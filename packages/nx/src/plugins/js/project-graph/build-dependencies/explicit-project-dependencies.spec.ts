@@ -8,7 +8,7 @@ import {
   retrieveProjectConfigurations,
   retrieveWorkspaceFiles,
 } from '../../../../project-graph/utils/retrieve-workspace-files';
-import { CreateDependenciesContext } from '../../../../utils/nx-plugin';
+import { CreateDependenciesContext } from '../../../../project-graph/plugins';
 import { setupWorkspaceContext } from '../../../../utils/workspace-context';
 
 // projectName => tsconfig import path

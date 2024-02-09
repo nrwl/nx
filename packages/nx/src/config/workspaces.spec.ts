@@ -3,6 +3,7 @@ import { TempFs } from '../internal-testing-utils/temp-fs';
 import { withEnvironmentVariables } from '../internal-testing-utils/with-environment';
 import { retrieveProjectConfigurations } from '../project-graph/utils/retrieve-workspace-files';
 import { readNxJson } from './configuration';
+import { shutdownPluginWorkers } from '../project-graph/plugins/plugin-pool';
 
 const libConfig = (root, name?: string) => ({
   name: name ?? toProjectName(`${root}/some-file`),
@@ -48,7 +49,7 @@ describe('Workspaces', () => {
 
       const { projects } = await withEnvironmentVariables(
         {
-          NX_WORKSPACE_ROOT: fs.tempDir,
+          NX_WORKSPACE_ROOT_PATH: fs.tempDir,
         },
         () => retrieveProjectConfigurations(fs.tempDir, readNxJson(fs.tempDir))
       );
@@ -65,6 +66,7 @@ describe('Workspaces', () => {
           },
         },
       });
+      await shutdownPluginWorkers();
     });
   });
 });

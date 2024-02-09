@@ -18,7 +18,7 @@ import {
   isNxPluginV1,
   isNxPluginV2,
   loadNxPlugins,
-} from '../utils/nx-plugin';
+} from './plugins';
 import { getRootTsConfigPath } from '../plugins/js/utils/typescript';
 import {
   FileMap,
@@ -240,12 +240,10 @@ async function updateProjectGraphWithPlugins(
 ) {
   const plugins = await loadNxPlugins(
     context.nxJsonConfiguration?.plugins,
-    getNxRequirePaths(),
-    context.workspaceRoot,
-    context.projects
+    context.workspaceRoot
   );
   let graph = initProjectGraph;
-  for (const { plugin } of plugins) {
+  for (const plugin of plugins) {
     try {
       if (
         isNxPluginV1(plugin) &&
@@ -297,17 +295,18 @@ async function updateProjectGraphWithPlugins(
   );
 
   const createDependencyPlugins = plugins.filter(
-    ({ plugin }) => isNxPluginV2(plugin) && plugin.createDependencies
+    (plugin) => isNxPluginV2(plugin) && plugin.createDependencies
   );
   await Promise.all(
-    createDependencyPlugins.map(async ({ plugin, options }) => {
+    createDependencyPlugins.map(async (plugin) => {
       performance.mark(`${plugin.name}:createDependencies - start`);
 
       // Set this globally to allow plugins to know if they are being called from the project graph creation
       global.NX_GRAPH_CREATION = true;
 
       try {
-        const dependencies = await plugin.createDependencies(options, {
+        // TODO: we shouldn't have to pass null here
+        const dependencies = await plugin.createDependencies(null, {
           ...context,
         });
 

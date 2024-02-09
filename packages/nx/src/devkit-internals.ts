@@ -1,3 +1,5 @@
+import { shutdownPluginWorkers } from './project-graph/plugins/plugin-pool';
+
 /**
  * Note to developers: STOP! These exports are available via requireNx in @nx/devkit.
  *
@@ -21,3 +23,4 @@ export {
   findProjectForPath,
 } from './project-graph/utils/find-project-for-path';
 export { registerTsProject } from './plugins/js/utils/register';
+export { shutdownPluginWorkers } from './project-graph/plugins/plugin-pool';

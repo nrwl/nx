@@ -5,13 +5,14 @@ import {
   TargetConfiguration,
 } from '../../config/workspace-json-project-json';
 import { NX_PREFIX } from '../../utils/logger';
-import { CreateNodesResult, LoadedNxPlugin } from '../../utils/nx-plugin';
 import { readJsonFile } from '../../utils/fileutils';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { ONLY_MODIFIES_EXISTING_TARGET } from '../../plugins/target-defaults/target-defaults-plugin';
 
 import { minimatch } from 'minimatch';
 import { join } from 'path';
+import { RemotePlugin, CreateNodesResult } from '../plugins';
+import { CreateNodesResultWithContext } from '../plugins/nx-plugin';
 
 export type SourceInformation = [file: string, plugin: string];
 export type ConfigurationSourceMaps = Record<
@@ -196,94 +197,43 @@ export type ConfigurationResult = {
 export function buildProjectsConfigurationsFromProjectPathsAndPlugins(
   nxJson: NxJsonConfiguration,
   projectFiles: string[], // making this parameter allows devkit to pick up newly created projects
-  plugins: LoadedNxPlugin[],
+  plugins: RemotePlugin[],
   root: string = workspaceRoot
 ): Promise<ConfigurationResult> {
-  type CreateNodesResultWithContext = CreateNodesResult & {
-    file: string;
-    pluginName: string;
-  };
-
   const results: Array<Promise<Array<CreateNodesResultWithContext>>> = [];
 
   // We iterate over plugins first - this ensures that plugins specified first take precedence.
-  for (const { plugin, options } of plugins) {
+  for (const plugin of plugins) {
     const [pattern, createNodes] = plugin.createNodes ?? [];
-    const pluginResults: Array<
-      CreateNodesResultWithContext | Promise<CreateNodesResultWithContext>
-    > = [];
 
-    performance.mark(`${plugin.name}:createNodes - start`);
     if (!pattern) {
       continue;
     }
 
+    const matchedFiles = [];
+
+    performance.mark(`${plugin.name}:createNodes - start`);
     // Set this globally to allow plugins to know if they are being called from the project graph creation
     global.NX_GRAPH_CREATION = true;
 
     for (const file of projectFiles) {
-      performance.mark(`${plugin.name}:createNodes:${file} - start`);
       if (minimatch(file, pattern, { dot: true })) {
-        try {
-          let r = createNodes(file, options, {
-            nxJsonConfiguration: nxJson,
-            workspaceRoot: root,
-          });
-
-          if (r instanceof Promise) {
-            pluginResults.push(
-              r
-                .catch((e) => {
-                  performance.mark(`${plugin.name}:createNodes:${file} - end`);
-                  throw new CreateNodesError(
-                    `Unable to create nodes for ${file} using plugin ${plugin.name}.`,
-                    e
-                  );
-                })
-                .then((r) => {
-                  performance.mark(`${plugin.name}:createNodes:${file} - end`);
-                  performance.measure(
-                    `${plugin.name}:createNodes:${file}`,
-                    `${plugin.name}:createNodes:${file} - start`,
-                    `${plugin.name}:createNodes:${file} - end`
-                  );
-                  return { ...r, file, pluginName: plugin.name };
-                })
-            );
-          } else {
-            performance.mark(`${plugin.name}:createNodes:${file} - end`);
-            performance.measure(
-              `${plugin.name}:createNodes:${file}`,
-              `${plugin.name}:createNodes:${file} - start`,
-              `${plugin.name}:createNodes:${file} - end`
-            );
-            pluginResults.push({
-              ...r,
-              file,
-              pluginName: plugin.name,
-            });
-          }
-        } catch (e) {
-          throw new CreateNodesError(
-            `Unable to create nodes for ${file} using plugin ${plugin.name}.`,
-            e
-          );
-        }
+        matchedFiles.push(file);
       }
     }
-    // If there are no promises (counter undefined) or all promises have resolved (counter === 0)
-    results.push(
-      Promise.all(pluginResults).then((results) => {
-        delete global.NX_GRAPH_CREATION;
-        performance.mark(`${plugin.name}:createNodes - end`);
-        performance.measure(
-          `${plugin.name}:createNodes`,
-          `${plugin.name}:createNodes - start`,
-          `${plugin.name}:createNodes - end`
-        );
-        return results;
-      })
-    );
+    try {
+      let r = createNodes(matchedFiles, {
+        nxJsonConfiguration: nxJson,
+        workspaceRoot: root,
+      });
+
+      results.push(r);
+    } catch (e) {
+      throw new CreateNodesError(
+        `Unable to create nodes using plugin ${plugin.name}.`,
+        e
+      );
+    }
   }
 
   return Promise.all(results).then((results) => {

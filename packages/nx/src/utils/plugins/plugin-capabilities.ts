@@ -6,14 +6,12 @@ import type { PluginCapabilities } from './models';
 import { hasElements } from './shared';
 import { readJsonFile } from '../fileutils';
 import { getPackageManagerCommand } from '../package-manager';
-import {
-  loadNxPluginAsync,
-  NxPlugin,
-  readPluginPackageJson,
-} from '../nx-plugin';
 import { getNxRequirePaths } from '../installation-directory';
 import { PackageJson } from '../package-json';
 import { ProjectConfiguration } from '../../config/workspace-json-project-json';
+import { readPluginPackageJson } from '../../project-graph/plugins/load-plugin';
+import { RemotePlugin } from '../../project-graph/plugins';
+import { loadRemoteNxPlugin } from '../../project-graph/plugins/plugin-pool';
 
 function tryGetCollection<T extends object>(
   packageJsonPath: string,
@@ -101,24 +99,17 @@ async function tryGetModule(
   packageJson: PackageJson,
   workspaceRoot: string,
   projects: Record<string, ProjectConfiguration>
-): Promise<NxPlugin | null> {
+): Promise<RemotePlugin | null> {
   try {
     return packageJson.generators ??
       packageJson.executors ??
       packageJson['nx-migrations'] ??
       packageJson['schematics'] ??
       packageJson['builders']
-      ? (
-          await loadNxPluginAsync(
-            packageJson.name,
-            getNxRequirePaths(workspaceRoot),
-            projects,
-            workspaceRoot
-          )
-        ).plugin
+      ? await loadRemoteNxPlugin(packageJson.name, workspaceRoot)
       : ({
           name: packageJson.name,
-        } as NxPlugin);
+        } as RemotePlugin);
   } catch {
     return null;
   }
