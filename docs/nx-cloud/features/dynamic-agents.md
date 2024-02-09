@@ -10,7 +10,7 @@ The standard way to set up [Nx Agents](/ci/features/distribute-task-execution) i
 
 ```yaml {% fileName=".nx/workflows/dynamic-changesets.yaml" %}
 distribute-on:
-  small-changeset: 1 linux-medium-js
+  small-changeset: 3 linux-medium-js
   medium-changeset: 6 linux-medium-js
   large-changeset: 10 linux-medium-js
 ```

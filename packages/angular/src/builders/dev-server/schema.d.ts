@@ -16,6 +16,7 @@ interface BaseSchema {
   hmr?: boolean;
   watch?: boolean;
   poll?: number;
+  forceEsbuild?: boolean;
   buildLibsFromSource?: boolean;
   esbuildMiddleware?: string[];
 }

@@ -52,7 +52,7 @@ module.exports = function (api: any, options: NxWebBabelPresetOptions = {}) {
         // For Jest tests, NODE_ENV is set as 'test' and we only want to set target as Node.
         // All other options will fail in Jest since Node does not support some ES features
         // such as import syntax.
-        isTest || process.env.NODE_ENV === 'test'
+        isTest || process.env.NODE_ENV === 'test' || process.env.JEST_WORKER_ID
           ? { targets: { node: 'current' }, loose: true }
           : {
               // Allow importing core-js in entrypoint and use browserslist to select polyfills.

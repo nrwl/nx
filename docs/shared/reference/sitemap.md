@@ -271,7 +271,7 @@
     - [Use Remote Caching (Nx Replay)](/ci/features/remote-cache)
     - [Distribute Task Execution (Nx Agents)](/ci/features/distribute-task-execution)
     - [Dynamically Allocate Agents](/ci/features/dynamic-agents)
-    - [Automatically Split E2E Tasks](/ci/features/split-e2e-tasks)
+    - [Automatically Split E2E Tasks (TestAtomizer)](/ci/features/split-e2e-tasks)
     - [Identify and Re-run Flaky Tasks](/ci/features/flaky-tasks)
     - [Set up Nx Cloud On-Premise](/ci/features/on-premise)
   - [Concepts](/ci/concepts)

@@ -162,27 +162,30 @@ async function runPublishOnProjects(
     overrides.firstRelease = args.firstRelease;
   }
 
-  const targets = ['nx-release-publish'];
+  const requiredTargetName = 'nx-release-publish';
 
   if (args.graph) {
     const file = readGraphFileFromGraphArg(args);
-    const projectNames = projectsToRun.map((t) => t.name);
+    const projectNamesWithTarget = projectsToRun
+      .map((t) => t.name)
+      .filter((projectName) =>
+        projectHasTarget(projectGraph.nodes[projectName], requiredTargetName)
+      );
     await generateGraph(
       {
         watch: false,
         all: false,
         open: true,
         view: 'tasks',
-        targets,
-        projects: projectNames,
+        targets: [requiredTargetName],
+        projects: projectNamesWithTarget,
         file,
       },
-      projectNames
+      projectNamesWithTarget
     );
     return 0;
   }
 
-  const requiredTargetName = 'nx-release-publish';
   const projectsWithTarget = projectsToRun.filter((project) =>
     projectHasTarget(project, requiredTargetName)
   );
@@ -205,7 +208,7 @@ async function runPublishOnProjects(
     projectGraph,
     { nxJson },
     {
-      targets,
+      targets: [requiredTargetName],
       outputStyle: 'static',
       ...(args as any),
     },
