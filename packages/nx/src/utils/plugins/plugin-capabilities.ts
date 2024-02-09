@@ -1,19 +1,25 @@
-import { workspaceRoot } from '../workspace-root';
-import * as chalk from 'chalk';
 import { dirname, join } from 'path';
-import { output } from '../output';
-import type { PluginCapabilities } from './models';
-import { hasElements } from './shared';
-import { readJsonFile } from '../fileutils';
-import { getPackageManagerCommand } from '../package-manager';
 import {
-  loadNxPluginAsync,
+  ExecutorsJsonEntry,
+  GeneratorsJsonEntry,
+} from '../../config/misc-interfaces';
+import { ProjectConfiguration } from '../../config/workspace-json-project-json';
+import { readJsonFile } from '../fileutils';
+import { getNxRequirePaths } from '../installation-directory';
+import {
   NxPlugin,
+  loadNxPluginAsync,
   readPluginPackageJson,
 } from '../nx-plugin';
-import { getNxRequirePaths } from '../installation-directory';
 import { PackageJson } from '../package-json';
-import { ProjectConfiguration } from '../../config/workspace-json-project-json';
+
+export interface PluginCapabilities {
+  name: string;
+  executors?: { [name: string]: ExecutorsJsonEntry };
+  generators?: { [name: string]: GeneratorsJsonEntry };
+  projectInference?: boolean;
+  projectGraphExtension?: boolean;
+}
 
 function tryGetCollection<T extends object>(
   packageJsonPath: string,
@@ -122,81 +128,4 @@ async function tryGetModule(
   } catch {
     return null;
   }
-}
-
-export async function listPluginCapabilities(
-  pluginName: string,
-  projects: Record<string, ProjectConfiguration>
-) {
-  const plugin = await getPluginCapabilities(
-    workspaceRoot,
-    pluginName,
-    projects
-  );
-
-  if (!plugin) {
-    const pmc = getPackageManagerCommand();
-    output.note({
-      title: `${pluginName} is not currently installed`,
-      bodyLines: [
-        `Use "${pmc.addDev} ${pluginName}" to install the plugin.`,
-        `After that, use "${pmc.exec} nx g ${pluginName}:init" to add the required peer deps and initialize the plugin.`,
-      ],
-    });
-
-    return;
-  }
-
-  const hasBuilders = hasElements(plugin.executors);
-  const hasGenerators = hasElements(plugin.generators);
-  const hasProjectGraphExtension = !!plugin.projectGraphExtension;
-  const hasProjectInference = !!plugin.projectInference;
-
-  if (
-    !hasBuilders &&
-    !hasGenerators &&
-    !hasProjectGraphExtension &&
-    !hasProjectInference
-  ) {
-    output.warn({ title: `No capabilities found in ${pluginName}` });
-    return;
-  }
-
-  const bodyLines = [];
-
-  if (hasGenerators) {
-    bodyLines.push(chalk.bold(chalk.green('GENERATORS')));
-    bodyLines.push('');
-    bodyLines.push(
-      ...Object.keys(plugin.generators).map(
-        (name) => `${chalk.bold(name)} : ${plugin.generators[name].description}`
-      )
-    );
-    if (hasBuilders) {
-      bodyLines.push('');
-    }
-  }
-
-  if (hasBuilders) {
-    bodyLines.push(chalk.bold(chalk.green('EXECUTORS/BUILDERS')));
-    bodyLines.push('');
-    bodyLines.push(
-      ...Object.keys(plugin.executors).map(
-        (name) => `${chalk.bold(name)} : ${plugin.executors[name].description}`
-      )
-    );
-  }
-
-  if (hasProjectGraphExtension) {
-    bodyLines.push(`✔️  Project Graph Extension`);
-  }
-
-  if (hasProjectInference) {
-    bodyLines.push(`✔️  Project Inference`);
-  }
-
-  output.log({
-    title: `Capabilities in ${plugin.name}:`,
-    bodyLines,
-  });
 }
