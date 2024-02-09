@@ -67,6 +67,20 @@ _Note: Windows-based images can only run on Windows-based resource classes._
 
 Enterprise accounts can use custom images.
 
+## Pass Environment Variables to Agents
+
+If you need to send environment variables to agents, you can use the [--with-env-vars](/ci/reference/nx-cloud-cli#withenvvars) flag on the `nx-cloud start-ci-run` command. You can pass a specific list of environment variables like this:
+
+```
+nx-cloud start-ci-run --distribute-on="8 linux-medium-js" --with-env-vars="VAR1,VAR2"
+```
+
+Or pass all the environment variables except OS-specific ones with this `--with-env-vars="auto"`:
+
+```
+nx-cloud start-ci-run --distribute-on="8 linux-medium-js" --with-env-vars="auto"
+```
+
 ## Reusable Steps
 
-You can find the list of reusable step [here](https://github.com/nrwl/nx-cloud-workflows/tree/main/workflow-steps).
+You can find the list of reusable steps [here](https://github.com/nrwl/nx-cloud-workflows/tree/main/workflow-steps).
