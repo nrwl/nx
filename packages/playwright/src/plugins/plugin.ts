@@ -7,6 +7,7 @@ import {
   CreateNodesContext,
   detectPackageManager,
   joinPathFragments,
+  normalizePath,
   readJsonFile,
   TargetConfiguration,
   writeJsonFile,
@@ -157,7 +158,9 @@ async function buildPlaywrightTargets(
     const dependsOn: TargetConfiguration['dependsOn'] = [];
     forEachTestFile(
       (testFile) => {
-        const relativeToProjectRoot = relative(projectRoot, testFile);
+        const relativeToProjectRoot = normalizePath(
+          relative(projectRoot, testFile)
+        );
         const targetName = `${options.ciTargetName}--${relativeToProjectRoot}`;
         targets[targetName] = {
           ...ciBaseTargetConfig,

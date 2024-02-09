@@ -11,14 +11,14 @@ To enable automatically split e2e tasks, you need to turn on [inferred tasks](/c
 {% tabs %}
 {% tab label="Cypress" %}
 
-```shell
+```shell {% skipRescope=true %}
 nx add @nx/cypress
 ```
 
 {% /tab %}
 {% tab label="Playwright" %}
 
-```shell
+```shell {% skipRescope=true %}
 nx add @nx/playwright
 ```
 

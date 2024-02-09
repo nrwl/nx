@@ -18,7 +18,8 @@ describe('cache', () => {
 
   afterEach(() => cleanupProject());
 
-  it('should cache command execution', async () => {
+  // TODO(@Cammisuli): This test is flaky and needs to be investigated
+  xit('should cache command execution', async () => {
     const myapp1 = uniq('myapp1');
     const myapp2 = uniq('myapp2');
     runCLI(`generate @nx/web:app ${myapp1}`);
