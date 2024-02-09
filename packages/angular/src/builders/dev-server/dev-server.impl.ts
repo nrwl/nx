@@ -10,7 +10,6 @@ import {
   normalizePath,
   parseTargetString,
   readCachedProjectGraph,
-  stripIndents,
   type Target,
 } from '@nx/devkit';
 import { getRootTsConfigPath } from '@nx/js';
@@ -34,7 +33,7 @@ import {
   mergeCustomWebpackConfig,
   resolveIndexHtmlTransformer,
 } from '../utilities/webpack';
-import { normalizeOptions } from './lib';
+import { normalizeOptions, validateOptions } from './lib';
 import type {
   NormalizedSchema,
   Schema,
@@ -55,14 +54,7 @@ export function executeDevServerBuilder(
   rawOptions: Schema,
   context: import('@angular-devkit/architect').BuilderContext
 ) {
-  if (rawOptions.esbuildMiddleware?.length > 0) {
-    const { major: angularMajorVersion, version: angularVersion } =
-      getInstalledAngularVersionInfo();
-    if (angularMajorVersion < 17) {
-      throw new Error(stripIndents`The "esbuildMiddleware" option is only supported in Angular >= 17.0.0. You are currently using "${angularVersion}".
-        You can resolve this error by removing the "esbuildMiddleware" option or by migrating to Angular 17.0.0.`);
-    }
-  }
+  validateOptions(rawOptions);
 
   process.env.NX_TSCONFIG_PATH = getRootTsConfigPath();
 
