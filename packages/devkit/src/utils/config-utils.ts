@@ -1,9 +1,8 @@
 import { dirname, extname, join } from 'path';
 import { existsSync, readdirSync } from 'fs';
-// eslint-disable-next-line @typescript-eslint/no-restricted-imports
-import { workspaceRoot } from 'nx/src/devkit-exports';
-// eslint-disable-next-line @typescript-eslint/no-restricted-imports
-import { registerTsProject } from 'nx/src/plugins/js/utils/register';
+import { requireNx } from '../../nx';
+
+const { workspaceRoot, registerTsProject } = requireNx();
 
 export let dynamicImport = new Function(
   'modulePath',

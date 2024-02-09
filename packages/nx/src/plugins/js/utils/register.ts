@@ -74,11 +74,6 @@ export function getSwcTranspiler(
   const register = require('@swc-node/register/register')
     .register as ISwcRegister;
 
-  let rootTsConfig = join(workspaceRoot, 'tsconfig.base.json');
-  if (existsSync(rootTsConfig)) {
-    process.env.SWC_NODE_PROJECT = rootTsConfig;
-  }
-
   const cleanupFn = register(compilerOptions);
 
   return typeof cleanupFn === 'function' ? cleanupFn : () => {};
