@@ -1,4 +1,4 @@
-import { rmSync } from 'fs-extra';
+import { removeSync } from 'fs-extra';
 import { daemonClient } from '../../daemon/client/client';
 import {
   cacheDir,
@@ -13,9 +13,9 @@ export async function resetHandler() {
   });
   await daemonClient.stop();
   output.log({ title: 'Daemon Server - Stopped' });
-  rmSync(cacheDir, { recursive: true, force: true });
+  removeSync(cacheDir);
   if (projectGraphCacheDirectory !== cacheDir) {
-    rmSync(projectGraphCacheDirectory, { recursive: true, force: true });
+    removeSync(projectGraphCacheDirectory);
   }
   output.success({
     title: 'Successfully reset the Nx workspace.',
