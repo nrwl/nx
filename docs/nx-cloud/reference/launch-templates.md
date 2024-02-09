@@ -83,4 +83,4 @@ nx-cloud start-ci-run --distribute-on="8 linux-medium-js" --with-env-vars="auto"
 
 ## Reusable Steps
 
-You can find the list of reusable steps [here](https://github.com/nrwl/nx-cloud-workflows/tree/main/workflow-steps).
+You can find the [list of reusable steps here](https://github.com/nrwl/nx-cloud-workflows/tree/main/workflow-steps).
