@@ -376,7 +376,7 @@ describe('Angular Module Federation', () => {
     const buildRemoteOutput = runCLI(`build ${remote}`);
     expect(buildRemoteOutput).toContain('Successfully ran target build');
 
-    if (runE2ETests()) {
+    if (runE2ETests('cypress')) {
       const e2eProcess = await runCommandUntil(
         `e2e ${host}-e2e --no-watch`,
         (output) => output.includes('All specs passed!')
@@ -468,7 +468,7 @@ describe('Angular Module Federation', () => {
     const buildRemoteOutput = runCLI(`build ${remote}`);
     expect(buildRemoteOutput).toContain('Successfully ran target build');
 
-    if (runE2ETests()) {
+    if (runE2ETests('cypress')) {
       const e2eProcess = await runCommandUntil(
         `e2e ${host}-e2e --no-watch`,
         (output) => output.includes('All specs passed!')
