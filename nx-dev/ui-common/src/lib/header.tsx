@@ -35,7 +35,7 @@ export function Header(): JSX.Element {
       name: 'Nx Replay',
       description:
         'Built-in local and remote caching to speed up your tasks and save you time and money.',
-      href: '/core-features/cache-task-results',
+      href: '/features/cache-task-results',
     },
     {
       name: 'Recipes',
@@ -46,7 +46,7 @@ export function Header(): JSX.Element {
       name: 'Nx Agents',
       description:
         'Executes tasks remotely on different agents in parallel. Enable remote cache in one command.',
-      href: '/ci/features/nx-agents',
+      href: '/ci/features/distribute-task-execution',
     },
     {
       name: 'Nx Console',

@@ -5779,7 +5779,7 @@
             "disableCollapsible": false
           },
           {
-            "name": "Automatically Split E2E Tasks",
+            "name": "Automatically Split E2E Tasks (TestAtomizer)",
             "path": "/ci/features/split-e2e-tasks",
             "id": "split-e2e-tasks",
             "isExternal": false,
@@ -5838,7 +5838,7 @@
         "disableCollapsible": false
       },
       {
-        "name": "Automatically Split E2E Tasks",
+        "name": "Automatically Split E2E Tasks (TestAtomizer)",
         "path": "/ci/features/split-e2e-tasks",
         "id": "split-e2e-tasks",
         "isExternal": false,
