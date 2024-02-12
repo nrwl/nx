@@ -456,6 +456,8 @@ const nxCloudUrls = {
     '/ci/features/distribute-task-execution',
   '/ci/features/nx-agents': '/ci/features/distribute-task-execution',
   '/ci': '/ci/intro/ci-with-nx',
+  '/concepts/more-concepts/illustrated-dte':
+    '/ci/concepts/parallelization-distribution',
   '/nx-cloud/:path*': '/ci/:path*',
   '/core-features/:path*': '/features/:path*',
 };
