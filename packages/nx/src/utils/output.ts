@@ -237,7 +237,10 @@ class CLIOutput {
       message,
       taskStatus
     );
-    if (process.env.GITHUB_ACTIONS) {
+    if (
+      process.env.NX_SKIP_LOG_GROUPING !== 'true' &&
+      process.env.GITHUB_ACTIONS
+    ) {
       const icon = this.getStatusIcon(taskStatus);
       commandOutputWithStatus = `${GH_GROUP_PREFIX}${icon} ${commandOutputWithStatus}`;
     }
@@ -248,7 +251,10 @@ class CLIOutput {
     this.addNewline();
     this.writeToStdOut(output);
 
-    if (process.env.GITHUB_ACTIONS) {
+    if (
+      process.env.NX_SKIP_LOG_GROUPING !== 'true' &&
+      process.env.GITHUB_ACTIONS
+    ) {
       this.writeToStdOut(GH_GROUP_SUFFIX);
     }
   }
