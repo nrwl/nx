@@ -209,7 +209,7 @@ export function SidebarMobile({
       current: isChangelog,
     },
     {
-      name: 'AI Chat (beta)',
+      name: 'AI Chat',
       href: '/ai-chat',
       current: isAiChat,
     },

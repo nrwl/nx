@@ -126,7 +126,7 @@ describe('Angular Projects', () => {
     );
 
     // check e2e tests
-    if (runE2ETests()) {
+    if (runE2ETests('cypress')) {
       const e2eResults = runCLI(`e2e ${app1}-e2e`);
       expect(e2eResults).toContain('All specs passed!');
       expect(await killPort(4200)).toBeTruthy();
@@ -152,15 +152,14 @@ describe('Angular Projects', () => {
     await killProcessAndPorts(esbProcess.pid, appPort);
   }, 1000000);
 
-  // TODO: enable this when tests are passing again.
-  xit('should successfully work with playwright for e2e tests', async () => {
+  it('should successfully work with playwright for e2e tests', async () => {
     const app = uniq('app');
 
     runCLI(
       `generate @nx/angular:app ${app} --e2eTestRunner=playwright --project-name-and-root-format=as-provided --no-interactive`
     );
 
-    if (runE2ETests()) {
+    if (runE2ETests('playwright')) {
       const e2eResults = runCLI(`e2e ${app}-e2e`);
       expect(e2eResults).toContain(
         `Successfully ran target e2e for project ${app}-e2e`

@@ -15,7 +15,6 @@ import { FsTree, Tree } from '../../generators/tree';
 import { registerTsProject } from '../../plugins/js/utils/register';
 import { createProjectGraphAsync } from '../../project-graph/project-graph';
 import { interpolate } from '../../tasks-runner/utils';
-import { logger } from '../../utils/logger';
 import { output } from '../../utils/output';
 import { handleErrors } from '../../utils/params';
 import { joinPathFragments } from '../../utils/path';
@@ -595,12 +594,6 @@ async function applyChangesAndExit(
   // Run any post-git tasks in series
   for (const postGitTask of postGitTasks) {
     await postGitTask(latestCommit);
-  }
-
-  if (args.dryRun) {
-    logger.warn(
-      `\nNOTE: The "dryRun" flag means no changelogs were actually created.`
-    );
   }
 
   return;

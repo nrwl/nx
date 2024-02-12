@@ -21,7 +21,7 @@ Because we are using an Nx plugin for Deno, all the features of Nx are available
 Make sure you have Deno installed on your machine. Consult the [Deno docs for more details](https://deno.com/manual/getting_started/installation)
 {% /callout %}
 
-```shell
+```shell {% skipRescope=true %}
 nx add @nx/deno
 ```
 

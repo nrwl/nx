@@ -27,7 +27,7 @@ In any Nx workspace, you can install `@nx/react` by running the following comman
 {% tabs %}
 {% tab label="Nx 18+" %}
 
-```shell
+```shell {% skipRescope=true %}
 nx add @nx/react
 ```
 
