@@ -799,14 +799,6 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Illustrated Distributed Task Execution",
-                "path": "/concepts/more-concepts/illustrated-dte",
-                "id": "illustrated-dte",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
                 "name": "Nx and Turborepo",
                 "path": "/concepts/more-concepts/turbo-and-nx",
                 "id": "turbo-and-nx",
@@ -1084,14 +1076,6 @@
             "disableCollapsible": false
           },
           {
-            "name": "Illustrated Distributed Task Execution",
-            "path": "/concepts/more-concepts/illustrated-dte",
-            "id": "illustrated-dte",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
             "name": "Nx and Turborepo",
             "path": "/concepts/more-concepts/turbo-and-nx",
             "id": "turbo-and-nx",
@@ -1218,14 +1202,6 @@
         "name": "Incremental Builds",
         "path": "/concepts/more-concepts/incremental-builds",
         "id": "incremental-builds",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Illustrated Distributed Task Execution",
-        "path": "/concepts/more-concepts/illustrated-dte",
-        "id": "illustrated-dte",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false

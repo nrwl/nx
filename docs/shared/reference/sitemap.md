@@ -45,7 +45,6 @@
       - [Manage Library Versions with Module Federation](/concepts/module-federation/manage-library-versions-with-module-federation)
     - [More Concepts](/concepts/more-concepts)
       - [Incremental Builds](/concepts/more-concepts/incremental-builds)
-      - [Illustrated Distributed Task Execution](/concepts/more-concepts/illustrated-dte)
       - [Nx and Turborepo](/concepts/more-concepts/turbo-and-nx)
       - [Monorepos](/concepts/more-concepts/why-monorepos)
       - [Dependency Management](/concepts/more-concepts/dependency-management)

@@ -1089,17 +1089,6 @@
             "tags": []
           },
           {
-            "id": "illustrated-dte",
-            "name": "Illustrated Distributed Task Execution",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/concepts/illustrated-dte-guide",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/concepts/more-concepts/illustrated-dte",
-            "tags": ["distribute-task-execution"]
-          },
-          {
             "id": "turbo-and-nx",
             "name": "Nx and Turborepo",
             "description": "",
@@ -1481,17 +1470,6 @@
         "tags": []
       },
       {
-        "id": "illustrated-dte",
-        "name": "Illustrated Distributed Task Execution",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/concepts/illustrated-dte-guide",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/concepts/more-concepts/illustrated-dte",
-        "tags": ["distribute-task-execution"]
-      },
-      {
         "id": "turbo-and-nx",
         "name": "Nx and Turborepo",
         "description": "",
@@ -1671,17 +1649,6 @@
     "isExternal": false,
     "path": "/concepts/more-concepts/incremental-builds",
     "tags": []
-  },
-  "/concepts/more-concepts/illustrated-dte": {
-    "id": "illustrated-dte",
-    "name": "Illustrated Distributed Task Execution",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/concepts/illustrated-dte-guide",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/concepts/more-concepts/illustrated-dte",
-    "tags": ["distribute-task-execution"]
   },
   "/concepts/more-concepts/turbo-and-nx": {
     "id": "turbo-and-nx",
