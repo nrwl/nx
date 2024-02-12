@@ -1,42 +1,5 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`hostGenerator should generate host files and configs 1`] = `
-"const { composePlugins, withNx } = require('@nx/webpack');
-const { withReact } = require('@nx/react');
-const { withModuleFederation } = require('@nx/react/module-federation');
-
-const baseConfig = require('./module-federation.config');
-
-const config = {
-  ...baseConfig,
-};
-
-// Nx plugins for webpack to build config object from Nx options and context.
-module.exports = composePlugins(withNx(), withReact(), withModuleFederation(config));
-"
-`;
-
-exports[`hostGenerator should generate host files and configs 2`] = `
-"module.exports = {
-  name: 'test',
-  /**
-   * To use a remote that does not exist in your current Nx Workspace
-   * You can use the tuple-syntax to define your remote
-   *
-   * remotes: [['my-external-remote', 'https://nx-angular-remote.netlify.app']]
-   *
-   * You _may_ need to add a \`remotes.d.ts\` file to your \`src/\` folder declaring the external remote for tsc, with the
-   * following content:
-   *
-   * declare module 'my-external-remote';
-   *
-   */
-  remotes: [
-    
-  ],
-};"
-`;
-
 exports[`hostGenerator should generate host files and configs for SSR 1`] = `
 "const { composePlugins, withNx } = require('@nx/webpack');
 const { withReact } = require('@nx/react');
@@ -101,6 +64,46 @@ const config: ModuleFederationConfig = {
 };
 
 export default config;
+"
+`;
+
+exports[`hostGenerator should generate host files and configs when --typescriptConfiguration=false 1`] = `
+"const { composePlugins, withNx } = require('@nx/webpack');
+const { withReact } = require('@nx/react');
+const { withModuleFederation } = require('@nx/react/module-federation');
+
+const baseConfig = require('./module-federation.config');
+
+const config = {
+  ...baseConfig,
+};
+
+// Nx plugins for webpack to build config object from Nx options and context.
+module.exports = composePlugins(
+  withNx(),
+  withReact(),
+  withModuleFederation(config)
+);
+"
+`;
+
+exports[`hostGenerator should generate host files and configs when --typescriptConfiguration=false 2`] = `
+"module.exports = {
+  name: 'test',
+  /**
+   * To use a remote that does not exist in your current Nx Workspace
+   * You can use the tuple-syntax to define your remote
+   *
+   * remotes: [['my-external-remote', 'https://nx-angular-remote.netlify.app']]
+   *
+   * You _may_ need to add a \`remotes.d.ts\` file to your \`src/\` folder declaring the external remote for tsc, with the
+   * following content:
+   *
+   * declare module 'my-external-remote';
+   *
+   */
+  remotes: [],
+};
 "
 `;
 
