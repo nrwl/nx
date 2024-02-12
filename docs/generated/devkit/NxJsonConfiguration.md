@@ -203,7 +203,7 @@ Configuration for Nx Plugins
 
 • `Optional` **release**: `NxReleaseConfiguration`
 
-**ALPHA**: Configuration for `nx release` (versioning and publishing of applications and libraries)
+Configuration for `nx release` (versioning and publishing of applications and libraries)
 
 ---
 
