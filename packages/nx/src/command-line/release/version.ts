@@ -9,6 +9,7 @@ import {
 } from '../../config/project-graph';
 import {
   NxJsonConfiguration,
+  createProjectFileMapUsingProjectGraph,
   joinPathFragments,
   logger,
   output,
@@ -110,6 +111,7 @@ export async function releaseVersion(
   // Apply default configuration to any optional user configuration
   const { error: configError, nxReleaseConfig } = await createNxReleaseConfig(
     projectGraph,
+    await createProjectFileMapUsingProjectGraph(projectGraph),
     nxJson.release
   );
   if (configError) {

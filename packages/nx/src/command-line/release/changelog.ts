@@ -8,6 +8,7 @@ import {
   ProjectGraph,
   ProjectGraphProjectNode,
 } from '../../config/project-graph';
+import { createProjectFileMapUsingProjectGraph } from '../../devkit-exports';
 import { FsTree, Tree } from '../../generators/tree';
 import { registerTsProject } from '../../plugins/js/utils/register';
 import { createProjectGraphAsync } from '../../project-graph/project-graph';
@@ -83,6 +84,7 @@ export async function releaseChangelog(
   // Apply default configuration to any optional user configuration
   const { error: configError, nxReleaseConfig } = await createNxReleaseConfig(
     projectGraph,
+    await createProjectFileMapUsingProjectGraph(projectGraph),
     nxJson.release
   );
   if (configError) {

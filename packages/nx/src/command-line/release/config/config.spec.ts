@@ -1,8 +1,9 @@
-import { type ProjectGraph } from '../../../devkit-exports';
+import { ProjectFileMap, type ProjectGraph } from '../../../devkit-exports';
 import { createNxReleaseConfig } from './config';
 
 describe('createNxReleaseConfig()', () => {
   let projectGraph: ProjectGraph;
+  let projectFileMap: ProjectFileMap;
 
   beforeEach(() => {
     projectGraph = {
@@ -40,13 +41,35 @@ describe('createNxReleaseConfig()', () => {
       },
       dependencies: {},
     };
+
+    projectFileMap = {
+      'lib-a': [
+        {
+          file: 'libs/lib-a/package.json',
+          hash: 'abc',
+        },
+      ],
+      'lib-b': [
+        {
+          file: 'libs/lib-b/package.json',
+          hash: 'abc',
+        },
+      ],
+      nx: [
+        {
+          file: 'packages/nx/package.json',
+          hash: 'abc',
+        },
+      ],
+    };
   });
 
   describe('zero/empty user config', () => {
     it('should create appropriate default NxReleaseConfig data from zero/empty user config', async () => {
       // zero user config
-      expect(await createNxReleaseConfig(projectGraph, undefined))
-        .toMatchInlineSnapshot(`
+      expect(
+        await createNxReleaseConfig(projectGraph, projectFileMap, undefined)
+      ).toMatchInlineSnapshot(`
         {
           "error": null,
           "nxReleaseConfig": {
@@ -121,7 +144,7 @@ describe('createNxReleaseConfig()', () => {
       `);
 
       // empty user config
-      expect(await createNxReleaseConfig(projectGraph, {}))
+      expect(await createNxReleaseConfig(projectGraph, projectFileMap, {}))
         .toMatchInlineSnapshot(`
         {
           "error": null,
@@ -198,7 +221,7 @@ describe('createNxReleaseConfig()', () => {
 
       // empty groups
       expect(
-        await createNxReleaseConfig(projectGraph, {
+        await createNxReleaseConfig(projectGraph, projectFileMap, {
           groups: {},
         })
       ).toMatchInlineSnapshot(`
@@ -295,8 +318,117 @@ describe('createNxReleaseConfig()', () => {
         } as any,
       };
 
-      expect(await createNxReleaseConfig(projectGraph, undefined))
-        .toMatchInlineSnapshot(`
+      projectFileMap['app-1'] = [
+        {
+          file: 'apps/app-1/package.json',
+          hash: 'abc',
+        },
+      ];
+
+      projectFileMap['e2e-1'] = [
+        {
+          file: 'apps/e2e-1/package.json',
+          hash: 'abc',
+        },
+      ];
+
+      expect(
+        await createNxReleaseConfig(projectGraph, projectFileMap, undefined)
+      ).toMatchInlineSnapshot(`
+        {
+          "error": null,
+          "nxReleaseConfig": {
+            "changelog": {
+              "automaticFromRef": false,
+              "git": {
+                "commit": true,
+                "commitArgs": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": false,
+                "tag": true,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+              "projectChangelogs": false,
+              "workspaceChangelog": {
+                "createRelease": false,
+                "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
+                "file": "{workspaceRoot}/CHANGELOG.md",
+                "renderOptions": {
+                  "authors": true,
+                  "commitReferences": true,
+                  "versionTitleDate": true,
+                },
+                "renderer": "nx/release/changelog-renderer",
+              },
+            },
+            "git": {
+              "commit": false,
+              "commitArgs": "",
+              "commitMessage": "chore(release): publish {version}",
+              "stageChanges": false,
+              "tag": false,
+              "tagArgs": "",
+              "tagMessage": "",
+            },
+            "groups": {
+              "__default__": {
+                "changelog": false,
+                "projects": [
+                  "lib-a",
+                  "lib-b",
+                  "nx",
+                ],
+                "projectsRelationship": "fixed",
+                "releaseTagPattern": "v{version}",
+                "version": {
+                  "conventionalCommits": false,
+                  "generator": "@nx/js:release-version",
+                  "generatorOptions": {},
+                },
+              },
+            },
+            "projectsRelationship": "fixed",
+            "releaseTagPattern": "v{version}",
+            "version": {
+              "conventionalCommits": false,
+              "generator": "@nx/js:release-version",
+              "generatorOptions": {},
+              "git": {
+                "commit": false,
+                "commitArgs": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": true,
+                "tag": false,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+            },
+          },
+        }
+      `);
+    });
+
+    it('should filter out projects without package.json', async () => {
+      projectGraph.nodes['lib-c'] = {
+        name: 'lib-c',
+        type: 'lib',
+        data: {
+          root: 'libs/lib-c',
+          targets: {},
+        } as any,
+      };
+
+      projectFileMap['lib-c'] = [
+        {
+          file: 'libs/lib-c/cargo.toml',
+          hash: 'abc',
+        },
+      ];
+
+      expect(
+        await createNxReleaseConfig(projectGraph, projectFileMap, undefined)
+      ).toMatchInlineSnapshot(`
         {
           "error": null,
           "nxReleaseConfig": {
@@ -374,7 +506,7 @@ describe('createNxReleaseConfig()', () => {
 
   describe('user specified groups', () => {
     it('should ignore any projects not matched to user specified groups', async () => {
-      const res = await createNxReleaseConfig(projectGraph, {
+      const res = await createNxReleaseConfig(projectGraph, projectFileMap, {
         groups: {
           'group-1': {
             projects: ['lib-a'], // intentionally no lib-b, so it should be ignored
@@ -455,7 +587,7 @@ describe('createNxReleaseConfig()', () => {
     });
 
     it('should convert any projects patterns into actual project names in the final config', async () => {
-      const res = await createNxReleaseConfig(projectGraph, {
+      const res = await createNxReleaseConfig(projectGraph, projectFileMap, {
         groups: {
           'group-1': {
             projects: ['lib-*'], // should match both lib-a and lib-b
@@ -537,7 +669,7 @@ describe('createNxReleaseConfig()', () => {
     });
 
     it('should respect user overrides for "version" config at the group level', async () => {
-      const res = await createNxReleaseConfig(projectGraph, {
+      const res = await createNxReleaseConfig(projectGraph, projectFileMap, {
         groups: {
           'group-1': {
             projects: ['lib-a'],
@@ -635,7 +767,7 @@ describe('createNxReleaseConfig()', () => {
     });
 
     it('should allow using true for group level changelog as an equivalent of an empty object (i.e. use the defaults)', async () => {
-      const res = await createNxReleaseConfig(projectGraph, {
+      const res = await createNxReleaseConfig(projectGraph, projectFileMap, {
         groups: {
           'group-1': {
             projects: ['lib-a'],
@@ -727,7 +859,7 @@ describe('createNxReleaseConfig()', () => {
     });
 
     it('should disable workspaceChangelog if there are multiple groups', async () => {
-      const res = await createNxReleaseConfig(projectGraph, {
+      const res = await createNxReleaseConfig(projectGraph, projectFileMap, {
         groups: {
           'group-1': {
             projects: ['lib-a'],
@@ -837,7 +969,7 @@ describe('createNxReleaseConfig()', () => {
     });
 
     it('should disable workspaceChangelog if the single group has an independent projects relationship', async () => {
-      const res = await createNxReleaseConfig(projectGraph, {
+      const res = await createNxReleaseConfig(projectGraph, projectFileMap, {
         groups: {
           'group-1': {
             projects: ['lib-a', 'lib-b'],
@@ -924,7 +1056,7 @@ describe('createNxReleaseConfig()', () => {
 
   describe('user config -> top level version', () => {
     it('should respect modifying version at the top level and it should be inherited by the implicit default group', async () => {
-      const res = await createNxReleaseConfig(projectGraph, {
+      const res = await createNxReleaseConfig(projectGraph, projectFileMap, {
         version: {
           // only modifying options, use default generator
           generatorOptions: {
@@ -1012,7 +1144,7 @@ describe('createNxReleaseConfig()', () => {
     });
 
     it('should respect enabling git operations on the version command via the top level', async () => {
-      const res = await createNxReleaseConfig(projectGraph, {
+      const res = await createNxReleaseConfig(projectGraph, projectFileMap, {
         git: {
           commit: true,
           commitArgs: '--no-verify',
@@ -1094,7 +1226,7 @@ describe('createNxReleaseConfig()', () => {
     });
 
     it('should respect enabling git operations for the version command directly', async () => {
-      const res = await createNxReleaseConfig(projectGraph, {
+      const res = await createNxReleaseConfig(projectGraph, projectFileMap, {
         version: {
           git: {
             commit: true,
@@ -1181,7 +1313,7 @@ describe('createNxReleaseConfig()', () => {
 
   describe('user config -> top level projects', () => {
     it('should return an error when both "projects" and "groups" are specified', async () => {
-      const res = await createNxReleaseConfig(projectGraph, {
+      const res = await createNxReleaseConfig(projectGraph, projectFileMap, {
         projects: ['lib-a'],
         groups: {
           'group-1': {
@@ -1201,7 +1333,7 @@ describe('createNxReleaseConfig()', () => {
     });
 
     it('should influence the projects configured for the implicit default group', async () => {
-      const res = await createNxReleaseConfig(projectGraph, {
+      const res = await createNxReleaseConfig(projectGraph, projectFileMap, {
         projects: ['lib-a'],
       });
       expect(res).toMatchInlineSnapshot(`
@@ -1280,7 +1412,7 @@ describe('createNxReleaseConfig()', () => {
 
   describe('user config -> top level releaseTagPattern', () => {
     it('should respect modifying releaseTagPattern at the top level and it should be inherited by the implicit default group', async () => {
-      const res = await createNxReleaseConfig(projectGraph, {
+      const res = await createNxReleaseConfig(projectGraph, projectFileMap, {
         releaseTagPattern: '{projectName}__{version}',
       });
       expect(res).toMatchInlineSnapshot(`
@@ -1359,7 +1491,7 @@ describe('createNxReleaseConfig()', () => {
     });
 
     it('should respect top level releaseTagPatterns for fixed groups without explicit settings of their own', async () => {
-      const res = await createNxReleaseConfig(projectGraph, {
+      const res = await createNxReleaseConfig(projectGraph, projectFileMap, {
         releaseTagPattern: '{version}',
         groups: {
           npm: {
@@ -1463,7 +1595,7 @@ describe('createNxReleaseConfig()', () => {
 
   describe('user config -> top level changelog', () => {
     it('should respect disabling all changelogs at the top level', async () => {
-      const res = await createNxReleaseConfig(projectGraph, {
+      const res = await createNxReleaseConfig(projectGraph, projectFileMap, {
         changelog: {
           projectChangelogs: false,
           workspaceChangelog: false,
@@ -1535,7 +1667,7 @@ describe('createNxReleaseConfig()', () => {
     });
 
     it('should respect any adjustments to default changelog config at the top level and apply as defaults at the group level', async () => {
-      const res = await createNxReleaseConfig(projectGraph, {
+      const res = await createNxReleaseConfig(projectGraph, projectFileMap, {
         changelog: {
           workspaceChangelog: {
             // override single field in user config
@@ -1647,7 +1779,7 @@ describe('createNxReleaseConfig()', () => {
     });
 
     it('should allow using true for workspaceChangelog and projectChangelogs as an equivalent of an empty object (i.e. use the defaults)', async () => {
-      const res = await createNxReleaseConfig(projectGraph, {
+      const res = await createNxReleaseConfig(projectGraph, projectFileMap, {
         changelog: {
           projectChangelogs: true,
           workspaceChangelog: true,
@@ -1749,7 +1881,7 @@ describe('createNxReleaseConfig()', () => {
     });
 
     it('should respect disabling git at the top level (thus disabling the default of true for changelog', async () => {
-      const res = await createNxReleaseConfig(projectGraph, {
+      const res = await createNxReleaseConfig(projectGraph, projectFileMap, {
         git: {
           commit: false,
           tag: false,
@@ -1833,7 +1965,7 @@ describe('createNxReleaseConfig()', () => {
 
   describe('user config -> top level and group level changelog combined', () => {
     it('should respect any adjustments to default changelog config at the top level and group level in the final config, CASE 1', async () => {
-      const res = await createNxReleaseConfig(projectGraph, {
+      const res = await createNxReleaseConfig(projectGraph, projectFileMap, {
         changelog: {
           projectChangelogs: {
             // overriding field at the root should be inherited by all groups that do not set their own override
@@ -1985,7 +2117,7 @@ describe('createNxReleaseConfig()', () => {
     });
 
     it('should respect any adjustments to default changelog config at the top level and group level in the final config, CASE 2', async () => {
-      const res = await createNxReleaseConfig(projectGraph, {
+      const res = await createNxReleaseConfig(projectGraph, projectFileMap, {
         groups: {
           foo: {
             projects: 'lib-a',
@@ -2097,7 +2229,7 @@ describe('createNxReleaseConfig()', () => {
     });
 
     it('should return an error if no projects can be resolved for a group', async () => {
-      const res = await createNxReleaseConfig(projectGraph, {
+      const res = await createNxReleaseConfig(projectGraph, projectFileMap, {
         groups: {
           'group-1': {
             projects: ['lib-does-not-exist'],
@@ -2120,7 +2252,7 @@ describe('createNxReleaseConfig()', () => {
 
   describe('user config -> mixed top level and granular git', () => {
     it('should return an error with version config and top level config', async () => {
-      const res = await createNxReleaseConfig(projectGraph, {
+      const res = await createNxReleaseConfig(projectGraph, projectFileMap, {
         git: {
           commit: true,
           tag: false,
@@ -2145,7 +2277,7 @@ describe('createNxReleaseConfig()', () => {
     });
 
     it('should return an error with changelog config and top level config', async () => {
-      const res = await createNxReleaseConfig(projectGraph, {
+      const res = await createNxReleaseConfig(projectGraph, projectFileMap, {
         git: {
           commit: true,
           tag: false,
@@ -2170,7 +2302,7 @@ describe('createNxReleaseConfig()', () => {
     });
 
     it('should return an error with version and changelog config and top level config', async () => {
-      const res = await createNxReleaseConfig(projectGraph, {
+      const res = await createNxReleaseConfig(projectGraph, projectFileMap, {
         git: {
           commit: true,
           tag: false,
@@ -2203,7 +2335,7 @@ describe('createNxReleaseConfig()', () => {
 
   describe('release group config errors', () => {
     it('should return an error if a project matches multiple groups', async () => {
-      const res = await createNxReleaseConfig(projectGraph, {
+      const res = await createNxReleaseConfig(projectGraph, projectFileMap, {
         groups: {
           'group-1': {
             projects: ['lib-a'],
@@ -2227,7 +2359,7 @@ describe('createNxReleaseConfig()', () => {
     });
 
     it('should return an error if no projects can be resolved for a group', async () => {
-      const res = await createNxReleaseConfig(projectGraph, {
+      const res = await createNxReleaseConfig(projectGraph, projectFileMap, {
         groups: {
           'group-1': {
             projects: ['lib-does-not-exist'],
@@ -2248,7 +2380,7 @@ describe('createNxReleaseConfig()', () => {
     });
 
     it("should return an error if a group's releaseTagPattern has no {version} placeholder", async () => {
-      const res = await createNxReleaseConfig(projectGraph, {
+      const res = await createNxReleaseConfig(projectGraph, projectFileMap, {
         groups: {
           'group-1': {
             projects: '*',
@@ -2270,7 +2402,7 @@ describe('createNxReleaseConfig()', () => {
     });
 
     it("should return an error if a group's releaseTagPattern has more than one {version} placeholder", async () => {
-      const res = await createNxReleaseConfig(projectGraph, {
+      const res = await createNxReleaseConfig(projectGraph, projectFileMap, {
         groups: {
           'group-1': {
             projects: '*',
@@ -2294,7 +2426,7 @@ describe('createNxReleaseConfig()', () => {
 
   describe('projectsRelationship at the root', () => {
     it('should respect the user specified projectsRelationship value and apply it to any groups that do not specify their own value', async () => {
-      const res = await createNxReleaseConfig(projectGraph, {
+      const res = await createNxReleaseConfig(projectGraph, projectFileMap, {
         projectsRelationship: 'independent',
         groups: {
           'group-1': {
@@ -2385,7 +2517,7 @@ describe('createNxReleaseConfig()', () => {
     });
 
     it('should override workspaceChangelog default if projectsRelationship is independent', async () => {
-      const res = await createNxReleaseConfig(projectGraph, {
+      const res = await createNxReleaseConfig(projectGraph, projectFileMap, {
         projectsRelationship: 'independent',
         projects: ['lib-a', 'lib-b'],
       });
@@ -2457,7 +2589,7 @@ describe('createNxReleaseConfig()', () => {
 
   describe('version.conventionalCommits shorthand', () => {
     it('should be implicitly false and not interfere with its long-form equivalent generatorOptions when not explicitly set', async () => {
-      const res1 = await createNxReleaseConfig(projectGraph, {
+      const res1 = await createNxReleaseConfig(projectGraph, projectFileMap, {
         version: {
           generatorOptions: {
             currentVersionResolver: 'git-tag',
@@ -2545,7 +2677,7 @@ describe('createNxReleaseConfig()', () => {
         }
       `);
 
-      const res2 = await createNxReleaseConfig(projectGraph, {
+      const res2 = await createNxReleaseConfig(projectGraph, projectFileMap, {
         version: {
           generatorOptions: {
             currentVersionResolver: 'registry',
@@ -2635,7 +2767,7 @@ describe('createNxReleaseConfig()', () => {
     });
 
     it('should update appropriate default values for generatorOptions when applied at the root', async () => {
-      const res = await createNxReleaseConfig(projectGraph, {
+      const res = await createNxReleaseConfig(projectGraph, projectFileMap, {
         version: {
           conventionalCommits: true,
         },
@@ -2722,7 +2854,7 @@ describe('createNxReleaseConfig()', () => {
     });
 
     it('should be possible to override at the group level and produce the appropriate default generatorOptions', async () => {
-      const res = await createNxReleaseConfig(projectGraph, {
+      const res = await createNxReleaseConfig(projectGraph, projectFileMap, {
         version: {
           conventionalCommits: true,
         },
@@ -2812,7 +2944,7 @@ describe('createNxReleaseConfig()', () => {
     });
 
     it('should not error if the shorthand is combined with unrelated generatorOptions', async () => {
-      const res = await createNxReleaseConfig(projectGraph, {
+      const res = await createNxReleaseConfig(projectGraph, projectFileMap, {
         version: {
           conventionalCommits: true,
           generatorOptions: {
@@ -2904,7 +3036,7 @@ describe('createNxReleaseConfig()', () => {
     });
 
     it('should error if the shorthand is combined with related generatorOptions', async () => {
-      const res1 = await createNxReleaseConfig(projectGraph, {
+      const res1 = await createNxReleaseConfig(projectGraph, projectFileMap, {
         version: {
           conventionalCommits: true,
           generatorOptions: {
@@ -2922,7 +3054,7 @@ describe('createNxReleaseConfig()', () => {
         }
       `);
 
-      const res2 = await createNxReleaseConfig(projectGraph, {
+      const res2 = await createNxReleaseConfig(projectGraph, projectFileMap, {
         version: {
           conventionalCommits: true,
           generatorOptions: {

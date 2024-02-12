@@ -3,7 +3,10 @@ import {
   ProjectGraph,
   ProjectGraphProjectNode,
 } from '../../config/project-graph';
-import { output } from '../../devkit-exports';
+import {
+  createProjectFileMapUsingProjectGraph,
+  output,
+} from '../../devkit-exports';
 import { createProjectGraphAsync } from '../../project-graph/project-graph';
 import { runCommand } from '../../tasks-runner/run-command';
 import {
@@ -52,6 +55,7 @@ export async function releasePublish(
   // Apply default configuration to any optional user configuration
   const { error: configError, nxReleaseConfig } = await createNxReleaseConfig(
     projectGraph,
+    await createProjectFileMapUsingProjectGraph(projectGraph),
     nxJson.release
   );
   if (configError) {

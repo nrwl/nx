@@ -12,7 +12,11 @@
  * and easy to consume config object for all the `nx release` command implementations.
  */
 import { NxJsonConfiguration } from '../../../config/nx-json';
-import { output, type ProjectGraph } from '../../../devkit-exports';
+import {
+  output,
+  ProjectFileMap,
+  type ProjectGraph,
+} from '../../../devkit-exports';
 import { findMatchingProjects } from '../../../utils/find-matching-projects';
 import { resolveNxJsonConfigErrorMessage } from '../utils/resolve-nx-json-error-message';
 
@@ -80,6 +84,7 @@ export interface CreateNxReleaseConfigError {
 // Apply default configuration to any optional user configuration and handle known errors
 export async function createNxReleaseConfig(
   projectGraph: ProjectGraph,
+  projectFileMap: ProjectFileMap,
   userConfig: NxJsonConfiguration['release'] = {}
 ): Promise<{
   error: null | CreateNxReleaseConfigError;
@@ -312,10 +317,8 @@ export async function createNxReleaseConfig(
                   ensureArray(userConfig.projects),
                   projectGraph.nodes
                 )
-              : // default to all library projects in the workspace
-                findMatchingProjects(['*'], projectGraph.nodes).filter(
-                  (project) => projectGraph.nodes[project].type === 'lib'
-                ),
+              : await getDefaultProjects(projectGraph, projectFileMap),
+
             /**
              * For properties which are overriding config at the root, we use the root level config as the
              * default values to merge with so that the group that matches a specific project will always
@@ -692,5 +695,20 @@ function hasInvalidGitConfig(
 ): boolean {
   return (
     !!userConfig.git && !!(userConfig.version?.git || userConfig.changelog?.git)
+  );
+}
+
+async function getDefaultProjects(
+  projectGraph: ProjectGraph,
+  projectFileMap: ProjectFileMap
+): Promise<string[]> {
+  // default to all library projects in the workspace with a package.json file
+  return findMatchingProjects(['*'], projectGraph.nodes).filter(
+    (project) =>
+      projectGraph.nodes[project].type === 'lib' &&
+      projectFileMap[project]?.find(
+        (f) =>
+          f.file === `${projectGraph.nodes[project].data.root}/package.json`
+      )
   );
 }

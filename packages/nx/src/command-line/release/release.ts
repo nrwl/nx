@@ -1,6 +1,9 @@
 import { prompt } from 'enquirer';
 import { readNxJson } from '../../config/nx-json';
-import { output } from '../../devkit-exports';
+import {
+  createProjectFileMapUsingProjectGraph,
+  output,
+} from '../../devkit-exports';
 import { createProjectGraphAsync } from '../../project-graph/project-graph';
 import { handleErrors } from '../../utils/params';
 import { releaseChangelog } from './changelog';
@@ -54,6 +57,7 @@ export async function release(
   // Apply default configuration to any optional user configuration
   const { error: configError, nxReleaseConfig } = await createNxReleaseConfig(
     projectGraph,
+    await createProjectFileMapUsingProjectGraph(projectGraph),
     nxJson.release
   );
   if (configError) {
