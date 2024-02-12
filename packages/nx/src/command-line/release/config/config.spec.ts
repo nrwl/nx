@@ -1,11 +1,19 @@
 import { ProjectFileMap, type ProjectGraph } from '../../../devkit-exports';
+import { PackageJson } from '../../../utils/package-json';
 import { createNxReleaseConfig } from './config';
+
+let rootPackageJson: PackageJson;
+jest.mock('../../../devkit-exports', () => ({
+  ...jest.requireActual('../../../devkit-exports'),
+  readJsonFile: () => rootPackageJson,
+}));
 
 describe('createNxReleaseConfig()', () => {
   let projectGraph: ProjectGraph;
   let projectFileMap: ProjectFileMap;
 
   beforeEach(() => {
+    rootPackageJson = { name: 'root', version: '0.0.0' };
     projectGraph = {
       nodes: {
         'lib-a': {
@@ -472,6 +480,202 @@ describe('createNxReleaseConfig()', () => {
                   "lib-a",
                   "lib-b",
                   "nx",
+                ],
+                "projectsRelationship": "fixed",
+                "releaseTagPattern": "v{version}",
+                "version": {
+                  "conventionalCommits": false,
+                  "generator": "@nx/js:release-version",
+                  "generatorOptions": {},
+                },
+              },
+            },
+            "projectsRelationship": "fixed",
+            "releaseTagPattern": "v{version}",
+            "version": {
+              "conventionalCommits": false,
+              "generator": "@nx/js:release-version",
+              "generatorOptions": {},
+              "git": {
+                "commit": false,
+                "commitArgs": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": true,
+                "tag": false,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+            },
+          },
+        }
+      `);
+    });
+
+    it('should filter out the root project if it is private', async () => {
+      projectGraph.nodes['root'] = {
+        name: 'root',
+        type: 'lib',
+        data: {
+          root: '.',
+          targets: {},
+        } as any,
+      };
+
+      projectFileMap['root'] = [
+        {
+          file: 'package.json',
+          hash: 'abc',
+        },
+      ];
+
+      rootPackageJson = { name: 'root', version: '0.0.0', private: true };
+
+      expect(
+        await createNxReleaseConfig(projectGraph, projectFileMap, undefined)
+      ).toMatchInlineSnapshot(`
+        {
+          "error": null,
+          "nxReleaseConfig": {
+            "changelog": {
+              "automaticFromRef": false,
+              "git": {
+                "commit": true,
+                "commitArgs": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": false,
+                "tag": true,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+              "projectChangelogs": false,
+              "workspaceChangelog": {
+                "createRelease": false,
+                "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
+                "file": "{workspaceRoot}/CHANGELOG.md",
+                "renderOptions": {
+                  "authors": true,
+                  "commitReferences": true,
+                  "versionTitleDate": true,
+                },
+                "renderer": "nx/release/changelog-renderer",
+              },
+            },
+            "git": {
+              "commit": false,
+              "commitArgs": "",
+              "commitMessage": "chore(release): publish {version}",
+              "stageChanges": false,
+              "tag": false,
+              "tagArgs": "",
+              "tagMessage": "",
+            },
+            "groups": {
+              "__default__": {
+                "changelog": false,
+                "projects": [
+                  "lib-a",
+                  "lib-b",
+                  "nx",
+                ],
+                "projectsRelationship": "fixed",
+                "releaseTagPattern": "v{version}",
+                "version": {
+                  "conventionalCommits": false,
+                  "generator": "@nx/js:release-version",
+                  "generatorOptions": {},
+                },
+              },
+            },
+            "projectsRelationship": "fixed",
+            "releaseTagPattern": "v{version}",
+            "version": {
+              "conventionalCommits": false,
+              "generator": "@nx/js:release-version",
+              "generatorOptions": {},
+              "git": {
+                "commit": false,
+                "commitArgs": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": true,
+                "tag": false,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+            },
+          },
+        }
+      `);
+    });
+
+    it('should not filter out the root project if it is not private', async () => {
+      projectGraph.nodes['root'] = {
+        name: 'root',
+        type: 'lib',
+        data: {
+          root: '.',
+          targets: {},
+        } as any,
+      };
+
+      projectFileMap['root'] = [
+        {
+          file: 'package.json',
+          hash: 'abc',
+        },
+      ];
+
+      rootPackageJson = {
+        name: 'root',
+        version: '0.0.0',
+      };
+
+      expect(
+        await createNxReleaseConfig(projectGraph, projectFileMap, undefined)
+      ).toMatchInlineSnapshot(`
+        {
+          "error": null,
+          "nxReleaseConfig": {
+            "changelog": {
+              "automaticFromRef": false,
+              "git": {
+                "commit": true,
+                "commitArgs": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": false,
+                "tag": true,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+              "projectChangelogs": false,
+              "workspaceChangelog": {
+                "createRelease": false,
+                "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
+                "file": "{workspaceRoot}/CHANGELOG.md",
+                "renderOptions": {
+                  "authors": true,
+                  "commitReferences": true,
+                  "versionTitleDate": true,
+                },
+                "renderer": "nx/release/changelog-renderer",
+              },
+            },
+            "git": {
+              "commit": false,
+              "commitArgs": "",
+              "commitMessage": "chore(release): publish {version}",
+              "stageChanges": false,
+              "tag": false,
+              "tagArgs": "",
+              "tagMessage": "",
+            },
+            "groups": {
+              "__default__": {
+                "changelog": false,
+                "projects": [
+                  "lib-a",
+                  "lib-b",
+                  "nx",
+                  "root",
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",

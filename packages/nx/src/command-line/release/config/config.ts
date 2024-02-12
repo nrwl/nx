@@ -11,13 +11,19 @@
  * defaults and user overrides, as well as handling common errors, up front to produce a single, consistent,
  * and easy to consume config object for all the `nx release` command implementations.
  */
+import { join } from 'path';
 import { NxJsonConfiguration } from '../../../config/nx-json';
 import {
-  output,
   ProjectFileMap,
+  ProjectGraphProjectNode,
+  output,
+  readJsonFile,
+  workspaceRoot,
   type ProjectGraph,
 } from '../../../devkit-exports';
+import { fileExists } from '../../../utils/fileutils';
 import { findMatchingProjects } from '../../../utils/find-matching-projects';
+import { PackageJson } from '../../../utils/package-json';
 import { resolveNxJsonConfigErrorMessage } from '../utils/resolve-nx-json-error-message';
 
 type DeepRequired<T> = Required<{
@@ -708,7 +714,29 @@ async function getDefaultProjects(
       projectGraph.nodes[project].type === 'lib' &&
       projectFileMap[project]?.find(
         (f) =>
-          f.file === `${projectGraph.nodes[project].data.root}/package.json`
-      )
+          f.file === join(projectGraph.nodes[project].data.root, 'package.json')
+      ) &&
+      // the root project needs to be included if it is not private in order to support standalone repos
+      (projectGraph.nodes[project].data.root !== '.' ||
+        isProjectPublic(projectGraph.nodes[project]))
   );
+}
+
+function isProjectPublic(project: ProjectGraphProjectNode): boolean {
+  const packageJsonPath = join(
+    workspaceRoot,
+    project.data.root,
+    'package.json'
+  );
+  if (!fileExists(packageJsonPath)) {
+    return false;
+  }
+  try {
+    const packageJson = readJsonFile<PackageJson>(packageJsonPath);
+    return !(packageJson.private === true);
+  } catch (e) {
+    // do nothing and assume that the project is not public if there is a parsing issue
+    // this will result in it being excluded from the default projects list
+    return false;
+  }
 }
