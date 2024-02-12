@@ -27,6 +27,7 @@ The following environment variables are ones that you can set to change the beha
 | NX_PREFER_TS_NODE                | boolean | If set to `true`, Nx will use ts-node for local execution of plugins even if `@swc-node/register` is installed.                                                                                                                        |
 | NX_IGNORE_CYCLES                 | boolean | If set to `true`, Nx will ignore errors created by a task graph circular dependency. Can be overriden on the command line with `--nxIgnoreCycles`                                                                                      |
 | NX_BATCH_MODE                    | boolean | If set to `true`, Nx will run task(s) in batches for executors which support batches.                                                                                                                                                  |
+| NX_SKIP_LOG_GROUPING             | boolean | If set to `true`, Nx will not group command's logs on CI.                                                                                                                                                                              |
 
 Nx will set the following environment variables so they can be accessible within the process even outside of executors and generators.
 
