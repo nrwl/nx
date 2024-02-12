@@ -49,6 +49,8 @@ import {
 import jsInitGenerator from '../init/init';
 import setupVerdaccio from '../setup-verdaccio/generator';
 
+const defaultOutputDirectory = 'dist';
+
 export async function libraryGenerator(
   tree: Tree,
   schema: LibraryGeneratorSchema
@@ -252,10 +254,7 @@ async function addProject(tree: Tree, options: NormalizedSchema) {
     }
 
     if (options.publishable) {
-      const packageRoot = getOutputPath(options).replaceAll(
-        options.name,
-        '{projectName}'
-      );
+      const packageRoot = join(defaultOutputDirectory, '{projectRoot}');
 
       projectConfiguration.targets['nx-release-publish'] = {
         options: {
@@ -767,7 +766,7 @@ function getBuildExecutor(bundler: Bundler) {
 }
 
 function getOutputPath(options: NormalizedSchema) {
-  const parts = ['dist'];
+  const parts = [defaultOutputDirectory];
   if (options.projectRoot === '.') {
     parts.push(options.name);
   } else {

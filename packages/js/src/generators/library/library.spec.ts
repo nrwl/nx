@@ -1014,7 +1014,7 @@ describe('lib', () => {
         });
       });
 
-      it('should update the nx-release-publish target to specify dist/{projectName} as the package root', async () => {
+      it('should update the nx-release-publish target to specify dist/{projectRoot} as the package root', async () => {
         await libraryGenerator(tree, {
           ...defaultOptions,
           name: 'my-lib',
@@ -1027,7 +1027,7 @@ describe('lib', () => {
         const config = readProjectConfiguration(tree, 'my-lib');
         expect(config.targets['nx-release-publish']).toEqual({
           options: {
-            packageRoot: 'dist/{projectName}',
+            packageRoot: 'dist/{projectRoot}',
           },
         });
       });
