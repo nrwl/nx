@@ -51,9 +51,6 @@ interface NxInstallationConfiguration {
   plugins?: Record<string, string>;
 }
 
-/**
- * **ALPHA**
- */
 export interface NxReleaseVersionConfiguration {
   generator?: string;
   generatorOptions?: Record<string, unknown>;
@@ -70,9 +67,6 @@ export interface NxReleaseVersionConfiguration {
   conventionalCommits?: boolean;
 }
 
-/**
- * **ALPHA**
- */
 export interface NxReleaseChangelogConfiguration {
   /**
    * Optionally create a release containing all relevant changes on a supported version control system, it
@@ -115,9 +109,6 @@ export interface NxReleaseChangelogConfiguration {
   renderOptions?: ChangelogRenderOptions;
 }
 
-/**
- * **ALPHA**
- */
 export interface NxReleaseGitConfiguration {
   /**
    * Whether or not to automatically commit the changes made by current command
@@ -149,9 +140,6 @@ export interface NxReleaseGitConfiguration {
   tagArgs?: string;
 }
 
-/**
- * **ALPHA**
- */
 interface NxReleaseConfiguration {
   /**
    * Shorthand for amending the projects which will be included in the implicit default release group (all projects by default).
@@ -359,7 +347,7 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
   installation?: NxInstallationConfiguration;
 
   /**
-   * **ALPHA**: Configuration for `nx release` (versioning and publishing of applications and libraries)
+   * Configuration for `nx release` (versioning and publishing of applications and libraries)
    */
   release?: NxReleaseConfiguration;
 
