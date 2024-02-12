@@ -26,7 +26,7 @@ Install all the dependencies we need:
 {% tabs %}
 {%tab label="npm"%}
 
-```shell
+```shell {% skipRescope=true %}
 nx add @nx/node
 npm add -D lit http-server
 ```
@@ -34,7 +34,7 @@ npm add -D lit http-server
 {% /tab %}
 {%tab label="yarn"%}
 
-```shell
+```shell {% skipRescope=true %}
 nx add @nx/node
 yarn add -D lit http-server
 ```
@@ -42,7 +42,7 @@ yarn add -D lit http-server
 {% /tab %}
 {%tab label="pnpm"%}
 
-```shell
+```shell {% skipRescope=true %}
 nx add @nx/node
 pnpm add -D lit http-server
 ```

@@ -21,7 +21,7 @@ You can also define the configuration in a file and reference it as follows:
 
 ```yaml {% fileName=".nx/workflows/dynamic-changesets.yaml" %}
 distribute-on:
-  small-changeset: 1 linux-medium-js
+  small-changeset: 3 linux-medium-js
   medium-changeset: 6 linux-medium-js
   large-changeset: 10 linux-medium-js
 ```

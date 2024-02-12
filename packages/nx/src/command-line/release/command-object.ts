@@ -1,5 +1,6 @@
 import { Argv, CommandModule, showHelp } from 'yargs';
 import { readNxJson } from '../../project-graph/file-utils';
+import { logger } from '../../utils/logger';
 import {
   OutputStyle,
   RunManyOptions,
@@ -65,7 +66,7 @@ export const yargsReleaseCommand: CommandModule<
 > = {
   command: 'release',
   describe:
-    '**ALPHA**: Orchestrate versioning and publishing of applications and libraries',
+    'Orchestrate versioning and publishing of applications and libraries',
   builder: (yargs) =>
     yargs
       .command(releaseCommand)
@@ -160,15 +161,18 @@ const releaseCommand: CommandModule<NxReleaseArgs, ReleaseOptions> = {
         }
         return true;
       }),
-  handler: (args) =>
-    import('./release')
-      .then((m) => m.releaseCLIHandler(args))
-      .then((versionDataOrExitCode) => {
-        if (typeof versionDataOrExitCode === 'number') {
-          return process.exit(versionDataOrExitCode);
-        }
-        process.exit(0);
-      }),
+  handler: async (args) => {
+    const release = await import('./release');
+    const result = await release.releaseCLIHandler(args);
+    if (args.dryRun) {
+      logger.warn(`\nNOTE: The "dryRun" flag means no changes were made.`);
+    }
+
+    if (typeof result === 'number') {
+      process.exit(result);
+    }
+    process.exit(0);
+  },
 };
 
 const versionCommand: CommandModule<NxReleaseArgs, VersionOptions> = {
@@ -196,15 +200,18 @@ const versionCommand: CommandModule<NxReleaseArgs, VersionOptions> = {
             'Whether or not to stage the changes made by this command. Useful when combining this command with changelog generation.',
         })
     ),
-  handler: (args) =>
-    import('./version')
-      .then((m) => m.releaseVersionCLIHandler(args))
-      .then((versionDataOrExitCode) => {
-        if (typeof versionDataOrExitCode === 'number') {
-          return process.exit(versionDataOrExitCode);
-        }
-        process.exit(0);
-      }),
+  handler: async (args) => {
+    const release = await import('./version');
+    const result = await release.releaseVersionCLIHandler(args);
+    if (args.dryRun) {
+      logger.warn(`\nNOTE: The "dryRun" flag means no changes were made.`);
+    }
+
+    if (typeof result === 'number') {
+      process.exit(result);
+    }
+    process.exit(0);
+  },
 };
 
 const changelogCommand: CommandModule<NxReleaseArgs, ChangelogOptions> = {
@@ -255,10 +262,16 @@ const changelogCommand: CommandModule<NxReleaseArgs, ChangelogOptions> = {
         })
     ),
   handler: async (args) => {
-    const status = await (
-      await import('./changelog')
-    ).releaseChangelogCLIHandler(args);
-    process.exit(status);
+    const release = await import('./changelog');
+    const result = await release.releaseChangelogCLIHandler(args);
+    if (args.dryRun) {
+      logger.warn(`\nNOTE: The "dryRun" flag means no changes were made.`);
+    }
+
+    if (typeof result === 'number') {
+      process.exit(result);
+    }
+    process.exit(0);
   },
 };
 
@@ -285,6 +298,10 @@ const publishCommand: CommandModule<NxReleaseArgs, PublishOptions> = {
     const status = await (
       await import('./publish')
     ).releasePublishCLIHandler(coerceParallelOption(withOverrides(args, 2)));
+    if (args.dryRun) {
+      logger.warn(`\nNOTE: The "dryRun" flag means no changes were made.`);
+    }
+
     process.exit(status);
   },
 };

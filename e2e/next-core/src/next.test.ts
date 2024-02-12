@@ -149,6 +149,40 @@ describe('Next.js Applications', () => {
       checkExport: false,
     });
   }, 300_000);
+
+  it('should support --custom-server flag (swc)', async () => {
+    const appName = uniq('app');
+
+    runCLI(`generate @nx/next:app ${appName} --no-interactive --custom-server`);
+
+    checkFilesExist(`apps/${appName}/server/main.ts`);
+
+    const result = runCLI(`build ${appName}`);
+
+    checkFilesExist(`dist/apps/${appName}/server/main.js`);
+
+    expect(result).toContain(
+      `Successfully ran target build for project ${appName}`
+    );
+  }, 300_000);
+
+  it('should support --custom-server flag (tsc)', async () => {
+    const appName = uniq('app');
+
+    runCLI(
+      `generate @nx/next:app ${appName} --swc=false --no-interactive --custom-server`
+    );
+
+    checkFilesExist(`apps/${appName}/server/main.ts`);
+
+    const result = runCLI(`build ${appName}`);
+
+    checkFilesExist(`dist/apps/${appName}/server/main.js`);
+
+    expect(result).toContain(
+      `Successfully ran target build for project ${appName}`
+    );
+  }, 300_000);
 });
 
 function getData(port, path = ''): Promise<any> {

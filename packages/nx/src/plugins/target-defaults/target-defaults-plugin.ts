@@ -88,9 +88,13 @@ export const TargetDefaultsPlugin: NxPluginV2 = {
           // Prevents `build` from overwriting `@nx/js:tsc` if both are present
           // and build is specified later in the ordering.
           if (!modifiedTargets[targetName] || targetName !== defaultSpecifier) {
-            modifiedTargets[targetName] = JSON.parse(
+            const defaults = JSON.parse(
               JSON.stringify(targetDefaults[defaultSpecifier])
             );
+            modifiedTargets[targetName] = {
+              ...getTargetInfo(targetName, projectJson, packageJson),
+              ...defaults,
+            };
           }
           // TODO: Remove this after we figure out a way to define new targets
           // in target defaults
@@ -139,4 +143,94 @@ function readJsonOrNull<T extends Object = any>(path: string) {
   } else {
     return null;
   }
+}
+
+/**
+ * This fn gets target info that would make a target uniquely compatible
+ * with what is described by project.json or package.json. As the merge process
+ * for config happens, without this, the target defaults may be compatible
+ * with a config from a plugin and then that combined target be incompatible
+ * with the project json configuration resulting in the target default values
+ * being scrapped. By adding enough information from the project.json / package.json,
+ * we can make sure that the target after merging is compatible with the defined target.
+ */
+export function getTargetInfo(
+  target: string,
+  projectJson: Pick<ProjectConfiguration, 'targets'>,
+  packageJson: Pick<PackageJson, 'scripts' | 'nx'>
+) {
+  const projectJsonTarget = projectJson?.targets?.[target];
+  const packageJsonTarget = packageJson?.nx?.targets?.[target];
+
+  const executor = getTargetExecutor(target, projectJson, packageJson);
+  const targetOptions = {
+    ...packageJsonTarget?.options,
+    ...projectJsonTarget?.options,
+  };
+
+  if (projectJsonTarget?.command) {
+    return {
+      command: projectJsonTarget?.command,
+    };
+  }
+
+  if (executor === 'nx:run-commands') {
+    if (targetOptions?.command) {
+      return {
+        executor: 'nx:run-commands',
+        options: {
+          command: projectJsonTarget.options?.command,
+        },
+      };
+    } else if (targetOptions?.commands) {
+      return {
+        executor: 'nx:run-commands',
+        options: {
+          commands: targetOptions.commands,
+        },
+      };
+    }
+    return {
+      executor: 'nx:run-commands',
+    };
+  }
+
+  if (executor === 'nx:run-script') {
+    return {
+      executor: 'nx:run-script',
+      options: {
+        script: targetOptions?.script ?? target,
+      },
+    };
+  }
+
+  if (executor) {
+    return { executor };
+  }
+
+  return {};
+}
+
+function getTargetExecutor(
+  target: string,
+  projectJson: Pick<ProjectConfiguration, 'targets'>,
+  packageJson: Pick<PackageJson, 'scripts' | 'nx'>
+) {
+  const projectJsonTarget = projectJson?.targets?.[target];
+  const packageJsonTarget = packageJson?.nx?.targets?.[target];
+  const packageJsonScript = packageJson?.scripts?.[target];
+
+  if (projectJsonTarget?.command) {
+    return 'nx:run-commands';
+  }
+
+  if (
+    !projectJsonTarget?.executor &&
+    !packageJsonTarget?.executor &&
+    packageJsonScript
+  ) {
+    return 'nx:run-script';
+  }
+
+  return projectJsonTarget?.executor ?? packageJsonTarget?.executor;
 }

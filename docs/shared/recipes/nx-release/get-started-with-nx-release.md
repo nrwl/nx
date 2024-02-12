@@ -12,7 +12,7 @@ Ensure that Nx is installed in your monorepo. Check out the [Installation docs](
 
 The [`@nx/js` package](/nx-api/js) is required for Nx Release to manage and release JavaScript packages. Add it if it is not already installed:
 
-```shell
+```shell {% skipRescope=true %}
 nx add @nx/js
 ```
 

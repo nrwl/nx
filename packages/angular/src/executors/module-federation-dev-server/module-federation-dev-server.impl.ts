@@ -7,6 +7,7 @@ import { type Schema } from './schema';
 import {
   buildStaticRemotes,
   normalizeOptions,
+  parseStaticRemotesConfig,
   startDevRemotes,
   startStaticRemotesFileServer,
 } from './lib';
@@ -131,7 +132,11 @@ export async function* moduleFederationDevServerExecutor(
     }, options.staticRemotesPort);
   }
 
-  await buildStaticRemotes(remotes, nxBin, context, options);
+  const staticRemotesConfig = parseStaticRemotesConfig(
+    remotes.staticRemotes,
+    context
+  );
+  await buildStaticRemotes(staticRemotesConfig, nxBin, context, options);
 
   const devRemoteIters = await startDevRemotes(
     remotes,
@@ -142,7 +147,7 @@ export async function* moduleFederationDevServerExecutor(
 
   const staticRemotesIter =
     remotes.staticRemotes.length > 0
-      ? startStaticRemotesFileServer(remotes, context, options)
+      ? startStaticRemotesFileServer(staticRemotesConfig, context, options)
       : undefined;
 
   const removeBaseUrlEmission = (iter: AsyncIterable<unknown>) =>

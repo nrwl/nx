@@ -49,6 +49,7 @@
     "@nx/eslint": "file:../eslint",
     "@nx/react": "file:../react",
     "@nx/web": "file:../web",
+    "@nx/webpack": "file:../webpack",
     "@nx/workspace": "file:../workspace"
   },
   "publishConfig": {

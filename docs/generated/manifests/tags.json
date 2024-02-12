@@ -701,43 +701,6 @@
       "path": "/recipes/react/module-federation-with-ssr"
     }
   ],
-  "distribute-task-execution": [
-    {
-      "description": "",
-      "file": "shared/concepts/illustrated-dte-guide",
-      "id": "illustrated-dte",
-      "name": "Illustrated Distributed Task Execution",
-      "path": "/concepts/more-concepts/illustrated-dte"
-    },
-    {
-      "description": "",
-      "file": "",
-      "id": "ci",
-      "name": "CI Documentation",
-      "path": "/ci/intro/ci-with-nx"
-    },
-    {
-      "description": "",
-      "file": "nx-cloud/concepts/parallelization-distribution",
-      "id": "parallelization-distribution",
-      "name": "Parallelization and Distribution",
-      "path": "/ci/concepts/parallelization-distribution"
-    },
-    {
-      "description": "Learn how to set up Nx Cloud for your workspace.",
-      "file": "",
-      "id": "set-up",
-      "name": "Set Up CI",
-      "path": "/ci/recipes/set-up"
-    },
-    {
-      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-      "file": "generated/packages/generated/packages/nx/documents/connect-to-nx-cloud",
-      "id": "connect-to-nx-cloud",
-      "name": "connect-to-nx-cloud",
-      "path": "/nx-api/nx/documents/connect-to-nx-cloud"
-    }
-  ],
   "workspace-watching": [
     {
       "description": "",
@@ -812,20 +775,6 @@
       "id": "node-aws-lambda",
       "name": "Deploying AWS lambda in Node.js",
       "path": "/recipes/node/node-aws-lambda"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/deployment/deno-deploy",
-      "id": "deno-deploy",
-      "name": "Serverless deployment with Deno Deploy",
-      "path": "/recipes/deno/deno-deploy"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/deployment/deno-netlify-edge-functions",
-      "id": "deno-netlify-functions",
-      "name": "Add and Deploy Netlify Edge Functions with Deno",
-      "path": "/recipes/deno/deno-netlify-functions"
     }
   ],
   "node": [
@@ -979,29 +928,6 @@
       "path": "/recipes/storybook/angular-configuring-styles"
     }
   ],
-  "deno": [
-    {
-      "description": "",
-      "file": "shared/recipes/add-stack/add-deno",
-      "id": "add-deno",
-      "name": "Add a Deno Project",
-      "path": "/recipes/deno/add-deno"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/deployment/deno-deploy",
-      "id": "deno-deploy",
-      "name": "Serverless deployment with Deno Deploy",
-      "path": "/recipes/deno/deno-deploy"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/deployment/deno-netlify-edge-functions",
-      "id": "deno-netlify-functions",
-      "name": "Add and Deploy Netlify Edge Functions with Deno",
-      "path": "/recipes/deno/deno-netlify-functions"
-    }
-  ],
   "installation": [
     {
       "description": "",
@@ -1128,6 +1054,36 @@
       "id": "serverless-fastify-planetscale",
       "name": "Using PlanetScale with Serverless Fastify",
       "path": "/showcase/example-repos/serverless-fastify-planetscale"
+    }
+  ],
+  "distribute-task-execution": [
+    {
+      "description": "",
+      "file": "",
+      "id": "ci",
+      "name": "CI Documentation",
+      "path": "/ci/intro/ci-with-nx"
+    },
+    {
+      "description": "",
+      "file": "nx-cloud/concepts/parallelization-distribution",
+      "id": "parallelization-distribution",
+      "name": "Parallelization and Distribution",
+      "path": "/ci/concepts/parallelization-distribution"
+    },
+    {
+      "description": "Learn how to set up Nx Cloud for your workspace.",
+      "file": "",
+      "id": "set-up",
+      "name": "Set Up CI",
+      "path": "/ci/recipes/set-up"
+    },
+    {
+      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+      "file": "generated/packages/generated/packages/nx/documents/connect-to-nx-cloud",
+      "id": "connect-to-nx-cloud",
+      "name": "connect-to-nx-cloud",
+      "path": "/nx-api/nx/documents/connect-to-nx-cloud"
     }
   ],
   "remote-cache": [

@@ -323,12 +323,6 @@
                   "file": "shared/incremental-builds"
                 },
                 {
-                  "name": "Illustrated Distributed Task Execution",
-                  "tags": ["distribute-task-execution"],
-                  "id": "illustrated-dte",
-                  "file": "shared/concepts/illustrated-dte-guide"
-                },
-                {
                   "name": "Nx and Turborepo",
                   "id": "turbo-and-nx",
                   "mediaImage": "./shared/guides/nx-media-monorepo.jpg",
@@ -771,31 +765,6 @@
                   "name": "Cypress v11 Migration Guide",
                   "description": "Cypress v11 Migration Guide",
                   "file": "shared/packages/cypress/cypress-v11-migration"
-                }
-              ]
-            },
-            {
-              "name": "Deno",
-              "id": "deno",
-              "description": "Deno related recipes",
-              "itemList": [
-                {
-                  "name": "Add a Deno Project",
-                  "id": "add-deno",
-                  "tags": ["deno"],
-                  "file": "shared/recipes/add-stack/add-deno"
-                },
-                {
-                  "name": "Serverless deployment with Deno Deploy",
-                  "id": "deno-deploy",
-                  "tags": ["deployment", "deno"],
-                  "file": "shared/recipes/deployment/deno-deploy"
-                },
-                {
-                  "name": "Add and Deploy Netlify Edge Functions with Deno",
-                  "id": "deno-netlify-functions",
-                  "tags": ["deployment", "deno"],
-                  "file": "shared/recipes/deployment/deno-netlify-edge-functions"
                 }
               ]
             },
@@ -1429,10 +1398,10 @@
                   "file": "shared/deprecated/storybook/angular-storybook-targets"
                 },
                 {
-                  "id": "angular-browser-target",
-                  "name": "Angular: The browserTarget",
-                  "description": "This document explains the role of the browserTarget in Angular projects with a Storybook configuration, and how the Storybook executors use it.",
-                  "file": "shared/deprecated/storybook/angular-browser-target"
+                  "id": "angular-project-build-config",
+                  "name": "Angular - The projectBuildConfig",
+                  "description": "This document explains the role of the projectBuildConfig in Angular projects with a Storybook configuration, and how the Storybook executors use it.",
+                  "file": "shared/deprecated/storybook/angular-project-build-config"
                 },
                 {
                   "id": "migrate-webpack-final-angular",
@@ -1712,7 +1681,7 @@
               "file": "nx-cloud/features/dynamic-agents"
             },
             {
-              "name": "Automatically Split E2E Tasks",
+              "name": "Automatically Split E2E Tasks (TestAtomizer)",
               "id": "split-e2e-tasks",
               "file": "nx-cloud/features/split-e2e-tasks"
             },
