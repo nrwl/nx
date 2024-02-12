@@ -4,6 +4,6 @@ module.exports = {
    library: { type: 'var', name: '<%= projectName %>'},
    <% } %>
    exposes: {
-     './Module': './src/remote-entry.ts',
+     './Module': './src/remote-entry.<%= js ? 'js' : 'ts' %>',
    },
 };

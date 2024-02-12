@@ -1089,17 +1089,6 @@
             "tags": []
           },
           {
-            "id": "illustrated-dte",
-            "name": "Illustrated Distributed Task Execution",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/concepts/illustrated-dte-guide",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/concepts/more-concepts/illustrated-dte",
-            "tags": ["distribute-task-execution"]
-          },
-          {
             "id": "turbo-and-nx",
             "name": "Nx and Turborepo",
             "description": "",
@@ -1481,17 +1470,6 @@
         "tags": []
       },
       {
-        "id": "illustrated-dte",
-        "name": "Illustrated Distributed Task Execution",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/concepts/illustrated-dte-guide",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/concepts/more-concepts/illustrated-dte",
-        "tags": ["distribute-task-execution"]
-      },
-      {
         "id": "turbo-and-nx",
         "name": "Nx and Turborepo",
         "description": "",
@@ -1671,17 +1649,6 @@
     "isExternal": false,
     "path": "/concepts/more-concepts/incremental-builds",
     "tags": []
-  },
-  "/concepts/more-concepts/illustrated-dte": {
-    "id": "illustrated-dte",
-    "name": "Illustrated Distributed Task Execution",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/concepts/illustrated-dte-guide",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/concepts/more-concepts/illustrated-dte",
-    "tags": ["distribute-task-execution"]
   },
   "/concepts/more-concepts/turbo-and-nx": {
     "id": "turbo-and-nx",
@@ -2510,51 +2477,6 @@
         ],
         "isExternal": false,
         "path": "/recipes/cypress",
-        "tags": []
-      },
-      {
-        "id": "deno",
-        "name": "Deno",
-        "description": "Deno related recipes",
-        "mediaImage": "",
-        "file": "",
-        "itemList": [
-          {
-            "id": "add-deno",
-            "name": "Add a Deno Project",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/recipes/add-stack/add-deno",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/deno/add-deno",
-            "tags": ["deno"]
-          },
-          {
-            "id": "deno-deploy",
-            "name": "Serverless deployment with Deno Deploy",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/recipes/deployment/deno-deploy",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/deno/deno-deploy",
-            "tags": ["deployment", "deno"]
-          },
-          {
-            "id": "deno-netlify-functions",
-            "name": "Add and Deploy Netlify Edge Functions with Deno",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/recipes/deployment/deno-netlify-edge-functions",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/deno/deno-netlify-functions",
-            "tags": ["deployment", "deno"]
-          }
-        ],
-        "isExternal": false,
-        "path": "/recipes/deno",
         "tags": []
       },
       {
@@ -4529,84 +4451,6 @@
     "isExternal": false,
     "path": "/recipes/cypress/cypress-v11-migration",
     "tags": []
-  },
-  "/recipes/deno": {
-    "id": "deno",
-    "name": "Deno",
-    "description": "Deno related recipes",
-    "mediaImage": "",
-    "file": "",
-    "itemList": [
-      {
-        "id": "add-deno",
-        "name": "Add a Deno Project",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/recipes/add-stack/add-deno",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/deno/add-deno",
-        "tags": ["deno"]
-      },
-      {
-        "id": "deno-deploy",
-        "name": "Serverless deployment with Deno Deploy",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/recipes/deployment/deno-deploy",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/deno/deno-deploy",
-        "tags": ["deployment", "deno"]
-      },
-      {
-        "id": "deno-netlify-functions",
-        "name": "Add and Deploy Netlify Edge Functions with Deno",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/recipes/deployment/deno-netlify-edge-functions",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/deno/deno-netlify-functions",
-        "tags": ["deployment", "deno"]
-      }
-    ],
-    "isExternal": false,
-    "path": "/recipes/deno",
-    "tags": []
-  },
-  "/recipes/deno/add-deno": {
-    "id": "add-deno",
-    "name": "Add a Deno Project",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/recipes/add-stack/add-deno",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/deno/add-deno",
-    "tags": ["deno"]
-  },
-  "/recipes/deno/deno-deploy": {
-    "id": "deno-deploy",
-    "name": "Serverless deployment with Deno Deploy",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/recipes/deployment/deno-deploy",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/deno/deno-deploy",
-    "tags": ["deployment", "deno"]
-  },
-  "/recipes/deno/deno-netlify-functions": {
-    "id": "deno-netlify-functions",
-    "name": "Add and Deploy Netlify Edge Functions with Deno",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/recipes/deployment/deno-netlify-edge-functions",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/deno/deno-netlify-functions",
-    "tags": ["deployment", "deno"]
   },
   "/recipes/next": {
     "id": "next",

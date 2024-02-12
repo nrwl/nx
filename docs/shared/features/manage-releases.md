@@ -105,18 +105,22 @@ import * as yargs from 'yargs';
     verbose: options.verbose,
   });
 
-  await releaseChangelog({
+  // The returned number value from releaseChangelog will be non-zero if something went wrong
+  const changelogStatus = await releaseChangelog({
     versionData: projectsVersionData,
     version: workspaceVersion,
     dryRun: options.dryRun,
     verbose: options.verbose,
   });
+  if (changelogStatus !== 0) {
+    process.exit(changelogStatus);
+  }
 
-  await releasePublish({
+  // The returned number value from releasePublish will be zero if all projects are published successfully, non-zero if not
+  const publishStatus = await releasePublish({
     dryRun: options.dryRun,
     verbose: options.verbose,
   });
-
-  process.exit(0);
+  process.exit(publishStatus);
 })();
 ```

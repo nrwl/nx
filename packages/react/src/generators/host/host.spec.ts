@@ -104,7 +104,7 @@ describe('hostGenerator', () => {
     tree = createTreeWithEmptyWorkspace();
   });
 
-  it('should generate host files and configs', async () => {
+  it('should generate host files and configs when --js=true', async () => {
     await hostGenerator(tree, {
       name: 'test',
       style: 'css',
@@ -114,18 +114,32 @@ describe('hostGenerator', () => {
       projectNameAndRootFormat: 'as-provided',
       typescriptConfiguration: false,
       skipFormat: true,
+      js: true,
     });
 
     expect(tree.exists('test/tsconfig.json')).toBeTruthy();
-    expect(tree.exists('test/webpack.config.prod.js')).toBeTruthy();
-    expect(tree.exists('test/webpack.config.js')).toBeTruthy();
-    expect(tree.exists('test/module-federation.config.js')).toBeTruthy();
+
+    expect(tree.exists('test/src/bootstrap.js')).toBeTruthy();
+    expect(tree.exists('test/src/main.js')).toBeTruthy();
+    expect(tree.exists('test/src/app/app.js')).toBeTruthy();
+  });
+
+  it('should generate host files and configs when --js=false', async () => {
+    await hostGenerator(tree, {
+      name: 'test',
+      style: 'css',
+      linter: Linter.None,
+      unitTestRunner: 'none',
+      e2eTestRunner: 'none',
+      projectNameAndRootFormat: 'as-provided',
+      typescriptConfiguration: false,
+    });
+
+    expect(tree.exists('test/tsconfig.json')).toBeTruthy();
+
     expect(tree.exists('test/src/bootstrap.tsx')).toBeTruthy();
     expect(tree.exists('test/src/main.ts')).toBeTruthy();
-    expect(tree.read('test/webpack.config.js', 'utf-8')).toMatchSnapshot();
-    expect(
-      tree.read('test/module-federation.config.js', 'utf-8')
-    ).toMatchSnapshot();
+    expect(tree.exists('test/src/app/app.tsx')).toBeTruthy();
   });
 
   it('should generate host files and configs when --typescriptConfiguration=true', async () => {
@@ -141,14 +155,39 @@ describe('hostGenerator', () => {
     });
 
     expect(tree.exists('test/tsconfig.json')).toBeTruthy();
+
     expect(tree.exists('test/webpack.config.prod.ts')).toBeTruthy();
+
     expect(tree.exists('test/webpack.config.ts')).toBeTruthy();
-    expect(tree.exists('test/module-federation.config.ts')).toBeTruthy();
-    expect(tree.exists('test/src/bootstrap.tsx')).toBeTruthy();
-    expect(tree.exists('test/src/main.ts')).toBeTruthy();
     expect(tree.read('test/webpack.config.ts', 'utf-8')).toMatchSnapshot();
+
+    expect(tree.exists('test/module-federation.config.ts')).toBeTruthy();
     expect(
       tree.read('test/module-federation.config.ts', 'utf-8')
+    ).toMatchSnapshot();
+  });
+
+  it('should generate host files and configs when --typescriptConfiguration=false', async () => {
+    await hostGenerator(tree, {
+      name: 'test',
+      style: 'css',
+      linter: Linter.None,
+      unitTestRunner: 'none',
+      e2eTestRunner: 'none',
+      projectNameAndRootFormat: 'as-provided',
+      typescriptConfiguration: false,
+    });
+
+    expect(tree.exists('test/tsconfig.json')).toBeTruthy();
+
+    expect(tree.exists('test/webpack.config.prod.js')).toBeTruthy();
+
+    expect(tree.exists('test/webpack.config.js')).toBeTruthy();
+    expect(tree.read('test/webpack.config.js', 'utf-8')).toMatchSnapshot();
+
+    expect(tree.exists('test/module-federation.config.js')).toBeTruthy();
+    expect(
+      tree.read('test/module-federation.config.js', 'utf-8')
     ).toMatchSnapshot();
   });
 
