@@ -198,7 +198,8 @@ export async function remixApplicationGeneratorInternal(
     const pkgInstallTask = updateUnitTestConfig(
       tree,
       options.projectRoot,
-      options.unitTestRunner
+      options.unitTestRunner,
+      options.rootProject
     );
     tasks.push(pkgInstallTask);
   } else {

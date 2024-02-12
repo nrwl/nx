@@ -23,7 +23,7 @@ Make sure to install the `@nx/nuxt` version that matches the version of `nx` in 
 
 In any Nx workspace, you can install `@nx/nuxt` by running the following command:
 
-```shell
+```shell {% skipRescope=true %}
 nx add @nx/nuxt
 ```
 

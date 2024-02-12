@@ -10,7 +10,6 @@ import {
 import {
   NxJsonConfiguration,
   joinPathFragments,
-  logger,
   output,
   workspaceRoot,
 } from '../../devkit-exports';
@@ -281,10 +280,6 @@ export async function releaseVersion(
       }
     }
 
-    if (args.dryRun) {
-      logger.warn(`\nNOTE: The "dryRun" flag means no changes were made.`);
-    }
-
     return {
       // An overall workspace version cannot be relevant when filtering to independent projects
       workspaceVersion: undefined,
@@ -420,10 +415,6 @@ export async function releaseVersion(
         verbose: args.verbose,
       });
     }
-  }
-
-  if (args.dryRun) {
-    logger.warn(`\nNOTE: The "dryRun" flag means no changes were made.`);
   }
 
   return {
