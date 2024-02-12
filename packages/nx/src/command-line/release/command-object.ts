@@ -65,7 +65,7 @@ export const yargsReleaseCommand: CommandModule<
 > = {
   command: 'release',
   describe:
-    '**ALPHA**: Orchestrate versioning and publishing of applications and libraries',
+    'Orchestrate versioning and publishing of applications and libraries',
   builder: (yargs) =>
     yargs
       .command(releaseCommand)
