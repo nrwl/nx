@@ -5,5 +5,5 @@ export const cypressViteDevServerVersion = '^2.2.1';
 export const cypressVersion = '^13.0.0';
 export const cypressWebpackVersion = '^2.0.0';
 export const webpackHttpPluginVersion = '^5.5.0';
-export const viteVersion = '^5.0.0';
+export const viteVersion = '~5.0.0';
 export const htmlWebpackPluginVersion = '^5.5.0';

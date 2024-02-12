@@ -140,8 +140,17 @@ export async function release(
     }
   }
 
-  let shouldPublish = !!args.yes && !args.skipPublish;
-  const shouldPromptPublishing = !args.yes && !args.skipPublish && !args.dryRun;
+  let hasNewVersion = false;
+  // null means that all projects are versioned together but there were no changes
+  if (versionResult.workspaceVersion !== null) {
+    hasNewVersion = Object.values(versionResult.projectsVersionData).some(
+      (version) => version.newVersion !== null
+    );
+  }
+
+  let shouldPublish = !!args.yes && !args.skipPublish && hasNewVersion;
+  const shouldPromptPublishing =
+    !args.yes && !args.skipPublish && !args.dryRun && hasNewVersion;
 
   if (shouldPromptPublishing) {
     shouldPublish = await promptForPublish();
@@ -150,15 +159,13 @@ export async function release(
   if (shouldPublish) {
     await releasePublish(args);
   } else {
-    console.log('Skipped publishing packages.');
+    output.logSingleLine('Skipped publishing packages.');
   }
 
   return versionResult;
 }
 
 async function promptForPublish(): Promise<boolean> {
-  console.log('\n');
-
   try {
     const reply = await prompt<{ confirmation: boolean }>([
       {
@@ -169,7 +176,6 @@ async function promptForPublish(): Promise<boolean> {
     ]);
     return reply.confirmation;
   } catch (e) {
-    console.log('\n');
     // Handle the case where the user exits the prompt with ctrl+c
     return false;
   }

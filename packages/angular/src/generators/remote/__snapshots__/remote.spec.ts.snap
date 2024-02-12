@@ -117,7 +117,7 @@ platformBrowserDynamic()
 `;
 
 exports[`MF Remote App Generator --ssr should generate the correct files 3`] = `
-"export { AppServerModule } from './app/app.server.module';
+"export { AppServerModule as default } from './app/app.server.module';
 "
 `;
 
@@ -339,7 +339,7 @@ platformBrowserDynamic()
 `;
 
 exports[`MF Remote App Generator --ssr should generate the correct files when --typescriptConfiguration=true 3`] = `
-"export { AppServerModule } from './app/app.server.module';
+"export { AppServerModule as default } from './app/app.server.module';
 "
 `;
 

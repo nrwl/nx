@@ -4,7 +4,9 @@
     "module": "commonjs",
     "noEmit": false,
     "incremental": true,
+    <% if(hasPlugin && compiler === 'tsc') { %>
     "tsBuildInfoFile": "<%= offsetFromRoot %>tmp/buildcache/<%= projectRoot %>/server",
+    <% } %>
     "types": [
       "node"
     ]

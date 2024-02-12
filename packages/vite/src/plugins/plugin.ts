@@ -96,6 +96,15 @@ async function buildViteTargets(
     context.workspaceRoot,
     configFilePath
   );
+
+  // Workaround for the `build$3 is not a function` error that we sometimes see in agents.
+  // This should be removed later once we address the issue properly
+  try {
+    const importEsbuild = () => new Function('return import("esbuild")')();
+    await importEsbuild();
+  } catch {
+    // do nothing
+  }
   const { resolveConfig } = await loadViteDynamicImport();
   const viteConfig = await resolveConfig(
     {

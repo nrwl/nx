@@ -40,7 +40,7 @@ describe('Cypress E2E Test runner (legacy)', () => {
     TEN_MINS_MS
   );
 
-  xit(
+  it(
     `should allow CT and e2e in same project - react`,
     async () => {
       const appName = uniq(`react-cy-app`);

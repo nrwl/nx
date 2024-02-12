@@ -15,7 +15,7 @@ Nx provides an `enforce-module-boundaries` eslint rule that enforces the public 
 
 To set up the lint rule, install these dependencies:
 
-```shell
+```shell {% skipRescope=true %}
 nx add @nx/eslint-plugin @nx/devkit
 ```
 

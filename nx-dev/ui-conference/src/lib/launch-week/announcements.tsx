@@ -204,12 +204,132 @@ export function LaunchWeekAnnouncements(): JSX.Element {
               </div>
               <div
                 aria-hidden="true"
-                className="order-first sm:order-last pb-8 relative flex flex-col items-center"
+                className="order-first md:order-last pb-8 relative flex flex-col items-center"
               >
                 <img
                   className="rounded-lg"
                   src="/images/launch-nx/nx-agents.jpg"
                   alt="Nx Agents"
+                />
+              </div>
+            </div>
+          </article>
+        </div>
+
+        {/* Thursday */}
+        <div>
+          <article className="relative overflow-hidden pt-4 mx-auto max-w-screen-lg xl:max-w-screen-xl">
+            <div className="px-5 py-12 grid md:grid-cols-2 sm:gap-8 lg:py-16">
+              <div>
+                <header>
+                  <SectionHeading as="h2" variant="title" id="thursday">
+                    Thursday
+                  </SectionHeading>
+                  <SectionHeading as="p" variant="display" className="mt-4">
+                    Tusky
+                  </SectionHeading>
+                </header>
+                <div className="mt-8 flex gap-16 font-normal">
+                  <p className="max-w-xl text-lg text-slate-700 dark:text-slate-400">
+                    Announcing Tusky: A powerful Artificial Intelligence
+                    equipped with context of your workspace, commit history, and
+                    historical build timing data. Tusky can uniquely understand
+                    and optimize your codebase and pipelines.
+                  </p>
+                </div>
+                <div className="pt-4 action flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:space-x-2">
+                  <ButtonLink
+                    variant="primary"
+                    size="default"
+                    href="https://youtu.be/Xfvv09wSoM8"
+                    title="Tusky - Youtube Video"
+                  >
+                    Watch the video
+                  </ButtonLink>
+                  <ButtonLink
+                    variant="primary"
+                    size="default"
+                    href="https://nx.app"
+                    title="Nx Cloud"
+                  >
+                    See on Nx Cloud
+                  </ButtonLink>
+                </div>
+              </div>
+              <div
+                aria-hidden="true"
+                className="order-first md:order-last pb-8 relative flex flex-col items-center"
+              >
+                <img
+                  className="rounded-lg"
+                  src="/images/launch-nx/tusky.jpg"
+                  alt="Tusky"
+                />
+              </div>
+            </div>
+          </article>
+        </div>
+
+        {/* Friday */}
+        <div>
+          <article className="relative overflow-hidden pt-4 mx-auto max-w-screen-lg xl:max-w-screen-xl">
+            <div className="px-5 py-12 grid md:grid-cols-2 sm:gap-8 lg:py-16">
+              <div>
+                <header>
+                  <SectionHeading as="h2" variant="title" id="thursday">
+                    Friday
+                  </SectionHeading>
+                  <SectionHeading as="p" variant="display" className="mt-4">
+                    Nx Release & Launch Week Recap Stream
+                  </SectionHeading>
+                </header>
+                <div className="mt-8 flex gap-16 font-normal">
+                  <p className="max-w-xl text-lg text-slate-700 dark:text-slate-400">
+                    Last day of launch week! Releasing packages in a monorepo
+                    can be tricky and many of today's tools are either outdated
+                    or need further tweaking when used in a monorepo. We decided
+                    to chime in and leverage our experience of maintaining Lerna
+                    and having hand-coded many release scripts in the past to
+                    solve this once and for all. <br /> <br />
+                    Check out the blog post and video below and make sure to
+                    chime in for our live-stream!
+                  </p>
+                </div>
+                <div className="pt-4 action flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:space-x-2">
+                  <ButtonLink
+                    variant="primary"
+                    size="default"
+                    href="https://blog.nrwl.io/versioning-and-releasing-packages-in-a-monorepo-45ee194378d1?source=friends_link&sk=934e4c5321774c8a9f88433e0dea578b"
+                    title="Blog post - Versioning and Releasing Packages in a Monorepo"
+                  >
+                    Read the blog post
+                  </ButtonLink>
+                  <ButtonLink
+                    variant="primary"
+                    size="default"
+                    href="https://www.youtube.com/watch?v=KjZKFGu3_9I"
+                    title="Releasing Nx Release"
+                  >
+                    Watch the talk
+                  </ButtonLink>
+                  <ButtonLink
+                    variant="primary"
+                    size="default"
+                    href="https://www.youtube.com/live/xjLrFvEcxZw?si=L8Cfk41yKvYb1rud"
+                    title="Nx Live Stream - Launch Week Wrap Up and Q&A"
+                  >
+                    Live Stream
+                  </ButtonLink>
+                </div>
+              </div>
+              <div
+                aria-hidden="true"
+                className="order-first md:order-last pb-8 relative flex flex-col items-center"
+              >
+                <img
+                  className="rounded-lg"
+                  src="/images/launch-nx/nx-release.jpg"
+                  alt="Tusky"
                 />
               </div>
             </div>
