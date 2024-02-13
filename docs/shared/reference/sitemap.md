@@ -180,6 +180,7 @@
       - [Release Projects Independently](/recipes/nx-release/release-projects-independently)
       - [Automatically Version with Conventional Commits](/recipes/nx-release/automatically-version-with-conventional-commits)
       - [Publish in CI/CD](/recipes/nx-release/publish-in-ci-cd)
+      - [Update Your Local Registry Setup to use Nx Release](/recipes/nx-release/update-local-registry-setup)
     - [Other](/recipes/other)
       - [Rescope Packages from @nrwl to @nx](/recipes/other/rescope)
   - [Showcase](/showcase)
