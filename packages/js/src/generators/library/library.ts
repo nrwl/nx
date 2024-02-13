@@ -918,25 +918,9 @@ async function addProjectToNxReleaseConfig(
   const { output } = requireNx();
   const nxJson = readNxJson(tree);
 
-  if (!nxJson.release) {
-    const defaultMatchingProjects = await getDefaultProjectsConfig();
-    nxJson.release = {
-      projects: [...defaultMatchingProjects, options.name],
-    };
-    writeJson(tree, 'nx.json', nxJson);
-    output.log({
-      title: `Added explicit release configuration to nx.json`,
-    });
-    return;
-  }
-
-  if (!nxJson.release.projects && !nxJson.release.groups) {
-    const defaultMatchingProjects = await getDefaultProjectsConfig();
-    nxJson.release.projects = [...defaultMatchingProjects, options.name];
-    writeJson(tree, 'nx.json', nxJson);
-    output.log({
-      title: `Added explicit release configuration to nx.json`,
-    });
+  if (!nxJson.release || (!nxJson.release.projects && !nxJson.release.groups)) {
+    // skip adding any projects configuration since the new project should be
+    // automatically included by nx release's default project detection logic
     return;
   }
 

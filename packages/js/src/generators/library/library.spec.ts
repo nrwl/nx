@@ -1033,7 +1033,7 @@ describe('lib', () => {
       });
 
       describe('nx release projects config', () => {
-        it("should be added with default projects if it doesn't exist", async () => {
+        it('should not be added if no release config exists', async () => {
           updateJson(tree, 'nx.json', (json) => {
             delete json.release;
             return json;
@@ -1049,11 +1049,10 @@ describe('lib', () => {
           });
 
           const nxJson = readJson(tree, 'nx.json');
-          const projectsConfig = nxJson.release?.projects ?? [];
-          expect(projectsConfig).toContain('my-lib');
+          expect(nxJson.release).toBeUndefined();
         });
 
-        it("should be added with default projects if release config exists but doesn't specify groups or projects", async () => {
+        it("should be not be added if release config exists but doesn't specify groups or projects", async () => {
           const existingReleaseConfig = {
             version: {
               git: {},
@@ -1077,8 +1076,8 @@ describe('lib', () => {
           });
 
           const nxJson = readJson(tree, 'nx.json');
-          const projectsConfig = nxJson.release?.projects ?? [];
-          expect(projectsConfig).toContain('my-lib');
+          const projectsConfig = nxJson.release.projects;
+          expect(projectsConfig).toBeUndefined();
         });
 
         it('should be unchanged if it already exists as a string and matches the new project', async () => {
