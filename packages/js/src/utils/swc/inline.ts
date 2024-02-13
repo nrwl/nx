@@ -3,7 +3,8 @@ import type { InlineProjectGraph } from '../inline';
 
 export function generateTmpSwcrc(
   inlineProjectGraph: InlineProjectGraph,
-  swcrcPath: string
+  swcrcPath: string,
+  tmpSwcrcPath: string
 ) {
   const swcrc = readJsonFile(swcrcPath);
 
@@ -14,7 +15,6 @@ export function generateTmpSwcrc(
     'node_modules/**/*.ts$'
   );
 
-  const tmpSwcrcPath = `tmp${swcrcPath}`;
   writeJsonFile(tmpSwcrcPath, swcrc);
 
   return tmpSwcrcPath;
