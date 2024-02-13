@@ -103,7 +103,7 @@ class CLIOutput {
       return;
     }
     this.addNewline();
-    bodyLines.forEach((bodyLine) => this.writeToStdOut(`   ${bodyLine}${EOL}`));
+    bodyLines.forEach((bodyLine) => this.writeToStdOut(`${bodyLine}${EOL}`));
   }
 
   applyNxPrefix(color = 'cyan', text: string): string {

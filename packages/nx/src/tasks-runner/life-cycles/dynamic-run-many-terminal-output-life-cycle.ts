@@ -194,7 +194,7 @@ export async function createRunManyDynamicOutputRenderer({
     if (runningTasks.length > 0) {
       additionalFooterRows.push(
         output.dim(
-          `   ${output.colors.cyan(figures.arrowRight)}    Executing ${
+          `  ${output.colors.cyan(figures.arrowRight)}    Executing ${
             runningTasks.length
           }/${remainingTasks} remaining tasks${
             runningTasks.length > 1 ? ' in parallel' : ''
@@ -204,7 +204,7 @@ export async function createRunManyDynamicOutputRenderer({
       additionalFooterRows.push('');
       for (const runningTask of runningTasks) {
         additionalFooterRows.push(
-          `   ${output.dim.cyan(
+          `  ${output.dim.cyan(
             dots.frames[currentFrame]
           )}    ${output.formatCommand(runningTask.task.id)}`
         );
@@ -236,7 +236,7 @@ export async function createRunManyDynamicOutputRenderer({
 
     if (totalSuccessfulTasks > 0) {
       additionalFooterRows.push(
-        `   ${output.colors.green(
+        `  ${output.colors.green(
           figures.tick
         )}    ${totalSuccessfulTasks}${`/${totalCompletedTasks}`} succeeded ${output.dim(
           `[${totalCachedTasks} read from cache]`
@@ -246,7 +246,7 @@ export async function createRunManyDynamicOutputRenderer({
 
     if (totalFailedTasks > 0) {
       additionalFooterRows.push(
-        `   ${output.colors.red(
+        `  ${output.colors.red(
           figures.cross
         )}    ${totalFailedTasks}${`/${totalCompletedTasks}`} failed`
       );
@@ -345,7 +345,7 @@ export async function createRunManyDynamicOutputRenderer({
       if (totalCachedTasks > 0) {
         pinnedFooterLines.push(
           output.dim(
-            `${EOL}   Nx read the output from the cache instead of running the command for ${totalCachedTasks} out of ${totalTasks} tasks.`
+            `${EOL}Nx read the output from the cache instead of running the command for ${totalCachedTasks} out of ${totalTasks} tasks.`
           )
         );
       }
@@ -383,14 +383,14 @@ export async function createRunManyDynamicOutputRenderer({
         ...taskOverridesRows,
         '',
         output.dim(
-          `   ${output.dim(
+          `  ${output.dim(
             figures.tick
           )}    ${totalSuccessfulTasks}${`/${totalCompletedTasks}`} succeeded ${output.dim(
             `[${totalCachedTasks} read from cache]`
           )}`
         ),
         '',
-        `   ${output.colors.red(
+        `  ${output.colors.red(
           figures.cross
         )}    ${totalFailedTasks}${`/${totalCompletedTasks}`} targets failed, including the following:`,
         `${failedTasksForPrinting

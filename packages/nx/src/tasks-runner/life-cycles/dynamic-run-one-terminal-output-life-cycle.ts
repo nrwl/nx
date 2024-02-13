@@ -134,7 +134,7 @@ export async function createRunOneDynamicOutputRenderer({
       case 'EXECUTING_DEPENDENT_TARGETS':
         if (totalFailedTasks === 0) {
           linesToRender.push(
-            `   ${output.colors.cyan(
+            `  ${output.colors.cyan(
               dots.frames[dependentTargetsCurrentFrame]
             )}    ${output.dim(
               `Nx is waiting on ${remainingDependentTasksNotFromInitiatingProject} dependent project tasks before running tasks from`
@@ -150,7 +150,7 @@ export async function createRunOneDynamicOutputRenderer({
     if (totalFailedTasks > 0) {
       linesToRender.push(
         output.colors.red.dim(
-          `   ${output.colors.red(
+          `  ${output.colors.red(
             figures.cross
           )}    ${totalFailedTasks}${`/${totalCompletedTasks}`} dependent project tasks failed (see below)`
         )
@@ -160,7 +160,7 @@ export async function createRunOneDynamicOutputRenderer({
     if (totalSuccessfulTasks > 0) {
       linesToRender.push(
         output.dim(
-          `   ${output.dim(
+          `  ${output.dim(
             figures.tick
           )}    ${totalSuccessfulTasks}${`/${totalCompletedTasks}`} dependent project tasks succeeded ${output.dim(
             `[${totalCachedTasks} read from cache]`
@@ -200,7 +200,7 @@ export async function createRunOneDynamicOutputRenderer({
         if (totalDependentTasksNotFromInitiatingProject > 0) {
           output.addNewline();
           process.stdout.write(
-            `   ${output.dim(
+            `  ${output.dim(
               'Hint: you can run the command with'
             )} --verbose ${output.dim(
               'to see the full dependent project outputs'
@@ -302,7 +302,7 @@ export async function createRunOneDynamicOutputRenderer({
       if (totalCachedTasks > 0) {
         pinnedFooterLines.push(
           output.dim(
-            `${EOL}   Nx read the output from the cache instead of running the command for ${totalCachedTasks} out of ${totalTasks} tasks.`
+            `${EOL}Nx read the output from the cache instead of running the command for ${totalCachedTasks} out of ${totalTasks} tasks.`
           )
         );
       }
@@ -343,10 +343,10 @@ export async function createRunOneDynamicOutputRenderer({
           ),
           ...taskOverridesLines,
           '',
-          `   ${output.colors.red(
+          `  ${output.colors.red(
             figures.cross
           )}    ${totalFailedTasks}${`/${totalCompletedTasks}`} failed`,
-          `   ${output.dim(
+          `  ${output.dim(
             figures.tick
           )}    ${totalSuccessfulTasks}${`/${totalCompletedTasks}`} succeeded ${output.dim(
             `[${totalCachedTasks} read from cache]`
