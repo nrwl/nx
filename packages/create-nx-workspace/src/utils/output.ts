@@ -35,19 +35,13 @@ if (isCI()) {
 }
 
 class CLIOutput {
-  readonly X_PADDING = ' ';
-
   /**
    * Longer dash character which forms more of a continuous line when place side to side
    * with itself, unlike the standard dash character
    */
   private get VERTICAL_SEPARATOR() {
     let divider = '';
-    for (
-      let i = 0;
-      i < process.stdout.columns - this.X_PADDING.length * 2;
-      i++
-    ) {
+    for (let i = 0; i < process.stdout.columns - 1; i++) {
       divider += '\u2014';
     }
     return divider;
@@ -80,7 +74,7 @@ class CLIOutput {
     color: string;
     title: string;
   }): void {
-    this.writeToStdOut(` ${this.applyCLIPrefix(color, title)}${EOL}`);
+    this.writeToStdOut(`${this.applyCLIPrefix(color, title)}${EOL}`);
   }
 
   private writeOptionalOutputBody(bodyLines?: string[]): void {
@@ -119,9 +113,7 @@ class CLIOutput {
 
   addVerticalSeparatorWithoutNewLines(color = 'gray') {
     this.writeToStdOut(
-      `${this.X_PADDING}${(chalk as any).dim[color](
-        this.VERTICAL_SEPARATOR
-      )}${EOL}`
+      `${(chalk as any).dim[color](this.VERTICAL_SEPARATOR)}${EOL}`
     );
   }
 

@@ -39,7 +39,6 @@ if (isCI() && !forceColor) {
 }
 
 class CLIOutput {
-  readonly X_PADDING = ' ';
   cliName = 'NX';
   formatCommand = (taskId: string) => `${chalk.dim('nx run')} ${taskId}`;
 
@@ -49,11 +48,7 @@ class CLIOutput {
    */
   private get VERTICAL_SEPARATOR() {
     let divider = '';
-    for (
-      let i = 0;
-      i < process.stdout.columns - this.X_PADDING.length * 2;
-      i++
-    ) {
+    for (let i = 0; i < process.stdout.columns - 1; i++) {
       divider += '\u2014';
     }
     return divider;
@@ -95,7 +90,7 @@ class CLIOutput {
     color: string;
     title: string;
   }): void {
-    this.writeToStdOut(` ${this.applyNxPrefix(color, title)}${EOL}`);
+    this.writeToStdOut(`${this.applyNxPrefix(color, title)}${EOL}`);
   }
 
   private writeOptionalOutputBody(bodyLines?: string[]): void {
@@ -135,7 +130,7 @@ class CLIOutput {
   }
 
   private getVerticalSeparator(color: string): string {
-    return `${this.X_PADDING}${chalk.dim[color](this.VERTICAL_SEPARATOR)}`;
+    return chalk.dim[color](this.VERTICAL_SEPARATOR);
   }
 
   error({ title, slug, bodyLines }: CLIErrorMessageConfig) {
