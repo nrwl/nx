@@ -799,14 +799,6 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Illustrated Distributed Task Execution",
-                "path": "/concepts/more-concepts/illustrated-dte",
-                "id": "illustrated-dte",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
                 "name": "Nx and Turborepo",
                 "path": "/concepts/more-concepts/turbo-and-nx",
                 "id": "turbo-and-nx",
@@ -1084,14 +1076,6 @@
             "disableCollapsible": false
           },
           {
-            "name": "Illustrated Distributed Task Execution",
-            "path": "/concepts/more-concepts/illustrated-dte",
-            "id": "illustrated-dte",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
             "name": "Nx and Turborepo",
             "path": "/concepts/more-concepts/turbo-and-nx",
             "id": "turbo-and-nx",
@@ -1218,14 +1202,6 @@
         "name": "Incremental Builds",
         "path": "/concepts/more-concepts/incremental-builds",
         "id": "incremental-builds",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Illustrated Distributed Task Execution",
-        "path": "/concepts/more-concepts/illustrated-dte",
-        "id": "illustrated-dte",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -1829,39 +1805,6 @@
                 "name": "Cypress v11 Migration Guide",
                 "path": "/recipes/cypress/cypress-v11-migration",
                 "id": "cypress-v11-migration",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              }
-            ],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Deno",
-            "path": "/recipes/deno",
-            "id": "deno",
-            "isExternal": false,
-            "children": [
-              {
-                "name": "Add a Deno Project",
-                "path": "/recipes/deno/add-deno",
-                "id": "add-deno",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Serverless deployment with Deno Deploy",
-                "path": "/recipes/deno/deno-deploy",
-                "id": "deno-deploy",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Add and Deploy Netlify Edge Functions with Deno",
-                "path": "/recipes/deno/deno-netlify-functions",
-                "id": "deno-netlify-functions",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -3305,63 +3248,6 @@
         "name": "Cypress v11 Migration Guide",
         "path": "/recipes/cypress/cypress-v11-migration",
         "id": "cypress-v11-migration",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Deno",
-        "path": "/recipes/deno",
-        "id": "deno",
-        "isExternal": false,
-        "children": [
-          {
-            "name": "Add a Deno Project",
-            "path": "/recipes/deno/add-deno",
-            "id": "add-deno",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Serverless deployment with Deno Deploy",
-            "path": "/recipes/deno/deno-deploy",
-            "id": "deno-deploy",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Add and Deploy Netlify Edge Functions with Deno",
-            "path": "/recipes/deno/deno-netlify-functions",
-            "id": "deno-netlify-functions",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          }
-        ],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Add a Deno Project",
-        "path": "/recipes/deno/add-deno",
-        "id": "add-deno",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Serverless deployment with Deno Deploy",
-        "path": "/recipes/deno/deno-deploy",
-        "id": "deno-deploy",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Add and Deploy Netlify Edge Functions with Deno",
-        "path": "/recipes/deno/deno-netlify-functions",
-        "id": "deno-netlify-functions",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -5779,7 +5665,7 @@
             "disableCollapsible": false
           },
           {
-            "name": "Automatically Split E2E Tasks",
+            "name": "Automatically Split E2E Tasks (TestAtomizer)",
             "path": "/ci/features/split-e2e-tasks",
             "id": "split-e2e-tasks",
             "isExternal": false,
@@ -5838,7 +5724,7 @@
         "disableCollapsible": false
       },
       {
-        "name": "Automatically Split E2E Tasks",
+        "name": "Automatically Split E2E Tasks (TestAtomizer)",
         "path": "/ci/features/split-e2e-tasks",
         "id": "split-e2e-tasks",
         "isExternal": false,

@@ -12,7 +12,8 @@ launch-templates:
   my-linux-medium-js:
     resourceClass: 'docker_linux_amd64/medium'
     image: 'ubuntu22.04-node20.9-v3'
-    env: MY_ENV_VAR=shared
+    env:
+      MY_ENV_VAR: shared
     init-steps:
       - name: Checkout # using a reusable step
         uses: 'nrwl/nx-cloud-workflows/v1.1/workflow-steps/checkout/main.yaml'
@@ -25,6 +26,7 @@ launch-templates:
       - name: Install Node Modules
         uses: 'nrwl/nx-cloud-workflows/v1.1/workflow-steps/install-node-modules/main.yaml'
       - name: Run a custom script
+        script: |
           git config --global user.email test@test.com
           git config --global user.name "Test Test"
       - name: Setting env # Redefine PATH for further steps
@@ -67,6 +69,20 @@ _Note: Windows-based images can only run on Windows-based resource classes._
 
 Enterprise accounts can use custom images.
 
+## Pass Environment Variables to Agents
+
+If you need to send environment variables to agents, you can use the [--with-env-vars](/ci/reference/nx-cloud-cli#withenvvars) flag on the `nx-cloud start-ci-run` command. You can pass a specific list of environment variables like this:
+
+```
+nx-cloud start-ci-run --distribute-on="8 linux-medium-js" --with-env-vars="VAR1,VAR2"
+```
+
+Or pass all the environment variables except OS-specific ones with this `--with-env-vars="auto"`:
+
+```
+nx-cloud start-ci-run --distribute-on="8 linux-medium-js" --with-env-vars="auto"
+```
+
 ## Reusable Steps
 
-You can find the list of reusable step [here](https://github.com/nrwl/nx-cloud-workflows/tree/main/workflow-steps).
+You can find the [list of reusable steps here](https://github.com/nrwl/nx-cloud-workflows/tree/main/workflow-steps).

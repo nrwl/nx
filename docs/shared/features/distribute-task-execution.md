@@ -69,10 +69,12 @@ Here are the [available resource classes](https://nx.app/pricing#resource-classe
 Every organization manages their CI/CD pipelines differently, so the guides don't cover org-specific aspects of
 CI/CD (e.g., deployment). They mainly focus on configuring Nx correctly using Nx Agents and [Nx Replay](/ci/features/remote-cache).
 
-- [Azure Pipelines](/ci/recipes/set-up/monorepo-ci-azure#distributed-ci-with-nx-cloud)
-- [Circle CI](/ci/recipes/set-up/monorepo-ci-circle-ci#distributed-ci-with-nx-cloud)
-- [GitHub Actions](/ci/recipes/set-up/monorepo-ci-github-actions#distributed-ci-with-nx-cloud)
-- [Jenkins](/ci/recipes/set-up/monorepo-ci-jenkins#distributed-ci-with-nx-cloud)
+- [Azure Pipelines](/ci/recipes/set-up/monorepo-ci-azure)
+- [Circle CI](/ci/recipes/set-up/monorepo-ci-circle-ci)
+- [GitHub Actions](/ci/recipes/set-up/monorepo-ci-github-actions)
+- [Jenkins](/ci/recipes/set-up/monorepo-ci-jenkins)
+- [GitLab](/ci/recipes/set-up/monorepo-ci-gitlab)
+- [Bitbucket Pipelines](/ci/recipes/set-up/monorepo-ci-bitbucket-pipelines)
 
 Note that only cacheable operations can be distributed because they have to be replayed on the main job.
 

@@ -20,51 +20,62 @@ import { join } from 'path';
 import { createTreeWithEmptyWorkspace } from 'nx/src/devkit-testing-exports';
 
 describe('React Module Federation', () => {
-  let proj: string;
-  let tree: Tree;
-
   beforeAll(() => {
-    tree = createTreeWithEmptyWorkspace();
-    proj = newProject({ packages: ['@nx/react'] });
+    newProject({ packages: ['@nx/react'] });
   });
 
   afterAll(() => cleanupProject());
 
   describe('Default Configuration', () => {
-    it('should generate host and remote apps', async () => {
-      const shell = uniq('shell');
-      const remote1 = uniq('remote1');
-      const remote2 = uniq('remote2');
-      const remote3 = uniq('remote3');
+    it.each`
+      js
+      ${false}
+      ${true}
+    `(
+      'should generate host and remote apps',
+      async ({ js }) => {
+        const shell = uniq('shell');
+        const remote1 = uniq('remote1');
+        const remote2 = uniq('remote2');
+        const remote3 = uniq('remote3');
 
-      // Since we are using a single-file server for the remotes
-      const defaultRemotePort = 4201;
+        // Since we are using a single-file server for the remotes
+        const defaultRemotePort = 4201;
 
-      runCLI(
-        `generate @nx/react:host ${shell} --remotes=${remote1},${remote2},${remote3} --style=css --no-interactive --skipFormat`
-      );
+        runCLI(
+          `generate @nx/react:host ${shell} --remotes=${remote1},${remote2},${remote3} --style=css --no-interactive --skipFormat --js=${js}`
+        );
 
-      checkFilesExist(`apps/${shell}/module-federation.config.ts`);
-      checkFilesExist(`apps/${remote1}/module-federation.config.ts`);
-      checkFilesExist(`apps/${remote2}/module-federation.config.ts`);
-      checkFilesExist(`apps/${remote3}/module-federation.config.ts`);
+        checkFilesExist(
+          `apps/${shell}/module-federation.config.${js ? 'js' : 'ts'}`
+        );
+        checkFilesExist(
+          `apps/${remote1}/module-federation.config.${js ? 'js' : 'ts'}`
+        );
+        checkFilesExist(
+          `apps/${remote2}/module-federation.config.${js ? 'js' : 'ts'}`
+        );
+        checkFilesExist(
+          `apps/${remote3}/module-federation.config.${js ? 'js' : 'ts'}`
+        );
 
-      await expect(runCLIAsync(`test ${shell}`)).resolves.toMatchObject({
-        combinedOutput: expect.stringContaining(
-          'Test Suites: 1 passed, 1 total'
-        ),
-      });
+        await expect(runCLIAsync(`test ${shell}`)).resolves.toMatchObject({
+          combinedOutput: expect.stringContaining(
+            'Test Suites: 1 passed, 1 total'
+          ),
+        });
 
-      updateFile(
-        `apps/${shell}/webpack.config.ts`,
-        stripIndents`
-        import { composePlugins, withNx, ModuleFederationConfig } from '@nx/webpack';
-        import { withReact } from '@nx/react';
-        import { withModuleFederation } from '@nx/react/module-federation';
+        if (js) {
+          updateFile(
+            `apps/${shell}/webpack.config.js`,
+            stripIndents`
+        const { composePlugins, withNx } = require('@nx/webpack');
+        const { withReact } = require('@nx/react');
+        const { withModuleFederation } = require('@nx/react/module-federation');
         
-        import baseConfig from './module-federation.config';
+        const baseConfig = require('./module-federation.config');
         
-        const config: ModuleFederationConfig = {
+        const config = {
           ...baseConfig,
               remotes: [
                 '${remote1}',
@@ -76,11 +87,35 @@ describe('React Module Federation', () => {
         // Nx plugins for webpack to build config object from Nx options and context.
         module.exports = composePlugins(withNx(), withReact(), withModuleFederation(config));
       `
-      );
+          );
+        } else {
+          updateFile(
+            `apps/${shell}/webpack.config.ts`,
+            stripIndents`
+        import { composePlugins, withNx } from '@nx/webpack';
+        import { withReact } from '@nx/react';
+        import { withModuleFederation } from '@nx/react/module-federation';
+        
+        import baseConfig from './module-federation.config';
+        
+        const config = {
+          ...baseConfig,
+              remotes: [
+                '${remote1}',
+                ['${remote2}', 'http://localhost:${defaultRemotePort}/${remote2}/remoteEntry.js'],
+                ['${remote3}', 'http://localhost:${defaultRemotePort}/${remote3}/remoteEntry.js'],
+              ],
+        };
 
-      updateFile(
-        `apps/${shell}-e2e/src/integration/app.spec.ts`,
-        stripIndents`
+        // Nx plugins for webpack to build config object from Nx options and context.
+        export default composePlugins(withNx(), withReact(), withModuleFederation(config));
+      `
+          );
+        }
+
+        updateFile(
+          `apps/${shell}-e2e/src/integration/app.spec.${js ? 'js' : 'ts'}`,
+          stripIndents`
         import { getGreeting } from '../support/app.po';
 
         describe('shell app', () => {
@@ -105,34 +140,53 @@ describe('React Module Federation', () => {
           });
         });
       `
-      );
+        );
 
-      if (runE2ETests()) {
-        const e2eResultsSwc = await runCommandUntil(
-          `e2e ${shell}-e2e --no-watch --verbose`,
-          (output) => output.includes('All specs passed!')
+        [shell, remote1, remote2, remote3].forEach((app) => {
+          ['development', 'production'].forEach(async (configuration) => {
+            const cliOutput = runCLI(`run ${app}:build:${configuration}`);
+            expect(cliOutput).toContain('Successfully ran target');
+          });
+        });
+
+        const serveResult = await runCommandUntil(`serve ${shell}`, (output) =>
+          output.includes(`http://localhost:${readPort(shell)}`)
         );
 
         await killProcessAndPorts(
-          e2eResultsSwc.pid,
+          serveResult.pid,
           readPort(shell),
           defaultRemotePort
         );
 
-        const e2eResultsTsNode = await runCommandUntil(
-          `e2e ${shell}-e2e --no-watch --verbose`,
-          (output) => output.includes('All specs passed!'),
-          {
-            env: { NX_PREFER_TS_NODE: 'true' },
-          }
-        );
-        await killProcessAndPorts(
-          e2eResultsTsNode.pid,
-          readPort(shell),
-          defaultRemotePort
-        );
-      }
-    }, 500_000);
+        if (runE2ETests()) {
+          const e2eResultsSwc = await runCommandUntil(
+            `e2e ${shell}-e2e --no-watch --verbose`,
+            (output) => output.includes('All specs passed!')
+          );
+
+          await killProcessAndPorts(
+            e2eResultsSwc.pid,
+            readPort(shell),
+            defaultRemotePort
+          );
+
+          const e2eResultsTsNode = await runCommandUntil(
+            `e2e ${shell}-e2e --no-watch --verbose`,
+            (output) => output.includes('All specs passed!'),
+            {
+              env: { NX_PREFER_TS_NODE: 'true' },
+            }
+          );
+          await killProcessAndPorts(
+            e2eResultsTsNode.pid,
+            readPort(shell),
+            defaultRemotePort
+          );
+        }
+      },
+      500_000
+    );
 
     it('should generate host and remote apps with ssr', async () => {
       const shell = uniq('shell');
@@ -865,8 +919,7 @@ describe('React Module Federation', () => {
 
   describe('Dynamic Module Federation', () => {
     beforeAll(() => {
-      tree = createTreeWithEmptyWorkspace();
-      proj = newProject({ packages: ['@nx/react'] });
+      newProject({ packages: ['@nx/react'] });
     });
 
     afterAll(() => cleanupProject());

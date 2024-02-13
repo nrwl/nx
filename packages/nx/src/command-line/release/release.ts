@@ -140,8 +140,17 @@ export async function release(
     }
   }
 
-  let shouldPublish = !!args.yes && !args.skipPublish;
-  const shouldPromptPublishing = !args.yes && !args.skipPublish && !args.dryRun;
+  let hasNewVersion = false;
+  // null means that all projects are versioned together but there were no changes
+  if (versionResult.workspaceVersion !== null) {
+    hasNewVersion = Object.values(versionResult.projectsVersionData).some(
+      (version) => version.newVersion !== null
+    );
+  }
+
+  let shouldPublish = !!args.yes && !args.skipPublish && hasNewVersion;
+  const shouldPromptPublishing =
+    !args.yes && !args.skipPublish && !args.dryRun && hasNewVersion;
 
   if (shouldPromptPublishing) {
     shouldPublish = await promptForPublish();
