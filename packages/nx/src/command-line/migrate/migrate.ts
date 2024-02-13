@@ -1367,8 +1367,19 @@ export async function executeMigrations(
   const depsBeforeMigrations = getStringifiedPackageJsonDeps(root);
 
   const migrationsWithNoChanges: typeof migrations = [];
+  const sortedMigrations = migrations.sort((a, b) => {
+    // special case for the split configuration migration to run first
+    if (a.name === '15-7-0-split-configuration-into-project-json-files') {
+      return -1;
+    }
+    if (b.name === '15-7-0-split-configuration-into-project-json-files') {
+      return 1;
+    }
 
-  for (const m of migrations) {
+    return lt(a.version, b.version) ? -1 : 1;
+  });
+
+  for (const m of sortedMigrations) {
     try {
       const { collection, collectionPath } = readMigrationCollection(
         m.package,
