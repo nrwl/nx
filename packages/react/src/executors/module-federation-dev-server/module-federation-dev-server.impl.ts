@@ -98,7 +98,8 @@ async function startDevRemotes(
     staticRemotes: string[];
     devRemotes: string[];
   },
-  context: ExecutorContext
+  context: ExecutorContext,
+  options: ModuleFederationDevServerOptions
 ) {
   const devRemoteIters: AsyncIterable<{ success: boolean }>[] = [];
 
@@ -119,6 +120,10 @@ async function startDevRemotes(
         },
         {
           watch: true,
+          ...(options.host ? { host: options.host } : {}),
+          ...(options.ssl ? { ssl: options.ssl } : {}),
+          ...(options.sslCert ? { sslCert: options.sslCert } : {}),
+          ...(options.sslKey ? { sslKey: options.sslKey } : {}),
           ...(isUsingModuleFederationDevServerExecutor
             ? { isInitialHost: false }
             : {}),
@@ -291,7 +296,7 @@ export default async function* moduleFederationDevServer(
   );
   await buildStaticRemotes(staticRemotesConfig, nxBin, context, options);
 
-  const devRemoteIters = await startDevRemotes(remotes, context);
+  const devRemoteIters = await startDevRemotes(remotes, context, options);
 
   const staticRemotesIter =
     remotes.staticRemotes.length > 0
@@ -313,6 +318,10 @@ export default async function* moduleFederationDevServer(
           return;
         }
         try {
+          const host = options.host ?? 'localhost';
+          const baseUrl = `http${options.ssl ? 's' : ''}://${host}:${
+            options.port
+          }`;
           const portsToWaitFor = staticRemotesIter
             ? [options.staticRemotesPort, ...remotes.remotePorts]
             : [...remotes.remotePorts];
@@ -321,15 +330,13 @@ export default async function* moduleFederationDevServer(
               waitForPortOpen(port, {
                 retries: 480,
                 retryDelay: 2500,
-                host: 'localhost',
+                host: host,
               })
             )
           );
 
-          logger.info(
-            `NX All remotes started, server ready at http://localhost:${options.port}`
-          );
-          next({ success: true, baseUrl: `http://localhost:${options.port}` });
+          logger.info(`NX All remotes started, server ready at ${baseUrl}`);
+          next({ success: true, baseUrl: baseUrl });
         } catch {
           throw new Error(
             `Timed out waiting for remote to start. Check above for any errors.`

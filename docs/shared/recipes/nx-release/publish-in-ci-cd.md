@@ -24,13 +24,13 @@ Skipped publishing packages.
 Nx Release provides a publishing subcommand that performs just the publishing step. Use this in your CI/CD pipeline to publish the packages.
 
 ```{% command="nx release publish" %}
-NX   Running target nx-release-publish for 3 projects:
+ >  NX   Running target nx-release-publish for 3 projects:
 
-- pkg-1
-- pkg-2
-- pkg-3
+    - pkg-1
+    - pkg-2
+    - pkg-3
 
-—————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+ —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
 > nx run pkg-1:nx-release-publish
 
@@ -98,9 +98,9 @@ total files:   12
 
 Published to https://registry.npmjs.org with tag "latest"
 
-—————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+ —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
-NX   Successfully ran target nx-release-publish for 3 projects
+ >  NX   Successfully ran target nx-release-publish for 3 projects
 ```
 
 ## Publish in Github Actions
