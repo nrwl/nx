@@ -7,6 +7,7 @@ import {
   joinPathFragments,
   offsetFromRoot,
   parseTargetString,
+  ProjectConfiguration,
   ProjectGraph,
   readNxJson,
   readProjectConfiguration,
@@ -220,21 +221,18 @@ async function addFiles(
         projectGraph
       );
 
-      const devServerProjectConfig = readProjectConfiguration(
-        tree,
-        parsedTarget.project
-      );
+      const devServerProjectConfig: ProjectConfiguration | undefined =
+        readProjectConfiguration(tree, parsedTarget.project);
       // Add production e2e target if serve target is found
       if (
         parsedTarget.configuration !== 'production' &&
-        devServerProjectConfig.targets[parsedTarget.target]?.configurations?.[
-          'production'
-        ]
+        devServerProjectConfig?.targets?.[parsedTarget.target]
+          ?.configurations?.['production']
       ) {
         webServerCommands.production = `nx run ${parsedTarget.project}:${parsedTarget.target}:production`;
       }
       // Add ci/static e2e target if serve target is found
-      if (devServerProjectConfig.targets?.['serve-static']) {
+      if (devServerProjectConfig?.targets?.['serve-static']) {
         ciWebServerCommand = `nx run ${parsedTarget.project}:serve-static`;
       }
     }
@@ -278,6 +276,7 @@ async function addFiles(
 function addTarget(tree: Tree, opts: NormalizedSchema) {
   const projectConfig = readProjectConfiguration(tree, opts.project);
   const cyVersion = installedCypressVersion();
+  projectConfig.targets ??= {};
   projectConfig.targets.e2e = {
     executor: '@nx/cypress:cypress',
     options: {
