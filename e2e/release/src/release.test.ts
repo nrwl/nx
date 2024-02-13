@@ -173,7 +173,7 @@ ${JSON.stringify(
     const changelogOutput = runCLI(`release changelog 999.9.9`);
     expect(changelogOutput).toMatchInlineSnapshot(`
 
-      >  NX   Generating an entry in CHANGELOG.md for v999.9.9
+      NX   Generating an entry in CHANGELOG.md for v999.9.9
 
 
       + ## 999.9.9 (YYYY-MM-DD)
@@ -188,10 +188,10 @@ ${JSON.stringify(
       + - Test @{COMMIT_AUTHOR}
 
 
-      >  NX   Committing changes with git
+      NX   Committing changes with git
 
 
-      >  NX   Tagging commit with git
+      NX   Tagging commit with git
 
 
     `);
@@ -218,7 +218,7 @@ ${JSON.stringify(
     const publishOutput = runCLI(`release publish`);
     expect(publishOutput).toMatchInlineSnapshot(`
 
-      >  NX   Running target nx-release-publish for 3 projects:
+      NX   Running target nx-release-publish for 3 projects:
 
       - {project-name}
       - {project-name}
@@ -291,7 +291,7 @@ ${JSON.stringify(
 
 
 
-      >  NX   Successfully ran target nx-release-publish for 3 projects
+      NX   Successfully ran target nx-release-publish for 3 projects
 
 
 
@@ -391,7 +391,7 @@ ${JSON.stringify(
     const publishOutput2 = runCLI(`${publishToNext} --dry-run`);
     expect(publishOutput2).toMatchInlineSnapshot(`
 
-      >  NX   Running target nx-release-publish for 3 projects:
+      NX   Running target nx-release-publish for 3 projects:
 
       - {project-name}
       - {project-name}
@@ -469,7 +469,7 @@ ${JSON.stringify(
 
 
 
-      >  NX   Successfully ran target nx-release-publish for 3 projects
+      NX   Successfully ran target nx-release-publish for 3 projects
 
 
 
@@ -496,7 +496,7 @@ ${JSON.stringify(
     const publishOutput3 = runCLI(publishToNext);
     expect(publishOutput3).toMatchInlineSnapshot(`
 
-      >  NX   Running target nx-release-publish for 3 projects:
+      NX   Running target nx-release-publish for 3 projects:
 
       - {project-name}
       - {project-name}
@@ -573,7 +573,7 @@ ${JSON.stringify(
 
 
 
-      >  NX   Successfully ran target nx-release-publish for 3 projects
+      NX   Successfully ran target nx-release-publish for 3 projects
 
 
 
@@ -583,7 +583,7 @@ ${JSON.stringify(
     const publishOutput3Repeat = runCLI(publishToNext);
     expect(publishOutput3Repeat).toMatchInlineSnapshot(`
 
-      >  NX   Running target nx-release-publish for 3 projects:
+      NX   Running target nx-release-publish for 3 projects:
 
       - {project-name}
       - {project-name}
@@ -609,7 +609,7 @@ ${JSON.stringify(
 
 
 
-      >  NX   Successfully ran target nx-release-publish for 3 projects
+      NX   Successfully ran target nx-release-publish for 3 projects
 
 
 
@@ -621,7 +621,7 @@ ${JSON.stringify(
     );
     expect(publishOutput3NewDistTags).toMatchInlineSnapshot(`
 
-      >  NX   Running target nx-release-publish for 3 projects:
+      NX   Running target nx-release-publish for 3 projects:
 
       - {project-name}
       - {project-name}
@@ -650,7 +650,7 @@ ${JSON.stringify(
 
 
 
-      >  NX   Successfully ran target nx-release-publish for 3 projects
+      NX   Successfully ran target nx-release-publish for 3 projects
 
 
 
@@ -713,7 +713,7 @@ ${JSON.stringify(
     );
     expect(changelogDryRunOutput).toMatchInlineSnapshot(`
 
-      >  NX   Previewing an entry in CHANGELOG.md for v1000.0.0-next.0
+      NX   Previewing an entry in CHANGELOG.md for v1000.0.0-next.0
 
 
 
@@ -726,7 +726,7 @@ ${JSON.stringify(
 
 
 
-      >  NX   Previewing a GitHub release and an entry in {project-name}/CHANGELOG.md for v1000.0.0-next.0
+      NX   Previewing a GitHub release and an entry in {project-name}/CHANGELOG.md for v1000.0.0-next.0
 
 
       + ## 1000.0.0-next.0
@@ -734,7 +734,7 @@ ${JSON.stringify(
       + This was a version bump only for {project-name} to align it with other projects, there were no code changes.
 
 
-      >  NX   Previewing a GitHub release and an entry in {project-name}/CHANGELOG.md for v1000.0.0-next.0
+      NX   Previewing a GitHub release and an entry in {project-name}/CHANGELOG.md for v1000.0.0-next.0
 
 
       + ## 1000.0.0-next.0
@@ -742,7 +742,7 @@ ${JSON.stringify(
       + This was a version bump only for {project-name} to align it with other projects, there were no code changes.
 
 
-      >  NX   Previewing a GitHub release and an entry in {project-name}/CHANGELOG.md for v1000.0.0-next.0
+      NX   Previewing a GitHub release and an entry in {project-name}/CHANGELOG.md for v1000.0.0-next.0
 
 
       + ## 1000.0.0-next.0
@@ -750,10 +750,10 @@ ${JSON.stringify(
       + This was a version bump only for {project-name} to align it with other projects, there were no code changes.
 
 
-      >  NX   Committing changes with git
+      NX   Committing changes with git
 
 
-      >  NX   Tagging commit with git
+      NX   Tagging commit with git
 
 
     `);
@@ -1085,11 +1085,11 @@ ${JSON.stringify(
 
     expect(releaseOutput4a).toMatchInlineSnapshot(`
 
-      >  NX   Running release version for project: {project-name}
+      NX   Running release version for project: {project-name}
 
       {project-name} 🔍 Reading data for package "@proj/{project-name}" from {project-name}/package.json
 
-      >  NX   No git tags matching pattern ">{version}" for project "{project-name}" were found. You will need to create an initial matching tag to use as a base for determining the next version. Alternatively, you can use the --first-release option or set "release.version.generatorOptions.fallbackCurrentVersionResolver" to "disk" in order to fallback to the version on disk when no matching git tags are found.
+      NX   No git tags matching pattern ">{version}" for project "{project-name}" were found. You will need to create an initial matching tag to use as a base for determining the next version. Alternatively, you can use the --first-release option or set "release.version.generatorOptions.fallbackCurrentVersionResolver" to "disk" in order to fallback to the version on disk when no matching git tags are found.
 
 
     `);

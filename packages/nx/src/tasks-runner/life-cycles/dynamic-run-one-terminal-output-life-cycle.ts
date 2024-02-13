@@ -98,8 +98,7 @@ export async function createRunOneDynamicOutputRenderer({
   const renderLines = (
     lines: string[],
     dividerColor = 'cyan',
-    renderDivider = true,
-    skipPadding = false
+    renderDivider = true
   ) => {
     let additionalLines = 0;
     if (renderDivider) {
@@ -111,7 +110,7 @@ export async function createRunOneDynamicOutputRenderer({
       lines.push('');
     }
     for (const line of lines) {
-      output.overwriteLine((skipPadding ? '' : output.X_PADDING) + line);
+      output.overwriteLine(line);
     }
     dependentTargetsNumLines = lines.length + additionalLines;
     // clear any possible text below the cursor's position
@@ -175,8 +174,7 @@ export async function createRunOneDynamicOutputRenderer({
       renderLines(
         linesToRender,
         'gray',
-        renderDivider && state !== 'EXECUTING_DEPENDENT_TARGETS',
-        true
+        renderDivider && state !== 'EXECUTING_DEPENDENT_TARGETS'
       );
     } else {
       renderLines([]);
@@ -280,7 +278,7 @@ export async function createRunOneDynamicOutputRenderer({
 
       const taskOverridesLines = [];
       if (Object.keys(overrides).length > 0) {
-        const leftPadding = `${output.X_PADDING}       `;
+        const leftPadding = `       `;
         taskOverridesLines.push('');
         taskOverridesLines.push(
           `${leftPadding}${output.dim.green('With additional flags:')}`
@@ -321,7 +319,7 @@ export async function createRunOneDynamicOutputRenderer({
 
       const taskOverridesLines = [];
       if (Object.keys(overrides).length > 0) {
-        const leftPadding = `${output.X_PADDING}       `;
+        const leftPadding = `       `;
         taskOverridesLines.push('');
         taskOverridesLines.push(
           `${leftPadding}${output.dim.red('With additional flags:')}`
