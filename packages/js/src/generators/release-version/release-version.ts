@@ -1,4 +1,6 @@
 import {
+  ProjectGraph,
+  ProjectGraphDependency,
   ProjectGraphProjectNode,
   Tree,
   formatFiles,
@@ -33,7 +35,10 @@ import * as ora from 'ora';
 import { relative } from 'path';
 import { prerelease } from 'semver';
 import { ReleaseVersionGeneratorSchema } from './schema';
-import { resolveLocalPackageDependencies } from './utils/resolve-local-package-dependencies';
+import {
+  LocalPackageDependency,
+  resolveLocalPackageDependencies,
+} from './utils/resolve-local-package-dependencies';
 import { updateLockFile } from './utils/update-lock-file';
 
 export async function releaseVersionGenerator(
@@ -74,7 +79,20 @@ Valid values are: ${validReleaseVersionPrefixes
       options.fallbackCurrentVersionResolver = 'disk';
     }
 
-    const projects = options.projects;
+    // Set defaults for updateDependentsOptions
+    const updateDependentsOptions = options.updateDependents ?? {};
+    // "auto" means "only when the dependents are already included in the current batch", and is the default
+    updateDependentsOptions.when = updateDependentsOptions.when || 'auto';
+    // in the case "when" is set to "always", what semver bump should be applied to the dependents which are not included in the current batch
+    updateDependentsOptions.bump = updateDependentsOptions.bump || 'patch';
+
+    // Sort the projects topologically because there are cases where we need to perform updates based on dependent relationships
+    // TODO: maybe move this sorting to the command level?
+    const projects = sortProjectsTopologically(
+      options.projectGraph,
+      options.projects
+    );
+    const projectToDependencyBumps = new Map<string, any>();
 
     const createResolvePackageRoot =
       (customPackageRoot?: string) =>
@@ -226,6 +244,11 @@ To fix this you will either need to add a package.json file at that location, or
         }
         case 'disk':
           currentVersion = currentVersionFromDisk;
+          if (!currentVersion) {
+            throw new Error(
+              `Unable to determine the current version for project "${project.name}" from ${packageJsonPath}`
+            );
+          }
           log(
             `📄 Resolved the current version as ${currentVersion} from ${packageJsonPath}`
           );
@@ -337,13 +360,21 @@ To fix this you will either need to add a package.json file at that location, or
             );
 
             if (!specifier) {
+              if (projectToDependencyBumps.has(projectName)) {
+                // No applicable changes to the project directly by the user, but we have updated or more dependencies from the current batch already, so it does need to be bumped
+                specifier = updateDependentsOptions.bump;
+                log(
+                  `📄 Resolved the specifier as "${specifier}" based on "release.version.generatorOptions.updateDependentsOptions.bump"`
+                );
+                break;
+              }
               log(
                 `🚫 No changes were detected using git history and the conventional commits standard.`
               );
               break;
             }
 
-            // TODO: reevaluate this logic/workflow for independent projects
+            // TODO: reevaluate this prerelease logic/workflow for independent projects
             //
             // Always assume that if the current version is a prerelease, then the next version should be a prerelease.
             // Users must manually graduate from a prerelease to a release by providing an explicit specifier.
@@ -407,16 +438,50 @@ To fix this you will either need to add a package.json file at that location, or
         options.releaseGroup.projectsRelationship === 'independent'
       );
 
-      const dependentProjects = Object.values(localPackageDependencies)
+      const allDependentProjects = Object.values(localPackageDependencies)
         .flat()
         .filter((localPackageDependency) => {
           return localPackageDependency.target === project.name;
         });
 
+      const dependentProjectsInCurrentBatch = [];
+      const dependentProjectsOutsideCurrentBatch = [];
+
+      for (const dependentProject of allDependentProjects) {
+        const isInCurrentBatch = options.projects.some(
+          (project) => project.name === dependentProject.source
+        );
+        if (!isInCurrentBatch) {
+          dependentProjectsOutsideCurrentBatch.push(dependentProject);
+        } else {
+          dependentProjectsInCurrentBatch.push(dependentProject);
+        }
+      }
+
+      // If not always updating dependents (when they don't already appear in the batch itself), print a warning to the user about what is being skipped and how to change it
+      if (updateDependentsOptions.when === 'auto') {
+        if (dependentProjectsOutsideCurrentBatch.length > 0) {
+          let logMsg = `⚠️  Warning, the following packages depend on "${project.name}"`;
+          if (options.releaseGroup.name === IMPLICIT_DEFAULT_RELEASE_GROUP) {
+            logMsg += ` but have been filtered out via --projects, and therefore will not be updated:`;
+          } else {
+            logMsg += ` but are either not part of the current release group "${options.releaseGroup.name}", or have been filtered out via --projects, and therefore will not be updated:`;
+          }
+          const indent = Array.from(new Array(projectName.length + 4))
+            .map(() => ' ')
+            .join('');
+          logMsg += `\n${dependentProjectsOutsideCurrentBatch
+            .map((dependentProject) => `${indent}- ${dependentProject.source}`)
+            .join('\n')}`;
+          logMsg += `\n${indent}=> You can adjust this behavior by setting \`version.generatorOptions.updateDependents.when\` to "always"`;
+          log(logMsg);
+        }
+      }
+
       versionData[projectName] = {
         currentVersion,
-        dependentProjects,
         newVersion: null, // will stay as null in the final result in the case that no changes are detected
+        dependentProjects: allDependentProjects,
       };
 
       if (!specifier) {
@@ -442,55 +507,109 @@ To fix this you will either need to add a package.json file at that location, or
         `✍️  New version ${newVersion} written to ${workspaceRelativePackageJsonPath}`
       );
 
-      if (dependentProjects.length > 0) {
-        log(
-          `✍️  Applying new version ${newVersion} to ${
-            dependentProjects.length
-          } ${
-            dependentProjects.length > 1
-              ? 'packages which depend'
-              : 'package which depends'
-          } on ${project.name}`
-        );
+      if (allDependentProjects.length > 0) {
+        const totalProjectsToUpdate =
+          updateDependentsOptions.when === 'always'
+            ? allDependentProjects.length
+            : dependentProjectsInCurrentBatch.length;
+        if (totalProjectsToUpdate > 0) {
+          log(
+            `✍️  Applying new version ${newVersion} to ${totalProjectsToUpdate} ${
+              totalProjectsToUpdate > 1
+                ? 'packages which depend'
+                : 'package which depends'
+            } on ${project.name}`
+          );
+        }
       }
 
-      for (const dependentProject of dependentProjects) {
-        updateJson(
-          tree,
-          joinPathFragments(
-            projectNameToPackageRootMap.get(dependentProject.source),
-            'package.json'
-          ),
-          (json) => {
-            // Auto (i.e.infer existing) by default
-            let versionPrefix = options.versionPrefix ?? 'auto';
+      const updateDependentProjectAndAddToVersionData = ({
+        dependentProject,
+        forceVersionBump,
+      }: {
+        dependentProject: LocalPackageDependency;
+        forceVersionBump: 'major' | 'minor' | 'patch' | false;
+      }) => {
+        const updatedFilePath = joinPathFragments(
+          projectNameToPackageRootMap.get(dependentProject.source),
+          'package.json'
+        );
+        updateJson(tree, updatedFilePath, (json) => {
+          // Auto (i.e.infer existing) by default
+          let versionPrefix = options.versionPrefix ?? 'auto';
+          const currentDependencyVersion =
+            json[dependentProject.dependencyCollection][packageName];
 
-            // For auto, we infer the prefix based on the current version of the dependent
-            if (versionPrefix === 'auto') {
-              versionPrefix = ''; // we don't want to end up printing auto
-
-              const current =
-                json[dependentProject.dependencyCollection][packageName];
-              if (current) {
-                const prefixMatch = current.match(/^[~^]/);
-                if (prefixMatch) {
-                  versionPrefix = prefixMatch[0];
-                } else {
-                  versionPrefix = '';
-                }
+          // For auto, we infer the prefix based on the current version of the dependent
+          if (versionPrefix === 'auto') {
+            versionPrefix = ''; // we don't want to end up printing auto
+            if (currentDependencyVersion) {
+              const prefixMatch = currentDependencyVersion.match(/^[~^]/);
+              if (prefixMatch) {
+                versionPrefix = prefixMatch[0];
+              } else {
+                versionPrefix = '';
               }
             }
-            json[dependentProject.dependencyCollection][
-              packageName
-            ] = `${versionPrefix}${newVersion}`;
-            return json;
           }
-        );
+
+          // Apply the new version of the dependency to the dependent
+          const newDepVersion = `${versionPrefix}${newVersion}`;
+          json[dependentProject.dependencyCollection][packageName] =
+            newDepVersion;
+
+          // Bump the dependent's version if applicable and record it in the version data
+          if (forceVersionBump) {
+            const currentPackageVersion = json.version;
+            const newPackageVersion = deriveNewSemverVersion(
+              currentPackageVersion,
+              forceVersionBump,
+              options.preid
+            );
+            json.version = newPackageVersion;
+            versionData[dependentProject.source] = {
+              currentVersion: currentPackageVersion,
+              newVersion: newPackageVersion,
+              dependentProjects: [], // TODO: missing recursion here?
+            };
+          }
+
+          return json;
+        });
+      };
+
+      for (const dependentProject of dependentProjectsInCurrentBatch) {
+        if (projectToDependencyBumps.has(dependentProject.source)) {
+          const dependencyBumps = projectToDependencyBumps.get(
+            dependentProject.source
+          );
+          dependencyBumps.add(projectName);
+        } else {
+          projectToDependencyBumps.set(
+            dependentProject.source,
+            new Set([projectName])
+          );
+        }
+        updateDependentProjectAndAddToVersionData({
+          dependentProject,
+          // We don't force bump because we know they will come later in the topologically sorted projects loop and may have their own version update logic to take into account
+          forceVersionBump: false,
+        });
+      }
+
+      if (updateDependentsOptions.when === 'always') {
+        for (const dependentProject of dependentProjectsOutsideCurrentBatch) {
+          updateDependentProjectAndAddToVersionData({
+            dependentProject,
+            // For these additional dependents, we need to update their package.json version as well because we know they will not come later in the topologically sorted projects loop
+            forceVersionBump: updateDependentsOptions.bump,
+          });
+        }
       }
     }
 
     /**
-     * Ensure that formatting is applied so that version bump diffs are as mimimal as possible
+     * Ensure that formatting is applied so that version bump diffs are as minimal as possible
      * within the context of the user's workspace.
      */
     await formatFiles(tree);
@@ -558,4 +677,59 @@ async function getNpmRegistry() {
       return resolve(stdout.trim());
     });
   });
+}
+
+function sortProjectsTopologically(
+  projectGraph: ProjectGraph,
+  projectNodes: ProjectGraphProjectNode[]
+): ProjectGraphProjectNode[] {
+  const edges = new Map<ProjectGraphProjectNode, number>(
+    projectNodes.map((node) => [node, 0])
+  );
+
+  const filteredDependencies: ProjectGraphDependency[] = [];
+  for (const node of projectNodes) {
+    const deps = projectGraph.dependencies[node.name];
+    if (deps) {
+      filteredDependencies.push(
+        ...deps.filter((dep) => projectNodes.find((n) => n.name === dep.target))
+      );
+    }
+  }
+
+  filteredDependencies.forEach((dep) => {
+    const sourceNode = projectGraph.nodes[dep.source];
+    // dep.source depends on dep.target
+    edges.set(sourceNode, (edges.get(sourceNode) || 0) + 1);
+  });
+
+  // Initialize queue with projects that have no dependencies
+  const processQueue = [...edges]
+    .filter(([_, count]) => count === 0)
+    .map(([node]) => node);
+  const sortedProjects = [];
+
+  while (processQueue.length > 0) {
+    const node = processQueue.shift();
+    sortedProjects.push(node);
+
+    // Process each project that depends on the current node
+    filteredDependencies.forEach((dep) => {
+      const dependentNode = projectGraph.nodes[dep.source];
+      const count = edges.get(dependentNode) - 1;
+      edges.set(dependentNode, count);
+      if (count === 0) {
+        processQueue.push(dependentNode);
+      }
+    });
+  }
+
+  // TODO: should hopefully be impossible by this point?
+  if (sortedProjects.length !== projectNodes.length) {
+    throw new Error(
+      'Cycle detected or a disconnected node exists that was not included in the input set.'
+    );
+  }
+
+  return sortedProjects;
 }
