@@ -25,19 +25,22 @@ To see the remote cache in action, run:
 src/index.tsx → dist...
 created dist in 786ms
 
-—————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+ —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
-NX   Successfully ran target build for project header (2s)
+ >  NX   Successfully ran target build for project header (2s)
 
-See logs and investigate cache misses at https://cloud.nx.app/runs/k0HDHACpL8
+   See logs and investigate cache misses at https://cloud.nx.app/runs/k0HDHACpL8
 
-NX   Resetting the Nx workspace cache and stopping the Nx Daemon.
 
-This might take a few minutes.
+ >  NX   Resetting the Nx workspace cache and stopping the Nx Daemon.
 
-NX   Daemon Server - Stopped
+   This might take a few minutes.
 
-NX   Successfully reset the Nx workspace.
+
+ >  NX   Daemon Server - Stopped
+
+
+ >  NX   Successfully reset the Nx workspace.
 
 
 > nx run header:build  [remote cache]
@@ -50,13 +53,13 @@ NX   Successfully reset the Nx workspace.
 src/index.tsx → dist...
 created dist in 786ms
 
-—————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+ —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
-NX   Successfully ran target build for project header (664ms)
+ >  NX   Successfully ran target build for project header (664ms)
 
-Nx read the output from the cache instead of running the command for 1 out of 1 tasks.
+   Nx read the output from the cache instead of running the command for 1 out of 1 tasks.
 
-Nx Cloud made it possible to reuse header: https://nx.app/runs/P0X6ZGTkqZ
+   Nx Cloud made it possible to reuse header: https://nx.app/runs/P0X6ZGTkqZ
 ```
 
 ## Skipping Cloud Cache

@@ -52,7 +52,7 @@ title="Tutorial: Standalone Angular Application"
 Create a new Angular monorepo with the following command:
 
 ```{% command="npx create-nx-workspace@latest angular-monorepo --preset=angular-monorepo" path="~" %}
-NX   Let's create a new workspace [https://nx.dev/getting-started/intro]
+ >  NX   Let's create a new workspace [https://nx.dev/getting-started/intro]
 
 ✔ Application name · angular-store
 ✔ Which bundler would you like to use? · esbuild
@@ -566,7 +566,7 @@ Nx plugins usually provide [generators](/features/generate-code) that allow you 
 
 ```{% command="npx nx list @nx/angular" path="angular-monorepo" %}
 
-NX   Capabilities in @nx/angular:
+ >  NX   Capabilities in @nx/angular:
 
    GENERATORS
 
@@ -608,7 +608,7 @@ More info can be found in [the integrate with editors article](/features/integra
 Run the following command to generate a new `inventory` application. Note how we append `--dry-run` to first check the output.
 
 ```{% command="npx nx g @nx/angular:app inventory --directory=apps/inventory --dry-run" path="angular-monorepo" %}
-NX  Generating @nx/angular:application
+>  NX  Generating @nx/angular:application
 
 ✔ Would you like to configure routing for this application? (y/N) · false
 ✔ Would you like to use Standalone Components? (y/N) · true
@@ -1009,16 +1009,17 @@ One thing to highlight is that Nx is able to [cache the tasks you run](/features
 Note that all of these targets are automatically cached by Nx. If you re-run a single one or all of them again, you'll see that the task completes immediately. In addition, (as can be seen in the output example below) there will be a note that a matching cache result was found and therefore the task was not run again.
 
 ```{% command="nx run-many -t test lint e2e" path="angular-monorepo" %}
-✔  nx run e2e:lint  [existing outputs match the cache, left as is]
-✔  nx run angular-store:lint  [existing outputs match the cache, left as is]
-✔  nx run angular-store:test  [existing outputs match the cache, left as is]
-✔  nx run e2e:e2e  [existing outputs match the cache, left as is]
 
-——————————————————————————————————————————————————————
+    ✔  nx run e2e:lint  [existing outputs match the cache, left as is]
+    ✔  nx run angular-store:lint  [existing outputs match the cache, left as is]
+    ✔  nx run angular-store:test  [existing outputs match the cache, left as is]
+    ✔  nx run e2e:e2e  [existing outputs match the cache, left as is]
 
-NX   Successfully ran targets test, lint, e2e for 5 projects (54ms)
+ ——————————————————————————————————————————————————————
 
-Nx read the output from the cache instead of running the command for 10 out of 10 tasks.
+ >  NX   Successfully ran targets test, lint, e2e for 5 projects (54ms)
+
+   Nx read the output from the cache instead of running the command for 10 out of 10 tasks.
 ```
 
 Not all tasks might be cacheable though. You can configure `cacheableOperations` in the `nx.json` file. You can also [learn more about how caching works](/features/cache-task-results).
@@ -1152,7 +1153,7 @@ nx graph --affected
 If you're ready and want to ship your applications, you can build them using
 
 ```{% command="npx nx run-many -t build" path="angular-monorepo" %}
-NX  Generating @nx/angular:component
+>  NX  Generating @nx/angular:component
 
 CREATE libs/orders/src/lib/order-list/order-list.component.css
 CREATE libs/orders/src/lib/order-list/order-list.component.html
@@ -1161,12 +1162,12 @@ CREATE libs/orders/src/lib/order-list/order-list.component.ts
 UPDATE libs/orders/src/index.ts
 ❯ nx run-many -t build
 
-✔  nx run inventory:build:production (7s)
-✔  nx run angular-store:build:production (7s)
+    ✔  nx run inventory:build:production (7s)
+    ✔  nx run angular-store:build:production (7s)
 
-———————————————————————————————————————————————————————————————————————
+ ———————————————————————————————————————————————————————————————————————
 
-NX   Successfully ran target build for 2 projects (7s)
+ >  NX   Successfully ran target build for 2 projects (7s)
 ```
 
 All the required files will be placed in `dist/apps/angular-store` and `dist/apps/inventory` and can be deployed to your favorite hosting provider.
@@ -1320,36 +1321,36 @@ export class ProductListComponent {}
 If you lint your workspace you'll get an error now:
 
 ```{% command="nx run-many -t lint" %}
-NX   Running target lint for 7 projects
-✖  nx run products:lint
-   Linting "products"...
+ >  NX   Running target lint for 7 projects
+    ✖  nx run products:lint
+       Linting "products"...
 
-   /Users/isaac/Documents/code/nx-recipes/angular-monorepo/libs/products/src/lib/product-list/product-list.component.ts
-     5:1   error    A project tagged with "scope:products" can only depend on libs tagged with "scope:products", "scope:shared"  @nx/enforce-module-boundaries
-     5:10  warning  'OrderListComponent' is defined but never used                                                               @typescript-eslint/no-unused-vars
+       /Users/isaac/Documents/code/nx-recipes/angular-monorepo/libs/products/src/lib/product-list/product-list.component.ts
+         5:1   error    A project tagged with "scope:products" can only depend on libs tagged with "scope:products", "scope:shared"  @nx/enforce-module-boundaries
+         5:10  warning  'OrderListComponent' is defined but never used                                                               @typescript-eslint/no-unused-vars
 
-   ✖ 2 problems (1 error, 1 warning)
+       ✖ 2 problems (1 error, 1 warning)
 
-   Lint warnings found in the listed files.
+       Lint warnings found in the listed files.
 
-   Lint errors found in the listed files.
+       Lint errors found in the listed files.
 
 
-✔  nx run orders:lint (1s)
-✔  nx run angular-store:lint (1s)
-✔  nx run angular-store-e2e:lint (689ms)
-✔  nx run inventory-e2e:lint (690ms)
-✔  nx run inventory:lint (858ms)
-✔  nx run shared-ui:lint (769ms)
+    ✔  nx run orders:lint (1s)
+    ✔  nx run angular-store:lint (1s)
+    ✔  nx run angular-store-e2e:lint (689ms)
+    ✔  nx run inventory-e2e:lint (690ms)
+    ✔  nx run inventory:lint (858ms)
+    ✔  nx run shared-ui:lint (769ms)
 
-———————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+ ———————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
-NX   Ran target lint for 7 projects (3s)
+ >  NX   Ran target lint for 7 projects (3s)
 
-✔  6/7 succeeded [0 read from cache]
+    ✔    6/7 succeeded [0 read from cache]
 
-✖  1/7 targets failed, including the following:
-   - nx run products:lint
+    ✖    1/7 targets failed, including the following:
+         - nx run products:lint
 ```
 
 If you have the ESLint plugin installed in your IDE you should immediately see an error:
