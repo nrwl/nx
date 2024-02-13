@@ -66,7 +66,13 @@ created dist in 786ms
 
 There are two ways that Nx Replay directly benefits your organization.
 
-### 1. Reuse Cached Results from CI on Developer Machines
+### 1. Speed Up CI Pipelines for Modified PRs
+
+The first time a PR goes through the CI pipeline, the [affected](/ci/features/affected) command provides most of the time savings. The `affected` command compares the PR against the `main` branch and only runs tasks for projects that could have been affected by the code changes. Unfortunately, all the projects affected by the first CI pipeline for a PR will continue to be affected by all future commits to that PR. This is because `affected` compares the current commit with the `main` branch every time.
+
+With Nx Replay enabled, any tasks that were run during the first pipeline and not affected by the second commit would reuse the cached results from the first pipeline instead of re-running the task. This gives subsequent pipeline runs a mechanism similar to affected that will [reduce the wasted time in CI](/ci/concepts/reduce-waste).
+
+### 2. Reuse Cached Results from CI on Developer Machines
 
 If a task has been executed in CI, a developer running that same task locally can reuse the task result instead of actually running the task. Here are a couple common scenarios where this happens:
 
@@ -74,12 +80,6 @@ If a task has been executed in CI, a developer running that same task locally ca
 2. A developer checks out someone else's PR branch to help troubleshoot a problem. They run the tests and all the successful tests finish instantly. They can focus their debugging time on the few tests that are still failing.
 
 The best part about Nx Replay is that developers will experience the benefits of it without needing to remember to use it. Some of their tasks will just finish much faster than they normally do.
-
-### 2. Speed Up CI Pipelines for Modified PRs
-
-The first time a PR goes through the CI pipeline, the [affected](/ci/features/affected) command provides most of the time savings. The `affected` command compares the PR against the `main` branch and only runs tasks for projects that could have been affected by the code changes. Unfortunately, all the projects affected by the first CI pipeline for a PR will continue to be affected by all future commits to that PR. This is because `affected` compares the current commit with the `main` branch every time.
-
-With Nx Replay enabled, any tasks that were run during the first pipeline and not affected by the second commit would reuse the cached results from the first pipeline instead of re-running the task. This gives subsequent pipeline runs a mechanism similar to affected that will [reduce the wasted time in CI](/ci/concepts/reduce-waste).
 
 ## Nx Replay Enables Nx Agents
 
