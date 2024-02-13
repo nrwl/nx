@@ -325,6 +325,7 @@
       - [browser-esbuild](/nx-api/angular/executors/browser-esbuild)
       - [module-federation-dev-server](/nx-api/angular/executors/module-federation-dev-server)
       - [application](/nx-api/angular/executors/application)
+      - [extract-i18n](/nx-api/angular/executors/extract-i18n)
       - [webpack-browser](/nx-api/angular/executors/webpack-browser)
       - [dev-server](/nx-api/angular/executors/dev-server)
       - [webpack-server](/nx-api/angular/executors/webpack-server)
