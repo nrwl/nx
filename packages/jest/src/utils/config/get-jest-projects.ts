@@ -1,6 +1,6 @@
+import { readNxJson, workspaceRoot } from '@nx/devkit';
+import { retrieveProjectConfigurations } from 'nx/src/project-graph/utils/retrieve-workspace-files';
 import { join } from 'path';
-import type { ProjectsConfigurations } from '@nx/devkit';
-import { readWorkspaceConfig } from 'nx/src/project-graph/file-utils';
 
 function getJestConfigProjectPath(projectJestConfigPath: string): string {
   return join('<rootDir>', projectJestConfigPath);
@@ -18,30 +18,29 @@ function getJestConfigProjectPath(projectJestConfigPath: string): string {
  * }
  *
  **/
-export function getJestProjects() {
-  const ws = readWorkspaceConfig({
-    format: 'nx',
-  }) as ProjectsConfigurations;
+export async function getJestProjects() {
+  const nxJson = readNxJson();
+  const nxGraph = await retrieveProjectConfigurations(workspaceRoot, nxJson);
   const jestConfigurationSet = new Set<string>();
-  for (const projectConfig of Object.values(ws.projects)) {
+  for (const projectConfig of Object.values(nxGraph.projects)) {
     if (!projectConfig.targets) {
       continue;
     }
-    for (const targetConfiguration of Object.values(projectConfig.targets)) {
+    for (const targetConfig of Object.values(projectConfig.targets)) {
       if (
-        targetConfiguration.executor !== '@nx/jest:jest' &&
-        targetConfiguration.executor !== '@nrwl/jest:jest'
+        targetConfig.executor !== '@nx/jest:jest' &&
+        targetConfig.executor !== '@nrwl/jest:jest'
       ) {
         continue;
       }
-      if (targetConfiguration.options?.jestConfig) {
+      if (targetConfig.options?.jestConfig) {
         jestConfigurationSet.add(
-          getJestConfigProjectPath(targetConfiguration.options.jestConfig)
+          getJestConfigProjectPath(targetConfig.options.jestConfig)
         );
       }
-      if (targetConfiguration.configurations) {
+      if (targetConfig.configurations) {
         for (const configurationObject of Object.values(
-          targetConfiguration.configurations
+          targetConfig.configurations
         )) {
           if (configurationObject.jestConfig) {
             jestConfigurationSet.add(
