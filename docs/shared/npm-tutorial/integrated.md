@@ -191,9 +191,9 @@ Run the same command a second time and you'll see the build cache is being used:
 Compiling TypeScript files for project "is-even"...
 Done compiling TypeScript files for project "is-even".
 
- —————————————————————————————————————————————————————————————————————
+—————————————————————————————————————————————————————————————————————
 
- NX   Successfully ran target build for project is-even (713ms)
+NX   Successfully ran target build for project is-even (713ms)
 ```
 
 ## Running Multiple Tasks
@@ -207,14 +207,14 @@ npx nx run-many -t build
 What you would get is the following:
 
 ```{% command="npx nx run-many -t build" %}
-    ✔  nx run is-even:build  [existing outputs match the cache, left as is]
-    ✔  nx run is-odd:build (906ms)
+✔  nx run is-even:build  [existing outputs match the cache, left as is]
+✔  nx run is-odd:build (906ms)
 
- —————————————————————————————————————————————————————————————————
+—————————————————————————————————————————————————————————————————
 
- NX   Successfully ran target build for 2 projects (914ms)
+NX   Successfully ran target build for 2 projects (914ms)
 
- Nx read the output from the cache instead of running the command for 1 out of 2 tasks.
+Nx read the output from the cache instead of running the command for 1 out of 2 tasks.
 ```
 
 Note how on the `is-even:build` it didn't run the build but rather pulled it out of the cache because the build has ran before. If you re-run the `run-many` command all of the builds would be cached.

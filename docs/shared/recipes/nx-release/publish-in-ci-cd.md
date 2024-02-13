@@ -24,83 +24,83 @@ Skipped publishing packages.
 Nx Release provides a publishing subcommand that performs just the publishing step. Use this in your CI/CD pipeline to publish the packages.
 
 ```{% command="nx release publish" %}
- NX   Running target nx-release-publish for 3 projects:
+NX   Running target nx-release-publish for 3 projects:
 
- - pkg-1
- - pkg-2
- - pkg-3
+- pkg-1
+- pkg-2
+- pkg-3
 
- —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+—————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
 > nx run pkg-1:nx-release-publish
 
 
- 📦  @myorg/pkg-1@0.0.2
- === Tarball Contents ===
+📦  @myorg/pkg-1@0.0.2
+=== Tarball Contents ===
 
- 233B README.md
- 277B package.json
- 53B  src/index.ts
- 61B  src/lib/pkg-1.ts
- === Tarball Details ===
- name:          @myorg/pkg-1
- version:       0.0.2
- filename:      testorg-pkg-1-0.0.2.tgz
- package size:  531 B
- unpacked size: 624 B
- shasum:        {shasum}
- integrity:     {integrity}
- total files:   12
+233B README.md
+277B package.json
+53B  src/index.ts
+61B  src/lib/pkg-1.ts
+=== Tarball Details ===
+name:          @myorg/pkg-1
+version:       0.0.2
+filename:      testorg-pkg-1-0.0.2.tgz
+package size:  531 B
+unpacked size: 624 B
+shasum:        {shasum}
+integrity:     {integrity}
+total files:   12
 
- Published to https://registry.npmjs.org with tag "latest"
+Published to https://registry.npmjs.org with tag "latest"
 
 > nx run pkg-2:nx-release-publish
 
 
- 📦  @myorg/pkg-2@0.0.2
- === Tarball Contents ===
+📦  @myorg/pkg-2@0.0.2
+=== Tarball Contents ===
 
- 233B README.md
- 277B package.json
- 53B  src/index.ts
- 61B  src/lib/pkg-2.ts
- === Tarball Details ===
- name:          @myorg/pkg-2
- version:       0.0.2
- filename:      testorg-pkg-2-0.0.2.tgz
- package size:  531 B
- unpacked size: 624 B
- shasum:        {shasum}
- integrity:     {integrity}
- total files:   12
+233B README.md
+277B package.json
+53B  src/index.ts
+61B  src/lib/pkg-2.ts
+=== Tarball Details ===
+name:          @myorg/pkg-2
+version:       0.0.2
+filename:      testorg-pkg-2-0.0.2.tgz
+package size:  531 B
+unpacked size: 624 B
+shasum:        {shasum}
+integrity:     {integrity}
+total files:   12
 
- Published to https://registry.npmjs.org with tag "latest"
+Published to https://registry.npmjs.org with tag "latest"
 
 > nx run pkg-3:nx-release-publish
 
 
- 📦  @myorg/pkg-3@0.0.2
- === Tarball Contents ===
+📦  @myorg/pkg-3@0.0.2
+=== Tarball Contents ===
 
- 233B README.md
- 277B package.json
- 53B  src/index.ts
- 61B  src/lib/pkg-3.ts
- === Tarball Details ===
- name:          @myorg/pkg-3
- version:       0.0.2
- filename:      testorg-pkg-3-0.0.2.tgz
- package size:  531 B
- unpacked size: 624 B
- shasum:        {shasum}
- integrity:     {integrity}
- total files:   12
+233B README.md
+277B package.json
+53B  src/index.ts
+61B  src/lib/pkg-3.ts
+=== Tarball Details ===
+name:          @myorg/pkg-3
+version:       0.0.2
+filename:      testorg-pkg-3-0.0.2.tgz
+package size:  531 B
+unpacked size: 624 B
+shasum:        {shasum}
+integrity:     {integrity}
+total files:   12
 
- Published to https://registry.npmjs.org with tag "latest"
+Published to https://registry.npmjs.org with tag "latest"
 
- —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+—————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
- NX   Successfully ran target nx-release-publish for 3 projects
+NX   Successfully ran target nx-release-publish for 3 projects
 ```
 
 ## Publish in Github Actions

@@ -221,11 +221,11 @@ Run the command:
 > tsc index.ts --outDir dist
 
 
- ——————————————————————————————————————————————————————————————————————————————————————————
+——————————————————————————————————————————————————————————————————————————————————————————
 
- NX   Successfully ran target build for project is-even (33ms)
+NX   Successfully ran target build for project is-even (33ms)
 
- Nx read the output from the cache instead of running the command for 1 out of 1 tasks.
+Nx read the output from the cache instead of running the command for 1 out of 1 tasks.
 
 ```
 
@@ -236,25 +236,25 @@ Note that the cache for the `build` script was already populated when we ran it 
 To run the `build` target for all the packages in the workspace, use:
 
 ```{% command="npx nx run-many -t build" %}
-    ✔  nx run is-even:build  [existing outputs match the cache, left as is]
-    ✔  nx run is-odd:build  [existing outputs match the cache, left as is]
+✔  nx run is-even:build  [existing outputs match the cache, left as is]
+✔  nx run is-odd:build  [existing outputs match the cache, left as is]
 
- ————————————————————————————————————————————————————————————————————————————————————————
+————————————————————————————————————————————————————————————————————————————————————————
 
- NX   Successfully ran target build for 2 projects (35ms)
+NX   Successfully ran target build for 2 projects (35ms)
 
- Nx read the output from the cache instead of running the command for 2 out of 2 tasks.
+Nx read the output from the cache instead of running the command for 2 out of 2 tasks.
 ```
 
 Notice that both builds are replayed from cache. We can skip the cache by adding the `--skip-nx-cache` option:
 
 ```{% command="npx nx run-many -t build --skip-nx-cache" %}
- ✔  nx run is-even:build (1s)
- ✔  nx run is-odd:build (1s)
+✔  nx run is-even:build (1s)
+✔  nx run is-odd:build (1s)
 
- ———————————————————————————————————————————————————————————————————————
+———————————————————————————————————————————————————————————————————————
 
- NX   Successfully ran target build for 2 projects (2s)
+NX   Successfully ran target build for 2 projects (2s)
 ```
 
 Notice that using this method, the `is-even` build ran before the `is-odd` build, and that the `is-even` build only happened once. This demonstrates how `run-many` is informed by the `targetDefaults` we set earlier.
@@ -263,17 +263,17 @@ You can also only run tasks on packages that got changed by using the command:
 
 ```{% command="npx nx affected -t build" %}
 
- NX   Affected criteria defaulted to --base=main --head=HEAD
+NX   Affected criteria defaulted to --base=main --head=HEAD
 
 
- ✔  nx run is-even:build  [existing outputs match the cache, left as is]
- ✔  nx run is-odd:build  [existing outputs match the cache, left as is]
+✔  nx run is-even:build  [existing outputs match the cache, left as is]
+✔  nx run is-odd:build  [existing outputs match the cache, left as is]
 
- ——————————————————————————————————————————————————————————————————————————————————————————————
+——————————————————————————————————————————————————————————————————————————————————————————————
 
- NX   Successfully ran target build for 2 projects (34ms)
+NX   Successfully ran target build for 2 projects (34ms)
 
- Nx read the output from the cache instead of running the command for 2 out of 2 tasks.
+Nx read the output from the cache instead of running the command for 2 out of 2 tasks.
 ```
 
 Notice that the `base` and `head` options were populated with their default values. You could provide your own options here as needed. Notice too that the cache is also used with the `affected` command.
