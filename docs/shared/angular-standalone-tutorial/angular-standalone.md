@@ -470,14 +470,14 @@ More conveniently, we can also run them in parallel using the following syntax:
 
 ```{% command="nx run-many -t test lint e2e" path="myngapp" %}
 
-    ✔  nx run e2e:lint (1s)
-    ✔  nx run myngapp:lint (1s)
-    ✔  nx run myngapp:test (2s)
-    ✔  nx run e2e:e2e (6s)
+ ✔  nx run e2e:lint (1s)
+ ✔  nx run myngapp:lint (1s)
+ ✔  nx run myngapp:test (2s)
+ ✔  nx run e2e:e2e (6s)
 
  ——————————————————————————————————————————————————————
 
-  NX   Successfully ran targets test, lint, e2e for 2 projects (8s)
+ NX   Successfully ran targets test, lint, e2e for 2 projects (8s)
 ```
 
 ### Caching
@@ -490,16 +490,16 @@ Note that all of these targets are automatically cached by Nx. If you re-run a s
 
 ```{% command="nx run-many -t test lint e2e" path="myngapp" %}
 
-    ✔  nx run myngapp:lint  [existing outputs match the cache, left as is]
-    ✔  nx run e2e:lint  [existing outputs match the cache, left as is]
-    ✔  nx run myngapp:test  [existing outputs match the cache, left as is]
-    ✔  nx run e2e:e2e  [existing outputs match the cache, left as is]
+ ✔  nx run myngapp:lint  [existing outputs match the cache, left as is]
+ ✔  nx run e2e:lint  [existing outputs match the cache, left as is]
+ ✔  nx run myngapp:test  [existing outputs match the cache, left as is]
+ ✔  nx run e2e:e2e  [existing outputs match the cache, left as is]
 
  ———————————————————————————————————————————————————————
 
-  NX   Successfully ran targets test, lint, e2e for 2 projects (143ms)
+ NX   Successfully ran targets test, lint, e2e for 2 projects (143ms)
 
-   Nx read the output from the cache instead of running the command for 4 out of 4 tasks.
+ Nx read the output from the cache instead of running the command for 4 out of 4 tasks.
 ```
 
 Not all tasks might be cacheable though. You can configure the `cache` properties in the targets under `targetDefaults` in the `nx.json` file. You can also [learn more about how caching works](/features/cache-task-results).
@@ -514,7 +514,7 @@ Generators allow you to easily scaffold code, configuration or entire projects. 
 
 ```{% command="npx nx list @nx/angular" path="myngapp" %}
 
-  NX   Capabilities in @nx/angular:
+ NX   Capabilities in @nx/angular:
 
  NX   Capabilities in @nx/angular:
 
@@ -600,23 +600,23 @@ If you're ready and want to ship your application, you can build it using
 ```{% command="npx nx build" path="myngapp" %}
 > nx run myngapp:build:production
 
-✔ Browser application bundle generation complete.
-✔ Copying assets complete.
-✔ Index html generation complete.
+ ✔ Browser application bundle generation complete.
+ ✔ Copying assets complete.
+ ✔ Index html generation complete.
 
 Initial Chunk Files           | Names         |  Raw Size | Estimated Transfer Size
 main.afa99fe9f64fbdd9.js      | main          | 193.58 kB |                51.57 kB
-polyfills.1acfd3f58d94d542.js | polyfills     |  32.98 kB |                10.66 kB
-runtime.37059233034b21c2.js   | runtime       | 892 bytes |               515 bytes
-styles.ef46db3751d8e999.css   | styles        |   0 bytes |                       -
+   polyfills.1acfd3f58d94d542.js | polyfills     |  32.98 kB |                10.66 kB
+ runtime.37059233034b21c2.js   | runtime       | 892 bytes |               515 bytes
+ styles.ef46db3751d8e999.css   | styles        |   0 bytes |                       -
 
-                              | Initial Total | 227.44 kB |                62.73 kB
+                               | Initial Total | 227.44 kB |                62.73 kB
 
-Build at: 2023-05-23T14:00:31.981Z - Hash: 9086e92ce0bfefca - Time: 5228ms
+ Build at: 2023-05-23T14:00:31.981Z - Hash: 9086e92ce0bfefca - Time: 5228ms
 
  ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
-  NX   Successfully ran target build for project myngapp (7s)
+ NX   Successfully ran target build for project myngapp (7s)
 ```
 
 All the required files will be placed in the `dist/myngapp` folder and can be deployed to your favorite hosting provider.
@@ -1051,29 +1051,29 @@ export class ProductsComponent {}
 If you lint your workspace you'll get an error now:
 
 ```{% command="nx run-many -t lint" %}
-    ✖  nx run products:lint
-       Linting "products"...
+ ✖  nx run products:lint
+    Linting "products"...
 
-       /Users/juri/nrwl/content/myngapp/modules/products/src/lib/products/products.component.ts
-         3:1  error  A project tagged with "scope:products" can only depend on libs tagged with "scope:products", "scope:shared"  @nx/enforce-module-boundaries
+    /Users/juri/nrwl/content/myngapp/modules/products/src/lib/products/products.component.ts
+      3:1  error  A project tagged with "scope:products" can only depend on libs tagged with "scope:products", "scope:shared"  @nx/enforce-module-boundaries
 
-       ✖ 1 problem (1 error, 0 warnings)
+    ✖ 1 problem (1 error, 0 warnings)
 
-       Lint errors found in the listed files.
+    Lint errors found in the listed files.
 
-    ✔  nx run orders:lint (1s)
-    ✔  nx run myngapp:lint (1s)
-    ✔  nx run e2e:lint (682ms)
-    ✔  nx run shared-ui:lint (797ms)
+ ✔  nx run orders:lint (1s)
+ ✔  nx run myngapp:lint (1s)
+ ✔  nx run e2e:lint (682ms)
+ ✔  nx run shared-ui:lint (797ms)
 
  —————————————————————————————————————————————————————————————————————
 
-  NX   Ran target lint for 5 projects (2s)
+ NX   Ran target lint for 5 projects (2s)
 
-    ✔    4/5 succeeded [0 read from cache]
+ ✔    4/5 succeeded [0 read from cache]
 
-    ✖    1/5 targets failed, including the following:
-         - nx run products:lint
+ ✖    1/5 targets failed, including the following:
+      - nx run products:lint
 
 ```
 

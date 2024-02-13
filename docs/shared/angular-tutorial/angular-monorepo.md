@@ -52,14 +52,14 @@ title="Tutorial: Standalone Angular Application"
 Create a new Angular monorepo with the following command:
 
 ```{% command="npx create-nx-workspace@latest angular-monorepo --preset=angular-monorepo" path="~" %}
-  NX   Let's create a new workspace [https://nx.dev/getting-started/intro]
+ NX   Let's create a new workspace [https://nx.dev/getting-started/intro]
 
-✔ Application name · angular-store
-✔ Which bundler would you like to use? · esbuild
-✔ Default stylesheet format · css
-✔ Do you want to enable Server-Side Rendering (SSR) and Static Site Generation (SSG/Prerendering)? · No
-✔ Test runner to use for end to end (E2E) tests · cypress
-✔ Do you want Nx Cloud to make your CI fast? · Yes
+ ✔ Application name · angular-store
+ ✔ Which bundler would you like to use? · esbuild
+ ✔ Default stylesheet format · css
+ ✔ Do you want to enable Server-Side Rendering (SSR) and Static Site Generation (SSG/Prerendering)? · No
+ ✔ Test runner to use for end to end (E2E) tests · cypress
+ ✔ Do you want Nx Cloud to make your CI fast? · Yes
 ```
 
 Let's name the initial application `angular-store`. In this tutorial we're going to use `cypress` for e2e tests and `css` for styling. The above command generates the following structure:
@@ -566,7 +566,7 @@ Nx plugins usually provide [generators](/features/generate-code) that allow you 
 
 ```{% command="npx nx list @nx/angular" path="angular-monorepo" %}
 
-  NX   Capabilities in @nx/angular:
+ NX   Capabilities in @nx/angular:
 
    GENERATORS
 
@@ -610,38 +610,38 @@ Run the following command to generate a new `inventory` application. Note how we
 ```{% command="npx nx g @nx/angular:app inventory --directory=apps/inventory --dry-run" path="angular-monorepo" %}
  NX  Generating @nx/angular:application
 
-✔ Would you like to configure routing for this application? (y/N) · false
-✔ Would you like to use Standalone Components? (y/N) · true
-CREATE apps/inventory/project.json
-CREATE apps/inventory/src/assets/.gitkeep
-CREATE apps/inventory/src/favicon.ico
-CREATE apps/inventory/src/index.html
-CREATE apps/inventory/src/styles.css
-CREATE apps/inventory/tsconfig.app.json
-CREATE apps/inventory/tsconfig.editor.json
-CREATE apps/inventory/tsconfig.json
-CREATE apps/inventory/src/app/app.component.css
-CREATE apps/inventory/src/app/app.component.html
-CREATE apps/inventory/src/app/app.component.spec.ts
-CREATE apps/inventory/src/app/app.component.ts
-CREATE apps/inventory/src/app/app.config.ts
-CREATE apps/inventory/src/app/nx-welcome.component.ts
-CREATE apps/inventory/src/main.ts
-CREATE apps/inventory/.eslintrc.json
-CREATE apps/inventory/jest.config.ts
-CREATE apps/inventory/src/test-setup.ts
-CREATE apps/inventory/tsconfig.spec.json
-CREATE apps/inventory-e2e/cypress.config.ts
-CREATE apps/inventory-e2e/src/e2e/app.cy.ts
-CREATE apps/inventory-e2e/src/fixtures/example.json
-CREATE apps/inventory-e2e/src/support/app.po.ts
-CREATE apps/inventory-e2e/src/support/commands.ts
-CREATE apps/inventory-e2e/src/support/e2e.ts
-CREATE apps/inventory-e2e/tsconfig.json
-CREATE apps/inventory-e2e/project.json
-CREATE apps/inventory-e2e/.eslintrc.json
+ ✔ Would you like to configure routing for this application? (y/N) · false
+ ✔ Would you like to use Standalone Components? (y/N) · true
+ CREATE apps/inventory/project.json
+ CREATE apps/inventory/src/assets/.gitkeep
+ CREATE apps/inventory/src/favicon.ico
+ CREATE apps/inventory/src/index.html
+ CREATE apps/inventory/src/styles.css
+ CREATE apps/inventory/tsconfig.app.json
+ CREATE apps/inventory/tsconfig.editor.json
+ CREATE apps/inventory/tsconfig.json
+ CREATE apps/inventory/src/app/app.component.css
+ CREATE apps/inventory/src/app/app.component.html
+ CREATE apps/inventory/src/app/app.component.spec.ts
+ CREATE apps/inventory/src/app/app.component.ts
+ CREATE apps/inventory/src/app/app.config.ts
+ CREATE apps/inventory/src/app/nx-welcome.component.ts
+ CREATE apps/inventory/src/main.ts
+ CREATE apps/inventory/.eslintrc.json
+ CREATE apps/inventory/jest.config.ts
+ CREATE apps/inventory/src/test-setup.ts
+ CREATE apps/inventory/tsconfig.spec.json
+ CREATE apps/inventory-e2e/cypress.config.ts
+ CREATE apps/inventory-e2e/src/e2e/app.cy.ts
+ CREATE apps/inventory-e2e/src/fixtures/example.json
+ CREATE apps/inventory-e2e/src/support/app.po.ts
+ CREATE apps/inventory-e2e/src/support/commands.ts
+ CREATE apps/inventory-e2e/src/support/e2e.ts
+ CREATE apps/inventory-e2e/tsconfig.json
+ CREATE apps/inventory-e2e/project.json
+ CREATE apps/inventory-e2e/.eslintrc.json
 
-NOTE: The "dryRun" flag means no changes were made.
+ NOTE: The "dryRun" flag means no changes were made.
 ```
 
 As you can see, it generates a new application in the `apps/inventory/` folder. Let's actually run the generator by removing the `--dry-run` flag.
@@ -1009,17 +1009,16 @@ One thing to highlight is that Nx is able to [cache the tasks you run](/features
 Note that all of these targets are automatically cached by Nx. If you re-run a single one or all of them again, you'll see that the task completes immediately. In addition, (as can be seen in the output example below) there will be a note that a matching cache result was found and therefore the task was not run again.
 
 ```{% command="nx run-many -t test lint e2e" path="angular-monorepo" %}
-
-    ✔  nx run e2e:lint  [existing outputs match the cache, left as is]
-    ✔  nx run angular-store:lint  [existing outputs match the cache, left as is]
-    ✔  nx run angular-store:test  [existing outputs match the cache, left as is]
-    ✔  nx run e2e:e2e  [existing outputs match the cache, left as is]
+ ✔  nx run e2e:lint  [existing outputs match the cache, left as is]
+ ✔  nx run angular-store:lint  [existing outputs match the cache, left as is]
+ ✔  nx run angular-store:test  [existing outputs match the cache, left as is]
+ ✔  nx run e2e:e2e  [existing outputs match the cache, left as is]
 
  ——————————————————————————————————————————————————————
 
-  NX   Successfully ran targets test, lint, e2e for 5 projects (54ms)
+ NX   Successfully ran targets test, lint, e2e for 5 projects (54ms)
 
-   Nx read the output from the cache instead of running the command for 10 out of 10 tasks.
+ Nx read the output from the cache instead of running the command for 10 out of 10 tasks.
 ```
 
 Not all tasks might be cacheable though. You can configure `cacheableOperations` in the `nx.json` file. You can also [learn more about how caching works](/features/cache-task-results).
@@ -1155,19 +1154,19 @@ If you're ready and want to ship your applications, you can build them using
 ```{% command="npx nx run-many -t build" path="angular-monorepo" %}
  NX  Generating @nx/angular:component
 
-CREATE libs/orders/src/lib/order-list/order-list.component.css
-CREATE libs/orders/src/lib/order-list/order-list.component.html
-CREATE libs/orders/src/lib/order-list/order-list.component.spec.ts
-CREATE libs/orders/src/lib/order-list/order-list.component.ts
-UPDATE libs/orders/src/index.ts
-❯ nx run-many -t build
+ CREATE libs/orders/src/lib/order-list/order-list.component.css
+ CREATE libs/orders/src/lib/order-list/order-list.component.html
+ CREATE libs/orders/src/lib/order-list/order-list.component.spec.ts
+ CREATE libs/orders/src/lib/order-list/order-list.component.ts
+ UPDATE libs/orders/src/index.ts
+ ❯ nx run-many -t build
 
-    ✔  nx run inventory:build:production (7s)
-    ✔  nx run angular-store:build:production (7s)
+ ✔  nx run inventory:build:production (7s)
+ ✔  nx run angular-store:build:production (7s)
 
  ———————————————————————————————————————————————————————————————————————
 
-  NX   Successfully ran target build for 2 projects (7s)
+ NX   Successfully ran target build for 2 projects (7s)
 ```
 
 All the required files will be placed in `dist/apps/angular-store` and `dist/apps/inventory` and can be deployed to your favorite hosting provider.
@@ -1321,36 +1320,36 @@ export class ProductListComponent {}
 If you lint your workspace you'll get an error now:
 
 ```{% command="nx run-many -t lint" %}
-  NX   Running target lint for 7 projects
-    ✖  nx run products:lint
-       Linting "products"...
+ NX   Running target lint for 7 projects
+ ✖  nx run products:lint
+    Linting "products"...
 
-       /Users/isaac/Documents/code/nx-recipes/angular-monorepo/libs/products/src/lib/product-list/product-list.component.ts
-         5:1   error    A project tagged with "scope:products" can only depend on libs tagged with "scope:products", "scope:shared"  @nx/enforce-module-boundaries
-         5:10  warning  'OrderListComponent' is defined but never used                                                               @typescript-eslint/no-unused-vars
+    /Users/isaac/Documents/code/nx-recipes/angular-monorepo/libs/products/src/lib/product-list/product-list.component.ts
+      5:1   error    A project tagged with "scope:products" can only depend on libs tagged with "scope:products", "scope:shared"  @nx/enforce-module-boundaries
+      5:10  warning  'OrderListComponent' is defined but never used                                                               @typescript-eslint/no-unused-vars
 
-       ✖ 2 problems (1 error, 1 warning)
+    ✖ 2 problems (1 error, 1 warning)
 
-       Lint warnings found in the listed files.
+    Lint warnings found in the listed files.
 
-       Lint errors found in the listed files.
+    Lint errors found in the listed files.
 
 
-    ✔  nx run orders:lint (1s)
-    ✔  nx run angular-store:lint (1s)
-    ✔  nx run angular-store-e2e:lint (689ms)
-    ✔  nx run inventory-e2e:lint (690ms)
-    ✔  nx run inventory:lint (858ms)
-    ✔  nx run shared-ui:lint (769ms)
+ ✔  nx run orders:lint (1s)
+ ✔  nx run angular-store:lint (1s)
+ ✔  nx run angular-store-e2e:lint (689ms)
+ ✔  nx run inventory-e2e:lint (690ms)
+ ✔  nx run inventory:lint (858ms)
+ ✔  nx run shared-ui:lint (769ms)
 
  ———————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
-  NX   Ran target lint for 7 projects (3s)
+ NX   Ran target lint for 7 projects (3s)
 
-    ✔    6/7 succeeded [0 read from cache]
+ ✔  6/7 succeeded [0 read from cache]
 
-    ✖    1/7 targets failed, including the following:
-         - nx run products:lint
+ ✖  1/7 targets failed, including the following:
+     - nx run products:lint
 ```
 
 If you have the ESLint plugin installed in your IDE you should immediately see an error:

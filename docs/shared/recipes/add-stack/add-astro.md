@@ -30,22 +30,22 @@ npm create astro@latest
 We can leverage [`nx init`](/recipes/adopting-nx/adding-to-existing-project#installing-nx-on-a-non-monorepo-project) to add Nx to the Astro application.
 
 ```{% command="npx nx@latest init" path="~/astro-app"%}
-  NX   🐳 Nx initialization
+ NX   🐳 Nx initialization
 
 
-  NX   🧑‍🔧 Please answer the following questions about the scripts found in your package.json in order to generate task runner configuration
+ NX   🧑‍🔧 Please answer the following questions about the scripts found in your package.json in order to generate task runner configuration
 
-✔ Which of the following scripts are cacheable? (Produce the same output given the same input, e.g. build, test and lint usually are, serve and start are not). You can use spacebar to select one or more scripts. · build
+ ✔ Which of the following scripts are cacheable? (Produce the same output given the same input, e.g. build, test and lint usually are, serve and start are not). You can use spacebar to select one or more scripts. · build
 
 
-✔ Would you like remote caching to make your build faster? · Yes
+ ✔ Would you like remote caching to make your build faster? · Yes
 
-  NX   📦 Installing dependencies
+ NX   📦 Installing dependencies
 
-  NX   🎉 Done!
+ NX   🎉 Done!
 
-   - Enabled computation caching!
-   - Learn more at https://nx.dev/recipes/adopting-nx/adding-to-existing-project.
+ - Enabled computation caching!
+ - Learn more at https://nx.dev/recipes/adopting-nx/adding-to-existing-project.
 ```
 
 You can add a task as cacheable after the fact by updating the `cacheableOperations` in the `nx.json` file. Learn more about [caching task results](/recipes/adopting-nx/adding-to-existing-project#installing-nx-on-a-non-monorepo-project) or [how caching works](/features/cache-task-results).

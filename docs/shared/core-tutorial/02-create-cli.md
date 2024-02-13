@@ -125,21 +125,21 @@ Now if you run `nx serve cli`, you'll see a friendly message:
 > cli@ serve /Users/isaac/Documents/code/myorg/packages/cli
 > go run ./src/ascii.go
 
-Hello, World!
- _____
-< moo >
- -----
-        \   ^__^
-         \  (oo)\_______
-            (__)\       )\/\
-                ||----w |
-                ||     ||
+ Hello, World!
+  _____
+ < moo >
+  -----
+         \   ^__^
+          \  (oo)\_______
+             (__)\       )\/\
+                 ||----w |
+                 ||     ||
 
  —————————————————————————————————————————————————————————————————————————————————————————
 
-  NX   Successfully ran target serve for project cli (2s)
+ NX   Successfully ran target serve for project cli (2s)
 
-   See Nx Cloud run details at https://nx.app/runs/THRW7SDRL9S
+ See Nx Cloud run details at https://nx.app/runs/THRW7SDRL9S
 
 ```
 

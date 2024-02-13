@@ -131,13 +131,13 @@ CREATE apps/myapp-e2e/.eslintrc.json
 ```{% command="nx build myapp" path="~/acme" %}
 > nx run myapp:build
 
-Building Remix app in production mode...
+ Building Remix app in production mode...
 
-Built in 857ms
+ Built in 857ms
 
  ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
-  NX   Successfully ran target build for project myapp (3s)
+ NX   Successfully ran target build for project myapp (3s)
 ```
 
 2. To serve your application for use during development run:
@@ -157,7 +157,7 @@ Remix App Server started at http://localhost:3000 (http://192.168.0.14:3000)
 
  RUN  v0.31.4 /Users/columferry/dev/nrwl/issues/remixguide/acme/apps/myapp
 stderr | app/routes/index.spec.ts > test > should render
-Warning: Functions are not valid as a React child. This may happen if you return a Component instead of <Component /> from render. Or maybe you meant to call this function rather than return it.
+ Warning: Functions are not valid as a React child. This may happen if you return a Component instead of <Component /> from render. Or maybe you meant to call this function rather than return it.
  ✓ app/routes/index.spec.ts  (1 test) 10ms
  Test Files  1 passed (1)
       Tests  1 passed (1)
@@ -166,7 +166,7 @@ Warning: Functions are not valid as a React child. This may happen if you return
 
  ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
-  NX   Successfully ran target test for project myapp (2s)
+ NX   Successfully ran target test for project myapp (2s)
 ```
 
 ## Generating an Nx Library
@@ -178,24 +178,24 @@ To generate a library to use in your Remix application run:
 ```{% command="nx g @nx/remix:lib login --directory=libs/login" path="~/acme" %}
  NX  Generating @nx/remix:library
 
-✔ What test runner should be used? · vitest
-UPDATE nx.json
-UPDATE package.json
-CREATE babel.config.json
-CREATE libs/login/project.json
-CREATE libs/login/.eslintrc.json
-CREATE libs/login/README.md
-CREATE libs/login/src/index.ts
-CREATE libs/login/tsconfig.lib.json
-CREATE libs/login/tsconfig.json
-CREATE libs/login/vite.config.ts
-CREATE libs/login/tsconfig.spec.json
-CREATE libs/login/src/lib/login.module.css
-CREATE libs/login/src/lib/login.spec.tsx
-CREATE libs/login/src/lib/login.tsx
-UPDATE tsconfig.base.json
-CREATE libs/login/src/test-setup.ts
-CREATE libs/login/src/server.ts
+ ✔ What test runner should be used? · vitest
+ UPDATE nx.json
+ UPDATE package.json
+ CREATE babel.config.json
+ CREATE libs/login/project.json
+ CREATE libs/login/.eslintrc.json
+ CREATE libs/login/README.md
+ CREATE libs/login/src/index.ts
+ CREATE libs/login/tsconfig.lib.json
+ CREATE libs/login/tsconfig.json
+ CREATE libs/login/vite.config.ts
+ CREATE libs/login/tsconfig.spec.json
+ CREATE libs/login/src/lib/login.module.css
+ CREATE libs/login/src/lib/login.spec.tsx
+ CREATE libs/login/src/lib/login.tsx
+ UPDATE tsconfig.base.json
+ CREATE libs/login/src/test-setup.ts
+ CREATE libs/login/src/server.ts
 ```
 
 You can then use the library by importing one of the exports into your application:

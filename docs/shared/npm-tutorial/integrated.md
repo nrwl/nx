@@ -193,7 +193,7 @@ Done compiling TypeScript files for project "is-even".
 
  —————————————————————————————————————————————————————————————————————
 
-  NX   Successfully ran target build for project is-even (713ms)
+ NX   Successfully ran target build for project is-even (713ms)
 ```
 
 ## Running Multiple Tasks
@@ -212,9 +212,9 @@ What you would get is the following:
 
  —————————————————————————————————————————————————————————————————
 
-  NX   Successfully ran target build for 2 projects (914ms)
+ NX   Successfully ran target build for 2 projects (914ms)
 
-   Nx read the output from the cache instead of running the command for 1 out of 2 tasks.
+ Nx read the output from the cache instead of running the command for 1 out of 2 tasks.
 ```
 
 Note how on the `is-even:build` it didn't run the build but rather pulled it out of the cache because the build has ran before. If you re-run the `run-many` command all of the builds would be cached.

@@ -43,13 +43,13 @@ For our example, you would run:
 ```{% command="nx docs" path="~/myorg" %}
 > nx run myorg:docs
 
-yarn run v1.22.19
-$ node ./generateDocsSite.js
-Documentation site generated in /docs
+ yarn run v1.22.19
+ $ node ./generateDocsSite.js
+ Documentation site generated in /docs
 
  ————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
-  NX   Successfully ran target docs for project myorg (5s)
+ NX   Successfully ran target docs for project myorg (5s)
 ```
 
 ## Configuring a Root-Level Target
@@ -85,15 +85,15 @@ To cache the `docs` target, you can add `docs` to the `cacheableOperations` in `
 ```{% command="nx docs" path="~/myorg" %}
 > nx run myorg:docs  [existing outputs match the cache, left as is]
 
-yarn run v1.22.19
-$ node ./generateDocsSite.js
-Documentation site generated in /docs
+ yarn run v1.22.19
+ $ node ./generateDocsSite.js
+ Documentation site generated in /docs
 
  ————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
-  NX   Successfully ran target docs for project myorg (31ms)
+ NX   Successfully ran target docs for project myorg (31ms)
 
-   Nx read the output from the cache instead of running the command for 1 out of 1 tasks.
+ Nx read the output from the cache instead of running the command for 1 out of 1 tasks.
 ```
 
 Read more about [cacheableOperations](/features/cache-task-results) and fine-tuning caching with [task inputs](/recipes/running-tasks/configure-inputs).

@@ -47,14 +47,14 @@ git checkout .
 Update `packages/ascii/assets/cow.txt`:
 
 ```plaintext
- _____
-< Hi! >
- -----
-        \   ^__^
-         \  (oo)\_______
-            (__)\       )\/\
-                ||----w |
-                ||     ||
+  _____
+ < Hi! >
+  -----
+         \   ^__^
+          \  (oo)\_______
+             (__)\       )\/\
+                 ||----w |
+                 ||     ||
 ```
 
 **Run `nx print-affected --select=projects`**, and this time you should see `cli`, `blog` and `ascii` printed out.
@@ -66,14 +66,14 @@ Printing the affected projects can be handy, but usually you want to do somethin
 **Run `nx affected -t build` to rebuild only the projects affected by the change.**
 
 ```shell
-    ✔  nx run blog:build (1s)
-    ✔  nx run cli:build (2s)
+ ✔  nx run blog:build (1s)
+ ✔  nx run cli:build (2s)
 
  ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
-  NX   Successfully ran target build for 2 projects (2s)
+ NX   Successfully ran target build for 2 projects (2s)
 
-   See Nx Cloud run details at https://nx.app/runs/XfhRFaOyGCE
+ See Nx Cloud run details at https://nx.app/runs/XfhRFaOyGCE
 ```
 
 Note that Nx only built `blog` and `cli`. It didn't build `ascii` because there is no build script created for it.
