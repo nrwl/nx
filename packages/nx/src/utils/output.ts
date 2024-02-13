@@ -39,6 +39,7 @@ if (isCI() && !forceColor) {
 }
 
 class CLIOutput {
+  readonly X_PADDING = ' ';
   cliName = 'NX';
   formatCommand = (taskId: string) => `${chalk.dim('nx run')} ${taskId}`;
 
@@ -48,7 +49,11 @@ class CLIOutput {
    */
   private get VERTICAL_SEPARATOR() {
     let divider = '';
-    for (let i = 0; i < process.stdout.columns - 1; i++) {
+    for (
+      let i = 0;
+      i < process.stdout.columns - this.X_PADDING.length * 2;
+      i++
+    ) {
       divider += '\u2014';
     }
     return divider;
@@ -90,7 +95,7 @@ class CLIOutput {
     color: string;
     title: string;
   }): void {
-    this.writeToStdOut(`${this.applyNxPrefix(color, title)}${EOL}`);
+    this.writeToStdOut(` ${this.applyNxPrefix(color, title)}${EOL}`);
   }
 
   private writeOptionalOutputBody(bodyLines?: string[]): void {
@@ -98,15 +103,19 @@ class CLIOutput {
       return;
     }
     this.addNewline();
-    bodyLines.forEach((bodyLine) => this.writeToStdOut(`${bodyLine}${EOL}`));
+    bodyLines.forEach((bodyLine) => this.writeToStdOut(`   ${bodyLine}${EOL}`));
   }
 
   applyNxPrefix(color = 'cyan', text: string): string {
     let nxPrefix = '';
     if (chalk[color]) {
-      nxPrefix = chalk.reset.inverse.bold[color](` ${this.cliName} `);
+      nxPrefix = `${chalk[color]('>')} ${chalk.reset.inverse.bold[color](
+        ` ${this.cliName} `
+      )}`;
     } else {
-      nxPrefix = chalk.reset.inverse.bold.keyword(color)(` ${this.cliName} `);
+      nxPrefix = `${chalk.keyword(color)(
+        '>'
+      )} ${chalk.reset.inverse.bold.keyword(color)(` ${this.cliName} `)}`;
     }
     return `${nxPrefix}  ${text}`;
   }
@@ -130,7 +139,7 @@ class CLIOutput {
   }
 
   private getVerticalSeparator(color: string): string {
-    return chalk.dim[color](this.VERTICAL_SEPARATOR);
+    return `${this.X_PADDING}${chalk.dim[color](this.VERTICAL_SEPARATOR)}`;
   }
 
   error({ title, slug, bodyLines }: CLIErrorMessageConfig) {

@@ -1,6 +1,8 @@
 import * as chalk from 'chalk';
 
-export const NX_PREFIX = chalk.inverse(chalk.bold(chalk.cyan(' NX ')));
+export const NX_PREFIX = `${chalk.cyan('>')} ${chalk.inverse(
+  chalk.bold(chalk.cyan(' NX '))
+)}`;
 
 export const NX_ERROR = chalk.inverse(chalk.bold(chalk.red(' ERROR ')));
 

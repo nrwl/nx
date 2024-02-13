@@ -163,19 +163,19 @@ It may take a few minutes.
 ✔ Do you want to update to TypeScript v5.0? (Y/n) · false
 ✔ Do you want to update the Angular version to v16? (Y/n) · false
 
-NX   The migrate command has run successfully.
+ >  NX   The migrate command has run successfully.
 
-  - package.json has been updated.
-  - migrations.json has been generated.
+   - package.json has been updated.
+   - migrations.json has been generated.
 
-NX   Next steps:
+ >  NX   Next steps:
 
-  - Make sure package.json changes make sense and then run 'pnpm install --no-frozen-lockfile',
-  - Run 'pnpm exec nx migrate --run-migrations'
-  - You opted out of some migrations for now. Write the following command down somewhere to apply these migrations later:
-    nx migrate 16.5.3 --from nx@16.1.0-beta.0 --exclude-applied-migrations
-  - To learn more go to https://nx.dev/recipes/other/advanced-update
-  - You may run 'pnpm run nx connect-to-nx-cloud' to get faster builds, GitHub integration, and more. Check out https://nx.app
+   - Make sure package.json changes make sense and then run 'pnpm install --no-frozen-lockfile',
+   - Run 'pnpm exec nx migrate --run-migrations'
+   - You opted out of some migrations for now. Write the following command down somewhere to apply these migrations later:
+     nx migrate 16.5.3 --from nx@16.1.0-beta.0 --exclude-applied-migrations
+   - To learn more go to https://nx.dev/recipes/other/advanced-update
+   - You may run 'pnpm run nx connect-to-nx-cloud' to get faster builds, GitHub integration, and more. Check out https://nx.app
 ```
 
 You can see in the "Next steps" section a suggested command to run to apply the skipped package updates. Make sure to store that information somewhere so you can later remember from which version you need to run the migration to apply the skipped package updates.

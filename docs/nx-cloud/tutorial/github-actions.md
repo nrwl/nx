@@ -207,16 +207,16 @@ pnpm nx build landing-page
 Clearly this is not a scalable solution as it requires us to manually add every new app to the pipeline (and it doesn't include other tasks like `lint`, `test` etc). To improve this we can change the command to run the `build` for all projects like
 
 ```{% command="nx run-many -t build" %}
-✔  nx run shared-product-types:build (429ms)
-✔  nx run shared-product-ui:build (455ms)
-✔  nx run shared-header:build (467ms)
-✔  nx run landing-page:build:production (3s)
-✔  nx run admin:build:production (3s)
-✔  nx run cart:build:production (3s)
+    ✔  nx run shared-product-types:build (429ms)
+    ✔  nx run shared-product-ui:build (455ms)
+    ✔  nx run shared-header:build (467ms)
+    ✔  nx run landing-page:build:production (3s)
+    ✔  nx run admin:build:production (3s)
+    ✔  nx run cart:build:production (3s)
 
-————————————————————————————————————————————————————————————————
+ ————————————————————————————————————————————————————————————————
 
-NX   Successfully ran target build for 6 projects (10s)
+ >  NX   Successfully ran target build for 6 projects (10s)
 ```
 
 This change makes our CI pipeline configuration more maintainable. For a small repository, this might be good enough, but after a little bit of growth this approach will cause your CI times to become unmanageable.
@@ -224,14 +224,14 @@ This change makes our CI pipeline configuration more maintainable. For a small r
 Nx comes with a dedicated ["affected" command](/ci/features/affected) to help with that by only running tasks for projects that were affected by the changes in a given PR.
 
 ```{% command="nx affected -t build" %}
-✔  nx run shared-product-types:build (404ms)
-✔  nx run shared-product-ui:build (445ms)
-✔  nx run shared-header:build (465ms)
-✔  nx run cart:build:production (3s)
+    ✔  nx run shared-product-types:build (404ms)
+    ✔  nx run shared-product-ui:build (445ms)
+    ✔  nx run shared-header:build (465ms)
+    ✔  nx run cart:build:production (3s)
 
-——————————————————————————————————————————————————————————————————————————————————————
+ ——————————————————————————————————————————————————————————————————————————————————————
 
-NX   Successfully ran target build for project cart and 3 tasks it depends on (4s)
+ >  NX   Successfully ran target build for project cart and 3 tasks it depends on (4s)
 ```
 
 ### Configuring the Comparison Range for Affected Commands
@@ -345,18 +345,18 @@ What is more, if you run tasks locally, you will also get cache hits:
 
 ```{% command="nx run-many -t build" %}
 ...
-✔  nx run express-legacy:build  [remote cache]
-✔  nx run nx-plugin-legacy:build  [remote cache]
-✔  nx run esbuild-legacy:build  [remote cache]
-✔  nx run react-native-legacy:build  [remote cache]
-✔  nx run angular-legacy:build  [remote cache]
-✔  nx run remix-legacy:build  [remote cache]
+    ✔  nx run express-legacy:build  [remote cache]
+    ✔  nx run nx-plugin-legacy:build  [remote cache]
+    ✔  nx run esbuild-legacy:build  [remote cache]
+    ✔  nx run react-native-legacy:build  [remote cache]
+    ✔  nx run angular-legacy:build  [remote cache]
+    ✔  nx run remix-legacy:build  [remote cache]
 
-————————————————————————————————————————————————
+ ————————————————————————————————————————————————
 
-NX   Successfully ran target build for 58 projects and 62 tasks they depend on (1m)
+ >  NX   Successfully ran target build for 58 projects and 62 tasks they depend on (1m)
 
-Nx read the output from the cache instead of running the command for 116 out of 120 tasks.
+   Nx read the output from the cache instead of running the command for 116 out of 120 tasks.
 ```
 
 You might also want to learn more about [how to fine-tune caching](/recipes/running-tasks/configure-inputs) to get even better results.
