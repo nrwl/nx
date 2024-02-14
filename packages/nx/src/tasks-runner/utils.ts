@@ -108,9 +108,9 @@ export function validateOutputs(outputs: string[]) {
   const invalidOutputs = new Set<string>();
 
   for (const output of outputs) {
-    if (!/^!?{[\s\S]+}/.test(output)) {
-      invalidOutputs.add(output);
-    }
+    // if (!/^!?{[\s\S]+}/.test(output)) {
+    //   invalidOutputs.add(output);
+    // }
   }
   if (invalidOutputs.size > 0) {
     throw new InvalidOutputsError(outputs, invalidOutputs);
