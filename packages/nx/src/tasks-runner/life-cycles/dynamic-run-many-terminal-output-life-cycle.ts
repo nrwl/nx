@@ -99,7 +99,7 @@ export async function createRunManyDynamicOutputRenderer({
     // Create vertical breathing room for cursor position under the pinned footer
     lines.push('');
     for (const line of lines) {
-      output.overwriteLine(output.X_PADDING + line);
+      output.overwriteLine(line);
     }
     pinnedFooterNumLines = lines.length + additionalLines;
     // clear any possible text below the cursor's position
@@ -262,7 +262,7 @@ export async function createRunManyDynamicOutputRenderer({
       )}`;
       const taskOverridesRows = [];
       if (Object.keys(overrides).length > 0) {
-        const leftPadding = `${output.X_PADDING}       `;
+        const leftPadding = `       `;
         taskOverridesRows.push('');
         taskOverridesRows.push(
           `${leftPadding}${output.dim.cyan('With additional flags:')}`
@@ -323,7 +323,7 @@ export async function createRunManyDynamicOutputRenderer({
       )}`;
       const taskOverridesRows = [];
       if (Object.keys(overrides).length > 0) {
-        const leftPadding = `${output.X_PADDING}       `;
+        const leftPadding = `       `;
         taskOverridesRows.push('');
         taskOverridesRows.push(
           `${leftPadding}${output.dim.green('With additional flags:')}`
@@ -358,7 +358,7 @@ export async function createRunManyDynamicOutputRenderer({
       )}`;
       const taskOverridesRows = [];
       if (Object.keys(overrides).length > 0) {
-        const leftPadding = `${output.X_PADDING}       `;
+        const leftPadding = `       `;
         taskOverridesRows.push('');
         taskOverridesRows.push(
           `${leftPadding}${output.dim.red('With additional flags:')}`
@@ -468,7 +468,7 @@ export async function createRunManyDynamicOutputRenderer({
 
 function writeCompletedTaskResultLine(line: string) {
   const additionalXPadding = '   ';
-  output.overwriteLine(output.X_PADDING + additionalXPadding + line);
+  output.overwriteLine(additionalXPadding + line);
 }
 
 /**
@@ -495,7 +495,5 @@ function writeCommandOutputBlock(commandOutput: string) {
   }
   lines.push('');
   // Indent the command output to make it look more "designed" in the context of the dynamic output
-  lines.forEach((l) =>
-    output.overwriteLine(`${output.X_PADDING}${additionalXPadding}${l}`)
-  );
+  lines.forEach((l) => output.overwriteLine(`${additionalXPadding}${l}`));
 }
