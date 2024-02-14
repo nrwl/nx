@@ -19,7 +19,7 @@ describe('js:generators:publishable', () => {
 
   afterAll(() => cleanupProject());
 
-  it('should update nxJson.release.projects with explicit projects list', async () => {
+  it('should not add release config when it does not exist', async () => {
     const otherLib = uniq('other-lib');
     const publishableLib1 = uniq('publishable-lib1');
     const publishableLib2 = uniq('publishable-lib2');
@@ -39,8 +39,33 @@ describe('js:generators:publishable', () => {
     );
 
     const releaseConfig = readJson('nx.json').release;
+    expect(releaseConfig).toBeUndefined();
+  });
+
+  it('should update nxJson.release.projects when it has an explicit projects list', async () => {
+    const otherLib = uniq('other-lib');
+    const publishableLib3 = uniq('publishable-lib3');
+    const publishableLib4 = uniq('publishable-lib4');
+
+    updateJson('nx.json', (json) => {
+      json.release = {
+        projects: [publishableLib3],
+      };
+      return json;
+    });
+
+    runCLI(`generate @nx/js:lib ${otherLib} --no-interactive`);
+
+    runCLI(
+      `generate @nx/js:lib ${publishableLib3} --publishable --importPath=@scope/publishable-lib-3 --no-interactive`
+    );
+    runCLI(
+      `generate @nx/js:lib ${publishableLib4} --publishable --importPath=@scope/publishable-lib-4 --no-interactive`
+    );
+
+    const releaseConfig = readJson('nx.json').release;
     expect(releaseConfig).toEqual({
-      projects: [publishableLib1, publishableLib2],
+      projects: [publishableLib3, publishableLib4],
     });
   });
 });
