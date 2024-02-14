@@ -29,7 +29,7 @@ In any Nx workspace, you can install `@nx/cypress` by running the following comm
 {% tabs %}
 {% tab label="Nx 18+" %}
 
-```shell
+```shell {% skipRescope=true %}
 nx add @nx/cypress
 ```
 
@@ -75,6 +75,30 @@ The `@nx/cypress/plugin` is configured in the `plugins` array in `nx.json`.
 
 The `@nx/cypress/plugin` will automatically split your e2e tasks by file. You can read more about this feature [here](/ci/features/split-e2e-tasks).
 
+To enable e2e task splitting, make sure there is a `ciWebServerCommand` property set in your `cypress.config.ts` file. It will look something like this:
+
+```ts {% fileName="apps/my-project-e2e/cypress.config.ts" highlightLines=[13] %}
+import { defineConfig } from 'cypress';
+import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
+
+export default defineConfig({
+  e2e: {
+    ...nxE2EPreset(__filename, {
+      cypressDir: 'src',
+      bundler: 'vite',
+      webServerCommands: {
+        default: 'nx run my-project:serve',
+        production: 'nx run my-project:preview',
+      },
+      ciWebServerCommand: 'nx run my-project:serve-static',
+    }),
+    baseUrl: 'http://localhost:4200',
+  },
+});
+```
+
+Note: The `nxE2EPreset` is a collection of default settings, but is not necessary for task splitting.
+
 {% /tab %}
 {% tab label="Nx < 18" %}
 
@@ -95,18 +119,18 @@ By default, when creating a new frontend application, Nx will use Cypress to cre
 nx g @nx/web:app frontend
 ```
 
-### Creating a Cypress E2E project for an existing project
+### Configure Cypress for an existing project
 
-To generate an E2E project based on an existing project, run the following generator
+To configure Cypress for an existing project, run the following generator
 
 ```shell
-nx g @nx/cypress:configuration your-app-name-e2e --project=your-app-name
+nx g @nx/cypress:configuration --project=your-app-name
 ```
 
-Optionally, you can use the `--baseUrl` option if you don't want cypress plugin to serve `your-app-name`.
+Optionally, you can use the `--baseUrl` option if you don't want the Cypress plugin to serve `your-app-name`.
 
 ```shell
-nx g @nx/cypress:configuration your-app-name-e2e --baseUrl=http://localhost:4200
+nx g @nx/cypress:configuration --project=your-app-name --baseUrl=http://localhost:4200
 ```
 
 Replace `your-app-name` with the app's name as defined in your `tsconfig.base.json` file or the `name` property of your `package.json`.

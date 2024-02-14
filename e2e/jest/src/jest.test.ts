@@ -1,12 +1,12 @@
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 import {
+  cleanupProject,
+  expectJestTestsToPass,
   newProject,
   runCLI,
   runCLIAsync,
   uniq,
   updateFile,
-  expectJestTestsToPass,
-  cleanupProject,
 } from '@nx/e2e/utils';
 
 describe('Jest', () => {
@@ -19,6 +19,21 @@ describe('Jest', () => {
   it('should be able test projects using jest', async () => {
     await expectJestTestsToPass('@nx/js:lib --unitTestRunner=jest');
   }, 500000);
+
+  it('should be resilient against NODE_ENV values', async () => {
+    const name = uniq('lib');
+    runCLI(
+      `generate @nx/js:lib ${name} --unitTestRunner=jest --no-interactive`
+    );
+
+    const results = await runCLIAsync(`test ${name}`, {
+      env: {
+        ...process.env, // need to set this for some reason, or else get "env: node: No such file or directory"
+        NODE_ENV: 'foobar',
+      },
+    });
+    expect(results.combinedOutput).toContain('Test Suites: 1 passed, 1 total');
+  });
 
   it('should merge with jest config globals', async () => {
     const testGlobal = `'My Test Global'`;

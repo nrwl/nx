@@ -103,7 +103,7 @@ export function executeWebpackBrowserBuilder(
     switchMap(({ executeBrowserBuilder }) =>
       executeBrowserBuilder(delegateBuilderOptions, context as any, {
         webpackConfiguration: (baseWebpackConfig) => {
-          if (!buildLibsFromSource) {
+          if (!buildLibsFromSource && delegateBuilderOptions.watch) {
             const workspaceDependencies = dependencies
               .filter((dep) => !isNpmProject(dep.node))
               .map((dep) => dep.node.name);

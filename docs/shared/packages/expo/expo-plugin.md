@@ -21,7 +21,7 @@ In any Nx workspace, you can install `@nx/expo` by running the following command
 {% tabs %}
 {% tab label="Nx 18+" %}
 
-```shell
+```shell {% skipRescope=true %}
 nx add @nx/expo
 ```
 

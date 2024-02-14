@@ -5,13 +5,31 @@ src="https://youtu.be/XLOUFZeqRpM"
 title="Nx Agents in action splitting e2e tests at a file level"
  /%}
 
-**Nx Agents** lets you distribute your CI across many machines with minimal configuration. It comes with features such as dynamically allocating agents based on the size of the PR, flaky task re-running, and intelligent task splitting and distribution. Keep reading to learn more.
+**Nx Agents** let you distribute your CI across many machines with minimal configuration. It comes with features such as dynamically allocating agents based on the size of the PR, flaky task re-running, and intelligent task splitting and distribution. Keep reading to learn more.
+
+## Making a Distributed CI Pipeline Is Hard
+
+The only way to speed up your CI pipeline while still running all the necessary tasks is to distribute those tasks across multiple machines. Unfortunately, doing distribution right is hard to set up and hard to maintain. These are just some concerns you have to account for:
+
+- Choose how many machines to set up
+- Set up each machine so that it is ready to execute tasks
+- Ensure that tasks are run in the correct order
+- Copy the output of certain tasks to the machines where those outputs are needed
+- Shut down machines when there are no more tasks to run
+- Shut down all the machines when the whole pipeline hits an error
+- Make sure sensitive information is being handled securely on all machines
+
+And each of these concerns will need to be reconsidered whenever the codebase changes. It would actually be best if they were reconsidered for every PR, because small PRs may not need as much distribution as large PRs.
+
+## Nx Agents Make Distributing Tasks Simple
+
+Nx Agents take care of all these concerns with a small initial configuration that does not need to be modified as your codebase changes. Your CI pipeline sends your tasks to be run on agent machines that Nx Cloud creates for you. All you need to do is specify how many agents and the type of agent. Then, when the pipeline is finished, your initial CI pipeline will contain all the logs and artifacts as if the tasks all ran on your main CI machine - but completed in a fraction of the time.
 
 ![Distribute Task Execution with Nx Agents](/shared/images/dte/nx-agents-orchestration-diagram.svg)
 
 For a more thorough explanation of how Nx Agents optimizes your CI pipeline, read this [guide to parallelization and distribution in CI](/ci/concepts/parallelization-distribution).
 
-## Enabling Nx Agents
+## Enable Nx Agents
 
 To enable task distribution with Nx Agents, there are two requirements:
 
@@ -69,10 +87,12 @@ Here are the [available resource classes](https://nx.app/pricing#resource-classe
 Every organization manages their CI/CD pipelines differently, so the guides don't cover org-specific aspects of
 CI/CD (e.g., deployment). They mainly focus on configuring Nx correctly using Nx Agents and [Nx Replay](/ci/features/remote-cache).
 
-- [Azure Pipelines](/ci/recipes/set-up/monorepo-ci-azure#distributed-ci-with-nx-cloud)
-- [Circle CI](/ci/recipes/set-up/monorepo-ci-circle-ci#distributed-ci-with-nx-cloud)
-- [GitHub Actions](/ci/recipes/set-up/monorepo-ci-github-actions#distributed-ci-with-nx-cloud)
-- [Jenkins](/ci/recipes/set-up/monorepo-ci-jenkins#distributed-ci-with-nx-cloud)
+- [Azure Pipelines](/ci/recipes/set-up/monorepo-ci-azure)
+- [Circle CI](/ci/recipes/set-up/monorepo-ci-circle-ci)
+- [GitHub Actions](/ci/recipes/set-up/monorepo-ci-github-actions)
+- [Jenkins](/ci/recipes/set-up/monorepo-ci-jenkins)
+- [GitLab](/ci/recipes/set-up/monorepo-ci-gitlab)
+- [Bitbucket Pipelines](/ci/recipes/set-up/monorepo-ci-bitbucket-pipelines)
 
 Note that only cacheable operations can be distributed because they have to be replayed on the main job.
 

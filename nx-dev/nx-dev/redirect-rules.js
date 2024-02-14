@@ -359,9 +359,6 @@ const recipesUrls = {
   '/recipes/other/dte': '/showcase/example-repos/dte',
   '/recipes/other/deploy-nextjs-to-vercel':
     '/recipes/deployment/deploy-nextjs-to-vercel',
-  '/recipes/other/deno-deploy': '/recipes/deno/deno-deploy',
-  '/recipes/other/deno-netlify-functions':
-    '/recipes/deno/deno-netlify-functions',
   '/recipes/other/root-level-scripts':
     '/recipes/managing-repository/root-level-scripts',
   '/recipes/other/analyze-source-files':
@@ -456,6 +453,8 @@ const nxCloudUrls = {
     '/ci/features/distribute-task-execution',
   '/ci/features/nx-agents': '/ci/features/distribute-task-execution',
   '/ci': '/ci/intro/ci-with-nx',
+  '/concepts/more-concepts/illustrated-dte':
+    '/ci/concepts/parallelization-distribution',
   '/nx-cloud/:path*': '/ci/:path*',
   '/core-features/:path*': '/features/:path*',
 };
@@ -942,11 +941,6 @@ const latestRecipesRefactoring = {
     '/recipes/tips-n-tricks/run-commands-executor',
   // ci
   '/recipes/ci/azure-last-successful-commit': '/recipes/ci/monorepo-ci-azure',
-  // other
-  '/recipes/deployment/deno-deploy': '/recipes/other/deno-deploy',
-  '/recipes/deployment/deno-netlify-functions':
-    '/recipes/other/deno-netlify-functions',
-
   // nx concepts
   '/recipes/module-federation/faster-builds':
     '/concepts/more-concepts/faster-builds-with-module-federation',
@@ -955,7 +949,7 @@ const latestRecipesRefactoring = {
 };
 
 const coreFeatureAndConceptsRefactoring = {
-  '/features/share-your-cache': '/features/remote-cache',
+  '/features/share-your-cache': '/ci/features/remote-cache',
   '/concepts/more-concepts/customizing-inputs':
     '/recipes/running-tasks/configure-inputs',
   '/recipes/tips-n-tricks/root-level-scripts':

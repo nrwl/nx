@@ -64,7 +64,6 @@ npx create-nx-workspace@latest
 {% link-card title="Expo" appearance="small" url="/nx-api/expo" icon="expo" /%}
 {% link-card title="React Native" appearance="small" url="/nx-api/react-native" icon="react" /%}
 {% link-card title="Fastify" appearance="small" url="/showcase/example-repos/mongo-fastify" icon="fastify" /%}
-{% link-card title="Deno" appearance="small" url="https://github.com/nrwl/nx-labs/tree/main/api/deno" icon="deno" /%}
 {% link-card title="Svelte" appearance="small" url="/showcase/example-repos/add-svelte" icon="svelte" /%}
 {% link-card title="Solid" appearance="small" url="/showcase/example-repos/add-solid" icon="solid" /%}
 {% link-card title="Lit" appearance="small" url="/showcase/example-repos/add-lit" icon="lit" /%}

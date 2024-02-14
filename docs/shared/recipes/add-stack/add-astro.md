@@ -82,7 +82,7 @@ Install `@nx/js` plugin.
 
 > Note: you should make sure any first party, `@nx/` scoped, plugins match the `nx` package version
 
-```shell
+```shell {% skipRescope=true %}
 nx add @nx/js@<nx-version>
 ```
 

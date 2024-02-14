@@ -46,7 +46,7 @@ describe('createJestConfig', () => {
   });
 
   it('should generate files with --js flag', async () => {
-    await createJestConfig(tree, { js: true });
+    await createJestConfig(tree, { js: true }, 'js');
 
     expect(tree.exists('jest.config.js')).toBeTruthy();
     expect(
@@ -58,7 +58,7 @@ describe('createJestConfig', () => {
   });
 
   it('should generate files ', async () => {
-    await createJestConfig(tree, {});
+    await createJestConfig(tree, {}, 'js');
 
     expect(tree.exists('jest.config.ts')).toBeTruthy();
     expect(
@@ -92,13 +92,13 @@ export default {
 `;
     tree.write('jest.config.ts', expected);
 
-    await createJestConfig(tree, {});
+    await createJestConfig(tree, {}, 'js');
 
     expect(tree.read('jest.config.ts', 'utf-8')).toEqual(expected);
   });
 
   it('should make js jest files', async () => {
-    await createJestConfig(tree, { js: true });
+    await createJestConfig(tree, { js: true }, 'js');
 
     expect(tree.exists('jest.config.js')).toBeTruthy();
     expect(tree.exists('jest.preset.js')).toBeTruthy();
@@ -106,7 +106,7 @@ export default {
 
   describe('root project', () => {
     it('should not add a monorepo jest.config.ts  to the project', async () => {
-      await createJestConfig(tree, { rootProject: true });
+      await createJestConfig(tree, { rootProject: true }, 'js');
 
       expect(tree.exists('jest.config.ts')).toBeFalsy();
     });
@@ -143,7 +143,7 @@ export default {
 `
       );
 
-      await createJestConfig(tree, { rootProject: false });
+      await createJestConfig(tree, { rootProject: false }, 'js');
 
       expect(tree.exists('jest.config.app.ts')).toBeTruthy();
       expect(tree.read('jest.config.app.ts', 'utf-8')).toMatchInlineSnapshot(`
@@ -210,7 +210,7 @@ module.exports = {
 `
       );
 
-      await createJestConfig(tree, { js: true, rootProject: false });
+      await createJestConfig(tree, { js: true, rootProject: false }, 'js');
 
       expect(tree.exists('jest.config.app.js')).toBeTruthy();
       expect(tree.read('jest.config.js', 'utf-8'))

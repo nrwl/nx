@@ -726,7 +726,7 @@ ${JSON.stringify(
 
 
 
-      >  NX   Previewing a GitHub release and an entry in {project-name}/CHANGELOG.md for v1000.0.0-next.0
+      >  NX   Previewing an entry in {project-name}/CHANGELOG.md for v1000.0.0-next.0
 
 
       + ## 1000.0.0-next.0
@@ -734,7 +734,7 @@ ${JSON.stringify(
       + This was a version bump only for {project-name} to align it with other projects, there were no code changes.
 
 
-      >  NX   Previewing a GitHub release and an entry in {project-name}/CHANGELOG.md for v1000.0.0-next.0
+      >  NX   Previewing an entry in {project-name}/CHANGELOG.md for v1000.0.0-next.0
 
 
       + ## 1000.0.0-next.0
@@ -742,7 +742,7 @@ ${JSON.stringify(
       + This was a version bump only for {project-name} to align it with other projects, there were no code changes.
 
 
-      >  NX   Previewing a GitHub release and an entry in {project-name}/CHANGELOG.md for v1000.0.0-next.0
+      >  NX   Previewing an entry in {project-name}/CHANGELOG.md for v1000.0.0-next.0
 
 
       + ## 1000.0.0-next.0
@@ -754,6 +754,33 @@ ${JSON.stringify(
 
 
       >  NX   Tagging commit with git
+
+
+      >  NX   Pushing to git remote
+
+
+      >  NX   Creating GitHub Release
+
+
+      + ## 1000.0.0-next.0
+      +
+      + This was a version bump only for {project-name} to align it with other projects, there were no code changes.
+
+
+      >  NX   Creating GitHub Release
+
+
+      + ## 1000.0.0-next.0
+      +
+      + This was a version bump only for {project-name} to align it with other projects, there were no code changes.
+
+
+      >  NX   Creating GitHub Release
+
+
+      + ## 1000.0.0-next.0
+      +
+      + This was a version bump only for {project-name} to align it with other projects, there were no code changes.
 
 
     `);
