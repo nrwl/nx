@@ -10,6 +10,9 @@ import { prettyTime } from './pretty-time';
 import { formatFlags, formatTargetsAndProjects } from './formatting-utils';
 import { viewLogsFooterRows } from './view-logs-utils';
 
+const LEFT_PAD = `  `;
+const EXTENDED_LEFT_PAD = `    `;
+
 /**
  * The following function is responsible for creating a life cycle with dynamic
  * outputs, meaning previous outputs can be rewritten or modified as new outputs
@@ -194,7 +197,7 @@ export async function createRunManyDynamicOutputRenderer({
     if (runningTasks.length > 0) {
       additionalFooterRows.push(
         output.dim(
-          `  ${output.colors.cyan(figures.arrowRight)}    Executing ${
+          `${LEFT_PAD}${output.colors.cyan(figures.arrowRight)}    Executing ${
             runningTasks.length
           }/${remainingTasks} remaining tasks${
             runningTasks.length > 1 ? ' in parallel' : ''
@@ -204,7 +207,7 @@ export async function createRunManyDynamicOutputRenderer({
       additionalFooterRows.push('');
       for (const runningTask of runningTasks) {
         additionalFooterRows.push(
-          `  ${output.dim.cyan(
+          `${LEFT_PAD}${output.dim.cyan(
             dots.frames[currentFrame]
           )}    ${output.formatCommand(runningTask.task.id)}`
         );
@@ -236,7 +239,7 @@ export async function createRunManyDynamicOutputRenderer({
 
     if (totalSuccessfulTasks > 0) {
       additionalFooterRows.push(
-        `  ${output.colors.green(
+        `${LEFT_PAD}${output.colors.green(
           figures.tick
         )}    ${totalSuccessfulTasks}${`/${totalCompletedTasks}`} succeeded ${output.dim(
           `[${totalCachedTasks} read from cache]`
@@ -246,7 +249,7 @@ export async function createRunManyDynamicOutputRenderer({
 
     if (totalFailedTasks > 0) {
       additionalFooterRows.push(
-        `  ${output.colors.red(
+        `${LEFT_PAD}${output.colors.red(
           figures.cross
         )}    ${totalFailedTasks}${`/${totalCompletedTasks}`} failed`
       );
@@ -262,14 +265,13 @@ export async function createRunManyDynamicOutputRenderer({
       )}`;
       const taskOverridesRows = [];
       if (Object.keys(overrides).length > 0) {
-        const leftPadding = `       `;
         taskOverridesRows.push('');
         taskOverridesRows.push(
-          `${leftPadding}${output.dim.cyan('With additional flags:')}`
+          `${EXTENDED_LEFT_PAD}${output.dim.cyan('With additional flags:')}`
         );
         Object.entries(overrides)
           .map(([flag, value]) =>
-            output.dim.cyan(formatFlags(leftPadding, flag, value))
+            output.dim.cyan(formatFlags(EXTENDED_LEFT_PAD, flag, value))
           )
           .forEach((arg) => taskOverridesRows.push(arg));
       }
@@ -323,14 +325,13 @@ export async function createRunManyDynamicOutputRenderer({
       )}`;
       const taskOverridesRows = [];
       if (Object.keys(overrides).length > 0) {
-        const leftPadding = `       `;
         taskOverridesRows.push('');
         taskOverridesRows.push(
-          `${leftPadding}${output.dim.green('With additional flags:')}`
+          `${EXTENDED_LEFT_PAD}${output.dim.green('With additional flags:')}`
         );
         Object.entries(overrides)
           .map(([flag, value]) =>
-            output.dim.green(formatFlags(leftPadding, flag, value))
+            output.dim.green(formatFlags(EXTENDED_LEFT_PAD, flag, value))
           )
           .forEach((arg) => taskOverridesRows.push(arg));
       }
@@ -358,14 +359,13 @@ export async function createRunManyDynamicOutputRenderer({
       )}`;
       const taskOverridesRows = [];
       if (Object.keys(overrides).length > 0) {
-        const leftPadding = `       `;
         taskOverridesRows.push('');
         taskOverridesRows.push(
-          `${leftPadding}${output.dim.red('With additional flags:')}`
+          `${EXTENDED_LEFT_PAD}${output.dim.red('With additional flags:')}`
         );
         Object.entries(overrides)
           .map(([flag, value]) =>
-            output.dim.red(formatFlags(leftPadding, flag, value))
+            output.dim.red(formatFlags(EXTENDED_LEFT_PAD, flag, value))
           )
           .forEach((arg) => taskOverridesRows.push(arg));
       }
@@ -383,22 +383,22 @@ export async function createRunManyDynamicOutputRenderer({
         ...taskOverridesRows,
         '',
         output.dim(
-          `  ${output.dim(
+          `${LEFT_PAD}${output.dim(
             figures.tick
           )}    ${totalSuccessfulTasks}${`/${totalCompletedTasks}`} succeeded ${output.dim(
             `[${totalCachedTasks} read from cache]`
           )}`
         ),
         '',
-        `  ${output.colors.red(
+        `${LEFT_PAD}${output.colors.red(
           figures.cross
         )}    ${totalFailedTasks}${`/${totalCompletedTasks}`} targets failed, including the following:`,
         `${failedTasksForPrinting
           .map(
             (t) =>
-              `        ${output.colors.red('-')} ${output.formatCommand(
-                t.toString()
-              )}`
+              `${EXTENDED_LEFT_PAD}${output.colors.red(
+                '-'
+              )} ${output.formatCommand(t.toString())}`
           )
           .join('\n ')}`,
       ];
@@ -406,7 +406,9 @@ export async function createRunManyDynamicOutputRenderer({
       if (failedTasks.size > numFailedToPrint) {
         failureSummaryRows.push(
           output.dim(
-            `        ...and ${failedTasks.size - numFailedToPrint} more...`
+            `${EXTENDED_LEFT_PAD}...and ${
+              failedTasks.size - numFailedToPrint
+            } more...`
           )
         );
       }
@@ -467,8 +469,7 @@ export async function createRunManyDynamicOutputRenderer({
 }
 
 function writeCompletedTaskResultLine(line: string) {
-  const additionalXPadding = '   ';
-  output.overwriteLine(additionalXPadding + line);
+  output.overwriteLine(line);
 }
 
 /**
@@ -480,7 +481,6 @@ function writeCompletedTaskResultLine(line: string) {
 function writeCommandOutputBlock(commandOutput: string) {
   commandOutput = commandOutput || '';
   commandOutput = commandOutput.trimStart();
-  const additionalXPadding = '      ';
   const lines = commandOutput.split(EOL);
   let totalTrailingEmptyLines = 0;
   for (let i = lines.length - 1; i >= 0; i--) {
@@ -495,5 +495,5 @@ function writeCommandOutputBlock(commandOutput: string) {
   }
   lines.push('');
   // Indent the command output to make it look more "designed" in the context of the dynamic output
-  lines.forEach((l) => output.overwriteLine(`${additionalXPadding}${l}`));
+  lines.forEach((l) => output.overwriteLine(`${EXTENDED_LEFT_PAD}${l}`));
 }

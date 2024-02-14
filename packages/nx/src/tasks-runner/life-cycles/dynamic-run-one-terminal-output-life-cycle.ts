@@ -9,6 +9,9 @@ import { Task } from '../../config/task-graph';
 import { formatFlags, formatTargetsAndProjects } from './formatting-utils';
 import { viewLogsFooterRows } from './view-logs-utils';
 
+const LEFT_PAD = `  `;
+const EXTENDED_LEFT_PAD = `    `;
+
 /**
  * As tasks are completed the overall state moves from:
  * 1. EXECUTING_DEPENDENT_TARGETS (dynamic lines, including a spinner are reprinted, task outputs not shown)
@@ -133,7 +136,7 @@ export async function createRunOneDynamicOutputRenderer({
       case 'EXECUTING_DEPENDENT_TARGETS':
         if (totalFailedTasks === 0) {
           linesToRender.push(
-            `  ${output.colors.cyan(
+            `${LEFT_PAD}${output.colors.cyan(
               dots.frames[dependentTargetsCurrentFrame]
             )}    ${output.dim(
               `Nx is waiting on ${remainingDependentTasksNotFromInitiatingProject} dependent project tasks before running tasks from`
@@ -149,7 +152,7 @@ export async function createRunOneDynamicOutputRenderer({
     if (totalFailedTasks > 0) {
       linesToRender.push(
         output.colors.red.dim(
-          `  ${output.colors.red(
+          `${LEFT_PAD}${output.colors.red(
             figures.cross
           )}    ${totalFailedTasks}${`/${totalCompletedTasks}`} dependent project tasks failed (see below)`
         )
@@ -159,7 +162,7 @@ export async function createRunOneDynamicOutputRenderer({
     if (totalSuccessfulTasks > 0) {
       linesToRender.push(
         output.dim(
-          `  ${output.dim(
+          `${LEFT_PAD}${output.dim(
             figures.tick
           )}    ${totalSuccessfulTasks}${`/${totalCompletedTasks}`} dependent project tasks succeeded ${output.dim(
             `[${totalCachedTasks} read from cache]`
@@ -198,7 +201,7 @@ export async function createRunOneDynamicOutputRenderer({
         if (totalDependentTasksNotFromInitiatingProject > 0) {
           output.addNewline();
           process.stdout.write(
-            `  ${output.dim(
+            `${LEFT_PAD}${output.dim(
               'Hint: you can run the command with'
             )} --verbose ${output.dim(
               'to see the full dependent project outputs'
@@ -278,14 +281,13 @@ export async function createRunOneDynamicOutputRenderer({
 
       const taskOverridesLines = [];
       if (Object.keys(overrides).length > 0) {
-        const leftPadding = `       `;
         taskOverridesLines.push('');
         taskOverridesLines.push(
-          `${leftPadding}${output.dim.green('With additional flags:')}`
+          `${EXTENDED_LEFT_PAD}${output.dim.green('With additional flags:')}`
         );
         Object.entries(overrides)
           .map(([flag, value]) =>
-            output.dim.green(formatFlags(leftPadding, flag, value))
+            output.dim.green(formatFlags(EXTENDED_LEFT_PAD, flag, value))
           )
           .forEach((arg) => taskOverridesLines.push(arg));
       }
@@ -319,14 +321,13 @@ export async function createRunOneDynamicOutputRenderer({
 
       const taskOverridesLines = [];
       if (Object.keys(overrides).length > 0) {
-        const leftPadding = `       `;
         taskOverridesLines.push('');
         taskOverridesLines.push(
-          `${leftPadding}${output.dim.red('With additional flags:')}`
+          `${EXTENDED_LEFT_PAD}${output.dim.red('With additional flags:')}`
         );
         Object.entries(overrides)
           .map(([flag, value]) =>
-            output.dim.red(formatFlags(leftPadding, flag, value))
+            output.dim.red(formatFlags(EXTENDED_LEFT_PAD, flag, value))
           )
           .forEach((arg) => taskOverridesLines.push(arg));
       }
@@ -341,10 +342,10 @@ export async function createRunOneDynamicOutputRenderer({
           ),
           ...taskOverridesLines,
           '',
-          `  ${output.colors.red(
+          `${LEFT_PAD}${output.colors.red(
             figures.cross
           )}    ${totalFailedTasks}${`/${totalCompletedTasks}`} failed`,
-          `  ${output.dim(
+          `${LEFT_PAD}${output.dim(
             figures.tick
           )}    ${totalSuccessfulTasks}${`/${totalCompletedTasks}`} succeeded ${output.dim(
             `[${totalCachedTasks} read from cache]`
