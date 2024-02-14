@@ -6707,6 +6707,14 @@
                 "disableCollapsible": false
               },
               {
+                "id": "extract-i18n",
+                "path": "/nx-api/angular/executors/extract-i18n",
+                "name": "extract-i18n",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
                 "id": "webpack-browser",
                 "path": "/nx-api/angular/executors/webpack-browser",
                 "name": "webpack-browser",
