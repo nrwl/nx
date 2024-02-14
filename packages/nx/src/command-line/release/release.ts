@@ -6,7 +6,7 @@ import {
 } from '../../devkit-exports';
 import { createProjectGraphAsync } from '../../project-graph/project-graph';
 import { handleErrors } from '../../utils/params';
-import { releaseChangelog } from './changelog';
+import { releaseChangelog, shouldCreateGitHubRelease } from './changelog';
 import { ReleaseOptions, VersionOptions } from './command-object';
 import {
   createNxReleaseConfig,
@@ -14,7 +14,8 @@ import {
 } from './config/config';
 import { filterReleaseGroups } from './config/filter-release-groups';
 import { releasePublish } from './publish';
-import { gitCommit, gitTag } from './utils/git';
+import { getCommitHash, gitCommit, gitPush, gitTag } from './utils/git';
+import { createOrUpdateGithubRelease } from './utils/github';
 import { resolveNxJsonConfigErrorMessage } from './utils/resolve-nx-json-error-message';
 import {
   createCommitMessageValues,
@@ -78,13 +79,14 @@ export async function release(
     gitTag: false,
   });
 
-  await releaseChangelog({
+  const changelogResult = await releaseChangelog({
     ...args,
     versionData: versionResult.projectsVersionData,
     version: versionResult.workspaceVersion,
     stageChanges: shouldStage,
     gitCommit: false,
     gitTag: false,
+    createRelease: false,
   });
 
   const {
@@ -141,6 +143,82 @@ export async function release(
         dryRun: args.dryRun,
         verbose: args.verbose,
       });
+    }
+  }
+
+  const shouldCreateWorkspaceRelease = shouldCreateGitHubRelease(
+    nxReleaseConfig.changelog.workspaceChangelog
+  );
+
+  let hasPushedChanges = false;
+  let latestCommit: string | undefined;
+
+  if (shouldCreateWorkspaceRelease && changelogResult.workspaceChangelog) {
+    output.logSingleLine(`Pushing to git remote`);
+
+    // Before we can create/update the release we need to ensure the commit exists on the remote
+    await gitPush({
+      dryRun: args.dryRun,
+      verbose: args.verbose,
+    });
+
+    hasPushedChanges = true;
+
+    output.logSingleLine(`Creating GitHub Release`);
+
+    latestCommit = await getCommitHash('HEAD');
+    await createOrUpdateGithubRelease(
+      changelogResult.workspaceChangelog.releaseVersion,
+      changelogResult.workspaceChangelog.contents,
+      latestCommit,
+      { dryRun: args.dryRun }
+    );
+  }
+
+  for (const releaseGroup of releaseGroups) {
+    const shouldCreateProjectReleases = shouldCreateGitHubRelease(
+      releaseGroup.changelog
+    );
+
+    if (shouldCreateProjectReleases && changelogResult.projectChangelogs) {
+      const projects = args.projects?.length
+        ? // If the user has passed a list of projects, we need to use the filtered list of projects within the release group
+          Array.from(releaseGroupToFilteredProjects.get(releaseGroup))
+        : // Otherwise, we use the full list of projects within the release group
+          releaseGroup.projects;
+      const projectNodes = projects.map((name) => projectGraph.nodes[name]);
+
+      for (const project of projectNodes) {
+        const changelog = changelogResult.projectChangelogs[project.name];
+        if (!changelog) {
+          continue;
+        }
+
+        if (!hasPushedChanges) {
+          output.logSingleLine(`Pushing to git remote`);
+
+          // Before we can create/update the release we need to ensure the commit exists on the remote
+          await gitPush({
+            dryRun: args.dryRun,
+            verbose: args.verbose,
+          });
+
+          hasPushedChanges = true;
+        }
+
+        output.logSingleLine(`Creating GitHub Release`);
+
+        if (!latestCommit) {
+          latestCommit = await getCommitHash('HEAD');
+        }
+
+        await createOrUpdateGithubRelease(
+          changelog.releaseVersion,
+          changelog.contents,
+          latestCommit,
+          { dryRun: args.dryRun }
+        );
+      }
     }
   }
 
