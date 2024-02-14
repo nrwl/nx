@@ -756,18 +756,10 @@ ${JSON.stringify(
       NX   Tagging commit with git
 
 
-      >  NX   Pushing to git remote
+      NX   Pushing to git remote
 
 
-      >  NX   Creating GitHub Release
-
-
-      + ## 1000.0.0-next.0
-      +
-      + This was a version bump only for {project-name} to align it with other projects, there were no code changes.
-
-
-      >  NX   Creating GitHub Release
+      NX   Creating GitHub Release
 
 
       + ## 1000.0.0-next.0
@@ -775,7 +767,15 @@ ${JSON.stringify(
       + This was a version bump only for {project-name} to align it with other projects, there were no code changes.
 
 
-      >  NX   Creating GitHub Release
+      NX   Creating GitHub Release
+
+
+      + ## 1000.0.0-next.0
+      +
+      + This was a version bump only for {project-name} to align it with other projects, there were no code changes.
+
+
+      NX   Creating GitHub Release
 
 
       + ## 1000.0.0-next.0
