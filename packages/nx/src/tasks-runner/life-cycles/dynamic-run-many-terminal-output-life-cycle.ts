@@ -469,7 +469,7 @@ export async function createRunManyDynamicOutputRenderer({
 }
 
 function writeCompletedTaskResultLine(line: string) {
-  output.overwriteLine(line);
+  output.overwriteLine(LEFT_PAD + line);
 }
 
 /**
