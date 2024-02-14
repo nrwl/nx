@@ -45,6 +45,7 @@ export type ChangelogOptions = NxReleaseArgs &
     from?: string;
     interactive?: string;
     gitRemote?: string;
+    createRelease?: false | 'github';
   };
 
 export type PublishOptions = NxReleaseArgs &
