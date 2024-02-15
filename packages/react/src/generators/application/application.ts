@@ -40,6 +40,7 @@ import {
 } from '@nx/eslint/src/generators/utils/eslint-file';
 import { initGenerator as jsInitGenerator } from '@nx/js';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
+import { setupTailwindGenerator } from '../setup-tailwind/setup-tailwind';
 
 async function addLinting(host: Tree, options: NormalizedSchema) {
   const tasks: GeneratorCallback[] = [];
@@ -132,6 +133,13 @@ export async function applicationGeneratorInternal(
 
   createApplicationFiles(host, options);
   addProject(host, options);
+
+  if (options.style === 'tailwind') {
+    const twTask = await setupTailwindGenerator(host, {
+      project: options.projectName,
+    });
+    tasks.push(twTask);
+  }
 
   if (options.bundler === 'vite') {
     const { createOrEditViteConfig, viteConfigurationGenerator } =

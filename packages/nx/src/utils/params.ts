@@ -35,7 +35,7 @@ type PropertyDescription = {
     | { $source: 'projectName' }
     | { $source: 'unparsed' }
     | { $source: 'workingDirectory' };
-  additionalProperties?: boolean;
+  additionalProperties?: boolean | PropertyDescription;
   const?: any;
   'x-prompt'?:
     | string
@@ -72,7 +72,7 @@ export type Schema = {
   oneOf?: Partial<Schema>[];
   description?: string;
   definitions?: Properties;
-  additionalProperties?: boolean;
+  additionalProperties?: boolean | PropertyDescription;
   examples?: { command: string; description?: string }[];
   patternProperties?: {
     [pattern: string]: PropertyDescription;
@@ -284,7 +284,10 @@ export function validateObject(
     }
   });
 
-  if (schema.additionalProperties === false) {
+  if (
+    schema.additionalProperties !== undefined &&
+    schema.additionalProperties !== true
+  ) {
     Object.keys(opts).find((p) => {
       if (
         Object.keys(schema.properties).indexOf(p) === -1 &&
@@ -297,8 +300,15 @@ export function validateObject(
           throw new SchemaError(
             `Schema does not support positional arguments. Argument '${opts[p]}' found`
           );
-        } else {
+        } else if (schema.additionalProperties === false) {
           throw new SchemaError(`'${p}' is not found in schema`);
+        } else if (typeof schema.additionalProperties === 'object') {
+          validateProperty(
+            p,
+            opts[p],
+            schema.additionalProperties,
+            definitions
+          );
         }
       }
     });
@@ -595,7 +605,7 @@ export function applyVerbosity(
   isVerbose: boolean
 ) {
   if (
-    (schema.additionalProperties || 'verbose' in schema.properties) &&
+    (schema.additionalProperties === true || 'verbose' in schema.properties) &&
     isVerbose
   ) {
     options['verbose'] = true;

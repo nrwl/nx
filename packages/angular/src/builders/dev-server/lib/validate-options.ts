@@ -16,4 +16,9 @@ export function validateOptions(options: Schema): void {
     throw new Error(stripIndents`The "esbuildMiddleware" option is only supported in Angular >= 17.0.0. You are currently using "${angularVersion}".
       You can resolve this error by removing the "esbuildMiddleware" option or by migrating to Angular 17.0.0.`);
   }
+
+  if (lt(angularVersion, '17.2.0') && options.prebundle) {
+    throw new Error(stripIndents`The "prebundle" option is only supported in Angular >= 17.2.0. You are currently using "${angularVersion}".
+      You can resolve this error by removing the "prebundle" option or by migrating to Angular 17.2.0.`);
+  }
 }
