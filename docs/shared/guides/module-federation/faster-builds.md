@@ -301,7 +301,7 @@ To use Module Federation well, we recommend that you enable [Nx Cloud](https://n
 when using `create-nx-workspace`, you can do the following.
 
 ```shell
-nx connect-to-nx-cloud
+nx connect
 ```
 
 With Nx Cloud enabled, a large set of builds can be skipped entirely when running the application locally (and in
