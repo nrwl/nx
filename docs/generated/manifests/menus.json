@@ -2301,6 +2301,14 @@
                 "disableCollapsible": false
               },
               {
+                "name": "Automate GitHub Releases",
+                "path": "/recipes/nx-release/automate-github-releases",
+                "id": "automate-github-releases",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
                 "name": "Update Your Local Registry Setup to use Nx Release",
                 "path": "/recipes/nx-release/update-local-registry-setup",
                 "id": "update-local-registry-setup",
@@ -4109,6 +4117,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Automate GitHub Releases",
+            "path": "/recipes/nx-release/automate-github-releases",
+            "id": "automate-github-releases",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Update Your Local Registry Setup to use Nx Release",
             "path": "/recipes/nx-release/update-local-registry-setup",
             "id": "update-local-registry-setup",
@@ -4147,6 +4163,14 @@
         "name": "Publish in CI/CD",
         "path": "/recipes/nx-release/publish-in-ci-cd",
         "id": "publish-in-ci-cd",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Automate GitHub Releases",
+        "path": "/recipes/nx-release/automate-github-releases",
+        "id": "automate-github-releases",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -6726,6 +6750,14 @@
                 "id": "application",
                 "path": "/nx-api/angular/executors/application",
                 "name": "application",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "extract-i18n",
+                "path": "/nx-api/angular/executors/extract-i18n",
+                "name": "extract-i18n",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false

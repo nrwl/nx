@@ -1011,6 +1011,13 @@
     },
     {
       "description": "",
+      "file": "shared/recipes/nx-release/automate-github-releases",
+      "id": "automate-github-releases",
+      "name": "Automate GitHub Releases",
+      "path": "/recipes/nx-release/automate-github-releases"
+    },
+    {
+      "description": "",
       "file": "shared/recipes/nx-release/update-local-registry-setup",
       "id": "update-local-registry-setup",
       "name": "Update Your Local Registry Setup to use Nx Release",

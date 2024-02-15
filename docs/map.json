@@ -1131,6 +1131,12 @@
                   "file": "shared/recipes/nx-release/publish-in-ci-cd"
                 },
                 {
+                  "name": "Automate GitHub Releases",
+                  "id": "automate-github-releases",
+                  "tags": ["nx-release"],
+                  "file": "shared/recipes/nx-release/automate-github-releases"
+                },
+                {
                   "name": "Update Your Local Registry Setup to use Nx Release",
                   "id": "update-local-registry-setup",
                   "tags": ["nx-release"],

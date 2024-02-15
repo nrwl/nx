@@ -532,12 +532,18 @@ describe('app', () => {
     describe('eslint', () => {
       it('should add lint target', async () => {
         await generateApp(appTree, 'my-app', { linter: Linter.EsLint });
-        expect(
-          readProjectConfiguration(appTree, 'my-app').targets.lint
-        ).toMatchInlineSnapshot(`undefined`);
-        expect(
-          readProjectConfiguration(appTree, 'my-app-e2e').targets.lint
-        ).toMatchInlineSnapshot(`undefined`);
+        expect(readProjectConfiguration(appTree, 'my-app').targets.lint)
+          .toMatchInlineSnapshot(`
+          {
+            "executor": "@nx/eslint:lint",
+          }
+        `);
+        expect(readProjectConfiguration(appTree, 'my-app-e2e').targets.lint)
+          .toMatchInlineSnapshot(`
+          {
+            "executor": "@nx/eslint:lint",
+          }
+        `);
       });
 
       it('should add valid eslint JSON configuration which extends from Nx presets', async () => {
@@ -1256,7 +1262,7 @@ async function generateApp(
     unitTestRunner: UnitTestRunner.Jest,
     linter: Linter.EsLint,
     standalone: false,
-    addPlugin: true,
+    addPlugin: false,
     ...options,
   });
 }

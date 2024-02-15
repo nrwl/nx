@@ -131,13 +131,12 @@ function runMigration() {
 }
 
 function nxCliPath() {
+  const version = process.env.NX_MIGRATE_CLI_VERSION || 'latest';
   try {
     const packageManager = getPackageManagerCommand();
 
     const { dirSync } = require('tmp');
     const tmpDir = dirSync().name;
-    const version =
-      process.env.NX_MIGRATE_USE_NEXT === 'true' ? 'next' : 'latest';
     writeJsonFile(path.join(tmpDir, 'package.json'), {
       dependencies: {
         nx: version,
@@ -157,7 +156,7 @@ function nxCliPath() {
     return path.join(tmpDir, `node_modules`, '.bin', 'nx');
   } catch (e) {
     console.error(
-      'Failed to install the latest version of the migration script. Using the current version.'
+      `Failed to install the ${version} version of the migration script. Using the current version.`
     );
     if (process.env.NX_VERBOSE_LOGGING) {
       console.error(e);
