@@ -80,9 +80,6 @@ When `NX_ADD_PLUGINS` is `false`:
 1. A newly generated project will have all targets defined with executors - not with inferred tasks.
 2. Running `nx add @nx/some-plugin` will not create a plugin entry for `@nx/some-plugin` in the `nx.json` file. (So that plugin will not create inferred tasks.)
 
-When `NX_ADD_PLUGINS` is `true`:
-
-1. A newly generated project will rely on inferred tasks wherever possible, only explicitly defining targets for which there is no inferred task.
-2. Running `nx add @nx/some-plugin` will add a plugin entry for `@nx/some-plugin` in the `nx.json` file. (This will allow the plugin to create inferred tasks.)
+If your `.env` file is ignored by git, ensure that everyone in your organization sets `NX_ADD_PLUGINS=false`. This could be done by updating a shared `.env` file or setting the environment variable in everyone's `.bashrc` file.
 
 Even once a repository has fully embraced inferred tasks, `project.json` and executors will still be useful. The `project.json` file is needed to modify inferred task options and to define tasks that can not be inferred. Some executors perform tasks that can not be accomplished by running a tool directly from the command line (i.e. [TypeScript batch mode](/recipes/tips-n-tricks/enable-tsc-batch-mode)).
