@@ -185,35 +185,53 @@ export function SidebarMobile({
   const isNx: boolean =
     !isCI && !isAPI && !isPlugins && !isChangelog && !isAiChat;
 
-  const sections = [
-    { name: 'Home', href: '/', current: false },
-    { name: 'Nx', href: '/getting-started/intro', current: isNx },
-    {
-      name: 'CI',
-      href: '/ci/intro/ci-with-nx',
-      current: isCI,
-    },
-    {
-      name: 'Extending Nx',
-      href: '/extending-nx/intro/getting-started',
-      current: isPlugins,
-    },
-    {
-      name: 'API',
-      href: '/nx-api',
-      current: isAPI,
-    },
-    {
-      name: 'Changelog',
-      href: '/changelog',
-      current: isChangelog,
-    },
-    {
-      name: 'AI Chat',
-      href: '/ai-chat',
-      current: isAiChat,
-    },
-  ];
+  const sections = {
+    general: [
+      { name: 'Home', href: '/', current: false },
+      { name: 'Blog', href: '/blog', current: false },
+      { name: 'Community', href: '/community', current: false },
+      { name: 'Launch Nx', href: '/launch-nx', current: false },
+      {
+        name: 'Contact',
+        href: 'https://nx.app/enterprise?utm_source=nx.dev&utm_medium=header-menu',
+        current: false,
+      },
+      {
+        name: 'Go to app',
+        href: 'https://nx.app/?utm_source=nx.dev&utm_medium=header-menu',
+        current: false,
+      },
+    ],
+    documentation: [
+      { name: 'Nx', href: '/getting-started/intro', current: isNx },
+      {
+        name: 'CI',
+        href: '/ci/intro/ci-with-nx',
+        current: isCI,
+      },
+      {
+        name: 'Extending Nx',
+        href: '/extending-nx/intro/getting-started',
+        current: isPlugins,
+      },
+      {
+        name: 'API',
+        href: '/nx-api',
+        current: isAPI,
+      },
+      {
+        name: 'Changelog',
+        href: '/changelog',
+        current: isChangelog,
+      },
+      {
+        name: 'AI Chat',
+        href: '/ai-chat',
+        current: isAiChat,
+      },
+    ],
+  };
+
   return (
     <Transition.Root show={navIsOpen} as={Fragment}>
       <Dialog as="div" className="relative z-40" onClose={() => void 0}>
@@ -229,25 +247,44 @@ export function SidebarMobile({
           >
             <Dialog.Panel className="relative flex w-full flex-col overflow-y-auto bg-white p-4 dark:bg-slate-900">
               {/*SECTIONS*/}
-              <div className="mb-8 grid w-full shrink-0 grid-cols-3 items-center justify-between">
-                {sections.map((section) => (
-                  <Link
-                    key={section.name}
-                    href={section.href}
-                    className={cx(
-                      section.current
-                        ? 'text-blue-600 dark:text-sky-500'
-                        : 'hover:text-slate-900 dark:hover:text-sky-400',
-                      'whitespace-nowrap p-4 text-center text-sm font-medium'
-                    )}
-                    aria-current={section.current ? 'page' : undefined}
-                  >
-                    {section.name}
-                  </Link>
-                ))}
+              <div className="divide-y divide-slate-200">
+                <div className="grid w-full shrink-0 grid-cols-3 items-center justify-between">
+                  {sections.general.map((section) => (
+                    <Link
+                      key={section.name}
+                      href={section.href}
+                      className={cx(
+                        section.current
+                          ? 'text-blue-600 dark:text-sky-500'
+                          : 'hover:text-slate-900 dark:hover:text-sky-400',
+                        'whitespace-nowrap p-4 text-center text-sm font-medium'
+                      )}
+                      aria-current={section.current ? 'page' : undefined}
+                    >
+                      {section.name}
+                    </Link>
+                  ))}
+                </div>
+                <div className="grid w-full shrink-0 grid-cols-3 items-center justify-between">
+                  {sections.documentation.map((section) => (
+                    <Link
+                      key={section.name}
+                      href={section.href}
+                      className={cx(
+                        section.current
+                          ? 'text-blue-600 dark:text-sky-500'
+                          : 'hover:text-slate-900 dark:hover:text-sky-400',
+                        'whitespace-nowrap p-4 text-center text-sm font-medium'
+                      )}
+                      aria-current={section.current ? 'page' : undefined}
+                    >
+                      {section.name}
+                    </Link>
+                  ))}
+                </div>
               </div>
               {/*SIDEBAR*/}
-              <div data-testid="mobile-navigation-wrapper ">
+              <div data-testid="mobile-navigation-wrapper" className="mt-8">
                 <nav
                   id="mobile-nav"
                   data-testid="mobile-navigation"
