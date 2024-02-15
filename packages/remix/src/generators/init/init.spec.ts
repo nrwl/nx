@@ -1,6 +1,7 @@
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { readJson } from '@nx/devkit';
 import initGenerator from './init';
+import { remixInitGeneratorInternal } from './init';
 
 describe('Remix Init Generator', () => {
   it('should setup the workspace and add dependencies', async () => {
@@ -8,9 +9,8 @@ describe('Remix Init Generator', () => {
     const tree = createTreeWithEmptyWorkspace();
 
     // ACT
-    await initGenerator(tree, {
-      addPlugin: true,
-    });
+    // Should default to adding the plugin
+    await remixInitGeneratorInternal(tree, {});
 
     // ASSERT
     const pkgJson = readJson(tree, 'package.json');
@@ -25,6 +25,34 @@ describe('Remix Init Generator', () => {
           "@remix-run/dev": "^2.3.0",
         }
       `);
+
+    const nxJson = readJson(tree, 'nx.json');
+    expect(nxJson).toMatchInlineSnapshot(`
+      {
+        "affected": {
+          "defaultBase": "main",
+        },
+        "plugins": [
+          {
+            "options": {
+              "buildTargetName": "build",
+              "serveTargetName": "serve",
+              "startTargetName": "start",
+              "typecheckTargetName": "typecheck",
+            },
+            "plugin": "@nx/remix/plugin",
+          },
+        ],
+        "targetDefaults": {
+          "build": {
+            "cache": true,
+          },
+          "lint": {
+            "cache": true,
+          },
+        },
+      }
+    `);
   });
 
   describe('NX_ADD_PLUGINS=false', () => {
