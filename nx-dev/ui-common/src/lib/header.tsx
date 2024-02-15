@@ -82,9 +82,9 @@ export function Header(): JSX.Element {
       href: '/launch-nx',
     },
     {
-      name: 'Nx Enterprise',
-      description: 'Need help?',
-      href: 'https://nx.app/enterprise?utm_source=nx.dev',
+      name: 'Contact us',
+      description: 'Give us a call!',
+      href: 'https://nx.app/enterprise?utm_source=nx.dev&utm_medium=header-menu',
     },
   ];
 
@@ -200,10 +200,10 @@ export function Header(): JSX.Element {
             <a
               href="https://nx.app/enterprise?utm_source=nx.dev&utm_medium=header-menu"
               target="_blank"
-              title="Contact"
+              title="Contact us"
               className="hidden px-3 py-2 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500 md:inline-flex"
             >
-              Contact
+              Contact us
             </a>
           </nav>
         </div>
