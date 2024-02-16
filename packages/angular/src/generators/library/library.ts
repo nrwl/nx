@@ -134,7 +134,7 @@ async function addUnitTestRunner(
       projectRoot: options.projectRoot,
       skipPackageJson: options.skipPackageJson,
       strict: options.strict,
-      addPlugin: options.addPlugin,
+      addPlugin: false,
     });
   }
 }
