@@ -197,6 +197,12 @@ function withNx(
             : joinPathFragments(outputDir, '.next');
       }
 
+      // If we are running a static serve of the Next.js app, we need to change the output to 'export' and the distDir to 'out'.
+      if (process.env.NX_SERVE_STATIC_BUILD_RUNNING === 'true') {
+        nextConfig.output = 'export';
+        nextConfig.distDir = 'out';
+      }
+
       const userWebpackConfig = nextConfig.webpack;
 
       const { createWebpackConfig } = require('@nx/next/src/utils/config');
