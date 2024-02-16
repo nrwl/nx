@@ -100,11 +100,9 @@ export function ExtensibleAndIntegrated(): JSX.Element {
             </div>
           </Tab.List>
           <Tab.Panels>
-            <AnimatePresence>
-              {tabs.map((tab) => (
-                <Tab.Panel key={'panel-' + tab.title}>{tab.panel}</Tab.Panel>
-              ))}
-            </AnimatePresence>
+            {tabs.map((tab) => (
+              <Tab.Panel key={'panel-' + tab.title}>{tab.panel}</Tab.Panel>
+            ))}
           </Tab.Panels>
         </Tab.Group>
       </div>

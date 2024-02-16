@@ -362,6 +362,15 @@
       "version": "18.0.0-beta.0",
       "description": "Add NX_MF_DEV_SERVER_STATIC_REMOTES to inputs for task hashing when '@nx/angular:webpack-browser' is used for Module Federation.",
       "factory": "./src/migrations/update-18-0-0/add-mf-env-var-to-target-defaults"
+    },
+    "update-angular-cli-version-17-2-0": {
+      "cli": "nx",
+      "version": "18.1.0-beta.1",
+      "requires": {
+        "@angular/core": ">=17.2.0"
+      },
+      "description": "Update the @angular/cli package version to ~17.2.0.",
+      "factory": "./src/migrations/update-18-1-0/update-angular-cli"
     }
   },
   "packageJsonUpdates": {
@@ -1643,6 +1652,59 @@
       "packages": {
         "jest-preset-angular": {
           "version": "~14.0.2",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "18.1.0": {
+      "version": "18.1.0-beta.1",
+      "packages": {
+        "@angular-devkit/build-angular": {
+          "version": "~17.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/core": {
+          "version": "~17.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/schematics": {
+          "version": "~17.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/pwa": {
+          "version": "~17.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/ssr": {
+          "version": "~17.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@schematics/angular": {
+          "version": "~17.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/architect": {
+          "version": "~0.1702.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/build-webpack": {
+          "version": "~0.1702.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/core": {
+          "version": "~17.2.0",
+          "alwaysAddToPackageJson": true
+        },
+        "@angular/material": {
+          "version": "~17.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/cdk": {
+          "version": "~17.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "ng-packagr": {
+          "version": "~17.2.0",
           "alwaysAddToPackageJson": false
         }
       }

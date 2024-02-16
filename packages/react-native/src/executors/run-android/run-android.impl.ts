@@ -19,7 +19,7 @@ export default async function* runAndroidExecutor(
 ): AsyncGenerator<ReactNativeRunAndroidOutput> {
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
-  chmodAndroidGradlewFiles(join(projectRoot, 'android'));
+  chmodAndroidGradlewFiles(join(context.root, projectRoot, 'android'));
 
   const tasks = [runCliRunAndroid(context.root, projectRoot, options)];
 
