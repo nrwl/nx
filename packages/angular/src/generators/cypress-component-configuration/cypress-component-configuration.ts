@@ -46,13 +46,14 @@ export async function cypressComponentConfigurationInternal(
   tree: Tree,
   options: CypressComponentConfigSchema
 ) {
-  options.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
+  options.addPlugin ??= process.env.NX_ADD_PLUGINS === 'true';
 
   const projectConfig = readProjectConfiguration(tree, options.project);
   const installTask = await baseCyCTConfig(tree, {
     project: options.project,
     skipFormat: true,
     addPlugin: options.addPlugin,
+    addExplicitTargets: !options.addPlugin,
   });
 
   await configureCypressCT(tree, options);

@@ -93,6 +93,7 @@ export async function configurationGeneratorInternal(
   const linterTask = await addLinterToCyProject(tree, {
     ...opts,
     cypressDir: opts.directory,
+    addPlugin: opts.addPlugin,
   });
   tasks.push(linterTask);
 
