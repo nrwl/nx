@@ -60,7 +60,8 @@ The `@nx/next/plugin` is configured in the `plugins` array in `nx.json`.
       "options": {
         "buildTargetName": "build",
         "devTargetName": "dev",
-        "startTargetName": "start"
+        "startTargetName": "start",
+        "serveStaticTargetName": "serve-static"
       }
     }
   ]
@@ -70,6 +71,10 @@ The `@nx/next/plugin` is configured in the `plugins` array in `nx.json`.
 - The `buildTargetName` option controls the name of Next.js' compilation task which compiles the application for production deployment. The default name is `build`.
 - The `devTargetName` option controls the name of Next.js' development serve task which starts the application in development mode. The default name is `dev`.
 - The `startTargetName` option controls the name of Next.js' production serve task which starts the application in production mode. The default name is `start`.
+- The `serveStaticTargetName` option controls the name of Next.js' static export task which exports the application to static HTML files. The default name is `serve-static`.
+
+{% /tab %}
+{% tab label="Nx < 18" %}
 
 {% /tab %}
 {% tab label="Nx < 18" %}
@@ -246,8 +251,49 @@ const nextConfig = {
   nx: {
     svgr: false,
   },
+  output: 'export',
 };
 ```
+
+After setting the output to `export`, you can run the `build` command to generate the static HTML files.
+
+```shell
+nx build my-next-app
+```
+
+You can then check your project folder for the `out` folder which contains the static HTML files.
+
+```shell
+├── index.d.ts
+├── jest.config.ts
+├── next-env.d.ts
+├── next.config.js
+├── out
+├── project.json
+├── public
+├── specs
+├── src
+├── tsconfig.json
+└── tsconfig.spec.json
+```
+
+#### E2E testing
+
+You can perform end-to-end (E2E) testing on static HTML files using a test runner like Cypress. When you create a Next.js application, Nx automatically creates a `serve-static` target. This target is designed to serve the static HTML files produced by the build command.
+
+This feature is particularly useful for testing in continuous integration (CI) pipelines, where resources may be constrained. Unlike the `dev` and `start` targets, `serve-static` does not require a Next.js server to operate, making it more efficient and faster by eliminating background processes, such as file change monitoring.
+
+To utilize the `serve-static` target for testing, run the following command:
+
+```shell
+nx serve-static my-next-app-e2e
+```
+
+This command performs several actions:
+
+1. It will build the Next.js application and generate the static HTML files.
+2. It will serve the static HTML files using a simple HTTP server.
+3. It will run the Cypress tests against the served static HTML files.
 
 ### Deploying Next.js Applications
 

@@ -34,6 +34,7 @@ describe('@nx/next/plugin', () => {
           buildTargetName: 'build',
           devTargetName: 'dev',
           startTargetName: 'start',
+          serveStaticTargetName: 'serve-static',
         },
         context
       );
@@ -73,6 +74,7 @@ describe('@nx/next/plugin', () => {
           buildTargetName: 'my-build',
           devTargetName: 'my-serve',
           startTargetName: 'my-start',
+          serveStaticTargetName: 'my-serve-static',
         },
         context
       );

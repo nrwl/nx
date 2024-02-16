@@ -35,6 +35,14 @@ exports[`@nx/next/plugin integrated projects should create nodes 1`] = `
             "cwd": "my-app",
           },
         },
+        "my-serve-static": {
+          "executor": "@nx/web:file-server",
+          "options": {
+            "buildTarget": "my-build",
+            "port": 3000,
+            "staticFilePath": "{projectRoot}/out",
+          },
+        },
         "my-start": {
           "command": "next start",
           "dependsOn": [
@@ -83,6 +91,14 @@ exports[`@nx/next/plugin root projects should create nodes 1`] = `
           "command": "next dev",
           "options": {
             "cwd": ".",
+          },
+        },
+        "serve-static": {
+          "executor": "@nx/web:file-server",
+          "options": {
+            "buildTarget": "build",
+            "port": 3000,
+            "staticFilePath": "{projectRoot}/out",
           },
         },
         "start": {
