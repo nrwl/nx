@@ -82,7 +82,7 @@ Some executors automatically generate output `package.json` and the lock file ge
 {% /tab %}
 {% /tabs %}
 
-## Programmtic usage
+## Programmatic usage
 
 If you are using a custom setup that does not support the creation of a `package.json` or a lock file, you can still use Nx to generate them via The `createPackageJson` and `createLockFile` functions which are exported from `@nx/js`:
 
@@ -159,14 +159,21 @@ You can replace _npm_ with _yarn_ or _pnpm_ if you are using those package manag
 {% tab label="Custom executor" %}
 
 ```typescript
-import { createPackageJson, createLockFile } from '@nx/js';
+import { Schema } from './schema';
+import { createPackageJson, createLockFile, getLockFileName } from '@nx/js';
 import { writeFileSync } from 'fs';
+import {
+  detectPackageManager,
+  ExecutorContext,
+  writeJsonFile,
+} from '@nx/devkit';
 
 export default async function buildExecutor(
   options: Schema,
   context: ExecutorContext
 ) {
   // ...your executor code
+  const packageManager = detectPackageManager();
 
   const packageJson = createPackageJson(
     context.projectName,
@@ -179,9 +186,14 @@ export default async function buildExecutor(
 
   // do any additional manipulations to "package.json" here
 
-  const lockFile = createLockFile(packageJson);
+  const lockFile = createLockFile(
+    packageJson,
+    context.projectGraph,
+    packageManager
+  );
+  const lockFileName = getLockFileName(packageManager);
   writeJsonFile(`${options.outputPath}/package.json`, packageJson);
-  writeFileSync(`${options.outputPath}/${packageLockFileName}`, lockFile, {
+  writeFileSync(`${options.outputPath}/${lockFileName}`, lockFile, {
     encoding: 'utf-8',
   });
 
