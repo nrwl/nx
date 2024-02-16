@@ -191,7 +191,7 @@ export async function updateRootEsLintConfig(
   unitTestRunner?: string
 ): Promise<void> {
   await lintInitGenerator(tree, {
-    addPlugin: process.env.NX_ADD_PLUGINS !== 'false',
+    addPlugin: process.env.NX_ADD_PLUGINS === 'true',
   });
 
   if (!existingEsLintConfig) {

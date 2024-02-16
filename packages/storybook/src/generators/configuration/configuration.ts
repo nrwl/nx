@@ -174,7 +174,7 @@ export async function configurationGeneratorInternal(
 
   let devDeps = {};
 
-  if (!hasPlugin) {
+  if (!hasPlugin || schema.addExplicitTargets) {
     if (schema.uiFramework === '@storybook/angular') {
       addAngularStorybookTarget(tree, schema.project, schema.interactionTests);
     } else {

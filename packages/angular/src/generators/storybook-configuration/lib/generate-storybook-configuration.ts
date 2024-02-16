@@ -6,7 +6,11 @@ export async function generateStorybookConfiguration(
   tree: Tree,
   options: StorybookConfigurationOptions
 ): Promise<GeneratorCallback> {
-  const { configurationGenerator } = ensurePackage('@nx/storybook', nxVersion);
+  const addPlugin = process.env.NX_ADD_PLUGINS === 'true';
+
+  const { configurationGenerator } = ensurePackage<
+    typeof import('@nx/storybook')
+  >('@nx/storybook', nxVersion);
   return await configurationGenerator(tree, {
     project: options.project,
     uiFramework: '@storybook/angular',
@@ -17,5 +21,7 @@ export async function generateStorybookConfiguration(
     interactionTests: options.interactionTests,
     configureStaticServe: options.configureStaticServe,
     skipFormat: true,
+    addPlugin: addPlugin,
+    addExplicitTargets: !addPlugin,
   });
 }
