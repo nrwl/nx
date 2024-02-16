@@ -47,7 +47,7 @@ describe('Remix E2E Tests', () => {
         expect(result).toContain('Successfully ran target build');
 
         // TODO(colum): uncomment line below when fixed
-        checkFilesExist(`dist/apps/sub/${plugin}/build/index.js`);
+        checkFilesExist(`apps/sub/${plugin}/build/index.js`);
       }, 120000);
 
       it('should create src in the specified directory --projectNameAndRootFormat=as-provided', async () => {
@@ -58,7 +58,7 @@ describe('Remix E2E Tests', () => {
 
         const result = runCLI(`build ${plugin}`);
         expect(result).toContain('Successfully ran target build');
-        checkFilesExist(`dist/subdir/build/index.js`);
+        checkFilesExist(`subdir/build/index.js`);
       }, 120000);
     });
 
