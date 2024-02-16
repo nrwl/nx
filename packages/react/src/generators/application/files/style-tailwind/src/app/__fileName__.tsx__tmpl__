@@ -1,0 +1,33 @@
+<% if (classComponent) { %>
+import { Component } from 'react';
+<% } if (!minimal) { %>
+import NxWelcome from "./nx-welcome";
+<% } %>
+
+<% if (classComponent) { %>
+export class App extends Component {
+  render() {
+<% } else { %>
+export function App() {
+<% } %>
+  return (
+  <div>
+    <% if (!minimal) { %>
+    <NxWelcome title="<%= projectName %>"/>
+     <% } else { %>
+      <h1>
+        <span> Hello there, </span>
+        Welcome <%= projectName %> 👋
+      </h1>
+     <% } %>
+  </div>);
+<% if (classComponent) { %>
+  }
+}
+<% } else { %>
+}
+<% } %>
+
+export default App;
+
+<% if (inSourceTests === true) { %> <%- inSourceVitestTests %> <% } %>

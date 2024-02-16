@@ -3,7 +3,7 @@ import {
   CogIcon,
   ServerStackIcon,
 } from '@heroicons/react/24/outline';
-import { ButtonLink, SectionHeading } from '@nx/nx-dev/ui-common';
+import { SectionHeading } from '@nx/nx-dev/ui-common';
 import {
   animate,
   motion,
@@ -133,6 +133,7 @@ export function NxWithCi(): JSX.Element {
                 target="_blank"
                 className="hover:underline text-sm font-medium"
                 title="Find out how to reduce CI time with Nx"
+                rel="noreferrer"
               >
                 Find out how
               </a>

@@ -3,7 +3,7 @@ import {ModuleFederationConfig} from '@nx/webpack';
 const config: ModuleFederationConfig = {
     name: '<%= projectName %>',
     exposes: {
-        './Module': '<%= appProjectRoot %>/src/remote-entry.ts',
+        './Module': '<%= appProjectRoot %>/src/remote-entry.<%= js ? 'js' : 'ts' %>',
     },
 };
 

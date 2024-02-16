@@ -7,16 +7,16 @@ import {
   Tree,
   writeJson,
 } from '@nx/devkit';
+import { WithNxOptions } from '@nx/webpack';
 import { getRelativePathToRootTsConfig } from '@nx/js';
 import { join } from 'path';
 import { createTsConfig } from '../../../utils/create-ts-config';
 import { getInSourceVitestTestsTemplate } from '../../../utils/get-in-source-vitest-tests-template';
+import { maybeJs } from '../../../utils/maybe-js';
+import { WithReactOptions } from '../../../../plugins/with-react';
+import { hasWebpackPlugin } from '../../../utils/has-webpack-plugin';
 import { NormalizedSchema } from '../schema';
 import { getAppTests } from './get-app-tests';
-import { maybeJs } from './add-project';
-import { WithReactOptions } from '../../../../plugins/with-react';
-import { WithNxOptions } from '@nx/webpack';
-import { hasWebpackPlugin } from '../../../utils/has-webpack-plugin';
 
 export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
   let styleSolutionSpecificAppFiles: string;
@@ -24,6 +24,8 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
     styleSolutionSpecificAppFiles = '../files/style-styled-module';
   } else if (options.style === 'styled-jsx') {
     styleSolutionSpecificAppFiles = '../files/style-styled-jsx';
+  } else if (options.style === 'tailwind') {
+    styleSolutionSpecificAppFiles = '../files/style-tailwind';
   } else if (options.style === 'none') {
     styleSolutionSpecificAppFiles = '../files/style-none';
   } else if (options.globalCss) {
@@ -185,6 +187,10 @@ function createNxWebpackPluginOptions(
     styles:
       options.styledModule || !options.hasStyles
         ? []
-        : [`./src/styles.${options.style}`],
+        : [
+            `./src/styles.${
+              options.style !== 'tailwind' ? options.style : 'css'
+            }`,
+          ],
   };
 }

@@ -275,7 +275,7 @@ Projects' projects
 
 • `Optional` **release**: `NxReleaseConfiguration`
 
-**ALPHA**: Configuration for `nx release` (versioning and publishing of applications and libraries)
+Configuration for `nx release` (versioning and publishing of applications and libraries)
 
 #### Inherited from
 

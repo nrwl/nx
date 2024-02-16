@@ -9,7 +9,7 @@ Description of a file change in the Nx virtual file system/
 - [content](../../devkit/documents/FileChange#content): Buffer
 - [options](../../devkit/documents/FileChange#options): TreeWriteOptions
 - [path](../../devkit/documents/FileChange#path): string
-- [type](../../devkit/documents/FileChange#type): "DELETE" | "CREATE" | "UPDATE"
+- [type](../../devkit/documents/FileChange#type): "CREATE" | "DELETE" | "UPDATE"
 
 ## Properties
 
@@ -39,6 +39,6 @@ Path relative to the workspace root
 
 ### type
 
-• **type**: `"DELETE"` \| `"CREATE"` \| `"UPDATE"`
+• **type**: `"CREATE"` \| `"DELETE"` \| `"UPDATE"`
 
 Type of change: 'CREATE' | 'DELETE' | 'UPDATE'

@@ -799,14 +799,6 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Illustrated Distributed Task Execution",
-                "path": "/concepts/more-concepts/illustrated-dte",
-                "id": "illustrated-dte",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
                 "name": "Nx and Turborepo",
                 "path": "/concepts/more-concepts/turbo-and-nx",
                 "id": "turbo-and-nx",
@@ -1084,14 +1076,6 @@
             "disableCollapsible": false
           },
           {
-            "name": "Illustrated Distributed Task Execution",
-            "path": "/concepts/more-concepts/illustrated-dte",
-            "id": "illustrated-dte",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
             "name": "Nx and Turborepo",
             "path": "/concepts/more-concepts/turbo-and-nx",
             "id": "turbo-and-nx",
@@ -1218,14 +1202,6 @@
         "name": "Incremental Builds",
         "path": "/concepts/more-concepts/incremental-builds",
         "id": "incremental-builds",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Illustrated Distributed Task Execution",
-        "path": "/concepts/more-concepts/illustrated-dte",
-        "id": "illustrated-dte",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -1837,39 +1813,6 @@
             "disableCollapsible": false
           },
           {
-            "name": "Deno",
-            "path": "/recipes/deno",
-            "id": "deno",
-            "isExternal": false,
-            "children": [
-              {
-                "name": "Add a Deno Project",
-                "path": "/recipes/deno/add-deno",
-                "id": "add-deno",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Serverless deployment with Deno Deploy",
-                "path": "/recipes/deno/deno-deploy",
-                "id": "deno-deploy",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Add and Deploy Netlify Edge Functions with Deno",
-                "path": "/recipes/deno/deno-netlify-functions",
-                "id": "deno-netlify-functions",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              }
-            ],
-            "disableCollapsible": false
-          },
-          {
             "name": "Next",
             "path": "/recipes/next",
             "id": "next",
@@ -2353,6 +2296,14 @@
                 "name": "Publish in CI/CD",
                 "path": "/recipes/nx-release/publish-in-ci-cd",
                 "id": "publish-in-ci-cd",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Automate GitHub Releases",
+                "path": "/recipes/nx-release/automate-github-releases",
+                "id": "automate-github-releases",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -3310,63 +3261,6 @@
         "disableCollapsible": false
       },
       {
-        "name": "Deno",
-        "path": "/recipes/deno",
-        "id": "deno",
-        "isExternal": false,
-        "children": [
-          {
-            "name": "Add a Deno Project",
-            "path": "/recipes/deno/add-deno",
-            "id": "add-deno",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Serverless deployment with Deno Deploy",
-            "path": "/recipes/deno/deno-deploy",
-            "id": "deno-deploy",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Add and Deploy Netlify Edge Functions with Deno",
-            "path": "/recipes/deno/deno-netlify-functions",
-            "id": "deno-netlify-functions",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          }
-        ],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Add a Deno Project",
-        "path": "/recipes/deno/add-deno",
-        "id": "add-deno",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Serverless deployment with Deno Deploy",
-        "path": "/recipes/deno/deno-deploy",
-        "id": "deno-deploy",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Add and Deploy Netlify Edge Functions with Deno",
-        "path": "/recipes/deno/deno-netlify-functions",
-        "id": "deno-netlify-functions",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
         "name": "Next",
         "path": "/recipes/next",
         "id": "next",
@@ -4213,6 +4107,14 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
+          },
+          {
+            "name": "Automate GitHub Releases",
+            "path": "/recipes/nx-release/automate-github-releases",
+            "id": "automate-github-releases",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -4245,6 +4147,14 @@
         "name": "Publish in CI/CD",
         "path": "/recipes/nx-release/publish-in-ci-cd",
         "id": "publish-in-ci-cd",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Automate GitHub Releases",
+        "path": "/recipes/nx-release/automate-github-releases",
+        "id": "automate-github-releases",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -6816,6 +6726,14 @@
                 "id": "application",
                 "path": "/nx-api/angular/executors/application",
                 "name": "application",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "extract-i18n",
+                "path": "/nx-api/angular/executors/extract-i18n",
+                "name": "extract-i18n",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false

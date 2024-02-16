@@ -45,6 +45,7 @@ export type ChangelogOptions = NxReleaseArgs &
     from?: string;
     interactive?: string;
     gitRemote?: string;
+    createRelease?: false | 'github';
   };
 
 export type PublishOptions = NxReleaseArgs &
@@ -65,7 +66,7 @@ export const yargsReleaseCommand: CommandModule<
 > = {
   command: 'release',
   describe:
-    '**ALPHA**: Orchestrate versioning and publishing of applications and libraries',
+    'Orchestrate versioning and publishing of applications and libraries',
   builder: (yargs) =>
     yargs
       .command(releaseCommand)

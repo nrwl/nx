@@ -297,6 +297,7 @@ jobs:
           NX_E2E_VERBOSE_LOGGING: 'true'
           NX_PERF_LOGGING: 'false'
           NX_DAEMON: 'true'
+          NX_SKIP_LOG_GROUPING: 'true'
 
       - name: Save matrix config in file
         if: ${{ always() }}

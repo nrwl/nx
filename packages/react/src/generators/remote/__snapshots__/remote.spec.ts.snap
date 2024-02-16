@@ -29,6 +29,35 @@ exports[`remote generator should create the remote with the correct config files
 "
 `;
 
+exports[`remote generator should create the remote with the correct config files when --js=true 1`] = `
+"const { composePlugins, withNx } = require('@nx/webpack');
+const { withReact } = require('@nx/react');
+const { withModuleFederation } = require('@nx/react/module-federation');
+
+const baseConfig = require('./module-federation.config');
+
+const config = {
+  ...baseConfig,
+};
+
+// Nx plugins for webpack to build config object from Nx options and context.
+module.exports = composePlugins(withNx(), withReact(), withModuleFederation(config));
+"
+`;
+
+exports[`remote generator should create the remote with the correct config files when --js=true 2`] = `"module.exports = require('./webpack.config');"`;
+
+exports[`remote generator should create the remote with the correct config files when --js=true 3`] = `
+"module.exports = {
+   name: 'test',
+   
+   exposes: {
+     './Module': './src/remote-entry.js',
+   },
+};
+"
+`;
+
 exports[`remote generator should create the remote with the correct config files when --typescriptConfiguration=true 1`] = `
 "import { composePlugins, withNx } from '@nx/webpack';
 import { withReact } from '@nx/react';
