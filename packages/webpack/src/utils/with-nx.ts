@@ -32,7 +32,8 @@ export function withNx(
           ? normalizeAssets(
               pluginOptions.assets,
               options.root,
-              options.sourceRoot
+              options.sourceRoot,
+              options.projectRoot
             )
           : [],
         root: context.root,

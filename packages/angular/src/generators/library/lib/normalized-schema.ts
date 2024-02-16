@@ -38,6 +38,7 @@ export interface NormalizedSchema {
     parsedTags: string[];
     ngCliSchematicLibRoot: string;
     standaloneComponentName: string;
+    addPlugin?: boolean;
   };
   componentOptions: {
     name: string;

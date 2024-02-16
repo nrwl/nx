@@ -21,6 +21,7 @@ export interface NextPluginOptions {
   buildTargetName?: string;
   devTargetName?: string;
   startTargetName?: string;
+  serveStaticTargetName?: string;
 }
 
 const cachePath = join(projectGraphCacheDirectory, 'next.hash');
@@ -62,7 +63,6 @@ export const createNodes: CreateNodes<NextPluginOptions> = [
     ) {
       return {};
     }
-
     options = normalizeOptions(options);
 
     const hash = calculateHashForCreateNodes(projectRoot, options, context, [
@@ -106,6 +106,9 @@ async function buildNextTargets(
   targets[options.devTargetName] = getDevTargetConfig(projectRoot);
 
   targets[options.startTargetName] = getStartTargetConfig(options, projectRoot);
+
+  targets[options.serveStaticTargetName] = getStaticServeTargetConfig(options);
+
   return targets;
 }
 
@@ -147,6 +150,19 @@ function getStartTargetConfig(options: NextPluginOptions, projectRoot: string) {
       cwd: projectRoot,
     },
     dependsOn: [options.buildTargetName],
+  };
+
+  return targetConfig;
+}
+
+function getStaticServeTargetConfig(options: NextPluginOptions) {
+  const targetConfig: TargetConfiguration = {
+    executor: '@nx/web:file-server',
+    options: {
+      buildTarget: options.buildTargetName,
+      staticFilePath: '{projectRoot}/out',
+      port: 3000,
+    },
   };
 
   return targetConfig;
@@ -196,6 +212,7 @@ function normalizeOptions(options: NextPluginOptions): NextPluginOptions {
   options.buildTargetName ??= 'build';
   options.devTargetName ??= 'dev';
   options.startTargetName ??= 'start';
+  options.serveStaticTargetName ??= 'serve-static';
   return options;
 }
 
