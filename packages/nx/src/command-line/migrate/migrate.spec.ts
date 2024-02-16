@@ -1586,6 +1586,12 @@ describe('Migration', () => {
         targetVersion: 'next',
       });
       expect(
+        await parseMigrationsOptions({ packageAndVersion: 'canary' })
+      ).toMatchObject({
+        targetPackage: 'nx',
+        targetVersion: 'canary',
+      });
+      expect(
         await parseMigrationsOptions({ packageAndVersion: '13.10.0' })
       ).toMatchObject({
         targetPackage: '@nrwl/workspace',

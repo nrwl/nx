@@ -1,13 +1,16 @@
 import { NgPackagr, ngPackagr } from 'ng-packagr';
 import type { BuildAngularLibraryExecutorOptions } from '../../package/schema';
 import { getInstalledAngularVersionInfo } from '../../utilities/angular-version-utils';
-import { STYLESHEET_PROCESSOR } from '../../utilities/ng-packagr/stylesheet-processor.di';
 
 export async function getNgPackagrInstance(
   options: BuildAngularLibraryExecutorOptions
 ): Promise<NgPackagr> {
   const { major: angularMajorVersion } = getInstalledAngularVersionInfo();
   if (angularMajorVersion >= 17) {
+    const { STYLESHEET_PROCESSOR } = await import(
+      '../../utilities/ng-packagr/stylesheet-processor.di'
+    );
+
     const packagr = ngPackagr();
     packagr.withProviders([STYLESHEET_PROCESSOR]);
     return packagr;

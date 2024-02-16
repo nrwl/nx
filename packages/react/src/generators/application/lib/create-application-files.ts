@@ -24,6 +24,8 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
     styleSolutionSpecificAppFiles = '../files/style-styled-module';
   } else if (options.style === 'styled-jsx') {
     styleSolutionSpecificAppFiles = '../files/style-styled-jsx';
+  } else if (options.style === 'tailwind') {
+    styleSolutionSpecificAppFiles = '../files/style-tailwind';
   } else if (options.style === 'none') {
     styleSolutionSpecificAppFiles = '../files/style-none';
   } else if (options.globalCss) {
@@ -185,6 +187,10 @@ function createNxWebpackPluginOptions(
     styles:
       options.styledModule || !options.hasStyles
         ? []
-        : [`./src/styles.${options.style}`],
+        : [
+            `./src/styles.${
+              options.style !== 'tailwind' ? options.style : 'css'
+            }`,
+          ],
   };
 }
