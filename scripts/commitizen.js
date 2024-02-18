@@ -16,7 +16,7 @@ const scopes = [
   { value: 'nuxt',          name: 'nuxt:            anything Nuxt specific' },
   { value: 'nx-cloud',      name: 'nx-cloud:        anything Nx Cloud specific' },
   { value: 'nx-plugin',     name: 'nx-plugin:       anything Nx Plugin specific' },
-  { value: 'nx-dev',        name: 'nx-dev:         anything related to docs infrastructure' },
+  { value: 'nx-dev',        name: 'nx-dev:          anything related to docs infrastructure' },
   { value: 'react',         name: 'react:           anything React specific' },
   { value: 'react-native',  name: 'react-native:    anything React Native specific' },
   { value: 'remix',         name: 'remix:           anything Remix specific' },
@@ -29,7 +29,7 @@ const scopes = [
   { value: 'vue',           name: 'vue:             anything Vue specific' },
   { value: 'web',           name: 'web:             anything Web specific' },
   { value: 'webpack',       name: 'webpack:         anything Webpack specific' },
-  {value: 'module-federation', name: 'module-federation:         anything Module Federation specific'},
+  { value: 'module-federation', name: 'module-federation:         anything Module Federation specific'},
 ];
 
 // precomputed scope
