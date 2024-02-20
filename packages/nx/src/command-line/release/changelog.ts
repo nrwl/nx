@@ -563,21 +563,21 @@ async function applyChangesAndExit(
         title: `Skipped GitHub release creation because no changes were detected for any changelog files.`,
       });
       return;
-    } else {
-      // prompt the user to see if they want to create a GitHub release anyway
-      // we know that the user has configured GitHub releases because we have postGitTasks
-      const shouldCreateGitHubReleaseAnyway = await promptForGitHubRelease();
+    }
 
-      if (!shouldCreateGitHubReleaseAnyway) {
-        return;
-      }
+    // prompt the user to see if they want to create a GitHub release anyway
+    // we know that the user has configured GitHub releases because we have postGitTasks
+    const shouldCreateGitHubReleaseAnyway = await promptForGitHubRelease();
 
-      for (const postGitTask of postGitTasks) {
-        await postGitTask(latestCommit);
-      }
-
+    if (!shouldCreateGitHubReleaseAnyway) {
       return;
     }
+
+    for (const postGitTask of postGitTasks) {
+      await postGitTask(latestCommit);
+    }
+
+    return;
   }
 
   // Generate a new commit for the changes, if configured to do so
