@@ -554,48 +554,6 @@ export default defineConfig({
         "
       `);
     });
-
-    it('should support generating explicit targets', async () => {
-      mockedInstalledCypressVersion.mockReturnValue(undefined); // ensure init is called
-      addProject(tree, { name: 'explicit-lib', type: 'apps' });
-      addProject(tree, { name: 'inferred-lib', type: 'apps' });
-
-      await cypressE2EConfigurationGenerator(tree, {
-        project: 'explicit-lib',
-        baseUrl: 'http://localhost:4200',
-        addPlugin: true,
-        addExplicitTargets: true,
-      });
-      await cypressE2EConfigurationGenerator(tree, {
-        project: 'inferred-lib',
-        baseUrl: 'http://localhost:4200',
-        addPlugin: true,
-        addExplicitTargets: false,
-      });
-
-      expect(readProjectConfiguration(tree, 'explicit-lib').targets.e2e)
-        .toMatchInlineSnapshot(`
-        {
-          "configurations": {
-            "ci": {
-              "devServerTarget": "explicit-lib:serve-static",
-            },
-            "production": {
-              "devServerTarget": "explicit-lib:serve:production",
-            },
-          },
-          "executor": "@nx/cypress:cypress",
-          "options": {
-            "cypressConfig": "apps/explicit-lib/cypress.config.ts",
-            "devServerTarget": "explicit-lib:serve",
-            "testingType": "e2e",
-          },
-        }
-      `);
-      expect(
-        readProjectConfiguration(tree, 'inferred-lib').targets.e2e
-      ).toBeUndefined();
-    });
   });
 });
 

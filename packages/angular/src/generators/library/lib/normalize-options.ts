@@ -73,7 +73,6 @@ export async function normalizeOptions(
     standaloneComponentName: `${
       names(projectNames.projectSimpleName).className
     }Component`,
-    addPlugin: options.addPlugin ?? process.env.NX_ADD_PLUGINS === 'true',
   };
 
   const {
