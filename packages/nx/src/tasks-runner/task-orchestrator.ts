@@ -633,7 +633,9 @@ function supportedPtyPlatform(): boolean {
     return false;
   }
 
-  if (+windowsBuild < 1809) {
+  // Mininum supported Windows version:
+  // https://en.wikipedia.org/wiki/Windows_10,_version_1809
+  if (+windowsBuild < 17763) {
     return false;
   } else {
     return true;
