@@ -15,24 +15,14 @@ import {
   addServeTarget,
   addPreviewTarget,
   createOrEditViteConfig,
-  deleteWebpackConfig,
-  editTsConfig,
-  findExistingTargetsInProject,
-  handleUnknownExecutors,
-  handleUnsupportedUserProvidedTargets,
-  moveAndEditIndexHtml,
   TargetFlags,
-  UserProvidedTargetName,
 } from '../../utils/generator-utils';
 
 import initGenerator from '../init/init';
 import vitestGenerator from '../vitest/vitest-generator';
 import { ViteConfigurationGeneratorSchema } from './schema';
 import { ensureDependencies } from '../../utils/ensure-dependencies';
-import {
-  findViteConfig,
-  findWebpackConfig,
-} from '../../utils/find-vite-config';
+import { convertNonVite } from './lib/convert-non-vite';
 
 export function viteConfigurationGenerator(
   host: Tree,
@@ -70,131 +60,7 @@ export async function viteConfigurationGeneratorInternal(
   let projectAlreadyHasViteTargets: TargetFlags = {};
 
   if (!schema.newProject) {
-    // Check if it has vite
-    const hasViteConfig = findViteConfig(tree, projectRoot);
-    const hasIndexHtmlAtRoot = tree.exists(
-      joinPathFragments(projectRoot, 'index.html')
-    );
-
-    if (projectType === 'application' && hasViteConfig && hasIndexHtmlAtRoot) {
-      throw new Error(
-        `The project ${schema.project} is already configured to use Vite.`
-      );
-    }
-
-    if (projectType === 'library' && hasViteConfig) {
-      // continue anyway - it could need to be updated - only update vite.config.ts in any case
-      editTsConfig(tree, schema);
-    }
-
-    // Check if it has webpack
-    const hasWebpackConfig = findWebpackConfig(tree, projectRoot);
-    if (hasWebpackConfig) {
-      if (projectType === 'application') {
-        moveAndEditIndexHtml(tree, schema);
-      }
-      deleteWebpackConfig(tree, projectRoot, hasWebpackConfig);
-      editTsConfig(tree, schema);
-    }
-
-    // HAS JS EXECUTORS?
-    // TRY TO CONVERT TO VITE
-    const {
-      validFoundTargetName,
-      projectContainsUnsupportedExecutor,
-      userProvidedTargetIsUnsupported,
-      alreadyHasNxViteTargets,
-    } = findExistingTargetsInProject(targets);
-
-    // HAS NO JS EXECUTORS, NO WEBPACK CONFIG, NO ROLLUP CONFIG
-    // CONVERT TO VITE
-
-    projectAlreadyHasViteTargets = alreadyHasNxViteTargets;
-    /**
-     * This means that we only found unsupported build targets in that project.
-     * The only way that buildTarget is defined, means that it is supported.
-     *
-     * If the `unsupported` flag was false, it would mean that we did not find
-     * a build target at all, so we can create a new one.
-     *
-     * So we only throw if we found a target, but it is unsupported.
-     */
-    if (!validFoundTargetName.build && projectContainsUnsupportedExecutor) {
-      throw new Error(
-        `The project ${schema.project} cannot be converted to use the @nx/vite executors.`
-      );
-    }
-
-    if (
-      alreadyHasNxViteTargets.build &&
-      (alreadyHasNxViteTargets.serve || projectType === 'library') &&
-      alreadyHasNxViteTargets.test
-    ) {
-      throw new Error(
-        `The project ${schema.project} is already configured to use the @nx/vite executors.
-        Please try a different project, or remove the existing targets 
-        and re-run this generator to reset the existing Vite Configuration.
-        `
-      );
-    }
-
-    /**
-     * This means that we did not find any supported executors
-     * so we don't have any valid target names.
-     *
-     * However, the executors that we may have found are not in the
-     * list of the specifically unsupported executors either.
-     *
-     * So, we should warn the user about it.
-     */
-
-    if (
-      !projectContainsUnsupportedExecutor &&
-      !validFoundTargetName.build &&
-      !validFoundTargetName.serve &&
-      !validFoundTargetName.test
-    ) {
-      await handleUnknownExecutors(schema.project);
-    }
-
-    /**
-     * There is a possibility at this stage that the user has provided
-     * targets with unsupported executors.
-     * We keep track here of which of the targets that the user provided
-     * are unsupported.
-     * We do this with the `userProvidedTargetIsUnsupported` object,
-     * which contains flags for each target (whether it is supported or not).
-     *
-     * We also keep track of the targets that we found in the project,
-     * through the findExistingTargetsInProject function, which returns
-     * targets for build/serve/test that use supported executors, and
-     * can be converted to use the vite executors. These are the
-     * kept in the validFoundTargetName object.
-     */
-    await handleUnsupportedUserProvidedTargets(
-      userProvidedTargetIsUnsupported,
-      userProvidedTargetName,
-      validFoundTargetName
-    );
-
-    /**
-     * Once the user is at this stage, then they can go ahead and convert.
-     */
-
-    buildTargetName = validFoundTargetName.build ?? buildTargetName;
-    serveTargetName = validFoundTargetName.serve ?? serveTargetName;
-
-    if (projectType === 'application') {
-      moveAndEditIndexHtml(tree, schema, buildTargetName);
-    }
-
-    deleteWebpackConfig(
-      tree,
-      projectRoot,
-      targets?.[buildTargetName]?.options?.webpackConfig
-    );
-
-    editTsConfig(tree, schema);
+    await convertNonVite(tree, schema, projectRoot, projectType, targets);
   }
 
   const jsInitTask = await jsInitGenerator(tree, {
@@ -291,7 +157,7 @@ export async function viteConfigurationGeneratorInternal(
       inSourceTests: schema.inSourceTests,
       coverageProvider: 'v8',
       skipViteConfig: true,
-      testTarget: testTargetName,
+      testTarget: 'test',
       skipFormat: true,
       addPlugin: schema.addPlugin,
     });

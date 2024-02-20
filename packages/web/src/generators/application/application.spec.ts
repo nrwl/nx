@@ -179,8 +179,6 @@ describe('app', () => {
           path: './tsconfig.spec.json',
         },
       ]);
-      expect(tsconfig.compilerOptions.types).toMatchObject(['vite/client']);
-
       expect(tree.exists('my-app-e2e/cypress.config.ts')).toBeTruthy();
       expect(tree.exists('my-app/index.html')).toBeTruthy();
       expect(tree.exists('my-app/vite.config.ts')).toBeTruthy();

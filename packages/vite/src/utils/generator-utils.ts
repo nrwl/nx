@@ -21,28 +21,60 @@ export type TargetFlags = Partial<Record<Target, boolean>>;
 export type UserProvidedTargetName = Partial<Record<Target, string>>;
 export type ValidFoundTargetName = Partial<Record<Target, string>>;
 
-export function findExistingTargetsInProject(targets: {
+export function findExistingJsBuildTargetInProject(targets: {
   [targetName: string]: TargetConfiguration;
 }): {
-  validFoundTargetName: ValidFoundTargetName;
+  supported?: string;
+  unsupported?: string;
 } {
-  const output: ReturnType<typeof findExistingTargetsInProject> = {
-    validFoundTargetName: {},
-  };
+  const output: {
+    supported?: string;
+    unsupported?: string;
+  } = {};
 
   const supportedExecutors = {
     build: ['@nx/js:babel', '@nx/js:swc', '@nx/rollup:rollup'],
   };
+  const unsupportedExecutors = [
+    '@nx/angular:ng-packagr-lite',
+    '@nx/angular:package',
+    '@nx/angular:webpack-browser',
+    '@nx/esbuild:esbuild',
+    '@nx/react-native:run-ios',
+    '@nx/react-native:start',
+    '@nx/react-native:run-android',
+    '@nx/react-native:bundle',
+    '@nx/react-native:build-android',
+    '@nx/react-native:bundle',
+    '@nx/next:build',
+    '@nx/js:tsc',
+    '@nrwl/angular:ng-packagr-lite',
+    '@nrwl/angular:package',
+    '@nrwl/angular:webpack-browser',
+    '@nrwl/esbuild:esbuild',
+    '@nrwl/react-native:run-ios',
+    '@nrwl/react-native:start',
+    '@nrwl/react-native:run-android',
+    '@nrwl/react-native:bundle',
+    '@nrwl/react-native:build-android',
+    '@nrwl/react-native:bundle',
+    '@nrwl/next:build',
+    '@nrwl/js:tsc',
+    '@angular-devkit/build-angular:browser',
+    '@angular-devkit/build-angular:browser-esbuild',
+    '@angular-devkit/build-angular:application',
+  ];
 
   // We try to find the target that is using the supported executors
   // for build since this is the one we will be converting
   for (const target in targets) {
     const executorName = targets[target].executor;
     if (supportedExecutors.build.includes(executorName)) {
-      output.validFoundTargetName.build = target;
+      output.supported = target;
+    } else if (unsupportedExecutors.includes(executorName)) {
+      output.unsupported = target;
     }
   }
-
   return output;
 }
 
@@ -597,21 +629,17 @@ async function handleUnsupportedUserProvidedTargetsErrors(
   }
 }
 
-export async function handleUnknownExecutors(projectName: string) {
+export async function handleUnknownConfiguration(projectName: string) {
   if (process.env.NX_INTERACTIVE === 'false') {
     return;
   }
 
   logger.warn(
     `
-      We could not find any targets in project ${projectName} that use executors which 
-      can be converted to the @nx/vite executors.
-
-      This either means that your project may not have a target 
-      for building, serving, or testing at all, or that your targets are 
-      using executors that are not known to Nx.
+      We could not find any configuration in project ${projectName} that 
+      indicates whether we can definitely convert to Vite.
       
-      If you still want to convert your project to use the @nx/vite executors,
+      If you still want to convert your project to use Vite,
       please make sure to commit your changes before running this generator.
       `
   );
@@ -619,13 +647,13 @@ export async function handleUnknownExecutors(projectName: string) {
   const { Confirm } = require('enquirer');
   const prompt = new Confirm({
     name: 'question',
-    message: `Should Nx convert your project to use the @nx/vite executors?`,
+    message: `Should Nx convert your project to use Vite?`,
     initial: true,
   });
   const shouldConvert = await prompt.run();
   if (!shouldConvert) {
     throw new Error(`
-      Nx could not verify that the executors you are using can be converted to the @nx/vite executors.
+      Nx could not verify that your project can be converted to use Vite.
       Please try again with a different project.
     `);
   }
