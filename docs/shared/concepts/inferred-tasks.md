@@ -1,6 +1,6 @@
 # Inferred Tasks (Project Crystal)
 
-In Nx version 18, many Nx plugins will automatically infer tasks for your projects based on the configuration of different tools. Many tools have configuration files which determine what a tool does. Nx is able to cache the results of running the tool. Nx plugins use the same configuration files to infer how Nx should [run the task](/features/run-tasks). This includes [fine-tuned cache settings](/features/cache-task-results) and automatic [task dependencies](/concepts/task-pipeline-configuration).
+In Nx version 18, Nx plugins can automatically infer tasks for your projects based on the configuration of different tools. Many tools have configuration files which determine what a tool does. Nx is able to cache the results of running the tool. Nx plugins use the same configuration files to infer how Nx should [run the task](/features/run-tasks). This includes [fine-tuned cache settings](/features/cache-task-results) and automatic [task dependencies](/concepts/task-pipeline-configuration).
 
 For example, the `@nx/webpack` plugin infers tasks to run webpack through Nx based on your repository's webpack configuration. This configuration already defines the destination of your build files, so Nx reads that value and caches the correct output files.
 
@@ -70,3 +70,16 @@ More details about how to override task configuration is available in these reci
 - [Configure Inputs for Task Caching](/recipes/running-tasks/configure-inputs)
 - [Configure Outputs for Task Caching](/recipes/running-tasks/configure-outputs)
 - [Defining a Task Pipeline](/recipes/running-tasks/defining-task-pipeline)
+
+## Existing Nx Workspaces
+
+If you have an existing Nx Workspace and upgrade to Nx 18, the migration generator will automatically add `NX_ADD_PLUGINS=false` to your `.env` file. This environment variable allows you to continue to use Nx without inferred tasks. We are working on creating migrations for existing workspaces to start switching to inferred tasks, where desired.
+
+When `NX_ADD_PLUGINS` is `false`:
+
+1. A newly generated project will have all targets defined with executors - not with inferred tasks.
+2. Running `nx add @nx/some-plugin` will not create a plugin entry for `@nx/some-plugin` in the `nx.json` file. (So that plugin will not create inferred tasks.)
+
+If your `.env` file is ignored by git, ensure that everyone in your organization sets `NX_ADD_PLUGINS=false`. This could be done by updating a shared `.env` file or setting the environment variable in everyone's `.bashrc` file.
+
+Even once a repository has fully embraced inferred tasks, `project.json` and executors will still be useful. The `project.json` file is needed to modify inferred task options and to define tasks that can not be inferred. Some executors perform tasks that can not be accomplished by running a tool directly from the command line (i.e. [TypeScript batch mode](/recipes/tips-n-tricks/enable-tsc-batch-mode)).
