@@ -48,7 +48,6 @@ export interface CypressE2EConfigSchema {
   webServerCommands?: Record<string, string>;
   ciWebServerCommand?: string;
   addPlugin?: boolean;
-  addExplicitTargets?: boolean;
 }
 
 type NormalizedSchema = ReturnType<typeof normalizeOptions>;
@@ -90,7 +89,7 @@ export async function configurationGeneratorInternal(
   );
 
   await addFiles(tree, opts, projectGraph, hasPlugin);
-  if (!hasPlugin || options.addExplicitTargets) {
+  if (!hasPlugin) {
     addTarget(tree, opts);
   }
 
@@ -98,7 +97,6 @@ export async function configurationGeneratorInternal(
     ...opts,
     cypressDir: opts.directory,
     addPlugin: opts.addPlugin,
-    addExplicitTargets: opts.addExplicitTargets,
   });
   tasks.push(linterTask);
 

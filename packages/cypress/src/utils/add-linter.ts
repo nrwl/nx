@@ -40,7 +40,6 @@ export interface CyLinterOptions {
    **/
   overwriteExisting?: boolean;
   addPlugin?: boolean;
-  addExplicitTargets?: boolean;
 }
 
 export async function addLinterToCyProject(
@@ -66,7 +65,6 @@ export async function addLinterToCyProject(
         skipPackageJson: options.skipPackageJson,
         rootProject: options.rootProject,
         addPlugin: options.addPlugin,
-        addExplicitTargets: options.addExplicitTargets,
       })
     );
   }
