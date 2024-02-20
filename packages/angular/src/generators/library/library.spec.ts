@@ -173,6 +173,7 @@ describe('lib', () => {
       const json = readProjectConfiguration(tree, 'my-lib');
       expect(json.root).toEqual('my-lib');
       expect(json.targets.build).toBeDefined();
+      expect(json.targets.test).toBeDefined();
     });
 
     it('should not generate a module file and index.ts should be empty', async () => {

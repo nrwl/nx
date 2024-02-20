@@ -81,6 +81,15 @@
         "type": "executor"
       },
       {
+        "description": "Extracts i18n messages from source code.",
+        "file": "generated/packages/angular/executors/extract-i18n.json",
+        "hidden": false,
+        "name": "extract-i18n",
+        "originalFilePath": "/packages/angular/src/executors/extract-i18n/schema.json",
+        "path": "angular/executors/extract-i18n",
+        "type": "executor"
+      },
+      {
         "description": "The `webpack-browser` executor is very similar to the standard `browser` builder provided by the Angular Devkit. It allows you to build your Angular application to a build artifact that can be hosted online. There are some key differences:   \n- Supports Custom Webpack Configurations  \n- Supports Incremental Building",
         "file": "generated/packages/angular/executors/webpack-browser.json",
         "hidden": false,

@@ -31,5 +31,4 @@ export interface Schema {
   minimal?: boolean;
   bundler?: 'webpack' | 'esbuild';
   ssr?: boolean;
-  addPlugin?: boolean;
 }

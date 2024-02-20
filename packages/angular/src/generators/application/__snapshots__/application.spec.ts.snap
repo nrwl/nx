@@ -268,6 +268,9 @@ exports[`app --project-name-and-root-format=derived should generate correctly wh
         "buildTarget": "my-dir-my-app:build",
       },
     },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+    },
     "serve": {
       "configurations": {
         "development": {
@@ -287,6 +290,15 @@ exports[`app --project-name-and-root-format=derived should generate correctly wh
         "staticFilePath": "dist/apps/my-dir/my-app/browser",
       },
     },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "options": {
+        "jestConfig": "apps/my-dir/my-app/jest.config.ts",
+      },
+      "outputs": [
+        "{workspaceRoot}/coverage/{projectRoot}",
+      ],
+    },
   },
 }
 `;
@@ -302,24 +314,7 @@ exports[`app --project-name-and-root-format=derived should generate correctly wh
   "root": "apps/my-dir/my-app-e2e",
   "sourceRoot": "apps/my-dir/my-app-e2e/src",
   "tags": [],
-  "targets": {
-    "e2e": {
-      "configurations": {
-        "ci": {
-          "devServerTarget": "my-dir-my-app:serve-static",
-        },
-        "production": {
-          "devServerTarget": "my-dir-my-app:serve:production",
-        },
-      },
-      "executor": "@nx/cypress:cypress",
-      "options": {
-        "cypressConfig": "apps/my-dir/my-app-e2e/cypress.config.ts",
-        "devServerTarget": "my-dir-my-app:serve:development",
-        "testingType": "e2e",
-      },
-    },
-  },
+  "targets": {},
 }
 `;
 
@@ -472,6 +467,9 @@ exports[`app --project-name-and-root-format=derived should generate correctly wh
         "buildTarget": "my-app:build",
       },
     },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+    },
     "serve": {
       "configurations": {
         "development": {
@@ -491,6 +489,15 @@ exports[`app --project-name-and-root-format=derived should generate correctly wh
         "staticFilePath": "dist/apps/my-app/browser",
       },
     },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "options": {
+        "jestConfig": "apps/my-app/jest.config.ts",
+      },
+      "outputs": [
+        "{workspaceRoot}/coverage/{projectRoot}",
+      ],
+    },
   },
 }
 `;
@@ -506,24 +513,7 @@ exports[`app --project-name-and-root-format=derived should generate correctly wh
   "root": "apps/my-app-e2e",
   "sourceRoot": "apps/my-app-e2e/src",
   "tags": [],
-  "targets": {
-    "e2e": {
-      "configurations": {
-        "ci": {
-          "devServerTarget": "my-app:serve-static",
-        },
-        "production": {
-          "devServerTarget": "my-app:serve:production",
-        },
-      },
-      "executor": "@nx/cypress:cypress",
-      "options": {
-        "cypressConfig": "apps/my-app-e2e/cypress.config.ts",
-        "devServerTarget": "my-app:serve:development",
-        "testingType": "e2e",
-      },
-    },
-  },
+  "targets": {},
 }
 `;
 
@@ -971,6 +961,9 @@ exports[`app nested should create project configs 1`] = `
         "buildTarget": "my-app:build",
       },
     },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+    },
     "serve": {
       "configurations": {
         "development": {
@@ -990,6 +983,15 @@ exports[`app nested should create project configs 1`] = `
         "staticFilePath": "dist/my-dir/my-app/browser",
       },
     },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "options": {
+        "jestConfig": "my-dir/my-app/jest.config.ts",
+      },
+      "outputs": [
+        "{workspaceRoot}/coverage/{projectRoot}",
+      ],
+    },
   },
 }
 `;
@@ -1005,24 +1007,7 @@ exports[`app nested should create project configs 2`] = `
   "root": "my-dir/my-app-e2e",
   "sourceRoot": "my-dir/my-app-e2e/src",
   "tags": [],
-  "targets": {
-    "e2e": {
-      "configurations": {
-        "ci": {
-          "devServerTarget": "my-app:serve-static",
-        },
-        "production": {
-          "devServerTarget": "my-app:serve:production",
-        },
-      },
-      "executor": "@nx/cypress:cypress",
-      "options": {
-        "cypressConfig": "my-dir/my-app-e2e/cypress.config.ts",
-        "devServerTarget": "my-app:serve:development",
-        "testingType": "e2e",
-      },
-    },
-  },
+  "targets": {},
 }
 `;
 
@@ -1088,6 +1073,9 @@ exports[`app not nested should create project configs 1`] = `
         "buildTarget": "my-app:build",
       },
     },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+    },
     "serve": {
       "configurations": {
         "development": {
@@ -1107,6 +1095,15 @@ exports[`app not nested should create project configs 1`] = `
         "staticFilePath": "dist/my-app/browser",
       },
     },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "options": {
+        "jestConfig": "my-app/jest.config.ts",
+      },
+      "outputs": [
+        "{workspaceRoot}/coverage/{projectRoot}",
+      ],
+    },
   },
 }
 `;
@@ -1122,24 +1119,7 @@ exports[`app not nested should create project configs 2`] = `
   "root": "my-app-e2e",
   "sourceRoot": "my-app-e2e/src",
   "tags": [],
-  "targets": {
-    "e2e": {
-      "configurations": {
-        "ci": {
-          "devServerTarget": "my-app:serve-static",
-        },
-        "production": {
-          "devServerTarget": "my-app:serve:production",
-        },
-      },
-      "executor": "@nx/cypress:cypress",
-      "options": {
-        "cypressConfig": "my-app-e2e/cypress.config.ts",
-        "devServerTarget": "my-app:serve:development",
-        "testingType": "e2e",
-      },
-    },
-  },
+  "targets": {},
 }
 `;
 

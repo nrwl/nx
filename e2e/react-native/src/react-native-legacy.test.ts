@@ -215,18 +215,34 @@ describe('@nx/react-native (legacy)', () => {
       return `import AsyncStorage from '@react-native-async-storage/async-storage';${content}`;
     });
 
+    await runCLIAsync(`sync-deps ${appName}`);
+    let result = readJson(join('apps', appName, 'package.json'));
+    expect(result).toMatchObject({
+      dependencies: {
+        '@react-native-async-storage/async-storage': '*',
+      },
+    });
+
     await runCLIAsync(
       `sync-deps ${appName} --include=react-native-image-picker`
     );
-
-    const result = readJson(join('apps', appName, 'package.json'));
+    result = readJson(join('apps', appName, 'package.json'));
     expect(result).toMatchObject({
       dependencies: {
+        '@react-native-async-storage/async-storage': '*',
         'react-native-image-picker': '*',
-        'react-native': '*',
+      },
+    });
+
+    await runCLIAsync(`sync-deps ${appName} --all`);
+    result = readJson(join('apps', appName, 'package.json'));
+    expect(result).toMatchObject({
+      dependencies: {
+        '@react-native-async-storage/async-storage': '*',
+        'react-native-image-picker': '*',
       },
       devDependencies: {
-        '@react-native-async-storage/async-storage': '*',
+        '@nx/react-native': '*',
       },
     });
   });

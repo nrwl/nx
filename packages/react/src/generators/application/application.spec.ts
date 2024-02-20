@@ -341,6 +341,21 @@ describe('app', () => {
     });
   });
 
+  describe('--style tailwind', () => {
+    it('should generate tailwind setup', async () => {
+      await applicationGenerator(appTree, { ...schema, style: 'tailwind' });
+      expect(appTree.exists('my-app/tailwind.config.js')).toEqual(true);
+      expect(appTree.read('my-app/src/styles.css', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "@tailwind base;
+        @tailwind components;
+        @tailwind utilities;
+        /* You can add global styles to this file, and also import other style files */
+        "
+      `);
+    });
+  });
+
   it('should setup jest with tsx support', async () => {
     await applicationGenerator(appTree, { ...schema, name: 'my-app' });
 
@@ -910,10 +925,7 @@ describe('app', () => {
 
     it('should create correct tsconfig compilerOptions', () => {
       const tsconfigJson = readJson(viteAppTree, '/my-app/tsconfig.json');
-      expect(tsconfigJson.compilerOptions.types).toMatchObject([
-        'vite/client',
-        'vitest',
-      ]);
+      expect(tsconfigJson.compilerOptions.jsx).toBe('react-jsx');
     });
 
     it('should create index.html and vite.config file at the root of the app', () => {
