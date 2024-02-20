@@ -10,7 +10,7 @@ Run the following command with the options listed to create an empty workspace.
 
 ```{% command="npx create-nx-workspace@latest" path="~" %}
 
- >  NX   Let's create a new workspace [https://nx.dev/getting-started/intro]
+NX   Let's create a new workspace [https://nx.dev/getting-started/intro]
 
 ✔ Where would you like to create your workspace? · myorg
 ✔ Which stack do you want to use? · none

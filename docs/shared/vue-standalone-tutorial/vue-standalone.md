@@ -26,16 +26,16 @@ Here's the source code of the final result for this tutorial.
 Create a new Vue application with the following command:
 
 ```{% command="npx create-nx-workspace@latest myvueapp --preset=vue-standalone" path="~" %}
- >  NX   Let's create a new workspace [https://nx.dev/getting-started/intro]
+NX   Let's create a new workspace [https://nx.dev/getting-started/intro]
 
 ✔ Test runner to use for end to end (E2E) tests · cypress
 ✔ Default stylesheet format · css
 ✔ Set up CI with caching, distribution and test deflaking · github
 
- >  NX   Creating your v17.0.0 workspace.
+NX   Creating your v17.0.0 workspace.
 
-   To make sure the command works reliably in all environments, and that the preset is applied correctly,
-   Nx will run "npm install" several times. Please wait.
+To make sure the command works reliably in all environments, and that the preset is applied correctly,
+Nx will run "npm install" several times. Please wait.
 ```
 
 You can also choose [Playwright](/nx-api/playwright) for your e2e tests or a different stylesheet format. In this tutorial we're going to use Cypress and css. The above command generates the following structure:
@@ -215,14 +215,14 @@ More conveniently, we can also run them in parallel using the following syntax:
 
 ```{% command="nx run-many -t test lint e2e" path="myvueapp" %}
 
-    ✔  nx run e2e:lint (1s)
-    ✔  nx run myvueapp:lint (1s)
-    ✔  nx run myvueapp:test (2s)
-    ✔  nx run e2e:e2e (6s)
+✔  nx run e2e:lint (1s)
+✔  nx run myvueapp:lint (1s)
+✔  nx run myvueapp:test (2s)
+✔  nx run e2e:e2e (6s)
 
- ——————————————————————————————————————————————————————
+——————————————————————————————————————————————————————
 
- >  NX   Successfully ran targets test, lint, e2e for 2 projects (8s)
+NX   Successfully ran targets test, lint, e2e for 2 projects (8s)
 ```
 
 ### Caching
@@ -235,16 +235,16 @@ Note that all of these targets are automatically cached by Nx. If you re-run a s
 
 ```{% command="nx run-many -t test lint e2e" path="myvueapp" %}
 
-    ✔  nx run myvueapp:lint  [existing outputs match the cache, left as is]
-    ✔  nx run e2e:lint  [existing outputs match the cache, left as is]
-    ✔  nx run myvueapp:test  [existing outputs match the cache, left as is]
-    ✔  nx run e2e:e2e  [existing outputs match the cache, left as is]
+✔  nx run myvueapp:lint  [existing outputs match the cache, left as is]
+✔  nx run e2e:lint  [existing outputs match the cache, left as is]
+✔  nx run myvueapp:test  [existing outputs match the cache, left as is]
+✔  nx run e2e:e2e  [existing outputs match the cache, left as is]
 
- ———————————————————————————————————————————————————————
+———————————————————————————————————————————————————————
 
- >  NX   Successfully ran targets test, lint, e2e for 2 projects (143ms)
+NX   Successfully ran targets test, lint, e2e for 2 projects (143ms)
 
-   Nx read the output from the cache instead of running the command for 4 out of 4 tasks.
+Nx read the output from the cache instead of running the command for 4 out of 4 tasks.
 ```
 
 Not all tasks might be cacheable though. You can mark all targets of a certain type as cacheable by setting `cache` to `true` in the `targetDefaults` of the `nx.json` file. You can also [learn more about how caching works](/features/cache-task-results).
@@ -269,7 +269,7 @@ You can just create new Vue components as you normally would. However, Nx plugin
 
 ```{% command="npx nx list @nx/vue" path="myvueapp" %}
 
->  NX   Capabilities in @nx/vue:
+NX   Capabilities in @nx/vue:
 
    GENERATORS
 
@@ -293,7 +293,7 @@ More info can be found in [the integrate with editors article](/features/integra
 Run the following command to generate a new "hello-world" component. Note how we append `--dry-run` to first check the output.
 
 ```{% command="npx nx g @nx/vue:component hello-world --no-export --unit-test-runner=vitest --directory=src/components --dry-run" path="myvueapp" %}
->  NX  Generating @nx/vue:component
+NX  Generating @nx/vue:component
 
 CREATE src/components/hello-world.spec.ts
 CREATE src/components/hello-world.vue
@@ -324,16 +324,16 @@ If you're ready and want to ship your application, you can build it using
 ```{% command="npx nx build" path="myvueapp" %}
 > nx run myvueapp:build:production
 
-vite v4.3.9 building for production...
-✓ 15 modules transformed.
-dist/myvueapp/index.html                  0.43 kB │ gzip:  0.29 kB
-dist/myvueapp/assets/index-a0201bbf.css   7.90 kB │ gzip:  1.78 kB
-dist/myvueapp/assets/index-46a11b5f.js   62.39 kB │ gzip: 24.35 kB
-✓ built in 502ms
+ vite v4.3.9 building for production...
+ ✓ 15 modules transformed.
+ dist/myvueapp/index.html                  0.43 kB │ gzip:  0.29 kB
+ dist/myvueapp/assets/index-a0201bbf.css   7.90 kB │ gzip:  1.78 kB
+ dist/myvueapp/assets/index-46a11b5f.js   62.39 kB │ gzip: 24.35 kB
+ ✓ built in 502ms
 
- —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+—————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
- >  NX   Successfully ran target build for project myvueapp (957ms)
+NX   Successfully ran target build for project myvueapp (957ms)
 ```
 
 All the required files will be placed in the `dist/myvueapp` folder and can be deployed to your favorite hosting provider.
@@ -827,34 +827,34 @@ import { Orders } from 'orders';
 If you lint your workspace you'll get an error now:
 
 ```{% command="nx run-many -t lint" %}
- >  NX   Running target lint for 5 projects
-    ✖  nx run products:lint
-       Linting "products"...
+NX   Running target lint for 5 projects
+✖  nx run products:lint
+   Linting "products"...
 
-       /Users/isaac/Documents/code/nx-recipes/vue-standalone/modules/products/src/lib/products.vue
-         5:1   error    A project tagged with "scope:products" can only depend on libs tagged with "scope:products", "scope:shared"  @nx/enforce-module-boundaries
-         5:10  warning  'Orders' is defined but never used                                                                           @typescript-eslint/no-unused-vars
+   /Users/isaac/Documents/code/nx-recipes/vue-standalone/modules/products/src/lib/products.vue
+     5:1   error    A project tagged with "scope:products" can only depend on libs tagged with "scope:products", "scope:shared"  @nx/enforce-module-boundaries
+     5:10  warning  'Orders' is defined but never used                                                                           @typescript-eslint/no-unused-vars
 
-       ✖ 2 problems (1 error, 1 warning)
+   ✖ 2 problems (1 error, 1 warning)
 
-       Lint warnings found in the listed files.
+   Lint warnings found in the listed files.
 
-       Lint errors found in the listed files.
+   Lint errors found in the listed files.
 
 
-    ✔  nx run orders:lint (913ms)
-    ✔  nx run e2e:lint  [existing outputs match the cache, left as is]
-    ✔  nx run myvueapp:lint (870ms)
-    ✔  nx run shared-ui:lint (688ms)
+✔  nx run orders:lint (913ms)
+✔  nx run e2e:lint  [existing outputs match the cache, left as is]
+✔  nx run myvueapp:lint (870ms)
+✔  nx run shared-ui:lint (688ms)
 
- ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
- >  NX   Ran target lint for 5 projects (2s)
+NX   Ran target lint for 5 projects (2s)
 
-    ✔    4/5 succeeded [1 read from cache]
+✔    4/5 succeeded [1 read from cache]
 
-    ✖    1/5 targets failed, including the following:
-         - nx run products:lint
+✖    1/5 targets failed, including the following:
+     - nx run products:lint
 
 ```
 

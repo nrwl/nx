@@ -149,6 +149,12 @@ export default async function* fileServerExecutor(
     const run = () => {
       if (!running) {
         running = true;
+        /**
+         * Expose a variable to the build target to know if it's being run by the serve-static executor
+         * This is useful because a config might need to change if it's being run by serve-static without the user's input
+         * or if being ran by another executor (eg. E2E tests)
+         * */
+        process.env.NX_SERVE_STATIC_BUILD_RUNNING = 'true';
         try {
           const args = getBuildTargetCommand(options, context);
           execFileSync(pmCmd, args, {
@@ -159,6 +165,7 @@ export default async function* fileServerExecutor(
             `Build target failed: ${chalk.bold(options.buildTarget)}`
           );
         } finally {
+          process.env.NX_SERVE_STATIC_BUILD_RUNNING = undefined;
           running = false;
         }
       }
