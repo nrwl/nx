@@ -621,7 +621,7 @@ export class TaskOrchestrator {
   // endregion utils
 }
 
-function supportedPtyPlatform(): boolean {
+function supportedPtyPlatform() {
   if (process.platform !== 'win32') {
     return true;
   }
@@ -635,6 +635,7 @@ function supportedPtyPlatform(): boolean {
 
   // Mininum supported Windows version:
   // https://en.wikipedia.org/wiki/Windows_10,_version_1809
+  // https://learn.microsoft.com/en-us/windows/console/createpseudoconsole#requirements
   if (+windowsBuild < 17763) {
     return false;
   } else {
