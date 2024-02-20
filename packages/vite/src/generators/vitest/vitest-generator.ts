@@ -14,7 +14,6 @@ import {
 import {
   addOrChangeTestTarget,
   createOrEditViteConfig,
-  findExistingTargetsInProject,
 } from '../../utils/generator-utils';
 import { VitestGeneratorSchema } from './schema';
 
@@ -68,10 +67,7 @@ export async function vitestGeneratorInternal(
         : p.plugin === '@nx/vite/plugin') || hasPlugin
   );
   if (!hasPluginCheck) {
-    const testTarget =
-      schema.testTarget ??
-      findExistingTargetsInProject(targets).validFoundTargetName.test ??
-      'test';
+    const testTarget = schema.testTarget ?? 'test';
     addOrChangeTestTarget(tree, schema, testTarget);
   }
 
