@@ -59,8 +59,10 @@ export async function getOptions(
       ? process.cwd()
       : relative(context.cwd, joinPathFragments(context.root, projectRoot));
 
+  const normalizedExtraArgs = normalizeArgs(extraArgs);
+
   const settings = {
-    ...extraArgs,
+    ...normalizedExtraArgs,
     // This should not be needed as it's going to be set in vite.config.ts
     // but leaving it here in case someone did not migrate correctly
     root: resolved.config.root ?? root,
@@ -80,4 +82,32 @@ export async function getExtraArgs(
   }
 
   return extraArgs;
+}
+
+// normalizes some args that were previously normalized by `startVitest` until this is fixed
+// https://github.com/vitest-dev/vitest/pull/5126/files#diff-49ef635be88fe607c8682e81ab56b061ba9aafd5c94a5690a70b90a54604cd24L40-L62
+function normalizeArgs(extraArgs: Record<string, any>) {
+  const args = { ...extraArgs };
+
+  if (typeof args.coverage === 'boolean') {
+    args.coverage = { enabled: args.coverage };
+  }
+  // running "vitest --browser", assumes browser name is set in the config
+  if (typeof args.browser === 'boolean') {
+    args.browser = { enabled: args.browser } as any;
+  }
+  // running "vitest --browser=chrome"
+  if (typeof args.browser === 'string') {
+    args.browser = { enabled: true, name: args.browser };
+  }
+  if (typeof args.typecheck === 'boolean') {
+    args.typecheck = { enabled: true };
+  }
+  if (typeof args.typecheck?.only === 'boolean') {
+    args.typecheck ??= {};
+    args.typecheck.only = true;
+    args.typecheck.enabled = true;
+  }
+
+  return args;
 }

@@ -52,7 +52,8 @@ export async function cypressComponentConfigurationInternal(
   const installTask = await baseCyCTConfig(tree, {
     project: options.project,
     skipFormat: true,
-    addPlugin: options.addPlugin,
+    addPlugin: false,
+    addExplicitTargets: true,
   });
 
   await configureCypressCT(tree, options);

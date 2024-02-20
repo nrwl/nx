@@ -7,4 +7,5 @@ export interface AddLintingGeneratorSchema {
   skipPackageJson?: boolean;
   unitTestRunner?: string;
   addPlugin?: boolean;
+  addExplicitTargets?: boolean;
 }
