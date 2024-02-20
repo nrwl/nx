@@ -115,10 +115,10 @@ describe('nx release create github release', () => {
     const result = runCLI('release patch -d --first-release --verbose');
 
     expect(
-      result.match(new RegExp(`>  NX   Pushing to git remote`, 'g')).length
+      result.match(new RegExp(`NX   Pushing to git remote`, 'g')).length
     ).toEqual(1);
     expect(
-      result.match(new RegExp(`>  NX   Creating GitHub Release`, 'g')).length
+      result.match(new RegExp(`NX   Creating GitHub Release`, 'g')).length
     ).toEqual(1);
 
     // should have two occurrences of each - one for the changelog file, one for the github release
@@ -149,10 +149,10 @@ describe('nx release create github release', () => {
     const result = runCLI('release -d --first-release --verbose');
 
     expect(
-      result.match(new RegExp(`>  NX   Pushing to git remote`, 'g')).length
+      result.match(new RegExp(`NX   Pushing to git remote`, 'g')).length
     ).toEqual(1);
     expect(
-      result.match(new RegExp(`>  NX   Creating GitHub Release`, 'g')).length
+      result.match(new RegExp(`NX   Creating GitHub Release`, 'g')).length
     ).toEqual(3);
 
     // should have one occurrence of each because files are disabled
