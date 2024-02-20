@@ -18,7 +18,7 @@ export default defineNuxtConfig({
     },
   },
   imports: {
-    autoImport: false,
+    autoImport: true,
   },
   <% if (style !== 'none') { %>
   css: ['~/assets/css/styles.<%= style %>'],
