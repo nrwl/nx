@@ -8,7 +8,6 @@ export type AddJestOptions = {
   projectRoot: string;
   skipPackageJson: boolean;
   strict: boolean;
-  addPlugin?: boolean;
 };
 
 export async function addJest(

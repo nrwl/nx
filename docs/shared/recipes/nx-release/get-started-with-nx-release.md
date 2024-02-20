@@ -56,7 +56,7 @@ Nx Release will prompt you to pick a version bump for all the packages in the re
 
 ```{% command="nx release --first-release --dry-run" %}
 
-  >  NX   Running release version for project: pkg-1
+NX   Running release version for project: pkg-1
 
 pkg-1 🔍 Reading data for package "@myorg/pkg-1" from packages/pkg-1/package.json
 pkg-1 📄 Resolved the current version as 0.0.1 from packages/pkg-1/package.json
@@ -77,21 +77,21 @@ After this prompt, the command will finish, showing you the preview of changes t
 
 ```{% command="nx release --first-release --dry-run" %}
 
- >  NX   Running release version for project: pkg-1
+NX   Running release version for project: pkg-1
 
 pkg-1 🔍 Reading data for package "@myorg/pkg-1" from packages/pkg-1/package.json
 pkg-1 📄 Resolved the current version as 0.0.1 from packages/pkg-1/package.json
 ✔ What kind of change is this for the 3 matched projects(s)? · patch
 pkg-1 ✍️  New version 0.0.2 written to packages/pkg-1/package.json
 
- >  NX   Running release version for project: pkg-2
+NX   Running release version for project: pkg-2
 
 pkg-2 🔍 Reading data for package "@myorg/pkg-2" from packages/pkg-2/package.json
 pkg-2 📄 Resolved the current version as 0.0.1 from packages/pkg-2/package.json
 pkg-2 ✍️  New version 0.0.2 written to packages/pkg-2/package.json
 pkg-2 ✍️  Applying new version 0.0.2 to 1 package which depends on pkg-2
 
- >  NX   Running release version for project: pkg-3
+NX   Running release version for project: pkg-3
 
 pkg-3 🔍 Reading data for package "@myorg/pkg-3" from packages/pkg-3/package.json
 pkg-3 📄 Resolved the current version as 0.0.1 from packages/pkg-3/package.json
@@ -108,14 +108,14 @@ UPDATE packages/pkg-1/package.json [dry-run]
 +     "@myorg/pkg-2": "0.0.2"
     },
 
-UPDATE packages/pkg-2/package.json [dry-run]
+ UPDATE packages/pkg-2/package.json [dry-run]
 
     "name": "@myorg/pkg-2",
 -   "version": "0.0.1",
 +   "version": "0.0.2",
     "dependencies": {
 
-UPDATE packages/pkg-3/package.json [dry-run]
+ UPDATE packages/pkg-3/package.json [dry-run]
 
     "name": "@myorg/pkg-3",
 -   "version": "0.0.1",
@@ -123,15 +123,15 @@ UPDATE packages/pkg-3/package.json [dry-run]
     "dependencies": {
 
 
- >  NX   Updating npm lock file
+NX   Updating npm lock file
 
 
- >  NX   Staging changed files with git
+NX   Staging changed files with git
 
 
 NOTE: The "dryRun" flag means no changes were made.
 
- >  NX   Previewing an entry in CHANGELOG.md for v0.0.2
+NX   Previewing an entry in CHANGELOG.md for v0.0.2
 
 
 CREATE CHANGELOG.md [dry-run]
@@ -139,15 +139,15 @@ CREATE CHANGELOG.md [dry-run]
 +
 + This was a version bump only, there were no code changes.
 
- >  NX   Staging changed files with git
+NX   Staging changed files with git
 
 
 NOTE: The "dryRun" flag means no changelogs were actually created.
 
- >  NX   Committing changes with git
+NX   Committing changes with git
 
 
- >  NX   Tagging commit with git
+NX   Tagging commit with git
 
 Skipped publishing packages.
 ```
@@ -167,13 +167,13 @@ The command will proceed as before, prompting for a version bump and showing a p
 
 ✔ Do you want to publish these versions? (y/N) · true
 
- >  NX   Running target nx-release-publish for 3 projects:
+NX   Running target nx-release-publish for 3 projects:
 
-    - pkg-1
-    - pkg-2
-    - pkg-3
+- pkg-1
+- pkg-2
+- pkg-3
 
- —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+—————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
 > nx run pkg-1:nx-release-publish
 
@@ -241,9 +241,9 @@ total files:   12
 
 Published to https://registry.npmjs.org with tag "latest"
 
- —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+—————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
- >  NX   Successfully ran target nx-release-publish for 3 projects
+NX   Successfully ran target nx-release-publish for 3 projects
 
 ```
 

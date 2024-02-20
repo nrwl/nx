@@ -6,6 +6,7 @@ import {
 } from '../config/workspace-json-project-json';
 import { readJsonFile } from './fileutils';
 import { getNxRequirePaths } from './installation-directory';
+import { mergeTargetConfigurations } from '../project-graph/utils/project-configuration-utils';
 
 export interface NxProjectPackageJsonConfiguration {
   implicitDependencies?: string[];
@@ -113,17 +114,10 @@ export function readNxMigrateConfig(
   };
 }
 
-export function buildTargetFromScript(
-  script: string,
-  nx: NxProjectPackageJsonConfiguration
-): TargetConfiguration {
-  const nxTargetConfiguration = nx?.targets?.[script] || {};
-
+export function buildTargetFromScript(script: string): TargetConfiguration {
   return {
-    ...nxTargetConfiguration,
     executor: 'nx:run-script',
     options: {
-      ...(nxTargetConfiguration.options || {}),
       script,
     },
   };
@@ -132,11 +126,17 @@ export function buildTargetFromScript(
 export function readTargetsFromPackageJson(packageJson: PackageJson) {
   const { scripts, nx } = packageJson;
   const res: Record<string, TargetConfiguration> = {};
-  Object.keys(scripts || {}).forEach((script) => {
-    if (!nx?.includedScripts || nx?.includedScripts.includes(script)) {
-      res[script] = buildTargetFromScript(script, nx);
-    }
-  });
+  const includedScripts = nx?.includedScripts || Object.keys(scripts ?? {});
+  //
+  for (const script of includedScripts) {
+    res[script] = buildTargetFromScript(script);
+  }
+  for (const targetName in nx?.targets) {
+    res[targetName] = mergeTargetConfigurations(
+      nx?.targets[targetName],
+      res[targetName]
+    );
+  }
 
   /**
    * Add implicit nx-release-publish target for all package.json files that are

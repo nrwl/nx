@@ -314,27 +314,7 @@ exports[`app --project-name-and-root-format=derived should generate correctly wh
   "root": "apps/my-dir/my-app-e2e",
   "sourceRoot": "apps/my-dir/my-app-e2e/src",
   "tags": [],
-  "targets": {
-    "e2e": {
-      "configurations": {
-        "ci": {
-          "devServerTarget": "my-dir-my-app:serve-static",
-        },
-        "production": {
-          "devServerTarget": "my-dir-my-app:serve:production",
-        },
-      },
-      "executor": "@nx/cypress:cypress",
-      "options": {
-        "cypressConfig": "apps/my-dir/my-app-e2e/cypress.config.ts",
-        "devServerTarget": "my-dir-my-app:serve:development",
-        "testingType": "e2e",
-      },
-    },
-    "lint": {
-      "executor": "@nx/eslint:lint",
-    },
-  },
+  "targets": {},
 }
 `;
 
@@ -533,27 +513,7 @@ exports[`app --project-name-and-root-format=derived should generate correctly wh
   "root": "apps/my-app-e2e",
   "sourceRoot": "apps/my-app-e2e/src",
   "tags": [],
-  "targets": {
-    "e2e": {
-      "configurations": {
-        "ci": {
-          "devServerTarget": "my-app:serve-static",
-        },
-        "production": {
-          "devServerTarget": "my-app:serve:production",
-        },
-      },
-      "executor": "@nx/cypress:cypress",
-      "options": {
-        "cypressConfig": "apps/my-app-e2e/cypress.config.ts",
-        "devServerTarget": "my-app:serve:development",
-        "testingType": "e2e",
-      },
-    },
-    "lint": {
-      "executor": "@nx/eslint:lint",
-    },
-  },
+  "targets": {},
 }
 `;
 
@@ -1047,27 +1007,7 @@ exports[`app nested should create project configs 2`] = `
   "root": "my-dir/my-app-e2e",
   "sourceRoot": "my-dir/my-app-e2e/src",
   "tags": [],
-  "targets": {
-    "e2e": {
-      "configurations": {
-        "ci": {
-          "devServerTarget": "my-app:serve-static",
-        },
-        "production": {
-          "devServerTarget": "my-app:serve:production",
-        },
-      },
-      "executor": "@nx/cypress:cypress",
-      "options": {
-        "cypressConfig": "my-dir/my-app-e2e/cypress.config.ts",
-        "devServerTarget": "my-app:serve:development",
-        "testingType": "e2e",
-      },
-    },
-    "lint": {
-      "executor": "@nx/eslint:lint",
-    },
-  },
+  "targets": {},
 }
 `;
 
@@ -1179,27 +1119,7 @@ exports[`app not nested should create project configs 2`] = `
   "root": "my-app-e2e",
   "sourceRoot": "my-app-e2e/src",
   "tags": [],
-  "targets": {
-    "e2e": {
-      "configurations": {
-        "ci": {
-          "devServerTarget": "my-app:serve-static",
-        },
-        "production": {
-          "devServerTarget": "my-app:serve:production",
-        },
-      },
-      "executor": "@nx/cypress:cypress",
-      "options": {
-        "cypressConfig": "my-app-e2e/cypress.config.ts",
-        "devServerTarget": "my-app:serve:development",
-        "testingType": "e2e",
-      },
-    },
-    "lint": {
-      "executor": "@nx/eslint:lint",
-    },
-  },
+  "targets": {},
 }
 `;
 
