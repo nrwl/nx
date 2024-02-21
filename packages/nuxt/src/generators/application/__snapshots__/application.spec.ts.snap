@@ -47,7 +47,7 @@ export default defineNuxtConfig({
     },
   },
   imports: {
-    autoImport: false,
+    autoImport: true,
   },
 
   vite: {
@@ -234,7 +234,7 @@ export default defineNuxtConfig({
     },
   },
   imports: {
-    autoImport: false,
+    autoImport: true,
   },
 
   css: ['~/assets/css/styles.css'],
@@ -272,7 +272,7 @@ export default defineNuxtConfig({
     },
   },
   imports: {
-    autoImport: false,
+    autoImport: true,
   },
 
   css: ['~/assets/css/styles.less'],
@@ -310,7 +310,7 @@ export default defineNuxtConfig({
     },
   },
   imports: {
-    autoImport: false,
+    autoImport: true,
   },
 
   css: ['~/assets/css/styles.scss'],
@@ -348,7 +348,7 @@ export default defineNuxtConfig({
     },
   },
   imports: {
-    autoImport: false,
+    autoImport: true,
   },
 
   vite: {

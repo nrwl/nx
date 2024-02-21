@@ -16,7 +16,7 @@ exports[`directive generator --no-standalone should generate a directive with te
 "import { Directive } from '@angular/core';
 
 @Directive({
-  selector: '[projTest]',
+  selector: '[test]',
 })
 export class TestDirective {
   constructor() {}
@@ -52,7 +52,7 @@ exports[`directive generator --no-standalone should import the directive correct
 "import { Directive } from '@angular/core';
 
 @Directive({
-  selector: '[projTest]'
+  selector: '[test]'
 })
 export class TestDirective {
   constructor() {}
@@ -88,7 +88,7 @@ exports[`directive generator --no-standalone should import the directive correct
 "import { Directive } from '@angular/core';
 
 @Directive({
-  selector: '[projTest]'
+  selector: '[test]'
 })
 export class TestDirective {
   constructor() {}
@@ -124,7 +124,7 @@ exports[`directive generator should generate correctly 1`] = `
 "import { Directive } from '@angular/core';
 
 @Directive({
-  selector: '[projTest]',
+  selector: '[test]',
   standalone: true,
 })
 export class TestDirective {
