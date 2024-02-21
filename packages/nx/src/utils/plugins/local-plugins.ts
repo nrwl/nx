@@ -1,15 +1,14 @@
-import * as chalk from 'chalk';
-import { output } from '../output';
-import type { PluginCapabilities } from './models';
-import { hasElements } from './shared';
+import { existsSync } from 'fs';
+import { join } from 'path';
+import { NxJsonConfiguration } from '../../config/nx-json';
+import { ProjectsConfigurations } from '../../config/workspace-json-project-json';
 import { readJsonFile } from '../fileutils';
 import { PackageJson } from '../package-json';
-import { ProjectsConfigurations } from '../../config/workspace-json-project-json';
-import { join } from 'path';
 import { workspaceRoot } from '../workspace-root';
-import { existsSync } from 'fs';
-import { getPluginCapabilities } from './plugin-capabilities';
-import { NxJsonConfiguration, readNxJson } from '../../config/nx-json';
+import {
+  PluginCapabilities,
+  getPluginCapabilities,
+} from './plugin-capabilities';
 
 export async function getLocalWorkspacePlugins(
   projectsConfiguration: ProjectsConfigurations,
@@ -44,32 +43,4 @@ export async function getLocalWorkspacePlugins(
     }
   }
   return plugins;
-}
-
-export function listLocalWorkspacePlugins(
-  installedPlugins: Map<string, PluginCapabilities>
-) {
-  const bodyLines: string[] = [];
-
-  for (const [, p] of installedPlugins) {
-    const capabilities = [];
-    if (hasElements(p.executors)) {
-      capabilities.push('executors');
-    }
-    if (hasElements(p.generators)) {
-      capabilities.push('generators');
-    }
-    if (p.projectGraphExtension) {
-      capabilities.push('graph-extension');
-    }
-    if (p.projectInference) {
-      capabilities.push('project-inference');
-    }
-    bodyLines.push(`${chalk.bold(p.name)} (${capabilities.join()})`);
-  }
-
-  output.log({
-    title: `Local workspace plugins:`,
-    bodyLines: bodyLines,
-  });
 }
