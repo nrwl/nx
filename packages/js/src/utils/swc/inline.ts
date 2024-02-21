@@ -7,8 +7,16 @@ export function generateTmpSwcrc(
   tmpSwcrcPath: string
 ) {
   const swcrc = readJsonFile(swcrcPath);
+  let exclude: string[];
+  const originExcludeConfig = swcrc['exclude'] || [];
 
-  swcrc['exclude'] = swcrc['exclude'].concat(
+  if (Array.isArray(originExcludeConfig)) {
+    exclude = originExcludeConfig;
+  } else {
+    exclude = [originExcludeConfig];
+  }
+
+  swcrc['exclude'] = exclude.concat(
     Object.values(inlineProjectGraph.externals).map(
       (external) => `${external.root}/**/.*.ts$`
     ),
