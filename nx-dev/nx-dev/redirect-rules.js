@@ -219,7 +219,9 @@ const diataxis = {
   '/migration/adding-to-monorepo': '/recipes/adopting-nx/adding-to-monorepo',
   '/migration/migration-cra': '/recipes/adopting-nx/migration-cra',
   '/migration/migration-angular': '/recipes/adopting-nx/migration-angular',
-  '/migration/migration-angularjs': '/recipes/adopting-nx/migration-angularjs',
+  '/migration/migration-angularjs': '/recipes/adopting-nx/migration-angular',
+  '/recipes/angular/migration/angularjs':
+    '/recipes/adopting-nx/migration-angular',
   '/migration/preserving-git-histories':
     '/recipes/adopting-nx/preserving-git-histories',
   '/migration/manual': '/recipes/adopting-nx/manual',
