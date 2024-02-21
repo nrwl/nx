@@ -34,7 +34,8 @@ launch-templates:
       - name: Print path
         script: echo $PATH # will include my-folder
       - name: Define env var for a step
-        env: MY_ENV_VAR=for-step
+        env:
+          MY_ENV_VAR: 'for-step'
         script: echo $MY_ENV_VAR # will print for-step
 ```
 
