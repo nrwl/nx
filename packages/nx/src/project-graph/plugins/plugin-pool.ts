@@ -1,10 +1,12 @@
 import { ChildProcess, fork } from 'child_process';
 import path = require('path');
-import { PluginWorkerResult, consumeMessage, createMessage } from './messaging';
+
 import { PluginConfiguration } from '../../config/nx-json';
-import { RemotePlugin, nxPluginCache } from './internal-api';
 import { ProjectGraph } from '../../config/project-graph';
 import { logger } from '../../utils/logger';
+
+import { RemotePlugin, nxPluginCache } from './internal-api';
+import { PluginWorkerResult, consumeMessage, createMessage } from './messaging';
 
 const pool: ChildProcess[] = [];
 
@@ -35,9 +37,9 @@ export function loadRemoteNxPlugin(plugin: PluginConfiguration, root: string) {
   });
   worker.send(createMessage({ type: 'load', payload: { plugin, root } }));
   pool.push(worker);
-  
+
   logger.verbose(`[plugin-worker] started worker: ${worker.pid}`);
-  
+
   return new Promise<RemotePlugin>((res, rej) => {
     worker.on('message', createWorkerHandler(worker, res, rej));
     worker.on('exit', () => workerOnExitHandler(worker));
@@ -52,7 +54,7 @@ export async function shutdownPluginWorkers() {
 
   // Marks the workers as shutdown so that we don't report unexpected exits
   pluginWorkersShutdown = true;
-  
+
   const promises = [];
 
   for (const p of pool) {
@@ -72,7 +74,6 @@ export async function shutdownPluginWorkers() {
   return Promise.all(promises);
 }
 
-
 /**
  * Creates a message handler for the given worker.
  * @param worker Instance of plugin-worker
@@ -85,7 +86,6 @@ function createWorkerHandler(
   onload: (plugin: RemotePlugin) => void,
   onloadError: (err?: unknown) => void
 ) {
-
   // We store resolver and rejecter functions in the outer scope so that we can
   // resolve/reject the promise from the message handler. The flow is something like:
   // 1. plugin api called

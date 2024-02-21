@@ -12,7 +12,10 @@ import { ONLY_MODIFIES_EXISTING_TARGET } from '../../plugins/target-defaults/tar
 import { minimatch } from 'minimatch';
 import { join } from 'path';
 import { CreateNodesResult } from '../plugins';
-import { CreateNodesResultWithContext, RemotePlugin } from '../plugins/internal-api';
+import {
+  CreateNodesResultWithContext,
+  RemotePlugin,
+} from '../plugins/internal-api';
 
 export type SourceInformation = [file: string, plugin: string];
 export type ConfigurationSourceMaps = Record<

@@ -18,8 +18,6 @@ import {
 } from './utils/retrieve-workspace-files';
 import { readNxJson } from '../config/nx-json';
 
-import { shutdownPluginWorkers } from './plugins/plugin-pool';
-
 /**
  * Synchronously reads the latest cached copy of the workspace's ProjectGraph.
  * @throws {Error} if there is no cached ProjectGraph to read from
@@ -105,8 +103,6 @@ export async function buildProjectGraphAndSourceMapsWithoutDaemon() {
     )
   ).projectGraph;
   performance.mark('build-project-graph-using-project-file-map:end');
-
-  await shutdownPluginWorkers();
 
   return { projectGraph, sourceMaps };
 }

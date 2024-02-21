@@ -4,12 +4,12 @@ const tempFs = new TempFs('explicit-project-deps');
 import { ProjectGraphBuilder } from '../../../../project-graph/project-graph-builder';
 import { buildExplicitTypeScriptDependencies } from './explicit-project-dependencies';
 import {
-  retrieveProjectConfigurationPaths,
   retrieveProjectConfigurations,
   retrieveWorkspaceFiles,
 } from '../../../../project-graph/utils/retrieve-workspace-files';
 import { CreateDependenciesContext } from '../../../../project-graph/plugins';
 import { setupWorkspaceContext } from '../../../../utils/workspace-context';
+import { shutdownPluginWorkers } from '../../../../project-graph/plugins/plugin-pool';
 
 // projectName => tsconfig import path
 const dependencyProjectNamesToImportPaths = {
@@ -21,6 +21,10 @@ const dependencyProjectNamesToImportPaths = {
 describe('explicit project dependencies', () => {
   beforeEach(() => {
     tempFs.reset();
+  });
+
+  afterEach(async () => {
+    await shutdownPluginWorkers();
   });
 
   describe('static imports, dynamic imports, and commonjs requires', () => {

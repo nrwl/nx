@@ -1,7 +1,6 @@
 // This file contains the bits and bobs of the internal API for loading and interacting with Nx plugins.
 // For the public API, used by plugin authors, see `./public-api.ts`.
 
-
 import { join, dirname } from 'path';
 
 import { toProjectName } from '../../config/workspaces';

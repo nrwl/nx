@@ -35,6 +35,7 @@ import { PackageJson } from '../utils/package-json';
 import { getNxRequirePaths } from '../utils/installation-directory';
 import { output } from '../utils/output';
 import { ExternalObject, NxWorkspaceFilesExternals } from '../native';
+import { shutdownPluginWorkers } from './plugins/plugin-pool';
 
 let storedFileMap: FileMap | null = null;
 let storedAllWorkspaceFiles: FileData[] | null = null;
@@ -131,6 +132,7 @@ export async function buildProjectGraphUsingProjectFileMap(
   if (shouldWriteCache) {
     writeCache(projectFileMapCache, projectGraph);
   }
+  await shutdownPluginWorkers();
   return {
     projectGraph,
     projectFileMapCache,

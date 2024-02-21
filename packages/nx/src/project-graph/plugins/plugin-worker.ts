@@ -15,6 +15,7 @@ let pluginOptions: unknown;
 process.on('message', async (message: string) => {
   consumeMessage<PluginWorkerMessage>(message, {
     load: async ({ plugin: pluginConfiguration, root }) => {
+      process.chdir(root);
       try {
         ({ plugin, options: pluginOptions } = await loadPluginFromWorker(
           pluginConfiguration,

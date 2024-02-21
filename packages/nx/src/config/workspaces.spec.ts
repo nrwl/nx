@@ -53,6 +53,7 @@ describe('Workspaces', () => {
         },
         () => retrieveProjectConfigurations(fs.tempDir, readNxJson(fs.tempDir))
       );
+      await shutdownPluginWorkers();
       expect(projects['my-package']).toEqual({
         name: 'my-package',
         root: 'packages/my-package',
