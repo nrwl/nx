@@ -137,8 +137,8 @@ export function mockViteReactAppGenerator(tree: Tree): Tree {
   return tree;
 }
 
-export function mockReactAppGenerator(tree: Tree): Tree {
-  const appName = 'my-test-react-app';
+export function mockReactAppGenerator(tree: Tree, userAppName?: string): Tree {
+  const appName = userAppName ?? 'my-test-react-app';
 
   tree.write(
     `apps/${appName}/src/main.tsx`,
