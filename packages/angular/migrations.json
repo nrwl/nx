@@ -1641,7 +1641,7 @@
       }
     },
     "18.1.0-jest": {
-      "version": "18.1.0-beta.1",
+      "version": "18.1.0-beta.2",
       "requires": {
         "@angular-devkit/build-angular": ">=15.0.0 <18.0.0",
         "@angular/compiler-cli": ">=15.0.0 <18.0.0",
@@ -1651,13 +1651,17 @@
       },
       "packages": {
         "jest-preset-angular": {
-          "version": "~14.0.2",
+          "version": "~14.0.3",
           "alwaysAddToPackageJson": false
         }
       }
     },
     "18.1.0": {
       "version": "18.1.0-beta.1",
+      "x-prompt": "Do you want to update the Angular version to v17.2?",
+      "requires": {
+        "@angular/core": ">=17.1.0 <17.2.0"
+      },
       "packages": {
         "@angular-devkit/build-angular": {
           "version": "~17.2.0",
