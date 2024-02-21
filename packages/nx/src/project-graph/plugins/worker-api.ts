@@ -1,14 +1,9 @@
+// This file contains methods and utilities that should **only** be used by the plugin worker.
+
 import { ProjectConfiguration } from '../../config/workspace-json-project-json';
 import { PluginConfiguration } from '../../config/nx-json';
-import {
-  NxPlugin,
-  NxPluginV2,
-  isNxPluginV1,
-  isNxPluginV2,
-  LoadedNxPlugin,
-} from './nx-plugin';
-import { combineGlobPatterns } from '../../utils/globs';
-import { dirname, join } from 'node:path/posix';
+
+import { join } from 'node:path/posix';
 import { getNxRequirePaths } from '../../utils/installation-directory';
 import {
   PackageJson,
@@ -29,10 +24,16 @@ import {
 } from '../utils/find-project-for-path';
 import { normalizePath } from '../../utils/path';
 import { logger } from '../../utils/logger';
-import { toProjectName } from '../../config/workspaces';
 
 import type * as ts from 'typescript';
 import { extname } from 'node:path';
+import { NormalizedPlugin, normalizeNxPlugin } from './internal-api';
+import { NxPlugin } from './public-api';
+
+export type LoadedNxPlugin = {
+  plugin: NxPlugin;
+  options?: unknown;
+};
 
 export async function loadNxPluginAsync(
   pluginConfiguration: PluginConfiguration,
@@ -52,9 +53,7 @@ export async function loadNxPluginAsync(
     projects,
     root
   );
-  const plugin = ensurePluginIsV2(
-    (await importPluginModule(pluginPath)) as LoadedNxPlugin['plugin']
-  );
+  const plugin = normalizeNxPlugin(await importPluginModule(pluginPath));
   plugin.name ??= name;
   performance.mark(`Load Nx Plugin: ${moduleName} - end`);
   performance.measure(
@@ -63,32 +62,6 @@ export async function loadNxPluginAsync(
     `Load Nx Plugin: ${moduleName} - end`
   );
   return { plugin, options };
-}
-
-export function ensurePluginIsV2(plugin: NxPlugin): NxPluginV2 {
-  if (isNxPluginV2(plugin)) {
-    return plugin;
-  }
-  if (isNxPluginV1(plugin) && plugin.projectFilePatterns) {
-    return {
-      ...plugin,
-      createNodes: [
-        `*/**/${combineGlobPatterns(plugin.projectFilePatterns)}`,
-        (configFilePath) => {
-          const root = dirname(configFilePath);
-          return {
-            projects: {
-              [root]: {
-                name: toProjectName(configFilePath),
-                targets: plugin.registerProjectTargets?.(configFilePath),
-              },
-            },
-          };
-        },
-      ],
-    };
-  }
-  return plugin;
 }
 
 export function readPluginPackageJson(
@@ -131,48 +104,27 @@ export function resolveLocalNxPlugin(
   return lookupLocalPlugin(importPath, projects, root);
 }
 
-let tsNodeAndPathsUnregisterCallback: (() => void) | undefined = undefined;
-
 /**
  * Register swc-node or ts-node if they are not currently registered
  * with some default settings which work well for Nx plugins.
  */
 export function registerPluginTSTranspiler() {
-  if (!tsNodeAndPathsUnregisterCallback) {
-    // nx-ignore-next-line
-    const ts: typeof import('typescript') = require('typescript');
+  // Get the first tsconfig that matches the allowed set
+  const tsConfigName = [
+    join(workspaceRoot, 'tsconfig.base.json'),
+    join(workspaceRoot, 'tsconfig.json'),
+  ].find((x) => existsSync(x));
 
-    // Get the first tsconfig that matches the allowed set
-    const tsConfigName = [
-      join(workspaceRoot, 'tsconfig.base.json'),
-      join(workspaceRoot, 'tsconfig.json'),
-    ].find((x) => existsSync(x));
+  const tsConfig: Partial<ts.ParsedCommandLine> = tsConfigName
+    ? readTsConfig(tsConfigName)
+    : {};
 
-    const tsConfig: Partial<ts.ParsedCommandLine> = tsConfigName
-      ? readTsConfig(tsConfigName)
-      : {};
-
-    const unregisterTsConfigPaths = registerTsConfigPaths(tsConfigName);
-    const unregisterTranspiler = registerTranspiler({
-      experimentalDecorators: true,
-      emitDecoratorMetadata: true,
-      ...tsConfig.options,
-    });
-    tsNodeAndPathsUnregisterCallback = () => {
-      unregisterTsConfigPaths();
-      unregisterTranspiler();
-    };
-  }
-}
-
-/**
- * Unregister the ts-node transpiler if it is registered
- */
-export function unregisterPluginTSTranspiler() {
-  if (tsNodeAndPathsUnregisterCallback) {
-    tsNodeAndPathsUnregisterCallback();
-    tsNodeAndPathsUnregisterCallback = undefined;
-  }
+  registerTsConfigPaths(tsConfigName);
+  registerTranspiler({
+    experimentalDecorators: true,
+    emitDecoratorMetadata: true,
+    ...tsConfig.options,
+  });
 }
 
 function lookupLocalPlugin(
@@ -207,13 +159,11 @@ function findNxProjectForImportPath(
         return nxProject;
       }
     }
-    if (process.env.NX_VERBOSE_LOGGING) {
-      console.log(
-        'Unable to find local plugin',
-        possiblePaths,
-        projectRootMappings
-      );
-    }
+    logger.verbose(
+      'Unable to find local plugin',
+      possiblePaths,
+      projectRootMappings
+    );
     throw new Error(
       'Unable to resolve local plugin with import path ' + importPath
     );
@@ -290,7 +240,7 @@ export function getPluginPathAndName(
 
   // Register the ts-transpiler if we are pointing to a
   // plain ts file that's not part of a plugin project
-  if (registerTSTranspiler && !tsNodeAndPathsUnregisterCallback) {
+  if (registerTSTranspiler) {
     registerPluginTSTranspiler();
   }
 
@@ -302,7 +252,7 @@ export function getPluginPathAndName(
   return { pluginPath, name };
 }
 
-async function importPluginModule(pluginPath: string) {
+async function importPluginModule(pluginPath: string): Promise<NxPlugin> {
   const m = await import(pluginPath);
   if (
     m.default &&

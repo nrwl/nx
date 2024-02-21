@@ -1,20 +1,17 @@
+// This file represents the public API for plugins which live in nx.json's plugins array.
+// For methods to interact with plugins from within Nx, see `./internal-api.ts`.
+
+import { NxPluginV1 } from '../../utils/nx-plugin.deprecated';
 import {
   FileMap,
   ProjectGraph,
   ProjectGraphExternalNode,
 } from '../../config/project-graph';
-import { workspaceRoot } from '../../utils/workspace-root';
 
 import { ProjectConfiguration } from '../../config/workspace-json-project-json';
 
-import { NxJsonConfiguration, PluginConfiguration } from '../../config/nx-json';
-
-import { NxPluginV1 } from '../../utils/nx-plugin.deprecated';
+import { NxJsonConfiguration } from '../../config/nx-json';
 import { RawProjectGraphDependency } from '../project-graph-builder';
-import { shouldMergeAngularProjects } from '../../adapter/angular-json';
-
-import { loadRemoteNxPlugin } from './plugin-pool';
-import { join } from 'path';
 
 /**
  * Context for {@link CreateNodesFunction}
@@ -33,6 +30,8 @@ export type CreateNodesFunction<T = unknown> = (
   options: T | undefined,
   context: CreateNodesContext
 ) => CreateNodesResult | Promise<CreateNodesResult>;
+
+export type Optional<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
 
 export interface CreateNodesResult {
   /**
@@ -118,93 +117,3 @@ export type NxPluginV2<TOptions = unknown> = {
  * A plugin for Nx
  */
 export type NxPlugin = NxPluginV1 | NxPluginV2;
-
-export type LoadedNxPlugin = {
-  plugin: NxPluginV2 & Pick<NxPluginV1, 'processProjectGraph'>;
-  options?: unknown;
-};
-
-export type CreateNodesResultWithContext = CreateNodesResult & {
-  file: string;
-  pluginName: string;
-};
-
-export type RemotePlugin = Omit<LoadedNxPlugin['plugin'], 'createNodes'> & {
-  createNodes: [
-    filePattern: string,
-    fn: (
-      matchedFiles: string[],
-      context: CreateNodesContext
-    ) => Promise<CreateNodesResultWithContext[]>
-  ];
-};
-
-// Short lived cache (cleared between cmd runs)
-// holding resolved nx plugin objects.
-// Allows loaded plugins to not be reloaded when
-// referenced multiple times.
-export const nxPluginCache: Map<unknown, RemotePlugin> = new Map();
-
-export async function loadNxPlugins(
-  plugins: PluginConfiguration[],
-  root = workspaceRoot
-): Promise<RemotePlugin[]> {
-  const result: Promise<RemotePlugin>[] = [];
-
-  plugins ??= [];
-
-  plugins.unshift(
-    join(
-      __dirname,
-      '../../plugins/project-json/build-nodes/package-json-next-to-project-json'
-    )
-  );
-
-  // We push the nx core node plugins onto the end, s.t. it overwrites any other plugins
-  plugins.push(...(await getDefaultPlugins(root)));
-
-  for (const plugin of plugins) {
-    result.push(loadNxPlugin(plugin, root));
-  }
-
-  return Promise.all(result);
-}
-
-export async function loadNxPlugin(
-  plugin: PluginConfiguration,
-  root = workspaceRoot
-): Promise<RemotePlugin> {
-  const cacheKey = JSON.stringify(plugin);
-
-  if (nxPluginCache.has(cacheKey)) {
-    return nxPluginCache.get(cacheKey)!;
-  }
-
-  const loadedPlugin = await loadRemoteNxPlugin(plugin, root);
-  nxPluginCache.set(cacheKey, loadedPlugin);
-  return loadedPlugin;
-}
-
-export function isNxPluginV2(plugin: NxPlugin): plugin is NxPluginV2 {
-  return 'createNodes' in plugin || 'createDependencies' in plugin;
-}
-
-export function isNxPluginV1(
-  plugin: NxPlugin | RemotePlugin
-): plugin is NxPluginV1 {
-  return 'processProjectGraph' in plugin || 'projectFilePatterns' in plugin;
-}
-
-export async function getDefaultPlugins(root: string) {
-  return [
-    join(__dirname, '../../plugins/js'),
-    join(__dirname, '../../plugins/target-defaults/target-defaults-plugin'),
-    ...(shouldMergeAngularProjects(root, false)
-      ? [join(__dirname, '../../adapter/angular-json')]
-      : []),
-    join(__dirname, '../../plugins/package-json-workspaces'),
-    join(__dirname, '../../plugins/project-json/build-nodes/project-json'),
-  ];
-}
-
-type Optional<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;

@@ -1,20 +1,14 @@
 export {
   loadNxPlugins,
-  CreateDependencies,
-  CreateDependenciesContext,
-  CreateNodes,
-  CreateNodesContext,
-  CreateNodesFunction,
-  CreateNodesResult,
-  NxPlugin,
-  NxPluginV2,
   RemotePlugin,
   isNxPluginV1,
   isNxPluginV2,
-} from './nx-plugin';
+} from './internal-api';
+
+export * from './public-api';
 
 export {
   readPluginPackageJson,
   registerPluginTSTranspiler,
   unregisterPluginTSTranspiler,
-} from './load-plugin';
+} from './worker-api';

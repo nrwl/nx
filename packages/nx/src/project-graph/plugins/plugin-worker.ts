@@ -1,18 +1,15 @@
 import { getNxRequirePaths } from '../../utils/installation-directory';
-import { loadNxPluginAsync } from './load-plugin';
-import { PluginWorkerMessage, consumeMessage } from './types';
+import { loadNxPluginAsync } from './worker-api';
+import { PluginWorkerMessage, consumeMessage } from './messaging';
 import { PluginConfiguration } from '../../config/nx-json';
 import { ProjectConfiguration } from '../../config/workspace-json-project-json';
 import { retrieveProjectConfigurationsWithoutPluginInference } from '../utils/retrieve-workspace-files';
-import {
-  CreateNodesContext,
-  CreateNodesResultWithContext,
-  LoadedNxPlugin,
-} from './nx-plugin';
+import { CreateNodesResultWithContext, NormalizedPlugin } from './internal-api';
+import { CreateNodesContext } from './public-api';
 
 global.NX_GRAPH_CREATION = true;
 
-let plugin: LoadedNxPlugin['plugin'];
+let plugin: NormalizedPlugin;
 let pluginOptions: unknown;
 
 process.on('message', async (message: string) => {

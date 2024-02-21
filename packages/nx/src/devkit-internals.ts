@@ -1,5 +1,3 @@
-import { shutdownPluginWorkers } from './project-graph/plugins/plugin-pool';
-
 /**
  * Note to developers: STOP! These exports are available via requireNx in @nx/devkit.
  *

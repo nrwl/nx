@@ -3,12 +3,8 @@ import {
   ProjectGraphProcessorContext,
 } from '../../config/project-graph';
 import { PluginConfiguration } from '../../config/nx-json';
-import {
-  CreateDependenciesContext,
-  CreateNodesContext,
-  NxPluginV2,
-  RemotePlugin,
-} from './nx-plugin';
+import { CreateDependenciesContext, CreateNodesContext } from './public-api';
+import { RemotePlugin } from './internal-api';
 
 export interface PluginWorkerLoadMessage {
   type: 'load';
@@ -114,6 +110,14 @@ export type PluginWorkerResult =
   | PluginCreateDependenciesResult
   | PluginWorkerProcessProjectGraphResult;
 
+type MaybePromise<T> = T | Promise<T>;
+
+// The handler can return a message to be sent back to the process from which the message originated
+type MessageHandlerReturn<T extends PluginWorkerMessage | PluginWorkerResult> =
+  T extends PluginWorkerResult
+    ? MaybePromise<PluginWorkerMessage | void>
+    : MaybePromise<PluginWorkerResult | void>;
+
 // Takes a message and a map of handlers and calls the appropriate handler
 // type safe and requires all handlers to be handled
 export async function consumeMessage<
@@ -122,12 +126,10 @@ export async function consumeMessage<
   raw: string | T,
   handlers: {
     [K in T['type']]: (
+      // Extract restricts the type of payload to the payload of the message with the type K
       payload: Extract<T, { type: K }>['payload']
-    ) => T extends PluginWorkerResult
-      ? void | Promise<void>
-      : PluginWorkerResult | void | Promise<PluginWorkerResult> | Promise<void>;
-  },
-  allowUnhandled = false
+    ) => MessageHandlerReturn<T>;
+  }
 ) {
   const message: T = typeof raw === 'string' ? JSON.parse(raw) : raw;
   const handler = handlers[message.type];
@@ -136,7 +138,7 @@ export async function consumeMessage<
     if (response) {
       process.send!(createMessage(response));
     }
-  } else if (!allowUnhandled) {
+  } else {
     throw new Error(`Unhandled message type: ${message.type}`);
   }
 }
