@@ -337,9 +337,12 @@ export default async function* moduleFederationDevServer(
 
           logger.info(`NX All remotes started, server ready at ${baseUrl}`);
           next({ success: true, baseUrl: baseUrl });
-        } catch {
+        } catch (err) {
           throw new Error(
-            `Timed out waiting for remote to start. Check above for any errors.`
+            `Failed to start remotes. Check above for any errors.`,
+            {
+              cause: err,
+            }
           );
         } finally {
           done();
