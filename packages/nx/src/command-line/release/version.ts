@@ -1,4 +1,5 @@
 import * as chalk from 'chalk';
+import { execSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { relative } from 'node:path';
 import { Generator } from '../../config/misc-interfaces';
@@ -43,6 +44,8 @@ import {
   createGitTagValues,
   handleDuplicateGitTags,
 } from './utils/shared';
+
+const LARGE_BUFFER = 1024 * 1000000;
 
 // Reexport some utils for use in plugin release-version generator implementations
 export { deriveNewSemverVersion } from './utils/semver';
@@ -152,6 +155,15 @@ export async function releaseVersion(
     output.error(filterError);
     process.exit(1);
   }
+
+  /**
+   * This is always executed, even if --dry-run is passed, otherwise
+   * the dry run will likely error or produce inaccurate output.
+   */
+  runPreVersionCommand(nxReleaseConfig.version.preVersionCommand, {
+    dryRun: args.dryRun,
+    verbose: args.verbose,
+  });
 
   const tree = new FsTree(workspaceRoot, args.verbose);
 
@@ -623,5 +635,45 @@ function resolveGeneratorData({
     }
     // Unexpected error, rethrow
     throw err;
+  }
+}
+function runPreVersionCommand(
+  preVersionCommand: string,
+  { dryRun, verbose }: { dryRun: boolean; verbose: boolean }
+) {
+  if (!preVersionCommand) {
+    return;
+  }
+
+  output.logSingleLine(`Executing pre-version command`);
+  if (verbose) {
+    console.log(`Executing the following pre-version command:`);
+    console.log(preVersionCommand);
+  }
+
+  let env: Record<string, string> = {
+    ...process.env,
+  };
+  if (dryRun) {
+    env.NX_DRY_RUN = 'true';
+  }
+
+  const stdio = verbose ? 'inherit' : 'pipe';
+  try {
+    execSync(preVersionCommand, {
+      encoding: 'utf-8',
+      maxBuffer: LARGE_BUFFER,
+      stdio,
+      env,
+    });
+  } catch (e) {
+    const title = verbose
+      ? `The pre-version command failed. See the full output above.`
+      : `The pre-version command failed. Retry with --verbose to see the full output of the pre-version command.`;
+    output.error({
+      title,
+      bodyLines: [preVersionCommand, e],
+    });
+    process.exit(1);
   }
 }

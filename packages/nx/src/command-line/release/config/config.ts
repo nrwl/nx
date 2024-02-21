@@ -174,6 +174,7 @@ export async function createNxReleaseConfig(
       conventionalCommits: userConfig.version?.conventionalCommits || false,
       generator: '@nx/js:release-version',
       generatorOptions: defaultGeneratorOptions,
+      preVersionCommand: userConfig.version?.preVersionCommand || '',
     },
     changelog: {
       git: changelogGitDefaults,
@@ -290,21 +291,23 @@ export async function createNxReleaseConfig(
     >
   );
 
-  // git configuration is not supported at the group level, only the root/command level
-  const rootVersionWithoutGit = { ...rootVersionConfig };
-  delete rootVersionWithoutGit.git;
+  // these options are not supported at the group level, only the root/command level
+  const rootVersionWithoutGlobalOptions = { ...rootVersionConfig };
+  delete rootVersionWithoutGlobalOptions.git;
+  delete rootVersionWithoutGlobalOptions.preVersionCommand;
 
   // Apply conventionalCommits shorthand to the final group defaults if explicitly configured in the original user config
   if (userConfig.version?.conventionalCommits === true) {
-    rootVersionWithoutGit.generatorOptions = {
-      ...rootVersionWithoutGit.generatorOptions,
+    rootVersionWithoutGlobalOptions.generatorOptions = {
+      ...rootVersionWithoutGlobalOptions.generatorOptions,
       currentVersionResolver: 'git-tag',
       specifierSource: 'conventional-commits',
     };
   }
   if (userConfig.version?.conventionalCommits === false) {
-    delete rootVersionWithoutGit.generatorOptions.currentVersionResolver;
-    delete rootVersionWithoutGit.generatorOptions.specifierSource;
+    delete rootVersionWithoutGlobalOptions.generatorOptions
+      .currentVersionResolver;
+    delete rootVersionWithoutGlobalOptions.generatorOptions.specifierSource;
   }
 
   const groups: NxReleaseConfig['groups'] =
@@ -332,7 +335,7 @@ export async function createNxReleaseConfig(
              */
             version: deepMergeDefaults(
               [GROUP_DEFAULTS.version],
-              rootVersionWithoutGit
+              rootVersionWithoutGlobalOptions
             ),
             // If the user has set something custom for releaseTagPattern at the top level, respect it for the implicit default group
             releaseTagPattern:
@@ -418,7 +421,7 @@ export async function createNxReleaseConfig(
       projects: matchingProjects,
       version: deepMergeDefaults(
         // First apply any group level defaults, then apply actual root level config, then group level config
-        [GROUP_DEFAULTS.version, rootVersionWithoutGit],
+        [GROUP_DEFAULTS.version, rootVersionWithoutGlobalOptions],
         releaseGroup.version
       ),
       // If the user has set any changelog config at all, including at the root level, then use one set of defaults, otherwise default to false for the whole feature

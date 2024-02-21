@@ -146,6 +146,7 @@ describe('createNxReleaseConfig()', () => {
                 "tagArgs": "",
                 "tagMessage": "",
               },
+              "preVersionCommand": "",
             },
           },
         }
@@ -222,6 +223,7 @@ describe('createNxReleaseConfig()', () => {
                 "tagArgs": "",
                 "tagMessage": "",
               },
+              "preVersionCommand": "",
             },
           },
         }
@@ -301,6 +303,7 @@ describe('createNxReleaseConfig()', () => {
                 "tagArgs": "",
                 "tagMessage": "",
               },
+              "preVersionCommand": "",
             },
           },
         }
@@ -411,6 +414,7 @@ describe('createNxReleaseConfig()', () => {
                 "tagArgs": "",
                 "tagMessage": "",
               },
+              "preVersionCommand": "",
             },
           },
         }
@@ -505,6 +509,7 @@ describe('createNxReleaseConfig()', () => {
                 "tagArgs": "",
                 "tagMessage": "",
               },
+              "preVersionCommand": "",
             },
           },
         }
@@ -601,6 +606,7 @@ describe('createNxReleaseConfig()', () => {
                 "tagArgs": "",
                 "tagMessage": "",
               },
+              "preVersionCommand": "",
             },
           },
         }
@@ -701,6 +707,7 @@ describe('createNxReleaseConfig()', () => {
                 "tagArgs": "",
                 "tagMessage": "",
               },
+              "preVersionCommand": "",
             },
           },
         }
@@ -784,6 +791,7 @@ describe('createNxReleaseConfig()', () => {
                 "tagArgs": "",
                 "tagMessage": "",
               },
+              "preVersionCommand": "",
             },
           },
         }
@@ -866,6 +874,7 @@ describe('createNxReleaseConfig()', () => {
                 "tagArgs": "",
                 "tagMessage": "",
               },
+              "preVersionCommand": "",
             },
           },
         }
@@ -964,6 +973,7 @@ describe('createNxReleaseConfig()', () => {
                 "tagArgs": "",
                 "tagMessage": "",
               },
+              "preVersionCommand": "",
             },
           },
         }
@@ -1056,6 +1066,7 @@ describe('createNxReleaseConfig()', () => {
                 "tagArgs": "",
                 "tagMessage": "",
               },
+              "preVersionCommand": "",
             },
           },
         }
@@ -1166,6 +1177,7 @@ describe('createNxReleaseConfig()', () => {
                 "tagArgs": "",
                 "tagMessage": "",
               },
+              "preVersionCommand": "",
             },
           },
         }
@@ -1251,6 +1263,7 @@ describe('createNxReleaseConfig()', () => {
                 "tagArgs": "",
                 "tagMessage": "",
               },
+              "preVersionCommand": "",
             },
           },
         }
@@ -1341,6 +1354,7 @@ describe('createNxReleaseConfig()', () => {
                 "tagArgs": "",
                 "tagMessage": "",
               },
+              "preVersionCommand": "",
             },
           },
         }
@@ -1423,6 +1437,7 @@ describe('createNxReleaseConfig()', () => {
                 "tagArgs": "",
                 "tagMessage": "",
               },
+              "preVersionCommand": "",
             },
           },
         }
@@ -1508,6 +1523,89 @@ describe('createNxReleaseConfig()', () => {
                 "tagArgs": "",
                 "tagMessage": "",
               },
+              "preVersionCommand": "",
+            },
+          },
+        }
+      `);
+    });
+
+    it('should allow configuration of preVersionCommand', async () => {
+      const res = await createNxReleaseConfig(projectGraph, projectFileMap, {
+        version: {
+          preVersionCommand: 'nx run-many -t build',
+        },
+      });
+      expect(res).toMatchInlineSnapshot(`
+        {
+          "error": null,
+          "nxReleaseConfig": {
+            "changelog": {
+              "automaticFromRef": false,
+              "git": {
+                "commit": true,
+                "commitArgs": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": false,
+                "tag": true,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+              "projectChangelogs": false,
+              "workspaceChangelog": {
+                "createRelease": false,
+                "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
+                "file": "{workspaceRoot}/CHANGELOG.md",
+                "renderOptions": {
+                  "authors": true,
+                  "commitReferences": true,
+                  "versionTitleDate": true,
+                },
+                "renderer": "nx/release/changelog-renderer",
+              },
+            },
+            "git": {
+              "commit": false,
+              "commitArgs": "",
+              "commitMessage": "chore(release): publish {version}",
+              "stageChanges": false,
+              "tag": false,
+              "tagArgs": "",
+              "tagMessage": "",
+            },
+            "groups": {
+              "__default__": {
+                "changelog": false,
+                "projects": [
+                  "lib-a",
+                  "lib-b",
+                  "nx",
+                ],
+                "projectsRelationship": "fixed",
+                "releaseTagPattern": "v{version}",
+                "version": {
+                  "conventionalCommits": false,
+                  "generator": "@nx/js:release-version",
+                  "generatorOptions": {},
+                },
+              },
+            },
+            "projectsRelationship": "fixed",
+            "releaseTagPattern": "v{version}",
+            "version": {
+              "conventionalCommits": false,
+              "generator": "@nx/js:release-version",
+              "generatorOptions": {},
+              "git": {
+                "commit": false,
+                "commitArgs": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": true,
+                "tag": false,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+              "preVersionCommand": "nx run-many -t build",
             },
           },
         }
@@ -1607,6 +1705,7 @@ describe('createNxReleaseConfig()', () => {
                 "tagArgs": "",
                 "tagMessage": "",
               },
+              "preVersionCommand": "",
             },
           },
         }
@@ -1688,6 +1787,7 @@ describe('createNxReleaseConfig()', () => {
                 "tagArgs": "",
                 "tagMessage": "",
               },
+              "preVersionCommand": "",
             },
           },
         }
@@ -1790,6 +1890,7 @@ describe('createNxReleaseConfig()', () => {
                 "tagArgs": "",
                 "tagMessage": "",
               },
+              "preVersionCommand": "",
             },
           },
         }
@@ -1864,6 +1965,7 @@ describe('createNxReleaseConfig()', () => {
                 "tagArgs": "",
                 "tagMessage": "",
               },
+              "preVersionCommand": "",
             },
           },
         }
@@ -1976,6 +2078,7 @@ describe('createNxReleaseConfig()', () => {
                 "tagArgs": "",
                 "tagMessage": "",
               },
+              "preVersionCommand": "",
             },
           },
         }
@@ -2078,6 +2181,7 @@ describe('createNxReleaseConfig()', () => {
                 "tagArgs": "",
                 "tagMessage": "",
               },
+              "preVersionCommand": "",
             },
           },
         }
@@ -2160,6 +2264,7 @@ describe('createNxReleaseConfig()', () => {
                 "tagArgs": "",
                 "tagMessage": "",
               },
+              "preVersionCommand": "",
             },
           },
         }
@@ -2314,6 +2419,7 @@ describe('createNxReleaseConfig()', () => {
                 "tagArgs": "",
                 "tagMessage": "",
               },
+              "preVersionCommand": "",
             },
           },
         }
@@ -2426,6 +2532,7 @@ describe('createNxReleaseConfig()', () => {
                 "tagArgs": "",
                 "tagMessage": "",
               },
+              "preVersionCommand": "",
             },
           },
         }
@@ -2714,6 +2821,7 @@ describe('createNxReleaseConfig()', () => {
                 "tagArgs": "",
                 "tagMessage": "",
               },
+              "preVersionCommand": "",
             },
           },
         }
@@ -2784,6 +2892,7 @@ describe('createNxReleaseConfig()', () => {
                 "tagArgs": "",
                 "tagMessage": "",
               },
+              "preVersionCommand": "",
             },
           },
         }
@@ -2876,6 +2985,7 @@ describe('createNxReleaseConfig()', () => {
                 "tagArgs": "",
                 "tagMessage": "",
               },
+              "preVersionCommand": "",
             },
           },
         }
@@ -2964,6 +3074,7 @@ describe('createNxReleaseConfig()', () => {
                 "tagArgs": "",
                 "tagMessage": "",
               },
+              "preVersionCommand": "",
             },
           },
         }
@@ -3051,6 +3162,7 @@ describe('createNxReleaseConfig()', () => {
                 "tagArgs": "",
                 "tagMessage": "",
               },
+              "preVersionCommand": "",
             },
           },
         }
@@ -3141,6 +3253,7 @@ describe('createNxReleaseConfig()', () => {
                 "tagArgs": "",
                 "tagMessage": "",
               },
+              "preVersionCommand": "",
             },
           },
         }
@@ -3233,6 +3346,7 @@ describe('createNxReleaseConfig()', () => {
                 "tagArgs": "",
                 "tagMessage": "",
               },
+              "preVersionCommand": "",
             },
           },
         }
