@@ -1,9 +1,7 @@
 import { performance } from 'perf_hooks';
-import { getNxRequirePaths } from '../../utils/installation-directory';
 import { ProjectConfiguration } from '../../config/workspace-json-project-json';
 import {
   NX_ANGULAR_JSON_PLUGIN_NAME,
-  NxAngularJsonPlugin,
   shouldMergeAngularProjects,
 } from '../../adapter/angular-json';
 import { NxJsonConfiguration, readNxJson } from '../../config/nx-json';
@@ -12,14 +10,7 @@ import {
   buildProjectsConfigurationsFromProjectPathsAndPlugins,
   ConfigurationSourceMaps,
 } from './project-configuration-utils';
-import {
-  CreateNodes,
-  NxPluginV2,
-  RemotePlugin,
-  getDefaultPlugins,
-  loadNxPlugins,
-} from '../plugins/nx-plugin';
-import { ProjectJsonProjectsPlugin } from '../../plugins/project-json/build-nodes/project-json';
+import { RemotePlugin, loadNxPlugins } from '../plugins/internal-api';
 import {
   getNxWorkspaceFilesFromContext,
   globWithWorkspaceContext,

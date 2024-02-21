@@ -4,7 +4,7 @@ import { dirname } from 'path';
 import { readJson, writeJson } from '../../generators/utils/json';
 import { formatChangedFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available';
 import { retrieveProjectConfigurationPaths } from '../../project-graph/utils/retrieve-workspace-files';
-import { loadNxPlugins } from '../../project-graph/plugins';
+import { loadNxPlugins } from '../../project-graph/plugins/internal-api';
 
 export default async function (tree: Tree) {
   const nxJson = readNxJson(tree);

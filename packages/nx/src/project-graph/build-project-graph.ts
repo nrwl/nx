@@ -14,11 +14,11 @@ import {
 import { applyImplicitDependencies } from './utils/implicit-project-dependencies';
 import { normalizeProjectNodes } from './utils/normalize-project-nodes';
 import {
-  CreateDependenciesContext,
   isNxPluginV1,
   isNxPluginV2,
   loadNxPlugins,
-} from './plugins';
+} from './plugins/internal-api';
+import { CreateDependenciesContext } from './plugins';
 import { getRootTsConfigPath } from '../plugins/js/utils/typescript';
 import {
   FileMap,
