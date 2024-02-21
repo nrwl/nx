@@ -346,7 +346,7 @@ describe('Angular Module Federation', () => {
       import { isEven } from '${remote}/${module}';
 
       @Component({
-        selector: 'proj-root',
+        selector: 'app-root',
         template: \`<div class="host">{{title}}</div>\`,
         standalone: true
       })
@@ -433,7 +433,7 @@ describe('Angular Module Federation', () => {
       import { isEven } from '${childRemote}/${module}';
 
       @Component({
-        selector: 'proj-${remote}-entry',
+        selector: 'app-${remote}-entry',
         template: \`<div class="childremote">{{title}}</div>\`,
         standalone: true
       })
