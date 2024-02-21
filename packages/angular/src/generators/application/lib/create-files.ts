@@ -5,6 +5,7 @@ import { getRelativePathToRootTsConfig, getRootTsConfigFileName } from '@nx/js';
 import { createTsConfig } from '../../utils/create-ts-config';
 import { UnitTestRunner } from '../../../utils/test-runners';
 import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
+import { validateHtmlSelector } from '../../utils/selector';
 
 export async function createFiles(
   tree: Tree,
@@ -15,8 +16,13 @@ export async function createFiles(
   const isUsingApplicationBuilder =
     angularMajorVersion >= 17 && options.bundler === 'esbuild';
 
+  const rootSelector = `${options.prefix}-root`;
+  validateHtmlSelector(rootSelector);
+  const nxWelcomeSelector = `${options.prefix}-nx-welcome`;
+  validateHtmlSelector(nxWelcomeSelector);
+
   const substitutions = {
-    rootSelector: `${options.prefix}-root`,
+    rootSelector,
     appName: options.name,
     inlineStyle: options.inlineStyle,
     inlineTemplate: options.inlineTemplate,
@@ -25,7 +31,7 @@ export async function createFiles(
     unitTesting: options.unitTestRunner !== UnitTestRunner.None,
     routing: options.routing,
     minimal: options.minimal,
-    nxWelcomeSelector: `${options.prefix}-nx-welcome`,
+    nxWelcomeSelector,
     rootTsConfig: joinPathFragments(rootOffset, getRootTsConfigFileName(tree)),
     angularMajorVersion,
     rootOffset,

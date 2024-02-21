@@ -56,7 +56,10 @@ export function configurationGenerator(
   tree: Tree,
   options: CypressE2EConfigSchema
 ) {
-  return configurationGeneratorInternal(tree, { addPlugin: false, ...options });
+  return configurationGeneratorInternal(tree, {
+    addPlugin: false,
+    ...options,
+  });
 }
 
 export async function configurationGeneratorInternal(
@@ -93,6 +96,7 @@ export async function configurationGeneratorInternal(
   const linterTask = await addLinterToCyProject(tree, {
     ...opts,
     cypressDir: opts.directory,
+    addPlugin: opts.addPlugin,
   });
   tasks.push(linterTask);
 

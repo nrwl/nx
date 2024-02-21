@@ -4,6 +4,7 @@ import {
   type CreateNodes,
   type CreateNodesContext,
   detectPackageManager,
+  joinPathFragments,
   readJsonFile,
   type TargetConfiguration,
   writeJsonFile,
@@ -98,15 +99,15 @@ async function buildRemixTargets(
   siblingFiles: string[]
 ) {
   const namedInputs = getNamedInputs(projectRoot, context);
-  const serverBuildPath = await getServerBuildPath(
-    configFilePath,
-    context.workspaceRoot
-  );
+  const { buildDirectory, assetsBuildDirectory, serverBuildPath } =
+    await getBuildPaths(configFilePath, context.workspaceRoot);
 
   const targets: Record<string, TargetConfiguration> = {};
   targets[options.buildTargetName] = buildTarget(
     options.buildTargetName,
     projectRoot,
+    buildDirectory,
+    assetsBuildDirectory,
     namedInputs
   );
   targets[options.serveTargetName] = serveTarget(serverBuildPath);
@@ -127,9 +128,20 @@ async function buildRemixTargets(
 function buildTarget(
   buildTargetName: string,
   projectRoot: string,
+  buildDirectory: string,
+  assetsBuildDirectory: string,
   namedInputs: { [inputName: string]: any[] }
 ): TargetConfiguration {
-  const pathToOutput = projectRoot === '.' ? '' : `/${projectRoot}`;
+  const serverBuildOutputPath =
+    projectRoot === '.'
+      ? joinPathFragments(`{workspaceRoot}`, buildDirectory)
+      : joinPathFragments(`{workspaceRoot}`, projectRoot, buildDirectory);
+
+  const assetsBuildOutputPath =
+    projectRoot === '.'
+      ? joinPathFragments(`{workspaceRoot}`, assetsBuildDirectory)
+      : joinPathFragments(`{workspaceRoot}`, projectRoot, assetsBuildDirectory);
+
   return {
     cache: true,
     dependsOn: [`^${buildTargetName}`],
@@ -138,10 +150,10 @@ function buildTarget(
         ? ['production', '^production']
         : ['default', '^default']),
     ],
-    outputs: ['{options.outputPath}'],
+    outputs: [serverBuildOutputPath, assetsBuildOutputPath],
     executor: '@nx/remix:build',
     options: {
-      outputPath: `{workspaceRoot}/dist${pathToOutput}`,
+      outputPath: projectRoot,
     },
   };
 }
@@ -192,13 +204,21 @@ function typecheckTarget(
   };
 }
 
-async function getServerBuildPath(
+async function getBuildPaths(
   configFilePath: string,
   workspaceRoot: string
-): Promise<string> {
+): Promise<{
+  buildDirectory: string;
+  assetsBuildDirectory: string;
+  serverBuildPath: string;
+}> {
   const configPath = join(workspaceRoot, configFilePath);
   let appConfig = await loadConfigFile<AppConfig>(configPath);
-  return appConfig.serverBuildPath ?? 'build/index.js';
+  return {
+    buildDirectory: 'build',
+    serverBuildPath: appConfig.serverBuildPath ?? 'build/index.js',
+    assetsBuildDirectory: appConfig.assetsBuildDirectory ?? 'public/build',
+  };
 }
 
 function normalizeOptions(options: RemixPluginOptions) {

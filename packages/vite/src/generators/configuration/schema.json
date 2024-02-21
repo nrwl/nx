@@ -44,18 +44,6 @@
       "default": false,
       "hidden": true
     },
-    "buildTarget": {
-      "type": "string",
-      "description": "The build target of the project to be transformed to use the @nx/vite:build executor."
-    },
-    "serveTarget": {
-      "type": "string",
-      "description": "The serve target of the project to be transformed to use the @nx/vite:dev-server and @nx/vite:preview-server executors."
-    },
-    "testTarget": {
-      "type": "string",
-      "description": "The test target of the project to be transformed to use the @nx/vite:test executor."
-    },
     "skipFormat": {
       "description": "Skip formatting files.",
       "type": "boolean",

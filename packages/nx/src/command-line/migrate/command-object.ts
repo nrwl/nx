@@ -3,7 +3,10 @@ import * as path from 'path';
 import { runNxSync } from '../../utils/child-process';
 import { linkToNxDevAndExamples } from '../yargs-utils/documentation';
 import { execSync } from 'child_process';
-import { getPackageManagerCommand } from '../../utils/package-manager';
+import {
+  detectPackageManager,
+  getPackageManagerCommand,
+} from '../../utils/package-manager';
 import { writeJsonFile } from '../../utils/fileutils';
 import { workspaceRoot } from '../../utils/workspace-root';
 
@@ -133,7 +136,8 @@ function runMigration() {
 function nxCliPath() {
   const version = process.env.NX_MIGRATE_CLI_VERSION || 'latest';
   try {
-    const packageManager = getPackageManagerCommand();
+    const packageManager = detectPackageManager();
+    const pmc = getPackageManagerCommand(packageManager);
 
     const { dirSync } = require('tmp');
     const tmpDir = dirSync().name;
@@ -143,8 +147,22 @@ function nxCliPath() {
       },
       license: 'MIT',
     });
+    if (pmc.preInstall) {
+      // ensure package.json and repo in tmp folder is set to a proper package manager state
+      execSync(pmc.preInstall, {
+        cwd: tmpDir,
+        stdio: ['ignore', 'ignore', 'ignore'],
+      });
+      // if it's berry ensure we set the node_linker to node-modules
+      if (packageManager === 'yarn' && pmc.ciInstall.includes('immutable')) {
+        execSync(pmc.preInstall, {
+          cwd: 'yarn config set nodeLinker node-modules',
+          stdio: ['ignore', 'ignore', 'ignore'],
+        });
+      }
+    }
 
-    execSync(packageManager.install, {
+    execSync(pmc.install, {
       cwd: tmpDir,
       stdio: ['ignore', 'ignore', 'ignore'],
     });

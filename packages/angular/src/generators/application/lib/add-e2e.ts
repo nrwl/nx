@@ -14,6 +14,9 @@ import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
 import type { NormalizedSchema } from './normalized-schema';
 
 export async function addE2e(tree: Tree, options: NormalizedSchema) {
+  // since e2e are separate projects, default to adding plugins
+  const addPlugin = process.env.NX_ADD_PLUGINS !== 'false';
+
   if (options.e2eTestRunner === 'cypress') {
     // TODO: This can call `@nx/web:static-config` generator when ready
     addFileServerTarget(tree, options, 'serve-static');
@@ -34,7 +37,7 @@ export async function addE2e(tree: Tree, options: NormalizedSchema) {
       devServerTarget: `${options.name}:serve:development`,
       baseUrl: 'http://localhost:4200',
       rootProject: options.rootProject,
-      addPlugin: options.addPlugin,
+      addPlugin,
     });
   } else if (options.e2eTestRunner === 'playwright') {
     const { configurationGenerator: playwrightConfigurationGenerator } =
@@ -62,7 +65,7 @@ export async function addE2e(tree: Tree, options: NormalizedSchema) {
       }`,
       webServerAddress: `http://localhost:${options.port ?? 4200}`,
       rootProject: options.rootProject,
-      addPlugin: options.addPlugin,
+      addPlugin,
     });
   }
 }

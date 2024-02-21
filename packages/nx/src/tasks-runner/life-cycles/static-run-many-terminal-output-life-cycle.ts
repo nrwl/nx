@@ -41,7 +41,7 @@ export class StaticRunManyTerminalOutputLifeCycle implements LifeCycle {
     }
 
     const bodyLines = this.projectNames.map(
-      (affectedProject) => ` ${output.dim('-')} ${affectedProject}`
+      (affectedProject) => `${output.dim('-')} ${affectedProject}`
     );
     if (Object.keys(this.taskOverrides).length > 0) {
       bodyLines.push('');

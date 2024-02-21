@@ -9,7 +9,10 @@ import {
 import { readJsonFile } from '../../utils/fileutils';
 import { combineGlobPatterns } from '../../utils/globs';
 import { NxPluginV2 } from '../../utils/nx-plugin';
-import { PackageJson } from '../../utils/package-json';
+import {
+  PackageJson,
+  readTargetsFromPackageJson,
+} from '../../utils/package-json';
 import { getGlobPatternsFromPackageManagerWorkspaces } from '../package-json-workspaces';
 
 /**
@@ -58,16 +61,11 @@ export const TargetDefaultsPlugin: NxPluginV2 = {
       const packageJson = readJsonOrNull<PackageJson>(
         join(ctx.workspaceRoot, root, 'package.json')
       );
-      const includedScripts = packageJson?.nx?.includedScripts;
       const projectDefinedTargets = new Set([
-        ...Object.keys(packageJson?.scripts ?? {}).filter((script) => {
-          if (includedScripts) {
-            return includedScripts.includes(script);
-          }
-          return true;
-        }),
         ...Object.keys(projectJson?.targets ?? {}),
-        ...Object.keys(packageJson?.nx?.targets ?? {}),
+        ...(packageJson
+          ? Object.keys(readTargetsFromPackageJson(packageJson))
+          : []),
       ]);
 
       const executorToTargetMap = getExecutorToTargetMap(

@@ -52,6 +52,11 @@ interface LintProjectOptions {
   rootProject?: boolean;
   keepExistingVersions?: boolean;
   addPlugin?: boolean;
+
+  /**
+   * @internal
+   */
+  addExplicitTargets?: boolean;
 }
 
 export function lintProjectGenerator(tree: Tree, options: LintProjectOptions) {
@@ -91,7 +96,7 @@ export async function lintProjectGeneratorInternal(
   }
 
   const hasPlugin = hasEslintPlugin(tree);
-  if (hasPlugin) {
+  if (hasPlugin && !options.addExplicitTargets) {
     if (
       lintFilePatterns &&
       lintFilePatterns.length &&

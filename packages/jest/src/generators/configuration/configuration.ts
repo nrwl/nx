@@ -105,7 +105,7 @@ export async function configurationGeneratorInternal(
       );
     }
   });
-  if (!hasPlugin) {
+  if (!hasPlugin || options.addExplicitTargets) {
     updateWorkspace(tree, options);
   }
 
