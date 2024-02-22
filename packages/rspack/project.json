@@ -34,28 +34,18 @@
             "ignore": ["**/tsconfig*.json", "project.json", ".eslintrc.json"]
           },
           "LICENSE"
-        ],
-        "updateBuildableProjectDepsInPackageJson": true
+        ]
       }
     },
     "lint": {
       "executor": "@nx/eslint:lint",
-      "outputs": ["{options.outputFile}"],
-      "options": {
-        "lintFilePatterns": [
-          "packages/rspack/**/*.ts",
-          "packages/rspack/generators.json",
-          "packages/rspack/executors.json",
-          "packages/rspack/package.json"
-        ]
-      }
+      "outputs": ["{options.outputFile}"]
     },
     "test": {
       "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
       "options": {
-        "jestConfig": "packages/rspack/jest.config.ts",
-        "passWithNoTests": true
+        "jestConfig": "packages/rspack/jest.config.ts"
       }
     },
     "publish": {
