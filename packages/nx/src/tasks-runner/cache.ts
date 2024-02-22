@@ -286,7 +286,9 @@ export class Cache {
           // After enough attempts, throw the error
           throw e;
         }
-        await new Promise((res) => setTimeout(res, baseTimeout * attempts));
+        await new Promise((res) =>
+          setTimeout(res, baseTimeout * 2 ** attempts)
+        );
         return await _try();
       }
     };
