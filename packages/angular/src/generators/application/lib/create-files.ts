@@ -2,7 +2,7 @@ import type { Tree } from '@nx/devkit';
 import { generateFiles, joinPathFragments } from '@nx/devkit';
 import type { NormalizedSchema } from './normalized-schema';
 import { getRelativePathToRootTsConfig, getRootTsConfigFileName } from '@nx/js';
-import { createTsConfig } from '../../utils/create-ts-config';
+import { updateProjectRootTsConfig } from '../../utils/update-project-root-tsconfig';
 import { UnitTestRunner } from '../../../utils/test-runners';
 import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
 
@@ -56,18 +56,11 @@ export async function createFiles(
     );
   }
 
-  createTsConfig(
+  updateProjectRootTsConfig(
     tree,
     options.appProjectRoot,
-    'app',
-    {
-      bundler: options.bundler,
-      rootProject: options.rootProject,
-      strict: options.strict,
-      style: options.style,
-      esModuleInterop: isUsingApplicationBuilder,
-    },
-    getRelativePathToRootTsConfig(tree, options.appProjectRoot)
+    getRelativePathToRootTsConfig(tree, options.appProjectRoot),
+    options.rootProject
   );
 
   if (!options.routing) {

@@ -81,6 +81,13 @@ describe('app', () => {
     expect(devDependencies['codelyzer']).toBeUndefined();
   });
 
+  it('should generate correct tsconfig.editor.json', async () => {
+    await generateApp(appTree);
+
+    const tsConfig = readJson(appTree, 'my-app/tsconfig.editor.json');
+    expect(tsConfig).toMatchSnapshot();
+  });
+
   describe('not nested', () => {
     it('should create project configs', async () => {
       // ACT
