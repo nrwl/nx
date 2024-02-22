@@ -80,9 +80,7 @@ exports[`workspace move to nx layout should create a root eslint config 1`] = `
 
 exports[`workspace move to nx layout should create nx.json 1`] = `
 {
-  "affected": {
-    "defaultBase": "main",
-  },
+  "defaultBase": "main",
   "defaultProject": "myApp",
   "namedInputs": {
     "default": [
