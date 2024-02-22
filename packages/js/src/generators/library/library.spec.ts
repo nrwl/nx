@@ -1,4 +1,5 @@
 import {
+  getPackageManagerCommand,
   getProjects,
   output,
   readJson,
@@ -1032,8 +1033,35 @@ describe('lib', () => {
         });
       });
 
-      describe('nx release projects config', () => {
-        it('should not be added if no release config exists', async () => {
+      describe('nx release config', () => {
+        it('should not change preVersionCommand if it already exists', async () => {
+          updateJson(tree, 'nx.json', (json) => {
+            json.release = {
+              version: {
+                preVersionCommand: 'echo "hello world"',
+              },
+            };
+            return json;
+          });
+
+          await libraryGenerator(tree, {
+            ...defaultOptions,
+            name: 'my-lib',
+            publishable: true,
+            importPath: '@proj/my-lib',
+            bundler: 'tsc',
+            projectNameAndRootFormat: 'as-provided',
+          });
+
+          const nxJson = readJson(tree, 'nx.json');
+          expect(nxJson.release).toEqual({
+            version: {
+              preVersionCommand: 'echo "hello world"',
+            },
+          });
+        });
+
+        it('should not add projects if no release config exists', async () => {
           updateJson(tree, 'nx.json', (json) => {
             delete json.release;
             return json;
@@ -1049,10 +1077,16 @@ describe('lib', () => {
           });
 
           const nxJson = readJson(tree, 'nx.json');
-          expect(nxJson.release).toBeUndefined();
+          expect(nxJson.release).toEqual({
+            version: {
+              preVersionCommand: `${
+                getPackageManagerCommand().dlx
+              } nx run-many -t build`,
+            },
+          });
         });
 
-        it("should be not be added if release config exists but doesn't specify groups or projects", async () => {
+        it("should not add projects if release config exists but doesn't specify groups or projects", async () => {
           const existingReleaseConfig = {
             version: {
               git: {},
@@ -1076,11 +1110,18 @@ describe('lib', () => {
           });
 
           const nxJson = readJson(tree, 'nx.json');
-          const projectsConfig = nxJson.release.projects;
-          expect(projectsConfig).toBeUndefined();
+          expect(nxJson.release).toEqual({
+            ...existingReleaseConfig,
+            version: {
+              ...existingReleaseConfig.version,
+              preVersionCommand: `${
+                getPackageManagerCommand().dlx
+              } nx run-many -t build`,
+            },
+          });
         });
 
-        it('should be unchanged if it already exists as a string and matches the new project', async () => {
+        it('should not change projects if it already exists as a string and matches the new project', async () => {
           updateJson(tree, 'nx.json', (json) => {
             json.release = {
               projects: '*',
@@ -1100,10 +1141,15 @@ describe('lib', () => {
           const nxJson = readJson(tree, 'nx.json');
           expect(nxJson.release).toEqual({
             projects: '*',
+            version: {
+              preVersionCommand: `${
+                getPackageManagerCommand().dlx
+              } nx run-many -t build`,
+            },
           });
         });
 
-        it('should be unchanged if it already exists as an array and matches the new project by name', async () => {
+        it('should not change projects if it already exists as an array and matches the new project by name', async () => {
           updateJson(tree, 'nx.json', (json) => {
             json.release = {
               projects: ['something-else', 'my-lib'],
@@ -1123,10 +1169,15 @@ describe('lib', () => {
           const nxJson = readJson(tree, 'nx.json');
           expect(nxJson.release).toEqual({
             projects: ['something-else', 'my-lib'],
+            version: {
+              preVersionCommand: `${
+                getPackageManagerCommand().dlx
+              } nx run-many -t build`,
+            },
           });
         });
 
-        it('should be unchanged if it already exists and matches the new project by tag', async () => {
+        it('should not change projects if it already exists and matches the new project by tag', async () => {
           updateJson(tree, 'nx.json', (json) => {
             json.release = {
               projects: ['tag:one'],
@@ -1147,10 +1198,15 @@ describe('lib', () => {
           const nxJson = readJson(tree, 'nx.json');
           expect(nxJson.release).toEqual({
             projects: ['tag:one'],
+            version: {
+              preVersionCommand: `${
+                getPackageManagerCommand().dlx
+              } nx run-many -t build`,
+            },
           });
         });
 
-        it('should be unchanged if it already exists and matches the new project by root directory', async () => {
+        it('should not change projects if it already exists and matches the new project by root directory', async () => {
           updateJson(tree, 'nx.json', (json) => {
             json.release = {
               projects: ['packages/*'],
@@ -1171,10 +1227,15 @@ describe('lib', () => {
           const nxJson = readJson(tree, 'nx.json');
           expect(nxJson.release).toEqual({
             projects: ['packages/*'],
+            version: {
+              preVersionCommand: `${
+                getPackageManagerCommand().dlx
+              } nx run-many -t build`,
+            },
           });
         });
 
-        it("should be appended to if it exists as an array, but doesn't already match the new project", async () => {
+        it("should append project to projects if projects exists as an array, but doesn't already match the new project", async () => {
           updateJson(tree, 'nx.json', (json) => {
             json.release = {
               projects: ['something-else'],
@@ -1194,10 +1255,15 @@ describe('lib', () => {
           const nxJson = readJson(tree, 'nx.json');
           expect(nxJson.release).toEqual({
             projects: ['something-else', 'my-lib'],
+            version: {
+              preVersionCommand: `${
+                getPackageManagerCommand().dlx
+              } nx run-many -t build`,
+            },
           });
         });
 
-        it("should be converted to an array and appended to if it exists as a string, but doesn't already match the new project", async () => {
+        it("should convert projects to an array and append the new project to it if projects exists as a string, but doesn't already match the new project", async () => {
           updateJson(tree, 'nx.json', (json) => {
             json.release = {
               projects: 'packages',
@@ -1217,10 +1283,15 @@ describe('lib', () => {
           const nxJson = readJson(tree, 'nx.json');
           expect(nxJson.release).toEqual({
             projects: ['packages', 'my-lib'],
+            version: {
+              preVersionCommand: `${
+                getPackageManagerCommand().dlx
+              } nx run-many -t build`,
+            },
           });
         });
 
-        it('should be unchanged if it already exists as groups config and matches the new project', async () => {
+        it('should not change projects if it already exists as groups config and matches the new project', async () => {
           const existingReleaseConfig = {
             groups: {
               group1: {
@@ -1246,7 +1317,14 @@ describe('lib', () => {
           });
 
           const nxJson = readJson(tree, 'nx.json');
-          expect(nxJson.release).toEqual(existingReleaseConfig);
+          expect(nxJson.release).toEqual({
+            groups: existingReleaseConfig.groups,
+            version: {
+              preVersionCommand: `${
+                getPackageManagerCommand().dlx
+              } nx run-many -t build`,
+            },
+          });
         });
 
         it("should warn the user if their defined groups don't match the new project", async () => {
@@ -1281,8 +1359,14 @@ describe('lib', () => {
           });
 
           const nxJson = readJson(tree, 'nx.json');
-          expect(nxJson.release).toEqual(existingReleaseConfig);
-
+          expect(nxJson.release).toEqual({
+            groups: existingReleaseConfig.groups,
+            version: {
+              preVersionCommand: `${
+                getPackageManagerCommand().dlx
+              } nx run-many -t build`,
+            },
+          });
           expect(outputSpy).toHaveBeenCalledWith({
             title: `Could not find a release group that includes my-lib`,
             bodyLines: [

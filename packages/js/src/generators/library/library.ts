@@ -5,6 +5,7 @@ import {
   formatFiles,
   generateFiles,
   GeneratorCallback,
+  getPackageManagerCommand,
   joinPathFragments,
   names,
   offsetFromRoot,
@@ -898,9 +899,23 @@ async function addProjectToNxReleaseConfig(
   const { output } = requireNx();
   const nxJson = readNxJson(tree);
 
+  const addPreVersionCommand = () => {
+    const pmc = getPackageManagerCommand();
+
+    nxJson.release = {
+      ...nxJson.release,
+      version: {
+        preVersionCommand: `${pmc.dlx} nx run-many -t build`,
+        ...nxJson.release?.version,
+      },
+    };
+  };
+
   if (!nxJson.release || (!nxJson.release.projects && !nxJson.release.groups)) {
     // skip adding any projects configuration since the new project should be
     // automatically included by nx release's default project detection logic
+    addPreVersionCommand();
+    writeJson(tree, 'nx.json', nxJson);
     return;
   }
 
@@ -917,11 +932,14 @@ async function addProjectToNxReleaseConfig(
     output.log({
       title: `Project already included in existing release configuration`,
     });
+    addPreVersionCommand();
+    writeJson(tree, 'nx.json', nxJson);
     return;
   }
 
   if (Array.isArray(nxJson.release.projects)) {
     nxJson.release.projects.push(options.name);
+    addPreVersionCommand();
     writeJson(tree, 'nx.json', nxJson);
     output.log({
       title: `Added project to existing release configuration`,
@@ -933,6 +951,8 @@ async function addProjectToNxReleaseConfig(
 
     for (const [name, group] of allGroups) {
       if (projectsConfigMatchesProject(group.projects, project)) {
+        addPreVersionCommand();
+        writeJson(tree, 'nx.json', nxJson);
         return `Project already included in existing release configuration for group ${name}`;
       }
     }
@@ -943,11 +963,14 @@ async function addProjectToNxReleaseConfig(
         `Ensure that ${options.name} is included in a release group's "projects" list in nx.json so it can be published with "nx release"`,
       ],
     });
+    addPreVersionCommand();
+    writeJson(tree, 'nx.json', nxJson);
     return;
   }
 
   if (typeof nxJson.release.projects === 'string') {
     nxJson.release.projects = [nxJson.release.projects, options.name];
+    addPreVersionCommand();
     writeJson(tree, 'nx.json', nxJson);
     output.log({
       title: `Added project to existing release configuration`,
