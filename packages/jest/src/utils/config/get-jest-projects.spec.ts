@@ -147,7 +147,7 @@ describe('getJestProjects', () => {
     expect(getJestProjects()).toEqual(expectedResults);
   });
 
-  test('other projects and targets that do not use the nrwl jest test runner', () => {
+  test('other projects and targets that do not use the nx jest test runner', () => {
     const mockedWorkspaceConfig: WorkspaceJsonConfiguration = {
       projects: {
         otherTarget: {
@@ -299,7 +299,7 @@ describe('getJestProjectsAsync', () => {
     expect(await getJestProjectsAsync()).toEqual(expectedResults);
   });
 
-  test('other projects and targets that do not use the nrwl jest test runner', async () => {
+  test('other projects and targets that do not use the nx jest test runner', async () => {
     addProject('otherTarget', {
       root: 'test',
       targets: {

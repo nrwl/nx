@@ -1,5 +1,8 @@
-import type { ProjectsConfigurations } from '@nx/devkit';
-import { createProjectGraphAsync, type TargetConfiguration } from '@nx/devkit';
+import {
+  createProjectGraphAsync,
+  type ProjectsConfigurations,
+  type TargetConfiguration,
+} from '@nx/devkit';
 import { readWorkspaceConfig } from 'nx/src/project-graph/file-utils';
 import { join } from 'path';
 import * as yargs from 'yargs-parser';
