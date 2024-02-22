@@ -282,7 +282,7 @@ export class Cache {
         attempts++;
         return await fn();
       } catch (e) {
-        if (attempts === 10) {
+        if (attempts === 12) {
           // After enough attempts, throw the error
           throw e;
         }
