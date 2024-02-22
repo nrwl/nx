@@ -393,13 +393,13 @@ exports[`app --project-name-and-root-format=derived should generate correctly wh
   "include": [],
   "references": [
     {
+      "path": "./tsconfig.editor.json",
+    },
+    {
       "path": "./tsconfig.app.json",
     },
     {
       "path": "./tsconfig.spec.json",
-    },
-    {
-      "path": "./tsconfig.editor.json",
     },
   ],
 }
@@ -592,13 +592,13 @@ exports[`app --project-name-and-root-format=derived should generate correctly wh
   "include": [],
   "references": [
     {
+      "path": "./tsconfig.editor.json",
+    },
+    {
       "path": "./tsconfig.app.json",
     },
     {
       "path": "./tsconfig.spec.json",
-    },
-    {
-      "path": "./tsconfig.editor.json",
     },
   ],
 }
@@ -773,13 +773,13 @@ exports[`app --strict should enable strict type checking: app tsconfig.json 1`] 
   "include": [],
   "references": [
     {
+      "path": "./tsconfig.editor.json",
+    },
+    {
       "path": "./tsconfig.app.json",
     },
     {
       "path": "./tsconfig.spec.json",
-    },
-    {
-      "path": "./tsconfig.editor.json",
     },
   ],
 }
@@ -1198,14 +1198,29 @@ exports[`app not nested should generate files: tsconfig.json 1`] = `
   "include": [],
   "references": [
     {
+      "path": "./tsconfig.editor.json",
+    },
+    {
       "path": "./tsconfig.app.json",
     },
     {
       "path": "./tsconfig.spec.json",
     },
-    {
-      "path": "./tsconfig.editor.json",
-    },
+  ],
+}
+`;
+
+exports[`app should generate correct tsconfig.editor.json 1`] = `
+{
+  "compilerOptions": {},
+  "exclude": [
+    "jest.config.ts",
+    "src/**/*.test.ts",
+    "src/**/*.spec.ts",
+  ],
+  "extends": "./tsconfig.json",
+  "include": [
+    "src/**/*.ts",
   ],
 }
 `;
