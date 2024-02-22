@@ -1,6 +1,6 @@
 export const nxVersion = require('../../package.json').version;
 export const viteVersion = '~5.0.0';
-export const vitestVersion = '^1.0.4';
+export const vitestVersion = '^1.3.1';
 export const vitePluginReactVersion = '^4.2.0';
 export const vitePluginReactSwcVersion = '^3.5.0';
 export const jsdomVersion = '~22.1.0';
