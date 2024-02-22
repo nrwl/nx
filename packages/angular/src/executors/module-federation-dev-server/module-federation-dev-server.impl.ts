@@ -192,9 +192,12 @@ export async function* moduleFederationDevServerExecutor(
             `NX All remotes started, server ready at http://localhost:${options.port}`
           );
           next({ success: true, baseUrl: `http://localhost:${options.port}` });
-        } catch {
+        } catch (err) {
           throw new Error(
-            `Timed out waiting for remote to start. Check above for any errors.`
+            `Failed to start remotes. Check above for any errors.`,
+            {
+              cause: err,
+            }
           );
         } finally {
           done();

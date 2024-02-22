@@ -167,7 +167,7 @@ CREATE apps/react/with-remotes/remote2/webpack.config.prod.ts
 {% /tab %}
 {% tab label="Angular" %}
 
-```{% command="nx g @nx/angular:host shell --directory=apps/angular/with-remtoes/shell --remotes=remote1,remote2" %}
+```{% command="nx g @nx/angular:host shell --directory=apps/angular/with-remotes/shell --remotes=remote1,remote2" %}
 > NX Generating @nx/angular:host
 
 CREATE apps/angular/with-remotes/shell/project.json

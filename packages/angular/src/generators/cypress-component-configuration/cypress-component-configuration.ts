@@ -11,7 +11,6 @@ import {
 } from '@nx/cypress/src/utils/find-target-options';
 import {
   formatFiles,
-  glob,
   joinPathFragments,
   ProjectConfiguration,
   readProjectConfiguration,
@@ -26,6 +25,7 @@ import {
 } from '../utils/storybook-ast/component-info';
 import { getProjectEntryPoints } from '../utils/storybook-ast/entry-point';
 import { getModuleFilePaths } from '../utils/storybook-ast/module-info';
+import { updateAppEditorTsConfigExcludedFiles } from '../utils/update-app-editor-tsconfig-excluded-files';
 import { CypressComponentConfigSchema } from './schema';
 
 export function cypressComponentConfiguration(
@@ -55,6 +55,10 @@ export async function cypressComponentConfigurationInternal(
 
   await configureCypressCT(tree, options);
   await addFiles(tree, projectConfig, options);
+
+  if (projectConfig.projectType === 'application') {
+    updateAppEditorTsConfigExcludedFiles(tree, projectConfig);
+  }
 
   if (!options.skipFormat) {
     await formatFiles(tree);
