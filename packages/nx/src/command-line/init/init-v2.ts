@@ -61,6 +61,8 @@ export async function initHandler(options: InitArgs): Promise<void> {
     return;
   }
 
+  output.log({ title: '🧐 Checking dependencies' });
+
   const detectPluginsResponse = await detectPlugins();
 
   if (!detectPluginsResponse?.plugins.length) {
