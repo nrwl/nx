@@ -90,6 +90,7 @@ function createNxJson(
     };
     if (process.env.NX_ADD_PLUGINS === 'false') {
       nxJson.targetDefaults.build.inputs = ['production', '^production'];
+      nxJson.useInferencePlugins = false;
     }
   }
 

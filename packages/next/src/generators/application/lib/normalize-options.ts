@@ -1,4 +1,4 @@
-import { joinPathFragments, names, Tree } from '@nx/devkit';
+import { joinPathFragments, names, readNxJson, Tree } from '@nx/devkit';
 import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { Linter } from '@nx/eslint';
 import { assertValidStyle } from '@nx/react/src/utils/assertion';
@@ -34,7 +34,13 @@ export async function normalizeOptions(
   });
   options.rootProject = appProjectRoot === '.';
   options.projectNameAndRootFormat = projectNameAndRootFormat;
-  options.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
+
+  const nxJson = readNxJson(host);
+  const addPlugin =
+    process.env.NX_ADD_PLUGINS !== 'false' &&
+    nxJson.useInferencePlugins !== false;
+
+  options.addPlugin ??= addPlugin;
 
   const e2eProjectName = options.rootProject ? 'e2e' : `${appProjectName}-e2e`;
   const e2eProjectRoot = options.rootProject ? 'e2e' : `${appProjectRoot}-e2e`;

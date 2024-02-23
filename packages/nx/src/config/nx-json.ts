@@ -392,6 +392,11 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
    * Set this to false to disable the daemon.
    */
   useDaemonProcess?: boolean;
+
+  /**
+   * Set this to false to disable adding inference plugins when generating new projects
+   */
+  useInferencePlugins?: boolean;
 }
 
 export type PluginConfiguration =
