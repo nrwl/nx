@@ -715,13 +715,10 @@ async function getDefaultProjects(
   return findMatchingProjects(['*'], projectGraph.nodes).filter(
     (project) =>
       projectGraph.nodes[project].type === 'lib' &&
-      projectFileMap[project]?.find(
-        (f) =>
-          f.file === join(projectGraph.nodes[project].data.root, 'package.json')
-      ) &&
-      // the root project needs to be included if it is not private in order to support standalone repos
-      (projectGraph.nodes[project].data.root !== '.' ||
-        isProjectPublic(projectGraph.nodes[project]))
+      // Exclude all projects with "private": true in their package.json because this is
+      // a common indicator that a project is not intended for release.
+      // Users can override this behavior by explicitly defining the projects they want to release.
+      isProjectPublic(projectGraph.nodes[project])
   );
 }
 
