@@ -1,4 +1,4 @@
-import { NxJsonConfiguration, ProjectConfiguration } from '@nx/devkit';
+import { ProjectConfiguration } from '@nx/devkit';
 import {
   checkFilesExist,
   cleanupProject,
@@ -27,12 +27,6 @@ describe('Nx Plugin', () => {
 
   beforeAll(() => {
     workspaceName = newProject();
-    updateJson<NxJsonConfiguration>('nx.json', (json) => {
-      json.release = {
-        projects: ['!*-e2e'],
-      };
-      return json;
-    });
   });
 
   afterAll(() => cleanupProject());
