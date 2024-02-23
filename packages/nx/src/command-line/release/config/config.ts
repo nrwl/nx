@@ -15,13 +15,11 @@ import { join } from 'path';
 import { NxJsonConfiguration } from '../../../config/nx-json';
 import {
   ProjectFileMap,
-  ProjectGraphProjectNode,
   output,
   readJsonFile,
   workspaceRoot,
   type ProjectGraph,
 } from '../../../devkit-exports';
-import { fileExists } from '../../../utils/fileutils';
 import { findMatchingProjects } from '../../../utils/find-matching-projects';
 import { PackageJson } from '../../../utils/package-json';
 import { resolveNxJsonConfigErrorMessage } from '../utils/resolve-nx-json-error-message';
@@ -718,21 +716,25 @@ async function getDefaultProjects(
       // Exclude all projects with "private": true in their package.json because this is
       // a common indicator that a project is not intended for release.
       // Users can override this behavior by explicitly defining the projects they want to release.
-      isProjectPublic(projectGraph.nodes[project])
+      isProjectPublic(project, projectGraph, projectFileMap)
   );
 }
 
-function isProjectPublic(project: ProjectGraphProjectNode): boolean {
-  const packageJsonPath = join(
-    workspaceRoot,
-    project.data.root,
-    'package.json'
-  );
-  if (!fileExists(packageJsonPath)) {
+function isProjectPublic(
+  project: string,
+  projectGraph: ProjectGraph,
+  projectFileMap: ProjectFileMap
+): boolean {
+  const projectNode = projectGraph.nodes[project];
+  const packageJsonPath = join(projectNode.data.root, 'package.json');
+
+  if (!projectFileMap[project]?.find((f) => f.file === packageJsonPath)) {
     return false;
   }
+
   try {
-    const packageJson = readJsonFile<PackageJson>(packageJsonPath);
+    const fullPackageJsonPath = join(workspaceRoot, packageJsonPath);
+    const packageJson = readJsonFile<PackageJson>(fullPackageJsonPath);
     return !(packageJson.private === true);
   } catch (e) {
     // do nothing and assume that the project is not public if there is a parsing issue
