@@ -156,10 +156,6 @@ export async function releaseVersion(
     process.exit(1);
   }
 
-  /**
-   * This is always executed, even if --dry-run is passed, otherwise
-   * the dry run will likely error or produce inaccurate output.
-   */
   runPreVersionCommand(nxReleaseConfig.version.preVersionCommand, {
     dryRun: args.dryRun,
     verbose: args.verbose,
