@@ -124,7 +124,7 @@ export function buildTargetFromScript(script: string): TargetConfiguration {
 }
 
 export function readTargetsFromPackageJson(packageJson: PackageJson) {
-  const { scripts, nx } = packageJson;
+  const { scripts, nx, private: isPrivate } = packageJson ?? {};
   const res: Record<string, TargetConfiguration> = {};
   const includedScripts = nx?.includedScripts || Object.keys(scripts ?? {});
   //
@@ -143,7 +143,7 @@ export function readTargetsFromPackageJson(packageJson: PackageJson) {
    * not marked as `"private": true` to allow for lightweight configuration for
    * package based repos.
    */
-  if (!packageJson.private && !res['nx-release-publish']) {
+  if (!isPrivate && !res['nx-release-publish']) {
     res['nx-release-publish'] = {
       dependsOn: ['^nx-release-publish'],
       executor: '@nx/js:release-publish',
