@@ -155,20 +155,21 @@ export function mergeProjectConfigurationIntoRootMap(
         continue;
       }
 
-      // We don't want the symbol to live on past the merge process
-      if (target?.[ONLY_MODIFIES_EXISTING_TARGET])
-        delete target?.[ONLY_MODIFIES_EXISTING_TARGET];
+      const mergedTarget = mergeTargetConfigurations(
+        skipCommandNormalization
+          ? target
+          : resolveCommandSyntacticSugar(target, project.root),
+        matchingProject.targets?.[targetName],
+        sourceMap,
+        sourceInformation,
+        `targets.${targetName}`
+      );
 
-      updatedProjectConfiguration.targets[targetName] =
-        mergeTargetConfigurations(
-          skipCommandNormalization
-            ? target
-            : resolveCommandSyntacticSugar(target, project.root),
-          matchingProject.targets?.[targetName],
-          sourceMap,
-          sourceInformation,
-          `targets.${targetName}`
-        );
+      // We don't want the symbol to live on past the merge process
+      if (mergedTarget?.[ONLY_MODIFIES_EXISTING_TARGET])
+        delete mergedTarget?.[ONLY_MODIFIES_EXISTING_TARGET];
+
+      updatedProjectConfiguration.targets[targetName] = mergedTarget;
     }
   }
 
@@ -433,6 +434,14 @@ export function mergeTargetConfigurations(
   // Target is "compatible", e.g. executor is defined only once or is the same
   // in both places. This means that it is likely safe to merge
   const isCompatible = isCompatibleTarget(baseTargetProperties, target);
+
+  // If the targets are not compatible, we would normally overwrite the old target
+  // with the new one. However, we have a special case for targets that have the
+  // ONLY_MODIFIES_EXISTING_TARGET symbol set. This prevents the merged target
+  // equaling info that should have only been used to modify the existing target.
+  if (!isCompatible && target[ONLY_MODIFIES_EXISTING_TARGET]) {
+    return baseTarget;
+  }
 
   if (!isCompatible && projectConfigSourceMap) {
     // if the target is not compatible, we will simply override the options
