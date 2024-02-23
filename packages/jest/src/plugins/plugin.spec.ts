@@ -11,6 +11,7 @@ describe('@nx/jest/plugin', () => {
 
   beforeEach(async () => {
     tempFs = new TempFs('test');
+    process.chdir(tempFs.tempDir);
     context = {
       nxJsonConfiguration: {
         namedInputs: {

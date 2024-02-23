@@ -129,16 +129,16 @@ export async function createJestConfig(
 function generateGlobalConfig(tree: Tree, isJS: boolean) {
   const contents = isJS
     ? stripIndents`
-    const { getJestProjects } = require('@nx/jest');
+    const { getJestProjectsAsync } = require('@nx/jest');
 
-    module.exports = {
-      projects: getJestProjects()
-    };`
+    module.exports = async () => ({
+      projects: await getJestProjectsAsync()
+    });`
     : stripIndents`
-    import { getJestProjects } from '@nx/jest';
+    import { getJestProjectsAsync } from '@nx/jest';
 
-    export default {
-     projects: getJestProjects()
-    };`;
+    export default async () => ({
+     projects: await getJestProjectsAsync()
+    });`;
   tree.write(`jest.config.${isJS ? 'js' : 'ts'}`, contents);
 }
