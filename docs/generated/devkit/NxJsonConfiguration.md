@@ -21,6 +21,7 @@ Nx.json configuration
 - [affected](../../devkit/documents/NxJsonConfiguration#affected): NxAffectedConfig
 - [cacheDirectory](../../devkit/documents/NxJsonConfiguration#cachedirectory): string
 - [cli](../../devkit/documents/NxJsonConfiguration#cli): Object
+- [defaultBase](../../devkit/documents/NxJsonConfiguration#defaultbase): string
 - [defaultProject](../../devkit/documents/NxJsonConfiguration#defaultproject): string
 - [extends](../../devkit/documents/NxJsonConfiguration#extends): string
 - [generators](../../devkit/documents/NxJsonConfiguration#generators): Object
@@ -47,6 +48,10 @@ Nx.json configuration
 
 Default options for `nx affected`
 
+**`Deprecated`**
+
+use [defaultBase](../../devkit/documents/NxJsonConfiguration#defaultbase) instead. For more information see https://nx.dev/deprecated/affected-config#affected-config
+
 ---
 
 ### cacheDirectory
@@ -69,6 +74,14 @@ Default generator collection. It is used when no collection is provided.
 | :-------------------- | :-------------------------------------------------------- |
 | `defaultProjectName?` | `string`                                                  |
 | `packageManager?`     | [`PackageManager`](../../devkit/documents/PackageManager) |
+
+---
+
+### defaultBase
+
+• `Optional` **defaultBase**: `string`
+
+Default value for --base used by `nx affected` and `nx format`.
 
 ---
 

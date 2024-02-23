@@ -70,9 +70,9 @@ export async function createJestConfig(
       );
 
       if (
-        rootProjectConfig.targets['test']?.executor === 'nx:run-commands'
-          ? rootProjectConfig.targets['test']?.command !== 'jest'
-          : rootProjectConfig.targets['test']?.options?.jestConfig !==
+        rootProjectConfig.targets?.['test']?.executor === 'nx:run-commands'
+          ? rootProjectConfig.targets?.['test']?.command !== 'jest'
+          : rootProjectConfig.targets?.['test']?.options?.jestConfig !==
             rootJestPath
       ) {
         // Jest target has already been updated

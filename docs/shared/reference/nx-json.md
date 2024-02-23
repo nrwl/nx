@@ -16,9 +16,7 @@ The following is an expanded example showing all options. Your `nx.json` will li
   ],
   "parallel": 4,
   "cacheDirectory": "tmp/my-nx-cache",
-  "affected": {
-    "defaultBase": "main"
-  },
+  "defaultBase": "main",
   "namedInputs": {
     "default": ["{projectRoot}/**/*"],
     "production": ["!{projectRoot}/**/*.spec.tsx"]
@@ -123,9 +121,9 @@ nx run-many -t build --runner=another
 
 The official types of `runner` supported by Nx are `"nx/tasks-runners/default"` and `"nx-cloud"`.
 
-## Affected
+## Default Base
 
-Tells Nx which branch and HEAD to use when calculating affected projects.
+Tells Nx which base branch to use when calculating affected projects.
 
 - `defaultBase` defines the default base branch, defaults to `main`.
 
