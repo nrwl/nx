@@ -1,5 +1,7 @@
+import { getPackageManagerCommand } from '@nx/devkit';
 import {
   cleanupProject,
+  getSelectedPackageManager,
   newProject,
   readJson,
   runCLI,
@@ -9,17 +11,19 @@ import {
 
 describe('js:generators:publishable', () => {
   let scope: string;
+  let dlxCommand: string;
 
   beforeAll(() => {
     scope = newProject({
       name: uniq('js_generators_publishable'),
       packages: ['@nx/js'],
     });
+    dlxCommand = getPackageManagerCommand(getSelectedPackageManager()).dlx;
   });
 
   afterAll(() => cleanupProject());
 
-  it('should not add release config when it does not exist', async () => {
+  it('should not add projects config when it does not exist', async () => {
     const otherLib = uniq('other-lib');
     const publishableLib1 = uniq('publishable-lib1');
     const publishableLib2 = uniq('publishable-lib2');
@@ -39,7 +43,11 @@ describe('js:generators:publishable', () => {
     );
 
     const releaseConfig = readJson('nx.json').release;
-    expect(releaseConfig).toBeUndefined();
+    expect(releaseConfig).toEqual({
+      version: {
+        preVersionCommand: `${dlxCommand} nx run-many -t build`,
+      },
+    });
   });
 
   it('should update nxJson.release.projects when it has an explicit projects list', async () => {
@@ -50,6 +58,9 @@ describe('js:generators:publishable', () => {
     updateJson('nx.json', (json) => {
       json.release = {
         projects: [publishableLib3],
+        version: {
+          conventionalCommits: false,
+        },
       };
       return json;
     });
@@ -66,6 +77,10 @@ describe('js:generators:publishable', () => {
     const releaseConfig = readJson('nx.json').release;
     expect(releaseConfig).toEqual({
       projects: [publishableLib3, publishableLib4],
+      version: {
+        conventionalCommits: false,
+        preVersionCommand: `${dlxCommand} nx run-many -t build`,
+      },
     });
   });
 });
