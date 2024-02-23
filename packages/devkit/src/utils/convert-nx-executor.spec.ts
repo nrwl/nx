@@ -1,4 +1,7 @@
+import { requireNx } from '../../nx';
 import { convertNxExecutor } from './convert-nx-executor';
+
+const { workspaceRoot } = requireNx();
 
 describe('Convert Nx Executor', () => {
   it('should convertNxExecutor to builder correctly and produce the same output', async () => {
@@ -6,12 +9,14 @@ describe('Convert Nx Executor', () => {
     const { schema } = require('@angular-devkit/core');
     const {
       TestingArchitectHost,
-    } = require('@angular-devkit/architect/testing');
+      // nx-ignore-next-line
+    } = require('@angular-devkit/architect/testing') as typeof import('@angular-devkit/architect/testing');
     const { Architect } = require('@angular-devkit/architect');
 
     const registry = new schema.CoreSchemaRegistry();
     registry.addPostTransform(schema.transforms.addUndefinedDefaults);
     const testArchitectHost = new TestingArchitectHost();
+    testArchitectHost.workspaceRoot = workspaceRoot;
     const architect = new Architect(testArchitectHost, registry);
 
     const convertedExecutor = convertNxExecutor(echoExecutor);
