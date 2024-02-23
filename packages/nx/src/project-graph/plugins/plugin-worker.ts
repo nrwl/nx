@@ -45,51 +45,45 @@ process.on('message', async (message: string) => {
         };
       }
     },
-    shutdown: async () => {
-      process.exit(0);
-    },
-    createNodes: async ({ configFiles, context }) => {
+    createNodes: async ({ configFiles, context, tx }) => {
       try {
         const result = await runCreateNodesInParallel(configFiles, context);
         return {
           type: 'createNodesResult',
-          payload: { result, success: true },
+          payload: { result, success: true, tx },
         };
       } catch (e) {
         return {
           type: 'createNodesResult',
-          payload: { success: false, error: e.stack },
+          payload: { success: false, error: e.stack, tx },
         };
       }
     },
-    createDependencies: async (payload) => {
+    createDependencies: async ({ context, tx }) => {
       try {
-        const result = await plugin.createDependencies(
-          pluginOptions,
-          payload.context
-        );
+        const result = await plugin.createDependencies(pluginOptions, context);
         return {
           type: 'createDependenciesResult',
-          payload: { dependencies: result, success: true },
+          payload: { dependencies: result, success: true, tx },
         };
       } catch (e) {
         return {
           type: 'createDependenciesResult',
-          payload: { success: false, error: e.stack },
+          payload: { success: false, error: e.stack, tx },
         };
       }
     },
-    processProjectGraph: async ({ graph, ctx }) => {
+    processProjectGraph: async ({ graph, ctx, tx }) => {
       try {
         const result = await plugin.processProjectGraph(graph, ctx);
         return {
           type: 'processProjectGraphResult',
-          payload: { graph: result, success: true },
+          payload: { graph: result, success: true, tx },
         };
       } catch (e) {
         return {
           type: 'processProjectGraphResult',
-          payload: { success: false, error: e.stack },
+          payload: { success: false, error: e.stack, tx },
         };
       }
     },
