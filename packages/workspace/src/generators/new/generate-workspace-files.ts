@@ -129,8 +129,12 @@ function createReadme(
   const formattedNames = names(name);
   generateFiles(tree, join(__dirname, './files-readme'), directory, {
     formattedNames,
-    includeServe: preset !== Preset.TsStandalone,
+    isJsStandalone: preset === Preset.TsStandalone,
     appName,
+    serveCommand:
+      preset === Preset.NextJs || preset === Preset.NextJsStandalone
+        ? 'dev'
+        : 'serve',
     name,
   });
 }
