@@ -13,7 +13,7 @@ exports[`app generated files content - as-provided general application should ad
 exports[`app generated files content - as-provided general application should configure eslint correctly 1`] = `
 "{
   "extends": ["@nuxt/eslint-config", "../.eslintrc.json"],
-  "ignorePatterns": ["!**/*"],
+  "ignorePatterns": ["!**/*", ".nuxt/**", ".output/**", "node_modules"],
   "overrides": [
     {
       "files": ["*.ts", "*.tsx", "*.js", "*.jsx", "*.vue"],
@@ -34,7 +34,6 @@ import { defineNuxtConfig } from 'nuxt/config';
 export default defineNuxtConfig({
   workspaceDir: '../',
   srcDir: 'src',
-  buildDir: '../dist/my-app/.nuxt',
   devtools: { enabled: true },
   devServer: {
     host: 'localhost',
@@ -52,11 +51,6 @@ export default defineNuxtConfig({
 
   vite: {
     plugins: [nxViteTsPaths()],
-  },
-  nitro: {
-    output: {
-      dir: '../dist/my-app/.output',
-    },
   },
 });
 "
@@ -77,7 +71,7 @@ exports[`app generated files content - as-provided general application should co
 "{
   "compilerOptions": {},
   "files": [],
-  "include": [],
+  "include": [".nuxt/nuxt.d.ts"],
   "references": [
     {
       "path": "./tsconfig.app.json"
@@ -161,7 +155,7 @@ exports[`app generated files content - as-provided general application should co
 "{
   "compilerOptions": {},
   "files": [],
-  "include": [],
+  "include": [".nuxt/nuxt.d.ts"],
   "references": [
     {
       "path": "./tsconfig.app.json"
@@ -222,7 +216,6 @@ import { defineNuxtConfig } from 'nuxt/config';
 export default defineNuxtConfig({
   workspaceDir: '../',
   srcDir: 'src',
-  buildDir: '../dist/myapp1/.nuxt',
   devtools: { enabled: true },
   devServer: {
     host: 'localhost',
@@ -243,11 +236,6 @@ export default defineNuxtConfig({
   vite: {
     plugins: [nxViteTsPaths()],
   },
-  nitro: {
-    output: {
-      dir: '../dist/myapp1/.output',
-    },
-  },
 });
 "
 `;
@@ -260,7 +248,6 @@ import { defineNuxtConfig } from 'nuxt/config';
 export default defineNuxtConfig({
   workspaceDir: '../',
   srcDir: 'src',
-  buildDir: '../dist/myapp3/.nuxt',
   devtools: { enabled: true },
   devServer: {
     host: 'localhost',
@@ -281,11 +268,6 @@ export default defineNuxtConfig({
   vite: {
     plugins: [nxViteTsPaths()],
   },
-  nitro: {
-    output: {
-      dir: '../dist/myapp3/.output',
-    },
-  },
 });
 "
 `;
@@ -298,7 +280,6 @@ import { defineNuxtConfig } from 'nuxt/config';
 export default defineNuxtConfig({
   workspaceDir: '../',
   srcDir: 'src',
-  buildDir: '../dist/myapp2/.nuxt',
   devtools: { enabled: true },
   devServer: {
     host: 'localhost',
@@ -319,11 +300,6 @@ export default defineNuxtConfig({
   vite: {
     plugins: [nxViteTsPaths()],
   },
-  nitro: {
-    output: {
-      dir: '../dist/myapp2/.output',
-    },
-  },
 });
 "
 `;
@@ -336,7 +312,6 @@ import { defineNuxtConfig } from 'nuxt/config';
 export default defineNuxtConfig({
   workspaceDir: '../',
   srcDir: 'src',
-  buildDir: '../dist/myapp4/.nuxt',
   devtools: { enabled: true },
   devServer: {
     host: 'localhost',
@@ -354,11 +329,6 @@ export default defineNuxtConfig({
 
   vite: {
     plugins: [nxViteTsPaths()],
-  },
-  nitro: {
-    output: {
-      dir: '../dist/myapp4/.output',
-    },
   },
 });
 "

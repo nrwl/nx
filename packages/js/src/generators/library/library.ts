@@ -67,8 +67,6 @@ export async function libraryGeneratorInternal(
   tree: Tree,
   schema: LibraryGeneratorSchema
 ) {
-  const filesDir = join(__dirname, './files');
-
   const tasks: GeneratorCallback[] = [];
   tasks.push(
     await jsInitGenerator(tree, {
@@ -79,7 +77,7 @@ export async function libraryGeneratorInternal(
   );
   const options = await normalizeOptions(tree, schema);
 
-  createFiles(tree, options, `${filesDir}/lib`);
+  createFiles(tree, options);
 
   await addProject(tree, options);
 
@@ -125,7 +123,7 @@ export async function libraryGeneratorInternal(
     const jestCallback = await addJest(tree, options);
     tasks.push(jestCallback);
     if (options.bundler === 'swc' || options.bundler === 'rollup') {
-      replaceJestConfig(tree, options, `${filesDir}/jest-config`);
+      replaceJestConfig(tree, options);
     }
   } else if (
     options.unitTestRunner === 'vitest' &&
@@ -442,14 +440,14 @@ function addBabelRc(tree: Tree, options: NormalizedSchema) {
   writeJson(tree, join(options.projectRoot, filename), babelrc);
 }
 
-function createFiles(tree: Tree, options: NormalizedSchema, filesDir: string) {
+function createFiles(tree: Tree, options: NormalizedSchema) {
   const { className, name, propertyName } = names(
     options.projectNames.projectFileName
   );
 
   createProjectTsConfigJson(tree, options);
 
-  generateFiles(tree, filesDir, options.projectRoot, {
+  generateFiles(tree, join(__dirname, './files/lib'), options.projectRoot, {
     ...options,
     dot: '.',
     className,
@@ -463,6 +461,28 @@ function createFiles(tree: Tree, options: NormalizedSchema, filesDir: string) {
     buildable: options.bundler && options.bundler !== 'none',
     hasUnitTestRunner: options.unitTestRunner !== 'none',
   });
+
+  if (!options.rootProject) {
+    generateFiles(
+      tree,
+      join(__dirname, './files/readme'),
+      options.projectRoot,
+      {
+        ...options,
+        dot: '.',
+        className,
+        name,
+        propertyName,
+        js: !!options.js,
+        cliCommand: 'nx',
+        strict: undefined,
+        tmpl: '',
+        offsetFromRoot: offsetFromRoot(options.projectRoot),
+        buildable: options.bundler && options.bundler !== 'none',
+        hasUnitTestRunner: options.unitTestRunner !== 'none',
+      }
+    );
+  }
 
   if (options.bundler === 'swc' || options.bundler === 'rollup') {
     addSwcDependencies(tree);
@@ -569,11 +589,8 @@ async function addJest(
   });
 }
 
-function replaceJestConfig(
-  tree: Tree,
-  options: NormalizedSchema,
-  filesDir: string
-) {
+function replaceJestConfig(tree: Tree, options: NormalizedSchema) {
+  const filesDir = join(__dirname, './files/jest-config');
   // the existing config has to be deleted otherwise the new config won't overwrite it
   const existingJestConfig = joinPathFragments(
     filesDir,
