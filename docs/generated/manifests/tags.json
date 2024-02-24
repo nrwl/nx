@@ -1008,6 +1008,13 @@
       "id": "publish-in-ci-cd",
       "name": "Publish in CI/CD",
       "path": "/recipes/nx-release/publish-in-ci-cd"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/nx-release/automate-github-releases",
+      "id": "automate-github-releases",
+      "name": "Automate GitHub Releases",
+      "path": "/recipes/nx-release/automate-github-releases"
     }
   ],
   "database": [

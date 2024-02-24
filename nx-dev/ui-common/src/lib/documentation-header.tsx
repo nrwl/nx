@@ -5,12 +5,17 @@ import { ThemeSwitcher } from '@nx/nx-dev/ui-theme';
 import cx from 'classnames';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { AnnouncementBanner } from './announcement-banner';
+import { ButtonLink } from './button';
+import { NxCloudIcon } from './nx-cloud-icon';
 
 function Menu({ tabs }: { tabs: any[] }): JSX.Element {
   return (
     <div className="hidden sm:block">
-      <nav className="-mb-px flex space-x-8" aria-label="Tabs">
+      <nav
+        role="documentation-nav"
+        aria-label="Tabs"
+        className="-mb-px flex gap-6"
+      >
         {tabs.map((tab) => (
           <Link
             key={tab.name}
@@ -23,7 +28,7 @@ function Menu({ tabs }: { tabs: any[] }): JSX.Element {
             )}
             aria-current={tab.current ? 'page' : undefined}
           >
-            {tab.content ?? tab.name}
+            {tab.name}
           </Link>
         ))}
       </nav>
@@ -85,11 +90,6 @@ export function DocumentationHeader({
       name: 'AI Chat',
       href: '/ai-chat',
       current: isAiChat,
-      content: (
-        <>
-          <span>AI Chat</span>
-        </>
-      ),
     },
   ];
 
@@ -166,7 +166,7 @@ export function DocumentationHeader({
 
   return (
     <div className="border-b border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800/60 print:hidden">
-      <div className="mx-auto flex w-full items-center sm:space-x-6 lg:py-4 lg:px-8">
+      <div className="mx-auto flex w-full items-center gap-6 lg:py-4 lg:px-8">
         {/*MOBILE MENU*/}
         <div className="flex w-full items-center lg:hidden">
           <button
@@ -221,16 +221,62 @@ export function DocumentationHeader({
           <AlgoliaSearch />
         </div>
         {/*NAVIGATION*/}
-        <div className="hidden flex-grow lg:flex">{/* SPACER */}</div>
-        <div className="hidden lg:flex">
-          <AnnouncementBanner />
-        </div>
         <div className="hidden flex-shrink-0 lg:flex">
           <nav
-            role="accessory-nav"
-            className="items-justified hidden justify-center space-x-4 text-xs lg:flex"
+            role="menu"
+            className="items-justified hidden justify-center space-x-2 text-sm lg:flex"
+          >
+            <h2 className="sr-only">Main navigation</h2>
+            <Link
+              href="/blog"
+              title="Blog"
+              className="hidden px-3 py-2 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500 md:inline-flex"
+            >
+              Blog
+            </Link>
+            <Link
+              href="/community"
+              title="Nx Community: Join us!"
+              className="hidden px-3 py-2 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500 md:inline-flex"
+            >
+              Community
+            </Link>
+            <Link
+              href="/launch-nx"
+              title="Launch Nx"
+              className="relative hidden px-3 py-2 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500 md:inline-flex"
+            >
+              {/*<span className="absolute top-0 right-0 -mt-1 -mr-1 flex h-3 w-3">*/}
+              {/*  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-500 opacity-75 dark:bg-sky-500" />*/}
+              {/*  <span className="relative inline-flex h-3 w-3 rounded-full bg-blue-500 dark:bg-sky-500" />*/}
+              {/*</span>*/}Launch Nx
+            </Link>
+            <a
+              href="https://nx.app/enterprise?utm_source=nx.dev&utm_medium=header-menu"
+              target="_blank"
+              title="Contact us"
+              className="hidden px-3 py-2 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500 md:inline-flex"
+            >
+              Contact us
+            </a>
+          </nav>
+        </div>
+        <div className="hidden flex-grow lg:flex">{/* SPACER */}</div>
+        <div className="hidden flex-shrink-0 lg:flex">
+          <nav
+            role="menu"
+            className="items-justified hidden justify-center space-x-4 lg:flex"
           >
             <ThemeSwitcher />
+            <ButtonLink
+              href="https://nx.app/?utm_source=nx.dev&utm_medium=header-menu"
+              title="Go to app"
+              variant="secondary"
+              size="small"
+            >
+              <NxCloudIcon className="w-4 h-4" aria-hidden="true" />
+              <span>Go to app</span>
+            </ButtonLink>
           </nav>
         </div>
       </div>

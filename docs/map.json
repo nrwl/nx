@@ -1129,6 +1129,12 @@
                   "id": "publish-in-ci-cd",
                   "tags": ["nx-release"],
                   "file": "shared/recipes/nx-release/publish-in-ci-cd"
+                },
+                {
+                  "name": "Automate GitHub Releases",
+                  "id": "automate-github-releases",
+                  "tags": ["nx-release"],
+                  "file": "shared/recipes/nx-release/automate-github-releases"
                 }
               ]
             },

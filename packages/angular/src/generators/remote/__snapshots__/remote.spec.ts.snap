@@ -224,8 +224,8 @@ exports[`MF Remote App Generator --ssr should generate the correct files 8`] = `
 "import { Component } from '@angular/core';
 
 @Component({
-  selector: 'proj-test-entry',
-  template: \`<proj-nx-welcome></proj-nx-welcome>\`,
+  selector: 'app-test-entry',
+  template: \`<app-nx-welcome></app-nx-welcome>\`,
 })
 export class RemoteEntryComponent {}
 "
@@ -448,8 +448,8 @@ exports[`MF Remote App Generator --ssr should generate the correct files when --
 "import { Component } from '@angular/core';
 
 @Component({
-  selector: 'proj-test-entry',
-  template: \`<proj-nx-welcome></proj-nx-welcome>\`
+  selector: 'app-test-entry',
+  template: \`<app-nx-welcome></app-nx-welcome>\`
 })
 export class RemoteEntryComponent {}
 "
@@ -594,8 +594,8 @@ import { NxWelcomeComponent } from './nx-welcome.component';
 @Component({
   standalone: true,
   imports: [CommonModule, NxWelcomeComponent],
-  selector: 'proj-test-entry',
-  template: \`<proj-nx-welcome></proj-nx-welcome>\`,
+  selector: 'app-test-entry',
+  template: \`<app-nx-welcome></app-nx-welcome>\`,
 })
 export class RemoteEntryComponent {}
 "
@@ -657,8 +657,8 @@ import { NxWelcomeComponent } from './nx-welcome.component';
 @Component({
   standalone: true,
   imports: [CommonModule, NxWelcomeComponent],
-  selector: 'proj-test-entry',
-  template: \`<proj-nx-welcome></proj-nx-welcome>\`
+  selector: 'app-test-entry',
+  template: \`<app-nx-welcome></app-nx-welcome>\`
 })
 export class RemoteEntryComponent {}
 "

@@ -34,6 +34,7 @@ interface Schema {
   packageManager?: PackageManager;
   e2eTestRunner?: 'cypress' | 'playwright' | 'detox' | 'jest' | 'none';
   ssr?: boolean;
+  prefix?: string;
 }
 
 export interface NormalizedSchema extends Schema {

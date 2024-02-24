@@ -29,6 +29,44 @@ describe('React Applications', () => {
 
     afterAll(() => cleanupProject());
 
+    it('should be able to use Vite to build and test apps', async () => {
+      const appName = uniq('app');
+      const libName = uniq('lib');
+
+      runCLI(
+        `generate @nx/react:app ${appName} --bundler=vite --no-interactive --skipFormat`
+      );
+      runCLI(
+        `generate @nx/react:lib ${libName} --bundler=none --no-interactive --unit-test-runner=vitest --skipFormat`
+      );
+
+      // Library generated with Vite
+      checkFilesExist(`libs/${libName}/vite.config.ts`);
+
+      const mainPath = `apps/${appName}/src/main.tsx`;
+      updateFile(
+        mainPath,
+        `
+        import '@${proj}/${libName}';
+        ${readFile(mainPath)}
+      `
+      );
+
+      runCLI(`build ${appName}`);
+
+      checkFilesExist(`dist/apps/${appName}/index.html`);
+
+      if (runE2ETests()) {
+        const e2eResults = runCLI(`e2e ${appName}-e2e`, {
+          env: {
+            DEBUG: 'cypress:server:*',
+          },
+        });
+        expect(e2eResults).toContain('All specs passed!');
+        expect(await killPorts()).toBeTruthy();
+      }
+    }, 250_000);
+
     it('should be able to generate a react app + lib (with CSR and SSR)', async () => {
       const appName = uniq('app');
       const libName = uniq('lib');
@@ -123,45 +161,6 @@ describe('React Applications', () => {
         checkE2E: false,
       });
     }, 500000);
-
-    // TODO(crystal, @jaysoo): Investigate why this is failing.
-    it('should be able to use Vite to build and test apps', async () => {
-      const appName = uniq('app');
-      const libName = uniq('lib');
-
-      runCLI(
-        `generate @nx/react:app ${appName} --bundler=vite --no-interactive --skipFormat`
-      );
-      runCLI(
-        `generate @nx/react:lib ${libName} --bundler=none --no-interactive --unit-test-runner=vitest --skipFormat`
-      );
-
-      // Library generated with Vite
-      checkFilesExist(`libs/${libName}/vite.config.ts`);
-
-      const mainPath = `apps/${appName}/src/main.tsx`;
-      updateFile(
-        mainPath,
-        `
-        import '@${proj}/${libName}';
-        ${readFile(mainPath)}
-      `
-      );
-
-      runCLI(`build ${appName}`);
-
-      checkFilesExist(`dist/apps/${appName}/index.html`);
-
-      if (runE2ETests()) {
-        const e2eResults = runCLI(`e2e ${appName}-e2e`, {
-          env: {
-            DEBUG: 'cypress:server:*',
-          },
-        });
-        expect(e2eResults).toContain('All specs passed!');
-        expect(await killPorts()).toBeTruthy();
-      }
-    }, 250_000);
 
     it('should generate app with routing', async () => {
       const appName = uniq('app');
@@ -306,6 +305,48 @@ describe('React Applications', () => {
           const e2eResults = runCLI(`e2e ${appName}-e2e --verbose`);
           expect(e2eResults).toContain('All specs passed!');
         }
+      }, 250_000);
+
+      it('should support tailwind', async () => {
+        const appName = uniq('app');
+        runCLI(
+          `generate @nx/react:app ${appName} --style=tailwind --bundler=vite --no-interactive --skipFormat`
+        );
+
+        // update app to use styled-jsx
+        updateFile(
+          `apps/${appName}/src/app/app.tsx`,
+          `
+       import NxWelcome from './nx-welcome';
+
+        export function App() {
+          return (
+            <div className="w-20 h-20">
+              <NxWelcome title="${appName}" />
+            </div>
+          );
+        }
+
+        export default App;
+
+       `
+        );
+
+        runCLI(`build ${appName}`);
+        const outputAssetFiles = listFiles(`dist/apps/${appName}/assets`);
+        const styleFile = outputAssetFiles.find((filename) =>
+          filename.endsWith('.css')
+        );
+        if (!styleFile) {
+          throw new Error('Could not find bundled css file');
+        }
+        const styleFileContents = readFile(
+          `dist/apps/${appName}/assets/${styleFile}`
+        );
+        const isStyleFileUsingTWClasses =
+          styleFileContents.includes('w-20') &&
+          styleFileContents.includes('h-20');
+        expect(isStyleFileUsingTWClasses).toBeTruthy();
       }, 250_000);
     });
 

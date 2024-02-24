@@ -3,7 +3,10 @@ import * as path from 'path';
 import { runNxSync } from '../../utils/child-process';
 import { linkToNxDevAndExamples } from '../yargs-utils/documentation';
 import { execSync } from 'child_process';
-import { getPackageManagerCommand } from '../../utils/package-manager';
+import {
+  detectPackageManager,
+  getPackageManagerCommand,
+} from '../../utils/package-manager';
 import { writeJsonFile } from '../../utils/fileutils';
 import { workspaceRoot } from '../../utils/workspace-root';
 
@@ -131,21 +134,35 @@ function runMigration() {
 }
 
 function nxCliPath() {
+  const version = process.env.NX_MIGRATE_CLI_VERSION || 'latest';
   try {
-    const packageManager = getPackageManagerCommand();
+    const packageManager = detectPackageManager();
+    const pmc = getPackageManagerCommand(packageManager);
 
     const { dirSync } = require('tmp');
     const tmpDir = dirSync().name;
-    const version =
-      process.env.NX_MIGRATE_USE_NEXT === 'true' ? 'next' : 'latest';
     writeJsonFile(path.join(tmpDir, 'package.json'), {
       dependencies: {
         nx: version,
       },
       license: 'MIT',
     });
+    if (pmc.preInstall) {
+      // ensure package.json and repo in tmp folder is set to a proper package manager state
+      execSync(pmc.preInstall, {
+        cwd: tmpDir,
+        stdio: ['ignore', 'ignore', 'ignore'],
+      });
+      // if it's berry ensure we set the node_linker to node-modules
+      if (packageManager === 'yarn' && pmc.ciInstall.includes('immutable')) {
+        execSync(pmc.preInstall, {
+          cwd: 'yarn config set nodeLinker node-modules',
+          stdio: ['ignore', 'ignore', 'ignore'],
+        });
+      }
+    }
 
-    execSync(packageManager.install, {
+    execSync(pmc.install, {
       cwd: tmpDir,
       stdio: ['ignore', 'ignore', 'ignore'],
     });
@@ -157,7 +174,7 @@ function nxCliPath() {
     return path.join(tmpDir, `node_modules`, '.bin', 'nx');
   } catch (e) {
     console.error(
-      'Failed to install the latest version of the migration script. Using the current version.'
+      `Failed to install the ${version} version of the migration script. Using the current version.`
     );
     if (process.env.NX_VERBOSE_LOGGING) {
       console.error(e);

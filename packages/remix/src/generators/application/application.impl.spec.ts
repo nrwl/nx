@@ -74,6 +74,7 @@ describe('Remix Application', () => {
         expect(
           tree.read('tests/routes/_index.spec.tsx', 'utf-8')
         ).toMatchSnapshot();
+        expect(tree.read('tsconfig.spec.json', 'utf-8')).toMatchSnapshot();
         expect(tree.read('test-setup.ts', 'utf-8')).toMatchSnapshot();
       });
 
@@ -281,6 +282,9 @@ describe('Remix Application', () => {
           ).toMatchSnapshot();
           expect(
             tree.read(`${appDir}/test-setup.ts`, 'utf-8')
+          ).toMatchSnapshot();
+          expect(
+            tree.read(`${appDir}/tsconfig.spec.json`, 'utf-8')
           ).toMatchSnapshot();
         });
 

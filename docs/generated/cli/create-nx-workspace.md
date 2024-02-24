@@ -135,6 +135,12 @@ Default: `npm`
 
 Package manager to use
 
+### prefix
+
+Type: `string`
+
+Prefix to use for Angular component and directive selectors.
+
 ### preset
 
 Type: `string`
