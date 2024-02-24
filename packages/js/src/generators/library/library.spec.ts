@@ -42,6 +42,7 @@ describe('lib', () => {
       });
       expect(readJson(tree, '/my-lib/package.json')).toEqual({
         name: '@proj/my-lib',
+        private: true,
         version: '0.0.1',
         type: 'commonjs',
         scripts: {

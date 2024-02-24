@@ -513,12 +513,16 @@ function createFiles(tree: Tree, options: NormalizedSchema, filesDir: string) {
       };
     });
   } else {
-    writeJson<PackageJson>(tree, packageJsonPath, {
+    const packageJson: PackageJson = {
       name: options.importPath,
       version: '0.0.1',
       dependencies: determineDependencies(options),
       ...determineEntryFields(options),
-    });
+    };
+    if (!options.publishable && !options.rootProject) {
+      packageJson.private = true;
+    }
+    writeJson<PackageJson>(tree, packageJsonPath, packageJson);
   }
 
   if (options.config === 'npm-scripts') {
