@@ -333,7 +333,8 @@ To fix this you will either need to add a package.json file at that location, or
             specifier = await resolveSemverSpecifierFromConventionalCommits(
               previousVersionRef,
               options.projectGraph,
-              affectedProjects
+              affectedProjects,
+              options.conventionalCommitsConfig
             );
 
             if (!specifier) {

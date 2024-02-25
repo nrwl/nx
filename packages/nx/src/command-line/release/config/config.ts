@@ -15,6 +15,7 @@ import { NxJsonConfiguration } from '../../../config/nx-json';
 import { output, type ProjectGraph } from '../../../devkit-exports';
 import { findMatchingProjects } from '../../../utils/find-matching-projects';
 import { resolveNxJsonConfigErrorMessage } from '../utils/resolve-nx-json-error-message';
+import { DEFAULT_CONVENTIONAL_COMMITS_CONFIG } from './conventional-commits';
 
 type DeepRequired<T> = Required<{
   [K in keyof T]: T[K] extends Required<T[K]> ? T[K] : DeepRequired<T[K]>;
@@ -32,6 +33,14 @@ type RemoveTrueFromProperties<T, K extends keyof T> = {
 };
 type RemoveTrueFromPropertiesOnEach<T, K extends keyof T[keyof T]> = {
   [U in keyof T]: RemoveTrueFromProperties<T[U], K>;
+};
+
+type RemoveFalseFromType<T> = T extends false ? never : T;
+type RemoveFalseFromProperties<T, K extends keyof T> = {
+  [P in keyof T]: P extends K ? RemoveFalseFromType<T[P]> : T[P];
+};
+type RemoveFalseFromPropertiesOnEach<T, K extends keyof T[keyof T]> = {
+  [U in keyof T]: RemoveFalseFromProperties<T[U], K>;
 };
 
 export const IMPLICIT_DEFAULT_RELEASE_GROUP = '__default__';
@@ -59,6 +68,20 @@ export type NxReleaseConfig = Omit<
         DeepRequired<NxJsonConfiguration['release']['changelog']>,
         'workspaceChangelog' | 'projectChangelogs'
       >;
+      // Remove the false shorthand from the conventionalCommits config types, it will be normalized to a semver bump of "none" and to be hidden on the changelog
+      conventionalCommits: {
+        types: RemoveFalseFromPropertiesOnEach<
+          DeepRequired<
+            RemoveFalseFromProperties<
+              DeepRequired<
+                NxJsonConfiguration['release']['conventionalCommits']['types']
+              >,
+              string
+            >
+          >,
+          'changelog'
+        >;
+      };
     }
   >,
   // projects is just a shorthand for the default group's projects configuration, it does not exist in the final config
@@ -203,6 +226,7 @@ export async function createNxReleaseConfig(
       (workspaceProjectsRelationship === 'independent'
         ? defaultIndependentReleaseTagPattern
         : defaultFixedReleaseTagPattern),
+    conventionalCommits: DEFAULT_CONVENTIONAL_COMMITS_CONFIG,
   };
 
   const groupProjectsRelationship =
@@ -278,6 +302,16 @@ export async function createNxReleaseConfig(
       NxReleaseConfig['changelog']
     >
   );
+
+  const rootConventionalCommitsConfig: NxReleaseConfig['conventionalCommits'] =
+    fillUnspecifiedConventionalCommitsProperties(
+      deepMergeDefaults(
+        [WORKSPACE_DEFAULTS.conventionalCommits],
+        normalizeConventionalCommitsConfig(
+          userConfig.conventionalCommits
+        ) as NxReleaseConfig['conventionalCommits']
+      )
+    );
 
   // git configuration is not supported at the group level, only the root/command level
   const rootVersionWithoutGit = { ...rootVersionConfig };
@@ -463,6 +497,7 @@ export async function createNxReleaseConfig(
       version: rootVersionConfig,
       changelog: rootChangelogConfig,
       groups: releaseGroups,
+      conventionalCommits: rootConventionalCommitsConfig,
     },
   };
 }
@@ -474,6 +509,69 @@ export async function createNxReleaseConfig(
  */
 function normalizeTrueToEmptyObject<T>(value: T | boolean): T | {} {
   return value === true ? {} : value;
+}
+
+function normalizeConventionalCommitsConfig(
+  userConventionalCommitsConfig: NxJsonConfiguration['release']['conventionalCommits']
+): NxJsonConfiguration['release']['conventionalCommits'] {
+  if (!userConventionalCommitsConfig || !userConventionalCommitsConfig.types) {
+    return userConventionalCommitsConfig;
+  }
+
+  const types: NxJsonConfiguration['release']['conventionalCommits']['types'] =
+    {};
+  for (const [t, typeConfig] of Object.entries(
+    userConventionalCommitsConfig.types
+  )) {
+    if (typeConfig === false) {
+      types[t] = {
+        semverBump: 'none',
+        changelog: {
+          hidden: true,
+        },
+      };
+      continue;
+    }
+    if (typeConfig.changelog === false) {
+      types[t] = {
+        ...typeConfig,
+        changelog: {
+          hidden: true,
+        },
+      };
+      continue;
+    }
+
+    types[t] = typeConfig;
+  }
+
+  return {
+    ...userConventionalCommitsConfig,
+    types,
+  };
+}
+
+/**
+ * New, custom types specified by users will not be given the appropriate
+ * defaults with `deepMergeDefaults`, so we need to fill in the gaps here.
+ */
+function fillUnspecifiedConventionalCommitsProperties(
+  config: NxReleaseConfig['conventionalCommits']
+) {
+  const types: NxReleaseConfig['conventionalCommits']['types'] = {};
+  for (const [t, typeConfig] of Object.entries(config.types)) {
+    types[t] = {
+      semverBump: typeConfig.semverBump || 'patch',
+      changelog: {
+        hidden: typeConfig.changelog?.hidden || false,
+        title: typeConfig.changelog?.title || t,
+      },
+    };
+  }
+  return {
+    ...config,
+    types,
+  };
 }
 
 export async function handleNxReleaseConfigError(

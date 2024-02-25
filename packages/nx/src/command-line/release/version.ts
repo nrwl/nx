@@ -23,6 +23,7 @@ import { parseGeneratorString } from '../generate/generate';
 import { getGeneratorInformation } from '../generate/generator-utils';
 import { VersionOptions } from './command-object';
 import {
+  NxReleaseConfig,
   createNxReleaseConfig,
   handleNxReleaseConfigError,
 } from './config/config';
@@ -67,6 +68,7 @@ export interface ReleaseVersionGeneratorSchema {
   firstRelease?: boolean;
   // auto means the existing prefix will be preserved, and is the default behavior
   versionPrefix?: typeof validReleaseVersionPrefixes[number];
+  conventionalCommitsConfig?: NxReleaseConfig['conventionalCommits'];
 }
 
 export interface NxReleaseVersionResult {
@@ -199,7 +201,8 @@ export async function releaseVersion(
           generatorData,
           projectNames,
           releaseGroup,
-          versionData
+          versionData,
+          nxReleaseConfig.conventionalCommits
         );
         // Capture the callback so that we can run it after flushing the changes to disk
         generatorCallbacks.push(async () => {
@@ -326,7 +329,8 @@ export async function releaseVersion(
         generatorData,
         projectNames,
         releaseGroup,
-        versionData
+        versionData,
+        nxReleaseConfig.conventionalCommits
       );
       // Capture the callback so that we can run it after flushing the changes to disk
       generatorCallbacks.push(async () => {
@@ -447,7 +451,8 @@ async function runVersionOnProjects(
   generatorData: GeneratorData,
   projectNames: string[],
   releaseGroup: ReleaseGroupWithName,
-  versionData: VersionData
+  versionData: VersionData,
+  conventionalCommitsConfig: NxReleaseConfig['conventionalCommits']
 ): Promise<ReleaseVersionGeneratorResult['callback']> {
   const generatorOptions: ReleaseVersionGeneratorSchema = {
     // Always ensure a string to avoid generator schema validation errors
@@ -459,6 +464,7 @@ async function runVersionOnProjects(
     projectGraph,
     releaseGroup,
     firstRelease: args.firstRelease ?? false,
+    conventionalCommitsConfig,
   };
 
   // Apply generator defaults from schema.json file etc
