@@ -81,8 +81,10 @@ export class ExternalApiImpl extends ExternalApi {
     }
   }
 
-  openProjectDetails(projectName: string, targetName?: string) {
-    this.router.navigate(`/project-details/${encodeURIComponent(projectName)}`);
+  async openProjectDetails(projectName: string, targetName?: string) {
+    await this.router.navigate(
+      `/project-details/${encodeURIComponent(projectName)}`
+    );
     if (targetName) {
       this.focusTargetInProjectDetails(targetName);
     }

@@ -386,7 +386,7 @@ const tips: NewYearTip[] = [
         <p className="my-4">
           Read more about using Nx to{' '}
           <Link
-            href="/core-features/automate-updating-dependencies"
+            href="/features/automate-updating-dependencies"
             className="underline text-slate-900 dark:text-slate-100"
           >
             Automate Updating Dependencies

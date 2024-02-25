@@ -72,7 +72,7 @@ export default async function buildExecutor(
     packageJson.scripts ??= {};
     // Don't override existing custom script since project may have its own server.
     if (!packageJson.scripts.start) {
-      packageJson.scripts['start'] = 'remix-serve ./build';
+      packageJson.scripts['start'] = 'remix-serve ./build/index.js';
     }
 
     updatePackageJson(packageJson, context);

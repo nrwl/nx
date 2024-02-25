@@ -9,17 +9,16 @@ The code for this example is available on GitHub:
 We'll be using an Nx Plugin for Rust
 called [@monodon/rust](https://github.com/cammisuli/monodon/tree/main/packages/rust).
 
-{% pill url="/core-features/run-tasks" %}✅ Run Tasks{% /pill %}
-{% pill url="/core-features/cache-task-results" %}✅ Cache Task Results{% /pill %}
+{% pill url="/features/run-tasks" %}✅ Run Tasks{% /pill %}
+{% pill url="/features/cache-task-results" %}✅ Cache Task Results{% /pill %}
 {% pill url="/ci/features/remote-cache" %}✅ Share Your Cache{% /pill %}
-{% pill url="/core-features/explore-graph" %}✅ Explore the Graph{% /pill %}
+{% pill url="/features/explore-graph" %}✅ Explore the Graph{% /pill %}
 {% pill url="/ci/features/distribute-task-execution" %}✅ Distribute Task Execution{% /pill %}
-{% pill url="/core-features/integrate-with-editors" %}✅ Integrate with Editors{% /pill %}
-{% pill url="/core-features/automate-updating-dependencies" %}✅ Automate Updating Nx{% /pill %}
-{% pill url="/core-features/enforce-module-boundaries" %}✅ Enforce Module Boundaries{% /pill %}
-{% pill url="/core-features/plugin-features/use-task-executors" %}✅ Use Task Executors{% /pill %}
-{% pill url="/core-features/plugin-features/use-code-generators" %}✅ Use Code Generators{% /pill %}
-{% pill url="/core-features/automate-updating-dependencies" %}✅ Automate Updating Framework Dependencies{% /pill %}
+{% pill url="/features/integrate-with-editors" %}✅ Integrate with Editors{% /pill %}
+{% pill url="/features/automate-updating-dependencies" %}✅ Automate Updating Nx{% /pill %}
+{% pill url="/features/enforce-module-boundaries" %}✅ Enforce Module Boundaries{% /pill %}
+{% pill url="/features/generate-code" %}✅ Use Code Generators{% /pill %}
+{% pill url="/features/automate-updating-dependencies" %}✅ Automate Updating Framework Dependencies{% /pill %}
 
 ## Create the workspace with the `@monodon/rust` preset
 

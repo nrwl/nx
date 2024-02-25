@@ -36,6 +36,8 @@ export async function addLintingGenerator(
     setParserOptionsProject: options.setParserOptionsProject,
     skipFormat: true,
     rootProject: rootProject,
+    addPlugin: false,
+    addExplicitTargets: true,
   });
   tasks.push(lintTask);
 

@@ -13,6 +13,7 @@ env:
 
 jobs:
   build:
+    if: ${{ github.repository_owner == 'nrwl' }}
     strategy:
       fail-fast: false
       matrix:
@@ -157,6 +158,7 @@ jobs:
           if-no-files-found: error
 
   build-freebsd:
+     if: ${{ github.repository_owner == 'nrwl' }}
      runs-on: macos-13-large
      name: Build FreeBSD
      timeout-minutes: 45

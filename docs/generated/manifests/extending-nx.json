@@ -105,7 +105,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/extending-nx/recipes/local-executors",
-        "tags": ["use-task-executors"]
+        "tags": []
       },
       {
         "id": "compose-executors",
@@ -116,7 +116,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/extending-nx/recipes/compose-executors",
-        "tags": ["use-task-executors"]
+        "tags": []
       },
       {
         "id": "local-generators",
@@ -127,7 +127,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/extending-nx/recipes/local-generators",
-        "tags": ["use-code-generators"]
+        "tags": ["generate-code"]
       },
       {
         "id": "composing-generators",
@@ -138,7 +138,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/extending-nx/recipes/composing-generators",
-        "tags": ["use-code-generators"]
+        "tags": ["generate-code"]
       },
       {
         "id": "generator-options",
@@ -149,7 +149,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/extending-nx/recipes/generator-options",
-        "tags": ["use-code-generators"]
+        "tags": ["generate-code"]
       },
       {
         "id": "creating-files",
@@ -160,7 +160,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/extending-nx/recipes/creating-files",
-        "tags": ["use-code-generators"]
+        "tags": ["generate-code"]
       },
       {
         "id": "modifying-files",
@@ -171,7 +171,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/extending-nx/recipes/modifying-files",
-        "tags": ["use-code-generators"]
+        "tags": ["generate-code"]
       },
       {
         "id": "migration-generators",
@@ -231,7 +231,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/extending-nx/recipes/local-executors",
-    "tags": ["use-task-executors"]
+    "tags": []
   },
   "/extending-nx/recipes/compose-executors": {
     "id": "compose-executors",
@@ -242,7 +242,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/extending-nx/recipes/compose-executors",
-    "tags": ["use-task-executors"]
+    "tags": []
   },
   "/extending-nx/recipes/local-generators": {
     "id": "local-generators",
@@ -253,7 +253,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/extending-nx/recipes/local-generators",
-    "tags": ["use-code-generators"]
+    "tags": ["generate-code"]
   },
   "/extending-nx/recipes/composing-generators": {
     "id": "composing-generators",
@@ -264,7 +264,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/extending-nx/recipes/composing-generators",
-    "tags": ["use-code-generators"]
+    "tags": ["generate-code"]
   },
   "/extending-nx/recipes/generator-options": {
     "id": "generator-options",
@@ -275,7 +275,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/extending-nx/recipes/generator-options",
-    "tags": ["use-code-generators"]
+    "tags": ["generate-code"]
   },
   "/extending-nx/recipes/creating-files": {
     "id": "creating-files",
@@ -286,7 +286,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/extending-nx/recipes/creating-files",
-    "tags": ["use-code-generators"]
+    "tags": ["generate-code"]
   },
   "/extending-nx/recipes/modifying-files": {
     "id": "modifying-files",
@@ -297,7 +297,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/extending-nx/recipes/modifying-files",
-    "tags": ["use-code-generators"]
+    "tags": ["generate-code"]
   },
   "/extending-nx/recipes/migration-generators": {
     "id": "migration-generators",

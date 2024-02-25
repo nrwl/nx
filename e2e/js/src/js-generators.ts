@@ -2,7 +2,6 @@ import {
   checkFilesDoNotExist,
   checkFilesExist,
   cleanupProject,
-  createFile,
   newProject,
   readFile,
   readJson,

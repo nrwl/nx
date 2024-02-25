@@ -1,6 +1,6 @@
 {
   "name": "init",
-  "factory": "./src/generators/init/init",
+  "factory": "./src/generators/init/init#initGeneratorInternal",
   "schema": {
     "cli": "nx",
     "title": "Add Storybook Configuration to the workspace",
@@ -36,7 +36,7 @@
   "description": "Add Storybook configuration to the workspace.",
   "aliases": ["ng-add"],
   "hidden": true,
-  "implementation": "/packages/storybook/src/generators/init/init.ts",
+  "implementation": "/packages/storybook/src/generators/init/init#initGeneratorInternal.ts",
   "path": "/packages/storybook/src/generators/init/schema.json",
   "type": "generator"
 }

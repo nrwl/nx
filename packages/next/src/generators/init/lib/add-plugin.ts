@@ -20,6 +20,7 @@ export function addPlugin(tree: Tree) {
       buildTargetName: 'build',
       devTargetName: 'dev',
       startTargetName: 'start',
+      serveStaticTargetName: 'serve-static',
     },
   });
 

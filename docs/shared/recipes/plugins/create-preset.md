@@ -11,7 +11,7 @@ title="Develop a Nx Preset for your Nx Plugin"
 
 ## What is a preset?
 
-At its core, a preset is a special [generator](/core-features/plugin-features/use-code-generators) that is shipped as part of an Nx Plugin package.
+At its core, a preset is a special [generator](/features/generate-code) that is shipped as part of an Nx Plugin package.
 
 All first-party Nx presets are built into Nx itself, but you can [create your own plugin](/extending-nx/intro/getting-started) and create a generator with the magic name: `preset`. Once you've [published your plugin](/extending-nx/tutorials/publish-plugin) on npm, you can now run the `create-nx-workspace` command with the preset option set to the name of your published package.
 

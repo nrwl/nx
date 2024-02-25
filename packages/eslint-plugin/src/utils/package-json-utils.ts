@@ -17,16 +17,21 @@ export function getAllDependencies(
 export function getProductionDependencies(
   packageJsonPath: string
 ): Record<string, string> {
-  if (!globalThis.projPackageJsonDeps || !isTerminalRun()) {
+  if (
+    !globalThis.projPackageJsonDeps ||
+    !globalThis.projPackageJsonDeps[packageJsonPath] ||
+    !isTerminalRun()
+  ) {
     const packageJson = getPackageJson(packageJsonPath);
-    globalThis.projPackageJsonDeps = {
+    globalThis.projPackageJsonDeps = globalThis.projPackageJsonDeps || {};
+    globalThis.projPackageJsonDeps[packageJsonPath] = {
       ...packageJson.dependencies,
       ...packageJson.peerDependencies,
       ...packageJson.optionalDependencies,
     };
   }
 
-  return globalThis.projPackageJsonDeps;
+  return globalThis.projPackageJsonDeps[packageJsonPath];
 }
 
 export function getPackageJson(path: string): PackageJson {

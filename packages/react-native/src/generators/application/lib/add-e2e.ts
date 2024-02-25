@@ -29,7 +29,6 @@ export async function addE2e(
         unitTestRunner: 'none',
       });
     case 'detox':
-    case 'detox':
       const { detoxApplicationGenerator } = ensurePackage<
         typeof import('@nx/detox')
       >('@nx/detox', nxVersion);

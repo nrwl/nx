@@ -11,12 +11,13 @@ import {
   runNgNew,
 } from '../../utils';
 
-describe('nx init (Angular CLI)', () => {
+describe('nx init (Angular CLI - legacy)', () => {
   let project: string;
   let packageManager: PackageManager;
   let pmc: ReturnType<typeof getPackageManagerCommand>;
 
   beforeEach(() => {
+    process.env.NX_ADD_PLUGINS = 'false';
     packageManager = getSelectedPackageManager();
     // TODO: solve issues with pnpm and remove this fallback
     packageManager = packageManager === 'pnpm' ? 'yarn' : packageManager;
@@ -25,6 +26,7 @@ describe('nx init (Angular CLI)', () => {
   });
 
   afterEach(() => {
+    delete process.env.NX_ADD_PLUGINS;
     cleanupProject();
   });
 

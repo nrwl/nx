@@ -36,62 +36,229 @@ exports[`preset should create files (preset = angular-monorepo) 3`] = `
 ]
 `;
 
+exports[`preset should create files (preset = react-monorepo) 1`] = `
+"const { NxWebpackPlugin } = require('@nx/webpack');
+const { NxReactWebpackPlugin } = require('@nx/react');
+const { join } = require('path');
+
+module.exports = {
+  output: {
+    path: join(__dirname, '../../dist/apps/proj'),
+  },
+  devServer: {
+    port: 4200,
+  },
+  plugins: [
+    new NxWebpackPlugin({
+      tsConfig: './tsconfig.app.json',
+      compiler: 'babel',
+      main: './src/main.tsx',
+      index: './src/index.html',
+      baseHref: '/',
+      assets: ['./src/favicon.ico', './src/assets'],
+      styles: ['./src/styles.css'],
+      outputHashing: process.env['NODE_ENV'] === 'production' ? 'all' : 'none',
+      optimization: process.env['NODE_ENV'] === 'production',
+    }),
+    new NxReactWebpackPlugin({
+      // Uncomment this line if you don't want to use SVGR
+      // See: https://react-svgr.com/
+      // svgr: false
+    }),
+  ],
+};
+"
+`;
+
 exports[`preset should create files (preset = react-standalone bundler = vite) 1`] = `
-{
-  "configurations": {
-    "development": {
-      "buildTarget": "proj:build:development",
-      "hmr": true,
-    },
-    "production": {
-      "buildTarget": "proj:build:production",
-      "hmr": false,
+"/// <reference types='vitest' />
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+
+export default defineConfig({
+  root: __dirname,
+  cacheDir: './node_modules/.vite/.',
+
+  server: {
+    port: 4200,
+    host: 'localhost',
+  },
+
+  preview: {
+    port: 4300,
+    host: 'localhost',
+  },
+
+  plugins: [react(), nxViteTsPaths()],
+
+  // Uncomment this if you are using workers.
+  // worker: {
+  //  plugins: [ nxViteTsPaths() ],
+  // },
+
+  build: {
+    outDir: './dist/proj',
+    reportCompressedSize: true,
+    commonjsOptions: {
+      transformMixedEsModules: true,
     },
   },
-  "defaultConfiguration": "development",
-  "executor": "@nx/vite:dev-server",
-  "options": {
-    "buildTarget": "proj:build",
+
+  test: {
+    globals: true,
+    cache: {
+      dir: './node_modules/.vitest',
+    },
+    environment: 'jsdom',
+    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+
+    reporters: ['default'],
+    coverage: {
+      reportsDirectory: './coverage/proj',
+      provider: 'v8',
+    },
   },
-}
+});
+"
 `;
 
 exports[`preset should create files (preset = react-standalone bundler = webpack) 1`] = `
-{
-  "configurations": {
-    "development": {
-      "buildTarget": "proj:build:development",
-    },
-    "production": {
-      "buildTarget": "proj:build:production",
-      "hmr": false,
+"const { NxWebpackPlugin } = require('@nx/webpack');
+const { NxReactWebpackPlugin } = require('@nx/react');
+const { join } = require('path');
+
+module.exports = {
+  output: {
+    path: join(__dirname, './dist/proj'),
+  },
+  devServer: {
+    port: 4200,
+  },
+  plugins: [
+    new NxWebpackPlugin({
+      tsConfig: './tsconfig.app.json',
+      compiler: 'babel',
+      main: './src/main.tsx',
+      index: './src/index.html',
+      baseHref: '/',
+      assets: ['./src/favicon.ico', './src/assets'],
+      styles: ['./src/styles.css'],
+      outputHashing: process.env['NODE_ENV'] === 'production' ? 'all' : 'none',
+      optimization: process.env['NODE_ENV'] === 'production',
+    }),
+    new NxReactWebpackPlugin({
+      // Uncomment this line if you don't want to use SVGR
+      // See: https://react-svgr.com/
+      // svgr: false
+    }),
+  ],
+};
+"
+`;
+
+exports[`preset should create files (preset = vue-monorepo) 1`] = `
+"/// <reference types='vitest' />
+import { defineConfig } from 'vite';
+import vue from '@vitejs/plugin-vue';
+import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+
+export default defineConfig({
+  root: __dirname,
+  cacheDir: '../../node_modules/.vite/apps/proj',
+
+  server: {
+    port: 4200,
+    host: 'localhost',
+  },
+
+  preview: {
+    port: 4300,
+    host: 'localhost',
+  },
+
+  plugins: [vue(), nxViteTsPaths()],
+
+  // Uncomment this if you are using workers.
+  // worker: {
+  //  plugins: [ nxViteTsPaths() ],
+  // },
+
+  build: {
+    outDir: '../../dist/apps/proj',
+    reportCompressedSize: true,
+    commonjsOptions: {
+      transformMixedEsModules: true,
     },
   },
-  "defaultConfiguration": "development",
-  "executor": "@nx/webpack:dev-server",
-  "options": {
-    "buildTarget": "proj:build",
-    "hmr": true,
+
+  test: {
+    globals: true,
+    cache: {
+      dir: '../../node_modules/.vitest',
+    },
+    environment: 'jsdom',
+    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+
+    reporters: ['default'],
+    coverage: {
+      reportsDirectory: '../../coverage/apps/proj',
+      provider: 'v8',
+    },
   },
-}
+});
+"
 `;
 
 exports[`preset should create files (preset = vue-standalone) 1`] = `
-{
-  "configurations": {
-    "development": {
-      "buildTarget": "proj:build:development",
-      "hmr": true,
-    },
-    "production": {
-      "buildTarget": "proj:build:production",
-      "hmr": false,
+"/// <reference types='vitest' />
+import { defineConfig } from 'vite';
+import vue from '@vitejs/plugin-vue';
+import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+
+export default defineConfig({
+  root: __dirname,
+  cacheDir: './node_modules/.vite/.',
+
+  server: {
+    port: 4200,
+    host: 'localhost',
+  },
+
+  preview: {
+    port: 4300,
+    host: 'localhost',
+  },
+
+  plugins: [vue(), nxViteTsPaths()],
+
+  // Uncomment this if you are using workers.
+  // worker: {
+  //  plugins: [ nxViteTsPaths() ],
+  // },
+
+  build: {
+    outDir: './dist/proj',
+    reportCompressedSize: true,
+    commonjsOptions: {
+      transformMixedEsModules: true,
     },
   },
-  "defaultConfiguration": "development",
-  "executor": "@nx/vite:dev-server",
-  "options": {
-    "buildTarget": "proj:build",
+
+  test: {
+    globals: true,
+    cache: {
+      dir: './node_modules/.vitest',
+    },
+    environment: 'jsdom',
+    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+
+    reporters: ['default'],
+    coverage: {
+      reportsDirectory: './coverage/proj',
+      provider: 'v8',
+    },
   },
-}
+});
+"
 `;

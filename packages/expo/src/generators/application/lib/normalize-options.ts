@@ -30,6 +30,7 @@ export async function normalizeOptions(
     callingGenerator: '@nx/expo:application',
   });
   options.projectNameAndRootFormat = projectNameAndRootFormat;
+  options.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
 
   const { className } = names(options.name);
   const parsedTags = options.tags

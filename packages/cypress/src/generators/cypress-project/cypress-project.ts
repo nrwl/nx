@@ -177,6 +177,7 @@ function addProject(tree: Tree, options: CypressProjectSchema) {
 export async function cypressProjectGenerator(host: Tree, schema: Schema) {
   return await cypressProjectGeneratorInternal(host, {
     projectNameAndRootFormat: 'derived',
+    addPlugin: false,
     ...schema,
   });
 }
@@ -196,7 +197,11 @@ export async function cypressProjectGeneratorInternal(
   if (!cypressVersion) {
     tasks.push(await jsInitGenerator(host, { ...options, skipFormat: true }));
     tasks.push(
-      await cypressInitGenerator(host, { ...options, skipFormat: true })
+      await cypressInitGenerator(host, {
+        ...options,
+        skipFormat: true,
+        addPlugin: options.addPlugin,
+      })
     );
   }
 

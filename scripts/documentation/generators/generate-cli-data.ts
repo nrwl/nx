@@ -18,6 +18,7 @@ import {
 const importFresh = require('import-fresh');
 
 const sharedCommands = ['generate', 'run', 'exec'];
+const hiddenCommands = ['$0'];
 
 export async function generateCliDocumentation(
   commandsOutputDirectory: string
@@ -97,8 +98,12 @@ description: "${command.description}"
   const nxCommands = getCommands(commandsObject);
   await Promise.all(
     Object.keys(nxCommands)
-      .filter((name) => !sharedCommands.includes(name))
-      .filter((name) => nxCommands[name].description)
+      .filter(
+        (name) =>
+          !sharedCommands.includes(name) &&
+          !hiddenCommands.includes(name) &&
+          nxCommands[name].description
+      )
       .map((name) => parseCommand(name, nxCommands[name]))
       .map(async (command) => generateMarkdown(await command))
       .map(async (templateObject) =>

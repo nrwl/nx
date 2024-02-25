@@ -13,8 +13,10 @@ export default async function update(tree: Tree) {
         let content = tree
           .read(joinPathFragments(config.root, 'metro.config.js'))
           .toString();
+        content = content.replace(/blockList: exclusionList(.+?(?=\n))/, '');
+        content = content.replace('// unstable_enableSymlinks: true,', '');
         content = content.replace(
-          `blockList: exclusionList([/^(?!.*node_modules).*/dist/.*/]),`,
+          '// unstable_enablePackageExports: true,',
           ''
         );
         content = content.replace('unstable_enableSymlinks: true,', '');

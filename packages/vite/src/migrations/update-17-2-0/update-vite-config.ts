@@ -12,6 +12,7 @@ import { updateTestConfig } from './lib/edit-test-config';
 import { addFileReplacements } from './lib/add-file-replacements';
 import { tsquery } from '@phenomnomnominal/tsquery';
 import ts = require('typescript');
+import { findViteConfig } from '../../utils/find-vite-config';
 
 export default async function updateBuildDir(tree: Tree) {
   const projects = getProjects(tree);
@@ -52,16 +53,6 @@ export default async function updateBuildDir(tree: Tree) {
   );
 
   await formatFiles(tree);
-}
-
-function findViteConfig(tree: Tree, searchRoot: string) {
-  const allowsExt = ['js', 'mjs', 'ts', 'cjs', 'mts', 'cts'];
-
-  for (const ext of allowsExt) {
-    if (tree.exists(joinPathFragments(searchRoot, `vite.config.${ext}`))) {
-      return joinPathFragments(searchRoot, `vite.config.${ext}`);
-    }
-  }
 }
 
 export function getConfigNode(configFileContents: string): ts.Node | undefined {

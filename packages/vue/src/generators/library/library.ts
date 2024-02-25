@@ -20,7 +20,11 @@ import { addVite } from './lib/add-vite';
 import { ensureDependencies } from '../../utils/ensure-dependencies';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 
-export async function libraryGenerator(tree: Tree, schema: Schema) {
+export function libraryGenerator(tree: Tree, schema: Schema) {
+  return libraryGeneratorInternal(tree, { addPlugin: false, ...schema });
+}
+
+export async function libraryGeneratorInternal(tree: Tree, schema: Schema) {
   const tasks: GeneratorCallback[] = [];
 
   const options = await normalizeOptions(tree, schema);

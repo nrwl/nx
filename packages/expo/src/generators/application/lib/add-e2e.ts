@@ -15,6 +15,8 @@ export async function addE2e(
   tree: Tree,
   options: NormalizedSchema
 ): Promise<GeneratorCallback> {
+  const hasPlugin = hasExpoPlugin(tree);
+  const port = hasPlugin ? 8081 : 4200;
   switch (options.e2eTestRunner) {
     case 'cypress': {
       const hasNxExportPlugin = hasExpoPlugin(tree);
@@ -46,8 +48,8 @@ export async function addE2e(
         bundler: 'none',
         skipFormat: true,
         devServerTarget: `${options.projectName}:serve`,
-        port: 4200,
-        baseUrl: 'http://localhost:4200',
+        port,
+        baseUrl: `http://localhost:${port}`,
         ciWebServerCommand: hasNxExportPlugin
           ? `nx run ${options.projectName}:serve-static`
           : undefined,
@@ -77,7 +79,7 @@ export async function addE2e(
         webServerCommand: `${getPackageManagerCommand().exec} nx serve ${
           options.name
         }`,
-        webServerAddress: 'http://localhost:4200',
+        webServerAddress: `http://localhost:${port}`,
         rootProject: options.rootProject,
       });
     }

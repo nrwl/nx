@@ -37,7 +37,7 @@
       "aliases": ["slice"]
     },
     "storybook-configuration": {
-      "factory": "./src/generators/storybook-configuration/configuration#storybookConfigurationGenerator",
+      "factory": "./src/generators/storybook-configuration/configuration#storybookConfigurationGeneratorInternal",
       "schema": "./src/generators/storybook-configuration/schema.json",
       "description": "Set up storybook for a React app or library.",
       "hidden": false

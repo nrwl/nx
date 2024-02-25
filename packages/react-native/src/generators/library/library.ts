@@ -38,6 +38,7 @@ export async function reactNativeLibraryGenerator(
   schema: Schema
 ): Promise<GeneratorCallback> {
   return await reactNativeLibraryGeneratorInternal(host, {
+    addPlugin: false,
     projectNameAndRootFormat: 'derived',
     ...schema,
   });
@@ -90,7 +91,8 @@ export async function reactNativeLibraryGeneratorInternal(
     options.name,
     options.projectRoot,
     options.js,
-    options.skipPackageJson
+    options.skipPackageJson,
+    options.addPlugin
   );
   tasks.push(jestTask);
 

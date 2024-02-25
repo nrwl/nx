@@ -38,6 +38,7 @@ export async function normalizeOptions(
   }
 
   const normalized = {
+    addPlugin: process.env.NX_ADD_PLUGINS !== 'false',
     ...options,
     bundler,
     fileName,

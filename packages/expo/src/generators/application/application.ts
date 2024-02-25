@@ -26,6 +26,7 @@ export async function expoApplicationGenerator(
   schema: Schema
 ): Promise<GeneratorCallback> {
   return await expoApplicationGeneratorInternal(host, {
+    addPlugin: false,
     projectNameAndRootFormat: 'derived',
     ...schema,
   });
@@ -68,7 +69,8 @@ export async function expoApplicationGeneratorInternal(
     options.projectName,
     options.appProjectRoot,
     options.js,
-    options.skipPackageJson
+    options.skipPackageJson,
+    options.addPlugin
   );
   tasks.push(jestTask);
   const e2eTask = await addE2e(host, options);

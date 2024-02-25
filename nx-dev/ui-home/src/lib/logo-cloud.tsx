@@ -117,10 +117,25 @@ export function LogoCloud(): JSX.Element {
             viewBox="0 0 24 24"
             xmlns="http://www.w3.org/2000/svg"
             fill="currentColor"
-            className="h-12 w-12 text-[#5E5E5E] dark:text-slate-600"
+            className="h-12 w-12"
           >
             <title>Microsoft</title>
-            <path d="M0 0v11.408h11.408V0zm12.594 0v11.408H24V0zM0 12.594V24h11.408V12.594zm12.594 0V24H24V12.594z" />
+            <path
+              d="M0 0v11.408h11.408V0zm12.594"
+              className="text-[#F65314] dark:text-slate-600"
+            />
+            <path
+              d="M12.594 0v11.408H24V0zM0"
+              className="text-[#7CBB00] dark:text-slate-600"
+            />
+            <path
+              d="M0 12.594V24h11.408V12.594zm12.594"
+              className="text-[#00A1F1] dark:text-slate-600"
+            />
+            <path
+              d="M12.594 12.594V24H24V12.594z"
+              className="text-[#FFBB00] dark:text-slate-600"
+            />
           </svg>
         </div>
         <div className="col-span-1 flex items-center justify-center">

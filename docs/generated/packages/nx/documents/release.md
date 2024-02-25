@@ -1,11 +1,11 @@
 ---
 title: 'release - CLI command'
-description: '**ALPHA**: Orchestrate versioning and publishing of applications and libraries'
+description: 'Orchestrate versioning and publishing of applications and libraries'
 ---
 
 # release
 
-**ALPHA**: Orchestrate versioning and publishing of applications and libraries
+Orchestrate versioning and publishing of applications and libraries
 
 ## Usage
 

@@ -10,7 +10,7 @@ const config: StorybookConfig = {
     name: '@storybook/react-vite',
     options: {
       builder: {
-        viteConfigPath: 'libs/storybook-test/vite.config.ts',
+        viteConfigPath: 'vite.config.ts',
       },
     },
   },
@@ -34,7 +34,7 @@ const config: StorybookConfig = {
     name: '@storybook/react-vite',
     options: {
       builder: {
-        viteConfigPath: 'libs/storybook-test/vite.config.ts',
+        viteConfigPath: 'vite.config.ts',
       },
     },
   },
@@ -58,7 +58,7 @@ const config: StorybookConfig = {
     name: '@storybook/react-vite',
     options: {
       builder: {
-        viteConfigPath: 'libs/storybook-test/vite.config.ts',
+        viteConfigPath: 'vite.config.ts',
       },
     },
   },

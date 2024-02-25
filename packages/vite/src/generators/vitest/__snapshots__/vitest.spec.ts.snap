@@ -38,6 +38,11 @@ export default defineConfig({
 "
 `;
 
+exports[`vitest generator tsconfig should add vitest.workspace.ts at the root 1`] = `
+"export default ['**/*/vite.config.ts', '**/*/vitest.config.ts'];
+"
+`;
+
 exports[`vitest generator vite.config should create correct vite.config.ts file for apps 1`] = `
 "/// <reference types='vitest' />
 import { defineConfig } from 'vite';

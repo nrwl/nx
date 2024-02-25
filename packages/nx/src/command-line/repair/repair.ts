@@ -12,16 +12,21 @@ export async function repair(
   }
   const verbose = process.env.NX_VERBOSE_LOGGING === 'true';
   return handleErrors(verbose, async () => {
-    const nxMigrations = Object.entries(migrationsJson.generators).map(
-      ([name, migration]) => {
-        return {
-          package: 'nx',
-          cli: 'nx',
-          name,
-          description: migration.description,
-          version: migration.version,
-        } as const;
-      }
+    const nxMigrations = Object.entries(migrationsJson.generators).reduce(
+      (agg, [name, migration]) => {
+        const skip = migration['x-repair-skip'];
+        if (!skip) {
+          agg.push({
+            package: 'nx',
+            cli: 'nx',
+            name,
+            description: migration.description,
+            version: migration.version,
+          } as const);
+        }
+        return agg;
+      },
+      []
     );
 
     const migrations = [...nxMigrations, ...extraMigrations];

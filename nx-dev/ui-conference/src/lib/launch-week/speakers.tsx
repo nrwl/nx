@@ -12,7 +12,7 @@ export function LaunchWeekSpeakers(): JSX.Element {
     {
       description: `Zack is a Google Developer Expert in Angular, and a Senior Engineer and Engineering Manager for Nrwl, living in the desserts of San Tan Valley, Arizona. Zack particularly enjoys teaching other engineers, breaking down problems into manageable pieces, and building awesome stuff.`,
       imageUrl: '/images/conf/zack-derose.webp',
-      name: 'Zack Derose',
+      name: 'Zack DeRose',
       twitter: 'zackderose',
     },
     {

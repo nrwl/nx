@@ -1,7 +1,9 @@
 import { componentConfigurationGenerator as baseCyCTConfig } from '@nx/cypress';
+import { NxComponentTestingOptions } from '@nx/cypress/plugins/cypress-preset';
 import {
   addDefaultCTConfig,
   addMountDefinition,
+  getProjectCypressConfigPath,
 } from '@nx/cypress/src/utils/config';
 import {
   findBuildConfig,
@@ -23,13 +25,23 @@ import {
 } from '../utils/storybook-ast/component-info';
 import { getProjectEntryPoints } from '../utils/storybook-ast/entry-point';
 import { getModuleFilePaths } from '../utils/storybook-ast/module-info';
+import { updateAppEditorTsConfigExcludedFiles } from '../utils/update-app-editor-tsconfig-excluded-files';
 import { CypressComponentConfigSchema } from './schema';
+
+export function cypressComponentConfiguration(
+  tree: Tree,
+  options: CypressComponentConfigSchema
+) {
+  return cypressComponentConfigurationInternal(tree, {
+    ...options,
+  });
+}
 
 /**
  * This is for cypress built in component testing, if you want to test with
  * storybook + cypress then use the componentCypressGenerator instead.
  */
-export async function cypressComponentConfiguration(
+export async function cypressComponentConfigurationInternal(
   tree: Tree,
   options: CypressComponentConfigSchema
 ) {
@@ -37,10 +49,17 @@ export async function cypressComponentConfiguration(
   const installTask = await baseCyCTConfig(tree, {
     project: options.project,
     skipFormat: true,
+    addPlugin: false,
+    addExplicitTargets: true,
   });
 
-  await updateProjectConfig(tree, options);
+  await configureCypressCT(tree, options);
   await addFiles(tree, projectConfig, options);
+
+  if (projectConfig.projectType === 'application') {
+    updateAppEditorTsConfigExcludedFiles(tree, projectConfig);
+  }
+
   if (!options.skipFormat) {
     await formatFiles(tree);
   }
@@ -53,18 +72,6 @@ async function addFiles(
   projectConfig: ProjectConfiguration,
   options: CypressComponentConfigSchema
 ) {
-  const cyConfigFile = joinPathFragments(
-    projectConfig.root,
-    'cypress.config.ts'
-  );
-  const updatedCyConfig = await addDefaultCTConfig(
-    tree.read(cyConfigFile, 'utf-8')
-  );
-  tree.write(
-    cyConfigFile,
-    `import { nxComponentTestingPreset } from '@nx/angular/plugins/component-testing';\n${updatedCyConfig}`
-  );
-
   const componentFile = joinPathFragments(
     projectConfig.root,
     'cypress',
@@ -115,7 +122,7 @@ async function addFiles(
   }
 }
 
-async function updateProjectConfig(
+async function configureCypressCT(
   tree: Tree,
   options: CypressComponentConfigSchema
 ) {
@@ -135,13 +142,34 @@ async function updateProjectConfig(
     assertValidConfig(found?.config);
   }
 
+  const ctConfigOptions: NxComponentTestingOptions = {};
   const projectConfig = readProjectConfiguration(tree, options.project);
-  projectConfig.targets['component-test'].options = {
-    ...projectConfig.targets['component-test'].options,
-    skipServe: true,
-    devServerTarget: found.target,
-  };
-  updateProjectConfiguration(tree, options.project, projectConfig);
+  if (
+    projectConfig.targets?.['component-test']?.executor ===
+    '@nx/cypress:cypress'
+  ) {
+    projectConfig.targets['component-test'].options = {
+      ...projectConfig.targets['component-test'].options,
+      skipServe: true,
+      devServerTarget: found.target,
+    };
+    updateProjectConfiguration(tree, options.project, projectConfig);
+  } else {
+    ctConfigOptions.buildTarget = found.target;
+  }
+
+  const cypressConfigPath = getProjectCypressConfigPath(
+    tree,
+    projectConfig.root
+  );
+  const updatedCyConfig = await addDefaultCTConfig(
+    tree.read(cypressConfigPath, 'utf-8'),
+    ctConfigOptions
+  );
+  tree.write(
+    cypressConfigPath,
+    `import { nxComponentTestingPreset } from '@nx/angular/plugins/component-testing';\n${updatedCyConfig}`
+  );
 }
 
 function assertValidConfig(config: unknown) {

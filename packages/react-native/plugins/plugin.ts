@@ -24,6 +24,8 @@ export interface ReactNativePluginOptions {
   buildIosTargetName?: string;
   buildAndroidTargetName?: string;
   bundleTargetName?: string;
+  syncDepsTargetName?: string;
+  upgradeTargetname?: string;
 }
 
 const cachePath = join(projectGraphCacheDirectory, 'react-native.hash');
@@ -103,11 +105,13 @@ function buildReactNativeTargets(
 
   const targets: Record<string, TargetConfiguration> = {
     [options.startTargetName]: {
-      executor: `@nx/react-native:start`,
+      command: `react-native start`,
+      options: { cwd: projectRoot },
     },
     [options.podInstallTargetName]: {
       command: `pod install`,
       options: { cwd: joinPathFragments(projectRoot, 'ios') },
+      dependsOn: [`${options.syncDepsTargetName}`],
       cache: true,
       inputs: getInputs(namedInputs),
       outputs: [
@@ -144,6 +148,13 @@ function buildReactNativeTargets(
       options: { cwd: projectRoot },
       dependsOn: [`^${options.bundleTargetName}`],
       inputs: getInputs(namedInputs),
+    },
+    [options.syncDepsTargetName]: {
+      executor: '@nx/react-native:sync-deps',
+    },
+    [options.upgradeTargetname]: {
+      command: `react-native upgrade`,
+      options: { cwd: projectRoot },
     },
   };
 
@@ -207,5 +218,7 @@ function normalizeOptions(
   options.buildIosTargetName ??= 'build-ios';
   options.buildAndroidTargetName ??= 'build-android';
   options.bundleTargetName ??= 'bundle';
+  options.syncDepsTargetName ??= 'sync-deps';
+  options.upgradeTargetname ??= 'upgrade';
   return options;
 }

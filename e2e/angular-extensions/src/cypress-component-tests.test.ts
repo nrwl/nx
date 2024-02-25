@@ -42,8 +42,8 @@ describe('Angular Cypress Component Tests', () => {
     runCLI(
       `generate @nx/angular:cypress-component-configuration --project=${appName} --generate-tests --no-interactive`
     );
-    if (runE2ETests()) {
-      expect(runCLI(`component-test ${appName} --no-watch`)).toContain(
+    if (runE2ETests('cypress')) {
+      expect(runCLI(`component-test ${appName}`)).toContain(
         'All specs passed!'
       );
     }
@@ -53,8 +53,8 @@ describe('Angular Cypress Component Tests', () => {
     runCLI(
       `generate @nx/angular:cypress-component-configuration --project=${usedInAppLibName} --generate-tests --no-interactive`
     );
-    if (runE2ETests()) {
-      expect(runCLI(`component-test ${usedInAppLibName} --no-watch`)).toContain(
+    if (runE2ETests('cypress')) {
+      expect(runCLI(`component-test ${usedInAppLibName}`)).toContain(
         'All specs passed!'
       );
     }
@@ -73,8 +73,8 @@ describe('Angular Cypress Component Tests', () => {
     runCLI(
       `generate @nx/angular:cypress-component-configuration --project=${buildableLibName} --generate-tests --build-target=${appName}:build --no-interactive`
     );
-    if (runE2ETests()) {
-      expect(runCLI(`component-test ${buildableLibName} --no-watch`)).toContain(
+    if (runE2ETests('cypress')) {
+      expect(runCLI(`component-test ${buildableLibName}`)).toContain(
         'All specs passed!'
       );
     }
@@ -95,8 +95,8 @@ describe('Angular Cypress Component Tests', () => {
       }
     );
 
-    if (runE2ETests()) {
-      expect(runCLI(`component-test ${buildableLibName} --no-watch`)).toContain(
+    if (runE2ETests('cypress')) {
+      expect(runCLI(`component-test ${buildableLibName}`)).toContain(
         'All specs passed!'
       );
       checkFilesDoNotExist(`tmp${buildableLibName}/ct-styles.css`);
@@ -111,8 +111,8 @@ describe('Angular Cypress Component Tests', () => {
 
     updateBuilableLibTestsToAssertAppStyles(appName, buildableLibName);
 
-    if (runE2ETests()) {
-      expect(runCLI(`component-test ${buildableLibName} --no-watch`)).toContain(
+    if (runE2ETests('cypress')) {
+      expect(runCLI(`component-test ${buildableLibName}`)).toContain(
         'All specs passed!'
       );
     }
@@ -123,8 +123,8 @@ describe('Angular Cypress Component Tests', () => {
     checkFilesExist('tailwind.config.js');
     checkFilesDoNotExist(`${buildableLibName}/tailwind.config.js`);
 
-    if (runE2ETests()) {
-      expect(runCLI(`component-test ${buildableLibName} --no-watch`)).toContain(
+    if (runE2ETests('cypress')) {
+      expect(runCLI(`component-test ${buildableLibName}`)).toContain(
         'All specs passed!'
       );
     }

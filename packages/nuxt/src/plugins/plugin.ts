@@ -93,11 +93,7 @@ async function buildNuxtTargets(
     buildDir: string;
   } = await getInfoFromNuxtConfig(configFilePath, context, projectRoot);
 
-  const { buildOutputs } = getOutputs(
-    nuxtConfig,
-
-    projectRoot
-  );
+  const { buildOutputs } = getOutputs(nuxtConfig, projectRoot);
 
   const namedInputs = getNamedInputs(projectRoot, context);
 
@@ -179,16 +175,14 @@ function getOutputs(
 } {
   let nuxtBuildDir = nuxtConfig?.buildDir;
   if (nuxtConfig?.buildDir && basename(nuxtConfig?.buildDir) === '.nuxt') {
-    // buildDir will most probably be `../dist/my-app/.nuxt`
-    // we want the "general" outputPath to be `../dist/my-app`
+    // if buildDir exists, it will be `something/something/.nuxt`
+    // we want the "general" outputPath to be `something/something`
     nuxtBuildDir = nuxtConfig.buildDir.replace(
       basename(nuxtConfig.buildDir),
       ''
     );
   }
-  const buildOutputPath =
-    normalizeOutputPath(nuxtBuildDir, projectRoot) ??
-    '{workspaceRoot}/dist/{projectRoot}';
+  const buildOutputPath = normalizeOutputPath(nuxtBuildDir, projectRoot);
 
   return {
     buildOutputs: [buildOutputPath],
@@ -198,12 +192,12 @@ function getOutputs(
 function normalizeOutputPath(
   outputPath: string | undefined,
   projectRoot: string
-): string | undefined {
+): string {
   if (!outputPath) {
     if (projectRoot === '.') {
-      return `{projectRoot}/dist`;
+      return `{projectRoot}`;
     } else {
-      return `{workspaceRoot}/dist/{projectRoot}`;
+      return `{workspaceRoot}/{projectRoot}`;
     }
   } else {
     if (isAbsolute(outputPath)) {

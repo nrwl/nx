@@ -33,10 +33,21 @@ async function generateStories(host: Tree, schema: StorybookConfigureSchema) {
   });
 }
 
-export async function storybookConfigurationGenerator(
+export function storybookConfigurationGenerator(
   host: Tree,
   schema: StorybookConfigureSchema
 ) {
+  return storybookConfigurationGeneratorInternal(host, {
+    addPlugin: false,
+    ...schema,
+  });
+}
+
+export async function storybookConfigurationGeneratorInternal(
+  host: Tree,
+  schema: StorybookConfigureSchema
+) {
+  schema.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
   const { configurationGenerator } = ensurePackage<
     typeof import('@nx/storybook')
   >('@nx/storybook', nxVersion);
@@ -64,6 +75,7 @@ export async function storybookConfigurationGenerator(
     configureStaticServe: schema.configureStaticServe,
     uiFramework: uiFramework as any, // cannot import UiFramework type dynamically
     skipFormat: true,
+    addPlugin: schema.addPlugin,
   });
 
   if (schema.generateStories) {

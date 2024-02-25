@@ -9,22 +9,24 @@ describe('@nx/storybook:init', () => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   });
 
-  it('should add build-storybook to cacheable operations', async () => {
-    await initGenerator(tree, {});
+  it('should add build-storybook to cacheable operations if NX_ADD_PLUGINS=false', async () => {
+    await initGenerator(tree, {
+      addPlugin: false,
+    });
     const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
     expect(nxJson.targetDefaults['build-storybook'].cache).toEqual(true);
+    delete process.env.NX_ADD_PLUGINS;
   });
 
   it('should add storybook-static to .gitignore', async () => {
-    process.env.NX_PCV3 = 'true';
     tree.write('.gitignore', '');
-    await initGenerator(tree, {});
+    await initGenerator(tree, {
+      addPlugin: true,
+    });
     expect(tree.read('.gitignore', 'utf-8')).toContain('storybook-static');
-    delete process.env.NX_PCV3;
   });
 
   it('should not add storybook-static to .gitignore if it already exists', async () => {
-    process.env.NX_PCV3 = 'true';
     tree.write(
       '.gitignore',
       `
@@ -33,8 +35,9 @@ describe('@nx/storybook:init', () => {
     node_modules
   `
     );
-    await initGenerator(tree, {});
+    await initGenerator(tree, {
+      addPlugin: true,
+    });
     expect(tree.read('.gitignore', 'utf-8')).toMatchSnapshot();
-    delete process.env.NX_PCV3;
   });
 });

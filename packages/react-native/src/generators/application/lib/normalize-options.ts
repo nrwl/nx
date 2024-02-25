@@ -34,6 +34,7 @@ export async function normalizeOptions(
     callingGenerator: '@nx/react-native:application',
   });
   options.projectNameAndRootFormat = projectNameAndRootFormat;
+  options.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
 
   const { className, fileName } = names(options.name);
   const iosProjectRoot = joinPathFragments(appProjectRoot, 'ios');

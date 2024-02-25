@@ -34,6 +34,7 @@ export interface LibraryGeneratorOptions {
   setParserOptionsProject?: boolean;
   skipPackageJson?: boolean;
   simpleName?: boolean;
+  addPlugin?: boolean;
 }
 
 export interface NormalizedOptions extends LibraryGeneratorOptions {

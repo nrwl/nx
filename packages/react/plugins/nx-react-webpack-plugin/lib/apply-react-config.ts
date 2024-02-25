@@ -23,12 +23,6 @@ export function applyReactConfig(
             ref: true,
           },
         },
-        {
-          loader: require.resolve('file-loader'),
-          options: {
-            name: '[name].[hash].[ext]',
-          },
-        },
       ],
     });
   }

@@ -29,6 +29,7 @@ export interface Schema {
   unitTestRunner?: 'jest' | 'vitest' | 'none';
   minimal?: boolean;
   simpleName?: boolean;
+  addPlugin?: boolean;
 }
 
 export interface NormalizedSchema extends Schema {

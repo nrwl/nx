@@ -18,6 +18,16 @@ jest.mock('@nx/devkit', () => ({
 
 describe('Nx Plugin Migration - jest 29 update configs', () => {
   let tree: Tree;
+
+  let originalEnv: string;
+  beforeAll(() => {
+    originalEnv = process.env.NX_ADD_PLUGINS;
+    process.env.NX_ADD_PLUGINS = 'false';
+  });
+  afterAll(() => {
+    process.env.NX_ADD_PLUGINS = originalEnv;
+  });
+
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   });

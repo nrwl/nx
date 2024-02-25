@@ -4,7 +4,7 @@ import {
   checkFilesExist,
   cleanupProject,
   getSize,
-  killPorts,
+  killPort,
   killProcessAndPorts,
   newProject,
   readFile,
@@ -40,7 +40,7 @@ describe('Angular Projects', () => {
       `generate @nx/angular:app ${esbuildApp} --bundler=esbuild --no-standalone --project-name-and-root-format=as-provided --no-interactive`
     );
     runCLI(
-      `generate @nx/angular:lib ${lib1} --no-standalone --add-module-spec --project-name-and-root-format=as-provided --no-interactive`
+      `generate @nx/angular:lib ${lib1} --project-name-and-root-format=as-provided --no-interactive`
     );
     app1DefaultModule = readFile(`${app1}/src/app/app.module.ts`);
     app1DefaultComponentTemplate = readFile(
@@ -89,13 +89,13 @@ describe('Angular Projects', () => {
         import { AppComponent } from './app.component';
         import { appRoutes } from './app.routes';
         import { NxWelcomeComponent } from './nx-welcome.component';
-        import { ${names(lib1).className}Module } from '@${proj}/${lib1}';
+        import { ${names(lib1).className}Component } from '@${proj}/${lib1}';
 
         @NgModule({
           imports: [
             BrowserModule,
             RouterModule.forRoot(appRoutes, { initialNavigation: 'enabledBlocking' }),
-            ${names(lib1).className}Module
+            ${names(lib1).className}Component
           ],
           declarations: [AppComponent, NxWelcomeComponent],
           bootstrap: [AppComponent]
@@ -126,10 +126,10 @@ describe('Angular Projects', () => {
     );
 
     // check e2e tests
-    if (runE2ETests()) {
-      const e2eResults = runCLI(`e2e ${app1}-e2e --no-watch`);
+    if (runE2ETests('cypress')) {
+      const e2eResults = runCLI(`e2e ${app1}-e2e`);
       expect(e2eResults).toContain('All specs passed!');
-      expect(await killPorts()).toBeTruthy();
+      expect(await killPort(4200)).toBeTruthy();
     }
 
     const appPort = 4207;
@@ -152,20 +152,19 @@ describe('Angular Projects', () => {
     await killProcessAndPorts(esbProcess.pid, appPort);
   }, 1000000);
 
-  // TODO: enable this when tests are passing again.
-  xit('should successfully work with playwright for e2e tests', async () => {
+  it('should successfully work with playwright for e2e tests', async () => {
     const app = uniq('app');
 
     runCLI(
       `generate @nx/angular:app ${app} --e2eTestRunner=playwright --project-name-and-root-format=as-provided --no-interactive`
     );
 
-    if (runE2ETests()) {
+    if (runE2ETests('playwright')) {
       const e2eResults = runCLI(`e2e ${app}-e2e`);
       expect(e2eResults).toContain(
         `Successfully ran target e2e for project ${app}-e2e`
       );
-      expect(await killPorts()).toBeTruthy();
+      expect(await killPort(4200)).toBeTruthy();
     }
   }, 1000000);
 
@@ -319,6 +318,28 @@ describe('Angular Projects', () => {
         main: config.targets.build.options.browser,
         browser: undefined,
         buildLibsFromSource: false,
+      };
+      return config;
+    });
+
+    // update the nx.json
+    updateJson('nx.json', (config) => {
+      config.targetDefaults ??= {};
+      config.targetDefaults['@nx/angular:webpack-browser'] ??= {
+        cache: true,
+        dependsOn: [`^build`],
+        inputs:
+          config.namedInputs && 'production' in config.namedInputs
+            ? ['production', '^production']
+            : ['default', '^default'],
+      };
+      config.targetDefaults['@nx/angular:browser-esbuild'] ??= {
+        cache: true,
+        dependsOn: [`^build`],
+        inputs:
+          config.namedInputs && 'production' in config.namedInputs
+            ? ['production', '^production']
+            : ['default', '^default'],
       };
       return config;
     });
@@ -505,13 +526,13 @@ describe('Angular Projects', () => {
     );
 
     runCLI(
-      `generate @nx/angular:lib ${libName} --no-standalone --buildable --project-name-and-root-format=derived`
+      `generate @nx/angular:lib ${libName} --standalone --buildable --project-name-and-root-format=derived`
     );
 
     // check files are generated with the layout directory ("libs/")
     checkFilesExist(
       `libs/${libName}/src/index.ts`,
-      `libs/${libName}/src/lib/${libName}.module.ts`
+      `libs/${libName}/src/lib/${libName}/${libName}.component.ts`
     );
     // check build works
     expect(runCLI(`build ${libName}`)).toContain(
@@ -535,14 +556,16 @@ describe('Angular Projects', () => {
     ).toThrow();
 
     runCLI(
-      `generate @nx/angular:lib ${libName} --buildable --no-standalone --project-name-and-root-format=as-provided`
+      `generate @nx/angular:lib ${libName} --buildable --standalone --project-name-and-root-format=as-provided`
     );
 
     // check files are generated without the layout directory ("libs/") and
     // using the project name as the directory when no directory is provided
     checkFilesExist(
       `${libName}/src/index.ts`,
-      `${libName}/src/lib/${libName.split('/')[1]}.module.ts`
+      `${libName}/src/lib/${libName.split('/')[1]}/${
+        libName.split('/')[1]
+      }.component.ts`
     );
     // check build works
     expect(runCLI(`build ${libName}`)).toContain(

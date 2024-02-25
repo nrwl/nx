@@ -78,7 +78,7 @@ describe('@nx/storybook/plugin', () => {
       },
       cache: true,
       outputs: [
-        '{workspaceRoot}/{projectRoot}/static-storybook',
+        '{workspaceRoot}/{projectRoot}/storybook-static',
         '{options.output-dir}',
         '{options.outputDir}',
         '{options.o}',
@@ -135,14 +135,14 @@ describe('@nx/storybook/plugin', () => {
     ).toMatchObject({
       executor: '@storybook/angular:build-storybook',
       options: {
-        outputDir: 'my-ng-app/static-storybook',
+        outputDir: 'my-ng-app/storybook-static',
         configDir: 'my-ng-app/.storybook',
         browserTarget: 'my-ng-app:build-storybook',
         compodoc: false,
       },
       cache: true,
       outputs: [
-        '{workspaceRoot}/{projectRoot}/static-storybook',
+        '{workspaceRoot}/{projectRoot}/storybook-static',
         '{options.output-dir}',
         '{options.outputDir}',
         '{options.o}',

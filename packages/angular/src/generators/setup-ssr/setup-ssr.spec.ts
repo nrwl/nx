@@ -38,7 +38,7 @@ describe('setupSSR', () => {
       expect(tree.read('app1/server.ts', 'utf-8')).toMatchSnapshot();
       expect(tree.read('app1/src/main.server.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
-        "export { AppServerModule } from './app/app.server.module';
+        "export { AppServerModule as default } from './app/app.server.module';
         "
       `);
       expect(tree.read('app1/src/main.ts', 'utf-8')).toMatchInlineSnapshot(`
@@ -204,7 +204,7 @@ describe('setupSSR', () => {
       expect(tree.read('app1/server.ts', 'utf-8')).toMatchSnapshot();
       expect(tree.read('app1/src/main.server.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
-        "export { AppServerModule } from './app/app.server.module';
+        "export { AppServerModule as default } from './app/app.server.module';
         "
       `);
       expect(tree.read('app1/src/main.ts', 'utf-8')).toMatchInlineSnapshot(`

@@ -42,12 +42,14 @@ import { type PackageJson } from 'nx/src/utils/package-json';
 import setupVerdaccio from '../setup-verdaccio/generator';
 import { tsConfigBaseOptions } from '../../utils/typescript/create-ts-config';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
+import { addBuildTargetDefaults } from '@nx/devkit/src/generators/add-build-target-defaults';
 
 export async function libraryGenerator(
   tree: Tree,
   schema: LibraryGeneratorSchema
 ) {
   return await libraryGeneratorInternal(tree, {
+    addPlugin: false,
     // provide a default projectNameAndRootFormat to avoid breaking changes
     // to external generators invoking this one
     projectNameAndRootFormat: 'derived',
@@ -59,8 +61,6 @@ export async function libraryGeneratorInternal(
   tree: Tree,
   schema: LibraryGeneratorSchema
 ) {
-  const filesDir = join(__dirname, './files');
-
   const tasks: GeneratorCallback[] = [];
   tasks.push(
     await jsInitGenerator(tree, {
@@ -71,7 +71,7 @@ export async function libraryGeneratorInternal(
   );
   const options = await normalizeOptions(tree, schema);
 
-  createFiles(tree, options, `${filesDir}/lib`);
+  createFiles(tree, options);
 
   addProject(tree, options);
 
@@ -94,6 +94,7 @@ export async function libraryGeneratorInternal(
       includeLib: true,
       skipFormat: true,
       testEnvironment: options.testEnvironment,
+      addPlugin: options.addPlugin,
     });
     tasks.push(viteTask);
     createOrEditViteConfig(
@@ -116,7 +117,7 @@ export async function libraryGeneratorInternal(
     const jestCallback = await addJest(tree, options);
     tasks.push(jestCallback);
     if (options.bundler === 'swc' || options.bundler === 'rollup') {
-      replaceJestConfig(tree, options, `${filesDir}/jest-config`);
+      replaceJestConfig(tree, options);
     }
   } else if (
     options.unitTestRunner === 'vitest' &&
@@ -195,8 +196,13 @@ function addProject(tree: Tree, options: NormalizedSchema) {
     options.config !== 'npm-scripts'
   ) {
     const outputPath = getOutputPath(options);
+
+    const executor = getBuildExecutor(options.bundler);
+
+    addBuildTargetDefaults(tree, executor);
+
     projectConfiguration.targets.build = {
-      executor: getBuildExecutor(options.bundler),
+      executor,
       outputs: ['{options.outputPath}'],
       options: {
         outputPath,
@@ -268,6 +274,7 @@ export type AddLintOptions = Pick<
   | 'setParserOptionsProject'
   | 'rootProject'
   | 'bundler'
+  | 'addPlugin'
 >;
 
 export async function addLint(
@@ -286,6 +293,7 @@ export async function addLint(
     unitTestRunner: options.unitTestRunner,
     setParserOptionsProject: options.setParserOptionsProject,
     rootProject: options.rootProject,
+    addPlugin: options.addPlugin,
   });
   const {
     addOverrideToLintConfig,
@@ -409,14 +417,14 @@ function addBabelRc(tree: Tree, options: NormalizedSchema) {
   writeJson(tree, join(options.projectRoot, filename), babelrc);
 }
 
-function createFiles(tree: Tree, options: NormalizedSchema, filesDir: string) {
+function createFiles(tree: Tree, options: NormalizedSchema) {
   const { className, name, propertyName } = names(
     options.projectNames.projectFileName
   );
 
   createProjectTsConfigJson(tree, options);
 
-  generateFiles(tree, filesDir, options.projectRoot, {
+  generateFiles(tree, join(__dirname, './files/lib'), options.projectRoot, {
     ...options,
     dot: '.',
     className,
@@ -430,6 +438,28 @@ function createFiles(tree: Tree, options: NormalizedSchema, filesDir: string) {
     buildable: options.bundler && options.bundler !== 'none',
     hasUnitTestRunner: options.unitTestRunner !== 'none',
   });
+
+  if (!options.rootProject) {
+    generateFiles(
+      tree,
+      join(__dirname, './files/readme'),
+      options.projectRoot,
+      {
+        ...options,
+        dot: '.',
+        className,
+        name,
+        propertyName,
+        js: !!options.js,
+        cliCommand: 'nx',
+        strict: undefined,
+        tmpl: '',
+        offsetFromRoot: offsetFromRoot(options.projectRoot),
+        buildable: options.bundler && options.bundler !== 'none',
+        hasUnitTestRunner: options.unitTestRunner !== 'none',
+      }
+    );
+  }
 
   if (options.bundler === 'swc' || options.bundler === 'rollup') {
     addSwcDependencies(tree);
@@ -529,11 +559,8 @@ async function addJest(
   });
 }
 
-function replaceJestConfig(
-  tree: Tree,
-  options: NormalizedSchema,
-  filesDir: string
-) {
+function replaceJestConfig(tree: Tree, options: NormalizedSchema) {
+  const filesDir = join(__dirname, './files/jest-config');
   // the existing config has to be deleted otherwise the new config won't overwrite it
   const existingJestConfig = joinPathFragments(
     filesDir,
@@ -558,6 +585,8 @@ async function normalizeOptions(
   tree: Tree,
   options: LibraryGeneratorSchema
 ): Promise<NormalizedSchema> {
+  options.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
+
   /**
    * We are deprecating the compiler and the buildable options.
    * However, we want to keep the existing behavior for now.

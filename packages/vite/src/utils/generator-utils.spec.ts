@@ -5,9 +5,8 @@ import {
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import {
-  findExistingTargetsInProject,
+  findExistingJsBuildTargetInProject,
   getViteConfigPathForProject,
-  handleUnsupportedUserProvidedTargets,
 } from './generator-utils';
 import {
   mockReactAppGenerator,
@@ -97,105 +96,22 @@ describe('generator utils', () => {
     });
   });
 
-  describe('findExistingTargetsInProject', () => {
-    it('should return the correct targets', () => {
+  describe('findExistingJsBuildTargetInProject', () => {
+    it('should return no targets', () => {
       mockReactAppGenerator(tree);
       const { targets } = readProjectConfiguration(tree, 'my-test-react-app');
 
-      const existingTargets = findExistingTargetsInProject(targets);
-      expect(existingTargets).toMatchObject({
-        userProvidedTargetIsUnsupported: {},
-        validFoundTargetName: {
-          build: 'build',
-          serve: 'serve',
-          test: 'test',
-        },
-        projectContainsUnsupportedExecutor: false,
-      });
+      const existingTargets = findExistingJsBuildTargetInProject(targets);
+      expect(existingTargets).toMatchObject({});
     });
 
     it('should return the correct - undefined - targets for Angular apps', () => {
       mockAngularAppGenerator(tree);
       const { targets } = readProjectConfiguration(tree, 'my-test-angular-app');
-      const existingTargets = findExistingTargetsInProject(targets);
+      const existingTargets = findExistingJsBuildTargetInProject(targets);
       expect(existingTargets).toMatchObject({
-        userProvidedTargetIsUnsupported: {},
-        validFoundTargetName: {
-          test: 'test',
-        },
-        projectContainsUnsupportedExecutor: true,
+        unsupported: 'build',
       });
-    });
-  });
-
-  describe('handleUnsupportedUserProvidedTargets', () => {
-    afterEach(() => {
-      jest.clearAllMocks();
-    });
-    it('should throw error if unsupported and user does not want to confirm', async () => {
-      const { Confirm } = require('enquirer');
-      const confirmSpy = jest.spyOn(Confirm.prototype, 'run');
-      confirmSpy.mockResolvedValueOnce(false);
-      const object = {
-        unsupportedUserProvidedTarget: {
-          build: true,
-        },
-        userProvidedTargets: {
-          build: 'my-build',
-          serve: 'my-serve',
-          test: 'my-test',
-        },
-        targets: {
-          build: 'build',
-          serve: 'serve',
-          test: 'test',
-        },
-      };
-
-      expect(async () => {
-        await handleUnsupportedUserProvidedTargets(
-          object.unsupportedUserProvidedTarget,
-          object.userProvidedTargets,
-          object.targets
-        );
-      }).rejects.toThrowErrorMatchingInlineSnapshot(`
-        "The build target my-build cannot be converted to use the @nx/vite:build executor.
-              Please try again, either by providing a different build target or by not providing a target at all (Nx will
-                convert the first one it finds, most probably this one: build)
-
-              Please note that converting a potentially non-compatible project to use Vite.js may result in unexpected behavior. Always commit
-              your changes before converting a project to use Vite.js, and test the converted project thoroughly before deploying it.
-              "
-      `);
-    });
-
-    it('should NOT throw error if unsupported and user confirms', async () => {
-      const { Confirm } = require('enquirer');
-      const confirmSpy = jest.spyOn(Confirm.prototype, 'run');
-      confirmSpy.mockResolvedValue(true);
-      const object = {
-        unsupportedUserProvidedTarget: {
-          build: true,
-        },
-        userProvidedTargets: {
-          build: 'my-build',
-          serve: 'my-serve',
-          test: 'my-test',
-        },
-        targets: {
-          build: 'build',
-          serve: 'serve',
-          test: 'test',
-        },
-      };
-
-      expect(async () => {
-        await handleUnsupportedUserProvidedTargets(
-          object.unsupportedUserProvidedTarget,
-          object.userProvidedTargets,
-          object.targets
-        );
-      }).not.toThrow();
     });
   });
 });

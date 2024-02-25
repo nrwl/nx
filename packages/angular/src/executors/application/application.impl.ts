@@ -20,6 +20,7 @@ export default async function* applicationExecutor(
   const {
     buildLibsFromSource = true,
     plugins: pluginPaths,
+    indexHtmlTransformer: indexHtmlTransformerPath,
     ...delegateExecutorOptions
   } = options;
 
@@ -36,11 +37,8 @@ export default async function* applicationExecutor(
   }
 
   const plugins = await loadPlugins(pluginPaths, options.tsConfig);
-  const indexHtmlTransformer = options.indexHtmlTransformer
-    ? await loadIndexHtmlTransformer(
-        options.indexHtmlTransformer,
-        options.tsConfig
-      )
+  const indexHtmlTransformer = indexHtmlTransformerPath
+    ? await loadIndexHtmlTransformer(indexHtmlTransformerPath, options.tsConfig)
     : undefined;
 
   const { buildApplication } = await import('@angular-devkit/build-angular');

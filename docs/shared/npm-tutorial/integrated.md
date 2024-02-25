@@ -191,9 +191,9 @@ Run the same command a second time and you'll see the build cache is being used:
 Compiling TypeScript files for project "is-even"...
 Done compiling TypeScript files for project "is-even".
 
- —————————————————————————————————————————————————————————————————————
+—————————————————————————————————————————————————————————————————————
 
- >  NX   Successfully ran target build for project is-even (713ms)
+NX   Successfully ran target build for project is-even (713ms)
 ```
 
 ## Running Multiple Tasks
@@ -207,14 +207,14 @@ npx nx run-many -t build
 What you would get is the following:
 
 ```{% command="npx nx run-many -t build" %}
-    ✔  nx run is-even:build  [existing outputs match the cache, left as is]
-    ✔  nx run is-odd:build (906ms)
+✔  nx run is-even:build  [existing outputs match the cache, left as is]
+✔  nx run is-odd:build (906ms)
 
- —————————————————————————————————————————————————————————————————
+—————————————————————————————————————————————————————————————————
 
- >  NX   Successfully ran target build for 2 projects (914ms)
+NX   Successfully ran target build for 2 projects (914ms)
 
-   Nx read the output from the cache instead of running the command for 1 out of 2 tasks.
+Nx read the output from the cache instead of running the command for 1 out of 2 tasks.
 ```
 
 Note how on the `is-even:build` it didn't run the build but rather pulled it out of the cache because the build has ran before. If you re-run the `run-many` command all of the builds would be cached.
@@ -229,7 +229,7 @@ npx nx affected -t build
 
 {% cards %}
 
-{% card title="Core Features" description="Read about the core features of Nx." url="/core-features" /%}
+{% card title="Core Features" description="Read about the core features of Nx." url="/features" /%}
 
 {% card title="Mental Model" description="Get a deeper understanding of the mental model." url="/concepts/mental-model" /%}
 
@@ -238,7 +238,5 @@ npx nx affected -t build
 {% card title="Integrated Repos vs Package-Based Repos" description="Learn about two styles of monorepos." url="/concepts/integrated-vs-package-based" /%}
 
 {% card title="React Tutorial" description="A step-by-step tutorial showing how to build an integrated monorepo with React applications sharing code." url="/getting-started/tutorials/react-monorepo-tutorial" /%}
-
-{% card title="Node.js Tutorial" description="A step-by-step tutorial showing how to build an integrated monorepo with Node.js applications sharing code." url="/getting-started/tutorials/node-server-tutorial" /%}
 
 {% /cards %}

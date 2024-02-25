@@ -10,13 +10,13 @@
       "hidden": true
     },
     "application": {
-      "factory": "./src/generators/application/application",
+      "factory": "./src/generators/application/application#applicationGeneratorInternal",
       "schema": "./src/generators/application/schema.json",
       "aliases": ["app"],
       "description": "Create a Vue application."
     },
     "library": {
-      "factory": "./src/generators/library/library",
+      "factory": "./src/generators/library/library#libraryGeneratorInternal",
       "schema": "./src/generators/library/schema.json",
       "aliases": ["lib"],
       "x-type": "library",
@@ -35,7 +35,7 @@
       "description": "Set up Tailwind configuration for a project."
     },
     "storybook-configuration": {
-      "factory": "./src/generators/storybook-configuration/configuration",
+      "factory": "./src/generators/storybook-configuration/configuration#storybookConfigurationGeneratorInternal",
       "schema": "./src/generators/storybook-configuration/schema.json",
       "description": "Set up storybook for a Vue app or library.",
       "hidden": false

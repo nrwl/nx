@@ -10,6 +10,16 @@ import update from './specify-output-capture';
 const schemaPath = `libs/plugin/src/executors/build/schema.json`;
 
 describe('update-15-0-0-specify-output-capture', () => {
+  let originalEnv: string;
+  beforeEach(() => {
+    originalEnv = process.env.NX_ADD_PLUGINS;
+    process.env.NX_ADD_PLUGINS = 'false';
+  });
+
+  afterAll(() => {
+    process.env.NX_ADD_PLUGINS = originalEnv;
+  });
+
   it('should not change outputCapture if already present', async () => {
     const { tree } = await createTreeWithBoilerplate();
     updateJson(tree, schemaPath, (json) => {

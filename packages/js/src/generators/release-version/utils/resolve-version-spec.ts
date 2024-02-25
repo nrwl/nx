@@ -1,4 +1,5 @@
 import * as npa from 'npm-package-arg';
+import { normalizePath } from '@nx/devkit';
 
 export function resolveVersionSpec(
   name: string,
@@ -26,5 +27,7 @@ export function resolveVersionSpec(
 
   const npaResult = npa.resolve(name, spec, location);
 
-  return npaResult.fetchSpec;
+  return npaResult.fetchSpec.includes('\\')
+    ? normalizePath(npaResult.fetchSpec)
+    : npaResult.fetchSpec;
 }

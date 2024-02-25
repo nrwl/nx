@@ -18,4 +18,5 @@ export interface Schema {
   e2eTestRunner: 'cypress' | 'playwright' | 'detox' | 'none'; // default is cypress
   standaloneConfig?: boolean;
   skipPackageJson?: boolean; // default is false
+  addPlugin?: boolean;
 }

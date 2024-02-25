@@ -173,7 +173,7 @@ function buildTarget(
         configDir: `${dirname(configFilePath)}`,
         browserTarget: `${projectName}:build-storybook`,
         compodoc: false,
-        outputDir: joinPathFragments(projectRoot, 'static-storybook'),
+        outputDir: joinPathFragments(projectRoot, 'storybook-static'),
       },
       cache: true,
       outputs,
@@ -255,7 +255,7 @@ function serveStaticTarget(
     executor: '@nx/web:file-server',
     options: {
       buildTarget: `${options.buildStorybookTargetName}`,
-      staticFilePath: joinPathFragments(projectRoot, 'static-storybook'),
+      staticFilePath: joinPathFragments(projectRoot, 'storybook-static'),
     },
   };
 
@@ -316,8 +316,8 @@ function getStorybookConfig(
   return frameworkName;
 }
 
-function getOutputs(_projectRoot: string): string[] {
-  const normalizedOutputPath = normalizeOutputPath(undefined, _projectRoot);
+function getOutputs(projectRoot: string): string[] {
+  const normalizedOutputPath = normalizeOutputPath(projectRoot);
 
   const outputs = [
     normalizedOutputPath,
@@ -329,14 +329,11 @@ function getOutputs(_projectRoot: string): string[] {
   return outputs;
 }
 
-function normalizeOutputPath(
-  outputPath: string | undefined,
-  projectRoot: string
-): string | undefined {
+function normalizeOutputPath(projectRoot: string): string | undefined {
   if (projectRoot === '.') {
-    return `{projectRoot}/static-storybook`;
+    return `{projectRoot}/storybook-static`;
   } else {
-    return `{workspaceRoot}/{projectRoot}/static-storybook`;
+    return `{workspaceRoot}/{projectRoot}/storybook-static`;
   }
 }
 

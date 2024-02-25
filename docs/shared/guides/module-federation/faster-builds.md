@@ -89,41 +89,13 @@ take advantage of remote caching and other features it provides.
 
 Then, for React users, install the `@nx/react` plugin; and for Angular users, install the `@nx/angular` plugin.
 
-{% tabs %}
-{% tab label="npm" %}
-
 ```shell
 # If you use React
-npm add -D @nx/react
+nx add @nx/react
 
 # If you use Angular
-npm add -D @nx/angular
+nx add @nx/angular
 ```
-
-{% /tab %}
-{% tab label="yarn" %}
-
-```shell
-# If you use React
-yarn add -D @nx/react
-
-# If you use Angular
-yarn add -D @nx/angular
-```
-
-{% /tab %}
-{% tab label="pnpm" %}
-
-```shell
-# If you use React
-pnpm add -D @nx/react
-
-# If you use Angular
-pnpm add -D @nx/angular
-```
-
-{% /tab %}
-{% /tabs %}
 
 Next, generate the host and remote applications.
 
@@ -329,7 +301,7 @@ To use Module Federation well, we recommend that you enable [Nx Cloud](https://n
 when using `create-nx-workspace`, you can do the following.
 
 ```shell
-nx connect-to-nx-cloud
+nx connect
 ```
 
 With Nx Cloud enabled, a large set of builds can be skipped entirely when running the application locally (and in
@@ -355,11 +327,11 @@ If you inspect the terminal output, you'll see something like this, even if you 
 ```shell
 > nx run about:build:development  [existing outputs match the cache, left as is]
 
- (snip)
+(snip)
 
- >  NX   Successfully ran target build for project about
+NX   Successfully ran target build for project about
 
-   Nx read the output from the cache instead of running the command for 1 out of 1 tasks.
+Nx read the output from the cache instead of running the command for 1 out of 1 tasks.
 
 ```
 

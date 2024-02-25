@@ -20,6 +20,7 @@ describe('Remix Library Generator', () => {
           name: 'test',
           style: 'css',
           projectNameAndRootFormat,
+          addPlugin: true,
         });
 
         // ASSERT
@@ -36,6 +37,7 @@ describe('Remix Library Generator', () => {
           await applicationGenerator(tree, {
             name: 'demo',
             rootProject: true,
+            addPlugin: true,
           });
           const originalBaseTsConfig = readJson(tree, 'tsconfig.json');
 
@@ -44,6 +46,7 @@ describe('Remix Library Generator', () => {
             name: 'test',
             style: 'css',
             projectNameAndRootFormat,
+            addPlugin: true,
           });
 
           // ASSERT
@@ -68,6 +71,7 @@ describe('Remix Library Generator', () => {
             style: 'css',
             unitTestRunner: 'none',
             projectNameAndRootFormat,
+            addPlugin: true,
           });
 
           // ASSERT
@@ -85,6 +89,7 @@ describe('Remix Library Generator', () => {
             style: 'css',
             unitTestRunner: 'jest',
             projectNameAndRootFormat,
+            addPlugin: true,
           });
 
           // ASSERT
@@ -106,6 +111,7 @@ describe('Remix Library Generator', () => {
             style: 'css',
             unitTestRunner: 'vitest',
             projectNameAndRootFormat,
+            addPlugin: true,
           });
 
           // ASSERT
@@ -130,6 +136,7 @@ describe('Remix Library Generator', () => {
           style: 'css',
           buildable: true,
           projectNameAndRootFormat,
+          addPlugin: true,
         });
 
         // ASSERT

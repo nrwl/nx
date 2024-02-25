@@ -1,6 +1,6 @@
 {
   "name": "init",
-  "factory": "./src/generators/init/init#expoInitGenerator",
+  "factory": "./src/generators/init/init#expoInitGeneratorInternal",
   "schema": {
     "cli": "nx",
     "$id": "NxExpoInit",
@@ -35,9 +35,9 @@
     "required": [],
     "presets": []
   },
-  "description": "Initialize the @nrwl/expo plugin",
+  "description": "Initialize the @nx/expo plugin",
   "hidden": true,
-  "implementation": "/packages/expo/src/generators/init/init#expoInitGenerator.ts",
+  "implementation": "/packages/expo/src/generators/init/init#expoInitGeneratorInternal.ts",
   "aliases": [],
   "path": "/packages/expo/src/generators/init/schema.json",
   "type": "generator"

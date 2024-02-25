@@ -5,7 +5,9 @@ describe('Next.js Styles', () => {
   let originalEnv: string;
 
   beforeAll(() => {
-    newProject();
+    newProject({
+      packages: ['@nx/next'],
+    });
   });
 
   afterAll(() => cleanupProject());
@@ -29,7 +31,6 @@ describe('Next.js Styles', () => {
       checkUnitTest: false,
       checkLint: false,
       checkE2E: false,
-      checkExport: false,
     });
 
     const scApp = uniq('app');
@@ -42,7 +43,6 @@ describe('Next.js Styles', () => {
       checkUnitTest: true,
       checkLint: false,
       checkE2E: false,
-      checkExport: false,
     });
 
     const scAppWithAppRouter = uniq('app');
@@ -55,7 +55,6 @@ describe('Next.js Styles', () => {
       checkUnitTest: false, // No unit tests for app router
       checkLint: false,
       checkE2E: false,
-      checkExport: false,
     });
 
     const emotionApp = uniq('app');
@@ -68,7 +67,6 @@ describe('Next.js Styles', () => {
       checkUnitTest: true,
       checkLint: false,
       checkE2E: false,
-      checkExport: false,
     });
   }, 600_000);
 });

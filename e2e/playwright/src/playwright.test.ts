@@ -42,7 +42,7 @@ describe('Playwright E2E Test runner', () => {
       expect(e2eResults).toContain('Successfully ran target e2e for project');
 
       const lintResults = runCLI(`lint demo-e2e`);
-      expect(lintResults).toContain('All files pass linting');
+      expect(lintResults).toContain('Successfully ran target lint');
     },
     TEN_MINS_MS
   );
@@ -63,29 +63,29 @@ describe('Playwright E2E Test runner', () => {
       expect(e2eResults).toContain('Successfully ran target e2e for project');
 
       const lintResults = runCLI(`lint demo-e2e`);
-      expect(lintResults).toContain('All files pass linting');
+      expect(lintResults).toContain('Successfully ran target lint');
     },
     TEN_MINS_MS
   );
 });
 
-describe('Playwright E2E Test Runner - PCV3', () => {
+describe('Playwright E2E Test Runner - legacy', () => {
   let env: string | undefined;
 
   beforeAll(() => {
-    env = process.env.NX_PCV3;
+    env = process.env.NX_ADD_PLUGINS;
     newProject({
       name: uniq('playwright'),
       unsetProjectNameAndRootFormat: false,
     });
-    process.env.NX_PCV3 = 'true';
+    process.env.NX_ADD_PLUGINS = 'false';
   });
 
   afterAll(() => {
     if (env) {
-      process.env.NX_PCV3 = env;
+      process.env.NX_ADD_PLUGINS = env;
     } else {
-      delete process.env.NX_PCV3;
+      delete process.env.NX_ADD_PLUGINS;
     }
   });
 
@@ -108,20 +108,7 @@ describe('Playwright E2E Test Runner - PCV3', () => {
       expect(e2eResults).toContain('Successfully ran target e2e for project');
 
       const { targets } = readJson('apps/demo-e2e/project.json');
-      expect(targets?.e2e).not.toBeDefined();
-
-      const { plugins } = readJson('nx.json');
-      const playwrightPlugin = plugins?.find(
-        (p) => p.plugin === '@nx/playwright/plugin'
-      );
-      expect(playwrightPlugin).toMatchInlineSnapshot(`
-        {
-          "options": {
-            "targetName": "e2e",
-          },
-          "plugin": "@nx/playwright/plugin",
-        }
-      `);
+      expect(targets.e2e).toBeDefined();
     },
     TEN_MINS_MS
   );
@@ -144,20 +131,7 @@ describe('Playwright E2E Test Runner - PCV3', () => {
       expect(e2eResults).toContain('Successfully ran target e2e for project');
 
       const { targets } = readJson('apps/demo-js-e2e/project.json');
-      expect(targets?.e2e).not.toBeDefined();
-
-      const { plugins } = readJson('nx.json');
-      const playwrightPlugin = plugins?.find(
-        (p) => p.plugin === '@nx/playwright/plugin'
-      );
-      expect(playwrightPlugin).toMatchInlineSnapshot(`
-        {
-          "options": {
-            "targetName": "e2e",
-          },
-          "plugin": "@nx/playwright/plugin",
-        }
-      `);
+      expect(targets.e2e).toBeDefined();
     },
     TEN_MINS_MS
   );

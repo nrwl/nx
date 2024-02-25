@@ -1,4 +1,10 @@
-import { formatFiles, GeneratorCallback, Tree } from '@nx/devkit';
+import {
+  formatFiles,
+  GeneratorCallback,
+  readProjectConfiguration,
+  Tree,
+} from '@nx/devkit';
+import { updateAppEditorTsConfigExcludedFiles } from '../utils/update-app-editor-tsconfig-excluded-files';
 import { assertCompatibleStorybookVersion } from './lib/assert-compatible-storybook-version';
 import { generateStories } from './lib/generate-stories';
 import { generateStorybookConfiguration } from './lib/generate-storybook-configuration';
@@ -28,6 +34,11 @@ export async function storybookConfigurationGenerator(
       interactionTests: options.interactionTests ?? true,
       skipFormat: true,
     });
+  }
+
+  const project = readProjectConfiguration(tree, options.project);
+  if (project.projectType === 'application') {
+    updateAppEditorTsConfigExcludedFiles(tree, project);
   }
 
   if (!options.skipFormat) {

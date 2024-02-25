@@ -9,7 +9,7 @@ import {
 import { nxVersion } from 'nx/src/utils/versions';
 import { componentTestGenerator } from '../../component-test/component-test';
 import type { CypressComponentConfigurationSchema } from '../schema';
-import { getBundlerFromTarget, isComponent } from '../../../utils/ct-utils';
+import { getActualBundler, isComponent } from '../../../utils/ct-utils';
 import { FoundTarget } from '@nx/cypress/src/utils/find-target-options';
 
 export async function addFiles(
@@ -25,10 +25,7 @@ export async function addFiles(
   );
 
   // Specifically undefined to allow Remix workaround of passing an empty string
-  const actualBundler =
-    options.buildTarget !== undefined && options.bundler
-      ? options.bundler
-      : await getBundlerFromTarget(found, tree);
+  const actualBundler = await getActualBundler(tree, options, found);
 
   if (options.bundler && options.bundler !== actualBundler) {
     logger.warn(
@@ -52,16 +49,6 @@ export async function addFiles(
   tree.write(
     commandFile,
     `import { mount } from 'cypress/react18';\n${updatedCommandFile}`
-  );
-  const cyFile = joinPathFragments(projectConfig.root, 'cypress.config.ts');
-  const updatedCyConfig = await addDefaultCTConfig(
-    tree.read(cyFile, 'utf-8'),
-
-    { bundler: bundlerToUse }
-  );
-  tree.write(
-    cyFile,
-    `import { nxComponentTestingPreset } from '@nx/react/plugins/component-testing';\n${updatedCyConfig}`
   );
 
   if (

@@ -4,6 +4,8 @@ import libraryGenerator from '../library/library.impl';
 import cypressComponentConfigurationGenerator from './cypress-component-configuration.impl';
 
 describe('CypressComponentConfiguration', () => {
+  // TODO(@colum): Update this to adding the plugin
+
   it('should create the cypress configuration correctly', async () => {
     // ARRANGE
     const tree = createTreeWithEmptyWorkspace();
@@ -12,12 +14,14 @@ describe('CypressComponentConfiguration', () => {
       name: 'cypress-test',
       unitTestRunner: 'vitest',
       style: 'css',
+      addPlugin: false,
     });
 
     // ACT
     await cypressComponentConfigurationGenerator(tree, {
       project: 'cypress-test',
       generateTests: true,
+      addPlugin: false,
     });
 
     // ASSERT

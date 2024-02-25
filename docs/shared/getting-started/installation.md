@@ -30,7 +30,7 @@ This will guide you through the setup, asking whether you want a monorepo or a s
 
 ```{% command="npx create-nx-workspace" path="~" %}
 
- >  NX   Let's create a new workspace [https://nx.dev/getting-started/intro]
+NX   Let's create a new workspace [https://nx.dev/getting-started/intro]
 
 ✔ Where would you like to create your workspace? · myorg
 ? Which stack do you want to use? …
@@ -48,7 +48,7 @@ Once you've created your workspace, you can
 
 Run `npx nx run-many -t build` twice to see how Nx's powerful caching speeds up your build.
 
-Learn more about [running tasks](/core-features/run-tasks).
+Learn more about [running tasks](/features/run-tasks).
 
 ## Installing Nx Into an Existing Repository
 

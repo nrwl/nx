@@ -6,9 +6,7 @@ export interface ViteConfigurationGeneratorSchema {
   includeVitest?: boolean;
   inSourceTests?: boolean;
   includeLib?: boolean;
-  buildTarget?: string;
-  serveTarget?: string;
-  testTarget?: string;
   skipFormat?: boolean;
   testEnvironment?: 'node' | 'jsdom' | 'happy-dom' | 'edge-runtime' | string;
+  addPlugin?: boolean;
 }

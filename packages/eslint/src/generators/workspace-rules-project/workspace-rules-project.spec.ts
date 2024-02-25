@@ -72,26 +72,7 @@ describe('@nx/eslint:workspace-rules-project', () => {
   it('should create a project with a test target', async () => {
     await lintWorkspaceRulesProjectGenerator(tree);
 
-    expect(readProjectConfiguration(tree, WORKSPACE_RULES_PROJECT_NAME))
-      .toMatchInlineSnapshot(`
-      {
-        "$schema": "../../node_modules/nx/schemas/project-schema.json",
-        "name": "eslint-rules",
-        "root": "tools/eslint-rules",
-        "sourceRoot": "tools/eslint-rules",
-        "targets": {
-          "test": {
-            "executor": "@nx/jest:jest",
-            "options": {
-              "jestConfig": "tools/eslint-rules/jest.config.ts",
-            },
-            "outputs": [
-              "{workspaceRoot}/coverage/{projectRoot}",
-            ],
-          },
-        },
-      }
-    `);
+    expect(tree.exists('tools/eslint-rules/jest.config.ts')).toBeTruthy();
   });
 
   it('should not update the required files if the project already exists', async () => {

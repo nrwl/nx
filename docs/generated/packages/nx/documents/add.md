@@ -53,7 +53,7 @@ The package name and optional version (e.g. `@nx/react` or `@nx/react@latest`) t
 
 Type: `boolean`
 
-Update `package.json` scripts with inferred targets. Defaults to `true` when `NX_PCV3=true` and the package is a core Nx plugin
+Update `package.json` scripts with inferred targets. Defaults to `true` when the package is a core Nx plugin
 
 ### verbose
 

@@ -3,7 +3,7 @@
   "version": "0.1",
   "generators": {
     "init": {
-      "factory": "./src/generators/init/init#lintInitGenerator",
+      "factory": "./src/generators/init/init#initEsLint",
       "schema": "./src/generators/init/schema.json",
       "description": "Set up the ESLint plugin.",
       "hidden": true

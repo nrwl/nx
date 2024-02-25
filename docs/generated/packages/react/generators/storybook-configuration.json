@@ -1,6 +1,6 @@
 {
   "name": "storybook-configuration",
-  "factory": "./src/generators/storybook-configuration/configuration#storybookConfigurationGenerator",
+  "factory": "./src/generators/storybook-configuration/configuration#storybookConfigurationGeneratorInternal",
   "schema": {
     "$schema": "https://json-schema.org/schema",
     "cli": "nx",
@@ -93,7 +93,7 @@
   },
   "description": "Set up storybook for a React app or library.",
   "hidden": false,
-  "implementation": "/packages/react/src/generators/storybook-configuration/configuration#storybookConfigurationGenerator.ts",
+  "implementation": "/packages/react/src/generators/storybook-configuration/configuration#storybookConfigurationGeneratorInternal.ts",
   "aliases": [],
   "path": "/packages/react/src/generators/storybook-configuration/schema.json",
   "type": "generator"

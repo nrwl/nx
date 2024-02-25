@@ -47,8 +47,8 @@ export async function updateLockFile(
   }
 
   const isDaemonEnabled = daemonClient.enabled();
-  if (isDaemonEnabled) {
-    // temporarily stop the daemon, as it will error if the lock file is updated
+  if (!dryRun && isDaemonEnabled) {
+    // if not in dry-run temporarily stop the daemon, as it will error if the lock file is updated
     await daemonClient.stop();
   }
 

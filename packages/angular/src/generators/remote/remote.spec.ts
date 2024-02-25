@@ -275,7 +275,7 @@ describe('MF Remote App Generator', () => {
       "import { Component } from '@angular/core';
 
       @Component({
-        selector: 'proj-root',
+        selector: 'app-root',
         template: '<router-outlet></router-outlet>'
 
       })
@@ -294,11 +294,9 @@ describe('MF Remote App Generator', () => {
     });
 
     // ASSERT
-    expect(tree.read('test/src/index.html', 'utf-8')).not.toContain(
-      'proj-root'
-    );
+    expect(tree.read('test/src/index.html', 'utf-8')).not.toContain('app-root');
     expect(tree.read('test/src/index.html', 'utf-8')).toContain(
-      'proj-test-entry'
+      'app-test-entry'
     );
   });
 

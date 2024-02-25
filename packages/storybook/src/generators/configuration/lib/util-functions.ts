@@ -420,6 +420,11 @@ export function updateLintConfig(tree: Tree, schema: StorybookConfigureSchema) {
         }
       }
 
+      const ignorePatterns = json.ignorePatterns || [];
+      if (!ignorePatterns.includes('storybook-static')) {
+        ignorePatterns.push('storybook-static');
+      }
+
       return json;
     });
   }

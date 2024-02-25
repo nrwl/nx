@@ -67,7 +67,8 @@ export async function connectToNxCloudCommand(): Promise<boolean> {
 
 export async function connectToNxCloudWithPrompt(command: string) {
   const setNxCloud = await nxCloudPrompt('setupNxCloud');
-  const useCloud = setNxCloud ? await connectToNxCloudCommand() : false;
+  const useCloud =
+    setNxCloud === 'yes' ? await connectToNxCloudCommand() : false;
   await recordStat({
     command,
     nxVersion,

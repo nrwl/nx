@@ -1,6 +1,6 @@
 {
   "name": "storybook-configuration",
-  "factory": "./src/generators/storybook-configuration/configuration#storybookConfigurationGenerator",
+  "factory": "./src/generators/storybook-configuration/configuration#storybookConfigurationGeneratorInternal",
   "schema": {
     "$schema": "https://json-schema.org/schema",
     "cli": "nx",
@@ -76,7 +76,7 @@
     "presets": []
   },
   "description": "Set up Storybook for a React Native application or library.",
-  "implementation": "/packages/react-native/src/generators/storybook-configuration/configuration#storybookConfigurationGenerator.ts",
+  "implementation": "/packages/react-native/src/generators/storybook-configuration/configuration#storybookConfigurationGeneratorInternal.ts",
   "aliases": [],
   "hidden": false,
   "path": "/packages/react-native/src/generators/storybook-configuration/schema.json",

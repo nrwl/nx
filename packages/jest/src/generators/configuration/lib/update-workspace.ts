@@ -16,7 +16,7 @@ export function updateWorkspace(
     projectConfig.targets = {};
   }
 
-  projectConfig.targets.test = {
+  projectConfig.targets[options.targetName] = {
     executor: '@nx/jest:jest',
     outputs: [
       options.rootProject

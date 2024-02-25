@@ -53,7 +53,7 @@ The `depConstraints` is an array of objects representing the constraints defined
 
 Read more about the proper usage of this rule:
 
-- [Enforce Module Boundaries](/core-features/enforce-module-boundaries)
+- [Enforce Module Boundaries](/features/enforce-module-boundaries)
 - [Ban Dependencies with Certain Tags](/recipes/enforce-module-boundaries/ban-dependencies-with-tags)
 - [Tag in Multiple Dimensions](/recipes/enforce-module-boundaries/tag-multiple-dimensions)
 - [Ban External Imports](/recipes/enforce-module-boundaries/ban-external-imports)

@@ -34,23 +34,10 @@ First, make sure \`@nx/rspack\` is installed.
 Make sure to install the \`@nx/rspack\` version that matches the version of \`nx\` in your repository.  If the version numbers get out of sync, you can encounter some difficult to debug errors.  You can [fix Nx version mismatches with this recipe](/recipes/tips-n-tricks/keep-nx-versions-in-sync).
 {% /callout %}
 
-{% tabs %}
-{% tab label="npm" %}
 \`\`\`bash
-npm i -D @nx/rspack@latest
+nx add @nx/rspack
 \`\`\`
-{% /tab %}
-{% tab label="yarn" %}
-\`\`\`bash
-yarn add -D @nx/rspack@latest
-\`\`\`
-{% /tab %}
-{% tab label="pnpm" %}
-\`\`\`bash
-pnpm add -D @nx/rspack@latest
-\`\`\`
-{% /tab %}
-{% /tabs %}
+
 
 ### Generate a new React project using Rspack
 
@@ -74,28 +61,14 @@ You can generate a [Web](/nx-api/web) application, and then use the \`@nx/rspack
 
 Make sure you have the Web plugin installed.
 
-{% tabs %}
-{% tab label="npm" %}
 \`\`\`bash
-npm i -D @nrwl/web@latest
+nx add @nx/web
 \`\`\`
-{% /tab %}
-{% tab label="yarn" %}
-\`\`\`bash
-yarn add -D @nrwl/web@latest
-\`\`\`
-{% /tab %}
-{% tab label="pnpm" %}
-\`\`\`bash
-pnpm add -D @nrwl/web@latest
-\`\`\`
-{% /tab %}
-{% /tabs %}
 
 Then generate the application.
 
 \`\`\`bash
-nx g @nrwl/web:app my-app --style=css
+nx g @nx/web:app my-app --style=css
 \`\`\`
 
 Finally, configure Rspack for the new project.

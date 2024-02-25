@@ -12,7 +12,7 @@ import { dirname, join, relative, resolve } from 'path';
 
 import { readTargetDefaultsForTarget } from 'nx/src/project-graph/utils/project-configuration-utils';
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
-import { existsSync, readdirSync } from 'fs';
+import { existsSync, readdirSync, readFileSync } from 'fs';
 import { readConfig } from 'jest-config';
 import { projectGraphCacheDirectory } from 'nx/src/utils/cache-directory';
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
@@ -82,6 +82,17 @@ export const createNodes: CreateNodes<JestPluginOptions> = [
       }
     }
 
+    const jestConfigContent = readFileSync(
+      resolve(context.workspaceRoot, configFilePath),
+      'utf-8'
+    );
+    if (jestConfigContent.includes('getJestProjectsAsync()')) {
+      // The `getJestProjectsAsync` function uses the project graph, which leads to a
+      // circular dependency. We can skip this since it's no intended to be used for
+      // an Nx project.
+      return {};
+    }
+
     options = normalizeOptions(options);
 
     const hash = calculateHashForCreateNodes(projectRoot, options, context);
@@ -113,11 +124,7 @@ async function buildJestTargets(
       _: [],
       $0: undefined,
     },
-    resolve(context.workspaceRoot, configFilePath),
-    true,
-    null,
-    undefined,
-    true
+    resolve(context.workspaceRoot, configFilePath)
   );
 
   const targetDefaults = readTargetDefaultsForTarget(

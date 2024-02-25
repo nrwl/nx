@@ -26,16 +26,16 @@ export function Header(): JSX.Element {
     //   href: '/concepts',
     // },
     {
-      name: 'Core Features',
+      name: 'Features',
       description:
-        'Learn the core features of Nx with in depth guides and explainers.',
-      href: '/core-features',
+        'Learn the features of Nx with in depth guides and explainers.',
+      href: '/features',
     },
     {
       name: 'Nx Replay',
       description:
         'Built-in local and remote caching to speed up your tasks and save you time and money.',
-      href: '/core-features/cache-task-results',
+      href: '/features/cache-task-results',
     },
     {
       name: 'Recipes',
@@ -46,13 +46,13 @@ export function Header(): JSX.Element {
       name: 'Nx Agents',
       description:
         'Executes tasks remotely on different agents in parallel. Enable remote cache in one command.',
-      href: '/ci/features/nx-agents',
+      href: '/ci/features/distribute-task-execution',
     },
     {
       name: 'Nx Console',
       description:
         'The official VSCode & JetBrains plugin bringing Nx to your editor.',
-      href: '/core-features/integrate-with-editors#vscode',
+      href: '/features/integrate-with-editors#vscode',
     },
     {
       name: 'Set Up CI',
@@ -73,18 +73,18 @@ export function Header(): JSX.Element {
     },
     {
       name: 'Community',
-      description: "Check how to reach out and be part of Nx' community.",
+      description: 'Check how to reach out and be part of the Nx community.',
       href: '/community',
     },
     {
-      name: 'Nx Conf',
-      description: 'Be part of the next Nx conference!',
-      href: '/conf',
+      name: 'Launch Nx',
+      description: 'A week of exciting announcements about Nx and Nx Cloud!',
+      href: '/launch-nx',
     },
     {
-      name: 'Nx Enterprise',
-      description: 'Need help?',
-      href: 'https://nx.app/enterprise?utm_source=nx.dev',
+      name: 'Contact us',
+      description: 'Give us a call!',
+      href: 'https://nx.app/enterprise?utm_source=nx.dev&utm_medium=header-menu',
     },
   ];
 
@@ -174,15 +174,6 @@ export function Header(): JSX.Element {
               )}
             </Popover>
             <Link
-              href="https://nx.app/enterprise?utm_source=nx.dev"
-              title="Check Nx Enterprise"
-              target="_blank"
-              rel="noreferrer"
-              className="hidden px-3 py-2 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500 md:inline-flex"
-            >
-              Enterprise
-            </Link>
-            <Link
               href="/blog"
               title="Blog"
               className="hidden px-3 py-2 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500 md:inline-flex"
@@ -197,13 +188,6 @@ export function Header(): JSX.Element {
               Community
             </Link>
             <Link
-              href="/plugin-registry"
-              title="Check Nx available plugins"
-              className="hidden px-3 py-2 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500 md:inline-flex"
-            >
-              Plugins registry
-            </Link>
-            <Link
               href="/launch-nx"
               title="Launch Nx"
               className="relative hidden px-3 py-2 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500 md:inline-flex"
@@ -213,6 +197,14 @@ export function Header(): JSX.Element {
               {/*  <span className="relative inline-flex h-3 w-3 rounded-full bg-blue-500 dark:bg-sky-500" />*/}
               {/*</span>*/}Launch Nx
             </Link>
+            <a
+              href="https://nx.app/enterprise?utm_source=nx.dev&utm_medium=header-menu"
+              target="_blank"
+              title="Contact us"
+              className="hidden px-3 py-2 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500 md:inline-flex"
+            >
+              Contact us
+            </a>
           </nav>
         </div>
         <div className="flex-shrink-0 text-sm">

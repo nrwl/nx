@@ -16,6 +16,7 @@ export interface ApplicationGeneratorOptions {
   setParserOptionsProject?: boolean;
   rootProject?: boolean;
   strict?: boolean;
+  addPlugin?: boolean;
 }
 
 interface NormalizedOptions extends ApplicationGeneratorOptions {

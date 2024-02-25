@@ -11,29 +11,9 @@ It can be difficult to set up a typescript library to compile to ESM and CommonJ
 
 If you do not use Rollup already, install the corresponding Nx plugin as follows:
 
-{% tabs %}
-{%tab label="npm"%}
-
-```shell
-npm add -D @nx/rollup
+```shell {% skipRescope=true %}
+nx add @nx/rollup
 ```
-
-{% /tab %}
-{%tab label="yarn"%}
-
-```shell
-yarn add -D @nx/rollup
-```
-
-{% /tab %}
-{%tab label="pnpm"%}
-
-```shell
-pnpm add -D @nx/rollup
-```
-
-{% /tab %}
-{% /tabs %}
 
 Make sure the version of `@nx/rollup` matches your other `@nx/*` package versions.
 

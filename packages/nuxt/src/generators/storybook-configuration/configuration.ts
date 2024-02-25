@@ -19,6 +19,7 @@ export async function storybookConfigurationGenerator(
   const storybookConfigurationGenerator =
     await vueStorybookConfigurationGenerator(host, {
       ...options,
+      addPlugin: true,
     });
 
   const projectConfiguration = readProjectConfiguration(host, options.project);
