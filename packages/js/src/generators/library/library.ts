@@ -263,6 +263,9 @@ async function addProject(tree: Tree, options: NormalizedSchema) {
         version: {
           generatorOptions: {
             packageRoot,
+            // using git tags to determine the current version is required here because
+            // the version in the package root is overridden with every build
+            currentVersionResolver: 'git-tag',
           },
         },
       };
