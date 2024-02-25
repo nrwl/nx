@@ -3,23 +3,31 @@ import { ParsedCommandLine } from 'typescript';
 import { dirname, join } from 'path';
 import { workspaceRoot } from '@nx/devkit';
 
-let tsConfig: ParsedCommandLine;
-let tsPathMappings: ParsedCommandLine['options']['paths'];
+let tsConfig: Map<string, ParsedCommandLine> = new Map();
+let tsPathMappings: Map<string, ParsedCommandLine['options']['paths']> =
+  new Map();
 
 export function readTsPathMappings(
   tsConfigPath: string = process.env.NX_TSCONFIG_PATH ?? getRootTsConfigPath()
 ): ParsedCommandLine['options']['paths'] {
-  if (tsPathMappings) {
-    return tsPathMappings;
+  if (tsPathMappings.has(tsConfigPath)) {
+    return tsPathMappings.get(tsConfigPath);
   }
 
-  tsConfig ??= readTsConfiguration(tsConfigPath);
-  tsPathMappings = {};
-  Object.entries(tsConfig.options?.paths ?? {}).forEach(([alias, paths]) => {
-    tsPathMappings[alias] = paths.map((path) => path.replace(/^\.\//, ''));
-  });
+  if (!tsConfig.has(tsConfigPath)) {
+    tsConfig.set(tsConfigPath, readTsConfiguration(tsConfigPath));
+  }
+  tsPathMappings.set(tsConfigPath, {});
+  Object.entries(tsConfig.get(tsConfigPath).options?.paths ?? {}).forEach(
+    ([alias, paths]) => {
+      tsPathMappings.set(tsConfigPath, {
+        ...tsPathMappings.get(tsConfigPath),
+        [alias]: paths.map((path) => path.replace(/^\.\//, '')),
+      });
+    }
+  );
 
-  return tsPathMappings;
+  return tsPathMappings.get(tsConfigPath);
 }
 
 function readTsConfiguration(tsConfigPath: string): ParsedCommandLine {

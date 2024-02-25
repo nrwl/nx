@@ -9,13 +9,13 @@ import {
   updateProjectConfiguration,
 } from '@nx/devkit';
 
-import { maybeJs } from './maybe-js';
-import { NormalizedSchema } from '../schema';
+import { maybeJs } from '../../../utils/maybe-js';
 import {
   nxVersion,
   rollupPluginUrlVersion,
   svgrRollupVersion,
 } from '../../../utils/versions';
+import { NormalizedSchema } from '../schema';
 
 export async function addRollupBuildTarget(
   host: Tree,

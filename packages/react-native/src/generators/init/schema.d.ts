@@ -3,4 +3,5 @@ export interface Schema {
   skipPackageJson?: boolean; //default is false
   keepExistingVersions?: boolean; //default is false
   updatePackageScripts?: boolean;
+  addPlugin?: boolean;
 }

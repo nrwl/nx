@@ -29,7 +29,7 @@ describe('@nx/vite/plugin', () => {
   describe('root project', () => {
     let tempFs;
     beforeEach(async () => {
-      tempFs = new TempFs('');
+      tempFs = new TempFs('vite-plugin-tests');
       context = {
         nxJsonConfiguration: {
           // These defaults should be overridden by plugin

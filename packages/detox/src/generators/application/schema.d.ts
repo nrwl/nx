@@ -13,4 +13,5 @@ export interface Schema {
   skipFormat?: boolean;
   setParserOptionsProject?: boolean;
   framework: 'react-native' | 'expo';
+  addPlugin?: boolean;
 }

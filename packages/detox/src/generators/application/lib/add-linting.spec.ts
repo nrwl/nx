@@ -38,10 +38,8 @@ describe('Add Linting', () => {
       linter: Linter.EsLint,
       framework: 'react-native',
     });
-    const project = readProjectConfiguration(tree, 'my-app-e2e');
 
-    expect(project.targets.lint).toBeDefined();
-    expect(project.targets.lint.executor).toEqual('@nx/eslint:lint');
+    expect(tree.exists('apps/my-app-e2e/.eslintrc.json')).toBeTruthy();
   });
 
   it('should not add lint target when "none" is passed', async () => {

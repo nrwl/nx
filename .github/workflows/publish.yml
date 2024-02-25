@@ -13,6 +13,7 @@ env:
 
 jobs:
   build:
+    if: ${{ github.repository_owner == 'nrwl' }}
     strategy:
       fail-fast: false
       matrix:
@@ -157,7 +158,8 @@ jobs:
           if-no-files-found: error
 
   build-freebsd:
-     runs-on: macos-12
+     if: ${{ github.repository_owner == 'nrwl' }}
+     runs-on: macos-13-large
      name: Build FreeBSD
      timeout-minutes: 45
      steps:
@@ -166,7 +168,7 @@ jobs:
        - name: Build
          id: build
          if: ${{ github.event_name != 'schedule' }}
-         uses: cross-platform-actions/action@v0.21.1
+         uses: cross-platform-actions/action@v0.22.0
          env:
            DEBUG: napi:*
            RUSTUP_IO_THREADS: 1
@@ -223,6 +225,10 @@ jobs:
     needs:
       - build-freebsd
       - build
+    env:
+      GH_TOKEN: ${{ github.token }}
+      NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      NPM_CONFIG_PROVENANCE: true
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v2
@@ -235,6 +241,8 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
           check-latest: true
           cache: 'pnpm'
+      - name: Check NPM Credentials
+        run: npm whoami && echo "NPM credentials are valid" || (echo "NPM credentials are invalid or have expired." && exit 1)
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
       - name: Download all artifacts
@@ -271,7 +279,3 @@ jobs:
           git branch -f website
           git push -f origin website
           fi
-    env:
-      GH_TOKEN: ${{ github.token }}
-      NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-      NPM_CONFIG_PROVENANCE: true

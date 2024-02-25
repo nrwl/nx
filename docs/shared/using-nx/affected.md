@@ -205,7 +205,7 @@ For instance, if my PR changes `lib10`, and we then run `nx affected -t test`, N
 
 ## Visualize Affected Projects
 
-You can also visualize the affected projects using the [Nx graph](/core-features/explore-graph). Simply run:
+You can also visualize the affected projects using the [Nx graph](/features/explore-graph). Simply run:
 
 ```shell
 nx affected:graph
@@ -213,7 +213,7 @@ nx affected:graph
 
 ## Specify Which SHAs to Use to Calculate Affected Code
 
-To understand which projects are affected, Nx uses the Git history and the [project graph](/core-features/explore-graph). Git knows which files changed, and the Nx project graph knows which projects those files belong to.
+To understand which projects are affected, Nx uses the Git history and the [project graph](/features/explore-graph). Git knows which files changed, and the Nx project graph knows which projects those files belong to.
 
 The affected command takes a `base` and `head` commit. The default `base` is your `main` branch and the default `head` is your current file system. This is generally what you want when developing locally, but in CI, you need to customize these values.
 

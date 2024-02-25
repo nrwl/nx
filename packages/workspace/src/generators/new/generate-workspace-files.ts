@@ -64,11 +64,9 @@ function createNxJson(
 ) {
   const nxJson: NxJsonConfiguration & { $schema: string } = {
     $schema: './node_modules/nx/schemas/nx-schema.json',
-    affected: {
-      defaultBase,
-    },
+    defaultBase,
     targetDefaults:
-      process.env.NX_PCV3 !== 'true'
+      process.env.NX_ADD_PLUGINS === 'false'
         ? {
             build: {
               cache: true,
@@ -82,7 +80,7 @@ function createNxJson(
   };
 
   if (defaultBase === 'main') {
-    delete nxJson.affected;
+    delete nxJson.defaultBase;
   }
   if (preset !== Preset.NPM) {
     nxJson.namedInputs = {
@@ -90,7 +88,7 @@ function createNxJson(
       production: ['default'],
       sharedGlobals: [],
     };
-    if (process.env.NX_PCV3 !== 'true') {
+    if (process.env.NX_ADD_PLUGINS === 'false') {
       nxJson.targetDefaults.build.inputs = ['production', '^production'];
     }
   }
@@ -131,8 +129,12 @@ function createReadme(
   const formattedNames = names(name);
   generateFiles(tree, join(__dirname, './files-readme'), directory, {
     formattedNames,
-    includeServe: preset !== Preset.TsStandalone,
+    isJsStandalone: preset === Preset.TsStandalone,
     appName,
+    serveCommand:
+      preset === Preset.NextJs || preset === Preset.NextJsStandalone
+        ? 'dev'
+        : 'serve',
     name,
   });
 }

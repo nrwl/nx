@@ -7,7 +7,7 @@ exports[`lib --standalone should generate a library with a standalone component 
 import { CommonModule } from '@angular/common';
 
 @Component({
-  selector: 'proj-my-lib',
+  selector: 'lib-my-lib',
   standalone: true,
   imports: [CommonModule],
   templateUrl: './my-lib.component.html',
@@ -53,7 +53,7 @@ exports[`lib --standalone should generate a library with a standalone component 
 import { CommonModule } from '@angular/common';
 
 @Component({
-  selector: 'proj-my-lib',
+  selector: 'lib-my-lib',
   standalone: true,
   imports: [CommonModule],
   templateUrl: './my-lib.component.html',
@@ -105,7 +105,7 @@ exports[`lib --standalone should generate a library with a standalone component 
 import { CommonModule } from '@angular/common';
 
 @Component({
-  selector: 'proj-my-lib',
+  selector: 'lib-my-lib',
   standalone: true,
   imports: [CommonModule],
   templateUrl: './my-lib.component.html',
@@ -147,7 +147,7 @@ exports[`lib --standalone should generate a library with a standalone component 
 import { CommonModule } from '@angular/common';
 
 @Component({
-  selector: 'proj-my-lib',
+  selector: 'lib-my-lib',
   standalone: true,
   imports: [CommonModule],
   template: \`<p>my-lib works!</p>\`,
@@ -166,7 +166,7 @@ exports[`lib --standalone should generate a library with a standalone component 
 import { CommonModule } from '@angular/common';
 
 @Component({
-  selector: 'proj-my-lib',
+  selector: 'lib-my-lib',
   standalone: true,
   imports: [CommonModule],
   template: \`<p>my-lib works!</p>\`,
@@ -183,7 +183,7 @@ exports[`lib --standalone should generate a library with a standalone component 
 import { CommonModule } from '@angular/common';
 
 @Component({
-  selector: 'proj-my-lib',
+  selector: 'lib-my-lib',
   standalone: true,
   imports: [CommonModule],
   template: \`<p>my-lib works!</p>\`,
@@ -239,7 +239,7 @@ exports[`lib --standalone should generate a library with a standalone component 
 import { CommonModule } from '@angular/common';
 
 @Component({
-  selector: 'proj-my-lib',
+  selector: 'lib-my-lib',
   standalone: true,
   imports: [CommonModule],
   templateUrl: './my-lib.component.html',
@@ -353,7 +353,7 @@ exports[`lib --standalone should generate a library with a standalone component 
 import { CommonModule } from '@angular/common';
 
 @Component({
-  selector: 'proj-my-lib',
+  selector: 'lib-my-lib',
   standalone: true,
   imports: [CommonModule],
   templateUrl: './my-lib.component.html',
@@ -395,7 +395,7 @@ exports[`lib --standalone should generate a library with a standalone component 
 import { CommonModule } from '@angular/common';
 
 @Component({
-  selector: 'proj-my-lib',
+  selector: 'lib-my-lib',
   standalone: true,
   imports: [CommonModule],
   templateUrl: './my-lib.component.html',

@@ -39,6 +39,8 @@ Opens your app in Expo Go in a currently running iOS simulator on your computer:
     }
 ```
 
+or run command `nx start <your app name> --ios`.
+
 Opens your app in Expo Go on a connected Android device
 
 ```json
@@ -51,6 +53,8 @@ Opens your app in Expo Go on a connected Android device
     }
 ```
 
+or run command `nx start <your app name> --android`.
+
 Opens your app in a web browser:
 
 ```json
@@ -62,6 +66,8 @@ Opens your app in a web browser:
       }
     }
 ```
+
+or run command `nx start <your app name> --web`.
 
 {% /tab %}
 {% tab label="Specify the host" %}

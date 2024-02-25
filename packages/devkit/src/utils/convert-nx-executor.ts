@@ -8,6 +8,7 @@ const {
   Workspaces,
   readNxJsonFromDisk,
   retrieveProjectConfigurationsWithAngularProjects,
+  shutdownPluginWorkers,
 } = requireNx();
 
 /**
@@ -38,6 +39,7 @@ export function convertNxExecutor(executor: Executor) {
             (workspaces as any).readProjectsConfigurations({
               _includeProjectsFromAngularJson: true,
             });
+      shutdownPluginWorkers?.();
 
       const context: ExecutorContext = {
         root: builderContext.workspaceRoot,

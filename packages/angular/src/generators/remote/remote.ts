@@ -12,6 +12,7 @@ import { setupMf } from '../setup-mf/setup-mf';
 import { findNextAvailablePort, updateSsrSetup } from './lib';
 import type { Schema } from './schema';
 import { swcHelpersVersion } from '@nx/js/src/utils/versions';
+import { addMfEnvToTargetDefaultInputs } from '../utils/add-mf-env-to-inputs';
 
 export async function remote(tree: Tree, options: Schema) {
   return await remoteInternal(tree, {
@@ -89,6 +90,8 @@ export async function remoteInternal(tree: Tree, schema: Schema) {
     });
     installTasks.push(ssrInstallTask);
   }
+
+  addMfEnvToTargetDefaultInputs(tree);
 
   if (!options.skipFormat) {
     await formatFiles(tree);

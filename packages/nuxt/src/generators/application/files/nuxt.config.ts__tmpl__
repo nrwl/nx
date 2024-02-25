@@ -5,7 +5,6 @@ import { defineNuxtConfig } from 'nuxt/config';
 export default defineNuxtConfig({
   workspaceDir: '<%= offsetFromRoot %>',
   srcDir: 'src',
-  buildDir: '<%= offsetFromRoot %><%= buildDirectory %>',
   devtools: { enabled: true },
   devServer: {
     host: 'localhost',
@@ -18,7 +17,7 @@ export default defineNuxtConfig({
     },
   },
   imports: {
-    autoImport: false,
+    autoImport: true,
   },
   <% if (style !== 'none') { %>
   css: ['~/assets/css/styles.<%= style %>'],
@@ -27,10 +26,5 @@ export default defineNuxtConfig({
     plugins: [
       nxViteTsPaths()
     ],
-  },
-  nitro: {
-    output: {
-      dir: '<%= offsetFromRoot %><%= nitroOutputDir %>',
-    },
   },
 });

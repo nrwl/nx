@@ -53,6 +53,10 @@ export function fetchCorePlugins(): CorePlugin[] {
       capabilities: 'executors,generators',
     },
     {
+      name: '@nx/nuxt',
+      capabilities: 'generators',
+    },
+    {
       name: 'nx',
       capabilities: 'executors',
     },

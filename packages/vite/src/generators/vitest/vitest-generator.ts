@@ -14,7 +14,6 @@ import {
 import {
   addOrChangeTestTarget,
   createOrEditViteConfig,
-  findExistingTargetsInProject,
 } from '../../utils/generator-utils';
 import { VitestGeneratorSchema } from './schema';
 
@@ -28,20 +27,33 @@ import { addTsLibDependencies, initGenerator as jsInitGenerator } from '@nx/js';
 import { join } from 'path';
 import { ensureDependencies } from '../../utils/ensure-dependencies';
 
-export async function vitestGenerator(
+export function vitestGenerator(
+  tree: Tree,
+  schema: VitestGeneratorSchema,
+  hasPlugin = false
+) {
+  return vitestGeneratorInternal(
+    tree,
+    { addPlugin: false, ...schema },
+    hasPlugin
+  );
+}
+
+export async function vitestGeneratorInternal(
   tree: Tree,
   schema: VitestGeneratorSchema,
   hasPlugin = false
 ) {
   const tasks: GeneratorCallback[] = [];
 
-  const { targets, root, projectType } = readProjectConfiguration(
-    tree,
-    schema.project
-  );
+  const { root, projectType } = readProjectConfiguration(tree, schema.project);
+  const isRootProject = root === '.';
 
   tasks.push(await jsInitGenerator(tree, { ...schema, skipFormat: true }));
-  const initTask = await initGenerator(tree, { skipFormat: true });
+  const initTask = await initGenerator(tree, {
+    skipFormat: true,
+    addPlugin: schema.addPlugin,
+  });
   tasks.push(initTask);
   tasks.push(ensureDependencies(tree, schema));
 
@@ -53,10 +65,7 @@ export async function vitestGenerator(
         : p.plugin === '@nx/vite/plugin') || hasPlugin
   );
   if (!hasPluginCheck) {
-    const testTarget =
-      schema.testTarget ??
-      findExistingTargetsInProject(targets).validFoundTargetName.test ??
-      'test';
+    const testTarget = schema.testTarget ?? 'test';
     addOrChangeTestTarget(tree, schema, testTarget);
   }
 
@@ -106,6 +115,22 @@ export async function vitestGenerator(
     coverageProviderDependency
   );
   tasks.push(installCoverageProviderTask);
+
+  // Setup workspace config file (https://vitest.dev/guide/workspace.html)
+  if (
+    !isRootProject &&
+    !tree.exists(`vitest.workspace.ts`) &&
+    !tree.exists(`vitest.workspace.js`) &&
+    !tree.exists(`vitest.workspace.json`) &&
+    !tree.exists(`vitest.projects.ts`) &&
+    !tree.exists(`vitest.projects.js`) &&
+    !tree.exists(`vitest.projects.json`)
+  ) {
+    tree.write(
+      'vitest.workspace.ts',
+      `export default ['**/*/vite.config.ts', '**/*/vitest.config.ts'];`
+    );
+  }
 
   if (!schema.skipFormat) {
     await formatFiles(tree);

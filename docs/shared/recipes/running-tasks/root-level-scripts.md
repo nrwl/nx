@@ -47,9 +47,9 @@ yarn run v1.22.19
 $ node ./generateDocsSite.js
 Documentation site generated in /docs
 
- ————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
- >  NX   Successfully ran target docs for project myorg (5s)
+NX   Successfully ran target docs for project myorg (5s)
 ```
 
 ## Configuring a Root-Level Target
@@ -89,14 +89,14 @@ yarn run v1.22.19
 $ node ./generateDocsSite.js
 Documentation site generated in /docs
 
- ————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
- >  NX   Successfully ran target docs for project myorg (31ms)
+NX   Successfully ran target docs for project myorg (31ms)
 
-   Nx read the output from the cache instead of running the command for 1 out of 1 tasks.
+Nx read the output from the cache instead of running the command for 1 out of 1 tasks.
 ```
 
-Read more about [cacheableOperations](/core-features/cache-task-results) and fine-tuning caching with [task inputs](/recipes/running-tasks/customizing-inputs).
+Read more about [cacheableOperations](/features/cache-task-results) and fine-tuning caching with [task inputs](/recipes/running-tasks/configure-inputs).
 
 ## Keep using NPM to run scripts rather than Nx
 

@@ -36,12 +36,6 @@
       "description": "Update package.json eas build lifecycle scripts",
       "implementation": "./src/migrations/update-16-1-4/update-eas-scripts"
     },
-    "add-detox-app-json-16-1-4": {
-      "version": "16.1.4-beta.0",
-      "cli": "nx",
-      "description": "Add app.json for detox",
-      "factory": "./src/migrations/update-16-1-4/add-detox-app-json"
-    },
     "update-16-6-0-add-dependsOn": {
       "cli": "nx",
       "version": "16.6.0-beta.0",
@@ -65,6 +59,30 @@
       "version": "16.9.0-beta.1",
       "description": "Update eas.json cli version",
       "implementation": "./src/migrations/update-16-9-0/update-eas-cli-version"
+    },
+    "update-18-0-0-remove-block-list": {
+      "cli": "nx",
+      "version": "18.0.0-beta.0",
+      "description": "Remove blockList in metro.config.js",
+      "implementation": "./src/migrations/update-18-0-0/remove-block-list"
+    },
+    "update-18-0-0-remove-symlink-target": {
+      "cli": "nx",
+      "version": "18.0.0-beta.0",
+      "description": "Remove symlink target in project.json",
+      "implementation": "./src/migrations/update-18-0-0/remove-symlink-target"
+    },
+    "update-18-0-0-remove-eas-cli": {
+      "cli": "nx",
+      "version": "18.0.0-beta.0",
+      "description": "Remove eas-cli from package.json",
+      "implementation": "./src/migrations/update-18-0-0/remove-eas-cli"
+    },
+    "update-18-0-0-remove-offset-export-outputDir": {
+      "cli": "nx",
+      "version": "18.0.0-beta.0",
+      "description": "Remove the offset from the outputDir of the export target",
+      "implementation": "./src/migrations/update-18-0-0/change-outputDir-export-target"
     }
   },
   "packageJsonUpdates": {
@@ -602,6 +620,67 @@
         },
         "metro": {
           "version": "0.76.8",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "18.0.0": {
+      "version": "18.0.0-beta.0",
+      "packages": {
+        "expo": {
+          "version": "50.0.1",
+          "alwaysAddToPackageJson": false
+        },
+        "expo-splash-screen": {
+          "version": "~0.26.1",
+          "alwaysAddToPackageJson": false
+        },
+        "expo-status-bar": {
+          "version": "~1.11.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@expo/cli": {
+          "version": "~0.16.5",
+          "alwaysAddToPackageJson": false
+        },
+        "babel-preset-expo": {
+          "version": "~10.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/react": {
+          "version": "~18.2.45",
+          "alwaysAddToPackageJson": false
+        },
+        "react-native": {
+          "version": "~0.73.2",
+          "alwaysAddToPackageJson": false
+        },
+        "react-native-web": {
+          "version": "~0.19.9",
+          "alwaysAddToPackageJson": false
+        },
+        "@expo/metro-config": {
+          "version": "~0.17.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@expo/metro-runtime": {
+          "version": "~3.1.1",
+          "addToPackageJson": "devDependencies"
+        },
+        "react-native-svg-transformer": {
+          "version": "1.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "react-native-svg": {
+          "version": "14.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@testing-library/react-native": {
+          "version": "~12.4.2",
+          "alwaysAddToPackageJson": false
+        },
+        "jest-expo": {
+          "version": "~50.0.1",
           "alwaysAddToPackageJson": false
         }
       }

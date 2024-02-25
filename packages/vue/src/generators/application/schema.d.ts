@@ -18,6 +18,7 @@ export interface Schema {
   setParserOptionsProject?: boolean;
   skipPackageJson?: boolean;
   rootProject?: boolean;
+  addPlugin?: boolean;
 }
 
 export interface NormalizedSchema extends Schema {

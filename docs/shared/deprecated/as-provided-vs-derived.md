@@ -12,7 +12,7 @@ Here are some of the issues with the `derived` behavior that are addressed with 
 
 ## Using Nx Console
 
-You can use [Nx Console](/core-features/integrate-with-editors) for an intuitive experience running generators.
+You can use [Nx Console](/features/integrate-with-editors) for an intuitive experience running generators.
 
 1. If you right-click a folder and choose `Nx generate`, the code generation will be run from that folder.
 2. As you fill out the generate form, Nx Console will show you a preview of where the new files will be generated.
@@ -24,7 +24,7 @@ To mitigate the impact of this change of direction, Nx will prompt you when runn
 ```{% command="nx g lib my-lib --directory=shared/my-lib" path="~/myorg" %}
 ✔ Which generator would you like to use? · @nx/node:library
 
->  NX  Generating @nx/node:library
+NX  Generating @nx/node:library
 
 ? What should be the project name and where should it be generated? …
 ❯ As provided:

@@ -16,6 +16,9 @@ describe('Cypress 11 Migration', () => {
   let mockInstalledCypressVersion: jest.Mock<
     ReturnType<typeof installedCypressVersion>
   > = installedCypressVersion as never;
+
+  // TODO(@leosvelperez): Turn this back to adding the plugin
+
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     jest.resetAllMocks();

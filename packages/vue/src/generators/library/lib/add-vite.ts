@@ -25,6 +25,7 @@ export async function addVite(
       includeVitest: options.unitTestRunner === 'vitest',
       skipFormat: true,
       testEnvironment: 'jsdom',
+      addPlugin: options.addPlugin,
     });
     tasks.push(viteTask);
 
@@ -57,6 +58,7 @@ export async function addVite(
       inSourceTests: options.inSourceTests,
       skipFormat: true,
       testEnvironment: 'jsdom',
+      addPlugin: options.addPlugin,
     });
     tasks.push(vitestTask);
 

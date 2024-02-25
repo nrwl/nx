@@ -40,6 +40,7 @@ export async function expoLibraryGenerator(
   schema: Schema
 ): Promise<GeneratorCallback> {
   return await expoLibraryGeneratorInternal(host, {
+    addPlugin: false,
     projectNameAndRootFormat: 'derived',
     ...schema,
   });
@@ -92,7 +93,8 @@ export async function expoLibraryGeneratorInternal(
     options.name,
     options.projectRoot,
     options.js,
-    options.skipPackageJson
+    options.skipPackageJson,
+    options.addPlugin
   );
   tasks.push(jestTask);
 

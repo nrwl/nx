@@ -39,6 +39,7 @@ let projName: string;
 // TODO(jack): we should tag the projects (e.g. tags: ['package']) and filter from that rather than hard-code packages.
 const nxPackages = [
   `@nx/angular`,
+  `@nx/cypress`,
   `@nx/eslint-plugin`,
   `@nx/express`,
   `@nx/esbuild`,
@@ -232,6 +233,7 @@ export function runCreateWorkspace(
     e2eTestRunner,
     ssr,
     framework,
+    prefix,
   }: {
     preset: string;
     appName?: string;
@@ -250,6 +252,7 @@ export function runCreateWorkspace(
     e2eTestRunner?: 'cypress' | 'playwright' | 'jest' | 'detox' | 'none';
     ssr?: boolean;
     framework?: string;
+    prefix?: string;
   }
 ) {
   projName = name;
@@ -314,6 +317,10 @@ export function runCreateWorkspace(
 
   if (ssr !== undefined) {
     command += ` --ssr=${ssr}`;
+  }
+
+  if (prefix !== undefined) {
+    command += ` --prefix=${prefix}`;
   }
 
   try {

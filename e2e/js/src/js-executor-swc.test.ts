@@ -2,9 +2,7 @@ import { execSync } from 'child_process';
 import {
   checkFilesExist,
   cleanupProject,
-  detectPackageManager,
   newProject,
-  packageManagerLockFile,
   readJson,
   runCLI,
   tmpProjPath,

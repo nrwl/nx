@@ -27,8 +27,8 @@
       "e2eTestRunner": {
         "description": "Adds the specified e2e test runner.",
         "type": "string",
-        "enum": ["detox", "none"],
-        "default": "detox"
+        "enum": ["cypress", "playwright", "detox", "none"],
+        "default": "cypress"
       },
       "install": {
         "type": "boolean",
@@ -41,9 +41,9 @@
     "presets": []
   },
   "description": "Destructive command to upgrade native iOS and Android code to latest.",
-  "hidden": false,
   "implementation": "/packages/react-native/src/generators/upgrade-native/upgrade-native#reactNativeUpgradeNativeGenerator.ts",
   "aliases": [],
+  "hidden": false,
   "path": "/packages/react-native/src/generators/upgrade-native/schema.json",
   "type": "generator"
 }

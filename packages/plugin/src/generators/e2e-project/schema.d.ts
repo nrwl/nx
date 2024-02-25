@@ -11,4 +11,5 @@ export interface Schema {
   linter?: Linter;
   skipFormat?: boolean;
   rootProject?: boolean;
+  addPlugin?: boolean;
 }

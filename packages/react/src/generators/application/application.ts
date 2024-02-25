@@ -3,7 +3,7 @@ import { NormalizedSchema, Schema } from './schema';
 import { createApplicationFiles } from './lib/create-application-files';
 import { updateSpecConfig } from './lib/update-jest-config';
 import { normalizeOptions } from './lib/normalize-options';
-import { addProject, maybeJs } from './lib/add-project';
+import { addProject } from './lib/add-project';
 import { addJest } from './lib/add-jest';
 import { addRouting } from './lib/add-routing';
 import { setDefaults } from './lib/set-defaults';
@@ -27,6 +27,7 @@ import {
   nxRspackVersion,
   nxVersion,
 } from '../../utils/versions';
+import { maybeJs } from '../../utils/maybe-js';
 import { installCommonDependencies } from './lib/install-common-dependencies';
 import { extractTsConfigBase } from '../../utils/create-ts-config';
 import { addSwcDependencies } from '@nx/js/src/utils/swc/add-swc-dependencies';
@@ -39,6 +40,7 @@ import {
 } from '@nx/eslint/src/generators/utils/eslint-file';
 import { initGenerator as jsInitGenerator } from '@nx/js';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
+import { setupTailwindGenerator } from '../setup-tailwind/setup-tailwind';
 
 async function addLinting(host: Tree, options: NormalizedSchema) {
   const tasks: GeneratorCallback[] = [];
@@ -53,6 +55,7 @@ async function addLinting(host: Tree, options: NormalizedSchema) {
       skipFormat: true,
       rootProject: options.rootProject,
       skipPackageJson: options.skipPackageJson,
+      addPlugin: options.addPlugin,
     });
     tasks.push(lintTask);
 
@@ -78,6 +81,7 @@ export async function applicationGenerator(
   schema: Schema
 ): Promise<GeneratorCallback> {
   return await applicationGeneratorInternal(host, {
+    addPlugin: false,
     projectNameAndRootFormat: 'derived',
     ...schema,
   });
@@ -112,6 +116,7 @@ export async function applicationGeneratorInternal(
     const webpackInitTask = await webpackInitGenerator(host, {
       skipPackageJson: options.skipPackageJson,
       skipFormat: true,
+      addPlugin: options.addPlugin,
     });
     tasks.push(webpackInitTask);
     if (!options.skipPackageJson) {
@@ -128,6 +133,13 @@ export async function applicationGeneratorInternal(
 
   createApplicationFiles(host, options);
   addProject(host, options);
+
+  if (options.style === 'tailwind') {
+    const twTask = await setupTailwindGenerator(host, {
+      project: options.projectName,
+    });
+    tasks.push(twTask);
+  }
 
   if (options.bundler === 'vite') {
     const { createOrEditViteConfig, viteConfigurationGenerator } =
@@ -150,6 +162,7 @@ export async function applicationGeneratorInternal(
       inSourceTests: options.inSourceTests,
       compiler: options.compiler,
       skipFormat: true,
+      addPlugin: options.addPlugin,
     });
     tasks.push(viteTask);
     createOrEditViteConfig(
@@ -203,6 +216,7 @@ export async function applicationGeneratorInternal(
       project: options.projectName,
       inSourceTests: options.inSourceTests,
       skipFormat: true,
+      addPlugin: options.addPlugin,
     });
     tasks.push(vitestTask);
     createOrEditViteConfig(

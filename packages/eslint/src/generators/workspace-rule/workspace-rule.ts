@@ -25,7 +25,7 @@ export async function lintWorkspaceRuleGenerator(
   // Ensure that the workspace rules project has been created
   const projectGeneratorCallback = await lintWorkspaceRulesProjectGenerator(
     tree,
-    { skipFormat: true }
+    { skipFormat: true, addPlugin: process.env.NX_ADD_PLUGINS !== 'false' }
   );
 
   const ruleDir = joinPathFragments(

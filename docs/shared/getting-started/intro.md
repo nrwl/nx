@@ -4,14 +4,14 @@ Nx is a powerful open-source build system that provides tools and techniques for
 
 ## Core Features
 
-- **Run Tasks Efficiently**: Nx [runs tasks in parallel](/core-features/run-tasks) and orders the tasks based on the dependencies between them.
-- **Cache Locally & Remotely**: With [local](/core-features/cache-task-results) and [remote caching](/ci/features/remote-cache), Nx prevents unnecessary re-runs of tasks, saving you valuable dev time.
-- **Automate Dependency Updates**: if you leverage Nx plugins you gain additional features such as [code generation](/core-features/plugin-features/use-code-generators) and tools to [automatically upgrade](core-features/automate-updating-dependencies) your codebase and dependencies.
+- **Run Tasks Efficiently**: Nx [runs tasks in parallel](/features/run-tasks) and orders the tasks based on the dependencies between them.
+- **Cache Locally & Remotely**: With [local](/features/cache-task-results) and [remote caching](/ci/features/remote-cache), Nx prevents unnecessary re-runs of tasks, saving you valuable dev time.
+- **Automate Dependency Updates**: if you leverage Nx plugins you gain additional features such as [code generation](/features/generate-code) and tools to [automatically upgrade](features/automate-updating-dependencies) your codebase and dependencies.
 - **Make it Your Own**: Nx is highly customizable and extensible. Fine-tune it by [creating your own plugins](/extending-nx/intro/getting-started) and optionally [share them with the community](/extending-nx/tutorials/publish-plugin#publish-your-nx-plugin).
 
 <!-- - **Monorepo and Single Projects**: Nx supports both, monorepos as well as single-project (standalone) workspaces. -->
 
-Find out more about [why you should use Nx](/getting-started/why-nx) or browse our [core features](/core-features).
+Find out more about [why you should use Nx](/getting-started/why-nx) or browse our [features](/features).
 
 ## Try Nx Yourself!
 
@@ -47,9 +47,7 @@ npx create-nx-workspace@latest
 
 <!-- {% link-card title="React Monorepo" type="tutorial" url="/getting-started/tutorials/react-standalone-tutorial" icon="reactMono" /%}
 
-{% link-card title="Angular Monorepo" type="tutorial" url="/getting-started/tutorials/angular-standalone-tutorial" icon="angularMono" /%}
-
-{% link-card title="Node Monorepo" type="tutorial" url="/getting-started/tutorials/node-server-tutorial" icon="nodeMono" /%} -->
+{% link-card title="Angular Monorepo" type="tutorial" url="/getting-started/tutorials/angular-standalone-tutorial" icon="angularMono" /%}-->
 
 {% /cards %}
 
@@ -66,7 +64,6 @@ npx create-nx-workspace@latest
 {% link-card title="Expo" appearance="small" url="/nx-api/expo" icon="expo" /%}
 {% link-card title="React Native" appearance="small" url="/nx-api/react-native" icon="react" /%}
 {% link-card title="Fastify" appearance="small" url="/showcase/example-repos/mongo-fastify" icon="fastify" /%}
-{% link-card title="Deno" appearance="small" url="https://github.com/nrwl/nx-labs/tree/main/api/deno" icon="deno" /%}
 {% link-card title="Svelte" appearance="small" url="/showcase/example-repos/add-svelte" icon="svelte" /%}
 {% link-card title="Solid" appearance="small" url="/showcase/example-repos/add-solid" icon="solid" /%}
 {% link-card title="Lit" appearance="small" url="/showcase/example-repos/add-lit" icon="lit" /%}

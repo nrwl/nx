@@ -48,7 +48,7 @@ Adding a _ci_ configuration is helpful for adding this behavior.
 ```
 
 ```bash
-nx affected --target=test --configuration=ci
+nx affected --target=test
 ```
 
 Learn more [about _affected_](/ci/features/affected)

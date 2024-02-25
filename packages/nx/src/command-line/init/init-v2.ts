@@ -5,11 +5,12 @@ import { output } from '../../utils/output';
 import { getPackageManagerCommand } from '../../utils/package-manager';
 import { generateDotNxSetup } from './implementation/dot-nx/add-nx-scripts';
 import { runNxSync } from '../../utils/child-process';
-import { readJsonFile } from '../../utils/fileutils';
+import { readJsonFile, writeJsonFile } from '../../utils/fileutils';
 import { nxVersion } from '../../utils/versions';
 import {
   addDepsToPackageJson,
   createNxJsonFile,
+  isMonorepo,
   runInstall,
   updateGitIgnore,
 } from './implementation/utils';
@@ -18,6 +19,9 @@ import { execSync } from 'child_process';
 import { addNxToAngularCliRepo } from './implementation/angular';
 import { globWithWorkspaceContext } from '../../utils/workspace-context';
 import { connectExistingRepoToNxCloudPrompt } from '../connect/connect-to-nx-cloud';
+import { addNxToNpmRepo } from './implementation/add-nx-to-npm-repo';
+import { addNxToMonorepo } from './implementation/add-nx-to-monorepo';
+import { join } from 'path';
 
 export interface InitArgs {
   interactive: boolean;
@@ -49,7 +53,7 @@ export async function initHandler(options: InitArgs): Promise<void> {
     return;
   }
 
-  // TODO(jack): Remove this Angular logic once `@nx/plugin` is compatible with PCv3.
+  // TODO(jack): Remove this Angular logic once `@nx/angular` is compatible with inferred targets.
   if (existsSync('angular.json')) {
     await addNxToAngularCliRepo({
       ...options,
@@ -58,26 +62,38 @@ export async function initHandler(options: InitArgs): Promise<void> {
     return;
   }
 
-  const repoRoot = process.cwd();
-  const cacheableOperations: string[] = [];
-  createNxJsonFile(repoRoot, [], cacheableOperations, {});
-
-  const pmc = getPackageManagerCommand();
-
-  updateGitIgnore(repoRoot);
+  output.log({ title: '🧐 Checking dependencies' });
 
   const detectPluginsResponse = await detectPlugins();
-  const useNxCloud =
-    options.nxCloud ??
-    (options.interactive ? await connectExistingRepoToNxCloudPrompt() : false);
 
-  addDepsToPackageJson(repoRoot, detectPluginsResponse?.plugins ?? []);
+  if (!detectPluginsResponse?.plugins.length) {
+    // If no plugins are detected/chosen, guide users to setup
+    // their targetDefaults correctly so their package scripts will work.
+    const packageJson: PackageJson = readJsonFile('package.json');
+    if (isMonorepo(packageJson)) {
+      await addNxToMonorepo({ interactive: options.interactive });
+    } else {
+      await addNxToNpmRepo({ interactive: options.interactive });
+    }
+  } else {
+    const useNxCloud =
+      options.nxCloud ??
+      (options.interactive
+        ? await connectExistingRepoToNxCloudPrompt()
+        : false);
 
-  output.log({ title: '📦 Installing Nx' });
+    const repoRoot = process.cwd();
+    const pmc = getPackageManagerCommand();
 
-  runInstall(repoRoot, pmc);
+    createNxJsonFile(repoRoot, [], [], {});
+    updateGitIgnore(repoRoot);
 
-  if (detectPluginsResponse) {
+    addDepsToPackageJson(repoRoot, detectPluginsResponse.plugins);
+
+    output.log({ title: '📦 Installing Nx' });
+
+    runInstall(repoRoot, pmc);
+
     output.log({ title: '🔨 Configuring plugins' });
     for (const plugin of detectPluginsResponse.plugins) {
       execSync(
@@ -92,17 +108,24 @@ export async function initHandler(options: InitArgs): Promise<void> {
         }
       );
     }
-  }
 
-  if (useNxCloud) {
-    output.log({ title: '🛠️ Setting up Nx Cloud' });
-    execSync(
-      `${pmc.exec} nx g nx:connect-to-nx-cloud --installationSource=nx-init-pcv3 --quiet --hideFormatLogs --no-interactive`,
-      {
-        stdio: [0, 1, 2],
-        cwd: repoRoot,
-      }
-    );
+    if (!detectPluginsResponse.updatePackageScripts) {
+      const rootPackageJsonPath = join(repoRoot, 'package.json');
+      const json = readJsonFile<PackageJson>(rootPackageJsonPath);
+      json.nx = {};
+      writeJsonFile(rootPackageJsonPath, json);
+    }
+
+    if (useNxCloud) {
+      output.log({ title: '🛠️ Setting up Nx Cloud' });
+      execSync(
+        `${pmc.exec} nx g nx:connect-to-nx-cloud --installationSource=nx-init --quiet --hideFormatLogs --no-interactive`,
+        {
+          stdio: [0, 1, 2],
+          cwd: repoRoot,
+        }
+      );
+    }
   }
 
   output.log({

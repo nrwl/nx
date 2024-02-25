@@ -465,7 +465,7 @@ export async function generateGraph(
     url.pathname = args.view;
 
     if (args.focus) {
-      url.pathname += '/' + args.focus;
+      url.pathname += '/' + encodeURIComponent(args.focus);
     }
 
     if (target) {

@@ -18,7 +18,12 @@
           "description": "Default based branch used by affected commands."
         }
       },
-      "additionalProperties": false
+      "additionalProperties": false,
+      "deprecated": "Use `defaultBase` instead. Support for setting `defaultBase` in `affected` will be removed in Nx 19."
+    },
+    "defaultBase": {
+      "type": "string",
+      "description": "Default --base used by affected logic."
     },
     "tasksRunnerOptions": {
       "type": "object",

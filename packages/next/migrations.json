@@ -83,6 +83,24 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "17.3.1-beta.0": {
+      "version": "17.3.1-beta.0",
+      "packages": {
+        "next": {
+          "version": "14.0.4",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "18.0.4": {
+      "version": "18.0.4-beta.0",
+      "packages": {
+        "@swc-node/register": {
+          "version": "~1.8.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }

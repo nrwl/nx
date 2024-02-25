@@ -1,3 +1,8 @@
+---
+title: Overview of the Nx Next.js Plugin
+description: The Nx Next.js plugin contains executors and generators for managing Next.js applications and libraries within an Nx workspace. This page also explains how to configure Next.js on your Nx workspace.
+---
+
 When using Next.js in Nx, you get the out-of-the-box support for TypeScript, Cypress, and Jest. No need to configure anything: watch mode, source maps, and typings just work.
 
 The Next.js plugin contains executors and generators for managing Next.js applications and libraries within an Nx workspace. It provides:
@@ -6,35 +11,84 @@ The Next.js plugin contains executors and generators for managing Next.js applic
 - Integration with building, serving, and exporting a Next.js application.
 - Integration with React libraries within the workspace.
 
-## Setting up Next.js
+## Setting up @nx/next
 
-To create a new Nx workspace with Next.js, run `npx create-nx-workspace@latest --preset=next`.
+To create a new Nx workspace with Next.js, run:
 
-To add Next.js to an existing Nx workspace, install the `@nx/next` package. Make sure to install the version that matches your `nx` version.
+```shell
+npx create-nx-workspace@latest --preset=next
+```
+
+### Installation
+
+{% callout type="note" title="Keep Nx Package Versions In Sync" %}
+Make sure to install the `@nx/next` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/recipes/tips-n-tricks/keep-nx-versions-in-sync).
+{% /callout %}
+
+In any workspace, you can install `@nx/next` by running the following command:
 
 {% tabs %}
-{% tab label="npm" %}
+{% tab label="Nx 18+" %}
+
+```shell {% skipRescope=true %}
+nx add @nx/next
+```
+
+This will install the correct version of `@nx/next`.
+
+### How @nx/next Infers Tasks
+
+The `@nx/next` plugin will create tasks for any project that has a Next.js configuration file preset. Any of the following files will be recognized as a Next.js configuration file:
+
+- `next.config.js`
+- `next.config.cjs`
+- `next.config.mjs`
+
+### View Inferred Tasks
+
+To view inferred tasks for a project, open the [project details view](/concepts/inferred-tasks) in Nx Console or run `nx show project <project-name> --web` in your command line.
+
+### @nx/next Configuration
+
+The `@nx/next/plugin` is configured in the `plugins` array in `nx.json`.
+
+```json {% fileName="nx.json" %}
+{
+  "plugins": [
+    {
+      "plugin": "@nx/next/plugin",
+      "options": {
+        "buildTargetName": "build",
+        "devTargetName": "dev",
+        "startTargetName": "start",
+        "serveStaticTargetName": "serve-static"
+      }
+    }
+  ]
+}
+```
+
+- The `buildTargetName` option controls the name of Next.js' compilation task which compiles the application for production deployment. The default name is `build`.
+- The `devTargetName` option controls the name of Next.js' development serve task which starts the application in development mode. The default name is `dev`.
+- The `startTargetName` option controls the name of Next.js' production serve task which starts the application in production mode. The default name is `start`.
+- The `serveStaticTargetName` option controls the name of Next.js' static export task which exports the application to static HTML files. The default name is `serve-static`.
+
+{% /tab %}
+{% tab label="Nx < 18" %}
+
+{% /tab %}
+{% tab label="Nx < 18" %}
+
+Install the `@nx/next` package with your package manager.
 
 ```shell
 npm add -D @nx/next
 ```
 
 {% /tab %}
-{% tab label="yarn" %}
-
-```shell
-yarn add -D @nx/next
-```
-
-{% /tab %}
-{% tab label="pnpm" %}
-
-```shell
-pnpm add -D @nx/next
-```
-
-{% /tab %}
 {% /tabs %}
+
+## Using @nx/next
 
 ### Creating Applications
 
@@ -79,13 +133,37 @@ Nx generates components with tests by default. For pages, you can pass the `--wi
 
 ### Serving Next.js Applications
 
-You can run `nx serve my-new-app` to serve a Next.js application called `my-new-app` for development. This will start the dev server at http://localhost:4200.
+{% tabs %}
+
+{% tab label="Nx 18+" %}
+
+You can serve a Next.js application `my-new-app` for development:
+
+```shell
+nx dev my-new-app
+```
+
+To serve a Next.js application for production:
+
+```shell
+nx start my-new-app
+```
+
+This will start the server at <http://localhost:3000> by default.
+
+{% /tab %}
+{% tab label="Nx < 18" %}
+
+You can run `nx serve my-new-app` to serve a Next.js application called `my-new-app` for development. This will start the dev server at <http://localhost:4200>.
 
 To serve a Next.js application for production, add the `--prod` flag to the serve command:
 
 ```shell
 nx serve my-new-app --prod
 ```
+
+{% /tab %}
+{% /tabs %}
 
 ### Using an Nx Library in your Application
 
@@ -165,11 +243,57 @@ The library in `dist` is publishable to npm or a private registry.
 
 ### Static HTML Export
 
-Next.js applications can be statically exported with:
+Next.js applications can be statically exported by changing the output inside your Next.js configuration file.
+
+```js {% fileName="apps/my-next-app/next.config.js" %}
+const nextConfig = {
+  output: 'export',
+  nx: {
+    svgr: false,
+  },
+  output: 'export',
+};
+```
+
+After setting the output to `export`, you can run the `build` command to generate the static HTML files.
 
 ```shell
-nx export my-new-app
+nx build my-next-app
 ```
+
+You can then check your project folder for the `out` folder which contains the static HTML files.
+
+```shell
+├── index.d.ts
+├── jest.config.ts
+├── next-env.d.ts
+├── next.config.js
+├── out
+├── project.json
+├── public
+├── specs
+├── src
+├── tsconfig.json
+└── tsconfig.spec.json
+```
+
+#### E2E testing
+
+You can perform end-to-end (E2E) testing on static HTML files using a test runner like Cypress. When you create a Next.js application, Nx automatically creates a `serve-static` target. This target is designed to serve the static HTML files produced by the build command.
+
+This feature is particularly useful for testing in continuous integration (CI) pipelines, where resources may be constrained. Unlike the `dev` and `start` targets, `serve-static` does not require a Next.js server to operate, making it more efficient and faster by eliminating background processes, such as file change monitoring.
+
+To utilize the `serve-static` target for testing, run the following command:
+
+```shell
+nx serve-static my-next-app-e2e
+```
+
+This command performs several actions:
+
+1. It will build the Next.js application and generate the static HTML files.
+2. It will serve the static HTML files using a simple HTTP server.
+3. It will run the Cypress tests against the served static HTML files.
 
 ### Deploying Next.js Applications
 

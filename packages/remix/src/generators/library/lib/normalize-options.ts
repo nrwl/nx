@@ -21,6 +21,8 @@ export async function normalizeOptions(
       callingGenerator: '@nx/remix:library',
     });
 
+  options.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
+
   const importPath = options.importPath ?? getImportPath(tree, projectRoot);
 
   return {

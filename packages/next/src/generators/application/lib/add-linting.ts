@@ -34,6 +34,7 @@ export async function addLinting(
       skipFormat: true,
       rootProject: options.rootProject,
       setParserOptionsProject: options.setParserOptionsProject,
+      addPlugin: options.addPlugin,
     })
   );
 

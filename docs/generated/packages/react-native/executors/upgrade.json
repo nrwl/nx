@@ -1,0 +1,21 @@
+{
+  "name": "upgrade",
+  "implementation": "/packages/react-native/src/executors/upgrade/upgrade.impl.ts",
+  "schema": {
+    "$schema": "http://json-schema.org/schema",
+    "version": 2,
+    "cli": "nx",
+    "$id": "NxReactNativeUpgrade",
+    "title": "React Native Upgrade Executor",
+    "description": "Upgrade React Native code for project.",
+    "type": "object",
+    "properties": {},
+    "required": [],
+    "presets": []
+  },
+  "description": "upgrade executor",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/react-native/src/executors/upgrade/schema.json",
+  "type": "executor"
+}

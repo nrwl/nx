@@ -11,6 +11,7 @@ import {
 import { updatePackageScripts } from '@nx/devkit/src/utils/update-package-scripts';
 import { createNodes } from '../../plugins/plugin';
 import { jestVersion, nxVersion } from '../../utils/versions';
+import { isPresetCjs } from '../../utils/config/is-preset-cjs';
 import type { JestInitSchema } from './schema';
 
 function addPlugin(tree: Tree) {
@@ -34,7 +35,7 @@ function addPlugin(tree: Tree) {
   updateNxJson(tree, nxJson);
 }
 
-function updateProductionFileSet(tree: Tree) {
+function updateProductionFileSet(tree: Tree, presetExt: 'cjs' | 'js') {
   const nxJson = readNxJson(tree);
 
   const productionFileSet = nxJson.namedInputs?.production;
@@ -59,7 +60,7 @@ function updateProductionFileSet(tree: Tree) {
   updateNxJson(tree, nxJson);
 }
 
-function addJestTargetDefaults(tree: Tree) {
+function addJestTargetDefaults(tree: Tree, presetEnv: 'cjs' | 'js') {
   const nxJson = readNxJson(tree);
 
   nxJson.targetDefaults ??= {};
@@ -72,7 +73,7 @@ function addJestTargetDefaults(tree: Tree) {
   nxJson.targetDefaults['@nx/jest:jest'].inputs ??= [
     'default',
     productionFileSet ? '^production' : '^default',
-    '{workspaceRoot}/jest.preset.js',
+    `{workspaceRoot}/jest.preset.${presetEnv}`,
   ];
 
   nxJson.targetDefaults['@nx/jest:jest'].options ??= {
@@ -101,16 +102,24 @@ function updateDependencies(tree: Tree, options: JestInitSchema) {
   );
 }
 
-export async function jestInitGenerator(
+export function jestInitGenerator(tree: Tree, options: JestInitSchema) {
+  return jestInitGeneratorInternal(tree, { addPlugin: false, ...options });
+}
+
+export async function jestInitGeneratorInternal(
   tree: Tree,
   options: JestInitSchema
 ): Promise<GeneratorCallback> {
-  if (!tree.exists('jest.preset.js')) {
-    updateProductionFileSet(tree);
-    if (process.env.NX_PCV3 === 'true') {
+  options.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
+
+  const presetExt = isPresetCjs(tree) ? 'cjs' : 'js';
+
+  if (!tree.exists('jest.preset.js') && !tree.exists('jest.preset.cjs')) {
+    updateProductionFileSet(tree, presetExt);
+    if (options.addPlugin) {
       addPlugin(tree);
     } else {
-      addJestTargetDefaults(tree);
+      addJestTargetDefaults(tree, presetExt);
     }
   }
 

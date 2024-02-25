@@ -76,7 +76,7 @@ describe('resolveVersionSpec()', () => {
         'projectA',
         '1.0.0',
         'link:../projectB',
-        '/packages/fuck'
+        '/packages/projectB'
       )
     ).toEqual(expect.stringContaining(join('/packages/projectB')));
   });

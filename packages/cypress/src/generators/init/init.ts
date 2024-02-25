@@ -97,9 +97,18 @@ function updateProductionFileset(tree: Tree) {
 }
 
 export async function cypressInitGenerator(tree: Tree, options: Schema) {
+  return cypressInitGeneratorInternal(tree, { addPlugin: false, ...options });
+}
+
+export async function cypressInitGeneratorInternal(
+  tree: Tree,
+  options: Schema
+) {
   updateProductionFileset(tree);
 
-  if (process.env.NX_PCV3 === 'true') {
+  options.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
+
+  if (options.addPlugin) {
     addPlugin(tree);
   } else {
     setupE2ETargetDefaults(tree);
@@ -111,7 +120,9 @@ export async function cypressInitGenerator(tree: Tree, options: Schema) {
   }
 
   if (options.updatePackageScripts) {
+    global.NX_CYPRESS_INIT_GENERATOR_RUNNING = true;
     await updatePackageScripts(tree, createNodes);
+    global.NX_CYPRESS_INIT_GENERATOR_RUNNING = false;
   }
 
   if (!options.skipFormat) {

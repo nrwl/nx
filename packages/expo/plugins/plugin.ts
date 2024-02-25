@@ -106,17 +106,20 @@ function buildExpoTargets(
 
   const targets: Record<string, TargetConfiguration> = {
     [options.startTargetName]: {
-      executor: `@nx/expo:start`,
+      command: `expo start`,
+      options: { cwd: projectRoot },
     },
     [options.serveTargetName]: {
       command: `expo start --web`,
       options: { cwd: projectRoot },
     },
     [options.runIosTargetName]: {
-      executor: `@nx/expo:run-ios`,
+      command: `expo run:ios`,
+      options: { cwd: projectRoot },
     },
     [options.runAndroidTargetName]: {
-      executor: `@nx/expo:run-android`,
+      command: `expo run:android`,
+      options: { cwd: projectRoot },
     },
     [options.exportTargetName]: {
       command: `expo export`,
@@ -134,12 +137,12 @@ function buildExpoTargets(
       executor: `@nx/expo:prebuild`,
     },
     [options.buildTargetName]: {
-      executor: `@nx/expo:build`,
-      dependsOn: [`^${options.buildTargetName}`],
-      inputs: getInputs(namedInputs),
+      command: `eas build`,
+      options: { cwd: projectRoot },
     },
     [options.submitTargetName]: {
-      executor: `@nx/expo:submit`,
+      command: `eas submit`,
+      options: { cwd: projectRoot },
     },
   };
 

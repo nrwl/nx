@@ -4,9 +4,9 @@
   "extends": ["@nx/workspace"],
   "generators": {
     "init": {
-      "factory": "./src/generators/init/init#reactNativeInitGenerator",
+      "factory": "./src/generators/init/init#reactNativeInitGeneratorInternal",
       "schema": "./src/generators/init/schema.json",
-      "description": "Initialize the `@nrwl/react-native` plugin.",
+      "description": "Initialize the `@nx/react-native` plugin.",
       "hidden": true
     },
     "application": {
@@ -30,28 +30,29 @@
       "aliases": ["c"]
     },
     "storybook-configuration": {
-      "factory": "./src/generators/storybook-configuration/configuration#storybookConfigurationGenerator",
+      "factory": "./src/generators/storybook-configuration/configuration#storybookConfigurationGeneratorInternal",
       "schema": "./src/generators/storybook-configuration/schema.json",
-      "description": "Set up Storybook for a React-native application or library.",
-      "hidden": false
+      "description": "Set up Storybook for a React Native application or library."
     },
     "component-story": {
       "factory": "./src/generators/component-story/component-story#componentStoryGenerator",
       "schema": "./src/generators/component-story/schema.json",
-      "description": "Generate Storybook story for a React-native component.",
-      "hidden": false
+      "description": "Generate Storybook story for a React Native component."
     },
     "stories": {
       "factory": "./src/generators/stories/stories#storiesGenerator",
       "schema": "./src/generators/stories/schema.json",
-      "description": "Create stories/specs for all components declared in an application or library.",
-      "hidden": false
+      "description": "Create stories for all components declared in an application or library."
     },
     "upgrade-native": {
       "factory": "./src/generators/upgrade-native/upgrade-native#reactNativeUpgradeNativeGenerator",
       "schema": "./src/generators/upgrade-native/schema.json",
-      "description": "Destructive command to upgrade native iOS and Android code to latest.",
-      "hidden": false
+      "description": "Destructive command to upgrade native iOS and Android code to latest."
+    },
+    "web-configuration": {
+      "factory": "./src/generators/web-configuration/web-configuration#webConfigurationGenerator",
+      "schema": "./src/generators/web-configuration/schema.json",
+      "description": "Set up web configuration for a React Native app"
     }
   }
 }

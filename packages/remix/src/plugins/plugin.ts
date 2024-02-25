@@ -3,18 +3,19 @@ import {
   type CreateDependencies,
   type CreateNodes,
   type CreateNodesContext,
-  type TargetConfiguration,
   detectPackageManager,
+  joinPathFragments,
   readJsonFile,
+  type TargetConfiguration,
   writeJsonFile,
 } from '@nx/devkit';
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
-import { getLockFileName, getRootTsConfigPath } from '@nx/js';
-import { registerTsProject } from '@nx/js/src/internal';
+import { getLockFileName } from '@nx/js';
 import { type AppConfig } from '@remix-run/dev';
-import { join, dirname } from 'path';
+import { dirname, join } from 'path';
 import { existsSync, readdirSync } from 'fs';
+import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
 
 const cachePath = join(projectGraphCacheDirectory, 'remix.hash');
 const targetsCache = existsSync(cachePath) ? readTargetsCache() : {};
@@ -69,7 +70,13 @@ export const createNodes: CreateNodes<RemixPluginOptions> = [
     ]);
     const targets = targetsCache[hash]
       ? targetsCache[hash]
-      : await buildRemixTargets(configFilePath, projectRoot, options, context);
+      : await buildRemixTargets(
+          configFilePath,
+          projectRoot,
+          options,
+          context,
+          siblingFiles
+        );
 
     calculatedTargets[hash] = targets;
 
@@ -88,17 +95,19 @@ async function buildRemixTargets(
   configFilePath: string,
   projectRoot: string,
   options: RemixPluginOptions,
-  context: CreateNodesContext
+  context: CreateNodesContext,
+  siblingFiles: string[]
 ) {
   const namedInputs = getNamedInputs(projectRoot, context);
-  const serverBuildPath = await getServerBuildPath(
-    configFilePath,
-    context.workspaceRoot
-  );
+  const { buildDirectory, assetsBuildDirectory, serverBuildPath } =
+    await getBuildPaths(configFilePath, context.workspaceRoot);
 
   const targets: Record<string, TargetConfiguration> = {};
   targets[options.buildTargetName] = buildTarget(
     options.buildTargetName,
+    projectRoot,
+    buildDirectory,
+    assetsBuildDirectory,
     namedInputs
   );
   targets[options.serveTargetName] = serveTarget(serverBuildPath);
@@ -109,7 +118,8 @@ async function buildRemixTargets(
   );
   targets[options.typecheckTargetName] = typecheckTarget(
     projectRoot,
-    namedInputs
+    namedInputs,
+    siblingFiles
   );
 
   return targets;
@@ -117,8 +127,21 @@ async function buildRemixTargets(
 
 function buildTarget(
   buildTargetName: string,
+  projectRoot: string,
+  buildDirectory: string,
+  assetsBuildDirectory: string,
   namedInputs: { [inputName: string]: any[] }
 ): TargetConfiguration {
+  const serverBuildOutputPath =
+    projectRoot === '.'
+      ? joinPathFragments(`{workspaceRoot}`, buildDirectory)
+      : joinPathFragments(`{workspaceRoot}`, projectRoot, buildDirectory);
+
+  const assetsBuildOutputPath =
+    projectRoot === '.'
+      ? joinPathFragments(`{workspaceRoot}`, assetsBuildDirectory)
+      : joinPathFragments(`{workspaceRoot}`, projectRoot, assetsBuildDirectory);
+
   return {
     cache: true,
     dependsOn: [`^${buildTargetName}`],
@@ -127,10 +150,10 @@ function buildTarget(
         ? ['production', '^production']
         : ['default', '^default']),
     ],
-    outputs: ['{options.outputPath}'],
+    outputs: [serverBuildOutputPath, assetsBuildOutputPath],
     executor: '@nx/remix:build',
     options: {
-      outputPath: '{workspaceRoot}/dist',
+      outputPath: projectRoot,
     },
   };
 }
@@ -160,46 +183,42 @@ function startTarget(
 
 function typecheckTarget(
   projectRoot: string,
-  namedInputs: { [inputName: string]: any[] }
+  namedInputs: { [inputName: string]: any[] },
+  siblingFiles: string[]
 ): TargetConfiguration {
+  const hasTsConfigAppJson = siblingFiles.includes('tsconfig.app.json');
+  const command = `tsc${
+    hasTsConfigAppJson ? ` --project tsconfig.app.json` : ``
+  }`;
   return {
+    command,
     cache: true,
     inputs: [
       ...('production' in namedInputs
         ? ['production', '^production']
         : ['default', '^default']),
     ],
-    command: 'tsc',
     options: {
       cwd: projectRoot,
     },
   };
 }
 
-async function getServerBuildPath(
+async function getBuildPaths(
   configFilePath: string,
   workspaceRoot: string
-): Promise<string> {
+): Promise<{
+  buildDirectory: string;
+  assetsBuildDirectory: string;
+  serverBuildPath: string;
+}> {
   const configPath = join(workspaceRoot, configFilePath);
-  let appConfig: AppConfig = {};
-  try {
-    let appConfigModule: any;
-    try {
-      appConfigModule = await Function(
-        `return import("${configPath}?t=${Date.now()}")`
-      )();
-    } catch {
-      appConfigModule = require(configPath);
-    }
-
-    appConfig = appConfigModule?.default || appConfigModule;
-  } catch (error) {
-    throw new Error(
-      `Error loading Remix config at ${configFilePath}\n${String(error)}`
-    );
-  }
-
-  return appConfig.serverBuildPath ?? 'build/index.js';
+  let appConfig = await loadConfigFile<AppConfig>(configPath);
+  return {
+    buildDirectory: 'build',
+    serverBuildPath: appConfig.serverBuildPath ?? 'build/index.js',
+    assetsBuildDirectory: appConfig.assetsBuildDirectory ?? 'public/build',
+  };
 }
 
 function normalizeOptions(options: RemixPluginOptions) {

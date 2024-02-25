@@ -13,15 +13,21 @@ import { createNodes, DetoxPluginOptions } from '../../plugins/plugin';
 import { detoxVersion, nxVersion } from '../../utils/versions';
 import { Schema } from './schema';
 
-export async function detoxInitGenerator(host: Tree, schema: Schema) {
+export function detoxInitGenerator(host: Tree, schema: Schema) {
+  return detoxInitGeneratorInternal(host, { addPlugin: false, ...schema });
+}
+
+export async function detoxInitGeneratorInternal(host: Tree, schema: Schema) {
   const tasks: GeneratorCallback[] = [];
+
+  schema.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
 
   if (!schema.skipPackageJson) {
     tasks.push(moveDependency(host));
     tasks.push(updateDependencies(host, schema));
   }
 
-  if (process.env.NX_PCV3 === 'true') {
+  if (schema.addPlugin) {
     addPlugin(host);
   }
 

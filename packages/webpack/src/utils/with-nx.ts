@@ -25,13 +25,15 @@ export function withNx(
       {
         ...options,
         ...pluginOptions,
+        target: options.target ?? 'web',
         assets: options.assets
           ? options.assets
           : pluginOptions.assets
           ? normalizeAssets(
               pluginOptions.assets,
               options.root,
-              options.sourceRoot
+              options.sourceRoot,
+              options.projectRoot
             )
           : [],
         root: context.root,

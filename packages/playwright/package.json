@@ -32,6 +32,7 @@
     "directory": "packages/playwright"
   },
   "dependencies": {
+    "@phenomnomnominal/tsquery": "~5.0.1",
     "@nx/devkit": "file:../devkit",
     "@nx/eslint": "file:../eslint",
     "@nx/js": "file:../js",

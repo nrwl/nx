@@ -174,16 +174,6 @@ Please see https://nx.dev/guides/eslint for full guidance on how to resolve this
 
   const formatter = await eslint.loadFormatter(normalizedOptions.format);
 
-  let totalErrors = 0;
-  let totalWarnings = 0;
-
-  for (const result of lintResults) {
-    if (result.errorCount || result.warningCount) {
-      totalErrors += result.errorCount;
-      totalWarnings += result.warningCount;
-    }
-  }
-
   const formattedResults = await formatter.format(lintResults);
 
   if (normalizedOptions.outputFile) {
@@ -197,23 +187,71 @@ Please see https://nx.dev/guides/eslint for full guidance on how to resolve this
     console.info(formattedResults);
   }
 
-  if (totalWarnings > 0 && printInfo) {
-    console.warn('Lint warnings found in the listed files.\n');
-  }
+  const totals = getTotals(lintResults);
 
-  if (totalErrors > 0 && printInfo) {
-    console.error('Lint errors found in the listed files.\n');
-  }
-
-  if (totalWarnings === 0 && totalErrors === 0 && printInfo) {
-    console.info('All files pass linting.\n');
+  if (printInfo) {
+    outputPrintInfo(totals);
   }
 
   return {
     success:
       normalizedOptions.force ||
-      (totalErrors === 0 &&
+      (totals.errors === 0 &&
         (normalizedOptions.maxWarnings === -1 ||
-          totalWarnings <= normalizedOptions.maxWarnings)),
+          totals.warnings <= normalizedOptions.maxWarnings)),
   };
+}
+
+function getTotals(lintResults: ESLint.LintResult[]) {
+  let errors = 0;
+  let warnings = 0;
+  let fixableErrors = 0;
+  let fixableWarnings = 0;
+
+  for (const result of lintResults) {
+    errors += result.errorCount || 0;
+    warnings += result.warningCount || 0;
+    fixableErrors += result.fixableErrorCount || 0;
+    fixableWarnings += result.fixableWarningCount || 0;
+  }
+
+  return {
+    errors,
+    warnings,
+    fixableErrors,
+    fixableWarnings,
+  };
+}
+
+function pluralizedOutput(word: string, count: number) {
+  return `${count} ${word}${count === 1 ? '' : 's'}`;
+}
+
+function outputPrintInfo({
+  errors,
+  warnings,
+  fixableErrors,
+  fixableWarnings,
+}: ReturnType<typeof getTotals>) {
+  const total = warnings + errors;
+  const totalFixable = fixableErrors + fixableWarnings;
+
+  if (total <= 0) {
+    console.info('\u2714 All files pass linting\n');
+    return;
+  }
+
+  console.info(
+    `\u2716 ${pluralizedOutput('problem', total)} (${pluralizedOutput(
+      'error',
+      errors
+    )}, ${pluralizedOutput('warning', warnings)})\n`
+  );
+  if (totalFixable <= 0) return;
+  console.info(
+    `  ${pluralizedOutput('error', fixableErrors)} and ${pluralizedOutput(
+      'warning',
+      fixableWarnings
+    )} are potentially fixable with the \`--fix\` option.\n`
+  );
 }

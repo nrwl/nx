@@ -69,6 +69,32 @@ describe('project-configuration-utils', () => {
       ).toEqual({ executor: 'target2', outputs: ['output1'] });
     });
 
+    it('should not overwrite target with information from defaults', () => {
+      const result = mergeTargetConfigurations(
+        {
+          executor: 'foo',
+          options: {
+            baz: true,
+          },
+          [ONLY_MODIFIES_EXISTING_TARGET]: true,
+        } as any,
+        {
+          executor: 'bar',
+          options: {
+            bang: true,
+          },
+        }
+      );
+      expect(result).toMatchInlineSnapshot(`
+        {
+          "executor": "bar",
+          "options": {
+            "bang": true,
+          },
+        }
+      `);
+    });
+
     describe('options', () => {
       it('should merge if executor matches', () => {
         expect(
@@ -401,6 +427,21 @@ describe('project-configuration-utils', () => {
             ],
           }
         `);
+      });
+    });
+
+    describe('cache', () => {
+      it('should not be merged for incompatible targets', () => {
+        const result = mergeTargetConfigurations(
+          {
+            executor: 'foo',
+          },
+          {
+            executor: 'bar',
+            cache: true,
+          }
+        );
+        expect(result.cache).not.toBeDefined();
       });
     });
   });

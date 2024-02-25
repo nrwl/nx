@@ -5,7 +5,7 @@ import { CommonEngine } from '@angular/ssr';
 import * as express from 'express';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
-import <% if (standalone) { %>bootstrap<% } else { %>{ <%= rootModuleClassName %> }<% } %> from './src/<%= main.slice(0, -3) %>';
+import <% if (standalone) { %>bootstrap<% } else { %><%= rootModuleClassName %><% } %> from './src/<%= main.slice(0, -3) %>';
 
 // The Express app is exported so that it can be used by serverless Functions.
 export function app(): express.Express {

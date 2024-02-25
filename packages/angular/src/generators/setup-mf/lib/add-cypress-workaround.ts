@@ -2,8 +2,10 @@
 // as Angular attempt to figure out how to fix HMR when styles.js
 // is attached to the index.html with type=module
 
+import { CYPRESS_CONFIG_FILE_NAME_PATTERN } from '@nx/cypress/src/utils/config';
 import type { ProjectConfiguration, Tree } from '@nx/devkit';
 import {
+  glob,
   joinPathFragments,
   logger,
   readProjectConfiguration,
@@ -31,8 +33,9 @@ export function addCypressOnErrorWorkaround(tree: Tree, schema: Schema) {
   }
 
   if (
-    e2eProject.targets.e2e.executor !== '@nx/cypress:cypress' &&
-    e2eProject.targets.e2e.executor !== '@nx/cypress:cypress'
+    e2eProject.targets?.e2e?.executor !== '@nx/cypress:cypress' &&
+    !glob(tree, [`${e2eProject.root}/${CYPRESS_CONFIG_FILE_NAME_PATTERN}`])
+      .length
   ) {
     // Not a cypress e2e project, skip
     return;

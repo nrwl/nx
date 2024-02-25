@@ -45,7 +45,7 @@ describe('convertComponentToScam', () => {
       import { CommonModule } from '@angular/common';
 
       @Component({
-        selector: 'proj-example',
+        selector: 'example',
         templateUrl: './example.component.html',
         styleUrl: './example.component.css'
       })
@@ -155,7 +155,7 @@ describe('convertComponentToScam', () => {
       import { CommonModule } from '@angular/common';
 
       @Component({
-        selector: 'proj-example',
+        selector: 'example',
         templateUrl: './example.component.html',
         styleUrl: './example.component.css'
       })
@@ -269,7 +269,7 @@ describe('convertComponentToScam', () => {
       import { CommonModule } from '@angular/common';
 
       @Component({
-        selector: 'proj-example',
+        selector: 'example',
         templateUrl: './example.random.html',
         styleUrl: './example.random.css'
       })
@@ -384,7 +384,7 @@ describe('convertComponentToScam', () => {
       import { CommonModule } from '@angular/common';
 
       @Component({
-        selector: 'proj-example',
+        selector: 'example',
         templateUrl: './example.component.html',
         styleUrl: './example.component.css'
       })
@@ -444,7 +444,7 @@ describe('convertComponentToScam', () => {
       import { CommonModule } from '@angular/common';
 
       @Component({
-        selector: 'proj-example',
+        selector: 'example',
         templateUrl: './example.component.html',
         styleUrl: './example.component.css'
       })

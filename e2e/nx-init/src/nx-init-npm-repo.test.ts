@@ -10,9 +10,17 @@ import {
   updateFile,
 } from '@nx/e2e/utils';
 
-describe('nx init (NPM repo)', () => {
+describe('nx init (NPM repo - legacy)', () => {
   const pmc = getPackageManagerCommand({
     packageManager: getSelectedPackageManager(),
+  });
+
+  beforeAll(() => {
+    process.env.NX_ADD_PLUGINS = 'false';
+  });
+
+  afterAll(() => {
+    delete process.env.NX_ADD_PLUGINS;
   });
 
   it('should work in a regular npm repo', () => {

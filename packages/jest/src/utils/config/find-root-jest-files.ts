@@ -17,5 +17,9 @@ export function findRootJestPreset(tree: Tree): string | null {
     return 'jest.preset.js';
   }
 
+  if (tree.exists('jest.preset.cjs')) {
+    return 'jest.preset.cjs';
+  }
+
   return null;
 }

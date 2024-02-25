@@ -22,7 +22,7 @@ export const yargsAddCommand: CommandModule<
       .option('updatePackageScripts', {
         type: 'boolean',
         description:
-          'Update `package.json` scripts with inferred targets. Defaults to `true` when `NX_PCV3=true` and the package is a core Nx plugin',
+          'Update `package.json` scripts with inferred targets. Defaults to `true` when the package is a core Nx plugin',
       })
       .option('verbose', {
         type: 'boolean',

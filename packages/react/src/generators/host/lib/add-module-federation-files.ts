@@ -1,4 +1,3 @@
-import { NormalizedSchema } from '../schema';
 import {
   Tree,
   generateFiles,
@@ -6,6 +5,8 @@ import {
   names,
   readProjectConfiguration,
 } from '@nx/devkit';
+import { maybeJs } from '../../../utils/maybe-js';
+import { NormalizedSchema } from '../schema';
 
 export function addModuleFederationFiles(
   host: Tree,
@@ -35,13 +36,19 @@ export function addModuleFederationFiles(
   // Renaming original entry file so we can use `import(./bootstrap)` in
   // new entry file.
   host.rename(
-    joinPathFragments(options.appProjectRoot, 'src/main.tsx'),
-    joinPathFragments(options.appProjectRoot, 'src/bootstrap.tsx')
+    joinPathFragments(options.appProjectRoot, maybeJs(options, 'src/main.tsx')),
+    joinPathFragments(
+      options.appProjectRoot,
+      maybeJs(options, 'src/bootstrap.tsx')
+    )
   );
 
   generateFiles(
     host,
-    joinPathFragments(__dirname, `../files/common`),
+    joinPathFragments(
+      __dirname,
+      `../files/${options.js ? 'common' : 'common-ts'}`
+    ),
     options.appProjectRoot,
     templateVariables
   );

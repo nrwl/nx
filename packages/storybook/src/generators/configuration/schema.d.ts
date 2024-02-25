@@ -19,4 +19,10 @@ export interface StorybookConfigureSchema {
    * @deprecated Use interactionTests instead. This option will be removed in v19.
    */
   cypressDirectory?: string;
+  addPlugin?: boolean;
+
+  /**
+   * @internal
+   */
+  addExplicitTargets?: boolean;
 }

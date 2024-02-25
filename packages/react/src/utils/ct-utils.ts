@@ -8,27 +8,31 @@ import {
 import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 import { getComponentNode } from './ast-utils';
 import { type FoundTarget } from '@nx/cypress/src/utils/find-target-options';
+import type { NxComponentTestingOptions } from '@nx/cypress/plugins/cypress-preset';
 
 let tsModule: typeof import('typescript');
 
 const allowedFileExt = new RegExp(/\.[jt]sx?/);
 const isSpecFile = new RegExp(/(spec|test)\./);
 
-export async function addCTTargetWithBuildTarget(
+export async function configureCypressCT(
   tree: Tree,
   options: {
     project: string;
     buildTarget: string;
+    bundler: 'vite' | 'webpack';
     validExecutorNames: Set<string>;
   }
 ): Promise<FoundTarget> {
   let found: FoundTarget = { target: options.buildTarget, config: undefined };
 
+  const projectConfig = readProjectConfiguration(tree, options.project);
   // Specifically undefined as a workaround for Remix to pass an empty string as the buildTarget
   if (options.buildTarget === undefined) {
     const { findBuildConfig } = await import(
       '@nx/cypress/src/utils/find-target-options'
     );
+
     found = await findBuildConfig(tree, {
       project: options.project,
       buildTarget: options.buildTarget,
@@ -36,15 +40,54 @@ export async function addCTTargetWithBuildTarget(
     });
 
     assertValidConfig(found?.config);
+  } else if (options.buildTarget) {
+    const projectGraph = await createProjectGraphAsync();
+    const { project, target } = parseTargetString(
+      options.buildTarget,
+      projectGraph
+    );
+    const buildTargetProject = readProjectConfiguration(tree, project);
+    const executor = buildTargetProject.targets?.[target]?.executor;
+    if (!executor || !options.validExecutorNames.has(executor)) {
+      throw new Error(
+        `Cypress Component Testing is not currently supported for this project. Please check https://github.com/nrwl/nx/issues/21546 for more information.`
+      );
+    }
   }
 
-  const projectConfig = readProjectConfiguration(tree, options.project);
-  projectConfig.targets['component-test'].options = {
-    ...projectConfig.targets['component-test'].options,
-    devServerTarget: found.target,
-    skipServe: true,
+  const { addDefaultCTConfig, getProjectCypressConfigPath } = await import(
+    '@nx/cypress/src/utils/config'
+  );
+
+  const ctConfigOptions: NxComponentTestingOptions = {
+    bundler: options.bundler ?? (await getActualBundler(tree, options, found)),
   };
-  updateProjectConfiguration(tree, options.project, projectConfig);
+  if (
+    projectConfig.targets?.['component-test']?.executor ===
+    '@nx/cypress:cypress'
+  ) {
+    projectConfig.targets['component-test'].options = {
+      ...projectConfig.targets['component-test'].options,
+      devServerTarget: found.target,
+      skipServe: true,
+    };
+    updateProjectConfiguration(tree, options.project, projectConfig);
+  } else {
+    ctConfigOptions.buildTarget = found.target;
+  }
+
+  const cypressConfigFilePath = getProjectCypressConfigPath(
+    tree,
+    projectConfig.root
+  );
+  const updatedCyConfig = await addDefaultCTConfig(
+    tree.read(cypressConfigFilePath, 'utf-8'),
+    ctConfigOptions
+  );
+  tree.write(
+    cypressConfigFilePath,
+    `import { nxComponentTestingPreset } from '@nx/react/plugins/component-testing';\n${updatedCyConfig}`
+  );
 
   return found;
 }
@@ -77,6 +120,20 @@ export async function getBundlerFromTarget(
   return executor === '@nrwl/vite:build' || executor === '@nx/vite:build'
     ? 'vite'
     : 'webpack';
+}
+
+export async function getActualBundler(
+  tree: Tree,
+  options: { buildTarget?: string; bundler?: 'vite' | 'webpack' },
+  found: FoundTarget
+) {
+  // Specifically undefined to allow Remix workaround of passing an empty string
+  const actualBundler =
+    options.buildTarget !== undefined && options.bundler
+      ? options.bundler
+      : await getBundlerFromTarget(found, tree);
+
+  return actualBundler;
 }
 
 export function isComponent(tree: Tree, filePath: string): boolean {

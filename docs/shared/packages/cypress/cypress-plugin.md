@@ -1,3 +1,8 @@
+---
+title: Overview of the Nx Cypress Plugin
+description: The Nx Plugin for Cypress contains executors and generators that support e2e testing with Cypress. This page also explains how to configure Cypress on your Nx workspace.
+---
+
 Cypress is a test runner built for the modern web. It has a lot of great features:
 
 - Time travel
@@ -7,33 +12,100 @@ Cypress is a test runner built for the modern web. It has a lot of great feature
 - Network traffic control
 - Screenshots and videos
 
-## Setting Up Cypress
+## Setting Up @nx/cypress
 
 > Info about [Cypress Component Testing can be found here](/recipes/cypress/cypress-component-testing)
 >
 > Info about [using Cypress and Storybook can be found here](/recipes/storybook/overview-react#cypress-tests-for-storiesbook)
 
-If the `@nx/cypress` package is not installed, install the version that matches your `nx` package version.
+### Installation
+
+{% callout type="note" title="Keep Nx Package Versions In Sync" %}
+Make sure to install the `@nx/cypress` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/recipes/tips-n-tricks/keep-nx-versions-in-sync).
+{% /callout %}
+
+In any Nx workspace, you can install `@nx/cypress` by running the following command:
 
 {% tabs %}
-{% tab label="npm" %}
+{% tab label="Nx 18+" %}
+
+```shell {% skipRescope=true %}
+nx add @nx/cypress
+```
+
+This will install the correct version of `@nx/cypress`.
+
+### How @nx/cypress Infers Tasks
+
+The `@nx/cypress` plugin will create a task for any project that has a Cypress configuration file present. Any of the following files will be recognized as a Cypress configuration file:
+
+- `cypress.config.js`
+- `cypress.config.ts`
+- `cypress.config.mjs`
+- `cypress.config.mts`
+- `cypress.config.cjs`
+- `cypress.config.cts`
+
+### View Inferred Tasks
+
+To view inferred tasks for a project, open the [project details view](/concepts/inferred-tasks) in Nx Console or run `nx show project my-project --web` in the command line.
+
+### @nx/cypress Configuration
+
+The `@nx/cypress/plugin` is configured in the `plugins` array in `nx.json`.
+
+```json {% fileName="nx.json" %}
+{
+  "plugins": [
+    {
+      "plugin": "@nx/cypress/plugin",
+      "options": {
+        "ciTargetName": "e2e-ci",
+        "targetName": "e2e",
+        "componentTestingTargetName": "component-test"
+      }
+    }
+  ]
+}
+```
+
+- The `targetName`, `ciTargetName` and `componentTestingTargetName` options control the namea of the inferred Cypress tasks. The default names are `e2e`, `e2e-ci` and `component-test`.
+
+### Splitting E2E tasks by file
+
+The `@nx/cypress/plugin` will automatically split your e2e tasks by file. You can read more about this feature [here](/ci/features/split-e2e-tasks).
+
+To enable e2e task splitting, make sure there is a `ciWebServerCommand` property set in your `cypress.config.ts` file. It will look something like this:
+
+```ts {% fileName="apps/my-project-e2e/cypress.config.ts" highlightLines=[13] %}
+import { defineConfig } from 'cypress';
+import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
+
+export default defineConfig({
+  e2e: {
+    ...nxE2EPreset(__filename, {
+      cypressDir: 'src',
+      bundler: 'vite',
+      webServerCommands: {
+        default: 'nx run my-project:serve',
+        production: 'nx run my-project:preview',
+      },
+      ciWebServerCommand: 'nx run my-project:serve-static',
+    }),
+    baseUrl: 'http://localhost:4200',
+  },
+});
+```
+
+Note: The `nxE2EPreset` is a collection of default settings, but is not necessary for task splitting.
+
+{% /tab %}
+{% tab label="Nx < 18" %}
+
+Install the `@nx/cypress` package with your package manager.
 
 ```shell
 npm add -D @nx/cypress
-```
-
-{% /tab %}
-{% tab label="yarn" %}
-
-```shell
-yarn add -D @nx/cypress
-```
-
-{% /tab %}
-{% tab label="pnpm" %}
-
-```shell
-pnpm add -D @nx/cypress
 ```
 
 {% /tab %}
@@ -47,18 +119,18 @@ By default, when creating a new frontend application, Nx will use Cypress to cre
 nx g @nx/web:app frontend
 ```
 
-### Creating a Cypress E2E project for an existing project
+### Configure Cypress for an existing project
 
-To generate an E2E project based on an existing project, run the following generator
+To configure Cypress for an existing project, run the following generator
 
 ```shell
-nx g @nx/cypress:configuration your-app-name-e2e --project=your-app-name
+nx g @nx/cypress:configuration --project=your-app-name
 ```
 
-Optionally, you can use the `--baseUrl` option if you don't want cypress plugin to serve `your-app-name`.
+Optionally, you can use the `--baseUrl` option if you don't want the Cypress plugin to serve `your-app-name`.
 
 ```shell
-nx g @nx/cypress:configuration your-app-name-e2e --baseUrl=http://localhost:4200
+nx g @nx/cypress:configuration --project=your-app-name --baseUrl=http://localhost:4200
 ```
 
 Replace `your-app-name` with the app's name as defined in your `tsconfig.base.json` file or the `name` property of your `package.json`.
@@ -67,7 +139,7 @@ Replace `your-app-name` with the app's name as defined in your `tsconfig.base.js
 
 Run `nx e2e frontend-e2e` to execute e2e tests with Cypress.
 
-You can run your e2e test against a production build by using the `production` [configuration](https://nx.dev/plugin-features/use-task-executors#use-executor-configurations)
+You can run your e2e test against a production build by using the `production` [configuration](https://nx.dev/concepts/executors-and-configurations#use-task-configurations)
 
 ```shell
 nx e2e frontend-e2e --configuration=production

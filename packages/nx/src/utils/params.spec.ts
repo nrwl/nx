@@ -953,20 +953,13 @@ describe('params', () => {
     it('should throw if property name matching pattern is not valid', () => {
       expect(() =>
         validateOptsAgainstSchema(
-          {
-            a: true,
-            b: false,
-          },
+          { a: true, b: false },
           {
             properties: {
-              a: {
-                type: 'boolean',
-              },
+              a: { type: 'boolean' },
             },
             patternProperties: {
-              '^b$': {
-                type: 'number',
-              },
+              '^b$': { type: 'number' },
             },
             additionalProperties: false,
           }
@@ -974,6 +967,63 @@ describe('params', () => {
       ).toThrow(
         "Property 'b' does not match the schema. 'false' should be a 'number'."
       );
+    });
+
+    it('should handle properties matching patternProperties schema', () => {
+      expect(() =>
+        validateOptsAgainstSchema(
+          { a: true, b: false },
+          {
+            properties: {
+              a: { type: 'boolean' },
+            },
+            patternProperties: {
+              '^b$': { type: 'boolean' },
+            },
+            additionalProperties: false,
+          }
+        )
+      ).not.toThrow();
+    });
+
+    it('should throw if additional property does not match schema', () => {
+      expect(() =>
+        validateOptsAgainstSchema(
+          { a: true, b: 'b', c: 'c' },
+          {
+            properties: {
+              a: { type: 'boolean' },
+            },
+            patternProperties: {
+              '^b$': { type: 'string' },
+            },
+            additionalProperties: {
+              type: 'number',
+            },
+          }
+        )
+      ).toThrow(
+        "Property 'c' does not match the schema. 'c' should be a 'number'."
+      );
+    });
+
+    it('should handle additional properties when they match the additionalProperties schema', () => {
+      expect(() =>
+        validateOptsAgainstSchema(
+          { a: true, b: 'b', c: 1, d: 2 },
+          {
+            properties: {
+              a: { type: 'boolean' },
+            },
+            patternProperties: {
+              '^b$': { type: 'string' },
+            },
+            additionalProperties: {
+              type: 'number',
+            },
+          }
+        )
+      ).not.toThrow();
     });
 
     it('should throw if found unsupported positional property', () => {

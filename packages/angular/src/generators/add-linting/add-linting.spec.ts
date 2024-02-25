@@ -1,8 +1,8 @@
-import type { ProjectConfiguration, Tree } from '@nx/devkit';
 import {
+  ProjectConfiguration,
+  Tree,
   addProjectConfiguration,
   readJson,
-  readProjectConfiguration,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import * as linter from '@nx/eslint';
@@ -63,19 +63,5 @@ describe('addLinting generator', () => {
 
     const eslintConfig = readJson(tree, `${appProjectRoot}/.eslintrc.json`);
     expect(eslintConfig).toMatchSnapshot();
-  });
-
-  it('should update the project with the right lint target configuration', async () => {
-    await addLintingGenerator(tree, {
-      prefix: 'myOrg',
-      projectName: appProjectName,
-      projectRoot: appProjectRoot,
-      skipFormat: true,
-    });
-
-    const project = readProjectConfiguration(tree, appProjectName);
-    expect(project.targets.lint).toEqual({
-      executor: '@nx/eslint:lint',
-    });
   });
 });

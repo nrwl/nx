@@ -3,11 +3,17 @@ import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 
 import { cypressVersion } from '../../utils/versions';
 import { cypressInitGenerator } from './init';
+import { Schema } from './schema';
 
 describe('init', () => {
   let tree: Tree;
 
+  let options: Schema;
+
   beforeEach(() => {
+    options = {
+      addPlugin: true,
+    };
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   });
 
@@ -21,7 +27,7 @@ describe('init', () => {
       json.devDependencies[existing] = existingVersion;
       return json;
     });
-    await cypressInitGenerator(tree, {});
+    await cypressInitGenerator(tree, options);
     const packageJson = readJson(tree, 'package.json');
 
     expect(packageJson.devDependencies.cypress).toBeDefined();
@@ -38,7 +44,7 @@ describe('init', () => {
       return json;
     });
 
-    await cypressInitGenerator(tree, {});
+    await cypressInitGenerator(tree, { ...options, addPlugin: false });
 
     expect(
       readJson<NxJsonConfiguration>(tree, 'nx.json').targetDefaults.e2e
@@ -49,14 +55,13 @@ describe('init', () => {
   });
 
   it('should setup @nx/cypress/plugin', async () => {
-    process.env.NX_PCV3 = 'true';
     updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
       json.namedInputs ??= {};
       json.namedInputs.production = ['default'];
       return json;
     });
 
-    await cypressInitGenerator(tree, {});
+    await cypressInitGenerator(tree, options);
 
     expect(readJson<NxJsonConfiguration>(tree, 'nx.json'))
       .toMatchInlineSnapshot(`
@@ -91,7 +96,5 @@ describe('init', () => {
         },
       }
     `);
-
-    delete process.env.NX_PCV3;
   });
 });

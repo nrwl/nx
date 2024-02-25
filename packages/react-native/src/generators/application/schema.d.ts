@@ -9,13 +9,15 @@ export interface Schema {
   directory?: string;
   projectNameAndRootFormat?: ProjectNameAndRootFormat;
   tags?: string;
-  unitTestRunner?: 'jest' | 'none';
+  unitTestRunner: 'jest' | 'none'; // default is jest
   pascalCaseFiles?: boolean;
   classComponent?: boolean;
   js?: boolean;
-  linter?: Linter;
+  linter: Linter;
   setParserOptionsProject?: boolean;
-  e2eTestRunner?: 'detox' | 'none';
+  e2eTestRunner: 'cypress' | 'playwright' | 'detox' | 'none'; // default is cypress
+  bundler: 'webpack' | 'vite'; // default is webpack
   install: boolean; // default is true
   skipPackageJson?: boolean; //default is false
+  addPlugin?: boolean;
 }

@@ -116,6 +116,42 @@ describe('nx release lock file updates', () => {
     `);
   });
 
+  it('should not update lock file when package manager is yarn classic', async () => {
+    initializeProject('yarn');
+
+    updateJson('package.json', (json) => {
+      json.workspaces = [pkg1, pkg2, pkg3];
+      return json;
+    });
+
+    runCommand(`corepack prepare yarn@1.22.19 --activate`);
+    runCommand(`yarn set version 1.22.19`);
+    runCommand(`yarn install`);
+
+    // workaround for NXC-143
+    runCLI('reset');
+
+    runCommand(`git add .`);
+    runCommand(`git commit -m "chore: initial commit"`);
+
+    const versionOutput = runCLI(`release version 999.9.9 --verbose`);
+
+    expect(
+      versionOutput.match(
+        /Skipped lock file update because it is not necessary for Yarn Classic./g
+      ).length
+    ).toBe(1);
+
+    const filesChanges = runCommand('git diff --name-only HEAD');
+
+    expect(filesChanges).toMatchInlineSnapshot(`
+      {project-name}/package.json
+      {project-name}/package.json
+      {project-name}/package.json
+
+    `);
+  });
+
   it('should update yarn.lock when package manager is yarn', async () => {
     process.env.YARN_ENABLE_IMMUTABLE_INSTALLS = 'false';
 

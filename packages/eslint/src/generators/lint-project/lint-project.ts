@@ -35,6 +35,7 @@ import {
 import {
   baseEsLintConfigFile,
   baseEsLintFlatConfigFile,
+  ESLINT_CONFIG_FILENAMES,
 } from '../../utils/config-file';
 import { hasEslintPlugin } from '../utils/plugin';
 import { setupRootEsLint } from './setup-root-eslint';
@@ -50,15 +51,27 @@ interface LintProjectOptions {
   unitTestRunner?: string;
   rootProject?: boolean;
   keepExistingVersions?: boolean;
+  addPlugin?: boolean;
+
+  /**
+   * @internal
+   */
+  addExplicitTargets?: boolean;
 }
 
-export async function lintProjectGenerator(
+export function lintProjectGenerator(tree: Tree, options: LintProjectOptions) {
+  return lintProjectGeneratorInternal(tree, { addPlugin: false, ...options });
+}
+
+export async function lintProjectGeneratorInternal(
   tree: Tree,
   options: LintProjectOptions
 ) {
+  options.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
   const tasks: GeneratorCallback[] = [];
   const initTask = await lintInitGenerator(tree, {
     skipPackageJson: options.skipPackageJson,
+    addPlugin: options.addPlugin,
   });
   tasks.push(initTask);
   const rootEsLintTask = setupRootEsLint(tree, {
@@ -83,7 +96,7 @@ export async function lintProjectGenerator(
   }
 
   const hasPlugin = hasEslintPlugin(tree);
-  if (hasPlugin) {
+  if (hasPlugin && !options.addExplicitTargets) {
     if (
       lintFilePatterns &&
       lintFilePatterns.length &&
@@ -299,11 +312,15 @@ function isMigrationToMonorepoNeeded(
   if (!rootProject || !rootProject.targets) {
     return false;
   }
+  // check if we're inferring lint target from `@nx/eslint/plugin`
+  if (hasEslintPlugin(tree)) {
+    for (const f of ESLINT_CONFIG_FILENAMES) {
+      if (tree.exists(f)) {
+        return true;
+      }
+    }
+  }
   // find if root project has lint target
   const lintTarget = findLintTarget(rootProject);
-  if (!lintTarget) {
-    return false;
-  }
-
-  return true;
+  return !!lintTarget;
 }

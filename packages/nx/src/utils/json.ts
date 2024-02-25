@@ -44,7 +44,9 @@ export function parseJson<T extends object = any>(
   options?: JsonParseOptions
 ): T {
   try {
-    return JSON.parse(input);
+    if (options?.expectComments !== true) {
+      return JSON.parse(input);
+    }
   } catch {}
 
   options = { allowTrailingComma: true, ...options };

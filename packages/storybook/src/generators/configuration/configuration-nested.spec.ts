@@ -88,6 +88,7 @@ describe('@nx/storybook:configuration for workspaces with Root project', () => {
         project: 'web',
         uiFramework: '@storybook/react-webpack5',
         tsConfiguration: false,
+        addPlugin: true,
       });
 
       expect(tree.exists('.storybook/main.js')).toBeTruthy();
@@ -101,6 +102,7 @@ describe('@nx/storybook:configuration for workspaces with Root project', () => {
       await configurationGenerator(tree, {
         project: 'reapp',
         uiFramework: '@storybook/react-webpack5',
+        addPlugin: true,
       });
 
       expect(tree.exists('.storybook/main.ts')).toBeFalsy();
@@ -114,6 +116,7 @@ describe('@nx/storybook:configuration for workspaces with Root project', () => {
       await configurationGenerator(tree, {
         project: 'web',
         uiFramework: '@storybook/react-vite',
+        addPlugin: true,
       });
 
       expect(tree.exists('.storybook/main.ts')).toBeTruthy();

@@ -15,15 +15,15 @@
     "plugins": [{ "name": "next" }]
   },
   "include": [
-    "**/*.ts",
-    "**/*.tsx",
-    "**/*.js",
-    "**/*.jsx",
+    "<%= rootPath %>**/*.ts",
+    "<%= rootPath %>**/*.tsx",
+    "<%= rootPath %>**/*.js",
+    "<%= rootPath %>**/*.jsx",
     <% if (appDir) { %>
       "<%= layoutTypeSrcPath %>",
       "<%= layoutTypeDistPath %>",
     <% } %>
     "next-env.d.ts"
   ],
-  "exclude": ["node_modules", "jest.config.ts", "src/**/*.spec.ts", "src/**/*.test.ts"]
+  "exclude": ["node_modules", "jest.config.ts", "<%= rootPath %>**/*.spec.ts", "<%= rootPath %>**/*.test.ts"]
 }

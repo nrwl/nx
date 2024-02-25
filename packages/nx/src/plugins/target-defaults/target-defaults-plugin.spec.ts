@@ -2,8 +2,8 @@ import * as memfs from 'memfs';
 
 import '../../../src/internal-testing-utils/mock-fs';
 
-import { TargetDefaultsPlugin } from './target-defaults-plugin';
-import { CreateNodesContext } from '../../utils/nx-plugin';
+import { getTargetInfo, TargetDefaultsPlugin } from './target-defaults-plugin';
+import { CreateNodesContext } from '../../project-graph/plugins';
 const {
   createNodes: [, createNodesFn],
 } = TargetDefaultsPlugin;
@@ -74,6 +74,7 @@ describe('target-defaults plugin', () => {
                 "dependsOn": [
                   "^build",
                 ],
+                "executor": "nx:run-commands",
               },
             },
           },
@@ -114,6 +115,10 @@ describe('target-defaults plugin', () => {
             "targets": {
               "test": {
                 "command": "jest",
+                "executor": "nx:run-script",
+                "options": {
+                  "script": "test",
+                },
               },
             },
           },
@@ -156,6 +161,10 @@ describe('target-defaults plugin', () => {
             "targets": {
               "test": {
                 "command": "jest",
+                "executor": "nx:run-script",
+                "options": {
+                  "script": "test",
+                },
               },
             },
           },
@@ -191,7 +200,7 @@ describe('target-defaults plugin', () => {
     ).toMatchInlineSnapshot(`{}`);
   });
 
-  it('should not add target if project does not define target', () => {
+  it('should only modify target if package json has script but its not included', () => {
     memfs.vol.fromJSON(
       {
         'package.json': JSON.stringify({
@@ -232,5 +241,197 @@ describe('target-defaults plugin', () => {
         },
       }
     `);
+  });
+
+  describe('executor key', () => {
+    it('should support multiple targets with the same executor', () => {
+      memfs.vol.fromJSON(
+        {
+          'project.json': JSON.stringify({
+            name: 'root',
+            targets: {
+              echo: {
+                executor: 'nx:run-commands',
+                options: {
+                  command: 'echo 1',
+                },
+              },
+              echo2: {
+                executor: 'nx:run-commands',
+                options: {
+                  command: 'echo 2',
+                },
+              },
+            },
+          }),
+        },
+        '/root'
+      );
+
+      context.nxJsonConfiguration.targetDefaults = {
+        'nx:run-commands': {
+          options: {
+            cwd: '{projectRoot}',
+          },
+        },
+      };
+
+      expect(createNodesFn('project.json', undefined, context))
+        .toMatchInlineSnapshot(`
+        {
+          "projects": {
+            ".": {
+              "targets": {
+                "echo": {
+                  "executor": "nx:run-commands",
+                  "options": {
+                    "cwd": "{projectRoot}",
+                  },
+                },
+                "echo2": {
+                  "executor": "nx:run-commands",
+                  "options": {
+                    "cwd": "{projectRoot}",
+                  },
+                },
+                "nx:run-commands": {
+                  "options": {
+                    "cwd": "{projectRoot}",
+                  },
+                  Symbol(ONLY_MODIFIES_EXISTING_TARGET): true,
+                },
+              },
+            },
+          },
+        }
+      `);
+    });
+
+    it('should not be overridden by target name based default', () => {
+      memfs.vol.fromJSON(
+        {
+          'project.json': JSON.stringify({
+            name: 'root',
+            targets: {
+              echo: {
+                executor: 'nx:run-commands',
+                options: {
+                  command: 'echo 1',
+                },
+              },
+              echo2: {
+                executor: 'nx:run-commands',
+                options: {
+                  command: 'echo 2',
+                },
+              },
+            },
+          }),
+        },
+        '/root'
+      );
+
+      context.nxJsonConfiguration.targetDefaults = {
+        'nx:run-commands': {
+          options: {
+            cwd: '{projectRoot}',
+          },
+        },
+        echo: {},
+      };
+
+      expect(createNodesFn('project.json', undefined, context))
+        .toMatchInlineSnapshot(`
+        {
+          "projects": {
+            ".": {
+              "targets": {
+                "echo": {
+                  "executor": "nx:run-commands",
+                  "options": {
+                    "cwd": "{projectRoot}",
+                  },
+                },
+                "echo2": {
+                  "executor": "nx:run-commands",
+                  "options": {
+                    "cwd": "{projectRoot}",
+                  },
+                },
+                "nx:run-commands": {
+                  "options": {
+                    "cwd": "{projectRoot}",
+                  },
+                  Symbol(ONLY_MODIFIES_EXISTING_TARGET): true,
+                },
+              },
+            },
+          },
+        }
+      `);
+    });
+  });
+
+  describe('get target info', () => {
+    it('should include command for single command', () => {
+      const result = getTargetInfo(
+        'echo',
+        {
+          echo: {
+            command: 'echo hi',
+          },
+        },
+        null
+      );
+      expect(result).toMatchInlineSnapshot(`
+        {
+          "command": "echo hi",
+        }
+      `);
+    });
+
+    it('should include command for run-commands', () => {
+      const result = getTargetInfo(
+        'echo',
+        {
+          echo: {
+            executor: 'nx:run-commands',
+            options: {
+              command: 'echo hi',
+              cwd: '{projectRoot}',
+            },
+          },
+        },
+        null
+      );
+      expect(result).toMatchInlineSnapshot(`
+        {
+          "executor": "nx:run-commands",
+          "options": {
+            "command": "echo hi",
+          },
+        }
+      `);
+    });
+
+    it('should include script for run-script', () => {
+      expect(
+        getTargetInfo('build', null, {
+          build: {
+            executor: 'nx:run-script',
+            options: {
+              script: 'build',
+            },
+          },
+        })
+      ).toMatchInlineSnapshot(`
+        {
+          "executor": "nx:run-script",
+          "options": {
+            "script": "build",
+          },
+        }
+      `);
+    });
   });
 });

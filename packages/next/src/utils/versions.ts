@@ -11,4 +11,4 @@ export const tsLibVersion = '^2.3.0';
 export const swcCliVersion = '~0.1.62';
 export const swcCoreVersion = '~1.3.85';
 export const swcHelpersVersion = '~0.5.2';
-export const swcNodeVersion = '~1.6.7';
+export const swcNodeVersion = '~1.8.0';

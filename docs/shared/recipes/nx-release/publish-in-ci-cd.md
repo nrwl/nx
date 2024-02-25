@@ -24,13 +24,13 @@ Skipped publishing packages.
 Nx Release provides a publishing subcommand that performs just the publishing step. Use this in your CI/CD pipeline to publish the packages.
 
 ```{% command="nx release publish" %}
- >  NX   Running target nx-release-publish for 3 projects:
+NX   Running target nx-release-publish for 3 projects:
 
-    - pkg-1
-    - pkg-2
-    - pkg-3
+- pkg-1
+- pkg-2
+- pkg-3
 
- —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+—————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
 > nx run pkg-1:nx-release-publish
 
@@ -98,9 +98,9 @@ total files:   12
 
 Published to https://registry.npmjs.org with tag "latest"
 
- —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+—————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
- >  NX   Successfully ran target nx-release-publish for 3 projects
+NX   Successfully ran target nx-release-publish for 3 projects
 ```
 
 ## Publish in Github Actions
@@ -154,7 +154,7 @@ jobs:
 
 This workflow will install node, install npm dependencies, then run `nx release publish` to publish the packages. It will run on every push to the repository that creates a tag that matches the pattern `v*.*.*`. A release process using this workflow is as follows:
 
-1. Run `nx release --skip-publish` locally. This will create a commit with the version and changelog updates, then create a tag for the new version version.
+1. Run `nx release --skip-publish` locally. This will create a commit with the version and changelog updates, then create a tag for the new version.
 2. Push the changes (including the new tag) to the remote repository with `git push && git push --tags`.
 3. The publish workflow will automatically trigger and publish the packages to the npm registry.
 

@@ -15,7 +15,9 @@ describe('Next.js Webpack', () => {
   let originalEnv: string;
 
   beforeEach(() => {
-    proj = newProject();
+    proj = newProject({
+      packages: ['@nx/next'],
+    });
     originalEnv = process.env.NODE_ENV;
   });
 
@@ -28,7 +30,12 @@ describe('Next.js Webpack', () => {
     const appName = uniq('app');
 
     runCLI(
-      `generate @nx/next:app ${appName} --no-interactive --style=css --appDir=false`
+      `generate @nx/next:app ${appName} --no-interactive --style=css --appDir=false`,
+      {
+        env: {
+          NX_ADD_PLUGINS: 'false',
+        },
+      }
     );
 
     updateFile(

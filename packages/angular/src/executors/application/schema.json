@@ -135,6 +135,11 @@
       },
       "default": []
     },
+    "clearScreen": {
+      "type": "boolean",
+      "default": false,
+      "description": "Automatically clear the terminal screen during rebuilds. _Note: this is only supported in Angular versions >= 17.2.0_."
+    },
     "optimization": {
       "description": "Enables optimization of the build output. Including minification of scripts and styles, tree-shaking, dead-code elimination, inlining of critical CSS and fonts inlining. For more information, see https://angular.io/guide/workspace-config#optimization-configuration.",
       "default": true,
@@ -211,6 +216,13 @@
       "type": "object",
       "patternProperties": {
         "^\\.\\S+$": { "enum": ["text", "binary", "file", "empty"] }
+      }
+    },
+    "define": {
+      "description": "Defines global identifiers that will be replaced with a specified constant value when found in any JavaScript or TypeScript code including libraries. The value will be used directly. String values must be put in quotes. Identifiers within Angular metadata such as Component Decorators will not be replaced. _Note: this is only supported in Angular versions >= 17.2.0_.",
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
       }
     },
     "fileReplacements": {

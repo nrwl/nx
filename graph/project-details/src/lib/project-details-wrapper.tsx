@@ -95,13 +95,13 @@ export function ProjectDetailsWrapper(props: ProjectDetailsProps) {
 
   const handleTargetCollapse = useCallback(
     (targetName: string) => {
+      const expandedSections = searchParams.get('expanded')?.split(',') || [];
+      if (!expandedSections.includes(targetName)) return;
+      const newExpandedSections = expandedSections.filter(
+        (section) => section !== targetName
+      );
       setSearchParams(
         (currentSearchParams) => {
-          const expandedSections =
-            currentSearchParams.get('expanded')?.split(',') || [];
-          const newExpandedSections = expandedSections.filter(
-            (section) => section !== targetName
-          );
           updateSearchParams(currentSearchParams, newExpandedSections);
           return currentSearchParams;
         },
@@ -111,38 +111,34 @@ export function ProjectDetailsWrapper(props: ProjectDetailsProps) {
         }
       );
     },
-    [setSearchParams]
+    [setSearchParams, searchParams]
   );
 
   const handleTargetExpand = useCallback(
     (targetName: string) => {
+      const expandedSections = searchParams.get('expanded')?.split(',') || [];
+      if (expandedSections.includes(targetName)) return;
+      expandedSections.push(targetName);
       setSearchParams(
         (currentSearchParams) => {
-          const expandedSections =
-            currentSearchParams.get('expanded')?.split(',') || [];
-          if (!expandedSections.includes(targetName)) {
-            expandedSections.push(targetName);
-            updateSearchParams(currentSearchParams, expandedSections);
-          }
+          updateSearchParams(currentSearchParams, expandedSections);
           return currentSearchParams;
         },
         { replace: true, preventScrollReset: true }
       );
     },
-    [setSearchParams]
+    [setSearchParams, searchParams]
   );
 
-  // On initial render, expand the sections that are included in the URL search params.
-  const isExpandedHandled = useRef(false);
   useLayoutEffect(() => {
     if (!props.project.data.targets) return;
-    if (isExpandedHandled.current) return;
-    isExpandedHandled.current = true;
 
     const expandedSections = searchParams.get('expanded')?.split(',') || [];
     for (const targetName of Object.keys(props.project.data.targets)) {
       if (expandedSections.includes(targetName)) {
         projectDetailsRef.current?.expandTarget(targetName);
+      } else {
+        projectDetailsRef.current?.collapseTarget(targetName);
       }
     }
   }, [searchParams, props.project.data.targets, projectDetailsRef]);

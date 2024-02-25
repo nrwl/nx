@@ -30,6 +30,8 @@ export async function normalizeOptions(
     callingGenerator: '@nx/react-native:library',
   });
 
+  options.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
+
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())
     : [];

@@ -1,0 +1,81 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`app setup web app with --bundler=vite should setup vite configuration 1`] = `null`;
+
+exports[`app should setup eslint 1`] = `
+"{
+  "extends": ["../.eslintrc.json"],
+  "ignorePatterns": ["!**/*"],
+  "overrides": [
+    {
+      "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
+      "rules": {}
+    },
+    {
+      "files": ["*.ts", "*.tsx"],
+      "rules": {}
+    },
+    {
+      "files": ["*.js", "*.jsx"],
+      "rules": {}
+    }
+  ]
+}
+"
+`;
+
+exports[`app should setup the web build builder 1`] = `
+"const { NxWebpackPlugin } = require('@nx/webpack');
+const { join } = require('path');
+
+module.exports = {
+  output: {
+    path: join(__dirname, '../dist/my-app'),
+  },
+  devServer: {
+    port: 4200,
+  },
+  plugins: [
+    new NxWebpackPlugin({
+      tsConfig: './tsconfig.app.json',
+      compiler: 'babel',
+      main: './src/main.ts',
+      index: './src/index.html',
+      baseHref: '/',
+      assets: ['./src/favicon.ico', './src/assets'],
+      styles: ['./src/styles.css'],
+      outputHashing: process.env['NODE_ENV'] === 'production' ? 'all' : 'none',
+      optimization: process.env['NODE_ENV'] === 'production',
+    }),
+  ],
+};
+"
+`;
+
+exports[`app should setup the web dev server 1`] = `
+"const { NxWebpackPlugin } = require('@nx/webpack');
+const { join } = require('path');
+
+module.exports = {
+  output: {
+    path: join(__dirname, '../dist/my-app'),
+  },
+  devServer: {
+    port: 4200,
+  },
+  plugins: [
+    new NxWebpackPlugin({
+      tsConfig: './tsconfig.app.json',
+      compiler: 'babel',
+      main: './src/main.ts',
+      index: './src/index.html',
+      baseHref: '/',
+      assets: ['./src/favicon.ico', './src/assets'],
+      styles: ['./src/styles.css'],
+      outputHashing: process.env['NODE_ENV'] === 'production' ? 'all' : 'none',
+      optimization: process.env['NODE_ENV'] === 'production',
+    }),
+  ],
+};
+"
+`;

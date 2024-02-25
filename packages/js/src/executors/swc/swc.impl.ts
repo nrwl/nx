@@ -2,7 +2,7 @@ import { ExecutorContext, readJsonFile } from '@nx/devkit';
 import { assetGlobsToFiles, FileInputOutput } from '../../utils/assets/assets';
 import { removeSync } from 'fs-extra';
 import { sync as globSync } from 'fast-glob';
-import { dirname, join, relative, resolve } from 'path';
+import { dirname, join, relative, resolve, normalize } from 'path';
 import { copyAssets } from '../../utils/assets';
 import { checkDependencies } from '../../utils/check-dependencies';
 import {
@@ -66,7 +66,7 @@ function normalizeOptions(
   // default to current directory if projectRootParts is [].
   // Eg: when a project is at the root level, outside of layout dir
   const swcCwd = projectRootParts.join('/') || '.';
-  const swcrcPath = getSwcrcPath(options, root, projectRoot);
+  const { swcrcPath, tmpSwcrcPath } = getSwcrcPath(options, root, projectRoot);
 
   const swcCliOptions = {
     srcPath: projectDir,
@@ -89,6 +89,7 @@ function normalizeOptions(
     outputPath,
     tsConfig: join(root, options.tsConfig),
     swcCliOptions,
+    tmpSwcrcPath,
   } as NormalizedSwcExecutorOptions;
 }
 
@@ -131,17 +132,18 @@ export async function* swcExecutor(
     // remap paths for SWC compilation
     options.swcCliOptions.srcPath = options.swcCliOptions.swcCwd;
     options.swcCliOptions.swcCwd = '.';
-    options.swcCliOptions.destPath = options.swcCliOptions.destPath
-      .split('../')
-      .at(-1)
-      .concat('/', options.swcCliOptions.srcPath);
+    options.swcCliOptions.destPath = join(
+      options.swcCliOptions.destPath.split(normalize('../')).at(-1),
+      options.swcCliOptions.srcPath
+    );
 
     // tmp swcrc with dependencies to exclude
     // - buildable libraries
     // - other libraries that are not dependent on the current project
     options.swcCliOptions.swcrcPath = generateTmpSwcrc(
       inlineProjectGraph,
-      options.swcCliOptions.swcrcPath
+      options.swcCliOptions.swcrcPath,
+      options.tmpSwcrcPath
     );
   }
 
@@ -206,7 +208,10 @@ export async function* swcExecutor(
 }
 
 function removeTmpSwcrc(swcrcPath: string) {
-  if (swcrcPath.includes('tmp/') && swcrcPath.includes('.generated.swcrc')) {
+  if (
+    swcrcPath.includes(normalize('tmp/')) &&
+    swcrcPath.includes('.generated.swcrc')
+  ) {
     removeSync(dirname(swcrcPath));
   }
 }

@@ -1,10 +1,13 @@
 import { installedCypressVersion } from '@nx/cypress/src/utils/cypress-version';
 import type { Tree } from '@nx/devkit';
-import { writeJson } from '@nx/devkit';
+import { readJson, writeJson } from '@nx/devkit';
 import { Linter } from '@nx/eslint/src/generators/utils/linter';
 import { componentGenerator } from '../component/component';
 import { librarySecondaryEntryPointGenerator } from '../library-secondary-entry-point/library-secondary-entry-point';
-import { createStorybookTestWorkspaceForLib } from '../utils/testing';
+import {
+  createStorybookTestWorkspaceForLib,
+  generateTestApplication,
+} from '../utils/testing';
 import type { StorybookConfigurationOptions } from './schema';
 import { storybookConfigurationGenerator } from './storybook-configuration';
 
@@ -192,5 +195,21 @@ describe('StorybookConfiguration generator', () => {
     });
 
     expect(listFiles(tree)).toMatchSnapshot();
+  });
+
+  it('should exclude Storybook-related files from tsconfig.editor.json for applications', async () => {
+    await generateTestApplication(tree, { name: 'test-app' });
+
+    await storybookConfigurationGenerator(tree, {
+      project: 'test-app',
+      generateStories: false,
+      skipFormat: true,
+      linter: Linter.EsLint,
+    });
+
+    const tsConfig = readJson(tree, 'test-app/tsconfig.editor.json');
+    expect(tsConfig.exclude).toStrictEqual(
+      expect.arrayContaining(['**/*.stories.ts', '**/*.stories.js'])
+    );
   });
 });

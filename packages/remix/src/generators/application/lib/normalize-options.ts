@@ -26,6 +26,8 @@ export async function normalizeOptions(
     });
   options.rootProject = projectRoot === '.';
   options.projectNameAndRootFormat = projectNameAndRootFormat;
+  options.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
+
   const e2eProjectName = options.rootProject ? 'e2e' : `${projectName}-e2e`;
   const e2eProjectRoot = options.rootProject ? 'e2e' : `${projectRoot}-e2e`;
 

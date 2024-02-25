@@ -33,6 +33,7 @@ export interface LibraryGeneratorSchema {
   minimal?: boolean;
   rootProject?: boolean;
   simpleName?: boolean;
+  addPlugin?: boolean;
 }
 
 export interface ExecutorOptions {
@@ -82,4 +83,5 @@ export interface NormalizedSwcExecutorOptions
   swcExclude: string[];
   skipTypeCheck: boolean;
   swcCliOptions: SwcCliOptions;
+  tmpSwcrcPath: string;
 }

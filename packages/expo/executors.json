@@ -54,6 +54,11 @@
       "implementation": "./src/executors/submit/submit.impl",
       "schema": "./src/executors/submit/schema.json",
       "description": "Submit app binary to App Store and/or Play Store"
+    },
+    "serve": {
+      "implementation": "./src/executors/serve/serve.impl",
+      "schema": "./src/executors/serve/schema.json",
+      "description": "Serve up the Expo web app locally"
     }
   }
 }

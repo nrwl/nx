@@ -1,0 +1,11 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "version": 2,
+  "cli": "nx",
+  "$id": "NxReactNativeUpgrade",
+  "title": "React Native Upgrade Executor",
+  "description": "Upgrade React Native code for project.",
+  "type": "object",
+  "properties": {},
+  "required": []
+}

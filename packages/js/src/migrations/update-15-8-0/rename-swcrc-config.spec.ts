@@ -10,6 +10,15 @@ import renameSwcrcConfig from './rename-swcrc-config';
 describe('Rename swcrc file migration', () => {
   let tree: Tree;
 
+  let originalEnv: string;
+  beforeEach(() => {
+    originalEnv = process.env.NX_ADD_PLUGINS;
+    process.env.NX_ADD_PLUGINS = 'false';
+  });
+  afterEach(() => {
+    process.env.NX_ADD_PLUGINS = originalEnv;
+  });
+
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   });

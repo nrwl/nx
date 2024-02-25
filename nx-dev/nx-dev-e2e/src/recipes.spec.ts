@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 
 test.describe('nx-dev: Recipes pages', () => {
   test('should list related recipes based on tags', async ({ page }) => {
-    await page.goto('/recipes/other/deno-deploy');
+    await page.goto('/recipes/storybook/overview-react');
     const relatedDocs = page.locator('[data-document="related"] li');
     const relatedDocsText = await relatedDocs.allInnerTexts();
     expect(relatedDocsText.length, 'has related docs').toBeGreaterThan(0);

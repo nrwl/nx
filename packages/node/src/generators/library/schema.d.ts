@@ -23,4 +23,5 @@ export interface Schema {
   standaloneConfig?: boolean;
   setParserOptionsProject?: boolean;
   compiler: 'tsc' | 'swc';
+  addPlugin?: boolean;
 }

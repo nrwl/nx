@@ -1,10 +1,10 @@
 # Advanced update process
 
-This guide describes advanced scenarios when it comes to updating Nx and the workspaces dependencies. It starts with a summary of the [standard update process](/core-features/automate-updating-dependencies) and continues with those advanced use cases.
+This guide describes advanced scenarios when it comes to updating Nx and the workspaces dependencies. It starts with a summary of the [standard update process](/features/automate-updating-dependencies) and continues with those advanced use cases.
 
 ## Updating to the latest Nx version
 
-The following steps are a summary of the [standard update process](/core-features/automate-updating-dependencies). For more information on each step, please visit that page.
+The following steps are a summary of the [standard update process](/features/automate-updating-dependencies). For more information on each step, please visit that page.
 
 ### Step 1: Updating dependencies and generating migrations
 
@@ -163,19 +163,19 @@ It may take a few minutes.
 ✔ Do you want to update to TypeScript v5.0? (Y/n) · false
 ✔ Do you want to update the Angular version to v16? (Y/n) · false
 
- >  NX   The migrate command has run successfully.
+NX   The migrate command has run successfully.
 
-   - package.json has been updated.
-   - migrations.json has been generated.
+- package.json has been updated.
+- migrations.json has been generated.
 
- >  NX   Next steps:
+NX   Next steps:
 
-   - Make sure package.json changes make sense and then run 'pnpm install --no-frozen-lockfile',
-   - Run 'pnpm exec nx migrate --run-migrations'
-   - You opted out of some migrations for now. Write the following command down somewhere to apply these migrations later:
-     nx migrate 16.5.3 --from nx@16.1.0-beta.0 --exclude-applied-migrations
-   - To learn more go to https://nx.dev/recipes/other/advanced-update
-   - You may run 'pnpm run nx connect-to-nx-cloud' to get faster builds, GitHub integration, and more. Check out https://nx.app
+- Make sure package.json changes make sense and then run 'pnpm install --no-frozen-lockfile',
+- Run 'pnpm exec nx migrate --run-migrations'
+- You opted out of some migrations for now. Write the following command down somewhere to apply these migrations later:
+- nx migrate 16.5.3 --from nx@16.1.0-beta.0 --exclude-applied-migrations
+- To learn more go to https://nx.dev/recipes/other/advanced-update
+- You may run 'pnpm run nx connect' to get faster builds, GitHub integration, and more. Check out https://nx.app
 ```
 
 You can see in the "Next steps" section a suggested command to run to apply the skipped package updates. Make sure to store that information somewhere so you can later remember from which version you need to run the migration to apply the skipped package updates.

@@ -41,7 +41,7 @@ export class StaticRunManyTerminalOutputLifeCycle implements LifeCycle {
     }
 
     const bodyLines = this.projectNames.map(
-      (affectedProject) => ` ${output.dim('-')} ${affectedProject}`
+      (affectedProject) => `${output.dim('-')} ${affectedProject}`
     );
     if (Object.keys(this.taskOverrides).length > 0) {
       bodyLines.push('');
@@ -149,7 +149,6 @@ export class StaticRunManyTerminalOutputLifeCycle implements LifeCycle {
     terminalOutput: string
   ) {
     const args = getPrintableCommandArgsForTask(task);
-    output.logCommand(args.join(' '), cacheStatus);
-    process.stdout.write(terminalOutput);
+    output.logCommandOutput(args.join(' '), cacheStatus, terminalOutput);
   }
 }

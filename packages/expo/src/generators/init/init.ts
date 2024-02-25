@@ -11,7 +11,6 @@ import {
 import { updatePackageScripts } from '@nx/devkit/src/utils/update-package-scripts';
 import { createNodes, ExpoPluginOptions } from '../../../plugins/plugin';
 import {
-  easCliVersion,
   expoCliVersion,
   expoVersion,
   nxVersion,
@@ -20,13 +19,20 @@ import {
   reactVersion,
 } from '../../utils/versions';
 import { hasExpoPlugin } from '../../utils/has-expo-plugin';
+
 import { addGitIgnoreEntry } from './lib/add-git-ignore-entry';
 import { Schema } from './schema';
 
-export async function expoInitGenerator(host: Tree, schema: Schema) {
+export function expoInitGenerator(tree: Tree, schema: Schema) {
+  return expoInitGeneratorInternal(tree, { addPlugin: false, ...schema });
+}
+
+export async function expoInitGeneratorInternal(host: Tree, schema: Schema) {
+  schema.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
+
   addGitIgnoreEntry(host);
 
-  if (process.env.NX_PCV3 === 'true') {
+  if (schema.addPlugin) {
     addPlugin(host);
   }
 
@@ -59,7 +65,6 @@ export function updateDependencies(host: Tree, schema: Schema) {
     {
       '@nx/expo': nxVersion,
       '@expo/cli': expoCliVersion,
-      'eas-cli': easCliVersion,
     },
     undefined,
     schema.keepExistingVersions

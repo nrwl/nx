@@ -2,7 +2,7 @@ import { formatChangedFilesWithPrettierIfAvailable } from '../../generators/inte
 import { Tree } from '../../generators/tree';
 import { readNxJson, updateNxJson } from '../../generators/utils/nx-json';
 import { readJson } from '../../generators/utils/json';
-import { logger } from '../../utils/logger';
+import { output } from '../../utils/output';
 import { NxJsonConfiguration } from '../../config/nx-json';
 import { joinPathFragments } from '../../utils/path';
 
@@ -54,7 +54,7 @@ function warnNpmScopeHasChanged(
   const packageJsonName = readJson(tree, 'package.json').name;
 
   if (newScope) {
-    logger.warn({
+    output.warn({
       title: 'npmScope has been removed from nx.json',
       bodyLines: [
         'This will now be read from package.json',
@@ -69,7 +69,7 @@ function warnNpmScopeHasChanged(
     });
   } else {
     // There is no scope in package.json
-    logger.warn({
+    output.warn({
       title: 'npmScope has been removed from nx.json',
       bodyLines: [
         'This will now be read from package.json',

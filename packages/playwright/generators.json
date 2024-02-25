@@ -3,12 +3,12 @@
   "version": "0.1",
   "generators": {
     "configuration": {
-      "factory": "./src/generators/configuration/configuration",
+      "factory": "./src/generators/configuration/configuration#configurationGeneratorInternal",
       "schema": "./src/generators/configuration/schema.json",
       "description": "Add Nx Playwright configuration to your project"
     },
     "init": {
-      "factory": "./src/generators/init/init",
+      "factory": "./src/generators/init/init#initGeneratorInternal",
       "schema": "./src/generators/init/schema.json",
       "description": "Initializes a Playwright project in the current workspace"
     }

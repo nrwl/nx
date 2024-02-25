@@ -4,9 +4,9 @@
   "extends": ["@nx/workspace"],
   "generators": {
     "init": {
-      "factory": "./src/generators/init/init#expoInitGenerator",
+      "factory": "./src/generators/init/init#expoInitGeneratorInternal",
       "schema": "./src/generators/init/schema.json",
-      "description": "Initialize the @nrwl/expo plugin",
+      "description": "Initialize the @nx/expo plugin",
       "hidden": true
     },
     "application": {

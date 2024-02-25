@@ -6,7 +6,9 @@ export interface ProjectEdgeNodeTooltipProps {
   target: string;
   fileDependencies: Array<{ fileName: string }>;
   description?: string;
-  fileClickCallback: (fileName: string) => void;
+  renderMode?: 'nx-console' | 'nx-docs';
+  sourceRoot?: string;
+  fileClickCallback?: (fileName: string) => void;
 }
 
 export function ProjectEdgeNodeTooltip({

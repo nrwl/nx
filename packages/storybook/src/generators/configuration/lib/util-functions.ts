@@ -39,9 +39,6 @@ export function addStorybookTarget(
   uiFramework: UiFramework,
   interactionTests: boolean
 ) {
-  if (uiFramework === '@storybook/react-native') {
-    return;
-  }
   const projectConfig = readProjectConfiguration(tree, projectName);
   projectConfig.targets['storybook'] = {
     executor: '@nx/storybook:storybook',
@@ -239,10 +236,6 @@ export function createStorybookTsconfigFile(
     '.storybook/*.ts',
   ];
 
-  if (uiFramework === '@storybook/react-native') {
-    include.push('*.ts', '*.tsx');
-  }
-
   const storybookTsConfig: TsConfig = {
     extends: './tsconfig.json',
     compilerOptions: {
@@ -309,8 +302,7 @@ export function configureTsProjectConfig(
       ...(tsConfigContent.exclude || []),
       '**/*.stories.ts',
       '**/*.stories.js',
-      ...(schema.uiFramework === '@storybook/react-native' ||
-      schema.uiFramework?.startsWith('@storybook/react')
+      ...(schema.uiFramework?.startsWith('@storybook/react')
         ? ['**/*.stories.jsx', '**/*.stories.tsx']
         : []),
     ];
@@ -426,6 +418,11 @@ export function updateLintConfig(tree: Tree, schema: StorybookConfigureSchema) {
             parserConfigPath,
           ]);
         }
+      }
+
+      const ignorePatterns = json.ignorePatterns || [];
+      if (!ignorePatterns.includes('storybook-static')) {
+        ignorePatterns.push('storybook-static');
       }
 
       return json;
@@ -546,7 +543,8 @@ export function createProjectStorybookDir(
   usesVite?: boolean,
   viteConfigFilePath?: string,
   hasPlugin?: boolean,
-  viteConfigFileName?: string
+  viteConfigFileName?: string,
+  useReactNative?: boolean
 ) {
   let projectDirectory =
     projectType === 'application'
@@ -591,6 +589,7 @@ export function createProjectStorybookDir(
     viteConfigFilePath,
     hasPlugin,
     viteConfigFileName,
+    useReactNative,
   });
 
   if (js) {
@@ -739,6 +738,16 @@ export function findNextConfig(
     if (tree.exists(nextConfigPath)) {
       return nextConfigPath;
     }
+  }
+}
+
+export function findMetroConfig(
+  tree: Tree,
+  projectRoot: string
+): string | undefined {
+  const nextConfigPath = joinPathFragments(projectRoot, `metro.config.js`);
+  if (tree.exists(nextConfigPath)) {
+    return nextConfigPath;
   }
 }
 

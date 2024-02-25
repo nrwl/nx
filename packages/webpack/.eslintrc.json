@@ -46,7 +46,8 @@
               "source-map-loader",
               "swc-loader",
               "@swc/core",
-              "ts-loader"
+              "ts-loader",
+              "ajv"
             ]
           }
         ]

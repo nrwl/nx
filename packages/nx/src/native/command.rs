@@ -12,9 +12,14 @@ use napi::threadsafe_function::ThreadsafeFunction;
 use napi::threadsafe_function::ThreadsafeFunctionCallMode::NonBlocking;
 use napi::{Env, JsFunction};
 use portable_pty::{ChildKiller, CommandBuilder, NativePtySystem, PtySize, PtySystem};
+use tracing::trace;
+
+#[cfg_attr(windows, path = "command/windows.rs")]
+#[cfg_attr(not(windows), path = "command/unix.rs")]
+mod os;
 
 fn command_builder() -> CommandBuilder {
-    if cfg!(target_os = "windows") {
+    if cfg!(windows) {
         let comspec = std::env::var("COMSPEC");
         let shell = comspec
             .as_ref()
@@ -94,6 +99,12 @@ impl ChildProcess {
 
         std::thread::spawn(move || {
             while let Ok(content) = rx.recv() {
+                // windows will add `ESC[6n` to the beginning of the output,
+                // we dont want to store this ANSI code in cache, because replays will cause issues
+                // remove it before sending it to js
+                #[cfg(windows)]
+                let content = content.replace("\x1B[6n", "");
+
                 callback_tsfn.call(content, NonBlocking);
             }
         });
@@ -155,24 +166,18 @@ pub fn run_command(
         let mut reader = BufReader::new(reader);
         let mut buffer = [0; 8 * 1024];
 
-        let mut strip_clear_code = cfg!(target_os = "windows");
-
         while let Ok(n) = reader.read(&mut buffer) {
             if n == 0 {
                 break;
             }
 
-            let mut content = String::from_utf8_lossy(&buffer[..n]).to_string();
-            if strip_clear_code {
-                strip_clear_code = false;
-                // remove clear screen
-                content = content.replacen("\x1B[2J", "", 1);
-                // remove cursor position 1,1
-                content = content.replacen("\x1B[H", "", 1);
-            }
-            message_tx.send(content.to_string()).ok();
+            let content = &buffer[..n];
+            message_tx
+                .send(String::from_utf8_lossy(content).to_string())
+                .ok();
+
             if !quiet {
-                stdout.write_all(content.as_bytes()).ok();
+                stdout.write_all(content).ok();
                 stdout.flush().ok();
             }
         }
@@ -190,12 +195,13 @@ pub fn run_command(
 
     // Stdin -> pty stdin
     if std::io::stdout().is_tty() {
+        enable_raw_mode().expect("Failed to enter raw terminal mode");
         std::thread::spawn(move || {
-            enable_raw_mode().expect("Failed to enter raw terminal mode");
             let mut stdin = std::io::stdin();
-            #[allow(clippy::redundant_pattern_matching)]
-            // ignore errors that come from copying the stream
-            if let Ok(_) = std::io::copy(&mut stdin, &mut writer) {}
+
+            if let Err(e) = os::write_to_pty(&mut stdin, &mut writer) {
+                trace!("Error writing to pty: {:?}", e);
+            }
         });
     }
 
@@ -221,10 +227,13 @@ pub fn nx_fork(
     js_env: Option<HashMap<String, String>>,
     quiet: bool,
 ) -> napi::Result<ChildProcess> {
-    run_command(
-        format!("node {} {} {}", fork_script, psuedo_ipc_path, id),
-        command_dir,
-        js_env,
-        Some(quiet),
-    )
+    let command = format!(
+        "node {} {} {}",
+        os::handle_path_space(fork_script),
+        psuedo_ipc_path,
+        id
+    );
+
+    trace!("nx_fork command: {}", &command);
+    run_command(command, command_dir, js_env, Some(quiet))
 }

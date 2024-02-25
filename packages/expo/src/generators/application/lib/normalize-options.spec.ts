@@ -2,7 +2,7 @@ import { Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { Linter } from '@nx/eslint';
 import { Schema } from '../schema';
-import { normalizeOptions } from './normalize-options';
+import { NormalizedSchema, normalizeOptions } from './normalize-options';
 
 describe('Normalize Options', () => {
   let appTree: Tree;
@@ -23,6 +23,7 @@ describe('Normalize Options', () => {
     };
     const options = await normalizeOptions(appTree, schema);
     expect(options).toEqual({
+      addPlugin: true,
       appProjectRoot: 'my-app',
       className: 'MyApp',
       displayName: 'MyApp',
@@ -36,7 +37,10 @@ describe('Normalize Options', () => {
       unitTestRunner: 'jest',
       skipFormat: false,
       js: true,
-    });
+      rootProject: false,
+      e2eProjectName: 'my-app-e2e',
+      e2eProjectRoot: 'my-app-e2e',
+    } as NormalizedSchema);
   });
 
   it('should normalize options with name in camel case', async () => {
@@ -51,6 +55,7 @@ describe('Normalize Options', () => {
     };
     const options = await normalizeOptions(appTree, schema);
     expect(options).toEqual({
+      addPlugin: true,
       appProjectRoot: 'myApp',
       className: 'MyApp',
       displayName: 'MyApp',
@@ -64,7 +69,10 @@ describe('Normalize Options', () => {
       skipFormat: false,
       js: true,
       unitTestRunner: 'jest',
-    });
+      rootProject: false,
+      e2eProjectName: 'myApp-e2e',
+      e2eProjectRoot: 'myApp-e2e',
+    } as NormalizedSchema);
   });
 
   it('should normalize options with directory', async () => {
@@ -80,6 +88,7 @@ describe('Normalize Options', () => {
     };
     const options = await normalizeOptions(appTree, schema);
     expect(options).toEqual({
+      addPlugin: true,
       appProjectRoot: 'directory',
       className: 'MyApp',
       displayName: 'MyApp',
@@ -94,7 +103,10 @@ describe('Normalize Options', () => {
       linter: Linter.EsLint,
       skipFormat: false,
       js: true,
-    });
+      rootProject: false,
+      e2eProjectName: 'my-app-e2e',
+      e2eProjectRoot: 'directory-e2e',
+    } as NormalizedSchema);
   });
 
   it('should normalize options that has directory in its name', async () => {
@@ -109,6 +121,7 @@ describe('Normalize Options', () => {
     };
     const options = await normalizeOptions(appTree, schema);
     expect(options).toEqual({
+      addPlugin: true,
       appProjectRoot: 'directory/my-app',
       className: 'DirectoryMyApp',
       displayName: 'DirectoryMyApp',
@@ -122,7 +135,10 @@ describe('Normalize Options', () => {
       linter: Linter.EsLint,
       skipFormat: false,
       js: true,
-    });
+      rootProject: false,
+      e2eProjectName: 'my-app-e2e',
+      e2eProjectRoot: 'directory/my-app-e2e',
+    } as NormalizedSchema);
   });
 
   it('should normalize options with display name', async () => {
@@ -138,6 +154,7 @@ describe('Normalize Options', () => {
     };
     const options = await normalizeOptions(appTree, schema);
     expect(options).toEqual({
+      addPlugin: true,
       appProjectRoot: 'my-app',
       className: 'MyApp',
       displayName: 'My App',
@@ -151,6 +168,9 @@ describe('Normalize Options', () => {
       linter: Linter.EsLint,
       skipFormat: false,
       js: true,
-    });
+      rootProject: false,
+      e2eProjectName: 'my-app-e2e',
+      e2eProjectRoot: 'my-app-e2e',
+    } as NormalizedSchema);
   });
 });

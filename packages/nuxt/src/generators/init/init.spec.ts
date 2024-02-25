@@ -17,26 +17,24 @@ describe('init', () => {
     expect(packageJson).toMatchSnapshot();
   });
 
-  describe('pcv3', () => {
-    beforeEach(() => {
-      tree = createTreeWithEmptyWorkspace();
-    });
+  beforeEach(() => {
+    tree = createTreeWithEmptyWorkspace();
+  });
 
-    it('should not add targets', async () => {
-      await nuxtInitGenerator(tree, {
-        skipFormat: false,
-      });
-      const nxJson = readNxJson(tree);
-      expect(nxJson.plugins).toMatchObject([
-        {
-          options: { buildTargetName: 'build', serveTargetName: 'serve' },
-          plugin: '@nx/nuxt/plugin',
-        },
-        {
-          options: { testTargetName: 'test' },
-          plugin: '@nx/vite/plugin',
-        },
-      ]);
+  it('should not add targets', async () => {
+    await nuxtInitGenerator(tree, {
+      skipFormat: false,
     });
+    const nxJson = readNxJson(tree);
+    expect(nxJson.plugins).toMatchObject([
+      {
+        options: { buildTargetName: 'build', serveTargetName: 'serve' },
+        plugin: '@nx/nuxt/plugin',
+      },
+      {
+        options: { testTargetName: 'test' },
+        plugin: '@nx/vite/plugin',
+      },
+    ]);
   });
 });

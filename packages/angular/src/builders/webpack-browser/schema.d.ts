@@ -4,6 +4,10 @@ export type BrowserBuilderSchema = Schema & {
   customWebpackConfig?: {
     path: string;
   };
-  indexFileTransformer?: string;
+  indexHtmlTransformer?: string;
   buildLibsFromSource?: boolean;
+  /**
+   * @deprecated Use `indexHtmlTransformer` instead. It will be removed in Nx 19.
+   */
+  indexFileTransformer?: string;
 };

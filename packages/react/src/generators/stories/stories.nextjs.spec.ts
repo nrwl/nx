@@ -1,11 +1,10 @@
-import {
-  readProjectConfiguration,
-  Tree,
-  updateProjectConfiguration,
-} from '@nx/devkit';
+import { Tree } from '@nx/devkit';
 import storiesGenerator from './stories';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import applicationGenerator from '../application/application';
+/* eslint-disable @nx/enforce-module-boundaries */
+// nx-ignore-next-line
+import { applicationGenerator } from '@nx/next';
+/* eslint-enable @nx/enforce-module-boundaries */
 import { Linter } from '@nx/eslint';
 
 describe('nextjs:stories for applications', () => {
@@ -91,15 +90,8 @@ export async function createTestUIApp(name: string): Promise<Tree> {
     style: 'css',
     unitTestRunner: 'none',
     name,
-    bundler: 'vite',
     projectNameAndRootFormat: 'as-provided',
   });
-
-  const config = readProjectConfiguration(tree, name);
-  config.sourceRoot = config.root;
-  config.targets.build.executor = '@nx/next:build';
-  config.targets.serve.executor = '@nx/next:server';
-  updateProjectConfiguration(tree, name, config);
 
   return tree;
 }
