@@ -558,17 +558,36 @@ function normalizeConventionalCommitsConfig(
 function fillUnspecifiedConventionalCommitsProperties(
   config: NxReleaseConfig['conventionalCommits']
 ) {
+  if (!config || !config.types) {
+    return config;
+  }
   const types: NxReleaseConfig['conventionalCommits']['types'] = {};
   for (const [t, typeConfig] of Object.entries(config.types)) {
+    const defaultTypeConfig = DEFAULT_CONVENTIONAL_COMMITS_CONFIG.types[t];
+
+    const semverBump =
+      typeConfig.semverBump ||
+      // preserve our default semver bump if it's not 'none'
+      // this prevents a 'feat' from becoming a 'patch' just
+      // because they modified the changelog config for 'feat'
+      (defaultTypeConfig?.semverBump !== 'none' &&
+        defaultTypeConfig?.semverBump) ||
+      'patch';
+    // don't preserve our default behavior for hidden, ever.
+    // we should assume that if users are explicitly enabling a
+    // type, then they intend it to be visible in the changelog
+    const hidden = typeConfig.changelog?.hidden || false;
+    const title =
+      typeConfig.changelog?.title ||
+      // our default title is better than just the unmodified type name
+      defaultTypeConfig?.changelog.title ||
+      t;
+
     types[t] = {
-      semverBump: typeConfig.semverBump || 'patch',
+      semverBump,
       changelog: {
-        hidden: typeConfig.changelog?.hidden || false,
-        title:
-          typeConfig.changelog?.title ||
-          // our default title is better than just the unmodified type name
-          DEFAULT_CONVENTIONAL_COMMITS_CONFIG.types[t]?.changelog.title ||
-          t,
+        hidden,
+        title,
       },
     };
   }
