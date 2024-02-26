@@ -212,6 +212,9 @@
             }
           }
         },
+        "conventionalCommits": {
+          "$ref": "#/definitions/NxReleaseConventionalCommitsConfiguration"
+        },
         "projectsRelationship": {
           "type": "string",
           "enum": ["fixed", "independent"]
@@ -623,6 +626,55 @@
     "ChangelogRenderOptions": {
       "type": "object",
       "additionalProperties": true
+    },
+    "NxReleaseConventionalCommitsConfiguration": {
+      "type": "object",
+      "properties": {
+        "types": {
+          "type": "object",
+          "description": "A map of commit types to their configuration. If a type is set to 'false', then it will be hidden from changelogs and will not trigger a version bump.",
+          "additionalProperties": {
+            "oneOf": [
+              {
+                "type": "boolean",
+                "enum": [false]
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "semverBump": {
+                    "type": "string",
+                    "enum": ["major", "minor", "patch", "none"],
+                    "description": "The semver bump to apply to the version of the project(s) when a commit of this type is included in the release."
+                  },
+                  "changelog": {
+                    "description": "Configuration for the changelog section for commits of this type. If set to 'false', then commits of this type will not be included in the changelog.",
+                    "oneOf": [
+                      {
+                        "type": "boolean",
+                        "enum": [false]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "title": {
+                            "type": "string",
+                            "description": "The title of the section in the changelog for commits of this type"
+                          },
+                          "hidden": {
+                            "type": "boolean",
+                            "description": "Whether or not to include commits of this type in the changelog"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
     }
   }
 }
