@@ -304,9 +304,9 @@ export async function createNxReleaseConfig(
   );
 
   const rootConventionalCommitsConfig: NxReleaseConfig['conventionalCommits'] =
-    fillUnspecifiedConventionalCommitsProperties(
-      deepMergeDefaults(
-        [WORKSPACE_DEFAULTS.conventionalCommits],
+    deepMergeDefaults(
+      [WORKSPACE_DEFAULTS.conventionalCommits],
+      fillUnspecifiedConventionalCommitsProperties(
         normalizeConventionalCommitsConfig(
           userConfig.conventionalCommits
         ) as NxReleaseConfig['conventionalCommits']
@@ -564,7 +564,11 @@ function fillUnspecifiedConventionalCommitsProperties(
       semverBump: typeConfig.semverBump || 'patch',
       changelog: {
         hidden: typeConfig.changelog?.hidden || false,
-        title: typeConfig.changelog?.title || t,
+        title:
+          typeConfig.changelog?.title ||
+          // our default title is better than just the unmodified type name
+          DEFAULT_CONVENTIONAL_COMMITS_CONFIG.types[t]?.changelog.title ||
+          t,
       },
     };
   }
