@@ -249,7 +249,7 @@ Now the `project.json` files can be reduced to this:
       "options": {
         "testTimeout": 10000
       }
-    }  
+    }
   },
   "tags": []
 }
