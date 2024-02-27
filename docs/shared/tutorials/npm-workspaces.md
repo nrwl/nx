@@ -106,6 +106,7 @@ This command will download the latest version of Nx and help set up your reposit
 First, the script will propose installing some plugins based on the packages that are being used in your repository. Let's skip the plugins for now and explore what Nx provides without any plugins.
 
 Second, the script asks a series of questions to help set up caching for you.
+
 - The `build` task needs to be run in dependency order.
 - `typecheck`, `build` and `lint` are cacheable tasks.
 - Only the `build` task produces an output in the `dist` folder.
@@ -195,7 +196,7 @@ You may be wondering why the caching message in the previous section mentioned 3
 
 This configuration means that if you run `build` on any project, Nx will first run `build` for the dependencies of that project and then run `build` on the project itself. You can visualize this in the Nx graph by selecting the `Tasks` dropdown in the top left and clicking `Show all tasks`:
 
-```shell  {% path="~/tuskydesigns" %}
+```shell {% path="~/tuskydesigns" %}
 npx nx graph
 ```
 
