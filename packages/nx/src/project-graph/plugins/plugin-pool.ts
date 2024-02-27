@@ -2,13 +2,14 @@ import { ChildProcess, fork } from 'child_process';
 import path = require('path');
 
 import { PluginConfiguration } from '../../config/nx-json';
-import { ProjectGraph } from '../../config/project-graph';
-import { logger } from '../../utils/logger';
+
+// TODO (@AgentEnder): After scoped verbose logging is implemented, re-add verbose logs here.
+// import { logger } from '../../utils/logger';
 
 import { RemotePlugin, nxPluginCache } from './internal-api';
 import { PluginWorkerResult, consumeMessage, createMessage } from './messaging';
 
-const pool: ChildProcess[] = [];
+const pool: Set<ChildProcess> = new Set();
 
 const pidMap = new Map<number, { name: string; pending: Set<string> }>();
 
@@ -47,13 +48,13 @@ export function loadRemoteNxPlugin(plugin: PluginConfiguration, root: string) {
     ],
   });
   worker.send(createMessage({ type: 'load', payload: { plugin, root } }));
-  pool.push(worker);
+  pool.add(worker);
 
-  logger.verbose(`[plugin-worker] started worker: ${worker.pid}`);
+  // logger.verbose(`[plugin-worker] started worker: ${worker.pid}`);
 
   return new Promise<RemotePlugin>((res, rej) => {
     worker.on('message', createWorkerHandler(worker, res, rej));
-    worker.on('exit', () => workerOnExitHandler(worker));
+    worker.on('exit', createWorkerExitHandler(worker));
   });
 }
 
@@ -66,22 +67,24 @@ export async function shutdownPluginWorkers() {
   // Marks the workers as shutdown so that we don't report unexpected exits
   pluginWorkersShutdown = true;
 
-  logger.verbose(`[plugin-pool] shutting down workers`);
+  // logger.verbose(`[plugin-pool] starting worker shutdown`);
 
-  const pending = pool
-    .map(({ pid }) => Array.from(pidMap.get(pid)?.pending))
-    .flat();
+  const pending = getPendingPromises(pool, pidMap);
 
   if (pending.length > 0) {
-    logger.verbose(
-      `[plugin-pool] waiting for ${pending.length} pending operations to complete`
-    );
-    await Promise.all(pending.map((tx) => promiseBank.get(tx)?.promise));
+    // logger.verbose(
+    //   `[plugin-pool] waiting for ${pending.length} pending operations to complete`
+    // );
+    await Promise.all(pending);
   }
+
+  // logger.verbose(`[plugin-pool] all pending operations completed`);
 
   for (const p of pool) {
     p.kill('SIGINT');
   }
+
+  // logger.verbose(`[plugin-pool] all workers killed`);
 }
 
 /**
@@ -100,11 +103,11 @@ function createWorkerHandler(
 
   return function (message: string) {
     const parsed = JSON.parse(message);
-    logger.verbose(
-      `[plugin-pool] received message: ${parsed.type} from ${
-        pluginName ?? worker.pid
-      }`
-    );
+    // logger.verbose(
+    //   `[plugin-pool] received message: ${parsed.type} from ${
+    //     pluginName ?? worker.pid
+    //   }`
+    // );
     consumeMessage<PluginWorkerResult>(parsed, {
       'load-result': (result) => {
         if (result.success) {
@@ -215,27 +218,40 @@ function createWorkerHandler(
   };
 }
 
-function workerOnExitHandler(worker: ChildProcess) {
+function createWorkerExitHandler(worker: ChildProcess) {
   return () => {
     if (!pluginWorkersShutdown) {
       pidMap.get(worker.pid)?.pending.forEach((tx) => {
         const { rejecter } = promiseBank.get(tx);
         rejecter(
-          `[Nx] plugin worker ${
-            pidMap.get(worker.pid) ?? worker.pid
-          } exited unexpectedly`
+          new Error(
+            `Plugin worker ${
+              pidMap.get(worker.pid).name ?? worker.pid
+            } exited unexpectedly with code ${worker.exitCode}`
+          )
         );
       });
       shutdownPluginWorkers();
-      throw new Error(
-        `[Nx] plugin worker ${
-          pidMap.get(worker.pid) ?? worker.pid
-        } exited unexpectedly`
-      );
     }
   };
 }
 
 process.on('exit', () => {
-  shutdownPluginWorkers();
+  if (pool.size) {
+    shutdownPluginWorkers();
+  }
 });
+
+function getPendingPromises(
+  pool: Set<ChildProcess>,
+  pidMap: Map<number, { name: string; pending: Set<string> }>
+) {
+  const pendingTxs: Array<Promise<unknown>> = [];
+  for (const p of pool) {
+    const { pending } = pidMap.get(p.pid) ?? { pending: new Set() };
+    for (const tx of pending) {
+      pendingTxs.push(promiseBank.get(tx)?.promise);
+    }
+  }
+  return pendingTxs;
+}

@@ -11,11 +11,12 @@ import { ONLY_MODIFIES_EXISTING_TARGET } from '../../plugins/target-defaults/tar
 
 import { minimatch } from 'minimatch';
 import { join } from 'path';
-import { CreateNodesResult } from '../plugins';
+import { CreateNodesError } from '../plugins/utils';
 import {
   CreateNodesResultWithContext,
   RemotePlugin,
 } from '../plugins/internal-api';
+import { shutdownPluginWorkers } from '../plugins/plugin-pool';
 
 export type SourceInformation = [file: string, plugin: string];
 export type ConfigurationSourceMaps = Record<
@@ -225,19 +226,16 @@ export function buildProjectsConfigurationsFromProjectPathsAndPlugins(
         matchedFiles.push(file);
       }
     }
-    try {
-      let r = createNodes(matchedFiles, {
-        nxJsonConfiguration: nxJson,
-        workspaceRoot: root,
-      });
+    let r = createNodes(matchedFiles, {
+      nxJsonConfiguration: nxJson,
+      workspaceRoot: root,
+    }).catch((e) =>
+      shutdownPluginWorkers().then(() => {
+        throw e;
+      })
+    );
 
-      results.push(r);
-    } catch (e) {
-      throw new CreateNodesError(
-        `Unable to create nodes using plugin ${plugin.name}.`,
-        e
-      );
-    }
+    results.push(r);
   }
 
   return Promise.all(results).then((results) => {
@@ -339,23 +337,6 @@ export function readProjectConfigurationsFromRootMap(
     );
   }
   return projects;
-}
-
-class CreateNodesError extends Error {
-  constructor(msg, cause: Error | unknown) {
-    const message = `${msg} ${
-      !cause
-        ? ''
-        : cause instanceof Error
-        ? `\n\n\t Inner Error: ${cause.stack}`
-        : cause
-    }`;
-    // These errors are thrown during a JS callback which is invoked via rust.
-    // The errors messaging gets lost in the rust -> js -> rust transition, but
-    // logging the error here will ensure that it is visible in the console.
-    console.error(message);
-    super(message, { cause });
-  }
 }
 
 /**

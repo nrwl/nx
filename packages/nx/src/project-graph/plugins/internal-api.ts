@@ -1,10 +1,8 @@
 // This file contains the bits and bobs of the internal API for loading and interacting with Nx plugins.
 // For the public API, used by plugin authors, see `./public-api.ts`.
 
-import { join, dirname } from 'path';
+import { join } from 'path';
 
-import { toProjectName } from '../../config/workspaces';
-import { combineGlobPatterns } from '../../utils/globs';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { PluginConfiguration } from '../../config/nx-json';
 import { NxPluginV1 } from '../../utils/nx-plugin.deprecated';
@@ -86,42 +84,6 @@ export async function loadNxPlugin(
   const loadedPlugin = await loadRemoteNxPlugin(plugin, root);
   nxPluginCache.set(cacheKey, loadedPlugin);
   return loadedPlugin;
-}
-
-export function isNxPluginV2(plugin: NxPlugin): plugin is NxPluginV2 {
-  return 'createNodes' in plugin || 'createDependencies' in plugin;
-}
-
-export function isNxPluginV1(
-  plugin: NxPlugin | RemotePlugin
-): plugin is NxPluginV1 {
-  return 'processProjectGraph' in plugin || 'projectFilePatterns' in plugin;
-}
-
-export function normalizeNxPlugin(plugin: NxPlugin): NormalizedPlugin {
-  if (isNxPluginV2(plugin)) {
-    return plugin;
-  }
-  if (isNxPluginV1(plugin) && plugin.projectFilePatterns) {
-    return {
-      ...plugin,
-      createNodes: [
-        `*/**/${combineGlobPatterns(plugin.projectFilePatterns)}`,
-        (configFilePath) => {
-          const root = dirname(configFilePath);
-          return {
-            projects: {
-              [root]: {
-                name: toProjectName(configFilePath),
-                targets: plugin.registerProjectTargets?.(configFilePath),
-              },
-            },
-          };
-        },
-      ],
-    };
-  }
-  return plugin;
 }
 
 export async function getDefaultPlugins(root: string) {
