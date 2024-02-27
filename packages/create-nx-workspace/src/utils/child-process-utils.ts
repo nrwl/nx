@@ -1,4 +1,4 @@
-import { spawn, exec } from 'child_process';
+import { spawn, exec, execSync } from 'child_process';
 import { writeFileSync } from 'fs';
 import { join } from 'path';
 import { CreateNxWorkspaceError } from './error-utils';
@@ -28,19 +28,31 @@ export function spawnAndWait(command: string, args: string[], cwd: string) {
 
 export function execAndWait(command: string, cwd: string) {
   return new Promise<{ code: number; stdout: string }>((res, rej) => {
-    exec(
-      command,
-      { cwd, env: { ...process.env, NX_DAEMON: 'false' } },
-      (error, stdout, stderr) => {
-        if (error) {
-          const logFile = join(cwd, 'error.log');
-          writeFileSync(logFile, `${stdout}\n${stderr}`);
-          const message = stderr && stderr.trim().length ? stderr : stdout;
-          rej(new CreateNxWorkspaceError(message, error.code, logFile));
-        } else {
-          res({ code: 0, stdout });
-        }
-      }
-    );
+    try {
+      const output = execSync(command, {
+        cwd,
+        env: { ...process.env, NX_DAEMON: 'false' },
+        stdio: 'inherit',
+        encoding: 'utf-8',
+      });
+      res({ code: 0, stdout: output });
+    } catch (e: any) {
+      rej({ code: 1, stdout: e.toString() });
+    }
+
+    // exec(
+    //   command,
+    //   { cwd, env: { ...process.env, NX_DAEMON: 'false' } },
+    //   (error, stdout, stderr) => {
+    //     if (error) {
+    //       const logFile = join(cwd, 'error.log');
+    //       writeFileSync(logFile, `${stdout}\n${stderr}`);
+    //       const message = stderr && stderr.trim().length ? stderr : stdout;
+    //       rej(new CreateNxWorkspaceError(message, error.code, logFile));
+    //     } else {
+    //       res({ code: 0, stdout });
+    //     }
+    //   }
+    // );
   });
 }

@@ -215,7 +215,7 @@ describe('create-nx-workspace', () => {
     expectCodeIsFormatted();
   });
 
-  it('should be able to create an next workspace', () => {
+  it('hhhhhhshould be able to create an next workspace', () => {
     const wsName = uniq('next');
     const appName = uniq('app');
     runCreateWorkspace(wsName, {

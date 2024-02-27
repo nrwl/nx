@@ -53,36 +53,43 @@ export const createDependencies: CreateDependencies = () => {
 export const createNodes: CreateNodes<NextPluginOptions> = [
   '**/next.config.{js,cjs,mjs}',
   async (configFilePath, options, context) => {
-    const projectRoot = dirname(configFilePath);
+    try {
+      const projectRoot = dirname(configFilePath);
 
-    // Do not create a project if package.json and project.json isn't there.
-    const siblingFiles = readdirSync(join(context.workspaceRoot, projectRoot));
-    if (
-      !siblingFiles.includes('package.json') &&
-      !siblingFiles.includes('project.json')
-    ) {
-      return {};
-    }
-    options = normalizeOptions(options);
+      // Do not create a project if package.json and project.json isn't there.
+      const siblingFiles = readdirSync(
+        join(context.workspaceRoot, projectRoot)
+      );
+      if (
+        !siblingFiles.includes('package.json') &&
+        !siblingFiles.includes('project.json')
+      ) {
+        return {};
+      }
+      options = normalizeOptions(options);
 
-    const hash = calculateHashForCreateNodes(projectRoot, options, context, [
-      getLockFileName(detectPackageManager(context.workspaceRoot)),
-    ]);
+      const hash = calculateHashForCreateNodes(projectRoot, options, context, [
+        getLockFileName(detectPackageManager(context.workspaceRoot)),
+      ]);
 
-    const targets =
-      targetsCache[hash] ??
-      (await buildNextTargets(configFilePath, projectRoot, options, context));
+      const targets =
+        targetsCache[hash] ??
+        (await buildNextTargets(configFilePath, projectRoot, options, context));
 
-    calculatedTargets[hash] = targets;
+      calculatedTargets[hash] = targets;
 
-    return {
-      projects: {
-        [projectRoot]: {
-          root: projectRoot,
-          targets,
+      return {
+        projects: {
+          [projectRoot]: {
+            root: projectRoot,
+            targets,
+          },
         },
-      },
-    };
+      };
+    } catch (e) {
+      console.error(e);
+      throw e;
+    }
   },
 ];
 
