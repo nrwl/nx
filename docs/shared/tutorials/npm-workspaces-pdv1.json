@@ -1,0 +1,186 @@
+{
+    "project": {
+      "name": "@tuskdesign/demo",
+      "type": "lib",
+      "data": {
+        "root": "apps/demo",
+        "targets": {
+          "build": {
+            "executor": "nx:run-script",
+            "dependsOn": ["^build"],
+            "outputs": ["{projectRoot}/dist"],
+            "cache": true,
+            "options": {
+              "script": "build"
+            },
+            "configurations": {}
+          },
+          "typecheck": {
+            "executor": "nx:run-script",
+            "cache": true,
+            "options": {
+              "script": "typecheck"
+            },
+            "configurations": {}
+          },
+          "lint": {
+            "executor": "nx:run-script",
+            "cache": true,
+            "options": {
+              "script": "lint"
+            },
+            "configurations": {}
+          },
+          "dev": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "dev"
+            },
+            "configurations": {}
+          },
+          "prebuild": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "prebuild"
+            },
+            "configurations": {}
+          },
+          "preview": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "preview"
+            },
+            "configurations": {}
+          }
+        },
+        "sourceRoot": "apps/demo",
+        "name": "@tuskdesign/demo",
+        "projectType": "library",
+        "implicitDependencies": [],
+        "tags": []
+      }
+    },
+    "sourceMap": {
+      "root": ["apps/demo/package.json", "nx/core/package-json-workspaces"],
+      "targets": ["apps/demo/package.json", "nx/core/package-json-workspaces"],
+      "targets.build": [
+        "apps/demo/package.json",
+        "nx/core/package-json-workspaces"
+      ],
+      "targets.build.executor": [
+        "apps/demo/package.json",
+        "nx/core/package-json-workspaces"
+      ],
+      "targets.build.options": [
+        "apps/demo/package.json",
+        "nx/core/package-json-workspaces"
+      ],
+      "targets.build.dependsOn": [
+        "apps/demo/package.json",
+        "nx/core/target-defaults"
+      ],
+      "targets.build.outputs": [
+        "apps/demo/package.json",
+        "nx/core/target-defaults"
+      ],
+      "targets.build.cache": [
+        "apps/demo/package.json",
+        "nx/core/target-defaults"
+      ],
+      "targets.build.options.script": [
+        "apps/demo/package.json",
+        "nx/core/package-json-workspaces"
+      ],
+      "targets.typecheck": [
+        "apps/demo/package.json",
+        "nx/core/package-json-workspaces"
+      ],
+      "targets.typecheck.executor": [
+        "apps/demo/package.json",
+        "nx/core/package-json-workspaces"
+      ],
+      "targets.typecheck.options": [
+        "apps/demo/package.json",
+        "nx/core/package-json-workspaces"
+      ],
+      "targets.typecheck.cache": [
+        "apps/demo/package.json",
+        "nx/core/target-defaults"
+      ],
+      "targets.typecheck.options.script": [
+        "apps/demo/package.json",
+        "nx/core/package-json-workspaces"
+      ],
+      "targets.lint": [
+        "apps/demo/package.json",
+        "nx/core/package-json-workspaces"
+      ],
+      "targets.lint.executor": [
+        "apps/demo/package.json",
+        "nx/core/package-json-workspaces"
+      ],
+      "targets.lint.options": [
+        "apps/demo/package.json",
+        "nx/core/package-json-workspaces"
+      ],
+      "targets.lint.cache": ["apps/demo/package.json", "nx/core/target-defaults"],
+      "targets.lint.options.script": [
+        "apps/demo/package.json",
+        "nx/core/package-json-workspaces"
+      ],
+      "sourceRoot": ["apps/demo/package.json", "nx/core/package-json-workspaces"],
+      "name": ["apps/demo/package.json", "nx/core/package-json-workspaces"],
+      "projectType": [
+        "apps/demo/package.json",
+        "nx/core/package-json-workspaces"
+      ],
+      "targets.dev": [
+        "apps/demo/package.json",
+        "nx/core/package-json-workspaces"
+      ],
+      "targets.dev.executor": [
+        "apps/demo/package.json",
+        "nx/core/package-json-workspaces"
+      ],
+      "targets.dev.options": [
+        "apps/demo/package.json",
+        "nx/core/package-json-workspaces"
+      ],
+      "targets.dev.options.script": [
+        "apps/demo/package.json",
+        "nx/core/package-json-workspaces"
+      ],
+      "targets.prebuild": [
+        "apps/demo/package.json",
+        "nx/core/package-json-workspaces"
+      ],
+      "targets.prebuild.executor": [
+        "apps/demo/package.json",
+        "nx/core/package-json-workspaces"
+      ],
+      "targets.prebuild.options": [
+        "apps/demo/package.json",
+        "nx/core/package-json-workspaces"
+      ],
+      "targets.prebuild.options.script": [
+        "apps/demo/package.json",
+        "nx/core/package-json-workspaces"
+      ],
+      "targets.preview": [
+        "apps/demo/package.json",
+        "nx/core/package-json-workspaces"
+      ],
+      "targets.preview.executor": [
+        "apps/demo/package.json",
+        "nx/core/package-json-workspaces"
+      ],
+      "targets.preview.options": [
+        "apps/demo/package.json",
+        "nx/core/package-json-workspaces"
+      ],
+      "targets.preview.options.script": [
+        "apps/demo/package.json",
+        "nx/core/package-json-workspaces"
+      ]
+    }
+  }

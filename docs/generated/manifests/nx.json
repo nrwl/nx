@@ -47,14 +47,14 @@
         "file": "",
         "itemList": [
           {
-            "id": "package-based-repo-tutorial",
-            "name": "Package-Based Monorepo",
+            "id": "npm-workspaces-tutorial",
+            "name": "NPM Workspaces Monorepo",
             "description": "",
             "mediaImage": "",
-            "file": "shared/npm-tutorial/package-based",
+            "file": "shared/tutorials/npm-workspaces",
             "itemList": [],
             "isExternal": false,
-            "path": "/getting-started/tutorials/package-based-repo-tutorial",
+            "path": "/getting-started/tutorials/npm-workspaces-tutorial",
             "tags": []
           },
           {
@@ -174,14 +174,14 @@
     "file": "",
     "itemList": [
       {
-        "id": "package-based-repo-tutorial",
-        "name": "Package-Based Monorepo",
+        "id": "npm-workspaces-tutorial",
+        "name": "NPM Workspaces Monorepo",
         "description": "",
         "mediaImage": "",
-        "file": "shared/npm-tutorial/package-based",
+        "file": "shared/tutorials/npm-workspaces",
         "itemList": [],
         "isExternal": false,
-        "path": "/getting-started/tutorials/package-based-repo-tutorial",
+        "path": "/getting-started/tutorials/npm-workspaces-tutorial",
         "tags": []
       },
       {
@@ -255,15 +255,15 @@
     "path": "/getting-started/tutorials",
     "tags": []
   },
-  "/getting-started/tutorials/package-based-repo-tutorial": {
-    "id": "package-based-repo-tutorial",
-    "name": "Package-Based Monorepo",
+  "/getting-started/tutorials/npm-workspaces-tutorial": {
+    "id": "npm-workspaces-tutorial",
+    "name": "NPM Workspaces Monorepo",
     "description": "",
     "mediaImage": "",
-    "file": "shared/npm-tutorial/package-based",
+    "file": "shared/tutorials/npm-workspaces",
     "itemList": [],
     "isExternal": false,
-    "path": "/getting-started/tutorials/package-based-repo-tutorial",
+    "path": "/getting-started/tutorials/npm-workspaces-tutorial",
     "tags": []
   },
   "/getting-started/tutorials/integrated-repo-tutorial": {
