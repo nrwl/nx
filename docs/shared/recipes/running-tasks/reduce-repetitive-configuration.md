@@ -225,7 +225,9 @@ Now the `project.json` files can be reduced to this:
       "options": {
         "assets": ["libs/lib1/*.md", "libs/lib1/src/images/*"]
       }
-    }
+    },
+    "lint": {},
+    "test": {}
   },
   "tags": []
 }
@@ -241,11 +243,13 @@ Now the `project.json` files can be reduced to this:
   "sourceRoot": "libs/lib2/src",
   "projectType": "library",
   "targets": {
+    "build": {},
+    "lint": {},
     "test": {
       "options": {
         "testTimeout": 10000
       }
-    }
+    }  
   },
   "tags": []
 }
@@ -261,6 +265,8 @@ Now the `project.json` files can be reduced to this:
   "sourceRoot": "libs/lib3/src",
   "projectType": "library",
   "targets": {
+    "build": {},
+    "lint": {},
     "test": {}
   },
   "tags": []
