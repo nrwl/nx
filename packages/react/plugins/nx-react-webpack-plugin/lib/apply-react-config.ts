@@ -59,7 +59,7 @@ function addHotReload(
     }
 
     const ReactRefreshPlugin = require('@pmmmwh/react-refresh-webpack-plugin');
-    config.plugins.push(new ReactRefreshPlugin());
+    config.plugins.push(new ReactRefreshPlugin({ overlay: false }));
   }
 }
 
