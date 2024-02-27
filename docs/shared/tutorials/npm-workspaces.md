@@ -13,11 +13,11 @@ In this tutorial, you'll learn how to add Nx to a repository with an existing NP
 - Configure a task pipeline
 - Configure caching for your tasks
 
-## Final Source Code
+<!-- ## Final Source Code
 
 Here's the source code of the final result for this tutorial.
 
-{% github-repository url="https://github.com/nrwl/nx-recipes/tree/main/npm-workspaces" /%}
+{% github-repository url="https://github.com/nrwl/nx-recipes/tree/main/npm-workspaces" /%} -->
 
 ## Starting Repository
 
@@ -83,9 +83,9 @@ npm ERR!   in workspace: @tuskdesign/demo@0.0.0
 npm ERR!   at location: /Users/isaac/Documents/code/pnpm-monorepo/apps/demo
 ```
 
-The `build` script fails because it needs the `buttons` and `forms` projects to be built first in order to work correctly. To do this, lets run to the root of the repository and run the `build` task for every project in the repo:
+The `build` script fails because it needs the `buttons` and `forms` projects to be built first in order to work correctly. To do this, lets return to the root of the repository and run the `build` task for every project in the repo:
 
-```shell {% path="~/tuskydesigns/apps/demo" %}
+```shell {% path="~/tuskydesigns" %}
 npm run build --ws
 ```
 
@@ -105,7 +105,11 @@ This command will download the latest version of Nx and help set up your reposit
 
 First, the script will propose installing some plugins based on the packages that are being used in your repository. Let's skip the plugins for now and explore what Nx provides without any plugins.
 
-Second, the script asks a series of questions to help set up caching for you. The `build` task needs to be run in dependency order. `typecheck`, `build` and `lint` are cacheable tasks and only the `build` task produces an output in the `dist` folder.
+Second, the script asks a series of questions to help set up caching for you.
+- The `build` task needs to be run in dependency order.
+- `typecheck`, `build` and `lint` are cacheable tasks.
+- Only the `build` task produces an output in the `dist` folder.
+- Skip remote caching and we'll add it later.
 
 ```text {% command="npx nx@latest init" path="~/tuskydesigns" %}
  NX   Recommended Plugins:
@@ -139,6 +143,10 @@ Read this guide on exploring your workspace: https://nx.dev/features/explore-gra
 ## Explore Your Workspace
 
 If you run `nx graph` as instructed, you'll see the dependencies between your projects.
+
+```shell {% path="~/tuskydesigns" %}
+npx nx graph
+```
 
 {% graph title="Tusk Design" height="200px" jsonFile="shared/tutorials/npm-workspaces-project-graph.json" %}
 {% /graph %}
