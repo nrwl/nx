@@ -46,7 +46,7 @@ describe('Angular Projects', () => {
     app1DefaultComponentTemplate = readFile(
       `${app1}/src/app/app.component.html`
     );
-    esbuildAppDefaultModule = readFile(`${app1}/src/app/app.module.ts`);
+    esbuildAppDefaultModule = readFile(`${esbuildApp}/src/app/app.module.ts`);
     esbuildAppDefaultComponentTemplate = readFile(
       `${esbuildApp}/src/app/app.component.html`
     );
@@ -61,7 +61,7 @@ describe('Angular Projects', () => {
     );
     updateFile(`${esbuildApp}/src/app/app.module.ts`, esbuildAppDefaultModule);
     updateFile(
-      `${esbuildAppDefaultComponentTemplate}/src/app/app.component.html`,
+      `${esbuildApp}/src/app/app.component.html`,
       esbuildAppDefaultComponentTemplate
     );
     updateFile(`${esbuildApp}/project.json`, esbuildAppDefaultProjectConfig);

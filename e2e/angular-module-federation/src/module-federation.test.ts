@@ -385,7 +385,7 @@ describe('Angular Module Federation', () => {
         `nxE2EPreset(__filename, {`,
         `nxE2EPreset(__filename, {
           webServerConfig: {
-            timeout: 30000,
+            timeout: 60000,
           },`
       )
     );
@@ -489,7 +489,7 @@ describe('Angular Module Federation', () => {
         `nxE2EPreset(__filename, {`,
         `nxE2EPreset(__filename, {
           webServerConfig: {
-            timeout: 30000,
+            timeout: 60000,
           },`
       )
     );
