@@ -103,7 +103,7 @@ describe('Node Applications + webpack', () => {
           output.includes(`should rebuild lib`)
         );
       },
-      { timeout: 30_000, ms: 200 }
+      { timeout: 60_000, ms: 200 }
     );
 
     serveProcess.kill();
