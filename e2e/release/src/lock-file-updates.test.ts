@@ -150,7 +150,7 @@ describe('nx release lock file updates', () => {
     expect(filesChanges).toMatchInlineSnapshot(`
       {project-name}/package.json
       {project-name}/package.json
-      {project-name}/package.json 
+      {project-name}/package.json
 
     `);
   });
