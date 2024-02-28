@@ -10,7 +10,6 @@ within an Nx workspace. It provides:
 - Generators to help scaffold code quickly, including:
   - Micro Frontends
   - Libraries, both internal to your codebase and publishable to npm
-  - Upgrading AngularJS applications
   - Single Component Application Modules (SCAMs)
 - NgRx helpers.
 - Utilities for automatic workspace refactoring.
