@@ -62,7 +62,7 @@ async function processProject(
 
   // exclude package.json scripts from nx
   packageJson.nx ??= {};
-  packageJson.nx.includedScripts ??= [];
+  packageJson.nx.includedScripts ??= Object.keys(packageJson.scripts);
 
   for (const targetCommand of targetCommands) {
     const { command, target, configuration } = targetCommand;
