@@ -46,6 +46,8 @@ export function detectPackageManager(dir: string = ''): PackageManager {
 
 /**
  * Returns true if the workspace is using npm workspaces, yarn workspaces, or pnpm workspaces.
+ * @param packageManager The package manager to use. If not provided, it will be detected based on the lock file.
+ * @param root The directory the commands will be ran inside of. Defaults to the current workspace's root.
  */
 export function isWorkspacesEnabled(
   packageManager: PackageManager = detectPackageManager(),
