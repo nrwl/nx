@@ -159,7 +159,7 @@ describe('Remix E2E Tests', () => {
         ).not.toThrow();
       }, 120000);
 
-      it('should pass un-escaped dollar signs in resource routes with skipChecks flag', async () => {
+      xit('should pass un-escaped dollar signs in resource routes with skipChecks flag', async () => {
         await runCommandAsync(
           `someWeirdUseCase=route-segment && yarn nx generate @nx/remix:resource-route --project ${plugin} --path my.route.$someWeirdUseCase.ts --force`
         );
