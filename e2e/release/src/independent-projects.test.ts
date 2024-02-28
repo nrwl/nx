@@ -762,7 +762,7 @@ describe('nx release - independent projects', () => {
         integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
         total files:   4
 
-        Would publish to http://localhost:4873 with tag "latest", but [dry-run] was set
+        Would publish to ${e2eRegistryUrl} with tag "latest", but [dry-run] was set
 
 
 
@@ -871,7 +871,7 @@ describe('nx release - independent projects', () => {
           integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
           total files:   4
 
-          Would publish to http://localhost:4873 with tag "latest", but [dry-run] was set
+          Would publish to ${e2eRegistryUrl} with tag "latest", but [dry-run] was set
 
 
 
