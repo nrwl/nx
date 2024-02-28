@@ -13,11 +13,8 @@ import {
 } from './nx-deps-cache';
 import { applyImplicitDependencies } from './utils/implicit-project-dependencies';
 import { normalizeProjectNodes } from './utils/normalize-project-nodes';
-import {
-  isNxPluginV1,
-  isNxPluginV2,
-  loadNxPlugins,
-} from './plugins/internal-api';
+import { loadNxPlugins } from './plugins/internal-api';
+import { isNxPluginV1, isNxPluginV2 } from './plugins/utils';
 import { CreateDependenciesContext } from './plugins';
 import { getRootTsConfigPath } from '../plugins/js/utils/typescript';
 import {
