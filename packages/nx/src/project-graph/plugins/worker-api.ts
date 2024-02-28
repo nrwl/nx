@@ -27,7 +27,7 @@ import { logger } from '../../utils/logger';
 
 import type * as ts from 'typescript';
 import { extname } from 'node:path';
-import { NormalizedPlugin, normalizeNxPlugin } from './internal-api';
+import { normalizeNxPlugin } from './utils';
 import { NxPlugin } from './public-api';
 
 export type LoadedNxPlugin = {
