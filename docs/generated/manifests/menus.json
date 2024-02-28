@@ -8283,7 +8283,7 @@
             "name": "documents",
             "children": [
               {
-                "name": "Overview of the Nx Nuxt Plugin",
+                "name": "Overview",
                 "path": "/nx-api/nuxt/documents/overview",
                 "id": "overview",
                 "isExternal": false,
@@ -9417,7 +9417,7 @@
             "name": "documents",
             "children": [
               {
-                "name": "Nx Storybook Plugin Overview",
+                "name": "Overview",
                 "path": "/nx-api/storybook/documents/overview",
                 "id": "overview",
                 "isExternal": false,
@@ -9433,7 +9433,7 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Storybook 7 overview",
+                "name": "Storybook 7",
                 "path": "/nx-api/storybook/documents/storybook-7-setup",
                 "id": "storybook-7-setup",
                 "isExternal": false,
@@ -9533,7 +9533,7 @@
             "name": "documents",
             "children": [
               {
-                "name": "Overview of the Nx Vite Plugin",
+                "name": "Overview",
                 "path": "/nx-api/vite/documents/overview",
                 "id": "overview",
                 "isExternal": false,
@@ -9633,7 +9633,7 @@
             "name": "documents",
             "children": [
               {
-                "name": "Overview of the Nx Vue Plugin",
+                "name": "Overview",
                 "path": "/nx-api/vue/documents/overview",
                 "id": "overview",
                 "isExternal": false,
@@ -9800,7 +9800,7 @@
             "name": "documents",
             "children": [
               {
-                "name": "Overview of the Nx Webpack Plugin",
+                "name": "Overview",
                 "path": "/nx-api/webpack/documents/overview",
                 "id": "overview",
                 "isExternal": false,

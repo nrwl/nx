@@ -52,6 +52,7 @@ title="Tutorial: Standalone Angular Application"
 Create a new Angular monorepo with the following command:
 
 ```{% command="npx create-nx-workspace@latest angular-monorepo --preset=angular-monorepo" path="~" %}
+
 NX   Let's create a new workspace [https://nx.dev/getting-started/intro]
 
 ✔ Application name · angular-store
