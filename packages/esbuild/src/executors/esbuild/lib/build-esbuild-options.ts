@@ -260,10 +260,16 @@ Module._resolveFilename = function(request, parent) {
       const match = request.match(re);
 
       if (match?.groups) {
-        const candidate = path.join(distPath, entry.pattern.replace("*", ""), match.groups.rest + ".js");
-        if (isFile(candidate)) {
-          found = candidate;
-        }
+        const fileName = match.groups.rest;
+
+        const basePath = path.join(distPath, entry.pattern.replace("*", ""));
+
+        const possibleFiles = [
+          [fileName, "index.js"], // name/index.js
+          [fileName + ".js"],     // name.js
+        ].map((x) => path.join(basePath, ...x));
+
+        found = possibleFiles.find(isFile);
       }
 
     }
