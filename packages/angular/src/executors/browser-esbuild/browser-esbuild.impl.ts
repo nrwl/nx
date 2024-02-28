@@ -39,7 +39,7 @@ export default async function* esbuildExecutor(
     delegateExecutorOptions.tsConfig = tsConfigPath;
   }
 
-  const plugins = await loadPlugins(pluginPaths, options.tsConfig);
+  const plugins = await loadPlugins(pluginPaths, options.tsConfig, context);
 
   const { buildEsbuildBrowser } = await import(
     '@angular-devkit/build-angular/src/builders/browser-esbuild/index'

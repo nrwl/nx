@@ -36,7 +36,7 @@ export default async function* applicationExecutor(
     delegateExecutorOptions.tsConfig = tsConfigPath;
   }
 
-  const plugins = await loadPlugins(pluginPaths, options.tsConfig);
+  const plugins = await loadPlugins(pluginPaths, options.tsConfig, context);
   const indexHtmlTransformer = indexHtmlTransformerPath
     ? await loadIndexHtmlTransformer(indexHtmlTransformerPath, options.tsConfig)
     : undefined;

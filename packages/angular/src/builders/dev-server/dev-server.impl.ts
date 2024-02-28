@@ -166,7 +166,13 @@ export function executeDevServerBuilder(
 
   return combineLatest([
     from(import('@angular-devkit/build-angular')),
-    from(loadPlugins(buildTargetOptions.plugins, buildTargetOptions.tsConfig)),
+    from(
+      loadPlugins(
+        buildTargetOptions.plugins,
+        buildTargetOptions.tsConfig,
+        context
+      )
+    ),
     from(
       loadMiddleware(options.esbuildMiddleware, buildTargetOptions.tsConfig)
     ),

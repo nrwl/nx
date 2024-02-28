@@ -12,6 +12,8 @@ In addition to the features provided by the Angular CLI builder, the `@nx/angula
 
 The executor accepts a `plugins` option that allows you to provide esbuild plugins that will be used when building your application. It allows providing a path to a plugin file or an object with a `path` and `options` property to provide options to the plugin.
 
+It also supports runtime variable `<ExecutorContext>` which will be replaced by the context object for a given executor/builder.
+
 ```json {% fileName="apps/my-app/project.json" highlightLines=["8-16"] %}
 {
   ...
@@ -25,7 +27,8 @@ The executor accepts a `plugins` option that allows you to provide esbuild plugi
           {
             "path": "apps/my-app/plugins/plugin2.js",
             "options": {
-              "someOption": "some value"
+              "someOption": "some value",
+              "myContext": "<ExecutorContext>"
             }
           }
         ]
