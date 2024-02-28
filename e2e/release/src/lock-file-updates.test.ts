@@ -93,6 +93,11 @@ describe('nx release lock file updates', () => {
   it('should update package-lock.json when package manager is npm', async () => {
     initializeProject('npm');
 
+    updateJson('package.json', (json) => {
+      json.workspaces = [pkg1, pkg2, pkg3];
+      return json;
+    });
+
     runCommand(`npm install`);
 
     // workaround for NXC-143
@@ -112,6 +117,40 @@ describe('nx release lock file updates', () => {
       {project-name}/package.json
       {project-name}/package.json
       package-lock.json
+
+    `);
+  });
+
+  it('should not update package-lock.json when package manager is npm and workspaces are not enabled', async () => {
+    initializeProject('npm');
+
+    updateJson('package.json', (json) => {
+      delete json.workspaces;
+      return json;
+    });
+
+    runCommand(`npm install`);
+
+    // workaround for NXC-143
+    runCLI('reset');
+
+    runCommand(`git add .`);
+    runCommand(`git commit -m "chore: initial commit"`);
+
+    const versionOutput = runCLI(`release version 999.9.9 --verbose`);
+
+    expect(
+      versionOutput.match(
+        /Skipped lock file update because npm workspaces are not enabled./g
+      ).length
+    ).toBe(1);
+
+    const filesChanges = runCommand('git diff --name-only HEAD');
+
+    expect(filesChanges).toMatchInlineSnapshot(`
+      {project-name}/package.json
+      {project-name}/package.json
+      {project-name}/package.json 
 
     `);
   });

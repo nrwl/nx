@@ -6,8 +6,9 @@ import { gte, lt } from 'semver';
 import { dirSync } from 'tmp';
 import { promisify } from 'util';
 import { readNxJson } from '../config/configuration';
+import { readPackageJson } from '../project-graph/file-utils';
 import { readFileIfExisting, writeJsonFile } from './fileutils';
-import { readModulePackageJson } from './package-json';
+import { PackageJson, readModulePackageJson } from './package-json';
 import { workspaceRoot } from './workspace-root';
 
 const execAsync = promisify(exec);
@@ -41,6 +42,22 @@ export function detectPackageManager(dir: string = ''): PackageManager {
       ? 'pnpm'
       : 'npm')
   );
+}
+
+/**
+ * Returns true if the workspace is using npm workspaces, yarn workspaces, or pnpm workspaces.
+ */
+export function isWorkspacesEnabled(
+  packageManager: PackageManager = detectPackageManager(),
+  root: string = workspaceRoot
+): boolean {
+  if (packageManager === 'pnpm') {
+    return existsSync(join(root, 'pnpm-workspace.yaml'));
+  }
+
+  // yarn and pnpm both use the same 'workspaces' property in package.json
+  const packageJson: PackageJson = readPackageJson();
+  return !!packageJson?.workspaces;
 }
 
 /**

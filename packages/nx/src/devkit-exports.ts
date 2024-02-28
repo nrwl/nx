@@ -100,6 +100,7 @@ export {
   getPackageManagerCommand,
   detectPackageManager,
   getPackageManagerVersion,
+  isWorkspacesEnabled
 } from './utils/package-manager';
 
 /**
