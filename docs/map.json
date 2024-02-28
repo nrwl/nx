@@ -761,6 +761,12 @@
                   "file": "shared/packages/cypress/cypress-component-testing"
                 },
                 {
+                  "id": "cypress-setup-node-events",
+                  "name": "Using setupNodeEvents with Cypress preset",
+                  "description": "A guide on using the setupNodeEvents function with @nx/cypress/plugins/cypress-preset",
+                  "file": "shared/packages/cypress/cypress-setup-node-events"
+                },
+                {
                   "id": "cypress-v11-migration",
                   "name": "Cypress v11 Migration Guide",
                   "description": "Cypress v11 Migration Guide",

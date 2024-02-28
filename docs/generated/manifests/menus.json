@@ -1802,6 +1802,14 @@
                 "disableCollapsible": false
               },
               {
+                "name": "Using setupNodeEvents with Cypress preset",
+                "path": "/recipes/cypress/cypress-setup-node-events",
+                "id": "cypress-setup-node-events",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
                 "name": "Cypress v11 Migration Guide",
                 "path": "/recipes/cypress/cypress-v11-migration",
                 "id": "cypress-v11-migration",
@@ -3234,6 +3242,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Using setupNodeEvents with Cypress preset",
+            "path": "/recipes/cypress/cypress-setup-node-events",
+            "id": "cypress-setup-node-events",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Cypress v11 Migration Guide",
             "path": "/recipes/cypress/cypress-v11-migration",
             "id": "cypress-v11-migration",
@@ -3248,6 +3264,14 @@
         "name": "Component Testing",
         "path": "/recipes/cypress/cypress-component-testing",
         "id": "cypress-component-testing",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Using setupNodeEvents with Cypress preset",
+        "path": "/recipes/cypress/cypress-setup-node-events",
+        "id": "cypress-setup-node-events",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false

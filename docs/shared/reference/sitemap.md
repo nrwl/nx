@@ -119,6 +119,7 @@
       - [Angular: Configuring styles and preprocessor options](/recipes/storybook/angular-configuring-styles)
     - [Cypress](/recipes/cypress)
       - [Component Testing](/recipes/cypress/cypress-component-testing)
+      - [Using setupNodeEvents with Cypress preset](/recipes/cypress/cypress-setup-node-events)
       - [Cypress v11 Migration Guide](/recipes/cypress/cypress-v11-migration)
     - [Next](/recipes/next)
       - [How to configure Next.js plugins](/recipes/next/next-config-setup)
