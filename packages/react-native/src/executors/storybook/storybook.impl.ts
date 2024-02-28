@@ -39,7 +39,7 @@ export default async function* reactNativeStorybookExecutor(
   );
   const projectPackageJson = readJsonFile<PackageJson>(packageJsonPath);
 
-  if (fileExists(packageJsonPath) && isSyncDepsEnabled)
+  if (isSyncDepsEnabled && fileExists(packageJsonPath))
     displayNewlyAddedDepsMessage(
       context.projectName,
       await syncDeps(
