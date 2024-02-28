@@ -2,15 +2,27 @@ import { ChildProcess, fork } from 'child_process';
 import path = require('path');
 
 import { PluginConfiguration } from '../../config/nx-json';
-import { ProjectGraph } from '../../config/project-graph';
-import { logger } from '../../utils/logger';
+
+// TODO (@AgentEnder): After scoped verbose logging is implemented, re-add verbose logs here.
+// import { logger } from '../../utils/logger';
 
 import { RemotePlugin, nxPluginCache } from './internal-api';
 import { PluginWorkerResult, consumeMessage, createMessage } from './messaging';
 
-const pool: ChildProcess[] = [];
+const pool: Set<ChildProcess> = new Set();
 
-const pidMap = new Map<number, string>();
+const pidMap = new Map<number, { name: string; pending: Set<string> }>();
+
+// transaction id (tx) -> Promise, Resolver, Rejecter
+// Makes sure that we can resolve the correct promise when the worker sends back the result
+const promiseBank = new Map<
+  string,
+  {
+    promise: Promise<unknown>;
+    resolver: (result: any) => void;
+    rejecter: (err: any) => void;
+  }
+>();
 
 export function loadRemoteNxPlugin(plugin: PluginConfiguration, root: string) {
   // this should only really be true when running unit tests within
@@ -36,13 +48,13 @@ export function loadRemoteNxPlugin(plugin: PluginConfiguration, root: string) {
     ],
   });
   worker.send(createMessage({ type: 'load', payload: { plugin, root } }));
-  pool.push(worker);
+  pool.add(worker);
 
-  logger.verbose(`[plugin-worker] started worker: ${worker.pid}`);
+  // logger.verbose(`[plugin-worker] started worker: ${worker.pid}`);
 
   return new Promise<RemotePlugin>((res, rej) => {
     worker.on('message', createWorkerHandler(worker, res, rej));
-    worker.on('exit', () => workerOnExitHandler(worker));
+    worker.on('exit', createWorkerExitHandler(worker));
   });
 }
 
@@ -55,23 +67,24 @@ export async function shutdownPluginWorkers() {
   // Marks the workers as shutdown so that we don't report unexpected exits
   pluginWorkersShutdown = true;
 
-  const promises = [];
+  // logger.verbose(`[plugin-pool] starting worker shutdown`);
+
+  const pending = getPendingPromises(pool, pidMap);
+
+  if (pending.length > 0) {
+    // logger.verbose(
+    //   `[plugin-pool] waiting for ${pending.length} pending operations to complete`
+    // );
+    await Promise.all(pending);
+  }
+
+  // logger.verbose(`[plugin-pool] all pending operations completed`);
 
   for (const p of pool) {
-    p.send(createMessage({ type: 'shutdown', payload: undefined }), (error) => {
-      if (error) {
-        // This occurs when the worker is already dead, and we can ignore it
-      } else {
-        promises.push(
-          // Create a promise that resolves when the worker exits
-          new Promise<void>((res, rej) => {
-            p.once('exit', () => res());
-          })
-        );
-      }
-    });
+    p.kill('SIGINT');
   }
-  return Promise.all(promises);
+
+  // logger.verbose(`[plugin-pool] all workers killed`);
 }
 
 /**
@@ -86,84 +99,83 @@ function createWorkerHandler(
   onload: (plugin: RemotePlugin) => void,
   onloadError: (err?: unknown) => void
 ) {
-  // We store resolver and rejecter functions in the outer scope so that we can
-  // resolve/reject the promise from the message handler. The flow is something like:
-  // 1. plugin api called
-  // 2. remote plugin sends message to worker, creates promise and stores resolver/rejecter
-  // 3. worker performs API request
-  // 4. worker sends result back to main process
-  // 5. main process resolves/rejects promise based on result
-
-  let createNodesResolver: (
-    result: Awaited<ReturnType<RemotePlugin['createNodes'][1]>>
-  ) => void | undefined;
-  let createNodesRejecter: (err: unknown) => void | undefined;
-  let createDependenciesResolver: (
-    result: ReturnType<RemotePlugin['createDependencies']>
-  ) => void | undefined;
-  let createDependenciesRejecter: (err: unknown) => void | undefined;
-  let processProjectGraphResolver: (updatedGraph: ProjectGraph) => void;
-  let processProjectGraphRejecter: (err: unknown) => void | undefined;
-
   let pluginName: string;
 
   return function (message: string) {
     const parsed = JSON.parse(message);
-    logger.verbose(
-      `[plugin-pool] received message: ${parsed.type} from ${
-        pluginName ?? worker.pid
-      }`
-    );
+    // logger.verbose(
+    //   `[plugin-pool] received message: ${parsed.type} from ${
+    //     pluginName ?? worker.pid
+    //   }`
+    // );
     consumeMessage<PluginWorkerResult>(parsed, {
       'load-result': (result) => {
         if (result.success) {
           const { name, createNodesPattern } = result;
           pluginName = name;
-          pidMap.set(worker.pid, name);
+          const pending = new Set<string>();
+          pidMap.set(worker.pid, { name, pending });
           onload({
             name,
             createNodes: createNodesPattern
               ? [
                   createNodesPattern,
                   (configFiles, ctx) => {
-                    return new Promise((res, rej) => {
+                    return new Promise(function (res, rej) {
+                      const tx =
+                        pluginName + ':createNodes:' + performance.now();
                       worker.send(
                         createMessage({
                           type: 'createNodes',
-                          payload: { configFiles, context: ctx },
+                          payload: { configFiles, context: ctx, tx },
                         })
                       );
-                      createNodesResolver = res;
-                      createNodesRejecter = rej;
+                      pending.add(tx);
+                      promiseBank.set(tx, {
+                        promise: this,
+                        resolver: res,
+                        rejecter: rej,
+                      });
                     });
                   },
                 ]
               : undefined,
             createDependencies: result.hasCreateDependencies
               ? (opts, ctx) => {
-                  return new Promise((res, rej) => {
+                  return new Promise(function (res, rej) {
+                    const tx = pluginName + ':createNodes:' + performance.now();
                     worker.send(
                       createMessage({
                         type: 'createDependencies',
-                        payload: { context: ctx },
+                        payload: { context: ctx, tx },
                       })
                     );
-                    createDependenciesResolver = res;
-                    createDependenciesRejecter = rej;
+                    pending.add(tx);
+                    promiseBank.set(tx, {
+                      promise: this,
+                      resolver: res,
+                      rejecter: rej,
+                    });
                   });
                 }
               : undefined,
             processProjectGraph: result.hasProcessProjectGraph
               ? (graph, ctx) => {
-                  return new Promise((res, rej) => {
+                  return new Promise(function (res, rej) {
+                    const tx =
+                      pluginName + ':processProjectGraph:' + performance.now();
                     worker.send(
                       createMessage({
                         type: 'processProjectGraph',
-                        payload: { graph, ctx },
+                        payload: { graph, ctx, tx },
                       })
                     );
-                    processProjectGraphResolver = res;
-                    processProjectGraphRejecter = rej;
+                    pending.add(tx);
+                    promiseBank.set(tx, {
+                      promise: this,
+                      resolver: res,
+                      rejecter: rej,
+                    });
                   });
                 }
               : undefined,
@@ -172,50 +184,74 @@ function createWorkerHandler(
           onloadError(result.error);
         }
       },
-      createDependenciesResult: (result) => {
+      createDependenciesResult: ({ tx, ...result }) => {
+        const { resolver, rejecter } = promiseBank.get(tx);
         if (result.success) {
-          createDependenciesResolver(result.dependencies);
-          createDependenciesResolver = undefined;
+          resolver(result.dependencies);
         } else if (result.success === false) {
-          createDependenciesRejecter(result.error);
-          createDependenciesRejecter = undefined;
+          rejecter(result.error);
         }
+        pidMap.get(worker.pid)?.pending.delete(tx);
+        promiseBank.delete(tx);
       },
-      createNodesResult: (payload) => {
-        if (payload.success) {
-          createNodesResolver(payload.result);
-          createNodesResolver = undefined;
-        } else if (payload.success === false) {
-          createNodesRejecter(payload.error);
-          createNodesRejecter = undefined;
-        }
-      },
-      processProjectGraphResult: (result) => {
+      createNodesResult: ({ tx, ...result }) => {
+        const { resolver, rejecter } = promiseBank.get(tx);
         if (result.success) {
-          processProjectGraphResolver(result.graph);
-          processProjectGraphResolver = undefined;
+          resolver(result.result);
         } else if (result.success === false) {
-          processProjectGraphRejecter(result.error);
-          processProjectGraphRejecter = undefined;
+          rejecter(result.error);
         }
+        pidMap.get(worker.pid)?.pending.delete(tx);
+        promiseBank.delete(tx);
+      },
+      processProjectGraphResult: ({ tx, ...result }) => {
+        const { resolver, rejecter } = promiseBank.get(tx);
+        if (result.success) {
+          resolver(result.graph);
+        } else if (result.success === false) {
+          rejecter(result.error);
+        }
+        pidMap.get(worker.pid)?.pending.delete(tx);
+        promiseBank.delete(tx);
       },
     });
   };
 }
 
-function workerOnExitHandler(worker: ChildProcess) {
+function createWorkerExitHandler(worker: ChildProcess) {
   return () => {
     if (!pluginWorkersShutdown) {
+      pidMap.get(worker.pid)?.pending.forEach((tx) => {
+        const { rejecter } = promiseBank.get(tx);
+        rejecter(
+          new Error(
+            `Plugin worker ${
+              pidMap.get(worker.pid).name ?? worker.pid
+            } exited unexpectedly with code ${worker.exitCode}`
+          )
+        );
+      });
       shutdownPluginWorkers();
-      throw new Error(
-        `[Nx] plugin worker ${
-          pidMap.get(worker.pid) ?? worker.pid
-        } exited unexpectedly`
-      );
     }
   };
 }
 
 process.on('exit', () => {
-  shutdownPluginWorkers();
+  if (pool.size) {
+    shutdownPluginWorkers();
+  }
 });
+
+function getPendingPromises(
+  pool: Set<ChildProcess>,
+  pidMap: Map<number, { name: string; pending: Set<string> }>
+) {
+  const pendingTxs: Array<Promise<unknown>> = [];
+  for (const p of pool) {
+    const { pending } = pidMap.get(p.pid) ?? { pending: new Set() };
+    for (const tx of pending) {
+      pendingTxs.push(promiseBank.get(tx)?.promise);
+    }
+  }
+  return pendingTxs;
+}
