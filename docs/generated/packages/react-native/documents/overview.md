@@ -35,7 +35,7 @@ In any Nx workspace, you can install `@nx/react-native` by running the following
 {% tabs %}
 {% tab label="Nx 18+" %}
 
-```shell
+```shell {% skipRescope=true %}
 nx add @nx/react-native
 ```
 

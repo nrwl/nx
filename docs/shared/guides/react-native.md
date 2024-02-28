@@ -134,7 +134,7 @@ When using React Native in Nx, you get the out-of-the-box support for TypeScript
 
 For existing Nx workspaces, install the `@nx/react-native` package to add React Native capabilities to it.
 
-```shell
+```shell {% skipRescope=true %}
 nx add @nx/react-native
 ```
 

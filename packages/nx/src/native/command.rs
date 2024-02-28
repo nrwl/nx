@@ -14,11 +14,12 @@ use napi::{Env, JsFunction};
 use portable_pty::{ChildKiller, CommandBuilder, NativePtySystem, PtySize, PtySystem};
 use tracing::trace;
 
-#[cfg(target_os = "windows")]
-static CURSOR_POSITION: std::sync::OnceLock<regex::Regex> = std::sync::OnceLock::new();
+#[cfg_attr(windows, path = "command/windows.rs")]
+#[cfg_attr(not(windows), path = "command/unix.rs")]
+mod os;
 
 fn command_builder() -> CommandBuilder {
-    if cfg!(target_os = "windows") {
+    if cfg!(windows) {
         let comspec = std::env::var("COMSPEC");
         let shell = comspec
             .as_ref()
@@ -98,6 +99,12 @@ impl ChildProcess {
 
         std::thread::spawn(move || {
             while let Ok(content) = rx.recv() {
+                // windows will add `ESC[6n` to the beginning of the output,
+                // we dont want to store this ANSI code in cache, because replays will cause issues
+                // remove it before sending it to js
+                #[cfg(windows)]
+                let content = content.replace("\x1B[6n", "");
+
                 callback_tsfn.call(content, NonBlocking);
             }
         });
@@ -159,34 +166,18 @@ pub fn run_command(
         let mut reader = BufReader::new(reader);
         let mut buffer = [0; 8 * 1024];
 
-        let mut strip_clear_code = cfg!(target_os = "windows");
-
         while let Ok(n) = reader.read(&mut buffer) {
             if n == 0 {
                 break;
             }
 
-            let mut content = String::from_utf8_lossy(&buffer[..n]).to_string();
-            if strip_clear_code {
-                strip_clear_code = false;
-                // remove clear screen
-                content = content.replacen("\x1B[2J", "", 1);
-                // remove cursor position 1,1
-                content = content.replacen("\x1B[H", "", 1);
-            }
+            let content = &buffer[..n];
+            message_tx
+                .send(String::from_utf8_lossy(content).to_string())
+                .ok();
 
-            #[cfg(target_os = "windows")]
-            {
-                let regex = CURSOR_POSITION.get_or_init(|| {
-                    regex::Regex::new(r"\x1B\[\d+;\d+H")
-                        .expect("failed to compile CURSOR ansi regex")
-                });
-                content = regex.replace_all(&content, "").to_string();
-            }
-
-            message_tx.send(content.to_string()).ok();
             if !quiet {
-                stdout.write_all(content.as_bytes()).ok();
+                stdout.write_all(content).ok();
                 stdout.flush().ok();
             }
         }
@@ -204,12 +195,13 @@ pub fn run_command(
 
     // Stdin -> pty stdin
     if std::io::stdout().is_tty() {
+        enable_raw_mode().expect("Failed to enter raw terminal mode");
         std::thread::spawn(move || {
-            enable_raw_mode().expect("Failed to enter raw terminal mode");
             let mut stdin = std::io::stdin();
-            #[allow(clippy::redundant_pattern_matching)]
-            // ignore errors that come from copying the stream
-            if let Ok(_) = std::io::copy(&mut stdin, &mut writer) {}
+
+            if let Err(e) = os::write_to_pty(&mut stdin, &mut writer) {
+                trace!("Error writing to pty: {:?}", e);
+            }
         });
     }
 
@@ -237,45 +229,11 @@ pub fn nx_fork(
 ) -> napi::Result<ChildProcess> {
     let command = format!(
         "node {} {} {}",
-        handle_path_space(fork_script),
+        os::handle_path_space(fork_script),
         psuedo_ipc_path,
         id
     );
 
     trace!("nx_fork command: {}", &command);
     run_command(command, command_dir, js_env, Some(quiet))
-}
-
-#[cfg(target_os = "windows")]
-pub fn handle_path_space(path: String) -> String {
-    use std::os::windows::ffi::OsStrExt;
-    use std::{ffi::OsString, os::windows::ffi::OsStringExt};
-
-    use winapi::um::fileapi::GetShortPathNameW;
-    let wide: Vec<u16> = std::path::PathBuf::from(&path)
-        .as_os_str()
-        .encode_wide()
-        .chain(Some(0))
-        .collect();
-    let mut buffer: Vec<u16> = vec![0; wide.len() * 2];
-    let result =
-        unsafe { GetShortPathNameW(wide.as_ptr(), buffer.as_mut_ptr(), buffer.len() as u32) };
-    if result == 0 {
-        path
-    } else {
-        let len = buffer.iter().position(|&x| x == 0).unwrap();
-        let short_path: String = OsString::from_wide(&buffer[..len])
-            .to_string_lossy()
-            .into_owned();
-        short_path
-    }
-}
-
-#[cfg(not(target_os = "windows"))]
-fn handle_path_space(path: String) -> String {
-    if path.contains(' ') {
-        format!("'{}'", path)
-    } else {
-        path
-    }
 }

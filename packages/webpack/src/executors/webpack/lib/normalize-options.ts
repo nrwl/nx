@@ -36,7 +36,8 @@ export function normalizeOptions(
     normalizedOptions.assets = normalizeAssets(
       options.assets,
       root,
-      sourceRoot
+      sourceRoot,
+      projectRoot
     );
   }
   return normalizedOptions as NormalizedWebpackExecutorOptions;

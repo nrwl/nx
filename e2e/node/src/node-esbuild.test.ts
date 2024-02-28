@@ -10,7 +10,6 @@ import {
   uniq,
   updateFile,
 } from '@nx/e2e/utils';
-import { join } from 'path';
 
 describe('Node Applications + esbuild', () => {
   beforeAll(() =>

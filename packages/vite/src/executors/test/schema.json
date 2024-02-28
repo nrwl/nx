@@ -17,6 +17,10 @@
       "type": "string",
       "description": "Directory to write coverage report to."
     },
+    "mode": {
+      "type": "string",
+      "description": "Mode for Vite."
+    },
     "testFiles": {
       "aliases": ["testFile"],
       "type": "array",

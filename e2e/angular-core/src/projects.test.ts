@@ -46,7 +46,7 @@ describe('Angular Projects', () => {
     app1DefaultComponentTemplate = readFile(
       `${app1}/src/app/app.component.html`
     );
-    esbuildAppDefaultModule = readFile(`${app1}/src/app/app.module.ts`);
+    esbuildAppDefaultModule = readFile(`${esbuildApp}/src/app/app.module.ts`);
     esbuildAppDefaultComponentTemplate = readFile(
       `${esbuildApp}/src/app/app.component.html`
     );
@@ -61,7 +61,7 @@ describe('Angular Projects', () => {
     );
     updateFile(`${esbuildApp}/src/app/app.module.ts`, esbuildAppDefaultModule);
     updateFile(
-      `${esbuildAppDefaultComponentTemplate}/src/app/app.component.html`,
+      `${esbuildApp}/src/app/app.component.html`,
       esbuildAppDefaultComponentTemplate
     );
     updateFile(`${esbuildApp}/project.json`, esbuildAppDefaultProjectConfig);
@@ -126,22 +126,13 @@ describe('Angular Projects', () => {
     );
 
     // check e2e tests
-    let appPort = 4958;
-    updateJson(join(app1, 'project.json'), (config) => {
-      config.targets.serve.options ??= {};
-      config.targets.serve.options.port = appPort;
-      return config;
-    });
-    if (runE2ETests()) {
-      const e2eResults = runCLI(
-        `e2e ${app1}-e2e --config baseUrl=http://localhost:${appPort}`
-      );
+    if (runE2ETests('cypress')) {
+      const e2eResults = runCLI(`e2e ${app1}-e2e`);
       expect(e2eResults).toContain('All specs passed!');
-      // TODO(leo): check why the port is not being killed and add assertion after fixing it
-      await killPort(appPort);
+      expect(await killPort(4200)).toBeTruthy();
     }
 
-    appPort = 4207;
+    const appPort = 4207;
     const process = await runCommandUntil(
       `serve ${app1} -- --port=${appPort}`,
       (output) => output.includes(`listening on localhost:${appPort}`)
@@ -161,15 +152,14 @@ describe('Angular Projects', () => {
     await killProcessAndPorts(esbProcess.pid, appPort);
   }, 1000000);
 
-  // TODO: enable this when tests are passing again.
-  xit('should successfully work with playwright for e2e tests', async () => {
+  it('should successfully work with playwright for e2e tests', async () => {
     const app = uniq('app');
 
     runCLI(
       `generate @nx/angular:app ${app} --e2eTestRunner=playwright --project-name-and-root-format=as-provided --no-interactive`
     );
 
-    if (runE2ETests()) {
+    if (runE2ETests('playwright')) {
       const e2eResults = runCLI(`e2e ${app}-e2e`);
       expect(e2eResults).toContain(
         `Successfully ran target e2e for project ${app}-e2e`
@@ -227,8 +217,7 @@ describe('Angular Projects', () => {
     removeFile(`${app1}/src/app/inline-template.component.ts`);
   }, 1000000);
 
-  // TODO(crystal, @jaysoo): enable this test when buildable libs work
-  xit('should build the dependent buildable lib and its child lib, as well as the app', async () => {
+  it('should build the dependent buildable lib and its child lib, as well as the app', async () => {
     // ARRANGE
     const buildableLib = uniq('buildlib1');
     const buildableChildLib = uniq('buildlib2');
@@ -329,6 +318,28 @@ describe('Angular Projects', () => {
         main: config.targets.build.options.browser,
         browser: undefined,
         buildLibsFromSource: false,
+      };
+      return config;
+    });
+
+    // update the nx.json
+    updateJson('nx.json', (config) => {
+      config.targetDefaults ??= {};
+      config.targetDefaults['@nx/angular:webpack-browser'] ??= {
+        cache: true,
+        dependsOn: [`^build`],
+        inputs:
+          config.namedInputs && 'production' in config.namedInputs
+            ? ['production', '^production']
+            : ['default', '^default'],
+      };
+      config.targetDefaults['@nx/angular:browser-esbuild'] ??= {
+        cache: true,
+        dependsOn: [`^build`],
+        inputs:
+          config.namedInputs && 'production' in config.namedInputs
+            ? ['production', '^production']
+            : ['default', '^default'],
       };
       return config;
     });

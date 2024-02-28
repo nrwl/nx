@@ -64,7 +64,7 @@ export async function componentConfigurationGeneratorInternal(
   tasks.push(updateDeps(tree, opts));
 
   addProjectFiles(tree, projectConfig, opts);
-  if (!hasPlugin) {
+  if (!hasPlugin || opts.addExplicitTargets) {
     addTargetToProject(tree, projectConfig, opts);
   }
   updateNxJsonConfiguration(tree, hasPlugin);

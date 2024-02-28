@@ -23,7 +23,7 @@ Make sure to install the `@nx/nuxt` version that matches the version of `nx` in 
 
 In any Nx workspace, you can install `@nx/nuxt` by running the following command:
 
-```shell
+```shell {% skipRescope=true %}
 nx add @nx/nuxt
 ```
 
@@ -63,7 +63,7 @@ The `@nx/nuxt/plugin` is configured in the `plugins` array in `nx.json`.
 }
 ```
 
-- The `buildTargetName`, `testTargetName` and `serveTargetName` options control the names of the inferred Nuxt tasks. The default names are `build`, `test` and `serve`.
+The `buildTargetName`, `testTargetName` and `serveTargetName` options control the names of the inferred Nuxt tasks. The default names are `build`, `test` and `serve`.
 
 ## Using Nuxt
 

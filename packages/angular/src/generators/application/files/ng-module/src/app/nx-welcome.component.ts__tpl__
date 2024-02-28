@@ -699,7 +699,7 @@ import { Component, ViewEncapsulation } from '@angular/core';
                 You can activate distributed tasks executions and caching by
                 running:
               </p>
-              <pre>nx connect-to-nx-cloud</pre>
+              <pre>nx connect</pre>
               <a href="https://nx.app/?utm_source=nx-project" target="_blank" rel="noreferrer"> What is Nx Cloud? </a>
             </div>
             <a id="nx-repo" class="button-pill rounded shadow" href="https://github.com/nrwl/nx?utm_source=nx-project" target="_blank" rel="noreferrer">

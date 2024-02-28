@@ -20,7 +20,7 @@ In any Nx workspace, you can install `@nx/storybook` by running the following co
 {% tabs %}
 {% tab label="Nx 18+" %}
 
-```shell
+```shell {% skipRescope=true %}
 nx add @nx/storybook
 ```
 
@@ -61,7 +61,7 @@ The `@nx/storybook/plugin` is configured in the `plugins` array in `nx.json`.
 }
 ```
 
-- The `builtStorybookTargetName`, `serveStorybookTargetName`, `testStorybookTargetName` and `staticStorybookTargetName` options control the names of the inferred Storybook tasks. The default names are `build-storybook`, `storybook`, `test-storybook` and `static-storybook`.
+The `builtStorybookTargetName`, `serveStorybookTargetName`, `testStorybookTargetName` and `staticStorybookTargetName` options control the names of the inferred Storybook tasks. The default names are `build-storybook`, `storybook`, `test-storybook` and `static-storybook`.
 
 {% /tab %}
 {% tab label="Nx < 18" %}

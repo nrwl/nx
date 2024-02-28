@@ -5,6 +5,7 @@ import {
   newProject,
   readFile,
   runCLI,
+  runE2ETests,
   uniq,
   updateFile,
 } from '@nx/e2e/utils';
@@ -149,6 +150,78 @@ describe('Next.js Applications', () => {
       checkExport: false,
     });
   }, 300_000);
+
+  it('should support --custom-server flag (swc)', async () => {
+    const appName = uniq('app');
+
+    runCLI(`generate @nx/next:app ${appName} --no-interactive --custom-server`);
+
+    checkFilesExist(`apps/${appName}/server/main.ts`);
+
+    const result = runCLI(`build ${appName}`);
+
+    checkFilesExist(`dist/apps/${appName}/server/main.js`);
+
+    expect(result).toContain(
+      `Successfully ran target build for project ${appName}`
+    );
+  }, 300_000);
+
+  it('should support --custom-server flag (tsc)', async () => {
+    const appName = uniq('app');
+
+    runCLI(
+      `generate @nx/next:app ${appName} --swc=false --no-interactive --custom-server`
+    );
+
+    checkFilesExist(`apps/${appName}/server/main.ts`);
+
+    const result = runCLI(`build ${appName}`);
+
+    checkFilesExist(`dist/apps/${appName}/server/main.js`);
+
+    expect(result).toContain(
+      `Successfully ran target build for project ${appName}`
+    );
+  }, 300_000);
+
+  it('should run e2e-ci test', async () => {
+    const appName = uniq('app');
+
+    runCLI(
+      `generate @nx/next:app ${appName} --no-interactive --style=css --project-name-and-root-format=as-provided`
+    );
+
+    // Update the cypress timeout to 25 seconds since we need to build and wait for the server to start
+    updateFile(`${appName}-e2e/cypress.config.ts`, (_) => {
+      return `import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
+
+      import { defineConfig } from 'cypress';
+      
+      export default defineConfig({
+        e2e: {
+          ...nxE2EPreset(__filename, {
+            cypressDir: 'src',
+            webServerCommands: { default: 'nx run ${appName}:start' },
+            webServerConfig: { timeout: 25_000 },
+            ciWebServerCommand: 'nx run ${appName}:serve-static',
+          }),
+          baseUrl: 'http://localhost:3000',
+        },
+      });
+      
+      `;
+    });
+
+    if (runE2ETests()) {
+      const e2eResults = runCLI(`e2e-ci ${appName}-e2e --verbose`, {
+        verbose: true,
+      });
+      expect(e2eResults).toContain(
+        'Successfully ran target e2e-ci for project'
+      );
+    }
+  }, 600_000);
 });
 
 function getData(port, path = ''): Promise<any> {

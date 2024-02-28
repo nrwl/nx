@@ -1,5 +1,11 @@
-import { addProjectConfiguration, Tree } from '@nx/devkit';
+import {
+  addProjectConfiguration,
+  readProjectConfiguration,
+  updateProjectConfiguration,
+  type Tree,
+} from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import type { AngularProjectConfiguration } from '../../utils/types';
 import { directiveGenerator } from './directive';
 import type { Schema } from './schema';
 
@@ -162,6 +168,74 @@ describe('directive generator', () => {
       expect(tree.read('test/src/app/test.module.ts', 'utf-8')).not.toContain(
         'TestDirective'
       );
+    });
+  });
+
+  describe('prefix & selector', () => {
+    it('should use the prefix', async () => {
+      await directiveGenerator(tree, {
+        name: 'test/src/app/example/example',
+        prefix: 'foo',
+        nameAndDirectoryFormat: 'as-provided',
+      });
+
+      const content = tree.read(
+        'test/src/app/example/example.directive.ts',
+        'utf-8'
+      );
+      expect(content).toMatch(/selector: '\[fooExample\]'/);
+    });
+
+    it('should use the default project prefix if none is passed', async () => {
+      const projectConfig = readProjectConfiguration(tree, 'test');
+      updateProjectConfiguration(tree, 'test', {
+        ...projectConfig,
+        prefix: 'bar',
+      } as AngularProjectConfiguration);
+
+      await directiveGenerator(tree, {
+        name: 'test/src/app/example/example',
+        nameAndDirectoryFormat: 'as-provided',
+      });
+
+      const content = tree.read(
+        'test/src/app/example/example.directive.ts',
+        'utf-8'
+      );
+      expect(content).toMatch(/selector: '\[barExample\]'/);
+    });
+
+    it('should not use the default project prefix when supplied prefix is ""', async () => {
+      const projectConfig = readProjectConfiguration(tree, 'test');
+      updateProjectConfiguration(tree, 'test', {
+        ...projectConfig,
+        prefix: '',
+      } as AngularProjectConfiguration);
+
+      await directiveGenerator(tree, {
+        name: 'test/src/app/example/example',
+        nameAndDirectoryFormat: 'as-provided',
+      });
+
+      const content = tree.read(
+        'test/src/app/example/example.directive.ts',
+        'utf-8'
+      );
+      expect(content).toMatch(/selector: '\[example\]'/);
+    });
+
+    it('should use provided selector as is', async () => {
+      await directiveGenerator(tree, {
+        name: 'test/src/app/example/example',
+        selector: 'mySelector',
+        nameAndDirectoryFormat: 'as-provided',
+      });
+
+      const content = tree.read(
+        'test/src/app/example/example.directive.ts',
+        'utf-8'
+      );
+      expect(content).toMatch(/selector: '\[mySelector\]'/);
     });
   });
 });

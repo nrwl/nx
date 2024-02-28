@@ -3,6 +3,7 @@ import {
   DependencyType,
   joinPathFragments,
   ProjectGraph,
+  readJson,
   readProjectConfiguration,
   Tree,
   updateProjectConfiguration,
@@ -411,6 +412,50 @@ describe('Cypress Component Testing Configuration', () => {
     expect(
       tree.read('my-lib/cypress/support/component.ts', 'utf-8')
     ).toMatchSnapshot('component.ts');
+  });
+
+  it('should exclude Cypress-related files from tsconfig.editor.json for applications', async () => {
+    await generateTestApplication(tree, {
+      name: 'fancy-app',
+      bundler: 'webpack',
+      skipFormat: true,
+    });
+    await componentGenerator(tree, {
+      name: 'fancy-cmp',
+      project: 'fancy-app',
+      export: true,
+      skipFormat: true,
+    });
+    projectGraph = {
+      nodes: {
+        'fancy-app': {
+          name: 'fancy-app',
+          type: 'app',
+          data: {
+            ...readProjectConfiguration(tree, 'fancy-app'),
+          } as any,
+        },
+      },
+      dependencies: {},
+    };
+
+    await cypressComponentConfiguration(tree, {
+      project: 'fancy-app',
+      generateTests: false,
+      skipFormat: true,
+    });
+
+    const tsConfig = readJson(tree, 'fancy-app/tsconfig.editor.json');
+    expect(tsConfig.exclude).toStrictEqual(
+      expect.arrayContaining([
+        'cypress/**/*',
+        'cypress.config.ts',
+        '**/*.cy.ts',
+        '**/*.cy.js',
+        '**/*.cy.tsx',
+        '**/*.cy.jsx',
+      ])
+    );
   });
 
   it('should work with simple components', async () => {

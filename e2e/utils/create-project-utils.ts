@@ -233,6 +233,7 @@ export function runCreateWorkspace(
     e2eTestRunner,
     ssr,
     framework,
+    prefix,
   }: {
     preset: string;
     appName?: string;
@@ -251,6 +252,7 @@ export function runCreateWorkspace(
     e2eTestRunner?: 'cypress' | 'playwright' | 'jest' | 'detox' | 'none';
     ssr?: boolean;
     framework?: string;
+    prefix?: string;
   }
 ) {
   projName = name;
@@ -315,6 +317,10 @@ export function runCreateWorkspace(
 
   if (ssr !== undefined) {
     command += ` --ssr=${ssr}`;
+  }
+
+  if (prefix !== undefined) {
+    command += ` --prefix=${prefix}`;
   }
 
   try {

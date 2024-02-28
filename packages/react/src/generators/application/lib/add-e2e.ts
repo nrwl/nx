@@ -49,7 +49,7 @@ export async function addE2e(
         bundler: options.bundler === 'rspack' ? 'webpack' : options.bundler,
         skipFormat: true,
         devServerTarget: `${options.projectName}:serve`,
-        baseUrl: 'http://localhost:4200',
+        baseUrl: `http://localhost:${options.devServerPort ?? 4200}`,
         jsx: true,
         rootProject: options.rootProject,
         webServerCommands: hasNxBuildPlugin
@@ -85,7 +85,7 @@ export async function addE2e(
         webServerCommand: `${getPackageManagerCommand().exec} nx serve ${
           options.name
         }`,
-        webServerAddress: 'http://localhost:4200',
+        webServerAddress: `http://localhost:${options.devServerPort ?? 4200}`,
         rootProject: options.rootProject,
         addPlugin: options.addPlugin,
       });

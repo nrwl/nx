@@ -64,7 +64,12 @@ export function normalizeOptions(
   return {
     ...options,
     assets: options.assets
-      ? normalizeAssets(options.assets, workspaceRoot, sourceRoot)
+      ? normalizeAssets(
+          options.assets,
+          workspaceRoot,
+          sourceRoot,
+          projectNode.data.root
+        )
       : [],
     baseHref: options.baseHref ?? '/',
     commonChunk: options.commonChunk ?? true,
@@ -101,7 +106,8 @@ export function normalizeOptions(
 export function normalizeAssets(
   assets: any[],
   root: string,
-  sourceRoot: string
+  sourceRoot: string,
+  projectRoot: string
 ): AssetGlobPattern[] {
   return assets.map((asset) => {
     if (typeof asset === 'string') {
@@ -134,7 +140,12 @@ export function normalizeAssets(
       }
 
       const assetPath = normalizePath(asset.input);
-      const resolvedAssetPath = resolve(root, assetPath);
+      let resolvedAssetPath = resolve(root, assetPath);
+      if (asset.input.startsWith('.')) {
+        const resolvedProjectRoot = resolve(root, projectRoot);
+        resolvedAssetPath = resolve(resolvedProjectRoot, assetPath);
+      }
+
       return {
         ...asset,
         input: resolvedAssetPath,

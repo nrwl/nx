@@ -13,7 +13,7 @@ import {
   ProjectGraphExternalNode,
 } from '../../../config/project-graph';
 import { hashArray } from '../../../hasher/file-hasher';
-import { CreateDependenciesContext } from '../../../utils/nx-plugin';
+import { CreateDependenciesContext } from '../../../project-graph/plugins';
 
 /**
  * NPM

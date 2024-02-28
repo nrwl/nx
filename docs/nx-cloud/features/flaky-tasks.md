@@ -8,13 +8,19 @@ Nx is perfectly positioned to detect which tasks are flaky and automatically re-
 
 Nx creates a hash of all the inputs for a task whenever it is run. If Nx ever encounters a task that fails with a particular set of inputs and then succeeds with those same inputs, Nx knows for a fact that the task is flaky. Nx can't know with certainty when the task has been fixed to no longer be flaky, so if a particular task has no flakiness incidents for 2 weeks, the `flaky` flag is removed for that task.
 
+![Flaky tasks in CI](/nx-cloud/features/flaky-tasks-ci.png)
+
+In this image, the `e2e-ci--src/e2e/app.cy.ts` task is a flaky task that has been automatically retried once. There is a `1 retry` indicator to show that it has been retried and, once expanded, you can see tabs that contain the logs for `Attempt 1` and `Attempt 2`. With this UI, you can easily compare the output between a successful and unsuccessful run of a flaky task.
+
 ## Manually Mark a Task as Flaky or Not Flaky
 
-If you need to manually mark a task as flaky or not flaky, you can do so from the run details screen. Flaky tasks will have a button that says `Mark task as no longer flaky` and failed tasks that are not flaky will have a button that says `Mark task as likely flaky`. Using these buttons, you can ensure that Nx Cloud treats tasks in the appropriate way.
-
-![Mark task as no longer flaky button](/nx-cloud/features/mark-task-as-no-longer-flaky.png)
+If you suspect that a task is flaky, but Nx has not confirmed it yet, you can manually mark it as `likely flaky` from the run details screen. Failed tasks that are not flaky will have a button that says `Mark task as likely flaky`.
 
 ![Mark task as likely flaky button](/nx-cloud/features/mark-task-as-likely-flaky.png)
+
+Once you've resolved the issue that caused a task to be flaky, you can immediately mark the task as not flaky by clicking on `Mark task as no longer flaky` on the same run details screen.
+
+![Mark task as no longer flaky button](/nx-cloud/features/mark-task-as-no-longer-flaky.png)
 
 ## Re-run Flaky Tasks
 

@@ -12,7 +12,7 @@ describe('Nuxt Plugin', () => {
 
   beforeAll(() => {
     newProject({
-      packages: ['@nx/nuxt', '@nx/storybook'],
+      packages: ['@nx/nuxt'],
       unsetProjectNameAndRootFormat: false,
     });
     runCLI(
@@ -33,8 +33,8 @@ describe('Nuxt Plugin', () => {
     expect(result).toContain(
       `Successfully ran target build for project ${app}`
     );
-    checkFilesExist(`dist/${app}/.nuxt/nuxt.d.ts`);
-    checkFilesExist(`dist/${app}/.output/nitro.json`);
+    checkFilesExist(`${app}/.nuxt/nuxt.d.ts`);
+    checkFilesExist(`${app}/.output/nitro.json`);
   });
 
   it('should test application', async () => {

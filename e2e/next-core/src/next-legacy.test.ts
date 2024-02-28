@@ -22,15 +22,10 @@ import { mkdirSync, removeSync } from 'fs-extra';
 import { join } from 'path';
 import { checkApp } from './utils';
 
-// TODO(crystal, @ndcunningham): Investigate why these tests are failing
-xdescribe('@nx/next (legacy)', () => {
+describe('@nx/next (legacy)', () => {
   let proj: string;
   let originalEnv: string;
   let packageManager;
-
-  afterEach(() => {
-    cleanupProject();
-  });
 
   beforeAll(() => {
     proj = newProject({
@@ -99,7 +94,8 @@ xdescribe('@nx/next (legacy)', () => {
     });
   }, 1_000_000);
 
-  it('should produce a self-contained artifact in dist', async () => {
+  // Reenable this test once we fix Error: Cannot find module 'ajv/dist/compile/codegen'
+  xit('should produce a self-contained artifact in dist', async () => {
     // Remove apps/libs folder and use packages.
     // Allows us to test other integrated monorepo setup that had a regression.
     // See: https://github.com/nrwl/nx/issues/16658

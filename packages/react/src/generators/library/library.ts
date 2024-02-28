@@ -1,3 +1,4 @@
+import { relative } from 'path';
 import {
   addProjectConfiguration,
   ensurePackage,
@@ -9,10 +10,11 @@ import {
   updateJson,
 } from '@nx/devkit';
 import { getRelativeCwd } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
-
+import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 import { addTsConfigPath, initGenerator as jsInitGenerator } from '@nx/js';
 
 import { nxVersion } from '../../utils/versions';
+import { maybeJs } from '../../utils/maybe-js';
 import componentGenerator from '../component/component';
 import initGenerator from '../init/init';
 import { Schema } from './schema';
@@ -25,8 +27,6 @@ import { createFiles } from './lib/create-files';
 import { extractTsConfigBase } from '../../utils/create-ts-config';
 import { installCommonDependencies } from './lib/install-common-dependencies';
 import { setDefaults } from './lib/set-defaults';
-import { relative } from 'path';
-import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 
 export async function libraryGenerator(host: Tree, schema: Schema) {
   return await libraryGeneratorInternal(host, {
@@ -227,10 +227,9 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
 
   if (!options.skipTsConfig) {
     addTsConfigPath(host, options.importPath, [
-      joinPathFragments(
-        options.projectRoot,
-        './src',
-        'index.' + (options.js ? 'js' : 'ts')
+      maybeJs(
+        options,
+        joinPathFragments(options.projectRoot, './src/index.ts')
       ),
     ]);
   }

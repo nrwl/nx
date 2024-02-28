@@ -35,7 +35,7 @@ In any Nx workspace, you can install `@nx/vite` by running the following command
 {% tabs %}
 {% tab label="Nx 18+" %}
 
-```shell
+```shell {% skipRescope=true %}
 nx add @nx/vite
 ```
 
@@ -83,7 +83,7 @@ The `@nx/vite/plugin` is configured in the `plugins` array in `nx.json`.
 }
 ```
 
-- The `buildTargetName`, `previewTargetName`, `testTargetName`, `serveTargetName` and `serveStaticTargetName` options control the names of the inferred Vite tasks. The default names are `build`, `preview`, `test`, `serve` and `serve-static`.
+The `buildTargetName`, `previewTargetName`, `testTargetName`, `serveTargetName` and `serveStaticTargetName` options control the names of the inferred Vite tasks. The default names are `build`, `preview`, `test`, `serve` and `serve-static`.
 
 {% /tab %}
 {% tab label="Nx < 18" %}

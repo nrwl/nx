@@ -39,7 +39,10 @@ export async function hostGeneratorInternal(
   const tasks: GeneratorCallback[] = [];
   const options: NormalizedSchema = {
     ...(await normalizeOptions<Schema>(host, schema, '@nx/react:host')),
-    typescriptConfiguration: schema.typescriptConfiguration ?? true,
+    js: schema.js ?? false,
+    typescriptConfiguration: schema.js
+      ? false
+      : schema.typescriptConfiguration ?? true,
     dynamic: schema.dynamic ?? false,
     // TODO(colum): remove when MF works with Crystal
     addPlugin: false,
@@ -75,6 +78,7 @@ export async function hostGeneratorInternal(
         skipFormat: true,
         projectNameAndRootFormat: options.projectNameAndRootFormat,
         typescriptConfiguration: options.typescriptConfiguration,
+        js: options.js,
         dynamic: options.dynamic,
         host: options.name,
       });

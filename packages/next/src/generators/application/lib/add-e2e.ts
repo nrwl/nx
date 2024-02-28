@@ -10,6 +10,7 @@ import { Linter } from '@nx/eslint';
 
 import { nxVersion } from '../../../utils/versions';
 import { NormalizedSchema } from './normalize-options';
+import { webStaticServeGenerator } from '@nx/web';
 
 export async function addE2e(host: Tree, options: NormalizedSchema) {
   const nxJson = readNxJson(host);
@@ -18,10 +19,20 @@ export async function addE2e(host: Tree, options: NormalizedSchema) {
       ? p === '@nx/next/plugin'
       : p.plugin === '@nx/next/plugin'
   );
+
   if (options.e2eTestRunner === 'cypress') {
     const { configurationGenerator } = ensurePackage<
       typeof import('@nx/cypress')
     >('@nx/cypress', nxVersion);
+
+    if (!hasPlugin) {
+      webStaticServeGenerator(host, {
+        buildTarget: `${options.projectName}:build`,
+        outputPath: `${options.outputPath}/out`,
+        targetName: 'serve-static',
+      });
+    }
+
     addProjectConfiguration(host, options.e2eProjectName, {
       root: options.e2eProjectRoot,
       sourceRoot: joinPathFragments(options.e2eProjectRoot, 'src'),
@@ -29,6 +40,7 @@ export async function addE2e(host: Tree, options: NormalizedSchema) {
       tags: [],
       implicitDependencies: [options.projectName],
     });
+
     return configurationGenerator(host, {
       ...options,
       linter: Linter.EsLint,
@@ -40,6 +52,14 @@ export async function addE2e(host: Tree, options: NormalizedSchema) {
       }`,
       baseUrl: `http://localhost:${hasPlugin ? '3000' : '4200'}`,
       jsx: true,
+      webServerCommands: hasPlugin
+        ? {
+            default: `nx run ${options.projectName}:start`,
+          }
+        : undefined,
+      ciWebServerCommand: hasPlugin
+        ? `nx run ${options.projectName}:serve-static`
+        : undefined,
     });
   } else if (options.e2eTestRunner === 'playwright') {
     const { configurationGenerator } = ensurePackage<

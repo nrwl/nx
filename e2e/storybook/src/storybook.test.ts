@@ -16,7 +16,7 @@ describe('Storybook generators and executors for monorepos', () => {
   let proj;
   beforeAll(async () => {
     proj = newProject({
-      packages: ['@nx/react', '@nx/storybook'],
+      packages: ['@nx/react'],
       unsetProjectNameAndRootFormat: false,
     });
     runCLI(

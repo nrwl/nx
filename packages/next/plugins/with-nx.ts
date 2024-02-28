@@ -112,12 +112,12 @@ function withNx(
     const { PHASE_PRODUCTION_SERVER, PHASE_DEVELOPMENT_SERVER } = await import(
       'next/constants'
     );
-    if (
-      PHASE_PRODUCTION_SERVER === phase ||
-      !process.env.NX_TASK_TARGET_TARGET
-    ) {
-      // If we are running an already built production server, just return the configuration.
-      // NOTE: Avoid any `require(...)` or `import(...)` statements here. Development dependencies are not available at production runtime.
+    // Two scenarios where we want to skip graph creation:
+    // 1. Running production server means the build is already done so we just need to start the Next.js server.
+    // 2. During graph creation (i.e. create nodes), we won't have a graph to read, and it is not needed anyway since it's a build-time concern.
+    //
+    // NOTE: Avoid any `require(...)` or `import(...)` statements here. Development dependencies are not available at production runtime.
+    if (PHASE_PRODUCTION_SERVER === phase || global.NX_GRAPH_CREATION) {
       const { nx, ...validNextConfig } = _nextConfig;
       return {
         distDir: '.next',
@@ -126,21 +126,19 @@ function withNx(
     } else {
       const {
         createProjectGraphAsync,
-        readCachedProjectGraph,
         joinPathFragments,
         offsetFromRoot,
         workspaceRoot,
       } = require('@nx/devkit');
 
-      let graph = readCachedProjectGraph();
-      if (!graph) {
-        try {
-          graph = await createProjectGraphAsync();
-        } catch (e) {
-          throw new Error(
-            'Could not create project graph. Please ensure that your workspace is valid.'
-          );
-        }
+      let graph: ProjectGraph;
+      try {
+        graph = await createProjectGraphAsync();
+      } catch (e) {
+        throw new Error(
+          'Could not create project graph. Please ensure that your workspace is valid.',
+          { cause: e }
+        );
       }
 
       const originalTarget = {
@@ -195,6 +193,12 @@ function withNx(
           nextConfig.distDir && nextConfig.distDir !== '.next'
             ? joinPathFragments(outputDir, nextConfig.distDir)
             : joinPathFragments(outputDir, '.next');
+      }
+
+      // If we are running a static serve of the Next.js app, we need to change the output to 'export' and the distDir to 'out'.
+      if (process.env.NX_SERVE_STATIC_BUILD_RUNNING === 'true') {
+        nextConfig.output = 'export';
+        nextConfig.distDir = 'out';
       }
 
       const userWebpackConfig = nextConfig.webpack;
@@ -333,40 +337,22 @@ export function getNextConfig(
 
       // Default SVGR support to be on for projects.
       if (nx?.svgr !== false) {
-        config.module.rules.push({
-          test: /\.svg$/,
-          oneOf: [
-            // If coming from JS/TS file, then transform into React component using SVGR.
-            {
-              issuer: /\.[jt]sx?$/,
-              use: [
-                {
-                  loader: require.resolve('@svgr/webpack'),
-                  options: {
-                    svgo: false,
-                    titleProp: true,
-                    ref: true,
-                  },
-                },
-                {
-                  loader: require.resolve('url-loader'),
-                  options: {
-                    limit: 10000, // 10kB
-                    name: '[name].[hash:7].[ext]',
-                  },
-                },
-              ],
-            },
-            // Fallback to plain URL loader if someone just imports the SVG and references it on the <img src> tag
-            {
-              loader: require.resolve('url-loader'),
-              options: {
-                limit: 10000, // 10kB
-                name: '[name].[hash:7].[ext]',
-              },
-            },
-          ],
-        });
+        config.module.rules.push(
+          // Apply rule for svg imports ending in ?url
+          {
+            test: /\.svg$/i,
+            type: 'asset',
+            resourceQuery: /url/, // apply to *.svg?url
+          },
+
+          // Convert all other svg imports to React components
+          {
+            test: /\.svg$/i,
+            issuer: /\.[jt]sx?$/,
+            resourceQuery: { not: [/url/] },
+            use: ['@svgr/webpack'],
+          }
+        );
       }
 
       return userWebpack(config, options);

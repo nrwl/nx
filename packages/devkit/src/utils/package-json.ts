@@ -483,7 +483,7 @@ export function ensurePackage<T extends any = any>(
 
   if (process.env.NX_DRY_RUN && process.env.NX_DRY_RUN !== 'false') {
     throw new Error(
-      'NOTE: This generator does not support --dry-run. If you are running this in Nx Console, it should execute fine once you hit the "Run" button.\n'
+      'NOTE: This generator does not support --dry-run. If you are running this in Nx Console, it should execute fine once you hit the "Generate" button.\n'
     );
   }
 

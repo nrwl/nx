@@ -21,7 +21,7 @@ Because we are using an Nx plugin for Express, all the features of Nx are availa
 Make sure to install the `@nx/express` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/recipes/tips-n-tricks/keep-nx-versions-in-sync).
 {% /callout %}
 
-```shell
+```shell {% skipRescope=true %}
 nx add @nx/express
 ```
 

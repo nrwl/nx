@@ -387,7 +387,7 @@ export const App = () => {
                   </View>
                 </View>
                 <View style={styles.codeBlock}>
-                  <Text style={[styles.monospace]}>nx connect-to-nx-cloud</Text>
+                  <Text style={[styles.monospace]}>nx connect</Text>
                 </View>
               </View>
             </TouchableOpacity>

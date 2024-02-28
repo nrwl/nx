@@ -112,11 +112,11 @@ import * as yargs from 'yargs';
     verbose: options.verbose,
   });
 
-  await releasePublish({
+  // The returned number value from releasePublish will be zero if all projects are published successfully, non-zero if not
+  const publishStatus = await releasePublish({
     dryRun: options.dryRun,
     verbose: options.verbose,
   });
-
-  process.exit(0);
+  process.exit(publishStatus);
 })();
 ```

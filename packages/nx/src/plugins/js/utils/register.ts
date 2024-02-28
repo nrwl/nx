@@ -32,31 +32,17 @@ export function registerTsProject(tsConfigPath: string): () => void;
  * @returns cleanup function
  * @deprecated This signature will be removed in Nx v19. You should pass the full path to the tsconfig in the first argument.
  */
+export function registerTsProject(path: string, configFilename: string);
 export function registerTsProject(
   path: string,
-  configFilename: string,
-  /**
-   * @deprecated Do not use this.. it's a 1-off exception
-   */
-  useForSwcEnvironmentVariable?: boolean
-);
-export function registerTsProject(
-  path: string,
-  configFilename?: string,
-  /**
-   * @deprecated Do not use this.. it's a 1-off exception
-   */
-  useForSwcEnvironmentVariable?: boolean
+  configFilename?: string
 ): () => void {
   const tsConfigPath = configFilename ? join(path, configFilename) : path;
   const compilerOptions: CompilerOptions = readCompilerOptions(tsConfigPath);
 
   const cleanupFunctions: ((...args: unknown[]) => unknown)[] = [
     registerTsConfigPaths(tsConfigPath),
-    registerTranspiler(
-      compilerOptions,
-      useForSwcEnvironmentVariable ? tsConfigPath : undefined
-    ),
+    registerTranspiler(compilerOptions),
   ];
 
   // Add ESM support for `.ts` files.
@@ -80,23 +66,13 @@ export function registerTsProject(
 }
 
 export function getSwcTranspiler(
-  compilerOptions: CompilerOptions,
-  tsConfigPath?: string
+  compilerOptions: CompilerOptions
 ): (...args: unknown[]) => unknown {
   type ISwcRegister = typeof import('@swc-node/register/register')['register'];
 
   // These are requires to prevent it from registering when it shouldn't
   const register = require('@swc-node/register/register')
     .register as ISwcRegister;
-
-  if (tsConfigPath) {
-    process.env.SWC_NODE_PROJECT = tsConfigPath;
-  } else {
-    let rootTsConfig = join(workspaceRoot, 'tsconfig.base.json');
-    if (existsSync(rootTsConfig)) {
-      process.env.SWC_NODE_PROJECT = rootTsConfig;
-    }
-  }
 
   const cleanupFn = register(compilerOptions);
 
@@ -127,10 +103,7 @@ export function getTsNodeTranspiler(
   };
 }
 
-export function getTranspiler(
-  compilerOptions: CompilerOptions,
-  tsConfigPath?: string
-) {
+export function getTranspiler(compilerOptions: CompilerOptions) {
   const preferTsNode = process.env.NX_PREFER_TS_NODE === 'true';
 
   if (!ts) {
@@ -144,7 +117,7 @@ export function getTranspiler(
   compilerOptions.skipLibCheck = true;
 
   if (swcNodeInstalled && !preferTsNode) {
-    return () => getSwcTranspiler(compilerOptions, tsConfigPath);
+    return () => getSwcTranspiler(compilerOptions);
   }
 
   // We can fall back on ts-node if it's available
@@ -162,11 +135,10 @@ export function getTranspiler(
  * @returns cleanup method
  */
 export function registerTranspiler(
-  compilerOptions: CompilerOptions,
-  tsConfigPath?: string
+  compilerOptions: CompilerOptions
 ): () => void {
   // Function to register transpiler that returns cleanup function
-  const transpiler = getTranspiler(compilerOptions, tsConfigPath);
+  const transpiler = getTranspiler(compilerOptions);
 
   if (!transpiler) {
     warnNoTranspiler();
@@ -209,13 +181,22 @@ function readCompilerOptions(tsConfigPath): CompilerOptions {
   const preferTsNode = process.env.NX_PREFER_TS_NODE === 'true';
 
   if (swcNodeInstalled && !preferTsNode) {
-    const {
-      readDefaultTsConfig,
-    }: typeof import('@swc-node/register/read-default-tsconfig') = require('@swc-node/register/read-default-tsconfig');
-    return readDefaultTsConfig(tsConfigPath);
+    return readCompilerOptionsWithSwc(tsConfigPath);
   } else {
     return readCompilerOptionsWithTypescript(tsConfigPath);
   }
+}
+
+function readCompilerOptionsWithSwc(tsConfigPath) {
+  const {
+    readDefaultTsConfig,
+  }: typeof import('@swc-node/register/read-default-tsconfig') = require('@swc-node/register/read-default-tsconfig');
+  const compilerOptions = readDefaultTsConfig(tsConfigPath);
+  // This is returned in compiler options for some reason, but not part of the typings.
+  // @swc-node/register filters the files to transpile based on it, but it can be limiting when processing
+  // files not part of the received tsconfig included files (e.g. shared helpers, or config files not in source, etc.).
+  delete compilerOptions.files;
+  return compilerOptions;
 }
 
 function readCompilerOptionsWithTypescript(tsConfigPath) {

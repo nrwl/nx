@@ -33,7 +33,7 @@ In any Nx workspace, you can install `@nx/angular` by running the following comm
 {% tabs %}
 {% tab label="Nx 18+" %}
 
-```shell
+```shell {% skipRescope=true %}
 nx add @nx/angular
 ```
 

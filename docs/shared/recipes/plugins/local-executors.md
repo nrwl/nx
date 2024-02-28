@@ -8,7 +8,7 @@ This guide shows you how to create, run, and customize executors within your Nx 
 
 If you don't already have a local plugin, use Nx to generate one:
 
-```shell
+```shell {% skipRescope=true %}
 nx add @nx/plugin
 nx g @nx/plugin:plugin my-plugin
 ```

@@ -716,6 +716,7 @@ async function parseTargetPackageAndVersion(
     if (
       args === 'latest' ||
       args === 'next' ||
+      args === 'canary' ||
       valid(args) ||
       args.match(/^\d+(?:\.\d+)?(?:\.\d+)?$/)
     ) {
@@ -724,7 +725,8 @@ async function parseTargetPackageAndVersion(
       // on the registry
       const targetVersion = await normalizeVersionWithTagCheck('nx', args);
       const targetPackage =
-        !['latest', 'next'].includes(args) && lt(targetVersion, '14.0.0-beta.0')
+        !['latest', 'next', 'canary'].includes(args) &&
+        lt(targetVersion, '14.0.0-beta.0')
           ? '@nrwl/workspace'
           : 'nx';
 
@@ -1177,7 +1179,7 @@ async function updateInstallationDetails(
 
 async function isMigratingToNewMajor(from: string, to: string) {
   from = normalizeVersion(from);
-  to = ['latest', 'next'].includes(to) ? to : normalizeVersion(to);
+  to = ['latest', 'next', 'canary'].includes(to) ? to : normalizeVersion(to);
   if (!valid(from)) {
     from = await resolvePackageVersionUsingRegistry('nx', from);
   }
@@ -1367,8 +1369,21 @@ export async function executeMigrations(
   const depsBeforeMigrations = getStringifiedPackageJsonDeps(root);
 
   const migrationsWithNoChanges: typeof migrations = [];
+  const sortedMigrations = migrations.sort((a, b) => {
+    // special case for the split configuration migration to run first
+    if (a.name === '15-7-0-split-configuration-into-project-json-files') {
+      return -1;
+    }
+    if (b.name === '15-7-0-split-configuration-into-project-json-files') {
+      return 1;
+    }
 
-  for (const m of migrations) {
+    return lt(normalizeVersion(a.version), normalizeVersion(b.version))
+      ? -1
+      : 1;
+  });
+
+  for (const m of sortedMigrations) {
     try {
       const { collection, collectionPath } = readMigrationCollection(
         m.package,

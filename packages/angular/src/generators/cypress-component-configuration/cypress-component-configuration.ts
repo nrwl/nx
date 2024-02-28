@@ -11,7 +11,6 @@ import {
 } from '@nx/cypress/src/utils/find-target-options';
 import {
   formatFiles,
-  glob,
   joinPathFragments,
   ProjectConfiguration,
   readProjectConfiguration,
@@ -26,6 +25,7 @@ import {
 } from '../utils/storybook-ast/component-info';
 import { getProjectEntryPoints } from '../utils/storybook-ast/entry-point';
 import { getModuleFilePaths } from '../utils/storybook-ast/module-info';
+import { updateAppEditorTsConfigExcludedFiles } from '../utils/update-app-editor-tsconfig-excluded-files';
 import { CypressComponentConfigSchema } from './schema';
 
 export function cypressComponentConfiguration(
@@ -33,7 +33,6 @@ export function cypressComponentConfiguration(
   options: CypressComponentConfigSchema
 ) {
   return cypressComponentConfigurationInternal(tree, {
-    addPlugin: false,
     ...options,
   });
 }
@@ -46,17 +45,20 @@ export async function cypressComponentConfigurationInternal(
   tree: Tree,
   options: CypressComponentConfigSchema
 ) {
-  options.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
-
   const projectConfig = readProjectConfiguration(tree, options.project);
   const installTask = await baseCyCTConfig(tree, {
     project: options.project,
     skipFormat: true,
-    addPlugin: options.addPlugin,
+    addPlugin: false,
+    addExplicitTargets: true,
   });
 
   await configureCypressCT(tree, options);
   await addFiles(tree, projectConfig, options);
+
+  if (projectConfig.projectType === 'application') {
+    updateAppEditorTsConfigExcludedFiles(tree, projectConfig);
+  }
 
   if (!options.skipFormat) {
     await formatFiles(tree);

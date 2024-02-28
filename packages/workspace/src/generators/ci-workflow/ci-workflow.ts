@@ -85,17 +85,16 @@ function normalizeOptions(options: Schema, tree: Tree): Substitutes {
 }
 
 function defaultBranchNeedsOriginPrefix(nxJson: NxJsonConfiguration): boolean {
-  return !nxJson.affected?.defaultBase?.startsWith('origin/');
+  const base = nxJson.defaultBase ?? nxJson.affected?.defaultBase;
+  return !base?.startsWith('origin/');
 }
 
 function appendOriginPrefix(nxJson: NxJsonConfiguration): NxJsonConfiguration {
-  return {
-    ...nxJson,
-    affected: {
-      ...(nxJson.affected ?? {}),
-      defaultBase: nxJson.affected?.defaultBase
-        ? `origin/${nxJson.affected.defaultBase}`
-        : 'origin/main',
-    },
-  };
+  if (nxJson?.affected?.defaultBase) {
+    nxJson.affected.defaultBase = `origin/${nxJson.affected.defaultBase}`;
+  }
+  if (nxJson.defaultBase || !nxJson.affected) {
+    nxJson.defaultBase = `origin/${nxJson.defaultBase ?? deduceDefaultBase()}`;
+  }
+  return nxJson;
 }

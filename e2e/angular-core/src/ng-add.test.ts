@@ -143,9 +143,7 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
     // check nx.json
     const nxJson = readJson('nx.json');
     expect(nxJson).toEqual({
-      affected: {
-        defaultBase: 'main',
-      },
+      defaultBase: 'main',
       namedInputs: {
         default: ['{projectRoot}/**/*', 'sharedGlobals'],
         production: [

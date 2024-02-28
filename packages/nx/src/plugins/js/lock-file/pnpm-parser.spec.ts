@@ -11,7 +11,7 @@ import {
   ProjectGraphBuilder,
   RawProjectGraphDependency,
 } from '../../../project-graph/project-graph-builder';
-import { CreateDependenciesContext } from '../../../utils/nx-plugin';
+import { CreateDependenciesContext } from '../../../project-graph/plugins';
 
 jest.mock('fs', () => {
   const memFs = require('memfs').fs;

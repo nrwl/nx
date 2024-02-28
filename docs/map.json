@@ -323,12 +323,6 @@
                   "file": "shared/incremental-builds"
                 },
                 {
-                  "name": "Illustrated Distributed Task Execution",
-                  "tags": ["distribute-task-execution"],
-                  "id": "illustrated-dte",
-                  "file": "shared/concepts/illustrated-dte-guide"
-                },
-                {
                   "name": "Nx and Turborepo",
                   "id": "turbo-and-nx",
                   "mediaImage": "./shared/guides/nx-media-monorepo.jpg",
@@ -767,35 +761,16 @@
                   "file": "shared/packages/cypress/cypress-component-testing"
                 },
                 {
+                  "id": "cypress-setup-node-events",
+                  "name": "Using setupNodeEvents with Cypress preset",
+                  "description": "A guide on using the setupNodeEvents function with @nx/cypress/plugins/cypress-preset",
+                  "file": "shared/packages/cypress/cypress-setup-node-events"
+                },
+                {
                   "id": "cypress-v11-migration",
                   "name": "Cypress v11 Migration Guide",
                   "description": "Cypress v11 Migration Guide",
                   "file": "shared/packages/cypress/cypress-v11-migration"
-                }
-              ]
-            },
-            {
-              "name": "Deno",
-              "id": "deno",
-              "description": "Deno related recipes",
-              "itemList": [
-                {
-                  "name": "Add a Deno Project",
-                  "id": "add-deno",
-                  "tags": ["deno"],
-                  "file": "shared/recipes/add-stack/add-deno"
-                },
-                {
-                  "name": "Serverless deployment with Deno Deploy",
-                  "id": "deno-deploy",
-                  "tags": ["deployment", "deno"],
-                  "file": "shared/recipes/deployment/deno-deploy"
-                },
-                {
-                  "name": "Add and Deploy Netlify Edge Functions with Deno",
-                  "id": "deno-netlify-functions",
-                  "tags": ["deployment", "deno"],
-                  "file": "shared/recipes/deployment/deno-netlify-edge-functions"
                 }
               ]
             },
@@ -1160,6 +1135,12 @@
                   "id": "publish-in-ci-cd",
                   "tags": ["nx-release"],
                   "file": "shared/recipes/nx-release/publish-in-ci-cd"
+                },
+                {
+                  "name": "Automate GitHub Releases",
+                  "id": "automate-github-releases",
+                  "tags": ["nx-release"],
+                  "file": "shared/recipes/nx-release/automate-github-releases"
                 }
               ]
             },
@@ -1429,10 +1410,10 @@
                   "file": "shared/deprecated/storybook/angular-storybook-targets"
                 },
                 {
-                  "id": "angular-browser-target",
-                  "name": "Angular: The browserTarget",
-                  "description": "This document explains the role of the browserTarget in Angular projects with a Storybook configuration, and how the Storybook executors use it.",
-                  "file": "shared/deprecated/storybook/angular-browser-target"
+                  "id": "angular-project-build-config",
+                  "name": "Angular - The projectBuildConfig",
+                  "description": "This document explains the role of the projectBuildConfig in Angular projects with a Storybook configuration, and how the Storybook executors use it.",
+                  "file": "shared/deprecated/storybook/angular-project-build-config"
                 },
                 {
                   "id": "migrate-webpack-final-angular",
@@ -1712,7 +1693,7 @@
               "file": "nx-cloud/features/dynamic-agents"
             },
             {
-              "name": "Automatically Split E2E Tasks",
+              "name": "Automatically Split E2E Tasks (TestAtomizer)",
               "id": "split-e2e-tasks",
               "file": "nx-cloud/features/split-e2e-tasks"
             },
@@ -1896,6 +1877,18 @@
                   "name": "Advanced Configuration",
                   "id": "advanced-config",
                   "file": "nx-cloud/private/advanced-config"
+                }
+              ]
+            },
+            {
+              "name": "Troubleshooting",
+              "id": "troubleshooting",
+              "description": "Learn how to solve common issues in Nx Cloud.",
+              "itemList": [
+                {
+                  "name": "CI Execution Failed",
+                  "id": "ci-execution-failed",
+                  "file": "nx-cloud/troubleshooting/ci-execution-failed"
                 }
               ]
             },
@@ -2203,7 +2196,7 @@
             {
               "id": "overview",
               "path": "/nx-api/vite",
-              "name": "Overview of the Nx Vite Plugin",
+              "name": "Overview",
               "description": "The Nx Plugin for Vite contains executors and generators that support building applications using Vite. This page also explains how to configure Vite on your Nx workspace.",
               "file": "shared/packages/vite/vite-plugin"
             }
@@ -2217,7 +2210,7 @@
             {
               "id": "overview",
               "path": "/nx-api/vue",
-              "name": "Overview of the Nx Vue Plugin",
+              "name": "Overview",
               "description": "The Nx Plugin for Vue contains generators for managing Vue applications and libraries within an Nx workspace. This page also explains how to configure Vue on your Nx workspace.",
               "file": "shared/packages/vue/vue-plugin"
             }
@@ -2231,7 +2224,7 @@
             {
               "id": "overview",
               "path": "/nx-api/nuxt",
-              "name": "Overview of the Nx Nuxt Plugin",
+              "name": "Overview",
               "description": "The Nx Plugin for Nuxt contains generators for managing Nuxt applications within a Nx workspace. This page also explains how to configure Nuxt on your Nx workspace.",
               "file": "shared/packages/nuxt/nuxt-plugin"
             }
@@ -2245,7 +2238,7 @@
             {
               "id": "overview",
               "path": "/nx-api/webpack",
-              "name": "Overview of the Nx Webpack Plugin",
+              "name": "Overview",
               "description": "The Nx Plugin for Webpack contains executors and generators that support building applications using Webpack.",
               "file": "shared/packages/webpack/plugin-overview"
             }
@@ -2329,7 +2322,7 @@
           "itemList": [
             {
               "id": "overview",
-              "name": "Nx Storybook Plugin Overview",
+              "name": "Overview",
               "description": "This is an overview page for the Storybook plugin in Nx. It explains what Storybook is and how to set it up in your Nx workspace.",
               "path": "/nx-api/storybook",
               "file": "shared/packages/storybook/plugin-overview"
@@ -2342,7 +2335,7 @@
             },
             {
               "id": "storybook-7-setup",
-              "name": "Storybook 7 overview",
+              "name": "Storybook 7",
               "description": "This guide explains how you can set up Storybook version 7 in your Nx workspace. It contains information about the generators and the frameworks that are supported.",
               "file": "shared/packages/storybook/storybook-7-setup"
             }

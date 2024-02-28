@@ -735,7 +735,7 @@ export function NxWelcome({ title }: { title: string }) {
                   You can activate distributed tasks executions and caching by
                   running:
                 </p>
-                <pre>nx connect-to-nx-cloud</pre>
+                <pre>nx connect</pre>
                 <a
                   href="https://nx.app/?utm_source=nx-project"
                   target="_blank"

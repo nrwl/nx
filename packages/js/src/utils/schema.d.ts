@@ -83,4 +83,5 @@ export interface NormalizedSwcExecutorOptions
   swcExclude: string[];
   skipTypeCheck: boolean;
   swcCliOptions: SwcCliOptions;
+  tmpSwcrcPath: string;
 }

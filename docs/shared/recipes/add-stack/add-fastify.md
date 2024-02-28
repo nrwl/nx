@@ -34,7 +34,7 @@ If you are adding Fastify to an existing repo, continue to the next section.
 
 ## Install the Node Plugin
 
-```shell
+```shell {% skipRescope=true %}
 nx add @nx/node
 ```
 

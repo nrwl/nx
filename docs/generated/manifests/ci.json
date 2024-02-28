@@ -176,7 +176,7 @@
       },
       {
         "id": "split-e2e-tasks",
-        "name": "Automatically Split E2E Tasks",
+        "name": "Automatically Split E2E Tasks (TestAtomizer)",
         "description": "",
         "mediaImage": "",
         "file": "nx-cloud/features/split-e2e-tasks",
@@ -258,7 +258,7 @@
   },
   "/ci/features/split-e2e-tasks": {
     "id": "split-e2e-tasks",
-    "name": "Automatically Split E2E Tasks",
+    "name": "Automatically Split E2E Tasks (TestAtomizer)",
     "description": "",
     "mediaImage": "",
     "file": "nx-cloud/features/split-e2e-tasks",
@@ -673,6 +673,29 @@
         ],
         "isExternal": false,
         "path": "/ci/recipes/on-premise",
+        "tags": []
+      },
+      {
+        "id": "troubleshooting",
+        "name": "Troubleshooting",
+        "description": "Learn how to solve common issues in Nx Cloud.",
+        "mediaImage": "",
+        "file": "",
+        "itemList": [
+          {
+            "id": "ci-execution-failed",
+            "name": "CI Execution Failed",
+            "description": "",
+            "mediaImage": "",
+            "file": "nx-cloud/troubleshooting/ci-execution-failed",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/ci/recipes/troubleshooting/ci-execution-failed",
+            "tags": []
+          }
+        ],
+        "isExternal": false,
+        "path": "/ci/recipes/troubleshooting",
         "tags": []
       },
       {
@@ -1222,6 +1245,40 @@
     "itemList": [],
     "isExternal": false,
     "path": "/ci/recipes/on-premise/advanced-config",
+    "tags": []
+  },
+  "/ci/recipes/troubleshooting": {
+    "id": "troubleshooting",
+    "name": "Troubleshooting",
+    "description": "Learn how to solve common issues in Nx Cloud.",
+    "mediaImage": "",
+    "file": "",
+    "itemList": [
+      {
+        "id": "ci-execution-failed",
+        "name": "CI Execution Failed",
+        "description": "",
+        "mediaImage": "",
+        "file": "nx-cloud/troubleshooting/ci-execution-failed",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/recipes/troubleshooting/ci-execution-failed",
+        "tags": []
+      }
+    ],
+    "isExternal": false,
+    "path": "/ci/recipes/troubleshooting",
+    "tags": []
+  },
+  "/ci/recipes/troubleshooting/ci-execution-failed": {
+    "id": "ci-execution-failed",
+    "name": "CI Execution Failed",
+    "description": "",
+    "mediaImage": "",
+    "file": "nx-cloud/troubleshooting/ci-execution-failed",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/recipes/troubleshooting/ci-execution-failed",
     "tags": []
   },
   "/ci/recipes/other": {

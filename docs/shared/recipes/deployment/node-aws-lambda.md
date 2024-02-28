@@ -21,7 +21,7 @@ npx create-nx-workspace@latest my-functions --preset=@nx/aws-lambda
 
 First, make sure you have `@nx/aws-lambda` installed.
 
-```shell
+```shell {% skipRescope=true %}
 nx add @nx/aws-lambda
 ```
 

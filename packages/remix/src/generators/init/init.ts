@@ -62,6 +62,7 @@ export async function remixInitGeneratorInternal(tree: Tree, options: Schema) {
     tasks.push(installTask);
   }
 
+  options.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
   if (options.addPlugin) {
     addPlugin(tree);
   }

@@ -3,4 +3,5 @@ export interface VitestExecutorOptions {
   reportsDirectory?: string;
   testFiles?: string[];
   watch?: boolean;
+  mode?: string;
 }

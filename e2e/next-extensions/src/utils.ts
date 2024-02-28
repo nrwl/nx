@@ -34,12 +34,6 @@ export async function checkApp(
   expect(buildResult).toContain(`Successfully ran target build`);
   checkFilesExist(`${appsDir}/${appName}/.next/build-manifest.json`);
 
-  // TODO(crystal, @ndcunningham): Investigate if this file is correct
-  // const packageJson = readJson(`${appsDir}/${appName}/.next/package.json`);
-  // expect(packageJson.dependencies.react).toBeDefined();
-  // expect(packageJson.dependencies['react-dom']).toBeDefined();
-  // expect(packageJson.dependencies.next).toBeDefined();
-
   if (opts.checkE2E && runE2ETests()) {
     const e2eResults = runCLI(
       `e2e ${appName}-e2e --no-watch --configuration=production`

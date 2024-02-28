@@ -62,7 +62,9 @@ describe('Node Applications + webpack', () => {
     process.env.PORT = '';
   }
 
-  it('should generate an app using webpack', async () => {
+  // Disabled due to flakiness of ajv disabled (Error: Cannot find module 'ajv/dist/compile/codegen')
+  // TODO: (nicholas) Re-enable when the flakiness is resolved
+  xit('should generate an app using webpack', async () => {
     const testLib1 = uniq('test1');
     const testLib2 = uniq('test2');
     const expressApp = uniq('expressapp');

@@ -6,6 +6,7 @@ export * from './lib/champion-card';
 export * from './lib/champion-perks';
 export * from './lib/header';
 export * from './lib/flip-card';
+export * from './lib/nx-cloud-icon';
 export * from './lib/footer';
 export * from './lib/sidebar-container';
 export * from './lib/sidebar';

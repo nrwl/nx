@@ -3,7 +3,7 @@ import { ProjectGraph, readJson, readNxJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { Linter } from '@nx/eslint';
 import remote from './remote';
-import { getRootTsConfigPath, getRootTsConfigPathInTree } from '@nx/js';
+import { getRootTsConfigPathInTree } from '@nx/js';
 
 jest.mock('@nx/devkit', () => {
   const original = jest.requireActual('@nx/devkit');
@@ -125,6 +125,37 @@ describe('remote generator', () => {
     const tsconfigJson = readJson(tree, getRootTsConfigPathInTree(tree));
     expect(tsconfigJson.compilerOptions.paths['test/Module']).toEqual([
       'test/src/remote-entry.ts',
+    ]);
+  });
+
+  it('should create the remote with the correct config files when --js=true', async () => {
+    const tree = createTreeWithEmptyWorkspace();
+    await remote(tree, {
+      name: 'test',
+      devServerPort: 4201,
+      e2eTestRunner: 'cypress',
+      linter: Linter.EsLint,
+      skipFormat: true,
+      style: 'css',
+      unitTestRunner: 'jest',
+      projectNameAndRootFormat: 'as-provided',
+      typescriptConfiguration: false,
+      js: true,
+    });
+
+    expect(tree.exists('test/webpack.config.js')).toBeTruthy();
+    expect(tree.exists('test/webpack.config.prod.js')).toBeTruthy();
+    expect(tree.exists('test/module-federation.config.js')).toBeTruthy();
+
+    expect(tree.read('test/webpack.config.js', 'utf-8')).toMatchSnapshot();
+    expect(tree.read('test/webpack.config.prod.js', 'utf-8')).toMatchSnapshot();
+    expect(
+      tree.read('test/module-federation.config.js', 'utf-8')
+    ).toMatchSnapshot();
+
+    const tsconfigJson = readJson(tree, getRootTsConfigPathInTree(tree));
+    expect(tsconfigJson.compilerOptions.paths['test/Module']).toEqual([
+      'test/src/remote-entry.js',
     ]);
   });
 

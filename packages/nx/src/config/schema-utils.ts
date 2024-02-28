@@ -1,6 +1,6 @@
 import { existsSync } from 'fs';
 import { extname, join } from 'path';
-import { registerPluginTSTranspiler } from '../utils/nx-plugin';
+import { registerPluginTSTranspiler } from '../project-graph/plugins';
 
 /**
  * This function is used to get the implementation factory of an executor or generator.

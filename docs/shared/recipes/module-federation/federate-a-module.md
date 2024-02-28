@@ -161,4 +161,4 @@ Just run the application as usual.
 nx serve host
 ```
 
-To start the application, use the following address: [http://localhost:4200](http://localhost:4200). Once opened, you'll see the message **"Hello from Nx."** This message is loaded from the greeting remote, which runs on port 4201.
+To start the application, use the following address: [http://localhost:4200](http://localhost:4200). Once opened, you'll see the message **"Hello from Nx"**. This message is loaded from the greeting remote, which runs on port 4201.

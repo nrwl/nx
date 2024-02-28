@@ -24,6 +24,10 @@ export function addTailwindStyleImports(
   project: ProjectConfiguration,
   _options: SetupTailwindOptions
 ) {
+  if (_options.stylesheet) {
+    knownStylesheetLocations.push(_options.stylesheet);
+  }
+
   const stylesPath = knownStylesheetLocations
     .map((file) => joinPathFragments(project.root, file))
     .find((file) => tree.exists(file));

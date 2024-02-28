@@ -60,6 +60,10 @@
               "label": "LESS              [ https://lesscss.org                       ]"
             },
             {
+              "value": "tailwind",
+              "label": "tailwind [ https://tailwindcss.com/            ]"
+            },
+            {
               "value": "styled-components",
               "label": "styled-components [ https://styled-components.com            ]"
             },

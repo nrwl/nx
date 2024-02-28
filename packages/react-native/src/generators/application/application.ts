@@ -3,6 +3,7 @@ import {
   GeneratorCallback,
   joinPathFragments,
   output,
+  readCachedProjectGraph,
   readJson,
   runTasksInSerial,
   Tree,
@@ -98,22 +99,19 @@ export async function reactNativeApplicationGeneratorInternal(
     joinPathFragments(host.root, options.iosProjectRoot)
   );
   if (options.install) {
-    const workspacePackageJsonPath = joinPathFragments('package.json');
     const projectPackageJsonPath = joinPathFragments(
       options.appProjectRoot,
       'package.json'
     );
 
-    const workspacePackageJson = readJson<PackageJson>(
-      host,
-      workspacePackageJsonPath
-    );
+    const workspacePackageJson = readJson<PackageJson>(host, 'package.json');
     const projectPackageJson = readJson<PackageJson>(
       host,
       projectPackageJsonPath
     );
 
     await syncDeps(
+      options.name,
       projectPackageJson,
       projectPackageJsonPath,
       workspacePackageJson

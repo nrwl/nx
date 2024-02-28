@@ -301,7 +301,7 @@ To use Module Federation well, we recommend that you enable [Nx Cloud](https://n
 when using `create-nx-workspace`, you can do the following.
 
 ```shell
-nx connect-to-nx-cloud
+nx connect
 ```
 
 With Nx Cloud enabled, a large set of builds can be skipped entirely when running the application locally (and in
@@ -327,11 +327,11 @@ If you inspect the terminal output, you'll see something like this, even if you 
 ```shell
 > nx run about:build:development  [existing outputs match the cache, left as is]
 
- (snip)
+(snip)
 
- >  NX   Successfully ran target build for project about
+NX   Successfully ran target build for project about
 
-   Nx read the output from the cache instead of running the command for 1 out of 1 tasks.
+Nx read the output from the cache instead of running the command for 1 out of 1 tasks.
 
 ```
 

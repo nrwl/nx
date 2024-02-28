@@ -82,7 +82,6 @@ async function setup(tree: Tree, name: string) {
     skipPackageJson: true,
     projectNameAndRootFormat: 'derived',
     skipFormat: true,
-    addPlugin: false,
   });
 
   const projectConfig = readProjectConfiguration(tree, name);

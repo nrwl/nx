@@ -21,7 +21,7 @@ You can also define the configuration in a file and reference it as follows:
 
 ```yaml {% fileName=".nx/workflows/dynamic-changesets.yaml" %}
 distribute-on:
-  small-changeset: 1 linux-medium-js
+  small-changeset: 3 linux-medium-js
   medium-changeset: 6 linux-medium-js
   large-changeset: 10 linux-medium-js
 ```
@@ -86,7 +86,7 @@ individual commands as follows:
 
 ## npx nx-cloud stop-all-agents
 
-Same as `npx nx-cloud complete-ci-run` and `npx nx-cloud complete-run-group`.
+Same as `npx nx-cloud complete-ci-run`.
 
 This command tells Nx Cloud to terminate all agents associated with this CI pipeline execution.
 Invoking this command is not needed anymore. New versions of Nx Cloud can track when the main job terminates

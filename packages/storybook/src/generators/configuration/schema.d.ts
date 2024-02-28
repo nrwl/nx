@@ -20,4 +20,9 @@ export interface StorybookConfigureSchema {
    */
   cypressDirectory?: string;
   addPlugin?: boolean;
+
+  /**
+   * @internal
+   */
+  addExplicitTargets?: boolean;
 }

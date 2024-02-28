@@ -11,6 +11,7 @@ export const fence: Schema = {
     command: { type: 'String', default: '' },
     path: { type: 'String', default: '~/workspace' },
     process: { type: 'Boolean', render: false, default: true },
+    skipRescope: { type: 'Boolean', default: false },
     enableCopy: { type: 'Boolean', default: true },
   },
   transform(node, config) {

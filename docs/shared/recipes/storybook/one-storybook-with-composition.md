@@ -54,9 +54,9 @@ Now it’s important to change the Storybook ports in the `storybook-host-angula
 
 ### Add the `refs` to the main.ts of the host library
 
-Create the composition in ``:
+Update the `libs/storybook-host/.storybook/main.ts` file as shown below:
 
-```javascript {% fileName="libs/storybook-host/.storybook/main.ts" %}
+```javascript {% fileName="libs/storybook-host/.storybook/main.ts" highlightLines=["12-21"] %}
 import type { StorybookConfig } from '@storybook/react-vite';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { mergeConfig } from 'vite';

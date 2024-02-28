@@ -7,6 +7,7 @@ import {
   Tree,
 } from '@nx/devkit';
 import { hasWebpackPlugin } from '../../../utils/has-webpack-plugin';
+import { maybeJs } from '../../../utils/maybe-js';
 
 export function addProject(host: Tree, options: NormalizedSchema) {
   const project: ProjectConfiguration = {
@@ -29,12 +30,6 @@ export function addProject(host: Tree, options: NormalizedSchema) {
   addProjectConfiguration(host, options.projectName, {
     ...project,
   });
-}
-
-export function maybeJs(options: NormalizedSchema, path: string): string {
-  return options.js && (path.endsWith('.ts') || path.endsWith('.tsx'))
-    ? path.replace(/\.tsx?$/, '.js')
-    : path;
 }
 
 function createBuildTarget(options: NormalizedSchema): TargetConfiguration {

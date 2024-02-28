@@ -19,6 +19,11 @@ export interface JestProjectSchema {
   compiler?: 'tsc' | 'babel' | 'swc';
   skipPackageJson?: boolean;
   js?: boolean;
+
+  /**
+   * @internal
+   */
+  addExplicitTargets?: boolean;
 }
 
 export type NormalizedJestProjectSchema = JestProjectSchema & {

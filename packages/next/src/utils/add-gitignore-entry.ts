@@ -12,7 +12,7 @@ export function addGitIgnoreEntry(host: Tree) {
   ig.add(host.read('.gitignore', 'utf-8'));
 
   if (!ig.ignores('apps/example/.next')) {
-    content = `${content}\n\n# Next.js\n.next\n`;
+    content = `${content}\n\n# Next.js\n.next\nout\n`;
   }
 
   host.write('.gitignore', content);

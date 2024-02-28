@@ -16,7 +16,7 @@ import {
 } from '../../../utils/package-manager';
 import { joinPathFragments } from '../../../utils/path';
 import { nxVersion } from '../../../utils/versions';
-import { readFileSync, writeFileSync } from 'fs';
+import { existsSync, readFileSync, writeFileSync } from 'fs';
 
 export function createNxJsonFile(
   repoRoot: string,
@@ -58,8 +58,7 @@ export function createNxJsonFile(
     delete nxJson.targetDefaults;
   }
 
-  nxJson.affected ??= {};
-  nxJson.affected.defaultBase ??= deduceDefaultBase();
+  nxJson.defaultBase ??= deduceDefaultBase();
   writeJsonFile(nxJsonPath, nxJson);
 }
 
@@ -222,4 +221,15 @@ export function printFinalMessage({
       learnMoreLink ? `- Learn more at ${learnMoreLink}.` : undefined,
     ].filter(Boolean),
   });
+}
+
+export function isMonorepo(packageJson: PackageJson) {
+  if (!!packageJson.workspaces) return true;
+
+  if (existsSync('pnpm-workspace.yaml') || existsSync('pnpm-workspace.yml'))
+    return true;
+
+  if (existsSync('lerna.json')) return true;
+
+  return false;
 }

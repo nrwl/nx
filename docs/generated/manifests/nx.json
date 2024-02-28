@@ -1089,17 +1089,6 @@
             "tags": []
           },
           {
-            "id": "illustrated-dte",
-            "name": "Illustrated Distributed Task Execution",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/concepts/illustrated-dte-guide",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/concepts/more-concepts/illustrated-dte",
-            "tags": ["distribute-task-execution"]
-          },
-          {
             "id": "turbo-and-nx",
             "name": "Nx and Turborepo",
             "description": "",
@@ -1481,17 +1470,6 @@
         "tags": []
       },
       {
-        "id": "illustrated-dte",
-        "name": "Illustrated Distributed Task Execution",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/concepts/illustrated-dte-guide",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/concepts/more-concepts/illustrated-dte",
-        "tags": ["distribute-task-execution"]
-      },
-      {
         "id": "turbo-and-nx",
         "name": "Nx and Turborepo",
         "description": "",
@@ -1671,17 +1649,6 @@
     "isExternal": false,
     "path": "/concepts/more-concepts/incremental-builds",
     "tags": []
-  },
-  "/concepts/more-concepts/illustrated-dte": {
-    "id": "illustrated-dte",
-    "name": "Illustrated Distributed Task Execution",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/concepts/illustrated-dte-guide",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/concepts/more-concepts/illustrated-dte",
-    "tags": ["distribute-task-execution"]
   },
   "/concepts/more-concepts/turbo-and-nx": {
     "id": "turbo-and-nx",
@@ -2497,6 +2464,17 @@
             "tags": []
           },
           {
+            "id": "cypress-setup-node-events",
+            "name": "Using setupNodeEvents with Cypress preset",
+            "description": "A guide on using the setupNodeEvents function with @nx/cypress/plugins/cypress-preset",
+            "mediaImage": "",
+            "file": "shared/packages/cypress/cypress-setup-node-events",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/cypress/cypress-setup-node-events",
+            "tags": []
+          },
+          {
             "id": "cypress-v11-migration",
             "name": "Cypress v11 Migration Guide",
             "description": "Cypress v11 Migration Guide",
@@ -2510,51 +2488,6 @@
         ],
         "isExternal": false,
         "path": "/recipes/cypress",
-        "tags": []
-      },
-      {
-        "id": "deno",
-        "name": "Deno",
-        "description": "Deno related recipes",
-        "mediaImage": "",
-        "file": "",
-        "itemList": [
-          {
-            "id": "add-deno",
-            "name": "Add a Deno Project",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/recipes/add-stack/add-deno",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/deno/add-deno",
-            "tags": ["deno"]
-          },
-          {
-            "id": "deno-deploy",
-            "name": "Serverless deployment with Deno Deploy",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/recipes/deployment/deno-deploy",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/deno/deno-deploy",
-            "tags": ["deployment", "deno"]
-          },
-          {
-            "id": "deno-netlify-functions",
-            "name": "Add and Deploy Netlify Edge Functions with Deno",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/recipes/deployment/deno-netlify-edge-functions",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/deno/deno-netlify-functions",
-            "tags": ["deployment", "deno"]
-          }
-        ],
-        "isExternal": false,
-        "path": "/recipes/deno",
         "tags": []
       },
       {
@@ -3221,6 +3154,17 @@
             "itemList": [],
             "isExternal": false,
             "path": "/recipes/nx-release/publish-in-ci-cd",
+            "tags": ["nx-release"]
+          },
+          {
+            "id": "automate-github-releases",
+            "name": "Automate GitHub Releases",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/recipes/nx-release/automate-github-releases",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/nx-release/automate-github-releases",
             "tags": ["nx-release"]
           }
         ],
@@ -4493,6 +4437,17 @@
         "tags": []
       },
       {
+        "id": "cypress-setup-node-events",
+        "name": "Using setupNodeEvents with Cypress preset",
+        "description": "A guide on using the setupNodeEvents function with @nx/cypress/plugins/cypress-preset",
+        "mediaImage": "",
+        "file": "shared/packages/cypress/cypress-setup-node-events",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/cypress/cypress-setup-node-events",
+        "tags": []
+      },
+      {
         "id": "cypress-v11-migration",
         "name": "Cypress v11 Migration Guide",
         "description": "Cypress v11 Migration Guide",
@@ -4519,6 +4474,17 @@
     "path": "/recipes/cypress/cypress-component-testing",
     "tags": []
   },
+  "/recipes/cypress/cypress-setup-node-events": {
+    "id": "cypress-setup-node-events",
+    "name": "Using setupNodeEvents with Cypress preset",
+    "description": "A guide on using the setupNodeEvents function with @nx/cypress/plugins/cypress-preset",
+    "mediaImage": "",
+    "file": "shared/packages/cypress/cypress-setup-node-events",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/cypress/cypress-setup-node-events",
+    "tags": []
+  },
   "/recipes/cypress/cypress-v11-migration": {
     "id": "cypress-v11-migration",
     "name": "Cypress v11 Migration Guide",
@@ -4529,84 +4495,6 @@
     "isExternal": false,
     "path": "/recipes/cypress/cypress-v11-migration",
     "tags": []
-  },
-  "/recipes/deno": {
-    "id": "deno",
-    "name": "Deno",
-    "description": "Deno related recipes",
-    "mediaImage": "",
-    "file": "",
-    "itemList": [
-      {
-        "id": "add-deno",
-        "name": "Add a Deno Project",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/recipes/add-stack/add-deno",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/deno/add-deno",
-        "tags": ["deno"]
-      },
-      {
-        "id": "deno-deploy",
-        "name": "Serverless deployment with Deno Deploy",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/recipes/deployment/deno-deploy",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/deno/deno-deploy",
-        "tags": ["deployment", "deno"]
-      },
-      {
-        "id": "deno-netlify-functions",
-        "name": "Add and Deploy Netlify Edge Functions with Deno",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/recipes/deployment/deno-netlify-edge-functions",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/deno/deno-netlify-functions",
-        "tags": ["deployment", "deno"]
-      }
-    ],
-    "isExternal": false,
-    "path": "/recipes/deno",
-    "tags": []
-  },
-  "/recipes/deno/add-deno": {
-    "id": "add-deno",
-    "name": "Add a Deno Project",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/recipes/add-stack/add-deno",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/deno/add-deno",
-    "tags": ["deno"]
-  },
-  "/recipes/deno/deno-deploy": {
-    "id": "deno-deploy",
-    "name": "Serverless deployment with Deno Deploy",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/recipes/deployment/deno-deploy",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/deno/deno-deploy",
-    "tags": ["deployment", "deno"]
-  },
-  "/recipes/deno/deno-netlify-functions": {
-    "id": "deno-netlify-functions",
-    "name": "Add and Deploy Netlify Edge Functions with Deno",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/recipes/deployment/deno-netlify-edge-functions",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/deno/deno-netlify-functions",
-    "tags": ["deployment", "deno"]
   },
   "/recipes/next": {
     "id": "next",
@@ -5768,6 +5656,17 @@
         "isExternal": false,
         "path": "/recipes/nx-release/publish-in-ci-cd",
         "tags": ["nx-release"]
+      },
+      {
+        "id": "automate-github-releases",
+        "name": "Automate GitHub Releases",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/nx-release/automate-github-releases",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/nx-release/automate-github-releases",
+        "tags": ["nx-release"]
       }
     ],
     "isExternal": false,
@@ -5816,6 +5715,17 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/nx-release/publish-in-ci-cd",
+    "tags": ["nx-release"]
+  },
+  "/recipes/nx-release/automate-github-releases": {
+    "id": "automate-github-releases",
+    "name": "Automate GitHub Releases",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/nx-release/automate-github-releases",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/nx-release/automate-github-releases",
     "tags": ["nx-release"]
   },
   "/recipes/other": {
@@ -6852,14 +6762,14 @@
             "tags": []
           },
           {
-            "id": "angular-browser-target",
-            "name": "Angular: The browserTarget",
-            "description": "This document explains the role of the browserTarget in Angular projects with a Storybook configuration, and how the Storybook executors use it.",
+            "id": "angular-project-build-config",
+            "name": "Angular - The projectBuildConfig",
+            "description": "This document explains the role of the projectBuildConfig in Angular projects with a Storybook configuration, and how the Storybook executors use it.",
             "mediaImage": "",
-            "file": "shared/deprecated/storybook/angular-browser-target",
+            "file": "shared/deprecated/storybook/angular-project-build-config",
             "itemList": [],
             "isExternal": false,
-            "path": "/deprecated/storybook/angular-browser-target",
+            "path": "/deprecated/storybook/angular-project-build-config",
             "tags": []
           },
           {
@@ -7067,14 +6977,14 @@
         "tags": []
       },
       {
-        "id": "angular-browser-target",
-        "name": "Angular: The browserTarget",
-        "description": "This document explains the role of the browserTarget in Angular projects with a Storybook configuration, and how the Storybook executors use it.",
+        "id": "angular-project-build-config",
+        "name": "Angular - The projectBuildConfig",
+        "description": "This document explains the role of the projectBuildConfig in Angular projects with a Storybook configuration, and how the Storybook executors use it.",
         "mediaImage": "",
-        "file": "shared/deprecated/storybook/angular-browser-target",
+        "file": "shared/deprecated/storybook/angular-project-build-config",
         "itemList": [],
         "isExternal": false,
-        "path": "/deprecated/storybook/angular-browser-target",
+        "path": "/deprecated/storybook/angular-project-build-config",
         "tags": []
       },
       {
@@ -7137,15 +7047,15 @@
     "path": "/deprecated/storybook/angular-storybook-targets",
     "tags": []
   },
-  "/deprecated/storybook/angular-browser-target": {
-    "id": "angular-browser-target",
-    "name": "Angular: The browserTarget",
-    "description": "This document explains the role of the browserTarget in Angular projects with a Storybook configuration, and how the Storybook executors use it.",
+  "/deprecated/storybook/angular-project-build-config": {
+    "id": "angular-project-build-config",
+    "name": "Angular - The projectBuildConfig",
+    "description": "This document explains the role of the projectBuildConfig in Angular projects with a Storybook configuration, and how the Storybook executors use it.",
     "mediaImage": "",
-    "file": "shared/deprecated/storybook/angular-browser-target",
+    "file": "shared/deprecated/storybook/angular-project-build-config",
     "itemList": [],
     "isExternal": false,
-    "path": "/deprecated/storybook/angular-browser-target",
+    "path": "/deprecated/storybook/angular-project-build-config",
     "tags": []
   },
   "/deprecated/storybook/migrate-webpack-final-angular": {

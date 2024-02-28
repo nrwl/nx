@@ -5,16 +5,7 @@ import { applicationGenerator } from '../application/application';
 describe('app', () => {
   let tree: Tree;
 
-  let originalEnv: string;
   beforeAll(() => {
-    originalEnv = process.env.NX_ADD_PLUGINS;
-    process.env.NX_ADD_PLUGINS = 'false';
-  });
-  afterAll(() => {
-    process.env.NX_ADD_PLUGINS = originalEnv;
-  });
-
-  beforeEach(() => {
     tree = createTreeWithEmptyWorkspace();
   });
 
@@ -37,7 +28,7 @@ describe('app', () => {
   });
 
   it('should create a custom server with swc', async () => {
-    const name = uniq('custom-server');
+    const name = uniq('custom-server-swc');
 
     await applicationGenerator(tree, {
       name,

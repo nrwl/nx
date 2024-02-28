@@ -41,9 +41,11 @@ export default async function* reactNativeStorybookExecutor(
     displayNewlyAddedDepsMessage(
       context.projectName,
       await syncDeps(
+        context.projectName,
         projectPackageJson,
         packageJsonPath,
         workspacePackageJson,
+        context.projectGraph,
         [
           `@storybook/react-native`,
           '@storybook/addon-ondevice-actions',

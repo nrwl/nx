@@ -1,9 +1,5 @@
-import { buildTargetFromScript, PackageJson } from './package-json';
-import { join } from 'path';
 import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
-import { readJsonFile } from './fileutils';
 import { readCachedProjectGraph } from '../project-graph/project-graph';
-import { TargetConfiguration } from '../config/workspace-json-project-json';
 
 export function projectHasTarget(
   project: ProjectGraphProjectNode,

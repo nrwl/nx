@@ -10,36 +10,7 @@ import {
 
 describe('buildTargetFromScript', () => {
   it('should use nx:run-script', () => {
-    const target = buildTargetFromScript('build', null);
-    expect(target.executor).toEqual('nx:run-script');
-  });
-
-  it('should use options provided in nx target package json configuration', () => {
-    const target = buildTargetFromScript('build', {
-      targets: {
-        build: {
-          outputs: ['custom'],
-        },
-      },
-    });
-
-    expect(target.outputs).toEqual(['custom']);
-  });
-
-  it('should not override script or executor', () => {
-    const target = buildTargetFromScript('build', {
-      targets: {
-        build: {
-          outputs: ['custom'],
-          options: {
-            script: 'other',
-          },
-          executor: 'custom:execute',
-        },
-      },
-    });
-
-    expect(target.options.script).toEqual('build');
+    const target = buildTargetFromScript('build');
     expect(target.executor).toEqual('nx:run-script');
   });
 });
@@ -126,6 +97,119 @@ describe('readTargetsFromPackageJson', () => {
         options: {},
       },
     });
+  });
+
+  it('should extend script based targets if matching config', () => {
+    const result = readTargetsFromPackageJson({
+      name: 'my-other-app',
+      version: '',
+      scripts: {
+        build: 'echo 1',
+      },
+      nx: {
+        targets: {
+          build: {
+            outputs: ['custom'],
+          },
+        },
+      },
+    });
+    expect(result.build).toMatchInlineSnapshot(`
+      {
+        "executor": "nx:run-script",
+        "options": {
+          "script": "build",
+        },
+        "outputs": [
+          "custom",
+        ],
+      }
+    `);
+  });
+
+  it('should override scripts if provided an executor', () => {
+    const result = readTargetsFromPackageJson({
+      name: 'my-other-app',
+      version: '',
+      scripts: {
+        build: 'echo 1',
+      },
+      nx: {
+        targets: {
+          build: {
+            executor: 'nx:run-commands',
+            options: {
+              commands: ['echo 2'],
+            },
+          },
+        },
+      },
+    });
+    expect(result.build).toMatchInlineSnapshot(`
+      {
+        "executor": "nx:run-commands",
+        "options": {
+          "commands": [
+            "echo 2",
+          ],
+        },
+      }
+    `);
+  });
+
+  it('should override script if provided in options', () => {
+    const result = readTargetsFromPackageJson({
+      name: 'my-other-app',
+      version: '',
+      scripts: {
+        build: 'echo 1',
+      },
+      nx: {
+        targets: {
+          build: {
+            executor: 'nx:run-script',
+            options: {
+              script: 'echo 2',
+            },
+          },
+        },
+      },
+    });
+    expect(result.build).toMatchInlineSnapshot(`
+      {
+        "executor": "nx:run-script",
+        "options": {
+          "script": "echo 2",
+        },
+      }
+    `);
+  });
+
+  it('should support targets without scripts', () => {
+    const result = readTargetsFromPackageJson({
+      name: 'my-other-app',
+      version: '',
+      nx: {
+        targets: {
+          build: {
+            executor: 'nx:run-commands',
+            options: {
+              commands: ['echo 2'],
+            },
+          },
+        },
+      },
+    });
+    expect(result.build).toMatchInlineSnapshot(`
+      {
+        "executor": "nx:run-commands",
+        "options": {
+          "commands": [
+            "echo 2",
+          ],
+        },
+      }
+    `);
   });
 });
 

@@ -331,7 +331,6 @@ describe('app', () => {
     it('should configure proxy', async () => {
       await angularApplicationGenerator(tree, {
         name: 'my-frontend',
-        addPlugin: true,
       });
 
       await applicationGenerator(tree, {
@@ -349,7 +348,6 @@ describe('app', () => {
     it('should configure proxies for multiple node projects with the same frontend app', async () => {
       await angularApplicationGenerator(tree, {
         name: 'my-frontend',
-        addPlugin: true,
       });
 
       await applicationGenerator(tree, {
@@ -375,7 +373,6 @@ describe('app', () => {
     it('should work with unnormalized project names', async () => {
       await angularApplicationGenerator(tree, {
         name: 'myFrontend',
-        addPlugin: true,
       });
 
       await applicationGenerator(tree, {

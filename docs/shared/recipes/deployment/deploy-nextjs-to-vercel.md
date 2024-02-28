@@ -17,7 +17,7 @@ npx nx build tuskdesk --prod
 4. Toggle the override switch for the output directory. Point it to the `.next` directory inside the built app:
 
 ```shell
-dist/apps/tuskdesk/.next
+apps/tuskdesk/.next
 ```
 
 Therefore, our full configuration (based on a repo called "nx-workspace" and a project called "tuskdesk") will look like this:

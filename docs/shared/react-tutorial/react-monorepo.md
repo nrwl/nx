@@ -54,7 +54,8 @@ title="Tutorial: Standalone React Application"
 Create a new React monorepo with the following command:
 
 ```{% command="npx create-nx-workspace@latest react-monorepo --preset=react-monorepo" path="~" %}
- >  NX   Let's create a new workspace [https://nx.dev/getting-started/intro]
+
+NX   Let's create a new workspace [https://nx.dev/getting-started/intro]
 
 ✔ Application name · react-store
 ✔ Which bundler would you like to use? · vite
@@ -234,7 +235,7 @@ Nx plugins usually provide [generators](/features/generate-code) that allow you 
 
 ```{% command="npx nx list @nx/react" path="react-monorepo" %}
 
- >  NX   Capabilities in @nx/react:
+NX   Capabilities in @nx/react:
 
    GENERATORS
 
@@ -273,7 +274,7 @@ More info can be found in [the integrate with editors article](/features/integra
 Run the following command to generate a new `inventory` application. Note how we append `--dry-run` to first check the output.
 
 ```{% command="npx nx g @nx/react:app inventory --directory=apps/inventory --dry-run" path="react-monorepo" %}
->  NX  Generating @nx/react:application
+NX  Generating @nx/react:application
 
 ✔ Would you like to add React Router to this application? (y/N) · false
 ✔ Which E2E test runner would you like to use? · cypress
@@ -704,17 +705,16 @@ One thing to highlight is that Nx is able to [cache the tasks you run](/features
 Note that all of these targets are automatically cached by Nx. If you re-run a single one or all of them again, you'll see that the task completes immediately. In addition, (as can be seen in the output example below) there will be a note that a matching cache result was found and therefore the task was not run again.
 
 ```{% command="nx run-many -t test lint e2e" path="react-monorepo" %}
+✔  nx run e2e:lint  [existing outputs match the cache, left as is]
+✔  nx run react-store:lint  [existing outputs match the cache, left as is]
+✔  nx run react-store:test  [existing outputs match the cache, left as is]
+✔  nx run e2e:e2e  [existing outputs match the cache, left as is]
 
-    ✔  nx run e2e:lint  [existing outputs match the cache, left as is]
-    ✔  nx run react-store:lint  [existing outputs match the cache, left as is]
-    ✔  nx run react-store:test  [existing outputs match the cache, left as is]
-    ✔  nx run e2e:e2e  [existing outputs match the cache, left as is]
+——————————————————————————————————————————————————————
 
- ——————————————————————————————————————————————————————
+NX   Successfully ran targets test, lint, e2e for 5 projects (54ms)
 
- >  NX   Successfully ran targets test, lint, e2e for 5 projects (54ms)
-
-   Nx read the output from the cache instead of running the command for 10 out of 10 tasks.
+Nx read the output from the cache instead of running the command for 10 out of 10 tasks.
 ```
 
 Not all tasks might be cacheable though. You can configure the `cache` settings in the `targetDefaults` property of the `nx.json` file. You can also [learn more about how caching works](/features/cache-task-results).
@@ -861,7 +861,6 @@ nx graph --affected
 If you're ready and want to ship your applications, you can build them using
 
 ```{% command="npx nx run-many -t build" path="react-monorepo" %}
-// todo
 vite v4.3.5 building for production...
 ✓ 33 libs transformed.
 dist/react-store/index.html                   0.48 kB │ gzip:  0.30 kB
@@ -869,9 +868,9 @@ dist/react-store/assets/index-e3b0c442.css    0.00 kB │ gzip:  0.02 kB
 dist/react-store/assets/index-378e8124.js   165.64 kB │ gzip: 51.63 kB
 ✓ built in 496ms
 
- ——————————————————————————————————————————————————————————————————————————————————————————————————————————
+——————————————————————————————————————————————————————————————————————————————————————————————————————————
 
- >  NX   Successfully ran target build for project reactutorial (1s)
+NX   Successfully ran target build for project reactutorial (1s)
 ```
 
 All the required files will be placed in `dist/react-store` and `dist/inventory` and can be deployed to your favorite hosting provider.
@@ -1029,36 +1028,36 @@ export default ProductList;
 If you lint your workspace you'll get an error now:
 
 ```{% command="nx run-many -t lint" %}
->  NX   Running target lint for 7 projects
-    ✖  nx run products:lint
-       Linting "products"...
+ Running target lint for 7 projects
+✖  nx run products:lint
+   Linting "products"...
 
-       /Users/isaac/Documents/code/nx-recipes/react-monorepo/libs/products/src/lib/product-list/product-list.tsx
-         4:1   error    A project tagged with "scope:products" can only depend on libs tagged with "scope:products", "scope:shared"  @nx/enforce-module-boundaries
-         4:10  warning  'OrderList' is defined but never used                                                                        @typescript-eslint/no-unused-vars
+   /Users/isaac/Documents/code/nx-recipes/react-monorepo/libs/products/src/lib/product-list/product-list.tsx
+     4:1   error    A project tagged with "scope:products" can only depend on libs tagged with "scope:products", "scope:shared"  @nx/enforce-module-boundaries
+     4:10  warning  'OrderList' is defined but never used                                                                        @typescript-eslint/no-unused-vars
 
-       ✖ 2 problems (1 error, 1 warning)
+   ✖ 2 problems (1 error, 1 warning)
 
-       Lint warnings found in the listed files.
+   Lint warnings found in the listed files.
 
-       Lint errors found in the listed files.
+   Lint errors found in the listed files.
 
 
-    ✔  nx run orders:lint (996ms)
-    ✔  nx run react-store:lint (1s)
-    ✔  nx run react-store-e2e:lint (581ms)
-    ✔  nx run inventory-e2e:lint (588ms)
-    ✔  nx run inventory:lint (836ms)
-    ✔  nx run shared-ui:lint (753ms)
+✔  nx run orders:lint (996ms)
+✔  nx run react-store:lint (1s)
+✔  nx run react-store-e2e:lint (581ms)
+✔  nx run inventory-e2e:lint (588ms)
+✔  nx run inventory:lint (836ms)
+✔  nx run shared-ui:lint (753ms)
 
- ————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
- >  NX   Ran target lint for 7 projects (2s)
+NX   Ran target lint for 7 projects (2s)
 
-    ✔    6/7 succeeded [0 read from cache]
+✔    6/7 succeeded [0 read from cache]
 
-    ✖    1/7 targets failed, including the following:
-         - nx run products:lint
+✖    1/7 targets failed, including the following:
+     - nx run products:lint
 ```
 
 If you have the ESLint plugin installed in your IDE you should immediately see an error:

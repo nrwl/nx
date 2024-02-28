@@ -1,9 +1,9 @@
 import {
   addProjectConfiguration,
-  readProjectConfiguration,
-  updateJson,
-  Tree,
   readJson,
+  readProjectConfiguration,
+  Tree,
+  updateJson,
 } from '@nx/devkit';
 
 import { Linter } from '../utils/linter';
@@ -297,5 +297,40 @@ describe('@nx/eslint:lint-project', () => {
           "node_modules
           "
         `);
+  });
+
+  it('should support generating explicit targets on project config', async () => {
+    addProjectConfiguration(tree, 'explicit-lib', {
+      root: 'libs/explicit-lib',
+      projectType: 'library',
+      targets: {},
+    });
+    addProjectConfiguration(tree, 'inferred-lib', {
+      root: 'libs/inferred-lib',
+      projectType: 'library',
+      targets: {},
+    });
+
+    await lintProjectGenerator(tree, {
+      ...defaultOptions,
+      linter: Linter.EsLint,
+      project: 'explicit-lib',
+      addExplicitTargets: true,
+    });
+    await lintProjectGenerator(tree, {
+      ...defaultOptions,
+      linter: Linter.EsLint,
+      project: 'inferred-lib',
+      addExplicitTargets: false,
+    });
+
+    const explicitCOnfig = readProjectConfiguration(tree, 'explicit-lib');
+    expect(explicitCOnfig.targets.lint).toMatchInlineSnapshot(`
+      {
+        "executor": "@nx/eslint:lint",
+      }
+    `);
+    const inferredConfig = readProjectConfiguration(tree, 'inferred-lib');
+    expect(inferredConfig.targets.lint).toBeUndefined();
   });
 });

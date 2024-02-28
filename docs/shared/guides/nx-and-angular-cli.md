@@ -50,9 +50,9 @@ Here's a quick side-by-side overview comparing the features between the Angular 
 
 {% callout type="info" title="Notes" %}
 
-\* You can setup a monorepo with the Angular CLI creating buildable Angular ng-packagr projects, but the DX is not as optimized compared to what you'd get with Nx.`
+\* You can setup a monorepo with the Angular CLI creating buildable Angular ng-packagr projects, but the DX is not as optimized compared to what you'd get with Nx.
 
-\*\* The Angular CLI has a [caching mechanism](https://angular.io/cli/cache) which persists the Webpack/ESBuild/"TS incremental build info" cache to disk. Nx leverages that cache as well but in addition adds a more powerful process-level caching on top that is framework agnostic.`
+\*\* The Angular CLI has a [caching mechanism](https://angular.io/cli/cache) which persists the Webpack/ESBuild/"TS incremental build info" cache to disk. Nx leverages that cache as well but in addition adds a more powerful process-level caching on top that is framework agnostic.
 
 {% /callout %}
 
@@ -140,7 +140,7 @@ Nx comes with slightly different terminology than the Angular CLI for some featu
 npx nx g @nx/angular:component my-component
 ```
 
-You can also run Angular Schematics through the Nx ClI. So something like this works as well:
+You can also run Angular Schematics through the Nx CLI. So something like this works as well:
 
 ```shell
 npx nx g @schematics/angular:component my-component

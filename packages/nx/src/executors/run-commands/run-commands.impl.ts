@@ -136,7 +136,7 @@ async function runInParallel(
     const r = await Promise.race(procs);
     if (!r.result) {
       process.stderr.write(
-        `Warning: run-commands command "${r.command}" exited with non-zero status code`
+        `Warning: command "${r.command}" exited with non-zero status code`
       );
       return false;
     } else {
@@ -148,7 +148,7 @@ async function runInParallel(
     if (failed.length > 0) {
       failed.forEach((f) => {
         process.stderr.write(
-          `Warning: run-commands command "${f.command}" exited with non-zero status code`
+          `Warning: command "${f.command}" exited with non-zero status code`
         );
       });
       return false;
@@ -200,7 +200,7 @@ async function runSerially(
     );
     if (!success) {
       process.stderr.write(
-        `Warning: run-commands command "${c.command}" exited with non-zero status code`
+        `Warning: command "${c.command}" exited with non-zero status code`
       );
       return false;
     }

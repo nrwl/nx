@@ -2,8 +2,8 @@ import * as memfs from 'memfs';
 
 import '../../../src/internal-testing-utils/mock-fs';
 
-import { TargetDefaultsPlugin } from './target-defaults-plugin';
-import { CreateNodesContext } from '../../utils/nx-plugin';
+import { getTargetInfo, TargetDefaultsPlugin } from './target-defaults-plugin';
+import { CreateNodesContext } from '../../project-graph/plugins';
 const {
   createNodes: [, createNodesFn],
 } = TargetDefaultsPlugin;
@@ -74,6 +74,7 @@ describe('target-defaults plugin', () => {
                 "dependsOn": [
                   "^build",
                 ],
+                "executor": "nx:run-commands",
               },
             },
           },
@@ -114,6 +115,10 @@ describe('target-defaults plugin', () => {
             "targets": {
               "test": {
                 "command": "jest",
+                "executor": "nx:run-script",
+                "options": {
+                  "script": "test",
+                },
               },
             },
           },
@@ -156,6 +161,10 @@ describe('target-defaults plugin', () => {
             "targets": {
               "test": {
                 "command": "jest",
+                "executor": "nx:run-script",
+                "options": {
+                  "script": "test",
+                },
               },
             },
           },
@@ -191,7 +200,7 @@ describe('target-defaults plugin', () => {
     ).toMatchInlineSnapshot(`{}`);
   });
 
-  it('should not add target if project does not define target', () => {
+  it('should only modify target if package json has script but its not included', () => {
     memfs.vol.fromJSON(
       {
         'package.json': JSON.stringify({
@@ -274,11 +283,13 @@ describe('target-defaults plugin', () => {
             ".": {
               "targets": {
                 "echo": {
+                  "executor": "nx:run-commands",
                   "options": {
                     "cwd": "{projectRoot}",
                   },
                 },
                 "echo2": {
+                  "executor": "nx:run-commands",
                   "options": {
                     "cwd": "{projectRoot}",
                   },
@@ -336,11 +347,13 @@ describe('target-defaults plugin', () => {
             ".": {
               "targets": {
                 "echo": {
+                  "executor": "nx:run-commands",
                   "options": {
                     "cwd": "{projectRoot}",
                   },
                 },
                 "echo2": {
+                  "executor": "nx:run-commands",
                   "options": {
                     "cwd": "{projectRoot}",
                   },
@@ -353,6 +366,69 @@ describe('target-defaults plugin', () => {
                 },
               },
             },
+          },
+        }
+      `);
+    });
+  });
+
+  describe('get target info', () => {
+    it('should include command for single command', () => {
+      const result = getTargetInfo(
+        'echo',
+        {
+          echo: {
+            command: 'echo hi',
+          },
+        },
+        null
+      );
+      expect(result).toMatchInlineSnapshot(`
+        {
+          "command": "echo hi",
+        }
+      `);
+    });
+
+    it('should include command for run-commands', () => {
+      const result = getTargetInfo(
+        'echo',
+        {
+          echo: {
+            executor: 'nx:run-commands',
+            options: {
+              command: 'echo hi',
+              cwd: '{projectRoot}',
+            },
+          },
+        },
+        null
+      );
+      expect(result).toMatchInlineSnapshot(`
+        {
+          "executor": "nx:run-commands",
+          "options": {
+            "command": "echo hi",
+          },
+        }
+      `);
+    });
+
+    it('should include script for run-script', () => {
+      expect(
+        getTargetInfo('build', null, {
+          build: {
+            executor: 'nx:run-script',
+            options: {
+              script: 'build',
+            },
+          },
+        })
+      ).toMatchInlineSnapshot(`
+        {
+          "executor": "nx:run-script",
+          "options": {
+            "script": "build",
           },
         }
       `);

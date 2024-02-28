@@ -173,6 +173,7 @@ describe('lib', () => {
       const json = readProjectConfiguration(tree, 'my-lib');
       expect(json.root).toEqual('my-lib');
       expect(json.targets.build).toBeDefined();
+      expect(json.targets.test).toBeDefined();
     });
 
     it('should not generate a module file and index.ts should be empty', async () => {
@@ -651,7 +652,7 @@ describe('lib', () => {
                   "error",
                   {
                     "type": "attribute",
-                    "prefix": "proj",
+                    "prefix": "lib",
                     "style": "camelCase"
                   }
                 ],
@@ -659,7 +660,7 @@ describe('lib', () => {
                   "error",
                   {
                     "type": "element",
-                    "prefix": "proj",
+                    "prefix": "lib",
                     "style": "kebab-case"
                   }
                 ]
@@ -1200,7 +1201,7 @@ describe('lib', () => {
                   "@angular-eslint/component-selector": [
                     "error",
                     {
-                      "prefix": "proj",
+                      "prefix": "lib",
                       "style": "kebab-case",
                       "type": "element",
                     },
@@ -1208,7 +1209,7 @@ describe('lib', () => {
                   "@angular-eslint/directive-selector": [
                     "error",
                     {
-                      "prefix": "proj",
+                      "prefix": "lib",
                       "style": "camelCase",
                       "type": "attribute",
                     },
@@ -1260,7 +1261,7 @@ describe('lib', () => {
                   "@angular-eslint/component-selector": [
                     "error",
                     {
-                      "prefix": "proj",
+                      "prefix": "lib",
                       "style": "kebab-case",
                       "type": "element",
                     },
@@ -1268,7 +1269,7 @@ describe('lib', () => {
                   "@angular-eslint/directive-selector": [
                     "error",
                     {
-                      "prefix": "proj",
+                      "prefix": "lib",
                       "style": "camelCase",
                       "type": "attribute",
                     },

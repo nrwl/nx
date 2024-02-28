@@ -99,14 +99,13 @@ ______________________________________________________
             (__)\       )\/\
                 ||----w |
                 ||     ||
-Done in 0.14s.
+ Done in 0.14s.
 
- ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
- >  NX   Successfully ran target serve for project cow
+NX   Successfully ran target serve for project cow
 
-
-   See Nx Cloud run details at https://nx.app/runs/nZBYYBEuIfG
+See Nx Cloud run details at https://nx.app/runs/nZBYYBEuIfG
 ```
 
 ## View the Project Graph

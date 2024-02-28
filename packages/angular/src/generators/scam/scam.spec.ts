@@ -30,7 +30,7 @@ describe('SCAM Generator', () => {
       import { CommonModule } from '@angular/common';
 
       @Component({
-        selector: 'proj-example',
+        selector: 'example',
         templateUrl: './example.component.html',
         styleUrl: './example.component.css'
       })
@@ -163,7 +163,7 @@ describe('SCAM Generator', () => {
         import { CommonModule } from '@angular/common';
 
         @Component({
-          selector: 'proj-example',
+          selector: 'example',
           templateUrl: './example.component.html',
           styleUrl: './example.component.css'
         })
@@ -207,7 +207,7 @@ describe('SCAM Generator', () => {
         import { CommonModule } from '@angular/common';
 
         @Component({
-          selector: 'proj-example',
+          selector: 'example',
           templateUrl: './example.component.html',
           styleUrl: './example.component.css'
         })
