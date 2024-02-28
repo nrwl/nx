@@ -54,6 +54,7 @@ title="Tutorial: Standalone React Application"
 Create a new React monorepo with the following command:
 
 ```{% command="npx create-nx-workspace@latest react-monorepo --preset=react-monorepo" path="~" %}
+
 NX   Let's create a new workspace [https://nx.dev/getting-started/intro]
 
 ✔ Application name · react-store

@@ -34,6 +34,9 @@ Here's the source code of the final result for this tutorial.
 Create a new standalone React application with the following command:
 
 ```{% command="npx create-nx-workspace@latest myreactapp --preset=react-standalone" path="~" %}
+
+NX   Let's create a new workspace [https://nx.dev/getting-started/intro]
+
 ✔ Which bundler would you like to use? · vite
 ✔ Test runner to use for end to end (E2E) tests · cypress
 ✔ Default stylesheet format · css
@@ -144,7 +147,7 @@ nx show project myreactapp --web
               "externalDependencies": ["vite"]
             }
           ],
-          "outputs": ["{projectRoot}/build/myreactapp"],
+          "outputs": ["{projectRoot}/dist/myreactapp"],
           "executor": "nx:run-commands",
           "configurations": {}
         }
@@ -852,8 +855,8 @@ Here's some more things you can dive into next:
 - Learn how to [migrate your CRA app to Nx](/recipes/react/migration-cra)
 - [Learn how to setup Tailwind](/recipes/react/using-tailwind-css-in-react)
 - [Setup Storybook for our shared UI library](/recipes/storybook/overview-react)
-- [Speed up CI: Run only tasks for project that got changed](/features/run-tasks#run-tasks-affected-by-a-pr)]
-- [Speed up CI: Share your cache](/ci/features/remote-cache)]
+- [Speed up CI: Run only tasks for project that got changed](/features/run-tasks#run-tasks-affected-by-a-pr)
+- [Speed up CI: Share your cache](/ci/features/remote-cache)
 - [Speed up CI: Distribute your tasks across machines](/ci/features/distribute-task-execution)
 
 Also, make sure you
