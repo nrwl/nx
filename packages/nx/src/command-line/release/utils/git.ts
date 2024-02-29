@@ -46,7 +46,8 @@ export async function getLatestGitTagForPattern(
   additionalInterpolationData = {}
 ): Promise<{ tag: string; extractedVersion: string } | null> {
   try {
-    const tags = await execCommand('git', [
+    let tags: string[];
+    tags = await execCommand('git', [
       'tag',
       '--sort',
       '-v:refname',
@@ -58,6 +59,18 @@ export async function getLatestGitTagForPattern(
         .map((t) => t.trim())
         .filter(Boolean)
     );
+    if (!tags.length) {
+      // try again, but include all tags on the repo instead of just --merged ones
+      tags = await execCommand('git', ['tag', '--sort', '-v:refname']).then(
+        (r) =>
+          r
+            .trim()
+            .split('\n')
+            .map((t) => t.trim())
+            .filter(Boolean)
+      );
+    }
+
     if (!tags.length) {
       return null;
     }

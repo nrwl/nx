@@ -44,7 +44,7 @@ describe('nx release multiple release branches', () => {
   let pkg2: string;
   let pkg3: string;
 
-  beforeAll(() => {
+  beforeEach(() => {
     newProject({
       unsetProjectNameAndRootFormat: false,
       packages: ['@nx/js'],
@@ -58,15 +58,8 @@ describe('nx release multiple release branches', () => {
 
     pkg3 = uniq('my-pkg-3');
     runCLI(`generate @nx/workspace:npm-package ${pkg3}`);
-
-    // Update pkg2 to depend on pkg1
-    updateJson(`${pkg2}/package.json`, (json) => {
-      json.dependencies ??= {};
-      json.dependencies[`@proj/${pkg1}`] = '0.0.0';
-      return json;
-    });
   });
-  afterAll(() => cleanupProject());
+  afterEach(() => cleanupProject());
 
   it('git-tag version resolver should not detect tags in other branches', async () => {
     updateJson<NxJsonConfiguration>('nx.json', (json) => {
@@ -110,7 +103,7 @@ describe('nx release multiple release branches', () => {
       license: 'MIT',
     }));
     runCommand(`git add ${pkg2}/package.json`);
-    runCommand(`git commit -m "fix(${pkg2}): new feature 1"`);
+    runCommand(`git commit -m "fix(${pkg2}): new fix 1"`);
     runCommand(`git checkout release/0.x`);
     const versionResult0x = runCLI(`release version patch`);
 
@@ -264,6 +257,162 @@ describe('nx release multiple release branches', () => {
       -   "version": "0.0.7",
       +   "version": "0.0.8",
       "scripts": {
+
+
+      NX   Updating npm lock file
+
+
+      NX   Committing changes with git
+
+
+      NX   Tagging commit with git
+
+
+    `);
+  });
+
+  it('git-tag version resolver should detect tags in other branches if none are reachable from the current commit', async () => {
+    updateJson<NxJsonConfiguration>('nx.json', (json) => {
+      json.release = {
+        version: {
+          git: {
+            commit: true,
+            tag: true,
+          },
+          generatorOptions: {
+            currentVersionResolver: 'git-tag',
+          },
+        },
+      };
+
+      return json;
+    });
+
+    runCommand(`git checkout -b test-main`);
+    runCommand(`git add .`);
+    runCommand(`git commit -m "chore: initial commit"`);
+
+    runCommand(`git checkout -b release/1.x`);
+
+    // update my-pkg-1 with a feature commit
+    updateJson(`${pkg1}/package.json`, (json) => ({
+      ...json,
+      license: 'MIT',
+    }));
+    runCommand(`git add ${pkg1}/package.json`);
+    runCommand(`git commit -m "feat(${pkg1}): new feature 1"`);
+
+    const versionResult1x = runCLI(`release version minor --first-release`);
+
+    runCommand(`git checkout test-main`);
+    // update my-pkg-2 with a fix commit
+    updateJson(`${pkg2}/package.json`, (json) => ({
+      ...json,
+      license: 'MIT',
+    }));
+    runCommand(`git add ${pkg2}/package.json`);
+    runCommand(`git commit -m "fix(${pkg2}): new fix 1"`);
+    runCommand(`git checkout -b release/2.x`);
+    const versionResult2x = runCLI(`release version major`);
+
+    expect(versionResult1x).toMatchInlineSnapshot(`
+
+      NX   Running release version for project: {project-name}
+
+      {project-name} 🔍 Reading data for package "@proj/{project-name}" from {project-name}/package.json
+      {project-name} 📄 Unable to resolve the current version from git tag using pattern "v{version}". Falling back to the version on disk of 0.0.0
+      {project-name} 📄 Using the provided version specifier "minor".
+      {project-name} ✍️  New version 0.1.0 written to {project-name}/package.json
+
+      NX   Running release version for project: {project-name}
+
+      {project-name} 🔍 Reading data for package "@proj/{project-name}" from {project-name}/package.json
+      {project-name} 📄 Using the current version 0.0.0 already resolved from disk fallback.
+      {project-name} 📄 Using the provided version specifier "minor".
+      {project-name} ✍️  New version 0.1.0 written to {project-name}/package.json
+
+      NX   Running release version for project: {project-name}
+
+      {project-name} 🔍 Reading data for package "@proj/{project-name}" from {project-name}/package.json
+      {project-name} 📄 Using the current version 0.0.0 already resolved from disk fallback.
+      {project-name} 📄 Using the provided version specifier "minor".
+      {project-name} ✍️  New version 0.1.0 written to {project-name}/package.json
+
+
+      "name": "@proj/{project-name}",
+      -   "version": "0.0.0",
+      +   "version": "0.1.0",
+      "scripts": {
+
+      }
+      +
+
+
+      "name": "@proj/{project-name}",
+      -   "version": "0.0.0",
+      +   "version": "0.1.0",
+      "scripts": {
+
+
+      "name": "@proj/{project-name}",
+      -   "version": "0.0.0",
+      +   "version": "0.1.0",
+      "scripts": {
+
+
+      NX   Updating npm lock file
+
+
+      NX   Committing changes with git
+
+
+      NX   Tagging commit with git
+
+
+    `);
+    expect(versionResult2x).toMatchInlineSnapshot(`
+
+      NX   Running release version for project: {project-name}
+
+      {project-name} 🔍 Reading data for package "@proj/{project-name}" from {project-name}/package.json
+      {project-name} 📄 Resolved the current version as 0.1.0 from git tag "v0.1.0".
+      {project-name} 📄 Using the provided version specifier "major".
+      {project-name} ✍️  New version 1.0.0 written to {project-name}/package.json
+
+      NX   Running release version for project: {project-name}
+
+      {project-name} 🔍 Reading data for package "@proj/{project-name}" from {project-name}/package.json
+      {project-name} 📄 Using the current version 0.1.0 already resolved from git tag "v0.1.0".
+      {project-name} 📄 Using the provided version specifier "major".
+      {project-name} ✍️  New version 1.0.0 written to {project-name}/package.json
+
+      NX   Running release version for project: {project-name}
+
+      {project-name} 🔍 Reading data for package "@proj/{project-name}" from {project-name}/package.json
+      {project-name} 📄 Using the current version 0.1.0 already resolved from git tag "v0.1.0".
+      {project-name} 📄 Using the provided version specifier "major".
+      {project-name} ✍️  New version 1.0.0 written to {project-name}/package.json
+
+
+      "name": "@proj/{project-name}",
+      -   "version": "0.0.0",
+      +   "version": "1.0.0",
+      "scripts": {
+
+
+      "name": "@proj/{project-name}",
+      -   "version": "0.0.0",
+      +   "version": "1.0.0",
+      "scripts": {
+
+
+      "name": "@proj/{project-name}",
+      -   "version": "0.0.0",
+      +   "version": "1.0.0",
+      "scripts": {
+
+      }
+      +
 
 
       NX   Updating npm lock file
