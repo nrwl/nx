@@ -218,8 +218,6 @@ export function buildProjectsConfigurationsFromProjectPathsAndPlugins(
     const matchedFiles = [];
 
     performance.mark(`${plugin.name}:createNodes - start`);
-    // Set this globally to allow plugins to know if they are being called from the project graph creation
-    global.NX_GRAPH_CREATION = true;
 
     for (const file of projectFiles) {
       if (minimatch(file, pattern, { dot: true })) {
@@ -305,6 +303,9 @@ export function readProjectConfigurationsFromRootMap(
   const errors: Map<string, string[]> = new Map();
 
   for (const [root, configuration] of projectRootMap.entries()) {
+    // We're setting `// targets` as a comment `targets` is empty due to Project Crystal.
+    // Strip it before returning configuration for usage.
+    if (configuration['// targets']) delete configuration['// targets'];
     if (!configuration.name) {
       try {
         const { name } = readJsonFile(join(root, 'package.json'));
