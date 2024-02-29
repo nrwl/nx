@@ -4,11 +4,11 @@ import {
   cleanupProject,
   killProcessAndPorts,
   newProject,
-  readFile,
   readJson,
   runCLI,
   runCommandUntil,
   runE2ETests,
+  setCypressWebServerTimeout,
   uniq,
   updateFile,
 } from '@nx/e2e/utils';
@@ -377,20 +377,8 @@ describe('Angular Module Federation', () => {
     const buildRemoteOutput = runCLI(`build ${remote}`);
     expect(buildRemoteOutput).toContain('Successfully ran target build');
 
-    // increase default timeout for the Cypress web server, MF apps can take longer to start
-    const cypressConfig = readFile(`${host}-e2e/cypress.config.ts`);
-    updateFile(
-      `${host}-e2e/cypress.config.ts`,
-      cypressConfig.replace(
-        `nxE2EPreset(__filename, {`,
-        `nxE2EPreset(__filename, {
-          webServerConfig: {
-            timeout: 60000,
-          },`
-      )
-    );
-
     if (runE2ETests('cypress')) {
+      setCypressWebServerTimeout(`${host}-e2e/cypress.config.ts`);
       const e2eProcess = await runCommandUntil(`e2e ${host}-e2e`, (output) =>
         output.includes('All specs passed!')
       );
@@ -481,20 +469,8 @@ describe('Angular Module Federation', () => {
     const buildRemoteOutput = runCLI(`build ${remote}`);
     expect(buildRemoteOutput).toContain('Successfully ran target build');
 
-    // increase default timeout for the Cypress web server, MF apps can take longer to start
-    const cypressConfig = readFile(`${host}-e2e/cypress.config.ts`);
-    updateFile(
-      `${host}-e2e/cypress.config.ts`,
-      cypressConfig.replace(
-        `nxE2EPreset(__filename, {`,
-        `nxE2EPreset(__filename, {
-          webServerConfig: {
-            timeout: 60000,
-          },`
-      )
-    );
-
     if (runE2ETests('cypress')) {
+      setCypressWebServerTimeout(`${host}-e2e/cypress.config.ts`);
       const e2eProcess = await runCommandUntil(`e2e ${host}-e2e`, (output) =>
         output.includes('All specs passed!')
       );

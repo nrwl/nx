@@ -13,6 +13,7 @@ import {
   runCLI,
   runCommandUntil,
   runE2ETests,
+  setCypressWebServerTimeout,
   tmpProjPath,
   uniq,
   updateFile,
@@ -127,6 +128,7 @@ describe('Angular Projects', () => {
 
     // check e2e tests
     if (runE2ETests('cypress')) {
+      setCypressWebServerTimeout(`${app1}-e2e/cypress.config.ts`);
       const e2eResults = runCLI(`e2e ${app1}-e2e`);
       expect(e2eResults).toContain('All specs passed!');
       expect(await killPort(4200)).toBeTruthy();
