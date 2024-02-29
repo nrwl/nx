@@ -164,7 +164,7 @@ describe('nx release multiple release branches', () => {
       "scripts": {
 
 
-      NX   Updating npm lock file
+      NX   Updating {package-manager} lock file
 
 
       NX   Committing changes with git
@@ -219,7 +219,7 @@ describe('nx release multiple release branches', () => {
       "scripts": {
 
 
-      NX   Updating npm lock file
+      NX   Updating {package-manager} lock file
 
 
       NX   Committing changes with git
@@ -271,7 +271,7 @@ describe('nx release multiple release branches', () => {
       "scripts": {
 
 
-      NX   Updating npm lock file
+      NX   Updating {package-manager} lock file
 
 
       NX   Committing changes with git
@@ -372,7 +372,7 @@ describe('nx release multiple release branches', () => {
       "scripts": {
 
 
-      NX   Updating npm lock file
+      NX   Updating {package-manager} lock file
 
 
       NX   Committing changes with git
@@ -427,7 +427,7 @@ describe('nx release multiple release branches', () => {
       "scripts": {
 
 
-      NX   Updating npm lock file
+      NX   Updating {package-manager} lock file
 
 
       NX   Committing changes with git
