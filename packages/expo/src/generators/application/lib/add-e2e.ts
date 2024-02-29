@@ -19,8 +19,8 @@ export async function addE2e(
   const port = hasPlugin ? 8081 : 4200;
   switch (options.e2eTestRunner) {
     case 'cypress': {
-      const hasNxExportPlugin = hasExpoPlugin(tree);
-      if (!hasNxExportPlugin) {
+      const hasNxExpoPlugin = hasExpoPlugin(tree);
+      if (!hasNxExpoPlugin) {
         webStaticServeGenerator(tree, {
           buildTarget: `${options.projectName}:export`,
           targetName: 'serve-static',
@@ -50,7 +50,7 @@ export async function addE2e(
         devServerTarget: `${options.projectName}:serve`,
         port,
         baseUrl: `http://localhost:${port}`,
-        ciWebServerCommand: hasNxExportPlugin
+        ciWebServerCommand: hasNxExpoPlugin
           ? `nx run ${options.projectName}:serve-static`
           : undefined,
         jsx: true,
