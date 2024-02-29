@@ -67,6 +67,7 @@ export function addPlugin(tree: Tree) {
       options: {
         buildTargetName: 'build',
         serveTargetName: 'serve',
+        serveStaticTargetName: 'serve-static',
       },
     });
   }

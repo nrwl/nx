@@ -28,6 +28,12 @@ export async function addE2e(host: Tree, options: NormalizedSchema) {
       bundler: 'vite',
       skipFormat: true,
       devServerTarget: `${options.projectName}:serve`,
+      webServerCommands: {
+        default: `${getPackageManagerCommand().exec} nx serve ${
+          options.projectName
+        }`,
+      },
+      ciWebServerCommand: `nx run ${options.projectName}:serve-static`,
       baseUrl: 'http://localhost:4200',
       jsx: true,
       addPlugin: true,
