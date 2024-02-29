@@ -2315,6 +2315,14 @@
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
+              },
+              {
+                "name": "Publish Rust Crates",
+                "path": "/recipes/nx-release/publish-rust-crates",
+                "id": "publish-rust-crates",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
               }
             ],
             "disableCollapsible": false
@@ -4139,6 +4147,14 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
+          },
+          {
+            "name": "Publish Rust Crates",
+            "path": "/recipes/nx-release/publish-rust-crates",
+            "id": "publish-rust-crates",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -4179,6 +4195,14 @@
         "name": "Automate GitHub Releases",
         "path": "/recipes/nx-release/automate-github-releases",
         "id": "automate-github-releases",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Publish Rust Crates",
+        "path": "/recipes/nx-release/publish-rust-crates",
+        "id": "publish-rust-crates",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false

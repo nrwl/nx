@@ -1015,6 +1015,13 @@
       "id": "automate-github-releases",
       "name": "Automate GitHub Releases",
       "path": "/recipes/nx-release/automate-github-releases"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/nx-release/publish-rust-crates",
+      "id": "publish-rust-crates",
+      "name": "Publish Rust Crates",
+      "path": "/recipes/nx-release/publish-rust-crates"
     }
   ],
   "database": [
