@@ -218,8 +218,6 @@ export function buildProjectsConfigurationsFromProjectPathsAndPlugins(
     const matchedFiles = [];
 
     performance.mark(`${plugin.name}:createNodes - start`);
-    // Set this globally to allow plugins to know if they are being called from the project graph creation
-    global.NX_GRAPH_CREATION = true;
 
     for (const file of projectFiles) {
       if (minimatch(file, pattern, { dot: true })) {
