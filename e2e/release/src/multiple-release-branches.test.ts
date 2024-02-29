@@ -1,9 +1,11 @@
 import { NxJsonConfiguration } from '@nx/devkit';
 import {
   cleanupProject,
+  getSelectedPackageManager,
   newProject,
   runCLI,
   runCommand,
+  tmpProjPath,
   uniq,
   updateJson,
 } from '@nx/e2e/utils';
@@ -13,7 +15,11 @@ expect.addSnapshotSerializer({
     return (
       str
         // Remove all output unique to specific projects to ensure deterministic snapshots
+        .replaceAll(`/private/${tmpProjPath()}`, '')
+        .replaceAll(tmpProjPath(), '')
+        .replaceAll('/private/', '')
         .replaceAll(/my-pkg-\d+/g, '{project-name}')
+        .replaceAll(' in /{project-name}', ' in {project-name}')
         .replaceAll(
           /integrity:\s*.*/g,
           'integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
@@ -22,12 +28,21 @@ expect.addSnapshotSerializer({
         .replaceAll(/\d*B  index\.js/g, 'XXB  index.js')
         .replaceAll(/\d*B  project\.json/g, 'XXB  project.json')
         .replaceAll(/\d*B package\.json/g, 'XXXB package.json')
+        .replaceAll(/\d*B CHANGELOG\.md/g, 'XXXB CHANGELOG.md')
         .replaceAll(/size:\s*\d*\s?B/g, 'size: XXXB')
         .replaceAll(/\d*\.\d*\s?kB/g, 'XXX.XXX kb')
-        .replaceAll(/[a-fA-F0-9]{7}/g, '{COMMIT_SHA}')
-        .replaceAll(/Test @[\w\d]+/g, 'Test @{COMMIT_AUTHOR}')
-        // Normalize the version title date.
+        // Normalize the version title date
         .replaceAll(/\(\d{4}-\d{2}-\d{2}\)/g, '(YYYY-MM-DD)')
+        .replaceAll('package-lock.json', '{lock-file}')
+        .replaceAll('yarn.lock', '{lock-file}')
+        .replaceAll('pnpm-lock.yaml', '{lock-file}')
+        .replaceAll('npm install --package-lock-only', '{lock-file-command}')
+        .replaceAll(
+          'yarn install --mode update-lockfile',
+          '{lock-file-command}'
+        )
+        .replaceAll('pnpm install --lockfile-only', '{lock-file-command}')
+        .replaceAll(getSelectedPackageManager(), '{package-manager}')
         // We trim each line to reduce the chances of snapshot flakiness
         .split('\n')
         .map((r) => r.trim())
