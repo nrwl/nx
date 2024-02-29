@@ -303,6 +303,9 @@ export function readProjectConfigurationsFromRootMap(
   const errors: Map<string, string[]> = new Map();
 
   for (const [root, configuration] of projectRootMap.entries()) {
+    // We're setting `// targets` as a comment `targets` is empty due to Project Crystal.
+    // Strip it before returning configuration for usage.
+    if (configuration['// targets']) delete configuration['// targets'];
     if (!configuration.name) {
       try {
         const { name } = readJsonFile(join(root, 'package.json'));
