@@ -150,6 +150,11 @@ In this case you need to provide a devServerTarget,'<projectName>:<targetName>[:
     throw new Error('Either baseUrl or devServerTarget must be provided');
   }
 
+  const nxJson = readNxJson(tree);
+  options.addPlugin ??=
+    process.env.NX_ADD_PLUGINS !== 'false' &&
+    nxJson.useInferencePlugins !== false;
+
   return {
     ...options,
     bundler: options.bundler ?? 'webpack',

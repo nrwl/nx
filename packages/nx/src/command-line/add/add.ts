@@ -112,6 +112,7 @@ async function initializePlugin(
       updatePackageScripts = options.updatePackageScripts;
     } else {
       updatePackageScripts =
+        readNxJson().useInferencePlugins !== false &&
         process.env.NX_ADD_PLUGINS !== 'false' &&
         coreNxPlugins.includes(pkgName);
     }

@@ -1,4 +1,4 @@
-import { type Tree } from '@nx/devkit';
+import { readNxJson, type Tree } from '@nx/devkit';
 import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { type NxRemixGeneratorSchema } from '../schema';
 import { Linter } from '@nx/eslint';
@@ -26,7 +26,11 @@ export async function normalizeOptions(
     });
   options.rootProject = projectRoot === '.';
   options.projectNameAndRootFormat = projectNameAndRootFormat;
-  options.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
+  const nxJson = readNxJson(tree);
+  const addPluginDefault =
+    process.env.NX_ADD_PLUGINS !== 'false' &&
+    nxJson.useInferencePlugins !== false;
+  options.addPlugin ??= addPluginDefault;
 
   const e2eProjectName = options.rootProject ? 'e2e' : `${projectName}-e2e`;
   const e2eProjectRoot = options.rootProject ? 'e2e' : `${projectRoot}-e2e`;

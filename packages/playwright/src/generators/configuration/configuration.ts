@@ -39,7 +39,10 @@ export async function configurationGeneratorInternal(
   tree: Tree,
   options: ConfigurationGeneratorSchema
 ) {
-  options.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
+  const nxJson = readNxJson(tree);
+  options.addPlugin ??=
+    process.env.NX_ADD_PLUGINS !== 'false' &&
+    nxJson.useInferencePlugins !== false;
   const tasks: GeneratorCallback[] = [];
   tasks.push(
     await initGenerator(tree, {

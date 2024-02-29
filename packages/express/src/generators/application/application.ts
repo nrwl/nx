@@ -2,6 +2,7 @@ import type { GeneratorCallback, Tree } from '@nx/devkit';
 import {
   addDependenciesToPackageJson,
   formatFiles,
+  readNxJson,
   runTasksInSerial,
   toJS,
   updateJson,
@@ -114,7 +115,11 @@ async function normalizeOptions(
     callingGenerator: '@nx/express:application',
   });
   options.projectNameAndRootFormat = projectNameAndRootFormat;
-  options.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
+  const nxJson = readNxJson(host);
+  const addPlugin =
+    process.env.NX_ADD_PLUGINS !== 'false' &&
+    nxJson.useInferencePlugins !== false;
+  options.addPlugin ??= addPlugin;
 
   return {
     ...options,

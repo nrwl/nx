@@ -74,7 +74,11 @@ export async function initEsLint(
   tree: Tree,
   options: LinterInitOptions
 ): Promise<GeneratorCallback> {
-  options.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
+  const nxJson = readNxJson(tree);
+  const addPluginDefault =
+    process.env.NX_ADD_PLUGINS !== 'false' &&
+    nxJson.useInferencePlugins !== false;
+  options.addPlugin ??= addPluginDefault;
   const hasPlugin = hasEslintPlugin(tree);
   const rootEslintFile = findEslintFile(tree);
 
