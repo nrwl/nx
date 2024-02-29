@@ -142,9 +142,6 @@ describe('nx release multiple release branches', () => {
       +   "version": "0.0.7",
       "scripts": {
 
-      }
-      +
-
 
       "name": "@proj/{project-name}",
       -   "version": "0.0.0",
@@ -405,14 +402,14 @@ describe('nx release multiple release branches', () => {
       +   "version": "1.0.0",
       "scripts": {
 
+      }
+      +
+
 
       "name": "@proj/{project-name}",
       -   "version": "0.0.0",
       +   "version": "1.0.0",
       "scripts": {
-
-      }
-      +
 
 
       NX   Updating npm lock file
