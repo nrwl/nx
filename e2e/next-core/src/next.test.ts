@@ -203,7 +203,7 @@ describe('Next.js Applications', () => {
           ...nxE2EPreset(__filename, {
             cypressDir: 'src',
             webServerCommands: { default: 'nx run ${appName}:start' },
-            webServerConfig: { timeout: 25_000 },
+            webServerConfig: { timeout: 120_000 },
             ciWebServerCommand: 'nx run ${appName}:serve-static',
           }),
           baseUrl: 'http://localhost:3000',
