@@ -2157,17 +2157,6 @@
                 "isExternal": false,
                 "path": "/recipes/angular/migration/angular-manual",
                 "tags": []
-              },
-              {
-                "id": "angularjs",
-                "name": "Migrating from AngularJS",
-                "description": "",
-                "mediaImage": "",
-                "file": "shared/migration/migration-angularjs",
-                "itemList": [],
-                "isExternal": false,
-                "path": "/recipes/angular/migration/angularjs",
-                "tags": []
               }
             ],
             "isExternal": false,
@@ -3788,17 +3777,6 @@
             "isExternal": false,
             "path": "/recipes/angular/migration/angular-manual",
             "tags": []
-          },
-          {
-            "id": "angularjs",
-            "name": "Migrating from AngularJS",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/migration/migration-angularjs",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/angular/migration/angularjs",
-            "tags": []
           }
         ],
         "isExternal": false,
@@ -3904,17 +3882,6 @@
         "isExternal": false,
         "path": "/recipes/angular/migration/angular-manual",
         "tags": []
-      },
-      {
-        "id": "angularjs",
-        "name": "Migrating from AngularJS",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/migration/migration-angularjs",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/angular/migration/angularjs",
-        "tags": []
       }
     ],
     "isExternal": false,
@@ -3952,17 +3919,6 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/angular/migration/angular-manual",
-    "tags": []
-  },
-  "/recipes/angular/migration/angularjs": {
-    "id": "angularjs",
-    "name": "Migrating from AngularJS",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/migration/migration-angularjs",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/angular/migration/angularjs",
     "tags": []
   },
   "/recipes/angular/use-environment-variables-in-angular": {

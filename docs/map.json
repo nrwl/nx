@@ -583,11 +583,6 @@
                       "name": "Migrating Angular Application manually",
                       "id": "angular-manual",
                       "file": "shared/migration/angular-manual"
-                    },
-                    {
-                      "name": "Migrating from AngularJS",
-                      "id": "angularjs",
-                      "file": "shared/migration/migration-angularjs"
                     }
                   ]
                 },
