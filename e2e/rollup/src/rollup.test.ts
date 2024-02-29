@@ -13,7 +13,7 @@ import {
 import { join } from 'path';
 
 describe('Rollup Plugin', () => {
-  beforeAll(() => newProject());
+  beforeAll(() => newProject({ packages: ['@nx/rollup', '@nx/js'] }));
   afterAll(() => cleanupProject());
 
   it('should be able to setup project to build node programs with rollup and different compilers', async () => {
@@ -118,5 +118,47 @@ describe('Rollup Plugin', () => {
     const jsLib = uniq('jslib');
     runCLI(`generate @nx/js:lib ${jsLib} --bundler rollup`);
     expect(() => runCLI(`build ${jsLib}`)).not.toThrow();
+  });
+
+  it('should be able to build libs generated with @nx/js:lib --bundler rollup with a custom rollup.config.{cjs|mjs}', () => {
+    const jsLib = uniq('jslib');
+    runCLI(`generate @nx/js:lib ${jsLib} --bundler rollup`);
+    updateFile(
+      `libs/${jsLib}/rollup.config.cjs`,
+      `module.exports = {
+        output: {
+          format: "cjs",
+          dir: "dist/test",
+          name: "Mylib",
+          entryFileNames: "[name].cjs.js",
+          chunkFileNames: "[name].cjs.js"
+        }
+      }`
+    );
+    updateJson(join('libs', jsLib, 'project.json'), (config) => {
+      config.targets.build.options.rollupConfig = `libs/${jsLib}/rollup.config.cjs`;
+      return config;
+    });
+    expect(() => runCLI(`build ${jsLib}`)).not.toThrow();
+    checkFilesExist(`dist/test/index.cjs.js`);
+
+    updateFile(
+      `libs/${jsLib}/rollup.config.mjs`,
+      `export default {
+        output: {
+          format: "es",
+          dir: "dist/test",
+          name: "Mylib",
+          entryFileNames: "[name].mjs.js",
+          chunkFileNames: "[name].mjs.js"
+        }
+      }`
+    );
+    updateJson(join('libs', jsLib, 'project.json'), (config) => {
+      config.targets.build.options.rollupConfig = `libs/${jsLib}/rollup.config.mjs`;
+      return config;
+    });
+    expect(() => runCLI(`build ${jsLib}`)).not.toThrow();
+    checkFilesExist(`dist/test/index.mjs.js`);
   });
 });

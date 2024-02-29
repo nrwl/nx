@@ -97,7 +97,9 @@ export default defineConfig({
 });
 ```
 
-Note: The `nxE2EPreset` is a collection of default settings, but is not necessary for task splitting.
+{% callout type="note" title="Using setupNodeEvents function" %}
+If you use the `setupNodeEvents` function in your Cypress configuration, make sure to invoke the same function that is returned by `nxE2EPreset`. See the recipe on [using `setupNodeEvents` with Cypress preset](/recipes/cypress/cypress-setup-node-events) for more details.
+{% /callout %}
 
 {% /tab %}
 {% tab label="Nx < 18" %}

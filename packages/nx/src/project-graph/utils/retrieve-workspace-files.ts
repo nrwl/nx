@@ -17,6 +17,7 @@ import {
 } from '../../utils/workspace-context';
 import { buildAllWorkspaceFiles } from './build-all-workspace-files';
 import { join } from 'path';
+import { shutdownPluginWorkers } from '../plugins/plugin-pool';
 
 /**
  * Walks the workspace directory to create the `projectFileMap`, `ProjectConfigurations` and `allWorkspaceFiles`
@@ -68,8 +69,15 @@ export async function retrieveProjectConfigurations(
   nxJson: NxJsonConfiguration
 ): Promise<RetrievedGraphNodes> {
   const plugins = await loadNxPlugins(nxJson?.plugins ?? [], workspaceRoot);
-
-  return _retrieveProjectConfigurations(workspaceRoot, nxJson, plugins);
+  const projects = await _retrieveProjectConfigurations(
+    workspaceRoot,
+    nxJson,
+    plugins
+  );
+  if (!global.NX_GRAPH_CREATION) {
+    await shutdownPluginWorkers();
+  }
+  return projects;
 }
 
 export async function retrieveProjectConfigurationsWithAngularProjects(

@@ -2464,6 +2464,17 @@
             "tags": []
           },
           {
+            "id": "cypress-setup-node-events",
+            "name": "Using setupNodeEvents with Cypress preset",
+            "description": "A guide on using the setupNodeEvents function with @nx/cypress/plugins/cypress-preset",
+            "mediaImage": "",
+            "file": "shared/packages/cypress/cypress-setup-node-events",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/cypress/cypress-setup-node-events",
+            "tags": []
+          },
+          {
             "id": "cypress-v11-migration",
             "name": "Cypress v11 Migration Guide",
             "description": "Cypress v11 Migration Guide",
@@ -4437,6 +4448,17 @@
         "tags": []
       },
       {
+        "id": "cypress-setup-node-events",
+        "name": "Using setupNodeEvents with Cypress preset",
+        "description": "A guide on using the setupNodeEvents function with @nx/cypress/plugins/cypress-preset",
+        "mediaImage": "",
+        "file": "shared/packages/cypress/cypress-setup-node-events",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/cypress/cypress-setup-node-events",
+        "tags": []
+      },
+      {
         "id": "cypress-v11-migration",
         "name": "Cypress v11 Migration Guide",
         "description": "Cypress v11 Migration Guide",
@@ -4461,6 +4483,17 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/cypress/cypress-component-testing",
+    "tags": []
+  },
+  "/recipes/cypress/cypress-setup-node-events": {
+    "id": "cypress-setup-node-events",
+    "name": "Using setupNodeEvents with Cypress preset",
+    "description": "A guide on using the setupNodeEvents function with @nx/cypress/plugins/cypress-preset",
+    "mediaImage": "",
+    "file": "shared/packages/cypress/cypress-setup-node-events",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/cypress/cypress-setup-node-events",
     "tags": []
   },
   "/recipes/cypress/cypress-v11-migration": {

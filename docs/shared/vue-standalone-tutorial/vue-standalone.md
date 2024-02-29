@@ -26,16 +26,12 @@ Here's the source code of the final result for this tutorial.
 Create a new Vue application with the following command:
 
 ```{% command="npx create-nx-workspace@latest myvueapp --preset=vue-standalone" path="~" %}
+
 NX   Let's create a new workspace [https://nx.dev/getting-started/intro]
 
 ✔ Test runner to use for end to end (E2E) tests · cypress
 ✔ Default stylesheet format · css
 ✔ Set up CI with caching, distribution and test deflaking · github
-
-NX   Creating your v17.0.0 workspace.
-
-To make sure the command works reliably in all environments, and that the preset is applied correctly,
-Nx will run "npm install" several times. Please wait.
 ```
 
 You can also choose [Playwright](/nx-api/playwright) for your e2e tests or a different stylesheet format. In this tutorial we're going to use Cypress and css. The above command generates the following structure:
