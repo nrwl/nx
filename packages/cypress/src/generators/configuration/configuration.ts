@@ -27,7 +27,7 @@ import { addLinterToCyProject } from '../../utils/add-linter';
 import { addDefaultE2EConfig } from '../../utils/config';
 import { installedCypressVersion } from '../../utils/cypress-version';
 import { typesNodeVersion, viteVersion } from '../../utils/versions';
-import cypressInitGenerator from '../init/init';
+import cypressInitGenerator, { addPlugin } from '../init/init';
 import { addBaseCypressSetup } from '../base-setup/base-setup';
 
 export interface CypressE2EConfigSchema {
@@ -64,7 +64,7 @@ export async function configurationGeneratorInternal(
   options: CypressE2EConfigSchema
 ) {
   const opts = normalizeOptions(tree, options);
-
+  opts.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
   const tasks: GeneratorCallback[] = [];
 
   if (!installedCypressVersion()) {
@@ -73,10 +73,12 @@ export async function configurationGeneratorInternal(
       await cypressInitGenerator(tree, {
         ...opts,
         skipFormat: true,
-        addPlugin: options.addPlugin,
       })
     );
+  } else if (opts.addPlugin) {
+    addPlugin(tree);
   }
+
   const projectGraph = await createProjectGraphAsync();
   const nxJson = readNxJson(tree);
   const hasPlugin = nxJson.plugins?.some((p) =>
@@ -147,7 +149,6 @@ In this case you need to provide a devServerTarget,'<projectName>:<targetName>[:
 
   return {
     ...options,
-    addPlugin: options.addPlugin ?? process.env.NX_ADD_PLUGINS !== 'false',
     bundler: options.bundler ?? 'webpack',
     rootProject: options.rootProject ?? projectConfig.root === '.',
     linter: options.linter ?? Linter.EsLint,
