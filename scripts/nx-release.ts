@@ -222,12 +222,26 @@ function parseArgs() {
         'The version to publish. This does not need to be passed and can be inferred.',
       default: 'minor',
       coerce: (version) => {
-        if (version !== 'canary') {
+        if (version !== 'canary' && !version.startsWith('pr-')) {
           return version;
         }
         /**
-         * Handle the special case of `canary`
+         * Handle the special case of `canary` or PR releases
          */
+
+        // Create YYYYMMDD string
+        const date = new Date();
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
+        const day = String(date.getDate()).padStart(2, '0');
+        const YYYYMMDD = `${year}${month}${day}`;
+
+        // Get the current short git sha
+        const gitSha = execSync('git rev-parse --short HEAD').toString().trim();
+
+        if (version.startsWith('pr-')) {
+          return `0.0.0-${version}-${YYYYMMDD}-${gitSha}`;
+        }
 
         const currentLatestVersion = execSync('npm view nx@latest version')
           .toString()
@@ -254,16 +268,6 @@ function parseArgs() {
         if (!canaryBaseVersion) {
           throw new Error(`Unable to determine a base for the canary version.`);
         }
-
-        // Create YYYYMMDD string
-        const date = new Date();
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
-        const day = String(date.getDate()).padStart(2, '0');
-        const YYYYMMDD = `${year}${month}${day}`;
-
-        // Get the current short git sha
-        const gitSha = execSync('git rev-parse --short HEAD').toString().trim();
 
         const canaryVersion = `${canaryBaseVersion}-canary.${YYYYMMDD}-${gitSha}`;
 
@@ -338,10 +342,14 @@ function getRegistry() {
 
 function determineDistTag(
   newVersion: string
-): 'latest' | 'next' | 'previous' | 'canary' {
+): 'latest' | 'next' | 'previous' | 'canary' | 'pull-request' {
   // Special case of canary
   if (newVersion.includes('canary')) {
     return 'canary';
+  }
+
+  if (newVersion.startsWith('0.0.0-pr-')) {
+    return 'pull-request';
   }
 
   // For a relative version keyword, it cannot be previous

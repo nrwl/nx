@@ -4,6 +4,11 @@ on:
   schedule:
     - cron: "0 3 * * 2-6" # Tuesdays - Saturdays, at 3am UTC
   workflow_dispatch:
+    inputs:
+      pr:
+        description: "If creating a PR-release, specify the PR number, otherwise leave blank for dry-run"
+        required: false
+        type: number
   release:
     types: [published]
 
@@ -264,7 +269,12 @@ jobs:
           fi
           # If triggered via workflow_dispatch, perform a dry-run
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            DRY_RUN="--dry-run"
+            if [ -n "${{ github.event.inputs.pr }}" ]; then
+              DRY_RUN="--dry-run"
+            else
+              DRY_RUN=""
+              VERSION="pr-${{ github.event.inputs.pr }}"
+            fi
           else
             DRY_RUN=""
           fi
