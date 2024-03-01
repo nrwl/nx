@@ -8,6 +8,7 @@ import {
   joinPathFragments,
   readProjectConfiguration,
   updateProjectConfiguration,
+  readNxJson,
 } from '@nx/devkit';
 import { nxVersion } from '../../../utils/versions';
 import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
@@ -15,7 +16,10 @@ import type { NormalizedSchema } from './normalized-schema';
 
 export async function addE2e(tree: Tree, options: NormalizedSchema) {
   // since e2e are separate projects, default to adding plugins
-  const addPlugin = process.env.NX_ADD_PLUGINS !== 'false';
+  const nxJson = readNxJson(tree);
+  const addPlugin =
+    process.env.NX_ADD_PLUGINS !== 'false' &&
+    nxJson.useInferencePlugins !== false;
 
   if (options.e2eTestRunner === 'cypress') {
     // TODO: This can call `@nx/web:static-config` generator when ready

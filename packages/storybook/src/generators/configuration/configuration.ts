@@ -65,7 +65,7 @@ export async function configurationGeneratorInternal(
     throw new Error(pleaseUpgrade());
   }
 
-  const schema = normalizeSchema(rawSchema);
+  const schema = normalizeSchema(tree, rawSchema);
 
   const tasks: GeneratorCallback[] = [];
 
@@ -259,14 +259,20 @@ export async function configurationGeneratorInternal(
 }
 
 function normalizeSchema(
+  tree: Tree,
   schema: StorybookConfigureSchema
 ): StorybookConfigureSchema {
+  const nxJson = readNxJson(tree);
+  const addPlugin =
+    process.env.NX_ADD_PLUGINS !== 'false' &&
+    nxJson.useInferencePlugins !== false;
+
   const defaults = {
     interactionTests: true,
     linter: Linter.EsLint,
     js: false,
     tsConfiguration: true,
-    addPlugin: process.env.NX_ADD_PLUGINS !== 'false',
+    addPlugin,
   };
   return {
     ...defaults,

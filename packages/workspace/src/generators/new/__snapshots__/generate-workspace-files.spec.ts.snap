@@ -1706,6 +1706,62 @@ It will show tasks that you can run with Nx.
 "
 `;
 
+exports[`@nx/workspace:generateWorkspaceFiles should create package scripts for angular-standalone preset 1`] = `
+{
+  "build": "nx build",
+  "start": "nx serve",
+  "test": "nx test",
+}
+`;
+
+exports[`@nx/workspace:generateWorkspaceFiles should create package scripts for nextjs-standalone preset 1`] = `
+{
+  "build": "nx build",
+  "dev": "nx dev",
+  "start": "nx start",
+  "test": "nx test",
+}
+`;
+
+exports[`@nx/workspace:generateWorkspaceFiles should create package scripts for node-standalone preset 1`] = `
+{
+  "build": "nx build",
+  "start": "nx serve",
+  "test": "nx test",
+}
+`;
+
+exports[`@nx/workspace:generateWorkspaceFiles should create package scripts for nuxt-standalone preset 1`] = `
+{
+  "build": "nx build",
+  "start": "nx serve",
+  "test": "nx test",
+}
+`;
+
+exports[`@nx/workspace:generateWorkspaceFiles should create package scripts for react-standalone preset 1`] = `
+{
+  "build": "nx build",
+  "start": "nx serve",
+  "test": "nx test",
+}
+`;
+
+exports[`@nx/workspace:generateWorkspaceFiles should create package scripts for ts-standalone preset 1`] = `
+{
+  "build": "nx build",
+  "test": "nx test",
+}
+`;
+
+exports[`@nx/workspace:generateWorkspaceFiles should create package scripts for vue-standalone preset 1`] = `
+{
+  "build": "nx build",
+  "start": "nx serve",
+  "test": "nx test",
+}
+`;
+
 exports[`@nx/workspace:generateWorkspaceFiles should recommend vscode extensions (angular) 1`] = `
 [
   "nrwl.angular-console",

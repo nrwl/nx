@@ -102,22 +102,12 @@ export function nxE2EPreset(
 ) {
   const basePath = options?.cypressDir || 'src';
 
-  const dir = dirname(pathToConfig);
-  let supportFile: undefined | string = undefined;
-  for (const f of ['e2e.ts', 'e2e.js']) {
-    const candidate = join(dir, basePath, 'support', f);
-    if (existsSync(candidate)) {
-      supportFile = candidate;
-      break;
-    }
-  }
-
   const baseConfig: any /*Cypress.EndToEndConfigOptions & {
     [NX_PLUGIN_OPTIONS]: unknown;
   }*/ = {
     ...nxBaseCypressPreset(pathToConfig),
     fileServerFolder: '.',
-    supportFile,
+    supportFile: `${basePath}/support/e2e.{js,ts}`,
     specPattern: `${basePath}/**/*.cy.{js,jsx,ts,tsx}`,
     fixturesFolder: `${basePath}/fixtures`,
 
