@@ -11,6 +11,7 @@ import {
   joinPathFragments,
   offsetFromRoot,
   readJson,
+  readNxJson,
   readProjectConfiguration,
   stripIndents,
   updateJson,
@@ -342,6 +343,10 @@ export class E2eMigrator extends ProjectMigrator<SupportedTargets> {
       tags: [],
       implicitDependencies: [this.appName],
     });
+    const nxJson = readNxJson(this.tree) ?? {};
+    const addPlugin =
+      process.env.NX_ADD_PLUGINS !== 'false' &&
+      nxJson.useInferencePlugins !== false;
     await configurationGenerator(this.tree, {
       project: this.project.name,
       linter: this.isProjectUsingEsLint ? Linter.EsLint : Linter.None,
@@ -349,7 +354,7 @@ export class E2eMigrator extends ProjectMigrator<SupportedTargets> {
       // any target would do, we replace it later with the target existing in the project being migrated
       devServerTarget: `${this.appName}:serve`,
       baseUrl: 'http://localhost:4200',
-      addPlugin: process.env.NX_ADD_PLUGINS !== 'false',
+      addPlugin,
     });
 
     const cypressConfigFilePath = this.updateOrCreateCypressConfigFile(

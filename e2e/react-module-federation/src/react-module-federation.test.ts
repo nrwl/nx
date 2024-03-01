@@ -32,7 +32,7 @@ describe('React Module Federation', () => {
       ${false}
       ${true}
     `(
-      'should generate host and remote apps',
+      'should generate host and remote apps with "--js=$js"',
       async ({ js }) => {
         const shell = uniq('shell');
         const remote1 = uniq('remote1');

@@ -7,7 +7,10 @@ import {
 import { NX_PREFIX } from '../../utils/logger';
 import { readJsonFile } from '../../utils/fileutils';
 import { workspaceRoot } from '../../utils/workspace-root';
-import { ONLY_MODIFIES_EXISTING_TARGET } from '../../plugins/target-defaults/target-defaults-plugin';
+import {
+  ONLY_MODIFIES_EXISTING_TARGET,
+  OVERRIDE_SOURCE_FILE,
+} from '../../plugins/target-defaults/target-defaults-plugin';
 
 import { minimatch } from 'minimatch';
 import { join } from 'path';
@@ -252,6 +255,13 @@ export function buildProjectsConfigurationsFromProjectPathsAndPlugins(
         file,
         pluginName,
       } = result;
+
+      const sourceInfo: SourceInformation = [file, pluginName];
+
+      if (result[OVERRIDE_SOURCE_FILE]) {
+        sourceInfo[0] = result[OVERRIDE_SOURCE_FILE];
+      }
+
       for (const node in projectNodes) {
         const project = {
           root: node,
@@ -262,7 +272,7 @@ export function buildProjectsConfigurationsFromProjectPathsAndPlugins(
             projectRootMap,
             project,
             configurationSourceMaps,
-            [file, pluginName]
+            sourceInfo
           );
         } catch (e) {
           throw new CreateNodesError(
@@ -303,6 +313,9 @@ export function readProjectConfigurationsFromRootMap(
   const errors: Map<string, string[]> = new Map();
 
   for (const [root, configuration] of projectRootMap.entries()) {
+    // We're setting `// targets` as a comment `targets` is empty due to Project Crystal.
+    // Strip it before returning configuration for usage.
+    if (configuration['// targets']) delete configuration['// targets'];
     if (!configuration.name) {
       try {
         const { name } = readJsonFile(join(root, 'package.json'));

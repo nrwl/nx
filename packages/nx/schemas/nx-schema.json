@@ -101,6 +101,10 @@
       "type": "boolean",
       "description": "Specifies whether the daemon should be used for the default tasks runner."
     },
+    "useInferencePlugins": {
+      "type": "boolean",
+      "description": "Specifies whether to add inference plugins when generating new projects."
+    },
     "release": {
       "type": "object",
       "description": "Configuration for the nx release commands.",

@@ -32,7 +32,11 @@ export async function reactNativeInitGeneratorInternal(
 ) {
   addGitIgnoreEntry(host);
 
-  schema.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
+  const nxJson = readNxJson(host);
+  const addPluginDefault =
+    process.env.NX_ADD_PLUGINS !== 'false' &&
+    nxJson.useInferencePlugins !== false;
+  schema.addPlugin ??= addPluginDefault;
 
   if (schema.addPlugin) {
     addPlugin(host);

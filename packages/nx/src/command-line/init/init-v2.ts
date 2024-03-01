@@ -145,6 +145,7 @@ const npmPackageToPluginMap: Record<string, string> = {
   vite: '@nx/vite',
   vitest: '@nx/vite',
   webpack: '@nx/webpack',
+  rollup: '@nx/rollup',
   // Testing tools
   jest: '@nx/jest',
   cypress: '@nx/cypress',

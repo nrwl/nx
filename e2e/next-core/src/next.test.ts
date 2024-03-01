@@ -6,6 +6,7 @@ import {
   readFile,
   runCLI,
   runE2ETests,
+  setCypressWebServerTimeout,
   uniq,
   updateFile,
 } from '@nx/e2e/utils';
@@ -192,28 +193,8 @@ describe('Next.js Applications', () => {
       `generate @nx/next:app ${appName} --no-interactive --style=css --project-name-and-root-format=as-provided`
     );
 
-    // Update the cypress timeout to 25 seconds since we need to build and wait for the server to start
-    updateFile(`${appName}-e2e/cypress.config.ts`, (_) => {
-      return `import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
-
-      import { defineConfig } from 'cypress';
-      
-      export default defineConfig({
-        e2e: {
-          ...nxE2EPreset(__filename, {
-            cypressDir: 'src',
-            webServerCommands: { default: 'nx run ${appName}:start' },
-            webServerConfig: { timeout: 25_000 },
-            ciWebServerCommand: 'nx run ${appName}:serve-static',
-          }),
-          baseUrl: 'http://localhost:3000',
-        },
-      });
-      
-      `;
-    });
-
-    if (runE2ETests()) {
+    if (runE2ETests('cypress')) {
+      setCypressWebServerTimeout(`${appName}-e2e/cypress.config.ts`);
       const e2eResults = runCLI(`e2e-ci ${appName}-e2e --verbose`, {
         verbose: true,
       });
