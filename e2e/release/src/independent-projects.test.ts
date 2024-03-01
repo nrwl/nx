@@ -139,9 +139,6 @@ describe('nx release - independent projects', () => {
         "scripts": {
 
 
-        NX   Updating {package-manager} lock file
-
-
         NX   Staging changed files with git
 
 
@@ -172,9 +169,6 @@ describe('nx release - independent projects', () => {
 
         }
         +
-
-
-        NX   Updating {package-manager} lock file
 
 
         NX   Staging changed files with git
@@ -211,9 +205,6 @@ describe('nx release - independent projects', () => {
         -     "@proj/{project-name}": "0.0.0"
         +     "@proj/{project-name}": "999.9.9-package.3"
         }
-
-
-        NX   Updating {package-manager} lock file
 
 
         NX   Staging changed files with git
@@ -255,15 +246,12 @@ describe('nx release - independent projects', () => {
         "scripts": {
 
 
-        NX   Updating {package-manager} lock file
-
-        Updating {lock-file} with the following command:
-        {lock-file-command}
+        Skipped lock file update because {package-manager} workspaces are not enabled.
 
         NX   Committing changes with git
 
         Staging files in git with the following command:
-        git add {project-name}/package.json {lock-file}
+        git add {project-name}/package.json
 
         Committing files in git with the following command:
         git commit --message chore(release): publish --message - project: {project-name} 999.9.9-version-git-operations-test.2
@@ -363,20 +351,14 @@ describe('nx release - independent projects', () => {
         "scripts": {
 
 
-        NX   Updating {package-manager} lock file
+        Skipped lock file update because {package-manager} workspaces are not enabled.
 
-        Updating {lock-file} with the following command:
-        {lock-file-command}
-
-        NX   Updating {package-manager} lock file
-
-        Updating {lock-file} with the following command:
-        {lock-file-command}
+        Skipped lock file update because {package-manager} workspaces are not enabled.
 
         NX   Committing changes with git
 
         Staging files in git with the following command:
-        git add {project-name}/package.json {project-name}/package.json {project-name}/package.json {lock-file}
+        git add {project-name}/package.json {project-name}/package.json {project-name}/package.json
 
         Committing files in git with the following command:
         git commit --message chore(release): publish --message - project: {project-name} 999.9.9-version-git-operations-test.3 --message - project: {project-name} 999.9.9-version-git-operations-test.3 --message - release-group: fixed 999.9.9-version-git-operations-test.3
