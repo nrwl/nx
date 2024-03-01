@@ -1,9 +1,11 @@
 // This file should be committed to your repository! It wraps Nx and ensures
 // that your local installation matches nx.json.
+//!
+// You should not edit this file, as future updates to Nx may require changes to it.
 // See: https://nx.dev/recipes/installation/install-non-javascript for more info.
 //
 //# The contents of this file are executed before packages are installed.
-//# As such, we should not import anything from nx, other @nrwl packages,
+//# As such, we should not import anything from nx, other @nx packages,
 //# or any other npm packages. Only import node builtins. Type Imports are
 //# fine, since they are removed by the typescript compiler.
 
@@ -18,7 +20,7 @@ const installationPath = path.join(__dirname, 'installation', 'package.json');
 
 function matchesCurrentNxInstall(
   currentInstallation: PackageJson,
-  nxJsonInstallation: NxJsonConfiguration['installation']
+  nxJson: NxJsonConfiguration
 ) {
   if (
     !currentInstallation.devDependencies ||
@@ -30,19 +32,17 @@ function matchesCurrentNxInstall(
   try {
     if (
       currentInstallation.devDependencies['nx'] !==
-        nxJsonInstallation.version ||
+        nxJson.installation.version ||
       require(path.join(
         path.dirname(installationPath),
         'node_modules',
         'nx',
         'package.json'
-      )).version !== nxJsonInstallation.version
+      )).version !== nxJson.installation.version
     ) {
       return false;
     }
-    for (const [plugin, desiredVersion] of Object.entries(
-      nxJsonInstallation.plugins || {}
-    )) {
+    for (const [plugin, desiredVersion] of getDesiredPluginVersions(nxJson)) {
       if (currentInstallation.devDependencies[plugin] !== desiredVersion) {
         return false;
       }
@@ -81,7 +81,7 @@ function performInstallation(
       name: 'nx-installation',
       devDependencies: {
         nx: nxJson.installation.version,
-        ...nxJson.installation.plugins,
+        ...getDesiredPluginVersions(nxJson),
       },
     })
   );
@@ -97,6 +97,37 @@ function performInstallation(
     // rethrow
     throw e;
   }
+}
+
+function getDesiredPluginVersions(nxJson: NxJsonConfiguration) {
+  const packages: Record<string, string> = {};
+
+  //# adds support for "legacy" installation of plugins
+  for (const [plugin, version] of Object.entries(
+    nxJson?.installation?.plugins ?? {}
+  )) {
+    packages[plugin] = version;
+  }
+
+  for (const plugin of nxJson.plugins ?? []) {
+    if (typeof plugin === 'object' && plugin.version) {
+      packages[getPackageName(plugin.plugin)] = plugin.version;
+    }
+  }
+
+  return Object.entries(packages);
+}
+
+//# Converts import paths to package names.
+//# e.g. - `@nx/workspace`        -> `@nx/workspace`
+//#      - `@nx/workspace/plugin` -> `@nx/workspace`
+//#      - `@nx/workspace/other`  -> `@nx/workspace`
+//#      - `nx/plugin`            -> `nx`
+function getPackageName(name: string) {
+  if (name.startsWith('@')) {
+    return name.split('/').slice(0, 2).join('/');
+  }
+  return name.split('/')[0];
 }
 
 function ensureUpToDateInstallation() {
@@ -121,7 +152,7 @@ function ensureUpToDateInstallation() {
   try {
     ensureDir(path.join(__dirname, 'installation'));
     const currentInstallation = getCurrentInstallation();
-    if (!matchesCurrentNxInstall(currentInstallation, nxJson.installation)) {
+    if (!matchesCurrentNxInstall(currentInstallation, nxJson)) {
       performInstallation(currentInstallation, nxJson);
     }
   } catch (e: unknown) {
