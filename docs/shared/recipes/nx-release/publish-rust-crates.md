@@ -54,9 +54,9 @@ nx release --first-release --dry-run
 
 ### Pick a New Version
 
-Nx Release will prompt you to pick a version bump for all the crates in the release. By default, all package versions are kept in sync, so the prompt only needs to be answered one time.
+Nx Release will prompt you to pick a version bump for all the crates in the release. By default, all crate versions are kept in sync, so the prompt only needs to be answered one time. If needed, you can [configure Nx to release projects independently](/recipes/nx-release/release-projects-independently).
 
-```{% command="nx release --first-release --dry-run" %}
+```text {% command="nx release --first-release --dry-run" %}
 
 NX   Running release version for project: pkg-1
 
@@ -77,7 +77,7 @@ pkg-1 📄 Resolved the current version as 0.1.0 from crates/pkg-1/Cargo.toml
 
 After this prompt, the command will finish, showing you the preview of changes that would have been made if the `--dry-run` option was not passed.
 
-```{% command="nx release --first-release --dry-run" %}
+```text {% command="nx release --first-release --dry-run" %}
 
 NX   Running release version for project: pkg-1
 
@@ -165,7 +165,7 @@ nx release --first-release
 
 The command will proceed as before, prompting for a version bump and showing a preview of the changes. However, this time, it will prompt you to publish the crates to the remote registry. If you say no, the publishing step will be skipped. If you say yes, the command will publish the crates to https://crates.io.
 
-```{% command="nx release --first-release" %}
+```text {% command="nx release --first-release" %}
 ...
 
 ✔ Do you want to publish these versions? (y/N) · true
