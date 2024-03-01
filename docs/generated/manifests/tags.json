@@ -1015,6 +1015,13 @@
       "id": "automate-github-releases",
       "name": "Automate GitHub Releases",
       "path": "/recipes/nx-release/automate-github-releases"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/nx-release/customize-conventional-commit-types",
+      "id": "customize-conventional-commit-types",
+      "name": "Customize Conventional Commit Types",
+      "path": "/recipes/nx-release/customize-conventional-commit-types"
     }
   ],
   "database": [

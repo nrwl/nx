@@ -1141,6 +1141,12 @@
                   "id": "automate-github-releases",
                   "tags": ["nx-release"],
                   "file": "shared/recipes/nx-release/automate-github-releases"
+                },
+                {
+                  "name": "Customize Conventional Commit Types",
+                  "id": "customize-conventional-commit-types",
+                  "tags": ["nx-release"],
+                  "file": "shared/recipes/nx-release/customize-conventional-commit-types"
                 }
               ]
             },

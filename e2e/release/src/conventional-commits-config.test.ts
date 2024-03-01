@@ -112,8 +112,8 @@ describe('nx release conventional commits config', () => {
             fix: false,
             docs: {
               semverBump: 'patch',
+              // no hidden property set, but the user has explicitly overridden the `docs` type, so we assume they want it to appear
               changelog: {
-                hidden: false,
                 title: 'Custom Docs Header',
               },
             },
