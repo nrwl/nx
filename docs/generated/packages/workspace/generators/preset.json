@@ -96,6 +96,10 @@
         "description": "Enable Server-Side Rendering (SSR) and Static Site Generation (SSG/Prerendering) for the Angular application.",
         "type": "boolean",
         "default": false
+      },
+      "prefix": {
+        "description": "The prefix to use for Angular component and directive selectors.",
+        "type": "string"
       }
     },
     "required": ["preset", "name"],

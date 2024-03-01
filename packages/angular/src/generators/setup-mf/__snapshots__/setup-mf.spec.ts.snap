@@ -262,8 +262,8 @@ exports[`Init MF should generate the remote entry component correctly when prefi
 "import { Component } from '@angular/core';
 
 @Component({
-  selector: 'proj-remote1-entry',
-  template: \`<proj-nx-welcome></proj-nx-welcome>\`
+  selector: 'app-remote1-entry',
+  template: \`<app-nx-welcome></app-nx-welcome>\`
 })
 export class RemoteEntryComponent {}
 "

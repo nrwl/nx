@@ -43,6 +43,7 @@ const nxPackages = [
   `@nx/eslint-plugin`,
   `@nx/express`,
   `@nx/esbuild`,
+  `@nx/gradle`,
   `@nx/jest`,
   `@nx/js`,
   `@nx/eslint`,
@@ -233,6 +234,7 @@ export function runCreateWorkspace(
     e2eTestRunner,
     ssr,
     framework,
+    prefix,
   }: {
     preset: string;
     appName?: string;
@@ -251,6 +253,7 @@ export function runCreateWorkspace(
     e2eTestRunner?: 'cypress' | 'playwright' | 'jest' | 'detox' | 'none';
     ssr?: boolean;
     framework?: string;
+    prefix?: string;
   }
 ) {
   projName = name;
@@ -315,6 +318,10 @@ export function runCreateWorkspace(
 
   if (ssr !== undefined) {
     command += ` --ssr=${ssr}`;
+  }
+
+  if (prefix !== undefined) {
+    command += ` --prefix=${prefix}`;
   }
 
   try {

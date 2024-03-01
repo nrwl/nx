@@ -4,7 +4,7 @@ import { basename, join, relative } from 'path';
 import {
   buildProjectConfigurationFromPackageJson,
   getGlobPatternsFromPackageManagerWorkspaces,
-  getNxPackageJsonWorkspacesPlugin,
+  createNodes as packageJsonWorkspacesCreateNodes,
 } from '../../plugins/package-json-workspaces';
 import {
   buildProjectFromProjectJson,
@@ -64,6 +64,9 @@ export function addProjectConfiguration(
   }
 
   delete (projectConfiguration as any).$schema;
+
+  handleEmptyTargets(projectName, projectConfiguration);
+
   writeJson(tree, projectConfigFile, {
     name: projectName,
     $schema: getRelativeProjectJsonSchemaPath(tree, projectConfiguration),
@@ -94,6 +97,7 @@ export function updateProjectConfiguration(
       `Cannot update Project ${projectName} at ${projectConfiguration.root}. It either doesn't exist yet, or may not use project.json for configuration. Use \`addProjectConfiguration()\` instead if you want to create a new project.`
     );
   }
+  handleEmptyTargets(projectName, projectConfiguration);
   writeJson(tree, projectConfigFile, {
     name: projectConfiguration.name ?? projectName,
     $schema: getRelativeProjectJsonSchemaPath(tree, projectConfiguration),
@@ -192,12 +196,12 @@ function readAndCombineAllProjectConfigurations(tree: Tree): {
     '**/project.json',
     'project.json',
     ...getGlobPatternsFromPackageManagerWorkspaces(tree.root, (p) =>
-      readJson(tree, p)
+      readJson(tree, p, { expectComments: true })
     ),
   ];
   const projectGlobPatterns = configurationGlobs([
-    { plugin: ProjectJsonProjectsPlugin },
-    { plugin: getNxPackageJsonWorkspacesPlugin(tree.root) },
+    ProjectJsonProjectsPlugin,
+    { createNodes: packageJsonWorkspacesCreateNodes },
   ]);
   const globbedFiles = globWithWorkspaceContext(tree.root, projectGlobPatterns);
   const createdFiles = findCreatedProjectFiles(tree, patterns);
@@ -327,4 +331,23 @@ function toNewFormat(w: any): ProjectsConfigurations {
     w.version = 2;
   }
   return w;
+}
+
+function handleEmptyTargets(
+  projectName: string,
+  projectConfiguration: ProjectConfiguration
+): void {
+  if (
+    projectConfiguration.targets &&
+    !Object.keys(projectConfiguration.targets).length
+  ) {
+    // Re-order `targets` to appear after the `// target` comment.
+    delete projectConfiguration.targets;
+    projectConfiguration[
+      '// targets'
+    ] = `to see all targets run: nx show project ${projectName} --web`;
+    projectConfiguration.targets = {};
+  } else {
+    delete projectConfiguration['// targets'];
+  }
 }

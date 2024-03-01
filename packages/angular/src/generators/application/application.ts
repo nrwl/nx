@@ -34,7 +34,6 @@ export async function applicationGenerator(
 ): Promise<GeneratorCallback> {
   return await applicationGeneratorInternal(tree, {
     projectNameAndRootFormat: 'derived',
-    addPlugin: false,
     ...schema,
   });
 }

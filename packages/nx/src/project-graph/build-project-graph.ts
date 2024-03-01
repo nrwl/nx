@@ -13,12 +13,9 @@ import {
 } from './nx-deps-cache';
 import { applyImplicitDependencies } from './utils/implicit-project-dependencies';
 import { normalizeProjectNodes } from './utils/normalize-project-nodes';
-import {
-  CreateDependenciesContext,
-  isNxPluginV1,
-  isNxPluginV2,
-  loadNxPlugins,
-} from '../utils/nx-plugin';
+import { loadNxPlugins } from './plugins/internal-api';
+import { isNxPluginV1, isNxPluginV2 } from './plugins/utils';
+import { CreateDependenciesContext } from './plugins';
 import { getRootTsConfigPath } from '../plugins/js/utils/typescript';
 import {
   FileMap,
@@ -35,6 +32,7 @@ import { PackageJson } from '../utils/package-json';
 import { getNxRequirePaths } from '../utils/installation-directory';
 import { output } from '../utils/output';
 import { ExternalObject, NxWorkspaceFilesExternals } from '../native';
+import { shutdownPluginWorkers } from './plugins/plugin-pool';
 
 let storedFileMap: FileMap | null = null;
 let storedAllWorkspaceFiles: FileData[] | null = null;
@@ -131,6 +129,7 @@ export async function buildProjectGraphUsingProjectFileMap(
   if (shouldWriteCache) {
     writeCache(projectFileMapCache, projectGraph);
   }
+  await shutdownPluginWorkers();
   return {
     projectGraph,
     projectFileMapCache,
@@ -240,12 +239,10 @@ async function updateProjectGraphWithPlugins(
 ) {
   const plugins = await loadNxPlugins(
     context.nxJsonConfiguration?.plugins,
-    getNxRequirePaths(),
-    context.workspaceRoot,
-    context.projects
+    context.workspaceRoot
   );
   let graph = initProjectGraph;
-  for (const { plugin } of plugins) {
+  for (const plugin of plugins) {
     try {
       if (
         isNxPluginV1(plugin) &&
@@ -297,17 +294,15 @@ async function updateProjectGraphWithPlugins(
   );
 
   const createDependencyPlugins = plugins.filter(
-    ({ plugin }) => isNxPluginV2(plugin) && plugin.createDependencies
+    (plugin) => isNxPluginV2(plugin) && plugin.createDependencies
   );
   await Promise.all(
-    createDependencyPlugins.map(async ({ plugin, options }) => {
+    createDependencyPlugins.map(async (plugin) => {
       performance.mark(`${plugin.name}:createDependencies - start`);
 
-      // Set this globally to allow plugins to know if they are being called from the project graph creation
-      global.NX_GRAPH_CREATION = true;
-
       try {
-        const dependencies = await plugin.createDependencies(options, {
+        // TODO: we shouldn't have to pass null here
+        const dependencies = await plugin.createDependencies(null, {
           ...context,
         });
 
@@ -327,8 +322,6 @@ async function updateProjectGraphWithPlugins(
         }
         throw new Error(message);
       }
-
-      delete global.NX_GRAPH_CREATION;
 
       performance.mark(`${plugin.name}:createDependencies - end`);
       performance.measure(

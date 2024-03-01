@@ -39,10 +39,12 @@ const config = nxE2EPreset(__filename, { bundler: 'vite' });
 export default defineConfig({
   e2e: {
     ...config,
-     setupNodeEvents(on, config): {
-      config.setupNodeEvents(on);
+    async setupNodeEvents(on, config) {
+      // Ensure that `@nx/cypress` events are set up.
+      await config.setupNodeEvents(on, config);
+
       // Your settings here
-    }
+    },
   },
 });
 ```

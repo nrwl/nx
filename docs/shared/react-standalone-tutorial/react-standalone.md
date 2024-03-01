@@ -34,6 +34,9 @@ Here's the source code of the final result for this tutorial.
 Create a new standalone React application with the following command:
 
 ```{% command="npx create-nx-workspace@latest myreactapp --preset=react-standalone" path="~" %}
+
+NX   Let's create a new workspace [https://nx.dev/getting-started/intro]
+
 ✔ Which bundler would you like to use? · vite
 ✔ Test runner to use for end to end (E2E) tests · cypress
 ✔ Default stylesheet format · css
@@ -144,7 +147,7 @@ nx show project myreactapp --web
               "externalDependencies": ["vite"]
             }
           ],
-          "outputs": ["{projectRoot}/build/myreactapp"],
+          "outputs": ["{projectRoot}/dist/myreactapp"],
           "executor": "nx:run-commands",
           "configurations": {}
         }
@@ -209,14 +212,14 @@ More conveniently, we can also run them in parallel using the following syntax:
 
 ```{% command="nx run-many -t test lint e2e" path="myreactapp" %}
 
-    ✔  nx run e2e:lint (2s)
-    ✔  nx run myreactapp:lint (2s)
-    ✔  nx run myreactapp:test (2s)
-    ✔  nx run e2e:e2e (6s)
+✔  nx run e2e:lint (2s)
+✔  nx run myreactapp:lint (2s)
+✔  nx run myreactapp:test (2s)
+✔  nx run e2e:e2e (6s)
 
- ——————————————————————————————————————————————————————
+——————————————————————————————————————————————————————
 
- >  NX   Successfully ran targets test, lint, e2e for 2 projects (7s)
+NX   Successfully ran targets test, lint, e2e for 2 projects (7s)
 ```
 
 ### Caching
@@ -227,16 +230,16 @@ Note that all of these targets are automatically cached by Nx. If you re-run a s
 
 ```{% command="nx run-many -t test lint e2e" path="myreactapp" %}
 
-    ✔  nx run e2e:lint  [existing outputs match the cache, left as is]
-    ✔  nx run myreactapp:lint  [existing outputs match the cache, left as is]
-    ✔  nx run myreactapp:test  [existing outputs match the cache, left as is]
-    ✔  nx run e2e:e2e  [existing outputs match the cache, left as is]
+✔  nx run e2e:lint  [existing outputs match the cache, left as is]
+✔  nx run myreactapp:lint  [existing outputs match the cache, left as is]
+✔  nx run myreactapp:test  [existing outputs match the cache, left as is]
+✔  nx run e2e:e2e  [existing outputs match the cache, left as is]
 
- ——————————————————————————————————————————————————————
+——————————————————————————————————————————————————————
 
- >  NX   Successfully ran targets test, lint, e2e for 5 projects (54ms)
+NX   Successfully ran targets test, lint, e2e for 5 projects (54ms)
 
-   Nx read the output from the cache instead of running the command for 10 out of 10 tasks.
+Nx read the output from the cache instead of running the command for 10 out of 10 tasks.
 ```
 
 Not all tasks might be cacheable though. You can configure the `cache` properties in the targets under `targetDefaults` in the `nx.json` file. You can also [learn more about how caching works](/features/cache-task-results).
@@ -257,7 +260,7 @@ You can just create new React components as you normally would. However, Nx plug
 
 ```{% command="npx nx list @nx/react" path="myreactapp" %}
 
- >  NX   Capabilities in @nx/react:
+NX   Capabilities in @nx/react:
 
    GENERATORS
 
@@ -296,7 +299,7 @@ More info can be found in [the integrate with editors article](/features/integra
 Run the following command to generate a new "hello-world" component. Note how we append `--dry-run` to first check the output.
 
 ```{% command="npx nx g @nx/react:component --directory=src/app/hello-world hello-world --dry-run" path="myreactapp" %}
->  NX  Generating @nx/react:component
+NX  Generating @nx/react:component
 
 ✔ Should this component be exported in the project? (y/N) · false
 ✔ Where should the component be generated? · src/app/hello-world/hello-world.tsx
@@ -338,9 +341,9 @@ dist/myreactapp/assets/index-e3b0c442.css    0.00 kB │ gzip:  0.02 kB
 dist/myreactapp/assets/index-378e8124.js   165.64 kB │ gzip: 51.63 kB
 ✓ built in 496ms
 
- ——————————————————————————————————————————————————————————————————————————————————————————————————————————
+——————————————————————————————————————————————————————————————————————————————————————————————————————————
 
- >  NX   Successfully ran target build for project reactutorial (1s)
+NX   Successfully ran target build for project reactutorial (1s)
 ```
 
 All the required files will be placed in the `dist/myreactapp` folder and can be deployed to your favorite hosting provider.
@@ -806,30 +809,30 @@ export default ProductList;
 If you lint your workspace you'll get an error now:
 
 ```{% command="nx run-many -t lint" %}
-    ✔  nx run myreactapp:lint  [existing outputs match the cache, left as is]
-    ✔  nx run e2e:lint  [existing outputs match the cache, left as is]
-    ✔  nx run ui:lint (1s)
+✔  nx run myreactapp:lint  [existing outputs match the cache, left as is]
+✔  nx run e2e:lint  [existing outputs match the cache, left as is]
+✔  nx run ui:lint (1s)
 
-    ✖  nx run products:lint
-       Linting "products"...
+✖  nx run products:lint
+   Linting "products"...
 
-       /Users/.../myreactapp/modules/products/src/lib/product-list/product-list.tsx
-         3:1  error  A project tagged with "scope:products" can only depend on libs tagged with "scope:products", "scope:shared"  @nx/enforce-module-boundaries
+   /Users/.../myreactapp/modules/products/src/lib/product-list/product-list.tsx
+     3:1  error  A project tagged with "scope:products" can only depend on libs tagged with "scope:products", "scope:shared"  @nx/enforce-module-boundaries
 
-       ✖ 1 problem (1 error, 0 warnings)
+   ✖ 1 problem (1 error, 0 warnings)
 
-       Lint errors found in the listed files.
+   Lint errors found in the listed files.
 
-    ✔  nx run orders:lint (1s)
+✔  nx run orders:lint (1s)
 
- ————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
- >  NX   Ran target lint for 5 projects (1s)
+NX   Ran target lint for 5 projects (1s)
 
-    ✔    4/5 succeeded [2 read from cache]
+✔    4/5 succeeded [2 read from cache]
 
-    ✖    1/5 targets failed, including the following:
-         - nx run products:lint
+✖    1/5 targets failed, including the following:
+     - nx run products:lint
 ```
 
 If you have the ESLint plugin installed in your IDE you should immediately see an error:
@@ -852,8 +855,8 @@ Here's some more things you can dive into next:
 - Learn how to [migrate your CRA app to Nx](/recipes/react/migration-cra)
 - [Learn how to setup Tailwind](/recipes/react/using-tailwind-css-in-react)
 - [Setup Storybook for our shared UI library](/recipes/storybook/overview-react)
-- [Speed up CI: Run only tasks for project that got changed](/features/run-tasks#run-tasks-affected-by-a-pr)]
-- [Speed up CI: Share your cache](/ci/features/remote-cache)]
+- [Speed up CI: Run only tasks for project that got changed](/features/run-tasks#run-tasks-affected-by-a-pr)
+- [Speed up CI: Share your cache](/ci/features/remote-cache)
 - [Speed up CI: Distribute your tasks across machines](/ci/features/distribute-task-execution)
 
 Also, make sure you

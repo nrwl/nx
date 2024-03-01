@@ -8,6 +8,7 @@ export const iconsMap: Record<string, string> = {
   'eslint-plugin': '/images/icons/eslint.svg',
   expo: '/images/icons/expo.svg',
   express: '/images/icons/express.svg',
+  gradle: '/images/icons/gradle.svg',
   jest: '/images/icons/jest.svg',
   js: '/images/icons/javascript.svg',
   eslint: '/images/icons/eslint.svg',

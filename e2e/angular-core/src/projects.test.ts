@@ -13,6 +13,7 @@ import {
   runCLI,
   runCommandUntil,
   runE2ETests,
+  setCypressWebServerTimeout,
   tmpProjPath,
   uniq,
   updateFile,
@@ -46,7 +47,7 @@ describe('Angular Projects', () => {
     app1DefaultComponentTemplate = readFile(
       `${app1}/src/app/app.component.html`
     );
-    esbuildAppDefaultModule = readFile(`${app1}/src/app/app.module.ts`);
+    esbuildAppDefaultModule = readFile(`${esbuildApp}/src/app/app.module.ts`);
     esbuildAppDefaultComponentTemplate = readFile(
       `${esbuildApp}/src/app/app.component.html`
     );
@@ -61,7 +62,7 @@ describe('Angular Projects', () => {
     );
     updateFile(`${esbuildApp}/src/app/app.module.ts`, esbuildAppDefaultModule);
     updateFile(
-      `${esbuildAppDefaultComponentTemplate}/src/app/app.component.html`,
+      `${esbuildApp}/src/app/app.component.html`,
       esbuildAppDefaultComponentTemplate
     );
     updateFile(`${esbuildApp}/project.json`, esbuildAppDefaultProjectConfig);
@@ -127,6 +128,7 @@ describe('Angular Projects', () => {
 
     // check e2e tests
     if (runE2ETests('cypress')) {
+      setCypressWebServerTimeout(`${app1}-e2e/cypress.config.ts`);
       const e2eResults = runCLI(`e2e ${app1}-e2e`);
       expect(e2eResults).toContain('All specs passed!');
       expect(await killPort(4200)).toBeTruthy();

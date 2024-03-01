@@ -1,4 +1,4 @@
-import { Tree } from '@nx/devkit';
+import { Tree, readNxJson } from '@nx/devkit';
 import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { Linter } from '@nx/eslint';
 import type { Schema as NodeApplicationGeneratorOptions } from '@nx/node/src/generators/application/schema';
@@ -23,8 +23,13 @@ export async function normalizeOptions(
   options.rootProject = appProjectRoot === '.';
   options.projectNameAndRootFormat = projectNameAndRootFormat;
 
+  const nxJson = readNxJson(tree);
+  const addPlugin =
+    process.env.NX_ADD_PLUGINS !== 'false' &&
+    nxJson.useInferencePlugins !== false;
+
   return {
-    addPlugin: process.env.NX_ADD_PLUGINS !== 'false',
+    addPlugin,
     ...options,
     strict: options.strict ?? false,
     appProjectName,

@@ -182,7 +182,8 @@ const guideUrls = {
   '/guides/nextjs': '/next/overview',
   '/using-nx/nx-devkit': '/extending-nx/nx-devkit',
   '/structure/project-graph-plugins': '/extending-nx/project-graph-plugins',
-  '/guides/lerna-and-nx': '/migration/lerna-and-nx',
+  '/guides/lerna-and-nx': 'https://lerna.js.org',
+  '/migration/lerna-and-nx': 'https://lerna.js.org',
   '/cypress/v10-migration-guide': '/cypress/v11-migration-guide',
   '/cypress/generators/migrate-to-cypress-10':
     '/cypress/generators/migrate-to-cypress-11',
@@ -218,7 +219,9 @@ const diataxis = {
   '/migration/adding-to-monorepo': '/recipes/adopting-nx/adding-to-monorepo',
   '/migration/migration-cra': '/recipes/adopting-nx/migration-cra',
   '/migration/migration-angular': '/recipes/adopting-nx/migration-angular',
-  '/migration/migration-angularjs': '/recipes/adopting-nx/migration-angularjs',
+  '/migration/migration-angularjs': '/recipes/adopting-nx/migration-angular',
+  '/recipes/angular/migration/angularjs':
+    '/recipes/adopting-nx/migration-angular',
   '/migration/preserving-git-histories':
     '/recipes/adopting-nx/preserving-git-histories',
   '/migration/manual': '/recipes/adopting-nx/manual',

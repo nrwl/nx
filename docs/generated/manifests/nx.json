@@ -2157,17 +2157,6 @@
                 "isExternal": false,
                 "path": "/recipes/angular/migration/angular-manual",
                 "tags": []
-              },
-              {
-                "id": "angularjs",
-                "name": "Migrating from AngularJS",
-                "description": "",
-                "mediaImage": "",
-                "file": "shared/migration/migration-angularjs",
-                "itemList": [],
-                "isExternal": false,
-                "path": "/recipes/angular/migration/angularjs",
-                "tags": []
               }
             ],
             "isExternal": false,
@@ -2461,6 +2450,17 @@
             "itemList": [],
             "isExternal": false,
             "path": "/recipes/cypress/cypress-component-testing",
+            "tags": []
+          },
+          {
+            "id": "cypress-setup-node-events",
+            "name": "Using setupNodeEvents with Cypress preset",
+            "description": "A guide on using the setupNodeEvents function with @nx/cypress/plugins/cypress-preset",
+            "mediaImage": "",
+            "file": "shared/packages/cypress/cypress-setup-node-events",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/cypress/cypress-setup-node-events",
             "tags": []
           },
           {
@@ -3777,17 +3777,6 @@
             "isExternal": false,
             "path": "/recipes/angular/migration/angular-manual",
             "tags": []
-          },
-          {
-            "id": "angularjs",
-            "name": "Migrating from AngularJS",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/migration/migration-angularjs",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/angular/migration/angularjs",
-            "tags": []
           }
         ],
         "isExternal": false,
@@ -3893,17 +3882,6 @@
         "isExternal": false,
         "path": "/recipes/angular/migration/angular-manual",
         "tags": []
-      },
-      {
-        "id": "angularjs",
-        "name": "Migrating from AngularJS",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/migration/migration-angularjs",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/angular/migration/angularjs",
-        "tags": []
       }
     ],
     "isExternal": false,
@@ -3941,17 +3919,6 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/angular/migration/angular-manual",
-    "tags": []
-  },
-  "/recipes/angular/migration/angularjs": {
-    "id": "angularjs",
-    "name": "Migrating from AngularJS",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/migration/migration-angularjs",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/angular/migration/angularjs",
     "tags": []
   },
   "/recipes/angular/use-environment-variables-in-angular": {
@@ -4426,6 +4393,17 @@
         "tags": []
       },
       {
+        "id": "cypress-setup-node-events",
+        "name": "Using setupNodeEvents with Cypress preset",
+        "description": "A guide on using the setupNodeEvents function with @nx/cypress/plugins/cypress-preset",
+        "mediaImage": "",
+        "file": "shared/packages/cypress/cypress-setup-node-events",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/cypress/cypress-setup-node-events",
+        "tags": []
+      },
+      {
         "id": "cypress-v11-migration",
         "name": "Cypress v11 Migration Guide",
         "description": "Cypress v11 Migration Guide",
@@ -4450,6 +4428,17 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/cypress/cypress-component-testing",
+    "tags": []
+  },
+  "/recipes/cypress/cypress-setup-node-events": {
+    "id": "cypress-setup-node-events",
+    "name": "Using setupNodeEvents with Cypress preset",
+    "description": "A guide on using the setupNodeEvents function with @nx/cypress/plugins/cypress-preset",
+    "mediaImage": "",
+    "file": "shared/packages/cypress/cypress-setup-node-events",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/cypress/cypress-setup-node-events",
     "tags": []
   },
   "/recipes/cypress/cypress-v11-migration": {

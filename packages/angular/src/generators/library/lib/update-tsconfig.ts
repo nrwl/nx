@@ -3,9 +3,9 @@ import { updateJson } from '@nx/devkit';
 import { getRelativePathToRootTsConfig } from '@nx/js';
 import { NormalizedSchema } from './normalized-schema';
 import {
-  createTsConfig,
   extractTsConfigBase,
-} from '../../utils/create-ts-config';
+  updateProjectRootTsConfig,
+} from '../../utils/update-project-root-tsconfig';
 
 function updateProjectConfig(
   host: Tree,
@@ -25,11 +25,9 @@ function updateProjectConfig(
   });
 
   // tsconfig.json
-  createTsConfig(
+  updateProjectRootTsConfig(
     host,
     options.projectRoot,
-    'lib',
-    options,
     getRelativePathToRootTsConfig(host, options.projectRoot)
   );
 }

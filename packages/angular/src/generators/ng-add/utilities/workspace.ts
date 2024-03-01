@@ -50,9 +50,7 @@ export function createNxJson(
   const targets = getWorkspaceCommonTargets(tree);
 
   writeJson<NxJsonConfiguration>(tree, 'nx.json', {
-    affected: {
-      defaultBase: options.defaultBase ?? deduceDefaultBase(),
-    },
+    defaultBase: options.defaultBase ?? deduceDefaultBase(),
     namedInputs: {
       sharedGlobals: [],
       default: ['{projectRoot}/**/*', 'sharedGlobals'],
@@ -191,7 +189,7 @@ export async function updateRootEsLintConfig(
   unitTestRunner?: string
 ): Promise<void> {
   await lintInitGenerator(tree, {
-    addPlugin: process.env.NX_ADD_PLUGINS === 'true',
+    addPlugin: false,
   });
 
   if (!existingEsLintConfig) {

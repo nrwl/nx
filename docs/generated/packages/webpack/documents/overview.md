@@ -77,7 +77,7 @@ The `@nx/webpack/plugin` is configured in the `plugins` array in `nx.json`.
 }
 ```
 
-- The `buildTargetName`, `previewTargetName`, `serveTargetName` and `serveStaticTargetName` options control the names of the inferred Webpack tasks. The default names are `build`, `preview`, `serve` and `serve-static`.
+The `buildTargetName`, `previewTargetName`, `serveTargetName` and `serveStaticTargetName` options control the names of the inferred Webpack tasks. The default names are `build`, `preview`, `serve` and `serve-static`.
 
 {% /tab %}
 {% tab label="Nx < 18" %}

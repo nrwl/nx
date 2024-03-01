@@ -70,9 +70,9 @@ export async function createJestConfig(
       );
 
       if (
-        rootProjectConfig.targets['test']?.executor === 'nx:run-commands'
-          ? rootProjectConfig.targets['test']?.command !== 'jest'
-          : rootProjectConfig.targets['test']?.options?.jestConfig !==
+        rootProjectConfig.targets?.['test']?.executor === 'nx:run-commands'
+          ? rootProjectConfig.targets?.['test']?.command !== 'jest'
+          : rootProjectConfig.targets?.['test']?.options?.jestConfig !==
             rootJestPath
       ) {
         // Jest target has already been updated
@@ -129,16 +129,16 @@ export async function createJestConfig(
 function generateGlobalConfig(tree: Tree, isJS: boolean) {
   const contents = isJS
     ? stripIndents`
-    const { getJestProjects } = require('@nx/jest');
+    const { getJestProjectsAsync } = require('@nx/jest');
 
-    module.exports = {
-      projects: getJestProjects()
-    };`
+    module.exports = async () => ({
+      projects: await getJestProjectsAsync()
+    });`
     : stripIndents`
-    import { getJestProjects } from '@nx/jest';
+    import { getJestProjectsAsync } from '@nx/jest';
 
-    export default {
-     projects: getJestProjects()
-    };`;
+    export default async () => ({
+     projects: await getJestProjectsAsync()
+    });`;
   tree.write(`jest.config.${isJS ? 'js' : 'ts'}`, contents);
 }

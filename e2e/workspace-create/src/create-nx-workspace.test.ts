@@ -156,8 +156,7 @@ describe('create-nx-workspace', () => {
 
   it('should fail correctly when preset errors', () => {
     // Using Angular Preset as the example here to test
-    // It will error when npmScope is of form `<char>-<num>-<char>`
-    // Due to a validation error Angular will throw.
+    // It will error when prefix is not valid
     const wsName = uniq('angular-1-test');
     const appName = uniq('app');
     expect(() =>
@@ -171,6 +170,7 @@ describe('create-nx-workspace', () => {
         e2eTestRunner: 'none',
         bundler: 'webpack',
         ssr: false,
+        prefix: '1-one',
       })
     ).toThrow();
   });

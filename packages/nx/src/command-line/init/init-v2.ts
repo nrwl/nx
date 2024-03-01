@@ -5,7 +5,7 @@ import { output } from '../../utils/output';
 import { getPackageManagerCommand } from '../../utils/package-manager';
 import { generateDotNxSetup } from './implementation/dot-nx/add-nx-scripts';
 import { runNxSync } from '../../utils/child-process';
-import { readJsonFile } from '../../utils/fileutils';
+import { readJsonFile, writeJsonFile } from '../../utils/fileutils';
 import { nxVersion } from '../../utils/versions';
 import {
   addDepsToPackageJson,
@@ -21,6 +21,7 @@ import { globWithWorkspaceContext } from '../../utils/workspace-context';
 import { connectExistingRepoToNxCloudPrompt } from '../connect/connect-to-nx-cloud';
 import { addNxToNpmRepo } from './implementation/add-nx-to-npm-repo';
 import { addNxToMonorepo } from './implementation/add-nx-to-monorepo';
+import { join } from 'path';
 
 export interface InitArgs {
   interactive: boolean;
@@ -61,6 +62,8 @@ export async function initHandler(options: InitArgs): Promise<void> {
     return;
   }
 
+  output.log({ title: '🧐 Checking dependencies' });
+
   const detectPluginsResponse = await detectPlugins();
 
   if (!detectPluginsResponse?.plugins.length) {
@@ -85,27 +88,32 @@ export async function initHandler(options: InitArgs): Promise<void> {
     createNxJsonFile(repoRoot, [], [], {});
     updateGitIgnore(repoRoot);
 
-    addDepsToPackageJson(repoRoot, detectPluginsResponse?.plugins ?? []);
+    addDepsToPackageJson(repoRoot, detectPluginsResponse.plugins);
 
     output.log({ title: '📦 Installing Nx' });
 
     runInstall(repoRoot, pmc);
 
-    if (detectPluginsResponse) {
-      output.log({ title: '🔨 Configuring plugins' });
-      for (const plugin of detectPluginsResponse.plugins) {
-        execSync(
-          `${pmc.exec} nx g ${plugin}:init --keepExistingVersions ${
-            detectPluginsResponse.updatePackageScripts
-              ? '--updatePackageScripts'
-              : ''
-          } --no-interactive`,
-          {
-            stdio: [0, 1, 2],
-            cwd: repoRoot,
-          }
-        );
-      }
+    output.log({ title: '🔨 Configuring plugins' });
+    for (const plugin of detectPluginsResponse.plugins) {
+      execSync(
+        `${pmc.exec} nx g ${plugin}:init --keepExistingVersions ${
+          detectPluginsResponse.updatePackageScripts
+            ? '--updatePackageScripts'
+            : ''
+        } --no-interactive`,
+        {
+          stdio: [0, 1, 2],
+          cwd: repoRoot,
+        }
+      );
+    }
+
+    if (!detectPluginsResponse.updatePackageScripts) {
+      const rootPackageJsonPath = join(repoRoot, 'package.json');
+      const json = readJsonFile<PackageJson>(rootPackageJsonPath);
+      json.nx = {};
+      writeJsonFile(rootPackageJsonPath, json);
     }
 
     if (useNxCloud) {
@@ -137,6 +145,7 @@ const npmPackageToPluginMap: Record<string, string> = {
   vite: '@nx/vite',
   vitest: '@nx/vite',
   webpack: '@nx/webpack',
+  rollup: '@nx/rollup',
   // Testing tools
   jest: '@nx/jest',
   cypress: '@nx/cypress',

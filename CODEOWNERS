@@ -144,6 +144,10 @@ rust-toolchain @nrwl/nx-native-reviewers
 /packages/devkit/public-api.ts @FrozenPandaz @vsavkin
 /packages/devkit/nx.ts @FrozenPandaz @vsavkin
 
+# Gradle
+/packages/gradle/** @FrozenPandaz @xiongemi
+/e2e/gradle/** @FrozenPandaz @xiongemi
+
 # Nx-Plugin
 /docs/generated/packages/plugin/** @nrwl/nx-devkit-reviewers @nrwl/nx-docs-reviewers
 /docs/shared/packages/plugin/** @nrwl/nx-devkit-reviewers @nrwl/nx-docs-reviewers

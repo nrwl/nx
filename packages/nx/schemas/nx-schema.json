@@ -18,7 +18,12 @@
           "description": "Default based branch used by affected commands."
         }
       },
-      "additionalProperties": false
+      "additionalProperties": false,
+      "deprecated": "Use `defaultBase` instead. Support for setting `defaultBase` in `affected` will be removed in Nx 19."
+    },
+    "defaultBase": {
+      "type": "string",
+      "description": "Default --base used by affected logic."
     },
     "tasksRunnerOptions": {
       "type": "object",
@@ -95,6 +100,10 @@
     "useDaemonProcess": {
       "type": "boolean",
       "description": "Specifies whether the daemon should be used for the default tasks runner."
+    },
+    "useInferencePlugins": {
+      "type": "boolean",
+      "description": "Specifies whether to add inference plugins when generating new projects."
     },
     "release": {
       "type": "object",

@@ -8,11 +8,6 @@ export function addProject(
   tree: Tree,
   libraryOptions: NormalizedSchema['libraryOptions']
 ) {
-  const executor = libraryOptions.publishable
-    ? '@nx/angular:package'
-    : '@nx/angular:ng-packagr-lite';
-
-  addBuildTargetDefaults(tree, executor);
   const project: AngularProjectConfiguration = {
     name: libraryOptions.name,
     root: libraryOptions.projectRoot,
@@ -20,28 +15,33 @@ export function addProject(
     prefix: libraryOptions.prefix,
     tags: libraryOptions.parsedTags,
     projectType: 'library',
-    targets: {
-      build:
-        libraryOptions.buildable || libraryOptions.publishable
-          ? {
-              executor,
-              outputs: ['{workspaceRoot}/dist/{projectRoot}'],
-              options: {
-                project: `${libraryOptions.projectRoot}/ng-package.json`,
-              },
-              configurations: {
-                production: {
-                  tsConfig: `${libraryOptions.projectRoot}/tsconfig.lib.prod.json`,
-                },
-                development: {
-                  tsConfig: `${libraryOptions.projectRoot}/tsconfig.lib.json`,
-                },
-              },
-              defaultConfiguration: 'production',
-            }
-          : undefined,
-    },
+    targets: {},
   };
+
+  if (libraryOptions.buildable || libraryOptions.publishable) {
+    const executor = libraryOptions.publishable
+      ? '@nx/angular:package'
+      : '@nx/angular:ng-packagr-lite';
+
+    addBuildTargetDefaults(tree, executor);
+
+    project.targets.build = {
+      executor,
+      outputs: ['{workspaceRoot}/dist/{projectRoot}'],
+      options: {
+        project: `${libraryOptions.projectRoot}/ng-package.json`,
+      },
+      configurations: {
+        production: {
+          tsConfig: `${libraryOptions.projectRoot}/tsconfig.lib.prod.json`,
+        },
+        development: {
+          tsConfig: `${libraryOptions.projectRoot}/tsconfig.lib.json`,
+        },
+      },
+      defaultConfiguration: 'production',
+    };
+  }
 
   addProjectConfiguration(tree, libraryOptions.name, project);
   return project;

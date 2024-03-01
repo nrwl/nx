@@ -93,6 +93,12 @@ When false, disables interactive input prompts.
 
 Show help and display available generators in the default collection.
 
+### quiet
+
+Default: `false`
+
+When true, disables Nx specific logging related to running the generator or its outputs.
+
 ### version
 
 Show version number

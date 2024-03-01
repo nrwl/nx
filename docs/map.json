@@ -583,11 +583,6 @@
                       "name": "Migrating Angular Application manually",
                       "id": "angular-manual",
                       "file": "shared/migration/angular-manual"
-                    },
-                    {
-                      "name": "Migrating from AngularJS",
-                      "id": "angularjs",
-                      "file": "shared/migration/migration-angularjs"
                     }
                   ]
                 },
@@ -759,6 +754,12 @@
                   "name": "Component Testing",
                   "description": "Component Testing",
                   "file": "shared/packages/cypress/cypress-component-testing"
+                },
+                {
+                  "id": "cypress-setup-node-events",
+                  "name": "Using setupNodeEvents with Cypress preset",
+                  "description": "A guide on using the setupNodeEvents function with @nx/cypress/plugins/cypress-preset",
+                  "file": "shared/packages/cypress/cypress-setup-node-events"
                 },
                 {
                   "id": "cypress-v11-migration",
@@ -2190,7 +2191,7 @@
             {
               "id": "overview",
               "path": "/nx-api/vite",
-              "name": "Overview of the Nx Vite Plugin",
+              "name": "Overview",
               "description": "The Nx Plugin for Vite contains executors and generators that support building applications using Vite. This page also explains how to configure Vite on your Nx workspace.",
               "file": "shared/packages/vite/vite-plugin"
             }
@@ -2204,7 +2205,7 @@
             {
               "id": "overview",
               "path": "/nx-api/vue",
-              "name": "Overview of the Nx Vue Plugin",
+              "name": "Overview",
               "description": "The Nx Plugin for Vue contains generators for managing Vue applications and libraries within an Nx workspace. This page also explains how to configure Vue on your Nx workspace.",
               "file": "shared/packages/vue/vue-plugin"
             }
@@ -2218,7 +2219,7 @@
             {
               "id": "overview",
               "path": "/nx-api/nuxt",
-              "name": "Overview of the Nx Nuxt Plugin",
+              "name": "Overview",
               "description": "The Nx Plugin for Nuxt contains generators for managing Nuxt applications within a Nx workspace. This page also explains how to configure Nuxt on your Nx workspace.",
               "file": "shared/packages/nuxt/nuxt-plugin"
             }
@@ -2232,7 +2233,7 @@
             {
               "id": "overview",
               "path": "/nx-api/webpack",
-              "name": "Overview of the Nx Webpack Plugin",
+              "name": "Overview",
               "description": "The Nx Plugin for Webpack contains executors and generators that support building applications using Webpack.",
               "file": "shared/packages/webpack/plugin-overview"
             }
@@ -2316,7 +2317,7 @@
           "itemList": [
             {
               "id": "overview",
-              "name": "Nx Storybook Plugin Overview",
+              "name": "Overview",
               "description": "This is an overview page for the Storybook plugin in Nx. It explains what Storybook is and how to set it up in your Nx workspace.",
               "path": "/nx-api/storybook",
               "file": "shared/packages/storybook/plugin-overview"
@@ -2329,7 +2330,7 @@
             },
             {
               "id": "storybook-7-setup",
-              "name": "Storybook 7 overview",
+              "name": "Storybook 7",
               "description": "This guide explains how you can set up Storybook version 7 in your Nx workspace. It contains information about the generators and the frameworks that are supported.",
               "file": "shared/packages/storybook/storybook-7-setup"
             }

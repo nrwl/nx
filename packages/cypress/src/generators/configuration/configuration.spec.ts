@@ -118,29 +118,22 @@ describe('Cypress e2e configuration', () => {
         import { defineConfig } from 'cypress';
 
         export default defineConfig({
-          e2e: { ...nxE2EPreset(__filename, { cypressDir: 'src' }) },
+          e2e: {
+            ...nxE2EPreset(__filename, {
+              cypressDir: 'src',
+              webServerCommands: {
+                default: 'nx run my-app:serve',
+                production: 'nx run my-app:serve:production',
+              },
+              ciWebServerCommand: 'nx run my-app:serve-static',
+            }),
+          },
         });
         "
       `);
-      expect(readProjectConfiguration(tree, 'my-app').targets.e2e)
-        .toMatchInlineSnapshot(`
-        {
-          "configurations": {
-            "ci": {
-              "devServerTarget": "my-app:serve-static",
-            },
-            "production": {
-              "devServerTarget": "my-app:serve:production",
-            },
-          },
-          "executor": "@nx/cypress:cypress",
-          "options": {
-            "cypressConfig": "apps/my-app/cypress.config.ts",
-            "devServerTarget": "my-app:serve",
-            "testingType": "e2e",
-          },
-        }
-      `);
+      expect(
+        readProjectConfiguration(tree, 'my-app').targets.e2e
+      ).toMatchInlineSnapshot(`undefined`);
 
       expect(readJson(tree, 'apps/my-app/tsconfig.json'))
         .toMatchInlineSnapshot(`
@@ -185,7 +178,16 @@ describe('Cypress e2e configuration', () => {
         import { defineConfig } from 'cypress';
 
         export default defineConfig({
-          e2e: { ...nxE2EPreset(__filename, { cypressDir: 'cypress' }) },
+          e2e: {
+            ...nxE2EPreset(__filename, {
+              cypressDir: 'cypress',
+              webServerCommands: {
+                default: 'nx run my-app:serve',
+                production: 'nx run my-app:serve:production',
+              },
+              ciWebServerCommand: 'nx run my-app:serve-static',
+            }),
+          },
         });
         "
       `);
@@ -208,7 +210,14 @@ describe('Cypress e2e configuration', () => {
 
         export default defineConfig({
           e2e: {
-            ...nxE2EPreset(__filename, { cypressDir: 'src' }),
+            ...nxE2EPreset(__filename, {
+              cypressDir: 'src',
+              webServerCommands: {
+                default: 'nx run my-app:serve',
+                production: 'nx run my-app:serve:production',
+              },
+              ciWebServerCommand: 'nx run my-app:serve-static',
+            }),
             baseUrl: 'http://localhost:4200',
           },
         });
@@ -318,15 +327,6 @@ describe('Cypress e2e configuration', () => {
         addPlugin: true,
       });
       assertCypressFiles(tree, 'libs/my-lib/src/e2e', 'js');
-
-      expect(readProjectConfiguration(tree, 'my-lib').targets['e2e'].options)
-        .toMatchInlineSnapshot(`
-        {
-          "baseUrl": "http://localhost:4200",
-          "cypressConfig": "libs/my-lib/cypress.config.js",
-          "testingType": "e2e",
-        }
-      `);
     });
 
     it('should not override eslint settings if preset', async () => {
@@ -394,7 +394,7 @@ describe('Cypress e2e configuration', () => {
         project: 'my-lib',
         devServerTarget: 'my-app:serve',
         directory: 'cypress',
-        addPlugin: true,
+        addPlugin: false,
       });
       assertCypressFiles(tree, 'libs/my-lib/cypress');
       expect(
@@ -412,7 +412,7 @@ describe('Cypress e2e configuration', () => {
       await cypressE2EConfigurationGenerator(tree, {
         project: 'my-app',
         port: 0,
-        addPlugin: true,
+        addPlugin: false,
       });
 
       expect(readProjectConfiguration(tree, 'my-app').targets['e2e'].options)
@@ -553,48 +553,6 @@ export default defineConfig({
         });
         "
       `);
-    });
-
-    it('should support generating explicit targets', async () => {
-      mockedInstalledCypressVersion.mockReturnValue(undefined); // ensure init is called
-      addProject(tree, { name: 'explicit-lib', type: 'apps' });
-      addProject(tree, { name: 'inferred-lib', type: 'apps' });
-
-      await cypressE2EConfigurationGenerator(tree, {
-        project: 'explicit-lib',
-        baseUrl: 'http://localhost:4200',
-        addPlugin: true,
-        addExplicitTargets: true,
-      });
-      await cypressE2EConfigurationGenerator(tree, {
-        project: 'inferred-lib',
-        baseUrl: 'http://localhost:4200',
-        addPlugin: true,
-        addExplicitTargets: false,
-      });
-
-      expect(readProjectConfiguration(tree, 'explicit-lib').targets.e2e)
-        .toMatchInlineSnapshot(`
-        {
-          "configurations": {
-            "ci": {
-              "devServerTarget": "explicit-lib:serve-static",
-            },
-            "production": {
-              "devServerTarget": "explicit-lib:serve:production",
-            },
-          },
-          "executor": "@nx/cypress:cypress",
-          "options": {
-            "cypressConfig": "apps/explicit-lib/cypress.config.ts",
-            "devServerTarget": "explicit-lib:serve",
-            "testingType": "e2e",
-          },
-        }
-      `);
-      expect(
-        readProjectConfiguration(tree, 'inferred-lib').targets.e2e
-      ).toBeUndefined();
     });
   });
 });

@@ -21,6 +21,7 @@ Nx.json configuration
 - [affected](../../devkit/documents/NxJsonConfiguration#affected): NxAffectedConfig
 - [cacheDirectory](../../devkit/documents/NxJsonConfiguration#cachedirectory): string
 - [cli](../../devkit/documents/NxJsonConfiguration#cli): Object
+- [defaultBase](../../devkit/documents/NxJsonConfiguration#defaultbase): string
 - [defaultProject](../../devkit/documents/NxJsonConfiguration#defaultproject): string
 - [extends](../../devkit/documents/NxJsonConfiguration#extends): string
 - [generators](../../devkit/documents/NxJsonConfiguration#generators): Object
@@ -37,6 +38,7 @@ Nx.json configuration
 - [targetDefaults](../../devkit/documents/NxJsonConfiguration#targetdefaults): TargetDefaults
 - [tasksRunnerOptions](../../devkit/documents/NxJsonConfiguration#tasksrunneroptions): Object
 - [useDaemonProcess](../../devkit/documents/NxJsonConfiguration#usedaemonprocess): boolean
+- [useInferencePlugins](../../devkit/documents/NxJsonConfiguration#useinferenceplugins): boolean
 - [workspaceLayout](../../devkit/documents/NxJsonConfiguration#workspacelayout): Object
 
 ## Properties
@@ -46,6 +48,10 @@ Nx.json configuration
 • `Optional` **affected**: [`NxAffectedConfig`](../../devkit/documents/NxAffectedConfig)
 
 Default options for `nx affected`
+
+**`Deprecated`**
+
+use [defaultBase](../../devkit/documents/NxJsonConfiguration#defaultbase) instead. For more information see https://nx.dev/deprecated/affected-config#affected-config
 
 ---
 
@@ -69,6 +75,14 @@ Default generator collection. It is used when no collection is provided.
 | :-------------------- | :-------------------------------------------------------- |
 | `defaultProjectName?` | `string`                                                  |
 | `packageManager?`     | [`PackageManager`](../../devkit/documents/PackageManager) |
+
+---
+
+### defaultBase
+
+• `Optional` **defaultBase**: `string`
+
+Default value for --base used by `nx affected` and `nx format`.
 
 ---
 
@@ -232,6 +246,14 @@ Available Task Runners
 • `Optional` **useDaemonProcess**: `boolean`
 
 Set this to false to disable the daemon.
+
+---
+
+### useInferencePlugins
+
+• `Optional` **useInferencePlugins**: `boolean`
+
+Set this to false to disable adding inference plugins when generating new projects
 
 ---
 
