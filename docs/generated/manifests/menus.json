@@ -1761,6 +1761,14 @@
                 "disableCollapsible": false
               },
               {
+                "name": "Upgrading Storybook using the Storybook CLI",
+                "path": "/recipes/storybook/upgrading-storybook",
+                "id": "upgrading-storybook",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
                 "name": "Setting up Storybook Composition with Nx",
                 "path": "/recipes/storybook/storybook-composition-setup",
                 "id": "storybook-composition-setup",
@@ -3105,6 +3113,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Upgrading Storybook using the Storybook CLI",
+            "path": "/recipes/storybook/upgrading-storybook",
+            "id": "upgrading-storybook",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Setting up Storybook Composition with Nx",
             "path": "/recipes/storybook/storybook-composition-setup",
             "id": "storybook-composition-setup",
@@ -3199,6 +3215,14 @@
         "name": "Setting up Storybook Interaction Tests with Nx",
         "path": "/recipes/storybook/storybook-interaction-tests",
         "id": "storybook-interaction-tests",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Upgrading Storybook using the Storybook CLI",
+        "path": "/recipes/storybook/upgrading-storybook",
+        "id": "upgrading-storybook",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false

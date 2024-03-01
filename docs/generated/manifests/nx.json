@@ -2408,6 +2408,17 @@
             "tags": ["storybook"]
           },
           {
+            "id": "upgrading-storybook",
+            "name": "Upgrading Storybook using the Storybook CLI",
+            "description": "This guide explains how you can upgrade Storybook using the Storybook CLI upgrade and automigrate commands.",
+            "mediaImage": "",
+            "file": "shared/recipes/storybook/upgrading-storybook",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/storybook/upgrading-storybook",
+            "tags": ["storybook"]
+          },
+          {
             "id": "storybook-composition-setup",
             "name": "Setting up Storybook Composition with Nx",
             "description": "This guide explains how you can set up Storybook composition on your Nx workspace.",
@@ -4249,6 +4260,17 @@
         "tags": ["storybook"]
       },
       {
+        "id": "upgrading-storybook",
+        "name": "Upgrading Storybook using the Storybook CLI",
+        "description": "This guide explains how you can upgrade Storybook using the Storybook CLI upgrade and automigrate commands.",
+        "mediaImage": "",
+        "file": "shared/recipes/storybook/upgrading-storybook",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/storybook/upgrading-storybook",
+        "tags": ["storybook"]
+      },
+      {
         "id": "storybook-composition-setup",
         "name": "Setting up Storybook Composition with Nx",
         "description": "This guide explains how you can set up Storybook composition on your Nx workspace.",
@@ -4383,6 +4405,17 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/storybook/storybook-interaction-tests",
+    "tags": ["storybook"]
+  },
+  "/recipes/storybook/upgrading-storybook": {
+    "id": "upgrading-storybook",
+    "name": "Upgrading Storybook using the Storybook CLI",
+    "description": "This guide explains how you can upgrade Storybook using the Storybook CLI upgrade and automigrate commands.",
+    "mediaImage": "",
+    "file": "shared/recipes/storybook/upgrading-storybook",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/storybook/upgrading-storybook",
     "tags": ["storybook"]
   },
   "/recipes/storybook/storybook-composition-setup": {

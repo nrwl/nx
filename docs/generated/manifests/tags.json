@@ -907,6 +907,13 @@
       "path": "/recipes/storybook/storybook-interaction-tests"
     },
     {
+      "description": "This guide explains how you can upgrade Storybook using the Storybook CLI upgrade and automigrate commands.",
+      "file": "shared/recipes/storybook/upgrading-storybook",
+      "id": "upgrading-storybook",
+      "name": "Upgrading Storybook using the Storybook CLI",
+      "path": "/recipes/storybook/upgrading-storybook"
+    },
+    {
       "description": "This guide explains how you can set up Storybook composition on your Nx workspace.",
       "file": "shared/recipes/storybook/storybook-composition-setup",
       "id": "storybook-composition-setup",
