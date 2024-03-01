@@ -181,6 +181,7 @@
       - [Automatically Version with Conventional Commits](/recipes/nx-release/automatically-version-with-conventional-commits)
       - [Publish in CI/CD](/recipes/nx-release/publish-in-ci-cd)
       - [Automate GitHub Releases](/recipes/nx-release/automate-github-releases)
+      - [Publish Rust Crates](/recipes/nx-release/publish-rust-crates)
     - [Other](/recipes/other)
       - [Rescope Packages from @nrwl to @nx](/recipes/other/rescope)
   - [Showcase](/showcase)

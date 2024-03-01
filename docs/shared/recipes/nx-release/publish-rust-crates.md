@@ -1,6 +1,8 @@
-# Get Started with Nx Release
+# Using Nx Release with Rust
 
-This recipe guides you through versioning packages, generating changelogs, and publishing packages in a JavaScript monorepo with Nx Release.
+This recipe guides you through versioning Rust libraries, generating changelogs, and publishing Rust crates in a monorepo with Nx Release.
+
+{% github-repository url="https://github.com/JamesHenry/release-js-and-rust" /%}
 
 ## Initialize Nx Release in Your Workspace
 
@@ -8,30 +10,30 @@ This recipe guides you through versioning packages, generating changelogs, and p
 
 Ensure that Nx is installed in your monorepo. Check out the [Installation docs](/getting-started/installation) for instructions on created a new Nx workspace or adding Nx to an existing project.
 
-### Add the JavaScript Plugin
+### Add the @monodon/rust plugin
 
-The [`@nx/js` package](/nx-api/js) is required for Nx Release to manage and release JavaScript packages. Add it if it is not already installed:
+The [`@monodon/rust` package](https://github.com/Cammisuli/monodon) is required for Nx Release to manage and release Rust crates. Add it if it is not already installed:
 
-```shell {% skipRescope=true %}
-nx add @nx/js
+```shell
+nx add @monodon/rust
 ```
 
 ### Configure Projects to Release
 
 Nx Release uses Nx's powerful [Project Graph](/features/explore-graph) to understand your projects and their dependencies.
 
-If you want to release all of the projects in your workspace, such as when dealing with a series of npm library packages, no configuration is required.
+If you want to release all of the projects in your workspace, such as when dealing with a series of Rust crates, no configuration is required.
 
 If you have a mixed workspace in which you also have some applications, e2e testing projects or other things you don't want to release, you can configure `nx release` to target only the projects you want to release.
 
 Configure which projects to release by adding the `release.projects` property to nx.json. The value is an array of strings, and you can use any of the same specifiers that are supported by `nx run-many`'s [projects filtering](/nx-api/nx/documents/run-many), such as explicit project names, Nx tags, directories and glob patterns, including negation using the `!` character.
 
-For example, to release just the projects in the `packages` directory:
+For example, to release just the projects in the `crates` directory:
 
 ```json nx.json
 {
   "release": {
-    "projects": ["packages/*"]
+    "projects": ["crates/*"]
   }
 }
 ```
@@ -52,14 +54,14 @@ nx release --first-release --dry-run
 
 ### Pick a New Version
 
-Nx Release will prompt you to pick a version bump for all the packages in the release. By default, all package versions are kept in sync, so the prompt only needs to be answered one time. If needed, you can [configure Nx to release projects independently](/recipes/nx-release/release-projects-independently).
+Nx Release will prompt you to pick a version bump for all the crates in the release. By default, all crate versions are kept in sync, so the prompt only needs to be answered one time. If needed, you can [configure Nx to release projects independently](/recipes/nx-release/release-projects-independently).
 
 ```text {% command="nx release --first-release --dry-run" %}
 
 NX   Running release version for project: pkg-1
 
-pkg-1 🔍 Reading data for package "@myorg/pkg-1" from packages/pkg-1/package.json
-pkg-1 📄 Resolved the current version as 0.0.1 from packages/pkg-1/package.json
+pkg-1 🔍 Reading data for crate "pkg-1" from crates/crates/pkg-1/Cargo.toml
+pkg-1 📄 Resolved the current version as 0.1.0 from crates/pkg-1/Cargo.toml
 ? What kind of change is this for the 3 matched projects(s)? …
 ❯ major
   premajor
@@ -79,77 +81,78 @@ After this prompt, the command will finish, showing you the preview of changes t
 
 NX   Running release version for project: pkg-1
 
-pkg-1 🔍 Reading data for package "@myorg/pkg-1" from packages/pkg-1/package.json
-pkg-1 📄 Resolved the current version as 0.0.1 from packages/pkg-1/package.json
+pkg-1 🔍 Reading data for crate "pkg-1" from crates/crates/pkg-1/Cargo.toml
+pkg-1 📄 Resolved the current version as 0.1.0 from crates/pkg-1/Cargo.toml
 ✔ What kind of change is this for the 3 matched projects(s)? · patch
-pkg-1 ✍️  New version 0.0.2 written to packages/pkg-1/package.json
+pkg-1 ✍️  New version 0.1.1 written to crates/crates/pkg-1/Cargo.toml
 
 NX   Running release version for project: pkg-2
 
-pkg-2 🔍 Reading data for package "@myorg/pkg-2" from packages/pkg-2/package.json
-pkg-2 📄 Resolved the current version as 0.0.1 from packages/pkg-2/package.json
-pkg-2 ✍️  New version 0.0.2 written to packages/pkg-2/package.json
-pkg-2 ✍️  Applying new version 0.0.2 to 1 package which depends on pkg-2
+pkg-2 🔍 Reading data for crate "pkg-2" from crates/crates/pkg-2/Cargo.toml
+pkg-2 📄 Resolved the current version as 0.1.0 from crates/pkg-2/Cargo.toml
+pkg-2 ✍️  New version 0.1.1 written to crates/crates/pkg-2/Cargo.toml
 
 NX   Running release version for project: pkg-3
 
-pkg-3 🔍 Reading data for package "@myorg/pkg-3" from packages/pkg-3/package.json
-pkg-3 📄 Resolved the current version as 0.0.1 from packages/pkg-3/package.json
-pkg-3 ✍️  New version 0.0.2 written to packages/pkg-3/package.json
+pkg-3 🔍 Reading data for crate "pkg-3" from crates/crates/pkg-3/Cargo.toml
+pkg-3 📄 Resolved the current version as 0.1.0 from crates/pkg-3/Cargo.toml
+pkg-3 ✍️  New version 0.1.1 written to crates/crates/pkg-3/Cargo.toml
 
-UPDATE packages/pkg-1/package.json [dry-run]
+UPDATE crates/pkg-1/Cargo.toml [dry-run]
 
-    "name": "@myorg/pkg-1",
--   "version": "0.0.1",
-+   "version": "0.0.2",
-    "dependencies": {
-      "tslib": "^2.3.0",
--     "@myorg/pkg-2": "0.0.1"
-+     "@myorg/pkg-2": "0.0.2"
-    },
-
- UPDATE packages/pkg-2/package.json [dry-run]
-
-    "name": "@myorg/pkg-2",
--   "version": "0.0.1",
-+   "version": "0.0.2",
-    "dependencies": {
-
- UPDATE packages/pkg-3/package.json [dry-run]
-
-    "name": "@myorg/pkg-3",
--   "version": "0.0.1",
-+   "version": "0.0.2",
-    "dependencies": {
+  [package]
+  name = "pkg-1"
+- version = "0.1.0"
++ version = "0.1.1"
+  edition = "2021"
 
 
-NX   Updating npm lock file
+UPDATE crates/pkg-2/Cargo.toml [dry-run]
+
+  [package]
+  name = "pkg-2"
+- version = "0.1.0"
++ version = "0.1.1"
+  edition = "2021"
+
+
+UPDATE crates/pkg-3/Cargo.toml [dry-run]
+
+  [package]
+  name = "pkg-3"
+- version = "0.1.0"
++ version = "0.1.1"
+  edition = "2021"
+
+
+NX   Updating Cargo.lock file
 
 
 NX   Staging changed files with git
 
 
-NOTE: The "dryRun" flag means no changes were made.
-
-NX   Previewing an entry in CHANGELOG.md for v0.0.2
+NX   Previewing an entry in CHANGELOG.md for v0.1.1
 
 
 CREATE CHANGELOG.md [dry-run]
-+ ## 0.0.2 (2024-01-23)
++ ## 0.1.1 (2024-02-29)
 +
 + This was a version bump only, there were no code changes.
 
+
 NX   Staging changed files with git
 
-
-NOTE: The "dryRun" flag means no changelogs were actually created.
 
 NX   Committing changes with git
 
 
 NX   Tagging commit with git
 
-Skipped publishing packages.
+
+NX   Skipped publishing packages.
+
+
+NOTE: The "dryRun" flag means no changes were made.
 ```
 
 ### Run Without `--dry-run`
@@ -160,7 +163,7 @@ If the preview looks good, run the command again without the `--dry-run` option 
 nx release --first-release
 ```
 
-The command will proceed as before, prompting for a version bump and showing a preview of the changes. However, this time, it will prompt you to publish the packages to the remote registry. If you say no, the publishing step will be skipped. If you say yes, the command will publish the packages to the npm registry.
+The command will proceed as before, prompting for a version bump and showing a preview of the changes. However, this time, it will prompt you to publish the crates to the remote registry. If you say no, the publishing step will be skipped. If you say yes, the command will publish the crates to https://crates.io.
 
 ```text {% command="nx release --first-release" %}
 ...
@@ -175,71 +178,7 @@ NX   Running target nx-release-publish for 3 projects:
 
 —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
-> nx run pkg-1:nx-release-publish
-
-
-📦  @myorg/pkg-1@0.0.2
-=== Tarball Contents ===
-
-233B README.md
-277B package.json
-53B  src/index.ts
-61B  src/lib/pkg-1.ts
-=== Tarball Details ===
-name:          @myorg/pkg-1
-version:       0.0.2
-filename:      testorg-pkg-1-0.0.2.tgz
-package size:  531 B
-unpacked size: 624 B
-shasum:        {shasum}
-integrity:     {integrity}
-total files:   12
-
-Published to https://registry.npmjs.org with tag "latest"
-
-> nx run pkg-2:nx-release-publish
-
-
-📦  @myorg/pkg-2@0.0.2
-=== Tarball Contents ===
-
-233B README.md
-277B package.json
-53B  src/index.ts
-61B  src/lib/pkg-2.ts
-=== Tarball Details ===
-name:          @myorg/pkg-2
-version:       0.0.2
-filename:      testorg-pkg-2-0.0.2.tgz
-package size:  531 B
-unpacked size: 624 B
-shasum:        {shasum}
-integrity:     {integrity}
-total files:   12
-
-Published to https://registry.npmjs.org with tag "latest"
-
-> nx run pkg-3:nx-release-publish
-
-
-📦  @myorg/pkg-3@0.0.2
-=== Tarball Contents ===
-
-233B README.md
-277B package.json
-53B  src/index.ts
-61B  src/lib/pkg-3.ts
-=== Tarball Details ===
-name:          @myorg/pkg-3
-version:       0.0.2
-filename:      testorg-pkg-3-0.0.2.tgz
-package size:  531 B
-unpacked size: 624 B
-shasum:        {shasum}
-integrity:     {integrity}
-total files:   12
-
-Published to https://registry.npmjs.org with tag "latest"
+(...cargo publish output here...)
 
 —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
@@ -249,7 +188,7 @@ NX   Successfully ran target nx-release-publish for 3 projects
 
 ## Manage Git Operations
 
-By default, Nx Release will stage all changes it makes with git. This includes updating `package.json` files, creating changelog files, and updating the `package-lock.json` file. After staging the changes, Nx Release will commit the changes and create a git tag for the release.
+By default, Nx Release will stage all changes it makes with git. This includes updating `Cargo.toml` files, creating changelog files, and updating the `Cargo.lock` file. After staging the changes, Nx Release will commit the changes and create a git tag for the release.
 
 ### Customize the Commit Message and Tag Pattern
 
@@ -272,6 +211,6 @@ For this same example, if you want the commit message to be 'chore(release): 1.2
 
 ## Future Releases
 
-After the first release, the `--first-release` option will no longer be required. Nx Release will expect to find git tags and changelog files for each package. It will also use `npm view` to look up the current version of packages before publishing, ensuring that the package has not already been published and therefore avoid any conflict errors, meaning you can run the same publish action multiple times without any negative side-effects.
+After the first release, the `--first-release` option will no longer be required. Nx Release will expect to find git tags and changelog files for each package.
 
 Future releases will also generate entries in `CHANGELOG.md` based on the changes since the last release. Nx Release will parse the `feat` and `fix` type commits according to the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) specification and sort them into appropriate sections of the changelog. An example of these changelogs can be seen on the [Nx releases page](https://github.com/nrwl/nx/releases).
