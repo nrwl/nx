@@ -113,6 +113,7 @@
       - [One main Storybook instance using Storybook Composition](/recipes/storybook/one-storybook-with-composition)
       - [How to configure Webpack and Vite for Storybook](/recipes/storybook/custom-builder-configs)
       - [Setting up Storybook Interaction Tests with Nx](/recipes/storybook/storybook-interaction-tests)
+      - [Upgrading Storybook using the Storybook CLI](/recipes/storybook/upgrading-storybook)
       - [Setting up Storybook Composition with Nx](/recipes/storybook/storybook-composition-setup)
       - [Angular: Set up Compodoc for Storybook on Nx](/recipes/storybook/angular-storybook-compodoc)
       - [Angular: Configuring styles and preprocessor options](/recipes/storybook/angular-configuring-styles)
