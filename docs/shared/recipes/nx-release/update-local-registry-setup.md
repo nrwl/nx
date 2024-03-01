@@ -72,12 +72,14 @@ export default async () => {
     stageChanges: false,
     gitCommit: false,
     gitTag: false,
+    firstRelease: true,
     generatorOptionsOverrides: {
       skipLockFileUpdate: true,
     },
   });
   await releasePublish({
     tag: 'e2e',
+    firstRelease: true,
   });
 };
 ```
