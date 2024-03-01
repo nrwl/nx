@@ -629,6 +629,10 @@ async function applyChangesAndExit(
 function resolveChangelogRenderer(
   changelogRendererPath: string
 ): ChangelogRenderer {
+  const interpolatedChangelogRendererPath = interpolate(changelogRendererPath, {
+    workspaceRoot,
+  });
+
   // Try and load the provided (or default) changelog renderer
   let changelogRenderer: ChangelogRenderer;
   let cleanupTranspiler = () => {};
@@ -637,7 +641,7 @@ function resolveChangelogRenderer(
     if (rootTsconfigPath) {
       cleanupTranspiler = registerTsProject(rootTsconfigPath);
     }
-    const r = require(changelogRendererPath);
+    const r = require(interpolatedChangelogRendererPath);
     changelogRenderer = r.default || r;
   } catch {
   } finally {
