@@ -116,7 +116,7 @@ function buildStorybookTargets(
 
   const namedInputs = getNamedInputs(projectRoot, context);
 
-  const storybookFramework = getStorybookConfig(configFilePath, context);
+  const storybookFramework = getStorybookFramework(configFilePath, context);
 
   const frameworkIsAngular = storybookFramework === "'@storybook/angular'";
 
@@ -262,7 +262,7 @@ function serveStaticTarget(
   return targetConfig;
 }
 
-function getStorybookConfig(
+function getStorybookFramework(
   configFilePath: string,
   context: CreateNodesContext
 ): string {
@@ -273,47 +273,50 @@ function getStorybookConfig(
     'ImportDeclaration:has(ImportSpecifier:has([text="StorybookConfig"]))'
   )?.[0];
 
+  if (!importDeclarations) {
+    return parseFrameworkName(mainTsJs);
+  }
+
   const storybookConfigImportPackage = tsquery.query(
     importDeclarations,
     'StringLiteral'
   )?.[0];
 
-  let frameworkName: string | undefined;
-
   if (storybookConfigImportPackage?.getText() === `'@storybook/core-common'`) {
-    const frameworkPropertyAssignment = tsquery.query(
-      mainTsJs,
-      `PropertyAssignment:has(Identifier:has([text="framework"]))`
-    )?.[0];
-
-    if (!frameworkPropertyAssignment) {
-      return;
-    }
-
-    const propertyAssignments = tsquery.query(
-      frameworkPropertyAssignment,
-      `PropertyAssignment:has(Identifier:has([text="name"]))`
-    );
-
-    const namePropertyAssignment = propertyAssignments?.find((expression) => {
-      return expression.getText().startsWith('name');
-    });
-
-    if (!namePropertyAssignment) {
-      const storybookConfigImportPackage = tsquery.query(
-        frameworkPropertyAssignment,
-        'StringLiteral'
-      )?.[0];
-      frameworkName = storybookConfigImportPackage?.getText();
-    } else {
-      frameworkName = tsquery
-        .query(namePropertyAssignment, `StringLiteral`)?.[0]
-        ?.getText();
-    }
-  } else {
-    frameworkName = storybookConfigImportPackage?.getText();
+    return parseFrameworkName(mainTsJs);
   }
-  return frameworkName;
+
+  return storybookConfigImportPackage?.getText();
+}
+
+function parseFrameworkName(mainTsJs: string) {
+  const frameworkPropertyAssignment = tsquery.query(
+    mainTsJs,
+    `PropertyAssignment:has(Identifier:has([text="framework"]))`
+  )?.[0];
+
+  if (!frameworkPropertyAssignment) {
+    return undefined;
+  }
+
+  const propertyAssignments = tsquery.query(
+    frameworkPropertyAssignment,
+    `PropertyAssignment:has(Identifier:has([text="name"]))`
+  );
+
+  const namePropertyAssignment = propertyAssignments?.find((expression) => {
+    return expression.getText().startsWith('name');
+  });
+
+  if (!namePropertyAssignment) {
+    const storybookConfigImportPackage = tsquery.query(
+      frameworkPropertyAssignment,
+      'StringLiteral'
+    )?.[0];
+    return storybookConfigImportPackage?.getText();
+  }
+
+  return tsquery.query(namePropertyAssignment, `StringLiteral`)?.[0]?.getText();
 }
 
 function getOutputs(projectRoot: string): string[] {
