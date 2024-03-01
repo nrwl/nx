@@ -42,35 +42,6 @@ export interface WorkspaceJestPluginOptions {
   e2eTargetName?: string;
 }
 
-// "e2e": {
-//   "inputs": [
-//     "default",
-//     "^production",
-//     "{workspaceRoot}/jest.preset.js",
-//     "{workspaceRoot}/.verdaccio/config.yml",
-//     {
-//       "env": "SELECTED_CLI"
-//     },
-//     {
-//       "env": "SELECTED_PM"
-//     },
-//     {
-//       "env": "NX_E2E_CI_CACHE_KEY"
-//     },
-//     {
-//       "env": "CI"
-//     }
-//   ],
-//     "executor": "@nx/jest:jest",
-//     "options": {
-//     "jestConfig": "{projectRoot}/jest.config.ts",
-//       "passWithNoTests": true,
-//       "runInBand": true
-//   },
-//   "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
-//     "cache": true
-// },
-
 export const createNodes: CreateNodes<WorkspaceJestPluginOptions> = [
   '{e2e,packages}/*/jest.config.ts',
   async (configFilePath, options, context) => {
@@ -94,16 +65,14 @@ export const createNodes: CreateNodes<WorkspaceJestPluginOptions> = [
 
     calculatedTargets[hash] = targets;
 
-    return targets
-      ? {
-          projects: {
-            [projectRoot]: {
-              root: projectRoot,
-              targets: targets,
-            },
-          },
-        }
-      : {};
+    return {
+      projects: {
+        [projectRoot]: {
+          root: projectRoot,
+          targets: targets,
+        },
+      },
+    };
   },
 ];
 
@@ -113,16 +82,64 @@ async function buildJestTargets(
   options: WorkspaceJestPluginOptions,
   context: CreateNodesContext
 ) {
-  // Prevents `TS2451: Cannot redeclare block-scoped variable` error
-  process.env.TS_NODE_TRANSPILE_ONLY = 'true';
-
   const isE2E = projectRoot.startsWith('e2e');
   const targetName = isE2E ? options.e2eTargetName : options.testTargetName;
-  const targets = await jestCreateNodes[1](
-    configFilePath,
-    { targetName },
-    context
-  );
 
-  return targets.projects?.[projectRoot]?.targets ?? null;
+  if (isE2E) {
+    // Prevents `TS2451: Cannot redeclare block-scoped variable` error
+    process.env.TS_NODE_TRANSPILE_ONLY = 'true';
+
+    const result = await jestCreateNodes[1](
+      configFilePath,
+      { targetName },
+      context
+    );
+
+    const target = result.projects?.[projectRoot]?.targets?.[targetName];
+    if (!target) return {};
+
+    const inputs = [
+      'default',
+      '^production',
+      '{workspaceRoot}/jest.preset.js',
+      '{workspaceRoot}/.verdaccio/config.yml',
+      {
+        env: 'SELECTED_CLI',
+      },
+      {
+        env: 'SELECTED_PM',
+      },
+      {
+        env: 'NX_E2E_CI_CACHE_KEY',
+      },
+      {
+        env: 'CI',
+      },
+    ];
+
+    target.inputs = inputs;
+    target.options ??= {};
+    target.options.args = '--runInBand --passWithNoTests';
+
+    // TODO: Add `e2e-ci` and split tasks
+    return {
+      [targetName]: target,
+    };
+  } else {
+    // Unit tests don't benefit from splitting, and there are a lot of problems running from project root rather than workspace root.
+    // TODO: update tests and remove executor usage.
+    return {
+      [targetName]: {
+        dependsOn: ['test-native', 'build-native', '^build-native'],
+        inputs: ['default', '^production', '{workspaceRoot}/jest.preset.js'],
+        executor: '@nx/jest:jest',
+        options: {
+          jestConfig: '{projectRoot}/jest.config.ts',
+          passWithNoTests: true,
+        },
+        outputs: ['{workspaceRoot}/coverage/{projectRoot}'],
+        cache: true,
+      },
+    };
+  }
 }
