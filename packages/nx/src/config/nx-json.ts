@@ -147,7 +147,7 @@ export interface NxReleaseConventionalCommitsConfiguration {
   types?: Record<
     string,
     /**
-     * Optionally override the title and visibility of the changelog section for this type. If set to false, the section will be hidden and the semver bump will be "none".
+     * Optionally override the version and changelog for commit types. If set to false, commits of that type will be hidden in the changelog and will not trigger a version bump.
      */
     | {
         /**
