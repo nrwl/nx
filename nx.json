@@ -94,15 +94,7 @@
       "cache": true
     },
     "test": {
-      "dependsOn": ["test-native", "build-native", "^build-native"],
-      "inputs": ["default", "^production", "{workspaceRoot}/jest.preset.js"],
-      "executor": "@nx/jest:jest",
-      "options": {
-        "jestConfig": "{projectRoot}/jest.config.ts",
-        "passWithNoTests": true
-      },
-      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
-      "cache": true
+      "dependsOn": ["test-native", "build-native", "^build-native"]
     },
     "lint": {
       "dependsOn": ["build-native", "^build-native"],
@@ -116,34 +108,6 @@
         "lintFilePatterns": ["{projectRoot}"]
       },
       "outputs": ["{options.outputFile}"],
-      "cache": true
-    },
-    "e2e": {
-      "inputs": [
-        "default",
-        "^production",
-        "{workspaceRoot}/jest.preset.js",
-        "{workspaceRoot}/.verdaccio/config.yml",
-        {
-          "env": "SELECTED_CLI"
-        },
-        {
-          "env": "SELECTED_PM"
-        },
-        {
-          "env": "NX_E2E_CI_CACHE_KEY"
-        },
-        {
-          "env": "CI"
-        }
-      ],
-      "executor": "@nx/jest:jest",
-      "options": {
-        "jestConfig": "{projectRoot}/jest.config.ts",
-        "passWithNoTests": true,
-        "runInBand": true
-      },
-      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
       "cache": true
     },
     "e2e-macos": {
@@ -195,22 +159,12 @@
     },
     "copy-docs": {
       "cache": true
-    },
-    "@nx/jest:jest": {
-      "cache": true,
-      "inputs": ["default", "^production", "{workspaceRoot}/jest.preset.js"],
-      "options": {
-        "passWithNoTests": true
-      },
-      "configurations": {
-        "ci": {
-          "ci": true,
-          "codeCoverage": true
-        }
-      }
     }
   },
-  "plugins": ["@monodon/rust"],
+  "plugins": [
+    "@monodon/rust",
+    { "plugin": "@nx/workspace-plugin", "options": {} }
+  ],
   "nxCloudAccessToken": "YmZiOWQyNzctOThiZC00MjYwLWI3YTAtZDA3MDg4YWY1YTExfHJlYWQ=",
   "nxCloudUrl": "https://staging.nx.app",
   "parallel": 1,

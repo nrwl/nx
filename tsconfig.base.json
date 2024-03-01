@@ -4,6 +4,7 @@
     "importHelpers": true,
     "module": "commonjs",
     "moduleResolution": "node",
+    "moduleDetection": "force",
     "outDir": "build",
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
