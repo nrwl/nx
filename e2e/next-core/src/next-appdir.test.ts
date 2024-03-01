@@ -35,7 +35,7 @@ describe('Next.js App Router', () => {
         import React from 'react';
         import { ${jsLib} } from '@${proj}/${jsLib}';
 
-        export default async function Page() {
+        export default function Page() {
           return (
             <p>{${jsLib}()}</p>
           );
