@@ -96,30 +96,25 @@ function applyNxIndependentConfig(
     ...config.output,
     libraryTarget:
       (config as Configuration).output?.libraryTarget ??
-      options.target === 'node'
-        ? 'commonjs'
-        : undefined,
+      (options.target === 'node' ? 'commonjs' : undefined),
     path:
       config.output?.path ??
       (options.outputPath
         ? path.join(options.root, options.outputPath)
         : undefined),
     filename:
-      config.output?.filename ?? options.outputHashing
-        ? `[name]${hashFormat.script}.js`
-        : '[name].js',
+      config.output?.filename ??
+      (options.outputHashing ? `[name]${hashFormat.script}.js` : '[name].js'),
     chunkFilename:
-      config.output?.chunkFilename ?? options.outputHashing
-        ? `[name]${hashFormat.chunk}.js`
-        : '[name].js',
+      config.output?.chunkFilename ??
+      (options.outputHashing ? `[name]${hashFormat.chunk}.js` : '[name].js'),
     hashFunction: config.output?.hashFunction ?? 'xxhash64',
     // Disabled for performance
     pathinfo: config.output?.pathinfo ?? false,
     // Use CJS for Node since it has the widest support.
     scriptType:
-      config.output?.scriptType ?? options.target === 'node'
-        ? undefined
-        : 'module',
+      config.output?.scriptType ??
+      (options.target === 'node' ? undefined : 'module'),
   };
 
   config.watch = options.watch;
