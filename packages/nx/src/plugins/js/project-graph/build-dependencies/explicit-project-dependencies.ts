@@ -1,17 +1,18 @@
-import { TargetProjectLocator } from './target-project-locator';
+import { join, relative } from 'path';
 import {
   DependencyType,
   ProjectGraphProjectNode,
 } from '../../../../config/project-graph';
-import { join, relative } from 'path';
-import { workspaceRoot } from '../../../../utils/workspace-root';
-import { normalizePath } from '../../../../utils/path';
+import { ProjectConfiguration } from '../../../../config/workspace-json-project-json';
 import { CreateDependenciesContext } from '../../../../project-graph/plugins';
 import {
   RawProjectGraphDependency,
   validateDependency,
 } from '../../../../project-graph/project-graph-builder';
-import { ProjectConfiguration } from '../../../../config/workspace-json-project-json';
+import { normalizePath } from '../../../../utils/path';
+import { workspaceRoot } from '../../../../utils/workspace-root';
+import { ExternalDependenciesCache } from './build-dependencies';
+import { TargetProjectLocator } from './target-project-locator';
 
 function isRoot(
   projects: Record<string, ProjectConfiguration>,
@@ -22,12 +23,18 @@ function isRoot(
 
 function convertImportToDependency(
   importExpr: string,
+  externalDependenciesCache: ExternalDependenciesCache,
   sourceFile: string,
   source: string,
   type: RawProjectGraphDependency['type'],
   targetProjectLocator: TargetProjectLocator
 ): RawProjectGraphDependency {
+  /**
+   * First try and find in the cache populated by the package.json dependencies, then try and find in the project graph,
+   * and finally default to an assumed root level external dependency.
+   */
   const target =
+    externalDependenciesCache.get(source) ??
     targetProjectLocator.findProjectWithImport(importExpr, sourceFile) ??
     `npm:${importExpr}`;
 
@@ -40,7 +47,8 @@ function convertImportToDependency(
 }
 
 export function buildExplicitTypeScriptDependencies(
-  ctx: CreateDependenciesContext
+  ctx: CreateDependenciesContext,
+  externalDependenciesCache: ExternalDependenciesCache
 ): RawProjectGraphDependency[] {
   // TODO: TargetProjectLocator is a public API, so we can't change the shape of it
   // We should eventually let it accept Record<string, ProjectConfiguration> s.t. we
@@ -104,6 +112,7 @@ export function buildExplicitTypeScriptDependencies(
     for (const importExpr of staticImportExpressions) {
       const dependency = convertImportToDependency(
         importExpr,
+        externalDependenciesCache,
         normalizedFilePath,
         sourceProject,
         DependencyType.static,
@@ -120,6 +129,7 @@ export function buildExplicitTypeScriptDependencies(
     for (const importExpr of dynamicImportExpressions) {
       const dependency = convertImportToDependency(
         importExpr,
+        externalDependenciesCache,
         normalizedFilePath,
         sourceProject,
         DependencyType.dynamic,

@@ -1,22 +1,23 @@
-import { defaultFileRead } from '../../../../project-graph/file-utils';
 import { join } from 'path';
 import { DependencyType } from '../../../../config/project-graph';
-import { parseJson } from '../../../../utils/json';
-import { joinPathFragments } from '../../../../utils/path';
 import {
   ProjectConfiguration,
   ProjectsConfigurations,
 } from '../../../../config/workspace-json-project-json';
-import { NxJsonConfiguration } from '../../../../config/nx-json';
-import { PackageJson } from '../../../../utils/package-json';
+import { defaultFileRead } from '../../../../project-graph/file-utils';
 import { CreateDependenciesContext } from '../../../../project-graph/plugins';
 import {
   RawProjectGraphDependency,
   validateDependency,
 } from '../../../../project-graph/project-graph-builder';
+import { parseJson } from '../../../../utils/json';
+import { PackageJson } from '../../../../utils/package-json';
+import { joinPathFragments } from '../../../../utils/path';
+import { ExternalDependenciesCache } from './build-dependencies';
 
 export function buildExplicitPackageJsonDependencies(
-  ctx: CreateDependenciesContext
+  ctx: CreateDependenciesContext,
+  externalDependenciesCache: ExternalDependenciesCache
 ): RawProjectGraphDependency[] {
   const res: RawProjectGraphDependency[] = [];
   let packageNameMap = undefined;
@@ -26,7 +27,14 @@ export function buildExplicitPackageJsonDependencies(
       if (isPackageJsonAtProjectRoot(nodes, f.file)) {
         // we only create the package name map once and only if a package.json file changes
         packageNameMap = packageNameMap || createPackageNameMap(ctx.projects);
-        processPackageJson(source, f.file, ctx, res, packageNameMap);
+        processPackageJson(
+          source,
+          f.file,
+          ctx,
+          externalDependenciesCache,
+          res,
+          packageNameMap
+        );
       }
     });
   });
@@ -63,13 +71,14 @@ function processPackageJson(
   sourceProject: string,
   fileName: string,
   ctx: CreateDependenciesContext,
+  externalDependenciesCache: ExternalDependenciesCache,
   collectedDeps: RawProjectGraphDependency[],
   packageNameMap: { [packageName: string]: string }
 ) {
   try {
     const deps = readDeps(parseJson(defaultFileRead(fileName)));
     // the name matches the import path
-    deps.forEach((d) => {
+    Object.entries(deps).forEach(([d, version]) => {
       // package.json refers to another project in the monorepo
       if (packageNameMap[d]) {
         const dependency: RawProjectGraphDependency = {
@@ -80,15 +89,26 @@ function processPackageJson(
         };
         validateDependency(dependency, ctx);
         collectedDeps.push(dependency);
-      } else if (ctx.externalNodes[`npm:${d}`]) {
+        return;
+      }
+      // external/3rd party package
+      const externalWithExactVersion = `npm:${d}@${version}`;
+      const externalWithNoVersion = `npm:${d}`;
+      if (
+        ctx.externalNodes[externalWithExactVersion] ||
+        ctx.externalNodes[externalWithNoVersion]
+      ) {
         const dependency: RawProjectGraphDependency = {
           source: sourceProject,
-          target: `npm:${d}`,
+          target: ctx.externalNodes[externalWithExactVersion]
+            ? externalWithExactVersion
+            : externalWithNoVersion,
           sourceFile: fileName,
           type: DependencyType.static,
         };
         validateDependency(dependency, ctx);
         collectedDeps.push(dependency);
+        externalDependenciesCache.set(sourceProject, dependency.target);
       }
     });
   } catch (e) {
@@ -99,10 +119,26 @@ function processPackageJson(
 }
 
 function readDeps(packageJson: PackageJson) {
-  return [
-    ...Object.keys(packageJson?.dependencies ?? {}),
-    ...Object.keys(packageJson?.devDependencies ?? {}),
-    ...Object.keys(packageJson?.peerDependencies ?? {}),
-    ...Object.keys(packageJson?.optionalDependencies ?? {}),
+  const deps = {};
+
+  /**
+   * We process dependencies in a rough order or increasing importance such that if a dependency is listed in multiple
+   * sections, the version listed under the "most important" one wins, with production dependencies being the most important.
+   */
+  const depType = [
+    'optionalDependencies',
+    'peerDependencies',
+    'devDependencies',
+    'dependencies',
   ];
+
+  for (const type of depType) {
+    for (const [depName, depVersion] of Object.entries(
+      packageJson[type] || {}
+    )) {
+      deps[depName] = depVersion;
+    }
+  }
+
+  return deps;
 }

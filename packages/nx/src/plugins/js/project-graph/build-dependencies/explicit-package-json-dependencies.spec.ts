@@ -101,10 +101,16 @@ describe('explicit package json dependencies', () => {
     tempFs.cleanup();
   });
 
-  it(`should add dependencies for projects based on deps in package.json`, () => {
-    const res = buildExplicitPackageJsonDependencies(ctx);
-
+  it(`should add dependencies for projects based on deps in package.json and populate the cache`, () => {
+    const cache = new Map();
+    const res = buildExplicitPackageJsonDependencies(ctx, cache);
     expect(res).toEqual([
+      {
+        source: 'proj',
+        target: 'proj3',
+        sourceFile: 'libs/proj/package.json',
+        type: 'static',
+      },
       {
         source: 'proj',
         target: 'proj2',
@@ -117,12 +123,11 @@ describe('explicit package json dependencies', () => {
         target: 'npm:external',
         type: 'static',
       },
-      {
-        source: 'proj',
-        target: 'proj3',
-        sourceFile: 'libs/proj/package.json',
-        type: 'static',
-      },
     ]);
+    expect(cache).toMatchInlineSnapshot(`
+      Map {
+        "proj" => "npm:external",
+      }
+    `);
   });
 });
