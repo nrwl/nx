@@ -16,7 +16,7 @@
 7. "Launch instance"
 8. Wait 10 minutes, then navigate to your instance's IP in the browser. You should see the Nx Cloud dashboard!
 
-![Nx Cloud landing page](/nx-cloud/private/images/nx-cloud-landing.png)
+![Nx Cloud landing page](/nx-cloud/enterprise/on-premise/images/nx-cloud-landing.png)
 
 ### Your Nx Cloud URL
 
@@ -126,26 +126,26 @@ nxCloudAppURL: 'https://nx-cloud.on.my-domain.ca' # make sure no backslash is at
 # the filesystem
 secret:
   # set your initial admin password for logging into the app
-  # see here: https://nx.dev/ci/recipes/on-premise/auth-single-admin
+  # see here: https://nx.dev/ci/recipes/enterprise/on-premise/auth-single-admin
   adminPassword: 'correcthorsebatterystaple'
 
   # If you want to enable GitHub Login, just provide your client id & secret, we handle the rest
-  # see here: https://nx.dev/ci/recipes/on-premise/auth-github
+  # see here: https://nx.dev/ci/recipes/enterprise/on-premise/auth-github
   githubAuthClientId: 'my_client_id'
   githubAuthClientSecret: 'my_client_secret'
 
   # The same goes for GitLab authentication
-  # see here: https://nx.dev/ci/recipes/on-premise/auth-gitlab
+  # see here: https://nx.dev/ci/recipes/enterprise/on-premise/auth-gitlab
   # gitlabAppId: 'my_gitlab_app_id'
   # gitlabAppSecret: 'my_gitlab_app_secret'
 
   # Bitbucket too! If these are uncommented, BB auth is automatically enabled
-  # see here: https://nx.dev/ci/recipes/on-premise/auth-bitbucket
+  # see here: https://nx.dev/ci/recipes/enterprise/on-premise/auth-bitbucket
   # bitbucketAppId: 'bitbucket_app_id'
   # bitbucketAppSecret: 'bitbucket_app_secret'
 
   # SAML auth
-  # see here: https://nx.dev/ci/recipes/on-premise/auth-saml
+  # see here: https://nx.dev/ci/recipes/enterprise/on-premise/auth-saml
   # samlEntryPoint: 'your_saml_entry_point'
   # samlCert: 'saml_cert'
 ```
