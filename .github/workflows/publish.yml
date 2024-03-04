@@ -33,73 +33,72 @@ jobs:
       - name: Check NPM Credentials
         run: npm whoami && echo "NPM credentials are valid" || (echo "NPM credentials are invalid or have expired." && exit 1)
       - run: |
-          npm unpublish @nrwl/js@18.1.0
-          npm unpublish @nrwl/web@18.1.0
-          npm unpublish @nrwl/vite@18.1.0
-          npm unpublish @nrwl/node@18.1.0
-          npm unpublish @nrwl/next@18.1.0
-          npm unpublish @nrwl/nest@18.1.0
-          npm unpublish @nrwl/jest@18.1.0
-          npm unpublish @nrwl/expo@18.1.0
-          npm unpublish @nrwl/remix@18.1.0
-          npm unpublish @nrwl/react@18.1.0
-          npm unpublish @nrwl/detox@18.1.0
-          npm unpublish @nrwl/rollup@18.1.0
-          npm unpublish @nrwl/linter@18.1.0
-          npm unpublish @nrwl/devkit@18.1.0
-          npm unpublish @nrwl/webpack@18.1.0
-          npm unpublish @nrwl/express@18.1.0
-          npm unpublish @nrwl/esbuild@18.1.0
-          npm unpublish @nrwl/cypress@18.1.0
-          npm unpublish @nrwl/angular@18.1.0
-          npm unpublish @nrwl/workspace@18.1.0
-          npm unpublish @nrwl/storybook@18.1.0
-          npm unpublish @nrwl/nx-plugin@18.1.0
-          npm unpublish @nx/linter@18.1.0
-          npm unpublish @nrwl/react-native@18.1.0
-          npm unpublish @nrwl/eslint-plugin-nx@18.1.0
-          npm unpublish @nx/nx-darwin-x64@18.1.0
-          npm unpublish @nx/nx-freebsd-x64@18.1.0
-          npm unpublish @nx/nx-darwin-arm64@18.1.0
-          npm unpublish @nx/nx-linux-x64-gnu@18.1.0
-          npm unpublish @nx/nx-win32-x64-msvc@18.1.0
-          npm unpublish @nx/nx-linux-x64-musl@18.1.0
-          npm unpublish @nx/nx-linux-arm64-gnu@18.1.0
-          npm unpublish @nx/nx-win32-arm64-msvc@18.1.0
-          npm unpublish @nx/nx-linux-arm64-musl@18.1.0
-          npm unpublish @nx/nx-linux-arm-gnueabihf@18.1.0
-          npm unpublish nx@18.1.0
-          npm unpublish @nx/js@18.1.0
-          npm unpublish @nx/web@18.1.0
-          npm unpublish @nx/vue@18.1.0
-          npm unpublish @nrwl/tao@18.1.0
-          npm unpublish @nx/vite@18.1.0
-          npm unpublish @nx/nuxt@18.1.0
-          npm unpublish @nx/node@18.1.0
-          npm unpublish @nx/next@18.1.0
-          npm unpublish @nx/nest@18.1.0
-          npm unpublish @nx/jest@18.1.0
-          npm unpublish @nx/expo@18.1.0
-          npm unpublish @nx/remix@18.1.0
-          npm unpublish @nx/react@18.1.0
-          npm unpublish @nx/detox@18.1.0
-          npm unpublish @nx/rollup@18.1.0
-          npm unpublish @nx/plugin@18.1.0
-          # npm unpublish @nx/gradle@18.1.0
-          npm unpublish @nx/eslint@18.1.0
-          npm unpublish @nx/devkit@18.1.0
-          npm unpublish @nx/webpack@18.1.0
-          npm unpublish @nx/express@18.1.0
-          npm unpublish @nx/esbuild@18.1.0
-          npm unpublish @nx/cypress@18.1.0
-          npm unpublish @nx/angular@18.1.0
-          npm unpublish @nx/workspace@18.1.0
-          npm unpublish @nx/storybook@18.1.0
-          npm unpublish @nx/playwright@18.1.0
-          npm unpublish @nx/react-native@18.1.0
-          npm unpublish @nx/eslint-plugin@18.1.0
-          npm unpublish create-nx-plugin@18.1.0
-          npm unpublish create-nx-workspace@18.1.0
+           npm deprecate -f 'create-nx-workspace@18.1.0' "This was an unintentional release and has been deprecated"
+           npm deprecate -f 'create-nx-plugin@18.1.0' "This was an unintentional release and has been deprecated"
+           npm deprecate -f '@nrwl@nx/eslint-plugin@18.1.0' "This was an unintentional release and has been deprecated"
+           npm deprecate -f '@nrwl@nx/react-native@18.1.0' "This was an unintentional release and has been deprecated"
+           npm deprecate -f '@nrwl@nx/playwright@18.1.0' "This was an unintentional release and has been deprecated"
+           npm deprecate -f '@nrwl@nx/storybook@18.1.0' "This was an unintentional release and has been deprecated"
+           npm deprecate -f '@nrwl@nx/workspace@18.1.0' "This was an unintentional release and has been deprecated"
+           npm deprecate -f '@nrwl@nx/angular@18.1.0' "This was an unintentional release and has been deprecated"
+           npm deprecate -f '@nrwl@nx/cypress@18.1.0' "This was an unintentional release and has been deprecated"
+           npm deprecate -f '@nrwl@nx/esbuild@18.1.0' "This was an unintentional release and has been deprecated"
+           npm deprecate -f '@nrwl@nx/express@18.1.0' "This was an unintentional release and has been deprecated"
+           npm deprecate -f '@nrwl@nx/webpack@18.1.0' "This was an unintentional release and has been deprecated"
+           npm deprecate -f '@nrwl@nx/devkit@18.1.0' "This was an unintentional release and has been deprecated"
+           npm deprecate -f '@nrwl@nx/eslint@18.1.0' "This was an unintentional release and has been deprecated"
+           npm deprecate -f '@nrwl@nx/plugin@18.1.0' "This was an unintentional release and has been deprecated"
+           npm deprecate -f '@nrwl@nx/rollup@18.1.0' "This was an unintentional release and has been deprecated"
+           npm deprecate -f '@nrwl@nx/detox@18.1.0' "This was an unintentional release and has been deprecated"
+           npm deprecate -f '@nrwl@nx/react@18.1.0' "This was an unintentional release and has been deprecated"
+           npm deprecate -f '@nrwl@nx/remix@18.1.0' "This was an unintentional release and has been deprecated"
+           npm deprecate -f '@nrwl@nx/expo@18.1.0' "This was an unintentional release and has been deprecated"
+           npm deprecate -f '@nrwl@nx/jest@18.1.0' "This was an unintentional release and has been deprecated"
+           npm deprecate -f '@nrwl@nx/nest@18.1.0' "This was an unintentional release and has been deprecated"
+           npm deprecate -f '@nrwl@nx/next@18.1.0' "This was an unintentional release and has been deprecated"
+           npm deprecate -f '@nrwl@nx/node@18.1.0' "This was an unintentional release and has been deprecated"
+           npm deprecate -f '@nrwl@nx/nuxt@18.1.0' "This was an unintentional release and has been deprecated"
+           npm deprecate -f '@nrwl@nx/vite@18.1.0' "This was an unintentional release and has been deprecated"
+           npm deprecate -f '@nrwl@nrwl/tao@18.1.0' "This was an unintentional release and has been deprecated"
+           npm deprecate -f '@nrwl@nx/vue@18.1.0' "This was an unintentional release and has been deprecated"
+           npm deprecate -f '@nrwl@nx/web@18.1.0' "This was an unintentional release and has been deprecated"
+           npm deprecate -f '@nrwl@nx/js@18.1.0' "This was an unintentional release and has been deprecated"
+           npm deprecate -f 'nx@18.1.0' "This was an unintentional release and has been deprecated"
+           npm deprecate -f '@nrwl@nx/nx-linux-arm-gnueabihf@18.1.0' "This was an unintentional release and has been deprecated"
+           npm deprecate -f '@nrwl@nx/nx-linux-arm64-musl@18.1.0' "This was an unintentional release and has been deprecated"
+           npm deprecate -f '@nrwl@nx/nx-win32-arm64-msvc@18.1.0' "This was an unintentional release and has been deprecated"
+           npm deprecate -f '@nrwl@nx/nx-linux-arm64-gnu@18.1.0' "This was an unintentional release and has been deprecated"
+           npm deprecate -f '@nrwl@nx/nx-linux-x64-musl@18.1.0' "This was an unintentional release and has been deprecated"
+           npm deprecate -f '@nrwl@nx/nx-win32-x64-msvc@18.1.0' "This was an unintentional release and has been deprecated"
+           npm deprecate -f '@nrwl@nx/nx-linux-x64-gnu@18.1.0' "This was an unintentional release and has been deprecated"
+           npm deprecate -f '@nrwl@nx/nx-darwin-arm64@18.1.0' "This was an unintentional release and has been deprecated"
+           npm deprecate -f '@nrwl@nx/nx-freebsd-x64@18.1.0' "This was an unintentional release and has been deprecated"
+           npm deprecate -f '@nrwl@nx/nx-darwin-x64@18.1.0' "This was an unintentional release and has been deprecated"
+           npm deprecate -f '@nrwl@nrwl/eslint-plugin-nx@18.1.0' "This was an unintentional release and has been deprecated"
+           npm deprecate -f '@nrwl@nrwl/react-native@18.1.0' "This was an unintentional release and has been deprecated"
+           npm deprecate -f '@nrwl@nx/linter@18.1.0' "This was an unintentional release and has been deprecated"
+           npm deprecate -f '@nrwl@nrwl/nx-plugin@18.1.0' "This was an unintentional release and has been deprecated"
+           npm deprecate -f '@nrwl@nrwl/storybook@18.1.0' "This was an unintentional release and has been deprecated"
+           npm deprecate -f '@nrwl@nrwl/workspace@18.1.0' "This was an unintentional release and has been deprecated"
+           npm deprecate -f '@nrwl@nrwl/angular@18.1.0' "This was an unintentional release and has been deprecated"
+           npm deprecate -f '@nrwl@nrwl/cypress@18.1.0' "This was an unintentional release and has been deprecated"
+           npm deprecate -f '@nrwl@nrwl/esbuild@18.1.0' "This was an unintentional release and has been deprecated"
+           npm deprecate -f '@nrwl@nrwl/express@18.1.0' "This was an unintentional release and has been deprecated"
+           npm deprecate -f '@nrwl@nrwl/webpack@18.1.0' "This was an unintentional release and has been deprecated"
+           npm deprecate -f '@nrwl@nrwl/devkit@18.1.0' "This was an unintentional release and has been deprecated"
+           npm deprecate -f '@nrwl@nrwl/linter@18.1.0' "This was an unintentional release and has been deprecated"
+           npm deprecate -f '@nrwl@nrwl/rollup@18.1.0' "This was an unintentional release and has been deprecated"
+           npm deprecate -f '@nrwl@nrwl/detox@18.1.0' "This was an unintentional release and has been deprecated"
+           npm deprecate -f '@nrwl@nrwl/react@18.1.0' "This was an unintentional release and has been deprecated"
+           npm deprecate -f '@nrwl@nrwl/remix@18.1.0' "This was an unintentional release and has been deprecated"
+           npm deprecate -f '@nrwl@nrwl/expo@18.1.0' "This was an unintentional release and has been deprecated"
+           npm deprecate -f '@nrwl@nrwl/jest@18.1.0' "This was an unintentional release and has been deprecated"
+           npm deprecate -f '@nrwl@nrwl/nest@18.1.0' "This was an unintentional release and has been deprecated"
+           npm deprecate -f '@nrwl@nrwl/next@18.1.0' "This was an unintentional release and has been deprecated"
+           npm deprecate -f '@nrwl@nrwl/node@18.1.0' "This was an unintentional release and has been deprecated"
+           npm deprecate -f '@nrwl@nrwl/vite@18.1.0' "This was an unintentional release and has been deprecated"
+           npm deprecate -f '@nrwl@nrwl/web@18.1.0' "This was an unintentional release and has been deprecated"
+           npm deprecate -f '@nrwl@nrwl/js@18.1.0' "This was an unintentional release and has been deprecated"
 
   # build:
   #   if: ${{ github.repository_owner == 'nrwl' }}
