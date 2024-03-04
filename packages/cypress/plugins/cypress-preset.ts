@@ -75,9 +75,13 @@ function startWebServer(webServerCommand: string) {
   });
 
   return () => {
-    // child.kill() does not work on linux
-    // process.kill will kill the whole process group on unix
-    process.kill(-serverProcess.pid, 'SIGKILL');
+    if (process.platform === 'win32') {
+      serverProcess.kill();
+    } else {
+      // child.kill() does not work on linux
+      // process.kill will kill the whole process group on unix
+      process.kill(-serverProcess.pid, 'SIGKILL');
+    }
   };
 }
 
