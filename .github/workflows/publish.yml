@@ -33,7 +33,6 @@ jobs:
       - name: Check NPM Credentials
         run: npm whoami && echo "NPM credentials are valid" || (echo "NPM credentials are invalid or have expired." && exit 1)
       - run: |
-          npm unpublish create-nx-plugin@18.1.0
           npm unpublish @nx/eslint-plugin@18.1.0
           npm unpublish @nx/react-native@18.1.0
           npm unpublish @nx/playwright@18.1.0
@@ -100,6 +99,7 @@ jobs:
           npm unpublish @nrwl/web@18.1.0
           npm unpublish @nrwl/js@18.1.0
           npm unpublish create-nx-workspace@18.1.0
+          npm unpublish create-nx-plugin@18.1.0
 
   # build:
   #   if: ${{ github.repository_owner == 'nrwl' }}
