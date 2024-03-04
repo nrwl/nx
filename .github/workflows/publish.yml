@@ -12,219 +12,8 @@ env:
   NX_RUN_GROUP: ${{ github.run_id }}-${{ github.run_attempt }}
 
 jobs:
-  build:
-    if: ${{ github.repository_owner == 'nrwl' }}
-    strategy:
-      fail-fast: false
-      matrix:
-        settings:
-          - host: macos-latest
-            target: x86_64-apple-darwin
-            build: |
-              pnpm nx run-many --target=build-native -- --target=x86_64-apple-darwin
-          - host: windows-latest
-            build: pnpm nx run-many --target=build-native -- --target=x86_64-pc-windows-msvc
-            target: x86_64-pc-windows-msvc
-          # Windows 32bit (not needed)
-          # - host: windows-latest
-          #   build: |
-          #     yarn nx -- run-many --target=build-native -- --target=i686-pc-windows-msvc
-          #   target: i686-pc-windows-msvc
-          - host: ubuntu-latest
-            target: x86_64-unknown-linux-gnu
-            docker: ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-debian
-            build: |-
-              set -e &&
-              pnpm --version &&
-              pnpm nx run-many --target=build-native -- --target=x86_64-unknown-linux-gnu
-          - host: ubuntu-latest
-            target: x86_64-unknown-linux-musl
-            docker: ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-alpine
-            build: set -e && pnpm nx run-many --target=build-native -- --target=x86_64-unknown-linux-musl
-          - host: macos-latest
-            target: aarch64-apple-darwin
-            build: |
-              sudo rm -Rf /Library/Developer/CommandLineTools/SDKs/*;
-              export CC=$(xcrun -f clang);
-              export CXX=$(xcrun -f clang++);
-              SYSROOT=$(xcrun --sdk macosx --show-sdk-path);
-              export CFLAGS="-isysroot $SYSROOT -isystem $SYSROOT";
-              pnpm nx run-many --target=build-native -- --target=aarch64-apple-darwin
-          - host: ubuntu-latest
-            target: aarch64-unknown-linux-gnu
-            docker: ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-debian-aarch64
-            build: |-
-              set -e &&
-              pnpm --version &&
-              pnpm nx run-many --target=build-native -- --target=aarch64-unknown-linux-gnu
-          - host: ubuntu-latest
-            target: armv7-unknown-linux-gnueabihf
-            setup: |
-              sudo apt-get update
-              sudo apt-get install gcc-arm-linux-gnueabihf -y
-            build: |
-              pnpm nx run-many --target=build-native -- --target=armv7-unknown-linux-gnueabihf
-          # Android (not needed)
-          # - host: ubuntu-latest
-          #   target: aarch64-linux-android
-          #   build: |
-          #     pnpm nx run-many --target=build-native -- --target=aarch64-linux-android
-          # - host: ubuntu-latest
-          #   target: armv7-linux-androideabi
-          #   build: |
-          #     pnpm nx run-many --target=build-native -- --target=armv7-linux-androideabi
-          - host: ubuntu-latest
-            target: aarch64-unknown-linux-musl
-            docker: ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-alpine
-            build: |-
-              set -e &&
-              rustup target add aarch64-unknown-linux-musl &&
-              pnpm nx run-many --target=build-native -- --target=aarch64-unknown-linux-musl
-          - host: windows-latest
-            target: aarch64-pc-windows-msvc
-            build: pnpm nx run-many --target=build-native -- --target=aarch64-pc-windows-msvc
-    name: stable - ${{ matrix.settings.target }} - node@18
-    runs-on: ${{ matrix.settings.host }}
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: pnpm/action-setup@v2
-        with:
-          version: 8
-
-      - name: Setup node
-        uses: actions/setup-node@v4
-        if: ${{ !matrix.settings.docker }}
-        with:
-          node-version: 18
-          check-latest: true
-          cache: 'pnpm'
-
-      - name: Install
-        uses: dtolnay/rust-toolchain@stable
-        if: ${{ !matrix.settings.docker }}
-        with:
-          targets: ${{ matrix.settings.target }}
-
-      - name: Cache cargo
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            .cargo-cache
-            target/
-          key: ${{ matrix.settings.target }}-cargo-registry
-      - uses: goto-bus-stop/setup-zig@v2
-        if: ${{ matrix.settings.target == 'armv7-unknown-linux-gnueabihf' }}
-        with:
-          version: 0.10.0
-      - name: Setup toolchain
-        run: ${{ matrix.settings.setup }}
-        if: ${{ matrix.settings.setup }}
-        shell: bash
-      - name: Setup node x86
-        if: matrix.settings.target == 'i686-pc-windows-msvc'
-        run: yarn config set supportedArchitectures.cpu "ia32"
-        shell: bash
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-        timeout-minutes: 30
-      - name: Setup node x86
-        uses: actions/setup-node@v4
-        if: matrix.settings.target == 'i686-pc-windows-msvc'
-        with:
-          node-version: 18
-          check-latest: true
-          cache: pnpm
-          architecture: x86
-      - name: Build in docker
-        uses: addnab/docker-run-action@v3
-        if: ${{ matrix.settings.docker }}
-        with:
-          image: ${{ matrix.settings.docker }}
-          options: --user 0:0 -v ${{ github.workspace }}/.cargo-cache/git/db:/usr/local/cargo/git/db -v ${{ github.workspace }}/.cargo/registry/cache:/usr/local/cargo/registry/cache -v ${{ github.workspace }}/.cargo/registry/index:/usr/local/cargo/registry/index -v ${{ github.workspace }}:/build -w /build
-          run: ${{ matrix.settings.build }}
-      - name: Build
-        run: ${{ matrix.settings.build }}
-        if: ${{ !matrix.settings.docker }}
-        shell: bash
-      - name: Upload artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: bindings-${{ matrix.settings.target }}
-          path: packages/**/*.node
-          if-no-files-found: error
-
-  build-freebsd:
-     if: ${{ github.repository_owner == 'nrwl' }}
-     runs-on: macos-13-large
-     name: Build FreeBSD
-     timeout-minutes: 45
-     steps:
-       - uses: actions/checkout@v4
-         if: ${{ github.event_name != 'schedule' }}
-       - name: Build
-         id: build
-         if: ${{ github.event_name != 'schedule' }}
-         uses: cross-platform-actions/action@v0.22.0
-         env:
-           DEBUG: napi:*
-           RUSTUP_IO_THREADS: 1
-         with:
-           operating_system: freebsd
-           version: '13.2'
-           architecture: x86-64
-           environment_variables: DEBUG RUSTUP_IO_THREADS CI
-           shell: bash
-           run: |
-             env
-             whoami
-             sudo pkg install -y -f node libnghttp2 npm git
-             sudo npm install --location=global --ignore-scripts pnpm
-             curl https://sh.rustup.rs -sSf --output rustup.sh
-             sh rustup.sh -y --profile minimal --default-toolchain stable
-             source "$HOME/.cargo/env"
-             echo "~~~~ rustc --version ~~~~"
-             rustc --version
-             echo "~~~~ node -v ~~~~"
-             node -v
-             echo "~~~~ pnpm --version ~~~~"
-             pnpm --version
-             pwd
-             ls -lah
-             whoami
-             env
-             freebsd-version
-             mkdir -p /Users/runner/work/_temp/_github_workflow
-             echo "{}" > /Users/runner/work/_temp/_github_workflow/event.json
-             pnpm install --frozen-lockfile --ignore-scripts
-             pnpm nx run-many --outputStyle stream --target=build-native -- --target=x86_64-unknown-freebsd
-             pnpm nx reset
-             rm -rf node_modules
-             rm -rf dist
-             echo "KILL ALL NODE PROCESSES"
-             killall node || true
-             echo "COMPLETE"
-       - name: Upload artifact
-         if: ${{ github.event_name != 'schedule' }}
-         uses: actions/upload-artifact@v3
-         with:
-           name: bindings-freebsd
-           path: packages/**/*.node
-           if-no-files-found: error
-
-  publish:
-    if: ${{ github.repository_owner == 'nrwl' }}
-    name: Publish
+  unpublish:
     runs-on: ubuntu-latest
-    permissions:
-      id-token: write
-      contents: write
-    needs:
-      - build-freebsd
-      - build
     env:
       GH_TOKEN: ${{ github.token }}
       NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
@@ -243,39 +32,339 @@ jobs:
           cache: 'pnpm'
       - name: Check NPM Credentials
         run: npm whoami && echo "NPM credentials are valid" || (echo "NPM credentials are invalid or have expired." && exit 1)
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-      - name: Download all artifacts
-        uses: actions/download-artifact@v3
-        with:
-          path: artifacts
-      - name: List artifacts
-        run: ls -R artifacts
-        shell: bash
-      - name: Publish
-        run: |
-          git checkout -b publish/$GITHUB_REF_NAME
-          # If triggered by the cron, create a canary release
-          if [ "${{ github.event_name }}" = "schedule" ]; then
-            VERSION="canary"
-          else
-            # Otherwise, use the tag name (if triggered via release), or explicit version (if triggered via workflow_dispatch)
-            VERSION="${GITHUB_REF_NAME}"
-          fi
-          # If triggered via workflow_dispatch, perform a dry-run
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            DRY_RUN="--dry-run"
-          else
-            DRY_RUN=""
-          fi
-          pnpm nx-release --local=false $VERSION $DRY_RUN
-      - name: Trigger Docs Release
-        # Publish docs only on a full release
-        if: ${{ !github.event.release.prerelease }}
-        run: |
-          # Publish docs only when publishing the latest version
-          if [ "$(git describe --tags `git rev-list --tags --max-count=1`)" = "$GITHUB_REF_NAME" ]; then
-          # We force recreate the branch in order to always be up to date and avoid merge conflicts within the automated workflow
-          git branch -f website
-          git push -f origin website
-          fi
+      - run: |
+          npm unpublish create-nx-workspace@18.1.0 --dry-run
+          npm unpublish create-nx-plugin@18.1.0 --dry-run
+          npm unpublish eslint-plugin@18.1.0 --dry-run
+          npm unpublish react-native@18.1.0 --dry-run
+          npm unpublish playwright@18.1.0 --dry-run
+          npm unpublish storybook@18.1.0 --dry-run
+          npm unpublish workspace@18.1.0 --dry-run
+          npm unpublish angular@18.1.0 --dry-run
+          npm unpublish cypress@18.1.0 --dry-run
+          npm unpublish esbuild@18.1.0 --dry-run
+          npm unpublish express@18.1.0 --dry-run
+          npm unpublish webpack@18.1.0 --dry-run
+          npm unpublish devkit@18.1.0 --dry-run
+          npm unpublish eslint@18.1.0 --dry-run
+          npm unpublish gradle@18.1.0 --dry-run
+          npm unpublish plugin@18.1.0 --dry-run
+          npm unpublish rollup@18.1.0 --dry-run
+          npm unpublish detox@18.1.0 --dry-run
+          npm unpublish react@18.1.0 --dry-run
+          npm unpublish remix@18.1.0 --dry-run
+          npm unpublish expo@18.1.0 --dry-run
+          npm unpublish jest@18.1.0 --dry-run
+          npm unpublish nest@18.1.0 --dry-run
+          npm unpublish next@18.1.0 --dry-run
+          npm unpublish node@18.1.0 --dry-run
+          npm unpublish nuxt@18.1.0 --dry-run
+          npm unpublish vite@18.1.0 --dry-run
+          npm unpublish tao@18.1.0 --dry-run
+          npm unpublish vue@18.1.0 --dry-run
+          npm unpublish web@18.1.0 --dry-run
+          npm unpublish js@18.1.0 --dry-run
+          npm unpublish nx@18.1.0 --dry-run
+          npm unpublish linux-arm-gnueabihf@18.1.0 --dry-run
+          npm unpublish linux-arm64-musl@18.1.0 --dry-run
+          npm unpublish win32-arm64-msvc@18.1.0 --dry-run
+          npm unpublish linux-arm64-gnu@18.1.0 --dry-run
+          npm unpublish linux-x64-musl@18.1.0 --dry-run
+          npm unpublish win32-x64-msvc@18.1.0 --dry-run
+          npm unpublish linux-x64-gnu@18.1.0 --dry-run
+          npm unpublish darwin-arm64@18.1.0 --dry-run
+          npm unpublish freebsd-x64@18.1.0 --dry-run
+          npm unpublish darwin-x64@18.1.0 --dry-run
+          npm unpublish eslint-plugin-nx-legacy@18.1.0 --dry-run
+          npm unpublish react-native-legacy@18.1.0 --dry-run
+          npm unpublish linter-nx-legacy@18.1.0 --dry-run
+          npm unpublish nx-plugin-legacy@18.1.0 --dry-run
+          npm unpublish storybook-legacy@18.1.0 --dry-run
+          npm unpublish workspace-legacy@18.1.0 --dry-run
+          npm unpublish angular-legacy@18.1.0 --dry-run
+          npm unpublish cypress-legacy@18.1.0 --dry-run
+          npm unpublish esbuild-legacy@18.1.0 --dry-run
+          npm unpublish express-legacy@18.1.0 --dry-run
+          npm unpublish webpack-legacy@18.1.0 --dry-run
+          npm unpublish devkit-legacy@18.1.0 --dry-run
+          npm unpublish linter-legacy@18.1.0 --dry-run
+          npm unpublish rollup-legacy@18.1.0 --dry-run
+          npm unpublish detox-legacy@18.1.0 --dry-run
+          npm unpublish react-legacy@18.1.0 --dry-run
+          npm unpublish remix-legacy@18.1.0 --dry-run
+          npm unpublish expo-legacy@18.1.0 --dry-run
+          npm unpublish jest-legacy@18.1.0 --dry-run
+          npm unpublish nest-legacy@18.1.0 --dry-run
+          npm unpublish next-legacy@18.1.0 --dry-run
+          npm unpublish node-legacy@18.1.0 --dry-run
+          npm unpublish vite-legacy@18.1.0 --dry-run
+          npm unpublish web-legacy@18.1.0 --dry-run
+          npm unpublish js-legacy@18.1.0 --dry-run
+
+  # build:
+  #   if: ${{ github.repository_owner == 'nrwl' }}
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       settings:
+  #         - host: macos-latest
+  #           target: x86_64-apple-darwin
+  #           build: |
+  #             pnpm nx run-many --target=build-native -- --target=x86_64-apple-darwin
+  #         - host: windows-latest
+  #           build: pnpm nx run-many --target=build-native -- --target=x86_64-pc-windows-msvc
+  #           target: x86_64-pc-windows-msvc
+  #         # Windows 32bit (not needed)
+  #         # - host: windows-latest
+  #         #   build: |
+  #         #     yarn nx -- run-many --target=build-native -- --target=i686-pc-windows-msvc
+  #         #   target: i686-pc-windows-msvc
+  #         - host: ubuntu-latest
+  #           target: x86_64-unknown-linux-gnu
+  #           docker: ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-debian
+  #           build: |-
+  #             set -e &&
+  #             pnpm --version &&
+  #             pnpm nx run-many --target=build-native -- --target=x86_64-unknown-linux-gnu
+  #         - host: ubuntu-latest
+  #           target: x86_64-unknown-linux-musl
+  #           docker: ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-alpine
+  #           build: set -e && pnpm nx run-many --target=build-native -- --target=x86_64-unknown-linux-musl
+  #         - host: macos-latest
+  #           target: aarch64-apple-darwin
+  #           build: |
+  #             sudo rm -Rf /Library/Developer/CommandLineTools/SDKs/*;
+  #             export CC=$(xcrun -f clang);
+  #             export CXX=$(xcrun -f clang++);
+  #             SYSROOT=$(xcrun --sdk macosx --show-sdk-path);
+  #             export CFLAGS="-isysroot $SYSROOT -isystem $SYSROOT";
+  #             pnpm nx run-many --target=build-native -- --target=aarch64-apple-darwin
+  #         - host: ubuntu-latest
+  #           target: aarch64-unknown-linux-gnu
+  #           docker: ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-debian-aarch64
+  #           build: |-
+  #             set -e &&
+  #             pnpm --version &&
+  #             pnpm nx run-many --target=build-native -- --target=aarch64-unknown-linux-gnu
+  #         - host: ubuntu-latest
+  #           target: armv7-unknown-linux-gnueabihf
+  #           setup: |
+  #             sudo apt-get update
+  #             sudo apt-get install gcc-arm-linux-gnueabihf -y
+  #           build: |
+  #             pnpm nx run-many --target=build-native -- --target=armv7-unknown-linux-gnueabihf
+  #         # Android (not needed)
+  #         # - host: ubuntu-latest
+  #         #   target: aarch64-linux-android
+  #         #   build: |
+  #         #     pnpm nx run-many --target=build-native -- --target=aarch64-linux-android
+  #         # - host: ubuntu-latest
+  #         #   target: armv7-linux-androideabi
+  #         #   build: |
+  #         #     pnpm nx run-many --target=build-native -- --target=armv7-linux-androideabi
+  #         - host: ubuntu-latest
+  #           target: aarch64-unknown-linux-musl
+  #           docker: ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-alpine
+  #           build: |-
+  #             set -e &&
+  #             rustup target add aarch64-unknown-linux-musl &&
+  #             pnpm nx run-many --target=build-native -- --target=aarch64-unknown-linux-musl
+  #         - host: windows-latest
+  #           target: aarch64-pc-windows-msvc
+  #           build: pnpm nx run-many --target=build-native -- --target=aarch64-pc-windows-msvc
+  #   name: stable - ${{ matrix.settings.target }} - node@18
+  #   runs-on: ${{ matrix.settings.host }}
+  #   steps:
+  #     - uses: actions/checkout@v4
+
+  #     - uses: pnpm/action-setup@v2
+  #       with:
+  #         version: 8
+
+  #     - name: Setup node
+  #       uses: actions/setup-node@v4
+  #       if: ${{ !matrix.settings.docker }}
+  #       with:
+  #         node-version: 18
+  #         check-latest: true
+  #         cache: 'pnpm'
+
+  #     - name: Install
+  #       uses: dtolnay/rust-toolchain@stable
+  #       if: ${{ !matrix.settings.docker }}
+  #       with:
+  #         targets: ${{ matrix.settings.target }}
+
+  #     - name: Cache cargo
+  #       uses: actions/cache@v3
+  #       with:
+  #         path: |
+  #           ~/.cargo/registry/index/
+  #           ~/.cargo/registry/cache/
+  #           ~/.cargo/git/db/
+  #           .cargo-cache
+  #           target/
+  #         key: ${{ matrix.settings.target }}-cargo-registry
+  #     - uses: goto-bus-stop/setup-zig@v2
+  #       if: ${{ matrix.settings.target == 'armv7-unknown-linux-gnueabihf' }}
+  #       with:
+  #         version: 0.10.0
+  #     - name: Setup toolchain
+  #       run: ${{ matrix.settings.setup }}
+  #       if: ${{ matrix.settings.setup }}
+  #       shell: bash
+  #     - name: Setup node x86
+  #       if: matrix.settings.target == 'i686-pc-windows-msvc'
+  #       run: yarn config set supportedArchitectures.cpu "ia32"
+  #       shell: bash
+  #     - name: Install dependencies
+  #       run: pnpm install --frozen-lockfile
+  #       timeout-minutes: 30
+  #     - name: Setup node x86
+  #       uses: actions/setup-node@v4
+  #       if: matrix.settings.target == 'i686-pc-windows-msvc'
+  #       with:
+  #         node-version: 18
+  #         check-latest: true
+  #         cache: pnpm
+  #         architecture: x86
+  #     - name: Build in docker
+  #       uses: addnab/docker-run-action@v3
+  #       if: ${{ matrix.settings.docker }}
+  #       with:
+  #         image: ${{ matrix.settings.docker }}
+  #         options: --user 0:0 -v ${{ github.workspace }}/.cargo-cache/git/db:/usr/local/cargo/git/db -v ${{ github.workspace }}/.cargo/registry/cache:/usr/local/cargo/registry/cache -v ${{ github.workspace }}/.cargo/registry/index:/usr/local/cargo/registry/index -v ${{ github.workspace }}:/build -w /build
+  #         run: ${{ matrix.settings.build }}
+  #     - name: Build
+  #       run: ${{ matrix.settings.build }}
+  #       if: ${{ !matrix.settings.docker }}
+  #       shell: bash
+  #     - name: Upload artifact
+  #       uses: actions/upload-artifact@v3
+  #       with:
+  #         name: bindings-${{ matrix.settings.target }}
+  #         path: packages/**/*.node
+  #         if-no-files-found: error
+
+  # build-freebsd:
+  #    if: ${{ github.repository_owner == 'nrwl' }}
+  #    runs-on: macos-13-large
+  #    name: Build FreeBSD
+  #    timeout-minutes: 45
+  #    steps:
+  #      - uses: actions/checkout@v4
+  #        if: ${{ github.event_name != 'schedule' }}
+  #      - name: Build
+  #        id: build
+  #        if: ${{ github.event_name != 'schedule' }}
+  #        uses: cross-platform-actions/action@v0.22.0
+  #        env:
+  #          DEBUG: napi:*
+  #          RUSTUP_IO_THREADS: 1
+  #        with:
+  #          operating_system: freebsd
+  #          version: '13.2'
+  #          architecture: x86-64
+  #          environment_variables: DEBUG RUSTUP_IO_THREADS CI
+  #          shell: bash
+  #          run: |
+  #            env
+  #            whoami
+  #            sudo pkg install -y -f node libnghttp2 npm git
+  #            sudo npm install --location=global --ignore-scripts pnpm
+  #            curl https://sh.rustup.rs -sSf --output rustup.sh
+  #            sh rustup.sh -y --profile minimal --default-toolchain stable
+  #            source "$HOME/.cargo/env"
+  #            echo "~~~~ rustc --version ~~~~"
+  #            rustc --version
+  #            echo "~~~~ node -v ~~~~"
+  #            node -v
+  #            echo "~~~~ pnpm --version ~~~~"
+  #            pnpm --version
+  #            pwd
+  #            ls -lah
+  #            whoami
+  #            env
+  #            freebsd-version
+  #            mkdir -p /Users/runner/work/_temp/_github_workflow
+  #            echo "{}" > /Users/runner/work/_temp/_github_workflow/event.json
+  #            pnpm install --frozen-lockfile --ignore-scripts
+  #            pnpm nx run-many --outputStyle stream --target=build-native -- --target=x86_64-unknown-freebsd
+  #            pnpm nx reset
+  #            rm -rf node_modules
+  #            rm -rf dist
+  #            echo "KILL ALL NODE PROCESSES"
+  #            killall node || true
+  #            echo "COMPLETE"
+  #      - name: Upload artifact
+  #        if: ${{ github.event_name != 'schedule' }}
+  #        uses: actions/upload-artifact@v3
+  #        with:
+  #          name: bindings-freebsd
+  #          path: packages/**/*.node
+  #          if-no-files-found: error
+
+  # publish:
+  #   if: ${{ github.repository_owner == 'nrwl' }}
+  #   name: Publish
+  #   runs-on: ubuntu-latest
+  #   permissions:
+  #     id-token: write
+  #     contents: write
+  #   needs:
+  #     - build-freebsd
+  #     - build
+  #   env:
+  #     GH_TOKEN: ${{ github.token }}
+  #     NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+  #     NPM_CONFIG_PROVENANCE: true
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - uses: pnpm/action-setup@v2
+  #       with:
+  #         version: 8
+  #     - name: Setup node
+  #       uses: actions/setup-node@v4
+  #       with:
+  #         node-version: 18
+  #         registry-url: 'https://registry.npmjs.org'
+  #         check-latest: true
+  #         cache: 'pnpm'
+  #     - name: Check NPM Credentials
+  #       run: npm whoami && echo "NPM credentials are valid" || (echo "NPM credentials are invalid or have expired." && exit 1)
+  #     - name: Install dependencies
+  #       run: pnpm install --frozen-lockfile
+  #     - name: Download all artifacts
+  #       uses: actions/download-artifact@v3
+  #       with:
+  #         path: artifacts
+  #     - name: List artifacts
+  #       run: ls -R artifacts
+  #       shell: bash
+  #     - name: Publish
+  #       run: |
+  #         git checkout -b publish/$GITHUB_REF_NAME
+  #         # If triggered by the cron, create a canary release
+  #         if [ "${{ github.event_name }}" = "schedule" ]; then
+  #           VERSION="canary"
+  #         else
+  #           # Otherwise, use the tag name (if triggered via release), or explicit version (if triggered via workflow_dispatch)
+  #           VERSION="${GITHUB_REF_NAME}"
+  #         fi
+  #         # If triggered via workflow_dispatch, perform a dry-run
+  #         if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+  #           DRY_RUN="--dry-run"
+  #         else
+  #           DRY_RUN=""
+  #         fi
+  #         pnpm nx-release --local=false $VERSION $DRY_RUN
+  #     - name: Trigger Docs Release
+  #       # Publish docs only on a full release
+  #       if: ${{ !github.event.release.prerelease }}
+  #       run: |
+  #         # Publish docs only when publishing the latest version
+  #         if [ "$(git describe --tags `git rev-list --tags --max-count=1`)" = "$GITHUB_REF_NAME" ]; then
+  #         # We force recreate the branch in order to always be up to date and avoid merge conflicts within the automated workflow
+  #         git branch -f website
+  #         git push -f origin website
+  #         fi
