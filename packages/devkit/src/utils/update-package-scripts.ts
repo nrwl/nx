@@ -1,10 +1,10 @@
-import type { NxJsonConfiguration } from 'nx/src/config/nx-json';
-import type { Tree } from 'nx/src/generators/tree';
 import type {
   CreateNodes,
   CreateNodesFunction,
   CreateNodesResult,
-} from 'nx/src/utils/nx-plugin';
+  NxJsonConfiguration,
+  Tree,
+} from 'nx/src/devkit-exports';
 import type { PackageJson } from 'nx/src/utils/package-json';
 import { basename, dirname } from 'path';
 import * as yargs from 'yargs-parser';
