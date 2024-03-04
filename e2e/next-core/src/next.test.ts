@@ -6,7 +6,6 @@ import {
   readFile,
   runCLI,
   runE2ETests,
-  setCypressWebServerTimeout,
   uniq,
   updateFile,
 } from '@nx/e2e/utils';
@@ -194,7 +193,6 @@ describe('Next.js Applications', () => {
     );
 
     if (runE2ETests('cypress')) {
-      setCypressWebServerTimeout(`${appName}-e2e/cypress.config.ts`);
       const e2eResults = runCLI(`e2e-ci ${appName}-e2e --verbose`, {
         verbose: true,
       });
