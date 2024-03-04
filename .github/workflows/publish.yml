@@ -33,72 +33,72 @@ jobs:
       - name: Check NPM Credentials
         run: npm whoami && echo "NPM credentials are valid" || (echo "NPM credentials are invalid or have expired." && exit 1)
       - run: |
-           npm deprecate create-nx-workspace@18.1.0 "This was an unintentional release and has been deprecated"
-           npm deprecate create-nx-plugin@18.1.0 "This was an unintentional release and has been deprecated"
-           npm deprecate @nx/eslint-plugin@18.1.0 "This was an unintentional release and has been deprecated"
-           npm deprecate @nx/react-native@18.1.0 "This was an unintentional release and has been deprecated"
-           npm deprecate @nx/playwright@18.1.0 "This was an unintentional release and has been deprecated"
-           npm deprecate @nx/storybook@18.1.0 "This was an unintentional release and has been deprecated"
-           npm deprecate @nx/workspace@18.1.0 "This was an unintentional release and has been deprecated"
-           npm deprecate @nx/angular@18.1.0 "This was an unintentional release and has been deprecated"
-           npm deprecate @nx/cypress@18.1.0 "This was an unintentional release and has been deprecated"
-           npm deprecate @nx/esbuild@18.1.0 "This was an unintentional release and has been deprecated"
-           npm deprecate @nx/express@18.1.0 "This was an unintentional release and has been deprecated"
-           npm deprecate @nx/webpack@18.1.0 "This was an unintentional release and has been deprecated"
-           npm deprecate @nx/devkit@18.1.0 "This was an unintentional release and has been deprecated"
-           npm deprecate @nx/eslint@18.1.0 "This was an unintentional release and has been deprecated"
-           npm deprecate @nx/plugin@18.1.0 "This was an unintentional release and has been deprecated"
-           npm deprecate @nx/rollup@18.1.0 "This was an unintentional release and has been deprecated"
-           npm deprecate @nx/detox@18.1.0 "This was an unintentional release and has been deprecated"
-           npm deprecate @nx/react@18.1.0 "This was an unintentional release and has been deprecated"
-           npm deprecate @nx/remix@18.1.0 "This was an unintentional release and has been deprecated"
-           npm deprecate @nx/expo@18.1.0 "This was an unintentional release and has been deprecated"
-           npm deprecate @nx/jest@18.1.0 "This was an unintentional release and has been deprecated"
-           npm deprecate @nx/nest@18.1.0 "This was an unintentional release and has been deprecated"
-           npm deprecate @nx/next@18.1.0 "This was an unintentional release and has been deprecated"
-           npm deprecate @nx/node@18.1.0 "This was an unintentional release and has been deprecated"
-           npm deprecate @nx/nuxt@18.1.0 "This was an unintentional release and has been deprecated"
-           npm deprecate @nx/vite@18.1.0 "This was an unintentional release and has been deprecated"
-           npm deprecate @nrwl/tao@18.1.0 "This was an unintentional release and has been deprecated"
-           npm deprecate @nx/vue@18.1.0 "This was an unintentional release and has been deprecated"
-           npm deprecate @nx/web@18.1.0 "This was an unintentional release and has been deprecated"
-           npm deprecate @nx/js@18.1.0 "This was an unintentional release and has been deprecated"
-           npm deprecate nx@18.1.0 "This was an unintentional release and has been deprecated"
-           npm deprecate @nx/nx-linux-arm-gnueabihf@18.1.0 "This was an unintentional release and has been deprecated"
-           npm deprecate @nx/nx-linux-arm64-musl@18.1.0 "This was an unintentional release and has been deprecated"
-           npm deprecate @nx/nx-win32-arm64-msvc@18.1.0 "This was an unintentional release and has been deprecated"
-           npm deprecate @nx/nx-linux-arm64-gnu@18.1.0 "This was an unintentional release and has been deprecated"
-           npm deprecate @nx/nx-linux-x64-musl@18.1.0 "This was an unintentional release and has been deprecated"
-           npm deprecate @nx/nx-win32-x64-msvc@18.1.0 "This was an unintentional release and has been deprecated"
-           npm deprecate @nx/nx-linux-x64-gnu@18.1.0 "This was an unintentional release and has been deprecated"
-           npm deprecate @nx/nx-darwin-arm64@18.1.0 "This was an unintentional release and has been deprecated"
-           npm deprecate @nx/nx-freebsd-x64@18.1.0 "This was an unintentional release and has been deprecated"
-           npm deprecate @nx/nx-darwin-x64@18.1.0 "This was an unintentional release and has been deprecated"
-           npm deprecate @nrwl/eslint-plugin-nx@18.1.0 "This was an unintentional release and has been deprecated"
-           npm deprecate @nrwl/react-native@18.1.0 "This was an unintentional release and has been deprecated"
-           npm deprecate @nx/linter@18.1.0 "This was an unintentional release and has been deprecated"
-           npm deprecate @nrwl/nx-plugin@18.1.0 "This was an unintentional release and has been deprecated"
-           npm deprecate @nrwl/storybook@18.1.0 "This was an unintentional release and has been deprecated"
-           npm deprecate @nrwl/workspace@18.1.0 "This was an unintentional release and has been deprecated"
-           npm deprecate @nrwl/angular@18.1.0 "This was an unintentional release and has been deprecated"
-           npm deprecate @nrwl/cypress@18.1.0 "This was an unintentional release and has been deprecated"
-           npm deprecate @nrwl/esbuild@18.1.0 "This was an unintentional release and has been deprecated"
-           npm deprecate @nrwl/express@18.1.0 "This was an unintentional release and has been deprecated"
-           npm deprecate @nrwl/webpack@18.1.0 "This was an unintentional release and has been deprecated"
-           npm deprecate @nrwl/devkit@18.1.0 "This was an unintentional release and has been deprecated"
-           npm deprecate @nrwl/linter@18.1.0 "This was an unintentional release and has been deprecated"
-           npm deprecate @nrwl/rollup@18.1.0 "This was an unintentional release and has been deprecated"
-           npm deprecate @nrwl/detox@18.1.0 "This was an unintentional release and has been deprecated"
-           npm deprecate @nrwl/react@18.1.0 "This was an unintentional release and has been deprecated"
-           npm deprecate @nrwl/remix@18.1.0 "This was an unintentional release and has been deprecated"
-           npm deprecate @nrwl/expo@18.1.0 "This was an unintentional release and has been deprecated"
-           npm deprecate @nrwl/jest@18.1.0 "This was an unintentional release and has been deprecated"
-           npm deprecate @nrwl/nest@18.1.0 "This was an unintentional release and has been deprecated"
-           npm deprecate @nrwl/next@18.1.0 "This was an unintentional release and has been deprecated"
-           npm deprecate @nrwl/node@18.1.0 "This was an unintentional release and has been deprecated"
-           npm deprecate @nrwl/vite@18.1.0 "This was an unintentional release and has been deprecated"
-           npm deprecate @nrwl/web@18.1.0 "This was an unintentional release and has been deprecated"
-           npm deprecate @nrwl/js@18.1.0 "This was an unintentional release and has been deprecated"
+           npm dist-tag add create-nx-workspace@18.0.6 latest
+           npm dist-tag add create-nx-plugin@18.0.6 latest
+           npm dist-tag add @nx/eslint-plugin@18.0.6 latest
+           npm dist-tag add @nx/react-native@18.0.6 latest
+           npm dist-tag add @nx/playwright@18.0.6 latest
+           npm dist-tag add @nx/storybook@18.0.6 latest
+           npm dist-tag add @nx/workspace@18.0.6 latest
+           npm dist-tag add @nx/angular@18.0.6 latest
+           npm dist-tag add @nx/cypress@18.0.6 latest
+           npm dist-tag add @nx/esbuild@18.0.6 latest
+           npm dist-tag add @nx/express@18.0.6 latest
+           npm dist-tag add @nx/webpack@18.0.6 latest
+           npm dist-tag add @nx/devkit@18.0.6 latest
+           npm dist-tag add @nx/eslint@18.0.6 latest
+           npm dist-tag add @nx/plugin@18.0.6 latest
+           npm dist-tag add @nx/rollup@18.0.6 latest
+           npm dist-tag add @nx/detox@18.0.6 latest
+           npm dist-tag add @nx/react@18.0.6 latest
+           npm dist-tag add @nx/remix@18.0.6 latest
+           npm dist-tag add @nx/expo@18.0.6 latest
+           npm dist-tag add @nx/jest@18.0.6 latest
+           npm dist-tag add @nx/nest@18.0.6 latest
+           npm dist-tag add @nx/next@18.0.6 latest
+           npm dist-tag add @nx/node@18.0.6 latest
+           npm dist-tag add @nx/nuxt@18.0.6 latest
+           npm dist-tag add @nx/vite@18.0.6 latest
+           npm dist-tag add @nrwl/tao@18.0.6 latest
+           npm dist-tag add @nx/vue@18.0.6 latest
+           npm dist-tag add @nx/web@18.0.6 latest
+           npm dist-tag add @nx/js@18.0.6 latest
+           npm dist-tag add nx@18.0.6 latest
+           npm dist-tag add @nx/nx-linux-arm-gnueabihf@18.0.6 latest
+           npm dist-tag add @nx/nx-linux-arm64-musl@18.0.6 latest
+           npm dist-tag add @nx/nx-win32-arm64-msvc@18.0.6 latest
+           npm dist-tag add @nx/nx-linux-arm64-gnu@18.0.6 latest
+           npm dist-tag add @nx/nx-linux-x64-musl@18.0.6 latest
+           npm dist-tag add @nx/nx-win32-x64-msvc@18.0.6 latest
+           npm dist-tag add @nx/nx-linux-x64-gnu@18.0.6 latest
+           npm dist-tag add @nx/nx-darwin-arm64@18.0.6 latest
+           npm dist-tag add @nx/nx-freebsd-x64@18.0.6 latest
+           npm dist-tag add @nx/nx-darwin-x64@18.0.6 latest
+           npm dist-tag add @nrwl/eslint-plugin-nx@18.0.6 latest
+           npm dist-tag add @nrwl/react-native@18.0.6 latest
+           npm dist-tag add @nx/linter@18.0.6 latest
+           npm dist-tag add @nrwl/nx-plugin@18.0.6 latest
+           npm dist-tag add @nrwl/storybook@18.0.6 latest
+           npm dist-tag add @nrwl/workspace@18.0.6 latest
+           npm dist-tag add @nrwl/angular@18.0.6 latest
+           npm dist-tag add @nrwl/cypress@18.0.6 latest
+           npm dist-tag add @nrwl/esbuild@18.0.6 latest
+           npm dist-tag add @nrwl/express@18.0.6 latest
+           npm dist-tag add @nrwl/webpack@18.0.6 latest
+           npm dist-tag add @nrwl/devkit@18.0.6 latest
+           npm dist-tag add @nrwl/linter@18.0.6 latest
+           npm dist-tag add @nrwl/rollup@18.0.6 latest
+           npm dist-tag add @nrwl/detox@18.0.6 latest
+           npm dist-tag add @nrwl/react@18.0.6 latest
+           npm dist-tag add @nrwl/remix@18.0.6 latest
+           npm dist-tag add @nrwl/expo@18.0.6 latest
+           npm dist-tag add @nrwl/jest@18.0.6 latest
+           npm dist-tag add @nrwl/nest@18.0.6 latest
+           npm dist-tag add @nrwl/next@18.0.6 latest
+           npm dist-tag add @nrwl/node@18.0.6 latest
+           npm dist-tag add @nrwl/vite@18.0.6 latest
+           npm dist-tag add @nrwl/web@18.0.6 latest
+           npm dist-tag add @nrwl/js@18.0.6 latest
 
   # build:
   #   if: ${{ github.repository_owner == 'nrwl' }}
