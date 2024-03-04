@@ -51,7 +51,7 @@ export type {
   VersionData,
 } from './utils/shared';
 
-export const validReleaseVersionPrefixes = ['auto', '', '~', '^'];
+export const validReleaseVersionPrefixes = ['auto', '', '~', '^', '='] as const;
 
 export interface ReleaseVersionGeneratorSchema {
   // The projects being versioned in the current execution
