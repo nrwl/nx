@@ -47,7 +47,7 @@ jobs:
           npm unpublish @nx/webpack@18.1.0 --dry-run
           npm unpublish @nx/devkit@18.1.0 --dry-run
           npm unpublish @nx/eslint@18.1.0 --dry-run
-          npm unpublish @nx/gradle@18.1.0 --dry-run
+          # npm unpublish @nx/gradle@18.1.0 --dry-run
           npm unpublish @nx/plugin@18.1.0 --dry-run
           npm unpublish @nx/rollup@18.1.0 --dry-run
           npm unpublish @nx/detox@18.1.0 --dry-run
@@ -65,16 +65,16 @@ jobs:
           npm unpublish @nx/web@18.1.0 --dry-run
           npm unpublish @nx/js@18.1.0 --dry-run
           npm unpublish nx@18.1.0 --dry-run
-          npm unpublish @nx/linux-arm-gnueabihf@18.1.0 --dry-run
-          npm unpublish @nx/linux-arm64-musl@18.1.0 --dry-run
-          npm unpublish @nx/win32-arm64-msvc@18.1.0 --dry-run
-          npm unpublish @nx/linux-arm64-gnu@18.1.0 --dry-run
-          npm unpublish @nx/linux-x64-musl@18.1.0 --dry-run
-          npm unpublish @nx/win32-x64-msvc@18.1.0 --dry-run
-          npm unpublish @nx/linux-x64-gnu@18.1.0 --dry-run
-          npm unpublish @nx/darwin-arm64@18.1.0 --dry-run
-          npm unpublish @nx/freebsd-x64@18.1.0 --dry-run
-          npm unpublish @nx/darwin-x64@18.1.0 --dry-run
+          npm unpublish @nx/nx-linux-arm-gnueabihf@18.1.0 --dry-run
+          npm unpublish @nx/nx-linux-arm64-musl@18.1.0 --dry-run
+          npm unpublish @nx/nx-win32-arm64-msvc@18.1.0 --dry-run
+          npm unpublish @nx/nx-linux-arm64-gnu@18.1.0 --dry-run
+          npm unpublish @nx/nx-linux-x64-musl@18.1.0 --dry-run
+          npm unpublish @nx/nx-win32-x64-msvc@18.1.0 --dry-run
+          npm unpublish @nx/nx-linux-x64-gnu@18.1.0 --dry-run
+          npm unpublish @nx/nx-darwin-arm64@18.1.0 --dry-run
+          npm unpublish @nx/nx-freebsd-x64@18.1.0 --dry-run
+          npm unpublish @nx/nx-darwin-x64@18.1.0 --dry-run
           npm unpublish @nrwl/eslint-plugin-nx@18.1.0 --dry-run
           npm unpublish @nrwl/react-native@18.1.0 --dry-run
           npm unpublish @nrwl/linter-nx@18.1.0 --dry-run
