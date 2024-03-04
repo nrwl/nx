@@ -23,7 +23,6 @@
       "executor": "nx:run-commands",
       "options": {
         "commands": [
-          "ls -lsa dist/nx-dev/nx-dev/.next",
           "nx run nx-dev:sitemap",
           "ts-node -P ./scripts/tsconfig.scripts.json ./scripts/documentation/internal-link-checker.ts"
         ],
