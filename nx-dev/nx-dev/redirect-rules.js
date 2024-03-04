@@ -432,12 +432,14 @@ const nxCloudUrls = {
     '/nx-cloud/recipes/enterprise/on-premise/auth-single-admin',
   '/nx-cloud/private-cloud/auth-github':
     '/nx-cloud/recipes/enterprise/on-premise/auth-github',
-  '/nx-cloud/private-cloud/ami-setup': '/ci/recipes/enterprise/on-premise/ami-setup',
+  '/nx-cloud/private-cloud/ami-setup':
+    '/ci/recipes/enterprise/on-premise/ami-setup',
   '/nx-cloud/private-cloud/auth-gitlab':
     '/nx-cloud/recipes/enterprise/on-premise/auth-gitlab',
   '/nx-cloud/private-cloud/auth-bitbucket':
     '/nx-cloud/recipes/enterprise/on-premise/auth-bitbucket',
-  '/nx-cloud/private-cloud/auth-saml': '/ci/recipes/enterprise/on-premise/auth-saml',
+  '/nx-cloud/private-cloud/auth-saml':
+    '/ci/recipes/enterprise/on-premise/auth-saml',
   '/nx-cloud/private-cloud/auth-saml-managed':
     '/nx-cloud/recipes/enterprise/on-premise/auth-saml-managed',
   '/nx-cloud/private-cloud/advanced-config':
@@ -447,12 +449,14 @@ const nxCloudUrls = {
     '/ci/recipes/enterprise/on-premise/auth-single-admin',
   '/ci/recipes/on-premise/auth-github':
     '/ci/recipes/enterprise/on-premise/auth-github',
-  '/ci/recipes/on-premise/ami-setup': '/ci/recipes/enterprise/on-premise/ami-setup',
+  '/ci/recipes/on-premise/ami-setup':
+    '/ci/recipes/enterprise/on-premise/ami-setup',
   '/ci/recipes/on-premise/auth-gitlab':
     '/ci/recipes/enterprise/on-premise/auth-gitlab',
   '/ci/recipes/on-premise/auth-bitbucket':
     '/ci/recipes/enterprise/on-premise/auth-bitbucket',
-  '/ci/recipes/on-premise/auth-saml': '/ci/recipes/enterprise/on-premise/auth-saml',
+  '/ci/recipes/on-premise/auth-saml':
+    '/ci/recipes/enterprise/on-premise/auth-saml',
   '/ci/recipes/on-premise/auth-saml-managed':
     '/ci/recipes/enterprise/on-premise/auth-saml-managed',
   '/ci/recipes/on-premise/advanced-config':
