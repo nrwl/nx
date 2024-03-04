@@ -7,7 +7,6 @@ import {
   readJson,
   runCLI,
   runE2ETests,
-  setCypressWebServerTimeout,
   uniq,
   updateFile,
 } from '@nx/e2e/utils';
@@ -77,7 +76,6 @@ describe('env vars', () => {
       );
 
       if (runE2ETests('cypress')) {
-        setCypressWebServerTimeout(`apps/${myapp}-e2e/cypress.config.ts`);
         // contains the correct output and works
         const run1 = runCLI(
           `e2e ${myapp}-e2e --config \\'{\\"env\\":{\\"cliArg\\":\\"i am from the cli args\\"}}\\'`
@@ -169,7 +167,6 @@ export default defineConfig({
       );
 
       if (runE2ETests('cypress')) {
-        setCypressWebServerTimeout(`apps/${appName}/cypress.config.ts`);
         expect(runCLI(`run ${appName}:component-test`)).toContain(
           'All specs passed!'
         );
@@ -198,7 +195,6 @@ export default defineConfig({
       );
 
       if (runE2ETests('cypress')) {
-        setCypressWebServerTimeout(`apps/${appName}/cypress.config.ts`);
         expect(runCLI(`run ${appName}:component-test`)).toContain(
           'All specs passed!'
         );
