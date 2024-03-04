@@ -8,7 +8,6 @@ import {
   runCLI,
   runCommandUntil,
   runE2ETests,
-  setCypressWebServerTimeout,
   uniq,
   updateFile,
 } from '@nx/e2e/utils';
@@ -378,7 +377,6 @@ describe('Angular Module Federation', () => {
     expect(buildRemoteOutput).toContain('Successfully ran target build');
 
     if (runE2ETests('cypress')) {
-      setCypressWebServerTimeout(`${host}-e2e/cypress.config.ts`);
       const e2eProcess = await runCommandUntil(`e2e ${host}-e2e`, (output) =>
         output.includes('All specs passed!')
       );
@@ -470,7 +468,6 @@ describe('Angular Module Federation', () => {
     expect(buildRemoteOutput).toContain('Successfully ran target build');
 
     if (runE2ETests('cypress')) {
-      setCypressWebServerTimeout(`${host}-e2e/cypress.config.ts`);
       const e2eProcess = await runCommandUntil(`e2e ${host}-e2e`, (output) =>
         output.includes('All specs passed!')
       );
