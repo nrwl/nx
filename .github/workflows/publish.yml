@@ -77,7 +77,7 @@ jobs:
           npm unpublish @nx/nx-darwin-x64@18.1.0 --dry-run
           npm unpublish @nrwl/eslint-plugin-nx@18.1.0 --dry-run
           npm unpublish @nrwl/react-native@18.1.0 --dry-run
-          npm unpublish @nrwl/linter-nx@18.1.0 --dry-run
+          npm unpublish @nx/linter@18.1.0 --dry-run
           npm unpublish @nrwl/nx-plugin@18.1.0 --dry-run
           npm unpublish @nrwl/storybook@18.1.0 --dry-run
           npm unpublish @nrwl/workspace@18.1.0 --dry-run
