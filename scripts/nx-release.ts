@@ -129,17 +129,6 @@ const VALID_AUTHORS_FOR_LATEST = [
   });
 
   const distTag = determineDistTag(options.version);
-  if (!distTag || distTag === 'latest') {
-    // We are only expecting latest releases to be performed within publish.yml on GitHub
-    const author = process.env.GITHUB_ACTOR ?? '';
-    if (!VALID_AUTHORS_FOR_LATEST.includes(author)) {
-      throw new Error(
-        `The GitHub user "${author}" is not allowed to publish to "latest". Please request one of the following users to carry out the release: ${VALID_AUTHORS_FOR_LATEST.join(
-          ', '
-        )}`
-      );
-    }
-  }
 
   if (options.dryRun) {
     console.warn('Not Publishing because --dryRun was passed');
@@ -171,6 +160,18 @@ const VALID_AUTHORS_FOR_LATEST = [
             }
           } catch {}
         }
+      }
+    }
+
+    if (!options.local && (!distTag || distTag === 'latest')) {
+      // We are only expecting non-local latest releases to be performed within publish.yml on GitHub
+      const author = process.env.GITHUB_ACTOR ?? '';
+      if (!VALID_AUTHORS_FOR_LATEST.includes(author)) {
+        throw new Error(
+          `The GitHub user "${author}" is not allowed to publish to "latest". Please request one of the following users to carry out the release: ${VALID_AUTHORS_FOR_LATEST.join(
+            ', '
+          )}`
+        );
       }
     }
 
