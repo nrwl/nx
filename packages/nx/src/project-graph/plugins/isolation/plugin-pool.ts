@@ -4,7 +4,7 @@ import path = require('path');
 import { PluginConfiguration } from '../../../config/nx-json';
 
 // TODO (@AgentEnder): After scoped verbose logging is implemented, re-add verbose logs here.
-// import { logger } from '../../utils/logger';
+import { logger } from '../../../utils/logger';
 
 import { LoadedNxPlugin, nxPluginCache } from '../internal-api';
 import { consumeMessage, isPluginWorkerResult } from './messaging';
@@ -110,7 +110,15 @@ function createWorkerHandler(
     return consumeMessage(message, {
       'load-result': (result) => {
         if (result.success) {
-          const { name, createNodesPattern, include, exclude } = result;
+          const {
+            name,
+            include,
+            exclude,
+            createNodesPattern,
+            hasCreateDependencies,
+            hasProcessProjectGraph,
+            hasCreateMetadata,
+          } = result;
           pluginName = name;
           pluginNames.set(worker, pluginName);
           onload({
@@ -131,7 +139,7 @@ function createWorkerHandler(
                   },
                 ]
               : undefined,
-            createDependencies: result.hasCreateDependencies
+            createDependencies: hasCreateDependencies
               ? (ctx) => {
                   const tx =
                     pluginName + ':createDependencies:' + performance.now();
@@ -143,7 +151,7 @@ function createWorkerHandler(
                   });
                 }
               : undefined,
-            processProjectGraph: result.hasProcessProjectGraph
+            processProjectGraph: hasProcessProjectGraph
               ? (graph, ctx) => {
                   const tx =
                     pluginName + ':processProjectGraph:' + performance.now();
@@ -155,7 +163,7 @@ function createWorkerHandler(
                   });
                 }
               : undefined,
-            createMetadata: result.hasCreateMetadata
+            createMetadata: hasCreateMetadata
               ? (graph, ctx) => {
                   const tx =
                     pluginName + ':createMetadata:' + performance.now();
@@ -212,7 +220,7 @@ function createWorkerExitHandler(
   worker: ChildProcess,
   pendingPromises: Map<string, PendingPromise>
 ) {
-  return () => {
+  return (code?: number) => {
     for (const [_, pendingPromise] of pendingPromises) {
       pendingPromise.rejector(
         new Error(
@@ -220,6 +228,13 @@ function createWorkerExitHandler(
             pluginNames.get(worker) ?? worker.pid
           } exited unexpectedly with code ${worker.exitCode}`
         )
+      );
+    }
+    if (code && code !== 0) {
+      logger.error(
+        `[plugin-pool] worker ${
+          pluginNames.get(worker) ?? worker.pid
+        } exited with code ${code}`
       );
     }
   };

@@ -3,6 +3,7 @@ import { LoadedNxPlugin } from '../internal-api';
 import { loadNxPlugin } from '../loader';
 import { Serializable } from 'child_process';
 import { createSerializableError } from '../../../utils/serializable-error';
+import { isRuntimePlugin } from '../utils';
 
 if (process.env.NX_PERF_LOGGING === 'true') {
   require('../../../utils/perf-logging');
@@ -36,6 +37,11 @@ process.on('message', async (message: Serializable) => {
             hasCreateMetadata:
               'createMetadata' in plugin && !!plugin.createMetadata,
             success: true,
+            callback: isRuntimePlugin(plugin)
+              ? undefined
+              : () => {
+                  process.exit(0);
+                },
           },
         };
       } catch (e) {

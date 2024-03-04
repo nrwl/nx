@@ -184,8 +184,8 @@ type MaybePromise<T> = T | Promise<T>;
 // The handler can return a message to be sent back to the process from which the message originated
 type MessageHandlerReturn<T extends PluginWorkerMessage | PluginWorkerResult> =
   T extends PluginWorkerResult
-    ? MaybePromise<PluginWorkerMessage | void>
-    : MaybePromise<PluginWorkerResult | void>;
+    ? MaybePromise<(PluginWorkerMessage & { callback?: () => void }) | void>
+    : MaybePromise<(PluginWorkerResult & { callback?: () => void }) | void>;
 
 // Takes a message and a map of handlers and calls the appropriate handler
 // type safe and requires all handlers to be handled
@@ -205,7 +205,8 @@ export async function consumeMessage<
   if (handler) {
     const response = await handler(message.payload);
     if (response) {
-      process.send!(response);
+      const { callback, ...message } = response;
+      process.send!(message, callback);
     }
   }
 }

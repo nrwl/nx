@@ -42,7 +42,7 @@ function matchesCurrentNxInstall(
     ) {
       return false;
     }
-    for (const [plugin, desiredVersion] of getDesiredPluginVersions(nxJson)) {
+    for (const [plugin, desiredVersion] of getDesiredPackageVersions(nxJson)) {
       if (currentInstallation.devDependencies[plugin] !== desiredVersion) {
         return false;
       }
@@ -79,10 +79,7 @@ function performInstallation(
     installationPath,
     JSON.stringify({
       name: 'nx-installation',
-      devDependencies: {
-        nx: nxJson.installation.version,
-        ...getDesiredPluginVersions(nxJson),
-      },
+      devDependencies: Object.fromEntries(getDesiredPackageVersions(nxJson)),
     })
   );
 
@@ -99,19 +96,35 @@ function performInstallation(
   }
 }
 
-function getDesiredPluginVersions(nxJson: NxJsonConfiguration) {
-  const packages: Record<string, string> = {};
+let WARNED_DEPRECATED_INSTALLATIONS_PLUGIN_PROPERTY = false;
+function getDesiredPackageVersions(nxJson: NxJsonConfiguration) {
+  const packages: Record<string, string> = {
+    nx: nxJson.installation.version,
+  };
 
   //# adds support for "legacy" installation of plugins
   for (const [plugin, version] of Object.entries(
     nxJson?.installation?.plugins ?? {}
   )) {
     packages[plugin] = version;
+    if (!WARNED_DEPRECATED_INSTALLATIONS_PLUGIN_PROPERTY) {
+      console.warn(
+        '[Nx]: The "installation.plugins" entry in the "nx.json" file is deprecated. Use "plugins" instead. See https://nx.dev/recipes/installation/install-non-javascript'
+      );
+      WARNED_DEPRECATED_INSTALLATIONS_PLUGIN_PROPERTY = true;
+    }
   }
 
   for (const plugin of nxJson.plugins ?? []) {
-    if (typeof plugin === 'object' && plugin.version) {
-      packages[getPackageName(plugin.plugin)] = plugin.version;
+    if (typeof plugin === 'object') {
+      if (plugin.version) {
+        packages[getPackageName(plugin.plugin)] = plugin.version;
+      }
+      //# } else if (!nxJson.installation?.plugins?.[pluginName]) {
+      //# // Ideally we'd like to warn here, but we don't know that
+      //# // the plugin isn't a local plugin at this point. As such,
+      //# // the warning may not be relevant, and I'd like to avoid that.
+      //# }
     }
   }
 
@@ -123,6 +136,8 @@ function getDesiredPluginVersions(nxJson: NxJsonConfiguration) {
 //#      - `@nx/workspace/plugin` -> `@nx/workspace`
 //#      - `@nx/workspace/other`  -> `@nx/workspace`
 //#      - `nx/plugin`            -> `nx`
+//# This is a copy of a function in 'nx/src/utils/nx-installation'.
+//# It's tested there, but can't be imported since Nx isn't installed yet.
 function getPackageName(name: string) {
   if (name.startsWith('@')) {
     return name.split('/').slice(0, 2).join('/');
