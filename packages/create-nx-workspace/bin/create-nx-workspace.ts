@@ -1112,7 +1112,7 @@ async function determineVueFramework(
         {
           name: 'none',
           message: 'None',
-          hint: '         I only want vue',
+          hint: '         I only want Vue',
         },
         {
           name: 'nuxt',
