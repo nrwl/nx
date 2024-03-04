@@ -41,3 +41,20 @@ nx graph
 
 {% /tab %}
 {% /tabs %}
+
+## Installing Plugins
+
+When Nx is managing its own installation, you can install plugins with `nx add {pluginName}`. This will install the plugin in the `.nx` folder and add it to the `nx.json` file. To manually install a plugin, you can add the plugin to `nx.json` as shown below:
+
+```json {% fileName="nx.json" %}
+{
+  "plugins": [
+    {
+      "plugin": "{pluginName}",
+      "version": "1.0.0"
+    }
+  ]
+}
+```
+
+The next time you run Nx, the plugin will be installed and available for use.

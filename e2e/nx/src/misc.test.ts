@@ -460,6 +460,12 @@ describe('migrate', () => {
           'migrate-child-package': '1.0.0',
         },
       };
+      j.plugins = [
+        {
+          plugin: 'migrate-parent-package',
+          version: '1.0.0',
+        },
+      ];
       return j;
     });
     runCLI(
@@ -491,6 +497,12 @@ describe('migrate', () => {
     expect(nxJson.installation.plugins['migrate-child-package']).toEqual(
       '9.0.0'
     );
+    const updatedPlugin = nxJson.plugins.find(
+      (p) => typeof p === 'object' && p.plugin === 'migrate-parent-package'
+    );
+    expect(
+      typeof updatedPlugin === 'object' && updatedPlugin.version === '2.0.0'
+    ).toBeTruthy();
     // should keep new line on package
     const packageContent = readFile('package.json');
     expect(packageContent.charCodeAt(packageContent.length - 1)).toEqual(10);

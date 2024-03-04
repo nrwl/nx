@@ -21,7 +21,7 @@ const variable = 3;`);
 
   it('should remove empty comments', () => {
     const stripped = sanitizeWrapperScript(`test; //`);
-    expect(stripped.length).toEqual(5);
+    expect(stripped).toMatchInlineSnapshot(`"test;"`);
   });
 
   // This test serves as a final sanity check to ensure that the contents of the
@@ -39,7 +39,6 @@ const variable = 3;`);
       //
       // You should not edit this file, as future updates to Nx may require changes to it.
       // See: https://nx.dev/recipes/installation/install-non-javascript for more info.
-
       const fs: typeof import('fs') = require('fs');
       const path: typeof import('path') = require('path');
       const cp: typeof import('child_process') = require('child_process');
@@ -73,7 +72,7 @@ const variable = 3;`);
           ) {
             return false;
           }
-          for (const [plugin, desiredVersion] of getDesiredPluginVersions(nxJson)) {
+          for (const [plugin, desiredVersion] of getDesiredPackageVersions(nxJson)) {
             if (currentInstallation.devDependencies[plugin] !== desiredVersion) {
               return false;
             }
@@ -110,10 +109,7 @@ const variable = 3;`);
           installationPath,
           JSON.stringify({
             name: 'nx-installation',
-            devDependencies: {
-              nx: nxJson.installation.version,
-              ...getDesiredPluginVersions(nxJson),
-            },
+            devDependencies: Object.fromEntries(getDesiredPackageVersions(nxJson)),
           })
         );
 
@@ -130,24 +126,33 @@ const variable = 3;`);
         }
       }
 
-      function getDesiredPluginVersions(nxJson: NxJsonConfiguration) {
-        const packages: Record<string, string> = {};
-
+      let WARNED_DEPRECATED_INSTALLATIONS_PLUGIN_PROPERTY = false;
+      function getDesiredPackageVersions(nxJson: NxJsonConfiguration) {
+        const packages: Record<string, string> = {
+          nx: nxJson.installation.version,
+        };
         for (const [plugin, version] of Object.entries(
           nxJson?.installation?.plugins ?? {}
         )) {
           packages[plugin] = version;
+          if (!WARNED_DEPRECATED_INSTALLATIONS_PLUGIN_PROPERTY) {
+            console.warn(
+              '[Nx]: The "installation.plugins" entry in the "nx.json" file is deprecated. Use "plugins" instead. See https://nx.dev/recipes/installation/install-non-javascript'
+            );
+            WARNED_DEPRECATED_INSTALLATIONS_PLUGIN_PROPERTY = true;
+          }
         }
 
         for (const plugin of nxJson.plugins ?? []) {
-          if (typeof plugin === 'object' && plugin.version) {
-            packages[getPackageName(plugin.plugin)] = plugin.version;
+          if (typeof plugin === 'object') {
+            if (plugin.version) {
+              packages[getPackageName(plugin.plugin)] = plugin.version;
+            }
           }
         }
 
         return Object.entries(packages);
       }
-
       function getPackageName(name: string) {
         if (name.startsWith('@')) {
           return name.split('/').slice(0, 2).join('/');
@@ -199,7 +204,6 @@ const variable = 3;`);
       if (!process.env.NX_WRAPPER_SKIP_INSTALL) {
         ensureUpToDateInstallation();
       }
-
       require('./installation/node_modules/nx/bin/nx');
       "
     `);
