@@ -38,6 +38,9 @@ launch-templates:
       - name: Install Cypress
         script: pnpm exec cypress install
 
+      - name: Install Cypress
+        script: pnpm exec cypress verify
+
       - name: Install Rust
         script: |
           curl --proto '=https' --tlsv1.3 https://sh.rustup.rs -sSf | sh -s -- -y

@@ -1,5 +1,9 @@
 lockfileVersion: '6.0'
 
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
 overrides:
   minimist: ^1.2.6
   underscore: ^1.12.1
@@ -246,7 +250,7 @@ devDependencies:
     version: 9.1.6(@nestjs/common@9.1.6)(@nestjs/core@9.1.6)
   '@nestjs/schematics':
     specifier: ^9.1.0
-    version: 9.1.0(chokidar@3.5.3)(typescript@4.9.4)
+    version: 9.1.0(typescript@5.3.3)
   '@nestjs/swagger':
     specifier: ^6.0.0
     version: 6.1.3(@nestjs/common@9.1.6)(@nestjs/core@9.1.6)(reflect-metadata@0.1.14)
@@ -270,10 +274,10 @@ devDependencies:
     version: 3.10.0(rollup@2.79.0)
   '@nx/angular':
     specifier: 18.1.0-beta.1
-    version: 18.1.0-beta.1(@angular-devkit/build-angular@17.2.0)(@angular-devkit/core@17.2.0)(@angular-devkit/schematics@17.2.0)(@schematics/angular@17.2.0)(@swc-node/register@1.8.0)(@swc/core@1.3.86)(@types/node@18.19.8)(cypress@13.0.0)(esbuild@0.19.5)(eslint@8.48.0)(html-webpack-plugin@5.5.0)(js-yaml@4.1.0)(nx@18.1.0-beta.1)(rxjs@7.8.1)(ts-node@10.9.1)(typescript@5.3.3)(verdaccio@5.15.4)
+    version: 18.1.0-beta.1(@angular-devkit/build-angular@17.2.0)(@angular-devkit/core@17.2.0)(@angular-devkit/schematics@17.2.0)(@schematics/angular@17.2.0)(@swc-node/register@1.8.0)(@swc/core@1.3.86)(@types/node@18.19.8)(cypress@13.6.6)(esbuild@0.19.5)(eslint@8.48.0)(html-webpack-plugin@5.5.0)(js-yaml@4.1.0)(nx@18.1.0-beta.1)(rxjs@7.8.1)(ts-node@10.9.1)(typescript@5.3.3)(verdaccio@5.15.4)
   '@nx/cypress':
     specifier: 18.1.0-beta.1
-    version: 18.1.0-beta.1(@swc-node/register@1.8.0)(@swc/core@1.3.86)(@types/node@18.19.8)(cypress@13.0.0)(js-yaml@4.1.0)(nx@18.1.0-beta.1)(typescript@5.3.3)(verdaccio@5.15.4)
+    version: 18.1.0-beta.1(@swc-node/register@1.8.0)(@swc/core@1.3.86)(@types/node@18.19.8)(cypress@13.6.6)(js-yaml@4.1.0)(nx@18.1.0-beta.1)(typescript@5.3.3)(verdaccio@5.15.4)
   '@nx/devkit':
     specifier: 18.1.0-beta.1
     version: 18.1.0-beta.1(nx@18.1.0-beta.1)
@@ -303,7 +307,7 @@ devDependencies:
     version: 18.1.0-beta.1(@swc-node/register@1.8.0)(@swc/core@1.3.86)(@types/node@18.19.8)(js-yaml@4.1.0)(nx@18.1.0-beta.1)(typescript@5.3.3)(verdaccio@5.15.4)
   '@nx/storybook':
     specifier: 18.1.0-beta.1
-    version: 18.1.0-beta.1(@swc-node/register@1.8.0)(@swc/core@1.3.86)(@types/node@18.19.8)(cypress@13.0.0)(js-yaml@4.1.0)(nx@18.1.0-beta.1)(typescript@5.3.3)(verdaccio@5.15.4)
+    version: 18.1.0-beta.1(@swc-node/register@1.8.0)(@swc/core@1.3.86)(@types/node@18.19.8)(cypress@13.6.6)(js-yaml@4.1.0)(nx@18.1.0-beta.1)(typescript@5.3.3)(verdaccio@5.15.4)
   '@nx/vite':
     specifier: 18.1.0-beta.1
     version: 18.1.0-beta.1(@swc-node/register@1.8.0)(@swc/core@1.3.86)(@types/node@18.19.8)(nx@18.1.0-beta.1)(typescript@5.3.3)(verdaccio@5.15.4)(vite@5.0.8)(vitest@1.3.1)
@@ -539,8 +543,8 @@ devDependencies:
     specifier: ^5.0.0
     version: 5.0.0(esbuild@0.19.5)(webpack@5.88.0)
   cypress:
-    specifier: ^13.0.0
-    version: 13.0.0
+    specifier: ^13.6.6
+    version: 13.6.6
   cytoscape:
     specifier: ^3.18.2
     version: 3.23.0
@@ -6973,6 +6977,20 @@ packages:
       - chokidar
     dev: true
 
+  /@nestjs/schematics@9.1.0(typescript@5.3.3):
+    resolution: {integrity: sha512-/7CyMTnPJSK9/xD9CkCqwuHPOlHVlLC2RDnbdCJ7mIO07SdbBbY14msTqtYW9VRQtsjZPLh1GTChf7ryJUImwA==}
+    peerDependencies:
+      typescript: '>=4.3.5'
+    dependencies:
+      '@angular-devkit/core': 15.2.4(chokidar@3.5.3)
+      '@angular-devkit/schematics': 15.2.4(chokidar@3.5.3)
+      jsonc-parser: 3.2.0
+      pluralize: 8.0.0
+      typescript: 5.3.3
+    transitivePeerDependencies:
+      - chokidar
+    dev: true
+
   /@nestjs/swagger@6.1.3(@nestjs/common@9.1.6)(@nestjs/core@9.1.6)(reflect-metadata@0.1.14):
     resolution: {integrity: sha512-H9C/yRgLFb5QrAt6iGrYmIX9X7Q0zXkgZaTNUATljUBra+RCWrEUbLHBcGjTAOtcIyGV/vmyCLv68YSVcZoE0Q==}
     peerDependencies:
@@ -7325,10 +7343,10 @@ packages:
       - supports-color
     dev: true
 
-  /@nrwl/angular@18.1.0-beta.1(@angular-devkit/build-angular@17.2.0)(@angular-devkit/core@17.2.0)(@angular-devkit/schematics@17.2.0)(@schematics/angular@17.2.0)(@swc-node/register@1.8.0)(@swc/core@1.3.86)(@types/node@18.19.8)(cypress@13.0.0)(esbuild@0.19.5)(eslint@8.48.0)(html-webpack-plugin@5.5.0)(js-yaml@4.1.0)(nx@18.1.0-beta.1)(rxjs@7.8.1)(ts-node@10.9.1)(typescript@5.3.3)(verdaccio@5.15.4):
+  /@nrwl/angular@18.1.0-beta.1(@angular-devkit/build-angular@17.2.0)(@angular-devkit/core@17.2.0)(@angular-devkit/schematics@17.2.0)(@schematics/angular@17.2.0)(@swc-node/register@1.8.0)(@swc/core@1.3.86)(@types/node@18.19.8)(cypress@13.6.6)(esbuild@0.19.5)(eslint@8.48.0)(html-webpack-plugin@5.5.0)(js-yaml@4.1.0)(nx@18.1.0-beta.1)(rxjs@7.8.1)(ts-node@10.9.1)(typescript@5.3.3)(verdaccio@5.15.4):
     resolution: {integrity: sha512-Fu4cR3JPBNcZlAniZuQD+wgSihKr8oINqxxTuTBEL3Pr1SFssw2QC1/dHBv3ux5GTG4PkmE8SjxJL43tId7QmA==}
     dependencies:
-      '@nx/angular': 18.1.0-beta.1(@angular-devkit/build-angular@17.2.0)(@angular-devkit/core@17.2.0)(@angular-devkit/schematics@17.2.0)(@schematics/angular@17.2.0)(@swc-node/register@1.8.0)(@swc/core@1.3.86)(@types/node@18.19.8)(cypress@13.0.0)(esbuild@0.19.5)(eslint@8.48.0)(html-webpack-plugin@5.5.0)(js-yaml@4.1.0)(nx@18.1.0-beta.1)(rxjs@7.8.1)(ts-node@10.9.1)(typescript@5.3.3)(verdaccio@5.15.4)
+      '@nx/angular': 18.1.0-beta.1(@angular-devkit/build-angular@17.2.0)(@angular-devkit/core@17.2.0)(@angular-devkit/schematics@17.2.0)(@schematics/angular@17.2.0)(@swc-node/register@1.8.0)(@swc/core@1.3.86)(@types/node@18.19.8)(cypress@13.6.6)(esbuild@0.19.5)(eslint@8.48.0)(html-webpack-plugin@5.5.0)(js-yaml@4.1.0)(nx@18.1.0-beta.1)(rxjs@7.8.1)(ts-node@10.9.1)(typescript@5.3.3)(verdaccio@5.15.4)
       tslib: 2.6.2
     transitivePeerDependencies:
       - '@angular-devkit/build-angular'
@@ -7369,10 +7387,10 @@ packages:
       - webpack-cli
     dev: true
 
-  /@nrwl/cypress@18.1.0-beta.1(@swc-node/register@1.8.0)(@swc/core@1.3.86)(@types/node@18.19.8)(cypress@13.0.0)(js-yaml@4.1.0)(nx@18.1.0-beta.1)(typescript@5.3.3)(verdaccio@5.15.4):
+  /@nrwl/cypress@18.1.0-beta.1(@swc-node/register@1.8.0)(@swc/core@1.3.86)(@types/node@18.19.8)(cypress@13.6.6)(js-yaml@4.1.0)(nx@18.1.0-beta.1)(typescript@5.3.3)(verdaccio@5.15.4):
     resolution: {integrity: sha512-LokZ5hLHMq/UIegmFGqrNE3vC8FCZJLCcEki9DoO+g8MPOkm490gABaYlN2ju1fdR5R/xFcRsZZR60731ZiYcA==}
     dependencies:
-      '@nx/cypress': 18.1.0-beta.1(@swc-node/register@1.8.0)(@swc/core@1.3.86)(@types/node@18.19.8)(cypress@13.0.0)(js-yaml@4.1.0)(nx@18.1.0-beta.1)(typescript@5.3.3)(verdaccio@5.15.4)
+      '@nx/cypress': 18.1.0-beta.1(@swc-node/register@1.8.0)(@swc/core@1.3.86)(@types/node@18.19.8)(cypress@13.6.6)(js-yaml@4.1.0)(nx@18.1.0-beta.1)(typescript@5.3.3)(verdaccio@5.15.4)
     transitivePeerDependencies:
       - '@babel/traverse'
       - '@swc-node/register'
@@ -7551,10 +7569,10 @@ packages:
       - verdaccio
     dev: true
 
-  /@nrwl/storybook@18.1.0-beta.1(@swc-node/register@1.8.0)(@swc/core@1.3.86)(@types/node@18.19.8)(cypress@13.0.0)(js-yaml@4.1.0)(nx@18.1.0-beta.1)(typescript@5.3.3)(verdaccio@5.15.4):
+  /@nrwl/storybook@18.1.0-beta.1(@swc-node/register@1.8.0)(@swc/core@1.3.86)(@types/node@18.19.8)(cypress@13.6.6)(js-yaml@4.1.0)(nx@18.1.0-beta.1)(typescript@5.3.3)(verdaccio@5.15.4):
     resolution: {integrity: sha512-trnFKDaDZISxQ/jBDOXP/aEBcKIrGxxAK59D/bhUH0oVLiYjU4opw1HyNaVxQWYdHZ0qsaO8HmP3PbkyRLpL2A==}
     dependencies:
-      '@nx/storybook': 18.1.0-beta.1(@swc-node/register@1.8.0)(@swc/core@1.3.86)(@types/node@18.19.8)(cypress@13.0.0)(js-yaml@4.1.0)(nx@18.1.0-beta.1)(typescript@5.3.3)(verdaccio@5.15.4)
+      '@nx/storybook': 18.1.0-beta.1(@swc-node/register@1.8.0)(@swc/core@1.3.86)(@types/node@18.19.8)(cypress@13.6.6)(js-yaml@4.1.0)(nx@18.1.0-beta.1)(typescript@5.3.3)(verdaccio@5.15.4)
     transitivePeerDependencies:
       - '@babel/traverse'
       - '@swc-node/register'
@@ -7883,7 +7901,7 @@ packages:
       ufo: 1.3.2
       unenv: 1.9.0
       unplugin: 1.6.0
-      vite: 5.0.12(@types/node@18.19.8)(less@4.2.0)(sass@1.70.0)(stylus@0.59.0)(terser@5.27.0)
+      vite: 5.0.12(@types/node@18.19.8)(less@4.1.3)(sass@1.55.0)(stylus@0.59.0)
       vite-node: 1.3.1(@types/node@18.19.8)(less@4.1.3)(sass@1.55.0)(stylus@0.59.0)
       vite-plugin-checker: 0.6.4(eslint@8.48.0)(typescript@5.3.3)(vite@5.0.12)
       vue: 3.4.15(typescript@5.3.3)
@@ -7920,7 +7938,7 @@ packages:
       - encoding
     dev: true
 
-  /@nx/angular@18.1.0-beta.1(@angular-devkit/build-angular@17.2.0)(@angular-devkit/core@17.2.0)(@angular-devkit/schematics@17.2.0)(@schematics/angular@17.2.0)(@swc-node/register@1.8.0)(@swc/core@1.3.86)(@types/node@18.19.8)(cypress@13.0.0)(esbuild@0.19.5)(eslint@8.48.0)(html-webpack-plugin@5.5.0)(js-yaml@4.1.0)(nx@18.1.0-beta.1)(rxjs@7.8.1)(ts-node@10.9.1)(typescript@5.3.3)(verdaccio@5.15.4):
+  /@nx/angular@18.1.0-beta.1(@angular-devkit/build-angular@17.2.0)(@angular-devkit/core@17.2.0)(@angular-devkit/schematics@17.2.0)(@schematics/angular@17.2.0)(@swc-node/register@1.8.0)(@swc/core@1.3.86)(@types/node@18.19.8)(cypress@13.6.6)(esbuild@0.19.5)(eslint@8.48.0)(html-webpack-plugin@5.5.0)(js-yaml@4.1.0)(nx@18.1.0-beta.1)(rxjs@7.8.1)(ts-node@10.9.1)(typescript@5.3.3)(verdaccio@5.15.4):
     resolution: {integrity: sha512-JP1tC8L7csyGBRtgK8NmpBf3QaplTPNOeoT8va+/9Crqdrg9eq0AjwOxD8RUIW3MzKfu6krXbQhNPGOXPPggLw==}
     peerDependencies:
       '@angular-devkit/build-angular': '>= 15.0.0 < 18.0.0'
@@ -7936,8 +7954,8 @@ packages:
       '@angular-devkit/build-angular': 17.2.0(@angular/compiler-cli@17.2.1)(@swc/core@1.3.86)(@types/express@4.17.14)(@types/node@18.19.8)(html-webpack-plugin@5.5.0)(jest-environment-jsdom@29.4.3)(jest@29.4.3)(ng-packagr@17.2.0)(stylus@0.59.0)(tailwindcss@3.2.4)(typescript@5.3.3)
       '@angular-devkit/core': 17.2.0
       '@angular-devkit/schematics': 17.2.0
-      '@nrwl/angular': 18.1.0-beta.1(@angular-devkit/build-angular@17.2.0)(@angular-devkit/core@17.2.0)(@angular-devkit/schematics@17.2.0)(@schematics/angular@17.2.0)(@swc-node/register@1.8.0)(@swc/core@1.3.86)(@types/node@18.19.8)(cypress@13.0.0)(esbuild@0.19.5)(eslint@8.48.0)(html-webpack-plugin@5.5.0)(js-yaml@4.1.0)(nx@18.1.0-beta.1)(rxjs@7.8.1)(ts-node@10.9.1)(typescript@5.3.3)(verdaccio@5.15.4)
-      '@nx/cypress': 18.1.0-beta.1(@swc-node/register@1.8.0)(@swc/core@1.3.86)(@types/node@18.19.8)(cypress@13.0.0)(js-yaml@4.1.0)(nx@18.1.0-beta.1)(typescript@5.3.3)(verdaccio@5.15.4)
+      '@nrwl/angular': 18.1.0-beta.1(@angular-devkit/build-angular@17.2.0)(@angular-devkit/core@17.2.0)(@angular-devkit/schematics@17.2.0)(@schematics/angular@17.2.0)(@swc-node/register@1.8.0)(@swc/core@1.3.86)(@types/node@18.19.8)(cypress@13.6.6)(esbuild@0.19.5)(eslint@8.48.0)(html-webpack-plugin@5.5.0)(js-yaml@4.1.0)(nx@18.1.0-beta.1)(rxjs@7.8.1)(ts-node@10.9.1)(typescript@5.3.3)(verdaccio@5.15.4)
+      '@nx/cypress': 18.1.0-beta.1(@swc-node/register@1.8.0)(@swc/core@1.3.86)(@types/node@18.19.8)(cypress@13.6.6)(js-yaml@4.1.0)(nx@18.1.0-beta.1)(typescript@5.3.3)(verdaccio@5.15.4)
       '@nx/devkit': 18.1.0-beta.1(nx@18.1.0-beta.1)
       '@nx/eslint': 18.1.0-beta.1(@swc-node/register@1.8.0)(@swc/core@1.3.86)(@types/node@18.19.8)(js-yaml@4.1.0)(nx@18.1.0-beta.1)(verdaccio@5.15.4)
       '@nx/jest': 18.1.0-beta.1(@swc-node/register@1.8.0)(@swc/core@1.3.86)(@types/node@18.19.8)(nx@18.1.0-beta.1)(ts-node@10.9.1)(typescript@5.3.3)(verdaccio@5.15.4)
@@ -7993,7 +8011,7 @@ packages:
       - webpack-cli
     dev: true
 
-  /@nx/cypress@18.1.0-beta.1(@swc-node/register@1.8.0)(@swc/core@1.3.86)(@types/node@18.19.8)(cypress@13.0.0)(js-yaml@4.1.0)(nx@18.1.0-beta.1)(typescript@5.3.3)(verdaccio@5.15.4):
+  /@nx/cypress@18.1.0-beta.1(@swc-node/register@1.8.0)(@swc/core@1.3.86)(@types/node@18.19.8)(cypress@13.6.6)(js-yaml@4.1.0)(nx@18.1.0-beta.1)(typescript@5.3.3)(verdaccio@5.15.4):
     resolution: {integrity: sha512-c1QRF2kazJQGruFqqWIAcOEwthqAlw4l+blgVMICiUpP2kEms2vt2GNBSs4JTk4mPVGyq+qy+xsHjwTNQfpRRw==}
     peerDependencies:
       cypress: '>= 3 < 14'
@@ -8001,12 +8019,12 @@ packages:
       cypress:
         optional: true
     dependencies:
-      '@nrwl/cypress': 18.1.0-beta.1(@swc-node/register@1.8.0)(@swc/core@1.3.86)(@types/node@18.19.8)(cypress@13.0.0)(js-yaml@4.1.0)(nx@18.1.0-beta.1)(typescript@5.3.3)(verdaccio@5.15.4)
+      '@nrwl/cypress': 18.1.0-beta.1(@swc-node/register@1.8.0)(@swc/core@1.3.86)(@types/node@18.19.8)(cypress@13.6.6)(js-yaml@4.1.0)(nx@18.1.0-beta.1)(typescript@5.3.3)(verdaccio@5.15.4)
       '@nx/devkit': 18.1.0-beta.1(nx@18.1.0-beta.1)
       '@nx/eslint': 18.1.0-beta.1(@swc-node/register@1.8.0)(@swc/core@1.3.86)(@types/node@18.19.8)(js-yaml@4.1.0)(nx@18.1.0-beta.1)(verdaccio@5.15.4)
       '@nx/js': 18.1.0-beta.1(@swc-node/register@1.8.0)(@swc/core@1.3.86)(@types/node@18.19.8)(nx@18.1.0-beta.1)(typescript@5.3.3)(verdaccio@5.15.4)
       '@phenomnomnominal/tsquery': 5.0.1(typescript@5.3.3)
-      cypress: 13.0.0
+      cypress: 13.6.6
       detect-port: 1.5.1
       semver: 7.6.0
       tslib: 2.6.2
@@ -8591,11 +8609,11 @@ packages:
       - verdaccio
     dev: true
 
-  /@nx/storybook@18.1.0-beta.1(@swc-node/register@1.8.0)(@swc/core@1.3.86)(@types/node@18.19.8)(cypress@13.0.0)(js-yaml@4.1.0)(nx@18.1.0-beta.1)(typescript@5.3.3)(verdaccio@5.15.4):
+  /@nx/storybook@18.1.0-beta.1(@swc-node/register@1.8.0)(@swc/core@1.3.86)(@types/node@18.19.8)(cypress@13.6.6)(js-yaml@4.1.0)(nx@18.1.0-beta.1)(typescript@5.3.3)(verdaccio@5.15.4):
     resolution: {integrity: sha512-m5tRDIrLQARw3sl9d8d69HweudQOhnu6VGAQDTwHIX26v/d1bX88ExjubfbDm5lQogtQm2biPiRM0GjTNWiFEg==}
     dependencies:
-      '@nrwl/storybook': 18.1.0-beta.1(@swc-node/register@1.8.0)(@swc/core@1.3.86)(@types/node@18.19.8)(cypress@13.0.0)(js-yaml@4.1.0)(nx@18.1.0-beta.1)(typescript@5.3.3)(verdaccio@5.15.4)
-      '@nx/cypress': 18.1.0-beta.1(@swc-node/register@1.8.0)(@swc/core@1.3.86)(@types/node@18.19.8)(cypress@13.0.0)(js-yaml@4.1.0)(nx@18.1.0-beta.1)(typescript@5.3.3)(verdaccio@5.15.4)
+      '@nrwl/storybook': 18.1.0-beta.1(@swc-node/register@1.8.0)(@swc/core@1.3.86)(@types/node@18.19.8)(cypress@13.6.6)(js-yaml@4.1.0)(nx@18.1.0-beta.1)(typescript@5.3.3)(verdaccio@5.15.4)
+      '@nx/cypress': 18.1.0-beta.1(@swc-node/register@1.8.0)(@swc/core@1.3.86)(@types/node@18.19.8)(cypress@13.6.6)(js-yaml@4.1.0)(nx@18.1.0-beta.1)(typescript@5.3.3)(verdaccio@5.15.4)
       '@nx/devkit': 18.1.0-beta.1(nx@18.1.0-beta.1)
       '@nx/eslint': 18.1.0-beta.1(@swc-node/register@1.8.0)(@swc/core@1.3.86)(@types/node@18.19.8)(js-yaml@4.1.0)(nx@18.1.0-beta.1)(verdaccio@5.15.4)
       '@nx/js': 18.1.0-beta.1(@swc-node/register@1.8.0)(@swc/core@1.3.86)(@types/node@18.19.8)(nx@18.1.0-beta.1)(typescript@5.3.3)(verdaccio@5.15.4)
@@ -12771,10 +12789,6 @@ packages:
       form-data: 3.0.1
     dev: true
 
-  /@types/node@16.18.48:
-    resolution: {integrity: sha512-mlaecDKQ7rIZrYD7iiKNdzFb6e/qD5I9U1rAhq+Fd+DWvYVs+G2kv74UFHmSOlg5+i/vF3XxuR522V4u8BqO+Q==}
-    dev: true
-
   /@types/node@18.19.8:
     resolution: {integrity: sha512-g1pZtPhsvGVTwmeVoexWZLTQaOvXwoSq//pTL0DHeNzUDrFnir4fgETdhjhIxjVnN+hKOuh98+E1eMLnUXstFg==}
     dependencies:
@@ -13446,7 +13460,7 @@ packages:
       '@babel/core': 7.23.9
       '@babel/plugin-transform-typescript': 7.23.6(@babel/core@7.23.9)
       '@vue/babel-plugin-jsx': 1.2.1(@babel/core@7.23.9)
-      vite: 5.0.12(@types/node@18.19.8)(less@4.2.0)(sass@1.70.0)(stylus@0.59.0)(terser@5.27.0)
+      vite: 5.0.12(@types/node@18.19.8)(less@4.1.3)(sass@1.55.0)(stylus@0.59.0)
       vue: 3.4.15(typescript@5.3.3)
     transitivePeerDependencies:
       - supports-color
@@ -13459,7 +13473,7 @@ packages:
       vite: ^5.0.0
       vue: ^3.2.25
     dependencies:
-      vite: 5.0.12(@types/node@18.19.8)(less@4.2.0)(sass@1.70.0)(stylus@0.59.0)(terser@5.27.0)
+      vite: 5.0.12(@types/node@18.19.8)(less@4.1.3)(sass@1.55.0)(stylus@0.59.0)
       vue: 3.4.15(typescript@5.3.3)
     dev: true
 
@@ -17085,15 +17099,14 @@ packages:
     resolution: {integrity: sha512-d4ZVpCW31eWwCMe1YT3ur7mUDnTXbgwyzaL320DrcRT45rfjYxkt5QWLrmOJ+/UEAI2+fQgKe/fCjR8l4TpRgw==}
     dev: true
 
-  /cypress@13.0.0:
-    resolution: {integrity: sha512-nWHU5dUxP2Wm/zrMd8SWTTl706aJex/l+H4vi/tbu2SWUr17BUcd/sIYeqyxeoSPW1JFV2pT1pf4JEImH/POMg==}
+  /cypress@13.6.6:
+    resolution: {integrity: sha512-S+2S9S94611hXimH9a3EAYt81QM913ZVA03pUmGDfLTFa5gyp85NJ8dJGSlEAEmyRsYkioS1TtnWtbv/Fzt11A==}
     engines: {node: ^16.0.0 || ^18.0.0 || >=20.0.0}
     hasBin: true
     requiresBuild: true
     dependencies:
       '@cypress/request': 3.0.1
       '@cypress/xvfb': 1.2.4(supports-color@8.1.1)
-      '@types/node': 16.18.48
       '@types/sinonjs__fake-timers': 8.1.1
       '@types/sizzle': 2.3.3
       arch: 2.2.0
@@ -17129,7 +17142,7 @@ packages:
       process: 0.11.10
       proxy-from-env: 1.0.0
       request-progress: 3.0.0
-      semver: 7.5.3
+      semver: 7.6.0
       supports-color: 8.1.1
       tmp: 0.2.1
       untildify: 4.0.0
@@ -22914,8 +22927,6 @@ packages:
     peerDependenciesMeta:
       webpack:
         optional: true
-      webpack-sources:
-        optional: true
     dependencies:
       webpack: 5.88.0(@swc/core@1.3.86)(esbuild@0.19.5)
       webpack-sources: 3.2.3
@@ -22927,8 +22938,6 @@ packages:
       webpack: '*'
     peerDependenciesMeta:
       webpack:
-        optional: true
-      webpack-sources:
         optional: true
     dependencies:
       webpack: 5.90.1(@swc/core@1.3.86)(esbuild@0.20.0)
@@ -22995,7 +23004,7 @@ packages:
         optional: true
     dependencies:
       cli-truncate: 2.1.0
-      colorette: 2.0.19
+      colorette: 2.0.20
       enquirer: 2.3.6
       log-update: 4.0.0
       p-map: 4.0.0
@@ -32477,7 +32486,7 @@ packages:
       strip-ansi: 6.0.1
       tiny-invariant: 1.3.1
       typescript: 5.3.3
-      vite: 5.0.12(@types/node@18.19.8)(less@4.2.0)(sass@1.70.0)(stylus@0.59.0)(terser@5.27.0)
+      vite: 5.0.12(@types/node@18.19.8)(less@4.1.3)(sass@1.55.0)(stylus@0.59.0)
       vscode-languageclient: 7.0.0
       vscode-languageserver: 7.0.0
       vscode-languageserver-textdocument: 1.0.11
@@ -32562,6 +32571,45 @@ packages:
       less: 4.1.3
       postcss: 8.4.35
       rollup: 3.28.0
+      sass: 1.55.0
+      stylus: 0.59.0
+    optionalDependencies:
+      fsevents: 2.3.3
+    dev: true
+
+  /vite@5.0.12(@types/node@18.19.8)(less@4.1.3)(sass@1.55.0)(stylus@0.59.0):
+    resolution: {integrity: sha512-4hsnEkG3q0N4Tzf1+t6NdN9dg/L3BM+q8SWgbSPnJvrgH2kgdyzfVJwbR1ic69/4uMJJ/3dqDZZE5/WwqW8U1w==}
+    engines: {node: ^18.0.0 || >=20.0.0}
+    hasBin: true
+    peerDependencies:
+      '@types/node': ^18.0.0 || >=20.0.0
+      less: '*'
+      lightningcss: ^1.21.0
+      sass: '*'
+      stylus: '*'
+      sugarss: '*'
+      terser: ^5.4.0
+    peerDependenciesMeta:
+      '@types/node':
+        optional: true
+      less:
+        optional: true
+      lightningcss:
+        optional: true
+      sass:
+        optional: true
+      stylus:
+        optional: true
+      sugarss:
+        optional: true
+      terser:
+        optional: true
+    dependencies:
+      '@types/node': 18.19.8
+      esbuild: 0.19.5
+      less: 4.1.3
+      postcss: 8.4.35
+      rollup: 4.9.6
       sass: 1.55.0
       stylus: 0.59.0
     optionalDependencies:
@@ -33729,7 +33777,3 @@ packages:
   /zwitch@2.0.4:
     resolution: {integrity: sha512-bXE4cR/kVZhKZX/RjPEflHaKVhUVl85noU3v6b8apfQEc1x4A+zBxjZ4lN8LqGd6WZ3dl98pY4o717VFmoPp+A==}
     dev: true
-
-settings:
-  autoInstallPeers: true
-  excludeLinksFromLockfile: false
