@@ -99,7 +99,7 @@ jobs:
           npm unpublish @nrwl/node@18.1.0 --dry-run
           npm unpublish @nrwl/vite@18.1.0 --dry-run
           npm unpublish @nrwl/web@18.1.0 --dry-run
-          npm unpublish @nrwl/js-legacy@18.1.0 --dry-run
+          npm unpublish @nrwl/js@18.1.0 --dry-run
 
   # build:
   #   if: ${{ github.repository_owner == 'nrwl' }}
