@@ -49,7 +49,7 @@ export async function initHandler(options: InitArgs): Promise<void> {
     }
     generateDotNxSetup(version);
     // invokes the wrapper, thus invoking the initial installation process
-    runNxSync('');
+    runNxSync('--version', { stdio: 'ignore' });
     return;
   }
 
