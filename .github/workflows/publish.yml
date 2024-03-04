@@ -60,7 +60,7 @@ jobs:
           npm unpublish @nx/node@18.1.0 --dry-run
           npm unpublish @nx/nuxt@18.1.0 --dry-run
           npm unpublish @nx/vite@18.1.0 --dry-run
-          npm unpublish @nx/tao@18.1.0 --dry-run
+          npm unpublish @nrwl/tao@18.1.0 --dry-run
           npm unpublish @nx/vue@18.1.0 --dry-run
           npm unpublish @nx/web@18.1.0 --dry-run
           npm unpublish @nx/js@18.1.0 --dry-run
