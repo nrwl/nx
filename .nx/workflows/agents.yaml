@@ -9,6 +9,11 @@ launch-templates:
       GIT_COMMITTER_NAME: Test
       SELECTED_PM: 'pnpm'
       NPM_CONFIG_PREFIX: '/home/workflows/.npm-global'
+      DISPLAY: ':0'
+      TERM: 'xterm'
+      npm_config_loglevel: 'warn'
+      npm_config_unsafe_perm: 'true'
+      CYPRESS_CACHE_FOLDER: '~/.cache/Cypress'
     init-steps:
       - name: Checkout
         uses: 'nrwl/nx-cloud-workflows/v1.1/workflow-steps/checkout/main.yaml'
