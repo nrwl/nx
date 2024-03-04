@@ -185,17 +185,17 @@ const VALID_AUTHORS_FOR_LATEST = [
       stdio: [0, 1, 2],
       maxBuffer: LARGE_BUFFER,
     });
-  }
 
-  let version;
-  if (['minor', 'major', 'patch'].includes(options.version)) {
-    version = execSync(`npm view nx@${distTag} version`).toString().trim();
-  } else {
-    version = options.version;
-  }
+    let version;
+    if (['minor', 'major', 'patch'].includes(options.version)) {
+      version = execSync(`npm view nx@${distTag} version`).toString().trim();
+    } else {
+      version = options.version;
+    }
 
-  console.log(chalk.green` > Published version: ` + version);
-  console.log(chalk.dim`   Use: npx create-nx-workspace@${version}\n`);
+    console.log(chalk.green` > Published version: ` + version);
+    console.log(chalk.dim`   Use: npx create-nx-workspace@${version}\n`);
+  }
 
   process.exit(0);
 })();
