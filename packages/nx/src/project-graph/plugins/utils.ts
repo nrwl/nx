@@ -43,6 +43,14 @@ export function normalizeNxPlugin(plugin: NxPlugin): NormalizedPlugin {
   return plugin;
 }
 
+export function isRuntimePlugin(plugin: NormalizedPlugin): boolean {
+  return !!(
+    plugin.createNodes ||
+    plugin.createDependencies ||
+    plugin.processProjectGraph
+  );
+}
+
 export class CreateNodesError extends Error {
   constructor(msg, cause: Error | unknown) {
     const message = `${msg} ${

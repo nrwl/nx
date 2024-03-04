@@ -420,12 +420,6 @@ export interface PluginObjectConfiguration {
    * Version used to install the plugin when running via the nx wrapper. See https://nx.dev/recipes/installation/install-non-javascript
    */
   version?: string;
-
-  /**
-   * Determines wether the plugin should be loaded when constructing the project graph
-   * @default true
-   */
-  runtime?: boolean;
 }
 
 export function readNxJson(root: string = workspaceRoot): NxJsonConfiguration {

@@ -9,7 +9,7 @@ import type {
   NormalizedPlugin,
 } from './internal-api';
 import { CreateNodesContext } from './public-api';
-import { CreateNodesError } from './utils';
+import { CreateNodesError, isRuntimePlugin } from './utils';
 
 global.NX_GRAPH_CREATION = true;
 
@@ -35,6 +35,13 @@ process.on('message', async (message: string) => {
             hasProcessProjectGraph:
               'processProjectGraph' in plugin && !!plugin.processProjectGraph,
             success: true,
+            // If the plugin doesn't have any runtime hooks, we can exit the worker
+            // after loading it to avoid running an empty worker process.
+            callback: isRuntimePlugin(plugin)
+              ? undefined
+              : () => {
+                  process.exit(0);
+                },
           },
         };
       } catch (e) {

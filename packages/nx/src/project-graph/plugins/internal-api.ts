@@ -65,11 +65,7 @@ export async function loadNxPlugins(
   plugins.push(...(await getDefaultPlugins(root)));
 
   for (const plugin of plugins) {
-    // Plugin is string, default settings. Plugin is object, runtime defaults to true
-    const runtime = typeof plugin === 'string' ? true : plugin.runtime ?? true;
-    if (runtime) {
-      result.push(loadNxPlugin(plugin, root));
-    }
+    result.push(loadNxPlugin(plugin, root));
   }
 
   return Promise.all(result);

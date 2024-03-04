@@ -43,3 +43,20 @@ When Nx is installed in `.nx`, you can run Nx via a global Nx installation or th
 Support for `--use-dot-nx-installation` was added in Nx v15.8.7. To ensure that it is available, specify the version of nx when running your command so that `npx` doesn't accept an older version that is in the cache. (e.g. `npx nx@latest init`)
 
 {% /callout %}
+
+## Installing Plugins
+
+When Nx is managing its own installation, you can install plugins with `nx add {pluginName}`. This will install the plugin in the `.nx` folder and add it to the `nx.json` file. To manually install a plugin, you can add the plugin to `nx.json` as shown below:
+
+```json {% fileName="nx.json" %}
+{
+  "plugins": [
+    {
+      "plugin": "{pluginName}",
+      "version": "1.0.0"
+    }
+  ]
+}
+```
+
+The next time you run Nx, the plugin will be installed and available for use.

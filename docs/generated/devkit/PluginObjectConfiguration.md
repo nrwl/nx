@@ -8,7 +8,6 @@ Used to configure a plugin with options and installation version
 
 - [options](../../devkit/documents/PluginObjectConfiguration#options): unknown
 - [plugin](../../devkit/documents/PluginObjectConfiguration#plugin): string
-- [runtime](../../devkit/documents/PluginObjectConfiguration#runtime): boolean
 - [version](../../devkit/documents/PluginObjectConfiguration#version): string
 
 ## Properties
@@ -26,20 +25,6 @@ Options passed into the plugin's CreateNodes and CreateDependencies functions
 • **plugin**: `string`
 
 Plugin name (e.g. '@nx/react')
-
----
-
-### runtime
-
-• `Optional` **runtime**: `boolean`
-
-Determines wether the plugin should be loaded when constructing the project graph
-
-**`Default`**
-
-```ts
-true;
-```
 
 ---
 
