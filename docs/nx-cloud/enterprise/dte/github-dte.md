@@ -2,62 +2,7 @@
 
 Using [Nx Agents](/ci/features/distribute-task-execution) is the easiest way to distribute task execution, but it your organization may not be able to use hosted Nx Agents. With an [enterprise license](https://nx.app/enterprise), you can set up distributed task execution on your own CI provider using the recipe below.
 
-## Use the GitHub Action Reusable Workflow
-
-```yaml {% fileName=".github/workflows/ci.yml" %}
-name: CI
-on:
-  push:
-    branches:
-      - main
-  pull_request:
-
-# Needed for nx-set-shas when run on the main branch
-permissions:
-  actions: read
-  contents: read
-
-jobs:
-  main:
-    name: Nx Cloud - Main Job
-    uses: nrwl/ci/.github/workflows/nx-cloud-main.yml@v0.13.0
-    with:
-      number-of-agents: 3
-      parallel-commands: |
-        npx nx-cloud record -- nx format:check
-      parallel-commands-on-agents: |
-        npx nx affected -t lint,test,build --parallel=2
-
-  agents:
-    name: Nx Cloud - Agents
-    uses: nrwl/ci/.github/workflows/nx-cloud-agents.yml@v0.13.0
-    with:
-      number-of-agents: 3
-```
-
-This configuration is using two reusable workflows from the `nrwl/ci` repository. You can check out the full [API](https://github.com/nrwl/ci) for those workflows.
-
-The first workflow is for the main job:
-
-```
-    uses: nrwl/ci/.github/workflows/nx-cloud-main.yml@v0.13.0
-```
-
-The `parallel-commands` script will be run on the main job. The `parallel-commands-on-agents` script will be distributed across the available agents.
-
-The second workflow is for the agents:
-
-```
-    uses: nrwl/ci/.github/workflows/nx-cloud-agents.yml@v0.13.0
-```
-
-The `number-of-agents` property controls how many agent jobs are created. Note that this property should be the same number for each workflow.
-
-{% callout type="warning" title="Two Types of Parallelization" %}
-The `number-of-agents` property and the `--parallel` flag both parallelize tasks, but in different ways. The way this workflow is written, there will be 3 agents running tasks and each agent will try to run 2 tasks at once. If a particular CI run only has 2 tasks, only one agent will be used.
-{% /callout %}
-
-## Write Your Own Steps
+## Run Custom Agents on GitHub
 
 Our [reusable GitHub workflow](https://github.com/nrwl/ci) represents a good set of defaults that works for a large number of our users. However, reusable GitHub workflows come with their [limitations](https://docs.github.com/en/actions/using-workflows/reusing-workflows).
 
@@ -122,7 +67,7 @@ jobs:
         run: git branch --track main origin/main
 
       - name: Initialize the Nx Cloud distributed CI run and stop agents when the build tasks are done
-        run: npx nx-cloud start-ci-run --stop-agents-after=build
+        run: npx nx-cloud start-ci-run --stop-agents-after=e2e-ci
 
       - name: Run commands in parallel
         run: |
@@ -140,7 +85,7 @@ jobs:
           run_command "NX_CLOUD_DISTRIBUTED_EXECUTION=false npx nx-cloud record -- nx format:check"
 
           # list of commands to be run on agents
-          run_command "npx nx affected -t lint,test,build --parallel=3"
+          run_command "npx nx affected -t lint,test,build,e2e-ci --parallel=3"
 
           # wait for all background processes to finish
           for pid in ${pids[*]}; do

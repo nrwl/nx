@@ -11,6 +11,7 @@ pipeline {
     agent none
     environment {
         NX_BRANCH = env.BRANCH_NAME.replace('PR-', '')
+        NX_CLOUD_DISTRIBUTED_EXECUTION_AGENT_COUNT = 3
     }
     stages {
         stage('Pipeline') {
@@ -22,9 +23,9 @@ pipeline {
                     agent any
                     steps {
                         sh "npm ci"
-                        sh "npx nx-cloud start-ci-run --stop-agents-after='build'"
+                        sh "npx nx-cloud start-ci-run --stop-agents-after='e2e-ci'"
                         sh "npx nx-cloud record -- nx format:check"
-                        sh "npx nx affected --base=HEAD~1 -t lint --parallel=3 & npx nx affected --base=HEAD~1 -t test --parallel=3 --configuration=ci & npx nx affected --base=HEAD~1 -t build --parallel=3"
+                        sh "npx nx affected --base=HEAD~1 -t lint,test,build,e2e-ci --configuration=ci --parallel=2"
                     }
                 }
                 stage('PR') {
@@ -34,9 +35,9 @@ pipeline {
                     agent any
                     steps {
                         sh "npm ci"
-                        sh "npx nx-cloud start-ci-run --stop-agents-after='build'"
+                        sh "npx nx-cloud start-ci-run --stop-agents-after='e2e-ci'"
                         sh "npx nx-cloud record -- nx format:check"
-                        sh "npx nx affected --base origin/${env.CHANGE_TARGET} -t lint --parallel=2 & npx nx affected --base origin/${env.CHANGE_TARGET} -t test --parallel=2 --configuration=ci & npx nx affected --base origin/${env.CHANGE_TARGET} -t build --parallel=2"
+                        sh "npx nx affected --base origin/${env.CHANGE_TARGET} -t lint,test,build,e2e-ci --parallel=2 --configuration=ci"
                     }
                 }
 

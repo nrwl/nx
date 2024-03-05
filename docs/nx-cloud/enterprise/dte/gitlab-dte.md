@@ -38,6 +38,8 @@ image: node:18
     - yarn install --cache-folder .yarn-cache --prefer-offline --frozen-lockfile
     - NX_HEAD=$CI_COMMIT_SHA
     - NX_BASE=${CI_MERGE_REQUEST_DIFF_BASE_SHA:-$CI_COMMIT_BEFORE_SHA}
+    - NX_CLOUD_DISTRIBUTED_EXECUTION_AGENT_COUNT:3 # expected number of agents
+
   artifacts:
     expire_in: 5 days
     paths:
@@ -48,9 +50,9 @@ nx-dte:
   stage: affected
   extends: .base-pipeline
   script:
-    - yarn nx-cloud start-ci-run --stop-agents-after=build
+    - yarn nx-cloud start-ci-run --stop-agents-after=e2e-ci
     - yarn nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD
-    - yarn nx affected --base=$NX_BASE --head=$NX_HEAD -t lint,test,build --parallel=2
+    - yarn nx affected --base=$NX_BASE --head=$NX_HEAD -t lint,test,build,e2e-ci --parallel=2
 
 # Create as many agents as you want
 nx-dte-agent1:

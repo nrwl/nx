@@ -14,17 +14,19 @@ jobs:
   main:
     docker:
       - image: cimg/node:lts-browsers
+    environment:
+      NX_CLOUD_DISTRIBUTED_EXECUTION_AGENT_COUNT: 3 # expected number of agents
     steps:
       - checkout
       - run: npm ci
       - nx/set-shas
 
-      # Tell Nx Cloud to use DTE and stop agents when the build tasks are done
-      - run: npx nx-cloud start-ci-run --stop-agents-after=build
+      # Tell Nx Cloud to use DTE and stop agents when the e2e-ci tasks are done
+      - run: npx nx-cloud start-ci-run --stop-agents-after=e2e-ci
       # Send logs to Nx Cloud for any CLI command
       - run: npx nx-cloud record -- nx format:check
-      # Lint, test and build on agent jobs everything affected by a change
-      - run: npx nx affected --base=$NX_BASE --head=$NX_HEAD -t lint,test,build --parallel=2 --configuration=ci
+      # Lint, test, build and run e2e on agent jobs for everything affected by a change
+      - run: npx nx affected --base=$NX_BASE --head=$NX_HEAD -t lint,test,build,e2e-ci --parallel=2 --configuration=ci
   agent:
     docker:
       - image: cimg/node:lts-browsers

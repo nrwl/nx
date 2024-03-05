@@ -14,6 +14,7 @@ pr:
 
 variables:
   CI: 'true'
+  NX_CLOUD_DISTRIBUTED_EXECUTION_AGENT_COUNT: 3 # expected number of agents
   ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
     NX_BRANCH: $(System.PullRequest.PullRequestNumber)
     TARGET_BRANCH: $[replace(variables['System.PullRequest.TargetBranch'],'refs/heads/','origin/')]
@@ -56,9 +57,9 @@ jobs:
 
       - script: git branch --track main origin/main
       - script: npm ci
-      - script: npx nx-cloud start-ci-run --stop-agents-after="build"
+      - script: npx nx-cloud start-ci-run --stop-agents-after="e2e-ci"
       - script: npx nx-cloud record -- nx format:check --base=$(BASE_SHA) --head=$(HEAD_SHA)
-      - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint,test,build --parallel=2 --configuration=ci
+      - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint,test,build,e2e-ci --parallel=2 --configuration=ci
 ```
 
 This configuration is setting up two types of jobs - a main job and three agent jobs.
