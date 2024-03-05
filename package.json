@@ -140,7 +140,7 @@
     "@xstate/inspect": "0.7.0",
     "@xstate/react": "3.0.1",
     "ai": "^2.2.10",
-    "ajv": "^8.11.0",
+    "ajv": "^8.12.0",
     "autoprefixer": "10.4.13",
     "babel-jest": "29.4.3",
     "babel-loader": "^9.1.2",

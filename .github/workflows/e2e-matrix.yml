@@ -112,6 +112,7 @@ jobs:
           - e2e-esbuild
           - e2e-eslint
           - e2e-expo
+          - e2e-gradle
           - e2e-jest
           - e2e-js
           - e2e-lerna-smoke-tests

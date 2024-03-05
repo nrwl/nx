@@ -75,9 +75,13 @@ function startWebServer(webServerCommand: string) {
   });
 
   return () => {
-    // child.kill() does not work on linux
-    // process.kill will kill the whole process group on unix
-    process.kill(-serverProcess.pid, 'SIGKILL');
+    if (process.platform === 'win32') {
+      serverProcess.kill();
+    } else {
+      // child.kill() does not work on linux
+      // process.kill will kill the whole process group on unix
+      process.kill(-serverProcess.pid, 'SIGKILL');
+    }
   };
 }
 
@@ -172,7 +176,7 @@ function waitForServer(
     let pollTimeout: NodeJS.Timeout | null;
     const { protocol } = new URL(url);
 
-    const timeoutDuration = webServerConfig?.timeout ?? 15 * 1000;
+    const timeoutDuration = webServerConfig?.timeout ?? 60 * 1000;
     const timeout = setTimeout(() => {
       clearTimeout(pollTimeout);
       reject(
