@@ -9,6 +9,7 @@ With this version you can take advantage of most features announced during our r
 This release contains everything needed to run [Nx Agents](https://nx.dev/ci/features/distribute-task-execution) on-prem. While the on-prem configuration is still experimental, we are actively running Nx Agents trials at the moment, and if you'd like to take part please reach out to your DPE.
 
 If you already running DTE, there are a few advantages to upgrading to Agents:
+
 - simplified CI config (you do not need to maintain anymore your custom CI agents). You will need to maintain just a single, main CI job config.
 - Access to [Spot instances](https://aws.amazon.com/ec2/spot/): if you are running your clusters on any of the popular cloud providers (AWS, Google Cloud, Azure etc.), you can now use their Spot instances for running your CI job. This is possible due to NxCloud's distribution model, which allows work on a reclaimed node to be re-distributed to the remaining agents.
 
@@ -16,7 +17,7 @@ We will shortly make available a new Helm chart that will allow you to deploy a 
 
 ![agents_screen](/nx-cloud/reference/images/agents.webp)
 
-##### Task Atomizer and task retries 
+##### Task Atomizer and task retries
 
 If you combine this release + upgrade to the latest Nx 18, you will have access to both the [task atomizer](https://nx.dev/ci/features/split-e2e-tasks) (which allows your e2e to be distributed among agents PER FILE, instead of previously per project) and the [flaky task retry functionality](https://nx.dev/ci/features/flaky-tasks).
 
