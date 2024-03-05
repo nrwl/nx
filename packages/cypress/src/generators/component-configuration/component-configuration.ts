@@ -43,7 +43,7 @@ export async function componentConfigurationGeneratorInternal(
   options: CypressComponentConfigurationSchema
 ) {
   const tasks: GeneratorCallback[] = [];
-  const opts = normalizeOptions(options);
+  const opts = normalizeOptions(tree, options);
 
   tasks.push(
     await init(tree, {
@@ -64,7 +64,7 @@ export async function componentConfigurationGeneratorInternal(
   tasks.push(updateDeps(tree, opts));
 
   addProjectFiles(tree, projectConfig, opts);
-  if (!hasPlugin) {
+  if (!hasPlugin || opts.addExplicitTargets) {
     addTargetToProject(tree, projectConfig, opts);
   }
   updateNxJsonConfiguration(tree, hasPlugin);
@@ -78,7 +78,10 @@ export async function componentConfigurationGeneratorInternal(
   return runTasksInSerial(...tasks);
 }
 
-function normalizeOptions(options: CypressComponentConfigurationSchema) {
+function normalizeOptions(
+  tree: Tree,
+  options: CypressComponentConfigurationSchema
+) {
   const cyVersion = installedCypressVersion();
   if (cyVersion && cyVersion < 10) {
     throw new Error(
@@ -86,8 +89,13 @@ function normalizeOptions(options: CypressComponentConfigurationSchema) {
     );
   }
 
+  const nxJson = readNxJson(tree);
+  const addPlugin =
+    process.env.NX_ADD_PLUGINS !== 'false' &&
+    nxJson.useInferencePlugins !== false;
+
   return {
-    addPlugin: process.env.NX_ADD_PLUGINS !== 'false',
+    addPlugin,
     ...options,
     directory: options.directory ?? 'cypress',
   };

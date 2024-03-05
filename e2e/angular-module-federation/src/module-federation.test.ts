@@ -345,7 +345,7 @@ describe('Angular Module Federation', () => {
       import { isEven } from '${remote}/${module}';
 
       @Component({
-        selector: 'proj-root',
+        selector: 'app-root',
         template: \`<div class="host">{{title}}</div>\`,
         standalone: true
       })
@@ -377,9 +377,8 @@ describe('Angular Module Federation', () => {
     expect(buildRemoteOutput).toContain('Successfully ran target build');
 
     if (runE2ETests('cypress')) {
-      const e2eProcess = await runCommandUntil(
-        `e2e ${host}-e2e --no-watch`,
-        (output) => output.includes('All specs passed!')
+      const e2eProcess = await runCommandUntil(`e2e ${host}-e2e`, (output) =>
+        output.includes('All specs passed!')
       );
       await killProcessAndPorts(e2eProcess.pid, hostPort, hostPort + 1);
     }
@@ -420,7 +419,7 @@ describe('Angular Module Federation', () => {
       import { isEven } from '${childRemote}/${module}';
 
       @Component({
-        selector: 'proj-${remote}-entry',
+        selector: 'app-${remote}-entry',
         template: \`<div class="childremote">{{title}}</div>\`,
         standalone: true
       })
@@ -469,9 +468,8 @@ describe('Angular Module Federation', () => {
     expect(buildRemoteOutput).toContain('Successfully ran target build');
 
     if (runE2ETests('cypress')) {
-      const e2eProcess = await runCommandUntil(
-        `e2e ${host}-e2e --no-watch`,
-        (output) => output.includes('All specs passed!')
+      const e2eProcess = await runCommandUntil(`e2e ${host}-e2e`, (output) =>
+        output.includes('All specs passed!')
       );
       await killProcessAndPorts(e2eProcess.pid, hostPort, hostPort + 1);
     }

@@ -5,8 +5,15 @@ import { readProjectConfiguration, Tree } from '@nx/devkit';
 
 function isUsingUtilityFunction(host: Tree) {
   const rootConfig = findRootJestConfig(host);
+  if (!rootConfig) {
+    return false;
+  }
+
+  const rootConfigContent = host.read(rootConfig, 'utf-8');
+
   return (
-    rootConfig && host.read(rootConfig).toString().includes('getJestProjects()')
+    rootConfigContent.includes('getJestProjects()') ||
+    rootConfigContent.includes('getJestProjectsAsync()')
   );
 }
 

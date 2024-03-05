@@ -58,15 +58,14 @@ function setPresetProperty(tree: Tree, options: NormalizedSchema) {
     return json;
   });
 }
+
 function createNxJson(
   tree: Tree,
   { directory, defaultBase, preset }: NormalizedSchema
 ) {
   const nxJson: NxJsonConfiguration & { $schema: string } = {
     $schema: './node_modules/nx/schemas/nx-schema.json',
-    affected: {
-      defaultBase,
-    },
+    defaultBase,
     targetDefaults:
       process.env.NX_ADD_PLUGINS === 'false'
         ? {
@@ -82,7 +81,7 @@ function createNxJson(
   };
 
   if (defaultBase === 'main') {
-    delete nxJson.affected;
+    delete nxJson.defaultBase;
   }
   if (preset !== Preset.NPM) {
     nxJson.namedInputs = {
@@ -92,6 +91,7 @@ function createNxJson(
     };
     if (process.env.NX_ADD_PLUGINS === 'false') {
       nxJson.targetDefaults.build.inputs = ['production', '^production'];
+      nxJson.useInferencePlugins = false;
     }
   }
 
@@ -131,8 +131,12 @@ function createReadme(
   const formattedNames = names(name);
   generateFiles(tree, join(__dirname, './files-readme'), directory, {
     formattedNames,
-    includeServe: preset !== Preset.TsStandalone,
+    isJsStandalone: preset === Preset.TsStandalone,
     appName,
+    serveCommand:
+      preset === Preset.NextJs || preset === Preset.NextJsStandalone
+        ? 'dev'
+        : 'serve',
     name,
   });
 }
@@ -161,13 +165,23 @@ function addNpmScripts(tree: Tree, options: NormalizedSchema) {
     options.preset === Preset.ReactStandalone ||
     options.preset === Preset.VueStandalone ||
     options.preset === Preset.NuxtStandalone ||
-    options.preset === Preset.NodeStandalone ||
-    options.preset === Preset.NextJsStandalone
+    options.preset === Preset.NodeStandalone
   ) {
     updateJson(tree, join(options.directory, 'package.json'), (json) => {
       Object.assign(json.scripts, {
         start: 'nx serve',
         build: 'nx build',
+        test: 'nx test',
+      });
+      return json;
+    });
+  }
+  if (options.preset === Preset.NextJsStandalone) {
+    updateJson(tree, join(options.directory, 'package.json'), (json) => {
+      Object.assign(json.scripts, {
+        dev: 'nx dev',
+        build: 'nx build',
+        start: 'nx start',
         test: 'nx test',
       });
       return json;

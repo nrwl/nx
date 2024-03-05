@@ -64,7 +64,7 @@ export function updateUnitTestConfig(
   );
 
   updateJson(tree, pathToTsConfigSpec, (json) => {
-    json.includes = [
+    json.include = [
       'vite.config.ts',
       'vitest.config.ts',
       'app/**/*.ts',

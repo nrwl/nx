@@ -22,7 +22,12 @@ export async function initGeneratorInternal(
 ) {
   const tasks: GeneratorCallback[] = [];
 
-  options.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
+  const nxJson = readNxJson(tree);
+  const addPluginDefault =
+    process.env.NX_ADD_PLUGINS !== 'false' &&
+    nxJson.useInferencePlugins !== false;
+
+  options.addPlugin ??= addPluginDefault;
 
   if (!options.skipPackageJson) {
     tasks.push(

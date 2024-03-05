@@ -1,4 +1,4 @@
-let originalExit = process.exit;
+const originalExit = process.exit;
 let stubProcessExit = false;
 
 const processExitSpy = jest
@@ -12,10 +12,10 @@ const processExitSpy = jest
 
 import { ProjectGraph, Tree, output, readJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import * as enquirer from 'enquirer';
 import { ReleaseGroupWithName } from 'nx/src/command-line/release/config/filter-release-groups';
 import { releaseVersionGenerator } from './release-version';
 import { createWorkspaceWithPackageDependencies } from './test-utils/create-workspace-with-package-dependencies';
-import * as enquirer from 'enquirer';
 
 jest.mock('enquirer');
 
@@ -27,7 +27,7 @@ describe('release-version', () => {
   let projectGraph: ProjectGraph;
 
   beforeEach(() => {
-    // @ts-ignore
+    // @ts-expect-error read-only property
     process.exit = processExitSpy;
 
     tree = createTreeWithEmptyWorkspace();
@@ -95,12 +95,14 @@ describe('release-version', () => {
             "dependentProjects": [
               {
                 "dependencyCollection": "dependencies",
+                "rawVersionSpec": "0.0.1",
                 "source": "project-with-dependency-on-my-pkg",
                 "target": "my-lib",
                 "type": "static",
               },
               {
                 "dependencyCollection": "devDependencies",
+                "rawVersionSpec": "0.0.1",
                 "source": "project-with-devDependency-on-my-pkg",
                 "target": "my-lib",
                 "type": "static",
@@ -314,7 +316,7 @@ To fix this you will either need to add a package.json file at that location, or
   describe('independent release group', () => {
     describe('specifierSource: prompt', () => {
       it(`should appropriately prompt for each project independently and apply the version updates across all package.json files`, async () => {
-        // @ts-ignore
+        // @ts-expect-error read-only property
         enquirer.prompt = jest
           .fn()
           // First project will be minor
@@ -920,13 +922,13 @@ To fix this you will either need to add a package.json file at that location, or
         specifier: 'major',
         currentVersionResolver: 'disk',
         releaseGroup: createReleaseGroup('fixed'),
-        versionPrefix: '$',
+        versionPrefix: '$' as any,
       });
 
       expect(outputSpy).toHaveBeenCalledWith({
         title: `Invalid value for version.generatorOptions.versionPrefix: "$"
 
-Valid values are: "auto", "", "~", "^"`,
+Valid values are: "auto", "", "~", "^", "="`,
       });
 
       outputSpy.mockRestore();

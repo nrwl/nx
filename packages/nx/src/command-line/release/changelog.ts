@@ -1,4 +1,5 @@
 import * as chalk from 'chalk';
+import { prompt } from 'enquirer';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { valid } from 'semver';
 import { dirSync } from 'tmp';
@@ -15,6 +16,7 @@ import { FsTree, Tree } from '../../generators/tree';
 import { registerTsProject } from '../../plugins/js/utils/register';
 import { createProjectGraphAsync } from '../../project-graph/project-graph';
 import { interpolate } from '../../tasks-runner/utils';
+import { isCI } from '../../utils/is-ci';
 import { output } from '../../utils/output';
 import { handleErrors } from '../../utils/params';
 import { joinPathFragments } from '../../utils/path';
@@ -550,6 +552,31 @@ async function applyChangesAndExit(
         `No changes were detected for any changelog files, so no changelog entries will be generated.`,
       ],
     });
+
+    if (!postGitTasks.length) {
+      // no GitHub releases to create so we can just exit
+      return;
+    }
+
+    if (isCI()) {
+      output.warn({
+        title: `Skipped GitHub release creation because no changes were detected for any changelog files.`,
+      });
+      return;
+    }
+
+    // prompt the user to see if they want to create a GitHub release anyway
+    // we know that the user has configured GitHub releases because we have postGitTasks
+    const shouldCreateGitHubReleaseAnyway = await promptForGitHubRelease();
+
+    if (!shouldCreateGitHubReleaseAnyway) {
+      return;
+    }
+
+    for (const postGitTask of postGitTasks) {
+      await postGitTask(latestCommit);
+    }
+
     return;
   }
 
@@ -602,6 +629,10 @@ async function applyChangesAndExit(
 function resolveChangelogRenderer(
   changelogRendererPath: string
 ): ChangelogRenderer {
+  const interpolatedChangelogRendererPath = interpolate(changelogRendererPath, {
+    workspaceRoot,
+  });
+
   // Try and load the provided (or default) changelog renderer
   let changelogRenderer: ChangelogRenderer;
   let cleanupTranspiler = () => {};
@@ -610,7 +641,7 @@ function resolveChangelogRenderer(
     if (rootTsconfigPath) {
       cleanupTranspiler = registerTsProject(rootTsconfigPath);
     }
-    const r = require(changelogRendererPath);
+    const r = require(interpolatedChangelogRendererPath);
     changelogRenderer = r.default || r;
   } catch {
   } finally {
@@ -950,4 +981,20 @@ export function shouldCreateGitHubRelease(
   }
 
   return (changelogConfig || {}).createRelease === 'github';
+}
+
+async function promptForGitHubRelease(): Promise<boolean> {
+  try {
+    const result = await prompt<{ confirmation: boolean }>([
+      {
+        name: 'confirmation',
+        message: 'Do you want to create a GitHub release anyway?',
+        type: 'confirm',
+      },
+    ]);
+    return result.confirmation;
+  } catch (e) {
+    // Handle the case where the user exits the prompt with ctrl+c
+    return false;
+  }
 }

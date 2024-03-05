@@ -1,9 +1,7 @@
 import { joinPathFragments, type Tree } from '@nx/devkit';
 import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { Linter } from '@nx/eslint';
-import { getNpmScope } from '@nx/js/src/utils/package-json/get-npm-scope';
 import { E2eTestRunner, UnitTestRunner } from '../../../utils/test-runners';
-import { normalizeNewProjectPrefix } from '../../utils/project';
 import type { Schema } from '../schema';
 import type { NormalizedSchema } from './normalized-schema';
 import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
@@ -26,7 +24,6 @@ export async function normalizeOptions(
   });
   options.rootProject = appProjectRoot === '.';
   options.projectNameAndRootFormat = projectNameAndRootFormat;
-  options.addPlugin ??= process.env.NX_ADD_PLUGINS === 'true';
 
   const e2eProjectName = options.rootProject ? 'e2e' : `${appProjectName}-e2e`;
   const e2eProjectRoot = options.rootProject ? 'e2e' : `${appProjectRoot}-e2e`;
@@ -34,12 +31,6 @@ export async function normalizeOptions(
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())
     : [];
-
-  const prefix = normalizeNewProjectPrefix(
-    options.prefix,
-    getNpmScope(host),
-    'app'
-  );
 
   let bundler = options.bundler;
   if (!bundler) {
@@ -61,7 +52,7 @@ export async function normalizeOptions(
     strict: true,
     standalone: true,
     ...options,
-    prefix,
+    prefix: options.prefix || 'app',
     name: appProjectName,
     appProjectRoot,
     appProjectSourceRoot: `${appProjectRoot}/src`,

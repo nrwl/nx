@@ -35,19 +35,13 @@ if (isCI()) {
 }
 
 class CLIOutput {
-  readonly X_PADDING = ' ';
-
   /**
    * Longer dash character which forms more of a continuous line when place side to side
    * with itself, unlike the standard dash character
    */
   private get VERTICAL_SEPARATOR() {
     let divider = '';
-    for (
-      let i = 0;
-      i < process.stdout.columns - this.X_PADDING.length * 2;
-      i++
-    ) {
+    for (let i = 0; i < process.stdout.columns - 1; i++) {
       divider += '\u2014';
     }
     return divider;
@@ -80,7 +74,7 @@ class CLIOutput {
     color: string;
     title: string;
   }): void {
-    this.writeToStdOut(` ${this.applyCLIPrefix(color, title)}${EOL}`);
+    this.writeToStdOut(`${this.applyCLIPrefix(color, title)}${EOL}`);
   }
 
   private writeOptionalOutputBody(bodyLines?: string[]): void {
@@ -88,7 +82,7 @@ class CLIOutput {
       return;
     }
     this.addNewline();
-    bodyLines.forEach((bodyLine) => this.writeToStdOut(`   ${bodyLine}${EOL}`));
+    bodyLines.forEach((bodyLine) => this.writeToStdOut(`${bodyLine}${EOL}`));
   }
 
   private cliName = 'NX';
@@ -100,13 +94,9 @@ class CLIOutput {
   applyCLIPrefix(color = 'cyan', text: string): string {
     let cliPrefix = '';
     if ((chalk as any)[color]) {
-      cliPrefix = `${(chalk as any)[color]('>')} ${(
-        chalk as any
-      ).reset.inverse.bold[color](` ${this.cliName} `)}`;
+      cliPrefix = (chalk as any).reset.inverse.bold[color](` ${this.cliName} `);
     } else {
-      cliPrefix = `${chalk.keyword(color)(
-        '>'
-      )} ${chalk.reset.inverse.bold.keyword(color)(` ${this.cliName} `)}`;
+      cliPrefix = chalk.reset.inverse.bold.keyword(color)(` ${this.cliName} `);
     }
     return `${cliPrefix}  ${text}`;
   }
@@ -123,9 +113,7 @@ class CLIOutput {
 
   addVerticalSeparatorWithoutNewLines(color = 'gray') {
     this.writeToStdOut(
-      `${this.X_PADDING}${(chalk as any).dim[color](
-        this.VERTICAL_SEPARATOR
-      )}${EOL}`
+      `${(chalk as any).dim[color](this.VERTICAL_SEPARATOR)}${EOL}`
     );
   }
 

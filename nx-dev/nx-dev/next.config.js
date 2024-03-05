@@ -3,6 +3,8 @@ const { withNx } = require('@nx/next/plugins/with-nx');
 const redirectRules = require('./redirect-rules');
 
 module.exports = withNx({
+  // This is technically invalid, but we need to update our Vercel setting it order to change this.
+  distDir: '../../dist/nx-dev/nx-dev/.next',
   // For both client and server
   env: {
     VERCEL: process.env.VERCEL,

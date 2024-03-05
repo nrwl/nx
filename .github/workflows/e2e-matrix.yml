@@ -112,6 +112,7 @@ jobs:
           - e2e-esbuild
           - e2e-eslint
           - e2e-expo
+          - e2e-gradle
           - e2e-jest
           - e2e-js
           - e2e-lerna-smoke-tests
@@ -164,6 +165,8 @@ jobs:
           - project: e2e-esbuild
             codeowners: 'S04SJ6HHP0X'
           - project: e2e-expo
+            codeowners: 'S04TNCNJG5N'
+          - project: e2e-gradle
             codeowners: 'S04TNCNJG5N'
           - project: e2e-jest
             codeowners: 'S04T16BTJJY'
@@ -242,6 +245,8 @@ jobs:
             project: e2e-esbuild
           - node_version: 18
             project: e2e-expo
+          - node_version: 18
+            project: e2e-gradle
           - node_version: 18
             project: e2e-jest
           - node_version: 18

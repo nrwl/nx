@@ -2,6 +2,7 @@ import {
   NxJsonConfiguration,
   PackageManager,
   readJson,
+  readNxJson,
   Tree,
   updateJson,
   writeJson,
@@ -112,6 +113,21 @@ describe('CI Workflow generator', () => {
         expect(readJson(tree, 'nx.json').affected.defaultBase).toEqual(
           'origin/my-branch'
         );
+      });
+
+      it('should prefix nx.json base with origin/ if ci is bitbucket-pipelines', async () => {
+        setNxCloud(tree);
+
+        const nxJson = readNxJson(tree);
+        nxJson.defaultBase = 'my-branch';
+        writeJson(tree, 'nx.json', nxJson);
+
+        await ciWorkflowGenerator(tree, {
+          ci: 'bitbucket-pipelines',
+          name: 'CI',
+        });
+
+        expect(readNxJson(tree).defaultBase).toEqual('origin/my-branch');
       });
 
       it('should generate gitlab config', async () => {

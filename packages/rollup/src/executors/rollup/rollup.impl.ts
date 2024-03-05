@@ -28,6 +28,7 @@ import { analyze } from './lib/analyze-plugin';
 import { deleteOutputDir } from '../../utils/fs';
 import { swc } from './lib/swc-plugin';
 import { updatePackageJson } from './lib/update-package-json';
+import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
 
 export type RollupExecutorEvent = {
   success: boolean;
@@ -74,7 +75,7 @@ export async function* rollupExecutor(
     .filter((d) => d.target.startsWith('npm:'))
     .map((d) => d.target.slice(4));
 
-  const rollupOptions = createRollupOptions(
+  const rollupOptions = await createRollupOptions(
     options,
     dependencies,
     context,
@@ -155,14 +156,14 @@ export async function* rollupExecutor(
 
 // -----------------------------------------------------------------------------
 
-export function createRollupOptions(
+export async function createRollupOptions(
   options: NormalizedRollupExecutorOptions,
   dependencies: DependentBuildableProjectNode[],
   context: ExecutorContext,
   packageJson: PackageJson,
   sourceRoot: string,
   npmDeps: string[]
-): rollup.InputOptions[] {
+): Promise<rollup.InputOptions[]> {
   const useBabel = options.compiler === 'babel';
   const useTsc = options.compiler === 'tsc';
   const useSwc = options.compiler === 'swc';
@@ -195,7 +196,7 @@ export function createRollupOptions(
     options.format = ['cjs'];
   }
 
-  return options.format.map((format, idx) => {
+  const _rollupOptions = options.format.map(async (format, idx) => {
     // Either we're generating only one format, so we should bundle types
     // OR we are generating dual formats, so only bundle types for CJS.
     const shouldBundleTypes = options.format.length === 1 || format === 'cjs';
@@ -310,10 +311,35 @@ export function createRollupOptions(
       plugins,
     };
 
-    return options.rollupConfig.reduce((currentConfig, plugin) => {
-      return require(plugin)(currentConfig, options);
-    }, rollupConfig);
+    const userDefinedRollupConfigs = options.rollupConfig.map((plugin) =>
+      loadConfigFile(plugin)
+    );
+    let finalConfig: rollup.InputOptions = rollupConfig;
+    for (const _config of userDefinedRollupConfigs) {
+      const config = await _config;
+      if (typeof config === 'function') {
+        finalConfig = config(finalConfig, options);
+      } else {
+        finalConfig = {
+          ...finalConfig,
+          ...config,
+          plugins: [
+            ...(finalConfig.plugins?.length > 0 ? finalConfig.plugins : []),
+            ...(config.plugins?.length > 0 ? config.plugins : []),
+          ],
+        };
+      }
+    }
+
+    return finalConfig;
   });
+
+  const rollupOptions = [];
+  for (const rollupOption of _rollupOptions) {
+    rollupOptions.push(await rollupOption);
+  }
+
+  return rollupOptions;
 }
 
 function createTsCompilerOptions(

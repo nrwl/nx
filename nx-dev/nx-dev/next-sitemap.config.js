@@ -1,4 +1,4 @@
-const path = require('path');
+const path = require('node:path');
 
 module.exports = {
   siteUrl: process.env.SITE_URL || 'https://nx.dev',

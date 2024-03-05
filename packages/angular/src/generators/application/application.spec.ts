@@ -24,8 +24,7 @@ import {
 import { generateTestApplication } from '../utils/testing';
 import type { Schema } from './schema';
 
-// need to mock cypress otherwise it'll use the nx installed version from package.json
-//  which is v9 while we are testing for the new v10 version
+// need to mock cypress otherwise it'll use installed version in this repo's package.json
 jest.mock('@nx/cypress/src/utils/cypress-version');
 jest.mock('enquirer');
 jest.mock('@nx/devkit', () => {
@@ -43,7 +42,7 @@ describe('app', () => {
   > = installedCypressVersion as never;
 
   beforeEach(() => {
-    mockedInstalledCypressVersion.mockReturnValue(10);
+    mockedInstalledCypressVersion.mockReturnValue(null);
     // @ts-ignore
     enquirer.prompt = jest
       .fn()
@@ -79,6 +78,13 @@ describe('app', () => {
 
     // codelyzer should no longer be there by default
     expect(devDependencies['codelyzer']).toBeUndefined();
+  });
+
+  it('should generate correct tsconfig.editor.json', async () => {
+    await generateApp(appTree);
+
+    const tsConfig = readJson(appTree, 'my-app/tsconfig.editor.json');
+    expect(tsConfig).toMatchSnapshot();
   });
 
   describe('not nested', () => {
@@ -450,7 +456,7 @@ describe('app', () => {
       await generateApp(appTree, 'my-app', { directory: 'my-dir/my-app' });
       expect(
         appTree.read('my-dir/my-app/src/app/app.component.html', 'utf-8')
-      ).toContain('<proj-nx-welcome></proj-nx-welcome>');
+      ).toContain('<app-nx-welcome></app-nx-welcome>');
     });
 
     it("should update `template`'s property of AppComponent with Nx content", async () => {
@@ -460,7 +466,7 @@ describe('app', () => {
       });
       expect(
         appTree.read('my-dir/my-app/src/app/app.component.ts', 'utf-8')
-      ).toContain('<proj-nx-welcome></proj-nx-welcome>');
+      ).toContain('<app-nx-welcome></app-nx-welcome>');
     });
 
     it('should create Nx specific `nx-welcome.component.ts` file', async () => {
@@ -530,7 +536,7 @@ describe('app', () => {
 
   describe('--linter', () => {
     describe('eslint', () => {
-      it('should add lint target', async () => {
+      it('should add lint target to application', async () => {
         await generateApp(appTree, 'my-app', { linter: Linter.EsLint });
         expect(readProjectConfiguration(appTree, 'my-app').targets.lint)
           .toMatchInlineSnapshot(`
@@ -538,12 +544,40 @@ describe('app', () => {
             "executor": "@nx/eslint:lint",
           }
         `);
-        expect(readProjectConfiguration(appTree, 'my-app-e2e').targets.lint)
-          .toMatchInlineSnapshot(`
-          {
-            "executor": "@nx/eslint:lint",
-          }
+      });
+
+      it('should add eslint plugin and no lint target to e2e project', async () => {
+        await generateApp(appTree, 'my-app', { linter: Linter.EsLint });
+
+        expect(readNxJson(appTree).plugins).toMatchInlineSnapshot(`
+          [
+            {
+              "options": {
+                "componentTestingTargetName": "component-test",
+                "targetName": "e2e",
+              },
+              "plugin": "@nx/cypress/plugin",
+            },
+            {
+              "options": {
+                "targetName": "lint",
+              },
+              "plugin": "@nx/eslint/plugin",
+            },
+          ]
         `);
+        expect(
+          readProjectConfiguration(appTree, 'my-app-e2e').targets.lint
+        ).toBeUndefined();
+      });
+
+      it('should not add eslint plugin when no e2e test runner', async () => {
+        await generateApp(appTree, 'my-app', {
+          linter: Linter.EsLint,
+          e2eTestRunner: E2eTestRunner.None,
+        });
+
+        expect(readNxJson(appTree).plugins).toBeUndefined();
       });
 
       it('should add valid eslint JSON configuration which extends from Nx presets', async () => {
@@ -571,7 +605,7 @@ describe('app', () => {
                   "@angular-eslint/component-selector": [
                     "error",
                     {
-                      "prefix": "proj",
+                      "prefix": "app",
                       "style": "kebab-case",
                       "type": "element",
                     },
@@ -579,7 +613,7 @@ describe('app', () => {
                   "@angular-eslint/directive-selector": [
                     "error",
                     {
-                      "prefix": "proj",
+                      "prefix": "app",
                       "style": "camelCase",
                       "type": "attribute",
                     },
@@ -1262,7 +1296,6 @@ async function generateApp(
     unitTestRunner: UnitTestRunner.Jest,
     linter: Linter.EsLint,
     standalone: false,
-    addPlugin: false,
     ...options,
   });
 }

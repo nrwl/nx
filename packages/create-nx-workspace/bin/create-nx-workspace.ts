@@ -61,6 +61,7 @@ interface AngularArguments extends BaseArguments {
   e2eTestRunner: 'none' | 'cypress' | 'playwright';
   bundler: 'webpack' | 'esbuild';
   ssr: boolean;
+  prefix: string;
 }
 
 interface VueArguments extends BaseArguments {
@@ -175,6 +176,10 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
           .option('ssr', {
             describe: chalk.dim`Enable Server-Side Rendering (SSR) and Static Site Generation (SSG/Prerendering) for the Angular application`,
             type: 'boolean',
+          })
+          .option('prefix', {
+            describe: chalk.dim`Prefix to use for Angular component and directive selectors.`,
+            type: 'string',
           }),
         withNxCloud,
         withAllPrompts,
@@ -717,6 +722,25 @@ async function determineAngularOptions(
 
   const standaloneApi = parsedArgs.standaloneApi;
   const routing = parsedArgs.routing;
+  const prefix = parsedArgs.prefix;
+
+  if (prefix) {
+    // https://github.com/angular/angular-cli/blob/main/packages/schematics/angular/utility/validation.ts#L11-L14
+    const htmlSelectorRegex =
+      /^[a-zA-Z][.0-9a-zA-Z]*((:?-[0-9]+)*|(:?-[a-zA-Z][.0-9a-zA-Z]*(:?-[0-9]+)*)*)$/;
+
+    // validate whether component/directive selectors will be valid with the provided prefix
+    if (!htmlSelectorRegex.test(`${prefix}-placeholder`)) {
+      output.error({
+        title: `Failed to create a workspace.`,
+        bodyLines: [
+          `The provided "${prefix}" prefix is invalid. It must be a valid HTML selector.`,
+        ],
+      });
+
+      process.exit(1);
+    }
+  }
 
   if (parsedArgs.preset && parsedArgs.preset !== Preset.Angular) {
     preset = parsedArgs.preset;
@@ -817,6 +841,7 @@ async function determineAngularOptions(
     e2eTestRunner,
     bundler,
     ssr,
+    prefix,
   };
 }
 
@@ -1116,7 +1141,7 @@ async function determineVueFramework(
         {
           name: 'none',
           message: 'None',
-          hint: '         I only want vue',
+          hint: '         I only want Vue',
         },
         {
           name: 'nuxt',

@@ -36,7 +36,12 @@ function normalizeOptions(
     options.testEnvironment = 'jsdom';
   }
 
-  options.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
+  const nxJson = readNxJson(tree);
+  const addPlugin =
+    process.env.NX_ADD_PLUGINS !== 'false' &&
+    nxJson.useInferencePlugins !== false;
+
+  options.addPlugin ??= addPlugin;
 
   options.targetName ??= 'test';
 
@@ -105,7 +110,7 @@ export async function configurationGeneratorInternal(
       );
     }
   });
-  if (!hasPlugin) {
+  if (!hasPlugin || options.addExplicitTargets) {
     updateWorkspace(tree, options);
   }
 

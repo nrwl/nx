@@ -120,12 +120,12 @@ describe('nx release - independent projects', () => {
       );
       expect(versionPkg1Output).toMatchInlineSnapshot(`
 
-        >  NX   Your filter "{project-name}" matched the following projects:
+        NX   Your filter "{project-name}" matched the following projects:
 
         - {project-name}
 
 
-        >  NX   Running release version for project: {project-name}
+        NX   Running release version for project: {project-name}
 
         {project-name} 🔍 Reading data for package "@proj/{project-name}" from {project-name}/package.json
         {project-name} 📄 Resolved the current version as 0.0.0 from {project-name}/package.json
@@ -139,10 +139,7 @@ describe('nx release - independent projects', () => {
         "scripts": {
 
 
-        >  NX   Updating {package-manager} lock file
-
-
-        >  NX   Staging changed files with git
+        NX   Staging changed files with git
 
 
       `);
@@ -152,12 +149,12 @@ describe('nx release - independent projects', () => {
       );
       expect(versionPkg2Output).toMatchInlineSnapshot(`
 
-        >  NX   Your filter "{project-name}" matched the following projects:
+        NX   Your filter "{project-name}" matched the following projects:
 
         - {project-name}
 
 
-        >  NX   Running release version for project: {project-name}
+        NX   Running release version for project: {project-name}
 
         {project-name} 🔍 Reading data for package "@proj/{project-name}" from {project-name}/package.json
         {project-name} 📄 Resolved the current version as 0.0.0 from {project-name}/package.json
@@ -174,10 +171,7 @@ describe('nx release - independent projects', () => {
         +
 
 
-        >  NX   Updating {package-manager} lock file
-
-
-        >  NX   Staging changed files with git
+        NX   Staging changed files with git
 
 
       `);
@@ -187,12 +181,12 @@ describe('nx release - independent projects', () => {
       );
       expect(versionPkg3Output).toMatchInlineSnapshot(`
 
-        >  NX   Your filter "{project-name}" matched the following projects:
+        NX   Your filter "{project-name}" matched the following projects:
 
         - {project-name}
 
 
-        >  NX   Running release version for project: {project-name}
+        NX   Running release version for project: {project-name}
 
         {project-name} 🔍 Reading data for package "@proj/{project-name}" from {project-name}/package.json
         {project-name} 📄 Resolved the current version as 0.0.0 from {project-name}/package.json
@@ -213,10 +207,7 @@ describe('nx release - independent projects', () => {
         }
 
 
-        >  NX   Updating {package-manager} lock file
-
-
-        >  NX   Staging changed files with git
+        NX   Staging changed files with git
 
 
       `);
@@ -236,12 +227,12 @@ describe('nx release - independent projects', () => {
       );
       expect(versionWithGitActionsCLIOutput).toMatchInlineSnapshot(`
 
-        >  NX   Your filter "{project-name}" matched the following projects:
+        NX   Your filter "{project-name}" matched the following projects:
 
         - {project-name}
 
 
-        >  NX   Running release version for project: {project-name}
+        NX   Running release version for project: {project-name}
 
         {project-name} 🔍 Reading data for package "@proj/{project-name}" from {project-name}/package.json
         {project-name} 📄 Resolved the current version as 999.9.9-version-git-operations-test.1 from {project-name}/package.json
@@ -255,20 +246,17 @@ describe('nx release - independent projects', () => {
         "scripts": {
 
 
-        >  NX   Updating {package-manager} lock file
+        Skipped lock file update because {package-manager} workspaces are not enabled.
 
-        Updating {lock-file} with the following command:
-        {lock-file-command}
-
-        >  NX   Committing changes with git
+        NX   Committing changes with git
 
         Staging files in git with the following command:
-        git add {project-name}/package.json {lock-file}
+        git add {project-name}/package.json
 
         Committing files in git with the following command:
         git commit --message chore(release): publish --message - project: {project-name} 999.9.9-version-git-operations-test.2
 
-        >  NX   Tagging commit with git
+        NX   Tagging commit with git
 
         Tagging the current commit in git with the following command:
         git tag --annotate {project-name}@999.9.9-version-git-operations-test.2 --message {project-name}@999.9.9-version-git-operations-test.2
@@ -323,21 +311,21 @@ describe('nx release - independent projects', () => {
       );
       expect(versionWithGitActionsConfigOutput).toMatchInlineSnapshot(`
 
-        >  NX   Running release version for project: {project-name}
+        NX   Running release version for project: {project-name}
 
         {project-name} 🔍 Reading data for package "@proj/{project-name}" from {project-name}/package.json
         {project-name} 📄 Resolved the current version as 999.9.9-version-git-operations-test.2 from {project-name}/package.json
         {project-name} 📄 Using the provided version specifier "999.9.9-version-git-operations-test.3".
         {project-name} ✍️  New version 999.9.9-version-git-operations-test.3 written to {project-name}/package.json
 
-        >  NX   Running release version for project: {project-name}
+        NX   Running release version for project: {project-name}
 
         {project-name} 🔍 Reading data for package "@proj/{project-name}" from {project-name}/package.json
         {project-name} 📄 Resolved the current version as 999.9.9-package.2 from {project-name}/package.json
         {project-name} 📄 Using the provided version specifier "999.9.9-version-git-operations-test.3".
         {project-name} ✍️  New version 999.9.9-version-git-operations-test.3 written to {project-name}/package.json
 
-        >  NX   Running release version for project: {project-name}
+        NX   Running release version for project: {project-name}
 
         {project-name} 🔍 Reading data for package "@proj/{project-name}" from {project-name}/package.json
         {project-name} 📄 Resolved the current version as 999.9.9-package.3 from {project-name}/package.json
@@ -363,25 +351,19 @@ describe('nx release - independent projects', () => {
         "scripts": {
 
 
-        >  NX   Updating {package-manager} lock file
+        Skipped lock file update because {package-manager} workspaces are not enabled.
 
-        Updating {lock-file} with the following command:
-        {lock-file-command}
+        Skipped lock file update because {package-manager} workspaces are not enabled.
 
-        >  NX   Updating {package-manager} lock file
-
-        Updating {lock-file} with the following command:
-        {lock-file-command}
-
-        >  NX   Committing changes with git
+        NX   Committing changes with git
 
         Staging files in git with the following command:
-        git add {project-name}/package.json {project-name}/package.json {project-name}/package.json {lock-file}
+        git add {project-name}/package.json {project-name}/package.json {project-name}/package.json
 
         Committing files in git with the following command:
         git commit --message chore(release): publish --message - project: {project-name} 999.9.9-version-git-operations-test.3 --message - project: {project-name} 999.9.9-version-git-operations-test.3 --message - release-group: fixed 999.9.9-version-git-operations-test.3
 
-        >  NX   Tagging commit with git
+        NX   Tagging commit with git
 
         Tagging the current commit in git with the following command:
         git tag --annotate {project-name}@999.9.9-version-git-operations-test.3 --message {project-name}@999.9.9-version-git-operations-test.3
@@ -437,12 +419,12 @@ describe('nx release - independent projects', () => {
       );
       expect(changelogPkg1Output).toMatchInlineSnapshot(`
 
-        >  NX   Your filter "{project-name}" matched the following projects:
+        NX   Your filter "{project-name}" matched the following projects:
 
         - {project-name}
 
 
-        >  NX   Previewing an entry in {project-name}/CHANGELOG.md for {project-name}@999.9.9-package.1
+        NX   Previewing an entry in {project-name}/CHANGELOG.md for {project-name}@999.9.9-package.1
 
 
         + ## 999.9.9-package.1 (YYYY-MM-DD)
@@ -450,10 +432,10 @@ describe('nx release - independent projects', () => {
         + This was a version bump only for {project-name} to align it with other projects, there were no code changes.
 
 
-        >  NX   Committing changes with git
+        NX   Committing changes with git
 
 
-        >  NX   Tagging commit with git
+        NX   Tagging commit with git
 
 
       `);
@@ -464,12 +446,12 @@ describe('nx release - independent projects', () => {
       );
       expect(changelogPkg2Output).toMatchInlineSnapshot(`
 
-        >  NX   Your filter "{project-name}" matched the following projects:
+        NX   Your filter "{project-name}" matched the following projects:
 
         - {project-name}
 
 
-        >  NX   Previewing an entry in {project-name}/CHANGELOG.md for {project-name}@999.9.9-package.2
+        NX   Previewing an entry in {project-name}/CHANGELOG.md for {project-name}@999.9.9-package.2
 
 
         + ## 999.9.9-package.2 (YYYY-MM-DD)
@@ -477,10 +459,10 @@ describe('nx release - independent projects', () => {
         + This was a version bump only for {project-name} to align it with other projects, there were no code changes.
 
 
-        >  NX   Committing changes with git
+        NX   Committing changes with git
 
 
-        >  NX   Tagging commit with git
+        NX   Tagging commit with git
 
 
       `);
@@ -491,12 +473,12 @@ describe('nx release - independent projects', () => {
       );
       expect(changelogPkg3Output).toMatchInlineSnapshot(`
 
-        >  NX   Your filter "{project-name}" matched the following projects:
+        NX   Your filter "{project-name}" matched the following projects:
 
         - {project-name}
 
 
-        >  NX   Previewing an entry in {project-name}/CHANGELOG.md for {project-name}@999.9.9-package.3
+        NX   Previewing an entry in {project-name}/CHANGELOG.md for {project-name}@999.9.9-package.3
 
 
         + ## 999.9.9-package.3 (YYYY-MM-DD)
@@ -504,10 +486,10 @@ describe('nx release - independent projects', () => {
         + This was a version bump only for {project-name} to align it with other projects, there were no code changes.
 
 
-        >  NX   Committing changes with git
+        NX   Committing changes with git
 
 
-        >  NX   Tagging commit with git
+        NX   Tagging commit with git
 
 
       `);
@@ -524,12 +506,12 @@ describe('nx release - independent projects', () => {
       );
       expect(versionWithGitActionsCLIOutput).toMatchInlineSnapshot(`
 
-        >  NX   Your filter "{project-name}" matched the following projects:
+        NX   Your filter "{project-name}" matched the following projects:
 
         - {project-name}
 
 
-        >  NX   Generating an entry in {project-name}/CHANGELOG.md for {project-name}@999.9.9-changelog-git-operations-test.1
+        NX   Generating an entry in {project-name}/CHANGELOG.md for {project-name}@999.9.9-changelog-git-operations-test.1
 
 
         + ## 999.9.9-changelog-git-operations-test.1 (YYYY-MM-DD)
@@ -537,7 +519,7 @@ describe('nx release - independent projects', () => {
         + This was a version bump only for {project-name} to align it with other projects, there were no code changes.
 
 
-        >  NX   Committing changes with git
+        NX   Committing changes with git
 
         Staging files in git with the following command:
         git add {project-name}/CHANGELOG.md
@@ -545,7 +527,7 @@ describe('nx release - independent projects', () => {
         Committing files in git with the following command:
         git commit --message chore(release): publish --message - project: {project-name} 999.9.9-changelog-git-operations-test.1
 
-        >  NX   Tagging commit with git
+        NX   Tagging commit with git
 
         Tagging the current commit in git with the following command:
         git tag --annotate {project-name}@999.9.9-changelog-git-operations-test.1 --message {project-name}@999.9.9-changelog-git-operations-test.1
@@ -642,12 +624,12 @@ describe('nx release - independent projects', () => {
       // Should only contain 1 project
       expect(runCLI(`release publish -p ${pkg1} -d`)).toMatchInlineSnapshot(`
 
-        >  NX   Your filter "{project-name}" matched the following projects:
+        NX   Your filter "{project-name}" matched the following projects:
 
         - {project-name} (release group "group1")
 
 
-        >  NX   Running target nx-release-publish for project {project-name}:
+        NX   Running target nx-release-publish for project {project-name}:
 
         - {project-name}
 
@@ -680,7 +662,7 @@ describe('nx release - independent projects', () => {
 
 
 
-        >  NX   Successfully ran target nx-release-publish for project {project-name}
+        NX   Successfully ran target nx-release-publish for project {project-name}
 
 
 
@@ -690,13 +672,13 @@ describe('nx release - independent projects', () => {
       expect(runCLI(`release publish -p ${pkg1} -p ${pkg3} -d`))
         .toMatchInlineSnapshot(`
 
-        >  NX   Your filter "{project-name},{project-name}" matched the following projects:
+        NX   Your filter "{project-name},{project-name}" matched the following projects:
 
         - {project-name} (release group "group1")
         - {project-name} (release group "group2")
 
 
-        >  NX   Running target nx-release-publish for project {project-name}:
+        NX   Running target nx-release-publish for project {project-name}:
 
         - {project-name}
 
@@ -729,11 +711,11 @@ describe('nx release - independent projects', () => {
 
 
 
-        >  NX   Successfully ran target nx-release-publish for project {project-name}
+        NX   Successfully ran target nx-release-publish for project {project-name}
 
 
 
-        >  NX   Running target nx-release-publish for project {project-name}:
+        NX   Running target nx-release-publish for project {project-name}:
 
         - {project-name}
 
@@ -762,11 +744,11 @@ describe('nx release - independent projects', () => {
         integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
         total files:   4
 
-        Would publish to http://localhost:4873 with tag "latest", but [dry-run] was set
+        Would publish to ${e2eRegistryUrl} with tag "latest", but [dry-run] was set
 
 
 
-        >  NX   Successfully ran target nx-release-publish for project {project-name}
+        NX   Successfully ran target nx-release-publish for project {project-name}
 
 
 
@@ -777,7 +759,7 @@ describe('nx release - independent projects', () => {
       // Should only contain the 2 projects from group1
       expect(runCLI(`release publish -g group1 -d`)).toMatchInlineSnapshot(`
 
-        >  NX   Running target nx-release-publish for 2 projects:
+        NX   Running target nx-release-publish for 2 projects:
 
         - {project-name}
         - {project-name}
@@ -833,7 +815,7 @@ describe('nx release - independent projects', () => {
 
 
 
-        >  NX   Successfully ran target nx-release-publish for 2 projects
+        NX   Successfully ran target nx-release-publish for 2 projects
 
 
 
@@ -842,7 +824,7 @@ describe('nx release - independent projects', () => {
       // Should only contain the 1 project from group2
       expect(runCLI(`release publish -g group2 -d`)).toMatchInlineSnapshot(`
 
-          >  NX   Running target nx-release-publish for project {project-name}:
+          NX   Running target nx-release-publish for project {project-name}:
 
           - {project-name}
 
@@ -871,11 +853,11 @@ describe('nx release - independent projects', () => {
           integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
           total files:   4
 
-          Would publish to http://localhost:4873 with tag "latest", but [dry-run] was set
+          Would publish to ${e2eRegistryUrl} with tag "latest", but [dry-run] was set
 
 
 
-          >  NX   Successfully ran target nx-release-publish for project {project-name}
+          NX   Successfully ran target nx-release-publish for project {project-name}
 
 
 

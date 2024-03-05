@@ -47,16 +47,19 @@ export { workspaceLayout } from './config/configuration';
 
 export type {
   NxPlugin,
-  NxPluginV1,
   NxPluginV2,
-  ProjectTargetConfigurator,
   CreateNodes,
   CreateNodesFunction,
   CreateNodesResult,
   CreateNodesContext,
   CreateDependencies,
   CreateDependenciesContext,
-} from './utils/nx-plugin';
+} from './project-graph/plugins';
+
+export type {
+  NxPluginV1,
+  ProjectTargetConfigurator,
+} from './utils/nx-plugin.deprecated';
 
 /**
  * @category Workspace
@@ -97,6 +100,7 @@ export {
   getPackageManagerCommand,
   detectPackageManager,
   getPackageManagerVersion,
+  isWorkspacesEnabled,
 } from './utils/package-manager';
 
 /**

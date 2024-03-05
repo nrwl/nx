@@ -62,6 +62,11 @@ export async function remixInitGeneratorInternal(tree: Tree, options: Schema) {
     tasks.push(installTask);
   }
 
+  const nxJson = readNxJson(tree);
+  const addPluginDefault =
+    process.env.NX_ADD_PLUGINS !== 'false' &&
+    nxJson.useInferencePlugins !== false;
+  options.addPlugin ??= addPluginDefault;
   if (options.addPlugin) {
     addPlugin(tree);
   }

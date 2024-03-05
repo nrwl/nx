@@ -1,8 +1,8 @@
-import { ProjectConfiguration, readNxJson, Tree } from '@nx/devkit';
 import {
+  ProjectConfiguration,
+  Tree,
   addProjectConfiguration,
   readJson,
-  readProjectConfiguration,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import * as linter from '@nx/eslint';
@@ -32,7 +32,6 @@ describe('addLinting generator', () => {
       projectName: appProjectName,
       projectRoot: appProjectRoot,
       skipFormat: true,
-      addPlugin: true,
     });
 
     expect(linter.lintProjectGenerator).toHaveBeenCalled();
@@ -44,7 +43,6 @@ describe('addLinting generator', () => {
       projectName: appProjectName,
       projectRoot: appProjectRoot,
       skipFormat: true,
-      addPlugin: true,
     });
 
     const { devDependencies } = readJson(tree, 'package.json');
@@ -61,31 +59,9 @@ describe('addLinting generator', () => {
       projectName: appProjectName,
       projectRoot: appProjectRoot,
       skipFormat: true,
-      addPlugin: true,
     });
 
     const eslintConfig = readJson(tree, `${appProjectRoot}/.eslintrc.json`);
     expect(eslintConfig).toMatchSnapshot();
-  });
-
-  it('should add @nx/eslint/plugin', async () => {
-    await addLintingGenerator(tree, {
-      prefix: 'myOrg',
-      projectName: appProjectName,
-      projectRoot: appProjectRoot,
-      skipFormat: true,
-      addPlugin: true,
-    });
-
-    const nxJson = readNxJson(tree);
-    expect(
-      nxJson.plugins.find((p) => {
-        if (typeof p === 'string') {
-          return p === '@nx/eslint/plugin';
-        } else {
-          return p.plugin === '@nx/eslint/plugin';
-        }
-      })
-    ).toBeTruthy();
   });
 });

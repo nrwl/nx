@@ -28,7 +28,11 @@ export function expoInitGenerator(tree: Tree, schema: Schema) {
 }
 
 export async function expoInitGeneratorInternal(host: Tree, schema: Schema) {
-  schema.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
+  const nxJson = readNxJson(host);
+  const addPluginDefault =
+    process.env.NX_ADD_PLUGINS !== 'false' &&
+    nxJson.useInferencePlugins !== false;
+  schema.addPlugin ??= addPluginDefault;
 
   addGitIgnoreEntry(host);
 

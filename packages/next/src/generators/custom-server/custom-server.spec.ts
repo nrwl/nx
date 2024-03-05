@@ -28,7 +28,7 @@ describe('app', () => {
   });
 
   it('should create a custom server with swc', async () => {
-    const name = uniq('custom-server');
+    const name = uniq('custom-server-swc');
 
     await applicationGenerator(tree, {
       name,
