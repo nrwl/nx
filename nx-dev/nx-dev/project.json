@@ -4,26 +4,15 @@
   "sourceRoot": "nx-dev/nx-dev",
   "projectType": "application",
   "targets": {
-    "next-build": {
-      "dependsOn": ["copy-docs"]
-    },
-    "next-dev": {
-      "dependsOn": ["copy-docs"],
-      "options": {
-        "args": "--port 4200"
-      }
-    },
-    "next-start": {
-      "options": {
-        "args": "--port 4200"
-      }
-    },
     "build": {
-      "dependsOn": ["next-build"],
+      "dependsOn": [
+        {
+          "target": "build-base"
+        }
+      ],
       "executor": "nx:run-commands",
       "options": {
         "commands": [
-          "ls -lsa dist/nx-dev/nx-dev/.next",
           "nx run nx-dev:sitemap",
           "ts-node -P ./scripts/tsconfig.scripts.json ./scripts/documentation/internal-link-checker.ts"
         ],
@@ -35,13 +24,14 @@
         "{workspaceRoot}/scripts/tsconfig.scripts.json",
         "{workspaceRoot}/scripts/documentation/internal-link-checker.ts"
       ],
-      "outputs": [
-        "{workspaceRoot}/dist/nx-dev/nx-dev/.next",
-        "{workspaceRoot}/dist/nx-dev/nx-dev/.next/!(cache)"
-      ]
+      "outputs": ["{workspaceRoot}/dist/nx-dev/nx-dev"]
     },
     "sitemap": {
-      "command": "pnpm next-sitemap --config ./nx-dev/nx-dev/next-sitemap.config.js"
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/dist/nx-dev/nx-dev/public"],
+      "options": {
+        "command": "pnpm next-sitemap --config ./nx-dev/nx-dev/next-sitemap.config.js"
+      }
     },
     "sync-documentation": {
       "executor": "nx:run-commands",
@@ -57,6 +47,21 @@
         "command": "ts-node -P ./scripts/tsconfig.scripts.json ./scripts/documentation/open-graph/generate-images.ts"
       }
     },
+    "build-base": {
+      "executor": "@nx/next:build",
+      "dependsOn": ["copy-docs"],
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "root": "nx-dev/nx-dev",
+        "outputPath": "dist/nx-dev/nx-dev"
+      },
+      "configurations": {
+        "development": {
+          "outputPath": "nx-dev/nx-dev"
+        },
+        "production": {}
+      }
+    },
     "copy-docs": {
       "inputs": ["{workspaceRoot}/docs/**/*"],
       "outputs": ["{projectRoot}/public/documentation"],
@@ -70,10 +75,29 @@
       "options": {
         "commands": [
           "nx watch --projects=docs -- nx run nx-dev:copy-docs",
-          "nx run nx-dev:next-dev"
+          "nx run nx-dev:serve"
         ],
         "parallel": true
       }
+    },
+    "serve": {
+      "executor": "@nx/next:server",
+      "dependsOn": ["copy-docs"],
+      "options": {
+        "buildTarget": "nx-dev:build-base",
+        "dev": true
+      },
+      "configurations": {
+        "production": {
+          "buildTarget": "nx-dev:build-base:production",
+          "dev": false
+        },
+        "development": {
+          "buildTarget": "nx-dev:build-base:development",
+          "dev": true
+        }
+      },
+      "defaultConfiguration": "development"
     },
     "deploy-build": {
       "executor": "nx:run-commands",
@@ -103,6 +127,12 @@
         ],
         "color": true,
         "parallel": false
+      }
+    },
+    "export": {
+      "executor": "@nx/next:export",
+      "options": {
+        "buildTarget": "nx-dev:build:production"
       }
     },
     "lint": {},
