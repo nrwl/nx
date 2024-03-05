@@ -53,6 +53,7 @@
       "options": {
         "commands": [
           "npx nx e2e-base e2e-graph-client --configuration dev",
+          "echo done 1",
           "npx nx e2e-base e2e-graph-client --configuration release",
           "npx nx e2e-base e2e-graph-client --configuration release-static"
         ],
