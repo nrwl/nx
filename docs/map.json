@@ -1149,6 +1149,12 @@
                   "id": "publish-rust-crates",
                   "tags": ["nx-release"],
                   "file": "shared/recipes/nx-release/publish-rust-crates"
+                },
+                {
+                  "name": "Update Your Local Registry Setup to use Nx Release",
+                  "id": "update-local-registry-setup",
+                  "tags": ["nx-release"],
+                  "file": "shared/recipes/nx-release/update-local-registry-setup"
                 }
               ]
             },

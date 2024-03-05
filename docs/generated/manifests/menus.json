@@ -2323,6 +2323,14 @@
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
+              },
+              {
+                "name": "Update Your Local Registry Setup to use Nx Release",
+                "path": "/recipes/nx-release/update-local-registry-setup",
+                "id": "update-local-registry-setup",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
               }
             ],
             "disableCollapsible": false
@@ -4147,6 +4155,14 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
+          },
+          {
+            "name": "Update Your Local Registry Setup to use Nx Release",
+            "path": "/recipes/nx-release/update-local-registry-setup",
+            "id": "update-local-registry-setup",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -4195,6 +4211,14 @@
         "name": "Publish Rust Crates",
         "path": "/recipes/nx-release/publish-rust-crates",
         "id": "publish-rust-crates",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Update Your Local Registry Setup to use Nx Release",
+        "path": "/recipes/nx-release/update-local-registry-setup",
+        "id": "update-local-registry-setup",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
