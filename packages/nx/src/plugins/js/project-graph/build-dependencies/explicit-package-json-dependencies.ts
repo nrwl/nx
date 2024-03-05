@@ -125,7 +125,7 @@ function readDeps(packageJson: PackageJson) {
   const deps = {};
 
   /**
-   * We process dependencies in a rough order or increasing importance such that if a dependency is listed in multiple
+   * We process dependencies in a rough order of increasing importance such that if a dependency is listed in multiple
    * sections, the version listed under the "most important" one wins, with production dependencies being the most important.
    */
   const depType = [
