@@ -9,6 +9,7 @@ import {
   joinPathFragments,
   names,
   offsetFromRoot,
+  output,
   ProjectConfiguration,
   ProjectGraphProjectNode,
   readNxJson,
@@ -24,7 +25,6 @@ import {
   type ProjectNameAndRootOptions,
 } from '@nx/devkit/src/generators/project-name-and-root-utils';
 
-import { requireNx } from '@nx/devkit/nx';
 import { addBuildTargetDefaults } from '@nx/devkit/src/generators/add-build-target-defaults';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 import { findMatchingProjects } from 'nx/src/utils/find-matching-projects';
@@ -253,6 +253,7 @@ async function addProject(tree: Tree, options: NormalizedSchema) {
     if (options.publishable) {
       const packageRoot = join(defaultOutputDirectory, '{projectRoot}');
 
+      projectConfiguration.targets ??= {};
       projectConfiguration.targets['nx-release-publish'] = {
         options: {
           packageRoot,
@@ -924,7 +925,6 @@ async function addProjectToNxReleaseConfig(
   options: NormalizedSchema,
   projectConfiguration: ProjectConfiguration
 ) {
-  const { output } = requireNx();
   const nxJson = readNxJson(tree);
 
   const addPreVersionCommand = () => {
@@ -1008,7 +1008,6 @@ async function addProjectToNxReleaseConfig(
 }
 
 function logNxReleaseDocsInfo() {
-  const { output } = requireNx();
   output.log({
     title: `📦 To learn how to publish this library, see https://nx.dev/core-features/manage-releases.`,
   });

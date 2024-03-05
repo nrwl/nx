@@ -1,10 +1,8 @@
 import { prompt } from 'enquirer';
 import { readNxJson } from '../../config/nx-json';
-import {
-  createProjectFileMapUsingProjectGraph,
-  output,
-} from '../../devkit-exports';
+import { createProjectFileMapUsingProjectGraph } from '../../project-graph/file-map-utils';
 import { createProjectGraphAsync } from '../../project-graph/project-graph';
+import { output } from '../../utils/output';
 import { handleErrors } from '../../utils/params';
 import { releaseChangelog, shouldCreateGitHubRelease } from './changelog';
 import { ReleaseOptions, VersionOptions } from './command-object';

@@ -3,24 +3,21 @@ import { execSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { relative } from 'node:path';
 import { Generator } from '../../config/misc-interfaces';
-import { readNxJson } from '../../config/nx-json';
+import { NxJsonConfiguration, readNxJson } from '../../config/nx-json';
 import {
   ProjectGraph,
   ProjectGraphProjectNode,
 } from '../../config/project-graph';
-import {
-  NxJsonConfiguration,
-  createProjectFileMapUsingProjectGraph,
-  joinPathFragments,
-  output,
-  workspaceRoot,
-} from '../../devkit-exports';
 import { FsTree, Tree, flushChanges } from '../../generators/tree';
+import { createProjectFileMapUsingProjectGraph } from '../../project-graph/file-map-utils';
 import {
   createProjectGraphAsync,
   readProjectsConfigurationFromProjectGraph,
 } from '../../project-graph/project-graph';
+import { output } from '../../utils/output';
 import { combineOptionsForGenerator, handleErrors } from '../../utils/params';
+import { joinPathFragments } from '../../utils/path';
+import { workspaceRoot } from '../../utils/workspace-root';
 import { parseGeneratorString } from '../generate/generate';
 import { getGeneratorInformation } from '../generate/generator-utils';
 import { VersionOptions } from './command-object';
