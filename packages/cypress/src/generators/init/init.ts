@@ -55,7 +55,7 @@ function updateDependencies(tree: Tree, options: Schema) {
   return runTasksInSerial(...tasks);
 }
 
-function addPlugin(tree: Tree) {
+export function addPlugin(tree: Tree) {
   const nxJson = readNxJson(tree);
   nxJson.plugins ??= [];
 
@@ -106,7 +106,11 @@ export async function cypressInitGeneratorInternal(
 ) {
   updateProductionFileset(tree);
 
-  options.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
+  const nxJson = readNxJson(tree);
+
+  options.addPlugin ??=
+    process.env.NX_ADD_PLUGINS !== 'false' &&
+    nxJson.useInferencePlugins !== false;
 
   if (options.addPlugin) {
     addPlugin(tree);

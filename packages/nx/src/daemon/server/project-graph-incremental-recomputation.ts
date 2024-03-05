@@ -217,6 +217,7 @@ async function processFilesAndCreateAndSerializeProjectGraph(): Promise<Serializ
     serverLogger.requestLog([...updatedFiles.values()]);
     serverLogger.requestLog([...deletedFiles]);
     const nxJson = readNxJson(workspaceRoot);
+    global.NX_GRAPH_CREATION = true;
     const graphNodes = await retrieveProjectConfigurations(
       workspaceRoot,
       nxJson
@@ -226,7 +227,9 @@ async function processFilesAndCreateAndSerializeProjectGraph(): Promise<Serializ
       updatedFileHashes,
       deletedFiles
     );
-    return createAndSerializeProjectGraph(graphNodes);
+    const g = createAndSerializeProjectGraph(graphNodes);
+    delete global.NX_GRAPH_CREATION;
+    return g;
   } catch (err) {
     return Promise.resolve({
       error: err,

@@ -37,6 +37,7 @@ use ProjectsConfigurations or NxJsonConfiguration
 - [targetDefaults](../../devkit/documents/Workspace#targetdefaults): TargetDefaults
 - [tasksRunnerOptions](../../devkit/documents/Workspace#tasksrunneroptions): Object
 - [useDaemonProcess](../../devkit/documents/Workspace#usedaemonprocess): boolean
+- [useInferencePlugins](../../devkit/documents/Workspace#useinferenceplugins): boolean
 - [version](../../devkit/documents/Workspace#version): number
 - [workspaceLayout](../../devkit/documents/Workspace#workspacelayout): Object
 
@@ -337,6 +338,18 @@ Set this to false to disable the daemon.
 #### Inherited from
 
 [NxJsonConfiguration](../../devkit/documents/NxJsonConfiguration).[useDaemonProcess](../../devkit/documents/NxJsonConfiguration#usedaemonprocess)
+
+---
+
+### useInferencePlugins
+
+• `Optional` **useInferencePlugins**: `boolean`
+
+Set this to false to disable adding inference plugins when generating new projects
+
+#### Inherited from
+
+[NxJsonConfiguration](../../devkit/documents/NxJsonConfiguration).[useInferencePlugins](../../devkit/documents/NxJsonConfiguration#useinferenceplugins)
 
 ---
 

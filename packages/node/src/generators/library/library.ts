@@ -6,6 +6,7 @@ import {
   joinPathFragments,
   names,
   offsetFromRoot,
+  readNxJson,
   readProjectConfiguration,
   runTasksInSerial,
   toJS,
@@ -101,7 +102,13 @@ async function normalizeOptions(
     callingGenerator: '@nx/node:library',
   });
   options.projectNameAndRootFormat = projectNameAndRootFormat;
-  options.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
+
+  const nxJson = readNxJson(tree);
+  const addPluginDefault =
+    process.env.NX_ADD_PLUGINS !== 'false' &&
+    nxJson.useInferencePlugins !== false;
+
+  options.addPlugin ??= addPluginDefault;
 
   const fileName = getCaseAwareFileName({
     fileName: options.simpleModuleName

@@ -28,17 +28,17 @@ npx create-nx-workspace --pm pnpm
 
 This will guide you through the setup, asking whether you want a monorepo or a standalone app and whether you want to start with a blank or a preconfigured setup.
 
-```{% command="npx create-nx-workspace" path="~" %}
+```{% command="npx create-nx-workspace@latest" path="~" %}
 
 NX   Let's create a new workspace [https://nx.dev/getting-started/intro]
 
 ✔ Where would you like to create your workspace? · myorg
 ? Which stack do you want to use? …
-None:          Configures a minimal structure without specific frameworks or technologies.
-TS/JS:         Configures a TypeScript/JavaScript package without specific frameworks or platforms.
-React:         Configures a React app with your framework of choice.
-Angular:       Configures a Angular app with modern tooling.
-Node:          Configures a Node API with your framework of choice.
+None:          Configures a TypeScript/JavaScript project with minimal structure.
+React:         Configures a React application with your framework of choice.
+Vue:           Configures a Vue application with your framework of choice.
+Angular:       Configures a Angular application with modern tooling.
+Node:          Configures a Node API application with your framework of choice.
 ```
 
 Once you've created your workspace, you can

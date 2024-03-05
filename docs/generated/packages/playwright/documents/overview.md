@@ -63,7 +63,7 @@ The `@nx/playwright/plugin` is configured in the `plugins` array in `nx.json`.
 }
 ```
 
-- The `targetName` and `ciTargetName` options control the namea of the inferred Playwright tasks. The default names are `e2e` and `e2e-ci`.
+The `targetName` and `ciTargetName` options control the name of the inferred Playwright tasks. The default names are `e2e` and `e2e-ci`.
 
 ### Splitting E2E tasks by file
 

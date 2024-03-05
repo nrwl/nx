@@ -122,6 +122,7 @@ It only uses language primitives and immutable objects
 - [glob](../../devkit/documents/glob)
 - [hashArray](../../devkit/documents/hashArray)
 - [installPackagesTask](../../devkit/documents/installPackagesTask)
+- [isWorkspacesEnabled](../../devkit/documents/isWorkspacesEnabled)
 - [joinPathFragments](../../devkit/documents/joinPathFragments)
 - [moveFilesToNewDirectory](../../devkit/documents/moveFilesToNewDirectory)
 - [names](../../devkit/documents/names)

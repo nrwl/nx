@@ -202,14 +202,6 @@ export function Hero(): JSX.Element {
             aria-hidden="true"
             className="dark:block hidden"
           />
-          {/*<object*/}
-          {/*  type="image/svg+xml"*/}
-          {/*  data="/images/illustrations/nxdev-light.svg"*/}
-          {/*  title="PLACEHOLDER ILLUSTRATION"*/}
-          {/*  className="mb-[-70px] transition bg-white/90 hover:bg-white dark:bg-slate-800/90 dark:hover:bg-slate-800 rounded-xl shadow-2xl ring-1 ring-slate-200 dark:ring-slate-800/60 w-full min-h-[600px] dark:bg-slate-900"*/}
-          {/*>*/}
-          {/*  PLACEHOLDER ILLUSTRATION*/}
-          {/*</object>*/}
           <div className="relative" aria-hidden="true">
             <div className="absolute -inset-x-20 bottom-0 bg-gradient-to-t from-white dark:from-slate-900 pt-[7%]"></div>
           </div>

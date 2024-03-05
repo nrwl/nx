@@ -66,7 +66,7 @@ The `@nx/remix/plugin` is configured in the `plugins` array in `nx.json`.
 }
 ```
 
-- The `buildTargetName`, `serveTargetName`, `startTargetName` and `typecheckTargetName` options control the names of the inferred Remix tasks. The default names are `build`, `serve`, `start` and `typecheck`.
+The `buildTargetName`, `serveTargetName`, `startTargetName` and `typecheckTargetName` options control the names of the inferred Remix tasks. The default names are `build`, `serve`, `start` and `typecheck`.
 
 {% /tab %}
 {% tab label="Nx < 18" %}

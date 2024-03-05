@@ -3,12 +3,12 @@
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "angular",
     "packageName": "@nx/angular",
-    "description": "The Nx Plugin for Angular contains executors, generators, and utilities for managing Angular applications and libraries within an Nx workspace. It provides: \n\n- Integration with libraries such as Storybook, Jest, ESLint, Tailwind CSS, and Cypress. \n\n- Generators to help scaffold code quickly (like: Micro Frontends, Libraries, both internal to your codebase and publishable to npm) \n\n- Upgrading AngularJS applications \n\n- Single Component Application Modules (SCAMs) \n\n- NgRx helpers. \n\n- Utilities for automatic workspace refactoring.",
+    "description": "The Nx Plugin for Angular contains executors, generators, and utilities for managing Angular applications and libraries within an Nx workspace. It provides: \n\n- Integration with libraries such as Storybook, Jest, ESLint, Tailwind CSS, and Cypress. \n\n- Generators to help scaffold code quickly (like: Micro Frontends, Libraries, both internal to your codebase and publishable to npm) \n\n- Single Component Application Modules (SCAMs) \n\n- NgRx helpers. \n\n- Utilities for automatic workspace refactoring.",
     "documents": {
       "/nx-api/angular/documents/overview": {
         "id": "overview",
         "name": "Overview",
-        "description": "The Nx Plugin for Angular contains executors, generators, and utilities for managing Angular applications and libraries within an Nx workspace. It provides: \n\n- Integration with libraries such as Storybook, Jest, ESLint, Tailwind CSS, and Cypress. \n\n- Generators to help scaffold code quickly (like: Micro Frontends, Libraries, both internal to your codebase and publishable to npm) \n\n- Upgrading AngularJS applications \n\n- Single Component Application Modules (SCAMs) \n\n- NgRx helpers. \n\n- Utilities for automatic workspace refactoring.",
+        "description": "The Nx Plugin for Angular contains executors, generators, and utilities for managing Angular applications and libraries within an Nx workspace. It provides: \n\n- Integration with libraries such as Storybook, Jest, ESLint, Tailwind CSS, and Cypress. \n\n- Generators to help scaffold code quickly (like: Micro Frontends, Libraries, both internal to your codebase and publishable to npm) \n\n- Single Component Application Modules (SCAMs) \n\n- NgRx helpers. \n\n- Utilities for automatic workspace refactoring.",
         "file": "generated/packages/angular/documents/overview",
         "itemList": [],
         "isExternal": false,
@@ -19,7 +19,7 @@
       "/nx-api/angular/documents/angular-nx-version-matrix": {
         "id": "angular-nx-version-matrix",
         "name": "Angular and Nx Version Matrix",
-        "description": "The Nx Plugin for Angular contains executors, generators, and utilities for managing Angular applications and libraries within an Nx workspace. It provides: \n\n- Integration with libraries such as Storybook, Jest, ESLint, Tailwind CSS, and Cypress. \n\n- Generators to help scaffold code quickly (like: Micro Frontends, Libraries, both internal to your codebase and publishable to npm) \n\n- Upgrading AngularJS applications \n\n- Single Component Application Modules (SCAMs) \n\n- NgRx helpers. \n\n- Utilities for automatic workspace refactoring.",
+        "description": "The Nx Plugin for Angular contains executors, generators, and utilities for managing Angular applications and libraries within an Nx workspace. It provides: \n\n- Integration with libraries such as Storybook, Jest, ESLint, Tailwind CSS, and Cypress. \n\n- Generators to help scaffold code quickly (like: Micro Frontends, Libraries, both internal to your codebase and publishable to npm) \n\n- Single Component Application Modules (SCAMs) \n\n- NgRx helpers. \n\n- Utilities for automatic workspace refactoring.",
         "file": "generated/packages/angular/documents/angular-nx-version-matrix",
         "itemList": [],
         "isExternal": false,
@@ -1557,7 +1557,7 @@
     "documents": {
       "/nx-api/nuxt/documents/overview": {
         "id": "overview",
-        "name": "Overview of the Nx Nuxt Plugin",
+        "name": "Overview",
         "description": "The Nx Plugin for Nuxt contains generators for managing Nuxt applications within a Nx workspace. This page also explains how to configure Nuxt on your Nx workspace.",
         "file": "generated/packages/nuxt/documents/overview",
         "itemList": [],
@@ -2707,7 +2707,7 @@
     "documents": {
       "/nx-api/storybook/documents/overview": {
         "id": "overview",
-        "name": "Nx Storybook Plugin Overview",
+        "name": "Overview",
         "description": "This is an overview page for the Storybook plugin in Nx. It explains what Storybook is and how to set it up in your Nx workspace.",
         "file": "generated/packages/storybook/documents/overview",
         "itemList": [],
@@ -2729,7 +2729,7 @@
       },
       "/nx-api/storybook/documents/storybook-7-setup": {
         "id": "storybook-7-setup",
-        "name": "Storybook 7 overview",
+        "name": "Storybook 7",
         "description": "This guide explains how you can set up Storybook version 7 in your Nx workspace. It contains information about the generators and the frameworks that are supported.",
         "file": "generated/packages/storybook/documents/storybook-7-setup",
         "itemList": [],
@@ -2821,7 +2821,7 @@
     "documents": {
       "/nx-api/vite/documents/overview": {
         "id": "overview",
-        "name": "Overview of the Nx Vite Plugin",
+        "name": "Overview",
         "description": "The Nx Plugin for Vite contains executors and generators that support building applications using Vite. This page also explains how to configure Vite on your Nx workspace.",
         "file": "generated/packages/vite/documents/overview",
         "itemList": [],
@@ -2910,7 +2910,7 @@
     "documents": {
       "/nx-api/vue/documents/overview": {
         "id": "overview",
-        "name": "Overview of the Nx Vue Plugin",
+        "name": "Overview",
         "description": "The Nx Plugin for Vue contains generators for managing Vue applications and libraries within an Nx workspace. This page also explains how to configure Vue on your Nx workspace.",
         "file": "generated/packages/vue/documents/overview",
         "itemList": [],
@@ -3060,7 +3060,7 @@
     "documents": {
       "/nx-api/webpack/documents/overview": {
         "id": "overview",
-        "name": "Overview of the Nx Webpack Plugin",
+        "name": "Overview",
         "description": "The Nx Plugin for Webpack contains executors and generators that support building applications using Webpack.",
         "file": "generated/packages/webpack/documents/overview",
         "itemList": [],

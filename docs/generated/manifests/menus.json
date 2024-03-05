@@ -1578,14 +1578,6 @@
                     "isExternal": false,
                     "children": [],
                     "disableCollapsible": false
-                  },
-                  {
-                    "name": "Migrating from AngularJS",
-                    "path": "/recipes/angular/migration/angularjs",
-                    "id": "angularjs",
-                    "isExternal": false,
-                    "children": [],
-                    "disableCollapsible": false
                   }
                 ],
                 "disableCollapsible": false
@@ -1761,6 +1753,14 @@
                 "disableCollapsible": false
               },
               {
+                "name": "Upgrading Storybook using the Storybook CLI",
+                "path": "/recipes/storybook/upgrading-storybook",
+                "id": "upgrading-storybook",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
                 "name": "Setting up Storybook Composition with Nx",
                 "path": "/recipes/storybook/storybook-composition-setup",
                 "id": "storybook-composition-setup",
@@ -1797,6 +1797,14 @@
                 "name": "Component Testing",
                 "path": "/recipes/cypress/cypress-component-testing",
                 "id": "cypress-component-testing",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Using setupNodeEvents with Cypress preset",
+                "path": "/recipes/cypress/cypress-setup-node-events",
+                "id": "cypress-setup-node-events",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -2307,6 +2315,14 @@
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
+              },
+              {
+                "name": "Publish Rust Crates",
+                "path": "/recipes/nx-release/publish-rust-crates",
+                "id": "publish-rust-crates",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
               }
             ],
             "disableCollapsible": false
@@ -2761,14 +2777,6 @@
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
-              },
-              {
-                "name": "Migrating from AngularJS",
-                "path": "/recipes/angular/migration/angularjs",
-                "id": "angularjs",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
               }
             ],
             "disableCollapsible": false
@@ -2845,14 +2853,6 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
-          },
-          {
-            "name": "Migrating from AngularJS",
-            "path": "/recipes/angular/migration/angularjs",
-            "id": "angularjs",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -2877,14 +2877,6 @@
         "name": "Migrating Angular Application manually",
         "path": "/recipes/angular/migration/angular-manual",
         "id": "angular-manual",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Migrating from AngularJS",
-        "path": "/recipes/angular/migration/angularjs",
-        "id": "angularjs",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -3097,6 +3089,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Upgrading Storybook using the Storybook CLI",
+            "path": "/recipes/storybook/upgrading-storybook",
+            "id": "upgrading-storybook",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Setting up Storybook Composition with Nx",
             "path": "/recipes/storybook/storybook-composition-setup",
             "id": "storybook-composition-setup",
@@ -3196,6 +3196,14 @@
         "disableCollapsible": false
       },
       {
+        "name": "Upgrading Storybook using the Storybook CLI",
+        "path": "/recipes/storybook/upgrading-storybook",
+        "id": "upgrading-storybook",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
         "name": "Setting up Storybook Composition with Nx",
         "path": "/recipes/storybook/storybook-composition-setup",
         "id": "storybook-composition-setup",
@@ -3234,6 +3242,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Using setupNodeEvents with Cypress preset",
+            "path": "/recipes/cypress/cypress-setup-node-events",
+            "id": "cypress-setup-node-events",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Cypress v11 Migration Guide",
             "path": "/recipes/cypress/cypress-v11-migration",
             "id": "cypress-v11-migration",
@@ -3248,6 +3264,14 @@
         "name": "Component Testing",
         "path": "/recipes/cypress/cypress-component-testing",
         "id": "cypress-component-testing",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Using setupNodeEvents with Cypress preset",
+        "path": "/recipes/cypress/cypress-setup-node-events",
+        "id": "cypress-setup-node-events",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -4115,6 +4139,14 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
+          },
+          {
+            "name": "Publish Rust Crates",
+            "path": "/recipes/nx-release/publish-rust-crates",
+            "id": "publish-rust-crates",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -4155,6 +4187,14 @@
         "name": "Automate GitHub Releases",
         "path": "/recipes/nx-release/automate-github-releases",
         "id": "automate-github-releases",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Publish Rust Crates",
+        "path": "/recipes/nx-release/publish-rust-crates",
+        "id": "publish-rust-crates",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -8259,7 +8299,7 @@
             "name": "documents",
             "children": [
               {
-                "name": "Overview of the Nx Nuxt Plugin",
+                "name": "Overview",
                 "path": "/nx-api/nuxt/documents/overview",
                 "id": "overview",
                 "isExternal": false,
@@ -9393,7 +9433,7 @@
             "name": "documents",
             "children": [
               {
-                "name": "Nx Storybook Plugin Overview",
+                "name": "Overview",
                 "path": "/nx-api/storybook/documents/overview",
                 "id": "overview",
                 "isExternal": false,
@@ -9409,7 +9449,7 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Storybook 7 overview",
+                "name": "Storybook 7",
                 "path": "/nx-api/storybook/documents/storybook-7-setup",
                 "id": "storybook-7-setup",
                 "isExternal": false,
@@ -9509,7 +9549,7 @@
             "name": "documents",
             "children": [
               {
-                "name": "Overview of the Nx Vite Plugin",
+                "name": "Overview",
                 "path": "/nx-api/vite/documents/overview",
                 "id": "overview",
                 "isExternal": false,
@@ -9609,7 +9649,7 @@
             "name": "documents",
             "children": [
               {
-                "name": "Overview of the Nx Vue Plugin",
+                "name": "Overview",
                 "path": "/nx-api/vue/documents/overview",
                 "id": "overview",
                 "isExternal": false,
@@ -9776,7 +9816,7 @@
             "name": "documents",
             "children": [
               {
-                "name": "Overview of the Nx Webpack Plugin",
+                "name": "Overview",
                 "path": "/nx-api/webpack/documents/overview",
                 "id": "overview",
                 "isExternal": false,

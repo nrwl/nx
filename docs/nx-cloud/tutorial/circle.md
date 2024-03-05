@@ -404,7 +404,7 @@ pnpm exec nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agent
 
 We recommend you add this line right after you check out the repo, before installing node modules.
 
-- `nx-cloud start-ci-run --distribute-on="3 linux-medium-j` lets Nx know that all the tasks after this line should using Nx Agents and that Nx Cloud should use 3 instances of the `linux-medium-js` launch template. See below on how to configure a custom launch template.
+- `nx-cloud start-ci-run --distribute-on="3 linux-medium-js` lets Nx know that all the tasks after this line should using Nx Agents and that Nx Cloud should use 3 instances of the `linux-medium-js` launch template. See below on how to configure a custom launch template.
 - `--stop-agents-after="e2e-ci"` lets Nx Cloud know which line is the last command in this pipeline. Once there are no more e2e tasks for an agent to run, Nx Cloud will automatically shut them down. This way you're not wasting money on idle agents while a particularly long e2e task is running on a single agent.
 
 Try it out by creating a new PR with the above changes.
