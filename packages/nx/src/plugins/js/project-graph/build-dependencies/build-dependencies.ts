@@ -12,9 +12,9 @@ import { RawProjectGraphDependency } from '../../../../project-graph/project-gra
  * We need to track this in this separate cache because the project file map that lives on the ctx will
  * only be updated at the very end.
  *
- * sourceProject => resolved external node name (e.g. 'npm:lodash@4.0.0')
+ * sourceProject => resolved external node names (e.g. 'npm:lodash@4.0.0')
  */
-export type ExternalDependenciesCache = Map<string, string>;
+export type ExternalDependenciesCache = Map<string, Set<string>>;
 
 export function buildExplicitDependencies(
   jsPluginConfig: {

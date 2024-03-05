@@ -21,6 +21,16 @@ function isRoot(
   return projects[projectName]?.root === '.';
 }
 
+function getPackageName(importExpression: string) {
+  // Check if the package is scoped
+  if (importExpression.startsWith('@')) {
+    // For scoped packages, the package name is up to the second '/'
+    return importExpression.split('/').slice(0, 2).join('/');
+  }
+  // For unscoped packages, the package name is up to the first '/'
+  return importExpression.split('/')[0];
+}
+
 function convertImportToDependency(
   importExpr: string,
   externalDependenciesCache: ExternalDependenciesCache,
@@ -33,11 +43,22 @@ function convertImportToDependency(
    * First try and find in the cache populated by the package.json dependencies, then try and find in the project graph,
    * and finally default to an assumed root level external dependency.
    */
-  const target =
-    externalDependenciesCache.get(source) ??
+  const cachedDeps = externalDependenciesCache.get(source);
+  let target: string | undefined;
+  if (cachedDeps) {
+    // Certain dependencies contain nested entrypoints, we need to compare to the actual package name within the importExpr
+    const packageName = getPackageName(importExpr);
+    for (const dep of cachedDeps) {
+      if (dep.startsWith(`npm:${packageName}`)) {
+        target = dep;
+        break;
+      }
+    }
+  }
+  target =
+    target ??
     targetProjectLocator.findProjectWithImport(importExpr, sourceFile) ??
     `npm:${importExpr}`;
-
   return {
     source,
     target,

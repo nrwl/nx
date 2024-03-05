@@ -108,7 +108,10 @@ function processPackageJson(
         };
         validateDependency(dependency, ctx);
         collectedDeps.push(dependency);
-        externalDependenciesCache.set(sourceProject, dependency.target);
+        const depsForSource =
+          externalDependenciesCache.get(sourceProject) || new Set();
+        depsForSource.add(dependency.target);
+        externalDependenciesCache.set(sourceProject, depsForSource);
       }
     });
   } catch (e) {
