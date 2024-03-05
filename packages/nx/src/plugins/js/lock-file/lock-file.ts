@@ -143,12 +143,7 @@ export function getLockFileName(packageManager: PackageManager): string {
   throw new Error(`Unknown package manager: ${packageManager}`);
 }
 
-/**
- * Returns lock file name based on the detected package manager in the root
- * @param packageManager
- * @returns
- */
-export function getLockPath(packageManager: PackageManager): string {
+function getLockFilePath(packageManager: PackageManager): string {
   if (packageManager === 'yarn') {
     return YARN_LOCK_PATH;
   }
@@ -175,7 +170,7 @@ export function createLockFile(
   packageManager: PackageManager = detectPackageManager(workspaceRoot)
 ): string {
   const normalizedPackageJson = normalizePackageJson(packageJson);
-  const content = readFileSync(getLockPath(packageManager), 'utf8');
+  const content = readFileSync(getLockFilePath(packageManager), 'utf8');
 
   try {
     if (packageManager === 'yarn') {
