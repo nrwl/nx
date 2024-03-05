@@ -14,6 +14,8 @@ If you already running DTE, there are a few advantages to upgrading to Agents:
 
 We will shortly make available a new Helm chart that will allow you to deploy a separate Agents cluster to launch workflows: [https://github.com/nrwl/nx-cloud-helm](https://github.com/nrwl/nx-cloud-helm).
 
+![agents_screen](/nx-cloud/reference/images/agents.webp)
+
 ##### Task Atomizer and task retries 
 
 If you combine this release + upgrade to the latest Nx 18, you will have access to both the [task atomizer](https://nx.dev/ci/features/split-e2e-tasks) (which allows your e2e to be distributed among agents PER FILE, instead of previously per project) and the [flaky task retry functionality](https://nx.dev/ci/features/flaky-tasks).
@@ -22,7 +24,7 @@ If you combine this release + upgrade to the latest Nx 18, you will have access 
 
 Along with all the UI changes to support agents, and follow their logs and track how tasks get distributed (details of which you'll find demoed on [this page](https://nx.dev/ci/features/distribute-task-execution)) this release also brings all the new improvements to the CI pipeline execution page, including the commit info panel at the top:
 
-
+![cipe_top_half_screen](/nx-cloud/reference/images/cipe_top.webp)
 
 ### 2312.11.7.patch1
 
