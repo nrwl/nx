@@ -1,15 +1,7 @@
-import { componentConfigurationGenerator as baseCyCTConfig } from '@nx/cypress';
-import { NxComponentTestingOptions } from '@nx/cypress/plugins/cypress-preset';
+import type { NxComponentTestingOptions } from '@nx/cypress/plugins/cypress-preset';
+import type { FoundTarget } from '@nx/cypress/src/utils/find-target-options';
 import {
-  addDefaultCTConfig,
-  addMountDefinition,
-  getProjectCypressConfigPath,
-} from '@nx/cypress/src/utils/config';
-import {
-  findBuildConfig,
-  FoundTarget,
-} from '@nx/cypress/src/utils/find-target-options';
-import {
+  ensurePackage,
   formatFiles,
   joinPathFragments,
   ProjectConfiguration,
@@ -18,6 +10,7 @@ import {
   updateProjectConfiguration,
 } from '@nx/devkit';
 import { relative } from 'path';
+import { nxVersion } from '../../utils/versions';
 import { componentTestGenerator } from '../component-test/component-test';
 import {
   getComponentsInfo,
@@ -46,6 +39,9 @@ export async function cypressComponentConfigurationInternal(
   options: CypressComponentConfigSchema
 ) {
   const projectConfig = readProjectConfiguration(tree, options.project);
+  const { componentConfigurationGenerator: baseCyCTConfig } = ensurePackage<
+    typeof import('@nx/cypress')
+  >('@nx/cypress', nxVersion);
   const installTask = await baseCyCTConfig(tree, {
     project: options.project,
     skipFormat: true,
@@ -78,6 +74,7 @@ async function addFiles(
     'support',
     'component.ts'
   );
+  const { addMountDefinition } = await import('@nx/cypress/src/utils/config');
   const updatedCmpContents = await addMountDefinition(
     tree.read(componentFile, 'utf-8')
   );
@@ -129,6 +126,9 @@ async function configureCypressCT(
   let found: FoundTarget = { target: options.buildTarget, config: undefined };
 
   if (!options.buildTarget) {
+    const { findBuildConfig } = await import(
+      '@nx/cypress/src/utils/find-target-options'
+    );
     found = await findBuildConfig(tree, {
       project: options.project,
       buildTarget: options.buildTarget,
@@ -158,6 +158,9 @@ async function configureCypressCT(
     ctConfigOptions.buildTarget = found.target;
   }
 
+  const { addDefaultCTConfig, getProjectCypressConfigPath } = await import(
+    '@nx/cypress/src/utils/config'
+  );
   const cypressConfigPath = getProjectCypressConfigPath(
     tree,
     projectConfig.root

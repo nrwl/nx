@@ -1,4 +1,3 @@
-import { configurationGenerator } from '@nx/cypress';
 import type { Tree } from '@nx/devkit';
 import {
   addDependenciesToPackageJson,
@@ -6,9 +5,9 @@ import {
   ensurePackage,
   getPackageManagerCommand,
   joinPathFragments,
+  readNxJson,
   readProjectConfiguration,
   updateProjectConfiguration,
-  readNxJson,
 } from '@nx/devkit';
 import { nxVersion } from '../../../utils/versions';
 import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
@@ -22,6 +21,9 @@ export async function addE2e(tree: Tree, options: NormalizedSchema) {
     nxJson.useInferencePlugins !== false;
 
   if (options.e2eTestRunner === 'cypress') {
+    const { configurationGenerator } = ensurePackage<
+      typeof import('@nx/cypress')
+    >('@nx/cypress', nxVersion);
     // TODO: This can call `@nx/web:static-config` generator when ready
     addFileServerTarget(tree, options, 'serve-static');
     addProjectConfiguration(tree, options.e2eProjectName, {
@@ -44,11 +46,9 @@ export async function addE2e(tree: Tree, options: NormalizedSchema) {
       addPlugin,
     });
   } else if (options.e2eTestRunner === 'playwright') {
-    const { configurationGenerator: playwrightConfigurationGenerator } =
-      ensurePackage<typeof import('@nx/playwright')>(
-        '@nx/playwright',
-        nxVersion
-      );
+    const { configurationGenerator } = ensurePackage<
+      typeof import('@nx/playwright')
+    >('@nx/playwright', nxVersion);
     addProjectConfiguration(tree, options.e2eProjectName, {
       projectType: 'application',
       root: options.e2eProjectRoot,
@@ -56,7 +56,7 @@ export async function addE2e(tree: Tree, options: NormalizedSchema) {
       targets: {},
       implicitDependencies: [options.name],
     });
-    await playwrightConfigurationGenerator(tree, {
+    await configurationGenerator(tree, {
       project: options.e2eProjectName,
       skipFormat: true,
       skipPackageJson: options.skipPackageJson,
