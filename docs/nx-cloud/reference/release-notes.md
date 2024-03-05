@@ -10,8 +10,9 @@ This release contains everything needed to run [Nx Agents](https://nx.dev/ci/fea
 
 If you already running DTE, there are a few advantages to upgrading to Agents:
 
-- simplified CI config (you do not need to maintain anymore your custom CI agents). You will need to maintain just a single, main CI job config.
-- Access to [Spot instances](https://aws.amazon.com/ec2/spot/): if you are running your clusters on any of the popular cloud providers (AWS, Google Cloud, Azure etc.), you can now use their Spot instances for running your CI job. This is possible due to NxCloud's distribution model, which allows work on a reclaimed node to be re-distributed to the remaining agents.
+- simplified CI config: you will need to maintain just a single, main CI job config. NxCloud will create needed CI agents for you as needed.
+- [dynamic agent allocation based on PR size](https://nx.dev/ci/features/dynamic-agents): instead of always launching all your agents NxCloud will now launch different number of agents dynamically based on your PR size
+- access to [Spot instances](https://aws.amazon.com/ec2/spot/): if you are running your clusters on any of the popular cloud providers (AWS, Google Cloud, Azure etc.), you can now use their Spot instances for running your CI job. This is possible due to NxCloud's distribution model, which allows work on a reclaimed node to be re-distributed to the remaining agents.
 
 We will shortly make available a new Helm chart that will allow you to deploy a separate Agents cluster to launch workflows: [https://github.com/nrwl/nx-cloud-helm](https://github.com/nrwl/nx-cloud-helm).
 
@@ -23,7 +24,7 @@ If you combine this release + upgrade to the latest Nx 18, you will have access 
 
 ##### CIPE page improvements
 
-Along with all the UI changes to support agents, and follow their logs and track how tasks get distributed (details of which you'll find demoed on [this page](https://nx.dev/ci/features/distribute-task-execution)) this release also brings all the new improvements to the CI pipeline execution page, including the commit info panel at the top:
+Along with all the UI changes to support agents (following their logs and track how tasks get distributed,details of which you'll find demoed on [this page](https://nx.dev/ci/features/distribute-task-execution)) this release also brings all the new improvements to the CI pipeline execution page, including the commit info panel at the top:
 
 ![cipe_top_half_screen](/nx-cloud/reference/images/cipe_top.webp)
 
