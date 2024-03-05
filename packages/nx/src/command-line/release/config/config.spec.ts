@@ -1,37 +1,33 @@
-import { join } from 'path';
-import { ProjectFileMap, type ProjectGraph } from '../../../devkit-exports';
-import { PackageJson } from '../../../utils/package-json';
+import { ProjectFileMap, ProjectGraph } from '../../../config/project-graph';
+import { TempFs } from '../../../internal-testing-utils/temp-fs';
 import { createNxReleaseConfig } from './config';
-
-let rootPackageJson: PackageJson;
-let libAPackageJson: PackageJson;
-let libBPackageJson: PackageJson;
-let nxPackageJson: PackageJson;
-jest.mock('../../../devkit-exports', () => ({
-  ...jest.requireActual('../../../devkit-exports'),
-  readJsonFile: (path: string) => {
-    if (path.includes(join('libs', 'lib-a'))) {
-      return libAPackageJson;
-    }
-    if (path.includes(join('libs', 'lib-b'))) {
-      return libBPackageJson;
-    }
-    if (path.includes(join('packages', 'nx'))) {
-      return nxPackageJson;
-    }
-    return rootPackageJson;
-  },
-}));
 
 describe('createNxReleaseConfig()', () => {
   let projectGraph: ProjectGraph;
   let projectFileMap: ProjectFileMap;
+  let tempFs: TempFs;
 
-  beforeEach(() => {
-    rootPackageJson = { name: 'root', version: '0.0.0', private: true };
-    libAPackageJson = { name: 'lib-a', version: '0.0.0' };
-    libBPackageJson = { name: 'lib-b', version: '0.0.0' };
-    nxPackageJson = { name: 'nx', version: '0.0.0' };
+  beforeEach(async () => {
+    tempFs = new TempFs('nx-release-config-test');
+    await tempFs.createFiles({
+      'package.json': JSON.stringify({
+        name: 'root',
+        version: '0.0.0',
+        private: true,
+      }),
+      'libs/lib-a/package.json': JSON.stringify({
+        name: 'lib-a',
+        version: '0.0.0',
+      }),
+      'libs/lib-b/package.json': JSON.stringify({
+        name: 'lib-b',
+        version: '0.0.0',
+      }),
+      'packages/nx/package.json': JSON.stringify({
+        name: 'nx',
+        version: '0.0.0',
+      }),
+    });
     projectGraph = {
       nodes: {
         'lib-a': {
@@ -567,8 +563,14 @@ describe('createNxReleaseConfig()', () => {
         },
       ];
 
-      rootPackageJson = { name: 'root', version: '0.0.0', private: true };
-      libAPackageJson = { name: 'lib-a', version: '0.0.0', private: true };
+      tempFs.writeFile(
+        'package.json',
+        JSON.stringify({ name: 'root', version: '0.0.0', private: true })
+      );
+      tempFs.writeFile(
+        'libs/lib-a/package.json',
+        JSON.stringify({ name: 'lib-a', version: '0.0.0', private: true })
+      );
 
       expect(
         await createNxReleaseConfig(projectGraph, projectFileMap, undefined)
@@ -664,10 +666,13 @@ describe('createNxReleaseConfig()', () => {
         },
       ];
 
-      rootPackageJson = {
-        name: 'root',
-        version: '0.0.0',
-      };
+      tempFs.writeFile(
+        'package.json',
+        JSON.stringify({
+          name: 'root',
+          version: '0.0.0',
+        })
+      );
 
       expect(
         await createNxReleaseConfig(projectGraph, projectFileMap, undefined)
