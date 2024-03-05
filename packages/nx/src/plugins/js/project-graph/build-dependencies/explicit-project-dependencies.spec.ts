@@ -91,7 +91,9 @@ describe('explicit project dependencies', () => {
 
       // Set the cache to include a project specific version of the external dependency
       const externalDependenciesCache = new Map();
-      externalDependenciesCache.set(source, 'npm:npm-package@0.5.0');
+      const cachedDeps = new Set();
+      cachedDeps.add('npm:npm-package@0.5.0');
+      externalDependenciesCache.set(source, cachedDeps);
 
       const resWithEmptyCache = buildExplicitTypeScriptDependencies(
         ctx,

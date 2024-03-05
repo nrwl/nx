@@ -126,7 +126,9 @@ describe('explicit package json dependencies', () => {
     ]);
     expect(cache).toMatchInlineSnapshot(`
       Map {
-        "proj" => "npm:external",
+        "proj" => Set {
+          "npm:external",
+        },
       }
     `);
   });
