@@ -13,15 +13,12 @@
  */
 import { join } from 'path';
 import { NxJsonConfiguration } from '../../../config/nx-json';
-import {
-  ProjectFileMap,
-  output,
-  readJsonFile,
-  workspaceRoot,
-  type ProjectGraph,
-} from '../../../devkit-exports';
+import { ProjectFileMap, ProjectGraph } from '../../../config/project-graph';
+import { readJsonFile } from '../../../utils/fileutils';
 import { findMatchingProjects } from '../../../utils/find-matching-projects';
+import { output } from '../../../utils/output';
 import { PackageJson } from '../../../utils/package-json';
+import { workspaceRoot } from '../../../utils/workspace-root';
 import { resolveNxJsonConfigErrorMessage } from '../utils/resolve-nx-json-error-message';
 
 type DeepRequired<T> = Required<{
