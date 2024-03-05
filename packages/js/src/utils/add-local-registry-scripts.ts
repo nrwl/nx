@@ -21,13 +21,6 @@ export default async () => {
     verbose: false,
   });
 
-  const nx = require.resolve('nx');
-  execFileSync(
-    nx,
-    ['run-many', '--targets', 'build'],
-    { env: process.env, stdio: 'inherit' }
-  )
-
   await releaseVersion({
     specifier: '0.0.0-e2e',
     stageChanges: false,
