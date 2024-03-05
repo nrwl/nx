@@ -19,7 +19,6 @@ launch-templates:
           PATHS: |
             node_modules
             ~/.cache/Cypress
-            ~/.cache/ms-playwright
             ~/.pnpm-store
             ~/.sdkman
             ~/.sdkman/candidates/gradle
@@ -36,10 +35,8 @@ launch-templates:
         script: |
           pnpm install --frozen-lockfile
 
-      - name: Install Browsers
-        script: |
-          pnpm exec cypress install
-          pnpm exec playwright install
+      - name: Install Cypress
+        script: pnpm exec cypress install
 
       - name: Install Rust
         script: |
