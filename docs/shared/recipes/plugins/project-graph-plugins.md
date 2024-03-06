@@ -222,7 +222,7 @@ As an example, the below `nx.json` file specifies a plugin called `my-plugin` an
 {
   "plugins": [
     {
-      "name": "my-plugin",
+      "plugin": "my-plugin",
       "options": {
         "tagName": "plugin:my-plugin"
       }

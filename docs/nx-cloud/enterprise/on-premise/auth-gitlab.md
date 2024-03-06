@@ -6,11 +6,11 @@ Before creating your container, you'll need to create a GitLab app for your orga
 
 From GitLab, click on your profile picture and chose "Preferences":
 
-![Step 1](/nx-cloud/private/images/gitlab_step_1.png)
+![Step 1](/nx-cloud/enterprise/on-premise/images/gitlab_step_1.png)
 
 Then "Applications" from the left-hand menu:
 
-![Step 2](/nx-cloud/private/images/gitlab_step_2.png)
+![Step 2](/nx-cloud/enterprise/on-premise/images/gitlab_step_2.png)
 
 Give the app a name. The authorization callback is the important bit. It needs to be in this form:
 
@@ -23,17 +23,17 @@ https://my.nx-enterprise.url:8080/auth-callback
 
 **Important:** Ensure there is **no backslash at the end of the "Redirect URI"** (i.e. it matches the above pattern)
 
-![Step 3](/nx-cloud/private/images/gitlab_step_3.png)
+![Step 3](/nx-cloud/enterprise/on-premise/images/gitlab_step_3.png)
 
 Ensure you grant it the "`read_user`" scope:
 
-![Step 4](/nx-cloud/private/images/gitlab_step_4.png)
+![Step 4](/nx-cloud/enterprise/on-premise/images/gitlab_step_4.png)
 
 Click "Save application".
 
 Once you create, keep a note of the Client ID and the Secret:
 
-![Step 5](/nx-cloud/private/images/gitlab_step_5.png)
+![Step 5](/nx-cloud/enterprise/on-premise/images/gitlab_step_5.png)
 
 ## Connect your Nx Cloud installation to your new app
 

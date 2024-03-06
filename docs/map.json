@@ -1151,6 +1151,12 @@
                   "file": "shared/recipes/nx-release/publish-rust-crates"
                 },
                 {
+                  "name": "Update Your Local Registry Setup to use Nx Release",
+                  "id": "update-local-registry-setup",
+                  "tags": ["nx-release"],
+                  "file": "shared/recipes/nx-release/update-local-registry-setup"
+                },
+                {
                   "name": "Customize Conventional Commit Types",
                   "id": "customize-conventional-commit-types",
                   "tags": ["nx-release"],
@@ -1721,7 +1727,7 @@
               "description": "Set up Nx Cloud on machines that you control",
               "id": "on-premise",
               "tags": ["on-premise"],
-              "file": "nx-cloud/private/nx-enterprise-on-prem"
+              "file": "nx-cloud/features/nx-enterprise-on-prem"
             }
           ]
         },
@@ -1848,49 +1854,93 @@
               ]
             },
             {
-              "name": "On-Premise",
-              "id": "on-premise",
-              "description": "Manage an on-premise installation of Nx Cloud",
+              "name": "Enterprise",
+              "id": "enterprise",
+              "description": "Recipes for enterprise accounts",
               "itemList": [
                 {
-                  "name": "Authenticate with a Single Admin",
-                  "id": "auth-single-admin",
-                  "file": "nx-cloud/private/auth-single-admin"
+                  "name": "On-Premise",
+                  "id": "on-premise",
+                  "description": "Manage an on-premise installation of Nx Cloud",
+                  "itemList": [
+                    {
+                      "name": "Authenticate with a Single Admin",
+                      "id": "auth-single-admin",
+                      "file": "nx-cloud/enterprise/on-premise/auth-single-admin"
+                    },
+                    {
+                      "name": "Authenticate with GitHub",
+                      "id": "auth-github",
+                      "file": "nx-cloud/enterprise/on-premise/auth-github"
+                    },
+                    {
+                      "name": "On-Prem VM Setup",
+                      "id": "ami-setup",
+                      "file": "nx-cloud/enterprise/on-premise/ami-setup"
+                    },
+                    {
+                      "name": "Authenticate with GitLab",
+                      "id": "auth-gitlab",
+                      "file": "nx-cloud/enterprise/on-premise/auth-gitlab"
+                    },
+                    {
+                      "name": "Authenticate with BitBucket",
+                      "id": "auth-bitbucket",
+                      "file": "nx-cloud/enterprise/on-premise/auth-bitbucket"
+                    },
+                    {
+                      "name": "Authenticate via SAML",
+                      "id": "auth-saml",
+                      "file": "nx-cloud/enterprise/on-premise/auth-saml"
+                    },
+                    {
+                      "name": "Authenticate via SAML on Managed Version",
+                      "id": "auth-saml-managed",
+                      "file": "nx-cloud/enterprise/on-premise/auth-saml-managed"
+                    },
+                    {
+                      "name": "Advanced Configuration",
+                      "id": "advanced-config",
+                      "file": "nx-cloud/enterprise/on-premise/advanced-config"
+                    }
+                  ]
                 },
                 {
-                  "name": "Authenticate with GitHub",
-                  "id": "auth-github",
-                  "file": "nx-cloud/private/auth-github"
-                },
-                {
-                  "name": "On-Prem VM Setup",
-                  "id": "ami-setup",
-                  "file": "nx-cloud/private/ami-setup"
-                },
-                {
-                  "name": "Authenticate with GitLab",
-                  "id": "auth-gitlab",
-                  "file": "nx-cloud/private/auth-gitlab"
-                },
-                {
-                  "name": "Authenticate with BitBucket",
-                  "id": "auth-bitbucket",
-                  "file": "nx-cloud/private/auth-bitbucket"
-                },
-                {
-                  "name": "Authenticate via SAML",
-                  "id": "auth-saml",
-                  "file": "nx-cloud/private/auth-saml"
-                },
-                {
-                  "name": "Authenticate via SAML on Managed Version",
-                  "id": "auth-saml-managed",
-                  "file": "nx-cloud/private/auth-saml-managed"
-                },
-                {
-                  "name": "Advanced Configuration",
-                  "id": "advanced-config",
-                  "file": "nx-cloud/private/advanced-config"
+                  "name": "Custom Distributed Task Execution",
+                  "id": "dte",
+                  "description": "Custom DTE on your own CI provider",
+                  "itemList": [
+                    {
+                      "name": "GitHub Actions Custom DTE",
+                      "id": "github-dte",
+                      "file": "nx-cloud/enterprise/dte/github-dte"
+                    },
+                    {
+                      "name": "Circle CI Custom DTE",
+                      "id": "circle-ci-dte",
+                      "file": "nx-cloud/enterprise/dte/circle-ci-dte"
+                    },
+                    {
+                      "name": "Azure Pipelines Custom DTE",
+                      "id": "azure-dte",
+                      "file": "nx-cloud/enterprise/dte/azure-dte"
+                    },
+                    {
+                      "name": "Bitbucket Pipelines Custom DTE",
+                      "id": "bitbucket-dte",
+                      "file": "nx-cloud/enterprise/dte/bitbucket-dte"
+                    },
+                    {
+                      "name": "GitLab Custom DTE",
+                      "id": "gitlab-dte",
+                      "file": "nx-cloud/enterprise/dte/gitlab-dte"
+                    },
+                    {
+                      "name": "Jenkins Custom DTE",
+                      "id": "jenkins-dte",
+                      "file": "nx-cloud/enterprise/dte/jenkins-dte"
+                    }
+                  ]
                 }
               ]
             },

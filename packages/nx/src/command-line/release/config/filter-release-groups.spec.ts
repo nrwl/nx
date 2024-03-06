@@ -38,6 +38,7 @@ describe('filterReleaseGroups()', () => {
           tagMessage: '',
           tagArgs: '',
         },
+        preVersionCommand: '',
       },
       releaseTagPattern: '',
       git: {

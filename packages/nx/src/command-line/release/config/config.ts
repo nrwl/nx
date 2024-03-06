@@ -11,9 +11,14 @@
  * defaults and user overrides, as well as handling common errors, up front to produce a single, consistent,
  * and easy to consume config object for all the `nx release` command implementations.
  */
+import { join } from 'path';
 import { NxJsonConfiguration } from '../../../config/nx-json';
-import { output, type ProjectGraph } from '../../../devkit-exports';
+import { ProjectFileMap, ProjectGraph } from '../../../config/project-graph';
+import { readJsonFile } from '../../../utils/fileutils';
 import { findMatchingProjects } from '../../../utils/find-matching-projects';
+import { output } from '../../../utils/output';
+import { PackageJson } from '../../../utils/package-json';
+import { workspaceRoot } from '../../../utils/workspace-root';
 import { resolveNxJsonConfigErrorMessage } from '../utils/resolve-nx-json-error-message';
 import { DEFAULT_CONVENTIONAL_COMMITS_CONFIG } from './conventional-commits';
 
@@ -103,6 +108,7 @@ export interface CreateNxReleaseConfigError {
 // Apply default configuration to any optional user configuration and handle known errors
 export async function createNxReleaseConfig(
   projectGraph: ProjectGraph,
+  projectFileMap: ProjectFileMap,
   userConfig: NxJsonConfiguration['release'] = {}
 ): Promise<{
   error: null | CreateNxReleaseConfigError;
@@ -186,6 +192,7 @@ export async function createNxReleaseConfig(
       conventionalCommits: userConfig.version?.conventionalCommits || false,
       generator: '@nx/js:release-version',
       generatorOptions: defaultGeneratorOptions,
+      preVersionCommand: userConfig.version?.preVersionCommand || '',
     },
     changelog: {
       git: changelogGitDefaults,
@@ -313,21 +320,23 @@ export async function createNxReleaseConfig(
       )
     );
 
-  // git configuration is not supported at the group level, only the root/command level
-  const rootVersionWithoutGit = { ...rootVersionConfig };
-  delete rootVersionWithoutGit.git;
+  // these options are not supported at the group level, only the root/command level
+  const rootVersionWithoutGlobalOptions = { ...rootVersionConfig };
+  delete rootVersionWithoutGlobalOptions.git;
+  delete rootVersionWithoutGlobalOptions.preVersionCommand;
 
   // Apply conventionalCommits shorthand to the final group defaults if explicitly configured in the original user config
   if (userConfig.version?.conventionalCommits === true) {
-    rootVersionWithoutGit.generatorOptions = {
-      ...rootVersionWithoutGit.generatorOptions,
+    rootVersionWithoutGlobalOptions.generatorOptions = {
+      ...rootVersionWithoutGlobalOptions.generatorOptions,
       currentVersionResolver: 'git-tag',
       specifierSource: 'conventional-commits',
     };
   }
   if (userConfig.version?.conventionalCommits === false) {
-    delete rootVersionWithoutGit.generatorOptions.currentVersionResolver;
-    delete rootVersionWithoutGit.generatorOptions.specifierSource;
+    delete rootVersionWithoutGlobalOptions.generatorOptions
+      .currentVersionResolver;
+    delete rootVersionWithoutGlobalOptions.generatorOptions.specifierSource;
   }
 
   const groups: NxReleaseConfig['groups'] =
@@ -346,10 +355,8 @@ export async function createNxReleaseConfig(
                   ensureArray(userConfig.projects),
                   projectGraph.nodes
                 )
-              : // default to all library projects in the workspace
-                findMatchingProjects(['*'], projectGraph.nodes).filter(
-                  (project) => projectGraph.nodes[project].type === 'lib'
-                ),
+              : await getDefaultProjects(projectGraph, projectFileMap),
+
             /**
              * For properties which are overriding config at the root, we use the root level config as the
              * default values to merge with so that the group that matches a specific project will always
@@ -357,7 +364,7 @@ export async function createNxReleaseConfig(
              */
             version: deepMergeDefaults(
               [GROUP_DEFAULTS.version],
-              rootVersionWithoutGit
+              rootVersionWithoutGlobalOptions
             ),
             // If the user has set something custom for releaseTagPattern at the top level, respect it for the implicit default group
             releaseTagPattern:
@@ -443,7 +450,7 @@ export async function createNxReleaseConfig(
       projects: matchingProjects,
       version: deepMergeDefaults(
         // First apply any group level defaults, then apply actual root level config, then group level config
-        [GROUP_DEFAULTS.version, rootVersionWithoutGit],
+        [GROUP_DEFAULTS.version, rootVersionWithoutGlobalOptions],
         releaseGroup.version
       ),
       // If the user has set any changelog config at all, including at the root level, then use one set of defaults, otherwise default to false for the whole feature
@@ -814,4 +821,42 @@ function hasInvalidGitConfig(
   return (
     !!userConfig.git && !!(userConfig.version?.git || userConfig.changelog?.git)
   );
+}
+
+async function getDefaultProjects(
+  projectGraph: ProjectGraph,
+  projectFileMap: ProjectFileMap
+): Promise<string[]> {
+  // default to all library projects in the workspace with a package.json file
+  return findMatchingProjects(['*'], projectGraph.nodes).filter(
+    (project) =>
+      projectGraph.nodes[project].type === 'lib' &&
+      // Exclude all projects with "private": true in their package.json because this is
+      // a common indicator that a project is not intended for release.
+      // Users can override this behavior by explicitly defining the projects they want to release.
+      isProjectPublic(project, projectGraph, projectFileMap)
+  );
+}
+
+function isProjectPublic(
+  project: string,
+  projectGraph: ProjectGraph,
+  projectFileMap: ProjectFileMap
+): boolean {
+  const projectNode = projectGraph.nodes[project];
+  const packageJsonPath = join(projectNode.data.root, 'package.json');
+
+  if (!projectFileMap[project]?.find((f) => f.file === packageJsonPath)) {
+    return false;
+  }
+
+  try {
+    const fullPackageJsonPath = join(workspaceRoot, packageJsonPath);
+    const packageJson = readJsonFile<PackageJson>(fullPackageJsonPath);
+    return !(packageJson.private === true);
+  } catch (e) {
+    // do nothing and assume that the project is not public if there is a parsing issue
+    // this will result in it being excluded from the default projects list
+    return false;
+  }
 }

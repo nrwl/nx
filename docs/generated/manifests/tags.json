@@ -1032,6 +1032,13 @@
     },
     {
       "description": "",
+      "file": "shared/recipes/nx-release/update-local-registry-setup",
+      "id": "update-local-registry-setup",
+      "name": "Update Your Local Registry Setup to use Nx Release",
+      "path": "/recipes/nx-release/update-local-registry-setup"
+    },
+    {
+      "description": "",
       "file": "shared/recipes/nx-release/customize-conventional-commit-types",
       "id": "customize-conventional-commit-types",
       "name": "Customize Conventional Commit Types",
@@ -1126,7 +1133,7 @@
   "on-premise": [
     {
       "description": "Set up Nx Cloud on machines that you control",
-      "file": "nx-cloud/private/nx-enterprise-on-prem",
+      "file": "nx-cloud/features/nx-enterprise-on-prem",
       "id": "on-premise",
       "name": "Set up Nx Cloud On-Premise",
       "path": "/ci/features/on-premise"

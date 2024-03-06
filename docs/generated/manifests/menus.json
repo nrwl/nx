@@ -2325,6 +2325,14 @@
                 "disableCollapsible": false
               },
               {
+                "name": "Update Your Local Registry Setup to use Nx Release",
+                "path": "/recipes/nx-release/update-local-registry-setup",
+                "id": "update-local-registry-setup",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
                 "name": "Customize Conventional Commit Types",
                 "path": "/recipes/nx-release/customize-conventional-commit-types",
                 "id": "customize-conventional-commit-types",
@@ -4157,6 +4165,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Update Your Local Registry Setup to use Nx Release",
+            "path": "/recipes/nx-release/update-local-registry-setup",
+            "id": "update-local-registry-setup",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Customize Conventional Commit Types",
             "path": "/recipes/nx-release/customize-conventional-commit-types",
             "id": "customize-conventional-commit-types",
@@ -4211,6 +4227,14 @@
         "name": "Publish Rust Crates",
         "path": "/recipes/nx-release/publish-rust-crates",
         "id": "publish-rust-crates",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Update Your Local Registry Setup to use Nx Release",
+        "path": "/recipes/nx-release/update-local-registry-setup",
+        "id": "update-local-registry-setup",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -6046,73 +6070,139 @@
             "disableCollapsible": false
           },
           {
-            "name": "On-Premise",
-            "path": "/ci/recipes/on-premise",
-            "id": "on-premise",
+            "name": "Enterprise",
+            "path": "/ci/recipes/enterprise",
+            "id": "enterprise",
             "isExternal": false,
             "children": [
               {
-                "name": "Authenticate with a Single Admin",
-                "path": "/ci/recipes/on-premise/auth-single-admin",
-                "id": "auth-single-admin",
+                "name": "On-Premise",
+                "path": "/ci/recipes/enterprise/on-premise",
+                "id": "on-premise",
                 "isExternal": false,
-                "children": [],
+                "children": [
+                  {
+                    "name": "Authenticate with a Single Admin",
+                    "path": "/ci/recipes/enterprise/on-premise/auth-single-admin",
+                    "id": "auth-single-admin",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  },
+                  {
+                    "name": "Authenticate with GitHub",
+                    "path": "/ci/recipes/enterprise/on-premise/auth-github",
+                    "id": "auth-github",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  },
+                  {
+                    "name": "On-Prem VM Setup",
+                    "path": "/ci/recipes/enterprise/on-premise/ami-setup",
+                    "id": "ami-setup",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  },
+                  {
+                    "name": "Authenticate with GitLab",
+                    "path": "/ci/recipes/enterprise/on-premise/auth-gitlab",
+                    "id": "auth-gitlab",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  },
+                  {
+                    "name": "Authenticate with BitBucket",
+                    "path": "/ci/recipes/enterprise/on-premise/auth-bitbucket",
+                    "id": "auth-bitbucket",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  },
+                  {
+                    "name": "Authenticate via SAML",
+                    "path": "/ci/recipes/enterprise/on-premise/auth-saml",
+                    "id": "auth-saml",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  },
+                  {
+                    "name": "Authenticate via SAML on Managed Version",
+                    "path": "/ci/recipes/enterprise/on-premise/auth-saml-managed",
+                    "id": "auth-saml-managed",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  },
+                  {
+                    "name": "Advanced Configuration",
+                    "path": "/ci/recipes/enterprise/on-premise/advanced-config",
+                    "id": "advanced-config",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  }
+                ],
                 "disableCollapsible": false
               },
               {
-                "name": "Authenticate with GitHub",
-                "path": "/ci/recipes/on-premise/auth-github",
-                "id": "auth-github",
+                "name": "Custom Distributed Task Execution",
+                "path": "/ci/recipes/enterprise/dte",
+                "id": "dte",
                 "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "On-Prem VM Setup",
-                "path": "/ci/recipes/on-premise/ami-setup",
-                "id": "ami-setup",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Authenticate with GitLab",
-                "path": "/ci/recipes/on-premise/auth-gitlab",
-                "id": "auth-gitlab",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Authenticate with BitBucket",
-                "path": "/ci/recipes/on-premise/auth-bitbucket",
-                "id": "auth-bitbucket",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Authenticate via SAML",
-                "path": "/ci/recipes/on-premise/auth-saml",
-                "id": "auth-saml",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Authenticate via SAML on Managed Version",
-                "path": "/ci/recipes/on-premise/auth-saml-managed",
-                "id": "auth-saml-managed",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Advanced Configuration",
-                "path": "/ci/recipes/on-premise/advanced-config",
-                "id": "advanced-config",
-                "isExternal": false,
-                "children": [],
+                "children": [
+                  {
+                    "name": "GitHub Actions Custom DTE",
+                    "path": "/ci/recipes/enterprise/dte/github-dte",
+                    "id": "github-dte",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  },
+                  {
+                    "name": "Circle CI Custom DTE",
+                    "path": "/ci/recipes/enterprise/dte/circle-ci-dte",
+                    "id": "circle-ci-dte",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  },
+                  {
+                    "name": "Azure Pipelines Custom DTE",
+                    "path": "/ci/recipes/enterprise/dte/azure-dte",
+                    "id": "azure-dte",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  },
+                  {
+                    "name": "Bitbucket Pipelines Custom DTE",
+                    "path": "/ci/recipes/enterprise/dte/bitbucket-dte",
+                    "id": "bitbucket-dte",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  },
+                  {
+                    "name": "GitLab Custom DTE",
+                    "path": "/ci/recipes/enterprise/dte/gitlab-dte",
+                    "id": "gitlab-dte",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  },
+                  {
+                    "name": "Jenkins Custom DTE",
+                    "path": "/ci/recipes/enterprise/dte/jenkins-dte",
+                    "id": "jenkins-dte",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  }
+                ],
                 "disableCollapsible": false
               }
             ],
@@ -6399,14 +6489,153 @@
         "disableCollapsible": false
       },
       {
+        "name": "Enterprise",
+        "path": "/ci/recipes/enterprise",
+        "id": "enterprise",
+        "isExternal": false,
+        "children": [
+          {
+            "name": "On-Premise",
+            "path": "/ci/recipes/enterprise/on-premise",
+            "id": "on-premise",
+            "isExternal": false,
+            "children": [
+              {
+                "name": "Authenticate with a Single Admin",
+                "path": "/ci/recipes/enterprise/on-premise/auth-single-admin",
+                "id": "auth-single-admin",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Authenticate with GitHub",
+                "path": "/ci/recipes/enterprise/on-premise/auth-github",
+                "id": "auth-github",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "On-Prem VM Setup",
+                "path": "/ci/recipes/enterprise/on-premise/ami-setup",
+                "id": "ami-setup",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Authenticate with GitLab",
+                "path": "/ci/recipes/enterprise/on-premise/auth-gitlab",
+                "id": "auth-gitlab",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Authenticate with BitBucket",
+                "path": "/ci/recipes/enterprise/on-premise/auth-bitbucket",
+                "id": "auth-bitbucket",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Authenticate via SAML",
+                "path": "/ci/recipes/enterprise/on-premise/auth-saml",
+                "id": "auth-saml",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Authenticate via SAML on Managed Version",
+                "path": "/ci/recipes/enterprise/on-premise/auth-saml-managed",
+                "id": "auth-saml-managed",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Advanced Configuration",
+                "path": "/ci/recipes/enterprise/on-premise/advanced-config",
+                "id": "advanced-config",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              }
+            ],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Custom Distributed Task Execution",
+            "path": "/ci/recipes/enterprise/dte",
+            "id": "dte",
+            "isExternal": false,
+            "children": [
+              {
+                "name": "GitHub Actions Custom DTE",
+                "path": "/ci/recipes/enterprise/dte/github-dte",
+                "id": "github-dte",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Circle CI Custom DTE",
+                "path": "/ci/recipes/enterprise/dte/circle-ci-dte",
+                "id": "circle-ci-dte",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Azure Pipelines Custom DTE",
+                "path": "/ci/recipes/enterprise/dte/azure-dte",
+                "id": "azure-dte",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Bitbucket Pipelines Custom DTE",
+                "path": "/ci/recipes/enterprise/dte/bitbucket-dte",
+                "id": "bitbucket-dte",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "GitLab Custom DTE",
+                "path": "/ci/recipes/enterprise/dte/gitlab-dte",
+                "id": "gitlab-dte",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Jenkins Custom DTE",
+                "path": "/ci/recipes/enterprise/dte/jenkins-dte",
+                "id": "jenkins-dte",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              }
+            ],
+            "disableCollapsible": false
+          }
+        ],
+        "disableCollapsible": false
+      },
+      {
         "name": "On-Premise",
-        "path": "/ci/recipes/on-premise",
+        "path": "/ci/recipes/enterprise/on-premise",
         "id": "on-premise",
         "isExternal": false,
         "children": [
           {
             "name": "Authenticate with a Single Admin",
-            "path": "/ci/recipes/on-premise/auth-single-admin",
+            "path": "/ci/recipes/enterprise/on-premise/auth-single-admin",
             "id": "auth-single-admin",
             "isExternal": false,
             "children": [],
@@ -6414,7 +6643,7 @@
           },
           {
             "name": "Authenticate with GitHub",
-            "path": "/ci/recipes/on-premise/auth-github",
+            "path": "/ci/recipes/enterprise/on-premise/auth-github",
             "id": "auth-github",
             "isExternal": false,
             "children": [],
@@ -6422,7 +6651,7 @@
           },
           {
             "name": "On-Prem VM Setup",
-            "path": "/ci/recipes/on-premise/ami-setup",
+            "path": "/ci/recipes/enterprise/on-premise/ami-setup",
             "id": "ami-setup",
             "isExternal": false,
             "children": [],
@@ -6430,7 +6659,7 @@
           },
           {
             "name": "Authenticate with GitLab",
-            "path": "/ci/recipes/on-premise/auth-gitlab",
+            "path": "/ci/recipes/enterprise/on-premise/auth-gitlab",
             "id": "auth-gitlab",
             "isExternal": false,
             "children": [],
@@ -6438,7 +6667,7 @@
           },
           {
             "name": "Authenticate with BitBucket",
-            "path": "/ci/recipes/on-premise/auth-bitbucket",
+            "path": "/ci/recipes/enterprise/on-premise/auth-bitbucket",
             "id": "auth-bitbucket",
             "isExternal": false,
             "children": [],
@@ -6446,7 +6675,7 @@
           },
           {
             "name": "Authenticate via SAML",
-            "path": "/ci/recipes/on-premise/auth-saml",
+            "path": "/ci/recipes/enterprise/on-premise/auth-saml",
             "id": "auth-saml",
             "isExternal": false,
             "children": [],
@@ -6454,7 +6683,7 @@
           },
           {
             "name": "Authenticate via SAML on Managed Version",
-            "path": "/ci/recipes/on-premise/auth-saml-managed",
+            "path": "/ci/recipes/enterprise/on-premise/auth-saml-managed",
             "id": "auth-saml-managed",
             "isExternal": false,
             "children": [],
@@ -6462,7 +6691,7 @@
           },
           {
             "name": "Advanced Configuration",
-            "path": "/ci/recipes/on-premise/advanced-config",
+            "path": "/ci/recipes/enterprise/on-premise/advanced-config",
             "id": "advanced-config",
             "isExternal": false,
             "children": [],
@@ -6473,7 +6702,7 @@
       },
       {
         "name": "Authenticate with a Single Admin",
-        "path": "/ci/recipes/on-premise/auth-single-admin",
+        "path": "/ci/recipes/enterprise/on-premise/auth-single-admin",
         "id": "auth-single-admin",
         "isExternal": false,
         "children": [],
@@ -6481,7 +6710,7 @@
       },
       {
         "name": "Authenticate with GitHub",
-        "path": "/ci/recipes/on-premise/auth-github",
+        "path": "/ci/recipes/enterprise/on-premise/auth-github",
         "id": "auth-github",
         "isExternal": false,
         "children": [],
@@ -6489,7 +6718,7 @@
       },
       {
         "name": "On-Prem VM Setup",
-        "path": "/ci/recipes/on-premise/ami-setup",
+        "path": "/ci/recipes/enterprise/on-premise/ami-setup",
         "id": "ami-setup",
         "isExternal": false,
         "children": [],
@@ -6497,7 +6726,7 @@
       },
       {
         "name": "Authenticate with GitLab",
-        "path": "/ci/recipes/on-premise/auth-gitlab",
+        "path": "/ci/recipes/enterprise/on-premise/auth-gitlab",
         "id": "auth-gitlab",
         "isExternal": false,
         "children": [],
@@ -6505,7 +6734,7 @@
       },
       {
         "name": "Authenticate with BitBucket",
-        "path": "/ci/recipes/on-premise/auth-bitbucket",
+        "path": "/ci/recipes/enterprise/on-premise/auth-bitbucket",
         "id": "auth-bitbucket",
         "isExternal": false,
         "children": [],
@@ -6513,7 +6742,7 @@
       },
       {
         "name": "Authenticate via SAML",
-        "path": "/ci/recipes/on-premise/auth-saml",
+        "path": "/ci/recipes/enterprise/on-premise/auth-saml",
         "id": "auth-saml",
         "isExternal": false,
         "children": [],
@@ -6521,7 +6750,7 @@
       },
       {
         "name": "Authenticate via SAML on Managed Version",
-        "path": "/ci/recipes/on-premise/auth-saml-managed",
+        "path": "/ci/recipes/enterprise/on-premise/auth-saml-managed",
         "id": "auth-saml-managed",
         "isExternal": false,
         "children": [],
@@ -6529,8 +6758,113 @@
       },
       {
         "name": "Advanced Configuration",
-        "path": "/ci/recipes/on-premise/advanced-config",
+        "path": "/ci/recipes/enterprise/on-premise/advanced-config",
         "id": "advanced-config",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Custom Distributed Task Execution",
+        "path": "/ci/recipes/enterprise/dte",
+        "id": "dte",
+        "isExternal": false,
+        "children": [
+          {
+            "name": "GitHub Actions Custom DTE",
+            "path": "/ci/recipes/enterprise/dte/github-dte",
+            "id": "github-dte",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Circle CI Custom DTE",
+            "path": "/ci/recipes/enterprise/dte/circle-ci-dte",
+            "id": "circle-ci-dte",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Azure Pipelines Custom DTE",
+            "path": "/ci/recipes/enterprise/dte/azure-dte",
+            "id": "azure-dte",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Bitbucket Pipelines Custom DTE",
+            "path": "/ci/recipes/enterprise/dte/bitbucket-dte",
+            "id": "bitbucket-dte",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "GitLab Custom DTE",
+            "path": "/ci/recipes/enterprise/dte/gitlab-dte",
+            "id": "gitlab-dte",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Jenkins Custom DTE",
+            "path": "/ci/recipes/enterprise/dte/jenkins-dte",
+            "id": "jenkins-dte",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          }
+        ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "GitHub Actions Custom DTE",
+        "path": "/ci/recipes/enterprise/dte/github-dte",
+        "id": "github-dte",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Circle CI Custom DTE",
+        "path": "/ci/recipes/enterprise/dte/circle-ci-dte",
+        "id": "circle-ci-dte",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Azure Pipelines Custom DTE",
+        "path": "/ci/recipes/enterprise/dte/azure-dte",
+        "id": "azure-dte",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Bitbucket Pipelines Custom DTE",
+        "path": "/ci/recipes/enterprise/dte/bitbucket-dte",
+        "id": "bitbucket-dte",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "GitLab Custom DTE",
+        "path": "/ci/recipes/enterprise/dte/gitlab-dte",
+        "id": "gitlab-dte",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Jenkins Custom DTE",
+        "path": "/ci/recipes/enterprise/dte/jenkins-dte",
+        "id": "jenkins-dte",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
