@@ -1029,6 +1029,13 @@
       "id": "publish-rust-crates",
       "name": "Publish Rust Crates",
       "path": "/recipes/nx-release/publish-rust-crates"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/nx-release/update-local-registry-setup",
+      "id": "update-local-registry-setup",
+      "name": "Update Your Local Registry Setup to use Nx Release",
+      "path": "/recipes/nx-release/update-local-registry-setup"
     }
   ],
   "database": [
@@ -1119,7 +1126,7 @@
   "on-premise": [
     {
       "description": "Set up Nx Cloud on machines that you control",
-      "file": "nx-cloud/private/nx-enterprise-on-prem",
+      "file": "nx-cloud/features/nx-enterprise-on-prem",
       "id": "on-premise",
       "name": "Set up Nx Cloud On-Premise",
       "path": "/ci/features/on-premise"

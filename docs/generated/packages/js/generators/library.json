@@ -89,7 +89,7 @@
       "publishable": {
         "type": "boolean",
         "default": false,
-        "description": "Generate a publishable library.",
+        "description": "Configure the library ready for use with `nx release` (https://nx.dev/core-features/manage-releases).",
         "x-priority": "important"
       },
       "importPath": {

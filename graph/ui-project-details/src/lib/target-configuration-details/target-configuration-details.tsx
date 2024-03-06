@@ -4,9 +4,7 @@ import {
   ChevronDownIcon,
   ChevronUpIcon,
   EyeIcon,
-  InformationCircleIcon,
   PlayIcon,
-  QuestionMarkCircleIcon,
 } from '@heroicons/react/24/outline';
 
 // nx-ignore-next-line

@@ -33,17 +33,17 @@ than 1 admin to your workspace, to reduce the chance of losing access to it.
 
 For instructions on how to set up third-party auth providers, please refer to these guides:
 
-- [GitHub Auth](/ci/recipes/on-premise/auth-github)
-- [GitLab Auth](/ci/recipes/on-premise/auth-gitlab)
-- [BitBucket Auth](/ci/recipes/on-premise/auth-bitbucket)
-- [SAML Auth](/ci/recipes/on-premise/auth-saml)
+- [GitHub Auth](/ci/recipes/enterprise/on-premise/auth-github)
+- [GitLab Auth](/ci/recipes/enterprise/on-premise/auth-gitlab)
+- [BitBucket Auth](/ci/recipes/enterprise/on-premise/auth-bitbucket)
+- [SAML Auth](/ci/recipes/enterprise/on-premise/auth-saml)
 
 ## Inviting users
 
 Once that's done, you can either sign in with your admin user by using the form, or
 directly via the configured third-party authentication providers by clicking the "_Sign In with configured third-party provider_" button:
 
-![Main user login](/nx-cloud/private/images/main-user-login.webp)
+![Main user login](/nx-cloud/enterprise/on-premise/images/main-user-login.webp)
 
 You can then go to your organisation's settings and then to the members page and start inviting people based on their GitHub username.
 When you invite someone, Nx Cloud will generate a unique invite URL, which you can send to that person directly.
@@ -61,8 +61,8 @@ can usually be found by clicking in the top-right corner.
 
 GitLab:
 
-![GitLab username location](/nx-cloud/private/images/gitlab-username.png)
+![GitLab username location](/nx-cloud/enterprise/on-premise/images/gitlab-username.png)
 
 GitHub:
 
-![GitHub username location](/nx-cloud/private/images/github-username.png)
+![GitHub username location](/nx-cloud/enterprise/on-premise/images/github-username.png)
