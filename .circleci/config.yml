@@ -61,7 +61,7 @@ commands:
           name: Install Dependencies
           command: |
             pnpm install --frozen-lockfile
-            pnpm playwright install --with-deps firefox webkit chrome
+            pnpm playwright install --with-deps
       - save_cache:
           name: Save pnpm Package Cache
           key: node-deps-{{ arch }}-v3-{{ checksum "pnpm-lock.yaml" }}
