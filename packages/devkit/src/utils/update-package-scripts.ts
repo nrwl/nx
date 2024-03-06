@@ -175,20 +175,25 @@ async function processProject(
     }
   }
 
-  packageJson.nx ??= {};
   if (process.env.NX_RUNNING_NX_INIT === 'true') {
     // running `nx init` so we want to exclude everything by default
+    packageJson.nx ??= {};
     packageJson.nx.includedScripts = [];
-  } else {
+  } else if (replacedTargets.size) {
     /**
      * Running `nx add`. In this case we want to:
      * - if `includedScripts` is already set: exclude scripts that match inferred targets that were used to replace a script
      * - if `includedScripts` is not set: set `includedScripts` with all scripts except the ones that match an inferred target that was used to replace a script
      */
-    packageJson.nx.includedScripts ??= Object.keys(packageJson.scripts);
-    packageJson.nx.includedScripts = packageJson.nx.includedScripts.filter(
+    const includedScripts =
+      packageJson.nx?.includedScripts ?? Object.keys(packageJson.scripts);
+    const filteredScripts = includedScripts.filter(
       (s) => !replacedTargets.has(s)
     );
+    if (filteredScripts.length !== includedScripts.length) {
+      packageJson.nx ??= {};
+      packageJson.nx.includedScripts = filteredScripts;
+    }
   }
 
   writeJson(tree, packageJsonPath, packageJson);
