@@ -372,5 +372,10 @@
       "check-codeowners",
       "documentation"
     ]
+  },
+  "pnpm": {
+    "patchedDependencies": {
+      "nx@18.1.0-beta.3": "patches/nx@18.1.0-beta.3.patch"
+    }
   }
 }

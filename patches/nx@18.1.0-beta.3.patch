@@ -1,0 +1,90 @@
+diff --git a/src/daemon/client/client.js b/src/daemon/client/client.js
+index 71853e89a893caa19cabd46ee6f393dbf0643ed9..f4e36f22ec2f26177bbb4565666e8b775d412b15 100644
+--- a/src/daemon/client/client.js
++++ b/src/daemon/client/client.js
+@@ -90,9 +90,11 @@ class DaemonClient {
+         return this.sendToDaemonViaQueue({ type: 'REQUEST_SHUTDOWN' });
+     }
+     async getProjectGraphAndSourceMaps() {
++        console.log('Sending project graph request to daemon');
+         const response = await this.sendToDaemonViaQueue({
+             type: 'REQUEST_PROJECT_GRAPH',
+         });
++        console.log('Received project graph response from daemon');
+         return {
+             projectGraph: response.projectGraph,
+             sourceMaps: response.sourceMaps,
+diff --git a/src/project-graph/plugins/plugin-pool.js b/src/project-graph/plugins/plugin-pool.js
+index afc0a434d0757fccfc2458065e9b599ce602a3d7..ce4fa4df64e863249ca61f51ad6cc9e0aedb5c8b 100644
+--- a/src/project-graph/plugins/plugin-pool.js
++++ b/src/project-graph/plugins/plugin-pool.js
+@@ -4,7 +4,7 @@ exports.shutdownPluginWorkers = exports.loadRemoteNxPlugin = void 0;
+ const child_process_1 = require("child_process");
+ const path = require("path");
+ // TODO (@AgentEnder): After scoped verbose logging is implemented, re-add verbose logs here.
+-// import { logger } from '../../utils/logger';
++ const { logger } = require( '../../utils/logger');
+ const internal_api_1 = require("./internal-api");
+ const messaging_1 = require("./messaging");
+ const pool = new Set();
+@@ -37,7 +37,7 @@ function loadRemoteNxPlugin(plugin, root) {
+     });
+     worker.send((0, messaging_1.createMessage)({ type: 'load', payload: { plugin, root } }));
+     pool.add(worker);
+-    // logger.verbose(`[plugin-worker] started worker: ${worker.pid}`);
++     logger.verbose(`[plugin-worker] started worker: ${worker.pid}`);
+     return new Promise((res, rej) => {
+         worker.on('message', createWorkerHandler(worker, res, rej));
+         worker.on('exit', createWorkerExitHandler(worker));
+@@ -50,19 +50,17 @@ async function shutdownPluginWorkers() {
+     internal_api_1.nxPluginCache.clear();
+     // Marks the workers as shutdown so that we don't report unexpected exits
+     pluginWorkersShutdown = true;
+-    // logger.verbose(`[plugin-pool] starting worker shutdown`);
++     logger.verbose(`[plugin-pool] starting worker shutdown`);
+     const pending = getPendingPromises(pool, pidMap);
+-    if (pending.length > 0) {
+-        // logger.verbose(
+-        //   `[plugin-pool] waiting for ${pending.length} pending operations to complete`
+-        // );
+-        await Promise.all(pending);
++    
++    for (const pendingPromise of pending) {
++        pendingPromise.rejecter(new Error('shutting down'));
+     }
+-    // logger.verbose(`[plugin-pool] all pending operations completed`);
++
+     for (const p of pool) {
+         p.kill('SIGINT');
+     }
+-    // logger.verbose(`[plugin-pool] all workers killed`);
++     logger.verbose(`[plugin-pool] all workers killed`);
+ }
+ exports.shutdownPluginWorkers = shutdownPluginWorkers;
+ /**
+@@ -76,11 +74,11 @@ function createWorkerHandler(worker, onload, onloadError) {
+     let pluginName;
+     return function (message) {
+         const parsed = JSON.parse(message);
+-        // logger.verbose(
+-        //   `[plugin-pool] received message: ${parsed.type} from ${
+-        //     pluginName ?? worker.pid
+-        //   }`
+-        // );
++         logger.verbose(
++           `[plugin-pool] received message: ${parsed.type} from ${
++             pluginName ?? worker.pid
++           }`
++         );
+         (0, messaging_1.consumeMessage)(parsed, {
+             'load-result': (result) => {
+                 if (result.success) {
+@@ -189,7 +187,7 @@ function getPendingPromises(pool, pidMap) {
+     for (const p of pool) {
+         const { pending } = pidMap.get(p.pid) ?? { pending: new Set() };
+         for (const tx of pending) {
+-            pendingTxs.push(promiseBank.get(tx)?.promise);
++            pendingTxs.push(promiseBank.get(tx));
+         }
+     }
+     return pendingTxs;

@@ -8,6 +8,11 @@ overrides:
   minimist: ^1.2.6
   underscore: ^1.12.1
 
+patchedDependencies:
+  nx@18.1.0-beta.3:
+    hash: 6rzlb3dmg22zzn5ltnihgwoyaa
+    path: patches/nx@18.1.0-beta.3.patch
+
 dependencies:
   '@docsearch/react':
     specifier: ^3.3.0
@@ -775,7 +780,7 @@ devDependencies:
     version: 3.10.0(@types/node@18.19.8)(eslint@8.48.0)(less@4.1.3)(rollup@2.79.0)(sass@1.55.0)(stylus@0.59.0)(typescript@5.3.3)(vite@5.0.8)
   nx:
     specifier: 18.1.0-beta.3
-    version: 18.1.0-beta.3(@swc-node/register@1.8.0)(@swc/core@1.3.86)
+    version: 18.1.0-beta.3(patch_hash=6rzlb3dmg22zzn5ltnihgwoyaa)(@swc-node/register@1.8.0)(@swc/core@1.3.86)
   octokit:
     specifier: ^2.0.14
     version: 2.0.14
@@ -7604,7 +7609,7 @@ packages:
     resolution: {integrity: sha512-AuFnRaJ96PK0b8qXQVxIWJBYeeUB+haZ2PFjKHWCGD4b39dALSSTTcA+iCayTVoNaUU+qHYrAFUs4TyZ45T83A==}
     hasBin: true
     dependencies:
-      nx: 18.1.0-beta.3(@swc-node/register@1.8.0)(@swc/core@1.3.86)
+      nx: 18.1.0-beta.3(patch_hash=6rzlb3dmg22zzn5ltnihgwoyaa)(@swc-node/register@1.8.0)(@swc/core@1.3.86)
       tslib: 2.6.2
     transitivePeerDependencies:
       - '@swc-node/register'
@@ -8066,7 +8071,7 @@ packages:
       ejs: 3.1.8
       enquirer: 2.3.6
       ignore: 5.3.1
-      nx: 18.1.0-beta.3(@swc-node/register@1.8.0)(@swc/core@1.3.86)
+      nx: 18.1.0-beta.3(patch_hash=6rzlb3dmg22zzn5ltnihgwoyaa)(@swc-node/register@1.8.0)(@swc/core@1.3.86)
       semver: 7.6.0
       tmp: 0.2.1
       tslib: 2.6.2
@@ -8779,7 +8784,7 @@ packages:
       '@nx/devkit': 18.1.0-beta.3(nx@18.1.0-beta.3)
       chalk: 4.1.2
       enquirer: 2.3.6
-      nx: 18.1.0-beta.3(@swc-node/register@1.8.0)(@swc/core@1.3.86)
+      nx: 18.1.0-beta.3(patch_hash=6rzlb3dmg22zzn5ltnihgwoyaa)(@swc-node/register@1.8.0)(@swc/core@1.3.86)
       tslib: 2.6.2
       yargs-parser: 21.1.1
     transitivePeerDependencies:
@@ -25335,7 +25340,7 @@ packages:
       - debug
     dev: true
 
-  /nx@18.1.0-beta.3(@swc-node/register@1.8.0)(@swc/core@1.3.86):
+  /nx@18.1.0-beta.3(patch_hash=6rzlb3dmg22zzn5ltnihgwoyaa)(@swc-node/register@1.8.0)(@swc/core@1.3.86):
     resolution: {integrity: sha512-t1njGkImbAPeSKgozM+r4dfUY+xCziXtOcEvkMAwPo6LQ8+730fWlGwxUu1NyC5Ih0Aura5CaVJG0Yxxl2jBbg==}
     hasBin: true
     requiresBuild: true
@@ -25398,6 +25403,7 @@ packages:
     transitivePeerDependencies:
       - debug
     dev: true
+    patched: true
 
   /nypm@0.3.6:
     resolution: {integrity: sha512-2CATJh3pd6CyNfU5VZM7qSwFu0ieyabkEdnogE30Obn1czrmOYiZ8DOZLe1yBdLKWoyD3Mcy2maUs+0MR3yVjQ==}

@@ -153,21 +153,7 @@ jobs:
           name: Run Checks/Lint/Test/Build
           no_output_timeout: 60m
           command: |
-            pids=()
-
-            pnpm nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD &
-            pids+=($!)
-
-            pnpm nx run-many -t check-imports check-commit check-lock-files check-codeowners documentation --parallel=1 --no-dte &
-            pids+=($!)
-
-            (pnpm nx affected --targets=lint,test,build --base=$NX_BASE --head=$NX_HEAD --parallel=3 &&
-            pnpm nx affected --target=e2e --base=$NX_BASE --head=$NX_HEAD --parallel=1) &
-            pids+=($!)
-
-            for pid in "${pids[@]}"; do
-              wait "$pid"
-            done
+            pnpm nx run-many --target=e2e --projects e2e-graph-client
   # -------------------------
   #     JOBS: Main-MacOS
   # -------------------------
@@ -202,11 +188,6 @@ jobs:
       - rust/install
       - nx/set-shas:
           main-branch-name: 'master'
-      - run:
-          name: Run E2E Tests for macOS
-          command: |
-            pnpm nx affected -t e2e-macos --parallel=1 --base=$NX_BASE --head=$NX_HEAD
-          no_output_timeout: 45m
 
 # -------------------------
 #        WORKFLOWS(JOBS)

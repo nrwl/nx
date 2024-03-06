@@ -13,16 +13,15 @@ const pool: Set<ChildProcess> = new Set();
 
 const pidMap = new Map<number, { name: string; pending: Set<string> }>();
 
+interface PromiseBankEntry {
+  promise: Promise<unknown>;
+  resolver: (result: any) => void;
+  rejecter: (err: any) => void;
+}
+
 // transaction id (tx) -> Promise, Resolver, Rejecter
 // Makes sure that we can resolve the correct promise when the worker sends back the result
-const promiseBank = new Map<
-  string,
-  {
-    promise: Promise<unknown>;
-    resolver: (result: any) => void;
-    rejecter: (err: any) => void;
-  }
->();
+const promiseBank = new Map<string, PromiseBankEntry>();
 
 export function loadRemoteNxPlugin(plugin: PluginConfiguration, root: string) {
   // this should only really be true when running unit tests within
@@ -71,17 +70,21 @@ export async function shutdownPluginWorkers() {
 
   const pending = getPendingPromises(pool, pidMap);
 
-  if (pending.length > 0) {
-    // logger.verbose(
-    //   `[plugin-pool] waiting for ${pending.length} pending operations to complete`
-    // );
-    await Promise.all(pending);
+  // if (pending.length > 0) {
+  //   // logger.verbose(
+  //   //   `[plugin-pool] waiting for ${pending.length} pending operations to complete`
+  //   // );
+  //   await Promise.all(pending);
+  // }
+
+  for (const pendingPromise of pending) {
+    pendingPromise.rejecter(new Error('Shutting down'));
   }
 
   // logger.verbose(`[plugin-pool] all pending operations completed`);
 
-  for (const p of pool) {
-    p.kill('SIGINT');
+  for (const childProcess of pool) {
+    childProcess.kill('SIGINT');
   }
 
   // logger.verbose(`[plugin-pool] all workers killed`);
@@ -228,11 +231,11 @@ function getPendingPromises(
   pool: Set<ChildProcess>,
   pidMap: Map<number, { name: string; pending: Set<string> }>
 ) {
-  const pendingTxs: Array<Promise<unknown>> = [];
+  const pendingTxs: Array<PromiseBankEntry> = [];
   for (const p of pool) {
     const { pending } = pidMap.get(p.pid) ?? { pending: new Set() };
     for (const tx of pending) {
-      pendingTxs.push(promiseBank.get(tx)?.promise);
+      pendingTxs.push(promiseBank.get(tx));
     }
   }
   return pendingTxs;
