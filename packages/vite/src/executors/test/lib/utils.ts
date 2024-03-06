@@ -69,7 +69,7 @@ export async function getOptions(
   ]);
 
   const settings = {
-    ...normalizedExtraArgs,
+    ...normalizedExtraArgs.options,
     // This should not be needed as it's going to be set in vite.config.ts
     // but leaving it here in case someone did not migrate correctly
     root: resolved.config.root ?? root,
