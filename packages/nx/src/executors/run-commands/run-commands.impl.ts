@@ -163,7 +163,10 @@ function normalizeOptions(
 ): NormalizedRunCommandsOptions {
   if (options.command) {
     options.commands = [{ command: options.command }];
-    options.parallel = !!options.readyWhen;
+    //(@nicholas) revert options.parallel after: https://github.com/vercel/next.js/pull/62907 has been promoted and we update to the new next version
+    // For now, this is the only way to handle next.js passing exit code 0 for processes that end with SIGINT or SIGTERM
+    // As it will force the process to run as a Node.js process instead of a Rust process and we can handle the exit codes properly
+    options.parallel = options.parallel ?? !!options.readyWhen;
   } else {
     options.commands = options.commands.map((c) =>
       typeof c === 'string' ? { command: c } : c
