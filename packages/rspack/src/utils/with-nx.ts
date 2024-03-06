@@ -172,6 +172,8 @@ export function withNx(_opts = {}) {
         // It looks to be an issue with rspack itself, but will check back after Nx 16 release
         // once I can reproduce a small example repo with rspack only.
         alias,
+        // We need to define the extensions that rspack can resolve
+        extensions: ["...", ".ts", ".tsx", ".jsx"]
         // tsConfigPath: path.join(context.root, options.tsConfig),
       },
       infrastructureLogging: {
