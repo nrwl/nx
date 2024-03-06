@@ -583,11 +583,6 @@
                       "name": "Migrating Angular Application manually",
                       "id": "angular-manual",
                       "file": "shared/migration/angular-manual"
-                    },
-                    {
-                      "name": "Migrating from AngularJS",
-                      "id": "angularjs",
-                      "file": "shared/migration/migration-angularjs"
                     }
                   ]
                 },
@@ -727,6 +722,13 @@
                   "file": "shared/recipes/storybook/interaction-tests"
                 },
                 {
+                  "name": "Upgrading Storybook using the Storybook CLI",
+                  "id": "upgrading-storybook",
+                  "tags": ["storybook"],
+                  "description": "This guide explains how you can upgrade Storybook using the Storybook CLI upgrade and automigrate commands.",
+                  "file": "shared/recipes/storybook/upgrading-storybook"
+                },
+                {
                   "name": "Setting up Storybook Composition with Nx",
                   "id": "storybook-composition-setup",
                   "tags": ["storybook"],
@@ -759,6 +761,12 @@
                   "name": "Component Testing",
                   "description": "Component Testing",
                   "file": "shared/packages/cypress/cypress-component-testing"
+                },
+                {
+                  "id": "cypress-setup-node-events",
+                  "name": "Using setupNodeEvents with Cypress preset",
+                  "description": "A guide on using the setupNodeEvents function with @nx/cypress/plugins/cypress-preset",
+                  "file": "shared/packages/cypress/cypress-setup-node-events"
                 },
                 {
                   "id": "cypress-v11-migration",
@@ -1135,6 +1143,18 @@
                   "id": "automate-github-releases",
                   "tags": ["nx-release"],
                   "file": "shared/recipes/nx-release/automate-github-releases"
+                },
+                {
+                  "name": "Publish Rust Crates",
+                  "id": "publish-rust-crates",
+                  "tags": ["nx-release"],
+                  "file": "shared/recipes/nx-release/publish-rust-crates"
+                },
+                {
+                  "name": "Update Your Local Registry Setup to use Nx Release",
+                  "id": "update-local-registry-setup",
+                  "tags": ["nx-release"],
+                  "file": "shared/recipes/nx-release/update-local-registry-setup"
                 }
               ]
             },
@@ -1701,7 +1721,7 @@
               "description": "Set up Nx Cloud on machines that you control",
               "id": "on-premise",
               "tags": ["on-premise"],
-              "file": "nx-cloud/private/nx-enterprise-on-prem"
+              "file": "nx-cloud/features/nx-enterprise-on-prem"
             }
           ]
         },
@@ -1828,49 +1848,93 @@
               ]
             },
             {
-              "name": "On-Premise",
-              "id": "on-premise",
-              "description": "Manage an on-premise installation of Nx Cloud",
+              "name": "Enterprise",
+              "id": "enterprise",
+              "description": "Recipes for enterprise accounts",
               "itemList": [
                 {
-                  "name": "Authenticate with a Single Admin",
-                  "id": "auth-single-admin",
-                  "file": "nx-cloud/private/auth-single-admin"
+                  "name": "On-Premise",
+                  "id": "on-premise",
+                  "description": "Manage an on-premise installation of Nx Cloud",
+                  "itemList": [
+                    {
+                      "name": "Authenticate with a Single Admin",
+                      "id": "auth-single-admin",
+                      "file": "nx-cloud/enterprise/on-premise/auth-single-admin"
+                    },
+                    {
+                      "name": "Authenticate with GitHub",
+                      "id": "auth-github",
+                      "file": "nx-cloud/enterprise/on-premise/auth-github"
+                    },
+                    {
+                      "name": "On-Prem VM Setup",
+                      "id": "ami-setup",
+                      "file": "nx-cloud/enterprise/on-premise/ami-setup"
+                    },
+                    {
+                      "name": "Authenticate with GitLab",
+                      "id": "auth-gitlab",
+                      "file": "nx-cloud/enterprise/on-premise/auth-gitlab"
+                    },
+                    {
+                      "name": "Authenticate with BitBucket",
+                      "id": "auth-bitbucket",
+                      "file": "nx-cloud/enterprise/on-premise/auth-bitbucket"
+                    },
+                    {
+                      "name": "Authenticate via SAML",
+                      "id": "auth-saml",
+                      "file": "nx-cloud/enterprise/on-premise/auth-saml"
+                    },
+                    {
+                      "name": "Authenticate via SAML on Managed Version",
+                      "id": "auth-saml-managed",
+                      "file": "nx-cloud/enterprise/on-premise/auth-saml-managed"
+                    },
+                    {
+                      "name": "Advanced Configuration",
+                      "id": "advanced-config",
+                      "file": "nx-cloud/enterprise/on-premise/advanced-config"
+                    }
+                  ]
                 },
                 {
-                  "name": "Authenticate with GitHub",
-                  "id": "auth-github",
-                  "file": "nx-cloud/private/auth-github"
-                },
-                {
-                  "name": "On-Prem VM Setup",
-                  "id": "ami-setup",
-                  "file": "nx-cloud/private/ami-setup"
-                },
-                {
-                  "name": "Authenticate with GitLab",
-                  "id": "auth-gitlab",
-                  "file": "nx-cloud/private/auth-gitlab"
-                },
-                {
-                  "name": "Authenticate with BitBucket",
-                  "id": "auth-bitbucket",
-                  "file": "nx-cloud/private/auth-bitbucket"
-                },
-                {
-                  "name": "Authenticate via SAML",
-                  "id": "auth-saml",
-                  "file": "nx-cloud/private/auth-saml"
-                },
-                {
-                  "name": "Authenticate via SAML on Managed Version",
-                  "id": "auth-saml-managed",
-                  "file": "nx-cloud/private/auth-saml-managed"
-                },
-                {
-                  "name": "Advanced Configuration",
-                  "id": "advanced-config",
-                  "file": "nx-cloud/private/advanced-config"
+                  "name": "Custom Distributed Task Execution",
+                  "id": "dte",
+                  "description": "Custom DTE on your own CI provider",
+                  "itemList": [
+                    {
+                      "name": "GitHub Actions Custom DTE",
+                      "id": "github-dte",
+                      "file": "nx-cloud/enterprise/dte/github-dte"
+                    },
+                    {
+                      "name": "Circle CI Custom DTE",
+                      "id": "circle-ci-dte",
+                      "file": "nx-cloud/enterprise/dte/circle-ci-dte"
+                    },
+                    {
+                      "name": "Azure Pipelines Custom DTE",
+                      "id": "azure-dte",
+                      "file": "nx-cloud/enterprise/dte/azure-dte"
+                    },
+                    {
+                      "name": "Bitbucket Pipelines Custom DTE",
+                      "id": "bitbucket-dte",
+                      "file": "nx-cloud/enterprise/dte/bitbucket-dte"
+                    },
+                    {
+                      "name": "GitLab Custom DTE",
+                      "id": "gitlab-dte",
+                      "file": "nx-cloud/enterprise/dte/gitlab-dte"
+                    },
+                    {
+                      "name": "Jenkins Custom DTE",
+                      "id": "jenkins-dte",
+                      "file": "nx-cloud/enterprise/dte/jenkins-dte"
+                    }
+                  ]
                 }
               ]
             },
@@ -2190,7 +2254,7 @@
             {
               "id": "overview",
               "path": "/nx-api/vite",
-              "name": "Overview of the Nx Vite Plugin",
+              "name": "Overview",
               "description": "The Nx Plugin for Vite contains executors and generators that support building applications using Vite. This page also explains how to configure Vite on your Nx workspace.",
               "file": "shared/packages/vite/vite-plugin"
             }
@@ -2204,7 +2268,7 @@
             {
               "id": "overview",
               "path": "/nx-api/vue",
-              "name": "Overview of the Nx Vue Plugin",
+              "name": "Overview",
               "description": "The Nx Plugin for Vue contains generators for managing Vue applications and libraries within an Nx workspace. This page also explains how to configure Vue on your Nx workspace.",
               "file": "shared/packages/vue/vue-plugin"
             }
@@ -2218,7 +2282,7 @@
             {
               "id": "overview",
               "path": "/nx-api/nuxt",
-              "name": "Overview of the Nx Nuxt Plugin",
+              "name": "Overview",
               "description": "The Nx Plugin for Nuxt contains generators for managing Nuxt applications within a Nx workspace. This page also explains how to configure Nuxt on your Nx workspace.",
               "file": "shared/packages/nuxt/nuxt-plugin"
             }
@@ -2232,7 +2296,7 @@
             {
               "id": "overview",
               "path": "/nx-api/webpack",
-              "name": "Overview of the Nx Webpack Plugin",
+              "name": "Overview",
               "description": "The Nx Plugin for Webpack contains executors and generators that support building applications using Webpack.",
               "file": "shared/packages/webpack/plugin-overview"
             }
@@ -2316,7 +2380,7 @@
           "itemList": [
             {
               "id": "overview",
-              "name": "Nx Storybook Plugin Overview",
+              "name": "Overview",
               "description": "This is an overview page for the Storybook plugin in Nx. It explains what Storybook is and how to set it up in your Nx workspace.",
               "path": "/nx-api/storybook",
               "file": "shared/packages/storybook/plugin-overview"
@@ -2329,7 +2393,7 @@
             },
             {
               "id": "storybook-7-setup",
-              "name": "Storybook 7 overview",
+              "name": "Storybook 7",
               "description": "This guide explains how you can set up Storybook version 7 in your Nx workspace. It contains information about the generators and the frameworks that are supported.",
               "file": "shared/packages/storybook/storybook-7-setup"
             }

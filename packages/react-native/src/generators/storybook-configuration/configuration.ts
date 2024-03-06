@@ -1,4 +1,4 @@
-import { Tree, logger } from '@nx/devkit';
+import { Tree, logger, readNxJson } from '@nx/devkit';
 import { storybookConfigurationGenerator as reactStorybookConfigurationGenerator } from '@nx/react';
 import { StorybookConfigureSchema } from './schema';
 
@@ -23,7 +23,11 @@ export async function storybookConfigurationGeneratorInternal(
   logger.warn(
     `Please run 'nx run @nx/react:storybook-configuration ${schema.project}' instead.`
   );
-  schema.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
+  const nxJson = readNxJson(host);
+  const addPluginDefault =
+    process.env.NX_ADD_PLUGINS !== 'false' &&
+    nxJson.useInferencePlugins !== false;
+  schema.addPlugin ??= addPluginDefault;
 
   return reactStorybookConfigurationGenerator(host, schema);
 }

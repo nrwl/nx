@@ -4,25 +4,11 @@ In this recipe, we'll show you how to create a [Remix](https://remix.run) applic
 
 ## Create Nx Workspace
 
-```{% command="npx create-nx-workspace acme --preset=apps" path="~/" %}
+```{% command="npx create-nx-workspace@latest acme --preset=apps" path="~/" %}
+
 NX   Let's create a new workspace [https://nx.dev/getting-started/intro]
 
 ✔ Do you want Nx Cloud to make your CI fast? · Yes
-
-NX   Creating your v16.3.2 workspace.
-
-To make sure the command works reliably in all environments, and that the preset is applied correctly,
-Nx will run "npm install" several times. Please wait.
-
-✔ Installing dependencies with npm
-✔ Successfully created the workspace: acme.
-
-——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-
-
-NX   First time using Nx? Check out this interactive Nx tutorial.
-
-https://nx.dev/tutorials/package-based-repo-tutorial
 ```
 
 ## Install Nx Remix Plugin

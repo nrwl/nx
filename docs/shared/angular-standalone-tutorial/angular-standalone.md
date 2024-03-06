@@ -36,6 +36,9 @@ title="Tutorial: Standalone Angular Application"
 Create a new Angular application with the following command:
 
 ```{% command="npx create-nx-workspace@latest myngapp --preset=angular-standalone" path="~" %}
+
+NX   Let's create a new workspace [https://nx.dev/getting-started/intro]
+
 ✔ Which bundler would you like to use? · esbuild
 ✔ Default stylesheet format · css
 ✔ Do you want to enable Server-Side Rendering (SSR) and Static Site Generation (SSG/Prerendering)? · No

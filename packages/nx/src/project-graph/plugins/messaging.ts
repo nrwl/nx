@@ -30,16 +30,12 @@ export interface PluginWorkerLoadResult {
       };
 }
 
-export interface PluginWorkerShutdownMessage {
-  type: 'shutdown';
-  payload: undefined;
-}
-
 export interface PluginWorkerCreateNodesMessage {
   type: 'createNodes';
   payload: {
     configFiles: string[];
     context: CreateNodesContext;
+    tx: string;
   };
 }
 
@@ -49,10 +45,12 @@ export interface PluginWorkerCreateNodesResult {
     | {
         success: true;
         result: Awaited<ReturnType<RemotePlugin['createNodes'][1]>>;
+        tx: string;
       }
     | {
         success: false;
         error: string;
+        tx: string;
       };
 }
 
@@ -60,6 +58,7 @@ export interface PluginCreateDependenciesMessage {
   type: 'createDependencies';
   payload: {
     context: CreateDependenciesContext;
+    tx: string;
   };
 }
 
@@ -69,10 +68,12 @@ export interface PluginCreateDependenciesResult {
     | {
         dependencies: ReturnType<RemotePlugin['createDependencies']>;
         success: true;
+        tx: string;
       }
     | {
         success: false;
         error: string;
+        tx: string;
       };
 }
 
@@ -81,6 +82,7 @@ export interface PluginWorkerProcessProjectGraphMessage {
   payload: {
     graph: ProjectGraph;
     ctx: ProjectGraphProcessorContext;
+    tx: string;
   };
 }
 
@@ -90,16 +92,17 @@ export interface PluginWorkerProcessProjectGraphResult {
     | {
         graph: ProjectGraph;
         success: true;
+        tx: string;
       }
     | {
         success: false;
         error: string;
+        tx: string;
       };
 }
 
 export type PluginWorkerMessage =
   | PluginWorkerLoadMessage
-  | PluginWorkerShutdownMessage
   | PluginWorkerCreateNodesMessage
   | PluginCreateDependenciesMessage
   | PluginWorkerProcessProjectGraphMessage;

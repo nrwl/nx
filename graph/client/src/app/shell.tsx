@@ -6,9 +6,14 @@ import {
 import classNames from 'classnames';
 import { DebuggerPanel } from './ui-components/debugger-panel';
 import { getGraphService } from './machines/graph.service';
-import { Outlet, useNavigate, useParams } from 'react-router-dom';
+import {
+  Outlet,
+  useNavigate,
+  useNavigation,
+  useParams,
+} from 'react-router-dom';
 import { getSystemTheme, Theme, ThemePanel } from '@nx/graph/ui-theme';
-import { Dropdown } from '@nx/graph/ui-components';
+import { Dropdown, Spinner } from '@nx/graph/ui-components';
 import { useCurrentPath } from './hooks/use-current-path';
 import { ExperimentalFeature } from './ui-components/experimental-feature';
 import { RankdirPanel } from './feature-projects/panels/rankdir-panel';
@@ -36,8 +41,9 @@ export function Shell(): JSX.Element {
   }
 
   const navigate = useNavigate();
+  const { state: navigationState } = useNavigation();
   const currentPath = useCurrentPath();
-  const { selectedWorkspaceId, selectedTaskId } = useParams();
+  const { selectedWorkspaceId } = useParams();
   const currentRoute = currentPath.currentPath;
 
   const topLevelRoute = currentRoute.startsWith('/tasks')
@@ -165,17 +171,23 @@ export function Shell(): JSX.Element {
           ></DebuggerPanel>
         ) : null}
 
-        {!nodesVisible ? (
+        {!nodesVisible || navigationState === 'loading' ? (
           <div
             data-cy="no-tasks-selected"
             className="flex h-full w-full items-center justify-center text-slate-700 dark:text-slate-400"
           >
-            <ArrowLeftCircleIcon className="mr-4 h-6 w-6" />
-            <h4>
-              Please select a{' '}
-              {currentRoute.startsWith('/tasks') ? 'task' : 'project'} in the
-              sidebar.
-            </h4>
+            {navigationState === 'loading' ? (
+              <Spinner></Spinner>
+            ) : (
+              <>
+                <ArrowLeftCircleIcon className="mr-4 h-6 w-6" />
+                <h4>
+                  Please select a{' '}
+                  {currentRoute.startsWith('/tasks') ? 'task' : 'project'} in
+                  the sidebar.
+                </h4>
+              </>
+            )}
           </div>
         ) : null}
 

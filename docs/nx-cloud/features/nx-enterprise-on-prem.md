@@ -46,7 +46,7 @@ Once you let us know you'd like this option, depending on the agreed requirement
 
 If you would like to host Nx Cloud yourself, within your organization's infrastructure, the easiest way to set it up is as a self-contained VM.
 
-Refer to our ["Self-contained VM" guide](/ci/recipes/on-premise/ami-setup) for instructions on running Nx Cloud on Amazon EC2.
+Refer to our ["Self-contained VM" guide](/ci/recipes/enterprise/on-premise/ami-setup) for instructions on running Nx Cloud on Amazon EC2.
 
 ### Multi-node setup with Kubernetes
 
@@ -57,4 +57,4 @@ We do offer, however, a multi-node Kubernetes setup, that is deployed via Helm. 
 ## Resources
 
 - [Integration with your source control provider](/ci/recipes/source-control-integration)
-- [On-Prem specific features](/ci/recipes/on-premise/auth-single-admin)
+- [On-Prem specific features](/ci/recipes/enterprise/on-premise/auth-single-admin)

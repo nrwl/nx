@@ -58,6 +58,7 @@ function setPresetProperty(tree: Tree, options: NormalizedSchema) {
     return json;
   });
 }
+
 function createNxJson(
   tree: Tree,
   { directory, defaultBase, preset }: NormalizedSchema
@@ -90,6 +91,7 @@ function createNxJson(
     };
     if (process.env.NX_ADD_PLUGINS === 'false') {
       nxJson.targetDefaults.build.inputs = ['production', '^production'];
+      nxJson.useInferencePlugins = false;
     }
   }
 
@@ -163,13 +165,23 @@ function addNpmScripts(tree: Tree, options: NormalizedSchema) {
     options.preset === Preset.ReactStandalone ||
     options.preset === Preset.VueStandalone ||
     options.preset === Preset.NuxtStandalone ||
-    options.preset === Preset.NodeStandalone ||
-    options.preset === Preset.NextJsStandalone
+    options.preset === Preset.NodeStandalone
   ) {
     updateJson(tree, join(options.directory, 'package.json'), (json) => {
       Object.assign(json.scripts, {
         start: 'nx serve',
         build: 'nx build',
+        test: 'nx test',
+      });
+      return json;
+    });
+  }
+  if (options.preset === Preset.NextJsStandalone) {
+    updateJson(tree, join(options.directory, 'package.json'), (json) => {
+      Object.assign(json.scripts, {
+        dev: 'nx dev',
+        build: 'nx build',
+        start: 'nx start',
         test: 'nx test',
       });
       return json;

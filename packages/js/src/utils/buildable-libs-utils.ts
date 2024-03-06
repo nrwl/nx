@@ -258,7 +258,7 @@ export function calculateDependenciesFromTaskGraph(
     const depTask = taskGraph.tasks[taskName];
     const depProjectNode = projectGraph.nodes?.[depTask.target.project];
     if (depProjectNode?.type !== 'lib') {
-      return null;
+      continue;
     }
 
     let outputs = getOutputsForTargetAndConfiguration(

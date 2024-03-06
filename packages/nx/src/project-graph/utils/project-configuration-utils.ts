@@ -7,15 +7,19 @@ import {
 import { NX_PREFIX } from '../../utils/logger';
 import { readJsonFile } from '../../utils/fileutils';
 import { workspaceRoot } from '../../utils/workspace-root';
-import { ONLY_MODIFIES_EXISTING_TARGET } from '../../plugins/target-defaults/target-defaults-plugin';
+import {
+  ONLY_MODIFIES_EXISTING_TARGET,
+  OVERRIDE_SOURCE_FILE,
+} from '../../plugins/target-defaults/target-defaults-plugin';
 
 import { minimatch } from 'minimatch';
 import { join } from 'path';
-import { CreateNodesResult } from '../plugins';
+import { CreateNodesError } from '../plugins/utils';
 import {
   CreateNodesResultWithContext,
   RemotePlugin,
 } from '../plugins/internal-api';
+import { shutdownPluginWorkers } from '../plugins/plugin-pool';
 
 export type SourceInformation = [file: string, plugin: string];
 export type ConfigurationSourceMaps = Record<
@@ -217,27 +221,22 @@ export function buildProjectsConfigurationsFromProjectPathsAndPlugins(
     const matchedFiles = [];
 
     performance.mark(`${plugin.name}:createNodes - start`);
-    // Set this globally to allow plugins to know if they are being called from the project graph creation
-    global.NX_GRAPH_CREATION = true;
 
     for (const file of projectFiles) {
       if (minimatch(file, pattern, { dot: true })) {
         matchedFiles.push(file);
       }
     }
-    try {
-      let r = createNodes(matchedFiles, {
-        nxJsonConfiguration: nxJson,
-        workspaceRoot: root,
-      });
+    let r = createNodes(matchedFiles, {
+      nxJsonConfiguration: nxJson,
+      workspaceRoot: root,
+    }).catch((e) =>
+      shutdownPluginWorkers().then(() => {
+        throw e;
+      })
+    );
 
-      results.push(r);
-    } catch (e) {
-      throw new CreateNodesError(
-        `Unable to create nodes using plugin ${plugin.name}.`,
-        e
-      );
-    }
+    results.push(r);
   }
 
   return Promise.all(results).then((results) => {
@@ -256,6 +255,13 @@ export function buildProjectsConfigurationsFromProjectPathsAndPlugins(
         file,
         pluginName,
       } = result;
+
+      const sourceInfo: SourceInformation = [file, pluginName];
+
+      if (result[OVERRIDE_SOURCE_FILE]) {
+        sourceInfo[0] = result[OVERRIDE_SOURCE_FILE];
+      }
+
       for (const node in projectNodes) {
         const project = {
           root: node,
@@ -266,7 +272,7 @@ export function buildProjectsConfigurationsFromProjectPathsAndPlugins(
             projectRootMap,
             project,
             configurationSourceMaps,
-            [file, pluginName]
+            sourceInfo
           );
         } catch (e) {
           throw new CreateNodesError(
@@ -307,6 +313,9 @@ export function readProjectConfigurationsFromRootMap(
   const errors: Map<string, string[]> = new Map();
 
   for (const [root, configuration] of projectRootMap.entries()) {
+    // We're setting `// targets` as a comment `targets` is empty due to Project Crystal.
+    // Strip it before returning configuration for usage.
+    if (configuration['// targets']) delete configuration['// targets'];
     if (!configuration.name) {
       try {
         const { name } = readJsonFile(join(root, 'package.json'));
@@ -339,23 +348,6 @@ export function readProjectConfigurationsFromRootMap(
     );
   }
   return projects;
-}
-
-class CreateNodesError extends Error {
-  constructor(msg, cause: Error | unknown) {
-    const message = `${msg} ${
-      !cause
-        ? ''
-        : cause instanceof Error
-        ? `\n\n\t Inner Error: ${cause.stack}`
-        : cause
-    }`;
-    // These errors are thrown during a JS callback which is invoked via rust.
-    // The errors messaging gets lost in the rust -> js -> rust transition, but
-    // logging the error here will ensure that it is visible in the console.
-    console.error(message);
-    super(message, { cause });
-  }
 }
 
 /**

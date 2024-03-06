@@ -170,9 +170,9 @@ It’s also worth noting that the backend of Nx Cloud is written in Kotlin. This
 
 Nx was released in 2016. Turborepo was open sourced in December of 2021. Turborepo doesn't have a large community yet, but it probably will at some point.
 
-- There are about [3 million downloads per week](https://www.npmjs.com/package/@nx/tao).
+- There are about [4 million downloads per week](https://www.npmjs.com/package/nx).
 - There are about 1 million+ unique [Nx Console](https://marketplace.visualstudio.com/items?itemName=nrwl.angular-console) (a plugin for VSCode) installations.
-- There is a rich ecosystem of [third-party plugins.](https://nx.dev/community)
+- There is a rich ecosystem of [third-party plugins](https://nx.dev/plugin-registry).
 
 From day 1 Nx has always been an **MIT-licensed open source project**, and we did everything to make sure companies using Nx won’t end up in the vendor lock-in. We clearly separated Nx the open source project and Nx Cloud the SAAS product. For instance, Nx Cloud is built using the public APIs Nx provides (you can build your own and some companies do). Nx Cloud docs are on a separate domain etc.
 

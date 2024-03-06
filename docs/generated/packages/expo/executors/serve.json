@@ -14,7 +14,7 @@
       "port": {
         "type": "number",
         "description": "Port to start the native Metro bundler on (does not apply to web or tunnel)",
-        "default": 19000,
+        "default": 4200,
         "alias": "p"
       },
       "clear": {

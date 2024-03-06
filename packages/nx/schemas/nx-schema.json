@@ -101,6 +101,10 @@
       "type": "boolean",
       "description": "Specifies whether the daemon should be used for the default tasks runner."
     },
+    "useInferencePlugins": {
+      "type": "boolean",
+      "description": "Specifies whether to add inference plugins when generating new projects."
+    },
     "release": {
       "type": "object",
       "description": "Configuration for the nx release commands.",
@@ -153,10 +157,15 @@
                     "$ref": "#/definitions/NxReleaseVersionConfiguration"
                   },
                   {
-                    "anyOf": [
+                    "allOf": [
                       {
                         "not": {
                           "required": ["git"]
+                        }
+                      },
+                      {
+                        "not": {
+                          "required": ["preVersionCommand"]
                         }
                       }
                     ]
@@ -572,6 +581,10 @@
         },
         "git": {
           "$ref": "#/definitions/NxReleaseGitConfiguration"
+        },
+        "preVersionCommand": {
+          "type": "string",
+          "description": "A command to run after validation of nx release configuration, but before versioning begins. Used for preparing build artifacts. If --dry-run is passed, the command is still executed, but with the NX_DRY_RUN environment variable set to 'true'."
         }
       }
     },
