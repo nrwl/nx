@@ -23,8 +23,12 @@ import { setupWorkspaceContext } from '../src/utils/workspace-context';
       const tasks: Array<Promise<any>> = [
         buildProjectGraphAndSourceMapsWithoutDaemon(),
       ];
-      if (isNxCloudUsed(readNxJson())) {
-        tasks.push(verifyOrUpdateNxCloudClient(getCloudOptions()));
+
+      const [isCloudUsed, cloudConfigurationName] = isNxCloudUsed(readNxJson());
+      if (isCloudUsed) {
+        tasks.push(
+          verifyOrUpdateNxCloudClient(getCloudOptions(cloudConfigurationName))
+        );
       }
       await Promise.all(
         tasks.map((promise) => {

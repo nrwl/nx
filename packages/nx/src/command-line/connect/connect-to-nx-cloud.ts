@@ -48,7 +48,8 @@ export async function connectToNxCloudIfExplicitlyAsked(
 
 export async function connectToNxCloudCommand(): Promise<boolean> {
   const nxJson = readNxJson();
-  if (isNxCloudUsed(nxJson)) {
+  const [isCloudUsed, _] = isNxCloudUsed(nxJson);
+  if (isCloudUsed) {
     output.log({
       title: '✔ This workspace already has Nx Cloud set up',
       bodyLines: [

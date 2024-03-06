@@ -1216,11 +1216,12 @@ async function generateMigrationsJsonAndUpdatePackageJson(
       readNxVersion(originalPackageJson);
 
     try {
+      const [isCloudUsed, _] = isNxCloudUsed(originalNxJson);
       if (
         ['nx', '@nrwl/workspace'].includes(opts.targetPackage) &&
         (await isMigratingToNewMajor(from, opts.targetVersion)) &&
         !isCI() &&
-        !isNxCloudUsed(originalNxJson)
+        !isCloudUsed
       ) {
         await connectToNxCloudWithPrompt('migrate');
         originalPackageJson = readJsonFile<PackageJson>(

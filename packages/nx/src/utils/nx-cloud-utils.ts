@@ -1,13 +1,27 @@
 import { NxJsonConfiguration, readNxJson } from '../config/nx-json';
 
-export function isNxCloudUsed(nxJson: NxJsonConfiguration) {
-  return (
+// Returns tuple [isCloudUsed, cloudConfigurationName]
+export function isNxCloudUsed(nxJson: NxJsonConfiguration): [boolean, string] {
+  let isCloudUsed = false;
+  let cloudConfigurationName: string | undefined = Object.keys(
+    nxJson.tasksRunnerOptions ?? {}
+  ).find((configurationName) => {
+    const configuredRunner =
+      nxJson.tasksRunnerOptions[configurationName].runner;
+    return (
+      configuredRunner == '@nrwl/nx-cloud' || configuredRunner == 'nx-cloud'
+    );
+  });
+
+  if (
     process.env.NX_CLOUD_ACCESS_TOKEN ||
     !!nxJson.nxCloudAccessToken ||
-    !!Object.values(nxJson.tasksRunnerOptions ?? {}).find(
-      (r) => r.runner == '@nrwl/nx-cloud' || r.runner == 'nx-cloud'
-    )
-  );
+    !!cloudConfigurationName
+  ) {
+    isCloudUsed = true;
+  }
+
+  return [isCloudUsed, cloudConfigurationName ?? 'default'];
 }
 
 export function getNxCloudUrl(nxJson: NxJsonConfiguration): string {

@@ -93,7 +93,7 @@ export default async function migrate(tree: Tree) {
 }
 
 async function isNxCloudClientSupported(nxJson: NxJsonConfiguration) {
-  const nxCloudOptions = getRunnerOptions('default', nxJson, {}, true);
+  const nxCloudOptions = getRunnerOptions('default', nxJson, {});
 
   // Non enterprise workspaces support the Nx Cloud Client
   if (!isNxCloudEnterpriseWorkspace(nxJson)) {
