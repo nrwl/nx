@@ -235,30 +235,96 @@ describe('updatePackageScripts', () => {
     );
   });
 
-  it('should exclude all package.json scripts when none are excluded', async () => {
-    tree.write('next.config.js', '');
+  it('should set "includedScripts" to an empty array when running "nx init"', async () => {
+    const originalEnvVarValue = process.env.NX_RUNNING_NX_INIT;
+    process.env.NX_RUNNING_NX_INIT = 'true';
+
+    tree.write('vite.config.ts', '');
     writeJson(tree, 'package.json', {
       name: 'app1',
       scripts: {
-        build: 'next build',
+        build: 'vite build',
+        serve: 'vite',
+        test: 'vitest',
+        coverage: 'vitest run --coverage',
+        foo: 'echo "foo"',
       },
     });
 
     await updatePackageScripts(tree, [
-      '**/next.config.{js,cjs,mjs}',
+      '**/{vite,vitest}.config.{js,ts,mjs,mts,cjs,cts}',
       () => ({
         projects: {
           app1: {
             targets: {
-              build: { command: 'next build' },
+              build: { command: 'vite build' },
+              serve: { command: 'vite serve' },
+              test: { command: 'vitest run' },
             },
           },
         },
       }),
     ]);
 
-    const { nx } = readJson<PackageJson>(tree, 'package.json');
-    expect(nx).toStrictEqual({ includedScripts: [] });
+    const packageJson = readJson<PackageJson>(tree, 'package.json');
+    expect(packageJson.scripts).toStrictEqual({
+      build: 'nx build',
+      serve: 'vite',
+      test: 'vitest',
+      coverage: 'nx test --coverage',
+      foo: 'echo "foo"',
+    });
+    expect(packageJson.nx.includedScripts).toStrictEqual([]);
+
+    process.env.NX_RUNNING_NX_INIT = originalEnvVarValue;
+  });
+
+  it('should set "includedScripts" to all scripts except the ones matching inferred target names when "includedScripts" is not set', async () => {
+    tree.write('vite.config.ts', '');
+    writeJson(tree, 'package.json', {
+      name: 'app1',
+      scripts: {
+        build: 'vite build',
+        serve: 'vite',
+        test: 'vitest',
+        coverage: 'vitest run --coverage',
+        foo: 'echo "foo"',
+      },
+    });
+
+    await updatePackageScripts(tree, [
+      '**/{vite,vitest}.config.{js,ts,mjs,mts,cjs,cts}',
+      () => ({
+        projects: {
+          app1: {
+            targets: {
+              build: { command: 'vite build' },
+              serve: { command: 'vite serve' },
+              test: { command: 'vitest run' },
+            },
+          },
+        },
+      }),
+    ]);
+
+    const packageJson = readJson<PackageJson>(tree, 'package.json');
+    expect(packageJson.scripts).toStrictEqual({
+      build: 'nx build',
+      serve: 'vite',
+      test: 'vitest',
+      coverage: 'nx test --coverage',
+      foo: 'echo "foo"',
+    });
+    // "build": excluded because a script (itself) was replaced with a target "build"
+    // "serve" not excluded even though it matches the name of an inferred target because no script was replaced with a target "serve"
+    // "test" excluded even though it was not replaced because another script was replaced with a target "test"
+    // "coverage" not excluded even though it was replaced because it does not match a target
+    // "foo" not excluded because it does not match a target
+    expect(packageJson.nx.includedScripts).toStrictEqual([
+      'serve',
+      'coverage',
+      'foo',
+    ]);
   });
 
   it('should exclude replaced package.json scripts from nx if they are initially included', async () => {
@@ -288,6 +354,6 @@ describe('updatePackageScripts', () => {
     ]);
 
     const { nx } = readJson<PackageJson>(tree, 'package.json');
-    expect(nx).toStrictEqual({ includedScripts: ['foo'] });
+    expect(nx.includedScripts).toStrictEqual(['foo']);
   });
 });
