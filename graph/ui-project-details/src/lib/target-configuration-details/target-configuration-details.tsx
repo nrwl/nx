@@ -281,7 +281,7 @@ export const TargetConfigurationDetails = forwardRef(
                   </Tooltip>
                 )}
               </h4>
-              <p className="pl-5">
+              <p className="pl-5 font-mono">
                 {executorLink ? (
                   <span>
                     <ExternalLink
