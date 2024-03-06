@@ -190,6 +190,16 @@ describe('Run Commands', () => {
       ).toEqual('echo --additional-arg');
     });
 
+    it('should add forward unknown options when forwardAllArgs is true', () => {
+      expect(
+        interpolateArgsIntoCommand(
+          'echo',
+          { unknownOptions: { hello: 123 }, parsedArgs: { hello: 123 } } as any,
+          true
+        )
+      ).toEqual('echo --hello 123');
+    });
+
     it('should add all args and unparsed args when forwardAllArgs is true', () => {
       expect(
         interpolateArgsIntoCommand(
