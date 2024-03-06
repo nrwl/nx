@@ -878,6 +878,101 @@ describe('createNxReleaseConfig()', () => {
                 "renderer": "nx/release/changelog-renderer",
               },
             },
+            "conventionalCommits": {
+              "types": {
+                "build": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "📦 Build",
+                  },
+                  "semverBump": "none",
+                },
+                "chore": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🏡 Chore",
+                  },
+                  "semverBump": "none",
+                },
+                "ci": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🤖 CI",
+                  },
+                  "semverBump": "none",
+                },
+                "docs": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "📖 Documentation",
+                  },
+                  "semverBump": "none",
+                },
+                "examples": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🏀 Examples",
+                  },
+                  "semverBump": "none",
+                },
+                "feat": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🚀 Features",
+                  },
+                  "semverBump": "minor",
+                },
+                "fix": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🩹 Fixes",
+                  },
+                  "semverBump": "patch",
+                },
+                "perf": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🔥 Performance",
+                  },
+                  "semverBump": "none",
+                },
+                "refactor": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "💅 Refactors",
+                  },
+                  "semverBump": "none",
+                },
+                "revert": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "⏪ Revert",
+                  },
+                  "semverBump": "none",
+                },
+                "style": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🎨 Styles",
+                  },
+                  "semverBump": "none",
+                },
+                "test": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "✅ Tests",
+                  },
+                  "semverBump": "none",
+                },
+                "types": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🌊 Types",
+                  },
+                  "semverBump": "none",
+                },
+              },
+            },
             "git": {
               "commit": false,
               "commitArgs": "",
@@ -982,6 +1077,101 @@ describe('createNxReleaseConfig()', () => {
                 "renderer": "nx/release/changelog-renderer",
               },
             },
+            "conventionalCommits": {
+              "types": {
+                "build": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "📦 Build",
+                  },
+                  "semverBump": "none",
+                },
+                "chore": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🏡 Chore",
+                  },
+                  "semverBump": "none",
+                },
+                "ci": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🤖 CI",
+                  },
+                  "semverBump": "none",
+                },
+                "docs": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "📖 Documentation",
+                  },
+                  "semverBump": "none",
+                },
+                "examples": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🏀 Examples",
+                  },
+                  "semverBump": "none",
+                },
+                "feat": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🚀 Features",
+                  },
+                  "semverBump": "minor",
+                },
+                "fix": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🩹 Fixes",
+                  },
+                  "semverBump": "patch",
+                },
+                "perf": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🔥 Performance",
+                  },
+                  "semverBump": "none",
+                },
+                "refactor": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "💅 Refactors",
+                  },
+                  "semverBump": "none",
+                },
+                "revert": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "⏪ Revert",
+                  },
+                  "semverBump": "none",
+                },
+                "style": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🎨 Styles",
+                  },
+                  "semverBump": "none",
+                },
+                "test": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "✅ Tests",
+                  },
+                  "semverBump": "none",
+                },
+                "types": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🌊 Types",
+                  },
+                  "semverBump": "none",
+                },
+              },
+            },
             "git": {
               "commit": false,
               "commitArgs": "",
@@ -1082,6 +1272,101 @@ describe('createNxReleaseConfig()', () => {
                   "versionTitleDate": true,
                 },
                 "renderer": "nx/release/changelog-renderer",
+              },
+            },
+            "conventionalCommits": {
+              "types": {
+                "build": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "📦 Build",
+                  },
+                  "semverBump": "none",
+                },
+                "chore": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🏡 Chore",
+                  },
+                  "semverBump": "none",
+                },
+                "ci": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🤖 CI",
+                  },
+                  "semverBump": "none",
+                },
+                "docs": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "📖 Documentation",
+                  },
+                  "semverBump": "none",
+                },
+                "examples": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🏀 Examples",
+                  },
+                  "semverBump": "none",
+                },
+                "feat": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🚀 Features",
+                  },
+                  "semverBump": "minor",
+                },
+                "fix": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🩹 Fixes",
+                  },
+                  "semverBump": "patch",
+                },
+                "perf": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🔥 Performance",
+                  },
+                  "semverBump": "none",
+                },
+                "refactor": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "💅 Refactors",
+                  },
+                  "semverBump": "none",
+                },
+                "revert": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "⏪ Revert",
+                  },
+                  "semverBump": "none",
+                },
+                "style": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🎨 Styles",
+                  },
+                  "semverBump": "none",
+                },
+                "test": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "✅ Tests",
+                  },
+                  "semverBump": "none",
+                },
+                "types": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🌊 Types",
+                  },
+                  "semverBump": "none",
+                },
               },
             },
             "git": {
@@ -2838,6 +3123,101 @@ describe('createNxReleaseConfig()', () => {
                 "renderer": "nx/release/changelog-renderer",
               },
             },
+            "conventionalCommits": {
+              "types": {
+                "build": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "📦 Build",
+                  },
+                  "semverBump": "none",
+                },
+                "chore": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🏡 Chore",
+                  },
+                  "semverBump": "none",
+                },
+                "ci": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🤖 CI",
+                  },
+                  "semverBump": "none",
+                },
+                "docs": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "📖 Documentation",
+                  },
+                  "semverBump": "none",
+                },
+                "examples": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🏀 Examples",
+                  },
+                  "semverBump": "none",
+                },
+                "feat": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🚀 Features",
+                  },
+                  "semverBump": "minor",
+                },
+                "fix": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🩹 Fixes",
+                  },
+                  "semverBump": "patch",
+                },
+                "perf": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🔥 Performance",
+                  },
+                  "semverBump": "none",
+                },
+                "refactor": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "💅 Refactors",
+                  },
+                  "semverBump": "none",
+                },
+                "revert": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "⏪ Revert",
+                  },
+                  "semverBump": "none",
+                },
+                "style": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🎨 Styles",
+                  },
+                  "semverBump": "none",
+                },
+                "test": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "✅ Tests",
+                  },
+                  "semverBump": "none",
+                },
+                "types": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🌊 Types",
+                  },
+                  "semverBump": "none",
+                },
+              },
+            },
             "git": {
               "commit": false,
               "commitArgs": "",
@@ -4203,6 +4583,7 @@ describe('createNxReleaseConfig()', () => {
                 "tagArgs": "",
                 "tagMessage": "",
               },
+              "preVersionCommand": "",
             },
           },
         }
@@ -4212,7 +4593,7 @@ describe('createNxReleaseConfig()', () => {
 
   describe('user config -> top level conventional commits configuration', () => {
     it('should use defaults when config is empty', async () => {
-      const res1 = await createNxReleaseConfig(projectGraph, {
+      const res1 = await createNxReleaseConfig(projectGraph, projectFileMap, {
         conventionalCommits: {},
       });
 
@@ -4380,12 +4761,13 @@ describe('createNxReleaseConfig()', () => {
                 "tagArgs": "",
                 "tagMessage": "",
               },
+              "preVersionCommand": "",
             },
           },
         }
       `);
 
-      const res2 = await createNxReleaseConfig(projectGraph, {
+      const res2 = await createNxReleaseConfig(projectGraph, projectFileMap, {
         conventionalCommits: {
           types: {},
         },
@@ -4555,6 +4937,7 @@ describe('createNxReleaseConfig()', () => {
                 "tagArgs": "",
                 "tagMessage": "",
               },
+              "preVersionCommand": "",
             },
           },
         }
@@ -4562,7 +4945,7 @@ describe('createNxReleaseConfig()', () => {
     });
 
     it('should merge defaults with overrides and new commit types', async () => {
-      const res = await createNxReleaseConfig(projectGraph, {
+      const res = await createNxReleaseConfig(projectGraph, projectFileMap, {
         conventionalCommits: {
           types: {
             feat: {
@@ -4766,6 +5149,7 @@ describe('createNxReleaseConfig()', () => {
                 "tagArgs": "",
                 "tagMessage": "",
               },
+              "preVersionCommand": "",
             },
           },
         }
@@ -4773,7 +5157,7 @@ describe('createNxReleaseConfig()', () => {
     });
 
     it('should parse shorthand for disabling a commit type', async () => {
-      const res = await createNxReleaseConfig(projectGraph, {
+      const res = await createNxReleaseConfig(projectGraph, projectFileMap, {
         conventionalCommits: {
           types: {
             feat: false,
@@ -4953,6 +5337,7 @@ describe('createNxReleaseConfig()', () => {
                 "tagArgs": "",
                 "tagMessage": "",
               },
+              "preVersionCommand": "",
             },
           },
         }
@@ -4960,7 +5345,7 @@ describe('createNxReleaseConfig()', () => {
     });
 
     it('should parse shorthand for disabling changelog appearance for a commit type', async () => {
-      const res = await createNxReleaseConfig(projectGraph, {
+      const res = await createNxReleaseConfig(projectGraph, projectFileMap, {
         conventionalCommits: {
           types: {
             fix: {
