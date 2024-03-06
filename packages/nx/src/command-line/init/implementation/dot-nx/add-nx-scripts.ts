@@ -92,14 +92,44 @@ export function getNxWrapperContents() {
 // Remove any empty comments or comments that start with `//#: ` or eslint-disable comments.
 // This removes the sourceMapUrl since it is invalid, as well as any internal comments.
 export function sanitizeWrapperScript(input: string) {
-  const linesToRemove = [
+  const removals = [
     // Comments that start with //#
-    '\\/\\/# .*',
+    '\\s+\\/\\/# .*',
     // Comments that are empty (often used for newlines between internal comments)
-    '\\s*\\/\\/\\s*',
+    '\\s+\\/\\/\\s*$',
     // Comments that disable an eslint rule.
-    '\\/\\/ eslint-disable-next-line.*',
+    '(^|\\s?)\\/\\/ ?eslint-disable.*$',
   ];
-  const regex = `(${linesToRemove.join('|')})$`;
-  return input.replace(new RegExp(regex, 'gm'), '');
+
+  const replacements = [
+    ...removals.map((r) => [r, '']),
+    // Remove the sourceMapUrl comment
+    ['^\\/\\/# sourceMappingURL.*$', ''],
+    // Keep empty comments if ! is present
+    ['^\\/\\/!$', '//'],
+  ];
+
+  const replaced = replacements.reduce(
+    (result, [pattern, replacement]) =>
+      result.replace(new RegExp(pattern, 'gm'), replacement),
+    input
+  );
+
+  // Reduce multiple newlines to a single newline
+  const lines = replaced.split('\n');
+  const sanitized = lines
+    .reduce((result, line, idx) => {
+      const trimmed = line.trim();
+      const prevTrimmed = lines[idx - 1]?.trim();
+
+      // current line or previous line has non-whitespace
+      if (trimmed.length || prevTrimmed?.length) {
+        result.push(line);
+      }
+
+      return result;
+    }, [] as string[])
+    .join('\n');
+
+  return sanitized;
 }

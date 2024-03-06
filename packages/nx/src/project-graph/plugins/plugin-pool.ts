@@ -8,6 +8,7 @@ import { PluginConfiguration } from '../../config/nx-json';
 
 import { RemotePlugin, nxPluginCache } from './internal-api';
 import { PluginWorkerResult, consumeMessage, createMessage } from './messaging';
+import { isRuntimePlugin } from './utils';
 
 const pool: Set<ChildProcess> = new Set();
 
@@ -82,6 +83,8 @@ export async function shutdownPluginWorkers() {
 
   for (const p of pool) {
     p.kill('SIGINT');
+    pool.delete(p);
+    pidMap.delete(p.pid);
   }
 
   // logger.verbose(`[plugin-pool] all workers killed`);
@@ -111,11 +114,16 @@ function createWorkerHandler(
     consumeMessage<PluginWorkerResult>(parsed, {
       'load-result': (result) => {
         if (result.success) {
-          const { name, createNodesPattern } = result;
+          const {
+            name,
+            createNodesPattern,
+            hasCreateDependencies,
+            hasProcessProjectGraph,
+          } = result;
           pluginName = name;
           const pending = new Set<string>();
           pidMap.set(worker.pid, { name, pending });
-          onload({
+          const remotePlugin: RemotePlugin = {
             name,
             createNodes: createNodesPattern
               ? [
@@ -133,7 +141,7 @@ function createWorkerHandler(
                   },
                 ]
               : undefined,
-            createDependencies: result.hasCreateDependencies
+            createDependencies: hasCreateDependencies
               ? (opts, ctx) => {
                   const tx =
                     pluginName + ':createDependencies:' + performance.now();
@@ -147,7 +155,7 @@ function createWorkerHandler(
                   });
                 }
               : undefined,
-            processProjectGraph: result.hasProcessProjectGraph
+            processProjectGraph: hasProcessProjectGraph
               ? (graph, ctx) => {
                   const tx =
                     pluginName + ':processProjectGraph:' + performance.now();
@@ -161,7 +169,8 @@ function createWorkerHandler(
                   });
                 }
               : undefined,
-          });
+          };
+          onload(remotePlugin);
         } else if (result.success === false) {
           onloadError(result.error);
         }
@@ -201,8 +210,11 @@ function createWorkerHandler(
 }
 
 function createWorkerExitHandler(worker: ChildProcess) {
-  return () => {
-    if (!pluginWorkersShutdown) {
+  return (code: number) => {
+    // If a worker exits with code zero, its expected so we don't need to do anything.
+    pool.delete(worker);
+
+    if (code !== 0 && !pluginWorkersShutdown) {
       pidMap.get(worker.pid)?.pending.forEach((tx) => {
         const { rejecter } = promiseBank.get(tx);
         rejecter(
@@ -214,6 +226,8 @@ function createWorkerExitHandler(worker: ChildProcess) {
         );
       });
       shutdownPluginWorkers();
+    } else {
+      pidMap.delete(worker.pid);
     }
   };
 }

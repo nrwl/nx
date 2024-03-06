@@ -64,6 +64,10 @@ import {
   createProjectGraphAsync,
   readProjectsConfigurationFromProjectGraph,
 } from '../../project-graph/project-graph';
+import {
+  readDependenciesFromNxJson,
+  updateDependenciesInNxJson,
+} from '../../utils/nx-installation';
 
 export interface ResolvedMigrationConfiguration extends MigrationsJson {
   packageGroup?: ArrayPackageGroup;
@@ -115,7 +119,7 @@ function normalizeSlashes(packageName: string): string {
 
 export interface MigratorOptions {
   packageJson?: PackageJson;
-  nxInstallation?: NxJsonConfiguration['installation'];
+  nxJson?: NxJsonConfiguration;
   getInstalledPackageVersion: (
     pkg: string,
     overrides?: Record<string, string>
@@ -141,12 +145,12 @@ export class Migrator {
   private readonly packageUpdates: Record<string, PackageUpdate> = {};
   private readonly collectedVersions: Record<string, string> = {};
   private readonly promptAnswers: Record<string, boolean> = {};
-  private readonly nxInstallation: NxJsonConfiguration['installation'] | null;
+  private readonly nxJson: NxJsonConfiguration | null;
   private minVersionWithSkippedUpdates: string | undefined;
 
   constructor(opts: MigratorOptions) {
     this.packageJson = opts.packageJson;
-    this.nxInstallation = opts.nxInstallation;
+    this.nxJson = opts.nxJson;
     this.getInstalledPackageVersion = opts.getInstalledPackageVersion;
     this.fetch = opts.fetch;
     this.installedPkgVersionOverrides = opts.from;
@@ -423,10 +427,9 @@ export class Migrator {
       }
 
       const dependencies: Record<string, string> = {
-        ...this.packageJson?.dependencies,
         ...this.packageJson?.devDependencies,
-        ...this.nxInstallation?.plugins,
-        ...(this.nxInstallation && { nx: this.nxInstallation.version }),
+        ...this.packageJson?.dependencies,
+        ...readDependenciesFromNxJson(this.nxJson),
       };
 
       const filtered: Record<string, PackageUpdate> = {};
@@ -1152,25 +1155,11 @@ async function updateInstallationDetails(
   const parseOptions: JsonReadOptions = {};
   const nxJson = readJsonFile<NxJsonConfiguration>(nxJsonPath, parseOptions);
 
-  if (!nxJson.installation) {
+  if (!nxJson?.installation) {
     return;
   }
 
-  const nxVersion = updatedPackages.nx?.version;
-  if (nxVersion) {
-    nxJson.installation.version = nxVersion;
-  }
-
-  if (nxJson.installation.plugins) {
-    for (const dep in nxJson.installation.plugins) {
-      const update = updatedPackages[dep];
-      if (update) {
-        nxJson.installation.plugins[dep] = valid(update.version)
-          ? update.version
-          : await resolvePackageVersionUsingRegistry(dep, update.version);
-      }
-    }
-  }
+  await updateDependenciesInNxJson(nxJson, updatedPackages);
 
   writeJsonFile(nxJsonPath, nxJson, {
     appendNewLine: parseOptions.endsWithNewline,
@@ -1237,7 +1226,7 @@ async function generateMigrationsJsonAndUpdatePackageJson(
 
     const migrator = new Migrator({
       packageJson: originalPackageJson,
-      nxInstallation: originalNxJson.installation,
+      nxJson: originalNxJson,
       getInstalledPackageVersion: createInstalledPackageVersionsResolver(root),
       fetch: createFetcher(),
       from: opts.from,

@@ -405,9 +405,28 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
   useInferencePlugins?: boolean;
 }
 
-export type PluginConfiguration =
-  | string
-  | { plugin: string; options?: unknown };
+export type PluginConfiguration = string | PluginObjectConfiguration;
+
+/**
+ * Used to configure a plugin with options and installation version
+ */
+export interface PluginObjectConfiguration {
+  /**
+   *  Plugin name (e.g. '@nx/react')
+   */
+  plugin: string;
+
+  /**
+   * Options passed into the plugin's CreateNodes and CreateDependencies functions
+   */
+
+  options?: unknown;
+
+  /**
+   * Version used to install the plugin when running via the nx wrapper. See https://nx.dev/recipes/installation/install-non-javascript
+   */
+  version?: string;
+}
 
 export function readNxJson(root: string = workspaceRoot): NxJsonConfiguration {
   const nxJson = join(root, 'nx.json');

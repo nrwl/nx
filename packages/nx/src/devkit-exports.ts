@@ -74,6 +74,7 @@ export type {
   ImplicitJsonSubsetDependency,
   NxJsonConfiguration,
   PluginConfiguration,
+  PluginObjectConfiguration,
   TargetDefaults,
   NxAffectedConfig,
 } from './config/nx-json';
