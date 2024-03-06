@@ -7,10 +7,10 @@ import {
 } from '@nx/devkit';
 import { initGenerator } from '@nx/js';
 import {
+  lessLoaderVersion,
   rspackCoreVersion,
   rspackDevServerVersion,
   rspackPluginMinifyVersion,
-  lessLoaderVersion,
   rspackPluginReactRefreshVersion,
 } from '../../utils/versions';
 import { InitGeneratorSchema } from './schema';
@@ -49,7 +49,13 @@ export async function rspackInitGenerator(
     devDependencies['@rspack/dev-server'] = rspackDevServerVersion;
   }
 
-  const installTask = addDependenciesToPackageJson(tree, {}, devDependencies);
+  const installTask = addDependenciesToPackageJson(
+    tree,
+    {},
+    devDependencies,
+    undefined,
+    schema.keepExistingVersions
+  );
   tasks.push(installTask);
 
   return runTasksInSerial(...tasks);

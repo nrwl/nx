@@ -1,7 +1,6 @@
 import { Configuration } from '@rspack/core';
 import { SharedConfigContext } from './model';
 import { withWeb } from './with-web';
-import ReactRefreshPlugin from "@rspack/plugin-react-refresh";
 
 export function withReact(opts = {}) {
   return function makeConfig(
@@ -15,6 +14,9 @@ export function withReact(opts = {}) {
       options,
       context,
     });
+
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const ReactRefreshPlugin = require('@rspack/plugin-react-refresh');
 
     const react = {
       runtime: 'automatic',

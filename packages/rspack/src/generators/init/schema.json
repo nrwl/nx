@@ -18,6 +18,12 @@
     "rootProject": {
       "type": "boolean",
       "x-priority": "internal"
+    },
+    "keepExistingVersions": {
+      "type": "boolean",
+      "x-priority": "internal",
+      "description": "Keep existing dependencies versions",
+      "default": false
     }
   },
   "required": []

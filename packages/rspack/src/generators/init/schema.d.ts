@@ -5,4 +5,5 @@ export interface InitGeneratorSchema {
   style?: 'none' | 'css' | 'scss' | 'less' | 'styl';
   devServer?: boolean;
   rootProject?: boolean;
+  keepExistingVersions?: boolean;
 }
