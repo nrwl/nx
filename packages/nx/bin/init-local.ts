@@ -148,8 +148,8 @@ function handleAngularCLIFallbacks(workspace: WorkspaceTypeAndRoot) {
     }
   } else if (process.argv[2] === 'cache') {
     console.log(`"ng cache" is not natively supported by Nx.
-To clear the cache, you can delete the ".angular/cache" directory (or the directory configured by "cli.cache.path" in the "angular.json" file).
-To update the cache configuration, you can directly update the configuration in your "angular.json" file (https://angular.io/guide/workspace-config#cache-options).`);
+To clear the cache, you can delete the ".angular/cache" directory (or the directory configured by "cli.cache.path" in the "nx.json" file).
+To update the cache configuration, you can directly update the relevant options in your "nx.json" file (https://angular.io/guide/workspace-config#cache-options).`);
   } else {
     try {
       // nx-ignore-next-line
