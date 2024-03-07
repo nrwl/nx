@@ -58,8 +58,6 @@
     "webpack": "^5.80.0",
     "webpack-merge": "^5.8.0",
     "@nx/devkit": "file:../devkit",
-    "@nx/cypress": "file:../cypress",
-    "@nx/jest": "file:../jest",
     "@nx/js": "file:../js",
     "@nx/eslint": "file:../eslint",
     "@nx/webpack": "file:../webpack",
@@ -69,11 +67,11 @@
   },
   "peerDependencies": {
     "@angular-devkit/build-angular": ">= 15.0.0 < 18.0.0",
+    "@angular-devkit/core": ">= 15.0.0 < 18.0.0",
     "@angular-devkit/schematics": ">= 15.0.0 < 18.0.0",
     "@schematics/angular": ">= 15.0.0 < 18.0.0",
-    "@angular-devkit/core": ">= 15.0.0 < 18.0.0",
-    "rxjs": "^6.5.3 || ^7.5.0",
-    "esbuild": "^0.19.2"
+    "esbuild": "^0.19.2",
+    "rxjs": "^6.5.3 || ^7.5.0"
   },
   "peerDependenciesMeta": {
     "esbuild": {

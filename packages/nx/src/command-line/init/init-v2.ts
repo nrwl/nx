@@ -31,6 +31,7 @@ export interface InitArgs {
 }
 
 export async function initHandler(options: InitArgs): Promise<void> {
+  process.env.NX_RUNNING_NX_INIT = 'true';
   const version =
     process.env.NX_VERSION ?? (prerelease(nxVersion) ? 'next' : 'latest');
   if (process.env.NX_VERSION) {
@@ -112,7 +113,7 @@ export async function initHandler(options: InitArgs): Promise<void> {
     if (!detectPluginsResponse.updatePackageScripts) {
       const rootPackageJsonPath = join(repoRoot, 'package.json');
       const json = readJsonFile<PackageJson>(rootPackageJsonPath);
-      json.nx = {};
+      json.nx = { includedScripts: [] };
       writeJsonFile(rootPackageJsonPath, json);
     }
 

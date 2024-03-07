@@ -25,7 +25,7 @@ npx create-nx-workspace@latest
 
 {% link-card title="Nx in 10 minutes!" type="video" url="https://youtu.be/-_4WMl-Fn0w" icon="nx" /%}
 
-{% link-card title="What is Nx Cloud?" type="video" url="https://youtu.be/NZF0ZJpgaJM" icon="nxcloud" /%}
+{% link-card title="What is Nx Cloud?" type="video" url="https://youtu.be/4VI-q943J3o" icon="nxcloud" /%}
 
 {% link-card title="PNPM Monorepos with Nx" type="video" url="https://youtu.be/ngdoUQBvAjo" icon="pnpm" /%}
 

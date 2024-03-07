@@ -61,7 +61,7 @@ commands:
           name: Install Dependencies
           command: |
             pnpm install --frozen-lockfile
-            pnpm playwright install --with-deps firefox webkit chrome
+            pnpm playwright install --with-deps
       - save_cache:
           name: Save pnpm Package Cache
           key: node-deps-{{ arch }}-v3-{{ checksum "pnpm-lock.yaml" }}
@@ -162,7 +162,7 @@ jobs:
             pids+=($!)
 
             (pnpm nx affected --targets=lint,test,build --base=$NX_BASE --head=$NX_HEAD --parallel=3 &&
-            pnpm nx affected --targets=e2e,e2e-ci --base=$NX_BASE --head=$NX_HEAD --parallel=1) &
+            pnpm nx affected --target=e2e --base=$NX_BASE --head=$NX_HEAD --parallel=1) &
             pids+=($!)
 
             for pid in "${pids[@]}"; do
