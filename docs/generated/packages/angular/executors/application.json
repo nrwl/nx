@@ -66,6 +66,10 @@
         "type": "string",
         "description": "The full path for the TypeScript configuration file, relative to the current workspace."
       },
+      "deployUrl": {
+        "type": "string",
+        "description": "Customize the base path for the URLs of resources in 'index.html' and component stylesheets. This option is only necessary for specific deployment scenarios, such as with Angular Elements or when utilizing different CDN locations. _Note: this is only supported in Angular versions >= 17.3.0_."
+      },
       "scripts": {
         "description": "Global scripts to be included in the build.",
         "type": "array",
