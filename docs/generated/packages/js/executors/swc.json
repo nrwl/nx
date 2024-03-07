@@ -129,6 +129,11 @@
         "description": "Generate a lockfile (e.g. package-lock.json) that matches the workspace lockfile to ensure package versions match.",
         "default": false,
         "x-priority": "internal"
+      },
+      "stripLeadingPaths": {
+        "type": "boolean",
+        "description": "Remove the leading directory (including all parent relative paths) when building the final output path. As an example it compiles all modules under src folder to dist folder, without create the src folder inside of dist.",
+        "default": false
       }
     },
     "required": ["main", "outputPath", "tsConfig"],

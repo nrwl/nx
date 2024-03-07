@@ -73,6 +73,7 @@ function normalizeOptions(
     destPath: relative(join(root, swcCwd), outputPath),
     swcCwd,
     swcrcPath,
+    stripLeadingPaths: Boolean(options.stripLeadingPaths),
   };
 
   return {
