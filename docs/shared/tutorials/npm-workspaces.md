@@ -8,10 +8,9 @@ description: In this tutorial you'll add Nx to an existing NPM workspaces repo
 In this tutorial, you'll learn how to add Nx to a repository with an existing NPM workspaces setup. You'll see how Nx can provide immediate value with very little configuration and then you can gradually enable more features.
 
 - Add Nx to the repository with a single command
-- Explore your workspace with the graph and project detail view
-- Run your existing tasks that are automatically configured with caching
+- Configure caching for your existing tasks
 - Configure a task pipeline
-- Configure caching for your tasks
+- Use Nx Plugins to automatically configure caching
 
 <!-- ## Final Source Code
 
@@ -27,7 +26,7 @@ To get started, check out [the sample repository](https://github.com/nrwl/tuskyd
 git clone https://github.com/nrwl/tuskydesign.git
 ```
 
-The repository has two packages (under `packages/buttons` and `packages/forms`) that are used in a `demo` application located in `apps/demo`. The root `package.json` has a `workspaces` property that tells NPM how to find the projects in the repository.
+The repository has two React packages (under `packages/buttons` and `packages/forms`) that are used in a `demo` application (located in `apps/demo`) that was designed to be used with the Vite CLI. The root `package.json` has a `workspaces` property that tells NPM how to find the projects in the repository.
 
 ```json {% fileName="package.json" %}
 {
@@ -43,21 +42,19 @@ npm install
 
 Now let's try running some tasks. To lint the `demo` app, use the `lint` npm script:
 
-```text {% command="npm run lint" path="~/tuskydesigns/apps/demo" %}
+```text {% command="npm run lint -w @tuskdesign/demo" path="~/tuskydesigns" %}
 > @tuskdesign/demo@0.0.0 lint
 > eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0
 ```
 
 If you try to build the `demo` app, it will fail.
 
-```text {% command="npm run build" path="~/tuskydesigns/apps/demo" %}
+```text {% command="npm run build -w @tuskdesign/demo" path="~/tuskydesigns" %}
 > @tuskdesign/demo@0.0.0 prebuild
 > npm run typecheck
 
-
 > @tuskdesign/demo@0.0.0 typecheck
 > tsc
-
 
 > @tuskdesign/demo@0.0.0 build
 > vite build
@@ -67,20 +64,20 @@ vite v5.0.12 building for production...
 [commonjs--resolver] Failed to resolve entry for package "@tuskdesign/buttons". The package may have incorrect main/module/exports specified in its package.json.
 error during build:
 Error: Failed to resolve entry for package "@tuskdesign/buttons". The package may have incorrect main/module/exports specified in its package.json.
-    at packageEntryFailure (file:///Users/isaac/Documents/code/pnpm-monorepo/node_modules/vite/dist/node/chunks/dep-9A4-l-43.js:29443:17)
-    at resolvePackageEntry (file:///Users/isaac/Documents/code/pnpm-monorepo/node_modules/vite/dist/node/chunks/dep-9A4-l-43.js:29440:5)
-    at tryNodeResolve (file:///Users/isaac/Documents/code/pnpm-monorepo/node_modules/vite/dist/node/chunks/dep-9A4-l-43.js:29210:20)
-    at Object.resolveId (file:///Users/isaac/Documents/code/pnpm-monorepo/node_modules/vite/dist/node/chunks/dep-9A4-l-43.js:28978:28)
-    at file:///Users/isaac/Documents/code/pnpm-monorepo/node_modules/vite/node_modules/rollup/dist/es/shared/node-entry.js:19579:40
-    at async PluginDriver.hookFirstAndGetPlugin (file:///Users/isaac/Documents/code/pnpm-monorepo/node_modules/vite/node_modules/rollup/dist/es/shared/node-entry.js:19479:28)
-    at async resolveId (file:///Users/isaac/Documents/code/pnpm-monorepo/node_modules/vite/node_modules/rollup/dist/es/shared/node-entry.js:18149:26)
-    at async ModuleLoader.resolveId (file:///Users/isaac/Documents/code/pnpm-monorepo/node_modules/vite/node_modules/rollup/dist/es/shared/node-entry.js:18563:15)
-    at async Object.resolveId (file:///Users/isaac/Documents/code/pnpm-monorepo/node_modules/vite/dist/node/chunks/dep-9A4-l-43.js:8141:10)
-    at async PluginDriver.hookFirstAndGetPlugin (file:///Users/isaac/Documents/code/pnpm-monorepo/node_modules/vite/node_modules/rollup/dist/es/shared/node-entry.js:19479:28)
+    at packageEntryFailure (file:///Users/isaac/Documents/code/tuskydesign/node_modules/vite/dist/node/chunks/dep-9A4-l-43.js:29443:17)
+    at resolvePackageEntry (file:///Users/isaac/Documents/code/tuskydesign/node_modules/vite/dist/node/chunks/dep-9A4-l-43.js:29440:5)
+    at tryNodeResolve (file:///Users/isaac/Documents/code/tuskydesign/node_modules/vite/dist/node/chunks/dep-9A4-l-43.js:29210:20)
+    at Object.resolveId (file:///Users/isaac/Documents/code/tuskydesign/node_modules/vite/dist/node/chunks/dep-9A4-l-43.js:28978:28)
+    at file:///Users/isaac/Documents/code/tuskydesign/node_modules/vite/node_modules/rollup/dist/es/shared/node-entry.js:19579:40
+    at async PluginDriver.hookFirstAndGetPlugin (file:///Users/isaac/Documents/code/tuskydesign/node_modules/vite/node_modules/rollup/dist/es/shared/node-entry.js:19479:28)
+    at async resolveId (file:///Users/isaac/Documents/code/tuskydesign/node_modules/vite/node_modules/rollup/dist/es/shared/node-entry.js:18149:26)
+    at async ModuleLoader.resolveId (file:///Users/isaac/Documents/code/tuskydesign/node_modules/vite/node_modules/rollup/dist/es/shared/node-entry.js:18563:15)
+    at async Object.resolveId (file:///Users/isaac/Documents/code/tuskydesign/node_modules/vite/dist/node/chunks/dep-9A4-l-43.js:8141:10)
+    at async PluginDriver.hookFirstAndGetPlugin (file:///Users/isaac/Documents/code/tuskydesign/node_modules/vite/node_modules/rollup/dist/es/shared/node-entry.js:19479:28)
 npm ERR! Lifecycle script `build` failed with error:
 npm ERR! Error: command failed
 npm ERR!   in workspace: @tuskdesign/demo@0.0.0
-npm ERR!   at location: /Users/isaac/Documents/code/pnpm-monorepo/apps/demo
+npm ERR!   at location: /Users/isaac/Documents/code/tuskydesign/apps/demo
 ```
 
 The `build` script fails because it needs the `buttons` and `forms` projects to be built first in order to work correctly. To do this, lets return to the root of the repository and run the `build` task for every project in the repo:
@@ -93,7 +90,9 @@ When the `buttons` and `forms` projects are built first, the `demo` app can buil
 
 Now that you have a basic understanding of the repository we're working with, let's see how Nx can help us.
 
-## Adding Nx
+## Add Nx
+
+Nx offers many features, but at its core, it is a task runner. Out of the box, it can cache your tasks and ensure those tasks are run in the correct order. After the initial set up, you can incrementally add on other features that would be helpful in your organization.
 
 To enable Nx in your repository, run a single command:
 
@@ -103,14 +102,18 @@ npx nx@latest init
 
 This command will download the latest version of Nx and help set up your repository to take advantage of it.
 
-First, the script will propose installing some plugins based on the packages that are being used in your repository. Let's skip the plugins for now and explore what Nx provides without any plugins.
+First, the script will propose installing some plugins based on the packages that are being used in your repository.
+
+- Deselect both proposed plugins so that we can explore what Nx provides without any plugins.
 
 Second, the script asks a series of questions to help set up caching for you.
 
-- The `build` task needs to be run in dependency order.
-- `typecheck`, `build` and `lint` are cacheable tasks.
-- Only the `build` task produces an output in the `dist` folder.
-- Skip remote caching and we'll add it later.
+- `Which scripts need to be run in order?` - Choose `build`
+- `Which scripts are cacheable?` - Choose `typecheck`, `build` and `lint`
+- `Does the "typecheck" script create any outputs?` - Enter nothing
+- `Does the "build" script create any outputs?` - Enter `dist`
+- `Does the "lint" script create any outputs?` - Enter nothing
+- `Would you like remote caching to make your build faster?` - Choose `skip`
 
 ```text {% command="npx nx@latest init" path="~/tuskydesigns" %}
  NX   Recommended Plugins:
@@ -121,7 +124,6 @@ Add these Nx plugins to integrate with the tools used in your workspace.
 
  NX   🐳 Nx initialization
 
-
  NX   🧑‍🔧 Please answer the following questions about the scripts found in your workspace in order to generate task runner configuration
 
 ✔ Which scripts need to be run in order? (e.g. before building a project, dependent projects must be built) · build
@@ -130,8 +132,6 @@ Add these Nx plugins to integrate with the tools used in your workspace.
 ✔ Does the "build" script create any outputs? If not, leave blank, otherwise provide a path relative to a project root (e.g. dist, lib, build, coverage) · dist
 ✔ Does the "lint" script create any outputs? If not, leave blank, otherwise provide a path relative to a project root (e.g. dist, lib, build, coverage) ·
 ✔ Would you like remote caching to make your build faster? · skip
-
- NX   📦 Installing dependencies
 
  ...
 
@@ -152,27 +152,51 @@ npx nx graph
 {% graph title="Tusk Design" height="200px" jsonFile="shared/tutorials/npm-workspaces-project-graph.json" %}
 {% /graph %}
 
-You can open the project details view for the `demo` project in Nx Console or open it from the terminal with this command:
-
-```shell {% path="~/tuskydesigns" %}
-npx nx show project @tuskdesign/demo --web
-```
-
-{% project-details title="Project Details View" jsonFile="shared/tutorials/npm-workspaces-pdv1.json" %}
-{% /project-details %}
-
-This view shows all the tasks that Nx can run for the `demo` project.
+Nx uses this graph to determine the order tasks are run and enforce module boundaries. You can also leverage this graph to gain an accurate understanding of the architecture of your codebase. Part of what makes this graph invaluable is that it is derived directly from your codebase, so it will never become out of date.
 
 ## Caching Pre-configured
 
-Now your `build`, `typecheck` and `lint` tasks are configured to be cached by Nx. Try running the build with Nx twice:
+Nx has been configured to run your `build`, `typecheck` and `lint` tasks. You can run a single task like this:
 
-```shell {% path="~/tuskydesigns/apps/demo" %}
-npx nx build
-npx nx build
+```shell {% path="~/tuskydesigns" %}
+npx nx build @tuskdesign/demo
 ```
 
-The first time `nx build` is run, it takes about 5 seconds - just like running `npm run build`. But the second time you run `nx build`, it completes instantly and displays this message:
+Or all tasks with a certain name like this:
+
+```shell {% path="~/tuskydesigns" %}
+npx nx run-many -t lint
+```
+
+During the `init` script, Nx also configured caching for these tasks. You can see in the `nx.json` file that the `build`, `typecheck` and `lint` targets have the `cache` property set to `true` and the `build` target specifies that its output goes to the project's `dist` folder.
+
+```json {% fileName="nx.json" %}
+{
+  "$schema": "./node_modules/nx/schemas/nx-schema.json",
+  "targetDefaults": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["{projectRoot}/dist"],
+      "cache": true
+    },
+    "typecheck": {
+      "cache": true
+    },
+    "lint": {
+      "cache": true
+    }
+  },
+  "defaultBase": "main"
+}
+```
+
+Try running `build` for the `demo` app a second time:
+
+```shell {% path="~/tuskydesigns" %}
+npx nx build @tuskdesign/demo
+```
+
+The first time `nx build` was run, it took about 5 seconds - just like running `npm run build`. But the second time you run `nx build`, it completes instantly and displays this message:
 
 ```text
 Nx read the output from the cache instead of running the command for 3 out of 3 tasks.
@@ -180,7 +204,7 @@ Nx read the output from the cache instead of running the command for 3 out of 3 
 
 You can see the same caching behavior working when you run `npx nx lint` or `npx nx typecheck`.
 
-## Understand Task Pipelines
+## Use Task Pipelines
 
 You may be wondering why the caching message in the previous section mentioned 3 tasks when you only ran the `build` task from the terminal. When we said that `build` tasks must be run in order during the setup script, Nx created a simple task pipeline. You can see the configuration for it in the `nx.json` file:
 
@@ -194,7 +218,7 @@ You may be wondering why the caching message in the previous section mentioned 3
 }
 ```
 
-This configuration means that if you run `build` on any project, Nx will first run `build` for the dependencies of that project and then run `build` on the project itself. You can visualize this in the Nx graph by selecting the `Tasks` dropdown in the top left and clicking `Show all tasks`:
+This configuration means that if you run `build` on any project, Nx will first run `build` for the dependencies of that project and then run `build` on the project itself. The `^build` text means "the `build` tasks of the project's dependencies." You can visualize this in the Nx graph by selecting the `Tasks` dropdown in the top left and clicking `Show all tasks`:
 
 ```shell {% path="~/tuskydesigns" %}
 npx nx graph
@@ -205,7 +229,7 @@ npx nx graph
 
 With this pipeline in place, you will never run into the error we hit at the beginning of the tutorial where the `forms` and `buttons` packages weren't built so the `demo` app couldn't build. Test this out by deleting the `packages/forms/dist` folder and then re-running the `build` task for the `demo` app.
 
-```text {% command="npx nx build" path="~/tuskydesigns/apps/demo" %}
+```text {% command="npx nx build @tuskdesign/demo" path="~/tuskydesigns" %}
 ...
 
  NX   Successfully ran target build for project @tuskdesign/demo and 2 tasks it depends on (40ms)
@@ -215,7 +239,7 @@ Nx read the output from the cache instead of running the command for 3 out of 3 
 
 Not only does the build complete successfully, but it finishes instantly and the `packages/forms/dist` folder is put back in place thanks to the caching.
 
-## Configure Task Pipelines
+## Create a Task Pipeline
 
 You may have noticed in the `apps/demo/package.json` file, there is a `prebuild` script that runs `typecheck` before the `build` script in order to catch any type errors. Let's set up this same behavior in the Nx task pipeline as well.
 
@@ -241,7 +265,7 @@ You may have noticed in the `apps/demo/package.json` file, there is a `prebuild`
 
 The `dependsOn` line makes Nx run the `typecheck` task for the current project and the `build` task for any dependencies before running the current project's `build` task. Now `nx build` will run the `typecheck` task just like `npm run build` does.
 
-## Infer Cache Settings
+## Use Nx Plugins to Enhance Vite Tasks with Caching
 
 You may remember that we defined the `outputs` property in `nx.json` when we were answering questions in the `nx init` script. The value is currently hard-coded so that if you change the output path in your `vite.config.ts`, you have to remember to also change the `outputs` array in the `build` task configuration. This is where plugins can help.
 
@@ -281,7 +305,7 @@ The `nx add` command installs the version of the plugin that matches your repo's
 npx nx show project @tuskdesign/demo --web
 ```
 
-{% project-details title="Project Details View" jsonFile="shared/tutorials/npm-workspaces-pdv2.json" %}
+{% project-details title="Project Details View" jsonFile="shared/tutorials/npm-workspaces-pdv.json" %}
 {% /project-details %}
 
 If you hover over the settings for the `build` task, you can see where those settings come from. The `inputs` and `outputs` are defined by the `@nx/vite` plugin from the `vite.config.ts` file where as the `dependsOn` property we set earlier in the tutorial in the `targetDefaults` in the `nx.json` file.
@@ -316,7 +340,7 @@ The final task graph for `demo` app's `build` task looks like this:
 
 ## CI with Nx
 
-This tutorial walked you through how Nx can improve the developer experience for local development, but Nx can also make a big difference in CI. Without adequate tooling, CI times tend to grow exponentially with the size of the codebase. Nx helps reduce wasted time in CI with the [`affected` command](/ci/features/affected) and Nx Replay's [remote caching](/ci/features/remote-cache). Nx also [efficiently parallelizes tasks across machines](/ci/concepts/parallelization-distribution) with Nx Agents.
+This tutorial walked you through how Nx can improve the developer experience for local development, but Nx can also make a big difference in CI. Without adequate tooling, CI times tend to grow exponentially with the size of the codebase. Nx helps reduce wasted time in CI with the [`affected` command](/ci/features/affected) and Nx Replay's [remote caching](/ci/features/remote-cache). Nx also [efficiently parallelizes tasks across machines](/ci/concepts/parallelization-distribution) with Nx Agents. You can follow a full tutorial on using Nx in [GitHub Actions](/ci/intro/tutorials/github-actions) or [Circle CI](/ci/intro/tutorials/circle).
 
 To set up Nx Replay run:
 
