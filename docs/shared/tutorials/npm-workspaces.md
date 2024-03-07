@@ -113,7 +113,7 @@ Second, the script asks a series of questions to help set up caching for you.
 - `Does the "typecheck" script create any outputs?` - Enter nothing
 - `Does the "build" script create any outputs?` - Enter `dist`
 - `Does the "lint" script create any outputs?` - Enter nothing
-- `Would you like remote caching to make your build faster?` - Choose `skip`
+- `Would you like remote caching to make your build faster?` - Choose `Skip for now`
 
 ```text {% command="npx nx@latest init" path="~/tuskydesigns" %}
  NX   Recommended Plugins:
@@ -165,7 +165,7 @@ npx nx build @tuskdesign/demo
 Or all tasks with a certain name like this:
 
 ```shell {% path="~/tuskydesigns" %}
-npx nx run-many -t lint
+npx nx run-many -t typecheck
 ```
 
 During the `init` script, Nx also configured caching for these tasks. You can see in the `nx.json` file that the `build`, `typecheck` and `lint` targets have the `cache` property set to `true` and the `build` target specifies that its output goes to the project's `dist` folder.
