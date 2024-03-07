@@ -48,7 +48,7 @@ commands:
             - run:
                 name: Install pnpm package manager (linux)
                 command: |
-                  npm install --prefix=$HOME/.local -g @pnpm/exe@8.14
+                  npm install --prefix=$HOME/.local -g @pnpm/exe@8
       - when:
           condition:
             equal: [<< parameters.os >>, macos]
@@ -56,7 +56,7 @@ commands:
             - run:
                 name: Install pnpm package manager (macos)
                 command: |
-                  npm install -g @pnpm/exe@8.14
+                  npm install -g @pnpm/exe@8
       - run:
           name: Install Dependencies
           command: |
