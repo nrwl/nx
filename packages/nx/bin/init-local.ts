@@ -107,7 +107,14 @@ function isKnownCommand(command: string) {
 
 function shouldDelegateToAngularCLI() {
   const command = process.argv[2];
-  const commands = ['analytics', 'config', 'doc', 'update', 'completion'];
+  const commands = [
+    'analytics',
+    'cache',
+    'completion',
+    'config',
+    'doc',
+    'update',
+  ];
   return commands.indexOf(command) > -1;
 }
 
@@ -139,6 +146,10 @@ function handleAngularCLIFallbacks(workspace: WorkspaceTypeAndRoot) {
   Instead, you could try an Nx Editor Plugin for a visual tool to run Nx commands. If you're using VSCode, you can use the Nx Console plugin, or if you're using WebStorm, you could use one of the available community plugins.
   For more information, see https://nx.dev/features/integrate-with-editors`);
     }
+  } else if (process.argv[2] === 'cache') {
+    console.log(`"ng cache" is not natively supported by Nx.
+To clear the cache, you can delete the ".angular/cache" directory (or the directory configured by "cli.cache.path" in the "angular.json" file).
+To update the cache configuration, you can directly update the configuration in your "angular.json" file (https://angular.io/guide/workspace-config#cache-options).`);
   } else {
     try {
       // nx-ignore-next-line
