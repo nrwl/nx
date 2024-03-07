@@ -884,14 +884,14 @@ You can choose `github`, `circleci`, `azure`, `bitbucket-pipelines`, or `gitlab`
 
 This will create a default CI configuration that sets up Nx Cloud to [use distributed task execution](/ci/features/distribute-task-execution). This automatically runs all tasks on separate machines in parallel wherever possible, without requiring you to manually coordinate copying the output from one machine to another.
 
-## Next Steps
-
 Check out one of these detailed tutorials on setting up CI with Nx:
 
 - [Circle CI with Nx](/ci/intro/tutorials/circle)
 - [GitHub Actions with Nx](/ci/intro/tutorials/github-actions)
 
-Also, make sure you
+## Next Steps
+
+Connect with the rest of the Nx community with these resources:
 
 - [Join the Official Nx Discord Server](https://go.nx.dev/community) to ask questions and find out the latest news about Nx.
 - [Follow Nx on Twitter](https://twitter.com/nxdevtools) to stay up to date with Nx news

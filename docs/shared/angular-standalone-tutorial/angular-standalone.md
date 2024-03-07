@@ -1116,14 +1116,14 @@ You can choose `github`, `circleci`, `azure`, `bitbucket-pipelines`, or `gitlab`
 
 This will create a default CI configuration that sets up Nx Cloud to [use distributed task execution](/ci/features/distribute-task-execution). This automatically runs all tasks on separate machines in parallel wherever possible, without requiring you to manually coordinate copying the output from one machine to another.
 
-## Next Steps
-
 Check out one of these detailed tutorials on setting up CI with Nx:
 
 - [Circle CI with Nx](/ci/intro/tutorials/circle)
 - [GitHub Actions with Nx](/ci/intro/tutorials/github-actions)
 
-Or dig into other features of Nx:
+## Next Steps
+
+Here's some things you can dive into next:
 
 - Learn more about the [underlying mental model of Nx](/concepts/mental-model)
 - Learn about popular generators such as [how to setup Tailwind](/recipes/angular/using-tailwind-css-with-angular-projects) or [add Storybook to your UI library](/recipes/storybook/overview-angular)
