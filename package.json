@@ -239,7 +239,7 @@
     "ora": "5.3.0",
     "parse-markdown-links": "^1.0.4",
     "parse5": "4.0.0",
-    "piscina": "^4.2.1",
+    "piscina": "^4.4.0",
     "postcss": "8.4.19",
     "postcss-import": "~14.1.0",
     "postcss-preset-env": "~7.5.0",
