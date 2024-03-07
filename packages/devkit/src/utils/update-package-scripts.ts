@@ -1,10 +1,10 @@
-import type { NxJsonConfiguration } from 'nx/src/config/nx-json';
-import type { Tree } from 'nx/src/generators/tree';
 import type {
   CreateNodes,
   CreateNodesFunction,
   CreateNodesResult,
-} from 'nx/src/utils/nx-plugin';
+  NxJsonConfiguration,
+  Tree,
+} from 'nx/src/devkit-exports';
 import type { PackageJson } from 'nx/src/utils/package-json';
 import { basename, dirname } from 'path';
 import * as yargs from 'yargs-parser';
@@ -60,10 +60,7 @@ async function processProject(
     return;
   }
 
-  // exclude package.json scripts from nx
-  packageJson.nx ??= {};
-  packageJson.nx.includedScripts ??= [];
-
+  const replacedTargets = new Set<string>();
   for (const targetCommand of targetCommands) {
     const { command, target, configuration } = targetCommand;
     const targetCommandRegex = new RegExp(
@@ -80,7 +77,7 @@ async function processProject(
             ? `$1nx ${target} --configuration=${configuration}$3`
             : `$1nx ${target}$3`
         );
-        excludeScriptFromPackageJson(packageJson, scriptName);
+        replacedTargets.add(target);
       } else {
         /**
          * Parse script and command to handle the following:
@@ -157,6 +154,7 @@ async function processProject(
                   : `$1nx ${target}$4`
               )
             );
+            replacedTargets.add(target);
           } else {
             // there are different args or the script has extra args, replace with the command leaving the args
             packageJson.scripts[scriptName] = packageJson.scripts[
@@ -170,11 +168,31 @@ async function processProject(
                   : `$1nx ${target}$3`
               )
             );
+            replacedTargets.add(target);
           }
-
-          excludeScriptFromPackageJson(packageJson, scriptName);
         }
       }
+    }
+  }
+
+  if (process.env.NX_RUNNING_NX_INIT === 'true') {
+    // running `nx init` so we want to exclude everything by default
+    packageJson.nx ??= {};
+    packageJson.nx.includedScripts = [];
+  } else if (replacedTargets.size) {
+    /**
+     * Running `nx add`. In this case we want to:
+     * - if `includedScripts` is already set: exclude scripts that match inferred targets that were used to replace a script
+     * - if `includedScripts` is not set: set `includedScripts` with all scripts except the ones that match an inferred target that was used to replace a script
+     */
+    const includedScripts =
+      packageJson.nx?.includedScripts ?? Object.keys(packageJson.scripts);
+    const filteredScripts = includedScripts.filter(
+      (s) => !replacedTargets.has(s)
+    );
+    if (filteredScripts.length !== includedScripts.length) {
+      packageJson.nx ??= {};
+      packageJson.nx.includedScripts = filteredScripts;
     }
   }
 
@@ -226,15 +244,6 @@ function getInferredTargetCommands(result: CreateNodesResult): TargetCommand[] {
   }
 
   return targetCommands;
-}
-
-function excludeScriptFromPackageJson(
-  packageJson: PackageJson,
-  scriptName: string
-) {
-  packageJson.nx.includedScripts = packageJson.nx.includedScripts.filter(
-    (s) => s !== scriptName
-  );
 }
 
 function getProjectRootFromConfigFile(file: string): string {

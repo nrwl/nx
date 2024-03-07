@@ -62,6 +62,10 @@ const propKeys = [
   'cwd',
   'args',
   'envFile',
+  '__unparsed__',
+  'env',
+  'mode',
+  'verbose',
 ];
 
 export interface NormalizedRunCommandsOptions extends RunCommandsOptions {
@@ -69,6 +73,9 @@ export interface NormalizedRunCommandsOptions extends RunCommandsOptions {
     command: string;
     forwardAllArgs?: boolean;
   }[];
+  unknownOptions?: {
+    [k: string]: any;
+  };
   parsedArgs: {
     [k: string]: any;
   };
@@ -173,7 +180,25 @@ function normalizeOptions(
   if (options.args && Array.isArray(options.args)) {
     options.args = options.args.join(' ');
   }
-  options.parsedArgs = parseArgs(options, options.args as string);
+
+  const unparsedCommandArgs = yargsParser(options.__unparsed__, {
+    configuration: {
+      'parse-numbers': false,
+      'parse-positional-numbers': false,
+      'dot-notation': false,
+    },
+  });
+  options.unknownOptions = Object.keys(options)
+    .filter(
+      (p) => propKeys.indexOf(p) === -1 && unparsedCommandArgs[p] === undefined
+    )
+    .reduce((m, c) => ((m[c] = options[c]), m), {});
+
+  options.parsedArgs = parseArgs(
+    unparsedCommandArgs,
+    options.unknownOptions,
+    options.args as string
+  );
 
   (options as NormalizedRunCommandsOptions).commands.forEach((c) => {
     c.command = interpolateArgsIntoCommand(
@@ -361,7 +386,7 @@ export function interpolateArgsIntoCommand(
   command: string,
   opts: Pick<
     NormalizedRunCommandsOptions,
-    'args' | 'parsedArgs' | '__unparsed__'
+    'args' | 'parsedArgs' | '__unparsed__' | 'unknownOptions'
   >,
   forwardAllArgs: boolean
 ) {
@@ -371,28 +396,38 @@ export function interpolateArgsIntoCommand(
       opts.parsedArgs[group] !== undefined ? opts.parsedArgs[group] : ''
     );
   } else if (forwardAllArgs) {
-    return `${command}${opts.args ? ' ' + opts.args : ''}${
-      opts.__unparsed__.length > 0 ? ' ' + opts.__unparsed__.join(' ') : ''
-    }`;
+    let args = '';
+    if (Object.keys(opts.unknownOptions ?? {}).length > 0) {
+      args +=
+        ' ' +
+        Object.keys(opts.unknownOptions)
+          .filter(
+            (k) =>
+              typeof opts.unknownOptions[k] !== 'object' &&
+              opts.parsedArgs[k] === opts.unknownOptions[k]
+          )
+          .map((k) => `--${k} ${opts.unknownOptions[k]}`)
+          .join(' ');
+    }
+    if (opts.args) {
+      args += ` ${opts.args}`;
+    }
+    if (opts.__unparsed__?.length > 0) {
+      args += ` ${opts.__unparsed__.join(' ')}`;
+    }
+    return `${command}${args}`;
   } else {
     return command;
   }
 }
 
-function parseArgs(options: RunCommandsOptions, args?: string) {
+function parseArgs(
+  unparsedCommandArgs: { [k: string]: string },
+  unknownOptions: { [k: string]: string },
+  args?: string
+) {
   if (!args) {
-    const unknownOptionsTreatedAsArgs = Object.keys(options)
-      .filter((p) => propKeys.indexOf(p) === -1)
-      .reduce((m, c) => ((m[c] = options[c]), m), {});
-
-    const unparsedCommandArgs = yargsParser(options.__unparsed__, {
-      configuration: {
-        'parse-numbers': false,
-        'parse-positional-numbers': false,
-        'dot-notation': false,
-      },
-    });
-    return { ...unknownOptionsTreatedAsArgs, ...unparsedCommandArgs };
+    return { ...unknownOptions, ...unparsedCommandArgs };
   }
   return yargsParser(args.replace(/(^"|"$)/g, ''), {
     configuration: { 'camel-case-expansion': false },

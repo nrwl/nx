@@ -24,7 +24,7 @@ export function TerminalVideo({
   alt: string;
 }): JSX.Element {
   return (
-    <TerminalShellWrapper isMessageBelow={false}>
+    <TerminalShellWrapper>
       <div className="overflow-x-auto">
         <VideoLoop src={src} alt={alt}></VideoLoop>
       </div>
