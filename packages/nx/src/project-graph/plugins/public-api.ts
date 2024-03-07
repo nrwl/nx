@@ -104,7 +104,7 @@ export type NxPluginV2<TOptions = unknown> = {
    * Provides a file pattern and function that retrieves configuration info from
    * those files. e.g. { '**\/*.csproj': buildProjectsFromCsProjFile }
    */
-  createNodes?: CreateNodes;
+  createNodes?: CreateNodes<TOptions>;
 
   // Todo(@AgentEnder): This shouldn't be a full processor, since its only responsible for defining edges between projects. What do we want the API to be?
   /**

@@ -20,13 +20,13 @@ npx nx connect
 
 {% cards cols="2" lgCols="4" mdCols="4" smCols="2" %}
 
+{% link-card title="What is Nx Cloud?" type="video" url="https://youtu.be/4VI-q943J3o" icon="nxcloud" /%}
+
+{% link-card title="E2E Test Auto-Splitting and Distribution" type="video" url="https://youtu.be/XLOUFZeqRpM" icon="nxagents" /%}
+
 {% link-card title="Circle CI with Nx" type="tutorial" url="/ci/intro/tutorials/circle" icon="circleci" /%}
 
 {% link-card title="GitHub Actions with Nx" type="tutorial" url="/ci/intro/tutorials/github-actions" icon="github" /%}
-
-{% link-card title="E2E Test Auto-Splitting and Distribution" type="video" url="https://youtu.be/XLOUFZeqRpM" icon="nxcloud" /%}
-
-{% link-card title="More On Youtube" type="video" url="https://www.youtube.com/@nxdevtools" icon="youtube" /%}
 
 {% /cards %}
 

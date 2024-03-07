@@ -1,4 +1,4 @@
-import { glob, type Tree } from '@nx/devkit';
+import { glob, joinPathFragments, type Tree } from '@nx/devkit';
 import type {
   InterfaceDeclaration,
   MethodSignature,
@@ -168,7 +168,7 @@ export function getProjectCypressConfigPath(
   projectRoot: string
 ): string {
   const cypressConfigPaths = glob(tree, [
-    `${projectRoot}/${CYPRESS_CONFIG_FILE_NAME_PATTERN}`,
+    joinPathFragments(projectRoot, CYPRESS_CONFIG_FILE_NAME_PATTERN),
   ]);
   if (cypressConfigPaths.length === 0) {
     throw new Error(`Could not find a cypress config file in ${projectRoot}.`);

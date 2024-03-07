@@ -97,6 +97,7 @@ function normalizeOptions(
   return {
     addPlugin,
     ...options,
+    framework: options.framework ?? null,
     directory: options.directory ?? 'cypress',
   };
 }
