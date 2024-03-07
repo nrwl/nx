@@ -15,6 +15,11 @@ import {
   NxPlugin,
   NxPluginV2,
 } from './public-api';
+import { ProjectConfiguration } from '../../config/workspace-json-project-json';
+import { retrieveProjectConfigurationsWithoutPluginInference } from '../utils/retrieve-workspace-files';
+import { getPluginPathAndName } from './worker-api';
+import { getNxRequirePaths } from '../../utils/installation-directory';
+import { normalizeNxPlugin } from './utils';
 
 export type CreateNodesResultWithContext = CreateNodesResult & {
   file: string;
@@ -44,12 +49,13 @@ export type RemotePlugin =
 // holding resolved nx plugin objects.
 // Allows loaded plugins to not be reloaded when
 // referenced multiple times.
-export const nxPluginCache: Map<unknown, Promise<RemotePlugin>> = new Map();
+export const nxPluginCache: Map<unknown, [Promise<RemotePlugin>, () => void]> =
+  new Map();
 
-export async function loadNxPlugins(
+export async function loadNxPluginsRemotely(
   plugins: PluginConfiguration[],
   root = workspaceRoot
-): Promise<RemotePlugin[]> {
+): Promise<[RemotePlugin[], () => void]> {
   const result: Promise<RemotePlugin>[] = [];
 
   plugins ??= [];
@@ -64,26 +70,36 @@ export async function loadNxPlugins(
   // We push the nx core node plugins onto the end, s.t. it overwrites any other plugins
   plugins.push(...(await getDefaultPlugins(root)));
 
+  const cleanupFunctions: Array<() => void> = [];
   for (const plugin of plugins) {
-    result.push(loadNxPlugin(plugin, root));
+    const [loadedPluginPromise, cleanup] = loadNxPluginRemotely(plugin, root);
+    result.push(loadedPluginPromise);
+    cleanupFunctions.push(cleanup);
   }
 
-  return Promise.all(result);
+  return [
+    await Promise.all(result),
+    () => {
+      for (const fn of cleanupFunctions) {
+        fn();
+      }
+    },
+  ];
 }
 
-export async function loadNxPlugin(
+export function loadNxPluginRemotely(
   plugin: PluginConfiguration,
   root = workspaceRoot
-): Promise<RemotePlugin> {
+): [Promise<RemotePlugin>, () => void] {
   const cacheKey = JSON.stringify(plugin);
 
   if (nxPluginCache.has(cacheKey)) {
-    return await nxPluginCache.get(cacheKey)!;
+    return nxPluginCache.get(cacheKey);
   }
 
-  const loadingPlugin = loadRemoteNxPlugin(plugin, root);
-  nxPluginCache.set(cacheKey, loadingPlugin);
-  return await loadingPlugin;
+  const [loadingPlugin, cleanup] = loadRemoteNxPlugin(plugin, root);
+  nxPluginCache.set(cacheKey, [loadingPlugin, cleanup]);
+  return [loadingPlugin, cleanup];
 }
 
 export async function getDefaultPlugins(root: string) {
@@ -96,4 +112,74 @@ export async function getDefaultPlugins(root: string) {
     join(__dirname, '../../plugins/package-json-workspaces'),
     join(__dirname, '../../plugins/project-json/build-nodes/project-json'),
   ];
+}
+
+let projectsWithoutInference: Record<string, ProjectConfiguration>;
+
+export async function loadPlugins(
+  plugins: PluginConfiguration[],
+  root: string
+): Promise<LoadedNxPlugin[]> {
+  return await Promise.all(plugins.map((p) => loadPlugin(p, root)));
+}
+
+export async function loadPlugin(plugin: PluginConfiguration, root: string) {
+  try {
+    require.resolve(typeof plugin === 'string' ? plugin : plugin.plugin);
+  } catch {
+    // If a plugin cannot be resolved, we will need projects to resolve it
+    projectsWithoutInference ??=
+      await retrieveProjectConfigurationsWithoutPluginInference(root);
+  }
+  return await loadNxPluginAsync(
+    plugin,
+    getNxRequirePaths(root),
+    projectsWithoutInference,
+    root
+  );
+}
+
+export type LoadedNxPlugin = {
+  plugin: NxPlugin;
+  options?: unknown;
+};
+
+export async function loadNxPluginAsync(
+  pluginConfiguration: PluginConfiguration,
+  paths: string[],
+  projects: Record<string, ProjectConfiguration>,
+  root: string
+): Promise<LoadedNxPlugin> {
+  const { plugin: moduleName, options } =
+    typeof pluginConfiguration === 'object'
+      ? pluginConfiguration
+      : { plugin: pluginConfiguration, options: undefined };
+
+  performance.mark(`Load Nx Plugin: ${moduleName} - start`);
+  let { pluginPath, name } = await getPluginPathAndName(
+    moduleName,
+    paths,
+    projects,
+    root
+  );
+  const plugin = normalizeNxPlugin(await importPluginModule(pluginPath));
+  plugin.name ??= name;
+  performance.mark(`Load Nx Plugin: ${moduleName} - end`);
+  performance.measure(
+    `Load Nx Plugin: ${moduleName}`,
+    `Load Nx Plugin: ${moduleName} - start`,
+    `Load Nx Plugin: ${moduleName} - end`
+  );
+  return { plugin, options };
+}
+
+async function importPluginModule(pluginPath: string): Promise<NxPlugin> {
+  const m = await import(pluginPath);
+  if (
+    m.default &&
+    ('createNodes' in m.default || 'createDependencies' in m.default)
+  ) {
+    return m.default;
+  }
+  return m;
 }

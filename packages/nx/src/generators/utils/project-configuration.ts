@@ -28,6 +28,7 @@ import { readJson, writeJson } from './json';
 import { readNxJson } from './nx-json';
 
 import type { Tree } from '../tree';
+import { NxPlugin } from '../../project-graph/plugins';
 
 export { readNxJson, updateNxJson } from './nx-json';
 
@@ -201,7 +202,7 @@ function readAndCombineAllProjectConfigurations(tree: Tree): {
   ];
   const projectGlobPatterns = configurationGlobs([
     ProjectJsonProjectsPlugin,
-    { createNodes: packageJsonWorkspacesCreateNodes },
+    { createNodes: packageJsonWorkspacesCreateNodes } as NxPlugin,
   ]);
   const globbedFiles = globWithWorkspaceContext(tree.root, projectGlobPatterns);
   const createdFiles = findCreatedProjectFiles(tree, patterns);

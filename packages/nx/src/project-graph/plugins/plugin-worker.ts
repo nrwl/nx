@@ -1,11 +1,7 @@
-import { getNxRequirePaths } from '../../utils/installation-directory';
-import { loadNxPluginAsync } from './worker-api';
-import { PluginWorkerMessage, consumeMessage } from './messaging';
-import { PluginConfiguration } from '../../config/nx-json';
-import { ProjectConfiguration } from '../../config/workspace-json-project-json';
-import { retrieveProjectConfigurationsWithoutPluginInference } from '../utils/retrieve-workspace-files';
-import type {
+import { consumeMessage, PluginWorkerMessage } from './messaging';
+import {
   CreateNodesResultWithContext,
+  loadPlugin,
   NormalizedPlugin,
 } from './internal-api';
 import { CreateNodesContext } from './public-api';
@@ -21,7 +17,7 @@ process.on('message', async (message: string) => {
     load: async ({ plugin: pluginConfiguration, root }) => {
       process.chdir(root);
       try {
-        ({ plugin, options: pluginOptions } = await loadPluginFromWorker(
+        ({ plugin, options: pluginOptions } = await loadPlugin(
           pluginConfiguration,
           root
         ));
@@ -93,24 +89,6 @@ process.on('message', async (message: string) => {
     },
   });
 });
-
-let projectsWithoutInference: Record<string, ProjectConfiguration>;
-
-async function loadPluginFromWorker(plugin: PluginConfiguration, root: string) {
-  try {
-    require.resolve(typeof plugin === 'string' ? plugin : plugin.plugin);
-  } catch {
-    // If a plugin cannot be resolved, we will need projects to resolve it
-    projectsWithoutInference ??=
-      await retrieveProjectConfigurationsWithoutPluginInference(root);
-  }
-  return await loadNxPluginAsync(
-    plugin,
-    getNxRequirePaths(root),
-    projectsWithoutInference,
-    root
-  );
-}
 
 function runCreateNodesInParallel(
   configFiles: string[],

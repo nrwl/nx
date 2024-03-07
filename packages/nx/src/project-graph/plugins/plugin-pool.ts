@@ -51,15 +51,20 @@ export function loadRemoteNxPlugin(plugin: PluginConfiguration, root: string) {
 
   // logger.verbose(`[plugin-worker] started worker: ${worker.pid}`);
 
-  return new Promise<RemotePlugin>((res, rej) => {
-    worker.on('message', createWorkerHandler(worker, res, rej));
-    worker.on('exit', createWorkerExitHandler(worker));
-  });
+  return [
+    new Promise<RemotePlugin>((res, rej) => {
+      worker.on('message', createWorkerHandler(worker, res, rej));
+      worker.on('exit', createWorkerExitHandler(worker));
+    }),
+    () => {
+      shutdownPluginWorkers();
+    },
+  ] as const;
 }
 
 let pluginWorkersShutdown = false;
 
-export async function shutdownPluginWorkers() {
+async function shutdownPluginWorkers() {
   // Clears the plugin cache so no refs to the workers are held
   nxPluginCache.clear();
 
@@ -70,9 +75,7 @@ export async function shutdownPluginWorkers() {
 
   const pending = getPendingPromises(pool, pidMap);
 
-  for (const pendingPromise of pending) {
-    pendingPromise.rejector(new Error('Shutting down'));
-  }
+  await Promise.all(pending.map((p) => p.promise));
 
   // logger.verbose(`[plugin-pool] all pending operations completed`);
 
