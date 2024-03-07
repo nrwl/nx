@@ -377,6 +377,15 @@
       "version": "18.1.1-beta.0",
       "description": "Ensure targetDefaults inputs for task hashing when '@nx/angular:webpack-browser' is used are correct for Module Federation.",
       "factory": "./src/migrations/update-18-1-1/fix-target-defaults-inputs"
+    },
+    "update-angular-cli-version-17-3-0": {
+      "cli": "nx",
+      "version": "18.2.0-beta.0",
+      "requires": {
+        "@angular/core": ">=17.3.0"
+      },
+      "description": "Update the @angular/cli package version to ~17.3.0.",
+      "factory": "./src/migrations/update-18-2-0/update-angular-cli"
     }
   },
   "packageJsonUpdates": {
@@ -1715,6 +1724,63 @@
         },
         "ng-packagr": {
           "version": "~17.2.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "18.2.0": {
+      "version": "18.2.0-beta.0",
+      "x-prompt": "Do you want to update the Angular version to v17.3?",
+      "requires": {
+        "@angular/core": ">=17.2.0 <17.3.0"
+      },
+      "packages": {
+        "@angular-devkit/build-angular": {
+          "version": "~17.3.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/core": {
+          "version": "~17.3.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/schematics": {
+          "version": "~17.3.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/pwa": {
+          "version": "~17.3.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/ssr": {
+          "version": "~17.3.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@schematics/angular": {
+          "version": "~17.3.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/architect": {
+          "version": "~0.1703.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/build-webpack": {
+          "version": "~0.1703.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/core": {
+          "version": "~17.3.0",
+          "alwaysAddToPackageJson": true
+        },
+        "@angular/material": {
+          "version": "~17.3.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/cdk": {
+          "version": "~17.3.0",
+          "alwaysAddToPackageJson": false
+        },
+        "ng-packagr": {
+          "version": "~17.3.0",
           "alwaysAddToPackageJson": false
         }
       }
