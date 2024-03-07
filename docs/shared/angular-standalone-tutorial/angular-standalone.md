@@ -1092,11 +1092,11 @@ When you are ready to add another application to the repo, you'll probably want 
 
 You can also go through the full [Angular monorepo tutorial](/getting-started/tutorials/angular-monorepo-tutorial)
 
-## CI with Nx
+## Setup CI for the Angular App
 
 This tutorial walked you through how Nx can improve the developer experience for local development, but Nx can also make a big difference in CI. Without adequate tooling, CI times tend to grow exponentially with the size of the codebase. Nx helps reduce wasted time in CI with the [`affected` command](/ci/features/affected) and Nx Replay's [remote caching](/ci/features/remote-cache). Nx also [efficiently parallelizes tasks across machines](/ci/concepts/parallelization-distribution) with Nx Agents. You can follow a full tutorial on using Nx in [GitHub Actions](/ci/intro/tutorials/github-actions) or [Circle CI](/ci/intro/tutorials/circle).
 
-To set up Nx Replay run:
+To set up Nx Cloud run:
 
 ```shell
 nx connect

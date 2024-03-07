@@ -860,11 +860,11 @@ Learn more about how to [enforce module boundaries](/features/enforce-module-bou
 
 When you are ready to add another application to the repo, you'll probably want to move `myvueapp` to its own folder. To do this, you can run the [`convert-to-monorepo` generator](/nx-api/workspace/generators/convert-to-monorepo) or [manually move the configuration files](/recipes/tips-n-tricks/standalone-to-integrated).
 
-## CI with Nx
+## Setup CI for Your Vue App
 
 This tutorial walked you through how Nx can improve the developer experience for local development, but Nx can also make a big difference in CI. Without adequate tooling, CI times tend to grow exponentially with the size of the codebase. Nx helps reduce wasted time in CI with the [`affected` command](/ci/features/affected) and Nx Replay's [remote caching](/ci/features/remote-cache). Nx also [efficiently parallelizes tasks across machines](/ci/concepts/parallelization-distribution) with Nx Agents. You can follow a full tutorial on using Nx in [GitHub Actions](/ci/intro/tutorials/github-actions) or [Circle CI](/ci/intro/tutorials/circle).
 
-To set up Nx Replay run:
+To set up Nx Cloud run:
 
 ```shell
 nx connect
