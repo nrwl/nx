@@ -87,10 +87,13 @@ export async function pluginGeneratorInternal(host: Tree, schema: Schema) {
   tasks.push(
     await jsLibraryGenerator(host, {
       ...schema,
+      name: options.name,
+      directory: options.projectRoot,
       config: 'project',
       bundler: options.bundler,
       publishable: options.publishable,
       importPath: options.npmPackageName,
+      projectNameAndRootFormat: 'as-provided',
       skipFormat: true,
     })
   );
