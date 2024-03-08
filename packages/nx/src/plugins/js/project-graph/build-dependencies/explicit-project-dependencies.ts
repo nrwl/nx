@@ -1,17 +1,18 @@
-import { TargetProjectLocator } from './target-project-locator';
+import { join, relative } from 'path';
 import {
   DependencyType,
   ProjectGraphProjectNode,
 } from '../../../../config/project-graph';
-import { join, relative } from 'path';
-import { workspaceRoot } from '../../../../utils/workspace-root';
-import { normalizePath } from '../../../../utils/path';
+import { ProjectConfiguration } from '../../../../config/workspace-json-project-json';
 import { CreateDependenciesContext } from '../../../../project-graph/plugins';
 import {
   RawProjectGraphDependency,
   validateDependency,
 } from '../../../../project-graph/project-graph-builder';
-import { ProjectConfiguration } from '../../../../config/workspace-json-project-json';
+import { normalizePath } from '../../../../utils/path';
+import { workspaceRoot } from '../../../../utils/workspace-root';
+import { ExternalDependenciesCache } from './build-dependencies';
+import { TargetProjectLocator } from './target-project-locator';
 
 function isRoot(
   projects: Record<string, ProjectConfiguration>,
@@ -20,17 +21,44 @@ function isRoot(
   return projects[projectName]?.root === '.';
 }
 
+function getPackageName(importExpression: string) {
+  // Check if the package is scoped
+  if (importExpression.startsWith('@')) {
+    // For scoped packages, the package name is up to the second '/'
+    return importExpression.split('/').slice(0, 2).join('/');
+  }
+  // For unscoped packages, the package name is up to the first '/'
+  return importExpression.split('/')[0];
+}
+
 function convertImportToDependency(
   importExpr: string,
+  externalDependenciesCache: ExternalDependenciesCache,
   sourceFile: string,
   source: string,
   type: RawProjectGraphDependency['type'],
   targetProjectLocator: TargetProjectLocator
 ): RawProjectGraphDependency {
-  const target =
+  /**
+   * First try and find in the cache populated by the package.json dependencies, then try and find in the project graph,
+   * and finally default to an assumed root level external dependency.
+   */
+  const cachedDeps = externalDependenciesCache.get(source);
+  let target: string | undefined;
+  if (cachedDeps) {
+    // Certain dependencies contain nested entrypoints, we need to compare to the actual package name within the importExpr
+    const packageName = getPackageName(importExpr);
+    for (const dep of cachedDeps) {
+      if (dep.startsWith(`npm:${packageName}`)) {
+        target = dep;
+        break;
+      }
+    }
+  }
+  target =
+    target ??
     targetProjectLocator.findProjectWithImport(importExpr, sourceFile) ??
     `npm:${importExpr}`;
-
   return {
     source,
     target,
@@ -40,7 +68,8 @@ function convertImportToDependency(
 }
 
 export function buildExplicitTypeScriptDependencies(
-  ctx: CreateDependenciesContext
+  ctx: CreateDependenciesContext,
+  externalDependenciesCache: ExternalDependenciesCache
 ): RawProjectGraphDependency[] {
   // TODO: TargetProjectLocator is a public API, so we can't change the shape of it
   // We should eventually let it accept Record<string, ProjectConfiguration> s.t. we
@@ -104,6 +133,7 @@ export function buildExplicitTypeScriptDependencies(
     for (const importExpr of staticImportExpressions) {
       const dependency = convertImportToDependency(
         importExpr,
+        externalDependenciesCache,
         normalizedFilePath,
         sourceProject,
         DependencyType.static,
@@ -120,6 +150,7 @@ export function buildExplicitTypeScriptDependencies(
     for (const importExpr of dynamicImportExpressions) {
       const dependency = convertImportToDependency(
         importExpr,
+        externalDependenciesCache,
         normalizedFilePath,
         sourceProject,
         DependencyType.dynamic,
