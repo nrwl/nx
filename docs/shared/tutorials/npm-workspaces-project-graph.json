@@ -1,0 +1,56 @@
+{
+  "hash": "b403577d293fcd1162049fb6cd70752277d68eecc34268aa57452ce597b7352e",
+  "projects": [
+    {
+      "name": "@tuskdesign/buttons",
+      "type": "lib",
+      "data": {
+        "tags": []
+      }
+    },
+    {
+      "name": "@tuskdesign/forms",
+      "type": "lib",
+      "data": {
+        "tags": []
+      }
+    },
+    {
+      "name": "@tuskdesign/demo",
+      "type": "lib",
+      "data": {
+        "tags": []
+      }
+    }
+  ],
+  "dependencies": {
+    "@tuskdesign/buttons": [],
+    "@tuskdesign/forms": [
+      {
+        "source": "@tuskdesign/forms",
+        "target": "@tuskdesign/buttons",
+        "type": "static"
+      }
+    ],
+    "@tuskdesign/demo": [
+      {
+        "source": "@tuskdesign/demo",
+        "target": "@tuskdesign/buttons",
+        "type": "static"
+      },
+      {
+        "source": "@tuskdesign/demo",
+        "target": "@tuskdesign/forms",
+        "type": "static"
+      }
+    ]
+  },
+  "workspaceLayout": {
+    "appsDir": "apps",
+    "libsDir": "packages"
+  },
+  "affectedProjectIds": [],
+  "focus": null,
+  "groupByFolder": false,
+  "exclude": []
+}

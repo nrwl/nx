@@ -17,10 +17,16 @@ We are generally following the [Diataxis](https://diataxis.fr) model where docum
 
 We also have different audiences in mind when writing docs:
 
-👶 New user
+👶 New user starting from scratch
 
 - They know their framework of choice
 - They have probably heard the term monorepo but don't really know what it is
+- They're smart and eager to learn
+
+👶 New user migrating an existing repo
+
+- They know their framework of choice
+- They know how npm workspaces work
 - They're smart and eager to learn
 
 👦 Intermediate User

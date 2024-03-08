@@ -5,7 +5,7 @@
     - [Installation](/getting-started/installation)
     - [Why Nx?](/getting-started/why-nx)
     - [Tutorials](/getting-started/tutorials)
-      - [Package-Based Monorepo](/getting-started/tutorials/package-based-repo-tutorial)
+      - [NPM Workspaces Monorepo](/getting-started/tutorials/npm-workspaces-tutorial)
       - [Integrated Monorepo](/getting-started/tutorials/integrated-repo-tutorial)
       - [React Standalone](/getting-started/tutorials/react-standalone-tutorial)
       - [React Monorepo](/getting-started/tutorials/react-monorepo-tutorial)

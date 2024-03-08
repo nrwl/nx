@@ -34,9 +34,9 @@
               "description": "Get started with basic information, concepts and tutorials.",
               "itemList": [
                 {
-                  "name": "Package-Based Monorepo",
-                  "id": "package-based-repo-tutorial",
-                  "file": "shared/npm-tutorial/package-based"
+                  "name": "NPM Workspaces Monorepo",
+                  "id": "npm-workspaces-tutorial",
+                  "file": "shared/tutorials/npm-workspaces"
                 },
                 {
                   "name": "Integrated Monorepo",

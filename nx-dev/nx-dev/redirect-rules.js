@@ -754,7 +754,9 @@ const conceptUrls = {
   '/concepts/more-concepts/global-nx':
     '/getting-started/installation#installing-nx-globally',
   '/getting-started/package-based-repo-tutorial':
-    '/getting-started/tutorials/package-based-repo-tutorial',
+    '/getting-started/tutorials/npm-workspaces-tutorial',
+  '/getting-started/tutorials/package-based-repo-tutorial':
+    '/getting-started/tutorials/npm-workspaces-tutorial',
   '/getting-started/integrated-repo-tutorial':
     '/getting-started/tutorials/integrated-repo-tutorial',
   '/getting-started/react-standalone-tutorial':
@@ -769,7 +771,7 @@ const conceptUrls = {
 
 const nested5minuteTutorialUrls = {
   '/tutorials/package-based-repo-tutorial':
-    '/getting-started/tutorials/package-based-repo-tutorial',
+    '/getting-started/tutorials/npm-workspaces-tutorial',
   '/tutorials/integrated-repo-tutorial':
     '/getting-started/tutorials/integrated-repo-tutorial',
   '/tutorials/react-standalone-tutorial':

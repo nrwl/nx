@@ -35,7 +35,7 @@ npx create-nx-workspace@latest
 
 {% cards cols="2" lgCols="5" mdCols="5" smCols="2" %}
 
-{% link-card title="Package Based Monorepos" type="tutorial" url="/getting-started/tutorials/package-based-repo-tutorial" icon="jsMono" /%}
+{% link-card title="NPM Workspaces" type="tutorial" url="/getting-started/tutorials/npm-workspaces-tutorial" icon="jsMono" /%}
 
 {% link-card title="Integrated Monorepos" type="tutorial" url="/getting-started/tutorials/integrated-repo-tutorial" icon="nx" /%}
 
