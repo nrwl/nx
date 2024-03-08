@@ -1,9 +1,9 @@
 import type {
+  Tree,
+  CreateNodes,
   ProjectConfiguration,
   TargetConfiguration,
-} from 'nx/src/config/workspace-json-project-json';
-import type { Tree } from 'nx/src/generators/tree';
-import type { CreateNodes } from 'nx/src/utils/nx-plugin';
+} from 'nx/src/devkit-exports';
 import { requireNx } from '../../nx';
 const {
   readNxJson,

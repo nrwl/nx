@@ -2,9 +2,8 @@ import * as chalk from 'chalk';
 import { dirname, join } from 'path';
 
 import { ProjectConfiguration } from '../../config/workspace-json-project-json';
-import { readPluginPackageJson } from '../../project-graph/plugins';
-import { RemotePlugin } from '../../project-graph/plugins/internal-api';
-import { loadRemoteNxPlugin } from '../../project-graph/plugins/plugin-pool';
+import { NxPlugin, readPluginPackageJson } from '../../project-graph/plugins';
+import { loadPlugin } from '../../project-graph/plugins/internal-api';
 import { readJsonFile } from '../fileutils';
 import { getNxRequirePaths } from '../installation-directory';
 import { output } from '../output';
@@ -46,7 +45,7 @@ export async function getPluginCapabilities(
         getNxRequirePaths(workspaceRoot)
       );
     const pluginModule = includeRuntimeCapabilities
-      ? await tryGetModule(packageJson, workspaceRoot, projects)
+      ? await tryGetModule(packageJson, workspaceRoot)
       : ({} as Record<string, unknown>);
     return {
       name: pluginName,
@@ -99,19 +98,18 @@ export async function getPluginCapabilities(
 
 async function tryGetModule(
   packageJson: PackageJson,
-  workspaceRoot: string,
-  projects: Record<string, ProjectConfiguration>
-): Promise<RemotePlugin | null> {
+  workspaceRoot: string
+): Promise<NxPlugin | null> {
   try {
     return packageJson.generators ??
       packageJson.executors ??
       packageJson['nx-migrations'] ??
       packageJson['schematics'] ??
       packageJson['builders']
-      ? await loadRemoteNxPlugin(packageJson.name, workspaceRoot)
+      ? (await loadPlugin(packageJson.name, workspaceRoot)).plugin
       : ({
           name: packageJson.name,
-        } as RemotePlugin);
+        } as NxPlugin);
   } catch {
     return null;
   }

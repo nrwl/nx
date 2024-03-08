@@ -9,20 +9,15 @@ import { PluginConfiguration } from '../../config/nx-json';
 import { RemotePlugin, nxPluginCache } from './internal-api';
 import { PluginWorkerResult, consumeMessage, createMessage } from './messaging';
 
-const pool: Set<ChildProcess> = new Set();
+const cleanupFunctions = new Set<() => void>();
 
-const pidMap = new Map<number, { name: string; pending: Set<string> }>();
+const pluginNames = new Map<ChildProcess, string>();
 
-// transaction id (tx) -> Promise, Resolver, Rejecter
-// Makes sure that we can resolve the correct promise when the worker sends back the result
-const promiseBank = new Map<
-  string,
-  {
-    promise: Promise<unknown>;
-    resolver: (result: any) => void;
-    rejecter: (err: any) => void;
-  }
->();
+interface PendingPromise {
+  promise: Promise<unknown>;
+  resolver: (result: any) => void;
+  rejector: (err: any) => void;
+}
 
 export function loadRemoteNxPlugin(plugin: PluginConfiguration, root: string) {
   // this should only really be true when running unit tests within
@@ -48,54 +43,64 @@ export function loadRemoteNxPlugin(plugin: PluginConfiguration, root: string) {
     ],
   });
   worker.send(createMessage({ type: 'load', payload: { plugin, root } }));
-  pool.add(worker);
 
   // logger.verbose(`[plugin-worker] started worker: ${worker.pid}`);
 
-  return new Promise<RemotePlugin>((res, rej) => {
-    worker.on('message', createWorkerHandler(worker, res, rej));
-    worker.on('exit', createWorkerExitHandler(worker));
-  });
+  const pendingPromises = new Map<string, PendingPromise>();
+
+  const exitHandler = createWorkerExitHandler(worker, pendingPromises);
+
+  const cleanupFunction = () => {
+    worker.off('exit', exitHandler);
+    shutdownPluginWorker(worker, pendingPromises);
+  };
+
+  cleanupFunctions.add(cleanupFunction);
+
+  return [
+    new Promise<RemotePlugin>((res, rej) => {
+      worker.on(
+        'message',
+        createWorkerHandler(worker, pendingPromises, res, rej)
+      );
+      worker.on('exit', exitHandler);
+    }),
+    () => {
+      cleanupFunction();
+      cleanupFunctions.delete(cleanupFunction);
+    },
+  ] as const;
 }
 
-let pluginWorkersShutdown = false;
-
-export async function shutdownPluginWorkers() {
+async function shutdownPluginWorker(
+  worker: ChildProcess,
+  pendingPromises: Map<string, PendingPromise>
+) {
   // Clears the plugin cache so no refs to the workers are held
   nxPluginCache.clear();
 
-  // Marks the workers as shutdown so that we don't report unexpected exits
-  pluginWorkersShutdown = true;
-
   // logger.verbose(`[plugin-pool] starting worker shutdown`);
 
-  const pending = getPendingPromises(pool, pidMap);
+  // Other things may be interacting with the worker.
+  // Wait for all pending promises to be done before killing the worker
+  await Promise.all(
+    Array.from(pendingPromises.values()).map(({ promise }) => promise)
+  );
 
-  if (pending.length > 0) {
-    // logger.verbose(
-    //   `[plugin-pool] waiting for ${pending.length} pending operations to complete`
-    // );
-    await Promise.all(pending);
-  }
-
-  // logger.verbose(`[plugin-pool] all pending operations completed`);
-
-  for (const p of pool) {
-    p.kill('SIGINT');
-  }
-
-  // logger.verbose(`[plugin-pool] all workers killed`);
+  worker.kill('SIGINT');
 }
 
 /**
  * Creates a message handler for the given worker.
  * @param worker Instance of plugin-worker
+ * @param pending Set of pending promises
  * @param onload Resolver for RemotePlugin promise
  * @param onloadError Rejecter for RemotePlugin promise
  * @returns Function to handle messages from the worker
  */
 function createWorkerHandler(
   worker: ChildProcess,
+  pending: Map<string, PendingPromise>,
   onload: (plugin: RemotePlugin) => void,
   onloadError: (err?: unknown) => void
 ) {
@@ -113,8 +118,7 @@ function createWorkerHandler(
         if (result.success) {
           const { name, createNodesPattern } = result;
           pluginName = name;
-          const pending = new Set<string>();
-          pidMap.set(worker.pid, { name, pending });
+          pluginNames.set(worker, pluginName);
           onload({
             name,
             createNodes: createNodesPattern
@@ -167,101 +171,77 @@ function createWorkerHandler(
         }
       },
       createDependenciesResult: ({ tx, ...result }) => {
-        const { resolver, rejecter } = promiseBank.get(tx);
+        const { resolver, rejector } = pending.get(tx);
         if (result.success) {
           resolver(result.dependencies);
         } else if (result.success === false) {
-          rejecter(result.error);
+          rejector(result.error);
         }
-        pidMap.get(worker.pid)?.pending.delete(tx);
-        promiseBank.delete(tx);
       },
       createNodesResult: ({ tx, ...result }) => {
-        const { resolver, rejecter } = promiseBank.get(tx);
+        const { resolver, rejector } = pending.get(tx);
         if (result.success) {
           resolver(result.result);
         } else if (result.success === false) {
-          rejecter(result.error);
+          rejector(result.error);
         }
-        pidMap.get(worker.pid)?.pending.delete(tx);
-        promiseBank.delete(tx);
       },
       processProjectGraphResult: ({ tx, ...result }) => {
-        const { resolver, rejecter } = promiseBank.get(tx);
+        const { resolver, rejector } = pending.get(tx);
         if (result.success) {
           resolver(result.graph);
         } else if (result.success === false) {
-          rejecter(result.error);
+          rejector(result.error);
         }
-        pidMap.get(worker.pid)?.pending.delete(tx);
-        promiseBank.delete(tx);
       },
     });
   };
 }
 
-function createWorkerExitHandler(worker: ChildProcess) {
+function createWorkerExitHandler(
+  worker: ChildProcess,
+  pendingPromises: Map<string, PendingPromise>
+) {
   return () => {
-    if (!pluginWorkersShutdown) {
-      pidMap.get(worker.pid)?.pending.forEach((tx) => {
-        const { rejecter } = promiseBank.get(tx);
-        rejecter(
-          new Error(
-            `Plugin worker ${
-              pidMap.get(worker.pid).name ?? worker.pid
-            } exited unexpectedly with code ${worker.exitCode}`
-          )
-        );
-      });
-      shutdownPluginWorkers();
+    for (const [_, pendingPromise] of pendingPromises) {
+      pendingPromise.rejector(
+        new Error(
+          `Plugin worker ${
+            pluginNames.get(worker) ?? worker.pid
+          } exited unexpectedly with code ${worker.exitCode}`
+        )
+      );
     }
   };
 }
 
 process.on('exit', () => {
-  if (pool.size) {
-    shutdownPluginWorkers();
+  for (const fn of cleanupFunctions) {
+    fn();
   }
 });
 
-function getPendingPromises(
-  pool: Set<ChildProcess>,
-  pidMap: Map<number, { name: string; pending: Set<string> }>
-) {
-  const pendingTxs: Array<Promise<unknown>> = [];
-  for (const p of pool) {
-    const { pending } = pidMap.get(p.pid) ?? { pending: new Set() };
-    for (const tx of pending) {
-      pendingTxs.push(promiseBank.get(tx)?.promise);
-    }
-  }
-  return pendingTxs;
-}
-
 function registerPendingPromise(
   tx: string,
-  pending: Set<string>,
+  pending: Map<string, PendingPromise>,
   callback: () => void
 ): Promise<any> {
-  let resolver, rejecter;
+  let resolver, rejector;
 
   const promise = new Promise((res, rej) => {
     resolver = res;
-    rejecter = rej;
+    rejector = rej;
 
     callback();
-  }).then((val) => {
-    // Remove the promise from the pending set
+  }).finally(() => {
     pending.delete(tx);
-    // Return the original value
-    return val;
   });
 
-  pending.add(tx);
-  promiseBank.set(tx, {
+  pending.set(tx, {
     promise,
     resolver,
-    rejecter,
+    rejector,
   });
+
   return promise;
 }

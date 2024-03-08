@@ -10,14 +10,17 @@ import {
   buildProjectsConfigurationsFromProjectPathsAndPlugins,
   ConfigurationSourceMaps,
 } from './project-configuration-utils';
-import { RemotePlugin, loadNxPlugins } from '../plugins/internal-api';
+import {
+  RemotePlugin,
+  loadNxPluginsInIsolation,
+} from '../plugins/internal-api';
 import {
   getNxWorkspaceFilesFromContext,
   globWithWorkspaceContext,
 } from '../../utils/workspace-context';
 import { buildAllWorkspaceFiles } from './build-all-workspace-files';
 import { join } from 'path';
-import { shutdownPluginWorkers } from '../plugins/plugin-pool';
+import { NxPlugin } from '../plugins';
 
 /**
  * Walks the workspace directory to create the `projectFileMap`, `ProjectConfigurations` and `allWorkspaceFiles`
@@ -60,23 +63,17 @@ export async function retrieveWorkspaceFiles(
 
 /**
  * Walk through the workspace and return `ProjectConfigurations`. Only use this if the projectFileMap is not needed.
- *
- * @param workspaceRoot
- * @param nxJson
  */
 export async function retrieveProjectConfigurations(
+  plugins: RemotePlugin[],
   workspaceRoot: string,
   nxJson: NxJsonConfiguration
 ): Promise<RetrievedGraphNodes> {
-  const plugins = await loadNxPlugins(nxJson?.plugins ?? [], workspaceRoot);
   const projects = await _retrieveProjectConfigurations(
     workspaceRoot,
     nxJson,
     plugins
   );
-  if (!global.NX_GRAPH_CREATION) {
-    await shutdownPluginWorkers();
-  }
   return projects;
 }
 
@@ -97,9 +94,18 @@ export async function retrieveProjectConfigurationsWithAngularProjects(
     pluginsToLoad.push(join(__dirname, '../../adapter/angular-json'));
   }
 
-  const plugins = await loadNxPlugins(nxJson?.plugins ?? [], workspaceRoot);
+  const [plugins, cleanup] = await loadNxPluginsInIsolation(
+    nxJson?.plugins ?? [],
+    workspaceRoot
+  );
 
-  return _retrieveProjectConfigurations(workspaceRoot, nxJson, plugins);
+  const res = _retrieveProjectConfigurations(
+    workspaceRoot,
+    nxJson,
+    await plugins
+  );
+  cleanup();
+  return res;
 }
 
 export type RetrievedGraphNodes = {
@@ -127,7 +133,7 @@ function _retrieveProjectConfigurations(
 
 export function retrieveProjectConfigurationPaths(
   root: string,
-  plugins: PluginGlobsOnly
+  plugins: NxPlugin[]
 ): string[] {
   const projectGlobPatterns = configurationGlobs(plugins);
   return globWithWorkspaceContext(root, projectGlobPatterns);
@@ -143,7 +149,7 @@ export async function retrieveProjectConfigurationsWithoutPluginInference(
   root: string
 ): Promise<Record<string, ProjectConfiguration>> {
   const nxJson = readNxJson(root);
-  const plugins = await loadNxPlugins([]); // only load default plugins
+  const [plugins, cleanup] = await loadNxPluginsInIsolation([]); // only load default plugins
   const projectGlobPatterns = retrieveProjectConfigurationPaths(root, plugins);
   const cacheKey = root + ',' + projectGlobPatterns.join(',');
 
@@ -160,6 +166,8 @@ export async function retrieveProjectConfigurationsWithoutPluginInference(
   );
 
   projectsWithoutPluginCache.set(cacheKey, projects);
+
+  cleanup();
 
   return projects;
 }
@@ -195,12 +203,10 @@ export async function createProjectConfigurations(
   };
 }
 
-type PluginGlobsOnly = Array<{ createNodes?: readonly [string, ...unknown[]] }>;
-
-export function configurationGlobs(plugins: PluginGlobsOnly): string[] {
+export function configurationGlobs(plugins: Array<NxPlugin>): string[] {
   const globPatterns = [];
   for (const plugin of plugins) {
-    if (plugin.createNodes) {
+    if ('createNodes' in plugin && plugin.createNodes) {
       globPatterns.push(plugin.createNodes[0]);
     }
   }

@@ -25,9 +25,17 @@ describe('retrieveProjectConfigurationPaths', () => {
       })
     );
 
-    const configPaths = await retrieveProjectConfigurationPaths(fs.tempDir, [
+    const configPaths = retrieveProjectConfigurationPaths(fs.tempDir, [
       {
-        createNodes: ['{project.json,**/project.json}', () => {}],
+        name: 'test',
+        createNodes: [
+          '{project.json,**/project.json}',
+          () => {
+            return {
+              projects: {},
+            };
+          },
+        ],
       },
     ]);
 
