@@ -1,9 +1,23 @@
-import { toProjectName } from './workspaces';
+import { toProjectName, Workspaces } from './workspaces';
 import { TempFs } from '../internal-testing-utils/temp-fs';
 import { withEnvironmentVariables } from '../internal-testing-utils/with-environment';
 import { retrieveProjectConfigurations } from '../project-graph/utils/retrieve-workspace-files';
 import { readNxJson } from './configuration';
 import { shutdownPluginWorkers } from '../project-graph/plugins/plugin-pool';
+
+const libConfig = (root, name?: string) => ({
+  name: name ?? toProjectName(`${root}/some-file`),
+  projectType: 'library',
+  root: `libs/${root}`,
+  sourceRoot: `libs/${root}/src`,
+  targets: {
+    'nx-release-publish': {
+      dependsOn: ['^nx-release-publish'],
+      executor: '@nx/js:release-publish',
+      options: {},
+    },
+  },
+});
 
 describe('Workspaces', () => {
   let fs: TempFs;
@@ -39,6 +53,7 @@ describe('Workspaces', () => {
         },
         () => retrieveProjectConfigurations(fs.tempDir, readNxJson(fs.tempDir))
       );
+      await shutdownPluginWorkers();
       expect(projects['my-package']).toEqual({
         name: 'my-package',
         root: 'packages/my-package',
@@ -52,6 +67,7 @@ describe('Workspaces', () => {
           },
         },
       });
+      await shutdownPluginWorkers();
     });
   });
 });

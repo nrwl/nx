@@ -77,7 +77,6 @@ export function readProjectsConfigurationFromProjectGraph(
 }
 
 export async function buildProjectGraphAndSourceMapsWithoutDaemon() {
-  global.NX_GRAPH_CREATION = true;
   const nxJson = readNxJson();
 
   performance.mark('retrieve-project-configurations:start');
@@ -104,7 +103,7 @@ export async function buildProjectGraphAndSourceMapsWithoutDaemon() {
     )
   ).projectGraph;
   performance.mark('build-project-graph-using-project-file-map:end');
-  delete global.NX_GRAPH_CREATION;
+
   return { projectGraph, sourceMaps };
 }
 
