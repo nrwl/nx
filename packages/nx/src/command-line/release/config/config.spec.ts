@@ -5344,6 +5344,197 @@ describe('createNxReleaseConfig()', () => {
       `);
     });
 
+    it('should parse shorthand for enabling a commit type', async () => {
+      const res = await createNxReleaseConfig(projectGraph, projectFileMap, {
+        conventionalCommits: {
+          types: {
+            feat: true,
+            fix: true,
+            perf: true,
+            docs: true,
+            customType: true,
+          },
+        },
+      });
+
+      expect(res).toMatchInlineSnapshot(`
+      {
+        "error": null,
+        "nxReleaseConfig": {
+          "changelog": {
+            "automaticFromRef": false,
+            "git": {
+              "commit": true,
+              "commitArgs": "",
+              "commitMessage": "chore(release): publish {version}",
+              "stageChanges": false,
+              "tag": true,
+              "tagArgs": "",
+              "tagMessage": "",
+            },
+            "projectChangelogs": false,
+            "workspaceChangelog": {
+              "createRelease": false,
+              "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
+              "file": "{workspaceRoot}/CHANGELOG.md",
+              "renderOptions": {
+                "authors": true,
+                "commitReferences": true,
+                "versionTitleDate": true,
+              },
+              "renderer": "nx/release/changelog-renderer",
+            },
+          },
+          "conventionalCommits": {
+            "types": {
+              "build": {
+                "changelog": {
+                  "hidden": true,
+                  "title": "📦 Build",
+                },
+                "semverBump": "none",
+              },
+              "chore": {
+                "changelog": {
+                  "hidden": true,
+                  "title": "🏡 Chore",
+                },
+                "semverBump": "none",
+              },
+              "ci": {
+                "changelog": {
+                  "hidden": true,
+                  "title": "🤖 CI",
+                },
+                "semverBump": "none",
+              },
+              "customType": {
+                "changelog": {
+                  "hidden": false,
+                  "title": "customType",
+                },
+                "semverBump": "patch",
+              },
+              "docs": {
+                "changelog": {
+                  "hidden": false,
+                  "title": "📖 Documentation",
+                },
+                "semverBump": "patch",
+              },
+              "examples": {
+                "changelog": {
+                  "hidden": true,
+                  "title": "🏀 Examples",
+                },
+                "semverBump": "none",
+              },
+              "feat": {
+                "changelog": {
+                  "hidden": false,
+                  "title": "🚀 Features",
+                },
+                "semverBump": "minor",
+              },
+              "fix": {
+                "changelog": {
+                  "hidden": false,
+                  "title": "🩹 Fixes",
+                },
+                "semverBump": "patch",
+              },
+              "perf": {
+                "changelog": {
+                  "hidden": false,
+                  "title": "🔥 Performance",
+                },
+                "semverBump": "patch",
+              },
+              "refactor": {
+                "changelog": {
+                  "hidden": true,
+                  "title": "💅 Refactors",
+                },
+                "semverBump": "none",
+              },
+              "revert": {
+                "changelog": {
+                  "hidden": true,
+                  "title": "⏪ Revert",
+                },
+                "semverBump": "none",
+              },
+              "style": {
+                "changelog": {
+                  "hidden": true,
+                  "title": "🎨 Styles",
+                },
+                "semverBump": "none",
+              },
+              "test": {
+                "changelog": {
+                  "hidden": true,
+                  "title": "✅ Tests",
+                },
+                "semverBump": "none",
+              },
+              "types": {
+                "changelog": {
+                  "hidden": true,
+                  "title": "🌊 Types",
+                },
+                "semverBump": "none",
+              },
+            },
+          },
+          "git": {
+            "commit": false,
+            "commitArgs": "",
+            "commitMessage": "chore(release): publish {version}",
+            "stageChanges": false,
+            "tag": false,
+            "tagArgs": "",
+            "tagMessage": "",
+          },
+          "groups": {
+            "__default__": {
+              "changelog": false,
+              "projects": [
+                "lib-a",
+                "lib-b",
+                "nx",
+              ],
+              "projectsRelationship": "fixed",
+              "releaseTagPattern": "v{version}",
+              "version": {
+                "conventionalCommits": false,
+                "generator": "@nx/js:release-version",
+                "generatorOptions": {},
+              },
+            },
+          },
+          "projectsRelationship": "fixed",
+          "releaseTagPattern": "v{version}",
+          "version": {
+            "conventionalCommits": false,
+            "generator": "@nx/js:release-version",
+            "generatorOptions": {},
+            "git": {
+              "commit": false,
+              "commitArgs": "",
+              "commitMessage": "chore(release): publish {version}",
+              "stageChanges": true,
+              "tag": false,
+              "tagArgs": "",
+              "tagMessage": "",
+            },
+            "preVersionCommand": "",
+          },
+        },
+      }
+    `);
+    });
+
     it('should parse shorthand for disabling changelog appearance for a commit type', async () => {
       const res = await createNxReleaseConfig(projectGraph, projectFileMap, {
         conventionalCommits: {
@@ -5533,6 +5724,201 @@ describe('createNxReleaseConfig()', () => {
             },
           },
         }
+      `);
+    });
+
+    it('should parse shorthand for enabling changelog appearance for a commit type', async () => {
+      const res = await createNxReleaseConfig(projectGraph, projectFileMap, {
+        conventionalCommits: {
+          types: {
+            fix: {
+              changelog: true,
+            },
+            docs: {
+              changelog: true,
+            },
+            customType: {
+              changelog: true,
+            },
+          },
+        },
+      });
+
+      expect(res).toMatchInlineSnapshot(`
+      {
+        "error": null,
+        "nxReleaseConfig": {
+          "changelog": {
+            "automaticFromRef": false,
+            "git": {
+              "commit": true,
+              "commitArgs": "",
+              "commitMessage": "chore(release): publish {version}",
+              "stageChanges": false,
+              "tag": true,
+              "tagArgs": "",
+              "tagMessage": "",
+            },
+            "projectChangelogs": false,
+            "workspaceChangelog": {
+              "createRelease": false,
+              "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
+              "file": "{workspaceRoot}/CHANGELOG.md",
+              "renderOptions": {
+                "authors": true,
+                "commitReferences": true,
+                "versionTitleDate": true,
+              },
+              "renderer": "nx/release/changelog-renderer",
+            },
+          },
+          "conventionalCommits": {
+            "types": {
+              "build": {
+                "changelog": {
+                  "hidden": true,
+                  "title": "📦 Build",
+                },
+                "semverBump": "none",
+              },
+              "chore": {
+                "changelog": {
+                  "hidden": true,
+                  "title": "🏡 Chore",
+                },
+                "semverBump": "none",
+              },
+              "ci": {
+                "changelog": {
+                  "hidden": true,
+                  "title": "🤖 CI",
+                },
+                "semverBump": "none",
+              },
+              "customType": {
+                "changelog": {
+                  "hidden": false,
+                  "title": "customType",
+                },
+                "semverBump": "patch",
+              },
+              "docs": {
+                "changelog": {
+                  "hidden": false,
+                  "title": "📖 Documentation",
+                },
+                "semverBump": "patch",
+              },
+              "examples": {
+                "changelog": {
+                  "hidden": true,
+                  "title": "🏀 Examples",
+                },
+                "semverBump": "none",
+              },
+              "feat": {
+                "changelog": {
+                  "hidden": false,
+                  "title": "🚀 Features",
+                },
+                "semverBump": "minor",
+              },
+              "fix": {
+                "changelog": {
+                  "hidden": false,
+                  "title": "🩹 Fixes",
+                },
+                "semverBump": "patch",
+              },
+              "perf": {
+                "changelog": {
+                  "hidden": false,
+                  "title": "🔥 Performance",
+                },
+                "semverBump": "none",
+              },
+              "refactor": {
+                "changelog": {
+                  "hidden": true,
+                  "title": "💅 Refactors",
+                },
+                "semverBump": "none",
+              },
+              "revert": {
+                "changelog": {
+                  "hidden": true,
+                  "title": "⏪ Revert",
+                },
+                "semverBump": "none",
+              },
+              "style": {
+                "changelog": {
+                  "hidden": true,
+                  "title": "🎨 Styles",
+                },
+                "semverBump": "none",
+              },
+              "test": {
+                "changelog": {
+                  "hidden": true,
+                  "title": "✅ Tests",
+                },
+                "semverBump": "none",
+              },
+              "types": {
+                "changelog": {
+                  "hidden": true,
+                  "title": "🌊 Types",
+                },
+                "semverBump": "none",
+              },
+            },
+          },
+          "git": {
+            "commit": false,
+            "commitArgs": "",
+            "commitMessage": "chore(release): publish {version}",
+            "stageChanges": false,
+            "tag": false,
+            "tagArgs": "",
+            "tagMessage": "",
+          },
+          "groups": {
+            "__default__": {
+              "changelog": false,
+              "projects": [
+                "lib-a",
+                "lib-b",
+                "nx",
+              ],
+              "projectsRelationship": "fixed",
+              "releaseTagPattern": "v{version}",
+              "version": {
+                "conventionalCommits": false,
+                "generator": "@nx/js:release-version",
+                "generatorOptions": {},
+              },
+            },
+          },
+          "projectsRelationship": "fixed",
+          "releaseTagPattern": "v{version}",
+          "version": {
+            "conventionalCommits": false,
+            "generator": "@nx/js:release-version",
+            "generatorOptions": {},
+            "git": {
+              "commit": false,
+              "commitArgs": "",
+              "commitMessage": "chore(release): publish {version}",
+              "stageChanges": true,
+              "tag": false,
+              "tagArgs": "",
+              "tagMessage": "",
+            },
+            "preVersionCommand": "",
+          },
+        },
+      }
       `);
     });
   });

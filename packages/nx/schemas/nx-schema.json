@@ -645,12 +645,11 @@
       "properties": {
         "types": {
           "type": "object",
-          "description": "A map of commit types to their configuration. If a type is set to 'false', then it will be hidden from changelogs and will not trigger a version bump.",
+          "description": "A map of commit types to their configuration. If a type is set to 'true', then it will be enabled with the default 'semverBump' of 'patch' and will appear in the changelog. If a type is set to 'false', then it will not trigger a version bump and will be hidden from the changelog.",
           "additionalProperties": {
             "oneOf": [
               {
-                "type": "boolean",
-                "enum": [false]
+                "type": "boolean"
               },
               {
                 "type": "object",
@@ -658,14 +657,14 @@
                   "semverBump": {
                     "type": "string",
                     "enum": ["major", "minor", "patch", "none"],
-                    "description": "The semver bump to apply to the version of the project(s) when a commit of this type is included in the release."
+                    "description": "The semver bump to apply to the version of the project(s) when a commit of this type is included in the release.",
+                    "default": "patch"
                   },
                   "changelog": {
-                    "description": "Configuration for the changelog section for commits of this type. If set to 'false', then commits of this type will not be included in the changelog.",
+                    "description": "Configuration for the changelog section for commits of this type. If set to 'true', then commits of this type will be included in the changelog with their default title for the type. If set to 'false', then commits of this type will not be included in the changelog.",
                     "oneOf": [
                       {
-                        "type": "boolean",
-                        "enum": [false]
+                        "type": "boolean"
                       },
                       {
                         "type": "object",
@@ -676,7 +675,8 @@
                           },
                           "hidden": {
                             "type": "boolean",
-                            "description": "Whether or not to include commits of this type in the changelog"
+                            "description": "Whether or not to include commits of this type in the changelog",
+                            "default": false
                           }
                         }
                       }

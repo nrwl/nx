@@ -46,6 +46,7 @@ describe('nx release conventional commits config', () => {
   let pkg3: string;
   let pkg4: string;
   let pkg5: string;
+  let pkg6: string;
 
   beforeAll(async () => {
     newProject({
@@ -67,6 +68,9 @@ describe('nx release conventional commits config', () => {
 
     pkg5 = uniq('my-pkg-5');
     runCLI(`generate @nx/workspace:npm-package ${pkg5}`);
+
+    pkg6 = uniq('my-pkg-6');
+    runCLI(`generate @nx/workspace:npm-package ${pkg6}`);
 
     // Update pkg2 to depend on pkg1
     updateJson(`${pkg2}/package.json`, (json) => {
@@ -90,6 +94,7 @@ describe('nx release conventional commits config', () => {
     await runCommandAsync(`git tag -a ${pkg3}@0.0.1 -m "${pkg3}@0.0.1"`);
     await runCommandAsync(`git tag -a ${pkg4}@0.0.1 -m "${pkg4}@0.0.1"`);
     await runCommandAsync(`git tag -a ${pkg5}@0.0.1 -m "${pkg5}@0.0.1"`);
+    await runCommandAsync(`git tag -a ${pkg6}@0.0.1 -m "${pkg6}@0.0.1"`);
   }, 60000);
   afterAll(() => cleanupProject());
 
@@ -129,8 +134,14 @@ describe('nx release conventional commits config', () => {
               // is a shortcut for setting "changelog.hidden" to false.
               changelog: false,
             },
-            // unspecified semverBump will default to "patch"
             perf: {},
+            // true should be the same as specifying {}
+            refactor: true,
+            build: {
+              semverBump: 'none',
+              // true should be the same as specifying {}
+              changelog: true,
+            },
           },
         },
       };
@@ -144,6 +155,13 @@ describe('nx release conventional commits config', () => {
     }));
     await runCommandAsync(`git add ${pkg1}/package.json`);
     await runCommandAsync(`git commit -m "fix: this is a fix"`);
+
+    updateJson(`${pkg6}/package.json`, (json) => ({
+      ...json,
+      license: 'MIT',
+    }));
+    await runCommandAsync(`git add ${pkg6}/package.json`);
+    await runCommandAsync(`git commit -m "build: this is a build"`);
 
     const versionResultNoChanges = runCLI(`release version -d`);
 
@@ -161,6 +179,9 @@ describe('nx release conventional commits config', () => {
     );
     expect(versionResultNoChanges).toContain(
       `${pkg5} 🚫 Skipping versioning "@proj/${pkg5}" as no changes were detected.`
+    );
+    expect(versionResultNoChanges).toContain(
+      `${pkg6} 🚫 Skipping versioning "@proj/${pkg6}" as no changes were detected.`
     );
 
     // update my-pkg-3 with a fix commit
@@ -187,6 +208,9 @@ describe('nx release conventional commits config', () => {
     );
     expect(versionResultDocsChanges).toContain(
       `${pkg5} 🚫 Skipping versioning "@proj/${pkg5}" as no changes were detected.`
+    );
+    expect(versionResultDocsChanges).toContain(
+      `${pkg6} 🚫 Skipping versioning "@proj/${pkg6}" as no changes were detected.`
     );
 
     // update my-pkg-2 with a fix commit
@@ -215,6 +239,9 @@ describe('nx release conventional commits config', () => {
     expect(versionResultCustomTypeChanges).toContain(
       `${pkg5} 🚫 Skipping versioning "@proj/${pkg5}" as no changes were detected.`
     );
+    expect(versionResultCustomTypeChanges).toContain(
+      `${pkg6} 🚫 Skipping versioning "@proj/${pkg6}" as no changes were detected.`
+    );
 
     updateJson(`${pkg1}/package.json`, (json) => ({
       ...json,
@@ -241,6 +268,9 @@ describe('nx release conventional commits config', () => {
     expect(versionResultCustomTypeBreakingChanges).toContain(
       `${pkg5} 🚫 Skipping versioning "@proj/${pkg5}" as no changes were detected.`
     );
+    expect(versionResultCustomTypeBreakingChanges).toContain(
+      `${pkg6} 🚫 Skipping versioning "@proj/${pkg6}" as no changes were detected.`
+    );
 
     updateJson(`${pkg4}/package.json`, (json) => ({
       ...json,
@@ -264,6 +294,9 @@ describe('nx release conventional commits config', () => {
     );
     expect(versionResultChoreChanges).toContain(
       `${pkg5} 🚫 Skipping versioning "@proj/${pkg5}" as no changes were detected.`
+    );
+    expect(versionResultChoreChanges).toContain(
+      `${pkg6} 🚫 Skipping versioning "@proj/${pkg6}" as no changes were detected.`
     );
 
     updateJson(`${pkg5}/package.json`, (json) => ({
@@ -290,6 +323,36 @@ describe('nx release conventional commits config', () => {
     );
     expect(versionResultPerfChanges).toContain(
       `${pkg5} ✍️  New version 0.0.2 written to ${pkg5}/package.json`
+    );
+    expect(versionResultPerfChanges).toContain(
+      `${pkg6} 🚫 Skipping versioning "@proj/${pkg6}" as no changes were detected.`
+    );
+
+    updateJson(`${pkg6}/package.json`, (json) => ({
+      ...json,
+      license: 'GNU GPLv3',
+    }));
+    await runCommandAsync(`git add ${pkg6}/package.json`);
+    await runCommandAsync(`git commit -m "refactor: this is refactor"`);
+
+    const versionResultRefactorChanges = runCLI(`release version -d`);
+    expect(versionResultRefactorChanges).toContain(
+      `${pkg1} ✍️  New version 1.0.0 written to ${pkg1}/package.json`
+    );
+    expect(versionResultRefactorChanges).toContain(
+      `${pkg2} ✍️  New version 0.1.0 written to ${pkg2}/package.json`
+    );
+    expect(versionResultRefactorChanges).toContain(
+      `${pkg3} ✍️  New version 0.0.2 written to ${pkg3}/package.json`
+    );
+    expect(versionResultRefactorChanges).toContain(
+      `${pkg4} ✍️  New version 0.0.2 written to ${pkg4}/package.json`
+    );
+    expect(versionResultRefactorChanges).toContain(
+      `${pkg5} ✍️  New version 0.0.2 written to ${pkg5}/package.json`
+    );
+    expect(versionResultRefactorChanges).toContain(
+      `${pkg6} ✍️  New version 0.0.2 written to ${pkg6}/package.json`
     );
 
     // Normally, users would use `nx release` or the programmatic api to ensure that
@@ -350,6 +413,21 @@ describe('nx release conventional commits config', () => {
       ### 🔥 Performance
 
       - this is a performance improvement
+    `);
+
+    const pkg6Changelog = readFile(`${pkg6}/CHANGELOG.md`);
+    expect(pkg6Changelog).toMatchInlineSnapshot(`
+      # 1.0.0 (YYYY-MM-DD)
+
+
+      ### 💅 Refactors
+
+      - this is refactor
+
+
+      ### 📦 Build
+
+      - this is a build
     `);
   });
 });

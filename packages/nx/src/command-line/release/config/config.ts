@@ -48,6 +48,14 @@ type RemoveFalseFromPropertiesOnEach<T, K extends keyof T[keyof T]> = {
   [U in keyof T]: RemoveFalseFromProperties<T[U], K>;
 };
 
+type RemoveBooleanFromType<T> = T extends boolean ? never : T;
+type RemoveBooleanFromProperties<T, K extends keyof T> = {
+  [P in keyof T]: P extends K ? RemoveBooleanFromType<T[P]> : T[P];
+};
+type RemoveBooleanFromPropertiesOnEach<T, K extends keyof T[keyof T]> = {
+  [U in keyof T]: RemoveBooleanFromProperties<T[U], K>;
+};
+
 export const IMPLICIT_DEFAULT_RELEASE_GROUP = '__default__';
 
 /**
@@ -75,9 +83,9 @@ export type NxReleaseConfig = Omit<
       >;
       // Remove the false shorthand from the conventionalCommits config types, it will be normalized to a semver bump of "none" and to be hidden on the changelog
       conventionalCommits: {
-        types: RemoveFalseFromPropertiesOnEach<
+        types: RemoveBooleanFromPropertiesOnEach<
           DeepRequired<
-            RemoveFalseFromProperties<
+            RemoveBooleanFromProperties<
               DeepRequired<
                 NxJsonConfiguration['release']['conventionalCommits']['types']
               >,
@@ -539,12 +547,23 @@ function normalizeConventionalCommitsConfig(
       };
       continue;
     }
+    if (typeConfig === true) {
+      types[t] = {};
+      continue;
+    }
     if (typeConfig.changelog === false) {
       types[t] = {
         ...typeConfig,
         changelog: {
           hidden: true,
         },
+      };
+      continue;
+    }
+    if (typeConfig.changelog === true) {
+      types[t] = {
+        ...typeConfig,
+        changelog: {},
       };
       continue;
     }

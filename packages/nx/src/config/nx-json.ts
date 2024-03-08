@@ -147,24 +147,29 @@ export interface NxReleaseConventionalCommitsConfiguration {
   types?: Record<
     string,
     /**
-     * Optionally override the version and changelog for commit types. If set to false, commits of that type will be hidden in the changelog and will not trigger a version bump.
+     * A map of commit types to their configuration.
+     * If a type is set to 'true', then it will be enabled with the default 'semverBump' of 'patch' and will appear in the changelog.
+     * If a type is set to 'false', then it will not trigger a version bump and will be hidden from the changelog.
      */
     | {
         /**
-         * The semver bump to apply when a commit of this type is found. If set to "none", the commit will be ignored for versioning purposes.
+         * The semver bump to apply when a commit of this type is found.
+         * If set to "none", the commit will be ignored for versioning purposes.
          */
         semverBump?: 'patch' | 'minor' | 'major' | 'none';
         /**
-         * Optionally override the title and visibility of the changelog section for this type. If set to false, the section will be hidden.
+         * Configuration for the changelog section for commits of this type.
+         * If set to 'true', then commits of this type will be included in the changelog with their default title for the type.
+         * If set to 'false', then commits of this type will not be included in the changelog.
          */
         changelog?:
           | {
               title?: string;
               hidden?: boolean;
             }
-          | false;
+          | boolean;
       }
-    | false
+    | boolean
   >;
 }
 

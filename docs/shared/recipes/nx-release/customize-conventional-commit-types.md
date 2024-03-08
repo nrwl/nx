@@ -30,9 +30,29 @@ then Nx Release will select the `minor` version bump and elect to release versio
 If Nx Release does not find any relevant commits since the last release, it will skip releasing a new version. This works with [independent releases](/recipes/nx-release/release-projects-independently) as well, allowing for only some projects to be released and some to be skipped.
 {% /callout %}
 
+#### Breaking Changes and Major Version Bumps
+
+Major version bumps are triggered by the presence of a `BREAKING CHANGE` in the footer of the commit message or with '!' after the commit type and scope, as specified by the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) standard. This is regardless of the type or scope of the commit. For example:
+
+```
+fix: remove deprecated config properties
+
+BREAKING CHANGE: `settings` and `overrides` keys in config are no longer supported
+```
+
+```
+fix!: do not trigger a workflow when user submits bad data
+```
+
+```
+feat(pkg-2)!: redirect users to the new workflow page
+```
+
+When Nx Release detects a breaking change, it will bump the major version, regardless of the other commits present in the history. Breaking changes will also appear in their own section of the changelog.
+
 ### Generate Changelog Sections
 
-Nx Release sorts changes within changelogs into sections based on the type of commit. By default, `fix`, `feat`, and `perf` commits will be included in the changelog. To customize the headers of changelog sections, include other commit types, or exclude the default commit types, see the [Configure Commit Types](#configure-commit-types) section below.
+Nx Release will sort changes within changelogs into sections based on the type of commit. By default, `fix`, `feat`, and `perf` commits will be included in the changelog. To customize the headers of changelog sections, include other commit types, or exclude the default commit types, see the [Configure Commit Types](#configure-commit-types) section below.
 
 See the [Nx repo](https://github.com/nrwl/nx/releases) for examples of a changelogs generated with Nx Release.
 
