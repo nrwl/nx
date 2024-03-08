@@ -20,7 +20,7 @@ import { RankdirPanel } from './feature-projects/panels/rankdir-panel';
 import { getProjectGraphService } from './machines/get-services';
 import { useSyncExternalStore } from 'use-sync-external-store/shim';
 import { Tooltip } from '@nx/graph/ui-tooltips';
-import { TooltipDisplay } from './ui-tooltips/graph-tooltip-display';
+import { GraphTooltipDisplay } from './ui-tooltips/graph-tooltip-display';
 import { useEnvironmentConfig } from '@nx/graph/shared';
 
 export function Shell(): JSX.Element {
@@ -196,7 +196,7 @@ export function Shell(): JSX.Element {
             className="h-full w-full cursor-pointer"
             id="cytoscape-graph"
           ></div>
-          <TooltipDisplay></TooltipDisplay>
+          <GraphTooltipDisplay></GraphTooltipDisplay>
 
           <Tooltip
             openAction="hover"

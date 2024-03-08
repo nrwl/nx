@@ -1,29 +1,16 @@
 import {
   getCheckedProjectItems,
   getDeselectAllButton,
-  getFocusButtonForProject,
-  getGroupByFolderCheckbox,
   getGroupByProjectCheckbox,
   getImageDownloadButton,
-  getIncludeProjectsInPathButton,
-  getSearchDepthCheckbox,
-  getSearchDepthIncrementButton,
-  getSelectAffectedButton,
   getSelectAllButton,
-  getSelectProjectsMessage,
   getSelectTargetDropdown,
   getSelectTasksMessage,
-  getTextFilterInput,
-  getTextFilterReset,
-  getToggleAllButtonForFolder,
   getUncheckedProjectItems,
-  getUnfocusProjectButton,
   openTooltipForNode,
 } from '../support/app.po';
 
-import * as affectedJson from '../fixtures/affected.json';
-import { testProjectsRoutes, testTaskRoutes } from '../support/routing-tests';
-import * as nxExamplesTaskInputs from '../fixtures/nx-examples-task-inputs.json';
+import { testTaskRoutes } from '../support/routing-tests';
 
 describe('dev mode - task graph', () => {
   before(() => {
@@ -186,52 +173,41 @@ describe('dev mode - task graph', () => {
   });
 
   describe('file inputs', () => {
-    beforeEach(() => {
-      cy.intercept(
-        {
-          method: 'GET',
-          url: '/task-inputs.json*',
-        },
-        async (req) => {
-          // Extract the desired query parameter
-          const taskId = req.url.split('taskId=')[1];
-          // Load the fixture data and find the property based on the query parameter
-
-          const expandedInputs = nxExamplesTaskInputs[taskId];
-
-          // Reply with the selected property
-          req.reply({
-            body: expandedInputs,
-          });
-        }
-      ).as('getTaskInputs');
-    });
     it('should display input files', () => {
       getSelectTargetDropdown().select('build', { force: true });
       cy.get('[data-project="cart"]').click({
         force: true,
       });
       openTooltipForNode('cart:build');
-      cy.get('[data-cy="inputs-accordion"]').click();
+      cy.get('[data-cy="inputs-accordions"]').should('exist');
+      const expectedInputs = ['production', '^production'];
+      cy.get('[data-cy="inputs-accordion"]')
+        .should('have.length', 2)
+        .each((el, idx) => {
+          expect(el.text()).to.contain(expectedInputs[idx]);
+        });
+      cy.get('[data-cy="inputs-accordion"]').contains('^production').click();
 
-      cy.get('[data-cy="input-list-entry"]').should('have.length', 18);
       const expectedSections = [
         'cart-cart-page',
         'shared-assets',
+        'shared-cart-state',
         'shared-header',
+        'shared-jsxify',
+        'shared-product-data',
+        'shared-product-state',
+        'shared-product-types',
+        'shared-product-ui',
         'shared-styles',
-        'External Inputs',
       ];
       cy.get('[data-cy="input-section-entry"]').each((el, idx) => {
         expect(el.text()).to.equal(expectedSections[idx]);
       });
 
       const sharedHeaderSelector =
-        '[data-cy="input-section-entry"]:contains(shared-header)';
-      cy.get(sharedHeaderSelector).click();
-      cy.get(sharedHeaderSelector)
-        .nextAll('[data-cy="input-list-entry"]')
-        .should('have.length', 9);
+        'li[data-cy="input-section-entry"][id="cart-cart-page"]';
+      cy.get(sharedHeaderSelector).should('exist').click();
+      cy.get('[data-cy="input-list-entry"]').should('have.length', 12);
     });
   });
 });

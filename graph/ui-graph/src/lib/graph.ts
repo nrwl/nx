@@ -2,6 +2,11 @@
 import { CollectionReturnValue, use } from 'cytoscape';
 import cytoscapeDagre from 'cytoscape-dagre';
 import popper from 'cytoscape-popper';
+
+/* eslint-disable @nx/enforce-module-boundaries */
+// nx-ignore-next-line
+import type { ExpandedInputs } from 'nx/src/command-line/graph/inputs-utils';
+
 import {
   GraphPerfReport,
   ProjectGraphRenderEvents,
@@ -35,7 +40,7 @@ export class GraphService {
     rankDir: 'TB' | 'LR' = 'TB',
     public getTaskInputs: (
       taskId: string
-    ) => Promise<Record<string, string[]>> = undefined
+    ) => Promise<{ [inputName: string]: ExpandedInputs }> = undefined
   ) {
     use(cytoscapeDagre);
     use(popper);

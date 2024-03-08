@@ -1,9 +1,12 @@
 /* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
 import type {
+  ExpandedTaskInputsReponse,
   ProjectGraphClientResponse,
   TaskGraphClientResponse,
 } from 'nx/src/command-line/graph/graph';
+// nx-ignore-next-line
+import type { ExpandedInputs } from 'nx/src/command-line/graph/inputs-utils';
 import { ProjectGraphService } from './get-project-graph-data-service';
 /* eslint-enable @nx/enforce-module-boundaries */
 
@@ -50,7 +53,7 @@ export class FetchProjectGraphService implements ProjectGraphService {
 
   async getExpandedTaskInputs(
     taskId: string
-  ): Promise<Record<string, string[]>> {
+  ): Promise<{ [inputName: string]: ExpandedInputs }> {
     if (!this.taskInputsUrl) {
       return {};
     }
@@ -59,6 +62,6 @@ export class FetchProjectGraphService implements ProjectGraphService {
     });
 
     const response = await fetch(request);
-    return (await response.json())[taskId];
+    return ((await response.json()) as ExpandedTaskInputsReponse)[taskId];
   }
 }

@@ -1,7 +1,10 @@
+/* eslint-disable @nx/enforce-module-boundaries */
+// nx-ignore-next-line
+import type { InputDefinition } from 'nx/src/config/workspace-json-project-json';
 import { JSX, ReactNode } from 'react';
 
-interface RenderPropertyProps {
-  data: string | Record<string, any> | any[];
+export interface RenderPropertyProps {
+  data: string | InputDefinition | Record<string, any> | any[];
   children?: ReactNode;
 }
 

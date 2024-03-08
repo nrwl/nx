@@ -2,19 +2,12 @@ import { createHash } from 'crypto';
 import { existsSync, readFileSync, statSync, writeFileSync } from 'fs';
 import { copySync, ensureDirSync } from 'fs-extra';
 import * as http from 'http';
-import { minimatch } from 'minimatch';
 import { URL } from 'node:url';
 import * as open from 'open';
-import {
-  basename,
-  dirname,
-  extname,
-  isAbsolute,
-  join,
-  parse,
-  relative,
-} from 'path';
+import { basename, dirname, extname, isAbsolute, join, parse } from 'path';
 import { performance } from 'perf_hooks';
+import { Server } from 'net';
+
 import { readNxJson, workspaceLayout } from '../../config/configuration';
 import {
   ProjectFileMap,
@@ -26,12 +19,8 @@ import { writeJsonFile } from '../../utils/fileutils';
 import { output } from '../../utils/output';
 import { workspaceRoot } from '../../utils/workspace-root';
 
-import { Server } from 'net';
-
-import { FileData } from '../../config/project-graph';
-import { TaskGraph } from '../../config/task-graph';
+import { Task, TaskGraph } from '../../config/task-graph';
 import { daemonClient } from '../../daemon/client/client';
-import { getRootTsConfigPath } from '../../plugins/js/utils/typescript';
 import { pruneExternalNodes } from '../../project-graph/operators';
 import {
   createProjectGraphAndSourceMapsAsync,
@@ -44,14 +33,18 @@ import {
 import { allFileData } from '../../utils/all-file-data';
 import { splitArgsIntoNxArgsAndOverrides } from '../../utils/command-line-utils';
 import { NxJsonConfiguration } from '../../config/nx-json';
-import { HashPlanner, transferProjectGraph } from '../../native';
-import { transformProjectGraphForRust } from '../../native/transform-objects';
 import { getAffectedGraphNodes } from '../affected/affected';
 import { readFileMapCache } from '../../project-graph/nx-deps-cache';
 import { ConfigurationSourceMaps } from '../../project-graph/utils/project-configuration-utils';
-
-import { filterUsingGlobPatterns } from '../../hasher/task-hasher';
+import { Hash, getNamedInputs } from '../../hasher/task-hasher';
 import { createTaskHasher } from '../../hasher/create-task-hasher';
+
+import {
+  ExpandedInputs,
+  expandInputs,
+  getFilesForDepInput,
+  getFilesForNamedInput,
+} from './inputs-utils';
 
 export interface ProjectGraphClientResponse {
   hash: string;
@@ -67,12 +60,18 @@ export interface ProjectGraphClientResponse {
 
 export interface TaskGraphClientResponse {
   taskGraphs: Record<string, TaskGraph>;
-  plans?: Record<string, string[]>;
+  plans?: {
+    [taskId: string]: {
+      [inputName: string]: string[];
+    };
+  };
   errors: Record<string, string>;
 }
 
 export interface ExpandedTaskInputsReponse {
-  [taskId: string]: Record<string, string[]>;
+  [taskId: string]: {
+    [inputName: string]: ExpandedInputs;
+  };
 }
 
 // maps file extention to MIME types
@@ -129,7 +128,6 @@ function buildEnvironmentJs(
       depGraphClientResponse
     )};
     `;
-
     environmentJs += `window.taskGraphResponse = ${JSON.stringify(
       taskGraphClientResponse
     )};
@@ -137,7 +135,6 @@ function buildEnvironmentJs(
     environmentJs += `window.expandedTaskInputsResponse = ${JSON.stringify(
       expandedTaskInputsReponse
     )};`;
-
     environmentJs += `window.sourceMapsResponse = ${JSON.stringify(
       sourceMapsResponse
     )};`;
@@ -380,11 +377,13 @@ export async function generateGraph(
       const { projectGraphClientResponse } =
         await createProjectGraphAndSourceMapClientResponse(affectedProjects);
 
-      const taskGraphClientResponse = await createTaskGraphClientResponse();
-      const taskInputsReponse = await createExpandedTaskInputResponse(
-        taskGraphClientResponse,
-        projectGraphClientResponse
-      );
+      const taskGraphClientResponse: TaskGraphClientResponse =
+        await createTaskGraphClientResponse(projectGraphClientResponse);
+      const taskInputsReponse: ExpandedTaskInputsReponse =
+        await createExpandedTaskInputsResponse(
+          taskGraphClientResponse,
+          projectGraphClientResponse
+        );
 
       const environmentJs = buildEnvironmentJs(
         args.exclude || [],
@@ -544,7 +543,11 @@ async function startServer(
 
     if (sanitizePath === 'task-graph.json') {
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify(await createTaskGraphClientResponse()));
+      res.end(
+        JSON.stringify(
+          await createTaskGraphClientResponse(projectGraphClientResponse)
+        )
+      );
       return;
     }
 
@@ -553,7 +556,10 @@ async function startServer(
 
       const taskId = parsedUrl.searchParams.get('taskId');
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      const inputs = await getExpandedTaskInputs(taskId);
+      const inputs = await getExpandedTaskInputs(
+        taskId,
+        currentProjectGraphClientResponse
+      );
       performance.mark('task input generation:end');
 
       res.end(JSON.stringify({ [taskId]: inputs }));
@@ -733,6 +739,7 @@ async function createProjectGraphAndSourceMapClientResponse(
 }
 
 async function createTaskGraphClientResponse(
+  projectGraphClientResponse: ProjectGraphClientResponse = currentProjectGraphClientResponse,
   pruneExternal: boolean = false
 ): Promise<TaskGraphClientResponse> {
   let graph: ProjectGraph;
@@ -748,23 +755,39 @@ async function createTaskGraphClientResponse(
 
   performance.mark('task graph generation:start');
   const taskGraphs = getAllTaskGraphsForWorkspace(nxJson, graph);
-  performance.mark('task graph generation:end');
 
-  const planner = new HashPlanner(
-    nxJson,
-    transferProjectGraph(transformProjectGraphForRust(graph))
-  );
+  performance.mark('task graph generation:end');
   performance.mark('task hash plan generation:start');
-  const plans: Record<string, string[]> = {};
+
+  const plans: {
+    [taskId: string]: {
+      [input: string]: string[];
+    };
+  } = {};
   for (const individualTaskGraph of Object.values(taskGraphs.taskGraphs)) {
     for (const task of Object.values(individualTaskGraph.tasks)) {
-      if (plans[task.id]) {
-        continue;
-      }
-
-      plans[task.id] = planner.getPlans([task.id], individualTaskGraph)[
-        task.id
-      ];
+      const projectName = task.target.project;
+      const project = projectGraphClientResponse.projects.find(
+        (project) => project.name === projectName
+      );
+      project.data.targets[task.target.target].inputs?.forEach(
+        async (input) => {
+          if (typeof input === 'string') {
+            const plansForTaskInput = getPlansForTaskInput(
+              project,
+              input,
+              projectGraphClientResponse,
+              nxJson
+            );
+            if (plansForTaskInput.length > 0) {
+              if (!plans[task.id]) {
+                plans[task.id] = {};
+              }
+              plans[task.id][input] = plansForTaskInput;
+            }
+          }
+        }
+      );
     }
   }
   performance.mark('task hash plan generation:end');
@@ -787,27 +810,39 @@ async function createTaskGraphClientResponse(
   };
 }
 
-async function createExpandedTaskInputResponse(
+async function createExpandedTaskInputsResponse(
   taskGraphClientResponse: TaskGraphClientResponse,
   depGraphClientResponse: ProjectGraphClientResponse
 ): Promise<ExpandedTaskInputsReponse> {
   performance.mark('task input static generation:start');
 
   const allWorkspaceFiles = await allFileData();
-  const response: Record<string, Record<string, string[]>> = {};
+  const response: ExpandedTaskInputsReponse = {};
 
-  Object.entries(taskGraphClientResponse.plans).forEach(([key, inputs]) => {
-    const [project] = key.split(':');
-
-    const expandedInputs = expandInputs(
-      inputs,
-      depGraphClientResponse.projects.find((p) => p.name === project),
-      allWorkspaceFiles,
-      depGraphClientResponse
-    );
-
-    response[key] = expandedInputs;
-  });
+  Object.entries(taskGraphClientResponse.plans ?? {}).forEach(
+    ([taskId, inputs]: [string, Record<string, string[]>]) => {
+      Object.entries(inputs).forEach(
+        ([inputName, plans]: [string, string[]]) => {
+          const expandedInputs: ExpandedInputs = expandInputs(
+            plans,
+            allWorkspaceFiles,
+            depGraphClientResponse,
+            taskId
+          );
+          if (
+            expandedInputs &&
+            Object.keys(expandedInputs)?.length > 0 &&
+            Object.values(expandedInputs)?.flat()?.length > 0
+          ) {
+            if (!response[taskId]) {
+              response[taskId] = {};
+            }
+            response[taskId][inputName] = expandedInputs;
+          }
+        }
+      );
+    }
+  );
   performance.mark('task input static generation:end');
   performance.measure(
     'task input static generation',
@@ -834,57 +869,58 @@ function getAllTaskGraphsForWorkspace(
   // TODO(cammisuli): improve performance here. Cache results or something.
   for (const projectName in projectGraph.nodes) {
     const project = projectGraph.nodes[projectName];
-    const targets = Object.keys(project.data.targets ?? {});
 
-    targets.forEach((target) => {
-      const taskId = createTaskId(projectName, target);
-      try {
-        taskGraphs[taskId] = createTaskGraph(
-          projectGraph,
-          defaultDependencyConfigs,
-          [projectName],
-          [target],
-          undefined,
-          {}
+    Object.entries(project.data.targets ?? {}).forEach(
+      ([targetName, targetConfiguration]) => {
+        const taskId = createTaskId(projectName, targetName);
+        try {
+          taskGraphs[taskId] = createTaskGraph(
+            projectGraph,
+            defaultDependencyConfigs,
+            [projectName],
+            [targetName],
+            undefined,
+            {}
+          );
+        } catch (err) {
+          taskGraphs[taskId] = {
+            tasks: {},
+            dependencies: {},
+            roots: [],
+          };
+
+          taskGraphErrors[taskId] = err.message;
+        }
+
+        const configurations: string[] = Object.keys(
+          targetConfiguration.configurations
         );
-      } catch (err) {
-        taskGraphs[taskId] = {
-          tasks: {},
-          dependencies: {},
-          roots: [],
-        };
 
-        taskGraphErrors[taskId] = err.message;
+        if (configurations.length > 0) {
+          configurations.forEach((configuration) => {
+            const taskId = createTaskId(projectName, targetName, configuration);
+            try {
+              taskGraphs[taskId] = createTaskGraph(
+                projectGraph,
+                defaultDependencyConfigs,
+                [projectName],
+                [targetName],
+                configuration,
+                {}
+              );
+            } catch (err) {
+              taskGraphs[taskId] = {
+                tasks: {},
+                dependencies: {},
+                roots: [],
+              };
+
+              taskGraphErrors[taskId] = err.message;
+            }
+          });
+        }
       }
-
-      const configurations = Object.keys(
-        project.data.targets[target]?.configurations || {}
-      );
-
-      if (configurations.length > 0) {
-        configurations.forEach((configuration) => {
-          const taskId = createTaskId(projectName, target, configuration);
-          try {
-            taskGraphs[taskId] = createTaskGraph(
-              projectGraph,
-              defaultDependencyConfigs,
-              [projectName],
-              [target],
-              configuration,
-              {}
-            );
-          } catch (err) {
-            taskGraphs[taskId] = {
-              tasks: {},
-              dependencies: {},
-              roots: [],
-            };
-
-            taskGraphErrors[taskId] = err.message;
-          }
-        });
-      }
-    });
+    );
   }
 
   return { taskGraphs, errors: taskGraphErrors };
@@ -903,129 +939,62 @@ function createTaskId(
 }
 
 async function getExpandedTaskInputs(
-  taskId: string
-): Promise<Record<string, string[]>> {
-  const [project] = taskId.split(':');
-  const taskGraphResponse = await createTaskGraphClientResponse(false);
-
+  taskId: string,
+  projectGraphClientResponse: ProjectGraphClientResponse = currentProjectGraphClientResponse
+): Promise<{
+  [inputName: string]: ExpandedInputs;
+}> {
+  const taskGraphResponse = await createTaskGraphClientResponse(
+    projectGraphClientResponse
+  );
   const allWorkspaceFiles = await allFileData();
 
-  const inputs = taskGraphResponse.plans[taskId];
-  if (inputs) {
-    return expandInputs(
-      inputs,
-      currentProjectGraphClientResponse.projects.find(
-        (p) => p.name === project
-      ),
+  const inputPlans: {
+    [inputName: string]: string[];
+  } = taskGraphResponse.plans[taskId];
+  let inputs: {
+    [inputName: string]: ExpandedInputs;
+  } = {};
+  Object.entries(inputPlans).forEach(([inputName, plans]) => {
+    const expandedInputs = expandInputs(
+      plans,
       allWorkspaceFiles,
-      currentProjectGraphClientResponse
+      currentProjectGraphClientResponse,
+      taskId
     );
-  }
-  return {};
+    if (
+      expandedInputs &&
+      Object.keys(expandedInputs)?.length > 0 &&
+      Object.values(expandedInputs)?.flat()?.length > 0
+    ) {
+      inputs[inputName] = expandedInputs;
+    }
+  });
+  return inputs;
 }
 
-function expandInputs(
-  inputs: string[],
+export function getPlansForTaskInput(
   project: ProjectGraphProjectNode,
-  allWorkspaceFiles: FileData[],
-  depGraphClientResponse: ProjectGraphClientResponse
-): Record<string, string[]> {
-  const projectNames = depGraphClientResponse.projects.map((p) => p.name);
-
-  const workspaceRootInputs: string[] = [];
-  const projectRootInputs: string[] = [];
-  const externalInputs: string[] = [];
-  const otherInputs: string[] = [];
-  inputs.forEach((input) => {
-    if (input.startsWith('{workspaceRoot}')) {
-      workspaceRootInputs.push(input);
-      return;
-    }
-    const maybeProjectName = input.split(':')[0];
-    if (projectNames.includes(maybeProjectName)) {
-      projectRootInputs.push(input);
-      return;
-    }
-    if (
-      input === 'ProjectConfiguration' ||
-      input === 'TsConfig' ||
-      input === 'AllExternalDependencies'
-    ) {
-      otherInputs.push(input);
-      return;
-    }
-    // there shouldn't be any other imports in here, but external ones are always going to have a modifier in front
-    if (input.includes(':')) {
-      externalInputs.push(input);
-      return;
-    }
-  });
-
-  const workspaceRootsExpanded: string[] = workspaceRootInputs.flatMap(
-    (input) => {
-      const matches = [];
-      const withoutWorkspaceRoot = input.substring(16);
-      const matchingFile = allWorkspaceFiles.find(
-        (t) => t.file === withoutWorkspaceRoot
-      );
-      if (matchingFile) {
-        matches.push(matchingFile.file);
-      } else {
-        allWorkspaceFiles
-          .filter((f) => minimatch(f.file, withoutWorkspaceRoot))
-          .forEach((f) => {
-            matches.push(f.file);
-          });
-      }
-      return matches;
-    }
-  );
-
-  const otherInputsExpanded = otherInputs.map((input) => {
-    if (input === 'TsConfig') {
-      return relative(workspaceRoot, getRootTsConfigPath());
-    }
-    if (input === 'ProjectConfiguration') {
-      return depGraphClientResponse.fileMap[project.name].find(
-        (file) =>
-          file.file === `${project.data.root}/project.json` ||
-          file.file === `${project.data.root}/package.json`
-      ).file;
-    }
-
-    return input;
-  });
-
-  const projectRootsExpanded = projectRootInputs
-    .map((input) => {
-      const fileSetProjectName = input.split(':')[0];
-      const fileSetProject = depGraphClientResponse.projects.find(
-        (p) => p.name === fileSetProjectName
-      );
-      const fileSets = input.replace(`${fileSetProjectName}:`, '').split(',');
-
-      const projectInputExpanded = {
-        [fileSetProject.name]: filterUsingGlobPatterns(
-          fileSetProject.data.root,
-          depGraphClientResponse.fileMap[fileSetProject.name],
-          fileSets
-        ).map((f) => f.file),
-      };
-
-      return projectInputExpanded;
-    })
-    .reduce((curr, acc) => {
-      for (let key in curr) {
-        acc[key] = curr[key];
-      }
-      return acc;
-    }, {});
-
-  return {
-    general: [...workspaceRootsExpanded, ...otherInputsExpanded],
-    ...projectRootsExpanded,
-    external: externalInputs,
-  };
+  input: string,
+  projectGraphClientResponse: ProjectGraphClientResponse,
+  nxJson: NxJsonConfiguration
+): string[] {
+  let projectInputs: string[];
+  const namedInputs = getNamedInputs(nxJson, project);
+  if (input.startsWith('^')) {
+    const depInput = { input: input.slice(1), dependencies: true };
+    projectInputs = getFilesForDepInput(
+      project,
+      depInput,
+      projectGraphClientResponse,
+      namedInputs
+    );
+  } else if (namedInputs[input]) {
+    projectInputs = getFilesForNamedInput(input, namedInputs, project.name);
+  } else {
+    projectInputs = [input];
+  }
+  return projectInputs;
 }
 
 interface GraphJsonResponse {
@@ -1071,8 +1040,12 @@ async function createJsonOutput(
     );
 
     const hasher = createTaskHasher(rawGraph, readNxJson());
-    let tasks = Object.values(taskGraph.tasks);
-    const hashes = await hasher.hashTasks(tasks, taskGraph);
+    let tasks: Task[] = Object.values(taskGraph.tasks);
+    const hashes: Hash[] = await hasher.hashTasks(
+      tasks,
+      taskGraph,
+      process.env
+    );
     response.tasks = taskGraph;
     response.taskPlans = tasks.reduce((acc, task, index) => {
       acc[task.id] = Object.keys(hashes[index].details.nodes).sort();

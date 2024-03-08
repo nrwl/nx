@@ -4,16 +4,16 @@ import {
   ProjectEdgeNodeTooltip,
   ProjectNodeToolTip,
   TaskNodeTooltip,
+  TaskInputsListAccordions,
   Tooltip,
 } from '@nx/graph/ui-tooltips';
 import { ProjectNodeActions } from './project-node-actions';
-import { TaskNodeActions } from './task-node-actions';
 import { getExternalApiService, useRouteConstructor } from '@nx/graph/shared';
 import { useNavigate } from 'react-router-dom';
 
 const tooltipService = getTooltipService();
 
-export function TooltipDisplay() {
+export function GraphTooltipDisplay() {
   const navigate = useNavigate();
   const routeConstructor = useRouteConstructor();
   const externalApiService = getExternalApiService();
@@ -25,6 +25,7 @@ export function TooltipDisplay() {
 
   let tooltipToRender;
   if (currentTooltip) {
+    const [projectName, targetName] = currentTooltip.props.id.split(':');
     if (currentTooltip.type === 'projectNode') {
       const onConfigClick =
         currentTooltip.props.renderMode === 'nx-docs'
@@ -92,7 +93,6 @@ export function TooltipDisplay() {
               })
           : undefined;
       const onConfigClick = (() => {
-        const [projectName, targetName] = currentTooltip.props.id.split(':');
         if (currentTooltip.props.renderMode !== 'nx-console') {
           return () => {
             navigate(
@@ -118,14 +118,16 @@ export function TooltipDisplay() {
             });
         }
       })();
-
       tooltipToRender = (
         <TaskNodeTooltip
           {...currentTooltip.props}
           openConfigCallback={onConfigClick}
           runTaskCallback={onRunTaskClick}
         >
-          <TaskNodeActions {...currentTooltip.props} />
+          <TaskInputsListAccordions
+            {...currentTooltip.props}
+            projectName={projectName}
+          />
         </TaskNodeTooltip>
       );
     }

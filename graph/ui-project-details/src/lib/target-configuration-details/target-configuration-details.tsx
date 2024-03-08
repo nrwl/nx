@@ -1,15 +1,3 @@
-/* eslint-disable @nx/enforce-module-boundaries */
-// nx-ignore-next-line
-import {
-  ChevronDownIcon,
-  ChevronUpIcon,
-  EyeIcon,
-  PlayIcon,
-} from '@heroicons/react/24/outline';
-
-// nx-ignore-next-line
-import { TargetConfiguration } from '@nx/devkit';
-import { JsonCodeBlock } from '@nx/graph/ui-code-block';
 import {
   ForwardedRef,
   forwardRef,
@@ -19,27 +7,45 @@ import {
   useMemo,
   useState,
 } from 'react';
-import { SourceInfo } from './source-info';
-import { FadingCollapsible } from './fading-collapsible';
-import { TargetConfigurationProperty } from './target-configuration-property';
-import { selectSourceInfo } from './target-configuration-details.util';
-import { CopyToClipboard } from './copy-to-clipboard';
+import {
+  ChevronDownIcon,
+  ChevronUpIcon,
+  EyeIcon,
+  PlayIcon,
+} from '@heroicons/react/24/outline';
+
+/* eslint-disable @nx/enforce-module-boundaries */
+// nx-ignore-next-line
+import type { TargetConfiguration } from '@nx/devkit';
+// nx-ignore-next-line
+import type { ExpandedInputs } from 'nx/src/command-line/graph/inputs-utils';
+/* eslint-enable @nx/enforce-module-boundaries */
+import { Pill } from '@nx/graph/ui-components';
 import {
   ExternalLink,
   PropertyInfoTooltip,
   Tooltip,
 } from '@nx/graph/ui-tooltips';
+
+import { SourceInfo } from './source-info';
+import { CopyToClipboard } from './copy-to-clipboard';
 import { TooltipTriggerText } from './tooltip-trigger-text';
 import { twMerge } from 'tailwind-merge';
-import { Pill } from '../pill';
+import { TargetConfigurationDetailsInputs } from './target-configuration-details-inputs';
+import { TargetConfigurationDetailsOutputs } from './target-configuration-details-outputs';
+import { TargetConfigurationDetailsDependsOn } from './target-configuration-details-depends-on';
+import { TargetConfigurationDetailsOptions } from './target-configuration-details-options';
+import { TargetConfigurationDetailsConfiguration } from './target-configuration-details-configuration';
 
-/* eslint-disable-next-line */
 export interface TargetProps {
   projectName: string;
   targetName: string;
   targetConfiguration: TargetConfiguration;
   sourceMap: Record<string, string[]>;
   variant?: 'default' | 'compact';
+  getInputs?: (
+    taskId: string
+  ) => Promise<{ [inputName: string]: ExpandedInputs } | undefined>;
   onCollapse?: (targetName: string) => void;
   onExpand?: (targetName: string) => void;
   onRunTarget?: (data: { projectName: string; targetName: string }) => void;
@@ -62,6 +68,7 @@ export const TargetConfigurationDetails = forwardRef(
       targetName,
       targetConfiguration,
       sourceMap,
+      getInputs,
       onExpand,
       onCollapse,
       onViewInTaskGraph,
@@ -70,6 +77,11 @@ export const TargetConfigurationDetails = forwardRef(
     ref: ForwardedRef<TargetConfigurationDetailsHandle>
   ) => {
     const isCompact = variant === 'compact';
+    const taskId = `${projectName}:${targetName}${
+      targetConfiguration.defaultConfiguration
+        ? ':' + targetConfiguration.defaultConfiguration
+        : ''
+    }`;
     const [collapsed, setCollapsed] = useState(true);
 
     const handleCopyClick = async (copyText: string) => {
@@ -127,18 +139,6 @@ export const TargetConfigurationDetails = forwardRef(
         return targetConfiguration.options;
       }
     }, [targetConfiguration.options, singleCommand]);
-
-    const configurations = targetConfiguration.configurations;
-
-    const shouldRenderOptions =
-      options &&
-      (typeof options === 'object' ? Object.keys(options).length : true);
-
-    const shouldRenderConfigurations =
-      configurations &&
-      (typeof configurations === 'object'
-        ? Object.keys(configurations).length
-        : true);
 
     return (
       <div className="rounded-md border border-slate-200 dark:border-slate-700/60 relative overflow-hidden">
@@ -301,242 +301,39 @@ export const TargetConfigurationDetails = forwardRef(
               </p>
             </div>
 
-            {targetConfiguration.inputs && (
-              <div className="group">
-                <h4 className="mb-4">
-                  <Tooltip
-                    openAction="hover"
-                    content={(<PropertyInfoTooltip type="inputs" />) as any}
-                  >
-                    <span className="font-medium">
-                      <TooltipTriggerText>Inputs</TooltipTriggerText>
-                    </span>
-                  </Tooltip>
-                  <span className="hidden group-hover:inline ml-2 mb-1">
-                    <CopyToClipboard
-                      onCopy={() =>
-                        handleCopyClick(
-                          `"inputs": ${JSON.stringify(
-                            targetConfiguration.inputs
-                          )}`
-                        )
-                      }
-                    />
-                  </span>
-                </h4>
-                <ul className="list-disc pl-5 mb-4">
-                  {targetConfiguration.inputs.map((input, idx) => {
-                    const sourceInfo = selectSourceInfo(
-                      sourceMap,
-                      `targets.${targetName}.inputs`
-                    );
-                    return (
-                      <li
-                        className="group/line overflow-hidden whitespace-nowrap"
-                        key={`input-${idx}`}
-                      >
-                        <TargetConfigurationProperty data={input}>
-                          {sourceInfo && (
-                            <span className="opacity-0 flex shrink-1 min-w-0 group-hover/line:opacity-100 transition-opacity duration-150 ease-in-out inline pl-4">
-                              <SourceInfo
-                                data={sourceInfo}
-                                propertyKey={`targets.${targetName}.inputs`}
-                              />
-                            </span>
-                          )}
-                        </TargetConfigurationProperty>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </div>
-            )}
-            {targetConfiguration.outputs && (
-              <div className="group">
-                <h4 className="mb-4">
-                  <Tooltip
-                    openAction="hover"
-                    content={(<PropertyInfoTooltip type="outputs" />) as any}
-                  >
-                    <span className="font-medium">
-                      <TooltipTriggerText>Outputs</TooltipTriggerText>
-                    </span>
-                  </Tooltip>
-                  <span className="hidden group-hover:inline ml-2 mb-1">
-                    <CopyToClipboard
-                      onCopy={() =>
-                        handleCopyClick(
-                          `"outputs": ${JSON.stringify(
-                            targetConfiguration.outputs
-                          )}`
-                        )
-                      }
-                    />
-                  </span>
-                </h4>
-                <ul className="list-disc pl-5 mb-4">
-                  {targetConfiguration.outputs?.map((output, idx) => {
-                    const sourceInfo = selectSourceInfo(
-                      sourceMap,
-                      `targets.${targetName}.outputs`
-                    );
-                    return (
-                      <li
-                        className="group/line overflow-hidden whitespace-nowrap"
-                        key={`output-${idx}`}
-                      >
-                        <TargetConfigurationProperty data={output}>
-                          {sourceInfo && (
-                            <span className="opacity-0 flex shrink-1 min-w-0 group-hover/line:opacity-100 transition-opacity duration-150 ease-in-out inline pl-4">
-                              <SourceInfo
-                                data={sourceInfo}
-                                propertyKey={`targets.${targetName}.outputs`}
-                              />
-                            </span>
-                          )}
-                        </TargetConfigurationProperty>
-                      </li>
-                    );
-                  }) ?? <span>no outputs</span>}
-                </ul>
-              </div>
-            )}
-            {targetConfiguration.dependsOn && (
-              <div className="group">
-                <h4 className="mb-4">
-                  <Tooltip
-                    openAction="hover"
-                    content={(<PropertyInfoTooltip type="dependsOn" />) as any}
-                  >
-                    <span className="font-medium">
-                      <TooltipTriggerText>Depends On</TooltipTriggerText>
-                    </span>
-                  </Tooltip>
-                  <span className="opacity-0 group-hover/line:opacity-100 transition-opacity duration-150 ease-in-out inline pl-4">
-                    <CopyToClipboard
-                      onCopy={() =>
-                        handleCopyClick(
-                          `"dependsOn": ${JSON.stringify(
-                            targetConfiguration.dependsOn
-                          )}`
-                        )
-                      }
-                    />
-                  </span>
-                </h4>
-                <ul className="list-disc pl-5 mb-4">
-                  {targetConfiguration.dependsOn.map((dep, idx) => {
-                    const sourceInfo = selectSourceInfo(
-                      sourceMap,
-                      `targets.${targetName}.dependsOn`
-                    );
-
-                    return (
-                      <li
-                        className="group/line overflow-hidden whitespace-nowrap"
-                        key={`dependsOn-${idx}`}
-                      >
-                        <TargetConfigurationProperty data={dep}>
-                          <span className="opacity-0 flex shrink-1 min-w-0 group-hover/line:opacity-100 transition-opacity duration-150 ease-in-out inline pl-4">
-                            {sourceInfo && (
-                              <SourceInfo
-                                data={sourceInfo}
-                                propertyKey={`targets.${targetName}.dependsOn`}
-                              />
-                            )}
-                          </span>
-                        </TargetConfigurationProperty>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </div>
-            )}
-
-            {shouldRenderOptions ? (
-              <>
-                <h4 className="mb-4">
-                  <Tooltip
-                    openAction="hover"
-                    content={(<PropertyInfoTooltip type="options" />) as any}
-                  >
-                    <span className="font-medium">
-                      <TooltipTriggerText>Options</TooltipTriggerText>
-                    </span>
-                  </Tooltip>
-                </h4>
-                <div className="mb-4">
-                  <FadingCollapsible>
-                    <JsonCodeBlock
-                      data={options}
-                      renderSource={(propertyName: string) => {
-                        const sourceInfo = selectSourceInfo(
-                          sourceMap,
-                          `targets.${targetName}.options.${propertyName}`
-                        );
-                        return sourceInfo ? (
-                          <span className="pl-4 flex shrink-1 min-w-0">
-                            <SourceInfo
-                              data={sourceInfo}
-                              propertyKey={`targets.${targetName}.options.${propertyName}`}
-                            />
-                          </span>
-                        ) : null;
-                      }}
-                    />
-                  </FadingCollapsible>
-                </div>
-              </>
-            ) : (
-              ''
-            )}
-
-            {shouldRenderConfigurations ? (
-              <>
-                <h4 className="py-2 mb-4">
-                  <Tooltip
-                    openAction="hover"
-                    content={
-                      (<PropertyInfoTooltip type="configurations" />) as any
-                    }
-                  >
-                    <span className="font-medium">
-                      <TooltipTriggerText>Configurations</TooltipTriggerText>
-                    </span>
-                  </Tooltip>{' '}
-                  {targetConfiguration.defaultConfiguration && (
-                    <span className="ml-3 cursor-help">
-                      <Pill
-                        tooltip="Default Configuration"
-                        text={targetConfiguration.defaultConfiguration}
-                        color="yellow"
-                      />
-                    </span>
-                  )}
-                </h4>
-                <FadingCollapsible>
-                  <JsonCodeBlock
-                    data={targetConfiguration.configurations}
-                    renderSource={(propertyName: string) => {
-                      const sourceInfo = selectSourceInfo(
-                        sourceMap,
-                        `targets.${targetName}.configurations.${propertyName}`
-                      );
-                      return sourceInfo ? (
-                        <span className="pl-4 flex shrink-1 min-w-0">
-                          <SourceInfo
-                            data={sourceInfo}
-                            propertyKey={`targets.${targetName}.configurations.${propertyName}`}
-                          />{' '}
-                        </span>
-                      ) : null;
-                    }}
-                  />
-                </FadingCollapsible>
-              </>
-            ) : (
-              ''
-            )}
+            <TargetConfigurationDetailsInputs
+              inputs={targetConfiguration.inputs}
+              sourceMap={sourceMap}
+              projectName={projectName}
+              targetName={targetName}
+              handleCopyClick={handleCopyClick}
+              getInputs={getInputs}
+              taskId={taskId}
+            />
+            <TargetConfigurationDetailsOutputs
+              outputs={targetConfiguration.outputs}
+              sourceMap={sourceMap}
+              targetName={targetName}
+              handleCopyClick={handleCopyClick}
+            />
+            <TargetConfigurationDetailsDependsOn
+              dependsOn={targetConfiguration.dependsOn}
+              sourceMap={sourceMap}
+              targetName={targetName}
+              handleCopyClick={handleCopyClick}
+            />
+            <TargetConfigurationDetailsOptions
+              options={options}
+              sourceMap={sourceMap}
+              targetName={targetName}
+              handleCopyClick={handleCopyClick}
+            />
+            <TargetConfigurationDetailsConfiguration
+              defaultConfiguration={targetConfiguration.defaultConfiguration}
+              configurations={targetConfiguration.configurations}
+              sourceMap={sourceMap}
+              targetName={targetName}
+            />
           </div>
         )}
       </div>

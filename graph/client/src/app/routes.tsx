@@ -4,7 +4,10 @@ import { TasksSidebar } from './feature-tasks/tasks-sidebar';
 import { Shell } from './shell';
 /* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
-import { ProjectGraphClientResponse } from 'nx/src/command-line/graph/graph';
+import type {
+  ProjectGraphClientResponse,
+  TaskGraphClientResponse,
+} from 'nx/src/command-line/graph/graph';
 // nx-ignore-next-line
 import type { ProjectGraphProjectNode } from 'nx/src/config/project-graph';
 import {
@@ -18,7 +21,7 @@ import { ErrorBoundary } from './ui-components/error-boundary';
 const { appConfig } = getEnvironmentConfig();
 const projectGraphDataService = getProjectGraphDataService();
 
-export function getRoutesForEnvironment() {
+export function getRoutesForEnvironment(): RouteObject[] {
   if (getEnvironmentConfig().environment === 'dev') {
     return devRoutes;
   } else {
@@ -26,7 +29,14 @@ export function getRoutesForEnvironment() {
   }
 }
 
-const workspaceDataLoader = async (selectedWorkspaceId: string) => {
+const workspaceDataLoader = async (
+  selectedWorkspaceId: string
+): Promise<
+  ProjectGraphClientResponse & {
+    targets: string[];
+    sourceMaps: Record<string, Record<string, string[]>>;
+  }
+> => {
   const workspaceInfo = appConfig.workspaces.find(
     (graph) => graph.id === selectedWorkspaceId
   );
@@ -40,7 +50,7 @@ const workspaceDataLoader = async (selectedWorkspaceId: string) => {
 
   const targetsSet = new Set<string>();
 
-  projectGraph.projects.forEach((project) => {
+  projectGraph?.projects.forEach((project) => {
     Object.keys(project.data.targets ?? {}).forEach((targetName) => {
       targetsSet.add(targetName);
     });
@@ -53,7 +63,9 @@ const workspaceDataLoader = async (selectedWorkspaceId: string) => {
   return { ...projectGraph, targets, sourceMaps };
 };
 
-const taskDataLoader = async (selectedWorkspaceId: string) => {
+const taskDataLoader = async (
+  selectedWorkspaceId: string
+): Promise<TaskGraphClientResponse> => {
   const workspaceInfo = appConfig.workspaces.find(
     (graph) => graph.id === selectedWorkspaceId
   );

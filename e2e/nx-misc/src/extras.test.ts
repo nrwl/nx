@@ -357,28 +357,25 @@ describe('Extra Nx Misc Tests', () => {
     it('should correctly expand default task inputs', () => {
       runCLI('graph --file=graph.html');
 
-      expect(readExpandedTaskInputResponse()[`${baseLib}:build`])
-        .toMatchInlineSnapshot(`
-        {
-          "external": [
-            "npm:@nx/js",
-            "npm:tslib",
-          ],
-          "general": [
-            ".gitignore",
-            "nx.json",
-          ],
-          "lib-base-123": [
-            "libs/lib-base-123/README.md",
-            "libs/lib-base-123/package.json",
-            "libs/lib-base-123/project.json",
-            "libs/lib-base-123/src/index.ts",
-            "libs/lib-base-123/src/lib/lib-base-123.ts",
-            "libs/lib-base-123/tsconfig.json",
-            "libs/lib-base-123/tsconfig.lib.json",
-          ],
-        }
-      `);
+      expect(readExpandedTaskInputResponse()[`${baseLib}:build`]).toEqual({
+        production: {
+          'lib-base-123': {
+            '{projectRoot}/**/*': [
+              'libs/lib-base-123/.eslintrc.json',
+              'libs/lib-base-123/README.md',
+              'libs/lib-base-123/jest.config.ts',
+              'libs/lib-base-123/package.json',
+              'libs/lib-base-123/project.json',
+              'libs/lib-base-123/src/index.ts',
+              'libs/lib-base-123/src/lib/lib-base-123.spec.ts',
+              'libs/lib-base-123/src/lib/lib-base-123.ts',
+              'libs/lib-base-123/tsconfig.json',
+              'libs/lib-base-123/tsconfig.lib.json',
+              'libs/lib-base-123/tsconfig.spec.json',
+            ],
+          },
+        },
+      });
     });
 
     it('should correctly expand dependent task inputs', () => {
@@ -400,45 +397,42 @@ describe('Extra Nx Misc Tests', () => {
       });
       runCLI('graph --file=graph.html');
 
-      expect(readExpandedTaskInputResponse()[`${baseLib}:build`])
-        .toMatchInlineSnapshot(`
-        {
-          "external": [
-            "npm:@nx/js",
-            "npm:tslib",
-          ],
-          "general": [
-            ".gitignore",
-            "nx.json",
-          ],
-          "lib-base-123": [
-            "libs/lib-base-123/.eslintrc.json",
-            "libs/lib-base-123/README.md",
-            "libs/lib-base-123/jest.config.ts",
-            "libs/lib-base-123/package.json",
-            "libs/lib-base-123/project.json",
-            "libs/lib-base-123/src/index.ts",
-            "libs/lib-base-123/src/lib/lib-base-123.spec.ts",
-            "libs/lib-base-123/src/lib/lib-base-123.ts",
-            "libs/lib-base-123/tsconfig.json",
-            "libs/lib-base-123/tsconfig.lib.json",
-            "libs/lib-base-123/tsconfig.spec.json",
-          ],
-          "lib-dependent-123": [
-            "libs/lib-dependent-123/.eslintrc.json",
-            "libs/lib-dependent-123/README.md",
-            "libs/lib-dependent-123/jest.config.ts",
-            "libs/lib-dependent-123/package.json",
-            "libs/lib-dependent-123/project.json",
-            "libs/lib-dependent-123/src/index.ts",
-            "libs/lib-dependent-123/src/lib/lib-dependent-123.spec.ts",
-            "libs/lib-dependent-123/src/lib/lib-dependent-123.ts",
-            "libs/lib-dependent-123/tsconfig.json",
-            "libs/lib-dependent-123/tsconfig.lib.json",
-            "libs/lib-dependent-123/tsconfig.spec.json",
-          ],
-        }
-      `);
+      expect(readExpandedTaskInputResponse()[`${baseLib}:build`]).toEqual({
+        '^default': {
+          'lib-dependent-123': {
+            '{projectRoot}/**/*': [
+              'libs/lib-dependent-123/.eslintrc.json',
+              'libs/lib-dependent-123/README.md',
+              'libs/lib-dependent-123/jest.config.ts',
+              'libs/lib-dependent-123/package.json',
+              'libs/lib-dependent-123/project.json',
+              'libs/lib-dependent-123/src/index.ts',
+              'libs/lib-dependent-123/src/lib/lib-dependent-123.spec.ts',
+              'libs/lib-dependent-123/src/lib/lib-dependent-123.ts',
+              'libs/lib-dependent-123/tsconfig.json',
+              'libs/lib-dependent-123/tsconfig.lib.json',
+              'libs/lib-dependent-123/tsconfig.spec.json',
+            ],
+          },
+        },
+        default: {
+          'lib-base-123': {
+            '{projectRoot}/**/*': [
+              'libs/lib-base-123/.eslintrc.json',
+              'libs/lib-base-123/README.md',
+              'libs/lib-base-123/jest.config.ts',
+              'libs/lib-base-123/package.json',
+              'libs/lib-base-123/project.json',
+              'libs/lib-base-123/src/index.ts',
+              'libs/lib-base-123/src/lib/lib-base-123.spec.ts',
+              'libs/lib-base-123/src/lib/lib-base-123.ts',
+              'libs/lib-base-123/tsconfig.json',
+              'libs/lib-base-123/tsconfig.lib.json',
+              'libs/lib-base-123/tsconfig.spec.json',
+            ],
+          },
+        },
+      });
     });
   });
 });

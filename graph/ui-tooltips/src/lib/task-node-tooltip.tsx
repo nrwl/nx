@@ -1,17 +1,20 @@
+import { ReactNode } from 'react';
 import {
   DocumentMagnifyingGlassIcon,
   PencilSquareIcon,
   PlayIcon,
 } from '@heroicons/react/24/outline';
 import { Tag } from '@nx/graph/ui-components';
-import { ReactNode } from 'react';
+/* eslint-disable @nx/enforce-module-boundaries */
+// nx-ignore-next-line
+import type { ExpandedInputs } from 'nx/src/command-line/graph/inputs-utils';
 
 export interface TaskNodeTooltipProps {
   id: string;
   executor: string;
   runTaskCallback?: () => void;
   description?: string;
-  inputs?: Record<string, string[]>;
+  inputs?: { [inputName: string]: ExpandedInputs };
   openConfigCallback?: () => void;
   renderMode?: 'nx-console' | 'nx-docs';
   children?: ReactNode | ReactNode[];
