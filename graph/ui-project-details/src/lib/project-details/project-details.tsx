@@ -1,9 +1,9 @@
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-
 /* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
-import { ProjectGraphProjectNode } from '@nx/devkit';
-
+import type { ProjectGraphProjectNode } from '@nx/devkit';
+// nx-ignore-next-line
+import type { ExpandedInputs } from 'nx/src/command-line/graph/inputs-utils';
+/* eslint-enable @nx/enforce-module-boundaries */
 import { EyeIcon } from '@heroicons/react/24/outline';
 import { PropertyInfoTooltip, Tooltip } from '@nx/graph/ui-tooltips';
 import {
@@ -20,12 +20,15 @@ import {
   useRef,
 } from 'react';
 import { twMerge } from 'tailwind-merge';
-import { Pill } from '../pill';
+import { Pill } from '@nx/graph/ui-components';
 
 export interface ProjectDetailsProps {
   project: ProjectGraphProjectNode;
   sourceMap: Record<string, string[]>;
   variant?: 'default' | 'compact';
+  getInpustForTaskId?: (
+    targetName: string
+  ) => Promise<{ [inputName: string]: ExpandedInputs } | undefined>;
   onTargetCollapse?: (targetName: string) => void;
   onTargetExpand?: (targetName: string) => void;
   onViewInProjectGraph?: (data: { projectName: string }) => void;
@@ -50,6 +53,7 @@ export const ProjectDetails = forwardRef(
       },
       sourceMap,
       variant,
+      getInpustForTaskId,
       onTargetCollapse,
       onTargetExpand,
       onViewInProjectGraph,
@@ -154,6 +158,7 @@ export const ProjectDetails = forwardRef(
                     targetName={targetName}
                     targetConfiguration={target}
                     sourceMap={sourceMap}
+                    getInputs={getInpustForTaskId}
                     onRunTarget={onRunTarget}
                     onViewInTaskGraph={onViewInTaskGraph}
                     onCollapse={onTargetCollapse}

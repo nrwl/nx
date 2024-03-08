@@ -1,3 +1,7 @@
+/* eslint-disable @nx/enforce-module-boundaries */
+// nx-ignore-next-line
+import type { ExpandedInputs } from 'nx/src/command-line/graph/inputs-utils';
+/* eslint-enable @nx/enforce-module-boundaries */
 import { FetchProjectGraphService } from './fetch-project-graph-service';
 import { LocalProjectGraphService } from './local-project-graph-service';
 import { MockProjectGraphService } from './mock-project-graph-service';
@@ -17,7 +21,9 @@ export interface ProjectGraphService {
   getProjectGraph: (url: string) => Promise<ProjectGraphClientResponse>;
   getTaskGraph: (url: string) => Promise<TaskGraphClientResponse>;
   setTaskInputsUrl?: (url: string) => void;
-  getExpandedTaskInputs?: (taskId: string) => Promise<Record<string, string[]>>;
+  getExpandedTaskInputs?: (taskId: string) => Promise<{
+    [inputName: string]: ExpandedInputs;
+  }>;
   getSourceMaps?: (
     url: string
   ) => Promise<Record<string, Record<string, string[]>>>;

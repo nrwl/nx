@@ -1,6 +1,7 @@
 /* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
 import type {
+  ExpandedTaskInputsReponse,
   ProjectGraphClientResponse,
   TaskGraphClientResponse,
 } from 'nx/src/command-line/graph/graph';
@@ -30,7 +31,7 @@ export abstract class ExternalApi {
   loadTaskGraph: ((url: string) => Promise<TaskGraphClientResponse>) | null =
     null;
   loadExpandedTaskInputs:
-    | ((taskId: string) => Promise<Record<string, Record<string, string[]>>>)
+    | ((taskId: string) => Promise<ExpandedTaskInputsReponse>)
     | null = null;
   loadSourceMaps:
     | ((url: string) => Promise<Record<string, Record<string, string[]>>>)

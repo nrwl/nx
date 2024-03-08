@@ -1,10 +1,14 @@
 /* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
 import type {
+  ExpandedTaskInputsReponse,
   ProjectGraphClientResponse,
   TaskGraphClientResponse,
 } from 'nx/src/command-line/graph/graph';
+// nx-ignore-next-line
+import type { ExpandedInputs } from 'nx/src/command-line/graph/inputs-utils';
 import { ProjectGraphService } from './get-project-graph-data-service';
+/* eslint-enable @nx/enforce-module-boundaries */
 
 export class NxConsoleProjectGraphService implements ProjectGraphService {
   async getHash(): Promise<string> {
@@ -21,8 +25,9 @@ export class NxConsoleProjectGraphService implements ProjectGraphService {
 
   async getExpandedTaskInputs(
     taskId: string
-  ): Promise<Record<string, string[]>> {
-    const res = await window.externalApi.loadExpandedTaskInputs?.(taskId);
+  ): Promise<{ [inputName: string]: ExpandedInputs }> {
+    const res: ExpandedTaskInputsReponse =
+      await window.externalApi.loadExpandedTaskInputs?.(taskId);
     return res ? res[taskId] : {};
   }
 

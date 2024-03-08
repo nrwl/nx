@@ -29,7 +29,6 @@ import {
   isDepsOutput,
   isSelfInput,
   PartialHash,
-  TaskHasher,
   TaskHasherImpl,
 } from './task-hasher';
 import { hashTsConfig } from '../plugins/js/hasher/hasher';
@@ -117,11 +116,7 @@ export class NodeTaskHasherImpl implements TaskHasherImpl {
     visited: string[]
   ): Promise<PartialHash> {
     const projectNode = this.projectGraph.nodes[projectName];
-    const namedInputs = {
-      default: [{ fileset: '{projectRoot}/**/*' }],
-      ...this.nxJson.namedInputs,
-      ...projectNode.data.namedInputs,
-    };
+    const namedInputs = getNamedInputs(this.nxJson, projectNode);
 
     const expandedInputs = expandNamedInput(namedInput, namedInputs);
     const selfInputs = expandedInputs.filter(isSelfInput);

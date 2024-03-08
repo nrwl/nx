@@ -123,6 +123,11 @@
               "glob": "e2e.json"
             },
             {
+              "input": "graph/client/src/assets/task-inputs",
+              "output": "/assets/task-inputs",
+              "glob": "e2e.json"
+            },
+            {
               "input": "graph/client/src/assets/release",
               "output": "/",
               "glob": "environment.js"
@@ -153,6 +158,16 @@
             {
               "input": "graph/client/src/assets/task-graphs",
               "output": "/assets/task-graphs",
+              "glob": "e2e.json"
+            },
+            {
+              "input": "graph/client/src/assets/source-maps",
+              "output": "/assets/source-maps",
+              "glob": "e2e.json"
+            },
+            {
+              "input": "graph/client/src/assets/task-inputs",
+              "output": "/assets/task-inputs",
               "glob": "e2e.json"
             },
             {

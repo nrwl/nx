@@ -3,9 +3,16 @@ import { join } from 'path';
 import { readdirSync, writeFileSync } from 'fs';
 import { execSync } from 'child_process';
 
-function generateFileContent(
-  workspaces: { id: string; label: string; url: string }[]
-) {
+interface GeneratedGraphs {
+  id: string;
+  label: string;
+  projectGraphUrl: string;
+  taskGraphUrl: string;
+  taskInputsUrl: string;
+  sourceMapsUrl: string;
+}
+
+function generateEnvironmentFileContent(workspaces: GeneratedGraphs[]): string {
   return `
   window.exclude = [];
   window.watch = false;
@@ -22,7 +29,7 @@ function generateFileContent(
 }
 
 function writeFile() {
-  let generatedGraphs;
+  let generatedGraphs: GeneratedGraphs[];
   try {
     generatedGraphs = readdirSync(
       join(__dirname, '../graph/client/src/assets/generated-project-graphs')
@@ -41,7 +48,7 @@ function writeFile() {
     generatedGraphs = [];
   }
 
-  let pregeneratedGraphs;
+  let pregeneratedGraphs: GeneratedGraphs[];
   try {
     pregeneratedGraphs = readdirSync(
       join(__dirname, '../graph/client/src/assets/project-graphs')
@@ -67,13 +74,14 @@ function writeFile() {
     return;
   }
 
-  const projects = generatedGraphs.concat(pregeneratedGraphs);
+  const projects: GeneratedGraphs[] =
+    generatedGraphs.concat(pregeneratedGraphs);
 
   ensureDirSync(join(__dirname, '../graph/client/src/assets/dev/'));
 
   writeFileSync(
     join(__dirname, '../graph/client/src/assets/dev/', `environment.js`),
-    generateFileContent(projects)
+    generateEnvironmentFileContent(projects)
   );
 }
 

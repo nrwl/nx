@@ -247,6 +247,16 @@ export class InProcessTaskHasher implements TaskHasher {
   }
 }
 
+export interface Inputs {
+  selfInputs: ExpandedSelfInput[];
+  depsInputs: { input: string; dependencies: true }[];
+  depsOutputs: ExpandedDepsOutput[];
+  projectInputs: {
+    input: string;
+    projects: string[];
+  }[];
+}
+
 export type ExpandedSelfInput =
   | { fileset: string }
   | { runtime: string }
@@ -282,7 +292,7 @@ export function getTargetInputs(
   nxJson: NxJsonConfiguration,
   projectNode: ProjectGraphProjectNode,
   target: string
-) {
+): { selfInputs: string[]; dependencyInputs: string[] } {
   const namedInputs = getNamedInputs(nxJson, projectNode);
 
   const targetData = projectNode.data.targets[target];
@@ -314,7 +324,7 @@ export function getInputs(
   task: Task,
   projectGraph: ProjectGraph,
   nxJson: NxJsonConfiguration
-) {
+): Inputs {
   const projectNode = projectGraph.nodes[task.target.project];
   const namedInputs = getNamedInputs(nxJson, projectNode);
   const targetData = projectNode.data.targets[task.target.target];
@@ -330,12 +340,7 @@ export function getInputs(
 function splitInputsIntoSelfAndDependencies(
   inputs: ReadonlyArray<InputDefinition | string>,
   namedInputs: { [inputName: string]: ReadonlyArray<InputDefinition | string> }
-): {
-  depsInputs: { input: string; dependencies: true }[];
-  projectInputs: { input: string; projects: string[] }[];
-  selfInputs: ExpandedSelfInput[];
-  depsOutputs: ExpandedDepsOutput[];
-} {
+): Inputs {
   const depsInputs: { input: string; dependencies: true }[] = [];
   const projectInputs: { input: string; projects: string[] }[] = [];
   const selfInputs = [];
