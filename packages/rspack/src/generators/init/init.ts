@@ -7,11 +7,11 @@ import {
 } from '@nx/devkit';
 import { initGenerator } from '@nx/js';
 import {
-  lessLoaderVersion,
+  lessLoaderVersion, reactRefreshVersion,
   rspackCoreVersion,
   rspackDevServerVersion,
   rspackPluginMinifyVersion,
-  rspackPluginReactRefreshVersion,
+  rspackPluginReactRefreshVersion
 } from '../../utils/versions';
 import { InitGeneratorSchema } from './schema';
 
@@ -32,6 +32,7 @@ export async function rspackInitGenerator(
     '@rspack/core': rspackCoreVersion,
     '@rspack/plugin-minify': rspackPluginMinifyVersion,
     '@rspack/plugin-react-refresh': rspackPluginReactRefreshVersion,
+    'react-refresh': reactRefreshVersion
   };
 
   // eslint-disable-next-line @typescript-eslint/no-var-requires
