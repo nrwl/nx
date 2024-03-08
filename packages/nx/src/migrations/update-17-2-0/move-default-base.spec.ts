@@ -11,20 +11,20 @@ describe('update-17.1.0 migration', () => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   });
 
-  it("shouldn't do anything if affected.defaultBase is not set", () => {
+  it("shouldn't do anything if affected.defaultBase is not set", async () => {
     tree.write('nx.json', JSON.stringify({}));
-    update(tree);
+    await update(tree);
     expect(readNxJson(tree)).toEqual({});
   });
 
-  it("shouldn't remove affected if other keys present", () => {
+  it("shouldn't remove affected if other keys present", async () => {
     updateNxJson(tree, {
       affected: {
         defaultBase: 'master',
         otherKey: 'otherValue',
       } as any,
     });
-    update(tree);
+    await update(tree);
     expect(readNxJson(tree)).toEqual({
       affected: {
         otherKey: 'otherValue',
@@ -33,13 +33,13 @@ describe('update-17.1.0 migration', () => {
     });
   });
 
-  it('should remove affected if no other keys present', () => {
+  it('should remove affected if no other keys present', async () => {
     updateNxJson(tree, {
       affected: {
         defaultBase: 'master',
       } as any,
     });
-    update(tree);
+    await update(tree);
     expect(readNxJson(tree)).toEqual({
       defaultBase: 'master',
     });
