@@ -30,7 +30,7 @@ function addPlugin(tree) {
     plugin: '@nx/remix/plugin',
     options: {
       buildTargetName: 'build',
-      serveTargetName: 'serve',
+      devTargetName: 'dev',
       startTargetName: 'start',
       typecheckTargetName: 'typecheck',
     },
