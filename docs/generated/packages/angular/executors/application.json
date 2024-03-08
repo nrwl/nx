@@ -256,9 +256,9 @@
           "properties": {
             "replace": {
               "type": "string",
-              "pattern": "\\.(([cm]?j|t)sx?|json)$"
+              "pattern": "\\.(([cm]?[jt])sx?|json)$"
             },
-            "with": { "type": "string", "pattern": "\\.(([cm]?j|t)sx?|json)$" }
+            "with": { "type": "string", "pattern": "\\.(([cm]?[jt])sx?|json)$" }
           },
           "additionalProperties": false,
           "required": ["replace", "with"]
@@ -677,9 +677,9 @@
         "properties": {
           "replace": {
             "type": "string",
-            "pattern": "\\.(([cm]?j|t)sx?|json)$"
+            "pattern": "\\.(([cm]?[jt])sx?|json)$"
           },
-          "with": { "type": "string", "pattern": "\\.(([cm]?j|t)sx?|json)$" }
+          "with": { "type": "string", "pattern": "\\.(([cm]?[jt])sx?|json)$" }
         },
         "additionalProperties": false,
         "required": ["replace", "with"]
