@@ -267,7 +267,16 @@ The `dependsOn` line makes Nx run the `typecheck` task for the current project a
 
 ## Use Nx Plugins to Enhance Vite Tasks with Caching
 
-You may remember that we defined the `outputs` property in `nx.json` when we were answering questions in the `nx init` script. The value is currently hard-coded so that if you change the output path in your `vite.config.ts`, you have to remember to also change the `outputs` array in the `build` task configuration. This is where plugins can help.
+You may remember that we defined the `outputs` property in `nx.json` when we were answering questions in the `nx init` script. The value is currently hard-coded so that if you change the output path in your `vite.config.ts`, you have to remember to also change the `outputs` array in the `build` task configuration. This is where plugins can help. They directly infer information from the actual tooling configuration files (`vite.config.ts` in this case).
+
+Nx plugins can:
+
+- automatically configure caching for you, including inputs and outputs based on the underlying tooling configuration
+- infer tasks that can be run on a project because of the tooling present
+- provide code generators to help scaffold out projects
+- automatically keep the tooling versions and configuration files up to date
+
+For this tutorial, we'll just focus on the automatic caching configuration.
 
 First, let's delete the `outputs` array from `nx.json` so that we don't override the inferred values from the plugin. Your `nx.json` should look like this:
 
@@ -338,9 +347,39 @@ The final task graph for `demo` app's `build` task looks like this:
 {% graph height="200px" title="Build Task Pipeline" type="task" jsonFile="shared/tutorials/npm-workspaces-build-tasks2.json" %}
 {% /graph %}
 
-## CI with Nx
+## Manage Releases
 
-This tutorial walked you through how Nx can improve the developer experience for local development, but Nx can also make a big difference in CI. Without adequate tooling, CI times tend to grow exponentially with the size of the codebase. Nx helps reduce wasted time in CI with the [`affected` command](/ci/features/affected) and Nx Replay's [remote caching](/ci/features/remote-cache). Nx also [efficiently parallelizes tasks across machines](/ci/concepts/parallelization-distribution) with Nx Agents. You can follow a full tutorial on using Nx in [GitHub Actions](/ci/intro/tutorials/github-actions) or [Circle CI](/ci/intro/tutorials/circle).
+If you decide to publish the `forms` or `buttons` packages on NPM, Nx can also help you [manage the release process](/features/manage-releases). Release management involves updating the version of your package, populating a changelog, and publishing the new version to the NPM registry.
+
+First you'll need to define which projects Nx should manage releases for by setting the `release.projects` property in `nx.json`:
+
+```json {% fileName="nx.json" %}
+{
+  "release": {
+    "projects": ["packages/*"]
+  }
+}
+```
+
+Now you're ready to use the `nx release` command to publish the `forms` and `buttons` packages. The first time you run `nx release`, you need to add the `--first-release` flag so that Nx doesn't try to find the previous version to compare against. It's also recommended to use the `--dry-run` flag until you're sure about the results of the `nx release` command, then you can run it a final time without the `--dry-run` flag.
+
+To preview your first release, run:
+
+```shell
+nx release --first-release --dry-run
+```
+
+The command will ask you a series of questions and then show you what the results would be. Once you are happy with the results, run it again without the `--dry-run` flag:
+
+```shell
+nx release --first-release
+```
+
+After this first release, you can remove the `--first-release` flag and just run `nx release --dry-run`. There is also a [dedicated feature page](/features/manage-releases) that goes into more detail about how to use the `nx release` command.
+
+## Setup CI for Your NPM Workspace
+
+This tutorial walked you through how Nx can improve the developer experience for local development, but Nx can also make a big difference in CI. Without adequate tooling, CI times tend to grow exponentially with the size of the codebase. Nx helps reduce wasted time in CI with the [`affected` command](/ci/features/affected) and Nx Replay's [remote caching](/ci/features/remote-cache). Nx also [efficiently parallelizes tasks across machines](/ci/concepts/parallelization-distribution) with Nx Agents.
 
 To set up Nx Replay run:
 
@@ -362,14 +401,14 @@ You can choose `github`, `circleci`, `azure`, `bitbucket-pipelines`, or `gitlab`
 
 This will create a default CI configuration that sets up Nx Cloud to [use distributed task execution](/ci/features/distribute-task-execution). This automatically runs all tasks on separate machines in parallel wherever possible, without requiring you to manually coordinate copying the output from one machine to another.
 
-## Next Steps
-
 Check out one of these detailed tutorials on setting up CI with Nx:
 
 - [Circle CI with Nx](/ci/intro/tutorials/circle)
 - [GitHub Actions with Nx](/ci/intro/tutorials/github-actions)
 
-Also, make sure you
+## Next Steps
+
+Connect with the rest of the Nx community with these resources:
 
 - [Join the Official Nx Discord Server](https://go.nx.dev/community) to ask questions and find out the latest news about Nx.
 - [Follow Nx on Twitter](https://twitter.com/nxdevtools) to stay up to date with Nx news
