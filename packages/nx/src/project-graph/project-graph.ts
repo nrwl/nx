@@ -82,37 +82,35 @@ export async function buildProjectGraphAndSourceMapsWithoutDaemon() {
   const nxJson = readNxJson();
 
   const [plugins, cleanup] = await loadNxPluginsInIsolation(nxJson.plugins);
-  try {
-    performance.mark('retrieve-project-configurations:start');
-    const { projects, externalNodes, sourceMaps, projectRootMap } =
-      await retrieveProjectConfigurations(plugins, workspaceRoot, nxJson);
-    performance.mark('retrieve-project-configurations:end');
 
-    performance.mark('retrieve-workspace-files:start');
-    const { allWorkspaceFiles, fileMap, rustReferences } =
-      await retrieveWorkspaceFiles(workspaceRoot, projectRootMap);
-    performance.mark('retrieve-workspace-files:end');
+  performance.mark('retrieve-project-configurations:start');
+  const { projects, externalNodes, sourceMaps, projectRootMap } =
+    await retrieveProjectConfigurations(plugins, workspaceRoot, nxJson);
+  performance.mark('retrieve-project-configurations:end');
 
-    const cacheEnabled = process.env.NX_CACHE_PROJECT_GRAPH !== 'false';
-    performance.mark('build-project-graph-using-project-file-map:start');
-    const projectGraph = (
-      await buildProjectGraphUsingProjectFileMap(
-        projects,
-        externalNodes,
-        fileMap,
-        allWorkspaceFiles,
-        rustReferences,
-        cacheEnabled ? readFileMapCache() : null,
-        cacheEnabled,
-        plugins
-      )
-    ).projectGraph;
-    performance.mark('build-project-graph-using-project-file-map:end');
-    delete global.NX_GRAPH_CREATION;
-    return { projectGraph, sourceMaps };
-  } finally {
-    cleanup();
-  }
+  performance.mark('retrieve-workspace-files:start');
+  const { allWorkspaceFiles, fileMap, rustReferences } =
+    await retrieveWorkspaceFiles(workspaceRoot, projectRootMap);
+  performance.mark('retrieve-workspace-files:end');
+
+  const cacheEnabled = process.env.NX_CACHE_PROJECT_GRAPH !== 'false';
+  performance.mark('build-project-graph-using-project-file-map:start');
+  const projectGraph = (
+    await buildProjectGraphUsingProjectFileMap(
+      projects,
+      externalNodes,
+      fileMap,
+      allWorkspaceFiles,
+      rustReferences,
+      cacheEnabled ? readFileMapCache() : null,
+      cacheEnabled,
+      plugins
+    )
+  ).projectGraph;
+  performance.mark('build-project-graph-using-project-file-map:end');
+  delete global.NX_GRAPH_CREATION;
+  cleanup();
+  return { projectGraph, sourceMaps };
 }
 
 function handleProjectGraphError(opts: { exitOnError: boolean }, e) {
