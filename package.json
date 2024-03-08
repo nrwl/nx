@@ -22,8 +22,6 @@
     "@nx/js": "^18.0.7",
     "@nx/devkit": "^18.0.7",
     "@phenomnomnominal/tsquery": "~5.0.1",
-    "ajv": "^8.12.0",
-    "ajv-keywords": "5.1.0",
     "less-loader": "11.1.0",
     "license-webpack-plugin": "^4.0.2",
     "sass-loader": "^12.2.0",
