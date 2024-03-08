@@ -1,5 +1,9 @@
 # Enterprise Release Notes
 
+### 2402.27.3.patch1
+
+- Fixes an issue with the aggregator creating empty organisations during the first migration
+
 ### 2402.27.3
 
 With this version you can take advantage of most features announced during our recent [launch week](https://nx.dev/launch-nx).
