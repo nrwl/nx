@@ -47,7 +47,7 @@
         "parallel": false
       }
     },
-    "e2e-disabled-jason-re-enable-this": {
+    "e2e": {
       "executor": "nx:run-commands",
       "outputs": [],
       "options": {
