@@ -27,6 +27,9 @@ import type * as ts from 'typescript';
 import { extname } from 'node:path';
 import { NxPlugin } from './public-api';
 import path = require('node:path/posix');
+import { PluginConfiguration } from '../../config/nx-json';
+import { retrieveProjectConfigurationsWithoutPluginInference } from '../utils/retrieve-workspace-files';
+import { normalizeNxPlugin } from './utils';
 
 export function readPluginPackageJson(
   pluginName: string,
@@ -214,4 +217,74 @@ export function getPluginPathAndName(
       ? readJsonFile(packageJsonPath) // read name from package.json
       : { name: moduleName };
   return { pluginPath, name };
+}
+
+let projectsWithoutInference: Record<string, ProjectConfiguration>;
+
+export async function loadPlugins(
+  plugins: PluginConfiguration[],
+  root: string
+): Promise<LoadedNxPlugin[]> {
+  return await Promise.all(plugins.map((p) => loadPlugin(p, root)));
+}
+
+export async function loadPlugin(plugin: PluginConfiguration, root: string) {
+  try {
+    require.resolve(typeof plugin === 'string' ? plugin : plugin.plugin);
+  } catch {
+    // If a plugin cannot be resolved, we will need projects to resolve it
+    projectsWithoutInference ??=
+      await retrieveProjectConfigurationsWithoutPluginInference(root);
+  }
+  return await loadNxPluginAsync(
+    plugin,
+    getNxRequirePaths(root),
+    projectsWithoutInference,
+    root
+  );
+}
+
+export type LoadedNxPlugin = {
+  plugin: NxPlugin;
+  options?: unknown;
+};
+
+export async function loadNxPluginAsync(
+  pluginConfiguration: PluginConfiguration,
+  paths: string[],
+  projects: Record<string, ProjectConfiguration>,
+  root: string
+): Promise<LoadedNxPlugin> {
+  const { plugin: moduleName, options } =
+    typeof pluginConfiguration === 'object'
+      ? pluginConfiguration
+      : { plugin: pluginConfiguration, options: undefined };
+
+  performance.mark(`Load Nx Plugin: ${moduleName} - start`);
+  let { pluginPath, name } = await getPluginPathAndName(
+    moduleName,
+    paths,
+    projects,
+    root
+  );
+  const plugin = normalizeNxPlugin(await importPluginModule(pluginPath));
+  plugin.name ??= name;
+  performance.mark(`Load Nx Plugin: ${moduleName} - end`);
+  performance.measure(
+    `Load Nx Plugin: ${moduleName}`,
+    `Load Nx Plugin: ${moduleName} - start`,
+    `Load Nx Plugin: ${moduleName} - end`
+  );
+  return { plugin, options };
+}
+
+async function importPluginModule(pluginPath: string): Promise<NxPlugin> {
+  const m = await import(pluginPath);
+  if (
+    m.default &&
+    ('createNodes' in m.default || 'createDependencies' in m.default)
+  ) {
+    return m.default;
+  }
+  return m;
 }

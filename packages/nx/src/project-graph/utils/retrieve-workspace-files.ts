@@ -10,7 +10,10 @@ import {
   buildProjectsConfigurationsFromProjectPathsAndPlugins,
   ConfigurationSourceMaps,
 } from './project-configuration-utils';
-import { RemotePlugin, loadNxPluginsRemotely } from '../plugins/internal-api';
+import {
+  RemotePlugin,
+  loadNxPluginsInIsolation,
+} from '../plugins/internal-api';
 import {
   getNxWorkspaceFilesFromContext,
   globWithWorkspaceContext,
@@ -91,7 +94,7 @@ export async function retrieveProjectConfigurationsWithAngularProjects(
     pluginsToLoad.push(join(__dirname, '../../adapter/angular-json'));
   }
 
-  const [plugins, cleanup] = await loadNxPluginsRemotely(
+  const [plugins, cleanup] = await loadNxPluginsInIsolation(
     nxJson?.plugins ?? [],
     workspaceRoot
   );
@@ -146,7 +149,7 @@ export async function retrieveProjectConfigurationsWithoutPluginInference(
   root: string
 ): Promise<Record<string, ProjectConfiguration>> {
   const nxJson = readNxJson(root);
-  const [plugins, cleanup] = await loadNxPluginsRemotely([]); // only load default plugins
+  const [plugins, cleanup] = await loadNxPluginsInIsolation([]); // only load default plugins
   const projectGlobPatterns = retrieveProjectConfigurationPaths(root, plugins);
   const cacheKey = root + ',' + projectGlobPatterns.join(',');
 

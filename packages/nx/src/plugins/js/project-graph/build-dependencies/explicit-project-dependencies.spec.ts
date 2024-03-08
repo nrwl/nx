@@ -11,7 +11,7 @@ import {
 import { CreateDependenciesContext } from '../../../../project-graph/plugins';
 import { setupWorkspaceContext } from '../../../../utils/workspace-context';
 import ProjectJsonProjectsPlugin from '../../../project-json/build-nodes/project-json';
-import { loadNxPluginsRemotely } from '../../../../project-graph/plugins/internal-api';
+import { loadNxPluginsInIsolation } from '../../../../project-graph/plugins/internal-api';
 
 // projectName => tsconfig import path
 const dependencyProjectNamesToImportPaths = {
@@ -566,7 +566,7 @@ async function createContext(
 
   setupWorkspaceContext(tempFs.tempDir);
 
-  const [plugins, cleanup] = await loadNxPluginsRemotely([], tempFs.tempDir);
+  const [plugins, cleanup] = await loadNxPluginsInIsolation([], tempFs.tempDir);
   const { projects, projectRootMap } = await retrieveProjectConfigurations(
     plugins,
     tempFs.tempDir,

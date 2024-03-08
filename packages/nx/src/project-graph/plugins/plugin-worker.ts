@@ -1,11 +1,8 @@
 import { consumeMessage, PluginWorkerMessage } from './messaging';
-import {
-  CreateNodesResultWithContext,
-  loadPlugin,
-  NormalizedPlugin,
-} from './internal-api';
+import { CreateNodesResultWithContext, NormalizedPlugin } from './internal-api';
 import { CreateNodesContext } from './public-api';
 import { CreateNodesError } from './utils';
+import { loadPlugin } from './worker-api';
 
 global.NX_GRAPH_CREATION = true;
 

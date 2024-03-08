@@ -17,7 +17,7 @@ import {
   retrieveWorkspaceFiles,
 } from './utils/retrieve-workspace-files';
 import { readNxJson } from '../config/nx-json';
-import { loadNxPluginsRemotely, RemotePlugin } from './plugins/internal-api';
+import { loadNxPluginsInIsolation, RemotePlugin } from './plugins/internal-api';
 
 /**
  * Synchronously reads the latest cached copy of the workspace's ProjectGraph.
@@ -81,7 +81,7 @@ export async function buildProjectGraphAndSourceMapsWithoutDaemon() {
   global.NX_GRAPH_CREATION = true;
   const nxJson = readNxJson();
 
-  const [plugins, cleanup] = await loadNxPluginsRemotely(nxJson.plugins);
+  const [plugins, cleanup] = await loadNxPluginsInIsolation(nxJson.plugins);
 
   performance.mark('retrieve-project-configurations:start');
   const { projects, externalNodes, sourceMaps, projectRootMap } =
