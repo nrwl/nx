@@ -12,9 +12,10 @@ import { loadRemoteNxPlugin } from './plugin-pool';
 import {
   CreateNodesContext,
   CreateNodesResult,
-  NxPlugin,
   NxPluginV2,
 } from './public-api';
+
+export { loadPlugins, loadPlugin } from './worker-api';
 
 export type CreateNodesResultWithContext = CreateNodesResult & {
   file: string;
@@ -44,12 +45,16 @@ export type RemotePlugin =
 // holding resolved nx plugin objects.
 // Allows loaded plugins to not be reloaded when
 // referenced multiple times.
-export const nxPluginCache: Map<unknown, Promise<RemotePlugin>> = new Map();
+export const nxPluginCache: Map<unknown, [Promise<RemotePlugin>, () => void]> =
+  new Map();
 
-export async function loadNxPlugins(
+/**
+ * This loads plugins in isolation in their own worker so that they do not disturb other workers or the main process.
+ */
+export async function loadNxPluginsInIsolation(
   plugins: PluginConfiguration[],
   root = workspaceRoot
-): Promise<RemotePlugin[]> {
+): Promise<[RemotePlugin[], () => void]> {
   const result: Promise<RemotePlugin>[] = [];
 
   plugins ??= [];
@@ -64,26 +69,39 @@ export async function loadNxPlugins(
   // We push the nx core node plugins onto the end, s.t. it overwrites any other plugins
   plugins.push(...(await getDefaultPlugins(root)));
 
+  const cleanupFunctions: Array<() => void> = [];
   for (const plugin of plugins) {
-    result.push(loadNxPlugin(plugin, root));
+    const [loadedPluginPromise, cleanup] = loadNxPluginInIsolation(
+      plugin,
+      root
+    );
+    result.push(loadedPluginPromise);
+    cleanupFunctions.push(cleanup);
   }
 
-  return Promise.all(result);
+  return [
+    await Promise.all(result),
+    () => {
+      for (const fn of cleanupFunctions) {
+        fn();
+      }
+    },
+  ];
 }
 
-export async function loadNxPlugin(
+export function loadNxPluginInIsolation(
   plugin: PluginConfiguration,
   root = workspaceRoot
-): Promise<RemotePlugin> {
+): [Promise<RemotePlugin>, () => void] {
   const cacheKey = JSON.stringify(plugin);
 
   if (nxPluginCache.has(cacheKey)) {
-    return await nxPluginCache.get(cacheKey)!;
+    return nxPluginCache.get(cacheKey);
   }
 
-  const loadingPlugin = loadRemoteNxPlugin(plugin, root);
-  nxPluginCache.set(cacheKey, loadingPlugin);
-  return await loadingPlugin;
+  const [loadingPlugin, cleanup] = loadRemoteNxPlugin(plugin, root);
+  nxPluginCache.set(cacheKey, [loadingPlugin, cleanup]);
+  return [loadingPlugin, cleanup];
 }
 
 export async function getDefaultPlugins(root: string) {

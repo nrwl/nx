@@ -17,6 +17,7 @@ import {
   retrieveWorkspaceFiles,
 } from './utils/retrieve-workspace-files';
 import { readNxJson } from '../config/nx-json';
+import { loadNxPluginsInIsolation, RemotePlugin } from './plugins/internal-api';
 
 /**
  * Synchronously reads the latest cached copy of the workspace's ProjectGraph.
@@ -80,9 +81,11 @@ export async function buildProjectGraphAndSourceMapsWithoutDaemon() {
   global.NX_GRAPH_CREATION = true;
   const nxJson = readNxJson();
 
+  const [plugins, cleanup] = await loadNxPluginsInIsolation(nxJson.plugins);
+
   performance.mark('retrieve-project-configurations:start');
   const { projects, externalNodes, sourceMaps, projectRootMap } =
-    await retrieveProjectConfigurations(workspaceRoot, nxJson);
+    await retrieveProjectConfigurations(plugins, workspaceRoot, nxJson);
   performance.mark('retrieve-project-configurations:end');
 
   performance.mark('retrieve-workspace-files:start');
@@ -100,11 +103,13 @@ export async function buildProjectGraphAndSourceMapsWithoutDaemon() {
       allWorkspaceFiles,
       rustReferences,
       cacheEnabled ? readFileMapCache() : null,
-      cacheEnabled
+      cacheEnabled,
+      plugins
     )
   ).projectGraph;
   performance.mark('build-project-graph-using-project-file-map:end');
   delete global.NX_GRAPH_CREATION;
+  cleanup();
   return { projectGraph, sourceMaps };
 }
 

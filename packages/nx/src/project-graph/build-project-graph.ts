@@ -13,7 +13,7 @@ import {
 } from './nx-deps-cache';
 import { applyImplicitDependencies } from './utils/implicit-project-dependencies';
 import { normalizeProjectNodes } from './utils/normalize-project-nodes';
-import { loadNxPlugins } from './plugins/internal-api';
+import { RemotePlugin } from './plugins/internal-api';
 import { isNxPluginV1, isNxPluginV2 } from './plugins/utils';
 import { CreateDependenciesContext } from './plugins';
 import { getRootTsConfigPath } from '../plugins/js/utils/typescript';
@@ -29,10 +29,8 @@ import { ProjectConfiguration } from '../config/workspace-json-project-json';
 import { readNxJson } from '../config/configuration';
 import { existsSync } from 'fs';
 import { PackageJson } from '../utils/package-json';
-import { getNxRequirePaths } from '../utils/installation-directory';
 import { output } from '../utils/output';
-import { ExternalObject, NxWorkspaceFilesExternals } from '../native';
-import { shutdownPluginWorkers } from './plugins/plugin-pool';
+import { NxWorkspaceFilesExternals } from '../native';
 
 let storedFileMap: FileMap | null = null;
 let storedAllWorkspaceFiles: FileData[] | null = null;
@@ -68,7 +66,8 @@ export async function buildProjectGraphUsingProjectFileMap(
   allWorkspaceFiles: FileData[],
   rustReferences: NxWorkspaceFilesExternals,
   fileMapCache: FileMapCache | null,
-  shouldWriteCache: boolean
+  shouldWriteCache: boolean,
+  plugins: RemotePlugin[]
 ): Promise<{
   projectGraph: ProjectGraph;
   projectFileMapCache: FileMapCache;
@@ -118,7 +117,8 @@ export async function buildProjectGraphUsingProjectFileMap(
     externalNodes,
     context,
     cachedFileData,
-    projectGraphVersion
+    projectGraphVersion,
+    plugins
   );
   const projectFileMapCache = createProjectFileMapCache(
     nxJson,
@@ -129,7 +129,6 @@ export async function buildProjectGraphUsingProjectFileMap(
   if (shouldWriteCache) {
     writeCache(projectFileMapCache, projectGraph);
   }
-  await shutdownPluginWorkers();
   return {
     projectGraph,
     projectFileMapCache,
@@ -165,7 +164,8 @@ async function buildProjectGraphUsingContext(
   knownExternalNodes: Record<string, ProjectGraphExternalNode>,
   ctx: CreateDependenciesContext,
   cachedFileData: CachedFileData,
-  projectGraphVersion: string
+  projectGraphVersion: string,
+  plugins: RemotePlugin[]
 ) {
   performance.mark('build project graph:start');
 
@@ -178,7 +178,7 @@ async function buildProjectGraphUsingContext(
   await normalizeProjectNodes(ctx, builder);
   const initProjectGraph = builder.getUpdatedProjectGraph();
 
-  const r = await updateProjectGraphWithPlugins(ctx, initProjectGraph);
+  const r = await updateProjectGraphWithPlugins(ctx, initProjectGraph, plugins);
 
   const updatedBuilder = new ProjectGraphBuilder(r, ctx.fileMap.projectFileMap);
   for (const proj of Object.keys(cachedFileData.projectFileMap)) {
@@ -235,12 +235,9 @@ function createContext(
 
 async function updateProjectGraphWithPlugins(
   context: CreateDependenciesContext,
-  initProjectGraph: ProjectGraph
+  initProjectGraph: ProjectGraph,
+  plugins: RemotePlugin[]
 ) {
-  const plugins = await loadNxPlugins(
-    context.nxJsonConfiguration?.plugins,
-    context.workspaceRoot
-  );
   let graph = initProjectGraph;
   for (const plugin of plugins) {
     try {
