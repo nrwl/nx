@@ -39,9 +39,9 @@
             "isExternal": false,
             "children": [
               {
-                "name": "Package-Based Monorepo",
-                "path": "/getting-started/tutorials/package-based-repo-tutorial",
-                "id": "package-based-repo-tutorial",
+                "name": "NPM Workspaces Monorepo",
+                "path": "/getting-started/tutorials/npm-workspaces-tutorial",
+                "id": "npm-workspaces-tutorial",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -131,9 +131,9 @@
         "isExternal": false,
         "children": [
           {
-            "name": "Package-Based Monorepo",
-            "path": "/getting-started/tutorials/package-based-repo-tutorial",
-            "id": "package-based-repo-tutorial",
+            "name": "NPM Workspaces Monorepo",
+            "path": "/getting-started/tutorials/npm-workspaces-tutorial",
+            "id": "npm-workspaces-tutorial",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -190,9 +190,9 @@
         "disableCollapsible": false
       },
       {
-        "name": "Package-Based Monorepo",
-        "path": "/getting-started/tutorials/package-based-repo-tutorial",
-        "id": "package-based-repo-tutorial",
+        "name": "NPM Workspaces Monorepo",
+        "path": "/getting-started/tutorials/npm-workspaces-tutorial",
+        "id": "npm-workspaces-tutorial",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false

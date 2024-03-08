@@ -67,7 +67,6 @@ describe('Redirect rules configuration', () => {
 
     test('old tutorial links', () => {
       const oldTutorialUrls = [
-        '/tutorials/package-based-repo-tutorial',
         '/tutorials/integrated-repo-tutorial',
         '/tutorials/react-standalone-tutorial',
         '/tutorials/angular-standalone-tutorial',
