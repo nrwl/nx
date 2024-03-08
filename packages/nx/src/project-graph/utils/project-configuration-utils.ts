@@ -19,6 +19,7 @@ import {
   CreateNodesResultWithContext,
   RemotePlugin,
 } from '../plugins/internal-api';
+import { shutdownPluginWorkers } from '../plugins/plugin-pool';
 
 export type SourceInformation = [file: string, plugin: string];
 export type ConfigurationSourceMaps = Record<
@@ -229,7 +230,11 @@ export function buildProjectsConfigurationsFromProjectPathsAndPlugins(
     let r = createNodes(matchedFiles, {
       nxJsonConfiguration: nxJson,
       workspaceRoot: root,
-    });
+    }).catch((e) =>
+      shutdownPluginWorkers().then(() => {
+        throw e;
+      })
+    );
 
     results.push(r);
   }

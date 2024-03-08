@@ -29,8 +29,6 @@ import { workspaceRoot } from '../../utils/workspace-root';
 import { notifyFileWatcherSockets } from './file-watching/file-watcher-sockets';
 import { serverLogger } from './logger';
 import { NxWorkspaceFilesExternals } from '../../native';
-import { RemotePlugin } from '../../project-graph/plugins/internal-api';
-import { getPlugins } from './plugins';
 
 interface SerializedProjectGraph {
   error: Error | null;
@@ -71,15 +69,14 @@ export async function getCachedSerializedProjectGraphPromise(): Promise<Serializ
     // reset the wait time
     waitPeriod = 100;
     await resetInternalStateIfNxDepsMissing();
-    const plugins = await getPlugins();
     if (collectedUpdatedFiles.size == 0 && collectedDeletedFiles.size == 0) {
       if (!cachedSerializedProjectGraphPromise) {
         cachedSerializedProjectGraphPromise =
-          processFilesAndCreateAndSerializeProjectGraph(plugins);
+          processFilesAndCreateAndSerializeProjectGraph();
       }
     } else {
       cachedSerializedProjectGraphPromise =
-        processFilesAndCreateAndSerializeProjectGraph(plugins);
+        processFilesAndCreateAndSerializeProjectGraph();
     }
     return await cachedSerializedProjectGraphPromise;
   } catch (e) {
@@ -126,7 +123,7 @@ export function addUpdatedAndDeletedFiles(
       }
 
       cachedSerializedProjectGraphPromise =
-        processFilesAndCreateAndSerializeProjectGraph(await getPlugins());
+        processFilesAndCreateAndSerializeProjectGraph();
       await cachedSerializedProjectGraphPromise;
 
       if (createdFiles.length > 0) {
@@ -202,9 +199,7 @@ async function processCollectedUpdatedAndDeletedFiles(
   }
 }
 
-async function processFilesAndCreateAndSerializeProjectGraph(
-  plugins: RemotePlugin[]
-): Promise<SerializedProjectGraph> {
+async function processFilesAndCreateAndSerializeProjectGraph(): Promise<SerializedProjectGraph> {
   try {
     performance.mark('hash-watched-changes-start');
     const updatedFiles = [...collectedUpdatedFiles.values()];
@@ -224,7 +219,6 @@ async function processFilesAndCreateAndSerializeProjectGraph(
     const nxJson = readNxJson(workspaceRoot);
     global.NX_GRAPH_CREATION = true;
     const graphNodes = await retrieveProjectConfigurations(
-      plugins,
       workspaceRoot,
       nxJson
     );
@@ -281,8 +275,7 @@ async function createAndSerializeProjectGraph({
         allWorkspaceFiles,
         rustReferences,
         currentProjectFileMapCache || readFileMapCache(),
-        true,
-        await getPlugins()
+        true
       );
     currentProjectFileMapCache = projectFileMapCache;
     currentProjectGraph = projectGraph;

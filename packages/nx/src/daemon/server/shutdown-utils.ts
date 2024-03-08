@@ -4,26 +4,21 @@ import { serverLogger } from './logger';
 import { serializeResult } from '../socket-utils';
 import { deleteDaemonJsonProcessCache } from '../cache';
 import type { Watcher } from '../../native';
-import { cleanupPlugins } from './plugins';
 
 export const SERVER_INACTIVITY_TIMEOUT_MS = 10800000 as const; // 10800000 ms = 3 hours
 
 let watcherInstance: Watcher | undefined;
-
 export function storeWatcherInstance(instance: Watcher) {
   watcherInstance = instance;
 }
-
 export function getWatcherInstance() {
   return watcherInstance;
 }
 
 let outputWatcherInstance: Watcher | undefined;
-
 export function storeOutputWatcherInstance(instance: Watcher) {
   outputWatcherInstance = instance;
 }
-
 export function getOutputWatcherInstance() {
   return outputWatcherInstance;
 }
@@ -40,7 +35,6 @@ export async function handleServerProcessTermination({
   try {
     server.close();
     deleteDaemonJsonProcessCache();
-    cleanupPlugins();
 
     if (watcherInstance) {
       await watcherInstance.stop();
