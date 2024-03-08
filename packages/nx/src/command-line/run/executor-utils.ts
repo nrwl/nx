@@ -1,6 +1,6 @@
 import { dirname, join } from 'path';
 
-import { readPluginPackageJson } from '../../project-graph/plugins';
+import { readPluginPackageJson } from '../../utils/nx-plugin';
 import {
   CustomHasher,
   Executor,

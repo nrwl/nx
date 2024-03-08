@@ -8,7 +8,7 @@ import { pruneProjectGraph } from './project-graph-pruning';
 import { vol } from 'memfs';
 import { ProjectGraph } from '../../../config/project-graph';
 import { ProjectGraphBuilder } from '../../../project-graph/project-graph-builder';
-import { CreateDependenciesContext } from '../../../project-graph/plugins';
+import { CreateDependenciesContext } from '../../../utils/nx-plugin';
 
 jest.mock('fs', () => {
   const memFs = require('memfs').fs;
