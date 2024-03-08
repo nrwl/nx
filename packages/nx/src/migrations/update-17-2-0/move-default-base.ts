@@ -7,7 +7,7 @@ import { formatChangedFilesWithPrettierIfAvailable } from '../../generators/inte
 /**
  * Updates existing workspaces to move nx.json's affected.defaultBase to nx.json's base.
  */
-export default function update(host: Tree) {
+export default async function update(host: Tree) {
   const nxJson = readNxJson(host) as NxJsonConfiguration & {
     affected: { defaultBase?: string };
   };
@@ -19,5 +19,5 @@ export default function update(host: Tree) {
     }
     updateNxJson(host, nxJson);
   }
-  formatChangedFilesWithPrettierIfAvailable(host);
+  await formatChangedFilesWithPrettierIfAvailable(host);
 }
