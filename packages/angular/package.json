@@ -63,7 +63,7 @@
     "@nx/webpack": "file:../webpack",
     "@nx/web": "file:../web",
     "@nx/workspace": "file:../workspace",
-    "piscina": "^4.2.1"
+    "piscina": "^4.4.0"
   },
   "peerDependencies": {
     "@angular-devkit/build-angular": ">= 15.0.0 < 18.0.0",
