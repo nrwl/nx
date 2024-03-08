@@ -44,7 +44,7 @@ export type RemotePlugin =
 // holding resolved nx plugin objects.
 // Allows loaded plugins to not be reloaded when
 // referenced multiple times.
-export const nxPluginCache: Map<unknown, Promise<RemotePlugin>> = new Map();
+export const nxPluginCache: Map<unknown, RemotePlugin> = new Map();
 
 export async function loadNxPlugins(
   plugins: PluginConfiguration[],
@@ -78,12 +78,12 @@ export async function loadNxPlugin(
   const cacheKey = JSON.stringify(plugin);
 
   if (nxPluginCache.has(cacheKey)) {
-    return await nxPluginCache.get(cacheKey)!;
+    return nxPluginCache.get(cacheKey)!;
   }
 
-  const loadingPlugin = loadRemoteNxPlugin(plugin, root);
-  nxPluginCache.set(cacheKey, loadingPlugin);
-  return await loadingPlugin;
+  const loadedPlugin = await loadRemoteNxPlugin(plugin, root);
+  nxPluginCache.set(cacheKey, loadedPlugin);
+  return loadedPlugin;
 }
 
 export async function getDefaultPlugins(root: string) {

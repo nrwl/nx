@@ -121,43 +121,61 @@ function createWorkerHandler(
               ? [
                   createNodesPattern,
                   (configFiles, ctx) => {
-                    const tx = pluginName + ':createNodes:' + performance.now();
-                    return registerPendingPromise(tx, pending, () => {
+                    return new Promise(function (res, rej) {
+                      const tx =
+                        pluginName + ':createNodes:' + performance.now();
                       worker.send(
                         createMessage({
                           type: 'createNodes',
                           payload: { configFiles, context: ctx, tx },
                         })
                       );
+                      pending.add(tx);
+                      promiseBank.set(tx, {
+                        promise: this,
+                        resolver: res,
+                        rejecter: rej,
+                      });
                     });
                   },
                 ]
               : undefined,
             createDependencies: result.hasCreateDependencies
               ? (opts, ctx) => {
-                  const tx =
-                    pluginName + ':createDependencies:' + performance.now();
-                  return registerPendingPromise(tx, pending, () => {
+                  return new Promise(function (res, rej) {
+                    const tx = pluginName + ':createNodes:' + performance.now();
                     worker.send(
                       createMessage({
                         type: 'createDependencies',
                         payload: { context: ctx, tx },
                       })
                     );
+                    pending.add(tx);
+                    promiseBank.set(tx, {
+                      promise: this,
+                      resolver: res,
+                      rejecter: rej,
+                    });
                   });
                 }
               : undefined,
             processProjectGraph: result.hasProcessProjectGraph
               ? (graph, ctx) => {
-                  const tx =
-                    pluginName + ':processProjectGraph:' + performance.now();
-                  return registerPendingPromise(tx, pending, () => {
+                  return new Promise(function (res, rej) {
+                    const tx =
+                      pluginName + ':processProjectGraph:' + performance.now();
                     worker.send(
                       createMessage({
                         type: 'processProjectGraph',
                         payload: { graph, ctx, tx },
                       })
                     );
+                    pending.add(tx);
+                    promiseBank.set(tx, {
+                      promise: this,
+                      resolver: res,
+                      rejecter: rej,
+                    });
                   });
                 }
               : undefined,
@@ -236,32 +254,4 @@ function getPendingPromises(
     }
   }
   return pendingTxs;
-}
-
-function registerPendingPromise(
-  tx: string,
-  pending: Set<string>,
-  callback: () => void
-): Promise<any> {
-  let resolver, rejecter;
-
-  const promise = new Promise((res, rej) => {
-    resolver = res;
-    rejecter = rej;
-
-    callback();
-  }).then((val) => {
-    // Remove the promise from the pending set
-    pending.delete(tx);
-    // Return the original value
-    return val;
-  });
-
-  pending.add(tx);
-  promiseBank.set(tx, {
-    promise,
-    resolver,
-    rejecter,
-  });
-  return promise;
 }
