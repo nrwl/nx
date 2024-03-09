@@ -1,18 +1,19 @@
+import { workspaceRoot } from '../workspace-root';
 import * as chalk from 'chalk';
 import { dirname, join } from 'path';
-
-import { ProjectConfiguration } from '../../config/workspace-json-project-json';
-import { NxPlugin, readPluginPackageJson } from '../../project-graph/plugins';
-import { loadPlugin } from '../../project-graph/plugins/internal-api';
-import { readJsonFile } from '../fileutils';
-import { getNxRequirePaths } from '../installation-directory';
 import { output } from '../output';
-import { PackageJson } from '../package-json';
-import { getPackageManagerCommand } from '../package-manager';
-import { workspaceRoot } from '../workspace-root';
-import { hasElements } from './shared';
-
 import type { PluginCapabilities } from './models';
+import { hasElements } from './shared';
+import { readJsonFile } from '../fileutils';
+import { getPackageManagerCommand } from '../package-manager';
+import {
+  loadNxPluginAsync,
+  NxPlugin,
+  readPluginPackageJson,
+} from '../nx-plugin';
+import { getNxRequirePaths } from '../installation-directory';
+import { PackageJson } from '../package-json';
+import { ProjectConfiguration } from '../../config/workspace-json-project-json';
 
 function tryGetCollection<T extends object>(
   packageJsonPath: string,
@@ -45,7 +46,7 @@ export async function getPluginCapabilities(
         getNxRequirePaths(workspaceRoot)
       );
     const pluginModule = includeRuntimeCapabilities
-      ? await tryGetModule(packageJson, workspaceRoot)
+      ? await tryGetModule(packageJson, workspaceRoot, projects)
       : ({} as Record<string, unknown>);
     return {
       name: pluginName,
@@ -98,7 +99,8 @@ export async function getPluginCapabilities(
 
 async function tryGetModule(
   packageJson: PackageJson,
-  workspaceRoot: string
+  workspaceRoot: string,
+  projects: Record<string, ProjectConfiguration>
 ): Promise<NxPlugin | null> {
   try {
     return packageJson.generators ??
@@ -106,7 +108,14 @@ async function tryGetModule(
       packageJson['nx-migrations'] ??
       packageJson['schematics'] ??
       packageJson['builders']
-      ? (await loadPlugin(packageJson.name, workspaceRoot)).plugin
+      ? (
+          await loadNxPluginAsync(
+            packageJson.name,
+            getNxRequirePaths(workspaceRoot),
+            projects,
+            workspaceRoot
+          )
+        ).plugin
       : ({
           name: packageJson.name,
         } as NxPlugin);

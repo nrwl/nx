@@ -3,7 +3,7 @@ import * as memfs from 'memfs';
 import '../../../internal-testing-utils/mock-fs';
 
 import { ProjectJsonProjectsPlugin } from './project-json';
-import { CreateNodesContext } from '../../../project-graph/plugins';
+import { CreateNodesContext } from '../../../utils/nx-plugin';
 const { createNodes } = ProjectJsonProjectsPlugin;
 
 describe('nx project.json plugin', () => {

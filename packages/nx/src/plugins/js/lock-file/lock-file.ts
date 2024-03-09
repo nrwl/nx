@@ -37,7 +37,7 @@ import {
 import { pruneProjectGraph } from './project-graph-pruning';
 import { normalizePackageJson } from './utils/package-json';
 import { readJsonFile } from '../../../utils/fileutils';
-import { CreateDependenciesContext } from '../../../project-graph/plugins';
+import { CreateDependenciesContext } from '../../../utils/nx-plugin';
 
 const YARN_LOCK_FILE = 'yarn.lock';
 const NPM_LOCK_FILE = 'package-lock.json';

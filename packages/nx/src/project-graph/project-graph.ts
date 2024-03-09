@@ -17,7 +17,7 @@ import {
   retrieveWorkspaceFiles,
 } from './utils/retrieve-workspace-files';
 import { readNxJson } from '../config/nx-json';
-import { loadNxPluginsInIsolation, RemotePlugin } from './plugins/internal-api';
+import { unregisterPluginTSTranspiler } from '../utils/nx-plugin';
 
 /**
  * Synchronously reads the latest cached copy of the workspace's ProjectGraph.
@@ -78,41 +78,39 @@ export function readProjectsConfigurationFromProjectGraph(
 }
 
 export async function buildProjectGraphAndSourceMapsWithoutDaemon() {
+  // Set this globally to allow plugins to know if they are being called from the project graph creation
   global.NX_GRAPH_CREATION = true;
   const nxJson = readNxJson();
 
-  const [plugins, cleanup] = await loadNxPluginsInIsolation(nxJson.plugins);
-  try {
-    performance.mark('retrieve-project-configurations:start');
-    const { projects, externalNodes, sourceMaps, projectRootMap } =
-      await retrieveProjectConfigurations(plugins, workspaceRoot, nxJson);
-    performance.mark('retrieve-project-configurations:end');
+  performance.mark('retrieve-project-configurations:start');
+  const { projects, externalNodes, sourceMaps, projectRootMap } =
+    await retrieveProjectConfigurations(workspaceRoot, nxJson);
+  performance.mark('retrieve-project-configurations:end');
 
-    performance.mark('retrieve-workspace-files:start');
-    const { allWorkspaceFiles, fileMap, rustReferences } =
-      await retrieveWorkspaceFiles(workspaceRoot, projectRootMap);
-    performance.mark('retrieve-workspace-files:end');
+  performance.mark('retrieve-workspace-files:start');
+  const { allWorkspaceFiles, fileMap, rustReferences } =
+    await retrieveWorkspaceFiles(workspaceRoot, projectRootMap);
+  performance.mark('retrieve-workspace-files:end');
 
-    const cacheEnabled = process.env.NX_CACHE_PROJECT_GRAPH !== 'false';
-    performance.mark('build-project-graph-using-project-file-map:start');
-    const projectGraph = (
-      await buildProjectGraphUsingProjectFileMap(
-        projects,
-        externalNodes,
-        fileMap,
-        allWorkspaceFiles,
-        rustReferences,
-        cacheEnabled ? readFileMapCache() : null,
-        cacheEnabled,
-        plugins
-      )
-    ).projectGraph;
-    performance.mark('build-project-graph-using-project-file-map:end');
-    delete global.NX_GRAPH_CREATION;
-    return { projectGraph, sourceMaps };
-  } finally {
-    cleanup();
-  }
+  const cacheEnabled = process.env.NX_CACHE_PROJECT_GRAPH !== 'false';
+  performance.mark('build-project-graph-using-project-file-map:start');
+  const projectGraph = (
+    await buildProjectGraphUsingProjectFileMap(
+      projects,
+      externalNodes,
+      fileMap,
+      allWorkspaceFiles,
+      rustReferences,
+      cacheEnabled ? readFileMapCache() : null,
+      cacheEnabled
+    )
+  ).projectGraph;
+  performance.mark('build-project-graph-using-project-file-map:end');
+
+  unregisterPluginTSTranspiler();
+  delete global.NX_GRAPH_CREATION;
+
+  return { projectGraph, sourceMaps };
 }
 
 function handleProjectGraphError(opts: { exitOnError: boolean }, e) {

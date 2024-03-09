@@ -3,7 +3,7 @@ import * as memfs from 'memfs';
 import '../../../src/internal-testing-utils/mock-fs';
 
 import { getTargetInfo, TargetDefaultsPlugin } from './target-defaults-plugin';
-import { CreateNodesContext } from '../../project-graph/plugins';
+import { CreateNodesContext } from '../../utils/nx-plugin';
 const {
   createNodes: [, createNodesFn],
 } = TargetDefaultsPlugin;
