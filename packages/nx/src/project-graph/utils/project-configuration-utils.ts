@@ -222,9 +222,6 @@ export function buildProjectsConfigurationsFromProjectPathsAndPlugins(
       continue;
     }
 
-    // Set this globally to allow plugins to know if they are being called from the project graph creation
-    global.NX_GRAPH_CREATION = true;
-
     for (const file of projectFiles) {
       performance.mark(`${plugin.name}:createNodes:${file} - start`);
       if (minimatch(file, pattern, { dot: true })) {
@@ -278,7 +275,6 @@ export function buildProjectsConfigurationsFromProjectPathsAndPlugins(
     // If there are no promises (counter undefined) or all promises have resolved (counter === 0)
     results.push(
       Promise.all(pluginResults).then((results) => {
-        delete global.NX_GRAPH_CREATION;
         performance.mark(`${plugin.name}:createNodes - end`);
         performance.measure(
           `${plugin.name}:createNodes`,
