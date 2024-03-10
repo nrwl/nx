@@ -202,7 +202,7 @@ Nx uses the project graph of your workspace to determine the order in which to [
 
 ```shell
 nx build myreactapp --graph # View the graph for building myreactapp
-nx run-many -targets build --graph # View the graph for building all projects
+nx run-many --targets build --graph # View the graph for building all projects
 nx affected --targets build --graph # View the graph for building the affected projects
 ```
 
