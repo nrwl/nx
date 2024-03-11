@@ -217,10 +217,6 @@ async function buildStaticRemotes(
       stdoutStream.write(stdoutString);
       if (stdoutString.includes('Successfully ran target build')) {
         staticProcess.stdout.removeAllListeners('data');
-        logger.info(
-          `NX Built ${staticRemotesConfig.remotes.length} static remotes`
-        );
-        res();
       }
     });
     staticProcess.stderr.on('data', (data) => logger.info(data.toString()));
@@ -231,6 +227,11 @@ async function buildStaticRemotes(
           `Remote failed to start. A complete log can be found in: ${remoteBuildLogFile}`
         );
       }
+
+      logger.info(
+        `NX Built ${staticRemotesConfig.remotes.length} static remotes`
+      );
+      res();
     });
     process.on('SIGTERM', () => staticProcess.kill('SIGTERM'));
     process.on('exit', () => staticProcess.kill('SIGTERM'));
