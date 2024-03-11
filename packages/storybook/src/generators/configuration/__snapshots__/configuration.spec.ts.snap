@@ -114,7 +114,7 @@ exports[`@nx/storybook:configuration for Storybook v7 dependencies should add an
     "storybook": "^7.5.3",
     "ts-jest": "^29.1.0",
     "ts-node": "10.9.1",
-    "typescript": "~5.3.2",
+    "typescript": "~5.4.2",
   },
   "name": "@proj/source",
 }
