@@ -36,15 +36,13 @@ export const createNodes: CreateNodes<EslintPluginOptions> = [
     (context as any).configFiles = context.configFiles ?? [];
 
     const childProjectRoots = globWithWorkspaceContext(context.workspaceRoot, [
+      'project.json',
+      'package.json',
       '**/project.json',
       '**/package.json',
     ])
       .map((f) => dirname(f))
       .filter((dir) => {
-        // Ignore root level package.json or project.json
-        if (dir === '.') {
-          return false;
-        }
         // Ignore project roots where the project does not contain any lintable files
         const lintableFiles = globWithWorkspaceContext(
           join(context.workspaceRoot, dir),
@@ -53,20 +51,8 @@ export const createNodes: CreateNodes<EslintPluginOptions> = [
         return lintableFiles.length > 0;
       });
 
-    const configDir = dirname(configFilePath);
-    if (configDir === '.') {
-      return {
-        projects: getProjectsUsingRootESLintConfig(
-          configFilePath,
-          childProjectRoots,
-          options,
-          context
-        ),
-      };
-    }
-
     return {
-      projects: getProjectsUsingNestedEslintConfig(
+      projects: getProjectsUsingESLintConfig(
         configFilePath,
         childProjectRoots,
         options,
@@ -76,109 +62,63 @@ export const createNodes: CreateNodes<EslintPluginOptions> = [
   },
 ];
 
-function getProjectsUsingRootESLintConfig(
+function getProjectsUsingESLintConfig(
   configFilePath: string,
   childProjectRoots: string[],
   options: EslintPluginOptions,
   context: CreateNodesContext
 ): CreateNodesResult['projects'] {
   const projects: CreateNodesResult['projects'] = {};
-
-  // If there's no src folder, it's not a standalone project, so a project.json would be explicitly required to add the root to the mapping
-  const isStandaloneWorkspace =
-    existsSync(join(context.workspaceRoot, 'src')) &&
-    existsSync(join(context.workspaceRoot, 'package.json'));
-
-  if (isStandaloneWorkspace) {
-    projects['.'] = {
-      targets: buildEslintTargets([configFilePath], '.', options, true),
-    };
-  } else if (existsSync(join(context.workspaceRoot, 'project.json'))) {
-    projects['.'] = {
-      targets: buildEslintTargets([configFilePath], '.', options),
-    };
-  }
 
   // Some nested projects may require a lint target based on this root level config as well (in the case they don't have their own)
 
-  // See if any child project roots do not have a matching eslint config
-  const childProjectsWithoutEslintConfig = childProjectRoots.filter(
-    (childProjectRoot) =>
-      !ESLINT_CONFIG_FILENAMES.some((eslintConfigFile) =>
-        context.configFiles.includes(join(childProjectRoot, eslintConfigFile))
-      )
+  // Create a Set of all the directories containing eslint configs
+  const eslintRoots = new Set(context.configFiles.map((f) => dirname(f)));
+
+  // Filter out projects under other eslint configs
+  const projectRootsUnderEslintConfig = childProjectRoots.filter(
+    (childProjectRoot) => {
+      let root = childProjectRoot;
+      // Traverse up from the childProjectRoot to either the workspaceRoot or the dir of this config file
+      while (root !== dirname(root) && root !== dirname(configFilePath)) {
+        if (eslintRoots.has(root)) {
+          return false;
+        }
+        root = dirname(root);
+      }
+      return true;
+    }
+  );
+
+  const rootEslintConfig = context.configFiles.find(
+    (f) =>
+      f === baseEsLintConfigFile ||
+      f === baseEsLintFlatConfigFile ||
+      ESLINT_CONFIG_FILENAMES.includes(f)
   );
 
   // Add a lint target for each child project without an eslint config, with the root level config as an input
-  for (const childProjectRoot of childProjectsWithoutEslintConfig) {
-    projects[childProjectRoot] = {
-      targets: buildEslintTargets([configFilePath], childProjectRoot, options),
+  for (const projectRoot of projectRootsUnderEslintConfig) {
+    // If there's no src folder, it's not a standalone project, so a project.json would be explicitly required to add the root to the mapping
+    const isStandaloneWorkspace =
+      projectRoot === '.' &&
+      existsSync(join(projectRoot, 'src')) &&
+      existsSync(join(projectRoot, 'package.json'));
+
+    const eslintConfigs = [configFilePath];
+
+    if (rootEslintConfig && !eslintConfigs.includes(rootEslintConfig)) {
+      eslintConfigs.unshift(rootEslintConfig);
+    }
+
+    projects[projectRoot] = {
+      targets: buildEslintTargets(
+        eslintConfigs,
+        projectRoot,
+        options,
+        isStandaloneWorkspace
+      ),
     };
-  }
-
-  return projects;
-}
-
-// We are dealing with a nested eslint config, add a target if a project.json or package.json is found
-function getProjectsUsingNestedEslintConfig(
-  configFilePath: string,
-  childProjectRoots: string[],
-  options: EslintPluginOptions,
-  context: CreateNodesContext
-): CreateNodesResult['projects'] {
-  const projects: CreateNodesResult['projects'] = {};
-  const configDir = dirname(configFilePath);
-  const configFileInputs = [configFilePath];
-
-  const getRootConfig = (): string | undefined => {
-    const rootFiles = context.configFiles.filter((f) => !f.includes('/'));
-    return rootFiles.find(
-      (f) =>
-        ESLINT_CONFIG_FILENAMES.some((eslintConfigFile) =>
-          f.endsWith(eslintConfigFile)
-        ) ||
-        f === baseEsLintConfigFile ||
-        f === baseEsLintFlatConfigFile
-    );
-  };
-
-  // Check if the current config is orphaned (not associated with a project)
-  const isOrphaned = !childProjectRoots.includes(configDir);
-
-  if (isOrphaned) {
-    const projectRootsUnderConfigDir = childProjectRoots.filter((root) =>
-      root.startsWith(configDir)
-    );
-    // Add the root level config as an input if it exists
-    const rootEslintConfig = getRootConfig();
-    if (rootEslintConfig) {
-      configFileInputs.unshift(rootEslintConfig);
-    }
-    // If any of the project roots under the config dir do not have their own eslint config file, add the target
-    for (const projectRoot of projectRootsUnderConfigDir) {
-      if (
-        !ESLINT_CONFIG_FILENAMES.some((eslintConfigFile) =>
-          context.configFiles.includes(join(projectRoot, eslintConfigFile))
-        )
-      ) {
-        projects[projectRoot] = {
-          targets: buildEslintTargets(configFileInputs, projectRoot, options),
-        };
-      }
-    }
-    return projects;
-  }
-
-  if (childProjectRoots.includes(configDir)) {
-    // Add the root level config as an input if it exists
-    const rootEslintConfig = getRootConfig();
-    if (rootEslintConfig) {
-      configFileInputs.unshift(rootEslintConfig);
-    }
-    projects[configDir] = {
-      targets: buildEslintTargets(configFileInputs, configDir, options),
-    };
-    return projects;
   }
 
   return projects;

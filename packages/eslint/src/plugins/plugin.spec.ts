@@ -46,6 +46,22 @@ describe('@nx/eslint/plugin', () => {
     jest.resetModules();
   });
 
+  it('should not create any nodes when there are no eslint configs', async () => {
+    applyFilesToVolAndContext(
+      {
+        'package.json': `{}`,
+        'project.json': `{}`,
+      },
+      context
+    );
+    expect(await invokeCreateNodesOnMatchingFiles(context, 'lint'))
+      .toMatchInlineSnapshot(`
+      {
+        "projects": {},
+      }
+    `);
+  });
+
   describe('root eslint config only', () => {
     it('should not create any nodes for just a package.json and root level eslint config', async () => {
       applyFilesToVolAndContext(
