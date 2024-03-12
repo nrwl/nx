@@ -448,6 +448,12 @@
                   "file": "shared/recipes/running-tasks/running-custom-commands"
                 },
                 {
+                  "name": "Pass Args to Commands",
+                  "id": "pass-args-to-commands",
+                  "tags": ["run-tasks"],
+                  "file": "shared/recipes/running-tasks/pass-args-to-commands"
+                },
+                {
                   "name": "Run Tasks in Parallel",
                   "id": "run-tasks-in-parallel",
                   "tags": ["run-tasks"],

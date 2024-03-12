@@ -1852,6 +1852,17 @@
             "tags": ["run-tasks"]
           },
           {
+            "id": "pass-args-to-commands",
+            "name": "Pass Args to Commands",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/recipes/running-tasks/pass-args-to-commands",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/running-tasks/pass-args-to-commands",
+            "tags": ["run-tasks"]
+          },
+          {
             "id": "run-tasks-in-parallel",
             "name": "Run Tasks in Parallel",
             "description": "",
@@ -3263,6 +3274,17 @@
         "tags": ["run-tasks"]
       },
       {
+        "id": "pass-args-to-commands",
+        "name": "Pass Args to Commands",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/running-tasks/pass-args-to-commands",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/running-tasks/pass-args-to-commands",
+        "tags": ["run-tasks"]
+      },
+      {
         "id": "run-tasks-in-parallel",
         "name": "Run Tasks in Parallel",
         "description": "",
@@ -3364,6 +3386,17 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/running-tasks/run-commands-executor",
+    "tags": ["run-tasks"]
+  },
+  "/recipes/running-tasks/pass-args-to-commands": {
+    "id": "pass-args-to-commands",
+    "name": "Pass Args to Commands",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/running-tasks/pass-args-to-commands",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/running-tasks/pass-args-to-commands",
     "tags": ["run-tasks"]
   },
   "/recipes/running-tasks/run-tasks-in-parallel": {

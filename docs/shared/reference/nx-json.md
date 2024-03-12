@@ -277,6 +277,37 @@ If you are using distributed task execution and disable caching for a given targ
 
 {% /callout %}
 
+### Executor/command options
+
+You can configure options specific to a target's executor. As an example, if your repo have projects using the `@nx/js:tsc` executor, you can provide some default options as follows:
+
+```json {% fileName="nx.json" %}
+{
+  "targetDefaults": {
+    "@nx/js:tsc": {
+      "generateExportsField": true
+    }
+  }
+}
+```
+
+You can also provide defaults for [inferred targets](/concepts/inferred-tasks) or targets running a command using the `nx:run-commands` executor. As an example, if your repo has projects with a `build` inferred target running the `vite build` command, you can provide some defaults options as follows:
+
+```json {% fileName="nx.json" %}
+{
+  "targetDefaults": {
+    "build": {
+      "options": {
+        "assetsInlineLimit": 2048,
+        "assetsDir": "static/assets"
+      }
+    }
+  }
+}
+```
+
+For more details on how to pass args to the underlying command see the [Pass Args to Commands recipe](/recipes/running-tasks/pass-args-to-commands).
+
 ## Release
 
 The `release` property in `nx.json` configures the `nx release` command. It is an optional property, as `nx release` is capable of working with zero config, but when present it is used to configure the versioning, changelog, and publishing phases of the release process.
