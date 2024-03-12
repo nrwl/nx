@@ -1379,6 +1379,14 @@
                 "disableCollapsible": false
               },
               {
+                "name": "Pass Args to Commands",
+                "path": "/recipes/running-tasks/pass-args-to-commands",
+                "id": "pass-args-to-commands",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
                 "name": "Run Tasks in Parallel",
                 "path": "/recipes/running-tasks/run-tasks-in-parallel",
                 "id": "run-tasks-in-parallel",
@@ -2410,6 +2418,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Pass Args to Commands",
+            "path": "/recipes/running-tasks/pass-args-to-commands",
+            "id": "pass-args-to-commands",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Run Tasks in Parallel",
             "path": "/recipes/running-tasks/run-tasks-in-parallel",
             "id": "run-tasks-in-parallel",
@@ -2480,6 +2496,14 @@
         "name": "Run Custom Commands",
         "path": "/recipes/running-tasks/run-commands-executor",
         "id": "run-commands-executor",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Pass Args to Commands",
+        "path": "/recipes/running-tasks/pass-args-to-commands",
+        "id": "pass-args-to-commands",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
