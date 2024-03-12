@@ -1,17 +1,23 @@
 import { TouchedProjectLocator } from '../affected-project-graph-models';
 import { minimatch } from 'minimatch';
 import { workspaceRoot } from '../../../utils/workspace-root';
+import { getNxRequirePaths } from '../../../utils/installation-directory';
 import { join } from 'path';
 import { existsSync } from 'fs';
 import { configurationGlobs } from '../../utils/retrieve-workspace-files';
-import { loadPlugins } from '../../plugins/internal-api';
+import { loadNxPlugins } from '../../../utils/nx-plugin';
 import { combineGlobPatterns } from '../../../utils/globs';
 
 export const getTouchedProjectsFromProjectGlobChanges: TouchedProjectLocator =
   async (touchedFiles, projectGraphNodes, nxJson): Promise<string[]> => {
-    const plugins = await loadPlugins(nxJson?.plugins ?? [], workspaceRoot);
     const globPattern = combineGlobPatterns(
-      configurationGlobs(plugins.map((p) => p.plugin))
+      configurationGlobs(
+        await loadNxPlugins(
+          nxJson?.plugins,
+          getNxRequirePaths(workspaceRoot),
+          workspaceRoot
+        )
+      )
     );
 
     const touchedProjects = new Set<string>();

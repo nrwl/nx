@@ -1,4 +1,4 @@
-import type { NxPluginV2 } from '../src/project-graph/plugins';
+import type { NxPluginV2 } from '../src/utils/nx-plugin';
 import { workspaceRoot } from '../src/utils/workspace-root';
 import { createNodeFromPackageJson } from '../src/plugins/package-json-workspaces';
 

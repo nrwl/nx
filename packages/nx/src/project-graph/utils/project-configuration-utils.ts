@@ -5,6 +5,7 @@ import {
   TargetConfiguration,
 } from '../../config/workspace-json-project-json';
 import { NX_PREFIX } from '../../utils/logger';
+import { CreateNodesResult, LoadedNxPlugin } from '../../utils/nx-plugin';
 import { readJsonFile } from '../../utils/fileutils';
 import { workspaceRoot } from '../../utils/workspace-root';
 import {
@@ -14,11 +15,6 @@ import {
 
 import { minimatch } from 'minimatch';
 import { join } from 'path';
-import { CreateNodesError } from '../plugins/utils';
-import {
-  CreateNodesResultWithContext,
-  RemotePlugin,
-} from '../plugins/internal-api';
 
 export type SourceInformation = [file: string, plugin: string];
 export type ConfigurationSourceMaps = Record<
@@ -204,34 +200,90 @@ export type ConfigurationResult = {
 export function buildProjectsConfigurationsFromProjectPathsAndPlugins(
   nxJson: NxJsonConfiguration,
   projectFiles: string[], // making this parameter allows devkit to pick up newly created projects
-  plugins: RemotePlugin[],
+  plugins: LoadedNxPlugin[],
   root: string = workspaceRoot
 ): Promise<ConfigurationResult> {
+  type CreateNodesResultWithContext = CreateNodesResult & {
+    file: string;
+    pluginName: string;
+  };
+
   const results: Array<Promise<Array<CreateNodesResultWithContext>>> = [];
 
   // We iterate over plugins first - this ensures that plugins specified first take precedence.
-  for (const plugin of plugins) {
+  for (const { plugin, options } of plugins) {
     const [pattern, createNodes] = plugin.createNodes ?? [];
+    const pluginResults: Array<
+      CreateNodesResultWithContext | Promise<CreateNodesResultWithContext>
+    > = [];
 
+    performance.mark(`${plugin.name}:createNodes - start`);
     if (!pattern) {
       continue;
     }
 
-    const matchedFiles = [];
-
-    performance.mark(`${plugin.name}:createNodes - start`);
-
     for (const file of projectFiles) {
+      performance.mark(`${plugin.name}:createNodes:${file} - start`);
       if (minimatch(file, pattern, { dot: true })) {
-        matchedFiles.push(file);
+        try {
+          let r = createNodes(file, options, {
+            nxJsonConfiguration: nxJson,
+            workspaceRoot: root,
+          });
+
+          if (r instanceof Promise) {
+            pluginResults.push(
+              r
+                .catch((e) => {
+                  performance.mark(`${plugin.name}:createNodes:${file} - end`);
+                  throw new CreateNodesError(
+                    `Unable to create nodes for ${file} using plugin ${plugin.name}.`,
+                    e
+                  );
+                })
+                .then((r) => {
+                  performance.mark(`${plugin.name}:createNodes:${file} - end`);
+                  performance.measure(
+                    `${plugin.name}:createNodes:${file}`,
+                    `${plugin.name}:createNodes:${file} - start`,
+                    `${plugin.name}:createNodes:${file} - end`
+                  );
+                  return { ...r, file, pluginName: plugin.name };
+                })
+            );
+          } else {
+            performance.mark(`${plugin.name}:createNodes:${file} - end`);
+            performance.measure(
+              `${plugin.name}:createNodes:${file}`,
+              `${plugin.name}:createNodes:${file} - start`,
+              `${plugin.name}:createNodes:${file} - end`
+            );
+            pluginResults.push({
+              ...r,
+              file,
+              pluginName: plugin.name,
+            });
+          }
+        } catch (e) {
+          throw new CreateNodesError(
+            `Unable to create nodes for ${file} using plugin ${plugin.name}.`,
+            e
+          );
+        }
       }
     }
-    let r = createNodes(matchedFiles, {
-      nxJsonConfiguration: nxJson,
-      workspaceRoot: root,
-    });
-
-    results.push(r);
+    // If there are no promises (counter undefined) or all promises have resolved (counter === 0)
+    results.push(
+      Promise.all(pluginResults).then((results) => {
+        performance.mark(`${plugin.name}:createNodes - end`);
+        performance.measure(
+          `${plugin.name}:createNodes`,
+          `${plugin.name}:createNodes - start`,
+          `${plugin.name}:createNodes - end`
+        );
+        return results;
+      })
+    );
   }
 
   return Promise.all(results).then((results) => {
@@ -343,6 +395,23 @@ export function readProjectConfigurationsFromRootMap(
     );
   }
   return projects;
+}
+
+class CreateNodesError extends Error {
+  constructor(msg, cause: Error | unknown) {
+    const message = `${msg} ${
+      !cause
+        ? ''
+        : cause instanceof Error
+        ? `\n\n\t Inner Error: ${cause.stack}`
+        : cause
+    }`;
+    // These errors are thrown during a JS callback which is invoked via rust.
+    // The errors messaging gets lost in the rust -> js -> rust transition, but
+    // logging the error here will ensure that it is visible in the console.
+    console.error(message);
+    super(message, { cause });
+  }
 }
 
 /**

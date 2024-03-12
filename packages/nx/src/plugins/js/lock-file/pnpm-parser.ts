@@ -25,7 +25,7 @@ import {
   ProjectGraphExternalNode,
 } from '../../../config/project-graph';
 import { hashArray } from '../../../hasher/file-hasher';
-import { CreateDependenciesContext } from '../../../project-graph/plugins';
+import { CreateDependenciesContext } from '../../../utils/nx-plugin';
 
 // we use key => node map to avoid duplicate work when parsing keys
 let keyMap = new Map<string, ProjectGraphExternalNode>();

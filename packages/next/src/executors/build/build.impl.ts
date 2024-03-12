@@ -137,7 +137,7 @@ function runCliBuild(
       ['build', ...args],
       {
         cwd: pathResolve(workspaceRoot, projectRoot),
-        stdio: ['pipe', 'inherit', 'ipc', 'inherit'],
+        stdio: ['ignore', 'inherit', 'inherit', 'ipc'],
         env: process.env,
       }
     );
