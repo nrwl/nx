@@ -38,6 +38,7 @@ image: node:18
     - yarn install --cache-folder .yarn-cache --prefer-offline --frozen-lockfile
     - NX_HEAD=$CI_COMMIT_SHA
     - NX_BASE=${CI_MERGE_REQUEST_DIFF_BASE_SHA:-$CI_COMMIT_BEFORE_SHA}
+    - NX_CLOUD_DISTRIBUTED_EXECUTION=true # this enables distribution
     - NX_CLOUD_DISTRIBUTED_EXECUTION_AGENT_COUNT=3 # expected number of agents
 
   artifacts:

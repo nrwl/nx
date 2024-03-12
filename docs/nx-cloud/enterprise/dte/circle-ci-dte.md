@@ -15,6 +15,7 @@ jobs:
     docker:
       - image: cimg/node:lts-browsers
     environment:
+      NX_CLOUD_DISTRIBUTED_EXECUTION: true # this enables distribution
       NX_CLOUD_DISTRIBUTED_EXECUTION_AGENT_COUNT: 3 # expected number of agents
     steps:
       - checkout

@@ -30,7 +30,8 @@ pipelines:
               name: CI
               script:
                 - export NX_BRANCH=$BITBUCKET_PR_ID
-                - export NX_CLOUD_DISTRIBUTED_EXECUTION_AGENT_COUNT=3
+                - export NX_CLOUD_DISTRIBUTED_EXECUTION=true # this enables distribution
+                - export NX_CLOUD_DISTRIBUTED_EXECUTION_AGENT_COUNT=3 # expected number of agents
 
                 - npm ci
                 - npx nx-cloud start-ci-run --stop-agents-after="e2e-ci" --agent-count=3

@@ -22,7 +22,7 @@ permissions:
   contents: read
 
 env:
-  NX_CLOUD_DISTRIBUTED_EXECUTION: true # this enables DTE
+  NX_CLOUD_DISTRIBUTED_EXECUTION: true # this enables distribution
   NX_CLOUD_DISTRIBUTED_EXECUTION_AGENT_COUNT: 3 # expected number of agents
   NX_BRANCH: ${{ github.event.number || github.ref_name }}
   NX_CLOUD_ACCESS_TOKEN: ${{ secrets.NX_CLOUD_ACCESS_TOKEN }}
