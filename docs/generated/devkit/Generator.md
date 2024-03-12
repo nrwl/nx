@@ -2,6 +2,8 @@
 
 Ƭ **Generator**\<`T`\>: (`tree`: `any`, `schema`: `T`) => `void` \| [`GeneratorCallback`](../../devkit/documents/GeneratorCallback) \| `Promise`\<`void` \| [`GeneratorCallback`](../../devkit/documents/GeneratorCallback)\>
 
+A function that schedules updates to the filesystem to be done atomically
+
 #### Type parameters
 
 | Name | Type      |
@@ -11,8 +13,6 @@
 #### Type declaration
 
 ▸ (`tree`, `schema`): `void` \| [`GeneratorCallback`](../../devkit/documents/GeneratorCallback) \| `Promise`\<`void` \| [`GeneratorCallback`](../../devkit/documents/GeneratorCallback)\>
-
-A function that schedules updates to the filesystem to be done atomically
 
 ##### Parameters
 

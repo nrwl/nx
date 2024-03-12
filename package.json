@@ -281,7 +281,7 @@
     "ts-node": "10.9.1",
     "tsconfig-paths": "^4.1.2",
     "tsconfig-paths-webpack-plugin": "4.0.0",
-    "typedoc": "0.25.4",
+    "typedoc": "0.25.12",
     "typedoc-plugin-markdown": "3.17.1",
     "typescript": "~5.3.2",
     "unist-builder": "^4.0.0",

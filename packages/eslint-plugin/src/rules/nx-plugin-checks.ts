@@ -11,9 +11,9 @@ import { findProject, getSourceFilePath } from '../utils/runtime-lint-utils';
 import { existsSync } from 'fs';
 import { registerTsProject } from '@nx/js/src/internal';
 import * as path from 'path';
-import { join } from 'path';
 import { readProjectGraph } from '../utils/project-graph-utils';
 import { valid } from 'semver';
+import { getRootTsConfigPath } from '@nx/js';
 
 type Options = [
   {
@@ -147,7 +147,7 @@ export default ESLintUtils.RuleCreator(() => ``)<Options, MessageIds>({
     }
 
     if (!(global as any).tsProjectRegistered) {
-      registerTsProject(join(workspaceRoot, 'tsconfig.base.json'));
+      registerTsProject(getRootTsConfigPath());
       (global as any).tsProjectRegistered = true;
     }
 

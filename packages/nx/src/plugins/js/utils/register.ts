@@ -112,7 +112,9 @@ export function getTranspiler(compilerOptions: CompilerOptions) {
 
   compilerOptions.lib = ['es2021'];
   compilerOptions.module = ts.ModuleKind.CommonJS;
-  compilerOptions.moduleResolution = ts.ModuleResolutionKind.Node10;
+  // use NodeJs module resolution until support for TS 4.x is dropped and then
+  // we can switch to Node10
+  compilerOptions.moduleResolution = ts.ModuleResolutionKind.NodeJs;
   compilerOptions.target = ts.ScriptTarget.ES2021;
   compilerOptions.inlineSourceMap = true;
   compilerOptions.skipLibCheck = true;
