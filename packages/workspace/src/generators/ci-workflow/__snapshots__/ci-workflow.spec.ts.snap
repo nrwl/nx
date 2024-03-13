@@ -29,7 +29,7 @@ jobs:
       # Set Azure Devops CLI default settings
       - bash: az devops configure --defaults organization=$(System.TeamFoundationCollectionUri) project=$(System.TeamProject)
         displayName: 'Set default Azure DevOps organization and project'
-      # Get last successfull commit from Azure Devops CLI
+      # Get last successful commit from Azure Devops CLI
       - displayName: 'Get last successful commit SHA'
         condition: ne(variables['Build.Reason'], 'PullRequest')
         env:
@@ -232,7 +232,7 @@ jobs:
       # Set Azure Devops CLI default settings
       - bash: az devops configure --defaults organization=$(System.TeamFoundationCollectionUri) project=$(System.TeamProject)
         displayName: 'Set default Azure DevOps organization and project'
-      # Get last successfull commit from Azure Devops CLI
+      # Get last successful commit from Azure Devops CLI
       - displayName: 'Get last successful commit SHA'
         condition: ne(variables['Build.Reason'], 'PullRequest')
         env:
@@ -462,7 +462,7 @@ jobs:
       # Set Azure Devops CLI default settings
       - bash: az devops configure --defaults organization=$(System.TeamFoundationCollectionUri) project=$(System.TeamProject)
         displayName: 'Set default Azure DevOps organization and project'
-      # Get last successfull commit from Azure Devops CLI
+      # Get last successful commit from Azure Devops CLI
       - displayName: 'Get last successful commit SHA'
         condition: ne(variables['Build.Reason'], 'PullRequest')
         env:
@@ -709,7 +709,7 @@ jobs:
       # Set Azure Devops CLI default settings
       - bash: az devops configure --defaults organization=$(System.TeamFoundationCollectionUri) project=$(System.TeamProject)
         displayName: 'Set default Azure DevOps organization and project'
-      # Get last successfull commit from Azure Devops CLI
+      # Get last successful commit from Azure Devops CLI
       - displayName: 'Get last successful commit SHA'
         condition: ne(variables['Build.Reason'], 'PullRequest')
         env:
