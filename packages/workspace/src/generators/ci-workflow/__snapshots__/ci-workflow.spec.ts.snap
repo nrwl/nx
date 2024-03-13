@@ -76,12 +76,12 @@ pipelines:
             - npm ci
 
             - npx nx-cloud record -- nx format:check
-            - npx nx affected -t lint test build e2e-ci --base=origin/master
+            - npx nx affected -t lint test build e2e-ci --base=origin/main
 
   branches:
     main:
       - step:
-          name: 'Build and test affected apps on "master" branch changes'
+          name: 'Build and test affected apps on "main" branch changes'
           script:
             # Connect your workspace on my.nx.app and uncomment this to enable task distribution.
             # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "e2e-ci" targets have been requested
@@ -113,7 +113,7 @@ jobs:
 
       - run: npm ci
       - nx/set-shas:
-          main-branch-name: 'master'
+          main-branch-name: 'main'
 
       - run: npx nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD
       - run: npx nx affected --base=$NX_BASE --head=$NX_HEAD -t lint test build e2e-ci
@@ -279,12 +279,12 @@ pipelines:
             - npm ci
 
             - npx nx-cloud record -- nx format:check
-            - npx nx affected -t lint test build --base=origin/master
+            - npx nx affected -t lint test build --base=origin/main
 
   branches:
     main:
       - step:
-          name: 'Build and test affected apps on "master" branch changes'
+          name: 'Build and test affected apps on "main" branch changes'
           script:
             # Connect your workspace on my.nx.app and uncomment this to enable task distribution.
             # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
@@ -316,7 +316,7 @@ jobs:
 
       - run: npm ci
       - nx/set-shas:
-          main-branch-name: 'master'
+          main-branch-name: 'main'
 
       - run: npx nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD
       - run: npx nx affected --base=$NX_BASE --head=$NX_HEAD -t lint test build
@@ -513,12 +513,12 @@ pipelines:
             - pnpm install --frozen-lockfile
 
             - pnpm exec nx-cloud record -- nx format:check
-            - pnpm exec nx affected -t lint test build --base=origin/master
+            - pnpm exec nx affected -t lint test build --base=origin/main
 
   branches:
     main:
       - step:
-          name: 'Build and test affected apps on "master" branch changes'
+          name: 'Build and test affected apps on "main" branch changes'
           script:
             # Connect your workspace on my.nx.app and uncomment this to enable task distribution.
             # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
@@ -555,7 +555,7 @@ jobs:
           command: npm install --prefix=$HOME/.local -g pnpm@8
       - run: pnpm install --frozen-lockfile
       - nx/set-shas:
-          main-branch-name: 'master'
+          main-branch-name: 'main'
 
       - run: pnpm exec nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD
       - run: pnpm exec nx affected --base=$NX_BASE --head=$NX_HEAD -t lint test build
@@ -756,12 +756,12 @@ pipelines:
             - yarn install --frozen-lockfile
 
             - yarn nx-cloud record -- nx format:check
-            - yarn nx affected -t lint test build --base=origin/master
+            - yarn nx affected -t lint test build --base=origin/main
 
   branches:
     main:
       - step:
-          name: 'Build and test affected apps on "master" branch changes'
+          name: 'Build and test affected apps on "main" branch changes'
           script:
             # Connect your workspace on my.nx.app and uncomment this to enable task distribution.
             # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
@@ -793,7 +793,7 @@ jobs:
 
       - run: yarn install --frozen-lockfile
       - nx/set-shas:
-          main-branch-name: 'master'
+          main-branch-name: 'main'
 
       - run: yarn nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD
       - run: yarn nx affected --base=$NX_BASE --head=$NX_HEAD -t lint test build
