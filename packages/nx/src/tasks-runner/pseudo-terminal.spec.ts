@@ -56,12 +56,19 @@ describe('PseudoTerminal', () => {
     });
   }
 
-  it('should run multiple commands', (done) => {
-    const cp1 = terminal.runCommand('echo "hello"', {});
+  it('should run multiple commands', async () => {
+    function runCommand() {
+      return new Promise((res) => {
+        const cp1 = terminal.runCommand('whoami', {});
 
-    cp1.onExit(() => {
-      const cp2 = terminal.runCommand('echo "world"');
-      cp2.onExit(done);
-    });
+        cp1.onExit(res);
+      });
+    }
+
+    let i = 0;
+    while (i < 10) {
+      await runCommand();
+      i++;
+    }
   });
 });

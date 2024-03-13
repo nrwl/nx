@@ -5,6 +5,7 @@ use std::{
         atomic::{AtomicBool, Ordering},
         Arc,
     },
+    time::Instant,
 };
 
 use crate::native::logger::enable_logger;
@@ -28,7 +29,9 @@ mod os;
 pub struct RustPseudoTerminal {
     pty_pair: PtyPair,
     message_rx: Receiver<String>,
+    printing_rx: Receiver<()>,
     quiet: Arc<AtomicBool>,
+    running: Arc<AtomicBool>,
 }
 
 #[napi]
@@ -37,7 +40,8 @@ impl RustPseudoTerminal {
     pub fn new() -> napi::Result<Self> {
         enable_logger();
 
-        let quiet = Arc::new(AtomicBool::new(false));
+        let quiet = Arc::new(AtomicBool::new(true));
+        let running = Arc::new(AtomicBool::new(false));
 
         let pty_system = NativePtySystem::default();
 
@@ -61,11 +65,17 @@ impl RustPseudoTerminal {
                 }
             });
         }
+        if std::io::stdout().is_tty() {
+            trace!("Enabling raw mode");
+            enable_raw_mode().expect("Failed to enter raw terminal mode");
+        }
 
         let mut reader = pty_pair.master.try_clone_reader()?;
         let (message_tx, message_rx) = unbounded();
+        let (printing_tx, printing_rx) = unbounded();
         // Output -> stdout handling
         let quiet_clone = quiet.clone();
+        let running_clone = running.clone();
         std::thread::spawn(move || {
             let mut stdout = std::io::stdout();
             let mut buf = [0; 8 * 1024];
@@ -88,13 +98,22 @@ impl RustPseudoTerminal {
                         }
                     }
                 }
+                if !running_clone.load(Ordering::SeqCst) {
+                    printing_tx.send(()).ok();
+                }
             }
+            printing_tx.send(()).ok();
         });
+        if std::io::stdout().is_tty() {
+            disable_raw_mode().expect("Failed to enter raw terminal mode");
+        }
 
         Ok(RustPseudoTerminal {
             pty_pair,
             message_rx,
+            printing_rx,
             quiet,
+            running,
         })
     }
 
@@ -106,7 +125,6 @@ impl RustPseudoTerminal {
         js_env: Option<HashMap<String, String>>,
         quiet: Option<bool>,
     ) -> napi::Result<ChildProcess> {
-        trace!("{} Running", command);
         let command_dir = get_directory(command_dir)?;
 
         let pair = &self.pty_pair;
@@ -125,19 +143,41 @@ impl RustPseudoTerminal {
             }
         }
 
-        let mut child = pair.slave.spawn_command(cmd)?;
-        trace!("{} Running", command);
-        enable_raw_mode().expect("Failed to enter raw terminal mode");
-
-        let process_killer = child.clone_killer();
         let (exit_to_process_tx, exit_to_process_rx) = bounded(1);
+        let mut child = pair.slave.spawn_command(cmd)?;
+        self.running.store(true, Ordering::SeqCst);
+        trace!("Running {}", command);
+        let is_tty = std::io::stdout().is_tty();
+        if is_tty {
+            trace!("Enabling raw mode");
+            enable_raw_mode().expect("Failed to enter raw terminal mode");
+        }
+        let process_killer = child.clone_killer();
 
+        let running_clone = self.running.clone();
+        let printing_rx = self.printing_rx.clone();
         std::thread::spawn(move || {
-            if let Ok(exit) = child.wait() {
+            trace!("Waiting for {}", command);
+
+            let res = child.wait();
+            if let Ok(exit) = res {
                 trace!("{} Exited", command);
-                disable_raw_mode().expect("Failed to restore non-raw terminal");
-                drop(child);
-                trace!("Sending exit to stdout thread");
+                running_clone.store(false, Ordering::SeqCst);
+                trace!("Waiting for printing to finish");
+                let timeout = 500;
+                let a = Instant::now();
+                // This mitigates the issues with ConPTY on windows and makes it work.
+                loop {
+                    if let Ok(_) = printing_rx.try_recv() {
+                        break;
+                    }
+                    if a.elapsed().as_millis() > timeout {
+                        break;
+                    }
+                }
+                if is_tty {
+                    disable_raw_mode().expect("Failed to restore non-raw terminal");
+                }
                 exit_to_process_tx.send(exit.to_string()).ok();
             };
         });
@@ -280,26 +320,22 @@ fn command_builder() -> CommandBuilder {
     }
 }
 
-// #[cfg(test)]
-// mod tests {
-//     use super::*;
-//
-//     #[test]
-//     fn can_run_commands() {
-//         let pseudo_terminal = RustPseudoTerminal::new().unwrap();
-//
-//         let cp1 = pseudo_terminal
-//             .run_command(String::from("echo 1"), None, None, None)
-//             .unwrap();
-//         println!("Waiting for first command to finish");
-//         cp1.wait_receiver.recv().unwrap();
-//         println!("Running second command");
-//         let cp2 = pseudo_terminal
-//             .run_command(String::from("echo 2"), None, None, None)
-//             .unwrap();
-//         println!("Waiting for second command to finish");
-//         cp2.wait_receiver.recv().unwrap();
-//         println!("Second command finished");
-//         pseudo_terminal.kill();
-//     }
-// }
+#[cfg(all(test, windows))]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn can_run_commands() {
+        let mut i = 0;
+        let pseudo_terminal = RustPseudoTerminal::new().unwrap();
+        while i < 10 {
+            println!("Running {}", i);
+            let cp1 = pseudo_terminal
+                .run_command(String::from("dir"), None, None, None)
+                .unwrap();
+            cp1.wait_receiver.recv().unwrap();
+            i += 1;
+        }
+        drop(pseudo_terminal);
+    }
+}
