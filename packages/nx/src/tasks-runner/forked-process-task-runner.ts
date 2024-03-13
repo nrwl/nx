@@ -15,10 +15,7 @@ import {
 import { stripIndents } from '../utils/strip-indents';
 import { Task, TaskGraph } from '../config/task-graph';
 import { Transform } from 'stream';
-import { nxFork } from '../native';
-import { PsuedoIPCServer } from './psuedo-ipc';
-import { FORKED_PROCESS_OS_SOCKET_PATH } from '../daemon/socket-utils';
-import { PseudoTtyProcess } from '../utils/child-process';
+import { PseudoTtyProcess, getPseudoTerminal } from './pseudo-terminal';
 import { signalToCode } from '../utils/exit-codes';
 
 const forkScript = join(__dirname, './fork.js');
@@ -31,14 +28,12 @@ export class ForkedProcessTaskRunner {
   private readonly verbose = process.env.NX_VERBOSE_LOGGING === 'true';
   private processes = new Set<ChildProcess | PseudoTtyProcess>();
 
-  private psuedoIPCPath = FORKED_PROCESS_OS_SOCKET_PATH(process.pid.toString());
-
-  private psuedoIPC = new PsuedoIPCServer(this.psuedoIPCPath);
+  private pseudoTerminal = getPseudoTerminal();
 
   constructor(private readonly options: DefaultTasksRunnerOptions) {}
 
   async init() {
-    await this.psuedoIPC.init();
+    await this.pseudoTerminal.init();
     this.setupProcessEventListeners();
   }
 
@@ -180,7 +175,7 @@ export class ForkedProcessTaskRunner {
         env,
       });
     } else {
-      return this.forkProcessWithPsuedoTerminal(task, {
+      return this.forkProcessWithPseudoTerminal(task, {
         temporaryOutputPath,
         streamOutput,
         taskGraph,
@@ -189,10 +184,9 @@ export class ForkedProcessTaskRunner {
     }
   }
 
-  private async forkProcessWithPsuedoTerminal(
+  private async forkProcessWithPseudoTerminal(
     task: Task,
     {
-      temporaryOutputPath,
       streamOutput,
       taskGraph,
       env,
@@ -209,20 +203,13 @@ export class ForkedProcessTaskRunner {
     }
 
     const childId = task.id;
-    const p = new PseudoTtyProcess(
-      nxFork(
-        childId,
-        forkScript,
-        this.psuedoIPCPath,
-        process.cwd(),
-        env,
-        !streamOutput
-      )
-    );
+    const p = await this.pseudoTerminal.fork(childId, forkScript, {
+      cwd: process.cwd(),
+      jsEnv: env,
+      quiet: !streamOutput,
+    });
 
-    await this.psuedoIPC.waitForChildReady(childId);
-
-    this.psuedoIPC.sendMessageToChild(childId, {
+    p.send({
       targetDescription: task.target,
       overrides: task.overrides,
       taskGraph,
@@ -452,14 +439,14 @@ export class ForkedProcessTaskRunner {
   }
 
   private setupProcessEventListeners() {
-    this.psuedoIPC.onMessageFromChildren((message: Serializable) => {
+    this.pseudoTerminal.onMessageFromChildren((message: Serializable) => {
       process.send(message);
     });
 
     // When the nx process gets a message, it will be sent into the task's process
     process.on('message', (message: Serializable) => {
       // this.publisher.publish(message.toString());
-      this.psuedoIPC.sendMessageToChildren(message);
+      this.pseudoTerminal.sendMessageToChildren(message);
 
       this.processes.forEach((p) => {
         if ('connected' in p && p.connected) {
@@ -506,7 +493,7 @@ export class ForkedProcessTaskRunner {
   }
 
   destroy() {
-    this.psuedoIPC.close();
+    this.pseudoTerminal.kill();
   }
 }
 

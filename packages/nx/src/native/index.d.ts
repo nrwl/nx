@@ -21,12 +21,6 @@ export function expandOutputs(directory: string, entries: Array<string>): Array<
 export function getFilesForOutputs(directory: string, entries: Array<string>): Array<string>
 export function remove(src: string): void
 export function copy(src: string, dest: string): void
-export function runCommand(command: string, commandDir?: string | undefined | null, jsEnv?: Record<string, string> | undefined | null, quiet?: boolean | undefined | null): ChildProcess
-/**
- * This allows us to run a pseudoterminal with a fake node ipc channel
- * this makes it possible to be backwards compatible with the old implementation
- */
-export function nxFork(id: string, forkScript: string, psuedoIpcPath: string, commandDir: string | undefined | null, jsEnv: Record<string, string> | undefined | null, quiet: boolean): ChildProcess
 export function hashArray(input: Array<string>): string
 export function hashFile(file: string): string | null
 export function findImports(projectFileMap: Record<string, Array<string>>): Array<ImportResult>
@@ -146,6 +140,15 @@ export interface FileMap {
   nonProjectFiles: Array<FileData>
 }
 export function testOnlyTransferFileMap(projectFiles: Record<string, Array<FileData>>, nonProjectFiles: Array<FileData>): NxWorkspaceFilesExternals
+export class RustPseudoTerminal {
+  constructor()
+  runCommand(command: string, commandDir?: string | undefined | null, jsEnv?: Record<string, string> | undefined | null, quiet?: boolean | undefined | null): ChildProcess
+  /**
+   * This allows us to run a pseudoterminal with a fake node ipc channel
+   * this makes it possible to be backwards compatible with the old implementation
+   */
+  fork(id: string, forkScript: string, pseudoIpcPath: string, commandDir: string | undefined | null, jsEnv: Record<string, string> | undefined | null, quiet: boolean): ChildProcess
+}
 export class ChildProcess {
   kill(): void
   onExit(callback: (message: string) => void): void

@@ -16,13 +16,12 @@ import {
 } from '../../project-graph/project-graph';
 import { ProjectGraph } from '../../config/project-graph';
 import { readNxJson } from '../../config/configuration';
-import { runCommand } from '../../native';
 import {
   getLastValueFromAsyncIterableIterator,
   isAsyncIterator,
 } from '../../utils/async-iterator';
 import { getExecutorInformation } from './executor-utils';
-import { PseudoTtyProcess } from '../../utils/child-process';
+import { getPseudoTerminal } from '../../tasks-runner/pseudo-terminal';
 
 export interface Target {
   project: string;
@@ -127,9 +126,11 @@ async function printTargetRunHelpInternal(
     targetConfig.options.command
   ) {
     const command = targetConfig.options.command.split(' ')[0];
+    const terminal = getPseudoTerminal();
     await new Promise(() => {
-      const cp = new PseudoTtyProcess(runCommand(`${command} --help`));
+      const cp = terminal.runCommand(`${command} --help`);
       cp.onExit((code) => {
+        terminal.kill();
         process.exit(code);
       });
     });
