@@ -28,14 +28,19 @@ distribute-on:
 
 ### --with-env-vars
 
-By default, invoking `npx nx-cloud start-ci-run` will take all env vars prefixed with `NX_` and send them over to agents.
-This means that your access token, verbose logging configuration and other NX related env vars will be the same on your
-main CI jobs and on agents.
+By default, invoking `npx nx-cloud start-ci-run` will take all environment variables prefixed with `NX_` and send them over to agents.
+This means that your access token, verbose logging configuration and other Nx-related environment variables will be the same on your
+main CI jobs and the agents.
 
-If you want to pass other env vars from the main job to agents, you can do it as follows: `--with-env-vars="VAR1,VAR2"`.
+If you want to pass other environment variables from the main job to agents, you can do it as follows: `--with-env-vars="VAR1,VAR2"`.
 This will set `VAR1` and `VAR2` on agents to the same values set on the main job before any steps run.
 
-You can also pass `--with-env-vars="auto"` which will filter out all OS-specific env vars and pass the rest to agents.
+You can also pass `--with-env-vars="auto"` which will filter out all OS-specific environment variables and pass the rest to agents.
+
+{% callout type="warning" title="Use Caution With 'auto'" %}
+Using `--with-env-vars="auto"` will override any existing environment variables on the agent, some of which might be critical to the
+functionality of that machine. In case of unexpected issues on agents, try fallback to the explicit variable definition using `--with-env-vars="VAR1,VAR2,..."`.
+{% /callout %}
 
 Note: none of the values passed to agents are stored by Nx Cloud.
 

@@ -75,6 +75,7 @@ export const allowedWorkspaceExtensions = [
   'parallel',
   'cacheDirectory',
   'useDaemonProcess',
+  'useInferencePlugins',
 ] as const;
 
 if (!patched) {

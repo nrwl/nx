@@ -98,6 +98,9 @@ export default defineConfig({
         production: 'nx run ${myapp}:preview',
       },
       ciWebServerCommand: 'nx run ${myapp}:serve-static',
+      webServerConfig: {
+        timeout: 60_000,
+      },
     }),
     baseUrl: 'http://localhost:4200',
   },

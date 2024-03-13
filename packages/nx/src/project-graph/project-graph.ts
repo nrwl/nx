@@ -17,6 +17,7 @@ import {
   retrieveWorkspaceFiles,
 } from './utils/retrieve-workspace-files';
 import { readNxJson } from '../config/nx-json';
+import { unregisterPluginTSTranspiler } from '../utils/nx-plugin';
 
 /**
  * Synchronously reads the latest cached copy of the workspace's ProjectGraph.
@@ -77,6 +78,8 @@ export function readProjectsConfigurationFromProjectGraph(
 }
 
 export async function buildProjectGraphAndSourceMapsWithoutDaemon() {
+  // Set this globally to allow plugins to know if they are being called from the project graph creation
+  global.NX_GRAPH_CREATION = true;
   const nxJson = readNxJson();
 
   performance.mark('retrieve-project-configurations:start');
@@ -103,6 +106,9 @@ export async function buildProjectGraphAndSourceMapsWithoutDaemon() {
     )
   ).projectGraph;
   performance.mark('build-project-graph-using-project-file-map:end');
+
+  unregisterPluginTSTranspiler();
+  delete global.NX_GRAPH_CREATION;
 
   return { projectGraph, sourceMaps };
 }

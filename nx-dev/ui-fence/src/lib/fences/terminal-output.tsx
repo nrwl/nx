@@ -4,17 +4,15 @@ import { TerminalShellWrapper } from './terminal-shell';
 export function TerminalOutput({
   content,
   command,
-  isMessageBelow,
   path,
 }: {
   content: ReactNode | null;
   command: string;
-  isMessageBelow: boolean;
   path: string;
 }): JSX.Element {
   const commandLines = command.split('\n').filter(Boolean);
   return (
-    <TerminalShellWrapper isMessageBelow={isMessageBelow}>
+    <TerminalShellWrapper>
       <div className="p-4 pt-2 overflow-x-auto">
         <div className="flex flex-col items-left">
           {commandLines.map((line, index) => {

@@ -1,4 +1,4 @@
-import { ProjectConfiguration, readJson, type Tree } from '@nx/devkit';
+import { output, ProjectConfiguration, readJson, type Tree } from '@nx/devkit';
 
 const startLocalRegistryScript = (localRegistryTarget: string) => `
 /**
@@ -7,6 +7,7 @@ const startLocalRegistryScript = (localRegistryTarget: string) => `
  */
 import { startLocalRegistry } from '@nx/js/plugins/jest/local-registry';
 import { execFileSync } from 'child_process';
+import { releasePublish, releaseVersion } from 'nx/release';
 
 export default async () => {
   // local registry target to run
@@ -19,12 +20,21 @@ export default async () => {
     storage,
     verbose: false,
   });
-  const nx = require.resolve('nx');
-  execFileSync(
-    nx,
-    ['run-many', '--targets', 'publish', '--ver', '0.0.0-e2e', '--tag', 'e2e'],
-    { env: process.env, stdio: 'inherit' }
-  );
+
+  await releaseVersion({
+    specifier: '0.0.0-e2e',
+    stageChanges: false,
+    gitCommit: false,
+    gitTag: false,
+    firstRelease: true,
+    generatorOptionsOverrides: {
+      skipLockFileUpdate: true
+    }
+  });
+  await releasePublish({
+    tag: 'e2e',
+    firstRelease: true
+  });
 };
 `;
 
@@ -49,12 +59,23 @@ export function addLocalRegistryScripts(tree: Tree) {
     tree,
     'project.json'
   );
+
   const localRegistryTarget = `${projectConfiguration.name}:local-registry`;
   if (!tree.exists(startLocalRegistryPath)) {
     tree.write(
       startLocalRegistryPath,
       startLocalRegistryScript(localRegistryTarget)
     );
+  } else {
+    const existingStartLocalRegistryScript = tree
+      .read(startLocalRegistryPath)
+      .toString();
+    if (!existingStartLocalRegistryScript.includes('nx/release')) {
+      output.warn({
+        title:
+          'Your `start-local-registry.ts` script may be outdated. To ensure that newly generated packages are published appropriately when running end to end tests, update this script to use Nx Release. See https://nx.dev/recipes/nx-release/update-local-registry-setup for details.',
+      });
+    }
   }
   if (!tree.exists(stopLocalRegistryPath)) {
     tree.write(stopLocalRegistryPath, stopLocalRegistryScript);

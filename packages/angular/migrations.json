@@ -371,6 +371,12 @@
       },
       "description": "Update the @angular/cli package version to ~17.2.0.",
       "factory": "./src/migrations/update-18-1-0/update-angular-cli"
+    },
+    "fix-target-defaults-for-webpack-browser": {
+      "cli": "nx",
+      "version": "18.1.1-beta.0",
+      "description": "Ensure targetDefaults inputs for task hashing when '@nx/angular:webpack-browser' is used are correct for Module Federation.",
+      "factory": "./src/migrations/update-18-1-1/fix-target-defaults-inputs"
     }
   },
   "packageJsonUpdates": {

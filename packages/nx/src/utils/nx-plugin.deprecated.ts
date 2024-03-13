@@ -1,10 +1,10 @@
 import { shouldMergeAngularProjects } from '../adapter/angular-json';
 import { ProjectGraphProcessor } from '../config/project-graph';
 import { TargetConfiguration } from '../config/workspace-json-project-json';
-import ProjectJsonProjectsPlugin from '../plugins/project-json/build-nodes/project-json';
-import TargetDefaultsPlugin from '../plugins/target-defaults/target-defaults-plugin';
-import * as PackageJsonWorkspacesPlugin from '../plugins/package-json-workspaces';
-import { NxPluginV2 } from '../project-graph/plugins';
+import { ProjectJsonProjectsPlugin } from '../plugins/project-json/build-nodes/project-json';
+import { TargetDefaultsPlugin } from '../plugins/target-defaults/target-defaults-plugin';
+import { getNxPackageJsonWorkspacesPlugin } from '../plugins/package-json-workspaces';
+import { LoadedNxPlugin, NxPluginV2 } from './nx-plugin';
 
 /**
  * @deprecated Add targets to the projects in a {@link CreateNodes} function instead. This will be removed in Nx 19
@@ -39,14 +39,14 @@ export type NxPluginV1 = {
 /**
  * @todo(@agentender) v19: Remove this fn when we remove readWorkspaceConfig
  */
-export function getDefaultPluginsSync(root: string) {
+export function getDefaultPluginsSync(root: string): LoadedNxPlugin[] {
   const plugins: NxPluginV2[] = [
     require('../plugins/js'),
     ...(shouldMergeAngularProjects(root, false)
       ? [require('../adapter/angular-json').NxAngularJsonPlugin]
       : []),
     TargetDefaultsPlugin,
-    PackageJsonWorkspacesPlugin,
+    getNxPackageJsonWorkspacesPlugin(root),
     ProjectJsonProjectsPlugin,
   ];
 

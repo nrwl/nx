@@ -18,8 +18,8 @@ describe('@nx/remix/plugin', () => {
               cache: false,
               inputs: ['foo', '^foo'],
             },
-            serve: {
-              command: 'npm run serve',
+            dev: {
+              command: 'npm run dev',
             },
             start: {
               command: 'npm run start',
@@ -65,7 +65,7 @@ module.exports = {
         'remix.config.cjs',
         {
           buildTargetName: 'build',
-          serveTargetName: 'serve',
+          devTargetName: 'dev',
           startTargetName: 'start',
           typecheckTargetName: 'typecheck',
         },
@@ -123,7 +123,7 @@ module.exports = {
         'my-app/remix.config.cjs',
         {
           buildTargetName: 'build',
-          serveTargetName: 'serve',
+          devTargetName: 'dev',
           startTargetName: 'start',
           typecheckTargetName: 'tsc',
         },

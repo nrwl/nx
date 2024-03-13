@@ -6,6 +6,7 @@ import { useRouter } from 'next/router';
 import Script from 'next/script';
 import { useEffect } from 'react';
 import '../styles/main.css';
+import Link from 'next/link';
 
 export default function CustomApp({
   Component,
@@ -66,14 +67,14 @@ export default function CustomApp({
         />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
-      <a
+      <Link
         id="skip-to-content-link"
         href="#main"
         tabIndex={0}
         className="absolute top-3 left-8 -translate-y-24 rounded-md bg-green-400 px-4 py-2 text-white transition focus:translate-y-0"
       >
         Skip to content
-      </a>
+      </Link>
       <Component {...pageProps} />
       {/* Global Site Tag (gtag.js) - Google Analytics */}
       <Script

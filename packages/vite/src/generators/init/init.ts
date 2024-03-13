@@ -56,7 +56,11 @@ export async function initGeneratorInternal(
   tree: Tree,
   schema: InitGeneratorSchema
 ) {
-  schema.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
+  const nxJson = readNxJson(tree);
+  const addPluginDefault =
+    process.env.NX_ADD_PLUGINS !== 'false' &&
+    nxJson.useInferencePlugins !== false;
+  schema.addPlugin ??= addPluginDefault;
   if (schema.addPlugin) {
     addPlugin(tree);
   }

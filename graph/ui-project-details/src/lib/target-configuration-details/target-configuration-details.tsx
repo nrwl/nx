@@ -4,9 +4,7 @@ import {
   ChevronDownIcon,
   ChevronUpIcon,
   EyeIcon,
-  InformationCircleIcon,
   PlayIcon,
-  QuestionMarkCircleIcon,
 } from '@heroicons/react/24/outline';
 
 // nx-ignore-next-line
@@ -283,7 +281,7 @@ export const TargetConfigurationDetails = forwardRef(
                   </Tooltip>
                 )}
               </h4>
-              <p className="pl-5">
+              <p className="pl-5 font-mono">
                 {executorLink ? (
                   <span>
                     <ExternalLink

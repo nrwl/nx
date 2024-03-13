@@ -15,7 +15,7 @@ import {
   ProjectGraphProjectNode,
 } from '../config/project-graph';
 import { ProjectConfiguration } from '../config/workspace-json-project-json';
-import { CreateDependenciesContext } from './plugins';
+import { CreateDependenciesContext } from '../utils/nx-plugin';
 import { getFileMap } from './build-project-graph';
 
 /**

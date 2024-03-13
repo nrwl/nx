@@ -211,6 +211,67 @@ describe('readTargetsFromPackageJson', () => {
       }
     `);
   });
+
+  it('should support partial target info without including script', () => {
+    const result = readTargetsFromPackageJson({
+      name: 'my-remix-app-8cce',
+      version: '',
+      scripts: {
+        build: 'run-s build:*',
+        'build:icons': 'tsx ./other/build-icons.ts',
+        'build:remix': 'remix build --sourcemap',
+        'build:server': 'tsx ./other/build-server.ts',
+        predev: 'npm run build:icons --silent',
+        dev: 'remix dev -c "node ./server/dev-server.js" --manual',
+        'prisma:studio': 'prisma studio',
+        format: 'prettier --write .',
+        lint: 'eslint .',
+        setup:
+          'npm run build && prisma generate && prisma migrate deploy && prisma db seed && playwright install',
+        start: 'cross-env NODE_ENV=production node .',
+        'start:mocks': 'cross-env NODE_ENV=production MOCKS=true tsx .',
+        test: 'vitest',
+        coverage: 'nx test --coverage',
+        'test:e2e': 'npm run test:e2e:dev --silent',
+        'test:e2e:dev': 'playwright test --ui',
+        'pretest:e2e:run': 'npm run build',
+        'test:e2e:run': 'cross-env CI=true playwright test',
+        'test:e2e:install': 'npx playwright install --with-deps chromium',
+        typecheck: 'tsc',
+        validate: 'run-p "test -- --run" lint typecheck test:e2e:run',
+      },
+      nx: {
+        targets: {
+          'build:icons': {
+            outputs: ['{projectRoot}/app/components/ui/icons'],
+          },
+          'build:remix': {
+            outputs: ['{projectRoot}/build'],
+          },
+          'build:server': {
+            outputs: ['{projectRoot}/server-build'],
+          },
+          test: {
+            outputs: ['{projectRoot}/test-results'],
+          },
+          'test:e2e': {
+            outputs: ['{projectRoot}/playwright-report'],
+          },
+          'test:e2e:run': {
+            outputs: ['{projectRoot}/playwright-report'],
+          },
+        },
+        includedScripts: [],
+      },
+    });
+    expect(result.test).toMatchInlineSnapshot(`
+      {
+        "outputs": [
+          "{projectRoot}/test-results",
+        ],
+      }
+    `);
+  });
 });
 
 const rootPackageJson: PackageJson = readJsonFile(

@@ -1,8 +1,5 @@
 {
   "$schema": "packages/nx/schemas/nx-schema.json",
-  "affected": {
-    "defaultBase": "master"
-  },
   "namedInputs": {
     "default": ["{projectRoot}/**/*", "sharedGlobals"],
     "production": [
@@ -215,5 +212,6 @@
   "nxCloudUrl": "https://staging.nx.app",
   "parallel": 1,
   "cacheDirectory": "/tmp/nx-cache",
-  "bust": 5
+  "bust": 5,
+  "defaultBase": "master"
 }

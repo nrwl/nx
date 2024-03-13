@@ -1,24 +1,23 @@
 import * as chalk from 'chalk';
+import { execSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { relative } from 'node:path';
 import { Generator } from '../../config/misc-interfaces';
-import { readNxJson } from '../../config/nx-json';
+import { NxJsonConfiguration, readNxJson } from '../../config/nx-json';
 import {
   ProjectGraph,
   ProjectGraphProjectNode,
 } from '../../config/project-graph';
-import {
-  NxJsonConfiguration,
-  joinPathFragments,
-  output,
-  workspaceRoot,
-} from '../../devkit-exports';
 import { FsTree, Tree, flushChanges } from '../../generators/tree';
+import { createProjectFileMapUsingProjectGraph } from '../../project-graph/file-map-utils';
 import {
   createProjectGraphAsync,
   readProjectsConfigurationFromProjectGraph,
 } from '../../project-graph/project-graph';
+import { output } from '../../utils/output';
 import { combineOptionsForGenerator, handleErrors } from '../../utils/params';
+import { joinPathFragments } from '../../utils/path';
+import { workspaceRoot } from '../../utils/workspace-root';
 import { parseGeneratorString } from '../generate/generate';
 import { getGeneratorInformation } from '../generate/generator-utils';
 import { VersionOptions } from './command-object';
@@ -43,6 +42,8 @@ import {
   handleDuplicateGitTags,
 } from './utils/shared';
 
+const LARGE_BUFFER = 1024 * 1000000;
+
 // Reexport some utils for use in plugin release-version generator implementations
 export { deriveNewSemverVersion } from './utils/semver';
 export type {
@@ -50,7 +51,7 @@ export type {
   VersionData,
 } from './utils/shared';
 
-export const validReleaseVersionPrefixes = ['auto', '', '~', '^'];
+export const validReleaseVersionPrefixes = ['auto', '', '~', '^', '='] as const;
 
 export interface ReleaseVersionGeneratorSchema {
   // The projects being versioned in the current execution
@@ -67,6 +68,9 @@ export interface ReleaseVersionGeneratorSchema {
   firstRelease?: boolean;
   // auto means the existing prefix will be preserved, and is the default behavior
   versionPrefix?: typeof validReleaseVersionPrefixes[number];
+  skipLockFileUpdate?: boolean;
+  installArgs?: string;
+  installIgnoreScripts?: boolean;
 }
 
 export interface NxReleaseVersionResult {
@@ -106,6 +110,7 @@ export async function releaseVersion(
   // Apply default configuration to any optional user configuration
   const { error: configError, nxReleaseConfig } = await createNxReleaseConfig(
     projectGraph,
+    await createProjectFileMapUsingProjectGraph(projectGraph),
     nxJson.release
   );
   if (configError) {
@@ -147,6 +152,11 @@ export async function releaseVersion(
     output.error(filterError);
     process.exit(1);
   }
+
+  runPreVersionCommand(nxReleaseConfig.version.preVersionCommand, {
+    dryRun: args.dryRun,
+    verbose: args.verbose,
+  });
 
   const tree = new FsTree(workspaceRoot, args.verbose);
 
@@ -197,6 +207,7 @@ export async function releaseVersion(
           args,
           tree,
           generatorData,
+          args.generatorOptionsOverrides,
           projectNames,
           releaseGroup,
           versionData
@@ -206,7 +217,10 @@ export async function releaseVersion(
           const changedFiles = await generatorCallback(tree, {
             dryRun: !!args.dryRun,
             verbose: !!args.verbose,
-            generatorOptions,
+            generatorOptions: {
+              ...generatorOptions,
+              ...args.generatorOptionsOverrides,
+            },
           });
           changedFiles.forEach((f) => additionalChangedFiles.add(f));
         });
@@ -324,6 +338,7 @@ export async function releaseVersion(
         args,
         tree,
         generatorData,
+        args.generatorOptionsOverrides,
         projectNames,
         releaseGroup,
         versionData
@@ -333,7 +348,10 @@ export async function releaseVersion(
         const changedFiles = await generatorCallback(tree, {
           dryRun: !!args.dryRun,
           verbose: !!args.verbose,
-          generatorOptions,
+          generatorOptions: {
+            ...generatorOptions,
+            ...args.generatorOptionsOverrides,
+          },
         });
         changedFiles.forEach((f) => additionalChangedFiles.add(f));
       });
@@ -445,6 +463,7 @@ async function runVersionOnProjects(
   args: VersionOptions,
   tree: Tree,
   generatorData: GeneratorData,
+  generatorOverrides: Record<string, unknown> | undefined,
   projectNames: string[],
   releaseGroup: ReleaseGroupWithName,
   versionData: VersionData
@@ -454,6 +473,7 @@ async function runVersionOnProjects(
     specifier: args.specifier ?? '',
     preid: args.preid ?? '',
     ...generatorData.configGeneratorOptions,
+    ...(generatorOverrides ?? {}),
     // The following are not overridable by user config
     projects: projectNames.map((p) => projectGraph.nodes[p]),
     projectGraph,
@@ -608,5 +628,45 @@ function resolveGeneratorData({
     }
     // Unexpected error, rethrow
     throw err;
+  }
+}
+function runPreVersionCommand(
+  preVersionCommand: string,
+  { dryRun, verbose }: { dryRun: boolean; verbose: boolean }
+) {
+  if (!preVersionCommand) {
+    return;
+  }
+
+  output.logSingleLine(`Executing pre-version command`);
+  if (verbose) {
+    console.log(`Executing the following pre-version command:`);
+    console.log(preVersionCommand);
+  }
+
+  let env: Record<string, string> = {
+    ...process.env,
+  };
+  if (dryRun) {
+    env.NX_DRY_RUN = 'true';
+  }
+
+  const stdio = verbose ? 'inherit' : 'pipe';
+  try {
+    execSync(preVersionCommand, {
+      encoding: 'utf-8',
+      maxBuffer: LARGE_BUFFER,
+      stdio,
+      env,
+    });
+  } catch (e) {
+    const title = verbose
+      ? `The pre-version command failed. See the full output above.`
+      : `The pre-version command failed. Retry with --verbose to see the full output of the pre-version command.`;
+    output.error({
+      title,
+      bodyLines: [preVersionCommand, e],
+    });
+    process.exit(1);
   }
 }

@@ -8,6 +8,7 @@ import { frameworkIcons } from '../icons';
 
 import { cx } from '@nx/nx-dev/ui-primitives';
 import { ReactNode } from 'react';
+import Link from 'next/link';
 
 const colsClasses: Record<number, string> = {
   1: 'grid-cols-1',
@@ -79,7 +80,7 @@ export function Cards({
       {children}
       {moreLink && (
         <div className="flex justify-end mt-2 col-span-full">
-          <a
+          <Link
             className="transition-all duration-200 ease-in-out flex items-center no-underline text-sm px-4 py-0 border-transparent hover:text-slate-900 dark:hover:text-sky-400 whitespace-nowrap font-semibold group"
             href={moreLink}
           >
@@ -90,7 +91,7 @@ export function Cards({
             >
               →
             </span>
-          </a>
+          </Link>
         </div>
       )}
     </div>

@@ -11,6 +11,7 @@ import {
   names,
   offsetFromRoot,
   readJson,
+  readNxJson,
   readProjectConfiguration,
   runTasksInSerial,
   updateProjectConfiguration,
@@ -37,7 +38,12 @@ async function normalizeOptions(
 ): Promise<NormalizedSchema> {
   const projectName = options.rootProject ? 'e2e' : `${options.pluginName}-e2e`;
 
-  options.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
+  const nxJson = readNxJson(host);
+  const addPlugin =
+    process.env.NX_ADD_PLUGINS !== 'false' &&
+    nxJson.useInferencePlugins !== false;
+
+  options.addPlugin ??= addPlugin;
 
   let projectRoot: string;
   if (options.projectNameAndRootFormat === 'as-provided') {

@@ -27,7 +27,7 @@ jobs:
     name: Cache install (node v${{ matrix.node_version }})
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - uses: pnpm/action-setup@v2
         name: Install pnpm
@@ -43,7 +43,7 @@ jobs:
 
       - name: Cache node_modules
         id: cache-modules
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           lookup-only: true
           path: '**/node_modules'
@@ -62,7 +62,7 @@ jobs:
 
       - name: Install Cypress
         if: steps.cache-cypress.outputs.cache-hit != 'true'
-        run: npx cypress install
+        run: pnpm cypress install
 
   e2e:
     needs: preinstall
@@ -234,7 +234,7 @@ jobs:
     name: ${{ matrix.project }} (v${{ matrix.node_version }})
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Prepare dir for output
         run: mkdir -p outputs

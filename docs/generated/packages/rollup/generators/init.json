@@ -24,6 +24,12 @@
         "x-priority": "internal",
         "description": "Keep existing dependencies versions",
         "default": false
+      },
+      "updatePackageScripts": {
+        "type": "boolean",
+        "x-priority": "internal",
+        "description": "Update `package.json` scripts with inferred targets",
+        "default": false
       }
     },
     "required": [],

@@ -10,12 +10,10 @@ import {
   readJson,
   runCLI,
   runCommand,
-  runCommandUntil,
   tmpProjPath,
   uniq,
   updateFile,
   updateJson,
-  waitUntil,
 } from '@nx/e2e/utils';
 import { join } from 'path';
 
@@ -44,6 +42,7 @@ describe('EsBuild Plugin', () => {
     expect(packageJson).toEqual({
       name: `@proj/${myPkg}`,
       version: '0.0.1',
+      private: true,
       type: 'commonjs',
       main: './index.cjs',
       dependencies: {},

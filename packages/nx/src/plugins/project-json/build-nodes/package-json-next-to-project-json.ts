@@ -1,6 +1,6 @@
 import { dirname, join } from 'path';
 import { existsSync } from 'fs';
-import { NxPluginV2 } from '../../../project-graph/plugins';
+import { NxPluginV2 } from '../../../utils/nx-plugin';
 import { readJsonFile } from '../../../utils/fileutils';
 import { ProjectConfiguration } from '../../../config/workspace-json-project-json';
 import {
@@ -32,8 +32,6 @@ export const PackageJsonProjectsNextToProjectJsonPlugin: NxPluginV2 = {
     },
   ],
 };
-
-export default PackageJsonProjectsNextToProjectJsonPlugin;
 
 function createProjectFromPackageJsonNextToProjectJson(
   projectJsonPath: string,

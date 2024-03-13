@@ -4,6 +4,7 @@ import {
   runTasksInSerial,
   type GeneratorCallback,
   type Tree,
+  readNxJson,
 } from '@nx/devkit';
 import { updatePackageScripts } from '@nx/devkit/src/utils/update-package-scripts';
 import { reactDomVersion, reactVersion } from '@nx/react/src/utils/versions';
@@ -44,7 +45,12 @@ export async function nextInitGeneratorInternal(
   host: Tree,
   schema: InitSchema
 ) {
-  schema.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
+  const nxJson = readNxJson(host);
+  const addPluginDefault =
+    process.env.NX_ADD_PLUGINS !== 'false' &&
+    nxJson.useInferencePlugins !== false;
+
+  schema.addPlugin ??= addPluginDefault;
   if (schema.addPlugin) {
     addPlugin(host);
   }

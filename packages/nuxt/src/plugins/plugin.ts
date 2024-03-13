@@ -46,6 +46,8 @@ export const createDependencies: CreateDependencies = () => {
 export interface NuxtPluginOptions {
   buildTargetName?: string;
   serveTargetName?: string;
+  serveStaticTargetName?: string;
+  buildStaticTargetName?: string;
 }
 
 export const createNodes: CreateNodes<NuxtPluginOptions> = [
@@ -108,6 +110,15 @@ async function buildNuxtTargets(
 
   targets[options.serveTargetName] = serveTarget(projectRoot);
 
+  targets[options.serveStaticTargetName] = serveStaticTarget(options);
+
+  targets[options.buildStaticTargetName] = buildStaticTarget(
+    options.buildStaticTargetName,
+    namedInputs,
+    buildOutputs,
+    projectRoot
+  );
+
   return targets;
 }
 
@@ -145,6 +156,46 @@ function serveTarget(projectRoot: string) {
     },
   };
 
+  return targetConfig;
+}
+
+function serveStaticTarget(options: NuxtPluginOptions) {
+  const targetConfig: TargetConfiguration = {
+    executor: '@nx/web:file-server',
+    options: {
+      buildTarget: `${options.buildStaticTargetName}`,
+      staticFilePath: '{projectRoot}/dist',
+      port: 4200,
+    },
+  };
+
+  return targetConfig;
+}
+
+function buildStaticTarget(
+  buildStaticTargetName: string,
+  namedInputs: {
+    [inputName: string]: any[];
+  },
+  buildOutputs: string[],
+  projectRoot: string
+) {
+  const targetConfig: TargetConfiguration = {
+    command: `nuxt build --prerender`,
+    options: { cwd: projectRoot },
+    cache: true,
+    dependsOn: [`^${buildStaticTargetName}`],
+    inputs: [
+      ...('production' in namedInputs
+        ? ['production', '^production']
+        : ['default', '^default']),
+
+      {
+        externalDependencies: ['nuxt'],
+      },
+    ],
+    outputs: buildOutputs,
+  };
   return targetConfig;
 }
 
@@ -216,5 +267,7 @@ function normalizeOptions(options: NuxtPluginOptions): NuxtPluginOptions {
   options ??= {};
   options.buildTargetName ??= 'build';
   options.serveTargetName ??= 'serve';
+  options.serveStaticTargetName ??= 'serve-static';
+  options.buildStaticTargetName ??= 'build-static';
   return options;
 }

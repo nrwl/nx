@@ -25,6 +25,8 @@ describe('addMfEnvVarToTargetDefaults', () => {
       {
         "@nx/webpack:webpack": {
           "inputs": [
+            "production",
+            "^production",
             {
               "env": "NX_MF_DEV_SERVER_STATIC_REMOTES",
             },

@@ -3,7 +3,7 @@
   "compilerOptions": {
     "outDir": "../../dist/out-tsc",
     "lib": ["dom"],
-    "types": ["node", "dom"]
+    "types": ["node"]
   },
   "files": [
     "../../node_modules/@nx/react/typings/cssmodule.d.ts",

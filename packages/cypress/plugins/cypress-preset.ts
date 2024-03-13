@@ -75,9 +75,13 @@ function startWebServer(webServerCommand: string) {
   });
 
   return () => {
-    // child.kill() does not work on linux
-    // process.kill will kill the whole process group on unix
-    process.kill(-serverProcess.pid, 'SIGKILL');
+    if (process.platform === 'win32') {
+      serverProcess.kill();
+    } else {
+      // child.kill() does not work on linux
+      // process.kill will kill the whole process group on unix
+      process.kill(-serverProcess.pid, 'SIGKILL');
+    }
   };
 }
 
@@ -102,22 +106,12 @@ export function nxE2EPreset(
 ) {
   const basePath = options?.cypressDir || 'src';
 
-  const dir = dirname(pathToConfig);
-  let supportFile: undefined | string = undefined;
-  for (const f of ['e2e.ts', 'e2e.js']) {
-    const candidate = join(dir, basePath, 'support', f);
-    if (existsSync(candidate)) {
-      supportFile = candidate;
-      break;
-    }
-  }
-
   const baseConfig: any /*Cypress.EndToEndConfigOptions & {
     [NX_PLUGIN_OPTIONS]: unknown;
   }*/ = {
     ...nxBaseCypressPreset(pathToConfig),
     fileServerFolder: '.',
-    supportFile,
+    supportFile: `${basePath}/support/e2e.{js,ts}`,
     specPattern: `${basePath}/**/*.cy.{js,jsx,ts,tsx}`,
     fixturesFolder: `${basePath}/fixtures`,
 
@@ -182,7 +176,7 @@ function waitForServer(
     let pollTimeout: NodeJS.Timeout | null;
     const { protocol } = new URL(url);
 
-    const timeoutDuration = webServerConfig?.timeout ?? 15 * 1000;
+    const timeoutDuration = webServerConfig?.timeout ?? 60 * 1000;
     const timeout = setTimeout(() => {
       clearTimeout(pollTimeout);
       reject(

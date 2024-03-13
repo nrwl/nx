@@ -3,6 +3,7 @@ import {
   cleanupProject,
   killPorts,
   newProject,
+  readJson,
   runCLI,
   uniq,
 } from '@nx/e2e/utils';
@@ -16,7 +17,7 @@ describe('Nuxt Plugin', () => {
       unsetProjectNameAndRootFormat: false,
     });
     runCLI(
-      `generate @nx/nuxt:app ${app} --unitTestRunner=vitest --projectNameAndRootFormat=as-provided`
+      `generate @nx/nuxt:app ${app} --unitTestRunner=vitest --projectNameAndRootFormat=as-provided e2eTestRunner=cypress`
     );
     runCLI(
       `generate @nx/nuxt:component --directory=${app}/src/components/one --name=one --nameAndDirectoryFormat=as-provided --unitTestRunner=vitest`
@@ -54,4 +55,14 @@ describe('Nuxt Plugin', () => {
     runCLI(`run ${app}:build-storybook --verbose`);
     checkFilesExist(`${app}/storybook-static/index.html`);
   }, 300_000);
+
+  it('should have build, serve, build-static, server-static targets', () => {
+    runCLI(`show project ${app} --json > targets.json`);
+
+    const targets = readJson('targets.json');
+    expect(targets.targets['build']).toBeDefined();
+    expect(targets.targets['serve']).toBeDefined();
+    expect(targets.targets['serve-static']).toBeDefined();
+    expect(targets.targets['build-static']).toBeDefined();
+  });
 });

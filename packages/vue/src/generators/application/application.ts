@@ -28,6 +28,8 @@ export async function applicationGeneratorInternal(
   _options: Schema
 ): Promise<GeneratorCallback> {
   const options = await normalizeOptions(tree, _options);
+  options.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
+
   const tasks: GeneratorCallback[] = [];
 
   addProjectConfiguration(tree, options.name, {

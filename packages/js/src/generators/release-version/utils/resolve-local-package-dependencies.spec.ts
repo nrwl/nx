@@ -97,18 +97,21 @@ describe('resolveLocalPackageDependencies()', () => {
           "projectA": [
             {
               "dependencyCollection": "dependencies",
+              "rawVersionSpec": "1.0.0",
               "source": "projectA",
               "target": "projectB",
               "type": "static",
             },
             {
               "dependencyCollection": "devDependencies",
+              "rawVersionSpec": "1.0.0",
               "source": "projectA",
               "target": "projectC",
               "type": "static",
             },
             {
               "dependencyCollection": "optionalDependencies",
+              "rawVersionSpec": "1.0.0",
               "source": "projectA",
               "target": "projectD",
               "type": "static",
@@ -220,24 +223,28 @@ describe('resolveLocalPackageDependencies()', () => {
           "projectA": [
             {
               "dependencyCollection": "dependencies",
+              "rawVersionSpec": "file:../projectB",
               "source": "projectA",
               "target": "projectB",
               "type": "static",
             },
             {
               "dependencyCollection": "devDependencies",
+              "rawVersionSpec": "workspace:*",
               "source": "projectA",
               "target": "projectC",
               "type": "static",
             },
             {
               "dependencyCollection": "optionalDependencies",
+              "rawVersionSpec": "workspace:../projectD",
               "source": "projectA",
               "target": "projectD",
               "type": "static",
             },
             {
               "dependencyCollection": "dependencies",
+              "rawVersionSpec": "link:../projectE",
               "source": "projectA",
               "target": "projectE",
               "type": "static",
@@ -246,6 +253,7 @@ describe('resolveLocalPackageDependencies()', () => {
           "projectB": [
             {
               "dependencyCollection": "dependencies",
+              "rawVersionSpec": "workspace:1.0.0",
               "source": "projectB",
               "target": "projectC",
               "type": "static",
@@ -305,6 +313,7 @@ describe('resolveLocalPackageDependencies()', () => {
           "projectA": [
             {
               "dependencyCollection": "dependencies",
+              "rawVersionSpec": "1.0.0",
               "source": "projectA",
               "target": "projectB",
               "type": "static",
@@ -394,18 +403,21 @@ describe('resolveLocalPackageDependencies()', () => {
           "projectA": [
             {
               "dependencyCollection": "dependencies",
+              "rawVersionSpec": "1.0.0",
               "source": "projectA",
               "target": "projectB",
               "type": "static",
             },
             {
               "dependencyCollection": "dependencies",
+              "rawVersionSpec": "1.0.0",
               "source": "projectA",
               "target": "projectC",
               "type": "static",
             },
             {
               "dependencyCollection": "dependencies",
+              "rawVersionSpec": "file:../../../packages/projectD",
               "source": "projectA",
               "target": "projectD",
               "type": "static",

@@ -217,6 +217,8 @@ async function processFilesAndCreateAndSerializeProjectGraph(): Promise<Serializ
     serverLogger.requestLog([...updatedFiles.values()]);
     serverLogger.requestLog([...deletedFiles]);
     const nxJson = readNxJson(workspaceRoot);
+    // Set this globally to allow plugins to know if they are being called from the project graph creation
+    global.NX_GRAPH_CREATION = true;
     const graphNodes = await retrieveProjectConfigurations(
       workspaceRoot,
       nxJson
@@ -226,7 +228,10 @@ async function processFilesAndCreateAndSerializeProjectGraph(): Promise<Serializ
       updatedFileHashes,
       deletedFiles
     );
-    return createAndSerializeProjectGraph(graphNodes);
+    const g = createAndSerializeProjectGraph(graphNodes);
+
+    delete global.NX_GRAPH_CREATION;
+    return g;
   } catch (err) {
     return Promise.resolve({
       error: err,

@@ -27,7 +27,7 @@ Someone who appreciates the flexibility of a package-based repository will be mo
 - Easily create new projects or tools with [code generators](/features/generate-code)
 
 {% cards %}
-{% card title="Tutorial: Getting Started with Package-Based Repos" description="Walkthrough for creating a package-based monorepo with Nx" type="documentation" url="/getting-started/tutorials/package-based-repo-tutorial" /%}
+{% card title="NPM Workspaces Tutorial" description="Add Nx to an existing NPM workspaces repo" type="documentation" url="/getting-started/tutorials/npm-workspaces-tutorial" /%}
 {% /cards %}
 
 ## Integrated Repos
@@ -43,7 +43,8 @@ Someone who appreciates the structure and consistency of an integrated repositor
 - [Automate updating dependencies](/features/automate-updating-dependencies) of the entire toolchain
 
 {% cards %}
-{% card title="Tutorial: Getting Started with Integrated Repos" description="Walkthrough for creating an integrated monorepo with Nx" type="documentation" url="/getting-started/tutorials/integrated-repo-tutorial" /%}
+{% card title="Tutorial: React Monorepo" description="Create a React monorepo with Nx" type="documentation" url="/getting-started/tutorials/react-monorepo-tutorial" /%}
+{% card title="Tutorial: Angular Monorepo" description="Create an Angular monorepo with Nx" type="documentation" url="/getting-started/tutorials/angular-monorepo-tutorial" /%}
 {% /cards %}
 
 ## Standalone Applications

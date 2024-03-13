@@ -10,7 +10,8 @@ import {
   writeJson,
 } from '@nx/devkit';
 import * as chalk from 'chalk';
-import { exec } from 'child_process';
+import { exec } from 'node:child_process';
+import { relative } from 'node:path';
 import { IMPLICIT_DEFAULT_RELEASE_GROUP } from 'nx/src/command-line/release/config/config';
 import {
   getFirstGitCommit,
@@ -27,10 +28,8 @@ import {
   deriveNewSemverVersion,
   validReleaseVersionPrefixes,
 } from 'nx/src/command-line/release/version';
-
 import { interpolate } from 'nx/src/tasks-runner/utils';
 import * as ora from 'ora';
-import { relative } from 'path';
 import { prerelease } from 'semver';
 import { ReleaseVersionGeneratorSchema } from './schema';
 import { resolveLocalPackageDependencies } from './utils/resolve-local-package-dependencies';
@@ -76,20 +75,6 @@ Valid values are: ${validReleaseVersionPrefixes
 
     const projects = options.projects;
 
-    const createResolvePackageRoot =
-      (customPackageRoot?: string) =>
-      (projectNode: ProjectGraphProjectNode): string => {
-        // Default to the project root if no custom packageRoot
-        if (!customPackageRoot) {
-          return projectNode.data.root;
-        }
-        return interpolate(customPackageRoot, {
-          workspaceRoot: '',
-          projectRoot: projectNode.data.root,
-          projectName: projectNode.name,
-        });
-      };
-
     const resolvePackageRoot = createResolvePackageRoot(options.packageRoot);
 
     // Resolve any custom package roots for each project upfront as they will need to be reused during dependency resolution
@@ -101,20 +86,31 @@ Valid values are: ${validReleaseVersionPrefixes
       );
     }
 
-    let currentVersion: string;
-    let currentVersionResolvedFromFallback: boolean = false;
+    let currentVersion: string | undefined = undefined;
+    let currentVersionResolvedFromFallback = false;
 
     // only used for options.currentVersionResolver === 'git-tag', but
     // must be declared here in order to reuse it for additional projects
-    let latestMatchingGitTag: { tag: string; extractedVersion: string };
+    let latestMatchingGitTag:
+      | { tag: string; extractedVersion: string }
+      | null
+      | undefined = undefined;
 
     // if specifier is undefined, then we haven't resolved it yet
     // if specifier is null, then it has been resolved and no changes are necessary
-    let specifier = options.specifier ? options.specifier : undefined;
+    let specifier: string | null | undefined = options.specifier
+      ? options.specifier
+      : undefined;
 
     for (const project of projects) {
       const projectName = project.name;
       const packageRoot = projectNameToPackageRootMap.get(projectName);
+      if (!packageRoot) {
+        throw new Error(
+          `The project "${projectName}" does not have a packageRoot available. Please report this issue on https://github.com/nrwl/nx`
+        );
+      }
+
       const packageJsonPath = joinPathFragments(packageRoot, 'package.json');
       const workspaceRelativePackageJsonPath = relative(
         workspaceRoot,
@@ -268,7 +264,10 @@ To fix this you will either need to add a package.json file at that location, or
               );
             } else {
               log(
-                `📄 Using the current version ${currentVersion} already resolved from git tag "${latestMatchingGitTag.tag}".`
+                // In this code path we know that latestMatchingGitTag is defined, because we are not relying on the fallbackCurrentVersionResolver, so we can safely use the non-null assertion operator
+                `📄 Using the current version ${currentVersion} already resolved from git tag "${
+                  latestMatchingGitTag!.tag
+                }".`
               );
             }
           }
@@ -301,7 +300,7 @@ To fix this you will either need to add a package.json file at that location, or
       ) {
         const specifierSource = options.specifierSource;
         switch (specifierSource) {
-          case 'conventional-commits':
+          case 'conventional-commits': {
             if (options.currentVersionResolver !== 'git-tag') {
               throw new Error(
                 `Invalid currentVersionResolver "${options.currentVersionResolver}" provided for release group "${options.releaseGroup.name}". Must be "git-tag" when "specifierSource" is "conventional-commits"`
@@ -347,7 +346,7 @@ To fix this you will either need to add a package.json file at that location, or
             //
             // Always assume that if the current version is a prerelease, then the next version should be a prerelease.
             // Users must manually graduate from a prerelease to a release by providing an explicit specifier.
-            if (prerelease(currentVersion)) {
+            if (prerelease(currentVersion ?? '')) {
               specifier = 'prerelease';
               log(
                 `📄 Resolved the specifier as "${specifier}" since the current version is a prerelease.`
@@ -358,6 +357,7 @@ To fix this you will either need to add a package.json file at that location, or
               );
             }
             break;
+          }
           case 'prompt': {
             // Only add the release group name to the log if it is one set by the user, otherwise it is useless noise
             const maybeLogReleaseGroup = (log: string): string => {
@@ -413,9 +413,16 @@ To fix this you will either need to add a package.json file at that location, or
           return localPackageDependency.target === project.name;
         });
 
+      if (!currentVersion) {
+        throw new Error(
+          `The current version for project "${project.name}" could not be resolved. Please report this on https://github.com/nrwl/nx`
+        );
+      }
+
       versionData[projectName] = {
         currentVersion,
         dependentProjects,
+        // @ts-ignore: The types will be updated in a future version of Nx
         newVersion: null, // will stay as null in the final result in the case that no changes are detected
       };
 
@@ -455,12 +462,17 @@ To fix this you will either need to add a package.json file at that location, or
       }
 
       for (const dependentProject of dependentProjects) {
+        const dependentPackageRoot = projectNameToPackageRootMap.get(
+          dependentProject.source
+        );
+        if (!dependentPackageRoot) {
+          throw new Error(
+            `The dependent project "${dependentProject.source}" does not have a packageRoot available. Please report this issue on https://github.com/nrwl/nx`
+          );
+        }
         updateJson(
           tree,
-          joinPathFragments(
-            projectNameToPackageRootMap.get(dependentProject.source),
-            'package.json'
-          ),
+          joinPathFragments(dependentPackageRoot, 'package.json'),
           (json) => {
             // Auto (i.e.infer existing) by default
             let versionPrefix = options.versionPrefix ?? 'auto';
@@ -490,7 +502,7 @@ To fix this you will either need to add a package.json file at that location, or
     }
 
     /**
-     * Ensure that formatting is applied so that version bump diffs are as mimimal as possible
+     * Ensure that formatting is applied so that version bump diffs are as minimal as possible
      * within the context of the user's workspace.
      */
     await formatFiles(tree);
@@ -504,7 +516,7 @@ To fix this you will either need to add a package.json file at that location, or
         return updatedFiles;
       },
     };
-  } catch (e) {
+  } catch (e: any) {
     if (process.env.NX_VERBOSE_LOGGING === 'true') {
       output.error({
         title: e.message,
@@ -521,6 +533,20 @@ To fix this you will either need to add a package.json file at that location, or
 }
 
 export default releaseVersionGenerator;
+
+function createResolvePackageRoot(customPackageRoot?: string) {
+  return (projectNode: ProjectGraphProjectNode): string => {
+    // Default to the project root if no custom packageRoot
+    if (!customPackageRoot) {
+      return projectNode.data.root;
+    }
+    return interpolate(customPackageRoot, {
+      workspaceRoot: '',
+      projectRoot: projectNode.data.root,
+      projectName: projectNode.name,
+    });
+  };
+}
 
 const colors = [
   { instance: chalk.green, spinnerColor: 'green' },

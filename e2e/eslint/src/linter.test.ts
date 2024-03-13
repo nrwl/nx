@@ -497,6 +497,7 @@ describe('Linter', () => {
             },
             "main": "./src/index.js",
             "name": "@proj/${mylib}",
+            "private": true,
             "type": "commonjs",
             "typings": "./src/index.d.ts",
             "version": "0.0.1",

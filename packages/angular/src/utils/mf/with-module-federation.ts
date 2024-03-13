@@ -3,6 +3,9 @@ import { getModuleFederationConfig } from './utils';
 import ModuleFederationPlugin = require('webpack/lib/container/ModuleFederationPlugin');
 
 export async function withModuleFederation(options: ModuleFederationConfig) {
+  if (global.NX_GRAPH_CREATION) {
+    return (config) => config;
+  }
   const { sharedLibraries, sharedDependencies, mappedRemotes } =
     await getModuleFederationConfig(options);
 

@@ -1,4 +1,4 @@
-import { Tree, extractLayoutDirectory, names } from '@nx/devkit';
+import { Tree, extractLayoutDirectory, names, readNxJson } from '@nx/devkit';
 import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { assertValidStyle } from '../../../utils/assertion';
 import { NormalizedSchema, Schema } from '../schema';
@@ -33,7 +33,13 @@ export async function normalizeOptions<T extends Schema = Schema>(
     rootProject: options.rootProject,
     callingGenerator,
   });
-  options.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
+
+  const nxJson = readNxJson(host);
+  const addPlugin =
+    process.env.NX_ADD_PLUGINS !== 'false' &&
+    nxJson.useInferencePlugins !== false;
+
+  options.addPlugin ??= addPlugin;
 
   options.rootProject = appProjectRoot === '.';
   options.projectNameAndRootFormat = projectNameAndRootFormat;

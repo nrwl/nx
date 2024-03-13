@@ -1,10 +1,10 @@
-import { Tree } from 'nx/src/generators/tree';
-import { CreateNodes } from 'nx/src/utils/nx-plugin';
-import { createTreeWithEmptyWorkspace } from 'nx/src/generators/testing-utils/create-tree-with-empty-workspace';
 import {
   addProjectConfiguration,
+  CreateNodes,
   readProjectConfiguration,
-} from 'nx/src/generators/utils/project-configuration';
+  Tree,
+} from 'nx/src/devkit-exports';
+import { createTreeWithEmptyWorkspace } from 'nx/src/generators/testing-utils/create-tree-with-empty-workspace';
 
 import { replaceProjectConfigurationsWithPlugin } from './replace-project-configuration-with-plugin';
 

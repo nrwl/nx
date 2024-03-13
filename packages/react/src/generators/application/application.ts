@@ -200,7 +200,7 @@ export async function applicationGeneratorInternal(
       tsConfig: joinPathFragments(options.appProjectRoot, 'tsconfig.app.json'),
       target: 'web',
       newProject: true,
-      uiFramework: 'react',
+      framework: 'react',
     });
     tasks.push(rspackTask);
   }
@@ -295,8 +295,8 @@ export async function applicationGeneratorInternal(
     host.write(
       joinPathFragments(options.appProjectRoot, 'rspack.config.js'),
       stripIndents`
-        const { composePlugins, withNx, withWeb } = require('@nx/rspack');
-        module.exports = composePlugins(withNx(), withWeb(), (config) => {
+        const { composePlugins, withNx, withReact } = require('@nx/rspack');
+        module.exports = composePlugins(withNx(), withReact(), (config) => {
           config.module.rules.push({
             test: /\\.[jt]sx$/i,
             use: [

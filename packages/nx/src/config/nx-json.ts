@@ -232,6 +232,12 @@ interface NxReleaseConfiguration {
      * Enable or override configuration for git operations as part of the version subcommand
      */
     git?: NxReleaseGitConfiguration;
+    /**
+     * A command to run after validation of nx release configuration, but before versioning begins.
+     * Used for preparing build artifacts. If --dry-run is passed, the command is still executed, but
+     * with the NX_DRY_RUN environment variable set to 'true'.
+     */
+    preVersionCommand?: string;
   };
   /**
    * Optionally override the git/release tag pattern to use. This field is the source of truth
@@ -392,6 +398,11 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
    * Set this to false to disable the daemon.
    */
   useDaemonProcess?: boolean;
+
+  /**
+   * Set this to false to disable adding inference plugins when generating new projects
+   */
+  useInferencePlugins?: boolean;
 }
 
 export type PluginConfiguration =

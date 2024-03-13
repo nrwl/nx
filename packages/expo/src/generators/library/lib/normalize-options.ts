@@ -1,4 +1,4 @@
-import { Tree } from '@nx/devkit';
+import { Tree, readNxJson } from '@nx/devkit';
 import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { Schema } from '../schema';
 
@@ -28,7 +28,11 @@ export async function normalizeOptions(
     projectNameAndRootFormat: options.projectNameAndRootFormat,
     callingGenerator: '@nx/expo:library',
   });
-  options.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
+  const nxJson = readNxJson(host);
+  const addPluginDefault =
+    process.env.NX_ADD_PLUGINS !== 'false' &&
+    nxJson.useInferencePlugins !== false;
+  options.addPlugin ??= addPluginDefault;
 
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())

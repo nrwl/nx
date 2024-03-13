@@ -461,3 +461,15 @@ pass `--buildable=true` when creating new libraries with the `@nx/js` plugin.
 ## Extends
 
 Some presets use the `extends` property to hide some default options in a separate json file. The json file specified in the `extends` property is located in your `node_modules` folder. The Nx preset files are specified in [the `nx` package](https://github.com/nrwl/nx/tree/master/packages/nx/presets).
+
+## Nx Cloud
+
+There are also options for [Nx Cloud](https://nx.app) that are set in the `nx.json` file. For instance, you authenticate with the Nx Cloud service using an `nxCloudAccessToken` like this:
+
+```json {% fileName="nx.json" %}
+{
+  "nxCloudAccessToken": "SOMETOKEN"
+}
+```
+
+For more details on configuring Nx Cloud, see the [Nx Cloud Configuration Options page](/ci/reference/config).

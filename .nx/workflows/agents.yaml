@@ -20,6 +20,8 @@ launch-templates:
             node_modules
             ~/.cache/Cypress
             ~/.pnpm-store
+            ~/.sdkman
+            ~/.sdkman/candidates/gradle
           BASE_BRANCH: 'master'
       - name: Install e2e deps
         script: |
@@ -49,3 +51,21 @@ launch-templates:
 
       - name: Load Cargo Env
         script: echo "PATH=$HOME/.cargo/bin:$PATH" >> $NX_CLOUD_ENV
+
+      - name: Install zip and unzip
+        script: sudo apt-get -yqq install zip unzip
+
+      - name: Install SDKMAN and gradle
+        script: |
+          if [ ! -d $HOME/.sdkman ]
+          then
+            curl -s "https://get.sdkman.io" | bash
+            source "$HOME/.sdkman/bin/sdkman-init.sh"
+          fi
+          sdk version
+          if [ ! -d $HOME/.sdkman/candidates/gradle/8.5 ]
+          then
+            sdk install gradle 8.5
+          fi
+          gradle --version
+          echo "PATH=$HOME/.sdkman/candidates/gradle/8.5/bin:$PATH" >> $NX_CLOUD_ENV

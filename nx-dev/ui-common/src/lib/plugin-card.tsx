@@ -3,6 +3,7 @@ import {
   ClockIcon,
   StarIcon,
 } from '@heroicons/react/24/outline';
+import Link from 'next/link';
 
 export interface PluginCardProps {
   name: string;
@@ -41,7 +42,7 @@ export function PluginCard({
           </svg>{' '}
           <span className="truncate">{name}</span>
         </h3>
-        <a
+        <Link
           href={url}
           target={isOfficial ? undefined : '_blank'}
           rel={isOfficial ? undefined : 'noreferrer'}
@@ -80,7 +81,7 @@ export function PluginCard({
               )}
             </div>
           </div>
-        </a>
+        </Link>
       </div>
     </div>
   );

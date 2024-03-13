@@ -46,14 +46,31 @@ export async function getLatestGitTagForPattern(
   additionalInterpolationData = {}
 ): Promise<{ tag: string; extractedVersion: string } | null> {
   try {
-    const tags = await execCommand('git', ['tag', '--sort', '-v:refname']).then(
-      (r) =>
-        r
-          .trim()
-          .split('\n')
-          .map((t) => t.trim())
-          .filter(Boolean)
+    let tags: string[];
+    tags = await execCommand('git', [
+      'tag',
+      '--sort',
+      '-v:refname',
+      '--merged',
+    ]).then((r) =>
+      r
+        .trim()
+        .split('\n')
+        .map((t) => t.trim())
+        .filter(Boolean)
     );
+    if (!tags.length) {
+      // try again, but include all tags on the repo instead of just --merged ones
+      tags = await execCommand('git', ['tag', '--sort', '-v:refname']).then(
+        (r) =>
+          r
+            .trim()
+            .split('\n')
+            .map((t) => t.trim())
+            .filter(Boolean)
+      );
+    }
+
     if (!tags.length) {
       return null;
     }
@@ -134,7 +151,29 @@ export async function gitAdd({
   logFn?: (...messages: string[]) => void;
 }): Promise<string> {
   logFn = logFn || console.log;
-  const commandArgs = ['add', ...changedFiles];
+
+  let ignoredFiles: string[] = [];
+  let filesToAdd: string[] = [];
+  for (const f of changedFiles) {
+    const isFileIgnored = await isIgnored(f);
+    if (isFileIgnored) {
+      ignoredFiles.push(f);
+    } else {
+      filesToAdd.push(f);
+    }
+  }
+
+  if (verbose && ignoredFiles.length) {
+    logFn(`Will not add the following files because they are ignored by git:`);
+    ignoredFiles.forEach((f) => logFn(f));
+  }
+
+  if (!filesToAdd.length) {
+    logFn('\nNo files to stage. Skipping git add.');
+    return;
+  }
+
+  const commandArgs = ['add', ...filesToAdd];
   const message = dryRun
     ? `Would stage files in git with the following command, but --dry-run was set:`
     : `Staging files in git with the following command:`;
@@ -146,6 +185,16 @@ export async function gitAdd({
     return;
   }
   return execCommand('git', commandArgs);
+}
+
+async function isIgnored(filePath: string): Promise<boolean> {
+  try {
+    // This command will error if the file is not ignored
+    await execCommand('git', ['check-ignore', filePath]);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export async function gitCommit({

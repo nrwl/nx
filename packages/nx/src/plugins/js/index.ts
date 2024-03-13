@@ -9,7 +9,7 @@ import {
   CreateDependencies,
   CreateDependenciesContext,
   CreateNodes,
-} from '../../project-graph/plugins';
+} from '../../utils/nx-plugin';
 import {
   getLockFileDependencies,
   getLockFileName,

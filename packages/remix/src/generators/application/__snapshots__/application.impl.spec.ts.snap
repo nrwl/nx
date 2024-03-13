@@ -151,7 +151,11 @@ import { defineConfig } from 'cypress';
 
 export default defineConfig({
   e2e: {
-    ...nxE2EPreset(__filename, { cypressDir: 'src' }),
+    ...nxE2EPreset(__filename, {
+      cypressDir: 'src',
+      webServerCommands: { default: 'nx run test:serve:development' },
+      ciWebServerCommand: 'nx run test:serve-static',
+    }),
     baseUrl: 'http://localhost:4200',
   },
 });
@@ -661,7 +665,11 @@ import { defineConfig } from 'cypress';
 
 export default defineConfig({
   e2e: {
-    ...nxE2EPreset(__filename, { cypressDir: 'src' }),
+    ...nxE2EPreset(__filename, {
+      cypressDir: 'src',
+      webServerCommands: { default: 'nx run test:serve:development' },
+      ciWebServerCommand: 'nx run test:serve-static',
+    }),
     baseUrl: 'http://localhost:4200',
   },
 });
@@ -1027,7 +1035,11 @@ import { defineConfig } from 'cypress';
 
 export default defineConfig({
   e2e: {
-    ...nxE2EPreset(__filename, { cypressDir: 'src' }),
+    ...nxE2EPreset(__filename, {
+      cypressDir: 'src',
+      webServerCommands: { default: 'nx run test:serve:development' },
+      ciWebServerCommand: 'nx run test:serve-static',
+    }),
     baseUrl: 'http://localhost:4200',
   },
 });

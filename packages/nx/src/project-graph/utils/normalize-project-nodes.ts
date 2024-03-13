@@ -5,8 +5,9 @@ import {
   TargetConfiguration,
 } from '../../config/workspace-json-project-json';
 import { findMatchingProjects } from '../../utils/find-matching-projects';
+import { NX_PREFIX } from '../../utils/logger';
 import { resolveNxTokensInOptions } from '../utils/project-configuration-utils';
-import { CreateDependenciesContext } from '../plugins';
+import { CreateDependenciesContext } from '../../utils/nx-plugin';
 
 export async function normalizeProjectNodes(
   ctx: CreateDependenciesContext,

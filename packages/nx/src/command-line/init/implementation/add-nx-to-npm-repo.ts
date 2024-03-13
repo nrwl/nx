@@ -72,18 +72,13 @@ export async function addNxToNpmRepo(options: Options) {
         : false);
   }
 
-  createNxJsonFile(repoRoot, [], cacheableOperations, {});
+  createNxJsonFile(repoRoot, [], cacheableOperations, scriptOutputs);
 
   const pmc = getPackageManagerCommand();
 
   updateGitIgnore(repoRoot);
   addDepsToPackageJson(repoRoot);
-  markRootPackageJsonAsNxProject(
-    repoRoot,
-    cacheableOperations,
-    scriptOutputs,
-    pmc
-  );
+  markRootPackageJsonAsNxProject(repoRoot, cacheableOperations, pmc);
 
   output.log({ title: '📦 Installing dependencies' });
 

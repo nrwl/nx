@@ -43,6 +43,7 @@ const nxPackages = [
   `@nx/eslint-plugin`,
   `@nx/express`,
   `@nx/esbuild`,
+  `@nx/gradle`,
   `@nx/jest`,
   `@nx/js`,
   `@nx/eslint`,

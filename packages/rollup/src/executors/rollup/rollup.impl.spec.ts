@@ -1,11 +1,15 @@
 import { ExecutorContext } from '@nx/devkit';
+import * as fs from 'fs';
 import * as rollup from 'rollup';
 import { RollupExecutorOptions } from './schema';
 import { createRollupOptions } from './rollup.impl';
 import { normalizeRollupExecutorOptions } from './lib/normalize';
 
 jest.mock('rollup-plugin-copy', () => jest.fn());
-
+jest.mock('fs', () => ({
+  ...jest.requireActual('fs'),
+  readdirSync: () => [],
+}));
 describe('rollupExecutor', () => {
   let context: ExecutorContext;
   let testOptions: RollupExecutorOptions;
@@ -35,8 +39,8 @@ describe('rollupExecutor', () => {
   });
 
   describe('createRollupOptions', () => {
-    it('should create rollup options for valid config', () => {
-      const result: any = createRollupOptions(
+    it('should create rollup options for valid config', async () => {
+      const result: any = await createRollupOptions(
         normalizeRollupExecutorOptions(
           testOptions,
           { root: '/root' } as any,
@@ -73,7 +77,7 @@ describe('rollupExecutor', () => {
         () => (o) => ({ ...o, prop: 'my-val' }),
         { virtual: true }
       );
-      const result: any = createRollupOptions(
+      const result: any = await createRollupOptions(
         normalizeRollupExecutorOptions(
           { ...testOptions, rollupConfig: 'custom-rollup.config.ts' },
           { root: '/root' } as any,
@@ -85,6 +89,7 @@ describe('rollupExecutor', () => {
         '/root/src',
         []
       );
+
       expect(result.map((x) => x.prop)).toEqual(['my-val', 'my-val']);
     });
 
@@ -103,7 +108,7 @@ describe('rollupExecutor', () => {
         }),
         { virtual: true }
       );
-      const result: any = createRollupOptions(
+      const result: any = await createRollupOptions(
         normalizeRollupExecutorOptions(
           {
             ...testOptions,
@@ -121,6 +126,7 @@ describe('rollupExecutor', () => {
         '/root/src',
         []
       );
+
       expect(result.map((x) => x.prop1)).toEqual([
         'my-val-my-val-2',
         'my-val-my-val-2',
@@ -128,8 +134,8 @@ describe('rollupExecutor', () => {
       expect(result.map((x) => x.prop2)).toEqual(['my-val-2', 'my-val-2']);
     });
 
-    it(`should always use forward slashes for asset paths`, () => {
-      createRollupOptions(
+    it(`should always use forward slashes for asset paths`, async () => {
+      await createRollupOptions(
         {
           ...normalizeRollupExecutorOptions(
             testOptions,
@@ -156,8 +162,8 @@ describe('rollupExecutor', () => {
       });
     });
 
-    it(`should treat npm dependencies as external if external is all`, () => {
-      const options = createRollupOptions(
+    it(`should treat npm dependencies as external if external is all`, async () => {
+      const options = await createRollupOptions(
         normalizeRollupExecutorOptions(
           { ...testOptions, external: 'all' },
           { root: '/root' } as any,
@@ -177,8 +183,8 @@ describe('rollupExecutor', () => {
       expect(external('rxjs', '', false)).toBe(false);
     });
 
-    it(`should not treat npm dependencies as external if external is none`, () => {
-      const options = createRollupOptions(
+    it(`should not treat npm dependencies as external if external is none`, async () => {
+      const options = await createRollupOptions(
         normalizeRollupExecutorOptions(
           { ...testOptions, external: 'none' },
           { root: '/root' } as any,
@@ -198,8 +204,8 @@ describe('rollupExecutor', () => {
       expect(external('rxjs', '', false)).toBe(false);
     });
 
-    it(`should set external based on options`, () => {
-      const options = createRollupOptions(
+    it(`should set external based on options`, async () => {
+      const options = await createRollupOptions(
         normalizeRollupExecutorOptions(
           { ...testOptions, external: ['rxjs'] },
           { root: '/root' } as any,

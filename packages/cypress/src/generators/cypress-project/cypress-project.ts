@@ -283,6 +283,8 @@ async function normalizeOptions(
 
   options.linter = options.linter || Linter.EsLint;
   options.bundler = options.bundler || 'webpack';
+  options.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
+
   return {
     ...options,
     // other generators depend on the rootProject flag down stream

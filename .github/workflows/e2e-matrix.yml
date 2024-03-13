@@ -34,7 +34,7 @@ jobs:
     name: Cache install (${{ matrix.os }}, node v${{ matrix.node_version }})
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install PNPM
         run: |
@@ -112,6 +112,7 @@ jobs:
           - e2e-esbuild
           - e2e-eslint
           - e2e-expo
+          - e2e-gradle
           - e2e-jest
           - e2e-js
           - e2e-lerna-smoke-tests
@@ -164,6 +165,8 @@ jobs:
           - project: e2e-esbuild
             codeowners: 'S04SJ6HHP0X'
           - project: e2e-expo
+            codeowners: 'S04TNCNJG5N'
+          - project: e2e-gradle
             codeowners: 'S04TNCNJG5N'
           - project: e2e-jest
             codeowners: 'S04T16BTJJY'
@@ -243,6 +246,8 @@ jobs:
           - node_version: 18
             project: e2e-expo
           - node_version: 18
+            project: e2e-gradle
+          - node_version: 18
             project: e2e-jest
           - node_version: 18
             project: e2e-js
@@ -300,7 +305,7 @@ jobs:
     name: ${{ matrix.os_name }}/${{ matrix.package_manager }}/${{ matrix.node_version }} ${{ join(matrix.project) }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Prepare dir for output
         run: mkdir -p outputs

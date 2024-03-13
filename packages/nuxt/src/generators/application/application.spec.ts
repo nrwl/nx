@@ -22,6 +22,8 @@ describe('app', () => {
         expect(projectConfig.targets.build).toBeUndefined();
         expect(projectConfig.targets.serve).toBeUndefined();
         expect(projectConfig.targets.test).toBeUndefined();
+        expect(projectConfig.targets['build-static']).toBeUndefined();
+        expect(projectConfig.targets['serve-static']).toBeUndefined();
       });
 
       it('should create all new files in the correct location', async () => {

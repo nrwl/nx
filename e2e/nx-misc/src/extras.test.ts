@@ -153,6 +153,21 @@ describe('Extra Nx Misc Tests', () => {
       expect(result).toContain('--var1=a');
     }, 120000);
 
+    it('should pass unknown options', async () => {
+      updateJson(join('libs', mylib, 'project.json'), (config) => {
+        config.targets.echo = {
+          command: 'echo',
+          options: {
+            var1: 'a',
+          },
+        };
+        return config;
+      });
+
+      const result = runCLI(`run ${mylib}:echo`, { silent: true });
+      expect(result).toContain('--var1 a');
+    }, 120000);
+
     it('should interpolate provided arguments', async () => {
       const echoTarget = uniq('echo');
       updateJson(join('libs', mylib, 'project.json'), (config) => {

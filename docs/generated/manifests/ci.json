@@ -201,7 +201,7 @@
         "name": "Set up Nx Cloud On-Premise",
         "description": "Set up Nx Cloud on machines that you control",
         "mediaImage": "",
-        "file": "nx-cloud/private/nx-enterprise-on-prem",
+        "file": "nx-cloud/features/nx-enterprise-on-prem",
         "itemList": [],
         "isExternal": false,
         "path": "/ci/features/on-premise",
@@ -283,7 +283,7 @@
     "name": "Set up Nx Cloud On-Premise",
     "description": "Set up Nx Cloud on machines that you control",
     "mediaImage": "",
-    "file": "nx-cloud/private/nx-enterprise-on-prem",
+    "file": "nx-cloud/features/nx-enterprise-on-prem",
     "itemList": [],
     "isExternal": false,
     "path": "/ci/features/on-premise",
@@ -576,103 +576,193 @@
         "tags": []
       },
       {
-        "id": "on-premise",
-        "name": "On-Premise",
-        "description": "Manage an on-premise installation of Nx Cloud",
+        "id": "enterprise",
+        "name": "Enterprise",
+        "description": "Recipes for enterprise accounts",
         "mediaImage": "",
         "file": "",
         "itemList": [
           {
-            "id": "auth-single-admin",
-            "name": "Authenticate with a Single Admin",
-            "description": "",
+            "id": "on-premise",
+            "name": "On-Premise",
+            "description": "Manage an on-premise installation of Nx Cloud",
             "mediaImage": "",
-            "file": "nx-cloud/private/auth-single-admin",
-            "itemList": [],
+            "file": "",
+            "itemList": [
+              {
+                "id": "auth-single-admin",
+                "name": "Authenticate with a Single Admin",
+                "description": "",
+                "mediaImage": "",
+                "file": "nx-cloud/enterprise/on-premise/auth-single-admin",
+                "itemList": [],
+                "isExternal": false,
+                "path": "/ci/recipes/enterprise/on-premise/auth-single-admin",
+                "tags": []
+              },
+              {
+                "id": "auth-github",
+                "name": "Authenticate with GitHub",
+                "description": "",
+                "mediaImage": "",
+                "file": "nx-cloud/enterprise/on-premise/auth-github",
+                "itemList": [],
+                "isExternal": false,
+                "path": "/ci/recipes/enterprise/on-premise/auth-github",
+                "tags": []
+              },
+              {
+                "id": "ami-setup",
+                "name": "On-Prem VM Setup",
+                "description": "",
+                "mediaImage": "",
+                "file": "nx-cloud/enterprise/on-premise/ami-setup",
+                "itemList": [],
+                "isExternal": false,
+                "path": "/ci/recipes/enterprise/on-premise/ami-setup",
+                "tags": []
+              },
+              {
+                "id": "auth-gitlab",
+                "name": "Authenticate with GitLab",
+                "description": "",
+                "mediaImage": "",
+                "file": "nx-cloud/enterprise/on-premise/auth-gitlab",
+                "itemList": [],
+                "isExternal": false,
+                "path": "/ci/recipes/enterprise/on-premise/auth-gitlab",
+                "tags": []
+              },
+              {
+                "id": "auth-bitbucket",
+                "name": "Authenticate with BitBucket",
+                "description": "",
+                "mediaImage": "",
+                "file": "nx-cloud/enterprise/on-premise/auth-bitbucket",
+                "itemList": [],
+                "isExternal": false,
+                "path": "/ci/recipes/enterprise/on-premise/auth-bitbucket",
+                "tags": []
+              },
+              {
+                "id": "auth-saml",
+                "name": "Authenticate via SAML",
+                "description": "",
+                "mediaImage": "",
+                "file": "nx-cloud/enterprise/on-premise/auth-saml",
+                "itemList": [],
+                "isExternal": false,
+                "path": "/ci/recipes/enterprise/on-premise/auth-saml",
+                "tags": []
+              },
+              {
+                "id": "auth-saml-managed",
+                "name": "Authenticate via SAML on Managed Version",
+                "description": "",
+                "mediaImage": "",
+                "file": "nx-cloud/enterprise/on-premise/auth-saml-managed",
+                "itemList": [],
+                "isExternal": false,
+                "path": "/ci/recipes/enterprise/on-premise/auth-saml-managed",
+                "tags": []
+              },
+              {
+                "id": "advanced-config",
+                "name": "Advanced Configuration",
+                "description": "",
+                "mediaImage": "",
+                "file": "nx-cloud/enterprise/on-premise/advanced-config",
+                "itemList": [],
+                "isExternal": false,
+                "path": "/ci/recipes/enterprise/on-premise/advanced-config",
+                "tags": []
+              }
+            ],
             "isExternal": false,
-            "path": "/ci/recipes/on-premise/auth-single-admin",
+            "path": "/ci/recipes/enterprise/on-premise",
             "tags": []
           },
           {
-            "id": "auth-github",
-            "name": "Authenticate with GitHub",
-            "description": "",
+            "id": "dte",
+            "name": "Custom Distributed Task Execution",
+            "description": "Custom DTE on your own CI provider",
             "mediaImage": "",
-            "file": "nx-cloud/private/auth-github",
-            "itemList": [],
+            "file": "",
+            "itemList": [
+              {
+                "id": "github-dte",
+                "name": "GitHub Actions Custom DTE",
+                "description": "",
+                "mediaImage": "",
+                "file": "nx-cloud/enterprise/dte/github-dte",
+                "itemList": [],
+                "isExternal": false,
+                "path": "/ci/recipes/enterprise/dte/github-dte",
+                "tags": []
+              },
+              {
+                "id": "circle-ci-dte",
+                "name": "Circle CI Custom DTE",
+                "description": "",
+                "mediaImage": "",
+                "file": "nx-cloud/enterprise/dte/circle-ci-dte",
+                "itemList": [],
+                "isExternal": false,
+                "path": "/ci/recipes/enterprise/dte/circle-ci-dte",
+                "tags": []
+              },
+              {
+                "id": "azure-dte",
+                "name": "Azure Pipelines Custom DTE",
+                "description": "",
+                "mediaImage": "",
+                "file": "nx-cloud/enterprise/dte/azure-dte",
+                "itemList": [],
+                "isExternal": false,
+                "path": "/ci/recipes/enterprise/dte/azure-dte",
+                "tags": []
+              },
+              {
+                "id": "bitbucket-dte",
+                "name": "Bitbucket Pipelines Custom DTE",
+                "description": "",
+                "mediaImage": "",
+                "file": "nx-cloud/enterprise/dte/bitbucket-dte",
+                "itemList": [],
+                "isExternal": false,
+                "path": "/ci/recipes/enterprise/dte/bitbucket-dte",
+                "tags": []
+              },
+              {
+                "id": "gitlab-dte",
+                "name": "GitLab Custom DTE",
+                "description": "",
+                "mediaImage": "",
+                "file": "nx-cloud/enterprise/dte/gitlab-dte",
+                "itemList": [],
+                "isExternal": false,
+                "path": "/ci/recipes/enterprise/dte/gitlab-dte",
+                "tags": []
+              },
+              {
+                "id": "jenkins-dte",
+                "name": "Jenkins Custom DTE",
+                "description": "",
+                "mediaImage": "",
+                "file": "nx-cloud/enterprise/dte/jenkins-dte",
+                "itemList": [],
+                "isExternal": false,
+                "path": "/ci/recipes/enterprise/dte/jenkins-dte",
+                "tags": []
+              }
+            ],
             "isExternal": false,
-            "path": "/ci/recipes/on-premise/auth-github",
-            "tags": []
-          },
-          {
-            "id": "ami-setup",
-            "name": "On-Prem VM Setup",
-            "description": "",
-            "mediaImage": "",
-            "file": "nx-cloud/private/ami-setup",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/ci/recipes/on-premise/ami-setup",
-            "tags": []
-          },
-          {
-            "id": "auth-gitlab",
-            "name": "Authenticate with GitLab",
-            "description": "",
-            "mediaImage": "",
-            "file": "nx-cloud/private/auth-gitlab",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/ci/recipes/on-premise/auth-gitlab",
-            "tags": []
-          },
-          {
-            "id": "auth-bitbucket",
-            "name": "Authenticate with BitBucket",
-            "description": "",
-            "mediaImage": "",
-            "file": "nx-cloud/private/auth-bitbucket",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/ci/recipes/on-premise/auth-bitbucket",
-            "tags": []
-          },
-          {
-            "id": "auth-saml",
-            "name": "Authenticate via SAML",
-            "description": "",
-            "mediaImage": "",
-            "file": "nx-cloud/private/auth-saml",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/ci/recipes/on-premise/auth-saml",
-            "tags": []
-          },
-          {
-            "id": "auth-saml-managed",
-            "name": "Authenticate via SAML on Managed Version",
-            "description": "",
-            "mediaImage": "",
-            "file": "nx-cloud/private/auth-saml-managed",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/ci/recipes/on-premise/auth-saml-managed",
-            "tags": []
-          },
-          {
-            "id": "advanced-config",
-            "name": "Advanced Configuration",
-            "description": "",
-            "mediaImage": "",
-            "file": "nx-cloud/private/advanced-config",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/ci/recipes/on-premise/advanced-config",
+            "path": "/ci/recipes/enterprise/dte",
             "tags": []
           }
         ],
         "isExternal": false,
-        "path": "/ci/recipes/on-premise",
+        "path": "/ci/recipes/enterprise",
         "tags": []
       },
       {
@@ -1059,7 +1149,197 @@
     "path": "/ci/recipes/source-control-integration/gitlab",
     "tags": []
   },
-  "/ci/recipes/on-premise": {
+  "/ci/recipes/enterprise": {
+    "id": "enterprise",
+    "name": "Enterprise",
+    "description": "Recipes for enterprise accounts",
+    "mediaImage": "",
+    "file": "",
+    "itemList": [
+      {
+        "id": "on-premise",
+        "name": "On-Premise",
+        "description": "Manage an on-premise installation of Nx Cloud",
+        "mediaImage": "",
+        "file": "",
+        "itemList": [
+          {
+            "id": "auth-single-admin",
+            "name": "Authenticate with a Single Admin",
+            "description": "",
+            "mediaImage": "",
+            "file": "nx-cloud/enterprise/on-premise/auth-single-admin",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/ci/recipes/enterprise/on-premise/auth-single-admin",
+            "tags": []
+          },
+          {
+            "id": "auth-github",
+            "name": "Authenticate with GitHub",
+            "description": "",
+            "mediaImage": "",
+            "file": "nx-cloud/enterprise/on-premise/auth-github",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/ci/recipes/enterprise/on-premise/auth-github",
+            "tags": []
+          },
+          {
+            "id": "ami-setup",
+            "name": "On-Prem VM Setup",
+            "description": "",
+            "mediaImage": "",
+            "file": "nx-cloud/enterprise/on-premise/ami-setup",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/ci/recipes/enterprise/on-premise/ami-setup",
+            "tags": []
+          },
+          {
+            "id": "auth-gitlab",
+            "name": "Authenticate with GitLab",
+            "description": "",
+            "mediaImage": "",
+            "file": "nx-cloud/enterprise/on-premise/auth-gitlab",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/ci/recipes/enterprise/on-premise/auth-gitlab",
+            "tags": []
+          },
+          {
+            "id": "auth-bitbucket",
+            "name": "Authenticate with BitBucket",
+            "description": "",
+            "mediaImage": "",
+            "file": "nx-cloud/enterprise/on-premise/auth-bitbucket",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/ci/recipes/enterprise/on-premise/auth-bitbucket",
+            "tags": []
+          },
+          {
+            "id": "auth-saml",
+            "name": "Authenticate via SAML",
+            "description": "",
+            "mediaImage": "",
+            "file": "nx-cloud/enterprise/on-premise/auth-saml",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/ci/recipes/enterprise/on-premise/auth-saml",
+            "tags": []
+          },
+          {
+            "id": "auth-saml-managed",
+            "name": "Authenticate via SAML on Managed Version",
+            "description": "",
+            "mediaImage": "",
+            "file": "nx-cloud/enterprise/on-premise/auth-saml-managed",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/ci/recipes/enterprise/on-premise/auth-saml-managed",
+            "tags": []
+          },
+          {
+            "id": "advanced-config",
+            "name": "Advanced Configuration",
+            "description": "",
+            "mediaImage": "",
+            "file": "nx-cloud/enterprise/on-premise/advanced-config",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/ci/recipes/enterprise/on-premise/advanced-config",
+            "tags": []
+          }
+        ],
+        "isExternal": false,
+        "path": "/ci/recipes/enterprise/on-premise",
+        "tags": []
+      },
+      {
+        "id": "dte",
+        "name": "Custom Distributed Task Execution",
+        "description": "Custom DTE on your own CI provider",
+        "mediaImage": "",
+        "file": "",
+        "itemList": [
+          {
+            "id": "github-dte",
+            "name": "GitHub Actions Custom DTE",
+            "description": "",
+            "mediaImage": "",
+            "file": "nx-cloud/enterprise/dte/github-dte",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/ci/recipes/enterprise/dte/github-dte",
+            "tags": []
+          },
+          {
+            "id": "circle-ci-dte",
+            "name": "Circle CI Custom DTE",
+            "description": "",
+            "mediaImage": "",
+            "file": "nx-cloud/enterprise/dte/circle-ci-dte",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/ci/recipes/enterprise/dte/circle-ci-dte",
+            "tags": []
+          },
+          {
+            "id": "azure-dte",
+            "name": "Azure Pipelines Custom DTE",
+            "description": "",
+            "mediaImage": "",
+            "file": "nx-cloud/enterprise/dte/azure-dte",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/ci/recipes/enterprise/dte/azure-dte",
+            "tags": []
+          },
+          {
+            "id": "bitbucket-dte",
+            "name": "Bitbucket Pipelines Custom DTE",
+            "description": "",
+            "mediaImage": "",
+            "file": "nx-cloud/enterprise/dte/bitbucket-dte",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/ci/recipes/enterprise/dte/bitbucket-dte",
+            "tags": []
+          },
+          {
+            "id": "gitlab-dte",
+            "name": "GitLab Custom DTE",
+            "description": "",
+            "mediaImage": "",
+            "file": "nx-cloud/enterprise/dte/gitlab-dte",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/ci/recipes/enterprise/dte/gitlab-dte",
+            "tags": []
+          },
+          {
+            "id": "jenkins-dte",
+            "name": "Jenkins Custom DTE",
+            "description": "",
+            "mediaImage": "",
+            "file": "nx-cloud/enterprise/dte/jenkins-dte",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/ci/recipes/enterprise/dte/jenkins-dte",
+            "tags": []
+          }
+        ],
+        "isExternal": false,
+        "path": "/ci/recipes/enterprise/dte",
+        "tags": []
+      }
+    ],
+    "isExternal": false,
+    "path": "/ci/recipes/enterprise",
+    "tags": []
+  },
+  "/ci/recipes/enterprise/on-premise": {
     "id": "on-premise",
     "name": "On-Premise",
     "description": "Manage an on-premise installation of Nx Cloud",
@@ -1071,10 +1351,10 @@
         "name": "Authenticate with a Single Admin",
         "description": "",
         "mediaImage": "",
-        "file": "nx-cloud/private/auth-single-admin",
+        "file": "nx-cloud/enterprise/on-premise/auth-single-admin",
         "itemList": [],
         "isExternal": false,
-        "path": "/ci/recipes/on-premise/auth-single-admin",
+        "path": "/ci/recipes/enterprise/on-premise/auth-single-admin",
         "tags": []
       },
       {
@@ -1082,10 +1362,10 @@
         "name": "Authenticate with GitHub",
         "description": "",
         "mediaImage": "",
-        "file": "nx-cloud/private/auth-github",
+        "file": "nx-cloud/enterprise/on-premise/auth-github",
         "itemList": [],
         "isExternal": false,
-        "path": "/ci/recipes/on-premise/auth-github",
+        "path": "/ci/recipes/enterprise/on-premise/auth-github",
         "tags": []
       },
       {
@@ -1093,10 +1373,10 @@
         "name": "On-Prem VM Setup",
         "description": "",
         "mediaImage": "",
-        "file": "nx-cloud/private/ami-setup",
+        "file": "nx-cloud/enterprise/on-premise/ami-setup",
         "itemList": [],
         "isExternal": false,
-        "path": "/ci/recipes/on-premise/ami-setup",
+        "path": "/ci/recipes/enterprise/on-premise/ami-setup",
         "tags": []
       },
       {
@@ -1104,10 +1384,10 @@
         "name": "Authenticate with GitLab",
         "description": "",
         "mediaImage": "",
-        "file": "nx-cloud/private/auth-gitlab",
+        "file": "nx-cloud/enterprise/on-premise/auth-gitlab",
         "itemList": [],
         "isExternal": false,
-        "path": "/ci/recipes/on-premise/auth-gitlab",
+        "path": "/ci/recipes/enterprise/on-premise/auth-gitlab",
         "tags": []
       },
       {
@@ -1115,10 +1395,10 @@
         "name": "Authenticate with BitBucket",
         "description": "",
         "mediaImage": "",
-        "file": "nx-cloud/private/auth-bitbucket",
+        "file": "nx-cloud/enterprise/on-premise/auth-bitbucket",
         "itemList": [],
         "isExternal": false,
-        "path": "/ci/recipes/on-premise/auth-bitbucket",
+        "path": "/ci/recipes/enterprise/on-premise/auth-bitbucket",
         "tags": []
       },
       {
@@ -1126,10 +1406,10 @@
         "name": "Authenticate via SAML",
         "description": "",
         "mediaImage": "",
-        "file": "nx-cloud/private/auth-saml",
+        "file": "nx-cloud/enterprise/on-premise/auth-saml",
         "itemList": [],
         "isExternal": false,
-        "path": "/ci/recipes/on-premise/auth-saml",
+        "path": "/ci/recipes/enterprise/on-premise/auth-saml",
         "tags": []
       },
       {
@@ -1137,10 +1417,10 @@
         "name": "Authenticate via SAML on Managed Version",
         "description": "",
         "mediaImage": "",
-        "file": "nx-cloud/private/auth-saml-managed",
+        "file": "nx-cloud/enterprise/on-premise/auth-saml-managed",
         "itemList": [],
         "isExternal": false,
-        "path": "/ci/recipes/on-premise/auth-saml-managed",
+        "path": "/ci/recipes/enterprise/on-premise/auth-saml-managed",
         "tags": []
       },
       {
@@ -1148,103 +1428,247 @@
         "name": "Advanced Configuration",
         "description": "",
         "mediaImage": "",
-        "file": "nx-cloud/private/advanced-config",
+        "file": "nx-cloud/enterprise/on-premise/advanced-config",
         "itemList": [],
         "isExternal": false,
-        "path": "/ci/recipes/on-premise/advanced-config",
+        "path": "/ci/recipes/enterprise/on-premise/advanced-config",
         "tags": []
       }
     ],
     "isExternal": false,
-    "path": "/ci/recipes/on-premise",
+    "path": "/ci/recipes/enterprise/on-premise",
     "tags": []
   },
-  "/ci/recipes/on-premise/auth-single-admin": {
+  "/ci/recipes/enterprise/on-premise/auth-single-admin": {
     "id": "auth-single-admin",
     "name": "Authenticate with a Single Admin",
     "description": "",
     "mediaImage": "",
-    "file": "nx-cloud/private/auth-single-admin",
+    "file": "nx-cloud/enterprise/on-premise/auth-single-admin",
     "itemList": [],
     "isExternal": false,
-    "path": "/ci/recipes/on-premise/auth-single-admin",
+    "path": "/ci/recipes/enterprise/on-premise/auth-single-admin",
     "tags": []
   },
-  "/ci/recipes/on-premise/auth-github": {
+  "/ci/recipes/enterprise/on-premise/auth-github": {
     "id": "auth-github",
     "name": "Authenticate with GitHub",
     "description": "",
     "mediaImage": "",
-    "file": "nx-cloud/private/auth-github",
+    "file": "nx-cloud/enterprise/on-premise/auth-github",
     "itemList": [],
     "isExternal": false,
-    "path": "/ci/recipes/on-premise/auth-github",
+    "path": "/ci/recipes/enterprise/on-premise/auth-github",
     "tags": []
   },
-  "/ci/recipes/on-premise/ami-setup": {
+  "/ci/recipes/enterprise/on-premise/ami-setup": {
     "id": "ami-setup",
     "name": "On-Prem VM Setup",
     "description": "",
     "mediaImage": "",
-    "file": "nx-cloud/private/ami-setup",
+    "file": "nx-cloud/enterprise/on-premise/ami-setup",
     "itemList": [],
     "isExternal": false,
-    "path": "/ci/recipes/on-premise/ami-setup",
+    "path": "/ci/recipes/enterprise/on-premise/ami-setup",
     "tags": []
   },
-  "/ci/recipes/on-premise/auth-gitlab": {
+  "/ci/recipes/enterprise/on-premise/auth-gitlab": {
     "id": "auth-gitlab",
     "name": "Authenticate with GitLab",
     "description": "",
     "mediaImage": "",
-    "file": "nx-cloud/private/auth-gitlab",
+    "file": "nx-cloud/enterprise/on-premise/auth-gitlab",
     "itemList": [],
     "isExternal": false,
-    "path": "/ci/recipes/on-premise/auth-gitlab",
+    "path": "/ci/recipes/enterprise/on-premise/auth-gitlab",
     "tags": []
   },
-  "/ci/recipes/on-premise/auth-bitbucket": {
+  "/ci/recipes/enterprise/on-premise/auth-bitbucket": {
     "id": "auth-bitbucket",
     "name": "Authenticate with BitBucket",
     "description": "",
     "mediaImage": "",
-    "file": "nx-cloud/private/auth-bitbucket",
+    "file": "nx-cloud/enterprise/on-premise/auth-bitbucket",
     "itemList": [],
     "isExternal": false,
-    "path": "/ci/recipes/on-premise/auth-bitbucket",
+    "path": "/ci/recipes/enterprise/on-premise/auth-bitbucket",
     "tags": []
   },
-  "/ci/recipes/on-premise/auth-saml": {
+  "/ci/recipes/enterprise/on-premise/auth-saml": {
     "id": "auth-saml",
     "name": "Authenticate via SAML",
     "description": "",
     "mediaImage": "",
-    "file": "nx-cloud/private/auth-saml",
+    "file": "nx-cloud/enterprise/on-premise/auth-saml",
     "itemList": [],
     "isExternal": false,
-    "path": "/ci/recipes/on-premise/auth-saml",
+    "path": "/ci/recipes/enterprise/on-premise/auth-saml",
     "tags": []
   },
-  "/ci/recipes/on-premise/auth-saml-managed": {
+  "/ci/recipes/enterprise/on-premise/auth-saml-managed": {
     "id": "auth-saml-managed",
     "name": "Authenticate via SAML on Managed Version",
     "description": "",
     "mediaImage": "",
-    "file": "nx-cloud/private/auth-saml-managed",
+    "file": "nx-cloud/enterprise/on-premise/auth-saml-managed",
     "itemList": [],
     "isExternal": false,
-    "path": "/ci/recipes/on-premise/auth-saml-managed",
+    "path": "/ci/recipes/enterprise/on-premise/auth-saml-managed",
     "tags": []
   },
-  "/ci/recipes/on-premise/advanced-config": {
+  "/ci/recipes/enterprise/on-premise/advanced-config": {
     "id": "advanced-config",
     "name": "Advanced Configuration",
     "description": "",
     "mediaImage": "",
-    "file": "nx-cloud/private/advanced-config",
+    "file": "nx-cloud/enterprise/on-premise/advanced-config",
     "itemList": [],
     "isExternal": false,
-    "path": "/ci/recipes/on-premise/advanced-config",
+    "path": "/ci/recipes/enterprise/on-premise/advanced-config",
+    "tags": []
+  },
+  "/ci/recipes/enterprise/dte": {
+    "id": "dte",
+    "name": "Custom Distributed Task Execution",
+    "description": "Custom DTE on your own CI provider",
+    "mediaImage": "",
+    "file": "",
+    "itemList": [
+      {
+        "id": "github-dte",
+        "name": "GitHub Actions Custom DTE",
+        "description": "",
+        "mediaImage": "",
+        "file": "nx-cloud/enterprise/dte/github-dte",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/recipes/enterprise/dte/github-dte",
+        "tags": []
+      },
+      {
+        "id": "circle-ci-dte",
+        "name": "Circle CI Custom DTE",
+        "description": "",
+        "mediaImage": "",
+        "file": "nx-cloud/enterprise/dte/circle-ci-dte",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/recipes/enterprise/dte/circle-ci-dte",
+        "tags": []
+      },
+      {
+        "id": "azure-dte",
+        "name": "Azure Pipelines Custom DTE",
+        "description": "",
+        "mediaImage": "",
+        "file": "nx-cloud/enterprise/dte/azure-dte",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/recipes/enterprise/dte/azure-dte",
+        "tags": []
+      },
+      {
+        "id": "bitbucket-dte",
+        "name": "Bitbucket Pipelines Custom DTE",
+        "description": "",
+        "mediaImage": "",
+        "file": "nx-cloud/enterprise/dte/bitbucket-dte",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/recipes/enterprise/dte/bitbucket-dte",
+        "tags": []
+      },
+      {
+        "id": "gitlab-dte",
+        "name": "GitLab Custom DTE",
+        "description": "",
+        "mediaImage": "",
+        "file": "nx-cloud/enterprise/dte/gitlab-dte",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/recipes/enterprise/dte/gitlab-dte",
+        "tags": []
+      },
+      {
+        "id": "jenkins-dte",
+        "name": "Jenkins Custom DTE",
+        "description": "",
+        "mediaImage": "",
+        "file": "nx-cloud/enterprise/dte/jenkins-dte",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/recipes/enterprise/dte/jenkins-dte",
+        "tags": []
+      }
+    ],
+    "isExternal": false,
+    "path": "/ci/recipes/enterprise/dte",
+    "tags": []
+  },
+  "/ci/recipes/enterprise/dte/github-dte": {
+    "id": "github-dte",
+    "name": "GitHub Actions Custom DTE",
+    "description": "",
+    "mediaImage": "",
+    "file": "nx-cloud/enterprise/dte/github-dte",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/recipes/enterprise/dte/github-dte",
+    "tags": []
+  },
+  "/ci/recipes/enterprise/dte/circle-ci-dte": {
+    "id": "circle-ci-dte",
+    "name": "Circle CI Custom DTE",
+    "description": "",
+    "mediaImage": "",
+    "file": "nx-cloud/enterprise/dte/circle-ci-dte",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/recipes/enterprise/dte/circle-ci-dte",
+    "tags": []
+  },
+  "/ci/recipes/enterprise/dte/azure-dte": {
+    "id": "azure-dte",
+    "name": "Azure Pipelines Custom DTE",
+    "description": "",
+    "mediaImage": "",
+    "file": "nx-cloud/enterprise/dte/azure-dte",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/recipes/enterprise/dte/azure-dte",
+    "tags": []
+  },
+  "/ci/recipes/enterprise/dte/bitbucket-dte": {
+    "id": "bitbucket-dte",
+    "name": "Bitbucket Pipelines Custom DTE",
+    "description": "",
+    "mediaImage": "",
+    "file": "nx-cloud/enterprise/dte/bitbucket-dte",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/recipes/enterprise/dte/bitbucket-dte",
+    "tags": []
+  },
+  "/ci/recipes/enterprise/dte/gitlab-dte": {
+    "id": "gitlab-dte",
+    "name": "GitLab Custom DTE",
+    "description": "",
+    "mediaImage": "",
+    "file": "nx-cloud/enterprise/dte/gitlab-dte",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/recipes/enterprise/dte/gitlab-dte",
+    "tags": []
+  },
+  "/ci/recipes/enterprise/dte/jenkins-dte": {
+    "id": "jenkins-dte",
+    "name": "Jenkins Custom DTE",
+    "description": "",
+    "mediaImage": "",
+    "file": "nx-cloud/enterprise/dte/jenkins-dte",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/recipes/enterprise/dte/jenkins-dte",
     "tags": []
   },
   "/ci/recipes/troubleshooting": {

@@ -37,7 +37,8 @@
               "@nx/webpack",
               "@nx/detox",
               "@nx/cypress",
-              "@nx/playwright"
+              "@nx/playwright",
+              "ajv"
             ]
           }
         ]
