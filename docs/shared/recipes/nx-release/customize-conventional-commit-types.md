@@ -54,13 +54,13 @@ When Nx Release detects a breaking change, it will bump the major version, regar
 
 Nx Release will sort changes within changelogs into sections based on the type of commit. By default, `fix`, `feat`, and `perf` commits will be included in the changelog. To customize the headers of changelog sections, include other commit types, or exclude the default commit types, see the [Configure Commit Types](#configure-commit-types) section below.
 
-See the [Nx repo](https://github.com/nrwl/nx/releases) for examples of a changelogs generated with Nx Release.
+See the [Nx repo](https://github.com/nrwl/nx/releases) for an example of a changelogs generated with Nx Release.
 
 ## Configure Commit Types
 
 Commit types are configured in the `release.conventionalCommits.types` property in `nx.json`:
 
-```json nx.json
+```json {% fileName="nx.json" %}
 {
   "release": {
     "conventionalCommits": {
@@ -105,7 +105,7 @@ Commit types are configured in the `release.conventionalCommits.types` property 
 In this example, the following types are configured:
 
 - The `fix` type has been fully disabled, so `fix` commits will not trigger a version bump and will not be included in the changelog.
-- The `docs` type will now trigger a `patch` version bump and will have the "Documentation Changes" title in the changelog.
+- The `docs` type will trigger a `patch` version bump and will have the "Documentation Changes" title in the changelog.
 - The `perf` type will NOT trigger a version bump and will have the "Performance Improvements" title in the changelog.
 - The `deps` type will trigger a `minor` version bump and will have the "Dependency Updates" title in the changelog.
 - The `chore` type will trigger a `patch` version bump, which is the default for if `versionBump` is not specified, and will not be included in the changelog.
