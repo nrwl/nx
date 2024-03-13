@@ -79,7 +79,7 @@ describe('@nx/eslint/plugin', () => {
       `);
     });
 
-    it('should create a node for a root level eslint config when accompanied by a project.json', async () => {
+    it('should not create a node for a root level eslint config when accompanied by a project.json, if no src directory is present', async () => {
       applyFilesToVolAndContext(
         {
           'eslint.config.js': `module.exports = {};`,
@@ -91,33 +91,7 @@ describe('@nx/eslint/plugin', () => {
       expect(await invokeCreateNodesOnMatchingFiles(context, 'lint'))
         .toMatchInlineSnapshot(`
         {
-          "projects": {
-            ".": {
-              "targets": {
-                "lint": {
-                  "cache": true,
-                  "command": "eslint .",
-                  "inputs": [
-                    "default",
-                    "^default",
-                    "{workspaceRoot}/eslint.config.js",
-                    "{workspaceRoot}/tools/eslint-rules/**/*",
-                    {
-                      "externalDependencies": [
-                        "eslint",
-                      ],
-                    },
-                  ],
-                  "options": {
-                    "cwd": ".",
-                    "env": {
-                      "ESLINT_USE_FLAT_CONFIG": "true",
-                    },
-                  },
-                },
-              },
-            },
-          },
+          "projects": {},
         }
       `);
     });
@@ -366,8 +340,10 @@ describe('@nx/eslint/plugin', () => {
           'package.json': `{}`,
           'apps/my-app/.eslintrc.json': `{}`,
           'apps/my-app/project.json': `{}`,
+          'apps/my-app/index.ts': `console.log('hello world')`,
           'libs/my-lib/.eslintrc.json': `{}`,
           'libs/my-lib/project.json': `{}`,
+          'libs/my-lib/index.ts': `console.log('hello world')`,
         },
         context
       );
@@ -375,7 +351,54 @@ describe('@nx/eslint/plugin', () => {
       expect(await invokeCreateNodesOnMatchingFiles(context, 'lint'))
         .toMatchInlineSnapshot(`
         {
-          "projects": {},
+          "projects": {
+            "apps/my-app": {
+              "targets": {
+                "lint": {
+                  "cache": true,
+                  "command": "eslint .",
+                  "inputs": [
+                    "default",
+                    "^default",
+                    "{workspaceRoot}/.eslintrc.json",
+                    "{projectRoot}/.eslintrc.json",
+                    "{workspaceRoot}/tools/eslint-rules/**/*",
+                    {
+                      "externalDependencies": [
+                        "eslint",
+                      ],
+                    },
+                  ],
+                  "options": {
+                    "cwd": "apps/my-app",
+                  },
+                },
+              },
+            },
+            "libs/my-lib": {
+              "targets": {
+                "lint": {
+                  "cache": true,
+                  "command": "eslint .",
+                  "inputs": [
+                    "default",
+                    "^default",
+                    "{workspaceRoot}/.eslintrc.json",
+                    "{projectRoot}/.eslintrc.json",
+                    "{workspaceRoot}/tools/eslint-rules/**/*",
+                    {
+                      "externalDependencies": [
+                        "eslint",
+                      ],
+                    },
+                  ],
+                  "options": {
+                    "cwd": "libs/my-lib",
+                  },
+                },
+              },
+            },
+          },
         }
       `);
     });
