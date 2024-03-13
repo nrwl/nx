@@ -1,12 +1,8 @@
-import {
-  ChevronRightIcon,
-  ClipboardDocumentCheckIcon,
-  ClipboardDocumentIcon,
-} from '@heroicons/react/24/outline';
 import { ButtonLink } from '@nx/nx-dev/ui-common';
 import { Fragment, useEffect, useState } from 'react';
 import { Transition } from '@headlessui/react';
 import { cx } from '@nx/nx-dev/ui-primitives';
+import Link from 'next/link';
 
 export function Hero(): JSX.Element {
   const [copied, setCopied] = useState(false);
@@ -33,14 +29,14 @@ export function Hero(): JSX.Element {
             Introducing{' '}
             <span className="text-blue-500 dark:text-sky-500">Nx Agents</span>,
             the next leap in CI.{' '}
-            <a
+            <Link
               href="/ci/features/nx-agents"
               title="Discover Nx Agents"
               className="font-semibold text-blue-500 dark:text-sky-500"
             >
               <span className="absolute inset-0" aria-hidden="true"></span>Read
               more <span aria-hidden="true">→</span>
-            </a>
+            </Link>
           </div>
         </div>
         <div className="text-center">
