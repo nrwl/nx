@@ -76,12 +76,12 @@ pipelines:
             - npm ci
 
             - npx nx-cloud record -- nx format:check
-            - npx nx affected -t lint test build e2e-ci --base=origin/main
+            - npx nx affected -t lint test build e2e-ci --base=origin/master
 
   branches:
     main:
       - step:
-          name: 'Build and test affected apps on "main" branch changes'
+          name: 'Build and test affected apps on "master" branch changes'
           script:
             # Connect your workspace on my.nx.app and uncomment this to enable task distribution.
             # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "e2e-ci" targets have been requested
@@ -113,7 +113,7 @@ jobs:
 
       - run: npm ci
       - nx/set-shas:
-          main-branch-name: 'main'
+          main-branch-name: 'master'
 
       - run: npx nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD
       - run: npx nx affected --base=$NX_BASE --head=$NX_HEAD -t lint test build e2e-ci
@@ -279,12 +279,12 @@ pipelines:
             - npm ci
 
             - npx nx-cloud record -- nx format:check
-            - npx nx affected -t lint test build --base=origin/main
+            - npx nx affected -t lint test build --base=origin/master
 
   branches:
     main:
       - step:
-          name: 'Build and test affected apps on "main" branch changes'
+          name: 'Build and test affected apps on "master" branch changes'
           script:
             # Connect your workspace on my.nx.app and uncomment this to enable task distribution.
             # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
@@ -316,7 +316,7 @@ jobs:
 
       - run: npm ci
       - nx/set-shas:
-          main-branch-name: 'main'
+          main-branch-name: 'master'
 
       - run: npx nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD
       - run: npx nx affected --base=$NX_BASE --head=$NX_HEAD -t lint test build
@@ -479,7 +479,7 @@ jobs:
 
       # Connect your workspace on my.nx.app and uncomment this to enable task distribution.
       # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
-      # - script: pnpm exec nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+      # - script: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
 
       - script: npm install --prefix=$HOME/.local -g pnpm@8
         displayName: Install PNPM
@@ -506,23 +506,23 @@ pipelines:
 
             # Connect your workspace on my.nx.app and uncomment this to enable task distribution.
             # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
-            # - pnpm exec nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+            # - npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
 
             - npm install --prefix=$HOME/.local -g pnpm@8
 
             - pnpm install --frozen-lockfile
 
             - pnpm exec nx-cloud record -- nx format:check
-            - pnpm exec nx affected -t lint test build --base=origin/main
+            - pnpm exec nx affected -t lint test build --base=origin/master
 
   branches:
     main:
       - step:
-          name: 'Build and test affected apps on "main" branch changes'
+          name: 'Build and test affected apps on "master" branch changes'
           script:
             # Connect your workspace on my.nx.app and uncomment this to enable task distribution.
             # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
-            # - pnpm exec nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+            # - npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
 
             - npm install --prefix=$HOME/.local -g pnpm@8
 
@@ -548,14 +548,14 @@ jobs:
 
       # Connect your workspace on my.nx.app and uncomment this to enable task distribution.
       # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
-      # - run: pnpm exec nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+      # - run: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
 
       - run:
           name: Install PNPM
           command: npm install --prefix=$HOME/.local -g pnpm@8
       - run: pnpm install --frozen-lockfile
       - nx/set-shas:
-          main-branch-name: 'main'
+          main-branch-name: 'master'
 
       - run: pnpm exec nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD
       - run: pnpm exec nx affected --base=$NX_BASE --head=$NX_HEAD -t lint test build
@@ -592,7 +592,7 @@ jobs:
 
       # Connect your workspace on my.nx.app and uncomment this to enable task distribution.
       # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
-      # - run: pnpm exec nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+      # - run: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
 
       - uses: pnpm/action-setup@v2
         with:
@@ -633,7 +633,7 @@ jobs:
 
       # Connect your workspace on my.nx.app and uncomment this to enable task distribution.
       # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
-      # - run: pnpm exec nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+      # - run: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
 
       - uses: pnpm/action-setup@v2
         with:
@@ -726,7 +726,7 @@ jobs:
 
       # Connect your workspace on my.nx.app and uncomment this to enable task distribution.
       # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
-      # - script: yarn nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+      # - script: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
 
       - script: yarn install --frozen-lockfile
 
@@ -751,21 +751,21 @@ pipelines:
 
             # Connect your workspace on my.nx.app and uncomment this to enable task distribution.
             # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
-            # - yarn nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+            # - npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
 
             - yarn install --frozen-lockfile
 
             - yarn nx-cloud record -- nx format:check
-            - yarn nx affected -t lint test build --base=origin/main
+            - yarn nx affected -t lint test build --base=origin/master
 
   branches:
     main:
       - step:
-          name: 'Build and test affected apps on "main" branch changes'
+          name: 'Build and test affected apps on "master" branch changes'
           script:
             # Connect your workspace on my.nx.app and uncomment this to enable task distribution.
             # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
-            # - yarn nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+            # - npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
 
             - yarn install --frozen-lockfile
 
@@ -789,11 +789,11 @@ jobs:
 
       # Connect your workspace on my.nx.app and uncomment this to enable task distribution.
       # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
-      # - run: yarn nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+      # - run: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
 
       - run: yarn install --frozen-lockfile
       - nx/set-shas:
-          main-branch-name: 'main'
+          main-branch-name: 'master'
 
       - run: yarn nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD
       - run: yarn nx affected --base=$NX_BASE --head=$NX_HEAD -t lint test build
@@ -830,7 +830,7 @@ jobs:
 
       # Connect your workspace on my.nx.app and uncomment this to enable task distribution.
       # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
-      # - run: yarn nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+      # - run: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
 
       # Cache node_modules
       - uses: actions/setup-node@v3
@@ -868,7 +868,7 @@ jobs:
 
       # Connect your workspace on my.nx.app and uncomment this to enable task distribution.
       # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
-      # - run: yarn nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+      # - run: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
 
       # Cache node_modules
       - uses: actions/setup-node@v3
