@@ -588,7 +588,7 @@ To define what a task does, you must configure which command or executor will ru
 
 For more details on how to pass args to the underlying command see the [Pass Args to Commands recipe](/recipes/running-tasks/pass-args-to-commands).
 
-In the case of an explicit target using an executor, you need to specify the executor and the options specific to that executor as follows:
+In the case of an explicit target using an executor, you can specify the executor and the options specific to that executor as follows:
 
 ```json
 {

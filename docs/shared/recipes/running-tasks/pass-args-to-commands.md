@@ -5,7 +5,7 @@ description: 'Recipe describing how to pass args to tasks running commands'
 
 # Pass Args to Commands
 
-When you have an [inferred task](/concepts/inferred-tasks) (or an [explicitly defined task](/recipes/running-tasks/run-commands-executor#2-update)) running a command, there'll come a time when you'll need to pass args to the underlying command being run. This recipe explains how you can achieve that.
+When you have an [inferred task](/concepts/inferred-tasks) (or an explicitly defined task using the [`nx:run-commands` executor](/recipes/running-tasks/run-commands-executor#2-update)) running a command, there'll come a time when you'll need to pass args to the underlying command being run. This recipe explains how you can achieve that.
 
 ## Example project and tasks
 
@@ -148,7 +148,7 @@ And the following [final configuration](/reference/project-configuration):
 
 {% /project-details %}
 
-We'll focus on the `build` target of the project. If you expand the target in the Project Details View above, you'll see that it runs the command `vite build`. In the next sections, we'll see how to provide `--assetsInlineLimit=2048` and `--assetsDir=static/assets` args to that command.
+We'll focus on the `build` target of the project. If you expand the `build` target in the Project Details View above, you'll see that it runs the command `vite build`. In the next sections, we'll see how to provide `--assetsInlineLimit=2048` and `--assetsDir=static/assets` args to that command.
 
 ## Pass args in the `project.json` task configuration
 
@@ -176,7 +176,11 @@ To statically pass some extra args to a specific project, you can update its `pr
 
 {% tab label="Setting the \"args\" option" %}
 
-```json {% fileName="apps/my-app/project.json" highlightLines=["5-12"] %}
+{% callout type="note" title="Providing command args as options" %}
+Support for providing command args as options was added in **Nx v18.1.1**.
+{% /callout %}
+
+```json {% fileName="apps/my-app/project.json" highlightLines=["5-11"] %}
 {
   "sourceRoot": "apps/my-app/src",
   "projectType": "application",
@@ -194,10 +198,6 @@ To statically pass some extra args to a specific project, you can update its `pr
 
 {% /tab %}
 {% /tabs %}
-
-{% callout type="note" title="Providing command args as options" %}
-Support for providing command args as options was added in **Nx v18.1.1**.
-{% /callout %}
 
 {% callout type="warning" title="Precedence" %}
 Args specified in the `args` option take precedence and will override any arg specified as an option with the same name. So, defining both `"args": ["--assetsDir=static/assets"]` and `"assetsDir": "different/path/to/assets"` will result in Nx running the command with `--assetsDir=static/assets`.
@@ -241,6 +241,10 @@ To provide the same args for all projects in the workspace, you need to update t
 
 {% /tab %}
 {% /tabs %}
+
+{% callout type="caution" title="Be careful" %}
+If multiple targets with the same name run different commands (or with different executors), do not set options in `targetDefaults`. Different commands would accept different options, and the target defaults will apply to all targets with the same name regardless of the command they run. If you were to provide options in `targetDefaults` for them, the different commands that don't expect those options could throw.
+{% /callout %}
 
 ## Pass args when running the command in the terminal
 
