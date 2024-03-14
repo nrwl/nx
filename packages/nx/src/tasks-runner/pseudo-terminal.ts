@@ -2,6 +2,7 @@ import { ChildProcess, RustPseudoTerminal } from '../native';
 import { PseudoIPCServer } from './pseudo-ipc';
 import { FORKED_PROCESS_OS_SOCKET_PATH } from '../daemon/socket-utils';
 import { Serializable } from 'child_process';
+import { signalToCode } from '../utils/exit-codes';
 
 let pseudoTerminal: PseudoTerminal;
 
@@ -12,13 +13,14 @@ export function getPseudoTerminal() {
 }
 
 export class PseudoTerminal {
-  constructor(private rustPseudoTerminal: RustPseudoTerminal) {}
-
   private pseudoIPCPath = FORKED_PROCESS_OS_SOCKET_PATH(process.pid.toString());
-
   private pseudoIPC = new PseudoIPCServer(this.pseudoIPCPath);
 
   private initialized: boolean = false;
+
+  constructor(private rustPseudoTerminal: RustPseudoTerminal) {
+    this.setupProcessListeners();
+  }
 
   async init() {
     if (this.initialized) {
@@ -87,7 +89,25 @@ export class PseudoTerminal {
     this.pseudoIPC.onMessageFromChildren(callback);
   }
 
-  kill() {
+  private setupProcessListeners() {
+    const shutdown = () => {
+      this.shutdownPseudoIPC();
+    };
+    process.on('SIGINT', () => {
+      this.shutdownPseudoIPC();
+    });
+    process.on('SIGTERM', () => {
+      this.shutdownPseudoIPC();
+    });
+    process.on('SIGHUP', () => {
+      this.shutdownPseudoIPC();
+    });
+    process.on('exit', () => {
+      this.shutdownPseudoIPC();
+    });
+  }
+
+  private shutdownPseudoIPC() {
     if (this.initialized) {
       this.pseudoIPC.close();
     }

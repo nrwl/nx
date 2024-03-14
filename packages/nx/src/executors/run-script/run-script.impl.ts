@@ -64,7 +64,6 @@ async function ptyProcess(
   return new Promise<void>((res, rej) => {
     const cp = terminal.runCommand(command, { cwd, jsEnv: env });
     cp.onExit((code) => {
-      terminal.kill();
       if (code === 0) {
         res();
       } else if (code >= 128) {

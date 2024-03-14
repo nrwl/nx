@@ -118,7 +118,6 @@ export default async function (
     const result = options.parallel
       ? await runInParallel(terminal, normalized, context)
       : await runSerially(terminal, normalized, context);
-    terminal.kill();
     return result;
   } catch (e) {
     if (process.env.NX_VERBOSE_LOGGING === 'true') {

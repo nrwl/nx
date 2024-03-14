@@ -130,7 +130,6 @@ async function printTargetRunHelpInternal(
     await new Promise(() => {
       const cp = terminal.runCommand(`${command} --help`);
       cp.onExit((code) => {
-        terminal.kill();
         process.exit(code);
       });
     });

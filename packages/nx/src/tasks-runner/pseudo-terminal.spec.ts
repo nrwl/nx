@@ -7,7 +7,6 @@ describe('PseudoTerminal', () => {
   });
 
   afterAll(() => {
-    terminal.kill();
     terminal = undefined;
   });
 

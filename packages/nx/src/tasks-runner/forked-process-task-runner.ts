@@ -491,10 +491,6 @@ export class ForkedProcessTaskRunner {
       // will store results to the cache and will terminate this process
     });
   }
-
-  destroy() {
-    this.pseudoTerminal.kill();
-  }
 }
 
 const colors = [
