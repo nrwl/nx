@@ -279,19 +279,21 @@ If you are using distributed task execution and disable caching for a given targ
 
 ### Executor/command options
 
-You can configure options specific to a target's executor. As an example, if your repo have projects using the `@nx/js:tsc` executor, you can provide some default options as follows:
+You can configure options specific to a target's executor. As an example, if your repo has projects using the `@nx/js:tsc` executor, you can provide some default options as follows:
 
 ```json {% fileName="nx.json" %}
 {
   "targetDefaults": {
     "@nx/js:tsc": {
-      "generateExportsField": true
+      "options": {
+        "generateExportsField": true
+      }
     }
   }
 }
 ```
 
-You can also provide defaults for [inferred targets](/concepts/inferred-tasks) or targets running a command using the `nx:run-commands` executor. As an example, if your repo has projects with a `build` inferred target running the `vite build` command, you can provide some defaults options as follows:
+You can also provide defaults for [inferred targets](/concepts/inferred-tasks) or targets running a command using the `nx:run-commands` executor. As an example, if your repo has projects where **all the `build` targets** run the same `vite build` command, you can provide some default options as follows:
 
 ```json {% fileName="nx.json" %}
 {
@@ -305,6 +307,10 @@ You can also provide defaults for [inferred targets](/concepts/inferred-tasks) o
   }
 }
 ```
+
+{% callout type="caution" title="Be careful" %}
+If multiple targets with the same name run different commands (or with different executors), do not set options in `targetDefaults`. Different commands would accept different options, and the target defaults will apply to all targets with the same name regardless of the command they run. If you were to provide options in `targetDefaults` for them, the different commands that don't expect those options could throw.
+{% /callout %}
 
 For more details on how to pass args to the underlying command see the [Pass Args to Commands recipe](/recipes/running-tasks/pass-args-to-commands).
 
