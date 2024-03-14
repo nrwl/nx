@@ -1,6 +1,7 @@
 import { ExecutorContext, joinPathFragments, readJsonFile } from '@nx/devkit';
 import { execSync } from 'child_process';
 import { env as appendLocalEnv } from 'npm-run-path';
+import { getNpmRegistry, getNpmTag } from '../../utils/npm-config';
 import { logTar } from './log-tar';
 import { PublishExecutorSchema } from './schema';
 import chalk = require('chalk');
@@ -56,32 +57,28 @@ export default async function runExecutor(
     };
   }
 
-  const npmPublishCommandSegments = [`npm publish --json`];
+  /*
+   * The registry obtained here is just used for logging. The tag is used for
+   * logging as well as updating the dist tag, if necessary.
+   *
+   * If not set in the options, then the actual registry and tag used for
+   * publishing are detected automatically by npm.
+   */
+  const registry =
+    options.registry ?? getNpmRegistry(packageName, context.root);
+  const tag = options.tag ?? getNpmTag(context.root);
+
   const npmViewCommandSegments = [
     `npm view ${packageName} versions dist-tags --json`,
   ];
+  const npmDistTagAddCommandSegments = [
+    `npm dist-tag add ${packageName}@${projectPackageJson.version} ${tag}`,
+  ];
 
   if (options.registry) {
-    npmPublishCommandSegments.push(`--registry=${options.registry}`);
     npmViewCommandSegments.push(`--registry=${options.registry}`);
+    npmDistTagAddCommandSegments.push(`--registry=${options.registry}`);
   }
-
-  if (options.tag) {
-    npmPublishCommandSegments.push(`--tag=${options.tag}`);
-  }
-
-  if (options.otp) {
-    npmPublishCommandSegments.push(`--otp=${options.otp}`);
-  }
-
-  if (isDryRun) {
-    npmPublishCommandSegments.push(`--dry-run`);
-  }
-
-  // Resolve values using the `npm config` command so that things like environment variables and `publishConfig`s are accounted for
-  const registry =
-    options.registry ?? execSync(`npm config get registry`).toString().trim();
-  const tag = options.tag ?? execSync(`npm config get tag`).toString().trim();
 
   /**
    * In a dry-run scenario, it is most likely that all commands are being run with dry-run, therefore
@@ -96,7 +93,7 @@ export default async function runExecutor(
     try {
       const result = execSync(npmViewCommandSegments.join(' '), {
         env: processEnv(true),
-        cwd: packageRoot,
+        cwd: context.root,
         stdio: ['ignore', 'pipe', 'pipe'],
       });
 
@@ -114,14 +111,11 @@ export default async function runExecutor(
       if (resultJson.versions.includes(currentVersion)) {
         try {
           if (!isDryRun) {
-            execSync(
-              `npm dist-tag add ${packageName}@${currentVersion} ${tag} --registry=${registry}`,
-              {
-                env: processEnv(true),
-                cwd: packageRoot,
-                stdio: 'ignore',
-              }
-            );
+            execSync(npmDistTagAddCommandSegments.join(' '), {
+              env: processEnv(true),
+              cwd: context.root,
+              stdio: 'ignore',
+            });
             console.log(
               `Added the dist-tag ${tag} to v${currentVersion} for registry ${registry}.\n`
             );
@@ -205,11 +199,29 @@ export default async function runExecutor(
     console.log('Skipped npm view because --first-release was set');
   }
 
+  const npmPublishCommandSegments = [`npm publish ${packageRoot} --json`];
+
+  if (options.registry) {
+    npmPublishCommandSegments.push(`--registry=${options.registry}`);
+  }
+
+  if (options.tag) {
+    npmPublishCommandSegments.push(`--tag=${options.tag}`);
+  }
+
+  if (options.otp) {
+    npmPublishCommandSegments.push(`--otp=${options.otp}`);
+  }
+
+  if (isDryRun) {
+    npmPublishCommandSegments.push(`--dry-run`);
+  }
+
   try {
     const output = execSync(npmPublishCommandSegments.join(' '), {
       maxBuffer: LARGE_BUFFER,
       env: processEnv(true),
-      cwd: packageRoot,
+      cwd: context.root,
       stdio: ['ignore', 'pipe', 'pipe'],
     });
 
