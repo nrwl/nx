@@ -1,4 +1,4 @@
-import { execSync } from 'child_process';
+import { exec } from 'child_process';
 
 /**
  * Returns the npm registry that is used for publishing.
@@ -12,16 +12,19 @@ import { execSync } from 'child_process';
  * @param packageName the name of the package from which to determine the scope
  * @param cwd the directory where the npm config should be read from
  */
-export function getNpmRegistry(packageName: string, cwd: string): string {
+export async function getNpmRegistry(
+  packageName: string,
+  cwd: string
+): Promise<string> {
   const scope = packageName.startsWith('@') ? packageName.split('/')[0] : null;
 
   let registry = undefined;
   if (scope) {
-    registry = getNpmConfigValue(`${scope}:registry`, cwd);
+    registry = await getNpmConfigValue(`${scope}:registry`, cwd);
   }
 
   if (!registry) {
-    registry = getNpmConfigValue('registry', cwd);
+    registry = await getNpmConfigValue('registry', cwd);
   }
 
   return registry;
@@ -37,20 +40,30 @@ export function getNpmRegistry(packageName: string, cwd: string): string {
  *
  * @param cwd the directory where the npm config should be read from
  */
-export function getNpmTag(cwd: string) {
+export async function getNpmTag(cwd: string): Promise<string> {
   return getNpmConfigValue('tag', cwd);
 }
 
-function getNpmConfigValue(key: string, cwd: string) {
+async function getNpmConfigValue(key: string, cwd: string): Promise<string> {
   try {
-    const result = execSync(`npm config get ${key}`, {
-      cwd,
-      stdio: 'pipe',
-    })
-      .toString()
-      .trim();
+    const result = await execAsync(`npm config get ${key}`, cwd);
     return result === 'undefined' ? undefined : result;
   } catch (e) {
-    return undefined;
+    return Promise.resolve(undefined);
   }
+}
+
+async function execAsync(command: string, cwd: string): Promise<string> {
+  // Must be non-blocking async to allow spinner to render
+  return new Promise<string>((resolve, reject) => {
+    exec(command, { cwd }, (error, stdout, stderr) => {
+      if (error) {
+        return reject(error);
+      }
+      if (stderr) {
+        return reject(stderr);
+      }
+      return resolve(stdout.trim());
+    });
+  });
 }

@@ -65,8 +65,8 @@ export default async function runExecutor(
    * publishing are detected automatically by npm.
    */
   const registry =
-    options.registry ?? getNpmRegistry(packageName, context.root);
-  const tag = options.tag ?? getNpmTag(context.root);
+    options.registry ?? (await getNpmRegistry(packageName, context.root));
+  const tag = options.tag ?? (await getNpmTag(context.root));
 
   const npmViewCommandSegments = [
     `npm view ${packageName} versions dist-tags --json`,

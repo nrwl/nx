@@ -31,6 +31,7 @@ import {
 import { interpolate } from 'nx/src/tasks-runner/utils';
 import * as ora from 'ora';
 import { prerelease } from 'semver';
+import { getNpmRegistry, getNpmTag } from '../../utils/npm-config';
 import { ReleaseVersionGeneratorSchema } from './schema';
 import { resolveLocalPackageDependencies } from './utils/resolve-local-package-dependencies';
 import { updateLockFile } from './utils/update-lock-file';
@@ -149,9 +150,8 @@ To fix this you will either need to add a package.json file at that location, or
           const metadata = options.currentVersionResolverMetadata;
           const registry =
             metadata?.registry ??
-            (await getNpmRegistry()) ??
-            'https://registry.npmjs.org';
-          const tag = metadata?.tag ?? 'latest';
+            (await getNpmRegistry(packageName, workspaceRoot));
+          const tag = metadata?.tag ?? (await getNpmTag(workspaceRoot));
 
           /**
            * If the currentVersionResolver is set to registry, and the projects are not independent, we only want to make the request once for the whole batch of projects.
@@ -569,19 +569,4 @@ function getColor(projectName: string) {
   const colorIndex = code % colors.length;
 
   return colors[colorIndex];
-}
-
-async function getNpmRegistry() {
-  // Must be non-blocking async to allow spinner to render
-  return await new Promise<string>((resolve, reject) => {
-    exec('npm config get registry', (error, stdout, stderr) => {
-      if (error) {
-        return reject(error);
-      }
-      if (stderr) {
-        return reject(stderr);
-      }
-      return resolve(stdout.trim());
-    });
-  });
 }
