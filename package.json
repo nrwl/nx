@@ -283,7 +283,7 @@
     "tsconfig-paths-webpack-plugin": "4.0.0",
     "typedoc": "0.25.12",
     "typedoc-plugin-markdown": "3.17.1",
-    "typescript": "~5.3.2",
+    "typescript": "~5.4.2",
     "unist-builder": "^4.0.0",
     "unzipper": "^0.10.11",
     "url-loader": "^4.1.1",
