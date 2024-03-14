@@ -30,7 +30,7 @@ export function Hero(): JSX.Element {
             <span className="text-blue-500 dark:text-sky-500">Nx Agents</span>,
             the next leap in CI.{' '}
             <Link
-              href="/ci/features/nx-agents"
+              href="/ci/features/distribute-task-execution"
               title="Discover Nx Agents"
               className="font-semibold text-blue-500 dark:text-sky-500"
             >

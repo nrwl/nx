@@ -166,7 +166,10 @@ export function NxWithCi(): JSX.Element {
                 <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500 to-green-500 rounded-lg blur-sm opacity-25 group-hover:opacity-90 transition duration-1000 group-hover:duration-200"></div>
                 <div className="relative flex gap-4 items-center rounded-lg border border-slate-200 bg-white p-4 text-lg shadow-sm transition focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 dark:border-slate-800/40 dark:bg-slate-800">
                   <NxAgentsIcon className="h-8 w-8" aria-hidden="true" />
-                  <a href="/ci/features/nx-agents" title="Discover Nx Agents">
+                  <a
+                    href="/ci/features/distribute-task-execution"
+                    title="Discover Nx Agents"
+                  >
                     <span className="absolute inset-0"></span>Nx Agents
                   </a>
                 </div>
