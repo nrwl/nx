@@ -1036,6 +1036,13 @@
       "id": "update-local-registry-setup",
       "name": "Update Your Local Registry Setup to use Nx Release",
       "path": "/recipes/nx-release/update-local-registry-setup"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/nx-release/customize-conventional-commit-types",
+      "id": "customize-conventional-commit-types",
+      "name": "Customize Conventional Commit Types",
+      "path": "/recipes/nx-release/customize-conventional-commit-types"
     }
   ],
   "database": [

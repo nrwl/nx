@@ -3188,6 +3188,17 @@
             "isExternal": false,
             "path": "/recipes/nx-release/update-local-registry-setup",
             "tags": ["nx-release"]
+          },
+          {
+            "id": "customize-conventional-commit-types",
+            "name": "Customize Conventional Commit Types",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/recipes/nx-release/customize-conventional-commit-types",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/nx-release/customize-conventional-commit-types",
+            "tags": ["nx-release"]
           }
         ],
         "isExternal": false,
@@ -5700,6 +5711,17 @@
         "isExternal": false,
         "path": "/recipes/nx-release/update-local-registry-setup",
         "tags": ["nx-release"]
+      },
+      {
+        "id": "customize-conventional-commit-types",
+        "name": "Customize Conventional Commit Types",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/nx-release/customize-conventional-commit-types",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/nx-release/customize-conventional-commit-types",
+        "tags": ["nx-release"]
       }
     ],
     "isExternal": false,
@@ -5781,6 +5803,17 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/nx-release/update-local-registry-setup",
+    "tags": ["nx-release"]
+  },
+  "/recipes/nx-release/customize-conventional-commit-types": {
+    "id": "customize-conventional-commit-types",
+    "name": "Customize Conventional Commit Types",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/nx-release/customize-conventional-commit-types",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/nx-release/customize-conventional-commit-types",
     "tags": ["nx-release"]
   },
   "/recipes/other": {
