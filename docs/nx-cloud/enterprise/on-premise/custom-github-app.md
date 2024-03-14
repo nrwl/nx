@@ -37,6 +37,24 @@ And then generate a new client secret, and save it somewhere secure (we'll use i
 
 ![Step 7](/nx-cloud/enterprise/on-premise/images/github_auth_step_7.png)
 
+## Configure Permissions for the GitHub App
+
+The following permissions are required for Nx Cloud to work:
+
+Repository permissions:
+
+- `Contents: Read & Write`
+- `Pull requests: Read & Write`
+- `Checks: Read Only`
+- `Commit Statuses: Read & Write`
+- `Issues: Read & Write`
+- `Metadata: Read Only`
+
+Organization permissions:
+
+- `Administration: Read Only`
+- `Members: Read Only`
+
 ## Configure Nx Cloud Installation
 
 ### Using Helm:
