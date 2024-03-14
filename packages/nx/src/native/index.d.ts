@@ -140,6 +140,17 @@ export interface FileMap {
   nonProjectFiles: Array<FileData>
 }
 export function testOnlyTransferFileMap(projectFiles: Record<string, Array<FileData>>, nonProjectFiles: Array<FileData>): NxWorkspaceFilesExternals
+export class ImportResult {
+  file: string
+  sourceProject: string
+  dynamicImportExpressions: Array<string>
+  staticImportExpressions: Array<string>
+}
+export class ChildProcess {
+  kill(): void
+  onExit(callback: (message: string) => void): void
+  onOutput(callback: (message: string) => void): void
+}
 export class RustPseudoTerminal {
   constructor()
   runCommand(command: string, commandDir?: string | undefined | null, jsEnv?: Record<string, string> | undefined | null, quiet?: boolean | undefined | null): ChildProcess
@@ -148,17 +159,6 @@ export class RustPseudoTerminal {
    * this makes it possible to be backwards compatible with the old implementation
    */
   fork(id: string, forkScript: string, pseudoIpcPath: string, commandDir: string | undefined | null, jsEnv: Record<string, string> | undefined | null, quiet: boolean): ChildProcess
-}
-export class ChildProcess {
-  kill(): void
-  onExit(callback: (message: string) => void): void
-  onOutput(callback: (message: string) => void): void
-}
-export class ImportResult {
-  file: string
-  sourceProject: string
-  dynamicImportExpressions: Array<string>
-  staticImportExpressions: Array<string>
 }
 export class HashPlanner {
   constructor(nxJson: NxJson, projectGraph: ExternalObject<ProjectGraph>)
