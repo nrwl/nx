@@ -309,7 +309,7 @@ You can also provide defaults for [inferred targets](/concepts/inferred-tasks) o
 ```
 
 {% callout type="caution" title="Be careful" %}
-If multiple targets with the same name run different commands (or with different executors), do not set options in `targetDefaults`. Different commands would accept different options, and the target defaults will apply to all targets with the same name regardless of the command they run. If you were to provide options in `targetDefaults` for them, the different commands that don't expect those options could throw.
+If multiple targets with the same name run different commands (or use different executors), do not set options in `targetDefaults`. Different commands would accept different options, and the target defaults will apply to all targets with the same name regardless of the command they run. If you were to provide options in `targetDefaults` for them, the commands that don't expect those options could throw an error.
 {% /callout %}
 
 For more details on how to pass args to the underlying command see the [Pass Args to Commands recipe](/recipes/running-tasks/pass-args-to-commands).
