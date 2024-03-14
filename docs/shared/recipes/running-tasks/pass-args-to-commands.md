@@ -243,7 +243,7 @@ To provide the same args for all projects in the workspace, you need to update t
 {% /tabs %}
 
 {% callout type="caution" title="Be careful" %}
-If multiple targets with the same name run different commands (or with different executors), do not set options in `targetDefaults`. Different commands would accept different options, and the target defaults will apply to all targets with the same name regardless of the command they run. If you were to provide options in `targetDefaults` for them, the different commands that don't expect those options could throw.
+If multiple targets with the same name run different commands (or use different executors), do not set options in `targetDefaults`. Different commands would accept different options, and the target defaults will apply to all targets with the same name regardless of the command they run. If you were to provide options in `targetDefaults` for them, the commands that don't expect those options could throw an error.
 {% /callout %}
 
 ## Pass args when running the command in the terminal
