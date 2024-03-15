@@ -822,6 +822,72 @@ describe('NPM lock file utility', () => {
         )
       );
     });
+
+    it('should prune cdn packages', () => {
+      const cdnPackageJson = require(joinPathFragments(
+        __dirname,
+        '__fixtures__/pruning/cdn/package.json'
+      ));
+
+      const hash = uniq('mock-hash');
+      const externalNodes = getNpmLockfileNodes(
+        JSON.stringify(rootLockFile),
+        hash
+      );
+      const pg = {
+        nodes: {},
+        dependencies: {},
+        externalNodes,
+      };
+      const ctx: CreateDependenciesContext = {
+        projects: {},
+        externalNodes,
+        fileMap: {
+          nonProjectFiles: [],
+          projectFileMap: {},
+        },
+        filesToProcess: {
+          nonProjectFiles: [],
+          projectFileMap: {},
+        },
+        nxJsonConfiguration: null,
+        workspaceRoot: '/virtual',
+      };
+      const dependencies = getNpmLockfileDependencies(
+        JSON.stringify(rootLockFile),
+        hash,
+        ctx
+      );
+
+      const builder = new ProjectGraphBuilder(pg);
+      for (const dep of dependencies) {
+        builder.addDependency(
+          dep.source,
+          dep.target,
+          dep.type,
+          'sourceFile' in dep ? dep.sourceFile : null
+        );
+      }
+      const graph = builder.getUpdatedProjectGraph();
+
+      const prunedGraph = pruneProjectGraph(graph, cdnPackageJson);
+      const result = stringifyNpmLockfile(
+        prunedGraph,
+        JSON.stringify(rootLockFile),
+        cdnPackageJson
+      );
+
+      expect(result).toEqual(
+        JSON.stringify(
+          require(joinPathFragments(
+            __dirname,
+            '__fixtures__/pruning/cdn/package-lock.json'
+          )),
+          null,
+          2
+        )
+      );
+    });
   });
 
   describe('workspaces', () => {
