@@ -1,9 +1,8 @@
 import * as path from 'path';
 import type { ExecutorContext } from '../../config/misc-interfaces';
-import { runCommand } from '../../native';
-import { PseudoTtyProcess } from '../../utils/child-process';
 import { getPackageManagerCommand } from '../../utils/package-manager';
 import { execSync } from 'child_process';
+import { getPseudoTerminal } from '../../tasks-runner/pseudo-terminal';
 
 export interface RunScriptOptions {
   script: string;
@@ -60,8 +59,10 @@ async function ptyProcess(
   cwd: string,
   env: Record<string, string>
 ) {
+  const terminal = getPseudoTerminal();
+
   return new Promise<void>((res, rej) => {
-    const cp = new PseudoTtyProcess(runCommand(command, cwd, env));
+    const cp = terminal.runCommand(command, { cwd, jsEnv: env });
     cp.onExit((code) => {
       if (code === 0) {
         res();

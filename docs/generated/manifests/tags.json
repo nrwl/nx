@@ -810,35 +810,35 @@
       "description": "",
       "file": "shared/recipes/database/nestjs-prisma",
       "id": "nestjs-prisma",
-      "name": "Using Prisma with NestJS",
+      "name": "Prisma with NestJS",
       "path": "/showcase/example-repos/nestjs-prisma"
     },
     {
       "description": "",
       "file": "shared/recipes/database/mongo-fastify",
       "id": "mongo-fastify",
-      "name": "Using Mongo with Fastify",
+      "name": "Mongo with Fastify",
       "path": "/showcase/example-repos/mongo-fastify"
     },
     {
       "description": "",
       "file": "shared/recipes/database/redis-fastify",
       "id": "redis-fastify",
-      "name": "Using Redis with Fastify",
+      "name": "Redis with Fastify",
       "path": "/showcase/example-repos/redis-fastify"
     },
     {
       "description": "",
       "file": "shared/recipes/database/postgres-fastify",
       "id": "postgres-fastify",
-      "name": "Using Postgres with Fastify",
+      "name": "Postgres with Fastify",
       "path": "/showcase/example-repos/postgres-fastify"
     },
     {
       "description": "",
       "file": "shared/recipes/database/serverless-fastify-planetscale",
       "id": "serverless-fastify-planetscale",
-      "name": "Using PlanetScale with Serverless Fastify",
+      "name": "PlanetScale with Serverless Fastify",
       "path": "/showcase/example-repos/serverless-fastify-planetscale"
     }
   ],
@@ -1050,35 +1050,35 @@
       "description": "",
       "file": "shared/recipes/database/nestjs-prisma",
       "id": "nestjs-prisma",
-      "name": "Using Prisma with NestJS",
+      "name": "Prisma with NestJS",
       "path": "/showcase/example-repos/nestjs-prisma"
     },
     {
       "description": "",
       "file": "shared/recipes/database/mongo-fastify",
       "id": "mongo-fastify",
-      "name": "Using Mongo with Fastify",
+      "name": "Mongo with Fastify",
       "path": "/showcase/example-repos/mongo-fastify"
     },
     {
       "description": "",
       "file": "shared/recipes/database/redis-fastify",
       "id": "redis-fastify",
-      "name": "Using Redis with Fastify",
+      "name": "Redis with Fastify",
       "path": "/showcase/example-repos/redis-fastify"
     },
     {
       "description": "",
       "file": "shared/recipes/database/postgres-fastify",
       "id": "postgres-fastify",
-      "name": "Using Postgres with Fastify",
+      "name": "Postgres with Fastify",
       "path": "/showcase/example-repos/postgres-fastify"
     },
     {
       "description": "",
       "file": "shared/recipes/database/serverless-fastify-planetscale",
       "id": "serverless-fastify-planetscale",
-      "name": "Using PlanetScale with Serverless Fastify",
+      "name": "PlanetScale with Serverless Fastify",
       "path": "/showcase/example-repos/serverless-fastify-planetscale"
     }
   ],
@@ -1087,7 +1087,7 @@
       "description": "",
       "file": "shared/recipes/database/serverless-fastify-planetscale",
       "id": "serverless-fastify-planetscale",
-      "name": "Using PlanetScale with Serverless Fastify",
+      "name": "PlanetScale with Serverless Fastify",
       "path": "/showcase/example-repos/serverless-fastify-planetscale"
     }
   ],
