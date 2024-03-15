@@ -191,6 +191,11 @@ export async function createNxReleaseConfig(
       userGroups[0].projectsRelationship === 'independent') ||
     (userConfig.projectsRelationship === 'independent' &&
       !userGroups.some((g) => g.projectsRelationship === 'fixed'));
+
+  const defaultRendererPath = join(
+    __dirname,
+    '../../../../release/changelog-renderer'
+  );
   const WORKSPACE_DEFAULTS: Omit<NxReleaseConfig, 'groups'> = {
     // By default all projects in all groups are released together
     projectsRelationship: workspaceProjectsRelationship,
@@ -211,7 +216,7 @@ export async function createNxReleaseConfig(
             entryWhenNoChanges:
               'This was a version bump only, there were no code changes.',
             file: '{workspaceRoot}/CHANGELOG.md',
-            renderer: 'nx/release/changelog-renderer',
+            renderer: defaultRendererPath,
             renderOptions: {
               authors: true,
               commitReferences: true,
@@ -225,7 +230,7 @@ export async function createNxReleaseConfig(
             file: '{projectRoot}/CHANGELOG.md',
             entryWhenNoChanges:
               'This was a version bump only for {projectName} to align it with other projects, there were no code changes.',
-            renderer: 'nx/release/changelog-renderer',
+            renderer: defaultRendererPath,
             renderOptions: {
               authors: true,
               commitReferences: true,
@@ -259,7 +264,7 @@ export async function createNxReleaseConfig(
       entryWhenNoChanges:
         'This was a version bump only for {projectName} to align it with other projects, there were no code changes.',
       file: '{projectRoot}/CHANGELOG.md',
-      renderer: 'nx/release/changelog-renderer',
+      renderer: defaultRendererPath,
       renderOptions: {
         authors: true,
         commitReferences: true,

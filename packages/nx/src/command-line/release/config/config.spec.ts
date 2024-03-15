@@ -1,7 +1,26 @@
 import { ProjectFileMap, ProjectGraph } from '../../../config/project-graph';
 import { TempFs } from '../../../internal-testing-utils/temp-fs';
 import { createNxReleaseConfig } from './config';
+import { join } from 'path';
 
+expect.addSnapshotSerializer({
+  serialize: (str: string) => {
+    // replace all instances of the workspace root with a placeholder to ensure consistency
+    return JSON.stringify(
+      str.replaceAll(
+        new RegExp(join(__dirname, '../../../..').replace(/\\/g, '\\\\'), 'g'),
+        '<dirname>'
+      )
+    );
+  },
+  test(val: string) {
+    return (
+      val != null &&
+      typeof val === 'string' &&
+      val.includes(join(__dirname, '../../../..'))
+    );
+  },
+});
 describe('createNxReleaseConfig()', () => {
   let projectGraph: ProjectGraph;
   let projectFileMap: ProjectFileMap;
@@ -132,7 +151,7 @@ describe('createNxReleaseConfig()', () => {
                   "commitReferences": true,
                   "versionTitleDate": true,
                 },
-                "renderer": "nx/release/changelog-renderer",
+                "renderer": "<dirname>/release/changelog-renderer",
               },
             },
             "conventionalCommits": {
@@ -304,7 +323,7 @@ describe('createNxReleaseConfig()', () => {
                   "commitReferences": true,
                   "versionTitleDate": true,
                 },
-                "renderer": "nx/release/changelog-renderer",
+                "renderer": "<dirname>/release/changelog-renderer",
               },
             },
             "conventionalCommits": {
@@ -479,7 +498,7 @@ describe('createNxReleaseConfig()', () => {
                   "commitReferences": true,
                   "versionTitleDate": true,
                 },
-                "renderer": "nx/release/changelog-renderer",
+                "renderer": "<dirname>/release/changelog-renderer",
               },
             },
             "conventionalCommits": {
@@ -685,7 +704,7 @@ describe('createNxReleaseConfig()', () => {
                   "commitReferences": true,
                   "versionTitleDate": true,
                 },
-                "renderer": "nx/release/changelog-renderer",
+                "renderer": "<dirname>/release/changelog-renderer",
               },
             },
             "conventionalCommits": {
@@ -875,7 +894,7 @@ describe('createNxReleaseConfig()', () => {
                   "commitReferences": true,
                   "versionTitleDate": true,
                 },
-                "renderer": "nx/release/changelog-renderer",
+                "renderer": "<dirname>/release/changelog-renderer",
               },
             },
             "conventionalCommits": {
@@ -1074,7 +1093,7 @@ describe('createNxReleaseConfig()', () => {
                   "commitReferences": true,
                   "versionTitleDate": true,
                 },
-                "renderer": "nx/release/changelog-renderer",
+                "renderer": "<dirname>/release/changelog-renderer",
               },
             },
             "conventionalCommits": {
@@ -1271,7 +1290,7 @@ describe('createNxReleaseConfig()', () => {
                   "commitReferences": true,
                   "versionTitleDate": true,
                 },
-                "renderer": "nx/release/changelog-renderer",
+                "renderer": "<dirname>/release/changelog-renderer",
               },
             },
             "conventionalCommits": {
@@ -1453,7 +1472,7 @@ describe('createNxReleaseConfig()', () => {
                   "commitReferences": true,
                   "versionTitleDate": true,
                 },
-                "renderer": "nx/release/changelog-renderer",
+                "renderer": "<dirname>/release/changelog-renderer",
               },
             },
             "conventionalCommits": {
@@ -1630,7 +1649,7 @@ describe('createNxReleaseConfig()', () => {
                   "commitReferences": true,
                   "versionTitleDate": true,
                 },
-                "renderer": "nx/release/changelog-renderer",
+                "renderer": "<dirname>/release/changelog-renderer",
               },
             },
             "conventionalCommits": {
@@ -2003,7 +2022,7 @@ describe('createNxReleaseConfig()', () => {
                   "commitReferences": true,
                   "versionTitleDate": true,
                 },
-                "renderer": "nx/release/changelog-renderer",
+                "renderer": "<dirname>/release/changelog-renderer",
               },
             },
             "conventionalCommits": {
@@ -2121,7 +2140,7 @@ describe('createNxReleaseConfig()', () => {
                     "commitReferences": true,
                     "versionTitleDate": true,
                   },
-                  "renderer": "nx/release/changelog-renderer",
+                  "renderer": "<dirname>/release/changelog-renderer",
                 },
                 "projects": [
                   "lib-a",
@@ -2304,7 +2323,7 @@ describe('createNxReleaseConfig()', () => {
                     "commitReferences": true,
                     "versionTitleDate": true,
                   },
-                  "renderer": "nx/release/changelog-renderer",
+                  "renderer": "<dirname>/release/changelog-renderer",
                 },
                 "projects": [
                   "lib-a",
@@ -2327,7 +2346,7 @@ describe('createNxReleaseConfig()', () => {
                     "commitReferences": true,
                     "versionTitleDate": true,
                   },
-                  "renderer": "nx/release/changelog-renderer",
+                  "renderer": "<dirname>/release/changelog-renderer",
                 },
                 "projects": [
                   "lib-b",
@@ -2507,7 +2526,7 @@ describe('createNxReleaseConfig()', () => {
                     "commitReferences": true,
                     "versionTitleDate": true,
                   },
-                  "renderer": "nx/release/changelog-renderer",
+                  "renderer": "<dirname>/release/changelog-renderer",
                 },
                 "projects": [
                   "lib-a",
@@ -2580,7 +2599,7 @@ describe('createNxReleaseConfig()', () => {
                   "commitReferences": true,
                   "versionTitleDate": true,
                 },
-                "renderer": "nx/release/changelog-renderer",
+                "renderer": "<dirname>/release/changelog-renderer",
               },
             },
             "conventionalCommits": {
@@ -2762,7 +2781,7 @@ describe('createNxReleaseConfig()', () => {
                   "commitReferences": true,
                   "versionTitleDate": true,
                 },
-                "renderer": "nx/release/changelog-renderer",
+                "renderer": "<dirname>/release/changelog-renderer",
               },
             },
             "conventionalCommits": {
@@ -2943,7 +2962,7 @@ describe('createNxReleaseConfig()', () => {
                   "commitReferences": true,
                   "versionTitleDate": true,
                 },
-                "renderer": "nx/release/changelog-renderer",
+                "renderer": "<dirname>/release/changelog-renderer",
               },
             },
             "conventionalCommits": {
@@ -3120,7 +3139,7 @@ describe('createNxReleaseConfig()', () => {
                   "commitReferences": true,
                   "versionTitleDate": true,
                 },
-                "renderer": "nx/release/changelog-renderer",
+                "renderer": "<dirname>/release/changelog-renderer",
               },
             },
             "conventionalCommits": {
@@ -3317,7 +3336,7 @@ describe('createNxReleaseConfig()', () => {
                   "commitReferences": true,
                   "versionTitleDate": true,
                 },
-                "renderer": "nx/release/changelog-renderer",
+                "renderer": "<dirname>/release/changelog-renderer",
               },
             },
             "conventionalCommits": {
@@ -3492,7 +3511,7 @@ describe('createNxReleaseConfig()', () => {
                   "commitReferences": true,
                   "versionTitleDate": true,
                 },
-                "renderer": "nx/release/changelog-renderer",
+                "renderer": "<dirname>/release/changelog-renderer",
               },
             },
             "conventionalCommits": {
@@ -3679,7 +3698,7 @@ describe('createNxReleaseConfig()', () => {
                   "commitReferences": true,
                   "versionTitleDate": true,
                 },
-                "renderer": "nx/release/changelog-renderer",
+                "renderer": "<dirname>/release/changelog-renderer",
               },
             },
             "conventionalCommits": {
@@ -3797,7 +3816,7 @@ describe('createNxReleaseConfig()', () => {
                     "commitReferences": true,
                     "versionTitleDate": true,
                   },
-                  "renderer": "nx/release/changelog-renderer",
+                  "renderer": "<dirname>/release/changelog-renderer",
                 },
                 "projects": [
                   "nx",
@@ -4047,7 +4066,7 @@ describe('createNxReleaseConfig()', () => {
                   "commitReferences": false,
                   "versionTitleDate": true,
                 },
-                "renderer": "nx/release/changelog-renderer",
+                "renderer": "<dirname>/release/changelog-renderer",
               },
               "workspaceChangelog": {
                 "createRelease": false,
@@ -4058,7 +4077,7 @@ describe('createNxReleaseConfig()', () => {
                   "commitReferences": true,
                   "versionTitleDate": true,
                 },
-                "renderer": "nx/release/changelog-renderer",
+                "renderer": "<dirname>/release/changelog-renderer",
               },
             },
             "conventionalCommits": {
@@ -4176,7 +4195,7 @@ describe('createNxReleaseConfig()', () => {
                     "commitReferences": false,
                     "versionTitleDate": true,
                   },
-                  "renderer": "nx/release/changelog-renderer",
+                  "renderer": "<dirname>/release/changelog-renderer",
                 },
                 "projects": [
                   "lib-a",
@@ -4245,7 +4264,7 @@ describe('createNxReleaseConfig()', () => {
                   "commitReferences": true,
                   "versionTitleDate": true,
                 },
-                "renderer": "nx/release/changelog-renderer",
+                "renderer": "<dirname>/release/changelog-renderer",
               },
               "workspaceChangelog": {
                 "createRelease": false,
@@ -4256,7 +4275,7 @@ describe('createNxReleaseConfig()', () => {
                   "commitReferences": true,
                   "versionTitleDate": true,
                 },
-                "renderer": "nx/release/changelog-renderer",
+                "renderer": "<dirname>/release/changelog-renderer",
               },
             },
             "conventionalCommits": {
@@ -4374,7 +4393,7 @@ describe('createNxReleaseConfig()', () => {
                     "commitReferences": true,
                     "versionTitleDate": true,
                   },
-                  "renderer": "nx/release/changelog-renderer",
+                  "renderer": "<dirname>/release/changelog-renderer",
                 },
                 "projects": [
                   "lib-a",
@@ -4444,7 +4463,7 @@ describe('createNxReleaseConfig()', () => {
                   "commitReferences": true,
                   "versionTitleDate": true,
                 },
-                "renderer": "nx/release/changelog-renderer",
+                "renderer": "<dirname>/release/changelog-renderer",
               },
             },
             "conventionalCommits": {
@@ -4622,7 +4641,7 @@ describe('createNxReleaseConfig()', () => {
                   "commitReferences": true,
                   "versionTitleDate": true,
                 },
-                "renderer": "nx/release/changelog-renderer",
+                "renderer": "<dirname>/release/changelog-renderer",
               },
             },
             "conventionalCommits": {
@@ -4798,7 +4817,7 @@ describe('createNxReleaseConfig()', () => {
                   "commitReferences": true,
                   "versionTitleDate": true,
                 },
-                "renderer": "nx/release/changelog-renderer",
+                "renderer": "<dirname>/release/changelog-renderer",
               },
             },
             "conventionalCommits": {
@@ -4996,7 +5015,7 @@ describe('createNxReleaseConfig()', () => {
                   "commitReferences": true,
                   "versionTitleDate": true,
                 },
-                "renderer": "nx/release/changelog-renderer",
+                "renderer": "<dirname>/release/changelog-renderer",
               },
             },
             "conventionalCommits": {
@@ -5191,7 +5210,7 @@ describe('createNxReleaseConfig()', () => {
                   "commitReferences": true,
                   "versionTitleDate": true,
                 },
-                "renderer": "nx/release/changelog-renderer",
+                "renderer": "<dirname>/release/changelog-renderer",
               },
             },
             "conventionalCommits": {
@@ -5382,7 +5401,7 @@ describe('createNxReleaseConfig()', () => {
                 "commitReferences": true,
                 "versionTitleDate": true,
               },
-              "renderer": "nx/release/changelog-renderer",
+              "renderer": "<dirname>/release/changelog-renderer",
             },
           },
           "conventionalCommits": {
@@ -5574,7 +5593,7 @@ describe('createNxReleaseConfig()', () => {
                   "commitReferences": true,
                   "versionTitleDate": true,
                 },
-                "renderer": "nx/release/changelog-renderer",
+                "renderer": "<dirname>/release/changelog-renderer",
               },
             },
             "conventionalCommits": {
@@ -5769,7 +5788,7 @@ describe('createNxReleaseConfig()', () => {
                 "commitReferences": true,
                 "versionTitleDate": true,
               },
-              "renderer": "nx/release/changelog-renderer",
+              "renderer": "<dirname>/release/changelog-renderer",
             },
           },
           "conventionalCommits": {
@@ -5981,7 +6000,7 @@ describe('createNxReleaseConfig()', () => {
                   "commitReferences": true,
                   "versionTitleDate": true,
                 },
-                "renderer": "nx/release/changelog-renderer",
+                "renderer": "<dirname>/release/changelog-renderer",
               },
               "workspaceChangelog": false,
             },
@@ -6100,7 +6119,7 @@ describe('createNxReleaseConfig()', () => {
                     "commitReferences": true,
                     "versionTitleDate": true,
                   },
-                  "renderer": "nx/release/changelog-renderer",
+                  "renderer": "<dirname>/release/changelog-renderer",
                 },
                 "projects": [
                   "lib-a",
@@ -6136,7 +6155,7 @@ describe('createNxReleaseConfig()', () => {
                     "commitReferences": true,
                     "versionTitleDate": true,
                   },
-                  "renderer": "nx/release/changelog-renderer",
+                  "renderer": "<dirname>/release/changelog-renderer",
                 },
                 "projects": [
                   "nx",
@@ -6215,7 +6234,7 @@ describe('createNxReleaseConfig()', () => {
                   "commitReferences": true,
                   "versionTitleDate": true,
                 },
-                "renderer": "nx/release/changelog-renderer",
+                "renderer": "<dirname>/release/changelog-renderer",
               },
               "workspaceChangelog": {
                 "createRelease": "github",
@@ -6226,7 +6245,7 @@ describe('createNxReleaseConfig()', () => {
                   "commitReferences": true,
                   "versionTitleDate": true,
                 },
-                "renderer": "nx/release/changelog-renderer",
+                "renderer": "<dirname>/release/changelog-renderer",
               },
             },
             "conventionalCommits": {
@@ -6344,7 +6363,7 @@ describe('createNxReleaseConfig()', () => {
                     "commitReferences": true,
                     "versionTitleDate": true,
                   },
-                  "renderer": "nx/release/changelog-renderer",
+                  "renderer": "<dirname>/release/changelog-renderer",
                 },
                 "projects": [
                   "lib-a",
@@ -6966,7 +6985,7 @@ describe('createNxReleaseConfig()', () => {
                   "commitReferences": true,
                   "versionTitleDate": true,
                 },
-                "renderer": "nx/release/changelog-renderer",
+                "renderer": "<dirname>/release/changelog-renderer",
               },
             },
             "conventionalCommits": {
@@ -7150,7 +7169,7 @@ describe('createNxReleaseConfig()', () => {
                   "commitReferences": true,
                   "versionTitleDate": true,
                 },
-                "renderer": "nx/release/changelog-renderer",
+                "renderer": "<dirname>/release/changelog-renderer",
               },
             },
             "conventionalCommits": {
@@ -7333,7 +7352,7 @@ describe('createNxReleaseConfig()', () => {
                   "commitReferences": true,
                   "versionTitleDate": true,
                 },
-                "renderer": "nx/release/changelog-renderer",
+                "renderer": "<dirname>/release/changelog-renderer",
               },
             },
             "conventionalCommits": {
@@ -7524,7 +7543,7 @@ describe('createNxReleaseConfig()', () => {
                   "commitReferences": true,
                   "versionTitleDate": true,
                 },
-                "renderer": "nx/release/changelog-renderer",
+                "renderer": "<dirname>/release/changelog-renderer",
               },
             },
             "conventionalCommits": {
@@ -7705,7 +7724,7 @@ describe('createNxReleaseConfig()', () => {
                   "commitReferences": true,
                   "versionTitleDate": true,
                 },
-                "renderer": "nx/release/changelog-renderer",
+                "renderer": "<dirname>/release/changelog-renderer",
               },
             },
             "conventionalCommits": {
