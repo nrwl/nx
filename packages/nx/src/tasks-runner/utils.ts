@@ -187,6 +187,7 @@ export function getOutputsForTargetAndConfiguration(
   if (targetConfiguration?.outputs) {
     validateOutputs(targetConfiguration.outputs);
 
+    const seen = new Set();
     return targetConfiguration.outputs
       .map((output: string) => {
         return interpolate(output, {
@@ -195,6 +196,14 @@ export function getOutputsForTargetAndConfiguration(
           project: { ...node.data, name: node.name }, // this is legacy
           options,
         });
+      })
+      .filter((output) => !!output && !output.match(/{.*}/))
+      .filter((p) => {
+        if (seen.has(p)) {
+          return false;
+        }
+        seen.add(p);
+        return true;
       })
       .filter(
         (output) =>
