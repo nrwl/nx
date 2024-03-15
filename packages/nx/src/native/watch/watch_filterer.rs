@@ -56,10 +56,11 @@ impl Filterer for WatchFilterer {
         let transformed = transform_event(watch_event);
         let event = transformed.as_ref().unwrap_or(watch_event);
 
-        trace!(?event, "checking if event is valid");
         if !self.filter_event(event, priority) {
             return Ok(false);
         }
+
+        trace!(?event, "checking if event is valid");
 
         //
         // Tags will be a Vec that contains multiple types of information for a given event
