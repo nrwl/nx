@@ -104,10 +104,10 @@ export async function initGenerator(
     '.prettierrc.js',
     '.prettierrc.cjs',
     '.prettierrc.mjs',
+    '.prettierrc.toml',
     'prettier.config.js',
     'prettier.config.cjs',
     'prettier.config.mjs',
-    '.prettierrc.toml',
   ];
 
   if (prettierrcNameOptions.every((name) => !tree.exists(name))) {
