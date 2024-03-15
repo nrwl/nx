@@ -3,8 +3,10 @@ import {
   CreateNodes,
   CreateNodesContext,
   detectPackageManager,
+  getProjects,
   joinPathFragments,
   readJsonFile,
+  readProjectsConfigurationFromProjectGraph,
   TargetConfiguration,
   workspaceRoot,
   writeJsonFile,
@@ -16,6 +18,7 @@ import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash
 import { projectGraphCacheDirectory } from 'nx/src/utils/cache-directory';
 import { getLockFileName } from '@nx/js';
 import { loadViteDynamicImport } from '../utils/executor-utils';
+import { projectFoundInRootPath } from '@nx/devkit/src/utils/project-found-in-root-path';
 
 export interface VitePluginOptions {
   buildTargetName?: string;
@@ -55,12 +58,9 @@ export const createNodes: CreateNodes<VitePluginOptions> = [
   '**/{vite,vitest}.config.{js,ts,mjs,mts,cjs,cts}',
   async (configFilePath, options, context) => {
     const projectRoot = dirname(configFilePath);
-    // Do not create a project if package.json and project.json isn't there.
-    const siblingFiles = readdirSync(join(context.workspaceRoot, projectRoot));
-    if (
-      !siblingFiles.includes('package.json') &&
-      !siblingFiles.includes('project.json')
-    ) {
+
+    // Configurations will be generated only if project exists at projectRoot
+    if (!projectFoundInRootPath(projectRoot, context)) {
       return {};
     }
 

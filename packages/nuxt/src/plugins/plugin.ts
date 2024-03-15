@@ -16,6 +16,7 @@ import { existsSync, readdirSync } from 'fs';
 import { loadNuxtKitDynamicImport } from '../utils/executor-utils';
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { getLockFileName } from '@nx/js';
+import { projectFoundInRootPath } from '@nx/devkit/src/utils/project-found-in-root-path';
 
 const cachePath = join(projectGraphCacheDirectory, 'nuxt.hash');
 const targetsCache = existsSync(cachePath) ? readTargetsCache() : {};
@@ -54,12 +55,9 @@ export const createNodes: CreateNodes<NuxtPluginOptions> = [
   '**/nuxt.config.{js,ts,mjs,mts,cjs,cts}',
   async (configFilePath, options, context) => {
     const projectRoot = dirname(configFilePath);
-    // Do not create a project if package.json and project.json isn't there.
-    const siblingFiles = readdirSync(join(context.workspaceRoot, projectRoot));
-    if (
-      !siblingFiles.includes('package.json') &&
-      !siblingFiles.includes('project.json')
-    ) {
+
+    // Configurations will be generated only if project exists at projectRoot
+    if (!projectFoundInRootPath(projectRoot, context)) {
       return {};
     }
 
