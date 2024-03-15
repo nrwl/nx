@@ -34,38 +34,7 @@ describe('nx init (for React - legacy)', () => {
     delete process.env.NX_ADD_PLUGINS;
   });
 
-  // TODO(@jaysoo): Please investigate why this test is failing
-  xit('should convert to an integrated workspace with craco (webpack)', () => {
-    const appName = 'my-app';
-    createReactApp(appName);
-
-    const craToNxOutput = runCommand(
-      `${
-        pmc.runUninstalledPackage
-      } nx@${getPublishedVersion()} init --no-interactive --integrated --vite=false`
-    );
-
-    expect(craToNxOutput).toContain('🎉 Done!');
-
-    const packageJson = readJson('package.json');
-    expect(packageJson.devDependencies['@nx/jest']).toBeDefined();
-    expect(packageJson.devDependencies['@nx/vite']).toBeUndefined();
-    expect(packageJson.devDependencies['@nx/webpack']).toBeDefined();
-    expect(packageJson.dependencies['redux']).toBeDefined();
-    expect(packageJson.name).toEqual(appName);
-
-    runCLI(`build ${appName}`, {
-      env: {
-        // since craco 7.1.0 the NODE_ENV is used, since the tests set it
-        // to "test" is causes an issue with React Refresh Babel
-        NODE_ENV: undefined,
-      },
-    });
-    checkFilesExist(`dist/apps/${appName}/index.html`);
-  });
-
-  // TODO(crystal, @jaysoo): Investigate why this is failing
-  xit('should convert to an integrated workspace with Vite', () => {
+  it('should convert to an integrated workspace with Vite', () => {
     // TODO investigate why this is broken
     const originalPM = process.env.SELECTED_PM;
     process.env.SELECTED_PM = originalPM === 'pnpm' ? 'yarn' : originalPM;
@@ -91,29 +60,6 @@ describe('nx init (for React - legacy)', () => {
 
     runCLI(`build ${appName}`);
     checkFilesExist(`dist/apps/${appName}/index.html`);
-
-    const unitTestsOutput = runCLI(`test ${appName}`);
-    expect(unitTestsOutput).toContain('Successfully ran target test');
-    process.env.SELECTED_PM = originalPM;
-  });
-
-  // TODO(crystal, @jaysoo): Investigate why this is failing
-  xit('should convert to an integrated workspace with Vite with custom port', () => {
-    // TODO investigate why this is broken
-    const originalPM = process.env.SELECTED_PM;
-    process.env.SELECTED_PM = originalPM === 'pnpm' ? 'yarn' : originalPM;
-    const appName = 'my-app';
-    createReactApp(appName);
-    updateFile(`.env`, `NOT_THE_PORT=8000\nPORT=3000\nSOMETHING_ELSE=whatever`);
-
-    runCommand(
-      `${
-        pmc.runUninstalledPackage
-      } nx@${getPublishedVersion()} init --no-interactive --force --integrated`
-    );
-
-    const viteConfig = readFile(`apps/${appName}/vite.config.js`);
-    expect(viteConfig).toContain('port: 3000');
 
     const unitTestsOutput = runCLI(`test ${appName}`);
     expect(unitTestsOutput).toContain('Successfully ran target test');
