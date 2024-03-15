@@ -99,7 +99,6 @@ export class TaskOrchestrator {
       'task-execution:start',
       'task-execution:end'
     );
-    this.forkedProcessTaskRunner.destroy();
     this.cache.removeOldCacheRecords();
 
     return this.completedTasks;

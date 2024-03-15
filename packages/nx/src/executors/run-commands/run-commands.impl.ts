@@ -4,8 +4,10 @@ import * as yargsParser from 'yargs-parser';
 import { env as appendLocalEnv } from 'npm-run-path';
 import { ExecutorContext } from '../../config/misc-interfaces';
 import * as chalk from 'chalk';
-import { runCommand } from '../../native';
-import { PseudoTtyProcess } from '../../utils/child-process';
+import {
+  getPseudoTerminal,
+  PseudoTerminal,
+} from '../../tasks-runner/pseudo-terminal';
 
 export const LARGE_BUFFER = 1024 * 1000000;
 
@@ -110,10 +112,12 @@ export default async function (
     );
   }
 
+  const terminal = getPseudoTerminal();
+
   try {
     const result = options.parallel
-      ? await runInParallel(normalized, context)
-      : await runSerially(normalized, context);
+      ? await runInParallel(terminal, normalized, context)
+      : await runSerially(terminal, normalized, context);
     return result;
   } catch (e) {
     if (process.env.NX_VERBOSE_LOGGING === 'true') {
@@ -126,11 +130,13 @@ export default async function (
 }
 
 async function runInParallel(
+  pseudoTerminal: PseudoTerminal,
   options: NormalizedRunCommandsOptions,
   context: ExecutorContext
 ): Promise<{ success: boolean; terminalOutput: string }> {
   const procs = options.commands.map((c) =>
     createProcess(
+      pseudoTerminal,
       c,
       options.readyWhen,
       options.color,
@@ -239,6 +245,7 @@ function normalizeOptions(
 }
 
 async function runSerially(
+  pseudoTerminal: PseudoTerminal,
   options: NormalizedRunCommandsOptions,
   context: ExecutorContext
 ): Promise<{ success: boolean; terminalOutput: string }> {
@@ -246,6 +253,7 @@ async function runSerially(
   for (const c of options.commands) {
     const result: { success: boolean; terminalOutput: string } =
       await createProcess(
+        pseudoTerminal,
         c,
         undefined,
         options.color,
@@ -269,6 +277,7 @@ async function runSerially(
 }
 
 async function createProcess(
+  pseudoTerminal: PseudoTerminal,
   commandConfig: {
     command: string;
     color?: string;
@@ -293,9 +302,11 @@ async function createProcess(
     !isParallel &&
     usePty
   ) {
-    const cp = new PseudoTtyProcess(
-      runCommand(commandConfig.command, cwd, env, !streamOutput)
-    );
+    const cp = pseudoTerminal.runCommand(commandConfig.command, {
+      cwd,
+      jsEnv: env,
+      quiet: !streamOutput,
+    });
 
     let terminalOutput = '';
     return new Promise((res) => {
