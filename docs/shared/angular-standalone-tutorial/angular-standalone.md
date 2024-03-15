@@ -204,7 +204,7 @@ nx e2e e2e # runs e2e tests from the e2e project with Cypress
 
 ### Inferred Tasks
 
-Nx identifies available tasks for your project from [tooling configuration files](/concepts/inferred-tasks), `package.json` scripts and the targets defined in `project.json`. All tasks from the `myngapp` project are defined in its `project.json` file, but the companion `e2e` project has its tasks inferred from configuration files. To view the tasks that Nx has detected, look in the [Nx Console](/features/integrate-with-editors) [Project Details View](/recipes/nx-console/console-project-details) or run:
+Nx identifies available tasks for your project from [tooling configuration files](/concepts/inferred-tasks), `package.json` scripts and the targets defined in `project.json`. All tasks from the `myngapp` project are defined in its `project.json` file, but the companion `e2e` project has its tasks inferred from configuration files. To view the tasks that Nx has detected, look in the [Nx Console](/features/integrate-with-editors), [Project Details View](/recipes/nx-console/console-project-details) or run:
 
 ```shell
 nx show project e2e --web
@@ -370,7 +370,7 @@ If you expand the `e2e` task, you can see that it was created by the `@nx/cypres
 ]
 ```
 
-This value is being read from the `videosFolder` and `screenshotsFolder` defined by the `nxE2EPreset` in your `e2e/cypress.config.ts` file. Let's change their value in your `e2e/cypresss.config.ts` file:
+This value is being read from the `videosFolder` and `screenshotsFolder` defined by the `nxE2EPreset` in your `e2e/cypress.config.ts` file. Let's change their value in your `e2e/cypress.config.ts` file:
 
 ```ts {% fileName="e2e/cypress.config.ts" highlightLines=[8,9] %}
 // ...
