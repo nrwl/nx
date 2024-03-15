@@ -20,6 +20,8 @@ export default async function* reactNativeStorybookExecutor(
   options: ReactNativeStorybookOptions,
   context: ExecutorContext
 ): AsyncGenerator<{ success: boolean }> {
+  const { syncDeps: isSyncDepsEnabled = true } = options;
+
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
   logger.info(
@@ -37,7 +39,7 @@ export default async function* reactNativeStorybookExecutor(
   );
   const projectPackageJson = readJsonFile<PackageJson>(packageJsonPath);
 
-  if (fileExists(packageJsonPath))
+  if (isSyncDepsEnabled && fileExists(packageJsonPath))
     displayNewlyAddedDepsMessage(
       context.projectName,
       await syncDeps(
