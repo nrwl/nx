@@ -1155,6 +1155,12 @@
                   "id": "update-local-registry-setup",
                   "tags": ["nx-release"],
                   "file": "shared/recipes/nx-release/update-local-registry-setup"
+                },
+                {
+                  "name": "Customize Conventional Commit Types",
+                  "id": "customize-conventional-commit-types",
+                  "tags": ["nx-release"],
+                  "file": "shared/recipes/nx-release/customize-conventional-commit-types"
                 }
               ]
             },

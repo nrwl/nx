@@ -1,8 +1,8 @@
-import addMfEnvVarToTargetDefaults from './add-mf-env-var-to-target-defaults';
+import fixTargetDefaultsInputs from './fix-target-defaults-inputs';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { addProjectConfiguration, readNxJson, updateNxJson } from '@nx/devkit';
 
-describe('addMfEnvVarToTargetDefaults', () => {
+describe('fixTargetDefaultsInputs', () => {
   it('should add the executor and input when it does not exist', async () => {
     // ARRANGE
     const tree = createTreeWithEmptyWorkspace();
@@ -10,21 +10,20 @@ describe('addMfEnvVarToTargetDefaults', () => {
       root: '',
       targets: {
         build: {
-          executor: '@nx/angular:webpack-browser',
+          executor: '@nx/webpack:webpack',
         },
       },
     });
-
     tree.write('module-federation.config.ts', '');
 
     // ACT
-    await addMfEnvVarToTargetDefaults(tree);
+    await fixTargetDefaultsInputs(tree);
 
     // ASSERT
     const nxJson = readNxJson(tree);
     expect(nxJson.targetDefaults).toMatchInlineSnapshot(`
       {
-        "@nx/angular:webpack-browser": {
+        "@nx/webpack:webpack": {
           "inputs": [
             "production",
             "^production",
@@ -56,7 +55,7 @@ describe('addMfEnvVarToTargetDefaults', () => {
     });
 
     // ACT
-    await addMfEnvVarToTargetDefaults(tree);
+    await fixTargetDefaultsInputs(tree);
 
     // ASSERT
     const nxJson = readNxJson(tree);
@@ -79,10 +78,11 @@ describe('addMfEnvVarToTargetDefaults', () => {
       root: '',
       targets: {
         build: {
-          executor: '@nx/angular:webpack-browser',
+          executor: '@nx/webpack:webpack',
         },
       },
     });
+
     tree.write('module-federation.config.ts', '');
 
     let nxJson = readNxJson(tree);
@@ -90,7 +90,7 @@ describe('addMfEnvVarToTargetDefaults', () => {
       ...nxJson,
       targetDefaults: {
         ...nxJson.targetDefaults,
-        ['@nx/angular:webpack-browser']: {
+        ['@nx/webpack:webpack']: {
           inputs: ['^build'],
         },
       },
@@ -99,15 +99,17 @@ describe('addMfEnvVarToTargetDefaults', () => {
     updateNxJson(tree, nxJson);
 
     // ACT
-    await addMfEnvVarToTargetDefaults(tree);
+    await fixTargetDefaultsInputs(tree);
 
     // ASSERT
     nxJson = readNxJson(tree);
     expect(nxJson.targetDefaults).toMatchInlineSnapshot(`
       {
-        "@nx/angular:webpack-browser": {
+        "@nx/webpack:webpack": {
           "inputs": [
             "^build",
+            "production",
+            "^production",
             {
               "env": "NX_MF_DEV_SERVER_STATIC_REMOTES",
             },

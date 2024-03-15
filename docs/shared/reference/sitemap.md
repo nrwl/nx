@@ -184,6 +184,7 @@
       - [Automate GitHub Releases](/recipes/nx-release/automate-github-releases)
       - [Publish Rust Crates](/recipes/nx-release/publish-rust-crates)
       - [Update Your Local Registry Setup to use Nx Release](/recipes/nx-release/update-local-registry-setup)
+      - [Customize Conventional Commit Types](/recipes/nx-release/customize-conventional-commit-types)
     - [Other](/recipes/other)
       - [Rescope Packages from @nrwl to @nx](/recipes/other/rescope)
   - [Showcase](/showcase)

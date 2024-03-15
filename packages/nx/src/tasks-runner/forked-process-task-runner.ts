@@ -14,8 +14,8 @@ import {
 } from './batch/batch-messages';
 import { stripIndents } from '../utils/strip-indents';
 import { Task, TaskGraph } from '../config/task-graph';
-import { Readable, Transform } from 'stream';
-import { ChildProcess as NativeChildProcess, nxFork } from '../native';
+import { Transform } from 'stream';
+import { nxFork } from '../native';
 import { PsuedoIPCServer } from './psuedo-ipc';
 import { FORKED_PROCESS_OS_SOCKET_PATH } from '../daemon/socket-utils';
 import { PseudoTtyProcess } from '../utils/child-process';

@@ -241,7 +241,8 @@ export async function releaseChangelog(
 
   const workspaceChangelogCommits = await getCommits(
     workspaceChangelogFromSHA,
-    toSHA
+    toSHA,
+    nxReleaseConfig.conventionalCommits
   );
 
   const workspaceChangelog = await generateChangelogForWorkspace(
@@ -317,7 +318,11 @@ export async function releaseChangelog(
 
         if (!fromRef && useAutomaticFromRef) {
           const firstCommit = await getFirstGitCommit();
-          const allCommits = await getCommits(firstCommit, toSHA);
+          const allCommits = await getCommits(
+            firstCommit,
+            toSHA,
+            nxReleaseConfig.conventionalCommits
+          );
           const commitsForProject = allCommits.filter((c) =>
             c.affectedFiles.find((f) => f.startsWith(project.data.root))
           );
@@ -338,7 +343,11 @@ export async function releaseChangelog(
         }
 
         if (!commits) {
-          commits = await getCommits(fromRef, toSHA);
+          commits = await getCommits(
+            fromRef,
+            toSHA,
+            nxReleaseConfig.conventionalCommits
+          );
         }
 
         const projectChangelogs = await generateChangelogForProjects(
@@ -347,9 +356,9 @@ export async function releaseChangelog(
           projectGraph,
           commits,
           projectsVersionData,
-          postGitTasks,
           releaseGroup,
-          [project]
+          [project],
+          nxReleaseConfig
         );
 
         let hasPushed = false;
@@ -402,7 +411,11 @@ export async function releaseChangelog(
       // Make sure that the fromRef is actually resolvable
       const fromSHA = await getCommitHash(fromRef);
 
-      const commits = await getCommits(fromSHA, toSHA);
+      const commits = await getCommits(
+        fromSHA,
+        toSHA,
+        nxReleaseConfig.conventionalCommits
+      );
 
       const projectChangelogs = await generateChangelogForProjects(
         tree,
@@ -410,9 +423,9 @@ export async function releaseChangelog(
         projectGraph,
         commits,
         projectsVersionData,
-        postGitTasks,
         releaseGroup,
-        projectNodes
+        projectNodes,
+        nxReleaseConfig
       );
 
       let hasPushed = false;
@@ -744,6 +757,7 @@ async function generateChangelogForWorkspace(
     repoSlug: githubRepoSlug,
     entryWhenNoChanges: config.entryWhenNoChanges,
     changelogRenderOptions: config.renderOptions,
+    conventionalCommitsConfig: nxReleaseConfig.conventionalCommits,
   });
 
   /**
@@ -806,9 +820,9 @@ async function generateChangelogForProjects(
   projectGraph: ProjectGraph,
   commits: GitCommit[],
   projectsVersionData: VersionData,
-  postGitTasks: PostGitTask[],
   releaseGroup: ReleaseGroupWithName,
-  projects: ProjectGraphProjectNode[]
+  projects: ProjectGraphProjectNode[],
+  nxReleaseConfig: NxReleaseConfig
 ): Promise<NxReleaseChangelogResult['projectChangelogs']> {
   const config = releaseGroup.changelog;
   // The entire feature is disabled at the release group level, exit early
@@ -879,6 +893,7 @@ async function generateChangelogForProjects(
             })
           : false,
       changelogRenderOptions: config.renderOptions,
+      conventionalCommitsConfig: nxReleaseConfig.conventionalCommits,
     });
 
     /**
@@ -960,17 +975,22 @@ function checkChangelogFilesEnabled(nxReleaseConfig: NxReleaseConfig): boolean {
   return false;
 }
 
-async function getCommits(fromSHA: string, toSHA: string) {
+async function getCommits(
+  fromSHA: string,
+  toSHA: string,
+  conventionalCommitsConfig: NxReleaseConfig['conventionalCommits']
+): Promise<GitCommit[]> {
   const rawCommits = await getGitDiff(fromSHA, toSHA);
   // Parse as conventional commits
   return parseCommits(rawCommits).filter((c) => {
     const type = c.type;
-    // Always ignore non user-facing commits for now
-    // TODO: allow this filter to be configurable via config in a future release
-    if (type === 'feat' || type === 'fix' || type === 'perf') {
-      return true;
+
+    const typeConfig = conventionalCommitsConfig.types[type];
+    if (!typeConfig) {
+      // don't include commits with unknown types
+      return false;
     }
-    return false;
+    return !typeConfig.changelog.hidden;
   });
 }
 
