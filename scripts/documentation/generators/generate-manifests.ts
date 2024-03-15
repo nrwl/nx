@@ -1,10 +1,11 @@
 import * as chalk from 'chalk';
-import { readJsonSync } from 'fs-extra';
-import { resolve } from 'path';
+import { readFileSync, readJsonSync } from 'fs-extra';
+import { join, resolve } from 'path';
 import {
   convertToDocumentMetadata,
   createDocumentMetadata,
   DocumentMetadata,
+  BacklinkDocument,
 } from '@nx/nx-dev/models-document';
 import { MenuItem } from '@nx/nx-dev/models-menu';
 import {
@@ -13,6 +14,7 @@ import {
 } from '@nx/nx-dev/models-package';
 import { generateIndexMarkdownFile, generateJsonFile } from '../utils';
 import { convertToDictionary } from './utils-generator/convert-to-dictionary';
+import { link } from 'fs';
 
 interface DocumentSection {
   name: string;
@@ -123,6 +125,9 @@ export function generateManifests(workspace: string): Promise<void[]> {
     }[]
   > = generateTags(manifests);
 
+  const backlinks: Record<string, BacklinkDocument[]> =
+    generateBacklinks(manifests);
+
   /**
    * We can now create manifest files.
    */
@@ -134,6 +139,10 @@ export function generateManifests(workspace: string): Promise<void[]> {
         manifest.records
       )
     )
+  );
+
+  fileGenerationPromises.push(
+    generateJsonFile(resolve(targetFolder, `backlinks.json`), backlinks)
   );
   fileGenerationPromises.push(
     generateJsonFile(resolve(targetFolder, `tags.json`), tags)
@@ -149,6 +158,104 @@ export function generateManifests(workspace: string): Promise<void[]> {
   );
 
   return Promise.all(fileGenerationPromises);
+}
+
+const manifestPathIdMap: Record<string, string> = {};
+
+function resolveId(path: string, manifests: Manifest[]) {
+  if (manifestPathIdMap[path]) return manifestPathIdMap[path];
+
+  for (let i = 0; i < manifests.length; i++) {
+    const manifest = manifests[i];
+
+    for (let key in manifest.records) {
+      const item = manifest.records[key];
+
+      if (isDocument(item) && item.path === path) {
+        manifestPathIdMap[path] = item.id;
+        return item.id;
+      }
+    }
+  }
+}
+
+function generateBacklinks(manifests: Manifest[]) {
+  const backlinks: Record<string, BacklinkDocument[]> = {};
+
+  manifests.map((manifest) => {
+    for (let key in manifest.records) {
+      const item: DocumentMetadata | ProcessedPackageMetadata =
+        manifest.records[key];
+
+      if (
+        isDocument(item) &&
+        item.id !== 'sitemap' &&
+        item.id !== 'glossary' &&
+        item.file &&
+        item.file !== '' &&
+        item.hideBacklinks !== true
+      ) {
+        const links = extractLinks(item.file);
+        links.forEach((link) => {
+          // try to resolve the id
+          const id = resolveId(link, manifests);
+          if (!id) {
+            // console.warn(`Unable to resolve id for "${link}" in ${item.file}`);
+            return;
+          }
+
+          if (backlinks[id]) {
+            // verify there's no duplicate using "item.id"
+            const duplicate = backlinks[id].find((b) => b.id === item.id);
+
+            if (!duplicate) {
+              backlinks[id].push({
+                name: item.name,
+                file: item.file,
+                id: item.id,
+                path: item.path,
+              });
+            }
+          } else {
+            backlinks[id] = [
+              {
+                name: item.name,
+                file: item.file,
+                id: item.id,
+                path: item.path,
+              },
+            ];
+          }
+        });
+      }
+    }
+  });
+
+  return backlinks;
+}
+
+function extractLinks(path: string) {
+  try {
+    const data = readFileSync(join('./docs', `${path}.md`), 'utf8');
+    // Regular expression to exclude image links, mailto links, and hash-tags.
+    const regex =
+      /\[([^\]]+)\]\((?!http|mailto|.*\.(jpg|jpeg|png|gif|webp|svg))([^)]+)\)/g;
+    const links: string[] = [];
+    let match;
+
+    while ((match = regex.exec(data)) !== null) {
+      // Split the URL part of the markdown link at the '#' and keep only the first part
+      const link = match[3].split('#')[0];
+      if (link !== '') {
+        links.push(link);
+      }
+    }
+
+    return links;
+  } catch (err) {
+    console.error(err);
+    return [];
+  }
 }
 
 function generateTags(manifests: Manifest[]) {

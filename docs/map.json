@@ -16,7 +16,9 @@
             {
               "name": "Intro to Nx",
               "id": "intro",
-              "file": "shared/getting-started/intro"
+              "file": "shared/getting-started/intro",
+              "mediaImage": "./shared/guides/nx-media-monorepo.jpg",
+              "hideBacklinks": true
             },
             {
               "name": "Installation",

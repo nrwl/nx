@@ -96,6 +96,7 @@ export class DocumentsApi {
       id: document.id,
       name: document.name,
       mediaImage: document.mediaImage || '',
+      hideBacklinks: document.hideBacklinks ?? false,
       relatedDocuments: this.getRelatedDocuments(document.tags),
       tags: document.tags,
     };

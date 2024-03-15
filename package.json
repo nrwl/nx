@@ -16,6 +16,7 @@
     "prepublishOnly": "node ./scripts/update-package-group.js",
     "local-registry": "nx local-registry @nx/nx-source",
     "documentation": "ts-node -P scripts/tsconfig.scripts.json ./scripts/documentation/generators/main.ts && pnpm check-documentation-map",
+    "backlinks": "ts-node -P scripts/tsconfig.scripts.json ./scripts/documentation/generators/main.ts",
     "submit-plugin": "node ./scripts/submit-plugin.js",
     "prepare": "is-ci || husky install",
     "echo": "echo 123458",

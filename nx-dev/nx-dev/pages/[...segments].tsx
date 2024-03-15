@@ -1,6 +1,10 @@
 import { getBasicNxSection } from '@nx/nx-dev/data-access-menu';
 import { DocViewer } from '@nx/nx-dev/feature-doc-viewer';
-import { ProcessedDocument, RelatedDocument } from '@nx/nx-dev/models-document';
+import {
+  BacklinkDocument,
+  ProcessedDocument,
+  RelatedDocument,
+} from '@nx/nx-dev/models-document';
 import { MenuItem } from '@nx/nx-dev/models-menu';
 import { DocumentationHeader, SidebarContainer } from '@nx/nx-dev/ui-common';
 import { GetStaticPaths, GetStaticProps } from 'next';
@@ -10,16 +14,19 @@ import { menusApi } from '../lib/menus.api';
 import { useNavToggle } from '../lib/navigation-toggle.effect';
 import { nxDocumentationApi } from '../lib/nx.api';
 import { tagsApi } from '../lib/tags.api';
+import { backlinksApi } from '../lib/backlinks.api';
 import { fetchGithubStarCount } from '../lib/githubStars.api';
 
 export default function NxDocumentation({
   document,
   menu,
+  backlinks,
   relatedDocuments,
   widgetData,
 }: {
   document: ProcessedDocument;
   menu: MenuItem[];
+  backlinks: BacklinkDocument[];
   relatedDocuments: RelatedDocument[];
   widgetData: { githubStarsCount: number };
 }) {
@@ -66,6 +73,7 @@ export default function NxDocumentation({
         >
           <DocViewer
             document={document}
+            backlinks={backlinks}
             relatedDocuments={relatedDocuments}
             widgetData={widgetData}
           />
@@ -86,6 +94,7 @@ export const getStaticPaths: GetStaticPaths = () => {
     fallback: 'blocking',
   };
 };
+
 export const getStaticProps: GetStaticProps = async ({
   params,
 }: {
@@ -93,12 +102,19 @@ export const getStaticProps: GetStaticProps = async ({
 }) => {
   try {
     const document = nxDocumentationApi.getDocument(params.segments);
+
+    console.log(document);
+
     return {
       props: {
         document,
         widgetData: {
           githubStarsCount: await fetchGithubStarCount(),
         },
+        backlinks:
+          document.hideBacklinks !== true
+            ? backlinksApi.getBackLinks(document.id)
+            : [],
         relatedDocuments: tagsApi
           .getAssociatedItemsFromTags(document.tags)
           .filter((item) => item.path !== '/' + params.segments.join('/')), // Remove currently displayed item
