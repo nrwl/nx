@@ -1,6 +1,6 @@
 # Function: generateFiles
 
-▸ **generateFiles**(`tree`, `srcFolder`, `target`, `substitutions`): `void`
+▸ **generateFiles**(`tree`, `srcFolder`, `target`, `substitutions`, `overwriteStrategy?`): `void`
 
 Generates a folder of files based on provided templates.
 
@@ -26,12 +26,13 @@ doesn't get confused about incorrect TypeScript files.
 
 #### Parameters
 
-| Name            | Type                                  | Description                                   |
-| :-------------- | :------------------------------------ | :-------------------------------------------- |
-| `tree`          | [`Tree`](../../devkit/documents/Tree) | the file system tree                          |
-| `srcFolder`     | `string`                              | the source folder of files (absolute path)    |
-| `target`        | `string`                              | the target folder (relative to the tree root) |
-| `substitutions` | `Object`                              | an object of key-value pairs                  |
+| Name                 | Type                                                            | Description                                                          |
+| :------------------- | :-------------------------------------------------------------- | :------------------------------------------------------------------- |
+| `tree`               | [`Tree`](../../devkit/documents/Tree)                           | the file system tree                                                 |
+| `srcFolder`          | `string`                                                        | the source folder of files (absolute path)                           |
+| `target`             | `string`                                                        | the target folder (relative to the tree root)                        |
+| `substitutions`      | `Object`                                                        | an object of key-value pairs                                         |
+| `overwriteStrategy?` | [`OverwriteStrategy`](../../devkit/documents/OverwriteStrategy) | behaviour when the target file already exists. Defaults to Overwrite |
 
 #### Returns
 

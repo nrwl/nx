@@ -16,7 +16,10 @@ export { formatFiles } from './src/generators/format-files';
 /**
  * @category Generators
  */
-export { generateFiles } from './src/generators/generate-files';
+export {
+  generateFiles,
+  OverwriteStrategy,
+} from './src/generators/generate-files';
 
 /**
  * @category Generators

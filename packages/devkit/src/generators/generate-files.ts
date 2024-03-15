@@ -1,10 +1,19 @@
 import { readFileSync, readdirSync, statSync } from 'fs';
-import * as path from 'path';
 import type { Tree } from 'nx/src/generators/tree';
+import * as path from 'path';
 import { requireNx } from '../../nx';
 import { isBinaryPath } from '../utils/binary-extensions';
 
 const { logger } = requireNx();
+
+/**
+ * Specify what should be done when a file is generated but already exists on the system
+ */
+export enum OverwriteStrategy {
+  Overwrite = 'overwrite',
+  KeepExisting = 'keepExisting',
+  ThrowIfExisting = 'throwIfExisting',
+}
 
 /**
  * Generates a folder of files based on provided templates.
@@ -27,12 +36,14 @@ const { logger } = requireNx();
  * @param srcFolder - the source folder of files (absolute path)
  * @param target - the target folder (relative to the tree root)
  * @param substitutions - an object of key-value pairs
+ * @param overwriteStrategy - behaviour when the target file already exists. Defaults to Overwrite
  */
 export function generateFiles(
   tree: Tree,
   srcFolder: string,
   target: string,
-  substitutions: { [k: string]: any }
+  substitutions: { [k: string]: any },
+  overwriteStrategy: OverwriteStrategy = OverwriteStrategy.Overwrite
 ): void {
   const ejs: typeof import('ejs') = require('ejs');
 
@@ -50,6 +61,17 @@ export function generateFiles(
         filePath,
         substitutions
       );
+
+      if (tree.exists(computedPath)) {
+        if (overwriteStrategy === OverwriteStrategy.KeepExisting) {
+          return;
+        } else if (overwriteStrategy === OverwriteStrategy.ThrowIfExisting) {
+          throw new Error(
+            `Generated file already exists, not allowed by overwrite strategy in generator (${computedPath})`
+          );
+        }
+        // else: file should be overwritten, so just fall through to file generation
+      }
 
       if (isBinaryPath(filePath)) {
         newContent = readFileSync(filePath);
