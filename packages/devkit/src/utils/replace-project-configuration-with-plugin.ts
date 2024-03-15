@@ -48,6 +48,7 @@ export async function replaceProjectConfigurationsWithPlugin<T = unknown>(
       const nodes = await createNodesFunction(configFile, pluginOptions, {
         workspaceRoot: tree.root,
         nxJsonConfiguration: readNxJson(tree),
+        configFiles,
       });
       const node = nodes.projects[Object.keys(nodes.projects)[0]];
 
