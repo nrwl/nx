@@ -112,12 +112,10 @@ export default async function (
     );
   }
 
-  const terminal = getPseudoTerminal();
-
   try {
     const result = options.parallel
-      ? await runInParallel(terminal, normalized, context)
-      : await runSerially(terminal, normalized, context);
+      ? await runInParallel(normalized, context)
+      : await runSerially(normalized, context);
     return result;
   } catch (e) {
     if (process.env.NX_VERBOSE_LOGGING === 'true') {
@@ -130,13 +128,12 @@ export default async function (
 }
 
 async function runInParallel(
-  pseudoTerminal: PseudoTerminal,
   options: NormalizedRunCommandsOptions,
   context: ExecutorContext
 ): Promise<{ success: boolean; terminalOutput: string }> {
   const procs = options.commands.map((c) =>
     createProcess(
-      pseudoTerminal,
+      null,
       c,
       options.readyWhen,
       options.color,
@@ -245,10 +242,12 @@ function normalizeOptions(
 }
 
 async function runSerially(
-  pseudoTerminal: PseudoTerminal,
   options: NormalizedRunCommandsOptions,
   context: ExecutorContext
 ): Promise<{ success: boolean; terminalOutput: string }> {
+  const pseudoTerminal = PseudoTerminal.isSupported()
+    ? getPseudoTerminal()
+    : null;
   let terminalOutput = '';
   for (const c of options.commands) {
     const result: { success: boolean; terminalOutput: string } =
@@ -277,7 +276,7 @@ async function runSerially(
 }
 
 async function createProcess(
-  pseudoTerminal: PseudoTerminal,
+  pseudoTerminal: PseudoTerminal | null,
   commandConfig: {
     command: string;
     color?: string;
@@ -296,8 +295,8 @@ async function createProcess(
   // The rust runCommand is always a tty, so it will not look nice in parallel and if we need prefixes
   // currently does not work properly in windows
   if (
+    pseudoTerminal &&
     process.env.NX_NATIVE_COMMAND_RUNNER !== 'false' &&
-    process.stdout.isTTY &&
     !commandConfig.prefix &&
     !isParallel &&
     usePty
