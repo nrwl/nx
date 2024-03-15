@@ -76,6 +76,7 @@ export default function CustomApp({
         Skip to content
       </Link>
       <Component {...pageProps} />
+
       {/* Global Site Tag (gtag.js) - Google Analytics */}
       <Script
         id="gtag-script-dependency"
@@ -94,6 +95,15 @@ export default function CustomApp({
               page_path: window.location.pathname,
             });
           `,
+        }}
+      />
+      {/* Apollo.io Embed Code */}
+      <Script
+        type="text/javascript"
+        id="apollo-script-loader"
+        strategy="afterInteractive"
+        dangerouslySetInnerHTML={{
+          __html: `function initApollo(){var n=Math.random().toString(36).substring(7),o=document.createElement("script"); o.src="https://assets.apollo.io/micro/website-tracker/tracker.iife.js?nocache="+n,o.async=!0,o.defer=!0,o.onload=function(){window.trackingFunctions.onLoad({appId:"65e1db2f1976f30300fd8b26"})},document.head.appendChild(o)}initApollo();`,
         }}
       />
       {/* HubSpot Analytics */}
