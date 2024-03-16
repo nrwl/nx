@@ -35,10 +35,14 @@ export interface PackageManagerCommands {
 export function detectPackageManager(dir: string = ''): PackageManager {
   const nxJson = readNxJson();
   return nxJson.cli?.packageManager ??
-    nxJson.cli?.packageManager ?? existsSync(join(dir, 'pnpm-lock.yaml')) ? 'pnpm' :
-    existsSync(join(dir, 'yarn.lock')) ? 'yarn' :
-    existsSync(join(dir, 'bun.lockb')) ? 'bun' :
-    'npm';
+    nxJson.cli?.packageManager ??
+    existsSync(join(dir, 'pnpm-lock.yaml'))
+    ? 'pnpm'
+    : existsSync(join(dir, 'yarn.lock'))
+    ? 'yarn'
+    : existsSync(join(dir, 'bun.lockb'))
+    ? 'bun'
+    : 'npm';
 }
 
 /**
@@ -53,7 +57,6 @@ export function isWorkspacesEnabled(
   if (packageManager === 'bun') {
     return existsSync(join(root, 'bun-workspace.yaml'));
   }
-
 
   if (packageManager === 'pnpm') {
     return existsSync(join(root, 'pnpm-workspace.yaml'));
