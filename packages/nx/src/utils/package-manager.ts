@@ -36,13 +36,11 @@ export function detectPackageManager(dir: string = ''): PackageManager {
   const nxJson = readNxJson();
   return nxJson.cli?.packageManager ?? existsSync(join(dir, 'bun.lockb'))
     ? 'bun'
-    : existsSync(
-        join(dir, 'yarn.lock')
-          ? 'yarn'
-          : existsSync(join(dir, 'pnpm-lock.yaml'))
-          ? 'pnpm'
-          : 'npm'
-      );
+    : existsSync(join(dir, 'yarn.lock'))
+    ? 'yarn'
+    : existsSync(join(dir, 'pnpm-lock.yaml'))
+    ? 'pnpm'
+    : 'npm';
 }
 
 /**
@@ -54,6 +52,10 @@ export function isWorkspacesEnabled(
   packageManager: PackageManager = detectPackageManager(),
   root: string = workspaceRoot
 ): boolean {
+  if (packageManager === 'bun') {
+    return existsSync(join(root, 'bun-workspace.yaml'));
+  }
+
   if (packageManager === 'pnpm') {
     return existsSync(join(root, 'pnpm-workspace.yaml'));
   }
@@ -124,6 +126,23 @@ export function getPackageManagerCommand(
             ? `pnpm run ${script} -- ${args}`
             : `pnpm run ${script} ${args}`,
         list: 'pnpm ls --depth 100',
+      };
+    },
+    npm: () => {
+      // TODO: Remove this
+      process.env.npm_config_legacy_peer_deps ??= 'true';
+
+      return {
+        install: 'npm install',
+        ciInstall: 'npm ci',
+        updateLockFile: 'npm install --package-lock-only',
+        add: 'npm install',
+        addDev: 'npm install -D',
+        rm: 'npm rm',
+        exec: 'npx',
+        dlx: 'npx',
+        run: (script: string, args: string) => `npm run ${script} -- ${args}`,
+        list: 'npm ls',
       };
     },
     bun: () => {
