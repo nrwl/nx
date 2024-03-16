@@ -38,6 +38,7 @@ describe('@nx/nuxt/plugin', () => {
           },
         },
         workspaceRoot: '',
+        configFiles: [],
       };
     });
 
@@ -72,6 +73,7 @@ describe('@nx/nuxt/plugin', () => {
           },
         },
         workspaceRoot: tempFs.tempDir,
+        configFiles: [],
       };
 
       tempFs.createFileSync(

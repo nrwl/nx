@@ -193,13 +193,13 @@ export type ConfigurationResult = {
  * Transforms a list of project paths into a map of project configurations.
  *
  * @param nxJson The NxJson configuration
- * @param projectFiles A list of files identified as projects
+ * @param workspaceFiles A list of non-ignored workspace files
  * @param plugins The plugins that should be used to infer project configuration
  * @param root The workspace root
  */
 export function buildProjectsConfigurationsFromProjectPathsAndPlugins(
   nxJson: NxJsonConfiguration,
-  projectFiles: string[], // making this parameter allows devkit to pick up newly created projects
+  workspaceFiles: string[], // making this parameter allows devkit to pick up newly created projects
   plugins: LoadedNxPlugin[],
   root: string = workspaceRoot
 ): Promise<ConfigurationResult> {
@@ -222,54 +222,57 @@ export function buildProjectsConfigurationsFromProjectPathsAndPlugins(
       continue;
     }
 
-    for (const file of projectFiles) {
-      performance.mark(`${plugin.name}:createNodes:${file} - start`);
-      if (minimatch(file, pattern, { dot: true })) {
-        try {
-          let r = createNodes(file, options, {
-            nxJsonConfiguration: nxJson,
-            workspaceRoot: root,
-          });
+    const matchingConfigFiles: string[] = workspaceFiles.filter(
+      minimatch.filter(pattern, { dot: true })
+    );
 
-          if (r instanceof Promise) {
-            pluginResults.push(
-              r
-                .catch((e) => {
-                  performance.mark(`${plugin.name}:createNodes:${file} - end`);
-                  throw new CreateNodesError(
-                    `Unable to create nodes for ${file} using plugin ${plugin.name}.`,
-                    e
-                  );
-                })
-                .then((r) => {
-                  performance.mark(`${plugin.name}:createNodes:${file} - end`);
-                  performance.measure(
-                    `${plugin.name}:createNodes:${file}`,
-                    `${plugin.name}:createNodes:${file} - start`,
-                    `${plugin.name}:createNodes:${file} - end`
-                  );
-                  return { ...r, file, pluginName: plugin.name };
-                })
-            );
-          } else {
-            performance.mark(`${plugin.name}:createNodes:${file} - end`);
-            performance.measure(
-              `${plugin.name}:createNodes:${file}`,
-              `${plugin.name}:createNodes:${file} - start`,
-              `${plugin.name}:createNodes:${file} - end`
-            );
-            pluginResults.push({
-              ...r,
-              file,
-              pluginName: plugin.name,
-            });
-          }
-        } catch (e) {
-          throw new CreateNodesError(
-            `Unable to create nodes for ${file} using plugin ${plugin.name}.`,
-            e
+    for (const file of matchingConfigFiles) {
+      performance.mark(`${plugin.name}:createNodes:${file} - start`);
+      try {
+        let r = createNodes(file, options, {
+          nxJsonConfiguration: nxJson,
+          workspaceRoot: root,
+          configFiles: matchingConfigFiles,
+        });
+
+        if (r instanceof Promise) {
+          pluginResults.push(
+            r
+              .catch((e) => {
+                performance.mark(`${plugin.name}:createNodes:${file} - end`);
+                throw new CreateNodesError(
+                  `Unable to create nodes for ${file} using plugin ${plugin.name}.`,
+                  e
+                );
+              })
+              .then((r) => {
+                performance.mark(`${plugin.name}:createNodes:${file} - end`);
+                performance.measure(
+                  `${plugin.name}:createNodes:${file}`,
+                  `${plugin.name}:createNodes:${file} - start`,
+                  `${plugin.name}:createNodes:${file} - end`
+                );
+                return { ...r, file, pluginName: plugin.name };
+              })
           );
+        } else {
+          performance.mark(`${plugin.name}:createNodes:${file} - end`);
+          performance.measure(
+            `${plugin.name}:createNodes:${file}`,
+            `${plugin.name}:createNodes:${file} - start`,
+            `${plugin.name}:createNodes:${file} - end`
+          );
+          pluginResults.push({
+            ...r,
+            file,
+            pluginName: plugin.name,
+          });
         }
+      } catch (e) {
+        throw new CreateNodesError(
+          `Unable to create nodes for ${file} using plugin ${plugin.name}.`,
+          e
+        );
       }
     }
     // If there are no promises (counter undefined) or all promises have resolved (counter === 0)

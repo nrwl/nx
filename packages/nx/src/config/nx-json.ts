@@ -143,6 +143,36 @@ export interface NxReleaseGitConfiguration {
   tagArgs?: string;
 }
 
+export interface NxReleaseConventionalCommitsConfiguration {
+  types?: Record<
+    string,
+    /**
+     * A map of commit types to their configuration.
+     * If a type is set to 'true', then it will be enabled with the default 'semverBump' of 'patch' and will appear in the changelog.
+     * If a type is set to 'false', then it will not trigger a version bump and will be hidden from the changelog.
+     */
+    | {
+        /**
+         * The semver bump to apply when a commit of this type is found.
+         * If set to "none", the commit will be ignored for versioning purposes.
+         */
+        semverBump?: 'patch' | 'minor' | 'major' | 'none';
+        /**
+         * Configuration for the changelog section for commits of this type.
+         * If set to 'true', then commits of this type will be included in the changelog with their default title for the type.
+         * If set to 'false', then commits of this type will not be included in the changelog.
+         */
+        changelog?:
+          | {
+              title?: string;
+              hidden?: boolean;
+            }
+          | boolean;
+      }
+    | boolean
+  >;
+}
+
 interface NxReleaseConfiguration {
   /**
    * Shorthand for amending the projects which will be included in the implicit default release group (all projects by default).
@@ -254,6 +284,7 @@ interface NxReleaseConfiguration {
    * Enable and configure automatic git operations as part of the release
    */
   git?: NxReleaseGitConfiguration;
+  conventionalCommits?: NxReleaseConventionalCommitsConfiguration;
 }
 
 /**
