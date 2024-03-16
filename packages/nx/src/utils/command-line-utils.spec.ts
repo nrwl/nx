@@ -60,11 +60,12 @@ describe('splitArgs', () => {
       splitArgsIntoNxArgsAndOverrides(
         {
           __overrides_unparsed__: ['--notNxArg', '--override'],
+          base: 'main',
           $0: '',
         },
         'affected',
         {} as any,
-        { affected: { defaultBase: 'main' } } as any
+        {} as any
       ).nxArgs
     ).toEqual({
       base: 'main',
@@ -95,10 +96,11 @@ describe('splitArgs', () => {
         {
           __overrides_unparsed__: ['--notNxArg', 'affecteda', '--override'],
           $0: '',
+          base: 'main',
         },
         'affected',
         {} as any,
-        { affected: { defaultBase: 'main' } } as any
+        {} as any
       ).nxArgs
     ).toEqual({
       base: 'main',
