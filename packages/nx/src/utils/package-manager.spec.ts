@@ -71,7 +71,7 @@ describe('package-manager', () => {
           case 'pnpm-lock.yaml':
             return false;
           case 'package-lock.json':
-            return false;
+            return true;
           case 'bun.lockb':
             return false;
           default:
@@ -80,7 +80,7 @@ describe('package-manager', () => {
       });
       const packageManager = detectPackageManager();
       expect(packageManager).toEqual('npm');
-      expect(fs.existsSync).toHaveBeenCalledTimes(5);
+      expect(fs.existsSync).toHaveBeenCalledTimes(6);
     });
   });
 

@@ -34,13 +34,11 @@ export interface PackageManagerCommands {
  */
 export function detectPackageManager(dir: string = ''): PackageManager {
   const nxJson = readNxJson();
-  return nxJson.cli?.packageManager ?? existsSync(join(dir, 'bun.lockb'))
-    ? 'bun'
-    : existsSync(join(dir, 'yarn.lock'))
-    ? 'yarn'
-    : existsSync(join(dir, 'pnpm-lock.yaml'))
-    ? 'pnpm'
-    : 'npm';
+  return nxJson.cli?.packageManager ??
+    nxJson.cli?.packageManager ?? existsSync(join(dir, 'pnpm-lock.yaml')) ? 'pnpm' :
+    existsSync(join(dir, 'yarn.lock')) ? 'yarn' :
+    existsSync(join(dir, 'bun.lockb')) ? 'bun' :
+    'npm';
 }
 
 /**
@@ -52,6 +50,11 @@ export function isWorkspacesEnabled(
   packageManager: PackageManager = detectPackageManager(),
   root: string = workspaceRoot
 ): boolean {
+  if (packageManager === 'bun') {
+    return existsSync(join(root, 'bun-workspace.yaml'));
+  }
+
+
   if (packageManager === 'pnpm') {
     return existsSync(join(root, 'pnpm-workspace.yaml'));
   }
@@ -142,12 +145,15 @@ export function getPackageManagerCommand(
       };
     },
     bun: () => {
+      // TODO: Remove this
+      process.env.npm_config_legacy_peer_deps ??= 'true';
+
       return {
         install: 'bun install',
         ciInstall: 'bun install --no-cache',
-        updateLockFile: 'bun install',
-        add: 'bun add',
-        addDev: 'bun add --dev',
+        updateLockFile: 'bun install --frozen-lockfile',
+        add: 'bun install',
+        addDev: 'bun install -D',
         rm: 'bun rm',
         exec: 'bun',
         dlx: 'bunx',
