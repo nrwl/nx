@@ -34,15 +34,15 @@ export interface PackageManagerCommands {
  */
 export function detectPackageManager(dir: string = ''): PackageManager {
   const nxJson = readNxJson();
-  return (
-    nxJson.cli?.packageManager ??
-    existsSync(join(dir, 'bun.lockb')) ? 'bun' 
-      : existsSync(join(dir, 'yarn.lock')
-      ? 'yarn'
-      : existsSync(join(dir, 'pnpm-lock.yaml'))
-      ? 'pnpm'
-      : 'npm')
-  );
+  return nxJson.cli?.packageManager ?? existsSync(join(dir, 'bun.lockb'))
+    ? 'bun'
+    : existsSync(
+        join(dir, 'yarn.lock')
+          ? 'yarn'
+          : existsSync(join(dir, 'pnpm-lock.yaml'))
+          ? 'pnpm'
+          : 'npm'
+      );
 }
 
 /**
