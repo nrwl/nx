@@ -1,5 +1,6 @@
 import { splitArgsIntoNxArgsAndOverrides } from './command-line-utils';
 import { withEnvironmentVariables as withEnvironment } from '../internal-testing-utils/with-environment';
+import { affected } from '../command-line/affected/affected';
 
 jest.mock('../project-graph/file-utils');
 
@@ -63,7 +64,7 @@ describe('splitArgs', () => {
         },
         'affected',
         {} as any,
-        {} as any
+        { affected: { defaultBase: 'main' } } as any
       ).nxArgs
     ).toEqual({
       base: 'main',
@@ -97,7 +98,7 @@ describe('splitArgs', () => {
         },
         'affected',
         {} as any,
-        {} as any
+        { affected: { defaultBase: 'main' } } as any
       ).nxArgs
     ).toEqual({
       base: 'main',

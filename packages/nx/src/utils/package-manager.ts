@@ -36,7 +36,7 @@ export function detectPackageManager(dir: string = ''): PackageManager {
   const nxJson = readNxJson();
   return nxJson.cli?.packageManager ??
     nxJson.cli?.packageManager ??
-    existsSync(join(dir, 'pnpm-lock.yaml'))
+   (existsSync(join(dir, 'pnpm-lock.yaml')) || existsSync(join(dir, 'pnpm-workspace.yaml')))
     ? 'pnpm'
     : existsSync(join(dir, 'package-lock.json'))
     ? 'npm'
@@ -44,7 +44,7 @@ export function detectPackageManager(dir: string = ''): PackageManager {
     ? 'yarn'
     : existsSync(join(dir, 'bun.lockb'))
     ? 'bun'
-    : 'pnpm';
+    : 'npm';
 }
 
 /**
