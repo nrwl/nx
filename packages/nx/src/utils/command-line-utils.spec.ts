@@ -66,7 +66,7 @@ describe('splitArgs', () => {
         {} as any
       ).nxArgs
     ).toEqual({
-      base: 'b11d37997e4a375c99d3b89f796709db53a037cb',
+      base: 'main',
       skipNxCache: false,
     });
   });
@@ -100,7 +100,7 @@ describe('splitArgs', () => {
         {} as any
       ).nxArgs
     ).toEqual({
-      base: 'b11d37997e4a375c99d3b89f796709db53a037cb',
+      base: 'main',
       skipNxCache: false,
     });
   });
