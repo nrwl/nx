@@ -37,8 +37,8 @@ export function detectPackageManager(dir: string = ''): PackageManager {
   return nxJson.cli?.packageManager ??
     nxJson.cli?.packageManager ??
     existsSync(join(dir, 'pnpm-lock.yaml'))
-    ? 'pnpm' :
-    existsSync(join(dir, 'package-lock.json'))
+    ? 'pnpm'
+    : existsSync(join(dir, 'package-lock.json'))
     ? 'npm'
     : existsSync(join(dir, 'yarn.lock'))
     ? 'yarn'
