@@ -1,0 +1,46 @@
+{
+  "name": "init",
+  "factory": "./src/generators/init/init#reactNativeInitGeneratorInternal",
+  "schema": {
+    "cli": "nx",
+    "$id": "NxReactNativeInit",
+    "$schema": "https://json-schema.org/schema",
+    "title": "Add Nx React Native Schematics",
+    "description": "Add Nx React native schematics.",
+    "type": "object",
+    "properties": {
+      "skipFormat": {
+        "description": "Skip formatting files.",
+        "type": "boolean",
+        "default": false,
+        "x-priority": "internal"
+      },
+      "skipPackageJson": {
+        "description": "Do not add dependencies to `package.json`.",
+        "type": "boolean",
+        "default": false,
+        "x-priority": "internal"
+      },
+      "keepExistingVersions": {
+        "type": "boolean",
+        "x-priority": "internal",
+        "description": "Keep existing dependencies versions",
+        "default": false
+      },
+      "updatePackageScripts": {
+        "type": "boolean",
+        "x-priority": "internal",
+        "description": "Update `package.json` scripts with inferred targets",
+        "default": false
+      }
+    },
+    "required": [],
+    "presets": []
+  },
+  "description": "Initialize the `@nx/react-native` plugin.",
+  "hidden": true,
+  "implementation": "/packages/react-native/src/generators/init/init#reactNativeInitGeneratorInternal.ts",
+  "aliases": [],
+  "path": "/packages/react-native/src/generators/init/schema.json",
+  "type": "generator"
+}

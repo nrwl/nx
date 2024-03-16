@@ -1,0 +1,118 @@
+{
+  "name": "application",
+  "factory": "./src/generators/application/application",
+  "schema": {
+    "$schema": "https://json-schema.org/schema",
+    "cli": "nx",
+    "$id": "NxNuxtApp",
+    "title": "Create a Nuxt Application for Nx",
+    "description": "Create a Nuxt Application for Nx.",
+    "type": "object",
+    "properties": {
+      "name": {
+        "description": "The name of the application.",
+        "type": "string",
+        "$default": { "$source": "argv", "index": 0 },
+        "x-prompt": "What name would you like to use for the application?",
+        "pattern": "^[a-zA-Z][^:]*$",
+        "x-priority": "important"
+      },
+      "directory": {
+        "description": "The directory of the new application.",
+        "type": "string",
+        "alias": "dir",
+        "x-priority": "important"
+      },
+      "projectNameAndRootFormat": {
+        "description": "Whether to generate the project name and root directory as provided (`as-provided`) or generate them composing their values and taking the configured layout into account (`derived`).",
+        "type": "string",
+        "enum": ["as-provided", "derived"]
+      },
+      "linter": {
+        "description": "The tool to use for running lint checks.",
+        "type": "string",
+        "enum": ["eslint"],
+        "default": "eslint"
+      },
+      "skipFormat": {
+        "description": "Skip formatting files.",
+        "type": "boolean",
+        "default": false,
+        "x-priority": "internal"
+      },
+      "unitTestRunner": {
+        "type": "string",
+        "enum": ["vitest", "none"],
+        "description": "Test runner to use for unit tests.",
+        "x-prompt": "Which unit test runner would you like to use?",
+        "default": "none"
+      },
+      "e2eTestRunner": {
+        "type": "string",
+        "enum": ["cypress", "playwright", "none"],
+        "description": "Test runner to use for end to end (E2E) tests.",
+        "x-prompt": "Which E2E test runner would you like to use?",
+        "default": "cypress"
+      },
+      "tags": {
+        "type": "string",
+        "description": "Add tags to the application (used for linting).",
+        "alias": "t"
+      },
+      "js": {
+        "type": "boolean",
+        "description": "Generate JavaScript files rather than TypeScript files.",
+        "default": false
+      },
+      "skipPackageJson": {
+        "type": "boolean",
+        "default": false,
+        "description": "Do not add dependencies to `package.json`.",
+        "x-priority": "internal"
+      },
+      "rootProject": {
+        "description": "Create an application at the root of the workspace.",
+        "type": "boolean",
+        "default": false,
+        "hidden": true,
+        "x-priority": "internal"
+      },
+      "style": {
+        "description": "The file extension to be used for style files.",
+        "type": "string",
+        "alias": "s",
+        "default": "css",
+        "x-prompt": {
+          "message": "Which stylesheet format would you like to use?",
+          "type": "list",
+          "items": [
+            { "value": "css", "label": "CSS" },
+            {
+              "value": "scss",
+              "label": "SASS(.scss)       [ https://sass-lang.com          ]"
+            },
+            {
+              "value": "less",
+              "label": "LESS              [ https://lesscss.org            ]"
+            },
+            { "value": "none", "label": "None" }
+          ]
+        }
+      },
+      "setParserOptionsProject": {
+        "type": "boolean",
+        "description": "Whether or not to configure the ESLint `parserOptions.project` option. We do not do this by default for lint performance reasons.",
+        "default": false
+      }
+    },
+    "required": [],
+    "examplesFile": "---\ntitle: Nuxt application generator examples\ndescription: This page contains examples for the @nx/nuxt:app generator.\n---\n\nYour new Nuxt application will be generated with the following directory structure, following the suggested [directory structure](https://nuxt.com/docs/guide/directory-structure) for Nuxt applications:\n\n```text\nmy-nuxt-app\n├── nuxt.config.ts\n├── project.json\n├── src\n│   ├── app.vue\n│   ├── assets\n│   │   └── css\n│   │       └── styles.css\n│   ├── components\n│   │   └── NxWelcome.vue\n│   ├── pages\n│   │   ├── about.vue\n│   │   └── index.vue\n│   ├── public\n│   │   └── favicon.ico\n│   └── server\n│       ├── api\n│       │   └── greet.ts\n│       └── tsconfig.json\n├── tsconfig.app.json\n├── tsconfig.json\n├── tsconfig.spec.json\n└── vitest.config.ts\n```\n\nYour new app will contain the following:\n\n- Two pages (home and about) under `pages`\n- A component (`NxWelcome`) under `components`\n- A `greet` API endpoint that returns a JSON response under `/api/greet`\n- Configuration for `vitest`\n- Your app's entrypoint (`app.vue`) will contain the navigation links to the home and about pages, and the `nuxt-page` component to display the contents of your pages.\n\n## Examples\n\n{% tabs %}\n{% tab label=\"Create app in a directory\" %}\n\n{% callout type=\"note\" title=\"Directory Flag Behavior Changes\" %}\nThe command below uses the `as-provided` directory flag behavior, which is the default in Nx 16.8.0. If you're on an earlier version of Nx or using the `derived` option, use `--directory=nested`. See the [as-provided vs. derived documentation](/deprecated/as-provided-vs-derived) for more details.\n{% /callout %}\n\n```shell\nnx g @nx/nuxt:app myapp --directory=apps/nested/myapp\n```\n\n{% /tab %}\n\n{% tab label=\"Create app with vitest configured\" %}\n\n```shell\nnx g @nx/nuxt:app myapp --directory=apps/nested/myapp --unitTestRunner=vitest\n```\n\n{% /tab %}\n\n{% tab label=\"Use plain JavaScript (not TypeScript)\" %}\n\n```shell\nnx g @nx/nuxt:app myapp --js\n```\n\n{% /tab %}\n{% /tabs %}\n\n## Generate pages and components\n\nYou can use the the [`@nx/vue:component` generator](/nx-api/vue/generators/component) to generate new pages and components for your application. You can read more on the [`@nx/vue:component` generator documentation page](/nx-api/vue/generators/component), but here are some examples:\n\n{% tabs %}\n{% tab label=\"New page\" %}\n\n```shell\nnx g @nx/nuxt:component --directory=my-app/src/pages --name=my-page\n```\n\n{% /tab %}\n\n{% tab label=\"New component\" %}\n\n```shell\nnx g @nx/nuxt:component --directory=my-app/src/components/my-cmp --name=my-cmp\n```\n\n{% /tab %}\n{% /tabs %}\n",
+    "presets": []
+  },
+  "aliases": ["app"],
+  "description": "Create a Nuxt application.",
+  "implementation": "/packages/nuxt/src/generators/application/application.ts",
+  "hidden": false,
+  "path": "/packages/nuxt/src/generators/application/schema.json",
+  "type": "generator"
+}

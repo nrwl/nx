@@ -1,0 +1,83 @@
+{
+  "name": "create-package",
+  "factory": "./src/generators/create-package/create-package#createPackageGeneratorInternal",
+  "schema": {
+    "$schema": "https://json-schema.org/schema",
+    "cli": "nx",
+    "$id": "NxPluginCreatePackage",
+    "title": "Create a framework package",
+    "description": "Create a framework package that uses Nx CLI.",
+    "examplesFile": "## Examples\n\n{% tabs %}\n{% tab label=\"Basic executable\" %}\n\nCreate an executable that initializes an Nx workspace with {my-plugin}'s preset:\n\n```bash\nnx g @nx/plugin:create-package create-my-plugin --project my-plugin\n```\n\n{% /tab %}\n{% /tabs %}\n",
+    "type": "object",
+    "properties": {
+      "name": {
+        "type": "string",
+        "description": "The package name of cli, e.g. `create-framework-package`. Note this must be a valid NPM name to be published.",
+        "pattern": "create-.+|^@.+/create(?:-.+)?",
+        "$default": { "$source": "argv", "index": 0 },
+        "x-priority": "important"
+      },
+      "project": {
+        "type": "string",
+        "description": "The name of the generator project.",
+        "alias": "p",
+        "$default": { "$source": "projectName" },
+        "x-prompt": "What is the name of the project for the generator?",
+        "x-priority": "important"
+      },
+      "unitTestRunner": {
+        "type": "string",
+        "enum": ["jest", "none"],
+        "description": "Test runner to use for unit tests.",
+        "default": "jest"
+      },
+      "directory": {
+        "type": "string",
+        "description": "A directory where the app is placed."
+      },
+      "projectNameAndRootFormat": {
+        "description": "Whether to generate the project name and root directory as provided (`as-provided`) or generate them composing their values and taking the configured layout into account (`derived`).",
+        "type": "string",
+        "enum": ["as-provided", "derived"]
+      },
+      "linter": {
+        "description": "The tool to use for running lint checks.",
+        "type": "string",
+        "enum": ["eslint"],
+        "default": "eslint"
+      },
+      "tags": {
+        "type": "string",
+        "description": "Add tags to the library (used for linting).",
+        "alias": "t"
+      },
+      "skipFormat": {
+        "description": "Skip formatting files.",
+        "type": "boolean",
+        "default": false,
+        "x-priority": "internal"
+      },
+      "compiler": {
+        "type": "string",
+        "enum": ["tsc", "swc"],
+        "default": "tsc",
+        "description": "The compiler used by the build and test targets."
+      },
+      "e2eProject": {
+        "type": "string",
+        "description": "The name of the e2e project.",
+        "alias": "p",
+        "$default": { "$source": "projectName" },
+        "x-prompt": "What is the name of the e2e project?"
+      }
+    },
+    "required": ["name", "project"],
+    "presets": []
+  },
+  "description": "Create a package which can be used by npx to create a new workspace",
+  "implementation": "/packages/plugin/src/generators/create-package/create-package#createPackageGeneratorInternal.ts",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/plugin/src/generators/create-package/schema.json",
+  "type": "generator"
+}

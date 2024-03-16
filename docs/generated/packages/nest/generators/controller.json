@@ -1,0 +1,78 @@
+{
+  "name": "controller",
+  "factory": "./src/generators/controller/controller#controllerGeneratorInternal",
+  "schema": {
+    "$schema": "https://json-schema.org/schema",
+    "$id": "NxNestControllerGenerator",
+    "title": "Nest Controller Options Schema",
+    "description": "Nest Controller Options Schema.",
+    "cli": "nx",
+    "type": "object",
+    "properties": {
+      "name": {
+        "description": "The name of the controller.",
+        "type": "string",
+        "$default": { "$source": "argv", "index": 0 },
+        "x-prompt": "What name would you like to use?"
+      },
+      "project": {
+        "description": "The Nest project to target.",
+        "type": "string",
+        "$default": { "$source": "projectName" },
+        "alias": "p",
+        "x-deprecated": "Provide The `directory` option instead and use the `as-provided` format. the project will be determined from the directory provided. it will be removed in nx v19."
+      },
+      "nameAndDirectoryFormat": {
+        "description": "Whether to generate the component in the directory as provided, relative to the current working directory and ignoring the project (`as-provided`) or generate it using the project and directory relative to the workspace root (`derived`).",
+        "type": "string",
+        "enum": ["as-provided", "derived"]
+      },
+      "directory": {
+        "description": "Directory where the generated files are placed. when `--nameAndDirectoryFormat=as-provided`, it will be relative to the current working directory. otherwise, it will be relative to the workspace root.",
+        "type": "string",
+        "aliases": ["dir", "path"]
+      },
+      "skipFormat": {
+        "description": "Skip formatting files.",
+        "type": "boolean",
+        "default": false,
+        "x-priority": "internal"
+      },
+      "unitTestRunner": {
+        "description": "Test runner to use for unit tests.",
+        "type": "string",
+        "enum": ["jest", "none"],
+        "default": "jest"
+      },
+      "flat": {
+        "description": "Flag to indicate if a directory is created.",
+        "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. It will be removed in Nx v19.",
+        "type": "boolean",
+        "default": false
+      },
+      "language": {
+        "description": "Nest controller language.",
+        "type": "string",
+        "enum": ["js", "ts"]
+      },
+      "skipImport": {
+        "description": "Flag to skip the module import.",
+        "type": "boolean",
+        "default": false
+      },
+      "module": {
+        "description": "Allows specification of the declaring module.",
+        "type": "string"
+      }
+    },
+    "additionalProperties": false,
+    "required": ["name"],
+    "presets": []
+  },
+  "description": "Run the `controller` NestJS generator with Nx project support.",
+  "implementation": "/packages/nest/src/generators/controller/controller#controllerGeneratorInternal.ts",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/nest/src/generators/controller/schema.json",
+  "type": "generator"
+}

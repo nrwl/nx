@@ -1,0 +1,97 @@
+{
+  "name": "start",
+  "implementation": "/packages/expo/src/executors/start/start.impl.ts",
+  "schema": {
+    "version": 2,
+    "outputCapture": "direct-nodejs",
+    "cli": "nx",
+    "$id": "NxExpoStart",
+    "$schema": "https://json-schema.org/schema",
+    "title": "Packager Server for Expo",
+    "description": "Packager Server target options.",
+    "type": "object",
+    "properties": {
+      "forceManifestType": {
+        "type": "string",
+        "description": "Override auto detection of manifest type.",
+        "enum": ["expo-updates", "classic"]
+      },
+      "privateKeyPath": {
+        "type": "string",
+        "description": "Path to private key for code signing. Default: 'private-key.pem' in the same directory as the certificate specified by the expo-updates configuration in app.json."
+      },
+      "port": {
+        "type": "number",
+        "description": "Port to start the native Metro bundler on (does not apply to web or tunnel)",
+        "default": 19000,
+        "alias": "p"
+      },
+      "clear": {
+        "type": "boolean",
+        "description": "Clear the Metro bundler cache",
+        "alias": "c"
+      },
+      "maxWorkers": {
+        "type": "number",
+        "description": "Maximum number of tasks to allow Metro to spawn"
+      },
+      "dev": {
+        "type": "boolean",
+        "description": "Turn development mode on or off"
+      },
+      "devClient": {
+        "type": "boolean",
+        "description": "Experimental: Starts the bundler for use with the expo-development-client"
+      },
+      "minify": {
+        "type": "boolean",
+        "description": "Whether or not to minify code"
+      },
+      "https": {
+        "type": "boolean",
+        "description": "To start webpack with https or http protocol"
+      },
+      "scheme": {
+        "type": "string",
+        "description": "Custom URI protocol to use with a development build"
+      },
+      "android": {
+        "type": "boolean",
+        "description": "Opens your app in Expo Go on a connected Android device",
+        "alias": "a"
+      },
+      "ios": {
+        "type": "boolean",
+        "description": "Opens your app in Expo Go in a currently running iOS simulator on your computer",
+        "alias": "i"
+      },
+      "web": {
+        "type": "boolean",
+        "description": " Opens your app in a web browser",
+        "alias": "w"
+      },
+      "host": {
+        "type": "string",
+        "description": "lan (default), tunnel, localhost. Type of host to use. lan uses the local network; tunnel ues any network by tunnel through ngrok; localhost connects to the dev server over localhost.",
+        "enum": ["localhost", "lan", "tunnel"]
+      },
+      "tunnel": { "type": "boolean", "description": "Same as --host tunnel" },
+      "lan": { "type": "boolean", "description": "Same as --host lan" },
+      "localhost": {
+        "type": "boolean",
+        "description": "Same as --host localhost"
+      },
+      "offline": {
+        "type": "boolean",
+        "description": "Allows this command to run while offline"
+      }
+    },
+    "examplesFile": "`project.json`:\n\n```json\n{\n  \"name\": \"mobile\",\n  //...\n  \"targets\": {\n    //...\n    \"start\": {\n      \"executor\": \"@nx/expo:start\",\n      \"options\": {\n        \"port\": 8081\n      }\n    }\n    //...\n  }\n}\n```\n\n```shell\nnx run mobile:start\n```\n\n## Examples\n\n{% tabs %}\n{% tab label=\"Specify starting on platform\" %}\nThe `ios`, `android` and `web` option allows you to start the server on different platforms.\n\nOpens your app in Expo Go in a currently running iOS simulator on your computer:\n\n```json\n    \"start\": {\n      \"executor\": \"@nx/expo:start\",\n      \"options\": {\n        \"port\": 8081,\n        \"ios\": true\n      }\n    }\n```\n\nor run command `nx start <your app name> --ios`.\n\nOpens your app in Expo Go on a connected Android device\n\n```json\n    \"start\": {\n      \"executor\": \"@nx/expo:start\",\n      \"options\": {\n        \"port\": 8081,\n        \"android\": true\n      }\n    }\n```\n\nor run command `nx start <your app name> --android`.\n\nOpens your app in a web browser:\n\n```json\n    \"start\": {\n      \"executor\": \"@nx/expo:start\",\n      \"options\": {\n        \"port\": 8081,\n        \"web\": true\n      }\n    }\n```\n\nor run command `nx start <your app name> --web`.\n\n{% /tab %}\n{% tab label=\"Specify the host\" %}\nThe `host` option allows you to specify the type of host to use. `lan` uses the local network; `tunnel` ues any network by tunnel through ngrok; `localhost` connects to the dev server over localhost.\n\n```json\n    \"start\": {\n      \"executor\": \"@nx/expo:start\",\n      \"options\": {\n        \"port\": 8081,\n        \"host\": \"localhost\"\n      }\n    }\n```\n\n{% /tab %}\n{% tab label=\"Starts the server with cache reset\" %}\n\nThe `clear` option allows you to remove Metro bundler cache.\n\n```json\n    \"start\": {\n      \"executor\": \"@nx/expo:start\",\n      \"options\": {\n        \"port\": 8081,\n        \"clear\": true\n      }\n    }\n```\n\n{% /tab %}\n{% /tabs %}\n\n---\n",
+    "presets": []
+  },
+  "description": "Start a local dev server for the app or start a Webpack dev server for the web app",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/expo/src/executors/start/schema.json",
+  "type": "executor"
+}

@@ -1,0 +1,47 @@
+{
+  "name": "error-boundary",
+  "implementation": "/packages/remix/src/generators/error-boundary/error-boundary.impl.ts",
+  "schema": {
+    "$schema": "https://json-schema.org/schema",
+    "$id": "NxRemixErrorBoundary",
+    "title": "Create an ErrorBoundary for a Route",
+    "description": "Generate an ErrorBoundary for a given route.",
+    "type": "object",
+    "examples": [
+      {
+        "command": "g error-boundary --routePath=apps/demo/app/routes/my-route.tsx",
+        "description": "Generate an ErrorBoundary for my-route.tsx"
+      }
+    ],
+    "properties": {
+      "path": {
+        "type": "string",
+        "description": "The path to route file relative to the project root."
+      },
+      "nameAndDirectoryFormat": {
+        "description": "Whether to generate the error boundary in the path as provided, relative to the current working directory and ignoring the project (`as-provided`) or generate it using the project and directory relative to the workspace root (`derived`).",
+        "type": "string",
+        "enum": ["as-provided", "derived"]
+      },
+      "project": {
+        "type": "string",
+        "description": "The name of the project.",
+        "pattern": "^[a-zA-Z].*$",
+        "x-deprecated": "Provide the `path` option instead and use the `as-provided` format. The project will be determined from the path provided. It will be removed in Nx v19."
+      },
+      "skipFormat": {
+        "type": "boolean",
+        "description": "Skip formatting files after generation.",
+        "default": false,
+        "x-priority": "internal"
+      }
+    },
+    "required": ["path"],
+    "presets": []
+  },
+  "description": "Add an ErrorBoundary to an existing route",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/remix/src/generators/error-boundary/schema.json",
+  "type": "generator"
+}

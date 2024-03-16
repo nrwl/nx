@@ -1,0 +1,63 @@
+{
+  "name": "stories",
+  "factory": "./src/generators/stories/stories#storiesGenerator",
+  "schema": {
+    "$schema": "https://json-schema.org/schema",
+    "cli": "nx",
+    "$id": "NxReactNativeStorybookStories",
+    "title": "Generate React Native Storybook stories",
+    "description": "Generate stories/specs for all components declared in a React Native project.",
+    "type": "object",
+    "properties": {
+      "project": {
+        "type": "string",
+        "aliases": ["name", "projectName"],
+        "description": "Project for which to generate stories.",
+        "$default": { "$source": "projectName", "index": 0 },
+        "x-prompt": "For which project do you want to generate stories?",
+        "x-priority": "important"
+      },
+      "interactionTests": {
+        "type": "boolean",
+        "description": "Set up Storybook interaction tests.",
+        "x-prompt": "Do you want to set up Storybook interaction tests?",
+        "x-priority": "important",
+        "default": true
+      },
+      "js": {
+        "type": "boolean",
+        "description": "Generate JavaScript files rather than TypeScript files.",
+        "default": false
+      },
+      "ignorePaths": {
+        "type": "array",
+        "description": "Paths to ignore when looking for components.",
+        "items": { "type": "string", "description": "Path to ignore." },
+        "default": [
+          "*.stories.ts,*.stories.tsx,*.stories.js,*.stories.jsx,*.stories.mdx"
+        ],
+        "examples": [
+          "apps/my-app/src/not-stories/**",
+          "**/**/src/**/not-stories/**",
+          "libs/my-lib/**/*.something.ts",
+          "**/**/src/**/*.other.*",
+          "libs/my-lib/src/not-stories/**,**/**/src/**/*.other.*,apps/my-app/**/*.something.ts"
+        ]
+      },
+      "skipFormat": {
+        "description": "Skip formatting files.",
+        "type": "boolean",
+        "default": false,
+        "x-priority": "internal"
+      }
+    },
+    "required": ["project"],
+    "presets": []
+  },
+  "description": "Create stories for all components declared in an application or library.",
+  "implementation": "/packages/react-native/src/generators/stories/stories#storiesGenerator.ts",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/react-native/src/generators/stories/schema.json",
+  "type": "generator"
+}

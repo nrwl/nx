@@ -1,0 +1,111 @@
+{
+  "name": "page",
+  "factory": "./src/generators/page/page#pageGeneratorInternal",
+  "schema": {
+    "$schema": "https://json-schema.org/schema",
+    "cli": "nx",
+    "$id": "NxNextReactPage",
+    "title": "Create a Page for Next",
+    "description": "Create a Page for Next.",
+    "type": "object",
+    "properties": {
+      "project": {
+        "type": "string",
+        "description": "The name of the project.",
+        "alias": "p",
+        "$default": { "$source": "projectName" },
+        "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. The project will be determined from the directory provided. It will be removed in Nx v19."
+      },
+      "name": {
+        "type": "string",
+        "description": "The name of the component.",
+        "$default": { "$source": "argv", "index": 0 },
+        "x-prompt": "What name would you like to use for the component?",
+        "x-priority": "important"
+      },
+      "directory": {
+        "type": "string",
+        "description": "The directory at which to create the page file. When `--nameAndDirectoryFormat=as-provided`, it will be relative to the current working directory. Otherwise, it will be relative to the project root.",
+        "alias": "dir",
+        "x-priority": "important"
+      },
+      "nameAndDirectoryFormat": {
+        "description": "Whether to generate the component in the directory as provided, relative to the current working directory and ignoring the project (`as-provided`) or generate it using the project and directory relative to the workspace root (`derived`).",
+        "type": "string",
+        "enum": ["as-provided", "derived"]
+      },
+      "style": {
+        "description": "The file extension to be used for style files.",
+        "type": "string",
+        "alias": "s",
+        "default": "css",
+        "x-prompt": {
+          "message": "Which stylesheet format would you like to use?",
+          "type": "list",
+          "items": [
+            { "value": "css", "label": "CSS" },
+            {
+              "value": "scss",
+              "label": "SASS(.scss)       [ https://sass-lang.com          ]"
+            },
+            {
+              "value": "less",
+              "label": "LESS              [ https://lesscss.org            ]"
+            },
+            {
+              "value": "styled-components",
+              "label": "styled-components [ https://styled-components.com ]"
+            },
+            {
+              "value": "@emotion/styled",
+              "label": "emotion           [ https://emotion.sh            ]"
+            },
+            {
+              "value": "styled-jsx",
+              "label": "styled-jsx        [ https://www.npmjs.com/package/styled-jsx ]"
+            },
+            { "value": "none", "label": "None" }
+          ]
+        },
+        "x-priority": "important"
+      },
+      "withTests": {
+        "type": "boolean",
+        "description": "When true, creates a `spec.ts` test file for the new page.",
+        "default": false
+      },
+      "export": {
+        "type": "boolean",
+        "description": "When true, the component is exported from the project `index.ts` (if it exists).",
+        "alias": "e",
+        "default": false
+      },
+      "js": {
+        "type": "boolean",
+        "description": "Generate JavaScript files rather than TypeScript files.",
+        "default": false
+      },
+      "flat": {
+        "type": "boolean",
+        "description": "Create component at the source root rather than its own directory.",
+        "default": false,
+        "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. It will be removed in Nx v19."
+      },
+      "skipFormat": {
+        "description": "Skip formatting files.",
+        "type": "boolean",
+        "default": false,
+        "x-priority": "internal"
+      }
+    },
+    "required": ["name"],
+    "examplesFile": "## Examples\n\n{% tabs %}\n{% tab label=\"Create static page in an app\" %}\n\n```shell\nnx g page my-page --project=my-app\n```\n\n{% /tab %}\n{% tab label=\"Create dynamic page in an app\" %}\n\nThe following creates a page under `apps/my-app/pages/products/[id].tsx`.\n\n```shell\nnx g page \"[id]\" --project=my-app --directory=products\n```\n\n{% /tab %}\n\n{% /tabs %}\n",
+    "presets": []
+  },
+  "description": "Create a page.",
+  "implementation": "/packages/next/src/generators/page/page#pageGeneratorInternal.ts",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/next/src/generators/page/schema.json",
+  "type": "generator"
+}

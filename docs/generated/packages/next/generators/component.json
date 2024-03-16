@@ -1,0 +1,125 @@
+{
+  "name": "component",
+  "factory": "./src/generators/component/component#componentGeneratorInternal",
+  "schema": {
+    "$schema": "https://json-schema.org/schema",
+    "cli": "nx",
+    "$id": "NxNextReactComponent",
+    "title": "Create a React Component for Next",
+    "description": "Create a React Component for Next.",
+    "type": "object",
+    "properties": {
+      "project": {
+        "type": "string",
+        "description": "The name of the project.",
+        "alias": "p",
+        "$default": { "$source": "projectName" },
+        "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. The project will be determined from the directory provided. It will be removed in Nx v19."
+      },
+      "name": {
+        "type": "string",
+        "description": "The name of the component.",
+        "$default": { "$source": "argv", "index": 0 },
+        "x-prompt": "What name would you like to use for the component?",
+        "x-priority": "important"
+      },
+      "style": {
+        "description": "The file extension to be used for style files.",
+        "type": "string",
+        "alias": "s",
+        "default": "css",
+        "x-prompt": {
+          "message": "Which stylesheet format would you like to use?",
+          "type": "list",
+          "items": [
+            { "value": "css", "label": "CSS" },
+            {
+              "value": "scss",
+              "label": "SASS(.scss)       [ https://sass-lang.com          ]"
+            },
+            {
+              "value": "less",
+              "label": "LESS              [ https://lesscss.org            ]"
+            },
+            {
+              "value": "styled-components",
+              "label": "styled-components [ https://styled-components.com ]"
+            },
+            {
+              "value": "@emotion/styled",
+              "label": "emotion           [ https://emotion.sh            ]"
+            },
+            {
+              "value": "styled-jsx",
+              "label": "styled-jsx        [ https://www.npmjs.com/package/styled-jsx ]"
+            },
+            { "value": "none", "label": "None" }
+          ]
+        }
+      },
+      "skipTests": {
+        "type": "boolean",
+        "description": "When true, does not create `spec.ts` test files for the new component.",
+        "default": false,
+        "x-priority": "internal"
+      },
+      "directory": {
+        "type": "string",
+        "description": "The directory at which to create the component file. When `--nameAndDirectoryFormat=as-provided`, it will be relative to the current working directory. Otherwise, it will be relative to the project root.",
+        "alias": "dir",
+        "x-priority": "important"
+      },
+      "nameAndDirectoryFormat": {
+        "description": "Whether to generate the component in the directory as provided, relative to the current working directory and ignoring the project (`as-provided`) or generate it using the project and directory relative to the workspace root (`derived`).",
+        "type": "string",
+        "enum": ["as-provided", "derived"]
+      },
+      "export": {
+        "type": "boolean",
+        "description": "When true, the component is exported from the project index.ts (if it exists).",
+        "alias": "e",
+        "default": false
+      },
+      "js": {
+        "type": "boolean",
+        "description": "Generate JavaScript files rather than TypeScript files.",
+        "default": false
+      },
+      "flat": {
+        "type": "boolean",
+        "description": "Create component at the source root rather than its own directory.",
+        "default": false,
+        "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. This option will be removed in Nx v19."
+      },
+      "pascalCaseFiles": {
+        "type": "boolean",
+        "description": "Use pascal case component file name (e.g. `App.tsx`).",
+        "alias": "P",
+        "default": false,
+        "x-deprecated": "Provide the `name` in pascal-case and use the `as-provided` format. This option will be removed in Nx v19."
+      },
+      "pascalCaseDirectory": {
+        "type": "boolean",
+        "description": "Use pascal case directory name (e.g. `App/App.tsx`).",
+        "alias": "R",
+        "default": false,
+        "x-deprecated": "Provide the `directory` in pascal-case and use the `as-provided` format. This option will be removed in Nx v19."
+      },
+      "skipFormat": {
+        "description": "Skip formatting files.",
+        "type": "boolean",
+        "default": false,
+        "x-priority": "internal"
+      }
+    },
+    "required": ["name"],
+    "examplesFile": "## Examples\n\n{% tabs %}\n{% tab label=\"Create an app component\" %}\n\n```shell\nnx g component my-cmp --project=my-app\n```\n\n{% /tab %}\n{% tab label=\"Create a component without its own folder\" %}\n\nRunning the following will create a component under `apps/my-app/components/my-cmp.tsx` rather than `apps/my-app/components/my-cmp/my-cmp.tsx`.\n\n```shell\nnx g component my-cmp --flat --project=my-app\n```\n\n{% /tab %}\n{% tab label=\"Create component in a custom directory\" %}\n\nRunning the following will create a component under `apps/my-app/foo/my-cmp.tsx` rather than `apps/my-app/my-cmp/my-cmp.tsx`.\n\n```shell\nnx g component my-cmp --directory=foo --flat --project=my-app\n```\n\n{% /tab %}\n{% /tabs %}\n",
+    "presets": []
+  },
+  "description": "Create a component.",
+  "implementation": "/packages/next/src/generators/component/component#componentGeneratorInternal.ts",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/next/src/generators/component/schema.json",
+  "type": "generator"
+}

@@ -1,0 +1,97 @@
+{
+  "name": "directive",
+  "factory": "./src/generators/directive/directive",
+  "schema": {
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "GeneratorAngularDirective",
+    "cli": "nx",
+    "title": "Nx Angular Directive Options Schema",
+    "type": "object",
+    "description": "Creates a new Angular directive.",
+    "additionalProperties": false,
+    "properties": {
+      "name": {
+        "type": "string",
+        "description": "The name of the new directive.",
+        "$default": { "$source": "argv", "index": 0 },
+        "x-prompt": "What name would you like to use for the directive?"
+      },
+      "directory": {
+        "type": "string",
+        "description": "The directory at which to create the directive file. When `--nameAndDirectoryFormat=as-provided`, it will be relative to the current working directory. Otherwise, it will be relative to the workspace root.",
+        "aliases": ["dir", "path"],
+        "x-priority": "important"
+      },
+      "nameAndDirectoryFormat": {
+        "description": "Whether to generate the directive in the directory as provided, relative to the current working directory and ignoring the project (`as-provided`) or generate it using the project and directory relative to the workspace root (`derived`).",
+        "type": "string",
+        "enum": ["as-provided", "derived"]
+      },
+      "project": {
+        "type": "string",
+        "description": "The name of the project.",
+        "$default": { "$source": "projectName" },
+        "x-dropdown": "projects",
+        "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. The project will be determined from the directory provided. It will be removed in Nx v19."
+      },
+      "prefix": {
+        "type": "string",
+        "description": "A prefix to apply to generated selectors.",
+        "alias": "p",
+        "oneOf": [
+          { "maxLength": 0 },
+          { "minLength": 1, "format": "html-selector" }
+        ]
+      },
+      "skipTests": {
+        "type": "boolean",
+        "description": "Do not create \"spec.ts\" test files for the new class.",
+        "default": false
+      },
+      "skipImport": {
+        "type": "boolean",
+        "description": "Do not import this directive into the owning NgModule.",
+        "default": false
+      },
+      "selector": {
+        "type": "string",
+        "format": "html-selector",
+        "description": "The HTML selector to use for this directive."
+      },
+      "standalone": {
+        "description": "Whether the generated directive is standalone.",
+        "type": "boolean",
+        "default": true
+      },
+      "flat": {
+        "type": "boolean",
+        "description": "When true (the default), creates the new files at the top level of the current project.",
+        "default": true,
+        "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. It will be removed in Nx v19."
+      },
+      "module": {
+        "type": "string",
+        "description": "The filename of the declaring NgModule.",
+        "alias": "m"
+      },
+      "export": {
+        "type": "boolean",
+        "default": false,
+        "description": "The declaring NgModule exports this directive."
+      },
+      "skipFormat": {
+        "type": "boolean",
+        "default": false,
+        "description": "Skip formatting of files."
+      }
+    },
+    "required": ["name"],
+    "presets": []
+  },
+  "aliases": ["d"],
+  "description": "Generate an Angular directive.",
+  "implementation": "/packages/angular/src/generators/directive/directive.ts",
+  "hidden": false,
+  "path": "/packages/angular/src/generators/directive/schema.json",
+  "type": "generator"
+}

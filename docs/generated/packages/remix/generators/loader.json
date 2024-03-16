@@ -1,0 +1,36 @@
+{
+  "name": "loader",
+  "implementation": "/packages/remix/src/generators/loader/loader.impl.ts",
+  "schema": {
+    "$schema": "https://json-schema.org/schema",
+    "$id": "data-loader",
+    "type": "object",
+    "description": "Generate an loader for a given route.",
+    "properties": {
+      "path": {
+        "type": "string",
+        "description": "The route path or path to the filename of the route.",
+        "$default": { "$source": "argv", "index": 0 },
+        "x-prompt": "What is the path of the route? (e.g. 'apps/demo/app/routes/foo/bar.tsx')"
+      },
+      "nameAndDirectoryFormat": {
+        "description": "Whether to generate the loader in the path as provided, relative to the current working directory and ignoring the project (`as-provided`) or generate it using the project and directory relative to the workspace root (`derived`).",
+        "type": "string",
+        "enum": ["as-provided", "derived"]
+      },
+      "project": {
+        "type": "string",
+        "description": "The name of the project.",
+        "pattern": "^[a-zA-Z].*$",
+        "x-deprecated": "Provide the `path` option instead and use the `as-provided` format. The project will be determined from the path provided. It will be removed in Nx v19."
+      }
+    },
+    "required": ["path"],
+    "presets": []
+  },
+  "description": "Add a loader function to an existing route",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/remix/src/generators/loader/schema.json",
+  "type": "generator"
+}
