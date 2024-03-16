@@ -73,14 +73,13 @@ export function someFunction(): string {
 
 import express from 'express';
 import * as path from 'path';
-import { someFunction } from '@my-express-app/my-lib';
 
 const app = express();
 
 app.use('/assets', express.static(path.join(__dirname, 'assets')));
 
 app.get('/api', (req, res) => {
-  res.send({ message: `Welcome to my-express-app! ${someFunction()}` });
+  res.send({ message: 'Welcome to my-express-app!' });
 });
 
 const port = process.env.PORT || 3333;

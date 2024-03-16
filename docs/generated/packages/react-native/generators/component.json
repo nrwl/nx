@@ -1,0 +1,91 @@
+{
+  "name": "component",
+  "factory": "./src/generators/component/component#reactNativeComponentGeneratorInternal",
+  "schema": {
+    "cli": "nx",
+    "$id": "NxReactNativeApplication",
+    "$schema": "https://json-schema.org/schema",
+    "title": "Create a React Native Component for Nx",
+    "description": "Create a React native Component for Nx.",
+    "type": "object",
+    "examples": [
+      {
+        "command": "nx g @nx/react-native:component my-component --project=mylib",
+        "description": "Generate a component in the `mylib` library"
+      },
+      {
+        "command": "nx g @nx/react-native:component my-component --project=mylib --classComponent",
+        "description": "Generate a class component in the `mylib` library"
+      }
+    ],
+    "properties": {
+      "project": {
+        "type": "string",
+        "description": "The name of the project.",
+        "alias": "p",
+        "$default": { "$source": "projectName" },
+        "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. The project will be determined from the directory provided. It will be removed in Nx v19."
+      },
+      "name": {
+        "type": "string",
+        "description": "The name of the component.",
+        "$default": { "$source": "argv", "index": 0 },
+        "x-prompt": "What name would you like to use for the component?"
+      },
+      "js": {
+        "type": "boolean",
+        "description": "Generate JavaScript files rather than TypeScript files.",
+        "default": false
+      },
+      "skipTests": {
+        "type": "boolean",
+        "description": "When true, does not create `spec.ts` test files for the new component.",
+        "default": false
+      },
+      "directory": {
+        "type": "string",
+        "description": "The directory at which to create the component file. When `--nameAndDirectoryFormat=as-provided`, it will be relative to the current working directory. Otherwise, it will be relative to the project root.",
+        "x-priority": "important"
+      },
+      "nameAndDirectoryFormat": {
+        "description": "Whether to generate the component in the directory as provided, relative to the current working directory and ignoring the project (`as-provided`) or generate it using the project and directory relative to the workspace root (`derived`).",
+        "type": "string",
+        "enum": ["as-provided", "derived"]
+      },
+      "flat": {
+        "type": "boolean",
+        "description": "Create component at the source root rather than its own directory.",
+        "default": false,
+        "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. This option will be removed in Nx v19."
+      },
+      "export": {
+        "type": "boolean",
+        "description": "When true, the component is exported from the project `index.ts` (if it exists).",
+        "alias": "e",
+        "default": false,
+        "x-prompt": "Should this component be exported in the project?"
+      },
+      "pascalCaseFiles": {
+        "type": "boolean",
+        "description": "Use pascal case component file name (e.g. `App.tsx`).",
+        "alias": "P",
+        "default": false,
+        "x-deprecated": "Provide the `name` in pascal-case and use the `as-provided` format. This option will be removed in Nx v19."
+      },
+      "classComponent": {
+        "type": "boolean",
+        "alias": "C",
+        "description": "Use class components instead of functional component.",
+        "default": false
+      }
+    },
+    "required": ["name"],
+    "presets": []
+  },
+  "description": "Create a React Native component.",
+  "aliases": ["c"],
+  "implementation": "/packages/react-native/src/generators/component/component#reactNativeComponentGeneratorInternal.ts",
+  "hidden": false,
+  "path": "/packages/react-native/src/generators/component/schema.json",
+  "type": "generator"
+}

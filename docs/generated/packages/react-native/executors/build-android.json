@@ -1,0 +1,81 @@
+{
+  "name": "build-android",
+  "implementation": "/packages/react-native/src/executors/build-android/build-android.impl.ts",
+  "schema": {
+    "version": 2,
+    "outputCapture": "direct-nodejs",
+    "cli": "nx",
+    "$id": "NxReactNativeBuildAndroid",
+    "$schema": "https://json-schema.org/schema",
+    "title": "Release Build for Android",
+    "description": "Build target options for Android.",
+    "type": "object",
+    "presets": [
+      {
+        "name": "Build Android for current device architecture",
+        "keys": ["activeArchOnly"]
+      },
+      { "name": "Build Android without metro cache", "keys": ["resetCache"] },
+      { "name": "Build Android with specific tasks", "keys": ["tasks"] },
+      { "name": "Build Android with a specific mode", "keys": ["mode"] }
+    ],
+    "properties": {
+      "mode": {
+        "type": "string",
+        "description": "Specify your app's build variant",
+        "default": "debug",
+        "examples": ["debug", "release"],
+        "x-priority": "important"
+      },
+      "port": {
+        "type": "number",
+        "description": "The port where the packager server is listening on.",
+        "default": 8081
+      },
+      "tasks": {
+        "oneOf": [
+          { "type": "array", "items": { "type": "string" } },
+          { "type": "string" }
+        ],
+        "description": "Run custom Gradle tasks. By default it's \"assembleDebug\". Will override passed mode and variant arguments.",
+        "examples": [
+          "assembleDebug",
+          "assembleRelease",
+          "bundleDebug",
+          "bundleRelease",
+          "installDebug",
+          "installRelease"
+        ]
+      },
+      "activeArchOnly": {
+        "type": "boolean",
+        "description": "Build native libraries only for the current device architecture for debug builds.",
+        "default": false
+      },
+      "extraParams": {
+        "oneOf": [
+          { "type": "array", "items": { "type": "string" } },
+          { "type": "string" }
+        ],
+        "description": "Custom params passed to gradle build command",
+        "examples": ["-x lint -x test"]
+      },
+      "interactive": {
+        "type": "boolean",
+        "description": "Explicitly select build type and flavour to use before running a build"
+      },
+      "resetCache": {
+        "type": "boolean",
+        "description": "Resets metro cache.",
+        "default": false
+      }
+    },
+    "required": [],
+    "examplesFile": "`project.json`:\n\n```json\n{\n  \"name\": \"mobile\",\n  //...\n  \"targets\": {\n    //...\n    \"build-android\": {\n      \"executor\": \"@nx/react-native:build-android\",\n      \"outputs\": [\n        \"{projectRoot}/build/outputs/bundle\",\n        \"{projectRoot}/build/outputs/apk\"\n      ],\n      \"options\": {}\n    }\n  }\n}\n```\n\n```bash\nnx run mobile:build-android\n```\n\n## Examples\n\n{% tabs %}\n{% tab label=\"Build with custom tasks\" %}\nThe `tasks` option accepts any custom gradle task, such as `assembleDebug`, `assembleRelease`, `bundleDebug`, `bundleRelease`, `installDebug`, `installRelease`.\nFor example, pass in `bundleRelease` or `bundleRelease` to tasks, it will create with `.aab` extension under bundle folder.\nPass in `assembleDebug` or `assembleRelease` to tasks, it will create a build with `.apk` extension under apk folder.\nPass in `installDebug` or `installRelease` to tasks, it will create a build with `.apk` extension and immediately install it on a running emulator or connected device.\n\n```json\n    \"build-android\": {\n      \"executor\": \"@nx/react-native:build-android\",\n      \"outputs\": [\n        \"{projectRoot}/build/outputs/bundle\",\n        \"{projectRoot}/build/outputs/apk\"\n      ],\n      \"options\": {\n        \"tasks\": [\"bundleRelease\"]\n      }\n    }\n```\n\n{% /tab %}\n{% tab label=\"Build for debug/release\" %}\n\nThe `mode` option allows you determine whether to build for debug/release apk.\n\n```json\n    \"build-android\": {\n      \"executor\": \"@nx/react-native:build-android\",\n      \"outputs\": [\n        \"{projectRoot}/build/outputs/bundle\",\n        \"{projectRoot}/build/outputs/apk\"\n      ],\n      \"options\": {\n        \"mode\": \"debug\"\n      }\n    }\n```\n\n{% /tab %}\n{% tab label=\"Build for current device architecture\" %}\n\nThe `activeArchOnly` option allows you to build native libraries only for the current device architecture for debug builds.\n\n```json\n    \"build-android\": {\n      \"executor\": \"@nx/react-native:build-android\",\n      \"outputs\": [\n        \"{projectRoot}/build/outputs/bundle\",\n        \"{projectRoot}/build/outputs/apk\"\n      ],\n      \"options\": {\n        \"activeArchOnly\": true\n      }\n    }\n```\n\n{% /tab %}\n{% /tabs %}\n\n---\n"
+  },
+  "description": "Release Build for Android.",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/react-native/src/executors/build-android/schema.json",
+  "type": "executor"
+}

@@ -1,0 +1,83 @@
+{
+  "name": "pipe",
+  "factory": "./src/generators/pipe/pipe",
+  "schema": {
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "SchematicsAngularPipe",
+    "title": "Angular Pipe Options Schema",
+    "type": "object",
+    "cli": "nx",
+    "additionalProperties": false,
+    "description": "Creates an Angular pipe.",
+    "properties": {
+      "name": {
+        "type": "string",
+        "description": "The name of the pipe.",
+        "$default": { "$source": "argv", "index": 0 },
+        "x-prompt": "What name would you like to use for the pipe?"
+      },
+      "directory": {
+        "type": "string",
+        "description": "The directory at which to create the pipe file. When `--nameAndDirectoryFormat=as-provided`, it will be relative to the current working directory. Otherwise, it will be relative to the workspace root.",
+        "aliases": ["dir", "path"],
+        "x-priority": "important"
+      },
+      "nameAndDirectoryFormat": {
+        "description": "Whether to generate the pipe in the directory as provided, relative to the current working directory and ignoring the project (`as-provided`) or generate it using the project and directory relative to the workspace root (`derived`).",
+        "type": "string",
+        "enum": ["as-provided", "derived"]
+      },
+      "project": {
+        "type": "string",
+        "description": "The name of the project.",
+        "$default": { "$source": "projectName" },
+        "x-dropdown": "projects",
+        "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. The project will be determined from the directory provided. It will be removed in Nx v19."
+      },
+      "flat": {
+        "type": "boolean",
+        "default": true,
+        "description": "When true (the default) creates files at the top level of the project.",
+        "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. It will be removed in Nx v19."
+      },
+      "skipTests": {
+        "type": "boolean",
+        "description": "Do not create \"spec.ts\" test files for the new pipe.",
+        "default": false
+      },
+      "skipImport": {
+        "type": "boolean",
+        "default": false,
+        "description": "Do not import this pipe into the owning NgModule."
+      },
+      "standalone": {
+        "description": "Whether the generated pipe is standalone.",
+        "type": "boolean",
+        "default": true
+      },
+      "module": {
+        "type": "string",
+        "description": "The filename of the declaring NgModule.",
+        "alias": "m"
+      },
+      "export": {
+        "type": "boolean",
+        "default": false,
+        "description": "The declaring NgModule exports this pipe."
+      },
+      "skipFormat": {
+        "type": "boolean",
+        "default": false,
+        "description": "Skip formatting of files."
+      }
+    },
+    "required": ["name"],
+    "presets": []
+  },
+  "description": "Generate an Angular Pipe",
+  "aliases": ["p"],
+  "implementation": "/packages/angular/src/generators/pipe/pipe.ts",
+  "hidden": false,
+  "path": "/packages/angular/src/generators/pipe/schema.json",
+  "type": "generator"
+}
