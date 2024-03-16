@@ -20,6 +20,7 @@ describe('@nx/jest/plugin', () => {
         },
       },
       workspaceRoot: tempFs.tempDir,
+      configFiles: [],
     };
 
     await tempFs.createFiles({

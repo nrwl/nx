@@ -43,7 +43,7 @@ interface ReactArguments extends BaseArguments {
   stack: 'react';
   workspaceType: 'standalone' | 'integrated';
   appName: string;
-  framework: 'none' | 'next';
+  framework: 'none' | 'next' | 'remix';
   style: string;
   bundler: 'webpack' | 'vite' | 'rspack';
   nextAppDir: boolean;
@@ -378,6 +378,8 @@ async function determineStack(
       case Preset.ReactMonorepo:
       case Preset.NextJs:
       case Preset.NextJsStandalone:
+      case Preset.RemixStandalone:
+      case Preset.RemixMonorepo:
         return 'react';
       case Preset.Vue:
       case Preset.VueStandalone:
@@ -520,7 +522,8 @@ async function determineReactOptions(
     preset = parsedArgs.preset;
     if (
       preset === Preset.ReactStandalone ||
-      preset === Preset.NextJsStandalone
+      preset === Preset.NextJsStandalone ||
+      preset === Preset.RemixStandalone
     ) {
       appName = parsedArgs.appName ?? parsedArgs.name;
     } else {
@@ -548,6 +551,12 @@ async function determineReactOptions(
       } else {
         preset = Preset.NextJs;
       }
+    } else if (framework === 'remix') {
+      if (workspaceType === 'standalone') {
+        preset = Preset.RemixStandalone;
+      } else {
+        preset = Preset.RemixMonorepo;
+      }
     } else if (framework === 'react-native') {
       preset = Preset.ReactNative;
     } else if (framework === 'expo') {
@@ -567,6 +576,11 @@ async function determineReactOptions(
   } else if (preset === Preset.NextJs || preset === Preset.NextJsStandalone) {
     nextAppDir = await determineNextAppDir(parsedArgs);
     nextSrcDir = await determineNextSrcDir(parsedArgs);
+    e2eTestRunner = await determineE2eTestRunner(parsedArgs);
+  } else if (
+    preset === Preset.RemixMonorepo ||
+    preset === Preset.RemixStandalone
+  ) {
     e2eTestRunner = await determineE2eTestRunner(parsedArgs);
   }
 
@@ -1017,9 +1031,9 @@ async function determineAppName(
 
 async function determineReactFramework(
   parsedArgs: yargs.Arguments<ReactArguments>
-): Promise<'none' | 'nextjs' | 'expo' | 'react-native'> {
+): Promise<'none' | 'nextjs' | 'remix' | 'expo' | 'react-native'> {
   const reply = await enquirer.prompt<{
-    framework: 'none' | 'nextjs' | 'expo' | 'react-native';
+    framework: 'none' | 'nextjs' | 'remix' | 'expo' | 'react-native';
   }>([
     {
       name: 'framework',
@@ -1034,6 +1048,10 @@ async function determineReactFramework(
         {
           name: 'nextjs',
           message: 'Next.js       [ https://nextjs.org/      ]',
+        },
+        {
+          name: 'remix',
+          message: 'Remix         [ https://remix.run/       ]',
         },
         {
           name: 'expo',
