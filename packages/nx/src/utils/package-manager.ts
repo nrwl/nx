@@ -13,7 +13,7 @@ import { workspaceRoot } from './workspace-root';
 
 const execAsync = promisify(exec);
 
-export type PackageManager = 'yarn' | 'pnpm' | 'npm';
+export type PackageManager = 'yarn' | 'pnpm' | 'npm' | 'bun';
 
 export interface PackageManagerCommands {
   preInstall?: string;
@@ -36,7 +36,8 @@ export function detectPackageManager(dir: string = ''): PackageManager {
   const nxJson = readNxJson();
   return (
     nxJson.cli?.packageManager ??
-    (existsSync(join(dir, 'yarn.lock'))
+    existsSync(join(dir, 'bun.lockb')) ? 'bun' 
+      : existsSync(join(dir, 'yarn.lock')
       ? 'yarn'
       : existsSync(join(dir, 'pnpm-lock.yaml'))
       ? 'pnpm'
@@ -125,21 +126,18 @@ export function getPackageManagerCommand(
         list: 'pnpm ls --depth 100',
       };
     },
-    npm: () => {
-      // TODO: Remove this
-      process.env.npm_config_legacy_peer_deps ??= 'true';
-
+    bun: () => {
       return {
-        install: 'npm install',
-        ciInstall: 'npm ci',
-        updateLockFile: 'npm install --package-lock-only',
-        add: 'npm install',
-        addDev: 'npm install -D',
-        rm: 'npm rm',
-        exec: 'npx',
-        dlx: 'npx',
-        run: (script: string, args: string) => `npm run ${script} -- ${args}`,
-        list: 'npm ls',
+        install: 'bun install',
+        ciInstall: 'bun install --no-cache',
+        updateLockFile: 'bun install',
+        add: 'bun add',
+        addDev: 'bun add --dev',
+        rm: 'bun rm',
+        exec: 'bun',
+        dlx: 'bunx',
+        run: (script: string, args: string) => `bun run ${script} -- ${args}`,
+        list: 'bun pm ls',
       };
     },
   };
