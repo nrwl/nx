@@ -248,7 +248,12 @@ export function copyPackageManagerConfigurationFiles(
   root: string,
   destination: string
 ) {
-  for (const packageManagerConfigFile of ['.npmrc', '.yarnrc', '.yarnrc.yml']) {
+  for (const packageManagerConfigFile of [
+    '.npmrc',
+    '.yarnrc',
+    '.yarnrc.yml',
+    'bunfig.toml',
+  ]) {
     // f is an absolute path, including the {workspaceRoot}.
     const f = findFileInPackageJsonDirectory(packageManagerConfigFile, root);
     if (f) {
@@ -258,6 +263,10 @@ export function copyPackageManagerConfigurationFiles(
       const destinationPath = join(destination, relative(root, f));
       switch (packageManagerConfigFile) {
         case '.npmrc': {
+          copyFileSync(f, destinationPath);
+          break;
+        }
+        case 'bunfig.toml': {
           copyFileSync(f, destinationPath);
           break;
         }
@@ -361,7 +370,7 @@ export async function packageRegistryView(
   args: string
 ): Promise<string> {
   let pm = detectPackageManager();
-  if (pm === 'yarn') {
+  if (pm === 'yarn' || pm === 'bun') {
     /**
      * yarn has `yarn info` but it behaves differently than (p)npm,
      * which makes it's usage unreliable
@@ -381,7 +390,7 @@ export async function packageRegistryPack(
   version: string
 ): Promise<{ tarballPath: string }> {
   let pm = detectPackageManager();
-  if (pm === 'yarn') {
+  if (pm === 'yarn' || pm === 'bun') {
     /**
      * `(p)npm pack` will download a tarball of the specified version,
      * whereas `yarn` pack creates a tarball of the active workspace, so it
