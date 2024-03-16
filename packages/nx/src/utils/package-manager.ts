@@ -13,7 +13,7 @@ import { workspaceRoot } from './workspace-root';
 
 const execAsync = promisify(exec);
 
-export type PackageManager = 'yarn' | 'pnpm' | 'npm';
+export type PackageManager = 'yarn' | 'pnpm' | 'npm' | 'bun';
 
 export interface PackageManagerCommands {
   preInstall?: string;
@@ -34,14 +34,13 @@ export interface PackageManagerCommands {
  */
 export function detectPackageManager(dir: string = ''): PackageManager {
   const nxJson = readNxJson();
-  return (
-    nxJson.cli?.packageManager ??
-    (existsSync(join(dir, 'yarn.lock'))
-      ? 'yarn'
-      : existsSync(join(dir, 'pnpm-lock.yaml'))
-      ? 'pnpm'
-      : 'npm')
-  );
+  return nxJson.cli?.packageManager ?? existsSync(join(dir, 'bun.lockb'))
+    ? 'bun'
+    : existsSync(join(dir, 'yarn.lock'))
+    ? 'yarn'
+    : existsSync(join(dir, 'pnpm-lock.yaml'))
+    ? 'pnpm'
+    : 'npm';
 }
 
 /**
@@ -53,6 +52,10 @@ export function isWorkspacesEnabled(
   packageManager: PackageManager = detectPackageManager(),
   root: string = workspaceRoot
 ): boolean {
+  if (packageManager === 'bun') {
+    return existsSync(join(root, 'bun-workspace.yaml'));
+  }
+
   if (packageManager === 'pnpm') {
     return existsSync(join(root, 'pnpm-workspace.yaml'));
   }
@@ -140,6 +143,20 @@ export function getPackageManagerCommand(
         dlx: 'npx',
         run: (script: string, args: string) => `npm run ${script} -- ${args}`,
         list: 'npm ls',
+      };
+    },
+    bun: () => {
+      return {
+        install: 'bun install',
+        ciInstall: 'bun install --no-cache',
+        updateLockFile: 'bun install',
+        add: 'bun add',
+        addDev: 'bun add --dev',
+        rm: 'bun rm',
+        exec: 'bun',
+        dlx: 'bunx',
+        run: (script: string, args: string) => `bun run ${script} -- ${args}`,
+        list: 'bun pm ls',
       };
     },
   };
