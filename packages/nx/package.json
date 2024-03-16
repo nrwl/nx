@@ -80,6 +80,7 @@
     }
   },
   "optionalDependencies": {
+    "@nx/nx-darwin-arm64": "*",
     "@nx/nx-darwin-x64": "*",
     "@nx/nx-linux-x64-gnu": "*",
     "@nx/nx-linux-x64-musl": "*",
