@@ -52,10 +52,6 @@ export function isWorkspacesEnabled(
   packageManager: PackageManager = detectPackageManager(),
   root: string = workspaceRoot
 ): boolean {
-  if (packageManager === 'bun') {
-    return existsSync(join(root, 'bun-workspace.yaml'));
-  }
-
   if (packageManager === 'pnpm') {
     return existsSync(join(root, 'pnpm-workspace.yaml'));
   }
