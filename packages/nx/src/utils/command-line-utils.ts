@@ -314,7 +314,10 @@ function getMergeBase(base: string = 'main', head: string = 'HEAD') {
   }
 }
 
-function getFilesUsingBaseAndHead(base: string = 'main', head: string): string[] {
+function getFilesUsingBaseAndHead(
+  base: string = 'main',
+  head: string
+): string[] {
   return parseGitOutput(
     `git diff --name-only --no-renames --relative "${base}" "${head}"`
   );
