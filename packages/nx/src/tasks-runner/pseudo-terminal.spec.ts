@@ -3,7 +3,7 @@ import { getPseudoTerminal, PseudoTerminal } from './pseudo-terminal';
 describe('PseudoTerminal', () => {
   let terminal: PseudoTerminal;
   beforeAll(() => {
-    terminal = getPseudoTerminal();
+    terminal = getPseudoTerminal(true);
   });
 
   afterAll(() => {

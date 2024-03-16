@@ -2,11 +2,14 @@ import { ChildProcess, RustPseudoTerminal } from '../native';
 import { PseudoIPCServer } from './pseudo-ipc';
 import { FORKED_PROCESS_OS_SOCKET_PATH } from '../daemon/socket-utils';
 import { Serializable } from 'child_process';
-import { signalToCode } from '../utils/exit-codes';
+import * as os from 'os';
 
 let pseudoTerminal: PseudoTerminal;
 
-export function getPseudoTerminal() {
+export function getPseudoTerminal(skipSupportCheck: boolean = false) {
+  if (!skipSupportCheck && !PseudoTerminal.isSupported()) {
+    throw new Error('Pseudo terminal is not supported on this platform.');
+  }
   pseudoTerminal ??= new PseudoTerminal(new RustPseudoTerminal());
 
   return pseudoTerminal;
@@ -17,6 +20,10 @@ export class PseudoTerminal {
   private pseudoIPC = new PseudoIPCServer(this.pseudoIPCPath);
 
   private initialized: boolean = false;
+
+  static isSupported() {
+    return process.stdout.isTTY && supportedPtyPlatform();
+  }
 
   constructor(private rustPseudoTerminal: RustPseudoTerminal) {
     this.setupProcessListeners();
@@ -181,5 +188,27 @@ function messageToCode(message: string): number {
     return 0;
   } else {
     return 1;
+  }
+}
+
+function supportedPtyPlatform() {
+  if (process.platform !== 'win32') {
+    return true;
+  }
+
+  let windowsVersion = os.release().split('.');
+  let windowsBuild = windowsVersion[2];
+
+  if (!windowsBuild) {
+    return false;
+  }
+
+  // Mininum supported Windows version:
+  // https://en.wikipedia.org/wiki/Windows_10,_version_1809
+  // https://learn.microsoft.com/en-us/windows/console/createpseudoconsole#requirements
+  if (+windowsBuild < 17763) {
+    return false;
+  } else {
+    return true;
   }
 }

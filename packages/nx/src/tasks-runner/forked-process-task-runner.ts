@@ -15,7 +15,11 @@ import {
 import { stripIndents } from '../utils/strip-indents';
 import { Task, TaskGraph } from '../config/task-graph';
 import { Transform } from 'stream';
-import { PseudoTtyProcess, getPseudoTerminal } from './pseudo-terminal';
+import {
+  PseudoTtyProcess,
+  getPseudoTerminal,
+  PseudoTerminal,
+} from './pseudo-terminal';
 import { signalToCode } from '../utils/exit-codes';
 
 const forkScript = join(__dirname, './fork.js');
@@ -28,12 +32,16 @@ export class ForkedProcessTaskRunner {
   private readonly verbose = process.env.NX_VERBOSE_LOGGING === 'true';
   private processes = new Set<ChildProcess | PseudoTtyProcess>();
 
-  private pseudoTerminal = getPseudoTerminal();
+  private pseudoTerminal: PseudoTerminal | null = PseudoTerminal.isSupported()
+    ? getPseudoTerminal()
+    : null;
 
   constructor(private readonly options: DefaultTasksRunnerOptions) {}
 
   async init() {
-    await this.pseudoTerminal.init();
+    if (this.pseudoTerminal) {
+      await this.pseudoTerminal.init();
+    }
     this.setupProcessEventListeners();
   }
 
@@ -151,15 +159,16 @@ export class ForkedProcessTaskRunner {
     {
       temporaryOutputPath,
       streamOutput,
-      pipeOutput,
       taskGraph,
       env,
+      disablePseudoTerminal,
     }: {
       temporaryOutputPath: string;
       streamOutput: boolean;
       pipeOutput: boolean;
       taskGraph: TaskGraph;
       env: NodeJS.ProcessEnv;
+      disablePseudoTerminal: boolean;
     }
   ): Promise<{ code: number; terminalOutput: string }> {
     const shouldPrefix =
@@ -167,7 +176,12 @@ export class ForkedProcessTaskRunner {
 
     // streamOutput would be false if we are running multiple targets
     // there's no point in running the commands in a pty if we are not streaming the output
-    if (!streamOutput || shouldPrefix || !process.stdout.isTTY) {
+    if (
+      !this.pseudoTerminal ||
+      disablePseudoTerminal ||
+      !streamOutput ||
+      shouldPrefix
+    ) {
       return this.forkProcessWithPrefixAndNotTTY(task, {
         temporaryOutputPath,
         streamOutput,
@@ -439,14 +453,18 @@ export class ForkedProcessTaskRunner {
   }
 
   private setupProcessEventListeners() {
-    this.pseudoTerminal.onMessageFromChildren((message: Serializable) => {
-      process.send(message);
-    });
+    if (this.pseudoTerminal) {
+      this.pseudoTerminal.onMessageFromChildren((message: Serializable) => {
+        process.send(message);
+      });
+    }
 
     // When the nx process gets a message, it will be sent into the task's process
     process.on('message', (message: Serializable) => {
       // this.publisher.publish(message.toString());
-      this.pseudoTerminal.sendMessageToChildren(message);
+      if (this.pseudoTerminal) {
+        this.pseudoTerminal.sendMessageToChildren(message);
+      }
 
       this.processes.forEach((p) => {
         if ('connected' in p && p.connected) {

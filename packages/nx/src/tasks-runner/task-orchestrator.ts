@@ -27,7 +27,6 @@ import {
   getEnvVariablesForTask,
   getTaskSpecificEnv,
 } from './task-env';
-import * as os from 'os';
 import { workspaceRoot } from '../utils/workspace-root';
 import { output } from '../utils/output';
 import { combineOptionsForExecutor } from '../utils/params';
@@ -461,9 +460,10 @@ export class TaskOrchestrator {
     streamOutput: boolean
   ) {
     try {
-      let usePtyFork =
-        process.env.NX_NATIVE_COMMAND_RUNNER !== 'false' &&
-        supportedPtyPlatform();
+      const usePtyFork = process.env.NX_NATIVE_COMMAND_RUNNER !== 'false';
+
+      // Disable the pseudo terminal if this is a run-many
+      const disablePseudoTerminal = !this.initiatingProject;
       // execution
       const { code, terminalOutput } = usePtyFork
         ? await this.forkedProcessTaskRunner.forkProcess(task, {
@@ -472,6 +472,7 @@ export class TaskOrchestrator {
             pipeOutput,
             taskGraph: this.taskGraph,
             env,
+            disablePseudoTerminal,
           })
         : await this.forkedProcessTaskRunner.forkProcessLegacy(task, {
             temporaryOutputPath,
@@ -678,26 +679,4 @@ export class TaskOrchestrator {
   }
 
   // endregion utils
-}
-
-function supportedPtyPlatform() {
-  if (process.platform !== 'win32') {
-    return true;
-  }
-
-  let windowsVersion = os.release().split('.');
-  let windowsBuild = windowsVersion[2];
-
-  if (!windowsBuild) {
-    return false;
-  }
-
-  // Mininum supported Windows version:
-  // https://en.wikipedia.org/wiki/Windows_10,_version_1809
-  // https://learn.microsoft.com/en-us/windows/console/createpseudoconsole#requirements
-  if (+windowsBuild < 17763) {
-    return false;
-  } else {
-    return true;
-  }
 }
