@@ -28,6 +28,8 @@ describe('package-manager', () => {
             return true;
           case 'pnpm-lock.yaml':
             return false;
+          case 'bun.lockb':
+            return false;
           case 'package-lock.json':
             return false;
           default:
@@ -47,6 +49,8 @@ describe('package-manager', () => {
             return false;
           case 'pnpm-lock.yaml':
             return true;
+          case 'bun.lockb':
+            return false;
           case 'package-lock.json':
             return false;
           default:
@@ -67,6 +71,8 @@ describe('package-manager', () => {
           case 'pnpm-lock.yaml':
             return false;
           case 'package-lock.json':
+            return false;
+          case 'bun.lockb':
             return false;
           default:
             return jest.requireActual('fs').existsSync(p);
