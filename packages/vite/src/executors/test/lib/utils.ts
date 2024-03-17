@@ -63,7 +63,7 @@ export async function getOptions(
 
   const { parseCLI } = await loadVitestDynamicImport();
 
-  const normalizedExtraArgs = parseCLI([
+  const { options: normalizedExtraArgs } = parseCLI([
     'vitest',
     ...getOptionsAsArgv(options),
   ]);
