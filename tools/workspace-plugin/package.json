@@ -7,6 +7,5 @@
     "tslib": "^2.3.0"
   },
   "type": "commonjs",
-  "main": "./src/index.js",
-  "typings": "./src/index.d.ts"
+  "main": "./src/index.ts"
 }
