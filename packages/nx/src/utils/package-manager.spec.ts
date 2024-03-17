@@ -31,6 +31,11 @@ describe('package-manager', () => {
     });
 
     it('should detect pnpm package manager from pnpm-lock.yaml', () => {
+      jest.spyOn(configModule, 'readNxJson').mockReturnValueOnce({
+        cli: {
+          packageManager: 'pnpm',
+        },
+      });
       jest.spyOn(configModule, 'readNxJson').mockReturnValueOnce({});
       jest
         .spyOn(fs, 'existsSync')
