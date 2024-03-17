@@ -48,7 +48,7 @@ function getPackageManager(dir: string = '') {
  */
 export function detectPackageManager(dir: string = ''): PackageManager {
   const nxJson = readNxJson();
-  return nxJson.cli?.packageManager ?? getPackageManager(dir)
+  return nxJson.cli?.packageManager ?? getPackageManager(dir);
 }
 
 /**
