@@ -65,8 +65,7 @@
     "yargs": "^17.6.2",
     "yargs-parser": "21.1.1",
     "node-machine-id": "1.1.12",
-    "ora": "5.3.0",
-    "@nx/nx-darwin-arm64": "18.1.0-beta.10"
+    "ora": "5.3.0"
   },
   "peerDependencies": {
     "@swc-node/register": "^1.8.0",
@@ -82,6 +81,7 @@
   },
   "optionalDependencies": {
     "@nx/nx-darwin-x64": "*",
+    "@nx/nx-darwin-arm64": "*",
     "@nx/nx-linux-x64-gnu": "*",
     "@nx/nx-linux-x64-musl": "*",
     "@nx/nx-win32-x64-msvc": "*",

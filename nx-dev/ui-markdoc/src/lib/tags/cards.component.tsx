@@ -8,7 +8,6 @@ import { frameworkIcons } from '../icons';
 
 import { cx } from '@nx/nx-dev/ui-primitives';
 import { ReactNode } from 'react';
-import Link from 'next/link';
 
 const colsClasses: Record<number, string> = {
   1: 'grid-cols-1',
@@ -79,9 +78,9 @@ export function Cards({
     >
       {children}
       {moreLink && (
-        <div className="col-span-full mt-2 flex justify-end">
-          <Link
-            className="group flex items-center whitespace-nowrap border-transparent px-4 py-0 text-sm font-semibold no-underline transition-all duration-200 ease-in-out hover:text-slate-900 dark:hover:text-sky-400"
+        <div className="flex justify-end mt-2 col-span-full">
+          <a
+            className="transition-all duration-200 ease-in-out flex items-center no-underline text-sm px-4 py-0 border-transparent hover:text-slate-900 dark:hover:text-sky-400 whitespace-nowrap font-semibold group"
             href={moreLink}
           >
             Browse more
@@ -91,7 +90,7 @@ export function Cards({
             >
               →
             </span>
-          </Link>
+          </a>
         </div>
       )}
     </div>
@@ -112,7 +111,7 @@ export function LinkCard({
   appearance?: 'default' | 'small';
 }): JSX.Element {
   return (
-    <Link
+    <a
       key={title}
       href={url}
       className="no-prose relative col-span-1 flex flex-col items-center rounded-md border border-slate-200 bg-slate-50/40 p-4 text-center font-semibold shadow-sm transition focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 hover:bg-slate-100 dark:border-slate-800/40 dark:bg-slate-800/60 dark:hover:bg-slate-800"
@@ -121,7 +120,7 @@ export function LinkCard({
       {icon && (
         <div
           className={cx(
-            'mb-2 flex h-24 w-24 items-center justify-center rounded-lg',
+            'flex items-center justify-center w-24 h-24 rounded-lg mb-2',
             {
               'h-12 w-12': appearance === 'small',
             }
@@ -132,20 +131,20 @@ export function LinkCard({
       )}
       <div className={cx('pt-4', { 'pt-2': appearance === 'small' })}>
         {appearance === 'small' && type ? null : (
-          <div className="mb-1 text-xs font-medium uppercase text-slate-600 dark:text-slate-300">
+          <div className="text-xs font-medium text-slate-600 dark:text-slate-300 uppercase mb-1">
             {type}
           </div>
         )}
         <h3
           className={cx(
-            'm-0 text-lg font-semibold text-slate-900 dark:text-white',
+            'text-lg font-semibold text-slate-900 dark:text-white m-0',
             { 'text-sm font-normal': appearance === 'small' }
           )}
         >
           {title}
         </h3>
       </div>
-    </Link>
+    </a>
   );
 }
 
@@ -166,22 +165,22 @@ export function Card({
     video: <PlayCircleIcon className="mr-3 h-5 w-5 shrink-0" />,
   };
   const youtubeRegex =
-    /(?:youtube.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu.be\/)([^"&?\/\s]{11})/gi.exec(
+    /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/gi.exec(
       url
     );
   const hasYoutubeId = !!youtubeRegex ? youtubeRegex[1] : '';
 
   return (
-    <Link
+    <a
       key={title}
       href={url}
       title={title}
-      className="group flex flex-col items-stretch rounded-md border border-slate-200 bg-slate-50/40 text-sm no-underline shadow-sm transition focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 hover:bg-slate-50 dark:border-slate-800/40 dark:bg-slate-800/60 dark:hover:bg-slate-800"
+      className="group no-underline flex flex-col items-stretch rounded-md border border-slate-200 bg-slate-50/40 text-sm shadow-sm transition focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 hover:bg-slate-50 dark:border-slate-800/40 dark:bg-slate-800/60 dark:hover:bg-slate-800"
     >
       {!!hasYoutubeId && (
         <div className="max-h-24">
           <img
-            className="!m-0 h-full !w-full rounded-t-md bg-black object-contain"
+            className="!m-0 rounded-t-md bg-black object-contain !w-full h-full"
             alt="Youtube Link"
             src={`https://img.youtube.com/vi/${hasYoutubeId}/default.jpg`}
           />
@@ -202,6 +201,6 @@ export function Card({
           <ArrowRightCircleIcon className="h-5 w-5" />
         </span>
       </div>
-    </Link>
+    </a>
   );
 }

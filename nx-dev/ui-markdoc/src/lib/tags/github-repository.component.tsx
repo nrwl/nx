@@ -34,7 +34,7 @@ export function GithubRepository({
               className="block text-sm font-medium opacity-80"
             >
               <span className="absolute inset-0" aria-hidden="true"></span>
-              {url.replace(/^.*\/\/[^/]+/, '')}
+              {url.replace(/^.*\/\/[^\/]+/, '')}
             </a>
           </p>
         </div>
