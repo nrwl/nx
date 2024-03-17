@@ -7,6 +7,7 @@ import {
   modifyYarnRcToFitNewDirectory,
   modifyYarnRcYmlToFitNewDirectory,
 } from './package-manager';
+import path = require('path');
 
 describe('package-manager', () => {
   describe('detectPackageManager', () => {
@@ -31,16 +32,13 @@ describe('package-manager', () => {
     });
 
     it('should detect pnpm package manager from pnpm-lock.yaml', () => {
-      jest.spyOn(configModule, 'readNxJson').mockReturnValueOnce({
-        cli: {
-          packageManager: 'pnpm',
-        },
-      });
       jest.spyOn(configModule, 'readNxJson').mockReturnValueOnce({});
       jest
         .spyOn(fs, 'existsSync')
         .mockImplementation((p) => p === 'pnpm-lock.yaml');
-      const packageManager = detectPackageManager();
+      const packageManager = detectPackageManager(
+        path.join(__dirname, '..', '..', '..', '..')
+      );
       expect(packageManager).toEqual('pnpm');
     });
 
