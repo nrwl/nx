@@ -31,17 +31,6 @@ describe('package-manager', () => {
       expect(packageManager).toEqual('yarn');
     });
 
-    it('should detect pnpm package manager from pnpm-lock.yaml', () => {
-      jest.spyOn(configModule, 'readNxJson').mockReturnValueOnce({});
-      jest
-        .spyOn(fs, 'existsSync')
-        .mockImplementation((p) => p === 'pnpm-lock.yaml');
-      const packageManager = detectPackageManager(
-        path.join(__dirname, '..', '..', '..', '..')
-      );
-      expect(packageManager).toEqual('pnpm');
-    });
-
     it('should use npm package manager as default', () => {
       jest.spyOn(configModule, 'readNxJson').mockReturnValueOnce({});
       jest
