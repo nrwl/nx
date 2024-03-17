@@ -32,11 +32,8 @@ export interface PackageManagerCommands {
 /**
  * Detects which package manager is used in the workspace based on the lock file.
  */
-export function detectPackageManager(dir: string = ''): PackageManager {
-  const nxJson = readNxJson();
-  return nxJson.cli?.packageManager ??
-    nxJson.cli?.packageManager ??
-    existsSync(join(dir, 'yarn.lock'))
+function getPackageManager(dir: string = '') {
+  return existsSync(join(dir, 'yarn.lock'))
     ? 'yarn'
     : existsSync(join(dir, 'bun.lockb'))
     ? 'bun'
@@ -44,6 +41,14 @@ export function detectPackageManager(dir: string = ''): PackageManager {
       existsSync(join(dir, 'pnpm-workspace.yaml'))
     ? 'pnpm'
     : 'npm';
+}
+
+/**
+ * Detects which package manager is used in the workspace based on the lock file.
+ */
+export function detectPackageManager(dir: string = ''): PackageManager {
+  const nxJson = readNxJson();
+  return nxJson.cli?.packageManager ?? getPackageManager(dir)
 }
 
 /**
