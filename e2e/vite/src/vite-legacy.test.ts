@@ -20,7 +20,9 @@ import {
   updateFile,
   updateJson,
   checkFilesExist,
+  runCLIUntil,
 } from '@nx/e2e/utils';
+import exp = require('constants');
 import { join } from 'path';
 
 describe('Vite Plugin', () => {
@@ -41,18 +43,50 @@ describe('Vite Plugin', () => {
 
   describe('Vite on React apps', () => {
     describe('set up new React app with --bundler=vite option', () => {
-      it('should build application', async () => {
-        const myApp = uniq('my-app');
+      let myApp;
+
+      beforeAll(() => {
+        myApp = uniq('my-app');
         runCLI(
           `generate @nx/react:app ${myApp} --bundler=vite --directory=${myApp} --projectNameAndRootFormat=as-provided`
         );
-        createFile(`${myApp}/public/hello.md`, `# Hello World`);
-        runCLI(`build ${myApp}`);
-        expect(readFile(`dist/${myApp}/favicon.ico`)).toBeDefined();
-        expect(readFile(`dist/${myApp}/hello.md`)).toBeDefined();
-        expect(readFile(`dist/${myApp}/index.html`)).toBeDefined();
+      });
+
+      afterEach(() => {
         rmDist();
-      }, 200_000);
+      });
+
+      describe('build the app', () => {
+        it('should build application', async () => {
+          runCLI(`build ${myApp}`);
+          expect(readFile(`dist/${myApp}/favicon.ico`)).toBeDefined();
+          expect(readFile(`dist/${myApp}/index.html`)).toBeDefined();
+        }, 200_000);
+
+        describe('when the app has static assets', () => {
+          beforeAll(() => {
+            createFile(`${myApp}/public/hello.md`, `# Hello World`);
+          });
+
+          afterAll(() => {
+            removeFile(`${myApp}/public/hello.md`);
+          });
+
+          it('should copy the assets to the output path', async () => {
+            runCLI(`build ${myApp}`);
+            expect(readFile(`dist/${myApp}/favicon.ico`)).toBeDefined();
+            expect(readFile(`dist/${myApp}/hello.md`)).toBeDefined();
+            expect(readFile(`dist/${myApp}/index.html`)).toBeDefined();
+          }, 200_000);
+        });
+      });
+
+      describe('test the app', () => {
+        it('should test application', async () => {
+          const result = runCLI(`test ${myApp}`);
+          expect(result).toContain('Successfully ran target test');
+        }, 200_000);
+      });
     });
   });
 
@@ -236,32 +270,64 @@ export default App;
   });
 
   describe('should be able to create libs that use vitest', () => {
-    const lib = uniq('my-lib');
-    beforeEach(() => {
-      proj = newProject({ name: uniq('vite-proj'), packages: ['@nx/react'] });
+    describe('using default project configuration', () => {
+      const lib = uniq('my-default-lib');
+      beforeAll(() => {
+        proj = newProject({ name: uniq('vite-proj'), packages: ['@nx/react'] });
+        runCLI(`generate @nx/react:lib ${lib} --unitTestRunner=vitest`);
+      });
+
+      it('should collect coverage when --coverage is set', () => {
+        const results = runCLI(`test ${lib} --coverage`);
+        expect(results).toContain(`Coverage report`);
+      }, 100_000);
+
+      it('should be able to watch tests', async () => {
+        await runCLIUntil(`test ${lib} --watch`, {
+          criteria: (output) => {
+            return output.includes('Waiting for file changes...');
+          },
+        });
+      }, 100_000);
+
+      it('should not watch tests when --watch is not set', async () => {
+        const results = runCLI(`test ${lib}`);
+
+        expect(results).not.toContain('Waiting for file changes...');
+
+        expect(results).toContain(
+          `Successfully ran target test for project ${lib}`
+        );
+      }, 100_000);
     });
 
-    it('should be able to run tests', async () => {
-      runCLI(`generate @nx/react:lib ${lib} --unitTestRunner=vitest`);
-      expect(exists(tmpProjPath(`libs/${lib}/vite.config.ts`))).toBeTruthy();
-
-      const result = await runCLIAsync(`test ${lib}`);
-      expect(result.combinedOutput).toContain(
-        `Successfully ran target test for project ${lib}`
-      );
-
-      const nestedResults = await runCLIAsync(`test ${lib} --skip-nx-cache`, {
-        cwd: `${tmpProjPath()}/libs/${lib}`,
+    describe('using custom project configuration', () => {
+      const lib = uniq('my-custom-lib');
+      beforeEach(() => {
+        proj = newProject({ name: uniq('vite-proj'), packages: ['@nx/react'] });
       });
-      expect(nestedResults.combinedOutput).toContain(
-        `Successfully ran target test for project ${lib}`
-      );
-    }, 100_000);
 
-    it('should collect coverage', () => {
-      runCLI(`generate @nx/react:lib ${lib} --unitTestRunner=vitest`);
-      updateFile(`libs/${lib}/vite.config.ts`, () => {
-        return `/// <reference types='vitest' />
+      it('should be able to run tests', async () => {
+        runCLI(`generate @nx/react:lib ${lib} --unitTestRunner=vitest`);
+        expect(exists(tmpProjPath(`libs/${lib}/vite.config.ts`))).toBeTruthy();
+
+        const result = await runCLIAsync(`test ${lib}`);
+        expect(result.combinedOutput).toContain(
+          `Successfully ran target test for project ${lib}`
+        );
+
+        const nestedResults = await runCLIAsync(`test ${lib} --skip-nx-cache`, {
+          cwd: `${tmpProjPath()}/libs/${lib}`,
+        });
+        expect(nestedResults.combinedOutput).toContain(
+          `Successfully ran target test for project ${lib}`
+        );
+      }, 100_000);
+
+      it('should collect coverage', () => {
+        runCLI(`generate @nx/react:lib ${lib} --unitTestRunner=vitest`);
+        updateFile(`libs/${lib}/vite.config.ts`, () => {
+          return `/// <reference types='vitest' />
         import { defineConfig } from 'vite';
         import react from '@vitejs/plugin-react';
         import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
@@ -292,24 +358,26 @@ export default App;
           },
         });
         `;
-      });
+        });
 
-      const coverageDir = `${tmpProjPath()}/coverage/libs/${lib}`;
+        const coverageDir = `${tmpProjPath()}/coverage/libs/${lib}`;
 
-      const results = runCLI(`test ${lib} --coverage`, { silenceError: true });
-      expect(results).toContain(
-        `Running target test for project ${lib} failed`
-      );
-      expect(results).toContain(`ERROR: Coverage`);
-      expect(directoryExists(coverageDir)).toBeTruthy();
-    }, 100_000);
+        const results = runCLI(`test ${lib} --coverage`, {
+          silenceError: true,
+        });
+        expect(results).toContain(
+          `Running target test for project ${lib} failed`
+        );
+        expect(results).toContain(`ERROR: Coverage`);
+        expect(directoryExists(coverageDir)).toBeTruthy();
+      }, 100_000);
 
-    it('should not delete the project directory when coverage is enabled', async () => {
-      // when coverage is enabled in the vite.config.ts but reportsDirectory is removed
-      // from the @nx/vite:test executor options, vite will delete the project root directory
-      runCLI(`generate @nx/react:lib ${lib} --unitTestRunner=vitest`);
-      updateFile(`libs/${lib}/vite.config.ts`, () => {
-        return `import { defineConfig } from 'vite';
+      it('should not delete the project directory when coverage is enabled', async () => {
+        // when coverage is enabled in the vite.config.ts but reportsDirectory is removed
+        // from the @nx/vite:test executor options, vite will delete the project root directory
+        runCLI(`generate @nx/react:lib ${lib} --unitTestRunner=vitest`);
+        updateFile(`libs/${lib}/vite.config.ts`, () => {
+          return `import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 
@@ -339,37 +407,37 @@ export default defineConfig({
   },
 });
 `;
-      });
-      updateJson(join('libs', lib, 'project.json'), (config) => {
-        delete config.targets.test.options.reportsDirectory;
-        return config;
-      });
+        });
+        updateJson(join('libs', lib, 'project.json'), (config) => {
+          delete config.targets.test.options.reportsDirectory;
+          return config;
+        });
 
-      const projectRoot = `${tmpProjPath()}/libs/${lib}`;
+        const projectRoot = `${tmpProjPath()}/libs/${lib}`;
 
-      const results = runCLI(`test ${lib}`, {
-        env: {
-          CI: 'true', // prevent vitest from watching for file changes and making the process hang
-        },
-      });
+        const results = runCLI(`test ${lib}`, {
+          env: {
+            CI: 'true', // prevent vitest from watching for file changes and making the process hang
+          },
+        });
 
-      expect(directoryExists(projectRoot)).toBeTruthy();
-      expect(results).toContain(
-        `Successfully ran target test for project ${lib}`
-      );
-      expect(results).toContain(`JUNIT report written`);
-    }, 100_000);
+        expect(directoryExists(projectRoot)).toBeTruthy();
+        expect(results).toContain(
+          `Successfully ran target test for project ${lib}`
+        );
+        expect(results).toContain(`JUNIT report written`);
+      }, 100_000);
 
-    it('should be able to run tests with inSourceTests set to true', async () => {
-      runCLI(
-        `generate @nx/react:lib ${lib} --unitTestRunner=vitest --inSourceTests`
-      );
-      expect(
-        exists(tmpProjPath(`libs/${lib}/src/lib/${lib}.spec.tsx`))
-      ).toBeFalsy();
+      it('should be able to run tests with inSourceTests set to true', async () => {
+        runCLI(
+          `generate @nx/react:lib ${lib} --unitTestRunner=vitest --inSourceTests`
+        );
+        expect(
+          exists(tmpProjPath(`libs/${lib}/src/lib/${lib}.spec.tsx`))
+        ).toBeFalsy();
 
-      updateFile(`libs/${lib}/src/lib/${lib}.tsx`, (content) => {
-        content += `
+        updateFile(`libs/${lib}/src/lib/${lib}.tsx`, (content) => {
+          content += `
         if (import.meta.vitest) {
           const { expect, it } = import.meta.vitest;
           it('should be successful', () => {
@@ -377,12 +445,13 @@ export default defineConfig({
           });
         }
         `;
-        return content;
-      });
+          return content;
+        });
 
-      const result = await runCLIAsync(`test ${lib}`);
-      expect(result.combinedOutput).toContain(`1 passed`);
-    }, 100_000);
+        const result = await runCLIAsync(`test ${lib}`);
+        expect(result.combinedOutput).toContain(`1 passed`);
+      }, 100_000);
+    });
   });
 
   describe('ESM-only apps', () => {
