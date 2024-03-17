@@ -37,11 +37,11 @@ export function detectPackageManager(dir: string = ''): PackageManager {
   return nxJson.cli?.packageManager ??
     nxJson.cli?.packageManager ??
     existsSync(join(dir, 'yarn.lock'))
-    ? 'yarn':
-    existsSync(join(dir, 'bun.lockb'))
-    ? 'bun' :
-    (existsSync(join(dir, 'pnpm-lock.yaml')) ||
-      existsSync(join(dir, 'pnpm-workspace.yaml')))
+    ? 'yarn'
+    : existsSync(join(dir, 'bun.lockb'))
+    ? 'bun'
+    : existsSync(join(dir, 'pnpm-lock.yaml')) ||
+      existsSync(join(dir, 'pnpm-workspace.yaml'))
     ? 'pnpm'
     : 'npm';
 }
