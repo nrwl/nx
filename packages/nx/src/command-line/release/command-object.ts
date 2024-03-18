@@ -108,15 +108,15 @@ export const yargsReleaseCommand: CommandModule<
         description:
           'Indicates that this is the first release for the selected release group. If the current version cannot be determined as usual, the version on disk will be used as a fallback. This is useful when using git or the registry to determine the current version of packages, since those sources are only available after the first release. Also indicates that changelog generation should not assume a previous git tag exists and that publishing should not check for the existence of the package before running.',
       })
-      .check((a): any => {
-        if (a?.groups?.length && a.projects) {
+      .check((argv) => {
+        if (argv.groups && argv.projects) {
           throw new Error(
             'The --projects and --groups options are mutually exclusive, please use one or the other.'
           );
         }
         const nxJson = readNxJson();
-        if (a?.groups?.length) {
-          for (const group of (a?.groups ?? [])) {
+        if (argv.groups?.length) {
+          for (const group of argv.groups) {
             if (!nxJson.release?.groups?.[group]) {
               throw new Error(
                 `The specified release group "${group}" was not found in nx.json`
