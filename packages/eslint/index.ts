@@ -6,3 +6,5 @@ export { Linter } from './src/generators/utils/linter';
 // infer whether a config is using type aware rules and set the
 // `hasTypeAwareRules` option of the `@nx/eslint:lint` executor.
 export { hasRulesRequiringTypeChecking } from './src/utils/rules-requiring-type-checking';
+
+// some custome commit change
