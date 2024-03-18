@@ -46,7 +46,7 @@ export async function updateCyMountUsage(tree: Tree) {
           ? buildProjectConfig.targets[parsed.target].configurations[
               parsed.configuration
             ]
-          : buildProjectConfig.targets[parsed.target]
+          : buildProjectConfig.targets[parsed.target],
       );
 
       const ctProjectConfig = projects.get(projectName);
@@ -56,7 +56,7 @@ export async function updateCyMountUsage(tree: Tree) {
           updateCyFile(tree, filePath, framework);
         }
       });
-    }
+    },
   );
 
   await formatFiles(tree);
@@ -65,13 +65,13 @@ export async function updateCyMountUsage(tree: Tree) {
 export function addMountCommand(
   tree: Tree,
   projectRoot: string,
-  framework: string
+  framework: string,
 ) {
   const commandFilePath = joinPathFragments(
     projectRoot,
     'cypress',
     'support',
-    'commands.ts'
+    'commands.ts',
   );
   if (!tree.exists(commandFilePath)) {
     return;
@@ -80,7 +80,7 @@ export function addMountCommand(
   const commandFile = tree.read(commandFilePath, 'utf-8');
   const mountCommand = tsquery.query<ts.PropertyAccessExpression>(
     commandFile,
-    'CallExpression:has(StringLiteral[value="mount"]) PropertyAccessExpression:has(Identifier[name="add"])'
+    'CallExpression:has(StringLiteral[value="mount"]) PropertyAccessExpression:has(Identifier[name="add"])',
   );
   if (mountCommand?.length > 0) {
     return;
@@ -89,11 +89,11 @@ export function addMountCommand(
     ts.MethodSignature | ts.PropertySignature
   >(
     commandFile,
-    'InterfaceDeclaration:has(Identifier[name="Chainable"]) > MethodSignature, InterfaceDeclaration:has(Identifier[name="Chainable"]) > PropertySignature'
+    'InterfaceDeclaration:has(Identifier[name="Chainable"]) > MethodSignature, InterfaceDeclaration:has(Identifier[name="Chainable"]) > PropertySignature',
   );
   const isGlobalDeclaration = tsquery.query<ts.ModuleDeclaration>(
     commandFile,
-    'ModuleDeclaration > Identifier[name="global"]'
+    'ModuleDeclaration > Identifier[name="global"]',
   );
 
   const updatedInterface = tsquery.replace(
@@ -127,7 +127,7 @@ export function addMountCommand(
       ) {
         return newModuleDelcaration;
       }
-    }
+    },
   );
 
   const updatedCommandFile = `import { mount } from 'cypress/${framework}'\n${updatedInterface}\nCypress.Commands.add('mount', mount);`;
@@ -136,7 +136,7 @@ export function addMountCommand(
 
 function getFramework(
   tree: Tree,
-  target: TargetConfiguration
+  target: TargetConfiguration,
 ): 'angular' | 'react' | 'react18' {
   if (
     target.executor === '@nrwl/angular:webpack-browser' ||
@@ -161,7 +161,7 @@ function getFramework(
 export function updateCyFile(
   tree: Tree,
   filePath: string,
-  framework: 'angular' | 'react' | 'react18'
+  framework: 'angular' | 'react' | 'react18',
 ) {
   if (!tree.exists(filePath)) {
     return;
@@ -173,7 +173,7 @@ export function updateCyFile(
     ':matches(CallExpression>Identifier[name="mount"])',
     (node: ts.CallExpression) => {
       return `cy.mount`;
-    }
+    },
   );
   const withUpdatedImports = tsquery.replace(
     withCyMount,
@@ -188,7 +188,7 @@ export function updateCyFile(
         default:
           return node.getText().replace('mount', '');
       }
-    }
+    },
   );
 
   tree.write(filePath, withUpdatedImports);

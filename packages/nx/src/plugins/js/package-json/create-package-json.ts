@@ -38,13 +38,13 @@ export function createPackageJson(
     isProduction?: boolean;
     helperDependencies?: string[];
   } = {},
-  fileMap: ProjectFileMap = null
+  fileMap: ProjectFileMap = null,
 ): PackageJson {
   const projectNode = graph.nodes[projectName];
   const isLibrary = projectNode.type === 'lib';
 
   const rootPackageJson = readJsonFile(
-    `${options.root || workspaceRoot}/package.json`
+    `${options.root || workspaceRoot}/package.json`,
   );
 
   const npmDeps = findProjectsNpmDependencies(
@@ -56,7 +56,7 @@ export function createPackageJson(
       helperDependencies: options.helperDependencies,
       isProduction: options.isProduction,
     },
-    fileMap
+    fileMap,
   );
 
   // default package.json if one does not exist
@@ -67,7 +67,7 @@ export function createPackageJson(
   const projectPackageJsonPath = join(
     options.root || workspaceRoot,
     projectNode.data.root,
-    'package.json'
+    'package.json',
   );
   if (existsSync(projectPackageJsonPath)) {
     try {
@@ -91,7 +91,7 @@ export function createPackageJson(
   const getVersion = (
     packageName: string,
     version: string,
-    section: 'devDependencies' | 'dependencies'
+    section: 'devDependencies' | 'dependencies',
   ) => {
     return (
       packageJson[section][packageName] ||
@@ -112,7 +112,7 @@ export function createPackageJson(
         packageJson.devDependencies[packageName] = getVersion(
           packageName,
           version,
-          'devDependencies'
+          'devDependencies',
         );
       }
     } else {
@@ -121,7 +121,7 @@ export function createPackageJson(
         packageJson.dependencies[packageName] = getVersion(
           packageName,
           version,
-          'dependencies'
+          'dependencies',
         );
       }
     }
@@ -135,7 +135,7 @@ export function createPackageJson(
             packageJson.dependencies[packageName] = getVersion(
               packageName,
               version,
-              'dependencies'
+              'dependencies',
             );
             return;
           }
@@ -151,7 +151,7 @@ export function createPackageJson(
               packageJson.peerDependencies[packageName] = getVersion(
                 packageName,
                 version,
-                'dependencies'
+                'dependencies',
               );
             }
           } else if (!options.isProduction) {
@@ -164,17 +164,17 @@ export function createPackageJson(
             };
           }
         }
-      }
+      },
     );
   }
 
   packageJson.devDependencies &&= sortObjectByKeys(packageJson.devDependencies);
   packageJson.dependencies &&= sortObjectByKeys(packageJson.dependencies);
   packageJson.peerDependencies &&= sortObjectByKeys(
-    packageJson.peerDependencies
+    packageJson.peerDependencies,
   );
   packageJson.peerDependenciesMeta &&= sortObjectByKeys(
-    packageJson.peerDependenciesMeta
+    packageJson.peerDependenciesMeta,
   );
 
   return packageJson;
@@ -190,7 +190,7 @@ export function findProjectsNpmDependencies(
     ignoredDependencies?: string[];
     isProduction?: boolean;
   },
-  fileMap?: ProjectFileMap
+  fileMap?: ProjectFileMap,
 ): NpmDeps {
   if (fileMap == null) {
     fileMap = readFileMapCache()?.fileMap?.projectFileMap || {};
@@ -232,7 +232,7 @@ export function findProjectsNpmDependencies(
     seen,
     ignoredDependencies,
     dependencyInputs,
-    selfInputs
+    selfInputs,
   );
 
   return npmDeps;
@@ -246,7 +246,7 @@ function findAllNpmDeps(
   seen: Set<string>,
   ignoredDependencies: string[],
   dependencyPatterns: string[],
-  rootPatterns?: string[]
+  rootPatterns?: string[],
 ): void {
   if (seen.has(projectNode.name)) return;
 
@@ -255,15 +255,15 @@ function findAllNpmDeps(
   const projectFiles = filterUsingGlobPatterns(
     projectNode.data.root,
     projectFileMap[projectNode.name] || [],
-    rootPatterns ?? dependencyPatterns
+    rootPatterns ?? dependencyPatterns,
   );
 
   const projectDependencies = new Set<string>();
 
   projectFiles.forEach((fileData) =>
     fileData.deps?.forEach((dep) =>
-      projectDependencies.add(fileDataDepTarget(dep))
-    )
+      projectDependencies.add(fileDataDepTarget(dep)),
+    ),
   );
 
   for (const dep of projectDependencies) {
@@ -297,7 +297,7 @@ function findAllNpmDeps(
           npmDeps,
           seen,
           ignoredDependencies,
-          dependencyPatterns
+          dependencyPatterns,
         );
       }
     }
@@ -308,7 +308,7 @@ function recursivelyCollectPeerDependencies(
   projectName: string,
   graph: ProjectGraph,
   npmDeps: NpmDeps,
-  seen: Set<string>
+  seen: Set<string>,
 ) {
   const npmPackage = graph.externalNodes[projectName];
   if (!npmPackage) {

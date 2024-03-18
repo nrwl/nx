@@ -19,7 +19,7 @@ let tsModule: typeof import('typescript');
 
 export async function componentTestGenerator(
   tree: Tree,
-  options: ComponentTestSchema
+  options: ComponentTestSchema,
 ) {
   ensurePackage('@nx/cypress', nxVersion);
   const { assertMinimumCypressVersion } = await import(
@@ -32,14 +32,14 @@ export async function componentTestGenerator(
   const projectConfig = readProjectConfiguration(tree, options.project);
 
   const normalizedPath = options.componentPath.startsWith(
-    projectConfig.sourceRoot
+    projectConfig.sourceRoot,
   )
     ? relative(projectConfig.sourceRoot, options.componentPath)
     : options.componentPath;
 
   const componentPath = joinPathFragments(
     projectConfig.sourceRoot,
-    normalizedPath
+    normalizedPath,
   );
 
   if (tree.exists(componentPath)) {
@@ -56,7 +56,7 @@ function generateSpecsForComponents(tree: Tree, filePath: string) {
     filePath,
     tree.read(filePath, 'utf-8'),
     tsModule.ScriptTarget.Latest,
-    true
+    true,
   );
 
   const cmpNodes = findExportDeclarationsForJsx(sourceFile);

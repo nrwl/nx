@@ -12,7 +12,7 @@ import { ChildProcess } from '../native';
 
 export function runNxSync(
   cmd: string,
-  options?: ExecSyncOptions & { cwd?: string }
+  options?: ExecSyncOptions & { cwd?: string },
 ) {
   let baseCmd: string;
   if (existsSync(join(workspaceRoot, 'package.json'))) {
@@ -22,7 +22,7 @@ export function runNxSync(
     options.cwd ??= process.cwd();
     const offsetFromRoot = relative(
       options.cwd,
-      workspaceRootInner(options.cwd, null)
+      workspaceRootInner(options.cwd, null),
     );
     if (process.platform === 'win32') {
       baseCmd = '.\\' + join(`${offsetFromRoot}`, 'nx.bat');
@@ -35,7 +35,7 @@ export function runNxSync(
 
 export async function runNxAsync(
   cmd: string,
-  options?: ExecOptions & { cwd?: string; silent?: boolean }
+  options?: ExecOptions & { cwd?: string; silent?: boolean },
 ) {
   let baseCmd: string;
   if (existsSync(join(workspaceRoot, 'package.json'))) {
@@ -45,7 +45,7 @@ export async function runNxAsync(
     options.cwd ??= process.cwd();
     const offsetFromRoot = relative(
       options.cwd,
-      workspaceRootInner(options.cwd, null)
+      workspaceRootInner(options.cwd, null),
     );
     if (process.platform === 'win32') {
       baseCmd = '.\\' + join(`${offsetFromRoot}`, 'nx.bat');
@@ -67,7 +67,7 @@ export async function runNxAsync(
         } else {
           resolve(stdout);
         }
-      }
+      },
     );
     if (!silent) {
       child.stdout?.pipe(process.stdout);

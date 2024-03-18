@@ -23,14 +23,14 @@ export function Content({
 }) {
   if (!schemaViewModel.currentSchema)
     throw new Error(
-      'A valid schema has to be defined for the "currentSchema" property'
+      'A valid schema has to be defined for the "currentSchema" property',
     );
 
   const router = useRouter();
   const [presets, setPresets] = useState<string[]>([]);
   const filterWithPresets = (
     data: Record<string, any>,
-    wantedProperties: string[]
+    wantedProperties: string[],
   ): Record<string, any> => {
     const result: Record<string, any> = {};
 
@@ -50,7 +50,7 @@ export function Content({
       const examples = generateJsonExampleFor(
         schemaViewModel.currentSchema as NxSchema,
         schemaViewModel.lookup,
-        'both'
+        'both',
       );
       return isErrors(examples) ? {} : examples.value;
     },
@@ -74,7 +74,7 @@ export function Content({
             }
           : void 0,
       ].filter(
-        (x): x is { name: string; href: string; current: boolean } => !!x
+        (x): x is { name: string; href: string; current: boolean } => !!x,
       );
     },
     get markdown(): {
@@ -93,7 +93,7 @@ export function Content({
           }),
           {
             filePath: '',
-          }
+          },
         ).node,
         customContent: !!schema['examplesFile']
           ? renderMarkdown(schema['examplesFile'], { filePath: '' }).node
@@ -108,7 +108,7 @@ export function Content({
           }),
           {
             filePath: '',
-          }
+          },
         ).node,
       };
     },
@@ -303,7 +303,7 @@ export function Content({
             schema={
               getSchemaFromReference(
                 schemaViewModel.subReference,
-                schemaViewModel.lookup
+                schemaViewModel.lookup,
               ) as JsonSchema1
             }
             lookup={schemaViewModel.lookup}
@@ -347,7 +347,7 @@ const getUsageAndExamplesMarkdown = (data: {
     !!data.schema['examples']
       ? `### Examples \n ${data.schema['examples']
           .map(
-            (e: any) => `${e.description}: \n \`\`\`bash\n${e.command}\n\`\`\``
+            (e: any) => `${e.description}: \n \`\`\`bash\n${e.command}\n\`\`\``,
           )
           .join('\n')}`
       : '',
@@ -358,7 +358,7 @@ const getUsageAndExamplesMarkdown = (data: {
 const getUsage = (
   packageName: string,
   schemaName: string,
-  schemaAlias: string
+  schemaAlias: string,
 ): string => `
 ## Usage
 \`\`\`bash

@@ -19,7 +19,7 @@ export async function esbuildInitGenerator(tree: Tree, schema: Schema) {
         esbuild: esbuildVersion,
       },
       undefined,
-      schema.keepExistingVersions
+      schema.keepExistingVersions,
     );
   }
 

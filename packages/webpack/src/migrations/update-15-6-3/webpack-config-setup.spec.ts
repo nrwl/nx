@@ -70,15 +70,15 @@ describe('15.6.3 migration (setup webpack.config file)', () => {
 
     expect(tree.read('apps/app3/webpack.config.js', 'utf-8')).toMatchSnapshot();
     expect(
-      tree.read('apps/app3/webpack.config.old.js', 'utf-8')
+      tree.read('apps/app3/webpack.config.old.js', 'utf-8'),
     ).toMatchInlineSnapshot(`"some content"`);
 
     expect(
-      tree.read('some/random/path/webpack.something.ts', 'utf-8')
+      tree.read('some/random/path/webpack.something.ts', 'utf-8'),
     ).toMatchSnapshot();
 
     expect(
-      tree.read('some/random/path/webpack.something.old.ts', 'utf-8')
+      tree.read('some/random/path/webpack.something.old.ts', 'utf-8'),
     ).toMatchInlineSnapshot(`"some content"`);
   });
 
@@ -132,40 +132,41 @@ describe('15.6.3 migration (setup webpack.config file)', () => {
     await webpackConfigSetup(tree);
 
     expect(
-      readProjectConfiguration(tree, 'app1').targets.build.options.webpackConfig
+      readProjectConfiguration(tree, 'app1').targets.build.options
+        .webpackConfig,
     ).toBe('apps/app1/webpack.config.js');
     expect(
       readProjectConfiguration(tree, 'app2').targets.custom.options
-        .webpackConfig
+        .webpackConfig,
     ).toBe('apps/app2/webpack.config.js');
 
     expect(
       readProjectConfiguration(tree, 'app3').targets.custom.options
-        .webpackConfig
+        .webpackConfig,
     ).toBe('apps/app3/webpack.config.js');
 
     expect(
       readProjectConfiguration(tree, 'app4').targets.custom.options
-        .webpackConfig
+        .webpackConfig,
     ).toBe('some/random/path/webpack.something.ts');
 
     expect(
       readProjectConfiguration(tree, 'app1').targets.build.options
-        .isolatedConfig
+        .isolatedConfig,
     ).toBeTruthy();
     expect(
       readProjectConfiguration(tree, 'app2').targets.custom.options
-        .isolatedConfig
+        .isolatedConfig,
     ).toBeTruthy();
 
     expect(
       readProjectConfiguration(tree, 'app3').targets.custom.options
-        .isolatedConfig
+        .isolatedConfig,
     ).toBeTruthy();
 
     expect(
       readProjectConfiguration(tree, 'app4').targets.custom.options
-        .isolatedConfig
+        .isolatedConfig,
     ).toBeTruthy();
   });
 
@@ -265,23 +266,23 @@ describe('15.6.3 migration (setup webpack.config file)', () => {
     await webpackConfigSetup(tree);
 
     expect(tree.read('apps/myapp/webpack.config.old.js', 'utf-8')).toContain(
-      'default'
+      'default',
     );
     expect(
-      tree.read('apps/myapp/webpack.config.bar.old.js', 'utf-8')
+      tree.read('apps/myapp/webpack.config.bar.old.js', 'utf-8'),
     ).toContain('bar');
 
     expect(
-      tree.read('apps/alreadymigrated/webpack.config.js', 'utf-8')
+      tree.read('apps/alreadymigrated/webpack.config.js', 'utf-8'),
     ).toContain('default');
     expect(
-      tree.read('apps/alreadymigrated/webpack.config.bar.js', 'utf-8')
+      tree.read('apps/alreadymigrated/webpack.config.bar.js', 'utf-8'),
     ).toContain('bar');
     expect(
-      tree.exists('apps/alreadymigrated/webpack.config.old.js')
+      tree.exists('apps/alreadymigrated/webpack.config.old.js'),
     ).toBeFalsy();
     expect(
-      tree.exists('apps/alreadymigrated/webpack.config.bar.old.js')
+      tree.exists('apps/alreadymigrated/webpack.config.bar.old.js'),
     ).toBeFalsy();
   });
 });

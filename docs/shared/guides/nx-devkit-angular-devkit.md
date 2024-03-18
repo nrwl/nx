@@ -26,7 +26,7 @@ export default async function (tree: Tree, options: Schema) {
     tree,
     path.join(__dirname, 'files'),
     path.join('tools/generators', schema.name),
-    options
+    options,
   );
   if (!schema.skipFormat) {
     await formatFiles(tree);
@@ -131,7 +131,7 @@ Then, you might need to register it in the `collections.json`:
 ```typescript
 export const libraryGenerator = wrapAngularDevkitSchematic(
   '@schematics/angular',
-  'library'
+  'library',
 );
 
 export async function mygenerator(tree: Tree, options: Schema) {
@@ -151,7 +151,7 @@ interface Schema {
 
 export default async function (
   options: Schema,
-  context: ExecutorContext
+  context: ExecutorContext,
 ): Promise<{ success: true }> {
   if (options.allCaps) {
     console.log(options.message.toUpperCase());
@@ -171,7 +171,7 @@ interface Schema {
 }
 export function run(
   options: Schema,
-  context: BuilderContext
+  context: BuilderContext,
 ): Observable<{ success: true }> {
   if (options.allCaps) {
     console.log(options.message.toUpperCase());

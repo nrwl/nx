@@ -60,14 +60,14 @@ export interface PlaywrightExecutorSchema {
 
 export async function playwrightExecutor(
   options: PlaywrightExecutorSchema,
-  context: ExecutorContext
+  context: ExecutorContext,
 ) {
   const projectRoot =
     context.projectGraph?.nodes?.[context?.projectName]?.data?.root;
 
   if (!projectRoot) {
     throw new Error(
-      `Unable to find the Project Root for ${context.projectName}. Is it set in the project.json?`
+      `Unable to find the Project Root for ${context.projectName}. Is it set in the project.json?`,
     );
   }
 
@@ -101,7 +101,7 @@ export async function playwrightExecutor(
 
 function createArgs(
   opts: PlaywrightExecutorSchema,
-  exclude: string[] = ['skipInstall']
+  exclude: string[] = ['skipInstall'],
 ): string[] {
   const args: string[] = [];
 

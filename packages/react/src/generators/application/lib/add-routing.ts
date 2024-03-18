@@ -22,19 +22,19 @@ export function addRouting(host: Tree, options: NormalizedSchema) {
   }
   const appPath = joinPathFragments(
     options.appProjectRoot,
-    maybeJs(options, `src/app/${options.fileName}.tsx`)
+    maybeJs(options, `src/app/${options.fileName}.tsx`),
   );
   const appFileContent = host.read(appPath, 'utf-8');
   const appSource = tsModule.createSourceFile(
     appPath,
     appFileContent,
     tsModule.ScriptTarget.Latest,
-    true
+    true,
   );
 
   const changes = applyChangesToString(
     appFileContent,
-    addInitialRoutes(appPath, appSource)
+    addInitialRoutes(appPath, appSource),
   );
   host.write(appPath, changes);
 
@@ -42,7 +42,7 @@ export function addRouting(host: Tree, options: NormalizedSchema) {
     return addDependenciesToPackageJson(
       host,
       { 'react-router-dom': reactRouterDomVersion },
-      {}
+      {},
     );
   }
 

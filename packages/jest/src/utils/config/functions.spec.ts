@@ -11,7 +11,7 @@ describe('jestConfigObject', () => {
       module.exports = {
         foo: 'bar'
       };
-    `
+    `,
       );
 
       expect(jestConfigObject(tree, 'jest.config.js')).toEqual({
@@ -31,7 +31,7 @@ describe('jestConfigObject', () => {
       module.exports = async () => ({
         foo: 'bar'
       });
-    `
+    `,
       );
 
       expect(await jestConfigObject(tree, 'jest.config.js')).toEqual({
@@ -51,7 +51,7 @@ describe('jestConfigObject', () => {
       module.exports = {
         projects: getJestProjects()
       };
-    `
+    `,
       );
 
       expect(jestConfigObject(tree, 'jest.config.js')).toEqual({
@@ -74,7 +74,7 @@ describe('jestConfigObject', () => {
         env: process.env,
         dirname: __dirname
       };
-    `
+    `,
       );
 
       expect(jestConfigObject(tree, 'jest.config.js')).toEqual({

@@ -8,11 +8,11 @@ import type { ExtractI18nExecutorOptions } from './schema';
 
 export default async function* extractI18nExecutor(
   options: ExtractI18nExecutorOptions,
-  context: ExecutorContext
+  context: ExecutorContext,
 ) {
   const parsedBuildTarget = parseTargetString(options.buildTarget, context);
   const browserTargetProjectConfiguration = readCachedProjectConfiguration(
-    parsedBuildTarget.project
+    parsedBuildTarget.project,
   );
 
   const buildTarget =
@@ -31,7 +31,7 @@ export default async function* extractI18nExecutor(
       description: 'Extracts i18n messages from source code.',
       optionSchema: await import('./schema.json'),
     },
-    context
+    context,
   );
 
   /**
@@ -49,12 +49,12 @@ export default async function* extractI18nExecutor(
 
   return await executeExtractI18nBuilder(
     delegateBuilderOptions,
-    builderContext
+    builderContext,
   );
 }
 
 function getDelegateBuilderOptions(
-  options: ExtractI18nExecutorOptions
+  options: ExtractI18nExecutorOptions,
 ): ExtractI18nBuilderOptions {
   const delegateBuilderOptions: ExtractI18nBuilderOptions = { ...options };
 

@@ -1,13 +1,13 @@
 export function getNpmPackageVersion(
   packageName: string,
-  packageVersion?: string
+  packageVersion?: string,
 ): string | null {
   try {
     const version = require('child_process').execSync(
       `npm view ${packageName}${
         packageVersion ? '@' + packageVersion : ''
       } version --json`,
-      { stdio: ['pipe', 'pipe', 'ignore'] }
+      { stdio: ['pipe', 'pipe', 'ignore'] },
     );
 
     if (version) {

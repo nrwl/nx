@@ -39,7 +39,7 @@ export function Disclosure({
       className={cx(
         'my-6 block flex-col rounded-md bg-slate-50 ring-1 ring-slate-100 dark:bg-slate-800/40 dark:ring-slate-700',
         ui.backgroundColor,
-        ui.borderColor
+        ui.borderColor,
       )}
     >
       <span

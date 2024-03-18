@@ -54,7 +54,7 @@ type NormalizedSchema = ReturnType<typeof normalizeOptions>;
 
 export function configurationGenerator(
   tree: Tree,
-  options: CypressE2EConfigSchema
+  options: CypressE2EConfigSchema,
 ) {
   return configurationGeneratorInternal(tree, {
     addPlugin: false,
@@ -64,7 +64,7 @@ export function configurationGenerator(
 
 export async function configurationGeneratorInternal(
   tree: Tree,
-  options: CypressE2EConfigSchema
+  options: CypressE2EConfigSchema,
 ) {
   const opts = normalizeOptions(tree, options);
   opts.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
@@ -76,7 +76,7 @@ export async function configurationGeneratorInternal(
       await cypressInitGenerator(tree, {
         ...opts,
         skipFormat: true,
-      })
+      }),
     );
   } else if (opts.addPlugin) {
     addPlugin(tree);
@@ -87,7 +87,7 @@ export async function configurationGeneratorInternal(
   const hasPlugin = nxJson.plugins?.some((p) =>
     typeof p === 'string'
       ? p === '@nx/cypress/plugin'
-      : p.plugin === '@nx/cypress/plugin'
+      : p.plugin === '@nx/cypress/plugin',
   );
 
   await addFiles(tree, opts, projectGraph, hasPlugin);
@@ -169,14 +169,14 @@ async function addFiles(
   tree: Tree,
   options: NormalizedSchema,
   projectGraph: ProjectGraph,
-  hasPlugin: boolean
+  hasPlugin: boolean,
 ) {
   const projectConfig = readProjectConfiguration(tree, options.project);
   const cyVersion = installedCypressVersion();
   const filesToUse = cyVersion && cyVersion < 10 ? 'v9' : 'v10';
 
   const hasTsConfig = tree.exists(
-    joinPathFragments(projectConfig.root, 'tsconfig.json')
+    joinPathFragments(projectConfig.root, 'tsconfig.json'),
   );
   const offsetFromProjectRoot = options.directory
     .split('/')
@@ -200,7 +200,7 @@ async function addFiles(
     tree,
     join(__dirname, 'files', filesToUse),
     projectConfig.root,
-    fileOpts
+    fileOpts,
   );
 
   if (filesToUse === 'v10') {
@@ -213,7 +213,7 @@ async function addFiles(
 
     const cyFile = joinPathFragments(
       projectConfig.root,
-      options.js ? 'cypress.config.js' : 'cypress.config.ts'
+      options.js ? 'cypress.config.js' : 'cypress.config.ts',
     );
     let webServerCommands: Record<string, string>;
 
@@ -228,7 +228,7 @@ async function addFiles(
       webServerCommands.default = 'nx run ' + options.devServerTarget;
       const parsedTarget = parseTargetString(
         options.devServerTarget,
-        projectGraph
+        projectGraph,
       );
 
       const devServerProjectConfig: ProjectConfiguration | undefined =
@@ -254,7 +254,7 @@ async function addFiles(
         webServerCommands,
         ciWebServerCommand: ciWebServerCommand,
       },
-      options.baseUrl
+      options.baseUrl,
     );
 
     tree.write(cyFile, updatedCyConfig);
@@ -264,7 +264,7 @@ async function addFiles(
     cyVersion &&
     cyVersion < 7 &&
     tree.exists(
-      joinPathFragments(projectConfig.root, 'src', 'plugins', 'index.js')
+      joinPathFragments(projectConfig.root, 'src', 'plugins', 'index.js'),
     )
   ) {
     updateJson(tree, join(projectConfig.root, 'cypress.json'), (json) => {
@@ -294,7 +294,7 @@ function addTarget(tree: Tree, opts: NormalizedSchema) {
         projectConfig.root,
         cyVersion && cyVersion < 10
           ? 'cypress.json'
-          : `cypress.config.${opts.js ? 'js' : 'ts'}`
+          : `cypress.config.${opts.js ? 'js' : 'ts'}`,
       ),
       testingType: 'e2e',
     },
@@ -310,7 +310,7 @@ function addTarget(tree: Tree, opts: NormalizedSchema) {
 
     const devServerProjectConfig = readProjectConfiguration(
       tree,
-      parsedTarget.project
+      parsedTarget.project,
     );
     // Add production e2e target if serve target is found
     if (

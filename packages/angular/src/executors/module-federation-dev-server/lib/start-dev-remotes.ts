@@ -13,7 +13,7 @@ export async function startDevRemotes(
   },
   workspaceProjects: Record<string, ProjectConfiguration>,
   options: Schema,
-  context: ExecutorContext
+  context: ExecutorContext,
 ) {
   const devRemotesIters: AsyncIterable<{ success: boolean }>[] = [];
   for (const app of remotes.devRemotes) {
@@ -21,14 +21,14 @@ export async function startDevRemotes(
       throw new Error(`Could not find "serve" target in "${app}" project.`);
     } else if (!workspaceProjects[app].targets?.['serve'].executor) {
       throw new Error(
-        `Could not find executor for "serve" target in "${app}" project.`
+        `Could not find executor for "serve" target in "${app}" project.`,
       );
     }
 
     const [collection, executor] =
       workspaceProjects[app].targets['serve'].executor.split(':');
     const isUsingModuleFederationDevServerExecutor = executor.includes(
-      'module-federation-dev-server'
+      'module-federation-dev-server',
     );
 
     devRemotesIters.push(
@@ -44,8 +44,8 @@ export async function startDevRemotes(
             ? { isInitialHost: false }
             : {}),
         },
-        context
-      )
+        context,
+      ),
     );
   }
   return devRemotesIters;

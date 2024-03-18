@@ -105,10 +105,10 @@ export function fetchCorePlugins(): CorePlugin[] {
 
 export function listCorePlugins(
   installedPlugins: Map<string, PluginCapabilities>,
-  corePlugins: CorePlugin[]
+  corePlugins: CorePlugin[],
 ): void {
   const alsoAvailable = corePlugins.filter(
-    (p) => !installedPlugins.has(p.name)
+    (p) => !installedPlugins.has(p.name),
   );
 
   if (alsoAvailable.length) {

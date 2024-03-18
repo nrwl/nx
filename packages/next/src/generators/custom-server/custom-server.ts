@@ -14,7 +14,7 @@ import { configureForSwc } from '../../utils/add-swc-to-custom-server';
 
 export async function customServerGenerator(
   host: Tree,
-  options: CustomServerSchema
+  options: CustomServerSchema,
 ) {
   const project = readProjectConfiguration(host, options.project);
 
@@ -22,7 +22,7 @@ export async function customServerGenerator(
   const hasPlugin = nxJson.plugins?.some((p) =>
     typeof p === 'string'
       ? p === '@nx/next/plugin'
-      : p.plugin === '@nx/next/plugin'
+      : p.plugin === '@nx/next/plugin',
   );
 
   if (
@@ -31,7 +31,7 @@ export async function customServerGenerator(
     !hasPlugin
   ) {
     logger.error(
-      `Project ${options.project} is not a Next.js project. Did you generate it with "nx g @nx/next:app"?`
+      `Project ${options.project} is not a Next.js project. Did you generate it with "nx g @nx/next:app"?`,
     );
     return;
   }
@@ -50,7 +50,7 @@ export async function customServerGenerator(
     !hasPlugin
   ) {
     logger.error(
-      `Project ${options.project} has invalid config. Did you generate it with "nx g @nx/next:app"?`
+      `Project ${options.project} has invalid config. Did you generate it with "nx g @nx/next:app"?`,
     );
     return;
   }
@@ -60,7 +60,7 @@ export async function customServerGenerator(
     project.targets?.['serve-custom-server']
   ) {
     logger.warn(
-      `Project ${options.project} has custom server targets already: build-custom-server, serve-custom-server. Remove these targets from project and try again.`
+      `Project ${options.project} has custom server targets already: build-custom-server, serve-custom-server. Remove these targets from project and try again.`,
     );
     return;
   }
@@ -128,12 +128,12 @@ export async function customServerGenerator(
   updateJson(host, 'nx.json', (json) => {
     if (
       !json.tasksRunnerOptions?.default?.options?.cacheableOperations?.includes(
-        'build-custom-server'
+        'build-custom-server',
       ) &&
       json.tasksRunnerOptions?.default?.options?.cacheableOperations
     ) {
       json.tasksRunnerOptions.default.options.cacheableOperations.push(
-        'build-custom-server'
+        'build-custom-server',
       );
     }
     json.targetDefaults ??= {};

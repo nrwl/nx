@@ -127,13 +127,13 @@ describe('@nx/storybook:configuration for workspaces with Root project', () => {
       expect(tree.read('tsconfig.storybook.json', 'utf-8')).toMatchSnapshot();
       expect(tree.read('.storybook/preview.ts', 'utf-8')).toMatchSnapshot();
       expect(
-        tree.read('apps/reapp/.storybook/main.ts', 'utf-8')
+        tree.read('apps/reapp/.storybook/main.ts', 'utf-8'),
       ).toMatchSnapshot();
       expect(
-        tree.read('apps/reapp/tsconfig.storybook.json', 'utf-8')
+        tree.read('apps/reapp/tsconfig.storybook.json', 'utf-8'),
       ).toMatchSnapshot();
       expect(
-        tree.read('apps/reapp/.storybook/preview.ts', 'utf-8')
+        tree.read('apps/reapp/.storybook/preview.ts', 'utf-8'),
       ).toMatchSnapshot();
     });
   });

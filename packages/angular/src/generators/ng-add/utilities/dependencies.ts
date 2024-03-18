@@ -3,7 +3,7 @@ import { getPkgVersionForAngularMajorVersion } from '../../../utils/version-util
 import { getInstalledAngularMajorVersion } from '../../utils/version-utils';
 
 export function ensureAngularDevKitPeerDependenciesAreInstalled(
-  tree: Tree
+  tree: Tree,
 ): void {
   const packagesToInstall = [
     '@angular-devkit/core',
@@ -19,17 +19,20 @@ export function ensureAngularDevKitPeerDependenciesAreInstalled(
     const angularMajorVersion = getInstalledAngularMajorVersion(tree);
     const angularDevkitVersion = getPkgVersionForAngularMajorVersion(
       'angularDevkitVersion',
-      angularMajorVersion
+      angularMajorVersion,
     );
     angularCliVersion = angularDevkitVersion;
   }
 
   const filteredPackages = packagesToInstall
     .filter((pkg) => !devDependencies?.[pkg] && !dependencies?.[pkg])
-    .reduce((allPkgs, pkg) => {
-      allPkgs[pkg] = angularCliVersion;
-      return allPkgs;
-    }, {} as Record<string, string>);
+    .reduce(
+      (allPkgs, pkg) => {
+        allPkgs[pkg] = angularCliVersion;
+        return allPkgs;
+      },
+      {} as Record<string, string>,
+    );
 
   addDependenciesToPackageJson(tree, {}, filteredPackages);
 }

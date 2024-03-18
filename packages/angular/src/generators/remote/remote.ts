@@ -28,7 +28,7 @@ export async function remoteInternal(tree: Tree, schema: Schema) {
   const projects = getProjects(tree);
   if (options.host && !projects.has(options.host)) {
     throw new Error(
-      `The name of the application to be used as the host app does not exist. (${options.host})`
+      `The name of the application to be used as the host app does not exist. (${options.host})`,
     );
   }
 
@@ -77,7 +77,7 @@ export async function remoteInternal(tree: Tree, schema: Schema) {
     {},
     {
       '@swc/helpers': swcHelpersVersion,
-    }
+    },
   );
 
   let installTasks = [appInstallTask, installSwcHelpersTask];

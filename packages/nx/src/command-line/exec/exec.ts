@@ -29,14 +29,14 @@ import { calculateDefaultProjectName } from '../../config/calculate-default-proj
 import { getCommandProjects } from '../../commands-runner/get-command-projects';
 
 export async function nxExecCommand(
-  args: Record<string, string | string[] | boolean>
+  args: Record<string, string | string[] | boolean>,
 ): Promise<unknown> {
   const nxJson = readNxJson();
   const { nxArgs, overrides } = splitArgsIntoNxArgsAndOverrides(
     args,
     'run-many',
     { printWarnings: args.graph !== 'stdout' },
-    nxJson
+    nxJson,
   );
   if (nxArgs.verbose) {
     process.env.NX_VERBOSE_LOGGING = 'true';
@@ -67,7 +67,7 @@ export async function nxExecCommand(
 async function runScriptAsNxTarget(
   projectGraph: ProjectGraph,
   argv: string[],
-  nxArgs: NxArgs
+  nxArgs: NxArgs,
 ) {
   // NPM, Yarn, and PNPM set this to the name of the currently executing script. Lets use it if we can.
   const targetName = process.env.npm_lifecycle_event;
@@ -80,7 +80,7 @@ async function runScriptAsNxTarget(
         targetName,
         defaultPorject,
         defaultPorject.name,
-        argv
+        argv,
       );
       return;
     }
@@ -90,7 +90,7 @@ async function runScriptAsNxTarget(
   const projectsToRun: string[] = getCommandProjects(
     projectGraph,
     projects,
-    nxArgs
+    nxArgs,
   );
   projectsToRun.forEach((projectName) => {
     const command = argv.reduce((cmd, arg) => cmd + `"${arg}" `, '').trim();
@@ -104,7 +104,7 @@ async function runScriptAsNxTarget(
       cwd: projectGraph.nodes?.[projectName]?.data?.root
         ? joinPathFragments(
             workspaceRoot,
-            projectGraph.nodes?.[projectName]?.data?.root
+            projectGraph.nodes?.[projectName]?.data?.root,
           )
         : workspaceRoot,
     });
@@ -116,7 +116,7 @@ function runTargetOnProject(
   targetName: string,
   project: ProjectGraphProjectNode,
   projectName: string,
-  argv: string[]
+  argv: string[],
 ) {
   ensureNxTarget(project, targetName);
 
@@ -134,7 +134,7 @@ function runTargetOnProject(
 }
 
 function readScriptArgV(
-  overrides: Arguments & { __overrides_unparsed__: string[] }
+  overrides: Arguments & { __overrides_unparsed__: string[] },
 ) {
   const scriptSeparatorIdx = process.argv.findIndex((el) => el === '--');
   if (scriptSeparatorIdx === -1) {
@@ -149,7 +149,7 @@ function readScriptArgV(
 
 function getScriptDefinition(
   targetName: string,
-  project?: ProjectGraphProjectNode
+  project?: ProjectGraphProjectNode,
 ): PackageJson['scripts'][string] {
   if (!project) {
     return;
@@ -157,7 +157,7 @@ function getScriptDefinition(
   const packageJsonPath = join(
     workspaceRoot,
     project.data.root,
-    'package.json'
+    'package.json',
   );
   if (existsSync(packageJsonPath)) {
     const scriptDefinition =
@@ -179,13 +179,13 @@ function ensureNxTarget(project: ProjectGraphProjectNode, targetName: string) {
 }
 
 function getDefaultProject(
-  projectGraph: ProjectGraph
+  projectGraph: ProjectGraph,
 ): ProjectGraphProjectNode | undefined {
   const defaultProjectName = calculateDefaultProjectName(
     process.cwd(),
     workspaceRoot,
     readProjectsConfigurationFromProjectGraph(projectGraph),
-    readNxJson()
+    readNxJson(),
   );
   if (defaultProjectName && projectGraph.nodes[defaultProjectName]) {
     return projectGraph.nodes[defaultProjectName];
@@ -194,7 +194,7 @@ function getDefaultProject(
 
 function getProjects(
   projectGraph: ProjectGraph,
-  nxArgs: NxArgs
+  nxArgs: NxArgs,
 ): ProjectGraphProjectNode[] {
   let selectedProjects = {};
 
@@ -202,7 +202,7 @@ function getProjects(
   if (nxArgs.projects?.length) {
     const matchingProjects = findMatchingProjects(
       nxArgs.projects,
-      projectGraph.nodes
+      projectGraph.nodes,
     );
     for (const project of matchingProjects) {
       selectedProjects[project] = projectGraph.nodes[project];
@@ -214,7 +214,7 @@ function getProjects(
 
   const excludedProjects = findMatchingProjects(
     nxArgs.exclude,
-    selectedProjects
+    selectedProjects,
   );
   for (const excludedProject of excludedProjects) {
     delete selectedProjects[excludedProject];

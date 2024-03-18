@@ -8,7 +8,7 @@ export function upsertLinksFunction(
   filePath: string,
   importName: string,
   importPath: string,
-  linkObject: string
+  linkObject: string,
 ) {
   insertImport(tree, filePath, 'LinksFunction', '@remix-run/node', {
     typeOnly: true,
@@ -16,7 +16,7 @@ export function upsertLinksFunction(
   insertStatementAfterImports(
     tree,
     filePath,
-    stripIndents`import ${importName} from "${importPath}";`
+    stripIndents`import ${importName} from "${importPath}";`,
   );
 
   const fileContents = tree.read(filePath, 'utf-8');
@@ -33,18 +33,18 @@ export function upsertLinksFunction(
       filePath,
       stripIndents`export const links: LinksFunction = () => [
   ${linkObject},
-];`
+];`,
     );
   } else {
     const linksArrayNodes = tsquery(
       linksFunctionNodes[0],
       'ArrayLiteralExpression',
-      { visitAllChildren: true }
+      { visitAllChildren: true },
     );
     const arrayNode = linksArrayNodes[0];
     const updatedFileContents = `${fileContents.slice(
       0,
-      arrayNode.getStart() + 1
+      arrayNode.getStart() + 1,
     )}\n${linkObject},${fileContents.slice(arrayNode.getStart() + 1)}`;
     tree.write(filePath, updatedFileContents);
   }

@@ -19,7 +19,7 @@ export function JsonCodeBlockPreTag({
       className={twMerge(
         'hljs not-prose w-full overflow-hidden rounded-md',
         'font-mono text-sm',
-        'border border-slate-200 bg-slate-50/50 dark:border-slate-700 dark:bg-slate-800/60'
+        'border border-slate-200 bg-slate-50/50 dark:border-slate-700 dark:bg-slate-800/60',
       )}
     >
       <div className="p-4">{children}</div>
@@ -36,7 +36,7 @@ export function JsonCodeBlock(props: JsonCodeBlockProps): JSX.Element {
   const [copied, setCopied] = useState(false);
   const jsonString = useMemo(
     () => JSON.stringify(props.data, null, 2),
-    [props.data]
+    [props.data],
   );
   useEffect(() => {
     if (!copied) return;
@@ -59,7 +59,7 @@ export function JsonCodeBlock(props: JsonCodeBlockProps): JSX.Element {
             className={twMerge(
               'not-prose flex',
               'border border-slate-200 bg-slate-50/50 p-2 dark:border-slate-700 dark:bg-slate-800/60',
-              'opacity-0 transition-opacity group-hover:opacity-100'
+              'opacity-0 transition-opacity group-hover:opacity-100',
             )}
           >
             {copied ? (
@@ -81,7 +81,7 @@ export function JsonCodeBlock(props: JsonCodeBlockProps): JSX.Element {
 }
 
 export function sourcesRenderer(
-  renderSource: (propertyName: string) => ReactNode
+  renderSource: (propertyName: string) => ReactNode,
 ) {
   return ({ rows, stylesheet }: any) => {
     return rows.map((node: any, idx: number) => {
@@ -94,7 +94,8 @@ export function sourcesRenderer(
       let sourceElement: ReactNode;
       const attrNode = node.children.find(
         (c: any) =>
-          c.type === 'element' && c.properties?.className?.includes('hljs-attr')
+          c.type === 'element' &&
+          c.properties?.className?.includes('hljs-attr'),
       );
       if (attrNode?.children?.length) {
         for (const child of attrNode.children) {

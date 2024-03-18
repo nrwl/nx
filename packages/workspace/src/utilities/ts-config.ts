@@ -12,12 +12,12 @@ export function readTsConfig(tsConfigPath: string) {
   }
   const readResult = tsModule.readConfigFile(
     tsConfigPath,
-    tsModule.sys.readFile
+    tsModule.sys.readFile,
   );
   return tsModule.parseJsonConfigFileContent(
     readResult.config,
     tsModule.sys,
-    dirname(tsConfigPath)
+    dirname(tsConfigPath),
   );
 }
 
@@ -33,7 +33,7 @@ export function getRootTsConfigPathInTree(tree: Tree): string | null {
 
 export function getRelativePathToRootTsConfig(
   tree: Tree,
-  targetPath: string
+  targetPath: string,
 ): string {
   return offsetFromRoot(targetPath) + getRootTsConfigPathInTree(tree);
 }
@@ -52,7 +52,7 @@ export function getRootTsConfigFileName(): string | null {
 export function findNodes(
   node: Node,
   kind: SyntaxKind | SyntaxKind[],
-  max = Infinity
+  max = Infinity,
 ): Node[] {
   if (!node || max == 0) {
     return [];

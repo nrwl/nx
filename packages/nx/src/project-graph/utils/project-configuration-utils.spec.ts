@@ -32,15 +32,15 @@ describe('project-configuration-utils', () => {
         readTargetDefaultsForTarget(
           'other-target',
           targetDefaults,
-          'nx:run-commands'
-        ).options['key']
+          'nx:run-commands',
+        ).options['key'],
       ).toEqual('default-value-for-executor');
     });
 
     it('should fallback to target key', () => {
       expect(
         readTargetDefaultsForTarget('build', targetDefaults, 'other-executor')
-          .options['key']
+          .options['key'],
       ).toEqual('default-value-for-targetname');
     });
 
@@ -49,8 +49,8 @@ describe('project-configuration-utils', () => {
         readTargetDefaultsForTarget(
           'other-target',
           targetDefaults,
-          'other-executor'
-        )
+          'other-executor',
+        ),
       ).toBeNull();
     });
 
@@ -64,8 +64,8 @@ describe('project-configuration-utils', () => {
           {
             executor: 'target',
             inputs: ['input1'],
-          }
-        )
+          },
+        ),
       ).toEqual({ executor: 'target2', outputs: ['output1'] });
     });
 
@@ -83,7 +83,7 @@ describe('project-configuration-utils', () => {
           options: {
             bang: true,
           },
-        }
+        },
       );
       expect(result).toMatchInlineSnapshot(`
         {
@@ -111,8 +111,8 @@ describe('project-configuration-utils', () => {
                 a: 'default-value-a',
                 b: 'default-value-b',
               },
-            }
-          ).options
+            },
+          ).options,
         ).toEqual({ a: 'project-value-a', b: 'default-value-b' });
       });
 
@@ -130,8 +130,8 @@ describe('project-configuration-utils', () => {
                 a: 'default-value',
                 b: 'default-value',
               },
-            }
-          ).options
+            },
+          ).options,
         ).toEqual({ a: 'project-value', b: 'default-value' });
       });
 
@@ -149,8 +149,8 @@ describe('project-configuration-utils', () => {
                 a: 'default-value',
                 b: 'default-value',
               },
-            }
-          ).options
+            },
+          ).options,
         ).toEqual({ a: 'project-value', b: 'default-value' });
       });
 
@@ -168,8 +168,8 @@ describe('project-configuration-utils', () => {
               options: {
                 b: 'default-value',
               },
-            }
-          ).options
+            },
+          ).options,
         ).toEqual({ a: 'project-value' });
       });
     });
@@ -213,8 +213,8 @@ describe('project-configuration-utils', () => {
             {
               executor: 'target',
               configurations: defaultConfigurations,
-            }
-          ).configurations
+            },
+          ).configurations,
         ).toEqual(merged);
       });
 
@@ -227,8 +227,8 @@ describe('project-configuration-utils', () => {
             },
             {
               configurations: defaultConfigurations,
-            }
-          ).configurations
+            },
+          ).configurations,
         ).toEqual(merged);
       });
 
@@ -241,8 +241,8 @@ describe('project-configuration-utils', () => {
             {
               executor: 'target',
               configurations: defaultConfigurations,
-            }
-          ).configurations
+            },
+          ).configurations,
         ).toEqual(merged);
       });
 
@@ -256,8 +256,8 @@ describe('project-configuration-utils', () => {
             {
               executor: 'target',
               configurations: defaultConfigurations,
-            }
-          ).configurations
+            },
+          ).configurations,
         ).toEqual(projectConfigurations);
       });
     });
@@ -281,8 +281,8 @@ describe('project-configuration-utils', () => {
             {
               executor: 'target',
               defaultConfiguration: defaultDefaultConfiguration,
-            }
-          ).defaultConfiguration
+            },
+          ).defaultConfiguration,
         ).toEqual(merged);
       });
 
@@ -295,8 +295,8 @@ describe('project-configuration-utils', () => {
             },
             {
               defaultConfiguration: defaultDefaultConfiguration,
-            }
-          ).defaultConfiguration
+            },
+          ).defaultConfiguration,
         ).toEqual(merged);
       });
 
@@ -309,8 +309,8 @@ describe('project-configuration-utils', () => {
             {
               executor: 'target',
               defaultConfiguration: defaultDefaultConfiguration,
-            }
-          ).defaultConfiguration
+            },
+          ).defaultConfiguration,
         ).toEqual(merged);
       });
 
@@ -324,8 +324,8 @@ describe('project-configuration-utils', () => {
             {
               executor: 'target',
               defaultConfiguration: defaultDefaultConfiguration,
-            }
-          ).defaultConfiguration
+            },
+          ).defaultConfiguration,
         ).toEqual(projectDefaultConfiguration);
       });
     });
@@ -351,7 +351,7 @@ describe('project-configuration-utils', () => {
             options: { cwd: 'apps/third-app', command: 'eslint .' },
             executor: 'nx:run-commands',
             configurations: {},
-          }
+          },
         );
         expect(merged).toMatchInlineSnapshot(`
           {
@@ -400,7 +400,7 @@ describe('project-configuration-utils', () => {
             options: { cwd: 'apps/third-app' },
             configurations: {},
             command: 'eslint .',
-          }
+          },
         );
         expect(merged).toMatchInlineSnapshot(`
           {
@@ -439,7 +439,7 @@ describe('project-configuration-utils', () => {
           {
             executor: 'bar',
             cache: true,
-          }
+          },
         );
         expect(result.cache).not.toBeDefined();
       });
@@ -564,7 +564,7 @@ describe('project-configuration-utils', () => {
       });
       const merged = rootMap.get('libs/lib-a');
       expect(merged.targets['existingTarget']).toEqual(
-        existingTargetConfiguration
+        existingTargetConfiguration,
       );
       expect(merged.targets['shouldMerge']).toMatchInlineSnapshot(`
         {
@@ -588,7 +588,7 @@ describe('project-configuration-utils', () => {
         }
       `);
       expect(merged.targets['shouldntMerge']).toEqual(
-        shouldntMergeConfigurationB
+        shouldntMergeConfigurationB,
       );
       expect(merged.targets['newTarget']).toEqual(newTargetConfiguration);
     });
@@ -762,7 +762,7 @@ describe('project-configuration-utils', () => {
             implicitDependencies: ['lib-b'],
           },
           sourceMap,
-          ['dummy', 'dummy.ts']
+          ['dummy', 'dummy.ts'],
         );
         expect(sourceMap).toMatchInlineSnapshot(`
           {
@@ -854,7 +854,7 @@ describe('project-configuration-utils', () => {
             projectType: 'application',
           },
           sourceMap,
-          ['dummy', 'dummy.ts']
+          ['dummy', 'dummy.ts'],
         );
         mergeProjectConfigurationIntoRootMap(
           rootMap,
@@ -866,7 +866,7 @@ describe('project-configuration-utils', () => {
             implicitDependencies: ['lib-b'],
           },
           sourceMap,
-          ['dummy2', 'dummy2.ts']
+          ['dummy2', 'dummy2.ts'],
         );
         assertCorrectKeysInSourceMap(
           sourceMap,
@@ -874,7 +874,7 @@ describe('project-configuration-utils', () => {
           ['tags.a', 'dummy'],
           ['tags.c', 'dummy2'],
           ['projectType', 'dummy2'],
-          ['implicitDependencies.lib-b', 'dummy2']
+          ['implicitDependencies.lib-b', 'dummy2'],
         );
       });
 
@@ -906,7 +906,7 @@ describe('project-configuration-utils', () => {
             },
           },
           sourceMap,
-          ['dummy', 'dummy.ts']
+          ['dummy', 'dummy.ts'],
         );
         mergeProjectConfigurationIntoRootMap(
           rootMap,
@@ -934,7 +934,7 @@ describe('project-configuration-utils', () => {
             },
           },
           sourceMap,
-          ['dummy2', 'dummy2.ts']
+          ['dummy2', 'dummy2.ts'],
         );
 
         assertCorrectKeysInSourceMap(
@@ -952,7 +952,7 @@ describe('project-configuration-utils', () => {
           ['targets.build.configurations.dev.command', 'dummy2'],
           ['targets.build.configurations.dev.oldOption', 'dummy'],
           ['targets.build.configurations.dev.newOption', 'dummy2'],
-          ['targets.build.configurations.production.command', 'dummy2']
+          ['targets.build.configurations.production.command', 'dummy2'],
         );
       });
 
@@ -983,7 +983,7 @@ describe('project-configuration-utils', () => {
             },
           },
           sourceMap,
-          ['dummy', 'dummy.ts']
+          ['dummy', 'dummy.ts'],
         );
         mergeProjectConfigurationIntoRootMap(
           rootMap,
@@ -1005,7 +1005,7 @@ describe('project-configuration-utils', () => {
             },
           },
           sourceMap,
-          ['dummy2', 'dummy2.ts']
+          ['dummy2', 'dummy2.ts'],
         );
         assertCorrectKeysInSourceMap(
           sourceMap,
@@ -1016,15 +1016,15 @@ describe('project-configuration-utils', () => {
           ['targets.build.options.option1', 'dummy2'],
           ['targets.build.configurations', 'dummy2'],
           ['targets.build.configurations.prod', 'dummy2'],
-          ['targets.build.configurations.prod.command', 'dummy2']
+          ['targets.build.configurations.prod.command', 'dummy2'],
         );
 
         expect(
-          sourceMap['libs/lib-a']['targets.build.configurations.dev']
+          sourceMap['libs/lib-a']['targets.build.configurations.dev'],
         ).toBeFalsy();
         expect(sourceMap['libs/lib-a']['targets.build.outputs']).toBeFalsy();
         expect(
-          sourceMap['libs/lib-a']['targets.build.options.command']
+          sourceMap['libs/lib-a']['targets.build.options.command'],
         ).toBeFalsy();
       });
 
@@ -1046,7 +1046,7 @@ describe('project-configuration-utils', () => {
             },
           },
           sourceMap,
-          ['dummy', 'dummy.ts']
+          ['dummy', 'dummy.ts'],
         );
         mergeProjectConfigurationIntoRootMap(
           rootMap,
@@ -1061,14 +1061,14 @@ describe('project-configuration-utils', () => {
             },
           },
           sourceMap,
-          ['dummy2', 'dummy2.ts']
+          ['dummy2', 'dummy2.ts'],
         );
         assertCorrectKeysInSourceMap(
           sourceMap,
           'libs/lib-a',
           ['targets.build', 'dummy2'],
           ['targets.build.executor', 'dummy2'],
-          ['targets.build.outputs', 'dummy2']
+          ['targets.build.outputs', 'dummy2'],
         );
 
         expect(sourceMap['libs/lib-a']['targets.build.inputs']).toBeFalsy();
@@ -1092,7 +1092,7 @@ describe('project-configuration-utils', () => {
             },
           },
           sourceMap,
-          ['dummy', 'dummy.ts']
+          ['dummy', 'dummy.ts'],
         );
         mergeProjectConfigurationIntoRootMap(
           rootMap,
@@ -1109,7 +1109,7 @@ describe('project-configuration-utils', () => {
             },
           },
           sourceMap,
-          ['dummy2', 'dummy2.ts']
+          ['dummy2', 'dummy2.ts'],
         );
 
         assertCorrectKeysInSourceMap(
@@ -1117,7 +1117,7 @@ describe('project-configuration-utils', () => {
           'libs/lib-a',
           ['generators.@nx/angular:component.option1', 'dummy2'],
           ['generators.@nx/angular:component.option2', 'dummy'],
-          ['generators.@nx/angular:component.option3', 'dummy2']
+          ['generators.@nx/angular:component.option3', 'dummy2'],
         );
       });
     });
@@ -1190,8 +1190,8 @@ describe('project-configuration-utils', () => {
           {
             executor: 'nx:run-commands',
           },
-          {}
-        )
+          {},
+        ),
       ).toBe(true);
     });
 
@@ -1203,8 +1203,8 @@ describe('project-configuration-utils', () => {
           },
           {
             executor: 'nx:run-commands',
-          }
-        )
+          },
+        ),
       ).toBe(true);
     });
 
@@ -1216,8 +1216,8 @@ describe('project-configuration-utils', () => {
           },
           {
             executor: 'other-executor',
-          }
-        )
+          },
+        ),
       ).toBe(false);
     });
 
@@ -1235,8 +1235,8 @@ describe('project-configuration-utils', () => {
             options: {
               command: 'echo',
             },
-          }
-        )
+          },
+        ),
       ).toBe(true);
     });
 
@@ -1254,8 +1254,8 @@ describe('project-configuration-utils', () => {
             options: {
               command: 'echo2',
             },
-          }
-        )
+          },
+        ),
       ).toBe(false);
     });
   });

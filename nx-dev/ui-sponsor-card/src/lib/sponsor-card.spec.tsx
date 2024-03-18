@@ -9,7 +9,7 @@ describe('SponsorCard', () => {
         imageUrl="/image.png"
         name="name content"
         linkTarget=""
-      />
+      />,
     );
     expect(baseElement).toBeTruthy();
   });

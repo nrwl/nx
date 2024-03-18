@@ -47,7 +47,7 @@ describe('params', () => {
         target,
         schema,
         'proj',
-        process.cwd()
+        process.cwd(),
       );
 
       expect(options).toEqual({
@@ -75,7 +75,7 @@ describe('params', () => {
         target,
         schema,
         'proj',
-        process.cwd()
+        process.cwd(),
       );
 
       expect(options).toEqual({
@@ -105,7 +105,7 @@ describe('params', () => {
         target,
         schema,
         'proj',
-        process.cwd()
+        process.cwd(),
       );
 
       expect(options).toEqual({
@@ -135,7 +135,7 @@ describe('params', () => {
         target,
         schema,
         'proj',
-        process.cwd()
+        process.cwd(),
       );
 
       expect(options).toEqual({
@@ -165,7 +165,7 @@ describe('params', () => {
         target,
         schema,
         'proj',
-        process.cwd()
+        process.cwd(),
       );
 
       expect(options).toEqual({
@@ -185,7 +185,7 @@ describe('params', () => {
         target,
         schema,
         'proj',
-        process.cwd()
+        process.cwd(),
       );
 
       expect(options).toEqual({});
@@ -203,7 +203,7 @@ describe('params', () => {
             c: { type: 'boolean' },
             d: { type: 'string' },
           },
-        } as Schema
+        } as Schema,
       );
 
       expect(opts).toEqual({
@@ -276,7 +276,7 @@ describe('params', () => {
           properties: {
             a: { oneOf: [{ type: 'object' }, { type: 'boolean' }] },
           },
-        } as Schema
+        } as Schema,
       );
 
       expect(opts).toEqual({
@@ -304,7 +304,7 @@ describe('params', () => {
               ],
             },
           },
-        } as Schema
+        } as Schema,
       );
 
       expect(opts).toEqual({
@@ -319,7 +319,7 @@ describe('params', () => {
           properties: {
             a: { oneOf: [{ type: 'boolean' }, { type: 'number' }] },
           },
-        } as Schema
+        } as Schema,
       );
 
       expect(opts).toEqual({
@@ -340,8 +340,8 @@ describe('params', () => {
           }),
           {
             properties: { oneTwo: 'some object' },
-          } as any
-        )
+          } as any,
+        ),
       ).toEqual({
         _: [],
         oneTwo: 1,
@@ -358,8 +358,8 @@ describe('params', () => {
           }),
           {
             properties: {},
-          } as any
-        )
+          } as any,
+        ),
       ).toEqual({
         _: [],
         'one-two': 1,
@@ -377,8 +377,8 @@ describe('params', () => {
           }),
           {
             properties: { oneTwo: 'some object' },
-          } as any
-        )
+          } as any,
+        ),
       ).toEqual({
         _: [],
         oneTwo: 1,
@@ -396,8 +396,8 @@ describe('params', () => {
           }),
           {
             properties: { oneTwo: 'some object' },
-          } as any
-        )
+          } as any,
+        ),
       ).toEqual({
         _: [],
         oneTwo: 1,
@@ -415,8 +415,8 @@ describe('params', () => {
             required: [],
             description: '',
           },
-          true
-        )
+          true,
+        ),
       ).toEqual({ directory: 'test' });
     });
 
@@ -429,8 +429,8 @@ describe('params', () => {
             required: [],
             description: '',
           },
-          true
-        )
+          true,
+        ),
       ).toEqual({ directory: 'test' });
     });
 
@@ -443,8 +443,8 @@ describe('params', () => {
             required: [],
             description: '',
           },
-          true
-        )
+          true,
+        ),
       ).toEqual({
         '--': [
           {
@@ -464,8 +464,8 @@ describe('params', () => {
             required: [],
             description: '',
           },
-          false
-        )
+          false,
+        ),
       ).toEqual({
         d: 'test',
       });
@@ -490,7 +490,7 @@ describe('params', () => {
               default: true,
             },
           },
-        }
+        },
       );
 
       expect(opts).toEqual({ b: true, c: false });
@@ -514,7 +514,7 @@ describe('params', () => {
               },
             },
           },
-        }
+        },
       );
 
       expect(opts).toEqual({ a: [{ key: 'inner' }, { key: 'inner' }] });
@@ -539,7 +539,7 @@ describe('params', () => {
               default: [],
             },
           },
-        }
+        },
       );
 
       expect(opts).toEqual({ a: [] });
@@ -567,7 +567,7 @@ describe('params', () => {
               },
             },
           },
-        }
+        },
       );
 
       expect(opts).toEqual({ a: { key: 'value', key2: 'value2' } });
@@ -587,7 +587,7 @@ describe('params', () => {
               },
             },
           },
-        }
+        },
       );
 
       expect(opts).toEqual({});
@@ -613,7 +613,7 @@ describe('params', () => {
               additionalProperties: false,
             },
           },
-        }
+        },
       );
 
       expect(opts).toEqual({
@@ -639,7 +639,7 @@ describe('params', () => {
               default: true,
             },
           },
-        }
+        },
       );
 
       expect(opts).toEqual({ a: true });
@@ -663,7 +663,7 @@ describe('params', () => {
           },
         },
         null,
-        null
+        null,
       );
 
       expect(params).toEqual({ a: 'argv-value', _: ['unused'] });
@@ -684,7 +684,7 @@ describe('params', () => {
           },
         },
         'myProject',
-        null
+        null,
       );
 
       expect(params).toEqual({ a: 'myProject' });
@@ -704,7 +704,7 @@ describe('params', () => {
           },
         },
         null,
-        './somepath'
+        './somepath',
       );
 
       expect(params).toEqual({ a: './somepath' });
@@ -726,7 +726,7 @@ describe('params', () => {
           },
         },
         null,
-        './somepath'
+        './somepath',
       );
 
       expect(params).toEqual({ a: './somepath' });
@@ -750,7 +750,7 @@ describe('params', () => {
           },
         },
         null,
-        null
+        null,
       );
 
       expect(params).toEqual({ unparsed: ['one'] });
@@ -774,7 +774,7 @@ describe('params', () => {
           },
         },
         null,
-        null
+        null,
       );
 
       expect(params).toEqual({ unparsed: [] });
@@ -793,8 +793,8 @@ describe('params', () => {
               },
             },
             required: ['a'],
-          }
-        )
+          },
+        ),
       ).toThrow("Required property 'a' is missing");
     });
 
@@ -823,8 +823,8 @@ describe('params', () => {
                 required: ['b'],
               },
             ],
-          }
-        )
+          },
+        ),
       ).toThrowErrorMatchingInlineSnapshot(`
         "Options did not match schema. Please fix 1 of the following errors:
          - Required property 'a' is missing
@@ -860,8 +860,8 @@ describe('params', () => {
                 required: ['b'],
               },
             ],
-          }
-        )
+          },
+        ),
       ).toThrowErrorMatchingInlineSnapshot(`"Options did not match schema."`);
     });
 
@@ -890,8 +890,8 @@ describe('params', () => {
                 required: ['b'],
               },
             ],
-          }
-        )
+          },
+        ),
       ).toThrowErrorMatchingInlineSnapshot(`
         "Options did not match schema. Please fix any of the following errors:
          - Required property 'a' is missing
@@ -926,8 +926,8 @@ describe('params', () => {
                 required: ['b'],
               },
             ],
-          }
-        )
+          },
+        ),
       ).not.toThrow();
     });
 
@@ -945,8 +945,8 @@ describe('params', () => {
               },
             },
             additionalProperties: false,
-          }
-        )
+          },
+        ),
       ).toThrow("'b' is not found in schema");
     });
 
@@ -962,10 +962,10 @@ describe('params', () => {
               '^b$': { type: 'number' },
             },
             additionalProperties: false,
-          }
-        )
+          },
+        ),
       ).toThrow(
-        "Property 'b' does not match the schema. 'false' should be a 'number'."
+        "Property 'b' does not match the schema. 'false' should be a 'number'.",
       );
     });
 
@@ -981,8 +981,8 @@ describe('params', () => {
               '^b$': { type: 'boolean' },
             },
             additionalProperties: false,
-          }
-        )
+          },
+        ),
       ).not.toThrow();
     });
 
@@ -1000,10 +1000,10 @@ describe('params', () => {
             additionalProperties: {
               type: 'number',
             },
-          }
-        )
+          },
+        ),
       ).toThrow(
-        "Property 'c' does not match the schema. 'c' should be a 'number'."
+        "Property 'c' does not match the schema. 'c' should be a 'number'.",
       );
     });
 
@@ -1021,8 +1021,8 @@ describe('params', () => {
             additionalProperties: {
               type: 'number',
             },
-          }
-        )
+          },
+        ),
       ).not.toThrow();
     });
 
@@ -1040,10 +1040,10 @@ describe('params', () => {
               },
             },
             additionalProperties: false,
-          }
-        )
+          },
+        ),
       ).toThrow(
-        "Schema does not support positional arguments. Argument 'sometext' found"
+        "Schema does not support positional arguments. Argument 'sometext' found",
       );
     });
 
@@ -1058,10 +1058,10 @@ describe('params', () => {
                   type: 'boolean',
                 },
               },
-            }
-          )
+            },
+          ),
         ).toThrow(
-          "Property 'a' does not match the schema. 'string' should be a 'boolean'."
+          "Property 'a' does not match the schema. 'string' should be a 'boolean'.",
         );
       });
 
@@ -1075,8 +1075,8 @@ describe('params', () => {
                   default: false,
                 },
               },
-            }
-          )
+            },
+          ),
         ).not.toThrow();
       });
 
@@ -1090,14 +1090,14 @@ describe('params', () => {
         };
         expect(() => validateOptsAgainstSchema({ a: 3 }, schema)).not.toThrow();
         expect(() =>
-          validateOptsAgainstSchema({ a: true }, schema)
+          validateOptsAgainstSchema({ a: true }, schema),
         ).toThrowErrorMatchingInlineSnapshot(
-          `"Property 'a' does not match the schema. 'true' should be '3'."`
+          `"Property 'a' does not match the schema. 'true' should be '3'."`,
         );
         expect(() =>
-          validateOptsAgainstSchema({ a: 123 }, schema)
+          validateOptsAgainstSchema({ a: 123 }, schema),
         ).toThrowErrorMatchingInlineSnapshot(
-          `"Property 'a' does not match the schema. '123' should be '3'."`
+          `"Property 'a' does not match the schema. '123' should be '3'."`,
         );
       });
 
@@ -1111,15 +1111,15 @@ describe('params', () => {
             },
           };
           expect(() =>
-            validateOptsAgainstSchema({ a: 'abc' }, schema)
+            validateOptsAgainstSchema({ a: 'abc' }, schema),
           ).not.toThrow();
           expect(() =>
-            validateOptsAgainstSchema({ a: true }, schema)
+            validateOptsAgainstSchema({ a: true }, schema),
           ).not.toThrow();
           expect(() =>
-            validateOptsAgainstSchema({ a: 123 }, schema)
+            validateOptsAgainstSchema({ a: 123 }, schema),
           ).toThrowErrorMatchingInlineSnapshot(
-            `"Property 'a' does not match the schema. '123' should be a 'string,boolean'."`
+            `"Property 'a' does not match the schema. '123' should be a 'string,boolean'."`,
           );
         });
       });
@@ -1135,12 +1135,12 @@ describe('params', () => {
             },
           };
           expect(() =>
-            validateOptsAgainstSchema({ a: 'abc' }, schema)
+            validateOptsAgainstSchema({ a: 'abc' }, schema),
           ).not.toThrow();
           expect(() =>
-            validateOptsAgainstSchema({ a: 'xyz' }, schema)
+            validateOptsAgainstSchema({ a: 'xyz' }, schema),
           ).toThrowErrorMatchingInlineSnapshot(
-            `"Property 'a' does not match the schema. 'xyz' should match the pattern '^a'."`
+            `"Property 'a' does not match the schema. 'xyz' should match the pattern '^a'."`,
           );
         });
 
@@ -1154,12 +1154,12 @@ describe('params', () => {
             },
           };
           expect(() =>
-            validateOptsAgainstSchema({ a: 'a' }, schema)
+            validateOptsAgainstSchema({ a: 'a' }, schema),
           ).toThrowErrorMatchingInlineSnapshot(
-            `"Property 'a' does not match the schema. 'a' (1 character(s)) should have at least 2 character(s)."`
+            `"Property 'a' does not match the schema. 'a' (1 character(s)) should have at least 2 character(s)."`,
           );
           expect(() =>
-            validateOptsAgainstSchema({ a: 'abc' }, schema)
+            validateOptsAgainstSchema({ a: 'abc' }, schema),
           ).not.toThrow();
         });
         it('should handle validating maxLength', () => {
@@ -1172,12 +1172,12 @@ describe('params', () => {
             },
           };
           expect(() =>
-            validateOptsAgainstSchema({ a: 'abc' }, schema)
+            validateOptsAgainstSchema({ a: 'abc' }, schema),
           ).not.toThrow();
           expect(() =>
-            validateOptsAgainstSchema({ a: 'xyz' }, schema)
+            validateOptsAgainstSchema({ a: 'xyz' }, schema),
           ).toThrowErrorMatchingInlineSnapshot(
-            `"Property 'a' does not match the schema. 'xyz' should match the pattern '^a'."`
+            `"Property 'a' does not match the schema. 'xyz' should match the pattern '^a'."`,
           );
         });
       });
@@ -1193,12 +1193,12 @@ describe('params', () => {
             },
           };
           expect(() =>
-            validateOptsAgainstSchema({ a: 6 }, schema)
+            validateOptsAgainstSchema({ a: 6 }, schema),
           ).not.toThrow();
           expect(() =>
-            validateOptsAgainstSchema({ a: 5 }, schema)
+            validateOptsAgainstSchema({ a: 5 }, schema),
           ).toThrowErrorMatchingInlineSnapshot(
-            `"Property 'a' does not match the schema. 5 should be a multiple of 3."`
+            `"Property 'a' does not match the schema. 5 should be a multiple of 3."`,
           );
         });
 
@@ -1212,15 +1212,15 @@ describe('params', () => {
             },
           };
           expect(() =>
-            validateOptsAgainstSchema({ a: 2 }, schema)
+            validateOptsAgainstSchema({ a: 2 }, schema),
           ).toThrowErrorMatchingInlineSnapshot(
-            `"Property 'a' does not match the schema. 2 should be at least 3"`
+            `"Property 'a' does not match the schema. 2 should be at least 3"`,
           );
           expect(() =>
-            validateOptsAgainstSchema({ a: 3 }, schema)
+            validateOptsAgainstSchema({ a: 3 }, schema),
           ).not.toThrow();
           expect(() =>
-            validateOptsAgainstSchema({ a: 4 }, schema)
+            validateOptsAgainstSchema({ a: 4 }, schema),
           ).not.toThrow();
         });
 
@@ -1234,17 +1234,17 @@ describe('params', () => {
             },
           };
           expect(() =>
-            validateOptsAgainstSchema({ a: 2 }, schema)
+            validateOptsAgainstSchema({ a: 2 }, schema),
           ).toThrowErrorMatchingInlineSnapshot(
-            `"Property 'a' does not match the schema. 2 should be greater than 3"`
+            `"Property 'a' does not match the schema. 2 should be greater than 3"`,
           );
           expect(() =>
-            validateOptsAgainstSchema({ a: 3 }, schema)
+            validateOptsAgainstSchema({ a: 3 }, schema),
           ).toThrowErrorMatchingInlineSnapshot(
-            `"Property 'a' does not match the schema. 3 should be greater than 3"`
+            `"Property 'a' does not match the schema. 3 should be greater than 3"`,
           );
           expect(() =>
-            validateOptsAgainstSchema({ a: 4 }, schema)
+            validateOptsAgainstSchema({ a: 4 }, schema),
           ).not.toThrow();
         });
 
@@ -1258,15 +1258,15 @@ describe('params', () => {
             },
           };
           expect(() =>
-            validateOptsAgainstSchema({ a: 2 }, schema)
+            validateOptsAgainstSchema({ a: 2 }, schema),
           ).not.toThrow();
           expect(() =>
-            validateOptsAgainstSchema({ a: 3 }, schema)
+            validateOptsAgainstSchema({ a: 3 }, schema),
           ).not.toThrow();
           expect(() =>
-            validateOptsAgainstSchema({ a: 4 }, schema)
+            validateOptsAgainstSchema({ a: 4 }, schema),
           ).toThrowErrorMatchingInlineSnapshot(
-            `"Property 'a' does not match the schema. 4 should be at most 3"`
+            `"Property 'a' does not match the schema. 4 should be at most 3"`,
           );
         });
 
@@ -1280,17 +1280,17 @@ describe('params', () => {
             },
           };
           expect(() =>
-            validateOptsAgainstSchema({ a: 2 }, schema)
+            validateOptsAgainstSchema({ a: 2 }, schema),
           ).not.toThrow();
           expect(() =>
-            validateOptsAgainstSchema({ a: 3 }, schema)
+            validateOptsAgainstSchema({ a: 3 }, schema),
           ).toThrowErrorMatchingInlineSnapshot(
-            `"Property 'a' does not match the schema. 3 should be less than 3"`
+            `"Property 'a' does not match the schema. 3 should be less than 3"`,
           );
           expect(() =>
-            validateOptsAgainstSchema({ a: 4 }, schema)
+            validateOptsAgainstSchema({ a: 4 }, schema),
           ).toThrowErrorMatchingInlineSnapshot(
-            `"Property 'a' does not match the schema. 4 should be less than 3"`
+            `"Property 'a' does not match the schema. 4 should be less than 3"`,
           );
         });
       });
@@ -1313,8 +1313,8 @@ describe('params', () => {
                 ],
               },
             },
-          }
-        )
+          },
+        ),
       ).not.toThrow();
     });
 
@@ -1377,8 +1377,8 @@ describe('params', () => {
                 ],
               },
             },
-          }
-        )
+          },
+        ),
       ).not.toThrow();
     });
 
@@ -1393,8 +1393,8 @@ describe('params', () => {
                 oneOf: [{ type: 'string' }, { type: 'boolean' }],
               },
             },
-          }
-        )
+          },
+        ),
       ).not.toThrow();
     });
 
@@ -1417,8 +1417,8 @@ describe('params', () => {
                 ],
               },
             },
-          }
-        )
+          },
+        ),
       ).not.toThrow();
 
       // matching oneOf value
@@ -1439,8 +1439,8 @@ describe('params', () => {
                 ],
               },
             },
-          }
-        )
+          },
+        ),
       ).not.toThrow();
 
       // non-matching enum value
@@ -1461,8 +1461,8 @@ describe('params', () => {
                 ],
               },
             },
-          }
-        )
+          },
+        ),
       ).toThrow();
     });
 
@@ -1479,10 +1479,10 @@ describe('params', () => {
                 },
               },
             },
-          }
-        )
+          },
+        ),
       ).toThrow(
-        "Property 'a' does not match the schema. '123' should be a 'string'."
+        "Property 'a' does not match the schema. '123' should be a 'string'.",
       );
     });
 
@@ -1501,10 +1501,10 @@ describe('params', () => {
                 },
               },
             },
-          }
-        )
+          },
+        ),
       ).toThrow(
-        "Property 'key' does not match the schema. 'string' should be a 'boolean'."
+        "Property 'key' does not match the schema. 'string' should be a 'boolean'.",
       );
     });
 
@@ -1523,10 +1523,10 @@ describe('params', () => {
                 type: 'boolean',
               },
             },
-          }
-        )
+          },
+        ),
       ).toThrow(
-        "Property 'key' does not match the schema. 'string' should be a 'boolean'."
+        "Property 'key' does not match the schema. 'string' should be a 'boolean'.",
       );
     });
   });
@@ -1549,7 +1549,7 @@ describe('params', () => {
               type: 'boolean',
             },
           },
-        }
+        },
       );
 
       expect(logger.warn).not.toHaveBeenCalled();
@@ -1565,7 +1565,7 @@ describe('params', () => {
               'x-deprecated': true,
             },
           },
-        }
+        },
       );
 
       expect(logger.warn).toHaveBeenCalledWith('Option "a" is deprecated.');
@@ -1582,11 +1582,11 @@ describe('params', () => {
                 'Deprecated since version x.x.x. Use "b" instead.',
             },
           },
-        }
+        },
       );
 
       expect(logger.warn).toHaveBeenCalledWith(
-        'Option "a" is deprecated: Deprecated since version x.x.x. Use "b" instead.'
+        'Option "a" is deprecated: Deprecated since version x.x.x. Use "b" instead.',
       );
     });
   });
@@ -1599,7 +1599,7 @@ describe('params', () => {
       applyVerbosity(
         options,
         { additionalProperties: false, properties: {} },
-        isVerbose
+        isVerbose,
       );
 
       expect(options).toEqual({});
@@ -1610,7 +1610,7 @@ describe('params', () => {
       applyVerbosity(
         options,
         { additionalProperties: true, properties: {} },
-        isVerbose
+        isVerbose,
       );
       expect(options).toEqual({ verbose: isVerbose });
     });
@@ -1623,7 +1623,7 @@ describe('params', () => {
           additionalProperties: false,
           properties: { verbose: {} },
         },
-        isVerbose
+        isVerbose,
       );
       expect(options).toEqual({ verbose: isVerbose });
     });
@@ -1636,7 +1636,7 @@ describe('params', () => {
           additionalProperties: false,
           properties: { verbose: {} },
         },
-        false
+        false,
       );
       expect(options).toEqual({});
     });
@@ -1657,7 +1657,7 @@ describe('params', () => {
         {
           version: 2,
           projects: {},
-        }
+        },
       );
 
       expect(prompts).toEqual([
@@ -1684,7 +1684,7 @@ describe('params', () => {
         {
           version: 2,
           projects: {},
-        }
+        },
       );
 
       expect(prompts).toEqual([
@@ -1711,7 +1711,7 @@ describe('params', () => {
         {
           version: 2,
           projects: {},
-        }
+        },
       );
 
       expect(prompts).toEqual([
@@ -1743,7 +1743,7 @@ describe('params', () => {
         {
           version: 2,
           projects: {},
-        }
+        },
       );
 
       expect(prompts).toEqual([
@@ -1780,7 +1780,7 @@ describe('params', () => {
         {
           version: 2,
           projects: {},
-        }
+        },
       );
 
       expect(prompts).toEqual([
@@ -1822,7 +1822,7 @@ describe('params', () => {
         {
           version: 2,
           projects: {},
-        }
+        },
       );
 
       expect(prompts).toEqual([
@@ -1858,7 +1858,7 @@ describe('params', () => {
         {
           version: 2,
           projects: {},
-        }
+        },
       );
 
       expect(prompts).toMatchInlineSnapshot(`
@@ -1897,7 +1897,7 @@ describe('params', () => {
               projA: null,
               projB: null,
             },
-          }
+          },
         );
 
         expect(prompts).toEqual([
@@ -1929,7 +1929,7 @@ describe('params', () => {
               projA: null,
               projB: null,
             },
-          }
+          },
         );
 
         expect(prompts).toEqual([
@@ -1962,7 +1962,7 @@ describe('params', () => {
               projA: null,
               projB: null,
             },
-          }
+          },
         );
 
         expect(prompts).toEqual([
@@ -1997,7 +1997,7 @@ describe('params', () => {
               projA: null,
               projB: null,
             },
-          }
+          },
         );
 
         expect(prompts).toEqual([
@@ -2028,7 +2028,7 @@ describe('params', () => {
         {
           version: 2,
           projects: {},
-        }
+        },
       );
 
       expect(prompts).toEqual([
@@ -2059,7 +2059,7 @@ describe('params', () => {
         {
           version: 2,
           projects: {},
-        }
+        },
       );
 
       expect(prompts).toEqual([
@@ -2091,7 +2091,7 @@ describe('params', () => {
         {
           version: 2,
           projects: {},
-        }
+        },
       );
 
       expect(prompts).toEqual([

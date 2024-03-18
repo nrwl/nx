@@ -12,7 +12,7 @@ import type { TypescriptInMemoryTsConfig } from './typescript-compilation';
 export function getProcessedTaskTsConfigs(
   tasks: string[],
   tasksOptions: Record<string, NormalizedExecutorOptions>,
-  context: ExecutorContext
+  context: ExecutorContext,
 ): Record<string, TypescriptInMemoryTsConfig> {
   const taskInMemoryTsConfigMap: Record<string, TypescriptInMemoryTsConfig> =
     {};
@@ -22,7 +22,7 @@ export function getProcessedTaskTsConfigs(
       task,
       tasksOptions,
       context,
-      taskInMemoryTsConfigMap
+      taskInMemoryTsConfigMap,
     );
   }
 
@@ -37,7 +37,7 @@ function generateTaskProjectTsConfig(
   task: string,
   tasksOptions: Record<string, NormalizedExecutorOptions>,
   context: ExecutorContext,
-  taskInMemoryTsConfigMap: Record<string, TypescriptInMemoryTsConfig>
+  taskInMemoryTsConfigMap: Record<string, TypescriptInMemoryTsConfig>,
 ): string {
   const { project } = parseTargetString(task, context);
   if (projectTsConfigCache.has(project)) {
@@ -51,14 +51,14 @@ function generateTaskProjectTsConfig(
     ...getDependencyTasksInSameProject(task, context),
   ];
   const taskWithTscExecutor = tasksInProject.find((t) =>
-    hasTscExecutor(t, context)
+    hasTscExecutor(t, context),
   );
 
   if (!taskWithTscExecutor) {
     throw new Error(
       stripIndents`The "@nx/js:tsc" batch executor requires all dependencies to use the "@nx/js:tsc" executor.
         None of the following tasks in the "${project}" project use the "@nx/js:tsc" executor:
-        ${tasksInProject.map((t) => `- ${t}`).join('\n')}`
+        ${tasksInProject.map((t) => `- ${t}`).join('\n')}`,
     );
   }
 
@@ -67,13 +67,13 @@ function generateTaskProjectTsConfig(
     for (const depTask of getDependencyTasksInOtherProjects(
       task,
       project,
-      context
+      context,
     )) {
       const tsConfigPath = generateTaskProjectTsConfig(
         depTask,
         tasksOptions,
         context,
-        taskInMemoryTsConfigMap
+        taskInMemoryTsConfigMap,
       );
       projectReferences.push(tsConfigPath);
     }
@@ -87,7 +87,7 @@ function generateTaskProjectTsConfig(
   taskInMemoryTsConfigMap[taskWithTscExecutor] = getInMemoryTsConfig(
     tsConfigPath,
     taskOptions,
-    projectReferences
+    projectReferences,
   );
 
   projectTsConfigCache.set(project, {
@@ -101,21 +101,21 @@ function generateTaskProjectTsConfig(
 function getDependencyTasksInOtherProjects(
   task: string,
   project: string,
-  context: ExecutorContext
+  context: ExecutorContext,
 ): string[] {
   return context.taskGraph.dependencies[task].filter(
-    (t) => t !== task && parseTargetString(t, context).project !== project
+    (t) => t !== task && parseTargetString(t, context).project !== project,
   );
 }
 
 function getDependencyTasksInSameProject(
   task: string,
-  context: ExecutorContext
+  context: ExecutorContext,
 ): string[] {
   const { project: taskProject } = parseTargetString(task, context);
 
   return Object.keys(context.taskGraph.tasks).filter(
-    (t) => t !== task && parseTargetString(t, context).project === taskProject
+    (t) => t !== task && parseTargetString(t, context).project === taskProject,
   );
 }
 
@@ -126,7 +126,7 @@ function getInMemoryTsConfig(
     rootDir: string;
     outputPath: string;
   },
-  projectReferences: string[]
+  projectReferences: string[],
 ): TypescriptInMemoryTsConfig {
   const originalTsConfig = readJsonFile(tsConfig, {
     allowTrailingComma: true,
@@ -137,8 +137,8 @@ function getInMemoryTsConfig(
     new Set<string>(
       (originalTsConfig.references ?? [])
         .map((r: { path: string }) => r.path)
-        .concat(projectReferences)
-    )
+        .concat(projectReferences),
+    ),
   );
 
   return {

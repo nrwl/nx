@@ -52,13 +52,13 @@ const affectedNodes: Stylesheet = {
       switchValueByDarkMode(
         node,
         NrwlPalette.fuchsia_800,
-        NrwlPalette.pink_500
+        NrwlPalette.pink_500,
       ),
     backgroundColor: (node) =>
       switchValueByDarkMode(
         node,
         NrwlPalette.fuchsia_700,
-        NrwlPalette.pink_400
+        NrwlPalette.pink_400,
       ),
   },
 };

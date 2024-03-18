@@ -15,7 +15,7 @@ export default async function (tree: Tree) {
           path,
           content.toString().replace(/^\uFEFF/, ''),
           ts.ScriptTarget.Latest,
-          true
+          true,
         );
 
         let recorder: FileChangeRecorder | undefined;
@@ -55,13 +55,13 @@ export default async function (tree: Tree) {
             // Update named exports as there are leftovers.
             const newExportClause = ts.factory.updateNamedExports(
               exportClause,
-              newElements
+              newElements,
             );
             printer ??= ts.createPrinter();
             const fix = printer.printNode(
               ts.EmitHint.Unspecified,
               newExportClause,
-              source
+              source,
             );
 
             const index = exportClause.getStart();

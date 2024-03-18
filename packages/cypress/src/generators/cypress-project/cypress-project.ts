@@ -61,10 +61,10 @@ function createFiles(tree: Tree, options: CypressProjectSchema) {
       offsetFromRoot: offsetFromRoot(options.projectRoot),
       rootTsConfigPath: getRelativePathToRootTsConfig(
         tree,
-        options.projectRoot
+        options.projectRoot,
       ),
       bundler: options.bundler,
-    }
+    },
   );
 
   if (cypressVersion && cypressVersion < 7) {
@@ -105,7 +105,7 @@ function addProject(tree: Tree, options: CypressProjectSchema) {
           options: {
             cypressConfig: joinPathFragments(
               options.projectRoot,
-              cypressConfig
+              cypressConfig,
             ),
             baseUrl: options.baseUrl,
             testingType: 'e2e',
@@ -138,7 +138,7 @@ function addProject(tree: Tree, options: CypressProjectSchema) {
           options: {
             cypressConfig: joinPathFragments(
               options.projectRoot,
-              cypressConfig
+              cypressConfig,
             ),
             devServerTarget,
             testingType: 'e2e',
@@ -165,7 +165,7 @@ function addProject(tree: Tree, options: CypressProjectSchema) {
   if (detectedCypressVersion < 7) {
     e2eProjectConfig.targets.e2e.options.tsConfig = joinPathFragments(
       options.projectRoot,
-      'tsconfig.json'
+      'tsconfig.json',
     );
   }
   addProjectConfiguration(tree, options.projectName, e2eProjectConfig);
@@ -187,7 +187,7 @@ export async function cypressProjectGenerator(host: Tree, schema: Schema) {
  **/
 export async function cypressProjectGeneratorInternal(
   host: Tree,
-  schema: Schema
+  schema: Schema,
 ) {
   const options = await normalizeOptions(host, schema);
   const tasks: GeneratorCallback[] = [];
@@ -201,7 +201,7 @@ export async function cypressProjectGeneratorInternal(
         ...options,
         skipFormat: true,
         addPlugin: options.addPlugin,
-      })
+      }),
     );
   }
 
@@ -241,13 +241,13 @@ function ensureDependencies(tree: Tree, options: CypressProjectSchema) {
       () => {
         logShowProjectCommand(options.projectName);
       },
-    ]
+    ],
   );
 }
 
 async function normalizeOptions(
   host: Tree,
-  options: Schema
+  options: Schema,
 ): Promise<CypressProjectSchema> {
   let maybeRootProject: ProjectConfiguration;
   let isRootProject = false;
@@ -278,7 +278,7 @@ async function normalizeOptions(
         ? 'as-provided'
         : options.projectNameAndRootFormat,
       callingGenerator: '@nx/cypress:cypress-project',
-    }
+    },
   );
 
   options.linter = options.linter || Linter.EsLint;

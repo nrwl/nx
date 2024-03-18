@@ -11,7 +11,7 @@ export function composePlugins(
   return function (baseConfig: NextConfig) {
     return async function combined(
       phase: string,
-      context: any
+      context: any,
     ): Promise<NextConfig> {
       let config = baseConfig;
       for (const plugin of plugins) {

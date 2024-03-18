@@ -25,7 +25,7 @@ export async function ciWorkflowGenerator(tree: Tree, schema: Schema) {
   const nxCloudUsed =
     nxJson.nxCloudAccessToken ??
     Object.values(nxJson.tasksRunnerOptions ?? {}).find(
-      (r) => r.runner == '@nrwl/nx-cloud' || r.runner == 'nx-cloud'
+      (r) => r.runner == '@nrwl/nx-cloud' || r.runner == 'nx-cloud',
     );
   if (!nxCloudUsed) {
     throw new Error('This workspace is not connected to Nx Cloud.');
@@ -53,7 +53,7 @@ interface Substitutes {
 
 function normalizeOptions(options: Schema, tree: Tree): Substitutes {
   const { name: workflowName, fileName: workflowFileName } = names(
-    options.name
+    options.name,
   );
   const packageManager = detectPackageManager();
   const { exec: packageManagerPrefix, ciInstall: packageManagerInstall } =

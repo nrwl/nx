@@ -21,7 +21,7 @@ export async function convertToWithMF(tree: Tree, schema: Schema) {
 
   if (!projects.has(schema.project)) {
     throw new Error(
-      `Could not find project "${schema.project}" with a Micro Frontend configuration in your workspace. Please check the name of the project you're wishing to convert exists.`
+      `Could not find project "${schema.project}" with a Micro Frontend configuration in your workspace. Please check the name of the project you're wishing to convert exists.`,
     );
   }
 
@@ -32,30 +32,30 @@ export async function convertToWithMF(tree: Tree, schema: Schema) {
   if (!checkOutputNameMatchesProjectName(webpackAst, schema.project)) {
     throw new Error(
       `Cannot automatically migrate "${schema.project}" to "withModuleFederation" micro frontend webpack config. 
-      "uniqueName" in webpack config (${pathToWebpackConfig}) does not match project name.`
+      "uniqueName" in webpack config (${pathToWebpackConfig}) does not match project name.`,
     );
   }
 
   if (!checkSharedNpmPackagesMatchExpected(webpackAst)) {
     throw new Error(
       `Cannot automatically migrate "${schema.project}" to "withModuleFederation" micro frontend webpack config. 
-        There are npm packages being shared with a custom configuration in webpack config (${pathToWebpackConfig}).`
+        There are npm packages being shared with a custom configuration in webpack config (${pathToWebpackConfig}).`,
     );
   }
 
   logger.warn(
-    `This Micro Frontend configuration conversion will overwrite "${schema.project}"'s current webpack config. If you have anything custom that is not related to Micro Frontends, it will be lost. You should be able to see the changes in your version control system.`
+    `This Micro Frontend configuration conversion will overwrite "${schema.project}"'s current webpack config. If you have anything custom that is not related to Micro Frontends, it will be lost. You should be able to see the changes in your version control system.`,
   );
 
   const [updatedWebpackConfig, mfConfig] = writeNewWebpackConfig(
     webpackAst,
     isHostRemoteConfig(webpackAst),
-    schema.project
+    schema.project,
   );
   tree.write(pathToWebpackConfig, updatedWebpackConfig);
   tree.write(
     joinPathFragments(project.root, 'module-federation.config.js'),
-    mfConfig
+    mfConfig,
   );
 
   if (!schema.skipFormat) {

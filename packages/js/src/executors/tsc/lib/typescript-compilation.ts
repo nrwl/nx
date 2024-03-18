@@ -49,14 +49,14 @@ export function compileTypescriptSolution(
     beforeProjectCompilationCallback?: (tsConfig: string) => void;
     afterProjectCompilationCallback?: (
       tsConfig: string,
-      success: boolean
+      success: boolean,
     ) => void;
   },
   reporters?: {
     diagnosticReporter?: ReporterWithTsConfig<ts.DiagnosticReporter>;
     solutionBuilderStatusReporter?: ReporterWithTsConfig<ts.DiagnosticReporter>;
     watchStatusReporter?: ReporterWithTsConfig<ts.WatchStatusReporter>;
-  }
+  },
 ): AsyncIterable<TypescriptCompilationResult> {
   if (watch) {
     // create an AsyncIterable that doesn't complete, watch mode is only
@@ -72,7 +72,7 @@ export function compileTypescriptSolution(
         };
 
         compileTSWithWatch(context, logger, hooks, reporters);
-      }
+      },
     );
   }
 
@@ -97,14 +97,14 @@ function* compileTS(
     beforeProjectCompilationCallback?: (tsConfig: string) => void;
     afterProjectCompilationCallback?: (
       tsConfig: string,
-      success: boolean
+      success: boolean,
     ) => void;
   },
   reporters?: {
     diagnosticReporter?: ReporterWithTsConfig<ts.DiagnosticReporter>;
     solutionBuilderStatusReporter?: ReporterWithTsConfig<ts.DiagnosticReporter>;
     watchStatusReporter?: ReporterWithTsConfig<ts.WatchStatusReporter>;
-  }
+  },
 ): Generator<TypescriptCompilationResult, void, TypescriptCompilationResult> {
   let project: ts.InvalidatedProject<ts.EmitAndSemanticDiagnosticsBuilderProgram>;
 
@@ -120,7 +120,7 @@ function* compileTS(
     (diagnostic) => {
       const formattedDiagnostic = formatDiagnosticReport(
         diagnostic,
-        formatDiagnosticsHost
+        formatDiagnosticsHost,
       );
 
       // handles edge case where a wrong a project reference path can't be read
@@ -137,13 +137,13 @@ function* compileTS(
       logger.info(formattedDiagnostic, project.project);
 
       reporters?.solutionBuilderStatusReporter?.(project.project, diagnostic);
-    }
+    },
   );
   const rootNames = Object.keys(context);
   const solutionBuilder = ts.createSolutionBuilder(
     solutionBuilderHost,
     rootNames,
-    {}
+    {},
   );
 
   // eslint-disable-next-line no-constant-condition
@@ -165,7 +165,7 @@ function* compileTS(
         `The project ${projectName} ` +
           `is using the deprecated "prepend" Typescript compiler option. ` +
           `This option is not supported by the batch executor and it's ignored.\n`,
-        project.project
+        project.project,
       );
       continue;
     }
@@ -175,7 +175,7 @@ function* compileTS(
     if (project.kind === ts.InvalidatedProjectKind.UpdateOutputFileStamps) {
       logger.info(
         `Updating output timestamps of project "${projectName}"...\n`,
-        project.project
+        project.project,
       );
 
       // update output timestamps and mark project as complete
@@ -185,7 +185,7 @@ function* compileTS(
       if (success) {
         logger.info(
           `Done updating output timestamps of project "${projectName}"...\n`,
-          project.project
+          project.project,
         );
       }
 
@@ -197,22 +197,22 @@ function* compileTS(
 
     logger.info(
       `Compiling TypeScript files for project "${projectName}"...\n`,
-      project.project
+      project.project,
     );
     // build and mark project as complete
     const status = project.done(
       undefined,
       undefined,
       getCustomTrasformersFactory(projectContext.transformers)(
-        project.getProgram()
-      )
+        project.getProgram(),
+      ),
     );
     const success = status === ts.ExitStatus.Success;
 
     if (success) {
       logger.info(
         `Done compiling TypeScript files for project "${projectName}".\n`,
-        project.project
+        project.project,
       );
     }
 
@@ -232,20 +232,20 @@ function compileTSWithWatch(
     beforeProjectCompilationCallback?: (tsConfig: string) => void;
     afterProjectCompilationCallback?: (
       tsConfig: string,
-      success: boolean
+      success: boolean,
     ) => void;
   },
   reporters?: {
     diagnosticReporter?: ReporterWithTsConfig<ts.DiagnosticReporter>;
     solutionBuilderStatusReporter?: ReporterWithTsConfig<ts.DiagnosticReporter>;
     watchStatusReporter?: ReporterWithTsConfig<ts.WatchStatusReporter>;
-  }
+  },
 ): void {
   let project: ts.InvalidatedProject<ts.EmitAndSemanticDiagnosticsBuilderProgram>;
 
   const solutionHost = ts.createSolutionBuilderWithWatchHost(
     getSystem(context),
-    /*createProgram*/ undefined
+    /*createProgram*/ undefined,
   );
 
   if (reporters?.diagnosticReporter) {
@@ -270,7 +270,7 @@ function compileTSWithWatch(
     diagnostic,
     newLine,
     options,
-    errorCount
+    errorCount,
   ) => {
     originalWatchStatusReporter(diagnostic, newLine, options, errorCount);
 
@@ -287,7 +287,7 @@ function compileTSWithWatch(
       diagnostic,
       newLine,
       options,
-      errorCount
+      errorCount,
     );
   };
 
@@ -295,7 +295,7 @@ function compileTSWithWatch(
   const solutionBuilder = ts.createSolutionBuilderWithWatch(
     solutionHost,
     rootNames,
-    {}
+    {},
   );
 
   const build = () => {
@@ -316,7 +316,7 @@ function compileTSWithWatch(
         logger.warn(
           `The project ${projectName} ` +
             `is using the deprecated "prepend" Typescript compiler option. ` +
-            `This option is not supported by the batch executor and it's ignored.`
+            `This option is not supported by the batch executor and it's ignored.`,
         );
         continue;
       }
@@ -327,7 +327,7 @@ function compileTSWithWatch(
         if (projectName) {
           logger.info(
             `Updating output timestamps of project "${projectName}"...\n`,
-            project.project
+            project.project,
           );
         }
 
@@ -338,7 +338,7 @@ function compileTSWithWatch(
         if (projectName && success) {
           logger.info(
             `Done updating output timestamps of project "${projectName}"...\n`,
-            project.project
+            project.project,
           );
         }
 
@@ -349,22 +349,22 @@ function compileTSWithWatch(
 
       logger.info(
         `Compiling TypeScript files for project "${projectName}"...\n`,
-        project.project
+        project.project,
       );
       // build and mark project as complete
       const status = project.done(
         undefined,
         undefined,
         getCustomTrasformersFactory(projectContext.transformers)(
-          project.getProgram()
-        )
+          project.getProgram(),
+        ),
       );
       const success = status === ts.ExitStatus.Success;
 
       if (success) {
         logger.info(
           `Done compiling TypeScript files for project "${projectName}".\n`,
-          project.project
+          project.project,
         );
       }
 
@@ -387,7 +387,7 @@ function compileTSWithWatch(
 }
 
 function getSystem(
-  context: Record<string, TypescriptProjectContext>
+  context: Record<string, TypescriptProjectContext>,
 ): ts.System {
   return {
     ...ts.sys,

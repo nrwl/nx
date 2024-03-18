@@ -29,7 +29,7 @@ const versionWithRescopeToNx = '16.0.0-beta.2';
 
 export async function getLegacyMigrationFunctionIfApplicable(
   repoRoot: string,
-  options: Options
+  options: Options,
 ): Promise<() => Promise<void> | null> {
   const angularVersion =
     readModulePackageJson('@angular/core').packageJson.version;
@@ -51,7 +51,7 @@ export async function getLegacyMigrationFunctionIfApplicable(
     pkgName = `${pkgScope}/${unscopedPkgName}`;
     pkgVersion = await resolvePackageVersion(
       pkgName,
-      `^${majorAngularVersion}.0.0`
+      `^${majorAngularVersion}.0.0`,
     );
     const preserveAngularCliLayoutFlag = !options.integrated
       ? '--preserveAngularCLILayout'
@@ -71,7 +71,7 @@ export async function getLegacyMigrationFunctionIfApplicable(
     // use the latest Nx version that supported the Angular version
     pkgVersion = await resolvePackageVersion(
       'nx',
-      nxAngularLegacyVersionMap[majorAngularVersion]
+      nxAngularLegacyVersionMap[majorAngularVersion],
     );
 
     pkgScope = gte(pkgVersion, versionWithRescopeToNx) ? '@nx' : '@nrwl';
@@ -101,7 +101,7 @@ export async function getLegacyMigrationFunctionIfApplicable(
         pkgVersion,
         unscopedPkgName,
       },
-      pmc
+      pmc,
     );
 
     output.log({ title: '📝 Setting up workspace' });
@@ -129,7 +129,7 @@ async function installDependencies(
     pkgVersion: string;
     unscopedPkgName: string;
   },
-  pmc: PackageManagerCommands
+  pmc: PackageManagerCommands,
 ): Promise<void> {
   const json = readJsonFile(join(repoRoot, 'package.json'));
 
@@ -157,7 +157,7 @@ async function installDependencies(
 
 async function resolvePackageVersion(
   packageName: string,
-  version: string
+  version: string,
 ): Promise<string> {
   try {
     return await resolvePackageVersionUsingRegistry(packageName, version);

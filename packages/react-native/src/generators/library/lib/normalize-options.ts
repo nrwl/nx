@@ -14,7 +14,7 @@ export interface NormalizedSchema extends Schema {
 
 export async function normalizeOptions(
   host: Tree,
-  options: Schema
+  options: Schema,
 ): Promise<NormalizedSchema> {
   const {
     projectName,

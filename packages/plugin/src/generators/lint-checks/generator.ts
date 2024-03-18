@@ -28,12 +28,12 @@ import { useFlatConfig } from '@nx/eslint/src/utils/flat-config';
 
 export default async function pluginLintCheckGenerator(
   host: Tree,
-  options: PluginLintChecksGeneratorSchema
+  options: PluginLintChecksGeneratorSchema,
 ) {
   const project = readProjectConfiguration(host, options.projectName);
   const packageJson = readJson<PackageJson>(
     host,
-    joinPathFragments(project.root, 'package.json')
+    joinPathFragments(project.root, 'package.json'),
   );
 
   // This rule is eslint **only**
@@ -48,7 +48,7 @@ export default async function pluginLintCheckGenerator(
     }
   } else {
     logger.error(
-      `${NX_PREFIX} plugin lint checks can only be added to plugins which use eslint for linting`
+      `${NX_PREFIX} plugin lint checks can only be added to plugins which use eslint for linting`,
     );
   }
 
@@ -60,11 +60,11 @@ export default async function pluginLintCheckGenerator(
 export function addMigrationJsonChecks(
   host: Tree,
   options: PluginLintChecksGeneratorSchema,
-  packageJson: PackageJson
+  packageJson: PackageJson,
 ) {
   const projectConfiguration = readProjectConfiguration(
     host,
-    options.projectName
+    options.projectName,
   );
 
   if (!projectIsEsLintEnabled(host, projectConfiguration)) {
@@ -83,7 +83,7 @@ export function addMigrationJsonChecks(
 
   const migrationsJsonPath = joinPathFragments(
     projectConfiguration.root,
-    relativeMigrationsJsonPath
+    relativeMigrationsJsonPath,
   );
 
   if (!eslintTarget) {
@@ -94,7 +94,7 @@ export function addMigrationJsonChecks(
   if (
     eslintTargetConfiguration.options?.lintFilePatterns &&
     !eslintTargetConfiguration.options.lintFilePatterns.includes(
-      migrationsJsonPath
+      migrationsJsonPath,
     )
   ) {
     eslintTargetConfiguration.options.lintFilePatterns.push(migrationsJsonPath);
@@ -115,14 +115,14 @@ export function addMigrationJsonChecks(
         ...o,
         files: Array.from(fileSet),
       };
-    }
+    },
   );
 }
 
 function updateProjectTarget(
   host: Tree,
   options: PluginLintChecksGeneratorSchema,
-  packageJson: PackageJson
+  packageJson: PackageJson,
 ) {
   const project = readProjectConfiguration(host, options.projectName);
   if (!project.targets) {
@@ -140,7 +140,7 @@ function updateProjectTarget(
 
       if (packageJson.generators) {
         opts.lintFilePatterns.push(
-          joinPathFragments(project.root, packageJson.generators)
+          joinPathFragments(project.root, packageJson.generators),
         );
       }
       if (
@@ -148,12 +148,12 @@ function updateProjectTarget(
         packageJson.schematics !== packageJson.generators
       ) {
         opts.lintFilePatterns.push(
-          joinPathFragments(project.root, packageJson.schematics)
+          joinPathFragments(project.root, packageJson.schematics),
         );
       }
       if (packageJson.executors) {
         opts.lintFilePatterns.push(
-          joinPathFragments(project.root, packageJson.executors)
+          joinPathFragments(project.root, packageJson.executors),
         );
       }
       if (
@@ -161,7 +161,7 @@ function updateProjectTarget(
         packageJson.builders !== packageJson.executors
       ) {
         opts.lintFilePatterns.push(
-          joinPathFragments(project.root, packageJson.builders)
+          joinPathFragments(project.root, packageJson.builders),
         );
       }
       opts.lintFilePatterns.push(`${project.root}/package.json`);
@@ -175,7 +175,7 @@ function updateProjectTarget(
 function updateProjectEslintConfig(
   host: Tree,
   options: ProjectConfiguration,
-  packageJson: PackageJson
+  packageJson: PackageJson,
 ) {
   if (isEslintConfigSupported(host, options.root)) {
     const lookup = (o) =>
@@ -237,7 +237,7 @@ function updateRootEslintConfig(host: Tree) {
           Array.isArray(o.files)
             ? o.files.some((f) => f.match(/\.json$/))
             : !!o.files?.match(/\.json$/),
-        true
+        true,
       )
     ) {
       addOverrideToLintConfig(
@@ -248,7 +248,7 @@ function updateRootEslintConfig(host: Tree) {
           parser: 'jsonc-eslint-parser',
           rules: {},
         },
-        { checkBaseConfig: true }
+        { checkBaseConfig: true },
       );
     }
   } else {
@@ -269,7 +269,7 @@ function setupVsCodeLintingForJsonFiles(host: Tree) {
     existing = readJson<Record<string, unknown>>(host, '.vscode/settings.json');
   } else {
     logger.info(
-      `${NX_PREFIX} We've updated the vscode settings for this repository to ensure that plugin lint checks show up inside your IDE. This created .vscode/settings.json. To read more about this file, check vscode's documentation. It is frequently not committed, so other developers may need to add similar settings if they'd like to see the lint checks in the IDE rather than only during linting.`
+      `${NX_PREFIX} We've updated the vscode settings for this repository to ensure that plugin lint checks show up inside your IDE. This created .vscode/settings.json. To read more about this file, check vscode's documentation. It is frequently not committed, so other developers may need to add similar settings if they'd like to see the lint checks in the IDE rather than only during linting.`,
     );
   }
 
@@ -286,12 +286,12 @@ function projectIsEsLintEnabled(tree: Tree, project: ProjectConfiguration) {
 }
 
 export function getEsLintOptions(
-  project: ProjectConfiguration
+  project: ProjectConfiguration,
 ): [target: string, configuration: TargetConfiguration<EsLintExecutorOptions>] {
   return Object.entries(project.targets || {}).find(
     ([, x]) =>
       x.executor === '@nx/eslint:lint' ||
       x.executor === '@nx/linter:eslint' ||
-      x.executor === '@nrwl/linter:eslint'
+      x.executor === '@nrwl/linter:eslint',
   );
 }

@@ -17,7 +17,7 @@ export function createFiles(host: Tree, options: NormalizedSchema) {
     offsetFromRoot: offsetFromRoot(options.e2eProjectRoot),
     rootTsConfigPath: getRelativePathToRootTsConfig(
       host,
-      options.e2eProjectRoot
+      options.e2eProjectRoot,
     ),
   });
   if (options.js) {

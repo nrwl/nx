@@ -11,7 +11,7 @@ let tsquery: typeof import('@phenomnomnominal/tsquery').tsquery;
 function getBootstrapCallFileInfo(
   tree: Tree,
   project: ProjectConfiguration,
-  mainFilePath: string
+  mainFilePath: string,
 ) {
   const IMPORT_BOOTSTRAP_FILE =
     'CallExpression:has(ImportKeyword) > StringLiteral';
@@ -30,7 +30,7 @@ function getBootstrapCallFileInfo(
   ) {
     bootstrapCallFilePath = joinPathFragments(
       project.sourceRoot,
-      'bootstrap.ts'
+      'bootstrap.ts',
     );
     bootstrapCallFileContents = tree.read(bootstrapCallFilePath, 'utf-8');
   }
@@ -42,7 +42,7 @@ function getImportTokenMap(bootstrapCallFileContentsAst: SourceFile) {
   const importedTokensNodes = tsquery(
     bootstrapCallFileContentsAst,
     'ImportDeclaration > ImportClause',
-    { visitAllChildren: true }
+    { visitAllChildren: true },
   );
 
   for (const node of importedTokensNodes) {
@@ -55,12 +55,12 @@ function getImportsRequiredForAppConfig(
   importTokenMap: Map<string, string>,
   appConfigNode: Node,
   oldSourceFilePath: string,
-  newSourceFilePath: string
+  newSourceFilePath: string,
 ): { appConfigImports: string[]; importsToRemoveFromSource: string[] } {
   const identifiers = tsquery.query<Identifier>(
     appConfigNode,
     'Identifier:not(PropertyAssignment > Identifier)',
-    { visitAllChildren: true }
+    { visitAllChildren: true },
   );
 
   const appConfigImports = new Set<string>();
@@ -93,17 +93,17 @@ function getImportsRequiredForAppConfig(
       if (importPath.startsWith('.')) {
         const resolvedImportPath = resolve(
           dirname(oldSourceFilePath),
-          importPath
+          importPath,
         );
         const newRelativeImportPath = relative(
           dirname(newSourceFilePath),
-          resolvedImportPath
+          resolvedImportPath,
         );
         importText = importText.replace(
           importPath,
           newRelativeImportPath.startsWith('.')
             ? newRelativeImportPath
-            : `./${newRelativeImportPath}`
+            : `./${newRelativeImportPath}`,
         );
       }
 
@@ -119,19 +119,19 @@ function getImportsRequiredForAppConfig(
 
 function getAppConfigFileContents(
   importsRequiredForAppConfig: string[],
-  appConfigText: string
+  appConfigText: string,
 ) {
   const buildAppConfigFileContents = (
     importStatements: string[],
-    appConfig: string
+    appConfig: string,
   ) => `import { ApplicationConfig } from '@angular/core';${importStatements.join(
-    '\n'
+    '\n',
   )}
         export const appConfig: ApplicationConfig = ${appConfig}`;
 
   const appConfigFileContents = buildAppConfigFileContents(
     importsRequiredForAppConfig,
-    appConfigText
+    appConfigText,
   );
   return appConfigFileContents;
 }
@@ -139,18 +139,18 @@ function getAppConfigFileContents(
 function getBootstrapCallFileContents(
   bootstrapCallFileContents: string,
   appConfigNode: Node,
-  importsRequiredForAppConfig: string[]
+  importsRequiredForAppConfig: string[],
 ) {
   let newBootstrapCallFileContents = `import { appConfig } from './app/app.config';
 ${bootstrapCallFileContents.slice(
   0,
-  appConfigNode.getStart()
+  appConfigNode.getStart(),
 )}appConfig${bootstrapCallFileContents.slice(appConfigNode.getEnd())}`;
 
   for (const importStatement of importsRequiredForAppConfig) {
     newBootstrapCallFileContents = newBootstrapCallFileContents.replace(
       importStatement,
-      ''
+      '',
     );
   }
   return newBootstrapCallFileContents;
@@ -185,14 +185,14 @@ export default async function extractStandaloneConfig(tree: Tree) {
       getBootstrapCallFileInfo(
         tree,
         project,
-        project.targets.build.options.main
+        project.targets.build.options.main,
       );
 
     const bootstrapCallFileContentsAst = tsquery.ast(bootstrapCallFileContents);
     const nodes: Node[] = tsquery(
       bootstrapCallFileContentsAst,
       BOOTSTRAP_APPLICATION_CALL_SELECTOR,
-      { visitAllChildren: true }
+      { visitAllChildren: true },
     );
     if (nodes.length === 0) {
       continue;
@@ -204,7 +204,7 @@ export default async function extractStandaloneConfig(tree: Tree) {
     const appConfigNodes = tsquery(
       bootstrapCallNode,
       BOOTSTRAP_APPLICATION_CALL_CONFIG_SELECTOR,
-      { visitAllChildren: true }
+      { visitAllChildren: true },
     );
     if (appConfigNodes.length === 0) {
       continue;
@@ -214,7 +214,7 @@ export default async function extractStandaloneConfig(tree: Tree) {
     const appConfigText = appConfigNode.getText();
     const appConfigFilePath = joinPathFragments(
       project.sourceRoot,
-      'app/app.config.ts'
+      'app/app.config.ts',
     );
 
     const { appConfigImports, importsToRemoveFromSource } =
@@ -222,12 +222,12 @@ export default async function extractStandaloneConfig(tree: Tree) {
         importTokenMap,
         appConfigNode,
         bootstrapCallFilePath,
-        appConfigFilePath
+        appConfigFilePath,
       );
 
     const appConfigFileContents = getAppConfigFileContents(
       appConfigImports,
-      appConfigText
+      appConfigText,
     );
 
     tree.write(appConfigFilePath, appConfigFileContents);
@@ -235,7 +235,7 @@ export default async function extractStandaloneConfig(tree: Tree) {
     let newBootstrapCallFileContents = getBootstrapCallFileContents(
       bootstrapCallFileContents,
       appConfigNode,
-      importsToRemoveFromSource
+      importsToRemoveFromSource,
     );
 
     tree.write(bootstrapCallFilePath, newBootstrapCallFileContents);

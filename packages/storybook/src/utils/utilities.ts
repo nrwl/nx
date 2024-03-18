@@ -42,10 +42,9 @@ type Constants = typeof Constants;
 
 export function storybookMajorVersion(): number | undefined {
   try {
-    const storybookPackageVersion = require(join(
-      '@storybook/core-server',
-      'package.json'
-    )).version;
+    const storybookPackageVersion = require(
+      join('@storybook/core-server', 'package.json'),
+    ).version;
     return major(storybookPackageVersion);
   } catch {
     return undefined;
@@ -54,10 +53,9 @@ export function storybookMajorVersion(): number | undefined {
 
 export function getInstalledStorybookVersion(): string | undefined {
   try {
-    const storybookPackageVersion = require(join(
-      '@storybook/core-server',
-      'package.json'
-    )).version;
+    const storybookPackageVersion = require(
+      join('@storybook/core-server', 'package.json'),
+    ).version;
     return storybookPackageVersion;
   } catch {
     return undefined;
@@ -84,7 +82,7 @@ export type TsConfig = {
 
 export function storybookConfigExistsCheck(
   config: string,
-  projectName: string
+  projectName: string,
 ): void {
   const exists = !!(config && statSync(config).isDirectory());
 
@@ -94,7 +92,7 @@ export function storybookConfigExistsCheck(
       Please generate Storybook configuration using the following command:
 
       nx g @nx/storybook:configuration --name=${projectName}
-      `
+      `,
     );
   }
 }
@@ -260,7 +258,7 @@ export function getTsSourceFile(host: Tree, path: string): ts.SourceFile {
     path,
     content,
     ts.ScriptTarget.Latest,
-    true
+    true,
   );
 
   return source;

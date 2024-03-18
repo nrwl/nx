@@ -32,7 +32,7 @@ describe('nx init (NPM repo - legacy)', () => {
         scripts: {
           echo: 'echo 123',
         },
-      })
+      }),
     );
 
     runCommand(pmc.install);
@@ -40,7 +40,7 @@ describe('nx init (NPM repo - legacy)', () => {
     const output = runCommand(
       `${
         pmc.runUninstalledPackage
-      } nx@${getPublishedVersion()} init --cacheable=echo --no-interactive`
+      } nx@${getPublishedVersion()} init --cacheable=echo --no-interactive`,
     );
     console.log(output);
     expect(output).toContain('Enabled computation caching');
@@ -61,7 +61,7 @@ describe('nx init (NPM repo - legacy)', () => {
         scripts: {
           compound: 'echo HELLO && echo COMPOUND',
         },
-      })
+      }),
     );
 
     runCommand(pmc.install);
@@ -69,7 +69,7 @@ describe('nx init (NPM repo - legacy)', () => {
     runCommand(
       `${
         pmc.runUninstalledPackage
-      } nx@${getPublishedVersion()} init --cacheable=compound --no-interactive`
+      } nx@${getPublishedVersion()} init --cacheable=compound --no-interactive`,
     );
 
     const output = runCommand('npm run compound TEST');

@@ -38,7 +38,7 @@ export async function e2eProjectGenerator(host: Tree, options: Schema) {
 
 export async function e2eProjectGeneratorInternal(
   host: Tree,
-  _options: Schema
+  _options: Schema,
 ) {
   const tasks: GeneratorCallback[] = [];
   const options = await normalizeOptions(host, _options);
@@ -71,7 +71,7 @@ export async function e2eProjectGeneratorInternal(
         ...names(options.rootProject ? 'server' : options.project),
         offsetFromRoot: offsetFromRoot(options.e2eProjectRoot),
         tmpl: '',
-      }
+      },
     );
 
     if (options.isNest) {
@@ -84,7 +84,7 @@ export async function e2eProjectGeneratorInternal(
           ...names(options.rootProject ? 'server' : options.project),
           offsetFromRoot: offsetFromRoot(options.e2eProjectRoot),
           tmpl: '',
-        }
+        },
       );
     }
   } else if (options.projectType === 'cli') {
@@ -99,7 +99,7 @@ export async function e2eProjectGeneratorInternal(
         mainFile,
         offsetFromRoot: offsetFromRoot(options.e2eProjectRoot),
         tmpl: '',
-      }
+      },
     );
   }
 
@@ -107,7 +107,7 @@ export async function e2eProjectGeneratorInternal(
   const installTask = addDependenciesToPackageJson(
     host,
     { axios: axiosVersion },
-    {}
+    {},
   );
   tasks.push(installTask);
 
@@ -148,7 +148,7 @@ export async function e2eProjectGeneratorInternal(
 
 async function normalizeOptions(
   tree: Tree,
-  options: Schema
+  options: Schema,
 ): Promise<
   Omit<Schema, 'name'> & { e2eProjectRoot: string; e2eProjectName: string }
 > {

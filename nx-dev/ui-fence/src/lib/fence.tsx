@@ -66,7 +66,7 @@ function processHighlightLines(highlightLines: any): number[] {
       // remove duplicates
       .filter(
         (value: any, index: number, self: number[]) =>
-          self.indexOf(value) === index
+          self.indexOf(value) === index,
       )
   );
 }

@@ -4,15 +4,15 @@ import type { InlineProjectGraph } from '../inline';
 export function generateTmpSwcrc(
   inlineProjectGraph: InlineProjectGraph,
   swcrcPath: string,
-  tmpSwcrcPath: string
+  tmpSwcrcPath: string,
 ) {
   const swcrc = readJsonFile(swcrcPath);
 
   swcrc['exclude'] = swcrc['exclude'].concat(
     Object.values(inlineProjectGraph.externals).map(
-      (external) => `${external.root}/**/.*.ts$`
+      (external) => `${external.root}/**/.*.ts$`,
     ),
-    'node_modules/**/*.ts$'
+    'node_modules/**/*.ts$',
   );
 
   writeJsonFile(tmpSwcrcPath, swcrc);

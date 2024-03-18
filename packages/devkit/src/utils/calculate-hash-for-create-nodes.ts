@@ -7,7 +7,7 @@ export function calculateHashForCreateNodes(
   projectRoot: string,
   options: object,
   context: CreateNodesContext,
-  additionalGlobs: string[] = []
+  additionalGlobs: string[] = [],
 ): string {
   return hashArray([
     hashWithWorkspaceContext(context.workspaceRoot, [

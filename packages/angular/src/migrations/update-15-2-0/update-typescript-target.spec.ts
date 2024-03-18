@@ -62,7 +62,7 @@ describe('Migration to update target and add useDefineForClassFields', () => {
     await updateTypescriptTarget(tree);
     const compilerOptions = readJson(
       tree,
-      'tsconfig.base.json'
+      'tsconfig.base.json',
     ).compilerOptions;
     expect(compilerOptions).toMatchInlineSnapshot(`
       {
@@ -82,7 +82,7 @@ describe('Migration to update target and add useDefineForClassFields', () => {
 
     const compilerOptions = readJson(
       tree,
-      'apps/test/tsconfig.app.prod.json'
+      'apps/test/tsconfig.app.prod.json',
     ).compilerOptions;
     expect(compilerOptions['target']).toEqual('ES2022');
     expect(compilerOptions['useDefineForClassFields']).toBeFalsy();
@@ -92,7 +92,7 @@ describe('Migration to update target and add useDefineForClassFields', () => {
     await updateTypescriptTarget(tree);
     const compilerOptions = readJson(
       tree,
-      'apps/karma/tsconfig.spec.json'
+      'apps/karma/tsconfig.spec.json',
     ).compilerOptions;
     expect(compilerOptions).toMatchInlineSnapshot(`
       {

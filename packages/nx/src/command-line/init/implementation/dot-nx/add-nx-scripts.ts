@@ -78,14 +78,14 @@ export function updateGitIgnore(host: Tree) {
   const contents = host.read('.gitignore', 'utf-8') ?? '';
   host.write(
     '.gitignore',
-    [contents, '.nx/installation', '.nx/cache'].join('\n')
+    [contents, '.nx/installation', '.nx/cache'].join('\n'),
   );
 }
 
 // Gets the sanitized contents for nxw.js
 export function getNxWrapperContents() {
   return sanitizeWrapperScript(
-    readFileSync(path.join(__dirname, 'nxw.js'), 'utf-8')
+    readFileSync(path.join(__dirname, 'nxw.js'), 'utf-8'),
   );
 }
 

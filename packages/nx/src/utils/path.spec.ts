@@ -17,7 +17,7 @@ describe('normalizePath', () => {
 describe('joinPathFragments', () => {
   it('should join relative paths', () => {
     expect(joinPathFragments('C://some/path', '../other-path')).toEqual(
-      '/some/other-path'
+      '/some/other-path',
     );
   });
 });

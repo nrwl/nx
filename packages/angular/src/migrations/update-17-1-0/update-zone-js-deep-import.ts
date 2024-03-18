@@ -30,7 +30,7 @@ export default async function (tree: Tree) {
       if (zoneJsTestingImportRegex.test(content)) {
         content = content.replace(
           zoneJsTestingImportRegex,
-          '$1zone.js/testing$2'
+          '$1zone.js/testing$2',
         );
         wasUpdated = true;
       }

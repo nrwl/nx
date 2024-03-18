@@ -19,11 +19,11 @@ describe('workspaceRootInner', () => {
           '/home/workspace/packages/a/package.json',
           '/home/workspace/packages/b/package.json',
           '/home/workspace/packages/c/package.json',
-        ].includes(p.toString())
+        ].includes(p.toString()),
       );
 
     expect(workspaceRootInner('/home/workspace', null)).toEqual(
-      '/home/workspace'
+      '/home/workspace',
     );
   });
 
@@ -38,13 +38,13 @@ describe('workspaceRootInner', () => {
             '/home/workspace/packages/a/package.json',
             '/home/workspace/packages/b/package.json',
             '/home/workspace/packages/c/package.json',
-          ].includes(p.toString())
+          ].includes(p.toString()),
         );
 
       expect(workspaceRootInner('/home/workspace/packages/a', null)).toEqual(
-        '/home/workspace'
+        '/home/workspace',
       );
-    }
+    },
   );
 
   it.each(rootMarkers)(
@@ -59,13 +59,13 @@ describe('workspaceRootInner', () => {
             '/home/workspace/packages/a/package.json',
             '/home/workspace/packages/b/package.json',
             '/home/workspace/packages/c/package.json',
-          ].includes(p.toString())
+          ].includes(p.toString()),
         );
 
       expect(workspaceRootInner('/home/workspace/packages/a', null)).toEqual(
-        '/home/workspace'
+        '/home/workspace',
       );
-    }
+    },
   );
 
   it('should find workspace root from installation when marker not present', () => {
@@ -77,11 +77,11 @@ describe('workspaceRootInner', () => {
           '/home/workspace/packages/a/package.json',
           '/home/workspace/packages/b/package.json',
           '/home/workspace/packages/c/package.json',
-        ].includes(p.toString())
+        ].includes(p.toString()),
       );
 
     expect(workspaceRootInner('/home/workspace/packages/a', null)).toEqual(
-      '/home/workspace'
+      '/home/workspace',
     );
   });
 
@@ -95,11 +95,11 @@ describe('workspaceRootInner', () => {
           '/home/workspace/packages/a/package.json',
           '/home/workspace/packages/b/package.json',
           '/home/workspace/packages/c/package.json',
-        ].includes(p.toString())
+        ].includes(p.toString()),
       );
 
     expect(workspaceRootInner('/home/workspace/packages/a', null)).toEqual(
-      '/home/workspace'
+      '/home/workspace',
     );
   });
 });

@@ -10,18 +10,18 @@ import {
 const importFresh = require('import-fresh');
 
 export async function generateCnwDocumentation(
-  commandsOutputDirectory: string
+  commandsOutputDirectory: string,
 ) {
   process.env.NX_GENERATE_DOCS_PROCESS = 'true';
 
   console.log(
     `\n${chalk.blue(
-      'i'
-    )} Generating Documentation for Create Nx Workspace Command`
+      'i',
+    )} Generating Documentation for Create Nx Workspace Command`,
   );
 
   const { commandsObject } = importFresh(
-    '../../../packages/create-nx-workspace/bin/create-nx-workspace'
+    '../../../packages/create-nx-workspace/bin/create-nx-workspace',
   );
 
   const command = getCommands(commandsObject)['$0'];
@@ -33,8 +33,8 @@ export async function generateCnwDocumentation(
 
   console.log(
     `${chalk.green(
-      '✓'
-    )} Generated Documentation for Create Nx Workspace Command`
+      '✓',
+    )} Generated Documentation for Create Nx Workspace Command`,
   );
 }
 

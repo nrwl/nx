@@ -29,7 +29,7 @@ export function Tabs({
                     'whitespace-nowrap border-b-2 border-transparent p-2 text-sm font-medium',
                     label === currentTab
                       ? 'border-blue-500 text-slate-800 dark:border-sky-500 dark:text-slate-300'
-                      : 'text-slate-500 hover:border-blue-500 hover:text-slate-800 dark:text-slate-400 dark:hover:border-sky-500 dark:hover:text-slate-300'
+                      : 'text-slate-500 hover:border-blue-500 hover:text-slate-800 dark:text-slate-400 dark:hover:border-sky-500 dark:hover:text-slate-300',
                   )}
                 >
                   {label}

@@ -51,7 +51,7 @@ export function writeTargetsToCache(
   targets: Record<
     string,
     { name: string; targets: Record<string, TargetConfiguration> }
-  >
+  >,
 ) {
   writeJsonFile(cachePath, targets);
 }
@@ -61,14 +61,14 @@ export const createNodes: CreateNodes<GradlePluginOptions> = [
   (
     gradleFilePath,
     options: GradlePluginOptions | undefined,
-    context: CreateNodesContext
+    context: CreateNodesContext,
   ) => {
     const projectRoot = dirname(gradleFilePath);
 
     const hash = calculateHashForCreateNodes(
       projectRoot,
       options ?? {},
-      context
+      context,
     );
     if (targetsCache[hash]) {
       calculatedTargets[hash] = targetsCache[hash];
@@ -89,7 +89,7 @@ export const createNodes: CreateNodes<GradlePluginOptions> = [
       } = getGradleReport();
 
       const gradleProject = gradleFileToGradleProjectMap.get(
-        gradleFilePath
+        gradleFilePath,
       ) as string;
       const projectName = gradleProjectToProjectName.get(gradleProject);
       if (!projectName) {
@@ -98,7 +98,7 @@ export const createNodes: CreateNodes<GradlePluginOptions> = [
 
       const availableTaskNames = tasksMap.get(gradleFilePath) as string[];
       const tasksTypeMap = gradleProjectToTasksTypeMap.get(
-        gradleProject
+        gradleProject,
       ) as Map<string, string>;
       const tasks: GradleTask[] = availableTaskNames.map((taskName) => {
         return {
@@ -117,7 +117,7 @@ export const createNodes: CreateNodes<GradlePluginOptions> = [
         projectRoot,
         options,
         context,
-        outputDirs
+        outputDirs,
       );
       calculatedTargets[hash] = {
         name: projectName,
@@ -145,7 +145,7 @@ function createGradleTargets(
   projectRoot: string,
   options: GradlePluginOptions | undefined,
   context: CreateNodesContext,
-  outputDirs: Map<string, string>
+  outputDirs: Map<string, string>,
 ): Record<string, TargetConfiguration> {
   const inputsMap = createInputsMap(context);
 
@@ -169,7 +169,7 @@ function createGradleTargets(
 }
 
 function createInputsMap(
-  context: CreateNodesContext
+  context: CreateNodesContext,
 ): Record<string, TargetConfiguration['inputs']> {
   const namedInputs = context.nxJsonConfiguration.namedInputs;
   return {

@@ -93,7 +93,7 @@ export class ProjectTraversalGraph {
 
     const includedProjects = this.includeProjectsByDepth(
       focusedProject,
-      searchDepth
+      searchDepth,
     );
 
     const includedNodes = focusedProject.union(includedProjects);
@@ -117,7 +117,7 @@ export class ProjectTraversalGraph {
   filterProjectsByText(
     search: string,
     includePath: boolean,
-    searchDepth: number = -1
+    searchDepth: number = -1,
   ) {
     if (search === '') {
       return this.cy.collection();
@@ -132,7 +132,7 @@ export class ProjectTraversalGraph {
 
       if (includePath) {
         filteredProjects = filteredProjects.union(
-          this.includeProjectsByDepth(filteredProjects, searchDepth)
+          this.includeProjectsByDepth(filteredProjects, searchDepth),
         );
       }
 
@@ -195,7 +195,7 @@ export class ProjectTraversalGraph {
         const nextIndex = i + 1;
         if (nextIndex < path.length) {
           finalCollection = finalCollection.union(
-            path[i].edgesTo(path[nextIndex])
+            path[i].edgesTo(path[nextIndex]),
           );
         }
       }
@@ -206,7 +206,7 @@ export class ProjectTraversalGraph {
 
   private includeProjectsByDepth(
     projects: NodeCollection | NodeSingular,
-    depth: number = -1
+    depth: number = -1,
   ) {
     let predecessors: CollectionReturnValue;
 
@@ -242,7 +242,7 @@ export class ProjectTraversalGraph {
     workspaceLayout,
     dependencies: Record<string, ProjectGraphDependency[]>,
     affectedProjectIds: string[],
-    collapseEdges: boolean
+    collapseEdges: boolean,
   ) {
     this.generateCytoscapeLayout(
       fileMap,
@@ -250,7 +250,7 @@ export class ProjectTraversalGraph {
       groupByFolder,
       workspaceLayout,
       dependencies,
-      affectedProjectIds
+      affectedProjectIds,
     );
   }
 
@@ -260,7 +260,7 @@ export class ProjectTraversalGraph {
     groupByFolder: boolean,
     workspaceLayout,
     dependencies: Record<string, ProjectGraphDependency[]>,
-    affectedProjectIds: string[]
+    affectedProjectIds: string[],
   ) {
     const elements = this.createElements(
       fileMap,
@@ -268,7 +268,7 @@ export class ProjectTraversalGraph {
       groupByFolder,
       workspaceLayout,
       dependencies,
-      affectedProjectIds
+      affectedProjectIds,
     );
 
     this.cy = cytoscape({
@@ -287,7 +287,7 @@ export class ProjectTraversalGraph {
       libsDir: string;
     },
     dependencies: Record<string, ProjectGraphDependency[]>,
-    affectedProjectIds: string[]
+    affectedProjectIds: string[],
   ) {
     let elements: ElementDefinition[] = [];
     const filteredProjectNames = projects.map((project) => project.name);
@@ -325,18 +325,18 @@ export class ProjectTraversalGraph {
 
     const projectElements: (ElementDefinition & { pannable?: boolean })[] =
       projectNodes.map((projectNode) =>
-        projectNode.getCytoscapeNodeDef(groupByFolder)
+        projectNode.getCytoscapeNodeDef(groupByFolder),
       );
 
     const edgeElements = edgeNodes.map((edgeNode) =>
-      edgeNode.getCytoscapeNodeDef()
+      edgeNode.getCytoscapeNodeDef(),
     );
 
     elements = projectElements.concat(edgeElements);
 
     if (groupByFolder) {
       const parentElements = Object.keys(parents).map((id) =>
-        new ParentNode(parents[id]).getCytoscapeNodeDef()
+        new ParentNode(parents[id]).getCytoscapeNodeDef(),
       );
       elements = parentElements.concat(elements);
     }

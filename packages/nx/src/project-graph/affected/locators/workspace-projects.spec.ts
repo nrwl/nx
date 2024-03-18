@@ -27,7 +27,7 @@ describe('getTouchedProjects', () => {
       c: { root: 'libs/c' },
     };
     expect(
-      getTouchedProjects(fileChanges, buildProjectGraphNodes(projects))
+      getTouchedProjects(fileChanges, buildProjectGraphNodes(projects)),
     ).toEqual(['a', 'b']);
   });
 
@@ -39,7 +39,7 @@ describe('getTouchedProjects', () => {
       ab: { root: 'libs/a-b' },
     };
     expect(
-      getTouchedProjects(fileChanges, buildProjectGraphNodes(projects))
+      getTouchedProjects(fileChanges, buildProjectGraphNodes(projects)),
     ).toEqual(['ab']);
   });
 
@@ -51,7 +51,7 @@ describe('getTouchedProjects', () => {
       ab: { root: 'libs/a-b' },
     };
     expect(
-      getTouchedProjects(fileChanges, buildProjectGraphNodes(projects))
+      getTouchedProjects(fileChanges, buildProjectGraphNodes(projects)),
     ).toEqual(['ab']);
   });
 
@@ -62,7 +62,7 @@ describe('getTouchedProjects', () => {
       ab: { root: 'libs/a/b' },
     };
     expect(
-      getTouchedProjects(fileChanges, buildProjectGraphNodes(projects))
+      getTouchedProjects(fileChanges, buildProjectGraphNodes(projects)),
     ).toEqual(['ab']);
   });
 
@@ -73,7 +73,7 @@ describe('getTouchedProjects', () => {
       b: { root: 'libs/a/b' },
     };
     expect(
-      getTouchedProjects(fileChanges, buildProjectGraphNodes(projects))
+      getTouchedProjects(fileChanges, buildProjectGraphNodes(projects)),
     ).toEqual(['b']);
   });
 });
@@ -148,7 +148,7 @@ describe('extractGlobalFilesFromInputs', () => {
 });
 
 function buildProjectGraphNodes(
-  projects: Record<string, ProjectConfiguration>
+  projects: Record<string, ProjectConfiguration>,
 ): ProjectGraph['nodes'] {
   return Object.fromEntries(
     Object.entries(projects).map(
@@ -159,7 +159,7 @@ function buildProjectGraphNodes(
           name,
           type: config.projectType === 'application' ? 'app' : 'lib',
         },
-      ]
-    )
+      ],
+    ),
   );
 }

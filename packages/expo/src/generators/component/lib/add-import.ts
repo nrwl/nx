@@ -4,7 +4,7 @@ import { ChangeType, StringChange } from '@nx/devkit';
 
 export function addImport(
   source: ts.SourceFile,
-  statement: string
+  statement: string,
 ): StringChange[] {
   const allImports = findNodes(source, ts.SyntaxKind.ImportDeclaration);
   if (allImports.length > 0) {

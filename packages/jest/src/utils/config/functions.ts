@@ -9,14 +9,14 @@ let tsModule: typeof import('typescript');
 
 function makeTextToInsert(
   value: unknown,
-  precedingCommaNeeded: boolean
+  precedingCommaNeeded: boolean,
 ): string {
   return `${precedingCommaNeeded ? ',' : ''}${value}`;
 }
 
 function findPropertyAssignment(
   object: ts.ObjectLiteralExpression,
-  propertyName: string
+  propertyName: string,
 ) {
   if (!tsModule) {
     tsModule = ensureTypescript();
@@ -40,7 +40,7 @@ export function addOrUpdateProperty(
   object: ts.ObjectLiteralExpression,
   properties: string[],
   value: unknown,
-  path: string
+  path: string,
 ) {
   if (!tsModule) {
     tsModule = ensureTypescript();
@@ -104,7 +104,7 @@ export function addOrUpdateProperty(
         const text = makeTextToInsert(
           value,
           arrayLiteral.elements.length !== 0 &&
-            !arrayLiteral.elements.hasTrailingComma
+            !arrayLiteral.elements.hasTrailingComma,
         );
         const updatedContents = applyChangesToString(originalContents, [
           {
@@ -124,18 +124,18 @@ export function addOrUpdateProperty(
         propertyAssignment.initializer as ts.ObjectLiteralExpression,
         properties,
         value,
-        path
+        path,
       );
     }
   } else {
     if (propertyName === undefined) {
       throw new Error(
-        `Please use dot delimited paths to update an existing object. Eg. object.property `
+        `Please use dot delimited paths to update an existing object. Eg. object.property `,
       );
     }
     const text = makeTextToInsert(
       `${JSON.stringify(propertyName)}: ${value}`,
-      object.properties.length !== 0 && !object.properties.hasTrailingComma
+      object.properties.length !== 0 && !object.properties.hasTrailingComma,
     );
     const updatedContents = applyChangesToString(originalContents, [
       {
@@ -151,7 +151,7 @@ export function addOrUpdateProperty(
 
 export function removeProperty(
   object: ts.ObjectLiteralExpression,
-  properties: string[]
+  properties: string[],
 ): ts.PropertyAssignment | null {
   if (!tsModule) {
     tsModule = ensureTypescript();
@@ -168,7 +168,7 @@ export function removeProperty(
     ) {
       return removeProperty(
         propertyAssignment.initializer as ts.ObjectLiteralExpression,
-        properties
+        properties,
       );
     }
     return propertyAssignment;
@@ -208,7 +208,7 @@ function isDefaultExport(node: ts.Statement) {
  * Should be used to get the jest config object as AST
  */
 export function jestConfigObjectAst(
-  fileContent: string
+  fileContent: string,
 ): ts.ObjectLiteralExpression {
   if (!tsModule) {
     tsModule = ensureTypescript();
@@ -218,11 +218,11 @@ export function jestConfigObjectAst(
     'jest.config.ts',
     fileContent,
     tsModule.ScriptTarget.Latest,
-    true
+    true,
   );
 
   const exportStatement = sourceFile.statements.find(
-    (statement) => isModuleExport(statement) || isDefaultExport(statement)
+    (statement) => isModuleExport(statement) || isDefaultExport(statement),
   );
 
   let ast: ts.ObjectLiteralExpression;
@@ -232,7 +232,7 @@ export function jestConfigObjectAst(
       throw new Error(
         `
        The provided jest config file does not have the expected 'module.exports' expression. 
-       See https://jestjs.io/docs/en/configuration for more details.`
+       See https://jestjs.io/docs/en/configuration for more details.`,
       );
     }
 
@@ -245,7 +245,7 @@ export function jestConfigObjectAst(
       throw new Error(
         `
        The provided jest config file does not have the expected 'export default' expression. 
-       See https://jestjs.io/docs/en/configuration for more details.`
+       See https://jestjs.io/docs/en/configuration for more details.`,
       );
     }
 
@@ -255,13 +255,13 @@ export function jestConfigObjectAst(
     throw new Error(
       `
       The provided jest config file does not have the expected 'module.exports' or 'export default' expression. 
-      See https://jestjs.io/docs/en/configuration for more details.`
+      See https://jestjs.io/docs/en/configuration for more details.`,
     );
   }
 
   if (!tsModule.isObjectLiteralExpression(ast)) {
     throw new Error(
-      `The 'export default' or 'module.exports' expression is not an object literal.`
+      `The 'export default' or 'module.exports' expression is not an object literal.`,
     );
   }
 
@@ -275,7 +275,7 @@ export function jestConfigObjectAst(
  */
 export function jestConfigObject(
   host: Tree,
-  path: string
+  path: string,
 ): Partial<Config.InitialOptions> & { [index: string]: any } {
   const __filename = join(host.root, path);
   const contents = host.read(path, 'utf-8');
@@ -287,7 +287,7 @@ export function jestConfigObject(
   //  or deprecate and make a new method for getting the jest config object
   const forcedModuleSyntax = contents.replace(
     /export\s+default/,
-    'module.exports ='
+    'module.exports =',
   );
   // Run the contents of the file with some stuff from this current context
   // The module.exports will be mutated by the contents of the file...
@@ -299,7 +299,7 @@ export function jestConfigObject(
       process,
       __filename,
       __dirname: dirname(__filename),
-    })
+    }),
   );
 
   // TODO: jest actually allows defining configs with async functions... we should be able to read that...

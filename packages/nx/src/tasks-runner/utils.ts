@@ -23,7 +23,7 @@ export function getCommandAsString(execCommand: string, task: Task) {
 export function getDependencyConfigs(
   { project, target }: { project: string; target: string },
   defaultDependencyConfigs: Record<string, (TargetDependencyConfig | string)[]>,
-  projectGraph: ProjectGraph
+  projectGraph: ProjectGraph,
 ): TargetDependencyConfig[] | undefined {
   const dependencyConfigs = (
     projectGraph.nodes[project].data?.targets[target]?.dependsOn ??
@@ -32,7 +32,7 @@ export function getDependencyConfigs(
   ).map((config) =>
     typeof config === 'string'
       ? expandDependencyConfigSyntaxSugar(config, projectGraph)
-      : config
+      : config,
   );
   for (const dependencyConfig of dependencyConfigs) {
     if (dependencyConfig.projects && dependencyConfig.dependencies) {
@@ -50,7 +50,7 @@ export function getDependencyConfigs(
 
 export function expandDependencyConfigSyntaxSugar(
   dependencyConfigString: string,
-  graph: ProjectGraph
+  graph: ProjectGraph,
 ): TargetDependencyConfig {
   const [dependencies, targetString] = dependencyConfigString.startsWith('^')
     ? [true, dependencyConfigString.substring(1)]
@@ -86,17 +86,20 @@ export function expandDependencyConfigSyntaxSugar(
 export function getOutputs(
   p: Record<string, ProjectGraphProjectNode>,
   target: Task['target'],
-  overrides: Task['overrides']
+  overrides: Task['overrides'],
 ) {
   return getOutputsForTargetAndConfiguration(
     target,
     overrides,
-    p[target.project]
+    p[target.project],
   );
 }
 
 class InvalidOutputsError extends Error {
-  constructor(public outputs: string[], public invalidOutputs: Set<string>) {
+  constructor(
+    public outputs: string[],
+    public invalidOutputs: Set<string>,
+  ) {
     super(InvalidOutputsError.createMessage(invalidOutputs));
   }
 
@@ -122,7 +125,7 @@ export function validateOutputs(outputs: string[]) {
 
 export function transformLegacyOutputs(
   projectRoot: string,
-  error: InvalidOutputsError
+  error: InvalidOutputsError,
 ) {
   return error.outputs.map((output) => {
     if (!error.invalidOutputs.has(output)) {
@@ -142,7 +145,7 @@ export function transformLegacyOutputs(
       (isNegated ? '!' : '') +
       joinPathFragments(
         isWithinProject ? '{projectRoot}' : '{workspaceRoot}',
-        isWithinProject ? relativePath : outputPath
+        isWithinProject ? relativePath : outputPath,
       )
     );
   });
@@ -153,12 +156,12 @@ export function transformLegacyOutputs(
  */
 export function getOutputsForTargetAndConfiguration(
   task: Task,
-  node: ProjectGraphProjectNode
+  node: ProjectGraphProjectNode,
 ): string[];
 export function getOutputsForTargetAndConfiguration(
   target: Task['target'] | Task,
   overrides: Task['overrides'] | ProjectGraphProjectNode,
-  node: ProjectGraphProjectNode
+  node: ProjectGraphProjectNode,
 ): string[];
 /**
  * Returns the list of outputs that will be cached.
@@ -166,7 +169,7 @@ export function getOutputsForTargetAndConfiguration(
 export function getOutputsForTargetAndConfiguration(
   taskTargetOrTask: Task['target'] | Task,
   overridesOrNode: Task['overrides'] | ProjectGraphProjectNode,
-  node?: ProjectGraphProjectNode
+  node?: ProjectGraphProjectNode,
 ): string[] {
   const taskTarget =
     'id' in taskTargetOrTask ? taskTargetOrTask.target : taskTargetOrTask;
@@ -198,7 +201,8 @@ export function getOutputsForTargetAndConfiguration(
       })
       .filter(
         (output) =>
-          !!output && !output.match(/{(projectRoot|workspaceRoot|(options.*))}/)
+          !!output &&
+          !output.match(/{(projectRoot|workspaceRoot|(options.*))}/),
       );
   }
 
@@ -222,13 +226,13 @@ export function getOutputsForTargetAndConfiguration(
 export function interpolate(template: string, data: any): string {
   if (template.includes('{workspaceRoot}', 1)) {
     throw new Error(
-      `Output '${template}' is invalid. {workspaceRoot} can only be used at the beginning of the expression.`
+      `Output '${template}' is invalid. {workspaceRoot} can only be used at the beginning of the expression.`,
     );
   }
 
   if (data.projectRoot == '.' && template.includes('{projectRoot}', 1)) {
     throw new Error(
-      `Output '${template}' is invalid. When {projectRoot} is '.', it can only be used at the beginning of the expression.`
+      `Output '${template}' is invalid. When {projectRoot} is '.', it can only be used at the beginning of the expression.`,
     );
   }
 
@@ -253,7 +257,7 @@ export function interpolate(template: string, data: any): string {
 
 export function getTargetConfigurationForTask(
   task: Task,
-  projectGraph: ProjectGraph
+  projectGraph: ProjectGraph,
 ): TargetConfiguration | undefined {
   const project = projectGraph.nodes[task.target.project].data;
   return project.targets[task.target.target];
@@ -265,7 +269,7 @@ export function getExecutorNameForTask(task: Task, projectGraph: ProjectGraph) {
 
 export function getExecutorForTask(
   task: Task,
-  projectGraph: ProjectGraph
+  projectGraph: ProjectGraph,
 ): ExecutorConfig & { isNgCompat: boolean; isNxExecutor: boolean } {
   const executor = getExecutorNameForTask(task, projectGraph);
   const [nodeModule, executorName] = executor.split(':');
@@ -274,13 +278,13 @@ export function getExecutorForTask(
     nodeModule,
     executorName,
     workspaceRoot,
-    readProjectsConfigurationFromProjectGraph(projectGraph).projects
+    readProjectsConfigurationFromProjectGraph(projectGraph).projects,
   );
 }
 
 export function getCustomHasher(
   task: Task,
-  projectGraph: ProjectGraph
+  projectGraph: ProjectGraph,
 ): CustomHasher | null {
   const factory = getExecutorForTask(task, projectGraph).hasherFactory;
   return factory ? factory() : null;
@@ -288,7 +292,7 @@ export function getCustomHasher(
 
 export function removeTasksFromTaskGraph(
   graph: TaskGraph,
-  ids: string[]
+  ids: string[],
 ): TaskGraph {
   const newGraph = removeIdsFromGraph<Task>(graph, ids, graph.tasks);
   return {
@@ -304,7 +308,7 @@ export function removeIdsFromGraph<T>(
     dependencies: Record<string, string[]>;
   },
   ids: string[],
-  mapWithIds: Record<string, T>
+  mapWithIds: Record<string, T>,
 ): {
   mapWithIds: Record<string, T>;
   roots: string[];
@@ -317,7 +321,7 @@ export function removeIdsFromGraph<T>(
     if (!removedSet.has(id)) {
       filteredMapWithIds[id] = mapWithIds[id];
       dependencies[id] = graph.dependencies[id].filter(
-        (depId) => !removedSet.has(depId)
+        (depId) => !removedSet.has(depId),
       );
     }
   }
@@ -325,13 +329,13 @@ export function removeIdsFromGraph<T>(
     mapWithIds: filteredMapWithIds,
     dependencies: dependencies,
     roots: Object.keys(dependencies).filter(
-      (k) => dependencies[k].length === 0
+      (k) => dependencies[k].length === 0,
     ),
   };
 }
 
 export function calculateReverseDeps(
-  taskGraph: TaskGraph
+  taskGraph: TaskGraph,
 ): Record<string, string[]> {
   const reverseTaskDeps: Record<string, string[]> = {};
   Object.keys(taskGraph.tasks).forEach((t) => {
@@ -377,7 +381,7 @@ export function getSerializedArgsForTask(task: Task, isVerbose: boolean) {
 
 export function shouldStreamOutput(
   task: Task,
-  initiatingProject: string | null
+  initiatingProject: string | null,
 ): boolean {
   if (process.env.NX_STREAM_OUTPUT === 'true') return true;
   if (longRunningTask(task)) return true;
@@ -390,7 +394,7 @@ export function isCacheableTask(
   options: {
     cacheableOperations?: string[] | null;
     cacheableTargets?: string[] | null;
-  }
+  },
 ): boolean {
   if (task.cache !== undefined && !longRunningTask(task)) {
     return task.cache;

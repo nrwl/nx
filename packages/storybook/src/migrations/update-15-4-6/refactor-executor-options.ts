@@ -44,7 +44,7 @@ function updateNonAngularStorybookBuildTargets(tree: Tree) {
       projectConfiguration.targets[targetName].outputs =
         projectConfiguration.targets[targetName].outputs?.map(
           (output: string) =>
-            output.replace('{options.outputPath}', '{options.outputDir}')
+            output.replace('{options.outputPath}', '{options.outputDir}'),
         );
 
       delete projectConfiguration.targets[targetName].options.config;
@@ -54,7 +54,7 @@ function updateNonAngularStorybookBuildTargets(tree: Tree) {
       updateProjectConfiguration(tree, projectName, {
         ...projectConfiguration,
       });
-    }
+    },
   );
 }
 
@@ -89,6 +89,6 @@ function updateNonAngularStorybookServeTargets(tree: Tree) {
       updateProjectConfiguration(tree, projectName, {
         ...projectConfiguration,
       });
-    }
+    },
   );
 }

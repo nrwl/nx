@@ -17,7 +17,7 @@ export function updateDependencies(host: Tree, schema: InitSchema) {
       '@nx/vite': nxVersion,
     },
     undefined,
-    schema.keepExistingVersions
+    schema.keepExistingVersions,
   );
 }
 
@@ -28,7 +28,7 @@ export function addVitestTargetDefaults(tree: Tree) {
   if (productionFileSet) {
     productionFileSet.push(
       '!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)',
-      '!{projectRoot}/tsconfig.spec.json'
+      '!{projectRoot}/tsconfig.spec.json',
     );
 
     nxJson.namedInputs.production = Array.from(new Set(productionFileSet));

@@ -113,7 +113,7 @@ class CLIOutput {
 
   addVerticalSeparatorWithoutNewLines(color = 'gray') {
     this.writeToStdOut(
-      `${(chalk as any).dim[color](this.VERTICAL_SEPARATOR)}${EOL}`
+      `${(chalk as any).dim[color](this.VERTICAL_SEPARATOR)}${EOL}`,
     );
   }
 

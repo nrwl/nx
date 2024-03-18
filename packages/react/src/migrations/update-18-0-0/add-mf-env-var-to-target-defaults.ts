@@ -24,10 +24,10 @@ function hasModuleFederationProject(tree: Tree) {
       if (
         target.executor === '@nx/webpack:webpack' &&
         (tree.exists(
-          joinPathFragments(project.root, 'module-federation.config.ts')
+          joinPathFragments(project.root, 'module-federation.config.ts'),
         ) ||
           tree.exists(
-            joinPathFragments(project.root, 'module-federation.config.js')
+            joinPathFragments(project.root, 'module-federation.config.js'),
           ))
       ) {
         return true;

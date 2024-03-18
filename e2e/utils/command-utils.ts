@@ -60,7 +60,7 @@ export function setMaxWorkers(projectJsonPath: string) {
 
 export function runCommand(
   command: string,
-  options?: Partial<ExecSyncOptions> & { failOnError?: boolean }
+  options?: Partial<ExecSyncOptions> & { failOnError?: boolean },
 ): string {
   const { failOnError, ...childProcessOptions } = options ?? {};
   try {
@@ -186,12 +186,12 @@ export function runE2ETests(runner?: 'cypress' | 'playwright') {
   }
 
   console.warn(
-    'Not running E2E tests because NX_E2E_RUN_E2E is not set to true.'
+    'Not running E2E tests because NX_E2E_RUN_E2E is not set to true.',
   );
 
   if (process.env.NX_E2E_RUN_CYPRESS) {
     console.warn(
-      'NX_E2E_RUN_CYPRESS is deprecated, use NX_E2E_RUN_E2E instead.'
+      'NX_E2E_RUN_CYPRESS is deprecated, use NX_E2E_RUN_E2E instead.',
     );
   }
 
@@ -203,7 +203,7 @@ export function runCommandAsync(
   opts: RunCmdOpts = {
     silenceError: false,
     env: process['env'],
-  }
+  },
 ): Promise<{ stdout: string; stderr: string; combinedOutput: string }> {
   return new Promise((resolve, reject) => {
     exec(
@@ -226,7 +226,7 @@ export function runCommandAsync(
           stderr: stripConsoleColors(stderr),
           combinedOutput: stripConsoleColors(`${stdout}${stderr}`),
         });
-      }
+      },
     );
   });
 }
@@ -236,7 +236,7 @@ export function runCommandUntil(
   criteria: (output: string) => boolean,
   opts: RunCmdOpts = {
     env: undefined,
-  }
+  },
 ): Promise<ChildProcess> {
   const pm = getPackageManagerCommand();
   const p = exec(`${pm.runNx} ${command}`, {
@@ -270,7 +270,7 @@ export function runCommandUntil(
           output
             .split('\n')
             .map((l) => `    ${l}`)
-            .join('\n')
+            .join('\n'),
         );
         rej(`Exited with ${code}`);
       } else {
@@ -286,12 +286,12 @@ export function runCLIAsync(
     silenceError: false,
     env: getStrippedEnvironmentVariables(),
     silent: false,
-  }
+  },
 ): Promise<{ stdout: string; stderr: string; combinedOutput: string }> {
   const pm = getPackageManagerCommand();
   return runCommandAsync(
     `${opts.silent ? pm.runNxSilent : pm.runNx} ${command}`,
-    opts
+    opts,
   );
 }
 
@@ -303,7 +303,7 @@ export function runNgAdd(
     silenceError: false,
     env: undefined,
     cwd: tmpProjPath(),
-  }
+  },
 ): string {
   try {
     const pmc = getPackageManagerCommand();
@@ -344,7 +344,7 @@ export function runCLI(
     env: undefined,
     verbose: undefined,
     redirectStderr: undefined,
-  }
+  },
 ): string {
   try {
     const pm = getPackageManagerCommand();
@@ -389,7 +389,7 @@ export function runLernaCLI(
   opts: RunCmdOpts = {
     silenceError: false,
     env: undefined,
-  }
+  },
 ): string {
   try {
     const pm = getPackageManagerCommand();
@@ -430,7 +430,7 @@ export function waitUntil(
   opts: { timeout: number; ms: number; allowError?: boolean } = {
     timeout: 5000,
     ms: 50,
-  }
+  },
 ): Promise<void> {
   return new Promise((resolve, reject) => {
     const t = setInterval(() => {

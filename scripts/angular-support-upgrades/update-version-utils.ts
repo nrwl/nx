@@ -10,22 +10,22 @@ function updateAngularVersionUtils(packageVersionMap: Map<string, string>) {
 
   versionUtilContents = versionUtilContents.replace(
     /export const angularVersion = '~.+';/,
-    `export const angularVersion = '~${angularVersion}';`
+    `export const angularVersion = '~${angularVersion}';`,
   );
   versionUtilContents = versionUtilContents.replace(
     /export const angularDevkitVersion = '~.+';/,
-    `export const angularDevkitVersion = '~${angularDevkitVersion}';`
+    `export const angularDevkitVersion = '~${angularDevkitVersion}';`,
   );
   versionUtilContents = versionUtilContents.replace(
     /export const ngPackagrVersion = '~.+';/,
-    `export const ngPackagrVersion = '~${ngPackagrVersion}';`
+    `export const ngPackagrVersion = '~${ngPackagrVersion}';`,
   );
 
   writeFileSync(pathToFile, versionUtilContents);
 }
 
 function updateWorkspaceAngularVersionUtils(
-  packageVersionMap: Map<string, string>
+  packageVersionMap: Map<string, string>,
 ) {
   const pathToFile = 'packages/workspace/src/utils/versions.ts';
   let versionUtilContents = readFileSync(pathToFile, { encoding: 'utf-8' });
@@ -34,7 +34,7 @@ function updateWorkspaceAngularVersionUtils(
 
   versionUtilContents = versionUtilContents.replace(
     /export const angularCliVersion = '~.+';/,
-    `export const angularCliVersion = '~${angularDevkitVersion}';`
+    `export const angularCliVersion = '~${angularDevkitVersion}';`,
   );
 
   writeFileSync(pathToFile, versionUtilContents);

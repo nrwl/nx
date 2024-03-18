@@ -23,7 +23,7 @@ describe('angularVersionUtils', () => {
 
       // ASSERT
       expect(angularVersion).toBe(15);
-    }
+    },
   );
 
   test.each([

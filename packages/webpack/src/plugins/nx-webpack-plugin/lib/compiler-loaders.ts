@@ -4,7 +4,7 @@ import { readTsConfig } from '@nx/js';
 import { NormalizedNxWebpackPluginOptions } from '../nx-webpack-plugin-options';
 
 export function createLoaderFromCompiler(
-  options: NormalizedNxWebpackPluginOptions
+  options: NormalizedNxWebpackPluginOptions,
 ) {
   switch (options.compiler) {
     case 'swc':
@@ -31,7 +31,7 @@ export function createLoaderFromCompiler(
     case 'tsc':
       const { loadTsTransformers } = require('@nx/js');
       const { compilerPluginHooks, hasPlugin } = loadTsTransformers(
-        options.transformers
+        options.transformers,
       );
       return {
         test: /\.([jt])sx?$/,
@@ -44,11 +44,11 @@ export function createLoaderFromCompiler(
           experimentalWatchApi: true,
           getCustomTransformers: (program) => ({
             before: compilerPluginHooks.beforeHooks.map((hook) =>
-              hook(program)
+              hook(program),
             ),
             after: compilerPluginHooks.afterHooks.map((hook) => hook(program)),
             afterDeclarations: compilerPluginHooks.afterDeclarationsHooks.map(
-              (hook) => hook(program)
+              (hook) => hook(program),
             ),
           }),
         },

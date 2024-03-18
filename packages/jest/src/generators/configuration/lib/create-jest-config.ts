@@ -14,7 +14,7 @@ import type { NormalizedJestProjectSchema } from '../schema';
 export async function createJestConfig(
   tree: Tree,
   options: Partial<NormalizedJestProjectSchema>,
-  presetExt: 'cjs' | 'js'
+  presetExt: 'cjs' | 'js',
 ) {
   if (!tree.exists(`jest.preset.${presetExt}`)) {
     // preset is always js file.
@@ -23,7 +23,7 @@ export async function createJestConfig(
       `
       const nxPreset = require('@nx/jest/preset').default;
 
-      module.exports = { ...nxPreset }`
+      module.exports = { ...nxPreset }`,
     );
   }
   if (options.rootProject) {
@@ -46,7 +46,7 @@ export async function createJestConfig(
     const { nodes: projects } = await createProjectGraphAsync();
     const projectConfigurations = Object.values(projects);
     const rootProject = projectConfigurations.find(
-      (projectNode) => projectNode.data?.root === '.'
+      (projectNode) => projectNode.data?.root === '.',
     );
     // root project might have been removed,
     // if it's missing there's nothing to migrate
@@ -56,7 +56,7 @@ export async function createJestConfig(
           ((t?.executor === '@nx/jest:jest' ||
             t?.executor === '@nrwl/jest:jest') &&
             t?.options?.jestConfig === rootJestPath) ||
-          (t?.executor === 'nx:run-commands' && t?.options?.command === 'jest')
+          (t?.executor === 'nx:run-commands' && t?.options?.command === 'jest'),
       );
       if (!jestTarget) {
         return;
@@ -66,7 +66,7 @@ export async function createJestConfig(
       // if root project doesn't have jest target, there's nothing to migrate
       const rootProjectConfig = readProjectConfiguration(
         tree,
-        rootProject.name
+        rootProject.name,
       );
 
       if (
@@ -89,7 +89,7 @@ export async function createJestConfig(
       const targetDefaults = readTargetDefaultsForTarget(
         jestTargetName,
         nxJson.targetDefaults,
-        jestTargetConfigInGraph.executor
+        jestTargetConfigInGraph.executor,
       );
 
       const target: TargetConfiguration = (rootProjectConfig.targets[

@@ -15,7 +15,7 @@ let childProcess: ChildProcess;
 
 export default async function* runAndroidExecutor(
   options: ReactNativeRunAndroidOptions,
-  context: ExecutorContext
+  context: ExecutorContext,
 ): AsyncGenerator<ReactNativeRunAndroidOutput> {
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
@@ -29,7 +29,7 @@ export default async function* runAndroidExecutor(
         port: options.port,
         resetCache: options.resetCache,
         interactive: true,
-      })
+      }),
     );
   }
 
@@ -41,7 +41,7 @@ export default async function* runAndroidExecutor(
 function runCliRunAndroid(
   workspaceRoot: string,
   projectRoot: string,
-  options: ReactNativeRunAndroidOptions
+  options: ReactNativeRunAndroidOptions,
 ): Promise<ChildProcess> {
   return new Promise<ChildProcess>((resolve, reject) => {
     /**
@@ -55,7 +55,7 @@ function runCliRunAndroid(
         stdio: 'inherit',
         cwd: pathResolve(workspaceRoot, projectRoot),
         env: { ...process.env, RCT_METRO_PORT: options.port.toString() },
-      }
+      },
     );
 
     /**

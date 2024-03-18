@@ -23,7 +23,7 @@ describe('federate-module Utils', () => {
         'module-federation.config.js',
         fileContent,
         ts.ScriptTarget.ES2015,
-        true
+        true,
       );
       const exposesObject = findExposes(sourceFile);
       expect(exposesObject).toBeDefined();
@@ -35,7 +35,7 @@ describe('federate-module Utils', () => {
     it('should update the exposes object with a new entry', () => {
       const newEntry = createObjectEntry(
         'NewModule',
-        './src/new-remote-entry.ts'
+        './src/new-remote-entry.ts',
       );
       expect(newEntry).toBeDefined();
 
@@ -44,11 +44,11 @@ describe('federate-module Utils', () => {
       const newEntryText = printer.printNode(
         ts.EmitHint.Unspecified,
         newEntry,
-        ts.createSourceFile('', '', ts.ScriptTarget.ES2015)
+        ts.createSourceFile('', '', ts.ScriptTarget.ES2015),
       );
 
       expect(newEntryText).toEqual(
-        `'./NewModule': './src/new-remote-entry.ts'`
+        `'./NewModule': './src/new-remote-entry.ts'`,
       );
     });
   });
@@ -77,7 +77,7 @@ describe('federate-module Utils', () => {
         fileName,
         tree.read(fileName).toString(),
         ts.ScriptTarget.ES2015,
-        true
+        true,
       );
 
       const updatedContent = printer.printFile(updatedSource);

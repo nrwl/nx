@@ -31,7 +31,7 @@ export default function update(tree: Tree) {
             Array.isArray(o.files)
               ? o.files.some((f) => f.match(/\.json$/))
               : !!o.files?.match(/\.json$/),
-          true
+          true,
         )
       ) {
         updateOverrideInLintConfig(
@@ -52,7 +52,7 @@ export default function update(tree: Tree) {
             ruleOptions.ignoredFiles = [ignorePattern];
             o.rules['@nx/dependency-checks'] = [ruleSeverity, ruleOptions];
             return o;
-          }
+          },
         );
       }
     };
@@ -60,21 +60,21 @@ export default function update(tree: Tree) {
   forEachExecutorOptions(
     tree,
     '@nx/vite:build',
-    addIgnorePattern('{projectRoot}/vite.config.{js,ts,mjs,mts}')
+    addIgnorePattern('{projectRoot}/vite.config.{js,ts,mjs,mts}'),
   );
   forEachExecutorOptions(
     tree,
     '@nx/vite:test',
-    addIgnorePattern('{projectRoot}/vite.config.{js,ts,mjs,mts}')
+    addIgnorePattern('{projectRoot}/vite.config.{js,ts,mjs,mts}'),
   );
   forEachExecutorOptions(
     tree,
     '@nx/esbuild:esbuild',
-    addIgnorePattern('{projectRoot}/esbuild.config.{js,ts,mjs,mts}')
+    addIgnorePattern('{projectRoot}/esbuild.config.{js,ts,mjs,mts}'),
   );
   forEachExecutorOptions(
     tree,
     '@nx/rollup:rollup',
-    addIgnorePattern('{projectRoot}/rollup.config.{js,ts,mjs,mts}')
+    addIgnorePattern('{projectRoot}/rollup.config.{js,ts,mjs,mts}'),
   );
 }

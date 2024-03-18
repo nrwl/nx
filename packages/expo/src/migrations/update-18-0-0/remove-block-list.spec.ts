@@ -54,7 +54,7 @@ module.exports = withNxMetro(mergeConfig(defaultConfig, customConfig), {
   extensions: [],
   // Specify folders to watch, in addition to Nx defaults (workspace libraries and node_modules)
   watchFolders: [],
-});`
+});`,
     );
   });
 

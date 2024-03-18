@@ -40,7 +40,7 @@ describe('watch mode  - app', () => {
 
 function checkSelectedProjects(
   expectedNumberOfProjects: number,
-  excludedProjects: string[]
+  excludedProjects: string[],
 ) {
   getProjectItems().should((projects) => {
     expect(projects.length).to.equal(expectedNumberOfProjects);

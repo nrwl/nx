@@ -106,7 +106,7 @@ describe('Node Applications', () => {
     const port = getRandomPort();
     process.env.PORT = `${port}`;
     runCLI(
-      `generate @nx/node:app ${nodeapp} --port=${port} --linter=eslint --bundler=webpack`
+      `generate @nx/node:app ${nodeapp} --port=${port} --linter=eslint --bundler=webpack`,
     );
 
     const lintResults = runCLI(`lint ${nodeapp}`);
@@ -140,32 +140,32 @@ module.exports = {
     }),
   ],
 };
-     `
+     `,
     );
 
     updateFile(
       `apps/${nodeapp}/src/additional-main.ts`,
-      `console.log('Hello Additional World!');`
+      `console.log('Hello Additional World!');`,
     );
     updateFile(
       `apps/${nodeapp}/src/main.ts`,
       `console.log('Hello World!');
     console.log('env: ' + process.env['NODE_ENV']);
-    `
+    `,
     );
 
     await runCLIAsync(`build ${nodeapp}`);
 
     checkFilesExist(
       `dist/apps/${nodeapp}/main.js`,
-      `dist/apps/${nodeapp}/additional-main.js`
+      `dist/apps/${nodeapp}/additional-main.js`,
     );
 
     const result = execSync(
       `NODE_ENV=development && node dist/apps/${nodeapp}/main.js`,
       {
         cwd: tmpProjPath(),
-      }
+      },
     ).toString();
     expect(result).toContain('Hello World!');
     expect(result).toContain('env: development');
@@ -174,7 +174,7 @@ module.exports = {
       `node dist/apps/${nodeapp}/additional-main.js`,
       {
         cwd: tmpProjPath(),
-      }
+      },
     ).toString();
     expect(additionalResult).toContain('Hello Additional World!');
 
@@ -188,14 +188,14 @@ module.exports = {
     const nodeapp = uniq('nodeapp');
 
     runCLI(
-      `generate @nx/node:app ${nodeapp} --linter=eslint --bundler=webpack --framework=none`
+      `generate @nx/node:app ${nodeapp} --linter=eslint --bundler=webpack --framework=none`,
     );
 
     updateFile('.env', `NX_FOOBAR="test foo bar"`);
 
     updateFile(
       `apps/${nodeapp}/src/main.ts`,
-      `console.log('foobar: ' + process.env['NX_FOOBAR']);`
+      `console.log('foobar: ' + process.env['NX_FOOBAR']);`,
     );
 
     await runCLIAsync(`build ${nodeapp}`);
@@ -207,7 +207,7 @@ module.exports = {
       (output) => {
         process.stdout.write(output);
         return output.includes(`foobar: test foo bar`);
-      }
+      },
     );
     try {
       await promisifiedTreeKill(p.pid, 'SIGKILL');
@@ -224,7 +224,7 @@ module.exports = {
     process.env.PORT = `${port}`;
 
     runCLI(
-      `generate @nx/express:app ${nodeapp} --port=${port} --linter=eslint`
+      `generate @nx/express:app ${nodeapp} --port=${port} --linter=eslint`,
     );
 
     const lintResults = runCLI(`lint ${nodeapp}`);
@@ -238,7 +238,7 @@ module.exports = {
               expect(true).toEqual(true);
             })
           })
-        `
+        `,
     );
 
     const jestResult = runCLI(`test ${nodeapp}`);
@@ -247,7 +247,7 @@ module.exports = {
     // checking serve
     updateFile(`apps/${nodeapp}/src/assets/file.txt`, `Test`);
     const p = await runCommandUntil(`serve ${nodeapp}`, (output) =>
-      output.includes(`Listening at http://localhost:${port}`)
+      output.includes(`Listening at http://localhost:${port}`),
     );
 
     let result = await getData(port);
@@ -275,7 +275,7 @@ module.exports = {
     updateFile(`apps/${nestapp}/src/assets/file.txt`, ``);
     const jestResult = await runCLIAsync(`test ${nestapp}`);
     expect(jestResult.combinedOutput).toContain(
-      'Test Suites: 2 passed, 2 total'
+      'Test Suites: 2 passed, 2 total',
     );
 
     await runCLIAsync(`build ${nestapp}`);
@@ -283,7 +283,7 @@ module.exports = {
     checkFilesExist(
       `dist/apps/${nestapp}/main.js`,
       `dist/apps/${nestapp}/assets/file.txt`,
-      `dist/apps/${nestapp}/main.js.map`
+      `dist/apps/${nestapp}/main.js.map`,
     );
 
     const server = exec(`node ./dist/apps/${nestapp}/main.js`, {
@@ -311,7 +311,7 @@ module.exports = {
       (output) => {
         process.stdout.write(output);
         return output.includes(`Listening at http://localhost:${port}`);
-      }
+      },
     );
     const result = await getData(port);
     expect(result.message).toEqual(`Welcome to ${nestapp}!`);
@@ -329,7 +329,7 @@ module.exports = {
     const esmapp = uniq('esmapp');
 
     runCLI(
-      `generate @nrwl/node:app ${esmapp} --linter=eslint --framework=none --bundler=webpack`
+      `generate @nrwl/node:app ${esmapp} --linter=eslint --framework=none --bundler=webpack`,
     );
     updateJson(`apps/${esmapp}/tsconfig.app.json`, (config) => {
       config.module = 'esnext';
@@ -358,7 +358,7 @@ module.exports = {
           }
           return config;
         });
-      `
+      `,
     );
     await runCLIAsync(`build ${esmapp}`);
     const p = await runCommandUntil(`serve ${esmapp}`, (output) => {
@@ -393,54 +393,54 @@ describe('Build Node apps', () => {
     checkFilesExist(`dist/apps/${nestapp}/package.json`);
     checkFilesExist(
       `dist/apps/${nestapp}/${getLockFileName(
-        detectPackageManager(tmpProjPath())
-      )}`
+        detectPackageManager(tmpProjPath()),
+      )}`,
     );
     const rootPackageJson = JSON.parse(readFile(`package.json`));
     const packageJson = JSON.parse(
-      readFile(`dist/apps/${nestapp}/package.json`)
+      readFile(`dist/apps/${nestapp}/package.json`),
     );
     expect(packageJson).toEqual(
       expect.objectContaining({
         main: 'main.js',
         name: expect.any(String),
         version: '0.0.1',
-      })
+      }),
     );
 
     expect(
       satisfies(
         packageJson.dependencies['@nestjs/common'],
-        rootPackageJson.dependencies['@nestjs/common']
-      )
+        rootPackageJson.dependencies['@nestjs/common'],
+      ),
     ).toBeTruthy();
     expect(
       satisfies(
         packageJson.dependencies['@nestjs/core'],
-        rootPackageJson.dependencies['@nestjs/core']
-      )
+        rootPackageJson.dependencies['@nestjs/core'],
+      ),
     ).toBeTruthy();
     expect(
       satisfies(
         packageJson.dependencies['reflect-metadata'],
-        rootPackageJson.dependencies['reflect-metadata']
-      )
+        rootPackageJson.dependencies['reflect-metadata'],
+      ),
     ).toBeTruthy();
     expect(
       satisfies(
         packageJson.dependencies['rxjs'],
-        rootPackageJson.dependencies['rxjs']
-      )
+        rootPackageJson.dependencies['rxjs'],
+      ),
     ).toBeTruthy();
     expect(
       satisfies(
         packageJson.dependencies['tslib'],
-        rootPackageJson.dependencies['tslib']
-      )
+        rootPackageJson.dependencies['tslib'],
+      ),
     ).toBeTruthy();
 
     checkFilesExist(
-      `dist/apps/${nestapp}/${packageManagerLockFile[packageManager]}`
+      `dist/apps/${nestapp}/${packageManagerLockFile[packageManager]}`,
     );
     runCommand(`${getPackageManagerCommand().ciInstall}`, {
       cwd: joinPathFragments(tmpProjPath(), 'dist/apps', nestapp),
@@ -458,19 +458,19 @@ describe('Build Node apps', () => {
 import { ${jslib} } from '@${scope}/${jslib}';
 console.log('Hello World!');
 ${jslib}();
-`
+`,
     );
 
     const { combinedOutput: nodeCombinedOutput } = await runCLIAsync(
-      `build ${nodeapp} --generate-package-json`
+      `build ${nodeapp} --generate-package-json`,
     );
     expect(nodeCombinedOutput).not.toMatch(/Graph is not consistent/);
     checkFilesExist(`dist/apps/${nodeapp}/package.json`);
     checkFilesExist(
-      `dist/apps/${nodeapp}/${packageManagerLockFile[packageManager]}`
+      `dist/apps/${nodeapp}/${packageManagerLockFile[packageManager]}`,
     );
     const nodeAppPackageJson = JSON.parse(
-      readFile(`dist/apps/${nodeapp}/package.json`)
+      readFile(`dist/apps/${nodeapp}/package.json`),
     );
 
     expect(nodeAppPackageJson['dependencies']['tslib']).toBeTruthy();
@@ -497,7 +497,7 @@ ${jslib}();
     createFile(`dist/apps/_should_not_remove.txt`);
     checkFilesExist(
       `dist/apps/${appName}/_should_remove.txt`,
-      `dist/apps/_should_not_remove.txt`
+      `dist/apps/_should_not_remove.txt`,
     );
     runCLI(`build ${appName} --outputHashing none`); // no explicit deleteOutputPath option set
     checkFilesDoNotExist(`dist/apps/${appName}/_should_remove.txt`);
@@ -508,7 +508,7 @@ ${jslib}();
     createFile(`dist/apps/_should_not_remove.txt`);
     checkFilesExist(
       `dist/apps/${appName}/_should_remove.txt`,
-      `dist/apps/_should_not_remove.txt`
+      `dist/apps/_should_not_remove.txt`,
     );
     runCLI(`build ${appName} --outputHashing none --deleteOutputPath`);
     checkFilesDoNotExist(`dist/apps/${appName}/_should_remove.txt`);
@@ -530,7 +530,7 @@ ${jslib}();
     process.env.PORT = `${port}`;
 
     runCLI(
-      `generate @nx/node:app ${appName} --project-name-and-root-format=as-provided --port=${port} --no-interactive`
+      `generate @nx/node:app ${appName} --project-name-and-root-format=as-provided --port=${port} --no-interactive`,
     );
 
     // check files are generated without the layout directory ("apps/") and
@@ -538,23 +538,23 @@ ${jslib}();
     checkFilesExist(`${appName}/src/main.ts`);
     // check build works
     expect(runCLI(`build ${appName}`)).toContain(
-      `Successfully ran target build for project ${appName}`
+      `Successfully ran target build for project ${appName}`,
     );
     // check tests pass
     const appTestResult = runCLI(`test ${appName} --passWithNoTests`);
     expect(appTestResult).toContain(
-      `Successfully ran target test for project ${appName}`
+      `Successfully ran target test for project ${appName}`,
     );
 
     // assert scoped project names are not supported when --project-name-and-root-format=derived
     expect(() =>
       runCLI(
-        `generate @nx/node:lib ${libName} --buildable --project-name-and-root-format=derived --no-interactive`
-      )
+        `generate @nx/node:lib ${libName} --buildable --project-name-and-root-format=derived --no-interactive`,
+      ),
     ).toThrow();
 
     runCLI(
-      `generate @nx/node:lib ${libName} --buildable --project-name-and-root-format=as-provided --no-interactive`
+      `generate @nx/node:lib ${libName} --buildable --project-name-and-root-format=as-provided --no-interactive`,
     );
 
     // check files are generated without the layout directory ("libs/") and
@@ -562,12 +562,12 @@ ${jslib}();
     checkFilesExist(`${libName}/src/index.ts`);
     // check build works
     expect(runCLI(`build ${libName}`)).toContain(
-      `Successfully ran target build for project ${libName}`
+      `Successfully ran target build for project ${libName}`,
     );
     // check tests pass
     const libTestResult = runCLI(`test ${libName}`);
     expect(libTestResult).toContain(
-      `Successfully ran target test for project ${libName}`
+      `Successfully ran target test for project ${libName}`,
     );
   }, 500_000);
 
@@ -591,7 +591,7 @@ ${jslib}();
   export class FooDto {
     foo: string;
     bar: number;
-  }`
+  }`,
       );
       updateFile(
         `apps/${nestapp}/src/app/app.controller.ts`,
@@ -616,7 +616,7 @@ ${jslib}();
         bar: 123
       })
     }
-  }`
+  }`,
       );
 
       await runCLIAsync(`build ${nestapp}`);
@@ -637,7 +637,7 @@ ${jslib}();
 
       const testResults = runCLI(`test ${nestlib} --passWithNoTests`);
       expect(testResults).toContain(
-        `Successfully ran target test for project ${nestlib}`
+        `Successfully ran target test for project ${nestlib}`,
       );
     }, 60000);
 
@@ -651,7 +651,7 @@ ${jslib}();
 
       const jestResult = await runCLIAsync(`test ${nestlib}`);
       expect(jestResult.combinedOutput).toContain(
-        'Test Suites: 1 passed, 1 total'
+        'Test Suites: 1 passed, 1 total',
       );
     }, 200000);
 
@@ -665,7 +665,7 @@ ${jslib}();
 
       const jestResult = await runCLIAsync(`test ${nestlib}`);
       expect(jestResult.combinedOutput).toContain(
-        'Test Suites: 1 passed, 1 total'
+        'Test Suites: 1 passed, 1 total',
       );
     }, 200000);
 
@@ -679,7 +679,7 @@ ${jslib}();
 
       const jestResult = await runCLIAsync(`test ${nestlib}`);
       expect(jestResult.combinedOutput).toContain(
-        'Test Suites: 2 passed, 2 total'
+        'Test Suites: 2 passed, 2 total',
       );
     }, 200000);
 
@@ -707,7 +707,7 @@ ${jslib}();
 export class FooModel {
   foo?: string;
   bar?: number;
-}`
+}`,
       );
 
       await runCLIAsync(`build ${nestlib}`);
@@ -726,7 +726,7 @@ class FooModel {
 }
 exports.FooModel = FooModel;
 //# sourceMappingURL=foo.model.js.map
-        `
+        `,
       );
     }, 300000);
 

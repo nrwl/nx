@@ -8,7 +8,7 @@ import { join } from 'path';
 
 export function createTmpTsConfigForBuildableLibs(
   tsConfigPath: string,
-  context: ExecutorContext
+  context: ExecutorContext,
 ) {
   let dependencies: DependentBuildableProjectNode[];
   const result = calculateProjectDependencies(
@@ -16,7 +16,7 @@ export function createTmpTsConfigForBuildableLibs(
     context.root,
     context.projectName,
     context.targetName,
-    context.configurationName
+    context.configurationName,
   );
   dependencies = result.dependencies;
 
@@ -24,13 +24,13 @@ export function createTmpTsConfigForBuildableLibs(
     join(context.root, tsConfigPath),
     context.root,
     result.target.data.root,
-    dependencies
+    dependencies,
   );
   process.env.NX_TSCONFIG_PATH = tmpTsConfigPath;
 
   const tmpTsConfigPathWithoutWorkspaceRoot = tmpTsConfigPath.replace(
     context.root,
-    ''
+    '',
   );
 
   return { tsConfigPath: tmpTsConfigPathWithoutWorkspaceRoot, dependencies };

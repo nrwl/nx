@@ -7,7 +7,7 @@ import type { NormalizedSchema } from '../schema';
  */
 export function updateImplicitDependencies(
   tree: Tree,
-  schema: NormalizedSchema
+  schema: NormalizedSchema,
 ) {
   for (const [projectName, project] of getProjects(tree)) {
     if (project.implicitDependencies) {

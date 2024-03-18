@@ -12,7 +12,7 @@ export default async function addEslintInputs(tree: Tree) {
   const nxJson = readNxJson(tree);
 
   const globalEslintFile = ESLINT_CONFIG_FILENAMES.find((file) =>
-    tree.exists(file)
+    tree.exists(file),
   );
 
   if (globalEslintFile && nxJson.namedInputs?.production) {

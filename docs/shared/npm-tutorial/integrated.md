@@ -85,8 +85,8 @@ The Nx plugins use a project-level `project.json` to manage the metadata around 
     },
     "test": {
       /* ... */
-    }
-  }
+    },
+  },
 }
 ```
 

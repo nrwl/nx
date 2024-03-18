@@ -80,9 +80,9 @@ As you configure `outputs`, keep the project details screen open and it will ref
 {
   "targetDefaults": {
     "build": {
-      "outputs": ["{projectRoot}/dist"]
-    }
-  }
+      "outputs": ["{projectRoot}/dist"],
+    },
+  },
 }
 ```
 
@@ -107,9 +107,9 @@ Defining `outputs` of a target in `project.json` or `package.json` will apply on
   "name": "myreactapp",
   "targets": {
     "build": {
-      "outputs": ["{projectRoot}/dist"]
-    }
-  }
+      "outputs": ["{projectRoot}/dist"],
+    },
+  },
 }
 ```
 

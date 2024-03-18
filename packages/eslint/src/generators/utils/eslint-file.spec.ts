@@ -28,7 +28,7 @@ describe('@nx/eslint:lint-file', () => {
       (eslintFileName) => {
         tree.write(eslintFileName, '{}');
         expect(findEslintFile(tree)).toBe(eslintFileName);
-      }
+      },
     );
 
     test.each(ESLINT_CONFIG_FILENAMES)(
@@ -37,7 +37,7 @@ describe('@nx/eslint:lint-file', () => {
         tree.write(baseEsLintConfigFile, '{}');
         tree.write(eslintFileName, '{}');
         expect(findEslintFile(tree)).toBe(baseEsLintConfigFile);
-      }
+      },
     );
   });
 
@@ -45,7 +45,7 @@ describe('@nx/eslint:lint-file', () => {
     it('should return true when override exists in eslintrc format', () => {
       tree.write(
         '.eslintrc.json',
-        '{"overrides": [{ "files": ["*.ts"], "rules": {} }]}'
+        '{"overrides": [{ "files": ["*.ts"], "rules": {} }]}',
       );
       expect(
         lintConfigHasOverride(
@@ -54,15 +54,15 @@ describe('@nx/eslint:lint-file', () => {
           (o) => {
             return o.files?.includes('*.ts');
           },
-          false
-        )
+          false,
+        ),
       ).toBe(true);
     });
 
     it('should return false when eslintrc is not in JSON format', () => {
       tree.write(
         '.eslintrc.js',
-        'module.exports = {overrides: [{ files: ["*.ts"], rules: {} }]};'
+        'module.exports = {overrides: [{ files: ["*.ts"], rules: {} }]};',
       );
       expect(
         lintConfigHasOverride(
@@ -71,8 +71,8 @@ describe('@nx/eslint:lint-file', () => {
           (o) => {
             return o.files?.includes('*.ts');
           },
-          false
-        )
+          false,
+        ),
       ).toBe(false);
     });
   });
@@ -111,7 +111,7 @@ describe('@nx/eslint:lint-file', () => {
             },
           ],
           ignorePatterns: ['!**/*', 'build/**/*'],
-        })
+        }),
       );
       addExtendsToLintConfig(tree, 'apps/demo', 'plugin:playwright/recommend');
       expect(readJson(tree, 'apps/demo/.eslintrc.json').extends).toEqual([

@@ -37,8 +37,8 @@ describe('utils', () => {
           task.overrides,
           getNode({
             outputs: [],
-          })
-        )
+          }),
+        ),
       ).toEqual([]);
     });
 
@@ -53,8 +53,8 @@ describe('utils', () => {
               '{projectRoot}/two',
               '{projectName}/three',
             ],
-          })
-        )
+          }),
+        ),
       ).toEqual(['one', 'myapp/two', 'myapp/three']);
     });
 
@@ -65,8 +65,8 @@ describe('utils', () => {
           task.overrides,
           getNode({
             outputs: ['{workspaceRoot}/dist/{projectRoot}'],
-          })
-        )
+          }),
+        ),
       ).toEqual(['dist/myapp']);
     });
 
@@ -77,8 +77,8 @@ describe('utils', () => {
           task.overrides,
           getNode({
             outputs: ['test/{workspaceRoot}/dist'],
-          })
-        )
+          }),
+        ),
       ).toThrow();
     });
 
@@ -100,8 +100,8 @@ describe('utils', () => {
         getOutputsForTargetAndConfiguration(
           task.target,
           task.overrides,
-          data as any
-        )
+          data as any,
+        ),
       ).toEqual(['dist']);
     });
 
@@ -123,8 +123,8 @@ describe('utils', () => {
         getOutputsForTargetAndConfiguration(
           task.target,
           task.overrides,
-          data as any
-        )
+          data as any,
+        ),
       ).toEqual(['dist']);
     });
 
@@ -146,8 +146,8 @@ describe('utils', () => {
         getOutputsForTargetAndConfiguration(
           task.target,
           task.overrides,
-          data as any
-        )
+          data as any,
+        ),
       ).toThrow();
     });
 
@@ -161,8 +161,8 @@ describe('utils', () => {
             options: {
               myVar: 'value',
             },
-          })
-        )
+          }),
+        ),
       ).toEqual(['path/value']);
     });
 
@@ -178,8 +178,8 @@ describe('utils', () => {
                 myVar: 'value',
               },
             },
-          })
-        )
+          }),
+        ),
       ).toEqual(['value']);
     });
 
@@ -191,8 +191,8 @@ describe('utils', () => {
           getNode({
             outputs: ['{options.outputFile}'],
             options: {},
-          })
-        )
+          }),
+        ),
       ).toEqual([]);
     });
 
@@ -211,8 +211,8 @@ describe('utils', () => {
                 myVar: 'value/production',
               },
             },
-          })
-        )
+          }),
+        ),
       ).toEqual(['value/production']);
     });
 
@@ -233,8 +233,8 @@ describe('utils', () => {
                 myVar: 'value/production',
               },
             },
-          })
-        )
+          }),
+        ),
       ).toEqual(['value/override']);
     });
 
@@ -248,8 +248,8 @@ describe('utils', () => {
               options: {
                 outputPath: 'value',
               },
-            })
-          )
+            }),
+          ),
         ).toEqual(['value']);
       });
 
@@ -264,8 +264,8 @@ describe('utils', () => {
               options: {
                 outputPath: 'one',
               },
-            })
-          )
+            }),
+          ),
         ).toEqual(['overrideOutputPath']);
       });
 
@@ -283,8 +283,8 @@ describe('utils', () => {
                   outputPath: 'value/production',
                 },
               },
-            })
-          )
+            }),
+          ),
         ).toEqual(['value/production']);
       });
 
@@ -300,8 +300,8 @@ describe('utils', () => {
               configurations: {
                 production: {},
               },
-            })
-          )
+            }),
+          ),
         ).toEqual(['value']);
       });
 
@@ -318,7 +318,7 @@ describe('utils', () => {
                 },
               },
             },
-          })
+          }),
         ).toEqual([
           'dist/root-myapp',
           'root-myapp/dist',
@@ -336,8 +336,8 @@ describe('utils', () => {
             task.overrides,
             getNode({
               outputs: ['{workspaceRoot}/dist'],
-            })
-          )
+            }),
+          ),
         ).toEqual(['dist']);
       });
       it('should transform non-prefixed paths that use interpolation', () => {
@@ -347,8 +347,8 @@ describe('utils', () => {
             task.overrides,
             getNode({
               outputs: ['{workspaceRoot}/dist/{projectRoot}'],
-            })
-          )
+            }),
+          ),
         ).toEqual(['dist/myapp']);
       });
 
@@ -359,8 +359,8 @@ describe('utils', () => {
             task.overrides,
             getNode({
               outputs: ['{projectRoot}/sub'],
-            })
-          )
+            }),
+          ),
         ).toEqual(['myapp/sub']);
       });
 
@@ -371,8 +371,8 @@ describe('utils', () => {
             task.overrides,
             getNode({
               outputs: ['{workspaceRoot}/dist'],
-            })
-          )
+            }),
+          ),
         ).toEqual(['dist']);
       });
     });

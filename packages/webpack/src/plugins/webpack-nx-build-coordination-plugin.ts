@@ -8,7 +8,10 @@ export class WebpackNxBuildCoordinationPlugin {
   private currentlyRunning: 'none' | 'nx-build' | 'webpack-build' = 'none';
   private buildCmdProcess: ReturnType<typeof exec> | null = null;
 
-  constructor(private readonly buildCmd: string, skipInitialBuild?: boolean) {
+  constructor(
+    private readonly buildCmd: string,
+    skipInitialBuild?: boolean,
+  ) {
     if (!skipInitialBuild) {
       this.buildChangedProjects();
     }
@@ -23,7 +26,7 @@ export class WebpackNxBuildCoordinationPlugin {
           await sleep(50);
         }
         this.currentlyRunning = 'webpack-build';
-      }
+      },
     );
     compiler.hooks.done.tapPromise('IncrementalDevServerPlugin', async () => {
       this.currentlyRunning = 'none';
@@ -86,7 +89,7 @@ export class WebpackNxBuildCoordinationPlugin {
         }
         // Queue a build
         runner.enqueue(changedProjects, changedFiles);
-      }
+      },
     );
   }
 }

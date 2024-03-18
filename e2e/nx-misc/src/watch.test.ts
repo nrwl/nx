@@ -56,7 +56,7 @@ describe('Nx Watch', () => {
 
   it('should watch for project changes', async () => {
     const getOutput = await runWatch(
-      `--projects=${proj1} -- echo \\$NX_PROJECT_NAME`
+      `--projects=${proj1} -- echo \\$NX_PROJECT_NAME`,
     );
     await writeFileForWatcher(`libs/${proj1}/newfile.txt`, 'content');
     await writeFileForWatcher(`libs/${proj2}/newfile.txt`, 'content');
@@ -100,7 +100,7 @@ describe('Nx Watch', () => {
 
   it('should watch for global workspace file changes', async () => {
     const getOutput = await runWatch(
-      `--all --includeGlobalWorkspaceFiles -- echo \\$NX_FILE_CHANGES`
+      `--all --includeGlobalWorkspaceFiles -- echo \\$NX_FILE_CHANGES`,
     );
     await writeFileForWatcher(`libs/${proj1}/newfile.txt`, 'content');
     await writeFileForWatcher(`libs/${proj2}/newfile.txt`, 'content');
@@ -120,7 +120,7 @@ describe('Nx Watch', () => {
 
   it('should watch selected projects only', async () => {
     const getOutput = await runWatch(
-      `--projects=${proj1},${proj3} -- echo \\$NX_PROJECT_NAME`
+      `--projects=${proj1},${proj3} -- echo \\$NX_PROJECT_NAME`,
     );
     await writeFileForWatcher(`libs/${proj1}/newfile.txt`, 'content');
     await writeFileForWatcher(`libs/${proj2}/newfile.txt`, 'content');
@@ -141,7 +141,7 @@ describe('Nx Watch', () => {
     });
 
     const getOutput = await runWatch(
-      `--projects=${proj3} --includeDependentProjects -- echo \\$NX_PROJECT_NAME`
+      `--projects=${proj3} --includeDependentProjects -- echo \\$NX_PROJECT_NAME`,
     );
     await writeFileForWatcher(`libs/${proj1}/newfile.txt`, 'content');
     await writeFileForWatcher(`libs/${proj2}/newfile.txt`, 'content');

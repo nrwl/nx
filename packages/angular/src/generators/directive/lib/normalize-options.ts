@@ -7,7 +7,7 @@ import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/src/generat
 
 export async function normalizeOptions(
   tree: Tree,
-  options: Schema
+  options: Schema,
 ): Promise<NormalizedSchema> {
   const {
     artifactName: name,
@@ -32,7 +32,7 @@ export async function normalizeOptions(
 
   const { prefix } = readProjectConfiguration(
     tree,
-    projectName
+    projectName,
   ) as AngularProjectConfiguration;
 
   const selector =

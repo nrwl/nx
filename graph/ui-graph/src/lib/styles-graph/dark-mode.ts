@@ -9,7 +9,7 @@ export function scratchHasDarkMode(element: SingularData | Core) {
 export function switchValueByDarkMode<T>(
   element: SingularData | Core,
   dark: T,
-  light: T
+  light: T,
 ) {
   return scratchHasDarkMode(element) ? dark : light;
 }

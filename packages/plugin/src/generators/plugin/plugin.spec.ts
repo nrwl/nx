@@ -13,7 +13,7 @@ import { pluginGenerator } from './plugin';
 import { Schema } from './schema';
 
 const getSchema: (overrides?: Partial<Schema>) => Schema = (
-  overrides = {}
+  overrides = {},
 ) => ({
   name: 'my-plugin',
   compiler: 'tsc',
@@ -76,7 +76,7 @@ describe('NxPlugin Plugin Generator', () => {
       getSchema({
         name: 'myPlugin',
         directory: 'plugins',
-      })
+      }),
     );
     const project = readProjectConfiguration(tree, 'plugins-my-plugin');
     const projectE2e = readProjectConfiguration(tree, 'plugins-my-plugin-e2e');
@@ -90,7 +90,7 @@ describe('NxPlugin Plugin Generator', () => {
         tree,
         getSchema({
           name: 'myPlugin',
-        })
+        }),
       );
       const project = readProjectConfiguration(tree, 'my-plugin');
       const assets = project.targets.build.options.assets;
@@ -125,7 +125,7 @@ describe('NxPlugin Plugin Generator', () => {
         getSchema({
           name: 'myPlugin',
           rootProject: true,
-        })
+        }),
       );
       const project = readProjectConfiguration(tree, 'my-plugin');
       const assets = project.targets.build.options.assets;
@@ -163,15 +163,15 @@ describe('NxPlugin Plugin Generator', () => {
           getSchema({
             name: 'myPlugin',
             unitTestRunner: 'none',
-          })
+          }),
         );
 
         ['libs/my-plugin/jest.config.ts'].forEach((path) =>
-          expect(tree.exists(path)).toBeFalsy()
+          expect(tree.exists(path)).toBeFalsy(),
         );
 
         expect(
-          readProjectConfiguration(tree, 'my-plugin').targets.test
+          readProjectConfiguration(tree, 'my-plugin').targets.test,
         ).not.toBeDefined();
       });
     });
@@ -183,7 +183,7 @@ describe('NxPlugin Plugin Generator', () => {
         tree,
         getSchema({
           compiler: 'tsc',
-        })
+        }),
       );
 
       const { build } = readProjectConfiguration(tree, 'my-plugin').targets;
@@ -196,7 +196,7 @@ describe('NxPlugin Plugin Generator', () => {
         tree,
         getSchema({
           compiler: 'swc',
-        })
+        }),
       );
 
       const { build } = readProjectConfiguration(tree, 'my-plugin').targets;
@@ -212,7 +212,7 @@ describe('NxPlugin Plugin Generator', () => {
       const { root } = readProjectConfiguration(tree, 'my-plugin');
       const { name } = readJson<PackageJson>(
         tree,
-        joinPathFragments(root, 'package.json')
+        joinPathFragments(root, 'package.json'),
       );
 
       expect(name).toEqual('@proj/my-plugin');
@@ -229,7 +229,7 @@ describe('NxPlugin Plugin Generator', () => {
       const { root } = readProjectConfiguration(tree, 'my-plugin');
       const { name } = readJson<PackageJson>(
         tree,
-        joinPathFragments(root, 'package.json')
+        joinPathFragments(root, 'package.json'),
       );
 
       expect(name).toEqual('my-plugin');
@@ -238,13 +238,13 @@ describe('NxPlugin Plugin Generator', () => {
     it('should use importPath as the package.json name', async () => {
       await pluginGenerator(
         tree,
-        getSchema({ importPath: '@my-company/my-plugin' })
+        getSchema({ importPath: '@my-company/my-plugin' }),
       );
 
       const { root } = readProjectConfiguration(tree, 'my-plugin');
       const { name } = readJson<PackageJson>(
         tree,
-        joinPathFragments(root, 'package.json')
+        joinPathFragments(root, 'package.json'),
       );
 
       expect(name).toEqual('@my-company/my-plugin');

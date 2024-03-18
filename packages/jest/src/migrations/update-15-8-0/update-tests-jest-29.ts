@@ -31,9 +31,9 @@ export async function updateTestsJest29(tree: Tree) {
           }
           updateJestMockTypes(tree, file);
           updateJestMocked(tree, file);
-        }
+        },
       );
-    }
+    },
   );
   await formatFiles(tree);
 }
@@ -51,7 +51,7 @@ export function updateJestMockTypes(tree: Tree, filePath: string) {
           .replace('MaybeMockedDeep', 'Mocked')
           .replace('MaybeMocked', 'MockedShallow')
       );
-    }
+    },
   );
   tree.write(filePath, updatedContent);
 }
@@ -60,7 +60,7 @@ export function updateJestMocked(tree: Tree, filePath: string) {
   const contents = tree.read(filePath, 'utf-8');
   const jestGlobalNodes = tsquery.query(
     contents,
-    ':matches(ImportDeclaration, VariableStatement):has(Identifier[name="jest"]):has(StringLiteral[value="@jest/globals"])'
+    ':matches(ImportDeclaration, VariableStatement):has(Identifier[name="jest"]):has(StringLiteral[value="@jest/globals"])',
   );
 
   // this only applies if using jest from @jest/globals
@@ -87,7 +87,7 @@ export function updateJestMocked(tree: Tree, filePath: string) {
           return text.replace('false', '{shallow: true}');
         }
       }
-    }
+    },
   );
 
   tree.write(filePath, updatedJestMockTypes);

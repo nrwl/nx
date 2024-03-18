@@ -13,7 +13,7 @@ export interface GetEntryPointsOptions {
 export function getEntryPoints(
   projectName: string,
   context: ExecutorContext,
-  options: GetEntryPointsOptions = {}
+  options: GetEntryPointsOptions = {},
 ): string[] {
   const entryPoints = options.initialEntryPoints
     ? new Set(options.initialEntryPoints)
@@ -22,7 +22,7 @@ export function getEntryPoints(
 
   const findEntryPoints = (
     projectName: string,
-    tsConfigFileName?: string
+    tsConfigFileName?: string,
   ): void => {
     if (seenProjects.has(projectName)) return;
     seenProjects.add(projectName);
@@ -48,7 +48,7 @@ export function getEntryPoints(
     // Workspace projects may not be a TS project, so skip reading source files if tsconfig is not found.
     if (foundTsConfig) {
       const tsconfig = readJsonFile(
-        path.join(project.data.root, foundTsConfig)
+        path.join(project.data.root, foundTsConfig),
       );
       const projectFiles = glob
         .sync(tsconfig.include ?? [], {

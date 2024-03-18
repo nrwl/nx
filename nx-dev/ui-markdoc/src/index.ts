@@ -62,7 +62,7 @@ import { FenceWrapper } from './lib/nodes/fence-wrapper.component';
 export { GithubRepository } from './lib/tags/github-repository.component';
 
 export const getMarkdocCustomConfig = (
-  documentFilePath: string
+  documentFilePath: string,
 ): { config: any; components: any } => ({
   config: {
     nodes: {
@@ -143,7 +143,7 @@ export { frameworkIcons };
 
 export const renderMarkdown: (
   documentContent: string,
-  options: { filePath: string }
+  options: { filePath: string },
 ) => {
   metadata: Record<string, any>;
   node: ReactNode;

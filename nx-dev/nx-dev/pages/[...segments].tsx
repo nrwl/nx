@@ -81,7 +81,7 @@ export const getStaticPaths: GetStaticPaths = () => {
     paths: nxDocumentationApi
       .getSlugsStaticDocumentPaths()
       .filter(
-        (path) => !reservedPaths.some((reserved) => path.startsWith(reserved))
+        (path) => !reservedPaths.some((reserved) => path.startsWith(reserved)),
       ),
     fallback: 'blocking',
   };

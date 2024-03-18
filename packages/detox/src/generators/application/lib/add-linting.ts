@@ -34,7 +34,7 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
   const installTask = addDependenciesToPackageJson(
     host,
     extraEslintDependencies.dependencies,
-    extraEslintDependencies.devDependencies
+    extraEslintDependencies.devDependencies,
   );
 
   return runTasksInSerial(lintTask, installTask);

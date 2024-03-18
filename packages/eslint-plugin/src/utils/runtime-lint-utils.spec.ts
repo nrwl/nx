@@ -36,7 +36,7 @@ describe('findConstraintsFor', () => {
         type: 'lib',
         name: 'someLib',
         data: { root: '.', tags: ['b'] },
-      })
+      }),
     ).toEqual([{ sourceTag: 'b', onlyDependOnLibsWithTags: ['c'] }]);
   });
 
@@ -52,7 +52,7 @@ describe('findConstraintsFor', () => {
         type: 'lib',
         name: 'someLib',
         data: { root: '.', tags: ['b'] },
-      })
+      }),
     ).toEqual([
       { sourceTag: 'b', onlyDependOnLibsWithTags: ['c'] },
       { sourceTag: '*', onlyDependOnLibsWithTags: ['a'] },
@@ -70,7 +70,7 @@ describe('findConstraintsFor', () => {
         type: 'lib',
         name: 'someLib',
         data: { root: '.', tags: ['b'] },
-      })
+      }),
     ).toEqual([
       { sourceTag: '/^b$/', onlyDependOnLibsWithTags: ['c'] },
       { sourceTag: '/a|b/', onlyDependOnLibsWithTags: ['c'] },
@@ -80,7 +80,7 @@ describe('findConstraintsFor', () => {
         type: 'lib',
         name: 'someLib',
         data: { root: '.', tags: ['baz'] },
-      })
+      }),
     ).toEqual([{ sourceTag: '/a|b/', onlyDependOnLibsWithTags: ['c'] }]);
   });
 
@@ -95,14 +95,14 @@ describe('findConstraintsFor', () => {
         type: 'lib',
         name: 'someLib',
         data: { root: '.', tags: ['a:a'] },
-      })
+      }),
     ).toEqual([{ sourceTag: 'a:*', onlyDependOnLibsWithTags: ['b:*'] }]);
     expect(
       findConstraintsFor(constriants, {
         type: 'lib',
         name: 'someLib',
         data: { root: '.', tags: ['a:abc'] },
-      })
+      }),
     ).toEqual([{ sourceTag: 'a:*', onlyDependOnLibsWithTags: ['b:*'] }]);
   });
 });
@@ -141,7 +141,7 @@ describe('hasBannedImport', () => {
     ];
 
     expect(hasBannedImport(source, target, constraints, 'react-native')).toBe(
-      constraints[1]
+      constraints[1],
     );
   });
 
@@ -161,7 +161,7 @@ describe('hasBannedImport', () => {
     ];
 
     expect(hasBannedImport(source, target, constraints, 'react-native')).toBe(
-      constraints[1]
+      constraints[1],
     );
   });
 
@@ -181,7 +181,7 @@ describe('hasBannedImport', () => {
     ];
 
     expect(hasBannedImport(source, target, constraints, 'react-native')).toBe(
-      undefined
+      undefined,
     );
   });
 
@@ -197,7 +197,7 @@ describe('hasBannedImport', () => {
     ];
 
     expect(hasBannedImport(source, target, constraints, 'react-native')).toBe(
-      undefined
+      undefined,
     );
   });
 });
@@ -304,7 +304,7 @@ describe('dependentsHaveBannedImport + findTransitiveExternalDependencies', () =
 
   it('should findTransitiveExternalDependencies', () => {
     expect(findTransitiveExternalDependencies(graph, source)).toStrictEqual(
-      externalDependencies
+      externalDependencies,
     );
   });
 
@@ -317,8 +317,8 @@ describe('dependentsHaveBannedImport + findTransitiveExternalDependencies', () =
           sourceTag: 'a',
           bannedExternalImports: ['angular'],
         },
-        'react-native'
-      )
+        'react-native',
+      ),
     ).toStrictEqual([]);
   });
 
@@ -333,8 +333,8 @@ describe('dependentsHaveBannedImport + findTransitiveExternalDependencies', () =
         externalDependencies.slice(1),
         graph,
         constraint,
-        'react-native'
-      )
+        'react-native',
+      ),
     ).toStrictEqual([[bannedTarget, d, constraint]]);
   });
 
@@ -349,8 +349,8 @@ describe('dependentsHaveBannedImport + findTransitiveExternalDependencies', () =
         externalDependencies.slice(1),
         graph,
         constraint,
-        'react'
-      )
+        'react',
+      ),
     ).toStrictEqual([
       [nonBannedTarget, target, constraint],
       [nonBannedTarget, c, constraint],
@@ -368,16 +368,16 @@ describe('dependentsHaveBannedImport + findTransitiveExternalDependencies', () =
         externalDependencies.slice(1),
         graph,
         constraint,
-        'react-native'
-      ).length
+        'react-native',
+      ).length,
     ).toBe(0);
     expect(
       hasBannedDependencies(
         externalDependencies.slice(1),
         graph,
         constraint,
-        'react'
-      ).length
+        'react',
+      ).length,
     ).toBe(0);
   });
 });
@@ -488,30 +488,30 @@ describe('isAngularSecondaryEntrypoint', () => {
       belongsToDifferentNgEntryPoint(
         '@project/standard',
         'libs/standard/src/subfolder/index.ts',
-        'libs/standard'
-      )
+        'libs/standard',
+      ),
     ).toBe(false);
     expect(
       belongsToDifferentNgEntryPoint(
         '@project/features',
         'libs/features/src/subfolder/index.ts',
-        'libs/features'
-      )
+        'libs/features',
+      ),
     ).toBe(false);
     // secondary
     expect(
       belongsToDifferentNgEntryPoint(
         '@project/standard/secondary',
         'libs/standard/secondary/src/subfolder/index.ts',
-        'libs/standard'
-      )
+        'libs/standard',
+      ),
     ).toBe(false);
     expect(
       belongsToDifferentNgEntryPoint(
         '@project/features/secondary',
         'libs/features/secondary/random/folder/src/index.ts',
-        'libs/features'
-      )
+        'libs/features',
+      ),
     ).toBe(false);
   });
 
@@ -521,30 +521,30 @@ describe('isAngularSecondaryEntrypoint', () => {
       belongsToDifferentNgEntryPoint(
         '@project/standard',
         'libs/standard/secondary/src/subfolder/index.ts',
-        'libs/standard'
-      )
+        'libs/standard',
+      ),
     ).toBe(true);
     expect(
       belongsToDifferentNgEntryPoint(
         '@project/features',
         'libs/features/secondary/random/folder/src/index.ts',
-        'libs/features'
-      )
+        'libs/features',
+      ),
     ).toBe(true);
     // secondary
     expect(
       belongsToDifferentNgEntryPoint(
         '@project/standard/secondary',
         'libs/standard/src/subfolder/index.ts',
-        'libs/standard'
-      )
+        'libs/standard',
+      ),
     ).toBe(true);
     expect(
       belongsToDifferentNgEntryPoint(
         '@project/features/secondary',
         'libs/features/src/subfolder/index.ts',
-        'libs/features'
-      )
+        'libs/features',
+      ),
     ).toBe(true);
   });
 });
@@ -571,7 +571,7 @@ describe('hasNoneOfTheseTags', () => {
     'should return %s when project has tags ["abc"] and requested tags are %s',
     (expected, tags) => {
       expect(hasNoneOfTheseTags(source, tags)).toBe(expected);
-    }
+    },
   );
 });
 
@@ -585,9 +585,9 @@ describe('getSourceFilePath', () => {
     'should return "libs/dev-kit/package.json" when sourceFileName is "%s" and projectPath is "%s"',
     (sourceFileName, projectPath) => {
       expect(getSourceFilePath(sourceFileName, projectPath)).toBe(
-        'libs/dev-kit/package.json'
+        'libs/dev-kit/package.json',
       );
-    }
+    },
   );
 });
 

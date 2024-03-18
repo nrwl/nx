@@ -44,16 +44,16 @@ describe('remove-show-circular-dependencies-option migration', () => {
 
       const project = readProjectConfiguration(tree, 'app1');
       expect(
-        project.targets.build.options.showCircularDependencies
+        project.targets.build.options.showCircularDependencies,
       ).toBeUndefined();
       expect(project.targets.build.configurations).toBeDefined();
       expect(
-        project.targets.build.configurations.one.showCircularDependencies
+        project.targets.build.configurations.one.showCircularDependencies,
       ).toBeUndefined();
       expect(
-        project.targets.build.configurations.two.showCircularDependencies
+        project.targets.build.configurations.two.showCircularDependencies,
       ).toBeUndefined();
-    }
+    },
   );
 
   it('should not remove "showCircularDependencies" from target not using the relevant executors', async () => {
@@ -77,14 +77,14 @@ describe('remove-show-circular-dependencies-option migration', () => {
 
     const project = readProjectConfiguration(tree, 'app1');
     expect(
-      project.targets.build.options.showCircularDependencies
+      project.targets.build.options.showCircularDependencies,
     ).toBeDefined();
     expect(project.targets.build.configurations).toBeDefined();
     expect(
-      project.targets.build.configurations.one.showCircularDependencies
+      project.targets.build.configurations.one.showCircularDependencies,
     ).toBeDefined();
     expect(
-      project.targets.build.configurations.two.showCircularDependencies
+      project.targets.build.configurations.two.showCircularDependencies,
     ).toBeDefined();
   });
 });

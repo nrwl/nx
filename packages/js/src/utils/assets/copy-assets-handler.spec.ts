@@ -24,8 +24,8 @@ jest.mock(
             data: {
               changedProjects: string[];
               changedFiles: ChangedFile[];
-            }
-          ) => void
+            },
+          ) => void,
         ) => {
           mockWatcher.subscribe((data) => {
             callback(null, {
@@ -37,7 +37,7 @@ jest.mock(
         },
       },
     };
-  }
+  },
 );
 
 function createMockedWatchedFile(path: string) {
@@ -181,7 +181,7 @@ describe('AssetInputOutputHandler', () => {
     fse.writeFileSync(path.join(projectDir, 'docs/nx-ignore.md'), 'IGNORE ME');
     fse.writeFileSync(
       path.join(projectDir, 'docs/a/b/nested-ignore.md'),
-      'IGNORE ME'
+      'IGNORE ME',
     );
 
     await sut.processAllAssetsOnce();

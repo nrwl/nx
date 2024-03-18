@@ -4,7 +4,7 @@ import { readdirSync, writeFileSync } from 'fs';
 import { execSync } from 'child_process';
 
 function generateFileContent(
-  workspaces: { id: string; label: string; url: string }[]
+  workspaces: { id: string; label: string; url: string }[],
 ) {
   return `
   window.exclude = [];
@@ -25,7 +25,7 @@ function writeFile() {
   let generatedGraphs;
   try {
     generatedGraphs = readdirSync(
-      join(__dirname, '../graph/client/src/assets/generated-project-graphs')
+      join(__dirname, '../graph/client/src/assets/generated-project-graphs'),
     ).map((filename) => {
       const id = filename.substring(0, filename.length - 5);
       return {
@@ -44,7 +44,7 @@ function writeFile() {
   let pregeneratedGraphs;
   try {
     pregeneratedGraphs = readdirSync(
-      join(__dirname, '../graph/client/src/assets/project-graphs')
+      join(__dirname, '../graph/client/src/assets/project-graphs'),
     ).map((filename) => {
       const id = filename.substring(0, filename.length - 5);
       return {
@@ -73,7 +73,7 @@ function writeFile() {
 
   writeFileSync(
     join(__dirname, '../graph/client/src/assets/dev/', `environment.js`),
-    generateFileContent(projects)
+    generateFileContent(projects),
   );
 }
 

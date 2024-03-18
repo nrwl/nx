@@ -74,13 +74,13 @@ export interface EchoExecutorOptions {
 
 export default async function echoExecutor(
   options: EchoExecutorOptions,
-  context: ExecutorContext
+  context: ExecutorContext,
 ): Promise<{ success: boolean }> {
   console.info(`Executing "echo"...`);
   console.info(`Options: ${JSON.stringify(options, null, 2)}`);
 
   const { stdout, stderr } = await promisify(exec)(
-    `echo ${options.textToEcho}`
+    `echo ${options.textToEcho}`,
   );
   console.log(stdout);
   console.error(stderr);
@@ -110,10 +110,10 @@ Our last step is to add this executor to a given project’s `targets` object in
     "echo": {
       "executor": "@my-org/my-plugin:echo",
       "options": {
-        "textToEcho": "Hello World"
-      }
-    }
-  }
+        "textToEcho": "Hello World",
+      },
+    },
+  },
 }
 ```
 
@@ -154,18 +154,18 @@ export interface MultipleExecutorOptions {}
 
 export default async function multipleExecutor(
   options: MultipleExecutorOptions,
-  context: ExecutorContext
+  context: ExecutorContext,
 ): Promise<{ success: boolean }> {
   const result = await Promise.race([
     await runExecutor(
       { project: 'api', target: 'serve' },
       { watch: true },
-      context
+      context,
     ),
     await runExecutor(
       { project: 'web-client', target: 'serve' },
       { watch: true },
-      context
+      context,
     ),
   ]);
   for await (const res of result) {
@@ -207,7 +207,7 @@ import { CustomHasher, Task, HasherContext } from '@nx/devkit';
 
 export const mimicNxHasher: CustomHasher = async (
   task: Task,
-  context: HasherContext
+  context: HasherContext,
 ) => {
   return context.hasher.hashTask(task);
 };
@@ -222,7 +222,7 @@ import { CustomHasher, Task, HasherContext } from '@nx/devkit';
 
 export const badHasher: CustomHasher = async (
   task: Task,
-  context: HasherContext
+  context: HasherContext,
 ) => {
   return {
     value: 'my-static-hash',

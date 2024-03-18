@@ -66,7 +66,7 @@ export function Hero(): JSX.Element {
               onClick={() => setDisplayBuildSystem(!displayBuildSystem)}
               className={cx(
                 'text-md  my-0.5 inline-flex cursor-pointer items-center rounded-md px-1.5 py-0.5 font-medium ring-1 ring-inset ring-slate-500/10 transition hover:bg-slate-50 hover:underline dark:ring-slate-400/20 hover:dark:bg-slate-400/10',
-                displayBuildSystem && 'bg-yellow-500/10 dark:bg-yellow-500/20'
+                displayBuildSystem && 'bg-yellow-500/10 dark:bg-yellow-500/20',
               )}
             >
               build system
@@ -90,7 +90,7 @@ export function Hero(): JSX.Element {
               onClick={() => setDisplayTools(!displayTools)}
               className={cx(
                 'text-md my-0.5 inline-flex cursor-pointer items-center rounded-md px-1.5 py-0.5 font-medium ring-1 ring-inset ring-slate-500/10 transition hover:bg-slate-50 hover:underline dark:ring-slate-400/20 hover:dark:bg-slate-400/10',
-                displayTools && 'bg-cyan-500/10 dark:bg-cyan-500/20'
+                displayTools && 'bg-cyan-500/10 dark:bg-cyan-500/20',
               )}
             >
               built-in tooling
@@ -115,7 +115,7 @@ export function Hero(): JSX.Element {
               onClick={() => setDisplayCi(!displayCi)}
               className={cx(
                 'text-md my-0.5 inline-flex cursor-pointer items-center rounded-md px-1.5 py-0.5 font-medium ring-1 ring-inset ring-slate-500/10 transition hover:bg-slate-50 hover:underline dark:ring-slate-400/20 hover:dark:bg-slate-400/10',
-                displayCi && 'bg-fuchsia-500/10 dark:bg-fuchsia-500/20'
+                displayCi && 'bg-fuchsia-500/10 dark:bg-fuchsia-500/20',
               )}
             >
               advanced CI capabilities

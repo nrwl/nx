@@ -28,7 +28,7 @@ describe('implicit project dependencies', () => {
       {
         proj1: { root: '', implicitDependencies: ['proj2'] },
       },
-      builder
+      builder,
     );
 
     expect(builder.getUpdatedProjectGraph().dependencies['proj1']).toEqual([
@@ -56,7 +56,7 @@ describe('implicit project dependencies', () => {
       {
         proj1: { root: '', implicitDependencies: ['!proj2'] },
       },
-      builder
+      builder,
     );
 
     expect(builder.getUpdatedProjectGraph().dependencies['proj1']).toEqual([]);

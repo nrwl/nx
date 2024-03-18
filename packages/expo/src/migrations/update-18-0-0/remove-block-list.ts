@@ -17,13 +17,13 @@ export default async function update(tree: Tree) {
         content = content.replace('// unstable_enableSymlinks: true,', '');
         content = content.replace(
           '// unstable_enablePackageExports: true,',
-          ''
+          '',
         );
         content = content.replace('unstable_enableSymlinks: true,', '');
         content = content.replace('unstable_enablePackageExports: true,', '');
         content = content.replace(
           `const exclusionList = require('metro-config/src/defaults/exclusionList');`,
-          ''
+          '',
         );
 
         tree.write(joinPathFragments(config.root, 'metro.config.js'), content);

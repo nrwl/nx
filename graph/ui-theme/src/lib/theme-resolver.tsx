@@ -80,7 +80,7 @@ export function themeResolver(theme: Theme) {
 
 export function selectValueByThemeDynamic<T>(
   darkModeSetting: T,
-  lightModeSetting: T
+  lightModeSetting: T,
 ): () => T {
   return () => selectValueByThemeStatic(darkModeSetting, lightModeSetting);
 }
@@ -89,7 +89,7 @@ export function selectValueByThemeDynamic<T>(
 // It also prevents the dynamic change of theme for certain elements like tippy
 export function selectValueByThemeStatic<T>(
   darkModeSetting: T,
-  lightModeSetting: T
+  lightModeSetting: T,
 ): T {
   return currentTheme === 'dark' ? darkModeSetting : lightModeSetting;
 }

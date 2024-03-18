@@ -34,7 +34,7 @@ describe('e2e migrator', () => {
 
   function addProject(
     name: string,
-    config: ProjectConfiguration
+    config: ProjectConfiguration,
   ): MigrationProjectConfiguration {
     config.projectType = 'application';
     writeJson(tree, `apps/${name}/project.json`, config);
@@ -53,7 +53,7 @@ describe('e2e migrator', () => {
   function createMigrator(
     project: MigrationProjectConfiguration,
     lintTargetName?: string,
-    logger?: Logger
+    logger?: Logger,
   ): void {
     migrator = new E2eMigrator(tree, {}, project, lintTargetName, logger);
     // the app migrator does this before invoking e2e migrator, it's an implementation
@@ -96,10 +96,10 @@ describe('e2e migrator', () => {
 
       expect(result).toHaveLength(1);
       expect(result[0].message).toBe(
-        'The "e2e" target is not specifying any options. The target will be skipped.'
+        'The "e2e" target is not specifying any options. The target will be skipped.',
       );
       expect(result[0].hint).toBe(
-        'Make sure to manually migrate the target configuration and any possible associated files. Alternatively, you could revert the migration, ensure the "app1.architect.e2e.options" is correctly set or remove the target if it is not valid, and run the migration again.'
+        'Make sure to manually migrate the target configuration and any possible associated files. Alternatively, you could revert the migration, ensure the "app1.architect.e2e.options" is correctly set or remove the target if it is not valid, and run the migration again.',
       );
     });
 
@@ -119,10 +119,10 @@ describe('e2e migrator', () => {
 
       expect(result).toHaveLength(1);
       expect(result[0].message).toBe(
-        'The "e2e" target is using the "@angular-devkit/build-angular:protractor" builder but the Protractor config file is not specified. The target will be skipped.'
+        'The "e2e" target is using the "@angular-devkit/build-angular:protractor" builder but the Protractor config file is not specified. The target will be skipped.',
       );
       expect(result[0].hint).toBe(
-        'Make sure to manually migrate the target configuration and any possible associated files. Alternatively, you could revert the migration, ensure the "app1.architect.e2e.options.protractorConfig" is correctly set or remove the "app1.architect.e2e" target if it is not valid, and run the migration again.'
+        'Make sure to manually migrate the target configuration and any possible associated files. Alternatively, you could revert the migration, ensure the "app1.architect.e2e.options.protractorConfig" is correctly set or remove the "app1.architect.e2e" target if it is not valid, and run the migration again.',
       );
     });
 
@@ -142,10 +142,10 @@ describe('e2e migrator', () => {
 
       expect(result).toHaveLength(1);
       expect(result[0].message).toBe(
-        'The specified Protractor config file "protractor.conf.js" in the "e2e" target could not be found. The target will be skipped.'
+        'The specified Protractor config file "protractor.conf.js" in the "e2e" target could not be found. The target will be skipped.',
       );
       expect(result[0].hint).toBe(
-        'Make sure to manually migrate the target configuration and any possible associated files. Alternatively, you could revert the migration, ensure the "app1.architect.e2e.options.protractorConfig" is set to a valid path or remove the "app1.architect.e2e" target if it is not valid, and run the migration again.'
+        'Make sure to manually migrate the target configuration and any possible associated files. Alternatively, you could revert the migration, ensure the "app1.architect.e2e.options.protractorConfig" is set to a valid path or remove the "app1.architect.e2e" target if it is not valid, and run the migration again.',
       );
     });
 
@@ -183,10 +183,10 @@ describe('e2e migrator', () => {
 
       expect(result).toHaveLength(1);
       expect(result[0].message).toBe(
-        'The specified Cypress config file "cypress.conf.json" in the "e2e" target could not be found. The target will be skipped.'
+        'The specified Cypress config file "cypress.conf.json" in the "e2e" target could not be found. The target will be skipped.',
       );
       expect(result[0].hint).toBe(
-        'Make sure to manually migrate the target configuration and any possible associated files. Alternatively, you could revert the migration, ensure the "app1.architect.e2e.options.configFile" option is set to a valid path or remove the "app1.architect.e2e" target if it is not valid, and run the migration again.'
+        'Make sure to manually migrate the target configuration and any possible associated files. Alternatively, you could revert the migration, ensure the "app1.architect.e2e.options.configFile" option is set to a valid path or remove the "app1.architect.e2e" target if it is not valid, and run the migration again.',
       );
     });
 
@@ -204,10 +204,10 @@ describe('e2e migrator', () => {
 
       expect(result).toHaveLength(1);
       expect(result[0].message).toBe(
-        'The "e2e" target is using the "@cypress/schematic:cypress" builder but the "cypress" directory could not be found at the project root. The target will be skipped.'
+        'The "e2e" target is using the "@cypress/schematic:cypress" builder but the "cypress" directory could not be found at the project root. The target will be skipped.',
       );
       expect(result[0].hint).toBe(
-        'Make sure to manually migrate the target configuration and any possible associated files. Alternatively, you could revert the migration, ensure the "cypress" directory exists in the project root or remove the "e2e" target if it is not valid, and run the migration again.'
+        'Make sure to manually migrate the target configuration and any possible associated files. Alternatively, you could revert the migration, ensure the "cypress" directory exists in the project root or remove the "e2e" target if it is not valid, and run the migration again.',
       );
     });
 
@@ -225,10 +225,10 @@ describe('e2e migrator', () => {
 
         expect(result).toHaveLength(1);
         expect(result[0].message).toBe(
-          'The "e2e" target is using the "@cypress/schematic:cypress" builder but the "configFile" option is not specified and a "cypress.json" file could not be found at the project root. The target will be skipped.'
+          'The "e2e" target is using the "@cypress/schematic:cypress" builder but the "configFile" option is not specified and a "cypress.json" file could not be found at the project root. The target will be skipped.',
         );
         expect(result[0].hint).toBe(
-          'Make sure to manually migrate the target configuration and any possible associated files. Alternatively, you could revert the migration, ensure the "app1.architect.e2e.options.configFile" option is set to a valid path or that a "cypress.json" file exists at the project root or remove the "app1.architect.e2e" target if it is not valid, and run the migration again.'
+          'Make sure to manually migrate the target configuration and any possible associated files. Alternatively, you could revert the migration, ensure the "app1.architect.e2e.options.configFile" option is set to a valid path or that a "cypress.json" file exists at the project root or remove the "app1.architect.e2e" target if it is not valid, and run the migration again.',
         );
       });
 
@@ -248,10 +248,10 @@ describe('e2e migrator', () => {
 
         expect(result).toHaveLength(1);
         expect(result[0].message).toBe(
-          'The specified Cypress config file "cypress.conf.json" in the "e2e" target could not be found. The target will be skipped.'
+          'The specified Cypress config file "cypress.conf.json" in the "e2e" target could not be found. The target will be skipped.',
         );
         expect(result[0].hint).toBe(
-          'Make sure to manually migrate the target configuration and any possible associated files. Alternatively, you could revert the migration, ensure the "app1.architect.e2e.options.configFile" option is set to a valid path or remove the "app1.architect.e2e" target if it is not valid, and run the migration again.'
+          'Make sure to manually migrate the target configuration and any possible associated files. Alternatively, you could revert the migration, ensure the "app1.architect.e2e.options.configFile" option is set to a valid path or remove the "app1.architect.e2e" target if it is not valid, and run the migration again.',
         );
       });
 
@@ -287,10 +287,10 @@ describe('e2e migrator', () => {
 
         expect(result).toHaveLength(1);
         expect(result[0].message).toBe(
-          'The "e2e" target is using the "@cypress/schematic:cypress" builder but the "configFile" option is not specified and a "cypress.config.{ts,js,mjs,cjs}" file could not be found at the project root. The target will be skipped.'
+          'The "e2e" target is using the "@cypress/schematic:cypress" builder but the "configFile" option is not specified and a "cypress.config.{ts,js,mjs,cjs}" file could not be found at the project root. The target will be skipped.',
         );
         expect(result[0].hint).toBe(
-          'Make sure to manually migrate the target configuration and any possible associated files. Alternatively, you could revert the migration, ensure the "app1.architect.e2e.options.configFile" option is set to a valid path or that a "cypress.config.{ts,js,mjs,cjs}" file exists at the project root or remove the "app1.architect.e2e" target if it is not valid, and run the migration again.'
+          'Make sure to manually migrate the target configuration and any possible associated files. Alternatively, you could revert the migration, ensure the "app1.architect.e2e.options.configFile" option is set to a valid path or that a "cypress.config.{ts,js,mjs,cjs}" file exists at the project root or remove the "app1.architect.e2e" target if it is not valid, and run the migration again.',
         );
       });
 
@@ -330,7 +330,7 @@ describe('e2e migrator', () => {
       await expect(migrator.migrate()).resolves.not.toThrow();
 
       expect(mockedLogger.warn).toHaveBeenCalledWith(
-        'A "tsconfig.json" file could not be found for the e2e project. Skipping updating the tsConfig file.'
+        'A "tsconfig.json" file could not be found for the e2e project. Skipping updating the tsConfig file.',
       );
     });
 
@@ -348,7 +348,7 @@ describe('e2e migrator', () => {
       await expect(migrator.migrate()).resolves.not.toThrow();
 
       expect(mockedLogger.warn).toHaveBeenCalledWith(
-        'A "tsconfig.json" file could not be found for the e2e project. Skipping updating the tsConfig file.'
+        'A "tsconfig.json" file could not be found for the e2e project. Skipping updating the tsConfig file.',
       );
     });
   });
@@ -367,7 +367,7 @@ describe('e2e migrator', () => {
               options: {
                 protractorConfig: joinPathFragments(
                   root,
-                  'e2e/protractor.conf.js'
+                  'e2e/protractor.conf.js',
                 ),
               },
             },
@@ -393,7 +393,7 @@ describe('e2e migrator', () => {
               options: {
                 protractorConfig: joinPathFragments(
                   root,
-                  'e2e/protractor.conf.js'
+                  'e2e/protractor.conf.js',
                 ),
               },
             },
@@ -433,7 +433,7 @@ describe('e2e migrator', () => {
               options: {
                 protractorConfig: joinPathFragments(
                   root,
-                  'e2e/protractor.conf.js'
+                  'e2e/protractor.conf.js',
                 ),
               },
             },
@@ -457,7 +457,7 @@ describe('e2e migrator', () => {
               options: {
                 protractorConfig: joinPathFragments(
                   root,
-                  'e2e/protractor.conf.js'
+                  'e2e/protractor.conf.js',
                 ),
               },
             },
@@ -481,7 +481,7 @@ describe('e2e migrator', () => {
               options: {
                 protractorConfig: joinPathFragments(
                   root,
-                  'e2e/protractor.conf.js'
+                  'e2e/protractor.conf.js',
                 ),
               },
             },
@@ -494,7 +494,7 @@ describe('e2e migrator', () => {
         const appProject = readProjectConfiguration(tree, 'app1-e2e');
         expect(appProject.targets.lint).toBeUndefined();
       });
-    }
+    },
   );
 
   describe.each(['', 'projects/app1'])(
@@ -829,7 +829,7 @@ describe('e2e migrator', () => {
           expect(tree.exists('apps/app1-e2e/cypress.config.ts')).toBe(true);
           const cypressConfig = tree.read(
             'apps/app1-e2e/cypress.config.ts',
-            'utf-8'
+            'utf-8',
           );
 
           expect(cypressConfig).toMatchSnapshot();
@@ -846,7 +846,7 @@ describe('e2e migrator', () => {
               e2e: {
                 baseUrl: 'http://localhost:4200'
               },
-            });`
+            });`,
           );
           const project = addProject('app1', {
             root,
@@ -861,7 +861,7 @@ describe('e2e migrator', () => {
           expect(tree.exists('apps/app1-e2e/cypress.config.ts')).toBe(true);
           const cypressConfig = tree.read(
             'apps/app1-e2e/cypress.config.ts',
-            'utf-8'
+            'utf-8',
           );
           expect(cypressConfig).toMatchSnapshot();
         });
@@ -884,7 +884,7 @@ export default defineConfig({
   component: {
     supportFile: 'cypress/support/component.ts',
   }
-});`
+});`,
           );
           const project = addProject('app1', {
             root,
@@ -899,7 +899,7 @@ export default defineConfig({
           expect(tree.exists('apps/app1-e2e/cypress.config.ts')).toBe(true);
           const cypressConfig = tree.read(
             'apps/app1-e2e/cypress.config.ts',
-            'utf-8'
+            'utf-8',
           );
           expect(cypressConfig).toMatchSnapshot();
         });
@@ -917,7 +917,7 @@ export default defineConfig({
     fixturesFolder: 'cypress/fixtures',
     specPattern: 'cypress/**/*.cy.{js,jsx,ts,tsx}',
   },
-});`
+});`,
           );
           const project = addProject('app1', {
             root,
@@ -932,7 +932,7 @@ export default defineConfig({
           expect(tree.exists('apps/app1-e2e/cypress.config.ts')).toBe(true);
           const cypressConfig = tree.read(
             'apps/app1-e2e/cypress.config.ts',
-            'utf-8'
+            'utf-8',
           );
           expect(cypressConfig).toMatchSnapshot();
         });
@@ -950,7 +950,7 @@ export default defineConfig({
     fixturesFolder: 'cypress/my-fixtures',
     specPattern: 'cypress/e2e/**/*.cy.{js,jsx,ts,tsx}',
   },
-});`
+});`,
           );
           const project = addProject('app1', {
             root,
@@ -965,7 +965,7 @@ export default defineConfig({
           expect(tree.exists('apps/app1-e2e/cypress.config.ts')).toBe(true);
           const cypressConfig = tree.read(
             'apps/app1-e2e/cypress.config.ts',
-            'utf-8'
+            'utf-8',
           );
           expect(cypressConfig).toMatchSnapshot();
         });
@@ -983,7 +983,7 @@ export default defineConfig({
   e2e: {
     baseUrl: 'http://localhost:4200',
   },
-});`
+});`,
           );
           const project = addProject('app1', {
             root,
@@ -998,7 +998,7 @@ export default defineConfig({
           expect(tree.exists('apps/app1-e2e/cypress.config.ts')).toBe(true);
           const cypressConfig = tree.read(
             'apps/app1-e2e/cypress.config.ts',
-            'utf-8'
+            'utf-8',
           );
           expect(cypressConfig).toMatchSnapshot();
         });
@@ -1010,7 +1010,7 @@ export default defineConfig({
             joinPathFragments(root, 'cypress.config.ts'),
             `import { defineConfig } from 'cypress';
 
-export default defineConfig({});`
+export default defineConfig({});`,
           );
           const project = addProject('app1', {
             root,
@@ -1030,7 +1030,7 @@ export default defineConfig({});`
             joinPathFragments(root, 'cypress.config.ts'),
             `import { defineConfig } from 'cypress';
 const e2e = {};
-export default defineConfig({ e2e });`
+export default defineConfig({ e2e });`,
           );
           const project = addProject('app1', {
             root,
@@ -1058,6 +1058,6 @@ export default defineConfig({ e2e });`
           await expect(migrator.migrate()).resolves.not.toThrow();
         });
       });
-    }
+    },
   );
 });

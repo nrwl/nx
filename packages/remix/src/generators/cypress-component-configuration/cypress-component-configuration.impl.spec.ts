@@ -27,7 +27,7 @@ describe('CypressComponentConfiguration', () => {
     // ASSERT
     const project = readProjectConfiguration(tree, 'cypress-test');
     expect(
-      tree.read(joinPathFragments(project.root, 'cypress.config.ts'), 'utf-8')
+      tree.read(joinPathFragments(project.root, 'cypress.config.ts'), 'utf-8'),
     ).toMatchInlineSnapshot(`
       "import { defineConfig } from 'cypress';
       import { nxComponentTestingPreset } from '@nx/remix/plugins/component-testing';
@@ -49,7 +49,7 @@ describe('CypressComponentConfiguration', () => {
       }
     `);
     expect(
-      tree.exists(joinPathFragments(project.root, 'cypress'))
+      tree.exists(joinPathFragments(project.root, 'cypress')),
     ).toBeTruthy();
   });
 });

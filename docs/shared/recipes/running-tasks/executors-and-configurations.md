@@ -57,9 +57,9 @@ If defining a new target that needs to run a single shell command, there is a sh
   "generators": {},
   "targets": {
     "echo": {
-      "command": "echo 'hello world'"
-    }
-  }
+      "command": "echo 'hello world'",
+    },
+  },
 }
 ```
 

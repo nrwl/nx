@@ -9,7 +9,7 @@ import {
 
 export default async function buildStorybookExecutor(
   options: CLIOptions,
-  context: ExecutorContext
+  context: ExecutorContext,
 ) {
   storybookConfigExistsCheck(options.configDir, context.projectName);
   const storybook7 = storybookMajorVersion() >= 7;

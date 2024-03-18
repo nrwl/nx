@@ -36,7 +36,7 @@ describe.each([
 
     const project = readProjectConfiguration(tree, 'app1');
     expect(
-      project.targets.server.configurations.development.buildOptimizer
+      project.targets.server.configurations.development.buildOptimizer,
     ).toBe(false);
   });
 
@@ -80,7 +80,7 @@ describe.each([
 
     const project = readProjectConfiguration(tree, 'app1');
     expect(
-      project.targets.server.configurations.production.buildOptimizer
+      project.targets.server.configurations.production.buildOptimizer,
     ).toBe(true);
   });
 
@@ -106,7 +106,7 @@ describe.each([
 
     const project = readProjectConfiguration(tree, 'app1');
     expect(
-      project.targets.server.configurations.development.buildOptimizer
+      project.targets.server.configurations.development.buildOptimizer,
     ).toBe(true);
   });
 });

@@ -38,7 +38,7 @@ describe('interpolateEnvironmentVariablesToIndex()', () => {
 <div>Deploy Url: some-other-url.com</div>
 `;
     expect(
-      interpolateEnvironmentVariablesToIndex(content, 'some-other-url.com')
+      interpolateEnvironmentVariablesToIndex(content, 'some-other-url.com'),
     ).toBe(expected);
   });
 

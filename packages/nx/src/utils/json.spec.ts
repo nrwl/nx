@@ -56,8 +56,8 @@ describe('parseJson', () => {
       },
       "array": [1, 2, 3]
   }`,
-        { disallowComments: true }
-      )
+        { disallowComments: true },
+      ),
     ).toThrowErrorMatchingInlineSnapshot(`
       "InvalidCommentToken in JSON at 2:7
       [0m [90m 1 | [39m{[0m
@@ -84,8 +84,8 @@ describe('parseJson', () => {
       },
       "array": [1, 2, 3]
   }`,
-        { disallowComments: true, expectComments: true }
-      )
+        { disallowComments: true, expectComments: true },
+      ),
     ).toThrowErrorMatchingInlineSnapshot(`
       "InvalidCommentToken in JSON at 2:7
       [0m [90m 1 | [39m{[0m
@@ -108,8 +108,8 @@ describe('parseJson', () => {
           "more": 456,
      },
       "array": [1, 2, 3,]
-  }`
-      )
+  }`,
+      ),
     ).not.toThrow();
   });
 
@@ -124,8 +124,8 @@ describe('parseJson', () => {
      },
       "array": [1, 2, 3,]
   }`,
-        { allowTrailingComma: false }
-      )
+        { allowTrailingComma: false },
+      ),
     ).toThrowErrorMatchingInlineSnapshot(`
       "PropertyNameExpected in JSON at 6:6
       [0m [90m 4 | [39m          "test": 123,[0m
@@ -147,8 +147,8 @@ describe('parseJson', () => {
       },
       "array": [1, 2, 3,]
   }`,
-        { allowTrailingComma: true }
-      )
+        { allowTrailingComma: true },
+      ),
     ).toEqual({
       nested: { test: 123 },
       array: [1, 2, 3],
@@ -164,8 +164,8 @@ describe('parseJson', () => {
       /* a comment */
       "foo": "bar"
     }`,
-        { expectComments: true }
-      )
+        { expectComments: true },
+      ),
     ).toEqual({ foo: 'bar' });
 
     expect(JSON.parse).not.toHaveBeenCalled();

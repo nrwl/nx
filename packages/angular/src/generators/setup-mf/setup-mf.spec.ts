@@ -47,10 +47,10 @@ describe('Init MF', () => {
 
       const mfConfigContents = tree.read(
         `${app}/module-federation.config.js`,
-        'utf-8'
+        'utf-8',
       );
       expect(mfConfigContents).toMatchSnapshot();
-    }
+    },
   );
 
   test.each([
@@ -78,10 +78,10 @@ describe('Init MF', () => {
 
       const mfConfigContents = tree.read(
         `${app}/module-federation.config.ts`,
-        'utf-8'
+        'utf-8',
       );
       expect(mfConfigContents).toMatchSnapshot();
-    }
+    },
   );
 
   test.each([
@@ -107,7 +107,7 @@ describe('Init MF', () => {
 
       expect(bootstrapContents).toEqual(mainContents);
       expect(updatedMainContents).not.toEqual(mainContents);
-    }
+    },
   );
 
   test.each([
@@ -131,10 +131,10 @@ describe('Init MF', () => {
       const updatedMainContents = tree.read(`${app}/src/main.ts`, 'utf-8');
 
       expect(updatedMainContents).toEqual(
-        `import('./bootstrap').catch(err => console.error(err));`
+        `import('./bootstrap').catch(err => console.error(err));`,
       );
       expect(updatedMainContents).not.toEqual(mainContents);
-    }
+    },
   );
 
   test.each([
@@ -158,13 +158,13 @@ describe('Init MF', () => {
       expect(serve.executor).toEqual(
         type === 'host'
           ? '@nx/angular:module-federation-dev-server'
-          : '@nx/angular:dev-server'
+          : '@nx/angular:dev-server',
       );
       expect(build.executor).toEqual('@nx/angular:webpack-browser');
       expect(build.options.customWebpackConfig.path).toEqual(
-        `${app}/webpack.config.js`
+        `${app}/webpack.config.js`,
       );
-    }
+    },
   );
 
   test.each([
@@ -188,13 +188,13 @@ describe('Init MF', () => {
       expect(serve.executor).toEqual(
         type === 'host'
           ? '@nx/angular:module-federation-dev-server'
-          : '@nx/angular:dev-server'
+          : '@nx/angular:dev-server',
       );
       expect(build.executor).toEqual('@nx/angular:webpack-browser');
       expect(build.options.customWebpackConfig.path).toEqual(
-        `${app}/webpack.config.ts`
+        `${app}/webpack.config.ts`,
       );
-    }
+    },
   );
 
   it('should not generate a webpack prod file for dynamic host', async () => {
@@ -224,10 +224,10 @@ describe('Init MF', () => {
 
     // ASSERT
     expect(
-      tree.read('remote1/src/app/remote-entry/entry.component.ts', 'utf-8')
+      tree.read('remote1/src/app/remote-entry/entry.component.ts', 'utf-8'),
     ).toMatchSnapshot();
     expect(
-      tree.read('remote1/src/app/remote-entry/entry.module.ts', 'utf-8')
+      tree.read('remote1/src/app/remote-entry/entry.module.ts', 'utf-8'),
     ).toMatchSnapshot();
   });
 
@@ -242,7 +242,7 @@ describe('Init MF', () => {
 
     // ASSERT
     expect(
-      tree.read('remote1/src/app/remote-entry/entry.component.ts', 'utf-8')
+      tree.read('remote1/src/app/remote-entry/entry.component.ts', 'utf-8'),
     ).toMatchSnapshot();
   });
 
@@ -260,7 +260,7 @@ describe('Init MF', () => {
     // ASSERT
     const mfConfigContents = tree.read(
       `app1/module-federation.config.js`,
-      'utf-8'
+      'utf-8',
     );
 
     expect(mfConfigContents).toContain(`'remote1'`);
@@ -280,7 +280,7 @@ describe('Init MF', () => {
     // ASSERT
     const mfConfigContents = tree.read(
       `app1/module-federation.config.ts`,
-      'utf-8'
+      'utf-8',
     );
 
     expect(mfConfigContents).toContain(`'remote1'`);
@@ -484,10 +484,10 @@ describe('Init MF', () => {
     // ASSERT
     const cypressCommands = tree.read(
       'test-app-e2e/src/support/e2e.ts',
-      'utf-8'
+      'utf-8',
     );
     expect(cypressCommands).toContain(
-      "Cannot use 'import.meta' outside a module"
+      "Cannot use 'import.meta' outside a module",
     );
   });
 
@@ -506,10 +506,10 @@ describe('Init MF', () => {
 
       // ASSERT
       expect(tree.read('app1/module-federation.config.js', 'utf-8')).toContain(
-        'remotes: []'
+        'remotes: []',
       );
       expect(
-        tree.exists('app1/src/assets/module-federation.manifest.json')
+        tree.exists('app1/src/assets/module-federation.manifest.json'),
       ).toBeTruthy();
       expect(tree.read('app1/src/main.ts', 'utf-8')).toMatchSnapshot();
     });
@@ -528,10 +528,10 @@ describe('Init MF', () => {
 
       // ASSERT
       expect(tree.read('app1/module-federation.config.ts', 'utf-8')).toContain(
-        'remotes: []'
+        'remotes: []',
       );
       expect(
-        tree.exists('app1/src/assets/module-federation.manifest.json')
+        tree.exists('app1/src/assets/module-federation.manifest.json'),
       ).toBeTruthy();
       expect(tree.read('app1/src/main.ts', 'utf-8')).toMatchSnapshot();
     });
@@ -563,10 +563,10 @@ describe('Init MF', () => {
 
     // ASSERT
     expect(tree.read('app1/module-federation.config.js', 'utf-8')).toContain(
-      'remotes: []'
+      'remotes: []',
     );
     expect(
-      readJson(tree, 'app1/src/assets/module-federation.manifest.json')
+      readJson(tree, 'app1/src/assets/module-federation.manifest.json'),
     ).toEqual({
       remote1: 'http://localhost:4201',
     });
@@ -599,10 +599,10 @@ describe('Init MF', () => {
 
     // ASSERT
     expect(tree.read('app1/module-federation.config.ts', 'utf-8')).toContain(
-      'remotes: []'
+      'remotes: []',
     );
     expect(
-      readJson(tree, 'app1/src/assets/module-federation.manifest.json')
+      readJson(tree, 'app1/src/assets/module-federation.manifest.json'),
     ).toEqual({
       remote1: 'http://localhost:4201',
     });

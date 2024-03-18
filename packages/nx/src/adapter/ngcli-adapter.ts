@@ -72,7 +72,7 @@ export async function createBuilderContext(
     description: string;
     optionSchema: any;
   },
-  context: ExecutorContext
+  context: ExecutorContext,
 ) {
   require('./compat');
   const fsHost = new NxScopedHostForBuilders(context.root);
@@ -81,12 +81,12 @@ export async function createBuilderContext(
   const { workspaces } = require('@angular-devkit/core');
   const { workspace } = await workspaces.readWorkspace(
     'angular.json',
-    workspaces.createWorkspaceHost(fsHost)
+    workspaces.createWorkspaceHost(fsHost),
   );
   const architectHost = await getWrappedWorkspaceNodeModulesArchitectHost(
     workspace,
     context.root,
-    context.projectsConfigurations.projects
+    context.projectsConfigurations.projects,
   );
 
   const registry = new schema.CoreSchemaRegistry();
@@ -108,24 +108,24 @@ export async function createBuilderContext(
       architect['_scheduler'].schedule('..validateOptions', [
         builderName,
         options,
-      ]).output
+      ]).output,
     );
 
   const getProjectMetadata = (target: Target | string) =>
     toPromise(
-      architect['_scheduler'].schedule('..getProjectMetadata', target).output
+      architect['_scheduler'].schedule('..getProjectMetadata', target).output,
     );
 
   const getBuilderNameForTarget = (target: Target | string) => {
     if (typeof target === 'string') {
       return Promise.resolve(
         context.projectGraph.nodes[context.projectName].data.targets[target]
-          .executor
+          .executor,
       );
     }
     return Promise.resolve(
       context.projectGraph.nodes[target.project].data.targets[target.target]
-        .executor
+        .executor,
     );
   };
 
@@ -194,7 +194,7 @@ export async function scheduleTarget(
     runOptions: any;
     projects: Record<string, ProjectConfiguration>;
   },
-  verbose: boolean
+  verbose: boolean,
 ): Promise<Observable<import('@angular-devkit/architect').BuilderOutput>> {
   const { Architect } = require('@angular-devkit/architect');
 
@@ -202,7 +202,7 @@ export async function scheduleTarget(
   const fsHost = new NxScopedHostForBuilders(root);
   const { workspace } = await workspaces.readWorkspace(
     'angular.json',
-    workspaces.createWorkspaceHost(fsHost)
+    workspaces.createWorkspaceHost(fsHost),
   );
 
   const registry = new schema.CoreSchemaRegistry();
@@ -215,7 +215,7 @@ export async function scheduleTarget(
   const architectHost = await getWrappedWorkspaceNodeModulesArchitectHost(
     workspace,
     root,
-    opts.projects
+    opts.projects,
   );
   const architect: Architect = new Architect(architectHost, registry);
   const run = await architect.scheduleTarget(
@@ -225,7 +225,7 @@ export async function scheduleTarget(
       configuration: opts.configuration,
     },
     opts.runOptions,
-    { logger }
+    { logger },
   );
 
   let lastOutputError: string;
@@ -236,14 +236,14 @@ export async function scheduleTarget(
       (error) => {}, // do nothing, this could be an intentional error
       () => {
         lastOutputError ? logger.error(lastOutputError) : 0;
-      }
-    )
+      },
+    ),
   );
 }
 
 function createNodeModulesEngineHost(
   resolvePaths: string[],
-  projects: Record<string, ProjectConfiguration>
+  projects: Record<string, ProjectConfiguration>,
 ): import('@angular-devkit/schematics/tools').NodeModulesEngineHost {
   const NodeModulesEngineHost = require('@angular-devkit/schematics/tools')
     .NodeModulesEngineHost as typeof import('@angular-devkit/schematics/tools').NodeModulesEngineHost;
@@ -269,12 +269,12 @@ function createNodeModulesEngineHost(
 
         if (!schematics && !generators) {
           throw new Error(
-            `The "${name}" package does not support Nx generators or Angular Devkit schematics.`
+            `The "${name}" package does not support Nx generators or Angular Devkit schematics.`,
           );
         }
 
         collectionFilePath = require.resolve(
-          join(dirname(packageJsonPath), schematics ?? generators)
+          join(dirname(packageJsonPath), schematics ?? generators),
         );
       }
 
@@ -295,7 +295,7 @@ function createWorkflow(
   fsHost: virtualFs.Host<Stats>,
   root: string,
   opts: any,
-  projects: Record<string, ProjectConfiguration>
+  projects: Record<string, ProjectConfiguration>,
 ): import('@angular-devkit/schematics/tools').NodeWorkflow {
   const NodeWorkflow: typeof import('@angular-devkit/schematics/tools').NodeWorkflow =
     require('@angular-devkit/schematics/tools').NodeWorkflow;
@@ -305,7 +305,7 @@ function createWorkflow(
     packageManager: detectPackageManager(),
     root: normalize(root),
     registry: new schema.CoreSchemaRegistry(
-      require('@angular-devkit/schematics').formats.standardFormats
+      require('@angular-devkit/schematics').formats.standardFormats,
     ),
     resolvePaths: [process.cwd(), root],
     engineHostCreator: (options) =>
@@ -314,8 +314,8 @@ function createWorkflow(
   workflow.registry.addPostTransform(schema.transforms.addUndefinedDefaults);
   workflow.engineHost.registerOptionsTransform(
     require('@angular-devkit/schematics/tools').validateOptionsWithSchema(
-      workflow.registry
-    )
+      workflow.registry,
+    ),
   );
   if (opts.interactive) {
     workflow.registry.usePromptProvider(createPromptProvider());
@@ -335,7 +335,7 @@ async function createRecorder(
     loggingQueue: string[];
     error: boolean;
   },
-  logger: logging.Logger
+  logger: logging.Logger,
 ) {
   return (event: import('@angular-devkit/schematics').DryRunEvent) => {
     let eventPath = event.path.startsWith('/')
@@ -349,21 +349,21 @@ async function createRecorder(
           event.description == 'alreadyExist'
             ? 'already exists'
             : 'does not exist.'
-        }.`
+        }.`,
       );
     } else if (event.kind === 'update') {
       record.loggingQueue.push(
-        tags.oneLine`${chalk.white('UPDATE')} ${eventPath}`
+        tags.oneLine`${chalk.white('UPDATE')} ${eventPath}`,
       );
     } else if (event.kind === 'create') {
       record.loggingQueue.push(
-        tags.oneLine`${chalk.green('CREATE')} ${eventPath}`
+        tags.oneLine`${chalk.green('CREATE')} ${eventPath}`,
       );
     } else if (event.kind === 'delete') {
       record.loggingQueue.push(`${chalk.yellow('DELETE')} ${eventPath}`);
     } else if (event.kind === 'rename') {
       record.loggingQueue.push(
-        `${chalk.blue('RENAME')} ${eventPath} => ${event.to}`
+        `${chalk.blue('RENAME')} ${eventPath} => ${event.to}`,
       );
     }
   };
@@ -380,11 +380,11 @@ async function runSchematic(
     import('@angular-devkit/schematics/tools').FileSystemSchematicDescription
   >,
   printDryRunMessage = true,
-  recorder: any = null
+  recorder: any = null,
 ): Promise<{ status: number; loggingQueue: string[] }> {
   const record = { loggingQueue: [] as string[], error: false };
   workflow.reporter.subscribe(
-    recorder || (await createRecorder(host, record, logger))
+    recorder || (await createRecorder(host, record, logger)),
   );
 
   try {
@@ -423,7 +423,7 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
       isAngularPluginInstalled()
     ) {
       return this.readMergedWorkspaceConfiguration().pipe(
-        map((r) => Buffer.from(JSON.stringify(toOldFormat(r))))
+        map((r) => Buffer.from(JSON.stringify(toOldFormat(r)))),
       );
     } else {
       return super.read(path);
@@ -434,7 +434,7 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
     return zip(
       from(createProjectGraphAsync()),
       this.readExistingAngularJson(),
-      this.readJson<NxJsonConfiguration>('nx.json')
+      this.readJson<NxJsonConfiguration>('nx.json'),
     ).pipe(
       concatMap(([graph, angularJson, nxJson]) => {
         const workspaceConfig = (angularJson || { projects: {} }) as any;
@@ -448,9 +448,9 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
               zip(
                 of(projectName),
                 this.readJson<ProjectConfiguration>(
-                  join(graph.nodes[projectName].data.root, 'project.json')
-                )
-              )
+                  join(graph.nodes[projectName].data.root, 'project.json'),
+                ),
+              ),
             );
           }
         }
@@ -466,14 +466,14 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
               });
 
             return workspaceConfig;
-          })
+          }),
         );
       }),
       catchError((err) => {
         console.error('Unable to read angular.json');
         console.error(err);
         process.exit(1);
-      })
+      }),
     );
   }
 
@@ -484,7 +484,7 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
 
       return zip(
         this.readMergedWorkspaceConfiguration(),
-        this.readExistingAngularJson()
+        this.readExistingAngularJson(),
       ).pipe(
         concatMap((arg) => {
           const existingConfig = arg[0] as any;
@@ -508,31 +508,33 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
                       const updatedContent = this.mergeProjectConfiguration(
                         existingConfig.projects[projectName],
                         projects[projectName],
-                        projectName
+                        projectName,
                       );
                       if (updatedContent) {
                         delete updatedContent.root;
                         allObservables.push(
                           super.write(
                             path as any,
-                            Buffer.from(JSON.stringify(updatedContent, null, 2))
-                          )
+                            Buffer.from(
+                              JSON.stringify(updatedContent, null, 2),
+                            ),
+                          ),
                         );
                       }
                     } else {
                       allObservables.push(
-                        super.write(path as any, Buffer.from(content))
+                        super.write(path as any, Buffer.from(content)),
                       );
                     }
                   },
                 } as any,
                 projectName,
-                projects[projectName]
+                projects[projectName],
               );
             }
           });
           return concat(...allObservables);
-        })
+        }),
       ) as any;
     } else {
       return super.write(path, content);
@@ -558,13 +560,13 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
   mergeProjectConfiguration(
     existing: AngularProjectConfiguration,
     updated: AngularProjectConfiguration,
-    projectName: string
+    projectName: string,
   ) {
     const res: AngularProjectConfiguration = { ...existing };
     let modified = false;
 
     function updatePropertyIfDifferent<
-      T extends Exclude<keyof AngularProjectConfiguration, 'namedInputs'>
+      T extends Exclude<keyof AngularProjectConfiguration, 'namedInputs'>,
     >(property: T): void {
       if (typeof res[property] === 'string') {
         if (res[property] !== updated[property]) {
@@ -607,8 +609,8 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
             ? super
                 .read(path as any)
                 .pipe(map((r) => parseJson(arrayBufferToString(r))))
-            : of(null)
-        )
+            : of(null),
+        ),
       );
   }
 }
@@ -622,7 +624,7 @@ export class NxScopedHostForBuilders extends NxScopedHost {
     return zip(
       from(createProjectGraphAsync()),
       this.readExistingAngularJson(),
-      this.readJson<NxJsonConfiguration>('nx.json')
+      this.readJson<NxJsonConfiguration>('nx.json'),
     ).pipe(
       map(([graph, angularJson, nxJson]) => {
         const workspaceConfig = (angularJson || { projects: {} }) as any;
@@ -641,7 +643,7 @@ export class NxScopedHostForBuilders extends NxScopedHost {
         console.error('Unable to read angular.json');
         console.error(err);
         process.exit(1);
-      })
+      }),
     );
   }
 }
@@ -654,7 +656,7 @@ export function arrayBufferToString(buffer: any) {
   for (i = 0; i < array.length / chunkSize; i++) {
     result += String.fromCharCode.apply(
       null,
-      array.subarray(i * chunkSize, (i + 1) * chunkSize)
+      array.subarray(i * chunkSize, (i + 1) * chunkSize),
     );
   }
   result += String.fromCharCode.apply(null, array.subarray(i * chunkSize));
@@ -666,7 +668,10 @@ export function arrayBufferToString(buffer: any) {
  * the project configuration files.
  */
 export class NxScopeHostUsedForWrappedSchematics extends NxScopedHost {
-  constructor(root: string, private readonly host: Tree) {
+  constructor(
+    root: string,
+    private readonly host: Tree,
+  ) {
     super(root);
   }
 
@@ -688,12 +693,12 @@ export class NxScopeHostUsedForWrappedSchematics extends NxScopedHost {
                   ...projectJsonConfig.projects,
                   ...angularJson.projects,
                 },
-              })
+              }),
             );
           } else {
             return Buffer.from(JSON.stringify(projectJsonConfig));
           }
-        })
+        }),
       );
     } else {
       const match = findMatchingFileChange(this.host, path);
@@ -743,7 +748,7 @@ export class NxScopeHostUsedForWrappedSchematics extends NxScopedHost {
 
 function findMatchingFileChange(host: Tree, path: Path) {
   const targetPath = normalize(
-    path.startsWith('/') ? path.substring(1) : path.toString()
+    path.startsWith('/') ? path.substring(1) : path.toString(),
   );
   return host
     .listChanges()
@@ -754,7 +759,7 @@ export async function generate(
   root: string,
   opts: GenerateOptions,
   projects: Record<string, ProjectConfiguration>,
-  verbose: boolean
+  verbose: boolean,
 ) {
   const logger = getLogger(verbose);
   const fsHost = new NxScopeHostUsedForWrappedSchematics(
@@ -762,8 +767,8 @@ export async function generate(
     new FsTree(
       root,
       verbose,
-      `ng-cli generator: ${opts.collectionName}:${opts.generatorName}`
-    )
+      `ng-cli generator: ${opts.collectionName}:${opts.generatorName}`,
+    ),
   );
   const workflow = createWorkflow(fsHost, root, opts, projects);
   const collection = getCollection(workflow, opts.collectionName);
@@ -775,7 +780,7 @@ export async function generate(
       workflow,
       logger as any,
       { ...opts, generatorName: schematic.description.name },
-      schematic
+      schematic,
     )
   ).status;
 }
@@ -848,7 +853,7 @@ export async function runMigration(
   packageName: string,
   migrationName: string,
   projects: Record<string, ProjectConfiguration>,
-  isVerbose: boolean
+  isVerbose: boolean,
 ) {
   const logger = getLogger(isVerbose);
   const fsHost = new NxScopeHostUsedForWrappedSchematics(
@@ -856,8 +861,8 @@ export async function runMigration(
     new FsTree(
       root,
       isVerbose,
-      `ng-cli migration: ${packageName}:${migrationName}`
-    )
+      `ng-cli migration: ${packageName}:${migrationName}`,
+    ),
   );
   const workflow = createWorkflow(fsHost, root, {}, projects);
   const collection = resolveMigrationsCollection(packageName);
@@ -893,7 +898,7 @@ function resolveMigrationsCollection(name: string): string {
   } else {
     const { path: packageJsonPath, packageJson } = readModulePackageJson(
       name,
-      getNxRequirePaths(process.cwd())
+      getNxRequirePaths(process.cwd()),
     );
 
     let pkgJsonSchematics =
@@ -946,7 +951,7 @@ let mockedSchematics = null;
 export function mockSchematicsForTesting(schematics: {
   [name: string]: (
     host: Tree,
-    generatorOptions: { [k: string]: any }
+    generatorOptions: { [k: string]: any },
   ) => Promise<void>;
 }) {
   mockedSchematics = schematics;
@@ -954,7 +959,7 @@ export function mockSchematicsForTesting(schematics: {
 
 export function wrapAngularDevkitSchematic(
   collectionName: string,
-  generatorName: string
+  generatorName: string,
 ) {
   // This is idempotent, if it happens to get called
   // multiple times its no big deal. It ensures that some
@@ -977,7 +982,7 @@ export function wrapAngularDevkitSchematic(
     ) {
       return await mockedSchematics[`${collectionName}:${generatorName}`](
         host,
-        generatorOptions
+        generatorOptions,
       );
     }
 
@@ -992,7 +997,7 @@ export function wrapAngularDevkitSchematic(
     emptyLogger.createChild = () => emptyLogger;
 
     const recorder = (
-      event: import('@angular-devkit/schematics').DryRunEvent
+      event: import('@angular-devkit/schematics').DryRunEvent,
     ) => {
       let eventPath = event.path.startsWith('/')
         ? event.path.slice(1)
@@ -1004,7 +1009,7 @@ export function wrapAngularDevkitSchematic(
         if (eventPath === 'angular.json' && isAngularPluginInstalled()) {
           saveProjectsConfigurationsInWrappedSchematic(
             host,
-            event.content.toString()
+            event.content.toString(),
           );
         } else {
           host.write(eventPath, event.content);
@@ -1056,7 +1061,7 @@ export function wrapAngularDevkitSchematic(
       options,
       schematic,
       false,
-      recorder
+      recorder,
     );
 
     if (res.status !== 0) {
@@ -1092,7 +1097,7 @@ export const getLogger = (isVerbose = false): logging.Logger => {
 
 function saveProjectsConfigurationsInWrappedSchematic(
   host: Tree,
-  content: string
+  content: string,
 ) {
   const projects = toNewFormat(parseJson(content)).projects;
   const existingProjects = getProjects(host);
@@ -1128,7 +1133,7 @@ function saveProjectsConfigurationsInWrappedSchematic(
   if (Object.keys(newAngularJson.projects).length > 0) {
     host.write(
       'angular.json',
-      JSON.stringify(toOldFormat(newAngularJson), null, 2)
+      JSON.stringify(toOldFormat(newAngularJson), null, 2),
     );
   }
 }
@@ -1136,7 +1141,7 @@ function saveProjectsConfigurationsInWrappedSchematic(
 async function getWrappedWorkspaceNodeModulesArchitectHost(
   workspace: workspaces.WorkspaceDefinition,
   root: string,
-  projects: Record<string, ProjectConfiguration>
+  projects: Record<string, ProjectConfiguration>,
 ) {
   const {
     WorkspaceNodeModulesArchitectHost: AngularWorkspaceNodeModulesArchitectHost,
@@ -1146,7 +1151,7 @@ async function getWrappedWorkspaceNodeModulesArchitectHost(
     constructor(
       private workspace,
       private root: string,
-      private projects: Record<string, ProjectConfiguration>
+      private projects: Record<string, ProjectConfiguration>,
     ) {
       super(workspace, root);
     }
@@ -1156,7 +1161,7 @@ async function getWrappedWorkspaceNodeModulesArchitectHost(
 
       const { executorsFilePath, executorConfig } = this.readExecutorsJson(
         packageName,
-        builderName
+        builderName,
       );
       const builderInfo = this.readExecutor(packageName, builderName);
       const { builders, executors } =
@@ -1170,7 +1175,7 @@ async function getWrappedWorkspaceNodeModulesArchitectHost(
         optionSchema: builderInfo.schema,
         import: resolveImplementation(
           executorConfig.implementation,
-          dirname(executorsFilePath)
+          dirname(executorsFilePath),
         ),
       };
     }
@@ -1180,18 +1185,18 @@ async function getWrappedWorkspaceNodeModulesArchitectHost(
         readPluginPackageJson(
           nodeModule,
           this.projects,
-          this.root ? [this.root, __dirname] : [__dirname]
+          this.root ? [this.root, __dirname] : [__dirname],
         );
       const executorsFile = packageJson.executors ?? packageJson.builders;
 
       if (!executorsFile) {
         throw new Error(
-          `The "${nodeModule}" package does not support Nx executors or Angular Devkit Builders.`
+          `The "${nodeModule}" package does not support Nx executors or Angular Devkit Builders.`,
         );
       }
 
       const executorsFilePath = require.resolve(
-        join(dirname(packageJsonPath), executorsFile)
+        join(dirname(packageJsonPath), executorsFile),
       );
       const executorsJson = readJsonFile<ExecutorsJson>(executorsFilePath);
       const executorConfig: {
@@ -1203,7 +1208,7 @@ async function getWrappedWorkspaceNodeModulesArchitectHost(
         executorsJson.builders?.[builder] ?? executorsJson.executors?.[builder];
       if (!executorConfig) {
         throw new Error(
-          `Cannot find builder '${builder}' in ${executorsFilePath}.`
+          `Cannot find builder '${builder}' in ${executorsFilePath}.`,
         );
       }
       return { executorsFilePath, executorConfig, isNgCompat: true };
@@ -1211,7 +1216,7 @@ async function getWrappedWorkspaceNodeModulesArchitectHost(
 
     private readExecutor(
       nodeModule: string,
-      executor: string
+      executor: string,
     ): ExecutorConfig & { isNgCompat: boolean } {
       try {
         const { executorsFilePath, executorConfig, isNgCompat } =
@@ -1222,20 +1227,20 @@ async function getWrappedWorkspaceNodeModulesArchitectHost(
 
         const implementationFactory = this.getImplementationFactory<Executor>(
           executorConfig.implementation,
-          executorsDir
+          executorsDir,
         );
 
         const batchImplementationFactory = executorConfig.batchImplementation
           ? this.getImplementationFactory<TaskGraphExecutor>(
               executorConfig.batchImplementation,
-              executorsDir
+              executorsDir,
             )
           : null;
 
         const hasherFactory = executorConfig.hasher
           ? this.getImplementationFactory<CustomHasher>(
               executorConfig.hasher,
-              executorsDir
+              executorsDir,
             )
           : null;
 
@@ -1248,14 +1253,14 @@ async function getWrappedWorkspaceNodeModulesArchitectHost(
         };
       } catch (e) {
         throw new Error(
-          `Unable to resolve ${nodeModule}:${executor}.\n${e.message}`
+          `Unable to resolve ${nodeModule}:${executor}.\n${e.message}`,
         );
       }
     }
 
     private getImplementationFactory<T>(
       implementation: string,
-      executorsDir: string
+      executorsDir: string,
     ): () => T {
       return getImplementationFactory(implementation, executorsDir);
     }
@@ -1264,6 +1269,6 @@ async function getWrappedWorkspaceNodeModulesArchitectHost(
   return new WrappedWorkspaceNodeModulesArchitectHost(
     workspace,
     root,
-    projects
+    projects,
   );
 }

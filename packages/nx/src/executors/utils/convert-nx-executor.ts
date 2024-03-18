@@ -22,7 +22,7 @@ export function convertNxExecutor(executor: Executor) {
         projects: (
           await retrieveProjectConfigurations(
             builderContext.workspaceRoot,
-            nxJsonConfiguration
+            nxJsonConfiguration,
           )
         ).projects,
       };
@@ -48,7 +48,7 @@ export function convertNxExecutor(executor: Executor) {
 }
 
 function toObservable<T extends { success: boolean }>(
-  promiseOrAsyncIterator: Promise<T | AsyncIterableIterator<T>>
+  promiseOrAsyncIterator: Promise<T | AsyncIterableIterator<T>>,
 ): Observable<T> {
   return new (require('rxjs') as typeof import('rxjs')).Observable(
     (subscriber) => {
@@ -89,6 +89,6 @@ function toObservable<T extends { success: boolean }>(
         .catch((err) => {
           subscriber.error(err);
         });
-    }
+    },
   );
 }

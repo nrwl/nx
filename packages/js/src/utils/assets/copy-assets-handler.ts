@@ -87,7 +87,7 @@ export class CopyAssetsHandler {
         input = f.input;
         output = path.join(
           path.relative(opts.rootDir, opts.outputDir),
-          f.output
+          f.output,
         );
         if (f.ignore) ignore = f.ignore.map((ig) => path.join(f.input, ig));
       }
@@ -113,7 +113,7 @@ export class CopyAssetsHandler {
         });
 
         this.callback(this.filesToEvent(files, ag));
-      })
+      }),
     );
   }
 
@@ -146,7 +146,7 @@ export class CopyAssetsHandler {
         } else {
           this.processWatchEvents(data.changedFiles);
         }
-      }
+      },
     );
 
     return () => unregisterFileWatcher();

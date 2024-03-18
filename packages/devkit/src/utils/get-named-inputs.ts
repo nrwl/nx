@@ -16,7 +16,7 @@ const { readJsonFile } = requireNx();
  */
 export function getNamedInputs(
   directory: string,
-  context: CreateNodesContext
+  context: CreateNodesContext,
 ): { [inputName: string]: (string | InputDefinition)[] } {
   const projectJsonPath = join(directory, 'project.json');
   const projectJson: ProjectConfiguration = existsSync(projectJsonPath)

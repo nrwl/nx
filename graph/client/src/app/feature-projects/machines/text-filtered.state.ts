@@ -47,7 +47,7 @@ export const textFilteredStateConfig: ProjectGraphStateNodeConfig = {
           }),
           {
             to: (context) => context.graphActor,
-          }
+          },
         ),
         'notifyGraphFilterProjectsByText',
       ],

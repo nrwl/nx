@@ -21,7 +21,7 @@ const TS_QUERY_EXPORT_CONFIG_PREFIX = `:matches(ExportAssignment, ${TS_QUERY_COM
 export async function addDefaultE2EConfig(
   cyConfigContents: string,
   options: NxCypressE2EPresetOptions,
-  baseUrl: string
+  baseUrl: string,
 ) {
   if (!cyConfigContents) {
     throw new Error('The passed in cypress config file is empty!');
@@ -33,7 +33,7 @@ export async function addDefaultE2EConfig(
     0;
   const testingTypeConfig = tsquery.query<PropertyAssignment>(
     cyConfigContents,
-    `${TS_QUERY_EXPORT_CONFIG_PREFIX} PropertyAssignment:has(Identifier[name="e2e"])`
+    `${TS_QUERY_EXPORT_CONFIG_PREFIX} PropertyAssignment:has(Identifier[name="e2e"])`,
   );
 
   let updatedConfigContents = cyConfigContents;
@@ -55,7 +55,7 @@ export async function addDefaultE2EConfig(
         return `{
   e2e: { ...${configValue}${baseUrlContents} }
 }`;
-      }
+      },
     );
 
     return isCommonJS
@@ -76,7 +76,7 @@ export async function addDefaultE2EConfig(
  **/
 export async function addDefaultCTConfig(
   cyConfigContents: string,
-  options: NxComponentTestingOptions = {}
+  options: NxComponentTestingOptions = {},
 ) {
   if (!cyConfigContents) {
     throw new Error('The passed in cypress config file is empty!');
@@ -85,7 +85,7 @@ export async function addDefaultCTConfig(
 
   const testingTypeConfig = tsquery.query<PropertyAssignment>(
     cyConfigContents,
-    `${TS_QUERY_EXPORT_CONFIG_PREFIX} PropertyAssignment:has(Identifier[name="component"])`
+    `${TS_QUERY_EXPORT_CONFIG_PREFIX} PropertyAssignment:has(Identifier[name="component"])`,
   );
 
   let updatedConfigContents = cyConfigContents;
@@ -100,7 +100,7 @@ export async function addDefaultCTConfig(
 
       if (Object.keys(options).length) {
         configValue = `nxComponentTestingPreset(__filename, ${JSON.stringify(
-          options
+          options,
         )})`;
       }
     }
@@ -118,7 +118,7 @@ export async function addDefaultCTConfig(
         return `{
   component: ${configValue}
 }`;
-      }
+      },
     );
   }
   return updatedConfigContents;
@@ -137,7 +137,7 @@ export async function addMountDefinition(cmpCommandFileContents: string) {
   const hasMountCommand =
     tsquery.query<MethodSignature | PropertySignature>(
       cmpCommandFileContents,
-      'CallExpression StringLiteral[value="mount"]'
+      'CallExpression StringLiteral[value="mount"]',
     )?.length > 0;
 
   if (hasMountCommand) {
@@ -158,14 +158,14 @@ export async function addMountDefinition(cmpCommandFileContents: string) {
       ${node.members.map((m) => m.getText()).join('\n      ')}
       mount: typeof mount;
     }`;
-    }
+    },
   );
   return `${updatedInterface}\n${mountCommand}`;
 }
 
 export function getProjectCypressConfigPath(
   tree: Tree,
-  projectRoot: string
+  projectRoot: string,
 ): string {
   const cypressConfigPaths = glob(tree, [
     joinPathFragments(projectRoot, CYPRESS_CONFIG_FILE_NAME_PATTERN),

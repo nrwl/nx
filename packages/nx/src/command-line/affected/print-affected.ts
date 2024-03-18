@@ -31,11 +31,11 @@ export async function printAffected(
   projectGraph: ProjectGraph,
   { nxJson }: { nxJson: NxJsonConfiguration },
   nxArgs: NxArgs,
-  overrides: yargs.Arguments
+  overrides: yargs.Arguments,
 ) {
   logger.warn([NX_PREFIX, printAffectedDeprecationMessage].join(' '));
   const projectsForType = affectedProjects.filter((p) =>
-    nxArgs.type ? p.type === nxArgs.type : true
+    nxArgs.type ? p.type === nxArgs.type : true,
   );
   const projectNames = projectsForType.map((p) => p.name);
   const tasksJson =
@@ -45,7 +45,7 @@ export async function printAffected(
           projectGraph,
           nxArgs,
           nxJson,
-          overrides
+          overrides,
         )
       : [];
   const result = {
@@ -65,10 +65,10 @@ async function createTasks(
   projectGraph: ProjectGraph,
   nxArgs: NxArgs,
   nxJson: NxJsonConfiguration,
-  overrides: yargs.Arguments
+  overrides: yargs.Arguments,
 ) {
   const defaultDependencyConfigs = mapTargetDefaultsToDependencies(
-    nxJson.targetDefaults
+    nxJson.targetDefaults,
   );
   const taskGraph = createTaskGraph(
     projectGraph,
@@ -76,7 +76,7 @@ async function createTasks(
     affectedProjectsWithTargetAndConfig.map((p) => p.name),
     nxArgs.targets,
     nxArgs.configuration,
-    overrides
+    overrides,
   );
 
   let hasher: TaskHasher;
@@ -90,7 +90,7 @@ async function createTasks(
       projectGraph,
       nxJson,
       rustReferences,
-      {}
+      {},
     );
   }
 
@@ -105,9 +105,9 @@ async function createTasks(
         taskGraph,
         t,
         // This loads dotenv files for the task
-        getTaskSpecificEnv(t)
-      )
-    )
+        getTaskSpecificEnv(t),
+      ),
+    ),
   );
 
   return tasks.map((task) => ({
@@ -164,7 +164,7 @@ export function selectPrintAffected(wholeJson: any, wholeSelect: string) {
 function throwIfEmpty(select: string, value: any) {
   if (value === undefined) {
     throw new Error(
-      `Cannot select '${select}' in the results of print-affected.`
+      `Cannot select '${select}' in the results of print-affected.`,
     );
   }
 }

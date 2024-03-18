@@ -73,7 +73,7 @@ function buildMatrix(graph: ProjectGraph) {
 export function getPath(
   graph: ProjectGraph,
   sourceProjectName: string,
-  targetProjectName: string
+  targetProjectName: string,
 ): Array<ProjectGraphProjectNode> {
   if (sourceProjectName === targetProjectName) return [];
 
@@ -117,7 +117,7 @@ export function getPath(
 export function pathExists(
   graph: ProjectGraph,
   sourceProjectName: string,
-  targetProjectName: string
+  targetProjectName: string,
 ): boolean {
   if (sourceProjectName === targetProjectName) return true;
 
@@ -134,7 +134,7 @@ export function pathExists(
 export function checkCircularPath(
   graph: ProjectGraph,
   sourceProject: ProjectGraphProjectNode,
-  targetProject: ProjectGraphProjectNode
+  targetProject: ProjectGraphProjectNode,
 ): ProjectGraphProjectNode[] {
   if (!graph.nodes[targetProject.name]) return [];
 
@@ -143,7 +143,7 @@ export function checkCircularPath(
 
 export function findFilesInCircularPath(
   projectFileMap: ProjectFileMap,
-  circularPath: ProjectGraphProjectNode[]
+  circularPath: ProjectGraphProjectNode[],
 ): Array<string[]> {
   const filePathChain = [];
 
@@ -154,9 +154,9 @@ export function findFilesInCircularPath(
       files
         .filter(
           (file) =>
-            file.deps && file.deps.find((d) => fileDataDepTarget(d) === next)
+            file.deps && file.deps.find((d) => fileDataDepTarget(d) === next),
         )
-        .map((file) => file.file)
+        .map((file) => file.file),
     );
   }
 
@@ -166,7 +166,7 @@ export function findFilesInCircularPath(
 export function findFilesWithDynamicImports(
   projectFileMap: ProjectFileMap,
   sourceProjectName: string,
-  targetProjectName: string
+  targetProjectName: string,
 ): FileData[] {
   const files: FileData[] = [];
   projectFileMap[sourceProjectName].forEach((file) => {
@@ -175,7 +175,7 @@ export function findFilesWithDynamicImports(
       file.deps.some(
         (d) =>
           fileDataDepTarget(d) === targetProjectName &&
-          fileDataDepType(d) === DependencyType.dynamic
+          fileDataDepType(d) === DependencyType.dynamic,
       )
     ) {
       files.push(file);

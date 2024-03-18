@@ -30,7 +30,7 @@ export function addProject(host: Tree, options: NormalizedSchema) {
     host,
     options.projectName,
     projectConfiguration,
-    options.standaloneConfig
+    options.standaloneConfig,
   );
 }
 

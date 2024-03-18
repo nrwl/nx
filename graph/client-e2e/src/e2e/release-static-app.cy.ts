@@ -66,12 +66,12 @@ function checkFocusedProject(projectGraphJson: any, projectName: string) {
   const dependents = Object.keys(nxExamplesJson.dependencies).filter((key) =>
     nxExamplesJson.dependencies[key]
       .map((dependencies) => dependencies.target)
-      .includes(projectName)
+      .includes(projectName),
   );
   getUnfocusProjectButton().should('exist');
   getCheckedProjectItems().should(
     'have.length',
-    [projectName, ...dependencies, ...dependents].length
+    [projectName, ...dependencies, ...dependents].length,
   );
   cy.url().should('contain', `/projects/${projectName}`);
 }
@@ -79,7 +79,7 @@ function checkFocusedProject(projectGraphJson: any, projectName: string) {
 function checkSelectAll(projectGraphJson: any) {
   getCheckedProjectItems().should(
     'have.length',
-    projectGraphJson.projects.length
+    projectGraphJson.projects.length,
   );
   cy.url().should('contain', `/projects/all`);
 }
@@ -90,6 +90,6 @@ function checkSelectedProject(projectName: string) {
 
 function checkDeselectedProject(projectName: string) {
   cy.get(`[data-project="${projectName}"][data-active="true"]`).should(
-    'not.exist'
+    'not.exist',
   );
 }

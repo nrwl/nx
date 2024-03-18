@@ -25,7 +25,7 @@ describe('Remix Application', () => {
       expect(tree.read('app/root.tsx', 'utf-8')).toMatchSnapshot();
       expect(tree.read('app/routes/_index.tsx', 'utf-8')).toMatchSnapshot();
       expect(
-        tree.read('tests/routes/_index.spec.tsx', 'utf-8')
+        tree.read('tests/routes/_index.spec.tsx', 'utf-8'),
       ).toMatchSnapshot();
       expect(tree.read('vite.config.ts', 'utf-8')).toMatchSnapshot();
       expect(tree.read('.eslintrc.json', 'utf-8')).toMatchSnapshot();
@@ -72,7 +72,7 @@ describe('Remix Application', () => {
         expect(tree.read('remix.config.js', 'utf-8')).toMatchSnapshot();
         expect(tree.read('vitest.config.ts', 'utf-8')).toMatchSnapshot();
         expect(
-          tree.read('tests/routes/_index.spec.tsx', 'utf-8')
+          tree.read('tests/routes/_index.spec.tsx', 'utf-8'),
         ).toMatchSnapshot();
         expect(tree.read('tsconfig.spec.json', 'utf-8')).toMatchSnapshot();
         expect(tree.read('test-setup.ts', 'utf-8')).toMatchSnapshot();
@@ -97,7 +97,7 @@ describe('Remix Application', () => {
         expect(tree.read('jest.config.ts', 'utf-8')).toMatchSnapshot();
         expect(tree.read('test-setup.ts', 'utf-8')).toMatchSnapshot();
         expect(
-          tree.read('tests/routes/_index.spec.tsx', 'utf-8')
+          tree.read('tests/routes/_index.spec.tsx', 'utf-8'),
         ).toMatchSnapshot();
         expect(tree.exists('jest.preset.cjs')).toBeTruthy();
       });
@@ -163,11 +163,11 @@ describe('Remix Application', () => {
         expectTargetsToBeCorrect(tree, appDir);
 
         expect(
-          tree.read(`${appDir}/remix.config.js`, 'utf-8')
+          tree.read(`${appDir}/remix.config.js`, 'utf-8'),
         ).toMatchSnapshot();
         expect(tree.read(`${appDir}/app/root.tsx`, 'utf-8')).toMatchSnapshot();
         expect(
-          tree.read(`${appDir}/app/routes/_index.tsx`, 'utf-8')
+          tree.read(`${appDir}/app/routes/_index.tsx`, 'utf-8'),
         ).toMatchSnapshot();
       });
 
@@ -188,11 +188,11 @@ describe('Remix Application', () => {
           expectTargetsToBeCorrect(tree, appDir);
 
           expect(
-            tree.read(`${appDir}/remix.config.js`, 'utf-8')
+            tree.read(`${appDir}/remix.config.js`, 'utf-8'),
           ).toMatchSnapshot();
           expect(tree.read(`${appDir}/app/root.js`, 'utf-8')).toMatchSnapshot();
           expect(
-            tree.read(`${appDir}/app/routes/_index.js`, 'utf-8')
+            tree.read(`${appDir}/app/routes/_index.js`, 'utf-8'),
           ).toMatchSnapshot();
         });
       });
@@ -217,13 +217,13 @@ describe('Remix Application', () => {
           expectTargetsToBeCorrect(tree, newAppDir);
 
           expect(
-            tree.read(`${newAppDir}/remix.config.js`, 'utf-8')
+            tree.read(`${newAppDir}/remix.config.js`, 'utf-8'),
           ).toMatchSnapshot();
           expect(
-            tree.read(`${newAppDir}/app/root.tsx`, 'utf-8')
+            tree.read(`${newAppDir}/app/root.tsx`, 'utf-8'),
           ).toMatchSnapshot();
           expect(
-            tree.read(`${newAppDir}/app/routes/_index.tsx`, 'utf-8')
+            tree.read(`${newAppDir}/app/routes/_index.tsx`, 'utf-8'),
           ).toMatchSnapshot();
         });
 
@@ -247,13 +247,13 @@ describe('Remix Application', () => {
           expectTargetsToBeCorrect(tree, newAppDir);
 
           expect(
-            tree.read(`${newAppDir}/remix.config.js`, 'utf-8')
+            tree.read(`${newAppDir}/remix.config.js`, 'utf-8'),
           ).toMatchSnapshot();
           expect(
-            tree.read(`${newAppDir}/app/root.tsx`, 'utf-8')
+            tree.read(`${newAppDir}/app/root.tsx`, 'utf-8'),
           ).toMatchSnapshot();
           expect(
-            tree.read(`${newAppDir}/app/routes/_index.tsx`, 'utf-8')
+            tree.read(`${newAppDir}/app/routes/_index.tsx`, 'utf-8'),
           ).toMatchSnapshot();
         });
       });
@@ -275,16 +275,16 @@ describe('Remix Application', () => {
           expectTargetsToBeCorrect(tree, appDir);
 
           expect(
-            tree.read(`${appDir}/remix.config.js`, 'utf-8')
+            tree.read(`${appDir}/remix.config.js`, 'utf-8'),
           ).toMatchSnapshot();
           expect(
-            tree.read(`${appDir}/vitest.config.ts`, 'utf-8')
+            tree.read(`${appDir}/vitest.config.ts`, 'utf-8'),
           ).toMatchSnapshot();
           expect(
-            tree.read(`${appDir}/test-setup.ts`, 'utf-8')
+            tree.read(`${appDir}/test-setup.ts`, 'utf-8'),
           ).toMatchSnapshot();
           expect(
-            tree.read(`${appDir}/tsconfig.spec.json`, 'utf-8')
+            tree.read(`${appDir}/tsconfig.spec.json`, 'utf-8'),
           ).toMatchSnapshot();
         });
 
@@ -304,13 +304,13 @@ describe('Remix Application', () => {
           expectTargetsToBeCorrect(tree, appDir);
 
           expect(
-            tree.read(`${appDir}/remix.config.js`, 'utf-8')
+            tree.read(`${appDir}/remix.config.js`, 'utf-8'),
           ).toMatchSnapshot();
           expect(
-            tree.read(`${appDir}/jest.config.ts`, 'utf-8')
+            tree.read(`${appDir}/jest.config.ts`, 'utf-8'),
           ).toMatchSnapshot();
           expect(
-            tree.read(`${appDir}/test-setup.ts`, 'utf-8')
+            tree.read(`${appDir}/test-setup.ts`, 'utf-8'),
           ).toMatchSnapshot();
         });
       });
@@ -332,7 +332,7 @@ describe('Remix Application', () => {
           expectTargetsToBeCorrect(tree, appDir);
 
           expect(
-            tree.read(`${appDir}-e2e/cypress.config.ts`, 'utf-8')
+            tree.read(`${appDir}-e2e/cypress.config.ts`, 'utf-8'),
           ).toMatchSnapshot();
         });
 
@@ -352,18 +352,18 @@ describe('Remix Application', () => {
           expectTargetsToBeCorrect(tree, appDir);
 
           expect(
-            tree.read(`${appDir}-e2e/playwright.config.ts`, 'utf-8')
+            tree.read(`${appDir}-e2e/playwright.config.ts`, 'utf-8'),
           ).toMatchSnapshot();
         });
       });
-    }
+    },
   );
 });
 
 function expectTargetsToBeCorrect(tree: Tree, projectRoot: string) {
   const { targets } = readJson(
     tree,
-    joinPathFragments(projectRoot === '.' ? '/' : projectRoot, 'project.json')
+    joinPathFragments(projectRoot === '.' ? '/' : projectRoot, 'project.json'),
   );
   expect(tree.exists(join(projectRoot, '.eslintrc.json'))).toBeTruthy();
 }

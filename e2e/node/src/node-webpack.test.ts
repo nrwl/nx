@@ -19,7 +19,7 @@ describe('Node Applications + webpack', () => {
   beforeAll(() =>
     newProject({
       packages: ['@nx/node'],
-    })
+    }),
   );
 
   afterAll(() => cleanupProject());
@@ -41,7 +41,7 @@ describe('Node Applications + webpack', () => {
         return "foo " + x;
       };
       console.log(foo("bar")); 
-    `
+    `,
     );
     await runCLIAsync(`build ${app}`);
 
@@ -75,14 +75,14 @@ describe('Node Applications + webpack', () => {
       `
       import { ${lib} } from '@proj/${lib}';
       console.log('Hello ' + ${lib}());
-    `
+    `,
     );
 
     const serveProcess = await runCommandUntil(
       `serve ${app} --watch --runBuildTargetDependencies`,
       (output) => {
         return output.includes(`Hello`);
-      }
+      },
     );
 
     // Update library source and check that it triggers rebuild.
@@ -94,16 +94,16 @@ describe('Node Applications + webpack', () => {
 
     updateFile(
       `libs/${lib}/src/index.ts`,
-      `export function ${lib}() { return 'should rebuild lib'; }`
+      `export function ${lib}() { return 'should rebuild lib'; }`,
     );
 
     await waitUntil(
       () => {
         return terminalOutputs.some((output) =>
-          output.includes(`should rebuild lib`)
+          output.includes(`should rebuild lib`),
         );
       },
-      { timeout: 60_000, ms: 200 }
+      { timeout: 60_000, ms: 200 },
     );
 
     serveProcess.kill();

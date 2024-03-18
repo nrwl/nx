@@ -11,8 +11,8 @@ export function getDynamicRemotes(
   pathToManifestFile = join(
     context.workspaceRoot,
     project.sourceRoot,
-    'assets/module-federation.manifest.json'
-  )
+    'assets/module-federation.manifest.json',
+  ),
 ): string[] {
   // check for dynamic remotes
   // we should only check for dynamic based on what we generate
@@ -24,7 +24,7 @@ export function getDynamicRemotes(
 
   const moduleFederationManifestJson = readFileSync(
     pathToManifestFile,
-    'utf-8'
+    'utf-8',
   );
 
   if (!moduleFederationManifestJson) {
@@ -39,7 +39,7 @@ export function getDynamicRemotes(
   if (
     !Object.keys(parsedManifest).every(
       (key) =>
-        typeof key === 'string' && typeof parsedManifest[key] === 'string'
+        typeof key === 'string' && typeof parsedManifest[key] === 'string',
     )
   ) {
     return [];
@@ -63,8 +63,8 @@ export function getDynamicRemotes(
   if (remotesNotInWorkspace.length > 0) {
     logger.warn(
       `Skipping serving ${remotesNotInWorkspace.join(
-        ', '
-      )} as they could not be found in the workspace. Ensure they are served correctly.`
+        ', ',
+      )} as they could not be found in the workspace. Ensure they are served correctly.`,
     );
   }
 
@@ -74,18 +74,18 @@ export function getDynamicRemotes(
 function getModuleFederationConfig(
   tsconfigPath: string,
   workspaceRoot: string,
-  projectRoot: string
+  projectRoot: string,
 ) {
   const moduleFederationConfigPathJS = join(
     workspaceRoot,
     projectRoot,
-    'module-federation.config.js'
+    'module-federation.config.js',
   );
 
   const moduleFederationConfigPathTS = join(
     workspaceRoot,
     projectRoot,
-    'module-federation.config.ts'
+    'module-federation.config.ts',
   );
 
   let moduleFederationConfigPath = moduleFederationConfigPathJS;
@@ -106,7 +106,7 @@ function getModuleFederationConfig(
     };
   } catch {
     throw new Error(
-      `Could not load ${moduleFederationConfigPath}. Was this project generated with "@nx/angular:host"?`
+      `Could not load ${moduleFederationConfigPath}. Was this project generated with "@nx/angular:host"?`,
     );
   }
 }
@@ -115,12 +115,12 @@ export function getStaticRemotes(
   project: ProjectConfiguration,
   context: import('@angular-devkit/architect').BuilderContext,
   workspaceProjects: Record<string, ProjectConfiguration>,
-  remotesToSkip: Set<string>
+  remotesToSkip: Set<string>,
 ): string[] {
   const { mfeConfig, mfConfigPath } = getModuleFederationConfig(
     project.targets.build.options.tsConfig,
     context.workspaceRoot,
-    project.root
+    project.root,
   );
 
   const remotesConfig =
@@ -129,7 +129,7 @@ export function getStaticRemotes(
       : [];
   const allStaticRemotes = remotesConfig
     .map((remoteDefinition) =>
-      Array.isArray(remoteDefinition) ? remoteDefinition[0] : remoteDefinition
+      Array.isArray(remoteDefinition) ? remoteDefinition[0] : remoteDefinition,
     )
     .filter((r) => !remotesToSkip.has(r));
   const remotesNotInWorkspace: string[] = [];
@@ -146,8 +146,8 @@ export function getStaticRemotes(
   if (remotesNotInWorkspace.length > 0) {
     logger.warn(
       `Skipping serving ${remotesNotInWorkspace.join(
-        ', '
-      )} as they could not be found in the workspace. Ensure they are served correctly.`
+        ', ',
+      )} as they could not be found in the workspace. Ensure they are served correctly.`,
     );
   }
 
@@ -156,7 +156,7 @@ export function getStaticRemotes(
 
 export function validateDevRemotes(
   options: { devRemotes?: string[] },
-  workspaceProjects: Record<string, ProjectConfiguration>
+  workspaceProjects: Record<string, ProjectConfiguration>,
 ): void {
   const invalidDevRemotes =
     options.devRemotes?.filter((remote) => !workspaceProjects[remote]) ?? [];
@@ -165,7 +165,7 @@ export function validateDevRemotes(
     throw new Error(
       invalidDevRemotes.length === 1
         ? `Invalid dev remote provided: ${invalidDevRemotes[0]}.`
-        : `Invalid dev remotes provided: ${invalidDevRemotes.join(', ')}.`
+        : `Invalid dev remotes provided: ${invalidDevRemotes.join(', ')}.`,
     );
   }
 }

@@ -37,11 +37,11 @@ describe('nx project.json plugin', () => {
           },
         }),
       },
-      '/root'
+      '/root',
     );
 
     expect(
-      createNodesFunction('packages/lib-a/project.json', undefined, context)
+      createNodesFunction('packages/lib-a/project.json', undefined, context),
     ).toMatchInlineSnapshot(`
       {
         "projects": {

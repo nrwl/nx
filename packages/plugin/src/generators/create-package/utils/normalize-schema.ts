@@ -10,7 +10,7 @@ export interface NormalizedSchema extends CreatePackageSchema {
 
 export async function normalizeSchema(
   host: Tree,
-  schema: CreatePackageSchema
+  schema: CreatePackageSchema,
 ): Promise<NormalizedSchema> {
   const {
     projectName,

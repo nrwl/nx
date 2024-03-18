@@ -5,7 +5,7 @@ import { directoryExists } from 'nx/src/utils/fileutils';
 export function findUp(
   names: string | string[],
   from: string,
-  stopOnNodeModules = false
+  stopOnNodeModules = false,
 ) {
   if (!Array.isArray(names)) {
     names = [names];

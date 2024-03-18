@@ -22,7 +22,7 @@ describe('remove-platform-server-exports', () => {
         `
           import { Path, join } from '@angular-devkit/core';
           export { renderModule } from '@angular/platform-server';
-        `
+        `,
       );
 
       await removePlatformServerExports(tree);
@@ -30,7 +30,7 @@ describe('remove-platform-server-exports', () => {
       const content = tree.read(testTypeScriptFilePath, 'utf-8');
       expect(content).not.toContain('@angular/platform-server');
       expect(content).toContain(
-        `import { Path, join } from '@angular-devkit/core';`
+        `import { Path, join } from '@angular-devkit/core';`,
       );
     });
 
@@ -40,7 +40,7 @@ describe('remove-platform-server-exports', () => {
         `
           import { Path, join } from '@angular-devkit/core';
           export { renderModule, ServerModule } from '@angular/platform-server';
-        `
+        `,
       );
 
       await removePlatformServerExports(tree);
@@ -48,10 +48,10 @@ describe('remove-platform-server-exports', () => {
       const content = tree.read(testTypeScriptFilePath, 'utf-8');
 
       expect(content).toContain(
-        `import { Path, join } from '@angular-devkit/core';`
+        `import { Path, join } from '@angular-devkit/core';`,
       );
       expect(content).toContain(
-        `export { ServerModule } from '@angular/platform-server';`
+        `export { ServerModule } from '@angular/platform-server';`,
       );
     });
 
@@ -60,14 +60,14 @@ describe('remove-platform-server-exports', () => {
         testTypeScriptFilePath,
         `
           export { renderModule } from '@angular/core';
-        `
+        `,
       );
 
       await removePlatformServerExports(tree);
 
       const content = tree.read(testTypeScriptFilePath, 'utf-8');
       expect(content).toContain(
-        `export { renderModule } from '@angular/core';`
+        `export { renderModule } from '@angular/core';`,
       );
     });
 
@@ -76,14 +76,14 @@ describe('remove-platform-server-exports', () => {
         testTypeScriptFilePath,
         `
           import { renderModule } from '@angular/platform-server';
-        `
+        `,
       );
 
       await removePlatformServerExports(tree);
 
       const content = tree.read(testTypeScriptFilePath, 'utf-8');
       expect(content).toContain(
-        `import { renderModule } from '@angular/platform-server'`
+        `import { renderModule } from '@angular/platform-server'`,
       );
     });
   });

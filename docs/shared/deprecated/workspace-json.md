@@ -26,10 +26,10 @@ After this command, `workspace.json` should look like this:
   "version": 2,
   "projects": {
     "my-app": "apps/my-app",
-    "some-lib": "libs/some-lib"
+    "some-lib": "libs/some-lib",
     // ...
   },
-  "$schema": "./node_modules/nx/schemas/workspace-schema.json"
+  "$schema": "./node_modules/nx/schemas/workspace-schema.json",
 }
 ```
 

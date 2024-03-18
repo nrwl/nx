@@ -33,7 +33,7 @@ import { setupWorkspaceContext } from '../src/utils/workspace-context';
               console.warn(e);
             }
           });
-        })
+        }),
       );
       if (process.env.NX_VERBOSE_LOGGING === 'true') {
         const a = new Date();

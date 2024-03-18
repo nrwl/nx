@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 
 export function useDebounce(
   value: string,
-  delay: number
+  delay: number,
 ): [string, Dispatch<SetStateAction<string>>] {
   // State and setters for debounced value
   const [debouncedValue, setDebouncedValue] = useState(value);
@@ -20,7 +20,7 @@ export function useDebounce(
         clearTimeout(handler);
       };
     },
-    [value, delay] // Only re-call effect if value or delay changes
+    [value, delay], // Only re-call effect if value or delay changes
   );
   return [debouncedValue, setDebouncedValue];
 }

@@ -18,7 +18,7 @@ describe('ensureNodeModulesSymlink', () => {
       JSON.stringify({
         name: 'myapp',
         dependencies: { 'react-native': '*' },
-      })
+      }),
     );
     writeFileSync(
       join(workspaceDir, 'package.json'),
@@ -30,7 +30,7 @@ describe('ensureNodeModulesSymlink', () => {
           '@react-native-community/cli-platform-android': '7777.7.7',
           'react-native': '0.9999.0',
         },
-      })
+      }),
     );
   });
 
@@ -42,7 +42,7 @@ describe('ensureNodeModulesSymlink', () => {
     createNpmDirectory('@nx/react-native', '9999.9.9');
     createNpmDirectory(
       '@react-native-community/cli-platform-android',
-      '7777.7.7'
+      '7777.7.7',
     );
     createNpmDirectory('@react-native-community/cli-platform-ios', '7777.7.7');
     createNpmDirectory('hermes-engine', '3333.3.3');
@@ -69,12 +69,12 @@ describe('ensureNodeModulesSymlink', () => {
         dependencies: {
           random: '9999.9.9',
         },
-      })
+      }),
     );
     createNpmDirectory('@nx/react-native', '9999.9.9');
     createNpmDirectory(
       '@react-native-community/cli-platform-android',
-      '7777.7.7'
+      '7777.7.7',
     );
     createNpmDirectory('@react-native-community/cli-platform-ios', '7777.7.7');
     createNpmDirectory('hermes-engine', '3333.3.3');
@@ -93,7 +93,7 @@ describe('ensureNodeModulesSymlink', () => {
     mkdirSync(dir, { recursive: true });
     writeFileSync(
       join(dir, 'package.json'),
-      JSON.stringify({ name: packageName, version: version })
+      JSON.stringify({ name: packageName, version: version }),
     );
     return dir;
   }
@@ -101,8 +101,8 @@ describe('ensureNodeModulesSymlink', () => {
   function expectSymlinkToExist(packageName) {
     expect(
       existsSync(
-        join(appDirAbsolutePath, `node_modules/${packageName}/package.json`)
-      )
+        join(appDirAbsolutePath, `node_modules/${packageName}/package.json`),
+      ),
     ).toBe(true);
   }
 });

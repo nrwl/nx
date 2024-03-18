@@ -21,7 +21,7 @@ describe('Move Angular Project', () => {
     app2 = uniq('app2');
     newPath = `subfolder/${app2}`;
     runCLI(
-      `generate @nx/angular:app ${app1} --project-name-and-root-format=as-provided --no-interactive`
+      `generate @nx/angular:app ${app1} --project-name-and-root-format=as-provided --no-interactive`,
     );
   });
 
@@ -32,7 +32,7 @@ describe('Move Angular Project', () => {
    */
   it('should work for apps', () => {
     const moveOutput = runCLI(
-      `generate @nx/angular:move --project ${app1} ${newPath} --project-name-and-root-format=as-provided`
+      `generate @nx/angular:move --project ${app1} ${newPath} --project-name-and-root-format=as-provided`,
     );
 
     // just check the output
@@ -48,7 +48,7 @@ describe('Move Angular Project', () => {
     expect(moveOutput).toContain(`CREATE ${newPath}/src/styles.css`);
     expect(moveOutput).toContain(`CREATE ${newPath}/src/test-setup.ts`);
     expect(moveOutput).toContain(
-      `CREATE ${newPath}/src/app/app.component.html`
+      `CREATE ${newPath}/src/app/app.component.html`,
     );
     expect(moveOutput).toContain(`CREATE ${newPath}/src/app/app.component.ts`);
     expect(moveOutput).toContain(`CREATE ${newPath}/src/app/app.config.ts`);
@@ -74,10 +74,10 @@ describe('Move Angular Project', () => {
       screenshotsFolder: '../dist/cypress/${app1}-e2e/screenshots',
       },
   });
-  `
+  `,
     );
     const moveOutput = runCLI(
-      `generate @nx/angular:move --projectName=${app1}-e2e --destination=${newPath}-e2e --project-name-and-root-format=as-provided`
+      `generate @nx/angular:move --projectName=${app1}-e2e --destination=${newPath}-e2e --project-name-and-root-format=as-provided`,
     );
 
     // just check that the cypress.config.ts is updated correctly
@@ -88,7 +88,7 @@ describe('Move Angular Project', () => {
 
     expect(cypressConfig).toContain(`../../dist/cypress/${newPath}-e2e/videos`);
     expect(cypressConfig).toContain(
-      `../../dist/cypress/${newPath}-e2e/screenshots`
+      `../../dist/cypress/${newPath}-e2e/screenshots`,
     );
   });
 
@@ -99,7 +99,7 @@ describe('Move Angular Project', () => {
     const lib1 = uniq('mylib');
     const lib2 = uniq('mylib');
     runCLI(
-      `generate @nx/angular:lib ${lib1} --no-standalone --project-name-and-root-format=as-provided --no-interactive`
+      `generate @nx/angular:lib ${lib1} --no-standalone --project-name-and-root-format=as-provided --no-interactive`,
     );
 
     /**
@@ -107,18 +107,18 @@ describe('Move Angular Project', () => {
      */
 
     runCLI(
-      `generate @nx/angular:lib ${lib2} --no-standalone --project-name-and-root-format=as-provided --no-interactive`
+      `generate @nx/angular:lib ${lib2} --no-standalone --project-name-and-root-format=as-provided --no-interactive`,
     );
 
     updateFile(
       `${lib2}/src/lib/${lib2}.module.ts`,
       `import { ${classify(lib1)}Module } from '@${proj}/${lib1}';
   
-          export class ExtendedModule extends ${classify(lib1)}Module { }`
+          export class ExtendedModule extends ${classify(lib1)}Module { }`,
     );
 
     const moveOutput = runCLI(
-      `generate @nx/angular:move --projectName=${lib1} --destination=shared/${lib1} --newProjectName=shared-${lib1} --project-name-and-root-format=as-provided`
+      `generate @nx/angular:move --projectName=${lib1} --destination=shared/${lib1} --newProjectName=shared-${lib1} --project-name-and-root-format=as-provided`,
     );
 
     const newPath = `shared/${lib1}`;
@@ -146,7 +146,7 @@ describe('Move Angular Project', () => {
     const lib2FilePath = `${lib2}/src/lib/${lib2}.module.ts`;
     const lib2File = readFile(lib2FilePath);
     expect(lib2File).toContain(
-      `import { ${newModule} } from '@${proj}/shared-${lib1}';`
+      `import { ${newModule} } from '@${proj}/shared-${lib1}';`,
     );
     expect(lib2File).toContain(`extends ${newModule}`);
   });
@@ -155,7 +155,7 @@ describe('Move Angular Project', () => {
     const lib1 = uniq('mylib');
     const lib2 = uniq('mylib');
     runCLI(
-      `generate @nx/angular:lib ${lib1} --no-standalone --project-name-and-root-format=derived --no-interactive`
+      `generate @nx/angular:lib ${lib1} --no-standalone --project-name-and-root-format=derived --no-interactive`,
     );
 
     /**
@@ -163,18 +163,18 @@ describe('Move Angular Project', () => {
      */
 
     runCLI(
-      `generate @nx/angular:lib ${lib2} --no-standalone --project-name-and-root-format=derived --no-interactive`
+      `generate @nx/angular:lib ${lib2} --no-standalone --project-name-and-root-format=derived --no-interactive`,
     );
 
     updateFile(
       `libs/${lib2}/src/lib/${lib2}.module.ts`,
       `import { ${classify(lib1)}Module } from '@${proj}/${lib1}';
   
-          export class ExtendedModule extends ${classify(lib1)}Module { }`
+          export class ExtendedModule extends ${classify(lib1)}Module { }`,
     );
 
     const moveOutput = runCLI(
-      `generate @nx/angular:move --projectName=${lib1} --destination=shared/${lib1} --project-name-and-root-format=derived`
+      `generate @nx/angular:move --projectName=${lib1} --destination=shared/${lib1} --project-name-and-root-format=derived`,
     );
 
     const newPath = `libs/shared/${lib1}`;
@@ -202,7 +202,7 @@ describe('Move Angular Project', () => {
     const lib2FilePath = `libs/${lib2}/src/lib/${lib2}.module.ts`;
     const lib2File = readFile(lib2FilePath);
     expect(lib2File).toContain(
-      `import { ${newModule} } from '@${proj}/shared/${lib1}';`
+      `import { ${newModule} } from '@${proj}/shared/${lib1}';`,
     );
     expect(lib2File).toContain(`extends ${newModule}`);
   });

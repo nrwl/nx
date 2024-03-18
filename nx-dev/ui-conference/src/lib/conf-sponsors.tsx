@@ -99,7 +99,7 @@ export function ConfSponsors(): JSX.Element {
               key={'speaker-row--' + rowIndex}
               className={cx(
                 'border-b border-slate-600',
-                sponsorLevelList.length === levelIndex + 1 && 'border-b'
+                sponsorLevelList.length === levelIndex + 1 && 'border-b',
               )}
             >
               <div className="mx-auto max-w-screen-lg text-white xl:max-w-screen-xl">

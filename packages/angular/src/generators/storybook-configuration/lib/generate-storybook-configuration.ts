@@ -4,7 +4,7 @@ import { nxVersion } from '../../../utils/versions';
 
 export async function generateStorybookConfiguration(
   tree: Tree,
-  options: StorybookConfigurationOptions
+  options: StorybookConfigurationOptions,
 ): Promise<GeneratorCallback> {
   const { configurationGenerator } = ensurePackage<
     typeof import('@nx/storybook')

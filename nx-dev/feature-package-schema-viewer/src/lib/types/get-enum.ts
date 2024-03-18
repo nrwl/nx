@@ -19,7 +19,7 @@ function extractEnumDirectly(schema?: JsonSchema): JsonSchema1['enum'] {
 
 function extractArrayEnum(
   schema: JsonSchema,
-  lookup: Lookup
+  lookup: Lookup,
 ): JsonSchema1['enum'] {
   if (
     typeof schema !== 'boolean' &&
@@ -28,7 +28,7 @@ function extractArrayEnum(
     !Array.isArray(schema.items)
   ) {
     return extractEnumDirectly(
-      getSchemaFromResult(lookup.getSchema(schema.items))
+      getSchemaFromResult(lookup.getSchema(schema.items)),
     );
   }
   return undefined;
@@ -36,7 +36,7 @@ function extractArrayEnum(
 
 function runUntilFirstResult<A, B>(
   inputFunctions: ((a: A) => B | undefined)[],
-  value: A
+  value: A,
 ): B | undefined {
   for (let i = 0; i < inputFunctions.length; i++) {
     const potentialResult = inputFunctions[i](value);
@@ -50,7 +50,7 @@ function runUntilFirstResult<A, B>(
 
 export function getEnum(
   schema: JsonSchema,
-  lookup: Lookup
+  lookup: Lookup,
 ): JsonSchema1['enum'] {
   const extractors: ((s: JsonSchema) => JsonSchema1['enum'])[] = [
     extractEnumDirectly,

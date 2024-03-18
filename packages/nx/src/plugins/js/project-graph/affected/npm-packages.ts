@@ -53,7 +53,7 @@ export const getTouchedNpmPackages: TouchedProjectLocator<
         // If it was a type declarations package then also mark its corresponding implementation package as affected
         if (npmPackage.name.startsWith('npm:@types/')) {
           const implementationNpmPackage = npmPackages.find(
-            (pkg) => pkg.data.packageName === c.path[1].substring(7)
+            (pkg) => pkg.data.packageName === c.path[1].substring(7),
           );
           if (implementationNpmPackage) {
             touched.push(implementationNpmPackage.name);
@@ -70,8 +70,8 @@ export const getTouchedNpmPackages: TouchedProjectLocator<
   if (missingTouchedNpmPackages.length) {
     logger.warn(
       `The affected projects might have not been identified properly. The package(s) ${missingTouchedNpmPackages.join(
-        ', '
-      )} were not found. Please open an issue in GitHub including the package.json file.`
+        ', ',
+      )} were not found. Please open an issue in GitHub including the package.json file.`,
     );
   }
   return touched;

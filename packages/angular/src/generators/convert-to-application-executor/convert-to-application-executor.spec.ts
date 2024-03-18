@@ -36,7 +36,7 @@ describe('convert-to-application-executor generator', () => {
 
       const project = readProjectConfiguration(tree, 'app1');
       expect(project.targets.build.executor).toBe(expected);
-    }
+    },
   );
 
   it('should not convert the target when using a custom webpack config', async () => {
@@ -103,7 +103,7 @@ describe('convert-to-application-executor generator', () => {
 
     const project = readProjectConfiguration(tree, 'app1');
     expect(project.targets.build.options.serviceWorker).toBe(
-      'app1/ngsw-config.json'
+      'app1/ngsw-config.json',
     );
     expect(project.targets.build.options.ngswConfigPath).toBeUndefined();
   });
@@ -245,13 +245,13 @@ describe('convert-to-application-executor generator', () => {
 
     const project = readProjectConfiguration(tree, 'app1');
     expect(
-      project.targets.build.configurations.development.buildOptimizer
+      project.targets.build.configurations.development.buildOptimizer,
     ).toBeUndefined();
     expect(
-      project.targets.build.configurations.development.vendorChunk
+      project.targets.build.configurations.development.vendorChunk,
     ).toBeUndefined();
     expect(
-      project.targets.build.configurations.development.commonChunk
+      project.targets.build.configurations.development.commonChunk,
     ).toBeUndefined();
   });
 

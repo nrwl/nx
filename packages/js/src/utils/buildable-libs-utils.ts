@@ -40,7 +40,7 @@ export function calculateProjectBuildableDependencies(
   projectName: string,
   targetName: string,
   configurationName: string,
-  shallow?: boolean
+  shallow?: boolean,
 ): {
   target: ProjectGraphProjectNode;
   dependencies: DependentBuildableProjectNode[];
@@ -55,7 +55,7 @@ export function calculateProjectBuildableDependencies(
       projectName,
       targetName,
       configurationName,
-      shallow
+      shallow,
     );
   }
 
@@ -65,7 +65,7 @@ export function calculateProjectBuildableDependencies(
     projectName,
     targetName,
     configurationName,
-    shallow
+    shallow,
   );
 }
 
@@ -75,7 +75,7 @@ export function calculateProjectDependencies(
   projectName: string,
   targetName: string,
   configurationName: string,
-  shallow?: boolean
+  shallow?: boolean,
 ): {
   target: ProjectGraphProjectNode;
   dependencies: DependentBuildableProjectNode[];
@@ -90,7 +90,7 @@ export function calculateProjectDependencies(
     projectName,
     projGraph,
     [],
-    shallow
+    shallow,
   );
   const missing = collectedDeps.reduce(
     (missing: string[] | undefined, { name: dep }) => {
@@ -101,7 +101,7 @@ export function calculateProjectDependencies(
       }
       return missing;
     },
-    null
+    null,
   );
   if (missing) {
     throw new Error(`Unable to find ${missing.join(', ')} in project graph.`);
@@ -115,7 +115,7 @@ export function calculateProjectDependencies(
           const libPackageJsonPath = join(
             root,
             depNode.data.root,
-            'package.json'
+            'package.json',
           );
 
           project = {
@@ -129,7 +129,7 @@ export function calculateProjectDependencies(
                 configuration: configurationName,
               },
               {},
-              depNode
+              depNode,
             ),
             node: depNode,
           };
@@ -167,7 +167,7 @@ function collectDependencies(
   projGraph: ProjectGraph,
   acc: { name: string; isTopLevel: boolean }[],
   shallow?: boolean,
-  areTopLevelDeps = true
+  areTopLevelDeps = true,
 ): { name: string; isTopLevel: boolean }[] {
   (projGraph.dependencies[project] || []).forEach((dependency) => {
     const existingEntry = acc.find((dep) => dep.name === dependency.target);
@@ -195,16 +195,16 @@ function collectDependencies(
 function readTsConfigWithRemappedPaths(
   tsConfig: string,
   generatedTsConfigPath: string,
-  dependencies: DependentBuildableProjectNode[]
+  dependencies: DependentBuildableProjectNode[],
 ) {
   const generatedTsConfig: any = { compilerOptions: {} };
   generatedTsConfig.extends = relative(
     dirname(generatedTsConfigPath),
-    tsConfig
+    tsConfig,
   );
   generatedTsConfig.compilerOptions.paths = computeCompilerOptionsPaths(
     tsConfig,
-    dependencies
+    dependencies,
   );
 
   if (process.env.NX_VERBOSE_LOGGING_PATH_MAPPINGS === 'true') {
@@ -212,7 +212,7 @@ function readTsConfigWithRemappedPaths(
       title: 'TypeScript path mappings have been rewritten.',
     });
     console.log(
-      JSON.stringify(generatedTsConfig.compilerOptions.paths, null, 2)
+      JSON.stringify(generatedTsConfig.compilerOptions.paths, null, 2),
     );
   }
   return generatedTsConfig;
@@ -225,7 +225,7 @@ export function calculateDependenciesFromTaskGraph(
   projectName: string,
   targetName: string,
   configurationName: string,
-  shallow?: boolean
+  shallow?: boolean,
 ): {
   target: ProjectGraphProjectNode;
   dependencies: DependentBuildableProjectNode[];
@@ -243,13 +243,13 @@ export function calculateDependenciesFromTaskGraph(
     }`,
     taskGraph,
     projectGraph,
-    shallow
+    shallow,
   );
 
   const npmDependencies = collectNpmDependencies(
     projectName,
     projectGraph,
-    !shallow ? dependentTasks : undefined
+    !shallow ? dependentTasks : undefined,
   );
 
   const dependencies: DependentBuildableProjectNode[] = [];
@@ -264,7 +264,7 @@ export function calculateDependenciesFromTaskGraph(
     let outputs = getOutputsForTargetAndConfiguration(
       depTask.target,
       depTask.overrides,
-      depProjectNode
+      depProjectNode,
     );
 
     if (outputs.length === 0) {
@@ -275,7 +275,7 @@ export function calculateDependenciesFromTaskGraph(
     const libPackageJsonPath = join(
       root,
       depProjectNode.data.root,
-      'package.json'
+      'package.json',
     );
 
     project = {
@@ -318,7 +318,7 @@ function collectNpmDependencies(
     | Map<string, { project: string; isTopLevel: boolean }>
     | undefined,
   collectedPackages = new Set<string>(),
-  isTopLevel = true
+  isTopLevel = true,
 ): Array<{ project: DependentBuildableProjectNode; isTopLevel: boolean }> {
   const dependencies: Array<{
     project: DependentBuildableProjectNode;
@@ -354,8 +354,8 @@ function collectNpmDependencies(
           projectGraph,
           undefined,
           collectedPackages,
-          false
-        )
+          false,
+        ),
       );
     }
   }
@@ -370,7 +370,7 @@ function collectDependentTasks(
   projectGraph: ProjectGraph,
   shallow?: boolean,
   areTopLevelDeps = true,
-  dependentTasks = new Map<string, { project: string; isTopLevel: boolean }>()
+  dependentTasks = new Map<string, { project: string; isTopLevel: boolean }>(),
 ): Map<string, { project: string; isTopLevel: boolean }> {
   for (const depTask of taskGraph.dependencies[task] ?? []) {
     if (dependentTasks.has(depTask)) {
@@ -382,7 +382,7 @@ function collectDependentTasks(
 
     const { project: depTaskProject } = parseTargetString(
       depTask,
-      projectGraph
+      projectGraph,
     );
     if (depTaskProject !== project) {
       dependentTasks.set(depTask, {
@@ -399,7 +399,7 @@ function collectDependentTasks(
         projectGraph,
         shallow,
         depTaskProject === project && areTopLevelDeps,
-        dependentTasks
+        dependentTasks,
       );
     }
   }
@@ -417,7 +417,7 @@ function collectDependentTasks(
  */
 export function computeCompilerOptionsPaths(
   tsConfig: string | ts.ParsedCommandLine,
-  dependencies: DependentBuildableProjectNode[]
+  dependencies: DependentBuildableProjectNode[],
 ) {
   const paths = readTsConfigPaths(tsConfig) || {};
   updatePaths(dependencies, paths);
@@ -428,18 +428,18 @@ export function createTmpTsConfig(
   tsconfigPath: string,
   workspaceRoot: string,
   projectRoot: string,
-  dependencies: DependentBuildableProjectNode[]
+  dependencies: DependentBuildableProjectNode[],
 ) {
   const tmpTsConfigPath = join(
     workspaceRoot,
     'tmp',
     projectRoot,
-    'tsconfig.generated.json'
+    'tsconfig.generated.json',
   );
   const parsedTSConfig = readTsConfigWithRemappedPaths(
     tsconfigPath,
     tmpTsConfigPath,
-    dependencies
+    dependencies,
   );
   process.on('exit', () => cleanupTmpTsConfigFile(tmpTsConfigPath));
   writeJsonFile(tmpTsConfigPath, parsedTSConfig);
@@ -458,13 +458,13 @@ export function checkDependentProjectsHaveBeenBuilt(
   root: string,
   projectName: string,
   targetName: string,
-  projectDependencies: DependentBuildableProjectNode[]
+  projectDependencies: DependentBuildableProjectNode[],
 ): boolean {
   const missing = findMissingBuildDependencies(
     root,
     projectName,
     targetName,
-    projectDependencies
+    projectDependencies,
   );
   if (missing.length > 0) {
     console.error(stripIndents`
@@ -484,7 +484,7 @@ export function findMissingBuildDependencies(
   root: string,
   projectName: string,
   targetName: string,
-  projectDependencies: DependentBuildableProjectNode[]
+  projectDependencies: DependentBuildableProjectNode[],
 ): DependentBuildableProjectNode[] {
   const depLibsToBuildFirst: DependentBuildableProjectNode[] = [];
 
@@ -506,7 +506,7 @@ export function findMissingBuildDependencies(
 
 export function updatePaths(
   dependencies: DependentBuildableProjectNode[],
-  paths: Record<string, string[]>
+  paths: Record<string, string[]>,
 ) {
   const pathsKeys = Object.keys(paths);
   // For each registered dependency
@@ -527,7 +527,7 @@ export function updatePaths(
 
           // Bind secondary endpoints for ng-packagr projects
           let mappedPaths = dep.outputs.map(
-            (output) => `${output}/${nestedPart}`
+            (output) => `${output}/${nestedPart}`,
           );
 
           // Get the dependency's package name
@@ -536,8 +536,8 @@ export function updatePaths(
             // Update nested mappings to point to the dependency's output paths
             mappedPaths = mappedPaths.concat(
               paths[path].flatMap((path) =>
-                dep.outputs.map((output) => path.replace(root, output))
-              )
+                dep.outputs.map((output) => path.replace(root, output)),
+              ),
             );
           }
 
@@ -559,7 +559,7 @@ export function updateBuildableProjectPackageJsonDependencies(
   configurationName: string,
   node: ProjectGraphProjectNode,
   dependencies: DependentBuildableProjectNode[],
-  typeOfDependency: 'dependencies' | 'peerDependencies' = 'dependencies'
+  typeOfDependency: 'dependencies' | 'peerDependencies' = 'dependencies',
 ) {
   const outputs = getOutputsForTargetAndConfiguration(
     {
@@ -568,7 +568,7 @@ export function updateBuildableProjectPackageJsonDependencies(
       configuration: configurationName,
     },
     {},
-    node
+    node,
   );
 
   const packageJsonPath = `${outputs[0]}/package.json`;
@@ -606,7 +606,7 @@ export function updateBuildableProjectPackageJsonDependencies(
               configuration: configurationName,
             },
             {},
-            entry.node
+            entry.node,
           );
 
           const depPackageJsonPath = join(root, outputs[0], 'package.json');

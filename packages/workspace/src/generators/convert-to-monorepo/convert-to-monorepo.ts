@@ -42,11 +42,11 @@ export async function monorepoGenerator(tree: Tree, options: {}) {
         project.projectType === 'application'
           ? joinPathFragments(
               appsDir,
-              project.root === '.' ? project.name : project.root
+              project.root === '.' ? project.name : project.root,
             )
           : joinPathFragments(
               libsDir,
-              project.root === '.' ? project.name : project.root
+              project.root === '.' ? project.name : project.root,
             ),
       updateImportPath: project.projectType === 'library',
       projectNameAndRootFormat: 'as-provided',

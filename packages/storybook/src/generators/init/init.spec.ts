@@ -33,7 +33,7 @@ describe('@nx/storybook:init', () => {
     storybook-static
     dist
     node_modules
-  `
+  `,
     );
     await initGenerator(tree, {
       addPlugin: true,

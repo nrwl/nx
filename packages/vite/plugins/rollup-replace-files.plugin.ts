@@ -11,7 +11,7 @@ export function replaceFiles(replacements: FileReplacement[]): {
   resolveId(
     source: any,
     importer: any,
-    options: any
+    options: any,
   ): Promise<{
     id: string;
   }>;
@@ -35,11 +35,11 @@ export function replaceFiles(replacements: FileReplacement[]): {
        */
 
       const foundReplace = replacements.find((replacement) =>
-        resolved?.id?.endsWith(replacement.replace)
+        resolved?.id?.endsWith(replacement.replace),
       );
       if (foundReplace) {
         console.info(
-          `replace "${foundReplace.replace}" with "${foundReplace.with}"`
+          `replace "${foundReplace.replace}" with "${foundReplace.with}"`,
         );
         try {
           // return new file content

@@ -56,7 +56,7 @@ export class Errors {
         .reduce((prev, curr) => {
           prev.push(...curr);
           return prev;
-        }, [])
+        }, []),
     );
   }
 
@@ -83,7 +83,7 @@ class ChainContext {
     private internalLookup: Lookup,
     private internalDepth: number,
     private internalStage: Stage,
-    private internalParent: JsonSchema | undefined
+    private internalParent: JsonSchema | undefined,
   ) {}
 
   get lookup(): Lookup {
@@ -116,7 +116,7 @@ class ChainContext {
       this.internalLookup,
       this.internalDepth + 1,
       this.internalStage,
-      currentParent
+      currentParent,
     );
   }
 }
@@ -129,7 +129,7 @@ type NameAndExample = {
 function missingSchema(schemaOrRef: JsonSchema): Error {
   return new Error(
     'missing-schema',
-    `Could not find a schema for: ${JSON.stringify(schemaOrRef)}`
+    `Could not find a schema for: ${JSON.stringify(schemaOrRef)}`,
   );
 }
 
@@ -140,14 +140,14 @@ function notSupported(message: string): Error {
 function infinitePropLoopForObject(
   propName: string,
   ref: NonNullable<JsonSchema1['$ref']>,
-  schema: JsonSchema1
+  schema: JsonSchema1,
 ): Error {
   return new Error(
     'infinite-prop-loop',
     `The reference to '${ref}' in the property '${propName}' in the schema '${
       schema.title || 'object'
     }'
-        causes an infinite loop.`
+        causes an infinite loop.`,
   );
 }
 
@@ -155,8 +155,8 @@ function allOfMismatchedTypes(allTypes: (string | null)[]): Error {
   return new Error(
     'all-of-mismatched-types',
     `There was an allOf that evaluated to examples of mismatched types: ${JSON.stringify(
-      allTypes
-    )}`
+      allTypes,
+    )}`,
   );
 }
 
@@ -165,7 +165,7 @@ function nothing(parentSchema: JsonSchema | undefined): Error {
     parentSchema === undefined ? 'root' : JSON.stringify(parentSchema);
   return new Error(
     'example-of-nothing-is-impossible',
-    `Can't generate an example of the 'nothing' type for a child of: ${renderedParent}`
+    `Can't generate an example of the 'nothing' type for a child of: ${renderedParent}`,
   );
 }
 
@@ -190,7 +190,7 @@ type IgnoredProperty = {
 };
 
 function isNameAndExample(
-  t: NameAndExample | IgnoredProperty
+  t: NameAndExample | IgnoredProperty,
 ): t is NameAndExample {
   return 'example' in t;
 }
@@ -198,7 +198,7 @@ function isNameAndExample(
 function inferExample<A>(
   schema: JsonSchema1,
   typeMatcher: (x: any) => boolean,
-  defaultExample: () => Example
+  defaultExample: () => Example,
 ): Example {
   const match = (schema.examples || []).find(typeMatcher);
   if (match !== undefined) {
@@ -229,7 +229,7 @@ function getSchemaNameForError(schemaOrRef: JsonSchema): string {
 
 function generateJsonExampleForHelper(
   context: ChainContext,
-  schemaOrRef: JsonSchema
+  schemaOrRef: JsonSchema,
 ): Example | Errors {
   const { lookup } = context;
   const schema = getSchemaFromResult(lookup.getSchema(schemaOrRef));
@@ -264,8 +264,8 @@ function generateJsonExampleForHelper(
       return Errors.of(
         new Error(
           'type-array-was-empty',
-          `The type was an empty array for: ${JSON.stringify(schemaOrRef)}`
-        )
+          `The type was an empty array for: ${JSON.stringify(schemaOrRef)}`,
+        ),
       );
     }
   }
@@ -275,19 +275,19 @@ function generateJsonExampleForHelper(
       return inferExample(
         schema,
         (x) => typeof x === 'boolean',
-        () => Example.of(schema.default ?? true)
+        () => Example.of(schema.default ?? true),
       );
     } else if (type === 'integer' || type === 'number') {
       return inferExample(
         schema,
         (x) => typeof x === 'number' || typeof x === 'bigint',
-        () => Example.of(schema.description ? schema.description.length : 2154)
+        () => Example.of(schema.description ? schema.description.length : 2154),
       );
     } else if (type === 'string') {
       return inferExample(
         schema,
         (x) => typeof x === 'string',
-        () => Example.of('<string>')
+        () => Example.of('<string>'),
       );
     } else if (type === 'array') {
       const match = (schema.examples || []).find(Array.isArray);
@@ -323,7 +323,7 @@ function generateJsonExampleForHelper(
 
         const itemExample = generateJsonExampleForHelper(
           nextContext,
-          itemSchema
+          itemSchema,
         );
 
         if (isErrors(itemExample)) {
@@ -348,7 +348,7 @@ function generateJsonExampleForHelper(
         const props = Object.keys(properties)
           .filter((name) => {
             const propSchema = getSchemaFromResult(
-              context.lookup.getSchema(properties[name])
+              context.lookup.getSchema(properties[name]),
             );
             if (propSchema === undefined) {
               return true;
@@ -379,7 +379,7 @@ function generateJsonExampleForHelper(
                   ? {
                       name,
                       example: Errors.of(
-                        infinitePropLoopForObject(name, propOrRef.$ref, schema)
+                        infinitePropLoopForObject(name, propOrRef.$ref, schema),
                       ),
                     }
                   : { name };
@@ -395,7 +395,7 @@ function generateJsonExampleForHelper(
 
             const generatedExample = generateJsonExampleForHelper(
               nextContext,
-              prop
+              prop,
             );
             if (isErrors(generatedExample) && !requiredPropNames.has(name)) {
               return { name };
@@ -411,7 +411,7 @@ function generateJsonExampleForHelper(
 
         // If there were errors then just return the errors
         const e = Errors.from(
-          ...nonIgnoredProps.map((p) => p.example).filter<Errors>(isErrors)
+          ...nonIgnoredProps.map((p) => p.example).filter<Errors>(isErrors),
         );
         if (e.length > 0) {
           return e;
@@ -459,7 +459,7 @@ function generateJsonExampleForHelper(
       const examples = exs.filter(isExample).map((e) => e.value);
       const allExampleTypes = examples.map<string | null>((e) => typeof e);
       const matchedType = allExampleTypes.reduce((a, b) =>
-        a === b ? a : null
+        a === b ? a : null,
       );
       if (matchedType === null) {
         return Errors.of(allOfMismatchedTypes(allExampleTypes));
@@ -482,9 +482,9 @@ function generateJsonExampleForHelper(
     return Errors.of(
       notSupported(
         `Support schemas without a "type" has not been written yet. Source: ${schemaName}. Parent ${JSON.stringify(
-          context.parent
-        )}`
-      )
+          context.parent,
+        )}`,
+      ),
     );
   }
 }
@@ -492,12 +492,12 @@ function generateJsonExampleForHelper(
 export function generateJsonExampleFor(
   schemaOrRef: JsonSchema,
   lookup: Lookup,
-  stage: Stage
+  stage: Stage,
 ): Example | Errors {
   try {
     return generateJsonExampleForHelper(
       new ChainContext(new Set<string>(), lookup, 0, stage, undefined),
-      schemaOrRef
+      schemaOrRef,
     );
   } catch (e) {
     return Errors.of(new Error('ran-out-of-memory', `Ran out of memory: ${e}`));

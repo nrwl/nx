@@ -12,7 +12,7 @@ import {
 } from '@nx/devkit';
 
 export default async function removeLibraryGeneratorSimpleModuleNameOption(
-  tree: Tree
+  tree: Tree,
 ): Promise<void> {
   const nxJson = readNxJson(tree);
 
@@ -39,7 +39,7 @@ function replaceSimpleModuleNameInConfig(
     generators?:
       | NxJsonConfiguration['generators']
       | ProjectConfiguration['generators'];
-  } | null
+  } | null,
 ): boolean {
   if (!configObject?.generators) {
     return false;

@@ -9,7 +9,7 @@ import {
 
 function updateProjectConfig(
   host: Tree,
-  options: NormalizedSchema['libraryOptions']
+  options: NormalizedSchema['libraryOptions'],
 ) {
   updateJson(host, `${options.projectRoot}/tsconfig.lib.json`, (json) => {
     json.include = ['src/**/*.ts'];
@@ -28,13 +28,13 @@ function updateProjectConfig(
   updateProjectRootTsConfig(
     host,
     options.projectRoot,
-    getRelativePathToRootTsConfig(host, options.projectRoot)
+    getRelativePathToRootTsConfig(host, options.projectRoot),
   );
 }
 
 function updateProjectIvyConfig(
   host: Tree,
-  options: NormalizedSchema['libraryOptions']
+  options: NormalizedSchema['libraryOptions'],
 ) {
   if (options.buildable || options.publishable) {
     return updateJson(
@@ -44,14 +44,14 @@ function updateProjectIvyConfig(
         json.angularCompilerOptions['compilationMode'] =
           options.compilationMode === 'full' ? undefined : 'partial';
         return json;
-      }
+      },
     );
   }
 }
 
 export function updateTsConfig(
   host: Tree,
-  options: NormalizedSchema['libraryOptions']
+  options: NormalizedSchema['libraryOptions'],
 ) {
   extractTsConfigBase(host);
   updateProjectConfig(host, options);

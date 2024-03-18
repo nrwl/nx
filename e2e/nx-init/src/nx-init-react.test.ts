@@ -42,7 +42,7 @@ describe('nx init (for React - legacy)', () => {
     const craToNxOutput = runCommand(
       `${
         pmc.runUninstalledPackage
-      } nx@${getPublishedVersion()} init --no-interactive --integrated --vite=false`
+      } nx@${getPublishedVersion()} init --no-interactive --integrated --vite=false`,
     );
 
     expect(craToNxOutput).toContain('🎉 Done!');
@@ -76,7 +76,7 @@ describe('nx init (for React - legacy)', () => {
     const craToNxOutput = runCommand(
       `${
         pmc.runUninstalledPackage
-      } nx@${getPublishedVersion()} init --no-interactive --integrated`
+      } nx@${getPublishedVersion()} init --no-interactive --integrated`,
     );
 
     expect(craToNxOutput).toContain('🎉 Done!');
@@ -109,7 +109,7 @@ describe('nx init (for React - legacy)', () => {
     runCommand(
       `${
         pmc.runUninstalledPackage
-      } nx@${getPublishedVersion()} init --no-interactive --force --integrated`
+      } nx@${getPublishedVersion()} init --no-interactive --force --integrated`,
     );
 
     const viteConfig = readFile(`apps/${appName}/vite.config.js`);
@@ -127,7 +127,7 @@ describe('nx init (for React - legacy)', () => {
     const craToNxOutput = runCommand(
       `${
         pmc.runUninstalledPackage
-      } nx@${getPublishedVersion()} init --no-interactive --vite=false`
+      } nx@${getPublishedVersion()} init --no-interactive --vite=false`,
     );
 
     expect(craToNxOutput).toContain('🎉 Done!');
@@ -149,7 +149,7 @@ describe('nx init (for React - legacy)', () => {
     const craToNxOutput = runCommand(
       `${
         pmc.runUninstalledPackage
-      } nx@${getPublishedVersion()} init --no-interactive --vite`
+      } nx@${getPublishedVersion()} init --no-interactive --vite`,
     );
 
     expect(craToNxOutput).toContain('🎉 Done!');
@@ -159,7 +159,7 @@ describe('nx init (for React - legacy)', () => {
       'tools/tsconfig.tools.json',
       'babel.config.json',
       'jest.preset.js',
-      'jest.config.ts'
+      'jest.config.ts',
     );
 
     const packageJson = readJson('package.json');

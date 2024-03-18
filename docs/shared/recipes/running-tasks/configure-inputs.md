@@ -105,9 +105,9 @@ As you configure `inputs`, keep the project details screen open and it will refr
 {
   "targetDefaults": {
     "build": {
-      "inputs": ["production", "^production"]
-    }
-  }
+      "inputs": ["production", "^production"],
+    },
+  },
 }
 ```
 
@@ -128,9 +128,9 @@ Defining `inputs` of a target in `project.json` or `package.json` will apply onl
   "name": "myreactapp",
   "targets": {
     "build": {
-      "inputs": ["production", "^production"]
-    }
-  }
+      "inputs": ["production", "^production"],
+    },
+  },
 }
 ```
 
@@ -194,9 +194,9 @@ Given the above configurations, exclude the test and config files from the `prod
     "production": [
       "default",
       "!{projectRoot}/jest.config.ts",
-      "!{projectRoot}/**/?(*.)+(spec|test).ts"
-    ]
-  }
+      "!{projectRoot}/**/?(*.)+(spec|test).ts",
+    ],
+  },
 }
 ```
 
@@ -216,7 +216,7 @@ For example, to consider the version of Node.js in the hash of every task, add `
 {
   "namedInputs": {
     "default": ["{projectRoot}/**/*", "sharedGlobals"],
-    "sharedGlobals": [{ "runtime": "node --version" }]
-  }
+    "sharedGlobals": [{ "runtime": "node --version" }],
+  },
 }
 ```

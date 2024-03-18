@@ -48,7 +48,7 @@ describe('addLinting generator', () => {
     const { devDependencies } = readJson(tree, 'package.json');
     expect(devDependencies['@angular-eslint/eslint-plugin']).toBeDefined();
     expect(
-      devDependencies['@angular-eslint/eslint-plugin-template']
+      devDependencies['@angular-eslint/eslint-plugin-template'],
     ).toBeDefined();
     expect(devDependencies['@angular-eslint/template-parser']).toBeDefined();
   });

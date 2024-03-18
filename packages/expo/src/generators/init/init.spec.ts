@@ -23,7 +23,7 @@ describe('init', () => {
       '/.gitignore',
       `
 /node_modules
-`
+`,
     );
     await expoInitGenerator(tree, {});
 

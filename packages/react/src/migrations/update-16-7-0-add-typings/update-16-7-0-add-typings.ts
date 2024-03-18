@@ -57,7 +57,8 @@ export default async function addTypings(tree: Tree) {
           ];
           if (json.files?.length > 0) {
             json.files = json.files.filter(
-              (file: string) => !['cssmodule.d.ts', 'image.d.ts'].includes(file)
+              (file: string) =>
+                !['cssmodule.d.ts', 'image.d.ts'].includes(file),
             );
           }
           return { ...json, compilerOptions };

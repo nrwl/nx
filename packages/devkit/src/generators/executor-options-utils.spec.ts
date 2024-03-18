@@ -58,7 +58,7 @@ describe('forEachExecutorOptions', () => {
         builder1Option: 0,
       },
       'proj1',
-      'a'
+      'a',
     );
     expect(callback).toHaveBeenCalledWith(
       {
@@ -66,14 +66,14 @@ describe('forEachExecutorOptions', () => {
       },
       'proj1',
       'a',
-      'production'
+      'production',
     );
     expect(callback).not.toHaveBeenCalledWith(
       {
         builder2Option: 0,
       },
       'proj2',
-      'a'
+      'a',
     );
     expect(callback).not.toHaveBeenCalledWith(
       {
@@ -81,7 +81,7 @@ describe('forEachExecutorOptions', () => {
       },
       'proj2',
       'a',
-      'production'
+      'production',
     );
   });
 });

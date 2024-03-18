@@ -95,7 +95,7 @@ describe('lib', () => {
     expect(project).toEqual(
       expect.objectContaining({
         tags: ['one', 'two'],
-      })
+      }),
     );
   });
 
@@ -243,7 +243,7 @@ describe('lib', () => {
       compiler: 'babel',
     });
     expect(tree.read('my-lib/jest.config.ts', 'utf-8')).toContain(
-      "['babel-jest', { presets: ['@nx/react/babel'] }]"
+      "['babel-jest', { presets: ['@nx/react/babel'] }]",
     );
   });
 
@@ -270,7 +270,7 @@ describe('lib', () => {
       expect(myLib).toEqual(
         expect.objectContaining({
           tags: ['one'],
-        })
+        }),
       );
 
       await libraryGenerator(tree, {
@@ -284,7 +284,7 @@ describe('lib', () => {
       expect(myLib2).toEqual(
         expect.objectContaining({
           tags: ['one', 'two'],
-        })
+        }),
       );
     });
 
@@ -293,13 +293,13 @@ describe('lib', () => {
       expect(tree.exists(`my-dir/my-lib/jest.config.ts`)).toBeTruthy();
       expect(tree.exists('my-dir/my-lib/src/index.ts')).toBeTruthy();
       expect(
-        tree.exists('my-dir/my-lib/src/lib/my-dir-my-lib.tsx')
+        tree.exists('my-dir/my-lib/src/lib/my-dir-my-lib.tsx'),
       ).toBeTruthy();
       expect(
-        tree.exists('my-dir/my-lib/src/lib/my-dir-my-lib.module.css')
+        tree.exists('my-dir/my-lib/src/lib/my-dir-my-lib.module.css'),
       ).toBeTruthy();
       expect(
-        tree.exists('my-dir/my-lib/src/lib/my-dir-my-lib.spec.tsx')
+        tree.exists('my-dir/my-lib/src/lib/my-dir-my-lib.spec.tsx'),
       ).toBeTruthy();
     });
 
@@ -311,7 +311,7 @@ describe('lib', () => {
         compiler: 'babel',
       });
       expect(tree.read('my-dir/my-lib/jest.config.ts', 'utf-8')).toContain(
-        "['babel-jest', { presets: ['@nx/react/babel'] }]"
+        "['babel-jest', { presets: ['@nx/react/babel'] }]",
       );
     });
 
@@ -336,10 +336,10 @@ describe('lib', () => {
       await libraryGenerator(tree, { ...defaultSchema, directory: 'myDir' });
       const tsconfigJson = readJson(tree, '/tsconfig.base.json');
       expect(tsconfigJson.compilerOptions.paths['@proj/my-dir/my-lib']).toEqual(
-        ['my-dir/my-lib/src/index.ts']
+        ['my-dir/my-lib/src/index.ts'],
       );
       expect(
-        tsconfigJson.compilerOptions.paths['my-dir-my-lib/*']
+        tsconfigJson.compilerOptions.paths['my-dir-my-lib/*'],
       ).toBeUndefined();
     });
 
@@ -540,7 +540,7 @@ describe('lib', () => {
         });
       } catch (e) {
         expect(e.message).toContain(
-          'For publishable libs you have to provide a proper "--importPath" which needs to be a valid npm package name (e.g. my-awesome-lib or @myorg/my-lib)'
+          'For publishable libs you have to provide a proper "--importPath" which needs to be a valid npm package name (e.g. my-awesome-lib or @myorg/my-lib)',
         );
       }
     });
@@ -585,7 +585,7 @@ describe('lib', () => {
       });
       expect(babelrc.plugins).toEqual(['@emotion/babel-plugin']);
       expect(tsconfigJson.compilerOptions['jsxImportSource']).toEqual(
-        '@emotion/react'
+        '@emotion/react',
       );
     });
 
@@ -662,7 +662,7 @@ describe('lib', () => {
 
       expect(packageJson.name).toBe('@myorg/lib');
       expect(
-        tsconfigJson.compilerOptions.paths[packageJson.name]
+        tsconfigJson.compilerOptions.paths[packageJson.name],
       ).toBeDefined();
     });
 
@@ -683,7 +683,7 @@ describe('lib', () => {
         });
       } catch (e) {
         expect(e.message).toContain(
-          'You already have a library using the import path'
+          'You already have a library using the import path',
         );
       }
 
@@ -713,7 +713,7 @@ describe('lib', () => {
       const packageJson = readJson(tree, 'package.json');
 
       expect(packageJson.devDependencies['@swc/core']).toEqual(
-        expect.any(String)
+        expect.any(String),
       );
     });
   });
@@ -730,7 +730,7 @@ describe('lib', () => {
 
       // ASSERT
       expect(tree.read('package.json', 'utf-8')).toEqual(
-        packageJsonBeforeGenerator
+        packageJsonBeforeGenerator,
       );
     });
   });
@@ -763,7 +763,7 @@ describe('lib', () => {
       expect(indexFile).toContain(`export * from './lib/my-lib';`);
 
       expect(
-        tree.exists('my-dir/my-lib/src/lib/my-lib.module.css')
+        tree.exists('my-dir/my-lib/src/lib/my-lib.module.css'),
       ).toBeTruthy();
 
       expect(tree.exists('my-dir/my-lib/src/lib/my-lib.spec.tsx')).toBeTruthy();
@@ -790,7 +790,7 @@ describe('lib', () => {
       expect(() => {
         readJson(tree, `my-lib/.babelrc`);
       }).not.toThrow();
-    }
+    },
   );
 
   it.each`
@@ -813,6 +813,6 @@ describe('lib', () => {
           [pkg]: expect.any(String),
         },
       });
-    }
+    },
   );
 });

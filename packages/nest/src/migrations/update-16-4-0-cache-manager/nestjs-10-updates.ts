@@ -38,7 +38,7 @@ export async function updateNestJs10(tree: Tree) {
         projectConfig.root,
         projectConfig.projectType === 'application'
           ? 'tsconfig.app.json'
-          : 'tsconfig.lib.json'
+          : 'tsconfig.lib.json',
       );
 
     if (tree.exists(tsConfig)) {
@@ -64,7 +64,7 @@ export async function updateNestJs10(tree: Tree) {
           '@nestjs/cache-manager': '^2.0.0',
           'cache-manager': '^5.2.3',
         },
-        {}
+        {},
       )
     : () => {};
 }
@@ -76,8 +76,9 @@ async function getNestProejcts(): Promise<string[]> {
     .filter(([node, dep]) =>
       dep.some(
         ({ target }) =>
-          !projectGraph.externalNodes?.[node] && target === 'npm:@nestjs/common'
-      )
+          !projectGraph.externalNodes?.[node] &&
+          target === 'npm:@nestjs/common',
+      ),
     )
     .map(([projectName]) => projectName);
 }
@@ -86,7 +87,7 @@ async function getNestProejcts(): Promise<string[]> {
 // to import { CacheModule } from '@nestjs/cache-manager';
 export function updateCacheManagerImport(
   tree: Tree,
-  filePath: string
+  filePath: string,
 ): boolean {
   const content = tree.read(filePath, 'utf-8');
 
@@ -101,7 +102,7 @@ export function updateCacheManagerImport(
           ? "const { CacheModule } = require('@nestjs/cache-manager')"
           : "import { CacheModule } from '@nestjs/cache-manager';"
       }`;
-    }
+    },
   );
 
   if (updated !== content) {

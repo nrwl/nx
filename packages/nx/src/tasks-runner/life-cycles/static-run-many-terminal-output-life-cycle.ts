@@ -25,7 +25,7 @@ export class StaticRunManyTerminalOutputLifeCycle implements LifeCycle {
       targets?: string[];
       configuration?: string;
     },
-    private readonly taskOverrides: any
+    private readonly taskOverrides: any,
   ) {}
 
   startCommand(): void {
@@ -34,14 +34,14 @@ export class StaticRunManyTerminalOutputLifeCycle implements LifeCycle {
         `No projects with ${formatTargetsAndProjects(
           this.projectNames,
           this.args.targets,
-          this.tasks
-        )} were run`
+          this.tasks,
+        )} were run`,
       );
       return;
     }
 
     const bodyLines = this.projectNames.map(
-      (affectedProject) => `${output.dim('-')} ${affectedProject}`
+      (affectedProject) => `${output.dim('-')} ${affectedProject}`,
     );
     if (Object.keys(this.taskOverrides).length > 0) {
       bodyLines.push('');
@@ -54,7 +54,7 @@ export class StaticRunManyTerminalOutputLifeCycle implements LifeCycle {
     const title = `Running ${formatTargetsAndProjects(
       this.projectNames,
       this.args.targets,
-      this.tasks
+      this.tasks,
     )}:`;
 
     output.log({
@@ -76,7 +76,7 @@ export class StaticRunManyTerminalOutputLifeCycle implements LifeCycle {
         this.cachedTasks.length > 0
           ? [
               output.dim(
-                `Nx read the output from the cache instead of running the command for ${this.cachedTasks.length} out of ${this.tasks.length} tasks.`
+                `Nx read the output from the cache instead of running the command for ${this.cachedTasks.length} out of ${this.tasks.length} tasks.`,
               ),
             ]
           : [];
@@ -85,7 +85,7 @@ export class StaticRunManyTerminalOutputLifeCycle implements LifeCycle {
         title: `Successfully ran ${formatTargetsAndProjects(
           this.projectNames,
           this.args.targets,
-          this.tasks
+          this.tasks,
         )}`,
         bodyLines,
       });
@@ -97,25 +97,25 @@ export class StaticRunManyTerminalOutputLifeCycle implements LifeCycle {
       if (skippedTasks.length > 0) {
         bodyLines.push(
           output.dim(
-            'Tasks not run because their dependencies failed or --nx-bail=true:'
+            'Tasks not run because their dependencies failed or --nx-bail=true:',
           ),
           '',
           ...skippedTasks.map((task) => `${output.dim('-')} ${task.id}`),
-          ''
+          '',
         );
       }
       bodyLines.push(
         output.dim('Failed tasks:'),
         '',
         ...[...this.failedTasks.values()].map(
-          (task) => `${output.dim('-')} ${task.id}`
-        )
+          (task) => `${output.dim('-')} ${task.id}`,
+        ),
       );
       output.error({
         title: `Running ${formatTargetsAndProjects(
           this.projectNames,
           this.args.targets,
-          this.tasks
+          this.tasks,
         )} failed`,
         bodyLines,
       });
@@ -127,7 +127,7 @@ export class StaticRunManyTerminalOutputLifeCycle implements LifeCycle {
   }
 
   endTasks(
-    taskResults: { task: Task; status: TaskStatus; code: number }[]
+    taskResults: { task: Task; status: TaskStatus; code: number }[],
   ): void {
     for (let t of taskResults) {
       this.allCompletedTasks.set(t.task.id, t.task);
@@ -146,7 +146,7 @@ export class StaticRunManyTerminalOutputLifeCycle implements LifeCycle {
   printTaskTerminalOutput(
     task: Task,
     cacheStatus: TaskStatus,
-    terminalOutput: string
+    terminalOutput: string,
   ) {
     const args = getPrintableCommandArgsForTask(task);
     output.logCommandOutput(args.join(' '), cacheStatus, terminalOutput);

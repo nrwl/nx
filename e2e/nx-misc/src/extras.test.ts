@@ -37,14 +37,14 @@ describe('Extra Nx Misc Tests', () => {
       });
 
       const withPrefixes = runCLI(`echo ${myapp} --output-style=stream`).split(
-        isNotWindows() ? '\n' : '\r\n'
+        isNotWindows() ? '\n' : '\r\n',
       );
       expect(withPrefixes).toContain(`${myapp}: 1`);
       expect(withPrefixes).toContain(`${myapp}: 2`);
       expect(withPrefixes).toContain(`${myapp}: inner`);
 
       const noPrefixes = runCLI(
-        `echo ${myapp} --output-style=stream-without-prefixes`
+        `echo ${myapp} --output-style=stream-without-prefixes`,
       );
       expect(noPrefixes).not.toContain(`${myapp}: `);
     });
@@ -83,7 +83,7 @@ describe('Extra Nx Misc Tests', () => {
           return builder.getUpdatedProjectGraph();
         }
       };
-    `
+    `,
       );
 
       runCLI('graph --file project-graph.json');
@@ -95,7 +95,7 @@ describe('Extra Nx Misc Tests', () => {
           type: 'implicit',
           source: 'plugin-node',
           target: 'plugin-node2',
-        }
+        },
       );
     });
   });
@@ -109,17 +109,17 @@ describe('Extra Nx Misc Tests', () => {
     it('should not override environment variables already set when setting a custom env file path', async () => {
       updateFile(
         `.env`,
-        'SHARED_VAR=shared-root-value\nROOT_ONLY=root-only-value'
+        'SHARED_VAR=shared-root-value\nROOT_ONLY=root-only-value',
       );
 
       updateFile(
         `apps/${mylib}/.custom.env`,
-        'SHARED_VAR=shared-nested-value\nNESTED_ONLY=nested-only-value'
+        'SHARED_VAR=shared-nested-value\nNESTED_ONLY=nested-only-value',
       );
 
       const envFile = `apps/${mylib}/.custom.env`;
       runCLI(
-        `generate @nx/workspace:run-commands echoEnvVariables --command=echo --envFile=${envFile} --project=${mylib}`
+        `generate @nx/workspace:run-commands echoEnvVariables --command=echo --envFile=${envFile} --project=${mylib}`,
       );
 
       const command =
@@ -188,7 +188,7 @@ describe('Extra Nx Misc Tests', () => {
       });
 
       const result = runCLI(
-        `run ${mylib}:${echoTarget} --var1=a --var2=b --var-hyphen=c --varCamelCase=d`
+        `run ${mylib}:${echoTarget} --var1=a --var2=b --var-hyphen=c --varCamelCase=d`,
       );
       expect(result).toContain('var1: a');
       expect(result).toContain('var2: b');
@@ -196,7 +196,7 @@ describe('Extra Nx Misc Tests', () => {
       expect(result).toContain('camel: d');
 
       const resultArgs = runCLI(
-        `run ${mylib}:${echoTarget} --args="--var1=a --var2=b --var-hyphen=c --varCamelCase=d"`
+        `run ${mylib}:${echoTarget} --args="--var1=a --var2=b --var-hyphen=c --varCamelCase=d"`,
       );
       expect(resultArgs).toContain('var1: a');
       expect(resultArgs).toContain('var2: b');
@@ -220,7 +220,7 @@ describe('Extra Nx Misc Tests', () => {
         fail('Should error if process errors');
       } catch (e) {
         expect(e.stderr.toString()).toContain(
-          'command "exit 1" exited with non-zero status code'
+          'command "exit 1" exited with non-zero status code',
         );
       }
     });
@@ -235,7 +235,7 @@ describe('Extra Nx Misc Tests', () => {
       expect(() =>
         runCLI(`run ${mylib}:lint --format=json`, {
           silenceError: true,
-        })
+        }),
       ).not.toThrow();
     }, 1000000);
 
@@ -252,7 +252,7 @@ describe('Extra Nx Misc Tests', () => {
       runCLI(`generate @nx/js:lib ${mylib}`);
 
       runCLI(
-        `generate @nx/workspace:run-commands build --command=echo --outputs=${folder}/ --project=${mylib}`
+        `generate @nx/workspace:run-commands build --command=echo --outputs=${folder}/ --project=${mylib}`,
       );
 
       const commands = [
@@ -295,13 +295,13 @@ describe('Extra Nx Misc Tests', () => {
     it('should have the right env', () => {
       const appName = uniq('app');
       runCLI(
-        `generate @nx/react:app ${appName} --style=css --bundler=webpack --no-interactive`
+        `generate @nx/react:app ${appName} --style=css --bundler=webpack --no-interactive`,
       );
       updateFile(
         '.env',
         `FIRSTNAME="firstname"
   LASTNAME="lastname"
-  NX_USERNAME=$FIRSTNAME $LASTNAME`
+  NX_USERNAME=$FIRSTNAME $LASTNAME`,
       );
       updateFile(
         `apps/${appName}/src/app/app.tsx`,
@@ -317,7 +317,7 @@ describe('Extra Nx Misc Tests', () => {
       }
   
       export default App;
-    `
+    `,
       );
       updateFile(
         `apps/${appName}/src/app/app.spec.tsx`,
@@ -331,7 +331,7 @@ describe('Extra Nx Misc Tests', () => {
         expect(getByText(/Welcome firstname lastname/gi)).toBeTruthy();
       });
     });
-  `
+  `,
       );
       const unitTestsOutput = runCLI(`test ${appName}`);
       expect(unitTestsOutput).toContain('Successfully ran target test');
@@ -345,8 +345,8 @@ describe('Extra Nx Misc Tests', () => {
     > =>
       parseJson(
         readFile('static/environment.js').match(
-          /window\.expandedTaskInputsResponse\s*=\s*(.*?);/
-        )[1]
+          /window\.expandedTaskInputsResponse\s*=\s*(.*?);/,
+        )[1],
       );
 
     const baseLib = 'lib-base-123';

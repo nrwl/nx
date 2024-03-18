@@ -127,7 +127,7 @@ describe('dep-graph machine', () => {
           affectedProjects: [],
           fileMap: {},
           workspaceLayout: { appsDir: 'apps', libsDir: 'libs' },
-        }
+        },
       );
       expect(result.context.projects).toEqual(mockProjects);
       expect(result.context.dependencies).toEqual(mockDependencies);
@@ -147,7 +147,7 @@ describe('dep-graph machine', () => {
           affectedProjects: [],
           fileMap: {},
           workspaceLayout: { appsDir: 'apps', libsDir: 'libs' },
-        }
+        },
       );
 
       expect(result.value).toEqual('unselected');
@@ -239,7 +239,7 @@ describe('dep-graph machine', () => {
           affectedProjects: [],
           fileMap: {},
           workspaceLayout: { appsDir: 'apps', libsDir: 'libs' },
-        }
+        },
       );
 
       result = projectGraphMachine.transition(result, {
@@ -278,7 +278,7 @@ describe('dep-graph machine', () => {
           affectedProjects: [],
           fileMap: {},
           workspaceLayout: { appsDir: 'apps', libsDir: 'libs' },
-        }
+        },
       );
 
       result = projectGraphMachine.transition(result, {
@@ -330,7 +330,7 @@ describe('dep-graph machine', () => {
           affectedProjects: [],
           fileMap: {},
           workspaceLayout: { appsDir: 'apps', libsDir: 'libs' },
-        }
+        },
       );
 
       result = projectGraphMachine.transition(result, {
@@ -358,7 +358,7 @@ describe('dep-graph machine', () => {
           affectedProjects: [],
           fileMap: {},
           workspaceLayout: { appsDir: 'apps', libsDir: 'libs' },
-        }
+        },
       );
 
       result = projectGraphMachine.transition(result, {
@@ -423,7 +423,7 @@ describe('dep-graph machine', () => {
           affectedProjects: [],
           fileMap: {},
           workspaceLayout: { appsDir: 'apps', libsDir: 'libs' },
-        }
+        },
       );
 
       result = projectGraphMachine.transition(result, {

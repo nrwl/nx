@@ -25,7 +25,7 @@ describe('Web Components Applications', () => {
   it('should be able to generate a web app', async () => {
     const appName = uniq('app');
     runCLI(
-      `generate @nx/web:app ${appName} --bundler=webpack --no-interactive`
+      `generate @nx/web:app ${appName} --bundler=webpack --no-interactive`,
     );
 
     const lintResults = runCLI(`lint ${appName}`);
@@ -34,7 +34,7 @@ describe('Web Components Applications', () => {
     const testResults = await runCLIAsync(`test ${appName}`);
 
     expect(testResults.combinedOutput).toContain(
-      'Test Suites: 1 passed, 1 total'
+      'Test Suites: 1 passed, 1 total',
     );
     const lintE2eResults = runCLI(`lint ${appName}-e2e`);
 
@@ -48,11 +48,11 @@ describe('Web Components Applications', () => {
 
     copyFileSync(
       join(__dirname, 'test-fixtures/inlined.png'),
-      join(tmpProjPath(), `apps/${appName}/src/app/inlined.png`)
+      join(tmpProjPath(), `apps/${appName}/src/app/inlined.png`),
     );
     copyFileSync(
       join(__dirname, 'test-fixtures/emitted.png'),
-      join(tmpProjPath(), `apps/${appName}/src/app/emitted.png`)
+      join(tmpProjPath(), `apps/${appName}/src/app/emitted.png`),
     );
     updateFile(
       `apps/${appName}/src/app/app.element.ts`,
@@ -71,12 +71,12 @@ describe('Web Components Applications', () => {
         }
       }
       customElements.define('app-root', AppElement);
-    `
+    `,
     );
     setPluginOption(
       `apps/${appName}/webpack.config.js`,
       'outputHashing',
-      'none'
+      'none',
     );
     runCLI(`build ${appName}`);
     checkFilesExist(
@@ -84,27 +84,27 @@ describe('Web Components Applications', () => {
       `dist/apps/${appName}/runtime.js`,
       `dist/apps/${appName}/emitted.png`,
       `dist/apps/${appName}/main.js`,
-      `dist/apps/${appName}/styles.css`
+      `dist/apps/${appName}/styles.css`,
     );
     checkFilesDoNotExist(`dist/apps/${appName}/inlined.png`);
 
     expect(readFile(`dist/apps/${appName}/main.js`)).toContain(
-      'data:image/png;base64'
+      'data:image/png;base64',
     );
     // Should not be a JS module but kept as a PNG
     expect(readFile(`dist/apps/${appName}/emitted.png`)).not.toContain(
-      'export default'
+      'export default',
     );
 
     expect(readFile(`dist/apps/${appName}/index.html`)).toContain(
-      '<link rel="stylesheet" href="styles.css">'
+      '<link rel="stylesheet" href="styles.css">',
     );
   }, 500000);
 
   it('should emit decorator metadata when --compiler=babel and it is enabled in tsconfig', async () => {
     const appName = uniq('app');
     runCLI(
-      `generate @nx/web:app ${appName} --bundler=webpack --compiler=babel --no-interactive`
+      `generate @nx/web:app ${appName} --bundler=webpack --compiler=babel --no-interactive`,
     );
 
     updateFile(`apps/${appName}/src/app/app.element.ts`, (content) => {
@@ -139,12 +139,12 @@ describe('Web Components Applications', () => {
     setPluginOption(
       `apps/${appName}/webpack.config.js`,
       'outputHashing',
-      'none'
+      'none',
     );
     runCLI(`build ${appName}`);
 
     expect(readFile(`dist/apps/${appName}/main.js`)).toMatch(
-      /Reflect\.metadata/
+      /Reflect\.metadata/,
     );
 
     // Turn off decorator metadata
@@ -157,19 +157,19 @@ describe('Web Components Applications', () => {
     setPluginOption(
       `apps/${appName}/webpack.config.js`,
       'outputHashing',
-      'none'
+      'none',
     );
     runCLI(`build ${appName}`);
 
     expect(readFile(`dist/apps/${appName}/main.js`)).not.toMatch(
-      /Reflect\.metadata/
+      /Reflect\.metadata/,
     );
   }, 120000);
 
   it('should emit decorator metadata when using --compiler=swc', async () => {
     const appName = uniq('app');
     runCLI(
-      `generate @nx/web:app ${appName} --bundler=webpack --compiler=swc --no-interactive`
+      `generate @nx/web:app ${appName} --bundler=webpack --compiler=swc --no-interactive`,
     );
 
     updateFile(`apps/${appName}/src/app/app.element.ts`, (content) => {
@@ -204,12 +204,12 @@ describe('Web Components Applications', () => {
     setPluginOption(
       `apps/${appName}/webpack.config.js`,
       'outputHashing',
-      'none'
+      'none',
     );
     runCLI(`build ${appName}`);
 
     expect(readFile(`dist/apps/${appName}/main.js`)).toMatch(
-      /Foo=.*?_decorate/
+      /Foo=.*?_decorate/,
     );
   }, 120000);
 
@@ -217,7 +217,7 @@ describe('Web Components Applications', () => {
     const appName = uniq('app1');
 
     runCLI(
-      `generate @nx/web:app ${appName} --bundler=webpack --project-name-and-root-format=as-provided --no-interactive`
+      `generate @nx/web:app ${appName} --bundler=webpack --project-name-and-root-format=as-provided --no-interactive`,
     );
 
     // check files are generated without the layout directory ("apps/") and
@@ -225,12 +225,12 @@ describe('Web Components Applications', () => {
     checkFilesExist(`${appName}/src/main.ts`);
     // check build works
     expect(runCLI(`build ${appName}`)).toContain(
-      `Successfully ran target build for project ${appName}`
+      `Successfully ran target build for project ${appName}`,
     );
     // check tests pass
     const appTestResult = runCLI(`test ${appName}`);
     expect(appTestResult).toContain(
-      `Successfully ran target test for project ${appName}`
+      `Successfully ran target test for project ${appName}`,
     );
   }, 500_000);
 });
@@ -243,27 +243,27 @@ describe('CLI - Environment Variables', () => {
     //test if the Nx CLI loads root .env vars
     updateFile(
       `.env`,
-      'NX_WS_BASE=ws-base\nNX_SHARED_ENV=shared-in-workspace-base'
+      'NX_WS_BASE=ws-base\nNX_SHARED_ENV=shared-in-workspace-base',
     );
     updateFile(
       `.env.local`,
-      'NX_WS_ENV_LOCAL=ws-env-local\nNX_SHARED_ENV=shared-in-workspace-env-local'
+      'NX_WS_ENV_LOCAL=ws-env-local\nNX_SHARED_ENV=shared-in-workspace-env-local',
     );
     updateFile(
       `.local.env`,
-      'NX_WS_LOCAL_ENV=ws-local-env\nNX_SHARED_ENV=shared-in-workspace-local-env'
+      'NX_WS_LOCAL_ENV=ws-local-env\nNX_SHARED_ENV=shared-in-workspace-local-env',
     );
     updateFile(
       `apps/${appName}/.env`,
-      'NX_APP_BASE=app-base\nNX_SHARED_ENV=shared-in-app-base'
+      'NX_APP_BASE=app-base\nNX_SHARED_ENV=shared-in-app-base',
     );
     updateFile(
       `apps/${appName}/.env.local`,
-      'NX_APP_ENV_LOCAL=app-env-local\nNX_SHARED_ENV=shared-in-app-env-local'
+      'NX_APP_ENV_LOCAL=app-env-local\nNX_SHARED_ENV=shared-in-app-env-local',
     );
     updateFile(
       `apps/${appName}/.local.env`,
-      'NX_APP_LOCAL_ENV=app-local-env\nNX_SHARED_ENV=shared-in-app-local-env'
+      'NX_APP_LOCAL_ENV=app-local-env\nNX_SHARED_ENV=shared-in-app-local-env',
     );
     const main = `apps/${appName}/src/main.ts`;
     const newCode = `
@@ -279,7 +279,7 @@ describe('CLI - Environment Variables', () => {
       `;
 
     runCLI(
-      `generate @nx/web:app ${appName} --bundler=webpack --no-interactive --compiler=babel`
+      `generate @nx/web:app ${appName} --bundler=webpack --no-interactive --compiler=babel`,
     );
 
     const content = readFile(main);
@@ -290,21 +290,21 @@ describe('CLI - Environment Variables', () => {
 
     updateFile(
       `apps/${appName2}/.env`,
-      'NX_APP_BASE=app2-base\nNX_SHARED_ENV=shared2-in-app-base'
+      'NX_APP_BASE=app2-base\nNX_SHARED_ENV=shared2-in-app-base',
     );
     updateFile(
       `apps/${appName2}/.env.local`,
-      'NX_APP_ENV_LOCAL=app2-env-local\nNX_SHARED_ENV=shared2-in-app-env-local'
+      'NX_APP_ENV_LOCAL=app2-env-local\nNX_SHARED_ENV=shared2-in-app-env-local',
     );
     updateFile(
       `apps/${appName2}/.local.env`,
-      'NX_APP_LOCAL_ENV=app2-local-env\nNX_SHARED_ENV=shared2-in-app-local-env'
+      'NX_APP_LOCAL_ENV=app2-local-env\nNX_SHARED_ENV=shared2-in-app-local-env',
     );
     const main2 = `apps/${appName2}/src/main.ts`;
     const newCode2 = `const envVars = [process.env.NODE_ENV, process.env.NX_WS_BASE, process.env.NX_WS_ENV_LOCAL, process.env.NX_WS_LOCAL_ENV, process.env.NX_APP_BASE, process.env.NX_APP_ENV_LOCAL, process.env.NX_APP_LOCAL_ENV, process.env.NX_SHARED_ENV];`;
 
     runCLI(
-      `generate @nx/web:app ${appName2} --bundler=webpack --no-interactive --compiler=babel`
+      `generate @nx/web:app ${appName2} --bundler=webpack --no-interactive --compiler=babel`,
     );
 
     const content2 = readFile(main2);
@@ -314,25 +314,25 @@ describe('CLI - Environment Variables', () => {
     setPluginOption(
       `apps/${appName}/webpack.config.js`,
       'outputHashing',
-      'none'
+      'none',
     );
     setPluginOption(`apps/${appName}/webpack.config.js`, 'optimization', false);
     setPluginOption(
       `apps/${appName2}/webpack.config.js`,
       'outputHashing',
-      'none'
+      'none',
     );
     setPluginOption(
       `apps/${appName2}/webpack.config.js`,
       'optimization',
-      false
+      false,
     );
     runCLI(`run-many --target build --node-env=test`);
     expect(readFile(`dist/apps/${appName}/main.js`)).toContain(
-      'const envVars = ["test", "ws-base", "ws-env-local", "ws-local-env", "app-base", "app-env-local", "app-local-env", "shared-in-app-env-local"];'
+      'const envVars = ["test", "ws-base", "ws-env-local", "ws-local-env", "app-base", "app-env-local", "app-local-env", "shared-in-app-env-local"];',
     );
     expect(readFile(`dist/apps/${appName2}/main.js`)).toContain(
-      'const envVars = ["test", "ws-base", "ws-env-local", "ws-local-env", "app2-base", "app2-env-local", "app2-local-env", "shared2-in-app-env-local"];'
+      'const envVars = ["test", "ws-base", "ws-env-local", "ws-local-env", "app2-base", "app2-env-local", "app2-local-env", "shared2-in-app-env-local"];',
     );
   });
 });
@@ -345,7 +345,7 @@ describe('index.html interpolation', () => {
     const appName = uniq('app');
 
     runCLI(
-      `generate @nx/web:app ${appName} --bundler=webpack --no-interactive`
+      `generate @nx/web:app ${appName} --bundler=webpack --no-interactive`,
     );
 
     const srcPath = `apps/${appName}/src`;
@@ -390,12 +390,12 @@ describe('index.html interpolation', () => {
 function setPluginOption(
   webpackConfigPath: string,
   option: string,
-  value: string | boolean
+  value: string | boolean,
 ): void {
   updateFile(webpackConfigPath, (content) => {
     return content.replace(
       new RegExp(`${option}: .+`),
-      `${option}: ${typeof value === 'string' ? `'${value}'` : value},`
+      `${option}: ${typeof value === 'string' ? `'${value}'` : value},`,
     );
   });
 }

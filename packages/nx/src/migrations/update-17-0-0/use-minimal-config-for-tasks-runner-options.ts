@@ -78,7 +78,7 @@ export default async function migrate(tree: Tree) {
     }
     if (
       ['nx-cloud', '@nrwl/nx-cloud', 'nx/tasks-runners/default'].includes(
-        runner
+        runner,
       )
     ) {
       delete nxJson.tasksRunnerOptions.default.runner;

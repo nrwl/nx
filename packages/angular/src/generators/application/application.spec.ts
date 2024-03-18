@@ -63,7 +63,7 @@ describe('app', () => {
     expect(dependencies['@angular/core']).toBe(angularVersion);
     expect(dependencies['@angular/platform-browser']).toBe(angularVersion);
     expect(dependencies['@angular/platform-browser-dynamic']).toBe(
-      angularVersion
+      angularVersion,
     );
     expect(dependencies['@angular/router']).toBe(angularVersion);
     expect(dependencies['rxjs']).toBeDefined();
@@ -73,7 +73,7 @@ describe('app', () => {
     expect(devDependencies['@angular/compiler-cli']).toBe(angularVersion);
     expect(devDependencies['@angular/language-service']).toBe(angularVersion);
     expect(devDependencies['@angular-devkit/build-angular']).toBe(
-      angularDevkitVersion
+      angularDevkitVersion,
     );
 
     // codelyzer should no longer be there by default
@@ -104,7 +104,7 @@ describe('app', () => {
       const { targets } = readProjectConfiguration(appTree, 'my-app');
       expect(targets.test).toBeFalsy();
       expect(
-        appTree.exists('my-app/src/app/app.component.spec.ts')
+        appTree.exists('my-app/src/app/app.component.spec.ts'),
       ).toBeFalsy();
     });
 
@@ -114,7 +114,7 @@ describe('app', () => {
 
       // ASSERT
       expect(
-        readProjectConfiguration(appTree, 'my-app').targets.e2e
+        readProjectConfiguration(appTree, 'my-app').targets.e2e,
       ).not.toBeDefined();
     });
 
@@ -134,8 +134,8 @@ describe('app', () => {
               implicitDependencies: ['my-app'],
               tags: [],
             }),
-          })
-        )
+          }),
+        ),
       );
     });
 
@@ -147,26 +147,26 @@ describe('app', () => {
       expect(appTree.exists('my-app/src/app/app.module.ts')).toBeTruthy();
       expect(appTree.exists('my-app/src/app/app.component.ts')).toBeTruthy();
       expect(appTree.read('my-app/src/app/app.module.ts', 'utf-8')).toContain(
-        'class AppModule'
+        'class AppModule',
       );
 
       expect(readJson(appTree, 'my-app/tsconfig.json')).toMatchSnapshot(
-        'tsconfig.json'
+        'tsconfig.json',
       );
 
       const tsconfigApp = parseJson(
-        appTree.read('my-app/tsconfig.app.json', 'utf-8')
+        appTree.read('my-app/tsconfig.app.json', 'utf-8'),
       );
       expect(tsconfigApp).toMatchSnapshot('tsconfig.app.json');
 
       const eslintrcJson = parseJson(
-        appTree.read('my-app/.eslintrc.json', 'utf-8')
+        appTree.read('my-app/.eslintrc.json', 'utf-8'),
       );
       expect(eslintrcJson.extends).toEqual(['../.eslintrc.json']);
 
       expect(appTree.exists('my-app-e2e/cypress.config.ts')).toBeTruthy();
       const tsconfigE2E = parseJson(
-        appTree.read('my-app-e2e/tsconfig.json', 'utf-8')
+        appTree.read('my-app-e2e/tsconfig.json', 'utf-8'),
       );
       expect(tsconfigE2E).toMatchSnapshot('e2e tsconfig.json');
     });
@@ -177,10 +177,10 @@ describe('app', () => {
       });
 
       expect(
-        appTree.exists('playwright-app-e2e/playwright.config.ts')
+        appTree.exists('playwright-app-e2e/playwright.config.ts'),
       ).toBeTruthy();
       expect(
-        appTree.exists('playwright-app-e2e/src/example.spec.ts')
+        appTree.exists('playwright-app-e2e/src/example.spec.ts'),
       ).toBeTruthy();
     });
 
@@ -188,13 +188,13 @@ describe('app', () => {
       await generateApp(appTree);
 
       expect(appTree.read('my-app/jest.config.ts', 'utf-8')).toContain(
-        `'jest-preset-angular/build/serializers/no-ng-attributes'`
+        `'jest-preset-angular/build/serializers/no-ng-attributes'`,
       );
       expect(appTree.read('my-app/jest.config.ts', 'utf-8')).toContain(
-        `'jest-preset-angular/build/serializers/ng-snapshot'`
+        `'jest-preset-angular/build/serializers/ng-snapshot'`,
       );
       expect(appTree.read('my-app/jest.config.ts', 'utf-8')).toContain(
-        `'jest-preset-angular/build/serializers/html-comment'`
+        `'jest-preset-angular/build/serializers/html-comment'`,
       );
     });
 
@@ -229,7 +229,7 @@ describe('app', () => {
 
       expect(
         readJson(appTree, 'my-app/tsconfig.json').compilerOptions
-          .esModuleInterop
+          .esModuleInterop,
       ).toBe(true);
     });
 
@@ -238,7 +238,7 @@ describe('app', () => {
 
       expect(
         readJson(appTree, 'my-app/tsconfig.json').compilerOptions
-          .esModuleInterop
+          .esModuleInterop,
       ).toBeUndefined();
     });
   });
@@ -266,8 +266,8 @@ describe('app', () => {
               implicitDependencies: ['my-app'],
               tags: [],
             }),
-          })
-        )
+          }),
+        ),
       );
     });
 
@@ -357,7 +357,7 @@ describe('app', () => {
       // ASSERT
 
       expect(
-        readProjectConfiguration(appTree, 'my-app').root
+        readProjectConfiguration(appTree, 'my-app').root,
       ).toMatchSnapshot();
     });
 
@@ -411,7 +411,7 @@ describe('app', () => {
       await generateApp(appTree, 'my-app', { rootProject: true });
 
       expect(
-        readJson(appTree, 'tsconfig.json').compilerOptions.esModuleInterop
+        readJson(appTree, 'tsconfig.json').compilerOptions.esModuleInterop,
       ).toBe(true);
     });
 
@@ -422,7 +422,7 @@ describe('app', () => {
       });
 
       expect(
-        readJson(appTree, 'tsconfig.json').compilerOptions.esModuleInterop
+        readJson(appTree, 'tsconfig.json').compilerOptions.esModuleInterop,
       ).toBeUndefined();
     });
   });
@@ -433,10 +433,10 @@ describe('app', () => {
         directory: 'my-dir/my-app',
       });
       expect(
-        appTree.read('my-dir/my-app/src/app/app.module.ts', 'utf-8')
+        appTree.read('my-dir/my-app/src/app/app.module.ts', 'utf-8'),
       ).toContain('RouterModule.forRoot');
       expect(
-        appTree.read('my-dir/my-app/src/app/app.component.spec.ts', 'utf-8')
+        appTree.read('my-dir/my-app/src/app/app.component.spec.ts', 'utf-8'),
       ).toContain('imports: [RouterTestingModule]');
     });
 
@@ -446,7 +446,7 @@ describe('app', () => {
         skipTests: true,
       });
       expect(
-        appTree.exists('my-dir/my-app/src/app/app.component.spec.ts')
+        appTree.exists('my-dir/my-app/src/app/app.component.spec.ts'),
       ).toBeFalsy();
     });
   });
@@ -455,7 +455,7 @@ describe('app', () => {
     it('should create Nx specific `app.component.html` template', async () => {
       await generateApp(appTree, 'my-app', { directory: 'my-dir/my-app' });
       expect(
-        appTree.read('my-dir/my-app/src/app/app.component.html', 'utf-8')
+        appTree.read('my-dir/my-app/src/app/app.component.html', 'utf-8'),
       ).toContain('<app-nx-welcome></app-nx-welcome>');
     });
 
@@ -465,14 +465,14 @@ describe('app', () => {
         inlineTemplate: true,
       });
       expect(
-        appTree.read('my-dir/my-app/src/app/app.component.ts', 'utf-8')
+        appTree.read('my-dir/my-app/src/app/app.component.ts', 'utf-8'),
       ).toContain('<app-nx-welcome></app-nx-welcome>');
     });
 
     it('should create Nx specific `nx-welcome.component.ts` file', async () => {
       await generateApp(appTree, 'my-app', { directory: 'my-dir/my-app' });
       expect(
-        appTree.read('my-dir/my-app/src/app/nx-welcome.component.ts', 'utf-8')
+        appTree.read('my-dir/my-app/src/app/nx-welcome.component.ts', 'utf-8'),
       ).toContain('Hello there');
     });
 
@@ -483,7 +483,7 @@ describe('app', () => {
       });
       const testFileContent = appTree.read(
         'my-dir/my-app/src/app/app.component.spec.ts',
-        'utf-8'
+        'utf-8',
       );
 
       expect(testFileContent).toContain(`querySelector('h1')`);
@@ -520,16 +520,16 @@ describe('app', () => {
 
       expect(formatFilesSpy).toHaveBeenCalled();
       expect(
-        appTree.read('my-app/src/app/app.module.ts', 'utf-8')
+        appTree.read('my-app/src/app/app.module.ts', 'utf-8'),
       ).toMatchSnapshot();
       expect(
-        appTree.read('my-app/src/app/app.component.ts', 'utf-8')
+        appTree.read('my-app/src/app/app.component.ts', 'utf-8'),
       ).toMatchSnapshot();
       expect(
-        appTree.read('my-app/src/app/app.component.spec.ts', 'utf-8')
+        appTree.read('my-app/src/app/app.component.spec.ts', 'utf-8'),
       ).toMatchSnapshot();
       expect(
-        appTree.read('my-app/src/app/app.routes.ts', 'utf-8')
+        appTree.read('my-app/src/app/app.routes.ts', 'utf-8'),
       ).toMatchSnapshot();
     });
   });
@@ -567,7 +567,7 @@ describe('app', () => {
           ]
         `);
         expect(
-          readProjectConfiguration(appTree, 'my-app-e2e').targets.lint
+          readProjectConfiguration(appTree, 'my-app-e2e').targets.lint,
         ).toBeUndefined();
       });
 
@@ -639,7 +639,7 @@ describe('app', () => {
       it('should add no lint target', async () => {
         await generateApp(appTree, 'my-app', { linter: Linter.None });
         expect(
-          readProjectConfiguration(appTree, 'my-app').targets.lint
+          readProjectConfiguration(appTree, 'my-app').targets.lint,
         ).toBeUndefined();
       });
     });
@@ -653,13 +653,13 @@ describe('app', () => {
         const jestConfig = appTree.read('my-app/jest.config.ts', 'utf-8');
 
         expect(jestConfig).toContain(
-          `'jest-preset-angular/build/serializers/no-ng-attributes'`
+          `'jest-preset-angular/build/serializers/no-ng-attributes'`,
         );
         expect(jestConfig).toContain(
-          `'jest-preset-angular/build/serializers/ng-snapshot'`
+          `'jest-preset-angular/build/serializers/ng-snapshot'`,
         );
         expect(jestConfig).toContain(
-          `'jest-preset-angular/build/serializers/html-comment'`
+          `'jest-preset-angular/build/serializers/html-comment'`,
         );
       });
 
@@ -668,7 +668,7 @@ describe('app', () => {
 
         const { references } = readJson(appTree, 'my-app/tsconfig.json');
         expect(
-          references.find((r) => r.path.includes('tsconfig.spec.json'))
+          references.find((r) => r.path.includes('tsconfig.spec.json')),
         ).toBeTruthy();
       });
     });
@@ -684,15 +684,15 @@ describe('app', () => {
         expect(appTree.exists('my-app/jest.config.ts')).toBeFalsy();
         expect(appTree.exists('my-app/karma.config.js')).toBeFalsy();
         expect(
-          appTree.exists('my-app/src/app/app.component.spec.ts')
+          appTree.exists('my-app/src/app/app.component.spec.ts'),
         ).toBeFalsy();
         expect(
-          readProjectConfiguration(appTree, 'my-app').targets.test
+          readProjectConfiguration(appTree, 'my-app').targets.test,
         ).toBeUndefined();
         // check tsconfig.spec.json is not referenced
         const { references } = readJson(appTree, 'my-app/tsconfig.json');
         expect(
-          references.every((r) => !r.path.includes('tsconfig.spec.json'))
+          references.every((r) => !r.path.includes('tsconfig.spec.json')),
         ).toBe(true);
       });
     });
@@ -724,12 +724,12 @@ describe('app', () => {
             },
           },
           null,
-          2
+          2,
         );
 
         expect(appTree.exists('customer-ui/proxy.conf.json')).toBeTruthy();
         expect(appTree.read('customer-ui/proxy.conf.json', 'utf-8')).toContain(
-          proxyConfContent
+          proxyConfContent,
         );
       });
     });
@@ -755,7 +755,7 @@ describe('app', () => {
       // should not update workspace configuration since --strict=true is the default
       const nxJson = readJson<NxJsonConfiguration>(appTree, 'nx.json');
       expect(
-        nxJson.generators['@nx/angular:application'].strict
+        nxJson.generators['@nx/angular:application'].strict,
       ).not.toBeDefined();
     });
 
@@ -834,20 +834,20 @@ describe('app', () => {
       // ASSERT
       expect(appTree.read('standalone/src/main.ts', 'utf-8')).toMatchSnapshot();
       expect(
-        appTree.read('standalone/src/app/app.config.ts', 'utf-8')
+        appTree.read('standalone/src/app/app.config.ts', 'utf-8'),
       ).toMatchSnapshot();
       expect(
-        appTree.read('standalone/src/app/app.routes.ts', 'utf-8')
+        appTree.read('standalone/src/app/app.routes.ts', 'utf-8'),
       ).toMatchSnapshot();
       expect(
-        appTree.read('standalone/src/app/app.component.ts', 'utf-8')
+        appTree.read('standalone/src/app/app.component.ts', 'utf-8'),
       ).toMatchSnapshot();
       expect(
-        appTree.read('standalone/src/app/app.component.spec.ts', 'utf-8')
+        appTree.read('standalone/src/app/app.component.spec.ts', 'utf-8'),
       ).toMatchSnapshot();
       expect(appTree.exists('standalone/src/app/app.module.ts')).toBeFalsy();
       expect(
-        appTree.read('standalone/src/app/nx-welcome.component.ts', 'utf-8')
+        appTree.read('standalone/src/app/nx-welcome.component.ts', 'utf-8'),
       ).toContain('standalone: true');
     });
 
@@ -861,17 +861,17 @@ describe('app', () => {
       // ASSERT
       expect(appTree.read('standalone/src/main.ts', 'utf-8')).toMatchSnapshot();
       expect(
-        appTree.read('standalone/src/app/app.config.ts', 'utf-8')
+        appTree.read('standalone/src/app/app.config.ts', 'utf-8'),
       ).toMatchSnapshot();
       expect(
-        appTree.read('standalone/src/app/app.component.ts', 'utf-8')
+        appTree.read('standalone/src/app/app.component.ts', 'utf-8'),
       ).toMatchSnapshot();
       expect(
-        appTree.read('standalone/src/app/app.component.spec.ts', 'utf-8')
+        appTree.read('standalone/src/app/app.component.spec.ts', 'utf-8'),
       ).toMatchSnapshot();
       expect(appTree.exists('standalone/src/app/app.module.ts')).toBeFalsy();
       expect(
-        appTree.read('standalone/src/app/nx-welcome.component.ts', 'utf-8')
+        appTree.read('standalone/src/app/nx-welcome.component.ts', 'utf-8'),
       ).toContain('standalone: true');
     });
   });
@@ -922,19 +922,19 @@ describe('app', () => {
       await generateApp(appTree, 'plain', { minimal: true, routing: false });
 
       expect(
-        appTree.exists('plain/src/app/nx-welcome.component.ts')
+        appTree.exists('plain/src/app/nx-welcome.component.ts'),
       ).toBeFalsy();
       expect(
-        appTree.read('plain/src/app/app.module.ts', 'utf-8')
+        appTree.read('plain/src/app/app.module.ts', 'utf-8'),
       ).toMatchSnapshot();
       expect(
-        appTree.read('plain/src/app/app.component.ts', 'utf-8')
+        appTree.read('plain/src/app/app.component.ts', 'utf-8'),
       ).toMatchSnapshot();
       expect(
-        appTree.read('plain/src/app/app.component.spec.ts', 'utf-8')
+        appTree.read('plain/src/app/app.component.spec.ts', 'utf-8'),
       ).toMatchSnapshot();
       expect(
-        appTree.read('plain/src/app/app.component.html', 'utf-8')
+        appTree.read('plain/src/app/app.component.html', 'utf-8'),
       ).toMatchSnapshot();
     });
 
@@ -942,19 +942,19 @@ describe('app', () => {
       await generateApp(appTree, 'plain', { minimal: true });
 
       expect(
-        appTree.exists('plain/src/app/nx-welcome.component.ts')
+        appTree.exists('plain/src/app/nx-welcome.component.ts'),
       ).toBeFalsy();
       expect(
-        appTree.read('plain/src/app/app.module.ts', 'utf-8')
+        appTree.read('plain/src/app/app.module.ts', 'utf-8'),
       ).toMatchSnapshot();
       expect(
-        appTree.read('plain/src/app/app.component.ts', 'utf-8')
+        appTree.read('plain/src/app/app.component.ts', 'utf-8'),
       ).toMatchSnapshot();
       expect(
-        appTree.read('plain/src/app/app.component.spec.ts', 'utf-8')
+        appTree.read('plain/src/app/app.component.spec.ts', 'utf-8'),
       ).toMatchSnapshot();
       expect(
-        appTree.read('plain/src/app/app.component.html', 'utf-8')
+        appTree.read('plain/src/app/app.component.html', 'utf-8'),
       ).toMatchSnapshot();
     });
 
@@ -966,16 +966,16 @@ describe('app', () => {
       });
 
       expect(
-        appTree.exists('plain/src/app/nx-welcome.component.ts')
+        appTree.exists('plain/src/app/nx-welcome.component.ts'),
       ).toBeFalsy();
       expect(
-        appTree.read('plain/src/app/app.component.ts', 'utf-8')
+        appTree.read('plain/src/app/app.component.ts', 'utf-8'),
       ).toMatchSnapshot();
       expect(
-        appTree.read('plain/src/app/app.component.spec.ts', 'utf-8')
+        appTree.read('plain/src/app/app.component.spec.ts', 'utf-8'),
       ).toMatchSnapshot();
       expect(
-        appTree.read('plain/src/app/app.component.html', 'utf-8')
+        appTree.read('plain/src/app/app.component.html', 'utf-8'),
       ).toMatchSnapshot();
     });
 
@@ -986,16 +986,16 @@ describe('app', () => {
       });
 
       expect(
-        appTree.exists('plain/src/app/nx-welcome.component.ts')
+        appTree.exists('plain/src/app/nx-welcome.component.ts'),
       ).toBeFalsy();
       expect(
-        appTree.read('plain/src/app/app.component.ts', 'utf-8')
+        appTree.read('plain/src/app/app.component.ts', 'utf-8'),
       ).toMatchSnapshot();
       expect(
-        appTree.read('plain/src/app/app.component.spec.ts', 'utf-8')
+        appTree.read('plain/src/app/app.component.spec.ts', 'utf-8'),
       ).toMatchSnapshot();
       expect(
-        appTree.read('plain/src/app/app.component.html', 'utf-8')
+        appTree.read('plain/src/app/app.component.html', 'utf-8'),
       ).toMatchSnapshot();
     });
 
@@ -1006,16 +1006,16 @@ describe('app', () => {
 
       const project = readProjectConfiguration(appTree, 'ngesbuild');
       expect(project.targets.build.executor).toEqual(
-        '@angular-devkit/build-angular:application'
+        '@angular-devkit/build-angular:application',
       );
       expect(
-        project.targets.build.configurations.development.buildOptimizer
+        project.targets.build.configurations.development.buildOptimizer,
       ).toBeUndefined();
       expect(
-        project.targets.build.configurations.development.namedChunks
+        project.targets.build.configurations.development.namedChunks,
       ).toBeUndefined();
       expect(
-        project.targets.build.configurations.development.vendorChunks
+        project.targets.build.configurations.development.vendorChunks,
       ).toBeUndefined();
       expect(project.targets.build.configurations.production.budgets)
         .toMatchInlineSnapshot(`
@@ -1041,16 +1041,16 @@ describe('app', () => {
 
       const project = readProjectConfiguration(appTree, 'app1');
       expect(project.targets.build.executor).toEqual(
-        '@angular-devkit/build-angular:browser'
+        '@angular-devkit/build-angular:browser',
       );
       expect(
-        project.targets.build.configurations.development.buildOptimizer
+        project.targets.build.configurations.development.buildOptimizer,
       ).toBe(false);
       expect(project.targets.build.configurations.development.namedChunks).toBe(
-        true
+        true,
       );
       expect(project.targets.build.configurations.development.vendorChunk).toBe(
-        true
+        true,
       );
       expect(project.targets.build.configurations.production.budgets)
         .toMatchInlineSnapshot(`
@@ -1075,7 +1075,7 @@ describe('app', () => {
       const project = readProjectConfiguration(appTree, 'my-app');
       expect(project.targets.build.options.browser).toBeDefined();
       expect(
-        project.targets.serve.configurations.development.buildTarget
+        project.targets.serve.configurations.development.buildTarget,
       ).toBeDefined();
     });
   });
@@ -1101,25 +1101,25 @@ describe('app', () => {
       expect(appTree.exists('apps/my-app/src/main.ts')).toBeTruthy();
       expect(appTree.exists('apps/my-app/src/app/app.module.ts')).toBeTruthy();
       expect(
-        appTree.exists('apps/my-app/src/app/app.component.ts')
+        appTree.exists('apps/my-app/src/app/app.component.ts'),
       ).toBeTruthy();
       expect(
-        appTree.read('apps/my-app/src/app/app.module.ts', 'utf-8')
+        appTree.read('apps/my-app/src/app/app.module.ts', 'utf-8'),
       ).toContain('class AppModule');
       expect(readJson(appTree, 'apps/my-app/tsconfig.json')).toMatchSnapshot(
-        'tsconfig.json'
+        'tsconfig.json',
       );
       const tsconfigApp = parseJson(
-        appTree.read('apps/my-app/tsconfig.app.json', 'utf-8')
+        appTree.read('apps/my-app/tsconfig.app.json', 'utf-8'),
       );
       expect(tsconfigApp).toMatchSnapshot('tsconfig.app.json');
       const eslintrcJson = parseJson(
-        appTree.read('apps/my-app/.eslintrc.json', 'utf-8')
+        appTree.read('apps/my-app/.eslintrc.json', 'utf-8'),
       );
       expect(eslintrcJson.extends).toEqual(['../../.eslintrc.json']);
       expect(appTree.exists('apps/my-app-e2e/cypress.config.ts')).toBeTruthy();
       const tsconfigE2E = parseJson(
-        appTree.read('apps/my-app-e2e/tsconfig.json', 'utf-8')
+        appTree.read('apps/my-app-e2e/tsconfig.json', 'utf-8'),
       );
       expect(tsconfigE2E).toMatchSnapshot('e2e tsconfig.json');
     });
@@ -1131,38 +1131,38 @@ describe('app', () => {
       });
 
       expect(
-        readProjectConfiguration(appTree, 'my-dir-my-app')
+        readProjectConfiguration(appTree, 'my-dir-my-app'),
       ).toMatchSnapshot();
       expect(
-        readProjectConfiguration(appTree, 'my-dir-my-app-e2e')
+        readProjectConfiguration(appTree, 'my-dir-my-app-e2e'),
       ).toMatchSnapshot();
       expect(appTree.exists('apps/my-dir/my-app/jest.config.ts')).toBeTruthy();
       expect(appTree.exists('apps/my-dir/my-app/src/main.ts')).toBeTruthy();
       expect(
-        appTree.exists('apps/my-dir/my-app/src/app/app.module.ts')
+        appTree.exists('apps/my-dir/my-app/src/app/app.module.ts'),
       ).toBeTruthy();
       expect(
-        appTree.exists('apps/my-dir/my-app/src/app/app.component.ts')
+        appTree.exists('apps/my-dir/my-app/src/app/app.component.ts'),
       ).toBeTruthy();
       expect(
-        appTree.read('apps/my-dir/my-app/src/app/app.module.ts', 'utf-8')
+        appTree.read('apps/my-dir/my-app/src/app/app.module.ts', 'utf-8'),
       ).toContain('class AppModule');
       expect(
-        readJson(appTree, 'apps/my-dir/my-app/tsconfig.json')
+        readJson(appTree, 'apps/my-dir/my-app/tsconfig.json'),
       ).toMatchSnapshot('tsconfig.json');
       const tsconfigApp = parseJson(
-        appTree.read('apps/my-dir/my-app/tsconfig.app.json', 'utf-8')
+        appTree.read('apps/my-dir/my-app/tsconfig.app.json', 'utf-8'),
       );
       expect(tsconfigApp).toMatchSnapshot('tsconfig.app.json');
       const eslintrcJson = parseJson(
-        appTree.read('apps/my-dir/my-app/.eslintrc.json', 'utf-8')
+        appTree.read('apps/my-dir/my-app/.eslintrc.json', 'utf-8'),
       );
       expect(eslintrcJson.extends).toEqual(['../../../.eslintrc.json']);
       expect(
-        appTree.exists('apps/my-dir/my-app-e2e/cypress.config.ts')
+        appTree.exists('apps/my-dir/my-app-e2e/cypress.config.ts'),
       ).toBeTruthy();
       const tsconfigE2E = parseJson(
-        appTree.read('apps/my-dir/my-app-e2e/tsconfig.json', 'utf-8')
+        appTree.read('apps/my-dir/my-app-e2e/tsconfig.json', 'utf-8'),
       );
       expect(tsconfigE2E).toMatchSnapshot('e2e tsconfig.json');
     });
@@ -1187,47 +1187,47 @@ describe('app', () => {
       // ASSERT
       const { dependencies, devDependencies } = readJson(
         appTree,
-        'package.json'
+        'package.json',
       );
 
       expect(dependencies['@angular/animations']).toEqual(
-        backwardCompatibleVersions.angularV15.angularVersion
+        backwardCompatibleVersions.angularV15.angularVersion,
       );
       expect(dependencies['@angular/common']).toEqual(
-        backwardCompatibleVersions.angularV15.angularVersion
+        backwardCompatibleVersions.angularV15.angularVersion,
       );
       expect(dependencies['@angular/compiler']).toEqual(
-        backwardCompatibleVersions.angularV15.angularVersion
+        backwardCompatibleVersions.angularV15.angularVersion,
       );
       expect(dependencies['@angular/core']).toEqual(
-        backwardCompatibleVersions.angularV15.angularVersion
+        backwardCompatibleVersions.angularV15.angularVersion,
       );
       expect(dependencies['@angular/platform-browser']).toEqual(
-        backwardCompatibleVersions.angularV15.angularVersion
+        backwardCompatibleVersions.angularV15.angularVersion,
       );
       expect(dependencies['@angular/platform-browser-dynamic']).toEqual(
-        backwardCompatibleVersions.angularV15.angularVersion
+        backwardCompatibleVersions.angularV15.angularVersion,
       );
       expect(dependencies['@angular/router']).toEqual(
-        backwardCompatibleVersions.angularV15.angularVersion
+        backwardCompatibleVersions.angularV15.angularVersion,
       );
       expect(dependencies['rxjs']).toEqual(
-        backwardCompatibleVersions.angularV15.rxjsVersion
+        backwardCompatibleVersions.angularV15.rxjsVersion,
       );
       expect(dependencies['zone.js']).toEqual(
-        backwardCompatibleVersions.angularV15.zoneJsVersion
+        backwardCompatibleVersions.angularV15.zoneJsVersion,
       );
       expect(devDependencies['@angular/cli']).toEqual(
-        backwardCompatibleVersions.angularV15.angularDevkitVersion
+        backwardCompatibleVersions.angularV15.angularDevkitVersion,
       );
       expect(devDependencies['@angular/compiler-cli']).toEqual(
-        backwardCompatibleVersions.angularV15.angularDevkitVersion
+        backwardCompatibleVersions.angularV15.angularDevkitVersion,
       );
       expect(devDependencies['@angular/language-service']).toEqual(
-        backwardCompatibleVersions.angularV15.angularVersion
+        backwardCompatibleVersions.angularV15.angularVersion,
       );
       expect(devDependencies['@angular-devkit/build-angular']).toEqual(
-        backwardCompatibleVersions.angularV15.angularDevkitVersion
+        backwardCompatibleVersions.angularV15.angularDevkitVersion,
       );
 
       // codelyzer should no longer be there by default
@@ -1238,7 +1238,7 @@ describe('app', () => {
       await generateApp(appTree, 'my-app', { standalone: true });
 
       expect(
-        appTree.read('my-app/src/app/app.config.ts', 'utf-8')
+        appTree.read('my-app/src/app/app.config.ts', 'utf-8'),
       ).toMatchSnapshot();
     });
 
@@ -1250,7 +1250,7 @@ describe('app', () => {
 
       const project = readProjectConfiguration(appTree, 'my-app');
       expect(project.targets.build.executor).toEqual(
-        '@angular-devkit/build-angular:browser-esbuild'
+        '@angular-devkit/build-angular:browser-esbuild',
       );
     });
 
@@ -1260,7 +1260,7 @@ describe('app', () => {
       const project = readProjectConfiguration(appTree, 'my-app');
       expect(project.targets.build.options.main).toBeDefined();
       expect(
-        project.targets.serve.configurations.development.browserTarget
+        project.targets.serve.configurations.development.browserTarget,
       ).toBeDefined();
     });
 
@@ -1269,7 +1269,7 @@ describe('app', () => {
 
       expect(
         readJson(appTree, 'my-app/tsconfig.json').compilerOptions
-          .esModuleInterop
+          .esModuleInterop,
       ).toBeUndefined();
     });
 
@@ -1278,7 +1278,7 @@ describe('app', () => {
 
       expect(
         readJson(appTree, 'my-app/tsconfig.json').compilerOptions
-          .esModuleInterop
+          .esModuleInterop,
       ).toBeUndefined();
     });
   });
@@ -1287,7 +1287,7 @@ describe('app', () => {
 async function generateApp(
   appTree: Tree,
   name: string = 'my-app',
-  options: Partial<Schema> = {}
+  options: Partial<Schema> = {},
 ) {
   await generateTestApplication(appTree, {
     name,

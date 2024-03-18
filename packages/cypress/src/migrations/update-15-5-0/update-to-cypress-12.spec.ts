@@ -75,7 +75,7 @@ describe('Cypress 12 Migration', () => {
     })
   })
 })
-`
+`,
       );
     });
     it('should comment', () => {
@@ -166,7 +166,7 @@ Cypress.Commands.add('login', (email, password) => {
   console.log('Custom command example: Login', email, password);
 });
 Cypress.Commands.overwrite('find', () => {});
-`
+`,
       );
     });
     it('should comment', () => {
@@ -249,7 +249,7 @@ describe('something', () => {
    .its('url').should('include', 'api/v1')
   })
 })
-`
+`,
       );
       const expected = stripIndents`describe('something', () => {
       it('should do the thing', () => {
@@ -286,13 +286,13 @@ describe('something', () => {
       shouldUseCyIntercept(tree, 'my-cool-test.cy.ts');
       shouldUseCySession(tree, 'my-cool-test.cy.ts');
       expect(stripIndents`${tree.read('my-cool-test.cy.ts', 'utf-8')}`).toEqual(
-        expected
+        expected,
       );
 
       shouldUseCyIntercept(tree, 'my-cool-test.cy.ts');
       shouldUseCySession(tree, 'my-cool-test.cy.ts');
       expect(stripIndents`${tree.read('my-cool-test.cy.ts', 'utf-8')}`).toEqual(
-        expected
+        expected,
       );
     });
     it('comment on cy.route,cy.server, & Cypress.Server.defaults usage', () => {
@@ -326,7 +326,7 @@ describe('something', () => {
    .its('url').should('include', 'api/v1')
   })
 })
-`
+`,
       );
       shouldUseCyIntercept(tree, 'my-cool-test.cy.ts');
       expect(tree.read('my-cool-test.cy.ts', 'utf-8')).toMatchInlineSnapshot(`
@@ -384,7 +384,7 @@ describe('something', () => {
    .its('url').should('include', 'api/v1')
   })
 })
-`
+`,
       );
       shouldUseCySession(tree, 'my-cool-test.cy.ts');
       expect(tree.read('my-cool-test.cy.ts', 'utf-8')).toMatchInlineSnapshot(`
@@ -437,7 +437,7 @@ import { nxE2EPreset } from '@nrwl/cypress/plugins/cypress-preset';
 export default defineConfig({
   e2e: nxE2EPreset(__filename),
 })
-`
+`,
       );
       turnOffTestIsolation(tree, 'my-cypress.config.ts');
       expect(tree.read('my-cypress.config.ts', 'utf-8')).toMatchInlineSnapshot(`
@@ -474,7 +474,7 @@ export default defineConfig({
     video: false
   }
 })
-`
+`,
       );
       turnOffTestIsolation(tree, 'my-cypress.config.ts');
       expect(tree.read('my-cypress.config.ts', 'utf-8')).toMatchInlineSnapshot(`
@@ -513,7 +513,7 @@ const myConfig = {
 export default defineConfig({
   e2e: myConfig,
 })
-`
+`,
       );
       turnOffTestIsolation(tree, 'my-cypress.config.ts');
       expect(tree.read('my-cypress.config.ts', 'utf-8')).toMatchInlineSnapshot(`
@@ -581,7 +581,7 @@ import { nxE2EPreset } from '@nrwl/cypress/plugins/cypress-preset';
 
 export default defineConfig({
   e2e: nxE2EPreset(__filename)
-})`
+})`,
   );
   // test Cypress.Commands.Override
   tree.write(
@@ -597,7 +597,7 @@ Cypress.Commands.add('login', (email, password) => {
   console.log('Custom command example: Login', email, password);
 });
 Cypress.Commands.overwrite('find', () => {});
-`
+`,
   );
   // test .should(() => cy.<cmd>)
   tree.write(
@@ -620,7 +620,7 @@ Cypress.Commands.overwrite('find', () => {});
       cy.task("");
     })
   })
-})`
+})`,
   );
   tree.write(
     `apps/${name}/src/e2e/intercept-session.spec.ts`,
@@ -650,7 +650,7 @@ Cypress.Commands.overwrite('find', () => {});
     cy.wait('@getApi')
    .its('url').should('include', 'api/v1')
   })
-})`
+})`,
   );
   tree.write(
     `apps/${name}/src/e2e/combo.spec.ts`,
@@ -683,35 +683,35 @@ Cypress.Commands.overwrite('find', () => {});
       cy.get('@table').find('tr').should('have.length', 3)
 })
   })
-})`
+})`,
   );
 }
 
 function assertMigration(tree: Tree, name: string) {
   expect(tree.read(`apps/${name}/cypress.config.ts`, 'utf-8')).toContain(
-    'testIsolation: false'
+    'testIsolation: false',
   );
   // command overrides
   expect(tree.read(`apps/${name}/src/support/commands.ts`, 'utf-8')).toContain(
-    'TODO(@nrwl/cypress): This command can no longer be overridden'
+    'TODO(@nrwl/cypress): This command can no longer be overridden',
   );
   // test .should(() => cy.<cmd>)
   expect(tree.read(`apps/${name}/src/e2e/callback.spec.ts`, 'utf-8')).toContain(
-    'TODO(@nrwl/cypress): Nesting Cypress commands in a should assertion now throws.'
+    'TODO(@nrwl/cypress): Nesting Cypress commands in a should assertion now throws.',
   );
   // use cy.intercept, cy.session
   const interceptSessionSpec = tree.read(
     `apps/${name}/src/e2e/intercept-session.spec.ts`,
-    'utf-8'
+    'utf-8',
   );
   expect(interceptSessionSpec).toContain(
-    '// TODO(@nrwl/cypress): this command has been removed, use cy.session instead. https://docs.cypress.io/guides/references/migration-guide#Command-Cypress-API-Changes'
+    '// TODO(@nrwl/cypress): this command has been removed, use cy.session instead. https://docs.cypress.io/guides/references/migration-guide#Command-Cypress-API-Changes',
   );
   expect(interceptSessionSpec).toContain(
-    '// TODO(@nrwl/cypress): this command has been removed, use cy.intercept instead. https://docs.cypress.io/guides/references/migration-guide#cy-server-cy-route-and-Cypress-Server-defaults'
+    '// TODO(@nrwl/cypress): this command has been removed, use cy.intercept instead. https://docs.cypress.io/guides/references/migration-guide#cy-server-cy-route-and-Cypress-Server-defaults',
   );
   // intercept,session & callback
   expect(
-    tree.read(`apps/${name}/src/e2e/combo.spec.ts`, 'utf-8')
+    tree.read(`apps/${name}/src/e2e/combo.spec.ts`, 'utf-8'),
   ).toMatchSnapshot();
 }

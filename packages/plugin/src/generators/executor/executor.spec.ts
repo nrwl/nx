@@ -34,16 +34,16 @@ describe('NxPlugin Executor Generator', () => {
     });
 
     expect(
-      tree.exists('my-plugin/src/executors/my-executor/schema.d.ts')
+      tree.exists('my-plugin/src/executors/my-executor/schema.d.ts'),
     ).toBeTruthy();
     expect(
-      tree.exists('my-plugin/src/executors/my-executor/schema.json')
+      tree.exists('my-plugin/src/executors/my-executor/schema.json'),
     ).toBeTruthy();
     expect(
-      tree.exists('my-plugin/src/executors/my-executor/executor.ts')
+      tree.exists('my-plugin/src/executors/my-executor/executor.ts'),
     ).toBeTruthy();
     expect(
-      tree.exists('my-plugin/src/executors/my-executor/executor.spec.ts')
+      tree.exists('my-plugin/src/executors/my-executor/executor.spec.ts'),
     ).toBeTruthy();
   });
 
@@ -57,16 +57,16 @@ describe('NxPlugin Executor Generator', () => {
     });
 
     expect(
-      tree.exists('my-plugin/src/executors/my-executor/schema.d.ts')
+      tree.exists('my-plugin/src/executors/my-executor/schema.d.ts'),
     ).toBeTruthy();
     expect(
-      tree.exists('my-plugin/src/executors/my-executor/schema.json')
+      tree.exists('my-plugin/src/executors/my-executor/schema.json'),
     ).toBeTruthy();
     expect(
-      tree.exists('my-plugin/src/executors/my-executor/executor.ts')
+      tree.exists('my-plugin/src/executors/my-executor/executor.ts'),
     ).toBeTruthy();
     expect(
-      tree.exists('my-plugin/src/executors/my-executor/executor.spec.ts')
+      tree.exists('my-plugin/src/executors/my-executor/executor.spec.ts'),
     ).toBeTruthy();
   });
 
@@ -79,16 +79,16 @@ describe('NxPlugin Executor Generator', () => {
     });
 
     expect(
-      tree.exists('my-plugin/src/executors/my-executor/schema.d.ts')
+      tree.exists('my-plugin/src/executors/my-executor/schema.d.ts'),
     ).toBeTruthy();
     expect(
-      tree.exists('my-plugin/src/executors/my-executor/schema.json')
+      tree.exists('my-plugin/src/executors/my-executor/schema.json'),
     ).toBeTruthy();
     expect(
-      tree.exists('my-plugin/src/executors/my-executor/executor.ts')
+      tree.exists('my-plugin/src/executors/my-executor/executor.ts'),
     ).toBeTruthy();
     expect(
-      tree.exists('my-plugin/src/executors/my-executor/executor.spec.ts')
+      tree.exists('my-plugin/src/executors/my-executor/executor.spec.ts'),
     ).toBeTruthy();
   });
 
@@ -104,13 +104,13 @@ describe('NxPlugin Executor Generator', () => {
     const executorJson = readJson(tree, 'my-plugin/executors.json');
 
     expect(executorJson.executors['my-executor'].implementation).toEqual(
-      './src/executors/my-executor/executor'
+      './src/executors/my-executor/executor',
     );
     expect(executorJson.executors['my-executor'].schema).toEqual(
-      './src/executors/my-executor/schema.json'
+      './src/executors/my-executor/schema.json',
     );
     expect(executorJson.executors['my-executor'].description).toEqual(
-      'my-executor executor'
+      'my-executor executor',
     );
   });
 
@@ -125,13 +125,13 @@ describe('NxPlugin Executor Generator', () => {
     const executorJson = readJson(tree, 'my-plugin/executors.json');
 
     expect(executorJson.executors['my-executor'].implementation).toEqual(
-      './src/executors/my-executor/executor'
+      './src/executors/my-executor/executor',
     );
     expect(executorJson.executors['my-executor'].schema).toEqual(
-      './src/executors/my-executor/schema.json'
+      './src/executors/my-executor/schema.json',
     );
     expect(executorJson.executors['my-executor'].description).toEqual(
-      'my-executor executor'
+      'my-executor executor',
     );
   });
 
@@ -148,7 +148,7 @@ describe('NxPlugin Executor Generator', () => {
     const executorsJson = readJson(tree, 'my-plugin/executors.json');
 
     expect(executorsJson.executors['my-executor'].description).toEqual(
-      'my-executor custom description'
+      'my-executor custom description',
     );
   });
 
@@ -170,7 +170,7 @@ describe('NxPlugin Executor Generator', () => {
 
     expect(() => tree.exists(`${libConfig.root}/executors.json`)).not.toThrow();
     expect(readJson(tree, `${libConfig.root}/package.json`).executors).toBe(
-      './executors.json'
+      './executors.json',
     );
   });
 
@@ -186,10 +186,10 @@ describe('NxPlugin Executor Generator', () => {
         });
 
         expect(
-          tree.exists('my-plugin/src/executors/my-executor/executor.spec.ts')
+          tree.exists('my-plugin/src/executors/my-executor/executor.spec.ts'),
         ).toBeFalsy();
         expect(
-          tree.exists('my-plugin/src/executors/my-executor/hasher.spec.ts')
+          tree.exists('my-plugin/src/executors/my-executor/hasher.spec.ts'),
         ).toBeFalsy();
       });
     });
@@ -205,10 +205,10 @@ describe('NxPlugin Executor Generator', () => {
         nameAndDirectoryFormat: 'as-provided',
       });
       expect(
-        tree.exists('my-plugin/src/executors/my-executor/hasher.spec.ts')
+        tree.exists('my-plugin/src/executors/my-executor/hasher.spec.ts'),
       ).toBeTruthy();
       expect(
-        tree.read('my-plugin/src/executors/my-executor/hasher.ts').toString()
+        tree.read('my-plugin/src/executors/my-executor/hasher.ts').toString(),
       ).toMatchInlineSnapshot(`
         "import { CustomHasher } from '@nx/devkit';
 
@@ -237,7 +237,7 @@ describe('NxPlugin Executor Generator', () => {
 
       const executorsJson = readJson(tree, 'my-plugin/executors.json');
       expect(executorsJson.executors['my-executor'].hasher).toEqual(
-        './src/executors/my-executor/hasher'
+        './src/executors/my-executor/hasher',
       );
     });
   });

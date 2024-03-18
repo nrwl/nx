@@ -62,7 +62,7 @@ describe('lib', () => {
       });
 
       expect(
-        tree.read(`my-lib/src/lib/my-lib.module.ts`, 'utf-8')
+        tree.read(`my-lib/src/lib/my-lib.module.ts`, 'utf-8'),
       ).toMatchSnapshot();
     });
 
@@ -86,10 +86,10 @@ describe('lib', () => {
       });
 
       expect(
-        tree.read(`my-lib/src/lib/my-lib.module.ts`, 'utf-8')
+        tree.read(`my-lib/src/lib/my-lib.module.ts`, 'utf-8'),
       ).toMatchSnapshot();
       expect(
-        tree.read(`my-lib/src/lib/my-lib.controller.ts`, 'utf-8')
+        tree.read(`my-lib/src/lib/my-lib.controller.ts`, 'utf-8'),
       ).toMatchSnapshot();
       expect(tree.read(`my-lib/src/index.ts`, 'utf-8')).toMatchSnapshot();
     });
@@ -236,7 +236,7 @@ describe('lib', () => {
       expect(tsConfig.compilerOptions.noImplicitAny).toBeTruthy();
       expect(tsConfig.compilerOptions.strictBindCallApply).toBeTruthy();
       expect(
-        tsConfig.compilerOptions.forceConsistentCasingInFileNames
+        tsConfig.compilerOptions.forceConsistentCasingInFileNames,
       ).toBeTruthy();
       expect(tsConfig.compilerOptions.noFallthroughCasesInSwitch).toBeTruthy();
     });
@@ -364,15 +364,15 @@ describe('lib', () => {
       expect(tree.exists('api/my-lib/src/lib/my-lib.service.ts')).toBeTruthy();
 
       expect(
-        tree.exists('api/my-lib/src/lib/my-lib.service.spec.ts')
+        tree.exists('api/my-lib/src/lib/my-lib.service.spec.ts'),
       ).toBeTruthy();
 
       expect(
-        tree.exists('api/my-lib/src/lib/my-lib.controller.ts')
+        tree.exists('api/my-lib/src/lib/my-lib.controller.ts'),
       ).toBeTruthy();
 
       expect(
-        tree.exists('api/my-lib/src/lib/my-lib.controller.spec.ts')
+        tree.exists('api/my-lib/src/lib/my-lib.controller.spec.ts'),
       ).toBeTruthy();
     });
   });

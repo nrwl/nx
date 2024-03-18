@@ -72,7 +72,7 @@ function addPlugin(tree: Tree) {
 
 export async function initEsLint(
   tree: Tree,
-  options: LinterInitOptions
+  options: LinterInitOptions,
 ): Promise<GeneratorCallback> {
   const nxJson = readNxJson(tree);
   const addPluginDefault =
@@ -116,8 +116,8 @@ export async function initEsLint(
           eslint: eslintVersion,
         },
         undefined,
-        options.keepExistingVersions
-      )
+        options.keepExistingVersions,
+      ),
     );
   }
 
@@ -130,7 +130,7 @@ export async function initEsLint(
 
 export async function lintInitGenerator(
   tree: Tree,
-  options: LinterInitOptions
+  options: LinterInitOptions,
 ) {
   return await initEsLint(tree, { addPlugin: false, ...options });
 }

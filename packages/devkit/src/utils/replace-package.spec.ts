@@ -169,7 +169,7 @@ describe('replaceNrwlPackageWithNxPackage', () => {
     tree.write('package.json', '{ broken: "json ');
 
     expect(() =>
-      replaceNrwlPackageWithNxPackage(tree, 'old-package', 'new-package')
+      replaceNrwlPackageWithNxPackage(tree, 'old-package', 'new-package'),
     ).not.toThrow();
   });
 

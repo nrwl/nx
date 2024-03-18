@@ -25,7 +25,7 @@ import { appRoutes } from './app.routes';
 export const appConfig: ApplicationConfig = {
   providers: [provideRouter(appRoutes)],
 };
-`
+`,
     );
 
     addHydration(tree, { project: 'app1', standalone: true });
@@ -55,7 +55,7 @@ import { appRoutes } from './app.routes';
 export const appConfig: ApplicationConfig = {
   providers: [provideClientHydration(), provideRouter(appRoutes)],
 };
-`
+`,
     );
 
     addHydration(tree, { project: 'app1', standalone: true });
@@ -90,7 +90,7 @@ import { NxWelcomeComponent } from './nx-welcome.component';
   bootstrap: [AppComponent],
 })
 export class AppModule {}
-`
+`,
     );
 
     addHydration(tree, { project: 'app1', standalone: false });
@@ -132,7 +132,7 @@ import { NxWelcomeComponent } from './nx-welcome.component';
   providers: [provideClientHydration()],
 })
 export class AppModule {}
-`
+`,
     );
 
     addHydration(tree, { project: 'app1', standalone: false });

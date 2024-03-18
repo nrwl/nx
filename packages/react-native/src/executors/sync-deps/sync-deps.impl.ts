@@ -19,7 +19,7 @@ export interface ReactNativeSyncDepsOutput {
 
 export default async function* syncDepsExecutor(
   options: ReactNativeSyncDepsOptions,
-  context: ExecutorContext
+  context: ExecutorContext,
 ): AsyncGenerator<ReactNativeSyncDepsOutput> {
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
@@ -28,7 +28,7 @@ export default async function* syncDepsExecutor(
   const projectPackageJsonPath = join(
     context.root,
     projectRoot,
-    'package.json'
+    'package.json',
   );
 
   const workspacePackageJson = readJsonFile(workspacePackageJsonPath);
@@ -47,8 +47,8 @@ export default async function* syncDepsExecutor(
       typeof options.exclude === 'string'
         ? options.exclude.split(',')
         : options.exclude,
-      options.all
-    )
+      options.all,
+    ),
   );
 
   yield { success: true };
@@ -62,7 +62,7 @@ export async function syncDeps(
   projectGraph: ProjectGraph = readCachedProjectGraph(),
   include: string[] = [],
   exclude: string[] = [],
-  all: boolean = false
+  all: boolean = false,
 ): Promise<string[]> {
   let npmDeps = all
     ? Object.keys(workspacePackageJson.dependencies || {})
@@ -123,18 +123,18 @@ export async function syncDeps(
 
 export function displayNewlyAddedDepsMessage(
   projectName: string,
-  deps: string[]
+  deps: string[],
 ) {
   if (deps.length > 0) {
     logger.info(`${chalk.bold.cyan(
-      'info'
+      'info',
     )} Added entries to 'package.json' for '${projectName}' (for autolink):
   ${deps.map((d) => chalk.bold.cyan(`"${d}": "*"`)).join('\n  ')}`);
   } else {
     logger.info(
       `${chalk.bold.cyan(
-        'info'
-      )} Dependencies for '${projectName}' are up to date! No changes made.`
+        'info',
+      )} Dependencies for '${projectName}' are up to date! No changes made.`,
     );
   }
 }

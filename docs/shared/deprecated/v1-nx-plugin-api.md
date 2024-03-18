@@ -83,7 +83,7 @@ import { TargetConfiguration } from '@nx/devkit';
 export const projectFilePatterns = ['project.json', 'my-other-project-file'];
 
 export function registerProjectTargets(
-  projectFilePath: string
+  projectFilePath: string,
 ): Record<string, TargetConfiguration> {
   return {
     build: {
@@ -151,7 +151,7 @@ import {
 
 export function processProjectGraph(
   graph: ProjectGraph,
-  context: ProjectGraphProcessorContext
+  context: ProjectGraphProcessorContext,
 ): ProjectGraph {
   const builder = new ProjectGraphBuilder(graph);
   // We will see how this is used below.
@@ -210,7 +210,7 @@ Nx knows what files have changed since the last invocation. Only those files wil
 builder.addStaticDependency(
   'existing-project',
   'new-project',
-  'libs/existing-project/src/index.ts'
+  'libs/existing-project/src/index.ts',
 );
 ```
 
@@ -228,7 +228,7 @@ import { DependencyType } from '@nx/devkit';
 builder.addDynamicDependency(
   'existing-project',
   'lazy-route',
-  'libs/existing-project/src/router-setup.ts'
+  'libs/existing-project/src/router-setup.ts',
 );
 ```
 

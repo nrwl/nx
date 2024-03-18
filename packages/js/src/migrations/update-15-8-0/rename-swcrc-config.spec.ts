@@ -46,7 +46,7 @@ describe('Rename swcrc file migration', () => {
 
     const projectConfig = readProjectConfiguration(tree, 'my-lib');
     expect(projectConfig.targets.build.options.swcrc).toEqual(
-      'libs/my-lib/src/.swcrc'
+      'libs/my-lib/src/.swcrc',
     );
   });
 
@@ -61,7 +61,7 @@ describe('Rename swcrc file migration', () => {
 
     const projectConfig = readProjectConfiguration(tree, 'my-lib');
     expect(projectConfig.targets.build.options.swcrc).toEqual(
-      'libs/my-lib/src/.custom.swcrc'
+      'libs/my-lib/src/.custom.swcrc',
     );
   });
 });
@@ -100,14 +100,14 @@ module.exports = {
   moduleFileExtensions: ['ts', 'js', 'html'],
   coverageDirectory: '../../coverage/packages/vite',
 };
-`
+`,
   );
 }
 
 function customSwcrcPath(tree: Tree, custom = false) {
   tree.rename(
     'libs/my-lib/.lib.swcrc',
-    custom ? 'libs/my-lib/src/.custom.swcrc' : 'libs/my-lib/src/.lib.swcrc'
+    custom ? 'libs/my-lib/src/.custom.swcrc' : 'libs/my-lib/src/.lib.swcrc',
   );
   const projectConfig = readProjectConfiguration(tree, 'my-lib');
   projectConfig.targets.build.options.swcrc = custom

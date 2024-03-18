@@ -146,7 +146,7 @@ const launchWeekScheduleRow = (item: ScheduleItem): JSX.Element => (
         <p className="col-span-2 flex items-center px-5 py-6 md:px-8">
           {item.speakers.length > 2
             ? `${item.speakers.slice(0, -1).join(', ')}, & ${item.speakers.at(
-                -1
+                -1,
               )}`
             : item.speakers.join(' & ')}
         </p>

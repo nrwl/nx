@@ -38,13 +38,13 @@ describe('ensureViteConfigIsCorrect', () => {
       testOption,
       testOptionObject,
       '',
-      { build: false, test: true, serve: false }
+      { build: false, test: true, serve: false },
     );
     const appFileContent = tree.read('apps/my-app/vite.config.ts', 'utf-8');
     const file = tsquery.ast(appFileContent);
     const buildNode = tsquery.query(
       file,
-      'PropertyAssignment:has(Identifier[name="build"])'
+      'PropertyAssignment:has(Identifier[name="build"])',
     );
     expect(buildNode).toBeDefined();
     expect(appFileContent).toMatchSnapshot();
@@ -62,13 +62,13 @@ describe('ensureViteConfigIsCorrect', () => {
       testOption,
       testOptionObject,
       '',
-      { build: false, test: true, serve: false }
+      { build: false, test: true, serve: false },
     );
     const appFileContent = tree.read('apps/my-app/vite.config.ts', 'utf-8');
     const file = tsquery.ast(appFileContent);
     const buildNode = tsquery.query(
       file,
-      'PropertyAssignment:has(Identifier[name="build"])'
+      'PropertyAssignment:has(Identifier[name="build"])',
     );
     expect(buildNode).toBeDefined();
     expect(appFileContent).toMatchSnapshot();
@@ -86,13 +86,13 @@ describe('ensureViteConfigIsCorrect', () => {
       testOption,
       testOptionObject,
       '',
-      { build: false, test: false, serve: false }
+      { build: false, test: false, serve: false },
     );
     const appFileContent = tree.read('apps/my-app/vite.config.ts', 'utf-8');
     const file = tsquery.ast(appFileContent);
     const buildNode = tsquery.query(
       file,
-      'PropertyAssignment:has(Identifier[name="build"])'
+      'PropertyAssignment:has(Identifier[name="build"])',
     );
     expect(buildNode).toBeDefined();
     expect(appFileContent).toMatchSnapshot();
@@ -110,13 +110,13 @@ describe('ensureViteConfigIsCorrect', () => {
       testOption,
       testOptionObject,
       '',
-      { build: false, test: false, serve: false }
+      { build: false, test: false, serve: false },
     );
     const appFileContent = tree.read('apps/my-app/vite.config.ts', 'utf-8');
     const file = tsquery.ast(appFileContent);
     const buildNode = tsquery.query(
       file,
-      'PropertyAssignment:has(Identifier[name="build"])'
+      'PropertyAssignment:has(Identifier[name="build"])',
     );
     expect(buildNode).toBeDefined();
     expect(appFileContent).toMatchSnapshot();
@@ -134,13 +134,13 @@ describe('ensureViteConfigIsCorrect', () => {
       testOption,
       testOptionObject,
       '',
-      { build: false, test: false, serve: false }
+      { build: false, test: false, serve: false },
     );
     const appFileContent = tree.read('apps/my-app/vite.config.ts', 'utf-8');
     const file = tsquery.ast(appFileContent);
     const buildNode = tsquery.query(
       file,
-      'PropertyAssignment:has(Identifier[name="build"])'
+      'PropertyAssignment:has(Identifier[name="build"])',
     );
     expect(buildNode).toBeDefined();
     expect(appFileContent).toMatchSnapshot();
@@ -158,7 +158,7 @@ describe('ensureViteConfigIsCorrect', () => {
       testOption,
       testOptionObject,
       '',
-      { build: false, test: false, serve: false }
+      { build: false, test: false, serve: false },
     );
     const appFileContent = tree.read('apps/my-app/vite.config.ts', 'utf-8');
     expect(appFileContent).toMatchSnapshot();
@@ -176,7 +176,7 @@ describe('ensureViteConfigIsCorrect', () => {
       testOption,
       testOptionObject,
       '',
-      { build: true, test: true, serve: true }
+      { build: true, test: true, serve: true },
     );
     const appFileContent = tree.read('apps/my-app/vite.config.ts', 'utf-8');
     expect(appFileContent).toMatchSnapshot();
@@ -194,7 +194,7 @@ describe('ensureViteConfigIsCorrect', () => {
       testOption,
       testOptionObject,
       '',
-      { build: false, test: true, serve: true }
+      { build: false, test: true, serve: true },
     );
     const appFileContent = tree.read('apps/my-app/vite.config.ts', 'utf-8');
     expect(appFileContent).toMatchSnapshot();
@@ -212,7 +212,7 @@ describe('ensureViteConfigIsCorrect', () => {
       testOption,
       testOptionObject,
       '',
-      { build: false, test: false, serve: true }
+      { build: false, test: false, serve: true },
     );
     const appFileContent = tree.read('apps/my-app/vite.config.ts', 'utf-8');
     expect(appFileContent).toMatchSnapshot();

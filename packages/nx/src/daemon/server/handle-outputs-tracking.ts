@@ -15,7 +15,7 @@ export async function handleRecordOutputsHash(payload: {
     return {
       description: 'recordOutputsHash failed',
       error: new Error(
-        `Critical error when recording metadata about outputs: '${e.message}'.`
+        `Critical error when recording metadata about outputs: '${e.message}'.`,
       ),
     };
   }
@@ -28,7 +28,7 @@ export async function handleOutputsHashesMatch(payload: {
   try {
     const res = await outputsHashesMatch(
       payload.data.outputs,
-      payload.data.hash
+      payload.data.hash,
     );
     return {
       response: JSON.stringify(res),
@@ -38,7 +38,7 @@ export async function handleOutputsHashesMatch(payload: {
     return {
       description: 'outputsHashesMatch failed',
       error: new Error(
-        `Critical error when verifying the contents of the outputs haven't changed: '${e.message}'.`
+        `Critical error when verifying the contents of the outputs haven't changed: '${e.message}'.`,
       ),
     };
   }

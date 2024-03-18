@@ -150,8 +150,8 @@ class CLIOutput {
       this.addNewline();
       this.writeToStdOut(
         `${chalk.grey(
-          '  Learn more about this error: '
-        )}https://errors.nx.dev/${slug}${EOL}`
+          '  Learn more about this error: ',
+        )}https://errors.nx.dev/${slug}${EOL}`,
       );
     }
 
@@ -175,8 +175,8 @@ class CLIOutput {
       this.addNewline();
       this.writeToStdOut(
         `${chalk.grey(
-          '  Learn more about this warning: '
-        )}https://errors.nx.dev/${slug}${EOL}`
+          '  Learn more about this warning: ',
+        )}https://errors.nx.dev/${slug}${EOL}`,
       );
     }
 
@@ -230,7 +230,7 @@ class CLIOutput {
   logCommandOutput(message: string, taskStatus: TaskStatus, output: string) {
     let commandOutputWithStatus = this.getCommandWithStatus(
       message,
-      taskStatus
+      taskStatus,
     );
     if (
       process.env.NX_SKIP_LOG_GROUPING !== 'true' &&
@@ -256,7 +256,7 @@ class CLIOutput {
 
   private getCommandWithStatus(
     message: string,
-    taskStatus: TaskStatus
+    taskStatus: TaskStatus,
   ): string {
     const commandOutput =
       chalk.dim('> ') + this.formatCommand(this.normalizeMessage(message));
@@ -296,7 +296,7 @@ class CLIOutput {
       | 'local-cache-kept-existing'
       | 'local-cache'
       | 'remote-cache',
-    commandOutput: string
+    commandOutput: string,
   ) {
     if (taskStatus === 'local-cache') {
       return `${commandOutput}  ${chalk.dim('[local cache]')}`;
@@ -304,7 +304,7 @@ class CLIOutput {
       return `${commandOutput}  ${chalk.dim('[remote cache]')}`;
     } else if (taskStatus === 'local-cache-kept-existing') {
       return `${commandOutput}  ${chalk.dim(
-        '[existing outputs match the cache, left as is]'
+        '[existing outputs match the cache, left as is]',
       )}`;
     } else {
       return commandOutput;

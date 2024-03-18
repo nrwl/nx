@@ -20,7 +20,7 @@ export default async function update(tree: Tree): Promise<void> {
           projectConfig.targets[targetName].options.generatePackageJson ??=
             true;
         }
-      }
+      },
     );
 
     if (shouldUpdate) {

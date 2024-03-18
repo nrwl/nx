@@ -35,7 +35,7 @@ export default async function (tree: Tree) {
   }
 
   for (const [targetOrExecutor, targetConfig] of Object.entries(
-    nxJson.targetDefaults
+    nxJson.targetDefaults,
   )) {
     if (targetOrExecutor === '@nguniversal/builders:ssr-dev-server') {
       nxJson.targetDefaults['@angular-devkit/build-angular:ssr-dev-server'] =
@@ -62,14 +62,14 @@ export default async function (tree: Tree) {
   removeDependenciesFromPackageJson(
     tree,
     ['@nguniversal/builders'],
-    ['@nguniversal/builders']
+    ['@nguniversal/builders'],
   );
 
   await formatFiles(tree);
 }
 
 function* allTargetOptions<T>(
-  target: TargetConfiguration<T>
+  target: TargetConfiguration<T>,
 ): Iterable<[string | undefined, T]> {
   if (target.options) {
     yield [undefined, target.options];
@@ -91,7 +91,7 @@ function updatePrerenderOptions(
     discoverRoutes?: any;
     guessRoutes?: any;
     numProcesses?: any;
-  }>
+  }>,
 ) {
   for (const [, options] of allTargetOptions(config)) {
     if (options.guessRoutes !== undefined) {

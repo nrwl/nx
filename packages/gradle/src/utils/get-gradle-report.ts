@@ -27,7 +27,7 @@ export function getGradleReport(): GradleReport {
   }
 
   const gradleProjectReportStart = performance.mark(
-    'gradleProjectReport:start'
+    'gradleProjectReport:start',
   );
   const projectReportLines = execGradle(['projectReport'], {
     cwd: workspaceRoot,
@@ -38,7 +38,7 @@ export function getGradleReport(): GradleReport {
   performance.measure(
     'gradleProjectReport',
     gradleProjectReportStart.name,
-    gradleProjectReportEnd.name
+    gradleProjectReportEnd.name,
   );
   gradleReportCache = processProjectReports(projectReportLines);
   return gradleReportCache;
@@ -79,7 +79,7 @@ function processProjectReports(projectReportLines: string[]): GradleReport {
       if (line.endsWith(':dependencyReport')) {
         const gradleProject = line.substring(
           '> Task '.length,
-          line.length - ':dependencyReport'.length
+          line.length - ':dependencyReport'.length,
         );
         const [_, file] = nextLine.split('file://');
         dependenciesMap.set(gradleProject, file);
@@ -87,7 +87,7 @@ function processProjectReports(projectReportLines: string[]): GradleReport {
       if (line.endsWith('propertyReport')) {
         const gradleProject = line.substring(
           '> Task '.length,
-          line.length - ':propertyReport'.length
+          line.length - ':propertyReport'.length,
         );
         const [_, file] = nextLine.split('file://');
         const propertyReportLines = readFileSync(file).toString().split('\n');
@@ -116,7 +116,7 @@ function processProjectReports(projectReportLines: string[]): GradleReport {
             const taskName = dirName.replace('Dir', '');
             outputDirMap.set(
               taskName,
-              `{workspaceRoot}/${relative(workspaceRoot, dirPath)}`
+              `{workspaceRoot}/${relative(workspaceRoot, dirPath)}`,
             );
           }
         }
@@ -128,13 +128,13 @@ function processProjectReports(projectReportLines: string[]): GradleReport {
         const buildDir = relative(workspaceRoot, absBuildDirPath);
         buildFileToDepsMap.set(
           buildFile,
-          dependenciesMap.get(gradleProject) as string
+          dependenciesMap.get(gradleProject) as string,
         );
 
         outputDirMap.set('build', `{workspaceRoot}/${buildDir}`);
         outputDirMap.set(
           'classes',
-          `{workspaceRoot}/${join(buildDir, 'classes')}`
+          `{workspaceRoot}/${join(buildDir, 'classes')}`,
         );
 
         gradleFileToOutputDirsMap.set(buildFile, outputDirMap);
@@ -146,7 +146,7 @@ function processProjectReports(projectReportLines: string[]): GradleReport {
       if (line.endsWith('taskReport')) {
         const gradleProject = line.substring(
           '> Task '.length,
-          line.length - ':taskReport'.length
+          line.length - ':taskReport'.length,
         );
         const [_, file] = nextLine.split('file://');
         const taskTypeMap = new Map<string, string>();

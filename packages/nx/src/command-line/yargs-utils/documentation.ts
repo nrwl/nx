@@ -4,7 +4,7 @@ import { examples } from '../examples';
 
 export function linkToNxDevAndExamples<T>(
   yargs: yargs.Argv<T>,
-  command: string
+  command: string,
 ) {
   (examples[command] || []).forEach((t) => {
     yargs = yargs.example(t.command, t.description);
@@ -13,8 +13,8 @@ export function linkToNxDevAndExamples<T>(
     chalk.bold(
       `Find more information and examples at https://nx.dev/nx/${command.replace(
         ':',
-        '-'
-      )}`
-    )
+        '-',
+      )}`,
+    ),
   );
 }

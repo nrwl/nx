@@ -5,7 +5,7 @@ import { extname } from 'path';
 export function replaceModuleUsagesWithComponent(
   tree: Tree,
   moduleName: string,
-  componentName: string
+  componentName: string,
 ) {
   visitNotIgnoredFiles(tree, '/', (path) => {
     if (extname(path) !== '.ts') {
@@ -16,7 +16,7 @@ export function replaceModuleUsagesWithComponent(
       const moduleNameRegex = new RegExp(moduleName, 'g');
       const newFileContents = fileContents.replace(
         moduleNameRegex,
-        componentName
+        componentName,
       );
       tree.write(path, newFileContents);
     }

@@ -14,7 +14,7 @@ export function setupHostIfDynamic(tree: Tree, options: Schema) {
   const project = readProjectConfiguration(tree, options.appName);
   const pathToMFManifest = joinPathFragments(
     project.sourceRoot,
-    'assets/module-federation.manifest.json'
+    'assets/module-federation.manifest.json',
   );
 
   if (!tree.exists(pathToMFManifest)) {
@@ -23,7 +23,7 @@ export function setupHostIfDynamic(tree: Tree, options: Schema) {
 
   const pathToProdWebpackConfig = joinPathFragments(
     project.root,
-    `webpack.prod.config.${options.typescriptConfiguration ? 'ts' : 'js'}`
+    `webpack.prod.config.${options.typescriptConfiguration ? 'ts' : 'js'}`,
   );
   if (tree.exists(pathToProdWebpackConfig)) {
     tree.delete(pathToProdWebpackConfig);

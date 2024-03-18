@@ -9,8 +9,8 @@ expect.addSnapshotSerializer({
     return JSON.stringify(
       str.replaceAll(
         new RegExp(workspaceRoot.replace(/\\/g, '\\\\'), 'g'),
-        '<workspaceRoot>'
-      )
+        '<workspaceRoot>',
+      ),
     );
   },
   test(val: string) {
@@ -89,7 +89,7 @@ describe('resolveLocalPackageDependencies()', () => {
         allProjects,
         projectNameToPackageRootMap,
         (p) => p.data.root,
-        false
+        false,
       );
 
       expect(result).toMatchInlineSnapshot(`
@@ -215,7 +215,7 @@ describe('resolveLocalPackageDependencies()', () => {
         allProjects,
         projectNameToPackageRootMap,
         (p) => p.data.root,
-        false
+        false,
       );
 
       expect(result).toMatchInlineSnapshot(`
@@ -305,7 +305,7 @@ describe('resolveLocalPackageDependencies()', () => {
         allProjects,
         projectNameToPackageRootMap,
         (p) => p.data.root,
-        false
+        false,
       );
 
       expect(result).toMatchInlineSnapshot(`
@@ -395,7 +395,7 @@ describe('resolveLocalPackageDependencies()', () => {
         allProjects,
         projectNameToPackageRootMap,
         (p) => p.data.root,
-        false
+        false,
       );
 
       expect(result).toMatchInlineSnapshot(`

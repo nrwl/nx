@@ -17,7 +17,7 @@ export default async function (tree: Tree, options: PresetGeneratorSchema) {
   const pluginProjectName = names(
     options.pluginName.includes('/')
       ? options.pluginName.split('/')[1]
-      : options.pluginName
+      : options.pluginName,
   ).fileName;
   options.createPackageName =
     options.createPackageName === 'false' // for command line in e2e, it is passed as a string

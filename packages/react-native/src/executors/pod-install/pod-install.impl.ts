@@ -10,7 +10,7 @@ export interface ReactNativePodInstallOutput {
 
 export default async function* podInstall(
   options: ReactNativePodInstallOptions,
-  context: ExecutorContext
+  context: ExecutorContext,
 ): AsyncGenerator<ReactNativePodInstallOutput> {
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;

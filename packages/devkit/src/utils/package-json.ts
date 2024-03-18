@@ -35,7 +35,7 @@ const NON_SEMVER_TAGS = {
 
 function filterExistingDependencies(
   dependencies: Record<string, string>,
-  existingAltDependencies: Record<string, string>
+  existingAltDependencies: Record<string, string>,
 ) {
   if (!existingAltDependencies) {
     return dependencies;
@@ -52,7 +52,7 @@ function cleanSemver(version: string) {
 
 function isIncomingVersionGreater(
   incomingVersion: string,
-  existingVersion: string
+  existingVersion: string,
 ) {
   // if version is in the format of "latest", "next" or similar - keep it, otherwise try to parse it
   const incomingVersionCompareBy =
@@ -86,7 +86,7 @@ function isIncomingVersionGreater(
 
 function updateExistingAltDependenciesVersion(
   dependencies: Record<string, string>,
-  existingAltDependencies: Record<string, string>
+  existingAltDependencies: Record<string, string>,
 ) {
   return Object.keys(existingAltDependencies || {})
     .filter((d) => {
@@ -103,7 +103,7 @@ function updateExistingAltDependenciesVersion(
 
 function updateExistingDependenciesVersion(
   dependencies: Record<string, string>,
-  existingDependencies: Record<string, string> = {}
+  existingDependencies: Record<string, string> = {},
 ) {
   return Object.keys(dependencies)
     .filter((d) => {
@@ -140,19 +140,19 @@ export function addDependenciesToPackageJson(
   dependencies: Record<string, string>,
   devDependencies: Record<string, string>,
   packageJsonPath: string = 'package.json',
-  keepExistingVersions?: boolean
+  keepExistingVersions?: boolean,
 ): GeneratorCallback {
   const currentPackageJson = readJson(tree, packageJsonPath);
 
   /** Dependencies to install that are not met in dev dependencies */
   let filteredDependencies = filterExistingDependencies(
     dependencies,
-    currentPackageJson.devDependencies
+    currentPackageJson.devDependencies,
   );
   /** Dev dependencies to install that are not met in dependencies */
   let filteredDevDependencies = filterExistingDependencies(
     devDependencies,
-    currentPackageJson.dependencies
+    currentPackageJson.dependencies,
   );
 
   // filtered dependencies should consist of:
@@ -163,41 +163,41 @@ export function addDependenciesToPackageJson(
   filteredDependencies = {
     ...updateExistingDependenciesVersion(
       filteredDependencies,
-      currentPackageJson.dependencies
+      currentPackageJson.dependencies,
     ),
     ...updateExistingAltDependenciesVersion(
       devDependencies,
-      currentPackageJson.dependencies
+      currentPackageJson.dependencies,
     ),
   };
   filteredDevDependencies = {
     ...updateExistingDependenciesVersion(
       filteredDevDependencies,
-      currentPackageJson.devDependencies
+      currentPackageJson.devDependencies,
     ),
     ...updateExistingAltDependenciesVersion(
       dependencies,
-      currentPackageJson.devDependencies
+      currentPackageJson.devDependencies,
     ),
   };
 
   if (keepExistingVersions) {
     filteredDependencies = removeExistingDependencies(
       filteredDependencies,
-      currentPackageJson.dependencies
+      currentPackageJson.dependencies,
     );
     filteredDevDependencies = removeExistingDependencies(
       filteredDevDependencies,
-      currentPackageJson.devDependencies
+      currentPackageJson.devDependencies,
     );
   } else {
     filteredDependencies = removeLowerVersions(
       filteredDependencies,
-      currentPackageJson.dependencies
+      currentPackageJson.dependencies,
     );
     filteredDevDependencies = removeLowerVersions(
       filteredDevDependencies,
-      currentPackageJson.devDependencies
+      currentPackageJson.devDependencies,
     );
   }
 
@@ -205,7 +205,7 @@ export function addDependenciesToPackageJson(
     requiresAddingOfPackages(
       currentPackageJson,
       filteredDependencies,
-      filteredDevDependencies
+      filteredDevDependencies,
     )
   ) {
     updateJson(tree, packageJsonPath, (json) => {
@@ -237,7 +237,7 @@ export function addDependenciesToPackageJson(
  **/
 function removeLowerVersions(
   incomingDeps: Record<string, string>,
-  existingDeps: Record<string, string>
+  existingDeps: Record<string, string>,
 ) {
   return Object.keys(incomingDeps).reduce((acc, d) => {
     if (
@@ -252,7 +252,7 @@ function removeLowerVersions(
 
 function removeExistingDependencies(
   incomingDeps: Record<string, string>,
-  existingDeps: Record<string, string>
+  existingDeps: Record<string, string>,
 ): Record<string, string> {
   return Object.keys(incomingDeps).reduce((acc, d) => {
     if (!existingDeps?.[d]) {
@@ -279,7 +279,7 @@ export function removeDependenciesFromPackageJson(
   tree: Tree,
   dependencies: string[],
   devDependencies: string[],
-  packageJsonPath: string = 'package.json'
+  packageJsonPath: string = 'package.json',
 ): GeneratorCallback {
   const currentPackageJson = readJson(tree, packageJsonPath);
 
@@ -287,7 +287,7 @@ export function removeDependenciesFromPackageJson(
     requiresRemovingOfPackages(
       currentPackageJson,
       dependencies,
-      devDependencies
+      devDependencies,
     )
   ) {
     updateJson(tree, packageJsonPath, (json) => {
@@ -377,7 +377,7 @@ function requiresAddingOfPackages(packageJsonFile, deps, devDeps): boolean {
 function requiresRemovingOfPackages(
   packageJsonFile,
   deps: string[],
-  devDeps: string[]
+  devDeps: string[],
 ): boolean {
   let needsDepsUpdate = false;
   let needsDevDepsUpdate = false;
@@ -391,7 +391,7 @@ function requiresRemovingOfPackages(
 
   if (devDeps.length > 0) {
     needsDevDepsUpdate = devDeps.some(
-      (entry) => packageJsonFile.devDependencies[entry]
+      (entry) => packageJsonFile.devDependencies[entry],
     );
   }
 
@@ -429,7 +429,7 @@ export function ensurePackage(
   tree: Tree,
   pkg: string,
   requiredVersion: string,
-  options?: { dev?: boolean; throwOnMissing?: boolean }
+  options?: { dev?: boolean; throwOnMissing?: boolean },
 ): void;
 
 /**
@@ -446,13 +446,13 @@ export function ensurePackage(
  */
 export function ensurePackage<T extends any = any>(
   pkg: string,
-  version: string
+  version: string,
 ): T;
 export function ensurePackage<T extends any = any>(
   pkgOrTree: string | Tree,
   requiredVersionOrPackage: string,
   maybeRequiredVersion?: string,
-  _?: never
+  _?: never,
 ): T {
   let pkg: string;
   let requiredVersion: string;
@@ -483,7 +483,7 @@ export function ensurePackage<T extends any = any>(
 
   if (process.env.NX_DRY_RUN && process.env.NX_DRY_RUN !== 'false') {
     throw new Error(
-      'NOTE: This generator does not support --dry-run. If you are running this in Nx Console, it should execute fine once you hit the "Generate" button.\n'
+      'NOTE: This generator does not support --dry-run. If you are running this in Nx Console, it should execute fine once you hit the "Generate" button.\n',
     );
   }
 
@@ -520,9 +520,11 @@ export function ensurePackage<T extends any = any>(
   (Module as any)._initPaths();
 
   try {
-    const result = require(require.resolve(pkg, {
-      paths: [tempDir],
-    }));
+    const result = require(
+      require.resolve(pkg, {
+        paths: [tempDir],
+      }),
+    );
 
     packageMapCache.set(pkg, result);
 
@@ -544,7 +546,7 @@ export function ensurePackage<T extends any = any>(
  */
 function generatePackageManagerFiles(
   root: string,
-  packageManager: PackageManager = detectPackageManager()
+  packageManager: PackageManager = detectPackageManager(),
 ) {
   const [pmMajor] = getPackageManagerVersion(packageManager).split('.');
   switch (packageManager) {
@@ -552,7 +554,7 @@ function generatePackageManagerFiles(
       if (+pmMajor >= 2) {
         writeFileSync(
           join(root, '.yarnrc.yml'),
-          'nodeLinker: node-modules\nenableScripts: false'
+          'nodeLinker: node-modules\nenableScripts: false',
         );
       }
       break;

@@ -28,14 +28,14 @@ export interface WorkspaceFileMap {
 }
 
 export async function createProjectFileMapUsingProjectGraph(
-  graph: ProjectGraph
+  graph: ProjectGraph,
 ): Promise<ProjectFileMap> {
   return (await createFileMapUsingProjectGraph(graph)).fileMap.projectFileMap;
 }
 
 // TODO: refactor this to pull straight from the rust context instead of creating the file map in JS
 export async function createFileMapUsingProjectGraph(
-  graph: ProjectGraph
+  graph: ProjectGraph,
 ): Promise<WorkspaceFileMap> {
   const configs = readProjectsConfigurationFromProjectGraph(graph);
 
@@ -51,12 +51,12 @@ export async function createFileMapUsingProjectGraph(
 
 export function createFileMap(
   projectsConfigurations: ProjectsConfigurations,
-  allWorkspaceFiles: FileData[]
+  allWorkspaceFiles: FileData[],
 ): WorkspaceFileMap {
   const projectFileMap: ProjectFileMap = {};
   const projectRootMappings =
     createProjectRootMappingsFromProjectConfigurations(
-      projectsConfigurations.projects
+      projectsConfigurations.projects,
     );
   const nonProjectFiles: FileData[] = [];
 
@@ -87,21 +87,23 @@ export function updateFileMap(
   projectsConfigurations: Record<string, ProjectConfiguration>,
   rustReferences: NxWorkspaceFilesExternals,
   updatedFiles: Record<string, string>,
-  deletedFiles: string[]
+  deletedFiles: string[],
 ) {
   const updates = updateProjectFiles(
     Object.fromEntries(
-      createProjectRootMappingsFromProjectConfigurations(projectsConfigurations)
+      createProjectRootMappingsFromProjectConfigurations(
+        projectsConfigurations,
+      ),
     ),
     rustReferences,
     updatedFiles,
-    deletedFiles
+    deletedFiles,
   );
   return {
     fileMap: updates.fileMap,
     allWorkspaceFiles: buildAllWorkspaceFiles(
       updates.fileMap.projectFileMap,
-      updates.fileMap.nonProjectFiles
+      updates.fileMap.nonProjectFiles,
     ),
     rustReferences: updates.externalReferences,
   };

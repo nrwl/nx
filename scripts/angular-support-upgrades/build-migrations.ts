@@ -11,24 +11,22 @@ async function addMigrationPackageGroup(
   angularPackageMigrations: Record<string, any>,
   targetNxVersion: string,
   targetNxMigrationVersion: string,
-  packageVersionMap: Map<string, string>
+  packageVersionMap: Map<string, string>,
 ) {
   angularPackageMigrations.packageJsonUpdates[targetNxVersion] = {
     version: `${targetNxMigrationVersion}`,
   };
 
-  const promptAndRequirements = await getPromptAndRequiredVersions(
-    packageVersionMap
-  );
+  const promptAndRequirements =
+    await getPromptAndRequiredVersions(packageVersionMap);
   if (!promptAndRequirements) {
     console.warn(
       '❗️ - The `@angular/core` latest version is greater than the next version. Skipping generating migration prompt and requirements.\n' +
-        '     Please review the migrations and manually add the prompt and requirements if needed.'
+        '     Please review the migrations and manually add the prompt and requirements if needed.',
     );
   } else {
-    angularPackageMigrations.packageJsonUpdates[targetNxVersion][
-      'x-prompt'
-    ] = `Do you want to update the Angular version to ${promptAndRequirements.promptVersion}?`;
+    angularPackageMigrations.packageJsonUpdates[targetNxVersion]['x-prompt'] =
+      `Do you want to update the Angular version to ${promptAndRequirements.promptVersion}?`;
     angularPackageMigrations.packageJsonUpdates[targetNxVersion].requires = {
       '@angular/core': promptAndRequirements.angularCoreRequirement,
     };
@@ -59,21 +57,21 @@ async function addMigrationPackageGroup(
 }
 
 async function getPromptAndRequiredVersions(
-  packageVersionMap: Map<string, string>
+  packageVersionMap: Map<string, string>,
 ): Promise<{
   angularCoreRequirement: string;
   promptVersion: string;
 } | null> {
   // @angular/core
   const angularCoreMetadata = await axios.get(
-    'https://registry.npmjs.org/@angular/core'
+    'https://registry.npmjs.org/@angular/core',
   );
   const { latest, next } = angularCoreMetadata.data['dist-tags'];
   if (gt(latest, next)) {
     return null;
   }
   const angularCoreRequirement = `>=${major(latest)}.${minor(
-    latest
+    latest,
   )}.0 <${next}`;
 
   // prompt version (e.g. v16 or v16.1)
@@ -90,19 +88,19 @@ async function getPromptAndRequiredVersions(
 export async function buildMigrations(
   packageVersionMap: Map<string, string>,
   targetNxVersion: string,
-  targetNxMigrationVersion: string
+  targetNxMigrationVersion: string,
 ) {
   console.log('⏳ - Writing migrations...');
   const pathToMigrationsJsonFile = 'packages/angular/migrations.json';
   const angularPackageMigrations = JSON.parse(
-    readFileSync(pathToMigrationsJsonFile, { encoding: 'utf-8' })
+    readFileSync(pathToMigrationsJsonFile, { encoding: 'utf-8' }),
   );
 
   await addMigrationPackageGroup(
     angularPackageMigrations,
     targetNxVersion,
     targetNxMigrationVersion,
-    packageVersionMap
+    packageVersionMap,
   );
 
   const angularCLIVersion = packageVersionMap.get('@angular/cli') as string;
@@ -120,7 +118,7 @@ export async function buildMigrations(
   const migrationFileName = 'update-angular-cli';
   const generatorName = `update-angular-cli-version-${angularCLIVersion.replace(
     /\./g,
-    '-'
+    '-',
   )}`;
 
   const angularCoreVersion = packageVersionMap.get('@angular/core');
@@ -136,12 +134,12 @@ export async function buildMigrations(
 
   writeFileSync(
     pathToMigrationsJsonFile,
-    JSON.stringify(angularPackageMigrations, null, 2)
+    JSON.stringify(angularPackageMigrations, null, 2),
   );
 
   const pathToMigrationFolder = join(
     'packages/angular/src/migrations',
-    migrationGeneratorFolderName
+    migrationGeneratorFolderName,
   );
   if (!existsSync(pathToMigrationFolder)) {
     mkdirSync(pathToMigrationFolder);
@@ -149,19 +147,19 @@ export async function buildMigrations(
 
   const pathToMigrationGeneratorFile = join(
     pathToMigrationFolder,
-    `${migrationFileName}.ts`
+    `${migrationFileName}.ts`,
   );
   const pathToMigrationGeneratorSpecFile = join(
     pathToMigrationFolder,
-    `${migrationFileName}.spec.ts`
+    `${migrationFileName}.spec.ts`,
   );
   writeFileSync(
     pathToMigrationGeneratorFile,
-    angularCliMigrationGeneratorContents
+    angularCliMigrationGeneratorContents,
   );
   writeFileSync(
     pathToMigrationGeneratorSpecFile,
-    angularCliMigrationGeneratorSpecContents
+    angularCliMigrationGeneratorSpecContents,
   );
 
   console.log('✅ - Wrote migrations');

@@ -67,7 +67,7 @@ export const TargetConfigurationDetails = forwardRef(
       onViewInTaskGraph,
       onRunTarget,
     }: TargetProps,
-    ref: ForwardedRef<TargetConfigurationDetailsHandle>
+    ref: ForwardedRef<TargetConfigurationDetailsHandle>,
   ) => {
     const isCompact = variant === 'compact';
     const [collapsed, setCollapsed] = useState(true);
@@ -78,7 +78,7 @@ export const TargetConfigurationDetails = forwardRef(
 
     const handleCollapseToggle = useCallback(
       () => setCollapsed((collapsed) => !collapsed),
-      [setCollapsed]
+      [setCollapsed],
     );
 
     useEffect(() => {
@@ -148,7 +148,7 @@ export const TargetConfigurationDetails = forwardRef(
             isCompact ? 'px-2 py-1' : 'p-2',
             !collapsed
               ? 'border-b bg-slate-50 dark:border-slate-700/60 dark:border-slate-300/10 dark:bg-slate-800/60 '
-              : ''
+              : '',
           )}
           onClick={handleCollapseToggle}
         >
@@ -317,8 +317,8 @@ export const TargetConfigurationDetails = forwardRef(
                       onCopy={() =>
                         handleCopyClick(
                           `"inputs": ${JSON.stringify(
-                            targetConfiguration.inputs
-                          )}`
+                            targetConfiguration.inputs,
+                          )}`,
                         )
                       }
                     />
@@ -328,7 +328,7 @@ export const TargetConfigurationDetails = forwardRef(
                   {targetConfiguration.inputs.map((input, idx) => {
                     const sourceInfo = selectSourceInfo(
                       sourceMap,
-                      `targets.${targetName}.inputs`
+                      `targets.${targetName}.inputs`,
                     );
                     return (
                       <li
@@ -367,8 +367,8 @@ export const TargetConfigurationDetails = forwardRef(
                       onCopy={() =>
                         handleCopyClick(
                           `"outputs": ${JSON.stringify(
-                            targetConfiguration.outputs
-                          )}`
+                            targetConfiguration.outputs,
+                          )}`,
                         )
                       }
                     />
@@ -378,7 +378,7 @@ export const TargetConfigurationDetails = forwardRef(
                   {targetConfiguration.outputs?.map((output, idx) => {
                     const sourceInfo = selectSourceInfo(
                       sourceMap,
-                      `targets.${targetName}.outputs`
+                      `targets.${targetName}.outputs`,
                     );
                     return (
                       <li
@@ -417,8 +417,8 @@ export const TargetConfigurationDetails = forwardRef(
                       onCopy={() =>
                         handleCopyClick(
                           `"dependsOn": ${JSON.stringify(
-                            targetConfiguration.dependsOn
-                          )}`
+                            targetConfiguration.dependsOn,
+                          )}`,
                         )
                       }
                     />
@@ -428,7 +428,7 @@ export const TargetConfigurationDetails = forwardRef(
                   {targetConfiguration.dependsOn.map((dep, idx) => {
                     const sourceInfo = selectSourceInfo(
                       sourceMap,
-                      `targets.${targetName}.dependsOn`
+                      `targets.${targetName}.dependsOn`,
                     );
 
                     return (
@@ -472,7 +472,7 @@ export const TargetConfigurationDetails = forwardRef(
                       renderSource={(propertyName: string) => {
                         const sourceInfo = selectSourceInfo(
                           sourceMap,
-                          `targets.${targetName}.options.${propertyName}`
+                          `targets.${targetName}.options.${propertyName}`,
                         );
                         return sourceInfo ? (
                           <span className="shrink-1 flex min-w-0 pl-4">
@@ -520,7 +520,7 @@ export const TargetConfigurationDetails = forwardRef(
                     renderSource={(propertyName: string) => {
                       const sourceInfo = selectSourceInfo(
                         sourceMap,
-                        `targets.${targetName}.configurations.${propertyName}`
+                        `targets.${targetName}.configurations.${propertyName}`,
                       );
                       return sourceInfo ? (
                         <span className="shrink-1 flex min-w-0 pl-4">
@@ -541,7 +541,7 @@ export const TargetConfigurationDetails = forwardRef(
         )}
       </div>
     );
-  }
+  },
 );
 
 export default TargetConfigurationDetails;

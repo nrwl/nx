@@ -57,7 +57,7 @@ export async function remixInitGeneratorInternal(tree: Tree, options: Schema) {
         '@remix-run/dev': remixVersion,
       },
       undefined,
-      options.keepExistingVersions
+      options.keepExistingVersions,
     );
     tasks.push(installTask);
   }

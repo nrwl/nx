@@ -10,7 +10,7 @@ export interface TailwindSetup {
 
 export function getTailwindSetup(
   basePath: string,
-  tailwindConfig?: string
+  tailwindConfig?: string,
 ): TailwindSetup | undefined {
   let tailwindConfigPath = tailwindConfig;
 
@@ -29,12 +29,12 @@ export function getTailwindSetup(
   } catch {
     const relativeTailwindConfigPath = relative(
       workspaceRoot,
-      tailwindConfigPath
+      tailwindConfigPath,
     );
     logger.warn(
       `Tailwind CSS configuration file found (${relativeTailwindConfigPath})` +
         ` but the 'tailwindcss' package is not installed.` +
-        ` To enable Tailwind CSS, please install the 'tailwindcss' package.`
+        ` To enable Tailwind CSS, please install the 'tailwindcss' package.`,
     );
 
     return undefined;
@@ -49,7 +49,7 @@ export function getTailwindSetup(
 
 export function getTailwindConfigPath(
   projectRoot: string,
-  workspaceRoot: string
+  workspaceRoot: string,
 ): string | undefined {
   // valid tailwind config files https://github.com/tailwindlabs/tailwindcss/blob/master/src/util/resolveConfigPath.js#L4
   const tailwindConfigFiles = [

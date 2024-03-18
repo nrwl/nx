@@ -25,7 +25,7 @@ function resolveKnownRulesRequiringTypeChecking(): string[] | null {
 }
 
 export function hasRulesRequiringTypeChecking(
-  eslintConfig: Linter.Config
+  eslintConfig: Linter.Config,
 ): boolean {
   knownRulesRequiringTypeChecking = resolveKnownRulesRequiringTypeChecking();
   if (!knownRulesRequiringTypeChecking) {
@@ -38,12 +38,12 @@ export function hasRulesRequiringTypeChecking(
   }
   const allRulesInConfig = getAllRulesInConfig(eslintConfig);
   return allRulesInConfig.some((rule) =>
-    knownRulesRequiringTypeChecking.includes(rule)
+    knownRulesRequiringTypeChecking.includes(rule),
   );
 }
 
 export function removeParserOptionsProjectIfNotRequired(
-  json: Linter.Config
+  json: Linter.Config,
 ): Linter.Config {
   // At least one rule requiring type-checking is in use, do not migrate the config
   if (hasRulesRequiringTypeChecking(json)) {

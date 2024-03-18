@@ -9,7 +9,7 @@ import {
 
 export function addDependencies(
   tree: Tree,
-  isUsingApplicationBuilder: boolean
+  isUsingApplicationBuilder: boolean,
 ): void {
   const pkgVersions = versions(tree);
   const { major: angularMajorVersion, version: angularVersion } =

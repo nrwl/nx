@@ -44,15 +44,15 @@ checker.init(
           h2(
             license,
             unorderedList(
-              packages.map((p) => `[${p}](https://www.npmjs.com/${p})`)
-            )
-          )
+              packages.map((p) => `[${p}](https://www.npmjs.com/${p})`),
+            ),
+          ),
         ),
       h1(
         'License report',
-        'This report contains the licenses for all dependencies used by any project for the Nx monorepo.'
-      )
+        'This report contains the licenses for all dependencies used by any project for the Nx monorepo.',
+      ),
     );
     writeFileSync(join(__dirname, '../build/license-report.md'), md);
-  }
+  },
 );

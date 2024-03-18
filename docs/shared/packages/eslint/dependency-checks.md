@@ -22,11 +22,11 @@ To set it up manually for existing libraries, you need to add the `dependency-ch
       "files": ["*.json"],
       "parser": "jsonc-eslint-parser",
       "rules": {
-        "@nx/dependency-checks": "error"
-      }
-    }
+        "@nx/dependency-checks": "error",
+      },
+    },
     // ... more ESLint overrides here
-  ]
+  ],
 }
 ```
 
@@ -43,11 +43,11 @@ Additionally, you need to adjust your `lintFilePatterns` to include the project'
       "options": {
         "lintFilePatterns": [
           "libs/my-lib/**/*.{ts,tsx,js,jsx}",
-          "libs/my-lib/package.json" // add this line
-        ]
-      }
-    }
-  }
+          "libs/my-lib/package.json", // add this line
+        ],
+      },
+    },
+  },
 }
 ```
 
@@ -66,9 +66,9 @@ Sometimes we intentionally want to add or remove a dependency from our `package.
       "ignoredFiles": ["webpack.config.js", "eslint.config.js"], // list of files that should be skipped for check
       "checkMissingDependencies": true, // toggle to disable
       "checkObsoleteDependencies": true, // toggle to disable
-      "checkVersionMismatches": true // toggle to disable
-    }
-  ]
+      "checkVersionMismatches": true, // toggle to disable
+    },
+  ],
 }
 ```
 

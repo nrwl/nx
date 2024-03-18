@@ -77,7 +77,7 @@ export class PseudoIPCServer {
             this.childReadyMap.get(childId)();
           }
         }
-      })
+      }),
     );
 
     socket.on('close', () => {
@@ -95,7 +95,7 @@ export class PseudoIPCServer {
   sendMessageToChildren(message: Serializable) {
     this.sockets.forEach((socket) => {
       socket.write(
-        JSON.stringify({ type: 'TO_CHILDREN_FROM_PARENT', message })
+        JSON.stringify({ type: 'TO_CHILDREN_FROM_PARENT', message }),
       );
       // send EOT to indicate that the message has been fully written
       socket.write(String.fromCodePoint(4));
@@ -105,7 +105,7 @@ export class PseudoIPCServer {
   sendMessageToChild(id: string, message: Serializable) {
     this.sockets.forEach((socket) => {
       socket.write(
-        JSON.stringify({ type: 'TO_CHILDREN_FROM_PARENT', id, message })
+        JSON.stringify({ type: 'TO_CHILDREN_FROM_PARENT', id, message }),
       );
       socket.write(String.fromCodePoint(4));
     });
@@ -114,7 +114,7 @@ export class PseudoIPCServer {
   onMessageFromChildren(
     onMessage: (message: Serializable) => void,
     onClose: () => void = () => {},
-    onError: (err: Error) => void = (err) => {}
+    onError: (err: Error) => void = (err) => {},
   ) {
     this.childMessages.push({
       onMessage,
@@ -136,7 +136,7 @@ export class PseudoIPCClient {
 
   sendMessageToParent(message: Serializable) {
     this.socket.write(
-      JSON.stringify({ type: 'TO_PARENT_FROM_CHILDREN', message })
+      JSON.stringify({ type: 'TO_PARENT_FROM_CHILDREN', message }),
     );
     // send EOT to indicate that the message has been fully written
     this.socket.write(String.fromCodePoint(4));
@@ -147,7 +147,7 @@ export class PseudoIPCClient {
       JSON.stringify({
         type: 'CHILD_READY',
         message: id,
-      } as PseudoIPCMessage)
+      } as PseudoIPCMessage),
     );
     // send EOT to indicate that the message has been fully written
     this.socket.write(String.fromCodePoint(4));
@@ -157,7 +157,7 @@ export class PseudoIPCClient {
     forkId: string,
     onMessage: (message: Serializable) => void,
     onClose: () => void = () => {},
-    onError: (err: Error) => void = (err) => {}
+    onError: (err: Error) => void = (err) => {},
   ) {
     this.socket.on(
       'data',
@@ -170,7 +170,7 @@ export class PseudoIPCClient {
             onMessage(message);
           }
         }
-      })
+      }),
     );
 
     this.socket.on('close', onClose);

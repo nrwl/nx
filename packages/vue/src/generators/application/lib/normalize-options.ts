@@ -13,7 +13,7 @@ export function normalizeDirectory(options: Schema) {
 export async function normalizeOptions(
   host: Tree,
   options: Schema,
-  callingGenerator = '@nx/vue:application'
+  callingGenerator = '@nx/vue:application',
 ): Promise<NormalizedSchema> {
   const {
     projectName: appProjectName,

@@ -43,13 +43,13 @@ describe('splitTarget', () => {
 
   it('should targets that contain colons when present in the graph', () => {
     expect(
-      splitTarget('project:target:target:configuration', projectGraph)
+      splitTarget('project:target:target:configuration', projectGraph),
     ).toEqual(['project', 'target:target', 'configuration']);
   });
 
   it('should targets that contain colons when not present in the graph but surrounded by quotes', () => {
     expect(
-      splitTarget('project:"other:other":configuration', projectGraph)
+      splitTarget('project:"other:other":configuration', projectGraph),
     ).toEqual(['project', 'other:other', 'configuration']);
   });
 
@@ -58,7 +58,7 @@ describe('splitTarget', () => {
       splitTarget('project:"other:other":configuration', {
         nodes: {},
         dependencies: {},
-      } as ProjectGraph)
+      } as ProjectGraph),
     ).toEqual(['project', 'other:other', 'configuration']);
   });
 });

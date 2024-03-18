@@ -34,7 +34,7 @@ export async function killTree(pid: number, signal: NodeJS.Signals) {
           },
           function () {
             killAll(tree, signal, callback);
-          }
+          },
         );
         break;
       default: // Linux
@@ -53,7 +53,7 @@ export async function killTree(pid: number, signal: NodeJS.Signals) {
           },
           function () {
             killAll(tree, signal, callback);
-          }
+          },
         );
         break;
     }
@@ -100,7 +100,7 @@ function buildProcessTree(
   tree,
   pidsToProcess,
   spawnChildProcessesList,
-  cb
+  cb,
 ) {
   const ps = spawnChildProcessesList(parentPid);
   let allData = '';

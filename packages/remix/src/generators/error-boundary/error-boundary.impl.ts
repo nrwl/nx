@@ -4,7 +4,7 @@ import type { ErrorBoundarySchema } from './schema';
 
 export default async function errorBoundaryGenerator(
   tree: Tree,
-  schema: ErrorBoundarySchema
+  schema: ErrorBoundarySchema,
 ) {
   const options = await normalizeOptions(tree, schema);
 

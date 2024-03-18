@@ -30,7 +30,7 @@ describe('Angular AST Utils', () => {
       pathToModule,
       sourceText,
       ScriptTarget.Latest,
-      true
+      true,
     );
 
     // ACT
@@ -66,7 +66,7 @@ describe('Angular AST Utils', () => {
       pathToFile,
       sourceText,
       ScriptTarget.Latest,
-      true
+      true,
     );
 
     // ACT
@@ -102,7 +102,7 @@ describe('Angular AST Utils', () => {
       pathToFile,
       sourceText,
       ScriptTarget.Latest,
-      true
+      true,
     );
 
     // ACT
@@ -138,7 +138,7 @@ describe('Angular AST Utils', () => {
       pathToFile,
       sourceText,
       ScriptTarget.Latest,
-      true
+      true,
     );
 
     // ACT
@@ -174,7 +174,7 @@ describe('Angular AST Utils', () => {
       pathToFile,
       sourceText,
       ScriptTarget.Latest,
-      true
+      true,
     );
 
     // ACT
@@ -201,7 +201,7 @@ describe('Angular AST Utils', () => {
       pathToFile,
       sourceText,
       ScriptTarget.Latest,
-      true
+      true,
     );
 
     // ACT
@@ -228,7 +228,7 @@ describe('Angular AST Utils', () => {
       pathToFile,
       sourceText,
       ScriptTarget.Latest,
-      true
+      true,
     );
 
     // ACT
@@ -255,7 +255,7 @@ describe('Angular AST Utils', () => {
       pathToFile,
       sourceText,
       ScriptTarget.Latest,
-      true
+      true,
     );
 
     // ACT
@@ -280,7 +280,7 @@ bootstrapApplication(AppComponent, {
   providers: [
     provideRouter(appRoutes, withEnabledBlockingInitialNavigation()),
   ],
-}).catch((err) => console.error(err));`
+}).catch((err) => console.error(err));`,
     );
 
     // ACT
@@ -316,7 +316,7 @@ import { routes } from './app.routes';
 
 export const appConfig: ApplicationConfig = {
   providers: [provideRouter(routes) ]
-};`
+};`,
     );
 
     // ACT

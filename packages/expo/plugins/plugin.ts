@@ -47,7 +47,7 @@ function writeTargetsToCache(
   targets: Record<
     string,
     Record<string, TargetConfiguration<ExpoPluginOptions>>
-  >
+  >,
 ) {
   writeJsonFile(cachePath, targets);
 }
@@ -100,7 +100,7 @@ export const createNodes: CreateNodes<ExpoPluginOptions> = [
 function buildExpoTargets(
   projectRoot: string,
   options: ExpoPluginOptions,
-  context: CreateNodesContext
+  context: CreateNodesContext,
 ) {
   const namedInputs = getNamedInputs(projectRoot, context);
 
@@ -151,7 +151,7 @@ function buildExpoTargets(
 
 function getAppConfig(
   configFilePath: string,
-  context: CreateNodesContext
+  context: CreateNodesContext,
 ): any {
   const resolvedPath = join(context.workspaceRoot, configFilePath);
 
@@ -160,7 +160,7 @@ function getAppConfig(
 }
 
 function getInputs(
-  namedInputs: NxJsonConfiguration['namedInputs']
+  namedInputs: NxJsonConfiguration['namedInputs'],
 ): TargetConfiguration['inputs'] {
   return [
     ...('production' in namedInputs

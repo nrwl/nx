@@ -25,7 +25,7 @@ describe('@nx/storybook:cypress-project', () => {
     expect(tree.exists('apps/test-ui-lib-e2e/cypress.config.ts')).toBeTruthy();
     const cypressConfig = tree.read(
       'apps/test-ui-lib-e2e/cypress.config.ts',
-      'utf-8'
+      'utf-8',
     );
     expect(cypressConfig).toMatchSnapshot();
   });
@@ -38,7 +38,7 @@ describe('@nx/storybook:cypress-project', () => {
     const project = readProjectConfiguration(tree, 'test-ui-lib-e2e');
 
     expect(project.targets.e2e.options.devServerTarget).toEqual(
-      'test-ui-lib:storybook'
+      'test-ui-lib:storybook',
     );
     expect(project.targets.e2e.options.headless).toBeUndefined();
     expect(project.targets.e2e.options.watch).toBeUndefined();
@@ -54,10 +54,10 @@ describe('@nx/storybook:cypress-project', () => {
       linter: Linter.EsLint,
     });
     expect(
-      readProjectConfiguration(tree, 'one-two-test-ui-lib-e2e')
+      readProjectConfiguration(tree, 'one-two-test-ui-lib-e2e'),
     ).toBeDefined();
     expect(
-      tree.exists('apps/one/two/test-ui-lib-e2e/cypress.config.ts')
+      tree.exists('apps/one/two/test-ui-lib-e2e/cypress.config.ts'),
     ).toBeTruthy();
   });
 });

@@ -26,24 +26,24 @@ export async function updateSsrSetup(
     port: number;
     standalone: boolean;
     typescriptConfiguration: boolean;
-  }
+  },
 ) {
   let project = readProjectConfiguration(tree, appName);
 
   tree.rename(
     joinPathFragments(project.sourceRoot, 'main.server.ts'),
-    joinPathFragments(project.sourceRoot, 'bootstrap.server.ts')
+    joinPathFragments(project.sourceRoot, 'bootstrap.server.ts'),
   );
 
   tree.write(
     joinPathFragments(project.root, 'server.ts'),
-    "import('./src/main.server');"
+    "import('./src/main.server');",
   );
 
   const browserBundleOutput = project.targets.build.options.outputPath;
   const serverBundleOutput = project.targets.build.options.outputPath.replace(
     /\/browser$/,
-    '/server'
+    '/server',
   );
 
   const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
@@ -52,7 +52,7 @@ export async function updateSsrSetup(
     join(
       __dirname,
       '../files/common',
-      angularMajorVersion >= 17 ? 'v17+' : 'pre-v17'
+      angularMajorVersion >= 17 ? 'v17+' : 'pre-v17',
     ),
     project.root,
     {
@@ -61,7 +61,7 @@ export async function updateSsrSetup(
       serverBundleOutput,
       standalone,
       tmpl: '',
-    }
+    },
   );
 
   const pathToTemplateFiles = typescriptConfiguration ? 'base-ts' : 'base';
@@ -72,7 +72,7 @@ export async function updateSsrSetup(
     project.root,
     {
       tmpl: '',
-    }
+    },
   );
 
   if (standalone) {
@@ -84,7 +84,7 @@ export async function updateSsrSetup(
         appName,
         standalone,
         tmpl: '',
-      }
+      },
     );
   }
 
@@ -95,7 +95,7 @@ export async function updateSsrSetup(
   project.targets.server.options.customWebpackConfig = {
     path: joinPathFragments(
       project.root,
-      `webpack.server.config.${typescriptConfiguration ? 'ts' : 'js'}`
+      `webpack.server.config.${typescriptConfiguration ? 'ts' : 'js'}`,
     ),
   };
   project.targets['serve-ssr'].options = {
@@ -109,7 +109,7 @@ export async function updateSsrSetup(
     options: {
       command: `PORT=${port} node ${joinPathFragments(
         project.targets.server.options.outputPath,
-        'main.js'
+        'main.js',
       )}`,
     },
   };
@@ -124,7 +124,7 @@ export async function updateSsrSetup(
     },
     {
       '@types/cors': typesCorsVersion,
-    }
+    },
   );
 
   return installTask;

@@ -13,7 +13,7 @@ describe('findDefaultExport', () => {
       'test.ts',
       sourceCode,
       ts.ScriptTarget.Latest,
-      true
+      true,
     );
 
     const result = utils.findDefaultExport(source) as any;
@@ -31,7 +31,7 @@ describe('findDefaultExport', () => {
       'test.ts',
       sourceCode,
       ts.ScriptTarget.Latest,
-      true
+      true,
     );
 
     const result = utils.findDefaultExport(source) as any;
@@ -48,7 +48,7 @@ describe('findDefaultExport', () => {
       'test.ts',
       sourceCode,
       ts.ScriptTarget.Latest,
-      true
+      true,
     );
 
     const result = utils.findDefaultExport(source) as any;
@@ -65,7 +65,7 @@ describe('findDefaultExport', () => {
       'test.ts',
       sourceCode,
       ts.ScriptTarget.Latest,
-      true
+      true,
     );
 
     const result = utils.findDefaultExport(source) as any;
@@ -83,7 +83,7 @@ describe('findDefaultExport', () => {
       'test.ts',
       sourceCode,
       ts.ScriptTarget.Latest,
-      true
+      true,
     );
 
     const result = utils.findDefaultExport(source) as any;
@@ -119,12 +119,12 @@ export default App;
       '/app.tsx',
       sourceCode,
       ts.ScriptTarget.Latest,
-      true
+      true,
     );
 
     const result = applyChangesToString(
       sourceCode,
-      utils.addInitialRoutes('/app.tsx', source)
+      utils.addInitialRoutes('/app.tsx', source),
     );
 
     expect(result).toMatch(/role="navigation"/);
@@ -157,7 +157,7 @@ export default App;
       '/app.tsx',
       sourceCode,
       ts.ScriptTarget.Latest,
-      true
+      true,
     );
 
     const result = applyChangesToString(
@@ -166,7 +166,7 @@ export default App;
         routePath: '/about',
         componentName: 'About',
         moduleName: '@example/about',
-      })
+      }),
     );
 
     expect(result).toMatch(/<li><Link\s+to="\/about"/);
@@ -197,12 +197,12 @@ ReactDOM.render(<App/>, document.getElementById('root'));
       '/main.tsx',
       sourceCode,
       ts.ScriptTarget.Latest,
-      true
+      true,
     );
 
     const result = applyChangesToString(
       sourceCode,
-      utils.addBrowserRouter('/main.tsx', source)
+      utils.addBrowserRouter('/main.tsx', source),
     );
     expect(result).toContain('<BrowserRouter><App/></BrowserRouter>');
   });
@@ -230,7 +230,7 @@ ReactDOM.render(<div/>, document.getElementById('root'));
       '/main.tsx',
       sourceCode,
       ts.ScriptTarget.Latest,
-      true
+      true,
     );
 
     const node = utils.findMainRenderStatement(source);
@@ -249,7 +249,7 @@ root.render(<div/>);
       '/main.tsx',
       sourceCode,
       ts.ScriptTarget.Latest,
-      true
+      true,
     );
 
     const node = utils.findMainRenderStatement(source);
@@ -267,7 +267,7 @@ render(<div/>, document.getElementById('root'));
       '/main.tsx',
       sourceCode,
       ts.ScriptTarget.Latest,
-      true
+      true,
     );
 
     const node = utils.findMainRenderStatement(source);
@@ -281,7 +281,7 @@ render(<div/>, document.getElementById('root'));
       '/main.tsx',
       sourceCode,
       ts.ScriptTarget.Latest,
-      true
+      true,
     );
 
     const node = utils.findMainRenderStatement(source);
@@ -312,12 +312,12 @@ ReactDOM.render(<App/>, document.getElementById('root'));
       '/main.tsx',
       sourceCode,
       ts.ScriptTarget.Latest,
-      true
+      true,
     );
 
     const result = applyChangesToString(
       sourceCode,
-      utils.addReduxStoreToMain('/main.tsx', source)
+      utils.addReduxStoreToMain('/main.tsx', source),
     );
     expect(result).toContain('@reduxjs/toolkit');
     expect(result).toContain('const store = configureStore');
@@ -348,7 +348,7 @@ const store = configureStore({
       '/main.tsx',
       sourceCode,
       ts.ScriptTarget.Latest,
-      true
+      true,
     );
 
     const result = applyChangesToString(
@@ -357,10 +357,10 @@ const store = configureStore({
         keyName: 'SLICE_KEY',
         reducerName: 'sliceReducer',
         modulePath: '@test/slice',
-      })
+      }),
     );
     expect(result).toContain(
-      "import { SLICE_KEY, sliceReducer } from '@test/slice'"
+      "import { SLICE_KEY, sliceReducer } from '@test/slice'",
     );
     expect(result).toContain('[SLICE_KEY]: sliceReducer');
   });
@@ -375,7 +375,7 @@ const store = createStore(combineReducer({}));
       '/main.tsx',
       sourceCode,
       ts.ScriptTarget.Latest,
-      true
+      true,
     );
 
     const result = applyChangesToString(
@@ -384,10 +384,10 @@ const store = createStore(combineReducer({}));
         keyName: 'SLICE_KEY',
         reducerName: 'sliceReducer',
         modulePath: '@test/slice',
-      })
+      }),
     );
     expect(result).toContain(
-      "import { SLICE_KEY, sliceReducer } from '@test/slice'"
+      "import { SLICE_KEY, sliceReducer } from '@test/slice'",
     );
     expect(result).toContain('[SLICE_KEY]: sliceReducer');
   });
@@ -467,7 +467,7 @@ describe('findExportDeclarationsForJsx', () => {
         'some-component.tsx',
         src,
         ts.ScriptTarget.Latest,
-        true
+        true,
       );
 
       const result: Array<
@@ -476,7 +476,7 @@ describe('findExportDeclarationsForJsx', () => {
 
       expect(result).toBeDefined();
       expect(result[0]?.name.getText()).toEqual(expectedName);
-    }
+    },
   );
 });
 
@@ -569,14 +569,14 @@ describe('getComponentNode', () => {
         'some-component.tsx',
         src,
         ts.ScriptTarget.Latest,
-        true
+        true,
       );
 
       const result = utils.getComponentNode(source) as any;
 
       expect(result).toBeDefined();
       expect((result as any).name.text).toEqual(expectedName);
-    }
+    },
   );
 
   it('should return null if there is no component', () => {
@@ -584,7 +584,7 @@ describe('getComponentNode', () => {
       'some-component.tsx',
       `console.log('hi there');`,
       ts.ScriptTarget.Latest,
-      true
+      true,
     );
 
     const result = utils.getComponentNode(source) as any;

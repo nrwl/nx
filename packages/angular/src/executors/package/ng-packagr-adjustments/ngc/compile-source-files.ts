@@ -37,7 +37,7 @@ export async function compileSourceFiles(
   options: NgPackagrOptions,
   extraOptions?: Partial<CompilerOptions>,
   stylesheetProcessor?: StylesheetProcessor,
-  ngccProcessor?: any
+  ngccProcessor?: any,
 ) {
   const { NgtscProgram, formatDiagnostics } = await ngCompilerCli();
   const { cacheDirectory, watch, cacheEnabled } = options;
@@ -54,7 +54,7 @@ export async function compileSourceFiles(
     tsConfigOptions.incremental ??= true;
     tsConfigOptions.tsBuildInfoFile ??= join(
       cacheDir,
-      `tsbuildinfo/${entryPoint.data.entryPoint.flatModuleFile}.tsbuildinfo`
+      `tsbuildinfo/${entryPoint.data.entryPoint.flatModuleFile}.tsbuildinfo`,
     );
   }
 
@@ -64,7 +64,7 @@ export async function compileSourceFiles(
     tsConfigOptions,
     moduleResolutionCache,
     stylesheetProcessor as any,
-    inlineStyleLanguage
+    inlineStyleLanguage,
   );
 
   if (ngccProcessor) {
@@ -73,7 +73,7 @@ export async function compileSourceFiles(
         tsCompilerHost,
         tsConfigOptions,
         ngccProcessor,
-        moduleResolutionCache
+        moduleResolutionCache,
       );
   }
 
@@ -92,7 +92,7 @@ export async function compileSourceFiles(
     tsConfig.rootNames,
     tsConfigOptions,
     tsCompilerHost,
-    cache.oldNgtscProgram
+    cache.oldNgtscProgram,
   );
 
   const angularCompiler = angularProgram.compiler;
@@ -109,13 +109,13 @@ export async function compileSourceFiles(
       ts.createEmitAndSemanticDiagnosticsBuilderProgram(
         typeScriptProgram,
         tsCompilerHost,
-        oldBuilder
+        oldBuilder,
       );
     cache.oldNgtscProgram = angularProgram;
   } else {
     builder = ts.createEmitAndSemanticDiagnosticsBuilderProgram(
       typeScriptProgram,
-      tsCompilerHost
+      tsCompilerHost,
     );
   }
 
@@ -150,7 +150,7 @@ export async function compileSourceFiles(
           }
 
           return false;
-        }
+        },
       );
 
       if (!result) {
@@ -202,7 +202,7 @@ export async function compileSourceFiles(
     allDiagnostics.push(
       ...builder.getDeclarationDiagnostics(sourceFile),
       ...builder.getSyntacticDiagnostics(sourceFile),
-      ...builder.getSemanticDiagnostics(sourceFile)
+      ...builder.getSemanticDiagnostics(sourceFile),
     );
 
     // Declaration files cannot have template diagnostics
@@ -217,7 +217,7 @@ export async function compileSourceFiles(
         sourceFile,
         affectedFiles.size === 1
           ? /** OptimizeFor.SingleFile **/ 0
-          : /** OptimizeFor.WholeProgram */ 1
+          : /** OptimizeFor.WholeProgram */ 1,
       );
 
       allDiagnostics.push(...angularDiagnostics);
@@ -255,10 +255,10 @@ export async function compileSourceFiles(
               data,
               writeByteOrderMark,
               onError,
-              sourceFiles
+              sourceFiles,
             );
           }
-        }
+        },
       )
     ) {
       // empty

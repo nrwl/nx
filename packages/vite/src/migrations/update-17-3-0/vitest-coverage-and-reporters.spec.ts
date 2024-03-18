@@ -77,7 +77,7 @@ export default defineConfig({
   },
 });
 
-`
+`,
   );
 }
 
@@ -116,7 +116,7 @@ export default defineConfig({
     },
   },
 });
-`
+`,
   );
 }
 
@@ -157,7 +157,7 @@ export default defineConfig({
     },
   },
 });
-`
+`,
   );
 }
 
@@ -200,7 +200,7 @@ export default defineConfig({
     },
   },
 });
-`
+`,
   );
 }
 
@@ -243,7 +243,7 @@ export default defineConfig({
     },
   },
 });
-`
+`,
   );
 }
 function addProject6(tree: Tree, name: string) {
@@ -282,6 +282,6 @@ export default defineConfig({
     },
   },
 });
-`
+`,
   );
 }

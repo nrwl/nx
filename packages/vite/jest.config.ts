@@ -3,7 +3,7 @@ const fs = require('fs');
 // Reading the SWC compilation config and remove the "exclude"
 // for the test files to be compiled by SWC
 const { exclude: _, ...swcJestConfig } = JSON.parse(
-  fs.readFileSync(`${__dirname}/.swcrc`, 'utf-8')
+  fs.readFileSync(`${__dirname}/.swcrc`, 'utf-8'),
 );
 
 // disable .swcrc look-up by SWC core because we're passing in swcJestConfig ourselves.

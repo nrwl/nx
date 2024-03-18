@@ -32,14 +32,14 @@ export function generateFiles(
   tree: Tree,
   srcFolder: string,
   target: string,
-  substitutions: { [k: string]: any }
+  substitutions: { [k: string]: any },
 ): void {
   const ejs: typeof import('ejs') = require('ejs');
 
   const files = allFilesInDir(srcFolder);
   if (files.length === 0) {
     throw new Error(
-      `generateFiles: No files found in "${srcFolder}". Are you sure you specified the correct path?`
+      `generateFiles: No files found in "${srcFolder}". Are you sure you specified the correct path?`,
     );
   } else {
     files.forEach((filePath) => {
@@ -48,7 +48,7 @@ export function generateFiles(
         srcFolder,
         target,
         filePath,
-        substitutions
+        substitutions,
       );
 
       if (isBinaryPath(filePath)) {
@@ -74,7 +74,7 @@ function computePath(
   srcFolder: string,
   target: string,
   filePath: string,
-  substitutions: { [k: string]: any }
+  substitutions: { [k: string]: any },
 ): string {
   const relativeFromSrcFolder = path.relative(srcFolder, filePath);
   let computedPath = path.join(target, relativeFromSrcFolder);

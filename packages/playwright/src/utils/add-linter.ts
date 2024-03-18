@@ -33,7 +33,7 @@ export interface PlaywrightLinterOptions {
 
 export async function addLinterToPlaywrightProject(
   tree: Tree,
-  options: PlaywrightLinterOptions
+  options: PlaywrightLinterOptions,
 ): Promise<GeneratorCallback> {
   if (options.linter === Linter.None) {
     return () => {};
@@ -54,7 +54,7 @@ export async function addLinterToPlaywrightProject(
         skipPackageJson: options.skipPackageJson,
         rootProject: options.rootProject,
         addPlugin: options.addPlugin,
-      })
+      }),
     );
   }
 
@@ -67,16 +67,16 @@ export async function addLinterToPlaywrightProject(
       ? addDependenciesToPackageJson(
           tree,
           {},
-          { 'eslint-plugin-playwright': eslintPluginPlaywrightVersion }
+          { 'eslint-plugin-playwright': eslintPluginPlaywrightVersion },
         )
-      : () => {}
+      : () => {},
   );
 
   if (isEslintConfigSupported(tree)) {
     addExtendsToLintConfig(
       tree,
       projectConfig.root,
-      'plugin:playwright/recommended'
+      'plugin:playwright/recommended',
     );
     if (options.rootProject) {
       addPluginsToLintConfig(tree, projectConfig.root, '@nx');

@@ -109,7 +109,7 @@ describe('Host App Generator', () => {
     expect(tree.exists('remote1/project.json')).toBeTruthy();
     expect(tree.exists('remote2/project.json')).toBeTruthy();
     expect(
-      tree.read('host-app/module-federation.config.js', 'utf-8')
+      tree.read('host-app/module-federation.config.js', 'utf-8'),
     ).toContain(`'remote1','remote2'`);
     expect(tree.read('host-app/src/app/app.component.html', 'utf-8'))
       .toMatchInlineSnapshot(`
@@ -141,7 +141,7 @@ describe('Host App Generator', () => {
     expect(tree.exists('remote1/project.json')).toBeTruthy();
     expect(tree.exists('remote2/project.json')).toBeTruthy();
     expect(
-      tree.read('host-app/module-federation.config.ts', 'utf-8')
+      tree.read('host-app/module-federation.config.ts', 'utf-8'),
     ).toContain(`'remote1','remote2'`);
     expect(tree.read('host-app/src/app/app.component.html', 'utf-8'))
       .toMatchInlineSnapshot(`
@@ -179,7 +179,7 @@ describe('Host App Generator', () => {
     expect(tree.exists('remote2/project.json')).toBeTruthy();
     expect(tree.exists('remote3/project.json')).toBeTruthy();
     expect(
-      tree.read('host-app/module-federation.config.js', 'utf-8')
+      tree.read('host-app/module-federation.config.js', 'utf-8'),
     ).toContain(`'remote1','remote2','remote3'`);
   });
 
@@ -207,7 +207,7 @@ describe('Host App Generator', () => {
     expect(tree.exists('remote2/project.json')).toBeTruthy();
     expect(tree.exists('remote3/project.json')).toBeTruthy();
     expect(
-      tree.read('host-app/module-federation.config.ts', 'utf-8')
+      tree.read('host-app/module-federation.config.ts', 'utf-8'),
     ).toContain(`'remote1','remote2','remote3'`);
   });
 
@@ -236,7 +236,7 @@ describe('Host App Generator', () => {
     expect(tree.exists('foo/remote2/project.json')).toBeTruthy();
     expect(tree.exists('foo/remote3/project.json')).toBeTruthy();
     expect(
-      tree.read('foo/host-app/module-federation.config.js', 'utf-8')
+      tree.read('foo/host-app/module-federation.config.js', 'utf-8'),
     ).toContain(`'remote1','remote2','remote3'`);
   });
 
@@ -265,7 +265,7 @@ describe('Host App Generator', () => {
     expect(tree.exists('foo/remote2/project.json')).toBeTruthy();
     expect(tree.exists('foo/remote3/project.json')).toBeTruthy();
     expect(
-      tree.read('foo/host-app/module-federation.config.ts', 'utf-8')
+      tree.read('foo/host-app/module-federation.config.ts', 'utf-8'),
     ).toContain(`'remote1','remote2','remote3'`);
   });
 
@@ -284,7 +284,7 @@ describe('Host App Generator', () => {
     expect(tree.exists(`host/src/app/app.module.ts`)).toBeFalsy();
     expect(tree.read(`host/src/bootstrap.ts`, 'utf-8')).toMatchSnapshot();
     expect(
-      tree.read(`host/src/app/app.component.ts`, 'utf-8')
+      tree.read(`host/src/app/app.component.ts`, 'utf-8'),
     ).toMatchSnapshot();
   });
 
@@ -301,7 +301,7 @@ describe('Host App Generator', () => {
 
     // ASSERT
     expect(
-      tree.read(`host/src/app/app.component.spec.ts`, 'utf-8')
+      tree.read(`host/src/app/app.component.spec.ts`, 'utf-8'),
     ).toMatchSnapshot();
   });
 
@@ -319,7 +319,7 @@ describe('Host App Generator', () => {
 
     // ASSERT
     expect(
-      tree.read(`test/dashboard/src/app/app.component.spec.ts`, 'utf-8')
+      tree.read(`test/dashboard/src/app/app.component.spec.ts`, 'utf-8'),
     ).toMatchSnapshot();
   });
 
@@ -358,22 +358,22 @@ describe('Host App Generator', () => {
       // ASSERT
       const project = readProjectConfiguration(tree, 'test');
       expect(
-        tree.read(`test/src/app/app.module.ts`, 'utf-8')
+        tree.read(`test/src/app/app.module.ts`, 'utf-8'),
       ).toMatchSnapshot();
       expect(tree.read(`test/src/bootstrap.ts`, 'utf-8')).toMatchSnapshot();
       expect(
-        tree.read(`test/src/bootstrap.server.ts`, 'utf-8')
+        tree.read(`test/src/bootstrap.server.ts`, 'utf-8'),
       ).toMatchSnapshot();
       expect(tree.read(`test/src/main.server.ts`, 'utf-8')).toMatchSnapshot();
       expect(tree.read(`test/server.ts`, 'utf-8')).toMatchSnapshot();
       expect(
-        tree.read(`test/module-federation.config.js`, 'utf-8')
+        tree.read(`test/module-federation.config.js`, 'utf-8'),
       ).toMatchSnapshot();
       expect(
-        tree.read(`test/webpack.server.config.js`, 'utf-8')
+        tree.read(`test/webpack.server.config.js`, 'utf-8'),
       ).toMatchSnapshot();
       expect(
-        tree.read(`test/src/app/app.routes.ts`, 'utf-8')
+        tree.read(`test/src/app/app.routes.ts`, 'utf-8'),
       ).toMatchSnapshot();
       expect(project.targets.server).toMatchSnapshot();
       expect(project.targets['serve-ssr']).toMatchSnapshot();
@@ -395,22 +395,22 @@ describe('Host App Generator', () => {
       // ASSERT
       const project = readProjectConfiguration(tree, 'test');
       expect(
-        tree.read(`test/src/app/app.module.ts`, 'utf-8')
+        tree.read(`test/src/app/app.module.ts`, 'utf-8'),
       ).toMatchSnapshot();
       expect(tree.read(`test/src/bootstrap.ts`, 'utf-8')).toMatchSnapshot();
       expect(
-        tree.read(`test/src/bootstrap.server.ts`, 'utf-8')
+        tree.read(`test/src/bootstrap.server.ts`, 'utf-8'),
       ).toMatchSnapshot();
       expect(tree.read(`test/src/main.server.ts`, 'utf-8')).toMatchSnapshot();
       expect(tree.read(`test/server.ts`, 'utf-8')).toMatchSnapshot();
       expect(
-        tree.read(`test/module-federation.config.ts`, 'utf-8')
+        tree.read(`test/module-federation.config.ts`, 'utf-8'),
       ).toMatchSnapshot();
       expect(
-        tree.read(`test/webpack.server.config.ts`, 'utf-8')
+        tree.read(`test/webpack.server.config.ts`, 'utf-8'),
       ).toMatchSnapshot();
       expect(
-        tree.read(`test/src/app/app.routes.ts`, 'utf-8')
+        tree.read(`test/src/app/app.routes.ts`, 'utf-8'),
       ).toMatchSnapshot();
       expect(project.targets.server).toMatchSnapshot();
       expect(project.targets['serve-ssr']).toMatchSnapshot();
@@ -432,24 +432,24 @@ describe('Host App Generator', () => {
       expect(tree.exists(`test/src/app/app.module.ts`)).toBeFalsy();
       expect(tree.read(`test/src/bootstrap.ts`, 'utf-8')).toMatchSnapshot();
       expect(
-        tree.read(`test/src/bootstrap.server.ts`, 'utf-8')
+        tree.read(`test/src/bootstrap.server.ts`, 'utf-8'),
       ).toMatchSnapshot();
       expect(tree.read(`test/src/main.server.ts`, 'utf-8')).toMatchSnapshot();
       expect(tree.read(`test/server.ts`, 'utf-8')).toMatchSnapshot();
       expect(
-        tree.read(`test/module-federation.config.js`, 'utf-8')
+        tree.read(`test/module-federation.config.js`, 'utf-8'),
       ).toMatchSnapshot();
       expect(
-        tree.read(`test/webpack.server.config.js`, 'utf-8')
+        tree.read(`test/webpack.server.config.js`, 'utf-8'),
       ).toMatchSnapshot();
       expect(
-        tree.read(`test/src/app/app.routes.ts`, 'utf-8')
+        tree.read(`test/src/app/app.routes.ts`, 'utf-8'),
       ).toMatchSnapshot();
       expect(
-        tree.read(`test/src/app/app.config.ts`, 'utf-8')
+        tree.read(`test/src/app/app.config.ts`, 'utf-8'),
       ).toMatchSnapshot();
       expect(
-        tree.read(`test/src/app/app.config.server.ts`, 'utf-8')
+        tree.read(`test/src/app/app.config.server.ts`, 'utf-8'),
       ).toMatchSnapshot();
       expect(project.targets.server).toMatchSnapshot();
       expect(project.targets['serve-ssr']).toMatchSnapshot();
@@ -472,24 +472,24 @@ describe('Host App Generator', () => {
       expect(tree.exists(`test/src/app/app.module.ts`)).toBeFalsy();
       expect(tree.read(`test/src/bootstrap.ts`, 'utf-8')).toMatchSnapshot();
       expect(
-        tree.read(`test/src/bootstrap.server.ts`, 'utf-8')
+        tree.read(`test/src/bootstrap.server.ts`, 'utf-8'),
       ).toMatchSnapshot();
       expect(tree.read(`test/src/main.server.ts`, 'utf-8')).toMatchSnapshot();
       expect(tree.read(`test/server.ts`, 'utf-8')).toMatchSnapshot();
       expect(
-        tree.read(`test/module-federation.config.ts`, 'utf-8')
+        tree.read(`test/module-federation.config.ts`, 'utf-8'),
       ).toMatchSnapshot();
       expect(
-        tree.read(`test/webpack.server.config.ts`, 'utf-8')
+        tree.read(`test/webpack.server.config.ts`, 'utf-8'),
       ).toMatchSnapshot();
       expect(
-        tree.read(`test/src/app/app.routes.ts`, 'utf-8')
+        tree.read(`test/src/app/app.routes.ts`, 'utf-8'),
       ).toMatchSnapshot();
       expect(
-        tree.read(`test/src/app/app.config.ts`, 'utf-8')
+        tree.read(`test/src/app/app.config.ts`, 'utf-8'),
       ).toMatchSnapshot();
       expect(
-        tree.read(`test/src/app/app.config.server.ts`, 'utf-8')
+        tree.read(`test/src/app/app.config.server.ts`, 'utf-8'),
       ).toMatchSnapshot();
       expect(project.targets.server).toMatchSnapshot();
       expect(project.targets['serve-ssr']).toMatchSnapshot();
@@ -543,7 +543,7 @@ describe('Host App Generator', () => {
       expect(tree.exists('apps/remote2/project.json')).toBeTruthy();
       expect(tree.exists('apps/remote3/project.json')).toBeTruthy();
       expect(
-        tree.read('apps/host-app/module-federation.config.js', 'utf-8')
+        tree.read('apps/host-app/module-federation.config.js', 'utf-8'),
       ).toContain(`'remote1','remote2','remote3'`);
     });
 
@@ -574,7 +574,7 @@ describe('Host App Generator', () => {
       expect(tree.exists('apps/foo/remote2/project.json')).toBeTruthy();
       expect(tree.exists('apps/foo/remote3/project.json')).toBeTruthy();
       expect(
-        tree.read('apps/foo/host-app/module-federation.config.js', 'utf-8')
+        tree.read('apps/foo/host-app/module-federation.config.js', 'utf-8'),
       ).toContain(`'remote1','foo-remote2','foo-remote3'`);
     });
     it('should generate a host, integrate existing remotes and generate any remotes that dont exist, in a directory when --typescript=true', async () => {
@@ -604,7 +604,7 @@ describe('Host App Generator', () => {
       expect(tree.exists('apps/foo/remote2/project.json')).toBeTruthy();
       expect(tree.exists('apps/foo/remote3/project.json')).toBeTruthy();
       expect(
-        tree.read('apps/foo/host-app/module-federation.config.ts', 'utf-8')
+        tree.read('apps/foo/host-app/module-federation.config.ts', 'utf-8'),
       ).toContain(`'remote1','foo-remote2','foo-remote3'`);
     });
   });

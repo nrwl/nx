@@ -23,7 +23,7 @@ describe('deduceDefaultBase', () => {
   it('should work with extra line terminators', () => {
     execSyncSpy.mockReturnValue(
       Buffer.from(`some-other-default-branch
-    `)
+    `),
     );
     const result = deduceDefaultBase();
     expect(result).toEqual('some-other-default-branch');

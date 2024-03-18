@@ -55,8 +55,8 @@ async function moveWorkspaceGeneratorsToLocalPlugin(tree: Tree) {
         {},
         {
           '@nx/plugin': nxVersion,
-        }
-      )
+        },
+      ),
     );
     project = readProjectConfiguration(tree, PROJECT_NAME);
   }
@@ -85,7 +85,7 @@ function collectAndMoveGenerators(tree: Tree, destinationProjectRoot: string) {
   const destinationDir = joinPathFragments(
     destinationProjectRoot,
     'src',
-    'generators'
+    'generators',
   );
   for (const c of tree.children('tools/generators')) {
     const childDir = path.join(generatorsDir, c);
@@ -100,7 +100,7 @@ function collectAndMoveGenerators(tree: Tree, destinationProjectRoot: string) {
       moveFilesInDirectory(
         tree,
         childDir,
-        joinPathFragments(destinationDir, c)
+        joinPathFragments(destinationDir, c),
       );
     }
   }
@@ -128,12 +128,12 @@ function moveFilesInDirectory(tree: Tree, source: string, destination: string) {
       moveFilesInDirectory(
         tree,
         joinPathFragments(source, c),
-        joinPathFragments(destination, c)
+        joinPathFragments(destination, c),
       );
     }
     tree.rename(
       joinPathFragments(source, c),
-      joinPathFragments(destination, c)
+      joinPathFragments(destination, c),
     );
     // If its a TS file we can update relative imports with find + replace
     // This could be done with AST, but since we are only looking at relative
@@ -146,18 +146,18 @@ function moveFilesInDirectory(tree: Tree, source: string, destination: string) {
       const extraDirectoriesInPluginStructure = 2;
       content = content.replace(
         new RegExp(`'` + `\.\.\/`.repeat(offsetLevel), 'g'),
-        "'" + '../'.repeat(offsetLevel + extraDirectoriesInPluginStructure)
+        "'" + '../'.repeat(offsetLevel + extraDirectoriesInPluginStructure),
       );
       content = content.replace(
         new RegExp(`"` + `\.\.\/`.repeat(offsetLevel), 'g'),
-        '"' + '../'.repeat(offsetLevel + extraDirectoriesInPluginStructure)
+        '"' + '../'.repeat(offsetLevel + extraDirectoriesInPluginStructure),
       );
       // We write it back in the same spot, since it is moved as if it was a regular file after this
       tree.write(joinPathFragments(source, c), content);
     }
     tree.rename(
       joinPathFragments(source, c),
-      joinPathFragments(destination, c)
+      joinPathFragments(destination, c),
     );
   }
 }
@@ -190,7 +190,7 @@ async function createNewPlugin(tree: Tree) {
   await getCreateGeneratorsJson()(
     tree,
     readProjectConfiguration(tree, PROJECT_NAME).root,
-    PROJECT_NAME
+    PROJECT_NAME,
   );
   await moveGeneratedPlugin(tree, DESTINATION, importPath);
 }
@@ -198,7 +198,7 @@ async function createNewPlugin(tree: Tree) {
 function moveGeneratedPlugin(
   tree: Tree,
   destination: string,
-  importPath: string
+  importPath: string,
 ) {
   const config = readProjectConfiguration(tree, PROJECT_NAME);
   if (config.root !== DESTINATION) {
@@ -216,11 +216,11 @@ function moveGeneratedPlugin(
 function updateExistingPlugin(tree: Tree, project: ProjectConfiguration) {
   const packageJson = readJson<PackageJson>(
     tree,
-    joinPathFragments(project.root, 'package.json')
+    joinPathFragments(project.root, 'package.json'),
   );
   const defaultGeneratorsPath = joinPathFragments(
     project.root,
-    'generators.json'
+    'generators.json',
   );
   let generatorsJsonPath =
     packageJson.generators ||
@@ -232,7 +232,7 @@ function updateExistingPlugin(tree: Tree, project: ProjectConfiguration) {
     getCreateGeneratorsJson()(
       tree,
       readProjectConfiguration(tree, PROJECT_NAME).root,
-      PROJECT_NAME
+      PROJECT_NAME,
     );
     generatorsJsonPath = defaultGeneratorsPath;
   }
@@ -260,7 +260,7 @@ function getCreateGeneratorsJson(): (
   projectRoot: string,
   projectName: string,
   skipLintChecks?: boolean,
-  skipFormat?: boolean
+  skipFormat?: boolean,
 ) => Promise<void> {
   // We cant use  `as typeof import('@nx/plugin/src/generators/generator/generator');` here
   // because it will cause a typescript error at build time.

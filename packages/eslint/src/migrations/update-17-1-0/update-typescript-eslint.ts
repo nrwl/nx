@@ -65,7 +65,7 @@ function updateRecommended(tree: Tree) {
       path,
       contents,
       ScriptTarget.ESNext,
-      true
+      true,
     );
 
     const changes: StringChange[] = [];

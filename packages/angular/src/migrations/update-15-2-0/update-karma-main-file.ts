@@ -23,7 +23,7 @@ function findTestMainFiles(tree: Tree): Set<string> {
       if (typeof options.main === 'string' && tree.exists(options.main)) {
         testFiles.add(options.main);
       }
-    }
+    },
   );
 
   return testFiles;
@@ -39,7 +39,7 @@ function updateTestFile(tree: Tree, file: string): void {
     file,
     content.replace(/^\uFEFF/, ''),
     ts.ScriptTarget.Latest,
-    true
+    true,
   );
 
   const usedVariableNames = new Set<string>();
@@ -75,7 +75,7 @@ function updateTestFile(tree: Tree, file: string): void {
       // Delete node.
       recorder.remove(
         node.getFullStart(),
-        node.getFullStart() + node.getFullWidth()
+        node.getFullStart() + node.getFullWidth(),
       );
     }
 
@@ -86,20 +86,20 @@ function updateTestFile(tree: Tree, file: string): void {
       ts.isPropertyAccessExpression(node.expression.expression) && // context.keys().map
       ts.isCallExpression(node.expression.expression.expression) && // context.keys()
       ts.isPropertyAccessExpression(
-        node.expression.expression.expression.expression
+        node.expression.expression.expression.expression,
       ) && // context.keys
       ts.isIdentifier(
-        node.expression.expression.expression.expression.expression
+        node.expression.expression.expression.expression.expression,
       ) && // context
       usedVariableNames.has(
-        node.expression.expression.expression.expression.expression.getText()
+        node.expression.expression.expression.expression.expression.getText(),
       )
     ) {
       // `context.keys().map(context);`
       // `context.keys().forEach(context);`
       recorder.remove(
         node.getFullStart(),
-        node.getFullStart() + node.getFullWidth()
+        node.getFullStart() + node.getFullWidth(),
       );
     }
   });

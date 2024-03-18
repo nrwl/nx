@@ -34,7 +34,7 @@ describe('Run Commands', () => {
         args: '--key=123',
         __unparsed__: [],
       },
-      context
+      context,
     );
     expect(result).toEqual(expect.objectContaining({ success: true }));
     expect(readFile(f)).toEqual('123');
@@ -48,7 +48,7 @@ describe('Run Commands', () => {
         key: 123,
         __unparsed__: [],
       },
-      context
+      context,
     );
     expect(result).toEqual(expect.objectContaining({ success: true }));
     expect(readFile(f)).toEqual('123');
@@ -67,11 +67,11 @@ describe('Run Commands', () => {
           command: `echo {${argKey}} >> ${f}`,
           __unparsed__: [cmdLineArg],
         },
-        context
+        context,
       );
       expect(result).toEqual(expect.objectContaining({ success: true }));
       expect(readFile(f)).toEqual(expected);
-    }
+    },
   );
 
   it('should run commands serially', async () => {
@@ -82,7 +82,7 @@ describe('Run Commands', () => {
         parallel: false,
         __unparsed__: [],
       },
-      context
+      context,
     );
     expect(result).toEqual(expect.objectContaining({ success: true }));
     expect(readFile(f)).toEqual('12');
@@ -103,7 +103,7 @@ describe('Run Commands', () => {
         parallel: true,
         __unparsed__: [],
       },
-      context
+      context,
     );
     expect(result).toEqual(expect.objectContaining({ success: true }));
     const contents = readFile(f);
@@ -121,12 +121,12 @@ describe('Run Commands', () => {
             readyWhen: 'READY',
             __unparsed__: [],
           },
-          context
+          context,
         );
         fail('should throw');
       } catch (e) {
         expect(e.message).toEqual(
-          `ERROR: Bad executor config for run-commands - "readyWhen" can only be used when "parallel=true".`
+          `ERROR: Bad executor config for run-commands - "readyWhen" can only be used when "parallel=true".`,
         );
       }
     });
@@ -141,7 +141,7 @@ describe('Run Commands', () => {
           __unparsed__: [],
         },
 
-        context
+        context,
       );
       expect(result).toEqual(expect.objectContaining({ success: true }));
       expect(readFile(f)).toEqual('');
@@ -162,7 +162,7 @@ describe('Run Commands', () => {
           parallel: false,
           __unparsed__: [],
         },
-        context
+        context,
       );
       fail('should fail when a command fails');
     } catch (e) {}
@@ -175,8 +175,8 @@ describe('Run Commands', () => {
         interpolateArgsIntoCommand(
           'echo',
           { __unparsed__: ['one', '-a=b'] } as any,
-          true
-        )
+          true,
+        ),
       ).toEqual('echo one -a=b');
     });
 
@@ -185,8 +185,8 @@ describe('Run Commands', () => {
         interpolateArgsIntoCommand(
           'echo',
           { args: '--additional-arg', __unparsed__: [] } as any,
-          true
-        )
+          true,
+        ),
       ).toEqual('echo --additional-arg');
     });
 
@@ -195,8 +195,8 @@ describe('Run Commands', () => {
         interpolateArgsIntoCommand(
           'echo',
           { unknownOptions: { hello: 123 }, parsedArgs: { hello: 123 } } as any,
-          true
-        )
+          true,
+        ),
       ).toEqual('echo --hello 123');
     });
 
@@ -208,8 +208,8 @@ describe('Run Commands', () => {
             args: '--additional-arg',
             __unparsed__: ['--additional-unparsed-arg'],
           } as any,
-          true
-        )
+          true,
+        ),
       ).toEqual('echo --additional-arg --additional-unparsed-arg');
     });
 
@@ -221,8 +221,8 @@ describe('Run Commands', () => {
             parsedArgs: {},
             __unparsed__: [],
           },
-          false
-        )
+          false,
+        ),
       ).not.toContain('undefined');
     });
 
@@ -236,8 +236,8 @@ describe('Run Commands', () => {
             },
             __unparsed__: [],
           },
-          false
-        )
+          false,
+        ),
       ).toEqual('echo "hello world"');
     });
   });
@@ -251,7 +251,7 @@ describe('Run Commands', () => {
           parallel: true,
           __unparsed__: [],
         },
-        context
+        context,
       );
 
       expect(exec).toHaveBeenCalledTimes(2);
@@ -280,7 +280,7 @@ describe('Run Commands', () => {
           color: true,
           __unparsed__: [],
         },
-        context
+        context,
       );
 
       expect(exec).toHaveBeenCalledTimes(2);
@@ -311,7 +311,7 @@ describe('Run Commands', () => {
           cwd: process.cwd(),
           __unparsed__: [],
         },
-        { root } as any
+        { root } as any,
       );
       expect(result).toEqual(expect.objectContaining({ success: true }));
       expect(normalize(readFile(f))).not.toBe('12.0.0');
@@ -332,7 +332,7 @@ describe('Run Commands', () => {
           __unparsed__: [],
         },
 
-        { root } as any
+        { root } as any,
       );
 
       expect(result).toEqual(expect.objectContaining({ success: true }));
@@ -356,7 +356,7 @@ describe('Run Commands', () => {
           parallel: true,
           __unparsed__: [],
         },
-        { root } as any
+        { root } as any,
       );
 
       expect(result).toEqual(expect.objectContaining({ success: true }));
@@ -378,7 +378,7 @@ describe('Run Commands', () => {
           parallel: true,
           __unparsed__: [],
         },
-        { root } as any
+        { root } as any,
       );
 
       expect(result).toEqual(expect.objectContaining({ success: false }));
@@ -400,7 +400,7 @@ describe('Run Commands', () => {
           parallel: true,
           __unparsed__: [],
         },
-        { root } as any
+        { root } as any,
       );
 
       expect(result).toEqual(expect.objectContaining({ success: true }));
@@ -423,12 +423,12 @@ describe('Run Commands', () => {
           parallel: true,
           __unparsed__: [],
         },
-        { root } as any
+        { root } as any,
       );
 
       expect(result).toEqual(expect.objectContaining({ success: true }));
       expect(normalize(readFile(f))).toContain(
-        `${childFolder}/node_modules/.bin`
+        `${childFolder}/node_modules/.bin`,
       );
       expect(normalize(readFile(f))).toContain(`${root}/node_modules/.bin`);
     });
@@ -456,7 +456,7 @@ describe('Run Commands', () => {
           parallel: true,
           __unparsed__: [],
         },
-        { root } as any
+        { root } as any,
       );
 
       expect(result).toEqual(expect.objectContaining({ success: true }));
@@ -479,7 +479,7 @@ describe('Run Commands', () => {
           parallel: true,
           __unparsed__: [],
         },
-        { root } as any
+        { root } as any,
       );
 
       expect(result).toEqual(expect.objectContaining({ success: true }));
@@ -512,7 +512,7 @@ describe('Run Commands', () => {
           ],
           __unparsed__: [],
         },
-        context
+        context,
       );
 
       expect(result).toEqual(expect.objectContaining({ success: true }));
@@ -533,7 +533,7 @@ describe('Run Commands', () => {
           envFile: devEnv,
           __unparsed__: [],
         },
-        context
+        context,
       );
 
       expect(result).toEqual(expect.objectContaining({ success: true }));
@@ -554,12 +554,12 @@ describe('Run Commands', () => {
             __unparsed__: [],
           },
 
-          context
+          context,
         );
         fail('should not reach');
       } catch (e) {
         expect(e.message).toContain(
-          `no such file or directory, open '/somePath/.fakeEnv'`
+          `no such file or directory, open '/somePath/.fakeEnv'`,
         );
       }
     });

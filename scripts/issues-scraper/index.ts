@@ -12,14 +12,14 @@ const CACHE_FILE = join(__dirname, 'cached', 'data.json');
 async function main() {
   const oldData = getOldData();
   const currentData = await scrapeIssues(
-    oldData.collectedDate ? new Date(oldData.collectedDate) : undefined
+    oldData.collectedDate ? new Date(oldData.collectedDate) : undefined,
   );
   const trendData = getTrendData(currentData, oldData);
   const formatted = formatGhReport(
     currentData,
     trendData,
     oldData,
-    getUnlabeledIssuesUrl(await getScopeLabels())
+    getUnlabeledIssuesUrl(await getScopeLabels()),
   );
   setOutput('SLACK_MESSAGE', getSlackMessageJson(formatted));
   console.log(formatted.replace(/\<(.*)\|(.*)\>/g, '[$1]($0)'));
@@ -79,6 +79,6 @@ function getOldData(): ReportData {
 function getUnlabeledIssuesUrl(scopeLabels: string[]) {
   const labelFilters = scopeLabels.map((s) => `-label:"${s}"`);
   return `https://github.com/nrwl/nx/issues/?q=is%3Aopen+is%3Aissue+sort%3Aupdated-desc+${encodeURIComponent(
-    labelFilters.join(' ')
+    labelFilters.join(' '),
   )}`;
 }

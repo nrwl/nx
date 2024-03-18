@@ -16,7 +16,7 @@ describe('calculateFileChanges', () => {
       undefined,
       (path, revision) => {
         return revision === 'sha1' ? '' : 'const a = 0;';
-      }
+      },
     );
 
     expect(changes[0].getChanges()).toEqual([new WholeFileChange()]);
@@ -44,7 +44,7 @@ describe('calculateFileChanges', () => {
                 'awesome-nrwl': '0.0.1',
               },
             });
-      }
+      },
     );
 
     expect(changes[0].getChanges()).toContainEqual({
@@ -84,7 +84,7 @@ describe('calculateFileChanges', () => {
       },
       (path, revision) => {
         return '';
-      }
+      },
     );
 
     expect(changes[0].getChanges()).toEqual([new DeletedFileChange()]);
@@ -100,7 +100,7 @@ describe('calculateFileChanges', () => {
       (path, revision) => {
         return revision === 'sha1' ? '' : 'const a = 0;';
       },
-      ig
+      ig,
     );
     expect(changes.length).toEqual(0);
   });

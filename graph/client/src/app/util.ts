@@ -6,7 +6,7 @@ import { getEnvironmentConfig } from '@nx/graph/shared';
 
 export function parseParentDirectoriesFromFilePath(
   path: string,
-  workspaceRoot: string
+  workspaceRoot: string,
 ) {
   const directories = path
     .replace(workspaceRoot, '')
@@ -23,7 +23,7 @@ export function hasPath(
   node: string,
   visited: string[],
   currentSearchDepth: number,
-  maxSearchDepth: number = -1 // -1 indicates unlimited search depth
+  maxSearchDepth: number = -1, // -1 indicates unlimited search depth
 ) {
   if (target === node) return true;
 
@@ -38,7 +38,7 @@ export function hasPath(
           d.target,
           visited,
           currentSearchDepth + 1,
-          maxSearchDepth
+          maxSearchDepth,
         )
       )
         return true;
@@ -50,7 +50,7 @@ export function hasPath(
 
 export function getProjectsByType(
   type: string,
-  projects: ProjectGraphProjectNode[]
+  projects: ProjectGraphProjectNode[],
 ): ProjectGraphProjectNode[] {
   return projects
     .filter((project) => project.type === type)
@@ -59,7 +59,7 @@ export function getProjectsByType(
 
 export function groupProjectsByDirectory(
   projects: ProjectGraphProjectNode[],
-  workspaceLayout: { appsDir: string; libsDir: string }
+  workspaceLayout: { appsDir: string; libsDir: string },
 ): Record<string, ProjectGraphProjectNode[]> {
   let groups: Record<string, ProjectGraphProjectNode[]> = {};
 
@@ -70,7 +70,7 @@ export function groupProjectsByDirectory(
         : workspaceLayout.libsDir;
     const directories = parseParentDirectoriesFromFilePath(
       (project.data as any).root,
-      workspaceRoot
+      workspaceRoot,
     );
 
     const directory = directories.join('/');
@@ -87,7 +87,7 @@ export function groupProjectsByDirectory(
 export function createTaskName(
   project: string,
   target: string,
-  configuration?: string
+  configuration?: string,
 ) {
   if (configuration) {
     return `${project}:${target}:${configuration}`;

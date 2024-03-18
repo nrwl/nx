@@ -70,8 +70,8 @@ describe('dev mode - project graph', () => {
       getCheckedProjectItems().should(
         'have.length',
         nxExamplesJson.projects.filter((project) =>
-          project.name.includes('cart')
-        ).length
+          project.name.includes('cart'),
+        ).length,
       );
       getTextFilterReset().click();
       getCheckedProjectItems().should('have.length', 0);
@@ -88,8 +88,8 @@ describe('dev mode - project graph', () => {
       getCheckedProjectItems().should(
         'have.length',
         nxExamplesJson.projects.filter((project) =>
-          project.name.includes('cart')
-        ).length
+          project.name.includes('cart'),
+        ).length,
       );
     });
 
@@ -98,8 +98,8 @@ describe('dev mode - project graph', () => {
       getCheckedProjectItems().should(
         'have.length',
         nxExamplesJson.projects.filter((project) =>
-          project.name.includes('cart')
-        ).length
+          project.name.includes('cart'),
+        ).length,
       );
     });
 
@@ -110,8 +110,8 @@ describe('dev mode - project graph', () => {
       getCheckedProjectItems().should(
         'have.length.gt',
         nxExamplesJson.projects.filter((project) =>
-          project.name.includes('cart')
-        ).length
+          project.name.includes('cart'),
+        ).length,
       );
     });
   });
@@ -168,7 +168,7 @@ describe('dev mode - project graph', () => {
       getSelectAllButton().scrollIntoView().click({ force: true });
       getCheckedProjectItems().should(
         'have.length',
-        nxExamplesJson.projects.length
+        nxExamplesJson.projects.length,
       );
     });
   });
@@ -178,7 +178,7 @@ describe('dev mode - project graph', () => {
       getDeselectAllButton().click();
       getUncheckedProjectItems().should(
         'have.length',
-        nxExamplesJson.projects.length
+        nxExamplesJson.projects.length,
       );
       getSelectProjectsMessage().should('be.visible');
     });
@@ -201,7 +201,7 @@ describe('dev mode - project graph', () => {
 
       getCheckedProjectItems().should(
         'have.length',
-        affectedJson.affected.length
+        affectedJson.affected.length,
       );
 
       // switch back to Nx Examples graph before proceeding
@@ -265,12 +265,12 @@ describe('dev mode - project graph', () => {
         (key) =>
           nxExamplesJson.dependencies[key]
             .map((dependencies) => dependencies.target)
-            .includes('cart')
+            .includes('cart'),
       );
       getUnfocusProjectButton().should('exist');
       getCheckedProjectItems().should(
         'have.length',
-        ['cart', ...dependencies, ...dependents].length
+        ['cart', ...dependencies, ...dependents].length,
       );
     });
 
@@ -375,13 +375,13 @@ describe('dev mode - project graph', () => {
       getSelectAllButton().click();
       getCheckedProjectItems().should(
         'have.length',
-        nxExamplesJson.projects.length
+        nxExamplesJson.projects.length,
       );
       cy.url().should('contain', '/projects/all');
       cy.reload();
       getCheckedProjectItems().should(
         'have.length',
-        nxExamplesJson.projects.length
+        nxExamplesJson.projects.length,
       );
     });
   });

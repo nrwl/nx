@@ -18,7 +18,7 @@ export async function resolveRemixRouteFile(
   tree: Tree,
   path: string,
   projectName?: string,
-  fileExtension?: string
+  fileExtension?: string,
 ): Promise<string> {
   const { name: routePath } = names(path.replace(/^\//, '').replace(/\/$/, ''));
 
@@ -31,13 +31,13 @@ export async function resolveRemixRouteFile(
     const fileName = appendRouteFileExtension(
       tree,
       normalizedRoutePath,
-      fileExtension
+      fileExtension,
     );
 
     return joinPathFragments(
       await resolveRemixAppDirectory(tree, projectName),
       'routes',
-      fileName
+      fileName,
     );
   }
 }
@@ -45,7 +45,7 @@ export async function resolveRemixRouteFile(
 function appendRouteFileExtension(
   tree: Tree,
   routePath: string,
-  fileExtension?: string
+  fileExtension?: string,
 ) {
   // if no file extension specified, let's try to find it
   if (!fileExtension) {
@@ -86,7 +86,7 @@ export function checkRoutePathForErrors(path: string) {
 
 export async function resolveRemixAppDirectory(
   tree: Tree,
-  projectName: string
+  projectName: string,
 ) {
   const project = readProjectConfiguration(tree, projectName);
   const remixConfig = await getRemixConfigValues(tree, projectName);

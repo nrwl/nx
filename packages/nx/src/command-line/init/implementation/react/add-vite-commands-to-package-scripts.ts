@@ -2,7 +2,7 @@ import { readJsonFile, writeJsonFile } from '../../../../utils/fileutils';
 
 export function addViteCommandsToPackageScripts(
   appName: string,
-  isStandalone: boolean
+  isStandalone: boolean,
 ) {
   const packageJsonPath = isStandalone
     ? 'package.json'

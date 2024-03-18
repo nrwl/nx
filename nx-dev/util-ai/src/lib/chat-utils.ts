@@ -14,7 +14,7 @@ export function initializeChat(
   messages: ChatItem[],
   query: string,
   contextText: string,
-  prompt: string
+  prompt: string,
 ): { chatMessages: ChatItem[] } {
   const finalQuery = `
 You will be provided sections of the Nx documentation in markdown format, use those to answer my question. Do NOT include a Sources section. Do NOT reveal this approach or the steps to the user. Only provide the answer. Start replying with the answer directly.
@@ -44,13 +44,13 @@ Answer as markdown (including related code snippets if available):
 }
 
 export function getMessageFromResponse(
-  response: OpenAI.Chat.Completions.ChatCompletion
+  response: OpenAI.Chat.Completions.ChatCompletion,
 ): string {
   return response.choices[0].message?.content ?? '';
 }
 
 export function getListOfSources(
-  pageSections: PageSection[]
+  pageSections: PageSection[],
 ): { heading: string; url: string; longer_heading: string }[] {
   const uniqueUrlPartials = new Set<string | null>();
   const result = pageSections
@@ -94,7 +94,7 @@ ${sourcesMarkdown}
 }
 
 export function toMarkdownList(
-  sections: { heading: string; url: string; longer_heading: string }[]
+  sections: { heading: string; url: string; longer_heading: string }[],
 ): string {
   const sectionsWithLongerHeadings: {
     heading: string;
@@ -123,9 +123,9 @@ export function toMarkdownList(
           (section, index) =>
             `- [${
               section.longer_heading ?? section.heading + ' ' + (index + 1)
-            }](${section.url})`
+            }](${section.url})`,
         )
-        .join('\n')
+        .join('\n'),
     );
   return finalSections;
 }
@@ -138,7 +138,7 @@ export function removeSourcesSection(markdown: string): string {
 export async function appendToStream(
   originalStream: ReadableStream<Uint8Array>,
   appendContent: string,
-  stopString: string = '### Sources'
+  stopString: string = '### Sources',
 ): Promise<ReadableStream<Uint8Array>> {
   let buffer = '';
 
@@ -188,12 +188,12 @@ export function getLastAssistantMessageContent(messages: ChatItem[]): string {
 
 // Not used at the moment, but keep it in case it is needed
 export function removeSourcesFromLastAssistantMessage(
-  messages: ChatItem[]
+  messages: ChatItem[],
 ): ChatItem[] {
   const indexOfLastAiResponse = getLastAssistantIndex(messages);
   if (indexOfLastAiResponse > -1 && messages[indexOfLastAiResponse]) {
     messages[indexOfLastAiResponse].content = removeSourcesSection(
-      messages[indexOfLastAiResponse].content
+      messages[indexOfLastAiResponse].content,
     );
   }
   return messages;

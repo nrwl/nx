@@ -26,7 +26,7 @@ import { convertNonVite } from './lib/convert-non-vite';
 
 export function viteConfigurationGenerator(
   host: Tree,
-  schema: ViteConfigurationGeneratorSchema
+  schema: ViteConfigurationGeneratorSchema,
 ) {
   return viteConfigurationGeneratorInternal(host, {
     addPlugin: false,
@@ -36,7 +36,7 @@ export function viteConfigurationGenerator(
 
 export async function viteConfigurationGeneratorInternal(
   tree: Tree,
-  schema: ViteConfigurationGeneratorSchema
+  schema: ViteConfigurationGeneratorSchema,
 ) {
   const tasks: GeneratorCallback[] = [];
 
@@ -80,7 +80,7 @@ export async function viteConfigurationGeneratorInternal(
   const hasPlugin = nxJson.plugins?.some((p) =>
     typeof p === 'string'
       ? p === '@nx/vite/plugin'
-      : p.plugin === '@nx/vite/plugin'
+      : p.plugin === '@nx/vite/plugin',
   );
 
   if (!hasPlugin) {
@@ -119,7 +119,7 @@ export async function viteConfigurationGeneratorInternal(
           };
         }
         return json;
-      }
+      },
     );
   }
 
@@ -146,7 +146,7 @@ export async function viteConfigurationGeneratorInternal(
           plugins: ['react()'],
         },
         false,
-        undefined
+        undefined,
       );
     } else {
       createOrEditViteConfig(tree, schema, false, projectAlreadyHasViteTargets);

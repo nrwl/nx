@@ -8,7 +8,7 @@ module.exports = require('babel-loader').custom(() => {
     },
     config(
       cfg,
-      { customOptions: { isTest, isModern, emitDecoratorMetadata } }
+      { customOptions: { isTest, isModern, emitDecoratorMetadata } },
     ) {
       // Add hint to our babel preset so it can handle modern vs legacy bundles.
       cfg.options.caller.isModern = isModern;

@@ -38,7 +38,7 @@ describe('@nx/remix/plugin', () => {
       };
       tempFs.createFileSync(
         'package.json',
-        JSON.stringify('{name: "my-app", type: "module"}')
+        JSON.stringify('{name: "my-app", type: "module"}'),
       );
       tempFs.createFileSync(
         'remix.config.cjs',
@@ -49,7 +49,7 @@ module.exports = {
   ignoredRouteFiles: ['**/.*'],
   watchPaths: () => require('@nx/remix').createWatchPaths(__dirname),
 };
-`
+`,
       );
       process.chdir(tempFs.tempDir);
     });
@@ -70,7 +70,7 @@ module.exports = {
           startTargetName: 'start',
           typecheckTargetName: 'typecheck',
         },
-        context
+        context,
       );
 
       // ASSERT
@@ -95,7 +95,7 @@ module.exports = {
 
       tempFs.createFileSync(
         'my-app/project.json',
-        JSON.stringify({ name: 'my-app' })
+        JSON.stringify({ name: 'my-app' }),
       );
 
       tempFs.createFileSync(
@@ -107,7 +107,7 @@ module.exports = {
   ignoredRouteFiles: ['**/.*'],
   watchPaths: () => require('@nx/remix').createWatchPaths(__dirname),
 };
-`
+`,
       );
 
       process.chdir(tempFs.tempDir);
@@ -129,7 +129,7 @@ module.exports = {
           startTargetName: 'start',
           typecheckTargetName: 'tsc',
         },
-        context
+        context,
       );
 
       // ASSERT

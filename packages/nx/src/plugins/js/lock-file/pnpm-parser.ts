@@ -46,7 +46,7 @@ function parsePnpmLockFile(lockFileContent: string, lockFileHash: string) {
 
 export function getPnpmLockfileNodes(
   lockFileContent: string,
-  lockFileHash: string
+  lockFileHash: string,
 ) {
   const data = parsePnpmLockFile(lockFileContent, lockFileHash);
   const isV6 = isV6Lockfile(data);
@@ -57,7 +57,7 @@ export function getPnpmLockfileNodes(
 export function getPnpmLockfileDependencies(
   lockFileContent: string,
   lockFileHash: string,
-  ctx: CreateDependenciesContext
+  ctx: CreateDependenciesContext,
 ) {
   const data = parsePnpmLockFile(lockFileContent, lockFileHash);
   const isV6 = isV6Lockfile(data);
@@ -68,7 +68,7 @@ export function getPnpmLockfileDependencies(
 function getNodes(
   data: Lockfile,
   keyMap: Map<string, ProjectGraphExternalNode>,
-  isV6: boolean
+  isV6: boolean,
 ): Record<string, ProjectGraphExternalNode> {
   const nodes: Map<string, Map<string, ProjectGraphExternalNode>> = new Map();
 
@@ -95,7 +95,7 @@ function getNodes(
             hashArray(
               snapshot.resolution?.['tarball']
                 ? [snapshot.resolution['tarball']]
-                : [packageName, version]
+                : [packageName, version],
             ),
         },
       };
@@ -134,13 +134,13 @@ function getNodes(
 function getHoistedVersion(
   hoistedDependencies: Record<string, any>,
   packageName: string,
-  isV6: boolean
+  isV6: boolean,
 ): string {
   let version = getHoistedPackageVersion(packageName);
 
   if (!version) {
     const key = Object.keys(hoistedDependencies).find((k) =>
-      k.startsWith(`/${packageName}/`)
+      k.startsWith(`/${packageName}/`),
     );
     if (key) {
       version = parseBaseVersion(getVersion(key, packageName), isV6);
@@ -158,7 +158,7 @@ function getDependencies(
   data: Lockfile,
   keyMap: Map<string, ProjectGraphExternalNode>,
   isV6: boolean,
-  ctx: CreateDependenciesContext
+  ctx: CreateDependenciesContext,
 ): RawProjectGraphDependency[] {
   const results: RawProjectGraphDependency[] = [];
   Object.entries(data.packages).forEach(([key, snapshot]) => {
@@ -169,7 +169,7 @@ function getDependencies(
           Object.entries(section).forEach(([name, versionRange]) => {
             const version = parseBaseVersion(
               findVersion(versionRange, name),
-              isV6
+              isV6,
             );
             const target =
               ctx.externalNodes[`npm:${name}@${version}`] ||
@@ -185,7 +185,7 @@ function getDependencies(
             }
           });
         }
-      }
+      },
     );
   });
 
@@ -199,7 +199,7 @@ function parseBaseVersion(rawVersion: string, isV6: boolean): string {
 export function stringifyPnpmLockfile(
   graph: ProjectGraph,
   rootLockFileContent: string,
-  packageJson: NormalizedPackageJson
+  packageJson: NormalizedPackageJson,
 ): string {
   const data = parseAndNormalizePnpmLockfile(rootLockFileContent);
   const { lockfileVersion, packages } = data;
@@ -210,7 +210,7 @@ export function stringifyPnpmLockfile(
       '.': mapRootSnapshot(packageJson, packages, graph.externalNodes),
     },
     packages: sortObjectByKeys(
-      mapSnapshots(data.packages, graph.externalNodes)
+      mapSnapshots(data.packages, graph.externalNodes),
     ),
   };
 
@@ -219,7 +219,7 @@ export function stringifyPnpmLockfile(
 
 function mapSnapshots(
   packages: PackageSnapshots,
-  nodes: Record<string, ProjectGraphExternalNode>
+  nodes: Record<string, ProjectGraphExternalNode>,
 ): PackageSnapshots {
   const result: PackageSnapshots = {};
   Object.values(nodes).forEach((node) => {
@@ -239,7 +239,7 @@ function mapSnapshots(
 function findOriginalKeys(
   packages: PackageSnapshots,
   { data: { packageName, version } }: ProjectGraphExternalNode,
-  { returnFullKey }: { returnFullKey?: boolean } = {}
+  { returnFullKey }: { returnFullKey?: boolean } = {},
 ): Array<[string, PackageSnapshot]> {
   const matchedKeys = [];
   for (const key of Object.keys(packages)) {
@@ -278,7 +278,7 @@ function versionIsAlias(key: string, versionExpr: string): boolean {
 function mapRootSnapshot(
   packageJson: NormalizedPackageJson,
   packages: PackageSnapshots,
-  nodes: Record<string, ProjectGraphExternalNode>
+  nodes: Record<string, ProjectGraphExternalNode>,
 ): ProjectSnapshot {
   const snapshot: ProjectSnapshot = { specifiers: {} };
   [
@@ -326,7 +326,7 @@ function findVersion(key: string, packageName: string): string {
 function findPackageNames(
   key: string,
   snapshot: PackageSnapshot,
-  data: Lockfile
+  data: Lockfile,
 ): string[] {
   const packageNames = new Set<string>();
   const originalPackageName = extractNameFromKey(key);
@@ -349,7 +349,7 @@ function findPackageNames(
   };
 
   const matchedDependencyName = (
-    importer: Partial<PackageSnapshot>
+    importer: Partial<PackageSnapshot>,
   ): string => {
     return (
       matchPropValue(importer.dependencies) ||

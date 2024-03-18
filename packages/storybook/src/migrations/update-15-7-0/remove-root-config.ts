@@ -25,7 +25,7 @@ import ts = require('typescript');
 
 export function removeRootConfig(
   tree: Tree,
-  rootMainJsTsPath: string
+  rootMainJsTsPath: string,
 ): boolean {
   if (checkIfRootMainJsTsIsEmpty(tree, rootMainJsTsPath)) {
     const hasRemainingRootMainJsReferences = removeImportFromAllFiles(tree);
@@ -34,7 +34,7 @@ export function removeRootConfig(
       `
       We removed the root ${rootMainJsTsPath} file and we also
       removed all it's imports from all project-level Storybook configuration files.
-      `
+      `,
     );
 
     if (hasRemainingRootMainJsReferences.length) {
@@ -46,7 +46,7 @@ export function removeRootConfig(
         ${hasRemainingRootMainJsReferences.join('\n')}
 
         Please remove them manually.
-      `
+      `,
       );
     }
 
@@ -71,7 +71,7 @@ function removeImportFromAllFiles(tree: Tree): string[] {
       if (hasRemainingReference) {
         hasRemainingRootMainJsReferences.push(hasRemainingReference);
       }
-    }
+    },
   );
   return hasRemainingRootMainJsReferences;
 }
@@ -83,8 +83,8 @@ function makeTheChanges(tree: Tree, options: {}): string | undefined {
     const mainJsTsPath = tree.exists(`${storybookDir}/main.js`)
       ? `${storybookDir}/main.js`
       : tree.exists(`${storybookDir}/main.ts`)
-      ? `${storybookDir}/main.ts`
-      : undefined;
+        ? `${storybookDir}/main.ts`
+        : undefined;
 
     if (mainJsTsPath) {
       let mainJsTs = tree.read(mainJsTsPath, 'utf-8');
@@ -103,7 +103,7 @@ function makeTheChanges(tree: Tree, options: {}): string | undefined {
 
         const spreadElements = tsquery.query(
           mainJsTs,
-          `SpreadElement:has(Identifier[name="${rootMainVariableName}"])`
+          `SpreadElement:has(Identifier[name="${rootMainVariableName}"])`,
         );
         spreadElements.forEach((spreadElement) => {
           changesToBeMade.push({
@@ -118,7 +118,7 @@ function makeTheChanges(tree: Tree, options: {}): string | undefined {
 
         const spreadAssignments = tsquery.query(
           mainJsTs,
-          `SpreadAssignment:has(Identifier[name="${rootMainVariableName}"])`
+          `SpreadAssignment:has(Identifier[name="${rootMainVariableName}"])`,
         );
         spreadAssignments.forEach((spreadAssignment) => {
           changesToBeMade.push({
@@ -133,7 +133,7 @@ function makeTheChanges(tree: Tree, options: {}): string | undefined {
 
         const findOtherRootMainUses = tsquery.query(
           mainJsTs,
-          `Identifier[name="${rootMainVariableName}"]`
+          `Identifier[name="${rootMainVariableName}"]`,
         );
 
         findOtherRootMainUses.forEach((otherRootMainUse) => {
@@ -165,7 +165,7 @@ function makeTheChanges(tree: Tree, options: {}): string | undefined {
             checkIfUsesOldSyntaxAndUpdate(
               tree,
               mainJsTsPath,
-              rootMainVariableName
+              rootMainVariableName,
             )
           ) {
             return undefined;
@@ -180,7 +180,7 @@ function makeTheChanges(tree: Tree, options: {}): string | undefined {
 function checkIfUsesOldSyntaxAndUpdate(
   tree: Tree,
   filePath: string,
-  rootMainVariableName: string
+  rootMainVariableName: string,
 ): boolean {
   const mainJsTs = tree.read(filePath, 'utf-8');
   const changesToBeMade: StringChange[] = [];
@@ -201,13 +201,13 @@ function checkIfUsesOldSyntaxAndUpdate(
 
   if (addArrayToModuleExports('addons', mainJsTs, addonsArrayString)) {
     changesToBeMade.push(
-      addArrayToModuleExports('addons', mainJsTs, addonsArrayString)
+      addArrayToModuleExports('addons', mainJsTs, addonsArrayString),
     );
   }
 
   if (addArrayToModuleExports('stories', mainJsTs, storiesArrayString)) {
     changesToBeMade.push(
-      addArrayToModuleExports('stories', mainJsTs, storiesArrayString)
+      addArrayToModuleExports('stories', mainJsTs, storiesArrayString),
     );
   }
 
@@ -220,7 +220,7 @@ function checkIfUsesOldSyntaxAndUpdate(
 function addArrayToModuleExports(
   propertyName: string,
   mainJsTs: string,
-  arrayString: string
+  arrayString: string,
 ): StringChange {
   if (!arrayString) {
     return;
@@ -228,13 +228,13 @@ function addArrayToModuleExports(
 
   const moduleExports = tsquery.query(
     mainJsTs,
-    `PropertyAccessExpression:has([expression.name="module"]):has([name="exports"]):has([name="${propertyName}"])`
+    `PropertyAccessExpression:has([expression.name="module"]):has([name="exports"]):has([name="${propertyName}"])`,
   )?.[0];
   if (moduleExports) {
     const parentBinaryExpression = moduleExports.parent;
     const arrayExpression = tsquery.query(
       parentBinaryExpression,
-      `ArrayLiteralExpression`
+      `ArrayLiteralExpression`,
     )?.[0];
 
     return {
@@ -254,11 +254,11 @@ function addArrayToModuleExports(
 function getPropertyArray(
   propertyName: string,
   mainJsTs: string,
-  rootMainVariableName: string
+  rootMainVariableName: string,
 ): { stringArray: string; expressionToDelete: StringChange } {
   const propertyAccessExpression = tsquery.query(
     mainJsTs,
-    `PropertyAccessExpression:has([expression.name="${rootMainVariableName}"]):has([name="${propertyName}"])`
+    `PropertyAccessExpression:has([expression.name="${rootMainVariableName}"]):has([name="${propertyName}"])`,
   )?.[0];
 
   if (propertyAccessExpression) {
@@ -286,12 +286,12 @@ function getPropertyArray(
 function hasMoreRootMainUses(
   tree: Tree,
   filePath: string,
-  rootMainVariableName: string
+  rootMainVariableName: string,
 ): boolean {
   const mainJsTs = tree.read(filePath, 'utf-8');
   const findRemainingRootMainUses = tsquery.query(
     mainJsTs,
-    `Identifier[name="${rootMainVariableName}"]`
+    `Identifier[name="${rootMainVariableName}"]`,
   );
   return findRemainingRootMainUses?.length > 0;
 }
@@ -300,7 +300,7 @@ function checkIfRootMainJsTsIsEmpty(tree: Tree, rootMainJsTsPath: string) {
   const rootMainJsTs = tree.read(rootMainJsTsPath, 'utf-8');
   const mainConfigObject = tsquery.query(
     rootMainJsTs,
-    'ObjectLiteralExpression'
+    'ObjectLiteralExpression',
   );
 
   if (

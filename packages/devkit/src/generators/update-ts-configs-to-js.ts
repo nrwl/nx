@@ -5,7 +5,7 @@ const { updateJson } = requireNx();
 
 export function updateTsConfigsToJs(
   tree: Tree,
-  options: { projectRoot: string }
+  options: { projectRoot: string },
 ): void {
   let updateConfigPath: string;
 
@@ -24,7 +24,7 @@ export function updateTsConfigsToJs(
     }
 
     throw new Error(
-      `project is missing tsconfig.lib.json or tsconfig.app.json`
+      `project is missing tsconfig.lib.json or tsconfig.app.json`,
     );
   };
 

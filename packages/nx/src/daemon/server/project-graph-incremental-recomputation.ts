@@ -95,7 +95,7 @@ export async function getCachedSerializedProjectGraphPromise(): Promise<Serializ
 export function addUpdatedAndDeletedFiles(
   createdFiles: string[],
   updatedFiles: string[],
-  deletedFiles: string[]
+  deletedFiles: string[],
 ) {
   for (let f of [...createdFiles, ...updatedFiles]) {
     collectedDeletedFiles.delete(f);
@@ -134,15 +134,15 @@ export function addUpdatedAndDeletedFiles(
 }
 
 function computeWorkspaceConfigHash(
-  projectsConfigurations: Record<string, ProjectConfiguration>
+  projectsConfigurations: Record<string, ProjectConfiguration>,
 ) {
   const projectConfigurationStrings = Object.entries(projectsConfigurations)
     .sort(([projectNameA], [projectNameB]) =>
-      projectNameA.localeCompare(projectNameB)
+      projectNameA.localeCompare(projectNameB),
     )
     .map(
       ([projectName, projectConfig]) =>
-        `${projectName}:${JSON.stringify(projectConfig)}`
+        `${projectName}:${JSON.stringify(projectConfig)}`,
     );
   return hashArray(projectConfigurationStrings);
 }
@@ -150,7 +150,7 @@ function computeWorkspaceConfigHash(
 async function processCollectedUpdatedAndDeletedFiles(
   { projects, externalNodes, projectRootMap }: RetrievedGraphNodes,
   updatedFileHashes: Record<string, string>,
-  deletedFiles: string[]
+  deletedFiles: string[],
 ) {
   try {
     const workspaceConfigHash = computeWorkspaceConfigHash(projects);
@@ -161,7 +161,7 @@ async function processCollectedUpdatedAndDeletedFiles(
 
       ({ ...fileMapWithFiles } = await retrieveWorkspaceFiles(
         workspaceRoot,
-        projectRootMap
+        projectRootMap,
       ));
 
       knownExternalNodes = externalNodes;
@@ -171,12 +171,12 @@ async function processCollectedUpdatedAndDeletedFiles(
           projects,
           fileMapWithFiles.rustReferences,
           updatedFileHashes,
-          deletedFiles
+          deletedFiles,
         );
       } else {
         fileMapWithFiles = await retrieveWorkspaceFiles(
           workspaceRoot,
-          projectRootMap
+          projectRootMap,
         );
       }
     }
@@ -192,7 +192,7 @@ async function processCollectedUpdatedAndDeletedFiles(
     // if Nx requests the project graph prior to the error being fixed,
     // the error will be propagated
     serverLogger.log(
-      `Error detected when recomputing project file map: ${e.message}`
+      `Error detected when recomputing project file map: ${e.message}`,
     );
     resetInternalState();
     throw e;
@@ -209,10 +209,10 @@ async function processFilesAndCreateAndSerializeProjectGraph(): Promise<Serializ
     performance.measure(
       'hash changed files from watcher',
       'hash-watched-changes-start',
-      'hash-watched-changes-end'
+      'hash-watched-changes-end',
     );
     serverLogger.requestLog(
-      `Updated workspace context based on watched changes, recomputing project graph...`
+      `Updated workspace context based on watched changes, recomputing project graph...`,
     );
     serverLogger.requestLog([...updatedFiles.values()]);
     serverLogger.requestLog([...deletedFiles]);
@@ -221,12 +221,12 @@ async function processFilesAndCreateAndSerializeProjectGraph(): Promise<Serializ
     global.NX_GRAPH_CREATION = true;
     const graphNodes = await retrieveProjectConfigurations(
       workspaceRoot,
-      nxJson
+      nxJson,
     );
     await processCollectedUpdatedAndDeletedFiles(
       graphNodes,
       updatedFileHashes,
-      deletedFiles
+      deletedFiles,
     );
     const g = createAndSerializeProjectGraph(graphNodes);
 
@@ -277,7 +277,7 @@ async function createAndSerializeProjectGraph({
         allWorkspaceFiles,
         rustReferences,
         currentProjectFileMapCache || readFileMapCache(),
-        true
+        true,
       );
     currentProjectFileMapCache = projectFileMapCache;
     currentProjectGraph = projectGraph;
@@ -286,7 +286,7 @@ async function createAndSerializeProjectGraph({
     performance.measure(
       'total execution time for createProjectGraph()',
       'create-project-graph-start',
-      'create-project-graph-end'
+      'create-project-graph-end',
     );
 
     performance.mark('json-stringify-start');
@@ -296,7 +296,7 @@ async function createAndSerializeProjectGraph({
     performance.measure(
       'serialize graph',
       'json-stringify-start',
-      'json-stringify-end'
+      'json-stringify-end',
     );
 
     return {
@@ -310,7 +310,7 @@ async function createAndSerializeProjectGraph({
     };
   } catch (e) {
     serverLogger.log(
-      `Error detected when creating a project graph: ${e.message}`
+      `Error detected when creating a project graph: ${e.message}`,
     );
     return {
       error: e,

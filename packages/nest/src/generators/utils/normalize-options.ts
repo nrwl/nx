@@ -10,7 +10,7 @@ export async function normalizeOptions(
   tree: Tree,
   artifactType: string,
   callingGenerator: string,
-  options: NestGeneratorOptions
+  options: NestGeneratorOptions,
 ): Promise<NormalizedOptions> {
   const { directory, fileName } =
     await determineArtifactNameAndDirectoryOptions(tree, {
@@ -34,7 +34,7 @@ export async function normalizeOptions(
 }
 
 export function unitTestRunnerToSpec(
-  unitTestRunner: UnitTestRunner | undefined
+  unitTestRunner: UnitTestRunner | undefined,
 ): boolean | undefined {
   return unitTestRunner !== undefined ? unitTestRunner === 'jest' : undefined;
 }

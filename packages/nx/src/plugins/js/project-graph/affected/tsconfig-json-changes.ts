@@ -16,7 +16,7 @@ export const getTouchedProjectsFromTsConfig: TouchedProjectLocator<
     return [];
   }
   const tsConfigJsonChanges = touchedFiles.find(
-    (change) => change.file === rootTsConfig
+    (change) => change.file === rootTsConfig,
   );
   if (!tsConfigJsonChanges) {
     return [];
@@ -41,14 +41,14 @@ export const getTouchedProjectsFromTsConfig: TouchedProjectLocator<
       return Object.keys(graph.nodes);
     }
     touched.push(
-      ...getProjectsAffectedByPaths(change, Object.values(graph.nodes))
+      ...getProjectsAffectedByPaths(change, Object.values(graph.nodes)),
     );
   }
   return touched;
 };
 
 function allChangesArePathChanges(
-  changes: Array<WholeFileChange | JsonChange>
+  changes: Array<WholeFileChange | JsonChange>,
 ): changes is JsonChange[] {
   return changes.every(isChangeToPathMappings);
 }
@@ -58,7 +58,7 @@ function allChangesArePathChanges(
  */
 function getProjectsAffectedByPaths(
   change: JsonChange,
-  nodes: ProjectGraphProjectNode[]
+  nodes: ProjectGraphProjectNode[],
 ) {
   const result = [];
   const paths: string[] = [change.value.lhs, change.value.rhs];
@@ -84,7 +84,7 @@ function getProjectsAffectedByPaths(
  * Change is possibly a change to path mappings
  */
 function isChangeToPathMappings(
-  change: WholeFileChange | JsonChange
+  change: WholeFileChange | JsonChange,
 ): change is JsonChange {
   return (
     isJsonChange(change) &&

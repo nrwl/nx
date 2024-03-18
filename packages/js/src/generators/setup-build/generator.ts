@@ -16,7 +16,7 @@ import { addBuildTargetDefaults } from '@nx/devkit/src/generators/add-build-targ
 
 export async function setupBuildGenerator(
   tree: Tree,
-  options: SetupBuildGeneratorSchema
+  options: SetupBuildGeneratorSchema,
 ): Promise<GeneratorCallback> {
   const tasks: GeneratorCallback[] = [];
   const project = readProjectConfiguration(tree, options.project);
@@ -46,7 +46,7 @@ export async function setupBuildGenerator(
   }
   if (!mainFile || !tree.exists(mainFile)) {
     throw new Error(
-      `Cannot locate a main file for ${options.project}. Please specify one using --main=<file-path>.`
+      `Cannot locate a main file for ${options.project}. Please specify one using --main=<file-path>.`,
     );
   }
 
@@ -70,7 +70,7 @@ export async function setupBuildGenerator(
   }
   if (!tsConfigFile || !tree.exists(tsConfigFile)) {
     throw new Error(
-      `Cannot locate a tsConfig file for ${options.project}. Please specify one using --tsConfig=<file-path>.`
+      `Cannot locate a tsConfig file for ${options.project}. Please specify one using --tsConfig=<file-path>.`,
     );
   }
 
@@ -78,7 +78,7 @@ export async function setupBuildGenerator(
     case 'vite': {
       const { viteConfigurationGenerator } = ensurePackage(
         '@nx/vite',
-        nxVersion
+        nxVersion,
       );
       const task = await viteConfigurationGenerator(tree, {
         buildTarget: options.buildTarget,
@@ -95,7 +95,7 @@ export async function setupBuildGenerator(
     case 'esbuild': {
       const { configurationGenerator } = ensurePackage(
         '@nx/esbuild',
-        nxVersion
+        nxVersion,
       );
       const task = await configurationGenerator(tree, {
         main: mainFile,

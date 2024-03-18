@@ -1,6 +1,6 @@
 export function joinTypes<T extends JSX.Element>(
   arr: T[],
-  sep: string
+  sep: string,
 ): (JSX.Element | string)[] {
   let results: Array<JSX.Element | string> = new Array<JSX.Element | string>();
   let first = true;

@@ -35,7 +35,7 @@ export function registerTsProject(tsConfigPath: string): () => void;
 export function registerTsProject(path: string, configFilename: string);
 export function registerTsProject(
   path: string,
-  configFilename?: string
+  configFilename?: string,
 ): () => void {
   const tsConfigPath = configFilename ? join(path, configFilename) : path;
   const compilerOptions: CompilerOptions = readCompilerOptions(tsConfigPath);
@@ -66,9 +66,10 @@ export function registerTsProject(
 }
 
 export function getSwcTranspiler(
-  compilerOptions: CompilerOptions
+  compilerOptions: CompilerOptions,
 ): (...args: unknown[]) => unknown {
-  type ISwcRegister = typeof import('@swc-node/register/register')['register'];
+  type ISwcRegister =
+    (typeof import('@swc-node/register/register'))['register'];
 
   // These are requires to prevent it from registering when it shouldn't
   const register = require('@swc-node/register/register')
@@ -80,7 +81,7 @@ export function getSwcTranspiler(
 }
 
 export function getTsNodeTranspiler(
-  compilerOptions: CompilerOptions
+  compilerOptions: CompilerOptions,
 ): (...args: unknown[]) => unknown {
   const { register } = require('ts-node') as typeof import('ts-node');
   // ts-node doesn't provide a cleanup method
@@ -138,7 +139,7 @@ export function getTranspiler(compilerOptions: CompilerOptions) {
  * @returns cleanup method
  */
 export function registerTranspiler(
-  compilerOptions: CompilerOptions
+  compilerOptions: CompilerOptions,
 ): () => void {
   // Function to register transpiler that returns cleanup function
   const transpiler = getTranspiler(compilerOptions);
@@ -211,7 +212,7 @@ function readCompilerOptionsWithTypescript(tsConfigPath) {
   const { options } = parseJsonConfigFileContent(
     jsonContent.config,
     sys,
-    dirname(tsConfigPath)
+    dirname(tsConfigPath),
   );
   // This property is returned in compiler options for some reason, but not part of the typings.
   // ts-node fails on unknown props, so we have to remove it.
@@ -230,21 +231,21 @@ function loadTsConfigPaths(): typeof import('tsconfig-paths') | null {
 function warnTsNodeUsage() {
   logger.warn(
     stripIndent(`${NX_PREFIX} Falling back to ts-node for local typescript execution. This may be a little slower.
-  - To fix this, ensure @swc-node/register and @swc/core have been installed`)
+  - To fix this, ensure @swc-node/register and @swc/core have been installed`),
   );
 }
 
 function warnNoTsconfigPaths() {
   logger.warn(
     stripIndent(`${NX_PREFIX} Unable to load tsconfig-paths, workspace libraries may be inaccessible.
-  - To fix this, install tsconfig-paths with npm/yarn/pnpm`)
+  - To fix this, install tsconfig-paths with npm/yarn/pnpm`),
   );
 }
 
 function warnNoTranspiler() {
   logger.warn(
     stripIndent(`${NX_PREFIX} Unable to locate swc-node or ts-node. Nx will be unable to run local ts files without transpiling.
-  - To fix this, ensure @swc-node/register and @swc/core have been installed`)
+  - To fix this, ensure @swc-node/register and @swc/core have been installed`),
   );
 }
 

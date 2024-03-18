@@ -31,7 +31,7 @@ describe('update-ngcc-postinstall-target migration', () => {
       const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
       tree.write(
         '/package.json',
-        JSON.stringify({ scripts: { postinstall: testEntry.test } })
+        JSON.stringify({ scripts: { postinstall: testEntry.test } }),
       );
 
       await updateNgccTarget(tree);
@@ -55,7 +55,7 @@ describe('update-ngcc-postinstall-target migration', () => {
       const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
       tree.write(
         '/package.json',
-        JSON.stringify({ scripts: { postinstall: testEntry.test } })
+        JSON.stringify({ scripts: { postinstall: testEntry.test } }),
       );
 
       await updateNgccTarget(tree);

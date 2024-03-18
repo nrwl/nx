@@ -20,7 +20,7 @@ export function formatGhReport(
   currentData: ReportData,
   trendData: TrendData,
   prevData: ReportData,
-  unlabeledIssuesUrl: string
+  unlabeledIssuesUrl: string,
 ): string {
   const issueDelta = trendData.totalIssueCount;
   const formattedIssueDelta = formatDelta(issueDelta);
@@ -37,10 +37,10 @@ Totals, Issues: ${currentData.totalIssueCount} ${formattedIssueDelta} Bugs: ${cu
       ? [`Previous Report: ${prevData.collectedDate}`]
       : []),
     `Untriaged: ${currentData.untriagedIssueCount} ${formatDelta(
-      trendData.untriagedIssueCount
+      trendData.untriagedIssueCount,
     )}`,
     `Closed since last report: ${currentData.totalClosed} ${formatDelta(
-      trendData.totalClosed
+      trendData.totalClosed,
     )}`,
   ];
 
@@ -72,7 +72,7 @@ Totals, Issues: ${currentData.totalIssueCount} ${formattedIssueDelta} Bugs: ${cu
         mapFn: (el) =>
           `${el.closed} ${formatDelta(trendData.scopes[el.scope].closed)}`,
       },
-    ])
+    ]),
   );
 
   const footer = '```';

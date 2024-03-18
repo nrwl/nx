@@ -9,14 +9,14 @@ import { readModulePackageJson } from './package-json';
 // cliui is the CLI layout engine developed by, and used within, yargs
 // the typings for cliui do not play nice with our tsconfig, it either
 // works in build or in test but not both.
-const cliui = require('cliui') as typeof import('cliui')['default'];
+const cliui = require('cliui') as (typeof import('cliui'))['default'];
 
 export function printHelp(
   header: string,
   schema: Schema,
   meta:
     | { mode: 'generate'; plugin: string; entity: string; aliases: string[] }
-    | { mode: 'run'; plugin: string; entity: string }
+    | { mode: 'run'; plugin: string; entity: string },
 ) {
   const allPositional = Object.keys(schema.properties).filter((key) => {
     const p = schema.properties[key];
@@ -29,9 +29,9 @@ ${output.applyNxPrefix(
   'cyan',
   chalk.bold(
     `${`${header + chalk.reset.cyan(positional)} ${chalk.reset.cyan(
-      '[options,...]'
-    )}`}`
-  )
+      '[options,...]',
+    )}`}`,
+  ),
 )}
 
 ${generateOverviewOutput({
@@ -119,7 +119,7 @@ function generateGeneratorOverviewOutput({
           (installedVersion ? chalk.dim(` (v${installedVersion})`) : ''),
         padding: [1, 0, 0, 2],
       },
-    ]
+    ],
   );
 
   ui.div(
@@ -135,7 +135,7 @@ function generateGeneratorOverviewOutput({
         }`,
         padding: [0, 0, 0, 2],
       },
-    ]
+    ],
   );
 
   ui.div(
@@ -144,7 +144,7 @@ function generateGeneratorOverviewOutput({
         text: description,
         padding: [2, 0, 1, 2],
       },
-    ]
+    ],
   );
 
   return ui.toString();
@@ -178,7 +178,7 @@ function generateExecutorOverviewOutput({
             : ''),
         padding: [1, 0, 0, 0],
       },
-    ]
+    ],
   );
 
   ui.div(
@@ -187,7 +187,7 @@ function generateExecutorOverviewOutput({
         text: description,
         padding: [2, 0, 1, 2],
       },
-    ]
+    ],
   );
 
   return ui.toString();
@@ -222,7 +222,7 @@ function generateOptionsOutput(schema: Schema): string {
   >();
   let requiredSpaceToRenderAllFlagsAndAliases = 0;
   const sorted = Object.entries(schema.properties).sort((a, b) =>
-    compareByPriority(a, b, schema)
+    compareByPriority(a, b, schema),
   );
   for (const [optionName, optionConfig] of sorted) {
     const renderedFlagAndAlias =
@@ -346,11 +346,11 @@ function generateLinkOutput({
   const link = `https://nx.dev/packages/${pluginName.substring(
     pluginName.startsWith(nxPackagePrefix)
       ? nxPackagePrefix.length
-      : nrwlPackagePrefix.length
+      : nrwlPackagePrefix.length,
   )}/${type}/${name}`;
 
   return `\n\n${chalk.dim(
-    'Find more information and examples at:'
+    'Find more information and examples at:',
   )} ${chalk.bold(link)}`;
 }
 
@@ -366,11 +366,11 @@ function generateLinkOutput({
 function compareByPriority(
   a: [string, Schema['properties'][0]],
   b: [string, Schema['properties'][0]],
-  schema: Schema
+  schema: Schema,
 ): number {
   function getPriority([name, property]: [
     string,
-    Schema['properties'][0]
+    Schema['properties'][0],
   ]): number {
     if (schema.required?.includes(name)) {
       return 0;

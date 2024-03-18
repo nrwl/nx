@@ -15,7 +15,7 @@ export interface WithReactOptions extends WithWebOptions {
 export function withReact(pluginOptions: WithReactOptions = {}) {
   return function configure(
     config: Configuration,
-    context: NxWebpackExecutionContext
+    context: NxWebpackExecutionContext,
   ): Configuration {
     const { withWeb } = require('@nx/webpack');
 

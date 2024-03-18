@@ -38,7 +38,7 @@ describe('move', () => {
     expect(tree.exists(jestConfigPath)).toBeTruthy();
     expect(afterJestConfig).toContain("preset: '../../jest.preset.js'");
     expect(afterJestConfig).toContain(
-      "coverageDirectory: '../../coverage/shared/my-lib-new'"
+      "coverageDirectory: '../../coverage/shared/my-lib-new'",
     );
   });
 
@@ -77,13 +77,13 @@ describe('move', () => {
     const myLibNewConfig = readProjectConfiguration(tree, 'two');
 
     expect(myLibNewConfig.targets.custom.options.buildTarget).toEqual(
-      'two:build:production'
+      'two:build:production',
     );
     expect(myLibNewConfig.targets.custom.options.serveTarget).toEqual(
-      'two:serve:production'
+      'two:serve:production',
     );
     expect(myLibNewConfig.targets.custom.options.irrelevantTarget).toEqual(
-      'my-lib:build:production'
+      'my-lib:build:production',
     );
   });
 
@@ -107,7 +107,7 @@ describe('move', () => {
     expect(tree.exists(jestConfigPath)).toBeTruthy();
     expect(afterJestConfig).toContain("preset: '../jest.preset.js'");
     expect(afterJestConfig).toContain(
-      "coverageDirectory: '../coverage/my-lib-new'"
+      "coverageDirectory: '../coverage/my-lib-new'",
     );
   });
 
@@ -119,7 +119,7 @@ describe('move', () => {
 
     let projectJson = readJson(tree, 'my-lib/project.json');
     expect(projectJson['$schema']).toEqual(
-      '../node_modules/nx/schemas/project-schema.json'
+      '../node_modules/nx/schemas/project-schema.json',
     );
 
     await moveGenerator(tree, {
@@ -132,7 +132,7 @@ describe('move', () => {
 
     projectJson = readJson(tree, 'shared/my-lib-new/project.json');
     expect(projectJson['$schema']).toEqual(
-      '../../node_modules/nx/schemas/project-schema.json'
+      '../../node_modules/nx/schemas/project-schema.json',
     );
   });
 
@@ -152,15 +152,15 @@ describe('move', () => {
 
     const projectJson = readJson(tree, 'libs/shared/my-lib-new/project.json');
     expect(projectJson['$schema']).toEqual(
-      '../../../node_modules/nx/schemas/project-schema.json'
+      '../../../node_modules/nx/schemas/project-schema.json',
     );
     const afterJestConfig = tree.read(
       'libs/shared/my-lib-new/jest.config.ts',
-      'utf-8'
+      'utf-8',
     );
     expect(afterJestConfig).toContain("preset: '../../../jest.preset.js'");
     expect(afterJestConfig).toContain(
-      "coverageDirectory: '../../../coverage/libs/shared/my-lib-new'"
+      "coverageDirectory: '../../../coverage/libs/shared/my-lib-new'",
     );
   });
 });

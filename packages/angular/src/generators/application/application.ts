@@ -30,7 +30,7 @@ import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-com
 
 export async function applicationGenerator(
   tree: Tree,
-  schema: Partial<Schema>
+  schema: Partial<Schema>,
 ): Promise<GeneratorCallback> {
   return await applicationGeneratorInternal(tree, {
     projectNameAndRootFormat: 'derived',
@@ -40,7 +40,7 @@ export async function applicationGenerator(
 
 export async function applicationGeneratorInternal(
   tree: Tree,
-  schema: Partial<Schema>
+  schema: Partial<Schema>,
 ): Promise<GeneratorCallback> {
   const options = await normalizeOptions(tree, schema);
   const rootOffset = offsetFromRoot(options.appProjectRoot);

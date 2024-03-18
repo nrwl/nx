@@ -37,16 +37,16 @@ describe('NxPlugin Generator Generator', () => {
     });
 
     expect(
-      tree.exists('my-plugin/src/generators/my-generator/schema.d.ts')
+      tree.exists('my-plugin/src/generators/my-generator/schema.d.ts'),
     ).toBeTruthy();
     expect(
-      tree.exists('my-plugin/src/generators/my-generator/schema.json')
+      tree.exists('my-plugin/src/generators/my-generator/schema.json'),
     ).toBeTruthy();
     expect(
-      tree.exists('my-plugin/src/generators/my-generator/generator.ts')
+      tree.exists('my-plugin/src/generators/my-generator/generator.ts'),
     ).toBeTruthy();
     expect(
-      tree.exists('my-plugin/src/generators/my-generator/generator.spec.ts')
+      tree.exists('my-plugin/src/generators/my-generator/generator.spec.ts'),
     ).toBeTruthy();
   });
 
@@ -60,23 +60,23 @@ describe('NxPlugin Generator Generator', () => {
 
     expect(
       tree.exists(
-        'my-plugin/src/nx-integrations/generators/my-generator/schema.d.ts'
-      )
+        'my-plugin/src/nx-integrations/generators/my-generator/schema.d.ts',
+      ),
     ).toBeTruthy();
     expect(
       tree.exists(
-        'my-plugin/src/nx-integrations/generators/my-generator/schema.json'
-      )
+        'my-plugin/src/nx-integrations/generators/my-generator/schema.json',
+      ),
     ).toBeTruthy();
     expect(
       tree.exists(
-        'my-plugin/src/nx-integrations/generators/my-generator/generator.ts'
-      )
+        'my-plugin/src/nx-integrations/generators/my-generator/generator.ts',
+      ),
     ).toBeTruthy();
     expect(
       tree.exists(
-        'my-plugin/src/nx-integrations/generators/my-generator/generator.spec.ts'
-      )
+        'my-plugin/src/nx-integrations/generators/my-generator/generator.spec.ts',
+      ),
     ).toBeTruthy();
   });
 
@@ -88,16 +88,16 @@ describe('NxPlugin Generator Generator', () => {
     });
 
     expect(
-      tree.exists('my-plugin/src/generators/my-generator/schema.d.ts')
+      tree.exists('my-plugin/src/generators/my-generator/schema.d.ts'),
     ).toBeTruthy();
     expect(
-      tree.exists('my-plugin/src/generators/my-generator/schema.json')
+      tree.exists('my-plugin/src/generators/my-generator/schema.json'),
     ).toBeTruthy();
     expect(
-      tree.exists('my-plugin/src/generators/my-generator/generator.ts')
+      tree.exists('my-plugin/src/generators/my-generator/generator.ts'),
     ).toBeTruthy();
     expect(
-      tree.exists('my-plugin/src/generators/my-generator/generator.spec.ts')
+      tree.exists('my-plugin/src/generators/my-generator/generator.spec.ts'),
     ).toBeTruthy();
   });
 
@@ -112,13 +112,13 @@ describe('NxPlugin Generator Generator', () => {
     const generatorJson = readJson(tree, 'my-plugin/generators.json');
 
     expect(generatorJson.generators['my-generator'].factory).toEqual(
-      './src/generators/my-generator/generator'
+      './src/generators/my-generator/generator',
     );
     expect(generatorJson.generators['my-generator'].schema).toEqual(
-      './src/generators/my-generator/schema.json'
+      './src/generators/my-generator/schema.json',
     );
     expect(generatorJson.generators['my-generator'].description).toEqual(
-      'my-generator generator'
+      'my-generator generator',
     );
   });
 
@@ -132,13 +132,13 @@ describe('NxPlugin Generator Generator', () => {
     const generatorJson = readJson(tree, 'my-plugin/generators.json');
 
     expect(generatorJson.generators['my-generator'].factory).toEqual(
-      './src/generators/my-generator/generator'
+      './src/generators/my-generator/generator',
     );
     expect(generatorJson.generators['my-generator'].schema).toEqual(
-      './src/generators/my-generator/schema.json'
+      './src/generators/my-generator/schema.json',
     );
     expect(generatorJson.generators['my-generator'].description).toEqual(
-      'my-generator generator'
+      'my-generator generator',
     );
   });
 
@@ -154,7 +154,7 @@ describe('NxPlugin Generator Generator', () => {
         project: projectName,
         name: 'my-generator',
         unitTestRunner: 'jest',
-      })
+      }),
     ).rejects.toThrow('Generator my-generator already exists');
   });
 
@@ -173,17 +173,17 @@ describe('NxPlugin Generator Generator', () => {
     const generatorJson = readJson(tree, 'my-plugin/generators.json');
 
     expect(
-      tree.exists(`my-plugin/src/generators/${generatorFileName}/schema.d.ts`)
+      tree.exists(`my-plugin/src/generators/${generatorFileName}/schema.d.ts`),
     ).toBeTruthy();
 
     expect(generatorJson.generators[generatorName].factory).toEqual(
-      `./src/generators/${generatorFileName}/generator`
+      `./src/generators/${generatorFileName}/generator`,
     );
     expect(generatorJson.generators[generatorName].schema).toEqual(
-      `./src/generators/${generatorFileName}/schema.json`
+      `./src/generators/${generatorFileName}/schema.json`,
     );
     expect(generatorJson.generators[generatorName].description).toEqual(
-      `${generatorFileName} description`
+      `${generatorFileName} description`,
     );
   });
 
@@ -202,10 +202,10 @@ describe('NxPlugin Generator Generator', () => {
     });
 
     expect(() =>
-      tree.exists(`${libConfig.root}/generators.json`)
+      tree.exists(`${libConfig.root}/generators.json`),
     ).not.toThrow();
     expect(readJson(tree, `${libConfig.root}/package.json`).generators).toBe(
-      './generators.json'
+      './generators.json',
     );
   });
 
@@ -221,7 +221,7 @@ describe('NxPlugin Generator Generator', () => {
     const generatorJson = readJson(tree, 'my-plugin/generators.json');
 
     expect(generatorJson.generators['my-generator'].description).toEqual(
-      'my-generator custom description'
+      'my-generator custom description',
     );
   });
 
@@ -236,10 +236,12 @@ describe('NxPlugin Generator Generator', () => {
         });
 
         expect(
-          tree.exists('my-plugin/src/generators/my-generator/generator.ts')
+          tree.exists('my-plugin/src/generators/my-generator/generator.ts'),
         ).toBeTruthy();
         expect(
-          tree.exists('my-plugin/src/generators/my-generator/generator.spec.ts')
+          tree.exists(
+            'my-plugin/src/generators/my-generator/generator.spec.ts',
+          ),
         ).toBeFalsy();
       });
     });
@@ -255,11 +257,11 @@ describe('NxPlugin Generator Generator', () => {
 
       const generatorJson = readJson<GeneratorsJson>(
         tree,
-        'my-plugin/generators.json'
+        'my-plugin/generators.json',
       );
 
       expect(
-        generatorJson.generators['preset']['x-use-standalone-layout']
+        generatorJson.generators['preset']['x-use-standalone-layout'],
       ).toEqual(true);
     });
   });

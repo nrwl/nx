@@ -4,7 +4,7 @@ import type { ErrorBoundarySchema } from '../schema';
 
 export async function normalizeOptions(
   tree: Tree,
-  schema: ErrorBoundarySchema
+  schema: ErrorBoundarySchema,
 ): Promise<ErrorBoundarySchema> {
   const pathToRouteFile =
     schema.nameAndDirectoryFormat === 'as-provided'
@@ -13,7 +13,7 @@ export async function normalizeOptions(
 
   if (!tree.exists(pathToRouteFile)) {
     throw new Error(
-      `Route file specified does not exist "${pathToRouteFile}". Please ensure you pass a correct path to the file.`
+      `Route file specified does not exist "${pathToRouteFile}". Please ensure you pass a correct path to the file.`,
     );
   }
 

@@ -15,8 +15,8 @@ export function detectPackageManager(dir: string = ''): PackageManager {
   return existsSync(join(dir, 'yarn.lock'))
     ? 'yarn'
     : existsSync(join(dir, 'pnpm-lock.yaml'))
-    ? 'pnpm'
-    : 'npm';
+      ? 'pnpm'
+      : 'npm';
 }
 
 /**
@@ -32,7 +32,7 @@ export function detectPackageManager(dir: string = ''): PackageManager {
  *
  */
 export function getPackageManagerCommand(
-  packageManager: PackageManager = detectPackageManager()
+  packageManager: PackageManager = detectPackageManager(),
 ): {
   install: string;
   exec: string;
@@ -78,7 +78,7 @@ export function getPackageManagerCommand(
 
 export function generatePackageManagerFiles(
   root: string,
-  packageManager: PackageManager = detectPackageManager()
+  packageManager: PackageManager = detectPackageManager(),
 ) {
   const [pmMajor] = getPackageManagerVersion(packageManager).split('.');
   switch (packageManager) {
@@ -86,7 +86,7 @@ export function generatePackageManagerFiles(
       if (+pmMajor >= 2) {
         writeFileSync(
           join(root, '.yarnrc.yml'),
-          'nodeLinker: node-modules\nenableScripts: false'
+          'nodeLinker: node-modules\nenableScripts: false',
         );
         // avoids errors when using nested yarn projects
         writeFileSync(join(root, 'yarn.lock'), '');
@@ -99,7 +99,7 @@ const pmVersionCache = new Map<PackageManager, string>();
 
 export function getPackageManagerVersion(
   packageManager: PackageManager,
-  cwd = process.cwd()
+  cwd = process.cwd(),
 ): string {
   if (pmVersionCache.has(packageManager)) {
     return pmVersionCache.get(packageManager) as string;

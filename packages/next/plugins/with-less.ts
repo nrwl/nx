@@ -7,7 +7,7 @@ const addLessToRegExp = (rx) =>
   new RegExp(rx.source.replace('|sass', '|sass|less'), rx.flags);
 
 export function withLess(
-  configOrFn: NextConfigFn | WithNxOptions
+  configOrFn: NextConfigFn | WithNxOptions,
 ): NextConfigFn {
   return async (phase: string) => {
     const baseConfig =
@@ -22,7 +22,7 @@ export function withLess(
         let sassGlobalRule;
 
         const cssRule = config.module.rules.find((rule) =>
-          rule.oneOf?.find((r) => r?.[Symbol.for('__next_css_remove')])
+          rule.oneOf?.find((r) => r?.[Symbol.for('__next_css_remove')]),
         );
 
         const addLessToRuleTest = (test) => {
@@ -65,7 +65,7 @@ export function withLess(
 
         const configureLessRule = (rule) => {
           rule.test = new RegExp(
-            rule.test.source.replace('(scss|sass)', 'less')
+            rule.test.source.replace('(scss|sass)', 'less'),
           );
           // replace sass-loader (last entry) with less-loader
           rule.use.splice(-1, 1, lessLoader);
@@ -75,7 +75,7 @@ export function withLess(
         cssRule.oneOf.splice(
           cssRule.oneOf.indexOf(sassModuleRule) + 1,
           0,
-          lessModuleRule
+          lessModuleRule,
         );
 
         if (sassGlobalRule) {
@@ -84,7 +84,7 @@ export function withLess(
           cssRule.oneOf.splice(
             cssRule.oneOf.indexOf(sassGlobalRule) + 1,
             0,
-            lessGlobalRule
+            lessGlobalRule,
           );
         }
 

@@ -70,7 +70,7 @@ export async function buildProjectGraphUsingProjectFileMap(
   allWorkspaceFiles: FileData[],
   rustReferences: NxWorkspaceFilesExternals,
   fileMapCache: FileMapCache | null,
-  shouldWriteCache: boolean
+  shouldWriteCache: boolean,
 ): Promise<{
   projectGraph: ProjectGraph;
   projectFileMapCache: FileMapCache;
@@ -94,7 +94,7 @@ export async function buildProjectGraphUsingProjectFileMap(
       packageJsonDeps,
       projects,
       nxJson,
-      rootTsConfig
+      rootTsConfig,
     );
   if (useCacheData) {
     const fromCache = extractCachedFileData(fileMap, fileMapCache);
@@ -113,20 +113,20 @@ export async function buildProjectGraphUsingProjectFileMap(
     nxJson,
     externalNodes,
     fileMap,
-    filesToProcess
+    filesToProcess,
   );
   let projectGraph = await buildProjectGraphUsingContext(
     nxJson,
     externalNodes,
     context,
     cachedFileData,
-    projectGraphVersion
+    projectGraphVersion,
   );
   const projectFileMapCache = createProjectFileMapCache(
     nxJson,
     packageJsonDeps,
     fileMap,
-    rootTsConfig
+    rootTsConfig,
   );
   if (shouldWriteCache) {
     writeCache(projectFileMapCache, projectGraph);
@@ -142,10 +142,10 @@ function readCombinedDeps() {
     workspaceRoot,
     '.nx',
     'installation',
-    'package.json'
+    'package.json',
   );
   const installationPackageJson: Partial<PackageJson> = existsSync(
-    installationPackageJsonPath
+    installationPackageJsonPath,
   )
     ? readJsonFile(installationPackageJsonPath)
     : {};
@@ -166,7 +166,7 @@ async function buildProjectGraphUsingContext(
   knownExternalNodes: Record<string, ProjectGraphExternalNode>,
   ctx: CreateDependenciesContext,
   cachedFileData: CachedFileData,
-  projectGraphVersion: string
+  projectGraphVersion: string,
 ) {
   performance.mark('build project graph:start');
 
@@ -205,7 +205,7 @@ async function buildProjectGraphUsingContext(
   performance.measure(
     'build project graph',
     'build project graph:start',
-    'build project graph:end'
+    'build project graph:end',
   );
 
   return finalGraph;
@@ -216,14 +216,17 @@ function createContext(
   nxJson: NxJsonConfiguration,
   externalNodes: Record<string, ProjectGraphExternalNode>,
   fileMap: FileMap,
-  filesToProcess: FileMap
+  filesToProcess: FileMap,
 ): CreateDependenciesContext {
-  const clonedProjects = Object.keys(projects).reduce((map, projectName) => {
-    map[projectName] = {
-      ...projects[projectName],
-    };
-    return map;
-  }, {} as Record<string, ProjectConfiguration>);
+  const clonedProjects = Object.keys(projects).reduce(
+    (map, projectName) => {
+      map[projectName] = {
+        ...projects[projectName],
+      };
+      return map;
+    },
+    {} as Record<string, ProjectConfiguration>,
+  );
   return {
     nxJsonConfiguration: nxJson,
     projects: clonedProjects,
@@ -236,13 +239,13 @@ function createContext(
 
 async function updateProjectGraphWithPlugins(
   context: CreateDependenciesContext,
-  initProjectGraph: ProjectGraph
+  initProjectGraph: ProjectGraph,
 ) {
   const plugins = await loadNxPlugins(
     context.nxJsonConfiguration?.plugins,
     getNxRequirePaths(),
     context.workspaceRoot,
-    context.projects
+    context.projects,
   );
   let graph = initProjectGraph;
   for (const { plugin } of plugins) {
@@ -277,7 +280,7 @@ async function updateProjectGraphWithPlugins(
         performance.measure(
           `${plugin.name}:processProjectGraph`,
           `${plugin.name}:processProjectGraph - start`,
-          `${plugin.name}:processProjectGraph - end`
+          `${plugin.name}:processProjectGraph - end`,
         );
       }
     } catch (e) {
@@ -293,11 +296,11 @@ async function updateProjectGraphWithPlugins(
   const builder = new ProjectGraphBuilder(
     graph,
     context.fileMap.projectFileMap,
-    context.fileMap.nonProjectFiles
+    context.fileMap.nonProjectFiles,
   );
 
   const createDependencyPlugins = plugins.filter(
-    ({ plugin }) => isNxPluginV2(plugin) && plugin.createDependencies
+    ({ plugin }) => isNxPluginV2(plugin) && plugin.createDependencies,
   );
   await Promise.all(
     createDependencyPlugins.map(async ({ plugin, options }) => {
@@ -313,7 +316,7 @@ async function updateProjectGraphWithPlugins(
             dep.source,
             dep.target,
             dep.type,
-            'sourceFile' in dep ? dep.sourceFile : null
+            'sourceFile' in dep ? dep.sourceFile : null,
           );
         }
       } catch (e) {
@@ -329,9 +332,9 @@ async function updateProjectGraphWithPlugins(
       performance.measure(
         `${plugin.name}:createDependencies`,
         `${plugin.name}:createDependencies - start`,
-        `${plugin.name}:createDependencies - end`
+        `${plugin.name}:createDependencies - end`,
       );
-    })
+    }),
   );
   return builder.getUpdatedProjectGraph();
 }

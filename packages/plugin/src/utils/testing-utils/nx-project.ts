@@ -14,20 +14,20 @@ function runNxNewCommand(args?: string, silent?: boolean) {
   const localTmpDir = dirname(tmpProjPath());
   return execSync(
     `node ${require.resolve(
-      'nx'
+      'nx',
     )} new proj --nx-workspace-root=${localTmpDir} --no-interactive --skip-install --collection=@nx/workspace --npmScope=proj --preset=apps ${
       args || ''
     }`,
     {
       cwd: localTmpDir,
       ...(silent && false ? { stdio: ['ignore', 'ignore', 'ignore'] } : {}),
-    }
+    },
   );
 }
 
 export function patchPackageJsonForPlugin(
   npmPackageName: string,
-  distPath: string
+  distPath: string,
 ) {
   const path = tmpProjPath('package.json');
   const json = readJsonFile(path);
@@ -67,7 +67,7 @@ export function runPackageManagerInstall(silent: boolean = true) {
  */
 export function newNxProject(
   npmPackageName: string,
-  pluginDistPath: string
+  pluginDistPath: string,
 ): void {
   cleanup();
   runNxNewCommand('', true);
@@ -81,7 +81,7 @@ export function newNxProject(
  */
 export function ensureNxProject(
   npmPackageName?: string,
-  pluginDistPath?: string
+  pluginDistPath?: string,
 ): void {
   ensureDirSync(tmpProjPath());
   newNxProject(npmPackageName, pluginDistPath);

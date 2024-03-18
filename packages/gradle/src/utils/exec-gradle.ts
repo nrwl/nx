@@ -10,7 +10,7 @@ import { join } from 'node:path';
 
 export function execGradle(
   args: string[],
-  execOptions: ExecFileSyncOptionsWithBufferEncoding
+  execOptions: ExecFileSyncOptionsWithBufferEncoding,
 ) {
   const gradleBinaryPath = getGradleBinaryPath();
 
@@ -31,7 +31,7 @@ export function getGradleBinaryPath() {
 
 export function execGradleAsync(
   args: ReadonlyArray<string>,
-  execOptions: ExecFileOptions
+  execOptions: ExecFileOptions,
 ) {
   const gradleBinaryPath = getGradleBinaryPath();
   if (!existsSync(gradleBinaryPath)) {
@@ -53,9 +53,9 @@ export function execGradleAsync(
         rej(
           new Error(
             `Executing Gradle with ${args.join(
-              ' '
-            )} failed with code: ${code}. \nLogs: ${stdout}`
-          )
+              ' ',
+            )} failed with code: ${code}. \nLogs: ${stdout}`,
+          ),
         );
       }
     });

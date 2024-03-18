@@ -24,7 +24,7 @@ describe('setupTailwind generator', () => {
 
   it('should fail when the project does not exist', async () => {
     await expect(
-      setupTailwindGenerator(tree, { project: 'not-found' })
+      setupTailwindGenerator(tree, { project: 'not-found' }),
     ).rejects.toThrow();
   });
 
@@ -43,22 +43,22 @@ describe('setupTailwind generator', () => {
     it('should throw when tailwind is installed as a dependency with a version lower than 2.0.0', async () => {
       tree.write(
         'package.json',
-        JSON.stringify({ dependencies: { tailwindcss: '^1.99.99' } })
+        JSON.stringify({ dependencies: { tailwindcss: '^1.99.99' } }),
       );
 
       await expect(setupTailwindGenerator(tree, { project })).rejects.toThrow(
-        `Tailwind CSS version "^1.99.99" is not supported. Please upgrade to v2.0.0 or higher.`
+        `Tailwind CSS version "^1.99.99" is not supported. Please upgrade to v2.0.0 or higher.`,
       );
     });
 
     it('should throw when tailwind is installed as a devDependency with a version lower than 2.0.0', async () => {
       tree.write(
         'package.json',
-        JSON.stringify({ devDependencies: { tailwindcss: '^1.99.99' } })
+        JSON.stringify({ devDependencies: { tailwindcss: '^1.99.99' } }),
       );
 
       await expect(setupTailwindGenerator(tree, { project })).rejects.toThrow(
-        `Tailwind CSS version "^1.99.99" is not supported. Please upgrade to v2.0.0 or higher.`
+        `Tailwind CSS version "^1.99.99" is not supported. Please upgrade to v2.0.0 or higher.`,
       );
     });
 
@@ -68,9 +68,9 @@ describe('setupTailwind generator', () => {
       await expect(setupTailwindGenerator(tree, { project })).rejects.toThrow(
         expect.objectContaining({
           message: expect.stringContaining(
-            `The "tailwind.config.js" file already exists in the project "${project}". Are you sure this is the right project to set up Tailwind?`
+            `The "tailwind.config.js" file already exists in the project "${project}". Are you sure this is the right project to set up Tailwind?`,
           ),
-        })
+        }),
       );
     });
 
@@ -78,9 +78,9 @@ describe('setupTailwind generator', () => {
       const stylesEntryPoint = `apps/${project}/src/foo.scss`;
 
       await expect(
-        setupTailwindGenerator(tree, { project, stylesEntryPoint })
+        setupTailwindGenerator(tree, { project, stylesEntryPoint }),
       ).rejects.toThrow(
-        `The provided styles entry point "${stylesEntryPoint}" could not be found.`
+        `The provided styles entry point "${stylesEntryPoint}" could not be found.`,
       );
     });
 
@@ -88,9 +88,9 @@ describe('setupTailwind generator', () => {
       await expect(setupTailwindGenerator(tree, { project })).rejects.toThrow(
         expect.objectContaining({
           message: expect.stringContaining(
-            `Could not find a styles entry point for project "${project}"`
+            `Could not find a styles entry point for project "${project}"`,
           ),
-        })
+        }),
       );
     });
 
@@ -106,9 +106,9 @@ describe('setupTailwind generator', () => {
       await expect(setupTailwindGenerator(tree, { project })).rejects.toThrow(
         expect.objectContaining({
           message: expect.stringContaining(
-            `Could not find a styles entry point for project "${project}"`
+            `Could not find a styles entry point for project "${project}"`,
           ),
-        })
+        }),
       );
     });
 
@@ -127,9 +127,9 @@ describe('setupTailwind generator', () => {
       await expect(setupTailwindGenerator(tree, { project })).rejects.toThrow(
         expect.objectContaining({
           message: expect.stringContaining(
-            `Could not find a styles entry point for project "${project}"`
+            `Could not find a styles entry point for project "${project}"`,
           ),
-        })
+        }),
       );
     });
 
@@ -147,9 +147,9 @@ describe('setupTailwind generator', () => {
       await expect(setupTailwindGenerator(tree, { project })).rejects.toThrow(
         expect.objectContaining({
           message: expect.stringContaining(
-            `Could not find a styles entry point for project "${project}"`
+            `Could not find a styles entry point for project "${project}"`,
           ),
-        })
+        }),
       );
     });
 
@@ -177,9 +177,9 @@ describe('setupTailwind generator', () => {
       await expect(setupTailwindGenerator(tree, { project })).rejects.toThrow(
         expect.objectContaining({
           message: expect.stringContaining(
-            `Could not find a styles entry point for project "${project}"`
+            `Could not find a styles entry point for project "${project}"`,
           ),
-        })
+        }),
       );
     });
 
@@ -215,7 +215,7 @@ describe('setupTailwind generator', () => {
         await setupTailwindGenerator(tree, { project, skipFormat: true });
 
         expect(tree.read(stylesEntryPoint, 'utf-8')).toMatchSnapshot();
-      }
+      },
     );
 
     it('should add tailwind styles to the first style inside the project root specified in the build config as a string', async () => {
@@ -357,7 +357,7 @@ describe('setupTailwind generator', () => {
       tree.write(stylesEntryPoint, 'p { margin: 0; }');
       tree.write(
         'package.json',
-        JSON.stringify({ devDependencies: { tailwindcss: '^3.0.1' } })
+        JSON.stringify({ devDependencies: { tailwindcss: '^3.0.1' } }),
       );
 
       await setupTailwindGenerator(tree, {
@@ -391,7 +391,7 @@ describe('setupTailwind generator', () => {
       tree.write(stylesEntryPoint, 'p { margin: 0; }');
       tree.write(
         'package.json',
-        JSON.stringify({ devDependencies: { tailwindcss: '~2.0.0' } })
+        JSON.stringify({ devDependencies: { tailwindcss: '~2.0.0' } }),
       );
 
       await setupTailwindGenerator(tree, {

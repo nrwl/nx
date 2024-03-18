@@ -21,7 +21,7 @@ import type { BuilderMigrator, BuilderMigratorClassType } from '../builders';
 import { Migrator } from '../migrator';
 
 export class ProjectMigrator<
-  TargetType extends string = string
+  TargetType extends string = string,
 > extends Migrator {
   public get projectName(): string {
     return this.project.name;
@@ -43,7 +43,7 @@ export class ProjectMigrator<
     logger?: Logger,
     // TODO(leo): this will replace `targets` and become required once the full
     // refactor is done.
-    supportedBuilderMigrators?: BuilderMigratorClassType[]
+    supportedBuilderMigrators?: BuilderMigratorClassType[],
   ) {
     super(tree, project.config, logger ?? new Logger(project.name));
 
@@ -68,7 +68,7 @@ export class ProjectMigrator<
         this.tree.exists(`${this.projectConfig.root}/.eslintrc.json`),
       karma: this.builderMigrators.some(
         (migrator) =>
-          migrator.rootFileType === 'karma' && migrator.isBuilderUsed()
+          migrator.rootFileType === 'karma' && migrator.isBuilderUsed(),
       ),
     };
 
@@ -137,7 +137,7 @@ export class ProjectMigrator<
         .flat(),
     ];
     allSupportedBuilders.push(
-      ...this.builderMigrators.map((migrator) => migrator.builderName)
+      ...this.builderMigrators.map((migrator) => migrator.builderName),
     );
     const unsupportedBuilders: [target: string, builder: string][] = [];
 
@@ -146,7 +146,7 @@ export class ProjectMigrator<
         if (!allSupportedBuilders.includes(target.executor)) {
           unsupportedBuilders.push([targetName, target.executor]);
         }
-      }
+      },
     );
 
     if (unsupportedBuilders.length) {
@@ -156,13 +156,13 @@ export class ProjectMigrator<
           messages: unsupportedBuilders.map(
             ([target, builder]) =>
               `The "${target}" target is using a builder "${builder}" that's not currently supported by the automated migration. ` +
-              'The target will be skipped.'
+              'The target will be skipped.',
           ),
         },
         hint:
           'Make sure to manually migrate the target configuration and any possible associated files. Alternatively, you could ' +
           `revert the migration, change the builder to one of the builders supported by the automated migration (${arrayToString(
-            allSupportedBuilders
+            allSupportedBuilders,
           )}), and run the migration again.`,
       });
     }
@@ -170,7 +170,7 @@ export class ProjectMigrator<
     // check for multiple targets for the same type of target
     const targetTypes = Object.keys(this.targets) as TargetType[];
     const targetsByType: Record<TargetType, string[]> = Object.entries(
-      this.projectConfig.targets ?? {}
+      this.projectConfig.targets ?? {},
     ).reduce(
       (acc, [target, { executor }]) => {
         targetTypes.forEach((targetType) => {
@@ -184,8 +184,8 @@ export class ProjectMigrator<
       },
       targetTypes.reduce(
         (acc, targetType) => ({ ...acc, [targetType]: [] }),
-        {} as Record<TargetType, string[]>
-      )
+        {} as Record<TargetType, string[]>,
+      ),
     );
     targetTypes.forEach((targetType) => {
       if (
@@ -197,7 +197,7 @@ export class ProjectMigrator<
 
       errors.push({
         message: `There is more than one target using a builder that is used to ${targetType} the project (${arrayToString(
-          targetsByType[targetType]
+          targetsByType[targetType],
         )}). This is not currently supported by the automated migration. These targets will be skipped.`,
         hint: 'Make sure to manually migrate their configuration and any possible associated files.',
       });
@@ -211,14 +211,14 @@ export class ProjectMigrator<
     if (originalPath?.startsWith(this.project.oldSourceRoot)) {
       return joinPathFragments(
         this.project.newSourceRoot,
-        originalPath.replace(this.project.oldSourceRoot, '')
+        originalPath.replace(this.project.oldSourceRoot, ''),
       );
     }
 
     if (originalPath?.startsWith(this.project.oldRoot)) {
       return joinPathFragments(
         this.project.newRoot,
-        originalPath.replace(this.project.oldRoot, '')
+        originalPath.replace(this.project.oldRoot, ''),
       );
     }
 
@@ -251,12 +251,12 @@ export class ProjectMigrator<
             this.targetNames[targetType] = targetName;
           }
         });
-      }
+      },
     );
   }
 
   private createBuilderMigrators(
-    supportedBuilderMigrators?: BuilderMigratorClassType[]
+    supportedBuilderMigrators?: BuilderMigratorClassType[],
   ): void {
     if (!supportedBuilderMigrators) {
       this.builderMigrators = [];
@@ -269,8 +269,8 @@ export class ProjectMigrator<
           this.tree,
           this.project,
           this.projectConfig,
-          this.logger
-        )
+          this.logger,
+        ),
     );
   }
 

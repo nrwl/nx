@@ -39,7 +39,7 @@ export interface JsonWriteOptions extends JsonSerializeOptions {
  */
 export function readJsonFile<T extends object = any>(
   path: string,
-  options?: JsonReadOptions
+  options?: JsonReadOptions,
 ): T {
   const content = readFileSync(path, 'utf-8');
   if (options) {
@@ -68,7 +68,7 @@ interface YamlReadOptions {
  */
 export function readYamlFile<T extends object = any>(
   path: string,
-  options?: YamlReadOptions
+  options?: YamlReadOptions,
 ): T {
   const content = readFileSync(path, 'utf-8');
   const { load } = require('js-yaml');
@@ -85,7 +85,7 @@ export function readYamlFile<T extends object = any>(
 export function writeJsonFile<T extends object = object>(
   path: string,
   data: T,
-  options?: JsonWriteOptions
+  options?: JsonWriteOptions,
 ): void {
   mkdirSync(dirname(path), { recursive: true });
   const serializedJson = serializeJson(data, options);
@@ -142,7 +142,7 @@ export function isRelativePath(path: string): boolean {
 export async function extractFileFromTarball(
   tarballPath: string,
   file: string,
-  destinationFilePath: string
+  destinationFilePath: string,
 ) {
   return new Promise<string>((resolve, reject) => {
     mkdirSync(dirname(destinationFilePath), { recursive: true });

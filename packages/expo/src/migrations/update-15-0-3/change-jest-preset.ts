@@ -37,7 +37,7 @@ export default async function update(tree: Tree) {
           useJestExpo = true;
         }
       }
-    }
+    },
   );
 
   if (useJestExpo) {
@@ -57,7 +57,7 @@ function changePreset(host: Tree, project: ProjectConfiguration) {
     addPropertyToJestConfig(host, jestConfigPath, 'preset', 'react-native');
   } catch {
     logger.error(
-      stripIndents`Unable to update ${jestConfigPath} for project ${project.root}.`
+      stripIndents`Unable to update ${jestConfigPath} for project ${project.root}.`,
     );
   }
 }
@@ -77,7 +77,7 @@ function renameBabelJson(host: Tree, project: ProjectConfiguration) {
     host.delete(babelrcPath);
   } catch {
     logger.error(
-      stripIndents`Unable to rename from ${babelrcPath} to ${babelJsonPath} for project ${project.root}.`
+      stripIndents`Unable to rename from ${babelrcPath} to ${babelJsonPath} for project ${project.root}.`,
     );
   }
 }

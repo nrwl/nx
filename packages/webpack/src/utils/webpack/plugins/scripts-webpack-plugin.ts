@@ -26,16 +26,16 @@ function addDependencies(compilation: any, scripts: string[]): void {
 
 function hook(
   compiler: any,
-  action: (compilation: any, callback: (err?: Error) => void) => void
+  action: (compilation: any, callback: (err?: Error) => void) => void,
 ) {
   compiler.hooks.thisCompilation.tap(
     'scripts-webpack-plugin',
     (compilation: any) => {
       compilation.hooks.additionalAssets.tapAsync(
         'scripts-webpack-plugin',
-        (callback: (err?: Error) => void) => action(compilation, callback)
+        (callback: (err?: Error) => void) => action(compilation, callback),
       );
-    }
+    },
   );
 }
 
@@ -65,7 +65,7 @@ export class ScriptsWebpackPlugin {
   private _insertOutput(
     compilation: any,
     { filename, source }: ScriptOutput,
-    cached = false
+    cached = false,
   ) {
     const chunk = new Chunk(this.options.name);
     chunk.rendered = !cached;
@@ -135,14 +135,14 @@ export class ScriptsWebpackPlugin {
                 }
                 source = new webpack.sources.OriginalSource(
                   content,
-                  adjustedPath
+                  adjustedPath,
                 );
               } else {
                 source = new webpack.sources.RawSource(content);
               }
 
               resolve(source);
-            }
+            },
           );
         });
       });
@@ -159,7 +159,7 @@ export class ScriptsWebpackPlugin {
           const filename = interpolateName(
             { resourcePath: 'scripts.js' },
             this.options.filename as string,
-            { content: combinedSource.source() }
+            { content: combinedSource.source() },
           );
 
           const output = { filename, source: combinedSource };

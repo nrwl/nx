@@ -11,6 +11,6 @@ export function formatFile(content, ...values) {
     {
       singleQuote: true,
       parser: 'typescript',
-    }
+    },
   );
 }

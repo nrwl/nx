@@ -28,10 +28,10 @@ describe('directive generator', () => {
 
     // ASSERT
     expect(
-      tree.read('test/src/app/test.directive.ts', 'utf-8')
+      tree.read('test/src/app/test.directive.ts', 'utf-8'),
     ).toMatchSnapshot();
     expect(
-      tree.read('test/src/app/test.directive.spec.ts', 'utf-8')
+      tree.read('test/src/app/test.directive.spec.ts', 'utf-8'),
     ).toMatchSnapshot();
   });
 
@@ -44,7 +44,7 @@ describe('directive generator', () => {
 
     // ASSERT
     expect(tree.read('test/src/app/test.module.ts', 'utf-8')).not.toContain(
-      'TestDirective'
+      'TestDirective',
     );
   });
 
@@ -60,7 +60,7 @@ describe('directive generator', () => {
 
     // ASSERT
     expect(
-      tree.exists('test/src/app/my-directives/test/test.directive.spec.ts')
+      tree.exists('test/src/app/my-directives/test/test.directive.spec.ts'),
     ).toBeFalsy();
   });
 
@@ -80,13 +80,13 @@ describe('directive generator', () => {
 
       // ASSERT
       expect(
-        tree.read('test/src/app/test.directive.ts', 'utf-8')
+        tree.read('test/src/app/test.directive.ts', 'utf-8'),
       ).toMatchSnapshot();
       expect(
-        tree.read('test/src/app/test.directive.spec.ts', 'utf-8')
+        tree.read('test/src/app/test.directive.spec.ts', 'utf-8'),
       ).toMatchSnapshot();
       expect(
-        tree.read('test/src/app/test.module.ts', 'utf-8')
+        tree.read('test/src/app/test.module.ts', 'utf-8'),
       ).toMatchSnapshot();
     });
 
@@ -101,13 +101,13 @@ describe('directive generator', () => {
 
       // ASSERT
       expect(
-        tree.read('test/src/app/test/test.directive.ts', 'utf-8')
+        tree.read('test/src/app/test/test.directive.ts', 'utf-8'),
       ).toMatchSnapshot();
       expect(
-        tree.read('test/src/app/test/test.directive.spec.ts', 'utf-8')
+        tree.read('test/src/app/test/test.directive.spec.ts', 'utf-8'),
       ).toMatchSnapshot();
       expect(
-        tree.read('test/src/app/test.module.ts', 'utf-8')
+        tree.read('test/src/app/test.module.ts', 'utf-8'),
       ).toMatchSnapshot();
     });
 
@@ -123,16 +123,16 @@ describe('directive generator', () => {
 
       // ASSERT
       expect(
-        tree.read('test/src/app/my-directives/test/test.directive.ts', 'utf-8')
+        tree.read('test/src/app/my-directives/test/test.directive.ts', 'utf-8'),
       ).toMatchSnapshot();
       expect(
         tree.read(
           'test/src/app/my-directives/test/test.directive.spec.ts',
-          'utf-8'
-        )
+          'utf-8',
+        ),
       ).toMatchSnapshot();
       expect(
-        tree.read('test/src/app/test.module.ts', 'utf-8')
+        tree.read('test/src/app/test.module.ts', 'utf-8'),
       ).toMatchSnapshot();
     });
 
@@ -149,7 +149,7 @@ describe('directive generator', () => {
 
       // ASSERT
       expect(
-        tree.read('test/src/app/test.module.ts', 'utf-8')
+        tree.read('test/src/app/test.module.ts', 'utf-8'),
       ).toMatchSnapshot();
     });
 
@@ -166,7 +166,7 @@ describe('directive generator', () => {
 
       // ASSERT
       expect(tree.read('test/src/app/test.module.ts', 'utf-8')).not.toContain(
-        'TestDirective'
+        'TestDirective',
       );
     });
   });
@@ -181,7 +181,7 @@ describe('directive generator', () => {
 
       const content = tree.read(
         'test/src/app/example/example.directive.ts',
-        'utf-8'
+        'utf-8',
       );
       expect(content).toMatch(/selector: '\[fooExample\]'/);
     });
@@ -200,7 +200,7 @@ describe('directive generator', () => {
 
       const content = tree.read(
         'test/src/app/example/example.directive.ts',
-        'utf-8'
+        'utf-8',
       );
       expect(content).toMatch(/selector: '\[barExample\]'/);
     });
@@ -219,7 +219,7 @@ describe('directive generator', () => {
 
       const content = tree.read(
         'test/src/app/example/example.directive.ts',
-        'utf-8'
+        'utf-8',
       );
       expect(content).toMatch(/selector: '\[example\]'/);
     });
@@ -233,7 +233,7 @@ describe('directive generator', () => {
 
       const content = tree.read(
         'test/src/app/example/example.directive.ts',
-        'utf-8'
+        'utf-8',
       );
       expect(content).toMatch(/selector: '\[mySelector\]'/);
     });
@@ -250,13 +250,13 @@ function addModule(tree: Tree) {
   exports: [],
 })
 export class TestModule {}
-`
+`,
   );
 }
 
 async function generateDirectiveWithDefaultOptions(
   tree: Tree,
-  overrides: Partial<Schema> = {}
+  overrides: Partial<Schema> = {},
 ) {
   await directiveGenerator(tree, {
     name: 'test',

@@ -35,7 +35,7 @@ export default async function updateBuildDir(tree: Tree) {
         targetName,
         tree,
         projectName,
-        config
+        config,
       );
 
       configContents = updateTestConfig(configContents, projectConfig, config);
@@ -44,12 +44,12 @@ export default async function updateBuildDir(tree: Tree) {
         configContents = addFileReplacements(
           configContents,
           options['fileReplacements'],
-          config
+          config,
         );
       }
 
       tree.write(config, configContents);
-    }
+    },
   );
 
   await formatFiles(tree);
@@ -61,12 +61,12 @@ export function getConfigNode(configFileContents: string): ts.Node | undefined {
   }
   let configNode = tsquery.query(
     configFileContents,
-    `ObjectLiteralExpression`
+    `ObjectLiteralExpression`,
   )?.[0];
 
   const arrowFunctionReturnStatement = tsquery.query(
     configFileContents,
-    `ArrowFunction Block ReturnStatement ObjectLiteralExpression`
+    `ArrowFunction Block ReturnStatement ObjectLiteralExpression`,
   )?.[0];
 
   if (arrowFunctionReturnStatement) {

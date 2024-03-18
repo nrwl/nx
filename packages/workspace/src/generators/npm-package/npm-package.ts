@@ -24,7 +24,7 @@ interface NormalizedProjectOptions extends ProjectOptions {
 
 async function normalizeOptions(
   tree: Tree,
-  options: ProjectOptions
+  options: ProjectOptions,
 ): Promise<NormalizedProjectOptions> {
   const { projectName, projectRoot } = await determineProjectNameAndRootOptions(
     tree,
@@ -34,7 +34,7 @@ async function normalizeOptions(
       directory: options.directory,
       projectNameAndRootFormat: options.projectNameAndRootFormat,
       callingGenerator: '@nx/workspace:npm-package',
-    }
+    },
   );
 
   return {
@@ -66,7 +66,7 @@ export async function npmPackageGenerator(tree: Tree, options: ProjectOptions) {
 
 export async function npmPackageGeneratorInternal(
   tree: Tree,
-  _options: ProjectOptions
+  _options: ProjectOptions,
 ) {
   const options = await normalizeOptions(tree, _options);
 
@@ -76,7 +76,7 @@ export async function npmPackageGeneratorInternal(
 
   const fileCount = tree.children(options.projectRoot).length;
   const projectJsonExists = tree.exists(
-    join(options.projectRoot, 'project.json')
+    join(options.projectRoot, 'project.json'),
   );
   const isEmpty = fileCount === 0 || (fileCount === 1 && projectJsonExists);
 

@@ -7,7 +7,7 @@ import { createProjectGraphAsync, readProjectConfiguration } from '@nx/devkit';
 
 export async function getProjectsFilteredByDependencies(
   tree: Tree,
-  dependencies: string[]
+  dependencies: string[],
 ): Promise<
   Array<{
     project: ProjectConfiguration;
@@ -20,7 +20,7 @@ export async function getProjectsFilteredByDependencies(
     .filter(
       ([node, deps]) =>
         !projectGraph.externalNodes?.[node] &&
-        deps.some(({ target }) => dependencies.includes(target))
+        deps.some(({ target }) => dependencies.includes(target)),
     )
     .map(([projectName]) => ({
       project: readProjectConfiguration(tree, projectName),

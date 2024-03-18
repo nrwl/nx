@@ -17,14 +17,14 @@ const ALWAYS_IGNORE = [...getAlwaysIgnore(workspaceRoot), FULL_OS_SOCKET_PATH];
 
 export type FileWatcherCallback = (
   err: Error | string | null,
-  changeEvents: WatchEvent[] | null
+  changeEvents: WatchEvent[] | null,
 ) => Promise<void>;
 
 export async function watchWorkspace(server: Server, cb: FileWatcherCallback) {
   const { Watcher } = await import('../../native');
 
   let relativeServerProcess = normalizePath(
-    relative(workspaceRoot, serverProcessJsonPath)
+    relative(workspaceRoot, serverProcessJsonPath),
   );
 
   let watcher = new Watcher(workspaceRoot, [`!${relativeServerProcess}`]);
@@ -82,7 +82,7 @@ export async function watchOutputFiles(cb: FileWatcherCallback) {
  * our log language accordingly.
  */
 export function convertChangeEventsToLogMessage(
-  changeEvents: WatchEvent[]
+  changeEvents: WatchEvent[],
 ): string {
   // If only a single file was changed, show the information inline
   if (changeEvents.length === 1) {

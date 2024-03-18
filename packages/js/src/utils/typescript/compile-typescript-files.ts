@@ -24,7 +24,7 @@ export interface TypescriptCompilationResult {
 export function compileTypeScriptFiles(
   normalizedOptions: NormalizedExecutorOptions,
   tscOptions: TypeScriptCompilationOptions,
-  postCompilationCallback: () => void | Promise<void>
+  postCompilationCallback: () => void | Promise<void>,
 ): {
   iterator: AsyncIterable<TypescriptCompilationResult>;
   close: () => void | Promise<void>;
@@ -49,11 +49,11 @@ export function compileTypeScriptFiles(
                 await postCompilationCallback();
                 next(
                   getResult(
-                    getErrorCountFromMessage(d.messageText as string) === 0
-                  )
+                    getErrorCountFromMessage(d.messageText as string) === 0,
+                  ),
                 );
               }
-            }
+            },
           );
 
           tearDown = () => {
@@ -66,7 +66,7 @@ export function compileTypeScriptFiles(
           next(getResult(success));
           done();
         }
-      }
+      },
     ),
     close: () => tearDown?.(),
   };

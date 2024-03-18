@@ -31,8 +31,8 @@ describe('normalizeOptions', () => {
           generatePackageJson: true,
           assets: [],
         },
-        context
-      )
+        context,
+      ),
     ).toEqual({
       main: 'apps/myapp/src/index.ts',
       outputPath: 'dist/apps/myapp',
@@ -57,8 +57,8 @@ describe('normalizeOptions', () => {
           generatePackageJson: true,
           additionalEntryPoints: ['apps/myapp/src/extra-entry.ts'],
         },
-        context
-      )
+        context,
+      ),
     ).toEqual({
       main: 'apps/myapp/src/index.ts',
       outputPath: 'dist/apps/myapp',
@@ -84,8 +84,8 @@ describe('normalizeOptions', () => {
           generatePackageJson: true,
           outputFileName: 'test.js',
         },
-        context
-      )
+        context,
+      ),
     ).toEqual({
       main: 'apps/myapp/src/index.ts',
       outputPath: 'dist/apps/myapp',
@@ -112,8 +112,8 @@ describe('normalizeOptions', () => {
           outputFileName: 'test.js',
           thirdParty: false,
         },
-        context
-      )
+        context,
+      ),
     ).toThrow(/Cannot use/);
   });
 
@@ -127,8 +127,8 @@ describe('normalizeOptions', () => {
           generatePackageJson: false,
           assets: [],
         },
-        context
-      )
+        context,
+      ),
     ).toEqual({
       main: 'apps/myapp/src/index.ts',
       outputPath: 'dist/apps/myapp',
@@ -154,8 +154,8 @@ describe('normalizeOptions', () => {
           thirdParty: true,
           assets: [],
         },
-        context
-      )
+        context,
+      ),
     ).toEqual(expect.objectContaining({ thirdParty: false }));
   });
 });

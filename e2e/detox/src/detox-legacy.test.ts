@@ -21,7 +21,7 @@ describe('@nx/detox (legacy)', () => {
   it('should create files and run lint command for react-native apps', async () => {
     runCLI(
       `generate @nx/react-native:app ${appName} --e2eTestRunner=detox --linter=eslint --install=false`,
-      { env: { NX_ADD_PLUGINS: 'false' } }
+      { env: { NX_ADD_PLUGINS: 'false' } },
     );
     checkFilesExist(`apps/${appName}-e2e/.detoxrc.json`);
     checkFilesExist(`apps/${appName}-e2e/tsconfig.json`);
@@ -31,7 +31,7 @@ describe('@nx/detox (legacy)', () => {
 
     const lintResults = await runCLIAsync(`lint ${appName}-e2e`);
     expect(lintResults.combinedOutput).toContain(
-      'Successfully ran target lint'
+      'Successfully ran target lint',
     );
   });
 
@@ -39,7 +39,7 @@ describe('@nx/detox (legacy)', () => {
     const expoAppName = uniq('myapp');
     runCLI(
       `generate @nx/expo:app ${expoAppName} --e2eTestRunner=detox --linter=eslint`,
-      { env: { NX_ADD_PLUGINS: 'false' } }
+      { env: { NX_ADD_PLUGINS: 'false' } },
     );
     checkFilesExist(`apps/${expoAppName}-e2e/.detoxrc.json`);
     checkFilesExist(`apps/${expoAppName}-e2e/tsconfig.json`);
@@ -49,7 +49,7 @@ describe('@nx/detox (legacy)', () => {
 
     const lintResults = await runCLIAsync(`lint ${expoAppName}-e2e`);
     expect(lintResults.combinedOutput).toContain(
-      'Successfully ran target lint'
+      'Successfully ran target lint',
     );
   });
 
@@ -58,7 +58,7 @@ describe('@nx/detox (legacy)', () => {
 
     runCLI(
       `generate @nx/react-native:app ${appName} --e2eTestRunner=detox --linter=eslint --install=false --project-name-and-root-format=as-provided --interactive=false`,
-      { env: { NX_ADD_PLUGINS: 'false' } }
+      { env: { NX_ADD_PLUGINS: 'false' } },
     );
 
     // check files are generated without the layout directory ("apps/") and
@@ -68,12 +68,12 @@ describe('@nx/detox (legacy)', () => {
       `${appName}-e2e/tsconfig.json`,
       `${appName}-e2e/tsconfig.e2e.json`,
       `${appName}-e2e/test-setup.ts`,
-      `${appName}-e2e/src/app.spec.ts`
+      `${appName}-e2e/src/app.spec.ts`,
     );
 
     const lintResults = await runCLIAsync(`lint ${appName}-e2e`);
     expect(lintResults.combinedOutput).toContain(
-      'Successfully ran target lint'
+      'Successfully ran target lint',
     );
   });
 
@@ -83,8 +83,8 @@ describe('@nx/detox (legacy)', () => {
       it('should test ios MACOS-Tests', async () => {
         expect(
           runCLI(
-            `test-ios ${appName}-e2e --prod --debugSynchronization=true --loglevel=trace`
-          )
+            `test-ios ${appName}-e2e --prod --debugSynchronization=true --loglevel=trace`,
+          ),
         ).toContain('Successfully ran target test-ios');
 
         await killPorts(8081); // kill the port for the serve command

@@ -39,7 +39,7 @@ describe('js:tsc executor', () => {
       `dist/libs/${lib}/src/index.js`,
       `dist/libs/${lib}/src/lib/${lib}.js`,
       `dist/libs/${lib}/src/index.d.ts`,
-      `dist/libs/${lib}/src/lib/${lib}.d.ts`
+      `dist/libs/${lib}/src/lib/${lib}.d.ts`,
     );
 
     runCLI(`build ${lib} --generateLockfile=true`);
@@ -47,7 +47,7 @@ describe('js:tsc executor', () => {
       `dist/libs/${lib}/package.json`,
       `dist/libs/${lib}/${
         packageManagerLockFile[detectPackageManager(tmpProjPath())]
-      }`
+      }`,
     );
 
     updateJson(`libs/${lib}/project.json`, (json) => {
@@ -60,7 +60,7 @@ describe('js:tsc executor', () => {
     });
     const libBuildProcess = await runCommandUntil(
       `build ${lib} --watch`,
-      (output) => output.includes(`Watching for file changes`)
+      (output) => output.includes(`Watching for file changes`),
     );
     updateFile(`libs/${lib}/README.md`, `Hello, World!`);
     updateJson(`libs/${lib}/package.json`, (json) => {
@@ -74,32 +74,32 @@ describe('js:tsc executor', () => {
         {
           timeout: 20_000,
           ms: 500,
-        }
-      )
+        },
+      ),
     ).resolves.not.toThrow();
     await expect(
       waitUntil(
         () =>
           readFile(`dist/libs/${lib}/docs/a/b/nested.md`).includes(
-            `Nested File`
+            `Nested File`,
           ),
         {
           timeout: 20_000,
           ms: 500,
-        }
-      )
+        },
+      ),
     ).resolves.not.toThrow();
     await expect(
       waitUntil(
         () =>
           readFile(`dist/libs/${lib}/package.json`).includes(
-            `"version": "999.9.9"`
+            `"version": "999.9.9"`,
           ),
         {
           timeout: 20_000,
           ms: 500,
-        }
-      )
+        },
+      ),
     ).resolves.not.toThrow();
     libBuildProcess.kill();
 
@@ -108,18 +108,18 @@ describe('js:tsc executor', () => {
     const parentLibPackageJson = readJson(`libs/${parentLib}/package.json`);
     expect(parentLibPackageJson.scripts).toBeUndefined();
     expect((await runCLIAsync(`test ${parentLib}`)).combinedOutput).toContain(
-      'Ran all test suites'
+      'Ran all test suites',
     );
 
     expect(runCLI(`build ${parentLib}`)).toContain(
-      'Done compiling TypeScript files'
+      'Done compiling TypeScript files',
     );
     checkFilesExist(
       `dist/libs/${parentLib}/package.json`,
       `dist/libs/${parentLib}/src/index.js`,
       `dist/libs/${parentLib}/src/lib/${parentLib}.js`,
       `dist/libs/${parentLib}/src/index.d.ts`,
-      `dist/libs/${parentLib}/src/lib/${parentLib}.d.ts`
+      `dist/libs/${parentLib}/src/lib/${parentLib}.d.ts`,
     );
 
     const tsconfig = readJson(`tsconfig.base.json`);
@@ -158,19 +158,19 @@ describe('js:tsc executor', () => {
 
     expect(batchBuildOutput).toContain(`Running 2 tasks with @nx/js:tsc`);
     expect(batchBuildOutput).toContain(
-      `Compiling TypeScript files for project "${lib}"...`
+      `Compiling TypeScript files for project "${lib}"...`,
     );
     expect(batchBuildOutput).toContain(
-      `Done compiling TypeScript files for project "${lib}".`
+      `Done compiling TypeScript files for project "${lib}".`,
     );
     expect(batchBuildOutput).toContain(
-      `Compiling TypeScript files for project "${parentLib}"...`
+      `Compiling TypeScript files for project "${parentLib}"...`,
     );
     expect(batchBuildOutput).toContain(
-      `Done compiling TypeScript files for project "${parentLib}".`
+      `Done compiling TypeScript files for project "${parentLib}".`,
     );
     expect(batchBuildOutput).toContain(
-      `Successfully ran target build for project ${parentLib} and 1 task it depends on`
+      `Successfully ran target build for project ${parentLib} and 1 task it depends on`,
     );
 
     batchBuildOutput = runCLI(`build ${parentLib} --skip-nx-cache --batch`);
@@ -192,23 +192,23 @@ describe('js:tsc executor', () => {
       `dist/libs/${lib}/src/index.js`,
       `dist/libs/${lib}/src/index.d.ts`,
       `dist/libs/${lib}/src/lib/${lib}.js`,
-      `dist/libs/${lib}/src/lib/${lib}.d.ts`
+      `dist/libs/${lib}/src/lib/${lib}.d.ts`,
     );
 
     // run a second time skipping the nx cache and with the outputs present
     const secondBatchBuildOutput = runCLI(
       `build ${parentLib} --skip-nx-cache`,
-      { env: { NX_BATCH_MODE: 'true' } }
+      { env: { NX_BATCH_MODE: 'true' } },
     );
     expect(secondBatchBuildOutput).toContain(
-      `Successfully ran target build for project ${parentLib} and 1 task it depends on`
+      `Successfully ran target build for project ${parentLib} and 1 task it depends on`,
     );
   }, 240_000);
 
   it('should not create a `.babelrc` file when creating libs with js executors (--compiler=tsc)', () => {
     const lib = uniq('lib');
     runCLI(
-      `generate @nx/js:lib ${lib} --compiler=tsc --includeBabelRc=false --no-interactive`
+      `generate @nx/js:lib ${lib} --compiler=tsc --includeBabelRc=false --no-interactive`,
     );
 
     checkFilesDoNotExist(`libs/${lib}/.babelrc`);
@@ -231,7 +231,7 @@ describe('js:tsc executor', () => {
     });
 
     expect(runCLI(`build ${base}`)).toContain(
-      'Done compiling TypeScript files'
+      'Done compiling TypeScript files',
     );
 
     updateJson('tsconfig.base.json', (json) => {
@@ -247,7 +247,7 @@ describe('js:tsc executor', () => {
 export function ${lib}Wildcard() {
   return '${lib}-wildcard';
 };
-    `
+    `,
     );
 
     updateFile(`libs/${base}/src/index.ts`, () => {
@@ -262,7 +262,7 @@ export function ${lib}Wildcard() {
     });
 
     expect(runCLI(`build ${base}`)).toContain(
-      'Done compiling TypeScript files'
+      'Done compiling TypeScript files',
     );
   }, 240_000);
 

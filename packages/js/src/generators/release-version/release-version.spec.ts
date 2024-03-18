@@ -85,7 +85,7 @@ describe('release-version', () => {
         specifier: 'major',
         currentVersionResolver: 'disk',
         releaseGroup: createReleaseGroup('fixed'),
-      })
+      }),
     ).toMatchInlineSnapshot(`
       {
         "callback": [Function],
@@ -225,7 +225,7 @@ To fix this you will either need to add a package.json file at that location, or
   describe('fixed release group', () => {
     it(`should work with semver keywords and exact semver versions`, async () => {
       expect(readJson(tree, 'libs/my-lib/package.json').version).toEqual(
-        '0.0.1'
+        '0.0.1',
       );
       await releaseVersionGenerator(tree, {
         projects: Object.values(projectGraph.nodes), // version all projects
@@ -235,7 +235,7 @@ To fix this you will either need to add a package.json file at that location, or
         releaseGroup: createReleaseGroup('fixed'),
       });
       expect(readJson(tree, 'libs/my-lib/package.json').version).toEqual(
-        '1.0.0'
+        '1.0.0',
       );
 
       await releaseVersionGenerator(tree, {
@@ -246,7 +246,7 @@ To fix this you will either need to add a package.json file at that location, or
         releaseGroup: createReleaseGroup('fixed'),
       });
       expect(readJson(tree, 'libs/my-lib/package.json').version).toEqual(
-        '1.1.0'
+        '1.1.0',
       );
 
       await releaseVersionGenerator(tree, {
@@ -257,7 +257,7 @@ To fix this you will either need to add a package.json file at that location, or
         releaseGroup: createReleaseGroup('fixed'),
       });
       expect(readJson(tree, 'libs/my-lib/package.json').version).toEqual(
-        '1.1.1'
+        '1.1.1',
       );
 
       await releaseVersionGenerator(tree, {
@@ -268,7 +268,7 @@ To fix this you will either need to add a package.json file at that location, or
         releaseGroup: createReleaseGroup('fixed'),
       });
       expect(readJson(tree, 'libs/my-lib/package.json').version).toEqual(
-        '1.2.3'
+        '1.2.3',
       );
     });
 
@@ -289,7 +289,7 @@ To fix this you will either need to add a package.json file at that location, or
       `);
 
       expect(
-        readJson(tree, 'libs/project-with-dependency-on-my-pkg/package.json')
+        readJson(tree, 'libs/project-with-dependency-on-my-pkg/package.json'),
       ).toMatchInlineSnapshot(`
         {
           "dependencies": {
@@ -300,7 +300,10 @@ To fix this you will either need to add a package.json file at that location, or
         }
       `);
       expect(
-        readJson(tree, 'libs/project-with-devDependency-on-my-pkg/package.json')
+        readJson(
+          tree,
+          'libs/project-with-devDependency-on-my-pkg/package.json',
+        ),
       ).toMatchInlineSnapshot(`
         {
           "devDependencies": {
@@ -328,17 +331,17 @@ To fix this you will either need to add a package.json file at that location, or
           .mockReturnValueOnce(Promise.resolve({ specifier: '1.2.3' }));
 
         expect(readJson(tree, 'libs/my-lib/package.json').version).toEqual(
-          '0.0.1'
+          '0.0.1',
         );
         expect(
           readJson(tree, 'libs/project-with-dependency-on-my-pkg/package.json')
-            .version
+            .version,
         ).toEqual('0.0.1');
         expect(
           readJson(
             tree,
-            'libs/project-with-devDependency-on-my-pkg/package.json'
-          ).version
+            'libs/project-with-devDependency-on-my-pkg/package.json',
+          ).version,
         ).toEqual('0.0.1');
 
         await releaseVersionGenerator(tree, {
@@ -359,7 +362,7 @@ To fix this you will either need to add a package.json file at that location, or
         `);
 
         expect(
-          readJson(tree, 'libs/project-with-dependency-on-my-pkg/package.json')
+          readJson(tree, 'libs/project-with-dependency-on-my-pkg/package.json'),
         ).toMatchInlineSnapshot(`
           {
             "dependencies": {
@@ -372,8 +375,8 @@ To fix this you will either need to add a package.json file at that location, or
         expect(
           readJson(
             tree,
-            'libs/project-with-devDependency-on-my-pkg/package.json'
-          )
+            'libs/project-with-devDependency-on-my-pkg/package.json',
+          ),
         ).toMatchInlineSnapshot(`
           {
             "devDependencies": {
@@ -387,17 +390,17 @@ To fix this you will either need to add a package.json file at that location, or
 
       it(`should respect an explicit user CLI specifier for all, even when projects are independent, and apply the version updates across all package.json files`, async () => {
         expect(readJson(tree, 'libs/my-lib/package.json').version).toEqual(
-          '0.0.1'
+          '0.0.1',
         );
         expect(
           readJson(tree, 'libs/project-with-dependency-on-my-pkg/package.json')
-            .version
+            .version,
         ).toEqual('0.0.1');
         expect(
           readJson(
             tree,
-            'libs/project-with-devDependency-on-my-pkg/package.json'
-          ).version
+            'libs/project-with-devDependency-on-my-pkg/package.json',
+          ).version,
         ).toEqual('0.0.1');
 
         await releaseVersionGenerator(tree, {
@@ -418,7 +421,7 @@ To fix this you will either need to add a package.json file at that location, or
         `);
 
         expect(
-          readJson(tree, 'libs/project-with-dependency-on-my-pkg/package.json')
+          readJson(tree, 'libs/project-with-dependency-on-my-pkg/package.json'),
         ).toMatchInlineSnapshot(`
           {
             "dependencies": {
@@ -431,8 +434,8 @@ To fix this you will either need to add a package.json file at that location, or
         expect(
           readJson(
             tree,
-            'libs/project-with-devDependency-on-my-pkg/package.json'
-          )
+            'libs/project-with-devDependency-on-my-pkg/package.json',
+          ),
         ).toMatchInlineSnapshot(`
           {
             "devDependencies": {
@@ -446,10 +449,10 @@ To fix this you will either need to add a package.json file at that location, or
 
       it(`should update dependents even when filtering to a subset of projects which do not include those dependents`, async () => {
         expect(readJson(tree, 'libs/my-lib/package.json').version).toEqual(
-          '0.0.1'
+          '0.0.1',
         );
         expect(
-          readJson(tree, 'libs/project-with-dependency-on-my-pkg/package.json')
+          readJson(tree, 'libs/project-with-dependency-on-my-pkg/package.json'),
         ).toMatchInlineSnapshot(`
           {
             "dependencies": {
@@ -462,8 +465,8 @@ To fix this you will either need to add a package.json file at that location, or
         expect(
           readJson(
             tree,
-            'libs/project-with-devDependency-on-my-pkg/package.json'
-          )
+            'libs/project-with-devDependency-on-my-pkg/package.json',
+          ),
         ).toMatchInlineSnapshot(`
           {
             "devDependencies": {
@@ -492,7 +495,7 @@ To fix this you will either need to add a package.json file at that location, or
         `);
 
         expect(
-          readJson(tree, 'libs/project-with-dependency-on-my-pkg/package.json')
+          readJson(tree, 'libs/project-with-dependency-on-my-pkg/package.json'),
         ).toMatchInlineSnapshot(`
           {
             "dependencies": {
@@ -505,8 +508,8 @@ To fix this you will either need to add a package.json file at that location, or
         expect(
           readJson(
             tree,
-            'libs/project-with-devDependency-on-my-pkg/package.json'
-          )
+            'libs/project-with-devDependency-on-my-pkg/package.json',
+          ),
         ).toMatchInlineSnapshot(`
           {
             "devDependencies": {
@@ -523,7 +526,7 @@ To fix this you will either need to add a package.json file at that location, or
   describe('leading v in version', () => {
     it(`should strip a leading v from the provided specifier`, async () => {
       expect(readJson(tree, 'libs/my-lib/package.json').version).toEqual(
-        '0.0.1'
+        '0.0.1',
       );
       await releaseVersionGenerator(tree, {
         projects: Object.values(projectGraph.nodes), // version all projects
@@ -540,7 +543,7 @@ To fix this you will either need to add a package.json file at that location, or
       `);
 
       expect(
-        readJson(tree, 'libs/project-with-dependency-on-my-pkg/package.json')
+        readJson(tree, 'libs/project-with-dependency-on-my-pkg/package.json'),
       ).toMatchInlineSnapshot(`
         {
           "dependencies": {
@@ -551,7 +554,10 @@ To fix this you will either need to add a package.json file at that location, or
         }
       `);
       expect(
-        readJson(tree, 'libs/project-with-devDependency-on-my-pkg/package.json')
+        readJson(
+          tree,
+          'libs/project-with-devDependency-on-my-pkg/package.json',
+        ),
       ).toMatchInlineSnapshot(`
         {
           "devDependencies": {
@@ -624,7 +630,7 @@ To fix this you will either need to add a package.json file at that location, or
 
     it('should work with an empty prefix', async () => {
       expect(readJson(tree, 'libs/my-lib/package.json').version).toEqual(
-        '0.0.1'
+        '0.0.1',
       );
       await releaseVersionGenerator(tree, {
         projects: Object.values(projectGraph.nodes), // version all projects
@@ -642,7 +648,7 @@ To fix this you will either need to add a package.json file at that location, or
       `);
 
       expect(
-        readJson(tree, 'libs/project-with-dependency-on-my-pkg/package.json')
+        readJson(tree, 'libs/project-with-dependency-on-my-pkg/package.json'),
       ).toMatchInlineSnapshot(`
         {
           "dependencies": {
@@ -653,7 +659,10 @@ To fix this you will either need to add a package.json file at that location, or
         }
       `);
       expect(
-        readJson(tree, 'libs/project-with-devDependency-on-my-pkg/package.json')
+        readJson(
+          tree,
+          'libs/project-with-devDependency-on-my-pkg/package.json',
+        ),
       ).toMatchInlineSnapshot(`
         {
           "devDependencies": {
@@ -666,8 +675,8 @@ To fix this you will either need to add a package.json file at that location, or
       expect(
         readJson(
           tree,
-          'libs/another-project-with-devDependency-on-my-pkg/package.json'
-        )
+          'libs/another-project-with-devDependency-on-my-pkg/package.json',
+        ),
       ).toMatchInlineSnapshot(`
         {
           "devDependencies": {
@@ -681,7 +690,7 @@ To fix this you will either need to add a package.json file at that location, or
 
     it('should work with a ^ prefix', async () => {
       expect(readJson(tree, 'libs/my-lib/package.json').version).toEqual(
-        '0.0.1'
+        '0.0.1',
       );
       await releaseVersionGenerator(tree, {
         projects: Object.values(projectGraph.nodes), // version all projects
@@ -699,7 +708,7 @@ To fix this you will either need to add a package.json file at that location, or
       `);
 
       expect(
-        readJson(tree, 'libs/project-with-dependency-on-my-pkg/package.json')
+        readJson(tree, 'libs/project-with-dependency-on-my-pkg/package.json'),
       ).toMatchInlineSnapshot(`
         {
           "dependencies": {
@@ -710,7 +719,10 @@ To fix this you will either need to add a package.json file at that location, or
         }
       `);
       expect(
-        readJson(tree, 'libs/project-with-devDependency-on-my-pkg/package.json')
+        readJson(
+          tree,
+          'libs/project-with-devDependency-on-my-pkg/package.json',
+        ),
       ).toMatchInlineSnapshot(`
         {
           "devDependencies": {
@@ -723,8 +735,8 @@ To fix this you will either need to add a package.json file at that location, or
       expect(
         readJson(
           tree,
-          'libs/another-project-with-devDependency-on-my-pkg/package.json'
-        )
+          'libs/another-project-with-devDependency-on-my-pkg/package.json',
+        ),
       ).toMatchInlineSnapshot(`
         {
           "devDependencies": {
@@ -738,7 +750,7 @@ To fix this you will either need to add a package.json file at that location, or
 
     it('should work with a ~ prefix', async () => {
       expect(readJson(tree, 'libs/my-lib/package.json').version).toEqual(
-        '0.0.1'
+        '0.0.1',
       );
       await releaseVersionGenerator(tree, {
         projects: Object.values(projectGraph.nodes), // version all projects
@@ -756,7 +768,7 @@ To fix this you will either need to add a package.json file at that location, or
       `);
 
       expect(
-        readJson(tree, 'libs/project-with-dependency-on-my-pkg/package.json')
+        readJson(tree, 'libs/project-with-dependency-on-my-pkg/package.json'),
       ).toMatchInlineSnapshot(`
         {
           "dependencies": {
@@ -767,7 +779,10 @@ To fix this you will either need to add a package.json file at that location, or
         }
       `);
       expect(
-        readJson(tree, 'libs/project-with-devDependency-on-my-pkg/package.json')
+        readJson(
+          tree,
+          'libs/project-with-devDependency-on-my-pkg/package.json',
+        ),
       ).toMatchInlineSnapshot(`
         {
           "devDependencies": {
@@ -780,8 +795,8 @@ To fix this you will either need to add a package.json file at that location, or
       expect(
         readJson(
           tree,
-          'libs/another-project-with-devDependency-on-my-pkg/package.json'
-        )
+          'libs/another-project-with-devDependency-on-my-pkg/package.json',
+        ),
       ).toMatchInlineSnapshot(`
         {
           "devDependencies": {
@@ -795,7 +810,7 @@ To fix this you will either need to add a package.json file at that location, or
 
     it('should respect any existing prefix when set to "auto"', async () => {
       expect(readJson(tree, 'libs/my-lib/package.json').version).toEqual(
-        '0.0.1'
+        '0.0.1',
       );
       await releaseVersionGenerator(tree, {
         projects: Object.values(projectGraph.nodes), // version all projects
@@ -813,7 +828,7 @@ To fix this you will either need to add a package.json file at that location, or
       `);
 
       expect(
-        readJson(tree, 'libs/project-with-dependency-on-my-pkg/package.json')
+        readJson(tree, 'libs/project-with-dependency-on-my-pkg/package.json'),
       ).toMatchInlineSnapshot(`
         {
           "dependencies": {
@@ -824,7 +839,10 @@ To fix this you will either need to add a package.json file at that location, or
         }
       `);
       expect(
-        readJson(tree, 'libs/project-with-devDependency-on-my-pkg/package.json')
+        readJson(
+          tree,
+          'libs/project-with-devDependency-on-my-pkg/package.json',
+        ),
       ).toMatchInlineSnapshot(`
         {
           "devDependencies": {
@@ -837,8 +855,8 @@ To fix this you will either need to add a package.json file at that location, or
       expect(
         readJson(
           tree,
-          'libs/another-project-with-devDependency-on-my-pkg/package.json'
-        )
+          'libs/another-project-with-devDependency-on-my-pkg/package.json',
+        ),
       ).toMatchInlineSnapshot(`
         {
           "devDependencies": {
@@ -852,7 +870,7 @@ To fix this you will either need to add a package.json file at that location, or
 
     it('should use the behavior of "auto" by default', async () => {
       expect(readJson(tree, 'libs/my-lib/package.json').version).toEqual(
-        '0.0.1'
+        '0.0.1',
       );
       await releaseVersionGenerator(tree, {
         projects: Object.values(projectGraph.nodes), // version all projects
@@ -870,7 +888,7 @@ To fix this you will either need to add a package.json file at that location, or
       `);
 
       expect(
-        readJson(tree, 'libs/project-with-dependency-on-my-pkg/package.json')
+        readJson(tree, 'libs/project-with-dependency-on-my-pkg/package.json'),
       ).toMatchInlineSnapshot(`
         {
           "dependencies": {
@@ -881,7 +899,10 @@ To fix this you will either need to add a package.json file at that location, or
         }
       `);
       expect(
-        readJson(tree, 'libs/project-with-devDependency-on-my-pkg/package.json')
+        readJson(
+          tree,
+          'libs/project-with-devDependency-on-my-pkg/package.json',
+        ),
       ).toMatchInlineSnapshot(`
         {
           "devDependencies": {
@@ -894,8 +915,8 @@ To fix this you will either need to add a package.json file at that location, or
       expect(
         readJson(
           tree,
-          'libs/another-project-with-devDependency-on-my-pkg/package.json'
-        )
+          'libs/another-project-with-devDependency-on-my-pkg/package.json',
+        ),
       ).toMatchInlineSnapshot(`
         {
           "devDependencies": {
@@ -941,7 +962,7 @@ Valid values are: "auto", "", "~", "^", "="`,
 
 function createReleaseGroup(
   relationship: ReleaseGroupWithName['projectsRelationship'],
-  partialGroup: Partial<ReleaseGroupWithName> = {}
+  partialGroup: Partial<ReleaseGroupWithName> = {},
 ): ReleaseGroupWithName {
   return {
     name: 'myReleaseGroup',

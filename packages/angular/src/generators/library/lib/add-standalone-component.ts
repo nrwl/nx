@@ -6,7 +6,7 @@ import type { NormalizedSchema } from './normalized-schema';
 
 export async function addStandaloneComponent(
   tree: Tree,
-  { libraryOptions, componentOptions }: NormalizedSchema
+  { libraryOptions, componentOptions }: NormalizedSchema,
 ) {
   await componentGenerator(tree, {
     ...componentOptions,
@@ -15,7 +15,7 @@ export async function addStandaloneComponent(
       libraryOptions.projectRoot,
       'src',
       'lib',
-      componentOptions.flat ? '' : componentOptions.name
+      componentOptions.flat ? '' : componentOptions.name,
     ),
     nameAndDirectoryFormat: 'as-provided',
     standalone: true,

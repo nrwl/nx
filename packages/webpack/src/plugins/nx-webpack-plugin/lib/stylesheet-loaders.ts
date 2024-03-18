@@ -16,7 +16,7 @@ interface PostcssOptions {
 
 export function getCommonLoadersForCssModules(
   options: NormalizedNxWebpackPluginOptions,
-  includePaths: string[]
+  includePaths: string[],
 ) {
   // load component css as raw strings
   return [
@@ -50,7 +50,7 @@ export function getCommonLoadersForCssModules(
 
 export function getCommonLoadersForGlobalCss(
   options: NormalizedNxWebpackPluginOptions,
-  includePaths: string[]
+  includePaths: string[],
 ) {
   return [
     {
@@ -73,7 +73,7 @@ export function getCommonLoadersForGlobalCss(
 
 export function getCommonLoadersForGlobalStyle(
   options: NormalizedNxWebpackPluginOptions,
-  includePaths: string[]
+  includePaths: string[],
 ) {
   return [
     {
@@ -103,7 +103,7 @@ function postcssOptionsCreator(
   }: {
     includePaths: string[];
     forCssModules?: boolean;
-  }
+  },
 ) {
   const hashFormat = getOutputHashFormat(options.outputHashing as string);
   // PostCSS options depend on the webpack loader, but we need to set the `config` path as a string due to this check:

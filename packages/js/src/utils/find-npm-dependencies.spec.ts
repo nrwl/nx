@@ -32,7 +32,7 @@ describe('findNpmDependencies', () => {
       {
         './nx.json': JSON.stringify(nxJson),
       },
-      '/root'
+      '/root',
     );
     const libWithExternalDeps = {
       name: 'my-lib',
@@ -73,7 +73,7 @@ describe('findNpmDependencies', () => {
       libWithExternalDeps,
       projectGraph,
       projectFileMap,
-      'build'
+      'build',
     );
 
     expect(results).toEqual({
@@ -96,7 +96,7 @@ describe('findNpmDependencies', () => {
           },
         }),
       },
-      '/root'
+      '/root',
     );
     const libWithHelpers = {
       name: 'my-lib',
@@ -151,8 +151,8 @@ describe('findNpmDependencies', () => {
         libWithHelpers,
         projectGraph,
         projectFileMap,
-        'build1'
-      )
+        'build1',
+      ),
     ).toEqual({
       tslib: '2.6.0',
     });
@@ -162,8 +162,8 @@ describe('findNpmDependencies', () => {
         libWithHelpers,
         projectGraph,
         projectFileMap,
-        'build2'
-      )
+        'build2',
+      ),
     ).toEqual({
       '@swc/helpers': '0.5.0',
     });
@@ -183,7 +183,7 @@ describe('findNpmDependencies', () => {
           },
         }),
       },
-      '/root'
+      '/root',
     );
     const libWithInlinedHelpers = {
       name: 'my-lib',
@@ -237,7 +237,7 @@ describe('findNpmDependencies', () => {
       libWithInlinedHelpers,
       projectGraph,
       projectFileMap,
-      'build'
+      'build',
     );
 
     expect(results).toEqual({});
@@ -248,7 +248,7 @@ describe('findNpmDependencies', () => {
       {
         './nx.json': JSON.stringify(nxJson),
       },
-      '/root'
+      '/root',
     );
     const parentLib = {
       name: 'parent',
@@ -328,7 +328,7 @@ describe('findNpmDependencies', () => {
       'build',
       {
         includeTransitiveDependencies: true,
-      }
+      },
     );
 
     expect(results).toEqual({
@@ -345,7 +345,7 @@ describe('findNpmDependencies', () => {
         }),
         './nx.json': JSON.stringify(nxJson),
       },
-      '/root'
+      '/root',
     );
     const lib1 = {
       name: 'lib1',
@@ -387,12 +387,12 @@ describe('findNpmDependencies', () => {
     };
 
     expect(
-      findNpmDependencies('/root', lib1, projectGraph, projectFileMap, 'build')
+      findNpmDependencies('/root', lib1, projectGraph, projectFileMap, 'build'),
     ).toEqual({
       '@acme/lib3': '0.0.1',
     });
     expect(
-      findNpmDependencies('/root', lib2, projectGraph, projectFileMap, 'build')
+      findNpmDependencies('/root', lib2, projectGraph, projectFileMap, 'build'),
     ).toEqual({
       '@acme/lib3': '0.0.1',
     });
@@ -407,7 +407,7 @@ describe('findNpmDependencies', () => {
         }),
         './nx.json': JSON.stringify(nxJson),
       },
-      '/root'
+      '/root',
     );
     const a = {
       name: 'a',
@@ -451,14 +451,14 @@ describe('findNpmDependencies', () => {
     expect(
       findNpmDependencies('/root', a, projectGraph, projectFileMap, 'build', {
         useLocalPathsForWorkspaceDependencies: true,
-      })
+      }),
     ).toEqual({
       '@acme/c': 'file:../c',
     });
     expect(
       findNpmDependencies('/root', b, projectGraph, projectFileMap, 'build', {
         useLocalPathsForWorkspaceDependencies: true,
-      })
+      }),
     ).toEqual({
       '@acme/c': 'file:../c',
     });
@@ -469,7 +469,7 @@ describe('findNpmDependencies', () => {
       {
         './nx.json': JSON.stringify(nxJson),
       },
-      '/root'
+      '/root',
     );
     const lib = {
       name: 'my-lib',
@@ -511,7 +511,7 @@ describe('findNpmDependencies', () => {
       projectGraph,
       projectFileMap,
       'build',
-      { ignoredFiles: ['{projectRoot}/vite.config.ts'] }
+      { ignoredFiles: ['{projectRoot}/vite.config.ts'] },
     );
 
     expect(results).toEqual({});

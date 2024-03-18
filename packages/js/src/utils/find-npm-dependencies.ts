@@ -29,7 +29,7 @@ export function findNpmDependencies(
     includeTransitiveDependencies?: boolean;
     ignoredFiles?: string[];
     useLocalPathsForWorkspaceDependencies?: boolean;
-  } = {}
+  } = {},
 ): Record<string, string> {
   let seen: null | Set<string> = null;
   if (options.includeTransitiveDependencies) {
@@ -40,7 +40,7 @@ export function findNpmDependencies(
 
   function collectAll(
     currentProject: ProjectGraphProjectNode,
-    collectedDeps: Record<string, string>
+    collectedDeps: Record<string, string>,
   ): void {
     if (seen?.has(currentProject.name)) return;
     seen?.add(currentProject.name);
@@ -53,7 +53,7 @@ export function findNpmDependencies(
       buildTarget,
       options.ignoredFiles,
       options.useLocalPathsForWorkspaceDependencies,
-      collectedDeps
+      collectedDeps,
     );
 
     collectHelperDependencies(
@@ -61,7 +61,7 @@ export function findNpmDependencies(
       currentProject,
       projectGraph,
       buildTarget,
-      collectedDeps
+      collectedDeps,
     );
 
     if (options.includeTransitiveDependencies) {
@@ -89,7 +89,7 @@ function collectDependenciesFromFileMap(
   buildTarget: string,
   ignoredFiles: string[],
   useLocalPathsForWorkspaceDependencies: boolean,
-  npmDeps: Record<string, string>
+  npmDeps: Record<string, string>,
 ): void {
   const rawFiles = projectFileMap[sourceProject.name];
   if (!rawFiles) return;
@@ -107,7 +107,7 @@ function collectDependenciesFromFileMap(
   const files = filterUsingGlobPatterns(
     sourceProject.data.root,
     projectFileMap[sourceProject.name] || [],
-    inputs
+    inputs,
   );
 
   for (const fileData of files) {
@@ -172,7 +172,7 @@ function collectDependenciesFromFileMap(
 
 function readPackageJson(
   project: ProjectGraphProjectNode,
-  workspaceRoot: string
+  workspaceRoot: string,
 ): null | {
   name: string;
   version?: string;
@@ -183,7 +183,7 @@ function readPackageJson(
   const packageJsonPath = join(
     workspaceRoot,
     project.data.root,
-    'package.json'
+    'package.json',
   );
   if (fileExists(packageJsonPath)) return readJsonFile(packageJsonPath);
   return null;
@@ -194,7 +194,7 @@ function collectHelperDependencies(
   sourceProject: ProjectGraphProjectNode,
   projectGraph: ProjectGraph,
   buildTarget: string,
-  npmDeps: Record<string, string>
+  npmDeps: Record<string, string>,
 ): void {
   const target = sourceProject.data.targets[buildTarget];
   if (!target) return;

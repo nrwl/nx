@@ -42,16 +42,16 @@ export function getJestProjects() {
       }
       if (targetConfiguration.options?.jestConfig) {
         jestConfigurationSet.add(
-          getJestConfigProjectPath(targetConfiguration.options.jestConfig)
+          getJestConfigProjectPath(targetConfiguration.options.jestConfig),
         );
       }
       if (targetConfiguration.configurations) {
         for (const configurationObject of Object.values(
-          targetConfiguration.configurations
+          targetConfiguration.configurations,
         )) {
           if (configurationObject.jestConfig) {
             jestConfigurationSet.add(
-              getJestConfigProjectPath(configurationObject.jestConfig)
+              getJestConfigProjectPath(configurationObject.jestConfig),
             );
           }
         }
@@ -106,13 +106,13 @@ export async function getJestProjectsAsync() {
       ) {
         collectJestConfigFromJestExecutor(
           targetConfiguration,
-          jestConfigurations
+          jestConfigurations,
         );
       } else if (targetConfiguration.executor === 'nx:run-commands') {
         collectJestConfigFromRunCommandsExecutor(
           targetConfiguration,
           projectConfig.root,
-          jestConfigurations
+          jestConfigurations,
         );
       }
     }
@@ -123,20 +123,20 @@ export async function getJestProjectsAsync() {
 
 function collectJestConfigFromJestExecutor(
   targetConfiguration: TargetConfiguration,
-  jestConfigurations: Set<string>
+  jestConfigurations: Set<string>,
 ): void {
   if (targetConfiguration.options?.jestConfig) {
     jestConfigurations.add(
-      getJestConfigProjectPath(targetConfiguration.options.jestConfig)
+      getJestConfigProjectPath(targetConfiguration.options.jestConfig),
     );
   }
   if (targetConfiguration.configurations) {
     for (const configurationObject of Object.values(
-      targetConfiguration.configurations
+      targetConfiguration.configurations,
     )) {
       if (configurationObject.jestConfig) {
         jestConfigurations.add(
-          getJestConfigProjectPath(configurationObject.jestConfig)
+          getJestConfigProjectPath(configurationObject.jestConfig),
         );
       }
     }
@@ -146,13 +146,13 @@ function collectJestConfigFromJestExecutor(
 function collectJestConfigFromRunCommandsExecutor(
   targetConfiguration: TargetConfiguration,
   projectRoot: string,
-  jestConfigurations: Set<string>
+  jestConfigurations: Set<string>,
 ): void {
   if (targetConfiguration.options?.command) {
     collectJestConfigFromCommand(
       targetConfiguration.options.command,
       targetConfiguration.options.cwd ?? projectRoot,
-      jestConfigurations
+      jestConfigurations,
     );
   } else if (targetConfiguration.options?.commands) {
     for (const command of targetConfiguration.options.commands) {
@@ -161,20 +161,20 @@ function collectJestConfigFromRunCommandsExecutor(
       collectJestConfigFromCommand(
         commandScript,
         targetConfiguration.options.cwd ?? projectRoot,
-        jestConfigurations
+        jestConfigurations,
       );
     }
   }
 
   if (targetConfiguration.configurations) {
     for (const configurationObject of Object.values(
-      targetConfiguration.configurations
+      targetConfiguration.configurations,
     )) {
       if (configurationObject.command) {
         collectJestConfigFromCommand(
           configurationObject.command,
           configurationObject.cwd ?? projectRoot,
-          jestConfigurations
+          jestConfigurations,
         );
       } else if (configurationObject.commands) {
         for (const command of configurationObject.commands) {
@@ -183,7 +183,7 @@ function collectJestConfigFromRunCommandsExecutor(
           collectJestConfigFromCommand(
             commandScript,
             configurationObject.cwd ?? projectRoot,
-            jestConfigurations
+            jestConfigurations,
           );
         }
       }
@@ -194,7 +194,7 @@ function collectJestConfigFromRunCommandsExecutor(
 function collectJestConfigFromCommand(
   command: string,
   cwd: string,
-  jestConfigurations: Set<string>
+  jestConfigurations: Set<string>,
 ) {
   const jestCommandRegex =
     /(?<=^|&)(?:[^&\r\n\s]* )*jest(?: [^&\r\n\s]*)*(?=$|&)/g;
@@ -210,7 +210,7 @@ function collectJestConfigFromCommand(
     });
     if (parsed.config) {
       jestConfigurations.add(
-        getJestConfigProjectPath(join(cwd, parsed.config))
+        getJestConfigProjectPath(join(cwd, parsed.config)),
       );
     } else {
       jestConfigurations.add(getJestConfigProjectPath(cwd));

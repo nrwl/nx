@@ -4,7 +4,7 @@ import type { AngularProjectConfiguration } from '../../utils/types';
 
 export function getProjectPrefix(
   tree: Tree,
-  project: string
+  project: string,
 ): string | undefined {
   return (
     readProjectConfiguration(tree, project) as AngularProjectConfiguration

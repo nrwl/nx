@@ -33,7 +33,7 @@ describe('change-webpack-to-metro', () => {
             bundler: 'webpack',
           },
         },
-      })
+      }),
     );
   });
 

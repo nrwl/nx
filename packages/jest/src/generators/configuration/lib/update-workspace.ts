@@ -9,7 +9,7 @@ import {
 
 export function updateWorkspace(
   tree: Tree,
-  options: NormalizedJestProjectSchema
+  options: NormalizedJestProjectSchema,
 ) {
   const projectConfig = readProjectConfiguration(tree, options.project);
   if (!projectConfig.targets) {
@@ -26,7 +26,7 @@ export function updateWorkspace(
     options: {
       jestConfig: joinPathFragments(
         normalizePath(projectConfig.root),
-        `jest.config.${options.js ? 'js' : 'ts'}`
+        `jest.config.${options.js ? 'js' : 'ts'}`,
       ),
     },
   };

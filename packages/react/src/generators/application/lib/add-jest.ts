@@ -4,7 +4,7 @@ import { nxVersion } from '../../../utils/versions';
 
 export async function addJest(
   host: Tree,
-  options: NormalizedSchema
+  options: NormalizedSchema,
 ): Promise<GeneratorCallback> {
   if (options.unitTestRunner === 'none') {
     return () => {};
@@ -12,7 +12,7 @@ export async function addJest(
 
   const { configurationGenerator } = ensurePackage<typeof import('@nx/jest')>(
     '@nx/jest',
-    nxVersion
+    nxVersion,
   );
 
   return await configurationGenerator(host, {

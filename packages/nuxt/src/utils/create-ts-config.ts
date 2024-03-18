@@ -8,7 +8,7 @@ export function createTsConfig(
     rootProject?: boolean;
     unitTestRunner?: string;
   },
-  relativePathToRootTsConfig: string
+  relativePathToRootTsConfig: string,
 ) {
   createAppTsConfig(host, options);
   const json = {

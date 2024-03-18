@@ -18,7 +18,7 @@ export function updateModuleFederationProject(
     devServerPort?: number;
     typescriptConfiguration?: boolean;
     dynamic?: boolean;
-  }
+  },
 ): GeneratorCallback {
   const projectConfig = readProjectConfiguration(host, options.projectName);
 
@@ -43,7 +43,7 @@ export function updateModuleFederationProject(
       projectConfig.root,
       `webpack.prod.config.${
         options.typescriptConfiguration && !options.js ? 'ts' : 'js'
-      }`
+      }`,
     );
     if (host.exists(pathToProdWebpackConfig)) {
       host.delete(pathToProdWebpackConfig);

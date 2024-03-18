@@ -10,7 +10,7 @@ import { validateHtmlSelector } from '../../utils/selector';
 export async function createFiles(
   tree: Tree,
   options: NormalizedSchema,
-  rootOffset: string
+  rootOffset: string,
 ) {
   const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
   const isUsingApplicationBuilder =
@@ -43,7 +43,7 @@ export async function createFiles(
     tree,
     joinPathFragments(__dirname, '../files/base'),
     options.appProjectRoot,
-    substitutions
+    substitutions,
   );
 
   if (options.standalone) {
@@ -51,14 +51,14 @@ export async function createFiles(
       tree,
       joinPathFragments(__dirname, '../files/standalone-components'),
       options.appProjectRoot,
-      substitutions
+      substitutions,
     );
   } else {
     generateFiles(
       tree,
       joinPathFragments(__dirname, '../files/ng-module'),
       options.appProjectRoot,
-      substitutions
+      substitutions,
     );
   }
 
@@ -66,12 +66,12 @@ export async function createFiles(
     tree,
     options.appProjectRoot,
     getRelativePathToRootTsConfig(tree, options.appProjectRoot),
-    options.rootProject
+    options.rootProject,
   );
 
   if (!options.routing) {
     tree.delete(
-      joinPathFragments(options.appProjectRoot, '/src/app/app.routes.ts')
+      joinPathFragments(options.appProjectRoot, '/src/app/app.routes.ts'),
     );
   }
 
@@ -79,14 +79,14 @@ export async function createFiles(
     tree.delete(
       joinPathFragments(
         options.appProjectRoot,
-        '/src/app/app.component.spec.ts'
-      )
+        '/src/app/app.component.spec.ts',
+      ),
     );
   }
 
   if (options.inlineTemplate) {
     tree.delete(
-      joinPathFragments(options.appProjectRoot, '/src/app/app.component.html')
+      joinPathFragments(options.appProjectRoot, '/src/app/app.component.html'),
     );
   }
 
@@ -94,8 +94,8 @@ export async function createFiles(
     tree.delete(
       joinPathFragments(
         options.appProjectRoot,
-        `/src/app/app.component.${options.style}`
-      )
+        `/src/app/app.component.${options.style}`,
+      ),
     );
   }
 
@@ -103,8 +103,8 @@ export async function createFiles(
     tree.delete(
       joinPathFragments(
         options.appProjectRoot,
-        'src/app/nx-welcome.component.ts'
-      )
+        'src/app/nx-welcome.component.ts',
+      ),
     );
   }
 }

@@ -27,7 +27,7 @@ import {
 } from './compile-ngc.di';
 
 export const NX_ENTRY_POINT_TRANSFORM_TOKEN = new InjectionToken<Transform>(
-  `nx.v1.entryPointTransform`
+  `nx.v1.entryPointTransform`,
 );
 
 export const NX_ENTRY_POINT_TRANSFORM: TransformProvider = provideTransform({

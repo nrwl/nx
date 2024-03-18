@@ -35,7 +35,7 @@ describe('tscExecutor', () => {
     it('should create typescript compilation options for valid config', () => {
       const result = createTypeScriptCompilationOptions(
         normalizeOptions(testOptions, '/root', 'libs/ui/src', 'libs/ui'),
-        context
+        context,
       );
 
       expect(result).toMatchObject({
@@ -55,9 +55,9 @@ describe('tscExecutor', () => {
           { ...testOptions, rootDir: 'libs/ui/src' },
           '/root',
           'libs/ui/src',
-          'libs/ui'
+          'libs/ui',
         ),
-        context
+        context,
       );
 
       expect(result).toMatchObject({

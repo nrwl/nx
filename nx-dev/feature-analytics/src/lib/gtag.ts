@@ -2,7 +2,7 @@ export interface Gtag {
   (
     command: 'config',
     targetId: string,
-    config?: ConfigParams | ControlParams | EventParams | CustomParams
+    config?: ConfigParams | ControlParams | EventParams | CustomParams,
   ): void;
   (command: 'set', targetId: string, config: CustomParams | boolean): void;
   (command: 'set', config: CustomParams): void;
@@ -10,18 +10,18 @@ export interface Gtag {
   (
     command: 'event',
     eventName: EventNames | string,
-    eventParams?: ControlParams | EventParams | CustomParams
+    eventParams?: ControlParams | EventParams | CustomParams,
   ): void;
   (
     command: 'get',
     targetId: string,
     fieldName: FieldNames | string,
-    callback?: (field: string) => any
+    callback?: (field: string) => any,
   ): void;
   (
     command: 'consent',
     consentArg: ConsentArg | string,
-    consentParams: ConsentParams
+    consentParams: ConsentParams,
   ): void;
 }
 

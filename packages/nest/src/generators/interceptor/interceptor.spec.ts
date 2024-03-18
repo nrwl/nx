@@ -19,7 +19,7 @@ describe('interceptor generator', () => {
 
   it('should run successfully', async () => {
     await expect(
-      interceptorGenerator(tree, options)
+      interceptorGenerator(tree, options),
     ).resolves.not.toThrowError();
   });
 });

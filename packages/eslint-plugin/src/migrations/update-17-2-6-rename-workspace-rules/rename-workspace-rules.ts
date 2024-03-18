@@ -22,7 +22,7 @@ export default async function renameWorkspaceRule(tree: Tree): Promise<void> {
     ruleNames.forEach((ruleName) => {
       contents = contents.replace(
         new RegExp(`@nx/workspace/${ruleName}`, 'g'),
-        `@nx/workspace-${ruleName}`
+        `@nx/workspace-${ruleName}`,
       );
     });
     tree.write(path, contents);

@@ -24,7 +24,7 @@ describe('@nx/webpack/plugin', () => {
 
     tempFs.createFileSync(
       'my-app/project.json',
-      JSON.stringify({ name: 'my-app' })
+      JSON.stringify({ name: 'my-app' }),
     );
     tempFs.createFileSync('my-app/webpack.config.js', '');
   });
@@ -47,7 +47,7 @@ describe('@nx/webpack/plugin', () => {
         previewTargetName: 'preview-site',
         serveStaticTargetName: 'serve-static',
       },
-      context
+      context,
     );
 
     expect(nodes).toMatchSnapshot();

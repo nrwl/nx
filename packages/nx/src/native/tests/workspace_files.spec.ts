@@ -52,7 +52,7 @@ describe('workspace files', () => {
 
     const context = new WorkspaceContext(
       fs.tempDir,
-      cacheDirectoryForWorkspace(fs.tempDir)
+      cacheDirectoryForWorkspace(fs.tempDir),
     );
     let { projectFileMap, globalFiles } = await context.getWorkspaceFiles({
       'libs/project1': 'project1',
@@ -153,7 +153,7 @@ describe('workspace files', () => {
 
     const context = new WorkspaceContext(
       fs.tempDir,
-      cacheDirectoryForWorkspace(fs.tempDir)
+      cacheDirectoryForWorkspace(fs.tempDir),
     );
 
     const { globalFiles, projectFileMap } = await context.getWorkspaceFiles({

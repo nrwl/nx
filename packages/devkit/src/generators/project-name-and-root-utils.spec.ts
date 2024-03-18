@@ -309,7 +309,7 @@ describe('determineProjectNameAndRootOptions', () => {
           projectType: 'library',
           projectNameAndRootFormat: 'as-provided',
           callingGenerator: '',
-        })
+        }),
       ).rejects.toThrowError();
     });
 
@@ -442,7 +442,7 @@ describe('determineProjectNameAndRootOptions', () => {
           projectType: 'library',
           projectNameAndRootFormat: 'derived',
           callingGenerator: '',
-        })
+        }),
       ).rejects.toThrowError();
     });
 
@@ -728,7 +728,7 @@ describe('determineProjectNameAndRootOptions', () => {
           projectType: 'library',
           projectNameAndRootFormat: 'as-provided',
           callingGenerator: '',
-        })
+        }),
       ).rejects.toThrowError();
     });
 
@@ -882,7 +882,7 @@ describe('determineProjectNameAndRootOptions', () => {
           projectType: 'library',
           projectNameAndRootFormat: 'derived',
           callingGenerator: '',
-        })
+        }),
       ).rejects.toThrowError();
     });
 

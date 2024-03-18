@@ -17,7 +17,7 @@ export function addProject(host: Tree, options: NormalizedSchema) {
   const hasPlugin = nxJson.plugins?.some((p) =>
     typeof p === 'string'
       ? p === '@nx/detox/plugin'
-      : p.plugin === '@nx/detox/plugin'
+      : p.plugin === '@nx/detox/plugin',
   );
 
   addProjectConfiguration(host, options.e2eProjectName, {

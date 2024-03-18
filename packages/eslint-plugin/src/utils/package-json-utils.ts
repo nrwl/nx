@@ -4,7 +4,7 @@ import { PackageJson } from 'nx/src/utils/package-json';
 import { isTerminalRun } from './runtime-lint-utils';
 
 export function getAllDependencies(
-  packageJson: PackageJson
+  packageJson: PackageJson,
 ): Record<string, string> {
   return {
     ...packageJson.dependencies,
@@ -15,7 +15,7 @@ export function getAllDependencies(
 }
 
 export function getProductionDependencies(
-  packageJsonPath: string
+  packageJsonPath: string,
 ): Record<string, string> {
   if (
     !globalThis.projPackageJsonDeps ||

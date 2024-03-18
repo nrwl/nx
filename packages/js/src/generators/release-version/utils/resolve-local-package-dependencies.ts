@@ -32,7 +32,7 @@ export function resolveLocalPackageDependencies(
   filteredProjects: ProjectGraphProjectNode[],
   projectNameToPackageRootMap: Map<string, string>,
   resolvePackageRoot: (projectNode: ProjectGraphProjectNode) => string,
-  includeAll = false
+  includeAll = false,
 ): Record<string, LocalPackageDependency[]> {
   const localPackageDependencies: Record<string, LocalPackageDependency[]> = {};
   const projectNodeToPackageMap = new Map<ProjectGraphProjectNode, Package>();
@@ -68,7 +68,7 @@ export function resolveLocalPackageDependencies(
     const workspaceDeps = projectDeps.filter(
       (dep) =>
         !isExternalNpmDependency(dep.target) &&
-        !isExternalNpmDependency(dep.source)
+        !isExternalNpmDependency(dep.source),
     );
     for (const dep of workspaceDeps) {
       const source = projectGraph.nodes[dep.source];
@@ -86,7 +86,7 @@ export function resolveLocalPackageDependencies(
       const sourcePackage = projectNodeToPackageMap.get(source);
       const targetPackage = projectNodeToPackageMap.get(target);
       const sourceNpmDependency = sourcePackage.getLocalDependency(
-        targetPackage.name
+        targetPackage.name,
       );
       if (!sourceNpmDependency) {
         continue;
@@ -96,7 +96,7 @@ export function resolveLocalPackageDependencies(
         targetPackage.name,
         targetPackage.version,
         sourceNpmDependency.spec,
-        sourcePackage.location
+        sourcePackage.location,
       );
       const targetMatchesRequirement =
         // For file: and workspace: protocols the targetVersionSpec could be a path, so we check if it matches the target's location

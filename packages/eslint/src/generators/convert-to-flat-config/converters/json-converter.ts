@@ -20,7 +20,7 @@ export function convertEslintJsonToFlatConfig(
   tree: Tree,
   root: string,
   config: ESLint.ConfigData,
-  ignorePaths: string[]
+  ignorePaths: string[],
 ): { content: string; addESLintRC: boolean; addESLintJS: boolean } {
   const importsMap = new Map<string, string>();
   const exportElements: ts.Expression[] = [];
@@ -47,8 +47,8 @@ export function convertEslintJsonToFlatConfig(
     languageOptions.push(
       ts.factory.createPropertyAssignment(
         'parser',
-        ts.factory.createIdentifier(parserName)
-      )
+        ts.factory.createIdentifier(parserName),
+      ),
     );
   }
 
@@ -56,8 +56,8 @@ export function convertEslintJsonToFlatConfig(
     languageOptions.push(
       ts.factory.createPropertyAssignment(
         'parserOptions',
-        generateAst(config.parserOptions)
-      )
+        generateAst(config.parserOptions),
+      ),
     );
   }
 
@@ -74,18 +74,18 @@ export function convertEslintJsonToFlatConfig(
             ts.factory.createSpreadAssignment(
               ts.factory.createPropertyAccessExpression(
                 ts.factory.createIdentifier('globals'),
-                ts.factory.createIdentifier(env)
-              )
-            )
+                ts.factory.createIdentifier(env),
+              ),
+            ),
           ),
           ...Object.keys(config.globals || {}).map((key) =>
             ts.factory.createPropertyAssignment(
               key,
-              generateAst(config.globals[key])
-            )
+              generateAst(config.globals[key]),
+            ),
           ),
-        ])
-      )
+        ]),
+      ),
     );
   }
 
@@ -93,8 +93,8 @@ export function convertEslintJsonToFlatConfig(
     combinedConfig.push(
       ts.factory.createPropertyAssignment(
         'settings',
-        generateAst(config.settings)
-      )
+        generateAst(config.settings),
+      ),
     );
   }
 
@@ -108,8 +108,8 @@ export function convertEslintJsonToFlatConfig(
         generateAst({
           noInlineConfig: config.noInlineConfig,
           reportUnusedDisableDirectives: config.reportUnusedDisableDirectives,
-        })
-      )
+        }),
+      ),
     );
   }
 
@@ -119,9 +119,9 @@ export function convertEslintJsonToFlatConfig(
         'languageOptions',
         ts.factory.createObjectLiteralExpression(
           languageOptions,
-          languageOptions.length > 1
-        )
-      )
+          languageOptions.length > 1,
+        ),
+      ),
     );
   }
 
@@ -129,8 +129,8 @@ export function convertEslintJsonToFlatConfig(
     exportElements.push(
       ts.factory.createObjectLiteralExpression(
         combinedConfig,
-        combinedConfig.length > 1
-      )
+        combinedConfig.length > 1,
+      ),
     );
   }
 
@@ -162,7 +162,7 @@ export function convertEslintJsonToFlatConfig(
       exportElements.push(
         generateAst({
           ignores: patterns.map((path) => mapFilePath(path)),
-        })
+        }),
       );
     }
   }
@@ -184,7 +184,7 @@ export function convertEslintJsonToFlatConfig(
   const nodeList = createNodeList(
     importsMap,
     exportElements,
-    isFlatCompatNeeded
+    isFlatCompatNeeded,
   );
 
   return {
@@ -198,7 +198,7 @@ export function convertEslintJsonToFlatConfig(
 function addExtends(
   importsMap: Map<string, string | string[]>,
   configBlocks: ts.Expression[],
-  config: ESLint.ConfigData
+  config: ESLint.ConfigData,
 ): { isFlatCompatNeeded: boolean; isESLintJSNeeded: boolean } {
   let isFlatCompatNeeded = false;
   let isESLintJSNeeded = false;
@@ -217,7 +217,7 @@ function addExtends(
         configBlocks.push(generateSpreadElement(localName));
         const newImport = imp.replace(
           /^(.*)\.eslintrc(.base)?\.json$/,
-          '$1eslint$2.config.js'
+          '$1eslint$2.config.js',
         );
         importsMap.set(newImport, localName);
       } else {
@@ -228,7 +228,7 @@ function addExtends(
   const pluginExtends = extendsConfig.filter((imp) => !imp.match(/^\.?(\.\/)/));
   if (pluginExtends.length) {
     const eslintPluginExtends = pluginExtends.filter((imp) =>
-      imp.startsWith('eslint:')
+      imp.startsWith('eslint:'),
     );
     pluginExtends.forEach((imp) => {
       if (!imp.startsWith('eslint:')) {
@@ -245,10 +245,10 @@ function addExtends(
           ts.factory.createPropertyAccessExpression(
             ts.factory.createPropertyAccessExpression(
               ts.factory.createIdentifier('js'),
-              ts.factory.createIdentifier('configs')
+              ts.factory.createIdentifier('configs'),
             ),
-            ts.factory.createIdentifier(plugin.slice(7)) // strip 'eslint:' prefix
-          )
+            ts.factory.createIdentifier(plugin.slice(7)), // strip 'eslint:' prefix
+          ),
         );
       });
     }
@@ -266,7 +266,7 @@ function addExtends(
 function addPlugins(
   importsMap: Map<string, string | string[]>,
   configBlocks: ts.Expression[],
-  config: ESLint.ConfigData
+  config: ESLint.ConfigData,
 ) {
   const mappedPlugins: { name: string; varName: string; imp: string }[] = [];
   config.plugins.forEach((name) => {
@@ -285,22 +285,22 @@ function addPlugins(
           mappedPlugins.map(({ name, varName }) => {
             return ts.factory.createPropertyAssignment(
               ts.factory.createStringLiteral(name),
-              ts.factory.createIdentifier(varName)
+              ts.factory.createIdentifier(varName),
             );
           }),
-          mappedPlugins.length > 1
-        )
+          mappedPlugins.length > 1,
+        ),
       ),
       ...(config.processor
         ? [
             ts.factory.createPropertyAssignment(
               'processor',
-              ts.factory.createStringLiteral(config.processor)
+              ts.factory.createStringLiteral(config.processor),
             ),
           ]
         : []),
     ],
-    false
+    false,
   );
   configBlocks.push(pluginsAst);
 }

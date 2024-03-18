@@ -5,7 +5,7 @@ function _getMfProjects(
   tree: Tree,
   CUSTOM_WEBPACK_OPTION: string,
   MODULE_FEDERATION_IDENTIFIER: string,
-  projects: string[]
+  projects: string[],
 ) {
   return (opts, projectName) => {
     const webpackPath = opts[CUSTOM_WEBPACK_OPTION]?.path;
@@ -20,7 +20,7 @@ function _getMfProjects(
       MODULE_FEDERATION_IDENTIFIER,
       {
         visitAllChildren: true,
-      }
+      },
     );
     if (
       !moduleFederationWebpackConfig ||
@@ -35,7 +35,7 @@ function _getMfProjects(
 
 export function getMFProjects(
   tree: Tree,
-  { legacy }: { legacy: boolean } = { legacy: false }
+  { legacy }: { legacy: boolean } = { legacy: false },
 ) {
   const CUSTOM_WEBPACK_OPTION = 'customWebpackConfig';
   const MODULE_FEDERATION_IDENTIFIER = legacy
@@ -50,8 +50,8 @@ export function getMFProjects(
       tree,
       CUSTOM_WEBPACK_OPTION,
       MODULE_FEDERATION_IDENTIFIER,
-      projects
-    )
+      projects,
+    ),
   );
   forEachExecutorOptions(
     tree,
@@ -60,8 +60,8 @@ export function getMFProjects(
       tree,
       CUSTOM_WEBPACK_OPTION,
       MODULE_FEDERATION_IDENTIFIER,
-      projects
-    )
+      projects,
+    ),
   );
 
   return projects;

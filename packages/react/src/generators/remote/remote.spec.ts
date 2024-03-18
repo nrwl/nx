@@ -80,7 +80,7 @@ jest.mock('@nx/devkit', () => {
             },
           },
         },
-      })
+      }),
     ),
   };
 });
@@ -119,7 +119,7 @@ describe('remote generator', () => {
     expect(tree.read('test/webpack.config.js', 'utf-8')).toMatchSnapshot();
     expect(tree.read('test/webpack.config.prod.js', 'utf-8')).toMatchSnapshot();
     expect(
-      tree.read('test/module-federation.config.js', 'utf-8')
+      tree.read('test/module-federation.config.js', 'utf-8'),
     ).toMatchSnapshot();
 
     const tsconfigJson = readJson(tree, getRootTsConfigPathInTree(tree));
@@ -150,7 +150,7 @@ describe('remote generator', () => {
     expect(tree.read('test/webpack.config.js', 'utf-8')).toMatchSnapshot();
     expect(tree.read('test/webpack.config.prod.js', 'utf-8')).toMatchSnapshot();
     expect(
-      tree.read('test/module-federation.config.js', 'utf-8')
+      tree.read('test/module-federation.config.js', 'utf-8'),
     ).toMatchSnapshot();
 
     const tsconfigJson = readJson(tree, getRootTsConfigPathInTree(tree));
@@ -180,7 +180,7 @@ describe('remote generator', () => {
     expect(tree.read('test/webpack.config.ts', 'utf-8')).toMatchSnapshot();
     expect(tree.read('test/webpack.config.prod.ts', 'utf-8')).toMatchSnapshot();
     expect(
-      tree.read('test/module-federation.config.ts', 'utf-8')
+      tree.read('test/module-federation.config.ts', 'utf-8'),
     ).toMatchSnapshot();
   });
 
@@ -258,10 +258,10 @@ describe('remote generator', () => {
     expect(tree.exists('test/module-federation.server.config.js')).toBeTruthy();
 
     expect(
-      tree.read('test/webpack.server.config.js', 'utf-8')
+      tree.read('test/webpack.server.config.js', 'utf-8'),
     ).toMatchSnapshot();
     expect(
-      tree.read('test/module-federation.server.config.js', 'utf-8')
+      tree.read('test/module-federation.server.config.js', 'utf-8'),
     ).toMatchSnapshot();
   });
 
@@ -285,10 +285,10 @@ describe('remote generator', () => {
     expect(tree.exists('test/module-federation.server.config.ts')).toBeTruthy();
 
     expect(
-      tree.read('test/webpack.server.config.ts', 'utf-8')
+      tree.read('test/webpack.server.config.ts', 'utf-8'),
     ).toMatchSnapshot();
     expect(
-      tree.read('test/module-federation.server.config.ts', 'utf-8')
+      tree.read('test/module-federation.server.config.ts', 'utf-8'),
     ).toMatchSnapshot();
   });
 });

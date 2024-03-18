@@ -130,7 +130,7 @@ describe('15.0.0 migration (migrate-to-inputs)', () => {
 
     expect(updated.implicitDependencies).toBeUndefined();
     expect(updated.namedInputs.sharedGlobals).toContain(
-      '{workspaceRoot}/Jenkinsfile'
+      '{workspaceRoot}/Jenkinsfile',
     );
   });
 
@@ -165,7 +165,7 @@ describe('15.0.0 migration (migrate-to-inputs)', () => {
 
     expect(updated.implicitDependencies).toBeUndefined();
     expect(updated.namedInputs.sharedGlobals).toContain(
-      '{workspaceRoot}/config.json'
+      '{workspaceRoot}/config.json',
     );
   });
 
@@ -194,11 +194,11 @@ describe('15.0.0 migration (migrate-to-inputs)', () => {
 
     const app1 = readProjectConfiguration(tree, 'app1');
     expect(app1.namedInputs.projectSpecificFiles).toContain(
-      '{workspaceRoot}/tools/scripts/build-app.js'
+      '{workspaceRoot}/tools/scripts/build-app.js',
     );
     const app2 = readProjectConfiguration(tree, 'app2');
     expect(app2.namedInputs.projectSpecificFiles).toContain(
-      '{workspaceRoot}/tools/scripts/build-app.js'
+      '{workspaceRoot}/tools/scripts/build-app.js',
     );
 
     const lib = readProjectConfiguration(tree, 'lib1');
@@ -236,11 +236,11 @@ describe('15.0.0 migration (migrate-to-inputs)', () => {
 
     const app1 = readProjectConfiguration(tree, 'app1');
     expect(app1.namedInputs.projectSpecificFiles).toContain(
-      '{workspaceRoot}/tools/scripts/build-app.js'
+      '{workspaceRoot}/tools/scripts/build-app.js',
     );
     const app2 = readJson(tree, 'app2/package.json');
     expect(app2.nx.namedInputs.projectSpecificFiles).toContain(
-      '{workspaceRoot}/tools/scripts/build-app.js'
+      '{workspaceRoot}/tools/scripts/build-app.js',
     );
 
     const lib = readProjectConfiguration(tree, 'lib1');
@@ -446,11 +446,11 @@ describe('15.0.0 migration (migrate-to-inputs) (v1)', () => {
 
     const app1 = readProjectConfiguration(tree, 'app1');
     expect(app1.namedInputs.projectSpecificFiles).toContain(
-      '{workspaceRoot}/tools/scripts/build-app.js'
+      '{workspaceRoot}/tools/scripts/build-app.js',
     );
     const app2 = readProjectConfiguration(tree, 'app2');
     expect(app2.namedInputs.projectSpecificFiles).toContain(
-      '{workspaceRoot}/tools/scripts/build-app.js'
+      '{workspaceRoot}/tools/scripts/build-app.js',
     );
 
     const lib = readProjectConfiguration(tree, 'lib1');

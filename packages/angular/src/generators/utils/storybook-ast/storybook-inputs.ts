@@ -16,7 +16,7 @@ export interface InputDescriptor {
 
 export function getInputPropertyDeclarations(
   tree: Tree,
-  path: string
+  path: string,
 ): PropertyDeclaration[] {
   if (!tsModule) {
     tsModule = ensureTypescript();
@@ -24,14 +24,14 @@ export function getInputPropertyDeclarations(
   const file = getTsSourceFile(tree, path);
 
   const decorators = getSourceNodes(file).filter(
-    (node) => node.kind === tsModule.SyntaxKind.Decorator
+    (node) => node.kind === tsModule.SyntaxKind.Decorator,
   );
 
   return decorators
     .filter((decorator) =>
       findNodes(decorator, tsModule.SyntaxKind.Identifier).some(
-        (node) => node.getText() === 'Input'
-      )
+        (node) => node.getText() === 'Input',
+      ),
     )
     .map((node) => node.parent as PropertyDeclaration);
 }
@@ -40,9 +40,9 @@ export function getComponentProps(
   tree: Tree,
   componentPath: string,
   getArgsDefaultValueFn: (
-    property: PropertyDeclaration
+    property: PropertyDeclaration,
   ) => string | undefined = getArgsDefaultValue,
-  useDecoratorName = true
+  useDecoratorName = true,
 ): InputDescriptor[] {
   if (!tsModule) {
     tsModule = ensureTypescript();
@@ -51,9 +51,9 @@ export function getComponentProps(
     (node) => {
       const decoratorContent = findNodes(
         findNodes(node, tsModule.SyntaxKind.Decorator).find((n) =>
-          n.getText().startsWith('@Input')
+          n.getText().startsWith('@Input'),
         ),
-        tsModule.SyntaxKind.StringLiteral
+        tsModule.SyntaxKind.StringLiteral,
       );
       const name =
         useDecoratorName && decoratorContent.length
@@ -70,7 +70,7 @@ export function getComponentProps(
         type,
         defaultValue,
       };
-    }
+    },
   );
 
   return props;
@@ -110,6 +110,6 @@ export function getArgsDefaultValue(property: PropertyDeclaration): string {
   return property.initializer
     ? property.initializer.getText()
     : property.type
-    ? typeNameToDefault[property.type.getText()]
-    : "''";
+      ? typeNameToDefault[property.type.getText()]
+      : "''";
 }

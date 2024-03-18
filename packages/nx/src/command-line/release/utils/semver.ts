@@ -20,7 +20,7 @@ export function isValidSemverSpecifier(specifier: string): boolean {
 // https://github.com/unjs/changelogen/blob/main/src/semver.ts
 export function determineSemverChange(
   commits: GitCommit[],
-  config: NxReleaseConfig['conventionalCommits']
+  config: NxReleaseConfig['conventionalCommits'],
 ): 'patch' | 'minor' | 'major' | null {
   let [hasMajor, hasMinor, hasPatch] = [false, false, false];
   for (const commit of commits) {
@@ -42,11 +42,11 @@ export function determineSemverChange(
 export function deriveNewSemverVersion(
   currentSemverVersion: string,
   semverSpecifier: string,
-  preid?: string
+  preid?: string,
 ) {
   if (!valid(currentSemverVersion)) {
     throw new Error(
-      `Invalid semver version "${currentSemverVersion}" provided.`
+      `Invalid semver version "${currentSemverVersion}" provided.`,
     );
   }
 
@@ -56,7 +56,7 @@ export function deriveNewSemverVersion(
     const derivedVersion = inc(currentSemverVersion, semverSpecifier, preid);
     if (!derivedVersion) {
       throw new Error(
-        `Unable to derive new version from current version "${currentSemverVersion}" and version specifier "${semverSpecifier}"`
+        `Unable to derive new version from current version "${currentSemverVersion}" and version specifier "${semverSpecifier}"`,
       );
     }
     newVersion = derivedVersion;
@@ -64,7 +64,7 @@ export function deriveNewSemverVersion(
     // Ensure the new version specifier is a valid semver version, given it is not a valid semver keyword
     if (!valid(semverSpecifier)) {
       throw new Error(
-        `Invalid semver version specifier "${semverSpecifier}" provided. Please provide either a valid semver version or a valid semver version keyword.`
+        `Invalid semver version specifier "${semverSpecifier}" provided. Please provide either a valid semver version or a valid semver version keyword.`,
       );
     }
   }

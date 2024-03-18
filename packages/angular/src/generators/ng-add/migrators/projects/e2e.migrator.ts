@@ -80,7 +80,7 @@ export class E2eMigrator extends ProjectMigrator<SupportedTargets> {
     options: GeneratorOptions,
     project: MigrationProjectConfiguration,
     private lintTargetName: string | undefined,
-    logger?: Logger
+    logger?: Logger,
   ) {
     super(tree, options, supportedTargets, project, 'apps', logger);
 
@@ -98,7 +98,7 @@ export class E2eMigrator extends ProjectMigrator<SupportedTargets> {
   override async migrate(): Promise<void> {
     if (!this.targetNames.e2e) {
       this.logger.info(
-        'No e2e project was migrated because there was no "e2e" target declared in the "angular.json".'
+        'No e2e project was migrated because there was no "e2e" target declared in the "angular.json".',
       );
       return;
     }
@@ -115,11 +115,11 @@ export class E2eMigrator extends ProjectMigrator<SupportedTargets> {
 
     const tsConfig = joinPathFragments(
       this.projectConfig.root,
-      'tsconfig.json'
+      'tsconfig.json',
     );
     if (!this.tree.exists(tsConfig)) {
       this.logger.warn(
-        'A "tsconfig.json" file could not be found for the e2e project. Skipping updating the tsConfig file.'
+        'A "tsconfig.json" file could not be found for the e2e project. Skipping updating the tsConfig file.',
       );
       return;
     }
@@ -243,7 +243,7 @@ export class E2eMigrator extends ProjectMigrator<SupportedTargets> {
     this.isProjectUsingEsLint =
       Boolean(this.lintTargetName) ||
       this.tree.exists(
-        joinPathFragments(this.appConfig.root, '.eslintrc.json')
+        joinPathFragments(this.appConfig.root, '.eslintrc.json'),
       );
 
     const name = this.project.name.endsWith('-e2e')
@@ -290,7 +290,7 @@ export class E2eMigrator extends ProjectMigrator<SupportedTargets> {
             ...this.projectConfig.targets[this.targetNames.e2e].options,
             protractorConfig: this.convertRootPath(
               this.projectConfig.targets[this.targetNames.e2e].options
-                .protractorConfig
+                .protractorConfig,
             ),
           },
         },
@@ -312,7 +312,7 @@ export class E2eMigrator extends ProjectMigrator<SupportedTargets> {
       {
         ...this.projectConfig,
       },
-      true
+      true,
     );
 
     if (this.isProjectUsingEsLint) {
@@ -355,19 +355,19 @@ export class E2eMigrator extends ProjectMigrator<SupportedTargets> {
     });
 
     const cypressConfigFilePath = this.updateOrCreateCypressConfigFile(
-      oldCypressConfigFilePath
+      oldCypressConfigFilePath,
     );
     this.updateCypressProjectConfiguration(cypressConfigFilePath);
 
     // replace the generated tsconfig.json with the project one
     const newTsConfigPath = joinPathFragments(
       this.project.newRoot,
-      'tsconfig.json'
+      'tsconfig.json',
     );
     this.tree.delete(newTsConfigPath);
     this.moveFile(
       joinPathFragments(this.project.oldSourceRoot, 'tsconfig.json'),
-      newTsConfigPath
+      newTsConfigPath,
     );
 
     // replace the generated source with the project source
@@ -376,7 +376,7 @@ export class E2eMigrator extends ProjectMigrator<SupportedTargets> {
     });
     this.moveDir(
       this.project.oldSourceRoot,
-      joinPathFragments(this.project.newSourceRoot)
+      joinPathFragments(this.project.newSourceRoot),
     );
   }
 
@@ -387,7 +387,7 @@ export class E2eMigrator extends ProjectMigrator<SupportedTargets> {
 
     const cypressConfigFilePath = joinPathFragments(
       this.project.newRoot,
-      basename(configFile)
+      basename(configFile),
     );
     this.updateCypressConfigFilePaths(configFile);
     this.tree.delete(cypressConfigFilePath);
@@ -412,7 +412,7 @@ export class E2eMigrator extends ProjectMigrator<SupportedTargets> {
       if (this.appConfig.targets[target]) {
         this.projectConfig.targets[target] = this.updateE2eCypressTarget(
           this.appConfig.targets[target],
-          cypressConfigPath
+          cypressConfigPath,
         );
       }
     });
@@ -431,7 +431,7 @@ export class E2eMigrator extends ProjectMigrator<SupportedTargets> {
 
   private updateE2eCypressTarget(
     existingTarget: TargetConfiguration,
-    cypressConfig: string
+    cypressConfig: string,
   ): TargetConfiguration {
     const updatedTarget = {
       ...existingTarget,
@@ -445,7 +445,7 @@ export class E2eMigrator extends ProjectMigrator<SupportedTargets> {
     if (updatedTarget.options.tsConfig) {
       updatedTarget.options.tsConfig = joinPathFragments(
         this.project.newRoot,
-        'tsconfig.json'
+        'tsconfig.json',
       );
     } else {
       delete updatedTarget.options.tsConfig;
@@ -475,7 +475,7 @@ export class E2eMigrator extends ProjectMigrator<SupportedTargets> {
     srcPaths.forEach((path) => {
       if (cypressConfig[path]) {
         cypressConfig[path] = this.cypressConfigSrcPathToNewPath(
-          cypressConfig[path]
+          cypressConfig[path],
         );
       }
     });
@@ -483,7 +483,7 @@ export class E2eMigrator extends ProjectMigrator<SupportedTargets> {
     distPaths.forEach((path) => {
       if (cypressConfig[path]) {
         cypressConfig[path] = this.cypressConfigDistPathToNewPath(
-          cypressConfig[path]
+          cypressConfig[path],
         );
       }
     });
@@ -495,11 +495,11 @@ export class E2eMigrator extends ProjectMigrator<SupportedTargets> {
 
       if (Array.isArray(cypressConfig[stringOrArrayGlob])) {
         cypressConfig[stringOrArrayGlob] = cypressConfig[stringOrArrayGlob].map(
-          (glob: string) => this.cypressConfigGlobToNewGlob(glob)
+          (glob: string) => this.cypressConfigGlobToNewGlob(glob),
         );
       } else {
         cypressConfig[stringOrArrayGlob] = this.cypressConfigGlobToNewGlob(
-          cypressConfig[stringOrArrayGlob]
+          cypressConfig[stringOrArrayGlob],
         );
       }
     });
@@ -508,37 +508,37 @@ export class E2eMigrator extends ProjectMigrator<SupportedTargets> {
   }
 
   private cypressConfigGlobToNewGlob(
-    globPattern: string | undefined
+    globPattern: string | undefined,
   ): string | undefined {
     return globPattern
       ? globPattern.replace(
           new RegExp(
             `^(\\.\\/|\\/)?${relative(
               this.project.oldRoot,
-              this.project.oldSourceRoot
-            )}\\/`
+              this.project.oldSourceRoot,
+            )}\\/`,
           ),
-          'src/'
+          'src/',
         )
       : undefined;
   }
 
   private cypressConfigSrcPathToNewPath(
-    path: string | undefined
+    path: string | undefined,
   ): string | undefined {
     return path
       ? joinPathFragments(
           'src',
           relative(
             this.project.oldSourceRoot,
-            joinPathFragments(this.project.oldRoot, path)
-          )
+            joinPathFragments(this.project.oldRoot, path),
+          ),
         )
       : undefined;
   }
 
   private cypressConfigDistPathToNewPath(
-    path: string | undefined
+    path: string | undefined,
   ): string | undefined {
     return path
       ? joinPathFragments(
@@ -546,8 +546,8 @@ export class E2eMigrator extends ProjectMigrator<SupportedTargets> {
           this.project.newRoot,
           relative(
             this.project.oldSourceRoot,
-            joinPathFragments(this.project.oldRoot, path)
-          )
+            joinPathFragments(this.project.oldRoot, path),
+          ),
         )
       : undefined;
   }
@@ -564,12 +564,12 @@ export class E2eMigrator extends ProjectMigrator<SupportedTargets> {
 
     const defineConfigExpression = tsquery.query(
       sourceFile,
-      'CallExpression:has(Identifier[name=defineConfig]) > ObjectLiteralExpression'
+      'CallExpression:has(Identifier[name=defineConfig]) > ObjectLiteralExpression',
     )[0] as ObjectLiteralExpression;
 
     if (!defineConfigExpression) {
       this.logger.warn(
-        `Could not find a "defineConfig" expression in "${configFilePath}". Skipping updating the Cypress configuration.`
+        `Could not find a "defineConfig" expression in "${configFilePath}". Skipping updating the Cypress configuration.`,
       );
       return;
     }
@@ -598,7 +598,7 @@ export class E2eMigrator extends ProjectMigrator<SupportedTargets> {
       defineConfigExpression,
       e2eNode,
       recorder,
-      globalConfig
+      globalConfig,
     );
 
     recorder.applyChanges();
@@ -606,7 +606,7 @@ export class E2eMigrator extends ProjectMigrator<SupportedTargets> {
 
   private updateCypressComponentConfig(
     componentNode: PropertyAssignment,
-    recorder: FileChangeRecorder
+    recorder: FileChangeRecorder,
   ): void {
     if (!componentNode) {
       return;
@@ -618,7 +618,7 @@ export class E2eMigrator extends ProjectMigrator<SupportedTargets> {
       this.logger.warn(
         'The automatic migration only supports having an object literal in the "component" option of the Cypress configuration. ' +
           `The configuration won't be updated. Please make sure to update any paths you may have in the "component" option ` +
-          'manually to point to the new location.'
+          'manually to point to the new location.',
       );
       return;
     }
@@ -635,7 +635,7 @@ export class E2eMigrator extends ProjectMigrator<SupportedTargets> {
     defineConfigNode: ObjectLiteralExpression,
     e2eNode: PropertyAssignment,
     recorder: FileChangeRecorder,
-    { ...globalConfig }: CypressCommonConfig
+    { ...globalConfig }: CypressCommonConfig,
   ): void {
     ensureTypescript();
     const { tsquery } = require('@phenomnomnominal/tsquery');
@@ -649,7 +649,7 @@ export class E2eMigrator extends ProjectMigrator<SupportedTargets> {
         ${Object.entries(globalConfig)
           .filter(
             ([key, value]) =>
-              !e2eConfig[key] && value !== this.cypressPreset[key]
+              !e2eConfig[key] && value !== this.cypressPreset[key],
           )
           .map(([key, value]) => `${key}: '${value}'`)
           .join(',\n')}
@@ -662,14 +662,14 @@ export class E2eMigrator extends ProjectMigrator<SupportedTargets> {
         this.logger.warn(
           'The automatic migration only supports having an object literal in the "e2e" option of the Cypress configuration. ' +
             `The configuration won't be updated. Please make sure to update any paths you might have in the "e2e" option ` +
-            'manually to point to the new location.'
+            'manually to point to the new location.',
         );
         return;
       }
 
       recorder.insertRight(
         e2eNode.initializer.getStart() + 1,
-        presetSpreadAssignment
+        presetSpreadAssignment,
       );
 
       e2eNode.initializer.properties.forEach((node: Node) => {
@@ -696,7 +696,7 @@ export class E2eMigrator extends ProjectMigrator<SupportedTargets> {
         if (
           this.isValidPathLikePropertyWithStringLiteralValue(
             node,
-            cypressConfig.v10OrMore.srcPaths
+            cypressConfig.v10OrMore.srcPaths,
           )
         ) {
           const newValue = this.cypressConfigSrcPathToNewPath(oldValue);
@@ -704,7 +704,7 @@ export class E2eMigrator extends ProjectMigrator<SupportedTargets> {
         } else if (
           this.isValidPathLikePropertyWithStringLiteralValue(
             node,
-            cypressConfig.v10OrMore.distPaths
+            cypressConfig.v10OrMore.distPaths,
           )
         ) {
           const newValue = this.cypressConfigDistPathToNewPath(oldValue);
@@ -712,7 +712,7 @@ export class E2eMigrator extends ProjectMigrator<SupportedTargets> {
         } else if (
           this.isValidPathLikePropertyWithStringLiteralValue(
             node,
-            cypressConfig.v10OrMore.globPatterns
+            cypressConfig.v10OrMore.globPatterns,
           )
         ) {
           const newValue = this.cypressConfigGlobToNewGlob(oldValue);
@@ -729,7 +729,7 @@ export class E2eMigrator extends ProjectMigrator<SupportedTargets> {
           if (trailingCommaMatch) {
             recorder.remove(
               node.getFullStart(),
-              node.getEnd() + trailingCommaMatch[0].length
+              node.getEnd() + trailingCommaMatch[0].length,
             );
           } else {
             recorder.remove(node.getFullStart(), node.getEnd());
@@ -749,7 +749,7 @@ export class E2eMigrator extends ProjectMigrator<SupportedTargets> {
 
         recorder.insertRight(
           e2eNode.initializer.getStart() + 1,
-          `${key}: '${value}',`
+          `${key}: '${value}',`,
         );
       });
     }
@@ -762,7 +762,7 @@ export class E2eMigrator extends ProjectMigrator<SupportedTargets> {
       sourceFile,
       configFilePath,
       'nxE2EPreset',
-      '@nx/cypress/plugins/cypress-preset'
+      '@nx/cypress/plugins/cypress-preset',
     );
     // update recorder with the new content from the file
     recorder.setContentToFileContent();
@@ -771,7 +771,7 @@ export class E2eMigrator extends ProjectMigrator<SupportedTargets> {
   private updateCypressConfigNodeValue(
     recorder: FileChangeRecorder,
     node: PropertyAssignment,
-    configCollected?: CypressCommonConfig
+    configCollected?: CypressCommonConfig,
   ): void {
     let newValue: string;
     const oldValue = this.normalizeNodeText(node.initializer.getText());
@@ -779,21 +779,21 @@ export class E2eMigrator extends ProjectMigrator<SupportedTargets> {
     if (
       this.isValidPathLikePropertyWithStringLiteralValue(
         node,
-        cypressConfig.v10OrMore.srcPaths
+        cypressConfig.v10OrMore.srcPaths,
       )
     ) {
       newValue = this.cypressConfigSrcPathToNewPath(oldValue);
     } else if (
       this.isValidPathLikePropertyWithStringLiteralValue(
         node,
-        cypressConfig.v10OrMore.distPaths
+        cypressConfig.v10OrMore.distPaths,
       )
     ) {
       newValue = this.cypressConfigDistPathToNewPath(oldValue);
     } else if (
       this.isValidPathLikePropertyWithStringLiteralValue(
         node,
-        cypressConfig.v10OrMore.globPatterns
+        cypressConfig.v10OrMore.globPatterns,
       )
     ) {
       newValue = this.cypressConfigGlobToNewGlob(oldValue);
@@ -810,7 +810,7 @@ export class E2eMigrator extends ProjectMigrator<SupportedTargets> {
 
   private isValidPathLikePropertyWithStringLiteralValue(
     node: Node,
-    properties: string[]
+    properties: string[],
   ): boolean {
     const {
       isPropertyAssignment,
@@ -841,13 +841,13 @@ export class E2eMigrator extends ProjectMigrator<SupportedTargets> {
         this.logger.warn(
           `The "${node.name.getText()}" in the Cypress configuration file is set to a template expression ("${node.initializer.getText()}"). ` +
             `This is not supported by the automatic migration and its value won't be automatically migrated. ` +
-            `Please make sure to update its value to match the new location if needed.`
+            `Please make sure to update its value to match the new location if needed.`,
         );
       } else {
         this.logger.warn(
           `The "${node.name.getText()}" in the Cypress configuration file is not set to a string literal ("${node.initializer.getText()}"). ` +
             `This is not supported by the automatic migration and its value won't be automatically migrated. ` +
-            `Please make sure to update its value to match the new location if needed.`
+            `Please make sure to update its value to match the new location if needed.`,
         );
       }
 

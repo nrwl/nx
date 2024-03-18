@@ -6,7 +6,7 @@ describe('getTsNodeCompilerOptions', () => {
     expect(
       getTsNodeCompilerOptions({
         module: ModuleKind.CommonJS,
-      }).module
+      }).module,
     ).toEqual('CommonJS');
   });
 
@@ -14,7 +14,7 @@ describe('getTsNodeCompilerOptions', () => {
     expect(
       getTsNodeCompilerOptions({
         target: ScriptTarget.ES2020,
-      }).target
+      }).target,
     ).toEqual('ES2020');
   });
 
@@ -22,7 +22,7 @@ describe('getTsNodeCompilerOptions', () => {
     expect(
       getTsNodeCompilerOptions({
         jsx: JsxEmit.ReactJSX,
-      }).jsx
+      }).jsx,
     ).toBeUndefined();
   });
 
@@ -30,7 +30,7 @@ describe('getTsNodeCompilerOptions', () => {
     expect(
       getTsNodeCompilerOptions({
         lib: ['lib.es2022.d.ts'],
-      }).lib
+      }).lib,
     ).toEqual(['es2022']);
   });
 });

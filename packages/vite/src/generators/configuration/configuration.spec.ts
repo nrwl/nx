@@ -25,7 +25,7 @@ describe('@nx/vite:configuration', () => {
       addDependenciesToPackageJson(
         tree,
         { '@nx/vite': nxVersion, [existing]: existingVersion },
-        { [existing]: existingVersion }
+        { [existing]: existingVersion },
       );
       await viteConfigurationGenerator(tree, {
         addPlugin: true,
@@ -46,14 +46,14 @@ describe('@nx/vite:configuration', () => {
       expect(tree.exists('apps/my-test-react-app/src/index.html')).toBeFalsy();
       expect(tree.exists('apps/my-test-react-app/index.html')).toBeTruthy();
       expect(
-        tree.read('apps/my-test-react-app/index.html', 'utf-8')
+        tree.read('apps/my-test-react-app/index.html', 'utf-8'),
       ).toMatchSnapshot();
     });
 
     it('should create correct tsconfig compilerOptions', () => {
       const tsconfigJson = readJson(
         tree,
-        'apps/my-test-react-app/tsconfig.json'
+        'apps/my-test-react-app/tsconfig.json',
       );
       expect(tsconfigJson.compilerOptions.jsx).toBe('react-jsx');
     });
@@ -61,7 +61,7 @@ describe('@nx/vite:configuration', () => {
     it('should create vite.config file at the root of the app', () => {
       expect(tree.exists('apps/my-test-react-app/vite.config.ts')).toBe(true);
       expect(
-        tree.read('apps/my-test-react-app/vite.config.ts', 'utf-8')
+        tree.read('apps/my-test-react-app/vite.config.ts', 'utf-8'),
       ).toMatchSnapshot();
     });
   });
@@ -75,7 +75,7 @@ describe('@nx/vite:configuration', () => {
       addDependenciesToPackageJson(
         tree,
         { '@nx/vite': nxVersion, [existing]: existingVersion },
-        { [existing]: existingVersion }
+        { [existing]: existingVersion },
       );
       await viteConfigurationGenerator(tree, {
         addPlugin: true,
@@ -94,7 +94,7 @@ describe('@nx/vite:configuration', () => {
       expect(tree.exists('apps/my-test-web-app/src/index.html')).toBeFalsy();
       expect(tree.exists('apps/my-test-web-app/index.html')).toBeTruthy();
       expect(
-        tree.read('apps/my-test-web-app/index.html', 'utf-8')
+        tree.read('apps/my-test-web-app/index.html', 'utf-8'),
       ).toMatchSnapshot();
     });
 
@@ -106,7 +106,7 @@ describe('@nx/vite:configuration', () => {
     it('should create vite.config file at the root of the app', () => {
       expect(tree.exists('apps/my-test-web-app/vite.config.ts')).toBe(true);
       expect(
-        tree.read('apps/my-test-web-app/vite.config.ts', 'utf-8')
+        tree.read('apps/my-test-web-app/vite.config.ts', 'utf-8'),
       ).toMatchSnapshot();
     });
   });
@@ -128,7 +128,7 @@ describe('@nx/vite:configuration', () => {
       } catch (e) {
         expect(e).toBeDefined();
         expect(e.toString()).toContain(
-          'Nx cannot convert your project to use vite.'
+          'Nx cannot convert your project to use vite.',
         );
       }
     });
@@ -156,7 +156,7 @@ describe('@nx/vite:configuration', () => {
       } catch (e) {
         expect(e).toBeDefined();
         expect(e.toString()).toContain(
-          'Nx could not verify that your project can be converted to use Vite.'
+          'Nx could not verify that your project can be converted to use Vite.',
         );
       }
     });
@@ -171,7 +171,7 @@ describe('@nx/vite:configuration', () => {
       addDependenciesToPackageJson(
         tree,
         { '@nx/vite': nxVersion, [existing]: existingVersion },
-        { [existing]: existingVersion }
+        { [existing]: existingVersion },
       );
       await viteConfigurationGenerator(tree, {
         addPlugin: true,
@@ -186,7 +186,7 @@ describe('@nx/vite:configuration', () => {
         .toString();
       expect(viteConfig).toContain('test');
       expect(
-        tree.read('apps/my-test-react-app/vite.config.ts', 'utf-8')
+        tree.read('apps/my-test-react-app/vite.config.ts', 'utf-8'),
       ).toMatchSnapshot();
     });
   });
@@ -206,7 +206,7 @@ describe('@nx/vite:configuration', () => {
       });
       const viteConfig = tree.read(
         'libs/react-lib-nonb-jest/vite.config.ts',
-        'utf-8'
+        'utf-8',
       );
       expect(viteConfig).toMatchSnapshot();
     });
@@ -220,7 +220,7 @@ describe('@nx/vite:configuration', () => {
         includeVitest: true,
       });
       expect(
-        tree.read('libs/react-lib-nonb-jest/vite.config.ts', 'utf-8')
+        tree.read('libs/react-lib-nonb-jest/vite.config.ts', 'utf-8'),
       ).toMatchSnapshot();
     });
 
@@ -239,7 +239,7 @@ describe('@nx/vite:configuration', () => {
           includeVitest: true,
         });
         expect(
-          tree.read('libs/react-lib-nonb-vitest/vite.config.ts', 'utf-8')
+          tree.read('libs/react-lib-nonb-vitest/vite.config.ts', 'utf-8'),
         ).toMatchSnapshot();
       } catch (e) {
         throw new Error('Should not throw error');

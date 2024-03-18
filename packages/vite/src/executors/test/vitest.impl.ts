@@ -8,7 +8,7 @@ import { loadVitestDynamicImport } from '../../utils/executor-utils';
 
 export async function* vitestExecutor(
   options: VitestExecutorOptions,
-  context: ExecutorContext
+  context: ExecutorContext,
 ) {
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
@@ -35,7 +35,7 @@ export async function* vitestExecutor(
   const ctx = await startVitest(
     resolvedOptions['mode'] ?? 'test',
     cliFilters,
-    resolvedOptions
+    resolvedOptions,
   );
 
   let hasErrors = false;

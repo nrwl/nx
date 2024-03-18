@@ -14,7 +14,7 @@ import type { NormalizedJestProjectSchema } from '../schema';
 
 export function ensureDependencies(
   tree: Tree,
-  options: Partial<NormalizedJestProjectSchema>
+  options: Partial<NormalizedJestProjectSchema>,
 ) {
   const dependencies: Record<string, string> = {
     tslib: tslibVersion,

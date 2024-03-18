@@ -19,8 +19,8 @@ function updateDependencies(host: Tree, schema: InitSchema) {
       { vue: vueVersion },
       { '@nx/vue': nxVersion },
       undefined,
-      schema.keepExistingVersions
-    )
+      schema.keepExistingVersions,
+    ),
   );
 
   return runTasksInSerial(...tasks);

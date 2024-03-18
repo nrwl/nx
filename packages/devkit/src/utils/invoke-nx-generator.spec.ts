@@ -11,7 +11,7 @@ describe('Convert Nx Generator', () => {
     } = require('@angular-devkit/schematics/testing');
     const ngSchematicRunner = new SchematicTestRunner(
       '@schematics/angular',
-      require.resolve('@schematics/angular/collection.json')
+      require.resolve('@schematics/angular/collection.json'),
     );
 
     const appTree = await ngSchematicRunner.runSchematic('workspace', {
@@ -23,7 +23,7 @@ describe('Convert Nx Generator', () => {
     // ACT
     const convertedGenerator = convertNxGenerator(newFileGenerator);
     const tree: typeof UnitTestTree = await lastValueFrom(
-      ngSchematicRunner.callRule(convertedGenerator, appTree)
+      ngSchematicRunner.callRule(convertedGenerator, appTree),
     );
 
     // ASSERT

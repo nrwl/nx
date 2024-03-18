@@ -16,12 +16,12 @@ export default async function run(
     taskGraph: TaskGraph;
     projectsConfigurations: ProjectsConfigurations;
     env: NodeJS.ProcessEnv;
-  }
+  },
 ): Promise<Hash> {
   const res = await context.hasher.hashTask(
     task,
     context.taskGraph,
-    context.env
+    context.env,
   );
   if (task.overrides['hasTypeAwareRules'] === true) {
     return res;
@@ -30,8 +30,8 @@ export default async function run(
   const deps = allDeps(task.id, context.taskGraph, context.projectGraph);
   const tags = hashArray(
     deps.map((d) =>
-      (context.projectsConfigurations.projects[d].tags || []).join('|')
-    )
+      (context.projectsConfigurations.projects[d].tags || []).join('|'),
+    ),
   );
 
   const command = res.details['command'];
@@ -62,7 +62,7 @@ export default async function run(
 function allDeps(
   taskId: string,
   taskGraph: TaskGraph,
-  projectGraph: ProjectGraph
+  projectGraph: ProjectGraph,
 ): string[] {
   if (!taskGraph.tasks) {
     return [];

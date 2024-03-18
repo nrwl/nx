@@ -22,7 +22,7 @@ import { ShowProjectOptions, ShowProjectsOptions } from './command-object';
 import { generateGraph } from '../graph/graph';
 
 export async function showProjectsHandler(
-  args: ShowProjectsOptions
+  args: ShowProjectsOptions,
 ): Promise<void> {
   let graph = await createProjectGraphAsync();
   const nxJson = readNxJson();
@@ -32,7 +32,7 @@ export async function showProjectsHandler(
     {
       printWarnings: false,
     },
-    nxJson
+    nxJson,
   );
 
   // Affected touches dependencies so it needs to be processed first.
@@ -56,12 +56,15 @@ export async function showProjectsHandler(
 
   // Grab only the nodes with the specified target
   if (args.withTarget) {
-    graph.nodes = Object.entries(graph.nodes).reduce((acc, [name, node]) => {
-      if (args.withTarget.some((target) => node.data.targets?.[target])) {
-        acc[name] = node;
-      }
-      return acc;
-    }, {} as ProjectGraph['nodes']);
+    graph.nodes = Object.entries(graph.nodes).reduce(
+      (acc, [name, node]) => {
+        if (args.withTarget.some((target) => node.data.targets?.[target])) {
+          acc[name] = node;
+        }
+        return acc;
+      },
+      {} as ProjectGraph['nodes'],
+    );
   }
 
   const selectedProjects = new Set(Object.keys(graph.nodes));
@@ -85,7 +88,7 @@ export async function showProjectsHandler(
 }
 
 export async function showProjectHandler(
-  args: ShowProjectOptions
+  args: ShowProjectOptions,
 ): Promise<void> {
   const graph = await createProjectGraphAsync();
   const node = graph.nodes[args.projectName];
@@ -103,7 +106,7 @@ export async function showProjectHandler(
         watch: true,
         open: true,
       },
-      []
+      [],
     );
   } else {
     const chalk = require('chalk') as typeof import('chalk');
@@ -122,7 +125,7 @@ export async function showProjectHandler(
     const targets = Object.entries(node.data.targets ?? {});
     const maxTargetNameLength = Math.max(...targets.map(([t]) => t.length));
     const maxExecutorNameLength = Math.max(
-      ...targets.map(([, t]) => t?.executor?.length ?? 0)
+      ...targets.map(([, t]) => t?.executor?.length ?? 0),
     );
 
     if (targets.length > 0) {
@@ -133,13 +136,13 @@ export async function showProjectHandler(
             targetConfig?.executor ?? ''
           ).padEnd(maxExecutorNameLength + 2)} ${(() => {
             const configurations = Object.keys(
-              targetConfig.configurations ?? {}
+              targetConfig.configurations ?? {},
             );
             if (configurations.length) {
               return chalk.dim(configurations.join(', '));
             }
             return '';
-          })()}`
+          })()}`,
         );
       }
     }
@@ -149,7 +152,7 @@ export async function showProjectHandler(
 
 function getGraphNodesMatchingPatterns(
   graph: ProjectGraph,
-  patterns: string[]
+  patterns: string[],
 ): ProjectGraph['nodes'] {
   const nodes: Record<string, ProjectGraphProjectNode> = {};
   const matches = findMatchingProjects(patterns, graph.nodes);
@@ -162,7 +165,7 @@ function getGraphNodesMatchingPatterns(
 function getAffectedGraph(
   touchedFiles: FileChange[],
   nxJson: NxJsonConfiguration<'*' | string[]>,
-  graph: ProjectGraph
+  graph: ProjectGraph,
 ) {
   return filterAffected(graph, touchedFiles, nxJson);
 }
@@ -171,6 +174,6 @@ async function getTouchedFiles(nxArgs: NxArgs): Promise<FileChange[]> {
   return calculateFileChanges(
     parseFiles(nxArgs).files,
     await allFileData(),
-    nxArgs
+    nxArgs,
   );
 }

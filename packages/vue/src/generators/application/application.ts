@@ -25,7 +25,7 @@ export function applicationGenerator(tree: Tree, options: Schema) {
 
 export async function applicationGeneratorInternal(
   tree: Tree,
-  _options: Schema
+  _options: Schema,
 ): Promise<GeneratorCallback> {
   const options = await normalizeOptions(tree, _options);
   options.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
@@ -46,13 +46,13 @@ export async function applicationGeneratorInternal(
         ? 'tsconfig.json'
         : 'tsconfig.base.json',
       skipFormat: true,
-    })
+    }),
   );
   tasks.push(
     await vueInitGenerator(tree, {
       ...options,
       skipFormat: true,
-    })
+    }),
   );
   if (!options.skipPackageJson) {
     tasks.push(ensureDependencies(tree, options));
@@ -77,8 +77,8 @@ export async function applicationGeneratorInternal(
         rootProject: options.rootProject,
         addPlugin: options.addPlugin,
       },
-      'app'
-    )
+      'app',
+    ),
   );
 
   tasks.push(await addVite(tree, options));

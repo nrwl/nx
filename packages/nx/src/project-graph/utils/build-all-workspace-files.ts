@@ -3,7 +3,7 @@ import { performance } from 'perf_hooks';
 
 export function buildAllWorkspaceFiles(
   projectFileMap: ProjectFileMap,
-  globalFiles: FileData[]
+  globalFiles: FileData[],
 ): FileData[] {
   performance.mark('get-all-workspace-files:start');
   let fileData: FileData[] = Object.values(projectFileMap).flat();
@@ -14,7 +14,7 @@ export function buildAllWorkspaceFiles(
   performance.measure(
     'get-all-workspace-files',
     'get-all-workspace-files:start',
-    'get-all-workspace-files:end'
+    'get-all-workspace-files:end',
   );
 
   return fileData;

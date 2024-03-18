@@ -32,7 +32,7 @@ function readTargetsCache(): Record<
 }
 
 function writeTargetsToCache(
-  targets: Record<string, Record<string, TargetConfiguration>>
+  targets: Record<string, Record<string, TargetConfiguration>>,
 ) {
   writeJsonFile(cachePath, targets);
 }
@@ -86,12 +86,12 @@ async function buildRollupTarget(
   configFilePath: string,
   projectRoot: string,
   options: RollupPluginOptions,
-  context: CreateNodesContext
+  context: CreateNodesContext,
 ): Promise<Record<string, TargetConfiguration>> {
   const namedInputs = getNamedInputs(projectRoot, context);
   const rollupConfig = (
     (await loadConfigFile(
-      joinPathFragments(context.workspaceRoot, configFilePath)
+      joinPathFragments(context.workspaceRoot, configFilePath),
     )) as { options: RollupOptions[] }
   ).options;
   const outputs = getOutputs(rollupConfig, projectRoot);
@@ -114,7 +114,7 @@ async function buildRollupTarget(
 
 function getOutputs(
   rollupConfigs: RollupOptions[],
-  projectRoot: string
+  projectRoot: string,
 ): string[] {
   const outputs = new Set<string>();
   for (const rollupConfig of rollupConfigs) {
@@ -130,15 +130,15 @@ function getOutputs(
         const outputPathFromConfig = output.dir
           ? output.dir
           : output.file
-          ? dirname(output.file)
-          : 'dist';
+            ? dirname(output.file)
+            : 'dist';
         const outputPath =
           projectRoot === '.'
             ? joinPathFragments(`{workspaceRoot}`, outputPathFromConfig)
             : joinPathFragments(
                 `{workspaceRoot}`,
                 projectRoot,
-                outputPathFromConfig
+                outputPathFromConfig,
               );
         outputs.add(outputPath);
       }

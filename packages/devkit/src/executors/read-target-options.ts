@@ -22,7 +22,7 @@ combineOptionsForExecutor =
  */
 export function readTargetOptions<T = any>(
   { project, target, configuration }: Target,
-  context: ExecutorContext
+  context: ExecutorContext,
 ): T {
   const projectConfiguration = (
     context.workspace || context.projectsConfigurations
@@ -46,7 +46,7 @@ export function readTargetOptions<T = any>(
         nodeModule,
         executorName,
         context.root,
-        context.projectsConfigurations?.projects ?? context.workspace.projects
+        context.projectsConfigurations?.projects ?? context.workspace.projects,
       )
     : // TODO(v19): remove readExecutor. This is to be backwards compatible with Nx 16.5 and below.
       (ws as any).readExecutor(nodeModule, executorName);
@@ -56,13 +56,13 @@ export function readTargetOptions<T = any>(
         context.cwd,
         context.root,
         { version: 2, projects: context.projectsConfigurations.projects },
-        context.nxJsonConfiguration
+        context.nxJsonConfiguration,
       )
     : // TODO(v19): remove calculateDefaultProjectName. This is to be backwards compatible with Nx 16.5 and below.
       (ws as any).calculateDefaultProjectName(
         context.cwd,
         { version: 2, projects: context.projectsConfigurations.projects },
-        context.nxJsonConfiguration
+        context.nxJsonConfiguration,
       );
 
   return combineOptionsForExecutor(
@@ -71,6 +71,6 @@ export function readTargetOptions<T = any>(
     targetConfiguration,
     schema,
     defaultProject,
-    relative(context.root, context.cwd)
+    relative(context.root, context.cwd),
   ) as T;
 }

@@ -37,10 +37,10 @@ describe('Jest+Ng - 15.9.0 - tsconfig updates', () => {
     await setup(tree, 'proj');
     await updateTestingTsconfigForJest(tree);
     expect(
-      readJson(tree, 'proj/tsconfig.spec.json').compilerOptions.target
+      readJson(tree, 'proj/tsconfig.spec.json').compilerOptions.target,
     ).toEqual('es2016');
     expect(
-      readJson(tree, 'proj-lib/tsconfig.spec.json').compilerOptions.target
+      readJson(tree, 'proj-lib/tsconfig.spec.json').compilerOptions.target,
     ).toEqual('es2016');
   });
 
@@ -52,10 +52,10 @@ describe('Jest+Ng - 15.9.0 - tsconfig updates', () => {
     });
     await updateTestingTsconfigForJest(tree);
     expect(
-      readJson(tree, 'proj/tsconfig.spec.json').compilerOptions.target
+      readJson(tree, 'proj/tsconfig.spec.json').compilerOptions.target,
     ).toEqual('es2015');
     expect(
-      readJson(tree, 'proj-lib/tsconfig.spec.json').compilerOptions.target
+      readJson(tree, 'proj-lib/tsconfig.spec.json').compilerOptions.target,
     ).toEqual('es2016');
   });
 
@@ -68,10 +68,10 @@ describe('Jest+Ng - 15.9.0 - tsconfig updates', () => {
 
     await updateTestingTsconfigForJest(tree);
     expect(
-      readJson(tree, 'proj/tsconfig.spec.json').compilerOptions.target
+      readJson(tree, 'proj/tsconfig.spec.json').compilerOptions.target,
     ).toBeUndefined();
     expect(
-      readJson(tree, 'proj-lib/tsconfig.spec.json').compilerOptions.target
+      readJson(tree, 'proj-lib/tsconfig.spec.json').compilerOptions.target,
     ).toEqual('es2016');
   });
 });

@@ -48,7 +48,7 @@ describe('vue:storybook-configuration', () => {
     });
 
     expect(
-      appTree.read('test-ui-lib/.storybook/main.ts', 'utf-8')
+      appTree.read('test-ui-lib/.storybook/main.ts', 'utf-8'),
     ).toMatchSnapshot();
     expect(appTree.exists('test-ui-lib/tsconfig.storybook.json')).toBeTruthy();
 
@@ -56,11 +56,11 @@ describe('vue:storybook-configuration', () => {
     expect(packageJson.devDependencies['@storybook/vue3-vite']).toBeDefined();
     expect(packageJson.devDependencies['@storybook/vue3']).toBeDefined();
     expect(
-      packageJson.devDependencies['@storybook/addon-interactions']
+      packageJson.devDependencies['@storybook/addon-interactions'],
     ).toBeDefined();
     expect(packageJson.devDependencies['@storybook/test-runner']).toBeDefined();
     expect(
-      packageJson.devDependencies['@storybook/testing-library']
+      packageJson.devDependencies['@storybook/testing-library'],
     ).toBeDefined();
   });
 
@@ -68,7 +68,7 @@ describe('vue:storybook-configuration', () => {
     appTree = await createTestUILib('test-ui-lib');
     appTree.write(
       'test-ui-lib/src/lib/my-component/my-component.vue',
-      componentContent
+      componentContent,
     );
 
     await storybookConfigurationGenerator(appTree, {
@@ -77,13 +77,13 @@ describe('vue:storybook-configuration', () => {
     });
 
     expect(
-      appTree.exists('test-ui-lib/src/lib/test-ui-lib.stories.ts')
+      appTree.exists('test-ui-lib/src/lib/test-ui-lib.stories.ts'),
     ).toBeTruthy();
     expect(
       appTree.read(
         'test-ui-lib/src/lib/my-component/my-component.stories.ts',
-        'utf-8'
-      )
+        'utf-8',
+      ),
     ).toMatchSnapshot();
   });
 
@@ -101,7 +101,7 @@ describe('vue:storybook-configuration', () => {
     appTree = await createTestAppLib('test-ui-app');
     appTree.write(
       'test-ui-app/src/app/my-component/my-component.vue',
-      componentContent
+      componentContent,
     );
     await storybookConfigurationGenerator(appTree, {
       project: 'test-ui-app',
@@ -111,8 +111,8 @@ describe('vue:storybook-configuration', () => {
     expect(
       appTree.read(
         'test-ui-app/src/app/my-component/my-component.stories.ts',
-        'utf-8'
-      )
+        'utf-8',
+      ),
     ).toMatchSnapshot();
   });
 
@@ -120,7 +120,7 @@ describe('vue:storybook-configuration', () => {
     appTree = await createTestAppLib('test-ui-app');
     appTree.write(
       'test-ui-app/src/app/my-component/my-component.vue',
-      componentContent
+      componentContent,
     );
     await storybookConfigurationGenerator(appTree, {
       project: 'test-ui-app',
@@ -131,8 +131,8 @@ describe('vue:storybook-configuration', () => {
     expect(
       appTree.read(
         'test-ui-app/src/app/my-component/my-component.stories.ts',
-        'utf-8'
-      )
+        'utf-8',
+      ),
     ).toMatchSnapshot();
   });
 });
@@ -154,7 +154,7 @@ export async function createTestUILib(libName: string): Promise<Tree> {
 
 export async function createTestAppLib(
   libName: string,
-  plainJS = false
+  plainJS = false,
 ): Promise<Tree> {
   let appTree = createTreeWithEmptyWorkspace();
 

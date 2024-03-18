@@ -14,7 +14,7 @@ import type { NxPluginE2EExecutorOptions } from './schema';
 // TODO(v19): remove this
 export async function* nxPluginE2EExecutor(
   options: NxPluginE2EExecutorOptions,
-  context: ExecutorContext
+  context: ExecutorContext,
 ): AsyncGenerator<{ success: boolean }> {
   const { target, ...jestOptions } = options;
 
@@ -41,22 +41,22 @@ export async function* nxPluginE2EExecutor(
 
 async function* runBuildTarget(
   buildTarget: string,
-  context: ExecutorContext
+  context: ExecutorContext,
 ): AsyncGenerator<boolean> {
   const { project, target, configuration } = parseTargetString(
     buildTarget,
-    context
+    context,
   );
   const buildTargetOptions = readTargetOptions(
     { project, target, configuration },
-    context
+    context,
   );
   const targetSupportsWatch = Object.keys(buildTargetOptions).includes('watch');
 
   for await (const output of await runExecutor<{ success: boolean }>(
     { project, target, configuration },
     targetSupportsWatch ? { watch: false } : {},
-    context
+    context,
   )) {
     if (!output.success)
       throw new Error('Could not compile application files.');
@@ -66,11 +66,11 @@ async function* runBuildTarget(
 
 async function runTests(
   jestOptions: JestExecutorOptions,
-  context: ExecutorContext
+  context: ExecutorContext,
 ): Promise<boolean> {
   const { success } = await jestExecutor(
     { ...jestOptions, watch: false },
-    context
+    context,
   );
 
   return success;

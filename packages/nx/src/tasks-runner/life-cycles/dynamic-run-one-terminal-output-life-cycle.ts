@@ -49,7 +49,7 @@ export async function createRunOneDynamicOutputRenderer({
   cliCursor.hide();
   let resolveRenderIsDonePromise: (value: void) => void;
   const renderIsDone = new Promise<void>(
-    (resolve) => (resolveRenderIsDonePromise = resolve)
+    (resolve) => (resolveRenderIsDonePromise = resolve),
   ).then(() => {
     clearRenderInterval();
     cliCursor.show();
@@ -77,7 +77,7 @@ export async function createRunOneDynamicOutputRenderer({
   const totalTasks = tasks.length;
   const totalDependentTasks = totalTasks - 1;
   const totalTasksFromInitiatingProject = tasks.filter(
-    (t) => t.target.project === initiatingProject
+    (t) => t.target.project === initiatingProject,
   ).length;
   // Tasks from the initiating project are treated differently, they forward their output
   const totalDependentTasksNotFromInitiatingProject =
@@ -102,7 +102,7 @@ export async function createRunOneDynamicOutputRenderer({
   const renderLines = (
     lines: string[],
     dividerColor = 'cyan',
-    renderDivider = true
+    renderDivider = true,
   ) => {
     let additionalLines = 0;
     if (renderDivider) {
@@ -138,10 +138,10 @@ export async function createRunOneDynamicOutputRenderer({
         if (totalFailedTasks === 0) {
           linesToRender.push(
             `${LEFT_PAD}${output.colors.cyan(
-              dots.frames[dependentTargetsCurrentFrame]
+              dots.frames[dependentTargetsCurrentFrame],
             )}${SPACER}${output.dim(
-              `Nx is waiting on ${remainingDependentTasksNotFromInitiatingProject} dependent project tasks before running tasks from`
-            )} ${initiatingProject}${output.dim('...')}`
+              `Nx is waiting on ${remainingDependentTasksNotFromInitiatingProject} dependent project tasks before running tasks from`,
+            )} ${initiatingProject}${output.dim('...')}`,
           );
           if (totalSuccessfulTasks > 0) {
             linesToRender.push('');
@@ -154,9 +154,9 @@ export async function createRunOneDynamicOutputRenderer({
       linesToRender.push(
         output.colors.red.dim(
           `${LEFT_PAD}${output.colors.red(
-            figures.cross
-          )}${SPACER}${totalFailedTasks}${`/${totalCompletedTasks}`} dependent project tasks failed (see below)`
-        )
+            figures.cross,
+          )}${SPACER}${totalFailedTasks}${`/${totalCompletedTasks}`} dependent project tasks failed (see below)`,
+        ),
       );
     }
 
@@ -164,11 +164,11 @@ export async function createRunOneDynamicOutputRenderer({
       linesToRender.push(
         output.dim(
           `${LEFT_PAD}${output.dim(
-            figures.tick
+            figures.tick,
           )}${SPACER}${totalSuccessfulTasks}${`/${totalCompletedTasks}`} dependent project tasks succeeded ${output.dim(
-            `[${totalCachedTasks} read from cache]`
-          )}`
-        )
+            `[${totalCachedTasks} read from cache]`,
+          )}`,
+        ),
       );
     }
 
@@ -178,7 +178,7 @@ export async function createRunOneDynamicOutputRenderer({
       renderLines(
         linesToRender,
         'gray',
-        renderDivider && state !== 'EXECUTING_DEPENDENT_TARGETS'
+        renderDivider && state !== 'EXECUTING_DEPENDENT_TARGETS',
       );
     } else {
       renderLines([]);
@@ -203,10 +203,10 @@ export async function createRunOneDynamicOutputRenderer({
           output.addNewline();
           process.stdout.write(
             `${LEFT_PAD}${output.dim(
-              'Hint: you can run the command with'
+              'Hint: you can run the command with',
             )} --verbose ${output.dim(
-              'to see the full dependent project outputs'
-            )}` + EOL
+              'to see the full dependent project outputs',
+            )}` + EOL,
           );
           output.addVerticalSeparator('gray');
         }
@@ -218,7 +218,7 @@ export async function createRunOneDynamicOutputRenderer({
     ) {
       renderDependentTargetsIntervalId = setInterval(
         renderDependentTargets,
-        100
+        100,
       );
     }
   };
@@ -258,7 +258,7 @@ export async function createRunOneDynamicOutputRenderer({
             output.logCommandOutput(
               t.task.id,
               t.status,
-              tasksToTerminalOutputs[t.task.id]
+              tasksToTerminalOutputs[t.task.id],
             );
           }
           break;
@@ -277,18 +277,18 @@ export async function createRunOneDynamicOutputRenderer({
       const text = `Successfully ran ${formatTargetsAndProjects(
         [initiatingProject],
         [targetName],
-        tasks
+        tasks,
       )}`;
 
       const taskOverridesLines = [];
       if (Object.keys(overrides).length > 0) {
         taskOverridesLines.push('');
         taskOverridesLines.push(
-          `${EXTENDED_LEFT_PAD}${output.dim.green('With additional flags:')}`
+          `${EXTENDED_LEFT_PAD}${output.dim.green('With additional flags:')}`,
         );
         Object.entries(overrides)
           .map(([flag, value]) =>
-            output.dim.green(formatFlags(EXTENDED_LEFT_PAD, flag, value))
+            output.dim.green(formatFlags(EXTENDED_LEFT_PAD, flag, value)),
           )
           .forEach((arg) => taskOverridesLines.push(arg));
       }
@@ -296,15 +296,15 @@ export async function createRunOneDynamicOutputRenderer({
       const pinnedFooterLines = [
         output.applyNxPrefix(
           'green',
-          output.colors.green(text) + output.dim(` (${timeTakenText})`)
+          output.colors.green(text) + output.dim(` (${timeTakenText})`),
         ),
         ...taskOverridesLines,
       ];
       if (totalCachedTasks > 0) {
         pinnedFooterLines.push(
           output.dim(
-            `${EOL}Nx read the output from the cache instead of running the command for ${totalCachedTasks} out of ${totalTasks} tasks.`
-          )
+            `${EOL}Nx read the output from the cache instead of running the command for ${totalCachedTasks} out of ${totalTasks} tasks.`,
+          ),
         );
       }
       renderLines(pinnedFooterLines, 'green');
@@ -312,11 +312,11 @@ export async function createRunOneDynamicOutputRenderer({
       state = 'COMPLETED_WITH_ERRORS';
 
       let text = `Ran target ${output.bold(
-        targetName
+        targetName,
       )} for project ${output.bold(initiatingProject)}`;
       if (totalDependentTasks > 0) {
         text += ` and ${output.bold(
-          totalDependentTasks
+          totalDependentTasks,
         )} task(s) they depend on`;
       }
 
@@ -324,11 +324,11 @@ export async function createRunOneDynamicOutputRenderer({
       if (Object.keys(overrides).length > 0) {
         taskOverridesLines.push('');
         taskOverridesLines.push(
-          `${EXTENDED_LEFT_PAD}${output.dim.red('With additional flags:')}`
+          `${EXTENDED_LEFT_PAD}${output.dim.red('With additional flags:')}`,
         );
         Object.entries(overrides)
           .map(([flag, value]) =>
-            output.dim.red(formatFlags(EXTENDED_LEFT_PAD, flag, value))
+            output.dim.red(formatFlags(EXTENDED_LEFT_PAD, flag, value)),
           )
           .forEach((arg) => taskOverridesLines.push(arg));
       }
@@ -339,21 +339,21 @@ export async function createRunOneDynamicOutputRenderer({
         [
           output.applyNxPrefix(
             'red',
-            output.colors.red(text) + output.dim(` (${timeTakenText})`)
+            output.colors.red(text) + output.dim(` (${timeTakenText})`),
           ),
           ...taskOverridesLines,
           '',
           `${LEFT_PAD}${output.colors.red(
-            figures.cross
+            figures.cross,
           )}${SPACER}${totalFailedTasks}${`/${totalCompletedTasks}`} failed`,
           `${LEFT_PAD}${output.dim(
-            figures.tick
+            figures.tick,
           )}${SPACER}${totalSuccessfulTasks}${`/${totalCompletedTasks}`} succeeded ${output.dim(
-            `[${totalCachedTasks} read from cache]`
+            `[${totalCachedTasks} read from cache]`,
           )}`,
           ...viewLogs,
         ],
-        'red'
+        'red',
       );
     }
     resolveRenderIsDonePromise();

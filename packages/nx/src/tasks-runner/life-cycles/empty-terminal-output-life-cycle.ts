@@ -7,7 +7,7 @@ export class EmptyTerminalOutputLifeCycle implements LifeCycle {
   printTaskTerminalOutput(
     task: any,
     cacheStatus: TaskStatus,
-    terminalOutput: string
+    terminalOutput: string,
   ) {
     if (
       cacheStatus === 'success' ||

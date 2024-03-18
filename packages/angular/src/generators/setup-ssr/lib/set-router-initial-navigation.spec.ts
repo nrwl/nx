@@ -21,7 +21,7 @@ import { appRoutes } from './app.routes';
 export const appConfig: ApplicationConfig = {
   providers: [provideRouter(appRoutes)],
 };
-`
+`,
       );
 
       setRouterInitialNavigation(tree, {
@@ -58,7 +58,7 @@ export const appConfig: ApplicationConfig = {
     withDisabledInitialNavigation(),
   )],
 };
-`
+`,
       );
 
       setRouterInitialNavigation(tree, {
@@ -104,7 +104,7 @@ import { NxWelcomeComponent } from './nx-welcome.component';
   bootstrap: [AppComponent],
 })
 export class AppModule {}
-`
+`,
       );
 
       setRouterInitialNavigation(tree, {

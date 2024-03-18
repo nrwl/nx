@@ -2,7 +2,7 @@ import { JsonSchema1 } from '@nx/nx-dev/models-package';
 
 export function getTitleForSchema(
   reference: string,
-  schema: JsonSchema1
+  schema: JsonSchema1,
 ): string | undefined {
   if (schema.title !== undefined) {
     return schema.title;

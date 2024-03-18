@@ -26,7 +26,7 @@ const newImportPath = '@ngrx/router-store/data-persistence';
 export default async function (tree: Tree): Promise<void> {
   const projects = await getProjectsFilteredByDependencies(
     tree,
-    angularPluginTargetNames
+    angularPluginTargetNames,
   );
 
   if (!projects.length) {
@@ -40,7 +40,7 @@ export default async function (tree: Tree): Promise<void> {
   const filesWithNxAngularImports: FileData[] = [];
   for (const { graphNode } of projects) {
     const files = filterFilesWithNxAngularDep(
-      cachedFileMap[graphNode.name] || []
+      cachedFileMap[graphNode.name] || [],
     );
     filesWithNxAngularImports.push(...files);
   }
@@ -70,7 +70,7 @@ function replaceDataPersistenceInFile(tree: Tree, file: string): boolean {
   const nxAngularImports = tsquery<ImportDeclaration>(
     fileAst,
     NX_ANGULAR_IMPORT_SELECTOR,
-    { visitAllChildren: true }
+    { visitAllChildren: true },
   );
 
   if (!nxAngularImports.length) {
@@ -85,7 +85,7 @@ function replaceDataPersistenceInFile(tree: Tree, file: string): boolean {
     const importSpecifiers = tsquery<ImportSpecifier>(
       importDeclaration,
       IMPORT_SPECIFIERS_SELECTOR,
-      { visitAllChildren: true }
+      { visitAllChildren: true },
     );
 
     if (!importSpecifiers.length) {
@@ -118,7 +118,7 @@ function replaceDataPersistenceInFile(tree: Tree, file: string): boolean {
           importSpecifier.getEnd() +
             (hasTrailingComma(recorder.originalContent, importSpecifier)
               ? 1
-              : 0)
+              : 0),
         );
       }
     }
@@ -126,8 +126,8 @@ function replaceDataPersistenceInFile(tree: Tree, file: string): boolean {
     recorder.insertLeft(
       importDeclaration.getStart(),
       `import { ${operatorImportSpecifiers.join(
-        ', '
-      )} } from '${newImportPath}';`
+        ', ',
+      )} } from '${newImportPath}';`,
     );
   }
 
@@ -145,12 +145,12 @@ function hasTrailingComma(content: string, node: Node): boolean {
 
 function isOperatorImport(importSpecifier: ImportSpecifier): boolean {
   return dataPersistenceOperators.includes(
-    getOriginalIdentifierTextFromImportSpecifier(importSpecifier)
+    getOriginalIdentifierTextFromImportSpecifier(importSpecifier),
   );
 }
 
 function getOriginalIdentifierTextFromImportSpecifier(
-  importSpecifier: ImportSpecifier
+  importSpecifier: ImportSpecifier,
 ): string {
   const children = importSpecifier.getChildren();
   if (!children.length) {
@@ -178,7 +178,7 @@ function filterFilesWithNxAngularDep(files: FileData[]): FileData[] {
   for (const file of files) {
     if (
       file.deps?.some((dep) =>
-        angularPluginTargetNames.includes(fileDataDepTarget(dep))
+        angularPluginTargetNames.includes(fileDataDepTarget(dep)),
       )
     ) {
       filteredFiles.push(file);

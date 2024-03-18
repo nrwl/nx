@@ -23,7 +23,7 @@ import {
 
 export async function migrateFromAngularCli(
   tree: Tree,
-  options: GeneratorOptions
+  options: GeneratorOptions,
 ): Promise<GeneratorCallback> {
   validateWorkspace(tree);
   const projects = getAllProjects(tree);
@@ -38,7 +38,7 @@ export async function migrateFromAngularCli(
 
   const workspaceRootFileTypesInfo = getWorkspaceRootFileTypesInfo(
     tree,
-    migrators
+    migrators,
   );
 
   /**

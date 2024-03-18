@@ -494,7 +494,7 @@ import ReactDOM from 'react-dom/client';
 import App from './app/app';
 
 const root = ReactDOM.createRoot(
-  document.getElementById('root') as HTMLElement
+  document.getElementById('root') as HTMLElement,
 );
 
 root.render(
@@ -502,7 +502,7 @@ root.render(
     <BrowserRouter>
       <App />
     </BrowserRouter>
-  </StrictMode>
+  </StrictMode>,
 );
 ```
 

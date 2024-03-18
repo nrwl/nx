@@ -3,7 +3,7 @@ import { tsquery } from '@phenomnomnominal/tsquery';
 import ts = require('typescript');
 
 export function fixCoverageAndRerporters(
-  configContents: string
+  configContents: string,
 ): string | undefined {
   const configNode = getConfigNode(configContents);
   if (!configNode) {
@@ -12,14 +12,14 @@ export function fixCoverageAndRerporters(
 
   const testHasCoverage = tsquery.query(
     configNode,
-    `PropertyAssignment:has(Identifier[name="test"]):has(PropertyAssignment:has(Identifier[name="coverage"]))`
+    `PropertyAssignment:has(Identifier[name="test"]):has(PropertyAssignment:has(Identifier[name="coverage"]))`,
   )?.[0];
   let changes = [];
 
   if (testHasCoverage) {
     const testObjectLiteralExpressionNode = tsquery.query(
       testHasCoverage,
-      `ObjectLiteralExpression:has(Identifier[name="coverage"])`
+      `ObjectLiteralExpression:has(Identifier[name="coverage"])`,
     )?.[0];
     const coverageNode = findCoverageNode(testObjectLiteralExpressionNode);
 
@@ -29,22 +29,22 @@ export function fixCoverageAndRerporters(
 
     const linesNode = tsquery.query(
       coverageNode,
-      `PropertyAssignment:has(Identifier[name="lines"])`
+      `PropertyAssignment:has(Identifier[name="lines"])`,
     )?.[0];
 
     const statementsNode = tsquery.query(
       coverageNode,
-      `PropertyAssignment:has(Identifier[name="statements"])`
+      `PropertyAssignment:has(Identifier[name="statements"])`,
     )?.[0];
 
     const functionsNode = tsquery.query(
       coverageNode,
-      `PropertyAssignment:has(Identifier[name="functions"])`
+      `PropertyAssignment:has(Identifier[name="functions"])`,
     )?.[0];
 
     const branchesNode = tsquery.query(
       coverageNode,
-      `PropertyAssignment:has(Identifier[name="branches"])`
+      `PropertyAssignment:has(Identifier[name="branches"])`,
     )?.[0];
 
     if (linesNode) {
@@ -94,13 +94,13 @@ export function fixCoverageAndRerporters(
 
   const testHasReporters = tsquery.query(
     configNode,
-    `PropertyAssignment:has(Identifier[name="test"]):has(PropertyAssignment:has(Identifier[name="reporters"]))`
+    `PropertyAssignment:has(Identifier[name="test"]):has(PropertyAssignment:has(Identifier[name="reporters"]))`,
   )?.[0];
 
   if (!testHasReporters) {
     const testObject = tsquery.query(
       configNode,
-      `PropertyAssignment:has(Identifier[name="test"])`
+      `PropertyAssignment:has(Identifier[name="test"])`,
     )?.[0];
     changes.push({
       type: ChangeType.Insert,
@@ -122,12 +122,12 @@ export function getConfigNode(configFileContents: string): ts.Node | undefined {
   }
   let configNode = tsquery.query(
     configFileContents,
-    `ObjectLiteralExpression`
+    `ObjectLiteralExpression`,
   )?.[0];
 
   const arrowFunctionReturnStatement = tsquery.query(
     configFileContents,
-    `ArrowFunction Block ReturnStatement ObjectLiteralExpression`
+    `ArrowFunction Block ReturnStatement ObjectLiteralExpression`,
   )?.[0];
 
   if (arrowFunctionReturnStatement) {

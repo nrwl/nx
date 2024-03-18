@@ -40,7 +40,7 @@ export interface LifeCycle {
   printTaskTerminalOutput?(
     task: Task,
     status: TaskStatus,
-    output: string
+    output: string,
   ): void;
 }
 
@@ -110,7 +110,7 @@ export class CompositeLifeCycle implements LifeCycle {
   printTaskTerminalOutput(
     task: Task,
     status: TaskStatus,
-    output: string
+    output: string,
   ): void {
     for (let l of this.lifeCycles) {
       if (l.printTaskTerminalOutput) {

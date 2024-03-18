@@ -30,14 +30,14 @@ describe('js:swc executor', () => {
     expect(libPackageJson.scripts).toBeUndefined();
 
     expect(runCLI(`build ${lib}`)).toContain(
-      'Successfully compiled: 2 files with swc'
+      'Successfully compiled: 2 files with swc',
     );
     checkFilesExist(
       `dist/libs/${lib}/package.json`,
       `dist/libs/${lib}/src/index.js`,
       `dist/libs/${lib}/src/lib/${lib}.js`,
       `dist/libs/${lib}/src/index.d.ts`,
-      `dist/libs/${lib}/src/lib/${lib}.d.ts`
+      `dist/libs/${lib}/src/lib/${lib}.d.ts`,
     );
 
     const tsconfig = readJson(`tsconfig.base.json`);
@@ -57,7 +57,7 @@ describe('js:swc executor', () => {
 export function x() {
   console.log('x');
 }
-    `
+    `,
     );
 
     // update .swcrc to use path mappings

@@ -16,7 +16,7 @@ expect.addSnapshotSerializer({
         .replaceAll(/my-pkg-\d+/g, '{project-name}')
         .replaceAll(
           /integrity:\s*.*/g,
-          'integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
+          'integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX',
         )
         .replaceAll(/\b[0-9a-f]{40}\b/g, '{SHASUM}')
         .replaceAll(/\d*B  index\.js/g, 'XXB  index.js')
@@ -141,8 +141,8 @@ describe('nx release lock file updates', () => {
 
     expect(
       versionOutput.match(
-        /Skipped lock file update because npm workspaces are not enabled./g
-      ).length
+        /Skipped lock file update because npm workspaces are not enabled./g,
+      ).length,
     ).toBe(1);
 
     const filesChanges = runCommand('git diff --name-only HEAD');
@@ -177,8 +177,8 @@ describe('nx release lock file updates', () => {
 
     expect(
       versionOutput.match(
-        /Skipped lock file update because it is not necessary for Yarn Classic./g
-      ).length
+        /Skipped lock file update because it is not necessary for Yarn Classic./g,
+      ).length,
     ).toBe(1);
 
     const filesChanges = runCommand('git diff --name-only HEAD');
@@ -232,7 +232,7 @@ describe('nx release lock file updates', () => {
 
     updateFile(
       'pnpm-workspace.yaml',
-      `packages:\n - ${pkg1}\n - ${pkg2}\n - ${pkg3}\n`
+      `packages:\n - ${pkg1}\n - ${pkg2}\n - ${pkg3}\n`,
     );
 
     // workaround for NXC-143

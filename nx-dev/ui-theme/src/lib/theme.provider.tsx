@@ -53,7 +53,7 @@ export function useTheme(): [Theme, (theme: Theme) => void] {
         new StorageEvent('storage', {
           key: 'theme',
           newValue: theme,
-        })
+        }),
       );
     },
   ];

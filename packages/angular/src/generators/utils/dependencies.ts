@@ -10,6 +10,6 @@ export function addBuildableLibrariesPostCssDependencies(tree: Tree): void {
       postcss: pkgVersions.postcssVersion,
       autoprefixer: pkgVersions.autoprefixerVersion,
       'postcss-url': pkgVersions.postcssUrlVersion,
-    }
+    },
   );
 }

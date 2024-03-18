@@ -11,8 +11,8 @@ export function createProject(tree: Tree, options: NormalizedSchema) {
     options.bundler === 'webpack'
       ? '@angular-devkit/build-angular:browser'
       : angularMajorVersion >= 17
-      ? '@angular-devkit/build-angular:application'
-      : '@angular-devkit/build-angular:browser-esbuild';
+        ? '@angular-devkit/build-angular:application'
+        : '@angular-devkit/build-angular:browser-esbuild';
   const buildTargetOptionName =
     angularMajorVersion >= 17 ? 'buildTarget' : 'browserTarget';
   const buildMainOptionName =

@@ -3,7 +3,7 @@ import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript'
 
 export function checkOutputNameMatchesProjectName(
   ast: SourceFile,
-  projectName: string
+  projectName: string,
 ) {
   ensureTypescript();
   const { tsquery } = require('@phenomnomnominal/tsquery');

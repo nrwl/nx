@@ -17,7 +17,7 @@ export function getGraphService(): GraphService {
       selectValueByThemeStatic('dark', 'light'),
       environment.environment === 'nx-console' ? 'nx-console' : undefined,
       'TB',
-      (taskId: string) => projectDataService.getExpandedTaskInputs(taskId)
+      (taskId: string) => projectDataService.getExpandedTaskInputs(taskId),
     );
   }
 

@@ -110,11 +110,11 @@ function isNestCLI(packageJson: PackageJson) {
 function setupDotNxInstallation(version: string) {
   if (process.platform !== 'win32') {
     console.log(
-      'Setting Nx up installation in `.nx`. You can run nx commands like: `./nx --help`'
+      'Setting Nx up installation in `.nx`. You can run nx commands like: `./nx --help`',
     );
   } else {
     console.log(
-      'Setting Nx up installation in `.nx`. You can run nx commands like: `./nx.bat --help`'
+      'Setting Nx up installation in `.nx`. You can run nx commands like: `./nx.bat --help`',
     );
   }
   generateDotNxSetup(version);

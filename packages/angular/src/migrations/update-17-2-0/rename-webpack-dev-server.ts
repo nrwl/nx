@@ -33,7 +33,7 @@ export default async function (tree: Tree) {
   }
 
   for (const [targetOrExecutor, targetConfig] of Object.entries(
-    nxJson.targetDefaults
+    nxJson.targetDefaults,
   )) {
     if (targetOrExecutor === '@nx/angular:webpack-dev-server') {
       nxJson.targetDefaults['@nx/angular:dev-server'] = targetConfig;

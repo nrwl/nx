@@ -16,7 +16,7 @@ import type { Schema as RemoteOptions } from '../remote/schema';
 
 export async function generateTestApplication(
   tree: Tree,
-  options: ApplicationOptions
+  options: ApplicationOptions,
 ): Promise<void> {
   addAngularPluginPeerDeps(tree);
   tree.write('.gitignore', '');
@@ -28,7 +28,7 @@ export async function generateTestApplication(
 
 export async function generateTestHostApplication(
   tree: Tree,
-  options: HostOptions
+  options: HostOptions,
 ): Promise<void> {
   addAngularPluginPeerDeps(tree);
   tree.write('.gitignore', '');
@@ -37,7 +37,7 @@ export async function generateTestHostApplication(
 
 export async function generateTestRemoteApplication(
   tree: Tree,
-  options: RemoteOptions
+  options: RemoteOptions,
 ): Promise<void> {
   addAngularPluginPeerDeps(tree);
   tree.write('.gitignore', '');
@@ -46,7 +46,7 @@ export async function generateTestRemoteApplication(
 
 export async function generateTestLibrary(
   tree: Tree,
-  options: LibraryOptions
+  options: LibraryOptions,
 ): Promise<void> {
   addAngularPluginPeerDeps(tree);
   tree.write('.gitignore', '');
@@ -57,7 +57,7 @@ export async function generateTestLibrary(
 }
 
 export async function createStorybookTestWorkspaceForLib(
-  libName: string
+  libName: string,
 ): Promise<Tree> {
   let tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   addAngularPluginPeerDeps(tree);
@@ -98,19 +98,19 @@ export class TestButtonComponent {
   @Input() style: ButtonStyle = 'default';
   @Input() age?: number;
   @Input() isOn = false;
-}`
+}`,
   );
 
   tree.write(
     `${libName}/src/lib/test-button/test-button.component.html`,
-    `<button [attr.type]="type" [ngClass]="style"></button>`
+    `<button [attr.type]="type" [ngClass]="style"></button>`,
   );
 
   const modulePath = `${libName}/src/lib/${libName}.module.ts`;
   tree.write(
     modulePath,
     `import * as ButtonExports from './test-button/test-button.component';
-    ${tree.read(modulePath)}`
+    ${tree.read(modulePath)}`,
   );
 
   // create a module with component that gets exported in a barrel file
@@ -130,7 +130,7 @@ export class TestButtonComponent {
 
   tree.write(
     `${libName}/src/lib/barrel/barrel-button/index.ts`,
-    `export * from './barrel-button.component';`
+    `export * from './barrel-button.component';`,
   );
 
   tree.write(
@@ -143,7 +143,7 @@ import { BarrelButtonComponent } from './barrel-button';
   imports: [CommonModule],
   declarations: [BarrelButtonComponent],
 })
-export class BarrelModule {}`
+export class BarrelModule {}`,
   );
 
   // create a module with components that get Angular exported and declared by variable
@@ -187,7 +187,7 @@ const COMPONENTS = [
   declarations: COMPONENTS,
   exports: COMPONENTS
 })
-export class VariableDeclareModule {}`
+export class VariableDeclareModule {}`,
   );
 
   // create a module with components that get Angular exported and declared by variable
@@ -240,7 +240,7 @@ const COMPONENTS = [
   imports: [CommonModule],
   declarations: [...COMPONENTS, VariableSpreadDeclareAnotherviewComponent],
 })
-export class VariableSpreadDeclareModule {}`
+export class VariableSpreadDeclareModule {}`,
   );
 
   // create a module where declared components are pulled from a static member of the module
@@ -281,7 +281,7 @@ import { Cmp2Component } from './cmp2/cmp2.component';
 })
 export class StaticMemberDeclarationsModule {
   static readonly COMPONENTS = [Cmp1Component, Cmp2Component];
-}`
+}`,
   );
 
   // create another button in a nested subpath
@@ -324,7 +324,7 @@ function addAngularPluginPeerDeps(tree: Tree): void {
 
 function generateModule(
   tree: Tree,
-  options: { name: string; project: string; path?: string }
+  options: { name: string; project: string; path?: string },
 ): void {
   const project = readProjectConfiguration(tree, options.project);
 
@@ -347,6 +347,6 @@ function generateModule(
     declarations: [],
     imports: [CommonModule],
   })
-  export class ${moduleNames.className}Module {}`
+  export class ${moduleNames.className}Module {}`,
   );
 }

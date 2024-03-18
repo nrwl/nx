@@ -18,7 +18,7 @@ export default async function update(tree: Tree) {
   removeDependenciesFromPackageJson(
     tree,
     [],
-    ['eas-cli', 'metro', 'metro-resolver']
+    ['eas-cli', 'metro', 'metro-resolver'],
   );
   await formatFiles(tree);
 }

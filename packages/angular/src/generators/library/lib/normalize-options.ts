@@ -7,7 +7,7 @@ import { NormalizedSchema } from './normalized-schema';
 
 export async function normalizeOptions(
   host: Tree,
-  schema: Schema
+  schema: Schema,
 ): Promise<NormalizedSchema> {
   schema.standalone = schema.standalone ?? true;
   // Create a schema with populated default values

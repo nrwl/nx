@@ -111,7 +111,7 @@ export const yargsReleaseCommand: CommandModule<
       .check((argv) => {
         if (argv.groups && argv.projects) {
           throw new Error(
-            'The --projects and --groups options are mutually exclusive, please use one or the other.'
+            'The --projects and --groups options are mutually exclusive, please use one or the other.',
           );
         }
         const nxJson = readNxJson();
@@ -119,7 +119,7 @@ export const yargsReleaseCommand: CommandModule<
           for (const group of argv.groups as string[] | string) {
             if (!nxJson.release?.groups?.[group]) {
               throw new Error(
-                `The specified release group "${group}" was not found in nx.json`
+                `The specified release group "${group}" was not found in nx.json`,
               );
             }
           }
@@ -157,7 +157,7 @@ const releaseCommand: CommandModule<NxReleaseArgs, ReleaseOptions> = {
       .check((argv) => {
         if (argv.yes !== undefined && argv.skipPublish !== undefined) {
           throw new Error(
-            'The --yes and --skip-publish options are mutually exclusive, please use one or the other.'
+            'The --yes and --skip-publish options are mutually exclusive, please use one or the other.',
           );
         }
         return true;
@@ -199,7 +199,7 @@ const versionCommand: CommandModule<NxReleaseArgs, VersionOptions> = {
           type: 'boolean',
           describe:
             'Whether or not to stage the changes made by this command. Useful when combining this command with changelog generation.',
-        })
+        }),
     ),
   handler: async (args) => {
     const release = await import('./version');
@@ -256,11 +256,11 @@ const changelogCommand: CommandModule<NxReleaseArgs, ChangelogOptions> = {
         .check((argv) => {
           if (!argv.version) {
             throw new Error(
-              'An explicit target version must be specified when using the changelog command directly'
+              'An explicit target version must be specified when using the changelog command directly',
             );
           }
           return true;
-        })
+        }),
     ),
   handler: async (args) => {
     const release = await import('./changelog');
@@ -332,7 +332,7 @@ function coerceParallelOption(args: any) {
 }
 
 function withGitCommitAndGitTagOptions<T>(
-  yargs: Argv<T>
+  yargs: Argv<T>,
 ): Argv<T & GitCommitAndTagOptions> {
   return yargs
     .option('git-commit', {

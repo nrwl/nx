@@ -43,11 +43,11 @@ export function addProjectConfiguration(
   tree: Tree,
   projectName: string,
   projectConfiguration: ProjectConfiguration,
-  standalone = true
+  standalone = true,
 ): void {
   const projectConfigFile = joinPathFragments(
     projectConfiguration.root,
-    'project.json'
+    'project.json',
   );
 
   if (!standalone) {
@@ -59,7 +59,7 @@ export function addProjectConfiguration(
 
   if (tree.exists(projectConfigFile)) {
     throw new Error(
-      `Cannot create a new project ${projectName} at ${projectConfiguration.root}. A project already exists in this directory.`
+      `Cannot create a new project ${projectName} at ${projectConfiguration.root}. A project already exists in this directory.`,
     );
   }
 
@@ -85,16 +85,16 @@ export function addProjectConfiguration(
 export function updateProjectConfiguration(
   tree: Tree,
   projectName: string,
-  projectConfiguration: ProjectConfiguration
+  projectConfiguration: ProjectConfiguration,
 ): void {
   const projectConfigFile = joinPathFragments(
     projectConfiguration.root,
-    'project.json'
+    'project.json',
   );
 
   if (!tree.exists(projectConfigFile)) {
     throw new Error(
-      `Cannot update Project ${projectName} at ${projectConfiguration.root}. It either doesn't exist yet, or may not use project.json for configuration. Use \`addProjectConfiguration()\` instead if you want to create a new project.`
+      `Cannot update Project ${projectName} at ${projectConfiguration.root}. It either doesn't exist yet, or may not use project.json for configuration. Use \`addProjectConfiguration()\` instead if you want to create a new project.`,
     );
   }
   handleEmptyTargets(projectName, projectConfiguration);
@@ -114,7 +114,7 @@ export function updateProjectConfiguration(
  */
 export function removeProjectConfiguration(
   tree: Tree,
-  projectName: string
+  projectName: string,
 ): void {
   const projectConfiguration = readProjectConfiguration(tree, projectName);
   if (!projectConfiguration) {
@@ -122,7 +122,7 @@ export function removeProjectConfiguration(
   }
   const projectConfigFile = joinPathFragments(
     projectConfiguration.root,
-    'project.json'
+    'project.json',
   );
   if (tree.exists(projectConfigFile)) {
     tree.delete(projectConfigFile);
@@ -138,7 +138,7 @@ export function removeProjectConfiguration(
  */
 export function readProjectConfiguration(
   tree: Tree,
-  projectName: string
+  projectName: string,
 ): ProjectConfiguration {
   const allProjects = readAndCombineAllProjectConfigurations(tree);
   if (!allProjects[projectName]) {
@@ -168,19 +168,19 @@ export function getProjects(tree: Tree): Map<string, ProjectConfiguration> {
   return new Map(
     Object.keys(allProjects || {}).map((projectName) => {
       return [projectName, allProjects[projectName]];
-    })
+    }),
   );
 }
 
 export function getRelativeProjectJsonSchemaPath(
   tree: Tree,
-  project: ProjectConfiguration
+  project: ProjectConfiguration,
 ): string {
   return normalizePath(
     relative(
       join(tree.root, project.root),
-      join(tree.root, 'node_modules/nx/schemas/project-schema.json')
-    )
+      join(tree.root, 'node_modules/nx/schemas/project-schema.json'),
+    ),
   );
 }
 
@@ -196,7 +196,7 @@ function readAndCombineAllProjectConfigurations(tree: Tree): {
     '**/project.json',
     'project.json',
     ...getGlobPatternsFromPackageManagerWorkspaces(tree.root, (p) =>
-      readJson(tree, p, { expectComments: true })
+      readJson(tree, p, { expectComments: true }),
     ),
   ];
   const projectGlobPatterns = configurationGlobs([
@@ -207,7 +207,7 @@ function readAndCombineAllProjectConfigurations(tree: Tree): {
   const createdFiles = findCreatedProjectFiles(tree, patterns);
   const deletedFiles = findDeletedProjectFiles(tree, patterns);
   const projectFiles = [...globbedFiles, ...createdFiles].filter(
-    (r) => deletedFiles.indexOf(r) === -1
+    (r) => deletedFiles.indexOf(r) === -1,
   );
 
   const rootMap: Map<string, ProjectConfiguration> = new Map();
@@ -220,14 +220,14 @@ function readAndCombineAllProjectConfigurations(tree: Tree): {
         config,
         undefined,
         undefined,
-        true
+        true,
       );
     } else if (basename(projectFile) === 'package.json') {
       const packageJson = readJson<PackageJson>(tree, projectFile);
       const config = buildProjectConfigurationFromPackageJson(
         packageJson,
         projectFile,
-        readNxJson(tree)
+        readNxJson(tree),
       );
       if (!rootMap.has(config.root)) {
         mergeProjectConfigurationIntoRootMap(
@@ -240,7 +240,7 @@ function readAndCombineAllProjectConfigurations(tree: Tree): {
           },
           undefined,
           undefined,
-          true
+          true,
         );
       }
     }
@@ -266,7 +266,7 @@ function findCreatedProjectFiles(tree: Tree, globPatterns: string[]) {
       const fileName = basename(change.path);
       if (
         globPatterns.some((pattern) =>
-          minimatch(change.path, pattern, { dot: true })
+          minimatch(change.path, pattern, { dot: true }),
         )
       ) {
         createdProjectFiles.push(change.path);
@@ -335,7 +335,7 @@ function toNewFormat(w: any): ProjectsConfigurations {
 
 function handleEmptyTargets(
   projectName: string,
-  projectConfiguration: ProjectConfiguration
+  projectConfiguration: ProjectConfiguration,
 ): void {
   if (
     projectConfiguration.targets &&
@@ -343,9 +343,8 @@ function handleEmptyTargets(
   ) {
     // Re-order `targets` to appear after the `// target` comment.
     delete projectConfiguration.targets;
-    projectConfiguration[
-      '// targets'
-    ] = `to see all targets run: nx show project ${projectName} --web`;
+    projectConfiguration['// targets'] =
+      `to see all targets run: nx show project ${projectName} --web`;
     projectConfiguration.targets = {};
   } else {
     delete projectConfiguration['// targets'];

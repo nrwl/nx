@@ -16,7 +16,7 @@ export async function initializeGitRepo(
   options: {
     defaultBase: string;
     commit?: { message: string; name: string; email: string };
-  }
+  },
 ) {
   const execute = (args: ReadonlyArray<string>, ignoreErrorStream = false) => {
     const outputStream = 'ignore';
@@ -57,10 +57,10 @@ export async function initializeGitRepo(
   }
   const insideRepo = await execute(
     ['rev-parse', '--is-inside-work-tree'],
-    true
+    true,
   ).then(
     () => true,
-    () => false
+    () => false,
   );
   if (insideRepo) {
     output.log({

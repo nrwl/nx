@@ -17,18 +17,18 @@ describe('retrieveProjectConfigurationPaths', () => {
       'not-projects/project.json',
       JSON.stringify({
         name: 'not-project-1',
-      })
+      }),
     );
     await fs.createFile(
       'projects/project.json',
       JSON.stringify({
         name: 'project-1',
-      })
+      }),
     );
 
     const configPaths = await retrieveProjectConfigurationPaths(
       fs.tempDir,
-      await getDefaultPlugins(fs.tempDir)
+      await getDefaultPlugins(fs.tempDir),
     );
 
     expect(configPaths).not.toContain('not-projects/project.json');

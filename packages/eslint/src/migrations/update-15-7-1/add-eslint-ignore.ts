@@ -12,7 +12,7 @@ export default async function addEslintIgnore(tree: Tree) {
   const nxJson = readJson(tree, 'nx.json');
 
   const globalEslintFile = ESLINT_CONFIG_FILENAMES.find((file) =>
-    tree.exists(file)
+    tree.exists(file),
   );
 
   if (globalEslintFile) {
@@ -31,7 +31,7 @@ export default async function addEslintIgnore(tree: Tree) {
 
       const lintIgnorePath = joinPathFragments(
         '{workspaceRoot}',
-        globalEslintFile
+        globalEslintFile,
       );
 
       if (lintTargetDefaults.inputs) {

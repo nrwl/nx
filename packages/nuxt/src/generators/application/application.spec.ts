@@ -46,7 +46,7 @@ describe('app', () => {
       it('should configure vitest correctly', () => {
         expect(tree.read('my-app/vitest.config.ts', 'utf-8')).toMatchSnapshot();
         expect(
-          tree.read('my-app/tsconfig.spec.json', 'utf-8')
+          tree.read('my-app/tsconfig.spec.json', 'utf-8'),
         ).toMatchSnapshot();
         expect(tree.read('my-app/tsconfig.json', 'utf-8')).toMatchSnapshot();
         const packageJson = readJson(tree, 'package.json');

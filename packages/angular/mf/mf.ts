@@ -1,5 +1,5 @@
 export type ResolveRemoteUrlFunction = (
-  remoteName: string
+  remoteName: string,
 ) => string | Promise<string>;
 
 declare const __webpack_init_sharing__: (scope: 'default') => Promise<void>;
@@ -7,7 +7,7 @@ declare const __webpack_share_scopes__: { default: unknown };
 
 let resolveRemoteUrl: ResolveRemoteUrlFunction;
 export function setRemoteUrlResolver(
-  _resolveRemoteUrl: ResolveRemoteUrlFunction
+  _resolveRemoteUrl: ResolveRemoteUrlFunction,
 ) {
   resolveRemoteUrl = _resolveRemoteUrl;
 }
@@ -45,7 +45,7 @@ let initialSharingScopeCreated = false;
 async function loadRemoteContainer(remoteName: string) {
   if (!resolveRemoteUrl && !remoteUrlDefinitions) {
     throw new Error(
-      'Call setRemoteDefinitions or setRemoteUrlResolver to allow Dynamic Federation to find the remote apps correctly.'
+      'Call setRemoteDefinitions or setRemoteUrlResolver to allow Dynamic Federation to find the remote apps correctly.',
     );
   }
 

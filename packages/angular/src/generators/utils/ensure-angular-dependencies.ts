@@ -43,6 +43,6 @@ export function ensureAngularDependencies(tree: Tree): GeneratorCallback {
       '@angular-devkit/build-angular': angularDevkitVersion,
       '@angular-devkit/schematics': angularDevkitVersion,
       '@schematics/angular': angularDevkitVersion,
-    }
+    },
   );
 }

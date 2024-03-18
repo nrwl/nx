@@ -18,7 +18,7 @@ export const NxAngularJsonPlugin: NxPluginV2 = {
 
 export function shouldMergeAngularProjects(
   root: string,
-  includeProjectsFromAngularJson: boolean
+  includeProjectsFromAngularJson: boolean,
 ): boolean {
   if (
     existsSync(path.join(root, 'angular.json')) &&
@@ -51,7 +51,7 @@ export function isAngularPluginInstalled() {
 
 function readAngularJson(angularCliWorkspaceRoot: string) {
   return toNewFormat(
-    readJsonFile(path.join(angularCliWorkspaceRoot, 'angular.json'))
+    readJsonFile(path.join(angularCliWorkspaceRoot, 'angular.json')),
   ).projects;
 }
 
@@ -94,7 +94,7 @@ export function toOldFormat(w: any) {
       const projectConfig = w.projects[name];
       if (typeof projectConfig === 'string') {
         throw new Error(
-          "'project.json' files are incompatible with version 1 workspace schemas."
+          "'project.json' files are incompatible with version 1 workspace schemas.",
         );
       }
       if (projectConfig.targets) {
@@ -126,7 +126,7 @@ export function toOldFormat(w: any) {
 export function renamePropertyWithStableKeys(
   obj: any,
   from: string,
-  to: string
+  to: string,
 ) {
   const copy = { ...obj };
   Object.keys(obj).forEach((k) => {

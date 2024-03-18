@@ -33,6 +33,6 @@ export function addSnippet(tree: Tree, name: string, path: string) {
   tree.write(
     siblingModulePath,
     stripIndents`${originalContent}
-  ${workerCreationSnippet}`
+  ${workerCreationSnippet}`,
   );
 }

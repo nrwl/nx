@@ -9,8 +9,8 @@ expect.addSnapshotSerializer({
     return JSON.stringify(
       str.replaceAll(
         new RegExp(join(__dirname, '../../../..').replace(/\\/g, '\\\\'), 'g'),
-        '<dirname>'
-      )
+        '<dirname>',
+      ),
     );
   },
   test(val: string) {
@@ -125,7 +125,7 @@ describe('createNxReleaseConfig()', () => {
     it('should create appropriate default NxReleaseConfig data from zero/empty user config', async () => {
       // zero user config
       expect(
-        await createNxReleaseConfig(projectGraph, projectFileMap, undefined)
+        await createNxReleaseConfig(projectGraph, projectFileMap, undefined),
       ).toMatchInlineSnapshot(`
         {
           "error": null,
@@ -472,7 +472,7 @@ describe('createNxReleaseConfig()', () => {
       expect(
         await createNxReleaseConfig(projectGraph, projectFileMap, {
           groups: {},
-        })
+        }),
       ).toMatchInlineSnapshot(`
         {
           "error": null,
@@ -678,7 +678,7 @@ describe('createNxReleaseConfig()', () => {
       ];
 
       expect(
-        await createNxReleaseConfig(projectGraph, projectFileMap, undefined)
+        await createNxReleaseConfig(projectGraph, projectFileMap, undefined),
       ).toMatchInlineSnapshot(`
         {
           "error": null,
@@ -868,7 +868,7 @@ describe('createNxReleaseConfig()', () => {
       ];
 
       expect(
-        await createNxReleaseConfig(projectGraph, projectFileMap, undefined)
+        await createNxReleaseConfig(projectGraph, projectFileMap, undefined),
       ).toMatchInlineSnapshot(`
         {
           "error": null,
@@ -1059,15 +1059,15 @@ describe('createNxReleaseConfig()', () => {
 
       tempFs.writeFile(
         'package.json',
-        JSON.stringify({ name: 'root', version: '0.0.0', private: true })
+        JSON.stringify({ name: 'root', version: '0.0.0', private: true }),
       );
       tempFs.writeFile(
         'libs/lib-a/package.json',
-        JSON.stringify({ name: 'lib-a', version: '0.0.0', private: true })
+        JSON.stringify({ name: 'lib-a', version: '0.0.0', private: true }),
       );
 
       expect(
-        await createNxReleaseConfig(projectGraph, projectFileMap, undefined)
+        await createNxReleaseConfig(projectGraph, projectFileMap, undefined),
       ).toMatchInlineSnapshot(`
         {
           "error": null,
@@ -1260,11 +1260,11 @@ describe('createNxReleaseConfig()', () => {
         JSON.stringify({
           name: 'root',
           version: '0.0.0',
-        })
+        }),
       );
 
       expect(
-        await createNxReleaseConfig(projectGraph, projectFileMap, undefined)
+        await createNxReleaseConfig(projectGraph, projectFileMap, undefined),
       ).toMatchInlineSnapshot(`
         {
           "error": null,

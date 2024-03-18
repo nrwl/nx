@@ -33,7 +33,7 @@ describe('nx init (Monorepo - legacy)', () => {
           build: 'echo "build successful"',
           test: 'some test',
         },
-      })
+      }),
     );
     updateFile(
       'packages/package-b/package.json',
@@ -42,13 +42,13 @@ describe('nx init (Monorepo - legacy)', () => {
         scripts: {
           lint: 'some lint',
         },
-      })
+      }),
     );
 
     const output = runCommand(
       `${
         pmc.runUninstalledPackage
-      } nx@${getPublishedVersion()} init --cacheable=build --no-interactive`
+      } nx@${getPublishedVersion()} init --cacheable=build --no-interactive`,
     );
 
     expect(output).toContain('🎉 Done!');

@@ -22,14 +22,14 @@ let tsModule: typeof import('typescript');
 export function getModuleDeclaredComponents(
   file: SourceFile,
   moduleFilePath: string,
-  projectName: string
+  projectName: string,
 ): string[] {
   const ngModuleDecorator = getNgModuleDecorator(file, moduleFilePath);
   const declarationsPropertyAssignment =
     getNgModuleDeclarationsPropertyAssignment(
       ngModuleDecorator,
       moduleFilePath,
-      projectName
+      projectName,
     );
 
   if (!declarationsPropertyAssignment) {
@@ -40,7 +40,7 @@ export function getModuleDeclaredComponents(
     file,
     declarationsPropertyAssignment,
     moduleFilePath,
-    projectName
+    projectName,
   );
 
   if (!declarationsArray) {
@@ -52,7 +52,7 @@ export function getModuleDeclaredComponents(
 
 export function getModuleFilePaths(
   tree: Tree,
-  entryPoint: EntryPoint
+  entryPoint: EntryPoint,
 ): string[] {
   let moduleFilePaths = [] as string[];
 
@@ -61,7 +61,7 @@ export function getModuleFilePaths(
 
     if (
       entryPoint.excludeDirs?.some((excludeDir) =>
-        normalizedFilePath.startsWith(excludeDir)
+        normalizedFilePath.startsWith(excludeDir),
       )
     ) {
       return;
@@ -87,14 +87,14 @@ function hasNgModule(tree: Tree, filePath: string): boolean {
   const ngModule = tsquery(
     ast,
     'ClassDeclaration > Decorator > CallExpression > Identifier[name=NgModule]',
-    { visitAllChildren: true }
+    { visitAllChildren: true },
   );
 
   return ngModule.length > 0;
 }
 
 function getDeclaredComponentsInDeclarations(
-  declarationsArray: Node
+  declarationsArray: Node,
 ): string[] {
   return getDeclaredComponentNodes(declarationsArray)
     .map((node) => node.getText())
@@ -122,7 +122,7 @@ function getDeclaredComponentNodes(declarationsArray: Node): Node[] {
         // try to find the variable declaration in the same component
         const declarationVariable = getVariableDeclaration(
           declarationVariableNode.getText(),
-          declarationVariableNode.getSourceFile()
+          declarationVariableNode.getSourceFile(),
         );
         if (
           declarationVariable &&
@@ -130,7 +130,7 @@ function getDeclaredComponentNodes(declarationsArray: Node): Node[] {
             tsModule.SyntaxKind.ArrayLiteralExpression
         ) {
           const nodes = getDeclaredComponentNodes(
-            declarationVariable.initializer
+            declarationVariable.initializer,
           );
           return nodes;
         }
@@ -160,7 +160,7 @@ function getDeclarationsArray(
   file: SourceFile,
   declarationsPropertyAssignment: Node,
   moduleFilePath: string,
-  projectName: string
+  projectName: string,
 ): Node | undefined {
   if (!tsModule) {
     tsModule = ensureTypescript();
@@ -176,7 +176,7 @@ function getDeclarationsArray(
   // Attempt to follow a variable instead of the literal
   declarationArray = getModuleDeclaredComponentsFromVariable(
     file,
-    declarationsPropertyAssignment
+    declarationsPropertyAssignment,
   );
 
   if (declarationArray) {
@@ -186,12 +186,12 @@ function getDeclarationsArray(
   // Attempt to follow a class declaration instead of the literal
   declarationArray = getModuleDeclaredComponentsFromClass(
     file,
-    declarationsPropertyAssignment
+    declarationsPropertyAssignment,
   );
 
   if (!declarationArray) {
     logger.warn(
-      stripIndents`No stories generated because the declarations in ${moduleFilePath} is not an array literal or the variable could not be found. Hint: you can always generate stories later with the 'nx generate @nx/angular:stories --name=${projectName}' command.`
+      stripIndents`No stories generated because the declarations in ${moduleFilePath} is not an array literal or the variable could not be found. Hint: you can always generate stories later with the 'nx generate @nx/angular:stories --name=${projectName}' command.`,
     );
   }
 
@@ -203,7 +203,7 @@ function getDeclarationsArray(
  */
 function getModuleDeclaredComponentsFromVariable(
   file: SourceFile,
-  declarationsPropertyAssignment: Node
+  declarationsPropertyAssignment: Node,
 ): Node | undefined {
   if (!tsModule) {
     tsModule = ensureTypescript();
@@ -219,7 +219,7 @@ function getModuleDeclaredComponentsFromVariable(
   // Attempt to find variable declaration in the file
   let variableDeclaration = getVariableDeclaration(
     declarationsVariable.getText(),
-    file
+    file,
   );
 
   if (!variableDeclaration) {
@@ -239,7 +239,7 @@ function getModuleDeclaredComponentsFromVariable(
  */
 function getModuleDeclaredComponentsFromClass(
   file: SourceFile,
-  declarationsPropertyAssignment: Node
+  declarationsPropertyAssignment: Node,
 ): Node | undefined {
   if (!tsModule) {
     tsModule = ensureTypescript();
@@ -247,7 +247,7 @@ function getModuleDeclaredComponentsFromClass(
   const propertyAccessExpression = declarationsPropertyAssignment
     .getChildren()
     .filter(
-      (node) => node.kind === tsModule.SyntaxKind.PropertyAccessExpression
+      (node) => node.kind === tsModule.SyntaxKind.PropertyAccessExpression,
     )[0];
 
   if (!propertyAccessExpression) {
@@ -278,8 +278,8 @@ function getModuleDeclaredComponentsFromClass(
         .find(
           (node) =>
             node.kind === tsModule.SyntaxKind.Identifier &&
-            node.getText() === componentsProperty.getText()
-        )
+            node.getText() === componentsProperty.getText(),
+        ),
     )
     .getChildren()
     .find((node) => node.kind === tsModule.SyntaxKind.ArrayLiteralExpression);
@@ -289,7 +289,7 @@ function getModuleDeclaredComponentsFromClass(
 
 function getClassDeclaration(
   className: string,
-  file: SourceFile
+  file: SourceFile,
 ): ClassDeclaration | undefined {
   if (!tsModule) {
     tsModule = ensureTypescript();
@@ -297,15 +297,15 @@ function getClassDeclaration(
 
   const classDeclaration = findNodes(
     file,
-    tsModule.SyntaxKind.ClassDeclaration
+    tsModule.SyntaxKind.ClassDeclaration,
   ).find((classDeclaration) =>
     classDeclaration
       .getChildren()
       .find(
         (node) =>
           node.kind === tsModule.SyntaxKind.Identifier &&
-          node.getText() === className
-      )
+          node.getText() === className,
+      ),
   ) as ClassDeclaration;
 
   return classDeclaration;
@@ -313,7 +313,7 @@ function getClassDeclaration(
 
 function getVariableDeclaration(
   variableName: string,
-  file: SourceFile
+  file: SourceFile,
 ): VariableDeclaration | undefined {
   if (!tsModule) {
     tsModule = ensureTypescript();
@@ -321,15 +321,15 @@ function getVariableDeclaration(
 
   const variableDeclaration = findNodes(
     file,
-    tsModule.SyntaxKind.VariableDeclaration
+    tsModule.SyntaxKind.VariableDeclaration,
   ).find((variableDeclaration) =>
     variableDeclaration
       .getChildren()
       .find(
         (node) =>
           node.kind === tsModule.SyntaxKind.Identifier &&
-          node.getText() === variableName
-      )
+          node.getText() === variableName,
+      ),
   ) as VariableDeclaration;
 
   return variableDeclaration;
@@ -338,7 +338,7 @@ function getVariableDeclaration(
 function getNgModuleDeclarationsPropertyAssignment(
   ngModuleDecorator: Node,
   moduleFilePath: string,
-  projectName: string
+  projectName: string,
 ): Node | undefined {
   if (!tsModule) {
     tsModule = ensureTypescript();
@@ -358,7 +358,7 @@ function getNgModuleDeclarationsPropertyAssignment(
 
   if (!declarationsPropertyAssignment) {
     logger.warn(
-      stripIndents`No stories generated because there were no components declared in ${moduleFilePath}. Hint: you can always generate stories later with the 'nx generate @nx/angular:stories --name=${projectName}' command.`
+      stripIndents`No stories generated because there were no components declared in ${moduleFilePath}. Hint: you can always generate stories later with the 'nx generate @nx/angular:stories --name=${projectName}' command.`,
     );
   }
 
@@ -369,7 +369,7 @@ function getNgModuleDecorator(file: SourceFile, moduleFilePath: string): Node {
   const ngModuleDecorators = getDecoratorMetadata(
     file,
     'NgModule',
-    '@angular/core'
+    '@angular/core',
   );
 
   if (ngModuleDecorators.length === 0) {

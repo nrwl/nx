@@ -60,8 +60,8 @@ export function withRunOptions<T>(yargs: Argv<T>): Argv<T & RunOptions> {
         value === '' || value === 'true' || value === true
           ? true
           : value === 'false' || value === false
-          ? false
-          : value,
+            ? false
+            : value,
     })
     .option('verbose', {
       type: 'boolean',
@@ -101,7 +101,7 @@ export function withRunOptions<T>(yargs: Argv<T>): Argv<T & RunOptions> {
 
 export function withTargetAndConfigurationOption(
   yargs: Argv,
-  demandOption = true
+  demandOption = true,
 ) {
   return withConfiguration(yargs).option('targets', {
     describe: 'Tasks to run for affected projects',
@@ -168,11 +168,11 @@ export function withAffectedOptions(yargs: Argv) {
     })
     .group(
       ['base'],
-      'Run command using --base=[SHA1] (affected by the committed, uncommitted and untracked changes):'
+      'Run command using --base=[SHA1] (affected by the committed, uncommitted and untracked changes):',
     )
     .group(
       ['base', 'head'],
-      'or using --base=[SHA1] --head=[SHA2] (affected by the committed changes):'
+      'or using --base=[SHA1] --head=[SHA2] (affected by the committed changes):',
     )
     .group(['files', 'uncommitted', 'untracked'], 'or using:')
     .implies('head', 'base')
@@ -192,7 +192,7 @@ export interface RunManyOptions extends RunOptions {
 }
 
 export function withRunManyOptions<T>(
-  yargs: Argv<T>
+  yargs: Argv<T>,
 ): Argv<T & RunManyOptions> {
   return withRunOptions(yargs)
     .parserConfiguration({
@@ -217,10 +217,10 @@ export function withRunManyOptions<T>(
 
 export function withOverrides<T extends { _: Array<string | number> }>(
   args: T,
-  commandLevel: number = 1
+  commandLevel: number = 1,
 ): T & { __overrides_unparsed__: string[] } {
   const unparsedArgs: string[] = (args['--'] ?? args._.slice(commandLevel)).map(
-    (v) => v.toString()
+    (v) => v.toString(),
   );
   delete args['--'];
   delete args._;
@@ -247,7 +247,7 @@ export function withOutputStyleOption(
     'static',
     'stream',
     'stream-without-prefixes',
-  ]
+  ],
 ) {
   return yargs.option('output-style', {
     describe: 'Defines how Nx emits outputs tasks logs',
@@ -316,7 +316,7 @@ export function withRunOneOptions(yargs: Argv) {
   );
 
   const res = withRunOptions(
-    withOutputStyleOption(withConfiguration(yargs), allOutputStyles)
+    withOutputStyleOption(withConfiguration(yargs), allOutputStyles),
   )
     .parserConfiguration({
       'strip-dashed': true,
@@ -336,7 +336,7 @@ export function withRunOneOptions(yargs: Argv) {
     return res.help(false);
   } else {
     return res.epilog(
-      `Run "nx run myapp:mytarget --help" to see information about the executor's schema.`
+      `Run "nx run myapp:mytarget --help" to see information about the executor's schema.`,
     );
   }
 }
@@ -353,6 +353,6 @@ export function parseCSV(args: string[] | string): string[] {
   }
   const items = args.split(',');
   return items.map((i) =>
-    i.startsWith('"') && i.endsWith('"') ? i.slice(1, -1) : i
+    i.startsWith('"') && i.endsWith('"') ? i.slice(1, -1) : i,
   );
 }

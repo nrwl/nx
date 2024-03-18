@@ -27,7 +27,7 @@ describe('nextjs:stories for applications', () => {
       };
 
       export default Test;
-      `
+      `,
     );
   });
 
@@ -37,16 +37,16 @@ describe('nextjs:stories for applications', () => {
     });
 
     expect(
-      tree.exists('test-ui-app/components/test.stories.tsx')
+      tree.exists('test-ui-app/components/test.stories.tsx'),
     ).toMatchSnapshot();
 
     const packageJson = JSON.parse(tree.read('package.json', 'utf-8'));
     expect(
-      packageJson.devDependencies['@storybook/addon-interactions']
+      packageJson.devDependencies['@storybook/addon-interactions'],
     ).toBeDefined();
     expect(packageJson.devDependencies['@storybook/test-runner']).toBeDefined();
     expect(
-      packageJson.devDependencies['@storybook/testing-library']
+      packageJson.devDependencies['@storybook/testing-library'],
     ).toBeDefined();
   });
 
@@ -57,17 +57,17 @@ describe('nextjs:stories for applications', () => {
     });
 
     expect(
-      tree.exists('test-ui-app/components/test.stories.tsx')
+      tree.exists('test-ui-app/components/test.stories.tsx'),
     ).toMatchSnapshot();
     const packageJson = JSON.parse(tree.read('package.json', 'utf-8'));
     expect(
-      packageJson.devDependencies['@storybook/addon-interactions']
+      packageJson.devDependencies['@storybook/addon-interactions'],
     ).toBeUndefined();
     expect(
-      packageJson.devDependencies['@storybook/test-runner']
+      packageJson.devDependencies['@storybook/test-runner'],
     ).toBeUndefined();
     expect(
-      packageJson.devDependencies['@storybook/testing-library']
+      packageJson.devDependencies['@storybook/testing-library'],
     ).toBeUndefined();
   });
 

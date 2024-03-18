@@ -16,7 +16,7 @@ export default async function update(tree: Tree) {
     createNodes,
     {
       targetName: 'TODO',
-    }
+    },
   );
 
   await formatFiles(tree);

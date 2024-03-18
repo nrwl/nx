@@ -37,11 +37,11 @@ import { withWeb } from '../../utils/with-web';
 
 async function getWebpackConfigs(
   options: NormalizedWebpackExecutorOptions,
-  context: ExecutorContext
+  context: ExecutorContext,
 ): Promise<Configuration | Configuration[]> {
   if (options.isolatedConfig && !options.webpackConfig) {
     throw new Error(
-      `Using "isolatedConfig" without a "webpackConfig" is not supported.`
+      `Using "isolatedConfig" without a "webpackConfig" is not supported.`,
     );
   }
 
@@ -49,7 +49,7 @@ async function getWebpackConfigs(
   if (options.webpackConfig) {
     userDefinedWebpackConfig = resolveUserDefinedWebpackConfig(
       options.webpackConfig,
-      getRootTsConfigPath()
+      getRootTsConfigPath(),
     );
 
     if (typeof userDefinedWebpackConfig.then === 'function') {
@@ -97,7 +97,7 @@ export type WebpackExecutorEvent =
 
 export async function* webpackExecutor(
   _options: WebpackExecutorOptions,
-  context: ExecutorContext
+  context: ExecutorContext,
 ): AsyncGenerator<WebpackExecutorEvent, WebpackExecutorEvent, undefined> {
   // Default to production build.
   process.env['NODE_ENV'] ||= 'production';
@@ -108,14 +108,14 @@ export async function* webpackExecutor(
     _options,
     context.root,
     metadata.root,
-    sourceRoot
+    sourceRoot,
   );
   const isScriptOptimizeOn =
     typeof options.optimization === 'boolean'
       ? options.optimization
       : options.optimization && options.optimization.scripts
-      ? options.optimization.scripts
-      : false;
+        ? options.optimization.scripts
+        : false;
 
   (process.env as any).NODE_ENV ||= isScriptOptimizeOn
     ? 'production'
@@ -134,7 +134,7 @@ export async function* webpackExecutor(
       require.resolve('@swc/core');
     } catch {
       logger.error(
-        `Missing SWC dependencies: @swc/core, swc-loader. Make sure you install them first.`
+        `Missing SWC dependencies: @swc/core, swc-loader. Make sure you install them first.`,
       );
       return {
         success: false,
@@ -150,13 +150,13 @@ export async function* webpackExecutor(
       context.root,
       context.projectName,
       context.targetName,
-      context.configurationName
+      context.configurationName,
     );
     options.tsConfig = createTmpTsConfig(
       options.tsConfig,
       context.root,
       metadata.root,
-      dependencies
+      dependencies,
     );
     process.env.NX_TSCONFIG_PATH = options.tsConfig;
   }
@@ -169,7 +169,7 @@ export async function* webpackExecutor(
   if (options.generatePackageJson && metadata.projectType !== 'application') {
     logger.warn(
       stripIndents`The project ${context.projectName} is using the 'generatePackageJson' option which is deprecated for library projects. It should only be used for applications.
-        For libraries, configure the project to use the '@nx/dependency-checks' ESLint rule instead (https://nx.dev/packages/eslint-plugin/documents/dependency-checks).`
+        For libraries, configure the project to use the '@nx/dependency-checks' ESLint rule instead (https://nx.dev/packages/eslint-plugin/documents/dependency-checks).`,
     );
   }
 
@@ -185,20 +185,20 @@ export async function* webpackExecutor(
             return runWebpack(config).pipe(
               tap((stats) => {
                 console.info(stats.toString(config.stats));
-              })
+              }),
             );
           } else {
             return of();
           }
         },
         { hasErrors: () => false } as Stats,
-        1
+        1,
       ),
       // Collect build results as an array.
       bufferCount(Array.isArray(configs) ? configs.length : 1),
       switchMap(async (results) => {
         const success = results.every(
-          (result) => Boolean(result) && !result.hasErrors()
+          (result) => Boolean(result) && !result.hasErrors(),
         );
         // TODO(jack): This should read output from webpack config if provided.
         // The outfile is only used by NestJS, where `@nx/js:node` executor requires it to run the file.
@@ -207,12 +207,12 @@ export async function* webpackExecutor(
           outfile: resolve(
             context.root,
             options.outputPath,
-            options.outputFileName
+            options.outputFileName,
           ),
           options,
         };
-      })
-    )
+      }),
+    ),
   );
 }
 

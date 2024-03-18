@@ -14,7 +14,7 @@ export interface RemoveMigrationsGeneratorSchema {
 
 export async function removeMigrationsGenerator(
   tree: Tree,
-  { v }: RemoveMigrationsGeneratorSchema
+  { v }: RemoveMigrationsGeneratorSchema,
 ) {
   visitNotIgnoredFiles(tree, '', (path) => {
     // Ignore angular migrations because angular needs to support migrations until LTS support is dropped
@@ -59,7 +59,7 @@ export async function removeMigrationsGenerator(
         }
 
         for (const [updateName, packageJsonUpdate] of Object.entries(
-          packageJsonUpdates ?? {}
+          packageJsonUpdates ?? {},
         )) {
           if (major(packageJsonUpdate.version) < v) {
             delete packageJsonUpdates[updateName];
@@ -84,7 +84,7 @@ function getImplFile(
   }: {
     implementation?: string;
     factory?: string;
-  }
+  },
 ) {
   const rawPath = implementation ?? factory;
 

@@ -15,7 +15,7 @@ import { Schema } from './schema';
  */
 export async function storybookConfigurationGenerator(
   tree: Tree,
-  options: Schema
+  options: Schema,
 ) {
   const storybookConfigurationGenerator =
     await vueStorybookConfigurationGenerator(tree, {
@@ -29,9 +29,9 @@ export async function storybookConfigurationGenerator(
     joinPathFragments(
       root,
       '.storybook',
-      'preview.' + options.tsConfiguration ? 'ts' : 'js'
+      'preview.' + options.tsConfiguration ? 'ts' : 'js',
     ),
-    `import '../src/assets/css/styles.css';`
+    `import '../src/assets/css/styles.css';`,
   );
 
   updateJson(tree, `${root}/tsconfig.storybook.json`, (json) => {

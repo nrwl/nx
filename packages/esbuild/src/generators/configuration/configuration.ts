@@ -16,7 +16,7 @@ import { addBuildTargetDefaults } from '@nx/devkit/src/generators/add-build-targ
 
 export async function configurationGenerator(
   tree: Tree,
-  options: EsBuildProjectSchema
+  options: EsBuildProjectSchema,
 ) {
   const task = await esbuildInitGenerator(tree, {
     ...options,
@@ -34,7 +34,7 @@ function checkForTargetConflicts(tree: Tree, options: EsBuildProjectSchema) {
   const project = readProjectConfiguration(tree, options.project);
   if (project.targets?.[options.buildTarget]) {
     throw new Error(
-      `Project "${options.project}" already has a ${options.buildTarget} target. Pass --skipValidation to ignore this error.`
+      `Project "${options.project}" already has a ${options.buildTarget} target. Pass --skipValidation to ignore this error.`,
     );
   }
 }
@@ -63,7 +63,7 @@ function addBuildTarget(tree: Tree, options: EsBuildProjectSchema) {
       prevBuildOptions?.outputPath ??
       joinPathFragments(
         'dist',
-        project.root === '.' ? options.project : project.root
+        project.root === '.' ? options.project : project.root,
       ),
     outputFileName: 'main.js',
     tsConfig,

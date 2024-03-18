@@ -14,14 +14,14 @@ export interface RunScriptOptions {
 
 export default async function (
   options: RunScriptOptions,
-  context: ExecutorContext
+  context: ExecutorContext,
 ) {
   const pm = getPackageManagerCommand();
   try {
     let command = pm.run(options.script, options.__unparsed__.join(' '));
     let cwd = path.join(
       context.root,
-      context.projectsConfigurations.projects[context.projectName].root
+      context.projectsConfigurations.projects[context.projectName].root,
     );
 
     let env = process.env;
@@ -48,7 +48,7 @@ export default async function (
 function nodeProcess(
   command: string,
   cwd: string,
-  env: Record<string, string>
+  env: Record<string, string>,
 ) {
   execSync(command, {
     stdio: ['inherit', 'inherit', 'inherit'],
@@ -60,7 +60,7 @@ function nodeProcess(
 async function ptyProcess(
   command: string,
   cwd: string,
-  env: Record<string, string>
+  env: Record<string, string>,
 ) {
   const terminal = getPseudoTerminal();
 

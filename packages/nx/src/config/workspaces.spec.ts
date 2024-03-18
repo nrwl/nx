@@ -50,7 +50,7 @@ describe('Workspaces', () => {
         {
           NX_WORKSPACE_ROOT: fs.tempDir,
         },
-        () => retrieveProjectConfigurations(fs.tempDir, readNxJson(fs.tempDir))
+        () => retrieveProjectConfigurations(fs.tempDir, readNxJson(fs.tempDir)),
       );
       expect(projects['my-package']).toEqual({
         name: 'my-package',

@@ -31,7 +31,7 @@ export const yargsInternalMigrateCommand: CommandModule = {
     process.exit(
       await (
         await import('./migrate')
-      ).migrate(process.cwd(), args, process.argv.slice(3))
+      ).migrate(process.cwd(), args, process.argv.slice(3)),
     ),
 };
 
@@ -90,16 +90,16 @@ function withMigrationOptions(yargs: Argv) {
       ({ createCommits, commitPrefix, from, excludeAppliedMigrations }) => {
         if (!createCommits && commitPrefix !== defaultCommitPrefix) {
           throw new Error(
-            'Error: Providing a custom commit prefix requires --create-commits to be enabled'
+            'Error: Providing a custom commit prefix requires --create-commits to be enabled',
           );
         }
         if (excludeAppliedMigrations && !from) {
           throw new Error(
-            'Error: Excluding migrations that should have been previously applied requires --from to be set'
+            'Error: Excluding migrations that should have been previously applied requires --from to be set',
           );
         }
         return true;
-      }
+      },
     );
 }
 
@@ -119,7 +119,7 @@ function runMigration() {
       if (
         process.env.npm_config_registry &&
         process.env.npm_config_registry.match(
-          /^https:\/\/registry\.(npmjs\.org|yarnpkg\.com)/
+          /^https:\/\/registry\.(npmjs\.org|yarnpkg\.com)/,
         )
       ) {
         delete process.env.npm_config_registry;
@@ -174,7 +174,7 @@ function nxCliPath() {
     return path.join(tmpDir, `node_modules`, '.bin', 'nx');
   } catch (e) {
     console.error(
-      `Failed to install the ${version} version of the migration script. Using the current version.`
+      `Failed to install the ${version} version of the migration script. Using the current version.`,
     );
     if (process.env.NX_VERBOSE_LOGGING) {
       console.error(e);

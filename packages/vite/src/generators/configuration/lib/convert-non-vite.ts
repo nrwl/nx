@@ -24,12 +24,12 @@ export async function convertNonVite(
   projectType: string,
   targets: {
     [targetName: string]: TargetConfiguration<any>;
-  }
+  },
 ) {
   // Check if it has vite
   const hasViteConfig = findViteConfig(tree, projectRoot);
   const hasIndexHtmlAtRoot = tree.exists(
-    joinPathFragments(projectRoot, 'index.html')
+    joinPathFragments(projectRoot, 'index.html'),
   );
 
   // Check if it has webpack
@@ -50,7 +50,7 @@ export async function convertNonVite(
     !hasWebpackConfig
   ) {
     throw new Error(
-      `The project ${schema.project} is already configured to use Vite.`
+      `The project ${schema.project} is already configured to use Vite.`,
     );
     return;
   }

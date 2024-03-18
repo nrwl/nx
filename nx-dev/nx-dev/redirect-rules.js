@@ -544,7 +544,7 @@ const tutorialRedirects = Object.assign(
   tutorialBaseUrls,
   reactTutorialRedirects,
   nodeTutorialRedirects,
-  extraNodeRedirects
+  extraNodeRedirects,
 );
 
 const oldAngularTutorialPaths = [

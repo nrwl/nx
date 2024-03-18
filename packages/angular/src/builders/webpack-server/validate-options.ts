@@ -24,7 +24,7 @@ function validateAssets(options: Schema, { version }: VersionInfo): void {
 
 function validateBuildOptimizer(
   options: Schema,
-  { major, version }: VersionInfo
+  { major, version }: VersionInfo,
 ): void {
   if (major < 16 && options.buildOptimizer) {
     throw new Error(stripIndents`The "buildOptimizer" option is supported from Angular >= 16.0.0. You are currently using "${version}".

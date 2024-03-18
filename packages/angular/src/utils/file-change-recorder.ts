@@ -13,7 +13,10 @@ export class FileChangeRecorder {
     return this.mutableContent.original;
   }
 
-  constructor(private readonly tree: Tree, private readonly filePath: string) {
+  constructor(
+    private readonly tree: Tree,
+    private readonly filePath: string,
+  ) {
     this.setContentToFileContent();
   }
 
@@ -43,7 +46,7 @@ export class FileChangeRecorder {
 
   setContentToFileContent(): void {
     this.mutableContent = new MagicString(
-      this.tree.read(this.filePath, 'utf-8')
+      this.tree.read(this.filePath, 'utf-8'),
     );
   }
 }

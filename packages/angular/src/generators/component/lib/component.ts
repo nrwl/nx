@@ -9,7 +9,7 @@ import { findModuleFromOptions } from './module';
 
 export function exportComponentInEntryPoint(
   tree: Tree,
-  schema: NormalizedSchema
+  schema: NormalizedSchema,
 ): void {
   if (!schema.export || schema.skipImport) {
     return;
@@ -17,7 +17,7 @@ export function exportComponentInEntryPoint(
 
   const { root, projectType } = readProjectConfiguration(
     tree,
-    schema.projectName
+    schema.projectName,
   );
 
   if (projectType === 'application') {
@@ -28,12 +28,12 @@ export function exportComponentInEntryPoint(
     tree,
     schema.directory,
     root,
-    schema.projectSourceRoot
+    schema.projectSourceRoot,
   );
   if (!entryPointPath) {
     logger.warn(
       `Unable to determine whether the component should be exported in the library entry point file. ` +
-        `The library's entry point file could not be found. Skipping exporting the component in the entry point file.`
+        `The library's entry point file could not be found. Skipping exporting the component in the entry point file.`,
     );
 
     return;
@@ -48,11 +48,11 @@ export function exportComponentInEntryPoint(
 
   const relativePathFromEntryPoint = getRelativeImportToFile(
     entryPointPath,
-    schema.filePath
+    schema.filePath,
   );
   const updateEntryPointContent = stripIndents`${tree.read(
     entryPointPath,
-    'utf-8'
+    'utf-8',
   )}
     export * from '${relativePathFromEntryPoint}';`;
 
@@ -62,7 +62,7 @@ export function exportComponentInEntryPoint(
 function shouldExportInEntryPoint(
   tree: Tree,
   entryPoint: string,
-  modulePath: string
+  modulePath: string,
 ): boolean {
   if (!modulePath) {
     return false;
@@ -76,7 +76,7 @@ function shouldExportInEntryPoint(
   const moduleExport = tsquery(
     entryPointAst,
     `ExportDeclaration StringLiteral[value='${moduleImportPath}']`,
-    { visitAllChildren: true }
+    { visitAllChildren: true },
   )[0] as StringLiteral;
 
   return Boolean(moduleExport);

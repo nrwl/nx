@@ -43,7 +43,7 @@ export default async function removeProtractorDefaults(tree: Tree) {
 function updateE2ETestRunner(
   generatorsConfig:
     | NxJsonConfiguration['generators']
-    | ProjectConfiguration['generators']
+    | ProjectConfiguration['generators'],
 ) {
   const generators = Object.entries(generatorsConfig);
 

@@ -57,7 +57,7 @@ describe('EsBuild Plugin', () => {
       `dist/libs/${myPkg}/package.json`,
       `dist/libs/${myPkg}/${
         packageManagerLockFile[detectPackageManager(tmpProjPath())]
-      }`
+      }`,
     );
     expect(runCommand(`node dist/libs/${myPkg}`)).toMatch(/Hello/);
 
@@ -80,7 +80,7 @@ describe('EsBuild Plugin', () => {
       `
       const x: number = 'a'; // type error
       console.log('Bye');
-    `
+    `,
     );
     expect(() => runCLI(`build ${myPkg}`)).toThrow();
     expect(() => runCLI(`build ${myPkg} --skipTypeCheck`)).not.toThrow();
@@ -90,7 +90,7 @@ describe('EsBuild Plugin', () => {
       `libs/${myPkg}/src/index.ts`,
       `
       console.log('Hello');
-    `
+    `,
     );
 
     // TODO: Investigate why these assertions are flaky in CI
@@ -133,21 +133,21 @@ describe('EsBuild Plugin', () => {
 
         console.log(_.upperFirst('hello world'));
         console.log(greet());
-      `
+      `,
     );
     updateFile(
       `libs/${childLib}/src/index.ts`,
       `
         import { always } from 'rambda';
         export const greet = always('Hello from child lib');
-      `
+      `,
     );
 
     // Bundle child lib and third-party packages
     runCLI(`build ${parentLib}`);
 
     expect(
-      readJson(`dist/libs/${parentLib}/package.json`).dependencies?.['dayjs']
+      readJson(`dist/libs/${parentLib}/package.json`).dependencies?.['dayjs'],
     ).not.toBeDefined();
     let runResult = runCommand(`node dist/libs/${parentLib}/index.cjs`);
     expect(runResult).toMatch(/Hello world/);
@@ -157,7 +157,7 @@ describe('EsBuild Plugin', () => {
     runCLI(`build ${parentLib} --third-party=false`);
 
     expect(
-      readJson(`dist/libs/${parentLib}/package.json`).dependencies
+      readJson(`dist/libs/${parentLib}/package.json`).dependencies,
     ).toEqual({
       // Don't care about the versions, just that they exist
       rambda: expect.any(String),
@@ -178,11 +178,11 @@ describe('EsBuild Plugin', () => {
 
     checkFilesExist(
       `dist/libs/${myPkg}/libs/${myPkg}/src/lib/${myPkg}.cjs`,
-      `dist/libs/${myPkg}/index.cjs`
+      `dist/libs/${myPkg}/index.cjs`,
     );
     // Test files are excluded in tsconfig (e.g. tsconfig.lib.json)
     checkFilesDoNotExist(
-      `dist/libs/${myPkg}/libs/${myPkg}/src/lib/${myPkg}.spec.cjs`
+      `dist/libs/${myPkg}/libs/${myPkg}/src/lib/${myPkg}.spec.cjs`,
     );
     // Can run package (package.json fields are correctly generated)
     expect(runCommand(`node dist/libs/${myPkg}`)).toMatch(/Hello/);
@@ -204,13 +204,13 @@ describe('EsBuild Plugin', () => {
 
     checkFilesExist(
       `dist/libs/${myPkg}/index.cjs`,
-      `dist/libs/${myPkg}/extra.cjs`
+      `dist/libs/${myPkg}/extra.cjs`,
     );
     expect(
-      runCommand(`node dist/libs/${myPkg}/index.cjs`, { failOnError: true })
+      runCommand(`node dist/libs/${myPkg}/index.cjs`, { failOnError: true }),
     ).toMatch(/main/);
     expect(
-      runCommand(`node dist/libs/${myPkg}/extra.cjs`, { failOnError: true })
+      runCommand(`node dist/libs/${myPkg}/extra.cjs`, { failOnError: true }),
     ).toMatch(/extra/);
   }, 120_000);
 
@@ -219,7 +219,7 @@ describe('EsBuild Plugin', () => {
     runCLI(`generate @nx/js:lib ${myPkg} --bundler=esbuild`);
     updateFile(
       `libs/${myPkg}/esbuild.config.js`,
-      `console.log('custom config loaded');\nmodule.exports = {};\n`
+      `console.log('custom config loaded');\nmodule.exports = {};\n`,
     );
     updateJson(join('libs', myPkg, 'project.json'), (json) => {
       delete json.targets.build.options.esbuildOptions;

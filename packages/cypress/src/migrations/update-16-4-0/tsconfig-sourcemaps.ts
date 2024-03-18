@@ -32,7 +32,7 @@ export async function fixLegacyCypressTsconfig(tree: Tree) {
 
       const projectLevelConfigPath = joinPathFragments(
         projectConfig.root,
-        'tsconfig.json'
+        'tsconfig.json',
       );
 
       if (
@@ -60,24 +60,24 @@ export async function fixLegacyCypressTsconfig(tree: Tree) {
             ...e2eConfig.compilerOptions,
           };
           json.files = Array.from(
-            new Set([...(json.files ?? []), ...(e2eConfig.files ?? [])])
+            new Set([...(json.files ?? []), ...(e2eConfig.files ?? [])]),
           );
           json.include = Array.from(
-            new Set([...(json.include ?? []), ...(e2eConfig.include ?? [])])
+            new Set([...(json.include ?? []), ...(e2eConfig.include ?? [])]),
           );
           json.exclude = Array.from(
-            new Set([...(json.exclude ?? []), ...(e2eConfig.exclude ?? [])])
+            new Set([...(json.exclude ?? []), ...(e2eConfig.exclude ?? [])]),
           );
 
           // these paths will always be 'unix style'
           // and on windows relative will not work on these paths
           const tsConfigFromProjRoot = posix.relative(
             projectConfig.root,
-            tsconfigToRemove
+            tsconfigToRemove,
           );
 
           json.references = (json.references ?? []).filter(
-            ({ path }) => !path.includes(tsConfigFromProjRoot)
+            ({ path }) => !path.includes(tsConfigFromProjRoot),
           );
           return json;
         });
@@ -93,7 +93,7 @@ export async function fixLegacyCypressTsconfig(tree: Tree) {
       }
 
       updateProjectConfiguration(tree, projectName, projectConfig);
-    }
+    },
   );
 
   await formatFiles(tree);

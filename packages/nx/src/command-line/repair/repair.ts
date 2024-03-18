@@ -5,7 +5,7 @@ import { output } from '../../utils/output';
 
 export async function repair(
   args: { verbose: boolean },
-  extraMigrations = [] as any[]
+  extraMigrations = [] as any[],
 ) {
   if (args['verbose']) {
     process.env.NX_VERBOSE_LOGGING = 'true';
@@ -26,7 +26,7 @@ export async function repair(
         }
         return agg;
       },
-      []
+      [],
     );
 
     const migrations = [...nxMigrations, ...extraMigrations];
@@ -35,7 +35,7 @@ export async function repair(
       migrations,
       verbose,
       false,
-      ''
+      '',
     );
 
     if (migrationsThatMadeNoChanges.length < migrations.length) {

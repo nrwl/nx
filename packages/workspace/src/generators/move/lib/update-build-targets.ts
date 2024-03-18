@@ -23,7 +23,7 @@ export function updateBuildTargets(tree: Tree, schema: NormalizedSchema) {
                 : `${schema.newProjectName}:${target}`;
             }
           }) || changed;
-      }
+      },
     );
     if (changed) {
       updateProjectConfiguration(tree, project, projectConfig);
@@ -33,7 +33,7 @@ export function updateBuildTargets(tree: Tree, schema: NormalizedSchema) {
 
 function updateJsonValue(
   config: TargetConfiguration,
-  callback: (x: string) => void | string
+  callback: (x: string) => void | string,
 ): boolean {
   function recur(obj, key, value): boolean {
     let changed = false;

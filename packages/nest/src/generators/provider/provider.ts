@@ -15,7 +15,7 @@ export type ProviderGeneratorOptions = NestGeneratorWithLanguageOption &
 
 export async function providerGenerator(
   tree: Tree,
-  rawOptions: ProviderGeneratorOptions
+  rawOptions: ProviderGeneratorOptions,
 ) {
   await providerGeneratorInternal(tree, {
     nameAndDirectoryFormat: 'derived',
@@ -25,7 +25,7 @@ export async function providerGenerator(
 
 export async function providerGeneratorInternal(
   tree: Tree,
-  rawOptions: ProviderGeneratorOptions
+  rawOptions: ProviderGeneratorOptions,
 ): Promise<any> {
   const options = await normalizeProviderOptions(tree, rawOptions);
 
@@ -36,13 +36,13 @@ export default providerGenerator;
 
 async function normalizeProviderOptions(
   tree: Tree,
-  options: ProviderGeneratorOptions
+  options: ProviderGeneratorOptions,
 ): Promise<NormalizedOptions> {
   const normalizedOptions = await normalizeOptions(
     tree,
     'provider',
     '@nx/nest:provider',
-    options
+    options,
   );
   return {
     ...normalizedOptions,

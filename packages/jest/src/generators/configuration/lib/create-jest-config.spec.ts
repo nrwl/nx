@@ -20,7 +20,7 @@ import { createJestConfig } from './create-jest-config';
 function addProjectConfiguration(
   tree: Tree,
   name: string,
-  project: ProjectConfiguration
+  project: ProjectConfiguration,
 ) {
   _addProjectConfiguration(tree, name, project);
   projectGraph.nodes[name] = {
@@ -50,10 +50,10 @@ describe('createJestConfig', () => {
 
     expect(tree.exists('jest.config.js')).toBeTruthy();
     expect(
-      stripIndents`${tree.read('jest.config.js', 'utf-8')}`
+      stripIndents`${tree.read('jest.config.js', 'utf-8')}`,
     ).toMatchSnapshot();
     expect(
-      stripIndents`${tree.read('jest.preset.js', 'utf-8')}`
+      stripIndents`${tree.read('jest.preset.js', 'utf-8')}`,
     ).toMatchSnapshot();
   });
 
@@ -62,10 +62,10 @@ describe('createJestConfig', () => {
 
     expect(tree.exists('jest.config.ts')).toBeTruthy();
     expect(
-      stripIndents`${tree.read('jest.config.ts', 'utf-8')}`
+      stripIndents`${tree.read('jest.config.ts', 'utf-8')}`,
     ).toMatchSnapshot();
     expect(
-      stripIndents`${tree.read('jest.preset.js', 'utf-8')}`
+      stripIndents`${tree.read('jest.preset.js', 'utf-8')}`,
     ).toMatchSnapshot();
   });
 
@@ -140,7 +140,7 @@ export default {
   testEnvironment: 'node',
   preset: './jest.preset.js',
 };
-`
+`,
       );
 
       await createJestConfig(tree, { rootProject: false }, 'js');
@@ -207,7 +207,7 @@ module.exports = {
   testEnvironment: 'node',
   preset: './jest.preset.js',
 };
-`
+`,
       );
 
       await createJestConfig(tree, { js: true, rootProject: false }, 'js');

@@ -23,7 +23,7 @@ import { CypressComponentConfigSchema } from './schema';
 
 export function cypressComponentConfiguration(
   tree: Tree,
-  options: CypressComponentConfigSchema
+  options: CypressComponentConfigSchema,
 ) {
   return cypressComponentConfigurationInternal(tree, {
     ...options,
@@ -36,7 +36,7 @@ export function cypressComponentConfiguration(
  */
 export async function cypressComponentConfigurationInternal(
   tree: Tree,
-  options: CypressComponentConfigSchema
+  options: CypressComponentConfigSchema,
 ) {
   const projectConfig = readProjectConfiguration(tree, options.project);
   const { componentConfigurationGenerator: baseCyCTConfig } = ensurePackage<
@@ -66,21 +66,21 @@ export async function cypressComponentConfigurationInternal(
 async function addFiles(
   tree: Tree,
   projectConfig: ProjectConfiguration,
-  options: CypressComponentConfigSchema
+  options: CypressComponentConfigSchema,
 ) {
   const componentFile = joinPathFragments(
     projectConfig.root,
     'cypress',
     'support',
-    'component.ts'
+    'component.ts',
   );
   const { addMountDefinition } = await import('@nx/cypress/src/utils/config');
   const updatedCmpContents = await addMountDefinition(
-    tree.read(componentFile, 'utf-8')
+    tree.read(componentFile, 'utf-8'),
   );
   tree.write(
     componentFile,
-    `import { mount } from 'cypress/angular';\n${updatedCmpContents}`
+    `import { mount } from 'cypress/angular';\n${updatedCmpContents}`,
   );
 
   if (options.generateTests) {
@@ -94,9 +94,9 @@ async function addFiles(
           tree,
           entryPoint,
           moduleFilePaths,
-          options.project
+          options.project,
         ),
-        ...getStandaloneComponentsInfo(tree, entryPoint)
+        ...getStandaloneComponentsInfo(tree, entryPoint),
       );
     }
 
@@ -106,7 +106,7 @@ async function addFiles(
       }
       const componentDirFromProjectRoot = relative(
         projectConfig.root,
-        joinPathFragments(info.moduleFolderPath, info.path)
+        joinPathFragments(info.moduleFolderPath, info.path),
       );
       await componentTestGenerator(tree, {
         project: options.project,
@@ -121,7 +121,7 @@ async function addFiles(
 
 async function configureCypressCT(
   tree: Tree,
-  options: CypressComponentConfigSchema
+  options: CypressComponentConfigSchema,
 ) {
   let found: FoundTarget = { target: options.buildTarget, config: undefined };
 
@@ -163,22 +163,22 @@ async function configureCypressCT(
   );
   const cypressConfigPath = getProjectCypressConfigPath(
     tree,
-    projectConfig.root
+    projectConfig.root,
   );
   const updatedCyConfig = await addDefaultCTConfig(
     tree.read(cypressConfigPath, 'utf-8'),
-    ctConfigOptions
+    ctConfigOptions,
   );
   tree.write(
     cypressConfigPath,
-    `import { nxComponentTestingPreset } from '@nx/angular/plugins/component-testing';\n${updatedCyConfig}`
+    `import { nxComponentTestingPreset } from '@nx/angular/plugins/component-testing';\n${updatedCyConfig}`,
   );
 }
 
 function assertValidConfig(config: unknown) {
   if (!config) {
     throw new Error(
-      'Unable to find a valid build configuration. Try passing in a target for an Angular app. --build-target=<project>:<target>[:<configuration>]'
+      'Unable to find a valid build configuration. Try passing in a target for an Angular app. --build-target=<project>:<target>[:<configuration>]',
     );
   }
 }

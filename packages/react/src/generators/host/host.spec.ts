@@ -80,7 +80,7 @@ jest.mock('@nx/devkit', () => {
             },
           },
         },
-      })
+      }),
     ),
   };
 });
@@ -163,7 +163,7 @@ describe('hostGenerator', () => {
 
     expect(tree.exists('test/module-federation.config.ts')).toBeTruthy();
     expect(
-      tree.read('test/module-federation.config.ts', 'utf-8')
+      tree.read('test/module-federation.config.ts', 'utf-8'),
     ).toMatchSnapshot();
   });
 
@@ -187,7 +187,7 @@ describe('hostGenerator', () => {
 
     expect(tree.exists('test/module-federation.config.js')).toBeTruthy();
     expect(
-      tree.read('test/module-federation.config.js', 'utf-8')
+      tree.read('test/module-federation.config.js', 'utf-8'),
     ).toMatchSnapshot();
   });
 
@@ -244,10 +244,10 @@ describe('hostGenerator', () => {
     });
 
     expect(
-      tree.read('test/webpack.server.config.js', 'utf-8')
+      tree.read('test/webpack.server.config.js', 'utf-8'),
     ).toMatchSnapshot();
     expect(
-      tree.read('test/module-federation.server.config.js', 'utf-8')
+      tree.read('test/module-federation.server.config.js', 'utf-8'),
     ).toMatchSnapshot();
   });
 
@@ -288,10 +288,10 @@ describe('hostGenerator', () => {
     });
 
     expect(
-      tree.read('test/webpack.server.config.ts', 'utf-8')
+      tree.read('test/webpack.server.config.ts', 'utf-8'),
     ).toMatchSnapshot();
     expect(
-      tree.read('test/module-federation.server.config.ts', 'utf-8')
+      tree.read('test/module-federation.server.config.ts', 'utf-8'),
     ).toMatchSnapshot();
   });
 
@@ -314,7 +314,7 @@ describe('hostGenerator', () => {
     expect(tree.exists('foo/remote2/project.json')).toBeTruthy();
     expect(tree.exists('foo/remote3/project.json')).toBeTruthy();
     expect(
-      tree.read('foo/host-app/module-federation.config.js', 'utf-8')
+      tree.read('foo/host-app/module-federation.config.js', 'utf-8'),
     ).toContain(`'remote1', 'remote2', 'remote3'`);
   });
 
@@ -337,7 +337,7 @@ describe('hostGenerator', () => {
     expect(tree.exists('foo/remote2/project.json')).toBeTruthy();
     expect(tree.exists('foo/remote3/project.json')).toBeTruthy();
     expect(
-      tree.read('foo/host-app/module-federation.config.ts', 'utf-8')
+      tree.read('foo/host-app/module-federation.config.ts', 'utf-8'),
     ).toContain(`'remote1', 'remote2', 'remote3'`);
   });
 });

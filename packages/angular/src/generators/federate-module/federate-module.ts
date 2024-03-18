@@ -51,7 +51,7 @@ export async function federateModuleGenerator(tree: Tree, schema: Schema) {
     
     Dynamic import:
     import('${remoteName}/${schema.name}').then((m) => m.MyComponent);
-  `
+  `,
   );
   return runTasksInSerial(...tasks);
 }

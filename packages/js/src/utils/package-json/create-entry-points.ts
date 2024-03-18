@@ -3,7 +3,7 @@ import { logger } from '@nx/devkit';
 
 export function createEntryPoints(
   additionalEntryPoints: undefined | string[],
-  root: string
+  root: string,
 ): string[] {
   if (!additionalEntryPoints?.length) return [];
   const files = [];

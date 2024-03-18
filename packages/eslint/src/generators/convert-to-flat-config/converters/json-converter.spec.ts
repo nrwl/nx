@@ -53,7 +53,7 @@ describe('convertEslintJsonToFlatConfig', () => {
             rules: {},
           },
         ],
-      })
+      }),
     );
 
     tree.write('.eslintignore', 'node_modules\nsomething/else');
@@ -62,7 +62,7 @@ describe('convertEslintJsonToFlatConfig', () => {
       tree,
       '',
       readJson(tree, '.eslintrc.json'),
-      ['.eslintignore']
+      ['.eslintignore'],
     );
 
     expect(content).toMatchInlineSnapshot(`
@@ -164,7 +164,7 @@ describe('convertEslintJsonToFlatConfig', () => {
         env: {
           jest: true,
         },
-      })
+      }),
     );
 
     tree.write('mylib/.eslintignore', 'node_modules\nsomething/else');
@@ -173,7 +173,7 @@ describe('convertEslintJsonToFlatConfig', () => {
       tree,
       'mylib',
       readJson(tree, 'mylib/.eslintrc.json'),
-      ['mylib/.eslintignore']
+      ['mylib/.eslintignore'],
     );
 
     expect(content).toMatchInlineSnapshot(`

@@ -13,7 +13,7 @@ export function getBasicNxSection(items: MenuItem[]): MenuSection {
           m.id === 'concepts' ||
           m.id === 'recipes' ||
           m.id === 'showcase' ||
-          m.id === 'reference'
+          m.id === 'reference',
       )
       .map((m) => {
         return {
@@ -62,7 +62,7 @@ export function getPackagesSections(items: MenuItem[]): MenuSection[] {
       (m) =>
         m.id !== 'create-nx-plugin' &&
         m.id !== 'create-nx-workspace' &&
-        m.id !== 'tao'
+        m.id !== 'tao',
     )
     .map((m) => ({
       id: m.id,
@@ -84,7 +84,7 @@ export function getBasicNxCloudSection(items: MenuItem[]): MenuSection {
           m.id === 'features' ||
           m.id === 'concepts' ||
           m.id === 'recipes' ||
-          m.id === 'reference'
+          m.id === 'reference',
       )
       .map((m) => {
         return {

@@ -31,10 +31,12 @@ describe('lib', () => {
       expect(configuration.targets.build).toBeUndefined();
       expect(tree.read('my-lib/jest.config.ts', 'utf-8')).toMatchSnapshot();
       expect(
-        readJson(tree, 'package.json').devDependencies['jest-environment-jsdom']
+        readJson(tree, 'package.json').devDependencies[
+          'jest-environment-jsdom'
+        ],
       ).not.toBeDefined();
       expect(
-        readJson(tree, 'package.json').devDependencies['jest-environment-node']
+        readJson(tree, 'package.json').devDependencies['jest-environment-node'],
       ).toBeDefined();
     });
 
@@ -46,7 +48,7 @@ describe('lib', () => {
       });
       expect(
         readProjectConfiguration(tree, 'my-lib').targets.build.options
-          .srcRootForCompilationRoot
+          .srcRootForCompilationRoot,
       ).toEqual('./src');
     });
 
@@ -244,7 +246,7 @@ describe('lib', () => {
         });
       } catch (e) {
         expect(e.message).toContain(
-          'For publishable libs you have to provide a proper "--importPath" which needs to be a valid npm package name (e.g. my-awesome-lib or @myorg/my-lib)'
+          'For publishable libs you have to provide a proper "--importPath" which needs to be a valid npm package name (e.g. my-awesome-lib or @myorg/my-lib)',
         );
       }
     });
@@ -318,7 +320,7 @@ describe('lib', () => {
       expect(tree.exists('my-lib/jest.config.ts')).toBeFalsy();
       expect(tree.exists('my-lib/lib/my-lib.spec.ts')).toBeFalsy();
       expect(
-        readProjectConfiguration(tree, 'my-lib').targets.test
+        readProjectConfiguration(tree, 'my-lib').targets.test,
       ).toBeUndefined();
       const tsconfigJson = readJson(tree, 'my-lib/tsconfig.json');
       expect(tsconfigJson.extends).toEqual('../tsconfig.base.json');
@@ -400,7 +402,7 @@ describe('lib', () => {
 
       expect(packageJson.name).toBe('@myorg/lib');
       expect(
-        tsconfigJson.compilerOptions.paths[packageJson.name]
+        tsconfigJson.compilerOptions.paths[packageJson.name],
       ).toBeDefined();
     });
 
@@ -421,7 +423,7 @@ describe('lib', () => {
         });
       } catch (e) {
         expect(e.message).toContain(
-          'You already have a library using the import path'
+          'You already have a library using the import path',
         );
       }
 
@@ -501,7 +503,7 @@ describe('lib', () => {
       expect(projectConfiguration.root).toEqual('my-lib');
 
       expect(projectConfiguration.targets.build.options.main).toEqual(
-        'my-lib/src/index.js'
+        'my-lib/src/index.js',
       );
     });
 

@@ -37,10 +37,10 @@ describe('@nx/react-native (legacy)', () => {
     });
     runCLI(
       `generate @nx/react-native:application ${appName} --bunlder=webpack --e2eTestRunner=cypress --install=false --no-interactive`,
-      { env: { NX_ADD_PLUGINS: 'false' } }
+      { env: { NX_ADD_PLUGINS: 'false' } },
     );
     runCLI(
-      `generate @nx/react-native:library ${libName} --buildable --publishable --importPath=${proj}/${libName} --no-interactive`
+      `generate @nx/react-native:library ${libName} --buildable --publishable --importPath=${proj}/${libName} --no-interactive`,
     );
   });
   afterAll(() => cleanupProject());
@@ -53,7 +53,7 @@ describe('@nx/react-native (legacy)', () => {
   it('should test and lint', async () => {
     const componentName = uniq('Component');
     runCLI(
-      `generate @nx/react-native:component ${componentName} --project=${libName} --export --no-interactive`
+      `generate @nx/react-native:component ${componentName} --project=${libName} --export --no-interactive`,
     );
 
     updateFile(`apps/${appName}/src/app/App.tsx`, (content) => {
@@ -66,12 +66,12 @@ describe('@nx/react-native (legacy)', () => {
 
     const appLintResults = await runCLIAsync(`lint ${appName}`);
     expect(appLintResults.combinedOutput).toContain(
-      'Successfully ran target lint'
+      'Successfully ran target lint',
     );
 
     const libLintResults = await runCLIAsync(`lint ${libName}`);
     expect(libLintResults.combinedOutput).toContain(
-      'Successfully ran target lint'
+      'Successfully ran target lint',
     );
   });
 
@@ -87,10 +87,10 @@ describe('@nx/react-native (legacy)', () => {
 
   it('should bundle-ios', async () => {
     const iosBundleResult = await runCLIAsync(
-      `bundle-ios ${appName} --sourcemapOutput=../../dist/apps/${appName}/ios/main.map`
+      `bundle-ios ${appName} --sourcemapOutput=../../dist/apps/${appName}/ios/main.map`,
     );
     expect(iosBundleResult.combinedOutput).toContain(
-      'Done writing bundle output'
+      'Done writing bundle output',
     );
     expect(() => {
       checkFilesExist(`dist/apps/${appName}/ios/main.jsbundle`);
@@ -100,10 +100,10 @@ describe('@nx/react-native (legacy)', () => {
 
   it('should bundle-android', async () => {
     const androidBundleResult = await runCLIAsync(
-      `bundle-android ${appName} --sourcemapOutput=../../dist/apps/${appName}/android/main.map`
+      `bundle-android ${appName} --sourcemapOutput=../../dist/apps/${appName}/android/main.map`,
     );
     expect(androidBundleResult.combinedOutput).toContain(
-      'Done writing bundle output'
+      'Done writing bundle output',
     );
     expect(() => {
       checkFilesExist(`dist/apps/${appName}/android/main.jsbundle`);
@@ -124,7 +124,7 @@ describe('@nx/react-native (legacy)', () => {
             output.includes('Starting JS server...') ||
             output.includes('Welcome to Metro')
           );
-        }
+        },
       );
     } catch (err) {
       console.error(err);
@@ -149,7 +149,7 @@ describe('@nx/react-native (legacy)', () => {
         `serve ${appName} --interactive=false --port=${port}`,
         (output) => {
           return output.includes(`http://localhost:${port}`);
-        }
+        },
       );
     } catch (err) {
       console.error(err);
@@ -177,11 +177,11 @@ describe('@nx/react-native (legacy)', () => {
 
   it('should create storybook with application', async () => {
     runCLI(
-      `generate @nx/react-native:storybook-configuration ${appName} --generateStories --no-interactive`
+      `generate @nx/react-native:storybook-configuration ${appName} --generateStories --no-interactive`,
     );
     checkFilesExist(
       `apps/${appName}/.storybook/main.ts`,
-      `apps/${appName}/src/app/App.stories.tsx`
+      `apps/${appName}/src/app/App.stories.tsx`,
     );
   });
 
@@ -193,7 +193,7 @@ describe('@nx/react-native (legacy)', () => {
     const componentName = uniq('Component');
 
     runCLI(
-      `generate @nx/react-native:component ${componentName} --project=${libName} --export`
+      `generate @nx/react-native:component ${componentName} --project=${libName} --export`,
     );
     expect(() => {
       runCLI(`build ${libName}`);
@@ -207,7 +207,7 @@ describe('@nx/react-native (legacy)', () => {
     runCommand(
       `${
         getPackageManagerCommand().addDev
-      } react-native-image-picker @react-native-async-storage/async-storage`
+      } react-native-image-picker @react-native-async-storage/async-storage`,
     );
 
     // Add import for Nx to pick up
@@ -224,7 +224,7 @@ describe('@nx/react-native (legacy)', () => {
     });
 
     await runCLIAsync(
-      `sync-deps ${appName} --include=react-native-image-picker`
+      `sync-deps ${appName} --include=react-native-image-picker`,
     );
     result = readJson(join('apps', appName, 'package.json'));
     expect(result).toMatchObject({
@@ -251,7 +251,7 @@ describe('@nx/react-native (legacy)', () => {
     expect(() => {
       const pmc = getPackageManagerCommand();
       runCommand(
-        `${pmc.runUninstalledPackage} tsc -p apps/${appName}/tsconfig.app.json`
+        `${pmc.runUninstalledPackage} tsc -p apps/${appName}/tsconfig.app.json`,
       );
       checkFilesExist(
         `dist/out-tsc/apps/${appName}/src/main.js`,
@@ -259,7 +259,7 @@ describe('@nx/react-native (legacy)', () => {
         `dist/out-tsc/apps/${appName}/src/app/App.js`,
         `dist/out-tsc/apps/${appName}/src/app/App.d.ts`,
         `dist/out-tsc/libs/${libName}/src/index.js`,
-        `dist/out-tsc/libs/${libName}/src/index.d.ts`
+        `dist/out-tsc/libs/${libName}/src/index.d.ts`,
       );
     }).not.toThrow();
   });
@@ -270,7 +270,7 @@ describe('@nx/react-native (legacy)', () => {
 
     runCLI(
       `generate @nx/react-native:application ${appName} --project-name-and-root-format=as-provided --install=false --no-interactive`,
-      { env: { NX_ADD_PLUGINS: 'false' } }
+      { env: { NX_ADD_PLUGINS: 'false' } },
     );
 
     // check files are generated without the layout directory ("apps/") and
@@ -279,18 +279,18 @@ describe('@nx/react-native (legacy)', () => {
     // check tests pass
     const appTestResult = runCLI(`test ${appName}`);
     expect(appTestResult).toContain(
-      `Successfully ran target test for project ${appName}`
+      `Successfully ran target test for project ${appName}`,
     );
 
     // assert scoped project names are not supported when --project-name-and-root-format=derived
     expect(() =>
       runCLI(
-        `generate @nx/react-native:library ${libName} --buildable --project-name-and-root-format=derived`
-      )
+        `generate @nx/react-native:library ${libName} --buildable --project-name-and-root-format=derived`,
+      ),
     ).toThrow();
 
     runCLI(
-      `generate @nx/react-native:library ${libName} --buildable --project-name-and-root-format=as-provided`
+      `generate @nx/react-native:library ${libName} --buildable --project-name-and-root-format=as-provided`,
     );
 
     // check files are generated without the layout directory ("libs/") and
@@ -299,7 +299,7 @@ describe('@nx/react-native (legacy)', () => {
     // check tests pass
     const libTestResult = runCLI(`test ${libName}`);
     expect(libTestResult).toContain(
-      `Successfully ran target test for project ${libName}`
+      `Successfully ran target test for project ${libName}`,
     );
   });
 
@@ -307,7 +307,7 @@ describe('@nx/react-native (legacy)', () => {
     const appName2 = uniq('my-app');
     runCLI(
       `generate @nx/react-native:application ${appName2} --bundler=vite --e2eTestRunner=playwright --install=false --no-interactive`,
-      { env: { NX_ADD_PLUGINS: 'false' } }
+      { env: { NX_ADD_PLUGINS: 'false' } },
     );
     const buildResults = runCLI(`build ${appName2}`);
     expect(buildResults).toContain('Successfully ran target build');
@@ -317,11 +317,11 @@ describe('@nx/react-native (legacy)', () => {
     }
 
     runCLI(
-      `generate @nx/react-native:storybook-configuration ${appName2} --generateStories --no-interactive`
+      `generate @nx/react-native:storybook-configuration ${appName2} --generateStories --no-interactive`,
     );
     checkFilesExist(
       `apps/${appName2}/.storybook/main.ts`,
-      `apps/${appName2}/src/app/App.stories.tsx`
+      `apps/${appName2}/src/app/App.stories.tsx`,
     );
   });
 });

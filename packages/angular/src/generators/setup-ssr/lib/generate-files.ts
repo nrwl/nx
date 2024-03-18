@@ -11,11 +11,11 @@ import type { Schema } from '../schema';
 export function generateSSRFiles(
   tree: Tree,
   schema: Schema,
-  isUsingApplicationBuilder: boolean
+  isUsingApplicationBuilder: boolean,
 ) {
   const { root: projectRoot, targets } = readProjectConfiguration(
     tree,
-    schema.project
+    schema.project,
   );
 
   if (
@@ -34,14 +34,14 @@ export function generateSSRFiles(
       tree,
       joinPathFragments(pathToFiles, 'standalone'),
       projectRoot,
-      { ...schema, tpl: '' }
+      { ...schema, tpl: '' },
     );
   } else {
     generateFiles(
       tree,
       joinPathFragments(pathToFiles, 'ngmodule', 'base'),
       projectRoot,
-      { ...schema, tpl: '' }
+      { ...schema, tpl: '' },
     );
 
     if (lt(angularVersion, '15.2.0')) {
@@ -49,7 +49,7 @@ export function generateSSRFiles(
         tree,
         joinPathFragments(pathToFiles, 'ngmodule', 'pre-v15-2'),
         projectRoot,
-        { ...schema, tpl: '' }
+        { ...schema, tpl: '' },
       );
     }
   }

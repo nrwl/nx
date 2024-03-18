@@ -8,7 +8,7 @@ import { isKnownPreset } from './preset';
  * @returns null if the preset is a known Nx preset or preset does not exist, the package name of preset otherwise.
  */
 export async function getThirdPartyPreset(
-  preset?: string
+  preset?: string,
 ): Promise<string | null> {
   if (preset && !isKnownPreset(preset)) {
     // extract the package name from the preset

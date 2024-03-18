@@ -15,7 +15,7 @@ const semverLessThan = require('semver/functions/lt');
 // Check node version
 if (semverLessThan(process.version, '18.0.0')) {
   console.error(
-    'Please make sure that your installed Node version is greater than v18'
+    'Please make sure that your installed Node version is greater than v18',
   );
   process.exit(1);
 }
@@ -26,13 +26,13 @@ try {
   if (semverLessThan(rustVersion.toString().split(' ')[1], '1.70.0')) {
     console.log(`Found ${rustVersion}`);
     console.error(
-      'Please make sure that your installed Rust version is greater than v1.70. You can update your installed Rust version with `rustup update`'
+      'Please make sure that your installed Rust version is greater than v1.70. You can update your installed Rust version with `rustup update`',
     );
     process.exit(1);
   }
 } catch {
   console.error(
-    'Could not find the Rust compiler on this system. Please make sure that it is installed with https://rustup.rs'
+    'Could not find the Rust compiler on this system. Please make sure that it is installed with https://rustup.rs',
   );
   process.exit(1);
 }

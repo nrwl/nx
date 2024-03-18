@@ -95,7 +95,7 @@ The shape of the [`createDependencies`](/nx-api/devkit/documents/CreateDependenc
 ```typescript
 export type CreateDependencies<T> = (
   opts: T,
-  context: CreateDependenciesContext
+  context: CreateDependenciesContext,
 ) => CandidateDependency[] | Promise<CandidateDependency[]>;
 ```
 

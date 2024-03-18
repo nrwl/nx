@@ -15,7 +15,7 @@ import { ComponentTestSchema } from './schema';
 
 export async function componentTestGenerator(
   tree: Tree,
-  options: ComponentTestSchema
+  options: ComponentTestSchema,
 ) {
   ensurePackage('@nx/cypress', nxVersion);
   const { assertMinimumCypressVersion } = await import(
@@ -26,11 +26,11 @@ export async function componentTestGenerator(
   const componentDirPath = joinPathFragments(root, options.componentDir);
   const componentFilePath = joinPathFragments(
     componentDirPath,
-    `${options.componentFileName}.ts`
+    `${options.componentFileName}.ts`,
   );
   const componentTestFilePath = joinPathFragments(
     componentDirPath,
-    `${options.componentFileName}.cy.ts`
+    `${options.componentFileName}.cy.ts`,
   );
 
   if (tree.exists(componentFilePath) && !tree.exists(componentTestFilePath)) {
@@ -38,7 +38,7 @@ export async function componentTestGenerator(
       tree,
       componentFilePath,
       getArgsDefaultValue,
-      false
+      false,
     );
     generateFiles(
       tree,
@@ -51,7 +51,7 @@ export async function componentTestGenerator(
           : options.componentFileName,
         props: props.filter((p) => typeof p.defaultValue !== 'undefined'),
         tpl: '',
-      }
+      },
     );
   }
 

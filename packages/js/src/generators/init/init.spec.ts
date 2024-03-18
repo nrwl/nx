@@ -52,7 +52,7 @@ describe('js init generator', () => {
     expect(tree.exists('.prettierrc')).toBeFalsy();
     expect(tree.exists('.prettierignore')).toBeTruthy();
     expect(tree.read('.prettierrc.js', 'utf-8')).toContain(
-      `module.exports = { singleQuote: true };`
+      `module.exports = { singleQuote: true };`,
     );
   });
 
@@ -114,7 +114,7 @@ describe('js init generator', () => {
     const packageJson = readJson(tree, 'package.json');
     expect(packageJson.devDependencies['typescript']).toBe('~4.8.2');
     expect(packageJson.devDependencies['typescript']).not.toBe(
-      typescriptVersion
+      typescriptVersion,
     );
   });
 });

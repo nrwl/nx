@@ -35,11 +35,11 @@ export function typeDefinitions(options: {
         const hasDefaultExport = file.exports.includes('default');
         const entrySourceFileName = relative(
           options.projectRoot,
-          file.facadeModuleId
+          file.facadeModuleId,
         );
         const entrySourceDtsName = entrySourceFileName.replace(
           /\.[cm]?[jt]sx?$/,
-          ''
+          '',
         );
         const dtsFileName = file.fileName.replace(/\.[cm]?js$/, '.d.ts');
         const relativeSourceDtsName = JSON.stringify('./' + entrySourceDtsName);

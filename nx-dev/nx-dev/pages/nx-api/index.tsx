@@ -35,7 +35,7 @@ export default function Packages({
     menu: {
       sections: sortCorePackagesFirst<MenuSection>(
         getPackagesSections(menu),
-        'id'
+        'id',
       ),
     },
     packages: useMemo(() => {
@@ -56,7 +56,7 @@ export default function Packages({
       ];
       return sortCorePackagesFirst<IntrinsicPackageMetadata>(
         filterMigrationPackages<IntrinsicPackageMetadata>(packagesWithRspack),
-        'name'
+        'name',
       );
     }, [packages]),
   };

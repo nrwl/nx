@@ -12,7 +12,7 @@ export class ChangelogApi {
     private readonly options: {
       id: string;
       changelogRoot: string;
-    }
+    },
   ) {
     if (!options.id) {
       throw new Error('id cannot be undefined');

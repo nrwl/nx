@@ -9,7 +9,7 @@ import { join } from 'path';
 export function createTmpTsConfigForBuildableLibs(
   tsConfigPath: string,
   context: import('@angular-devkit/architect').BuilderContext,
-  options?: { projectGraph?: ProjectGraph; target?: string }
+  options?: { projectGraph?: ProjectGraph; target?: string },
 ) {
   let dependencies: DependentBuildableProjectNode[];
   const result = calculateProjectDependencies(
@@ -17,7 +17,7 @@ export function createTmpTsConfigForBuildableLibs(
     context.workspaceRoot,
     context.target.project,
     options?.target ?? context.target.target,
-    context.target.configuration
+    context.target.configuration,
   );
   dependencies = result.dependencies;
 
@@ -25,7 +25,7 @@ export function createTmpTsConfigForBuildableLibs(
     join(context.workspaceRoot, tsConfigPath),
     context.workspaceRoot,
     result.target.data.root,
-    dependencies
+    dependencies,
   );
   process.env.NX_TSCONFIG_PATH = tmpTsConfigPath;
 

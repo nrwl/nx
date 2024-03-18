@@ -51,20 +51,20 @@ describe('NxPlugin migration generator', () => {
     const packageJson = readJson(tree, 'packages/my-plugin/package.json');
 
     expect(
-      tree.exists('packages/my-plugin/migrations/1.0.0/my-migration.ts')
+      tree.exists('packages/my-plugin/migrations/1.0.0/my-migration.ts'),
     ).toBeTruthy();
 
     expect(migrationsJson.generators['my-migration'].version).toEqual('1.0.0');
     expect(migrationsJson.generators['my-migration'].description).toEqual(
-      'Migration for v1.0.0'
+      'Migration for v1.0.0',
     );
     expect(migrationsJson.generators['my-migration'].implementation).toEqual(
-      './migrations/1.0.0/my-migration'
+      './migrations/1.0.0/my-migration',
     );
     expect(migrationsJson.packageJsonUpdates).toBeFalsy();
 
     expect(packageJson['nx-migrations'].migrations).toEqual(
-      './migrations.json'
+      './migrations.json',
     );
   });
 
@@ -81,21 +81,21 @@ describe('NxPlugin migration generator', () => {
 
     expect(
       tree.exists(
-        'packages/my-plugin/src/migrations/my-migration/my-migration.ts'
-      )
+        'packages/my-plugin/src/migrations/my-migration/my-migration.ts',
+      ),
     ).toBeTruthy();
 
     expect(migrationsJson.generators['my-migration'].version).toEqual('1.0.0');
     expect(migrationsJson.generators['my-migration'].description).toEqual(
-      'my-migration description'
+      'my-migration description',
     );
     expect(migrationsJson.generators['my-migration'].implementation).toEqual(
-      './src/migrations/my-migration/my-migration'
+      './src/migrations/my-migration/my-migration',
     );
     expect(migrationsJson.packageJsonUpdates).toBeFalsy();
 
     expect(packageJson['nx-migrations'].migrations).toEqual(
-      './migrations.json'
+      './migrations.json',
     );
   });
 
@@ -111,12 +111,12 @@ describe('NxPlugin migration generator', () => {
 
     expect(
       tree.exists(
-        'packages/my-plugin/src/migrations/update-1.0.0/update-1.0.0.ts'
-      )
+        'packages/my-plugin/src/migrations/update-1.0.0/update-1.0.0.ts',
+      ),
     ).toBeTruthy();
 
     expect(migrationsJson.generators['update-1.0.0'].implementation).toEqual(
-      './src/migrations/update-1.0.0/update-1.0.0'
+      './src/migrations/update-1.0.0/update-1.0.0',
     );
   });
 
@@ -131,12 +131,12 @@ describe('NxPlugin migration generator', () => {
 
     expect(
       tree.exists(
-        'packages/my-plugin/src/migrations/update-1.0.0/update-1.0.0.ts'
-      )
+        'packages/my-plugin/src/migrations/update-1.0.0/update-1.0.0.ts',
+      ),
     ).toBeTruthy();
 
     expect(migrationsJson.generators['update-1.0.0'].implementation).toEqual(
-      './src/migrations/update-1.0.0/update-1.0.0'
+      './src/migrations/update-1.0.0/update-1.0.0',
     );
   });
 
@@ -151,7 +151,7 @@ describe('NxPlugin migration generator', () => {
     const migrationsJson = readJson(tree, 'packages/my-plugin/migrations.json');
 
     expect(migrationsJson.generators['my-migration'].description).toEqual(
-      'Migration for v1.0.0'
+      'Migration for v1.0.0',
     );
   });
 

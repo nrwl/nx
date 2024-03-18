@@ -29,9 +29,8 @@ export const nxCloudTasksRunnerShell: TasksRunner<
   CloudTaskRunnerOptions
 > = async (tasks: Task[], options: CloudTaskRunnerOptions, context) => {
   try {
-    const { nxCloudClient, version } = await verifyOrUpdateNxCloudClient(
-      options
-    );
+    const { nxCloudClient, version } =
+      await verifyOrUpdateNxCloudClient(options);
 
     options.clientVersion = version;
 
@@ -47,10 +46,10 @@ export const nxCloudTasksRunnerShell: TasksRunner<
             'If you are NOT an Nx Enterprise customer but are seeing this message, please reach out to cloud-support@nrwl.io.',
           ]
         : e instanceof NxCloudClientUnavailableError
-        ? [
-            'You might be offline. Nx Cloud will be re-enabled when you are back online.',
-          ]
-        : [];
+          ? [
+              'You might be offline. Nx Cloud will be re-enabled when you are back online.',
+            ]
+          : [];
 
     if (e instanceof NxCloudEnterpriseOutdatedError) {
       output.warn({

@@ -29,7 +29,7 @@ export default async function update(tree: Tree) {
       'metro-react-native-babel-transformer',
       '@react-native-community/cli',
       '@react-native-community/cli-platform-ios',
-    ]
+    ],
   );
   await formatFiles(tree);
 }

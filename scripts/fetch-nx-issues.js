@@ -5,12 +5,12 @@ async function calculate() {
     [1, 2, 3, 4, 5].map((q) => {
       const v = cp
         .execSync(
-          `curl -i "https://api.github.com/repos/nrwl/nx/issues?state=open&page=${q}&per_page=100"`
+          `curl -i "https://api.github.com/repos/nrwl/nx/issues?state=open&page=${q}&per_page=100"`,
         )
         .toString();
       const substr = v.substring(v.indexOf('['));
       return JSON.parse(substr);
-    })
+    }),
   );
   let all = [];
   aa.forEach((a) => all.push(...a));

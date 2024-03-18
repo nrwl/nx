@@ -52,10 +52,10 @@ describe('Remix Library Generator', () => {
           // ASSERT
           const updatedBaseTsConfig = readJson(tree, 'tsconfig.base.json');
           expect(
-            Object.keys(originalBaseTsConfig.compilerOptions.paths)
+            Object.keys(originalBaseTsConfig.compilerOptions.paths),
           ).toContain('~/*');
           expect(
-            Object.keys(updatedBaseTsConfig.compilerOptions.paths)
+            Object.keys(updatedBaseTsConfig.compilerOptions.paths),
           ).toContain('~/*');
         });
       });
@@ -94,10 +94,10 @@ describe('Remix Library Generator', () => {
 
           // ASSERT
           expect(
-            tree.read(`${libDir}/jest.config.ts`, 'utf-8')
+            tree.read(`${libDir}/jest.config.ts`, 'utf-8'),
           ).toMatchSnapshot();
           expect(
-            tree.read(`${libDir}/src/test-setup.ts`, 'utf-8')
+            tree.read(`${libDir}/src/test-setup.ts`, 'utf-8'),
           ).toMatchSnapshot();
         });
 
@@ -116,11 +116,11 @@ describe('Remix Library Generator', () => {
 
           // ASSERT
           expect(
-            tree.read(`${libDir}/vite.config.ts`, 'utf-8')
+            tree.read(`${libDir}/vite.config.ts`, 'utf-8'),
           ).toMatchSnapshot();
 
           expect(
-            tree.read(`${libDir}/src/test-setup.ts`, 'utf-8')
+            tree.read(`${libDir}/src/test-setup.ts`, 'utf-8'),
           ).toMatchSnapshot();
         }, 25_000);
       });
@@ -144,11 +144,11 @@ describe('Remix Library Generator', () => {
         const pkgJson = readJson(tree, `${libDir}/package.json`);
         expect(project.targets.build.options.format).toEqual(['cjs']);
         expect(project.targets.build.options.outputPath).toEqual(
-          `${libDir}/dist`
+          `${libDir}/dist`,
         );
         expect(pkgJson.main).toEqual('./dist/index.cjs.js');
         expect(pkgJson.typings).toEqual('./dist/index.d.ts');
       });
-    }
+    },
   );
 });

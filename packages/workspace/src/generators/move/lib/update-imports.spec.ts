@@ -52,14 +52,14 @@ describe('updateImports', () => {
         import { MyClass } from '@proj/my-source';
 
         export class MyExtendedClass extends MyClass {};
-      `
+      `,
     );
     const projectConfig = readProjectConfiguration(tree, 'my-source');
 
     updateImports(
       tree,
       await normalizeSchema(tree, schema, projectConfig),
-      projectConfig
+      projectConfig,
     );
 
     expect(tree.read(importerFilePath, 'utf-8')).toMatchSnapshot();
@@ -92,7 +92,7 @@ describe('updateImports', () => {
 
         export class MyTable extends Table {};
         export class MyTab extends Tab {};
-      `
+      `,
     );
     const projectConfig = readProjectConfiguration(tree, 'tab');
 
@@ -106,14 +106,14 @@ describe('updateImports', () => {
         newProjectName: 'tabs',
         relativeToRootDestination: 'tabs',
       },
-      projectConfig
+      projectConfig,
     );
 
     expect(tree.read(importerFilePath, 'utf-8')).toContain(
-      `import { Table } from '@proj/table';`
+      `import { Table } from '@proj/table';`,
     );
     expect(tree.read(importerFilePath, 'utf-8')).toContain(
-      `import { Tab } from '@proj/tabs';`
+      `import { Tab } from '@proj/tabs';`,
     );
     expect(tree.read(importerFilePath, 'utf-8')).toMatchSnapshot();
   });
@@ -140,7 +140,7 @@ describe('updateImports', () => {
 
         export class MyTable extends Table {};
         export class MyTab extends Tab {};
-      `
+      `,
     );
     const projectConfig = readProjectConfiguration(tree, 'tab');
 
@@ -154,14 +154,14 @@ describe('updateImports', () => {
         newProjectName: 'tabs',
         relativeToRootDestination: 'tabs',
       },
-      projectConfig
+      projectConfig,
     );
 
     expect(tree.read(importerFilePath, 'utf-8')).toContain(
-      `import { Table } from '@proj/table/components';`
+      `import { Table } from '@proj/table/components';`,
     );
     expect(tree.read(importerFilePath, 'utf-8')).toContain(
-      `import { Tab } from '@proj/tabs/components';`
+      `import { Tab } from '@proj/tabs/components';`,
     );
     expect(tree.read(importerFilePath, 'utf-8')).toMatchSnapshot();
   });
@@ -187,7 +187,7 @@ describe('updateImports', () => {
       import('@proj/table/components').then(m => m.Table);
       import('@proj/tab').then(m => m.Tab);
       import('@proj/tab/components').then(m => m.Tab);
-      `
+      `,
     );
     const projectConfig = readProjectConfiguration(tree, 'tab');
 
@@ -201,20 +201,20 @@ describe('updateImports', () => {
         newProjectName: 'tabs',
         relativeToRootDestination: 'tabs',
       },
-      projectConfig
+      projectConfig,
     );
 
     expect(tree.read(importerFilePath, 'utf-8')).toContain(
-      `import('@proj/table').then(m => m.Table);`
+      `import('@proj/table').then(m => m.Table);`,
     );
     expect(tree.read(importerFilePath, 'utf-8')).toContain(
-      `import('@proj/table/components').then(m => m.Table);`
+      `import('@proj/table/components').then(m => m.Table);`,
     );
     expect(tree.read(importerFilePath, 'utf-8')).toContain(
-      `import('@proj/tabs').then(m => m.Tab);`
+      `import('@proj/tabs').then(m => m.Tab);`,
     );
     expect(tree.read(importerFilePath, 'utf-8')).toContain(
-      `import('@proj/tabs/components').then(m => m.Tab);`
+      `import('@proj/tabs/components').then(m => m.Tab);`,
     );
     expect(tree.read(importerFilePath, 'utf-8')).toMatchSnapshot();
   });
@@ -241,14 +241,14 @@ describe('updateImports', () => {
         export { MyOtherClass } from '@proj/my-source';
         
         export class MyExtendedClass extends MyClass {};
-      `
+      `,
     );
     const projectConfig = readProjectConfiguration(tree, 'my-source');
 
     updateImports(
       tree,
       await normalizeSchema(tree, schema, projectConfig),
-      projectConfig
+      projectConfig,
     );
 
     expect(tree.read(importerFilePath, 'utf-8')).toMatchSnapshot();
@@ -275,7 +275,7 @@ describe('updateImports', () => {
       require('@proj/table/components');
       require('@proj/tab');
       require('@proj/tab/components');
-      `
+      `,
     );
     const projectConfig = readProjectConfiguration(tree, 'tab');
 
@@ -289,20 +289,20 @@ describe('updateImports', () => {
         newProjectName: 'tabs',
         relativeToRootDestination: 'tabs',
       },
-      projectConfig
+      projectConfig,
     );
 
     expect(tree.read(importerFilePath).toString()).toContain(
-      `require('@proj/table');`
+      `require('@proj/table');`,
     );
     expect(tree.read(importerFilePath).toString()).toContain(
-      `require('@proj/table/components');`
+      `require('@proj/table/components');`,
     );
     expect(tree.read(importerFilePath).toString()).toContain(
-      `require('@proj/tabs');`
+      `require('@proj/tabs');`,
     );
     expect(tree.read(importerFilePath).toString()).toContain(
-      `require('@proj/tabs/components');`
+      `require('@proj/tabs/components');`,
     );
   });
 
@@ -327,7 +327,7 @@ describe('updateImports', () => {
       importerFilePath,
       `import { MyClass } from '@proj/my-source';
 
-export MyExtendedClass extends MyClass {};`
+export MyExtendedClass extends MyClass {};`,
     );
     schema.updateImportPath = false;
     const projectConfig = readProjectConfiguration(tree, 'my-source');
@@ -340,13 +340,13 @@ export MyExtendedClass extends MyClass {};`
           ...schema,
           updateImportPath: false,
         },
-        projectConfig
+        projectConfig,
       ),
-      projectConfig
+      projectConfig,
     );
 
     expect(tree.read(importerFilePath).toString()).toContain(
-      `import { MyClass } from '@proj/my-source';`
+      `import { MyClass } from '@proj/my-source';`,
     );
   });
 
@@ -360,7 +360,7 @@ export MyExtendedClass extends MyClass {};`
     updateImports(
       tree,
       await normalizeSchema(tree, schema, projectConfig),
-      projectConfig
+      projectConfig,
     );
 
     const tsConfig = readJson(tree, '/tsconfig.base.json');
@@ -388,7 +388,7 @@ export MyExtendedClass extends MyClass {};`
     updateImports(
       tree,
       await normalizeSchema(tree, schema, projectConfig),
-      projectConfig
+      projectConfig,
     );
 
     const tsConfig = readJson(tree, '/tsconfig.base.json');
@@ -410,7 +410,7 @@ export MyExtendedClass extends MyClass {};`
     updateImports(
       tree,
       await normalizeSchema(tree, schema, projectConfig),
-      projectConfig
+      projectConfig,
     );
 
     const tsConfig = readJson(tree, '/tsconfig.base.json');
@@ -430,7 +430,7 @@ export MyExtendedClass extends MyClass {};`
     updateImports(
       tree,
       await normalizeSchema(tree, schema, projectConfig),
-      projectConfig
+      projectConfig,
     );
 
     const tsConfig = readJson(tree, '/tsconfig.json');
@@ -443,7 +443,7 @@ export MyExtendedClass extends MyClass {};`
     tree.rename('tsconfig.base.json', 'tsconfig.json');
     tree.write(
       'tsconfig.json',
-      `// A comment\n${tree.read('tsconfig.json', 'utf-8')}`
+      `// A comment\n${tree.read('tsconfig.json', 'utf-8')}`,
     );
     await libraryGenerator(tree, {
       name: 'my-source',
@@ -454,7 +454,7 @@ export MyExtendedClass extends MyClass {};`
     updateImports(
       tree,
       await normalizeSchema(tree, schema, projectConfig),
-      projectConfig
+      projectConfig,
     );
 
     const tsConfig = readJson(tree, '/tsconfig.json');
@@ -478,10 +478,10 @@ export MyExtendedClass extends MyClass {};`
           ...schema,
           updateImportPath: false,
         },
-        projectConfig
+        projectConfig,
       ),
 
-      projectConfig
+      projectConfig,
     );
 
     const tsConfig = readJson(tree, '/tsconfig.base.json');

@@ -36,14 +36,14 @@ describe('cache', () => {
     const filesApp2 = listFiles(`dist/apps/${myapp2}`);
     // now the data is in cache
     expect(outputThatPutsDataIntoCache).not.toContain(
-      'read the output from the cache'
+      'read the output from the cache',
     );
 
     rmDist();
 
     const outputWithBothBuildTasksCached = runCLI(buildAppsCommand);
     expect(outputWithBothBuildTasksCached).toContain(
-      'read the output from the cache'
+      'read the output from the cache',
     );
     expectCached(outputWithBothBuildTasksCached, [myapp1, myapp2]);
     expect(listFiles(`dist/apps/${myapp1}`)).toEqual(filesApp1);
@@ -51,10 +51,10 @@ describe('cache', () => {
 
     // run with skipping cache
     const outputWithBothBuildTasksCachedButSkipped = runCLI(
-      buildAppsCommand + ' --skip-nx-cache'
+      buildAppsCommand + ' --skip-nx-cache',
     );
     expect(outputWithBothBuildTasksCachedButSkipped).not.toContain(
-      `read the output from the cache`
+      `read the output from the cache`,
     );
 
     // touch myapp1
@@ -64,7 +64,7 @@ describe('cache', () => {
     });
     const outputWithBuildApp2Cached = runCLI(buildAppsCommand);
     expect(outputWithBuildApp2Cached).toContain(
-      'read the output from the cache'
+      'read the output from the cache',
     );
 
     expectCached(outputWithBuildApp2Cached, [myapp2]);
@@ -78,7 +78,7 @@ describe('cache', () => {
     });
     const outputWithNoBuildCached = runCLI(buildAppsCommand);
     expect(outputWithNoBuildCached).not.toContain(
-      'read the output from the cache'
+      'read the output from the cache',
     );
 
     // build individual project with caching
@@ -87,7 +87,7 @@ describe('cache', () => {
 
     // skip caching when building individual projects
     const individualBuildWithSkippedCache = runCLI(
-      `build ${myapp1} --skip-nx-cache`
+      `build ${myapp1} --skip-nx-cache`,
     );
     expect(individualBuildWithSkippedCache).not.toContain('local cache');
 
@@ -101,12 +101,12 @@ describe('cache', () => {
     ].join()}`;
     const outputWithNoLintCached = runCLI(lintAppsCommand);
     expect(outputWithNoLintCached).not.toContain(
-      'read the output from the cache'
+      'read the output from the cache',
     );
 
     const outputWithBothLintTasksCached = runCLI(lintAppsCommand);
     expect(outputWithBothLintTasksCached).toContain(
-      'read the output from the cache'
+      'read the output from the cache',
     );
     expectMatchedOutput(outputWithBothLintTasksCached, [
       myapp1,
@@ -134,12 +134,12 @@ describe('cache', () => {
     const outputWithoutCachingEnabled1 = runCLI(buildAppsCommand);
 
     expect(outputWithoutCachingEnabled1).not.toContain(
-      'read the output from the cache'
+      'read the output from the cache',
     );
 
     const outputWithoutCachingEnabled2 = runCLI(buildAppsCommand);
     expect(outputWithoutCachingEnabled2).not.toContain(
-      'read the output from the cache'
+      'read the output from the cache',
     );
 
     // re-enable caching after test
@@ -218,7 +218,7 @@ describe('cache', () => {
     expect(outputsAfterAddingUntouchedFileAndRerunning).toContain('f.md');
     expect(outputsAfterAddingUntouchedFileAndRerunning).toContain('g.html');
     expect(outputsAfterAddingUntouchedFileAndRerunning).toContain(
-      '.next/h.txt'
+      '.next/h.txt',
     );
     expect(outputsAfterAddingUntouchedFileAndRerunning).toContain('x.txt');
     expect(outputsAfterAddingUntouchedFileAndRerunning).toContain('z.md');
@@ -309,7 +309,7 @@ describe('cache', () => {
     // this is a miss cause child1 redefined "prod" to include all files
     const parentRunSpecChangeChild1 = runCLI(`test ${parent}`);
     expect(parentRunSpecChangeChild1).not.toContain(
-      'read the output from the cache'
+      'read the output from the cache',
     );
   }, 120000);
 
@@ -363,26 +363,26 @@ describe('cache', () => {
 
   function expectCached(
     actualOutput: string,
-    expectedCachedProjects: string[]
+    expectedCachedProjects: string[],
   ) {
     expectProjectMatchTaskCacheStatus(actualOutput, expectedCachedProjects);
   }
 
   function expectMatchedOutput(
     actualOutput: string,
-    expectedMatchedOutputProjects: string[]
+    expectedMatchedOutputProjects: string[],
   ) {
     expectProjectMatchTaskCacheStatus(
       actualOutput,
       expectedMatchedOutputProjects,
-      'existing outputs match the cache'
+      'existing outputs match the cache',
     );
   }
 
   function expectProjectMatchTaskCacheStatus(
     actualOutput: string,
     expectedProjects: string[],
-    cacheStatus: string = 'local cache'
+    cacheStatus: string = 'local cache',
   ) {
     const matchingProjects = [];
     const lines = actualOutput.split('\n');

@@ -76,7 +76,7 @@ export class AppMigrator extends ProjectMigrator<SupportedTargets> {
     tree: Tree,
     options: GeneratorOptions,
     project: MigrationProjectConfiguration,
-    logger?: Logger
+    logger?: Logger,
   ) {
     super(
       tree,
@@ -85,7 +85,7 @@ export class AppMigrator extends ProjectMigrator<SupportedTargets> {
       project,
       'apps',
       logger,
-      supportedBuilderMigrators
+      supportedBuilderMigrators,
     );
 
     const eslintBuilderMigrator =
@@ -98,7 +98,7 @@ export class AppMigrator extends ProjectMigrator<SupportedTargets> {
       project,
       eslintBuilderMigrator.targets.size
         ? Object.keys(eslintBuilderMigrator.targets)[0]
-        : undefined
+        : undefined,
     );
   }
 
@@ -153,14 +153,14 @@ export class AppMigrator extends ProjectMigrator<SupportedTargets> {
     if (this.targetNames.build) {
       this.moveFilePathsFromTargetToProjectRoot(
         this.projectConfig.targets[this.targetNames.build],
-        ['tsConfig', 'webWorkerTsConfig', 'ngswConfigPath']
+        ['tsConfig', 'webWorkerTsConfig', 'ngswConfigPath'],
       );
     }
 
     if (this.targetNames.server) {
       this.moveFilePathsFromTargetToProjectRoot(
         this.projectConfig.targets[this.targetNames.server],
-        ['tsConfig']
+        ['tsConfig'],
       );
     }
 
@@ -188,7 +188,7 @@ export class AppMigrator extends ProjectMigrator<SupportedTargets> {
     convertToNxProject(this.tree, this.project.name);
     this.moveFile(
       joinPathFragments(this.project.oldRoot, 'project.json'),
-      joinPathFragments(this.project.newRoot, 'project.json')
+      joinPathFragments(this.project.newRoot, 'project.json'),
     );
 
     this.projectConfig.root = this.project.newRoot;
@@ -205,7 +205,7 @@ export class AppMigrator extends ProjectMigrator<SupportedTargets> {
       !Object.keys(this.projectConfig.targets).length
     ) {
       this.logger.warn(
-        'The project does not have any targets configured. Skipping updating targets.'
+        'The project does not have any targets configured. Skipping updating targets.',
       );
       return;
     }
@@ -226,7 +226,7 @@ export class AppMigrator extends ProjectMigrator<SupportedTargets> {
 
     this.updateTsConfigFileUsedByBuildTarget(
       rootTsConfigFile,
-      projectOffsetFromRoot
+      projectOffsetFromRoot,
     );
     this.updateTsConfigFileUsedByServerTarget(projectOffsetFromRoot);
   }
@@ -237,7 +237,7 @@ export class AppMigrator extends ProjectMigrator<SupportedTargets> {
       joinPathFragments(
         'dist',
         this.project.newRoot,
-        this.targetNames.server ? 'browser' : ''
+        this.targetNames.server ? 'browser' : '',
       );
     if (buildOptions.index) {
       if (typeof buildOptions.index === 'string') {
@@ -286,7 +286,7 @@ export class AppMigrator extends ProjectMigrator<SupportedTargets> {
       this.convertAsset(buildOptions.ngswConfigPath);
     if (buildOptions.prerender?.routesFile) {
       buildOptions.prerender.routesFile = this.convertAsset(
-        buildOptions.prerender.routesFile
+        buildOptions.prerender.routesFile,
       );
     }
     buildOptions.ssr =
@@ -315,7 +315,7 @@ export class AppMigrator extends ProjectMigrator<SupportedTargets> {
   private updateBuildTargetConfiguration(): void {
     if (!this.targetNames.build) {
       this.logger.warn(
-        'There is no build target in the project configuration. Skipping updating the build target configuration.'
+        'There is no build target in the project configuration. Skipping updating the build target configuration.',
       );
       return;
     }
@@ -332,7 +332,7 @@ export class AppMigrator extends ProjectMigrator<SupportedTargets> {
         !Object.keys(buildTarget.configurations).length)
     ) {
       this.logger.warn(
-        `The target "${this.targetNames.build}" is not specifying any options or configurations. Skipping updating the target configuration.`
+        `The target "${this.targetNames.build}" is not specifying any options or configurations. Skipping updating the target configuration.`,
       );
       return;
     }
@@ -342,20 +342,20 @@ export class AppMigrator extends ProjectMigrator<SupportedTargets> {
       buildTarget.configurations?.development?.tsConfig;
     if (!buildDevTsConfig) {
       this.logger.warn(
-        `The "${this.targetNames.build}" target does not have the "tsConfig" option configured. Skipping updating the tsConfig file.`
+        `The "${this.targetNames.build}" target does not have the "tsConfig" option configured. Skipping updating the tsConfig file.`,
       );
     } else {
       const newBuildDevTsConfig = this.convertPath(buildDevTsConfig);
       if (!this.tree.exists(newBuildDevTsConfig)) {
         this.logger.warn(
-          `The tsConfig file "${buildDevTsConfig}" specified in the "${this.targetNames.build}" target could not be found. Skipping updating the tsConfig file.`
+          `The tsConfig file "${buildDevTsConfig}" specified in the "${this.targetNames.build}" target could not be found. Skipping updating the tsConfig file.`,
         );
       }
     }
 
     this.convertBuildOptions(buildTarget.options ?? {});
     Object.values(buildTarget.configurations ?? {}).forEach((config) =>
-      this.convertBuildOptions(config)
+      this.convertBuildOptions(config),
     );
   }
 
@@ -371,7 +371,7 @@ export class AppMigrator extends ProjectMigrator<SupportedTargets> {
       this.projectConfig.targets[this.targetNames.prerender];
     if (!prerenderTarget.options) {
       this.logger.warn(
-        `The target "${this.targetNames.prerender}" is not specifying any options. Skipping updating the target configuration.`
+        `The target "${this.targetNames.prerender}" is not specifying any options. Skipping updating the target configuration.`,
       );
       return;
     }
@@ -397,7 +397,7 @@ export class AppMigrator extends ProjectMigrator<SupportedTargets> {
         !Object.keys(serverTarget.configurations).length)
     ) {
       this.logger.warn(
-        `The target "${this.targetNames.server}" is not specifying any options or configurations. Skipping updating the target configuration.`
+        `The target "${this.targetNames.server}" is not specifying any options or configurations. Skipping updating the target configuration.`,
       );
       return;
     }
@@ -407,20 +407,20 @@ export class AppMigrator extends ProjectMigrator<SupportedTargets> {
       serverTarget.configurations?.development?.tsConfig;
     if (!serverDevTsConfig) {
       this.logger.warn(
-        `The "${this.targetNames.server}" target does not have the "tsConfig" option configured. Skipping updating the tsConfig file.`
+        `The "${this.targetNames.server}" target does not have the "tsConfig" option configured. Skipping updating the tsConfig file.`,
       );
     } else {
       const newServerDevTsConfig = this.convertPath(serverDevTsConfig);
       if (!this.tree.exists(newServerDevTsConfig)) {
         this.logger.warn(
-          `The tsConfig file "${serverDevTsConfig}" specified in the "${this.targetNames.server}" target could not be found. Skipping updating the tsConfig file.`
+          `The tsConfig file "${serverDevTsConfig}" specified in the "${this.targetNames.server}" target could not be found. Skipping updating the tsConfig file.`,
         );
       }
     }
 
     this.convertServerOptions(serverTarget.options ?? {});
     Object.values(serverTarget.configurations ?? {}).forEach((config) =>
-      this.convertServerOptions(config)
+      this.convertServerOptions(config),
     );
   }
 
@@ -441,7 +441,7 @@ export class AppMigrator extends ProjectMigrator<SupportedTargets> {
         !Object.keys(serveSsrTarget.configurations).length)
     ) {
       this.logger.warn(
-        `The target "${ssrTarget}" is not specifying any options or configurations. Skipping updating the target configuration.`
+        `The target "${ssrTarget}" is not specifying any options or configurations. Skipping updating the target configuration.`,
       );
       return;
     }
@@ -454,12 +454,12 @@ export class AppMigrator extends ProjectMigrator<SupportedTargets> {
       }
 
       for (const configuration of Object.values(
-        serveSsrTarget.configurations ?? {}
+        serveSsrTarget.configurations ?? {},
       )) {
         serveSsrTarget.configurations[configuration][option] =
           serveSsrTarget.configurations[configuration][option] &&
           this.convertPath(
-            serveSsrTarget.configurations[configuration][option]
+            serveSsrTarget.configurations[configuration][option],
           );
       }
     });
@@ -467,7 +467,7 @@ export class AppMigrator extends ProjectMigrator<SupportedTargets> {
 
   private updateTsConfigFileUsedByBuildTarget(
     rootTsConfigFile: string,
-    projectOffsetFromRoot: string
+    projectOffsetFromRoot: string,
   ): void {
     if (
       !this.targetNames.build ||
@@ -489,12 +489,12 @@ export class AppMigrator extends ProjectMigrator<SupportedTargets> {
     this.updateTsConfigFile(
       tsConfigPath,
       rootTsConfigFile,
-      projectOffsetFromRoot
+      projectOffsetFromRoot,
     );
   }
 
   private updateTsConfigFileUsedByServerTarget(
-    projectOffsetFromRoot: string
+    projectOffsetFromRoot: string,
   ): void {
     if (
       !this.targetNames.server ||

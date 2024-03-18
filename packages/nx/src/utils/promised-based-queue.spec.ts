@@ -11,13 +11,13 @@ describe('PromisedBasedQueue', () => {
         await wait(100);
         log.push('2');
         return 100;
-      })
+      }),
     );
     res.push(
       await queue.sendToQueue(async () => {
         log.push('3');
         return 200;
-      })
+      }),
     );
 
     expect(log).toEqual(['1', '2', '3']);
@@ -37,7 +37,7 @@ describe('PromisedBasedQueue', () => {
     expect(
       await queue.sendToQueue(async () => {
         return 100;
-      })
+      }),
     ).toEqual(100);
   });
 });

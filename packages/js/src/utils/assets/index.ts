@@ -20,7 +20,7 @@ export interface WatchMode {
 
 export async function copyAssets(
   options: CopyAssetsOptions,
-  context: ExecutorContext
+  context: ExecutorContext,
 ): Promise<CopyAssetsResult> {
   const assetHandler = new CopyAssetsHandler({
     projectDir:

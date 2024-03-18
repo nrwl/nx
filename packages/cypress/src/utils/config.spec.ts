@@ -12,7 +12,7 @@ import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
 export default defineConfig({
   e2e: nxE2EPreset(__filename),
 });
-`
+`,
     );
     expect(actual).toMatchInlineSnapshot(`
       "import { defineConfig } from 'cypress';
@@ -38,7 +38,7 @@ export default defineConfig({
       {
         cypressDir: 'cypress',
       },
-      undefined
+      undefined,
     );
     expect(actual).toMatchInlineSnapshot(`
       "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
@@ -67,7 +67,7 @@ export default defineConfig({
       {
         cypressDir: 'cypress',
       },
-      undefined
+      undefined,
     );
 
     expect(actual).toMatchInlineSnapshot(`
@@ -100,7 +100,7 @@ export default defineConfig({
       {
         cypressDir: 'cypress',
       },
-      undefined
+      undefined,
     );
     expect(actual).toMatchInlineSnapshot(`
       "import { defineConfig } from 'cypress';
@@ -130,7 +130,7 @@ export default defineConfig({
       {
         cypressDir: 'cypress',
       },
-      'https://example.com'
+      'https://example.com',
     );
     expect(actual).toMatchInlineSnapshot(`
       "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
@@ -162,7 +162,7 @@ export default defineConfig({
         },
         ciWebServerCommand: 'my-app:serve-static',
       },
-      undefined
+      undefined,
     );
     expect(actual).toMatchInlineSnapshot(`
       "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
@@ -190,7 +190,7 @@ declare global {
     }
   }
 }
-`
+`,
     );
 
     expect(actual).toMatchInlineSnapshot(`
@@ -226,7 +226,7 @@ declare global {
   }
 }
 Cypress.Commands.add('mount', customMount);
-`
+`,
     );
 
     expect(actual).toMatchInlineSnapshot(`

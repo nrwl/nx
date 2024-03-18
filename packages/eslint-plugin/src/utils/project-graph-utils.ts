@@ -35,12 +35,12 @@ export function ensureGlobalProjectGraph(ruleName: string) {
       const projectGraph = readCachedProjectGraph();
       globalThis.projectGraph = projectGraph;
       globalThis.projectRootMappings = createProjectRootMappings(
-        projectGraph.nodes
+        projectGraph.nodes,
       );
       globalThis.projectFileMap = readFileMapCache().fileMap.projectFileMap;
       globalThis.targetProjectLocator = new TargetProjectLocator(
         projectGraph.nodes,
-        projectGraph.externalNodes
+        projectGraph.externalNodes,
       );
     } catch {
       const WARNING_PREFIX = `${chalk.reset.keyword('orange')('warning')}`;

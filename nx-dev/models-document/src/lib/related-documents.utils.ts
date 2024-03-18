@@ -11,7 +11,7 @@ export interface RelatedDocumentsCategory {
 }
 
 export function categorizeRelatedDocuments(
-  items: RelatedDocument[]
+  items: RelatedDocument[],
 ): RelatedDocumentsCategory[] {
   const categories: RelatedDocumentsCategory[] = [
     {
@@ -44,7 +44,7 @@ export function categorizeRelatedDocuments(
     categories.forEach((c) => {
       if (c.matchers.some((m) => i.path.includes(m)))
         c.relatedDocuments.push(i);
-    })
+    }),
   );
 
   return categories.filter((c) => !!c.relatedDocuments.length);

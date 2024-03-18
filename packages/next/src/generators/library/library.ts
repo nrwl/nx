@@ -62,20 +62,20 @@ export async function libraryGeneratorInternal(host: Tree, rawOptions: Schema) {
       addDependenciesToPackageJson(
         host,
         { tslib: tsLibVersion },
-        devDependencies
-      )
+        devDependencies,
+      ),
     );
   }
 
   const indexPath = joinPathFragments(
     options.projectRoot,
     'src',
-    `index.${options.js ? 'js' : 'ts'}`
+    `index.${options.js ? 'js' : 'ts'}`,
   );
   const indexContent = host.read(indexPath, 'utf-8');
   host.write(
     indexPath,
-    `// Use this file to export React client components (e.g. those with 'use client' directive) or other non-server utilities\n${indexContent}`
+    `// Use this file to export React client components (e.g. those with 'use client' directive) or other non-server utilities\n${indexContent}`,
   );
   // Additional entry for Next.js libraries so React Server Components are exported from a separate entry point.
   // This is needed because RSC exported from `src/index.ts` will mark the entire file as server-only and throw an error when used from a client component.
@@ -83,28 +83,28 @@ export async function libraryGeneratorInternal(host: Tree, rawOptions: Schema) {
   const serverEntryPath = joinPathFragments(
     options.projectRoot,
     './src',
-    'server.' + (options.js ? 'js' : 'ts')
+    'server.' + (options.js ? 'js' : 'ts'),
   );
   host.write(
     joinPathFragments(
       options.projectRoot,
       'src',
-      `server.${options.js ? 'js' : 'ts'}`
+      `server.${options.js ? 'js' : 'ts'}`,
     ),
     `// Use this file to export React server components
-    export * from './lib/hello-server';`
+    export * from './lib/hello-server';`,
   );
   host.write(
     joinPathFragments(
       options.projectRoot,
       'src/lib',
-      `hello-server.${options.js ? 'js' : 'tsx'}`
+      `hello-server.${options.js ? 'js' : 'tsx'}`,
     ),
     `// React server components are async so you make database or API calls.
       export async function HelloServer() {
         return <h1>Hello Server</h1>
       }
-    `
+    `,
   );
   addTsConfigPath(host, `${options.importPath}/server`, [serverEntryPath]);
 
@@ -116,7 +116,7 @@ export async function libraryGeneratorInternal(host: Tree, rawOptions: Schema) {
         json.compilerOptions.jsxImportSource = '@emotion/react';
       }
       return json;
-    }
+    },
   );
 
   updateJson(
@@ -137,7 +137,7 @@ export async function libraryGeneratorInternal(host: Tree, rawOptions: Schema) {
         '@nx/next/typings/image.d.ts',
       ];
       return json;
-    }
+    },
   );
 
   if (!options.skipFormat) {

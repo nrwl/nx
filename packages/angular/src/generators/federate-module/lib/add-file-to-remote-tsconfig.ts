@@ -9,7 +9,7 @@ import {
 export function addFileToRemoteTsconfig(
   tree: Tree,
   remoteName: string,
-  pathToExpose: string
+  pathToExpose: string,
 ) {
   const remote = readProjectConfiguration(tree, remoteName);
   updateJson(tree, remote.targets.build.options.tsConfig, (json) => ({

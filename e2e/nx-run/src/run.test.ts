@@ -20,7 +20,7 @@ import * as path from 'path';
 describe('Nx Running Tests', () => {
   let proj: string;
   beforeAll(
-    () => (proj = newProject({ packages: ['@nx/js', '@nx/web', '@nx/node'] }))
+    () => (proj = newProject({ packages: ['@nx/js', '@nx/web', '@nx/node'] })),
   );
   afterAll(() => cleanupProject());
 
@@ -102,14 +102,14 @@ describe('Nx Running Tests', () => {
           nx: {
             includedScripts: ['echo:dev'],
           },
-        })
+        }),
       );
 
       const { stdout } = await runCLIAsync(
         `echo:dev ${mylib} -- positional --a=123 --no-b`,
         {
           silent: true,
-        }
+        },
       );
       if (isWindows()) {
         expect(stdout).toMatch(/ECHOED "positional" "--a=123" "--no-b"/);
@@ -118,7 +118,7 @@ describe('Nx Running Tests', () => {
       }
 
       expect(runCLI(`echo:fail ${mylib}`, { silenceError: true })).toContain(
-        `Cannot find configuration for task ${mylib}:echo:fail`
+        `Cannot find configuration for task ${mylib}:echo:fail`,
       );
 
       updateJson(`libs/${mylib}/project.json`, (c) => original);
@@ -280,18 +280,18 @@ describe('Nx Running Tests', () => {
               },
             },
           },
-        })
+        }),
       );
 
       updateFile(
         `apps/${myapp}/.env.production`,
-        `ENV_VAR=${expectedEnvOutput}`
+        `ENV_VAR=${expectedEnvOutput}`,
       );
 
       expect(runCLI(`${target} ${myapp}`)).toContain(expectedOutput);
       expect(runCLI(`${target} ${myapp}`)).not.toContain(expectedEnvOutput);
       expect(runCLI(`${target} ${myapp} --configuration production`)).toContain(
-        expectedEnvOutput
+        expectedEnvOutput,
       );
     }, 10000);
 
@@ -348,7 +348,7 @@ describe('Nx Running Tests', () => {
 
       // Should work within the project directory
       expect(runCommand(`cd apps/${myapp}/src && npx nx build`)).toContain(
-        `nx run ${myapp}:build`
+        `nx run ${myapp}:build`,
       );
     }, 10000);
 
@@ -375,11 +375,11 @@ describe('Nx Running Tests', () => {
             targets: {
               [target]: {},
             },
-          })
+          }),
         );
 
         expect(runCLI(`${target} ${lib} --verbose`)).toContain(
-          `Hello from ${target}`
+          `Hello from ${target}`,
         );
       });
 
@@ -406,11 +406,11 @@ describe('Nx Running Tests', () => {
                 executor: 'nx:run-commands',
               },
             },
-          })
+          }),
         );
 
         expect(runCLI(`${target} ${lib} --verbose`)).toContain(
-          `Hello from ${target}`
+          `Hello from ${target}`,
         );
       });
     });
@@ -432,7 +432,7 @@ describe('Nx Running Tests', () => {
           `
           import "@${proj}/${mylib1}";
           import "@${proj}/${mylib2}";
-        `
+        `,
         );
       });
 
@@ -453,7 +453,7 @@ describe('Nx Running Tests', () => {
 
         const output = runCLI(`build ${myapp}`);
         expect(output).toContain(
-          `NX   Running target build for project ${myapp} and 3 tasks it depends on`
+          `NX   Running target build for project ${myapp} and 3 tasks it depends on`,
         );
         expect(output).toContain(myapp);
         expect(output).toContain(mylib1);
@@ -489,7 +489,7 @@ describe('Nx Running Tests', () => {
 
         const output = runCLI(`outside ${myapp}`);
         expect(output).toContain(
-          `NX   Running target outside for project ${myapp} and 1 task it depends on`
+          `NX   Running target outside for project ${myapp} and 1 task it depends on`,
         );
 
         removeFile(`one.txt`);
@@ -513,10 +513,10 @@ describe('Nx Running Tests', () => {
       runCLI(`generate @nx/web:app ${appA}`);
       runCLI(`generate @nx/js:lib ${libA} --bundler=tsc --defaults`);
       runCLI(
-        `generate @nx/js:lib ${libB} --bundler=tsc --defaults --tags=ui-a`
+        `generate @nx/js:lib ${libB} --bundler=tsc --defaults --tags=ui-a`,
       );
       runCLI(
-        `generate @nx/js:lib ${libC} --bundler=tsc --defaults --tags=ui-b,shared`
+        `generate @nx/js:lib ${libC} --bundler=tsc --defaults --tags=ui-b,shared`,
       );
       runCLI(`generate @nx/node:lib ${libD} --defaults --tags=api`);
 
@@ -530,12 +530,12 @@ describe('Nx Running Tests', () => {
                     expect(1).toEqual(1);
                   });
                 });
-              `
+              `,
       );
 
       // testing run many starting'
       const buildParallel = runCLI(
-        `run-many --target=build --projects="${libC},${libB}"`
+        `run-many --target=build --projects="${libC},${libB}"`,
       );
       expect(buildParallel).toContain(`Running target build for 2 projects:`);
       expect(buildParallel).not.toContain(`- ${appA}`);
@@ -548,7 +548,7 @@ describe('Nx Running Tests', () => {
       // testing run many --all starting
       const buildAllParallel = runCLI(`run-many --target=build`);
       expect(buildAllParallel).toContain(
-        `Running target build for 4 projects:`
+        `Running target build for 4 projects:`,
       );
       expect(buildAllParallel).toContain(`- ${appA}`);
       expect(buildAllParallel).toContain(`- ${libA}`);
@@ -559,10 +559,10 @@ describe('Nx Running Tests', () => {
 
       // testing run many by tags
       const buildByTagParallel = runCLI(
-        `run-many --target=build --projects="tag:ui*"`
+        `run-many --target=build --projects="tag:ui*"`,
       );
       expect(buildByTagParallel).toContain(
-        `Running target build for 2 projects:`
+        `Running target build for 2 projects:`,
       );
       expect(buildByTagParallel).not.toContain(`- ${appA}`);
       expect(buildByTagParallel).not.toContain(`- ${libA}`);
@@ -573,10 +573,10 @@ describe('Nx Running Tests', () => {
 
       // testing run many with exclude
       const buildWithExcludeParallel = runCLI(
-        `run-many --target=build --exclude="${libD},tag:ui*"`
+        `run-many --target=build --exclude="${libD},tag:ui*"`,
       );
       expect(buildWithExcludeParallel).toContain(
-        `Running target build for 2 projects and 1 task they depend on:`
+        `Running target build for 2 projects and 1 task they depend on:`,
       );
       expect(buildWithExcludeParallel).toContain(`- ${appA}`);
       expect(buildWithExcludeParallel).toContain(`- ${libA}`);
@@ -584,15 +584,15 @@ describe('Nx Running Tests', () => {
       expect(buildWithExcludeParallel).toContain(`${libC}`); // should still include libC as dependency despite exclude
       expect(buildWithExcludeParallel).not.toContain(`- ${libD}`);
       expect(buildWithExcludeParallel).toContain(
-        'Successfully ran target build'
+        'Successfully ran target build',
       );
 
       // testing run many when project depends on other projects
       const buildWithDeps = runCLI(
-        `run-many --target=build --projects="${libA}"`
+        `run-many --target=build --projects="${libA}"`,
       );
       expect(buildWithDeps).toContain(
-        `Running target build for project ${libA} and 1 task it depends on:`
+        `Running target build for project ${libA} and 1 task it depends on:`,
       );
       expect(buildWithDeps).not.toContain(`- ${appA}`);
       expect(buildWithDeps).toContain(`- ${libA}`);
@@ -603,10 +603,10 @@ describe('Nx Running Tests', () => {
 
       // testing run many --configuration
       const buildConfig = runCLI(
-        `run-many --target=build --projects="${appA},${libA}" --prod`
+        `run-many --target=build --projects="${appA},${libA}" --prod`,
       );
       expect(buildConfig).toContain(
-        `Running target build for 2 projects and 1 task they depend on:`
+        `Running target build for 2 projects and 1 task they depend on:`,
       );
       expect(buildConfig).toContain(`run ${appA}:build`);
       expect(buildConfig).toContain(`run ${libA}:build`);
@@ -628,7 +628,7 @@ describe('Nx Running Tests', () => {
 
       let outputs = runCLI(
         // Options with lists can be specified using multiple args or with a delimiter (comma or space).
-        `run-many -t build -t test -p ${myapp1} ${myapp2}`
+        `run-many -t build -t test -p ${myapp1} ${myapp2}`,
       );
       expect(outputs).toContain('Running targets build, test for 2 projects:');
 
@@ -652,7 +652,7 @@ describe('Nx Running Tests', () => {
       pkg2Root = tmpProjPath(path.join('libs', pkg2));
       runCLI(`generate @nx/js:lib ${pkg} --bundler=none --unitTestRunner=none`);
       runCLI(
-        `generate @nx/js:lib ${pkg2} --bundler=none --unitTestRunner=none`
+        `generate @nx/js:lib ${pkg2} --bundler=none --unitTestRunner=none`,
       );
 
       updateJson<PackageJson>('package.json', (v) => {
@@ -676,7 +676,7 @@ describe('Nx Running Tests', () => {
               },
             },
           },
-        })
+        }),
       );
 
       updateFile(
@@ -687,7 +687,7 @@ describe('Nx Running Tests', () => {
           scripts: {
             build: "nx exec -- echo '$NX_PROJECT_NAME'",
           },
-        })
+        }),
       );
 
       updateJson(`libs/${pkg2}/project.json`, (content) => {
@@ -728,7 +728,7 @@ describe('Nx Running Tests', () => {
 
       output = runCLI("exec -- echo '$NX_PROJECT_ROOT_PATH'").replace(
         /\s+/g,
-        ' '
+        ' ',
       );
       expect(output).toContain(`${path.join('libs', pkg)}`);
       expect(output).toContain(`${path.join('libs', pkg2)}`);
@@ -787,13 +787,13 @@ describe('Nx Running Tests', () => {
                 },
               },
             },
-          })
+          }),
         );
         runCommand('npm run build', {
           cwd: pkgRoot,
         });
         expect(
-          fileExists(tmpProjPath('tmp/exec-outputs-test/file.txt'))
+          fileExists(tmpProjPath('tmp/exec-outputs-test/file.txt')),
         ).toBeTruthy();
         removeFile('tmp');
         const output = runCommand('npm run build', {
@@ -801,7 +801,7 @@ describe('Nx Running Tests', () => {
         });
         expect(output).toContain('[local cache]');
         expect(
-          fileExists(tmpProjPath('tmp/exec-outputs-test/file.txt'))
+          fileExists(tmpProjPath('tmp/exec-outputs-test/file.txt')),
         ).toBeTruthy();
       });
     });

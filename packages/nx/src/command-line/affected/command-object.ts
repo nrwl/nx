@@ -19,9 +19,9 @@ export const yargsAffectedCommand: CommandModule = {
       withAffectedOptions(
         withRunOptions(
           withOutputStyleOption(
-            withTargetAndConfigurationOption(withBatch(yargs))
-          )
-        )
+            withTargetAndConfigurationOption(withBatch(yargs)),
+          ),
+        ),
       )
         .option('all', {
           type: 'boolean',
@@ -30,11 +30,11 @@ export const yargsAffectedCommand: CommandModule = {
         .middleware((args) => {
           if (args.all !== undefined) {
             throw new Error(
-              "The '--all' option has been removed for `nx affected`. Use 'nx run-many' instead."
+              "The '--all' option has been removed for `nx affected`. Use 'nx run-many' instead.",
             );
           }
         }),
-      'affected'
+      'affected',
     ),
   handler: async (args) =>
     (await import('./affected')).affected('affected', withOverrides(args)),
@@ -46,9 +46,9 @@ export const yargsAffectedTestCommand: CommandModule = {
   builder: (yargs) =>
     linkToNxDevAndExamples(
       withAffectedOptions(
-        withRunOptions(withOutputStyleOption(withConfiguration(yargs)))
+        withRunOptions(withOutputStyleOption(withConfiguration(yargs))),
       ),
-      'affected'
+      'affected',
     ),
   handler: async (args) =>
     (await import('./affected')).affected('affected', {
@@ -63,9 +63,9 @@ export const yargsAffectedBuildCommand: CommandModule = {
   builder: (yargs) =>
     linkToNxDevAndExamples(
       withAffectedOptions(
-        withRunOptions(withOutputStyleOption(withConfiguration(yargs)))
+        withRunOptions(withOutputStyleOption(withConfiguration(yargs))),
       ),
-      'affected'
+      'affected',
     ),
   handler: async (args) =>
     (await import('./affected')).affected('affected', {
@@ -80,9 +80,9 @@ export const yargsAffectedLintCommand: CommandModule = {
   builder: (yargs) =>
     linkToNxDevAndExamples(
       withAffectedOptions(
-        withRunOptions(withOutputStyleOption(withConfiguration(yargs)))
+        withRunOptions(withOutputStyleOption(withConfiguration(yargs))),
       ),
-      'affected'
+      'affected',
     ),
   handler: async (args) =>
     (await import('./affected')).affected('affected', {
@@ -97,9 +97,9 @@ export const yargsAffectedE2ECommand: CommandModule = {
   builder: (yargs) =>
     linkToNxDevAndExamples(
       withAffectedOptions(
-        withRunOptions(withOutputStyleOption(withConfiguration(yargs)))
+        withRunOptions(withOutputStyleOption(withConfiguration(yargs))),
       ),
-      'affected'
+      'affected',
     ),
   handler: async (args) =>
     (await import('./affected')).affected('affected', {
@@ -120,7 +120,7 @@ export const yargsAffectedGraphCommand: CommandModule = {
   builder: (yargs) =>
     linkToNxDevAndExamples(
       withAffectedOptions(withDepGraphOptions(yargs)),
-      'affected:graph'
+      'affected:graph',
     ),
   handler: async (args) =>
     await (
@@ -143,7 +143,7 @@ export const yargsPrintAffectedCommand: CommandModule = {
   builder: (yargs) =>
     linkToNxDevAndExamples(
       withAffectedOptions(withTargetAndConfigurationOption(yargs, false)),
-      'print-affected'
+      'print-affected',
     )
       .option('select', {
         type: 'string',

@@ -8,8 +8,8 @@ export function deleteFiles(tree: Tree, options: NormalizedOptions): void {
       options.projectRoot,
       'src',
       'lib',
-      `${options.fileName}.ts`
-    )
+      `${options.fileName}.ts`,
+    ),
   );
 
   if (options.unitTestRunner !== 'none') {
@@ -18,8 +18,8 @@ export function deleteFiles(tree: Tree, options: NormalizedOptions): void {
         options.projectRoot,
         'src',
         'lib',
-        `${options.fileName}.spec.ts`
-      )
+        `${options.fileName}.spec.ts`,
+      ),
     );
   }
 

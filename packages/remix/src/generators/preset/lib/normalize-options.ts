@@ -12,7 +12,7 @@ export interface NormalizedSchema extends RemixGeneratorSchema {
 
 export function normalizeOptions(
   tree: Tree,
-  options: RemixGeneratorSchema
+  options: RemixGeneratorSchema,
 ): NormalizedSchema {
   // There is a bug in Nx core where custom preset args are not passed correctly for boolean values, thus causing the name to be "commit" or "nx-cloud" when not passed.
   // TODO(jack): revert this hack once Nx core is fixed for custom preset args.

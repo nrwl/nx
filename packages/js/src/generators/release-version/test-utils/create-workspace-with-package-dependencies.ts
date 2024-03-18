@@ -19,7 +19,7 @@ interface ProjectAndPackageData {
 
 export function createWorkspaceWithPackageDependencies(
   tree: Tree,
-  projectAndPackageData: ProjectAndPackageData
+  projectAndPackageData: ProjectAndPackageData,
 ): ProjectGraph {
   const projectGraph: ProjectGraph = {
     nodes: {},
@@ -52,7 +52,7 @@ export function createWorkspaceWithPackageDependencies(
         source: projectName,
         target: dependency.projectName,
         type: 'static',
-      })
+      }),
     );
     // create the package.json in the tree
     writeJson(tree, data.packageJsonPath, packageJsonContents);

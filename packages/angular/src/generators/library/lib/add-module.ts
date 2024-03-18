@@ -5,7 +5,7 @@ import { NormalizedSchema } from './normalized-schema';
 
 export function addModule(
   host: Tree,
-  options: NormalizedSchema['libraryOptions']
+  options: NormalizedSchema['libraryOptions'],
 ) {
   if (options.routing && options.lazy && options.parent) {
     addLoadChildren(host, options);

@@ -38,6 +38,6 @@ export function ensureDependencies(host: Tree): GeneratorCallback {
       '@testing-library/jest-native': testingLibraryJestNativeVersion,
       'jest-expo': jestExpoVersion,
       'babel-preset-expo': babelPresetExpoVersion,
-    }
+    },
   );
 }

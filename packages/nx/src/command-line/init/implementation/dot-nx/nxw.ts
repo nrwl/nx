@@ -18,7 +18,7 @@ const installationPath = path.join(__dirname, 'installation', 'package.json');
 
 function matchesCurrentNxInstall(
   currentInstallation: PackageJson,
-  nxJsonInstallation: NxJsonConfiguration['installation']
+  nxJsonInstallation: NxJsonConfiguration['installation'],
 ) {
   if (
     !currentInstallation.devDependencies ||
@@ -31,17 +31,19 @@ function matchesCurrentNxInstall(
     if (
       currentInstallation.devDependencies['nx'] !==
         nxJsonInstallation.version ||
-      require(path.join(
-        path.dirname(installationPath),
-        'node_modules',
-        'nx',
-        'package.json'
-      )).version !== nxJsonInstallation.version
+      require(
+        path.join(
+          path.dirname(installationPath),
+          'node_modules',
+          'nx',
+          'package.json',
+        ),
+      ).version !== nxJsonInstallation.version
     ) {
       return false;
     }
     for (const [plugin, desiredVersion] of Object.entries(
-      nxJsonInstallation.plugins || {}
+      nxJsonInstallation.plugins || {},
     )) {
       if (currentInstallation.devDependencies[plugin] !== desiredVersion) {
         return false;
@@ -73,7 +75,7 @@ function getCurrentInstallation(): PackageJson {
 
 function performInstallation(
   currentInstallation: PackageJson,
-  nxJson: NxJsonConfiguration
+  nxJson: NxJsonConfiguration,
 ) {
   fs.writeFileSync(
     installationPath,
@@ -83,7 +85,7 @@ function performInstallation(
         nx: nxJson.installation.version,
         ...nxJson.installation.plugins,
       },
-    })
+    }),
   );
 
   try {
@@ -107,13 +109,13 @@ function ensureUpToDateInstallation() {
     nxJson = require(nxJsonPath);
     if (!nxJson.installation) {
       console.error(
-        '[NX]: The "installation" entry in the "nx.json" file is required when running the nx wrapper. See https://nx.dev/recipes/installation/install-non-javascript'
+        '[NX]: The "installation" entry in the "nx.json" file is required when running the nx wrapper. See https://nx.dev/recipes/installation/install-non-javascript',
       );
       process.exit(1);
     }
   } catch {
     console.error(
-      '[NX]: The "nx.json" file is required when running the nx wrapper. See https://nx.dev/recipes/installation/install-non-javascript'
+      '[NX]: The "nx.json" file is required when running the nx wrapper. See https://nx.dev/recipes/installation/install-non-javascript',
     );
     process.exit(1);
   }

@@ -11,7 +11,7 @@ export async function daemonHandler(args: Arguments) {
       title: `Daemon Server - Started in a background process...`,
       bodyLines: [
         `${output.dim('Logs from the Daemon process (')}ID: ${pid}${output.dim(
-          ') can be found here:'
+          ') can be found here:',
         )} ${DAEMON_OUTPUT_LOG_FILE}\n`,
       ],
     });

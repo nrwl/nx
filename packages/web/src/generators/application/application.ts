@@ -60,9 +60,9 @@ function createApplicationFiles(tree: Tree, options: NormalizedSchema) {
         offsetFromRoot: offsetFromRoot(options.appProjectRoot),
         rootTsConfigPath: getRelativePathToRootTsConfig(
           tree,
-          options.appProjectRoot
+          options.appProjectRoot,
         ),
-      }
+      },
     );
   } else {
     generateFiles(
@@ -76,7 +76,7 @@ function createApplicationFiles(tree: Tree, options: NormalizedSchema) {
         offsetFromRoot: offsetFromRoot(options.appProjectRoot),
         rootTsConfigPath: getRelativePathToRootTsConfig(
           tree,
-          options.appProjectRoot
+          options.appProjectRoot,
         ),
         webpackPluginOptions: hasWebpackPlugin(tree)
           ? {
@@ -86,7 +86,7 @@ function createApplicationFiles(tree: Tree, options: NormalizedSchema) {
                 'dist',
                 options.appProjectRoot != '.'
                   ? options.appProjectRoot
-                  : options.projectName
+                  : options.projectName,
               ),
               tsConfig: './tsconfig.app.json',
               main: './src/main.ts',
@@ -96,11 +96,11 @@ function createApplicationFiles(tree: Tree, options: NormalizedSchema) {
               styles: [`./src/styles.${options.style}`],
             }
           : null,
-      }
+      },
     );
     if (options.unitTestRunner === 'none') {
       tree.delete(
-        join(options.appProjectRoot, './src/app/app.element.spec.ts')
+        join(options.appProjectRoot, './src/app/app.element.spec.ts'),
       );
     }
   }
@@ -110,7 +110,7 @@ async function setupBundler(tree: Tree, options: NormalizedSchema) {
   const main = joinPathFragments(options.appProjectRoot, 'src/main.ts');
   const tsConfig = joinPathFragments(
     options.appProjectRoot,
-    'tsconfig.app.json'
+    'tsconfig.app.json',
   );
   const assets = [
     joinPathFragments(options.appProjectRoot, 'src/favicon.ico'),
@@ -130,7 +130,7 @@ async function setupBundler(tree: Tree, options: NormalizedSchema) {
       devServer: true,
       webpackConfig: joinPathFragments(
         options.appProjectRoot,
-        'webpack.config.js'
+        'webpack.config.js',
       ),
       skipFormat: true,
       addPlugin: options.addPlugin,
@@ -142,13 +142,13 @@ async function setupBundler(tree: Tree, options: NormalizedSchema) {
       buildOptions.assets = assets;
       buildOptions.index = joinPathFragments(
         options.appProjectRoot,
-        'src/index.html'
+        'src/index.html',
       );
       buildOptions.baseHref = '/';
       buildOptions.styles = [
         joinPathFragments(
           options.appProjectRoot,
-          `src/styles.${options.style}`
+          `src/styles.${options.style}`,
         ),
       ];
       // We can delete that, because this projest is an application
@@ -160,11 +160,11 @@ async function setupBundler(tree: Tree, options: NormalizedSchema) {
         {
           replace: joinPathFragments(
             options.appProjectRoot,
-            `src/environments/environment.ts`
+            `src/environments/environment.ts`,
           ),
           with: joinPathFragments(
             options.appProjectRoot,
-            `src/environments/environment.prod.ts`
+            `src/environments/environment.prod.ts`,
           ),
         },
       ];
@@ -208,7 +208,7 @@ async function addProject(tree: Tree, options: NormalizedSchema) {
       tags: options.parsedTags,
       targets,
     },
-    options.standaloneConfig
+    options.standaloneConfig,
   );
 }
 
@@ -266,7 +266,7 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
       host.exists(joinPathFragments(options.appProjectRoot, 'src/environments'))
     ) {
       host.delete(
-        joinPathFragments(options.appProjectRoot, 'src/environments')
+        joinPathFragments(options.appProjectRoot, 'src/environments'),
       );
     }
 
@@ -288,7 +288,7 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
         includeVitest: options.unitTestRunner === 'vitest',
         inSourceTests: options.inSourceTests,
       },
-      false
+      false,
     );
   }
 
@@ -313,7 +313,7 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
         includeVitest: true,
         inSourceTests: options.inSourceTests,
       },
-      true
+      true,
     );
   }
 
@@ -322,14 +322,14 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
     options.inSourceTests
   ) {
     host.delete(
-      joinPathFragments(options.appProjectRoot, `src/app/app.element.spec.ts`)
+      joinPathFragments(options.appProjectRoot, `src/app/app.element.spec.ts`),
     );
   }
 
   if (options.linter === 'eslint') {
     const { lintProjectGenerator } = ensurePackage<typeof import('@nx/eslint')>(
       '@nx/eslint',
-      nxVersion
+      nxVersion,
     );
     const lintTask = await lintProjectGenerator(host, {
       linter: options.linter,
@@ -396,7 +396,7 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
   if (options.unitTestRunner === 'jest') {
     const { configurationGenerator } = ensurePackage<typeof import('@nx/jest')>(
       '@nx/jest',
-      nxVersion
+      nxVersion,
     );
     const jestTask = await configurationGenerator(host, {
       project: options.projectName,
@@ -421,7 +421,7 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
     const installTask = addDependenciesToPackageJson(
       host,
       {},
-      { '@swc/core': swcCoreVersion, 'swc-loader': swcLoaderVersion }
+      { '@swc/core': swcCoreVersion, 'swc-loader': swcLoaderVersion },
     );
     tasks.push(installTask);
   } else {
@@ -436,8 +436,8 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
     addDependenciesToPackageJson(
       host,
       { tslib: tsLibVersion },
-      { '@types/node': typesNodeVersion }
-    )
+      { '@types/node': typesNodeVersion },
+    ),
   );
 
   if (!schema.skipFormat) {
@@ -453,7 +453,7 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
 
 async function normalizeOptions(
   host: Tree,
-  options: Schema
+  options: Schema,
 ): Promise<NormalizedSchema> {
   const {
     projectName: appProjectName,

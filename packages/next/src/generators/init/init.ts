@@ -30,8 +30,8 @@ function updateDependencies(host: Tree, schema: InitSchema) {
         '@nx/next': nxVersion,
       },
       undefined,
-      schema.keepExistingVersions
-    )
+      schema.keepExistingVersions,
+    ),
   );
 
   return runTasksInSerial(...tasks);
@@ -43,7 +43,7 @@ export function nextInitGenerator(tree: Tree, schema: InitSchema) {
 
 export async function nextInitGeneratorInternal(
   host: Tree,
-  schema: InitSchema
+  schema: InitSchema,
 ) {
   const nxJson = readNxJson(host);
   const addPluginDefault =

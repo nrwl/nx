@@ -16,7 +16,7 @@ export default async function (globalConfig: Config.ConfigGlobals) {
   const storageLocation = join(
     tmpdir,
     'local-registry/storage',
-    process.env.NX_TASK_TARGET_PROJECT ?? ''
+    process.env.NX_TASK_TARGET_PROJECT ?? '',
   );
   global.e2eTeardown = await startLocalRegistry({
     localRegistryTarget: '@nx/nx-source:local-registry',

@@ -5,14 +5,14 @@ import { NextServeBuilderOptions } from '../../utils/types';
 
 export default async function* serveExecutor(
   options: NextServeBuilderOptions,
-  context: ExecutorContext
+  context: ExecutorContext,
 ) {
   // Cast to any to overwrite NODE_ENV
   (process.env as any).NODE_ENV = process.env.NODE_ENV
     ? process.env.NODE_ENV
     : options.dev
-    ? 'development'
-    : 'production';
+      ? 'development'
+      : 'production';
 
   // Setting port that the custom server should use.
   process.env.PORT = options.port ? `${options.port}` : process.env.PORT;
@@ -26,7 +26,7 @@ export default async function* serveExecutor(
 async function* runCustomServer(
   root: string,
   options: NextServeBuilderOptions,
-  context: ExecutorContext
+  context: ExecutorContext,
 ) {
   process.env.NX_NEXT_DIR ??= root;
   process.env.NX_NEXT_PUBLIC_DIR = join(root, 'public');
@@ -38,7 +38,7 @@ async function* runCustomServer(
     {
       watch: options.dev ? true : false,
     },
-    context
+    context,
   );
 
   for await (const result of customServerBuild) {

@@ -16,7 +16,7 @@ import {
 } from '../../../../project-graph/project-graph-builder';
 
 export function buildExplicitPackageJsonDependencies(
-  ctx: CreateDependenciesContext
+  ctx: CreateDependenciesContext,
 ): RawProjectGraphDependency[] {
   const res: RawProjectGraphDependency[] = [];
   let packageNameMap = undefined;
@@ -38,7 +38,7 @@ function createPackageNameMap(projects: ProjectsConfigurations['projects']) {
   for (let projectName of Object.keys(projects)) {
     try {
       const packageJson = parseJson(
-        defaultFileRead(join(projects[projectName].root, 'package.json'))
+        defaultFileRead(join(projects[projectName].root, 'package.json')),
       );
       res[packageJson.name ?? projectName] = projectName;
     } catch (e) {}
@@ -48,13 +48,13 @@ function createPackageNameMap(projects: ProjectsConfigurations['projects']) {
 
 function isPackageJsonAtProjectRoot(
   nodes: ProjectConfiguration[],
-  fileName: string
+  fileName: string,
 ) {
   return (
     fileName.endsWith('package.json') &&
     nodes.find(
       (projectNode) =>
-        joinPathFragments(projectNode.root, 'package.json') === fileName
+        joinPathFragments(projectNode.root, 'package.json') === fileName,
     )
   );
 }
@@ -64,7 +64,7 @@ function processPackageJson(
   fileName: string,
   ctx: CreateDependenciesContext,
   collectedDeps: RawProjectGraphDependency[],
-  packageNameMap: { [packageName: string]: string }
+  packageNameMap: { [packageName: string]: string },
 ) {
   try {
     const deps = readDeps(parseJson(defaultFileRead(fileName)));

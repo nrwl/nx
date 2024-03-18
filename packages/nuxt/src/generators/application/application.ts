@@ -67,12 +67,12 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
       style: options.style,
       projectRoot: options.appProjectRoot,
       hasVitest: options.unitTestRunner === 'vitest',
-    }
+    },
   );
 
   if (options.style === 'none') {
     tree.delete(
-      joinPathFragments(options.appProjectRoot, `src/assets/css/styles.none`)
+      joinPathFragments(options.appProjectRoot, `src/assets/css/styles.none`),
     );
   }
 
@@ -83,7 +83,7 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
       rootProject: options.rootProject,
       unitTestRunner: options.unitTestRunner,
     },
-    getRelativePathToRootTsConfig(tree, options.appProjectRoot)
+    getRelativePathToRootTsConfig(tree, options.appProjectRoot),
   );
 
   updateGitIgnore(tree);
@@ -95,7 +95,7 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
       linter: options.linter ?? Linter.EsLint,
       unitTestRunner: options.unitTestRunner,
       rootProject: options.rootProject,
-    })
+    }),
   );
 
   if (options.unitTestRunner === 'vitest') {
@@ -106,8 +106,8 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
         {
           '@vue/test-utils': vueTestUtilsVersion,
           '@vitejs/plugin-vue': vitePluginVueVersion,
-        }
-      )
+        },
+      ),
     );
 
     tasks.push(await addVitest(tree, options));

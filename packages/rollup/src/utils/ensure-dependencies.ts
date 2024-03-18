@@ -12,7 +12,7 @@ export type EnsureDependenciesOptions = {
 
 export function ensureDependencies(
   tree: Tree,
-  options: EnsureDependenciesOptions
+  options: EnsureDependenciesOptions,
 ): GeneratorCallback {
   if (options.compiler === 'swc') {
     return addDependenciesToPackageJson(
@@ -22,7 +22,7 @@ export function ensureDependencies(
         '@swc/helpers': swcHelpersVersion,
         '@swc/core': swcCoreVersion,
         'swc-loader': swcLoaderVersion,
-      }
+      },
     );
   }
 

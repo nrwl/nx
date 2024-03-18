@@ -12,7 +12,7 @@ describe('escape $ in env variables', () => {
     tree.write(
       '.env',
       `dollar=$
-NX_SOME_VAR=$ABC`
+NX_SOME_VAR=$ABC`,
     );
     escapeDollarSignEnvVariables(tree);
     expect(tree.read('.env', 'utf-8')).toEqual(`dollar=\\$
@@ -29,12 +29,12 @@ NX_SOME_VAR=\\$ABC`);
     tree.write(
       'apps/my-app/.env',
       `dollar=$
-NX_SOME_VAR=$ABC`
+NX_SOME_VAR=$ABC`,
     );
     tree.write(
       'apps/my-app2/.env',
       `dollar=$
-NX_SOME_VAR=$DEF`
+NX_SOME_VAR=$DEF`,
     );
     escapeDollarSignEnvVariables(tree);
     expect(tree.read('apps/my-app/.env', 'utf-8')).toEqual(`dollar=\\$
@@ -60,12 +60,12 @@ NX_SOME_VAR=\\$DEF`);
     tree.write(
       'apps/my-app/.build.env',
       `dollar=$
-NX_SOME_VAR=$ABC`
+NX_SOME_VAR=$ABC`,
     );
     tree.write(
       'apps/my-app/.env',
       `dollar=$
-NX_SOME_VAR=$ABC`
+NX_SOME_VAR=$ABC`,
     );
     escapeDollarSignEnvVariables(tree);
     expect(tree.read('.env', 'utf-8')).toEqual(`dollar=\\$`);
@@ -92,17 +92,17 @@ NX_SOME_VAR=\\$ABC`);
     tree.write(
       'apps/my-app/.production.env',
       `dollar=$
-NX_SOME_VAR=$ABC`
+NX_SOME_VAR=$ABC`,
     );
     tree.write(
       'apps/my-app/.build.production.env',
       `dollar=$
-NX_SOME_VAR=$ABC`
+NX_SOME_VAR=$ABC`,
     );
     tree.write(
       'apps/my-app/.env',
       `dollar=$
-NX_SOME_VAR=$ABC`
+NX_SOME_VAR=$ABC`,
     );
     escapeDollarSignEnvVariables(tree);
     expect(tree.read('.env', 'utf-8')).toEqual(`dollar=\\$`);
@@ -123,7 +123,7 @@ NX_SOME_VAR=\\$ABC`);
     tree.write(
       'apps/my-app/.env',
       `dollar=\\$
-NX_SOME_VAR=\\$ABC`
+NX_SOME_VAR=\\$ABC`,
     );
     escapeDollarSignEnvVariables(tree);
     expect(tree.read('apps/my-app/.env', 'utf-8')).toEqual(`dollar=\\$

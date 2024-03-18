@@ -118,7 +118,7 @@ describe('migrate-mfe-to-mf', () => {
     function something() {
       // but this should change
       import('@nrwl/angular/mfe');
-    }`
+    }`,
     );
 
     tree.write(
@@ -130,7 +130,7 @@ describe('migrate-mfe-to-mf', () => {
     const myRemotes: MFERemotes = [];
     
     function doSomething(v: MFERemotes): MFEConfig {};
-    `
+    `,
     );
 
     tree.write(
@@ -148,7 +148,7 @@ describe('migrate-mfe-to-mf', () => {
     const myRemotes: MFERemotes = [];
     
     function doSomething(v: MFERemotes): MFEConfig {};
-    `
+    `,
     );
 
     tree.write(
@@ -165,7 +165,7 @@ describe('migrate-mfe-to-mf', () => {
       })
     
     };
-    `
+    `,
     );
 
     // ACT
@@ -211,8 +211,8 @@ describe('migrate-mfe-to-mf', () => {
     expect(
       tree.read(
         'libs/plugins/my-plugin/src/generators/my-generator.ts',
-        'utf-8'
-      )
+        'utf-8',
+      ),
     ).toMatchInlineSnapshot(`
       "import { setupMf } from '@nrwl/angular/generators';
           import { setupMf, somethingElse } from '@nrwl/angular/generators';

@@ -22,7 +22,7 @@ describe('batchProjectsByGeneratorConfig()', () => {
         'bar',
         'baz',
         'qux',
-      ])
+      ]),
     ).toMatchInlineSnapshot(`
       Map {
         "["@nx/js:release-version",{"bar":"string","foo":true,"o":{"nested2":[],"nested1":false},"arr":["1",2,false]}]" => [

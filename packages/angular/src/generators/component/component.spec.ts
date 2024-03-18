@@ -27,7 +27,7 @@ describe('component Generator', () => {
       declarations: [],
       exports: []
     })
-    export class LibModule {}`
+    export class LibModule {}`,
     );
     tree.write('libs/lib1/src/index.ts', `export * from './lib/lib.module';`);
 
@@ -40,19 +40,19 @@ describe('component Generator', () => {
 
     // ASSERT
     expect(
-      tree.read('libs/lib1/src/lib/example/example.component.ts', 'utf-8')
+      tree.read('libs/lib1/src/lib/example/example.component.ts', 'utf-8'),
     ).toMatchSnapshot('component');
     expect(
-      tree.read('libs/lib1/src/lib/example/example.component.html', 'utf-8')
+      tree.read('libs/lib1/src/lib/example/example.component.html', 'utf-8'),
     ).toMatchSnapshot('template');
     expect(
-      tree.read('libs/lib1/src/lib/example/example.component.css', 'utf-8')
+      tree.read('libs/lib1/src/lib/example/example.component.css', 'utf-8'),
     ).toMatchSnapshot('stylesheet');
     expect(
-      tree.read('libs/lib1/src/lib/example/example.component.spec.ts', 'utf-8')
+      tree.read('libs/lib1/src/lib/example/example.component.spec.ts', 'utf-8'),
     ).toMatchSnapshot('component test file');
     expect(tree.read('libs/lib1/src/index.ts', 'utf-8')).toMatchSnapshot(
-      'entry point file'
+      'entry point file',
     );
   });
 
@@ -73,7 +73,7 @@ describe('component Generator', () => {
       declarations: [],
       exports: []
     })
-    export class LibModule {}`
+    export class LibModule {}`,
     );
     tree.write('libs/lib1/src/index.ts', '');
 
@@ -88,7 +88,7 @@ describe('component Generator', () => {
 
     // ASSERT
     expect(
-      tree.exists('libs/lib1/src/lib/example/example.component.spec.ts')
+      tree.exists('libs/lib1/src/lib/example/example.component.spec.ts'),
     ).toBe(false);
   });
 
@@ -109,7 +109,7 @@ describe('component Generator', () => {
       declarations: [],
       exports: []
     })
-    export class LibModule {}`
+    export class LibModule {}`,
     );
     tree.write('libs/lib1/src/index.ts', '');
 
@@ -124,10 +124,10 @@ describe('component Generator', () => {
 
     // ASSERT
     expect(
-      tree.read('libs/lib1/src/lib/example/example.component.ts', 'utf-8')
+      tree.read('libs/lib1/src/lib/example/example.component.ts', 'utf-8'),
     ).toMatchSnapshot();
     expect(
-      tree.exists('libs/lib1/src/lib/example/example.component.html')
+      tree.exists('libs/lib1/src/lib/example/example.component.html'),
     ).toBe(false);
   });
 
@@ -148,7 +148,7 @@ describe('component Generator', () => {
       declarations: [],
       exports: []
     })
-    export class LibModule {}`
+    export class LibModule {}`,
     );
     tree.write('libs/lib1/src/index.ts', '');
 
@@ -163,10 +163,10 @@ describe('component Generator', () => {
 
     // ASSERT
     expect(
-      tree.read('libs/lib1/src/lib/example/example.component.ts', 'utf-8')
+      tree.read('libs/lib1/src/lib/example/example.component.ts', 'utf-8'),
     ).toMatchSnapshot();
     expect(tree.exists('libs/lib1/src/lib/example/example.component.css')).toBe(
-      false
+      false,
     );
   });
 
@@ -187,7 +187,7 @@ describe('component Generator', () => {
       declarations: [],
       exports: []
     })
-    export class LibModule {}`
+    export class LibModule {}`,
     );
     tree.write('libs/lib1/src/index.ts', '');
 
@@ -202,7 +202,7 @@ describe('component Generator', () => {
 
     // ASSERT
     expect(
-      tree.exists('libs/lib1/src/lib/example/example.component.none')
+      tree.exists('libs/lib1/src/lib/example/example.component.none'),
     ).toBeFalsy();
     expect(tree.read('libs/lib1/src/lib/example/example.component.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
@@ -234,7 +234,7 @@ describe('component Generator', () => {
       declarations: [],
       exports: []
     })
-    export class LibModule {}`
+    export class LibModule {}`,
     );
     tree.write('libs/lib1/src/index.ts', `export * from './lib/lib.module';`);
 
@@ -250,7 +250,7 @@ describe('component Generator', () => {
     // ASSERT
     const componentSource = tree.read(
       'libs/lib1/src/lib/example/example.component.ts',
-      'utf-8'
+      'utf-8',
     );
     expect(componentSource).toMatchSnapshot();
 
@@ -275,7 +275,7 @@ describe('component Generator', () => {
       declarations: [],
       exports: []
     })
-    export class LibModule {}`
+    export class LibModule {}`,
     );
     tree.write('libs/lib1/src/index.ts', '');
 
@@ -290,13 +290,13 @@ describe('component Generator', () => {
     // ASSERT
     const componentSource = tree.read(
       'libs/lib1/src/lib/example/example.component.ts',
-      'utf-8'
+      'utf-8',
     );
     expect(componentSource).toMatchSnapshot();
 
     const indexSource = tree.read('libs/lib1/src/index.ts', 'utf-8');
     expect(indexSource).toMatchInlineSnapshot(
-      `"export * from './lib/example/example.component';"`
+      `"export * from './lib/example/example.component';"`,
     );
   });
 
@@ -317,7 +317,7 @@ describe('component Generator', () => {
       declarations: [],
       exports: []
     })
-    export class LibModule {}`
+    export class LibModule {}`,
     );
     tree.write('libs/lib1/src/index.ts', `export * from './lib/lib.module';`);
 
@@ -333,13 +333,13 @@ describe('component Generator', () => {
     // ASSERT
     const componentSource = tree.read(
       'libs/lib1/src/lib/example/example.component.ts',
-      'utf-8'
+      'utf-8',
     );
     expect(componentSource).toMatchSnapshot();
 
     const indexSource = tree.read('libs/lib1/src/index.ts', 'utf-8');
     expect(indexSource).not.toContain(
-      `export * from "./lib/example/example.component";`
+      `export * from "./lib/example/example.component";`,
     );
   });
 
@@ -360,7 +360,7 @@ describe('component Generator', () => {
       declarations: [],
       exports: []
     })
-    export class LibModule {}`
+    export class LibModule {}`,
     );
     tree.write('libs/lib1/src/index.ts', `export * from './lib/lib.module';`);
 
@@ -375,13 +375,13 @@ describe('component Generator', () => {
     // ASSERT
     const componentSource = tree.read(
       'libs/lib1/src/lib/example/example.component.ts',
-      'utf-8'
+      'utf-8',
     );
     expect(componentSource).toMatchSnapshot();
 
     const indexSource = tree.read('libs/lib1/src/index.ts', 'utf-8');
     expect(indexSource).not.toContain(
-      `export * from "./lib/example/example.component";`
+      `export * from "./lib/example/example.component";`,
     );
   });
 
@@ -402,7 +402,7 @@ describe('component Generator', () => {
       declarations: [],
       exports: []
     })
-    export class LibModule {}`
+    export class LibModule {}`,
     );
     tree.write('libs/lib1/src/index.ts', `export * from './lib/lib.module';`);
 
@@ -418,13 +418,13 @@ describe('component Generator', () => {
     // ASSERT
     const componentSource = tree.read(
       'libs/lib1/src/lib/example/example.component.ts',
-      'utf-8'
+      'utf-8',
     );
     expect(componentSource).toMatchSnapshot();
 
     const indexSource = tree.read('libs/lib1/src/index.ts', 'utf-8');
     expect(indexSource).not.toContain(
-      `export * from "./lib/example/example.component";`
+      `export * from "./lib/example/example.component";`,
     );
   });
 
@@ -445,7 +445,7 @@ describe('component Generator', () => {
       declarations: [],
       exports: []
     })
-    export class LibModule {}`
+    export class LibModule {}`,
     );
 
     // ACT
@@ -460,7 +460,7 @@ describe('component Generator', () => {
     // ASSERT
     const componentSource = tree.read(
       'libs/lib1/src/lib/example/example.component.ts',
-      'utf-8'
+      'utf-8',
     );
     expect(componentSource).toMatchSnapshot();
 
@@ -485,7 +485,7 @@ describe('component Generator', () => {
       declarations: [],
       exports: []
     })
-    export class LibModule {}`
+    export class LibModule {}`,
     );
     tree.write('libs/lib1/src/index.ts', '');
 
@@ -521,7 +521,7 @@ describe('component Generator', () => {
       declarations: [],
       exports: []
     })
-    export class LibModule {}`
+    export class LibModule {}`,
       );
       tree.write('libs/lib1/src/index.ts', `export * from './lib/lib.module';`);
 
@@ -538,7 +538,7 @@ describe('component Generator', () => {
       // ASSERT
       const componentSource = tree.read(
         'libs/lib1/src/lib/example.component.ts',
-        'utf-8'
+        'utf-8',
       );
       expect(componentSource).toMatchSnapshot();
 
@@ -563,7 +563,7 @@ describe('component Generator', () => {
       declarations: [],
       exports: []
     })
-    export class LibModule {}`
+    export class LibModule {}`,
       );
       tree.write('libs/lib1/src/index.ts', `export * from './lib/lib.module';`);
 
@@ -580,13 +580,13 @@ describe('component Generator', () => {
       // ASSERT
       const componentSource = tree.read(
         'libs/lib1/src/lib/example.component.ts',
-        'utf-8'
+        'utf-8',
       );
       expect(componentSource).toMatchSnapshot();
 
       const indexSource = tree.read('libs/lib1/src/index.ts', 'utf-8');
       expect(indexSource).not.toContain(
-        `export * from "./lib/example.component";`
+        `export * from "./lib/example.component";`,
       );
     });
   });
@@ -609,7 +609,7 @@ describe('component Generator', () => {
       declarations: [],
       exports: []
     })
-    export class LibModule {}`
+    export class LibModule {}`,
       );
       tree.write('libs/lib1/src/index.ts', `export * from './lib/lib.module';`);
 
@@ -626,13 +626,13 @@ describe('component Generator', () => {
       // ASSERT
       const componentSource = tree.read(
         'libs/lib1/src/lib/mycomp/example/example.component.ts',
-        'utf-8'
+        'utf-8',
       );
       expect(componentSource).toMatchSnapshot();
 
       const indexSource = tree.read('libs/lib1/src/index.ts', 'utf-8');
       expect(indexSource).toContain(
-        `export * from './lib/mycomp/example/example.component';`
+        `export * from './lib/mycomp/example/example.component';`,
       );
     });
 
@@ -653,7 +653,7 @@ describe('component Generator', () => {
       declarations: [],
       exports: []
     })
-    export class LibModule {}`
+    export class LibModule {}`,
       );
       tree.write('libs/lib1/src/index.ts', `export * from './lib/lib.module';`);
 
@@ -666,7 +666,7 @@ describe('component Generator', () => {
           export: false,
           standalone: false,
           skipFormat: true,
-        })
+        }),
       ).rejects.toThrow();
     });
   });
@@ -698,11 +698,11 @@ describe('component Generator', () => {
       declarations: [],
       exports: []
     })
-    export class LibModule {}`
+    export class LibModule {}`,
         );
         tree.write(
           'libs/lib1/src/index.ts',
-          `export * from './lib/lib.module';`
+          `export * from './lib/lib.module';`,
         );
 
         // ACT
@@ -718,9 +718,9 @@ describe('component Generator', () => {
         // ASSERT
         const indexSource = tree.read('libs/lib1/src/index.ts', 'utf-8');
         expect(indexSource).toContain(
-          `export * from './lib/example/example.component';`
+          `export * from './lib/example/example.component';`,
         );
-      }
+      },
     );
 
     it('should import the component correctly to the module file when flat is false', async () => {
@@ -741,11 +741,11 @@ import { NgModule } from '@angular/core';
   exports: []
 })
 export class LibModule {}
-`
+`,
       );
       tree.write(
         'libs/shared/ui/src/index.ts',
-        `export * from './lib/lib.module';`
+        `export * from './lib/lib.module';`,
       );
 
       // ACT
@@ -761,7 +761,7 @@ export class LibModule {}
       // ASSERT
       const moduleSource = tree.read(
         'libs/shared/ui/src/lib/lib.module.ts',
-        'utf-8'
+        'utf-8',
       );
       expect(moduleSource).toMatchSnapshot();
     });
@@ -783,7 +783,7 @@ export class LibModule {}
       declarations: [],
       exports: []
     })
-    export class LibModule {}`
+    export class LibModule {}`,
       );
       tree.write(
         'libs/lib1/src/lib/not-exported.module.ts',
@@ -794,7 +794,7 @@ export class LibModule {}
       declarations: [],
       exports: []
     })
-    export class NotExportedModule {}`
+    export class NotExportedModule {}`,
       );
       tree.write('libs/lib1/src/index.ts', `export * from './lib/lib.module';`);
 
@@ -811,7 +811,7 @@ export class LibModule {}
       // ASSERT
       const indexSource = tree.read('libs/lib1/src/index.ts', 'utf-8');
       expect(indexSource).toMatchInlineSnapshot(
-        `"export * from './lib/lib.module';"`
+        `"export * from './lib/lib.module';"`,
       );
     });
 
@@ -832,7 +832,7 @@ export class LibModule {}
       declarations: [],
       exports: []
     })
-    export class LibModule {}`
+    export class LibModule {}`,
       );
 
       // ACT & ASSERT
@@ -844,7 +844,7 @@ export class LibModule {}
           module: 'not-found',
           standalone: false,
           skipFormat: true,
-        })
+        }),
       ).rejects.toThrow();
     });
 
@@ -865,7 +865,7 @@ export class LibModule {}
       declarations: [],
       exports: []
     })
-    export class LibModule {}`
+    export class LibModule {}`,
       );
       tree.write(
         'libs/lib1/src/lib/lib2.module.ts',
@@ -876,7 +876,7 @@ export class LibModule {}
       declarations: [],
       exports: []
     })
-    export class Lib2Module {}`
+    export class Lib2Module {}`,
       );
 
       // ACT & ASSERT
@@ -887,7 +887,7 @@ export class LibModule {}
           path: 'libs/lib1/src/lib',
           standalone: false,
           skipFormat: true,
-        })
+        }),
       ).rejects.toThrow();
     });
   });
@@ -912,7 +912,7 @@ export class LibModule {}
 
       const content = tree.read(
         'lib1/src/lib/example/example.component.ts',
-        'utf-8'
+        'utf-8',
       );
       expect(content).toMatch(/selector: 'foo-example'/);
     });
@@ -923,7 +923,7 @@ export class LibModule {}
           name: 'lib1/src/lib/1-one/1-one',
           prefix: 'foo',
           nameAndDirectoryFormat: 'as-provided',
-        })
+        }),
       ).rejects.toThrow('The selector "foo-1-one" is invalid.');
     });
 
@@ -936,7 +936,7 @@ export class LibModule {}
 
       const content = tree.read(
         'lib1/src/lib/one-1/one-1.component.ts',
-        'utf-8'
+        'utf-8',
       );
       expect(content).toMatch(/selector: 'foo-one-1'/);
     });
@@ -950,7 +950,7 @@ export class LibModule {}
 
       const content = tree.read(
         'lib1/src/lib/example/example.component.ts',
-        'utf-8'
+        'utf-8',
       );
       expect(content).toMatch(/selector: 'one-1'/);
     });
@@ -969,7 +969,7 @@ export class LibModule {}
 
       const content = tree.read(
         'lib1/src/lib/example/example.component.ts',
-        'utf-8'
+        'utf-8',
       );
       expect(content).toMatch(/selector: 'bar-example'/);
     });
@@ -988,7 +988,7 @@ export class LibModule {}
 
       const content = tree.read(
         'lib1/src/lib/example/example.component.ts',
-        'utf-8'
+        'utf-8',
       );
       expect(content).toMatch(/selector: 'example'/);
     });
@@ -1012,7 +1012,7 @@ export class LibModule {}
         declarations: [],
         exports: []
       })
-      export class LibModule {}`
+      export class LibModule {}`,
       );
       tree.write('libs/lib1/src/index.ts', `export * from './lib/lib.module';`);
 
@@ -1022,7 +1022,7 @@ export class LibModule {}
       });
       tree.write(
         'libs/lib1/secondary/src/index.ts',
-        `export * from './lib/secondary.module';`
+        `export * from './lib/secondary.module';`,
       );
       tree.write(
         'libs/lib1/secondary/src/lib/secondary.module.ts',
@@ -1033,7 +1033,7 @@ export class LibModule {}
         declarations: [],
         exports: []
       })
-      export class SecondaryModule {}`
+      export class SecondaryModule {}`,
       );
 
       // ACT
@@ -1049,13 +1049,13 @@ export class LibModule {}
       // ASSERT
       const componentSource = tree.read(
         'libs/lib1/secondary/src/lib/example/example.component.ts',
-        'utf-8'
+        'utf-8',
       );
       expect(componentSource).toMatchSnapshot();
 
       const secondaryIndexSource = tree.read(
         'libs/lib1/secondary/src/index.ts',
-        'utf-8'
+        'utf-8',
       );
       expect(secondaryIndexSource).toMatchSnapshot();
     });
@@ -1077,7 +1077,7 @@ export class LibModule {}
         declarations: [],
         exports: []
       })
-      export class LibModule {}`
+      export class LibModule {}`,
       );
       tree.write('libs/lib1/src/index.ts', `export * from './lib/lib.module';`);
 
@@ -1095,7 +1095,7 @@ export class LibModule {}
         declarations: [],
         exports: []
       })
-      export class SecondaryModule {}`
+      export class SecondaryModule {}`,
       );
 
       // ACT
@@ -1110,7 +1110,7 @@ export class LibModule {}
       // ASSERT
       const indexSource = tree.read(
         'libs/lib1/secondary/src/index.ts',
-        'utf-8'
+        'utf-8',
       );
       expect(indexSource).toBe('');
     });
@@ -1133,7 +1133,7 @@ export class LibModule {}
         declarations: [],
         exports: []
       })
-      export class LibModule {}`
+      export class LibModule {}`,
       );
       tree.write('libs/lib1/src/index.ts', '');
 
@@ -1146,10 +1146,10 @@ export class LibModule {}
       });
 
       expect(
-        tree.read('libs/lib1/src/lib/example/example.component.ts', 'utf-8')
+        tree.read('libs/lib1/src/lib/example/example.component.ts', 'utf-8'),
       ).toMatchSnapshot();
       expect(
-        tree.exists('libs/lib1/src/lib/example/example.component.css')
+        tree.exists('libs/lib1/src/lib/example/example.component.css'),
       ).toBe(false);
     });
   });

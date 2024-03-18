@@ -23,7 +23,7 @@ describe('normalizeRollupExecutorOptions', () => {
     let result = normalizeRollupExecutorOptions(
       testOptions,
       { root } as any,
-      sourceRoot
+      sourceRoot,
     );
     expect(result.rollupConfig).toEqual(['/root/apps/nodeapp/rollup.config']);
 
@@ -34,7 +34,7 @@ describe('normalizeRollupExecutorOptions', () => {
         rollupConfig: 'react',
       },
       { root } as any,
-      sourceRoot
+      sourceRoot,
     );
     expect(result.rollupConfig).toHaveLength(1);
     expect(result.rollupConfig[0]).toMatch('react');
@@ -47,7 +47,7 @@ describe('normalizeRollupExecutorOptions', () => {
     const result = normalizeRollupExecutorOptions(
       testOptions,
       { root } as any,
-      sourceRoot
+      sourceRoot,
     );
     expect(result.rollupConfig).toEqual([]);
   });

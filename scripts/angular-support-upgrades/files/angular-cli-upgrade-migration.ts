@@ -1,5 +1,5 @@
 export const getAngularCliMigrationGenerator = (
-  version: string
+  version: string,
 ) => `import { formatFiles, Tree, updateJson } from '@nx/devkit';
 
 export const angularCliVersion = '~${version}';

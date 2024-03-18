@@ -17,7 +17,7 @@ import { existsSync, writeFileSync } from 'fs';
 
 export async function* startDevServer(
   opts: Omit<CypressExecutorOptions, 'cypressConfig'>,
-  context: ExecutorContext
+  context: ExecutorContext,
 ) {
   // no dev server, return the provisioned base url
   if (!opts.devServerTarget || opts.skipServe) {
@@ -27,13 +27,13 @@ export async function* startDevServer(
 
   const parsedDevServerTarget = parseTargetString(
     opts.devServerTarget,
-    context
+    context,
   );
 
   const [targetSupportsWatchOpt] = getValueFromSchema(
     context,
     parsedDevServerTarget,
-    'watch'
+    'watch',
   );
 
   const overrides: Record<string, any> = {
@@ -54,7 +54,7 @@ export async function* startDevServer(
       if (!didLock) {
         logger.warn(
           stripIndents`${opts.port} is potentially already in use by another cypress run.
-If the port is in use, try using a different port value or passing --port='cypress-auto' to find a free port.`
+If the port is in use, try using a different port value or passing --port='cypress-auto' to find a free port.`,
         );
       }
     }
@@ -91,13 +91,13 @@ If the port is in use, try using a different port value or passing --port='cypre
 async function getPortForProject(
   context: ExecutorContext,
   target: Target,
-  defaultPort = 4200
+  defaultPort = 4200,
 ) {
   const fmtTarget = targetToTargetString(target);
   const [hasPortOpt, schemaPortValue] = getValueFromSchema(
     context,
     target,
-    'port'
+    'port',
   );
 
   let freePort: number | undefined;
@@ -106,7 +106,7 @@ async function getPortForProject(
     let normalizedPortValue: number;
     if (!schemaPortValue) {
       logger.info(
-        `NX ${fmtTarget} did not have a defined port value, checking for free port with the default value of ${defaultPort}`
+        `NX ${fmtTarget} did not have a defined port value, checking for free port with the default value of ${defaultPort}`,
       );
       normalizedPortValue = defaultPort;
     } else {
@@ -143,7 +143,7 @@ async function getPortForProject(
     } catch (err) {
       throw new Error(
         stripIndents`Unable to find a free port for the dev server, ${fmtTarget}.
-You can disable auto port detection by specifing a port or not passing a value to --port`
+You can disable auto port detection by specifing a port or not passing a value to --port`,
       );
     }
   } else {
@@ -168,14 +168,14 @@ You can disable auto port detection by specifing a port or not passing a value t
 function getValueFromSchema(
   context: ExecutorContext,
   target: Target,
-  property: string
+  property: string,
 ): [hasPropertyOpt: boolean, value?: unknown] {
   let targetOpts: any;
   try {
     targetOpts = readTargetOptions(target, context);
   } catch (e) {
     throw new Error(`Unable to read the target options for  ${targetToTargetString(
-      target
+      target,
     )}.
 Are you sure this is a valid target?
 Was trying to read the target for the property: '${property}', but got the following error: 
@@ -195,7 +195,7 @@ ${e.message || e}`);
       collection,
       executor,
       context.root,
-      context.projectsConfigurations.projects
+      context.projectsConfigurations.projects,
     );
 
     // NOTE: schema won't have a default since readTargetOptions would have

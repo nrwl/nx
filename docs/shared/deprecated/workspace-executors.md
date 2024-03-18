@@ -23,6 +23,6 @@ nx generate @nx/plugin:executor my-executor --project=my-plugin
 
 ```jsonc
 {
-  "executor": "@my-org/my-plugin:my-executor"
+  "executor": "@my-org/my-plugin:my-executor",
 }
 ```

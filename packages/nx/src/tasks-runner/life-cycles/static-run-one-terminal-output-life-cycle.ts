@@ -25,7 +25,7 @@ export class StaticRunOneTerminalOutputLifeCycle implements LifeCycle {
       targets?: string[];
       configuration?: string;
       verbose?: boolean;
-    }
+    },
   ) {}
 
   startCommand(): void {
@@ -33,7 +33,7 @@ export class StaticRunOneTerminalOutputLifeCycle implements LifeCycle {
     const title = `Running ${formatTargetsAndProjects(
       this.projectNames,
       this.args.targets,
-      this.tasks
+      this.tasks,
     )}:`;
     if (numberOfDeps > 0) {
       output.log({
@@ -54,7 +54,7 @@ export class StaticRunOneTerminalOutputLifeCycle implements LifeCycle {
         this.cachedTasks.length > 0
           ? [
               output.dim(
-                `Nx read the output from the cache instead of running the command for ${this.cachedTasks.length} out of ${this.tasks.length} tasks.`
+                `Nx read the output from the cache instead of running the command for ${this.cachedTasks.length} out of ${this.tasks.length} tasks.`,
               ),
             ]
           : [];
@@ -63,7 +63,7 @@ export class StaticRunOneTerminalOutputLifeCycle implements LifeCycle {
         title: `Successfully ran ${formatTargetsAndProjects(
           this.projectNames,
           this.args.targets,
-          this.tasks
+          this.tasks,
         )}`,
         bodyLines,
       });
@@ -76,14 +76,14 @@ export class StaticRunOneTerminalOutputLifeCycle implements LifeCycle {
         ...this.failedTasks.map((task) => `${output.dim('-')} ${task.id}`),
         '',
         `${output.dim('Hint: run the command with')} --verbose ${output.dim(
-          'for more details.'
+          'for more details.',
         )}`,
       ];
       output.error({
         title: `Running ${formatTargetsAndProjects(
           this.projectNames,
           this.args.targets,
-          this.tasks
+          this.tasks,
         )} failed`,
         bodyLines,
       });
@@ -91,7 +91,7 @@ export class StaticRunOneTerminalOutputLifeCycle implements LifeCycle {
   }
 
   endTasks(
-    taskResults: { task: Task; status: TaskStatus; code: number }[]
+    taskResults: { task: Task; status: TaskStatus; code: number }[],
   ): void {
     for (let t of taskResults) {
       if (t.status === 'failure') {
@@ -109,7 +109,7 @@ export class StaticRunOneTerminalOutputLifeCycle implements LifeCycle {
   printTaskTerminalOutput(
     task: Task,
     status: TaskStatus,
-    terminalOutput: string
+    terminalOutput: string,
   ) {
     const args = getPrintableCommandArgsForTask(task);
     if (

@@ -25,7 +25,7 @@ export default function nxReleasePath(tree: Tree) {
 export function visitNotIgnoredFiles(
   tree: Tree,
   dirPath: string = tree.root,
-  visitor: (path: string) => void
+  visitor: (path: string) => void,
 ): void {
   const ig = getIgnoreObject();
   dirPath = normalizePathRelativeToRoot(dirPath, tree.root);

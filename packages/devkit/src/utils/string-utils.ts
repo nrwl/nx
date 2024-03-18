@@ -69,7 +69,7 @@ export function camelize(str: string): string {
       STRING_CAMELIZE_REGEXP,
       (_match: string, _separator: string, chr: string) => {
         return chr ? chr.toUpperCase() : '';
-      }
+      },
     )
     .replace(/^([A-Z])/, (match: string) => match.toLowerCase());
 }
@@ -143,7 +143,7 @@ export function featurePath(
   group: boolean | undefined,
   flat: boolean | undefined,
   path: string,
-  name: string
+  name: string,
 ): string {
   if (group && !flat) {
     return `../../${path}/${name}/`;

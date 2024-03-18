@@ -6,7 +6,7 @@ import type { ApplicationGeneratorOptions, NormalizedOptions } from '../schema';
 
 export async function normalizeOptions(
   tree: Tree,
-  options: ApplicationGeneratorOptions
+  options: ApplicationGeneratorOptions,
 ): Promise<NormalizedOptions> {
   const {
     projectName: appProjectName,
@@ -41,7 +41,7 @@ export async function normalizeOptions(
 }
 
 export function toNodeApplicationGeneratorOptions(
-  options: NormalizedOptions
+  options: NormalizedOptions,
 ): NodeApplicationGeneratorOptions {
   return {
     name: options.name,

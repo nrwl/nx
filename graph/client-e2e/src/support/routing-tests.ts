@@ -22,7 +22,7 @@ function waitForTaskGraphs(router: 'hash' | 'browser') {
 function resolveProjectsRoute(
   router: 'hash' | 'browser',
   route: string,
-  paramString: string
+  paramString: string,
 ) {
   if (router === 'hash') {
     return `/#${route}?${paramString}`;
@@ -34,7 +34,7 @@ function resolveProjectsRoute(
 function resolveTasksRoute(
   router: 'hash' | 'browser',
   route: string,
-  paramString: string
+  paramString: string,
 ) {
   if (router === 'hash') {
     return `/#${route}?${paramString}`;
@@ -45,7 +45,7 @@ function resolveTasksRoute(
 
 export function testProjectsRoutes(
   router: 'hash' | 'browser',
-  routes: string[]
+  routes: string[],
 ) {
   routes.forEach((route) => {
     describe(`for route ${route}`, () => {
@@ -60,17 +60,17 @@ export function testProjectsRoutes(
           (key) =>
             nxExamplesJson.dependencies[key]
               .map((dependencies) => dependencies.target)
-              .includes('cart')
+              .includes('cart'),
         );
         getCheckedProjectItems().should(
           'have.length',
-          ['cart', ...dependencies, ...dependents].length
+          ['cart', ...dependencies, ...dependents].length,
         );
       });
 
       it('should focus projects with special characters', () => {
         cy.visit(
-          resolveProjectsRoute(router, `${route}/%40scoped%2Fproject-a`, '')
+          resolveProjectsRoute(router, `${route}/%40scoped%2Fproject-a`, ''),
         );
 
         // wait for first graph to finish loading
@@ -81,17 +81,17 @@ export function testProjectsRoutes(
           (key) =>
             nxExamplesJson.dependencies[key]
               .map((dependencies) => dependencies.target)
-              .includes('@scoped/project-a')
+              .includes('@scoped/project-a'),
         );
         getCheckedProjectItems().should(
           'have.length',
-          ['@scoped/project-a', ...dependencies, ...dependents].length
+          ['@scoped/project-a', ...dependencies, ...dependents].length,
         );
       });
 
       it('should focus projects with search depth', () => {
         cy.visit(
-          resolveProjectsRoute(router, `${route}/cart`, `searchDepth=2`)
+          resolveProjectsRoute(router, `${route}/cart`, `searchDepth=2`),
         );
 
         // wait for first graph to finish loading
@@ -103,7 +103,7 @@ export function testProjectsRoutes(
 
       it('should focus projects with search depth disabled', () => {
         cy.visit(
-          resolveProjectsRoute(router, `${route}/cart`, `searchDepth=0`)
+          resolveProjectsRoute(router, `${route}/cart`, `searchDepth=0`),
         );
 
         // wait for first graph to finish loading
@@ -115,7 +115,7 @@ export function testProjectsRoutes(
 
       it('should set group by folder', () => {
         cy.visit(
-          resolveProjectsRoute(router, `${route}/cart`, `groupByFolder=true`)
+          resolveProjectsRoute(router, `${route}/cart`, `groupByFolder=true`),
         );
 
         // wait for first graph to finish loading
@@ -132,7 +132,7 @@ export function testProjectsRoutes(
 
         getCheckedProjectItems().should(
           'have.length',
-          nxExamplesJson.projects.length
+          nxExamplesJson.projects.length,
         );
       });
     });

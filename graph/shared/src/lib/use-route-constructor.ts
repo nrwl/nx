@@ -3,7 +3,7 @@ import { getEnvironmentConfig } from './use-environment-config';
 
 export const useRouteConstructor = (): ((
   to: To,
-  retainSearchParams: boolean
+  retainSearchParams: boolean,
 ) => To) => {
   const { environment } = getEnvironmentConfig();
   const { selectedWorkspaceId } = useParams();
@@ -24,8 +24,8 @@ export const useRouteConstructor = (): ((
         search: to.search
           ? to.search.toString()
           : retainSearchParams
-          ? searchParams.toString()
-          : '',
+            ? searchParams.toString()
+            : '',
       };
     } else if (typeof to === 'string') {
       if (environment === 'dev') {

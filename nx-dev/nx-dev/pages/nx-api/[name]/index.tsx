@@ -46,7 +46,7 @@ export default function Package({
     menu: {
       sections: sortCorePackagesFirst<MenuSection>(
         getPackagesSections(menu),
-        'id'
+        'id',
       ),
     },
     package: pkg,

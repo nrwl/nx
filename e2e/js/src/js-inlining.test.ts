@@ -23,22 +23,22 @@ describe('inlining', () => {
     async (bundler) => {
       const parent = uniq('parent');
       runCLI(
-        `generate @nx/js:lib ${parent} --bundler=${bundler} --no-interactive`
+        `generate @nx/js:lib ${parent} --bundler=${bundler} --no-interactive`,
       );
 
       const buildable = uniq('buildable');
       runCLI(
-        `generate @nx/js:lib ${buildable} --bundler=${bundler} --no-interactive`
+        `generate @nx/js:lib ${buildable} --bundler=${bundler} --no-interactive`,
       );
 
       const buildableTwo = uniq('buildabletwo');
       runCLI(
-        `generate @nx/js:lib ${buildableTwo} --bundler=${bundler} --no-interactive`
+        `generate @nx/js:lib ${buildableTwo} --bundler=${bundler} --no-interactive`,
       );
 
       const nonBuildable = uniq('nonbuildable');
       runCLI(
-        `generate @nx/js:lib ${nonBuildable} --bundler=none --no-interactive`
+        `generate @nx/js:lib ${nonBuildable} --bundler=none --no-interactive`,
       );
 
       updateFile(`libs/${parent}/src/lib/${parent}.ts`, () => {
@@ -62,7 +62,7 @@ describe('inlining', () => {
         `dist/libs/${buildable}/src/index.js`, // buildable
         `dist/libs/${buildableTwo}/src/index.js`, // buildable two
         `dist/libs/${parent}/src/index.js`, // parent
-        `dist/libs/${parent}/${nonBuildable}/src/index.js` // inlined non buildable
+        `dist/libs/${parent}/${nonBuildable}/src/index.js`, // inlined non buildable
       );
       // non-buildable lib import path is modified to relative path
       let fileContent = readFile(`dist/libs/${parent}/src/lib/${parent}.js`);
@@ -75,7 +75,7 @@ describe('inlining', () => {
         `dist/libs/${parent}/src/index.js`, // parent
         `dist/libs/${parent}/${buildable}/src/index.js`, // inlined buildable
         `dist/libs/${parent}/${buildableTwo}/src/index.js`, // inlined buildable two
-        `dist/libs/${parent}/${nonBuildable}/src/index.js` // inlined non buildable
+        `dist/libs/${parent}/${nonBuildable}/src/index.js`, // inlined non buildable
       );
       fileContent = readFile(`dist/libs/${parent}/src/lib/${parent}.js`);
       expect(fileContent).toContain(`${nonBuildable}/src`);
@@ -90,14 +90,14 @@ describe('inlining', () => {
         `dist/libs/${buildableTwo}/src/index.js`, // buildable two original output should be persisted
         `dist/libs/${parent}/src/index.js`, // parent
         `dist/libs/${parent}/${buildableTwo}/src/index.js`, // inlined buildable two
-        `dist/libs/${parent}/${nonBuildable}/src/index.js` // inlined non buildable
+        `dist/libs/${parent}/${nonBuildable}/src/index.js`, // inlined non buildable
       );
       fileContent = readFile(`dist/libs/${parent}/src/lib/${parent}.js`);
       expect(fileContent).toContain(`${nonBuildable}/src`);
       expect(fileContent).toContain(`${buildableTwo}/src`);
       expect(fileContent).not.toContain(`${buildable}/src`);
     },
-    240_000
+    240_000,
   );
 
   it('should inline nesting libraries', async () => {
@@ -134,17 +134,17 @@ describe('inlining', () => {
     checkFilesExist(
       `dist/libs/${parent}/src/index.js`, // parent
       `dist/libs/${parent}/${child}/src/index.js`, // inlined child
-      `dist/libs/${parent}/${grandChild}/src/index.js` // inlined grand child
+      `dist/libs/${parent}/${grandChild}/src/index.js`, // inlined grand child
     );
     // non-buildable lib import path is modified to relative path
     const parentFileContent = readFile(
-      `dist/libs/${parent}/src/lib/${parent}.js`
+      `dist/libs/${parent}/src/lib/${parent}.js`,
     );
     expect(parentFileContent).toContain(`${child}/src`);
     expect(parentFileContent).not.toContain(`${grandChild}/src`);
 
     const childFileContent = readFile(
-      `dist/libs/${parent}/${child}/src/lib/${child}.js`
+      `dist/libs/${parent}/${child}/src/lib/${child}.js`,
     );
     expect(childFileContent).toContain(`${grandChild}/src`);
   }, 240_000);

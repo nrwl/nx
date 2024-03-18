@@ -40,10 +40,10 @@ const mapPathList: string[] = readJsonSync(`${basePath}/map.json`, {
   .content.map((file: any) => filePathExtractor(file))
   .flat();
 const readmeMissList = readmePathList.filter(
-  (x) => !mapPathList.includes(x) && !x.startsWith('generated/devkit/')
+  (x) => !mapPathList.includes(x) && !x.startsWith('generated/devkit/'),
 );
 const mapMissList = mapPathList.filter(
-  (x) => !readmePathList.includes(x) && !x.startsWith('generated/devkit/')
+  (x) => !readmePathList.includes(x) && !x.startsWith('generated/devkit/'),
 );
 
 let scriptError = false;
@@ -51,43 +51,43 @@ let scriptError = false;
 if (!!readmeMissList.length) {
   console.error(
     chalk.red(
-      "\n⚠️  Documentation files and 'map.json' file are out of sync!\n"
-    )
+      "\n⚠️  Documentation files and 'map.json' file are out of sync!\n",
+    ),
   );
   console.log(readmeMissList.map((x) => x.concat('.md')).join('\n'));
   console.error(
     chalk.red(
-      `\nSome documentation files exist without any reference in \'map.json\', make sure to add an entry.`
-    )
+      `\nSome documentation files exist without any reference in \'map.json\', make sure to add an entry.`,
+    ),
   );
   scriptError = true;
 } else {
   console.log(
     `${chalk.green('✓')} Markdown files are in sync with ${chalk.grey(
-      'docs/maps.json'
-    )}.`
+      'docs/maps.json',
+    )}.`,
   );
 }
 
 if (!!mapMissList.length) {
   console.log(
     `\n${chalk.red(
-      'ERROR'
-    )} The 'map.json' file and the documentation files are out of sync!\n`
+      'ERROR',
+    )} The 'map.json' file and the documentation files are out of sync!\n`,
   );
   console.log(mapPathList);
   console.log(mapMissList.map((x) => x.concat('.md')).join('\n'));
   console.log(
     `\n${chalk.red(
-      'ERROR'
-    )} The \'map.json\' file is linking documentation files that do not exist.`
+      'ERROR',
+    )} The \'map.json\' file is linking documentation files that do not exist.`,
   );
   scriptError = true;
 } else {
   console.log(
     `${chalk.green(
-      '✓'
-    )} The 'map.json' file and the documentation files are in sync.`
+      '✓',
+    )} The 'map.json' file and the documentation files are in sync.`,
   );
 }
 

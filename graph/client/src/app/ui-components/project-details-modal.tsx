@@ -11,7 +11,7 @@ import { useRouteLoaderData, useSearchParams } from 'react-router-dom';
 
 export function ProjectDetailsModal() {
   const workspaceData = useRouteLoaderData(
-    'selectedWorkspace'
+    'selectedWorkspace',
   ) as ProjectGraphClientResponse & { sourceMaps: string[] };
   const [project, setProject] = useState(null);
   const [sourceMap, setSourceMap] = useState(null);
@@ -29,7 +29,7 @@ export function ProjectDetailsModal() {
     if (searchParams.has('projectDetails')) {
       const projectName = searchParams.get('projectDetails');
       const project = workspaceData.projects.find(
-        (project) => project.name === projectName
+        (project) => project.name === projectName,
       );
       if (!project) {
         return;

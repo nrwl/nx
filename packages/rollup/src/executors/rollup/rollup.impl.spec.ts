@@ -44,13 +44,13 @@ describe('rollupExecutor', () => {
         normalizeRollupExecutorOptions(
           testOptions,
           { root: '/root' } as any,
-          '/root/src'
+          '/root/src',
         ),
         [],
         context,
         { name: 'example', version: '1.0' },
         '/root/src',
-        []
+        [],
       );
 
       expect(result.map((x) => x.output)).toEqual([
@@ -75,19 +75,19 @@ describe('rollupExecutor', () => {
       jest.mock(
         '/root/custom-rollup.config.ts',
         () => (o) => ({ ...o, prop: 'my-val' }),
-        { virtual: true }
+        { virtual: true },
       );
       const result: any = await createRollupOptions(
         normalizeRollupExecutorOptions(
           { ...testOptions, rollupConfig: 'custom-rollup.config.ts' },
           { root: '/root' } as any,
-          '/root/src'
+          '/root/src',
         ),
         [],
         context,
         { name: 'example', version: '1.0' },
         '/root/src',
-        []
+        [],
       );
 
       expect(result.map((x) => x.prop)).toEqual(['my-val', 'my-val']);
@@ -97,7 +97,7 @@ describe('rollupExecutor', () => {
       jest.mock(
         '/root/custom-rollup-1.config.ts',
         () => (o) => ({ ...o, prop1: 'my-val' }),
-        { virtual: true }
+        { virtual: true },
       );
       jest.mock(
         '/root/custom-rollup-2.config.ts',
@@ -106,7 +106,7 @@ describe('rollupExecutor', () => {
           prop1: o.prop1 + '-my-val-2',
           prop2: 'my-val-2',
         }),
-        { virtual: true }
+        { virtual: true },
       );
       const result: any = await createRollupOptions(
         normalizeRollupExecutorOptions(
@@ -118,13 +118,13 @@ describe('rollupExecutor', () => {
             ],
           },
           { root: '/root' } as any,
-          '/root/src'
+          '/root/src',
         ),
         [],
         context,
         { name: 'example', version: '1.0' },
         '/root/src',
-        []
+        [],
       );
 
       expect(result.map((x) => x.prop1)).toEqual([
@@ -140,7 +140,7 @@ describe('rollupExecutor', () => {
           ...normalizeRollupExecutorOptions(
             testOptions,
             { root: '/root' } as any,
-            '/root/src'
+            '/root/src',
           ),
           assets: [
             {
@@ -154,7 +154,7 @@ describe('rollupExecutor', () => {
         context,
         { name: 'example', version: '1.0' },
         '/root/src',
-        []
+        [],
       );
 
       expect(require('rollup-plugin-copy')).toHaveBeenCalledWith({
@@ -167,13 +167,13 @@ describe('rollupExecutor', () => {
         normalizeRollupExecutorOptions(
           { ...testOptions, external: 'all' },
           { root: '/root' } as any,
-          '/root/src'
+          '/root/src',
         ),
         [],
         context,
         { name: 'example', version: '1.0' },
         '/root/src',
-        ['lodash']
+        ['lodash'],
       );
 
       const external = options[0].external as rollup.IsExternal;
@@ -188,13 +188,13 @@ describe('rollupExecutor', () => {
         normalizeRollupExecutorOptions(
           { ...testOptions, external: 'none' },
           { root: '/root' } as any,
-          '/root/src'
+          '/root/src',
         ),
         [],
         context,
         { name: 'example', version: '1.0' },
         '/root/src',
-        ['lodash']
+        ['lodash'],
       );
 
       const external = options[0].external as rollup.IsExternal;
@@ -209,13 +209,13 @@ describe('rollupExecutor', () => {
         normalizeRollupExecutorOptions(
           { ...testOptions, external: ['rxjs'] },
           { root: '/root' } as any,
-          '/root/src'
+          '/root/src',
         ),
         [],
         context,
         { name: 'example', version: '1.0' },
         '/root/src',
-        ['lodash']
+        ['lodash'],
       );
 
       const external = options[0].external as rollup.IsExternal;

@@ -26,7 +26,7 @@ let compilerHost: {
 export function resolveModuleByImport(
   importExpr: string,
   filePath: string,
-  tsConfigPath: string
+  tsConfigPath: string,
 ) {
   compilerHost = compilerHost || getCompilerHost(tsConfigPath);
   const { options, host, moduleResolutionCache } = compilerHost;
@@ -36,7 +36,7 @@ export function resolveModuleByImport(
     filePath,
     options,
     host,
-    moduleResolutionCache
+    moduleResolutionCache,
   );
 
   if (!resolvedModule) {
@@ -51,7 +51,7 @@ function getCompilerHost(tsConfigPath: string) {
   const host = tsModule.createCompilerHost(options, true);
   const moduleResolutionCache = tsModule.createModuleResolutionCache(
     workspaceRoot,
-    host.getCanonicalFileName
+    host.getCanonicalFileName,
   );
   return { options, host, moduleResolutionCache };
 }
@@ -63,7 +63,7 @@ function readTsConfigOptions(tsConfigPath: string) {
 
   const readResult = tsModule.readConfigFile(
     tsConfigPath,
-    tsModule.sys.readFile
+    tsModule.sys.readFile,
   );
 
   // we don't need to scan the files, we only care about options
@@ -76,7 +76,7 @@ function readTsConfigOptions(tsConfigPath: string) {
   return tsModule.parseJsonConfigFileContent(
     readResult.config,
     host as ts.ParseConfigHost,
-    dirname(tsConfigPath)
+    dirname(tsConfigPath),
   ).options;
 }
 
@@ -87,7 +87,7 @@ function nodesByPosition(first: ts.Node, second: ts.Node): number {
 function updateTsSourceFile(
   host: Tree,
   sourceFile: ts.SourceFile,
-  filePath: string
+  filePath: string,
 ): ts.SourceFile {
   const newFileContents = host.read(filePath).toString('utf-8');
   return sourceFile.update(newFileContents, {
@@ -104,7 +104,7 @@ export function insertChange(
   sourceFile: ts.SourceFile,
   filePath: string,
   insertPosition: number,
-  contentToInsert: string
+  contentToInsert: string,
 ): ts.SourceFile {
   const content = host.read(filePath).toString();
   const prefix = content.substring(0, insertPosition);
@@ -121,7 +121,7 @@ export function replaceChange(
   filePath: string,
   insertPosition: number,
   contentToInsert: string,
-  oldContent: string
+  oldContent: string,
 ) {
   const content = host.read(filePath, 'utf-8');
 
@@ -129,7 +129,7 @@ export function replaceChange(
   const suffix = content.substring(insertPosition + oldContent.length);
   const text = content.substring(
     insertPosition,
-    insertPosition + oldContent.length
+    insertPosition + oldContent.length,
   );
   if (text !== oldContent) {
     throw new Error(`Invalid replace: "${text}" != "${oldContent}".`);
@@ -145,7 +145,7 @@ export function removeChange(
   sourceFile: ts.SourceFile,
   filePath: string,
   removePosition: number,
-  contentToRemove: string
+  contentToRemove: string,
 ): ts.SourceFile {
   const content = host.read(filePath).toString();
   const prefix = content.substring(0, removePosition);
@@ -161,7 +161,7 @@ export function insertImport(
   fileToEdit: string,
   symbolName: string,
   fileName: string,
-  isDefault = false
+  isDefault = false,
 ): ts.SourceFile {
   if (!tsModule) {
     tsModule = ensureTypescript();
@@ -187,7 +187,7 @@ export function insertImport(
     relevantImports.forEach((n) => {
       Array.prototype.push.apply(
         imports,
-        findNodes(n, tsModule.SyntaxKind.Identifier)
+        findNodes(n, tsModule.SyntaxKind.Identifier),
       );
       if (findNodes(n, tsModule.SyntaxKind.AsteriskToken).length > 0) {
         importsAsterisk = true;
@@ -200,7 +200,7 @@ export function insertImport(
     }
 
     const importTextNodes = imports.filter(
-      (n) => (n as ts.Identifier).text === symbolName
+      (n) => (n as ts.Identifier).text === symbolName,
     );
 
     // insert import if it's not there
@@ -208,11 +208,11 @@ export function insertImport(
       const fallbackPos =
         findNodes(
           relevantImports[0],
-          tsModule.SyntaxKind.CloseBraceToken
+          tsModule.SyntaxKind.CloseBraceToken,
         )[0].getStart() ||
         findNodes(
           relevantImports[0],
-          tsModule.SyntaxKind.FromKeyword
+          tsModule.SyntaxKind.FromKeyword,
         )[0].getStart();
 
       return insertAfterLastOccurrence(
@@ -221,7 +221,7 @@ export function insertImport(
         imports,
         `, ${symbolName}`,
         fileToEdit,
-        fallbackPos
+        fallbackPos,
       );
     }
 
@@ -231,7 +231,7 @@ export function insertImport(
   // no such import declaration exists
   const useStrict = findNodes(
     rootNode,
-    tsModule.SyntaxKind.StringLiteral
+    tsModule.SyntaxKind.StringLiteral,
   ).filter((n: ts.StringLiteral) => n.text === 'use strict');
   let fallbackPos = 0;
   if (useStrict.length > 0) {
@@ -253,7 +253,7 @@ export function insertImport(
     toInsert,
     fileToEdit,
     fallbackPos,
-    tsModule.SyntaxKind.StringLiteral
+    tsModule.SyntaxKind.StringLiteral,
   );
 }
 
@@ -264,7 +264,7 @@ function insertAfterLastOccurrence(
   toInsert: string,
   pathToFile: string,
   fallbackPos: number,
-  syntaxKind?: ts.SyntaxKind
+  syntaxKind?: ts.SyntaxKind,
 ): ts.SourceFile {
   // sort() has a side effect, so make a copy so that we won't overwrite the parent's object.
   let lastItem = [...nodes].sort(nodesByPosition).pop();
@@ -276,7 +276,7 @@ function insertAfterLastOccurrence(
   }
   if (!lastItem && fallbackPos == undefined) {
     throw new Error(
-      `tried to insert ${toInsert} as first occurrence with no fallback position`
+      `tried to insert ${toInsert} as first occurrence with no fallback position`,
     );
   }
   const lastItemPosition: number = lastItem ? lastItem.getEnd() : fallbackPos;
@@ -288,7 +288,7 @@ export function addGlobal(
   host: Tree,
   source: ts.SourceFile,
   modulePath: string,
-  statement: string
+  statement: string,
 ): ts.SourceFile {
   if (!tsModule) {
     tsModule = ensureTypescript();
@@ -301,7 +301,7 @@ export function addGlobal(
       source,
       modulePath,
       lastImport.end + 1,
-      `\n${statement}\n`
+      `\n${statement}\n`,
     );
   } else {
     return insertChange(host, source, modulePath, 0, `${statement}\n`);
@@ -310,14 +310,14 @@ export function addGlobal(
 
 export function getImport(
   source: ts.SourceFile,
-  predicate: (a: any) => boolean
+  predicate: (a: any) => boolean,
 ): { moduleSpec: string; bindings: string[] }[] {
   if (!tsModule) {
     tsModule = ensureTypescript();
   }
   const allImports = findNodes(source, tsModule.SyntaxKind.ImportDeclaration);
   const matching = allImports.filter((i: ts.ImportDeclaration) =>
-    predicate(i.moduleSpecifier.getText())
+    predicate(i.moduleSpecifier.getText()),
   );
 
   return matching.map((i: ts.ImportDeclaration) => {
@@ -339,7 +339,7 @@ export function replaceNodeValue(
   sourceFile: ts.SourceFile,
   modulePath: string,
   node: ts.Node,
-  content: string
+  content: string,
 ) {
   return replaceChange(
     host,
@@ -347,7 +347,7 @@ export function replaceNodeValue(
     modulePath,
     node.getStart(node.getSourceFile()),
     content,
-    node.getText()
+    node.getText(),
   );
 }
 
@@ -355,14 +355,14 @@ export function addParameterToConstructor(
   tree: Tree,
   source: ts.SourceFile,
   modulePath: string,
-  opts: { className: string; param: string }
+  opts: { className: string; param: string },
 ): ts.SourceFile {
   if (!tsModule) {
     tsModule = ensureTypescript();
   }
   const clazz = findClass(source, opts.className);
   const constructor = clazz.members.filter(
-    (m) => m.kind === tsModule.SyntaxKind.Constructor
+    (m) => m.kind === tsModule.SyntaxKind.Constructor,
   )[0];
 
   if (constructor) {
@@ -379,7 +379,7 @@ export function addMethod(
   tree: Tree,
   source: ts.SourceFile,
   modulePath: string,
-  opts: { className: string; methodHeader: string; body?: string }
+  opts: { className: string; methodHeader: string; body?: string },
 ): ts.SourceFile {
   const clazz = findClass(source, opts.className);
   const body = opts.body
@@ -398,7 +398,7 @@ ${opts.methodHeader} {}
 export function findClass(
   source: ts.SourceFile,
   className: string,
-  silent: boolean = false
+  silent: boolean = false,
 ): ts.ClassDeclaration {
   if (!tsModule) {
     tsModule = ensureTypescript();
@@ -408,7 +408,7 @@ export function findClass(
   const clazz = nodes.filter(
     (n) =>
       n.kind === tsModule.SyntaxKind.ClassDeclaration &&
-      (<any>n).name.text === className
+      (<any>n).name.text === className,
   )[0] as ts.ClassDeclaration;
 
   if (!clazz && !silent) {
@@ -421,7 +421,7 @@ export function findClass(
 export function findNodes(
   node: Node,
   kind: SyntaxKind | SyntaxKind[],
-  max = Infinity
+  max = Infinity,
 ): Node[] {
   if (!node || max == 0) {
     return [];

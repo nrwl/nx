@@ -10,7 +10,7 @@ import { NormalizedSchema } from '../schema';
 export function moveProjectFiles(
   tree: Tree,
   schema: NormalizedSchema,
-  project: ProjectConfiguration
+  project: ProjectConfiguration,
 ) {
   // We don't want to move configuration files and other folders that we don't know about.
   // Moving the wrong files is worse than not moving them, because there might be
@@ -44,7 +44,7 @@ export function moveProjectFiles(
       return knownRootProjectFiles.some((stringOrRegex) =>
         typeof stringOrRegex === 'string'
           ? file === stringOrRegex
-          : stringOrRegex.test(file)
+          : stringOrRegex.test(file),
       );
     } else {
       // Nested, check base dir matches
@@ -59,7 +59,7 @@ export function moveProjectFiles(
     const relativeFromOriginalSource = relative(project.root, file);
     const newFilePath = join(
       schema.relativeToRootDestination,
-      relativeFromOriginalSource
+      relativeFromOriginalSource,
     );
 
     const content = tree.read(file);

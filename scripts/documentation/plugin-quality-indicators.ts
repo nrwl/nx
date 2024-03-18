@@ -21,7 +21,7 @@ const officialPlugins = Object.keys(packagesJson)
       packagesJson[m].name !== 'create-nx-plugin' &&
       packagesJson[m].name !== 'create-nx-workspace' &&
       packagesJson[m].name !== 'make-angular-cli-faster' &&
-      packagesJson[m].name !== 'tao'
+      packagesJson[m].name !== 'tao',
   )
   .map((k) => ({
     name: packagesJson[k].name === 'nx' ? 'nx' : '@nx/' + packagesJson[k].name,
@@ -76,7 +76,7 @@ async function main() {
 
     writeFileSync(
       './nx-dev/nx-dev/pages/quality-indicators.json',
-      JSON.stringify(qualityIndicators, null, 2)
+      JSON.stringify(qualityIndicators, null, 2),
     );
   } catch (ex) {
     console.warn('Failed to load quality indicators!');
@@ -91,7 +91,7 @@ main();
 async function getNpmData(plugin: PluginRegistry, skipNxVersion = false) {
   try {
     const { data } = await axios.get(
-      `https://registry.npmjs.org/${plugin.name}`
+      `https://registry.npmjs.org/${plugin.name}`,
     );
     const lastPublishedDate = data.time[data['dist-tags'].latest];
     const nxVersion = skipNxVersion || (await getNxVersion(data));
@@ -129,8 +129,8 @@ async function getNpmDownloads(plugin: PluginRegistry) {
   try {
     const { data } = await axios.get(
       `https://api.npmjs.org/downloads/point/${stringifyIntervalForUrl(
-        lastMonth
-      )}/${plugin.name}`
+        lastMonth,
+      )}/${plugin.name}`,
     );
     return data.downloads;
   } catch (ex) {
@@ -176,10 +176,10 @@ async function getGithubStars(repos: { owner: string; repo: string }[]) {
         ({ owner, repo }, index) =>
           `${owner.replace(/[\-#]/g, '')}${repo.replace(
             /[\-#]/g,
-            ''
+            '',
           )}: repository(owner: "${owner}", name: "${repo}") {
       ...repoProperties
-    }`
+    }`,
       )
       .join('\n')}
   }`;
@@ -193,7 +193,7 @@ async function getGithubStars(repos: { owner: string; repo: string }[]) {
       headers: {
         Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
       },
-    }
+    },
   );
 
   return result.data.data;
@@ -236,7 +236,7 @@ async function findNxRange(packageName: string, devkitVersion: string) {
     ? '@nx/devkit'
     : '@nrwl/devkit';
   const { data: devkitData } = await axios.get(
-    `https://registry.npmjs.org/${lookupPackage}`
+    `https://registry.npmjs.org/${lookupPackage}`,
   );
   if (!devkitData.versions[devkitVersion]?.peerDependencies) {
     const dependencies = devkitData.versions[devkitVersion]?.dependencies;

@@ -11,7 +11,7 @@ import { storybookConfigurationGenerator } from '@nx/react';
 
 export function remixStorybookConfiguration(
   tree: Tree,
-  schema: StorybookConfigurationSchema
+  schema: StorybookConfigurationSchema,
 ) {
   return remixStorybookConfigurationInternal(tree, {
     addPlugin: false,
@@ -21,7 +21,7 @@ export function remixStorybookConfiguration(
 
 export default async function remixStorybookConfigurationInternal(
   tree: Tree,
-  schema: StorybookConfigurationSchema
+  schema: StorybookConfigurationSchema,
 ) {
   const nxJson = readNxJson(tree);
   const addPluginDefault =

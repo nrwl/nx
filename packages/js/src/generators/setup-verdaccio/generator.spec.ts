@@ -100,7 +100,7 @@ describe('setup-verdaccio generator', () => {
         targets: {
           'local-registry': {},
         },
-      })
+      }),
     );
     await generator(tree, options);
     const config = readJson(tree, 'project.json');
@@ -119,7 +119,7 @@ describe('setup-verdaccio generator', () => {
         targets: {
           'local-registry': {},
         },
-      })
+      }),
     );
     await generator(tree, options);
     const config = readJson(tree, 'project.json');

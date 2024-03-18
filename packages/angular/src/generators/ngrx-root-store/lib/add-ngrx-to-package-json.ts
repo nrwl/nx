@@ -6,7 +6,7 @@ import { NormalizedNgRxRootStoreGeneratorOptions } from './normalize-options';
 
 export function addNgRxToPackageJson(
   tree: Tree,
-  options: NormalizedNgRxRootStoreGeneratorOptions
+  options: NormalizedNgRxRootStoreGeneratorOptions,
 ): GeneratorCallback {
   const jasmineMarblesVersion = gte(options.rxjsVersion, '7.0.0')
     ? '~0.9.1'
@@ -30,6 +30,6 @@ export function addNgRxToPackageJson(
         ? { '@ngrx/store-devtools': ngrxVersion }
         : undefined),
       'jasmine-marbles': jasmineMarblesVersion,
-    }
+    },
   );
 }

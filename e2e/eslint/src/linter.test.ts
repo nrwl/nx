@@ -82,7 +82,7 @@ describe('Linter', () => {
         runCLI(`lint ${myapp} --cache`, { silenceError: true });
         expect(() => checkFilesExist(cachePath)).not.toThrow();
         expect(readCacheFile(cachePath)).toContain(
-          path.normalize(`${myapp}/src/app/app.spec.tsx`)
+          path.normalize(`${myapp}/src/app/app.spec.tsx`),
         );
 
         // should let you specify a cache file location
@@ -93,7 +93,7 @@ describe('Linter', () => {
         });
         expect(() => checkFilesExist(cachePath)).not.toThrow();
         expect(readCacheFile(cachePath)).toContain(
-          path.normalize(`${myapp}/src/app/app.spec.tsx`)
+          path.normalize(`${myapp}/src/app/app.spec.tsx`),
         );
       });
 
@@ -115,19 +115,19 @@ describe('Linter', () => {
           `lint ${myapp} --output-file="${outputFile}" --format=json`,
           {
             silenceError: true,
-          }
+          },
         );
         expect(stdout).not.toContain('Unexpected console statement');
         expect(() => checkFilesExist(outputFilePath)).not.toThrow();
         const outputContents = JSON.parse(readFile(outputFilePath));
         const outputForApp: any = Object.values(outputContents).filter(
           (result: any) =>
-            result.filePath.includes(path.normalize(`${myapp}/src/main.ts`))
+            result.filePath.includes(path.normalize(`${myapp}/src/main.ts`)),
         )[0];
         expect(outputForApp.errorCount).toBe(1);
         expect(outputForApp.messages[0].ruleId).toBe('no-console');
         expect(outputForApp.messages[0].message).toBe(
-          'Unexpected console statement.'
+          'Unexpected console statement.',
         );
       }, 1000000);
 
@@ -138,7 +138,7 @@ describe('Linter', () => {
         // add custom function
         updateFile(
           `libs/${mylib}/src/lib/${mylib}.ts`,
-          `export const ${libMethodName} = (): '${messageId}' => '${messageId}';`
+          `export const ${libMethodName} = (): '${messageId}' => '${messageId}';`,
         );
 
         // Generate a new rule (should also scaffold the required workspace project and tests)
@@ -159,7 +159,7 @@ describe('Linter', () => {
           knownLintErrorMessage,
           messageId,
           libMethodName,
-          `@${projScope}/${mylib}`
+          `@${projScope}/${mylib}`,
         );
         updateFile(newRulePath, updatedRuleContents);
 
@@ -228,16 +228,16 @@ describe('Linter', () => {
         import '@${projScope}/${validtaglib}';
 
         const s = {loadChildren: '@secondScope/${lazylib}'};
-      `
+      `,
         );
 
         const out = runCLI(`lint ${myapp}`, { silenceError: true });
         expect(out).toContain(
-          'Projects cannot be imported by a relative or absolute path, and must begin with a npm scope'
+          'Projects cannot be imported by a relative or absolute path, and must begin with a npm scope',
         );
         expect(out).toContain('Imports of apps are forbidden');
         expect(out).toContain(
-          'A project tagged with "validtag" can only depend on libs tagged with "validtag"'
+          'A project tagged with "validtag" can only depend on libs tagged with "validtag"',
         );
       }, 1000000);
     });
@@ -266,7 +266,7 @@ describe('Linter', () => {
         export function libASayHello(): string {
           return 'Hi from tslib-a';
         }
-        `
+        `,
         );
 
         createFile(
@@ -279,7 +279,7 @@ describe('Linter', () => {
         export function someSelectivelyExportedFn() {
           return 'this fn is exported selectively in the barrel file';
         }
-        `
+        `,
         );
 
         createFile(
@@ -288,7 +288,7 @@ describe('Linter', () => {
         export * from './lib/tslib-a';
 
         export { someSelectivelyExportedFn } from './lib/some-non-exported-function';
-        `
+        `,
         );
 
         /**
@@ -298,7 +298,7 @@ describe('Linter', () => {
           `libs/${libB}/src/index.ts`,
           `
         export * from './lib/tslib-b';
-        `
+        `,
         );
 
         createFile(
@@ -316,7 +316,7 @@ describe('Linter', () => {
             libASayHello();
             return 'hi there';
           }
-        `
+        `,
         );
 
         /**
@@ -329,7 +329,7 @@ describe('Linter', () => {
         export * from './lib/tslib-c';
         export * from './lib/constant';
 
-        `
+        `,
         );
 
         createFile(
@@ -340,7 +340,7 @@ describe('Linter', () => {
         export function someFunc2() {
           return 'hi2';
         }
-        `
+        `,
         );
 
         createFile(
@@ -356,7 +356,7 @@ describe('Linter', () => {
     return 'hi';
   }
 
-        `
+        `,
         );
 
         createFile(
@@ -371,7 +371,7 @@ describe('Linter', () => {
     return 'tslib-c';
   }
 
-        `
+        `,
         );
       });
 
@@ -380,7 +380,7 @@ describe('Linter', () => {
           silenceError: true,
         });
         expect(stdout).toContain(
-          'Projects should use relative imports to import from other files within the same project'
+          'Projects should use relative imports to import from other files within the same project',
         );
 
         // fix them
@@ -388,18 +388,18 @@ describe('Linter', () => {
           silenceError: true,
         });
         expect(fixedStout).toContain(
-          `Successfully ran target lint for project ${libC}`
+          `Successfully ran target lint for project ${libC}`,
         );
 
         const fileContent = readFile(`libs/${libC}/src/lib/tslib-c-another.ts`);
         expect(fileContent).toContain(`import { tslibC } from './tslib-c';`);
         expect(fileContent).toContain(
-          `import { SOME_CONSTANT, someFunc1, someFunc2 } from './constant';`
+          `import { SOME_CONSTANT, someFunc1, someFunc2 } from './constant';`,
         );
 
         const fileContentTslibC = readFile(`libs/${libC}/src/lib/tslib-c.ts`);
         expect(fileContentTslibC).toContain(
-          `import { someFunc1, someFunc2, SOME_CONSTANT } from './constant';`
+          `import { someFunc1, someFunc2, SOME_CONSTANT } from './constant';`,
         );
       });
 
@@ -408,7 +408,7 @@ describe('Linter', () => {
           silenceError: true,
         });
         expect(stdout).toContain(
-          'Projects cannot be imported by a relative or absolute path, and must begin with a npm scope'
+          'Projects cannot be imported by a relative or absolute path, and must begin with a npm scope',
         );
 
         // fix them
@@ -416,18 +416,18 @@ describe('Linter', () => {
           silenceError: true,
         });
         expect(fixedStout).toContain(
-          `Successfully ran target lint for project ${libB}`
+          `Successfully ran target lint for project ${libB}`,
         );
 
         const fileContent = readFile(`libs/${libB}/src/lib/tslib-b.ts`);
         expect(fileContent).toContain(
-          `import { libASayHello } from '@${projScope}/${libA}';`
+          `import { libASayHello } from '@${projScope}/${libA}';`,
         );
         expect(fileContent).toContain(
-          `import { libASayHi } from '@${projScope}/${libA}';`
+          `import { libASayHi } from '@${projScope}/${libA}';`,
         );
         expect(fileContent).toContain(
-          `import { someSelectivelyExportedFn } from '@${projScope}/${libA}';`
+          `import { someSelectivelyExportedFn } from '@${projScope}/${libA}';`,
         );
       });
     });
@@ -456,7 +456,7 @@ describe('Linter', () => {
         // so that it does not affect other tests
         updateJson(`libs/${mylib}/.eslintrc.json`, (json) => {
           json.overrides = json.overrides.filter(
-            (o) => !o.rules?.['@nx/dependency-checks']
+            (o) => !o.rules?.['@nx/dependency-checks'],
           );
           return json;
         });
@@ -475,7 +475,7 @@ describe('Linter', () => {
           `libs/${mylib}/src/lib/${mylib}.ts`,
           (content) =>
             `import { names } from '@nx/devkit';\n\n` +
-            content.replace(/=> .*;/, `=> names('${mylib}').className;`)
+            content.replace(/=> .*;/, `=> names('${mylib}').className;`),
         );
 
         // output should now report missing dependency
@@ -486,7 +486,7 @@ describe('Linter', () => {
         // should fix the missing dependency issue
         out = runCLI(`lint ${mylib} --fix`, { silenceError: true });
         expect(out).toContain(
-          `Successfully ran target lint for project ${mylib}`
+          `Successfully ran target lint for project ${mylib}`,
         );
         const packageJson = readJson(`libs/${mylib}/package.json`);
         expect(packageJson).toMatchInlineSnapshot(`
@@ -511,13 +511,13 @@ describe('Linter', () => {
         });
         out = runCLI(`lint ${mylib}`, { silenceError: true });
         expect(out).toContain(
-          'version specifier does not contain the installed version of "@nx/devkit"'
+          'version specifier does not contain the installed version of "@nx/devkit"',
         );
 
         // should fix the version mismatch issue
         out = runCLI(`lint ${mylib} --fix`, { silenceError: true });
         expect(out).toContain(
-          `Successfully ran target lint for project ${mylib}`
+          `Successfully ran target lint for project ${mylib}`,
         );
       });
     });
@@ -527,16 +527,16 @@ describe('Linter', () => {
     beforeEach(() =>
       newProject({
         packages: ['@nx/react', '@nx/js', '@nx/angular', '@nx/node'],
-      })
+      }),
     );
     afterEach(() => cleanupProject());
 
     function verifySuccessfulStandaloneSetup(myapp: string) {
       expect(runCLI(`lint ${myapp}`, { silenceError: true })).toContain(
-        'Successfully ran target lint'
+        'Successfully ran target lint',
       );
       expect(runCLI(`lint e2e`, { silenceError: true })).toContain(
-        'Successfully ran target lint'
+        'Successfully ran target lint',
       );
       expect(() => checkFilesExist(`.eslintrc.base.json`)).toThrow();
 
@@ -550,13 +550,13 @@ describe('Linter', () => {
 
     function verifySuccessfulMigratedSetup(myapp: string, mylib: string) {
       expect(runCLI(`lint ${myapp}`, { silenceError: true })).toContain(
-        'Successfully ran target lint'
+        'Successfully ran target lint',
       );
       expect(runCLI(`lint e2e`, { silenceError: true })).toContain(
-        'Successfully ran target lint'
+        'Successfully ran target lint',
       );
       expect(runCLI(`lint ${mylib}`, { silenceError: true })).toContain(
-        'Successfully ran target lint'
+        'Successfully ran target lint',
       );
       expect(() => checkFilesExist(`.eslintrc.base.json`)).not.toThrow();
 
@@ -617,7 +617,7 @@ describe('Linter', () => {
       const mylib = uniq('mylib');
 
       runCLI(
-        `generate @nx/angular:app ${myapp} --rootProject=true --no-interactive`
+        `generate @nx/angular:app ${myapp} --rootProject=true --no-interactive`,
       );
       verifySuccessfulStandaloneSetup(myapp);
 
@@ -648,7 +648,7 @@ describe('Linter', () => {
       const mylib = uniq('mylib');
 
       runCLI(
-        `generate @nx/node:app ${myapp} --rootProject=true --no-interactive`
+        `generate @nx/node:app ${myapp} --rootProject=true --no-interactive`,
       );
       verifySuccessfulStandaloneSetup(myapp);
 
@@ -694,18 +694,18 @@ function updateGeneratedRuleImplementation(
   knownLintErrorMessage: string,
   messageId,
   libMethodName: string,
-  libPath: string
+  libPath: string,
 ): string {
   const printer = ts.createPrinter({ newLine: ts.NewLineKind.LineFeed });
   const newRuleSourceFile = ts.createSourceFile(
     newRulePath,
     newRuleGeneratedContents,
     ts.ScriptTarget.Latest,
-    true
+    true,
   );
 
   const transformer = <T extends ts.SourceFile>(
-    context: ts.TransformationContext
+    context: ts.TransformationContext,
   ) =>
     ((rootNode: T) => {
       function visit(node: ts.Node): ts.Node {
@@ -729,9 +729,9 @@ function updateGeneratedRuleImplementation(
             ts.factory.createObjectLiteralExpression([
               ts.factory.createPropertyAssignment(
                 messageId,
-                ts.factory.createStringLiteral(knownLintErrorMessage)
+                ts.factory.createStringLiteral(knownLintErrorMessage),
               ),
-            ])
+            ]),
           );
         }
 
@@ -788,7 +788,7 @@ function updateGeneratedRuleImplementation(
                         'node',
                         undefined,
                         undefined,
-                        undefined
+                        undefined,
                       ),
                     ],
                     undefined,
@@ -797,7 +797,7 @@ function updateGeneratedRuleImplementation(
                         ts.factory.createCallExpression(
                           ts.factory.createPropertyAccessExpression(
                             ts.factory.createIdentifier('context'),
-                            'report'
+                            'report',
                           ),
                           [],
                           [
@@ -807,21 +807,21 @@ function updateGeneratedRuleImplementation(
                                 ts.factory.createCallExpression(
                                   ts.factory.createIdentifier(libMethodName),
                                   [],
-                                  []
-                                )
+                                  [],
+                                ),
                               ),
                               ts.factory.createShorthandPropertyAssignment(
-                                'node'
+                                'node',
                               ),
                             ]),
-                          ]
-                        )
+                          ],
+                        ),
                       ),
-                    ])
+                    ]),
                   ),
-                ])
+                ]),
               ),
-            ])
+            ]),
           );
         }
 
@@ -847,11 +847,11 @@ function updateGeneratedRuleImplementation(
               ts.factory.createImportSpecifier(
                 false,
                 undefined,
-                ts.factory.createIdentifier(libMethodName)
+                ts.factory.createIdentifier(libMethodName),
               ),
-            ])
+            ]),
           ),
-          ts.factory.createStringLiteral(libPath)
+          ts.factory.createStringLiteral(libPath),
         ),
         ...rootNode.statements,
       ]);

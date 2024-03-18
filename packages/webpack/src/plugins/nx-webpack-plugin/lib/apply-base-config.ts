@@ -38,7 +38,7 @@ export function applyBaseConfig(
     // webpack then normalizes them to { import: "..." } objects
     // This option allows use to preserve existing composePlugins behavior where entry.main is an array.
     useNormalizedEntry?: boolean;
-  } = {}
+  } = {},
 ): void {
   // Defaults that was applied from executor schema previously.
   options.compiler ??= 'babel';
@@ -58,7 +58,7 @@ export function applyBaseConfig(
 
 function applyNxIndependentConfig(
   options: NormalizedNxWebpackPluginOptions,
-  config: Partial<WebpackOptionsNormalized | Configuration>
+  config: Partial<WebpackOptionsNormalized | Configuration>,
 ): void {
   const hashFormat = getOutputHashFormat(options.outputHashing as string);
   config.context = path.join(options.root, options.projectRoot);
@@ -69,17 +69,17 @@ function applyNxIndependentConfig(
     config.target === 'node'
       ? 'none'
       : // Otherwise, make sure it matches `process.env.NODE_ENV`.
-      // When mode is development or production, webpack will automatically
-      // configure DefinePlugin to replace `process.env.NODE_ENV` with the
-      // build-time value. Thus, we need to make sure it's the same value to
-      // avoid conflicts.
-      //
-      // When the NODE_ENV is something else (e.g. test), then set it to none
-      // to prevent extra behavior from webpack.
-      process.env.NODE_ENV === 'development' ||
-        process.env.NODE_ENV === 'production'
-      ? (process.env.NODE_ENV as 'development' | 'production')
-      : 'none';
+        // When mode is development or production, webpack will automatically
+        // configure DefinePlugin to replace `process.env.NODE_ENV` with the
+        // build-time value. Thus, we need to make sure it's the same value to
+        // avoid conflicts.
+        //
+        // When the NODE_ENV is something else (e.g. test), then set it to none
+        // to prevent extra behavior from webpack.
+        process.env.NODE_ENV === 'development' ||
+          process.env.NODE_ENV === 'production'
+        ? (process.env.NODE_ENV as 'development' | 'production')
+        : 'none';
   // When target is Node, the Webpack mode will be set to 'none' which disables in memory caching and causes a full rebuild on every change.
   // So to mitigate this we enable in memory caching when target is Node and in watch mode.
   config.cache =
@@ -89,8 +89,8 @@ function applyNxIndependentConfig(
     options.sourceMap === 'hidden'
       ? 'hidden-source-map'
       : options.sourceMap
-      ? 'source-map'
-      : false;
+        ? 'source-map'
+        : false;
 
   config.output = {
     ...config.output,
@@ -140,7 +140,7 @@ function applyNxIndependentConfig(
   config.ignoreWarnings = [
     (x) =>
       IGNORED_WEBPACK_WARNINGS.some((r) =>
-        typeof x === 'string' ? r.test(x) : r.test(x.message)
+        typeof x === 'string' ? r.test(x) : r.test(x.message),
       ),
   ];
 
@@ -158,7 +158,7 @@ function applyNxIndependentConfig(
             terserOptions: {
               keep_classnames: true,
               ecma: getTerserEcmaVersion(
-                path.join(options.root, options.projectRoot)
+                path.join(options.root, options.projectRoot),
               ),
               safari10: true,
               format: {
@@ -207,7 +207,7 @@ function applyNxIndependentConfig(
 function applyNxDependentConfig(
   options: NormalizedNxWebpackPluginOptions,
   config: Partial<WebpackOptionsNormalized | Configuration>,
-  { useNormalizedEntry }: { useNormalizedEntry?: boolean } = {}
+  { useNormalizedEntry }: { useNormalizedEntry?: boolean } = {},
 ): void {
   const tsConfig = options.tsConfig ?? getRootTsConfigPath();
   const plugins: WebpackPluginInstance[] = [
@@ -231,7 +231,7 @@ function applyNxDependentConfig(
             : path.join(options.root, tsConfig),
           memoryLimit: options.memoryLimit || 2018,
         },
-      })
+      }),
     );
   }
   const entries: Array<{ name: string; import: string[] }> = [];
@@ -284,7 +284,7 @@ function applyNxDependentConfig(
         },
         perChunkOutput: false,
         outputFilename: `3rdpartylicenses.txt`,
-      }) as unknown as WebpackPluginInstance
+      }) as unknown as WebpackPluginInstance,
     );
   }
 
@@ -308,7 +308,7 @@ function applyNxDependentConfig(
             },
           };
         }),
-      })
+      }),
     );
   }
   if (options.generatePackageJson && executorContext) {
@@ -344,7 +344,7 @@ function applyNxDependentConfig(
           ...aliases,
           [replacement.replace]: replacement.with,
         }),
-        {}
+        {},
       ) ?? {}),
     },
     mainFields: config.resolve?.mainFields ?? mainFields,

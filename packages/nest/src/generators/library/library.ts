@@ -17,7 +17,7 @@ import { ensureDependencies } from '../../utils/ensure-dependencies';
 
 export async function libraryGenerator(
   tree: Tree,
-  rawOptions: LibraryGeneratorOptions
+  rawOptions: LibraryGeneratorOptions,
 ): Promise<GeneratorCallback> {
   return await libraryGeneratorInternal(tree, {
     addPlugin: false,
@@ -28,7 +28,7 @@ export async function libraryGenerator(
 
 export async function libraryGeneratorInternal(
   tree: Tree,
-  rawOptions: LibraryGeneratorOptions
+  rawOptions: LibraryGeneratorOptions,
 ): Promise<GeneratorCallback> {
   const options = await normalizeOptions(tree, rawOptions);
   await jsLibraryGenerator(tree, toJsLibraryGeneratorOptions(options));
@@ -51,7 +51,7 @@ export async function libraryGeneratorInternal(
       () => {
         logShowProjectCommand(options.projectName);
       },
-    ]
+    ],
   );
 }
 

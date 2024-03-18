@@ -58,15 +58,15 @@ describe('convert-to-flat-config generator', () => {
     expect(tree.read('eslint.config.js', 'utf-8')).toMatchSnapshot();
     expect(tree.exists('libs/test-lib/eslint.config.js')).toBeTruthy();
     expect(
-      tree.read('libs/test-lib/eslint.config.js', 'utf-8')
+      tree.read('libs/test-lib/eslint.config.js', 'utf-8'),
     ).toMatchSnapshot();
     // check nx.json changes
     const nxJson = readJson(tree, 'nx.json');
     expect(nxJson.targetDefaults.lint.inputs).toContain(
-      '{workspaceRoot}/eslint.config.js'
+      '{workspaceRoot}/eslint.config.js',
     );
     expect(nxJson.namedInputs.production).toContain(
-      '!{projectRoot}/eslint.config.js'
+      '!{projectRoot}/eslint.config.js',
     );
   });
 
@@ -88,15 +88,15 @@ describe('convert-to-flat-config generator', () => {
     expect(tree.read('eslint.config.js', 'utf-8')).toMatchSnapshot();
     expect(tree.exists('libs/test-lib/eslint.config.js')).toBeTruthy();
     expect(
-      tree.read('libs/test-lib/eslint.config.js', 'utf-8')
+      tree.read('libs/test-lib/eslint.config.js', 'utf-8'),
     ).toMatchSnapshot();
     // check nx.json changes
     const nxJson = readJson(tree, 'nx.json');
     expect(nxJson.targetDefaults.lint.inputs).toContain(
-      '{workspaceRoot}/eslint.config.js'
+      '{workspaceRoot}/eslint.config.js',
     );
     expect(nxJson.namedInputs.production).toContain(
-      '!{projectRoot}/eslint.config.js'
+      '!{projectRoot}/eslint.config.js',
     );
   });
 
@@ -118,15 +118,15 @@ describe('convert-to-flat-config generator', () => {
     expect(tree.read('eslint.config.js', 'utf-8')).toMatchSnapshot();
     expect(tree.exists('libs/test-lib/eslint.config.js')).toBeTruthy();
     expect(
-      tree.read('libs/test-lib/eslint.config.js', 'utf-8')
+      tree.read('libs/test-lib/eslint.config.js', 'utf-8'),
     ).toMatchSnapshot();
     // check nx.json changes
     const nxJson = readJson(tree, 'nx.json');
     expect(nxJson.targetDefaults.lint.inputs).toContain(
-      '{workspaceRoot}/eslint.config.js'
+      '{workspaceRoot}/eslint.config.js',
     );
     expect(nxJson.namedInputs.production).toContain(
-      '!{projectRoot}/eslint.config.js'
+      '!{projectRoot}/eslint.config.js',
     );
   });
 
@@ -209,7 +209,7 @@ describe('convert-to-flat-config generator', () => {
       "
     `);
     expect(
-      readJson(tree, 'package.json').devDependencies['@eslint/eslintrc']
+      readJson(tree, 'package.json').devDependencies['@eslint/eslintrc'],
     ).toEqual(eslintrcVersion);
   });
 
@@ -247,14 +247,14 @@ describe('convert-to-flat-config generator', () => {
     await convertToFlatConfigGenerator(tree, options);
 
     expect(
-      tree.read('libs/test-lib/eslint.config.js', 'utf-8')
+      tree.read('libs/test-lib/eslint.config.js', 'utf-8'),
     ).toMatchSnapshot();
     expect(tree.exists('another-folder/.myeslintignore')).toBeFalsy();
     expect(tree.exists('libs/test-lib/.eslintignore')).toBeFalsy();
 
     expect(
       readJson(tree, 'libs/test-lib/project.json').targets.lint.options
-        .ignorePath
+        .ignorePath,
     ).toBeUndefined();
   });
 
@@ -452,7 +452,7 @@ describe('convert-to-flat-config generator', () => {
       (json: ProjectConfiguration) => {
         delete json.targets.lint;
         return json;
-      }
+      },
     );
 
     expect(tree.exists('eslint.config.js')).toBeFalsy();
@@ -487,7 +487,7 @@ describe('convert-to-flat-config generator', () => {
       (json: ProjectConfiguration) => {
         delete json.targets.lint;
         return json;
-      }
+      },
     );
 
     expect(tree.exists('eslint.config.js')).toBeFalsy();

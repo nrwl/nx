@@ -12,7 +12,7 @@ export function getOpenAI(openAiKey?: string): OpenAI {
       'Missing environment variable NX_OPENAI_KEY',
       {
         missing_key: true,
-      }
+      },
     );
   }
   openai = new OpenAI({ apiKey: openAiKey });
@@ -21,26 +21,26 @@ export function getOpenAI(openAiKey?: string): OpenAI {
 
 export function getSupabaseClient(
   supabaseUrl?: string,
-  supabaseServiceKey?: string
+  supabaseServiceKey?: string,
 ): SupabaseClient<any, 'public', any> {
   if (supabaseClient) return supabaseClient;
   if (!supabaseUrl) {
     throw new CustomError(
       'application_error',
       'Missing environment variable NX_NEXT_PUBLIC_SUPABASE_URL',
-      { missing_key: true }
+      { missing_key: true },
     );
   }
   if (!supabaseServiceKey) {
     throw new CustomError(
       'application_error',
       'Missing environment variable NX_SUPABASE_SERVICE_ROLE_KEY',
-      { missing_key: true }
+      { missing_key: true },
     );
   }
   supabaseClient = createClient(
     supabaseUrl as string,
-    supabaseServiceKey as string
+    supabaseServiceKey as string,
   );
   return supabaseClient;
 }
@@ -52,7 +52,7 @@ export class CustomError extends Error {
   constructor(
     type: string = 'application_error',
     message: string,
-    data: Record<string, any> = {}
+    data: Record<string, any> = {},
   ) {
     super(message);
     this.type = type;

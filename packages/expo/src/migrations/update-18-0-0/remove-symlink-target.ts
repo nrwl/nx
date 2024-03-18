@@ -28,7 +28,7 @@ function removeTargets(
   targets: {
     [targetName: string]: TargetConfiguration<any>;
   },
-  targetNameToRemove: string
+  targetNameToRemove: string,
 ) {
   for (const targetName in targets) {
     if (targetName === targetNameToRemove) {
@@ -36,7 +36,7 @@ function removeTargets(
     }
     if (targets[targetName]?.dependsOn?.length) {
       targets[targetName].dependsOn = targets[targetName].dependsOn.filter(
-        (dependsOn) => dependsOn !== targetNameToRemove
+        (dependsOn) => dependsOn !== targetNameToRemove,
       );
     }
   }

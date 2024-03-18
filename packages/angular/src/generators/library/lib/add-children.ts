@@ -9,7 +9,7 @@ let tsModule: typeof import('typescript');
 
 export function addChildren(
   tree: Tree,
-  options: NormalizedSchema['libraryOptions']
+  options: NormalizedSchema['libraryOptions'],
 ) {
   if (!tree.exists(options.parent)) {
     throw new Error(`Cannot find '${options.parent}'`);
@@ -27,7 +27,7 @@ export function addChildren(
     options.parent,
     routeFileSource,
     tsModule.ScriptTarget.Latest,
-    true
+    true,
   );
 
   if (!options.standalone) {
@@ -35,7 +35,7 @@ export function addChildren(
       tree,
       sourceFile,
       options.parent,
-      options.moduleName
+      options.moduleName,
     );
   }
 
@@ -44,7 +44,7 @@ export function addChildren(
     sourceFile,
     options.parent,
     options.standalone ? constName : `${options.moduleName}, ${constName}`,
-    importPath
+    importPath,
   );
 
   const route = `{ path: '${

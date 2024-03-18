@@ -56,14 +56,14 @@ describe('@nx/cypress/plugin', () => {
           videosFolder: './dist/videos',
           screenshotsFolder: './dist/screenshots',
         },
-      })
+      }),
     );
     const nodes = await createNodesFunction(
       'cypress.config.js',
       {
         targetName: 'e2e',
       },
-      context
+      context,
     );
 
     expect(nodes).toMatchInlineSnapshot(`
@@ -115,14 +115,14 @@ describe('@nx/cypress/plugin', () => {
             bundler: 'webpack',
           },
         },
-      })
+      }),
     );
     const nodes = await createNodesFunction(
       'cypress.config.js',
       {
         componentTestingTargetName: 'component-test',
       },
-      context
+      context,
     );
 
     expect(nodes).toMatchInlineSnapshot(`
@@ -173,14 +173,14 @@ describe('@nx/cypress/plugin', () => {
             ciWebServerCommand: 'my-app:serve-static',
           }),
         },
-      })
+      }),
     );
     const nodes = await createNodesFunction(
       'cypress.config.js',
       {
         componentTestingTargetName: 'component-test',
       },
-      context
+      context,
     );
 
     expect(nodes).toMatchInlineSnapshot(`
@@ -273,7 +273,7 @@ describe('@nx/cypress/plugin', () => {
       }),
       {
         virtual: true,
-      }
+      },
     );
   }
 });

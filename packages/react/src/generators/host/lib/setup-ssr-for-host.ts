@@ -16,7 +16,7 @@ export async function setupSsrForHost(
   tree: Tree,
   options: Schema,
   appName: string,
-  defaultRemoteManifest: { name: string; port: number }[]
+  defaultRemoteManifest: { name: string; port: number }[],
 ) {
   const tasks: GeneratorCallback[] = [];
   let project = readProjectConfiguration(tree, appName);
@@ -43,7 +43,7 @@ export async function setupSsrForHost(
       appName,
       tmpl: '',
       browserBuildOutputPath: project.targets.build.options.outputPath,
-    }
+    },
   );
 
   const installTask = addDependenciesToPackageJson(
@@ -51,7 +51,7 @@ export async function setupSsrForHost(
     {
       '@module-federation/node': moduleFederationNodeVersion,
     },
-    {}
+    {},
   );
   tasks.push(installTask);
 

@@ -28,7 +28,7 @@ export function VideoLoop({
         },
         {
           threshold: 0.5,
-        }
+        },
       );
 
       observer.observe(videoElement);

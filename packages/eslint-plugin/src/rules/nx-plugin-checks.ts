@@ -22,7 +22,7 @@ type Options = [
     migrationsJson?: string;
     packageJson?: string;
     allowedVersionStrings: string[];
-  }
+  },
 ];
 
 const DEFAULT_OPTIONS: Options[0] = {
@@ -121,13 +121,13 @@ export default ESLintUtils.RuleCreator(() => ``)<Options, MessageIds>({
 
     const sourceFilePath = getSourceFilePath(
       context.getFilename(),
-      workspaceRoot
+      workspaceRoot,
     );
 
     const sourceProject = findProject(
       projectGraph,
       projectRootMappings,
-      sourceFilePath
+      sourceFilePath,
     );
     // If source is not part of an nx workspace, return.
     if (!sourceProject) {
@@ -140,7 +140,7 @@ export default ESLintUtils.RuleCreator(() => ``)<Options, MessageIds>({
 
     if (
       ![generatorsJson, executorsJson, migrationsJson, packageJson].includes(
-        sourceFilePath
+        sourceFilePath,
       )
     ) {
       return {};
@@ -153,7 +153,7 @@ export default ESLintUtils.RuleCreator(() => ``)<Options, MessageIds>({
 
     return {
       ['JSONExpressionStatement > JSONObjectExpression'](
-        node: AST.JSONObjectExpression
+        node: AST.JSONObjectExpression,
       ) {
         if (sourceFilePath === generatorsJson) {
           checkCollectionFileNode(node, 'generator', context);
@@ -171,7 +171,7 @@ export default ESLintUtils.RuleCreator(() => ``)<Options, MessageIds>({
 
 function normalizeOptions(
   sourceProject: ProjectGraphProjectNode,
-  options: Options[0]
+  options: Options[0],
 ): Options[0] {
   const base = { ...DEFAULT_OPTIONS, ...options };
   const pathPrefix =
@@ -196,20 +196,20 @@ function normalizeOptions(
 export function checkCollectionFileNode(
   baseNode: AST.JSONObjectExpression,
   mode: 'migration' | 'generator' | 'executor',
-  context: TSESLint.RuleContext<MessageIds, Options>
+  context: TSESLint.RuleContext<MessageIds, Options>,
 ) {
   const schematicsRootNode = baseNode.properties.find(
-    (x) => x.key.type === 'JSONLiteral' && x.key.value === 'schematics'
+    (x) => x.key.type === 'JSONLiteral' && x.key.value === 'schematics',
   );
   const generatorsRootNode = baseNode.properties.find(
-    (x) => x.key.type === 'JSONLiteral' && x.key.value === 'generators'
+    (x) => x.key.type === 'JSONLiteral' && x.key.value === 'generators',
   );
 
   const executorsRootNode = baseNode.properties.find(
-    (x) => x.key.type === 'JSONLiteral' && x.key.value === 'executors'
+    (x) => x.key.type === 'JSONLiteral' && x.key.value === 'executors',
   );
   const buildersRootNode = baseNode.properties.find(
-    (x) => x.key.type === 'JSONLiteral' && x.key.value === 'builders'
+    (x) => x.key.type === 'JSONLiteral' && x.key.value === 'builders',
   );
 
   if (!schematicsRootNode && !generatorsRootNode && mode !== 'executor') {
@@ -251,7 +251,7 @@ export function checkCollectionFileNode(
 export function checkCollectionNode(
   baseNode: AST.JSONObjectExpression,
   mode: 'migration' | 'generator' | 'executor',
-  context: TSESLint.RuleContext<MessageIds, Options>
+  context: TSESLint.RuleContext<MessageIds, Options>,
 ) {
   const entries = baseNode.properties;
 
@@ -267,7 +267,7 @@ export function checkCollectionNode(
         entryNode.value,
         entryNode.key.value.toString(),
         mode,
-        context
+        context,
       );
     }
   }
@@ -277,10 +277,10 @@ export function validateEntry(
   baseNode: AST.JSONObjectExpression,
   key: string,
   mode: 'migration' | 'generator' | 'executor',
-  context: TSESLint.RuleContext<MessageIds, Options>
+  context: TSESLint.RuleContext<MessageIds, Options>,
 ) {
   const schemaNode = baseNode.properties.find(
-    (x) => x.key.type === 'JSONLiteral' && x.key.value === 'schema'
+    (x) => x.key.type === 'JSONLiteral' && x.key.value === 'schema',
   );
   if (mode !== 'migration' && !schemaNode) {
     context.report({
@@ -302,7 +302,7 @@ export function validateEntry(
     } else {
       const schemaFilePath = path.join(
         path.dirname(context.getFilename()),
-        schemaNode.value.value
+        schemaNode.value.value,
       );
       if (!existsSync(schemaFilePath)) {
         context.report({
@@ -325,7 +325,7 @@ export function validateEntry(
   const implementationNode = baseNode.properties.find(
     (x) =>
       x.key.type === 'JSONLiteral' &&
-      (x.key.value === 'implementation' || x.key.value === 'factory')
+      (x.key.value === 'implementation' || x.key.value === 'factory'),
   );
   if (!implementationNode) {
     context.report({
@@ -341,7 +341,7 @@ export function validateEntry(
 
   if (mode === 'migration') {
     const versionNode = baseNode.properties.find(
-      (x) => x.key.type === 'JSONLiteral' && x.key.value === 'version'
+      (x) => x.key.type === 'JSONLiteral' && x.key.value === 'version',
     );
     if (!versionNode) {
       context.report({
@@ -380,7 +380,7 @@ export function validateEntry(
 export function validateImplemenationNode(
   implementationNode: AST.JSONProperty,
   key: string,
-  context: TSESLint.RuleContext<MessageIds, Options>
+  context: TSESLint.RuleContext<MessageIds, Options>,
 ) {
   if (
     implementationNode.value.type !== 'JSONLiteral' ||
@@ -400,7 +400,7 @@ export function validateImplemenationNode(
 
     const modulePath = path.join(
       path.dirname(context.getFilename()),
-      implementationPath
+      implementationPath,
     );
 
     try {
@@ -443,7 +443,7 @@ export function validateImplemenationNode(
 
 export function validatePackageGroup(
   baseNode: AST.JSONObjectExpression,
-  context: TSESLint.RuleContext<MessageIds, Options>
+  context: TSESLint.RuleContext<MessageIds, Options>,
 ) {
   const migrationsNode = baseNode.properties.find(
     (x) =>
@@ -451,11 +451,11 @@ export function validatePackageGroup(
       x.value.type === 'JSONObjectExpression' &&
       (x.key.value === 'nx-migrations' ||
         x.key.value === 'ng-update' ||
-        x.key.value === 'migrations')
+        x.key.value === 'migrations'),
   )?.value as AST.JSONObjectExpression;
 
   const packageGroupNode = migrationsNode?.properties.find(
-    (x) => x.key.type === 'JSONLiteral' && x.key.value === 'packageGroup'
+    (x) => x.key.type === 'JSONLiteral' && x.key.value === 'packageGroup',
   );
 
   if (packageGroupNode) {
@@ -463,19 +463,19 @@ export function validatePackageGroup(
     if (packageGroupNode.value.type === 'JSONArrayExpression') {
       // Look at entries which are an object
       const members = packageGroupNode.value.elements.filter(
-        (x) => x.type === 'JSONObjectExpression'
+        (x) => x.type === 'JSONObjectExpression',
       );
       // validate that the version property exists and is valid
       for (const member of members) {
         const versionPropertyNode = (
           member as AST.JSONObjectExpression
         ).properties.find(
-          (x) => x.key.type === 'JSONLiteral' && x.key.value === 'version'
+          (x) => x.key.type === 'JSONLiteral' && x.key.value === 'version',
         );
         const packageNode = (
           member as AST.JSONObjectExpression
         ).properties.find(
-          (x) => x.key.type === 'JSONLiteral' && x.key.value === 'package'
+          (x) => x.key.type === 'JSONLiteral' && x.key.value === 'package',
         );
         const key = (packageNode?.value as AST.JSONLiteral)?.value ?? 'unknown';
 
@@ -517,7 +517,7 @@ export function validatePackageGroup(
 
 export function validateVersionJsonExpression(
   node: AST.JSONExpression,
-  context: TSESLint.RuleContext<MessageIds, Options>
+  context: TSESLint.RuleContext<MessageIds, Options>,
 ) {
   return (
     node &&

@@ -42,7 +42,7 @@ export default function GeneratorsIndex({
     menu: {
       sections: sortCorePackagesFirst<MenuSection>(
         getPackagesSections(menu),
-        'id'
+        'id',
       ),
     },
     package: pkg,

@@ -20,6 +20,6 @@ export function ensureDependencies(tree: Tree): GeneratorCallback {
     },
     {
       '@nestjs/testing': nestJsVersion,
-    }
+    },
   );
 }

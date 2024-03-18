@@ -9,7 +9,7 @@ import { GeneratorOptions } from './schema';
 
 export async function librarySecondaryEntryPointGenerator(
   tree: Tree,
-  rawOptions: GeneratorOptions
+  rawOptions: GeneratorOptions,
 ) {
   const options = normalizeOptions(tree, rawOptions);
 

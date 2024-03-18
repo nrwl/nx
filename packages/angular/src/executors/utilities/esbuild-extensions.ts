@@ -11,7 +11,7 @@ export type PluginSpec = {
 
 export async function loadPlugins(
   plugins: string[] | PluginSpec[] | undefined,
-  tsConfig: string
+  tsConfig: string,
 ): Promise<Plugin[]> {
   if (!plugins?.length) {
     return [];
@@ -21,7 +21,7 @@ export async function loadPlugins(
 
   try {
     return await Promise.all(
-      plugins.map((plugin: string | PluginSpec) => loadPlugin(plugin))
+      plugins.map((plugin: string | PluginSpec) => loadPlugin(plugin)),
     );
   } finally {
     cleanupTranspiler();
@@ -44,7 +44,7 @@ async function loadPlugin(pluginSpec: string | PluginSpec): Promise<Plugin> {
 
 export async function loadMiddleware(
   middlewareFns: string[] | undefined,
-  tsConfig: string
+  tsConfig: string,
 ): Promise<Connect.NextHandleFunction[]> {
   if (!middlewareFns?.length) {
     return [];
@@ -60,7 +60,7 @@ export async function loadMiddleware(
 
 export async function loadIndexHtmlTransformer(
   indexHtmlTransformerPath: string,
-  tsConfig: string
+  tsConfig: string,
 ): Promise<IndexHtmlTransform> {
   const cleanupTranspiler = registerTsProject(tsConfig);
 

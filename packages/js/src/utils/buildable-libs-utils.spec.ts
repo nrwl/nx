@@ -73,7 +73,7 @@ describe('calculateProjectDependencies', () => {
       'root',
       'example',
       'build',
-      undefined
+      undefined,
     );
     expect(results).toMatchObject({
       target: {
@@ -147,7 +147,7 @@ describe('calculateProjectDependencies', () => {
       'root',
       'example',
       'build',
-      undefined
+      undefined,
     );
     expect(results).toMatchObject({
       target: {
@@ -243,7 +243,7 @@ describe('calculateProjectDependencies', () => {
       'root',
       'example',
       'build',
-      undefined
+      undefined,
     );
     expect(results).toMatchObject({
       target: {
@@ -423,7 +423,7 @@ describe('calculateDependenciesFromTaskGraph', () => {
       'root',
       'lib1',
       'build',
-      undefined
+      undefined,
     );
 
     expect(results).toMatchObject({
@@ -611,7 +611,7 @@ describe('calculateDependenciesFromTaskGraph', () => {
       'root',
       'lib1',
       'build',
-      undefined
+      undefined,
     );
 
     expect(results).toMatchObject({
@@ -702,7 +702,7 @@ describe('calculateDependenciesFromTaskGraph', () => {
       'root',
       'example',
       'build',
-      undefined
+      undefined,
     );
     expect(results).toMatchObject({
       target: {
@@ -743,7 +743,13 @@ describe('missingDependencies', () => {
     };
 
     expect(() =>
-      calculateProjectDependencies(graph, 'root', 'example', 'build', undefined)
+      calculateProjectDependencies(
+        graph,
+        'root',
+        'example',
+        'build',
+        undefined,
+      ),
     ).toThrow();
   });
 });

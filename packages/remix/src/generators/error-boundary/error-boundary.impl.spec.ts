@@ -11,7 +11,7 @@ describe('ErrorBoundary', () => {
     (remixConfigUtils.getRemixConfigValues as jest.Mock) = jest.fn(() =>
       Promise.resolve({
         ignoredRouteFiles: ['**/.*'],
-      })
+      }),
     );
   });
   describe.each([
@@ -22,7 +22,7 @@ describe('ErrorBoundary', () => {
     (
       nameAndDirectoryFormat: NameAndDirectoryFormat,
       routeFilePath: string,
-      project: string
+      project: string,
     ) => {
       describe('--apiVersion=2', () => {
         it('should correctly add the ErrorBoundary to the route file', async () => {
@@ -68,10 +68,10 @@ describe('ErrorBoundary', () => {
               project,
               nameAndDirectoryFormat,
               path: `my-route.tsx`,
-            })
+            }),
           ).rejects.toThrow();
         });
       });
-    }
+    },
   );
 });

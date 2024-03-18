@@ -18,7 +18,7 @@ export class AngularDevkitKarmaMigrator extends BuilderMigrator {
     tree: Tree,
     project: ProjectMigrationInfo,
     projectConfig: ProjectConfiguration,
-    logger: Logger
+    logger: Logger,
   ) {
     super(
       tree,
@@ -26,7 +26,7 @@ export class AngularDevkitKarmaMigrator extends BuilderMigrator {
       'karma',
       project,
       projectConfig,
-      logger
+      logger,
     );
   }
 
@@ -52,7 +52,7 @@ export class AngularDevkitKarmaMigrator extends BuilderMigrator {
       const karmaConfig = 'karma.conf.js';
       if (this.tree.exists(karmaConfig)) {
         this.logger.info(
-          'No "test" target was found, but a root Karma config file was found in the project root. The file will be moved to the new location.'
+          'No "test" target was found, but a root Karma config file was found in the project root. The file will be moved to the new location.',
         );
         this.moveProjectRootFile(karmaConfig);
       }
@@ -61,11 +61,11 @@ export class AngularDevkitKarmaMigrator extends BuilderMigrator {
 
   private updateTargetConfiguration(
     targetName: string,
-    target: TargetConfiguration
+    target: TargetConfiguration,
   ): void {
     if (!target.options) {
       this.logger.warn(
-        `The target "${targetName}" is not specifying any options. Skipping updating the target configuration.`
+        `The target "${targetName}" is not specifying any options. Skipping updating the target configuration.`,
       );
       return;
     }
@@ -79,13 +79,13 @@ export class AngularDevkitKarmaMigrator extends BuilderMigrator {
       target.options.tsConfig &&
       joinPathFragments(
         this.project.newRoot,
-        basename(target.options.tsConfig)
+        basename(target.options.tsConfig),
       );
     target.options.karmaConfig =
       target.options.karmaConfig &&
       joinPathFragments(
         this.project.newRoot,
-        basename(target.options.karmaConfig)
+        basename(target.options.karmaConfig),
       );
     target.options.assets =
       target.options.assets &&
@@ -104,11 +104,11 @@ export class AngularDevkitKarmaMigrator extends BuilderMigrator {
 
   private updateTsConfigFileUsedByTestTarget(
     targetName: string,
-    target: TargetConfiguration
+    target: TargetConfiguration,
   ): void {
     if (!target.options?.tsConfig) {
       this.logger.warn(
-        `The "${targetName}" target does not have the "tsConfig" option configured. Skipping updating the tsConfig file.`
+        `The "${targetName}" target does not have the "tsConfig" option configured. Skipping updating the tsConfig file.`,
       );
       return;
     }
@@ -116,7 +116,7 @@ export class AngularDevkitKarmaMigrator extends BuilderMigrator {
       const originalTsConfigPath =
         this.originalProjectConfig.targets[targetName].options.tsConfig;
       this.logger.warn(
-        `The tsConfig file "${originalTsConfigPath}" specified in the "${targetName}" target could not be found. Skipping updating the tsConfig file.`
+        `The tsConfig file "${originalTsConfigPath}" specified in the "${targetName}" target could not be found. Skipping updating the tsConfig file.`,
       );
       return;
     }
@@ -124,7 +124,7 @@ export class AngularDevkitKarmaMigrator extends BuilderMigrator {
     this.updateTsConfigFile(
       target.options.tsConfig,
       getRootTsConfigPathInTree(this.tree),
-      offsetFromRoot(this.projectConfig.root)
+      offsetFromRoot(this.projectConfig.root),
     );
   }
 }

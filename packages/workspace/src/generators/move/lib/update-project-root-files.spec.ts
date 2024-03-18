@@ -44,7 +44,7 @@ describe('updateProjectRootFiles', () => {
     const testFileAfter = tree.read(testFilePath, 'utf-8');
     expect(testFileAfter).toContain(`preset: '../../jest.config.js'`);
     expect(testFileAfter).toContain(
-      `coverageDirectory: '../../coverage/my-source'`
+      `coverageDirectory: '../../coverage/my-source'`,
     );
   });
 
@@ -78,7 +78,7 @@ export default defineConfig({
 
     const cypressConfigAfter = tree.read(cypressConfigPath, 'utf-8');
     expect(cypressConfigAfter).toContain(
-      `e2e: { ...nxE2EPreset(__filename, { cypressDir: 'src' }) }`
+      `e2e: { ...nxE2EPreset(__filename, { cypressDir: 'src' }) }`,
     );
   });
 });

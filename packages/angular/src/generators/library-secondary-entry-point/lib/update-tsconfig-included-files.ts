@@ -3,7 +3,7 @@ import type { NormalizedGeneratorOptions } from '../schema';
 
 export function updateTsConfigIncludedFiles(
   tree: Tree,
-  options: NormalizedGeneratorOptions
+  options: NormalizedGeneratorOptions,
 ): void {
   const candidateTsConfigPaths = [
     options.libraryProject.targets?.build?.options?.tsConfig,
@@ -12,7 +12,7 @@ export function updateTsConfigIncludedFiles(
   ];
 
   const tsConfigPath = candidateTsConfigPaths.find(
-    (path) => path && tree.exists(path)
+    (path) => path && tree.exists(path),
   );
   if (!tsConfigPath) {
     // ignore if the library has a custom tsconfig setup
@@ -22,13 +22,13 @@ export function updateTsConfigIncludedFiles(
   updateJson(tree, tsConfigPath, (json) => {
     if (json.include?.length) {
       json.include = json.include.map((path: string) =>
-        path.replace(/^(?:\.\/)?src\//, '')
+        path.replace(/^(?:\.\/)?src\//, ''),
       );
     }
 
     if (json.exclude?.length) {
       json.exclude = json.exclude.map((path: string) =>
-        path.replace(/^(?:\.\/)?src\//, '')
+        path.replace(/^(?:\.\/)?src\//, ''),
       );
     }
 
