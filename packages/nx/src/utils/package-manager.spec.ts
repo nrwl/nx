@@ -7,7 +7,6 @@ import {
   modifyYarnRcToFitNewDirectory,
   modifyYarnRcYmlToFitNewDirectory,
 } from './package-manager';
-import path = require('path');
 
 describe('package-manager', () => {
   describe('detectPackageManager', () => {
