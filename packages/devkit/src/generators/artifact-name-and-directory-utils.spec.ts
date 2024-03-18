@@ -63,7 +63,7 @@ describe('determineArtifactNameAndDirectoryOptions', () => {
     });
 
     expect(res.filePath).toEqual(
-      'apps/app1/src/components/my-component/my-component.ts',
+      'apps/app1/src/components/my-component/my-component.ts'
     );
   });
 
@@ -84,7 +84,7 @@ describe('determineArtifactNameAndDirectoryOptions', () => {
     });
 
     expect(res.filePath).toEqual(
-      'apps/app1/components/my-component/my-component.ts',
+      'apps/app1/components/my-component/my-component.ts'
     );
   });
 
@@ -100,9 +100,9 @@ describe('determineArtifactNameAndDirectoryOptions', () => {
         name: 'myComponent',
         artifactType: 'component',
         callingGenerator: '@my-org/my-plugin:component',
-      }),
+      })
     ).rejects.toThrowErrorMatchingInlineSnapshot(
-      `"The current working directory "some/path" does not exist under any project root. Please make sure to navigate to a location or provide a directory that exists under a project root."`,
+      `"The current working directory "some/path" does not exist under any project root. Please make sure to navigate to a location or provide a directory that exists under a project root."`
     );
 
     restoreCwd();
@@ -115,9 +115,9 @@ describe('determineArtifactNameAndDirectoryOptions', () => {
         project: 'app1',
         artifactType: 'component',
         callingGenerator: '@my-org/my-plugin:component',
-      }),
+      })
     ).rejects.toThrowErrorMatchingInlineSnapshot(
-      `"The provided project "app1" does not exist! Please provide an existing project name."`,
+      `"The provided project "app1" does not exist! Please provide an existing project name."`
     );
   });
 
@@ -133,9 +133,9 @@ describe('determineArtifactNameAndDirectoryOptions', () => {
         directory: 'foo/bar',
         artifactType: 'component',
         callingGenerator: '@my-org/my-plugin:component',
-      }),
+      })
     ).rejects.toThrowErrorMatchingInlineSnapshot(
-      `"You can't specify both a directory (foo/bar) and a name with a directory path (apps/app1/foo/bar/myComponent). Please specify either a directory or a name with a directory path."`,
+      `"You can't specify both a directory (foo/bar) and a name with a directory path (apps/app1/foo/bar/myComponent). Please specify either a directory or a name with a directory path."`
     );
   });
 
@@ -505,9 +505,9 @@ describe('determineArtifactNameAndDirectoryOptions', () => {
           nameAndDirectoryFormat: 'derived',
           artifactType: 'component',
           callingGenerator: '@my-org/my-plugin:component',
-        }),
+        })
       ).rejects.toThrowErrorMatchingInlineSnapshot(
-        `"The provided directory "foo/bar" is not under the provided project root "apps/app1". Please provide a directory that is under the provided project root or use the "as-provided" format and only provide the directory."`,
+        `"The provided directory "foo/bar" is not under the provided project root "apps/app1". Please provide a directory that is under the provided project root or use the "as-provided" format and only provide the directory."`
       );
     });
 
@@ -548,9 +548,9 @@ describe('determineArtifactNameAndDirectoryOptions', () => {
           nameAndDirectoryFormat: 'derived',
           artifactType: 'component',
           callingGenerator: '@my-org/my-plugin:component',
-        }),
+        })
       ).rejects.toThrowErrorMatchingInlineSnapshot(
-        `"The provided name "apps/app1/foo/bar/myComponent" contains a path and this is not supported by the "@my-org/my-plugin:component" when using the "derived" format. Please provide a name without a path or use the "as-provided" format."`,
+        `"The provided name "apps/app1/foo/bar/myComponent" contains a path and this is not supported by the "@my-org/my-plugin:component" when using the "derived" format. Please provide a name without a path or use the "as-provided" format."`
       );
     });
 

@@ -34,7 +34,7 @@ async function addFiles(host: Tree, options: NormalizedSchema) {
     {
       ...options,
       tmpl: '',
-    },
+    }
   );
 }
 
@@ -95,7 +95,7 @@ export async function pluginGeneratorInternal(host: Tree, schema: Schema) {
       importPath: options.npmPackageName,
       projectNameAndRootFormat: 'as-provided',
       skipFormat: true,
-    }),
+    })
   );
 
   if (options.bundler === 'tsc') {
@@ -112,8 +112,8 @@ export async function pluginGeneratorInternal(host: Tree, schema: Schema) {
         '@nx/jest': nxVersion,
         '@nx/js': nxVersion,
         '@nx/plugin': nxVersion,
-      },
-    ),
+      }
+    )
   );
 
   // Ensures Swc Deps are installed to handle running
@@ -131,13 +131,13 @@ export async function pluginGeneratorInternal(host: Tree, schema: Schema) {
         projectDirectory: options.projectDirectory,
         pluginOutputPath: joinPathFragments(
           'dist',
-          options.rootProject ? options.name : options.projectRoot,
+          options.rootProject ? options.name : options.projectRoot
         ),
         npmPackageName: options.npmPackageName,
         skipFormat: true,
         rootProject: options.rootProject,
         projectNameAndRootFormat: options.projectNameAndRootFormat,
-      }),
+      })
     );
   }
 

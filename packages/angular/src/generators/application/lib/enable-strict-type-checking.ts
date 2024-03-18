@@ -4,7 +4,7 @@ import type { NormalizedSchema } from './normalized-schema';
 
 export function enableStrictTypeChecking(
   host: Tree,
-  options: NormalizedSchema,
+  options: NormalizedSchema
 ): void {
   // This matches the settings defined by the Angular CLI https://angular.io/guide/strict-mode
   const compilerOptions = {

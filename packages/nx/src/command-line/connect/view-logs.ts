@@ -18,8 +18,9 @@ export async function viewLogs(): Promise<number> {
     return 1;
   }
 
-  const setupNxCloud =
-    await connectExistingRepoToNxCloudPrompt('setupViewLogs');
+  const setupNxCloud = await connectExistingRepoToNxCloudPrompt(
+    'setupViewLogs'
+  );
   if (!setupNxCloud) {
     return;
   }
@@ -32,7 +33,7 @@ export async function viewLogs(): Promise<number> {
       `g nx:connect-to-nx-cloud --installation-source=view-logs --quiet --no-interactive`,
       {
         stdio: 'ignore',
-      },
+      }
     );
   } catch (e) {
     output.log({

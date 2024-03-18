@@ -14,7 +14,7 @@ export function createApplicationFiles(tree: Tree, options: NormalizedSchema) {
       ...options,
       offsetFromRoot: offsetFromRoot(options.appProjectRoot),
       title: options.projectName,
-    },
+    }
   );
 
   if (options.style !== 'none') {
@@ -26,7 +26,7 @@ export function createApplicationFiles(tree: Tree, options: NormalizedSchema) {
         ...options,
         offsetFromRoot: offsetFromRoot(options.appProjectRoot),
         title: options.projectName,
-      },
+      }
     );
   }
 
@@ -39,7 +39,7 @@ export function createApplicationFiles(tree: Tree, options: NormalizedSchema) {
         ...options,
         offsetFromRoot: offsetFromRoot(options.appProjectRoot),
         title: options.projectName,
-      },
+      }
     );
   }
 
@@ -48,6 +48,6 @@ export function createApplicationFiles(tree: Tree, options: NormalizedSchema) {
     options.appProjectRoot,
     'app',
     options,
-    getRelativePathToRootTsConfig(tree, options.appProjectRoot),
+    getRelativePathToRootTsConfig(tree, options.appProjectRoot)
   );
 }

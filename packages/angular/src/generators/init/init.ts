@@ -12,7 +12,7 @@ import { Schema } from './schema';
 
 export async function angularInitGenerator(
   tree: Tree,
-  options: Schema,
+  options: Schema
 ): Promise<GeneratorCallback> {
   ignoreAngularCacheDirectory(tree);
   const installTask = installAngularDevkitCoreIfMissing(tree, options);
@@ -26,11 +26,11 @@ export async function angularInitGenerator(
 
 function installAngularDevkitCoreIfMissing(
   tree: Tree,
-  options: Schema,
+  options: Schema
 ): GeneratorCallback {
   const packageVersion = getInstalledPackageVersion(
     tree,
-    '@angular-devkit/core',
+    '@angular-devkit/core'
   );
 
   if (!packageVersion) {
@@ -51,7 +51,7 @@ function installAngularDevkitCoreIfMissing(
         {},
         { ['@angular-devkit/core']: devkitVersion },
         undefined,
-        options.keepExistingVersions,
+        options.keepExistingVersions
       );
     }
   }

@@ -41,7 +41,7 @@ export default async function (tree: Tree) {
       }
 
       const initialNavigationAssignment = getInitialNavigationAssignment(
-        routerModuleForRootCall.arguments[1] as ObjectLiteralExpression,
+        routerModuleForRootCall.arguments[1] as ObjectLiteralExpression
       );
       if (!initialNavigationAssignment) {
         return;
@@ -52,15 +52,15 @@ export default async function (tree: Tree) {
         factory.updatePropertyAssignment(
           initialNavigationAssignment,
           initialNavigationAssignment.name,
-          factory.createIdentifier(`'enabledBlocking'`),
+          factory.createIdentifier(`'enabledBlocking'`)
         ),
-        initialNavigationAssignment.getSourceFile(),
+        initialNavigationAssignment.getSourceFile()
       );
       const updatedContent = `${content.slice(
         0,
-        initialNavigationAssignment.getStart(),
+        initialNavigationAssignment.getStart()
       )}${updatedInitialNavigationAssignment}${content.slice(
-        initialNavigationAssignment.getEnd(),
+        initialNavigationAssignment.getEnd()
       )}`;
 
       tree.write(filePath, updatedContent);
@@ -71,7 +71,7 @@ export default async function (tree: Tree) {
 }
 
 function getInitialNavigationAssignment(
-  extraOptionsLiteral: ObjectLiteralExpression,
+  extraOptionsLiteral: ObjectLiteralExpression
 ): PropertyAssignment | null {
   for (const prop of extraOptionsLiteral.properties) {
     if (
@@ -88,7 +88,7 @@ function getInitialNavigationAssignment(
 }
 
 async function getProjectsWithAngularRouter(
-  tree: Tree,
+  tree: Tree
 ): Promise<ProjectConfiguration[]> {
   const projectGraph = await createProjectGraphAsync();
 
@@ -97,20 +97,20 @@ async function getProjectsWithAngularRouter(
       dep.some(
         ({ target }) =>
           target === 'npm:@angular/router' &&
-          !projectGraph.externalNodes?.[node],
-      ),
+          !projectGraph.externalNodes?.[node]
+      )
     )
     .map(([projectName]) => readProjectConfiguration(tree, projectName));
 }
 
 function getRouterModuleForRootCall(
-  sourceFile: SourceFile,
+  sourceFile: SourceFile
 ): CallExpression | null {
   // narrow down call expressions
   const routerModuleForRootCalls = tsquery(
     sourceFile,
     'CallExpression:has(PropertyAccessExpression:has(Identifier[name=RouterModule]):has(Identifier[name=forRoot]))',
-    { visitAllChildren: true },
+    { visitAllChildren: true }
   ) as CallExpression[];
 
   for (const node of routerModuleForRootCalls) {
@@ -131,7 +131,7 @@ function isRouterModuleForRoot(node: CallExpression): boolean {
   const routerModuleForRootIdentifier = tsquery(
     node.expression,
     'CallExpression > PropertyAccessExpression > Identifier[name=RouterModule] ~ Identifier[name=forRoot]',
-    { visitAllChildren: true },
+    { visitAllChildren: true }
   )[0];
 
   return !!routerModuleForRootIdentifier;

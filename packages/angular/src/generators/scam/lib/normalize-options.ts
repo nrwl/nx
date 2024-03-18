@@ -5,7 +5,7 @@ import { names } from '@nx/devkit';
 
 export async function normalizeOptions(
   tree: Tree,
-  options: Schema,
+  options: Schema
 ): Promise<NormalizedSchema> {
   options.type ??= 'component';
   const {

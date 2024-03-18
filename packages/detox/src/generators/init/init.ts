@@ -56,7 +56,7 @@ export function updateDependencies(host: Tree, schema: Schema) {
       detox: detoxVersion,
     },
     undefined,
-    schema.keepExistingVersions,
+    schema.keepExistingVersions
   );
 }
 

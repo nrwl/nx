@@ -26,7 +26,7 @@ export function getLibConfig(): LibConfig {
 export function createApp(
   tree: Tree,
   appName: string,
-  routing: boolean = true,
+  routing: boolean = true
 ) {
   appName = names(appName).fileName;
   // save for getAppDir() lookup by external *.spec.ts tests
@@ -47,7 +47,7 @@ import { AppComponent } from './app.component';
   bootstrap: [AppComponent]
 })
 export class AppModule {}
-`,
+`
   );
   tree.write(
     `${appName}/src/main.ts`,
@@ -58,19 +58,19 @@ import { AppModule } from './app/app.module';
 platformBrowserDynamic()
   .bootstrapModule(AppModule)
   .catch(err => console.log(err));
-  `,
+  `
   );
   tree.write(
     `${appName}/tsconfig.app.json`,
     JSON.stringify({
       include: ['**/*.ts'],
-    }),
+    })
   );
   tree.write(
     `${appName}-e2e/tsconfig.e2e.json`,
     JSON.stringify({
       include: ['../**/*.ts'],
-    }),
+    })
   );
   addProjectConfiguration(tree, appName, {
     root: `${appName}`,
@@ -109,11 +109,11 @@ import { CommonModule } from '@angular/common';
   providers: []
 })
 export class ${className}Module { }
-  `,
+  `
   );
   tree.write(
     libConfig.barrel,
     `export * from './lib/${fileName}.module';
-`,
+`
   );
 }

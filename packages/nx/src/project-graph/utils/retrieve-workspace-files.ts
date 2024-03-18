@@ -33,14 +33,14 @@ import { buildAllWorkspaceFiles } from './build-all-workspace-files';
  */
 export async function retrieveWorkspaceFiles(
   workspaceRoot: string,
-  projectRootMap: Record<string, string>,
+  projectRootMap: Record<string, string>
 ) {
   performance.mark('native-file-deps:start');
   performance.mark('native-file-deps:end');
   performance.measure(
     'native-file-deps',
     'native-file-deps:start',
-    'native-file-deps:end',
+    'native-file-deps:end'
   );
 
   performance.mark('get-workspace-files:start');
@@ -51,7 +51,7 @@ export async function retrieveWorkspaceFiles(
   performance.measure(
     'get-workspace-files',
     'get-workspace-files:start',
-    'get-workspace-files:end',
+    'get-workspace-files:end'
   );
 
   return {
@@ -72,12 +72,12 @@ export async function retrieveWorkspaceFiles(
  */
 export async function retrieveProjectConfigurations(
   workspaceRoot: string,
-  nxJson: NxJsonConfiguration,
+  nxJson: NxJsonConfiguration
 ): Promise<RetrievedGraphNodes> {
   const plugins = await loadNxPlugins(
     nxJson?.plugins ?? [],
     getNxRequirePaths(workspaceRoot),
-    workspaceRoot,
+    workspaceRoot
   );
 
   return _retrieveProjectConfigurations(workspaceRoot, nxJson, plugins);
@@ -85,12 +85,12 @@ export async function retrieveProjectConfigurations(
 
 export async function retrieveProjectConfigurationsWithAngularProjects(
   workspaceRoot: string,
-  nxJson: NxJsonConfiguration,
+  nxJson: NxJsonConfiguration
 ): Promise<RetrievedGraphNodes> {
   const plugins = await loadNxPlugins(
     nxJson?.plugins ?? [],
     getNxRequirePaths(workspaceRoot),
-    workspaceRoot,
+    workspaceRoot
   );
 
   if (
@@ -113,7 +113,7 @@ export type RetrievedGraphNodes = {
 function _retrieveProjectConfigurations(
   workspaceRoot: string,
   nxJson: NxJsonConfiguration,
-  plugins: LoadedNxPlugin[],
+  plugins: LoadedNxPlugin[]
 ): Promise<RetrievedGraphNodes> {
   const globPatterns = configurationGlobs(plugins);
   const workspaceFiles = globWithWorkspaceContext(workspaceRoot, globPatterns);
@@ -122,13 +122,13 @@ function _retrieveProjectConfigurations(
     workspaceRoot,
     nxJson,
     workspaceFiles,
-    plugins,
+    plugins
   );
 }
 
 export function retrieveProjectConfigurationPaths(
   root: string,
-  plugins: LoadedNxPlugin[],
+  plugins: LoadedNxPlugin[]
 ): string[] {
   const projectGlobPatterns = configurationGlobs(plugins);
   return globWithWorkspaceContext(root, projectGlobPatterns);
@@ -141,7 +141,7 @@ const projectsWithoutPluginCache = new Map<
 
 // TODO: This function is called way too often, it should be optimized without this cache
 export async function retrieveProjectConfigurationsWithoutPluginInference(
-  root: string,
+  root: string
 ): Promise<Record<string, ProjectConfiguration>> {
   const nxJson = readNxJson(root);
   const plugins = await getDefaultPlugins(root);
@@ -161,7 +161,7 @@ export async function retrieveProjectConfigurationsWithoutPluginInference(
     [
       { plugin: getNxPackageJsonWorkspacesPlugin(root) },
       { plugin: ProjectJsonProjectsPlugin },
-    ],
+    ]
   );
 
   projectsWithoutPluginCache.set(cacheKey, projects);
@@ -173,7 +173,7 @@ export async function createProjectConfigurations(
   workspaceRoot: string,
   nxJson: NxJsonConfiguration,
   configFiles: string[],
-  plugins: LoadedNxPlugin[],
+  plugins: LoadedNxPlugin[]
 ): Promise<RetrievedGraphNodes> {
   performance.mark('build-project-configs:start');
 
@@ -182,14 +182,14 @@ export async function createProjectConfigurations(
       nxJson,
       configFiles,
       plugins,
-      workspaceRoot,
+      workspaceRoot
     );
 
   performance.mark('build-project-configs:end');
   performance.measure(
     'build-project-configs',
     'build-project-configs:start',
-    'build-project-configs:end',
+    'build-project-configs:end'
   );
 
   return {

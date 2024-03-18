@@ -10,7 +10,7 @@ import { NormalizedJestProjectSchema } from '../schema';
 export function createFiles(
   tree: Tree,
   options: NormalizedJestProjectSchema,
-  presetExt: 'cjs' | 'js',
+  presetExt: 'cjs' | 'js'
 ) {
   const projectConfig = readProjectConfiguration(tree, options.project);
 
@@ -56,7 +56,7 @@ export function createFiles(
   if (options.js) {
     tree.rename(
       join(projectConfig.root, 'jest.config.ts'),
-      join(projectConfig.root, 'jest.config.js'),
+      join(projectConfig.root, 'jest.config.js')
     );
   }
 }

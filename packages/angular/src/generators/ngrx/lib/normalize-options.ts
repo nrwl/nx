@@ -11,13 +11,13 @@ export type NormalizedNgRxGeneratorOptions = NgRxGeneratorOptions & {
 
 export function normalizeOptions(
   tree: Tree,
-  options: NgRxGeneratorOptions,
+  options: NgRxGeneratorOptions
 ): NormalizedNgRxGeneratorOptions {
   let rxjsVersion: string;
   try {
     rxjsVersion = checkAndCleanWithSemver(
       'rxjs',
-      readJson(tree, 'package.json').dependencies['rxjs'],
+      readJson(tree, 'package.json').dependencies['rxjs']
     );
   } catch {
     rxjsVersion = checkAndCleanWithSemver('rxjs', defaultRxjsVersion);
@@ -28,8 +28,8 @@ export function normalizeOptions(
     parentDirectory: options.module
       ? dirname(options.module)
       : options.parent
-        ? dirname(options.parent)
-        : undefined,
+      ? dirname(options.parent)
+      : undefined,
     route: options.route === '' ? `''` : options.route ?? `''`,
     directory: names(options.directory).fileName,
     rxjsVersion,

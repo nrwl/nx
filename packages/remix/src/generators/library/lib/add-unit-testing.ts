@@ -19,7 +19,7 @@ import type { RemixLibraryOptions } from './normalize-options';
 export function addUnitTestingSetup(tree: Tree, options: RemixLibraryOptions) {
   const pathToTestSetup = joinPathFragments(
     options.projectRoot,
-    'src/test-setup.ts',
+    'src/test-setup.ts'
   );
   let testSetupFileContents = '';
 
@@ -32,19 +32,19 @@ export function addUnitTestingSetup(tree: Tree, options: RemixLibraryOptions) {
     stripIndents`${testSetupFileContents}
     import { installGlobals } from '@remix-run/node';
     import "@testing-library/jest-dom/matchers";
-  installGlobals();`,
+  installGlobals();`
   );
 
   if (options.unitTestRunner === 'vitest') {
     const pathToVitestConfig = joinPathFragments(
       options.projectRoot,
-      `vite.config.ts`,
+      `vite.config.ts`
     );
     updateVitestTestSetup(tree, pathToVitestConfig, './src/test-setup.ts');
   } else if (options.unitTestRunner === 'jest') {
     const pathToJestConfig = joinPathFragments(
       options.projectRoot,
-      `jest.config.ts`,
+      `jest.config.ts`
     );
     updateJestTestSetup(tree, pathToJestConfig, './src/test-setup.ts');
   }
@@ -57,6 +57,6 @@ export function addUnitTestingSetup(tree: Tree, options: RemixLibraryOptions) {
       '@testing-library/react': testingLibraryReactVersion,
       '@testing-library/user-event': testingLibraryUserEventsVersion,
       '@remix-run/node': getRemixVersion(tree),
-    },
+    }
   );
 }

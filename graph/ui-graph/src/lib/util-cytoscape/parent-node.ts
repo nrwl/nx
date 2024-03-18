@@ -2,7 +2,7 @@ import * as cy from 'cytoscape';
 
 export class ParentNode {
   constructor(
-    private config: { id: string; parentId: string; label: string },
+    private config: { id: string; parentId: string; label: string }
   ) {}
 
   getCytoscapeNodeDef(): cy.NodeDefinition & { pannable?: boolean } {

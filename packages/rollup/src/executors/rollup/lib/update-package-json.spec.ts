@@ -24,7 +24,7 @@ describe('updatePackageJson', () => {
           generateExportsField: true,
           format: ['esm'],
         },
-        {} as unknown as PackageJson,
+        {} as unknown as PackageJson
       );
 
       expect(utils.writeJsonFile).toHaveBeenCalledWith(expect.anything(), {
@@ -49,7 +49,7 @@ describe('updatePackageJson', () => {
           generateExportsField: true,
           format: ['cjs'],
         },
-        {} as unknown as PackageJson,
+        {} as unknown as PackageJson
       );
 
       expect(utils.writeJsonFile).toHaveBeenCalledWith(expect.anything(), {
@@ -73,7 +73,7 @@ describe('updatePackageJson', () => {
           generateExportsField: true,
           format: ['esm', 'cjs'],
         },
-        {} as unknown as PackageJson,
+        {} as unknown as PackageJson
       );
 
       expect(utils.writeJsonFile).toHaveBeenCalledWith(expect.anything(), {
@@ -105,7 +105,7 @@ describe('updatePackageJson', () => {
           exports: {
             './foo': './foo.esm.js',
           },
-        } as unknown as PackageJson,
+        } as unknown as PackageJson
       );
 
       expect(utils.writeJsonFile).toHaveBeenCalledWith(expect.anything(), {
@@ -133,7 +133,7 @@ describe('updatePackageJson', () => {
           ...commonOptions,
           format: ['esm'],
         },
-        {} as unknown as PackageJson,
+        {} as unknown as PackageJson
       );
 
       expect(utils.writeJsonFile).toHaveBeenCalledWith(expect.anything(), {
@@ -153,7 +153,7 @@ describe('updatePackageJson', () => {
           ...commonOptions,
           format: ['cjs'],
         },
-        {} as unknown as PackageJson,
+        {} as unknown as PackageJson
       );
 
       expect(utils.writeJsonFile).toHaveBeenCalledWith(expect.anything(), {
@@ -172,7 +172,7 @@ describe('updatePackageJson', () => {
           ...commonOptions,
           format: ['esm', 'cjs'],
         },
-        {} as unknown as PackageJson,
+        {} as unknown as PackageJson
       );
 
       expect(utils.writeJsonFile).toHaveBeenCalledWith(expect.anything(), {
@@ -195,7 +195,7 @@ describe('updatePackageJson', () => {
           exports: {
             './foo': './foo.esm.js',
           },
-        } as unknown as PackageJson,
+        } as unknown as PackageJson
       );
 
       expect(utils.writeJsonFile).toHaveBeenCalledWith(expect.anything(), {
@@ -225,7 +225,7 @@ describe('updatePackageJson', () => {
           exports: {
             './foo': './foo.esm.js',
           },
-        } as unknown as PackageJson,
+        } as unknown as PackageJson
       );
 
       expect(utils.writeJsonFile).toHaveBeenCalledWith(expect.anything(), {
@@ -251,7 +251,7 @@ describe('updatePackageJson', () => {
           exports: {
             './foo': './foo.esm.js',
           },
-        } as unknown as PackageJson,
+        } as unknown as PackageJson
       );
 
       expect(utils.writeJsonFile).toHaveBeenCalledWith(expect.anything(), {
@@ -279,7 +279,7 @@ describe('updatePackageJson', () => {
           exports: {
             './foo': './foo.esm.js',
           },
-        } as unknown as PackageJson,
+        } as unknown as PackageJson
       );
 
       expect(utils.writeJsonFile).toHaveBeenCalledWith(expect.anything(), {

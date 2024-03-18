@@ -16,7 +16,7 @@ describe('route', () => {
     (remixConfigUtils.getRemixConfigValues as jest.Mock) = jest.fn(() =>
       Promise.resolve({
         ignoredRouteFiles: ['**/.*'],
-      }),
+      })
     );
   });
 
@@ -37,7 +37,7 @@ describe('route', () => {
     });
 
     expect(
-      tree.exists('apps/demo/app/styles/path/to/example.css'),
+      tree.exists('apps/demo/app/styles/path/to/example.css')
     ).toBeTruthy();
   });
 
@@ -58,7 +58,7 @@ describe('route', () => {
     });
 
     expect(
-      tree.exists('apps/demo/app/styles/example/$withParam.css'),
+      tree.exists('apps/demo/app/styles/example/$withParam.css')
     ).toBeTruthy();
   });
 
@@ -74,13 +74,13 @@ describe('route', () => {
     module.exports = {
       ignoredRouteFiles: ["**/.*"],
       appDirectory: "my-custom-dir",
-    };`,
+    };`
     );
     (remixConfigUtils.getRemixConfigValues as jest.Mock) = jest.fn(() =>
       Promise.resolve({
         ignoredRouteFiles: ['**/.*'],
         appDirectory: 'my-custom-dir',
-      }),
+      })
     );
 
     await routeGenerator(tree, {
@@ -117,11 +117,11 @@ describe('route', () => {
     });
     const content = tree.read(
       'apps/demo/app/routes/example/$withParam.tsx',
-      'utf-8',
+      'utf-8'
     );
 
     expect(content).toMatch(
-      "import stylesUrl from '../../styles/example/$withParam.css';",
+      "import stylesUrl from '../../styles/example/$withParam.css';"
     );
   });
 
@@ -145,7 +145,7 @@ describe('route', () => {
     const content = tree.read('app/routes/example/$withParam.tsx', 'utf-8');
 
     expect(content).toMatch(
-      "import stylesUrl from '~/styles/example/$withParam.css';",
+      "import stylesUrl from '~/styles/example/$withParam.css';"
     );
   });
 
@@ -166,11 +166,11 @@ describe('route', () => {
     });
     const content = tree.read(
       'apps/demo/app/routes/example/$withParam.tsx',
-      'utf-8',
+      'utf-8'
     );
 
     expect(content).toMatch(
-      "import stylesUrl from '../../styles/example/$withParam.css';",
+      "import stylesUrl from '../../styles/example/$withParam.css';"
     );
   });
 });

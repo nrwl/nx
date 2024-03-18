@@ -60,7 +60,7 @@ export default async function (tree: Tree) {
     const projects = getProjects(tree);
 
     for (const [files, dependents] of Object.entries(
-      nxJson.implicitDependencies,
+      nxJson.implicitDependencies
     )) {
       // Skip these because other plugins take care of them
       if (skippedFiles.includes(files)) {
@@ -68,7 +68,7 @@ export default async function (tree: Tree) {
       } else if (Array.isArray(dependents)) {
         nxJson.namedInputs.projectSpecificFiles = [];
         const defaultFileset = new Set(
-          nxJson.namedInputs.default ?? ['{projectRoot}/**/*', 'sharedGlobals'],
+          nxJson.namedInputs.default ?? ['{projectRoot}/**/*', 'sharedGlobals']
         );
         defaultFileset.add('projectSpecificFiles');
         nxJson.namedInputs.default = Array.from(defaultFileset);
@@ -77,13 +77,13 @@ export default async function (tree: Tree) {
           const project = projects.get(dependent);
           project.namedInputs ??= {};
           const projectSpecificFileset = new Set(
-            project.namedInputs.projectSpecificFiles ?? [],
+            project.namedInputs.projectSpecificFiles ?? []
           );
           projectSpecificFileset.add(
-            joinPathFragments('{workspaceRoot}', files),
+            joinPathFragments('{workspaceRoot}', files)
           );
           project.namedInputs.projectSpecificFiles = Array.from(
-            projectSpecificFileset,
+            projectSpecificFileset
           );
 
           try {
@@ -100,14 +100,14 @@ export default async function (tree: Tree) {
                     project.namedInputs.projectSpecificFiles;
 
                   return json;
-                },
+                }
               );
             }
           }
         }
       } else {
         nxJson.namedInputs.sharedGlobals.push(
-          joinPathFragments('{workspaceRoot}', files),
+          joinPathFragments('{workspaceRoot}', files)
         );
       }
     }

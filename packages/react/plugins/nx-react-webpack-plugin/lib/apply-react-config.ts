@@ -2,7 +2,7 @@ import { Configuration, WebpackOptionsNormalized } from 'webpack';
 
 export function applyReactConfig(
   options: { svgr?: boolean },
-  config: Partial<WebpackOptionsNormalized | Configuration> = {},
+  config: Partial<WebpackOptionsNormalized | Configuration> = {}
 ): void {
   if (!process.env['NX_TASK_TARGET_PROJECT']) return;
 
@@ -35,7 +35,7 @@ export function applyReactConfig(
 }
 
 function addHotReload(
-  config: Partial<WebpackOptionsNormalized | Configuration>,
+  config: Partial<WebpackOptionsNormalized | Configuration>
 ) {
   if (config.mode === 'development' && config['devServer']?.hot) {
     // add `react-refresh/babel` to babel loader plugin
@@ -43,7 +43,7 @@ function addHotReload(
       (rule) =>
         rule &&
         typeof rule !== 'string' &&
-        rule.loader?.toString().includes('babel-loader'),
+        rule.loader?.toString().includes('babel-loader')
     );
 
     if (babelLoader && typeof babelLoader !== 'string') {
@@ -66,10 +66,10 @@ function addHotReload(
 // We remove potentially conflicting rules that target SVGs because we use @svgr/webpack loader
 // See https://github.com/nrwl/nx/issues/14383
 function removeSvgLoaderIfPresent(
-  config: Partial<WebpackOptionsNormalized | Configuration>,
+  config: Partial<WebpackOptionsNormalized | Configuration>
 ) {
   const svgLoaderIdx = config.module.rules.findIndex(
-    (rule) => typeof rule === 'object' && rule.test.toString().includes('svg'),
+    (rule) => typeof rule === 'object' && rule.test.toString().includes('svg')
   );
   if (svgLoaderIdx === -1) return;
   config.module.rules.splice(svgLoaderIdx, 1);

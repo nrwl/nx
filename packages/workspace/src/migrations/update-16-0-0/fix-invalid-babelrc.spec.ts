@@ -75,7 +75,7 @@ describe('fix-invalid-babelrc', () => {
       expect(readJson(tree, 'proj2/.babelrc')).toEqual({
         presets: ['@nx/js/babel'],
       });
-    },
+    }
   );
 
   it('should remove the invalid preset if neither Web nor JS plugins are present', () => {

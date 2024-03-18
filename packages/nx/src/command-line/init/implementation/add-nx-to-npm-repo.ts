@@ -27,7 +27,7 @@ export async function addNxToNpmRepo(options: Options) {
 
   const packageJson = readJsonFile('package.json');
   const scripts = Object.keys(packageJson.scripts ?? {}).filter(
-    (s) => !s.startsWith('pre') && !s.startsWith('post'),
+    (s) => !s.startsWith('pre') && !s.startsWith('post')
   );
 
   if (options.interactive && scripts.length > 0) {

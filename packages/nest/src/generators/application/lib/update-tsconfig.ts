@@ -20,6 +20,6 @@ export function updateTsConfig(tree: Tree, options: NormalizedOptions): void {
         };
       }
       return json;
-    },
+    }
   );
 }

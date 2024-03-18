@@ -19,7 +19,7 @@ import type { MoveImplOptions } from './types';
  */
 export function updateModuleName(
   tree: Tree,
-  { oldProjectName, newProjectName }: MoveImplOptions,
+  { oldProjectName, newProjectName }: MoveImplOptions
 ): void {
   const unscopedNewProjectName = newProjectName.startsWith('@')
     ? newProjectName.split('/')[1]
@@ -113,7 +113,7 @@ function updateFileContent(
   tree: Tree,
   replacements: { regex: RegExp; replaceWith: string }[],
   fileName: string,
-  newFileName?: string,
+  newFileName?: string
 ): void {
   let content = tree.read(fileName, 'utf-8');
 

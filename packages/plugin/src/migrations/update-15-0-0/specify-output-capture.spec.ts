@@ -29,10 +29,10 @@ describe('update-15-0-0-specify-output-capture', () => {
     });
     await update(tree);
     expect(
-      readJson<ExecutorConfig['schema']>(tree, schemaPath).version,
+      readJson<ExecutorConfig['schema']>(tree, schemaPath).version
     ).toEqual(2);
     expect(
-      readJson<ExecutorConfig['schema']>(tree, schemaPath).outputCapture,
+      readJson<ExecutorConfig['schema']>(tree, schemaPath).outputCapture
     ).toEqual('pipe');
   });
 
@@ -40,10 +40,10 @@ describe('update-15-0-0-specify-output-capture', () => {
     const { tree } = await createTreeWithBoilerplate();
     await update(tree);
     expect(
-      readJson<ExecutorConfig['schema']>(tree, schemaPath).version,
+      readJson<ExecutorConfig['schema']>(tree, schemaPath).version
     ).toEqual(2);
     expect(
-      readJson<ExecutorConfig['schema']>(tree, schemaPath).outputCapture,
+      readJson<ExecutorConfig['schema']>(tree, schemaPath).outputCapture
     ).toBeUndefined();
   });
 
@@ -55,10 +55,10 @@ describe('update-15-0-0-specify-output-capture', () => {
     });
     await update(tree);
     expect(
-      readJson<ExecutorConfig['schema']>(tree, schemaPath).version,
+      readJson<ExecutorConfig['schema']>(tree, schemaPath).version
     ).toEqual(2);
     expect(
-      readJson<ExecutorConfig['schema']>(tree, schemaPath).outputCapture,
+      readJson<ExecutorConfig['schema']>(tree, schemaPath).outputCapture
     ).toEqual('direct-nodejs');
   });
 

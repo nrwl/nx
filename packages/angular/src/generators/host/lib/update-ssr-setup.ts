@@ -19,17 +19,17 @@ export async function updateSsrSetup(
   tree: Tree,
   options: Schema,
   appName: string,
-  typescriptConfiguration: boolean,
+  typescriptConfiguration: boolean
 ) {
   let project = readProjectConfiguration(tree, appName);
 
   tree.rename(
     joinPathFragments(project.sourceRoot, 'main.server.ts'),
-    joinPathFragments(project.sourceRoot, 'bootstrap.server.ts'),
+    joinPathFragments(project.sourceRoot, 'bootstrap.server.ts')
   );
   tree.write(
     joinPathFragments(project.root, 'server.ts'),
-    "import('./src/main.server');",
+    "import('./src/main.server');"
   );
 
   const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
@@ -38,7 +38,7 @@ export async function updateSsrSetup(
     join(
       __dirname,
       '../files/common',
-      angularMajorVersion >= 17 ? 'v17+' : 'pre-v17',
+      angularMajorVersion >= 17 ? 'v17+' : 'pre-v17'
     ),
     project.root,
     {
@@ -46,7 +46,7 @@ export async function updateSsrSetup(
       browserBundleOutput: project.targets.build.options.outputPath,
       standalone: options.standalone,
       tmpl: '',
-    },
+    }
   );
 
   const pathToTemplateFiles = typescriptConfiguration ? 'ts' : 'js';
@@ -57,7 +57,7 @@ export async function updateSsrSetup(
     project.root,
     {
       tmpl: '',
-    },
+    }
   );
 
   // update project.json
@@ -67,7 +67,7 @@ export async function updateSsrSetup(
   project.targets.server.options.customWebpackConfig = {
     path: joinPathFragments(
       project.root,
-      `webpack.server.config.${pathToTemplateFiles}`,
+      `webpack.server.config.${pathToTemplateFiles}`
     ),
   };
 
@@ -84,7 +84,7 @@ export async function updateSsrSetup(
     },
     {
       '@types/cors': typesCorsVersion,
-    },
+    }
   );
 
   return installTask;

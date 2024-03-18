@@ -22,7 +22,7 @@ export default async function (tree: Tree) {
   for (const [, project] of projects) {
     if (
       !Object.values(project.targets ?? {}).some((target) =>
-        libraryExecutors.includes(target.executor),
+        libraryExecutors.includes(target.executor)
       )
     ) {
       continue;
@@ -42,7 +42,7 @@ export default async function (tree: Tree) {
         // Migrate ng-packagr config to an ng-packagr config file.
         const configFilePath = joinPathFragments(
           dirname(filePath),
-          'ng-package.json',
+          'ng-package.json'
         );
         writeJson(tree, configFilePath, json.ngPackage);
       }

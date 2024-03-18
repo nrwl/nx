@@ -100,7 +100,7 @@ function buildEnvironmentJs(
   depGraphClientResponse?: ProjectGraphClientResponse,
   taskGraphClientResponse?: TaskGraphClientResponse,
   expandedTaskInputsReponse?: ExpandedTaskInputsReponse,
-  sourceMapsResponse?: ConfigurationSourceMaps,
+  sourceMapsResponse?: ConfigurationSourceMaps
 ) {
   let environmentJs = `window.exclude = ${JSON.stringify(exclude)};
   window.watch = ${!!watchMode};
@@ -126,20 +126,20 @@ function buildEnvironmentJs(
 
   if (localMode === 'build') {
     environmentJs += `window.projectGraphResponse = ${JSON.stringify(
-      depGraphClientResponse,
+      depGraphClientResponse
     )};
     `;
 
     environmentJs += `window.taskGraphResponse = ${JSON.stringify(
-      taskGraphClientResponse,
+      taskGraphClientResponse
     )};
     `;
     environmentJs += `window.expandedTaskInputsResponse = ${JSON.stringify(
-      expandedTaskInputsReponse,
+      expandedTaskInputsReponse
     )};`;
 
     environmentJs += `window.sourceMapsResponse = ${JSON.stringify(
-      sourceMapsResponse,
+      sourceMapsResponse
     )};`;
   } else {
     environmentJs += `window.projectGraphResponse = null;`;
@@ -153,7 +153,7 @@ function buildEnvironmentJs(
 
 function projectExists(
   projects: ProjectGraphProjectNode[],
-  projectToFind: string,
+  projectToFind: string
 ) {
   return (
     projects.find((project) => project.name === projectToFind) !== undefined
@@ -164,7 +164,7 @@ function hasPath(
   graph: ProjectGraph,
   target: string,
   node: string,
-  visited: string[],
+  visited: string[]
 ) {
   if (target === node) return true;
 
@@ -179,7 +179,7 @@ function hasPath(
 function filterGraph(
   graph: ProjectGraph,
   focus: string,
-  exclude: string[],
+  exclude: string[]
 ): ProjectGraph {
   let projectNames = (
     Object.values(graph.nodes) as ProjectGraphProjectNode[]
@@ -234,7 +234,7 @@ export async function generateGraph(
     exclude?: string[];
     affected?: boolean;
   },
-  affectedProjects: string[],
+  affectedProjects: string[]
 ): Promise<void> {
   if (
     Array.isArray(args.targets) &&
@@ -280,7 +280,7 @@ export async function generateGraph(
   let prunedGraph = pruneExternalNodes(rawGraph);
 
   const projects = Object.values(
-    prunedGraph.nodes,
+    prunedGraph.nodes
   ) as ProjectGraphProjectNode[];
   projects.sort((a, b) => {
     return a.name.localeCompare(b.name);
@@ -303,9 +303,9 @@ export async function generateGraph(
           args,
           'affected',
           { printWarnings: true },
-          readNxJson(),
+          readNxJson()
         ).nxArgs,
-        rawGraph,
+        rawGraph
       )
     ).map((n) => n.name);
   }
@@ -330,13 +330,13 @@ export async function generateGraph(
 
   let html = readFileSync(
     join(__dirname, '../../core/graph/index.html'),
-    'utf-8',
+    'utf-8'
   );
 
   prunedGraph = filterGraph(
     prunedGraph,
     args.focus || null,
-    args.exclude || [],
+    args.exclude || []
   );
 
   if (args.file) {
@@ -348,11 +348,11 @@ export async function generateGraph(
             prunedGraph,
             rawGraph,
             args.projects,
-            args.targets,
+            args.targets
           ),
           null,
-          2,
-        ),
+          2
+        )
       );
       process.exit(0);
     }
@@ -383,7 +383,7 @@ export async function generateGraph(
       const taskGraphClientResponse = await createTaskGraphClientResponse();
       const taskInputsReponse = await createExpandedTaskInputResponse(
         taskGraphClientResponse,
-        projectGraphClientResponse,
+        projectGraphClientResponse
       );
 
       const environmentJs = buildEnvironmentJs(
@@ -393,7 +393,7 @@ export async function generateGraph(
         projectGraphClientResponse,
         taskGraphClientResponse,
         taskInputsReponse,
-        sourceMaps,
+        sourceMaps
       );
       html = html.replace(/src="/g, 'src="static/');
       html = html.replace(/href="styles/g, 'href="static/styles');
@@ -414,7 +414,7 @@ export async function generateGraph(
         prunedGraph,
         rawGraph,
         args.projects,
-        args.targets,
+        args.targets
       );
       json.affectedProjects = affectedProjects;
       json.criticalPath = affectedProjects;
@@ -447,7 +447,7 @@ export async function generateGraph(
     const environmentJs = buildEnvironmentJs(
       args.exclude || [],
       args.watch,
-      !!args.file && args.file.endsWith('html') ? 'build' : 'serve',
+      !!args.file && args.file.endsWith('html') ? 'build' : 'serve'
     );
 
     const { app, url } = await startServer(
@@ -459,7 +459,7 @@ export async function generateGraph(
       affectedProjects,
       args.focus,
       args.groupByFolder,
-      args.exclude,
+      args.exclude
     );
 
     url.pathname = args.view;
@@ -476,7 +476,7 @@ export async function generateGraph(
     } else if (args.projects) {
       url.searchParams.append(
         'projects',
-        args.projects.map((projectName) => projectName).join(' '),
+        args.projects.map((projectName) => projectName).join(' ')
       );
     } else if (args.affected) {
       url.pathname += '/affected';
@@ -508,7 +508,7 @@ async function startServer(
   affected: string[] = [],
   focus: string = null,
   groupByFolder: boolean = false,
-  exclude: string[] = [],
+  exclude: string[] = []
 ) {
   let unregisterFileWatcher: (() => void) | undefined;
   if (watchForchanges) {
@@ -560,7 +560,7 @@ async function startServer(
       performance.measure(
         'task input generation',
         'task input generation:start',
-        'task input generation:end',
+        'task input generation:end'
       );
       return;
     }
@@ -675,12 +675,12 @@ function createFileWatcher() {
           output.note({ title: 'No graph changes found.' });
         }
       }
-    }, 500),
+    }, 500)
   );
 }
 
 async function createProjectGraphAndSourceMapClientResponse(
-  affected: string[] = [],
+  affected: string[] = []
 ): Promise<{
   projectGraphClientResponse: ProjectGraphClientResponse;
   sourceMapResponse: ConfigurationSourceMaps;
@@ -709,13 +709,13 @@ async function createProjectGraphAndSourceMapClientResponse(
   performance.measure(
     'project graph watch calculation',
     'project graph watch calculation:start',
-    'project graph watch calculation:end',
+    'project graph watch calculation:end'
   );
 
   performance.measure(
     'project graph response generation',
     'project graph response generation:start',
-    'project graph response generation:end',
+    'project graph response generation:end'
   );
 
   return {
@@ -733,12 +733,12 @@ async function createProjectGraphAndSourceMapClientResponse(
 }
 
 async function createTaskGraphClientResponse(
-  pruneExternal: boolean = false,
+  pruneExternal: boolean = false
 ): Promise<TaskGraphClientResponse> {
   let graph: ProjectGraph;
   if (pruneExternal) {
     graph = pruneExternalNodes(
-      await createProjectGraphAsync({ exitOnError: true }),
+      await createProjectGraphAsync({ exitOnError: true })
     );
   } else {
     graph = await createProjectGraphAsync({ exitOnError: true });
@@ -752,7 +752,7 @@ async function createTaskGraphClientResponse(
 
   const planner = new HashPlanner(
     nxJson,
-    transferProjectGraph(transformProjectGraphForRust(graph)),
+    transferProjectGraph(transformProjectGraphForRust(graph))
   );
   performance.mark('task hash plan generation:start');
   const plans: Record<string, string[]> = {};
@@ -772,13 +772,13 @@ async function createTaskGraphClientResponse(
   performance.measure(
     'task graph generation',
     'task graph generation:start',
-    'task graph generation:end',
+    'task graph generation:end'
   );
 
   performance.measure(
     'task hash plan generation',
     'task hash plan generation:start',
-    'task hash plan generation:end',
+    'task hash plan generation:end'
   );
 
   return {
@@ -789,7 +789,7 @@ async function createTaskGraphClientResponse(
 
 async function createExpandedTaskInputResponse(
   taskGraphClientResponse: TaskGraphClientResponse,
-  depGraphClientResponse: ProjectGraphClientResponse,
+  depGraphClientResponse: ProjectGraphClientResponse
 ): Promise<ExpandedTaskInputsReponse> {
   performance.mark('task input static generation:start');
 
@@ -803,7 +803,7 @@ async function createExpandedTaskInputResponse(
       inputs,
       depGraphClientResponse.projects.find((p) => p.name === project),
       allWorkspaceFiles,
-      depGraphClientResponse,
+      depGraphClientResponse
     );
 
     response[key] = expandedInputs;
@@ -812,20 +812,20 @@ async function createExpandedTaskInputResponse(
   performance.measure(
     'task input static generation',
     'task input static generation:start',
-    'task input static generation:end',
+    'task input static generation:end'
   );
   return response;
 }
 
 function getAllTaskGraphsForWorkspace(
   nxJson: NxJsonConfiguration,
-  projectGraph: ProjectGraph,
+  projectGraph: ProjectGraph
 ): {
   taskGraphs: Record<string, TaskGraph>;
   errors: Record<string, string>;
 } {
   const defaultDependencyConfigs = mapTargetDefaultsToDependencies(
-    nxJson.targetDefaults,
+    nxJson.targetDefaults
   );
 
   const taskGraphs: Record<string, TaskGraph> = {};
@@ -845,7 +845,7 @@ function getAllTaskGraphsForWorkspace(
           [projectName],
           [target],
           undefined,
-          {},
+          {}
         );
       } catch (err) {
         taskGraphs[taskId] = {
@@ -858,7 +858,7 @@ function getAllTaskGraphsForWorkspace(
       }
 
       const configurations = Object.keys(
-        project.data.targets[target]?.configurations || {},
+        project.data.targets[target]?.configurations || {}
       );
 
       if (configurations.length > 0) {
@@ -871,7 +871,7 @@ function getAllTaskGraphsForWorkspace(
               [projectName],
               [target],
               configuration,
-              {},
+              {}
             );
           } catch (err) {
             taskGraphs[taskId] = {
@@ -893,7 +893,7 @@ function getAllTaskGraphsForWorkspace(
 function createTaskId(
   projectId: string,
   targetId: string,
-  configurationId?: string,
+  configurationId?: string
 ) {
   if (configurationId) {
     return `${projectId}:${targetId}:${configurationId}`;
@@ -903,7 +903,7 @@ function createTaskId(
 }
 
 async function getExpandedTaskInputs(
-  taskId: string,
+  taskId: string
 ): Promise<Record<string, string[]>> {
   const [project] = taskId.split(':');
   const taskGraphResponse = await createTaskGraphClientResponse(false);
@@ -915,10 +915,10 @@ async function getExpandedTaskInputs(
     return expandInputs(
       inputs,
       currentProjectGraphClientResponse.projects.find(
-        (p) => p.name === project,
+        (p) => p.name === project
       ),
       allWorkspaceFiles,
-      currentProjectGraphClientResponse,
+      currentProjectGraphClientResponse
     );
   }
   return {};
@@ -928,7 +928,7 @@ function expandInputs(
   inputs: string[],
   project: ProjectGraphProjectNode,
   allWorkspaceFiles: FileData[],
-  depGraphClientResponse: ProjectGraphClientResponse,
+  depGraphClientResponse: ProjectGraphClientResponse
 ): Record<string, string[]> {
   const projectNames = depGraphClientResponse.projects.map((p) => p.name);
 
@@ -966,7 +966,7 @@ function expandInputs(
       const matches = [];
       const withoutWorkspaceRoot = input.substring(16);
       const matchingFile = allWorkspaceFiles.find(
-        (t) => t.file === withoutWorkspaceRoot,
+        (t) => t.file === withoutWorkspaceRoot
       );
       if (matchingFile) {
         matches.push(matchingFile.file);
@@ -978,7 +978,7 @@ function expandInputs(
           });
       }
       return matches;
-    },
+    }
   );
 
   const otherInputsExpanded = otherInputs.map((input) => {
@@ -989,7 +989,7 @@ function expandInputs(
       return depGraphClientResponse.fileMap[project.name].find(
         (file) =>
           file.file === `${project.data.root}/project.json` ||
-          file.file === `${project.data.root}/package.json`,
+          file.file === `${project.data.root}/package.json`
       ).file;
     }
 
@@ -1000,7 +1000,7 @@ function expandInputs(
     .map((input) => {
       const fileSetProjectName = input.split(':')[0];
       const fileSetProject = depGraphClientResponse.projects.find(
-        (p) => p.name === fileSetProjectName,
+        (p) => p.name === fileSetProjectName
       );
       const fileSets = input.replace(`${fileSetProjectName}:`, '').split(',');
 
@@ -1008,7 +1008,7 @@ function expandInputs(
         [fileSetProject.name]: filterUsingGlobPatterns(
           fileSetProject.data.root,
           depGraphClientResponse.fileMap[fileSetProject.name],
-          fileSets,
+          fileSets
         ).map((f) => f.file),
       };
 
@@ -1048,7 +1048,7 @@ async function createJsonOutput(
   prunedGraph: ProjectGraph,
   rawGraph: ProjectGraph,
   projects: string[],
-  targets?: string[],
+  targets?: string[]
 ): Promise<GraphJsonResponse> {
   const response: GraphJsonResponse = {
     graph: prunedGraph,
@@ -1058,7 +1058,7 @@ async function createJsonOutput(
     const nxJson = readNxJson();
 
     const defaultDependencyConfigs = mapTargetDefaultsToDependencies(
-      nxJson.targetDefaults,
+      nxJson.targetDefaults
     );
 
     const taskGraph = createTaskGraph(
@@ -1067,7 +1067,7 @@ async function createJsonOutput(
       projects,
       targets,
       undefined,
-      {},
+      {}
     );
 
     const hasher = createTaskHasher(rawGraph, readNxJson());

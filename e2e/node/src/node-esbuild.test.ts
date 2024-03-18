@@ -15,7 +15,7 @@ describe('Node Applications + esbuild', () => {
   beforeAll(() =>
     newProject({
       packages: ['@nx/node'],
-    }),
+    })
   );
 
   afterAll(() => cleanupProject());
@@ -40,7 +40,7 @@ describe('Node Applications + esbuild', () => {
     await new Promise((res) => setTimeout(res, 2000));
 
     expect(readFile(`dist/apps/${app}/apps/${app}/src/main.js`)).not.toContain(
-      `Bye!`,
+      `Bye!`
     );
 
     await promisifiedTreeKill(p.pid, 'SIGKILL');

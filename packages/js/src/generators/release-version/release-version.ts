@@ -37,7 +37,7 @@ import { updateLockFile } from './utils/update-lock-file';
 
 export async function releaseVersionGenerator(
   tree: Tree,
-  options: ReleaseVersionGeneratorSchema,
+  options: ReleaseVersionGeneratorSchema
 ): Promise<ReleaseVersionGeneratorResult> {
   try {
     const versionData: VersionData = {};
@@ -46,7 +46,7 @@ export async function releaseVersionGenerator(
     if (options.specifier) {
       if (!isValidSemverSpecifier(options.specifier)) {
         throw new Error(
-          `The given version specifier "${options.specifier}" is not valid. You provide an exact version or a valid semver keyword such as "major", "minor", "patch", etc.`,
+          `The given version specifier "${options.specifier}" is not valid. You provide an exact version or a valid semver keyword such as "major", "minor", "patch", etc.`
         );
       }
       // The node semver library classes a leading `v` as valid, but we want to ensure it is not present in the final version
@@ -64,7 +64,7 @@ export async function releaseVersionGenerator(
 
 Valid values are: ${validReleaseVersionPrefixes
           .map((s) => `"${s}"`)
-          .join(', ')}`,
+          .join(', ')}`
       );
     }
 
@@ -82,7 +82,7 @@ Valid values are: ${validReleaseVersionPrefixes
     for (const project of projects) {
       projectNameToPackageRootMap.set(
         project.name,
-        resolvePackageRoot(project),
+        resolvePackageRoot(project)
       );
     }
 
@@ -107,14 +107,14 @@ Valid values are: ${validReleaseVersionPrefixes
       const packageRoot = projectNameToPackageRootMap.get(projectName);
       if (!packageRoot) {
         throw new Error(
-          `The project "${projectName}" does not have a packageRoot available. Please report this issue on https://github.com/nrwl/nx`,
+          `The project "${projectName}" does not have a packageRoot available. Please report this issue on https://github.com/nrwl/nx`
         );
       }
 
       const packageJsonPath = joinPathFragments(packageRoot, 'package.json');
       const workspaceRelativePackageJsonPath = relative(
         workspaceRoot,
-        packageJsonPath,
+        packageJsonPath
       );
 
       const color = getColor(projectName);
@@ -126,19 +126,19 @@ Valid values are: ${validReleaseVersionPrefixes
         throw new Error(
           `The project "${projectName}" does not have a package.json available at ${workspaceRelativePackageJsonPath}.
 
-To fix this you will either need to add a package.json file at that location, or configure "release" within your nx.json to exclude "${projectName}" from the current release group, or amend the packageRoot configuration to point to where the package.json should be.`,
+To fix this you will either need to add a package.json file at that location, or configure "release" within your nx.json to exclude "${projectName}" from the current release group, or amend the packageRoot configuration to point to where the package.json should be.`
         );
       }
 
       output.logSingleLine(
         `Running release version for project: ${color.instance.bold(
-          project.name,
-        )}`,
+          project.name
+        )}`
       );
 
       const projectPackageJson = readJson(tree, packageJsonPath);
       log(
-        `🔍 Reading data for package "${projectPackageJson.name}" from ${workspaceRelativePackageJsonPath}`,
+        `🔍 Reading data for package "${projectPackageJson.name}" from ${workspaceRelativePackageJsonPath}`
       );
 
       const { name: packageName, version: currentVersionFromDisk } =
@@ -163,8 +163,8 @@ To fix this you will either need to add a package.json file at that location, or
           ) {
             const spinner = ora(
               `${Array.from(new Array(projectName.length + 3)).join(
-                ' ',
-              )}Resolving the current version for tag "${tag}" on ${registry}`,
+                ' '
+              )}Resolving the current version for tag "${tag}" on ${registry}`
             );
             spinner.color =
               color.spinnerColor as (typeof colors)[number]['spinnerColor'];
@@ -183,38 +183,38 @@ To fix this you will either need to add a package.json file at that location, or
                       return reject(stderr);
                     }
                     return resolve(stdout.trim());
-                  },
+                  }
                 );
               });
 
               spinner.stop();
 
               log(
-                `📄 Resolved the current version as ${currentVersion} for tag "${tag}" from registry ${registry}`,
+                `📄 Resolved the current version as ${currentVersion} for tag "${tag}" from registry ${registry}`
               );
             } catch (e) {
               spinner.stop();
 
               if (options.fallbackCurrentVersionResolver === 'disk') {
                 log(
-                  `📄 Unable to resolve the current version from the registry ${registry}. Falling back to the version on disk of ${currentVersionFromDisk}`,
+                  `📄 Unable to resolve the current version from the registry ${registry}. Falling back to the version on disk of ${currentVersionFromDisk}`
                 );
                 currentVersion = currentVersionFromDisk;
                 currentVersionResolvedFromFallback = true;
               } else {
                 throw new Error(
-                  `Unable to resolve the current version from the registry ${registry}. Please ensure that the package exists in the registry in order to use the "registry" currentVersionResolver. Alternatively, you can use the --first-release option or set "release.version.generatorOptions.fallbackCurrentVersionResolver" to "disk" in order to fallback to the version on disk when the registry lookup fails.`,
+                  `Unable to resolve the current version from the registry ${registry}. Please ensure that the package exists in the registry in order to use the "registry" currentVersionResolver. Alternatively, you can use the --first-release option or set "release.version.generatorOptions.fallbackCurrentVersionResolver" to "disk" in order to fallback to the version on disk when the registry lookup fails.`
                 );
               }
             }
           } else {
             if (currentVersionResolvedFromFallback) {
               log(
-                `📄 Using the current version ${currentVersion} already resolved from disk fallback.`,
+                `📄 Using the current version ${currentVersion} already resolved from disk fallback.`
               );
             } else {
               log(
-                `📄 Using the current version ${currentVersion} already resolved from the registry ${registry}`,
+                `📄 Using the current version ${currentVersion} already resolved from the registry ${registry}`
               );
             }
           }
@@ -223,7 +223,7 @@ To fix this you will either need to add a package.json file at that location, or
         case 'disk':
           currentVersion = currentVersionFromDisk;
           log(
-            `📄 Resolved the current version as ${currentVersion} from ${packageJsonPath}`,
+            `📄 Resolved the current version as ${currentVersion} from ${packageJsonPath}`
           );
           break;
         case 'git-tag': {
@@ -237,37 +237,37 @@ To fix this you will either need to add a package.json file at that location, or
               releaseTagPattern,
               {
                 projectName: project.name,
-              },
+              }
             );
             if (!latestMatchingGitTag) {
               if (options.fallbackCurrentVersionResolver === 'disk') {
                 log(
-                  `📄 Unable to resolve the current version from git tag using pattern "${releaseTagPattern}". Falling back to the version on disk of ${currentVersionFromDisk}`,
+                  `📄 Unable to resolve the current version from git tag using pattern "${releaseTagPattern}". Falling back to the version on disk of ${currentVersionFromDisk}`
                 );
                 currentVersion = currentVersionFromDisk;
                 currentVersionResolvedFromFallback = true;
               } else {
                 throw new Error(
-                  `No git tags matching pattern "${releaseTagPattern}" for project "${project.name}" were found. You will need to create an initial matching tag to use as a base for determining the next version. Alternatively, you can use the --first-release option or set "release.version.generatorOptions.fallbackCurrentVersionResolver" to "disk" in order to fallback to the version on disk when no matching git tags are found.`,
+                  `No git tags matching pattern "${releaseTagPattern}" for project "${project.name}" were found. You will need to create an initial matching tag to use as a base for determining the next version. Alternatively, you can use the --first-release option or set "release.version.generatorOptions.fallbackCurrentVersionResolver" to "disk" in order to fallback to the version on disk when no matching git tags are found.`
                 );
               }
             } else {
               currentVersion = latestMatchingGitTag.extractedVersion;
               log(
-                `📄 Resolved the current version as ${currentVersion} from git tag "${latestMatchingGitTag.tag}".`,
+                `📄 Resolved the current version as ${currentVersion} from git tag "${latestMatchingGitTag.tag}".`
               );
             }
           } else {
             if (currentVersionResolvedFromFallback) {
               log(
-                `📄 Using the current version ${currentVersion} already resolved from disk fallback.`,
+                `📄 Using the current version ${currentVersion} already resolved from disk fallback.`
               );
             } else {
               log(
                 // In this code path we know that latestMatchingGitTag is defined, because we are not relying on the fallbackCurrentVersionResolver, so we can safely use the non-null assertion operator
                 `📄 Using the current version ${currentVersion} already resolved from git tag "${
                   latestMatchingGitTag!.tag
-                }".`,
+                }".`
               );
             }
           }
@@ -275,7 +275,7 @@ To fix this you will either need to add a package.json file at that location, or
         }
         default:
           throw new Error(
-            `Invalid value for options.currentVersionResolver: ${options.currentVersionResolver}`,
+            `Invalid value for options.currentVersionResolver: ${options.currentVersionResolver}`
           );
       }
 
@@ -303,7 +303,7 @@ To fix this you will either need to add a package.json file at that location, or
           case 'conventional-commits': {
             if (options.currentVersionResolver !== 'git-tag') {
               throw new Error(
-                `Invalid currentVersionResolver "${options.currentVersionResolver}" provided for release group "${options.releaseGroup.name}". Must be "git-tag" when "specifierSource" is "conventional-commits"`,
+                `Invalid currentVersionResolver "${options.currentVersionResolver}" provided for release group "${options.releaseGroup.name}". Must be "git-tag" when "specifierSource" is "conventional-commits"`
               );
             }
 
@@ -317,15 +317,15 @@ To fix this you will either need to add a package.json file at that location, or
             const previousVersionRef = latestMatchingGitTag
               ? latestMatchingGitTag.tag
               : options.fallbackCurrentVersionResolver === 'disk'
-                ? await getFirstGitCommit()
-                : undefined;
+              ? await getFirstGitCommit()
+              : undefined;
 
             if (!previousVersionRef) {
               // This should never happen since the checks above should catch if the current version couldn't be resolved
               throw new Error(
                 `Unable to determine previous version ref for the projects ${affectedProjects.join(
-                  ', ',
-                )}. This is likely a bug in Nx.`,
+                  ', '
+                )}. This is likely a bug in Nx.`
               );
             }
 
@@ -333,12 +333,12 @@ To fix this you will either need to add a package.json file at that location, or
               previousVersionRef,
               options.projectGraph,
               affectedProjects,
-              options.conventionalCommitsConfig,
+              options.conventionalCommitsConfig
             );
 
             if (!specifier) {
               log(
-                `🚫 No changes were detected using git history and the conventional commits standard.`,
+                `🚫 No changes were detected using git history and the conventional commits standard.`
               );
               break;
             }
@@ -350,11 +350,11 @@ To fix this you will either need to add a package.json file at that location, or
             if (prerelease(currentVersion ?? '')) {
               specifier = 'prerelease';
               log(
-                `📄 Resolved the specifier as "${specifier}" since the current version is a prerelease.`,
+                `📄 Resolved the specifier as "${specifier}" since the current version is a prerelease.`
               );
             } else {
               log(
-                `📄 Resolved the specifier as "${specifier}" using git history and the conventional commits standard.`,
+                `📄 Resolved the specifier as "${specifier}" using git history and the conventional commits standard.`
               );
             }
             break;
@@ -372,27 +372,27 @@ To fix this you will either need to add a package.json file at that location, or
             if (options.releaseGroup.projectsRelationship === 'independent') {
               specifier = await resolveSemverSpecifierFromPrompt(
                 `${maybeLogReleaseGroup(
-                  `What kind of change is this for project "${projectName}"`,
+                  `What kind of change is this for project "${projectName}"`
                 )}?`,
                 `${maybeLogReleaseGroup(
-                  `What is the exact version for project "${projectName}"`,
-                )}?`,
+                  `What is the exact version for project "${projectName}"`
+                )}?`
               );
             } else {
               specifier = await resolveSemverSpecifierFromPrompt(
                 `${maybeLogReleaseGroup(
-                  `What kind of change is this for the ${projects.length} matched projects(s)`,
+                  `What kind of change is this for the ${projects.length} matched projects(s)`
                 )}?`,
                 `${maybeLogReleaseGroup(
-                  `What is the exact version for the ${projects.length} matched project(s)`,
-                )}?`,
+                  `What is the exact version for the ${projects.length} matched project(s)`
+                )}?`
               );
             }
             break;
           }
           default:
             throw new Error(
-              `Invalid specifierSource "${specifierSource}" provided. Must be one of "prompt" or "conventional-commits"`,
+              `Invalid specifierSource "${specifierSource}" provided. Must be one of "prompt" or "conventional-commits"`
             );
         }
       }
@@ -405,7 +405,7 @@ To fix this you will either need to add a package.json file at that location, or
         projectNameToPackageRootMap,
         resolvePackageRoot,
         // includeAll when the release group is independent, as we may be filtering to a specific subset of projects, but we still want to update their dependents
-        options.releaseGroup.projectsRelationship === 'independent',
+        options.releaseGroup.projectsRelationship === 'independent'
       );
 
       const dependentProjects = Object.values(localPackageDependencies)
@@ -416,7 +416,7 @@ To fix this you will either need to add a package.json file at that location, or
 
       if (!currentVersion) {
         throw new Error(
-          `The current version for project "${project.name}" could not be resolved. Please report this on https://github.com/nrwl/nx`,
+          `The current version for project "${project.name}" could not be resolved. Please report this on https://github.com/nrwl/nx`
         );
       }
 
@@ -429,7 +429,7 @@ To fix this you will either need to add a package.json file at that location, or
 
       if (!specifier) {
         log(
-          `🚫 Skipping versioning "${projectPackageJson.name}" as no changes were detected.`,
+          `🚫 Skipping versioning "${projectPackageJson.name}" as no changes were detected.`
         );
         continue;
       }
@@ -437,7 +437,7 @@ To fix this you will either need to add a package.json file at that location, or
       const newVersion = deriveNewSemverVersion(
         currentVersion,
         specifier,
-        options.preid,
+        options.preid
       );
       versionData[projectName].newVersion = newVersion;
 
@@ -447,7 +447,7 @@ To fix this you will either need to add a package.json file at that location, or
       });
 
       log(
-        `✍️  New version ${newVersion} written to ${workspaceRelativePackageJsonPath}`,
+        `✍️  New version ${newVersion} written to ${workspaceRelativePackageJsonPath}`
       );
 
       if (dependentProjects.length > 0) {
@@ -458,17 +458,17 @@ To fix this you will either need to add a package.json file at that location, or
             dependentProjects.length > 1
               ? 'packages which depend'
               : 'package which depends'
-          } on ${project.name}`,
+          } on ${project.name}`
         );
       }
 
       for (const dependentProject of dependentProjects) {
         const dependentPackageRoot = projectNameToPackageRootMap.get(
-          dependentProject.source,
+          dependentProject.source
         );
         if (!dependentPackageRoot) {
           throw new Error(
-            `The dependent project "${dependentProject.source}" does not have a packageRoot available. Please report this issue on https://github.com/nrwl/nx`,
+            `The dependent project "${dependentProject.source}" does not have a packageRoot available. Please report this issue on https://github.com/nrwl/nx`
           );
         }
         updateJson(
@@ -493,10 +493,11 @@ To fix this you will either need to add a package.json file at that location, or
                 }
               }
             }
-            json[dependentProject.dependencyCollection][packageName] =
-              `${versionPrefix}${newVersion}`;
+            json[dependentProject.dependencyCollection][
+              packageName
+            ] = `${versionPrefix}${newVersion}`;
             return json;
-          },
+          }
         );
       }
     }

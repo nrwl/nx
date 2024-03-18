@@ -64,11 +64,11 @@ describe('replaceProjectConfigurationsWithPlugin', () => {
       new Map([['proj', 'proj']]),
       'plugin-path',
       createNodes,
-      {},
+      {}
     );
 
     expect(readProjectConfiguration(tree, 'proj').targets.build).toEqual(
-      buildTarget,
+      buildTarget
     );
   });
 
@@ -93,11 +93,11 @@ describe('replaceProjectConfigurationsWithPlugin', () => {
         new Map([['proj', 'proj']]),
         'plugin-path',
         createNodes,
-        {},
+        {}
       );
 
       expect(
-        readProjectConfiguration(tree, 'proj').targets.build,
+        readProjectConfiguration(tree, 'proj').targets.build
       ).toBeUndefined();
     });
 
@@ -122,7 +122,7 @@ describe('replaceProjectConfigurationsWithPlugin', () => {
         new Map([['proj', 'proj']]),
         'plugin-path',
         createNodes,
-        {},
+        {}
       );
 
       expect(readProjectConfiguration(tree, 'proj').targets.build).toEqual({
@@ -154,7 +154,7 @@ describe('replaceProjectConfigurationsWithPlugin', () => {
         new Map([['proj', 'proj']]),
         'plugin-path',
         createNodes,
-        {},
+        {}
       );
 
       expect(readProjectConfiguration(tree, 'proj').targets.build).toEqual({
@@ -188,7 +188,7 @@ describe('replaceProjectConfigurationsWithPlugin', () => {
         new Map([['proj', 'proj']]),
         'plugin-path',
         createNodes,
-        {},
+        {}
       );
 
       expect(readProjectConfiguration(tree, 'proj').targets.build).toEqual({
@@ -222,7 +222,7 @@ describe('replaceProjectConfigurationsWithPlugin', () => {
         new Map([['proj', 'proj']]),
         'plugin-path',
         createNodes,
-        {},
+        {}
       );
 
       expect(readProjectConfiguration(tree, 'proj').targets.build).toEqual({
@@ -256,7 +256,7 @@ describe('replaceProjectConfigurationsWithPlugin', () => {
         new Map([['proj', 'proj']]),
         'plugin-path',
         createNodes,
-        {},
+        {}
       );
 
       expect(readProjectConfiguration(tree, 'proj').targets.build).toEqual({
@@ -287,7 +287,7 @@ describe('replaceProjectConfigurationsWithPlugin', () => {
         new Map([['proj', 'proj']]),
         'plugin-path',
         createNodes,
-        {},
+        {}
       );
 
       expect(readProjectConfiguration(tree, 'proj').targets.build).toEqual({
@@ -316,11 +316,11 @@ describe('replaceProjectConfigurationsWithPlugin', () => {
         new Map([['proj', 'proj']]),
         'plugin-path',
         createNodes,
-        {},
+        {}
       );
 
       expect(
-        readProjectConfiguration(tree, 'proj').targets.build,
+        readProjectConfiguration(tree, 'proj').targets.build
       ).toBeUndefined();
     });
 
@@ -343,7 +343,7 @@ describe('replaceProjectConfigurationsWithPlugin', () => {
         new Map([['proj', 'proj']]),
         'plugin-path',
         createNodes,
-        {},
+        {}
       );
 
       expect(readProjectConfiguration(tree, 'proj').targets.build).toEqual({
@@ -370,7 +370,7 @@ describe('replaceProjectConfigurationsWithPlugin', () => {
         new Map([['proj', 'proj']]),
         'plugin-path',
         createNodes,
-        {},
+        {}
       );
 
       expect(readProjectConfiguration(tree, 'proj').targets.build).toEqual({
@@ -399,7 +399,7 @@ describe('replaceProjectConfigurationsWithPlugin', () => {
         new Map([['proj', 'proj']]),
         'plugin-path',
         createNodes,
-        {},
+        {}
       );
 
       expect(readProjectConfiguration(tree, 'proj').targets.build).toEqual({
@@ -432,7 +432,7 @@ describe('replaceProjectConfigurationsWithPlugin', () => {
         new Map([['proj', 'proj']]),
         'plugin-path',
         createNodes,
-        {},
+        {}
       );
 
       expect(readProjectConfiguration(tree, 'proj').targets.build).toEqual({

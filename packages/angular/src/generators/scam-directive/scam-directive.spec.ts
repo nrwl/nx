@@ -24,7 +24,7 @@ describe('SCAM Directive Generator', () => {
     // ASSERT
     const directiveSource = tree.read(
       'apps/app1/src/app/example.directive.ts',
-      'utf-8',
+      'utf-8'
     );
     expect(directiveSource).toMatchInlineSnapshot(`
       "import { Directive, NgModule } from '@angular/core';
@@ -68,7 +68,7 @@ describe('SCAM Directive Generator', () => {
     // ASSERT
     const directiveModuleSource = tree.read(
       'apps/app1/src/app/example.module.ts',
-      'utf-8',
+      'utf-8'
     );
     expect(directiveModuleSource).toMatchInlineSnapshot(`
       "import { NgModule } from '@angular/core';
@@ -111,7 +111,7 @@ describe('SCAM Directive Generator', () => {
     // ASSERT
     const directiveModuleSource = tree.read(
       'libs/lib1/feature/src/lib/example/example.module.ts',
-      'utf-8',
+      'utf-8'
     );
     expect(directiveModuleSource).toMatchInlineSnapshot(`
       "import { NgModule } from '@angular/core';
@@ -128,7 +128,7 @@ describe('SCAM Directive Generator', () => {
     `);
     const secondaryEntryPointSource = tree.read(
       `libs/lib1/feature/src/index.ts`,
-      'utf-8',
+      'utf-8'
     );
     expect(secondaryEntryPointSource).toMatchInlineSnapshot(`
       "export * from './lib/example/example.directive';
@@ -159,7 +159,7 @@ describe('SCAM Directive Generator', () => {
       // ASSERT
       const directiveSource = tree.read(
         'apps/app1/src/app/random/example/example.directive.ts',
-        'utf-8',
+        'utf-8'
       );
       expect(directiveSource).toMatchInlineSnapshot(`
         "import { Directive, NgModule } from '@angular/core';
@@ -204,7 +204,7 @@ describe('SCAM Directive Generator', () => {
       // ASSERT
       const directiveSource = tree.read(
         'apps/app1/src/app/random/example/example.directive.ts',
-        'utf-8',
+        'utf-8'
       );
       expect(directiveSource).toMatchInlineSnapshot(`
         "import { Directive, NgModule } from '@angular/core';
@@ -245,9 +245,9 @@ describe('SCAM Directive Generator', () => {
           inlineScam: true,
           flat: false,
           skipFormat: true,
-        }),
+        })
       ).rejects.toThrowErrorMatchingInlineSnapshot(
-        `"The provided directory "libs/proj/src/lib/random" is not under the provided project root "apps/app1". Please provide a directory that is under the provided project root or use the "as-provided" format and only provide the directory."`,
+        `"The provided directory "libs/proj/src/lib/random" is not under the provided project root "apps/app1". Please provide a directory that is under the provided project root or use the "as-provided" format and only provide the directory."`
       );
     });
   });

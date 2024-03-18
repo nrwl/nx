@@ -36,6 +36,6 @@ export function addV2ErrorBoundary(tree: Tree, options: ErrorBoundarySchema) {
             return <h1>Unknown Error</h1>;
         }
     }
-  `,
+  `
   );
 }

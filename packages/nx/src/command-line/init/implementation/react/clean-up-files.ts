@@ -15,7 +15,7 @@ export function cleanUpFiles(appName: string, isStandalone: boolean) {
     if (json['$schema']) {
       json['$schema'] = json['$schema'].replace(
         '../../node_modules',
-        'node_modules',
+        'node_modules'
       );
     }
   }

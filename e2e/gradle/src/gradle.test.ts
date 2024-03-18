@@ -36,7 +36,7 @@ describe('Gradle', () => {
     checkFilesExist(
       `app/build/libs/app.jar`,
       `list/build/libs/list.jar`,
-      `utilities/build/libs/utilities.jar`,
+      `utilities/build/libs/utilities.jar`
     );
   });
 
@@ -51,7 +51,7 @@ describe('Gradle', () => {
     dependencies {
         implementation(project(":app"))
     }
-      `,
+      `
     );
     updateFile(`settings.gradle.kts`, (content) => {
       content += `\r\ninclude("app2")`;
@@ -69,8 +69,8 @@ function createGradleProject(projectName: string) {
   e2eConsoleLogger(execSync(`gradle help --task :init`).toString());
   e2eConsoleLogger(
     runCommand(
-      `gradle init --type kotlin-application --dsl kotlin --project-name ${projectName} --package gradleProject --no-incubating --split-project`,
-    ),
+      `gradle init --type kotlin-application --dsl kotlin --project-name ${projectName} --package gradleProject --no-incubating --split-project`
+    )
   );
   updateJson('nx.json', (nxJson) => {
     nxJson.plugins = ['@nx/gradle'];
@@ -82,6 +82,6 @@ function createGradleProject(projectName: string) {
       apply {
           plugin("project-report")
       }
-    }`,
+    }`
   );
 }

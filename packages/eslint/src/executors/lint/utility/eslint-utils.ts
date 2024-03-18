@@ -2,7 +2,7 @@ import type { ESLint } from 'eslint';
 import type { Schema } from '../schema';
 
 async function resolveESLintClass(
-  useFlatConfig = false,
+  useFlatConfig = false
 ): Promise<typeof ESLint> {
   try {
     if (!useFlatConfig) {
@@ -19,7 +19,7 @@ async function resolveESLintClass(
 export async function resolveAndInstantiateESLint(
   eslintConfigPath: string | undefined,
   options: Schema,
-  useFlatConfig = false,
+  useFlatConfig = false
 ) {
   if (
     useFlatConfig &&
@@ -27,7 +27,7 @@ export async function resolveAndInstantiateESLint(
     !eslintConfigPath?.endsWith('eslint.config.js')
   ) {
     throw new Error(
-      'When using the new Flat Config with ESLint, all configs must be named eslint.config.js and .eslintrc files may not be used. See https://eslint.org/docs/latest/use/configure/configuration-files-new',
+      'When using the new Flat Config with ESLint, all configs must be named eslint.config.js and .eslintrc files may not be used. See https://eslint.org/docs/latest/use/configure/configuration-files-new'
     );
   }
   const ESLint = await resolveESLintClass(useFlatConfig);
@@ -54,22 +54,22 @@ export async function resolveAndInstantiateESLint(
   if (useFlatConfig) {
     if (typeof options.useEslintrc !== 'undefined') {
       throw new Error(
-        'For Flat Config, the `useEslintrc` option is not applicable. See https://eslint.org/docs/latest/use/configure/configuration-files-new',
+        'For Flat Config, the `useEslintrc` option is not applicable. See https://eslint.org/docs/latest/use/configure/configuration-files-new'
       );
     }
     if (options.resolvePluginsRelativeTo !== undefined) {
       throw new Error(
-        'For Flat Config, ESLint removed `resolvePluginsRelativeTo` and so it is not supported as an option. See https://eslint.org/docs/latest/use/configure/configuration-files-new',
+        'For Flat Config, ESLint removed `resolvePluginsRelativeTo` and so it is not supported as an option. See https://eslint.org/docs/latest/use/configure/configuration-files-new'
       );
     }
     if (options.ignorePath !== undefined) {
       throw new Error(
-        'For Flat Config, ESLint removed `ignorePath` and so it is not supported as an option. See https://eslint.org/docs/latest/use/configure/configuration-files-new',
+        'For Flat Config, ESLint removed `ignorePath` and so it is not supported as an option. See https://eslint.org/docs/latest/use/configure/configuration-files-new'
       );
     }
     if (options.reportUnusedDisableDirectives) {
       throw new Error(
-        'For Flat Config, ESLint removed `reportedUnusedDisableDirectives` and so it is not supported as an option. See https://eslint.org/docs/latest/use/configure/configuration-files-new',
+        'For Flat Config, ESLint removed `reportedUnusedDisableDirectives` and so it is not supported as an option. See https://eslint.org/docs/latest/use/configure/configuration-files-new'
       );
     }
   } else {

@@ -30,7 +30,7 @@ import { NgPackagrOptions } from '../options.di';
 
 export const compileNgcTransformFactory = (
   StylesheetProcessor: typeof StylesheetProcessorClass,
-  options: NgPackagrOptions,
+  options: NgPackagrOptions
 ): Transform => {
   return transformFromPromise(async (graph) => {
     const spinner = ora({
@@ -47,7 +47,7 @@ export const compileNgcTransformFactory = (
       // Add paths mappings for dependencies
       const tsConfig = setDependenciesTsConfigPaths(
         entryPoint.data.tsConfig,
-        entryPoints,
+        entryPoints
       );
 
       const angularVersion = getInstalledAngularVersionInfo();
@@ -65,7 +65,7 @@ export const compileNgcTransformFactory = (
       spinner.start(
         `Compiling with Angular sources in Ivy ${
           tsConfig.options.compilationMode || 'full'
-        } compilation mode.`,
+        } compilation mode.`
       );
       let ngccProcessor: any;
       if (angularVersion && angularVersion.major < 16) {
@@ -75,7 +75,7 @@ export const compileNgcTransformFactory = (
             (entryPoint.cache as any).ngccProcessingCache,
             tsConfig.project,
             tsConfig.options,
-            entryPoints,
+            entryPoints
           );
         if (!entryPoint.data.entryPoint.isSecondaryEntryPoint) {
           // Only run the async version of NGCC during the primary entrypoint processing.
@@ -89,7 +89,7 @@ export const compileNgcTransformFactory = (
         cssUrl,
         styleIncludePaths,
         options.cacheEnabled && options.cacheDirectory,
-        options.tailwindConfig,
+        options.tailwindConfig
       ) as any;
 
       await compileSourceFiles(
@@ -107,7 +107,7 @@ export const compileNgcTransformFactory = (
               : ts.ScriptTarget.ES2020,
         },
         entryPoint.cache.stylesheetProcessor as any,
-        ngccProcessor,
+        ngccProcessor
       );
     } catch (error) {
       spinner.fail();

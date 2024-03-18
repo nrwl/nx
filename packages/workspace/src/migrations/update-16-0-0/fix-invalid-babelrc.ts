@@ -28,7 +28,7 @@ export default function update(tree: Tree) {
       // Account for rescope migration running before or after this one.
       Array.isArray(p)
         ? p[0] === '@nrwl/web/babel' || p[0] === '@nx/web/babel'
-        : p === '@nrwl/web/babel' || p === '@nx/web/babel',
+        : p === '@nrwl/web/babel' || p === '@nx/web/babel'
     );
 
     if (nrwlWebBabelPresetIdx === undefined || nrwlWebBabelPresetIdx === -1) {

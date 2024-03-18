@@ -16,7 +16,7 @@ expect.addSnapshotSerializer({
         .replaceAll(/my-pkg-\d+/g, '{project-name}')
         .replaceAll(
           /integrity:\s*.*/g,
-          'integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX',
+          'integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
         )
         .replaceAll(/\b[0-9a-f]{40}\b/g, '{SHASUM}')
         .replaceAll(/\d*B  index\.js/g, 'XXB  index.js')
@@ -91,16 +91,16 @@ describe('nx release git operations', () => {
 
     expect(
       releaseOutput1.match(
-        new RegExp('NX   Staging changed files with git', 'g'),
-      ).length,
+        new RegExp('NX   Staging changed files with git', 'g')
+      ).length
     ).toEqual(2);
     expect(
       releaseOutput1.match(new RegExp('NX   Committing changes with git', 'g'))
-        .length,
+        .length
     ).toEqual(1);
     expect(
       releaseOutput1.match(new RegExp('NX   Tagging commit with git', 'g'))
-        .length,
+        .length
     ).toEqual(1);
   });
 
@@ -132,9 +132,9 @@ describe('nx release git operations', () => {
       releaseOutput1.match(
         new RegExp(
           `The "release" top level command cannot be used with granular git configuration. Instead, configure git options in the "release.git" property in nx.json, or use the version, changelog, and publish subcommands or programmatic API directly.`,
-          'g',
-        ),
-      ).length,
+          'g'
+        )
+      ).length
     ).toEqual(1);
   });
 
@@ -155,32 +155,32 @@ describe('nx release git operations', () => {
       `release version patch --first-release -d`,
       {
         silenceError: true,
-      },
+      }
     );
 
     expect(
       releaseVersionOutput.match(
         new RegExp(
           `The "release.git" property in nx.json may not be used with the "nx release version" subcommand or programmatic API. Instead, configure git options for subcommands directly with "release.version.git" and "release.changelog.git".`,
-          'g',
-        ),
-      ).length,
+          'g'
+        )
+      ).length
     ).toEqual(1);
 
     const releaseChangelogOutput = runCLI(
       `release changelog 1.0.0 --first-release -d`,
       {
         silenceError: true,
-      },
+      }
     );
 
     expect(
       releaseChangelogOutput.match(
         new RegExp(
           `The "release.git" property in nx.json may not be used with the "nx release changelog" subcommand or programmatic API. Instead, configure git options for subcommands directly with "release.version.git" and "release.changelog.git".`,
-          'g',
-        ),
-      ).length,
+          'g'
+        )
+      ).length
     ).toEqual(1);
   });
 
@@ -201,14 +201,14 @@ describe('nx release git operations', () => {
 
     expect(
       releaseOutput1.match(
-        new RegExp('NX   Staging changed files with git', 'g'),
-      ).length,
+        new RegExp('NX   Staging changed files with git', 'g')
+      ).length
     ).toEqual(2);
     expect(
-      releaseOutput1.match(new RegExp('NX   Committing changes with git', 'g')),
+      releaseOutput1.match(new RegExp('NX   Committing changes with git', 'g'))
     ).toBeNull();
     expect(
-      releaseOutput1.match(new RegExp('NX   Tagging commit with git', 'g')),
+      releaseOutput1.match(new RegExp('NX   Tagging commit with git', 'g'))
     ).toBeNull();
   });
 
@@ -228,14 +228,14 @@ describe('nx release git operations', () => {
 
     expect(
       releaseOutput1.match(
-        new RegExp('NX   Staging changed files with git', 'g'),
-      ),
+        new RegExp('NX   Staging changed files with git', 'g')
+      )
     ).toBeNull();
     expect(
-      releaseOutput1.match(new RegExp('NX   Committing changes with git', 'g')),
+      releaseOutput1.match(new RegExp('NX   Committing changes with git', 'g'))
     ).toBeNull();
     expect(
-      releaseOutput1.match(new RegExp('NX   Tagging commit with git', 'g')),
+      releaseOutput1.match(new RegExp('NX   Tagging commit with git', 'g'))
     ).toBeNull();
   });
 });

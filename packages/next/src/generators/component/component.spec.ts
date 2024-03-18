@@ -38,7 +38,7 @@ describe('component', () => {
     expect(tree.exists('my-app/components/hello/hello.tsx')).toBeTruthy();
     expect(tree.exists('my-app/components/hello/hello.spec.tsx')).toBeTruthy();
     expect(
-      tree.exists('my-app/components/hello/hello.module.css'),
+      tree.exists('my-app/components/hello/hello.module.css')
     ).toBeTruthy();
   });
 

@@ -54,7 +54,7 @@ describe('lint-checks generator', () => {
     const projectConfig = readProjectConfiguration(tree, 'plugin');
     const eslintConfig: ESLint.Config = readJson(
       tree,
-      `${projectConfig.root}/.eslintrc.json`,
+      `${projectConfig.root}/.eslintrc.json`
     );
 
     expect(eslintConfig.overrides).toContainEqual(
@@ -67,7 +67,7 @@ describe('lint-checks generator', () => {
         rules: {
           '@nx/nx-plugin-checks': 'error',
         },
-      }),
+      })
     );
   });
 
@@ -77,11 +77,11 @@ describe('lint-checks generator', () => {
     const projectConfig = readProjectConfiguration(tree, 'plugin');
     const eslintConfig: ESLint.Config = readJson(
       tree,
-      `${projectConfig.root}/.eslintrc.json`,
+      `${projectConfig.root}/.eslintrc.json`
     );
 
     expect(
-      eslintConfig.overrides.find((x) => '@nx/nx-plugin-checks' in x.rules),
+      eslintConfig.overrides.find((x) => '@nx/nx-plugin-checks' in x.rules)
     ).toMatchInlineSnapshot(`
       {
         "files": [
@@ -109,18 +109,18 @@ describe('lint-checks generator', () => {
         delete json.executors;
         json['ng-update'] = './migrations.json';
         return json;
-      },
+      }
     );
     writeJson(
       tree,
       joinPathFragments(startingProjectConfig.root, 'migrations.json'),
-      {},
+      {}
     );
     await generator(tree, { projectName: 'plugin' });
     const projectConfig = readProjectConfiguration(tree, 'plugin');
     const eslintConfig: ESLint.Config = readJson(
       tree,
-      `${projectConfig.root}/.eslintrc.json`,
+      `${projectConfig.root}/.eslintrc.json`
     );
 
     expect(eslintConfig.overrides).toMatchInlineSnapshot(`

@@ -17,7 +17,7 @@ describe('update-16-2-0-remove-package', () => {
     await removePackage(tree);
 
     expect(
-      readJson(tree, 'package.json').devDependencies['react-test-renderer'],
+      readJson(tree, 'package.json').devDependencies['react-test-renderer']
     ).not.toBeDefined();
   });
 });

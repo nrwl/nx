@@ -21,7 +21,7 @@ describe('remove-render-module-platform-server-exports migration', () => {
         `
           import { Path, join } from '@angular-devkit/core';
           export { renderModule } from '@angular/platform-server';
-        `,
+        `
       );
 
       await migration(tree);
@@ -29,7 +29,7 @@ describe('remove-render-module-platform-server-exports migration', () => {
       const content = tree.read(testTypeScriptFilePath, 'utf-8');
       expect(content).not.toContain('@angular/platform-server');
       expect(content).toContain(
-        `import { Path, join } from '@angular-devkit/core';`,
+        `import { Path, join } from '@angular-devkit/core';`
       );
     });
 
@@ -39,7 +39,7 @@ describe('remove-render-module-platform-server-exports migration', () => {
         `
           import { Path, join } from '@angular-devkit/core';
           export { renderModule, ServerModule } from '@angular/platform-server';
-        `,
+        `
       );
 
       await migration(tree);
@@ -47,10 +47,10 @@ describe('remove-render-module-platform-server-exports migration', () => {
       const content = tree.read(testTypeScriptFilePath, 'utf-8');
 
       expect(content).toContain(
-        `import { Path, join } from '@angular-devkit/core';`,
+        `import { Path, join } from '@angular-devkit/core';`
       );
       expect(content).toContain(
-        `export { ServerModule } from '@angular/platform-server';`,
+        `export { ServerModule } from '@angular/platform-server';`
       );
     });
 
@@ -59,14 +59,14 @@ describe('remove-render-module-platform-server-exports migration', () => {
         testTypeScriptFilePath,
         `
           export { renderModule } from '@angular/core';
-        `,
+        `
       );
 
       await migration(tree);
 
       const content = tree.read(testTypeScriptFilePath, 'utf-8');
       expect(content).toContain(
-        `export { renderModule } from '@angular/core';`,
+        `export { renderModule } from '@angular/core';`
       );
     });
 
@@ -75,14 +75,14 @@ describe('remove-render-module-platform-server-exports migration', () => {
         testTypeScriptFilePath,
         `
           import { renderModule } from '@angular/platform-server';
-        `,
+        `
       );
 
       await migration(tree);
 
       const content = tree.read(testTypeScriptFilePath, 'utf-8');
       expect(content).toContain(
-        `import { renderModule } from '@angular/platform-server'`,
+        `import { renderModule } from '@angular/platform-server'`
       );
     });
   });

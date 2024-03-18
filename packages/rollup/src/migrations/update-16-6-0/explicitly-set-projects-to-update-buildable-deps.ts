@@ -13,14 +13,14 @@ export default async function (tree: Tree) {
   const projectGraph = await createProjectGraphAsync();
 
   for (const [projectName, { data: projectData }] of Object.entries(
-    projectGraph.nodes,
+    projectGraph.nodes
   )) {
     if (projectData.projectType !== 'library') {
       continue;
     }
 
     for (const [targetName, target] of Object.entries(
-      projectData.targets || {},
+      projectData.targets || {}
     )) {
       if (!executors.has(target.executor)) {
         continue;

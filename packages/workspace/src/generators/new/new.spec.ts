@@ -46,7 +46,7 @@ describe('new', () => {
     getNpmPackageVersionSpy = jest
       .spyOn(getNpmPackageVersion, 'getNpmPackageVersion')
       .mockImplementation(
-        (name, version) => version ?? DEFAULT_PACKAGE_VERSION,
+        (name, version) => version ?? DEFAULT_PACKAGE_VERSION
       );
   });
 
@@ -166,7 +166,7 @@ describe('new', () => {
 
       const { devDependencies, dependencies } = readJson(
         tree,
-        'my-workspace/package.json',
+        'my-workspace/package.json'
       );
       expect(dependencies).toStrictEqual({ '@nx/angular': nxVersion });
       expect(devDependencies).toStrictEqual({
@@ -220,7 +220,7 @@ describe('new', () => {
 
           const { devDependencies, dependencies } = readJson(
             tree,
-            'my-workspace/package.json',
+            'my-workspace/package.json'
           );
           expect(dependencies).toStrictEqual({
             '3rd-party-package': expectedVersion,
@@ -229,7 +229,7 @@ describe('new', () => {
             '@nx/workspace': nxVersion,
             nx: nxVersion,
           });
-        },
+        }
       );
     });
   });

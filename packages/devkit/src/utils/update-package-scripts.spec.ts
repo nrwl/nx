@@ -80,7 +80,7 @@ describe('updatePackageScripts', () => {
 
       const { scripts } = readJson<PackageJson>(tree, 'app1/package.json');
       expect(scripts.build).toBe(expected);
-    },
+    }
   );
 
   test.each`
@@ -115,7 +115,7 @@ describe('updatePackageScripts', () => {
 
       const { scripts } = readJson<PackageJson>(tree, 'app1/package.json');
       expect(scripts.e2e).toBe(expected);
-    },
+    }
   );
 
   it('should handle scripts with name different than the target name', async () => {
@@ -174,7 +174,7 @@ describe('updatePackageScripts', () => {
     const { scripts } = readJson<PackageJson>(tree, 'app1/package.json');
     expect(scripts.dev).toBe('PORT=4000 nx dev --experimental-https');
     expect(scripts.start).toBe(
-      'nx build && PORT=4000 nx start --experimental-https',
+      'nx build && PORT=4000 nx start --experimental-https'
     );
   });
 
@@ -202,7 +202,7 @@ describe('updatePackageScripts', () => {
 
     const { scripts } = readJson<PackageJson>(tree, 'app1/package.json');
     expect(scripts.typecheck).toBe(
-      'nx build -p tsconfig.lib.json && nx build -p tsconfig.spec.json',
+      'nx build -p tsconfig.lib.json && nx build -p tsconfig.spec.json'
     );
   });
 
@@ -231,7 +231,7 @@ describe('updatePackageScripts', () => {
 
     const { scripts } = readJson<PackageJson>(tree, 'app1/package.json');
     expect(scripts.typecheck).toBe(
-      'echo "Typechecking..." && nx build -p tsconfig.lib.json && nx build -p tsconfig.spec.json && echo "Done"',
+      'echo "Typechecking..." && nx build -p tsconfig.lib.json && nx build -p tsconfig.spec.json && echo "Done"'
     );
   });
 

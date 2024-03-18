@@ -21,7 +21,7 @@ export default async function (tree: Tree) {
   const angularMajorVersion = getInstalledAngularMajorVersion(tree);
   const angularDevkitVersion = getPkgVersionForAngularMajorVersion(
     'angularDevkitVersion',
-    angularMajorVersion,
+    angularMajorVersion
   );
 
   const angularCliVersion =
@@ -31,7 +31,7 @@ export default async function (tree: Tree) {
 
   const filteredPackages: Record<string, string> = packagesToInstall
     .filter(
-      (pkg) => !pkgJson.devDependencies?.[pkg] && !pkgJson.dependencies?.[pkg],
+      (pkg) => !pkgJson.devDependencies?.[pkg] && !pkgJson.dependencies?.[pkg]
     )
     .reduce((allPkgs, pkg) => ({ ...allPkgs, [pkg]: angularCliVersion }), {});
   // even though we are going to install the packages directly, we still want

@@ -31,7 +31,7 @@ describe('update-libraries-secondary-entrypoints migration', () => {
       await updateLibrariesSecondaryEntrypoints(tree);
 
       expect(tree.exists('libs/lib1/package.json')).toBe(true);
-    },
+    }
   );
 
   it.each(libraryExecutors)(
@@ -50,7 +50,7 @@ describe('update-libraries-secondary-entrypoints migration', () => {
       await updateLibrariesSecondaryEntrypoints(tree);
 
       expect(tree.exists('libs/lib1/secondary/package.json')).toBe(false);
-    },
+    }
   );
 
   it.each(libraryExecutors)(
@@ -69,11 +69,11 @@ describe('update-libraries-secondary-entrypoints migration', () => {
       await updateLibrariesSecondaryEntrypoints(tree);
 
       expect(
-        readJson(tree, 'libs/lib1/secondary/ng-package.json'),
+        readJson(tree, 'libs/lib1/secondary/ng-package.json')
       ).toStrictEqual({
         lib: { entryFile: 'src/index.ts' },
       });
-    },
+    }
   );
 
   it('should do nothing when not using any of the relevant executors', async () => {

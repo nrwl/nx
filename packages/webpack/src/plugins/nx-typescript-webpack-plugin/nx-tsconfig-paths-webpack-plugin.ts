@@ -7,11 +7,11 @@ export class NxTsconfigPathsWebpackPlugin {
   constructor(
     private options: {
       tsConfig: string;
-    },
+    }
   ) {
     if (!this.options.tsConfig)
       throw new Error(
-        `Missing "tsConfig" option. Set this option in your Nx webpack plugin.`,
+        `Missing "tsConfig" option. Set this option in your Nx webpack plugin.`
       );
   }
 
@@ -31,7 +31,7 @@ export class NxTsconfigPathsWebpackPlugin {
           : this.options.tsConfig,
         extensions: Array.from(extensions),
         mainFields: ['module', 'main'],
-      }),
+      })
     );
   }
 }

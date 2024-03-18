@@ -18,7 +18,7 @@ export function updatePackageJson(tree: Tree, schema: NormalizedSchema) {
 
   const packageJsonPath = path.join(
     schema.relativeToRootDestination,
-    'package.json',
+    'package.json'
   );
 
   if (!tree.exists(packageJsonPath)) {

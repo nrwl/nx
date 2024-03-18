@@ -30,7 +30,7 @@ const schemaDefaults = {
 
 function normalizeOptions(
   tree: Tree,
-  options: JestProjectSchema,
+  options: JestProjectSchema
 ): NormalizedJestProjectSchema {
   if (!options.testEnvironment) {
     options.testEnvironment = 'jsdom';
@@ -78,7 +78,7 @@ export function configurationGenerator(tree: Tree, schema: JestProjectSchema) {
 
 export async function configurationGeneratorInternal(
   tree: Tree,
-  schema: JestProjectSchema,
+  schema: JestProjectSchema
 ): Promise<GeneratorCallback> {
   const options = normalizeOptions(tree, schema);
 

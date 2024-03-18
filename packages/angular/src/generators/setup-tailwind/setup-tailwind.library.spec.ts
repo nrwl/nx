@@ -24,7 +24,7 @@ describe('setupTailwind generator', () => {
 
   it('should fail when the project does not exist', async () => {
     await expect(
-      setupTailwindGenerator(tree, { project: 'not-found' }),
+      setupTailwindGenerator(tree, { project: 'not-found' })
     ).rejects.toThrow();
   });
 
@@ -43,22 +43,22 @@ describe('setupTailwind generator', () => {
     it('should throw when tailwind is installed as a dependency with a version lower than 2.0.0', async () => {
       tree.write(
         'package.json',
-        JSON.stringify({ dependencies: { tailwindcss: '^1.99.99' } }),
+        JSON.stringify({ dependencies: { tailwindcss: '^1.99.99' } })
       );
 
       await expect(setupTailwindGenerator(tree, { project })).rejects.toThrow(
-        `Tailwind CSS version "^1.99.99" is not supported. Please upgrade to v2.0.0 or higher.`,
+        `Tailwind CSS version "^1.99.99" is not supported. Please upgrade to v2.0.0 or higher.`
       );
     });
 
     it('should throw when tailwind is installed as a devDependency with a version lower than 2.0.0', async () => {
       tree.write(
         'package.json',
-        JSON.stringify({ devDependencies: { tailwindcss: '^1.99.99' } }),
+        JSON.stringify({ devDependencies: { tailwindcss: '^1.99.99' } })
       );
 
       await expect(setupTailwindGenerator(tree, { project })).rejects.toThrow(
-        `Tailwind CSS version "^1.99.99" is not supported. Please upgrade to v2.0.0 or higher.`,
+        `Tailwind CSS version "^1.99.99" is not supported. Please upgrade to v2.0.0 or higher.`
       );
     });
 
@@ -66,21 +66,21 @@ describe('setupTailwind generator', () => {
       await expect(setupTailwindGenerator(tree, { project })).rejects.toThrow(
         expect.objectContaining({
           message: expect.stringContaining(
-            `The target "build" was not found for project "${project}".`,
+            `The target "build" was not found for project "${project}".`
           ),
-        }),
+        })
       );
     });
 
     it('should throw when the specified build target is not found', async () => {
       await expect(
-        setupTailwindGenerator(tree, { project, buildTarget: 'custom-build' }),
+        setupTailwindGenerator(tree, { project, buildTarget: 'custom-build' })
       ).rejects.toThrow(
         expect.objectContaining({
           message: expect.stringContaining(
-            `The target "custom-build" was not found for project "${project}".`,
+            `The target "custom-build" was not found for project "${project}".`
           ),
-        }),
+        })
       );
     });
 
@@ -97,9 +97,9 @@ describe('setupTailwind generator', () => {
       await expect(setupTailwindGenerator(tree, { project })).rejects.toThrow(
         expect.objectContaining({
           message: expect.stringContaining(
-            `The build target for project "${project}" is using an unsupported executor "@angular/build-angular:browser".`,
+            `The build target for project "${project}" is using an unsupported executor "@angular/build-angular:browser".`
           ),
-        }),
+        })
       );
     });
 
@@ -118,9 +118,9 @@ describe('setupTailwind generator', () => {
       await expect(setupTailwindGenerator(tree, { project })).rejects.toThrow(
         expect.objectContaining({
           message: expect.stringContaining(
-            `The "${tailwindConfig}" file is already configured for the project "${project}". Are you sure this is the right project to set up Tailwind?`,
+            `The "${tailwindConfig}" file is already configured for the project "${project}". Are you sure this is the right project to set up Tailwind?`
           ),
-        }),
+        })
       );
     });
 
@@ -135,7 +135,7 @@ describe('setupTailwind generator', () => {
 
       projectConfig = readProjectConfiguration(tree, project);
       expect(projectConfig.targets.build.options.tailwindConfig).toBe(
-        `libs/${project}/tailwind.config.js`,
+        `libs/${project}/tailwind.config.js`
       );
     });
 
@@ -155,7 +155,7 @@ describe('setupTailwind generator', () => {
 
       projectConfig = readProjectConfiguration(tree, project);
       expect(projectConfig.targets[buildTarget].options.tailwindConfig).toBe(
-        `libs/${project}/tailwind.config.js`,
+        `libs/${project}/tailwind.config.js`
       );
     });
 
@@ -170,9 +170,9 @@ describe('setupTailwind generator', () => {
 
         projectConfig = readProjectConfiguration(tree, project);
         expect(projectConfig.targets.build.options.tailwindConfig).toBe(
-          `libs/${project}/tailwind.config.js`,
+          `libs/${project}/tailwind.config.js`
         );
-      },
+      }
     );
 
     it('should add required packages', async () => {
@@ -227,7 +227,7 @@ describe('setupTailwind generator', () => {
       updateProjectConfiguration(tree, project, projectConfig);
       tree.write(
         'package.json',
-        JSON.stringify({ devDependencies: { tailwindcss: '^3.0.1' } }),
+        JSON.stringify({ devDependencies: { tailwindcss: '^3.0.1' } })
       );
 
       await setupTailwindGenerator(tree, { project, skipFormat: true });
@@ -260,7 +260,7 @@ describe('setupTailwind generator', () => {
       updateProjectConfiguration(tree, project, projectConfig);
       tree.write(
         'package.json',
-        JSON.stringify({ devDependencies: { tailwindcss: '~2.0.0' } }),
+        JSON.stringify({ devDependencies: { tailwindcss: '~2.0.0' } })
       );
 
       await setupTailwindGenerator(tree, { project, skipFormat: true });

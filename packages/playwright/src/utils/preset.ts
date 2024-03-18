@@ -35,7 +35,7 @@ export interface NxPlaywrightOptions {
  */
 export function nxE2EPreset(
   pathToConfig: string,
-  options?: NxPlaywrightOptions,
+  options?: NxPlaywrightOptions
 ) {
   const normalizedPath = lstatSync(pathToConfig).isDirectory()
     ? pathToConfig
@@ -48,14 +48,14 @@ export function nxE2EPreset(
     'dist',
     '.playwright',
     projectPath,
-    'test-output',
+    'test-output'
   );
   const reporterOutputDir = join(
     offset,
     'dist',
     '.playwright',
     projectPath,
-    'playwright-report',
+    'playwright-report'
   );
 
   return defineConfig({

@@ -46,9 +46,9 @@ The configuration lives in your `nx.json` file under the `"release"` section.
   "release": {
     // For example, configures nx release to target all projects
     // except the one called "ignore-me"
-    "projects": ["*", "!ignore-me"],
+    "projects": ["*", "!ignore-me"]
     // ... nx release config
-  },
+  }
 }
 ```
 

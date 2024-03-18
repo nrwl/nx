@@ -23,10 +23,10 @@ describe('Webpack Plugin (legacy)', () => {
       unsetProjectNameAndRootFormat: false,
     });
     runCLI(
-      `generate @nx/react:app ${appName} --bundler webpack --e2eTestRunner=cypress --rootProject --no-interactive`,
+      `generate @nx/react:app ${appName} --bundler webpack --e2eTestRunner=cypress --rootProject --no-interactive`
     );
     runCLI(
-      `generate @nx/react:lib ${libName} --unitTestRunner jest --no-interactive`,
+      `generate @nx/react:lib ${libName} --unitTestRunner jest --no-interactive`
     );
   });
 
@@ -56,7 +56,7 @@ describe('Webpack Plugin (legacy)', () => {
         `serve-static ${appName} --port=${port}`,
         (output) => {
           return output.includes(`http://localhost:${port}`);
-        },
+        }
       );
     } catch (err) {
       console.error(err);
@@ -87,7 +87,7 @@ describe('Webpack Plugin (legacy)', () => {
             }
           };
         });
-      `,
+      `
     );
 
     expect(() => {

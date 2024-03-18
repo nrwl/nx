@@ -130,7 +130,7 @@ describe('Dependency checks (eslint)', () => {
           createFile(`libs/liba/src/main.ts`, ['npm:external1']),
           createFile(`libs/liba/package.json`, ['npm:external1']),
         ],
-      },
+      }
     );
     expect(failures.length).toEqual(0);
   });
@@ -154,7 +154,7 @@ describe('Dependency checks (eslint)', () => {
           },
         },
         null,
-        2,
+        2
       ),
       './nx.json': JSON.stringify({
         targetDefaults: {
@@ -198,7 +198,7 @@ describe('Dependency checks (eslint)', () => {
           createFile(`libs/liba/src/main.spec.ts`, ['npm:external1']),
           createFile(`libs/liba/package.json`, []),
         ],
-      },
+      }
     );
     expect(failures.length).toEqual(0);
   });
@@ -222,7 +222,7 @@ describe('Dependency checks (eslint)', () => {
           },
         },
         null,
-        2,
+        2
       ),
       './nx.json': JSON.stringify({
         targetDefaults: {
@@ -267,7 +267,7 @@ describe('Dependency checks (eslint)', () => {
           createFile(`libs/liba/vite.config.ts`, ['npm:external1']),
           createFile(`libs/liba/package.json`, []),
         ],
-      },
+      }
     );
     expect(failures.length).toEqual(0);
   });
@@ -311,7 +311,7 @@ describe('Dependency checks (eslint)', () => {
           createFile(`libs/liba/src/main.ts`, ['npm:external1']),
           createFile(`libs/liba/package.json`),
         ],
-      },
+      }
     );
     expect(failures.length).toEqual(1);
     expect(failures[0].message).toMatchInlineSnapshot(`
@@ -374,7 +374,7 @@ describe('Dependency checks (eslint)', () => {
           createFile(`libs/liba/src/main.ts`, ['npm:external1']),
           createFile(`libs/liba/package.json`),
         ],
-      },
+      }
     );
     expect(failures.length).toEqual(0);
   });
@@ -418,7 +418,7 @@ describe('Dependency checks (eslint)', () => {
           createFile(`libs/liba/src/main.ts`, ['npm:external1']),
           createFile(`libs/liba/package.json`),
         ],
-      },
+      }
     );
     expect(failures.length).toEqual(0);
   });
@@ -460,7 +460,7 @@ describe('Dependency checks (eslint)', () => {
           createFile(`libs/liba/src/main.ts`),
           createFile(`libs/liba/package.json`),
         ],
-      },
+      }
     );
     expect(failures.length).toEqual(0);
   });
@@ -513,7 +513,7 @@ describe('Dependency checks (eslint)', () => {
           ]),
           createFile(`libs/liba/package.json`, ['npm:external1']),
         ],
-      },
+      }
     );
     expect(failures.length).toEqual(1);
     expect(failures[0].message).toMatchInlineSnapshot(`
@@ -576,7 +576,7 @@ describe('Dependency checks (eslint)', () => {
       },
       {
         liba: [createFile(`libs/liba/src/main.ts`, ['npm:external1'])],
-      },
+      }
     );
     expect(failures.length).toEqual(1);
 
@@ -635,7 +635,7 @@ describe('Dependency checks (eslint)', () => {
       },
       {
         liba: [createFile(`libs/liba/src/main.ts`, ['npm:random-external'])],
-      },
+      }
     );
     expect(failures.length).toEqual(1);
 
@@ -706,7 +706,7 @@ describe('Dependency checks (eslint)', () => {
             'npm:external2',
           ]),
         ],
-      },
+      }
     );
     expect(failures.length).toEqual(0);
   });
@@ -762,7 +762,7 @@ describe('Dependency checks (eslint)', () => {
             'npm:external2',
           ]),
         ],
-      },
+      }
     );
     expect(failures.length).toEqual(0);
   });
@@ -819,7 +819,7 @@ describe('Dependency checks (eslint)', () => {
             'npm:external2',
           ]),
         ],
-      },
+      }
     );
     expect(failures.length).toEqual(0);
   });
@@ -872,11 +872,11 @@ describe('Dependency checks (eslint)', () => {
             'npm:unneeded',
           ]),
         ],
-      },
+      }
     );
     expect(failures.length).toEqual(1);
     expect(failures[0].message).toMatchInlineSnapshot(
-      `"The "unneeded" package is not used by "liba" project."`,
+      `"The "unneeded" package is not used by "liba" project."`
     );
     expect(failures[0].line).toEqual(7);
 
@@ -951,11 +951,11 @@ describe('Dependency checks (eslint)', () => {
             'npm:unneeded',
           ]),
         ],
-      },
+      }
     );
     expect(failures.length).toEqual(1);
     expect(failures[0].message).toMatchInlineSnapshot(
-      `"The "unneeded" package is not used by "liba" project."`,
+      `"The "unneeded" package is not used by "liba" project."`
     );
     expect(failures[0].line).toEqual(5);
 
@@ -1030,11 +1030,11 @@ describe('Dependency checks (eslint)', () => {
             'npm:unneeded',
           ]),
         ],
-      },
+      }
     );
     expect(failures.length).toEqual(1);
     expect(failures[0].message).toMatchInlineSnapshot(
-      `"The "unneeded" package is not used by "liba" project."`,
+      `"The "unneeded" package is not used by "liba" project."`
     );
     expect(failures[0].line).toEqual(4);
 
@@ -1109,11 +1109,11 @@ describe('Dependency checks (eslint)', () => {
             'npm:unneeded',
           ]),
         ],
-      },
+      }
     );
     expect(failures.length).toEqual(1);
     expect(failures[0].message).toMatchInlineSnapshot(
-      `"The "unneeded" package is not used by "liba" project."`,
+      `"The "unneeded" package is not used by "liba" project."`
     );
 
     // should apply fixer
@@ -1181,7 +1181,7 @@ describe('Dependency checks (eslint)', () => {
             'npm:unneeded',
           ]),
         ],
-      },
+      }
     );
     expect(failures.length).toEqual(0);
   });
@@ -1234,7 +1234,7 @@ describe('Dependency checks (eslint)', () => {
             'npm:unneeded',
           ]),
         ],
-      },
+      }
     );
     expect(failures.length).toEqual(0);
   });
@@ -1291,15 +1291,15 @@ describe('Dependency checks (eslint)', () => {
             'npm:external2',
           ]),
         ],
-      },
+      }
     );
     expect(failures.length).toEqual(2);
     expect(failures[0].message).toMatchInlineSnapshot(
-      `"The version specifier does not contain the installed version of "external1" package: 16.1.8."`,
+      `"The version specifier does not contain the installed version of "external1" package: 16.1.8."`
     );
     expect(failures[0].line).toEqual(4);
     expect(failures[1].message).toMatchInlineSnapshot(
-      `"The version specifier does not contain the installed version of "external2" package: 5.5.6."`,
+      `"The version specifier does not contain the installed version of "external2" package: 5.5.6."`
     );
     expect(failures[1].line).toEqual(5);
 
@@ -1376,7 +1376,7 @@ describe('Dependency checks (eslint)', () => {
             'npm:external2',
           ]),
         ],
-      },
+      }
     );
     expect(failures.length).toEqual(0);
   });
@@ -1433,11 +1433,11 @@ describe('Dependency checks (eslint)', () => {
             'npm:external2',
           ]),
         ],
-      },
+      }
     );
     expect(failures.length).toEqual(1);
     expect(failures[0].message).toMatchInlineSnapshot(
-      `"The version specifier does not contain the installed version of "external2" package: 5.5.6."`,
+      `"The version specifier does not contain the installed version of "external2" package: 5.5.6."`
     );
     expect(failures[0].line).toEqual(5);
   });
@@ -1529,7 +1529,7 @@ describe('Dependency checks (eslint)', () => {
           createFile(`libs/liba/src/main.ts`, ['npm:external1']),
           createFile(`libs/liba/package.json`, ['npm:external1']),
         ],
-      },
+      }
     );
     expect(failures.length).toEqual(1);
     expect(failures[0].message).toMatchInlineSnapshot(`
@@ -1582,7 +1582,7 @@ describe('Dependency checks (eslint)', () => {
           createFile(`libs/liba/src/main.ts`, ['npm:external1']),
           createFile(`libs/liba/package.json`),
         ],
-      },
+      }
     );
     expect(failures.length).toEqual(1);
     expect(failures[0].message).toMatchInlineSnapshot(`
@@ -1644,7 +1644,7 @@ it('should require swc if @nx/js:swc executor', () => {
         createFile(`libs/liba/src/main.ts`, ['npm:external1']),
         createFile(`libs/liba/package.json`, ['npm:external1']),
       ],
-    },
+    }
   );
   expect(failures.length).toEqual(1);
   expect(failures[0].message).toMatchInlineSnapshot(`
@@ -1673,12 +1673,12 @@ function runRule(
   filePath: string,
   content: string,
   projectGraph: ProjectGraph,
-  projectFileMap: ProjectFileMap,
+  projectFileMap: ProjectFileMap
 ): Linter.LintMessage[] {
   globalThis.projectGraph = projectGraph;
   globalThis.projectFileMap = projectFileMap;
   globalThis.projectRootMappings = createProjectRootMappings(
-    projectGraph.nodes,
+    projectGraph.nodes
   );
 
   const config = {

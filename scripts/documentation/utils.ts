@@ -32,23 +32,23 @@ export function sortByBooleanFunction(a: boolean, b: boolean): number {
 
 export async function generateMarkdownFile(
   outputDirectory: string,
-  templateObject: { name: string; template: string },
+  templateObject: { name: string; template: string }
 ): Promise<void> {
   const filePath = join(outputDirectory, `${templateObject.name}.md`);
   outputFileSync(
     filePath,
-    await formatWithPrettier(filePath, stripAnsi(templateObject.template)),
+    await formatWithPrettier(filePath, stripAnsi(templateObject.template))
   );
 }
 
 export async function generateJsonFile(
   filePath: string,
-  json: unknown,
+  json: unknown
 ): Promise<void> {
   outputFileSync(
     filePath,
     await formatWithPrettier(filePath, JSON.stringify(json)),
-    { encoding: 'utf8' },
+    { encoding: 'utf8' }
   );
 }
 
@@ -63,7 +63,7 @@ function menuItemToStrings(item: MenuItem, pathPrefix = '/'): string[] {
     .map(() => '  ')
     .join('');
   const childLines = item.children.flatMap((child) =>
-    menuItemToStrings(child, pathPrefix),
+    menuItemToStrings(child, pathPrefix)
   );
   return [padding + line, ...childLines];
 }
@@ -74,7 +74,7 @@ function deduplicate<T>(array: T[]): T[] {
 
 export async function generateIndexMarkdownFile(
   filePath: string,
-  json: { id: string; menu: MenuItem[] }[],
+  json: { id: string; menu: MenuItem[] }[]
 ): Promise<void> {
   function capitalize(word: string) {
     const [firstLetter, ...rest] = word;
@@ -94,10 +94,10 @@ export async function generateIndexMarkdownFile(
           [
             `- ${capitalize(id)}`,
             ...menu.flatMap((item) =>
-              menuItemToStrings(item, idToPathPrefix[id]),
+              menuItemToStrings(item, idToPathPrefix[id])
             ),
-          ].filter((line) => line.length > 0),
-        ).join('\n') + '\n',
+          ].filter((line) => line.length > 0)
+        ).join('\n') + '\n'
     )
     .join(`\n`);
   outputFileSync(filePath, await formatWithPrettier(filePath, content), {
@@ -122,7 +122,7 @@ export async function formatWithPrettier(filePath: string, content: string) {
 
 export function formatDescription(
   description: string,
-  deprecated: boolean | string,
+  deprecated: boolean | string
 ) {
   if (!deprecated) {
     return description;
@@ -159,7 +159,7 @@ const YargsTypes = ['array', 'count', 'string', 'boolean', 'number'];
 
 export async function parseCommand(
   name: string,
-  command: any,
+  command: any
 ): Promise<ParsedCommand> {
   // It is not a function return a strip down version of the command
   if (
@@ -180,7 +180,7 @@ export async function parseCommand(
 
   // Show all the options we can get from yargs
   const builder = await command.builder(
-    importFresh('yargs')().getInternalMethods().reset(),
+    importFresh('yargs')().getInternalMethods().reset()
   );
   const builderDescriptions = builder
     .getInternalMethods()
@@ -193,15 +193,15 @@ export async function parseCommand(
   const builderOptionsChoices = builderOptions.choices;
   const builderOptionTypes = YargsTypes.reduce((acc, type) => {
     builderOptions[type].forEach(
-      (option: any) => (acc = { ...acc, [option]: type }),
+      (option: any) => (acc = { ...acc, [option]: type })
     );
     return acc;
   }, {});
   const subcommands = await Promise.all(
     Object.entries(getCommands(builder)).map(
       ([subCommandName, subCommandConfig]) =>
-        parseCommand(subCommandName, subCommandConfig),
-    ),
+        parseCommand(subCommandName, subCommandConfig)
+    )
   );
 
   return {
@@ -227,15 +227,15 @@ export async function parseCommand(
 
 export function generateOptionsMarkdown(
   command: ParsedCommand,
-  extraHeadingLevels = 0,
+  extraHeadingLevels = 0
 ): string {
   const lines: string[] = [];
   if (Array.isArray(command.options) && !!command.options.length) {
     lines.push(
       h(
         2 + extraHeadingLevels,
-        command.subcommands?.length ? 'Shared Options' : 'Options',
-      ),
+        command.subcommands?.length ? 'Shared Options' : 'Options'
+      )
     );
 
     command.options
@@ -245,8 +245,8 @@ export function generateOptionsMarkdown(
         lines.push(
           h(
             3 + extraHeadingLevels,
-            option.deprecated ? strikethrough(option.name) : option.name,
-          ),
+            option.deprecated ? strikethrough(option.name) : option.name
+          )
         );
         if (option.type !== undefined && option.type !== '') {
           lines.push(`Type: \`${option.type}\``);
@@ -259,7 +259,7 @@ export function generateOptionsMarkdown(
         }
         if (option.default !== undefined && option.default !== '') {
           lines.push(
-            `Default: \`${JSON.stringify(option.default).replace(/"/g, '')}\``,
+            `Default: \`${JSON.stringify(option.default).replace(/"/g, '')}\``
           );
         }
         lines.push(formatDescription(option.description, option.deprecated));

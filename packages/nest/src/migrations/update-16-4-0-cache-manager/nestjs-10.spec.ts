@@ -49,7 +49,7 @@ async function bootstrap() {
 }
 
 bootstrap();
-`,
+`
     );
 
     tree.write(
@@ -65,7 +65,7 @@ bootstrap();
         },
         exclude: ['jest.config.ts', 'src/**/*.spec.ts', 'src/**/*.test.ts'],
         include: ['src/**/*.ts'],
-      }),
+      })
     );
     addProject(
       tree,
@@ -81,7 +81,7 @@ bootstrap();
           },
         },
       },
-      ['npm:@nestjs/common'],
+      ['npm:@nestjs/common']
     );
 
     await updateNestJs10(tree);
@@ -93,10 +93,10 @@ bootstrap();
       }
     `);
     expect(
-      readJson(tree, 'apps/app1/tsconfig.app.json').compilerOptions.target,
+      readJson(tree, 'apps/app1/tsconfig.app.json').compilerOptions.target
     ).toEqual('es2021');
     expect(tree.read('apps/app1/main.ts', 'utf-8')).toContain(
-      "import { CacheModule } from '@nestjs/cache-manager';",
+      "import { CacheModule } from '@nestjs/cache-manager';"
     );
   });
 
@@ -113,7 +113,7 @@ import { Module, CacheModule } from '@nestjs/common';
   imports: [CacheModule.register()],
 })
 export class LibOneModule {}
-`,
+`
     );
 
     tree.write(
@@ -129,7 +129,7 @@ export class LibOneModule {}
         },
         exclude: ['jest.config.ts', 'src/**/*.spec.ts', 'src/**/*.test.ts'],
         include: ['src/**/*.ts'],
-      }),
+      })
     );
     addProject(
       tree,
@@ -138,7 +138,7 @@ export class LibOneModule {}
         root: 'libs/lib1',
         targets: {},
       },
-      ['npm:@nestjs/common'],
+      ['npm:@nestjs/common']
     );
 
     await updateNestJs10(tree);
@@ -150,10 +150,10 @@ export class LibOneModule {}
       }
     `);
     expect(
-      readJson(tree, 'libs/lib1/tsconfig.lib.json').compilerOptions.target,
+      readJson(tree, 'libs/lib1/tsconfig.lib.json').compilerOptions.target
     ).toEqual('es2021');
     expect(tree.read('libs/lib1/src/lib/lib1.module.ts', 'utf-8')).toContain(
-      "import { CacheModule } from '@nestjs/cache-manager';",
+      "import { CacheModule } from '@nestjs/cache-manager';"
     );
   });
 
@@ -163,7 +163,7 @@ export class LibOneModule {}
       `
 import { Module, CacheModule } from '@nestjs/common';
 const { Module, CacheModule } = require('@nestjs/common');
-`,
+`
     );
     const actual = updateCacheManagerImport(tree, 'main.ts');
 
@@ -184,7 +184,7 @@ const { Module, CacheModule } = require('@nestjs/common');
       `
 import { AnotherModule } from '@nestjs/common';
 const { AnotherModule } = require('@nestjs/common');
-`,
+`
     );
     const actual = updateCacheManagerImport(tree, 'main.ts');
 
@@ -200,22 +200,22 @@ const { AnotherModule } = require('@nestjs/common');
   it('should update script target', () => {
     tree.write(
       'tsconfig.json',
-      JSON.stringify({ compilerOptions: { target: 'es6' } }),
+      JSON.stringify({ compilerOptions: { target: 'es6' } })
     );
     updateTsConfigTarget(tree, 'tsconfig.json');
     expect(readJson(tree, 'tsconfig.json').compilerOptions.target).toBe(
-      'es2021',
+      'es2021'
     );
   });
 
   it('should NOT update script if over es2021', () => {
     tree.write(
       'tsconfig.json',
-      JSON.stringify({ compilerOptions: { target: 'es2022' } }),
+      JSON.stringify({ compilerOptions: { target: 'es2022' } })
     );
     updateTsConfigTarget(tree, 'tsconfig.json');
     expect(readJson(tree, 'tsconfig.json').compilerOptions.target).toBe(
-      'es2022',
+      'es2022'
     );
   });
 });
@@ -224,7 +224,7 @@ function addProject(
   tree: Tree,
   projectName: string,
   config: ProjectConfiguration,
-  dependencies: string[],
+  dependencies: string[]
 ): void {
   projectGraph = {
     dependencies: {

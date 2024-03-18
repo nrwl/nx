@@ -31,7 +31,7 @@ export function SvgAnimation({
         .then((response) => response.text())
         .then((svgContent) => {
           objectRef.current!.data = `data:image/svg+xml,${encodeURIComponent(
-            svgContent,
+            svgContent
           )}`;
         })
         .catch((error) => {

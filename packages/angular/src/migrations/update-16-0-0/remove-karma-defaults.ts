@@ -43,7 +43,7 @@ export default async function removeKarmaDefaults(tree: Tree) {
 function updateUnitTestRunner(
   generatorsConfig:
     | NxJsonConfiguration['generators']
-    | ProjectConfiguration['generators'],
+    | ProjectConfiguration['generators']
 ) {
   const generators = Object.entries(generatorsConfig);
 

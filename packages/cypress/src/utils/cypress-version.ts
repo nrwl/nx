@@ -26,7 +26,7 @@ export function assertMinimumCypressVersion(minVersion: number) {
   const version = installedCypressVersion();
   if (version && version < minVersion) {
     throw new Error(
-      `Cypress version of ${minVersion} or higher is not installed. Expected Cypress v${minVersion}+, found Cypress v${version} instead.`,
+      `Cypress version of ${minVersion} or higher is not installed. Expected Cypress v${minVersion}+, found Cypress v${version} instead.`
     );
   }
 }

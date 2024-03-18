@@ -10,7 +10,7 @@ test.describe('nx-dev: Recipes pages', () => {
     // All text content has to be different
     const distinct = new Set(relatedDocsText);
     expect(distinct.size, 'all strings are different').toBe(
-      relatedDocsText.length,
+      relatedDocsText.length
     );
   });
 });

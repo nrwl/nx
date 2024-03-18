@@ -23,7 +23,7 @@ export default async function (tree: Tree, options: RemixRouteSchema) {
 
   if (!options.skipChecks && checkRoutePathForErrors(options.path)) {
     throw new Error(
-      `Your route path has an indicator of an un-escaped dollar sign for a route param. If this was intended, include the --skipChecks flag.`,
+      `Your route path has an indicator of an un-escaped dollar sign for a route param. If this was intended, include the --skipChecks flag.`
     );
   }
 
@@ -33,7 +33,7 @@ export default async function (tree: Tree, options: RemixRouteSchema) {
       ? joinPathFragments(directory, name)
       : options.path,
     options.nameAndDirectoryFormat === 'as-provided' ? undefined : projectName,
-    '.ts',
+    '.ts'
   );
 
   if (tree.exists(routeFilePath))
@@ -41,7 +41,7 @@ export default async function (tree: Tree, options: RemixRouteSchema) {
 
   if (!options.loader && !options.action)
     throw new Error(
-      'The resource route generator requires either `loader` or `action` to be true',
+      'The resource route generator requires either `loader` or `action` to be true'
     );
 
   tree.write(routeFilePath, '');

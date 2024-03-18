@@ -38,13 +38,13 @@ const redundantExecutors = new Set([
 
 export async function convertToApplicationExecutor(
   tree: Tree,
-  options: GeneratorOptions,
+  options: GeneratorOptions
 ) {
   const { major: angularMajorVersion, version: angularVersion } =
     getInstalledAngularVersionInfo(tree);
   if (angularMajorVersion < 17) {
     throw new Error(
-      `The "convert-to-application-executor" generator is only supported in Angular >= 17.0.0. You are currently using "${angularVersion}".`,
+      `The "convert-to-application-executor" generator is only supported in Angular >= 17.0.0. You are currently using "${angularVersion}".`
     );
   }
 
@@ -55,7 +55,7 @@ export async function convertToApplicationExecutor(
       tree,
       options.project,
       angularVersion,
-      true,
+      true
     );
   } else {
     const projects = getProjects(tree);
@@ -64,14 +64,14 @@ export async function convertToApplicationExecutor(
       const success = await convertProjectTargets(
         tree,
         projectName,
-        angularVersion,
+        angularVersion
       );
 
       if (success) {
         logger.info(`Project "${projectName}" converted successfully.`);
       } else {
         logger.info(
-          `Project "${projectName}" could not be converted. See above for more information.`,
+          `Project "${projectName}" could not be converted. See above for more information.`
         );
       }
       logger.info('');
@@ -90,7 +90,7 @@ async function convertProjectTargets(
   tree: Tree,
   projectName: string,
   angularVersion: string,
-  isProvidedProject = false,
+  isProvidedProject = false
 ): Promise<boolean> {
   function warnIfProvided(message: string): void {
     if (isProvidedProject) {
@@ -101,19 +101,19 @@ async function convertProjectTargets(
   let project = readProjectConfiguration(tree, projectName);
   if (project.projectType !== 'application') {
     warnIfProvided(
-      `The provided project "${projectName}" is not an application. Skipping conversion.`,
+      `The provided project "${projectName}" is not an application. Skipping conversion.`
     );
     return false;
   }
 
   const { buildTargetName, serverTargetName } = getTargetsToConvert(
-    project.targets,
+    project.targets
   );
   if (!buildTargetName) {
     warnIfProvided(
       `The provided project "${projectName}" does not have any targets using on of the ` +
         `'@angular-devkit/build-angular:browser', '@angular-devkit/build-angular:browser-esbuild', ` +
-        `'@nx/angular:browser' and '@nx/angular:browser-esbuild' executors. Skipping conversion.`,
+        `'@nx/angular:browser' and '@nx/angular:browser-esbuild' executors. Skipping conversion.`
     );
     return false;
   }
@@ -129,7 +129,7 @@ async function convertProjectTargets(
 
   if (gte(angularVersion, '17.1.0') && buildTarget.outputs) {
     buildTarget.outputs = buildTarget.outputs.map((output) =>
-      output === '{options.outputPath}' ? '{options.outputPath.base}' : output,
+      output === '{options.outputPath}' ? '{options.outputPath.base}' : output
     );
   }
 
@@ -159,7 +159,7 @@ async function convertProjectTargets(
           `The output location of the browser build has been updated from "${outputPath}" to ` +
             `"${join(outputPath, 'browser')}". ` +
             'You might need to adjust your deployment pipeline or, as an alternative, ' +
-            'set outputPath.browser to "" in order to maintain the previous functionality.',
+            'set outputPath.browser to "" in order to maintain the previous functionality.'
         );
       } else {
         outputPath = outputPath.replace(/\/browser\/?$/, '');
@@ -198,14 +198,14 @@ async function convertProjectTargets(
     if (typeof browserTsConfigPath !== 'string') {
       logger.warn(
         `Cannot update project "${projectName}" to use the application executor ` +
-          `as the browser tsconfig cannot be located.`,
+          `as the browser tsconfig cannot be located.`
       );
     }
 
     if (typeof serverTsConfigPath !== 'string') {
       logger.warn(
         `Cannot update project "${projectName}" to use the application executor ` +
-          `as the server tsconfig cannot be located.`,
+          `as the server tsconfig cannot be located.`
       );
     }
 
@@ -226,7 +226,7 @@ async function convertProjectTargets(
       new Set([
         ...(browserTsConfigJson.compilerOptions.types ?? []),
         ...(serverTsConfigJson.compilerOptions?.types ?? []),
-      ]),
+      ])
     );
 
     // Delete server tsconfig
@@ -278,7 +278,7 @@ function getTargetsToConvert(targets: Record<string, TargetConfiguration>): {
       targets[target].executor === '@angular-devkit/build-angular:application'
     ) {
       logger.warn(
-        'The project is already using the application builder. Skipping conversion.',
+        'The project is already using the application builder. Skipping conversion.'
       );
       return {};
     }
@@ -288,13 +288,13 @@ function getTargetsToConvert(targets: Record<string, TargetConfiguration>): {
       for (const [, options] of allTargetOptions(targets[target])) {
         if (options.deployUrl) {
           logger.warn(
-            `The project is using the "deployUrl" option which is not available in the application builder. Skipping conversion.`,
+            `The project is using the "deployUrl" option which is not available in the application builder. Skipping conversion.`
           );
           return {};
         }
         if (options.customWebpackConfig) {
           logger.warn(
-            `The project is using a custom webpack configuration which is not supported by the esbuild-based application executor. Skipping conversion.`,
+            `The project is using a custom webpack configuration which is not supported by the esbuild-based application executor. Skipping conversion.`
           );
           return {};
         }
@@ -302,7 +302,7 @@ function getTargetsToConvert(targets: Record<string, TargetConfiguration>): {
 
       if (buildTargetName) {
         logger.warn(
-          'The project has more than one build target. Skipping conversion.',
+          'The project has more than one build target. Skipping conversion.'
         );
         return {};
       }
@@ -315,7 +315,7 @@ function getTargetsToConvert(targets: Record<string, TargetConfiguration>): {
         for (const [, options] of allTargetOptions(targets[target])) {
           if (options.customWebpackConfig) {
             logger.warn(
-              `The project is using a custom webpack configuration which is not supported by the esbuild-based application executor. Skipping conversion.`,
+              `The project is using a custom webpack configuration which is not supported by the esbuild-based application executor. Skipping conversion.`
             );
             return {};
           }
@@ -324,7 +324,7 @@ function getTargetsToConvert(targets: Record<string, TargetConfiguration>): {
 
       if (serverTargetName) {
         logger.warn(
-          'The project has more than one server target. Skipping conversion.',
+          'The project has more than one server target. Skipping conversion.'
         );
         return {};
       }

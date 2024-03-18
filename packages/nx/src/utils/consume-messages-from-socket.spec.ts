@@ -4,7 +4,7 @@ describe('consumeMessagesFromSocket', () => {
   it('should handle messages where every messages is in its own chunk', () => {
     const messages = [] as any[];
     const r = consumeMessagesFromSocket((message) =>
-      messages.push(JSON.parse(message)),
+      messages.push(JSON.parse(message))
     );
     r(JSON.stringify({ one: 1 }) + String.fromCodePoint(4));
     r(JSON.stringify({ two: 2 }) + String.fromCodePoint(4));
@@ -14,7 +14,7 @@ describe('consumeMessagesFromSocket', () => {
   it('should handle messages with a message spanning multiple chunks ', () => {
     const messages = [] as any[];
     const r = consumeMessagesFromSocket((message) =>
-      messages.push(JSON.parse(message)),
+      messages.push(JSON.parse(message))
     );
     const message = JSON.stringify({ one: 1 });
     r(message.substring(0, 3));

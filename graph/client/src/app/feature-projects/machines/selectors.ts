@@ -11,23 +11,23 @@ export const allProjectsSelector: ProjectGraphSelector<
 > = (state) => state.context.projects;
 
 export const workspaceLayoutSelector: ProjectGraphSelector<WorkspaceLayout> = (
-  state,
+  state
 ) => state.context.workspaceLayout;
 
 export const selectedProjectNamesSelector: ProjectGraphSelector<string[]> = (
-  state,
+  state
 ) => state.context.selectedProjects;
 
 export const projectIsSelectedSelector: ProjectGraphSelector<boolean> = (
-  state,
+  state
 ) => state.context.selectedProjects.length > 0;
 
 export const lastPerfReportSelector: ProjectGraphSelector<GraphPerfReport> = (
-  state,
+  state
 ) => state.context.lastPerfReport;
 
 export const focusedProjectNameSelector: ProjectGraphSelector<string> = (
-  state,
+  state
 ) => state.context.focusedProject;
 
 export const searchDepthSelector: ProjectGraphSelector<{
@@ -51,7 +51,7 @@ export const textFilterSelector: ProjectGraphSelector<string> = (state) =>
   state.context.textFilter;
 
 export const hasAffectedProjectsSelector: ProjectGraphSelector<boolean> = (
-  state,
+  state
 ) => state.context.affectedProjects.length > 0;
 
 export const getTracingInfo: ProjectGraphSelector<{

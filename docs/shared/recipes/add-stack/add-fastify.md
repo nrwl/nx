@@ -87,7 +87,7 @@ export default async function (fastify: FastifyInstance) {
     '/',
     async function (request: FastifyRequest, reply: FastifyReply) {
       return { message: 'Hello API ' + someFunction };
-    },
+    }
   );
 }
 ```

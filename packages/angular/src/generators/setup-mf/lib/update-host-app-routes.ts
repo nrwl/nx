@@ -21,7 +21,7 @@ export function updateHostAppRoutes(tree: Tree, options: Schema) {
             `${routes}\n<li><a routerLink='${remote}'>${
               names(remote).className
             }</a></li>`,
-          '',
+          ''
         )
       : '';
 
@@ -31,12 +31,12 @@ export function updateHostAppRoutes(tree: Tree, options: Schema) {
 <li><a routerLink="/">Home</a></li>${remoteRoutes}
 </ul>
 <router-outlet></router-outlet>
-`,
+`
   );
 
   let pathToHostRootRoutingFile = joinPathFragments(
     sourceRoot,
-    'app/app.routes.ts',
+    'app/app.routes.ts'
   );
 
   let hostRootRoutingFile = tree.read(pathToHostRootRoutingFile, 'utf-8');
@@ -44,7 +44,7 @@ export function updateHostAppRoutes(tree: Tree, options: Schema) {
   if (!hostRootRoutingFile) {
     pathToHostRootRoutingFile = joinPathFragments(
       sourceRoot,
-      'app/app-routing.module.ts',
+      'app/app-routing.module.ts'
     );
     hostRootRoutingFile = tree.read(pathToHostRootRoutingFile, 'utf-8');
   }
@@ -53,7 +53,7 @@ export function updateHostAppRoutes(tree: Tree, options: Schema) {
     pathToHostRootRoutingFile,
     hostRootRoutingFile,
     tsModule.ScriptTarget.Latest,
-    true,
+    true
   );
 
   addRoute(
@@ -62,13 +62,13 @@ export function updateHostAppRoutes(tree: Tree, options: Schema) {
     `{
       path: '',
       component: NxWelcomeComponent
-    }`,
+    }`
   );
 
   tree.write(
     pathToHostRootRoutingFile,
     `import { NxWelcomeComponent } from './nx-welcome.component';
-${tree.read(pathToHostRootRoutingFile, 'utf-8')}`,
+${tree.read(pathToHostRootRoutingFile, 'utf-8')}`
   );
 
   generateFiles(
@@ -79,6 +79,6 @@ ${tree.read(pathToHostRootRoutingFile, 'utf-8')}`,
       appName: options.appName,
       standalone: options.standalone,
       tmpl: '',
-    },
+    }
   );
 }

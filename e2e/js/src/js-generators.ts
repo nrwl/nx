@@ -25,7 +25,7 @@ describe('js e2e', () => {
   it('should create libs with npm scripts', () => {
     const npmScriptsLib = uniq('npmscriptslib');
     runCLI(
-      `generate @nx/js:lib ${npmScriptsLib} --config=npm-scripts --no-interactive`,
+      `generate @nx/js:lib ${npmScriptsLib} --config=npm-scripts --no-interactive`
     );
     const libPackageJson = readJson(`libs/${npmScriptsLib}/package.json`);
     expect(libPackageJson.scripts.test).toBeDefined();
@@ -46,7 +46,7 @@ describe('js e2e', () => {
 
     checkFilesExist(
       `libs/${dirName}/${libName}/src/index.ts`,
-      `libs/${dirName}/${libName}/README.md`,
+      `libs/${dirName}/${libName}/README.md`
     );
 
     // Lint
@@ -58,7 +58,7 @@ describe('js e2e', () => {
     // Test
     const testResult = await runCLIAsync(`test ${dirName}-${libName}`);
     expect(testResult.combinedOutput).toContain(
-      'Test Suites: 1 passed, 1 total',
+      'Test Suites: 1 passed, 1 total'
     );
   }, 500_000);
 
@@ -83,12 +83,12 @@ describe('js e2e', () => {
     // add dep between lib1 and lib2
     updateFile(
       `libs/${lib1}/src/index.ts`,
-      `export { ${lib2} } from '@${scope}/${lib2}';`,
+      `export { ${lib2} } from '@${scope}/${lib2}';`
     );
 
     // check current implementation
     expect(runCLI(`build ${lib1} --skip-nx-cache`)).toContain(
-      'Done compiling TypeScript files',
+      'Done compiling TypeScript files'
     );
     checkFilesExist(`dist/libs/${lib1}/src/index.js`);
     checkFilesExist(`dist/libs/${lib2}/src/index.js`);
@@ -100,7 +100,7 @@ describe('js e2e', () => {
     expect(
       runCLI(`build ${lib1} --skip-nx-cache`, {
         env: { NX_BUILDABLE_LIBRARIES_TASK_GRAPH: 'true' },
-      }),
+      })
     ).toContain('Done compiling TypeScript files');
     checkFilesExist(`dist/libs/${lib1}/src/index.js`);
     checkFilesExist(`dist/libs/${lib2}/src/index.js`);
@@ -133,7 +133,7 @@ describe('js e2e', () => {
     expect(
       runCLI(`build ${lib1} --skip-nx-cache`, {
         env: { NX_BUILDABLE_LIBRARIES_TASK_GRAPH: 'true' },
-      }),
+      })
     ).toContain('Done compiling TypeScript files');
     checkFilesExist(`dist/libs/${lib1}/src/index.js`);
     checkFilesExist(`dist/libs/${lib2}/src/index.js`);
@@ -145,7 +145,7 @@ describe('js e2e', () => {
   it('should generate project with name and directory as provided when --project-name-and-root-format=as-provided', async () => {
     const lib1 = uniq('lib1');
     runCLI(
-      `generate @nx/js:lib ${lib1} --directory=shared --bundler=tsc --project-name-and-root-format=as-provided`,
+      `generate @nx/js:lib ${lib1} --directory=shared --bundler=tsc --project-name-and-root-format=as-provided`
     );
 
     // check files are generated without the layout directory ("libs/") and
@@ -153,12 +153,12 @@ describe('js e2e', () => {
     checkFilesExist('shared/src/index.ts');
     // check project name is as provided (no prefixed directory name)
     expect(runCLI(`build ${lib1}`)).toContain(
-      'Done compiling TypeScript files',
+      'Done compiling TypeScript files'
     );
     // check tests pass
     const testResult = await runCLIAsync(`test ${lib1}`);
     expect(testResult.combinedOutput).toContain(
-      'Test Suites: 1 passed, 1 total',
+      'Test Suites: 1 passed, 1 total'
     );
   }, 500_000);
 
@@ -168,28 +168,28 @@ describe('js e2e', () => {
     // assert scoped project names are not supported when --project-name-and-root-format=derived
     expect(() =>
       runCLI(
-        `generate @nx/js:lib ${scopedLib} --bundler=tsc --project-name-and-root-format=derived`,
-      ),
+        `generate @nx/js:lib ${scopedLib} --bundler=tsc --project-name-and-root-format=derived`
+      )
     ).toThrow();
 
     runCLI(
-      `generate @nx/js:lib ${scopedLib} --bundler=tsc --project-name-and-root-format=as-provided`,
+      `generate @nx/js:lib ${scopedLib} --bundler=tsc --project-name-and-root-format=as-provided`
     );
 
     // check files are generated without the layout directory ("libs/") and
     // using the project name as the directory when no directory is provided
     checkFilesExist(
       `${scopedLib}/src/index.ts`,
-      `${scopedLib}/src/lib/${scopedLib.split('/')[1]}.ts`,
+      `${scopedLib}/src/lib/${scopedLib.split('/')[1]}.ts`
     );
     // check build works
     expect(runCLI(`build ${scopedLib}`)).toContain(
-      'Done compiling TypeScript files',
+      'Done compiling TypeScript files'
     );
     // check tests pass
     const testResult = await runCLIAsync(`test ${scopedLib}`);
     expect(testResult.combinedOutput).toContain(
-      'Test Suites: 1 passed, 1 total',
+      'Test Suites: 1 passed, 1 total'
     );
   }, 500_000);
 });

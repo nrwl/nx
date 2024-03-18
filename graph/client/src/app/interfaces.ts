@@ -18,7 +18,7 @@ export interface ProjectGraphService {
   setTaskInputsUrl?: (url: string) => void;
   getExpandedTaskInputs?: (taskId: string) => Promise<Record<string, string[]>>;
   getSourceMaps?: (
-    url: string,
+    url: string
   ) => Promise<Record<string, Record<string, string[]>>>;
 }
 

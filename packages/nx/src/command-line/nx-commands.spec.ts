@@ -13,7 +13,7 @@ describe('nx-commands', () => {
         '--abc.123.xyx=false',
         '--a.b=3',
       ],
-      commandsObject.parserConfiguration,
+      commandsObject.parserConfiguration
     );
 
     expect(actual).toEqual(
@@ -29,7 +29,7 @@ describe('nx-commands', () => {
         env: {
           NX_API_URL: 'http://localhost:4200',
         },
-      }),
+      })
     );
   });
 });

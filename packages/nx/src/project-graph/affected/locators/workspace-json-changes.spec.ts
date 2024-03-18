@@ -13,7 +13,7 @@ describe('getTouchedProjectsInWorkspaceJson', () => {
         },
       ],
       {},
-      {},
+      {}
     );
     expect(result).toEqual([]);
   });
@@ -44,7 +44,7 @@ describe('getTouchedProjectsInWorkspaceJson', () => {
             tags: [],
           },
         },
-      },
+      }
     );
     expect(result).toEqual(['proj1', 'proj2']);
   });
@@ -84,7 +84,7 @@ describe('getTouchedProjectsInWorkspaceJson', () => {
             tags: [],
           },
         },
-      },
+      }
     );
     expect(result).toEqual(['proj1', 'proj2']);
   });
@@ -127,7 +127,7 @@ describe('getTouchedProjectsInWorkspaceJson', () => {
             tags: [],
           },
         },
-      },
+      }
     );
     expect(result).toEqual(['proj1']);
   });
@@ -169,7 +169,7 @@ describe('getTouchedProjectsInWorkspaceJson', () => {
             tags: [],
           },
         },
-      },
+      }
     );
     expect(result).toEqual(['proj1', 'proj2']);
   });
@@ -221,7 +221,7 @@ describe('getTouchedProjectsInWorkspaceJson', () => {
             tags: [],
           },
         },
-      },
+      }
     );
     expect(result).toEqual(['proj1']);
   });

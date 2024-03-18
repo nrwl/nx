@@ -7,19 +7,19 @@ import { createCommandGraph } from './create-command-graph';
 export function getCommandProjects(
   projectGraph: ProjectGraph,
   projects: ProjectGraphProjectNode[],
-  nxArgs: NxArgs,
+  nxArgs: NxArgs
 ) {
   const commandGraph = createCommandGraph(
     projectGraph,
     projects.map((project) => project.name),
-    nxArgs,
+    nxArgs
   );
   return getSortedProjects(commandGraph);
 }
 
 function getSortedProjects(
   commandGraph: CommandGraph,
-  sortedProjects: string[] = [],
+  sortedProjects: string[] = []
 ): string[] {
   const roots = commandGraph.roots;
   if (!roots.length) {
@@ -29,7 +29,7 @@ function getSortedProjects(
   const newGraph: CommandGraph = removeIdsFromGraph<string[]>(
     commandGraph,
     roots,
-    commandGraph.dependencies,
+    commandGraph.dependencies
   );
 
   return getSortedProjects(newGraph, sortedProjects);

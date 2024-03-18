@@ -18,7 +18,7 @@ const CJS_FILE_EXTENSION = '.cjs';
 export function buildEsbuildOptions(
   format: 'cjs' | 'esm',
   options: NormalizedEsBuildExecutorOptions,
-  context: ExecutorContext,
+  context: ExecutorContext
 ): esbuild.BuildOptions {
   const outExtension = getOutExtension(format, options);
 
@@ -77,7 +77,7 @@ export function buildEsbuildOptions(
         initialTsConfigFileName: options.tsConfig,
         initialEntryPoints: entryPoints,
         recursive: true,
-      },
+      }
     );
 
     esbuildOptions.entryPoints = [
@@ -120,7 +120,7 @@ export function buildEsbuildOptions(
 
 export function getOutExtension(
   format: 'cjs' | 'esm',
-  options: NormalizedEsBuildExecutorOptions,
+  options: NormalizedEsBuildExecutorOptions
 ): '.cjs' | '.mjs' | '.js' {
   const userDefinedExt = options.userDefinedBuildOptions?.outExtension?.['.js'];
   // Allow users to change the output extensions from default CJS and ESM extensions.
@@ -129,21 +129,21 @@ export function getOutExtension(
   return userDefinedExt === '.js' && format === 'cjs'
     ? '.js'
     : userDefinedExt === '.mjs' && format === 'esm'
-      ? '.mjs'
-      : format === 'esm'
-        ? ESM_FILE_EXTENSION
-        : CJS_FILE_EXTENSION;
+    ? '.mjs'
+    : format === 'esm'
+    ? ESM_FILE_EXTENSION
+    : CJS_FILE_EXTENSION;
 }
 
 export function getOutfile(
   format: 'cjs' | 'esm',
   options: NormalizedEsBuildExecutorOptions,
-  context: ExecutorContext,
+  context: ExecutorContext
 ) {
   const ext = getOutExtension(format, options);
   const candidate = joinPathFragments(
     context.target.options.outputPath,
-    options.outputFileName,
+    options.outputFileName
   );
   const { dir, name } = path.parse(candidate);
   return `${dir}/${name}${ext}`;
@@ -153,7 +153,7 @@ function writeTmpEntryWithRequireOverrides(
   paths: Record<string, string[]>,
   outExtension: '.cjs' | '.js' | '.mjs',
   options: NormalizedEsBuildExecutorOptions,
-  context: ExecutorContext,
+  context: ExecutorContext
 ): { in: string; out: string } {
   const project = context.projectGraph?.nodes[context.projectName];
   // Write a temp main entry source that registers workspace libs.
@@ -161,11 +161,11 @@ function writeTmpEntryWithRequireOverrides(
   mkdirSync(tmpPath, { recursive: true });
 
   const { name: mainFileName, dir: mainPathRelativeToDist } = path.parse(
-    options.main,
+    options.main
   );
   const mainWithRequireOverridesInPath = path.join(
     tmpPath,
-    `main-with-require-overrides.js`,
+    `main-with-require-overrides.js`
   );
   writeFileSync(
     mainWithRequireOverridesInPath,
@@ -174,10 +174,10 @@ function writeTmpEntryWithRequireOverrides(
       paths,
       `./${path.join(
         mainPathRelativeToDist,
-        `${mainFileName}${outExtension}`,
+        `${mainFileName}${outExtension}`
       )}`,
-      outExtension,
-    ),
+      outExtension
+    )
   );
 
   let mainWithRequireOverridesOutPath: string;
@@ -187,7 +187,7 @@ function writeTmpEntryWithRequireOverrides(
     // If the user customized their entry such that it is not inside `src/` folder
     // then they have to provide the outputFileName
     throw new Error(
-      `There is a conflict between Nx-generated main file and the project's main file. Set --outputFileName=nx-main.js to fix this error.`,
+      `There is a conflict between Nx-generated main file and the project's main file. Set --outputFileName=nx-main.js to fix this error.`
     );
   } else {
     mainWithRequireOverridesOutPath = path.parse(mainFileName).name;
@@ -203,13 +203,13 @@ export function getRegisterFileContent(
   project: ProjectGraphProjectNode,
   paths: Record<string, string[]>,
   mainFile: string,
-  outExtension = '.js',
+  outExtension = '.js'
 ) {
   mainFile = normalizePath(mainFile);
 
   // Sort by longest prefix so imports match the most specific path.
   const sortedKeys = Object.keys(paths).sort(
-    (a: string, b: string) => getPrefixLength(b) - getPrefixLength(a),
+    (a: string, b: string) => getPrefixLength(b) - getPrefixLength(a)
   );
   const manifest: Array<{
     module: string;
@@ -313,6 +313,6 @@ function getRootTsConfigPath(context: ExecutorContext): string | null {
   }
 
   throw new Error(
-    'Could not find a root tsconfig.json or tsconfig.base.json file.',
+    'Could not find a root tsconfig.json or tsconfig.base.json file.'
   );
 }

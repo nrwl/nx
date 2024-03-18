@@ -17,7 +17,7 @@ export class ProcessTasks {
 
   constructor(
     private readonly defaultDependencyConfigs: TargetDependencies,
-    private readonly projectGraph: ProjectGraph,
+    private readonly projectGraph: ProjectGraph
   ) {}
 
   processTasks(
@@ -25,7 +25,7 @@ export class ProcessTasks {
     targets: string[],
     configuration: string,
     overrides: Object,
-    excludeTaskDependencies: boolean,
+    excludeTaskDependencies: boolean
   ) {
     for (const projectName of projectNames) {
       for (const target of targets) {
@@ -34,7 +34,7 @@ export class ProcessTasks {
           const resolvedConfiguration = this.resolveConfiguration(
             project,
             target,
-            configuration,
+            configuration
           );
           const id = this.getId(projectName, target, resolvedConfiguration);
           const task = this.createTask(
@@ -42,7 +42,7 @@ export class ProcessTasks {
             project,
             target,
             resolvedConfiguration,
-            overrides,
+            overrides
           );
           this.tasks[task.id] = task;
           this.dependencies[task.id] = [];
@@ -67,7 +67,7 @@ export class ProcessTasks {
       }
       for (let d of Object.keys(this.dependencies)) {
         this.dependencies[d] = this.dependencies[d].filter(
-          (dd) => !!initialTasks[dd],
+          (dd) => !!initialTasks[dd]
         );
       }
     }
@@ -81,7 +81,7 @@ export class ProcessTasks {
     }
 
     return Object.keys(this.dependencies).filter(
-      (d) => this.dependencies[d].length === 0,
+      (d) => this.dependencies[d].length === 0
     );
   }
 
@@ -89,7 +89,7 @@ export class ProcessTasks {
     task: Task,
     projectUsedToDeriveDependencies: string,
     configuration: string,
-    overrides: Object,
+    overrides: Object
   ) {
     const seenKey = `${task.id}-${projectUsedToDeriveDependencies}`;
     if (this.seen.has(seenKey)) {
@@ -100,7 +100,7 @@ export class ProcessTasks {
     const dependencyConfigs = getDependencyConfigs(
       { project: task.target.project, target: task.target.target },
       this.defaultDependencyConfigs,
-      this.projectGraph,
+      this.projectGraph
     );
     for (const dependencyConfig of dependencyConfigs) {
       const taskOverrides =
@@ -114,7 +114,7 @@ export class ProcessTasks {
           configuration,
           task,
           taskOverrides,
-          overrides,
+          overrides
         );
       } else if (dependencyConfig.dependencies) {
         this.processTasksForDependencies(
@@ -123,7 +123,7 @@ export class ProcessTasks {
           configuration,
           task,
           taskOverrides,
-          overrides,
+          overrides
         );
       } else {
         this.processTasksForSingleProject(
@@ -132,7 +132,7 @@ export class ProcessTasks {
           dependencyConfig,
           configuration,
           taskOverrides,
-          overrides,
+          overrides
         );
       }
     }
@@ -144,7 +144,7 @@ export class ProcessTasks {
     configuration: string,
     task: Task,
     taskOverrides: Object | { __overrides_unparsed__: any[] },
-    overrides: Object,
+    overrides: Object
   ) {
     const targetProjectSpecifiers =
       typeof dependencyConfig.projects === 'string'
@@ -164,7 +164,7 @@ export class ProcessTasks {
           configuration,
           task,
           taskOverrides,
-          overrides,
+          overrides
         );
       } else {
         // Since we need to maintain support for dependencies, it is more coherent
@@ -194,7 +194,7 @@ export class ProcessTasks {
             dependencyConfig,
             configuration,
             taskOverrides,
-            overrides,
+            overrides
           );
         }
       }
@@ -207,7 +207,7 @@ export class ProcessTasks {
     dependencyConfig: TargetDependencyConfig,
     configuration: string,
     taskOverrides: Object | { __overrides_unparsed__: any[] },
-    overrides: Object,
+    overrides: Object
   ) {
     const selfProject = this.projectGraph.nodes[
       projectName
@@ -217,12 +217,12 @@ export class ProcessTasks {
       const resolvedConfiguration = this.resolveConfiguration(
         selfProject,
         dependencyConfig.target,
-        configuration,
+        configuration
       );
       const selfTaskId = this.getId(
         selfProject.name,
         dependencyConfig.target,
-        resolvedConfiguration,
+        resolvedConfiguration
       );
       if (task.id !== selfTaskId) {
         this.dependencies[task.id].push(selfTaskId);
@@ -233,7 +233,7 @@ export class ProcessTasks {
           selfProject,
           dependencyConfig.target,
           resolvedConfiguration,
-          taskOverrides,
+          taskOverrides
         );
         this.tasks[selfTaskId] = newTask;
         this.dependencies[selfTaskId] = [];
@@ -241,7 +241,7 @@ export class ProcessTasks {
           newTask,
           newTask.target.project,
           configuration,
-          overrides,
+          overrides
         );
       }
     }
@@ -253,7 +253,7 @@ export class ProcessTasks {
     configuration: string,
     task: Task,
     taskOverrides: Object | { __overrides_unparsed__: any[] },
-    overrides: Object,
+    overrides: Object
   ) {
     for (const dep of this.projectGraph.dependencies[
       projectUsedToDeriveDependencies
@@ -269,12 +269,12 @@ export class ProcessTasks {
         const resolvedConfiguration = this.resolveConfiguration(
           depProject,
           dependencyConfig.target,
-          configuration,
+          configuration
         );
         const depTargetId = this.getId(
           depProject.name,
           dependencyConfig.target,
-          resolvedConfiguration,
+          resolvedConfiguration
         );
 
         if (task.id !== depTargetId) {
@@ -286,7 +286,7 @@ export class ProcessTasks {
             depProject,
             dependencyConfig.target,
             resolvedConfiguration,
-            taskOverrides,
+            taskOverrides
           );
           this.tasks[depTargetId] = newTask;
           this.dependencies[depTargetId] = [];
@@ -295,7 +295,7 @@ export class ProcessTasks {
             newTask,
             newTask.target.project,
             configuration,
-            overrides,
+            overrides
           );
         }
       } else {
@@ -309,17 +309,17 @@ export class ProcessTasks {
     project: ProjectGraphProjectNode,
     target: string,
     resolvedConfiguration: string | undefined,
-    overrides: Object,
+    overrides: Object
   ): Task {
     if (!project.data.targets[target]) {
       throw new Error(
-        `Cannot find configuration for task ${project.name}:${target}`,
+        `Cannot find configuration for task ${project.name}:${target}`
       );
     }
 
     if (!project.data.targets[target].executor) {
       throw new Error(
-        `Target "${project.name}:${target}" does not have an executor configured`,
+        `Target "${project.name}:${target}" does not have an executor configured`
       );
     }
 
@@ -332,7 +332,7 @@ export class ProcessTasks {
     const interpolatedOverrides = interpolateOverrides(
       overrides,
       project.name,
-      project.data,
+      project.data
     );
 
     return {
@@ -343,7 +343,7 @@ export class ProcessTasks {
       outputs: getOutputs(
         this.projectGraph.nodes,
         qualifiedTarget,
-        interpolatedOverrides,
+        interpolatedOverrides
       ),
       // TODO(v19): Remove cast here after typing is moved back onto TargetConfiguration
       cache: (project.data.targets[target] as any).cache,
@@ -353,7 +353,7 @@ export class ProcessTasks {
   resolveConfiguration(
     project: ProjectGraphProjectNode,
     target: string,
-    configuration: string | undefined,
+    configuration: string | undefined
   ) {
     const defaultConfiguration =
       project.data.targets?.[target]?.defaultConfiguration;
@@ -366,7 +366,7 @@ export class ProcessTasks {
   getId(
     project: string,
     target: string,
-    configuration: string | undefined,
+    configuration: string | undefined
   ): string {
     let id = `${project}:${target}`;
     if (configuration) {
@@ -383,7 +383,7 @@ export function createTaskGraph(
   targets: string[],
   configuration: string | undefined,
   overrides: Object,
-  excludeTaskDependencies: boolean = false,
+  excludeTaskDependencies: boolean = false
 ): TaskGraph {
   const p = new ProcessTasks(defaultDependencyConfigs, projectGraph);
   const roots = p.processTasks(
@@ -391,7 +391,7 @@ export function createTaskGraph(
     targets,
     configuration,
     overrides,
-    excludeTaskDependencies,
+    excludeTaskDependencies
   );
   return {
     roots,
@@ -401,7 +401,7 @@ export function createTaskGraph(
 }
 
 export function mapTargetDefaultsToDependencies(
-  defaults: TargetDefaults | undefined,
+  defaults: TargetDefaults | undefined
 ): TargetDependencies {
   const res = {};
   Object.keys(defaults ?? {}).forEach((k) => {
@@ -414,7 +414,7 @@ export function mapTargetDefaultsToDependencies(
 function interpolateOverrides<T = any>(
   args: T,
   projectName: string,
-  project: any,
+  project: any
 ): T {
   const interpolatedArgs: T = { ...args };
   Object.entries(interpolatedArgs).forEach(([name, value]) => {

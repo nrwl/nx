@@ -47,7 +47,7 @@ export function AlgoliaSearch({
       setIsOpen(true);
       setInitialQuery(event.key);
     },
-    [setIsOpen, setInitialQuery],
+    [setIsOpen, setInitialQuery]
   );
 
   useDocSearchKeyboardEvents({
@@ -159,7 +159,7 @@ export function AlgoliaSearch({
                 if (item.hierarchy?.lvl0) {
                   item.hierarchy.lvl0 = item.hierarchy.lvl0.replace(
                     /&amp;/g,
-                    '&',
+                    '&'
                   );
                 }
 
@@ -170,7 +170,7 @@ export function AlgoliaSearch({
               });
             }}
           />,
-          document.body,
+          document.body
         )}
     </>
   );

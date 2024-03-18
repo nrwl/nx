@@ -16,7 +16,7 @@ import { GeneratorOptions } from './schema';
 
 export async function setupTailwindGenerator(
   tree: Tree,
-  rawOptions: GeneratorOptions,
+  rawOptions: GeneratorOptions
 ): Promise<GeneratorCallback> {
   const options = normalizeOptions(rawOptions);
   const project = readProjectConfiguration(tree, options.project);

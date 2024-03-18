@@ -19,11 +19,11 @@ export default async function (tree: Tree) {
 
       const pathToStorybookConfigFile = joinPathFragments(
         options?.['configDir'],
-        'tsconfig.json',
+        'tsconfig.json'
       );
 
       renameAndMoveOldTsConfig(projectRoot, pathToStorybookConfigFile, tree);
-    },
+    }
   );
 
   addStorybookToNamedInputs(tree);

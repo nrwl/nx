@@ -24,7 +24,7 @@ export interface CypressBaseSetupSchema {
 
 export function addBaseCypressSetup(
   tree: Tree,
-  options: CypressBaseSetupSchema,
+  options: CypressBaseSetupSchema
 ) {
   const projectConfig = readProjectConfiguration(tree, options.project);
 
@@ -51,7 +51,7 @@ export function addBaseCypressSetup(
     tree,
     join(__dirname, 'files/common'),
     projectConfig.root,
-    templateVars,
+    templateVars
   );
 
   if (options.js) {
@@ -60,14 +60,14 @@ export function addBaseCypressSetup(
         tree,
         join(__dirname, 'files/config-js-esm'),
         projectConfig.root,
-        templateVars,
+        templateVars
       );
     } else {
       generateFiles(
         tree,
         join(__dirname, 'files/config-js-cjs'),
         projectConfig.root,
-        templateVars,
+        templateVars
       );
     }
   } else {
@@ -75,7 +75,7 @@ export function addBaseCypressSetup(
       tree,
       join(__dirname, 'files/config-ts'),
       projectConfig.root,
-      templateVars,
+      templateVars
     );
   }
 
@@ -98,12 +98,12 @@ export function addBaseCypressSetup(
           });
         }
         return json;
-      },
+      }
     );
   } else {
     tree.rename(
       joinPathFragments(projectConfig.root, options.directory, 'tsconfig.json'),
-      joinPathFragments(projectConfig.root, 'tsconfig.json'),
+      joinPathFragments(projectConfig.root, 'tsconfig.json')
     );
   }
 }
@@ -111,7 +111,7 @@ export function addBaseCypressSetup(
 function normalizeOptions(
   tree: Tree,
   projectConfig: ProjectConfiguration,
-  options: CypressBaseSetupSchema,
+  options: CypressBaseSetupSchema
 ) {
   options.directory ??= 'cypress';
 
@@ -121,7 +121,7 @@ function normalizeOptions(
     .join('/');
 
   const hasTsConfig = tree.exists(
-    joinPathFragments(projectConfig.root, 'tsconfig.json'),
+    joinPathFragments(projectConfig.root, 'tsconfig.json')
   );
 
   return {
@@ -137,7 +137,7 @@ function isEsmProject(tree: Tree, projectRoot: string) {
   if (tree.exists(joinPathFragments(projectRoot, 'package.json'))) {
     packageJson = readJson(
       tree,
-      joinPathFragments(projectRoot, 'package.json'),
+      joinPathFragments(projectRoot, 'package.json')
     );
   } else {
     packageJson = readJson(tree, 'package.json');

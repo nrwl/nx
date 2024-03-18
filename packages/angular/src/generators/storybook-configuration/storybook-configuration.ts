@@ -14,7 +14,7 @@ import type { StorybookConfigurationOptions } from './schema';
 // TODO(katerina): Nx 19 -> remove Cypress
 export async function storybookConfigurationGenerator(
   tree: Tree,
-  options: StorybookConfigurationOptions,
+  options: StorybookConfigurationOptions
 ): Promise<GeneratorCallback> {
   assertCompatibleStorybookVersion();
   validateOptions(options);
@@ -25,7 +25,7 @@ export async function storybookConfigurationGenerator(
       ...options,
       interactionTests: options.interactionTests ?? true, // default is true
       tsConfiguration: options.tsConfiguration ?? true, // default is true
-    },
+    }
   );
 
   if (options.generateStories) {

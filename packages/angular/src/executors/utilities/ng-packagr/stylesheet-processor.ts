@@ -37,7 +37,7 @@ export class StylesheetProcessor {
     private readonly basePath: string,
     private readonly cssUrl?: CssUrl,
     private readonly includePaths?: string[],
-    private readonly cacheDirectory?: string | false,
+    private readonly cacheDirectory?: string | false
   ) {
     // By default, browserslist defaults are too inclusive
     // https://github.com/browserslist/browserslist/blob/83764ea81ffaa39111c204b02c371afa44a4ff07/index.js#L516-L522
@@ -99,13 +99,13 @@ export class StylesheetProcessor {
         'ng-packagr/lib/styles/postcss-configuration'
       );
       postcssConfiguration = await loadPostcssConfiguration(
-        this.projectBasePath,
+        this.projectBasePath
       );
     }
 
     this.renderWorker = new Piscina({
       filename: require.resolve(
-        'ng-packagr/lib/styles/stylesheet-processor-worker',
+        'ng-packagr/lib/styles/stylesheet-processor-worker'
       ),
       maxThreads,
       env: {
@@ -116,7 +116,7 @@ export class StylesheetProcessor {
         postcssConfiguration,
         tailwindConfigPath: getTailwindConfigPath(
           this.projectBasePath,
-          workspaceRoot,
+          workspaceRoot
         ),
         projectBasePath: this.projectBasePath,
         browserslistData,
@@ -130,7 +130,7 @@ export class StylesheetProcessor {
 }
 
 function transformSupportedBrowsersToTargets(
-  supportedBrowsers: string[],
+  supportedBrowsers: string[]
 ): string[] {
   const transformed: string[] = [];
 

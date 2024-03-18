@@ -43,13 +43,13 @@ describe('workspace-projects', () => {
   describe('normalizeImplicitDependencies', () => {
     it('should expand "*" implicit dependencies', () => {
       expect(
-        normalizeImplicitDependencies('test-project', ['*'], projectGraph),
+        normalizeImplicitDependencies('test-project', ['*'], projectGraph)
       ).toEqual(['a', 'b', 'c']);
     });
 
     it('should return [] for null implicit dependencies', () => {
       expect(
-        normalizeImplicitDependencies('test-project', null, projectGraph),
+        normalizeImplicitDependencies('test-project', null, projectGraph)
       ).toEqual([]);
     });
 
@@ -74,7 +74,7 @@ describe('workspace-projects', () => {
         },
       };
       expect(
-        normalizeImplicitDependencies('test-project', ['b*'], projectGraphMod),
+        normalizeImplicitDependencies('test-project', ['b*'], projectGraphMod)
       ).toEqual(['b', 'b-1', 'b-2']);
     });
   });
@@ -97,8 +97,8 @@ describe('workspace-projects', () => {
               },
             },
           },
-          'build',
-        ).build.options,
+          'build'
+        ).build.options
       ).toEqual({ a: 'my/project', b: '', c: 'project' });
     });
   });

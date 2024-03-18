@@ -13,7 +13,7 @@ describe('outputs tracking', () => {
     expect(_outputsHashesMatch(['dist/app/app1'], '123')).toBeTruthy();
     expect(_outputsHashesMatch(['dist/app/app1'], '1234')).toBeFalsy();
     expect(
-      _outputsHashesMatch(['dist/app/app1', 'dist/app/app1/different'], '1234'),
+      _outputsHashesMatch(['dist/app/app1', 'dist/app/app1/different'], '1234')
     ).toBeFalsy();
   });
 
@@ -21,7 +21,7 @@ describe('outputs tracking', () => {
     _recordOutputsHash(['dist/app/app1'], '123');
     processFileChangesInOutputs(
       [{ path: 'dist/app/app1', type: EventType.update }],
-      now,
+      now
     );
     expect(recordedHash('dist/app/app1')).toBeUndefined();
   });
@@ -30,7 +30,7 @@ describe('outputs tracking', () => {
     _recordOutputsHash(['dist/app/app1'], '123');
     processFileChangesInOutputs(
       [{ path: 'dist/app/app1/child', type: EventType.update }],
-      now,
+      now
     );
     expect(recordedHash('dist/app/app1')).toBeUndefined();
   });
@@ -39,7 +39,7 @@ describe('outputs tracking', () => {
     _recordOutputsHash(['dist/app/app1'], '123');
     processFileChangesInOutputs(
       [{ path: 'dist/app', type: EventType.update }],
-      now,
+      now
     );
     expect(recordedHash('dist/app/app1')).toBeUndefined();
   });
@@ -48,7 +48,7 @@ describe('outputs tracking', () => {
     _recordOutputsHash(['dist/app/app1'], '123');
     processFileChangesInOutputs(
       [{ path: 'dist/app2', type: EventType.update }],
-      now,
+      now
     );
     expect(recordedHash('dist/app/app1')).toEqual('123');
   });

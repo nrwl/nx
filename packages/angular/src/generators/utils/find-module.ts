@@ -26,7 +26,7 @@ export function findModule(tree: Tree, path: string, module?: string) {
         .filter((f) => f.endsWith('.module.ts'));
       if (potentialOptions.length > 1) {
         throw new Error(
-          `More than one NgModule was found. Please provide the NgModule you wish to use.`,
+          `More than one NgModule was found. Please provide the NgModule you wish to use.`
         );
       } else if (potentialOptions.length === 1) {
         modulePath = joinPathFragments(pathToSearch, potentialOptions[0]);
@@ -43,7 +43,7 @@ export function findModule(tree: Tree, path: string, module?: string) {
   const moduleContents = tree.read(modulePath, 'utf-8');
   if (!moduleContents.includes('@NgModule')) {
     throw new Error(
-      `Declaring module file (${modulePath}) does not contain an @NgModule Declaration.`,
+      `Declaring module file (${modulePath}) does not contain an @NgModule Declaration.`
     );
   }
 
@@ -61,7 +61,7 @@ export function addToNgModule(
   // TODO(leo): remove once all consumers are updated
   // // check if exported in the public api
   isFlat = true,
-  isExported = false,
+  isExported = false
 ) {
   if (!tsModule) {
     tsModule = ensureTypescript();
@@ -70,7 +70,7 @@ export function addToNgModule(
   let relativePath = `${joinPathFragments(
     path.replace(dirname(modulePath), ''),
     !isFlat ? name : '',
-    `${fileName}`,
+    `${fileName}`
   )}`;
   relativePath = relativePath.startsWith('/')
     ? `.${relativePath}`
@@ -81,7 +81,7 @@ export function addToNgModule(
     modulePath,
     moduleContents,
     tsModule.ScriptTarget.Latest,
-    true,
+    true
   );
 
   insertImport(tree, source, modulePath, className, relativePath);

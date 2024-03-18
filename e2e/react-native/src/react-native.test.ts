@@ -18,7 +18,7 @@ describe('@nx/react-native', () => {
     newProject();
     appName = uniq('app');
     runCLI(
-      `generate @nx/react-native:app ${appName} --project-name-and-root-format=as-provided --install=false --no-interactive`,
+      `generate @nx/react-native:app ${appName} --project-name-and-root-format=as-provided --install=false --no-interactive`
     );
   });
 
@@ -26,12 +26,12 @@ describe('@nx/react-native', () => {
 
   it('should bundle the app', async () => {
     const result = runCLI(
-      `bundle ${appName} --platform=ios --bundle-output=dist.js --entry-file=src/main.tsx`,
+      `bundle ${appName} --platform=ios --bundle-output=dist.js --entry-file=src/main.tsx`
     );
     fileExists(` ${appName}/dist.js`);
 
     expect(result).toContain(
-      `Successfully ran target bundle for project ${appName}`,
+      `Successfully ran target bundle for project ${appName}`
     );
   }, 200_000);
 
@@ -48,7 +48,7 @@ describe('@nx/react-native', () => {
             output.includes('Starting JS server...') ||
             output.includes('Welcome to Metro')
           );
-        },
+        }
       );
     } catch (err) {
       console.error(err);
@@ -69,7 +69,7 @@ describe('@nx/react-native', () => {
         `serve ${appName} --interactive=false --port=${port}`,
         (output) => {
           return output.includes(`http://localhost:${port}`);
-        },
+        }
       );
     } catch (err) {
       console.error(err);
@@ -97,11 +97,11 @@ describe('@nx/react-native', () => {
 
   it('should create storybook with application', async () => {
     runCLI(
-      `generate @nx/react:storybook-configuration ${appName} --generateStories --no-interactive`,
+      `generate @nx/react:storybook-configuration ${appName} --generateStories --no-interactive`
     );
     checkFilesExist(
       `${appName}/.storybook/main.ts`,
-      `${appName}/src/app/App.stories.tsx`,
+      `${appName}/src/app/App.stories.tsx`
     );
   });
 });

@@ -14,7 +14,7 @@ import { ensureDependencies } from '../../utils/ensure-dependencies';
 
 export async function applicationGenerator(
   tree: Tree,
-  rawOptions: ApplicationGeneratorOptions,
+  rawOptions: ApplicationGeneratorOptions
 ): Promise<GeneratorCallback> {
   return await applicationGeneratorInternal(tree, {
     addPlugin: false,
@@ -25,7 +25,7 @@ export async function applicationGenerator(
 
 export async function applicationGeneratorInternal(
   tree: Tree,
-  rawOptions: ApplicationGeneratorOptions,
+  rawOptions: ApplicationGeneratorOptions
 ): Promise<GeneratorCallback> {
   const options = await normalizeOptions(tree, rawOptions);
 
@@ -37,7 +37,7 @@ export async function applicationGeneratorInternal(
   tasks.push(initTask);
   const nodeApplicationTask = await nodeApplicationGenerator(
     tree,
-    toNodeApplicationGeneratorOptions(options),
+    toNodeApplicationGeneratorOptions(options)
   );
   tasks.push(nodeApplicationTask);
   createFiles(tree, options);

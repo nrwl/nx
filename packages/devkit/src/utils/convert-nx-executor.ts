@@ -31,7 +31,7 @@ export function convertNxExecutor(executor: Executor) {
               version: 2,
               projects: await retrieveProjectConfigurationsWithAngularProjects(
                 builderContext.workspaceRoot,
-                nxJsonConfiguration,
+                nxJsonConfiguration
               ).then((p) => (p as any).projectNodes ?? p.projects),
             }
           : // TODO(v19): remove retrieveProjectConfigurations. This is to be backwards compatible with Nx 16.5 and below.
@@ -60,7 +60,7 @@ export function convertNxExecutor(executor: Executor) {
 }
 
 function toObservable<T extends { success: boolean }>(
-  promiseOrAsyncIterator: Promise<T | AsyncIterableIterator<T>>,
+  promiseOrAsyncIterator: Promise<T | AsyncIterableIterator<T>>
 ): Observable<T> {
   return new (require('rxjs') as typeof import('rxjs')).Observable(
     (subscriber) => {
@@ -101,6 +101,6 @@ function toObservable<T extends { success: boolean }>(
         .catch((err) => {
           subscriber.error(err);
         });
-    },
+    }
   );
 }

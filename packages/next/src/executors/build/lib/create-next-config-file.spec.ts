@@ -58,7 +58,7 @@ describe('Next.js config: getWithNxContent', () => {
       module.exports.withNx = withNx;
     `);
     expect(result).not.toContain(
-      `const { workspaceRoot, workspaceLayout } = require('@nx/devkit');`,
+      `const { workspaceRoot, workspaceLayout } = require('@nx/devkit');`
     );
     expect(result).toContain(`libsDir: '${workspaceLayout().libsDir}'`);
     expect(result).not.toContain(`libsDir: workspaceLayout().libsDir`);
@@ -67,7 +67,7 @@ describe('Next.js config: getWithNxContent', () => {
   it('should return relative module paths used in next.config.js when calling getRelativeFilesToCopy', () => {
     const modulePaths = getRelativeFilesToCopy(
       findNextConfigPath(join(__dirname, 'test-fixtures/config-js')),
-      join(__dirname, 'test-fixtures/config-js'),
+      join(__dirname, 'test-fixtures/config-js')
     );
 
     expect(modulePaths).toEqual([
@@ -80,7 +80,7 @@ describe('Next.js config: getWithNxContent', () => {
   it('should return relative module paths used in next.config.mjs when calling getRelativeFilesToCopy', () => {
     const modulePaths = getRelativeFilesToCopy(
       findNextConfigPath(join(__dirname, 'test-fixtures/config-mjs')),
-      join(__dirname, 'test-fixtures/config-mjs'),
+      join(__dirname, 'test-fixtures/config-mjs')
     );
 
     expect(modulePaths).toEqual(['a.mjs']);
@@ -117,7 +117,7 @@ describe('Next.js config: getWithNxContent', () => {
   it('should return files with their extensions when calling ensureFileExtensions', () => {
     const result = ensureFileExtensions(
       ['bar', 'baz', 'foo', 'faz', 'nested/baz.cjs'],
-      join(__dirname, 'test-fixtures/ensure-exts'),
+      join(__dirname, 'test-fixtures/ensure-exts')
     );
 
     expect(result).toEqual([
@@ -133,8 +133,8 @@ describe('Next.js config: getWithNxContent', () => {
     expect(() =>
       ensureFileExtensions(
         ['not-found'],
-        join(__dirname, 'test-fixtures/ensure-exts'),
-      ),
+        join(__dirname, 'test-fixtures/ensure-exts')
+      )
     ).toThrow(/Cannot find file "not-found"/);
   });
 });

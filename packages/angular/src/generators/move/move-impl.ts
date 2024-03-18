@@ -12,7 +12,7 @@ import type { MoveImplOptions } from './lib/types';
  */
 export async function move(
   tree: Tree,
-  options: MoveImplOptions,
+  options: MoveImplOptions
 ): Promise<void> {
   // while the project has already being moved at this point, the changes are
   // still in the virtual tree and haven't been committed, so the project graph
@@ -30,6 +30,6 @@ async function isAngularProject(project: string): Promise<boolean> {
   const projectGraph = await createProjectGraphAsync();
 
   return projectGraph.dependencies[project]?.some(
-    (dependency) => dependency.target === 'npm:@angular/core',
+    (dependency) => dependency.target === 'npm:@angular/core'
   );
 }

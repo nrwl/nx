@@ -17,7 +17,7 @@ describe('Ignore @nx/react/plugins/storybook in Storybook eslint plugin', () => 
     addProjectConfiguration(
       tree,
       variousProjects['main-vite'].name,
-      variousProjects['main-vite'] as ProjectConfiguration,
+      variousProjects['main-vite'] as ProjectConfiguration
     );
     tree.write('apps/main-vite/tsconfig.json', `{}`);
     tree.write(
@@ -31,12 +31,12 @@ describe('Ignore @nx/react/plugins/storybook in Storybook eslint plugin', () => 
           options: {},
         },
       };
-      `,
+      `
     );
     addProjectConfiguration(
       tree,
       variousProjects['main-webpack'].name,
-      variousProjects['main-webpack'] as ProjectConfiguration,
+      variousProjects['main-webpack'] as ProjectConfiguration
     );
 
     if (!tree.exists('.eslintrc.json')) {
@@ -64,7 +64,7 @@ describe('Ignore @nx/react/plugins/storybook in Storybook eslint plugin', () => 
           options: {},
         },
       };
-      `,
+      `
     );
 
     await eslintIgnoreReactPlugin(tree);
@@ -87,7 +87,7 @@ describe('Ignore @nx/react/plugins/storybook in Storybook eslint plugin', () => 
           options: {},
         },
       };
-      `,
+      `
     );
 
     updateJson(tree, '.eslintrc.json', (json) => {
@@ -100,7 +100,7 @@ describe('Ignore @nx/react/plugins/storybook in Storybook eslint plugin', () => 
 
     const eslintConfig = readJson(tree, '.eslintrc.json');
     expect(eslintConfig.rules).toHaveProperty(
-      'storybook/no-uninstalled-addons',
+      'storybook/no-uninstalled-addons'
     );
 
     expect(eslintConfig.rules['storybook/no-uninstalled-addons']).toMatchObject(
@@ -109,7 +109,7 @@ describe('Ignore @nx/react/plugins/storybook in Storybook eslint plugin', () => 
         {
           ignore: ['@nx/react/plugins/storybook'],
         },
-      ],
+      ]
     );
   });
 });

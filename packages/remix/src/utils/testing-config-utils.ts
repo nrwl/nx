@@ -6,7 +6,7 @@ let tsModule: typeof import('typescript');
 export function updateVitestTestSetup(
   tree: Tree,
   pathToVitestConfig: string,
-  pathToTestSetup: string,
+  pathToTestSetup: string
 ) {
   if (!tsModule) {
     tsModule = ensureTypescript();
@@ -32,9 +32,9 @@ export function updateVitestTestSetup(
     });
     updatedFileContents = stripIndents`${fileContents.slice(
       0,
-      testConfigNodes[0].getStart() + 1,
+      testConfigNodes[0].getStart() + 1
     )}setupFiles: ['${pathToTestSetup}'],${fileContents.slice(
-      testConfigNodes[0].getStart() + 1,
+      testConfigNodes[0].getStart() + 1
     )}`;
   } else {
     const arrayNodes = tsquery(nodes[0], 'ArrayLiteralExpression', {
@@ -43,9 +43,9 @@ export function updateVitestTestSetup(
     if (arrayNodes.length !== 0) {
       updatedFileContents = stripIndents`${fileContents.slice(
         0,
-        arrayNodes[0].getStart() + 1,
+        arrayNodes[0].getStart() + 1
       )}'${pathToTestSetup}',${fileContents.slice(
-        arrayNodes[0].getStart() + 1,
+        arrayNodes[0].getStart() + 1
       )}`;
     }
   }
@@ -56,7 +56,7 @@ export function updateVitestTestSetup(
 export function updateJestTestSetup(
   tree: Tree,
   pathToJestConfig: string,
-  pathToTestSetup: string,
+  pathToTestSetup: string
 ) {
   if (!tsModule) {
     tsModule = ensureTypescript();
@@ -78,9 +78,9 @@ export function updateJestTestSetup(
 
     const updatedFileContents = stripIndents`${fileContents.slice(
       0,
-      nodes[0].getStart() + 1,
+      nodes[0].getStart() + 1
     )}setupFilesAfterEnv: ['${pathToTestSetup}'],${fileContents.slice(
-      nodes[0].getStart() + 1,
+      nodes[0].getStart() + 1
     )}`;
     tree.write(pathToJestConfig, updatedFileContents);
   } else {
@@ -90,9 +90,9 @@ export function updateJestTestSetup(
     if (arrayNodes.length !== 0) {
       const updatedFileContents = stripIndents`${fileContents.slice(
         0,
-        arrayNodes[0].getStart() + 1,
+        arrayNodes[0].getStart() + 1
       )}'${pathToTestSetup}',${fileContents.slice(
-        arrayNodes[0].getStart() + 1,
+        arrayNodes[0].getStart() + 1
       )}`;
 
       tree.write(pathToJestConfig, updatedFileContents);
@@ -103,7 +103,7 @@ export function updateJestTestSetup(
 export function updateJestTestMatch(
   tree: Tree,
   pathToJestConfig: string,
-  includesString: string,
+  includesString: string
 ) {
   if (!tsModule) {
     tsModule = ensureTypescript();
@@ -120,7 +120,7 @@ export function updateJestTestMatch(
   if (nodes.length !== 0) {
     const updatedFileContents = stripIndents`${fileContents.slice(
       0,
-      nodes[0].getStart(),
+      nodes[0].getStart()
     )}testMatch: ["${includesString}"]${fileContents.slice(nodes[0].getEnd())}`;
 
     tree.write(pathToJestConfig, updatedFileContents);
@@ -130,7 +130,7 @@ export function updateJestTestMatch(
 export function updateVitestTestIncludes(
   tree: Tree,
   pathToVitestConfig: string,
-  includesString: string,
+  includesString: string
 ) {
   if (!tsModule) {
     tsModule = ensureTypescript();
@@ -147,7 +147,7 @@ export function updateVitestTestIncludes(
   if (nodes.length !== 0) {
     const updatedFileContents = stripIndents`${fileContents.slice(
       0,
-      nodes[0].getStart(),
+      nodes[0].getStart()
     )}include: ["${includesString}"]${fileContents.slice(nodes[0].getEnd())}`;
 
     tree.write(pathToVitestConfig, updatedFileContents);

@@ -36,7 +36,7 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
 
   const relativePathToRootTsConfig = getRelativePathToRootTsConfig(
     host,
-    options.appProjectRoot,
+    options.appProjectRoot
   );
   const appTests = getAppTests(options);
   const templateVariables = {
@@ -53,7 +53,7 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
       host,
       join(__dirname, '../files/base-vite'),
       options.appProjectRoot,
-      templateVariables,
+      templateVariables
     );
   } else if (options.bundler === 'webpack') {
     generateFiles(
@@ -65,7 +65,7 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
         webpackPluginOptions: hasWebpackPlugin(host)
           ? createNxWebpackPluginOptions(options)
           : null,
-      },
+      }
     );
     if (options.compiler === 'babel') {
       writeJson(host, `${options.appProjectRoot}/.babelrc`, {
@@ -125,7 +125,7 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
       host,
       join(__dirname, '../files/base-rspack'),
       options.appProjectRoot,
-      templateVariables,
+      templateVariables
     );
   }
 
@@ -134,7 +134,7 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
     (options.unitTestRunner === 'vitest' && options.inSourceTests == true)
   ) {
     host.delete(
-      `${options.appProjectRoot}/src/app/${options.fileName}.spec.tsx`,
+      `${options.appProjectRoot}/src/app/${options.fileName}.spec.tsx`
     );
   }
 
@@ -143,7 +143,7 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
       host,
       join(__dirname, '../files/nx-welcome'),
       options.appProjectRoot,
-      templateVariables,
+      templateVariables
     );
   }
 
@@ -151,7 +151,7 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
     host,
     join(__dirname, styleSolutionSpecificAppFiles),
     options.appProjectRoot,
-    templateVariables,
+    templateVariables
   );
 
   if (options.js) {
@@ -163,12 +163,12 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
     options.appProjectRoot,
     'app',
     options,
-    relativePathToRootTsConfig,
+    relativePathToRootTsConfig
   );
 }
 
 function createNxWebpackPluginOptions(
-  options: NormalizedSchema,
+  options: NormalizedSchema
 ): WithNxOptions & WithReactOptions {
   return {
     target: 'web',
@@ -177,7 +177,7 @@ function createNxWebpackPluginOptions(
       'dist',
       options.appProjectRoot != '.'
         ? options.appProjectRoot
-        : options.projectName,
+        : options.projectName
     ),
     index: './src/index.html',
     baseHref: '/',

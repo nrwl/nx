@@ -5,7 +5,7 @@ import { NormalizedSchema } from '../schema';
 export async function normalizeRemoteName(
   tree: Tree,
   remote: string,
-  options: NormalizedSchema,
+  options: NormalizedSchema
 ) {
   const { projectName: remoteName } = await determineProjectNameAndRootOptions(
     tree,
@@ -15,7 +15,7 @@ export async function normalizeRemoteName(
       directory: options.directory,
       projectNameAndRootFormat: options.projectNameAndRootFormat,
       callingGenerator: '@nx/react:host',
-    },
+    }
   );
 
   return remoteName;
@@ -23,7 +23,7 @@ export async function normalizeRemoteName(
 
 export function normalizeRemoteDirectory(
   remote: string,
-  options: NormalizedSchema,
+  options: NormalizedSchema
 ) {
   if (options.projectNameAndRootFormat === 'derived' || !options.directory) {
     return options.directory;

@@ -5,7 +5,7 @@ import { NormalizedSchema, ComponentGeneratorSchema } from './schema';
 
 export async function componentGenerator(
   host: Tree,
-  schema: ComponentGeneratorSchema,
+  schema: ComponentGeneratorSchema
 ) {
   return componentGeneratorInternal(host, {
     nameAndDirectoryFormat: 'derived',
@@ -15,7 +15,7 @@ export async function componentGenerator(
 
 export async function componentGeneratorInternal(
   host: Tree,
-  schema: ComponentGeneratorSchema,
+  schema: ComponentGeneratorSchema
 ) {
   const options = await normalizeOptions(host, schema);
 

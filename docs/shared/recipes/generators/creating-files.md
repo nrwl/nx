@@ -51,7 +51,7 @@ export default async function (tree: Tree, schema: any) {
     tree, // the virtual file system
     joinPathFragments(__dirname, './files'), // path to the file templates
     libraryRoot, // destination path of the files
-    schema, // config object to replace variable in file templates
+    schema // config object to replace variable in file templates
   );
   await formatFiles(tree);
   return () => {

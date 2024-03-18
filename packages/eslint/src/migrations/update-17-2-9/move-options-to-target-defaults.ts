@@ -37,7 +37,7 @@ export default async function update(tree: Tree) {
     '@nx/eslint:lint',
     (value, proj, targetName) => {
       lintTargets.add(targetName);
-    },
+    }
   );
 
   // Workspace does not use eslint?
@@ -72,14 +72,14 @@ export default async function update(tree: Tree) {
   const projectMap = getProjects(tree);
 
   for (const [targetDefaultKey, targetDefault] of Object.entries(
-    nxJson.targetDefaults,
+    nxJson.targetDefaults
   )) {
     if (
       !isTargetDefaultUsed(
         targetDefault,
         nxJson.targetDefaults,
         projects,
-        projectMap,
+        projectMap
       )
     ) {
       delete nxJson.targetDefaults[targetDefaultKey];
@@ -101,10 +101,10 @@ export default async function update(tree: Tree) {
             .filter(
               (filePattern) =>
                 filePattern !== '{projectRoot}' &&
-                filePattern !== projConfig.root,
+                filePattern !== projConfig.root
             )
             .map((filePattern) =>
-              filePattern.replace(projectRootRegex, '{projectRoot}/'),
+              filePattern.replace(projectRootRegex, '{projectRoot}/')
             );
         // remove lintFilePatterns if empty
         if (
@@ -118,7 +118,7 @@ export default async function update(tree: Tree) {
       if (
         projConfig.targets[targetName].inputs &&
         projConfig.targets[targetName].inputs.every((i) =>
-          lintDefaults.inputs.includes(i),
+          lintDefaults.inputs.includes(i)
         )
       ) {
         delete projConfig.targets[targetName].inputs;
@@ -151,7 +151,7 @@ export default async function update(tree: Tree) {
         delete projConfig.targets[targetName].outputs;
       }
       updateProjectConfiguration(tree, proj, projConfig);
-    },
+    }
   );
 
   if (addOutputs) {
@@ -166,7 +166,7 @@ function isTargetDefaultUsed(
   targetDefault: Partial<TargetConfiguration>,
   targetDefaults: TargetDefaults,
   projects: Record<string, ProjectGraphProjectNode>,
-  projectMap: Map<string, ProjectConfiguration>,
+  projectMap: Map<string, ProjectConfiguration>
 ) {
   for (const p of Object.values(projects)) {
     for (const targetName in p.data?.targets ?? {}) {
@@ -175,7 +175,7 @@ function isTargetDefaultUsed(
           targetName,
           targetDefaults,
           // It might seem like we should use the graph here too but we don't want to pass an executor which was processed in the graph
-          projectMap.get(p.name)?.targets?.[targetName]?.executor,
+          projectMap.get(p.name)?.targets?.[targetName]?.executor
         ) === targetDefault
       ) {
         return true;

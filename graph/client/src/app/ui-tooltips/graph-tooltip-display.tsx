@@ -20,7 +20,7 @@ export function TooltipDisplay() {
 
   const currentTooltip = useSyncExternalStore(
     (callback) => tooltipService.subscribe(callback),
-    () => tooltipService.currentTooltip,
+    () => tooltipService.currentTooltip
   );
 
   let tooltipToRender;
@@ -36,11 +36,11 @@ export function TooltipDisplay() {
                     routeConstructor(
                       {
                         pathname: `/project-details/${encodeURIComponent(
-                          currentTooltip.props.id,
+                          currentTooltip.props.id
                         )}`,
                       },
-                      false,
-                    ),
+                      false
+                    )
                   );
                 };
               } else {
@@ -99,12 +99,12 @@ export function TooltipDisplay() {
               routeConstructor(
                 {
                   pathname: `/project-details/${encodeURIComponent(
-                    projectName,
+                    projectName
                   )}`,
                   search: `expanded=${targetName}`,
                 },
-                false,
-              ),
+                false
+              )
             );
           };
         } else {

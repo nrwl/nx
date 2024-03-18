@@ -7,7 +7,7 @@ import {
 
 export function checkDependencies(
   context: ExecutorContext,
-  tsConfigPath: string,
+  tsConfigPath: string
 ): {
   tmpTsConfig: string | null;
   projectRoot: string;
@@ -20,7 +20,7 @@ export function checkDependencies(
     context.root,
     context.projectName,
     context.targetName,
-    context.configurationName,
+    context.configurationName
   );
   const projectRoot = target.data.root;
 
@@ -30,7 +30,7 @@ export function checkDependencies(
         tsConfigPath,
         context.root,
         projectRoot,
-        dependencies,
+        dependencies
       ),
       projectRoot,
       target,

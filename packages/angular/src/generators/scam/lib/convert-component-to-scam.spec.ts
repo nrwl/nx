@@ -38,7 +38,7 @@ describe('convertComponentToScam', () => {
     // ASSERT
     const componentSource = tree.read(
       'apps/app1/src/app/example/example.component.ts',
-      'utf-8',
+      'utf-8'
     );
     expect(componentSource).toMatchInlineSnapshot(`
       "import { Component, NgModule } from '@angular/core';
@@ -95,7 +95,7 @@ describe('convertComponentToScam', () => {
     // ASSERT
     const componentModuleSource = tree.read(
       'apps/app1/src/app/example/example.module.ts',
-      'utf-8',
+      'utf-8'
     );
     expect(componentModuleSource).toMatchInlineSnapshot(`
       "import { NgModule } from '@angular/core';
@@ -148,7 +148,7 @@ describe('convertComponentToScam', () => {
     // ASSERT
     const componentSource = tree.read(
       'apps/app1/src/app/example.component.ts',
-      'utf-8',
+      'utf-8'
     );
     expect(componentSource).toMatchInlineSnapshot(`
       "import { Component, NgModule } from '@angular/core';
@@ -207,7 +207,7 @@ describe('convertComponentToScam', () => {
     // ASSERT
     const componentModuleSource = tree.read(
       'apps/app1/src/app/example.module.ts',
-      'utf-8',
+      'utf-8'
     );
     expect(componentModuleSource).toMatchInlineSnapshot(`
       "import { NgModule } from '@angular/core';
@@ -262,7 +262,7 @@ describe('convertComponentToScam', () => {
     // ASSERT
     const componentSource = tree.read(
       'apps/app1/src/app/example.random.ts',
-      'utf-8',
+      'utf-8'
     );
     expect(componentSource).toMatchInlineSnapshot(`
       "import { Component, NgModule } from '@angular/core';
@@ -323,7 +323,7 @@ describe('convertComponentToScam', () => {
     // ASSERT
     const componentModuleSource = tree.read(
       'apps/app1/src/app/example.module.ts',
-      'utf-8',
+      'utf-8'
     );
     expect(componentModuleSource).toMatchInlineSnapshot(`
       "import { NgModule } from '@angular/core';
@@ -377,7 +377,7 @@ describe('convertComponentToScam', () => {
     // ASSERT
     const componentModuleSource = tree.read(
       'apps/app1/src/app/random/example/example.component.ts',
-      'utf-8',
+      'utf-8'
     );
     expect(componentModuleSource).toMatchInlineSnapshot(`
       "import { Component, NgModule } from '@angular/core';
@@ -437,7 +437,7 @@ describe('convertComponentToScam', () => {
     // ASSERT
     const componentModuleSource = tree.read(
       'apps/app1/src/app/random/example.component.ts',
-      'utf-8',
+      'utf-8'
     );
     expect(componentModuleSource).toMatchInlineSnapshot(`
       "import { Component, NgModule } from '@angular/core';

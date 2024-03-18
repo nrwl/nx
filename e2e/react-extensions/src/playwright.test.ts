@@ -18,7 +18,7 @@ describe('React Playwright e2e tests', () => {
       packages: ['@nx/react'],
     });
     runCLI(
-      `generate @nx/react:app ${appName} --e2eTestRunner=playwright --projectNameAndRootFormat=as-provided --no-interactive`,
+      `generate @nx/react:app ${appName} --e2eTestRunner=playwright --projectNameAndRootFormat=as-provided --no-interactive`
     );
   });
 
@@ -28,14 +28,14 @@ describe('React Playwright e2e tests', () => {
     if (runE2ETests()) {
       const result = runCLI(`e2e ${appName}-e2e --verbose`);
       expect(result).toContain(
-        `Successfully ran target e2e for project ${appName}-e2e`,
+        `Successfully ran target e2e for project ${appName}-e2e`
       );
     }
   });
 
   it('should execute e2e tests using playwright with a library used in the app', () => {
     runCLI(
-      `generate @nx/js:library ${usedInAppLibName} --unitTestRunner=none --importPath=@mylib --projectNameAndRootFormat=as-provided --no-interactive`,
+      `generate @nx/js:library ${usedInAppLibName} --unitTestRunner=none --importPath=@mylib --projectNameAndRootFormat=as-provided --no-interactive`
     );
 
     updateFile(
@@ -50,13 +50,13 @@ describe('React Playwright e2e tests', () => {
       // Expect h1 to contain a substring.
       expect(await page.locator('h1').innerText()).toContain('Welcome');
     });
-    `,
+    `
     );
 
     if (runE2ETests()) {
       const result = runCLI(`e2e ${appName}-e2e --verbose`);
       expect(result).toContain(
-        `Successfully ran target e2e for project ${appName}-e2e`,
+        `Successfully ran target e2e for project ${appName}-e2e`
       );
     }
   });

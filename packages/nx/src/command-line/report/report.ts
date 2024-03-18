@@ -23,13 +23,13 @@ import { getNxRequirePaths } from '../../utils/installation-directory';
 import { NxJsonConfiguration, readNxJson } from '../../config/nx-json';
 
 const nxPackageJson = readJsonFile<typeof import('../../../package.json')>(
-  join(__dirname, '../../../package.json'),
+  join(__dirname, '../../../package.json')
 );
 
 export const packagesWeCareAbout = [
   'lerna',
   ...nxPackageJson['nx-migrations'].packageGroup.map((x) =>
-    typeof x === 'string' ? x : x.package,
+    typeof x === 'string' ? x : x.package
   ),
   '@nrwl/schematics', // manually added since we don't publish it anymore.
   'typescript',
@@ -73,7 +73,7 @@ export async function reportHandler() {
     Math.max(...packageVersionsWeCareAbout.map((x) => x.package.length)) + 1;
   packageVersionsWeCareAbout.forEach((p) => {
     bodyLines.push(
-      `${chalk.green(p.package.padEnd(padding))} : ${chalk.bold(p.version)}`,
+      `${chalk.green(p.package.padEnd(padding))} : ${chalk.bold(p.version)}`
     );
   });
 
@@ -83,7 +83,7 @@ export async function reportHandler() {
     bodyLines.push('Community plugins:');
     communityPlugins.forEach((p) => {
       bodyLines.push(
-        `${chalk.green(p.name.padEnd(padding))}: ${chalk.bold(p.version)}`,
+        `${chalk.green(p.name.padEnd(padding))}: ${chalk.bold(p.version)}`
       );
     });
   }
@@ -101,14 +101,14 @@ export async function reportHandler() {
   if (outOfSyncPackageGroup) {
     bodyLines.push(LINE_SEPARATOR);
     bodyLines.push(
-      `The following packages should match the installed version of ${outOfSyncPackageGroup.basePackage}`,
+      `The following packages should match the installed version of ${outOfSyncPackageGroup.basePackage}`
     );
     for (const pkg of outOfSyncPackageGroup.misalignedPackages) {
       bodyLines.push(`  - ${pkg.name}@${pkg.version}`);
     }
     bodyLines.push('');
     bodyLines.push(
-      `To fix this, run \`nx migrate ${outOfSyncPackageGroup.migrateTarget}\``,
+      `To fix this, run \`nx migrate ${outOfSyncPackageGroup.migrateTarget}\``
     );
   }
 
@@ -191,7 +191,7 @@ async function findLocalPlugins(nxJson: NxJsonConfiguration) {
     const projectGraph = await createProjectGraphAsync({ exitOnError: true });
     const localPlugins = await getLocalWorkspacePlugins(
       readProjectsConfigurationFromProjectGraph(projectGraph),
-      nxJson,
+      nxJson
     );
     return Array.from(localPlugins.keys());
   } catch {
@@ -221,7 +221,7 @@ interface OutOfSyncPackageGroup {
 }
 
 export function findMisalignedPackagesForPackage(
-  base: PackageJson,
+  base: PackageJson
 ): undefined | OutOfSyncPackageGroup {
   const misalignedPackages: { name: string; version: string }[] = [];
 
@@ -264,8 +264,8 @@ export function findInstalledCommunityPlugins(): PackageJson[] {
       !patternsWeIgnoreInCommunityReport.some((pattern) =>
         typeof pattern === 'string'
           ? pattern === dep.name
-          : pattern.test(dep.name),
-      ),
+          : pattern.test(dep.name)
+      )
   );
 }
 export function findInstalledPackagesWeCareAbout() {

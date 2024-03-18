@@ -14,12 +14,12 @@ import { NormalizedSchema } from '../schema';
 export function updateStorybookConfig(
   tree: Tree,
   schema: NormalizedSchema,
-  project: ProjectConfiguration,
+  project: ProjectConfiguration
 ) {
   const oldRelativeRoot = path
     .relative(
       path.join(workspaceRoot, `${project.root}/.storybook`),
-      workspaceRoot,
+      workspaceRoot
     )
     .split(path.sep)
     .join('/');
@@ -27,16 +27,16 @@ export function updateStorybookConfig(
     .relative(
       path.join(
         workspaceRoot,
-        `${schema.relativeToRootDestination}/.storybook`,
+        `${schema.relativeToRootDestination}/.storybook`
       ),
-      workspaceRoot,
+      workspaceRoot
     )
     .split(path.sep)
     .join('/');
 
   const storybookDir = path.join(
     schema.relativeToRootDestination,
-    '.storybook',
+    '.storybook'
   );
 
   if (!storybookDir) {
@@ -51,7 +51,7 @@ function updateRecursively(
   tree: Tree,
   dir: string,
   oldRoot: string,
-  newRoot: string,
+  newRoot: string
 ) {
   for (const child of tree.children(dir)) {
     const childPath = join(dir, child);

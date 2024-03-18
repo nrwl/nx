@@ -51,8 +51,8 @@ describe('buildEsbuildOptions', () => {
           external: [],
           userDefinedBuildOptions: {},
         },
-        context,
-      ),
+        context
+      )
     ).toEqual({
       bundle: true,
       define: expect.objectContaining({
@@ -92,8 +92,8 @@ describe('buildEsbuildOptions', () => {
           external: [],
           userDefinedBuildOptions: {},
         },
-        context,
-      ),
+        context
+      )
     ).toEqual({
       bundle: true,
       define: expect.objectContaining({
@@ -132,8 +132,8 @@ describe('buildEsbuildOptions', () => {
           external: [],
           userDefinedBuildOptions: {},
         },
-        context,
-      ),
+        context
+      )
     ).toEqual({
       bundle: true,
       define: expect.objectContaining({
@@ -172,8 +172,8 @@ describe('buildEsbuildOptions', () => {
           external: [],
           userDefinedBuildOptions: {},
         },
-        context,
-      ),
+        context
+      )
     ).toEqual({
       bundle: true,
       entryNames: '[dir]/[name]',
@@ -213,8 +213,8 @@ describe('buildEsbuildOptions', () => {
             },
           },
         },
-        context,
-      ),
+        context
+      )
     ).toEqual({
       bundle: true,
       entryNames: '[dir]/[name]',
@@ -252,8 +252,8 @@ describe('buildEsbuildOptions', () => {
             },
           },
         },
-        context,
-      ),
+        context
+      )
     ).toEqual({
       bundle: true,
       entryNames: '[dir]/[name]',
@@ -292,8 +292,8 @@ describe('buildEsbuildOptions', () => {
             },
           },
         },
-        context,
-      ),
+        context
+      )
     ).toEqual({
       bundle: true,
       entryNames: '[dir]/[name]',
@@ -331,8 +331,8 @@ describe('buildEsbuildOptions', () => {
             external: ['bar'],
           },
         },
-        context,
-      ),
+        context
+      )
     ).toEqual({
       bundle: true,
       entryNames: '[dir]/[name]',
@@ -367,8 +367,8 @@ describe('buildEsbuildOptions', () => {
           external: ['foo'],
           userDefinedBuildOptions: {},
         },
-        context,
-      ),
+        context
+      )
     ).toEqual({
       bundle: false,
       entryNames: '[dir]/[name]',
@@ -405,8 +405,8 @@ describe('buildEsbuildOptions', () => {
           external: [],
           userDefinedBuildOptions: {},
         },
-        context,
-      ),
+        context
+      )
     ).toEqual({
       bundle: false,
       entryNames: '[dir]/[name]',
@@ -442,8 +442,8 @@ describe('buildEsbuildOptions', () => {
           external: [],
           userDefinedBuildOptions: {},
         },
-        context,
-      ),
+        context
+      )
     ).toEqual({
       bundle: false,
       entryNames: '[dir]/[name]',
@@ -481,8 +481,8 @@ describe('buildEsbuildOptions', () => {
           },
           external: [],
         },
-        context,
-      ),
+        context
+      )
     ).toEqual({
       bundle: false,
       entryNames: '[dir]/[name]',
@@ -521,8 +521,8 @@ describe('buildEsbuildOptions', () => {
           sourcemap: true,
           external: [],
         },
-        context,
-      ),
+        context
+      )
     ).toEqual({
       bundle: false,
       entryNames: '[dir]/[name]',

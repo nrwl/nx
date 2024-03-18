@@ -29,10 +29,10 @@ export class NativeTaskHasherImpl implements TaskHasherImpl {
     nxJson: NxJsonConfiguration,
     projectGraph: ProjectGraph,
     externals: NxWorkspaceFilesExternals,
-    options: { selectivelyHashTsConfig: boolean },
+    options: { selectivelyHashTsConfig: boolean }
   ) {
     this.projectGraphRef = transferProjectGraph(
-      transformProjectGraphForRust(projectGraph),
+      transformProjectGraphForRust(projectGraph)
     );
 
     this.allWorkspaceFilesRef = externals.allWorkspaceFiles;
@@ -58,14 +58,14 @@ export class NativeTaskHasherImpl implements TaskHasherImpl {
       this.allWorkspaceFilesRef,
       Buffer.from(JSON.stringify(tsconfig)),
       paths,
-      options,
+      options
     );
   }
 
   async hashTask(
     task: Task,
     taskGraph: TaskGraph,
-    env: NodeJS.ProcessEnv,
+    env: NodeJS.ProcessEnv
   ): Promise<PartialHash> {
     const plans = this.planner.getPlansReference([task.id], taskGraph);
     const hashes = this.hasher.hashPlans(plans, env);
@@ -76,11 +76,11 @@ export class NativeTaskHasherImpl implements TaskHasherImpl {
   async hashTasks(
     tasks: Task[],
     taskGraph: TaskGraph,
-    env: NodeJS.ProcessEnv,
+    env: NodeJS.ProcessEnv
   ): Promise<PartialHash[]> {
     const plans = this.planner.getPlansReference(
       tasks.map((t) => t.id),
-      taskGraph,
+      taskGraph
     );
     const hashes = this.hasher.hashPlans(plans, env);
     return tasks.map((t) => hashes[t.id]);

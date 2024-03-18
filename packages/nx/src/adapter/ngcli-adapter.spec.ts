@@ -22,7 +22,7 @@ describe('ngcli-adapter', () => {
 
     const wrappedSchematic = wrapAngularDevkitSchematic(
       '@schematics/angular',
-      'class',
+      'class'
     );
 
     // ACT

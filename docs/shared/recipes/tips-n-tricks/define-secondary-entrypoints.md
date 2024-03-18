@@ -41,13 +41,13 @@ If you're using the `@nx/js:tsc` executor, as of Nx 16.8, you can specify the `a
           "main": "packages/my-awesome-lib/src/index.ts",
           "additionalEntryPoints": [
             "packages/my-awesome-lib/src/foo.ts",
-            "packages/my-awesome-lib/src/bar.ts",
+            "packages/my-awesome-lib/src/bar.ts"
           ],
-          "generateExportsField": true,
-        },
-      },
-    },
-  },
+          "generateExportsField": true
+        }
+      }
+    }
+  }
 }
 ```
 
@@ -64,12 +64,12 @@ If you're using the `@nx/js:tsc` executor, as of Nx 16.8, you can specify the `a
         "main": "packages/my-awesome-lib/src/index.ts",
         "additionalEntryPoints": [
           "packages/my-awesome-lib/src/foo.ts",
-          "packages/my-awesome-lib/src/bar.ts",
+          "packages/my-awesome-lib/src/bar.ts"
         ],
-        "generateExportsField": true,
-      },
-    },
-  },
+        "generateExportsField": true
+      }
+    }
+  }
 }
 ```
 

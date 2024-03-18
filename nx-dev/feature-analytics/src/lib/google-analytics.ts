@@ -27,7 +27,7 @@ export function sendCustomEvent(
   category: string,
   label: string,
   value?: number,
-  customObject?: Record<string, unknown>,
+  customObject?: Record<string, unknown>
 ): void {
   try {
     gtag('event', action, {

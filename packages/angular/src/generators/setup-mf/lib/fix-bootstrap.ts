@@ -24,7 +24,7 @@ fetch('/assets/module-federation.manifest.json')
     mainFilePath,
     options.mfType === 'host' && options.federationType === 'dynamic'
       ? fetchMFManifestCode
-      : `${bootstrapImportCode};`,
+      : `${bootstrapImportCode};`
   );
 }
 

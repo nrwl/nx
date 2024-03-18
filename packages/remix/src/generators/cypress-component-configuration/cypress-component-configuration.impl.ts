@@ -11,7 +11,7 @@ import { cypressComponentConfigGenerator } from '@nx/react';
 
 export function cypressComponentConfigurationGenerator(
   tree: Tree,
-  options: CypressComponentConfigurationSchema,
+  options: CypressComponentConfigurationSchema
 ) {
   return cypressComponentConfigurationGeneratorInternal(tree, {
     addPlugin: false,
@@ -21,7 +21,7 @@ export function cypressComponentConfigurationGenerator(
 
 export async function cypressComponentConfigurationGeneratorInternal(
   tree: Tree,
-  options: CypressComponentConfigurationSchema,
+  options: CypressComponentConfigurationSchema
 ) {
   const nxJson = readNxJson(tree);
   const addPluginDefault =

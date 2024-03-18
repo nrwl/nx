@@ -12,10 +12,10 @@ export function getRemoteIfExists(tree: Tree, remote: string) {
 
   const hasModuleFederationConfig =
     tree.exists(
-      joinPathFragments(remoteProject.root, 'module-federation.config.ts'),
+      joinPathFragments(remoteProject.root, 'module-federation.config.ts')
     ) ||
     tree.exists(
-      joinPathFragments(remoteProject.root, 'module-federation.config.js'),
+      joinPathFragments(remoteProject.root, 'module-federation.config.js')
     );
 
   return hasModuleFederationConfig ? remoteProject : false;

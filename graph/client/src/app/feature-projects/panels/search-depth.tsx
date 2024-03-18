@@ -74,5 +74,5 @@ export const SearchDepth = memo(
         </div>
       </div>
     );
-  },
+  }
 );

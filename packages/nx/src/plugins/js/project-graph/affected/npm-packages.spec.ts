@@ -84,7 +84,7 @@ describe('getTouchedNpmPackages', () => {
           'happy-nrwl': '0.0.2',
         },
       },
-      projectGraph,
+      projectGraph
     );
     expect(result).toEqual(['npm:happy-nrwl']);
   });
@@ -117,10 +117,10 @@ describe('getTouchedNpmPackages', () => {
           '@types/happy-nrwl': '0.0.2',
         },
       },
-      projectGraph,
+      projectGraph
     );
     expect(result).toEqual(
-      expect.arrayContaining(['npm:@types/happy-nrwl', 'npm:happy-nrwl']),
+      expect.arrayContaining(['npm:@types/happy-nrwl', 'npm:happy-nrwl'])
     );
   });
 
@@ -149,7 +149,7 @@ describe('getTouchedNpmPackages', () => {
           '@types/happy-nrwl': '0.0.2',
         },
       },
-      projectGraph,
+      projectGraph
     );
     expect(result).toEqual(expect.arrayContaining(['npm:@types/happy-nrwl']));
   });
@@ -179,7 +179,7 @@ describe('getTouchedNpmPackages', () => {
           'happy-nrwl': '0.0.2',
         },
       },
-      projectGraph,
+      projectGraph
     );
     expect(result).toEqual(['proj1', 'proj2']);
   });
@@ -218,7 +218,7 @@ describe('getTouchedNpmPackages', () => {
           'awesome-nrwl': '0.0.1',
         },
       },
-      projectGraph,
+      projectGraph
     );
     expect(result).toEqual(['npm:awesome-nrwl']);
   });
@@ -248,7 +248,7 @@ describe('getTouchedNpmPackages', () => {
           'awesome-nrwl': '0.0.1',
         },
       },
-      projectGraph,
+      projectGraph
     );
     expect(result).toEqual([
       'npm:happy-nrwl',
@@ -290,7 +290,7 @@ describe('getTouchedNpmPackages', () => {
             data: {} as any,
           },
         },
-      },
+      }
     );
     expect(result).toEqual(['changed-test-pkg-name-1']);
   });
@@ -325,11 +325,11 @@ describe('getTouchedNpmPackages', () => {
             'awesome-nrwl': '0.0.1',
           },
         },
-        projectGraph,
+        projectGraph
       );
     }).not.toThrowError();
     expect(logger.warn).toHaveBeenCalledWith(
-      'The affected projects might have not been identified properly. The package(s) changed-test-pkg-name-1, changed-test-pkg-name-2 were not found. Please open an issue in GitHub including the package.json file.',
+      'The affected projects might have not been identified properly. The package(s) changed-test-pkg-name-1, changed-test-pkg-name-2 were not found. Please open an issue in GitHub including the package.json file.'
     );
   });
 });

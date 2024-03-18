@@ -28,7 +28,7 @@ describe('app migrator', () => {
 
   function addProject(
     name: string,
-    config: AngularCliProjectConfiguration,
+    config: AngularCliProjectConfiguration
   ): MigrationProjectConfiguration {
     config.projectType = 'application';
     const angularJson = readJson(tree, 'angular.json');
@@ -59,10 +59,10 @@ describe('app migrator', () => {
 
       expect(result).toHaveLength(1);
       expect(result[0].message).toBe(
-        'The project root is not defined in the project configuration. The project will be skipped.',
+        'The project root is not defined in the project configuration. The project will be skipped.'
       );
       expect(result[0].hint).toBe(
-        'Make sure to manually migrate its configuration and files or remove the project if it is not valid. Alternatively, you could revert the migration, ensure the value for "projects.app1.root" is set and run the migration again.',
+        'Make sure to manually migrate its configuration and files or remove the project if it is not valid. Alternatively, you could revert the migration, ensure the value for "projects.app1.root" is set and run the migration again.'
       );
     });
 
@@ -74,17 +74,17 @@ describe('app migrator', () => {
         {
           ...project,
           config: { ...project.config, root: 'wrong-root' },
-        },
+        }
       );
 
       const result = migrator.validate();
 
       expect(result).toHaveLength(1);
       expect(result[0].message).toBe(
-        'The project root "wrong-root" could not be found. The project will be skipped.',
+        'The project root "wrong-root" could not be found. The project will be skipped.'
       );
       expect(result[0].hint).toBe(
-        'Make sure to manually migrate its configuration and files or remove the project if it is not valid. Alternatively, you could revert the migration, ensure the value for "projects.app1.root" is correct and run the migration again.',
+        'Make sure to manually migrate its configuration and files or remove the project if it is not valid. Alternatively, you could revert the migration, ensure the value for "projects.app1.root" is correct and run the migration again.'
       );
     });
 
@@ -96,17 +96,17 @@ describe('app migrator', () => {
         {
           ...project,
           config: { ...project.config, sourceRoot: 'wrong-src' },
-        },
+        }
       );
 
       const result = migrator.validate();
 
       expect(result).toHaveLength(1);
       expect(result[0].message).toBe(
-        'The project source root "wrong-src" could not be found. The project will be skipped.',
+        'The project source root "wrong-src" could not be found. The project will be skipped.'
       );
       expect(result[0].hint).toBe(
-        'Make sure to manually migrate its configuration and files or remove the project if it is not valid. Alternatively, you could revert the migration, ensure the value for "projects.app1.sourceRoot" is correct and run the migration again.',
+        'Make sure to manually migrate its configuration and files or remove the project if it is not valid. Alternatively, you could revert the migration, ensure the value for "projects.app1.sourceRoot" is correct and run the migration again.'
       );
     });
 
@@ -125,7 +125,7 @@ describe('app migrator', () => {
         `The "build" target is using a builder "@not/supported:builder" that's not currently supported by the automated migration. The target will be skipped.`,
       ]);
       expect(result[0].hint).toMatchInlineSnapshot(
-        `"Make sure to manually migrate the target configuration and any possible associated files. Alternatively, you could revert the migration, change the builder to one of the builders supported by the automated migration ("@angular-devkit/build-angular:application", "@angular-devkit/build-angular:browser", "@angular-devkit/build-angular:browser-esbuild", "@angular-devkit/build-angular:protractor", "@cypress/schematic:cypress", "@angular-devkit/build-angular:extract-i18n", "@nguniversal/builders:prerender", "@angular-devkit/build-angular:prerender", "@angular-devkit/build-angular:dev-server", "@angular-devkit/build-angular:server", "@nguniversal/builders:ssr-dev-server", "@angular-devkit/build-angular:ssr-dev-server", "@angular-devkit/build-angular:karma" and "@angular-eslint/builder:lint"), and run the migration again."`,
+        `"Make sure to manually migrate the target configuration and any possible associated files. Alternatively, you could revert the migration, change the builder to one of the builders supported by the automated migration ("@angular-devkit/build-angular:application", "@angular-devkit/build-angular:browser", "@angular-devkit/build-angular:browser-esbuild", "@angular-devkit/build-angular:protractor", "@cypress/schematic:cypress", "@angular-devkit/build-angular:extract-i18n", "@nguniversal/builders:prerender", "@angular-devkit/build-angular:prerender", "@angular-devkit/build-angular:dev-server", "@angular-devkit/build-angular:server", "@nguniversal/builders:ssr-dev-server", "@angular-devkit/build-angular:ssr-dev-server", "@angular-devkit/build-angular:karma" and "@angular-eslint/builder:lint"), and run the migration again."`
       );
     });
 
@@ -148,7 +148,7 @@ describe('app migrator', () => {
         `The "test" target is using a builder "@other/not-supported:builder" that's not currently supported by the automated migration. The target will be skipped.`,
       ]);
       expect(result[0].hint).toMatchInlineSnapshot(
-        `"Make sure to manually migrate the target configuration and any possible associated files. Alternatively, you could revert the migration, change the builder to one of the builders supported by the automated migration ("@angular-devkit/build-angular:application", "@angular-devkit/build-angular:browser", "@angular-devkit/build-angular:browser-esbuild", "@angular-devkit/build-angular:protractor", "@cypress/schematic:cypress", "@angular-devkit/build-angular:extract-i18n", "@nguniversal/builders:prerender", "@angular-devkit/build-angular:prerender", "@angular-devkit/build-angular:dev-server", "@angular-devkit/build-angular:server", "@nguniversal/builders:ssr-dev-server", "@angular-devkit/build-angular:ssr-dev-server", "@angular-devkit/build-angular:karma" and "@angular-eslint/builder:lint"), and run the migration again."`,
+        `"Make sure to manually migrate the target configuration and any possible associated files. Alternatively, you could revert the migration, change the builder to one of the builders supported by the automated migration ("@angular-devkit/build-angular:application", "@angular-devkit/build-angular:browser", "@angular-devkit/build-angular:browser-esbuild", "@angular-devkit/build-angular:protractor", "@cypress/schematic:cypress", "@angular-devkit/build-angular:extract-i18n", "@nguniversal/builders:prerender", "@angular-devkit/build-angular:prerender", "@angular-devkit/build-angular:dev-server", "@angular-devkit/build-angular:server", "@nguniversal/builders:ssr-dev-server", "@angular-devkit/build-angular:ssr-dev-server", "@angular-devkit/build-angular:karma" and "@angular-eslint/builder:lint"), and run the migration again."`
       );
     });
 
@@ -167,7 +167,7 @@ describe('app migrator', () => {
         `The "my-build" target is using a builder "@not/supported:builder" that's not currently supported by the automated migration. The target will be skipped.`,
       ]);
       expect(result[0].hint).toMatchInlineSnapshot(
-        `"Make sure to manually migrate the target configuration and any possible associated files. Alternatively, you could revert the migration, change the builder to one of the builders supported by the automated migration ("@angular-devkit/build-angular:application", "@angular-devkit/build-angular:browser", "@angular-devkit/build-angular:browser-esbuild", "@angular-devkit/build-angular:protractor", "@cypress/schematic:cypress", "@angular-devkit/build-angular:extract-i18n", "@nguniversal/builders:prerender", "@angular-devkit/build-angular:prerender", "@angular-devkit/build-angular:dev-server", "@angular-devkit/build-angular:server", "@nguniversal/builders:ssr-dev-server", "@angular-devkit/build-angular:ssr-dev-server", "@angular-devkit/build-angular:karma" and "@angular-eslint/builder:lint"), and run the migration again."`,
+        `"Make sure to manually migrate the target configuration and any possible associated files. Alternatively, you could revert the migration, change the builder to one of the builders supported by the automated migration ("@angular-devkit/build-angular:application", "@angular-devkit/build-angular:browser", "@angular-devkit/build-angular:browser-esbuild", "@angular-devkit/build-angular:protractor", "@cypress/schematic:cypress", "@angular-devkit/build-angular:extract-i18n", "@nguniversal/builders:prerender", "@angular-devkit/build-angular:prerender", "@angular-devkit/build-angular:dev-server", "@angular-devkit/build-angular:server", "@nguniversal/builders:ssr-dev-server", "@angular-devkit/build-angular:ssr-dev-server", "@angular-devkit/build-angular:karma" and "@angular-eslint/builder:lint"), and run the migration again."`
       );
     });
 
@@ -185,10 +185,10 @@ describe('app migrator', () => {
 
       expect(result).toHaveLength(1);
       expect(result[0].message).toBe(
-        'There is more than one target using a builder that is used to build the project ("build1" and "build2"). This is not currently supported by the automated migration. These targets will be skipped.',
+        'There is more than one target using a builder that is used to build the project ("build1" and "build2"). This is not currently supported by the automated migration. These targets will be skipped.'
       );
       expect(result[0].hint).toBe(
-        'Make sure to manually migrate their configuration and any possible associated files.',
+        'Make sure to manually migrate their configuration and any possible associated files.'
       );
     });
 
@@ -208,16 +208,16 @@ describe('app migrator', () => {
 
       expect(result).toHaveLength(2);
       expect(result[0].message).toBe(
-        'There is more than one target using a builder that is used to build the project ("build1" and "build2"). This is not currently supported by the automated migration. These targets will be skipped.',
+        'There is more than one target using a builder that is used to build the project ("build1" and "build2"). This is not currently supported by the automated migration. These targets will be skipped.'
       );
       expect(result[0].hint).toBe(
-        'Make sure to manually migrate their configuration and any possible associated files.',
+        'Make sure to manually migrate their configuration and any possible associated files.'
       );
       expect(result[1].message).toBe(
-        'There is more than one target using the builder "@angular-eslint/builder:lint": "lint1" and "lint2". This is not currently supported by the automated migration. These targets will be skipped.',
+        'There is more than one target using the builder "@angular-eslint/builder:lint": "lint1" and "lint2". This is not currently supported by the automated migration. These targets will be skipped.'
       );
       expect(result[1].hint).toBe(
-        'Make sure to manually migrate their configuration and any possible associated files.',
+        'Make sure to manually migrate their configuration and any possible associated files.'
       );
     });
 
@@ -245,7 +245,7 @@ describe('app migrator', () => {
       await expect(migrator.migrate()).resolves.not.toThrow();
 
       expect(mockedLogger.warn).toHaveBeenCalledWith(
-        'The project does not have any targets configured. Skipping updating targets.',
+        'The project does not have any targets configured. Skipping updating targets.'
       );
     });
 
@@ -256,7 +256,7 @@ describe('app migrator', () => {
       await expect(migrator.migrate()).resolves.not.toThrow();
 
       expect(mockedLogger.warn).toHaveBeenCalledWith(
-        'The project does not have any targets configured. Skipping updating targets.',
+        'The project does not have any targets configured. Skipping updating targets.'
       );
     });
 
@@ -270,7 +270,7 @@ describe('app migrator', () => {
       await expect(migrator.migrate()).resolves.not.toThrow();
 
       expect(mockedLogger.warn).toHaveBeenCalledWith(
-        'There is no build target in the project configuration. Skipping updating the build target configuration.',
+        'There is no build target in the project configuration. Skipping updating the build target configuration.'
       );
     });
 
@@ -286,7 +286,7 @@ describe('app migrator', () => {
       await expect(migrator.migrate()).resolves.not.toThrow();
 
       expect(mockedLogger.warn).toHaveBeenCalledWith(
-        'The target "build" is not specifying any options or configurations. Skipping updating the target configuration.',
+        'The target "build" is not specifying any options or configurations. Skipping updating the target configuration.'
       );
     });
 
@@ -306,7 +306,7 @@ describe('app migrator', () => {
       await expect(migrator.migrate()).resolves.not.toThrow();
 
       expect(mockedLogger.warn).toHaveBeenCalledWith(
-        'The "build" target does not have the "tsConfig" option configured. Skipping updating the tsConfig file.',
+        'The "build" target does not have the "tsConfig" option configured. Skipping updating the tsConfig file.'
       );
     });
 
@@ -325,7 +325,7 @@ describe('app migrator', () => {
       await expect(migrator.migrate()).resolves.not.toThrow();
 
       expect(mockedLogger.warn).toHaveBeenCalledWith(
-        'The tsConfig file "tsconfig.app.json" specified in the "build" target could not be found. Skipping updating the tsConfig file.',
+        'The tsConfig file "tsconfig.app.json" specified in the "build" target could not be found. Skipping updating the tsConfig file.'
       );
     });
 
@@ -409,7 +409,7 @@ describe('app migrator', () => {
       await expect(migrator.migrate()).resolves.not.toThrow();
 
       expect(mockedLogger.warn).toHaveBeenCalledWith(
-        'The target "server" is not specifying any options or configurations. Skipping updating the target configuration.',
+        'The target "server" is not specifying any options or configurations. Skipping updating the target configuration.'
       );
     });
 
@@ -429,7 +429,7 @@ describe('app migrator', () => {
       await expect(migrator.migrate()).resolves.not.toThrow();
 
       expect(mockedLogger.warn).toHaveBeenCalledWith(
-        'The "server" target does not have the "tsConfig" option configured. Skipping updating the tsConfig file.',
+        'The "server" target does not have the "tsConfig" option configured. Skipping updating the tsConfig file.'
       );
     });
 
@@ -448,7 +448,7 @@ describe('app migrator', () => {
       await expect(migrator.migrate()).resolves.not.toThrow();
 
       expect(mockedLogger.warn).toHaveBeenCalledWith(
-        'The tsConfig file "tsconfig.server.json" specified in the "server" target could not be found. Skipping updating the tsConfig file.',
+        'The tsConfig file "tsconfig.server.json" specified in the "server" target could not be found. Skipping updating the tsConfig file.'
       );
     });
 
@@ -497,7 +497,7 @@ describe('app migrator', () => {
       await expect(migrator.migrate()).resolves.not.toThrow();
 
       expect(mockedLogger.warn).toHaveBeenCalledWith(
-        'The tsConfig file "tsconfig.spec.json" specified in the "test" target could not be found. Skipping updating the tsConfig file.',
+        'The tsConfig file "tsconfig.spec.json" specified in the "test" target could not be found. Skipping updating the tsConfig file.'
       );
     });
 
@@ -513,7 +513,7 @@ describe('app migrator', () => {
       await expect(migrator.migrate()).resolves.not.toThrow();
 
       expect(mockedLogger.warn).toHaveBeenCalledWith(
-        'The target "prerender" is not specifying any options. Skipping updating the target configuration.',
+        'The target "prerender" is not specifying any options. Skipping updating the target configuration.'
       );
     });
 
@@ -529,7 +529,7 @@ describe('app migrator', () => {
       await expect(migrator.migrate()).resolves.not.toThrow();
 
       expect(mockedLogger.warn).toHaveBeenCalledWith(
-        'The target "serve-ssr" is not specifying any options or configurations. Skipping updating the target configuration.',
+        'The target "serve-ssr" is not specifying any options or configurations. Skipping updating the target configuration.'
       );
     });
   });
@@ -1559,7 +1559,7 @@ describe('app migrator', () => {
       await migrator.migrate();
 
       expect(readJson(tree, 'apps/app1/.eslintrc.json').extends).toBe(
-        '../../.eslintrc.json',
+        '../../.eslintrc.json'
       );
     });
 
@@ -1582,7 +1582,7 @@ describe('app migrator', () => {
       await migrator.migrate();
 
       expect(readJson(tree, 'apps/app1/.eslintrc.json').extends).toBe(
-        '../../.eslintrc.json',
+        '../../.eslintrc.json'
       );
     });
 
@@ -1706,7 +1706,7 @@ describe('app migrator', () => {
 
       const { targetDefaults } = readNxJson(tree);
       expect(
-        Object.keys(targetDefaults).filter((f) => targetDefaults[f].cache),
+        Object.keys(targetDefaults).filter((f) => targetDefaults[f].cache)
       ).toStrictEqual([
         'build',
         'lint',
@@ -1740,7 +1740,7 @@ describe('app migrator', () => {
 
       const { targetDefaults } = readNxJson(tree);
       expect(
-        Object.keys(targetDefaults).filter((f) => targetDefaults[f].cache),
+        Object.keys(targetDefaults).filter((f) => targetDefaults[f].cache)
       ).toStrictEqual(['build', 'lint', 'myCustomTest', 'e2e']);
     });
   });

@@ -7,7 +7,7 @@ let tsModule: typeof import('typescript');
 
 export function addImport(
   source: ts.SourceFile,
-  statement: string,
+  statement: string
 ): StringChange[] {
   if (!tsModule) {
     tsModule = ensureTypescript();

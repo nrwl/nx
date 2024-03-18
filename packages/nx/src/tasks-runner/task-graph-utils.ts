@@ -2,7 +2,7 @@ function _findCycle(
   graph: { dependencies: Record<string, string[]> },
   id: string,
   visited: { [taskId: string]: boolean },
-  path: string[],
+  path: string[]
 ) {
   if (visited[id]) return null;
   visited[id] = true;
@@ -35,7 +35,7 @@ function _makeAcyclic(
   graph: { dependencies: Record<string, string[]> },
   id: string,
   visited: { [taskId: string]: boolean },
-  path: string[],
+  path: string[]
 ) {
   if (visited[id]) return;
   visited[id] = true;
@@ -63,6 +63,6 @@ export function makeAcyclic(graph: {
     _makeAcyclic(graph, t, visited, [t]);
   }
   graph.roots = Object.keys(graph.dependencies).filter(
-    (t) => graph.dependencies[t].length === 0,
+    (t) => graph.dependencies[t].length === 0
   );
 }

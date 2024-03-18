@@ -7,7 +7,7 @@ export function updateProjectRootTsConfig(
   host: Tree,
   projectRoot: string,
   relativePathToRootTsConfig: string,
-  isRootProject?: boolean,
+  isRootProject?: boolean
 ) {
   updateJson(host, `${projectRoot}/tsconfig.json`, (json) => {
     if (isRootProject) {

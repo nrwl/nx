@@ -11,7 +11,7 @@ describe('Jest AST Utils', () => {
   displayName: 'blah',
   preset: '../../jest.preset.js'
 };`,
-        `'^.+\\\\.[tj]sx?$': ['ts-jest', {tsconfig: '<rootDir>/tsconfig.spec.json'}]`,
+        `'^.+\\\\.[tj]sx?$': ['ts-jest', {tsconfig: '<rootDir>/tsconfig.spec.json'}]`
       );
 
       expect(actual).toMatchSnapshot();
@@ -27,7 +27,7 @@ describe('Jest AST Utils', () => {
   displayName: 'blah',
   preset: '../../jest.preset.js'
 };`,
-        `'^.+\\\\.[tj]sx?$': ['ts-jest', {tsconfig: '<rootDir>/tsconfig.spec.json'}]`,
+        `'^.+\\\\.[tj]sx?$': ['ts-jest', {tsconfig: '<rootDir>/tsconfig.spec.json'}]`
       );
 
       expect(actual).toMatchSnapshot();
@@ -40,7 +40,7 @@ describe('Jest AST Utils', () => {
   displayName: 'blah',
   preset: '../../jest.preset.js'
 };`,
-        `'^.+\\\\.[tj]sx?$': ['ts-jest', {tsconfig: '<rootDir>/tsconfig.spec.json'}]`,
+        `'^.+\\\\.[tj]sx?$': ['ts-jest', {tsconfig: '<rootDir>/tsconfig.spec.json'}]`
       );
 
       expect(actual).toMatchSnapshot();
@@ -53,7 +53,7 @@ describe('Jest AST Utils', () => {
   displayName: 'blah',
   preset: '../../jest.preset.js'
 };`,
-        `'^.+\\\\.[tj]sx?$': ['ts-jest', {tsconfig: '<rootDir>/tsconfig.spec.json'}]`,
+        `'^.+\\\\.[tj]sx?$': ['ts-jest', {tsconfig: '<rootDir>/tsconfig.spec.json'}]`
       );
 
       expect(actual).toMatchSnapshot();

@@ -14,7 +14,7 @@ export function runNxCommand(
   command?: string,
   opts: { silenceError?: boolean; env?: NodeJS.ProcessEnv; cwd?: string } = {
     silenceError: false,
-  },
+  }
 ): string {
   function _runNxCommand(c) {
     const cwd = opts.cwd ?? tmpProjPath();
@@ -37,7 +37,7 @@ export function runNxCommand(
       .toString()
       .replace(
         /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g,
-        '',
+        ''
       );
   } catch (e) {
     if (opts.silenceError) {
@@ -51,7 +51,7 @@ export function runNxCommand(
 
 export function runCommand(
   command: string,
-  opts: { env?: NodeJS.ProcessEnv; cwd?: string },
+  opts: { env?: NodeJS.ProcessEnv; cwd?: string }
 ): string {
   try {
     return execSync(command, {

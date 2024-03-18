@@ -3,7 +3,7 @@ import { copyFileSync, existsSync, writeFileSync } from 'fs';
 export function writeViteIndexHtml(
   appName: string,
   isStandalone: boolean,
-  isJs: boolean,
+  isJs: boolean
 ) {
   const indexPath = isStandalone ? 'index.html' : `apps/${appName}/index.html`;
   if (existsSync(indexPath)) {
@@ -24,6 +24,6 @@ export function writeViteIndexHtml(
     <div id="root"></div>
     <script type="module" src="${indexFile}"></script>
   </body>
-</html>`,
+</html>`
   );
 }

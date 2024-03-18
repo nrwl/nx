@@ -15,7 +15,7 @@ export type PipeGeneratorOptions = NestGeneratorWithLanguageOption &
 
 export async function pipeGenerator(
   tree: Tree,
-  rawOptions: PipeGeneratorOptions,
+  rawOptions: PipeGeneratorOptions
 ) {
   await pipeGeneratorInternal(tree, {
     nameAndDirectoryFormat: 'derived',
@@ -25,7 +25,7 @@ export async function pipeGenerator(
 
 export async function pipeGeneratorInternal(
   tree: Tree,
-  rawOptions: PipeGeneratorOptions,
+  rawOptions: PipeGeneratorOptions
 ): Promise<any> {
   const options = await normalizePipeOptions(tree, rawOptions);
 
@@ -36,13 +36,13 @@ export default pipeGenerator;
 
 async function normalizePipeOptions(
   tree: Tree,
-  options: PipeGeneratorOptions,
+  options: PipeGeneratorOptions
 ): Promise<NormalizedOptions> {
   const normalizedOptions = await normalizeOptions(
     tree,
     'pipe',
     '@nx/nest:pipe',
-    options,
+    options
   );
   return {
     ...normalizedOptions,

@@ -36,7 +36,7 @@ describe('nx wrapper / .nx installation', () => {
             command: `echo 'Hello from A'`,
           },
         },
-      }),
+      })
     );
 
     updateJson<NxJsonConfiguration>('nx.json', (json) => {
@@ -50,7 +50,7 @@ describe('nx wrapper / .nx installation', () => {
     expect(runNxWrapper('echo a')).toContain('Hello from A');
 
     expect(runNxWrapper('echo a')).toContain(
-      'Nx read the output from the cache instead of running the command for 1 out of 1 tasks',
+      'Nx read the output from the cache instead of running the command for 1 out of 1 tasks'
     );
 
     assertNoRootPackages();
@@ -58,8 +58,8 @@ describe('nx wrapper / .nx installation', () => {
       checkFilesExist(
         '.nx/installation/package.json',
         '.nx/installation/package-lock.json',
-        '.nx/cache/terminalOutputs',
-      ),
+        '.nx/cache/terminalOutputs'
+      )
     ).not.toThrow();
   });
 
@@ -74,14 +74,14 @@ describe('nx wrapper / .nx installation', () => {
     let output = runNxWrapper('list');
     const lines = output.split('\n');
     const installedPluginStart = lines.findIndex((l) =>
-      l.includes('Installed plugins'),
+      l.includes('Installed plugins')
     );
     const installedPluginEnd = lines.findIndex((l) =>
-      l.includes('Also available'),
+      l.includes('Also available')
     );
     const installedPluginLines = lines.slice(
       installedPluginStart + 1,
-      installedPluginEnd,
+      installedPluginEnd
     );
 
     expect(installedPluginLines.some((x) => x.includes(`${bold('nx')}`)));
@@ -108,7 +108,7 @@ describe('nx wrapper / .nx installation', () => {
         version: '1.0.0',
         name: 'migrate-parent-package',
         'nx-migrations': './migrations.json',
-      }),
+      })
     );
 
     updateFile(
@@ -121,7 +121,7 @@ describe('nx wrapper / .nx installation', () => {
             implementation: './run20',
           },
         },
-      }),
+      })
     );
 
     updateFile(
@@ -130,7 +130,7 @@ describe('nx wrapper / .nx installation', () => {
         exports.default = function (host) {
            host.write('file-20', 'content20')
         }
-        `,
+        `
     );
 
     updateFile(
@@ -138,7 +138,7 @@ describe('nx wrapper / .nx installation', () => {
       JSON.stringify({
         name: 'migrate-child-package',
         version: '1.0.0',
-      }),
+      })
     );
 
     /**
@@ -178,7 +178,7 @@ describe('nx wrapper / .nx installation', () => {
             `;
 
         return `${before}${newFetch}${after}`;
-      },
+      }
     );
 
     updateJson('nx.json', (j: NxJsonConfiguration) => {
@@ -199,12 +199,12 @@ describe('nx wrapper / .nx installation', () => {
           NX_MIGRATE_USE_LOCAL: 'true',
           NX_WRAPPER_SKIP_INSTALL: 'true',
         },
-      },
+      }
     );
 
     const nxJson: NxJsonConfiguration = readJson(`nx.json`);
     expect(nxJson.installation.plugins['migrate-child-package']).toEqual(
-      '9.0.0',
+      '9.0.0'
     );
     // creates migrations.json
     const migrationsJson = readJson(`migrations.json`);
@@ -239,7 +239,7 @@ function assertNoRootPackages() {
       'package.json',
       'package-lock.json',
       'yarn-lock.json',
-      'pnpm-lock.yaml',
-    ),
+      'pnpm-lock.yaml'
+    )
   ).not.toThrow();
 }

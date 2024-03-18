@@ -26,13 +26,13 @@ describe('Jest Migration - jest 29 mocked usage in tests', () => {
     const expected = tree.read('libs/my-lib/src/lib/my-lib.spec.ts', 'utf-8');
     await updateTestsJest29(tree);
     expect(
-      tree.read('libs/my-lib/src/file-one.spec.ts', 'utf-8'),
+      tree.read('libs/my-lib/src/file-one.spec.ts', 'utf-8')
     ).toMatchSnapshot();
     expect(
-      tree.read('libs/my-lib/src/file-two.spec.ts', 'utf-8'),
+      tree.read('libs/my-lib/src/file-two.spec.ts', 'utf-8')
     ).toMatchSnapshot();
     expect(tree.read('libs/my-lib/src/lib/my-lib.spec.ts', 'utf-8')).toEqual(
-      expected,
+      expected
     );
   });
   it('should be idempotent', async () => {
@@ -43,25 +43,25 @@ describe('Jest Migration - jest 29 mocked usage in tests', () => {
     await updateTestsJest29(tree);
 
     expect(
-      tree.read('libs/my-lib/src/file-one.spec.ts', 'utf-8'),
+      tree.read('libs/my-lib/src/file-one.spec.ts', 'utf-8')
     ).toMatchSnapshot();
     expect(
-      tree.read('libs/my-lib/src/file-two.spec.ts', 'utf-8'),
+      tree.read('libs/my-lib/src/file-two.spec.ts', 'utf-8')
     ).toMatchSnapshot();
     expect(tree.read('libs/my-lib/src/lib/my-lib.spec.ts', 'utf-8')).toEqual(
-      expected,
+      expected
     );
 
     await updateTestsJest29(tree);
 
     expect(
-      tree.read('libs/my-lib/src/file-one.spec.ts', 'utf-8'),
+      tree.read('libs/my-lib/src/file-one.spec.ts', 'utf-8')
     ).toMatchSnapshot();
     expect(
-      tree.read('libs/my-lib/src/file-two.spec.ts', 'utf-8'),
+      tree.read('libs/my-lib/src/file-two.spec.ts', 'utf-8')
     ).toMatchSnapshot();
     expect(tree.read('libs/my-lib/src/lib/my-lib.spec.ts', 'utf-8')).toEqual(
-      expected,
+      expected
     );
   });
 });
@@ -103,7 +103,7 @@ testEnvironment: 'node',
 preset: '../../jest.preset.js'
 };
 
-`,
+`
   );
   tree.write(
     `libs/${name}/src/file-one.spec.ts`,
@@ -135,7 +135,7 @@ test('direct usage', () => {
 
   expect(jest.mocked(console.log, false).mock.calls).toHaveLength(1);
 });
-  `,
+  `
   );
   tree.write(
     `libs/${name}/src/file-two.spec.ts`,
@@ -167,7 +167,7 @@ test('direct usage', () => {
 
   expect(jest.mocked(console.log, false).mock.calls).toHaveLength(1);
 });
-`,
+`
   );
   projectGraph = {
     dependencies: {},

@@ -21,7 +21,7 @@ describe('Webpack Plugin', () => {
     updateFile(`libs/${myPkg}/src/index.ts`, `console.log('Hello');\n`);
 
     runCLI(
-      `generate @nx/webpack:configuration ${myPkg} --target=node --tsConfig=libs/${myPkg}/tsconfig.lib.json --main=libs/${myPkg}/src/index.ts`,
+      `generate @nx/webpack:configuration ${myPkg} --target=node --tsConfig=libs/${myPkg}/tsconfig.lib.json --main=libs/${myPkg}/src/index.ts`
     );
 
     // Test `scriptType` later during during.
@@ -52,7 +52,7 @@ describe('Webpack Plugin', () => {
           }),
           new DebugPlugin()
         ]
-      };`,
+      };`
     );
 
     rmDist();
@@ -72,7 +72,7 @@ describe('Webpack Plugin', () => {
 
     // swc
     runCLI(
-      `generate @nx/webpack:configuration ${myPkg} --target=node --tsConfig=libs/${myPkg}/tsconfig.lib.json --main=libs/${myPkg}/src/index.ts --compiler=swc`,
+      `generate @nx/webpack:configuration ${myPkg} --target=node --tsConfig=libs/${myPkg}/tsconfig.lib.json --main=libs/${myPkg}/src/index.ts --compiler=swc`
     );
     rmDist();
     runCLI(`build ${myPkg}`);
@@ -86,7 +86,7 @@ describe('Webpack Plugin', () => {
 
     // tsc
     runCLI(
-      `generate @nx/webpack:configuration ${myPkg} --target=node --tsConfig=libs/${myPkg}/tsconfig.lib.json --main=libs/${myPkg}/src/index.ts --compiler=tsc`,
+      `generate @nx/webpack:configuration ${myPkg} --target=node --tsConfig=libs/${myPkg}/tsconfig.lib.json --main=libs/${myPkg}/src/index.ts --compiler=tsc`
     );
     rmDist();
     runCLI(`build ${myPkg}`);
@@ -100,12 +100,12 @@ describe('Webpack Plugin', () => {
     updateFile(`libs/${myPkg}/src/index.ts`, `console.log('Hello');\n`);
 
     runCLI(
-      `generate @nx/webpack:configuration ${myPkg} --target=node --compiler=babel --tsConfig=libs/${myPkg}/tsconfig.lib.json --main=libs/${myPkg}/src/index.ts`,
+      `generate @nx/webpack:configuration ${myPkg} --target=node --compiler=babel --tsConfig=libs/${myPkg}/tsconfig.lib.json --main=libs/${myPkg}/src/index.ts`
     );
 
     updateFile(
       `libs/${myPkg}/.babelrc`,
-      `{ 'presets': ['@nx/js/babel', './custom-preset'] } `,
+      `{ 'presets': ['@nx/js/babel', './custom-preset'] } `
     );
     updateFile(
       `libs/${myPkg}/custom-preset.js`,
@@ -114,7 +114,7 @@ describe('Webpack Plugin', () => {
         console.log('Babel env is ' + api.env());
         return opts;
       }
-    `,
+    `
     );
 
     let output = runCLI(`build ${myPkg}`, {
@@ -151,7 +151,7 @@ describe('Webpack Plugin', () => {
             optimization: false,
           })
         ]
-      };`,
+      };`
     );
 
     runCLI(`build ${appName}`);

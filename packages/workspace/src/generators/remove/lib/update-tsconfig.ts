@@ -28,7 +28,7 @@ export async function updateTsconfig(tree: Tree, schema: Schema) {
         for (const path of json.compilerOptions.paths[importPath]) {
           const project = findProjectForPath(
             normalizePath(path),
-            projectMapping,
+            projectMapping
           );
           if (project === schema.projectName) {
             delete json.compilerOptions.paths[importPath];

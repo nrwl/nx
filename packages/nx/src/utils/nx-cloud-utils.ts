@@ -5,14 +5,14 @@ export function isNxCloudUsed(nxJson: NxJsonConfiguration) {
     process.env.NX_CLOUD_ACCESS_TOKEN ||
     !!nxJson.nxCloudAccessToken ||
     !!Object.values(nxJson.tasksRunnerOptions ?? {}).find(
-      (r) => r.runner == '@nrwl/nx-cloud' || r.runner == 'nx-cloud',
+      (r) => r.runner == '@nrwl/nx-cloud' || r.runner == 'nx-cloud'
     )
   );
 }
 
 export function getNxCloudUrl(nxJson: NxJsonConfiguration): string {
   const cloudRunner = Object.values(nxJson.tasksRunnerOptions ?? {}).find(
-    (r) => r.runner == '@nrwl/nx-cloud' || r.runner == 'nx-cloud',
+    (r) => r.runner == '@nrwl/nx-cloud' || r.runner == 'nx-cloud'
   );
   if (
     !cloudRunner &&
@@ -24,7 +24,7 @@ export function getNxCloudUrl(nxJson: NxJsonConfiguration): string {
 
 export function getNxCloudToken(nxJson: NxJsonConfiguration): string {
   const cloudRunner = Object.values(nxJson.tasksRunnerOptions ?? {}).find(
-    (r) => r.runner == '@nrwl/nx-cloud' || r.runner == 'nx-cloud',
+    (r) => r.runner == '@nrwl/nx-cloud' || r.runner == 'nx-cloud'
   );
 
   if (

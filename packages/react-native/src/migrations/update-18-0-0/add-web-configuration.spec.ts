@@ -32,7 +32,7 @@ describe('add-web-configuration', () => {
     getProjects(tree).forEach((project) => {
       expect(project.targets['build'].executor).toEqual('@nx/webpack:webpack');
       expect(project.targets['serve'].executor).toEqual(
-        '@nx/webpack:dev-server',
+        '@nx/webpack:dev-server'
       );
     });
   });

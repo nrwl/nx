@@ -2,7 +2,7 @@ import { valid } from 'semver';
 
 export function checkAndCleanWithSemver(
   pkgName: string,
-  version: string,
+  version: string
 ): string {
   let newVersion = version;
 
@@ -16,7 +16,7 @@ export function checkAndCleanWithSemver(
 
   if (!valid(newVersion)) {
     throw new Error(
-      `The package.json lists a version of ${pkgName} that Nx is unable to validate - (${version})`,
+      `The package.json lists a version of ${pkgName} that Nx is unable to validate - (${version})`
     );
   }
 

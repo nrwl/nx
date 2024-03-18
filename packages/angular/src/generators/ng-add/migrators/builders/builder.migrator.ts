@@ -24,7 +24,7 @@ export abstract class BuilderMigrator extends Migrator {
     public readonly rootFileType: WorkspaceRootFileType | undefined,
     project: ProjectMigrationInfo,
     projectConfig: ProjectConfiguration,
-    logger: Logger,
+    logger: Logger
   ) {
     super(tree, projectConfig, logger);
 
@@ -59,7 +59,7 @@ export abstract class BuilderMigrator extends Migrator {
 
   protected collectBuilderTargets(): void {
     for (const [name, target] of Object.entries(
-      this.projectConfig.targets ?? {},
+      this.projectConfig.targets ?? {}
     )) {
       if (target.executor === this.builderName) {
         this.targets.set(name, target);

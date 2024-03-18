@@ -31,7 +31,7 @@ describe('@nx/vite/plugin', () => {
         packages: ['@nx/react', '@nx/vue'],
       });
       runCLI(
-        `generate @nx/react:app ${myApp} --bundler=vite --unitTestRunner=vitest`,
+        `generate @nx/react:app ${myApp} --bundler=vite --unitTestRunner=vitest`
       );
       runCLI(`generate @nx/vue:app ${myVueApp} --unitTestRunner=vitest`);
     });
@@ -72,7 +72,7 @@ describe('@nx/vite/plugin', () => {
           `serve-static ${myApp} --port=${port}`,
           (output) => {
             return output.includes(`http://localhost:${port}`);
-          },
+          }
         );
       } catch (err) {
         console.error(err);
@@ -93,7 +93,7 @@ describe('@nx/vite/plugin', () => {
         packages: ['@nx/vite', '@nx/react'],
       });
       runCLI(
-        `generate @nx/react:app ${reactVitest} --bundler=webpack --unitTestRunner=vitest --e2eTestRunner=none --projectNameAndRootFormat=as-provided`,
+        `generate @nx/react:app ${reactVitest} --bundler=webpack --unitTestRunner=vitest --e2eTestRunner=none --projectNameAndRootFormat=as-provided`
       );
     });
 
@@ -105,7 +105,7 @@ describe('@nx/vite/plugin', () => {
       const nxJson = readJson('nx.json');
 
       const vitePlugin = nxJson.plugins.find(
-        (p) => p.plugin === '@nx/vite/plugin',
+        (p) => p.plugin === '@nx/vite/plugin'
       );
       expect(vitePlugin).toBeDefined();
       expect(vitePlugin.options.buildTargetName).toEqual('build');

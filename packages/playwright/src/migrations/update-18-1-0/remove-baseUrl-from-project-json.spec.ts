@@ -72,7 +72,7 @@ describe('removeBaseUrlFromProjectJson', () => {
       // ASSERT
       const maybeUpdatedProject = readProjectConfiguration(tree, 'test');
       expect(maybeUpdatedProject.targets['e2e'].options).toMatchInlineSnapshot(
-        `{}`,
+        `{}`
       );
     });
 
@@ -107,10 +107,10 @@ describe('removeBaseUrlFromProjectJson', () => {
       // ASSERT
       const maybeUpdatedProject = readProjectConfiguration(tree, 'test');
       expect(maybeUpdatedProject.targets['e2e'].options).toMatchInlineSnapshot(
-        `{}`,
+        `{}`
       );
       expect(
-        maybeUpdatedProject.targets['e2e'].configurations['production'],
+        maybeUpdatedProject.targets['e2e'].configurations['production']
       ).toMatchInlineSnapshot(`{}`);
     });
   });

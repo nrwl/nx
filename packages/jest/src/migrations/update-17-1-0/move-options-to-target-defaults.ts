@@ -40,7 +40,7 @@ export default async function update(tree: Tree) {
     '@nx/jest:jest',
     (value, proj, targetName) => {
       jestTargets.add(targetName);
-    },
+    }
   );
 
   // Workspace does not use jest?
@@ -88,14 +88,14 @@ export default async function update(tree: Tree) {
 
   // Cleanup old target defaults
   for (const [targetDefaultKey, targetDefault] of Object.entries(
-    nxJson.targetDefaults,
+    nxJson.targetDefaults
   )) {
     if (
       !isTargetDefaultUsed(
         targetDefault,
         nxJson.targetDefaults,
         projects,
-        projectMap,
+        projectMap
       )
     ) {
       delete nxJson.targetDefaults[targetDefaultKey];
@@ -152,7 +152,7 @@ export default async function update(tree: Tree) {
       }
 
       updateProjectConfiguration(tree, proj, projConfig);
-    },
+    }
   );
 
   await formatFiles(tree);
@@ -165,7 +165,7 @@ function isTargetDefaultUsed(
   targetDefault: Partial<TargetConfiguration>,
   targetDefaults: TargetDefaults,
   projects: Record<string, ProjectGraphProjectNode>,
-  projectMap: Map<string, ProjectConfiguration>,
+  projectMap: Map<string, ProjectConfiguration>
 ) {
   for (const p of Object.values(projects)) {
     for (const targetName in p.data?.targets ?? {}) {
@@ -174,7 +174,7 @@ function isTargetDefaultUsed(
           targetName,
           targetDefaults,
           // It might seem like we should use the graph here too but we don't want to pass an executor which was processed in the graph
-          projectMap.get(p.name)?.targets?.[targetName]?.executor,
+          projectMap.get(p.name)?.targets?.[targetName]?.executor
         ) === targetDefault
       ) {
         return true;

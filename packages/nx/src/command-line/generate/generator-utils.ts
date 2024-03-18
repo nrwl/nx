@@ -16,7 +16,7 @@ export function getGeneratorInformation(
   collectionName: string,
   generatorName: string,
   root: string | null,
-  projects: Record<string, ProjectConfiguration>,
+  projects: Record<string, ProjectConfiguration>
 ): {
   resolvedCollectionName: string;
   normalizedGeneratorName: string;
@@ -47,7 +47,7 @@ export function getGeneratorInformation(
       generatorConfig.implementation || generatorConfig.factory;
     const implementationFactory = getImplementationFactory<Generator>(
       generatorConfig.implementation,
-      generatorsDir,
+      generatorsDir
     );
     const normalizedGeneratorConfiguration: GeneratorsJsonEntry = {
       ...generatorConfig,
@@ -65,7 +65,7 @@ export function getGeneratorInformation(
     };
   } catch (e) {
     throw new Error(
-      `Unable to resolve ${collectionName}:${generatorName}.\n${e.message}`,
+      `Unable to resolve ${collectionName}:${generatorName}.\n${e.message}`
     );
   }
 }
@@ -74,7 +74,7 @@ export function readGeneratorsJson(
   collectionName: string,
   generator: string,
   root: string | null,
-  projects: Record<string, ProjectConfiguration>,
+  projects: Record<string, ProjectConfiguration>
 ): {
   generatorsFilePath: string;
   generatorsJson: GeneratorsJson;
@@ -90,18 +90,18 @@ export function readGeneratorsJson(
     const { json: packageJson, path: packageJsonPath } = readPluginPackageJson(
       collectionName,
       projects,
-      root ? [root, __dirname] : [__dirname],
+      root ? [root, __dirname] : [__dirname]
     );
     const generatorsFile = packageJson.generators ?? packageJson.schematics;
 
     if (!generatorsFile) {
       throw new Error(
-        `The "${collectionName}" package does not support Nx generators.`,
+        `The "${collectionName}" package does not support Nx generators.`
       );
     }
 
     generatorsFilePath = require.resolve(
-      join(dirname(packageJsonPath), generatorsFile),
+      join(dirname(packageJsonPath), generatorsFile)
     );
   }
   const generatorsJson = readJsonFile<GeneratorsJson>(generatorsFilePath);
@@ -118,7 +118,7 @@ export function readGeneratorsJson(
     }
 
     throw new Error(
-      `Cannot find generator '${generator}' in ${generatorsFilePath}.`,
+      `Cannot find generator '${generator}' in ${generatorsFilePath}.`
     );
   }
   return {
@@ -133,11 +133,11 @@ function findFullGeneratorName(
   name: string,
   generators: {
     [name: string]: { aliases?: string[] };
-  },
+  }
 ) {
   if (generators) {
     for (let [key, data] of Object.entries<{ aliases?: string[] }>(
-      generators,
+      generators
     )) {
       if (
         key === name ||

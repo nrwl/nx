@@ -7,16 +7,16 @@ import { normalizeExtraEntryPoints } from '../../../utils/webpack/normalize-entr
 import { NormalizedNxWebpackPluginOptions } from '../nx-webpack-plugin-options';
 
 export function instantiateScriptPlugins(
-  options: NormalizedNxWebpackPluginOptions,
+  options: NormalizedNxWebpackPluginOptions
 ): WebpackPluginInstance[] {
   // process global scripts
   const globalScriptsByBundleName = normalizeExtraEntryPoints(
     options.scripts || [],
-    'scripts',
+    'scripts'
   ).reduce(
     (
       prev: { inject: boolean; bundleName: string; paths: string[] }[],
-      curr,
+      curr
     ) => {
       const bundleName = curr.bundleName;
       const resolvedPath = path.resolve(options.root, curr.input);
@@ -33,7 +33,7 @@ export function instantiateScriptPlugins(
 
       return prev;
     },
-    [],
+    []
   );
 
   const hashFormat = getOutputHashFormat(options.outputHashing as string);
@@ -50,7 +50,7 @@ export function instantiateScriptPlugins(
         filename: `${path.basename(bundleName)}${hash}.js`,
         scripts: script.paths,
         basePath: options.sourceRoot,
-      }),
+      })
     );
   });
 

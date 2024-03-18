@@ -43,7 +43,7 @@ const SEMVER_REGEX =
 
 export async function getLatestGitTagForPattern(
   releaseTagPattern: string,
-  additionalInterpolationData = {},
+  additionalInterpolationData = {}
 ): Promise<{ tag: string; extractedVersion: string } | null> {
   try {
     let tags: string[];
@@ -57,7 +57,7 @@ export async function getLatestGitTagForPattern(
         .trim()
         .split('\n')
         .map((t) => t.trim())
-        .filter(Boolean),
+        .filter(Boolean)
     );
     if (!tags.length) {
       // try again, but include all tags on the repo instead of just --merged ones
@@ -67,7 +67,7 @@ export async function getLatestGitTagForPattern(
             .trim()
             .split('\n')
             .map((t) => t.trim())
-            .filter(Boolean),
+            .filter(Boolean)
       );
     }
 
@@ -89,7 +89,7 @@ export async function getLatestGitTagForPattern(
       (tag) =>
         // Do the match against SEMVER_REGEX to ensure that we skip tags that aren't valid semver versions
         !!tag.match(tagRegexp) &&
-        tag.match(tagRegexp).some((r) => r.match(SEMVER_REGEX)),
+        tag.match(tagRegexp).some((r) => r.match(SEMVER_REGEX))
     );
 
     if (!matchingSemverTags.length) {
@@ -112,7 +112,7 @@ export async function getLatestGitTagForPattern(
 
 export async function getGitDiff(
   from: string | undefined,
-  to = 'HEAD',
+  to = 'HEAD'
 ): Promise<RawGitCommit[]> {
   // https://git-scm.com/docs/pretty-formats
   const r = await execCommand('git', [
@@ -224,7 +224,7 @@ export async function gitCommit({
     logFn(
       dryRun
         ? `Would commit all previously staged files in git with the following command, but --dry-run was set:`
-        : `Committing files in git with the following command:`,
+        : `Committing files in git with the following command:`
     );
     logFn(`git ${commandArgs.join(' ')}`);
   }
@@ -282,7 +282,7 @@ export async function gitTag({
     logFn(
       dryRun
         ? `Would tag the current commit in git with the following command, but --dry-run was set:`
-        : `Tagging the current commit in git with the following command:`,
+        : `Tagging the current commit in git with the following command:`
     );
     logFn(`git ${commandArgs.join(' ')}`);
   }
@@ -321,7 +321,7 @@ export async function gitPush({
     console.log(
       dryRun
         ? `Would push the current branch to the remote with the following command, but --dry-run was set:`
-        : `Pushing the current branch to the remote with the following command:`,
+        : `Pushing the current branch to the remote with the following command:`
     );
     console.log(`git ${commandArgs.join(' ')}`);
   }
@@ -401,15 +401,15 @@ export function parseGitCommit(commit: RawGitCommit): GitCommit | null {
 
   // Extract file changes from commit body
   const affectedFiles = Array.from(
-    commit.body.matchAll(ChangedFileRegex),
+    commit.body.matchAll(ChangedFileRegex)
   ).reduce(
     (
       prev,
-      [fullLine, changeType, file1, file2]: [string, string, string, string?],
+      [fullLine, changeType, file1, file2]: [string, string, string, string?]
     ) =>
       // file2 only exists for some change types, such as renames
       file2 ? [...prev, file1, file2] : [...prev, file1],
-    [] as string[],
+    [] as string[]
   );
 
   return {

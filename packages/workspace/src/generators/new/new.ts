@@ -64,7 +64,7 @@ export async function newGenerator(tree: Tree, opts: Schema) {
         tree,
         false,
         options.directory,
-        options.packageManager,
+        options.packageManager
       );
     }
     // TODO: move all of these into create-nx-workspace
@@ -92,7 +92,7 @@ function validateOptions(options: Schema, host: Tree) {
     !options.framework
   ) {
     throw new Error(
-      `Cannot generate ${options.preset} without selecting a framework`,
+      `Cannot generate ${options.preset} without selecting a framework`
     );
   }
 
@@ -102,7 +102,7 @@ function validateOptions(options: Schema, host: Tree) {
     host.children(options.name).length > 0
   ) {
     throw new Error(
-      `${join(host.root, options.name)} is not an empty directory.`,
+      `${join(host.root, options.name)} is not an empty directory.`
     );
   }
 }
@@ -143,7 +143,7 @@ function normalizeOptions(options: Schema): NormalizedSchema {
   normalized.presetVersion ??= parsed.version;
 
   normalized.isCustomPreset = !Object.values(Preset).includes(
-    options.preset as any,
+    options.preset as any
   );
 
   return normalized as NormalizedSchema;

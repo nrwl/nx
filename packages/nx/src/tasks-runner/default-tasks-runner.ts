@@ -40,7 +40,7 @@ export const defaultTasksRunner: TasksRunner<
     taskGraph: TaskGraph;
     hasher: TaskHasher;
     daemon: DaemonClient;
-  },
+  }
 ): Promise<{ [id: string]: TaskStatus }> => {
   if (
     (options as any)['parallel'] === 'false' ||
@@ -75,7 +75,7 @@ async function runAllTasks(
     taskGraph: TaskGraph;
     hasher: TaskHasher;
     daemon: DaemonClient;
-  },
+  }
 ): Promise<{ [id: string]: TaskStatus }> {
   const orchestrator = new TaskOrchestrator(
     context.hasher,
@@ -84,7 +84,7 @@ async function runAllTasks(
     context.taskGraph,
     options,
     context.nxArgs?.nxBail,
-    context.daemon,
+    context.daemon
   );
 
   return orchestrator.run();

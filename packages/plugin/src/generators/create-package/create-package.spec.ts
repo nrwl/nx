@@ -13,7 +13,7 @@ import { CreatePackageSchema } from './schema';
 import { setCwd } from '@nx/devkit/internal-testing-utils';
 
 const getSchema: (
-  overrides?: Partial<CreatePackageSchema>,
+  overrides?: Partial<CreatePackageSchema>
 ) => CreatePackageSchema = (overrides = {}) => ({
   name: 'create-a-workspace',
   directory: 'packages/create-a-workspace',
@@ -69,7 +69,7 @@ describe('NxPlugin Create Package Generator', () => {
       tree,
       getSchema({
         directory: 'clis/create-a-workspace',
-      } as Partial<CreatePackageSchema>),
+      } as Partial<CreatePackageSchema>)
     );
     const project = readProjectConfiguration(tree, 'create-a-workspace');
     expect(project.root).toEqual('clis/create-a-workspace');
@@ -79,7 +79,7 @@ describe('NxPlugin Create Package Generator', () => {
     await createPackageGenerator(tree, getSchema());
 
     expect(
-      tree.exists('packages/my-plugin/src/generators/preset/generator.ts'),
+      tree.exists('packages/my-plugin/src/generators/preset/generator.ts')
     ).toBeTruthy();
   });
 
@@ -88,12 +88,12 @@ describe('NxPlugin Create Package Generator', () => {
       tree,
       getSchema({
         compiler: 'tsc',
-      }),
+      })
     );
 
     const { build } = readProjectConfiguration(
       tree,
-      'create-a-workspace',
+      'create-a-workspace'
     ).targets;
 
     expect(build.executor).toEqual('@nx/js:tsc');
@@ -104,12 +104,12 @@ describe('NxPlugin Create Package Generator', () => {
       tree,
       getSchema({
         compiler: 'swc',
-      }),
+      })
     );
 
     const { build } = readProjectConfiguration(
       tree,
-      'create-a-workspace',
+      'create-a-workspace'
     ).targets;
 
     expect(build.executor).toEqual('@nx/js:swc');
@@ -121,7 +121,7 @@ describe('NxPlugin Create Package Generator', () => {
     const { root } = readProjectConfiguration(tree, 'create-a-workspace');
     const { name } = readJson<PackageJson>(
       tree,
-      joinPathFragments(root, 'package.json'),
+      joinPathFragments(root, 'package.json')
     );
 
     expect(name).toEqual('create-a-workspace');

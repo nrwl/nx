@@ -73,11 +73,11 @@ describe('dev mode - app', () => {
       it('should set left-to-right graph layout direction', () => {
         cy.log(
           'Localstorage is: ',
-          localStorage.getItem('nx-dep-graph-rankdir'),
+          localStorage.getItem('nx-dep-graph-rankdir')
         );
         expect(localStorage.getItem('nx-dep-graph-rankdir')).eq('LR');
         cy.get('[data-cy="tb-rankdir-button"]').should(
-          (elem) => expect(elem).to.exist,
+          (elem) => expect(elem).to.exist
         );
       });
     });
@@ -90,11 +90,11 @@ describe('dev mode - app', () => {
       it('should set top-to-bottom graph layout direction', () => {
         cy.log(
           'Localstorage is: ',
-          localStorage.getItem('nx-dep-graph-rankdir'),
+          localStorage.getItem('nx-dep-graph-rankdir')
         );
         expect(localStorage.getItem('nx-dep-graph-rankdir')).eq('TB');
         cy.get('[data-cy="lr-rankdir-button"]').should(
-          (elem) => expect(elem).to.exist,
+          (elem) => expect(elem).to.exist
         );
       });
     });

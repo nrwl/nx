@@ -28,14 +28,14 @@ export function getRoutesForEnvironment() {
 
 const workspaceDataLoader = async (selectedWorkspaceId: string) => {
   const workspaceInfo = appConfig.workspaces.find(
-    (graph) => graph.id === selectedWorkspaceId,
+    (graph) => graph.id === selectedWorkspaceId
   );
 
   projectGraphDataService.setTaskInputsUrl?.(workspaceInfo.taskInputsUrl);
 
   const projectGraph: ProjectGraphClientResponse =
     await projectGraphDataService.getProjectGraph(
-      workspaceInfo.projectGraphUrl,
+      workspaceInfo.projectGraphUrl
     );
 
   const targetsSet = new Set<string>();
@@ -55,7 +55,7 @@ const workspaceDataLoader = async (selectedWorkspaceId: string) => {
 
 const taskDataLoader = async (selectedWorkspaceId: string) => {
   const workspaceInfo = appConfig.workspaces.find(
-    (graph) => graph.id === selectedWorkspaceId,
+    (graph) => graph.id === selectedWorkspaceId
   );
 
   return await projectGraphDataService.getTaskGraph(workspaceInfo.taskGraphUrl);
@@ -63,17 +63,17 @@ const taskDataLoader = async (selectedWorkspaceId: string) => {
 
 const sourceMapsLoader = async (selectedWorkspaceId: string) => {
   const workspaceInfo = appConfig.workspaces.find(
-    (graph) => graph.id === selectedWorkspaceId,
+    (graph) => graph.id === selectedWorkspaceId
   );
 
   return await projectGraphDataService.getSourceMaps(
-    workspaceInfo.sourceMapsUrl,
+    workspaceInfo.sourceMapsUrl
   );
 };
 
 const projectDetailsLoader = async (
   selectedWorkspaceId: string,
-  projectName: string,
+  projectName: string
 ): Promise<{
   hash: string;
   project: ProjectGraphProjectNode;
@@ -83,7 +83,7 @@ const projectDetailsLoader = async (
   const sourceMaps = await sourceMapsLoader(selectedWorkspaceId);
 
   const project = workspaceData.projects.find(
-    (project) => project.name === projectName,
+    (project) => project.name === projectName
   );
   return {
     hash: workspaceData.hash,

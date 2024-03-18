@@ -22,7 +22,7 @@ export type EnsureDependenciesOptions = {
 
 export function ensureDependencies(
   host: Tree,
-  schema: EnsureDependenciesOptions,
+  schema: EnsureDependenciesOptions
 ): GeneratorCallback {
   const devDependencies: Record<string, string> = {};
 
@@ -34,7 +34,7 @@ export function ensureDependencies(
     devDependencies['@edge-runtime/vm'] = edgeRuntimeVmVersion;
   } else if (schema.testEnvironment !== 'node' && schema.testEnvironment) {
     logger.info(
-      `A custom environment was provided: ${schema.testEnvironment}. You need to install it manually.`,
+      `A custom environment was provided: ${schema.testEnvironment}. You need to install it manually.`
     );
   }
 

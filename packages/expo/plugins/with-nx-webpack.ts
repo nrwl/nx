@@ -8,7 +8,7 @@ import { resolve } from 'path';
 export async function withNxWebpack(config) {
   // add additional rule to load files under libs
   const rules = config.module.rules.find((rule) =>
-    Array.isArray(rule.oneOf),
+    Array.isArray(rule.oneOf)
   )?.oneOf;
   if (rules) {
     rules.push({
@@ -42,7 +42,7 @@ export async function withNxWebpack(config) {
     new TsconfigPathsPlugin({
       configFile: tsConfigPath,
       extensions,
-    }),
+    })
   );
   config.resolve.fallback = {
     ...config.resolve.fallback,

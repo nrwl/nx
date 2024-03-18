@@ -9,7 +9,7 @@ export function trimBackSlash(value: string): string {
 
 export function parseParentDirectoriesFromFilePath(
   path: string,
-  workspaceRoot: string,
+  workspaceRoot: string
 ) {
   const directories = path
     .replace(workspaceRoot, '')
@@ -26,7 +26,7 @@ export function hasPath(
   node: string,
   visited: string[],
   currentSearchDepth: number,
-  maxSearchDepth: number = -1, // -1 indicates unlimited search depth
+  maxSearchDepth: number = -1 // -1 indicates unlimited search depth
 ) {
   if (target === node) return true;
 
@@ -41,7 +41,7 @@ export function hasPath(
           d.target,
           visited,
           currentSearchDepth + 1,
-          maxSearchDepth,
+          maxSearchDepth
         )
       )
         return true;

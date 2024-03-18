@@ -136,7 +136,7 @@ export function FeedContainer(): JSX.Element {
                 <div
                   className={cx(
                     'left0 fixed bottom-0 right-0 w-full py-4 px-4 lg:py-6 lg:px-0',
-                    'bg-gradient-to-t from-white via-white/75 dark:from-slate-900 dark:via-slate-900/75',
+                    'bg-gradient-to-t from-white via-white/75 dark:from-slate-900 dark:via-slate-900/75'
                   )}
                 >
                   <Prompt

@@ -28,5 +28,5 @@ export const FocusedPanel = memo(
         </div>
       </div>
     );
-  },
+  }
 );

@@ -17,7 +17,7 @@ import { getNxRequirePaths } from '../../utils/installation-directory';
 import { ProjectConfiguration } from '../../config/workspace-json-project-json';
 
 export function normalizeExecutorSchema(
-  schema: Partial<ExecutorConfig['schema']>,
+  schema: Partial<ExecutorConfig['schema']>
 ): ExecutorConfig['schema'] {
   const version = (schema.version ??= 1);
   return {
@@ -42,7 +42,7 @@ export function getExecutorInformation(
   nodeModule: string,
   executor: string,
   root: string,
-  projects: Record<string, ProjectConfiguration>,
+  projects: Record<string, ProjectConfiguration>
 ): ExecutorConfig & { isNgCompat: boolean; isNxExecutor: boolean } {
   try {
     const key = cacheKey(nodeModule, executor, root);
@@ -52,7 +52,7 @@ export function getExecutorInformation(
       nodeModule,
       executor,
       root,
-      projects,
+      projects
     );
     const executorsDir = dirname(executorsFilePath);
     const schemaPath = resolveSchema(executorConfig.schema, executorsDir);
@@ -60,20 +60,20 @@ export function getExecutorInformation(
 
     const implementationFactory = getImplementationFactory<Executor>(
       executorConfig.implementation,
-      executorsDir,
+      executorsDir
     );
 
     const batchImplementationFactory = executorConfig.batchImplementation
       ? getImplementationFactory<TaskGraphExecutor>(
           executorConfig.batchImplementation,
-          executorsDir,
+          executorsDir
         )
       : null;
 
     const hasherFactory = executorConfig.hasher
       ? getImplementationFactory<CustomHasher>(
           executorConfig.hasher,
-          executorsDir,
+          executorsDir
         )
       : null;
 
@@ -90,7 +90,7 @@ export function getExecutorInformation(
     return res;
   } catch (e) {
     throw new Error(
-      `Unable to resolve ${nodeModule}:${executor}.\n${e.message}`,
+      `Unable to resolve ${nodeModule}:${executor}.\n${e.message}`
     );
   }
 }
@@ -99,7 +99,7 @@ function readExecutorJson(
   nodeModule: string,
   executor: string,
   root: string,
-  projects: Record<string, ProjectConfiguration>,
+  projects: Record<string, ProjectConfiguration>
 ): {
   executorsFilePath: string;
   executorConfig: {
@@ -115,18 +115,18 @@ function readExecutorJson(
     projects,
     root
       ? [root, __dirname, process.cwd(), ...getNxRequirePaths()]
-      : [__dirname, process.cwd(), ...getNxRequirePaths()],
+      : [__dirname, process.cwd(), ...getNxRequirePaths()]
   );
   const executorsFile = packageJson.executors ?? packageJson.builders;
 
   if (!executorsFile) {
     throw new Error(
-      `The "${nodeModule}" package does not support Nx executors.`,
+      `The "${nodeModule}" package does not support Nx executors.`
     );
   }
 
   const executorsFilePath = require.resolve(
-    join(dirname(packageJsonPath), executorsFile),
+    join(dirname(packageJsonPath), executorsFile)
   );
   const executorsJson = readJsonFile<ExecutorsJson>(executorsFilePath);
   const executorConfig: {
@@ -137,7 +137,7 @@ function readExecutorJson(
   } = executorsJson.executors?.[executor] || executorsJson.builders?.[executor];
   if (!executorConfig) {
     throw new Error(
-      `Cannot find executor '${executor}' in ${executorsFilePath}.`,
+      `Cannot find executor '${executor}' in ${executorsFilePath}.`
     );
   }
   const isNgCompat = !executorsJson.executors?.[executor];

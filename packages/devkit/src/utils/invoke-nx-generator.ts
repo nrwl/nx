@@ -36,7 +36,7 @@ function createRunCallbackTask() {
       return Promise.resolve(
         async ({ callback }: { callback: GeneratorCallback }) => {
           await callback();
-        },
+        }
       );
     },
   };
@@ -48,7 +48,7 @@ function createRunCallbackTask() {
  */
 export function convertNxGenerator<T = any>(
   generator: Generator<T>,
-  skipWritingConfigInOldFormat: boolean = false,
+  skipWritingConfigInOldFormat: boolean = false
 ) {
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   return (generatorOptions: T) =>
@@ -61,7 +61,7 @@ export function convertNxGenerator<T = any>(
 function invokeNxGenerator<T = any>(
   generator: Generator<T>,
   options: T,
-  skipWritingConfigInOldFormat?: boolean,
+  skipWritingConfigInOldFormat?: boolean
 ) {
   return async (tree, context) => {
     if (context.engine.workflow) {
@@ -77,7 +77,7 @@ function invokeNxGenerator<T = any>(
     const adapterTree = new DevkitTreeFromAngularDevkitTree(
       tree,
       root,
-      skipWritingConfigInOldFormat,
+      skipWritingConfigInOldFormat
     );
     const result = await generator(adapterTree, options);
 
@@ -104,7 +104,7 @@ class DevkitTreeFromAngularDevkitTree implements Tree {
   constructor(
     private tree,
     private _root: string,
-    private skipWritingConfigInOldFormat?: boolean,
+    private skipWritingConfigInOldFormat?: boolean
   ) {
     /**
      * When using the UnitTestTree from @angular-devkit/schematics/testing, the root is just `/`.
@@ -196,7 +196,7 @@ class DevkitTreeFromAngularDevkitTree implements Tree {
   write(
     filePath: string,
     content: Buffer | string,
-    options?: TreeWriteOptions,
+    options?: TreeWriteOptions
   ): void {
     if (options?.mode) {
       this.warnUnsupportedFilePermissionsChange(filePath, options.mode);
@@ -216,7 +216,7 @@ class DevkitTreeFromAngularDevkitTree implements Tree {
   private warnUnsupportedFilePermissionsChange(filePath: string, mode: Mode) {
     logger.warn(
       stripIndent(`The Angular DevKit tree does not support changing a file permissions.
-                  Ignoring changing ${filePath} permissions to ${mode}.`),
+                  Ignoring changing ${filePath} permissions to ${mode}.`)
     );
   }
 }

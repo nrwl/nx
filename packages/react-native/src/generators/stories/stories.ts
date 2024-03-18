@@ -8,7 +8,7 @@ import { StorybookStoriesSchema } from './schema';
  */
 export async function storiesGenerator(
   host: Tree,
-  schema: StorybookStoriesSchema,
+  schema: StorybookStoriesSchema
 ) {
   return reactStoriesGenerator(host, schema);
 }

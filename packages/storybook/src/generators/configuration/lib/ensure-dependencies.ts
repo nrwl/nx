@@ -23,7 +23,7 @@ export type EnsureDependenciesOptions = {
 
 export function ensureDependencies(
   tree: Tree,
-  options: EnsureDependenciesOptions,
+  options: EnsureDependenciesOptions
 ) {
   let storybook7VersionToInstall = storybookVersion;
   if (

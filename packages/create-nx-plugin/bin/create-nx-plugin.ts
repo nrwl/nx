@@ -42,7 +42,7 @@ export const yargsDecorator = {
 const nxVersion = require('../package.json').version;
 
 async function determinePluginName(
-  parsedArgs: CreateNxPluginArguments,
+  parsedArgs: CreateNxPluginArguments
 ): Promise<string> {
   if (parsedArgs.pluginName) {
     return parsedArgs.pluginName;
@@ -60,7 +60,7 @@ async function determinePluginName(
 }
 
 async function determineCreatePackageName(
-  parsedArgs: CreateNxPluginArguments,
+  parsedArgs: CreateNxPluginArguments
 ): Promise<string> {
   if (parsedArgs.createPackageName) {
     return parsedArgs.createPackageName;
@@ -109,7 +109,7 @@ export const commandsObject: yargs.Argv<CreateNxPluginArguments> = yargs
         withNxCloud,
         withAllPrompts,
         withPackageManager,
-        withGitOptions,
+        withGitOptions
       ),
     async (argv: yargs.ArgumentsCamelCase<CreateNxPluginArguments>) => {
       await main(argv).catch((error) => {
@@ -120,14 +120,14 @@ export const commandsObject: yargs.Argv<CreateNxPluginArguments> = yargs
         throw error;
       });
     },
-    [normalizeArgsMiddleware],
+    [normalizeArgsMiddleware]
   )
   .help('help', chalk.dim`Show help`)
   .updateLocale(yargsDecorator)
   .version(
     'version',
     chalk.dim`Show version`,
-    nxVersion,
+    nxVersion
   ) as yargs.Argv<CreateNxPluginArguments>;
 
 async function main(parsedArgs: yargs.Arguments<CreateNxPluginArguments>) {
@@ -148,7 +148,7 @@ async function main(parsedArgs: yargs.Arguments<CreateNxPluginArguments>) {
 
   const workspaceInfo = await createWorkspace(
     `@nx/plugin@${nxVersion}`,
-    populatedArguments,
+    populatedArguments
   );
 
   showNxWarning(parsedArgs.pluginName);
@@ -175,7 +175,7 @@ async function main(parsedArgs: yargs.Arguments<CreateNxPluginArguments>) {
  * @param argv user arguments
  */
 async function normalizeArgsMiddleware(
-  argv: yargs.Arguments<CreateNxPluginArguments>,
+  argv: yargs.Arguments<CreateNxPluginArguments>
 ): Promise<void> {
   try {
     const pluginName = await determinePluginName(argv);

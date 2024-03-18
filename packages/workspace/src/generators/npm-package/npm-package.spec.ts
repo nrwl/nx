@@ -78,10 +78,10 @@ describe('@nx/workspace:npm-package', () => {
       });
 
       expect(readJson(tree, 'packages/my-package/package.json')).toEqual(
-        existingPackageJson,
+        existingPackageJson
       );
       expect(tree.read('packages/my-package/index.ts').toString()).toEqual(
-        existingIndex,
+        existingIndex
       );
     });
   });

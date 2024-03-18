@@ -36,7 +36,7 @@ export interface StorybookStoriesSchema {
 
 export async function projectRootPath(
   tree: Tree,
-  config: ProjectConfiguration,
+  config: ProjectConfiguration
 ): Promise<string> {
   let projectDir: string;
   if (config.projectType === 'application') {
@@ -57,7 +57,7 @@ export async function projectRootPath(
 
 export function containsComponentDeclaration(
   tree: Tree,
-  componentPath: string,
+  componentPath: string
 ): boolean {
   if (!tsModule) {
     tsModule = ensureTypescript();
@@ -72,7 +72,7 @@ export function containsComponentDeclaration(
     componentPath,
     contents,
     tsModule.ScriptTarget.Latest,
-    true,
+    true
   );
 
   return !!(
@@ -90,7 +90,7 @@ export async function createAllStories(
   projectConfiguration: ProjectConfiguration,
   generateCypressSpecs?: boolean,
   cypressProject?: string,
-  ignorePaths?: string[],
+  ignorePaths?: string[]
 ) {
   const { isTheFileAStory } = await import('@nx/storybook/src/utils/utilities');
 
@@ -128,7 +128,7 @@ export async function createAllStories(
 
   if (generateCypressSpecs && !e2eProject) {
     logger.info(
-      `There was no e2e project "${e2eProjectName}" found, so cypress specs will not be generated. Pass "--cypressProject" to specify a different e2e project name`,
+      `There was no e2e project "${e2eProjectName}" found, so cypress specs will not be generated. Pass "--cypressProject" to specify a different e2e project name`
     );
   }
 
@@ -156,13 +156,13 @@ export async function createAllStories(
           skipFormat: true,
         });
       }
-    }),
+    })
   );
 }
 
 export async function storiesGenerator(
   host: Tree,
-  schema: StorybookStoriesSchema,
+  schema: StorybookStoriesSchema
 ) {
   const projects = getProjects(host);
   const projectConfiguration = projects.get(schema.project);
@@ -176,7 +176,7 @@ export async function storiesGenerator(
     projectConfiguration,
     schema.generateCypressSpecs,
     schema.cypressProject,
-    schema.ignorePaths,
+    schema.ignorePaths
   );
 
   const tasks: GeneratorCallback[] = [];
@@ -185,7 +185,7 @@ export async function storiesGenerator(
     const { interactionTestsDependencies, addInteractionsInAddons } =
       ensurePackage<typeof import('@nx/storybook')>('@nx/storybook', nxVersion);
     tasks.push(
-      addDependenciesToPackageJson(host, {}, interactionTestsDependencies()),
+      addDependenciesToPackageJson(host, {}, interactionTestsDependencies())
     );
     addInteractionsInAddons(host, projectConfiguration);
   }
@@ -202,7 +202,7 @@ async function isNextJsProject(tree: Tree, config: ProjectConfiguration) {
   );
 
   const { nextBuildTarget } = findStorybookAndBuildTargetsAndCompiler(
-    config.targets,
+    config.targets
   );
   if (nextBuildTarget) {
     return true;

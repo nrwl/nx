@@ -51,7 +51,7 @@ export default function RspackExecutor({
     menu: {
       sections: sortCorePackagesFirst<MenuSection>(
         getPackagesSections(menu),
-        'id',
+        'id'
       ),
     },
     package: pkg,

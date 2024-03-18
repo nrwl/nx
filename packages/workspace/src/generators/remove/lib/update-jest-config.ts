@@ -52,7 +52,7 @@ function isMonorepoConfig(tree: Tree) {
 export function updateJestConfig(
   tree: Tree,
   schema: Schema,
-  projectConfig: ProjectConfiguration,
+  projectConfig: ProjectConfiguration
 ) {
   if (!tsModule) {
     tsModule = ensureTypescript();
@@ -81,7 +81,7 @@ export function updateJestConfig(
   const sourceFile = createSourceFile(
     rootConfigPath,
     contents,
-    ScriptTarget.Latest,
+    ScriptTarget.Latest
   );
 
   const sourceNodes = getSourceNodes(sourceFile);
@@ -90,12 +90,12 @@ export function updateJestConfig(
     (node) =>
       isPropertyAssignment(node) &&
       node.name.getText(sourceFile) === 'projects' &&
-      isArrayLiteralExpression(node.initializer),
+      isArrayLiteralExpression(node.initializer)
   ) as PropertyAssignment;
 
   if (!projectsAssignment) {
     throw Error(
-      `Could not remove ${projectToRemove} from projects in /jest.config.ts. Please remove ${projectToRemove} from your projects.`,
+      `Could not remove ${projectToRemove} from projects in /jest.config.ts. Please remove ${projectToRemove} from your projects.`
     );
   }
   const projectsArray =
@@ -104,12 +104,12 @@ export function updateJestConfig(
   const project = projectsArray.elements.find(
     (item) =>
       isStringLiteral(item) &&
-      item.text.startsWith(`<rootDir>/${projectConfig.root}`),
+      item.text.startsWith(`<rootDir>/${projectConfig.root}`)
   ) as StringLiteral;
 
   if (!project) {
     console.warn(
-      `Could not find ${projectToRemove} in projects in /jest.config.ts.`,
+      `Could not find ${projectToRemove} in projects in /jest.config.ts.`
     );
     return;
   }
@@ -129,6 +129,6 @@ export function updateJestConfig(
         start,
         length: project.getEnd() - start,
       },
-    ]),
+    ])
   );
 }

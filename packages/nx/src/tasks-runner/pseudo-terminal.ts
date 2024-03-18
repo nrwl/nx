@@ -47,10 +47,10 @@ export class PseudoTerminal {
       cwd?: string;
       jsEnv?: Record<string, string>;
       quiet?: boolean;
-    } = {},
+    } = {}
   ) {
     return new PseudoTtyProcess(
-      this.rustPseudoTerminal.runCommand(command, cwd, jsEnv, quiet),
+      this.rustPseudoTerminal.runCommand(command, cwd, jsEnv, quiet)
     );
   }
 
@@ -65,7 +65,7 @@ export class PseudoTerminal {
       cwd?: string;
       jsEnv?: Record<string, string>;
       quiet?: boolean;
-    },
+    }
   ) {
     if (!this.initialized) {
       throw new Error('Call init() before forking processes');
@@ -77,10 +77,10 @@ export class PseudoTerminal {
         this.pseudoIPCPath,
         cwd,
         jsEnv,
-        quiet,
+        quiet
       ),
       id,
-      this.pseudoIPC,
+      this.pseudoIPC
     );
 
     await this.pseudoIPC.waitForChildReady(id);
@@ -162,7 +162,7 @@ export class PseudoTtyProcessWithSend extends PseudoTtyProcess {
   constructor(
     _childProcess: ChildProcess,
     private id: string,
-    private pseudoIpc: PseudoIPCServer,
+    private pseudoIpc: PseudoIPCServer
   ) {
     super(_childProcess);
   }

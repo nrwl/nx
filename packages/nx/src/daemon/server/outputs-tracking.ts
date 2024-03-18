@@ -58,14 +58,14 @@ export async function outputsHashesMatch(_outputs: string[], hash: string) {
 
 async function normalizeOutputs(outputs: string[]) {
   let expandedOutputs = collapseExpandedOutputs(
-    getFilesForOutputs(workspaceRoot, outputs),
+    getFilesForOutputs(workspaceRoot, outputs)
   );
   return expandedOutputs;
 }
 
 export function processFileChangesInOutputs(
   changeEvents: WatchEvent[],
-  now: number = undefined,
+  now: number = undefined
 ) {
   if (!now) {
     now = new Date().getTime();

@@ -8,7 +8,7 @@ import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
 
 export async function normalizeOptions(
   host: Tree,
-  options: Partial<Schema>,
+  options: Partial<Schema>
 ): Promise<NormalizedSchema> {
   const {
     projectName: appProjectName,
@@ -62,7 +62,7 @@ export async function normalizeOptions(
     bundler,
     outputPath: joinPathFragments(
       'dist',
-      !options.rootProject ? appProjectRoot : appProjectName,
+      !options.rootProject ? appProjectRoot : appProjectName
     ),
     ssr: options.ssr ?? false,
   };

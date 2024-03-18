@@ -45,7 +45,7 @@ describe('remove-ngcc-invocation migration', () => {
 
     const { scripts } = readJson(tree, 'package.json');
     expect(scripts.postinstall).toBe(
-      'node ./some-awesome-script.js && node ./another-awesome-script.js',
+      'node ./some-awesome-script.js && node ./another-awesome-script.js'
     );
   });
 
@@ -106,7 +106,7 @@ describe('remove-ngcc-invocation migration', () => {
 
     const { scripts } = readJson(tree, 'package.json');
     expect(scripts.postinstall).toBe(
-      'node ./some-awesome-script.js && node ./another-awesome-script.js',
+      'node ./some-awesome-script.js && node ./another-awesome-script.js'
     );
   });
 
@@ -123,7 +123,7 @@ describe('remove-ngcc-invocation migration', () => {
 
     const { scripts } = readJson(tree, 'package.json');
     expect(scripts.postinstall).toBe(
-      'node ./some-awesome-script.js    &&node ./another-awesome-script.js',
+      'node ./some-awesome-script.js    &&node ./another-awesome-script.js'
     );
   });
 });

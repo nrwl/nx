@@ -34,7 +34,7 @@ export function mergeProjectConfigurationIntoRootMap(
   sourceInformation?: SourceInformation,
   // This function is used when reading project configuration
   // in generators, where we don't want to do this.
-  skipCommandNormalization?: boolean,
+  skipCommandNormalization?: boolean
 ): void {
   if (configurationSourceMaps && !configurationSourceMaps[project.root]) {
     configurationSourceMaps[project.root] = {};
@@ -72,7 +72,7 @@ export function mergeProjectConfigurationIntoRootMap(
   // The next blocks handle properties that should be themselves merged (e.g. targets, tags, and implicit dependencies)
   if (project.tags) {
     updatedProjectConfiguration.tags = Array.from(
-      new Set((matchingProject.tags ?? []).concat(project.tags)),
+      new Set((matchingProject.tags ?? []).concat(project.tags))
     );
 
     if (sourceMap) {
@@ -165,7 +165,7 @@ export function mergeProjectConfigurationIntoRootMap(
         matchingProject.targets?.[targetName],
         sourceMap,
         sourceInformation,
-        `targets.${targetName}`,
+        `targets.${targetName}`
       );
 
       // We don't want the symbol to live on past the merge process
@@ -178,7 +178,7 @@ export function mergeProjectConfigurationIntoRootMap(
 
   projectRootMap.set(
     updatedProjectConfiguration.root,
-    updatedProjectConfiguration,
+    updatedProjectConfiguration
   );
 }
 
@@ -201,7 +201,7 @@ export function buildProjectsConfigurationsFromProjectPathsAndPlugins(
   nxJson: NxJsonConfiguration,
   workspaceFiles: string[], // making this parameter allows devkit to pick up newly created projects
   plugins: LoadedNxPlugin[],
-  root: string = workspaceRoot,
+  root: string = workspaceRoot
 ): Promise<ConfigurationResult> {
   type CreateNodesResultWithContext = CreateNodesResult & {
     file: string;
@@ -223,7 +223,7 @@ export function buildProjectsConfigurationsFromProjectPathsAndPlugins(
     }
 
     const matchingConfigFiles: string[] = workspaceFiles.filter(
-      minimatch.filter(pattern, { dot: true }),
+      minimatch.filter(pattern, { dot: true })
     );
 
     for (const file of matchingConfigFiles) {
@@ -242,7 +242,7 @@ export function buildProjectsConfigurationsFromProjectPathsAndPlugins(
                 performance.mark(`${plugin.name}:createNodes:${file} - end`);
                 throw new CreateNodesError(
                   `Unable to create nodes for ${file} using plugin ${plugin.name}.`,
-                  e,
+                  e
                 );
               })
               .then((r) => {
@@ -250,17 +250,17 @@ export function buildProjectsConfigurationsFromProjectPathsAndPlugins(
                 performance.measure(
                   `${plugin.name}:createNodes:${file}`,
                   `${plugin.name}:createNodes:${file} - start`,
-                  `${plugin.name}:createNodes:${file} - end`,
+                  `${plugin.name}:createNodes:${file} - end`
                 );
                 return { ...r, file, pluginName: plugin.name };
-              }),
+              })
           );
         } else {
           performance.mark(`${plugin.name}:createNodes:${file} - end`);
           performance.measure(
             `${plugin.name}:createNodes:${file}`,
             `${plugin.name}:createNodes:${file} - start`,
-            `${plugin.name}:createNodes:${file} - end`,
+            `${plugin.name}:createNodes:${file} - end`
           );
           pluginResults.push({
             ...r,
@@ -271,7 +271,7 @@ export function buildProjectsConfigurationsFromProjectPathsAndPlugins(
       } catch (e) {
         throw new CreateNodesError(
           `Unable to create nodes for ${file} using plugin ${plugin.name}.`,
-          e,
+          e
         );
       }
     }
@@ -282,10 +282,10 @@ export function buildProjectsConfigurationsFromProjectPathsAndPlugins(
         performance.measure(
           `${plugin.name}:createNodes`,
           `${plugin.name}:createNodes - start`,
-          `${plugin.name}:createNodes - end`,
+          `${plugin.name}:createNodes - end`
         );
         return results;
-      }),
+      })
     );
   }
 
@@ -322,12 +322,12 @@ export function buildProjectsConfigurationsFromProjectPathsAndPlugins(
             projectRootMap,
             project,
             configurationSourceMaps,
-            sourceInfo,
+            sourceInfo
           );
         } catch (e) {
           throw new CreateNodesError(
             `Unable to merge project information for "${project.root}" from ${result.file} using plugin ${result.pluginName}.`,
-            e,
+            e
           );
         }
       }
@@ -341,7 +341,7 @@ export function buildProjectsConfigurationsFromProjectPathsAndPlugins(
     performance.measure(
       'createNodes:merge',
       'createNodes:merge - start',
-      'createNodes:merge - end',
+      'createNodes:merge - end'
     );
 
     return {
@@ -354,7 +354,7 @@ export function buildProjectsConfigurationsFromProjectPathsAndPlugins(
 }
 
 export function readProjectConfigurationsFromRootMap(
-  projectRootMap: Map<string, ProjectConfiguration>,
+  projectRootMap: Map<string, ProjectConfiguration>
 ) {
   const projects: Record<string, ProjectConfiguration> = {};
   // If there are projects that have the same name, that is an error.
@@ -390,11 +390,11 @@ export function readProjectConfigurationsFromRootMap(
       [
         `The following projects are defined in multiple locations:`,
         ...Array.from(errors.entries()).map(([project, roots]) =>
-          [`- ${project}: `, ...roots.map((r) => `  - ${r}`)].join('\n'),
+          [`- ${project}: `, ...roots.map((r) => `  - ${r}`)].join('\n')
         ),
         '',
         "To fix this, set a unique name for each project in a project.json inside the project's root. If the project does not currently have a project.json, you can create one that contains only a name.",
-      ].join('\n'),
+      ].join('\n')
     );
   }
   return projects;
@@ -406,8 +406,8 @@ class CreateNodesError extends Error {
       !cause
         ? ''
         : cause instanceof Error
-          ? `\n\n\t Inner Error: ${cause.stack}`
-          : cause
+        ? `\n\n\t Inner Error: ${cause.stack}`
+        : cause
     }`;
     // These errors are thrown during a JS callback which is invoked via rust.
     // The errors messaging gets lost in the rust -> js -> rust transition, but
@@ -435,7 +435,7 @@ export function mergeTargetConfigurations(
   baseTarget?: TargetConfiguration,
   projectConfigSourceMap?: Record<string, SourceInformation>,
   sourceInformation?: SourceInformation,
-  targetIdentifier?: string,
+  targetIdentifier?: string
 ): TargetConfiguration {
   const {
     configurations: defaultConfigurations,
@@ -490,7 +490,7 @@ export function mergeTargetConfigurations(
       isCompatible ? defaultOptions : undefined,
       projectConfigSourceMap,
       sourceInformation,
-      targetIdentifier,
+      targetIdentifier
     );
   }
 
@@ -502,7 +502,7 @@ export function mergeTargetConfigurations(
       isCompatible ? defaultConfigurations : undefined,
       projectConfigSourceMap,
       sourceInformation,
-      targetIdentifier,
+      targetIdentifier
     );
   }
   return result as TargetConfiguration;
@@ -517,7 +517,7 @@ export function mergeTargetConfigurations(
  */
 export function isCompatibleTarget(
   a: TargetConfiguration,
-  b: TargetConfiguration,
+  b: TargetConfiguration
 ) {
   const oneHasNoExecutor = !a.executor || !b.executor;
   const bothHaveSameExecutor = a.executor === b.executor;
@@ -555,7 +555,7 @@ function mergeConfigurations<T extends Object>(
   baseConfigurations: Record<string, T> | undefined,
   projectConfigSourceMap?: Record<string, SourceInformation>,
   sourceInformation?: SourceInformation,
-  targetIdentifier?: string,
+  targetIdentifier?: string
 ): Record<string, T> | undefined {
   const mergedConfigurations = {};
 
@@ -592,7 +592,7 @@ function mergeOptions(
   baseOptions: Record<string, any> | undefined,
   projectConfigSourceMap?: Record<string, SourceInformation>,
   sourceInformation?: SourceInformation,
-  targetIdentifier?: string,
+  targetIdentifier?: string
 ): Record<string, any> | undefined {
   const mergedOptions = {
     ...(baseOptions ?? {}),
@@ -613,7 +613,7 @@ function mergeOptions(
 export function resolveNxTokensInOptions<T extends Object | Array<unknown>>(
   object: T,
   project: ProjectConfiguration,
-  key: string,
+  key: string
 ): T {
   const result: T = Array.isArray(object) ? ([...object] as T) : { ...object };
   for (let [opt, value] of Object.entries(object ?? {})) {
@@ -624,7 +624,7 @@ export function resolveNxTokensInOptions<T extends Object | Array<unknown>>(
       }
       if (value.includes('{workspaceRoot}')) {
         throw new Error(
-          `${NX_PREFIX} The {workspaceRoot} token is only valid at the beginning of an option. (${key})`,
+          `${NX_PREFIX} The {workspaceRoot} token is only valid at the beginning of an option. (${key})`
         );
       }
       value = value.replace(/\{projectRoot\}/g, project.root);
@@ -633,7 +633,7 @@ export function resolveNxTokensInOptions<T extends Object | Array<unknown>>(
       result[opt] = resolveNxTokensInOptions(
         value,
         project,
-        [key, opt].join('.'),
+        [key, opt].join('.')
       );
     }
   }
@@ -643,7 +643,7 @@ export function resolveNxTokensInOptions<T extends Object | Array<unknown>>(
 export function readTargetDefaultsForTarget(
   targetName: string,
   targetDefaults: TargetDefaults,
-  executor?: string,
+  executor?: string
 ): TargetDefaults[string] {
   if (executor) {
     // If an executor is defined in project.json, defaults should be read
@@ -669,7 +669,7 @@ function createRootMap(projectRootMap: Map<string, ProjectConfiguration>) {
 
 function resolveCommandSyntacticSugar(
   target: TargetConfiguration,
-  key: string,
+  key: string
 ): TargetConfiguration {
   const { command, ...config } = target ?? {};
 
@@ -679,7 +679,7 @@ function resolveCommandSyntacticSugar(
 
   if (config.executor) {
     throw new Error(
-      `${NX_PREFIX} Project at ${key} should not have executor and command both configured.`,
+      `${NX_PREFIX} Project at ${key} should not have executor and command both configured.`
     );
   } else {
     return {

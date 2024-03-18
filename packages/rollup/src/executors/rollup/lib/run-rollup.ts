@@ -11,11 +11,11 @@ export function runRollup(options: rollup.RollupOptions) {
       return from(
         Promise.all(
           (<Array<rollup.OutputOptions>>outputOptions).map((o) =>
-            bundle.write(o),
-          ),
-        ),
+            bundle.write(o)
+          )
+        )
       );
     }),
-    map(() => ({ success: true })),
+    map(() => ({ success: true }))
   );
 }

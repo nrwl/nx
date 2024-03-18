@@ -49,7 +49,7 @@ export function updateToCypress12(tree: Tree): GeneratorCallback {
         shouldNotUseCyInShouldCB(tree, filePath);
         shouldNotOverrideCommands(tree, filePath);
       });
-    },
+    }
   );
 
   console.warn(stripIndents`Cypress 12 has lots of breaking changes that might subtly break your tests.
@@ -73,7 +73,7 @@ export function turnOffTestIsolation(tree: Tree, configPath: string) {
   const config = tree.read(configPath, 'utf-8');
   const isTestIsolationSet = tsquery.query<PropertyAssignment>(
     config,
-    'ExportAssignment ObjectLiteralExpression > PropertyAssignment:has(Identifier[name="testIsolation"])',
+    'ExportAssignment ObjectLiteralExpression > PropertyAssignment:has(Identifier[name="testIsolation"])'
   );
 
   if (isTestIsolationSet.length > 0) {
@@ -104,7 +104,7 @@ export function turnOffTestIsolation(tree: Tree, configPath: string) {
     ...${node.initializer.getText()},
     ${testIsolationProperty}
   }`;
-    },
+    }
   );
 
   tree.write(configPath, updated);
@@ -132,7 +132,7 @@ export function shouldUseCyIntercept(tree: Tree, filePath: string) {
         return `// TODO(@nrwl/cypress): this command has been removed, use cy.intercept instead. https://docs.cypress.io/guides/references/migration-guide#cy-server-cy-route-and-Cypress-Server-defaults
 ${node.getText()}`;
       }
-    },
+    }
   );
 
   tree.write(filePath, markedRemovedCommands);
@@ -158,7 +158,7 @@ export function shouldUseCySession(tree: Tree, filePath: string) {
         return `// TODO(@nrwl/cypress): this command has been removed, use cy.session instead. https://docs.cypress.io/guides/references/migration-guide#Command-Cypress-API-Changes
 ${node.getText()}`;
       }
-    },
+    }
   );
 
   tree.write(filePath, markedRemovedCommands);
@@ -188,7 +188,7 @@ export function shouldNotUseCyInShouldCB(tree: Tree, filePath: string) {
         const isUsingNestedCyCommand =
           tsquery.query<PropertyAccessExpression>(
             parentExpression.arguments[0],
-            'CallExpression > PropertyAccessExpression:has(Identifier[name="cy"])',
+            'CallExpression > PropertyAccessExpression:has(Identifier[name="cy"])'
           )?.length > 0;
         if (isUsingNestedCyCommand) {
           return `/**
@@ -200,7 +200,7 @@ ${node.getText()}`;
         }
         return node.getText();
       }
-    },
+    }
   );
 
   tree.write(filePath, markedNestedCyCommands);
@@ -236,7 +236,7 @@ export function shouldNotOverrideCommands(tree: Tree, filePath: string) {
 ${node.getText()}`;
         }
       }
-    },
+    }
   );
 
   tree.write(filePath, markedOverrideUsage);

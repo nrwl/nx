@@ -20,7 +20,7 @@ export class AngularDevkitNgPackagrMigrator extends BuilderMigrator {
     tree: Tree,
     project: ProjectMigrationInfo,
     projectConfig: ProjectConfiguration,
-    logger: Logger,
+    logger: Logger
   ) {
     super(
       tree,
@@ -28,7 +28,7 @@ export class AngularDevkitNgPackagrMigrator extends BuilderMigrator {
       undefined,
       project,
       projectConfig,
-      logger,
+      logger
     );
   }
 
@@ -40,7 +40,7 @@ export class AngularDevkitNgPackagrMigrator extends BuilderMigrator {
     if (!this.targets.size) {
       this.logger.warn(
         `There is no target in the project configuration using the ${this.builderName} builder. This might not be an issue. ` +
-          `Skipping updating the build configuration.`,
+          `Skipping updating the build configuration.`
       );
       return;
     }
@@ -56,7 +56,7 @@ export class AngularDevkitNgPackagrMigrator extends BuilderMigrator {
 
   private updateTargetConfiguration(
     targetName: string,
-    target: TargetConfiguration,
+    target: TargetConfiguration
   ): void {
     target.executor = '@nx/angular:package';
 
@@ -65,7 +65,7 @@ export class AngularDevkitNgPackagrMigrator extends BuilderMigrator {
       (!target.configurations || !Object.keys(target.configurations).length)
     ) {
       this.logger.warn(
-        `The target "${targetName}" is not specifying any options or configurations. Skipping updating the target configuration.`,
+        `The target "${targetName}" is not specifying any options or configurations. Skipping updating the target configuration.`
       );
       return;
     }
@@ -74,7 +74,7 @@ export class AngularDevkitNgPackagrMigrator extends BuilderMigrator {
       if (target.options?.[option]) {
         target.options[option] = joinPathFragments(
           this.project.newRoot,
-          basename(target.options[option]),
+          basename(target.options[option])
         );
       }
 
@@ -83,7 +83,7 @@ export class AngularDevkitNgPackagrMigrator extends BuilderMigrator {
           configuration[option] &&
           joinPathFragments(
             this.project.newRoot,
-            basename(configuration[option]),
+            basename(configuration[option])
           );
       }
     });
@@ -95,17 +95,17 @@ export class AngularDevkitNgPackagrMigrator extends BuilderMigrator {
 
   private updateNgPackageJson(
     targetName: string,
-    target: TargetConfiguration,
+    target: TargetConfiguration
   ): void {
     if (!target.options?.project) {
       this.logger.warn(
-        `The "${targetName}" target does not have the "project" option configured. Skipping updating the ng-packagr project file ("ng-package.json").`,
+        `The "${targetName}" target does not have the "project" option configured. Skipping updating the ng-packagr project file ("ng-package.json").`
       );
       return;
     } else if (!this.tree.exists(target.options.project)) {
       this.logger.warn(
         `The ng-packagr project file "${this.originalProjectConfig.targets[targetName].options.project}" specified in the "${targetName}" ` +
-          `target could not be found. Skipping updating the ng-packagr project file.`,
+          `target could not be found. Skipping updating the ng-packagr project file.`
       );
       return;
     }
@@ -123,13 +123,13 @@ export class AngularDevkitNgPackagrMigrator extends BuilderMigrator {
 
   private updateTsConfigs(
     targetName: string,
-    target: TargetConfiguration,
+    target: TargetConfiguration
   ): void {
     const tsConfigPath =
       target.options?.tsConfig ?? target.configurations?.development?.tsConfig;
     if (!tsConfigPath) {
       this.logger.warn(
-        `The "${targetName}" target does not have the "tsConfig" option configured. Skipping updating the tsConfig file.`,
+        `The "${targetName}" target does not have the "tsConfig" option configured. Skipping updating the tsConfig file.`
       );
       return;
     } else if (!this.tree.exists(tsConfigPath)) {
@@ -138,7 +138,7 @@ export class AngularDevkitNgPackagrMigrator extends BuilderMigrator {
         : this.originalProjectConfig.targets[targetName].configurations
             ?.development?.tsConfig;
       this.logger.warn(
-        `The tsConfig file "${originalTsConfigPath}" specified in the "${targetName}" target could not be found. Skipping updating the tsConfig file.`,
+        `The tsConfig file "${originalTsConfigPath}" specified in the "${targetName}" target could not be found. Skipping updating the tsConfig file.`
       );
       return;
     }
@@ -148,7 +148,7 @@ export class AngularDevkitNgPackagrMigrator extends BuilderMigrator {
     this.updateTsConfigFile(
       tsConfigPath,
       rootTsConfigFile,
-      projectOffsetFromRoot,
+      projectOffsetFromRoot
     );
 
     updateJson(this.tree, tsConfigPath, (json) => {

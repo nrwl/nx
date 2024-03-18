@@ -113,7 +113,7 @@ describe('removeLibraryGeneratorSimpleModuleNameOption', () => {
       });
 
       await expect(
-        removeLibraryGeneratorSimpleModuleNameOption(tree),
+        removeLibraryGeneratorSimpleModuleNameOption(tree)
       ).resolves.not.toThrow();
 
       const updatedNxJson = readNxJson(tree);
@@ -129,7 +129,7 @@ describe('removeLibraryGeneratorSimpleModuleNameOption', () => {
       updateNxJson(tree, { ...nxJson, generators: undefined });
 
       await expect(
-        removeLibraryGeneratorSimpleModuleNameOption(tree),
+        removeLibraryGeneratorSimpleModuleNameOption(tree)
       ).resolves.not.toThrow();
 
       const updatedNxJson = readNxJson(tree);
@@ -140,7 +140,7 @@ describe('removeLibraryGeneratorSimpleModuleNameOption', () => {
       tree.delete('nx.json');
 
       await expect(
-        removeLibraryGeneratorSimpleModuleNameOption(tree),
+        removeLibraryGeneratorSimpleModuleNameOption(tree)
       ).resolves.not.toThrow();
 
       expect(tree.exists('nx.json')).toBe(false);
@@ -251,7 +251,7 @@ describe('removeLibraryGeneratorSimpleModuleNameOption', () => {
       addProjectConfiguration(tree, 'project', project);
 
       await expect(
-        removeLibraryGeneratorSimpleModuleNameOption(tree),
+        removeLibraryGeneratorSimpleModuleNameOption(tree)
       ).resolves.not.toThrow();
 
       const updatedProject = readProjectConfiguration(tree, 'project');
@@ -271,7 +271,7 @@ describe('removeLibraryGeneratorSimpleModuleNameOption', () => {
       addProjectConfiguration(tree, 'project', project);
 
       await expect(
-        removeLibraryGeneratorSimpleModuleNameOption(tree),
+        removeLibraryGeneratorSimpleModuleNameOption(tree)
       ).resolves.not.toThrow();
 
       const updatedProject = readProjectConfiguration(tree, 'project');

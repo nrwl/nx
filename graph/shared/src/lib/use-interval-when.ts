@@ -3,7 +3,7 @@ import { useEffect, useRef } from 'react';
 export const useIntervalWhen = (
   callback: () => void,
   delay: number,
-  condition: boolean,
+  condition: boolean
 ) => {
   const savedCallback = useRef(() => {});
 

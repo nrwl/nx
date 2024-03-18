@@ -39,7 +39,7 @@ describe('updateImplicitDepenencies', () => {
 
     const { implicitDependencies } = readProjectConfiguration(
       tree,
-      'my-other-lib',
+      'my-other-lib'
     );
     expect(implicitDependencies).toEqual(['my-destination']);
   });

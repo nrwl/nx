@@ -29,7 +29,7 @@ export function Shell(): JSX.Element {
 
   const lastPerfReport = useSyncExternalStore(
     (callback) => graphService.listen(callback),
-    () => graphService.lastPerformanceReport,
+    () => graphService.lastPerformanceReport
   );
 
   const nodesVisible = lastPerfReport.numNodes !== 0;
@@ -75,7 +75,7 @@ export function Shell(): JSX.Element {
         bubbles: true,
         cancelable: true,
         view: window,
-      }),
+      })
     );
   }
 
@@ -115,7 +115,7 @@ export function Shell(): JSX.Element {
                       navigate(
                         `/${encodeURIComponent(currentPath.workspace)}${
                           event.currentTarget.value
-                        }`,
+                        }`
                       );
                     } else {
                       navigate(`${event.currentTarget.value}`);
@@ -207,7 +207,7 @@ export function Shell(): JSX.Element {
               type="button"
               className={classNames(
                 !nodesVisible ? 'invisible opacity-0' : '',
-                'fixed bottom-4 right-4 z-50 block h-16 w-16 transform rounded-full bg-blue-500 text-white shadow-sm transition duration-300 dark:bg-sky-500',
+                'fixed bottom-4 right-4 z-50 block h-16 w-16 transform rounded-full bg-blue-500 text-white shadow-sm transition duration-300 dark:bg-sky-500'
               )}
               data-cy="downloadImageButton"
               onClick={downloadImage}

@@ -36,6 +36,6 @@ export default function update(tree: Tree) {
       }
 
       updateProjectConfiguration(tree, projectName, projectConfig);
-    },
+    }
   );
 }

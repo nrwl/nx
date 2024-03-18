@@ -29,7 +29,7 @@ describe('updateStorybookConfig', () => {
     };
 
     expect(() =>
-      updateStorybookConfig(tree, schema, projectConfig),
+      updateStorybookConfig(tree, schema, projectConfig)
     ).not.toThrow();
   });
 
@@ -59,7 +59,7 @@ describe('updateStorybookConfig', () => {
 
     const storybookMainAfter = tree.read(storybookMainPath, 'utf-8');
     expect(storybookMainAfter).toContain(
-      `const rootMain = require('../../../.storybook/main');`,
+      `const rootMain = require('../../../.storybook/main');`
     );
   });
 
@@ -88,10 +88,10 @@ describe('updateStorybookConfig', () => {
 
     const storybookWebpackConfigAfter = tree.read(
       storybookWebpackConfigPath,
-      'utf-8',
+      'utf-8'
     );
     expect(storybookWebpackConfigAfter).toContain(
-      `const rootWebpackConfig = require('../../../.storybook/webpack.config');`,
+      `const rootWebpackConfig = require('../../../.storybook/webpack.config');`
     );
   });
 
@@ -130,14 +130,14 @@ describe('updateStorybookConfig', () => {
 
       const storybookMainAfter = tree.read(storybookMainPath, 'utf-8');
       expect(storybookMainAfter).toContain(
-        `const rootMain = require('../../../.storybook/main');`,
+        `const rootMain = require('../../../.storybook/main');`
       );
       const storybookNestedMainAfter = tree.read(
         storybookNestedMainPath,
-        'utf-8',
+        'utf-8'
       );
       expect(storybookNestedMainAfter).toContain(
-        `const rootMain = require('../../../../.storybook/main');`,
+        `const rootMain = require('../../../../.storybook/main');`
       );
     });
 
@@ -162,7 +162,7 @@ describe('updateStorybookConfig', () => {
       tree.write(storybookWebpackConfigPath, storybookWebpackConfig);
       tree.write(
         storybookNestedWebpackConfigPath,
-        storybookNestedWebpackConfig,
+        storybookNestedWebpackConfig
       );
       const schema: NormalizedSchema = {
         projectName: 'my-source',
@@ -177,18 +177,18 @@ describe('updateStorybookConfig', () => {
 
       const storybookWebpackConfigAfter = tree.read(
         storybookWebpackConfigPath,
-        'utf-8',
+        'utf-8'
       );
       expect(storybookWebpackConfigAfter).toContain(
-        `const rootWebpackConfig = require('../../../.storybook/webpack.config');`,
+        `const rootWebpackConfig = require('../../../.storybook/webpack.config');`
       );
 
       const storybookNestedWebpackConfigAfter = tree.read(
         storybookNestedWebpackConfigPath,
-        'utf-8',
+        'utf-8'
       );
       expect(storybookNestedWebpackConfigAfter).toContain(
-        `const rootWebpackConfig = require('../../../../.storybook/webpack.config');`,
+        `const rootWebpackConfig = require('../../../../.storybook/webpack.config');`
       );
     });
   });

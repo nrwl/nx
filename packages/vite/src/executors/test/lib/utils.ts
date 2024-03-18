@@ -15,7 +15,7 @@ import {
 export async function getOptions(
   options: VitestExecutorOptions,
   context: ExecutorContext,
-  projectRoot: string,
+  projectRoot: string
 ) {
   // Allows ESM to be required in CJS modules. Vite will be published as ESM in the future.
   const { loadConfigFromFile, mergeConfig } = await loadViteDynamicImport();
@@ -23,7 +23,7 @@ export async function getOptions(
   const viteConfigPath = normalizeViteConfigFilePath(
     context.root,
     projectRoot,
-    options.configFile,
+    options.configFile
   );
 
   if (!viteConfigPath) {
@@ -34,7 +34,7 @@ export async function getOptions(
         Please make sure that vitest is configured correctly, 
         or use the @nx/vite:vitest generator to configure it for you.
         You can read more here: https://nx.dev/nx-api/vite/generators/vitest
-        `,
+        `
     );
   }
 
@@ -43,7 +43,7 @@ export async function getOptions(
       mode: options?.mode ?? 'production',
       command: 'serve',
     },
-    viteConfigPath,
+    viteConfigPath
   );
 
   if (!viteConfigPath || !resolved?.config?.['test']) {

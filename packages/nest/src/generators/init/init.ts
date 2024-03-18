@@ -6,7 +6,7 @@ import type { InitGeneratorOptions } from './schema';
 
 export async function initGenerator(
   tree: Tree,
-  options: InitGeneratorOptions,
+  options: InitGeneratorOptions
 ): Promise<GeneratorCallback> {
   let installPackagesTask: GeneratorCallback = () => {};
   if (!options.skipPackageJson) {

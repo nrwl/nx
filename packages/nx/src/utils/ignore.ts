@@ -11,21 +11,21 @@ export const ALWAYS_IGNORE = getAlwaysIgnore();
 
 export function getIgnoredGlobs(
   root: string = workspaceRoot,
-  prependRoot: boolean = true,
+  prependRoot: boolean = true
 ) {
   const files = ['.gitignore', '.nxignore'];
   if (prependRoot) {
     return [
       ...getAlwaysIgnore(root),
       ...files.flatMap((f) =>
-        getIgnoredGlobsFromFile(joinPathFragments(root, f), root),
+        getIgnoredGlobsFromFile(joinPathFragments(root, f), root)
       ),
     ];
   } else {
     return [
       ...getAlwaysIgnore(),
       ...files.flatMap((f) =>
-        getIgnoredGlobsFromFile(joinPathFragments(root, f)),
+        getIgnoredGlobsFromFile(joinPathFragments(root, f))
       ),
     ];
   }
@@ -37,7 +37,7 @@ export function getAlwaysIgnore(root?: string) {
 }
 
 export function getIgnoreObject(
-  root: string = workspaceRoot,
+  root: string = workspaceRoot
 ): ReturnType<typeof ignore> {
   const ig = ignore();
   ig.add(readFileIfExisting(`${root}/.gitignore`));

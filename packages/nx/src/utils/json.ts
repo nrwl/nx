@@ -41,7 +41,7 @@ export interface JsonSerializeOptions {
  */
 export function parseJson<T extends object = any>(
   input: string,
-  options?: JsonParseOptions,
+  options?: JsonParseOptions
 ): T {
   try {
     if (options?.expectComments !== true) {
@@ -94,7 +94,7 @@ function formatParseError(input: string, parseError: ParseError) {
  */
 export function serializeJson<T extends object = object>(
   input: T,
-  options?: JsonSerializeOptions,
+  options?: JsonSerializeOptions
 ): string {
   return JSON.stringify(input, null, options?.spaces ?? 2) + '\n';
 }

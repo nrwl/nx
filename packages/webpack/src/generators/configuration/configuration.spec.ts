@@ -32,7 +32,7 @@ describe('webpackProject', () => {
     });
 
     expect(tree.read('libs/mypkg/webpack.config.js', 'utf-8')).toContain(
-      `main: 'libs/mypkg/index.ts'`,
+      `main: 'libs/mypkg/index.ts'`
     );
   });
 
@@ -44,7 +44,7 @@ describe('webpackProject', () => {
     });
 
     expect(tree.read('libs/mypkg/webpack.config.js', 'utf-8')).toContain(
-      `tsConfig: 'libs/mypkg/tsconfig.custom.json'`,
+      `tsConfig: 'libs/mypkg/tsconfig.custom.json'`
     );
   });
 });

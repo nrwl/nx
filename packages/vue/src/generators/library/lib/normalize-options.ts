@@ -4,7 +4,7 @@ import { NormalizedSchema, Schema } from '../schema';
 
 export async function normalizeOptions(
   host: Tree,
-  options: Schema,
+  options: Schema
 ): Promise<NormalizedSchema> {
   const {
     projectName,
@@ -31,7 +31,7 @@ export async function normalizeOptions(
   if (bundler === 'none') {
     if (options.publishable) {
       logger.warn(
-        `Publishable libraries cannot be used with bundler: 'none'. Defaulting to 'vite'.`,
+        `Publishable libraries cannot be used with bundler: 'none'. Defaulting to 'vite'.`
       );
       bundler = 'vite';
     }
@@ -60,7 +60,7 @@ export async function normalizeOptions(
 
     if (appProjectConfig.projectType !== 'application') {
       throw new Error(
-        `appProject expected type of "application" but got "${appProjectConfig.projectType}"`,
+        `appProject expected type of "application" but got "${appProjectConfig.projectType}"`
       );
     }
 
@@ -69,7 +69,7 @@ export async function normalizeOptions(
       normalized.appSourceRoot = normalizePath(appProjectConfig.sourceRoot);
     } catch (e) {
       throw new Error(
-        `Could not locate project main for ${options.appProject}`,
+        `Could not locate project main for ${options.appProject}`
       );
     }
   }

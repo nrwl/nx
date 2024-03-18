@@ -1,6 +1,6 @@
 export function interpolateEnvironmentVariablesToIndex(
   contents: string,
-  deployUrl?: string,
+  deployUrl?: string
 ): string {
   const environmentVariables = getClientEnvironment(deployUrl || '');
   return interpolateEnvironmentVariables(contents, environmentVariables as any);
@@ -23,13 +23,13 @@ function getClientEnvironment(deployUrl: string) {
       {
         NODE_ENV: process.env.NODE_ENV || 'development',
         DEPLOY_URL: deployUrl || process.env.DEPLOY_URL || '',
-      },
+      }
     );
 }
 
 function interpolateEnvironmentVariables(
   documentContents: string,
-  environmentVariables: Record<string, string>,
+  environmentVariables: Record<string, string>
 ): string {
   let temp = documentContents;
   for (const [key, value] of Object.entries(environmentVariables)) {

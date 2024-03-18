@@ -11,7 +11,7 @@ export function convertScamToStandalone(
   moduleNodes: Array<Node>,
   tree: Tree,
   normalizedComponentPath: string,
-  componentName: string,
+  componentName: string
 ) {
   let newComponentContents = '';
   const COMPONENT_PROPERTY_SELECTOR =
@@ -20,22 +20,20 @@ export function convertScamToStandalone(
   const componentDecoratorMetadataNode = tsquery(
     componentAST,
     COMPONENT_PROPERTY_SELECTOR,
-    { visitAllChildren: true },
+    { visitAllChildren: true }
   )[0];
 
   newComponentContents = `${componentFileContents.slice(
     0,
-    componentDecoratorMetadataNode.getStart() - 1,
+    componentDecoratorMetadataNode.getStart() - 1
   )}({
     standalone: true,
     imports: [${importsArray.join(',')}],${
-      providersArray.length > 0
-        ? `providers: [${providersArray.join(',')}],`
-        : ''
-    }${componentFileContents.slice(
-      componentDecoratorMetadataNode.getStart() + 1,
-      moduleNodes[0].getStart() - 1,
-    )}`;
+    providersArray.length > 0 ? `providers: [${providersArray.join(',')}],` : ''
+  }${componentFileContents.slice(
+    componentDecoratorMetadataNode.getStart() + 1,
+    moduleNodes[0].getStart() - 1
+  )}`;
 
   tree.write(normalizedComponentPath, newComponentContents);
 
@@ -43,7 +41,7 @@ export function convertScamToStandalone(
   const pathToComponentSpec = joinPathFragments(
     componentPathParts.dir,
     '/',
-    `${componentPathParts.name}.spec.ts`,
+    `${componentPathParts.name}.spec.ts`
   );
 
   if (tree.exists(pathToComponentSpec)) {
@@ -56,13 +54,13 @@ export function convertScamToStandalone(
       if (componentSpecContents.includes('imports: [')) {
         newComponentSpecContents = newComponentSpecContents.replace(
           'imports: [',
-          `imports: [${componentName}, `,
+          `imports: [${componentName}, `
         );
         newComponentSpecContents.replace(/declarations: \[.+/, '');
       } else {
         newComponentSpecContents = newComponentSpecContents.replace(
           'declarations: [',
-          'imports: [',
+          'imports: ['
         );
       }
 

@@ -55,7 +55,7 @@ type Options = [
     checkDynamicDependenciesExceptions: string[];
     banTransitiveDependencies: boolean;
     checkNestedExternalImports: boolean;
-  },
+  }
 ];
 export type MessageIds =
   | 'noRelativeOrAbsoluteImportsAcrossLibraries'
@@ -77,7 +77,7 @@ export const RULE_NAME = 'enforce-module-boundaries';
 
 export default ESLintUtils.RuleCreator(
   () =>
-    `https://github.com/nrwl/nx/blob/${NX_VERSION}/docs/generated/packages/eslint-plugin/documents/enforce-module-boundaries.md`,
+    `https://github.com/nrwl/nx/blob/${NX_VERSION}/docs/generated/packages/eslint-plugin/documents/enforce-module-boundaries.md`
 )<Options, MessageIds>({
   name: RULE_NAME,
   meta: {
@@ -207,13 +207,13 @@ export default ESLintUtils.RuleCreator(
         banTransitiveDependencies,
         checkNestedExternalImports,
       },
-    ],
+    ]
   ) {
     /**
      * Globally cached info about workspace
      */
     const projectPath = normalizePath(
-      (global as any).projectPath || workspaceRoot,
+      (global as any).projectPath || workspaceRoot
     );
     const fileName = normalizePath(context.getFilename());
 
@@ -235,7 +235,7 @@ export default ESLintUtils.RuleCreator(
         | TSESTree.ImportDeclaration
         | TSESTree.ImportExpression
         | TSESTree.ExportAllDeclaration
-        | TSESTree.ExportNamedDeclaration,
+        | TSESTree.ExportNamedDeclaration
     ) {
       // Ignoring ExportNamedDeclarations like:
       // export class Foo {}
@@ -260,7 +260,7 @@ export default ESLintUtils.RuleCreator(
       const sourceProject = findProject(
         projectGraph,
         projectRootMappings,
-        sourceFilePath,
+        sourceFilePath
       );
       // If source is not part of an nx workspace, return.
       if (!sourceProject) {
@@ -280,7 +280,7 @@ export default ESLintUtils.RuleCreator(
           projectPath,
           projectGraph,
           projectRootMappings,
-          sourceFilePath,
+          sourceFilePath
         );
       }
 
@@ -294,7 +294,7 @@ export default ESLintUtils.RuleCreator(
           fix(fixer) {
             if (targetProject) {
               const indexTsPaths = getBarrelEntryPointProjectNode(
-                targetProject as ProjectGraphProjectNode,
+                targetProject as ProjectGraphProjectNode
               );
 
               if (indexTsPaths && indexTsPaths.length > 0) {
@@ -315,7 +315,7 @@ export default ESLintUtils.RuleCreator(
                     const importPath = getRelativeImportPath(
                       importMember,
                       joinPathFragments(workspaceRoot, entryPointPath.path),
-                      sourceProject.data.sourceRoot,
+                      sourceProject.data.sourceRoot
                     );
                     // we cannot remap, so leave it as is
                     if (importPath) {
@@ -332,7 +332,7 @@ export default ESLintUtils.RuleCreator(
                 if (adjustedRelativeImports !== '') {
                   return fixer.replaceTextRange(
                     node.range,
-                    adjustedRelativeImports,
+                    adjustedRelativeImports
                   );
                 }
               }
@@ -348,7 +348,7 @@ export default ESLintUtils.RuleCreator(
           projectGraph,
           targetProjectLocator,
           sourceFilePath,
-          imp,
+          imp
         );
 
       if (!targetProject) {
@@ -372,7 +372,7 @@ export default ESLintUtils.RuleCreator(
           !belongsToDifferentNgEntryPoint(
             imp,
             sourceFilePath,
-            sourceProject.data.root,
+            sourceProject.data.root
           )
         ) {
           context.report({
@@ -402,13 +402,13 @@ export default ESLintUtils.RuleCreator(
                     const importPath = getRelativeImportPath(
                       importMember,
                       joinPathFragments(workspaceRoot, entryPointPath),
-                      sourceProject.data.sourceRoot,
+                      sourceProject.data.sourceRoot
                     );
                     if (importPath) {
                       // resolve the import path
                       const relativePath = relative(
                         dirname(fileName),
-                        dirname(importPath),
+                        dirname(importPath)
                       );
 
                       // the string we receive from elsewhere might not have a leading './' here despite still being a relative path
@@ -425,8 +425,8 @@ export default ESLintUtils.RuleCreator(
                           : ensureRelativeForm(
                               joinPathFragments(
                                 relativePath,
-                                basename(importPath),
-                              ),
+                                basename(importPath)
+                              )
                             );
 
                       importsToRemap.push({
@@ -442,7 +442,7 @@ export default ESLintUtils.RuleCreator(
                 if (adjustedRelativeImports !== '') {
                   return fixer.replaceTextRange(
                     node.range,
-                    adjustedRelativeImports,
+                    adjustedRelativeImports
                   );
                 }
               }
@@ -467,7 +467,7 @@ export default ESLintUtils.RuleCreator(
           sourceProject,
           targetProject,
           depConstraints,
-          imp,
+          imp
         );
         if (constraint) {
           context.report({
@@ -489,12 +489,12 @@ export default ESLintUtils.RuleCreator(
       const circularPath = checkCircularPath(
         projectGraph,
         sourceProject,
-        targetProject,
+        targetProject
       );
       if (circularPath.length !== 0) {
         const circularFilePath = findFilesInCircularPath(
           projectFileMap,
-          circularPath,
+          circularPath
         );
 
         // spacer text used for indirect dependencies when printing one line per file.
@@ -509,7 +509,7 @@ export default ESLintUtils.RuleCreator(
             targetProjectName: targetProject.name,
             path: circularPath.reduce(
               (acc, v) => `${acc} -> ${v.name}`,
-              sourceProject.name,
+              sourceProject.name
             ),
             filePaths: circularFilePath
               .map((files) =>
@@ -517,11 +517,11 @@ export default ESLintUtils.RuleCreator(
                   ? `[${files
                       .map((f) => `\n${spacer}${spacer}${f}`)
                       .join(',')}\n${spacer}]`
-                  : files[0],
+                  : files[0]
               )
               .reduce(
                 (acc, files) => `${acc}\n- ${files}`,
-                `- ${sourceFilePath}`,
+                `- ${sourceFilePath}`
               ),
           },
         });
@@ -567,19 +567,19 @@ export default ESLintUtils.RuleCreator(
       // if we import a library using loadChildren, we should not import it using es6imports
       if (
         !checkDynamicDependenciesExceptions.some((a) =>
-          matchImportWithWildcard(a, imp),
+          matchImportWithWildcard(a, imp)
         ) &&
         hasStaticImportOfDynamicResource(
           node,
           projectGraph,
           sourceProject.name,
-          targetProject.name,
+          targetProject.name
         )
       ) {
         const filesWithLazyImports = findFilesWithDynamicImports(
           projectFileMap,
           sourceProject.name,
-          targetProject.name,
+          targetProject.name
         );
         context.report({
           data: {
@@ -616,7 +616,7 @@ export default ESLintUtils.RuleCreator(
             constraint.onlyDependOnLibsWithTags.length &&
             hasNoneOfTheseTags(
               targetProject,
-              constraint.onlyDependOnLibsWithTags,
+              constraint.onlyDependOnLibsWithTags
             )
           ) {
             context.report({
@@ -654,7 +654,7 @@ export default ESLintUtils.RuleCreator(
             const projectPaths = findDependenciesWithTags(
               targetProject,
               constraint.notDependOnLibsWithTags,
-              projectGraph,
+              projectGraph
             );
             if (projectPaths.length > 0) {
               context.report({
@@ -668,7 +668,7 @@ export default ESLintUtils.RuleCreator(
                   projects: projectPaths
                     .map(
                       (projectPath) =>
-                        `- ${projectPath.map((p) => p.name).join(' -> ')}`,
+                        `- ${projectPath.map((p) => p.name).join(' -> ')}`
                     )
                     .join('\n'),
                 },
@@ -685,7 +685,7 @@ export default ESLintUtils.RuleCreator(
               transitiveExternalDeps,
               projectGraph,
               constraint,
-              imp,
+              imp
             );
             if (matches.length > 0) {
               matches.forEach(([target, violatingSource, constraint]) => {

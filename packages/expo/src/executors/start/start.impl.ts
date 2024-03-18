@@ -14,7 +14,7 @@ let childProcess: ChildProcess;
 
 export default async function* startExecutor(
   options: ExpoStartOptions,
-  context: ExecutorContext,
+  context: ExecutorContext
 ): AsyncGenerator<ExpoStartOutput> {
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
@@ -39,7 +39,7 @@ export default async function* startExecutor(
 function startAsync(
   workspaceRoot: string,
   projectRoot: string,
-  options: ExpoStartOptions,
+  options: ExpoStartOptions
 ): Promise<number> {
   return new Promise((resolve, reject) => {
     childProcess = fork(
@@ -51,7 +51,7 @@ function startAsync(
           RCT_METRO_PORT: options.port.toString(),
           ...process.env,
         },
-      },
+      }
     );
 
     // Ensure the child process is killed when the parent exits

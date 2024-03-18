@@ -39,7 +39,7 @@ function main() {
   performance.measure(
     'loading dotenv files',
     'loading dotenv files:start',
-    'loading dotenv files:end',
+    'loading dotenv files:end'
   );
 
   const workspace = findWorkspaceRoot(process.cwd());
@@ -74,7 +74,7 @@ function main() {
     const { LOCAL_NX_VERSION, GLOBAL_NX_VERSION } = determineNxVersions(
       localNx,
       workspace,
-      isLocalInstall,
+      isLocalInstall
     );
 
     if (process.argv[2] === '--version') {
@@ -143,7 +143,7 @@ function handleNoWorkspace(globalNxVersion?: string) {
 
 function handleNxVersionCommand(
   LOCAL_NX_VERSION: string,
-  GLOBAL_NX_VERSION: string,
+  GLOBAL_NX_VERSION: string
 ) {
   console.log(stripIndents`Nx Version:
       - Local: ${LOCAL_NX_VERSION ? 'v' + LOCAL_NX_VERSION : 'Not found'}
@@ -154,7 +154,7 @@ function handleNxVersionCommand(
 function determineNxVersions(
   localNx: string,
   workspace: WorkspaceTypeAndRoot,
-  isLocalInstall: boolean,
+  isLocalInstall: boolean
 ) {
   const LOCAL_NX_VERSION: string | null = localNx
     ? getLocalNxVersion(workspace)
@@ -207,7 +207,7 @@ function handleMissingLocalInstallation() {
  */
 function warnIfUsingOutdatedGlobalInstall(
   globalNxVersion: string,
-  localNxVersion?: string,
+  localNxVersion?: string
 ) {
   // Never display this warning if Nx is already running via Nx
   if (process.env.NX_CLI_SET) {
@@ -216,7 +216,7 @@ function warnIfUsingOutdatedGlobalInstall(
 
   const isOutdatedGlobalInstall = checkOutdatedGlobalInstallation(
     globalNxVersion,
-    localNxVersion,
+    localNxVersion
   );
 
   // Using a global Nx Install
@@ -228,7 +228,7 @@ function warnIfUsingOutdatedGlobalInstall(
       : [];
 
     bodyLines.push(
-      'For more information, see https://nx.dev/more-concepts/global-nx',
+      'For more information, see https://nx.dev/more-concepts/global-nx'
     );
     output.warn({
       title: `Its time to update Nx 🎉`,
@@ -239,7 +239,7 @@ function warnIfUsingOutdatedGlobalInstall(
 
 function checkOutdatedGlobalInstallation(
   globalNxVersion?: string,
-  localNxVersion?: string,
+  localNxVersion?: string
 ) {
   // We aren't running a global install, so we can't know if its outdated.
   if (!globalNxVersion) {
@@ -264,7 +264,7 @@ function getLocalNxVersion(workspace: WorkspaceTypeAndRoot): string | null {
   try {
     const { packageJson } = readModulePackageJson(
       'nx',
-      getNxRequirePaths(workspace.dir),
+      getNxRequirePaths(workspace.dir)
     );
     return packageJson.version;
   } catch {}

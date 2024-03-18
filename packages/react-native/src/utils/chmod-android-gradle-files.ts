@@ -12,7 +12,7 @@ export function chmodAndroidGradlewFiles(androidFolder: string) {
 }
 
 export function chmodAndroidGradlewFilesTask(
-  androidFolder: string,
+  androidFolder: string
 ): GeneratorCallback {
   return () => {
     logger.info(`chmod android gradlew files under ${androidFolder}`);

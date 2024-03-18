@@ -3,7 +3,7 @@ import { existsSync, readFileSync, writeFileSync } from 'fs';
 export function writeViteConfig(
   appName: string,
   isStandalone: boolean,
-  isJs: boolean,
+  isJs: boolean
 ) {
   let port = 4200;
 
@@ -41,6 +41,6 @@ export default defineConfig({
   },
   plugins: [react()],
 });
-`,
+`
   );
 }

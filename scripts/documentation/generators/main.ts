@@ -20,7 +20,7 @@ async function generate() {
       workspaceRoot,
       'docs',
       'generated',
-      'cli',
+      'cli'
     );
     await generateCnwDocumentation(commandsOutputDirectory);
     await generateCliDocumentation(commandsOutputDirectory);
@@ -43,10 +43,10 @@ function checkDocumentation() {
   if (output) {
     console.log(
       `${chalk.red(
-        '!',
+        '!'
       )} 📄 Documentation has been modified, you need to commit the changes. ${chalk.red(
-        '!',
-      )} `,
+        '!'
+      )} `
     );
 
     console.log('\nChanged Docs:');

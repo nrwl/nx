@@ -11,14 +11,14 @@ export function filterReleaseGroups(
   projectGraph: ProjectGraph,
   nxReleaseConfig: NxReleaseConfig,
   projectsFilter?: string[],
-  groupsFilter?: string[],
+  groupsFilter?: string[]
 ): {
   error: null | { title: string; bodyLines?: string[] };
   releaseGroups: ReleaseGroupWithName[];
   releaseGroupToFilteredProjects: Map<ReleaseGroupWithName, Set<string>>;
 } {
   let releaseGroups: ReleaseGroupWithName[] = Object.entries(
-    nxReleaseConfig.groups,
+    nxReleaseConfig.groups
   ).map(([name, group]) => {
     return {
       ...group,
@@ -49,7 +49,7 @@ export function filterReleaseGroups(
   if (projectsFilter?.length) {
     const matchingProjectsForFilter = findMatchingProjects(
       projectsFilter,
-      projectGraph.nodes,
+      projectGraph.nodes
     );
 
     if (!matchingProjectsForFilter.length) {
@@ -74,7 +74,7 @@ export function filterReleaseGroups(
       releaseGroup.projects
         .filter((p) => !matchingProjectsForFilter.includes(p))
         .forEach((p) =>
-          releaseGroupToFilteredProjects.get(releaseGroup).delete(p),
+          releaseGroupToFilteredProjects.get(releaseGroup).delete(p)
         );
     }
 
@@ -84,7 +84,7 @@ export function filterReleaseGroups(
      */
     if (releaseGroups.length) {
       const unmatchedProjects = matchingProjectsForFilter.filter(
-        (p) => !filteredProjectToReleaseGroup.has(p),
+        (p) => !filteredProjectToReleaseGroup.has(p)
       );
       if (unmatchedProjects.length) {
         return {
@@ -105,11 +105,11 @@ export function filterReleaseGroups(
      * make the projects they were trying to filter be independently releasable.
      */
     const releaseGroupsForFilteredProjects = Array.from(
-      new Set(Array.from(filteredProjectToReleaseGroup.values())),
+      new Set(Array.from(filteredProjectToReleaseGroup.values()))
     );
     const releaseGroupsThatAreNotIndependent =
       releaseGroupsForFilteredProjects.filter(
-        (rg) => rg.projectsRelationship !== 'independent',
+        (rg) => rg.projectsRelationship !== 'independent'
       );
     if (releaseGroupsThatAreNotIndependent.length) {
       // Special handling for IMPLICIT_DEFAULT_RELEASE_GROUP
@@ -132,7 +132,7 @@ export function filterReleaseGroups(
         error: {
           title: `Your --projects filter "${projectsFilter}" matched projects in the following release groups which do not have "independent" configured for their "projectsRelationship":`,
           bodyLines: releaseGroupsThatAreNotIndependent.map(
-            (rg) => `- ${rg.name}`,
+            (rg) => `- ${rg.name}`
           ),
         },
         releaseGroups: [],
@@ -161,7 +161,7 @@ export function filterReleaseGroups(
       }
     }
     releaseGroups = releaseGroups.filter(
-      (rg) => releaseGroupToFilteredProjects.get(rg)?.size > 0,
+      (rg) => releaseGroupToFilteredProjects.get(rg)?.size > 0
     );
 
     return {

@@ -19,7 +19,7 @@ import { eslintConfigNextVersion } from '../../../utils/versions';
 
 export async function addLinting(
   host: Tree,
-  options: NormalizedSchema,
+  options: NormalizedSchema
 ): Promise<GeneratorCallback> {
   const tasks: GeneratorCallback[] = [];
 
@@ -35,7 +35,7 @@ export async function addLinting(
       rootProject: options.rootProject,
       setParserOptionsProject: options.setParserOptionsProject,
       addPlugin: options.addPlugin,
-    }),
+    })
   );
 
   if (options.linter === Linter.EsLint && isEslintConfigSupported(host)) {
@@ -63,7 +63,7 @@ export async function addLinting(
             `${options.appProjectRoot}/pages`,
           ],
         },
-      }),
+      })
     );
     // add jest specific config
     if (options.unitTestRunner === 'jest') {
@@ -82,7 +82,7 @@ export async function addLinting(
       addDependenciesToPackageJson(host, extraEslintDependencies.dependencies, {
         ...extraEslintDependencies.devDependencies,
         'eslint-config-next': eslintConfigNextVersion,
-      }),
+      })
     );
   }
 

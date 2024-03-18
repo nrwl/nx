@@ -46,7 +46,7 @@ export async function updateToCypress13(tree: Tree) {
         }
         shouldNotOverrideReadFile(tree, filePath);
       });
-    },
+    }
   );
 
   updateJson(tree, 'package.json', (json) => {
@@ -123,7 +123,7 @@ function removePassedSpecs(on) {
             return `// ${node.getText()} `;
           }
         }
-      },
+      }
     );
 
     updatedWithSetupNodeEvents = tsquery.replace(
@@ -141,7 +141,7 @@ function removePassedSpecs(on) {
 }
 `;
       },
-      { visitAllChildren: false },
+      { visitAllChildren: false }
     );
   } else {
     // if don't have setupNodeEvents, replace videoUploadOnPasses with setupNodeEvents method
@@ -152,7 +152,7 @@ function removePassedSpecs(on) {
         return `setupNodeEvents(on, config) {
   removePassedSpecs(on);
 }`;
-      },
+      }
     );
   }
 
@@ -184,7 +184,7 @@ function removeNodeVersionOption(tree: Tree, configPath: string) {
           return `// ${node.getText()}`;
         }
       }
-    },
+    }
   );
 
   if (updated !== config) {
@@ -222,7 +222,7 @@ export function shouldNotOverrideReadFile(tree: Tree, filePath: string) {
 ${node.getText()}`;
         }
       }
-    },
+    }
   );
   tree.write(filePath, markedOverrideUsage);
 }

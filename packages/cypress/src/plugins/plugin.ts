@@ -46,7 +46,7 @@ function writeTargetsToCache(
   targets: Record<
     string,
     Record<string, TargetConfiguration<CypressExecutorOptions>>
-  >,
+  >
 ) {
   writeJsonFile(cachePath, targets);
 }
@@ -81,7 +81,7 @@ export const createNodes: CreateNodes<CypressPluginOptions> = [
           configFilePath,
           projectRoot,
           options,
-          context,
+          context
         );
 
     calculatedTargets[hash] = targets;
@@ -100,7 +100,7 @@ export const createNodes: CreateNodes<CypressPluginOptions> = [
 function getOutputs(
   projectRoot: string,
   cypressConfig: any,
-  testingType: 'e2e' | 'component',
+  testingType: 'e2e' | 'component'
 ): string[] {
   function getOutput(path: string): string {
     if (path.startsWith('..')) {
@@ -149,10 +149,10 @@ async function buildCypressTargets(
   configFilePath: string,
   projectRoot: string,
   options: CypressPluginOptions,
-  context: CreateNodesContext,
+  context: CreateNodesContext
 ) {
   const cypressConfig = await loadConfigFile(
-    join(context.workspaceRoot, configFilePath),
+    join(context.workspaceRoot, configFilePath)
   );
 
   const pluginPresetOptions = {
@@ -184,7 +184,7 @@ async function buildCypressTargets(
     if (Object.keys(webServerCommands ?? {}).length > 0) {
       targets[options.targetName].configurations ??= {};
       for (const [configuration, webServerCommand] of Object.entries(
-        webServerCommands ?? {},
+        webServerCommands ?? {}
       )) {
         targets[options.targetName].configurations[configuration] = {
           command: `cypress run --env webServerCommand="${webServerCommand}"`,
@@ -202,14 +202,12 @@ async function buildCypressTargets(
         .excludeSpecPattern
         ? cypressConfig.e2e.excludeSpecPattern
         : Array.isArray(cypressConfig.e2e.excludeSpecPattern)
-          ? cypressConfig.e2e.excludeSpecPattern.map((p) =>
-              join(projectRoot, p),
-            )
-          : [join(projectRoot, cypressConfig.e2e.excludeSpecPattern)];
+        ? cypressConfig.e2e.excludeSpecPattern.map((p) => join(projectRoot, p))
+        : [join(projectRoot, cypressConfig.e2e.excludeSpecPattern)];
       const specFiles = globWithWorkspaceContext(
         context.workspaceRoot,
         specPatterns,
-        excludeSpecPatterns,
+        excludeSpecPatterns
       );
 
       const dependsOn: TargetConfiguration['dependsOn'] = [];
@@ -268,7 +266,7 @@ function normalizeOptions(options: CypressPluginOptions): CypressPluginOptions {
 }
 
 function getInputs(
-  namedInputs: NxJsonConfiguration['namedInputs'],
+  namedInputs: NxJsonConfiguration['namedInputs']
 ): TargetConfiguration['inputs'] {
   return [
     ...('production' in namedInputs

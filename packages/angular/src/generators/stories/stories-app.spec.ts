@@ -33,7 +33,7 @@ describe('angularStories generator: applications', () => {
     await angularStoriesGenerator(tree, { name: appName });
 
     expect(
-      tree.read(`${appName}/src/app/app.component.stories.ts`, 'utf-8'),
+      tree.read(`${appName}/src/app/app.component.stories.ts`, 'utf-8')
     ).toMatchSnapshot();
   });
 
@@ -47,7 +47,7 @@ describe('angularStories generator: applications', () => {
     await angularStoriesGenerator(tree, { name: appName });
 
     expect(
-      tree.exists(`${appName}/src/app/my-scam/my-scam.component.stories.ts`),
+      tree.exists(`${appName}/src/app/my-scam/my-scam.component.stories.ts`)
     ).toBeTruthy();
   });
 
@@ -65,7 +65,7 @@ describe('angularStories generator: applications', () => {
     });
 
     expect(
-      tree.exists(`${appName}/src/app/my-scam/my-scam.component.stories.ts`),
+      tree.exists(`${appName}/src/app/my-scam/my-scam.component.stories.ts`)
     ).toBeFalsy();
   });
 
@@ -83,7 +83,7 @@ describe('angularStories generator: applications', () => {
     });
 
     expect(
-      tree.exists(`${appName}/src/app/my-scam/my-scam.component.stories.ts`),
+      tree.exists(`${appName}/src/app/my-scam/my-scam.component.stories.ts`)
     ).toBeFalsy();
   });
 
@@ -108,13 +108,13 @@ describe('angularStories generator: applications', () => {
     expect(
       tree.read(
         `${appName}/src/app/component-a/component-b/component-b.component.stories.ts`,
-        'utf-8',
-      ),
+        'utf-8'
+      )
     ).toMatchSnapshot();
     expect(
       tree.exists(
-        `${appName}/src/app/component-a/component-a.component.stories.ts`,
-      ),
+        `${appName}/src/app/component-a/component-a.component.stories.ts`
+      )
     ).toBeFalsy();
   });
 
@@ -126,7 +126,7 @@ describe('angularStories generator: applications', () => {
       
       @NgModule({})
       export class ComponentModule {}
-      `,
+      `
     );
     tree.write(
       `${appName}/src/app/component/component-routing.module.ts`,
@@ -141,7 +141,7 @@ describe('angularStories generator: applications', () => {
         exports: [RouterModule],
       })
       export class ComponentRoutingModule {}
-      `,
+      `
     );
     await componentGenerator(tree, {
       name: 'component/component',
@@ -159,11 +159,11 @@ describe('angularStories generator: applications', () => {
     expect(
       tree.read(
         `${appName}/src/app/component/component.component.stories.ts`,
-        'utf-8',
-      ),
+        'utf-8'
+      )
     ).toMatchSnapshot();
     expect(
-      tree.exists(`${appName}/src/app/app.component.stories.ts`),
+      tree.exists(`${appName}/src/app/app.component.stories.ts`)
     ).toBeFalsy();
   });
 
@@ -180,8 +180,8 @@ describe('angularStories generator: applications', () => {
     expect(
       tree.read(
         `${appName}/src/app/my-scam/my-scam.component.stories.ts`,
-        'utf-8',
-      ),
+        'utf-8'
+      )
     ).toMatchSnapshot();
   });
 });

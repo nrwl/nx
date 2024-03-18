@@ -10,7 +10,7 @@ const { normalizePath } = requireNx();
 export function moveFilesToNewDirectory(
   tree: Tree,
   oldDir: string,
-  newDir: string,
+  newDir: string
 ): void {
   oldDir = normalizePath(oldDir);
   newDir = normalizePath(newDir);

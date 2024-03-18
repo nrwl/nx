@@ -217,7 +217,7 @@ export const useGetTodos = routeLoader$(() => getTodos());
 
 export const useAddTodo = routeAction$(
   (todo) => addTodo(todo),
-  zod$({ id: z.string(), message: z.string() }),
+  zod$({ id: z.string(), message: z.string() })
 );
 
 export default component$(() => {

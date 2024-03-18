@@ -7,7 +7,7 @@ export function ExperimentalFeature(props) {
     environment.appConfig.showExperimentalFeatures;
   return showExperimentalFeatures
     ? Children.map(props.children, (child) =>
-        cloneElement(child, { 'data-cy': 'experimental-feature' }),
+        cloneElement(child, { 'data-cy': 'experimental-feature' })
       )
     : null;
 }

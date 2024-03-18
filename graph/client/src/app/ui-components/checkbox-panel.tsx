@@ -36,5 +36,5 @@ export const CheckboxPanel = memo(
         </div>
       </div>
     );
-  },
+  }
 );

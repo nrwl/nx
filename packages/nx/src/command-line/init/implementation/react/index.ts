@@ -65,7 +65,7 @@ function installDependencies(options: NormalizedOptions) {
       '@craco/craco',
       'cross-env',
       'react-scripts',
-      'tsconfig-paths-webpack-plugin',
+      'tsconfig-paths-webpack-plugin'
     );
   }
 
@@ -187,7 +187,7 @@ function createTempWorkspace(options: NormalizedOptions) {
     } --packageManager=${options.packageManager} ${
       options.nxCloud ? '--nxCloud=yes' : '--nxCloud=skip'
     } ${options.addE2e ? '--e2eTestRunner=cypress' : '--e2eTestRunner=none'}`,
-    { stdio: [0, 1, 2] },
+    { stdio: [0, 1, 2] }
   );
 
   output.log({ title: '👋 Welcome to Nx!' });
@@ -196,7 +196,7 @@ function createTempWorkspace(options: NormalizedOptions) {
 
   copySync(
     join('temp-workspace', 'apps', options.reactAppName, 'project.json'),
-    'project.json',
+    'project.json'
   );
   removeSync(join('temp-workspace', 'apps', options.reactAppName));
   removeSync('node_modules');
@@ -206,31 +206,31 @@ function copyPackageJsonDepsFromTempWorkspace() {
   const repoRoot = process.cwd();
   let rootPackageJson = readJsonFile(join(repoRoot, 'package.json'));
   const tempWorkspacePackageJson = readJsonFile(
-    join(repoRoot, 'temp-workspace', 'package.json'),
+    join(repoRoot, 'temp-workspace', 'package.json')
   );
 
   rootPackageJson = overridePackageDeps(
     'dependencies',
     rootPackageJson,
-    tempWorkspacePackageJson,
+    tempWorkspacePackageJson
   );
   rootPackageJson = overridePackageDeps(
     'devDependencies',
     rootPackageJson,
-    tempWorkspacePackageJson,
+    tempWorkspacePackageJson
   );
   rootPackageJson.scripts = {}; // remove existing scripts
   writeJsonFile(join(repoRoot, 'package.json'), rootPackageJson);
   writeJsonFile(
     join(repoRoot, 'temp-workspace', 'package.json'),
-    rootPackageJson,
+    rootPackageJson
   );
 }
 
 function overridePackageDeps(
   depConfigName: 'dependencies' | 'devDependencies',
   base: PackageJson,
-  override: PackageJson,
+  override: PackageJson
 ): PackageJson {
   if (!base[depConfigName]) {
     base[depConfigName] = override[depConfigName];
@@ -267,7 +267,7 @@ function moveFilesToTempWorkspace(options: NormalizedOptions) {
   const optionalCraFiles = ['README.md'];
 
   const filesToMove = [...requiredCraFiles, ...optionalCraFiles].filter(
-    Boolean,
+    Boolean
   );
 
   filesToMove.forEach((f) => {
@@ -279,7 +279,7 @@ function moveFilesToTempWorkspace(options: NormalizedOptions) {
           : join('temp-workspace', 'apps', options.reactAppName, f),
         {
           overwrite: true,
-        },
+        }
       );
     } catch (error) {
       if (requiredCraFiles.includes(f)) {
@@ -301,12 +301,12 @@ async function addBundler(options: NormalizedOptions) {
     writeViteConfig(
       options.reactAppName,
       options.isStandalone,
-      options.appIsJs,
+      options.appIsJs
     );
     writeViteIndexHtml(
       options.reactAppName,
       options.isStandalone,
-      options.appIsJs,
+      options.appIsJs
     );
     renameJsToJsx(options.reactAppName, options.isStandalone);
   } else {
@@ -316,13 +316,13 @@ async function addBundler(options: NormalizedOptions) {
     );
     addCracoCommandsToPackageScripts(
       options.reactAppName,
-      options.isStandalone,
+      options.isStandalone
     );
 
     writeCracoConfig(
       options.reactAppName,
       options.isCRA5,
-      options.isStandalone,
+      options.isStandalone
     );
 
     output.log({

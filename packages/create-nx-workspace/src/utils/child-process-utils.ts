@@ -40,7 +40,7 @@ export function execAndWait(command: string, cwd: string) {
         } else {
           res({ code: 0, stdout });
         }
-      },
+      }
     );
   });
 }

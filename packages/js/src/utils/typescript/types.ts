@@ -19,15 +19,15 @@ export type TransformerEntry = string | TransformerPlugin;
 export interface CompilerPlugin {
   before?: (
     options?: Record<string, unknown>,
-    program?: Program,
+    program?: Program
   ) => TransformerFactory;
   after?: (
     options?: Record<string, unknown>,
-    program?: Program,
+    program?: Program
   ) => TransformerFactory;
   afterDeclarations?: (
     options?: Record<string, unknown>,
-    program?: Program,
+    program?: Program
   ) => TransformerFactory;
 }
 

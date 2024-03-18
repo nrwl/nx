@@ -33,7 +33,7 @@ describe('nx package.json workspaces plugin', () => {
           },
         }),
       },
-      '/root',
+      '/root'
     );
 
     expect(createNodeFromPackageJson('package.json', '/root'))

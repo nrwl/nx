@@ -47,7 +47,7 @@ describe('init', () => {
     await cypressInitGenerator(tree, { ...options, addPlugin: false });
 
     expect(
-      readJson<NxJsonConfiguration>(tree, 'nx.json').targetDefaults.e2e,
+      readJson<NxJsonConfiguration>(tree, 'nx.json').targetDefaults.e2e
     ).toEqual({
       cache: true,
       inputs: ['default', '^production'],

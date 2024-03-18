@@ -9,7 +9,7 @@ import {
 
 export function loadTsTransformers(
   plugins: TransformerEntry[],
-  moduleResolver: typeof require.resolve = require.resolve,
+  moduleResolver: typeof require.resolve = require.resolve
 ): {
   compilerPluginHooks: CompilerPluginHooks;
   hasPlugin: boolean;
@@ -30,7 +30,7 @@ export function loadTsTransformers(
     };
 
   const normalizedPlugins: TransformerPlugin[] = plugins.map((plugin) =>
-    typeof plugin === 'string' ? { name: plugin, options: {} } : plugin,
+    typeof plugin === 'string' ? { name: plugin, options: {} } : plugin
   );
 
   const nodeModulePaths = [
@@ -55,7 +55,7 @@ export function loadTsTransformers(
     const { before, after, afterDeclarations } = pluginRefs[i];
     if (!before && !after && !afterDeclarations) {
       logger.warn(
-        `${pluginName} is not a Transformer Plugin. It does not provide neither before(), after(), nor afterDeclarations()`,
+        `${pluginName} is not a Transformer Plugin. It does not provide neither before(), after(), nor afterDeclarations()`
       );
       continue;
     }
@@ -70,7 +70,7 @@ export function loadTsTransformers(
 
     if (afterDeclarations) {
       afterDeclarationsHooks.push(
-        afterDeclarations.bind(afterDeclarations, pluginOptions),
+        afterDeclarations.bind(afterDeclarations, pluginOptions)
       );
     }
   }

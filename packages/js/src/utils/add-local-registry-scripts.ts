@@ -57,14 +57,14 @@ export function addLocalRegistryScripts(tree: Tree) {
 
   const projectConfiguration: ProjectConfiguration = readJson(
     tree,
-    'project.json',
+    'project.json'
   );
 
   const localRegistryTarget = `${projectConfiguration.name}:local-registry`;
   if (!tree.exists(startLocalRegistryPath)) {
     tree.write(
       startLocalRegistryPath,
-      startLocalRegistryScript(localRegistryTarget),
+      startLocalRegistryScript(localRegistryTarget)
     );
   } else {
     const existingStartLocalRegistryScript = tree

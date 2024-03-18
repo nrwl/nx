@@ -27,37 +27,37 @@ describe('Ignore @nx/react/plugins/storybook in Storybook eslint plugin', () => 
 
   it('should update projects tsconfig.json', async () => {
     expect(
-      tree.read(`apps/webpack-app/tsconfig.json`).toString(),
+      tree.read(`apps/webpack-app/tsconfig.json`).toString()
     ).toMatchSnapshot();
     expect(
-      tree.read(`apps/vite-app/tsconfig.json`).toString(),
+      tree.read(`apps/vite-app/tsconfig.json`).toString()
     ).toMatchSnapshot();
     expect(
-      tree.read(`apps/my/custom/place/nested-app/tsconfig.json`).toString(),
+      tree.read(`apps/my/custom/place/nested-app/tsconfig.json`).toString()
     ).toMatchSnapshot();
   });
 
   it('should update Storybook tsconfig.json', async () => {
     expect(
-      tree.read(`apps/webpack-app/tsconfig.storybook.json`).toString(),
+      tree.read(`apps/webpack-app/tsconfig.storybook.json`).toString()
     ).toMatchSnapshot();
     expect(
-      tree.read(`apps/vite-app/tsconfig.storybook.json`).toString(),
+      tree.read(`apps/vite-app/tsconfig.storybook.json`).toString()
     ).toMatchSnapshot();
     expect(
       tree
         .read(`apps/my/custom/place/nested-app/tsconfig.storybook.json`)
-        .toString(),
+        .toString()
     ).toMatchSnapshot();
   });
 
   it('should delete old Storybook tsconfig.json', async () => {
     expect(tree.exists(`apps/vite-app/.storybook/tsconfig.json`)).toBeFalsy();
     expect(
-      tree.exists(`apps/webpack-app/.storybook/tsconfig.json`),
+      tree.exists(`apps/webpack-app/.storybook/tsconfig.json`)
     ).toBeFalsy();
     expect(
-      tree.exists(`apps/my/custom/place/nested-app/.storybook/tsconfig.json`),
+      tree.exists(`apps/my/custom/place/nested-app/.storybook/tsconfig.json`)
     ).toBeFalsy();
   });
 
@@ -95,7 +95,7 @@ function setupProjects(tree: Tree) {
         },
       ],
       extends: '../../../../../tsconfig.base.json',
-    }),
+    })
   );
   tree.write(
     `apps/webpack-app/tsconfig.json`,
@@ -121,7 +121,7 @@ function setupProjects(tree: Tree) {
         },
       ],
       extends: '../../tsconfig.base.json',
-    }),
+    })
   );
   tree.write(
     'apps/vite-app/tsconfig.json',
@@ -148,7 +148,7 @@ function setupProjects(tree: Tree) {
         },
       ],
       extends: '../../tsconfig.base.json',
-    }),
+    })
   );
 
   tree.write(
@@ -178,7 +178,7 @@ function setupProjects(tree: Tree) {
         '../src/**/*.stories.mdx',
         '*.js',
       ],
-    }),
+    })
   );
 
   tree.write(
@@ -208,7 +208,7 @@ function setupProjects(tree: Tree) {
         '../src/**/*.stories.mdx',
         '*.js',
       ],
-    }),
+    })
   );
 
   tree.write(
@@ -238,6 +238,6 @@ function setupProjects(tree: Tree) {
         '../src/**/*.stories.mdx',
         '*.js',
       ],
-    }),
+    })
   );
 }

@@ -30,7 +30,7 @@ import {
 
 export function findEslintFile(
   tree: Tree,
-  projectRoot?: string,
+  projectRoot?: string
 ): string | null {
   if (projectRoot === undefined && tree.exists(baseEsLintConfigFile)) {
     return baseEsLintConfigFile;
@@ -59,7 +59,7 @@ export function isEslintConfigSupported(tree: Tree, projectRoot = ''): boolean {
 export function updateRelativePathsInConfig(
   tree: Tree,
   sourcePath: string,
-  destinationPath: string,
+  destinationPath: string
 ) {
   if (
     sourcePath === destinationPath ||
@@ -70,7 +70,7 @@ export function updateRelativePathsInConfig(
 
   const configPath = joinPathFragments(
     destinationPath,
-    findEslintFile(tree, destinationPath),
+    findEslintFile(tree, destinationPath)
   );
   const offset = offsetFromRoot(destinationPath);
 
@@ -78,7 +78,7 @@ export function updateRelativePathsInConfig(
     const config = tree.read(configPath, 'utf-8');
     tree.write(
       configPath,
-      replaceFlatConfigPaths(config, sourcePath, offset, destinationPath, tree),
+      replaceFlatConfigPaths(config, sourcePath, offset, destinationPath, tree)
     );
   } else {
     updateJson(tree, configPath, (json) => {
@@ -86,7 +86,7 @@ export function updateRelativePathsInConfig(
         json.extends = offsetFilePath(sourcePath, json.extends, offset, tree);
       } else if (json.extends) {
         json.extends = json.extends.map((extend: string) =>
-          offsetFilePath(sourcePath, extend, offset, tree),
+          offsetFilePath(sourcePath, extend, offset, tree)
         );
       }
 
@@ -95,11 +95,11 @@ export function updateRelativePathsInConfig(
           if (o.parserOptions?.project) {
             o.parserOptions.project = Array.isArray(o.parserOptions.project)
               ? o.parserOptions.project.map((p) =>
-                  p.replace(sourcePath, destinationPath),
+                  p.replace(sourcePath, destinationPath)
                 )
               : o.parserOptions.project.replace(sourcePath, destinationPath);
           }
-        },
+        }
       );
       return json;
     });
@@ -111,7 +111,7 @@ function replaceFlatConfigPaths(
   sourceRoot: string,
   offset: string,
   destinationRoot: string,
-  tree: Tree,
+  tree: Tree
 ): string {
   let match;
   let newConfig = config;
@@ -141,11 +141,11 @@ function offsetFilePath(
   projectRoot: string,
   pathToFile: string,
   offset: string,
-  tree: Tree,
+  tree: Tree
 ): string {
   if (
     ESLINT_CONFIG_FILENAMES.some((eslintFile) =>
-      pathToFile.includes(eslintFile),
+      pathToFile.includes(eslintFile)
     )
   ) {
     // if the file is point to base eslint
@@ -167,14 +167,14 @@ export function addOverrideToLintConfig(
   override: Linter.ConfigOverride<Linter.RulesRecord>,
   options: { insertAtTheEnd?: boolean; checkBaseConfig?: boolean } = {
     insertAtTheEnd: true,
-  },
+  }
 ) {
   const isBase =
     options.checkBaseConfig && findEslintFile(tree, root).includes('.base');
   if (useFlatConfig(tree)) {
     const fileName = joinPathFragments(
       root,
-      isBase ? baseEsLintFlatConfigFile : 'eslint.config.js',
+      isBase ? baseEsLintFlatConfigFile : 'eslint.config.js'
     );
     const flatOverride = generateFlatOverride(override);
     let content = tree.read(fileName, 'utf8');
@@ -184,12 +184,12 @@ export function addOverrideToLintConfig(
     }
     tree.write(
       fileName,
-      addBlockToFlatConfigExport(content, flatOverride, options),
+      addBlockToFlatConfigExport(content, flatOverride, options)
     );
   } else {
     const fileName = joinPathFragments(
       root,
-      isBase ? baseEsLintConfigFile : '.eslintrc.json',
+      isBase ? baseEsLintConfigFile : '.eslintrc.json'
     );
     updateJson(tree, fileName, (json) => {
       json.overrides ??= [];
@@ -204,7 +204,7 @@ export function addOverrideToLintConfig(
 }
 
 function overrideNeedsCompat(
-  override: Linter.ConfigOverride<Linter.RulesRecord>,
+  override: Linter.ConfigOverride<Linter.RulesRecord>
 ) {
   return (
     override.env || override.extends || override.plugins || override.parser
@@ -216,8 +216,8 @@ export function updateOverrideInLintConfig(
   root: string,
   lookup: (override: Linter.ConfigOverride<Linter.RulesRecord>) => boolean,
   update: (
-    override: Linter.ConfigOverride<Linter.RulesRecord>,
-  ) => Linter.ConfigOverride<Linter.RulesRecord>,
+    override: Linter.ConfigOverride<Linter.RulesRecord>
+  ) => Linter.ConfigOverride<Linter.RulesRecord>
 ) {
   if (useFlatConfig(tree)) {
     const fileName = joinPathFragments(root, 'eslint.config.js');
@@ -252,7 +252,7 @@ export function lintConfigHasOverride(
   tree: Tree,
   root: string,
   lookup: (override: Linter.ConfigOverride<Linter.RulesRecord>) => boolean,
-  checkBaseConfig = false,
+  checkBaseConfig = false
 ): boolean {
   if (!isEslintConfigSupported(tree, root)) {
     return false;
@@ -262,14 +262,14 @@ export function lintConfigHasOverride(
   if (useFlatConfig(tree)) {
     const fileName = joinPathFragments(
       root,
-      isBase ? baseEsLintFlatConfigFile : 'eslint.config.js',
+      isBase ? baseEsLintFlatConfigFile : 'eslint.config.js'
     );
     const content = tree.read(fileName, 'utf8');
     return hasOverride(content, lookup);
   } else {
     const fileName = joinPathFragments(
       root,
-      isBase ? baseEsLintConfigFile : '.eslintrc.json',
+      isBase ? baseEsLintConfigFile : '.eslintrc.json'
     );
 
     return readJson(tree, fileName).overrides?.some(lookup) || false;
@@ -279,7 +279,7 @@ export function lintConfigHasOverride(
 export function replaceOverridesInLintConfig(
   tree: Tree,
   root: string,
-  overrides: Linter.ConfigOverride<Linter.RulesRecord>[],
+  overrides: Linter.ConfigOverride<Linter.RulesRecord>[]
 ) {
   if (useFlatConfig(tree)) {
     const fileName = joinPathFragments(root, 'eslint.config.js');
@@ -307,7 +307,7 @@ export function replaceOverridesInLintConfig(
 export function addExtendsToLintConfig(
   tree: Tree,
   root: string,
-  plugin: string | string[],
+  plugin: string | string[]
 ) {
   const plugins = Array.isArray(plugin) ? plugin : [plugin];
   if (useFlatConfig(tree)) {
@@ -332,7 +332,7 @@ export function addExtendsToLintConfig(
 export function addPluginsToLintConfig(
   tree: Tree,
   root: string,
-  plugin: string | string[],
+  plugin: string | string[]
 ) {
   const plugins = Array.isArray(plugin) ? plugin : [plugin];
   if (useFlatConfig(tree)) {
@@ -361,7 +361,7 @@ export function addPluginsToLintConfig(
 export function addIgnoresToLintConfig(
   tree: Tree,
   root: string,
-  ignorePatterns: string[],
+  ignorePatterns: string[]
 ) {
   if (useFlatConfig(tree)) {
     const fileName = joinPathFragments(root, 'eslint.config.js');
@@ -370,7 +370,7 @@ export function addIgnoresToLintConfig(
     });
     tree.write(
       fileName,
-      addBlockToFlatConfigExport(tree.read(fileName, 'utf8'), block),
+      addBlockToFlatConfigExport(tree.read(fileName, 'utf8'), block)
     );
   } else {
     const fileName = joinPathFragments(root, '.eslintrc.json');

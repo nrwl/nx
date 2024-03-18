@@ -21,7 +21,7 @@ export function addPresetDependencies(host: Tree, options: NormalizedSchema) {
     host,
     dependencies,
     dev,
-    join(options.directory, 'package.json'),
+    join(options.directory, 'package.json')
   );
 }
 

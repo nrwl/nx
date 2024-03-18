@@ -40,7 +40,7 @@ export default async function (tree: Tree) {
   }
 
   for (const [targetOrExecutor, targetConfig] of Object.entries(
-    nxJson.targetDefaults,
+    nxJson.targetDefaults
   )) {
     if (
       !executors.includes(targetOrExecutor) &&

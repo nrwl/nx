@@ -38,7 +38,7 @@ describe('vue setup-tailwind generator', () => {
         @tailwind components;
         @tailwind utilities;
         /* existing content */
-      `,
+      `
     );
   });
 
@@ -62,7 +62,7 @@ describe('vue setup-tailwind generator', () => {
         @tailwind components;
         @tailwind utilities;
         /* existing content */
-      `,
+      `
     );
   });
 

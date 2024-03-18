@@ -34,7 +34,7 @@ describe('nx init (Angular CLI - legacy)', () => {
     const output = runCommand(
       `${
         pmc.runUninstalledPackage
-      } nx@${getPublishedVersion()} init --no-interactive`,
+      } nx@${getPublishedVersion()} init --no-interactive`
     );
 
     expect(output).toContain('🎉 Done!');
@@ -46,21 +46,21 @@ describe('nx init (Angular CLI - legacy)', () => {
     // check build
     const coldBuildOutput = runCLI(`build ${project} --outputHashing none`);
     expect(coldBuildOutput).toContain(
-      `> nx run ${project}:build:production --outputHashing none`,
+      `> nx run ${project}:build:production --outputHashing none`
     );
     expect(coldBuildOutput).toContain(
-      `Successfully ran target build for project ${project}`,
+      `Successfully ran target build for project ${project}`
     );
     checkFilesExist(`dist/${project}/browser/main.js`);
 
     // run build again to check is coming from cache
     const cachedBuildOutput = runCLI(`build ${project} --outputHashing none`);
     expect(cachedBuildOutput).toContain(
-      `> nx run ${project}:build:production --outputHashing none  [local cache]`,
+      `> nx run ${project}:build:production --outputHashing none  [local cache]`
     );
     expect(cachedBuildOutput).toContain('Nx read the output from the cache');
     expect(cachedBuildOutput).toContain(
-      `Successfully ran target build for project ${project}`,
+      `Successfully ran target build for project ${project}`
     );
   });
 
@@ -68,7 +68,7 @@ describe('nx init (Angular CLI - legacy)', () => {
     const output = runCommand(
       `${
         pmc.runUninstalledPackage
-      } nx@${getPublishedVersion()} init --integrated --no-interactive`,
+      } nx@${getPublishedVersion()} init --integrated --no-interactive`
     );
 
     expect(output).toContain('🎉 Done!');
@@ -80,21 +80,21 @@ describe('nx init (Angular CLI - legacy)', () => {
     // check build
     const coldBuildOutput = runCLI(`build ${project} --outputHashing none`);
     expect(coldBuildOutput).toContain(
-      `> nx run ${project}:build:production --outputHashing none`,
+      `> nx run ${project}:build:production --outputHashing none`
     );
     expect(coldBuildOutput).toContain(
-      `Successfully ran target build for project ${project}`,
+      `Successfully ran target build for project ${project}`
     );
     checkFilesExist(`dist/apps/${project}/browser/main.js`);
 
     // run build again to check is coming from cache
     const cachedBuildOutput = runCLI(`build ${project} --outputHashing none`);
     expect(cachedBuildOutput).toContain(
-      `> nx run ${project}:build:production --outputHashing none  [local cache]`,
+      `> nx run ${project}:build:production --outputHashing none  [local cache]`
     );
     expect(cachedBuildOutput).toContain('Nx read the output from the cache');
     expect(cachedBuildOutput).toContain(
-      `Successfully ran target build for project ${project}`,
+      `Successfully ran target build for project ${project}`
     );
   });
 });

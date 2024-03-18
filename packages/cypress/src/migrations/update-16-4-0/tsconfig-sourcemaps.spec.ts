@@ -91,10 +91,10 @@ describe('Cypress Migration: tsconfig-sourcemaps', () => {
     await fixLegacyCypressTsconfig(tree);
 
     expect(readProjectConfiguration(tree, 'legacy-e2e').targets.e2e).toEqual(
-      existingProjectConfig,
+      existingProjectConfig
     );
     expect(readJson(tree, 'apps/legacy-e2e/tsconfig.json')).toEqual(
-      existingTsConfig,
+      existingTsConfig
     );
   });
 });
@@ -132,7 +132,7 @@ function addLegacyProject(tree: Tree) {
         types: ['cypress', 'node'],
       },
       include: ['src/**/*.ts', 'cypress.config.ts'],
-    }),
+    })
   );
   tree.write(
     'apps/legacy-e2e/tsconfig.e2e.prod.json',
@@ -145,7 +145,7 @@ function addLegacyProject(tree: Tree) {
         strict: true,
       },
       include: ['src/**/*.ts', 'cypress.config.ts'],
-    }),
+    })
   );
   tree.write(
     'apps/legacy-e2e/tsconfig.json',
@@ -170,6 +170,6 @@ function addLegacyProject(tree: Tree) {
           path: './tsconfig.e2e.prod.json',
         },
       ],
-    }),
+    })
   );
 }

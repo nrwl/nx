@@ -37,16 +37,16 @@ export function fileDataDepTarget(dep: FileDataDependency) {
   return typeof dep === 'string'
     ? dep
     : Array.isArray(dep) && dep.length === 2
-      ? dep[0]
-      : dep[1];
+    ? dep[0]
+    : dep[1];
 }
 
 export function fileDataDepType(dep: FileDataDependency) {
   return typeof dep === 'string'
     ? 'static'
     : Array.isArray(dep) && dep.length === 2
-      ? dep[1]
-      : dep[2];
+    ? dep[1]
+    : dep[2];
 }
 
 export interface FileMap {
@@ -175,5 +175,5 @@ export interface ProjectGraphProcessorContext {
  */
 export type ProjectGraphProcessor = (
   currentGraph: ProjectGraph,
-  context: ProjectGraphProcessorContext,
+  context: ProjectGraphProcessorContext
 ) => ProjectGraph | Promise<ProjectGraph>;

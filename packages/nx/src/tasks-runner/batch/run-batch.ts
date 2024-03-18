@@ -20,21 +20,21 @@ import { ProjectConfiguration } from '../../config/workspace-json-project-json';
 
 function getBatchExecutor(
   executorName: string,
-  projects: Record<string, ProjectConfiguration>,
+  projects: Record<string, ProjectConfiguration>
 ) {
   const [nodeModule, exportName] = executorName.split(':');
   return getExecutorInformation(
     nodeModule,
     exportName,
     workspaceRoot,
-    projects,
+    projects
   );
 }
 
 async function runTasks(
   executorName: string,
   batchTaskGraph: TaskGraph,
-  fullTaskGraph: TaskGraph,
+  fullTaskGraph: TaskGraph
 ) {
   const input: Record<string, any> = {};
   const projectGraph = await createProjectGraphAsync();
@@ -43,7 +43,7 @@ async function runTasks(
   const nxJsonConfiguration = readNxJson();
   const batchExecutor = getBatchExecutor(
     executorName,
-    projectsConfigurations.projects,
+    projectsConfigurations.projects
   );
   const tasks = Object.values(batchTaskGraph.tasks);
   const context: ExecutorContext = {
@@ -67,7 +67,7 @@ async function runTasks(
       targetConfiguration,
       batchExecutor.schema,
       null,
-      process.cwd(),
+      process.cwd()
     );
   }
 
@@ -76,7 +76,7 @@ async function runTasks(
       batchTaskGraph,
       input,
       tasks[0].overrides,
-      context,
+      context
     );
 
     if (typeof results !== 'object') {
@@ -118,7 +118,7 @@ process.on('message', async (message: BatchMessage) => {
       const results = await runTasks(
         message.executorName,
         message.batchTaskGraph,
-        message.fullTaskGraph,
+        message.fullTaskGraph
       );
       process.send({
         type: BatchMessageType.CompleteBatchExecution,

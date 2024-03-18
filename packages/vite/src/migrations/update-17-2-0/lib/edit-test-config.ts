@@ -12,7 +12,7 @@ import { getConfigNode, notFoundWarning } from '../update-vite-config';
 export function updateTestConfig(
   configContents: string,
   projectConfig: ProjectConfiguration,
-  configPath: string,
+  configPath: string
 ): string {
   const configNode = getConfigNode(configContents);
   if (!configNode) {
@@ -22,7 +22,7 @@ export function updateTestConfig(
 
   const testObject = tsquery.query(
     configNode,
-    `PropertyAssignment:has(Identifier[name="test"])`,
+    `PropertyAssignment:has(Identifier[name="test"])`
   )?.[0];
   let testCoverageDir: ts.Node;
   let testCoverage: ts.Node;
@@ -32,20 +32,20 @@ export function updateTestConfig(
   if (testObject) {
     testCoverage = tsquery.query(
       testObject,
-      `PropertyAssignment:has(Identifier[name="coverage"])`,
+      `PropertyAssignment:has(Identifier[name="coverage"])`
     )?.[0];
     reporters = tsquery.query(
       testObject,
-      `PropertyAssignment:has(Identifier[name="reporters"])`,
+      `PropertyAssignment:has(Identifier[name="reporters"])`
     )?.[0];
     if (testCoverage) {
       testCoverageDir = tsquery.query(
         testCoverage,
-        `PropertyAssignment:has(Identifier[name="reportsDirectory"])`,
+        `PropertyAssignment:has(Identifier[name="reportsDirectory"])`
       )?.[0];
       provider = tsquery.query(
         testCoverage,
-        `PropertyAssignment:has(Identifier[name="provider"])`,
+        `PropertyAssignment:has(Identifier[name="provider"])`
       )?.[0];
     }
   }
@@ -58,7 +58,7 @@ export function updateTestConfig(
     coverageDir = joinPathFragments(
       offsetFromRoot(projectConfig.root),
       'coverage',
-      projectConfig.root,
+      projectConfig.root
     );
   }
 

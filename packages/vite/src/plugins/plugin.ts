@@ -41,7 +41,7 @@ function readTargetsCache(): Record<
 }
 
 function writeTargetsToCache(
-  targets: Record<string, Record<string, TargetConfiguration>>,
+  targets: Record<string, Record<string, TargetConfiguration>>
 ) {
   writeJsonFile(cachePath, targets);
 }
@@ -90,11 +90,11 @@ async function buildViteTargets(
   configFilePath: string,
   projectRoot: string,
   options: VitePluginOptions,
-  context: CreateNodesContext,
+  context: CreateNodesContext
 ) {
   const absoluteConfigFilePath = joinPathFragments(
     context.workspaceRoot,
-    configFilePath,
+    configFilePath
   );
 
   // Workaround for the `build$3 is not a function` error that we sometimes see in agents.
@@ -111,12 +111,12 @@ async function buildViteTargets(
       configFile: absoluteConfigFilePath,
       mode: 'development',
     },
-    'build',
+    'build'
   );
 
   const { buildOutputs, testOutputs, hasTest, isBuildable } = getOutputs(
     viteConfig,
-    projectRoot,
+    projectRoot
   );
 
   const namedInputs = getNamedInputs(projectRoot, context);
@@ -129,7 +129,7 @@ async function buildViteTargets(
       options.buildTargetName,
       namedInputs,
       buildOutputs,
-      projectRoot,
+      projectRoot
     );
 
     targets[options.serveTargetName] = serveTarget(projectRoot);
@@ -144,7 +144,7 @@ async function buildViteTargets(
     targets[options.testTargetName] = await testTarget(
       namedInputs,
       testOutputs,
-      projectRoot,
+      projectRoot
     );
   }
 
@@ -157,7 +157,7 @@ async function buildTarget(
     [inputName: string]: any[];
   },
   outputs: string[],
-  projectRoot: string,
+  projectRoot: string
 ) {
   return {
     command: `vite build`,
@@ -203,7 +203,7 @@ async function testTarget(
     [inputName: string]: any[];
   },
   outputs: string[],
-  projectRoot: string,
+  projectRoot: string
 ) {
   return {
     command: `vitest run`,
@@ -234,7 +234,7 @@ function serveStaticTarget(options: VitePluginOptions) {
 
 function getOutputs(
   viteConfig: Record<string, any> | undefined,
-  projectRoot: string,
+  projectRoot: string
 ): {
   buildOutputs: string[];
   testOutputs: string[];
@@ -246,7 +246,7 @@ function getOutputs(
   const buildOutputPath = normalizeOutputPath(
     build?.outDir,
     projectRoot,
-    'dist',
+    'dist'
   );
 
   const isBuildable =
@@ -257,7 +257,7 @@ function getOutputs(
   const reportsDirectoryPath = normalizeOutputPath(
     test?.coverage?.reportsDirectory,
     projectRoot,
-    'coverage',
+    'coverage'
   );
 
   return {
@@ -271,7 +271,7 @@ function getOutputs(
 function normalizeOutputPath(
   outputPath: string | undefined,
   projectRoot: string,
-  path: 'coverage' | 'dist',
+  path: 'coverage' | 'dist'
 ): string | undefined {
   if (!outputPath) {
     if (projectRoot === '.') {

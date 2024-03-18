@@ -14,7 +14,7 @@ import { getRelativePathToRootTsConfig } from '@nx/js';
 
 export async function webWorkerGenerator(
   tree: Tree,
-  rawOptions: WebWorkerGeneratorOptions,
+  rawOptions: WebWorkerGeneratorOptions
 ): Promise<void> {
   const options = normalizeOptions(tree, rawOptions);
   const workerNames = names(options.name);
@@ -31,13 +31,13 @@ export async function webWorkerGenerator(
     tree,
     joinPathFragments(__dirname, './files/worker'),
     options.path,
-    substitutions,
+    substitutions
   );
   generateFiles(
     tree,
     joinPathFragments(__dirname, './files/config'),
     projectConfig.root,
-    substitutions,
+    substitutions
   );
 
   if (options.snippet) {

@@ -18,7 +18,7 @@ let tsModule: typeof import('typescript');
 export function createComponentStories(
   host: Tree,
   { project, js, interactionTests }: StorybookStoriesSchema,
-  componentPath: string,
+  componentPath: string
 ) {
   if (!tsModule) {
     tsModule = ensureTypescript();
@@ -30,7 +30,7 @@ export function createComponentStories(
 
   const componentDirectory = componentFilePath.replace(
     componentFilePath.slice(componentFilePath.lastIndexOf('/')),
-    '',
+    ''
   );
 
   const componentFileName = componentFilePath
@@ -52,7 +52,7 @@ export function createComponentStories(
       props: createDefautPropsObject(propsObject),
       componentName: camelCase(name),
       interactionTests,
-    },
+    }
   );
   if (contents === null) {
     throw new Error(`Failed to read ${componentFilePath}`);

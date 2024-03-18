@@ -12,7 +12,7 @@ import type { JsonParseOptions, JsonSerializeOptions } from '../../utils/json';
 export function readJson<T extends object = any>(
   tree: Tree,
   path: string,
-  options?: JsonParseOptions,
+  options?: JsonParseOptions
 ): T {
   if (!tree.exists(path)) {
     throw new Error(`Cannot find ${path}`);
@@ -36,7 +36,7 @@ export function writeJson<T extends object = object>(
   tree: Tree,
   path: string,
   value: T,
-  options?: JsonSerializeOptions,
+  options?: JsonSerializeOptions
 ): void {
   tree.write(path, serializeJson(value, options));
 }
@@ -53,7 +53,7 @@ export function updateJson<T extends object = any, U extends object = T>(
   tree: Tree,
   path: string,
   updater: (value: T) => U,
-  options?: JsonParseOptions & JsonSerializeOptions,
+  options?: JsonParseOptions & JsonSerializeOptions
 ): void {
   const updatedValue = updater(readJson(tree, path, options));
   writeJson(tree, path, updatedValue, options);

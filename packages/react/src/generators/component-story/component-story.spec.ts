@@ -18,7 +18,7 @@ describe('react:component-story', () => {
       beforeEach(() => {
         appTree.write(
           cmpPath,
-          `export const add = (a: number, b: number) => a + b;`,
+          `export const add = (a: number, b: number) => a + b;`
         );
       });
 
@@ -31,7 +31,7 @@ describe('react:component-story', () => {
           });
         } catch (e) {
           expect(e.message).toContain(
-            'Could not find any React component in file test-ui-lib/src/lib/test-ui-lib.tsx',
+            'Could not find any React component in file test-ui-lib/src/lib/test-ui-lib.tsx'
           );
         }
       });
@@ -74,7 +74,7 @@ describe('react:component-story', () => {
           };
 
           export default Test;
-          `,
+          `
         );
 
         await componentStoryGenerator(appTree, {
@@ -109,7 +109,7 @@ describe('react:component-story', () => {
           };
 
           export default Test;
-          `,
+          `
         );
 
         await componentStoryGenerator(appTree, {
@@ -145,7 +145,7 @@ describe('react:component-story', () => {
           };
 
           export default Test;
-          `,
+          `
         );
 
         await componentStoryGenerator(appTree, {
@@ -186,7 +186,7 @@ describe('react:component-story', () => {
           };
 
           export default Test;
-          `,
+          `
         );
 
         await componentStoryGenerator(appTree, {
@@ -329,7 +329,7 @@ describe('react:component-story', () => {
             }
 
             ${src}
-            `,
+            `
               );
 
               await componentStoryGenerator(appTree, {
@@ -341,7 +341,7 @@ describe('react:component-story', () => {
             it('should properly setup the controls based on the component props', () => {
               expect(appTree.read(storyFilePath, 'utf-8')).toMatchSnapshot();
             });
-          },
+          }
         );
       });
 
@@ -444,7 +444,7 @@ describe('react:component-story', () => {
               }
 
               ${src}
-              `,
+              `
               );
 
               await componentStoryGenerator(appTree, {
@@ -456,7 +456,7 @@ describe('react:component-story', () => {
             it('should properly setup the controls based on the component props', () => {
               expect(appTree.read(storyFilePath, 'utf-8')).toMatchSnapshot();
             });
-          },
+          }
         );
 
         it('should create stories for all components in a file with no default export', async () => {
@@ -485,7 +485,7 @@ describe('react:component-story', () => {
             }
 
             export { One, Two, Three };
-            `,
+            `
           );
 
           await componentStoryGenerator(appTree, {

@@ -11,7 +11,7 @@ const isVarOrWindow = (libType?: string) =>
  * @return {Promise<AsyncNxComposableWebpackPlugin>}
  */
 export async function withModuleFederation(
-  options: ModuleFederationConfig,
+  options: ModuleFederationConfig
 ): Promise<AsyncNxComposableWebpackPlugin> {
   if (global.NX_GRAPH_CREATION) {
     return (config) => config;
@@ -55,7 +55,7 @@ export async function withModuleFederation(
          */
         ...(isGlobal ? { remoteType: 'script' } : {}),
       }),
-      sharedLibraries.getReplacementPlugin(),
+      sharedLibraries.getReplacementPlugin()
     );
 
     return config;

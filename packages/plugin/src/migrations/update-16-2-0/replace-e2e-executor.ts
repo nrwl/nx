@@ -34,7 +34,7 @@ export default async function replaceE2EExecutor(tree: Tree): Promise<void> {
         }
 
         updateProjectConfiguration(tree, project, projectConfiguration);
-      },
+      }
     );
   }
 

@@ -9,7 +9,7 @@ import type { DelegateBuildExecutorSchema } from './schema';
 
 export async function* delegateBuildExecutor(
   options: DelegateBuildExecutorSchema,
-  context: ExecutorContext,
+  context: ExecutorContext
 ) {
   const { target, dependencies } = calculateProjectBuildableDependencies(
     context.taskGraph,
@@ -17,14 +17,14 @@ export async function* delegateBuildExecutor(
     context.root,
     context.projectName,
     context.targetName,
-    context.configurationName,
+    context.configurationName
   );
 
   options.tsConfig = createTmpTsConfig(
     joinPathFragments(context.root, options.tsConfig),
     context.root,
     target.data.root,
-    dependencies,
+    dependencies
   );
 
   if (
@@ -32,7 +32,7 @@ export async function* delegateBuildExecutor(
       context.root,
       context.projectName,
       context.targetName,
-      dependencies,
+      dependencies
     )
   ) {
     return { success: false };

@@ -50,7 +50,7 @@ export function ProjectsSidebar(): JSX.Element {
   const includePath = useProjectGraphSelector(includePathSelector);
   const textFilter = useProjectGraphSelector(textFilterSelector);
   const hasAffectedProjects = useProjectGraphSelector(
-    hasAffectedProjectsSelector,
+    hasAffectedProjectsSelector
   );
   const groupByFolder = useProjectGraphSelector(groupByFolderSelector);
   const collapseEdges = useProjectGraphSelector(collapseEdgesSelector);
@@ -64,7 +64,7 @@ export function ProjectsSidebar(): JSX.Element {
   const [searchParams, setSearchParams] = useSearchParams();
 
   const selectedProjectRouteData = useRouteLoaderData(
-    'selectedWorkspace',
+    'selectedWorkspace'
   ) as ProjectGraphClientResponse;
   const params = useParams();
   const navigate = useNavigate();
@@ -93,7 +93,7 @@ export function ProjectsSidebar(): JSX.Element {
       if (checked && searchDepthInfo.searchDepth > 1) {
         currentSearchParams.set(
           'searchDepth',
-          searchDepthInfo.searchDepth.toString(),
+          searchDepthInfo.searchDepth.toString()
         );
       } else if (checked && searchDepthInfo.searchDepth === 1) {
         currentSearchParams.delete('searchDepth');
@@ -300,7 +300,7 @@ export function ProjectsSidebar(): JSX.Element {
       fetchProjectGraph(
         projectGraphDataService,
         params,
-        environmentConfig.appConfig,
+        environmentConfig.appConfig
       ).then((response: ProjectGraphClientResponse) => {
         projectGraphService.send({
           type: 'updateGraph',
@@ -311,7 +311,7 @@ export function ProjectsSidebar(): JSX.Element {
       });
     },
     5000,
-    environmentConfig.watch,
+    environmentConfig.watch
   );
 
   const updateTextFilter = useCallback(
@@ -319,7 +319,7 @@ export function ProjectsSidebar(): JSX.Element {
       projectGraphService.send({ type: 'filterByText', search: textFilter });
       navigate(routeContructor('/projects', true));
     },
-    [projectGraphService],
+    [projectGraphService]
   );
 
   return (

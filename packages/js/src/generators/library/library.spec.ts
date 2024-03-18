@@ -236,7 +236,7 @@ describe('lib', () => {
         expect(tree.exists('my-dir/my-lib/src/index.ts')).toBeTruthy();
         expect(tree.exists('my-dir/my-lib/src/lib/my-lib.ts')).toBeTruthy();
         expect(
-          tree.exists('my-dir/my-lib/src/lib/my-lib.spec.ts'),
+          tree.exists('my-dir/my-lib/src/lib/my-lib.spec.ts')
         ).toBeTruthy();
         expect(tree.exists('my-dir/my-lib/src/index.ts')).toBeTruthy();
         expect(tree.exists(`my-dir/my-lib/.eslintrc.json`)).toBeTruthy();
@@ -253,7 +253,7 @@ describe('lib', () => {
         });
 
         expect(readProjectConfiguration(tree, 'my-lib').root).toEqual(
-          'my-dir/my-lib',
+          'my-dir/my-lib'
         );
       });
 
@@ -345,20 +345,20 @@ describe('lib', () => {
         const tsconfigJson = readJson(tree, '/my-lib/tsconfig.json');
 
         expect(
-          tsconfigJson.compilerOptions?.forceConsistentCasingInFileNames,
+          tsconfigJson.compilerOptions?.forceConsistentCasingInFileNames
         ).not.toBeDefined();
         expect(tsconfigJson.compilerOptions?.strict).not.toBeDefined();
         expect(
-          tsconfigJson.compilerOptions?.noImplicitOverride,
+          tsconfigJson.compilerOptions?.noImplicitOverride
         ).not.toBeDefined();
         expect(
-          tsconfigJson.compilerOptions?.noPropertyAccessFromIndexSignature,
+          tsconfigJson.compilerOptions?.noPropertyAccessFromIndexSignature
         ).not.toBeDefined();
         expect(
-          tsconfigJson.compilerOptions?.noImplicitReturns,
+          tsconfigJson.compilerOptions?.noImplicitReturns
         ).not.toBeDefined();
         expect(
-          tsconfigJson.compilerOptions?.noFallthroughCasesInSwitch,
+          tsconfigJson.compilerOptions?.noFallthroughCasesInSwitch
         ).not.toBeDefined();
       });
 
@@ -372,11 +372,11 @@ describe('lib', () => {
 
         expect(tsconfigJson.compilerOptions.strict).toBeTruthy();
         expect(
-          tsconfigJson.compilerOptions.forceConsistentCasingInFileNames,
+          tsconfigJson.compilerOptions.forceConsistentCasingInFileNames
         ).toBeTruthy();
         expect(tsconfigJson.compilerOptions.noImplicitReturns).toBeTruthy();
         expect(
-          tsconfigJson.compilerOptions.noFallthroughCasesInSwitch,
+          tsconfigJson.compilerOptions.noFallthroughCasesInSwitch
         ).toBeTruthy();
       });
     });
@@ -412,7 +412,7 @@ describe('lib', () => {
           });
         } catch (e) {
           expect(e.message).toContain(
-            'You already have a library using the import path',
+            'You already have a library using the import path'
           );
         }
 
@@ -428,7 +428,7 @@ describe('lib', () => {
 
         const tsconfigJson = readJson(tree, '/tsconfig.base.json');
         expect(
-          tsconfigJson.compilerOptions.paths['@proj/my-lib'],
+          tsconfigJson.compilerOptions.paths['@proj/my-lib']
         ).toBeDefined();
       });
 
@@ -624,7 +624,7 @@ describe('lib', () => {
           projectNameAndRootFormat: 'as-provided',
         });
         expect(
-          readJson(tree, 'my-lib/tsconfig.json').compilerOptions.allowJs,
+          readJson(tree, 'my-lib/tsconfig.json').compilerOptions.allowJs
         ).toBeTruthy();
       });
 
@@ -666,7 +666,7 @@ describe('lib', () => {
         expect(tree.exists('my-dir/my-lib/src/index.js')).toBeTruthy();
         expect(tree.exists('my-dir/my-lib/src/lib/my-lib.js')).toBeTruthy();
         expect(
-          tree.exists('my-dir/my-lib/src/lib/my-lib.spec.js'),
+          tree.exists('my-dir/my-lib/src/lib/my-lib.spec.js')
         ).toBeTruthy();
         expect(tree.exists('my-dir/my-lib/src/index.js')).toBeTruthy();
       });
@@ -975,7 +975,7 @@ describe('lib', () => {
 
         const config = readProjectConfiguration(tree, 'my-lib');
         expect(config.targets.build.options.project).toEqual(
-          `my-lib/package.json`,
+          `my-lib/package.json`
         );
       });
 
@@ -1511,12 +1511,12 @@ describe('lib', () => {
 
         expect(tree.read('my-lib/README.md', 'utf-8')).toMatchSnapshot();
         expect(
-          tree.read('my-lib/tsconfig.lib.json', 'utf-8'),
+          tree.read('my-lib/tsconfig.lib.json', 'utf-8')
         ).toMatchSnapshot();
         if (configPath) {
           expect(tree.read(configPath, 'utf-8')).toMatchSnapshot();
         }
-      },
+      }
     );
   });
 
@@ -1645,7 +1645,7 @@ describe('lib', () => {
       });
 
       expect(tree.read('web/my-lib/src/index.ts', 'utf-8')).toContain(
-        `export * from './lib/my-lib';`,
+        `export * from './lib/my-lib';`
       );
       expect(tree.exists('web/my-lib/src/lib/my-lib.ts')).toBeTruthy();
     });

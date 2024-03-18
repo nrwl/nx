@@ -27,7 +27,7 @@ function normalizeOptions(
   options: SwcExecutorOptions,
   root: string,
   sourceRoot: string,
-  projectRoot: string,
+  projectRoot: string
 ): NormalizedSwcExecutorOptions {
   const outputPath = join(root, options.outputPath);
 
@@ -56,7 +56,7 @@ function normalizeOptions(
   const files: FileInputOutput[] = assetGlobsToFiles(
     options.assets,
     root,
-    outputPath,
+    outputPath
   );
 
   const projectRootParts = projectRoot.split('/');
@@ -79,7 +79,7 @@ function normalizeOptions(
     ...options,
     mainOutputPath: resolve(
       outputPath,
-      options.main.replace(`${projectRoot}/`, '').replace('.ts', '.js'),
+      options.main.replace(`${projectRoot}/`, '').replace('.ts', '.js')
     ),
     files,
     root,
@@ -95,14 +95,14 @@ function normalizeOptions(
 
 export async function* swcExecutor(
   _options: SwcExecutorOptions,
-  context: ExecutorContext,
+  context: ExecutorContext
 ) {
   const { sourceRoot, root } =
     context.projectsConfigurations.projects[context.projectName];
   const options = normalizeOptions(_options, context.root, sourceRoot, root);
   const { tmpTsConfig, dependencies } = checkDependencies(
     context,
-    options.tsConfig,
+    options.tsConfig
   );
 
   if (tmpTsConfig) {
@@ -113,7 +113,7 @@ export async function* swcExecutor(
     HelperDependency.swc,
     options.swcCliOptions.swcrcPath,
     dependencies,
-    context.projectGraph,
+    context.projectGraph
   );
 
   if (swcHelperDependency) {
@@ -123,7 +123,7 @@ export async function* swcExecutor(
   const inlineProjectGraph = handleInliningBuild(
     context,
     options,
-    options.tsConfig,
+    options.tsConfig
   );
 
   if (!isInlineGraphEmpty(inlineProjectGraph)) {
@@ -134,7 +134,7 @@ export async function* swcExecutor(
     options.swcCliOptions.swcCwd = '.';
     options.swcCliOptions.destPath = join(
       options.swcCliOptions.destPath.split(normalize('../')).at(-1),
-      options.swcCliOptions.srcPath,
+      options.swcCliOptions.srcPath
     );
 
     // tmp swcrc with dependencies to exclude
@@ -143,12 +143,12 @@ export async function* swcExecutor(
     options.swcCliOptions.swcrcPath = generateTmpSwcrc(
       inlineProjectGraph,
       options.swcCliOptions.swcrcPath,
-      options.tmpSwcrcPath,
+      options.tmpSwcrcPath
     );
   }
 
   function determineModuleFormatFromSwcrc(
-    absolutePathToSwcrc: string,
+    absolutePathToSwcrc: string
   ): 'cjs' | 'esm' {
     const swcrc = readJsonFile(absolutePathToSwcrc);
     return swcrc.module?.type?.startsWith('es') ? 'esm' : 'cjs';
@@ -172,7 +172,7 @@ export async function* swcExecutor(
           // TSC can match them correctly based on file names.
           skipTypings: true,
         },
-        context,
+        context
       );
       removeTmpSwcrc(options.swcCliOptions.swcrcPath);
       disposeFn = () => {
@@ -195,13 +195,13 @@ export async function* swcExecutor(
           skipTypings: true,
           extraDependencies: swcHelperDependency ? [swcHelperDependency] : [],
         },
-        context,
+        context
       );
       removeTmpSwcrc(options.swcCliOptions.swcrcPath);
       postProcessInlinedDependencies(
         options.outputPath,
         options.originalProjectRoot,
-        inlineProjectGraph,
+        inlineProjectGraph
       );
     });
   }
@@ -218,7 +218,7 @@ function removeTmpSwcrc(swcrcPath: string) {
 
 function createEntryPoints(
   options: { additionalEntryPoints?: string[] },
-  context: ExecutorContext,
+  context: ExecutorContext
 ): string[] {
   if (!options.additionalEntryPoints?.length) return [];
   return globSync(options.additionalEntryPoints, {

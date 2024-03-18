@@ -123,7 +123,7 @@ async function main() {
   const lockFile = createLockFile(
     packageJson,
     projectGraph,
-    detectPackageManager(),
+    detectPackageManager()
   );
 
   const lockFileName = getLockFileName(pm);
@@ -170,7 +170,7 @@ import {
 
 export default async function buildExecutor(
   options: Schema,
-  context: ExecutorContext,
+  context: ExecutorContext
 ) {
   // ...your executor code
   const packageManager = detectPackageManager();
@@ -181,7 +181,7 @@ export default async function buildExecutor(
     {
       root: context.root,
       isProduction: true, // We want to strip any non-prod dependencies
-    },
+    }
   );
 
   // do any additional manipulations to "package.json" here
@@ -189,7 +189,7 @@ export default async function buildExecutor(
   const lockFile = createLockFile(
     packageJson,
     context.projectGraph,
-    packageManager,
+    packageManager
   );
   const lockFileName = getLockFileName(packageManager);
   writeJsonFile(`${options.outputPath}/package.json`, packageJson);

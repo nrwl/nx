@@ -14,7 +14,7 @@ export default async function (tree: Tree) {
   for (const [projectName, projectConfiguration] of projectsConfigurations) {
     let projectChanged = false;
     for (const [targetName, targetConfiguration] of Object.entries(
-      projectConfiguration.targets ?? {},
+      projectConfiguration.targets ?? {}
     )) {
       for (const dependency of targetConfiguration.dependsOn ?? []) {
         if (typeof dependency !== 'string') {
@@ -69,7 +69,7 @@ function updateDependsOnAndInputsInsideNxJson(tree: Tree) {
   const nxJson = readNxJson(tree);
   let nxJsonChanged = false;
   for (const [target, defaults] of Object.entries(
-    nxJson?.targetDefaults ?? {},
+    nxJson?.targetDefaults ?? {}
   )) {
     for (const dependency of defaults.dependsOn ?? []) {
       if (typeof dependency !== 'string') {

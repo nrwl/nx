@@ -5,7 +5,7 @@ if (process.argv[2] === 'migrate') {
 }
 
 console.warn(
-  `@nrwl/tao has been deprecated and will not be published in Nx 17. Please update your global install of nx: https://nx.dev/more-concepts/global-nx`,
+  `@nrwl/tao has been deprecated and will not be published in Nx 17. Please update your global install of nx: https://nx.dev/more-concepts/global-nx`
 );
 
 require('nx/bin/nx');

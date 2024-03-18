@@ -23,7 +23,7 @@ export async function createWatchPaths(dirname: string): Promise<string[]> {
   const projectRootMappings = createProjectRootMappings(graph.nodes);
   const projectName = findProjectForPath(
     relative(workspaceRoot, dirname),
-    projectRootMappings,
+    projectRootMappings
   );
   const deps = findAllProjectNodeDependencies(projectName, graph);
 
@@ -34,11 +34,11 @@ export async function createWatchPaths(dirname: string): Promise<string[]> {
 export function getRelativeDependencyPaths(
   project: ProjectGraphProjectNode,
   deps: string[],
-  graph: ProjectGraph,
+  graph: ProjectGraph
 ): string[] {
   if (!project.data?.root) {
     throw new Error(
-      `Project ${project.name} has no root set. Check the project configuration.`,
+      `Project ${project.name} has no root set. Check the project configuration.`
     );
   }
 

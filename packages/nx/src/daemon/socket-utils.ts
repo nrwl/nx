@@ -38,10 +38,10 @@ function serializeError(error: Error | null): string | null {
 export function serializeResult(
   error: Error | null,
   serializedProjectGraph: string | null,
-  serializedSourceMaps: string | null,
+  serializedSourceMaps: string | null
 ): string | null {
   // We do not want to repeat work `JSON.stringify`ing an object containing the potentially large project graph so merge as strings
   return `{ "error": ${serializeError(
-    error,
+    error
   )}, "projectGraph": ${serializedProjectGraph}, "sourceMaps": ${serializedSourceMaps} }`;
 }

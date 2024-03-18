@@ -8,7 +8,7 @@ import { stripIndents } from '@nx/devkit';
 // TODO(jack): Use updatePackageJson from @nx/js instead.
 export function updatePackageJson(
   options: NormalizedRollupExecutorOptions,
-  packageJson: PackageJson,
+  packageJson: PackageJson
 ) {
   const hasEsmFormat = options.format.includes('esm');
   const hasCjsFormat = options.format.includes('cjs');
@@ -73,9 +73,9 @@ export function updatePackageJson(
           writeFileSync(
             join(
               options.outputPath,
-              filePath.replace(/\.cjs\.js$/, '.cjs.default.js'),
+              filePath.replace(/\.cjs\.js$/, '.cjs.default.js')
             ),
-            `exports._default = require('./${parse(filePath).base}').default;`,
+            `exports._default = require('./${parse(filePath).base}').default;`
           );
           writeFileSync(
             join(options.outputPath, fauxEsmFilePath),
@@ -84,9 +84,9 @@ export function updatePackageJson(
             export * from './${relativeFile}';
             export { _default as default } from './${relativeFile.replace(
               /\.cjs\.js$/,
-              '.cjs.default.js',
+              '.cjs.default.js'
             )}';
-            `,
+            `
           );
         } else {
           packageJson.exports[exportEntry] = filePath;
@@ -110,7 +110,7 @@ function getExports(
     'main' | 'projectRoot' | 'outputFileName' | 'additionalEntryPoints'
   > & {
     fileExt: string;
-  },
+  }
 ): Exports {
   const mainFile = options.outputFileName
     ? options.outputFileName.replace(/\.[tj]s$/, '')

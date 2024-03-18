@@ -20,11 +20,11 @@ export async function replaceProjectConfigurationsWithPlugin<T = unknown>(
   rootMappings: Map<string, string>,
   pluginPath: string,
   createNodes: CreateNodes<T>,
-  pluginOptions: T,
+  pluginOptions: T
 ): Promise<void> {
   const nxJson = readNxJson(tree);
   const hasPlugin = nxJson.plugins?.some((p) =>
-    typeof p === 'string' ? p === pluginPath : p.plugin === pluginPath,
+    typeof p === 'string' ? p === pluginPath : p.plugin === pluginPath
   );
 
   if (hasPlugin) {
@@ -65,7 +65,7 @@ export async function replaceProjectConfigurationsWithPlugin<T = unknown>(
           targetName,
           targetFromProjectConfig,
           targetFromCreateNodes,
-          projectConfig,
+          projectConfig
         );
       }
 
@@ -80,7 +80,7 @@ function removeConfigurationDefinedByPlugin<T>(
   targetName: string,
   targetFromProjectConfig: TargetConfiguration<T>,
   targetFromCreateNodes: TargetConfiguration<T>,
-  projectConfig: ProjectConfiguration,
+  projectConfig: ProjectConfiguration
 ) {
   // Executor
   delete targetFromProjectConfig.executor;
@@ -103,7 +103,7 @@ function removeConfigurationDefinedByPlugin<T>(
     targetFromProjectConfig.dependsOn &&
     shouldRemoveArrayProperty(
       targetFromProjectConfig.dependsOn,
-      targetFromCreateNodes.dependsOn,
+      targetFromCreateNodes.dependsOn
     )
   ) {
     delete targetFromProjectConfig.dependsOn;
@@ -114,7 +114,7 @@ function removeConfigurationDefinedByPlugin<T>(
     targetFromProjectConfig.outputs &&
     shouldRemoveArrayProperty(
       targetFromProjectConfig.outputs,
-      targetFromCreateNodes.outputs,
+      targetFromCreateNodes.outputs
     )
   ) {
     delete targetFromProjectConfig.outputs;
@@ -125,7 +125,7 @@ function removeConfigurationDefinedByPlugin<T>(
     targetFromProjectConfig.inputs &&
     shouldRemoveArrayProperty(
       targetFromProjectConfig.inputs,
-      targetFromCreateNodes.inputs,
+      targetFromCreateNodes.inputs
     )
   ) {
     delete targetFromProjectConfig.inputs;
@@ -133,7 +133,7 @@ function removeConfigurationDefinedByPlugin<T>(
 
   // Options
   for (const [optionName, optionValue] of Object.entries(
-    targetFromProjectConfig.options ?? {},
+    targetFromProjectConfig.options ?? {}
   )) {
     if (equals(targetFromCreateNodes.options[optionName], optionValue)) {
       delete targetFromProjectConfig.options[optionName];
@@ -145,7 +145,7 @@ function removeConfigurationDefinedByPlugin<T>(
 
   // Configurations
   for (const [configName, configOptions] of Object.entries(
-    targetFromProjectConfig.configurations ?? {},
+    targetFromProjectConfig.configurations ?? {}
   )) {
     for (const [optionName, optionValue] of Object.entries(configOptions)) {
       if (
@@ -180,10 +180,10 @@ function equals<T extends unknown>(a: T, b: T) {
 
 function shouldRemoveArrayProperty(
   arrayValuesFromProjectConfiguration: (object | string)[],
-  arrayValuesFromCreateNodes: (object | string)[],
+  arrayValuesFromCreateNodes: (object | string)[]
 ) {
   const setOfArrayValuesFromProjectConfiguration = new Set(
-    arrayValuesFromProjectConfiguration,
+    arrayValuesFromProjectConfiguration
   );
   loopThroughArrayValuesFromCreateNodes: for (const arrayValueFromCreateNodes of arrayValuesFromCreateNodes) {
     if (typeof arrayValueFromCreateNodes === 'string') {
@@ -194,7 +194,7 @@ function shouldRemoveArrayProperty(
         return false;
       } else {
         setOfArrayValuesFromProjectConfiguration.delete(
-          arrayValueFromCreateNodes,
+          arrayValueFromCreateNodes
         );
       }
     } else {

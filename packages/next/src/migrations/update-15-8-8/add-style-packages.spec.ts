@@ -24,7 +24,7 @@ describe('Add less if needed', () => {
     });
     tree.write(
       `myapp/next.config.js`,
-      `require('@nrwl/next/plugins/with-less')`,
+      `require('@nrwl/next/plugins/with-less')`
     );
 
     await update(tree);

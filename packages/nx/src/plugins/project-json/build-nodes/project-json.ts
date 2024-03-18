@@ -11,7 +11,7 @@ export const ProjectJsonProjectsPlugin: NxPluginV2 = {
     '{project.json,**/project.json}',
     (file, _, { workspaceRoot }) => {
       const json = readJsonFile<ProjectConfiguration>(
-        join(workspaceRoot, file),
+        join(workspaceRoot, file)
       );
       const project = buildProjectFromProjectJson(json, file);
       return {
@@ -25,7 +25,7 @@ export const ProjectJsonProjectsPlugin: NxPluginV2 = {
 
 export function buildProjectFromProjectJson(
   json: Partial<ProjectConfiguration>,
-  path: string,
+  path: string
 ): ProjectConfiguration {
   return {
     name: toProjectName(path),

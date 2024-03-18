@@ -45,7 +45,7 @@ export function validateWorkspace(tree: Tree): void {
 export function createNxJson(
   tree: Tree,
   options: GeneratorOptions,
-  defaultProject: string | undefined,
+  defaultProject: string | undefined
 ): void {
   const targets = getWorkspaceCommonTargets(tree);
 
@@ -143,7 +143,7 @@ export function updateRootTsConfig(tree: Tree): void {
   tsconfig.compilerOptions.baseUrl = '.';
   tsconfig.compilerOptions.rootDir = '.';
   tsconfig.exclude = Array.from(
-    new Set([...(tsconfig.exclude ?? []), 'node_modules', 'tmp']),
+    new Set([...(tsconfig.exclude ?? []), 'node_modules', 'tmp'])
   );
   writeJson(tree, 'tsconfig.base.json', tsconfig);
 
@@ -186,7 +186,7 @@ export function updatePackageJson(tree: Tree): void {
 export async function updateRootEsLintConfig(
   tree: Tree,
   existingEsLintConfig: any | undefined,
-  unitTestRunner?: string,
+  unitTestRunner?: string
 ): Promise<void> {
   await lintInitGenerator(tree, {
     addPlugin: false,
@@ -201,7 +201,7 @@ export async function updateRootEsLintConfig(
   existingEsLintConfig.ignorePatterns = ['**/*'];
   if (!(existingEsLintConfig.plugins ?? []).includes('@nx')) {
     existingEsLintConfig.plugins = Array.from(
-      new Set([...(existingEsLintConfig.plugins ?? []), '@nx']),
+      new Set([...(existingEsLintConfig.plugins ?? []), '@nx'])
     );
   }
   existingEsLintConfig.overrides?.forEach((override) => {
@@ -272,13 +272,13 @@ export function createRootKarmaConfig(tree: Tree): void {
     '.',
     {
       tmpl: '',
-    },
+    }
   );
 }
 
 export function getWorkspaceRootFileTypesInfo(
   tree: Tree,
-  migrators: ProjectMigrator[],
+  migrators: ProjectMigrator[]
 ): WorkspaceRootFileTypesInfo {
   const workspaceRootFileTypesInfo: WorkspaceRootFileTypesInfo = {
     eslint: false,
@@ -331,7 +331,7 @@ export function updateVsCodeRecommendedExtensions(tree: Tree): void {
         });
 
         return json;
-      },
+      }
     );
   } else {
     writeJson(tree, '.vscode/extensions.json', {

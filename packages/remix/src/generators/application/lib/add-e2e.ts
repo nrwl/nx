@@ -72,7 +72,7 @@ export async function addE2E(tree: Tree, options: NormalizedSchema) {
 function addFileServerTarget(
   tree: Tree,
   options: NormalizedSchema,
-  targetName: string,
+  targetName: string
 ) {
   const projectConfig = readProjectConfiguration(tree, options.projectName);
   projectConfig.targets[targetName] = {

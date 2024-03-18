@@ -19,7 +19,7 @@ function isUsingUtilityFunction(host: Tree) {
 
 export function updateJestConfig(
   host: Tree,
-  options: NormalizedJestProjectSchema,
+  options: NormalizedJestProjectSchema
 ) {
   if (isUsingUtilityFunction(host)) {
     return;
@@ -31,7 +31,7 @@ export function updateJestConfig(
       host,
       findRootJestConfig(host),
       'projects',
-      `<rootDir>/${project.root}`,
+      `<rootDir>/${project.root}`
     );
   }
 }

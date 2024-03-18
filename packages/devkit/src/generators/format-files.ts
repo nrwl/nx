@@ -24,7 +24,7 @@ export async function formatFiles(tree: Tree): Promise<void> {
   if (!prettier) return;
 
   const files = new Set(
-    tree.listChanges().filter((file) => file.type !== 'DELETE'),
+    tree.listChanges().filter((file) => file.type !== 'DELETE')
   );
 
   const changedPrettierInTree = getChangedPrettierConfigInTree(tree);
@@ -58,12 +58,12 @@ export async function formatFiles(tree: Tree): Promise<void> {
           // In prettier v3 the format result is a promise
           await (prettier.format(file.content.toString('utf-8'), options) as
             | Promise<string>
-            | string),
+            | string)
         );
       } catch (e) {
         console.warn(`Could not format ${file.path}. Error: "${e.message}"`);
       }
-    }),
+    })
   );
 }
 

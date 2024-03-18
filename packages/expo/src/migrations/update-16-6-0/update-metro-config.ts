@@ -16,7 +16,7 @@ export default async function update(tree: Tree) {
           .toString();
         tree.write(
           join(config.root, 'metro-v71.config.js'),
-          oldConfigComment + oldConfig,
+          oldConfigComment + oldConfig
         );
         tree.write(join(config.root, 'metro.config.js'), content);
       }

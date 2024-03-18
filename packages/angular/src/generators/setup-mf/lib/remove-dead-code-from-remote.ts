@@ -9,7 +9,7 @@ export function removeDeadCodeFromRemote(tree: Tree, options: Schema) {
   ['css', 'less', 'scss', 'sass'].forEach((style) => {
     const pathToComponentStyle = joinPathFragments(
       project.sourceRoot,
-      `app/app.component.${style}`,
+      `app/app.component.${style}`
     );
     if (tree.exists(pathToComponentStyle)) {
       tree.delete(pathToComponentStyle);
@@ -20,17 +20,17 @@ export function removeDeadCodeFromRemote(tree: Tree, options: Schema) {
     joinPathFragments(project.sourceRoot, 'app/nx-welcome.component.ts'),
     joinPathFragments(
       project.sourceRoot,
-      'app/remote-entry/nx-welcome.component.ts',
-    ),
+      'app/remote-entry/nx-welcome.component.ts'
+    )
   );
   tree.delete(
-    joinPathFragments(project.sourceRoot, 'app/app.component.spec.ts'),
+    joinPathFragments(project.sourceRoot, 'app/app.component.spec.ts')
   );
   tree.delete(joinPathFragments(project.sourceRoot, 'app/app.component.html'));
 
   const pathToAppComponent = joinPathFragments(
     project.sourceRoot,
-    'app/app.component.ts',
+    'app/app.component.ts'
   );
   if (!options.standalone) {
     const componentContents = tree.read(pathToAppComponent, 'utf-8');
@@ -38,7 +38,7 @@ export function removeDeadCodeFromRemote(tree: Tree, options: Schema) {
 
     const component =
       componentContents.split(
-        isInlineTemplate ? 'template' : 'templateUrl',
+        isInlineTemplate ? 'template' : 'templateUrl'
       )[0] +
       `template: '<router-outlet></router-outlet>'
 
@@ -66,7 +66,7 @@ import { AppComponent } from './app.component';
   providers: [],
   bootstrap: [AppComponent],
 })
-export class AppModule {}`,
+export class AppModule {}`
     );
   } else {
     tree.delete(pathToAppComponent);
@@ -75,14 +75,14 @@ export class AppModule {}`,
     const indexContents = tree.read(pathToIndexHtml, 'utf-8');
     const rootSelectorRegex = new RegExp(
       `${options.prefix || 'app'}-root`,
-      'ig',
+      'ig'
     );
     const remoteEntrySelector = `${
       options.prefix || 'app'
     }-${projectName}-entry`;
     const newIndexContents = indexContents.replace(
       rootSelectorRegex,
-      remoteEntrySelector,
+      remoteEntrySelector
     );
 
     tree.write(pathToIndexHtml, newIndexContents);

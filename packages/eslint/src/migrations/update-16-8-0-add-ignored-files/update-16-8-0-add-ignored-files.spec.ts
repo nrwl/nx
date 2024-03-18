@@ -83,7 +83,7 @@ describe('update-16-8-0-add-ignored-files migration', () => {
           },
         ],
       });
-    },
+    }
   );
 
   it('should retain existing severity', () => {

@@ -3,7 +3,7 @@ export function isAsyncIterator<T>(v: any): v is AsyncIterableIterator<T> {
 }
 
 export async function getLastValueFromAsyncIterableIterator<T>(
-  i: AsyncIterableIterator<T>,
+  i: AsyncIterableIterator<T>
 ): Promise<T> {
   let prev: IteratorResult<T, T>;
   let current: IteratorResult<T, T>;

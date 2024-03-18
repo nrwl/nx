@@ -33,12 +33,12 @@ const documents: any[] = [
 ].filter(Boolean);
 
 const packages: PackageMetadata[] = readJSONSync(
-  resolve(__dirname, '../../../', `./docs/generated/packages-metadata.json`),
+  resolve(__dirname, '../../../', `./docs/generated/packages-metadata.json`)
 );
 const targetFolder: string = resolve(
   __dirname,
   '../../../',
-  `./nx-dev/nx-dev/public/images/open-graph`,
+  `./nx-dev/nx-dev/public/images/open-graph`
 );
 
 const data: {
@@ -111,7 +111,7 @@ function createOpenGraphImage(
   targetFolder: string,
   title: string,
   content: string,
-  filename: string,
+  filename: string
 ): Promise<void> {
   const addBackground = readFile(backgroundImagePath).then((content) => {
     const image = new Image();
@@ -146,7 +146,7 @@ function createOpenGraphImage(
       context.fillText(
         line,
         600,
-        310 + index * SUB_LINE_HEIGHT + titleLines.length * TITLE_LINE_HEIGHT,
+        310 + index * SUB_LINE_HEIGHT + titleLines.length * TITLE_LINE_HEIGHT
       );
     });
 
@@ -154,7 +154,7 @@ function createOpenGraphImage(
 
     return writeFileSync(
       resolve(targetFolder + `/${filename}.jpg`),
-      canvas.toBuffer('image/jpeg'),
+      canvas.toBuffer('image/jpeg')
     );
   });
 }
@@ -162,20 +162,20 @@ function createOpenGraphImage(
 function copyImage(
   backgroundImagePath: string,
   targetFolder: string,
-  filename: string,
+  filename: string
 ) {
   const splits = backgroundImagePath.split('.');
   const extension = splits[splits.length - 1];
   copyFileSync(
     backgroundImagePath,
-    resolve(targetFolder, `./${filename}.${extension}`),
+    resolve(targetFolder, `./${filename}.${extension}`)
   );
 }
 
 function splitLines(
   context: SKRSContext2D,
   text: string,
-  maxWidth: number,
+  maxWidth: number
 ): string[] {
   // calculate line splits
   const words = text.split(' ');
@@ -202,7 +202,7 @@ function splitLines(
 
 console.log(
   'Generated images will be on this path:\n',
-  resolve(targetFolder, '\n\n'),
+  resolve(targetFolder, '\n\n')
 );
 ensureDir(targetFolder).then(() =>
   data.map((item) =>
@@ -210,14 +210,14 @@ ensureDir(targetFolder).then(() =>
       ? copyImage(
           resolve(__dirname, '../../../docs/' + item.mediaImage),
           targetFolder,
-          item.filename,
+          item.filename
         )
       : createOpenGraphImage(
           resolve(__dirname, './media.jpg'),
           targetFolder,
           item.title,
           item.content,
-          item.filename,
-        ),
-  ),
+          item.filename
+        )
+  )
 );

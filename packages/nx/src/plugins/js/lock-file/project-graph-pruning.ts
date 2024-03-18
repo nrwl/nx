@@ -13,7 +13,7 @@ import { reverse } from '../../../project-graph/operators';
  */
 export function pruneProjectGraph(
   graph: ProjectGraph,
-  prunedPackageJson: PackageJson,
+  prunedPackageJson: PackageJson
 ): ProjectGraph {
   const builder = new ProjectGraphBuilder();
 
@@ -61,10 +61,10 @@ function normalizeDependencies(packageJson: PackageJson, graph: ProjectGraph) {
         combinedDependencies[packageName] = node.data.version;
       } else {
         throw new Error(
-          `Pruned lock file creation failed. The following package was not found in the root lock file: ${packageName}@${versionRange}`,
+          `Pruned lock file creation failed. The following package was not found in the root lock file: ${packageName}@${versionRange}`
         );
       }
-    },
+    }
   );
   return combinedDependencies;
 }
@@ -72,7 +72,7 @@ function normalizeDependencies(packageJson: PackageJson, graph: ProjectGraph) {
 function findNodeMatchingVersion(
   graph: ProjectGraph,
   packageName: string,
-  versionExpr: string,
+  versionExpr: string
 ) {
   if (versionExpr === '*') {
     return graph.externalNodes[`npm:${packageName}`];
@@ -88,7 +88,7 @@ function findNodeMatchingVersion(
     graph.externalNodes[`npm:${packageName}`] &&
     satisfies(
       graph.externalNodes[`npm:${packageName}`].data.version,
-      versionExpr,
+      versionExpr
     )
   ) {
     return graph.externalNodes[`npm:${packageName}`];
@@ -99,7 +99,7 @@ function findNodeMatchingVersion(
 function addNodesAndDependencies(
   graph: ProjectGraph,
   packageJsonDeps: Record<string, string>,
-  builder: ProjectGraphBuilder,
+  builder: ProjectGraphBuilder
 ) {
   Object.entries(packageJsonDeps).forEach(([name, version]) => {
     const node =
@@ -112,7 +112,7 @@ function addNodesAndDependencies(
 function traverseNode(
   graph: ProjectGraph,
   builder: ProjectGraphBuilder,
-  node: ProjectGraphExternalNode,
+  node: ProjectGraphExternalNode
 ) {
   if (builder.graph.externalNodes[node.name]) {
     return;
@@ -128,7 +128,7 @@ function traverseNode(
 function rehoistNodes(
   graph: ProjectGraph,
   packageJsonDeps: Record<string, string>,
-  builder: ProjectGraphBuilder,
+  builder: ProjectGraphBuilder
 ) {
   const packagesToRehoist = new Map<string, ProjectGraphExternalNode[]>();
 
@@ -139,7 +139,7 @@ function rehoistNodes(
       !builder.graph.externalNodes[node.name]
     ) {
       const nestedNodes = Object.values(builder.graph.externalNodes).filter(
-        (n) => n.data.packageName === node.data.packageName,
+        (n) => n.data.packageName === node.data.packageName
       );
       if (nestedNodes.length > 0) {
         packagesToRehoist.set(node.data.packageName, nestedNodes);
@@ -162,7 +162,7 @@ function rehoistNodes(
           node,
           packageJsonDeps,
           builder,
-          invertedGraph,
+          invertedGraph
         );
         if (distance < minDistance) {
           minDistance = distance;
@@ -177,16 +177,16 @@ function rehoistNodes(
 function switchNodeToHoisted(
   node: ProjectGraphExternalNode,
   builder: ProjectGraphBuilder,
-  invBuilder: ProjectGraphBuilder,
+  invBuilder: ProjectGraphBuilder
 ) {
   // make a copy of current name, all the dependencies and dependents
   const previousName = node.name;
   const targets = (builder.graph.dependencies[node.name] || []).map(
-    (d) => d.target,
+    (d) => d.target
   );
   const sources: string[] = Object.keys(builder.graph.dependencies).filter(
     (name) =>
-      builder.graph.dependencies[name].some((d) => d.target === previousName),
+      builder.graph.dependencies[name].some((d) => d.target === previousName)
   );
 
   builder.removeNode(node.name);
@@ -213,7 +213,7 @@ function pathLengthToIncoming(
   node: ProjectGraphExternalNode,
   packageJsonDeps: Record<string, string>,
   builder: ProjectGraphBuilder,
-  invertedGraph: ProjectGraph,
+  invertedGraph: ProjectGraph
 ): number {
   const visited = new Set<string>([node.name]);
   const queue: Array<[ProjectGraphExternalNode, number]> = [[node, 0]];

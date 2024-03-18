@@ -9,8 +9,8 @@ Nx creates a graph of all the dependencies between projects in your workspace us
    ```jsonc {% fileName="myapp/package.json"%}
    {
      "dependencies": {
-       "@myorg/awesome-library": "*",
-     },
+       "@myorg/awesome-library": "*"
+     }
    }
    ```
 
@@ -41,8 +41,8 @@ Nx creates a graph of all the dependencies between projects in your workspace us
 {
   "name": "myapp",
   "nx": {
-    "implicitDependencies": ["some-api"],
-  },
+    "implicitDependencies": ["some-api"]
+  }
 }
 ```
 
@@ -52,7 +52,7 @@ Nx creates a graph of all the dependencies between projects in your workspace us
 ```jsonc {% fileName="project.json"%}
 {
   "root": "/libs/myapp",
-  "implicitDependencies": ["some-api"],
+  "implicitDependencies": ["some-api"]
 }
 ```
 

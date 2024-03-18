@@ -25,7 +25,7 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
     updateFile('e2e/protractor.conf.js', 'exports.config = {};');
     updateFile(
       'e2e/tsconfig.json',
-      JSON.stringify({ extends: '../tsconfig.json' }, null, 2),
+      JSON.stringify({ extends: '../tsconfig.json' }, null, 2)
     );
     updateFile(
       'e2e/src/app.e2e-spec.ts',
@@ -33,7 +33,7 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
         it('should pass', () => {
           expect(true).toBe(true);
         });
-      });`,
+      });`
     );
 
     const angularJson = readJson('angular.json');
@@ -116,7 +116,7 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
       `apps/${project}/src/main.ts`,
       `apps/${project}/src/app/app.config.ts`,
       `apps/${project}/src/app/app.component.ts`,
-      `apps/${project}/src/app/app.routes.ts`,
+      `apps/${project}/src/app/app.routes.ts`
     );
 
     // check the right VSCode extensions are recommended
@@ -271,7 +271,7 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
       'cypress/integration/spec.ts',
       'cypress/plugins/index.ts',
       'cypress/support/commands.ts',
-      'cypress/support/index.ts',
+      'cypress/support/index.ts'
     );
     checkFilesExist(
       `apps/${e2eProject}/cypress.json`,
@@ -279,7 +279,7 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
       `apps/${e2eProject}/src/integration/spec.ts`,
       `apps/${e2eProject}/src/plugins/index.ts`,
       `apps/${e2eProject}/src/support/commands.ts`,
-      `apps/${e2eProject}/src/support/index.ts`,
+      `apps/${e2eProject}/src/support/index.ts`
     );
 
     const projectConfig = readJson(`apps/${project}/project.json`);
@@ -338,7 +338,7 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
       'cypress/e2e/spec.cy.ts',
       'cypress/fixtures/example.json',
       'cypress/support/commands.ts',
-      'cypress/support/e2e.ts',
+      'cypress/support/e2e.ts'
     );
     checkFilesExist(
       `apps/${e2eProject}/cypress.config.ts`,
@@ -346,7 +346,7 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
       `apps/${e2eProject}/src/e2e/spec.cy.ts`,
       `apps/${e2eProject}/src/fixtures/example.json`,
       `apps/${e2eProject}/src/support/commands.ts`,
-      `apps/${e2eProject}/src/support/e2e.ts`,
+      `apps/${e2eProject}/src/support/e2e.ts`
     );
 
     const projectConfig = readJson(`apps/${project}/project.json`);
@@ -411,14 +411,14 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
     expect(output).toContain(`> nx run ${project}:lint`);
     expect(output).toContain('All files pass linting');
     expect(output).toContain(
-      `Successfully ran target lint for project ${project}`,
+      `Successfully ran target lint for project ${project}`
     );
 
     output = runCLI(`lint ${project}`);
     expect(output).toContain(`> nx run ${project}:lint  [local cache]`);
     expect(output).toContain('All files pass linting');
     expect(output).toContain(
-      `Successfully ran target lint for project ${project}`,
+      `Successfully ran target lint for project ${project}`
     );
   });
 
@@ -437,53 +437,53 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
     // check building project
     let output = runCLI(`build ${project} --outputHashing none`);
     expect(output).toContain(
-      `> nx run ${project}:build:production --outputHashing none`,
+      `> nx run ${project}:build:production --outputHashing none`
     );
     expect(output).toContain(
-      `Successfully ran target build for project ${project}`,
+      `Successfully ran target build for project ${project}`
     );
     checkFilesExist(`dist/apps/${project}/browser/main.js`);
 
     output = runCLI(`build ${project} --outputHashing none`);
     expect(output).toContain(
-      `> nx run ${project}:build:production --outputHashing none  [local cache]`,
+      `> nx run ${project}:build:production --outputHashing none  [local cache]`
     );
     expect(output).toContain(
-      `Successfully ran target build for project ${project}`,
+      `Successfully ran target build for project ${project}`
     );
 
     // check building app1
     output = runCLI(`build ${app1} --outputHashing none`);
     expect(output).toContain(
-      `> nx run ${app1}:build:production --outputHashing none`,
+      `> nx run ${app1}:build:production --outputHashing none`
     );
     expect(output).toContain(
-      `Successfully ran target build for project ${app1}`,
+      `Successfully ran target build for project ${app1}`
     );
     checkFilesExist(`dist/apps/${app1}/browser/main.js`);
 
     output = runCLI(`build ${app1} --outputHashing none`);
     expect(output).toContain(
-      `> nx run ${app1}:build:production --outputHashing none  [local cache]`,
+      `> nx run ${app1}:build:production --outputHashing none  [local cache]`
     );
     expect(output).toContain(
-      `Successfully ran target build for project ${app1}`,
+      `Successfully ran target build for project ${app1}`
     );
 
     // check building lib1
     output = runCLI(`build ${lib1}`);
     expect(output).toContain(`> nx run ${lib1}:build:production`);
     expect(output).toContain(
-      `Successfully ran target build for project ${lib1}`,
+      `Successfully ran target build for project ${lib1}`
     );
     checkFilesExist(`dist/${lib1}/package.json`);
 
     output = runCLI(`build ${lib1}`);
     expect(output).toContain(
-      `> nx run ${lib1}:build:production  [local cache]`,
+      `> nx run ${lib1}:build:production  [local cache]`
     );
     expect(output).toContain(
-      `Successfully ran target build for project ${lib1}`,
+      `Successfully ran target build for project ${lib1}`
     );
   });
 });

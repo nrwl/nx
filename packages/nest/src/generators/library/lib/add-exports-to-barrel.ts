@@ -7,7 +7,7 @@ let tsModule: typeof import('typescript');
 
 export function addExportsToBarrelFile(
   tree: Tree,
-  options: NormalizedOptions,
+  options: NormalizedOptions
 ): void {
   if (!tsModule) {
     tsModule = ensureTypescript();
@@ -18,12 +18,12 @@ export function addExportsToBarrelFile(
     indexPath,
     indexContent,
     tsModule.ScriptTarget.Latest,
-    true,
+    true
   );
 
   // find the export in the source file
   const exportStatement = sourceFile.statements.find((statement) =>
-    tsModule.isExportDeclaration(statement),
+    tsModule.isExportDeclaration(statement)
   );
 
   sourceFile = removeChange(
@@ -31,13 +31,13 @@ export function addExportsToBarrelFile(
     sourceFile,
     indexPath,
     0,
-    exportStatement.getFullText(),
+    exportStatement.getFullText()
   );
   sourceFile = addGlobal(
     tree,
     sourceFile,
     indexPath,
-    `export * from './lib/${options.fileName}.module';`,
+    `export * from './lib/${options.fileName}.module';`
   );
 
   if (options.service) {
@@ -45,7 +45,7 @@ export function addExportsToBarrelFile(
       tree,
       sourceFile,
       indexPath,
-      `export * from './lib/${options.fileName}.service';`,
+      `export * from './lib/${options.fileName}.service';`
     );
   }
   if (options.controller) {
@@ -53,7 +53,7 @@ export function addExportsToBarrelFile(
       tree,
       sourceFile,
       indexPath,
-      `export * from './lib/${options.fileName}.controller';`,
+      `export * from './lib/${options.fileName}.controller';`
     );
   }
 }

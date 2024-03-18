@@ -5,6 +5,6 @@ export function hasVitePlugin(tree: Tree) {
   return !!nxJson.plugins?.some((p) =>
     typeof p === 'string'
       ? p === '@nx/vite/plugin'
-      : p.plugin === '@nx/vite/plugin',
+      : p.plugin === '@nx/vite/plugin'
   );
 }

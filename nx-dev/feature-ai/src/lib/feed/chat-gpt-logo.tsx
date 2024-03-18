@@ -1,7 +1,7 @@
 import { ComponentProps } from 'react';
 
 export function ChatGptLogo(
-  props: ComponentProps<'svg'> & { title?: string; titleId?: string },
+  props: ComponentProps<'svg'> & { title?: string; titleId?: string }
 ): JSX.Element {
   return (
     <svg

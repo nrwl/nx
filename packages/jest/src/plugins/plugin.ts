@@ -40,7 +40,7 @@ function readTargetsCache(): Record<
 }
 
 function writeTargetsToCache(
-  targets: Record<string, Record<string, TargetConfiguration>>,
+  targets: Record<string, Record<string, TargetConfiguration>>
 ) {
   writeJsonFile(cachePath, targets);
 }
@@ -56,7 +56,7 @@ export const createNodes: CreateNodes<JestPluginOptions> = [
     const projectRoot = dirname(configFilePath);
 
     const packageManagerWorkspacesGlob = combineGlobPatterns(
-      getGlobPatternsFromPackageManagerWorkspaces(context.workspaceRoot),
+      getGlobPatternsFromPackageManagerWorkspaces(context.workspaceRoot)
     );
 
     // Do not create a project if package.json and project.json isn't there.
@@ -74,7 +74,7 @@ export const createNodes: CreateNodes<JestPluginOptions> = [
 
       const isPackageJsonProject = minimatch(
         path,
-        packageManagerWorkspacesGlob,
+        packageManagerWorkspacesGlob
       );
 
       if (!isPackageJsonProject) {
@@ -84,7 +84,7 @@ export const createNodes: CreateNodes<JestPluginOptions> = [
 
     const jestConfigContent = readFileSync(
       resolve(context.workspaceRoot, configFilePath),
-      'utf-8',
+      'utf-8'
     );
     if (jestConfigContent.includes('getJestProjectsAsync()')) {
       // The `getJestProjectsAsync` function uses the project graph, which leads to a
@@ -117,20 +117,20 @@ async function buildJestTargets(
   configFilePath: string,
   projectRoot: string,
   options: JestPluginOptions,
-  context: CreateNodesContext,
+  context: CreateNodesContext
 ) {
   const config = await readConfig(
     {
       _: [],
       $0: undefined,
     },
-    resolve(context.workspaceRoot, configFilePath),
+    resolve(context.workspaceRoot, configFilePath)
   );
 
   const targetDefaults = readTargetDefaultsForTarget(
     options.targetName,
     context.nxJsonConfiguration.targetDefaults,
-    'nx:run-commands',
+    'nx:run-commands'
   );
 
   const namedInputs = getNamedInputs(projectRoot, context);
@@ -158,7 +158,7 @@ async function buildJestTargets(
 }
 
 function getInputs(
-  namedInputs: NxJsonConfiguration['namedInputs'],
+  namedInputs: NxJsonConfiguration['namedInputs']
 ): TargetConfiguration['inputs'] {
   return [
     ...('production' in namedInputs
@@ -173,12 +173,12 @@ function getInputs(
 function getOutputs(
   projectRoot: string,
   { globalConfig }: Awaited<ReturnType<typeof readConfig>>,
-  context: CreateNodesContext,
+  context: CreateNodesContext
 ): string[] {
   function getOutput(path: string): string {
     const relativePath = relative(
       join(context.workspaceRoot, projectRoot),
-      path,
+      path
     );
     if (relativePath.startsWith('..')) {
       return join('{workspaceRoot}', join(projectRoot, relativePath));

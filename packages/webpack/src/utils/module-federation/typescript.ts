@@ -8,7 +8,7 @@ let tsPathMappings: Map<string, ParsedCommandLine['options']['paths']> =
   new Map();
 
 export function readTsPathMappings(
-  tsConfigPath: string = process.env.NX_TSCONFIG_PATH ?? getRootTsConfigPath(),
+  tsConfigPath: string = process.env.NX_TSCONFIG_PATH ?? getRootTsConfigPath()
 ): ParsedCommandLine['options']['paths'] {
   if (tsPathMappings.has(tsConfigPath)) {
     return tsPathMappings.get(tsConfigPath);
@@ -24,7 +24,7 @@ export function readTsPathMappings(
         ...tsPathMappings.get(tsConfigPath),
         [alias]: paths.map((path) => path.replace(/^\.\//, '')),
       });
-    },
+    }
   );
 
   return tsPathMappings.get(tsConfigPath);
@@ -33,7 +33,7 @@ export function readTsPathMappings(
 function readTsConfiguration(tsConfigPath: string): ParsedCommandLine {
   if (!existsSync(tsConfigPath)) {
     throw new Error(
-      `NX MF: TsConfig Path for workspace libraries does not exist! (${tsConfigPath}).`,
+      `NX MF: TsConfig Path for workspace libraries does not exist! (${tsConfigPath}).`
     );
   }
 
@@ -48,12 +48,12 @@ export function readTsConfig(tsConfigPath: string): ParsedCommandLine {
   }
   const readResult = tsModule.readConfigFile(
     tsConfigPath,
-    tsModule.sys.readFile,
+    tsModule.sys.readFile
   );
   return tsModule.parseJsonConfigFileContent(
     readResult.config,
     tsModule.sys,
-    dirname(tsConfigPath),
+    dirname(tsConfigPath)
   );
 }
 

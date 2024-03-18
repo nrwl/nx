@@ -51,6 +51,6 @@ describe('visitNotIgnoredFiles', () => {
       expect(visitor).toHaveBeenCalledWith('dir/file1.ts');
       expect(visitor).toHaveBeenCalledWith('dir/dir2/file2.ts');
       expect(visitor).not.toHaveBeenCalledWith('dir/node_modules/file1.ts');
-    },
+    }
   );
 });

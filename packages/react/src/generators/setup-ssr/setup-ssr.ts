@@ -31,7 +31,7 @@ let tsModule: typeof import('typescript');
 
 function readEntryFile(
   host: Tree,
-  path: string,
+  path: string
 ): { content: string; source: ts.SourceFile } {
   if (!tsModule) {
     tsModule = ensureTypescript();
@@ -44,7 +44,7 @@ function readEntryFile(
       path,
       content,
       tsModule.ScriptTarget.Latest,
-      true,
+      true
     ),
   };
 }
@@ -82,24 +82,24 @@ export async function setupSsrGenerator(tree: Tree, options: Schema) {
       importPath,
       filePath: joinPathFragments(
         projectConfig.sourceRoot || projectConfig.root,
-        `${importPath}.tsx`,
+        `${importPath}.tsx`
       ),
     };
   });
 
   const appComponentInfo = appImportCandidates.find((candidate) =>
-    tree.exists(candidate.filePath),
+    tree.exists(candidate.filePath)
   );
 
   if (!appComponentInfo) {
     throw new Error(
-      `Cannot find an import path for <App/> component. Try passing setting --appComponentImportPath option.`,
+      `Cannot find an import path for <App/> component. Try passing setting --appComponentImportPath option.`
     );
   }
 
   if (!projectConfig.targets.build || !projectConfig.targets.serve) {
     throw new Error(
-      `Project ${options.project} does not have build and serve targets`,
+      `Project ${options.project} does not have build and serve targets`
     );
   }
 
@@ -113,14 +113,14 @@ export async function setupSsrGenerator(tree: Tree, options: Schema) {
 
   if (!originalOutputPath) {
     throw new Error(
-      `Project ${options.project} does not contain a outputPath for the build target.`,
+      `Project ${options.project} does not contain a outputPath for the build target.`
     );
   }
   // TODO(colum): We need to figure out how to handle this for Crystal
   if (projectConfig.targets.build.options?.outputPath) {
     projectConfig.targets.build.options.outputPath = joinPathFragments(
       originalOutputPath,
-      'browser',
+      'browser'
     );
   }
 
@@ -202,7 +202,7 @@ export async function setupSsrGenerator(tree: Tree, options: Schema) {
   if (
     nxJson.tasksRunnerOptions?.default &&
     !nxJson.tasksRunnerOptions?.default.options.cacheableOperations.includes(
-      'server',
+      'server'
     )
   ) {
     nxJson.tasksRunnerOptions.default.options.cacheableOperations = [
@@ -235,7 +235,7 @@ export async function setupSsrGenerator(tree: Tree, options: Schema) {
     const { content, source } = readEntryFile(tree, serverEntry);
     const changes = applyChangesToString(
       content,
-      addStaticRouter(serverEntry, source),
+      addStaticRouter(serverEntry, source)
     );
     tree.write(serverEntry, changes);
   }
@@ -252,7 +252,7 @@ export async function setupSsrGenerator(tree: Tree, options: Schema) {
     {
       '@types/express': typesExpressVersion,
       '@types/cors': typesCorsVersion,
-    },
+    }
   );
 
   await formatFiles(tree);

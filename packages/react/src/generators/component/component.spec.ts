@@ -45,13 +45,13 @@ describe('component', () => {
     expect(appTree.exists('my-lib/src/lib/hello/hello.tsx')).toBeTruthy();
     expect(appTree.exists('my-lib/src/lib/hello/hello.spec.tsx')).toBeTruthy();
     expect(
-      appTree.exists('my-lib/src/lib/hello/hello.module.css'),
+      appTree.exists('my-lib/src/lib/hello/hello.module.css')
     ).toBeTruthy();
     expect(appTree.read('my-lib/src/lib/hello/hello.tsx').toString()).toMatch(
-      /import styles from '.\/hello.module.css'/,
+      /import styles from '.\/hello.module.css'/
     );
     expect(appTree.read('my-lib/src/lib/hello/hello.tsx').toString()).toMatch(
-      /<div className={styles\['container']}>/,
+      /<div className={styles\['container']}>/
     );
   });
 
@@ -68,10 +68,10 @@ describe('component', () => {
     expect(appTree.exists('my-lib/src/lib/hello/hello.css')).toBeTruthy();
     expect(appTree.exists('my-lib/src/lib/hello/hello.module.css')).toBeFalsy();
     expect(appTree.read('my-lib/src/lib/hello/hello.tsx').toString()).toMatch(
-      /import '.\/hello.css'/,
+      /import '.\/hello.css'/
     );
     expect(appTree.read('my-lib/src/lib/hello/hello.tsx').toString()).toMatch(
-      /<div>/,
+      /<div>/
     );
   });
 
@@ -85,7 +85,7 @@ describe('component', () => {
     expect(appTree.exists('my-app/src/app/hello/hello.tsx')).toBeTruthy();
     expect(appTree.exists('my-app/src/app/hello/hello.spec.tsx')).toBeTruthy();
     expect(
-      appTree.exists('my-app/src/app/hello/hello.module.css'),
+      appTree.exists('my-app/src/app/hello/hello.module.css')
     ).toBeTruthy();
   });
 
@@ -114,7 +114,7 @@ describe('component', () => {
 
       const tsxFileContent = appTree.read(
         `my-lib/src/lib/hello/hello.tsx/`,
-        'utf-8',
+        'utf-8'
       );
       expect(tsxFileContent).toMatch(/override\srender\(\)/);
     });
@@ -174,10 +174,10 @@ describe('component', () => {
       });
       expect(appTree.exists('my-lib/src/lib/hello/Hello.tsx')).toBeTruthy();
       expect(
-        appTree.exists('my-lib/src/lib/hello/Hello.spec.tsx'),
+        appTree.exists('my-lib/src/lib/hello/Hello.spec.tsx')
       ).toBeTruthy();
       expect(
-        appTree.exists('my-lib/src/lib/hello/Hello.module.css'),
+        appTree.exists('my-lib/src/lib/hello/Hello.module.css')
       ).toBeTruthy();
     });
   });
@@ -192,13 +192,13 @@ describe('component', () => {
         pascalCaseDirectory: true,
       });
       expect(
-        appTree.exists('my-lib/src/lib/HelloWorld/HelloWorld.tsx'),
+        appTree.exists('my-lib/src/lib/HelloWorld/HelloWorld.tsx')
       ).toBeTruthy();
       expect(
-        appTree.exists('my-lib/src/lib/HelloWorld/HelloWorld.spec.tsx'),
+        appTree.exists('my-lib/src/lib/HelloWorld/HelloWorld.spec.tsx')
       ).toBeTruthy();
       expect(
-        appTree.exists('my-lib/src/lib/HelloWorld/HelloWorld.module.css'),
+        appTree.exists('my-lib/src/lib/HelloWorld/HelloWorld.module.css')
       ).toBeTruthy();
     });
   });
@@ -212,15 +212,15 @@ describe('component', () => {
       });
       expect(appTree.exists('my-lib/src/lib/hello/hello.tsx')).toBeTruthy();
       expect(
-        appTree.exists('my-lib/src/lib/hello/hello.spec.tsx'),
+        appTree.exists('my-lib/src/lib/hello/hello.spec.tsx')
       ).toBeTruthy();
       expect(appTree.exists('my-lib/src/lib/hello/hello.css')).toBeFalsy();
       expect(appTree.exists('my-lib/src/lib/hello/hello.scss')).toBeFalsy();
       expect(
-        appTree.exists('my-lib/src/lib/hello/hello.module.css'),
+        appTree.exists('my-lib/src/lib/hello/hello.module.css')
       ).toBeFalsy();
       expect(
-        appTree.exists('my-lib/src/lib/hello/hello.module.scss'),
+        appTree.exists('my-lib/src/lib/hello/hello.module.scss')
       ).toBeFalsy();
 
       const content = appTree.read('my-lib/src/lib/hello/hello.tsx').toString();
@@ -246,7 +246,7 @@ describe('component', () => {
       });
 
       expect(
-        appTree.exists('my-lib/src/lib/hello/hello.styled-components'),
+        appTree.exists('my-lib/src/lib/hello/hello.styled-components')
       ).toBeFalsy();
       expect(appTree.exists('my-lib/src/lib/hello/hello.tsx')).toBeTruthy();
 
@@ -276,7 +276,7 @@ describe('component', () => {
       });
 
       expect(
-        appTree.exists('my-lib/src/lib/hello/hello.@emotion/styled'),
+        appTree.exists('my-lib/src/lib/hello/hello.@emotion/styled')
       ).toBeFalsy();
       expect(appTree.exists('my-lib/src/lib/hello/hello.tsx')).toBeTruthy();
 
@@ -307,7 +307,7 @@ describe('component', () => {
       });
 
       expect(
-        appTree.exists('my-lib/src/lib/hello/hello.styled-jsx'),
+        appTree.exists('my-lib/src/lib/hello/hello.styled-jsx')
       ).toBeFalsy();
       expect(appTree.exists('my-lib/src/lib/hello/hello.tsx')).toBeTruthy();
 

@@ -478,7 +478,7 @@ interface VirtualWorkspaceConfig {
  * projects in order to be able to execute `buildExplicitTypeScriptDependencies()` in the tests.
  */
 async function createContext(
-  config: VirtualWorkspaceConfig,
+  config: VirtualWorkspaceConfig
 ): Promise<CreateDependenciesContext> {
   const nxJson = {};
   const projectsFs = {
@@ -502,7 +502,7 @@ async function createContext(
         ...acc,
         [file.path]: file.content,
       }),
-      {},
+      {}
     ),
   };
   const tsConfig = {
@@ -535,7 +535,7 @@ async function createContext(
   });
 
   for (const [projectName, tsconfigPath] of Object.entries(
-    dependencyProjectNamesToImportPaths,
+    dependencyProjectNamesToImportPaths
   )) {
     fsJson[`libs/${projectName}/index.ts`] = ``;
 
@@ -566,12 +566,12 @@ async function createContext(
 
   const { projects, projectRootMap } = await retrieveProjectConfigurations(
     tempFs.tempDir,
-    nxJson,
+    nxJson
   );
 
   const { fileMap } = await retrieveWorkspaceFiles(
     tempFs.tempDir,
-    projectRootMap,
+    projectRootMap
   );
 
   return {

@@ -14,7 +14,7 @@ export async function checkApp(
     checkLint: boolean;
     checkE2E: boolean;
     appsDir?: string;
-  },
+  }
 ) {
   const appsDir = opts.appsDir ?? 'apps';
 
@@ -26,7 +26,7 @@ export async function checkApp(
   if (opts.checkUnitTest) {
     const testResults = await runCLIAsync(`test ${appName}`);
     expect(testResults.combinedOutput).toContain(
-      'Test Suites: 1 passed, 1 total',
+      'Test Suites: 1 passed, 1 total'
     );
   }
 
@@ -36,7 +36,7 @@ export async function checkApp(
 
   if (opts.checkE2E && runE2ETests()) {
     const e2eResults = runCLI(
-      `e2e ${appName}-e2e --no-watch --configuration=production`,
+      `e2e ${appName}-e2e --no-watch --configuration=production`
     );
     expect(e2eResults).toContain('Successfully ran target e2e for project');
     expect(await killPorts()).toBeTruthy();

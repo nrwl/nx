@@ -3,7 +3,7 @@ import { readProjectConfiguration } from '@nx/devkit';
 
 export function getE2EProject(
   tree: Tree,
-  e2eProjectName: string,
+  e2eProjectName: string
 ): ProjectConfiguration {
   let e2eProject: ProjectConfiguration;
   try {

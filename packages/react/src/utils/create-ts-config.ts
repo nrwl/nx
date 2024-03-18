@@ -13,7 +13,7 @@ export function createTsConfig(
     rootProject?: boolean;
     unitTestRunner?: string;
   },
-  relativePathToRootTsConfig: string,
+  relativePathToRootTsConfig: string
 ) {
   const json = {
     compilerOptions: {
@@ -80,7 +80,7 @@ export function extractTsConfigBase(host: Tree) {
     const vite = host.read('vite.config.ts').toString();
     host.write(
       'vite.config.ts',
-      vite.replace(`projects: []`, `projects: ['tsconfig.base.json']`),
+      vite.replace(`projects: []`, `projects: ['tsconfig.base.json']`)
     );
   }
 }

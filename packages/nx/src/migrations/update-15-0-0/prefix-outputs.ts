@@ -53,7 +53,7 @@ export default async function (tree: Tree) {
             }
 
             return json;
-          },
+          }
         );
       }
     }

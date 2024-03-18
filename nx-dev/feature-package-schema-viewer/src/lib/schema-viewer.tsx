@@ -34,7 +34,7 @@ const getPropertyAlias = (schema: PropertySchema | JsonSchema): string => {
 function getViewModel(
   schema: JsonSchema1,
   lookup: Lookup,
-  reference: string,
+  reference: string
 ): PropertyModel[] {
   const properties = schema.properties || {};
   return Object.keys(properties)
@@ -174,12 +174,12 @@ export function SchemaViewer({
           schema={{}}
           reference={`${reference}/additionalProperties`}
           lookup={lookup}
-        />,
+        />
       );
     }
   } else if (schema.additionalProperties !== undefined) {
     const additionalPropertiesResult = lookup.getSchema(
-      schema.additionalProperties,
+      schema.additionalProperties
     );
     if (additionalPropertiesResult !== undefined) {
       const resolvedReference =
@@ -196,7 +196,7 @@ export function SchemaViewer({
           schema={additionalPropertiesResult.schema}
           reference={resolvedReference}
           lookup={lookup}
-        />,
+        />
       );
     }
   }
@@ -223,7 +223,7 @@ export function SchemaViewer({
           lookup={lookup}
         />
       );
-    },
+    }
   );
 
   const hasProperties =
@@ -236,7 +236,7 @@ export function SchemaViewer({
   let mixinProps = <></>;
   if (
     Object.keys(compositeOnlyType).some(
-      (key) => compositeOnlyType[key] !== undefined,
+      (key) => compositeOnlyType[key] !== undefined
     )
   ) {
     mixinProps = (

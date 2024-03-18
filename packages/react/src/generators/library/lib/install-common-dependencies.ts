@@ -20,7 +20,7 @@ import { NormalizedSchema } from '../schema';
 
 export function installCommonDependencies(
   host: Tree,
-  options: NormalizedSchema,
+  options: NormalizedSchema
 ) {
   const tasks: GeneratorCallback[] = [];
 
@@ -56,7 +56,7 @@ export function installCommonDependencies(
   const baseInstallTask = addDependenciesToPackageJson(
     host,
     dependencies,
-    devDependencies,
+    devDependencies
   );
   tasks.push(baseInstallTask);
 
@@ -70,8 +70,8 @@ export function installCommonDependencies(
         {
           '@babel/preset-react': babelPresetReactVersion,
           '@babel/core': babelCoreVersion,
-        },
-      ),
+        }
+      )
     );
   }
 

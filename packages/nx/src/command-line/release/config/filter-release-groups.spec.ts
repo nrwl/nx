@@ -355,7 +355,7 @@ describe('filterReleaseGroups()', () => {
         projectGraph,
         nxReleaseConfig,
         [],
-        ['not-a-group-name'],
+        ['not-a-group-name']
       );
       expect(error).toMatchInlineSnapshot(`
         {

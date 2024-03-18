@@ -27,7 +27,7 @@ export function onlyDefaultRunnerIsUsed(nxJson: NxJsonConfiguration) {
 }
 
 export async function connectToNxCloudIfExplicitlyAsked(
-  opts: NxArgs,
+  opts: NxArgs
 ): Promise<void> {
   if (opts['cloud'] === true) {
     const nxJson = readNxJson();
@@ -78,7 +78,7 @@ export async function connectToNxCloudWithPrompt(command: string) {
 }
 
 export async function connectExistingRepoToNxCloudPrompt(
-  key: MessageKey = 'setupNxCloud',
+  key: MessageKey = 'setupNxCloud'
 ): Promise<boolean> {
   return nxCloudPrompt(key).then((value: MessageOptionKey) => value === 'yes');
 }

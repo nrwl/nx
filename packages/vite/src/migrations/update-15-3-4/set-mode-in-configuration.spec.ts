@@ -16,17 +16,17 @@ describe('set mode in configuration object', () => {
 
     const projectConfig = readProjectConfiguration(
       tree,
-      'my-test-react-vite-app',
+      'my-test-react-vite-app'
     );
 
     expect(projectConfig.targets.build.configurations.production.mode).toEqual(
-      'production',
+      'production'
     );
 
     expect(projectConfig.targets.build.configurations.ssr.mode).toEqual('ssr');
     expect(projectConfig.targets.build.configurations.ssr.ssr).toBeTruthy();
     expect(
-      projectConfig.targets.build.configurations.ssr['my-other-setting'],
+      projectConfig.targets.build.configurations.ssr['my-other-setting']
     ).toBe('my-other-value');
   });
 });

@@ -33,10 +33,10 @@ interface PackageManifest {
 type Manifest = DocumentManifest | PackageManifest;
 
 const isDocument = (
-  e: DocumentMetadata | ProcessedPackageMetadata,
+  e: DocumentMetadata | ProcessedPackageMetadata
 ): e is DocumentMetadata => !('packageName' in e);
 const isPackage = (
-  e: DocumentMetadata | ProcessedPackageMetadata,
+  e: DocumentMetadata | ProcessedPackageMetadata
 ): e is ProcessedPackageMetadata => 'packageName' in e;
 
 export function generateManifests(workspace: string): Promise<void[]> {
@@ -48,13 +48,13 @@ export function generateManifests(workspace: string): Promise<void[]> {
     `${documentationPath}/map.json`,
     {
       encoding: 'utf8',
-    },
+    }
   ).content;
   const packages: PackageMetadata[] = readJsonSync(
     `${generatedDocumentationPath}/packages-metadata.json`,
     {
       encoding: 'utf8',
-    },
+    }
   );
 
   /**
@@ -90,8 +90,8 @@ export function generateManifests(workspace: string): Promise<void[]> {
     menu: MenuItem[];
   }[] = getDocumentMenus(
     manifests.filter((m): m is DocumentManifest =>
-      isDocument(m.records[Object.keys(m.records)[0]]),
-    ),
+      isDocument(m.records[Object.keys(m.records)[0]])
+    )
   );
 
   /**
@@ -131,21 +131,21 @@ export function generateManifests(workspace: string): Promise<void[]> {
     fileGenerationPromises.push(
       generateJsonFile(
         resolve(targetFolder + `/${manifest.id}.json`),
-        manifest.records,
-      ),
-    ),
+        manifest.records
+      )
+    )
   );
   fileGenerationPromises.push(
-    generateJsonFile(resolve(targetFolder, `tags.json`), tags),
+    generateJsonFile(resolve(targetFolder, `tags.json`), tags)
   );
   fileGenerationPromises.push(
-    generateJsonFile(resolve(targetFolder, `menus.json`), menus),
+    generateJsonFile(resolve(targetFolder, `menus.json`), menus)
   );
   fileGenerationPromises.push(
     generateIndexMarkdownFile(
       resolve(documentationPath, `shared`, `reference`, `sitemap.md`),
-      menus,
-    ),
+      menus
+    )
   );
 
   return Promise.all(fileGenerationPromises);
@@ -186,7 +186,7 @@ function generateTags(manifests: Manifest[]) {
               const tagData = {
                 description: documentMetadata.description,
                 file: ['generated', 'packages', documentMetadata.file].join(
-                  '/',
+                  '/'
                 ),
                 id: documentMetadata.id,
                 name: documentMetadata.name,
@@ -194,7 +194,7 @@ function generateTags(manifests: Manifest[]) {
               };
               !tags[t] ? (tags[t] = [tagData]) : tags[t].push(tagData);
             });
-          },
+          }
         );
     }
   });
@@ -223,7 +223,7 @@ function createPackagesMenu(packages: PackageManifest): {
         path: '/' + ['nx-api', p.name, 'documents'].join('/'),
         name: 'documents',
         children: Object.values(p.documents).map((d) =>
-          menuItemRecurseOperations(d),
+          menuItemRecurseOperations(d)
         ),
         isExternal: false,
         disableCollapsible: false,
@@ -301,10 +301,10 @@ function createPackagesManifest(packages: PackageMetadata[]): {
         p.documents.map((d) =>
           documentRecurseOperations(
             d,
-            createDocumentMetadata({ id: p.name, path: 'nx-api/' }),
-          ),
+            createDocumentMetadata({ id: p.name, path: 'nx-api/' })
+          )
         ),
-        'path',
+        'path'
       ),
       root: p.root,
       source: p.source,
@@ -313,14 +313,14 @@ function createPackagesManifest(packages: PackageMetadata[]): {
           ...e,
           path: generatePath({ id: e.name, path: e.path }, 'nx-api'),
         })),
-        'path',
+        'path'
       ),
       generators: convertToDictionary(
         p.generators.map((g) => ({
           ...g,
           path: generatePath({ id: g.name, path: g.path }, 'nx-api'),
         })),
-        'path',
+        'path'
       ),
       path: generatePath({ id: p.name, path: '' }, 'nx-api'),
     };
@@ -337,8 +337,8 @@ function getDocumentManifests(sections: DocumentSection[]): Manifest[] {
       .map((item: DocumentMetadata) =>
         documentRecurseOperations(
           item,
-          createDocumentMetadata({ id: section.name, path: section.prefix }),
-        ),
+          createDocumentMetadata({ id: section.name, path: section.prefix })
+        )
       )
       .forEach((item: DocumentMetadata) => {
         populateDictionary(item, records);
@@ -352,7 +352,7 @@ function getDocumentManifests(sections: DocumentSection[]): Manifest[] {
 }
 
 function createDocumentSections(
-  documents: Partial<DocumentMetadata>[],
+  documents: Partial<DocumentMetadata>[]
 ): DocumentSection[] {
   return [
     {
@@ -378,7 +378,7 @@ function createDocumentSections(
 
 function generatePath(
   item: { path: string; id: string },
-  prefix: string = '',
+  prefix: string = ''
 ): string {
   const isLinkExternal: (p: string) => boolean = (p: string) =>
     p.startsWith('http');
@@ -401,7 +401,7 @@ function generatePath(
  */
 function documentRecurseOperations(
   target: DocumentMetadata,
-  parent: DocumentMetadata,
+  parent: DocumentMetadata
 ): DocumentMetadata {
   const document: DocumentMetadata = structuredClone(target);
 
@@ -420,7 +420,7 @@ function documentRecurseOperations(
 
   if (!!target.itemList.length) {
     document.itemList = target.itemList.map((i) =>
-      documentRecurseOperations(i, document),
+      documentRecurseOperations(i, document)
     );
   }
 
@@ -429,13 +429,13 @@ function documentRecurseOperations(
 
 function populateDictionary(
   document: DocumentMetadata,
-  dictionary: Record<string, DocumentMetadata>,
+  dictionary: Record<string, DocumentMetadata>
 ) {
   if (document.path.startsWith('http')) return;
   dictionary[document.path] = document;
 
   document.itemList.forEach((item: DocumentMetadata) =>
-    populateDictionary(item, dictionary),
+    populateDictionary(item, dictionary)
   );
 }
 
@@ -458,7 +458,7 @@ function menuItemRecurseOperations(target: DocumentMetadata): MenuItem {
 
   if (!!target.itemList.length) {
     menuItem.children = target.itemList.map((i) =>
-      menuItemRecurseOperations(i),
+      menuItemRecurseOperations(i)
     );
   }
 

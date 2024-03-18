@@ -18,7 +18,7 @@ export function initGenerator(tree: Tree, options: InitGeneratorSchema) {
 
 export async function initGeneratorInternal(
   tree: Tree,
-  options: InitGeneratorSchema,
+  options: InitGeneratorSchema
 ) {
   const tasks: GeneratorCallback[] = [];
 
@@ -39,8 +39,8 @@ export async function initGeneratorInternal(
           '@playwright/test': playwrightVersion,
         },
         undefined,
-        options.keepExistingVersions,
-      ),
+        options.keepExistingVersions
+      )
     );
   }
 
@@ -67,7 +67,7 @@ function addPlugin(tree: Tree) {
     !nxJson.plugins.some((p) =>
       typeof p === 'string'
         ? p === '@nx/playwright/plugin'
-        : p.plugin === '@nx/playwright/plugin',
+        : p.plugin === '@nx/playwright/plugin'
     )
   ) {
     nxJson.plugins.push({

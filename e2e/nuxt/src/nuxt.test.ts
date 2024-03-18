@@ -17,10 +17,10 @@ describe('Nuxt Plugin', () => {
       unsetProjectNameAndRootFormat: false,
     });
     runCLI(
-      `generate @nx/nuxt:app ${app} --unitTestRunner=vitest --projectNameAndRootFormat=as-provided e2eTestRunner=cypress`,
+      `generate @nx/nuxt:app ${app} --unitTestRunner=vitest --projectNameAndRootFormat=as-provided e2eTestRunner=cypress`
     );
     runCLI(
-      `generate @nx/nuxt:component --directory=${app}/src/components/one --name=one --nameAndDirectoryFormat=as-provided --unitTestRunner=vitest`,
+      `generate @nx/nuxt:component --directory=${app}/src/components/one --name=one --nameAndDirectoryFormat=as-provided --unitTestRunner=vitest`
     );
   });
 
@@ -32,7 +32,7 @@ describe('Nuxt Plugin', () => {
   it('should build application', async () => {
     const result = runCLI(`build ${app}`);
     expect(result).toContain(
-      `Successfully ran target build for project ${app}`,
+      `Successfully ran target build for project ${app}`
     );
     checkFilesExist(`${app}/.nuxt/nuxt.d.ts`);
     checkFilesExist(`${app}/.output/nitro.json`);
@@ -50,7 +50,7 @@ describe('Nuxt Plugin', () => {
 
   it('should build storybook for app', () => {
     runCLI(
-      `generate @nx/nuxt:storybook-configuration ${app} --generateStories --no-interactive`,
+      `generate @nx/nuxt:storybook-configuration ${app} --generateStories --no-interactive`
     );
     runCLI(`run ${app}:build-storybook --verbose`);
     checkFilesExist(`${app}/storybook-static/index.html`);

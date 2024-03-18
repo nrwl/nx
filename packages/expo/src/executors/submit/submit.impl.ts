@@ -14,7 +14,7 @@ let childProcess: ChildProcess;
 
 export default async function* submitExecutor(
   options: SubmitExecutorSchema,
-  context: ExecutorContext,
+  context: ExecutorContext
 ): AsyncGenerator<ReactNativeSubmitOutput> {
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
@@ -33,7 +33,7 @@ export default async function* submitExecutor(
 function runCliSubmit(
   workspaceRoot: string,
   projectRoot: string,
-  options: SubmitExecutorSchema,
+  options: SubmitExecutorSchema
 ) {
   return new Promise((resolve, reject) => {
     childProcess = fork(
@@ -42,7 +42,7 @@ function runCliSubmit(
       {
         cwd: pathResolve(workspaceRoot, projectRoot),
         env: process.env,
-      },
+      }
     );
 
     // Ensure the child process is killed when the parent exits

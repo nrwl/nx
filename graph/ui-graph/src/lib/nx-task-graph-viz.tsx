@@ -60,7 +60,7 @@ export function NxTaskGraphViz({
             containerRef.current,
             resolvedTheme,
             'nx-docs',
-            'TB',
+            'TB'
           );
           graph.handleTaskEvent({
             type: 'notifyTaskGraphSetProjects',

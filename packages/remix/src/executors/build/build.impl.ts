@@ -25,7 +25,7 @@ function buildRemixBuildArgs(options: RemixBuildSchema) {
 
 async function runBuild(
   options: RemixBuildSchema,
-  context: ExecutorContext,
+  context: ExecutorContext
 ): Promise<void> {
   const projectRoot = context.projectGraph.nodes[context.projectName].data.root;
   return new Promise<void>((resolve, reject) => {
@@ -44,7 +44,7 @@ async function runBuild(
 
 export default async function buildExecutor(
   options: RemixBuildSchema,
-  context: ExecutorContext,
+  context: ExecutorContext
 ) {
   const projectRoot = context.projectGraph.nodes[context.projectName].data.root;
 
@@ -52,7 +52,7 @@ export default async function buildExecutor(
     await runBuild(options, context);
   } catch (error) {
     logger.error(
-      `Error occurred while trying to build application. See above for more details.`,
+      `Error occurred while trying to build application. See above for more details.`
     );
     return { success: false };
   }
@@ -86,14 +86,14 @@ export default async function buildExecutor(
     const lockFile = createLockFile(
       packageJson,
       context.projectGraph,
-      packageManager,
+      packageManager
     );
     writeFileSync(
       `${options.outputPath}/${getLockFileName(packageManager)}`,
       lockFile,
       {
         encoding: 'utf-8',
-      },
+      }
     );
   }
 

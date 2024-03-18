@@ -16,7 +16,7 @@ export async function addJest(host: Tree, options: NormalizedSchema) {
 
   const { configurationGenerator } = ensurePackage<typeof import('@nx/jest')>(
     '@nx/jest',
-    nxVersion,
+    nxVersion
   );
   const jestTask = await configurationGenerator(host, {
     ...options,
@@ -30,7 +30,7 @@ export async function addJest(host: Tree, options: NormalizedSchema) {
 
   const tsConfigSpecJson = readJson(
     host,
-    joinPathFragments(options.appProjectRoot, 'tsconfig.spec.json'),
+    joinPathFragments(options.appProjectRoot, 'tsconfig.spec.json')
   );
 
   updateJson(
@@ -40,11 +40,11 @@ export async function addJest(host: Tree, options: NormalizedSchema) {
       json.compilerOptions ??= {};
       json.compilerOptions.types ??= [];
       json.compilerOptions.types.push(
-        ...(tsConfigSpecJson?.compilerOptions?.types ?? []),
+        ...(tsConfigSpecJson?.compilerOptions?.types ?? [])
       );
 
       return json;
-    },
+    }
   );
 
   updateJson(
@@ -56,12 +56,12 @@ export async function addJest(host: Tree, options: NormalizedSchema) {
       if (options.setParserOptionsProject) {
         const tsConfig = readJson(
           host,
-          joinPathFragments(options.appProjectRoot, 'tsconfig.json'),
+          joinPathFragments(options.appProjectRoot, 'tsconfig.json')
         );
         json.exclude = tsConfig.exclude.filter((e) => e !== 'jest.config.ts');
       }
       return json;
-    },
+    }
   );
 
   return jestTask;

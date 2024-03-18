@@ -45,7 +45,7 @@ describe('target-defaults plugin', () => {
           },
         }),
       },
-      '/root',
+      '/root'
     );
 
     expect(createNodesFn('project.json', undefined, context))
@@ -97,7 +97,7 @@ describe('target-defaults plugin', () => {
           nx: {},
         }),
       },
-      '/root',
+      '/root'
     );
 
     expect(
@@ -111,7 +111,7 @@ describe('target-defaults plugin', () => {
         },
         workspaceRoot: '/root',
         configFiles: [],
-      }),
+      })
     ).toMatchInlineSnapshot(`
       {
         "NX_OVERRIDE_SOURCE_FILE": "nx.json",
@@ -145,7 +145,7 @@ describe('target-defaults plugin', () => {
           },
         }),
       },
-      '/root',
+      '/root'
     );
 
     expect(
@@ -159,7 +159,7 @@ describe('target-defaults plugin', () => {
         },
         workspaceRoot: '/root',
         configFiles: [],
-      }),
+      })
     ).toMatchInlineSnapshot(`
       {
         "NX_OVERRIDE_SOURCE_FILE": "nx.json",
@@ -190,7 +190,7 @@ describe('target-defaults plugin', () => {
           },
         }),
       },
-      '/root',
+      '/root'
     );
 
     expect(
@@ -204,7 +204,7 @@ describe('target-defaults plugin', () => {
         },
         workspaceRoot: '/root',
         configFiles: [],
-      }),
+      })
     ).toMatchInlineSnapshot(`{}`);
   });
 
@@ -221,7 +221,7 @@ describe('target-defaults plugin', () => {
           },
         }),
       },
-      '/root',
+      '/root'
     );
 
     expect(
@@ -235,7 +235,7 @@ describe('target-defaults plugin', () => {
         },
         workspaceRoot: '/root',
         configFiles: [],
-      }),
+      })
     ).toMatchInlineSnapshot(`
       {
         "NX_OVERRIDE_SOURCE_FILE": "nx.json",
@@ -271,7 +271,7 @@ describe('target-defaults plugin', () => {
           },
         }),
       },
-      '/root',
+      '/root'
     );
 
     const result = await createNodesFn('package.json', undefined, {
@@ -315,7 +315,7 @@ describe('target-defaults plugin', () => {
           },
         }),
       },
-      '/root',
+      '/root'
     );
 
     const result = await createNodesFn('package.json', undefined, {
@@ -360,7 +360,7 @@ describe('target-defaults plugin', () => {
             },
           }),
         },
-        '/root',
+        '/root'
       );
 
       context.nxJsonConfiguration.targetDefaults = {
@@ -424,7 +424,7 @@ describe('target-defaults plugin', () => {
             },
           }),
         },
-        '/root',
+        '/root'
       );
 
       context.nxJsonConfiguration.targetDefaults = {
@@ -478,7 +478,7 @@ describe('target-defaults plugin', () => {
             command: 'echo hi',
           },
         },
-        null,
+        null
       );
       expect(result).toMatchInlineSnapshot(`
         {
@@ -499,7 +499,7 @@ describe('target-defaults plugin', () => {
             },
           },
         },
-        null,
+        null
       );
       expect(result).toMatchInlineSnapshot(`
         {
@@ -520,7 +520,7 @@ describe('target-defaults plugin', () => {
               script: 'build',
             },
           },
-        }),
+        })
       ).toMatchInlineSnapshot(`
         {
           "executor": "nx:run-script",

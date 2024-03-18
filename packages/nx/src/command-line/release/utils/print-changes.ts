@@ -15,7 +15,7 @@ export function printDiff(
   before: string,
   after: string,
   contextLines = 1,
-  noDiffMessage = NO_DIFF_MESSAGE,
+  noDiffMessage = NO_DIFF_MESSAGE
 ) {
   const diffOutput = diff(before, after, {
     omitAnnotationLines: true,
@@ -40,7 +40,7 @@ export function printAndFlushChanges(
   diffContextLines = 1,
   shouldPrintDryRunMessage = true,
   noDiffMessage?: string,
-  changePredicate?: (f: { path: string; content?: Buffer }) => boolean,
+  changePredicate?: (f: { path: string; content?: Buffer }) => boolean
 ) {
   changePredicate = changePredicate || (() => true);
   const changes = tree.listChanges();
@@ -58,32 +58,32 @@ export function printAndFlushChanges(
       console.error(
         `${chalk.green('CREATE')} ${f.path}${
           isDryRun ? chalk.keyword('orange')(' [dry-run]') : ''
-        }`,
+        }`
       );
       printDiff(
         '',
         f.content?.toString() || '',
         diffContextLines,
-        noDiffMessage,
+        noDiffMessage
       );
     } else if (f.type === 'UPDATE') {
       console.error(
         `${chalk.white('UPDATE')} ${f.path}${
           isDryRun ? chalk.keyword('orange')(' [dry-run]') : ''
-        }`,
+        }`
       );
       const currentContentsOnDisk = readFileSync(
-        joinPathFragments(tree.root, f.path),
+        joinPathFragments(tree.root, f.path)
       ).toString();
       printDiff(
         currentContentsOnDisk,
         f.content?.toString() || '',
         diffContextLines,
-        noDiffMessage,
+        noDiffMessage
       );
     } else if (f.type === 'DELETE') {
       throw new Error(
-        'Unexpected DELETE change, please report this as an issue',
+        'Unexpected DELETE change, please report this as an issue'
       );
     }
   });

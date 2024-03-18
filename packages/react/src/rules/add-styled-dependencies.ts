@@ -6,7 +6,7 @@ import {
 
 export function addStyledModuleDependencies(
   host: Tree,
-  options: { styledModule?: string; compiler?: 'babel' | 'swc' },
+  options: { styledModule?: string; compiler?: 'babel' | 'swc' }
 ) {
   const extraDependencies =
     options.compiler === 'swc'
@@ -17,7 +17,7 @@ export function addStyledModuleDependencies(
     return addDependenciesToPackageJson(
       host,
       extraDependencies.dependencies,
-      extraDependencies.devDependencies,
+      extraDependencies.devDependencies
     );
   } else {
     return () => {};

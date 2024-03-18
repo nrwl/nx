@@ -11,7 +11,7 @@ export type AddJestOptions = {
 
 export async function addJest(
   tree: Tree,
-  options: AddJestOptions,
+  options: AddJestOptions
 ): Promise<void> {
   if (!options.skipPackageJson) {
     process.env.npm_config_legacy_peer_deps ??= 'true';
@@ -19,13 +19,13 @@ export async function addJest(
     addDependenciesToPackageJsonIfDontExist(
       tree,
       {},
-      { 'jest-preset-angular': jestPresetAngularVersion },
+      { 'jest-preset-angular': jestPresetAngularVersion }
     );
   }
 
   const { configurationGenerator } = ensurePackage<typeof import('@nx/jest')>(
     '@nx/jest',
-    nxVersion,
+    nxVersion
   );
   await configurationGenerator(tree, {
     project: options.name,
@@ -41,7 +41,7 @@ export async function addJest(
   const setupFile = joinPathFragments(
     options.projectRoot,
     'src',
-    'test-setup.ts',
+    'test-setup.ts'
   );
   if (options.strict && tree.exists(setupFile)) {
     const contents = tree.read(setupFile, 'utf-8');
@@ -54,7 +54,7 @@ testEnvironmentOptions: {
   errorOnUnknownProperties: true,
 },
 };
-${contents}`,
+${contents}`
     );
   }
 }

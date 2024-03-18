@@ -33,7 +33,7 @@ describe('composePlugins', () => {
     expect(isNxWebpackComposablePlugin(combined)).toBeTruthy();
     const config = await combined(
       { plugins: [] },
-      {} as NxWebpackExecutionContext,
+      {} as NxWebpackExecutionContext
     );
 
     expect(config.plugins.map((p) => p.constructor.name)).toEqual([
@@ -64,7 +64,7 @@ describe('composePluginsSync', () => {
     expect(isNxWebpackComposablePlugin(combined)).toBeTruthy();
     const config = await combined(
       { plugins: [] },
-      {} as NxWebpackExecutionContext,
+      {} as NxWebpackExecutionContext
     );
 
     expect(config.plugins.map((p) => p.constructor.name)).toEqual(['A', 'B']);

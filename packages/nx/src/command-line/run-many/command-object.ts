@@ -15,10 +15,10 @@ export const yargsRunManyCommand: CommandModule = {
     linkToNxDevAndExamples(
       withRunManyOptions(
         withOutputStyleOption(
-          withTargetAndConfigurationOption(withBatch(yargs)),
-        ),
+          withTargetAndConfigurationOption(withBatch(yargs))
+        )
       ),
-      'run-many',
+      'run-many'
     ),
   handler: async (args) =>
     (await import('./run-many')).runMany(withOverrides(args)),

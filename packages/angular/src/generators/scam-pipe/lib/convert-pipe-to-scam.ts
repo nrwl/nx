@@ -9,7 +9,7 @@ let tsModule: typeof import('typescript');
 export function convertPipeToScam(tree: Tree, options: NormalizedSchema) {
   if (!tree.exists(options.filePath)) {
     throw new Error(
-      `Couldn't find pipe at path ${options.filePath} to add SCAM setup.`,
+      `Couldn't find pipe at path ${options.filePath} to add SCAM setup.`
     );
   }
   if (!tsModule) {
@@ -22,7 +22,7 @@ export function convertPipeToScam(tree: Tree, options: NormalizedSchema) {
       options.filePath,
       currentPipeContents,
       tsModule.ScriptTarget.Latest,
-      true,
+      true
     );
 
     source = insertImport(
@@ -30,19 +30,19 @@ export function convertPipeToScam(tree: Tree, options: NormalizedSchema) {
       source,
       options.filePath,
       'NgModule',
-      '@angular/core',
+      '@angular/core'
     );
     source = insertImport(
       tree,
       source,
       options.filePath,
       'CommonModule',
-      '@angular/common',
+      '@angular/common'
     );
 
     let updatedPipeSource = source.getText();
     updatedPipeSource = `${updatedPipeSource}${getNgModuleDeclaration(
-      options.symbolName,
+      options.symbolName
     )}`;
 
     tree.write(options.filePath, updatedPipeSource);
@@ -51,18 +51,18 @@ export function convertPipeToScam(tree: Tree, options: NormalizedSchema) {
 
   const scamFilePath = joinPathFragments(
     options.directory,
-    `${options.name}.module.ts`,
+    `${options.name}.module.ts`
   );
 
   tree.write(
     scamFilePath,
-    getModuleFileContent(options.symbolName, options.fileName),
+    getModuleFileContent(options.symbolName, options.fileName)
   );
 }
 
 function getModuleFileContent(
   pipeClassName: string,
-  pipeFileName: string,
+  pipeFileName: string
 ): string {
   return `import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';

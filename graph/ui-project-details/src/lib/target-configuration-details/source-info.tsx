@@ -37,7 +37,7 @@ export function SourceInfo(props: {
         <span
           className={twMerge(
             'min-w-0 truncate text-sm italic',
-            props.color ?? 'text-gray-500',
+            props.color ?? 'text-gray-500'
           )}
         >
           {isTarget ? 'Created' : 'Set'} by {props.data?.[1]} from{' '}

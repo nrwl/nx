@@ -79,7 +79,7 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 const helloWorldMiddleware = (
   req: IncomingMessage,
   res: ServerResponse,
-  next: (err?: unknown) => void,
+  next: (err?: unknown) => void
 ) => {
   if (req.url === '/hello-world') {
     res.end('<h1>Hello World!</h1>');

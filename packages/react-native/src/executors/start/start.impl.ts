@@ -11,7 +11,7 @@ export interface ReactNativeStartOutput {
 
 export default async function* startExecutor(
   options: ReactNativeStartOptions,
-  context: ExecutorContext,
+  context: ExecutorContext
 ): AsyncGenerator<ReactNativeStartOutput> {
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
@@ -31,7 +31,7 @@ export default async function* startExecutor(
 export async function runCliStart(
   workspaceRoot: string,
   projectRoot: string,
-  options: ReactNativeStartOptions,
+  options: ReactNativeStartOptions
 ): Promise<ChildProcess> {
   const result = await isPackagerRunning(options.port);
   if (result === 'running') {
@@ -48,7 +48,7 @@ export async function runCliStart(
       logger.error(
         `Failed to start the packager server. Error details: ${
           error.message ?? error
-        }`,
+        }`
       );
       throw error;
     }
@@ -58,7 +58,7 @@ export async function runCliStart(
 function startAsync(
   workspaceRoot: string,
   projectRoot: string,
-  options: ReactNativeStartOptions,
+  options: ReactNativeStartOptions
 ): Promise<ChildProcess> {
   return new Promise<ChildProcess>((resolve, reject) => {
     const childProcess = fork(
@@ -68,7 +68,7 @@ function startAsync(
         cwd: pathResolve(workspaceRoot, projectRoot),
         env: process.env,
         stdio: 'inherit',
-      },
+      }
     );
 
     childProcess.on('error', (err) => {

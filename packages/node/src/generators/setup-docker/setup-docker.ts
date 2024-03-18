@@ -16,7 +16,7 @@ import { join } from 'path';
 
 function normalizeOptions(
   tree: Tree,
-  setupOptions: SetUpDockerOptions,
+  setupOptions: SetUpDockerOptions
 ): SetUpDockerOptions {
   return {
     ...setupOptions,
@@ -34,7 +34,7 @@ function addDocker(tree: Tree, options: SetUpDockerOptions) {
 
   if (tree.exists(joinPathFragments(project.root, 'DockerFile'))) {
     logger.info(
-      `Skipping setup since a Dockerfile already exists inside ${project.root}`,
+      `Skipping setup since a Dockerfile already exists inside ${project.root}`
     );
   } else {
     const outputPath =
@@ -55,7 +55,7 @@ export function updateProjectConfig(tree: Tree, options: SetUpDockerOptions) {
     dependsOn: [`${options.buildTarget}`],
     command: `docker build -f ${joinPathFragments(
       projectConfig.root,
-      'Dockerfile',
+      'Dockerfile'
     )} . -t ${options.project}`,
   };
 
@@ -64,7 +64,7 @@ export function updateProjectConfig(tree: Tree, options: SetUpDockerOptions) {
 
 export async function setupDockerGenerator(
   tree: Tree,
-  setupOptions: SetUpDockerOptions,
+  setupOptions: SetUpDockerOptions
 ) {
   const tasks: GeneratorCallback[] = [];
   const options = normalizeOptions(tree, setupOptions);

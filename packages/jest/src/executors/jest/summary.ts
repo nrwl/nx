@@ -63,7 +63,7 @@ const renderTime = (runTime: number, estimatedTime: number, width: number) => {
     const availableWidth = Math.min(PROGRESS_BAR_WIDTH, width);
     const length = Math.min(
       Math.floor((runTime / estimatedTime) * availableWidth),
-      availableWidth,
+      availableWidth
     );
     if (availableWidth >= 2) {
       time +=
@@ -82,7 +82,7 @@ export const getSummary = (
     estimatedTime?: number;
     roundTime?: boolean;
     width?: number;
-  },
+  }
 ): string => {
   let runTime = (Date.now() - aggregatedResults.startTime) / 1000;
   if (options?.roundTime) {
@@ -166,12 +166,12 @@ export const getSummary = (
       : '') +
     (snapshotsFilesRemoved && !snapshotsDidUpdate
       ? chalk.bold.yellow(
-          pluralize('file', snapshotsFilesRemoved) + ' obsolete',
+          pluralize('file', snapshotsFilesRemoved) + ' obsolete'
         ) + ', '
       : '') +
     (snapshotsFilesRemoved && snapshotsDidUpdate
       ? chalk.bold.green(
-          pluralize('file', snapshotsFilesRemoved) + ' removed',
+          pluralize('file', snapshotsFilesRemoved) + ' removed'
         ) + ', '
       : '') +
     (snapshotsUpdated

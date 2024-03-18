@@ -20,7 +20,7 @@ export function workspaceConfigurationCheck() {
   if (existsSync(join(workspaceRoot, 'angular.json'))) {
     const angularJson = readJsonFile(join(workspaceRoot, 'angular.json'));
     const v2Props = Object.values(angularJson.projects).find(
-      (p: any) => !!p.targets,
+      (p: any) => !!p.targets
     );
     if (angularJson.version === 2 || v2Props) {
       output.error({

@@ -12,15 +12,15 @@ if (p === 'linter') {
 let r = fs.readFileSync(sourceReadmePath).toString();
 r = r.replace(
   `{{links}}`,
-  fs.readFileSync('scripts/readme-fragments/links.md'),
+  fs.readFileSync('scripts/readme-fragments/links.md')
 );
 r = r.replace(
   `{{content}}`,
-  fs.readFileSync('scripts/readme-fragments/content.md'),
+  fs.readFileSync('scripts/readme-fragments/content.md')
 );
 r = r.replace(
   `{{resources}}`,
-  fs.readFileSync('scripts/readme-fragments/resources.md'),
+  fs.readFileSync('scripts/readme-fragments/resources.md')
 );
 
 console.log('WRITING', `build/packages/${p}/README.md`);

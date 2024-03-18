@@ -21,7 +21,7 @@ export const getImageSchema = (documentFilePath: string): Schema => ({
     return new Tag(
       this.render,
       { ...attributes, src, loading: 'lazy' },
-      children,
+      children
     );
   },
 });

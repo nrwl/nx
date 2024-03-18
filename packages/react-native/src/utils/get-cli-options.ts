@@ -10,7 +10,7 @@ import { names } from '@nx/devkit';
 export function getCliOptions<T>(
   options: T,
   optionKeysToIgnore: string[] = [],
-  optionKeysInCamelName: string[] = [],
+  optionKeysInCamelName: string[] = []
 ): string[] {
   return Object.keys(options).reduce((acc, optionKey) => {
     const optionValue = options[optionKey];

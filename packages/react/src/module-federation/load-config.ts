@@ -3,13 +3,13 @@ import { join } from 'path';
 import { ModuleFederationConfig } from './models';
 
 export function loadModuleFederationConfigFromContext(
-  context: ExecutorContext,
+  context: ExecutorContext
 ): ModuleFederationConfig {
   const p = context.projectsConfigurations.projects[context.projectName];
   const moduleFederationConfigPath = join(
     context.root,
     p.root,
-    'module-federation.config.js',
+    'module-federation.config.js'
   );
 
   try {
@@ -17,7 +17,7 @@ export function loadModuleFederationConfigFromContext(
   } catch {
     // TODO(jack): Add a link to guide
     throw new Error(
-      `Could not load ${moduleFederationConfigPath}. Was this project generated with "@nx/react:host"?`,
+      `Could not load ${moduleFederationConfigPath}. Was this project generated with "@nx/react:host"?`
     );
   }
 }

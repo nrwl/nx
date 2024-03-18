@@ -6,7 +6,7 @@ import { extname } from 'path';
 export function runWebpackDevServer(
   config: any,
   webpack: typeof import('webpack'),
-  WebpackDevServer: typeof import('webpack-dev-server'),
+  WebpackDevServer: typeof import('webpack-dev-server')
 ): Observable<{ stats: any; baseUrl: string }> {
   return new Observable((subscriber) => {
     const webpackCompiler: any = webpack(config);
@@ -35,7 +35,7 @@ export function runWebpackDevServer(
 
     const webpackServer = new WebpackDevServer(
       devServerConfig,
-      webpackCompiler as any,
+      webpackCompiler as any
     );
 
     try {

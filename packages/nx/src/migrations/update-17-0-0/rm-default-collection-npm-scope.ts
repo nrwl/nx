@@ -30,7 +30,7 @@ export default async function update(tree: Tree) {
 
 function warnNpmScopeHasChanged(
   tree: Tree,
-  nxJson: NxJsonConfiguration,
+  nxJson: NxJsonConfiguration
 ): boolean {
   const originalScope = nxJson['npmScope'];
 
@@ -63,7 +63,7 @@ function warnNpmScopeHasChanged(
         `Typescript path mappings for new libraries will now be generated as such: @${newScope}/new-lib instead of @${originalScope}/new-lib`,
         `If you would like to change this back, change the name in package.json to ${packageJsonName.replace(
           newScope,
-          originalScope,
+          originalScope
         )}`,
       ],
     });
@@ -78,7 +78,7 @@ function warnNpmScopeHasChanged(
         `Typescript path mappings for new libraries will now be generated as such: new-lib instead of @${originalScope}/new-lib`,
         `If you would like to change this back, change the name in package.json to ${joinPathFragments(
           `@${originalScope}`,
-          packageJsonName,
+          packageJsonName
         )}`,
       ],
     });

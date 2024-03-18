@@ -6,23 +6,20 @@ import { ProjectGraphProjectNode } from '../config/project-graph';
 
 export function assertWorkspaceValidity(
   projects: Record<string, ProjectConfiguration>,
-  nxJson: NxJsonConfiguration,
+  nxJson: NxJsonConfiguration
 ) {
   const projectNames = Object.keys(projects);
-  const projectGraphNodes = projectNames.reduce(
-    (graph, project) => {
-      const projectConfiguration = projects[project];
-      graph[project] = {
-        name: project,
-        type: projectConfiguration.projectType === 'library' ? 'lib' : 'app', // missing fallback to `e2e`
-        data: {
-          ...projectConfiguration,
-        },
-      };
-      return graph;
-    },
-    {} as Record<string, ProjectGraphProjectNode>,
-  );
+  const projectGraphNodes = projectNames.reduce((graph, project) => {
+    const projectConfiguration = projects[project];
+    graph[project] = {
+      name: project,
+      type: projectConfiguration.projectType === 'library' ? 'lib' : 'app', // missing fallback to `e2e`
+      data: {
+        ...projectConfiguration,
+      },
+    };
+    return graph;
+  }, {} as Record<string, ProjectGraphProjectNode>);
 
   const invalidImplicitDependencies = new Map<string, string[]>();
 
@@ -50,7 +47,7 @@ export function assertWorkspaceValidity(
       ) {
         projectsWithNonArrayImplicitDependencies.set(
           projectName,
-          project.implicitDependencies,
+          project.implicitDependencies
         );
       }
       return (
@@ -65,7 +62,7 @@ export function assertWorkspaceValidity(
         projectName,
         project.implicitDependencies,
         projects,
-        projectGraphNodes,
+        projectGraphNodes
       );
       return map;
     }, invalidImplicitDependencies);
@@ -85,7 +82,7 @@ export function assertWorkspaceValidity(
     projectsWithNonArrayImplicitDependencies.forEach(
       (implicitDependencies, projectName) => {
         message += `  ${projectName}.implicitDependencies: "${implicitDependencies}"\n`;
-      },
+      }
     );
     message += '\n';
   }
@@ -110,7 +107,7 @@ function detectAndSetInvalidProjectGlobValues(
   sourceName: string,
   desiredImplicitDeps: string[],
   projectConfigurations: Record<string, ProjectConfiguration>,
-  projects: Record<string, ProjectGraphProjectNode>,
+  projects: Record<string, ProjectGraphProjectNode>
 ) {
   const invalidProjectsOrGlobs = desiredImplicitDeps.filter((implicit) => {
     const projectName = implicit.startsWith('!')

@@ -42,15 +42,15 @@ A typical set up where the `test` task depends on the `build` task could look li
 {
   "scripts": {
     "build": "tsc",
-    "test": "jest",
+    "test": "jest"
   },
   "nx": {
     "targets": {
       "test": {
-        "dependsOn": ["build"],
-      },
-    },
-  },
+        "dependsOn": ["build"]
+      }
+    }
+  }
 }
 ```
 
@@ -61,13 +61,13 @@ A typical set up where the `test` task depends on the `build` task could look li
 {
   "targets": {
     "build": {
-      "command": "tsc",
+      "command": "tsc"
     },
     "test": {
       "command": "jest",
-      "dependsOn": ["build"],
-    },
-  },
+      "dependsOn": ["build"]
+    }
+  }
 }
 ```
 

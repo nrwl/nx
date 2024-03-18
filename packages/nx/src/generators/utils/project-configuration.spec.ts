@@ -126,7 +126,7 @@ describe('project configuration', () => {
     updateProjectConfiguration(tree, 'test', expectedProjectConfig);
 
     expect(
-      readJson(tree, 'libs/test/project.json').targets.build,
+      readJson(tree, 'libs/test/project.json').targets.build
     ).toBeDefined();
   });
 
@@ -143,7 +143,7 @@ describe('project configuration', () => {
       const projectJson = readJson(tree, 'libs/test/project.json');
       expect(projectJson['$schema']).toBeTruthy();
       expect(projectJson['$schema']).toEqual(
-        '../../node_modules/nx/schemas/project-schema.json',
+        '../../node_modules/nx/schemas/project-schema.json'
       );
     });
 
@@ -202,7 +202,7 @@ describe('project configuration', () => {
       };
       updateProjectConfiguration(tree, 'test', expectedProjectConfig);
       expect(
-        readJson(tree, 'libs/test/project.json').targets.build,
+        readJson(tree, 'libs/test/project.json').targets.build
       ).toBeDefined();
     });
 
@@ -219,8 +219,8 @@ describe('project configuration', () => {
 
       expect(
         tree.exists(
-          joinPathFragments(projectConfiguration.root, 'project.json'),
-        ),
+          joinPathFragments(projectConfiguration.root, 'project.json')
+        )
       ).toBeFalsy();
     });
 

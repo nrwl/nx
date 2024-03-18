@@ -22,12 +22,12 @@ function addProjectIfExists(tree: Tree, configFilePath: string) {
   const updatedStatements = updateOrCreateImportStatement(
     sourceFile,
     '@playwright/test',
-    ['devices'],
+    ['devices']
   );
 
   const exportAssignment = tsquery.query(
     sourceFile,
-    'ExportAssignment',
+    'ExportAssignment'
   )[0] as ts.ExportAssignment;
   if (!exportAssignment) {
     // No export found in the file
@@ -52,7 +52,7 @@ function addProjectIfExists(tree: Tree, configFilePath: string) {
   }
   const projectProperty = tsquery.query(
     exportAssignemntObject,
-    'PropertyAssignment > Identifier[name="projects"]',
+    'PropertyAssignment > Identifier[name="projects"]'
   )[0] as ts.PropertyAssignment;
   if (projectProperty) {
     // Projects property already exists in the config
@@ -66,12 +66,12 @@ function addProjectIfExists(tree: Tree, configFilePath: string) {
       createProperty('firefox', 'Desktop Firefox'),
       createProperty('webkit', 'Desktop Safari'),
     ],
-    true,
+    true
   );
 
   const newProjectsProperty = ts.factory.createPropertyAssignment(
     'projects',
-    projectsArray,
+    projectsArray
   );
 
   const newObj = ts.factory.createObjectLiteralExpression([
@@ -83,13 +83,13 @@ function addProjectIfExists(tree: Tree, configFilePath: string) {
     exportAssignemntObject,
     exportAssignemntObject.expression,
     exportAssignemntObject.typeArguments,
-    [newObj],
+    [newObj]
   );
 
   const newExportAssignment = ts.factory.updateExportAssignment(
     exportAssignment,
     exportAssignment.modifiers,
-    newCallExpression,
+    newCallExpression
   );
 
   const transformedStatements = updatedStatements.map((statement) => {
@@ -98,7 +98,7 @@ function addProjectIfExists(tree: Tree, configFilePath: string) {
 
   const transformedSourceFile = ts.factory.updateSourceFile(
     sourceFile,
-    transformedStatements,
+    transformedStatements
   );
 
   const updatedConfigFileContent = printer.printFile(transformedSourceFile);
@@ -109,7 +109,7 @@ function createProperty(name: string, device: string) {
   return ts.factory.createObjectLiteralExpression([
     ts.factory.createPropertyAssignment(
       'name',
-      ts.factory.createStringLiteral(name),
+      ts.factory.createStringLiteral(name)
     ),
     ts.factory.createPropertyAssignment(
       'use',
@@ -117,10 +117,10 @@ function createProperty(name: string, device: string) {
         ts.factory.createSpreadAssignment(
           ts.factory.createElementAccessExpression(
             ts.factory.createIdentifier('devices'),
-            ts.factory.createStringLiteral(device),
-          ),
+            ts.factory.createStringLiteral(device)
+          )
         ),
-      ]),
+      ])
     ),
   ]);
 }
@@ -128,7 +128,7 @@ function createProperty(name: string, device: string) {
 function updateOrCreateImportStatement(
   sourceFile: ts.SourceFile,
   moduleName: string,
-  importNames: string[],
+  importNames: string[]
 ): ts.Statement[] {
   let importDeclarationFound = false;
   const newStatements = sourceFile.statements.map((statement) => {
@@ -141,12 +141,12 @@ function updateOrCreateImportStatement(
         statement.importClause?.namedBindings &&
         ts.isNamedImports(statement.importClause.namedBindings)
           ? statement.importClause.namedBindings.elements.map(
-              (e) => e.name.text,
+              (e) => e.name.text
             )
           : [];
       // Merge with new import names, avoiding duplicates
       const mergedImportNames = Array.from(
-        new Set([...existingSpecifiers, ...importNames]),
+        new Set([...existingSpecifiers, ...importNames])
       );
 
       // Create new import specifiers
@@ -154,8 +154,8 @@ function updateOrCreateImportStatement(
         ts.factory.createImportSpecifier(
           false,
           undefined,
-          ts.factory.createIdentifier(name),
-        ),
+          ts.factory.createIdentifier(name)
+        )
       );
 
       return ts.factory.updateImportDeclaration(
@@ -164,10 +164,10 @@ function updateOrCreateImportStatement(
         ts.factory.createImportClause(
           false,
           undefined,
-          ts.factory.createNamedImports(importSpecifiers),
+          ts.factory.createNamedImports(importSpecifiers)
         ),
         statement.moduleSpecifier,
-        undefined,
+        undefined
       );
     }
     return statement;
@@ -184,12 +184,12 @@ function updateOrCreateImportStatement(
             ts.factory.createImportSpecifier(
               false,
               undefined,
-              ts.factory.createIdentifier(name),
-            ),
-          ),
-        ),
+              ts.factory.createIdentifier(name)
+            )
+          )
+        )
       ),
-      ts.factory.createStringLiteral(moduleName),
+      ts.factory.createStringLiteral(moduleName)
     );
     newStatements.push(importDeclaration);
   }

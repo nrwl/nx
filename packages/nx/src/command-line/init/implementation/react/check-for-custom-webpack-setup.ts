@@ -9,7 +9,7 @@ export function checkForCustomWebpackSetup() {
   ['react-app-rewired', '@craco/craco'].forEach((pkg) => {
     if (combinedDeps[pkg]) {
       console.log(
-        `Skipping migration due to custom webpack setup. Found "${pkg}" usage. Use --force to continue anyway.`,
+        `Skipping migration due to custom webpack setup. Found "${pkg}" usage. Use --force to continue anyway.`
       );
       process.exit(1);
     }

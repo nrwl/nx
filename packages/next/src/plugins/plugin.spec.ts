@@ -37,7 +37,7 @@ describe('@nx/next/plugin', () => {
           startTargetName: 'start',
           serveStaticTargetName: 'serve-static',
         },
-        context,
+        context
       );
 
       expect(nodes).toMatchSnapshot();
@@ -59,7 +59,7 @@ describe('@nx/next/plugin', () => {
 
       tempFs.createFileSync(
         'my-app/project.json',
-        JSON.stringify({ name: 'my-app' }),
+        JSON.stringify({ name: 'my-app' })
       );
       tempFs.createFileSync('my-app/next.config.js', '');
     });
@@ -78,7 +78,7 @@ describe('@nx/next/plugin', () => {
           startTargetName: 'my-start',
           serveStaticTargetName: 'my-serve-static',
         },
-        context,
+        context
       );
 
       expect(nodes).toMatchSnapshot();
@@ -94,6 +94,6 @@ function mockNextConfig(path: string, config: NextConfig) {
     }),
     {
       virtual: true,
-    },
+    }
   );
 }

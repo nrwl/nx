@@ -26,7 +26,7 @@ export interface CreateComponentSpecFileSchema {
 
 export async function componentCypressGenerator(
   host: Tree,
-  schema: CreateComponentSpecFileSchema,
+  schema: CreateComponentSpecFileSchema
 ) {
   createComponentSpecFile(host, schema);
 
@@ -58,7 +58,7 @@ export function getArgsDefaultValue(property: ts.SyntaxKind): string {
 
 export function createComponentSpecFile(
   tree: Tree,
-  { project, componentPath, js, cypressProject }: CreateComponentSpecFileSchema,
+  { project, componentPath, js, cypressProject }: CreateComponentSpecFileSchema
 ) {
   if (!tsModule) {
     tsModule = ensureTypescript();
@@ -71,7 +71,7 @@ export function createComponentSpecFile(
 
   const e2eLibIntegrationFolderPath = join(
     e2eProject.sourceRoot,
-    isCypressV10 ? 'e2e' : 'integration',
+    isCypressV10 ? 'e2e' : 'integration'
   );
 
   const proj = projects.get(project);
@@ -91,7 +91,7 @@ export function createComponentSpecFile(
     componentFilePath,
     contents,
     tsModule.ScriptTarget.Latest,
-    true,
+    true
   );
 
   const cmpDeclaration = getComponentNode(sourceFile);
@@ -107,12 +107,12 @@ export function createComponentSpecFile(
           componentName,
           project,
           js,
-          true,
+          true
         );
       });
     } else {
       throw new Error(
-        `Could not find any React component in file ${componentFilePath}`,
+        `Could not find any React component in file ${componentFilePath}`
       );
     }
   } else {
@@ -123,7 +123,7 @@ export function createComponentSpecFile(
       e2eLibIntegrationFolderPath,
       componentName,
       project,
-      js,
+      js
     );
   }
 }
@@ -136,7 +136,7 @@ function findPropsAndGenerateFileForCypress(
   componentName: string,
   project: string,
   js: boolean,
-  fromNodeArray?: boolean,
+  fromNodeArray?: boolean
 ) {
   const propsInterface = getComponentPropsInterface(sourceFile, cmpDeclaration);
 
@@ -171,7 +171,7 @@ function findPropsAndGenerateFileForCypress(
       componentSelector: (cmpDeclaration as any).name.text,
       props,
       fileExt: js ? `${cyFilePrefix}.js` : `${cyFilePrefix}.ts`,
-    },
+    }
   );
 }
 

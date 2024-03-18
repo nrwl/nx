@@ -8,7 +8,7 @@ export const getTouchedProjects: TouchedProjectLocator = (
   nodes,
   nxJson,
   packageJson,
-  graph,
+  graph
 ): string[] => {
   const touchedProjects = new Set<string>();
 
@@ -18,7 +18,7 @@ export const getTouchedProjects: TouchedProjectLocator = (
     getTouchedProjectsFromTsConfig,
   ].forEach((fn) => {
     (fn(touchedFiles, nodes, nxJson, packageJson, graph) as string[]).forEach(
-      (p) => touchedProjects.add(p),
+      (p) => touchedProjects.add(p)
     );
   });
 

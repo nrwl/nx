@@ -9,10 +9,10 @@ import { resolve } from 'path';
  */
 export function createGlobPatternsOfDependentProjects(
   projectName: string,
-  fileGlobPattern: string = '/**/!(*.stories|*.spec).tsx',
+  fileGlobPattern: string = '/**/!(*.stories|*.spec).tsx'
 ): string[] {
   logger.warn(
-    `createGlobPatternsOfDependentProjects is deprecated. Use "createGlobPatternsForDependencies(__dirname)" from "@nx/next/tailwind" instead`,
+    `createGlobPatternsOfDependentProjects is deprecated. Use "createGlobPatternsForDependencies(__dirname)" from "@nx/next/tailwind" instead`
   );
 
   try {
@@ -28,11 +28,11 @@ due to missing "sourceRoot" in the dependencies' project configuration
     }
 
     return projectDirs.map((sourceDir) =>
-      resolve(workspaceRoot, joinPathFragments(sourceDir, fileGlobPattern)),
+      resolve(workspaceRoot, joinPathFragments(sourceDir, fileGlobPattern))
     );
   } catch (e) {
     throw new Error(
-      `createGlobPatternsOfDependentProjects: Error when generating globs: ${e?.message}`,
+      `createGlobPatternsOfDependentProjects: Error when generating globs: ${e?.message}`
     );
   }
 }

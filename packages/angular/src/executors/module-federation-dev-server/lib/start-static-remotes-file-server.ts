@@ -8,7 +8,7 @@ import type { StaticRemotesConfig } from './parse-static-remotes-config';
 export function startStaticRemotesFileServer(
   staticRemotesConfig: StaticRemotesConfig,
   context: ExecutorContext,
-  options: Schema,
+  options: Schema
 ) {
   let shouldMoveToCommonLocation = false;
   let commonOutputDirectory: string;
@@ -32,7 +32,7 @@ export function startStaticRemotesFileServer(
         {
           force: true,
           recursive: true,
-        },
+        }
       );
     }
   }
@@ -51,7 +51,7 @@ export function startStaticRemotesFileServer(
       sslCert: options.sslCert,
       sslKey: options.sslKey,
     },
-    context,
+    context
   );
   return staticRemotesIter;
 }

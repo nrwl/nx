@@ -59,12 +59,12 @@ describe('move-workspace-generators-to-local-plugin', () => {
 
     const generatorsJson = readJson(
       tree,
-      'tools/workspace-plugin/generators.json',
+      'tools/workspace-plugin/generators.json'
     );
 
     await generator(tree);
     expect(readJson(tree, 'tools/workspace-plugin/generators.json')).toEqual(
-      generatorsJson,
+      generatorsJson
     );
 
     const config = readProjectConfiguration(tree, 'workspace-plugin');
@@ -107,30 +107,30 @@ describe('move-workspace-generators-to-local-plugin', () => {
     tree.write('tools/utils/index.ts', 'export default function someUtil() {}');
     tree.write(
       'tools/generators/my-generator/index.ts',
-      'import { someUtil } from "../../utils";',
+      'import { someUtil } from "../../utils";'
     );
     tree.write(
       'tools/generators/my-generator/lib/index.ts',
-      'import { someUtil } from "../../../utils";',
+      'import { someUtil } from "../../../utils";'
     );
     await generator(tree);
 
     const config = readProjectConfiguration(tree, 'workspace-plugin');
     const generatorImplPath = joinPathFragments(
       config.root,
-      'src/generators/my-generator/index.ts',
+      'src/generators/my-generator/index.ts'
     );
     const generatorImpl = tree.read(generatorImplPath).toString('utf-8');
     expect(generatorImpl).toContain(
-      `import { someUtil } from '../../../../utils';`,
+      `import { someUtil } from '../../../../utils';`
     );
     const generatorLibImplPath = joinPathFragments(
       config.root,
-      'src/generators/my-generator/lib/index.ts',
+      'src/generators/my-generator/lib/index.ts'
     );
     const generatorLibImpl = tree.read(generatorLibImplPath).toString('utf-8');
     expect(generatorLibImpl).toContain(
-      `import { someUtil } from '../../../../../utils';`,
+      `import { someUtil } from '../../../../../utils';`
     );
   });
 });
@@ -138,22 +138,22 @@ describe('move-workspace-generators-to-local-plugin', () => {
 function assertValidGenerator(
   tree: Tree,
   config: ProjectConfiguration,
-  generator: string,
+  generator: string
 ) {
   const generatorsJson = readJson<GeneratorsJson>(
     tree,
-    joinPathFragments(config.root, 'generators.json'),
+    joinPathFragments(config.root, 'generators.json')
   );
   expect(generatorsJson.generators).toHaveProperty(generator);
   const generatorImplPath = joinPathFragments(
     config.root,
     generatorsJson.generators[generator].implementation,
-    'index.ts',
+    'index.ts'
   );
   expect(tree.exists(generatorImplPath)).toBeTruthy();
   const generatorSchemaPath = joinPathFragments(
     config.root,
-    generatorsJson.generators[generator].schema,
+    generatorsJson.generators[generator].schema
   );
   expect(tree.exists(generatorSchemaPath)).toBeTruthy();
 }
@@ -164,7 +164,7 @@ function uniq(prefix: string) {
 
 async function workspaceGeneratorGenerator(
   host: Tree,
-  schema: { name: string },
+  schema: { name: string }
 ) {
   const outputDirectory = joinPathFragments('tools/generators', schema.name);
 
@@ -179,7 +179,7 @@ async function workspaceGeneratorGenerator(
     return () => {
       installPackagesTask(tree)
     }
-  }`,
+  }`
   );
 
   host.write(
@@ -201,6 +201,6 @@ async function workspaceGeneratorGenerator(
     },
     "required": ["name"]
   }
-  `,
+  `
   );
 }

@@ -3,7 +3,7 @@ import { RefObject, useEffect, useState } from 'react';
 export function useHeadingsObserver(
   elementRef: RefObject<Element>,
   { threshold = 0, root = null, rootMargin = '0%' }: IntersectionObserverInit,
-  cachekey: string | null = null,
+  cachekey: string | null = null
 ): string {
   const [activeId, setActiveId] = useState<string>('');
 

@@ -9,7 +9,7 @@ import { NormalizedWebpackExecutorOptions } from '../../webpack/schema';
 export function getDevServerOptions(
   root: string,
   serveOptions: WebDevServerOptions,
-  buildOptions: NormalizedWebpackExecutorOptions,
+  buildOptions: NormalizedWebpackExecutorOptions
 ): WebpackDevServerConfiguration {
   const servePath = buildServePath(buildOptions);
 
@@ -42,8 +42,8 @@ export function getDevServerOptions(
         `NX Web Development Server is listening at ${
           isHttps ? 'https' : 'http'
         }://${server.options.host}:${server.options.port}${buildServePath(
-          buildOptions,
-        )}`,
+          buildOptions
+        )}`
       );
     },
     open: serveOptions.open,

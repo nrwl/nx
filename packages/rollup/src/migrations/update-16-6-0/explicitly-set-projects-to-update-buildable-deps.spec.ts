@@ -34,9 +34,9 @@ describe('explicitly-set-projects-to-update-buildable-deps migration', () => {
 
       const project = readProjectConfiguration(tree, 'lib1');
       expect(
-        project.targets.build.options.updateBuildableProjectDepsInPackageJson,
+        project.targets.build.options.updateBuildableProjectDepsInPackageJson
       ).toBe(true);
-    },
+    }
   );
 
   it.each(['@nx/rollup:rollup', '@nrwl/rollup:rollup'])(
@@ -52,9 +52,9 @@ describe('explicitly-set-projects-to-update-buildable-deps migration', () => {
 
       const project = readProjectConfiguration(tree, 'lib1');
       expect(
-        project.targets.build.options.updateBuildableProjectDepsInPackageJson,
+        project.targets.build.options.updateBuildableProjectDepsInPackageJson
       ).toBe(true);
-    },
+    }
   );
 
   it.each(['@nx/js:swc', '@nrwl/js:swc', '@nx/js:tsc', '@nrwl/js:tsc'])(
@@ -75,9 +75,9 @@ describe('explicitly-set-projects-to-update-buildable-deps migration', () => {
 
       const project = readProjectConfiguration(tree, 'lib1');
       expect(
-        project.targets.build.options.updateBuildableProjectDepsInPackageJson,
+        project.targets.build.options.updateBuildableProjectDepsInPackageJson
       ).toBe(false);
-    },
+    }
   );
 
   it('should not update targets using other executors', async () => {
@@ -103,7 +103,7 @@ describe('explicitly-set-projects-to-update-buildable-deps migration', () => {
 function addProject(
   tree: Tree,
   projectName: string,
-  config: ProjectConfiguration,
+  config: ProjectConfiguration
 ): void {
   projectGraph = {
     dependencies: {},

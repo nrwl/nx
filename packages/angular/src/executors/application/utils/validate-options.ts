@@ -8,20 +8,20 @@ export function validateOptions(options: ApplicationExecutorOptions): void {
 
   if (angularMajorVersion < 17) {
     throw new Error(
-      `The "application" executor requires Angular version 17 or greater. You are currently using version ${angularVersion}.`,
+      `The "application" executor requires Angular version 17 or greater. You are currently using version ${angularVersion}.`
     );
   }
 
   if (lt(angularVersion, '17.1.0')) {
     if (options.loader) {
       throw new Error(
-        `The "loader" option requires Angular version 17.1.0 or greater. You are currently using version ${angularVersion}.`,
+        `The "loader" option requires Angular version 17.1.0 or greater. You are currently using version ${angularVersion}.`
       );
     }
 
     if (options.indexHtmlTransformer) {
       throw new Error(
-        `The "indexHtmlTransformer" option requires Angular version 17.1.0 or greater. You are currently using version ${angularVersion}.`,
+        `The "indexHtmlTransformer" option requires Angular version 17.1.0 or greater. You are currently using version ${angularVersion}.`
       );
     }
 
@@ -30,7 +30,7 @@ export function validateOptions(options: ApplicationExecutorOptions): void {
       options.index.preloadInitial !== undefined
     ) {
       throw new Error(
-        `The "index.preloadInitial" option requires Angular version 17.1.0 or greater. You are currently using version ${angularVersion}.`,
+        `The "index.preloadInitial" option requires Angular version 17.1.0 or greater. You are currently using version ${angularVersion}.`
       );
     }
 
@@ -42,7 +42,7 @@ export function validateOptions(options: ApplicationExecutorOptions): void {
     ) {
       if (options.optimization.styles.removeSpecialComments === false) {
         throw new Error(
-          `The "optimization.styles.removeSpecialComments" option requires Angular version 17.1.0 or greater. You are currently using version ${angularVersion}.`,
+          `The "optimization.styles.removeSpecialComments" option requires Angular version 17.1.0 or greater. You are currently using version ${angularVersion}.`
         );
       } else if (options.optimization.styles.removeSpecialComments === true) {
         // silently remove the option, as it was the default before 17.1.0
@@ -52,7 +52,7 @@ export function validateOptions(options: ApplicationExecutorOptions): void {
 
     if (typeof options.outputPath === 'object') {
       throw new Error(
-        `The "outputPath" option as an object requires Angular version 17.1.0 or greater. You are currently using version ${angularVersion}.`,
+        `The "outputPath" option as an object requires Angular version 17.1.0 or greater. You are currently using version ${angularVersion}.`
       );
     }
   }
@@ -60,13 +60,13 @@ export function validateOptions(options: ApplicationExecutorOptions): void {
   if (lt(angularVersion, '17.2.0')) {
     if (options.define) {
       throw new Error(
-        `The "define" option requires Angular version 17.2.0 or greater. You are currently using version ${angularVersion}.`,
+        `The "define" option requires Angular version 17.2.0 or greater. You are currently using version ${angularVersion}.`
       );
     }
 
     if (options.clearScreen !== undefined) {
       throw new Error(
-        `The "clearScreen" option requires Angular version 17.2.0 or greater. You are currently using version ${angularVersion}.`,
+        `The "clearScreen" option requires Angular version 17.2.0 or greater. You are currently using version ${angularVersion}.`
       );
     }
   }

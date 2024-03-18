@@ -43,7 +43,7 @@ describe('Invoke Runner', () => {
         console.log("DONE")
         process.exit(0)
       })
-    `,
+    `
     );
 
     const q = runCommand('node runner.js');

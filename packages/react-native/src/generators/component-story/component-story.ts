@@ -8,10 +8,10 @@ import { CreateComponentStoriesFileSchema } from './schema';
  */
 export async function componentStoryGenerator(
   host: Tree,
-  schema: CreateComponentStoriesFileSchema,
+  schema: CreateComponentStoriesFileSchema
 ) {
   logger.warn(
-    `Please run 'nx run @nx/react:component-story ${schema.project}' instead.`,
+    `Please run 'nx run @nx/react:component-story ${schema.project}' instead.`
   );
   return reactComponentStoryGenerator(host, schema);
 }

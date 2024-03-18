@@ -1,7 +1,7 @@
 import * as chalk from 'chalk';
 
 export const E2E_LOG_PREFIX = `${chalk.reset.inverse.bold.keyword('orange')(
-  ' E2E ',
+  ' E2E '
 )}`;
 
 export function e2eConsoleLogger(message: string, body?: string) {
@@ -15,21 +15,21 @@ export function e2eConsoleLogger(message: string, body?: string) {
 
 export function logInfo(title: string, body?: string) {
   const message = `${chalk.reset.inverse.bold.white(
-    ' INFO ',
+    ' INFO '
   )} ${chalk.bold.white(title)}`;
   return e2eConsoleLogger(message, body);
 }
 
 export function logError(title: string, body?: string) {
   const message = `${chalk.reset.inverse.bold.red(' ERROR ')} ${chalk.bold.red(
-    title,
+    title
   )}`;
   return e2eConsoleLogger(message, body);
 }
 
 export function logSuccess(title: string, body?: string) {
   const message = `${chalk.reset.inverse.bold.green(
-    ' SUCCESS ',
+    ' SUCCESS '
   )} ${chalk.bold.green(title)}`;
   return e2eConsoleLogger(message, body);
 }
@@ -42,6 +42,6 @@ export function logSuccess(title: string, body?: string) {
 export function stripConsoleColors(log: string): string {
   return log?.replace(
     /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g,
-    '',
+    ''
   );
 }

@@ -50,7 +50,7 @@ export function isWholeFileChange(change: Change): change is WholeFileChange {
 }
 
 export function isDeletedFileChange(
-  change: Change,
+  change: Change
 ): change is DeletedFileChange {
   return change.type === 'WholeFileDeleted';
 }
@@ -61,9 +61,9 @@ export function calculateFileChanges(
   nxArgs?: NxArgs,
   readFileAtRevision: (
     f: string,
-    r: void | string,
+    r: void | string
   ) => string = defaultReadFileAtRevision,
-  ignore = getIgnoreObject() as ReturnType<typeof ignore>,
+  ignore = getIgnoreObject() as ReturnType<typeof ignore>
 ): FileChange[] {
   files = files.filter((f) => !ignore.ignores(f));
 
@@ -109,7 +109,7 @@ export const TEN_MEGABYTES = 1024 * 10000;
 
 function defaultReadFileAtRevision(
   file: string,
-  revision: void | string,
+  revision: void | string
 ): string {
   try {
     const fileFullPath = `${workspaceRoot}${sep}${file}`;
@@ -184,7 +184,7 @@ export { readNxJson, workspaceLayout } from '../config/configuration';
 function getProjectsSyncNoInference(root: string, nxJson: NxJsonConfiguration) {
   const allConfigFiles = retrieveProjectConfigurationPaths(
     root,
-    getDefaultPluginsSync(root),
+    getDefaultPluginsSync(root)
   );
   const plugins: LoadedNxPlugin[] = [
     { plugin: PackageJsonProjectsNextToProjectJsonPlugin },
@@ -200,7 +200,7 @@ function getProjectsSyncNoInference(root: string, nxJson: NxJsonConfiguration) {
       continue;
     }
     const matchingConfigFiles = allConfigFiles.filter((file) =>
-      minimatch(file, pattern, { dot: true }),
+      minimatch(file, pattern, { dot: true })
     );
     for (const file of matchingConfigFiles) {
       if (minimatch(file, pattern, { dot: true })) {

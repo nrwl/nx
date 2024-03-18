@@ -139,7 +139,7 @@ describe('update-tsconfig-target migration', () => {
 
       const { compilerOptions } = readJson(tree, tsConfigPath);
       expect(compilerOptions.target).toBe('es2020');
-    },
+    }
   );
 
   it.each([
@@ -186,7 +186,7 @@ describe('update-tsconfig-target migration', () => {
       expect(compilerOptions.target).toBe('es2020');
       const tsConfigProd = readJson(tree, 'libs/lib1/tsconfig.lib.prod.json');
       expect(tsConfigProd.compilerOptions.target).toBe('es2020');
-    },
+    }
   );
 
   it('should not error and log a warning when the tsconfig file specified in target does not exist', async () => {
@@ -219,8 +219,8 @@ describe('update-tsconfig-target migration', () => {
 
     expect(logger.warn).toHaveBeenCalledWith(
       expect.stringContaining(
-        `The "libs/lib1/tsconfig.lib.json" file specified in the "build" target of the "lib1" project could not be found.`,
-      ),
+        `The "libs/lib1/tsconfig.lib.json" file specified in the "build" target of the "lib1" project could not be found.`
+      )
     );
   });
 
@@ -270,7 +270,7 @@ describe('update-tsconfig-target migration', () => {
         'jest-preset-angular/build/serializers/ng-snapshot',
         'jest-preset-angular/build/serializers/html-comment',
       ],
-    };`,
+    };`
     );
     writeJson(tree, 'libs/lib1/tsconfig.spec.json', {
       compilerOptions: { target: 'es2017' },
@@ -316,15 +316,15 @@ describe('update-tsconfig-target migration', () => {
           stringifyContentPathRegex: '\\.(html|svg)$',
         },
       },
-    };`,
+    };`
     );
 
     await expect(updateTsConfigTarget(tree)).resolves.not.toThrow();
 
     expect(logger.warn).toHaveBeenCalledWith(
       expect.stringContaining(
-        `The "<rootDir>/tsconfig.spec.json" file specified in the Jest configuration file "libs/lib1/jest.config.ts" of the "test" target of the "lib1" project could not be found.`,
-      ),
+        `The "<rootDir>/tsconfig.spec.json" file specified in the Jest configuration file "libs/lib1/jest.config.ts" of the "test" target of the "lib1" project could not be found.`
+      )
     );
   });
 
@@ -359,8 +359,8 @@ describe('update-tsconfig-target migration', () => {
 
     expect(logger.warn).toHaveBeenCalledWith(
       expect.stringContaining(
-        `Couldn't find the "tsconfig" property for "ts-jest" in the Jest configuration file "libs/lib1/jest.config.ts" specified in the "test" target of the "lib1" project.`,
-      ),
+        `Couldn't find the "tsconfig" property for "ts-jest" in the Jest configuration file "libs/lib1/jest.config.ts" specified in the "test" target of the "lib1" project.`
+      )
     );
   });
 
@@ -394,8 +394,8 @@ describe('update-tsconfig-target migration', () => {
 
     expect(logger.warn).toHaveBeenCalledWith(
       expect.stringContaining(
-        `The "libs/lib1/jest.config.ts" file specified in the "test" target of the "lib1" project could not be found.`,
-      ),
+        `The "libs/lib1/jest.config.ts" file specified in the "test" target of the "lib1" project could not be found.`
+      )
     );
   });
 
@@ -424,8 +424,8 @@ describe('update-tsconfig-target migration', () => {
 
     expect(logger.warn).toHaveBeenCalledWith(
       expect.stringContaining(
-        `The "test" target of the "lib1" project is using the "@nrwl/jest:jest" executor but no "jestConfig" property was specified.`,
-      ),
+        `The "test" target of the "lib1" project is using the "@nrwl/jest:jest" executor but no "jestConfig" property was specified.`
+      )
     );
   });
 
@@ -463,7 +463,7 @@ describe('update-tsconfig-target migration', () => {
 
       const { compilerOptions } = readJson(tree, 'apps/app1/tsconfig.json');
       expect(compilerOptions.target).toBe(target);
-    },
+    }
   );
 
   it('should not update target in "tsconfig.json" at the project root when it is not an angular project', async () => {
@@ -529,8 +529,8 @@ describe('update-tsconfig-target migration', () => {
     expect(compilerOptions.target).toBe('es2017');
     expect(logger.warn).toHaveBeenCalledWith(
       expect.stringContaining(
-        'The "build" target of the "lib1" project is using an executor not supported by the migration.',
-      ),
+        'The "build" target of the "lib1" project is using an executor not supported by the migration.'
+      )
     );
   });
 

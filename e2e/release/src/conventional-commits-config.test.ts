@@ -17,7 +17,7 @@ expect.addSnapshotSerializer({
         .replaceAll(/my-pkg-\d+/g, '{project-name}')
         .replaceAll(
           /integrity:\s*.*/g,
-          'integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX',
+          'integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
         )
         .replaceAll(/\b[0-9a-f]{40}\b/g, '{SHASUM}')
         .replaceAll(/\d*B  index\.js/g, 'XXB  index.js')
@@ -166,22 +166,22 @@ describe('nx release conventional commits config', () => {
     const versionResultNoChanges = runCLI(`release version -d`);
 
     expect(versionResultNoChanges).toContain(
-      `${pkg1} 🚫 Skipping versioning "@proj/${pkg1}" as no changes were detected.`,
+      `${pkg1} 🚫 Skipping versioning "@proj/${pkg1}" as no changes were detected.`
     );
     expect(versionResultNoChanges).toContain(
-      `${pkg2} 🚫 Skipping versioning "@proj/${pkg2}" as no changes were detected.`,
+      `${pkg2} 🚫 Skipping versioning "@proj/${pkg2}" as no changes were detected.`
     );
     expect(versionResultNoChanges).toContain(
-      `${pkg3} 🚫 Skipping versioning "@proj/${pkg3}" as no changes were detected.`,
+      `${pkg3} 🚫 Skipping versioning "@proj/${pkg3}" as no changes were detected.`
     );
     expect(versionResultNoChanges).toContain(
-      `${pkg4} 🚫 Skipping versioning "@proj/${pkg4}" as no changes were detected.`,
+      `${pkg4} 🚫 Skipping versioning "@proj/${pkg4}" as no changes were detected.`
     );
     expect(versionResultNoChanges).toContain(
-      `${pkg5} 🚫 Skipping versioning "@proj/${pkg5}" as no changes were detected.`,
+      `${pkg5} 🚫 Skipping versioning "@proj/${pkg5}" as no changes were detected.`
     );
     expect(versionResultNoChanges).toContain(
-      `${pkg6} 🚫 Skipping versioning "@proj/${pkg6}" as no changes were detected.`,
+      `${pkg6} 🚫 Skipping versioning "@proj/${pkg6}" as no changes were detected.`
     );
 
     // update my-pkg-3 with a fix commit
@@ -195,22 +195,22 @@ describe('nx release conventional commits config', () => {
     const versionResultDocsChanges = runCLI(`release version -d`);
 
     expect(versionResultDocsChanges).toContain(
-      `${pkg1} 🚫 Skipping versioning "@proj/${pkg1}" as no changes were detected.`,
+      `${pkg1} 🚫 Skipping versioning "@proj/${pkg1}" as no changes were detected.`
     );
     expect(versionResultDocsChanges).toContain(
-      `${pkg2} 🚫 Skipping versioning "@proj/${pkg2}" as no changes were detected.`,
+      `${pkg2} 🚫 Skipping versioning "@proj/${pkg2}" as no changes were detected.`
     );
     expect(versionResultDocsChanges).toContain(
-      `${pkg3} ✍️  New version 0.0.2 written to ${pkg3}/package.json`,
+      `${pkg3} ✍️  New version 0.0.2 written to ${pkg3}/package.json`
     );
     expect(versionResultDocsChanges).toContain(
-      `${pkg4} 🚫 Skipping versioning "@proj/${pkg4}" as no changes were detected.`,
+      `${pkg4} 🚫 Skipping versioning "@proj/${pkg4}" as no changes were detected.`
     );
     expect(versionResultDocsChanges).toContain(
-      `${pkg5} 🚫 Skipping versioning "@proj/${pkg5}" as no changes were detected.`,
+      `${pkg5} 🚫 Skipping versioning "@proj/${pkg5}" as no changes were detected.`
     );
     expect(versionResultDocsChanges).toContain(
-      `${pkg6} 🚫 Skipping versioning "@proj/${pkg6}" as no changes were detected.`,
+      `${pkg6} 🚫 Skipping versioning "@proj/${pkg6}" as no changes were detected.`
     );
 
     // update my-pkg-2 with a fix commit
@@ -220,27 +220,27 @@ describe('nx release conventional commits config', () => {
     }));
     await runCommandAsync(`git add ${pkg2}/package.json`);
     await runCommandAsync(
-      `git commit -m "customType(${pkg2}): this is a custom type"`,
+      `git commit -m "customType(${pkg2}): this is a custom type"`
     );
 
     const versionResultCustomTypeChanges = runCLI(`release version -d`);
     expect(versionResultCustomTypeChanges).toContain(
-      `${pkg1} 🚫 Skipping versioning "@proj/${pkg1}" as no changes were detected.`,
+      `${pkg1} 🚫 Skipping versioning "@proj/${pkg1}" as no changes were detected.`
     );
     expect(versionResultCustomTypeChanges).toContain(
-      `${pkg2} ✍️  New version 0.1.0 written to ${pkg2}/package.json`,
+      `${pkg2} ✍️  New version 0.1.0 written to ${pkg2}/package.json`
     );
     expect(versionResultCustomTypeChanges).toContain(
-      `${pkg3} ✍️  New version 0.0.2 written to ${pkg3}/package.json`,
+      `${pkg3} ✍️  New version 0.0.2 written to ${pkg3}/package.json`
     );
     expect(versionResultCustomTypeChanges).toContain(
-      `${pkg4} 🚫 Skipping versioning "@proj/${pkg4}" as no changes were detected.`,
+      `${pkg4} 🚫 Skipping versioning "@proj/${pkg4}" as no changes were detected.`
     );
     expect(versionResultCustomTypeChanges).toContain(
-      `${pkg5} 🚫 Skipping versioning "@proj/${pkg5}" as no changes were detected.`,
+      `${pkg5} 🚫 Skipping versioning "@proj/${pkg5}" as no changes were detected.`
     );
     expect(versionResultCustomTypeChanges).toContain(
-      `${pkg6} 🚫 Skipping versioning "@proj/${pkg6}" as no changes were detected.`,
+      `${pkg6} 🚫 Skipping versioning "@proj/${pkg6}" as no changes were detected.`
     );
 
     updateJson(`${pkg1}/package.json`, (json) => ({
@@ -249,27 +249,27 @@ describe('nx release conventional commits config', () => {
     }));
     await runCommandAsync(`git add ${pkg1}/package.json`);
     await runCommandAsync(
-      `git commit -m "customType(${pkg1})!: this is a breaking change"`,
+      `git commit -m "customType(${pkg1})!: this is a breaking change"`
     );
 
     const versionResultCustomTypeBreakingChanges = runCLI(`release version -d`);
     expect(versionResultCustomTypeBreakingChanges).toContain(
-      `${pkg1} ✍️  New version 1.0.0 written to ${pkg1}/package.json`,
+      `${pkg1} ✍️  New version 1.0.0 written to ${pkg1}/package.json`
     );
     expect(versionResultCustomTypeBreakingChanges).toContain(
-      `${pkg2} ✍️  New version 0.1.0 written to ${pkg2}/package.json`,
+      `${pkg2} ✍️  New version 0.1.0 written to ${pkg2}/package.json`
     );
     expect(versionResultCustomTypeBreakingChanges).toContain(
-      `${pkg3} ✍️  New version 0.0.2 written to ${pkg3}/package.json`,
+      `${pkg3} ✍️  New version 0.0.2 written to ${pkg3}/package.json`
     );
     expect(versionResultCustomTypeBreakingChanges).toContain(
-      `${pkg4} 🚫 Skipping versioning "@proj/${pkg4}" as no changes were detected.`,
+      `${pkg4} 🚫 Skipping versioning "@proj/${pkg4}" as no changes were detected.`
     );
     expect(versionResultCustomTypeBreakingChanges).toContain(
-      `${pkg5} 🚫 Skipping versioning "@proj/${pkg5}" as no changes were detected.`,
+      `${pkg5} 🚫 Skipping versioning "@proj/${pkg5}" as no changes were detected.`
     );
     expect(versionResultCustomTypeBreakingChanges).toContain(
-      `${pkg6} 🚫 Skipping versioning "@proj/${pkg6}" as no changes were detected.`,
+      `${pkg6} 🚫 Skipping versioning "@proj/${pkg6}" as no changes were detected.`
     );
 
     updateJson(`${pkg4}/package.json`, (json) => ({
@@ -281,22 +281,22 @@ describe('nx release conventional commits config', () => {
 
     const versionResultChoreChanges = runCLI(`release version -d`);
     expect(versionResultChoreChanges).toContain(
-      `${pkg1} ✍️  New version 1.0.0 written to ${pkg1}/package.json`,
+      `${pkg1} ✍️  New version 1.0.0 written to ${pkg1}/package.json`
     );
     expect(versionResultChoreChanges).toContain(
-      `${pkg2} ✍️  New version 0.1.0 written to ${pkg2}/package.json`,
+      `${pkg2} ✍️  New version 0.1.0 written to ${pkg2}/package.json`
     );
     expect(versionResultChoreChanges).toContain(
-      `${pkg3} ✍️  New version 0.0.2 written to ${pkg3}/package.json`,
+      `${pkg3} ✍️  New version 0.0.2 written to ${pkg3}/package.json`
     );
     expect(versionResultChoreChanges).toContain(
-      `${pkg4} ✍️  New version 0.0.2 written to ${pkg4}/package.json`,
+      `${pkg4} ✍️  New version 0.0.2 written to ${pkg4}/package.json`
     );
     expect(versionResultChoreChanges).toContain(
-      `${pkg5} 🚫 Skipping versioning "@proj/${pkg5}" as no changes were detected.`,
+      `${pkg5} 🚫 Skipping versioning "@proj/${pkg5}" as no changes were detected.`
     );
     expect(versionResultChoreChanges).toContain(
-      `${pkg6} 🚫 Skipping versioning "@proj/${pkg6}" as no changes were detected.`,
+      `${pkg6} 🚫 Skipping versioning "@proj/${pkg6}" as no changes were detected.`
     );
 
     updateJson(`${pkg5}/package.json`, (json) => ({
@@ -305,27 +305,27 @@ describe('nx release conventional commits config', () => {
     }));
     await runCommandAsync(`git add ${pkg5}/package.json`);
     await runCommandAsync(
-      `git commit -m "perf: this is a performance improvement"`,
+      `git commit -m "perf: this is a performance improvement"`
     );
 
     const versionResultPerfChanges = runCLI(`release version -d`);
     expect(versionResultPerfChanges).toContain(
-      `${pkg1} ✍️  New version 1.0.0 written to ${pkg1}/package.json`,
+      `${pkg1} ✍️  New version 1.0.0 written to ${pkg1}/package.json`
     );
     expect(versionResultPerfChanges).toContain(
-      `${pkg2} ✍️  New version 0.1.0 written to ${pkg2}/package.json`,
+      `${pkg2} ✍️  New version 0.1.0 written to ${pkg2}/package.json`
     );
     expect(versionResultPerfChanges).toContain(
-      `${pkg3} ✍️  New version 0.0.2 written to ${pkg3}/package.json`,
+      `${pkg3} ✍️  New version 0.0.2 written to ${pkg3}/package.json`
     );
     expect(versionResultPerfChanges).toContain(
-      `${pkg4} ✍️  New version 0.0.2 written to ${pkg4}/package.json`,
+      `${pkg4} ✍️  New version 0.0.2 written to ${pkg4}/package.json`
     );
     expect(versionResultPerfChanges).toContain(
-      `${pkg5} ✍️  New version 0.0.2 written to ${pkg5}/package.json`,
+      `${pkg5} ✍️  New version 0.0.2 written to ${pkg5}/package.json`
     );
     expect(versionResultPerfChanges).toContain(
-      `${pkg6} 🚫 Skipping versioning "@proj/${pkg6}" as no changes were detected.`,
+      `${pkg6} 🚫 Skipping versioning "@proj/${pkg6}" as no changes were detected.`
     );
 
     updateJson(`${pkg6}/package.json`, (json) => ({
@@ -337,22 +337,22 @@ describe('nx release conventional commits config', () => {
 
     const versionResultRefactorChanges = runCLI(`release version -d`);
     expect(versionResultRefactorChanges).toContain(
-      `${pkg1} ✍️  New version 1.0.0 written to ${pkg1}/package.json`,
+      `${pkg1} ✍️  New version 1.0.0 written to ${pkg1}/package.json`
     );
     expect(versionResultRefactorChanges).toContain(
-      `${pkg2} ✍️  New version 0.1.0 written to ${pkg2}/package.json`,
+      `${pkg2} ✍️  New version 0.1.0 written to ${pkg2}/package.json`
     );
     expect(versionResultRefactorChanges).toContain(
-      `${pkg3} ✍️  New version 0.0.2 written to ${pkg3}/package.json`,
+      `${pkg3} ✍️  New version 0.0.2 written to ${pkg3}/package.json`
     );
     expect(versionResultRefactorChanges).toContain(
-      `${pkg4} ✍️  New version 0.0.2 written to ${pkg4}/package.json`,
+      `${pkg4} ✍️  New version 0.0.2 written to ${pkg4}/package.json`
     );
     expect(versionResultRefactorChanges).toContain(
-      `${pkg5} ✍️  New version 0.0.2 written to ${pkg5}/package.json`,
+      `${pkg5} ✍️  New version 0.0.2 written to ${pkg5}/package.json`
     );
     expect(versionResultRefactorChanges).toContain(
-      `${pkg6} ✍️  New version 0.0.2 written to ${pkg6}/package.json`,
+      `${pkg6} ✍️  New version 0.0.2 written to ${pkg6}/package.json`
     );
 
     // Normally, users would use `nx release` or the programmatic api to ensure that

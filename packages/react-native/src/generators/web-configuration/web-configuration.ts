@@ -32,7 +32,7 @@ import { WebConfigurationGeneratorSchema } from './schema';
  */
 export async function webConfigurationGenerator(
   tree: Tree,
-  options: WebConfigurationGeneratorSchema,
+  options: WebConfigurationGeneratorSchema
 ) {
   const normalizedSchema = normalizeSchema(tree, options);
 
@@ -45,7 +45,7 @@ export async function webConfigurationGenerator(
       {},
       {
         'react-native-web': reactNativeWebVersion,
-      },
+      }
     );
     tasks.push(installTask);
   }
@@ -60,7 +60,7 @@ export async function webConfigurationGenerator(
       tree,
       joinPathFragments(__dirname, './files/base-vite'),
       normalizedSchema.projectRoot,
-      { ...normalizedSchema, tmpl: '' },
+      { ...normalizedSchema, tmpl: '' }
     );
   } else {
     generateFiles(
@@ -73,7 +73,7 @@ export async function webConfigurationGenerator(
         webpackPluginOptions: hasWebpackPlugin(tree)
           ? createNxWebpackPluginOptions(normalizedSchema)
           : null,
-      },
+      }
     );
   }
 
@@ -91,7 +91,7 @@ export async function webConfigurationGenerator(
  */
 async function addBundlerConfiguration(
   tree: Tree,
-  normalizedSchema: NormalizedSchema,
+  normalizedSchema: NormalizedSchema
 ) {
   if (normalizedSchema.bundler === 'vite') {
     const { viteConfigurationGenerator } = ensurePackage<
@@ -120,7 +120,7 @@ async function addBundlerConfiguration(
     if (!hasWebpackPlugin(tree)) {
       const projectConfiguration = readProjectConfiguration(
         tree,
-        normalizedSchema.project,
+        normalizedSchema.project
       );
       projectConfiguration.targets = {
         ...projectConfiguration.targets,
@@ -130,7 +130,7 @@ async function addBundlerConfiguration(
       updateProjectConfiguration(
         tree,
         normalizedSchema.project,
-        projectConfiguration,
+        projectConfiguration
       );
     }
 

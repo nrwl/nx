@@ -18,7 +18,7 @@ export async function addLinting(
     projectRoot: string;
     unitTestRunner?: 'vitest' | 'none';
     rootProject?: boolean;
-  },
+  }
 ) {
   const tasks: GeneratorCallback[] = [];
   if (options.linter === 'eslint') {
@@ -55,7 +55,7 @@ export async function addLinting(
           ],
           ...config,
         };
-      },
+      }
     );
 
     const installTask = addDependenciesToPackageJson(
@@ -63,7 +63,7 @@ export async function addLinting(
       {},
       {
         '@nuxt/eslint-config': nuxtEslintConfigVersion,
-      },
+      }
     );
     tasks.push(installTask);
   }

@@ -9,13 +9,13 @@ import { NormalizedGeneratorOptions } from '../schema';
 export function updateApplicationStyles(
   tree: Tree,
   options: NormalizedGeneratorOptions,
-  project: ProjectConfiguration,
+  project: ProjectConfiguration
 ): void {
   let stylesEntryPoint = options.stylesEntryPoint;
 
   if (stylesEntryPoint && !tree.exists(stylesEntryPoint)) {
     throw new Error(
-      `The provided styles entry point "${stylesEntryPoint}" could not be found.`,
+      `The provided styles entry point "${stylesEntryPoint}" could not be found.`
     );
   }
 
@@ -25,7 +25,7 @@ export function updateApplicationStyles(
     if (!stylesEntryPoint) {
       throw new Error(
         stripIndents`Could not find a styles entry point for project "${options.project}".
-        Please specify a styles entry point using the "--stylesEntryPoint" option.`,
+        Please specify a styles entry point using the "--stylesEntryPoint" option.`
       );
     }
   }
@@ -37,14 +37,14 @@ export function updateApplicationStyles(
     @tailwind components;
     @tailwind utilities;
 
-    ${stylesEntryPointContent}`,
+    ${stylesEntryPointContent}`
   );
 }
 
 function findStylesEntryPoint(
   tree: Tree,
   options: NormalizedGeneratorOptions,
-  project: ProjectConfiguration,
+  project: ProjectConfiguration
 ): string | undefined {
   // first check for common names
   const possibleStylesEntryPoints = [
@@ -73,7 +73,7 @@ function findStylesEntryPoint(
       ? s.startsWith(project.root) && tree.exists(s)
       : s.input.startsWith(project.root) &&
         s.inject !== false &&
-        tree.exists(s.input),
+        tree.exists(s.input)
   );
 
   if (!style) {

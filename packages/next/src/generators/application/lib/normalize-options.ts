@@ -18,7 +18,7 @@ export interface NormalizedSchema extends Schema {
 
 export async function normalizeOptions(
   host: Tree,
-  options: Schema,
+  options: Schema
 ): Promise<NormalizedSchema> {
   const {
     projectName: appProjectName,
@@ -50,7 +50,7 @@ export async function normalizeOptions(
   const outputPath = joinPathFragments(
     'dist',
     appProjectRoot,
-    ...(options.rootProject ? [name] : []),
+    ...(options.rootProject ? [name] : [])
   );
 
   const parsedTags = options.tags

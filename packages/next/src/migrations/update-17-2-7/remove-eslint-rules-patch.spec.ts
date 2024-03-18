@@ -139,13 +139,13 @@ describe('update-nx-next-dependency', () => {
         files: ['**/*.spec.ts', '**/*.spec.tsx', '**/*.spec.js', '**/*.spec.jsx'],
       })),
       { ignores: ['.next/**/*'] },
-    ];`,
+    ];`
     );
 
     await update(tree);
 
     expect(
-      tree.read(`packages/my-pkg/eslint.config.js`, 'utf-8'),
+      tree.read(`packages/my-pkg/eslint.config.js`, 'utf-8')
     ).not.toContain("'@next/next/no-html-link-for-pages': 'off'");
   });
 });

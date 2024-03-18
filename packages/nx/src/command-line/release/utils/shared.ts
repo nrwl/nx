@@ -9,7 +9,7 @@ import type { ReleaseGroupWithName } from '../config/filter-release-groups';
 import { GitCommit, gitAdd, gitCommit } from './git';
 
 export const noDiffInChangelogMessage = chalk.yellow(
-  `NOTE: There was no diff detected for the changelog entry. Maybe you intended to pass alternative git references via --from and --to?`,
+  `NOTE: There was no diff detected for the changelog entry. Maybe you intended to pass alternative git references via --from and --to?`
 );
 
 export type ReleaseVersionGeneratorResult = {
@@ -20,7 +20,7 @@ export type ReleaseVersionGeneratorResult = {
       dryRun?: boolean;
       verbose?: boolean;
       generatorOptions?: Record<string, unknown>;
-    },
+    }
   ) => Promise<string[]>;
 };
 
@@ -70,7 +70,7 @@ export async function commitChanges(
   isDryRun: boolean,
   isVerbose: boolean,
   gitCommitMessages: string[],
-  gitCommitArgs?: string,
+  gitCommitArgs?: string
 ) {
   if (!changedFiles.length) {
     throw new Error('Error: No changed files to commit');
@@ -98,7 +98,7 @@ export function createCommitMessageValues(
   releaseGroups: ReleaseGroupWithName[],
   releaseGroupToFilteredProjects: Map<ReleaseGroupWithName, Set<string>>,
   versionData: VersionData,
-  commitMessage: string,
+  commitMessage: string
 ): string[] {
   const commitMessageValues = [commitMessage];
 
@@ -113,7 +113,7 @@ export function createCommitMessageValues(
   ) {
     const releaseGroup = releaseGroups[0];
     const releaseGroupProjectNames = Array.from(
-      releaseGroupToFilteredProjects.get(releaseGroup),
+      releaseGroupToFilteredProjects.get(releaseGroup)
     );
     const projectVersionData = versionData[releaseGroupProjectNames[0]]; // all at the same version, so we can just pick the first one
     const releaseVersion = new ReleaseVersion({
@@ -138,7 +138,7 @@ export function createCommitMessageValues(
   ) {
     const releaseGroup = releaseGroups[0];
     const releaseGroupProjectNames = Array.from(
-      releaseGroupToFilteredProjects.get(releaseGroup),
+      releaseGroupToFilteredProjects.get(releaseGroup)
     );
     if (releaseGroupProjectNames.length === 1) {
       const projectVersionData = versionData[releaseGroupProjectNames[0]];
@@ -170,7 +170,7 @@ export function createCommitMessageValues(
 
   for (const releaseGroup of releaseGroups) {
     const releaseGroupProjectNames = Array.from(
-      releaseGroupToFilteredProjects.get(releaseGroup),
+      releaseGroupToFilteredProjects.get(releaseGroup)
     );
 
     // One entry per project for independent groups
@@ -184,7 +184,7 @@ export function createCommitMessageValues(
             projectName: project,
           });
           commitMessageValues.push(
-            `- project: ${project} ${releaseVersion.rawVersion}`,
+            `- project: ${project} ${releaseVersion.rawVersion}`
           );
         }
       }
@@ -199,7 +199,7 @@ export function createCommitMessageValues(
     });
 
     commitMessageValues.push(
-      `- release-group: ${releaseGroup.name} ${releaseVersion.rawVersion}`,
+      `- release-group: ${releaseGroup.name} ${releaseVersion.rawVersion}`
     );
   }
 
@@ -221,13 +221,13 @@ function stripPlaceholders(str: string, placeholders: string[]): string {
 export function createGitTagValues(
   releaseGroups: ReleaseGroupWithName[],
   releaseGroupToFilteredProjects: Map<ReleaseGroupWithName, Set<string>>,
-  versionData: VersionData,
+  versionData: VersionData
 ): string[] {
   const tags = [];
 
   for (const releaseGroup of releaseGroups) {
     const releaseGroupProjectNames = Array.from(
-      releaseGroupToFilteredProjects.get(releaseGroup),
+      releaseGroupToFilteredProjects.get(releaseGroup)
     );
     // For independent groups we want one tag per project, not one for the overall group
     if (releaseGroup.projectsRelationship === 'independent') {
@@ -238,7 +238,7 @@ export function createGitTagValues(
             interpolate(releaseGroup.releaseTagPattern, {
               version: projectVersionData.newVersion,
               projectName: project,
-            }),
+            })
           );
         }
       }
@@ -249,7 +249,7 @@ export function createGitTagValues(
     tags.push(
       interpolate(releaseGroup.releaseTagPattern, {
         version: projectVersionData.newVersion,
-      }),
+      })
     );
   }
 
@@ -288,14 +288,14 @@ export function handleDuplicateGitTags(gitTagValues: string[]): void {
 export async function getCommitsRelevantToProjects(
   projectGraph: ProjectGraph,
   commits: GitCommit[],
-  projects: string[],
+  projects: string[]
 ): Promise<GitCommit[]> {
   const { fileMap } = await createFileMapUsingProjectGraph(projectGraph);
   const filesInReleaseGroup = new Set<string>(
     projects.reduce(
       (files, p) => [...files, ...fileMap.projectFileMap[p].map((f) => f.file)],
-      [] as string[],
-    ),
+      [] as string[]
+    )
   );
 
   /**
@@ -309,8 +309,8 @@ export async function getCommitsRelevantToProjects(
         filesInReleaseGroup.has(f) ||
         (!c.scope &&
           fileMap.nonProjectFiles.some(
-            (nonProjectFile) => nonProjectFile.file === f,
-          )),
-    ),
+            (nonProjectFile) => nonProjectFile.file === f
+          ))
+    )
   );
 }

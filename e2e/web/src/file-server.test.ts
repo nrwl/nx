@@ -37,7 +37,7 @@ describe('file-server', () => {
       `serve ${appName} --port=${port}`,
       (output) => {
         return output.indexOf(`localhost:${port}`) > -1;
-      },
+      }
     );
 
     try {
@@ -64,7 +64,7 @@ describe('file-server', () => {
         path.join(__dirname, './src/index.html'),
         path.join(__dirname, '../../dist/foobar/index.html')
       );
-    `,
+    `
     );
     updateJson(join('apps', appName, 'project.json'), (config) => {
       // Point to same path as output.path in webpack config.
@@ -88,7 +88,7 @@ describe('file-server', () => {
           output.indexOf(`localhost:${port}`) > -1 &&
           output.indexOf(`dist/foobar`) > -1
         );
-      },
+      }
     );
 
     try {

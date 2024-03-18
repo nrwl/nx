@@ -15,7 +15,7 @@ export function getClientEnvironment(mode?: string) {
         ? {}
         : {
             NODE_ENV: process.env.NODE_ENV,
-          },
+          }
     );
 
   // Stringify all values so we can feed into webpack DefinePlugin

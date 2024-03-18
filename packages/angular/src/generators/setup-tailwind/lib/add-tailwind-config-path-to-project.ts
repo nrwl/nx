@@ -10,7 +10,7 @@ import { NormalizedGeneratorOptions } from '../schema';
 export function addTailwindConfigPathToProject(
   tree: Tree,
   options: NormalizedGeneratorOptions,
-  project: ProjectConfiguration,
+  project: ProjectConfiguration
 ): void {
   const buildTarget = project.targets?.[options.buildTarget];
 
@@ -18,7 +18,7 @@ export function addTailwindConfigPathToProject(
     throw new Error(
       stripIndents`The target "${options.buildTarget}" was not found for project "${options.project}".
       If you are using a different build target, please provide it using the "--buildTarget" option.
-      If the project is not a buildable or publishable library, you don't need to setup TailwindCSS for it.`,
+      If the project is not a buildable or publishable library, you don't need to setup TailwindCSS for it.`
     );
   }
 
@@ -35,7 +35,7 @@ export function addTailwindConfigPathToProject(
       }" is using an unsupported executor "${buildTarget.executor}".
       Supported executors are ${supportedLibraryExecutors
         .map((e) => `"${e}"`)
-        .join(', ')}.`,
+        .join(', ')}.`
     );
   }
 
@@ -45,7 +45,7 @@ export function addTailwindConfigPathToProject(
   ) {
     throw new Error(
       stripIndents`The "${buildTarget.options.tailwindConfig}" file is already configured for the project "${options.project}". Are you sure this is the right project to set up Tailwind?
-      If you are sure, you can remove the configuration and re-run the generator.`,
+      If you are sure, you can remove the configuration and re-run the generator.`
     );
   }
 

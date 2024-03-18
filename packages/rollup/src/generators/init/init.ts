@@ -44,7 +44,7 @@ export async function rollupInitGenerator(tree: Tree, schema: Schema) {
       {},
       { '@nx/rollup': nxVersion },
       undefined,
-      schema.keepExistingVersions,
+      schema.keepExistingVersions
     );
   }
 

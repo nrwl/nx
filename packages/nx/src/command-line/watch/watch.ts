@@ -34,8 +34,8 @@ export class BatchFunctionRunner {
   constructor(
     private callback: (
       projects: Set<string>,
-      files: Set<string>,
-    ) => Promise<unknown>,
+      files: Set<string>
+    ) => Promise<unknown>
   ) {}
 
   enqueue(projectNames: string[], fileChanges: ChangedFile[]) {
@@ -81,7 +81,7 @@ class BatchCommandRunner extends BatchFunctionRunner {
   constructor(
     private command: string,
     private projectNameEnv: string = DEFAULT_PROJECT_NAME_ENV,
-    private fileChangesEnv: string = DEFAULT_FILE_CHANGES_ENV,
+    private fileChangesEnv: string = DEFAULT_FILE_CHANGES_ENV
   ) {
     super((projects, files) => {
       // process all pending commands together
@@ -93,7 +93,7 @@ class BatchCommandRunner extends BatchFunctionRunner {
 
   private createCommandEnvironments(
     projects: Set<string>,
-    files: Set<string>,
+    files: Set<string>
   ): Record<string, string>[] {
     const commandsToRun = [];
 
@@ -117,8 +117,7 @@ class BatchCommandRunner extends BatchFunctionRunner {
   async run(envs: Record<string, string>[]) {
     this._verbose &&
       output.logSingleLine(
-        'about to run commands with these environments: ' +
-          JSON.stringify(envs),
+        'about to run commands with these environments: ' + JSON.stringify(envs)
       );
 
     return Promise.all(
@@ -141,7 +140,7 @@ class BatchCommandRunner extends BatchFunctionRunner {
             resolve();
           });
         });
-      }),
+      })
     ).then((r) => {
       this._verbose &&
         output.logSingleLine('running complete, processing the next batch');
@@ -153,7 +152,7 @@ class BatchCommandRunner extends BatchFunctionRunner {
 export async function watch(args: WatchArguments) {
   const projectReplacementRegex = new RegExp(
     args.projectNameEnvName ?? DEFAULT_PROJECT_NAME_ENV,
-    'g',
+    'g'
   );
 
   if (args.verbose) {
@@ -183,7 +182,7 @@ export async function watch(args: WatchArguments) {
   const batchQueue = new BatchCommandRunner(
     args.command ?? '',
     args.projectNameEnvName,
-    args.fileChangesEnvName,
+    args.fileChangesEnvName
   );
 
   await daemonClient.registerFileWatcher(
@@ -218,7 +217,7 @@ export async function watch(args: WatchArguments) {
       } else {
         batchQueue.enqueue([], data.changedFiles);
       }
-    },
+    }
   );
   args.verbose && output.logSingleLine('watch process waiting...');
 }

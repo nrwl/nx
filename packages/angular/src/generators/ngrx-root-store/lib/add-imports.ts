@@ -17,7 +17,7 @@ function addRootStoreImport(
   sourceFile: SourceFile,
   parentPath: string,
   provideRootStore: string,
-  storeForRoot: string,
+  storeForRoot: string
 ) {
   if (isParentStandalone) {
     if (tree.read(parentPath, 'utf-8').includes('ApplicationConfig')) {
@@ -37,7 +37,7 @@ function addRootEffectsImport(
   sourceFile: SourceFile,
   parentPath: string,
   provideRootEffects: string,
-  effectsForEmptyRoot: string,
+  effectsForEmptyRoot: string
 ) {
   if (isParentStandalone) {
     if (tree.read(parentPath, 'utf-8').includes('ApplicationConfig')) {
@@ -50,7 +50,7 @@ function addRootEffectsImport(
       tree,
       sourceFile,
       parentPath,
-      effectsForEmptyRoot,
+      effectsForEmptyRoot
     );
   }
 
@@ -64,15 +64,15 @@ function addRouterStoreImport(
     source: SourceFile,
     symbolName: string,
     fileName: string,
-    isDefault?: boolean,
+    isDefault?: boolean
   ) => SourceFile,
   parentPath: string,
-  storeRouterModule: string,
+  storeRouterModule: string
 ) {
   sourceFile = addImport(
     sourceFile,
     'StoreRouterConnectingModule',
-    '@ngrx/router-store',
+    '@ngrx/router-store'
   );
   return addImportToModule(tree, sourceFile, parentPath, storeRouterModule);
 }
@@ -86,15 +86,15 @@ function addStoreDevTools(
     source: SourceFile,
     symbolName: string,
     fileName: string,
-    isDefault?: boolean,
-  ) => SourceFile,
+    isDefault?: boolean
+  ) => SourceFile
 ): SourceFile {
   sourceFile = addImport(sourceFile, 'isDevMode', '@angular/core');
   if (isParentStandalone) {
     sourceFile = addImport(
       sourceFile,
       'provideStoreDevtools',
-      '@ngrx/store-devtools',
+      '@ngrx/store-devtools'
     );
 
     const provideStoreDevTools =
@@ -108,7 +108,7 @@ function addStoreDevTools(
     sourceFile = addImport(
       sourceFile,
       'StoreDevtoolsModule',
-      '@ngrx/store-devtools',
+      '@ngrx/store-devtools'
     );
 
     const storeDevToolsModule =
@@ -117,7 +117,7 @@ function addStoreDevTools(
       tree,
       sourceFile,
       parentPath,
-      storeDevToolsModule,
+      storeDevToolsModule
     );
   }
 
@@ -126,7 +126,7 @@ function addStoreDevTools(
 
 export function addImportsToModule(
   tree: Tree,
-  options: NormalizedNgRxRootStoreGeneratorOptions,
+  options: NormalizedNgRxRootStoreGeneratorOptions
 ): void {
   if (!tsModule) {
     tsModule = ensureTypescript();
@@ -137,7 +137,7 @@ export function addImportsToModule(
     parentPath,
     sourceText,
     tsModule.ScriptTarget.Latest,
-    true,
+    true
   );
 
   const isParentStandalone = !sourceText.includes('@NgModule');
@@ -146,7 +146,7 @@ export function addImportsToModule(
     source: SourceFile,
     symbolName: string,
     fileName: string,
-    isDefault = false,
+    isDefault = false
   ): SourceFile => {
     return insertImport(
       tree,
@@ -154,7 +154,7 @@ export function addImportsToModule(
       parentPath,
       symbolName,
       fileName,
-      isDefault,
+      isDefault
     );
   };
 
@@ -187,7 +187,7 @@ export function addImportsToModule(
     sourceFile,
     parentPath,
     provideRootStore,
-    storeForRoot,
+    storeForRoot
   );
 
   sourceFile = addRootEffectsImport(
@@ -196,7 +196,7 @@ export function addImportsToModule(
     sourceFile,
     parentPath,
     provideRootEffects,
-    effectsForEmptyRoot,
+    effectsForEmptyRoot
   );
 
   // this is just a heuristic
@@ -208,7 +208,7 @@ export function addImportsToModule(
       sourceFile,
       addImport,
       parentPath,
-      storeRouterModule,
+      storeRouterModule
     );
   }
 
@@ -218,7 +218,7 @@ export function addImportsToModule(
       sourceFile,
       parentPath,
       isParentStandalone,
-      addImport,
+      addImport
     );
   }
 }

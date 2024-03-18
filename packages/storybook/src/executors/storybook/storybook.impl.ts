@@ -9,7 +9,7 @@ import { CLIOptions } from '@storybook/types';
 
 export default async function* storybookExecutor(
   options: CLIOptions,
-  context: ExecutorContext,
+  context: ExecutorContext
 ): AsyncGenerator<{
   success: boolean;
   info?: { port: number; baseUrl?: string };

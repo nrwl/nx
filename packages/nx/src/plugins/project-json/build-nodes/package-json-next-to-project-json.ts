@@ -19,7 +19,7 @@ export const PackageJsonProjectsNextToProjectJsonPlugin: NxPluginV2 = {
     (file, _, { workspaceRoot }) => {
       const project = createProjectFromPackageJsonNextToProjectJson(
         file,
-        workspaceRoot,
+        workspaceRoot
       );
 
       return project
@@ -35,7 +35,7 @@ export const PackageJsonProjectsNextToProjectJsonPlugin: NxPluginV2 = {
 
 function createProjectFromPackageJsonNextToProjectJson(
   projectJsonPath: string,
-  workspaceRoot: string,
+  workspaceRoot: string
 ): ProjectConfiguration | null {
   const root = dirname(projectJsonPath);
   const packageJsonPath = join(workspaceRoot, root, 'package.json');

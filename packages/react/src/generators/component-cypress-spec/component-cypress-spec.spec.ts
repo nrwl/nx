@@ -102,7 +102,7 @@ describe('react:component-cypress-spec', () => {
 
           it('should properly set up the spec', () => {
             expect(
-              formatFile`${appTree.read(cypressStorySpecFilePath, 'utf-8')}`,
+              formatFile`${appTree.read(cypressStorySpecFilePath, 'utf-8')}`
             )
               .toContain(formatFile`describe('test-ui-lib: Test component', () => {
         beforeEach(() => cy.visit('/iframe.html?id=test--primary&args=name;displayAge:false;'));
@@ -162,10 +162,10 @@ describe('react:component-cypress-spec', () => {
       cypressProject: 'other-e2e',
     });
     expect(
-      appTree.exists('other-e2e/src/e2e/test-ui-lib/test-ui-lib.cy.ts'),
+      appTree.exists('other-e2e/src/e2e/test-ui-lib/test-ui-lib.cy.ts')
     ).toBeTruthy();
     expect(
-      appTree.exists('test-ui-lib/src/e2e/test-ui-lib/test-ui-lib.cy.ts'),
+      appTree.exists('test-ui-lib/src/e2e/test-ui-lib/test-ui-lib.cy.ts')
     ).toBeFalsy();
   });
 
@@ -188,20 +188,20 @@ describe('react:component-cypress-spec', () => {
     });
     expect(
       appTree.exists(
-        'other-e2e/src/integration/test-ui-lib/test-ui-lib.spec.ts',
-      ),
+        'other-e2e/src/integration/test-ui-lib/test-ui-lib.spec.ts'
+      )
     ).toBeTruthy();
     expect(
       appTree.exists(
-        'test-ui-lib/src/integration/test-ui-lib/test-ui-lib.spec.ts',
-      ),
+        'test-ui-lib/src/integration/test-ui-lib/test-ui-lib.spec.ts'
+      )
     ).toBeFalsy();
   });
 });
 
 export async function createTestUILib(
   libName: string,
-  plainJS = false,
+  plainJS = false
 ): Promise<Tree> {
   let appTree = createTreeWithEmptyWorkspace();
   await libraryGenerator(appTree, {

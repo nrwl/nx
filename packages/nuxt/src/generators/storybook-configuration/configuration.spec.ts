@@ -40,13 +40,13 @@ describe('nuxt:storybook-configuration', () => {
     });
 
     expect(
-      appTree.read('test-ui-app/.storybook/main.ts', 'utf-8'),
+      appTree.read('test-ui-app/.storybook/main.ts', 'utf-8')
     ).toMatchSnapshot();
     expect(
-      appTree.read('test-ui-app/.storybook/preview.ts', 'utf-8'),
+      appTree.read('test-ui-app/.storybook/preview.ts', 'utf-8')
     ).toMatchSnapshot();
     expect(
-      appTree.read('test-ui-app/tsconfig.storybook.json', 'utf-8'),
+      appTree.read('test-ui-app/tsconfig.storybook.json', 'utf-8')
     ).toMatchSnapshot();
   });
 
@@ -54,7 +54,7 @@ describe('nuxt:storybook-configuration', () => {
     appTree = await createTestApp('test-ui-app');
     appTree.write(
       'test-ui-app/src/components/my-component/my-component.vue',
-      componentContent,
+      componentContent
     );
     appTree.write('test-ui-app/src/pages/about.vue', componentContent);
 
@@ -65,18 +65,18 @@ describe('nuxt:storybook-configuration', () => {
 
     expect(
       appTree.exists(
-        'test-ui-app/src/components/my-component/my-component.stories.ts',
-      ),
+        'test-ui-app/src/components/my-component/my-component.stories.ts'
+      )
     ).toBeTruthy();
     expect(
-      appTree.exists('test-ui-app/src/pages/about.stories.ts'),
+      appTree.exists('test-ui-app/src/pages/about.stories.ts')
     ).toBeFalsy();
   });
 });
 
 export async function createTestApp(
   appName: string,
-  plainJS = false,
+  plainJS = false
 ): Promise<Tree> {
   let appTree = createTreeWithEmptyWorkspace();
 

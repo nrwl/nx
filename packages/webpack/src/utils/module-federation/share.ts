@@ -30,7 +30,7 @@ import type { PackageJson } from 'nx/src/utils/package-json';
  */
 export function shareWorkspaceLibraries(
   workspaceLibs: WorkspaceLibrary[],
-  tsConfigPath = process.env.NX_TSCONFIG_PATH ?? getRootTsConfigPath(),
+  tsConfigPath = process.env.NX_TSCONFIG_PATH ?? getRootTsConfigPath()
 ): SharedWorkspaceLibraryConfig {
   if (!workspaceLibs) {
     return getEmptySharedLibrariesConfig();
@@ -52,12 +52,12 @@ export function shareWorkspaceLibraries(
     // It will do nothing for React Projects
     collectWorkspaceLibrarySecondaryEntryPoints(
       library,
-      tsconfigPathAliases,
+      tsconfigPathAliases
     ).forEach(({ name, path }) =>
       pathMappings.push({
         name,
         path,
-      }),
+      })
     );
 
     pathMappings.push({
@@ -72,59 +72,56 @@ export function shareWorkspaceLibraries(
     getAliases: () =>
       pathMappings.reduce(
         (aliases, library) => ({ ...aliases, [library.name]: library.path }),
-        {},
+        {}
       ),
     getLibraries: (
       projectRoot: string,
-      eager?: boolean,
+      eager?: boolean
     ): Record<string, SharedLibraryConfig> => {
       let pkgJson: PackageJson = null;
       if (
         projectRoot &&
         existsSync(
-          joinPathFragments(workspaceRoot, projectRoot, 'package.json'),
+          joinPathFragments(workspaceRoot, projectRoot, 'package.json')
         )
       ) {
         pkgJson = readJsonFile(
-          joinPathFragments(workspaceRoot, projectRoot, 'package.json'),
+          joinPathFragments(workspaceRoot, projectRoot, 'package.json')
         );
       }
-      return pathMappings.reduce(
-        (libraries, library) => {
-          // Check to see if the library version is declared in the app's package.json
-          let version = pkgJson?.dependencies?.[library.name];
-          if (!version && workspaceLibs.length > 0) {
-            const workspaceLib = workspaceLibs.find(
-              (lib) => lib.importKey === library.name,
-            );
+      return pathMappings.reduce((libraries, library) => {
+        // Check to see if the library version is declared in the app's package.json
+        let version = pkgJson?.dependencies?.[library.name];
+        if (!version && workspaceLibs.length > 0) {
+          const workspaceLib = workspaceLibs.find(
+            (lib) => lib.importKey === library.name
+          );
 
-            const libPackageJsonPath = workspaceLib
-              ? join(workspaceLib.root, 'package.json')
-              : null;
-            if (libPackageJsonPath && existsSync(libPackageJsonPath)) {
-              pkgJson = readJsonFile(libPackageJsonPath);
+          const libPackageJsonPath = workspaceLib
+            ? join(workspaceLib.root, 'package.json')
+            : null;
+          if (libPackageJsonPath && existsSync(libPackageJsonPath)) {
+            pkgJson = readJsonFile(libPackageJsonPath);
 
-              if (pkgJson) {
-                version = pkgJson.version;
-              }
+            if (pkgJson) {
+              version = pkgJson.version;
             }
           }
+        }
 
-          return {
-            ...libraries,
-            [library.name]: {
-              ...(version
-                ? {
-                    requiredVersion: version,
-                    singleton: true,
-                  }
-                : { requiredVersion: false }),
-              eager,
-            },
-          };
-        },
-        {} as Record<string, SharedLibraryConfig>,
-      );
+        return {
+          ...libraries,
+          [library.name]: {
+            ...(version
+              ? {
+                  requiredVersion: version,
+                  singleton: true,
+                }
+              : { requiredVersion: false }),
+            eager,
+          },
+        };
+      }, {} as Record<string, SharedLibraryConfig>);
     },
     getReplacementPlugin: () =>
       new webpack.NormalModuleReplacementPlugin(/./, (req) => {
@@ -153,13 +150,13 @@ export function shareWorkspaceLibraries(
  */
 export function getNpmPackageSharedConfig(
   pkgName: string,
-  version: string,
+  version: string
 ): SharedLibraryConfig | undefined {
   if (!version) {
     logger.warn(
       `Could not find a version for "${pkgName}" in the root "package.json" ` +
         'when collecting shared packages for the Module Federation setup. ' +
-        'The package will not be shared.',
+        'The package will not be shared.'
     );
 
     return undefined;
@@ -177,7 +174,7 @@ export function getNpmPackageSharedConfig(
  * @param packages - Array of package names as strings
  */
 export function sharePackages(
-  packages: string[],
+  packages: string[]
 ): Record<string, SharedLibraryConfig> {
   const pkgJson = readRootPackageJson();
   const allPackages: { name: string; version: string }[] = [];
@@ -188,17 +185,14 @@ export function sharePackages(
     collectPackageSecondaryEntryPoints(pkg, pkgVersion, allPackages);
   });
 
-  return allPackages.reduce(
-    (shared, pkg) => {
-      const config = getNpmPackageSharedConfig(pkg.name, pkg.version);
-      if (config) {
-        shared[pkg.name] = config;
-      }
+  return allPackages.reduce((shared, pkg) => {
+    const config = getNpmPackageSharedConfig(pkg.name, pkg.version);
+    if (config) {
+      shared[pkg.name] = config;
+    }
 
-      return shared;
-    },
-    {} as Record<string, SharedLibraryConfig>,
-  );
+    return shared;
+  }, {} as Record<string, SharedLibraryConfig>);
 }
 
 /**
@@ -210,7 +204,7 @@ export function sharePackages(
  */
 export function applySharedFunction(
   sharedConfig: Record<string, SharedLibraryConfig>,
-  sharedFn: SharedFunction | undefined,
+  sharedFn: SharedFunction | undefined
 ): void {
   if (!sharedFn) {
     return;
@@ -244,7 +238,7 @@ export function applySharedFunction(
 export function applyAdditionalShared(
   sharedConfig: Record<string, SharedLibraryConfig>,
   additionalShared: AdditionalSharedConfig | undefined,
-  projectGraph: ProjectGraph,
+  projectGraph: ProjectGraph
 ): void {
   if (!additionalShared) {
     return;
@@ -264,7 +258,7 @@ export function applyAdditionalShared(
 function addStringDependencyToSharedConfig(
   sharedConfig: Record<string, SharedLibraryConfig>,
   dependency: string,
-  projectGraph: ProjectGraph,
+  projectGraph: ProjectGraph
 ): void {
   if (projectGraph.nodes[dependency]) {
     sharedConfig[dependency] = { requiredVersion: false };
@@ -273,7 +267,7 @@ function addStringDependencyToSharedConfig(
     const config = getNpmPackageSharedConfig(
       dependency,
       pkgJson.dependencies?.[dependency] ??
-        pkgJson.devDependencies?.[dependency],
+        pkgJson.devDependencies?.[dependency]
     );
 
     if (!config) {
@@ -284,7 +278,7 @@ function addStringDependencyToSharedConfig(
   } else {
     throw new Error(
       `The specified dependency "${dependency}" in the additionalShared configuration does not exist in the project graph. ` +
-        `Please check your additionalShared configuration and make sure you are including valid workspace projects or npm packages.`,
+        `Please check your additionalShared configuration and make sure you are including valid workspace projects or npm packages.`
     );
   }
 }

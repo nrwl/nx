@@ -3,7 +3,7 @@ import { NormalizedJestProjectSchema } from '../schema';
 
 export function checkForTestTarget(
   tree: Tree,
-  options: NormalizedJestProjectSchema,
+  options: NormalizedJestProjectSchema
 ) {
   const projectConfig = readProjectConfiguration(tree, options.project);
   if (projectConfig?.targets?.test) {

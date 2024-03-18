@@ -83,7 +83,7 @@ describe('project graph utils', () => {
 
     it('should throw an error if the project does not exist', () => {
       expect(() =>
-        getSourceDirOfDependentProjects('non-existent-app', projGraph),
+        getSourceDirOfDependentProjects('non-existent-app', projGraph)
       ).toThrowError();
     });
 
@@ -97,7 +97,7 @@ describe('project graph utils', () => {
 
         const [_, warnings] = getSourceDirOfDependentProjects(
           'demo-app',
-          projGraph,
+          projGraph
         );
         expect(warnings).toContain('implicit-lib');
       });

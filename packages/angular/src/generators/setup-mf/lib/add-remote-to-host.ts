@@ -28,15 +28,15 @@ export function addRemoteToHost(tree: Tree, options: Schema) {
     const hostProject = readProjectConfiguration(tree, options.host);
     const pathToMFManifest = joinPathFragments(
       hostProject.sourceRoot,
-      'assets/module-federation.manifest.json',
+      'assets/module-federation.manifest.json'
     );
     const hostFederationType = determineHostFederationType(
       tree,
-      pathToMFManifest,
+      pathToMFManifest
     );
 
     const isHostUsingTypescriptConfig = tree.exists(
-      joinPathFragments(hostProject.root, 'module-federation.config.ts'),
+      joinPathFragments(hostProject.root, 'module-federation.config.ts')
     );
 
     if (hostFederationType === 'static') {
@@ -44,7 +44,7 @@ export function addRemoteToHost(tree: Tree, options: Schema) {
         tree,
         options,
         hostProject,
-        isHostUsingTypescriptConfig,
+        isHostUsingTypescriptConfig
       );
     } else if (hostFederationType === 'dynamic') {
       addRemoteToDynamicHost(tree, options, pathToMFManifest);
@@ -70,7 +70,7 @@ export function addRemoteToHost(tree: Tree, options: Schema) {
 
 function determineHostFederationType(
   tree: Tree,
-  pathToMfManifest: string,
+  pathToMfManifest: string
 ): 'dynamic' | 'static' {
   return tree.exists(pathToMfManifest) ? 'dynamic' : 'static';
 }
@@ -79,18 +79,18 @@ function addRemoteToStaticHost(
   tree: Tree,
   options: Schema,
   hostProject: ProjectConfiguration,
-  isHostUsingTypescrpt: boolean,
+  isHostUsingTypescrpt: boolean
 ) {
   const hostMFConfigPath = joinPathFragments(
     hostProject.root,
     isHostUsingTypescrpt
       ? 'module-federation.config.ts'
-      : 'module-federation.config.js',
+      : 'module-federation.config.js'
   );
 
   if (!hostMFConfigPath || !tree.exists(hostMFConfigPath)) {
     throw new Error(
-      `The selected host application, ${options.host}, does not contain a module-federation.config.{ts,js} or module-federation.manifest.json file. Are you sure it has been set up as a host application?`,
+      `The selected host application, ${options.host}, does not contain a module-federation.config.{ts,js} or module-federation.manifest.json file. Are you sure it has been set up as a host application?`
     );
   }
 
@@ -100,7 +100,7 @@ function addRemoteToStaticHost(
   const mfRemotesNode = tsquery(
     webpackAst,
     'Identifier[name=remotes] ~ ArrayLiteralExpression',
-    { visitAllChildren: true },
+    { visitAllChildren: true }
   )[0] as ArrayLiteralExpression;
 
   const endOfPropertiesPos = mfRemotesNode.getEnd() - 1;
@@ -116,7 +116,7 @@ function addRemoteToStaticHost(
 function addRemoteToDynamicHost(
   tree: Tree,
   options: Schema,
-  pathToMfManifest: string,
+  pathToMfManifest: string
 ) {
   updateJson(tree, pathToMfManifest, (manifest) => {
     return {
@@ -130,7 +130,7 @@ function addRemoteToDynamicHost(
 function addLazyLoadedRouteToHostAppModule(
   tree: Tree,
   options: Schema,
-  hostFederationType: 'dynamic' | 'static',
+  hostFederationType: 'dynamic' | 'static'
 ) {
   if (!tsModule) {
     tsModule = ensureTypescript();
@@ -149,7 +149,7 @@ function addLazyLoadedRouteToHostAppModule(
     pathToHostRootRouting,
     hostRootRoutingFile,
     tsModule.ScriptTarget.Latest,
-    true,
+    true
   );
 
   if (hostFederationType === 'dynamic') {
@@ -158,7 +158,7 @@ function addLazyLoadedRouteToHostAppModule(
       sourceFile,
       pathToHostRootRouting,
       'loadRemoteModule',
-      '@nx/angular/mf',
+      '@nx/angular/mf'
     );
   }
 
@@ -177,12 +177,12 @@ function addLazyLoadedRouteToHostAppModule(
     `{
     path: '${options.appName}',
     loadChildren: () => ${routeToAdd}.then(m => m.${exportedRemote})
-    }`,
+    }`
   );
 
   const pathToAppComponentTemplate = joinPathFragments(
     hostAppConfig.sourceRoot,
-    'app/app.component.html',
+    'app/app.component.html'
   );
   const appComponent = tree.read(pathToAppComponentTemplate, 'utf-8');
   if (
@@ -192,7 +192,7 @@ function addLazyLoadedRouteToHostAppModule(
     const indexOfClosingMenuTag = appComponent.indexOf('</ul>');
     const newAppComponent = `${appComponent.slice(
       0,
-      indexOfClosingMenuTag,
+      indexOfClosingMenuTag
     )}<li><a routerLink="${options.appName}">${
       names(options.appName).className
     }</a></li>\n${appComponent.slice(indexOfClosingMenuTag)}`;

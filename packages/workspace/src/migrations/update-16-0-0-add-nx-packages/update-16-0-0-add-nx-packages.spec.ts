@@ -17,10 +17,10 @@ describe('update-16-0-0-add-nx-packages', () => {
     await replacePackage(tree);
 
     expect(
-      readJson(tree, 'package.json').dependencies['@nrwl/workspace'],
+      readJson(tree, 'package.json').dependencies['@nrwl/workspace']
     ).not.toBeDefined();
     expect(
-      readJson(tree, 'package.json').devDependencies['@nrwl/workspace'],
+      readJson(tree, 'package.json').devDependencies['@nrwl/workspace']
     ).not.toBeDefined();
   });
 

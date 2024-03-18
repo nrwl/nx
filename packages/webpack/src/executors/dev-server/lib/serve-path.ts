@@ -1,7 +1,7 @@
 import type { NormalizedWebpackExecutorOptions } from '../../webpack/schema';
 
 export function buildServePath(
-  browserOptions: NormalizedWebpackExecutorOptions,
+  browserOptions: NormalizedWebpackExecutorOptions
 ) {
   let servePath =
     _findDefaultServePath(browserOptions.baseHref, browserOptions.deployUrl) ||
@@ -18,7 +18,7 @@ export function buildServePath(
 
 export function _findDefaultServePath(
   baseHref?: string,
-  deployUrl?: string,
+  deployUrl?: string
 ): string | null {
   if (!baseHref && !deployUrl) {
     return '';

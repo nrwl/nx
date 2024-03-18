@@ -28,7 +28,7 @@ export async function runMany(
   extraOptions = { excludeTaskDependencies: false, loadDotEnvFiles: true } as {
     excludeTaskDependencies: boolean;
     loadDotEnvFiles: boolean;
-  },
+  }
 ) {
   performance.mark('code-loading:end');
   performance.measure('code-loading', 'init-local', 'code-loading:end');
@@ -38,7 +38,7 @@ export async function runMany(
     args,
     'run-many',
     { printWarnings: args.graph !== 'stdout' },
-    nxJson,
+    nxJson
   );
   if (nxArgs.verbose) {
     process.env.NX_VERBOSE_LOGGING = 'true';
@@ -62,7 +62,7 @@ export async function runMany(
         projects: projectNames,
         file,
       },
-      projectNames,
+      projectNames
     );
   } else {
     const status = await runCommand(
@@ -73,7 +73,7 @@ export async function runMany(
       overrides,
       null,
       extraTargetDependencies,
-      extraOptions,
+      extraOptions
     );
     process.exit(status);
   }
@@ -81,7 +81,7 @@ export async function runMany(
 
 export function projectsToRun(
   nxArgs: NxArgs,
-  projectGraph: ProjectGraph,
+  projectGraph: ProjectGraph
 ): ProjectGraphProjectNode[] {
   const selectedProjects: Record<string, ProjectGraphProjectNode> = {};
   const validProjects = runnableForTarget(projectGraph.nodes, nxArgs.targets);
@@ -95,7 +95,7 @@ export function projectsToRun(
   } else {
     const matchingProjects = findMatchingProjects(
       nxArgs.projects,
-      projectGraph.nodes,
+      projectGraph.nodes
     );
     for (const project of matchingProjects) {
       if (!validProjects.has(project)) {
@@ -108,7 +108,7 @@ export function projectsToRun(
     if (invalidProjects.length > 0) {
       output.warn({
         title: `The following projects do not have a configuration for any of the provided targets ("${nxArgs.targets.join(
-          ', ',
+          ', '
         )}")`,
         bodyLines: invalidProjects.map((name) => `- ${name}`),
       });
@@ -117,7 +117,7 @@ export function projectsToRun(
 
   const excludedProjects = findMatchingProjects(
     nxArgs.exclude,
-    selectedProjects,
+    selectedProjects
   );
 
   for (const excludedProject of excludedProjects) {
@@ -129,7 +129,7 @@ export function projectsToRun(
 
 function runnableForTarget(
   projects: Record<string, ProjectGraphProjectNode>,
-  targets: string[],
+  targets: string[]
 ): Set<string> {
   const runnable = new Set<string>();
   for (let projectName in projects) {

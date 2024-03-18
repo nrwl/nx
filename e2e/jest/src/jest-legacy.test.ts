@@ -30,14 +30,14 @@ describe('Jest', () => {
         test('can access jest global', () => {
           expect(true).toBe(true);
         });
-        `,
+        `
     );
 
     const result = await runCLIAsync(
-      `test ${mylib} --no-watch --code-coverage --coverageReporters=text --coverageReporters=text-summary`,
+      `test ${mylib} --no-watch --code-coverage --coverageReporters=text --coverageReporters=text-summary`
     );
     expect(result.stdout).toContain(
-      'File      | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s',
+      'File      | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s'
     ); // text
     expect(result.stdout).toContain('Coverage summary'); // text-summary
   }, 90000);

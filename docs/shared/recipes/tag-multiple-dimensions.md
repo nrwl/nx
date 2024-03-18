@@ -88,35 +88,35 @@ We can now restrict projects within the same group to depend on each other based
       "depConstraints": [
         {
           "sourceTag": "scope:shared",
-          "onlyDependOnLibsWithTags": ["scope:shared"],
+          "onlyDependOnLibsWithTags": ["scope:shared"]
         },
         {
           "sourceTag": "scope:admin",
-          "onlyDependOnLibsWithTags": ["scope:shared", "scope:admin"],
+          "onlyDependOnLibsWithTags": ["scope:shared", "scope:admin"]
         },
         {
           "sourceTag": "scope:client",
-          "onlyDependOnLibsWithTags": ["scope:shared", "scope:client"],
+          "onlyDependOnLibsWithTags": ["scope:shared", "scope:client"]
         },
         {
           "sourceTag": "type:app",
-          "onlyDependOnLibsWithTags": ["type:feature", "type:ui", "type:util"],
+          "onlyDependOnLibsWithTags": ["type:feature", "type:ui", "type:util"]
         },
         {
           "sourceTag": "type:feature",
-          "onlyDependOnLibsWithTags": ["type:ui", "type:util"],
+          "onlyDependOnLibsWithTags": ["type:ui", "type:util"]
         },
         {
           "sourceTag": "type:ui",
-          "onlyDependOnLibsWithTags": ["type:ui", "type:util"],
+          "onlyDependOnLibsWithTags": ["type:ui", "type:util"]
         },
         {
           "sourceTag": "type:util",
-          "onlyDependOnLibsWithTags": ["type:util"],
-        },
-      ],
-    },
-  ],
+          "onlyDependOnLibsWithTags": ["type:util"]
+        }
+      ]
+    }
+  ]
 
   // ... more ESLint config here
 }
@@ -142,22 +142,22 @@ Matching just a single source tag is sometimes not enough for solving complex re
         {
           // this constraint applies to all "admin" projects
           "sourceTag": "scope:admin",
-          "onlyDependOnLibsWithTags": ["scope:shared", "scope:admin"],
+          "onlyDependOnLibsWithTags": ["scope:shared", "scope:admin"]
         },
         {
           "sourceTag": "type:ui",
-          "onlyDependOnLibsWithTags": ["type:ui", "type:util"],
+          "onlyDependOnLibsWithTags": ["type:ui", "type:util"]
         },
         {
           // we don't want our admin ui components to depend on anything except utilities,
           // and we also want to ban router imports
           "allSourceTags": ["scope:admin", "type:ui"],
           "onlyDependOnLibsWithTags": ["type:util"],
-          "bannedExternalImports": ["*router*"],
-        },
-      ],
-    },
-  ],
+          "bannedExternalImports": ["*router*"]
+        }
+      ]
+    }
+  ]
 
   // ... more ESLint config here
 }

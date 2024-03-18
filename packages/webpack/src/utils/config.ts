@@ -10,7 +10,7 @@ import { NormalizedWebpackExecutorOptions } from '../executors/webpack/schema';
 export const nxWebpackComposablePlugin = 'nxWebpackComposablePlugin';
 
 export function isNxWebpackComposablePlugin(
-  a: unknown,
+  a: unknown
 ): a is AsyncNxComposableWebpackPlugin {
   return a?.[nxWebpackComposablePlugin] === true;
 }
@@ -26,10 +26,9 @@ export interface NxComposableWebpackPlugin {
 }
 
 export interface AsyncNxComposableWebpackPlugin {
-  (
-    config: Configuration,
-    ctx: NxWebpackExecutionContext,
-  ): Configuration | Promise<Configuration>;
+  (config: Configuration, ctx: NxWebpackExecutionContext):
+    | Configuration
+    | Promise<Configuration>;
 }
 
 export function composePlugins(
@@ -42,7 +41,7 @@ export function composePlugins(
   return Object.assign(
     async function combined(
       config: Configuration,
-      ctx: NxWebpackExecutionContext,
+      ctx: NxWebpackExecutionContext
     ): Promise<Configuration> {
       // Webpack may be calling us as a standard config function.
       // Build up Nx context from environment variables.
@@ -62,7 +61,7 @@ export function composePlugins(
     },
     {
       [nxWebpackComposablePlugin]: true,
-    },
+    }
   );
 }
 
@@ -70,7 +69,7 @@ export function composePluginsSync(...plugins: NxComposableWebpackPlugin[]) {
   return Object.assign(
     function combined(
       config: Configuration,
-      ctx: NxWebpackExecutionContext,
+      ctx: NxWebpackExecutionContext
     ): Configuration {
       for (const plugin of plugins) {
         config = plugin(config, ctx);
@@ -79,7 +78,7 @@ export function composePluginsSync(...plugins: NxComposableWebpackPlugin[]) {
     },
     {
       [nxWebpackComposablePlugin]: true,
-    },
+    }
   );
 }
 

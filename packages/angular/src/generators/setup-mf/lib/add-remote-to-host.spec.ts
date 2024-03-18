@@ -15,7 +15,7 @@ describe('Add remote to host', () => {
     const mfRemotesNode = tsquery(
       webpackAst,
       'Identifier[name=remotes] ~ ArrayLiteralExpression',
-      { visitAllChildren: true },
+      { visitAllChildren: true }
     )[0] as ArrayLiteralExpression;
 
     const endOfPropertiesPos = mfRemotesNode.getEnd() - 1;

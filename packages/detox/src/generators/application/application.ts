@@ -19,7 +19,7 @@ export async function detoxApplicationGenerator(host: Tree, schema: Schema) {
 
 export async function detoxApplicationGeneratorInternal(
   host: Tree,
-  schema: Schema,
+  schema: Schema
 ) {
   const options = await normalizeOptions(host, schema);
 

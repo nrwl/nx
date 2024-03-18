@@ -15,7 +15,7 @@ import type { NormalizedSchema } from './normalized-schema';
 export function createFiles(
   tree: Tree,
   options: NormalizedSchema,
-  project: AngularProjectConfiguration,
+  project: AngularProjectConfiguration
 ) {
   const rootOffset = offsetFromRoot(options.libraryOptions.projectRoot);
   const libNames = names(options.libraryOptions.fileName);
@@ -23,7 +23,7 @@ export function createFiles(
     ? options.libraryOptions.fileName
     : joinPathFragments(
         options.libraryOptions.fileName,
-        options.libraryOptions.fileName,
+        options.libraryOptions.fileName
       );
 
   const version = getInstalledAngularVersion(tree);
@@ -50,7 +50,7 @@ export function createFiles(
     tree,
     joinPathFragments(__dirname, '../files/base'),
     options.libraryOptions.projectRoot,
-    substitutions,
+    substitutions
   );
 
   if (options.libraryOptions.standalone) {
@@ -58,22 +58,22 @@ export function createFiles(
       tree,
       joinPathFragments(__dirname, '../files/standalone-components'),
       options.libraryOptions.projectRoot,
-      substitutions,
+      substitutions
     );
   } else {
     generateFiles(
       tree,
       joinPathFragments(__dirname, '../files/ng-module'),
       options.libraryOptions.projectRoot,
-      substitutions,
+      substitutions
     );
 
     if (options.libraryOptions.skipModule) {
       tree.delete(
         joinPathFragments(
           project.sourceRoot,
-          `lib/${options.libraryOptions.fileName}.module.ts`,
-        ),
+          `lib/${options.libraryOptions.fileName}.module.ts`
+        )
       );
     }
   }

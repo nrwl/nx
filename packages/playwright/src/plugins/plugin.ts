@@ -49,7 +49,7 @@ function readTargetsCache(): Record<
 }
 
 function writeTargetsToCache(
-  targets: Record<string, Record<string, TargetConfiguration>>,
+  targets: Record<string, Record<string, TargetConfiguration>>
 ) {
   writeJsonFile(cachePath, targets);
 }
@@ -85,7 +85,7 @@ export const createNodes: CreateNodes<PlaywrightPluginOptions> = [
         configFilePath,
         projectRoot,
         normalizedOptions,
-        context,
+        context
       ));
 
     calculatedTargets[hash] = targets;
@@ -105,7 +105,7 @@ async function buildPlaywrightTargets(
   configFilePath: string,
   projectRoot: string,
   options: NormalizedOptions,
-  context: CreateNodesContext,
+  context: CreateNodesContext
 ) {
   // Playwright forbids importing the `@playwright/test` module twice. This would affect running the tests,
   // but we're just reading the config so let's delete the variable they are using to detect this.
@@ -113,7 +113,7 @@ async function buildPlaywrightTargets(
   delete (process as any)['__pw_initiator__'];
 
   const playwrightConfig = await loadConfigFile<PlaywrightTestConfig>(
-    join(context.workspaceRoot, configFilePath),
+    join(context.workspaceRoot, configFilePath)
   );
 
   const namedInputs = getNamedInputs(projectRoot, context);
@@ -159,7 +159,7 @@ async function buildPlaywrightTargets(
     forEachTestFile(
       (testFile) => {
         const relativeToProjectRoot = normalizePath(
-          relative(projectRoot, testFile),
+          relative(projectRoot, testFile)
         );
         const targetName = `${options.ciTargetName}--${relativeToProjectRoot}`;
         targets[targetName] = {
@@ -176,7 +176,7 @@ async function buildPlaywrightTargets(
         context,
         path: testDir,
         config: playwrightConfig,
-      },
+      }
     );
 
     targets[options.ciTargetName] ??= {};
@@ -199,11 +199,11 @@ async function forEachTestFile(
     context: CreateNodesContext;
     path: string;
     config: PlaywrightTestConfig;
-  },
+  }
 ) {
   const files = getFilesInDirectoryUsingContext(
     opts.context.workspaceRoot,
-    opts.path,
+    opts.path
   );
   const matcher = createMatcher(opts.config.testMatch);
   const ignoredMatcher = opts.config.testIgnore
@@ -235,7 +235,7 @@ function createMatcher(pattern: string | RegExp | Array<string | RegExp>) {
 
 function getOutputs(
   projectRoot: string,
-  playwrightConfig: PlaywrightTestConfig,
+  playwrightConfig: PlaywrightTestConfig
 ): string[] {
   function getOutput(path: string): string {
     if (path.startsWith('..')) {

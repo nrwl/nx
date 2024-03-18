@@ -10,7 +10,7 @@ import * as esbuild from 'esbuild';
 
 export function normalizeOptions(
   options: EsBuildExecutorOptions,
-  context: ExecutorContext,
+  context: ExecutorContext
 ): NormalizedEsBuildExecutorOptions {
   // If we're not generating package.json file, then copy it as-is as an asset.
   const assets = options.generatePackageJson
@@ -19,7 +19,7 @@ export function normalizeOptions(
         ...options.assets,
         joinPathFragments(
           context.projectGraph.nodes[context.projectName].data.root,
-          'package.json',
+          'package.json'
         ),
       ];
 
@@ -27,13 +27,13 @@ export function normalizeOptions(
     logger.info(
       chalk.yellow(
         `Your build has conflicting options, ${chalk.bold(
-          'bundle:false',
+          'bundle:false'
         )} and ${chalk.bold(
-          'thirdParty:true',
+          'thirdParty:true'
         )}. Your package.json depedencies might not be generated correctly so we added an update ${chalk.bold(
-          'thirdParty:false',
-        )}`,
-      ),
+          'thirdParty:false'
+        )}`
+      )
     );
   }
 
@@ -45,11 +45,11 @@ export function normalizeOptions(
 
     if (options.esbuildOptions)
       throw new Error(
-        `Cannot use both esbuildOptions and esbuildConfig options. Remove one of them and try again.`,
+        `Cannot use both esbuildOptions and esbuildConfig options. Remove one of them and try again.`
       );
     if (!fs.existsSync(userDefinedConfig))
       throw new Error(
-        `Path of esbuildConfig does not exist: ${userDefinedConfig}`,
+        `Path of esbuildConfig does not exist: ${userDefinedConfig}`
       );
     userDefinedBuildOptions = require(userDefinedConfig);
   } else if (options.esbuildOptions) {
@@ -60,7 +60,7 @@ export function normalizeOptions(
     const { outputFileName, ...rest } = options;
     if (outputFileName) {
       throw new Error(
-        `Cannot use outputFileName and additionalEntry points together. Please remove outputFileName and try again.`,
+        `Cannot use outputFileName and additionalEntry points together. Please remove outputFileName and try again.`
       );
     }
     return {

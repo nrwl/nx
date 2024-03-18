@@ -3,7 +3,7 @@ import { ProjectGraphBuilder } from '../project-graph-builder';
 
 export function applyImplicitDependencies(
   projects: Record<string, ProjectConfiguration>,
-  builder: ProjectGraphBuilder,
+  builder: ProjectGraphBuilder
 ) {
   Object.keys(projects).forEach((source) => {
     const p = projects[source];

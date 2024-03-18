@@ -128,7 +128,7 @@ describe('findMatchingProjects', () => {
     // have the tag theme2 in which case we still want them.
     const matches = findMatchingProjects(
       ['*', '!tag:api', 'tag:theme2'],
-      projectGraph,
+      projectGraph
     );
     expect(matches).toEqual(expect.arrayContaining(['a', 'b', 'nested']));
     expect(matches.length).toEqual(3);
@@ -147,7 +147,7 @@ describe('findMatchingProjects', () => {
       'b',
     ]);
     expect(
-      findMatchingProjects(['tag:api', '!tag:theme2'], projectGraph),
+      findMatchingProjects(['tag:api', '!tag:theme2'], projectGraph)
     ).toEqual(['test-project', 'c']);
   });
 
@@ -197,7 +197,7 @@ describe.each([
     const iterations = 100;
     const cacheTime = time(
       () => getMatchingStringsWithCache(pattern, items),
-      iterations,
+      iterations
     );
     const directTime = time(() => minimatch.match(items, pattern), iterations);
     // Using minimatch directly is slower than using the cache.

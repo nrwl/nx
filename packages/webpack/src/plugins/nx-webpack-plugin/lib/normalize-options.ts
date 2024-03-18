@@ -13,7 +13,7 @@ import {
 } from '../nx-webpack-plugin-options';
 
 export function normalizeOptions(
-  options: NxWebpackPluginOptions,
+  options: NxWebpackPluginOptions
 ): NormalizedNxWebpackPluginOptions {
   const combinedOptions: Partial<NormalizedNxWebpackPluginOptions> = {};
   const isProd = process.env.NODE_ENV === 'production';
@@ -33,7 +33,7 @@ export function normalizeOptions(
   if (configurationName) {
     Object.assign(
       originalTargetOptions,
-      targetConfig.configurations?.[configurationName],
+      targetConfig.configurations?.[configurationName]
     );
   }
   // This could be called from dev-server which means we need to read `buildTarget` to get actual build options.
@@ -43,7 +43,7 @@ export function normalizeOptions(
     if (configurationName) {
       Object.assign(
         buildTargetOptions,
-        targetConfig.configurations?.[configurationName],
+        targetConfig.configurations?.[configurationName]
       );
     }
     Object.assign(combinedOptions, buildTargetOptions);
@@ -57,7 +57,7 @@ export function normalizeOptions(
 
   if (!options.main) {
     throw new Error(
-      `Missing "main" option for the entry file. Set this option in your Nx webpack plugin.`,
+      `Missing "main" option for the entry file. Set this option in your Nx webpack plugin.`
     );
   }
 
@@ -68,7 +68,7 @@ export function normalizeOptions(
           options.assets,
           workspaceRoot,
           sourceRoot,
-          projectNode.data.root,
+          projectNode.data.root
         )
       : [],
     baseHref: options.baseHref ?? '/',
@@ -79,7 +79,7 @@ export function normalizeOptions(
     extractCss: options.extractCss ?? true,
     fileReplacements: normalizeFileReplacements(
       workspaceRoot,
-      options.fileReplacements,
+      options.fileReplacements
     ),
     generateIndexHtml: options.generateIndexHtml ?? true,
     main: options.main,
@@ -107,7 +107,7 @@ export function normalizeAssets(
   assets: any[],
   root: string,
   sourceRoot: string,
-  projectRoot: string,
+  projectRoot: string
 ): AssetGlobPattern[] {
   return assets.map((asset) => {
     if (typeof asset === 'string') {
@@ -117,7 +117,7 @@ export function normalizeAssets(
 
       if (!resolvedAssetPath.startsWith(resolvedSourceRoot)) {
         throw new Error(
-          `The ${resolvedAssetPath} asset path must start with the project source root: ${sourceRoot}`,
+          `The ${resolvedAssetPath} asset path must start with the project source root: ${sourceRoot}`
         );
       }
 
@@ -135,7 +135,7 @@ export function normalizeAssets(
     } else {
       if (asset.output.startsWith('..')) {
         throw new Error(
-          'An asset cannot be written to a location outside of the output path.',
+          'An asset cannot be written to a location outside of the output path.'
         );
       }
 
@@ -158,7 +158,7 @@ export function normalizeAssets(
 
 export function normalizeFileReplacements(
   root: string,
-  fileReplacements: FileReplacement[],
+  fileReplacements: FileReplacement[]
 ): FileReplacement[] {
   return fileReplacements
     ? fileReplacements.map((fileReplacement) => ({
@@ -170,7 +170,7 @@ export function normalizeFileReplacements(
 
 function normalizeRelativePaths(
   projectRoot: string,
-  options: NxWebpackPluginOptions,
+  options: NxWebpackPluginOptions
 ): void {
   for (const [fieldName, fieldValue] of Object.entries(options)) {
     if (isRelativePath(fieldValue)) {

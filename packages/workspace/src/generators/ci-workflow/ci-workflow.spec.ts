@@ -58,7 +58,7 @@ describe('CI Workflow generator', () => {
         await ciWorkflowGenerator(tree, { ci: 'github', name: 'CI' });
 
         expect(
-          tree.read('.github/workflows/ci.yml', 'utf-8'),
+          tree.read('.github/workflows/ci.yml', 'utf-8')
         ).toMatchSnapshot();
       });
 
@@ -84,7 +84,7 @@ describe('CI Workflow generator', () => {
         });
 
         expect(
-          tree.read('.github/workflows/my-custom-workflow.yml', 'utf-8'),
+          tree.read('.github/workflows/my-custom-workflow.yml', 'utf-8')
         ).toMatchSnapshot();
       });
 
@@ -111,7 +111,7 @@ describe('CI Workflow generator', () => {
         });
 
         expect(readJson(tree, 'nx.json').affected.defaultBase).toEqual(
-          'origin/my-branch',
+          'origin/my-branch'
         );
       });
 
@@ -142,7 +142,7 @@ describe('CI Workflow generator', () => {
           ciWorkflowGenerator(tree, {
             ci: 'github',
             name: 'CI',
-          }),
+          })
         ).rejects.toThrowErrorMatchingSnapshot();
       });
     });
@@ -188,7 +188,7 @@ describe('CI Workflow generator', () => {
       });
 
       expect(
-        tree.read('.github/workflows/my-custom-workflow.yml', 'utf-8'),
+        tree.read('.github/workflows/my-custom-workflow.yml', 'utf-8')
       ).toMatchSnapshot();
     });
 

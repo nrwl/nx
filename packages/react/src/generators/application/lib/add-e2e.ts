@@ -14,7 +14,7 @@ import { NormalizedSchema } from '../schema';
 
 export async function addE2e(
   tree: Tree,
-  options: NormalizedSchema,
+  options: NormalizedSchema
 ): Promise<GeneratorCallback> {
   switch (options.e2eTestRunner) {
     case 'cypress': {

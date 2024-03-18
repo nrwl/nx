@@ -73,14 +73,14 @@ export default async function handler(request: NextRequest) {
         match_threshold: DEFAULT_MATCH_THRESHOLD,
         match_count: DEFAULT_MATCH_COUNT,
         min_content_length: MIN_CONTENT_LENGTH,
-      },
+      }
     );
 
     if (matchError) {
       throw new CustomError(
         'application_error',
         'Failed to match page sections',
-        matchError,
+        matchError
       );
     }
 
@@ -113,7 +113,7 @@ export default async function handler(request: NextRequest) {
       messages,
       query,
       contextText,
-      PROMPT,
+      PROMPT
     );
 
     const response: Stream<OpenAI.Chat.Completions.ChatCompletionChunk> =

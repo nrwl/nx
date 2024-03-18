@@ -29,7 +29,7 @@ export const rule = ESLintUtils.RuleCreator(() => __filename)({
     }
     return {
       ['JSONExpressionStatement > JSONObjectExpression'](
-        node: AST.JSONObjectExpression,
+        node: AST.JSONObjectExpression
       ) {
         const descriptionParentJSONPropertyNode =
           resolveDescriptionParentPropertyNode(node);
@@ -50,7 +50,7 @@ export const rule = ESLintUtils.RuleCreator(() => __filename)({
                 descriptionParentJSONPropertyNode.value.range;
               return fixer.insertTextAfterRange(
                 [start, end - 1], // -1 to account for the closing " of the string
-                '.',
+                '.'
               );
             },
           });
@@ -66,7 +66,7 @@ interface JSONPropertyWithStringLiteralValue extends AST.JSONProperty {
 }
 
 function resolveDescriptionParentPropertyNode(
-  node: AST.JSONObjectExpression,
+  node: AST.JSONObjectExpression
 ): JSONPropertyWithStringLiteralValue | null {
   const descriptionParentJSONPropertyNode = node.properties.find((prop) => {
     return (

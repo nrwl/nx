@@ -8,7 +8,7 @@ import { isBuildableLibraryProject } from './buildable-project';
 
 export function addAngularEsLintDependencies(
   tree: Tree,
-  projectName: string,
+  projectName: string
 ): GeneratorCallback {
   const angularEslintVersionToInstall = versions(tree).angularEslintVersion;
   const devDependencies = {

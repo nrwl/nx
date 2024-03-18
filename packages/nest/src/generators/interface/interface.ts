@@ -6,7 +6,7 @@ export type InterfaceGeneratorOptions = NestGeneratorOptions;
 
 export async function interfaceGenerator(
   tree: Tree,
-  rawOptions: InterfaceGeneratorOptions,
+  rawOptions: InterfaceGeneratorOptions
 ) {
   await interfaceGeneratorInternal(tree, {
     nameAndDirectoryFormat: 'derived',
@@ -16,13 +16,13 @@ export async function interfaceGenerator(
 
 export async function interfaceGeneratorInternal(
   tree: Tree,
-  rawOptions: InterfaceGeneratorOptions,
+  rawOptions: InterfaceGeneratorOptions
 ): Promise<any> {
   const options = await normalizeOptions(
     tree,
     'interface',
     '@nx/nest:interface',
-    rawOptions,
+    rawOptions
   );
 
   return runNestSchematic(tree, 'interface', options);

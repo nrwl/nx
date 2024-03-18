@@ -9,7 +9,7 @@ export async function addVitest(tree: Tree, options: NormalizedSchema) {
   const hasPlugin = nxJson.plugins?.some((p) =>
     typeof p === 'string'
       ? p === '@nx/nuxt/plugin'
-      : p.plugin === '@nx/nuxt/plugin',
+      : p.plugin === '@nx/nuxt/plugin'
   );
 
   const { createOrEditViteConfig, vitestGenerator } = ensurePackage<
@@ -27,7 +27,7 @@ export async function addVitest(tree: Tree, options: NormalizedSchema) {
       skipViteConfig: true,
       addPlugin: true,
     },
-    hasPlugin,
+    hasPlugin
   );
 
   createOrEditViteConfig(
@@ -42,7 +42,7 @@ export async function addVitest(tree: Tree, options: NormalizedSchema) {
     },
     true,
     undefined,
-    true,
+    true
   );
 
   updateJson(tree, `${options.appProjectRoot}/tsconfig.spec.json`, (json) => {

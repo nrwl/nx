@@ -15,7 +15,7 @@ import { createTsConfig } from '../../../utils/create-ts-config';
 export function createFiles(host: Tree, options: NormalizedSchema) {
   const relativePathToRootTsConfig = getRelativePathToRootTsConfig(
     host,
-    options.projectRoot,
+    options.projectRoot
   );
   const substitutions = {
     ...options,
@@ -29,7 +29,7 @@ export function createFiles(host: Tree, options: NormalizedSchema) {
     host,
     joinPathFragments(__dirname, '../files/common'),
     options.projectRoot,
-    substitutions,
+    substitutions
   );
 
   if (options.bundler === 'vite' || options.unitTestRunner === 'vitest') {
@@ -37,7 +37,7 @@ export function createFiles(host: Tree, options: NormalizedSchema) {
       host,
       joinPathFragments(__dirname, '../files/vite'),
       options.projectRoot,
-      substitutions,
+      substitutions
     );
   }
 
@@ -81,6 +81,6 @@ export function createFiles(host: Tree, options: NormalizedSchema) {
     options.projectRoot,
     'lib',
     options,
-    relativePathToRootTsConfig,
+    relativePathToRootTsConfig
   );
 }

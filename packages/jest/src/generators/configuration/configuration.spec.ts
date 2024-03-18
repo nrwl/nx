@@ -126,7 +126,7 @@ describe('jestProject', () => {
       } as JestProjectSchema);
       expect(tree.exists('src/test-setup.ts')).toBeFalsy();
       expect(tree.read('libs/lib1/jest.config.ts', 'utf-8')).not.toContain(
-        `setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],`,
+        `setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],`
       );
     });
 
@@ -137,7 +137,7 @@ describe('jestProject', () => {
         setupFile: 'web-components',
       } as JestProjectSchema);
       expect(tree.read('libs/lib1/jest.config.ts', 'utf-8')).toContain(
-        `setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],`,
+        `setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],`
       );
     });
 
@@ -150,7 +150,7 @@ describe('jestProject', () => {
 
       const jestConfig = tree.read('libs/lib1/jest.config.ts', 'utf-8');
       expect(jestConfig).toContain(
-        `setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],`,
+        `setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],`
       );
       expect(jestConfig).toMatchSnapshot();
     });
@@ -247,7 +247,7 @@ describe('jestProject', () => {
     expect(tree.exists('jest.config.js')).toBeTruthy();
     expect(tree.exists('libs/lib1/jest.config.js')).toBeTruthy();
     expect(tree.read('libs/lib1/jest.config.js', 'utf-8')).toContain(
-      "preset: '../../jest.preset.js',",
+      "preset: '../../jest.preset.js',"
     );
   });
 
@@ -269,7 +269,7 @@ describe('jestProject', () => {
     } as JestProjectSchema);
     expect(tree.exists('libs/lib1/jest.config.js')).toBeTruthy();
     expect(tree.read('libs/lib1/jest.config.js', 'utf-8')).toContain(
-      "preset: '../../jest.preset.js',",
+      "preset: '../../jest.preset.js',"
     );
   });
 
@@ -281,7 +281,7 @@ describe('jestProject', () => {
     } as JestProjectSchema);
     expect(tree.exists('libs/lib1/jest.config.js')).toBeTruthy();
     expect(tree.read('libs/lib1/jest.config.js', 'utf-8')).toContain(
-      'module.exports = {',
+      'module.exports = {'
     );
   });
 
@@ -396,7 +396,7 @@ describe('jestProject', () => {
         `
       const nxPreset = require('@nx/jest/preset').default;
 
-      module.exports = { ...nxPreset }`,
+      module.exports = { ...nxPreset }`
       );
 
       // ACT

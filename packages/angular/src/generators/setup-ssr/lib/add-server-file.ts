@@ -11,11 +11,11 @@ import { DEFAULT_BROWSER_DIR } from './constants';
 export function addServerFile(
   tree: Tree,
   schema: Schema,
-  isUsingApplicationBuilder: boolean,
+  isUsingApplicationBuilder: boolean
 ) {
   const { root: projectRoot, targets } = readProjectConfiguration(
     tree,
-    schema.project,
+    schema.project
   );
   const { outputPath } = targets.build.options;
   const browserBundleOutputPath = isUsingApplicationBuilder
@@ -33,16 +33,16 @@ export function addServerFile(
       ...(isUsingApplicationBuilder
         ? ['application-builder']
         : angularMajorVersion >= 17
-          ? ['server-builder', 'v17+']
-          : ['server-builder', 'pre-v17']),
+        ? ['server-builder', 'v17+']
+        : ['server-builder', 'pre-v17'])
     ),
     projectRoot,
-    { ...schema, browserBundleOutputPath, tpl: '' },
+    { ...schema, browserBundleOutputPath, tpl: '' }
   );
 }
 
 function getApplicationBuilderBrowserOutputPath(
-  outputPath: string | { browser: string },
+  outputPath: string | { browser: string }
 ): string {
   if (outputPath) {
     if (typeof outputPath === 'string') {

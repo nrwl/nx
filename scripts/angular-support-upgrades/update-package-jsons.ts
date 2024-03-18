@@ -2,10 +2,10 @@ import { readFileSync, writeFileSync } from 'fs';
 
 function updatePackageJson(
   pathToPkgJson: string,
-  packageVersionMap: Map<string, string>,
+  packageVersionMap: Map<string, string>
 ) {
   const pkgJson = JSON.parse(
-    readFileSync(pathToPkgJson, { encoding: 'utf-8' }),
+    readFileSync(pathToPkgJson, { encoding: 'utf-8' })
   );
 
   for (const [pkgName, version] of packageVersionMap.entries()) {
@@ -21,7 +21,7 @@ function updatePackageJson(
 }
 
 export async function updatePackageJsonForAngular(
-  packageVersionMap: Map<string, string>,
+  packageVersionMap: Map<string, string>
 ) {
   console.log('⏳ - Writing package.json files...');
   updatePackageJson('package.json', packageVersionMap);

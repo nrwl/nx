@@ -31,7 +31,7 @@ describe('@nx/eslint:workspace-rules-project', () => {
     await lintWorkspaceRulesProjectGenerator(tree);
 
     expect(
-      readJson<NxJsonConfiguration>(tree, 'nx.json').targetDefaults.lint.inputs,
+      readJson<NxJsonConfiguration>(tree, 'nx.json').targetDefaults.lint.inputs
     ).toContain('{workspaceRoot}/tools/eslint-rules/**/*');
   });
 
@@ -40,16 +40,16 @@ describe('@nx/eslint:workspace-rules-project', () => {
 
     expect(tree.read('tools/eslint-rules/index.ts', 'utf-8')).toMatchSnapshot();
     expect(
-      tree.read('tools/eslint-rules/tsconfig.json', 'utf-8'),
+      tree.read('tools/eslint-rules/tsconfig.json', 'utf-8')
     ).toMatchSnapshot();
     expect(
-      tree.read('tools/eslint-rules/tsconfig.lint.json', 'utf-8'),
+      tree.read('tools/eslint-rules/tsconfig.lint.json', 'utf-8')
     ).toMatchSnapshot();
     expect(
-      tree.read('tools/eslint-rules/tsconfig.spec.json', 'utf-8'),
+      tree.read('tools/eslint-rules/tsconfig.spec.json', 'utf-8')
     ).toMatchSnapshot();
     expect(
-      tree.read('tools/eslint-rules/jest.config.ts', 'utf-8'),
+      tree.read('tools/eslint-rules/jest.config.ts', 'utf-8')
     ).toMatchSnapshot();
   });
 
@@ -91,16 +91,16 @@ describe('@nx/eslint:workspace-rules-project', () => {
     await lintWorkspaceRulesProjectGenerator(tree);
 
     expect(tree.read('tools/eslint-rules/index.ts', 'utf-8')).toEqual(
-      customIndexContents,
+      customIndexContents
     );
     expect(tree.read('tools/eslint-rules/tsconfig.json', 'utf-8')).toEqual(
-      customTsconfigContents,
+      customTsconfigContents
     );
     expect(tree.read('tools/eslint-rules/tsconfig.lint.json', 'utf-8')).toEqual(
-      customTsconfigContents,
+      customTsconfigContents
     );
     expect(tree.read('tools/eslint-rules/tsconfig.spec.json', 'utf-8')).toEqual(
-      customTsconfigContents,
+      customTsconfigContents
     );
   });
 });

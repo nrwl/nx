@@ -7,6 +7,6 @@ export function addTsLibDependencies(tree: Tree) {
     {
       tslib: tsLibVersion,
     },
-    {},
+    {}
   );
 }

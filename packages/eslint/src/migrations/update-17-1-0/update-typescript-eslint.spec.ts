@@ -52,7 +52,7 @@ export default {
     '@eslint/eslintrc': '@eslint/eslintrc/dist/eslintrc-universal.cjs',
   },
 };
-`,
+`
     );
 
     tree.write(
@@ -94,7 +94,7 @@ export const rule = ESLintUtils.RuleCreator(() => __filename)({
     return {};
   },
 });
-`,
+`
     );
   });
 
@@ -102,10 +102,10 @@ export const rule = ESLintUtils.RuleCreator(() => __filename)({
     await update(tree);
 
     expect(
-      tree.read('tools/eslint-rules/tsconfig.json', 'utf-8'),
+      tree.read('tools/eslint-rules/tsconfig.json', 'utf-8')
     ).toMatchSnapshot();
     expect(
-      tree.read('tools/eslint-rules/tsconfig.spec.json', 'utf-8'),
+      tree.read('tools/eslint-rules/tsconfig.spec.json', 'utf-8')
     ).toMatchSnapshot();
   });
 
@@ -113,7 +113,7 @@ export const rule = ESLintUtils.RuleCreator(() => __filename)({
     await update(tree);
 
     expect(
-      tree.read('tools/eslint-rules/jest.config.ts', 'utf-8'),
+      tree.read('tools/eslint-rules/jest.config.ts', 'utf-8')
     ).toMatchSnapshot();
   });
 
@@ -121,7 +121,7 @@ export const rule = ESLintUtils.RuleCreator(() => __filename)({
     await update(tree);
 
     expect(
-      tree.read('tools/eslint-rules/rules/rule.ts', 'utf-8'),
+      tree.read('tools/eslint-rules/rules/rule.ts', 'utf-8')
     ).toMatchSnapshot();
   });
 });

@@ -21,7 +21,7 @@ function addRootStoreImport(
   sourceFile: SourceFile,
   parentPath: string,
   provideRootStore: string,
-  storeForRoot: string,
+  storeForRoot: string
 ) {
   if (isParentStandalone) {
     const parentContents = tree.read(parentPath, 'utf-8');
@@ -45,7 +45,7 @@ function addRootEffectsImport(
   sourceFile: SourceFile,
   parentPath: string,
   provideRootEffects: string,
-  effectsForEmptyRoot: string,
+  effectsForEmptyRoot: string
 ) {
   if (isParentStandalone) {
     const parentContents = tree.read(parentPath, 'utf-8');
@@ -61,7 +61,7 @@ function addRootEffectsImport(
       tree,
       sourceFile,
       parentPath,
-      effectsForEmptyRoot,
+      effectsForEmptyRoot
     );
   }
 
@@ -75,15 +75,15 @@ function addRouterStoreImport(
     source: SourceFile,
     symbolName: string,
     fileName: string,
-    isDefault?: boolean,
+    isDefault?: boolean
   ) => SourceFile,
   parentPath: string,
-  storeRouterModule: string,
+  storeRouterModule: string
 ) {
   sourceFile = addImport(
     sourceFile,
     'StoreRouterConnectingModule',
-    '@ngrx/router-store',
+    '@ngrx/router-store'
   );
   return addImportToModule(tree, sourceFile, parentPath, storeRouterModule);
 }
@@ -95,7 +95,7 @@ function addStoreForFeatureImport(
   sourceFile: SourceFile,
   parentPath: string,
   provideStoreForFeature: string,
-  storeForFeature: string,
+  storeForFeature: string
 ) {
   if (isParentStandalone) {
     const parentContents = tree.read(parentPath, 'utf-8');
@@ -105,7 +105,7 @@ function addStoreForFeatureImport(
       addProviderToBootstrapApplication(
         tree,
         parentPath,
-        provideStoreForFeature,
+        provideStoreForFeature
       );
     } else {
       addProviderToRoute(tree, parentPath, route, provideStoreForFeature);
@@ -115,7 +115,7 @@ function addStoreForFeatureImport(
       tree,
       sourceFile,
       parentPath,
-      storeForFeature,
+      storeForFeature
     );
   }
   return sourceFile;
@@ -128,7 +128,7 @@ function addEffectsForFeatureImport(
   sourceFile: SourceFile,
   parentPath: string,
   provideEffectsForFeature: string,
-  effectsForFeature: string,
+  effectsForFeature: string
 ) {
   if (isParentStandalone) {
     const parentContents = tree.read(parentPath, 'utf-8');
@@ -138,7 +138,7 @@ function addEffectsForFeatureImport(
       addProviderToBootstrapApplication(
         tree,
         parentPath,
-        provideEffectsForFeature,
+        provideEffectsForFeature
       );
     } else {
       addProviderToRoute(tree, parentPath, route, provideEffectsForFeature);
@@ -148,7 +148,7 @@ function addEffectsForFeatureImport(
       tree,
       sourceFile,
       parentPath,
-      effectsForFeature,
+      effectsForFeature
     );
   }
   return sourceFile;
@@ -156,7 +156,7 @@ function addEffectsForFeatureImport(
 
 export function addImportsToModule(
   tree: Tree,
-  options: NormalizedNgRxGeneratorOptions,
+  options: NormalizedNgRxGeneratorOptions
 ): void {
   if (!tsModule) {
     tsModule = ensureTypescript();
@@ -167,7 +167,7 @@ export function addImportsToModule(
     parentPath,
     sourceText,
     tsModule.ScriptTarget.Latest,
-    true,
+    true
   );
 
   const isParentStandalone = !sourceText.includes('@NgModule');
@@ -176,7 +176,7 @@ export function addImportsToModule(
     source: SourceFile,
     symbolName: string,
     fileName: string,
-    isDefault = false,
+    isDefault = false
   ): SourceFile => {
     return insertImport(
       tree,
@@ -184,7 +184,7 @@ export function addImportsToModule(
       parentPath,
       symbolName,
       fileName,
-      isDefault,
+      isDefault
     );
   };
 
@@ -241,7 +241,7 @@ export function addImportsToModule(
       sourceFile,
       parentPath,
       provideRootStore,
-      storeForRoot,
+      storeForRoot
     );
     sourceFile = addRootEffectsImport(
       tree,
@@ -250,7 +250,7 @@ export function addImportsToModule(
       sourceFile,
       parentPath,
       provideRootEffects,
-      effectsForEmptyRoot,
+      effectsForEmptyRoot
     );
 
     if (hasRouter && !isParentStandalone) {
@@ -259,7 +259,7 @@ export function addImportsToModule(
         sourceFile,
         addImport,
         parentPath,
-        storeRouterModule,
+        storeRouterModule
       );
     }
   } else {
@@ -280,7 +280,7 @@ export function addImportsToModule(
             tree,
             sourceFile,
             parentPath,
-            facadeName,
+            facadeName
           );
         }
       }
@@ -298,7 +298,7 @@ export function addImportsToModule(
         sourceFile,
         parentPath,
         provideRootStore,
-        storeForRoot,
+        storeForRoot
       );
 
       sourceFile = addRootEffectsImport(
@@ -308,7 +308,7 @@ export function addImportsToModule(
         sourceFile,
         parentPath,
         provideRootEffects,
-        effectsForRoot,
+        effectsForRoot
       );
 
       if (hasRouter && !isParentStandalone) {
@@ -317,7 +317,7 @@ export function addImportsToModule(
           sourceFile,
           addImport,
           parentPath,
-          storeRouterModule,
+          storeRouterModule
         );
       }
 
@@ -328,7 +328,7 @@ export function addImportsToModule(
         sourceFile,
         parentPath,
         provideStoreForFeature,
-        storeForFeature,
+        storeForFeature
       );
 
       if (isParentStandalone) {
@@ -339,7 +339,7 @@ export function addImportsToModule(
           sourceFile,
           parentPath,
           provideEffectsForFeature,
-          effectsForFeature,
+          effectsForFeature
         );
       }
     } else {
@@ -352,7 +352,7 @@ export function addImportsToModule(
         sourceFile,
         parentPath,
         provideStoreForFeature,
-        storeForFeature,
+        storeForFeature
       );
       sourceFile = addEffectsForFeatureImport(
         tree,
@@ -361,7 +361,7 @@ export function addImportsToModule(
         sourceFile,
         parentPath,
         provideEffectsForFeature,
-        effectsForFeature,
+        effectsForFeature
       );
     }
   }

@@ -15,7 +15,7 @@ import { moduleFederationNodeVersion } from '../../../utils/versions';
 export async function setupSsrForRemote(
   tree: Tree,
   options: NormalizedSchema<Schema>,
-  appName: string,
+  appName: string
 ) {
   const tasks: GeneratorCallback[] = [];
   const project = readProjectConfiguration(tree, appName);
@@ -34,7 +34,7 @@ export async function setupSsrForRemote(
       tmpl: '',
       browserBuildOutputPath: project.targets.build.options.outputPath,
       serverBuildOutputPath: project.targets.server.options.outputPath,
-    },
+    }
   );
 
   // For hosts to use when running remotes in static mode.
@@ -51,7 +51,7 @@ export async function setupSsrForRemote(
     options: {
       command: `PORT=${options.devServerPort ?? 4200} node ${joinPathFragments(
         serverOutputPath,
-        serverOutputName,
+        serverOutputName
       )}`,
     },
   };
@@ -62,7 +62,7 @@ export async function setupSsrForRemote(
     {
       '@module-federation/node': moduleFederationNodeVersion,
     },
-    {},
+    {}
   );
   tasks.push(installTask);
 

@@ -71,7 +71,7 @@ export function updateDependencies(host: Tree, schema: Schema) {
       '@expo/cli': expoCliVersion,
     },
     undefined,
-    schema.keepExistingVersions,
+    schema.keepExistingVersions
   );
 }
 

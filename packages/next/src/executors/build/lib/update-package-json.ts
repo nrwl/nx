@@ -3,7 +3,7 @@ import type { PackageJson } from 'nx/src/utils/package-json';
 
 export function updatePackageJson(
   packageJson: PackageJson,
-  context: ExecutorContext,
+  context: ExecutorContext
 ) {
   if (!packageJson.scripts) {
     packageJson.scripts = {};

@@ -4,7 +4,7 @@ import { output } from '../../utils/output';
 export function formatFlags(
   leftPadding: string,
   flag: string,
-  value: any,
+  value: any
 ): string {
   return flag == '_'
     ? `${leftPadding}  ${(value as string[]).join(' ')}`
@@ -24,7 +24,7 @@ function formatValue(value: any) {
 export function formatTargetsAndProjects(
   projectNames: string[],
   targets: string[],
-  tasks: Task[],
+  tasks: Task[]
 ) {
   if (tasks.length === 1)
     return `target ${targets[0]} for project ${projectNames[0]}`;
@@ -45,7 +45,7 @@ export function formatTargetsAndProjects(
   const dependentTasks = tasks.filter(
     (t) =>
       projectNames.indexOf(t.target.project) === -1 ||
-      targets.indexOf(t.target.target) === -1,
+      targets.indexOf(t.target.target) === -1
   ).length;
 
   if (dependentTasks > 0) {

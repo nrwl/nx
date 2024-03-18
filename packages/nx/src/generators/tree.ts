@@ -55,7 +55,7 @@ export interface Tree {
   write(
     filePath: string,
     content: Buffer | string,
-    options?: TreeWriteOptions,
+    options?: TreeWriteOptions
   ): void;
 
   /**
@@ -141,7 +141,7 @@ export class FsTree implements Tree {
   constructor(
     readonly root: string,
     private readonly isVerbose: boolean,
-    private readonly logOperationId?: string,
+    private readonly logOperationId?: string
   ) {}
 
   read(filePath: string): Buffer | null;
@@ -168,7 +168,7 @@ export class FsTree implements Tree {
   write(
     filePath: string,
     content: Buffer | string,
-    options?: TreeWriteOptions,
+    options?: TreeWriteOptions
   ): void {
     this.assertUnlocked();
     filePath = this.normalize(filePath);
@@ -208,7 +208,7 @@ export class FsTree implements Tree {
   overwrite(
     filePath: string,
     content: Buffer | string,
-    options?: TreeWriteOptions,
+    options?: TreeWriteOptions
   ): void {
     filePath = this.normalize(filePath);
     this.write(filePath, content, options);
@@ -219,7 +219,7 @@ export class FsTree implements Tree {
     filePath = this.normalize(filePath);
     if (this.filesForDir(this.rp(filePath)).length > 0) {
       this.filesForDir(this.rp(filePath)).forEach(
-        (f) => (this.recordedChanges[f] = { content: null, isDeleted: true }),
+        (f) => (this.recordedChanges[f] = { content: null, isDeleted: true })
       );
     }
     this.recordedChanges[this.rp(filePath)] = {
@@ -331,14 +331,14 @@ export class FsTree implements Tree {
     if (this.recordedChanges[filePathChangeKey]) {
       if (this.recordedChanges[filePathChangeKey].isDeleted) {
         throw new Error(
-          `Cannot change permissions of deleted file ${filePath}.`,
+          `Cannot change permissions of deleted file ${filePath}.`
         );
       }
 
       this.recordedChanges[filePathChangeKey].options = { mode };
     } else if (!this.fsExists(filePath)) {
       throw new Error(
-        `Cannot change permissions of non-existing file ${filePath}.`,
+        `Cannot change permissions of non-existing file ${filePath}.`
       );
     } else if (!this.fsIsFile(filePath)) {
       // To fully support directories we'd need to change how we store
@@ -405,7 +405,7 @@ export class FsTree implements Tree {
 
   private filesForDir(path: string): string[] {
     return Object.keys(this.recordedChanges).filter(
-      (f) => f.startsWith(`${path}/`) && !this.recordedChanges[f].isDeleted,
+      (f) => f.startsWith(`${path}/`) && !this.recordedChanges[f].isDeleted
     );
   }
 
@@ -413,7 +413,7 @@ export class FsTree implements Tree {
     const res = {};
     if (path === '') {
       return Object.keys(this.recordedChanges).map(
-        (file) => file.split('/')[0],
+        (file) => file.split('/')[0]
       );
     }
     Object.keys(this.recordedChanges).forEach((f) => {
@@ -453,7 +453,7 @@ export function flushChanges(root: string, fileChanges: FileChange[]): void {
 
 export function printChanges(
   fileChanges: FileChange[],
-  indent: string = '',
+  indent: string = ''
 ): void {
   fileChanges.forEach((f) => {
     if (f.type === 'CREATE') {

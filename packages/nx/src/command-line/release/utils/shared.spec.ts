@@ -57,7 +57,7 @@ describe('shared', () => {
           releaseGroups,
           releaseGroupToFilteredProjects,
           versionData,
-          userCommitMessage,
+          userCommitMessage
         );
         expect(result).toMatchInlineSnapshot(`
           [
@@ -121,7 +121,7 @@ describe('shared', () => {
               newVersion: '1.0.0-canary.2',
             },
           },
-          'chore(release): Release {projectName} v{version} [skip ci]',
+          'chore(release): Release {projectName} v{version} [skip ci]'
         );
         expect(result).toMatchInlineSnapshot(`
           [

@@ -13,7 +13,7 @@ export interface ReactNativeRunIosOutput {
 
 export default async function* runIosExecutor(
   options: ReactNativeRunIosOptions,
-  context: ExecutorContext,
+  context: ExecutorContext
 ): AsyncGenerator<ReactNativeRunIosOutput> {
   if (platform() !== 'darwin') {
     throw new Error(`The run-ios build requires Mac to run`);
@@ -29,7 +29,7 @@ export default async function* runIosExecutor(
         port: options.port,
         resetCache: options.resetCache,
         interactive: true,
-      }),
+      })
     );
   }
 
@@ -41,7 +41,7 @@ export default async function* runIosExecutor(
 function runCliRunIOS(
   workspaceRoot: string,
   projectRoot: string,
-  options: ReactNativeRunIosOptions,
+  options: ReactNativeRunIosOptions
 ): Promise<ChildProcess> {
   return new Promise<ChildProcess>((resolve, reject) => {
     /**
@@ -55,7 +55,7 @@ function runCliRunIOS(
         stdio: 'inherit',
         cwd: pathResolve(workspaceRoot, projectRoot),
         env: { ...process.env, RCT_METRO_PORT: options.port.toString() },
-      },
+      }
     );
 
     /**

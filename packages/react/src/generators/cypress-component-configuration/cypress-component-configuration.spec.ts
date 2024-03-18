@@ -168,7 +168,7 @@ describe('React:CypressComponentTestConfiguration', () => {
     expect(config).toMatchSnapshot();
 
     expect(
-      readProjectConfiguration(tree, 'some-lib').targets['component-test'],
+      readProjectConfiguration(tree, 'some-lib').targets['component-test']
     ).toEqual({
       executor: '@nx/cypress:cypress',
       options: {
@@ -236,7 +236,7 @@ describe('React:CypressComponentTestConfiguration', () => {
     expect(config).toMatchSnapshot();
 
     expect(
-      readProjectConfiguration(tree, 'some-lib').targets['component-test'],
+      readProjectConfiguration(tree, 'some-lib').targets['component-test']
     ).toEqual({
       executor: '@nx/cypress:cypress',
       options: {
@@ -304,7 +304,7 @@ describe('React:CypressComponentTestConfiguration', () => {
     expect(config).toMatchSnapshot();
 
     expect(
-      readProjectConfiguration(tree, 'some-lib').targets['component-test'],
+      readProjectConfiguration(tree, 'some-lib').targets['component-test']
     ).toEqual({
       executor: '@nx/cypress:cypress',
       options: {
@@ -355,11 +355,11 @@ describe('React:CypressComponentTestConfiguration', () => {
     expect(tree.exists('some-lib/src/lib/some-lib.cy.tsx')).toBeTruthy();
     const compTestNested = tree.read(
       'some-lib/src/lib/another-cmp/another-cmp.cy.tsx',
-      'utf-8',
+      'utf-8'
     );
     expect(compTestNested).toMatchSnapshot();
     expect(
-      tree.exists('some-lib/src/lib/another-cmp/another-cmp.spec.cy.tsx'),
+      tree.exists('some-lib/src/lib/another-cmp/another-cmp.spec.cy.tsx')
     ).toBeFalsy();
   });
   it('should generate tests for existing js components', async () => {
@@ -408,15 +408,15 @@ describe('React:CypressComponentTestConfiguration', () => {
     const compTest = tree.read('some-lib/src/lib/some-cmp.cy.js', 'utf-8');
     expect(compTest).toMatchSnapshot();
     expect(
-      tree.exists('some-lib/src/lib/another-cmp/another-cmp.cy.js'),
+      tree.exists('some-lib/src/lib/another-cmp/another-cmp.cy.js')
     ).toBeTruthy();
     const compTestNested = tree.read(
       'some-lib/src/lib/another-cmp/another-cmp.cy.js',
-      'utf-8',
+      'utf-8'
     );
     expect(compTestNested).toMatchSnapshot();
     expect(
-      tree.exists('some-lib/src/lib/another-cmp/another-cmp.spec.cy.js'),
+      tree.exists('some-lib/src/lib/another-cmp/another-cmp.spec.cy.js')
     ).toBeFalsy();
   });
 
@@ -471,7 +471,7 @@ describe('React:CypressComponentTestConfiguration', () => {
       });
     }).resolves;
     expect(
-      require('@nx/devkit').createProjectGraphAsync,
+      require('@nx/devkit').createProjectGraphAsync
     ).not.toHaveBeenCalled();
   });
 

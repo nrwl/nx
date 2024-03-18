@@ -252,7 +252,7 @@ describe('defaultChangelogRenderer()', () => {
         await defaultChangelogRenderer({
           ...otherOpts,
           project: 'pkg-a',
-        }),
+        })
       ).toMatchInlineSnapshot(`
         "## v1.1.0
 
@@ -282,7 +282,7 @@ describe('defaultChangelogRenderer()', () => {
           changelogRenderOptions: {
             authors: false,
           },
-        }),
+        })
       ).toMatchInlineSnapshot(`
         "## v1.1.0
 
@@ -303,7 +303,7 @@ describe('defaultChangelogRenderer()', () => {
         await defaultChangelogRenderer({
           ...otherOpts,
           project: 'pkg-b',
-        }),
+        })
       ).toMatchInlineSnapshot(`
         "## v1.1.0
 
@@ -344,7 +344,7 @@ describe('defaultChangelogRenderer()', () => {
         await defaultChangelogRenderer({
           ...otherOpts,
           entryWhenNoChanges: 'Nothing at all!',
-        }),
+        })
       ).toMatchInlineSnapshot(`
         "## v1.1.0
 
@@ -355,7 +355,7 @@ describe('defaultChangelogRenderer()', () => {
         await defaultChangelogRenderer({
           ...otherOpts,
           entryWhenNoChanges: false, // should not create an entry
-        }),
+        })
       ).toMatchInlineSnapshot(`""`);
     });
 
@@ -375,7 +375,7 @@ describe('defaultChangelogRenderer()', () => {
         await defaultChangelogRenderer({
           ...otherOpts,
           entryWhenNoChanges: 'Nothing at all!',
-        }),
+        })
       ).toMatchInlineSnapshot(`
         "## v1.1.0
 
@@ -386,7 +386,7 @@ describe('defaultChangelogRenderer()', () => {
         await defaultChangelogRenderer({
           ...otherOpts,
           entryWhenNoChanges: false, // should not create an entry
-        }),
+        })
       ).toMatchInlineSnapshot(`""`);
     });
   });

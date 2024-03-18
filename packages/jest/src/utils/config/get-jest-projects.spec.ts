@@ -356,7 +356,7 @@ describe('getJestProjectsAsync', () => {
       });
       const expectedResults = ['<rootDir>/projects/test-1'];
       expect(await getJestProjectsAsync()).toEqual(expectedResults);
-    },
+    }
   );
 
   test.each`
@@ -386,7 +386,7 @@ describe('getJestProjectsAsync', () => {
       });
       const expectedResults = ['<rootDir>/projects/test-1'];
       expect(await getJestProjectsAsync()).toEqual(expectedResults);
-    },
+    }
   );
 
   test.each`
@@ -416,7 +416,7 @@ describe('getJestProjectsAsync', () => {
       });
       const expectedResults = ['<rootDir>/projects/test-1'];
       expect(await getJestProjectsAsync()).toEqual(expectedResults);
-    },
+    }
   );
 
   test.each`
@@ -447,7 +447,7 @@ describe('getJestProjectsAsync', () => {
       });
       const expectedResults = ['<rootDir>/projects/test-1/jest.config.ts'];
       expect(await getJestProjectsAsync()).toEqual(expectedResults);
-    },
+    }
   );
 
   test('targets with nx:run-commands executor with a command with multiple "jest" runs', async () => {

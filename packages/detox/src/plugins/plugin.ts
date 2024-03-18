@@ -40,7 +40,7 @@ function writeTargetsToCache(
   targets: Record<
     string,
     Record<string, TargetConfiguration<DetoxPluginOptions>>
-  >,
+  >
 ) {
   writeJsonFile(cachePath, targets);
 }
@@ -85,7 +85,7 @@ export const createNodes: CreateNodes<DetoxPluginOptions> = [
 function buildDetoxTargets(
   projectRoot: string,
   options: DetoxPluginOptions,
-  context: CreateNodesContext,
+  context: CreateNodesContext
 ) {
   const namedInputs = getNamedInputs(projectRoot, context);
 
@@ -112,7 +112,7 @@ function buildDetoxTargets(
 }
 
 function getInputs(
-  namedInputs: NxJsonConfiguration['namedInputs'],
+  namedInputs: NxJsonConfiguration['namedInputs']
 ): TargetConfiguration['inputs'] {
   return [
     ...('production' in namedInputs

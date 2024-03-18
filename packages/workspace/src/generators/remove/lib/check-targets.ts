@@ -58,7 +58,7 @@ export async function checkTargets(tree: Tree, schema: Schema) {
 
 function checkIfProjectIsUsed(
   config: TargetConfiguration,
-  callback: (x: string) => void | string,
+  callback: (x: string) => void | string
 ) {
   function recur(obj, key, value) {
     if (typeof value === 'string') {

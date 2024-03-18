@@ -22,7 +22,7 @@ Example:
 for await (const s of await runExecutor(
   { project: 'myproj', target: 'serve' },
   { watch: true },
-  context,
+  context
 )) {
   // s.success
 }

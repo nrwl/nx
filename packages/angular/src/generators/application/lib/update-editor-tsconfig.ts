@@ -20,7 +20,7 @@ function getCompilerOptionsTypes(tsConfig: TsConfig): string[] {
 export function updateEditorTsConfig(tree: Tree, options: NormalizedSchema) {
   const appTsConfig = readJson<TsConfig>(
     tree,
-    joinPathFragments(options.appProjectRoot, 'tsconfig.app.json'),
+    joinPathFragments(options.appProjectRoot, 'tsconfig.app.json')
   );
   const types = getCompilerOptionsTypes(appTsConfig);
 
@@ -32,7 +32,7 @@ export function updateEditorTsConfig(tree: Tree, options: NormalizedSchema) {
         json.compilerOptions ??= {};
         json.compilerOptions.types = Array.from(new Set(types));
         return json;
-      },
+      }
     );
   }
 

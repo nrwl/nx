@@ -112,11 +112,11 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
           })
           .option('preset', {
             describe: chalk.dim`Customizes the initial content of your workspace. Default presets include: [${Object.values(
-              Preset,
+              Preset
             )
               .map((p) => `"${p}"`)
               .join(
-                ', ',
+                ', '
               )}]. To build your own see https://nx.dev/extending-nx/recipes/create-preset`,
             type: 'string',
           })
@@ -184,7 +184,7 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
         withNxCloud,
         withAllPrompts,
         withPackageManager,
-        withGitOptions,
+        withGitOptions
       ),
 
     async function handler(argv: yargs.ArgumentsCamelCase<Arguments>) {
@@ -203,14 +203,14 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
         [Preset.Core]: Preset.NPM,
         [Preset.Empty]: Preset.Apps,
       }),
-    ] as yargs.MiddlewareFunction<{}>[],
+    ] as yargs.MiddlewareFunction<{}>[]
   )
   .help('help', chalk.dim`Show help`)
   .updateLocale(yargsDecorator)
   .version(
     'version',
     chalk.dim`Show version`,
-    nxVersion,
+    nxVersion
   ) as yargs.Argv<Arguments>;
 
 async function main(parsedArgs: yargs.Arguments<Arguments>) {
@@ -220,7 +220,7 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
 
   const workspaceInfo = await createWorkspace<Arguments>(
     parsedArgs.preset,
-    parsedArgs,
+    parsedArgs
   );
 
   showNxWarning(parsedArgs.name);
@@ -249,7 +249,7 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
 }
 
 function normalizeAndWarnOnDeprecatedPreset(
-  deprecatedPresets: Partial<Record<Preset, Preset>>,
+  deprecatedPresets: Partial<Record<Preset, Preset>>
 ): (argv: yargs.Arguments<Arguments>) => Promise<void> {
   return async (args: yargs.Arguments<Arguments>): Promise<void> => {
     if (!args.preset) return;
@@ -277,7 +277,7 @@ function normalizeAndWarnOnDeprecatedPreset(
  * @param argv user arguments
  */
 async function normalizeArgsMiddleware(
-  argv: yargs.Arguments<Arguments>,
+  argv: yargs.Arguments<Arguments>
 ): Promise<void> {
   output.log({
     title:
@@ -327,7 +327,7 @@ async function normalizeArgsMiddleware(
 
 function invariant(
   predicate: string | number | boolean,
-  message: CLIErrorMessageConfig,
+  message: CLIErrorMessageConfig
 ): asserts predicate is NonNullable<string | number> | true {
   if (!predicate) {
     output.error(message);
@@ -336,7 +336,7 @@ function invariant(
 }
 
 async function determineFolder(
-  parsedArgs: yargs.Arguments<Arguments>,
+  parsedArgs: yargs.Arguments<Arguments>
 ): Promise<string> {
   const folderName: string = parsedArgs._[0]
     ? parsedArgs._[0].toString()
@@ -365,7 +365,7 @@ async function determineFolder(
 }
 
 async function determineStack(
-  parsedArgs: yargs.Arguments<Arguments>,
+  parsedArgs: yargs.Arguments<Arguments>
 ): Promise<'none' | 'react' | 'angular' | 'vue' | 'node' | 'unknown'> {
   if (parsedArgs.preset) {
     switch (parsedArgs.preset) {
@@ -440,7 +440,7 @@ async function determineStack(
 }
 
 async function determinePresetOptions(
-  parsedArgs: yargs.Arguments<Arguments>,
+  parsedArgs: yargs.Arguments<Arguments>
 ): Promise<Partial<Arguments>> {
   switch (parsedArgs.stack) {
     case 'none':
@@ -459,7 +459,7 @@ async function determinePresetOptions(
 }
 
 async function determineNoneOptions(
-  parsedArgs: yargs.Arguments<NoneArguments>,
+  parsedArgs: yargs.Arguments<NoneArguments>
 ): Promise<Partial<NoneArguments>> {
   let preset: Preset;
   let workspaceType: 'package-based' | 'standalone' | 'integrated' | undefined =
@@ -508,7 +508,7 @@ async function determineNoneOptions(
 }
 
 async function determineReactOptions(
-  parsedArgs: yargs.Arguments<ReactArguments>,
+  parsedArgs: yargs.Arguments<ReactArguments>
 ): Promise<Partial<Arguments>> {
   let preset: Preset;
   let style: undefined | string = undefined;
@@ -648,7 +648,7 @@ async function determineReactOptions(
 }
 
 async function determineVueOptions(
-  parsedArgs: yargs.Arguments<VueArguments>,
+  parsedArgs: yargs.Arguments<VueArguments>
 ): Promise<Partial<Arguments>> {
   let preset: Preset;
   let style: undefined | string = undefined;
@@ -725,7 +725,7 @@ async function determineVueOptions(
 }
 
 async function determineAngularOptions(
-  parsedArgs: yargs.Arguments<AngularArguments>,
+  parsedArgs: yargs.Arguments<AngularArguments>
 ): Promise<Partial<Arguments>> {
   let preset: Preset;
   let style: string;
@@ -860,7 +860,7 @@ async function determineAngularOptions(
 }
 
 async function determineNodeOptions(
-  parsedArgs: yargs.Arguments<NodeArguments>,
+  parsedArgs: yargs.Arguments<NodeArguments>
 ): Promise<Partial<Arguments>> {
   let preset: Preset;
   let appName: string;
@@ -1010,7 +1010,7 @@ async function determineStandaloneOrMonorepo(): Promise<
 async function determineAppName(
   parsedArgs: yargs.Arguments<
     ReactArguments | AngularArguments | NodeArguments | VueArguments
-  >,
+  >
 ): Promise<string> {
   if (parsedArgs.appName) return parsedArgs.appName;
 
@@ -1030,7 +1030,7 @@ async function determineAppName(
 }
 
 async function determineReactFramework(
-  parsedArgs: yargs.Arguments<ReactArguments>,
+  parsedArgs: yargs.Arguments<ReactArguments>
 ): Promise<'none' | 'nextjs' | 'remix' | 'expo' | 'react-native'> {
   const reply = await enquirer.prompt<{
     framework: 'none' | 'nextjs' | 'remix' | 'expo' | 'react-native';
@@ -1069,7 +1069,7 @@ async function determineReactFramework(
 }
 
 async function determineReactBundler(
-  parsedArgs: yargs.Arguments<ReactArguments>,
+  parsedArgs: yargs.Arguments<ReactArguments>
 ): Promise<'webpack' | 'vite' | 'rspack'> {
   if (parsedArgs.bundler) return parsedArgs.bundler;
   const reply = await enquirer.prompt<{
@@ -1099,7 +1099,7 @@ async function determineReactBundler(
 }
 
 async function determineNextAppDir(
-  parsedArgs: yargs.Arguments<ReactArguments>,
+  parsedArgs: yargs.Arguments<ReactArguments>
 ): Promise<boolean> {
   if (parsedArgs.nextAppDir !== undefined) return parsedArgs.nextAppDir;
   const reply = await enquirer.prompt<{ nextAppDir: 'Yes' | 'No' }>([
@@ -1122,7 +1122,7 @@ async function determineNextAppDir(
 }
 
 async function determineNextSrcDir(
-  parsedArgs: yargs.Arguments<ReactArguments>,
+  parsedArgs: yargs.Arguments<ReactArguments>
 ): Promise<boolean> {
   if (parsedArgs.nextSrcDir !== undefined) return parsedArgs.nextSrcDir;
   const reply = await enquirer.prompt<{ nextSrcDir: 'Yes' | 'No' }>([
@@ -1145,7 +1145,7 @@ async function determineNextSrcDir(
 }
 
 async function determineVueFramework(
-  parsedArgs: yargs.Arguments<VueArguments>,
+  parsedArgs: yargs.Arguments<VueArguments>
 ): Promise<'none' | 'nuxt'> {
   if (!!parsedArgs.framework) return parsedArgs.framework;
   const reply = await enquirer.prompt<{
@@ -1173,7 +1173,7 @@ async function determineVueFramework(
 }
 
 async function determineNodeFramework(
-  parsedArgs: yargs.Arguments<NodeArguments>,
+  parsedArgs: yargs.Arguments<NodeArguments>
 ): Promise<'express' | 'fastify' | 'koa' | 'nest' | 'none'> {
   if (parsedArgs.framework) return parsedArgs.framework;
   const reply = await enquirer.prompt<{
@@ -1213,7 +1213,7 @@ async function determineNodeFramework(
 async function determineE2eTestRunner(
   parsedArgs: yargs.Arguments<{
     e2eTestRunner?: 'none' | 'cypress' | 'playwright';
-  }>,
+  }>
 ): Promise<'none' | 'cypress' | 'playwright'> {
   if (parsedArgs.e2eTestRunner) return parsedArgs.e2eTestRunner;
   const reply = await enquirer.prompt<{

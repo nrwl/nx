@@ -282,8 +282,8 @@ If you want to limit the projects that `nx release` targets, you can use the `pr
   "release": {
     // Here we are configuring nx release to target all projects
     // except the one called "ignore-me"
-    "projects": ["*", "!ignore-me"],
-  },
+    "projects": ["*", "!ignore-me"]
+  }
 }
 ```
 
@@ -296,8 +296,8 @@ The `projectsRelationship` property tells Nx whether to release projects indepen
   "release": {
     // Here we are configuring nx release to release projects
     // independently, as opposed to the default of "fixed"
-    "projectsRelationship": "independent",
-  },
+    "projectsRelationship": "independent"
+  }
 }
 ```
 
@@ -316,8 +316,8 @@ The default `"releaseTagPattern"` for independent releases at the project level 
   "release": {
     // Here we are configuring nx release to use a custom release
     // tag pattern (we have dropped the v prefix from the default)
-    "releaseTagPattern": "{version}",
-  },
+    "releaseTagPattern": "{version}"
+  }
 }
 ```
 
@@ -340,10 +340,10 @@ It is therefore a common requirement to be able to tweak the options given to th
         // Here we are configuring the generator to use conventional
         // commits as the source of truth for how to determine the
         // relevant version bump for the next version
-        "specifierSource": "conventional-commits",
-      },
-    },
-  },
+        "specifierSource": "conventional-commits"
+      }
+    }
+  }
 }
 ```
 
@@ -370,9 +370,9 @@ The `changelog.workspaceChangelog` property configures the workspace changelog. 
   "release": {
     "changelog": {
       // This disables the workspace changelog
-      "workspaceChangelog": false,
-    },
-  },
+      "workspaceChangelog": false
+    }
+  }
 }
 ```
 
@@ -385,10 +385,10 @@ The `changelog.workspaceChangelog` property configures the workspace changelog. 
         // changelog contents
         "createRelease": "github",
         // This will disable creating a workspace CHANGELOG.md file
-        "file": false,
-      },
-    },
-  },
+        "file": false
+      }
+    }
+  }
 }
 ```
 
@@ -401,9 +401,9 @@ The `changelog.projectChangelogs` property configures the project changelogs. It
   "release": {
     "changelog": {
       // This enables project changelogs with the default options
-      "projectChangelogs": true,
-    },
-  },
+      "projectChangelogs": true
+    }
+  }
 }
 ```
 
@@ -417,10 +417,10 @@ The `changelog.projectChangelogs` property configures the project changelogs. It
         "createRelease": "github",
         // This will disable creating any project level CHANGELOG.md
         // files
-        "file": false,
-      },
-    },
-  },
+        "file": false
+      }
+    }
+  }
 }
 ```
 
@@ -437,9 +437,9 @@ The `git` property configures the automated git operations that take place as pa
       "commit": true,
       // This will enable create a git for the overall release, or
       // one tag per project for independent project releases
-      "tag": false,
-    },
-  },
+      "tag": false
+    }
+  }
 }
 ```
 

@@ -49,7 +49,7 @@ export class PromptMessages {
         this.selectedMessages[key] = 0;
       } else {
         this.selectedMessages[key] = Math.floor(
-          Math.random() * messageOptions[key].length,
+          Math.random() * messageOptions[key].length
         );
       }
     }

@@ -20,7 +20,7 @@ describe('scam-to-standalone', () => {
       @NgModule({
         imports: [BarComponentModule]
       })
-      export class MyModule {}`,
+      export class MyModule {}`
     );
 
     await scamToStandalone(tree, {

@@ -20,13 +20,13 @@ export async function handleRequestProjectGraph(): Promise<HandlerResult> {
     const serializedResult = serializeResult(
       result.error,
       result.serializedProjectGraph,
-      result.serializedSourceMaps,
+      result.serializedSourceMaps
     );
     if (!serializedResult) {
       return {
         description: `Error when serializing project graph result.`,
         error: new Error(
-          'Critical error when serializing server result, check server logs',
+          'Critical error when serializing server result, check server logs'
         ),
       };
     }
@@ -35,7 +35,7 @@ export async function handleRequestProjectGraph(): Promise<HandlerResult> {
     performance.measure(
       'total for creating and serializing project graph',
       'server-connection',
-      'serialized-project-graph-ready',
+      'serialized-project-graph-ready'
     );
 
     return { response: serializedResult, description: 'project-graph' };

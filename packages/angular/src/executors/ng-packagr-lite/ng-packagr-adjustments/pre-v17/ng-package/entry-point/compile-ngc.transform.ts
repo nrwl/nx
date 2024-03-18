@@ -26,7 +26,7 @@ import { NgPackagrOptions } from '../options.di';
 
 export const nxCompileNgcTransformFactory = (
   StylesheetProcessor: typeof StylesheetProcessorClass,
-  options: NgPackagrOptions,
+  options: NgPackagrOptions
 ): Transform => {
   return transformFromPromise(async (graph) => {
     const entryPoints: EntryPointNode[] = graph.filter(isEntryPoint);
@@ -38,7 +38,7 @@ export const nxCompileNgcTransformFactory = (
       // Add paths mappings for dependencies
       const tsConfig = setDependenciesTsConfigPaths(
         entryPoint.data.tsConfig,
-        entryPoints,
+        entryPoints
       );
 
       const angularVersion = getInstalledAngularVersionInfo();
@@ -59,7 +59,7 @@ export const nxCompileNgcTransformFactory = (
         cssUrl,
         styleIncludePaths,
         options.cacheEnabled && options.cacheDirectory,
-        options.tailwindConfig,
+        options.tailwindConfig
       ) as any;
 
       await compileSourceFiles(
@@ -76,7 +76,7 @@ export const nxCompileNgcTransformFactory = (
               ? ts.ScriptTarget.ES2022
               : ts.ScriptTarget.ES2020,
         },
-        entryPoint.cache.stylesheetProcessor as any,
+        entryPoint.cache.stylesheetProcessor as any
       );
     } catch (error) {
       throw error;

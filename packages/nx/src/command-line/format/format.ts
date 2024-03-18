@@ -32,18 +32,18 @@ const PRETTIER_PATH = getPrettierPath();
 
 export async function format(
   command: 'check' | 'write',
-  args: yargs.Arguments,
+  args: yargs.Arguments
 ): Promise<void> {
   const { nxArgs } = splitArgsIntoNxArgsAndOverrides(
     args,
     'affected',
     { printWarnings: false },
-    readNxJson(),
+    readNxJson()
   );
   const patterns = (await getPatterns({ ...args, ...nxArgs } as any)).map(
     // prettier removes one of the \
     // prettier-ignore
-    (p) => `"${p.replace(/\$/g, "\\\$")}"`,
+    (p) => `"${p.replace(/\$/g, "\\\$")}"`
   );
 
   // Chunkify the patterns array to prevent crashing the windows terminal
@@ -58,7 +58,7 @@ export async function format(
     case 'check':
       const pass = chunkList.reduce(
         (pass, chunk) => check(chunk) && pass,
-        true,
+        true
       );
       if (!pass) {
         process.exit(1);
@@ -68,7 +68,7 @@ export async function format(
 }
 
 async function getPatterns(
-  args: NxArgs & { libsAndApps: boolean; _: string[] },
+  args: NxArgs & { libsAndApps: boolean; _: string[] }
 ): Promise<string[]> {
   const graph = await createProjectGraphAsync({ exitOnError: true });
   const allFilesPattern = ['.'];
@@ -94,7 +94,7 @@ async function getPatterns(
         // Prettier supports ".swcrc" as a file instead of an extension
         // So we add ".swcrc" as a supported extension manually
         // which allows it to be considered for calculating "patterns"
-        .concat('.swcrc'),
+        .concat('.swcrc')
     );
 
     const patterns = p.files
@@ -108,7 +108,7 @@ async function getPatterns(
       ? await getPatternsFromApps(
           nonIgnoredPatterns,
           await allFileData(),
-          graph,
+          graph
         )
       : nonIgnoredPatterns;
   } catch (err) {
@@ -125,16 +125,16 @@ async function getPatterns(
 async function getPatternsFromApps(
   affectedFiles: string[],
   allWorkspaceFiles: FileData[],
-  projectGraph: ProjectGraph,
+  projectGraph: ProjectGraph
 ): Promise<string[]> {
   const graph = await createProjectGraphAsync({ exitOnError: true });
   const affectedGraph = await filterAffected(
     graph,
-    calculateFileChanges(affectedFiles, allWorkspaceFiles),
+    calculateFileChanges(affectedFiles, allWorkspaceFiles)
   );
   return getPatternsFromProjects(
     Object.keys(affectedGraph.nodes),
-    projectGraph,
+    projectGraph
   );
 }
 
@@ -162,7 +162,7 @@ function addRootConfigFiles(chunkList: string[][], nxArgs: NxArgs): void {
 
 function getPatternsFromProjects(
   projects: string[],
-  projectGraph: ProjectGraph,
+  projectGraph: ProjectGraph
 ): string[] {
   return getProjectRoots(projects, projectGraph);
 }
@@ -174,26 +174,26 @@ function write(patterns: string[]) {
         result[pattern.includes('.swcrc') ? 0 : 1].push(pattern);
         return result;
       },
-      [[], []] as [swcrcPatterns: string[], regularPatterns: string[]],
+      [[], []] as [swcrcPatterns: string[], regularPatterns: string[]]
     );
 
     execSync(
       `node "${PRETTIER_PATH}" --write --list-different ${regularPatterns.join(
-        ' ',
+        ' '
       )}`,
       {
         stdio: [0, 1, 2],
-      },
+      }
     );
 
     if (swcrcPatterns.length > 0) {
       execSync(
         `node "${PRETTIER_PATH}" --write --list-different ${swcrcPatterns.join(
-          ' ',
+          ' '
         )} --parser json`,
         {
           stdio: [0, 1, 2],
-        },
+        }
       );
     }
   }

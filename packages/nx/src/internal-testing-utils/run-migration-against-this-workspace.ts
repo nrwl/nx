@@ -2,7 +2,7 @@ import { FsTree, Tree } from '../generators/tree';
 import { join } from 'path';
 
 export function assertRunsAgainstNxRepo(
-  migrateFn: (tree: Tree) => void | Promise<void>,
+  migrateFn: (tree: Tree) => void | Promise<void>
 ) {
   it('should run against the Nx repo', async () => {
     const tree = new FsTree(join(__dirname, '../../../'), true);

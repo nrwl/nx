@@ -1,7 +1,7 @@
 import fetch from 'node-fetch';
 
 export async function isPackagerRunning(
-  packagerPort: number,
+  packagerPort: number
 ): Promise<'running' | 'not_running' | 'unrecognized'> {
   try {
     const resp = await fetch(`http://localhost:${packagerPort}/status`);

@@ -11,7 +11,7 @@ import {
 export function addBabelInputs(tree: Tree) {
   const nxJson = readNxJson(tree);
   let globalBabelFile = ['babel.config.js', 'babel.config.json'].find((file) =>
-    tree.exists(file),
+    tree.exists(file)
   );
 
   if (!globalBabelFile) {
@@ -24,7 +24,7 @@ export function addBabelInputs(tree: Tree) {
   if (nxJson.namedInputs?.sharedGlobals) {
     const sharedGlobalFileset = new Set(nxJson.namedInputs.sharedGlobals);
     sharedGlobalFileset.add(
-      joinPathFragments('{workspaceRoot}', globalBabelFile),
+      joinPathFragments('{workspaceRoot}', globalBabelFile)
     );
     nxJson.namedInputs.sharedGlobals = Array.from(sharedGlobalFileset);
   }

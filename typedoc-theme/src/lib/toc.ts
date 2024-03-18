@@ -34,7 +34,7 @@ export default function (theme: NxMarkdownTheme) {
       const { hideInPageTOC } = theme;
 
       const isVisible = this.groups?.some((group) =>
-        group.allChildrenHaveOwnDocument(),
+        group.allChildrenHaveOwnDocument()
       );
 
       function pushGroup(group: ReflectionGroup, md: string[]) {
@@ -46,7 +46,7 @@ export default function (theme: NxMarkdownTheme) {
             ? ': ' + getPropertyType(child)
             : '';
           return `- [${escapeChars(
-            child.name,
+            child.name
           )}](${Handlebars.helpers.relativeURL(child.url)})${propertyType}`;
         });
         md.push(children.join('\n'));
@@ -75,7 +75,7 @@ export default function (theme: NxMarkdownTheme) {
         });
       }
       return md.length > 0 ? md.join('\n') : null;
-    },
+    }
   );
 }
 

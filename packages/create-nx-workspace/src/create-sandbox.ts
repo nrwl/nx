@@ -20,7 +20,7 @@ import { mapErrorToBodyLines } from './utils/error-utils';
  */
 export async function createSandbox(packageManager: PackageManager) {
   const installSpinner = ora(
-    `Installing dependencies with ${packageManager}`,
+    `Installing dependencies with ${packageManager}`
   ).start();
 
   const { install, preInstall } = getPackageManagerCommand(packageManager);
@@ -35,7 +35,7 @@ export async function createSandbox(packageManager: PackageManager) {
           '@nx/workspace': nxVersion,
         },
         license: 'MIT',
-      }),
+      })
     );
     generatePackageManagerFiles(tmpDir, packageManager);
 

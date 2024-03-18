@@ -12,7 +12,7 @@ export default async function (tree: Tree) {
     options: WebpackExecutorOptions,
     projectName: string,
     targetName: string,
-    configurationName: string,
+    configurationName: string
   ) => {
     // Only handle webpack config for default configuration
     if (configurationName) return;
@@ -32,7 +32,7 @@ export default async function (tree: Tree) {
           // See: https://nx.dev/recipes/webpack/webpack-config-setup
           return config;
         });
-        `,
+        `
       );
 
       projectConfiguration.targets[targetName].options = options;
@@ -43,12 +43,12 @@ export default async function (tree: Tree) {
   forEachExecutorOptions<WebpackExecutorOptions>(
     tree,
     '@nx/webpack:webpack',
-    update,
+    update
   );
   forEachExecutorOptions<WebpackExecutorOptions>(
     tree,
     '@nrwl/webpack:webpack',
-    update,
+    update
   );
 
   await formatFiles(tree);

@@ -31,7 +31,7 @@ describe('NxPlugin e2e-project Generator', () => {
         pluginOutputPath: `dist/libs/my-plugin`,
         npmPackageName: '@proj/my-plugin',
         addPlugin: true,
-      }),
+      })
     ).resolves.toBeDefined();
 
     await expect(
@@ -40,7 +40,7 @@ describe('NxPlugin e2e-project Generator', () => {
         pluginOutputPath: `dist/libs/my-nonexistentplugin`,
         npmPackageName: '@proj/my-nonexistentplugin',
         addPlugin: true,
-      }),
+      })
     ).rejects.toThrow();
   });
 
@@ -54,7 +54,7 @@ describe('NxPlugin e2e-project Generator', () => {
 
     expect(tree.exists('apps/my-plugin-e2e/tsconfig.json')).toBeTruthy();
     expect(
-      tree.exists('apps/my-plugin-e2e/src/my-plugin.spec.ts'),
+      tree.exists('apps/my-plugin-e2e/src/my-plugin.spec.ts')
     ).toBeTruthy();
   });
 
@@ -171,7 +171,7 @@ describe('NxPlugin e2e-project Generator', () => {
     });
 
     expect(
-      tree.read('apps/my-plugin-e2e/.eslintrc.json', 'utf-8'),
+      tree.read('apps/my-plugin-e2e/.eslintrc.json', 'utf-8')
     ).toMatchSnapshot();
   });
 });

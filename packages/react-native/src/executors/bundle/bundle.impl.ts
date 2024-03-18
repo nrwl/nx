@@ -11,7 +11,7 @@ export interface ReactNativeBundleOutput {
 
 export default async function* bundleExecutor(
   options: ReactNativeBundleOptions,
-  context: ExecutorContext,
+  context: ExecutorContext
 ): AsyncGenerator<ReactNativeBundleOutput> {
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
@@ -27,7 +27,7 @@ export default async function* bundleExecutor(
 function runCliBuild(
   workspaceRoot: string,
   projectRoot: string,
-  options: ReactNativeBundleOptions,
+  options: ReactNativeBundleOptions
 ): Promise<ChildProcess> {
   return new Promise<ChildProcess>((resolve, reject) => {
     const cliOptions = createBundleOptions(options);
@@ -38,7 +38,7 @@ function runCliBuild(
         stdio: 'inherit',
         cwd: pathResolve(workspaceRoot, projectRoot),
         env: process.env,
-      },
+      }
     );
 
     /**

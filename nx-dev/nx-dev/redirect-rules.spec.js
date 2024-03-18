@@ -37,7 +37,7 @@ describe('Redirect rules configuration', () => {
 
       for (const url of oldReactUrls) {
         expect(redirectRules.tutorialRedirects[url]).toEqual(
-          '/react-tutorial/1-code-generation',
+          '/react-tutorial/1-code-generation'
         );
       }
     });
@@ -60,7 +60,7 @@ describe('Redirect rules configuration', () => {
 
       for (const url of oldAngularUrls) {
         expect(redirectRules.tutorialRedirects[url]).toEqual(
-          '/angular-tutorial/1-code-generation',
+          '/angular-tutorial/1-code-generation'
         );
       }
     });
@@ -74,7 +74,7 @@ describe('Redirect rules configuration', () => {
 
       for (const url of oldTutorialUrls) {
         expect(redirectRules.nested5minuteTutorialUrls[url]).toEqual(
-          '/getting-started' + url,
+          '/getting-started' + url
         );
       }
     });

@@ -4,7 +4,7 @@ export function findAllNpmDependencies(
   graph: ProjectGraph,
   projectName: string,
   list: string[] = [],
-  seen = new Set<string>(),
+  seen = new Set<string>()
 ) {
   // In case of bad circular dependencies
   if (seen.has(projectName)) {
@@ -28,7 +28,7 @@ export function findAllNpmDependencies(
   } else {
     // it's workspace project, search for it's dependencies
     graph.dependencies[projectName]?.forEach((dep) =>
-      findAllNpmDependencies(graph, dep.target, list, seen),
+      findAllNpmDependencies(graph, dep.target, list, seen)
     );
   }
   return list;

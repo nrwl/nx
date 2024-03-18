@@ -14,7 +14,7 @@ export interface DaemonProcessJson {
 
 export const serverProcessJsonPath = join(
   DAEMON_DIR_FOR_CURRENT_WORKSPACE,
-  'server-process.json',
+  'server-process.json'
 );
 
 export async function readDaemonProcessJsonCache(): Promise<DaemonProcessJson | null> {
@@ -33,7 +33,7 @@ export function deleteDaemonJsonProcessCache(): void {
 }
 
 export async function writeDaemonJsonProcessCache(
-  daemonJson: DaemonProcessJson,
+  daemonJson: DaemonProcessJson
 ): Promise<void> {
   await writeJson(serverProcessJsonPath, daemonJson);
 }

@@ -8,11 +8,11 @@ let tsModule: typeof import('typescript');
 
 export function convertDirectiveToScam(
   tree: Tree,
-  options: NormalizedSchema,
+  options: NormalizedSchema
 ): void {
   if (!tree.exists(options.filePath)) {
     throw new Error(
-      `Couldn't find directive at path ${options.filePath} to add SCAM setup.`,
+      `Couldn't find directive at path ${options.filePath} to add SCAM setup.`
     );
   }
   if (!tsModule) {
@@ -25,7 +25,7 @@ export function convertDirectiveToScam(
       options.filePath,
       currentDirectiveContents,
       tsModule.ScriptTarget.Latest,
-      true,
+      true
     );
 
     source = insertImport(
@@ -33,19 +33,19 @@ export function convertDirectiveToScam(
       source,
       options.filePath,
       'NgModule',
-      '@angular/core',
+      '@angular/core'
     );
     source = insertImport(
       tree,
       source,
       options.filePath,
       'CommonModule',
-      '@angular/common',
+      '@angular/common'
     );
 
     let updatedDirectiveSource = source.getText();
     updatedDirectiveSource = `${updatedDirectiveSource}${getNgModuleDeclaration(
-      options.symbolName,
+      options.symbolName
     )}`;
 
     tree.write(options.filePath, updatedDirectiveSource);
@@ -54,18 +54,18 @@ export function convertDirectiveToScam(
 
   const scamFilePath = joinPathFragments(
     options.directory,
-    `${options.name}.module.ts`,
+    `${options.name}.module.ts`
   );
 
   tree.write(
     scamFilePath,
-    getModuleFileContent(options.symbolName, options.fileName),
+    getModuleFileContent(options.symbolName, options.fileName)
   );
 }
 
 function getModuleFileContent(
   directiveClassName: string,
-  directiveFileName: string,
+  directiveFileName: string
 ): string {
   return `import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';

@@ -11,7 +11,7 @@ export function mockViteReactAppGenerator(tree: Tree): Tree {
 
   tree.write(
     `apps/${appName}/src/main.tsx`,
-    `import ReactDOM from 'react-dom';\n`,
+    `import ReactDOM from 'react-dom';\n`
   );
 
   tree.write(
@@ -37,7 +37,7 @@ export function mockViteReactAppGenerator(tree: Tree): Tree {
       ],
       "extends": "../../tsconfig.base.json"
       }
-      `,
+      `
   );
   tree.write(
     `apps/${appName}/tsconfig.app.json`,
@@ -63,7 +63,7 @@ export function mockViteReactAppGenerator(tree: Tree): Tree {
       ],
       "include": ["src/**/*.js", "src/**/*.jsx", "src/**/*.ts", "src/**/*.tsx"]
     }   
-      `,
+      `
   );
 
   tree.write(
@@ -83,7 +83,7 @@ export function mockViteReactAppGenerator(tree: Tree): Tree {
         <div id="root"></div>
         <script type="module" src="/src/main.tsx"></script>
       </body>
-    </html>`,
+    </html>`
   );
 
   tree.write(
@@ -115,7 +115,7 @@ export function mockViteReactAppGenerator(tree: Tree): Tree {
         include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
       },
     });
-    `,
+    `
   );
 
   writeJson(tree, 'workspace.json', {
@@ -142,7 +142,7 @@ export function mockReactAppGenerator(tree: Tree, userAppName?: string): Tree {
 
   tree.write(
     `apps/${appName}/src/main.tsx`,
-    `import ReactDOM from 'react-dom';\n`,
+    `import ReactDOM from 'react-dom';\n`
   );
 
   tree.write(`apps/${appName}/webpack.config.ts`, ``);
@@ -174,7 +174,7 @@ export function mockReactAppGenerator(tree: Tree, userAppName?: string): Tree {
           }
         ]
       }
-      `,
+      `
   );
   tree.write(
     `apps/${appName}/tsconfig.app.json`,
@@ -200,7 +200,7 @@ export function mockReactAppGenerator(tree: Tree, userAppName?: string): Tree {
       ],
       "include": ["**/*.js", "**/*.jsx", "**/*.ts", "**/*.tsx"]
     }   
-      `,
+      `
   );
 
   tree.write(
@@ -218,7 +218,7 @@ export function mockReactAppGenerator(tree: Tree, userAppName?: string): Tree {
       <body>
         <div id="root"></div>
       </body>
-    </html>`,
+    </html>`
   );
 
   writeJson(tree, `apps/${appName}/project.json`, {
@@ -233,7 +233,7 @@ export function mockReactMixedAppGenerator(tree: Tree): Tree {
 
   tree.write(
     `apps/${appName}/src/main.tsx`,
-    `import ReactDOM from 'react-dom';\n`,
+    `import ReactDOM from 'react-dom';\n`
   );
 
   tree.write(
@@ -263,7 +263,7 @@ export function mockReactMixedAppGenerator(tree: Tree): Tree {
           }
         ]
       }
-      `,
+      `
   );
   tree.write(
     `apps/${appName}/tsconfig.app.json`,
@@ -289,7 +289,7 @@ export function mockReactMixedAppGenerator(tree: Tree): Tree {
       ],
       "include": ["**/*.js", "**/*.jsx", "**/*.ts", "**/*.tsx"]
     }   
-      `,
+      `
   );
 
   tree.write(
@@ -307,7 +307,7 @@ export function mockReactMixedAppGenerator(tree: Tree): Tree {
       <body>
         <div id="root"></div>
       </body>
-    </html>`,
+    </html>`
   );
 
   writeJson(tree, 'workspace.json', {
@@ -349,7 +349,7 @@ export function mockWebAppGenerator(tree: Tree): Tree {
           }
         ]
       }      
-        `,
+        `
   );
 
   tree.write(`apps/${appName}/webpack.config.ts`, ``);
@@ -370,7 +370,7 @@ export function mockWebAppGenerator(tree: Tree): Tree {
         <workspace-root></workspace-root>
       </body>
     </html>
-    `,
+    `
   );
 
   writeJson(tree, 'workspace.json', {
@@ -434,7 +434,7 @@ export function mockUnknownAppGenerator(tree: Tree): Tree {
 }
 
 export function mockReactLibNonBuildableJestTestRunnerGenerator(
-  tree: Tree,
+  tree: Tree
 ): Tree {
   const libName = 'react-lib-nonb-jest';
 
@@ -461,7 +461,7 @@ export function mockReactLibNonBuildableJestTestRunnerGenerator(
         }
       ],
       "extends": "../../tsconfig.base.json"
-    }`,
+    }`
   );
   tree.write(
     `libs/${libName}/tsconfig.lib.json`,
@@ -487,7 +487,7 @@ export function mockReactLibNonBuildableJestTestRunnerGenerator(
         "src/**/*.test.jsx"
       ],
       "include": ["src/**/*.js", "src/**/*.jsx", "src/**/*.ts", "src/**/*.tsx"]
-    }`,
+    }`
   );
 
   writeJson(tree, 'workspace.json', {
@@ -510,7 +510,7 @@ export function mockReactLibNonBuildableJestTestRunnerGenerator(
 }
 
 export function mockReactLibNonBuildableVitestRunnerGenerator(
-  tree: Tree,
+  tree: Tree
 ): Tree {
   const libName = 'react-lib-nonb-vitest';
 
@@ -539,7 +539,7 @@ export function mockReactLibNonBuildableVitestRunnerGenerator(
         include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
       },
     });
-  `,
+  `
   );
 
   tree.write(
@@ -563,7 +563,7 @@ export function mockReactLibNonBuildableVitestRunnerGenerator(
         }
       ],
       "extends": "../../tsconfig.base.json"
-    }`,
+    }`
   );
   tree.write(
     `libs/${libName}/tsconfig.lib.json`,
@@ -588,7 +588,7 @@ export function mockReactLibNonBuildableVitestRunnerGenerator(
         "**/*.test.jsx"
       ],
       "include": ["**/*.js", "**/*.jsx", "**/*.ts", "**/*.tsx"]
-    }`,
+    }`
   );
 
   writeJson(tree, 'workspace.json', {

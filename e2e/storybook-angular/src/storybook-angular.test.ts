@@ -16,10 +16,10 @@ describe('Storybook executors for Angular', () => {
       unsetProjectNameAndRootFormat: false,
     });
     runCLI(
-      `g @nx/angular:library ${angularStorybookLib} --project-name-and-root-format=as-provided --no-interactive`,
+      `g @nx/angular:library ${angularStorybookLib} --project-name-and-root-format=as-provided --no-interactive`
     );
     runCLI(
-      `generate @nx/angular:storybook-configuration ${angularStorybookLib} --generateStories --no-interactive`,
+      `generate @nx/angular:storybook-configuration ${angularStorybookLib} --generateStories --no-interactive`
     );
   });
 
@@ -35,7 +35,7 @@ describe('Storybook executors for Angular', () => {
         `run ${angularStorybookLib}:storybook`,
         (output) => {
           return /Storybook.*started/gi.test(output);
-        },
+        }
       );
       p.kill();
     }, 200_000);

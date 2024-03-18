@@ -275,7 +275,7 @@ describe('readTargetsFromPackageJson', () => {
 });
 
 const rootPackageJson: PackageJson = readJsonFile(
-  join(workspaceRoot, 'package.json'),
+  join(workspaceRoot, 'package.json')
 );
 
 const dependencies = [
@@ -295,6 +295,6 @@ describe('readModulePackageJson', () => {
     `should be able to find %s`,
     (s) => {
       expect(() => readModulePackageJson(s)).not.toThrow();
-    },
+    }
   );
 });

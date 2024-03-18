@@ -44,7 +44,7 @@ function getBuildOptions(buildTarget: string, context: ExecutorContext) {
 function startStaticRemotesFileServer(
   staticRemotesConfig: StaticRemotesConfig,
   context: ExecutorContext,
-  options: ModuleFederationDevServerOptions,
+  options: ModuleFederationDevServerOptions
 ) {
   let shouldMoveToCommonLocation = false;
   let commonOutputDirectory: string;
@@ -68,7 +68,7 @@ function startStaticRemotesFileServer(
         {
           force: true,
           recursive: true,
-        },
+        }
       );
     }
   }
@@ -87,7 +87,7 @@ function startStaticRemotesFileServer(
       sslCert: options.sslCert,
       sslKey: options.sslKey,
     },
-    context,
+    context
   );
   return staticRemotesIter;
 }
@@ -99,7 +99,7 @@ async function startDevRemotes(
     devRemotes: string[];
   },
   context: ExecutorContext,
-  options: ModuleFederationDevServerOptions,
+  options: ModuleFederationDevServerOptions
 ) {
   const devRemoteIters: AsyncIterable<{ success: boolean }>[] = [];
 
@@ -108,7 +108,7 @@ async function startDevRemotes(
       context.projectGraph.nodes[app].data.targets['serve'];
     const isUsingModuleFederationDevServerExecutor =
       remoteProjectServeTarget.executor.includes(
-        'module-federation-dev-server',
+        'module-federation-dev-server'
       );
 
     devRemoteIters.push(
@@ -128,8 +128,8 @@ async function startDevRemotes(
             ? { isInitialHost: false }
             : {}),
         },
-        context,
-      ),
+        context
+      )
     );
   }
   return devRemoteIters;
@@ -139,13 +139,13 @@ async function buildStaticRemotes(
   staticRemotesConfig: StaticRemotesConfig,
   nxBin,
   context: ExecutorContext,
-  options: ModuleFederationDevServerOptions,
+  options: ModuleFederationDevServerOptions
 ) {
   if (!staticRemotesConfig.remotes.length) {
     return;
   }
   logger.info(
-    `NX Building ${staticRemotesConfig.remotes.length} static remotes...`,
+    `NX Building ${staticRemotesConfig.remotes.length} static remotes...`
   );
   const mappedLocationOfRemotes: Record<string, string> = {};
 
@@ -158,7 +158,7 @@ async function buildStaticRemotes(
   }
 
   process.env.NX_MF_DEV_SERVER_STATIC_REMOTES = JSON.stringify(
-    mappedLocationOfRemotes,
+    mappedLocationOfRemotes
   );
 
   await new Promise<void>((res) => {
@@ -176,7 +176,7 @@ async function buildStaticRemotes(
       {
         cwd: context.root,
         stdio: ['ignore', 'pipe', 'pipe', 'ipc'],
-      },
+      }
     );
     staticProcess.stdout.on('data', (data) => {
       const ANSII_CODE_REGEX =
@@ -185,7 +185,7 @@ async function buildStaticRemotes(
       if (stdoutString.includes('Successfully ran target build')) {
         staticProcess.stdout.removeAllListeners('data');
         logger.info(
-          `NX Built ${staticRemotesConfig.remotes.length} static remotes`,
+          `NX Built ${staticRemotesConfig.remotes.length} static remotes`
         );
         res();
       }
@@ -214,7 +214,7 @@ type StaticRemotesConfig = {
 
 export function parseStaticRemotesConfig(
   staticRemotes: string[] | undefined,
-  context: ExecutorContext,
+  context: ExecutorContext
 ): StaticRemotesConfig {
   if (!staticRemotes?.length) {
     return { remotes: [], config: undefined };
@@ -234,7 +234,7 @@ export function parseStaticRemotesConfig(
 
 export default async function* moduleFederationDevServer(
   options: ModuleFederationDevServerOptions,
-  context: ExecutorContext,
+  context: ExecutorContext
 ): AsyncIterableIterator<{ success: boolean; baseUrl?: string }> {
   const initialStaticRemotesPorts = options.staticRemotesPort;
   options.staticRemotesPort ??= options.port + 1;
@@ -249,7 +249,7 @@ export default async function* moduleFederationDevServer(
           spa: false,
           cors: true,
         },
-        context,
+        context
       )
     : devServerExecutor(options, context);
 
@@ -264,7 +264,7 @@ export default async function* moduleFederationDevServer(
     buildOptions.tsConfig,
     context.root,
     p.root,
-    'react',
+    'react'
   );
 
   const remotes = getRemotes(
@@ -275,7 +275,7 @@ export default async function* moduleFederationDevServer(
       projectName: context.projectName,
       projectGraph: context.projectGraph,
       root: context.root,
-    },
+    }
   );
 
   if (remotes.devRemotes.length > 0 && !initialStaticRemotesPorts) {
@@ -292,7 +292,7 @@ export default async function* moduleFederationDevServer(
 
   const staticRemotesConfig = parseStaticRemotesConfig(
     remotes.staticRemotes,
-    context,
+    context
   );
   await buildStaticRemotes(staticRemotesConfig, nxBin, context, options);
 
@@ -331,8 +331,8 @@ export default async function* moduleFederationDevServer(
                 retries: 480,
                 retryDelay: 2500,
                 host: host,
-              }),
-            ),
+              })
+            )
           );
 
           logger.info(`NX All remotes started, server ready at ${baseUrl}`);
@@ -342,12 +342,12 @@ export default async function* moduleFederationDevServer(
             `Failed to start remotes. Check above for any errors.`,
             {
               cause: err,
-            },
+            }
           );
         } finally {
           done();
         }
-      },
-    ),
+      }
+    )
   );
 }

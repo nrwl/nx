@@ -9,7 +9,7 @@ type CallBack<T> = (
   currentValue: T,
   project: string,
   target: string,
-  configuration?: string,
+  configuration?: string
 ) => void;
 
 /**
@@ -24,7 +24,7 @@ export function forEachExecutorOptions<Options>(
   /**
    * Callback that is called for each options configured for a builder
    */
-  callback: CallBack<Options>,
+  callback: CallBack<Options>
 ): void {
   forEachProjectConfig(getProjects(tree), executorName, callback);
 }
@@ -36,7 +36,7 @@ export function forEachExecutorOptions<Options>(
 export function forEachExecutorOptionsInGraph<Options>(
   graph: ProjectGraph,
   executorName: string,
-  callback: CallBack<Options>,
+  callback: CallBack<Options>
 ): void {
   const projects = new Map<string, ProjectConfiguration>();
   Object.values(graph.nodes).forEach((p) => projects.set(p.name, p.data));
@@ -47,7 +47,7 @@ export function forEachExecutorOptionsInGraph<Options>(
 function forEachProjectConfig<Options>(
   projects: Map<string, ProjectConfiguration>,
   executorName: string,
-  callback: CallBack<Options>,
+  callback: CallBack<Options>
 ): void {
   for (const [projectName, project] of projects) {
     for (const [targetName, target] of Object.entries(project.targets || {})) {

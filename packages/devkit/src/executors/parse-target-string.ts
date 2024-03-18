@@ -28,7 +28,7 @@ export function parseTargetString(targetString: string): Target;
  */
 export function parseTargetString(
   targetString: string,
-  projectGraph: ProjectGraph,
+  projectGraph: ProjectGraph
 ): Target;
 /**
  * Parses a target string into {project, target, configuration}. Passing a full
@@ -43,11 +43,11 @@ export function parseTargetString(
  */
 export function parseTargetString(
   targetString: string,
-  ctx: ExecutorContext,
+  ctx: ExecutorContext
 ): Target;
 export function parseTargetString(
   targetString: string,
-  projectGraphOrCtx?: ProjectGraph | ExecutorContext,
+  projectGraphOrCtx?: ProjectGraph | ExecutorContext
 ): Target {
   let projectGraph =
     projectGraphOrCtx && 'projectGraph' in projectGraphOrCtx
@@ -74,7 +74,7 @@ export function parseTargetString(
 
   const [project, target, configuration] = splitTarget(
     targetString,
-    projectGraph,
+    projectGraph
   );
 
   if (!project || !target) {

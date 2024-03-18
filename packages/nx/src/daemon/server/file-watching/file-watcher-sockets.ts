@@ -20,7 +20,7 @@ export let registeredFileWatcherSockets: {
 
 export function removeRegisteredFileWatcherSocket(socket: Socket) {
   registeredFileWatcherSockets = registeredFileWatcherSockets.filter(
-    (watcher) => watcher.socket !== socket,
+    (watcher) => watcher.socket !== socket
   );
 }
 
@@ -31,7 +31,7 @@ export function hasRegisteredFileWatcherSockets() {
 export function notifyFileWatcherSockets(
   createdFiles: string[] | null,
   updatedFiles: string[],
-  deletedFiles: string[],
+  deletedFiles: string[]
 ) {
   if (!hasRegisteredFileWatcherSockets()) {
     return;
@@ -41,7 +41,7 @@ export function notifyFileWatcherSockets(
     const projectAndGlobalChanges = getProjectsAndGlobalChanges(
       createdFiles,
       updatedFiles,
-      deletedFiles,
+      deletedFiles
     );
 
     await Promise.all(
@@ -50,7 +50,7 @@ export function notifyFileWatcherSockets(
         const changedFiles = [];
         if (config.watchProjects === 'all') {
           for (const [projectName, projectFiles] of Object.entries(
-            projectAndGlobalChanges.projects,
+            projectAndGlobalChanges.projects
           )) {
             changedProjects.push(projectName);
             changedFiles.push(...projectFiles);
@@ -59,15 +59,15 @@ export function notifyFileWatcherSockets(
           const watchedProjects = new Set<string>(
             findMatchingProjects(
               config.watchProjects,
-              currentProjectGraph.nodes,
-            ),
+              currentProjectGraph.nodes
+            )
           );
 
           if (config.includeDependentProjects) {
             for (const project of watchedProjects) {
               for (const dep of findAllProjectNodeDependencies(
                 project,
-                currentProjectGraph,
+                currentProjectGraph
               )) {
                 watchedProjects.add(dep);
               }
@@ -79,7 +79,7 @@ export function notifyFileWatcherSockets(
               changedProjects.push(watchedProject);
 
               changedFiles.push(
-                ...projectAndGlobalChanges.projects[watchedProject],
+                ...projectAndGlobalChanges.projects[watchedProject]
               );
             }
           }
@@ -97,10 +97,10 @@ export function notifyFileWatcherSockets(
                 changedProjects,
                 changedFiles,
               }),
-            }),
+            })
           );
         }
-      }),
+      })
     );
   });
 }

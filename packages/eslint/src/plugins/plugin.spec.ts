@@ -10,7 +10,7 @@ jest.mock(
         return glob.sync(patterns, { cwd: workspaceRoot });
       },
     };
-  },
+  }
 );
 
 import { CreateNodesContext } from '@nx/devkit';
@@ -52,7 +52,7 @@ describe('@nx/eslint/plugin', () => {
         'package.json': `{}`,
         'project.json': `{}`,
       },
-      context,
+      context
     );
     expect(await invokeCreateNodesOnMatchingFiles(context, 'lint'))
       .toMatchInlineSnapshot(`
@@ -69,7 +69,7 @@ describe('@nx/eslint/plugin', () => {
           '.eslintrc.json': `{}`,
           'package.json': `{}`,
         },
-        context,
+        context
       );
       expect(await invokeCreateNodesOnMatchingFiles(context, 'lint'))
         .toMatchInlineSnapshot(`
@@ -85,7 +85,7 @@ describe('@nx/eslint/plugin', () => {
           'eslint.config.js': `module.exports = {};`,
           'project.json': `{}`,
         },
-        context,
+        context
       );
       // NOTE: It should set ESLINT_USE_FLAT_CONFIG to true because of the use of eslint.config.js
       expect(await invokeCreateNodesOnMatchingFiles(context, 'lint'))
@@ -104,7 +104,7 @@ describe('@nx/eslint/plugin', () => {
           'package.json': `{}`,
           'src/index.ts': `console.log('hello world')`,
         },
-        context,
+        context
       );
       // NOTE: The command is specifically targeting the src directory in the case of a standalone Nx workspace
       expect(await invokeCreateNodesOnMatchingFiles(context, 'lint'))
@@ -146,7 +146,7 @@ describe('@nx/eslint/plugin', () => {
           // This file is lintable so create the target
           'apps/my-app/index.ts': `console.log('hello world')`,
         },
-        context,
+        context
       );
       expect(await invokeCreateNodesOnMatchingFiles(context, 'lint'))
         .toMatchInlineSnapshot(`
@@ -187,7 +187,7 @@ describe('@nx/eslint/plugin', () => {
           // This file is lintable so create the target
           'apps/my-app/index.ts': `console.log('hello world')`,
         },
-        context,
+        context
       );
       expect(await invokeCreateNodesOnMatchingFiles(context, 'lint'))
         .toMatchInlineSnapshot(`
@@ -232,7 +232,7 @@ describe('@nx/eslint/plugin', () => {
           'apps/my-app/config-one.yaml': `...`,
           'apps/my-app/config-two.yml': `...`,
         },
-        context,
+        context
       );
       expect(await invokeCreateNodesOnMatchingFiles(context, 'lint'))
         .toMatchInlineSnapshot(`
@@ -254,7 +254,7 @@ describe('@nx/eslint/plugin', () => {
           'apps/my-app/config-one.yaml': `...`,
           'apps/my-app/config-two.yml': `...`,
         },
-        context,
+        context
       );
       expect(await invokeCreateNodesOnMatchingFiles(context, 'lint'))
         .toMatchInlineSnapshot(`
@@ -276,7 +276,7 @@ describe('@nx/eslint/plugin', () => {
           'libs/my-lib/project.json': `{}`,
           'libs/my-lib/index.ts': `console.log('hello world')`,
         },
-        context,
+        context
       );
       expect(await invokeCreateNodesOnMatchingFiles(context, 'lint'))
         .toMatchInlineSnapshot(`
@@ -345,7 +345,7 @@ describe('@nx/eslint/plugin', () => {
           'libs/my-lib/project.json': `{}`,
           'libs/my-lib/index.ts': `console.log('hello world')`,
         },
-        context,
+        context
       );
       // NOTE: The nested projects have the root level config as an input to their lint targets
       expect(await invokeCreateNodesOnMatchingFiles(context, 'lint'))
@@ -411,7 +411,7 @@ describe('@nx/eslint/plugin', () => {
           'apps/myapp/project.json': '{}',
           'apps/myapp/index.ts': 'console.log("hello world")',
         },
-        context,
+        context
       );
       // NOTE: The nested projects have the root level config as an input to their lint targets
       expect(await invokeCreateNodesOnMatchingFiles(context, 'lint'))
@@ -450,13 +450,13 @@ describe('@nx/eslint/plugin', () => {
 
 function getMatchingFiles(allConfigFiles: string[]): string[] {
   return allConfigFiles.filter((file) =>
-    minimatch(file, createNodes[0], { dot: true }),
+    minimatch(file, createNodes[0], { dot: true })
   );
 }
 
 function applyFilesToVolAndContext(
   fileSys: Record<string, string>,
-  context: CreateNodesContext,
+  context: CreateNodesContext
 ) {
   vol.fromJSON(fileSys, '');
   // @ts-expect-error update otherwise readonly property for testing
@@ -465,7 +465,7 @@ function applyFilesToVolAndContext(
 
 async function invokeCreateNodesOnMatchingFiles(
   context: CreateNodesContext,
-  targetName: string,
+  targetName: string
 ) {
   const aggregateProjects: Record<string, any> = {};
   for (const file of context.configFiles) {

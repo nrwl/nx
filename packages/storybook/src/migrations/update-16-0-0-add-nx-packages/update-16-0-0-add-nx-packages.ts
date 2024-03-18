@@ -5,7 +5,7 @@ export default async function replacePackage(tree: Tree): Promise<void> {
   await replaceNrwlPackageWithNxPackage(
     tree,
     '@nrwl/storybook',
-    '@nx/storybook',
+    '@nx/storybook'
   );
 
   await formatFiles(tree);

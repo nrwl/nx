@@ -17,7 +17,7 @@ import { Schema } from '../schema';
 export function getDestination(
   host: Tree,
   schema: Schema,
-  project: ProjectConfiguration,
+  project: ProjectConfiguration
 ): string {
   const projectType = project.projectType;
 

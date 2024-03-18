@@ -1,5 +1,5 @@
 export type ResolveRemoteUrlFunction = (
-  remoteName: string,
+  remoteName: string
 ) => string | Promise<string>;
 
 declare const window: {
@@ -22,7 +22,7 @@ const remoteContainerMap = new Map<string, unknown>();
 let initialSharingScopeCreated = false;
 
 export function setRemoteUrlResolver(
-  _resolveRemoteUrl: ResolveRemoteUrlFunction,
+  _resolveRemoteUrl: ResolveRemoteUrlFunction
 ) {
   resolveRemoteUrl = _resolveRemoteUrl;
 }
@@ -77,7 +77,7 @@ const fetchRemoteModule = (url: string, remoteName: string): Promise<any> => {
 async function loadRemoteContainer(remoteName: string) {
   if (!resolveRemoteUrl && !remoteUrlDefinitions) {
     throw new Error(
-      'Call setRemoteDefinitions or setRemoteUrlResolver to allow Dynamic Federation to find the remote apps correctly.',
+      'Call setRemoteDefinitions or setRemoteUrlResolver to allow Dynamic Federation to find the remote apps correctly.'
     );
   }
 

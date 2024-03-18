@@ -23,7 +23,7 @@ export default async function removeBrowserlistConfig(tree: Tree) {
     browserslist = await import('browserslist');
   } catch {
     logger.warn(
-      'Skipping migration because the "browserslist" package could not be loaded.',
+      'Skipping migration because the "browserslist" package could not be loaded.'
     );
 
     return;
@@ -57,7 +57,7 @@ export default async function removeBrowserlistConfig(tree: Tree) {
       browsersListConfig.map((s) => `${s} and supports es6-module`),
       {
         ignoreUnknownVersions: true,
-      },
+      }
     );
 
     if (defaultSupportedBrowsers.size !== browserslistInProject.length) {
@@ -65,7 +65,7 @@ export default async function removeBrowserlistConfig(tree: Tree) {
     }
 
     const shouldDelete = browserslistInProject.every((browser) =>
-      defaultSupportedBrowsers.has(browser),
+      defaultSupportedBrowsers.has(browser)
     );
 
     if (shouldDelete) {

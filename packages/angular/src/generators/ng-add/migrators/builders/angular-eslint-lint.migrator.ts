@@ -23,7 +23,7 @@ export class AngularEslintLintMigrator extends BuilderMigrator {
     tree: Tree,
     project: ProjectMigrationInfo,
     projectConfig: ProjectConfiguration,
-    logger: Logger,
+    logger: Logger
   ) {
     super(
       tree,
@@ -31,7 +31,7 @@ export class AngularEslintLintMigrator extends BuilderMigrator {
       'eslint',
       project,
       projectConfig,
-      logger,
+      logger
     );
   }
 
@@ -58,7 +58,7 @@ export class AngularEslintLintMigrator extends BuilderMigrator {
       const eslintConfig = '.eslintrc.json';
       if (this.tree.exists(eslintConfig)) {
         this.logger.info(
-          'No "lint" target was found, but an ESLint config file was found in the project root. The file will be moved to the new location.',
+          'No "lint" target was found, but an ESLint config file was found in the project root. The file will be moved to the new location.'
         );
         this.moveProjectRootFile(eslintConfig);
       }
@@ -67,13 +67,13 @@ export class AngularEslintLintMigrator extends BuilderMigrator {
 
   private async updateTargetConfiguration(
     targetName: string,
-    target: TargetConfiguration,
+    target: TargetConfiguration
   ): Promise<void> {
     target.executor = '@nx/eslint:lint';
 
     if (!target.options) {
       this.logger.warn(
-        `The target "${targetName}" is not specifying any options. Skipping updating the target configuration.`,
+        `The target "${targetName}" is not specifying any options. Skipping updating the target configuration.`
       );
       return;
     }
@@ -81,7 +81,7 @@ export class AngularEslintLintMigrator extends BuilderMigrator {
     const existEsLintConfigPath = this.tree.exists(this.newEsLintConfigPath);
     if (!existEsLintConfigPath) {
       this.logger.warn(
-        `The ESLint config file "${this.oldEsLintConfigPath}" could not be found. Skipping updating the file.`,
+        `The ESLint config file "${this.oldEsLintConfigPath}" could not be found. Skipping updating the file.`
       );
     }
 
@@ -95,7 +95,7 @@ export class AngularEslintLintMigrator extends BuilderMigrator {
         if (pattern.startsWith(this.project.oldSourceRoot)) {
           return joinPathFragments(
             this.project.newRoot,
-            pattern.replace(this.project.oldSourceRoot, ''),
+            pattern.replace(this.project.oldSourceRoot, '')
           );
         }
 
@@ -103,13 +103,13 @@ export class AngularEslintLintMigrator extends BuilderMigrator {
         if (pattern.startsWith(this.project.oldRoot)) {
           return joinPathFragments(
             this.project.newRoot,
-            pattern.replace(this.project.oldRoot, ''),
+            pattern.replace(this.project.oldRoot, '')
           );
         }
 
         // do nothing, warn about the pattern
         this.logger.warn(
-          `The lint file pattern "${pattern}" specified in the "${targetName}" target is not contained in the project root or source root. The pattern will not be updated.`,
+          `The lint file pattern "${pattern}" specified in the "${targetName}" target is not contained in the project root or source root. The pattern will not be updated.`
         );
 
         return pattern;
@@ -138,14 +138,14 @@ export class AngularEslintLintMigrator extends BuilderMigrator {
 
       const rootEsLintConfigRelativePath = joinPathFragments(
         offsetFromRoot(this.projectConfig.root),
-        '.eslintrc.json',
+        '.eslintrc.json'
       );
       if (Array.isArray(json.extends)) {
         json.extends = json.extends.map((extend: string) =>
           this.convertEsLintConfigExtendToNewPath(
             this.oldEsLintConfigPath,
-            extend,
-          ),
+            extend
+          )
         );
 
         // it might have not been extending from the root config, make sure it does
@@ -172,7 +172,7 @@ export class AngularEslintLintMigrator extends BuilderMigrator {
 
   private convertEsLintConfigExtendToNewPath(
     eslintConfigPath: string,
-    extendPath: string,
+    extendPath: string
   ): string {
     if (!extendPath.startsWith('..')) {
       // we only need to adjust paths that are on a different directory, files
@@ -184,7 +184,7 @@ export class AngularEslintLintMigrator extends BuilderMigrator {
     return joinPathFragments(
       offsetFromRoot(this.project.newRoot),
       dirname(eslintConfigPath),
-      extendPath,
+      extendPath
     );
   }
 }

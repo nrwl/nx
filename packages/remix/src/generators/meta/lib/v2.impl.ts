@@ -13,7 +13,7 @@ export async function v2MetaGenerator(tree: Tree, schema: MetaSchema) {
 
   if (!tree.exists(routeFilePath)) {
     throw new Error(
-      `Route path does not exist: ${routeFilePath}. Please generate a Remix route first.`,
+      `Route path does not exist: ${routeFilePath}. Please generate a Remix route first.`
     );
   }
 
@@ -30,7 +30,7 @@ export async function v2MetaGenerator(tree: Tree, schema: MetaSchema) {
       return [{ title: '${defaultExportName} Route' }];
     };
 
-    `,
+    `
   );
   await formatFiles(tree);
 }

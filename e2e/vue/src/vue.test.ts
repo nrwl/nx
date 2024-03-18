@@ -16,14 +16,14 @@ describe('Vue Plugin', () => {
     const app = uniq('app');
 
     runCLI(
-      `generate @nx/vue:app ${app} --unitTestRunner=vitest --e2eTestRunner=playwright`,
+      `generate @nx/vue:app ${app} --unitTestRunner=vitest --e2eTestRunner=playwright`
     );
     let result = runCLI(`test ${app}`);
     expect(result).toContain(`Successfully ran target test for project ${app}`);
 
     result = runCLI(`build ${app}`);
     expect(result).toContain(
-      `Successfully ran target build for project ${app}`,
+      `Successfully ran target build for project ${app}`
     );
 
     // TODO: enable this when tests are passing again.
@@ -38,12 +38,12 @@ describe('Vue Plugin', () => {
     const lib = uniq('lib');
 
     runCLI(
-      `generate @nx/vue:lib ${lib} --bundler=vite --unitTestRunner=vitest`,
+      `generate @nx/vue:lib ${lib} --bundler=vite --unitTestRunner=vitest`
     );
 
     const result = runCLI(`build ${lib}`);
     expect(result).toContain(
-      `Successfully ran target build for project ${lib}`,
+      `Successfully ran target build for project ${lib}`
     );
   });
 });

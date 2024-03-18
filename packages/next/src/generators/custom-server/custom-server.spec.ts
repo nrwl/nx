@@ -43,7 +43,7 @@ describe('app', () => {
 
     expect(tree.exists(`${name}/.swcrc`)).toBeTruthy();
     expect(projectConfig.targets['build-custom-server'].executor).toEqual(
-      '@nx/js:swc',
+      '@nx/js:swc'
     );
     expect(packageJson.devDependencies['@swc/core']).toBeTruthy();
     expect(packageJson.devDependencies['@swc/cli']).toBeTruthy();

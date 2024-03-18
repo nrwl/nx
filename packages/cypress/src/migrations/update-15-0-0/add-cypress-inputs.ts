@@ -46,7 +46,7 @@ function getCypressTargetNames(tree: Tree) {
       if (options.testingType === 'component') {
         hasComponentTesting = true;
       }
-    },
+    }
   );
   return { cypressTargets, hasComponentTesting };
 }

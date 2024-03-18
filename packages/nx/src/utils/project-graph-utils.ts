@@ -3,7 +3,7 @@ import { readCachedProjectGraph } from '../project-graph/project-graph';
 
 export function projectHasTarget(
   project: ProjectGraphProjectNode,
-  target: string,
+  target: string
 ) {
   return !!(
     project.data &&
@@ -15,7 +15,7 @@ export function projectHasTarget(
 export function projectHasTargetAndConfiguration(
   project: ProjectGraphProjectNode,
   target: string,
-  configuration: string,
+  configuration: string
 ) {
   return (
     projectHasTarget(project, target) &&
@@ -26,11 +26,11 @@ export function projectHasTargetAndConfiguration(
 
 export function getSourceDirOfDependentProjects(
   projectName: string,
-  projectGraph = readCachedProjectGraph(),
+  projectGraph = readCachedProjectGraph()
 ): [projectDirs: string[], warnings: string[]] {
   if (!projectGraph.nodes[projectName]) {
     throw new Error(
-      `Couldn't find project "${projectName}" in this Nx workspace`,
+      `Couldn't find project "${projectName}" in this Nx workspace`
     );
   }
 
@@ -44,7 +44,7 @@ export function getSourceDirOfDependentProjects(
       }
       return result;
     },
-    [[], []] as [projectDirs: string[], warnings: string[]],
+    [[], []] as [projectDirs: string[], warnings: string[]]
   );
 }
 
@@ -59,7 +59,7 @@ export function getSourceDirOfDependentProjects(
 export function findAllProjectNodeDependencies(
   parentNodeName: string,
   projectGraph = readCachedProjectGraph(),
-  includeExternalDependencies = false,
+  includeExternalDependencies = false
 ): string[] {
   const dependencyNodeNames = new Set<string>();
 
@@ -67,7 +67,7 @@ export function findAllProjectNodeDependencies(
     projectGraph as ProjectGraph,
     dependencyNodeNames,
     parentNodeName,
-    includeExternalDependencies,
+    includeExternalDependencies
   );
 
   return Array.from(dependencyNodeNames);
@@ -78,7 +78,7 @@ function collectDependentProjectNodesNames(
   nxDeps: ProjectGraph,
   dependencyNodeNames: Set<string>,
   parentNodeName: string,
-  includeExternalDependencies: boolean,
+  includeExternalDependencies: boolean
 ) {
   const dependencies = nxDeps.dependencies[parentNodeName];
   if (!dependencies) {
@@ -111,7 +111,7 @@ function collectDependentProjectNodesNames(
       nxDeps,
       dependencyNodeNames,
       dependencyName,
-      includeExternalDependencies,
+      includeExternalDependencies
     );
   }
 }

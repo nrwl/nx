@@ -9,7 +9,7 @@ export function insertImport(
   tree: Tree,
   path: string,
   name: string,
-  modulePath: string,
+  modulePath: string
 ) {
   if (!tsModule) {
     tsModule = ensureTypescript();
@@ -36,7 +36,7 @@ export function insertImport(
         .replace(/['"`]/g, '')
         .trim() === modulePath &&
       statement.importClause.namedBindings &&
-      isNamedImports(statement.importClause.namedBindings),
+      isNamedImports(statement.importClause.namedBindings)
   );
   if (!existingImport) {
     insertStatement(tree, path, `import { ${name} } from '${modulePath}';`);

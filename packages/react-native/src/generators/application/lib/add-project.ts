@@ -12,7 +12,7 @@ export function addProject(host: Tree, options: NormalizedSchema) {
   const hasPlugin = nxJson.plugins?.some((p) =>
     typeof p === 'string'
       ? p === '@nx/react-native/plugin'
-      : p.plugin === '@nx/react-native/plugin',
+      : p.plugin === '@nx/react-native/plugin'
   );
 
   const project: ProjectConfiguration = {

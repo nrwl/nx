@@ -31,7 +31,7 @@ describe('vue tailwind support', () => {
              Hello TailwindCSS!
            </h1>
          </template>
-      `,
+      `
     );
 
     runCLI(`build ${app}`);

@@ -28,7 +28,7 @@ export function GitHubStarWidget({ starsCount }: { starsCount: number }) {
     sendCustomEvent(
       eventAction,
       'githubstars-toc-sidebar',
-      'githubstarswidget',
+      'githubstarswidget'
     );
   };
 

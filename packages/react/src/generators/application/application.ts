@@ -67,7 +67,7 @@ async function addLinting(host: Tree, options: NormalizedSchema) {
       const installTask = addDependenciesToPackageJson(
         host,
         extraEslintDependencies.dependencies,
-        extraEslintDependencies.devDependencies,
+        extraEslintDependencies.devDependencies
       );
       const addSwcTask = addSwcDependencies(host);
       tasks.push(installTask, addSwcTask);
@@ -78,7 +78,7 @@ async function addLinting(host: Tree, options: NormalizedSchema) {
 
 export async function applicationGenerator(
   host: Tree,
-  schema: Schema,
+  schema: Schema
 ): Promise<GeneratorCallback> {
   return await applicationGeneratorInternal(host, {
     addPlugin: false,
@@ -89,7 +89,7 @@ export async function applicationGenerator(
 
 export async function applicationGeneratorInternal(
   host: Tree,
-  schema: Schema,
+  schema: Schema
 ): Promise<GeneratorCallback> {
   const tasks = [];
 
@@ -150,7 +150,7 @@ export async function applicationGeneratorInternal(
       host.exists(joinPathFragments(options.appProjectRoot, 'src/environments'))
     ) {
       host.delete(
-        joinPathFragments(options.appProjectRoot, 'src/environments'),
+        joinPathFragments(options.appProjectRoot, 'src/environments')
       );
     }
 
@@ -184,18 +184,18 @@ export async function applicationGeneratorInternal(
         ],
         plugins: ['react()'],
       },
-      false,
+      false
     );
   } else if (options.bundler === 'rspack') {
     const { configurationGenerator } = ensurePackage(
       '@nx/rspack',
-      nxRspackVersion,
+      nxRspackVersion
     );
     const rspackTask = await configurationGenerator(host, {
       project: options.projectName,
       main: joinPathFragments(
         options.appProjectRoot,
-        maybeJs(options, `src/main.tsx`),
+        maybeJs(options, `src/main.tsx`)
       ),
       tsConfig: joinPathFragments(options.appProjectRoot, 'tsconfig.app.json'),
       target: 'web',
@@ -238,7 +238,7 @@ export async function applicationGeneratorInternal(
         ],
         plugins: ['react()'],
       },
-      true,
+      true
     );
   }
 
@@ -249,8 +249,8 @@ export async function applicationGeneratorInternal(
     host.delete(
       joinPathFragments(
         options.appProjectRoot,
-        `src/app/${options.fileName}.spec.tsx`,
-      ),
+        `src/app/${options.fileName}.spec.tsx`
+      )
     );
   }
 
@@ -278,18 +278,18 @@ export async function applicationGeneratorInternal(
   if (options.bundler === 'rspack' && options.style === 'styled-jsx') {
     logger.warn(
       `${chalk.bold('styled-jsx')} is not supported by ${chalk.bold(
-        'Rspack',
+        'Rspack'
       )}. We've added ${chalk.bold(
-        'babel-loader',
-      )} to your project, but using babel will slow down your build.`,
+        'babel-loader'
+      )} to your project, but using babel will slow down your build.`
     );
 
     tasks.push(
       addDependenciesToPackageJson(
         host,
         {},
-        { 'babel-loader': babelLoaderVersion },
-      ),
+        { 'babel-loader': babelLoaderVersion }
+      )
     );
 
     host.write(
@@ -311,7 +311,7 @@ export async function applicationGeneratorInternal(
           });
           return config;
         });
-        `,
+        `
     );
   }
 

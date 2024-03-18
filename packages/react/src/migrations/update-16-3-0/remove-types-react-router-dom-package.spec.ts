@@ -17,7 +17,7 @@ describe('update-16-3-0-remove-types-react-router-dom-package', () => {
     await removePackage(tree);
 
     expect(
-      readJson(tree, 'package.json').devDependencies['react-test-renderer'],
+      readJson(tree, 'package.json').devDependencies['react-test-renderer']
     ).not.toBeDefined();
   });
 });

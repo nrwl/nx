@@ -37,7 +37,7 @@ export async function setupMf(tree: Tree, rawOptions: Schema) {
     installTask = addDependenciesToPackageJson(
       tree,
       {},
-      { '@nx/web': nxVersion, '@nx/webpack': nxVersion },
+      { '@nx/web': nxVersion, '@nx/webpack': nxVersion }
     );
   }
 
@@ -57,7 +57,7 @@ export async function setupMf(tree: Tree, rawOptions: Schema) {
     installTask = addDependenciesToPackageJson(
       tree,
       {},
-      { '@nx/webpack': nxVersion },
+      { '@nx/webpack': nxVersion }
     );
   }
 

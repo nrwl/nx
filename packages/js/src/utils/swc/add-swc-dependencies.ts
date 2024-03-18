@@ -15,7 +15,7 @@ export function addSwcDependencies(tree: Tree) {
     {
       '@swc/core': swcCoreVersion,
       '@swc/cli': swcCliVersion,
-    },
+    }
   );
 }
 
@@ -23,6 +23,6 @@ export function addSwcRegisterDependencies(tree: Tree) {
   return addDependenciesToPackageJson(
     tree,
     {},
-    { '@swc-node/register': swcNodeVersion, '@swc/core': swcCoreVersion },
+    { '@swc-node/register': swcNodeVersion, '@swc/core': swcCoreVersion }
   );
 }

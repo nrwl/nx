@@ -2,7 +2,7 @@ import type { SourceFile } from 'typescript';
 
 export function getModuleMetadataFromAST(
   componentAST: SourceFile,
-  componentFileContents: string,
+  componentFileContents: string
 ) {
   const NGMODULE_CONTENT_SELECTOR =
     'ClassDeclaration:has(Decorator > CallExpression:has(Identifier[name=NgModule]))';
@@ -12,7 +12,7 @@ export function getModuleMetadataFromAST(
   });
   const moduleContents = componentFileContents.slice(
     moduleNodes[0].getStart(),
-    moduleNodes[0].getEnd(),
+    moduleNodes[0].getEnd()
   );
 
   // verify module is a scam

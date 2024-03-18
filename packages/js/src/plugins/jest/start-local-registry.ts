@@ -25,7 +25,7 @@ export function startLocalRegistry({
         ...`run ${localRegistryTarget} --location none --clear true`.split(' '),
         ...(storage ? [`--storage`, storage] : []),
       ],
-      { stdio: 'pipe' },
+      { stdio: 'pipe' }
     );
 
     const listener = (data) => {
@@ -34,14 +34,14 @@ export function startLocalRegistry({
       }
       if (data.toString().includes('http://localhost:')) {
         const port = parseInt(
-          data.toString().match(/localhost:(?<port>\d+)/)?.groups?.port,
+          data.toString().match(/localhost:(?<port>\d+)/)?.groups?.port
         );
         console.log('Local registry started on port ' + port);
 
         const registry = `http://localhost:${port}`;
         process.env.npm_config_registry = registry;
         execSync(
-          `npm config set //localhost:${port}/:_authToken "secretVerdaccioToken"`,
+          `npm config set //localhost:${port}/:_authToken "secretVerdaccioToken"`
         );
 
         // yarnv1

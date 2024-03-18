@@ -62,7 +62,7 @@ export const nxWritePackageTransform = (options: NgPackagrOptions) =>
           const primary = ngPackageNode.data.primary;
           await writeFile(
             path.join(primary.destinationPath, '.npmignore'),
-            `# Nested package.json's are only needed for development.\n**/package.json`,
+            `# Nested package.json's are only needed for development.\n**/package.json`
           );
         }
 
@@ -76,7 +76,7 @@ export const nxWritePackageTransform = (options: NgPackagrOptions) =>
             // webpack v4+ specific flag to enable advanced optimizations and code splitting
             sideEffects: ngEntryPoint.packageJson.sideEffects ?? false,
           },
-          !!options.watch,
+          !!options.watch
         );
       } catch (error) {
         throw error;
@@ -89,17 +89,17 @@ export const nxWritePackageTransform = (options: NgPackagrOptions) =>
         const primary = ngPackageNode.data.primary;
         const packageJsonPath = path.join(
           primary.destinationPath,
-          'package.json',
+          'package.json'
         );
 
         if (await exists(packageJsonPath)) {
           const packageJson = JSON.parse(
-            await readFile(packageJsonPath, { encoding: 'utf8' }),
+            await readFile(packageJsonPath, { encoding: 'utf8' })
           );
           packageJson.version = generateWatchVersion();
           await writeFile(
             path.join(primary.destinationPath, 'package.json'),
-            JSON.stringify(packageJson, undefined, 2),
+            JSON.stringify(packageJson, undefined, 2)
           );
         }
       }
@@ -111,8 +111,8 @@ export const nxWritePackageTransform = (options: NgPackagrOptions) =>
         JSON.stringify(
           { module: relativeUnixFromDestPath(destinationFiles.esm2022) },
           undefined,
-          2,
-        ),
+          2
+        )
       );
     }
 
@@ -126,7 +126,7 @@ type AssetEntry = Exclude<AssetPattern, string>;
 async function copyAssets(
   graph: BuildGraph,
   entryPointNode: EntryPointNode,
-  ngPackageNode: PackageNode,
+  ngPackageNode: PackageNode
 ): Promise<void> {
   const ngPackage = ngPackageNode.data;
 
@@ -168,12 +168,12 @@ async function copyAssets(
       path.relative(datum, target).startsWith('..');
     if (isAncestorPath(asset.input, ngPackage.src)) {
       throw new Error(
-        'Cannot read assets from a location outside of the project root.',
+        'Cannot read assets from a location outside of the project root.'
       );
     }
     if (isAncestorPath(asset.output, ngPackage.dest)) {
       throw new Error(
-        'Cannot write assets to a location outside of the output path.',
+        'Cannot write assets to a location outside of the output path.'
       );
     }
 
@@ -224,7 +224,7 @@ async function writePackageJson(
   additionalProperties: {
     [key: string]: string | boolean | string[] | ConditionalExport;
   },
-  isWatchMode: boolean,
+  isWatchMode: boolean
 ): Promise<void> {
   // set additional properties
   const packageJson = { ...entryPoint.packageJson, ...additionalProperties };
@@ -258,7 +258,7 @@ async function writePackageJson(
     }
   } else if (packageJson.peerDependencies?.tslib) {
     logger.warn(
-      `'tslib' is no longer recommended to be used as a 'peerDependencies'. Moving it to 'dependencies'.`,
+      `'tslib' is no longer recommended to be used as a 'peerDependencies'. Moving it to 'dependencies'.`
     );
     packageJson.dependencies = {
       ...(packageJson.dependencies || {}),
@@ -271,7 +271,7 @@ async function writePackageJson(
   // Verify non-peerDependencies as they can easily lead to duplicate installs or version conflicts
   // in the node_modules folder of an application
   const allowedList = pkg.allowedNonPeerDependencies.map(
-    (value) => new RegExp(value),
+    (value) => new RegExp(value)
   );
   try {
     checkNonPeerDependencies(packageJson, 'dependencies', allowedList);
@@ -284,12 +284,12 @@ async function writePackageJson(
   if (packageJson.scripts) {
     if (pkg.keepLifecycleScripts !== true) {
       logger.info(
-        `Removing scripts section in package.json as it's considered a potential security vulnerability.`,
+        `Removing scripts section in package.json as it's considered a potential security vulnerability.`
       );
       delete packageJson.scripts;
     } else {
       logger.warn(
-        `You enabled keepLifecycleScripts explicitly. The scripts section in package.json will be published to npm.`,
+        `You enabled keepLifecycleScripts explicitly. The scripts section in package.json will be published to npm.`
       );
     }
   }
@@ -318,14 +318,14 @@ async function writePackageJson(
   packageJson.name = entryPoint.moduleId;
   await writeFile(
     path.join(entryPoint.destinationPath, 'package.json'),
-    JSON.stringify(packageJson, undefined, 2),
+    JSON.stringify(packageJson, undefined, 2)
   );
 }
 
 function checkNonPeerDependencies(
   packageJson: Record<string, unknown>,
   property: string,
-  allowed: RegExp[],
+  allowed: RegExp[]
 ) {
   if (!packageJson[property]) {
     return;
@@ -334,10 +334,10 @@ function checkNonPeerDependencies(
   for (const dep of Object.keys(packageJson[property])) {
     if (!allowed.some((regex) => regex.test(dep))) {
       logger.warn(
-        `Distributing npm packages with '${property}' is not recommended. Please consider adding ${dep} to 'peerDependencies' or remove it from '${property}'.`,
+        `Distributing npm packages with '${property}' is not recommended. Please consider adding ${dep} to 'peerDependencies' or remove it from '${property}'.`
       );
       throw new Error(
-        `Dependency ${dep} must be explicitly allowed using the "allowedNonPeerDependencies" option.`,
+        `Dependency ${dep} must be explicitly allowed using the "allowedNonPeerDependencies" option.`
       );
     }
   }
@@ -368,7 +368,7 @@ type ConditionalExport = {
  */
 function generatePackageExports(
   { destinationPath, packageJson }: NgEntryPoint,
-  graph: BuildGraph,
+  graph: BuildGraph
 ): PackageExports {
   const exports: PackageExports = packageJson.exports
     ? JSON.parse(JSON.stringify(packageJson.exports))
@@ -376,7 +376,7 @@ function generatePackageExports(
 
   const insertMappingOrError = (
     subpath: string,
-    mapping: ConditionalExport,
+    mapping: ConditionalExport
   ) => {
     exports[subpath] ??= {};
     const subpathExport = exports[subpath];
@@ -388,7 +388,7 @@ function generatePackageExports(
       if (subpathExport[conditionName] !== undefined) {
         logger.warn(
           `Found a conflicting export condition for "${subpath}". The "${conditionName}" ` +
-            `condition would be overridden by ng-packagr. Please unset it.`,
+            `condition would be overridden by ng-packagr. Please unset it.`
         );
       }
 

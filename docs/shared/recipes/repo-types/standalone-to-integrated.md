@@ -36,8 +36,8 @@ For this recipe, we'll assume that the root-level app is named `my-app`. The hig
    {
      "workspaceLayout": {
        "appsDir": "apps",
-       "libsDir": "libs",
-     },
+       "libsDir": "libs"
+     }
    }
    ```
 

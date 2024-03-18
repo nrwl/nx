@@ -35,7 +35,7 @@ describe('Next.js Webpack', () => {
         env: {
           NX_ADD_PLUGINS: 'false',
         },
-      },
+      }
     );
 
     updateFile(
@@ -80,7 +80,7 @@ describe('Next.js Webpack', () => {
         };
 
         module.exports = withNx(nextConfig);
-      `,
+      `
     );
     // deleting `NODE_ENV` value, so that it's `undefined`, and not `"test"`
     // by the time it reaches the build executor.
@@ -99,7 +99,7 @@ describe('Next.js Webpack', () => {
         const nextConfig = {};
 
         module.exports = withNx(nextConfig);
-      `,
+      `
     );
     rmDist();
     runCLI(`build ${appName}`);

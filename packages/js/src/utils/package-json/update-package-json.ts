@@ -53,7 +53,7 @@ export function updatePackageJson(
   context: ExecutorContext,
   target: ProjectGraphProjectNode,
   dependencies: DependentBuildableProjectNode[],
-  fileMap: ProjectFileMap = null,
+  fileMap: ProjectFileMap = null
 ): void {
   let packageJson: PackageJson;
   if (fileMap == null) {
@@ -70,7 +70,7 @@ export function updatePackageJson(
         // By default we remove devDependencies since this is a production build.
         isProduction: true,
       },
-      fileMap,
+      fileMap
     );
 
     if (options.excludeLibsInPackageJson) {
@@ -81,13 +81,13 @@ export function updatePackageJson(
       packageJson,
       context,
       dependencies,
-      options.buildableProjectDepsInPackageJsonType,
+      options.buildableProjectDepsInPackageJsonType
     );
   } else {
     const pathToPackageJson = join(
       context.root,
       options.projectRoot,
-      'package.json',
+      'package.json'
     );
     packageJson = fileExists(pathToPackageJson)
       ? readJsonFile(pathToPackageJson)
@@ -105,28 +105,28 @@ export function updatePackageJson(
     const lockFile = createLockFile(
       packageJson,
       context.projectGraph,
-      packageManager,
+      packageManager
     );
     writeFileSync(
       `${options.outputPath}/${getLockFileName(packageManager)}`,
       lockFile,
       {
         encoding: 'utf-8',
-      },
+      }
     );
   }
 }
 
 function isNpmNode(
   node: ProjectGraphProjectNode | ProjectGraphExternalNode,
-  graph: ProjectGraph,
+  graph: ProjectGraph
 ): node is ProjectGraphExternalNode {
   return !!(graph.externalNodes[node.name]?.type === 'npm');
 }
 
 function isWorkspaceProject(
   node: ProjectGraphProjectNode | ProjectGraphExternalNode,
-  graph: ProjectGraph,
+  graph: ProjectGraph
 ): node is ProjectGraphProjectNode {
   return !!graph.nodes[node.name];
 }
@@ -141,10 +141,10 @@ function addMissingDependencies(
     projectGraph,
   }: ExecutorContext,
   dependencies: DependentBuildableProjectNode[],
-  propType: 'dependencies' | 'peerDependencies' = 'dependencies',
+  propType: 'dependencies' | 'peerDependencies' = 'dependencies'
 ) {
   const workspacePackageJson = readJsonFile(
-    joinPathFragments(workspaceRoot, 'package.json'),
+    joinPathFragments(workspaceRoot, 'package.json')
   );
   dependencies.forEach((entry) => {
     if (isNpmNode(entry.node, projectGraph)) {
@@ -180,7 +180,7 @@ function addMissingDependencies(
             configuration: configurationName,
           },
           {},
-          entry.node,
+          entry.node
         );
 
         const depPackageJsonPath = join(root, outputs[0], 'package.json');
@@ -208,7 +208,7 @@ export function getExports(
     'main' | 'projectRoot' | 'outputFileName' | 'additionalEntryPoints'
   > & {
     fileExt: string;
-  },
+  }
 ): Exports {
   const mainFile = options.outputFileName
     ? options.outputFileName.replace(/\.[tj]s$/, '')
@@ -227,7 +227,7 @@ export function getExports(
       const { ext: fileExt, name: fileName } = parse(file);
       const relativeDir = getRelativeDirectoryToProjectRoot(
         file,
-        options.projectRoot,
+        options.projectRoot
       );
       const sourceFilePath = relativeDir + fileName;
       const entryFilepath = sourceFilePath.replace(/^\.\/src\//, './');
@@ -242,7 +242,7 @@ export function getExports(
 
 export function getUpdatedPackageJsonContent(
   packageJson: PackageJson,
-  options: UpdatePackageJsonOption,
+  options: UpdatePackageJsonOption
 ): PackageJson {
   // Default is CJS unless esm is explicitly passed.
   const hasCjsFormat = !options.format || options.format?.includes('cjs');
@@ -305,7 +305,7 @@ export function getUpdatedPackageJsonContent(
     const mainFile = basename(options.main).replace(/\.[tj]s$/, '');
     const relativeMainFileDir = getRelativeDirectoryToProjectRoot(
       options.main,
-      options.projectRoot,
+      options.projectRoot
     );
     const typingsFile = `${relativeMainFileDir}${mainFile}.d.ts`;
     packageJson.types = packageJson.types ?? typingsFile;

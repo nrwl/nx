@@ -109,5 +109,5 @@ export const TracingPanel = memo(
         </div>
       </div>
     );
-  },
+  }
 );

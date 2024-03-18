@@ -13,7 +13,7 @@ describe('getDefaultExportName', () => {
   it("should get the default export's name", () => {
     tree.write(
       'component.tsx',
-      `export default function Component() { return (<p>Hello world!</p>); };`,
+      `export default function Component() { return (<p>Hello world!</p>); };`
     );
 
     const defaultExportName = getDefaultExportName(tree, 'component.tsx');

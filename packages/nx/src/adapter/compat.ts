@@ -108,7 +108,7 @@ if (!patched) {
 }
 
 function mockReadWorkspace(
-  ngCoreWorkspace: typeof import('@angular-devkit/core/src/workspace/core'),
+  ngCoreWorkspace: typeof import('@angular-devkit/core/src/workspace/core')
 ) {
   mockMember(
     ngCoreWorkspace,
@@ -117,7 +117,7 @@ function mockReadWorkspace(
       (path, ...rest) => {
         path = 'angular.json';
         return originalReadWorkspace.apply(this, [path, ...rest]);
-      },
+      }
   );
 }
 
@@ -126,7 +126,7 @@ function mockReadWorkspace(
  * NOTE: We hide warnings that would be logged during this process.
  */
 function mockReadJsonWorkspace(
-  readJsonUtils: typeof import('@angular-devkit/core/src/workspace/json/reader'),
+  readJsonUtils: typeof import('@angular-devkit/core/src/workspace/json/reader')
 ) {
   mockMember(
     readJsonUtils,
@@ -171,14 +171,14 @@ function mockReadJsonWorkspace(
           modifiedOptions,
         ]);
       }
-    },
+    }
   );
 }
 
 function mockMember<T, T2 extends keyof T>(
   obj: T,
   method: T2,
-  factory: (originalValue: T[T2]) => T[T2],
+  factory: (originalValue: T[T2]) => T[T2]
 ) {
   obj[method] = factory(obj[method]);
 }

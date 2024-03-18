@@ -14,13 +14,13 @@ interface ModuleFederationExecutorContext {
 
 function extractRemoteProjectsFromConfig(
   config: ModuleFederationConfig,
-  pathToManifestFile?: string,
+  pathToManifestFile?: string
 ) {
   const remotes = [];
   if (pathToManifestFile && existsSync(pathToManifestFile)) {
     const moduleFederationManifestJson = readFileSync(
       pathToManifestFile,
-      'utf-8',
+      'utf-8'
     );
 
     if (moduleFederationManifestJson) {
@@ -32,7 +32,7 @@ function extractRemoteProjectsFromConfig(
       if (
         Object.keys(parsedManifest).every(
           (key) =>
-            typeof key === 'string' && typeof parsedManifest[key] === 'string',
+            typeof key === 'string' && typeof parsedManifest[key] === 'string'
         )
       ) {
         remotes.push(...Object.keys(parsedManifest));
@@ -48,7 +48,7 @@ function extractRemoteProjectsFromConfig(
 function collectRemoteProjects(
   remote: string,
   collected: Set<string>,
-  context: ModuleFederationExecutorContext,
+  context: ModuleFederationExecutorContext
 ) {
   const remoteProject = context.projectGraph.nodes[remote]?.data;
   if (!context.projectGraph.nodes[remote] || collected.has(remote)) {
@@ -62,13 +62,13 @@ function collectRemoteProjects(
   const remoteProjectConfig = getModuleFederationConfig(
     remoteProjectTsConfig,
     context.root,
-    remoteProjectRoot,
+    remoteProjectRoot
   );
   const remoteProjectRemotes =
     extractRemoteProjectsFromConfig(remoteProjectConfig);
 
   remoteProjectRemotes.forEach((r) =>
-    collectRemoteProjects(r, collected, context),
+    collectRemoteProjects(r, collected, context)
   );
 }
 
@@ -77,45 +77,45 @@ export function getRemotes(
   skipRemotes: string[],
   config: ModuleFederationConfig,
   context: ModuleFederationExecutorContext,
-  pathToManifestFile?: string,
+  pathToManifestFile?: string
 ) {
   const collectedRemotes = new Set<string>();
   const remotes = extractRemoteProjectsFromConfig(config, pathToManifestFile);
   remotes.forEach((r) => collectRemoteProjects(r, collectedRemotes, context));
   const remotesToSkip = new Set(
-    findMatchingProjects(skipRemotes, context.projectGraph.nodes) ?? [],
+    findMatchingProjects(skipRemotes, context.projectGraph.nodes) ?? []
   );
 
   if (remotesToSkip.size > 0) {
     logger.info(
       `Remotes not served automatically: ${[...remotesToSkip.values()].join(
-        ', ',
-      )}`,
+        ', '
+      )}`
     );
   }
 
   const knownRemotes = Array.from(collectedRemotes).filter(
-    (r) => !remotesToSkip.has(r),
+    (r) => !remotesToSkip.has(r)
   );
 
   logger.info(
     `NX Starting module federation dev-server for ${chalk.bold(
-      context.projectName,
-    )} with ${knownRemotes.length} remotes`,
+      context.projectName
+    )} with ${knownRemotes.length} remotes`
   );
 
   const devServeApps = new Set(
     !devRemotes
       ? []
       : Array.isArray(devRemotes)
-        ? findMatchingProjects(devRemotes, context.projectGraph.nodes)
-        : findMatchingProjects([devRemotes], context.projectGraph.nodes),
+      ? findMatchingProjects(devRemotes, context.projectGraph.nodes)
+      : findMatchingProjects([devRemotes], context.projectGraph.nodes)
   );
 
   const staticRemotes = knownRemotes.filter((r) => !devServeApps.has(r));
   const devServeRemotes = knownRemotes.filter((r) => devServeApps.has(r));
   const remotePorts = devServeRemotes.map(
-    (r) => context.projectGraph.nodes[r].data.targets['serve'].options.port,
+    (r) => context.projectGraph.nodes[r].data.targets['serve'].options.port
   );
 
   return {
@@ -129,18 +129,18 @@ export function getModuleFederationConfig(
   tsconfigPath: string,
   workspaceRoot: string,
   projectRoot: string,
-  pluginName: 'react' | 'angular' = 'react',
+  pluginName: 'react' | 'angular' = 'react'
 ) {
   const moduleFederationConfigPathJS = join(
     workspaceRoot,
     projectRoot,
-    'module-federation.config.js',
+    'module-federation.config.js'
   );
 
   const moduleFederationConfigPathTS = join(
     workspaceRoot,
     projectRoot,
-    'module-federation.config.ts',
+    'module-federation.config.ts'
   );
 
   let moduleFederationConfigPath = moduleFederationConfigPathJS;
@@ -162,7 +162,7 @@ export function getModuleFederationConfig(
     return config.default || config;
   } catch {
     throw new Error(
-      `Could not load ${moduleFederationConfigPath}. Was this project generated with "@nx/${pluginName}:host"?\nSee: https://nx.dev/concepts/more-concepts/faster-builds-with-module-federation`,
+      `Could not load ${moduleFederationConfigPath}. Was this project generated with "@nx/${pluginName}:host"?\nSee: https://nx.dev/concepts/more-concepts/faster-builds-with-module-federation`
     );
   }
 }
