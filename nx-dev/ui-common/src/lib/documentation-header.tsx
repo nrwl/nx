@@ -209,7 +209,7 @@ export function DocumentationHeader({
           </Link>
           <Link
             href="/getting-started/intro"
-            className="hidden lg:flex ml-2 items-center px-4 text-slate-900 dark:text-white lg:px-0"
+            className="ml-2 hidden items-center px-4 text-slate-900 dark:text-white lg:flex lg:px-0"
           >
             <span className="text-xl font-bold uppercase tracking-wide">
               Docs
@@ -274,7 +274,7 @@ export function DocumentationHeader({
               variant="secondary"
               size="small"
             >
-              <NxCloudIcon className="w-4 h-4" aria-hidden="true" />
+              <NxCloudIcon className="h-4 w-4" aria-hidden="true" />
               <span>Go to app</span>
             </ButtonLink>
           </nav>

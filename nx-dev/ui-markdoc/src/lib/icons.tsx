@@ -9,7 +9,7 @@ export const frameworkIcons: Record<
       <svg
         xmlns="http://www.w3.org/2000/svg"
         fill="none"
-        className="w-full h-full"
+        className="h-full w-full"
         viewBox="0 0 48 49"
       >
         <path
@@ -24,7 +24,7 @@ export const frameworkIcons: Record<
       <svg
         xmlns="http://www.w3.org/2000/svg"
         fill="none"
-        className="w-full h-full"
+        className="h-full w-full"
         viewBox="0 0 52 54"
       >
         <path
@@ -59,7 +59,7 @@ export const frameworkIcons: Record<
       <svg
         xmlns="http://www.w3.org/2000/svg"
         fill="none"
-        className="w-full h-full"
+        className="h-full w-full"
         viewBox="0 0 132 134"
       >
         <path fill="#F7DF1E" d="M0 0h60v60H0V0z" />
@@ -85,7 +85,7 @@ export const frameworkIcons: Record<
       <svg
         xmlns="http://www.w3.org/2000/svg"
         fill="none"
-        className="w-full h-full"
+        className="h-full w-full"
         viewBox="0 0 47 48"
       >
         <path
@@ -100,7 +100,7 @@ export const frameworkIcons: Record<
       <svg
         xmlns="http://www.w3.org/2000/svg"
         fill="none"
-        className="w-full h-full"
+        className="h-full w-full"
         viewBox="0 0 196 205"
       >
         <path fill="#fff" d="M117.167 31h61v69h-61z" />
@@ -138,7 +138,7 @@ export const frameworkIcons: Record<
       <svg
         xmlns="http://www.w3.org/2000/svg"
         fill="#3178C6"
-        className="w-full h-full"
+        className="h-full w-full"
         viewBox="0 0 24 24"
       >
         <rect width="24" height="24" fill="#fff" rx="2" ry="2" />
@@ -151,7 +151,7 @@ export const frameworkIcons: Record<
       <svg
         xmlns="http://www.w3.org/2000/svg"
         fill="red"
-        className="w-full h-full"
+        className="h-full w-full"
         viewBox="0 0 24 24"
       >
         <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814z" />
@@ -181,7 +181,7 @@ export const frameworkIcons: Record<
         xmlns="http://www.w3.org/2000/svg"
         stroke="currentColor"
         fill="transparent"
-        className="w-full h-full"
+        className="h-full w-full"
         viewBox="0 0 24 24"
       >
         <path d="M22.167 7.167v-2.5a2.5 2.5 0 0 0-2.5-2.5h-15a2.5 2.5 0 0 0-2.5 2.5v15a2.5 2.5 0 0 0 2.5 2.5h2.5m15-15c-2.76 0-5 2.24-5 5s-2.24 5-5 5-5 2.24-5 5m15-15V19.59a2.577 2.577 0 0 1-2.576 2.576H7.167" />
@@ -192,7 +192,7 @@ export const frameworkIcons: Record<
     image: (
       <svg
         fill="currentColor"
-        className="w-full h-full"
+        className="h-full w-full"
         viewBox="0 0 24 24"
         xmlns="http://www.w3.org/2000/svg"
       >
@@ -205,7 +205,7 @@ export const frameworkIcons: Record<
       <svg
         fill="#339933"
         role="img"
-        className="w-full h-full"
+        className="h-full w-full"
         viewBox="0 0 24 24"
         xmlns="http://www.w3.org/2000/svg"
       >
@@ -218,7 +218,7 @@ export const frameworkIcons: Record<
     image: (
       <svg
         fill="#000000"
-        className="adaptive-icon w-full h-full"
+        className="adaptive-icon h-full w-full"
         role="img"
         viewBox="0 0 24 24"
         xmlns="http://www.w3.org/2000/svg"
@@ -233,7 +233,7 @@ export const frameworkIcons: Record<
       <svg
         fill="#E0234E"
         role="img"
-        className="w-full h-full"
+        className="h-full w-full"
         viewBox="0 0 24 24"
         xmlns="http://www.w3.org/2000/svg"
       >
@@ -246,7 +246,7 @@ export const frameworkIcons: Record<
     image: (
       <svg
         xmlns="http://www.w3.org/2000/svg"
-        className="w-full h-full"
+        className="h-full w-full"
         viewBox="20 0 350 339.32"
       >
         <path
@@ -276,7 +276,7 @@ export const frameworkIcons: Record<
     image: (
       <svg
         xmlns="http://www.w3.org/2000/svg"
-        className="w-full h-full"
+        className="h-full w-full"
         viewBox="100 150 450 450"
       >
         <path
@@ -330,7 +330,7 @@ export const frameworkIcons: Record<
       <svg
         fill="#000000"
         role="img"
-        className="adaptive-icon w-full h-full"
+        className="adaptive-icon h-full w-full"
         viewBox="0 0 24 24"
         xmlns="http://www.w3.org/2000/svg"
       >
@@ -343,7 +343,7 @@ export const frameworkIcons: Record<
     image: (
       <svg
         fill="#000000"
-        className="adaptive-icon w-full h-full"
+        className="adaptive-icon h-full w-full"
         role="img"
         viewBox="0 0 24 24"
         xmlns="http://www.w3.org/2000/svg"
@@ -358,7 +358,7 @@ export const frameworkIcons: Record<
       <svg
         fill="#FF4785"
         role="img"
-        className="w-full h-full"
+        className="h-full w-full"
         viewBox="0 0 24 24"
         xmlns="http://www.w3.org/2000/svg"
       >
@@ -372,7 +372,7 @@ export const frameworkIcons: Record<
       <svg
         xmlns="http://www.w3.org/2000/svg"
         role="img"
-        className="w-full h-full"
+        className="h-full w-full"
         viewBox="0 0 166 155.3"
       >
         <defs>
@@ -469,7 +469,7 @@ export const frameworkIcons: Record<
       <svg
         fill="#324FFF"
         role="img"
-        className="w-full h-full"
+        className="h-full w-full"
         viewBox="0 0 24 24"
         xmlns="http://www.w3.org/2000/svg"
       >
@@ -483,7 +483,7 @@ export const frameworkIcons: Record<
       <svg
         viewBox="0 0 410 404"
         role="img"
-        className="w-full h-full"
+        className="h-full w-full"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
       >
@@ -529,7 +529,7 @@ export const frameworkIcons: Record<
       <svg
         fill="#2596BE"
         role="img"
-        className="w-full h-full"
+        className="h-full w-full"
         viewBox="0 0 24 24"
         xmlns="http://www.w3.org/2000/svg"
       >
@@ -543,7 +543,7 @@ export const frameworkIcons: Record<
       <svg
         xmlns="http://www.w3.org/2000/svg"
         fill="none"
-        className="w-full h-full"
+        className="h-full w-full"
         viewBox="0 0 800 800"
       >
         <path fill="#212121" d="M0 0H800V800H0z"></path>
@@ -605,7 +605,7 @@ export const frameworkIcons: Record<
   dotnet: {
     image: (
       <svg
-        className="w-full h-full"
+        className="h-full w-full"
         viewBox="0 0 456 456"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
@@ -635,7 +635,7 @@ export const frameworkIcons: Record<
       <svg
         xmlns="http://www.w3.org/2000/svg"
         fill="none"
-        className="w-full h-full"
+        className="h-full w-full"
         viewBox="0 0 60 64"
       >
         <path
@@ -659,7 +659,7 @@ export const frameworkIcons: Record<
         id="Layer_1"
         data-name="Layer 1"
         xmlns="http://www.w3.org/2000/svg"
-        className="w-full h-full"
+        className="h-full w-full"
         viewBox="0 0 90 66.06"
       >
         <defs>
@@ -686,7 +686,7 @@ export const frameworkIcons: Record<
   go: {
     image: (
       <svg
-        className="w-full h-full"
+        className="h-full w-full"
         viewBox="0 0 32 32"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
@@ -715,7 +715,7 @@ export const frameworkIcons: Record<
   vue: {
     image: (
       <svg
-        className="w-full h-full"
+        className="h-full w-full"
         viewBox="0 -17.5 256 256"
         xmlns="http://www.w3.org/2000/svg"
         preserveAspectRatio="xMinYMin meet"
@@ -740,7 +740,7 @@ export const frameworkIcons: Record<
       <svg
         version="1.1"
         viewBox="0 0 108 108"
-        className="adaptive-icon w-full h-full"
+        className="adaptive-icon h-full w-full"
         xmlns="http://www.w3.org/2000/svg"
         xmlnsXlink="http://www.w3.org/1999/xlink"
       >
@@ -824,7 +824,7 @@ export const frameworkIcons: Record<
   nuxt: {
     image: (
       <svg
-        className="w-full h-full"
+        className="h-full w-full"
         viewBox="0 0 900 900"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
@@ -840,7 +840,7 @@ export const frameworkIcons: Record<
     image: (
       <svg
         xmlns="http://www.w3.org/2000/svg"
-        className="w-full h-full"
+        className="h-full w-full"
         viewBox="0 0 98.1 118"
       >
         <path
@@ -866,7 +866,7 @@ export const frameworkIcons: Record<
   gatsby: {
     image: (
       <svg
-        className="w-full h-full"
+        className="h-full w-full"
         viewBox="0 0 32 32"
         xmlns="http://www.w3.org/2000/svg"
       >
@@ -887,7 +887,7 @@ export const frameworkIcons: Record<
       <svg
         fill="#FF5D01"
         role="img"
-        className="w-full h-full"
+        className="h-full w-full"
         viewBox="0 0 24 24"
         xmlns="http://www.w3.org/2000/svg"
       >
@@ -901,7 +901,7 @@ export const frameworkIcons: Record<
       <svg
         fill="#2EAD33"
         role="img"
-        className="w-full h-full"
+        className="h-full w-full"
         viewBox="0 0 24 24"
         xmlns="http://www.w3.org/2000/svg"
       >
@@ -915,7 +915,7 @@ export const frameworkIcons: Record<
       <svg
         fill="#F69220"
         role="img"
-        className="w-full h-full"
+        className="h-full w-full"
         viewBox="0 0 24 24"
         xmlns="http://www.w3.org/2000/svg"
       >
@@ -929,7 +929,7 @@ export const frameworkIcons: Record<
       <svg
         xmlns="http://www.w3.org/2000/svg"
         fill="currentColor"
-        className="w-full h-full"
+        className="h-full w-full"
         viewBox="0 0 340 340"
       >
         <path
@@ -950,7 +950,7 @@ export const frameworkIcons: Record<
     image: (
       <svg
         xmlns="http://www.w3.org/2000/svg"
-        className="w-full h-full"
+        className="h-full w-full"
         viewBox="0 0 630 630"
       >
         <title>JavaScript Unofficial Logo</title>
@@ -964,7 +964,7 @@ export const frameworkIcons: Record<
       <svg
         xmlns="http://www.w3.org/2000/svg"
         fill="#09D3AC"
-        className="w-full h-full"
+        className="h-full w-full"
         viewBox="0 0 24 24"
       >
         <path d="M21.92 10.846c0-1.223-1.44-2.308-3.655-2.97.533-2.25.3-4.04-.76-4.645a1.695 1.695 0 00-.85-.213c-.989 0-2.239.69-3.501 1.886-1.262-1.186-2.509-1.873-3.496-1.873a1.68 1.68 0 00-.863.216c-1.054.607-1.273 2.386-.747 4.625-2.203.659-3.636 1.735-3.64 2.953-.003 1.218 1.442 2.308 3.656 2.968-.533 2.251-.302 4.04.76 4.645.259.145.552.218.848.213.991 0 2.241-.69 3.503-1.886 1.26 1.186 2.507 1.873 3.496 1.873a1.703 1.703 0 00.863-.216c1.054-.607 1.271-2.386.747-4.616 2.204-.668 3.636-1.744 3.638-2.96zm-7.953-5.541c1.454-1.301 2.363-1.442 2.686-1.442a.836.836 0 01.43.103c.508.29.71 1.31.549 2.663a10.075 10.075 0 01-.178 1.028 17.347 17.347 0 00-2.233-.367 17.49 17.49 0 00-1.463-1.79c.065-.065.136-.131.21-.195zm-4.401 6.548c.138.266.286.532.438.8.153.268.313.54.49.808-.48-.07-.948-.156-1.391-.259.124-.451.282-.895.463-1.35zm-.492-3.38c.45-.105.92-.192 1.408-.26-.177.263-.33.533-.49.815-.16.282-.3.533-.437.802a20.901 20.901 0 01-.48-1.358zM10 10.84c.22-.465.462-.93.726-1.396.267-.465.552-.918.847-1.35a20.569 20.569 0 013.176.004c.295.428.577.886.844 1.34.266.452.511.926.731 1.39a20.079 20.079 0 01-1.571 2.746 20.309 20.309 0 01-3.176-.004 19.91 19.91 0 01-.845-1.34 20.831 20.831 0 01-.725-1.39H10zm5.834-2.623c.483.068.95.155 1.392.258-.131.438-.288.888-.469 1.34-.14-.266-.285-.532-.44-.8a37.617 37.617 0 00-.476-.798h-.007zm.49 4.425c.153-.269.298-.537.437-.805.177.462.355.917.48 1.36-.448.105-.919.19-1.407.258.172-.263.337-.534.497-.813h-.007zm-3.165-6.54c.32.342.633.711.94 1.107a22.694 22.694 0 00-.928-.021c-.314 0-.636 0-.946.021a15 15 0 01.934-1.106zM9.22 3.974a.856.856 0 01.438-.099 2.328 2.328 0 01.922.233 6.937 6.937 0 011.775 1.203l.208.19a17.477 17.477 0 00-1.449 1.776 17.553 17.553 0 00-2.246.365 9.036 9.036 0 01-.177-1.006c-.185-1.34.028-2.363.527-2.655l.002-.007zm-.94 9.002a10.4 10.4 0 01-.983-.355c-1.26-.533-2.042-1.216-2.042-1.8 0-.585.785-1.265 2.044-1.788a10.232 10.232 0 01.966-.345 17.382 17.382 0 00.81 2.155 17.534 17.534 0 00-.794 2.133zm4.084 3.39c-1.454 1.302-2.363 1.44-2.688 1.44a.832.832 0 01-.43-.102c-.507-.29-.71-1.31-.548-2.663a9.957 9.957 0 01.177-1.027c.736.17 1.482.292 2.234.366.447.629.936 1.227 1.463 1.79l-.208.197zm.811-.8c-.32-.34-.634-.71-.942-1.106.305.014.616.021.93.021.314 0 .636 0 .946-.02-.307.395-.62.764-.935 1.105h.001zm3.938 2.13a.856.856 0 01-.44.105c-.323 0-1.243-.142-2.692-1.438l-.207-.19a17.466 17.466 0 001.447-1.775 17.236 17.236 0 002.247-.366c.078.345.14.682.178 1.007.176 1.338-.029 2.361-.535 2.65l.002.008zm1.918-5.049c-.304.125-.625.24-.966.343a17.487 17.487 0 00-.812-2.155c.312-.692.579-1.404.798-2.13.333.1.662.22.983.354 1.259.533 2.042 1.216 2.04 1.8-.002.585-.785 1.257-2.045 1.781l.002.007zm-5.873-.18c.322 0 .637-.096.905-.274a1.63 1.63 0 00.601-.731 1.63 1.63 0 00.094-.942 1.63 1.63 0 00-.445-.835 1.63 1.63 0 00-.834-.447 1.63 1.63 0 00-.942.092 1.63 1.63 0 00-.732.6 1.63 1.63 0 00-.276.905 1.628 1.628 0 00.123.624 1.63 1.63 0 001.506 1.007zM2.328 1.011v19.645H24V1.012H2.328zm20.825 18.8H3.176V1.859h19.977v17.953zm-15.09-6.019c-.533 2.251-.303 4.04.759 4.645.259.145.552.218.849.213.99 0 2.24-.69 3.503-1.886 1.26 1.186 2.506 1.873 3.495 1.873.302.006.6-.069.863-.216 1.055-.607 1.271-2.386.748-4.616 2.203-.66 3.636-1.737 3.637-2.953.002-1.216-1.44-2.308-3.653-2.97.532-2.25.3-4.04-.76-4.645a1.695 1.695 0 00-.85-.213c-.99 0-2.24.69-3.502 1.886-1.262-1.186-2.508-1.873-3.496-1.873a1.68 1.68 0 00-.862.216C7.739 3.862 7.52 5.64 8.046 7.88c-2.203.659-3.636 1.735-3.64 2.953-.003 1.218 1.444 2.297 3.658 2.961h-.002zm4.297 2.573c-1.454 1.301-2.363 1.44-2.688 1.44a.832.832 0 01-.43-.103c-.507-.29-.71-1.31-.548-2.663a9.957 9.957 0 01.178-1.027 17.68 17.68 0 002.233.366c.447.629.936 1.227 1.463 1.79l-.208.197zm4.402-6.55a24.03 24.03 0 00-.44-.8c-.155-.269-.32-.533-.484-.798.483.068.95.155 1.392.258-.13.438-.286.888-.467 1.34h-.001zm.483 3.373c-.448.105-.918.19-1.407.258a20.514 20.514 0 00.927-1.617c.187.47.348.921.476 1.368l.004-.008zm-.925-2.37a20.06 20.06 0 01-1.572 2.747 20.256 20.256 0 01-3.176-.004 19.938 19.938 0 01-1.576-2.73c.22-.465.462-.93.726-1.396.266-.465.552-.918.847-1.35a20.571 20.571 0 013.176.004c.294.428.577.886.843 1.34.266.452.513.935.733 1.398l-.001-.009zm-5.826 2.642c-.48-.07-.948-.156-1.391-.259.13-.437.289-.888.47-1.34.138.266.286.532.438.8.153.268.306.531.483.8zM10 9.023c-.154.266-.3.532-.437.802a17.869 17.869 0 01-.488-1.353c.45-.104.92-.191 1.408-.259-.165.263-.323.534-.483.81zm3.175 6.542c-.32-.34-.634-.71-.943-1.106.305.014.616.021.93.021.314 0 .636 0 .946-.02a16.35 16.35 0 01-.933 1.105zm3.937 2.13a.856.856 0 01-.44.105c-.323 0-1.243-.142-2.691-1.438l-.208-.19a17.479 17.479 0 001.447-1.775 17.234 17.234 0 002.247-.366c.079.344.14.682.178 1.007.178 1.338-.027 2.361-.533 2.65v.008zm.938-8.994c.333.102.662.22.983.355 1.26.533 2.042 1.216 2.04 1.8-.001.585-.783 1.272-2.043 1.796-.304.124-.625.24-.966.342a17.487 17.487 0 00-.811-2.155c.312-.697.578-1.413.797-2.145v.007zm-4.084-3.389c1.454-1.301 2.363-1.442 2.687-1.442a.836.836 0 01.43.103c.507.29.71 1.31.548 2.663a10.076 10.076 0 01-.178 1.028 17.345 17.345 0 00-2.233-.367 17.476 17.476 0 00-1.463-1.79c.067-.072.138-.138.211-.202l-.002.007zm-.807.792c.32.34.633.71.94 1.106a22.694 22.694 0 00-.928-.021c-.314 0-.636 0-.946.02a15 15 0 01.934-1.105zM9.22 3.974a.856.856 0 01.438-.1 2.328 2.328 0 01.922.233 6.937 6.937 0 011.775 1.203l.208.19a17.477 17.477 0 00-1.449 1.776 17.553 17.553 0 00-2.246.365 9.036 9.036 0 01-.177-1.006c-.185-1.34.028-2.363.527-2.655l.002-.007zM7.299 9.031a10.232 10.232 0 01.966-.345 17.382 17.382 0 00.81 2.155 17.536 17.536 0 00-.798 2.13 10.426 10.426 0 01-.984-.354c-1.26-.533-2.041-1.216-2.041-1.8 0-.584.788-1.263 2.047-1.786zm5.859.177a1.63 1.63 0 00-.906.274 1.63 1.63 0 00-.601.73 1.63 1.63 0 00-.094.942 1.63 1.63 0 003.229-.314 1.627 1.627 0 00-.12-.627 1.63 1.63 0 00-.353-.533 1.63 1.63 0 00-.53-.356 1.628 1.628 0 00-.625-.125v.01za1.63 1.63 0 00-.906.274 1.63 1.63 0 00-.601.73 1.63 1.63 0 00-.094.942 1.63 1.63 0 003.229-.314 1.627 1.627 0 00-.12-.627 1.63 1.63 0 00-.353-.533 1.63 1.63 0 00-.53-.356 1.628 1.628 0 00-.625-.125v.01za1.63 1.63 0 00-.906.274 1.63 1.63 0 00-.601.73 1.63 1.63 0 00-.094.942 1.63 1.63 0 003.229-.314 1.627 1.627 0 00-.12-.627 1.63 1.63 0 00-.353-.533 1.63 1.63 0 00-.53-.356 1.628 1.628 0 00-.625-.125v.01zm8.761 1.64c0-1.223-1.44-2.307-3.654-2.97.533-2.25.3-4.039-.76-4.644a1.695 1.695 0 00-.85-.213c-.989 0-2.239.69-3.501 1.885-1.262-1.186-2.509-1.873-3.496-1.873a1.68 1.68 0 00-.863.217c-1.054.607-1.273 2.386-.747 4.625-2.203.658-3.636 1.734-3.64 2.952-.003 1.218 1.442 2.308 3.656 2.969-.533 2.25-.302 4.039.76 4.644.259.145.552.219.848.213.991 0 2.241-.69 3.503-1.885 1.26 1.186 2.507 1.873 3.496 1.873.302.005.6-.07.863-.217 1.054-.607 1.271-2.386.747-4.616 2.204-.671 3.636-1.747 3.638-2.963v.004zm-7.952-5.544c1.454-1.301 2.363-1.442 2.686-1.442a.836.836 0 01.43.103c.508.29.71 1.31.549 2.663a10.075 10.075 0 01-.178 1.028 17.347 17.347 0 00-2.233-.367 17.49 17.49 0 00-1.463-1.79c.065-.065.136-.131.21-.195zm-4.401 6.548c.138.266.286.532.438.8.153.268.313.54.49.808-.48-.07-.948-.156-1.391-.259.124-.451.282-.895.463-1.35zm-.492-3.38c.45-.105.92-.192 1.408-.26-.177.263-.33.533-.49.815-.16.282-.3.533-.437.802a20.901 20.901 0 01-.48-1.358zM10 10.84c.22-.465.462-.93.726-1.396.267-.465.552-.918.847-1.35a20.569 20.569 0 013.176.004c.295.428.577.886.844 1.34.266.452.511.926.731 1.39a20.079 20.079 0 01-1.571 2.746 20.309 20.309 0 01-3.176-.004 19.91 19.91 0 01-.845-1.34 20.831 20.831 0 01-.725-1.39H10zm5.834-2.623c.483.068.95.155 1.392.258-.131.438-.288.888-.469 1.34-.14-.266-.285-.532-.44-.8a37.617 37.617 0 00-.476-.798h-.007zm.49 4.425c.153-.269.298-.537.437-.805.177.462.355.917.48 1.36-.448.105-.919.19-1.407.258.172-.263.337-.534.497-.813h-.007zm-3.165-6.54c.32.342.633.711.94 1.107a22.694 22.694 0 00-.928-.021c-.314 0-.636 0-.946.021a15 15 0 01.934-1.106zM9.22 3.974a.856.856 0 01.438-.099 2.328 2.328 0 01.922.233 6.937 6.937 0 011.775 1.203l.208.19a17.477 17.477 0 00-1.449 1.776 17.553 17.553 0 00-2.246.365 9.036 9.036 0 01-.177-1.006c-.185-1.34.028-2.363.527-2.655l.002-.007zm-.94 9.002a10.4 10.4 0 01-.983-.355c-1.26-.533-2.042-1.216-2.042-1.8 0-.585.785-1.265 2.044-1.788a10.232 10.232 0 01.966-.345 17.382 17.382 0 00.81 2.155 17.534 17.534 0 00-.794 2.133zm4.084 3.39c-1.454 1.302-2.363 1.44-2.688 1.44a.832.832 0 01-.43-.102c-.507-.29-.71-1.31-.548-2.663a9.957 9.957 0 01.177-1.027c.736.17 1.482.292 2.234.366.447.629.936 1.227 1.463 1.79l-.208.197zm.811-.8c-.32-.34-.634-.71-.942-1.106.305.014.616.021.93.021.314 0 .636 0 .946-.02-.307.395-.62.764-.935 1.105h.001zm3.938 2.13a.856.856 0 01-.44.105c-.323 0-1.243-.142-2.692-1.438l-.207-.19a17.466 17.466 0 001.447-1.775 17.236 17.236 0 002.247-.366c.078.345.14.682.178 1.007.176 1.338-.029 2.361-.535 2.65l.002.008zm1.918-5.049c-.304.125-.625.24-.966.343a17.487 17.487 0 00-.812-2.155c.312-.692.579-1.404.798-2.13.333.1.662.22.983.354 1.259.533 2.042 1.216 2.04 1.8-.002.585-.785 1.257-2.045 1.781l.002.007zm-5.873-.18c.322 0 .637-.096.905-.274a1.63 1.63 0 00.601-.731 1.63 1.63 0 00.094-.942 1.63 1.63 0 00-.445-.835 1.63 1.63 0 00-.834-.447 1.63 1.63 0 00-.942.092 1.63 1.63 0 00-.732.6 1.63 1.63 0 00-.276.905 1.628 1.628 0 00.123.624 1.63 1.63 0 001.506 1.007zM.85 22.14V2.49L0 3.341v19.647h21.669l.849-.847H.85z"></path>
@@ -975,7 +975,7 @@ export const frameworkIcons: Record<
     image: (
       <svg
         xmlns="http://www.w3.org/2000/svg"
-        className="w-full h-full text-black dark:text-white"
+        className="h-full w-full text-black dark:text-white"
         viewBox="0 0 24 24"
         fill="currentColor"
       >
@@ -1010,7 +1010,7 @@ export const frameworkIcons: Record<
     image: (
       <svg
         xmlns="http://www.w3.org/2000/svg"
-        className="adaptive-icon w-full h-full"
+        className="adaptive-icon h-full w-full"
         viewBox="0 0 24 24"
       >
         <title>Cypress</title>
@@ -1022,7 +1022,7 @@ export const frameworkIcons: Record<
     image: (
       <svg
         xmlns="http://www.w3.org/2000/svg"
-        className="adaptive-icon w-full h-full"
+        className="adaptive-icon h-full w-full"
         fill="#000020"
         viewBox="0 0 24 24"
       >
@@ -1036,7 +1036,7 @@ export const frameworkIcons: Record<
       <svg
         fill="#61DAFB"
         role="img"
-        className="w-full h-full"
+        className="h-full w-full"
         viewBox="0 0 24 24"
         xmlns="http://www.w3.org/2000/svg"
       >
@@ -1049,7 +1049,7 @@ export const frameworkIcons: Record<
     image: (
       <svg
         xmlns="http://www.w3.org/2000/svg"
-        className="w-full h-full"
+        className="h-full w-full"
         viewBox="0 0 728.55 727.44"
       >
         <title>Azure Pipelines</title>
@@ -1095,7 +1095,7 @@ export const frameworkIcons: Record<
     image: (
       <svg
         xmlns="http://www.w3.org/2000/svg"
-        className="w-full h-full"
+        className="h-full w-full"
         width="500"
         height="500"
         viewBox="0 0 62.42 62.42"
@@ -1132,7 +1132,7 @@ export const frameworkIcons: Record<
   circleci: {
     image: (
       <svg
-        className="adaptive-icon w-full h-full"
+        className="adaptive-icon h-full w-full"
         xmlns="http://www.w3.org/2000/svg"
         viewBox="0 0 390 390"
       >
@@ -1149,7 +1149,7 @@ export const frameworkIcons: Record<
   github: {
     image: (
       <svg
-        className="adaptive-icon w-full h-full"
+        className="adaptive-icon h-full w-full"
         xmlns="http://www.w3.org/2000/svg"
         viewBox="-1 0 100 100"
       >
@@ -1167,7 +1167,7 @@ export const frameworkIcons: Record<
     image: (
       <svg
         xmlns="http://www.w3.org/2000/svg"
-        className="w-full h-full"
+        className="h-full w-full"
         width="463.16"
         height="446.09"
         viewBox="0 0 463.16 446.09"
@@ -1202,7 +1202,7 @@ export const frameworkIcons: Record<
     image: (
       <svg
         xmlns="http://www.w3.org/2000/svg"
-        className="w-full h-full"
+        className="h-full w-full"
         viewBox="-2 0 448 620"
       >
         <title>jenkins-logo</title>
@@ -1459,7 +1459,7 @@ export const frameworkIcons: Record<
       <svg
         fill="#000000"
         role="img"
-        className="adaptive-icon w-full h-full"
+        className="adaptive-icon h-full w-full"
         height="256"
         preserveAspectRatio="xMidYMid"
         viewBox="0 0 256 256"
@@ -1475,7 +1475,7 @@ export const frameworkIcons: Record<
       <svg
         fill="currentColor"
         role="img"
-        className="adaptive-icon w-full h-full"
+        className="adaptive-icon h-full w-full"
         viewBox="0.34 -0.059977834648891726 33.11668247084116 39.96397783464889"
         xmlns="http://www.w3.org/2000/svg"
         width="2047"
@@ -1493,7 +1493,7 @@ export const frameworkIcons: Record<
     image: (
       <svg
         width="32"
-        className="w-full h-full"
+        className="h-full w-full"
         height="32"
         xmlns="http://www.w3.org/2000/svg"
         viewBox="0 0 32 32"
@@ -1544,7 +1544,7 @@ export const frameworkIcons: Record<
         width="32"
         height="32"
         viewBox="0 0 32 32"
-        className="w-full h-full"
+        className="h-full w-full"
       >
         <g fill="none">
           <path
@@ -1576,7 +1576,7 @@ export const frameworkIcons: Record<
         viewBox="0 0 24 24"
         strokeWidth="2"
         stroke="currentColor"
-        className="w-full h-full"
+        className="h-full w-full"
         fill="none"
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -1595,7 +1595,7 @@ export const frameworkIcons: Record<
         height="15"
         viewBox="0 0 15 15"
         fill="none"
-        className="adaptive-icon w-full h-full"
+        className="adaptive-icon h-full w-full"
         xmlns="http://www.w3.org/2000/svg"
       >
         <path
@@ -1611,7 +1611,7 @@ export const frameworkIcons: Record<
         xmlns="http://www.w3.org/2000/svg"
         width="24"
         height="24"
-        className="w-full h-full"
+        className="h-full w-full"
         fill="currentColor"
         viewBox="0 0 24 24"
       >
