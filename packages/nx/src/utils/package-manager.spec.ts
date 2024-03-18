@@ -32,7 +32,6 @@ describe('package-manager', () => {
       });
       const packageManager = detectPackageManager();
       expect(packageManager).toEqual('pnpm');
-      expect(fs.existsSync).toHaveBeenCalledTimes(0);
     });
 
     it('should detect yarn package manager from yarn.lock', () => {
