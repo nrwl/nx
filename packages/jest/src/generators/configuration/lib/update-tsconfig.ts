@@ -4,15 +4,15 @@ import { readProjectConfiguration, Tree, updateJson } from '@nx/devkit';
 
 export function updateTsConfig(
   host: Tree,
-  options: NormalizedJestProjectSchema,
+  options: NormalizedJestProjectSchema
 ) {
   const projectConfig = readProjectConfiguration(host, options.project);
   if (!host.exists(join(projectConfig.root, 'tsconfig.json'))) {
     throw new Error(
       `Expected ${join(
         projectConfig.root,
-        'tsconfig.json',
-      )} to exist. Please create one.`,
+        'tsconfig.json'
+      )} to exist. Please create one.`
     );
   }
   updateJson(host, join(projectConfig.root, 'tsconfig.json'), (json) => {

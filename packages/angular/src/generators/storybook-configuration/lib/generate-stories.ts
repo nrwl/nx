@@ -6,7 +6,7 @@ import type { StorybookConfigurationOptions } from '../schema';
 
 export async function generateStories(
   tree: Tree,
-  options: StorybookConfigurationOptions,
+  options: StorybookConfigurationOptions
 ) {
   const project = readProjectConfiguration(tree, options.project);
   ensurePackage('@nx/cypress', nxVersion);
@@ -16,7 +16,7 @@ export async function generateStories(
   const e2eProjectName = getE2eProjectName(
     options.project,
     project.root,
-    options.cypressDirectory,
+    options.cypressDirectory
   );
 
   await angularStoriesGenerator(tree, {

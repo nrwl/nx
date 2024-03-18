@@ -33,7 +33,7 @@ export function applyWebConfig(
     // webpack then normalizes them to { import: "..." } objects
     // This option allows use to preserve existing composePlugins behavior where entry.main is an array.
     useNormalizedEntry?: boolean;
-  } = {},
+  } = {}
 ): void {
   if (!process.env['NX_TASK_TARGET_PROJECT']) return;
 
@@ -65,7 +65,7 @@ export function applyWebConfig(
         deployUrl: options.deployUrl,
         scripts: options.scripts,
         styles: options.styles,
-      }),
+      })
     );
   }
 
@@ -78,12 +78,12 @@ export function applyWebConfig(
     minimizer.push(
       new CssMinimizerPlugin({
         test: /\.(?:css|scss|sass|less|styl)$/,
-      }),
+      })
     );
   }
   if (!options.ssr) {
     plugins.push(
-      new DefinePlugin(getClientEnvironment(process.env.NODE_ENV).stringified),
+      new DefinePlugin(getClientEnvironment(process.env.NODE_ENV).stringified)
     );
   }
 
@@ -97,7 +97,7 @@ export function applyWebConfig(
   if (options?.stylePreprocessorOptions?.includePaths?.length > 0) {
     options.stylePreprocessorOptions.includePaths.forEach(
       (includePath: string) =>
-        includePaths.push(path.resolve(options.root, includePath)),
+        includePaths.push(path.resolve(options.root, includePath))
     );
   }
 
@@ -324,7 +324,7 @@ export function applyWebConfig(
       // extract global css from js files into own css file
       new MiniCssExtractPlugin({
         filename: `[name]${hashFormat.extract}.css`,
-      }),
+      })
     );
   }
 

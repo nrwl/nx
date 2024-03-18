@@ -15,7 +15,7 @@ import { dirname, join, parse, relative } from 'path';
 
 export async function reactNativeComponentGenerator(
   host: Tree,
-  schema: Schema,
+  schema: Schema
 ) {
   return reactNativeComponentGeneratorInternal(host, {
     nameAndDirectoryFormat: 'derived',
@@ -25,7 +25,7 @@ export async function reactNativeComponentGenerator(
 
 export async function reactNativeComponentGeneratorInternal(
   host: Tree,
-  schema: Schema,
+  schema: Schema
 ) {
   const options = await normalizeOptions(host, schema);
   createComponentFiles(host, options);
@@ -71,7 +71,7 @@ function addExportsToBarrel(host: Tree, options: NormalizedSchema) {
   if (options.export && !isApp) {
     const indexFilePath = joinPathFragments(
       options.projectSourceRoot,
-      options.js ? 'index.js' : 'index.ts',
+      options.js ? 'index.js' : 'index.ts'
     );
     const indexSource = host.read(indexFilePath, 'utf-8');
     if (indexSource !== null) {
@@ -79,16 +79,16 @@ function addExportsToBarrel(host: Tree, options: NormalizedSchema) {
         indexFilePath,
         indexSource,
         tsModule.ScriptTarget.Latest,
-        true,
+        true
       );
 
       const relativePathFromIndex = getRelativeImportToFile(
         indexFilePath,
-        options.filePath,
+        options.filePath
       );
       const changes = applyChangesToString(
         indexSource,
-        addImport(indexSourceFile, `export * from '${relativePathFromIndex}';`),
+        addImport(indexSourceFile, `export * from '${relativePathFromIndex}';`)
       );
       host.write(indexFilePath, changes);
     }

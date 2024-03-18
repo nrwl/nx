@@ -17,7 +17,7 @@ import { NormalizedSchema } from './new';
 
 export async function generateWorkspaceFiles(
   tree: Tree,
-  options: NormalizedSchema,
+  options: NormalizedSchema
 ) {
   if (!options.name) {
     throw new Error(`Invalid options, "name" is required.`);
@@ -26,7 +26,7 @@ export async function generateWorkspaceFiles(
   // since it might influence the version report
   const packageManagerVersion = getPackageManagerVersion(
     options.packageManager as PackageManager,
-    tree.root,
+    tree.root
   );
   options = normalizeOptions(options);
   createReadme(tree, options);
@@ -61,7 +61,7 @@ function setPresetProperty(tree: Tree, options: NormalizedSchema) {
 
 function createNxJson(
   tree: Tree,
-  { directory, defaultBase, preset }: NormalizedSchema,
+  { directory, defaultBase, preset }: NormalizedSchema
 ) {
   const nxJson: NxJsonConfiguration & { $schema: string } = {
     $schema: './node_modules/nx/schemas/nx-schema.json',
@@ -111,8 +111,8 @@ function createFiles(tree: Tree, options: NormalizedSchema) {
     options.preset === Preset.TsStandalone
       ? './files-root-app'
       : options.preset === Preset.NPM
-        ? './files-package-based-repo'
-        : './files-integrated-repo';
+      ? './files-package-based-repo'
+      : './files-integrated-repo';
   generateFiles(tree, join(__dirname, filesDirName), options.directory, {
     formattedNames,
     dot: '.',
@@ -127,7 +127,7 @@ function createFiles(tree: Tree, options: NormalizedSchema) {
 
 function createReadme(
   tree: Tree,
-  { name, appName, directory, preset }: NormalizedSchema,
+  { name, appName, directory, preset }: NormalizedSchema
 ) {
   const formattedNames = names(name);
   generateFiles(tree, join(__dirname, './files-readme'), directory, {
@@ -147,7 +147,7 @@ function createReadme(
 function createNpmrc(tree: Tree, options: NormalizedSchema) {
   tree.write(
     join(options.directory, '.npmrc'),
-    'strict-peer-dependencies=false\nauto-install-peers=true\n',
+    'strict-peer-dependencies=false\nauto-install-peers=true\n'
   );
 }
 
@@ -156,7 +156,7 @@ function createNpmrc(tree: Tree, options: NormalizedSchema) {
 function createYarnrcYml(tree: Tree, options: NormalizedSchema) {
   tree.write(
     join(options.directory, '.yarnrc.yml'),
-    'nodeLinker: node-modules\n',
+    'nodeLinker: node-modules\n'
   );
 }
 
@@ -227,7 +227,7 @@ function setUpWorkspacesInPackageJson(tree: Tree, options: NormalizedSchema) {
         join(options.directory, 'pnpm-workspace.yaml'),
         `packages:
   - 'packages/*'
-`,
+`
       );
     } else {
       updateJson(tree, join(options.directory, 'package.json'), (json) => {

@@ -89,7 +89,7 @@ export interface NormalizedRunCommandsOptions extends RunCommandsOptions {
 
 export default async function (
   options: RunCommandsOptions,
-  context: ExecutorContext,
+  context: ExecutorContext
 ): Promise<{
   success: boolean;
   terminalOutput: string;
@@ -99,7 +99,7 @@ export default async function (
 
   if (options.readyWhen && !options.parallel) {
     throw new Error(
-      'ERROR: Bad executor config for run-commands - "readyWhen" can only be used when "parallel=true".',
+      'ERROR: Bad executor config for run-commands - "readyWhen" can only be used when "parallel=true".'
     );
   }
 
@@ -108,7 +108,7 @@ export default async function (
     !options.parallel
   ) {
     throw new Error(
-      'ERROR: Bad executor config for run-commands - "prefix", "color" and "bgColor" can only be set when "parallel=true".',
+      'ERROR: Bad executor config for run-commands - "prefix", "color" and "bgColor" can only be set when "parallel=true".'
     );
   }
 
@@ -122,14 +122,14 @@ export default async function (
       console.error(e);
     }
     throw new Error(
-      `ERROR: Something went wrong in run-commands - ${e.message}`,
+      `ERROR: Something went wrong in run-commands - ${e.message}`
     );
   }
 }
 
 async function runInParallel(
   options: NormalizedRunCommandsOptions,
-  context: ExecutorContext,
+  context: ExecutorContext
 ): Promise<{ success: boolean; terminalOutput: string }> {
   const procs = options.commands.map((c) =>
     createProcess(
@@ -141,11 +141,11 @@ async function runInParallel(
       options.env ?? {},
       true,
       options.usePty,
-      options.streamOutput,
+      options.streamOutput
     ).then((result: { success: boolean; terminalOutput: string }) => ({
       result,
       command: c.command,
-    })),
+    }))
   );
 
   let terminalOutput = '';
@@ -176,7 +176,7 @@ async function runInParallel(
       const output = failed
         .map(
           (f) =>
-            `Warning: command "${f.command}" exited with non-zero status code`,
+            `Warning: command "${f.command}" exited with non-zero status code`
         )
         .join('\r\n');
       terminalOutput += output;
@@ -197,14 +197,14 @@ async function runInParallel(
 }
 
 function normalizeOptions(
-  options: RunCommandsOptions,
+  options: RunCommandsOptions
 ): NormalizedRunCommandsOptions {
   if (options.command) {
     options.commands = [{ command: options.command }];
     options.parallel = !!options.readyWhen;
   } else {
     options.commands = options.commands.map((c) =>
-      typeof c === 'string' ? { command: c } : c,
+      typeof c === 'string' ? { command: c } : c
     );
   }
 
@@ -221,21 +221,21 @@ function normalizeOptions(
   });
   options.unknownOptions = Object.keys(options)
     .filter(
-      (p) => propKeys.indexOf(p) === -1 && unparsedCommandArgs[p] === undefined,
+      (p) => propKeys.indexOf(p) === -1 && unparsedCommandArgs[p] === undefined
     )
     .reduce((m, c) => ((m[c] = options[c]), m), {});
 
   options.parsedArgs = parseArgs(
     unparsedCommandArgs,
     options.unknownOptions,
-    options.args as string,
+    options.args as string
   );
 
   (options as NormalizedRunCommandsOptions).commands.forEach((c) => {
     c.command = interpolateArgsIntoCommand(
       c.command,
       options as NormalizedRunCommandsOptions,
-      c.forwardAllArgs ?? true,
+      c.forwardAllArgs ?? true
     );
   });
   return options as NormalizedRunCommandsOptions;
@@ -243,7 +243,7 @@ function normalizeOptions(
 
 async function runSerially(
   options: NormalizedRunCommandsOptions,
-  context: ExecutorContext,
+  context: ExecutorContext
 ): Promise<{ success: boolean; terminalOutput: string }> {
   const pseudoTerminal = PseudoTerminal.isSupported()
     ? getPseudoTerminal()
@@ -260,7 +260,7 @@ async function runSerially(
         options.env ?? {},
         false,
         options.usePty,
-        options.streamOutput,
+        options.streamOutput
       );
     terminalOutput += result.terminalOutput;
     if (!result.success) {
@@ -289,7 +289,7 @@ async function createProcess(
   env: Record<string, string>,
   isParallel: boolean,
   usePty: boolean = true,
-  streamOutput: boolean = true,
+  streamOutput: boolean = true
 ): Promise<{ success: boolean; terminalOutput: string }> {
   env = processEnv(color, cwd, env);
   // The rust runCommand is always a tty, so it will not look nice in parallel and if we need prefixes
@@ -339,7 +339,7 @@ function nodeProcess(
   cwd: string,
   env: Record<string, string>,
   readyWhen: string,
-  streamOutput = true,
+  streamOutput = true
 ): Promise<{ success: boolean; terminalOutput: string }> {
   let terminalOutput = '';
   return new Promise((res) => {
@@ -401,13 +401,13 @@ function addColorAndPrefix(
     prefix?: string;
     color?: string;
     bgColor?: string;
-  },
+  }
 ) {
   if (config.prefix) {
     out = out
       .split('\n')
       .map((l) =>
-        l.trim().length > 0 ? `${chalk.bold(config.prefix)} ${l}` : l,
+        l.trim().length > 0 ? `${chalk.bold(config.prefix)} ${l}` : l
       )
       .join('\n');
   }
@@ -422,7 +422,7 @@ function addColorAndPrefix(
 
 function calculateCwd(
   cwd: string | undefined,
-  context: ExecutorContext,
+  context: ExecutorContext
 ): string {
   if (!cwd) return context.root;
   if (path.isAbsolute(cwd)) return cwd;
@@ -450,12 +450,12 @@ export function interpolateArgsIntoCommand(
     NormalizedRunCommandsOptions,
     'args' | 'parsedArgs' | '__unparsed__' | 'unknownOptions'
   >,
-  forwardAllArgs: boolean,
+  forwardAllArgs: boolean
 ): string {
   if (command.indexOf('{args.') > -1) {
     const regex = /{args\.([^}]+)}/g;
     return command.replace(regex, (_, group: string) =>
-      opts.parsedArgs[group] !== undefined ? opts.parsedArgs[group] : '',
+      opts.parsedArgs[group] !== undefined ? opts.parsedArgs[group] : ''
     );
   } else if (forwardAllArgs) {
     let args = '';
@@ -466,7 +466,7 @@ export function interpolateArgsIntoCommand(
           .filter(
             (k) =>
               typeof opts.unknownOptions[k] !== 'object' &&
-              opts.parsedArgs[k] === opts.unknownOptions[k],
+              opts.parsedArgs[k] === opts.unknownOptions[k]
           )
           .map((k) => `--${k} ${opts.unknownOptions[k]}`)
           .join(' ');
@@ -486,7 +486,7 @@ export function interpolateArgsIntoCommand(
 function parseArgs(
   unparsedCommandArgs: { [k: string]: string },
   unknownOptions: { [k: string]: string },
-  args?: string,
+  args?: string
 ) {
   if (!args) {
     return { ...unknownOptions, ...unparsedCommandArgs };

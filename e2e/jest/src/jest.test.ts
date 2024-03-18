@@ -23,7 +23,7 @@ describe('Jest', () => {
   it('should be resilient against NODE_ENV values', async () => {
     const name = uniq('lib');
     runCLI(
-      `generate @nx/js:lib ${name} --unitTestRunner=jest --no-interactive`,
+      `generate @nx/js:lib ${name} --unitTestRunner=jest --no-interactive`
     );
 
     const results = await runCLIAsync(`test ${name}`, {
@@ -40,17 +40,17 @@ describe('Jest', () => {
     const mylib = uniq('mylib');
     const utilLib = uniq('util-lib');
     runCLI(
-      `generate @nx/js:lib ${mylib} --unitTestRunner=jest --no-interactive`,
+      `generate @nx/js:lib ${mylib} --unitTestRunner=jest --no-interactive`
     );
     runCLI(
-      `generate @nx/js:lib ${utilLib} --importPath=@global-fun/globals --unitTestRunner=jest --no-interactive`,
+      `generate @nx/js:lib ${utilLib} --importPath=@global-fun/globals --unitTestRunner=jest --no-interactive`
     );
     updateFile(
       `libs/${utilLib}/src/index.ts`,
       stripIndents`
       export function setup() {console.log('i am a global setup function')}
       export function teardown() {console.log('i am a global teardown function')}
-    `,
+    `
     );
 
     updateFile(`libs/${mylib}/src/lib/${mylib}.ts`, `export class Test { }`);
@@ -61,7 +61,7 @@ describe('Jest', () => {
           test('can access jest global', () => {
             expect((global as any).testGlobal).toBe(${testGlobal});
           });
-        `,
+        `
     );
 
     updateFile(
@@ -75,7 +75,7 @@ describe('Jest', () => {
       export default async function() {setup();}
 
       cleanup();
-    `,
+    `
     );
 
     updateFile(
@@ -88,7 +88,7 @@ describe('Jest', () => {
       import {teardown} from '@global-fun/globals';
       export default async function() {teardown();}
       cleanup();
-    `,
+    `
     );
 
     updateFile(
@@ -106,14 +106,14 @@ describe('Jest', () => {
           globals: { testGlobal: ${testGlobal} },
           globalSetup: '<rootDir>/setup.ts',
           globalTeardown: '<rootDir>/teardown.ts'
-        };`,
+        };`
     );
 
     const appResult = await runCLIAsync(`test ${mylib} --no-watch`, {
       silenceError: true,
     });
     expect(appResult.combinedOutput).toContain(
-      'Test Suites: 1 passed, 1 total',
+      'Test Suites: 1 passed, 1 total'
     );
   }, 300000);
 
@@ -127,23 +127,23 @@ describe('Jest', () => {
         test('can access jest global', () => {
           expect(process.env['NODE_ENV']).toBe('test');
         });
-        `,
+        `
     );
     const appResult = await runCLIAsync(`test ${mylib} --no-watch`);
     expect(appResult.combinedOutput).toContain(
-      'Test Suites: 1 passed, 1 total',
+      'Test Suites: 1 passed, 1 total'
     );
   }, 90000);
 
   it('should be able to test node lib with babel-jest', async () => {
     const libName = uniq('babel-test-lib');
     runCLI(
-      `generate @nx/node:lib ${libName} --buildable --importPath=@some-org/babel-test --publishable --babelJest`,
+      `generate @nx/node:lib ${libName} --buildable --importPath=@some-org/babel-test --publishable --babelJest`
     );
 
     const cliResults = await runCLIAsync(`test ${libName}`);
     expect(cliResults.combinedOutput).toContain(
-      'Test Suites: 1 passed, 1 total',
+      'Test Suites: 1 passed, 1 total'
     );
   }, 90000);
 });

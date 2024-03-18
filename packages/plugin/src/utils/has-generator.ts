@@ -10,19 +10,19 @@ import { PackageJson } from 'nx/src/utils/package-json';
 export function hasGenerator(
   tree: Tree,
   projectName: string,
-  generatorName: string,
+  generatorName: string
 ): boolean {
   const project = readProjectConfiguration(tree, projectName);
   const packageJson = readJson<PackageJson>(
     tree,
-    joinPathFragments(project.root, 'package.json'),
+    joinPathFragments(project.root, 'package.json')
   );
   if (!packageJson.generators && !packageJson.schematics) {
     return false;
   }
   const generatorsPath = joinPathFragments(
     project.root,
-    packageJson.generators ?? packageJson.schematics,
+    packageJson.generators ?? packageJson.schematics
   );
   const generatorsJson = readJson<GeneratorsJson>(tree, generatorsPath);
   return (

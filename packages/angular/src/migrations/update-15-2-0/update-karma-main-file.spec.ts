@@ -56,7 +56,7 @@ describe(`Migration to karma builder main file (test.ts)`, () => {
   const context = require.context('./', true, /\.spec\.ts$/);
   // And load the modules.
   context.keys().map(context);
-  `,
+  `
     );
 
     tree.write(
@@ -84,7 +84,7 @@ describe(`Migration to karma builder main file (test.ts)`, () => {
   // And load the modules.
   context2.keys().forEach(context2);
   context1.keys().map(context1);
-  `,
+  `
     );
   });
 

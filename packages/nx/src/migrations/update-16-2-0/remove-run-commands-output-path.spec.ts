@@ -86,7 +86,7 @@ describe('removeRunCommandsOutputPath', () => {
     removeRunCommandsOutputPath(tree);
     const migratedTargetDefaults = readJson(tree, 'nx.json').targetDefaults;
     expect(migratedTargetDefaults.build).not.toEqual(
-      startingTargetDefaults.build,
+      startingTargetDefaults.build
     );
     expect(migratedTargetDefaults.build).toEqual({
       executor: 'nx:run-commands',

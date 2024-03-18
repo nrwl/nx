@@ -13,7 +13,7 @@ export const workspaceRules = ((): ESLintRules => {
   }
   // Register `tools/eslint-rules` for TS transpilation
   const registrationCleanup = registerTsProject(
-    join(WORKSPACE_PLUGIN_DIR, 'tsconfig.json'),
+    join(WORKSPACE_PLUGIN_DIR, 'tsconfig.json')
   );
   try {
     /**

@@ -10,21 +10,21 @@ export async function resolveSemverSpecifierFromConventionalCommits(
   from: string,
   projectGraph: ProjectGraph,
   projectNames: string[],
-  conventionalCommitsConfig: NxReleaseConfig['conventionalCommits'],
+  conventionalCommitsConfig: NxReleaseConfig['conventionalCommits']
 ): Promise<string | null> {
   const commits = await getGitDiff(from);
   const parsedCommits = parseCommits(commits);
   const relevantCommits = await getCommitsRelevantToProjects(
     projectGraph,
     parsedCommits,
-    projectNames,
+    projectNames
   );
   return determineSemverChange(relevantCommits, conventionalCommitsConfig);
 }
 
 export async function resolveSemverSpecifierFromPrompt(
   selectionMessage: string,
-  customVersionMessage: string,
+  customVersionMessage: string
 ): Promise<string> {
   try {
     const reply = await prompt<{ specifier: string }>([

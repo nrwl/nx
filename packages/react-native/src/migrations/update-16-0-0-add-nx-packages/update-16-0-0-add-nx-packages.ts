@@ -5,7 +5,7 @@ export default async function replacePackage(tree: Tree): Promise<void> {
   await replaceNrwlPackageWithNxPackage(
     tree,
     '@nrwl/react-native',
-    '@nx/react-native',
+    '@nx/react-native'
   );
 
   await formatFiles(tree);

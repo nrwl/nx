@@ -151,7 +151,7 @@ describe('Enforce Module Boundaries (eslint)', () => {
           createFile(`libs/mylib/src/index.ts`),
           createFile(`libs/mylib/src/deep.ts`),
         ],
-      },
+      }
     );
     expect(failures.length).toEqual(0);
   });
@@ -206,7 +206,7 @@ describe('Enforce Module Boundaries (eslint)', () => {
         ],
         myapp2Name: [],
         'myapp2-mylib': [createFile('libs/myapp2/mylib/src/index.ts')],
-      },
+      }
     );
 
     expect(failures.length).toEqual(0);
@@ -424,7 +424,7 @@ describe('Enforce Module Boundaries (eslint)', () => {
           import('@mycompany/impl');
         `,
         graph,
-        fileMap,
+        fileMap
       );
 
       const message =
@@ -443,7 +443,7 @@ describe('Enforce Module Boundaries (eslint)', () => {
           import('npm-package');
         `,
         graph,
-        fileMap,
+        fileMap
       );
 
       expect(failures.length).toEqual(0);
@@ -462,7 +462,7 @@ describe('Enforce Module Boundaries (eslint)', () => {
           import('npm-package');
         `,
         graph,
-        fileMap,
+        fileMap
       );
 
       const message =
@@ -485,7 +485,7 @@ describe('Enforce Module Boundaries (eslint)', () => {
           import('npm-package');
         `,
         graph,
-        fileMap,
+        fileMap
       );
 
       expect(failures.length).toEqual(0);
@@ -504,7 +504,7 @@ describe('Enforce Module Boundaries (eslint)', () => {
           import('npm-awesome-package');
         `,
         graph,
-        fileMap,
+        fileMap
       );
 
       const message =
@@ -527,7 +527,7 @@ describe('Enforce Module Boundaries (eslint)', () => {
           import('npm-awesome-package');
         `,
         graph,
-        fileMap,
+        fileMap
       );
 
       expect(failures.length).toEqual(0);
@@ -546,7 +546,7 @@ describe('Enforce Module Boundaries (eslint)', () => {
           import('npm-package');
         `,
         graph,
-        fileMap,
+        fileMap
       );
 
       const message =
@@ -567,7 +567,7 @@ describe('Enforce Module Boundaries (eslint)', () => {
           import('npm-package');
         `,
         graph,
-        fileMap,
+        fileMap
       );
 
       const message =
@@ -594,7 +594,7 @@ describe('Enforce Module Boundaries (eslint)', () => {
           import('npm-package/allowed');
         `,
         graph,
-        fileMap,
+        fileMap
       );
 
       expect(failures.length).toEqual(0);
@@ -617,7 +617,7 @@ describe('Enforce Module Boundaries (eslint)', () => {
           import('npm-package/testing');
         `,
         graph,
-        fileMap,
+        fileMap
       );
 
       const message =
@@ -639,7 +639,7 @@ describe('Enforce Module Boundaries (eslint)', () => {
           import('npm-package2');
         `,
         graph,
-        fileMap,
+        fileMap
       );
 
       const message =
@@ -663,7 +663,7 @@ describe('Enforce Module Boundaries (eslint)', () => {
           import('npm-awesome-package');
         `,
         graph,
-        fileMap,
+        fileMap
       );
 
       expect(failures.length).toEqual(0);
@@ -684,7 +684,7 @@ describe('Enforce Module Boundaries (eslint)', () => {
           import '1npm-package';
         `,
         graph,
-        fileMap,
+        fileMap
       );
 
       const message = (packageName) =>
@@ -703,7 +703,7 @@ describe('Enforce Module Boundaries (eslint)', () => {
           import('@mycompany/untagged');
         `,
         graph,
-        fileMap,
+        fileMap
       );
 
       const message =
@@ -722,7 +722,7 @@ describe('Enforce Module Boundaries (eslint)', () => {
           import('@mycompany/untagged');
         `,
         graph,
-        fileMap,
+        fileMap
       );
 
       expect(failures.length).toEqual(0);
@@ -737,7 +737,7 @@ describe('Enforce Module Boundaries (eslint)', () => {
           import('@mycompany/tagged');
         `,
         graph,
-        fileMap,
+        fileMap
       );
 
       const message =
@@ -768,7 +768,7 @@ describe('Enforce Module Boundaries (eslint)', () => {
             ],
           },
         },
-        fileMap,
+        fileMap
       );
 
       const message = `A project tagged with "public" can not depend on libs tagged with "private"
@@ -812,13 +812,13 @@ Violation detected in:
             ],
           },
         },
-        fileMap,
+        fileMap
       );
 
       expect(failures.length).toEqual(3);
       // TODO: Add project dependency path to message
       const message = (
-        prefix,
+        prefix
       ) => `A project tagged with "public" can not depend on libs tagged with "private"
 
 Violation detected in:
@@ -837,7 +837,7 @@ Violation detected in:
           import('@mycompany/api');
         `,
         graph,
-        fileMap,
+        fileMap
       );
 
       const message =
@@ -856,7 +856,7 @@ Violation detected in:
           import('@mycompany/impl-domain2');
         `,
         graph,
-        fileMap,
+        fileMap
       );
 
       const message =
@@ -875,7 +875,7 @@ Violation detected in:
           import('@mycompany/impl-both-domains');
         `,
         graph,
-        fileMap,
+        fileMap
       );
 
       expect(failures.length).toEqual(0);
@@ -890,7 +890,7 @@ Violation detected in:
           import('@mycompany/impl');
         `,
         graph,
-        fileMap,
+        fileMap
       );
 
       expect(failures.length).toEqual(0);
@@ -905,7 +905,7 @@ Violation detected in:
           import('@mycompany/impl2');
         `,
         graph,
-        fileMap,
+        fileMap
       );
 
       expect(failures.length).toEqual(0);
@@ -922,7 +922,7 @@ Violation detected in:
           import('@mycompany/impl');
         `,
         graph,
-        fileMap,
+        fileMap
       );
 
       expect(failures.length).toEqual(0);
@@ -948,7 +948,7 @@ Violation detected in:
           import('@mycompany/impl');
         `,
         graph,
-        fileMap,
+        fileMap
       );
 
       expect(failures.length).toEqual(0);
@@ -973,15 +973,15 @@ Violation detected in:
           import('@mycompany/api');
         `,
         graph,
-        fileMap,
+        fileMap
       );
 
       expect(failures.length).toEqual(2);
       expect(failures[0].message).toEqual(
-        'A project tagged with "impl" and "domain1" can only depend on libs tagged with "impl"',
+        'A project tagged with "impl" and "domain1" can only depend on libs tagged with "impl"'
       );
       expect(failures[1].message).toEqual(
-        'A project tagged with "impl" and "domain1" can only depend on libs tagged with "impl"',
+        'A project tagged with "impl" and "domain1" can only depend on libs tagged with "impl"'
       );
     });
 
@@ -1003,7 +1003,7 @@ Violation detected in:
           import('@mycompany/api');
         `,
         graph,
-        fileMap,
+        fileMap
       );
 
       expect(failures.length).toEqual(0);
@@ -1039,7 +1039,7 @@ Violation detected in:
             createFile(`libs/mylib/src/main.ts`),
             createFile(`libs/mylib/other.ts`),
           ],
-        },
+        }
       );
       expect(failures.length).toEqual(0);
     });
@@ -1072,7 +1072,7 @@ Violation detected in:
             createFile(`libs/mylib/src/main.ts`),
             createFile(`libs/mylib/other/index.ts`),
           ],
-        },
+        }
       );
       expect(failures.length).toEqual(0);
     });
@@ -1113,7 +1113,7 @@ Violation detected in:
         {
           mylibName: [createFile(`libs/mylib/src/main.ts`)],
           otherName: [createFile('libs/other/src/index.ts')],
-        },
+        }
       );
 
       const message =
@@ -1159,7 +1159,7 @@ Violation detected in:
         {
           mylibName: [createFile(`libs/mylib/src/main.ts`)],
           otherName: [createFile('libs/other/src/index.ts')],
-        },
+        }
       );
 
       const message =
@@ -1194,14 +1194,14 @@ Violation detected in:
         },
         {
           mylibName: [createFile(`libs/mylib/src/main.ts`)],
-        },
+        }
       );
       expect(failures.length).toEqual(2);
       expect(failures[0].message).toEqual(
-        'External resources cannot be imported using a relative or absolute path',
+        'External resources cannot be imported using a relative or absolute path'
       );
       expect(failures[1].message).toEqual(
-        'External resources cannot be imported using a relative or absolute path',
+        'External resources cannot be imported using a relative or absolute path'
       );
     });
   });
@@ -1234,7 +1234,7 @@ Violation detected in:
           createFile(`libs/mylib/src/main.ts`),
           createFile(`libs/mylib/src/other.ts`),
         ],
-      },
+      }
     );
 
     const message =
@@ -1280,7 +1280,7 @@ Violation detected in:
       {
         mylibName: [createFile(`libs/mylib/src/main.ts`)],
         utils: [createFile(`libs/utils/a.ts`)],
-      },
+      }
     );
 
     expect(failures.length).toEqual(0);
@@ -1345,7 +1345,7 @@ Violation detected in:
             ]),
           ],
           otherName: [createFile(`libs/other/index.ts`)],
-        },
+        }
       );
       if (importKind === 'type') {
         expect(failures.length).toEqual(0);
@@ -1357,7 +1357,7 @@ Violation detected in:
           - libs/mylib/src/main.ts"
         `);
       }
-    },
+    }
   );
 
   it('should error on importing an app', () => {
@@ -1396,7 +1396,7 @@ Violation detected in:
       {
         mylibName: [createFile(`libs/mylib/src/main.ts`)],
         myappName: [createFile(`apps/myapp/src/index.ts`)],
-      },
+      }
     );
 
     const message = 'Imports of apps are forbidden';
@@ -1441,7 +1441,7 @@ Violation detected in:
       {
         mylibName: [createFile(`libs/mylib/src/main.ts`)],
         myappE2eName: [createFile(`apps/myapp-e2e/src/index.ts`)],
-      },
+      }
     );
 
     const message = 'Imports of e2e projects are forbidden';
@@ -1505,7 +1505,7 @@ Violation detected in:
         mylibName: [createFile(`libs/mylib/src/main.ts`)],
         anotherlibName: [createFile(`libs/anotherlib/src/main.ts`)],
         myappName: [createFile(`apps/myapp/src/index.ts`)],
-      },
+      }
     );
 
     const message =
@@ -1572,7 +1572,7 @@ Violation detected in:
         mylibName: [createFile(`libs/mylib/src/main.ts`)],
         anotherlibName: [createFile(`libs/anotherlib/src/main.ts`)],
         myappName: [createFile(`apps/myapp/src/index.ts`)],
-      },
+      }
     );
 
     expect(failures.length).toBe(0);
@@ -1635,7 +1635,7 @@ Violation detected in:
           createFile(`libs/anotherlib/src/main.ts`, ['mylibName']),
         ],
         myappName: [createFile(`apps/myapp/src/index.ts`)],
-      },
+      }
     );
 
     const message = `Circular dependency between "anotherlibName" and "mylibName" detected: anotherlibName -> mylibName -> anotherlibName
@@ -1733,7 +1733,7 @@ Circular file chain:
           createFile(`libs/badcirclelib/src/main.ts`, ['anotherlibName']),
         ],
         myappName: [createFile(`apps/myapp/index.ts`)],
-      },
+      }
     );
 
     const message = `Circular dependency between "mylibName" and "badcirclelibName" detected: mylibName -> badcirclelibName -> anotherlibName -> mylibName
@@ -1794,7 +1794,7 @@ Circular file chain:
         {
           buildableLib: [createFile(`libs/buildableLib/src/main.ts`)],
           nonBuildableLib: [createFile(`libs/nonBuildableLib/src/main.ts`)],
-        },
+        }
       );
 
       expect(failures.length).toBe(0);
@@ -1843,7 +1843,7 @@ Circular file chain:
         {
           buildableLib: [createFile(`libs/buildableLib/src/main.ts`)],
           nonBuildableLib: [createFile(`libs/nonBuildableLib/src/main.ts`)],
-        },
+        }
       );
 
       const message =
@@ -1897,7 +1897,7 @@ Circular file chain:
         {
           buildableLib2: [createFile(`libs/buildableLib2/src/main.ts`)],
           nonBuildableLib: [createFile(`libs/nonBuildableLib/src/main.ts`)],
-        },
+        }
       );
 
       const message =
@@ -1958,7 +1958,7 @@ Circular file chain:
           anotherBuildableLib: [
             createFile(`libs/anotherBuildableLib/src/main.ts`),
           ],
-        },
+        }
       );
 
       expect(failures.length).toBe(0);
@@ -2000,7 +2000,7 @@ Circular file chain:
         {
           buildableLib: [createFile(`libs/buildableLib/src/main.ts`)],
           nonBuildableLib: [createFile(`libs/nonBuildableLib/src/main.ts`)],
-        },
+        }
       );
 
       expect(failures.length).toBe(0);
@@ -2048,7 +2048,7 @@ Circular file chain:
         {
           buildableLib: [createFile(`libs/buildableLib/src/main.ts`)],
           nonBuildableLib: [createFile(`libs/nonBuildableLib/src/main.ts`)],
-        },
+        }
       );
 
       const message =
@@ -2105,7 +2105,7 @@ Circular file chain:
           anotherBuildableLib: [
             createFile(`libs/anotherBuildableLib/src/main.ts`),
           ],
-        },
+        }
       );
 
       expect(failures.length).toBe(0);
@@ -2153,7 +2153,7 @@ Circular file chain:
         {
           buildableLib: [createFile(`libs/buildableLib/src/main.ts`)],
           nonBuildableLib: [createFile(`libs/nonBuildableLib/src/main.ts`)],
-        },
+        }
       );
 
       const message =
@@ -2210,7 +2210,7 @@ Circular file chain:
           anotherBuildableLib: [
             createFile(`libs/anotherBuildableLib/src/main.ts`),
           ],
-        },
+        }
       );
 
       expect(failures.length).toBe(0);
@@ -2265,7 +2265,7 @@ Circular file chain:
           anotherBuildableLib: [
             createFile(`libs/anotherBuildableLib/src/main.ts`),
           ],
-        },
+        }
       );
 
       expect(failures.length).toBe(0);
@@ -2296,17 +2296,17 @@ function runRule(
   contentPath: string,
   content: string,
   projectGraph: ProjectGraph,
-  projectFileMap: ProjectFileMap,
+  projectFileMap: ProjectFileMap
 ): TSESLint.Linter.LintMessage[] {
   (global as any).projectPath = `${process.cwd()}/proj`;
   (global as any).projectGraph = projectGraph;
   (global as any).projectFileMap = projectFileMap;
   (global as any).projectRootMappings = createProjectRootMappings(
-    projectGraph.nodes,
+    projectGraph.nodes
   );
   (global as any).targetProjectLocator = new TargetProjectLocator(
     projectGraph.nodes,
-    projectGraph.externalNodes,
+    projectGraph.externalNodes
   );
 
   const config = {

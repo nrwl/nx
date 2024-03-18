@@ -15,7 +15,7 @@ import { ProjectConfiguration } from '../../../../config/workspace-json-project-
 
 function isRoot(
   projects: Record<string, ProjectConfiguration>,
-  projectName: string,
+  projectName: string
 ): boolean {
   return projects[projectName]?.root === '.';
 }
@@ -25,7 +25,7 @@ function convertImportToDependency(
   sourceFile: string,
   source: string,
   type: RawProjectGraphDependency['type'],
-  targetProjectLocator: TargetProjectLocator,
+  targetProjectLocator: TargetProjectLocator
 ): RawProjectGraphDependency {
   const target =
     targetProjectLocator.findProjectWithImport(importExpr, sourceFile) ??
@@ -40,7 +40,7 @@ function convertImportToDependency(
 }
 
 export function buildExplicitTypeScriptDependencies(
-  ctx: CreateDependenciesContext,
+  ctx: CreateDependenciesContext
 ): RawProjectGraphDependency[] {
   // TODO: TargetProjectLocator is a public API, so we can't change the shape of it
   // We should eventually let it accept Record<string, ProjectConfiguration> s.t. we
@@ -53,11 +53,11 @@ export function buildExplicitTypeScriptDependencies(
         type: null,
         data: config,
       },
-    ]),
+    ])
   );
   const targetProjectLocator = new TargetProjectLocator(
     nodes,
-    ctx.externalNodes,
+    ctx.externalNodes
   );
   const res: RawProjectGraphDependency[] = [];
 
@@ -80,7 +80,7 @@ export function buildExplicitTypeScriptDependencies(
   }
 
   for (const [project, fileData] of Object.entries(
-    ctx.fileMap.projectFileMap,
+    ctx.fileMap.projectFileMap
   )) {
     filesToProcess[project] ??= [];
     for (const { file } of fileData) {
@@ -107,7 +107,7 @@ export function buildExplicitTypeScriptDependencies(
         normalizedFilePath,
         sourceProject,
         DependencyType.static,
-        targetProjectLocator,
+        targetProjectLocator
       );
       // TODO: These edges technically should be allowed but we need to figure out how to separate config files out from root
       if (
@@ -123,7 +123,7 @@ export function buildExplicitTypeScriptDependencies(
         normalizedFilePath,
         sourceProject,
         DependencyType.dynamic,
-        targetProjectLocator,
+        targetProjectLocator
       );
       // TODO: These edges technically should be allowed but we need to figure out how to separate config files out from root
       if (

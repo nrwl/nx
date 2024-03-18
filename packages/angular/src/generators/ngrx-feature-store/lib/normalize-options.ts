@@ -13,13 +13,13 @@ export type NormalizedNgRxFeatureStoreGeneratorOptions = Schema & {
 
 export function normalizeOptions(
   tree: Tree,
-  options: Schema,
+  options: Schema
 ): NormalizedNgRxFeatureStoreGeneratorOptions {
   let rxjsVersion: string;
   try {
     rxjsVersion = checkAndCleanWithSemver(
       'rxjs',
-      readJson(tree, 'package.json').dependencies['rxjs'],
+      readJson(tree, 'package.json').dependencies['rxjs']
     );
   } catch {
     rxjsVersion = checkAndCleanWithSemver('rxjs', defaultRxjsVersion);

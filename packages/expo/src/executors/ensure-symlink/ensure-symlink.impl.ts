@@ -12,7 +12,7 @@ export interface ExpoEnsureSymlinkOutput {
  */
 export default async function* ensureSymlinkExecutor(
   _,
-  context: ExecutorContext,
+  context: ExecutorContext
 ): AsyncGenerator<ExpoEnsureSymlinkOutput> {
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;

@@ -4,7 +4,7 @@ import { getDefaultExport } from './get-default-export';
 export function insertStatementInDefaultFunction(
   tree: Tree,
   path: string,
-  statement,
+  statement
 ) {
   const defaultExport = getDefaultExport(tree, path);
 

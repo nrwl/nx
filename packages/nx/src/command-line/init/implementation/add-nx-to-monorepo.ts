@@ -89,7 +89,7 @@ export async function addNxToMonorepo(options: Options) {
     repoRoot,
     targetDefaults,
     cacheableOperations,
-    scriptOutputs,
+    scriptOutputs
   );
 
   updateGitIgnore(repoRoot);
@@ -161,13 +161,13 @@ function getIgnoredGlobs(repoRoot: string) {
 
 function combineAllScriptNames(
   repoRoot: string,
-  packageJsonFiles: string[],
+  packageJsonFiles: string[]
 ): string[] {
   const res = new Set<string>();
   packageJsonFiles.forEach((p) => {
     const packageJson = readJsonFile(join(repoRoot, p));
     Object.keys(packageJson.scripts || {}).forEach((scriptName) =>
-      res.add(scriptName),
+      res.add(scriptName)
     );
   });
   return [...res];

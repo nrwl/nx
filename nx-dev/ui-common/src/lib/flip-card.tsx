@@ -39,7 +39,7 @@ export function FlipCard({
         }}
         className={cx(
           'perspective group block',
-          isFlippable && !isFlipped ? 'cursor-pointer' : 'cursor-default',
+          isFlippable && !isFlipped ? 'cursor-pointer' : 'cursor-default'
         )}
       >
         <div
@@ -52,7 +52,7 @@ export function FlipCard({
               ? isFlipped
                 ? 'border-blue-400 dark:border-slate-800'
                 : 'border-blue-400 hover:[transform:rotateY(10deg)] dark:border-slate-800'
-              : 'border-1 border-slate-300 dark:border-slate-800',
+              : 'border-1 border-slate-300 dark:border-slate-800'
           )}
         >
           <FlipCardFront>{fullDate}</FlipCardFront>

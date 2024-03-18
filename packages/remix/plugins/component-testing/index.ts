@@ -35,7 +35,7 @@ export function nxComponentTestingPreset(pathToConfig: string): {
   chromeWebSecurity: boolean;
 } {
   const normalizedProjectRootPath = ['.ts', '.js'].some((ext) =>
-    pathToConfig.endsWith(ext),
+    pathToConfig.endsWith(ext)
   )
     ? pathToConfig
     : dirname(pathToConfig);
@@ -56,7 +56,7 @@ export function nxComponentTestingPreset(pathToConfig: string): {
             mode: 'watch',
             command: 'serve',
           },
-          viteConfigPath,
+          viteConfigPath
         );
         return mergeConfig(resolved.config, {
           server: {

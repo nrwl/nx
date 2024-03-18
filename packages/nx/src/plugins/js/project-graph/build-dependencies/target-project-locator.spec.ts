@@ -221,23 +221,23 @@ describe('findTargetProjectWithImport', () => {
   it('should be able to resolve a module by using relative paths', () => {
     const res1 = targetProjectLocator.findProjectWithImport(
       './class.ts',
-      'libs/proj/index.ts',
+      'libs/proj/index.ts'
     );
     const res2 = targetProjectLocator.findProjectWithImport(
       '../index.ts',
-      'libs/proj/src/index.ts',
+      'libs/proj/src/index.ts'
     );
     const res3 = targetProjectLocator.findProjectWithImport(
       '../proj/../proj2/index.ts',
-      'libs/proj/index.ts',
+      'libs/proj/index.ts'
     );
     const res4 = targetProjectLocator.findProjectWithImport(
       '../proj/../index.ts',
-      'libs/proj/src/index.ts',
+      'libs/proj/src/index.ts'
     );
     const res5 = targetProjectLocator.findProjectWithImport(
       '../../../index.ts',
-      'libs/proj/src/index.ts',
+      'libs/proj/src/index.ts'
     );
 
     expect(res1).toEqual('proj');
@@ -250,7 +250,7 @@ describe('findTargetProjectWithImport', () => {
   it('should be able to resolve a module by using tsConfig paths', () => {
     const proj2 = targetProjectLocator.findProjectWithImport(
       '@proj/my-second-proj',
-      'libs/proj1/index.ts',
+      'libs/proj1/index.ts'
     );
     // const proj3a = targetProjectLocator.findProjectWithImport(
     //   '@proj/project-3',
@@ -264,7 +264,7 @@ describe('findTargetProjectWithImport', () => {
   it('should be able to resolve nested files using tsConfig paths', () => {
     const proj2deep = targetProjectLocator.findProjectWithImport(
       '@proj/my-second-proj/deep',
-      'libs/proj1/index.ts',
+      'libs/proj1/index.ts'
     );
 
     expect(proj2deep).toEqual('proj2');
@@ -276,7 +276,7 @@ describe('findTargetProjectWithImport', () => {
 
     const proj2deep = targetProjectLocator.findProjectWithImport(
       '@proj/my-second-proj/deep',
-      'libs/proj1/index.ts',
+      'libs/proj1/index.ts'
     );
 
     expect(proj2deep).toEqual('proj2');
@@ -285,19 +285,19 @@ describe('findTargetProjectWithImport', () => {
   it('should be able to resolve nested files using tsConfig paths that have similar names', () => {
     const proj = targetProjectLocator.findProjectWithImport(
       '@proj/proj123/deep',
-      '',
+      ''
     );
     expect(proj).toEqual('proj123');
 
     const childProj = targetProjectLocator.findProjectWithImport(
       '@proj/proj1234-child/deep',
-      '',
+      ''
     );
     expect(childProj).toEqual('proj1234-child');
 
     const parentProj = targetProjectLocator.findProjectWithImport(
       '@proj/proj1234/deep',
-      '',
+      ''
     );
     expect(parentProj).toEqual('proj1234');
   });
@@ -305,11 +305,11 @@ describe('findTargetProjectWithImport', () => {
   it('should be able to locate npm dependencies', () => {
     const result1 = targetProjectLocator.findProjectWithImport(
       '@ng/core',
-      'libs/proj1/index.ts',
+      'libs/proj1/index.ts'
     );
     const result2 = targetProjectLocator.findProjectWithImport(
       'npm-package',
-      'libs/proj1/index.ts',
+      'libs/proj1/index.ts'
     );
 
     expect(result1).toEqual('npm:@ng/core');
@@ -319,14 +319,14 @@ describe('findTargetProjectWithImport', () => {
   it('should be able to resolve wildcard paths', () => {
     const parentProject = targetProjectLocator.findProjectWithImport(
       'parent-path',
-      'libs/proj1/index.ts',
+      'libs/proj1/index.ts'
     );
 
     expect(parentProject).toEqual('parent-project');
 
     const childProject = targetProjectLocator.findProjectWithImport(
       'parent-path/child-path',
-      'libs/proj1/index.ts',
+      'libs/proj1/index.ts'
     );
 
     expect(childProject).toEqual('child-project');
@@ -335,7 +335,7 @@ describe('findTargetProjectWithImport', () => {
   it('should be able to resolve paths that start with a #', () => {
     const proj = targetProjectLocator.findProjectWithImport(
       '#hash-path',
-      'libs/proj1/index.ts',
+      'libs/proj1/index.ts'
     );
 
     expect(proj).toEqual('hash-project');
@@ -344,7 +344,7 @@ describe('findTargetProjectWithImport', () => {
   it('should be able to resolve a modules when npm packages exist', () => {
     const proj5 = targetProjectLocator.findProjectWithImport(
       '@proj/proj5',
-      'libs/proj1/index.ts',
+      'libs/proj1/index.ts'
     );
     // const proj6 = targetProjectLocator.findProjectWithImport(
     //   '@proj/proj6',
@@ -362,19 +362,19 @@ describe('findTargetProjectWithImport', () => {
   it('should be able to resolve paths that have similar names', () => {
     const proj = targetProjectLocator.findProjectWithImport(
       '@proj/proj123',
-      '',
+      ''
     );
     expect(proj).toEqual('proj123');
 
     const childProj = targetProjectLocator.findProjectWithImport(
       '@proj/proj1234-child',
-      '',
+      ''
     );
     expect(childProj).toEqual('proj1234-child');
 
     const parentProj = targetProjectLocator.findProjectWithImport(
       '@proj/proj1234',
-      '',
+      ''
     );
     expect(parentProj).toEqual('proj1234');
   });
@@ -382,13 +382,13 @@ describe('findTargetProjectWithImport', () => {
   it('should be able to resolve npm projects', () => {
     const similarImportFromNpm = targetProjectLocator.findProjectWithImport(
       '@proj/proj123-base',
-      'libs/proj/index.ts',
+      'libs/proj/index.ts'
     );
     expect(similarImportFromNpm).toEqual('npm:@proj/proj123-base');
 
     const similarDeepImportFromNpm = targetProjectLocator.findProjectWithImport(
       '@proj/proj123-base/deep',
-      'libs/proj/index.ts',
+      'libs/proj/index.ts'
     );
     expect(similarDeepImportFromNpm).toEqual('npm:@proj/proj123-base');
   });
@@ -398,7 +398,7 @@ describe('findTargetProjectWithImport', () => {
   it('should be able to resolve packages using project prefix', () => {
     const proj5 = targetProjectLocator.findProjectWithImport(
       '@proj/proj5',
-      'libs/proj/index.ts',
+      'libs/proj/index.ts'
     );
     expect(proj5).toEqual('proj5');
   });
@@ -668,19 +668,19 @@ describe('findTargetProjectWithImport (without tsconfig.json)', () => {
   it('should be able to resolve a module by using relative paths', () => {
     const res1 = targetProjectLocator.findProjectWithImport(
       './class.ts',
-      'libs/proj/index.ts',
+      'libs/proj/index.ts'
     );
     const res2 = targetProjectLocator.findProjectWithImport(
       '../index.ts',
-      'libs/proj/src/index.ts',
+      'libs/proj/src/index.ts'
     );
     const res3 = targetProjectLocator.findProjectWithImport(
       '../proj/../proj2/index.ts',
-      'libs/proj/index.ts',
+      'libs/proj/index.ts'
     );
     const res4 = targetProjectLocator.findProjectWithImport(
       '../proj/../index.ts',
-      'libs/proj/src/index.ts',
+      'libs/proj/src/index.ts'
     );
 
     expect(res1).toEqual('proj');
@@ -696,7 +696,7 @@ describe('findTargetProjectWithImport (without tsconfig.json)', () => {
 
     const result1 = targetProjectLocator.findProjectWithImport(
       '@org/proj1',
-      'libs/proj1/index.ts',
+      'libs/proj1/index.ts'
     );
     expect(result1).toEqual('@org/proj1');
 
@@ -705,7 +705,7 @@ describe('findTargetProjectWithImport (without tsconfig.json)', () => {
       .mockReturnValue('libs/proj1/some/nested/file.ts');
     const result2 = targetProjectLocator.findProjectWithImport(
       '@org/proj1/some/nested/path',
-      'libs/proj1/index.ts',
+      'libs/proj1/index.ts'
     );
     expect(result2).toEqual('@org/proj1');
   });
@@ -713,11 +713,11 @@ describe('findTargetProjectWithImport (without tsconfig.json)', () => {
   it('should be able to npm dependencies', () => {
     const result1 = targetProjectLocator.findProjectWithImport(
       '@ng/core',
-      'libs/proj1/index.ts',
+      'libs/proj1/index.ts'
     );
     const result2 = targetProjectLocator.findProjectWithImport(
       'npm-package',
-      'libs/proj1/index.ts',
+      'libs/proj1/index.ts'
     );
 
     expect(result1).toEqual('npm:@ng/core');
@@ -727,19 +727,19 @@ describe('findTargetProjectWithImport (without tsconfig.json)', () => {
   it('should be able to resolve paths that have similar names', () => {
     const proj = targetProjectLocator.findProjectWithImport(
       '@proj/proj123',
-      '',
+      ''
     );
     expect(proj).toEqual('proj123');
 
     const childProj = targetProjectLocator.findProjectWithImport(
       '@proj/proj1234-child',
-      '',
+      ''
     );
     expect(childProj).toEqual('proj1234-child');
 
     const parentProj = targetProjectLocator.findProjectWithImport(
       '@proj/proj1234',
-      '',
+      ''
     );
     expect(parentProj).toEqual('proj1234');
   });
@@ -747,13 +747,13 @@ describe('findTargetProjectWithImport (without tsconfig.json)', () => {
   it('should be able to resolve npm projects', () => {
     const similarImportFromNpm = targetProjectLocator.findProjectWithImport(
       '@proj/proj123-base',
-      'libs/proj/index.ts',
+      'libs/proj/index.ts'
     );
     expect(similarImportFromNpm).toEqual('npm:@proj/proj123-base');
 
     const similarDeepImportFromNpm = targetProjectLocator.findProjectWithImport(
       '@proj/proj123-base/deep',
-      'libs/proj/index.ts',
+      'libs/proj/index.ts'
     );
     expect(similarDeepImportFromNpm).toEqual('npm:@proj/proj123-base');
   });
@@ -761,7 +761,7 @@ describe('findTargetProjectWithImport (without tsconfig.json)', () => {
   it('should return null for native modules', () => {
     const result = targetProjectLocator.findProjectWithImport(
       'path',
-      'libs/proj/index.ts',
+      'libs/proj/index.ts'
     );
     expect(result).toEqual(null);
   });
@@ -769,7 +769,7 @@ describe('findTargetProjectWithImport (without tsconfig.json)', () => {
   it('should return null for unresolved paths', () => {
     const result = targetProjectLocator.findProjectWithImport(
       'unresolved-path',
-      'libs/proj/index.ts',
+      'libs/proj/index.ts'
     );
     expect(result).toEqual(null);
   });

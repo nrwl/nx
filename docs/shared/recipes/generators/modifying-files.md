@@ -95,7 +95,7 @@ import { TypeReferenceNode } from 'typescript';
 function visitAllFiles(
   tree: Tree,
   path: string,
-  callback: (filePath: string) => void,
+  callback: (filePath: string) => void
 ) {
   tree.children(path).forEach((fileName) => {
     const filePath = `${path}/${fileName}`;

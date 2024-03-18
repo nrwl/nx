@@ -38,7 +38,7 @@ interface TracingInfo {
 function groupProjectsByDirectory(
   projects: ProjectGraphNode[],
   selectedProjects: string[],
-  workspaceLayout: { appsDir: string; libsDir: string },
+  workspaceLayout: { appsDir: string; libsDir: string }
 ): DirectoryProjectRecord {
   let groups = {};
 
@@ -49,7 +49,7 @@ function groupProjectsByDirectory(
         : workspaceLayout.libsDir;
     const directories = parseParentDirectoriesFromFilePath(
       (project.data as any).root,
-      workspaceRoot,
+      workspaceRoot
     );
 
     const directory = directories.join('/');
@@ -103,7 +103,7 @@ function ProjectListItem({
           title="Focus on this library"
           to={routeConstructor(
             `/projects/${encodeURIComponent(project.projectGraphNode.name)}`,
-            true,
+            true
           )}
         >
           <DocumentMagnifyingGlassIcon className="h-5 w-5" />
@@ -186,7 +186,7 @@ function SubProjectList({
 
   function toggleAllProjects(currentlySelected: boolean) {
     const projectNames = projects.map(
-      (project) => project.projectGraphNode.name,
+      (project) => project.projectGraphNode.name
     );
     if (currentlySelected) {
       projectGraphService.send({ type: 'deselectProjects', projectNames });
@@ -240,7 +240,7 @@ export function ProjectList() {
   const projects = useProjectGraphSelector(allProjectsSelector);
   const workspaceLayout = useProjectGraphSelector(workspaceLayoutSelector);
   const selectedProjects = useProjectGraphSelector(
-    selectedProjectNamesSelector,
+    selectedProjectNamesSelector
   );
 
   const appProjects = getProjectsByType('app', projects);
@@ -250,17 +250,17 @@ export function ProjectList() {
   const appDirectoryGroups = groupProjectsByDirectory(
     appProjects,
     selectedProjects,
-    workspaceLayout,
+    workspaceLayout
   );
   const libDirectoryGroups = groupProjectsByDirectory(
     libProjects,
     selectedProjects,
-    workspaceLayout,
+    workspaceLayout
   );
   const e2eDirectoryGroups = groupProjectsByDirectory(
     e2eProjects,
     selectedProjects,
-    workspaceLayout,
+    workspaceLayout
   );
 
   const sortedAppDirectories = Object.keys(appDirectoryGroups).sort();

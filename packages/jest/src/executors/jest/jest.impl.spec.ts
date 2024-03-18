@@ -4,7 +4,7 @@ let readConfig = jest.fn(() =>
     projectConfig: {
       displayName: 'something',
     },
-  }),
+  })
 );
 
 jest.mock('jest', () => ({
@@ -31,7 +31,7 @@ describe('Jest Executor', () => {
         results: {
           success: true,
         },
-      }),
+      })
     );
 
     mockContext = {
@@ -74,7 +74,7 @@ describe('Jest Executor', () => {
         () => ({
           transform: {},
         }),
-        { virtual: true },
+        { virtual: true }
       );
     });
 
@@ -85,7 +85,7 @@ describe('Jest Executor', () => {
           jestConfig: './jest.config.ts',
           watch: false,
         },
-        mockContext,
+        mockContext
       );
       expect(runCLI).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -93,7 +93,7 @@ describe('Jest Executor', () => {
           testPathPattern: [],
           watch: false,
         }),
-        ['/root/jest.config.ts'],
+        ['/root/jest.config.ts']
       );
     });
 
@@ -106,7 +106,7 @@ describe('Jest Executor', () => {
           // @ts-ignore
           group: 'core',
         },
-        mockContext,
+        mockContext
       );
       expect(runCLI).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -115,7 +115,7 @@ describe('Jest Executor', () => {
           watch: false,
           group: 'core',
         }),
-        ['/root/jest.config.js'],
+        ['/root/jest.config.js']
       );
     });
 
@@ -135,7 +135,7 @@ describe('Jest Executor', () => {
           coverageDirectory: '/test/coverage',
           watch: false,
         },
-        mockContext,
+        mockContext
       );
 
       expect(runCLI).toHaveBeenCalledWith(
@@ -152,7 +152,7 @@ describe('Jest Executor', () => {
           coverageDirectory: '/root/test/coverage',
           watch: false,
         }),
-        ['/root/jest.config.ts'],
+        ['/root/jest.config.ts']
       );
     });
 
@@ -167,7 +167,7 @@ describe('Jest Executor', () => {
           testNamePattern: 'should load',
           watch: false,
         },
-        mockContext,
+        mockContext
       );
 
       expect(runCLI).toHaveBeenCalledWith(
@@ -180,7 +180,7 @@ describe('Jest Executor', () => {
           testPathPattern: [],
           watch: false,
         }),
-        ['/root/jest.config.ts'],
+        ['/root/jest.config.ts']
       );
     });
 
@@ -217,7 +217,7 @@ describe('Jest Executor', () => {
           watchAll: false,
           testLocationInResults: true,
         },
-        mockContext,
+        mockContext
       );
       expect(runCLI).toHaveBeenCalledWith(
         {
@@ -251,7 +251,7 @@ describe('Jest Executor', () => {
           watchAll: false,
           testLocationInResults: true,
         },
-        ['/root/jest.config.ts'],
+        ['/root/jest.config.ts']
       );
     });
 
@@ -262,7 +262,7 @@ describe('Jest Executor', () => {
           jestConfig: './jest.config.ts',
           maxWorkers: '50%',
         },
-        mockContext,
+        mockContext
       );
       expect(runCLI).toHaveBeenCalledWith(
         {
@@ -270,7 +270,7 @@ describe('Jest Executor', () => {
           maxWorkers: '50%',
           testPathPattern: [],
         },
-        ['/root/jest.config.ts'],
+        ['/root/jest.config.ts']
       );
     });
 
@@ -282,7 +282,7 @@ describe('Jest Executor', () => {
           setupFile: './test-setup.ts',
           watch: false,
         },
-        mockContext,
+        mockContext
       );
       expect(runCLI).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -291,7 +291,7 @@ describe('Jest Executor', () => {
           testPathPattern: [],
           watch: false,
         }),
-        ['/root/jest.config.ts'],
+        ['/root/jest.config.ts']
       );
     });
 
@@ -305,7 +305,7 @@ describe('Jest Executor', () => {
             },
             globals: { hereToStay: true, 'ts-jest': { diagnostics: false } },
           }),
-          { virtual: true },
+          { virtual: true }
         );
       });
 
@@ -317,7 +317,7 @@ describe('Jest Executor', () => {
             setupFile: './test-setup.ts',
             watch: false,
           },
-          mockContext,
+          mockContext
         );
 
         expect(runCLI).toHaveBeenCalledWith(
@@ -327,7 +327,7 @@ describe('Jest Executor', () => {
             testPathPattern: [],
             watch: false,
           }),
-          ['/root/jest.config.ts'],
+          ['/root/jest.config.ts']
         );
       });
     });
@@ -341,7 +341,7 @@ describe('Jest Executor', () => {
               '^.+\\.[tj]sx?$': 'babel-jest',
             },
           }),
-          { virtual: true },
+          { virtual: true }
         );
       });
 
@@ -359,7 +359,7 @@ describe('Jest Executor', () => {
             testPathPattern: [],
             watch: false,
           }),
-          ['/root/jest.config.ts'],
+          ['/root/jest.config.ts']
         );
       });
     });
@@ -374,7 +374,7 @@ describe('Jest Executor', () => {
             '^.+\\.[tj]sx?$': 'babel-jest',
           },
         }),
-        { virtual: true },
+        { virtual: true }
       );
       // jest.spyOn(tsNode, 'register').mockReturnValue(null)
     });
@@ -386,7 +386,7 @@ describe('Jest Executor', () => {
           jestConfig: './jest.config.ts',
           watch: false,
         },
-        mockContext,
+        mockContext
       );
       expect(runCLI).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -394,7 +394,7 @@ describe('Jest Executor', () => {
           testPathPattern: [],
           watch: false,
         }),
-        ['/root/jest.config.ts'],
+        ['/root/jest.config.ts']
       );
     });
   });

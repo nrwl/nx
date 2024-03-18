@@ -15,7 +15,7 @@ describe('insertImport', () => {
     insertImport(tree, 'index.ts', 'b', 'a-path');
 
     expect(tree.read('index.ts', 'utf-8')).toMatchInlineSnapshot(
-      `"import { a ,b} from 'a-path';"`,
+      `"import { a ,b} from 'a-path';"`
     );
   });
 
@@ -25,7 +25,7 @@ describe('insertImport', () => {
     insertImport(tree, 'index.ts', 'b', 'a-path');
 
     expect(tree.read('index.ts', 'utf-8')).toMatchInlineSnapshot(
-      `"import { a, b,} from 'a-path';"`,
+      `"import { a, b,} from 'a-path';"`
     );
   });
 

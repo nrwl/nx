@@ -117,7 +117,7 @@ describe('app', () => {
 
       expect(appTree.exists('my-node-app/src/main.js')).toBeTruthy();
       expect(appTree.read('my-node-app/src/main.js').toString()).toContain(
-        `import express from 'express';`,
+        `import express from 'express';`
       );
 
       const tsConfig = readJson(appTree, 'my-node-app/tsconfig.json');

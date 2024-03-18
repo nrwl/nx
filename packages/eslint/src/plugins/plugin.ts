@@ -46,7 +46,7 @@ export const createNodes: CreateNodes<EslintPluginOptions> = [
         'package.json',
         '**/project.json',
         '**/package.json',
-      ].map((f) => join(configDir, f)),
+      ].map((f) => join(configDir, f))
     )
       .map((f) => dirname(f))
       .filter((childProjectRoot) => {
@@ -76,7 +76,7 @@ export const createNodes: CreateNodes<EslintPluginOptions> = [
         configFilePath,
         uniqueChildProjectRoots,
         options,
-        context,
+        context
       ),
     };
   },
@@ -86,7 +86,7 @@ function getProjectsUsingESLintConfig(
   configFilePath: string,
   childProjectRoots: string[],
   options: EslintPluginOptions,
-  context: CreateNodesContext,
+  context: CreateNodesContext
 ): CreateNodesResult['projects'] {
   const projects: CreateNodesResult['projects'] = {};
 
@@ -94,7 +94,7 @@ function getProjectsUsingESLintConfig(
     (f) =>
       f === baseEsLintConfigFile ||
       f === baseEsLintFlatConfigFile ||
-      ESLINT_CONFIG_FILENAMES.includes(f),
+      ESLINT_CONFIG_FILENAMES.includes(f)
   );
 
   // Add a lint target for each child project without an eslint config, with the root level config as an input
@@ -119,7 +119,7 @@ function getProjectsUsingESLintConfig(
         eslintConfigs,
         projectRoot,
         options,
-        isStandaloneWorkspace,
+        isStandaloneWorkspace
       ),
     };
   }
@@ -131,7 +131,7 @@ function buildEslintTargets(
   eslintConfigs: string[],
   projectRoot: string,
   options: EslintPluginOptions,
-  isStandaloneWorkspace = false,
+  isStandaloneWorkspace = false
 ) {
   const isRootProject = projectRoot === '.';
 
@@ -150,8 +150,8 @@ function buildEslintTargets(
       ...eslintConfigs.map((config) =>
         `{workspaceRoot}/${config}`.replace(
           `{workspaceRoot}/${projectRoot}`,
-          isRootProject ? '{projectRoot}/' : '{projectRoot}',
-        ),
+          isRootProject ? '{projectRoot}/' : '{projectRoot}'
+        )
       ),
       '{workspaceRoot}/tools/eslint-rules/**/*',
       { externalDependencies: ['eslint'] },

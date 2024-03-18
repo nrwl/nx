@@ -93,7 +93,7 @@ function SidebarSectionItems({ item }: { item: MenuItem }): JSX.Element {
         className={cx(
           'flex py-2',
           'text-sm font-semibold uppercase tracking-wide text-slate-800 dark:text-slate-200 lg:text-xs',
-          item.disableCollapsible ? 'cursor-text' : 'cursor-pointer',
+          item.disableCollapsible ? 'cursor-text' : 'cursor-pointer'
         )}
         onClick={handleCollapseToggle}
       >
@@ -125,7 +125,7 @@ function SidebarSectionItems({ item }: { item: MenuItem }): JSX.Element {
                 <Link
                   href={subItem.path}
                   className={cx(
-                    'relative block py-1 text-slate-500 transition-colors duration-200 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-300',
+                    'relative block py-1 text-slate-500 transition-colors duration-200 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-300'
                   )}
                 >
                   <span
@@ -156,7 +156,7 @@ function CollapsibleIcon({
       xmlns="http://www.w3.org/2000/svg"
       className={cx(
         'w-3.5 text-slate-600 transition-all dark:text-slate-400',
-        !isCollapsed && 'rotate-90 transform',
+        !isCollapsed && 'rotate-90 transform'
       )}
       fill="none"
       viewBox="0 0 24 24"
@@ -257,7 +257,7 @@ export function SidebarMobile({
                         section.current
                           ? 'text-blue-600 dark:text-sky-500'
                           : 'hover:text-slate-900 dark:hover:text-sky-400',
-                        'whitespace-nowrap p-4 text-center text-sm font-medium',
+                        'whitespace-nowrap p-4 text-center text-sm font-medium'
                       )}
                       aria-current={section.current ? 'page' : undefined}
                     >
@@ -274,7 +274,7 @@ export function SidebarMobile({
                         section.current
                           ? 'text-blue-600 dark:text-sky-500'
                           : 'hover:text-slate-900 dark:hover:text-sky-400',
-                        'whitespace-nowrap p-4 text-center text-sm font-medium',
+                        'whitespace-nowrap p-4 text-center text-sm font-medium'
                       )}
                       aria-current={section.current ? 'page' : undefined}
                     >

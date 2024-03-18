@@ -43,13 +43,13 @@ function createBuildTarget(options: NormalizedSchema): TargetConfiguration {
         'dist',
         options.appProjectRoot != '.'
           ? options.appProjectRoot
-          : options.projectName,
+          : options.projectName
       ),
       index: joinPathFragments(options.appProjectRoot, 'src/index.html'),
       baseHref: '/',
       main: joinPathFragments(
         options.appProjectRoot,
-        maybeJs(options, `src/main.tsx`),
+        maybeJs(options, `src/main.tsx`)
       ),
       tsConfig: joinPathFragments(options.appProjectRoot, 'tsconfig.app.json'),
       assets: [
@@ -62,13 +62,13 @@ function createBuildTarget(options: NormalizedSchema): TargetConfiguration {
           : [
               joinPathFragments(
                 options.appProjectRoot,
-                `src/styles.${options.style}`,
+                `src/styles.${options.style}`
               ),
             ],
       scripts: [],
       webpackConfig: joinPathFragments(
         options.appProjectRoot,
-        'webpack.config.js',
+        'webpack.config.js'
       ),
     },
     configurations: {
@@ -83,11 +83,11 @@ function createBuildTarget(options: NormalizedSchema): TargetConfiguration {
           {
             replace: joinPathFragments(
               options.appProjectRoot,
-              maybeJs(options, `src/environments/environment.ts`),
+              maybeJs(options, `src/environments/environment.ts`)
             ),
             with: joinPathFragments(
               options.appProjectRoot,
-              maybeJs(options, `src/environments/environment.prod.ts`),
+              maybeJs(options, `src/environments/environment.prod.ts`)
             ),
           },
         ],

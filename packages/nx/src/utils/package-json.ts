@@ -73,11 +73,11 @@ export interface PackageJson {
 }
 
 export function normalizePackageGroup(
-  packageGroup: PackageGroup,
+  packageGroup: PackageGroup
 ): ArrayPackageGroup {
   return Array.isArray(packageGroup)
     ? packageGroup.map((x) =>
-        typeof x === 'string' ? { package: x, version: '*' } : x,
+        typeof x === 'string' ? { package: x, version: '*' } : x
       )
     : Object.entries(packageGroup).map(([pkg, version]) => ({
         package: pkg,
@@ -86,10 +86,10 @@ export function normalizePackageGroup(
 }
 
 export function readNxMigrateConfig(
-  json: Partial<PackageJson>,
+  json: Partial<PackageJson>
 ): NxMigrationsConfiguration & { packageGroup?: ArrayPackageGroup } {
   const parseNxMigrationsConfig = (
-    fromJson?: string | NxMigrationsConfiguration,
+    fromJson?: string | NxMigrationsConfiguration
   ): NxMigrationsConfiguration & { packageGroup?: ArrayPackageGroup } => {
     if (!fromJson) {
       return {};
@@ -134,7 +134,7 @@ export function readTargetsFromPackageJson(packageJson: PackageJson) {
   for (const targetName in nx?.targets) {
     res[targetName] = mergeTargetConfigurations(
       nx?.targets[targetName],
-      res[targetName],
+      res[targetName]
     );
   }
 
@@ -163,7 +163,7 @@ export function readTargetsFromPackageJson(packageJson: PackageJson) {
  */
 export function readModulePackageJsonWithoutFallbacks(
   moduleSpecifier: string,
-  requirePaths = getNxRequirePaths(),
+  requirePaths = getNxRequirePaths()
 ): {
   packageJson: PackageJson;
   path: string;
@@ -172,7 +172,7 @@ export function readModulePackageJsonWithoutFallbacks(
     `${moduleSpecifier}/package.json`,
     {
       paths: requirePaths,
-    },
+    }
   );
   const packageJson: PackageJson = readJsonFile(packageJsonPath);
 
@@ -198,7 +198,7 @@ export function readModulePackageJsonWithoutFallbacks(
  */
 export function readModulePackageJson(
   moduleSpecifier: string,
-  requirePaths = getNxRequirePaths(),
+  requirePaths = getNxRequirePaths()
 ): {
   packageJson: PackageJson;
   path: string;
@@ -225,7 +225,7 @@ export function readModulePackageJson(
     packageJson = readJsonFile(packageJsonPath);
     if (packageJson.name && packageJson.name !== moduleSpecifier) {
       throw new Error(
-        `Found module ${packageJson.name} while trying to locate ${moduleSpecifier}/package.json`,
+        `Found module ${packageJson.name} while trying to locate ${moduleSpecifier}/package.json`
       );
     }
   }

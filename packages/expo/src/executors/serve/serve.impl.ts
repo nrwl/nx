@@ -12,7 +12,7 @@ export interface ExpoServeOutput {
 
 export default async function* serveExecutor(
   options: ExpoServeExecutorSchema,
-  context: ExecutorContext,
+  context: ExecutorContext
 ): AsyncGenerator<ExpoServeOutput> {
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
@@ -44,7 +44,7 @@ export default async function* serveExecutor(
 export async function runCliServe(
   workspaceRoot: string,
   projectRoot: string,
-  options: ExpoServeExecutorSchema,
+  options: ExpoServeExecutorSchema
 ): Promise<ChildProcess> {
   const result = await isPackagerRunning(options.port);
   if (result === 'running') {
@@ -59,7 +59,7 @@ export async function runCliServe(
       return await serveAsync(workspaceRoot, projectRoot, options);
     } catch (error) {
       logger.error(
-        `Failed to serve the packager server. Error details: ${error.message}`,
+        `Failed to serve the packager server. Error details: ${error.message}`
       );
       throw error;
     }
@@ -69,7 +69,7 @@ export async function runCliServe(
 function serveAsync(
   workspaceRoot: string,
   projectRoot: string,
-  options: ExpoServeExecutorSchema,
+  options: ExpoServeExecutorSchema
 ): Promise<ChildProcess> {
   return new Promise<ChildProcess>((resolve, reject) => {
     const childProcess = fork(
@@ -79,7 +79,7 @@ function serveAsync(
         cwd: pathResolve(workspaceRoot, projectRoot),
         env: process.env,
         stdio: ['inherit', 'pipe', 'pipe', 'ipc'],
-      },
+      }
     );
 
     childProcess.stdout.on('data', (data) => {

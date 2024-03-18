@@ -17,7 +17,7 @@ export default function escapeDollarSignEnvVariables(tree: Tree) {
     envFiles.push(
       `${configuration.root}/.env`,
       `${configuration.root}/.local.env`,
-      `${configuration.root}/.env.local`,
+      `${configuration.root}/.env.local`
     );
     for (const targetName in configuration.targets) {
       const task = configuration.targets[targetName];
@@ -25,7 +25,7 @@ export default function escapeDollarSignEnvVariables(tree: Tree) {
         `.env.${targetName}`,
         `.${targetName}.env`,
         `${configuration.root}/.env.${targetName}`,
-        `${configuration.root}/.${targetName}.env`,
+        `${configuration.root}/.${targetName}.env`
       );
 
       if (task.configurations) {
@@ -38,7 +38,7 @@ export default function escapeDollarSignEnvVariables(tree: Tree) {
             `${configuration.root}/.env.${targetName}.${configurationName}`,
             `${configuration.root}/.${targetName}.${configurationName}.env`,
             `${configuration.root}/.env.${configurationName}`,
-            `${configuration.root}/.${configurationName}.env`,
+            `${configuration.root}/.${configurationName}.env`
           );
         }
       }

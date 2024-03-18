@@ -53,7 +53,7 @@ export class WriteIndexHtmlPlugin {
               input: outputPath,
               inputContent: interpolateEnvironmentVariablesToIndex(
                 content,
-                deployUrl,
+                deployUrl
               ),
               baseHref,
               deployUrl,
@@ -65,9 +65,9 @@ export class WriteIndexHtmlPlugin {
               loadOutputFile: (filePath) =>
                 compilation.assets[filePath].source().toString(),
             });
-          },
+          }
         );
-      },
+      }
     );
   }
 
@@ -99,8 +99,8 @@ export class WriteIndexHtmlPlugin {
     return files.filter(
       ({ file, name }, index) =>
         files.findIndex(
-          (f) => f.file === file && (!name || name === f.name),
-        ) === index,
+          (f) => f.file === file && (!name || name === f.name)
+        ) === index
     );
   }
 
@@ -216,7 +216,7 @@ export class WriteIndexHtmlPlugin {
     // Inject into the html
     const indexSource = new webpack.sources.ReplaceSource(
       new webpack.sources.RawSource(params.inputContent, false),
-      params.input,
+      params.input
     );
 
     let scriptElements = '';
@@ -260,7 +260,7 @@ export class WriteIndexHtmlPlugin {
 
       const attributes = attrs
         .map((attr) =>
-          attr.value === null ? attr.name : `${attr.name}="${attr.value}"`,
+          attr.value === null ? attr.name : `${attr.name}="${attr.value}"`
         )
         .join(' ');
       scriptElements += `<script ${attributes}></script>`;
@@ -287,7 +287,7 @@ export class WriteIndexHtmlPlugin {
         treeAdapter.appendChild(baseFragment, baseElement);
         indexSource.insert(
           headElement.__location.startTag.endOffset,
-          parse5.serialize(baseFragment, { treeAdapter }),
+          parse5.serialize(baseFragment, { treeAdapter })
         );
       } else {
         let hrefAttribute;
@@ -306,7 +306,7 @@ export class WriteIndexHtmlPlugin {
         indexSource.replace(
           baseElement.__location.startOffset,
           baseElement.__location.endOffset,
-          parse5.serialize(baseFragment, { treeAdapter }),
+          parse5.serialize(baseFragment, { treeAdapter })
         );
       }
     }
@@ -333,7 +333,7 @@ export class WriteIndexHtmlPlugin {
 
     indexSource.insert(
       styleInsertionPoint,
-      parse5.serialize(styleElements, { treeAdapter }),
+      parse5.serialize(styleElements, { treeAdapter })
     );
 
     return indexSource;
@@ -348,7 +348,7 @@ export class WriteIndexHtmlPlugin {
 
   private filterAndMapBuildFiles(
     files: EmittedFile[],
-    extensionFilter: string[],
+    extensionFilter: string[]
   ): {
     file: string;
     name: string;

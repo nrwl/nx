@@ -6,7 +6,7 @@ export function generateWebpackConfig(
   tree: Tree,
   options: Schema,
   appRoot: string,
-  remotesWithPorts: { remoteName: string; port: number }[],
+  remotesWithPorts: { remoteName: string; port: number }[]
 ) {
   if (
     tree.exists(`${appRoot}/module-federation.config.js`) ||
@@ -18,7 +18,7 @@ export function generateWebpackConfig(
   ) {
     logger.warn(
       `NOTE: We encountered an existing webpack config for the app ${options.appName}. We have overwritten this file with the Module Federation Config.\n
-      If this was not the outcome you expected, you can discard the changes we have made, create a backup of your current webpack config, and run the command again.`,
+      If this was not the outcome you expected, you can discard the changes we have made, create a backup of your current webpack config, and run the command again.`
     );
   }
 
@@ -37,7 +37,7 @@ export function generateWebpackConfig(
       remotes: remotesWithPorts ?? [],
       projectRoot: appRoot,
       standalone: options.standalone,
-    },
+    }
   );
 
   if (!options.setParserOptionsProject) {

@@ -74,7 +74,7 @@ export function jsonDiff(lhs: any, rhs: any): JsonChange[] {
 export function walkJsonTree(
   json: any,
   currPath: string[],
-  visitor: (path: string[], value: any) => boolean,
+  visitor: (path: string[], value: any) => boolean
 ) {
   if (!json || typeof json !== 'object') {
     return;

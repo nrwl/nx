@@ -4,7 +4,7 @@ import type { Schema } from './schema';
 
 export async function angularMoveGenerator(
   tree: Tree,
-  schema: Schema,
+  schema: Schema
 ): Promise<void> {
   await angularMoveGeneratorInternal(tree, {
     projectNameAndRootFormat: 'derived',
@@ -14,7 +14,7 @@ export async function angularMoveGenerator(
 
 export async function angularMoveGeneratorInternal(
   tree: Tree,
-  schema: Schema,
+  schema: Schema
 ): Promise<void> {
   process.env.NX_ANGULAR_MOVE_INVOKED = 'true';
   await moveGeneratorInternal(tree, schema);

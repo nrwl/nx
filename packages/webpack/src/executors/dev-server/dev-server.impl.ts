@@ -25,7 +25,7 @@ import { getRootTsConfigPath } from '@nx/js';
 
 export async function* devServerExecutor(
   serveOptions: WebDevServerOptions,
-  context: ExecutorContext,
+  context: ExecutorContext
 ) {
   // Default to dev mode so builds are faster and HMR mode works better.
   (process.env as any).NODE_ENV ??= 'development';
@@ -36,7 +36,7 @@ export async function* devServerExecutor(
     getBuildOptions(serveOptions, context),
     context.root,
     projectRoot,
-    sourceRoot,
+    sourceRoot
   );
 
   process.env.NX_BUILD_LIBS_FROM_SOURCE = `${buildOptions.buildLibsFromSource}`;
@@ -46,7 +46,7 @@ export async function* devServerExecutor(
   if (!buildOptions.buildLibsFromSource) {
     if (!buildOptions.tsConfig) {
       throw new Error(
-        `Cannot find "tsConfig" to remap paths for. Set this option in project.json.`,
+        `Cannot find "tsConfig" to remap paths for. Set this option in project.json.`
       );
     }
     const { target, dependencies } = calculateProjectBuildableDependencies(
@@ -55,13 +55,13 @@ export async function* devServerExecutor(
       context.root,
       context.projectName,
       'build', // should be generalized
-      context.configurationName,
+      context.configurationName
     );
     buildOptions.tsConfig = createTmpTsConfig(
       buildOptions.tsConfig,
       context.root,
       target.data.root,
-      dependencies,
+      dependencies
     );
 
     process.env.NX_TSCONFIG_PATH = buildOptions.tsConfig;
@@ -72,13 +72,13 @@ export async function* devServerExecutor(
   const devServer = getDevServerOptions(
     context.root,
     serveOptions,
-    buildOptions,
+    buildOptions
   );
 
   if (buildOptions.webpackConfig) {
     let userDefinedWebpackConfig = resolveUserDefinedWebpackConfig(
       buildOptions.webpackConfig,
-      getRootTsConfigPath(),
+      getRootTsConfigPath()
     );
 
     if (typeof userDefinedWebpackConfig.then === 'function') {
@@ -98,7 +98,7 @@ export async function* devServerExecutor(
           options: buildOptions,
           context,
           configuration: serveOptions.buildTarget.split(':')[2],
-        },
+        }
       );
     }
   }
@@ -113,14 +113,14 @@ export async function* devServerExecutor(
           baseUrl,
           success: !stats.hasErrors(),
         };
-      }),
-    ),
+      })
+    )
   );
 }
 
 function getBuildOptions(
   options: WebDevServerOptions,
-  context: ExecutorContext,
+  context: ExecutorContext
 ): WebpackExecutorOptions {
   const target = parseTargetString(options.buildTarget, context);
 

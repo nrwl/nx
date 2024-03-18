@@ -22,32 +22,32 @@ describe('Add addon-essentials to project-level main.js files', () => {
         stories: [],
         addons: ['@storybook/addon-essentials', '@storybook/addon-knobs'],
       };
-      `,
+      `
     );
     await addAddonEssentialsToAll(tree);
     expect(
-      tree.read('apps/main-vite/.storybook/main.js', 'utf-8'),
+      tree.read('apps/main-vite/.storybook/main.js', 'utf-8')
     ).toMatchSnapshot();
     expect(
-      tree.read('apps/main-vite-ts/.storybook/main.ts', 'utf-8'),
+      tree.read('apps/main-vite-ts/.storybook/main.ts', 'utf-8')
     ).toMatchSnapshot();
     expect(
-      tree.read('apps/main-webpack/.storybook/main.js', 'utf-8'),
+      tree.read('apps/main-webpack/.storybook/main.js', 'utf-8')
     ).toMatchSnapshot();
     expect(
-      tree.read('libs/react-rollup/.storybook/main.js', 'utf-8'),
+      tree.read('libs/react-rollup/.storybook/main.js', 'utf-8')
     ).toMatchSnapshot();
     expect(
-      tree.read('libs/react-rollup-3/.storybook/main.js', 'utf-8'),
+      tree.read('libs/react-rollup-3/.storybook/main.js', 'utf-8')
     ).toMatchSnapshot();
     expect(
-      tree.read('libs/react-rollup-4/.storybook/main.js', 'utf-8'),
+      tree.read('libs/react-rollup-4/.storybook/main.js', 'utf-8')
     ).toMatchSnapshot();
     expect(
-      tree.read('libs/react-vite/.storybook/main.js', 'utf-8'),
+      tree.read('libs/react-vite/.storybook/main.js', 'utf-8')
     ).toMatchSnapshot();
     expect(
-      tree.read('libs/react-vite-2/.storybook/main.js', 'utf-8'),
+      tree.read('libs/react-vite-2/.storybook/main.js', 'utf-8')
     ).toMatchSnapshot();
   });
 
@@ -58,7 +58,7 @@ describe('Add addon-essentials to project-level main.js files', () => {
         stories: [],
         addons: ['@storybook/addon-essentials', '@storybook/addon-knobs'],
       };
-      `,
+      `
     );
     await addAddonEssentialsToAll(tree);
     expect(tree.read('.storybook/main.js', 'utf-8')).toMatchSnapshot();
@@ -73,7 +73,7 @@ describe('Add addon-essentials to project-level main.js files', () => {
       export const rootMain: StorybookConfig = {
         addons: ['@storybook/addon-knobs', '@storybook/addon-essentials'],
       };
-      `,
+      `
     );
     await addAddonEssentialsToAll(tree);
     expect(tree.read('.storybook/main.ts', 'utf-8')).toMatchSnapshot();
@@ -86,7 +86,7 @@ describe('Add addon-essentials to project-level main.js files', () => {
         stories: [],
         addons: ['@storybook/addon-essentials'],
       };
-      `,
+      `
     );
     await addAddonEssentialsToAll(tree);
     expect(tree.exists('.storybook/main.js')).toBeFalsy();
@@ -99,33 +99,33 @@ describe('Add addon-essentials to project-level main.js files', () => {
         stories: [],
         addons: ['@storybook/addon-essentials'],
       };
-      `,
+      `
     );
 
     await addAddonEssentialsToAll(tree);
     expect(
-      tree.read('apps/main-vite/.storybook/main.js', 'utf-8'),
+      tree.read('apps/main-vite/.storybook/main.js', 'utf-8')
     ).toMatchSnapshot();
     expect(
-      tree.read('apps/main-vite-ts/.storybook/main.ts', 'utf-8'),
+      tree.read('apps/main-vite-ts/.storybook/main.ts', 'utf-8')
     ).toMatchSnapshot();
     expect(
-      tree.read('apps/main-webpack/.storybook/main.js', 'utf-8'),
+      tree.read('apps/main-webpack/.storybook/main.js', 'utf-8')
     ).toMatchSnapshot();
     expect(
-      tree.read('libs/react-rollup/.storybook/main.js', 'utf-8'),
+      tree.read('libs/react-rollup/.storybook/main.js', 'utf-8')
     ).toMatchSnapshot();
     expect(
-      tree.read('libs/react-rollup-3/.storybook/main.js', 'utf-8'),
+      tree.read('libs/react-rollup-3/.storybook/main.js', 'utf-8')
     ).toMatchSnapshot();
     expect(
-      tree.read('libs/react-rollup-4/.storybook/main.js', 'utf-8'),
+      tree.read('libs/react-rollup-4/.storybook/main.js', 'utf-8')
     ).toMatchSnapshot();
     expect(
-      tree.read('libs/react-vite/.storybook/main.js', 'utf-8'),
+      tree.read('libs/react-vite/.storybook/main.js', 'utf-8')
     ).toMatchSnapshot();
     expect(
-      tree.read('libs/react-vite-2/.storybook/main.js', 'utf-8'),
+      tree.read('libs/react-vite-2/.storybook/main.js', 'utf-8')
     ).toMatchSnapshot();
 
     expect(tree.exists('.storybook/main.js')).toBeFalsy();
@@ -166,7 +166,7 @@ export function addAllProjectsToWorkspace(tree: Tree) {
           };
 
           module.exports = config;
-          `,
+          `
         );
       } else if (name === 'main-vite') {
         tree.write(
@@ -194,14 +194,14 @@ export function addAllProjectsToWorkspace(tree: Tree) {
               });
             },
           };
-          `,
+          `
         );
       } else if (name === 'react-vite-2') {
         tree.write(
           `${project.targets['build-storybook']?.options?.configDir}/main.js`,
           `
         some invalid stuff
-        `,
+        `
         );
       } else if (name === 'react-rollup') {
         tree.write(
@@ -218,7 +218,7 @@ export function addAllProjectsToWorkspace(tree: Tree) {
           module.exports = rootMain;
 
           module.exports.core = { ...module.exports.core, builder: 'webpack5' };
-          `,
+          `
         );
       } else if (name === 'react-rollup-3') {
         tree.write(
@@ -235,7 +235,7 @@ export function addAllProjectsToWorkspace(tree: Tree) {
           module.exports = rootMain;
 
           module.exports.core = { ...module.exports.core, builder: 'webpack5' };
-          `,
+          `
         );
       } else if (name === 'react-rollup-4') {
         tree.write(
@@ -251,7 +251,7 @@ export function addAllProjectsToWorkspace(tree: Tree) {
           module.exports = rootMain;
 
           module.exports.core = { ...module.exports.core, builder: 'webpack5' };
-          `,
+          `
         );
       } else {
         tree.write(
@@ -290,7 +290,7 @@ export function addAllProjectsToWorkspace(tree: Tree) {
               });
             },
           };
-          `,
+          `
         );
       }
     }

@@ -49,7 +49,7 @@ function getWithNxContext(): WithNxContext {
 
 function getNxContext(
   graph: ProjectGraph,
-  target: Target,
+  target: Target
 ): {
   node: ProjectGraphProjectNode;
   options: NextBuildBuilderOptions;
@@ -64,7 +64,7 @@ function getNxContext(
   if (target.configuration) {
     Object.assign(
       targetOptions,
-      targetConfig.configurations[target.configuration],
+      targetConfig.configurations[target.configuration]
     );
   }
 
@@ -80,13 +80,13 @@ function getNxContext(
     // Executors such as @nx/cypress:cypress define the devServerTarget option.
     return getNxContext(
       graph,
-      parseTargetString(targetOptions.devServerTarget, partialExecutorContext),
+      parseTargetString(targetOptions.devServerTarget, partialExecutorContext)
     );
   } else if (targetOptions.buildTarget) {
     // Executors such as @nx/next:server or @nx/next:export define the buildTarget option.
     return getNxContext(
       graph,
-      parseTargetString(targetOptions.buildTarget, partialExecutorContext),
+      parseTargetString(targetOptions.buildTarget, partialExecutorContext)
     );
   }
 
@@ -106,7 +106,7 @@ function getNxContext(
  */
 function withNx(
   _nextConfig = {} as WithNxOptions,
-  context: WithNxContext = getWithNxContext(),
+  context: WithNxContext = getWithNxContext()
 ): NextConfigFn {
   return async (phase: string) => {
     const { PHASE_PRODUCTION_SERVER, PHASE_DEVELOPMENT_SERVER } = await import(
@@ -137,7 +137,7 @@ function withNx(
       } catch (e) {
         throw new Error(
           'Could not create project graph. Please ensure that your workspace is valid.',
-          { cause: e },
+          { cause: e }
         );
       }
 
@@ -209,7 +209,7 @@ function withNx(
           workspaceRoot,
           projectDirectory,
           options.fileReplacements,
-          options.assets,
+          options.assets
         )(userWebpackConfig ? userWebpackConfig(a, b) : a, b);
 
       return nextConfig;
@@ -219,7 +219,7 @@ function withNx(
 
 export function getNextConfig(
   nextConfig = {} as WithNxOptions,
-  context: WithNxContext = getWithNxContext(),
+  context: WithNxContext = getWithNxContext()
 ): NextConfig {
   // If `next-compose-plugins` is used, the context argument is invalid.
   if (!context.libsDir || !context.workspaceRoot) {
@@ -254,7 +254,7 @@ export function getNextConfig(
       ];
 
       const nextCssLoaders = config.module.rules.find(
-        (rule) => typeof rule.oneOf === 'object',
+        (rule) => typeof rule.oneOf === 'object'
       );
 
       // webpack config is not as expected
@@ -265,7 +265,7 @@ export function getNextConfig(
        */
       const nextCssLoader = nextCssLoaders.oneOf.find(
         (rule) =>
-          rule.sideEffects === false && regexEqual(rule.test, /\.module\.css$/),
+          rule.sideEffects === false && regexEqual(rule.test, /\.module\.css$/)
       );
       // Might not be found if Next.js webpack config changes in the future
       if (nextCssLoader && nextCssLoader.issuer) {
@@ -281,7 +281,7 @@ export function getNextConfig(
       const nextSassLoader = nextCssLoaders.oneOf.find(
         (rule) =>
           rule.sideEffects === false &&
-          regexEqual(rule.test, /\.module\.(scss|sass)$/),
+          regexEqual(rule.test, /\.module\.(scss|sass)$/)
       );
       // Might not be found if Next.js webpack config changes in the future
       if (nextSassLoader && nextSassLoader.issuer) {
@@ -303,7 +303,7 @@ export function getNextConfig(
             'CSS Modules \u001b[1mcannot\u001b[22m be imported from within \u001b[1mnode_modules\u001b[22m.\n' +
               'Read more: https://err.sh/next.js/css-modules-npm' ||
             rule.use.options.reason ===
-              'CSS Modules cannot be imported from within node_modules.\nRead more: https://err.sh/next.js/css-modules-npm'),
+              'CSS Modules cannot be imported from within node_modules.\nRead more: https://err.sh/next.js/css-modules-npm')
       );
       // Might not be found if Next.js webpack config changes in the future
       if (nextErrorCssModuleLoader) {
@@ -315,8 +315,8 @@ export function getNextConfig(
        */
       const nextGlobalCssLoader = nextCssLoaders.oneOf.find((rule) =>
         rule.include?.and?.find((include) =>
-          regexEqual(include, /node_modules/),
-        ),
+          regexEqual(include, /node_modules/)
+        )
       );
       // Might not be found if Next.js webpack config changes in the future
       if (nextGlobalCssLoader && nextGlobalCssLoader.issuer) {
@@ -351,7 +351,7 @@ export function getNextConfig(
             issuer: /\.[jt]sx?$/,
             resourceQuery: { not: [/url/] },
             use: ['@svgr/webpack'],
-          },
+          }
         );
       }
 
@@ -385,21 +385,21 @@ function addNxEnvVariables(config: any) {
       .map(([name, value]) => [`process.env.${name}`, `"${value}"`])
       .filter(([name]) => !maybeDefinePlugin.definitions[name])
       .forEach(
-        ([name, value]) => (maybeDefinePlugin.definitions[name] = value),
+        ([name, value]) => (maybeDefinePlugin.definitions[name] = value)
       );
   }
 }
 
 export function getAliasForProject(
   node: ProjectGraphProjectNode,
-  paths: Record<string, string[]>,
+  paths: Record<string, string[]>
 ): null | string {
   // Match workspace libs to their alias in tsconfig paths.
   for (const [alias, lookup] of Object.entries(paths ?? {})) {
     const lookupContainsDepNode = lookup.some(
       (lookupPath) =>
         lookupPath.startsWith(node?.data?.root) ||
-        lookupPath.startsWith('./' + node?.data?.root),
+        lookupPath.startsWith('./' + node?.data?.root)
     );
     if (lookupContainsDepNode) {
       return alias;

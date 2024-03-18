@@ -47,10 +47,10 @@ describe('component', () => {
       });
 
       expect(
-        tree.exists('my-app/pages/posts/[dynamic]/index.tsx'),
+        tree.exists('my-app/pages/posts/[dynamic]/index.tsx')
       ).toBeTruthy();
       expect(
-        tree.exists('my-app/pages/posts/[dynamic]/index.module.css'),
+        tree.exists('my-app/pages/posts/[dynamic]/index.module.css')
       ).toBeTruthy();
 
       const content = tree
@@ -70,10 +70,10 @@ describe('component', () => {
       });
 
       expect(
-        tree.exists(`${appRouterProjectName}/app/about/page.tsx`),
+        tree.exists(`${appRouterProjectName}/app/about/page.tsx`)
       ).toBeTruthy();
       expect(
-        tree.exists(`${appRouterProjectName}/app/about/page.module.css`),
+        tree.exists(`${appRouterProjectName}/app/about/page.module.css`)
       ).toBeTruthy();
     });
 
@@ -86,12 +86,12 @@ describe('component', () => {
       });
 
       expect(
-        tree.exists(`${appRouterProjectName}/app/posts/[dynamic]/page.tsx`),
+        tree.exists(`${appRouterProjectName}/app/posts/[dynamic]/page.tsx`)
       ).toBeTruthy();
       expect(
         tree.exists(
-          `${appRouterProjectName}/app/posts/[dynamic]/page.module.css`,
-        ),
+          `${appRouterProjectName}/app/posts/[dynamic]/page.module.css`
+        )
       ).toBeTruthy();
 
       const content = tree

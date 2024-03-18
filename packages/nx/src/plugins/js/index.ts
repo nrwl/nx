@@ -66,7 +66,7 @@ export const createNodes: CreateNodes = [
       packageManager,
       lockFileContents,
       lockFileHash,
-      context,
+      context
     );
     parsedLockFile.externalNodes = externalNodes;
     return {
@@ -77,7 +77,7 @@ export const createNodes: CreateNodes = [
 
 export const createDependencies: CreateDependencies = (
   _,
-  ctx: CreateDependenciesContext,
+  ctx: CreateDependenciesContext
 ) => {
   const pluginConfig = jsPluginConfig(ctx.nxJsonConfiguration);
 
@@ -101,7 +101,7 @@ export const createDependencies: CreateDependencies = (
         packageManager,
         lockFileContents,
         lockFileHash,
-        ctx,
+        ctx
       );
 
       parsedLockFile.dependencies = lockfileDependencies;
@@ -113,13 +113,13 @@ export const createDependencies: CreateDependencies = (
   performance.mark('build typescript dependencies - start');
   const explicitProjectDependencies = buildExplicitDependencies(
     pluginConfig,
-    ctx,
+    ctx
   );
   performance.mark('build typescript dependencies - end');
   performance.measure(
     'build typescript dependencies',
     'build typescript dependencies - start',
-    'build typescript dependencies - end',
+    'build typescript dependencies - end'
   );
   return lockfileDependencies.concat(explicitProjectDependencies);
 };
@@ -138,7 +138,7 @@ function lockFileNeedsReprocessing(lockHash: string) {
 
 function writeLastProcessedLockfileHash(
   hash: string,
-  lockFile: ParsedLockFile,
+  lockFile: ParsedLockFile
 ) {
   ensureDirSync(dirname(lockFileHashFile));
   writeFileSync(cachedParsedLockFile, JSON.stringify(lockFile, null, 2));
@@ -152,5 +152,5 @@ function readCachedParsedLockFile(): ParsedLockFile {
 const lockFileHashFile = join(projectGraphCacheDirectory, 'lockfile.hash');
 const cachedParsedLockFile = join(
   projectGraphCacheDirectory,
-  'parsed-lock-file.json',
+  'parsed-lock-file.json'
 );

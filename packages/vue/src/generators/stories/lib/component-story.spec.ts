@@ -22,7 +22,7 @@ describe('vue:component-story', () => {
             interactionTests: true,
             project: 'test-ui-lib',
           },
-          'lib/test-ui-lib.vue',
+          'lib/test-ui-lib.vue'
         );
       });
 
@@ -49,7 +49,7 @@ describe('vue:component-story', () => {
 
           <style scoped>
           </style>
-          `,
+          `
         );
 
         createComponentStories(
@@ -58,7 +58,7 @@ describe('vue:component-story', () => {
             interactionTests: true,
             project: 'test-ui-lib',
           },
-          'lib/test-ui-lib.vue',
+          'lib/test-ui-lib.vue'
         );
       });
 
@@ -88,7 +88,7 @@ describe('vue:component-story', () => {
 
           <style scoped>
           </style>
-          `,
+          `
         );
 
         createComponentStories(
@@ -97,7 +97,7 @@ describe('vue:component-story', () => {
             interactionTests: true,
             project: 'test-ui-lib',
           },
-          'lib/test-ui-lib.vue',
+          'lib/test-ui-lib.vue'
         );
       });
 

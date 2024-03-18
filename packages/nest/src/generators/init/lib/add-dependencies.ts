@@ -5,7 +5,7 @@ import { InitGeneratorOptions } from '../schema';
 
 export function addDependencies(
   tree: Tree,
-  options: InitGeneratorOptions,
+  options: InitGeneratorOptions
 ): GeneratorCallback {
   return addDependenciesToPackageJson(
     tree,
@@ -15,6 +15,6 @@ export function addDependencies(
       '@nx/nest': nxVersion,
     },
     undefined,
-    options.keepExistingVersions,
+    options.keepExistingVersions
   );
 }

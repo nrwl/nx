@@ -51,7 +51,7 @@ export function ThemeSwitcher() {
             type="button"
             className={cx(
               'inline-flex p-2 text-sm font-medium opacity-60 transition-opacity group-hover:opacity-100',
-              themeMap[theme].className,
+              themeMap[theme].className
             )}
           >
             {themeMap[theme].icon}
@@ -77,7 +77,7 @@ export function ThemeSwitcher() {
                           'bg-slate-100 dark:bg-slate-800/60': active,
                           'text-blue-500 dark:text-sky-500': active || selected,
                           'text-slate-700 dark:text-slate-400': !active,
-                        },
+                        }
                       )}
                     >
                       {icon}

@@ -16,7 +16,7 @@ export function updateAppModule(tree: Tree, schema: Schema) {
   const projectConfig = readProjectConfiguration(tree, schema.project);
   const pathToAppModule = joinPathFragments(
     projectConfig.sourceRoot,
-    'app/app.module.ts',
+    'app/app.module.ts'
   );
   const fileContents = tree.read(pathToAppModule, 'utf-8');
 
@@ -24,12 +24,12 @@ export function updateAppModule(tree: Tree, schema: Schema) {
   const browserModuleImportNodes = tsquery(
     ast,
     'PropertyAssignment:has(Identifier[name=imports]) > ArrayLiteralExpression Identifier[name=BrowserModule]',
-    { visitAllChildren: true },
+    { visitAllChildren: true }
   );
 
   if (browserModuleImportNodes.length === 0) {
     throw new Error(
-      `Could not find BrowserModule declaration in ${pathToAppModule}. Please ensure this is correct.`,
+      `Could not find BrowserModule declaration in ${pathToAppModule}. Please ensure this is correct.`
     );
   }
 
@@ -37,10 +37,10 @@ export function updateAppModule(tree: Tree, schema: Schema) {
 
   const newFileContents = `${fileContents.slice(
     0,
-    browserModuleNode.getEnd(),
+    browserModuleNode.getEnd()
   )}.withServerTransition({ appId: '${schema.appId}' })${fileContents.slice(
     browserModuleNode.getEnd(),
-    fileContents.length,
+    fileContents.length
   )}`;
 
   tree.write(pathToAppModule, newFileContents);

@@ -66,8 +66,8 @@ The following configuration creates `build` and `test` targets for Nx.
   "name": "mylib",
   "scripts": {
     "test": "jest",
-    "build": "tsc -p tsconfig.lib.json", // the actual command here is arbitrary
-  },
+    "build": "tsc -p tsconfig.lib.json" // the actual command here is arbitrary
+  }
 }
 ```
 
@@ -82,15 +82,15 @@ The following configuration creates `build` and `test` targets for Nx.
       "executor": "@nx/jest:jest",
       "options": {
         /* ... */
-      },
+      }
     },
     "build": {
       "executor": "@nx/js:tsc",
       "options": {
         /* ... */
-      },
-    },
-  },
+      }
+    }
+  }
 }
 ```
 
@@ -110,27 +110,27 @@ Below are some more complete examples of project configuration files. For a more
   "scripts": {
     "test": "jest",
     "build": "tsc -p tsconfig.lib.json", // the actual command here is arbitrary
-    "ignored": "exit 1",
+    "ignored": "exit 1"
   },
   "nx": {
     "namedInputs": {
       "default": ["{projectRoot}/**/*"],
-      "production": ["!{projectRoot}/**/*.spec.tsx"],
+      "production": ["!{projectRoot}/**/*.spec.tsx"]
     },
     "targets": {
       "build": {
         "inputs": ["production", "^production"],
         "outputs": ["{workspaceRoot}/dist/libs/mylib"],
-        "dependsOn": ["^build"],
+        "dependsOn": ["^build"]
       },
       "test": {
         "inputs": ["default", "^production"],
         "outputs": [],
-        "dependsOn": ["build"],
-      },
+        "dependsOn": ["build"]
+      }
     },
-    "includedScripts": ["test", "build"], // If you want to limit the scripts Nx sees, you can specify a list here.
-  },
+    "includedScripts": ["test", "build"] // If you want to limit the scripts Nx sees, you can specify a list here.
+  }
 }
 ```
 
@@ -204,16 +204,16 @@ A typical set of inputs may look like this:
 {
   "namedInputs": {
     "default": ["{projectRoot}/**/*"], // every file in the project
-    "production": ["default", "!{projectRoot}/**/*.spec.tsx"], // except test files
+    "production": ["default", "!{projectRoot}/**/*.spec.tsx"] // except test files
   },
   "targets": {
     "build": {
       "inputs": [
         "production", // this project's production files
-        { "externalDependencies": ["vite"] }, // the version of the vite package
-      ],
-    },
-  },
+        { "externalDependencies": ["vite"] } // the version of the vite package
+      ]
+    }
+  }
 }
 ```
 
@@ -584,8 +584,8 @@ You can annotate your projects with `tags` as follows:
 {
   "name": "mylib",
   "nx": {
-    "tags": ["scope:myteam"],
-  },
+    "tags": ["scope:myteam"]
+  }
 }
 ```
 
@@ -595,7 +595,7 @@ You can annotate your projects with `tags` as follows:
 ```jsonc {% fileName="project.json" %}
 {
   "root": "libs/mylib",
-  "tags": ["scope:myteam"],
+  "tags": ["scope:myteam"]
 }
 ```
 
@@ -616,8 +616,8 @@ Nx uses powerful source-code analysis to figure out your workspace's project gra
 {
   "name": "mylib",
   "nx": {
-    "implicitDependencies": ["anotherlib"],
-  },
+    "implicitDependencies": ["anotherlib"]
+  }
 }
 ```
 
@@ -627,7 +627,7 @@ Nx uses powerful source-code analysis to figure out your workspace's project gra
 ```jsonc {% fileName="project.json" %}
 {
   "root": "libs/mylib",
-  "implicitDependencies": ["anotherlib"],
+  "implicitDependencies": ["anotherlib"]
 }
 ```
 

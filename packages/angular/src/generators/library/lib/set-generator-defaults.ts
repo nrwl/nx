@@ -3,7 +3,7 @@ import type { NormalizedSchema } from './normalized-schema';
 
 export function setGeneratorDefaults(
   tree: Tree,
-  options: NormalizedSchema,
+  options: NormalizedSchema
 ): void {
   const nxJson = readNxJson(tree);
 

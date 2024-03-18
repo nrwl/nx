@@ -14,7 +14,7 @@ export default async function addBabelCore(tree: Tree): Promise<void> {
       {},
       {
         '@babel/core': babelCoreVersion,
-      },
+      }
     );
     await formatFiles(tree);
   }

@@ -25,7 +25,7 @@ expect.addSnapshotSerializer({
         .replaceAll(' in /{project-name}', ' in {project-name}')
         .replaceAll(
           /integrity:\s*.*/g,
-          'integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX',
+          'integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
         )
         .replaceAll(/\b[0-9a-f]{40}\b/g, '{SHASUM}')
         .replaceAll(/\d*B  index\.js/g, 'XXB  index.js')
@@ -42,7 +42,7 @@ expect.addSnapshotSerializer({
         .replaceAll('npm install --package-lock-only', '{lock-file-command}')
         .replaceAll(
           'yarn install --mode update-lockfile',
-          '{lock-file-command}',
+          '{lock-file-command}'
         )
         .replaceAll('pnpm install --lockfile-only', '{lock-file-command}')
         .replaceAll(getSelectedPackageManager(), '{package-manager}')
@@ -116,7 +116,7 @@ describe('nx release - independent projects', () => {
 
     it('should allow versioning projects independently', async () => {
       const versionPkg1Output = runCLI(
-        `release version 999.9.9-package.1 -p ${pkg1}`,
+        `release version 999.9.9-package.1 -p ${pkg1}`
       );
       expect(versionPkg1Output).toMatchInlineSnapshot(`
 
@@ -145,7 +145,7 @@ describe('nx release - independent projects', () => {
       `);
 
       const versionPkg2Output = runCLI(
-        `release version 999.9.9-package.2 -p ${pkg2}`,
+        `release version 999.9.9-package.2 -p ${pkg2}`
       );
       expect(versionPkg2Output).toMatchInlineSnapshot(`
 
@@ -177,7 +177,7 @@ describe('nx release - independent projects', () => {
       `);
 
       const versionPkg3Output = runCLI(
-        `release version 999.9.9-package.3 -p ${pkg3}`,
+        `release version 999.9.9-package.3 -p ${pkg3}`
       );
       expect(versionPkg3Output).toMatchInlineSnapshot(`
 
@@ -216,14 +216,14 @@ describe('nx release - independent projects', () => {
     it('should support automated git operations after versioning when configured', async () => {
       const headSHA = runCommand(`git rev-parse HEAD`).trim();
       runCLI(
-        `release version 999.9.9-version-git-operations-test.1 -p ${pkg1}`,
+        `release version 999.9.9-version-git-operations-test.1 -p ${pkg1}`
       );
       // No git operations should have been performed by the previous command because not yet configured in nx.json nor passed as a flag
       expect(runCommand(`git rev-parse HEAD`).trim()).toEqual(headSHA);
 
       // Enable git commit and tag operations via CLI flags
       const versionWithGitActionsCLIOutput = runCLI(
-        `release version 999.9.9-version-git-operations-test.2 -p ${pkg1} --git-commit --git-tag --verbose`, // add verbose so we get richer output
+        `release version 999.9.9-version-git-operations-test.2 -p ${pkg1} --git-commit --git-tag --verbose` // add verbose so we get richer output
       );
       expect(versionWithGitActionsCLIOutput).toMatchInlineSnapshot(`
 
@@ -307,7 +307,7 @@ describe('nx release - independent projects', () => {
       });
 
       const versionWithGitActionsConfigOutput = runCLI(
-        `release version 999.9.9-version-git-operations-test.3 --verbose`, // add verbose so we get richer output
+        `release version 999.9.9-version-git-operations-test.3 --verbose` // add verbose so we get richer output
       );
       expect(versionWithGitActionsConfigOutput).toMatchInlineSnapshot(`
 
@@ -415,7 +415,7 @@ describe('nx release - independent projects', () => {
     it('should allow generating changelogs for projects independently', async () => {
       // pkg1
       const changelogPkg1Output = runCLI(
-        `release changelog 999.9.9-package.1 -p ${pkg1} --dry-run`,
+        `release changelog 999.9.9-package.1 -p ${pkg1} --dry-run`
       );
       expect(changelogPkg1Output).toMatchInlineSnapshot(`
 
@@ -442,7 +442,7 @@ describe('nx release - independent projects', () => {
 
       // pkg2
       const changelogPkg2Output = runCLI(
-        `release changelog 999.9.9-package.2 -p ${pkg2} --dry-run`,
+        `release changelog 999.9.9-package.2 -p ${pkg2} --dry-run`
       );
       expect(changelogPkg2Output).toMatchInlineSnapshot(`
 
@@ -469,7 +469,7 @@ describe('nx release - independent projects', () => {
 
       // pkg3
       const changelogPkg3Output = runCLI(
-        `release changelog 999.9.9-package.3 -p ${pkg3} --dry-run`,
+        `release changelog 999.9.9-package.3 -p ${pkg3} --dry-run`
       );
       expect(changelogPkg3Output).toMatchInlineSnapshot(`
 
@@ -502,7 +502,7 @@ describe('nx release - independent projects', () => {
       const headSHA = runCommand(`git rev-parse HEAD`).trim();
 
       const versionWithGitActionsCLIOutput = runCLI(
-        `release changelog 999.9.9-changelog-git-operations-test.1 -p ${pkg1} --verbose`,
+        `release changelog 999.9.9-changelog-git-operations-test.1 -p ${pkg1} --verbose`
       );
       expect(versionWithGitActionsCLIOutput).toMatchInlineSnapshot(`
 
@@ -559,7 +559,7 @@ describe('nx release - independent projects', () => {
       const updatedHeadSHA = runCommand(`git rev-parse HEAD`).trim();
       // Disable git commit and tag operations via CLI flags
       runCLI(
-        `release changelog 999.9.9-changelog-git-operations-test.2 -p ${pkg1} --git-commit=false --git-tag=false --verbose`, // add verbose so we get richer output
+        `release changelog 999.9.9-changelog-git-operations-test.2 -p ${pkg1} --git-commit=false --git-tag=false --verbose` // add verbose so we get richer output
       );
       // No git operations should have been performed by the previous command
       expect(runCommand(`git rev-parse HEAD`).trim()).toEqual(updatedHeadSHA);
@@ -593,7 +593,7 @@ describe('nx release - independent projects', () => {
       });
 
       runCLI(
-        `release changelog 999.9.9-changelog-git-operations-test.3 --verbose`, // add verbose so we get richer output
+        `release changelog 999.9.9-changelog-git-operations-test.3 --verbose` // add verbose so we get richer output
       );
 
       // Ensure no git operations were performed
@@ -895,30 +895,30 @@ describe('nx release - independent projects', () => {
 
       expect(
         releaseOutput.match(new RegExp(`New version 1\.2\.1 written`, 'g'))
-          .length,
+          .length
       ).toEqual(1);
 
       expect(
         releaseOutput.match(new RegExp(`New version 1\.4\.1 written`, 'g'))
-          .length,
+          .length
       ).toEqual(1);
 
       expect(
         releaseOutput.match(new RegExp(`New version 1\.6\.1 written`, 'g'))
-          .length,
+          .length
       ).toEqual(1);
 
       expect(
-        releaseOutput.match(new RegExp(`Generating an entry in `, 'g')).length,
+        releaseOutput.match(new RegExp(`Generating an entry in `, 'g')).length
       ).toEqual(3);
 
       expect(
         releaseOutput.match(
           new RegExp(
             `Successfully ran target nx-release-publish for 3 projects`,
-            'g',
-          ),
-        ).length,
+            'g'
+          )
+        ).length
       ).toEqual(1);
     });
 
@@ -982,50 +982,50 @@ describe('nx release - independent projects', () => {
         releaseOutput.match(
           new RegExp(
             `Resolved the specifier as "minor" using git history and the conventional commits standard.`,
-            'g',
-          ),
-        ).length,
+            'g'
+          )
+        ).length
       ).toEqual(1);
       expect(
         releaseOutput.match(
-          new RegExp(`New version 1\\.4\\.0 written to my-pkg-1\\d*`, 'g'),
-        ).length,
+          new RegExp(`New version 1\\.4\\.0 written to my-pkg-1\\d*`, 'g')
+        ).length
       ).toEqual(1);
       expect(
         releaseOutput.match(
-          new RegExp(`- \\*\\*${pkg1}:\\*\\* new feature 1`, 'g'),
-        ).length,
+          new RegExp(`- \\*\\*${pkg1}:\\*\\* new feature 1`, 'g')
+        ).length
       ).toEqual(1);
 
       expect(
         releaseOutput.match(
           new RegExp(
             `Resolved the specifier as "patch" using git history and the conventional commits standard.`,
-            'g',
-          ),
-        ).length,
+            'g'
+          )
+        ).length
       ).toEqual(1);
       expect(
         releaseOutput.match(
-          new RegExp(`New version 1\\.8\\.1 written to my-pkg-3\\d*`, 'g'),
-        ).length,
+          new RegExp(`New version 1\\.8\\.1 written to my-pkg-3\\d*`, 'g')
+        ).length
       ).toEqual(1);
       expect(
         releaseOutput.match(new RegExp(`- \\*\\*${pkg3}:\\*\\* new fix 3`, 'g'))
-          .length,
+          .length
       ).toEqual(1);
 
       expect(
-        releaseOutput.match(new RegExp(`Generating an entry in `, 'g')).length,
+        releaseOutput.match(new RegExp(`Generating an entry in `, 'g')).length
       ).toEqual(2);
 
       expect(
         releaseOutput.match(
           new RegExp(
             `Successfully ran target nx-release-publish for 3 projects`,
-            'g',
-          ),
-        ).length,
+            'g'
+          )
+        ).length
       ).toEqual(1);
     });
   });

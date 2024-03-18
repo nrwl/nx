@@ -28,7 +28,7 @@ describe('Nx Commands', () => {
   beforeAll(() =>
     newProject({
       packages: ['@nx/web', '@nx/angular', '@nx/next'],
-    }),
+    })
   );
 
   afterAll(() => cleanupProject());
@@ -38,10 +38,7 @@ describe('Nx Commands', () => {
       const app1 = uniq('myapp');
       const app2 = uniq('myapp');
       expect(
-        runCLI('show projects').replace(
-          /.*nx show projects( --verbose)?\n/,
-          '',
-        ),
+        runCLI('show projects').replace(/.*nx show projects( --verbose)?\n/, '')
       ).toEqual('');
 
       runCLI(`generate @nx/web:app ${app1} --tags e2etag`);
@@ -59,10 +56,10 @@ describe('Nx Commands', () => {
       expect(withTag).toEqual([app1]);
 
       const withTargets = JSON.parse(
-        runCLI('show projects --with-target e2e --json'),
+        runCLI('show projects --with-target e2e --json')
       );
       expect(withTargets).toEqual(
-        expect.arrayContaining([`${app1}-e2e`, `${app2}-e2e`]),
+        expect.arrayContaining([`${app1}-e2e`, `${app2}-e2e`])
       );
       expect(withTargets.length).toEqual(2);
     });
@@ -71,7 +68,7 @@ describe('Nx Commands', () => {
       const app = uniq('myapp');
       runCLI(`generate @nx/web:app ${app}`);
       const project: ProjectConfiguration = JSON.parse(
-        runCLI(`show project ${app}`),
+        runCLI(`show project ${app}`)
       );
       expect(project.targets.build).toBeDefined();
       expect(project.targets.lint).toBeDefined();
@@ -84,8 +81,8 @@ describe('Nx Commands', () => {
 
       expect(reportOutput).toEqual(
         expect.stringMatching(
-          new RegExp(`\@nx\/workspace.*:.*${getPublishedVersion()}`),
-        ),
+          new RegExp(`\@nx\/workspace.*:.*${getPublishedVersion()}`)
+        )
       );
       expect(reportOutput).toContain('@nx/workspace');
     }, 120000);
@@ -101,7 +98,7 @@ describe('Nx Commands', () => {
       // temporarily make it look like this isn't installed
       renameSync(
         tmpProjPath('node_modules/@nx/next'),
-        tmpProjPath('node_modules/@nx/next_tmp'),
+        tmpProjPath('node_modules/@nx/next_tmp')
       );
 
       listOutput = runCLI('list');
@@ -138,13 +135,13 @@ describe('Nx Commands', () => {
       listOutput = runCLI('list @wibble/fish');
 
       expect(listOutput).toContain(
-        'NX   @wibble/fish is not currently installed',
+        'NX   @wibble/fish is not currently installed'
       );
 
       // put back the @nx/angular module (or all the other e2e tests after this will fail)
       renameSync(
         tmpProjPath('node_modules/@nx/next_tmp'),
-        tmpProjPath('node_modules/@nx/next'),
+        tmpProjPath('node_modules/@nx/next')
       );
     }, 120000);
   });
@@ -163,41 +160,41 @@ describe('Nx Commands', () => {
         `apps/${myapp}/src/main.ts`,
         `
        const x = 1111;
-  `,
+  `
       );
 
       updateFile(
         `apps/${myapp}/src/app/app.element.spec.ts`,
         `
        const y = 1111;
-  `,
+  `
       );
 
       updateFile(
         `apps/${myapp}/src/app/app.element.ts`,
         `
        const z = 1111;
-  `,
+  `
       );
 
       updateFile(
         `libs/${mylib}/index.ts`,
         `
        const x = 1111;
-  `,
+  `
       );
       updateFile(
         `libs/${mylib}/src/${mylib}.spec.ts`,
         `
        const y = 1111;
-  `,
+  `
       );
 
       updateFile(
         `README.md`,
         `
        my new readme;
-  `,
+  `
       );
     });
 
@@ -205,11 +202,11 @@ describe('Nx Commands', () => {
       if (isNotWindows()) {
         const stdout = runCLI(
           `format:check --files="libs/${mylib}/index.ts,package.json" --libs-and-apps`,
-          { silenceError: true },
+          { silenceError: true }
         );
         expect(stdout).toContain(path.normalize(`libs/${mylib}/index.ts`));
         expect(stdout).toContain(
-          path.normalize(`libs/${mylib}/src/${mylib}.spec.ts`),
+          path.normalize(`libs/${mylib}/src/${mylib}.spec.ts`)
         );
         expect(stdout).not.toContain(path.normalize(`README.md`)); // It will be contained only in case of exception, that we fallback to all
       }
@@ -222,14 +219,14 @@ describe('Nx Commands', () => {
         });
         expect(stdout).toContain(path.normalize(`apps/${myapp}/src/main.ts`));
         expect(stdout).toContain(
-          path.normalize(`apps/${myapp}/src/app/app.element.ts`),
+          path.normalize(`apps/${myapp}/src/app/app.element.ts`)
         );
         expect(stdout).toContain(
-          path.normalize(`apps/${myapp}/src/app/app.element.spec.ts`),
+          path.normalize(`apps/${myapp}/src/app/app.element.spec.ts`)
         );
         expect(stdout).not.toContain(path.normalize(`libs/${mylib}/index.ts`));
         expect(stdout).not.toContain(
-          path.normalize(`libs/${mylib}/src/${mylib}.spec.ts`),
+          path.normalize(`libs/${mylib}/src/${mylib}.spec.ts`)
         );
         expect(stdout).not.toContain(path.normalize(`README.md`));
       }
@@ -242,14 +239,14 @@ describe('Nx Commands', () => {
         });
         expect(stdout).toContain(path.normalize(`apps/${myapp}/src/main.ts`));
         expect(stdout).toContain(
-          path.normalize(`apps/${myapp}/src/app/app.element.spec.ts`),
+          path.normalize(`apps/${myapp}/src/app/app.element.spec.ts`)
         );
         expect(stdout).toContain(
-          path.normalize(`apps/${myapp}/src/app/app.element.ts`),
+          path.normalize(`apps/${myapp}/src/app/app.element.ts`)
         );
         expect(stdout).toContain(path.normalize(`libs/${mylib}/index.ts`));
         expect(stdout).toContain(
-          path.normalize(`libs/${mylib}/src/${mylib}.spec.ts`),
+          path.normalize(`libs/${mylib}/src/${mylib}.spec.ts`)
         );
         expect(stdout).not.toContain(path.normalize(`README.md`));
       }
@@ -260,14 +257,14 @@ describe('Nx Commands', () => {
         const stdout = runCLI(`format:check --all`, { silenceError: true });
         expect(stdout).toContain(path.normalize(`apps/${myapp}/src/main.ts`));
         expect(stdout).toContain(
-          path.normalize(`apps/${myapp}/src/app/app.element.spec.ts`),
+          path.normalize(`apps/${myapp}/src/app/app.element.spec.ts`)
         );
         expect(stdout).toContain(
-          path.normalize(`apps/${myapp}/src/app/app.element.ts`),
+          path.normalize(`apps/${myapp}/src/app/app.element.ts`)
         );
         expect(stdout).toContain(path.normalize(`libs/${mylib}/index.ts`));
         expect(stdout).toContain(
-          path.normalize(`libs/${mylib}/src/${mylib}.spec.ts`),
+          path.normalize(`libs/${mylib}/src/${mylib}.spec.ts`)
         );
         expect(stdout).toContain(path.normalize(`README.md`));
       }
@@ -279,10 +276,10 @@ describe('Nx Commands', () => {
           `format:check --projects=${myapp},${mylib} --all`,
           {
             silenceError: true,
-          },
+          }
         );
         expect(stderr).toContain(
-          'Arguments all and projects are mutually exclusive',
+          'Arguments all and projects are mutually exclusive'
         );
       }
     }, 90000);
@@ -290,20 +287,20 @@ describe('Nx Commands', () => {
     it('should reformat the code', async () => {
       if (isNotWindows()) {
         runCLI(
-          `format:write --files="apps/${myapp}/src/app/app.element.spec.ts,apps/${myapp}/src/app/app.element.ts"`,
+          `format:write --files="apps/${myapp}/src/app/app.element.spec.ts,apps/${myapp}/src/app/app.element.ts"`
         );
         const stdout = runCLI('format:check --all', { silenceError: true });
         expect(stdout).toContain(path.normalize(`apps/${myapp}/src/main.ts`));
         expect(stdout).not.toContain(
-          path.normalize(`apps/${myapp}/src/app/app.element.spec.ts`),
+          path.normalize(`apps/${myapp}/src/app/app.element.spec.ts`)
         );
         expect(stdout).not.toContain(
-          path.normalize(`apps/${myapp}/src/app/app.element.ts`),
+          path.normalize(`apps/${myapp}/src/app/app.element.ts`)
         );
 
         runCLI('format:write --all');
         expect(runCLI('format:check --all')).not.toContain(
-          path.normalize(`apps/${myapp}/src/main.ts`),
+          path.normalize(`apps/${myapp}/src/main.ts`)
         );
       }
     }, 300000);
@@ -321,7 +318,7 @@ describe('migrate', () => {
         version: '1.0.0',
         name: 'migrate-parent-package',
         'nx-migrations': './migrations.json',
-      }),
+      })
     );
 
     updateFile(
@@ -341,7 +338,7 @@ describe('migrate', () => {
             implementation: './run20',
           },
         },
-      }),
+      })
     );
 
     updateFile(
@@ -353,7 +350,7 @@ describe('migrate', () => {
             host.create('file-11', 'content11')
           }
         }
-        `,
+        `
     );
 
     updateFile(
@@ -362,7 +359,7 @@ describe('migrate', () => {
         exports.default = function (host) {
            host.write('file-20', 'content20')
         }
-        `,
+        `
     );
 
     updateFile(
@@ -370,7 +367,7 @@ describe('migrate', () => {
       JSON.stringify({
         name: 'migrate-child-package',
         version: '1.0.0',
-      }),
+      })
     );
 
     updateFile(
@@ -414,7 +411,7 @@ describe('migrate', () => {
             `;
 
         return `${before}${newFetch}${after}`;
-      },
+      }
     );
   });
 
@@ -435,27 +432,27 @@ describe('migrate', () => {
           NX_MIGRATE_SKIP_INSTALL: 'true',
           NX_MIGRATE_USE_LOCAL: 'true',
         },
-      },
+      }
     );
 
     // updates package.json
     const packageJson = readJson(`package.json`);
     expect(packageJson.dependencies['migrate-child-package']).toEqual('9.0.0');
     expect(
-      packageJson.dependencies['migrate-child-package-2'],
+      packageJson.dependencies['migrate-child-package-2']
     ).not.toBeDefined();
     expect(
-      packageJson.dependencies['migrate-child-package-3'],
+      packageJson.dependencies['migrate-child-package-3']
     ).not.toBeDefined();
     expect(packageJson.dependencies['migrate-child-package-4']).toEqual(
-      '9.0.0',
+      '9.0.0'
     );
     expect(packageJson.devDependencies['migrate-child-package-5']).toEqual(
-      '9.0.0',
+      '9.0.0'
     );
     const nxJson: NxJsonConfiguration = readJson(`nx.json`);
     expect(nxJson.installation.plugins['migrate-child-package']).toEqual(
-      '9.0.0',
+      '9.0.0'
     );
     // should keep new line on package
     const packageContent = readFile('package.json');
@@ -498,7 +495,7 @@ describe('migrate', () => {
           NX_MIGRATE_SKIP_INSTALL: 'true',
           NX_MIGRATE_USE_LOCAL: 'true',
         },
-      },
+      }
     );
 
     // runs migrations with createCommits enabled
@@ -525,7 +522,7 @@ describe('migrate', () => {
             NX_MIGRATE_SKIP_INSTALL: 'true',
             NX_MIGRATE_USE_LOCAL: 'true',
           },
-        },
+        }
       );
 
       // runs migrations with createCommits enabled and custom commit-prefix (NOTE: the extra quotes are needed here to avoid shell escaping issues)
@@ -536,7 +533,7 @@ describe('migrate', () => {
             NX_MIGRATE_SKIP_INSTALL: 'true',
             NX_MIGRATE_USE_LOCAL: 'true',
           },
-        },
+        }
       );
 
       const recentCommits = runCommand('git --no-pager log --oneline -n 10');
@@ -554,7 +551,7 @@ describe('migrate', () => {
           NX_MIGRATE_SKIP_INSTALL: 'true',
           NX_MIGRATE_USE_LOCAL: 'true',
         },
-      },
+      }
     );
 
     // Invalid: runs migrations with a custom commit-prefix but without enabling --create-commits
@@ -566,11 +563,11 @@ describe('migrate', () => {
           NX_MIGRATE_USE_LOCAL: 'true',
         },
         silenceError: true,
-      },
+      }
     );
 
     expect(output).toContain(
-      `Error: Providing a custom commit prefix requires --create-commits to be enabled`,
+      `Error: Providing a custom commit prefix requires --create-commits to be enabled`
     );
   });
 
@@ -587,7 +584,7 @@ describe('migrate', () => {
     });
 
     expect(output).toContain(
-      `File 'migrations.json' doesn't exist, can't run migrations. Use flag --if-exists to run migrations only if the file exists`,
+      `File 'migrations.json' doesn't exist, can't run migrations. Use flag --if-exists to run migrations only if the file exists`
     );
   });
 
@@ -625,8 +622,8 @@ describe('global installation', () => {
           },
         },
         null,
-        2,
-      ),
+        2
+      )
     );
 
     runCommand(getPackageManagerCommand().install, {
@@ -701,12 +698,12 @@ describe('global installation', () => {
         output = runCommand(`nx report`);
       }).not.toThrow();
       expect(output).toEqual(
-        expect.stringMatching(new RegExp(`nx.*:.*${localVersion}`)),
+        expect.stringMatching(new RegExp(`nx.*:.*${localVersion}`))
       );
       expect(output).toEqual(
         expect.stringMatching(
-          new RegExp(`nx \\(global\\).*:.*${getPublishedVersion()}`),
-        ),
+          new RegExp(`nx \\(global\\).*:.*${getPublishedVersion()}`)
+        )
       );
       updateFile('node_modules/nx/package.json', packageJsonContents);
     });

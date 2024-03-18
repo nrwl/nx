@@ -31,10 +31,10 @@ describe('update-17-0-0-rename-to-eslint', () => {
     await replacePackage(tree);
 
     expect(
-      readJson(tree, 'package.json').dependencies['@nx/linter'],
+      readJson(tree, 'package.json').dependencies['@nx/linter']
     ).not.toBeDefined();
     expect(
-      readJson(tree, 'package.json').devDependencies['@nx/linter'],
+      readJson(tree, 'package.json').devDependencies['@nx/linter']
     ).not.toBeDefined();
   });
 

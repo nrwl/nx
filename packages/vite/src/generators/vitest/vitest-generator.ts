@@ -30,19 +30,19 @@ import { ensureDependencies } from '../../utils/ensure-dependencies';
 export function vitestGenerator(
   tree: Tree,
   schema: VitestGeneratorSchema,
-  hasPlugin = false,
+  hasPlugin = false
 ) {
   return vitestGeneratorInternal(
     tree,
     { addPlugin: false, ...schema },
-    hasPlugin,
+    hasPlugin
   );
 }
 
 export async function vitestGeneratorInternal(
   tree: Tree,
   schema: VitestGeneratorSchema,
-  hasPlugin = false,
+  hasPlugin = false
 ) {
   const tasks: GeneratorCallback[] = [];
 
@@ -62,7 +62,7 @@ export async function vitestGeneratorInternal(
     (p) =>
       (typeof p === 'string'
         ? p === '@nx/vite/plugin'
-        : p.plugin === '@nx/vite/plugin') || hasPlugin,
+        : p.plugin === '@nx/vite/plugin') || hasPlugin
   );
   if (!hasPluginCheck) {
     const testTarget = schema.testTarget ?? 'test';
@@ -87,7 +87,7 @@ export async function vitestGeneratorInternal(
           plugins: ['react()'],
           coverageProvider: schema.coverageProvider,
         },
-        true,
+        true
       );
     } else {
       createOrEditViteConfig(
@@ -97,7 +97,7 @@ export async function vitestGeneratorInternal(
           includeVitest: true,
           includeLib: projectType === 'library',
         },
-        true,
+        true
       );
     }
   }
@@ -106,13 +106,13 @@ export async function vitestGeneratorInternal(
   updateTsConfig(tree, schema, root);
 
   const coverageProviderDependency = getCoverageProviderDependency(
-    schema.coverageProvider,
+    schema.coverageProvider
   );
 
   const installCoverageProviderTask = addDependenciesToPackageJson(
     tree,
     {},
-    coverageProviderDependency,
+    coverageProviderDependency
   );
   tasks.push(installCoverageProviderTask);
 
@@ -128,7 +128,7 @@ export async function vitestGeneratorInternal(
   ) {
     tree.write(
       'vitest.workspace.ts',
-      `export default ['**/*/vite.config.ts', '**/*/vitest.config.ts'];`,
+      `export default ['**/*/vite.config.ts', '**/*/vitest.config.ts'];`
     );
   }
 
@@ -142,7 +142,7 @@ export async function vitestGeneratorInternal(
 function updateTsConfig(
   tree: Tree,
   options: VitestGeneratorSchema,
-  projectRoot: string,
+  projectRoot: string
 ) {
   if (tree.exists(joinPathFragments(projectRoot, 'tsconfig.spec.json'))) {
     updateJson(
@@ -158,7 +158,7 @@ function updateTsConfig(
           }
         }
         return json;
-      },
+      }
     );
 
     updateJson(
@@ -174,7 +174,7 @@ function updateTsConfig(
           });
         }
         return json;
-      },
+      }
     );
   } else {
     updateJson(
@@ -190,7 +190,7 @@ function updateTsConfig(
           }
         }
         return json;
-      },
+      }
     );
   }
 
@@ -204,7 +204,7 @@ function updateTsConfig(
         (json) => {
           (json.compilerOptions.types ??= []).push('vitest/importMeta');
           return json;
-        },
+        }
       );
     } else if (tree.exists(tsconfigAppPath)) {
       updateJson(
@@ -213,7 +213,7 @@ function updateTsConfig(
         (json) => {
           (json.compilerOptions.types ??= []).push('vitest/importMeta');
           return json;
-        },
+        }
       );
     }
 
@@ -224,7 +224,7 @@ function updateTsConfig(
 function createFiles(
   tree: Tree,
   options: VitestGeneratorSchema,
-  projectRoot: string,
+  projectRoot: string
 ) {
   generateFiles(tree, join(__dirname, 'files'), projectRoot, {
     tmpl: '',
@@ -235,7 +235,7 @@ function createFiles(
 }
 
 function getCoverageProviderDependency(
-  coverageProvider: VitestGeneratorSchema['coverageProvider'],
+  coverageProvider: VitestGeneratorSchema['coverageProvider']
 ) {
   switch (coverageProvider) {
     case 'v8':

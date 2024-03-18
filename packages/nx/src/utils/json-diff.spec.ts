@@ -4,7 +4,7 @@ describe('jsonDiff', () => {
   it('should return deep diffs of two JSON objects (including parents of children changes)', () => {
     const result = jsonDiff(
       { x: 1, a: { b: { c: 1 } } },
-      { y: 2, a: { b: { c: 2, d: 2 } } },
+      { y: 2, a: { b: { c: 2, d: 2 } } }
     );
 
     expect(result).toEqual(
@@ -59,7 +59,7 @@ describe('jsonDiff', () => {
           path: ['a', 'b', 'd'],
           value: { lhs: undefined, rhs: 2 },
         },
-      ]),
+      ])
     );
   });
 
@@ -71,7 +71,7 @@ describe('jsonDiff', () => {
 
       {
         a: { b: 1 },
-      },
+      }
     );
     expect(result).toContainEqual({
       type: JsonDiffType.Modified,
@@ -99,7 +99,7 @@ describe('jsonDiff', () => {
 
       {
         a: {},
-      },
+      }
     );
     expect(result2).toContainEqual({
       type: JsonDiffType.Added,
@@ -115,7 +115,7 @@ describe('jsonDiff', () => {
       },
       {
         rules: ['rule1'],
-      },
+      }
     );
 
     expect(result).toEqual(
@@ -136,7 +136,7 @@ describe('jsonDiff', () => {
             rhs: 'rule1',
           },
         },
-      ]),
+      ])
     );
   });
 
@@ -147,7 +147,7 @@ describe('jsonDiff', () => {
       },
       {
         rules: ['rule1', 'rule2'],
-      },
+      }
     );
 
     expect(result).toEqual(
@@ -168,7 +168,7 @@ describe('jsonDiff', () => {
             rhs: 'rule2',
           },
         },
-      ]),
+      ])
     );
   });
 
@@ -185,7 +185,7 @@ describe('jsonDiff', () => {
           'happy-nrwl': '0.0.2',
           'awesome-nrwl': '0.0.1',
         },
-      },
+      }
     );
 
     expect(result).toContainEqual({

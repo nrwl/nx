@@ -47,7 +47,7 @@ export default async function (tree: Tree) {
       }
 
       updateProjectConfiguration(tree, projectName, projectConfiguration);
-    },
+    }
   );
 
   forEachExecutorOptions(
@@ -67,7 +67,7 @@ export default async function (tree: Tree) {
 
         const jsonParseNodes = tsquery.query(
           jestConfig,
-          ':matches(CallExpression:has(Identifier[name="JSON"]):has(Identifier[name="parse"]))',
+          ':matches(CallExpression:has(Identifier[name="JSON"]):has(Identifier[name="parse"]))'
         );
 
         if (jsonParseNodes.length) {
@@ -86,7 +86,7 @@ export default async function (tree: Tree) {
                   .replace('.lib.swcrc', '.swcrc');
               }
               return '';
-            },
+            }
           );
 
           updatedJestConfig = tsquery.replace(
@@ -103,14 +103,14 @@ if (swcJestConfig.swcrc === undefined) {
 
 ${node.getFullText()}
 `;
-            },
+            }
           );
 
           tree.write(executorOptions.jestConfig, updatedJestConfig);
           changesMade = true;
         }
       }
-    },
+    }
   );
 
   if (changesMade) {

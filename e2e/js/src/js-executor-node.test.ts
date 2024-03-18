@@ -21,7 +21,7 @@ describe('js:node executor', () => {
     const esbuildLib = uniq('esbuildlib');
 
     runCLI(
-      `generate @nx/js:lib ${esbuildLib} --bundler=esbuild --no-interactive`,
+      `generate @nx/js:lib ${esbuildLib} --bundler=esbuild --no-interactive`
     );
 
     updateFile(`libs/${esbuildLib}/src/index.ts`, () => {
@@ -54,7 +54,7 @@ describe('js:node executor', () => {
     const rollupLib = uniq('rolluplib');
 
     runCLI(
-      `generate @nx/js:lib ${rollupLib} --bundler=rollup --no-interactive`,
+      `generate @nx/js:lib ${rollupLib} --bundler=rollup --no-interactive`
     );
 
     updateFile(`libs/${rollupLib}/src/index.ts`, () => {
@@ -134,7 +134,7 @@ describe('js:node executor', () => {
     const webpackProject = uniq('webpackproject');
 
     runCLI(
-      `generate @nx/node:application ${webpackProject} --bundler=webpack --no-interactive`,
+      `generate @nx/node:application ${webpackProject} --bundler=webpack --no-interactive`
     );
 
     updateFile(`apps/${webpackProject}/src/main.ts`, () => {

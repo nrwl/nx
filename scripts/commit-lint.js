@@ -14,7 +14,7 @@ const gitRemotes = childProcess
   .trim()
   .split('\n');
 const upstreamRemote = gitRemotes.find((remote) =>
-  remote.includes('nrwl/nx.git'),
+  remote.includes('nrwl/nx.git')
 );
 if (upstreamRemote) {
   const upstreamRemoteIdentifier = upstreamRemote.split('\t')[0].trim();
@@ -29,7 +29,7 @@ if (upstreamRemote) {
     gitLogCmd + ` ${currentBranch} ^${upstreamRemoteIdentifier}/master`;
 } else {
   console.error(
-    'No upstream remote found for nrwl/nx.git. Skipping comparison against upstream master.',
+    'No upstream remote found for nrwl/nx.git. Skipping comparison against upstream master.'
   );
 }
 
@@ -58,7 +58,7 @@ if (exitCode === 0) {
       '-------------------------------------------------------------------\n' +
       gitMessage +
       '\n-------------------------------------------------------------------' +
-      '\n\n 👉️ Does not follow the commit message convention specified in the CONTRIBUTING.MD file.',
+      '\n\n 👉️ Does not follow the commit message convention specified in the CONTRIBUTING.MD file.'
   );
   console.log('\ntype(scope): subject \n BLANK LINE \n body');
   console.log('\n');
@@ -67,7 +67,7 @@ if (exitCode === 0) {
   console.log(
     '\nEXAMPLE: \n' +
       'feat(nx): add an option to generate lazy-loadable modules\n' +
-      'fix(core)!: breaking change should have exclamation mark\n',
+      'fix(core)!: breaking change should have exclamation mark\n'
   );
 }
 process.exit(exitCode);

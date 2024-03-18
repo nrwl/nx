@@ -8,7 +8,7 @@ export const logTar = (tarball, opts = {}) => {
   const { unicode = true } = opts;
   console.log('');
   console.log(
-    `${unicode ? '📦 ' : 'package:'} ${tarball.name}@${tarball.version}`,
+    `${unicode ? '📦 ' : 'package:'} ${tarball.name}@${tarball.version}`
   );
   console.log(chalk.magenta('=== Tarball Contents ==='));
   if (tarball.files.length) {
@@ -25,7 +25,7 @@ export const logTar = (tarball, opts = {}) => {
       {
         include: ['size', 'path'],
         showHeaders: false,
-      },
+      }
     );
     columnData.split('\n').forEach((line) => {
       console.log(line);
@@ -69,8 +69,8 @@ export const logTar = (tarball, opts = {}) => {
       {
         include: ['name', 'value'],
         showHeaders: false,
-      },
-    ),
+      }
+    )
   );
   console.log('', '');
 };

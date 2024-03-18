@@ -49,13 +49,13 @@ export function stringifyTags(tags: string[]): string {
 
 export function hasNoneOfTheseTags(
   proj: ProjectGraphProjectNode,
-  tags: string[],
+  tags: string[]
 ): boolean {
   return tags.filter((tag) => hasTag(proj, tag)).length === 0;
 }
 
 export function isComboDepConstraint(
-  depConstraint: DepConstraint,
+  depConstraint: DepConstraint
 ): depConstraint is ComboSourceTagConstraint {
   return !!(depConstraint as ComboSourceTagConstraint).allSourceTags;
 }
@@ -69,21 +69,21 @@ export function isComboDepConstraint(
 export function findDependenciesWithTags(
   targetProject: ProjectGraphProjectNode,
   tags: string[],
-  graph: ProjectGraph,
+  graph: ProjectGraph
 ): ProjectGraphProjectNode[][] {
   // find all reachable projects that have one of the tags and
   // are reacheable from the targetProject (including self)
   const allReachableProjects = Object.keys(graph.nodes).filter(
     (projectName) =>
       pathExists(graph, targetProject.name, projectName) &&
-      tags.some((tag) => hasTag(graph.nodes[projectName], tag)),
+      tags.some((tag) => hasTag(graph.nodes[projectName], tag))
   );
 
   // return path from targetProject to reachable project
   return allReachableProjects.map((project) =>
     targetProject.name === project
       ? [targetProject]
-      : getPath(graph, targetProject.name, project),
+      : getPath(graph, targetProject.name, project)
   );
 }
 
@@ -116,7 +116,7 @@ function hasTag(proj: ProjectGraphProjectNode, tag: string): boolean {
 export function matchImportWithWildcard(
   // This may or may not contain wildcards ("*")
   allowableImport: string,
-  extractedImport: string,
+  extractedImport: string
 ): boolean {
   if (allowableImport.endsWith('/**')) {
     const prefix = allowableImport.substring(0, allowableImport.length - 2);
@@ -144,7 +144,7 @@ export function getTargetProjectBasedOnRelativeImport(
   projectPath: string,
   projectGraph: ProjectGraph,
   projectRootMappings: ProjectRootMappings,
-  sourceFilePath: string,
+  sourceFilePath: string
 ): ProjectGraphProjectNode | undefined {
   if (!isRelative(imp)) {
     return undefined;
@@ -152,7 +152,7 @@ export function getTargetProjectBasedOnRelativeImport(
   const sourceDir = path.join(projectPath, path.dirname(sourceFilePath));
 
   const targetFile = normalizePath(path.resolve(sourceDir, imp)).substring(
-    projectPath.length + 1,
+    projectPath.length + 1
   );
 
   return findProject(projectGraph, projectRootMappings, targetFile);
@@ -161,7 +161,7 @@ export function getTargetProjectBasedOnRelativeImport(
 export function findProject(
   projectGraph: ProjectGraph,
   projectRootMappings: ProjectRootMappings,
-  sourceFilePath: string,
+  sourceFilePath: string
 ) {
   return projectGraph.nodes[
     findProjectForPath(sourceFilePath, projectRootMappings)
@@ -170,7 +170,7 @@ export function findProject(
 
 export function isAbsoluteImportIntoAnotherProject(
   imp: string,
-  workspaceLayout = { libsDir: 'libs', appsDir: 'apps' },
+  workspaceLayout = { libsDir: 'libs', appsDir: 'apps' }
 ) {
   return (
     imp.startsWith(`${workspaceLayout.libsDir}/`) ||
@@ -184,7 +184,7 @@ export function findProjectUsingImport(
   projectGraph: ProjectGraph,
   targetProjectLocator: TargetProjectLocator,
   filePath: string,
-  imp: string,
+  imp: string
 ): ProjectGraphProjectNode | ProjectGraphExternalNode {
   const target = targetProjectLocator.findProjectWithImport(imp, filePath);
   return projectGraph.nodes[target] || projectGraph.externalNodes?.[target];
@@ -192,7 +192,7 @@ export function findProjectUsingImport(
 
 export function findConstraintsFor(
   depConstraints: DepConstraint[],
-  sourceProject: ProjectGraphProjectNode,
+  sourceProject: ProjectGraphProjectNode
 ) {
   return depConstraints.filter((f) => {
     if (isComboDepConstraint(f)) {
@@ -211,7 +211,7 @@ export function hasStaticImportOfDynamicResource(
     | TSESTree.ExportNamedDeclaration,
   graph: ProjectGraph,
   sourceProjectName: string,
-  targetProjectName: string,
+  targetProjectName: string
 ): boolean {
   if (
     node.type !== AST_NODE_TYPES.ImportDeclaration ||
@@ -226,7 +226,7 @@ function onlyLoadChildren(
   graph: ProjectGraph,
   sourceProjectName: string,
   targetProjectName: string,
-  visited: string[],
+  visited: string[]
 ) {
   if (visited.indexOf(sourceProjectName) > -1) {
     return false;
@@ -262,7 +262,7 @@ export function getSourceFilePath(sourceFileName: string, projectPath: string) {
 function isConstraintBanningProject(
   externalProject: ProjectGraphExternalNode,
   constraint: DepConstraint,
-  imp: string,
+  imp: string
 ): boolean {
   const { allowedExternalImports, bannedExternalImports } = constraint;
   const { packageName } = externalProject.data;
@@ -274,7 +274,7 @@ function isConstraintBanningProject(
   /* Check if import is banned... */
   if (
     bannedExternalImports?.some((importDefinition) =>
-      mapGlobToRegExp(importDefinition).test(imp),
+      mapGlobToRegExp(importDefinition).test(imp)
     )
   ) {
     return true;
@@ -284,7 +284,7 @@ function isConstraintBanningProject(
   return allowedExternalImports?.every(
     (importDefinition) =>
       !imp.startsWith(packageName) ||
-      !mapGlobToRegExp(importDefinition).test(imp),
+      !mapGlobToRegExp(importDefinition).test(imp)
   );
 }
 
@@ -292,7 +292,7 @@ export function hasBannedImport(
   source: ProjectGraphProjectNode,
   target: ProjectGraphExternalNode,
   depConstraints: DepConstraint[],
-  imp: string,
+  imp: string
 ): DepConstraint | undefined {
   // return those constraints that match source project
   depConstraints = depConstraints.filter((c) => {
@@ -306,7 +306,7 @@ export function hasBannedImport(
     return tags.every((t) => hasTag(source, t));
   });
   return depConstraints.find((constraint) =>
-    isConstraintBanningProject(target, constraint, imp),
+    isConstraintBanningProject(target, constraint, imp)
   );
 }
 
@@ -318,7 +318,7 @@ export function hasBannedImport(
  */
 export function findTransitiveExternalDependencies(
   graph: ProjectGraph,
-  source: ProjectGraphProjectNode,
+  source: ProjectGraphProjectNode
 ): ProjectGraphDependency[] {
   if (!graph.externalNodes) {
     return [];
@@ -359,7 +359,7 @@ export function hasBannedDependencies(
   externalDependencies: ProjectGraphDependency[],
   graph: ProjectGraph,
   depConstraint: DepConstraint,
-  imp: string,
+  imp: string
 ):
   | Array<[ProjectGraphExternalNode, ProjectGraphProjectNode, DepConstraint]>
   | undefined {
@@ -368,8 +368,8 @@ export function hasBannedDependencies(
       isConstraintBanningProject(
         graph.externalNodes[dependency.target],
         depConstraint,
-        imp,
-      ),
+        imp
+      )
     )
     .map((dep) => [
       graph.externalNodes[dep.target],
@@ -380,7 +380,7 @@ export function hasBannedDependencies(
 
 export function isDirectDependency(
   source: ProjectGraphProjectNode,
-  target: ProjectGraphExternalNode,
+  target: ProjectGraphExternalNode
 ): boolean {
   return (
     packageExistsInPackageJson(target.data.packageName, '.') ||
@@ -390,10 +390,10 @@ export function isDirectDependency(
 
 function packageExistsInPackageJson(
   packageName: string,
-  projectRoot: string,
+  projectRoot: string
 ): boolean {
   const content = readFileIfExisting(
-    join(workspaceRoot, projectRoot, 'package.json'),
+    join(workspaceRoot, projectRoot, 'package.json')
   );
   if (content) {
     const { dependencies, devDependencies, peerDependencies } =
@@ -430,14 +430,14 @@ function mapGlobToRegExp(importDefinition: string): RegExp {
  */
 export function hasBuildExecutor(
   projectGraph: ProjectGraphProjectNode,
-  buildTargets = ['build'],
+  buildTargets = ['build']
 ): boolean {
   return (
     projectGraph.data.targets &&
     buildTargets.some(
       (target) =>
         projectGraph.data.targets[target] &&
-        projectGraph.data.targets[target].executor !== '',
+        projectGraph.data.targets[target].executor !== ''
     )
   );
 }
@@ -464,11 +464,11 @@ export function isTerminalRun(): boolean {
  * @returns
  */
 export function groupImports(
-  importsToRemap: { member: string; importPath: string }[],
+  importsToRemap: { member: string; importPath: string }[]
 ): string {
   const importsToRemapGrouped = importsToRemap.reduce((acc, curr) => {
     const existing = acc.find(
-      (i) => i.importPath === curr.importPath && i.member !== curr.member,
+      (i) => i.importPath === curr.importPath && i.member !== curr.member
     );
     if (existing) {
       if (existing.member) {
@@ -494,12 +494,12 @@ export function groupImports(
 export function belongsToDifferentNgEntryPoint(
   importExpr: string,
   filePath: string,
-  projectRoot: string,
+  projectRoot: string
 ): boolean {
   const resolvedImportFile = resolveModuleByImport(
     importExpr,
     filePath, // not strictly necessary, but speeds up resolution
-    join(workspaceRoot, getRootTsConfigFileName()),
+    join(workspaceRoot, getRootTsConfigFileName())
   );
 
   if (!resolvedImportFile) {
@@ -508,7 +508,7 @@ export function belongsToDifferentNgEntryPoint(
 
   const importEntryPoint = getAngularEntryPoint(
     resolvedImportFile,
-    projectRoot,
+    projectRoot
   );
   const srcEntryPoint = getAngularEntryPoint(filePath, projectRoot);
 
@@ -522,7 +522,7 @@ function getAngularEntryPoint(file: string, projectRoot: string): string {
     // we need to find closest existing ng-package.json
     // in order to determine if the file matches the secondary entry point
     const ngPackageContent = readFileIfExisting(
-      joinPathFragments(workspaceRoot, parent, 'ng-package.json'),
+      joinPathFragments(workspaceRoot, parent, 'ng-package.json')
     );
     if (ngPackageContent) {
       // https://github.com/ng-packagr/ng-packagr/blob/23c718d04eea85e015b4c261310b7bd0c39e5311/src/ng-package.schema.json#L54
@@ -543,15 +543,15 @@ export function appIsMFERemote(project: ProjectGraphProjectNode): boolean {
       joinPathFragments(
         workspaceRoot,
         project.data.root,
-        'module-federation.config.js',
-      ),
+        'module-federation.config.js'
+      )
     ) ||
     readFileIfExisting(
       joinPathFragments(
         workspaceRoot,
         project.data.root,
-        'module-federation.config.ts',
-      ),
+        'module-federation.config.ts'
+      )
     );
 
   if (mfeConfig) {

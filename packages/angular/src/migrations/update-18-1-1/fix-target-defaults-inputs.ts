@@ -61,10 +61,10 @@ function isWebpackBrowserUsed(tree: Tree) {
       if (
         target.executor === '@nx/angular:webpack-browser' &&
         (tree.exists(
-          joinPathFragments(project.root, 'module-federation.config.ts'),
+          joinPathFragments(project.root, 'module-federation.config.ts')
         ) ||
           tree.exists(
-            joinPathFragments(project.root, 'module-federation.config.js'),
+            joinPathFragments(project.root, 'module-federation.config.js')
           ))
       ) {
         return true;

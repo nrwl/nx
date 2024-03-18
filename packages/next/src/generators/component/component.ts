@@ -45,8 +45,8 @@ function maybeGetDerivedDirectory(host: Tree, options: Schema): string {
   return options.directory
     ? options.directory
     : projectType === 'application'
-      ? 'components'
-      : undefined;
+    ? 'components'
+    : undefined;
 }
 
 export async function componentGenerator(host: Tree, schema: Schema) {

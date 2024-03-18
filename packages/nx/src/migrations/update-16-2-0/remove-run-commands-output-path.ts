@@ -39,7 +39,7 @@ function updateTargetBlock(target: TargetConfiguration): boolean {
     outputs.delete('{options.outputPath}');
     const newOutputs = Array.isArray(target.options.outputPath)
       ? target.options.outputPath.map((p) =>
-          joinPathFragments('{workspaceRoot}', p),
+          joinPathFragments('{workspaceRoot}', p)
         )
       : [joinPathFragments('{workspaceRoot}', target.options.outputPath)];
     for (const outputPath of newOutputs) {

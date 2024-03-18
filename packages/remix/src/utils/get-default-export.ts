@@ -12,16 +12,16 @@ export function getDefaultExport(tree: Tree, path: string) {
   const sourceFile = createSourceFile(path, contents, ScriptTarget.ESNext);
 
   const functionDeclarations = sourceFile.statements.filter(
-    isFunctionDeclaration,
+    isFunctionDeclaration
   );
 
   return functionDeclarations.find((functionDeclaration) => {
     const isDefault = functionDeclaration.modifiers.find(
-      (mod) => mod.kind === SyntaxKind.DefaultKeyword,
+      (mod) => mod.kind === SyntaxKind.DefaultKeyword
     );
 
     const isExport = functionDeclaration.modifiers.find(
-      (mod) => mod.kind === SyntaxKind.ExportKeyword,
+      (mod) => mod.kind === SyntaxKind.ExportKeyword
     );
 
     return isDefault && isExport;

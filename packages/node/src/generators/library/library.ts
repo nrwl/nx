@@ -51,7 +51,7 @@ export async function libraryGeneratorInternal(tree: Tree, schema: Schema) {
 
   if (options.publishable === true && !schema.importPath) {
     throw new Error(
-      `For publishable libs you have to provide a proper "--importPath" which needs to be a valid npm package name (e.g. my-awesome-lib or @myorg/my-lib)`,
+      `For publishable libs you have to provide a proper "--importPath" which needs to be a valid npm package name (e.g. my-awesome-lib or @myorg/my-lib)`
     );
   }
 
@@ -85,7 +85,7 @@ export default libraryGenerator;
 
 async function normalizeOptions(
   tree: Tree,
-  options: Schema,
+  options: Schema
 ): Promise<NormalizedSchema> {
   const {
     projectName,
@@ -154,7 +154,7 @@ function createFiles(tree: Tree, options: NormalizedSchema) {
 
   if (options.unitTestRunner === 'none') {
     tree.delete(
-      join(options.projectRoot, `./src/lib/${options.fileName}.spec.ts`),
+      join(options.projectRoot, `./src/lib/${options.fileName}.spec.ts`)
     );
   }
   if (!options.publishable && !options.buildable) {
@@ -181,7 +181,7 @@ function updateProject(tree: Tree, options: NormalizedSchema) {
     options: {
       outputPath: joinPathFragments(
         'dist',
-        rootProject ? options.projectName : options.projectRoot,
+        rootProject ? options.projectName : options.projectRoot
       ),
       tsConfig: `${options.projectRoot}/tsconfig.lib.json`,
       packageJson: `${options.projectRoot}/package.json`,
@@ -206,6 +206,6 @@ function ensureDependencies(tree: Tree): GeneratorCallback {
   return addDependenciesToPackageJson(
     tree,
     { tslib: tslibVersion },
-    { '@types/node': typesNodeVersion },
+    { '@types/node': typesNodeVersion }
   );
 }

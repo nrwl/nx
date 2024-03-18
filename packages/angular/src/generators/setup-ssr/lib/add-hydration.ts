@@ -32,12 +32,12 @@ export function addHydration(tree: Tree, options: Schema) {
     pathToClientConfigFile,
     sourceText,
     tsModule.ScriptTarget.Latest,
-    true,
+    true
   );
 
   const provideClientHydrationCallExpression = tsquery<CallExpression>(
     sourceFile,
-    'ObjectLiteralExpression PropertyAssignment:has(Identifier[name=providers]) ArrayLiteralExpression CallExpression:has(Identifier[name=provideClientHydration])',
+    'ObjectLiteralExpression PropertyAssignment:has(Identifier[name=providers]) ArrayLiteralExpression CallExpression:has(Identifier[name=provideClientHydration])'
   )[0];
   if (provideClientHydrationCallExpression) {
     return;
@@ -48,7 +48,7 @@ export function addHydration(tree: Tree, options: Schema) {
     symbolName: string,
     packageName: string,
     filePath: string,
-    isDefault = false,
+    isDefault = false
   ): SourceFile => {
     return insertImport(
       tree,
@@ -56,7 +56,7 @@ export function addHydration(tree: Tree, options: Schema) {
       filePath,
       symbolName,
       packageName,
-      isDefault,
+      isDefault
     );
   };
 
@@ -64,21 +64,21 @@ export function addHydration(tree: Tree, options: Schema) {
     sourceFile,
     'provideClientHydration',
     '@angular/platform-browser',
-    pathToClientConfigFile,
+    pathToClientConfigFile
   );
 
   if (options.standalone) {
     addProviderToAppConfig(
       tree,
       pathToClientConfigFile,
-      'provideClientHydration()',
+      'provideClientHydration()'
     );
   } else {
     addProviderToModule(
       tree,
       sourceFile,
       pathToClientConfigFile,
-      'provideClientHydration()',
+      'provideClientHydration()'
     );
   }
 }

@@ -5,7 +5,7 @@ import { lt } from 'semver';
 
 export function generateFilesFromTemplates(
   tree: Tree,
-  options: NormalizedNgRxFeatureStoreGeneratorOptions,
+  options: NormalizedNgRxFeatureStoreGeneratorOptions
 ) {
   const projectNames = names(options.name);
   const fileName = options.subdirectory
@@ -23,7 +23,7 @@ export function generateFilesFromTemplates(
       relativeFileName: projectNames.fileName,
       importFromOperators: lt(options.rxjsVersion, '7.2.0'),
       tmpl: '',
-    },
+    }
   );
 
   if (!options.facade) {
@@ -33,8 +33,8 @@ export function generateFilesFromTemplates(
         options.directory,
         `${options.subdirectory ? `${options.subdirectory}/` : ''}${
           projectNames.fileName
-        }.facade.ts`,
-      ),
+        }.facade.ts`
+      )
     );
     tree.delete(
       joinPathFragments(
@@ -42,8 +42,8 @@ export function generateFilesFromTemplates(
         options.directory,
         `${options.subdirectory ? `${options.subdirectory}/` : ''}${
           projectNames.fileName
-        }.facade.spec.ts`,
-      ),
+        }.facade.spec.ts`
+      )
     );
   }
 }

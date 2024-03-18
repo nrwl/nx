@@ -89,7 +89,7 @@ export class MyElement extends LitElement {
 Create `index.html`:
 
 ```html {% fileName="apps/my-lit-app/index.html" %}
-<!doctype html>
+<!DOCTYPE html>
 <html>
   <head>
     <script type="module" src="main.js"></script>

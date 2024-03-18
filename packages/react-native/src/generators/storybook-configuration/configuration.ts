@@ -4,7 +4,7 @@ import { StorybookConfigureSchema } from './schema';
 
 export function storybookConfigurationGenerator(
   tree: Tree,
-  schema: StorybookConfigureSchema,
+  schema: StorybookConfigureSchema
 ) {
   return storybookConfigurationGeneratorInternal(tree, {
     addPlugin: false,
@@ -18,10 +18,10 @@ export function storybookConfigurationGenerator(
  */
 export async function storybookConfigurationGeneratorInternal(
   host: Tree,
-  schema: StorybookConfigureSchema,
+  schema: StorybookConfigureSchema
 ) {
   logger.warn(
-    `Please run 'nx run @nx/react:storybook-configuration ${schema.project}' instead.`,
+    `Please run 'nx run @nx/react:storybook-configuration ${schema.project}' instead.`
   );
   const nxJson = readNxJson(host);
   const addPluginDefault =

@@ -15,17 +15,17 @@ readModulePackageJson =
 
 export function collectWorkspaceLibrarySecondaryEntryPoints(
   library: WorkspaceLibrary,
-  tsconfigPathAliases: Record<string, string[]>,
+  tsconfigPathAliases: Record<string, string[]>
 ): WorkspaceLibrarySecondaryEntryPoint[] {
   const libraryRoot = join(workspaceRoot, library.root);
   const needsSecondaryEntryPointsCollected = existsSync(
-    join(libraryRoot, 'ng-package.json'),
+    join(libraryRoot, 'ng-package.json')
   );
 
   const secondaryEntryPoints: WorkspaceLibrarySecondaryEntryPoint[] = [];
   if (needsSecondaryEntryPointsCollected) {
     const tsConfigAliasesForLibWithSecondaryEntryPoints = Object.entries(
-      tsconfigPathAliases,
+      tsconfigPathAliases
     ).reduce((acc, [tsKey, tsPaths]) => {
       if (!tsKey.startsWith(library.importKey)) {
         return { ...acc };
@@ -39,10 +39,10 @@ export function collectWorkspaceLibrarySecondaryEntryPoints(
     }, {});
 
     for (const [alias] of Object.entries(
-      tsConfigAliasesForLibWithSecondaryEntryPoints,
+      tsConfigAliasesForLibWithSecondaryEntryPoints
     )) {
       const pathToLib = dirname(
-        join(workspaceRoot, tsconfigPathAliases[alias][0]),
+        join(workspaceRoot, tsconfigPathAliases[alias][0])
       );
       let searchDir = pathToLib;
       while (searchDir !== libraryRoot) {
@@ -71,7 +71,7 @@ export function recursivelyCollectSecondaryEntryPointsFromDirectory(
   pkgRoot: string,
   mainEntryPointExports: any | undefined,
   directories: string[],
-  collectedPackages: { name: string; version: string }[],
+  collectedPackages: { name: string; version: string }[]
 ): void {
   for (const directory of directories) {
     const packageJsonPath = join(directory, 'package.json');
@@ -108,7 +108,7 @@ export function recursivelyCollectSecondaryEntryPointsFromDirectory(
       pkgRoot,
       mainEntryPointExports,
       subDirs,
-      collectedPackages,
+      collectedPackages
     );
   }
 }
@@ -116,7 +116,7 @@ export function recursivelyCollectSecondaryEntryPointsFromDirectory(
 export function collectPackageSecondaryEntryPoints(
   pkgName: string,
   pkgVersion: string,
-  collectedPackages: { name: string; version: string }[],
+  collectedPackages: { name: string; version: string }[]
 ): void {
   let pathToPackage: string;
   let packageJsonPath: string;
@@ -145,6 +145,6 @@ export function collectPackageSecondaryEntryPoints(
     pathToPackage,
     exports,
     subDirs,
-    collectedPackages,
+    collectedPackages
   );
 }

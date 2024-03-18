@@ -25,19 +25,19 @@ if (
   !argv.targetNxMigrationVersion
 ) {
   throw new Error(
-    'You need to provide --angularVersion=(latest|next) and --targetNxVersion=versionString and --targetNxMigrationVersion=versionString',
+    'You need to provide --angularVersion=(latest|next) and --targetNxVersion=versionString and --targetNxMigrationVersion=versionString'
   );
 }
 
 async function run() {
   const packageVersionMap = await fetchVersionsFromRegistry(
-    argv.angularVersion,
+    argv.angularVersion
   );
   await updatePackageJsonForAngular(packageVersionMap);
   await buildMigrations(
     packageVersionMap,
     argv.targetNxVersion,
-    argv.targetNxMigrationVersion,
+    argv.targetNxMigrationVersion
   );
   updateVersionUtils(packageVersionMap);
 

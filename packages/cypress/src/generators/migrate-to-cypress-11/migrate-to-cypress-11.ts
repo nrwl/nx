@@ -36,13 +36,13 @@ function migrateCypressExecutorOptions(
       (
         tree: Tree,
         projectConfig: ProjectConfiguration,
-        cypressConfigPathJson: string,
+        cypressConfigPathJson: string
       ) => {
         cypressConfigTs: Record<string, any>;
         cypressConfigJson: Record<string, any>;
       }
     >
-  >,
+  >
 ) {
   try {
     const projectConfig = readProjectConfiguration(tree, projectName);
@@ -51,7 +51,7 @@ function migrateCypressExecutorOptions(
       tree,
       projectConfig,
       target,
-      configuration,
+      configuration
     );
 
     if (!cypressConfigPathJson && !cypressConfigPathTs) {
@@ -65,7 +65,7 @@ function migrateCypressExecutorOptions(
       let cypressConfigs = createNewCypressConfig(
         tree,
         projectConfig,
-        cypressConfigPathJson,
+        cypressConfigPathJson
       );
       cypressConfigs = updatePluginFile(tree, projectConfig, cypressConfigs);
       writeNewConfig(tree, cypressConfigPathTs, cypressConfigs);
@@ -88,7 +88,7 @@ function migrateCypressExecutorOptions(
               ?.tsConfig
           : projectConfig.targets?.[target]?.options?.tsConfig) ||
           joinPathFragments(projectConfig.root, 'tsconfig.json'),
-        cypressConfigPathTs,
+        cypressConfigPathTs
       );
 
       if (configuration) {
@@ -140,9 +140,9 @@ export async function migrateCypressProject(tree: Tree) {
         projectName,
         target,
         configuration,
-        previousCypressConfigs,
+        previousCypressConfigs
       );
-    },
+    }
   );
 
   forEachExecutorOptions<CypressExecutorOptions>(
@@ -154,9 +154,9 @@ export async function migrateCypressProject(tree: Tree) {
         projectName,
         target,
         configuration,
-        previousCypressConfigs,
+        previousCypressConfigs
       );
-    },
+    }
   );
 
   updateJson(tree, 'package.json', (json) => {

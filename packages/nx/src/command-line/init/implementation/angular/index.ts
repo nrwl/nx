@@ -34,7 +34,7 @@ export async function addNxToAngularCliRepo(options: Options) {
   output.log({ title: '🧐 Checking versions compatibility' });
   const legacyMigrationFn = await getLegacyMigrationFunctionIfApplicable(
     repoRoot,
-    options,
+    options
   );
   if (legacyMigrationFn) {
     output.log({ title: '💽 Running migration for a legacy Angular version' });
@@ -79,7 +79,7 @@ async function collectCacheableOperations(options: Options): Promise<string[]> {
 
   workspaceTargets = getWorkspaceTargets();
   const defaultCacheableTargetsInWorkspace = defaultCacheableOperations.filter(
-    (t) => workspaceTargets.includes(t),
+    (t) => workspaceTargets.includes(t)
   );
 
   if (options.interactive && workspaceTargets.length > 0) {
@@ -147,7 +147,7 @@ function addPluginDependencies(): void {
 
 async function setupWorkspace(
   cacheableOperations: string[],
-  isIntegratedMigration: boolean,
+  isIntegratedMigration: boolean
 ): Promise<void> {
   updateGitIgnore(repoRoot);
 
@@ -157,14 +157,14 @@ async function setupWorkspace(
     await setupStandaloneWorkspace(
       repoRoot,
       cacheableOperations,
-      workspaceTargets,
+      workspaceTargets
     );
   }
 }
 
 function getWorkspaceTargets(): string[] {
   const { projects } = readJsonFile<AngularJsonConfig>(
-    join(repoRoot, 'angular.json'),
+    join(repoRoot, 'angular.json')
   );
   const targets = new Set<string>();
   for (const project of Object.values(projects ?? {})) {

@@ -25,7 +25,7 @@ describe('Migration to delete Browserslist configurations', () => {
     it('should delete ".browserslistrc" file', async () => {
       tree.write(
         'apps/test/src/app/.browserslistrc',
-        DEFAULT_BROWSERS.join('\n'),
+        DEFAULT_BROWSERS.join('\n')
       );
       expect(tree.exists('apps/test/src/app/.browserslistrc')).toBeTruthy();
 
@@ -61,7 +61,7 @@ describe('Migration to delete Browserslist configurations', () => {
     it('should delete ".browserslistrc" file when it only includes non supported ES5 browsers', async () => {
       tree.write(
         'apps/test/src/app/.browserslistrc',
-        [...DEFAULT_BROWSERS, 'IE 10'].join('\n'),
+        [...DEFAULT_BROWSERS, 'IE 10'].join('\n')
       );
       expect(tree.exists('apps/test/src/app/.browserslistrc')).toBeTruthy();
 
@@ -76,7 +76,7 @@ describe('Migration to delete Browserslist configurations', () => {
       ${DEFAULT_BROWSERS.join('\n')}
       [modern]
       last 1 chrome version
-      `,
+      `
       );
       expect(tree.exists('apps/test/src/app/.browserslistrc')).toBeTruthy();
 

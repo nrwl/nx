@@ -19,7 +19,7 @@ export function normalizeProjectName(options: Schema) {
 export async function normalizeOptions<T extends Schema = Schema>(
   host: Tree,
   options: Schema,
-  callingGenerator = '@nx/react:application',
+  callingGenerator = '@nx/react:application'
 ): Promise<NormalizedSchema<T>> {
   const {
     projectName: appProjectName,

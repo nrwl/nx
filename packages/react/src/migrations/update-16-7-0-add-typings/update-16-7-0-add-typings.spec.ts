@@ -15,7 +15,7 @@ describe('Add typings to react projects', () => {
       JSON.stringify({
         dependencies: {},
         devDependencies: {},
-      }),
+      })
     );
 
     addProjectConfiguration(tree, 'myapp', {
@@ -35,25 +35,25 @@ describe('Add typings to react projects', () => {
         compilerOptions: {
           jsx: 'react-jsx',
         },
-      }),
+      })
     );
     tree.write(
       'myapp/tsconfig.app.json',
       JSON.stringify({
         compilerOptions: {},
-      }),
+      })
     );
 
     await addTypings(tree);
     const tsconfigTypes = JSON.parse(
-      tree.read('myapp/tsconfig.app.json', 'utf-8'),
+      tree.read('myapp/tsconfig.app.json', 'utf-8')
     );
 
     expect(tsconfigTypes.compilerOptions.types).toContain(
-      '@nx/react/typings/cssmodule.d.ts',
+      '@nx/react/typings/cssmodule.d.ts'
     );
     expect(tsconfigTypes.compilerOptions.types).toContain(
-      '@nx/react/typings/image.d.ts',
+      '@nx/react/typings/image.d.ts'
     );
   });
 
@@ -63,7 +63,7 @@ describe('Add typings to react projects', () => {
       JSON.stringify({
         dependencies: {},
         devDependencies: {},
-      }),
+      })
     );
 
     addProjectConfiguration(tree, 'myapp', {
@@ -83,19 +83,19 @@ describe('Add typings to react projects', () => {
         compilerOptions: {
           types: [],
         },
-      }),
+      })
     );
 
     await addTypings(tree);
     const tsconfigTypes = JSON.parse(
-      tree.read('myapp/tsconfig.app.json', 'utf-8'),
+      tree.read('myapp/tsconfig.app.json', 'utf-8')
     );
 
     expect(tsconfigTypes.compilerOptions.types).not.toContain(
-      '@nx/react/typings/cssmodule.d.ts',
+      '@nx/react/typings/cssmodule.d.ts'
     );
     expect(tsconfigTypes.compilerOptions.types).not.toContain(
-      '@nx/react/typings/image.d.ts',
+      '@nx/react/typings/image.d.ts'
     );
   });
 });

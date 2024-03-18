@@ -39,17 +39,18 @@ export async function runTypeCheckWatch(
   callback: (
     diagnostic: Diagnostic,
     formattedDiagnostic: string,
-    errorCount?: number,
-  ) => void | Promise<void>,
+    errorCount?: number
+  ) => void | Promise<void>
 ) {
-  const { ts, workspaceRoot, config, compilerOptions } =
-    await setupTypeScript(options);
+  const { ts, workspaceRoot, config, compilerOptions } = await setupTypeScript(
+    options
+  );
 
   const host = ts.createWatchCompilerHost(
     config.fileNames,
     compilerOptions,
     ts.sys,
-    ts.createEmitAndSemanticDiagnosticsBuilderProgram,
+    ts.createEmitAndSemanticDiagnosticsBuilderProgram
   );
 
   const originalOnWatchStatusChange = host.onWatchStatusChange;
@@ -58,7 +59,7 @@ export async function runTypeCheckWatch(
     callback(
       diagnostic,
       getFormattedDiagnostic(ts, workspaceRoot, diagnostic),
-      errorCount,
+      errorCount
     );
   };
 
@@ -78,7 +79,7 @@ export async function runTypeCheckWatch(
 }
 
 export async function runTypeCheck(
-  options: TypeCheckOptions,
+  options: TypeCheckOptions
 ): Promise<TypeCheckResult> {
   const { ts, workspaceRoot, cacheDir, config, compilerOptions } =
     await setupTypeScript(options);
@@ -111,7 +112,7 @@ export async function runTypeCheck(
     workspaceRoot,
     config.fileNames.length,
     program.getSourceFiles().length,
-    incremental,
+    incremental
   );
 }
 
@@ -147,7 +148,7 @@ function getTypeCheckResult(
   workspaceRoot: string,
   inputFilesCount: number,
   totalFilesCount: number,
-  incremental: boolean = false,
+  incremental: boolean = false
 ) {
   const errors = allDiagnostics
     .filter((d) => d.category === ts.DiagnosticCategory.Error)
@@ -169,7 +170,7 @@ function getTypeCheckResult(
 export function getFormattedDiagnostic(
   ts: typeof import('typescript'),
   workspaceRoot: string,
-  diagnostic: Diagnostic,
+  diagnostic: Diagnostic
 ): string {
   let message = '';
 
@@ -179,13 +180,13 @@ export function getFormattedDiagnostic(
   switch (category) {
     case ts.DiagnosticCategory.Warning: {
       message += `${chalk.yellow.bold('warning')} ${chalk.gray(
-        `TS${diagnostic.code}`,
+        `TS${diagnostic.code}`
       )}: `;
       break;
     }
     case ts.DiagnosticCategory.Error: {
       message += `${chalk.red.bold('error')} ${chalk.gray(
-        `TS${diagnostic.code}`,
+        `TS${diagnostic.code}`
       )}: `;
       break;
     }
@@ -201,7 +202,7 @@ export function getFormattedDiagnostic(
 
   if (diagnostic.file) {
     const pos = diagnostic.file.getLineAndCharacterOfPosition(
-      diagnostic.start!,
+      diagnostic.start!
     );
     const line = pos.line + 1;
     const column = pos.character + 1;
@@ -218,7 +219,7 @@ export function getFormattedDiagnostic(
         {
           start: { line: line, column },
         },
-        { highlight },
+        { highlight }
       );
   }
 

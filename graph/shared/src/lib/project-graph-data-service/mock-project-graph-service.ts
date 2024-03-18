@@ -85,7 +85,7 @@ export class MockProjectGraphService implements ProjectGraphService {
   }
 
   getSourceMaps(
-    url: string,
+    url: string
   ): Promise<Record<string, Record<string, string[]>>> {
     return new Promise((resolve) => resolve({}));
   }
@@ -107,7 +107,7 @@ export class MockProjectGraphService implements ProjectGraphService {
   private updateResponse() {
     const newProject = this.createNewProject();
     const libProjects = this.projectGraphsResponse.projects.filter(
-      (project) => project.type === 'lib',
+      (project) => project.type === 'lib'
     );
 
     const targetDependency =

@@ -27,7 +27,7 @@ const jsExecutors = {
     getConfigPath: (
       options: SwcExecutorOptions,
       contextRoot: string,
-      projectRoot: string,
+      projectRoot: string
     ) => getSwcrcPath(options, contextRoot, projectRoot),
   } as const,
 } as const;
@@ -47,7 +47,7 @@ export function getHelperDependency(
   configPath: string,
   dependencies: DependentBuildableProjectNode[],
   projectGraph: ProjectGraph,
-  returnDependencyIfFound = false,
+  returnDependencyIfFound = false
 ): DependentBuildableProjectNode | null {
   const dependency = dependencies.find((dep) => dep.name === helperDependency);
 
@@ -90,7 +90,7 @@ export function getHelperDependency(
     logger.warn(
       `Your library compilation option specifies that the compiler external helper (${
         helperDependency.split(':')[1]
-      }) is needed but it is not installed.`,
+      }) is needed but it is not installed.`
     );
     return null;
   }
@@ -105,7 +105,7 @@ export function getHelperDependency(
 export function getHelperDependenciesFromProjectGraph(
   contextRoot: string,
   sourceProject: string,
-  projectGraph: ProjectGraph,
+  projectGraph: ProjectGraph
 ): ProjectGraphDependency[] {
   // if the source project isn't part of the projectGraph nodes; skip
   if (!projectGraph.nodes[sourceProject]) return [];
@@ -130,7 +130,7 @@ export function getHelperDependenciesFromProjectGraph(
 
         // check if the dependency has a buildable target with one of the jsExecutors
         const targetExecutor = Object.values(targetData.targets).find(
-          ({ executor }) => !!jsExecutors[executor],
+          ({ executor }) => !!jsExecutors[executor]
         );
         if (targetExecutor) {
           const jsExecutor = jsExecutors[targetExecutor['executor']];
@@ -139,7 +139,7 @@ export function getHelperDependenciesFromProjectGraph(
           const configPath = jsExecutor.getConfigPath(
             targetExecutor['options'],
             contextRoot,
-            projectRoot,
+            projectRoot
           );
 
           // construct the correct helperDependency configurations
@@ -155,7 +155,7 @@ export function getHelperDependenciesFromProjectGraph(
 
       return result;
     },
-    [],
+    []
   );
 
   return internalDependencies.reduce(
@@ -165,7 +165,7 @@ export function getHelperDependenciesFromProjectGraph(
         configPath,
         dependencies,
         projectGraph,
-        true,
+        true
       );
 
       if (dependency) {
@@ -178,6 +178,6 @@ export function getHelperDependenciesFromProjectGraph(
 
       return result;
     },
-    [] as ProjectGraphDependency[],
+    [] as ProjectGraphDependency[]
   );
 }

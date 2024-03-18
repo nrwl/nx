@@ -63,7 +63,7 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
           isCustomPreset: false,
         });
         expect(tree.read('proj/README.md', 'utf-8')).toMatchSnapshot();
-      },
+      }
     );
     it('should be created for custom plugins', async () => {
       await generateWorkspaceFiles(tree, {
@@ -144,7 +144,7 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
     });
     const recommendations = readJson<{ recommendations: string[] }>(
       tree,
-      'proj/.vscode/extensions.json',
+      'proj/.vscode/extensions.json'
     ).recommendations;
 
     expect(recommendations).toMatchSnapshot();
@@ -160,7 +160,7 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
     });
     const recommendations = readJson<{ recommendations: string[] }>(
       tree,
-      'proj/.vscode/extensions.json',
+      'proj/.vscode/extensions.json'
     ).recommendations;
 
     expect(recommendations).toMatchSnapshot();

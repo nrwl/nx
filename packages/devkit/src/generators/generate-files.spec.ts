@@ -24,17 +24,17 @@ describe('generateFiles', () => {
   it('should copy files from a directory into the tree', () => {
     expect(tree.exists('directory/file-in-directory.txt')).toBeTruthy();
     expect(
-      tree.read('directory/file-in-directory.txt', 'utf-8'),
+      tree.read('directory/file-in-directory.txt', 'utf-8')
     ).toMatchSnapshot();
   });
 
   it('should remove ".template" from paths', () => {
     expect(
-      tree.exists('file-with-template-suffix.txt.template'),
+      tree.exists('file-with-template-suffix.txt.template')
     ).not.toBeTruthy();
     expect(tree.exists('file-with-template-suffix.txt')).toBeTruthy();
     expect(
-      tree.read('file-with-template-suffix.txt', 'utf-8'),
+      tree.read('file-with-template-suffix.txt', 'utf-8')
     ).toMatchSnapshot();
   });
 
@@ -42,31 +42,31 @@ describe('generateFiles', () => {
     expect(tree.exists('file-with-property-foo-__foo__.txt')).not.toBeTruthy();
     expect(tree.exists('file-with-property-foo-bar.txt')).toBeTruthy();
     expect(
-      tree.read('file-with-property-foo-bar.txt', 'utf-8'),
+      tree.read('file-with-property-foo-bar.txt', 'utf-8')
     ).toMatchSnapshot();
   });
 
   it('should substitute properties in directory names', () => {
     expect(
-      tree.exists('directory-foo-__foo__/file-in-directory-foo-__foo__.txt'),
+      tree.exists('directory-foo-__foo__/file-in-directory-foo-__foo__.txt')
     ).not.toBeTruthy();
     expect(
-      tree.exists('directory-foo-bar/file-in-directory-foo-bar.txt'),
+      tree.exists('directory-foo-bar/file-in-directory-foo-bar.txt')
     ).toBeTruthy();
     expect(
-      tree.read('directory-foo-bar/file-in-directory-foo-bar.txt', 'utf-8'),
+      tree.read('directory-foo-bar/file-in-directory-foo-bar.txt', 'utf-8')
     ).toMatchSnapshot();
   });
 
   it('should generate files from template in a directory', () => {
     expect(tree.exists(`src/common-util.ts`)).toBeTruthy();
     expect(
-      tree.exists(`src/my-project-name/create-my-project.input.ts`),
+      tree.exists(`src/my-project-name/create-my-project.input.ts`)
     ).toBeTruthy();
     expect(
       tree.exists(
-        `src/my-project-name/my-project/my-project-name.my-project.model.ts`,
-      ),
+        `src/my-project-name/my-project/my-project-name.my-project.model.ts`
+      )
     ).toBeTruthy();
     expect(tree.exists(`src/my-project-name/output/.gitkeep`)).toBeTruthy();
     expect(tree.exists(`src/my-project.module.ts`)).toBeTruthy();

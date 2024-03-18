@@ -21,7 +21,7 @@ export class InvokeRunnerTerminalOutputLifeCycle implements LifeCycle {
             task.overrides.__overrides_unparsed__.length > 0
               ? `Overrides: ${task.overrides.__overrides_unparsed__.join(' ')}`
               : ''
-          }`,
+          }`
       ),
     });
 
@@ -55,7 +55,7 @@ export class InvokeRunnerTerminalOutputLifeCycle implements LifeCycle {
   }
 
   endTasks(
-    taskResults: { task: Task; status: TaskStatus; code: number }[],
+    taskResults: { task: Task; status: TaskStatus; code: number }[]
   ): void {
     for (let t of taskResults) {
       if (t.status === 'failure') {
@@ -73,7 +73,7 @@ export class InvokeRunnerTerminalOutputLifeCycle implements LifeCycle {
   printTaskTerminalOutput(
     task: Task,
     cacheStatus: TaskStatus,
-    terminalOutput: string,
+    terminalOutput: string
   ) {
     const args = getPrintableCommandArgsForTask(task);
     output.logCommandOutput(args.join(' '), cacheStatus, terminalOutput);

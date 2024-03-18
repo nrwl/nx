@@ -7,7 +7,7 @@ import { NormalizedSchema, Schema } from '../schema';
 
 export async function normalizeOptions(
   tree: Tree,
-  options: Schema,
+  options: Schema
 ): Promise<NormalizedSchema> {
   assertValidStyle(options.style);
 
@@ -48,7 +48,7 @@ export async function normalizeOptions(
 
   if (options.export && projectType === 'application') {
     logger.warn(
-      `The "--export" option should not be used with applications and will do nothing.`,
+      `The "--export" option should not be used with applications and will do nothing.`
     );
   }
 

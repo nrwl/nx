@@ -38,7 +38,7 @@ export function PackageSchemaViewer({
 
   if (!vm.schema.currentSchema)
     throw new Error(
-      'Could not interpret schema data: ' + vm.schema.schemaMetadata.name,
+      'Could not interpret schema data: ' + vm.schema.schemaMetadata.name
     );
 
   vm.seo.description = vm.schema.currentSchema.description;

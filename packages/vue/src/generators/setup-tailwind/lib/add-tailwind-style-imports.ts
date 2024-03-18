@@ -22,7 +22,7 @@ const knownStylesheetLocations = [
 export function addTailwindStyleImports(
   tree: Tree,
   project: ProjectConfiguration,
-  _options: SetupTailwindOptions,
+  _options: SetupTailwindOptions
 ) {
   if (_options.stylesheet) {
     knownStylesheetLocations.push(_options.stylesheet);
@@ -34,13 +34,13 @@ export function addTailwindStyleImports(
 
   if (!stylesPath) {
     throw new Error(
-      `Could not find the stylesheet to update. Use --stylesheet to specify this path (relative to the workspace root).`,
+      `Could not find the stylesheet to update. Use --stylesheet to specify this path (relative to the workspace root).`
     );
   }
 
   const content = tree.read(stylesPath).toString();
   tree.write(
     stylesPath,
-    `@tailwind base;\n@tailwind components;\n@tailwind utilities;\n${content}`,
+    `@tailwind base;\n@tailwind components;\n@tailwind utilities;\n${content}`
   );
 }

@@ -17,11 +17,11 @@ import { waitForPortOpen } from '@nx/web/src/utils/wait-for-port-open';
 
 export default async function* serveExecutor(
   options: NextServeBuilderOptions,
-  context: ExecutorContext,
+  context: ExecutorContext
 ) {
   const buildOptions = readTargetOptions<NextBuildBuilderOptions>(
     parseTargetString(options.buildTarget, context),
-    context,
+    context
   );
   const projectRoot = context.workspace.projects[context.projectName].root;
   // This is required for the default custom server to work. See the @nx/next:app generator.
@@ -39,8 +39,8 @@ export default async function* serveExecutor(
   (process.env as any).NODE_ENV = process.env.NODE_ENV
     ? process.env.NODE_ENV
     : options.dev
-      ? 'development'
-      : 'production';
+    ? 'development'
+    : 'production';
 
   // Setting port that the custom server should use.
   process.env.PORT = options.port ? `${options.port}` : process.env.PORT;
@@ -89,6 +89,6 @@ export default async function* serveExecutor(
         success: true,
         baseUrl: `http://${options.hostname ?? 'localhost'}:${options.port}`,
       });
-    },
+    }
   );
 }

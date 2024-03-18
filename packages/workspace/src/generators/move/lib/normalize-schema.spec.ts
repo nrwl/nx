@@ -61,7 +61,7 @@ describe('normalizeSchema', () => {
     const result = await normalizeSchema(
       tree,
       { ...schema, destination: './my/library' },
-      projectConfiguration,
+      projectConfiguration
     );
 
     expect(result).toEqual(expected);
@@ -81,7 +81,7 @@ describe('normalizeSchema', () => {
     const result = await normalizeSchema(
       tree,
       { ...schema, importPath: expected.importPath },
-      projectConfiguration,
+      projectConfiguration
     );
 
     expect(result).toEqual(expected);

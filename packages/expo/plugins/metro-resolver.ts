@@ -17,7 +17,7 @@ export function getResolveRequest(extensions: string[]) {
   return function (
     _context: any,
     realModuleName: string,
-    platform: string | null,
+    platform: string | null
   ) {
     const debug = process.env.NX_REACT_NATIVE_DEBUG === 'true';
 
@@ -31,7 +31,7 @@ export function getResolveRequest(extensions: string[]) {
         _context,
         realModuleName,
         platform,
-        debug,
+        debug
       ) ||
       defaultMetroResolver(context, realModuleName, platform, debug) ||
       tsconfigPathsResolver(
@@ -39,7 +39,7 @@ export function getResolveRequest(extensions: string[]) {
         extensions,
         realModuleName,
         platform,
-        debug,
+        debug
       ) ||
       pnpmResolver(extensions, context, realModuleName, debug);
     if (resolvedPath) {
@@ -47,9 +47,7 @@ export function getResolveRequest(extensions: string[]) {
     }
     if (debug) {
       console.log(
-        chalk.red(
-          `[Nx] Unable to resolve with any resolver: ${realModuleName}`,
-        ),
+        chalk.red(`[Nx] Unable to resolve with any resolver: ${realModuleName}`)
       );
     }
     throw new Error(`Cannot resolve ${chalk.bold(realModuleName)}`);
@@ -61,7 +59,7 @@ function resolveRequestFromContext(
   context: any,
   realModuleName: string,
   platform: string | null,
-  debug: boolean,
+  debug: boolean
 ) {
   try {
     return resolveRequest(context, realModuleName, platform);
@@ -69,8 +67,8 @@ function resolveRequestFromContext(
     if (debug)
       console.log(
         chalk.cyan(
-          `[Nx] Unable to resolve with default resolveRequest: ${realModuleName}`,
-        ),
+          `[Nx] Unable to resolve with default resolveRequest: ${realModuleName}`
+        )
       );
   }
 }
@@ -83,7 +81,7 @@ function defaultMetroResolver(
   context: any,
   realModuleName: string,
   platform: string | null,
-  debug: boolean,
+  debug: boolean
 ) {
   try {
     return metroResolver.resolve(context, realModuleName, platform);
@@ -91,8 +89,8 @@ function defaultMetroResolver(
     if (debug)
       console.log(
         chalk.cyan(
-          `[Nx] Unable to resolve with default Metro resolver: ${realModuleName}`,
-        ),
+          `[Nx] Unable to resolve with default Metro resolver: ${realModuleName}`
+        )
       );
   }
 }
@@ -106,7 +104,7 @@ function pnpmResolver(
   extensions: string[],
   context: any,
   realModuleName: string,
-  debug: boolean,
+  debug: boolean
 ) {
   try {
     const pnpmResolve = getPnpmResolver(extensions);
@@ -114,7 +112,7 @@ function pnpmResolver(
     const filePath = pnpmResolve.resolveSync(
       {},
       lookupStartPath,
-      realModuleName,
+      realModuleName
     );
     if (filePath) {
       return { type: 'sourceFile', filePath };
@@ -123,8 +121,8 @@ function pnpmResolver(
     if (debug)
       console.log(
         chalk.cyan(
-          `[Nx] Unable to resolve with default PNPM resolver: ${realModuleName}`,
-        ),
+          `[Nx] Unable to resolve with default PNPM resolver: ${realModuleName}`
+        )
       );
   }
 }
@@ -138,7 +136,7 @@ function tsconfigPathsResolver(
   extensions: string[],
   realModuleName: string,
   platform: string | null,
-  debug: boolean,
+  debug: boolean
 ) {
   try {
     const tsConfigPathMatcher = getMatcher(debug);
@@ -146,20 +144,20 @@ function tsconfigPathsResolver(
       realModuleName,
       undefined,
       undefined,
-      extensions.map((ext) => `.${ext}`),
+      extensions.map((ext) => `.${ext}`)
     );
     return metroResolver.resolve(context, match, platform);
   } catch {
     if (debug) {
       console.log(
-        chalk.cyan(`[Nx] Failed to resolve ${chalk.bold(realModuleName)}`),
+        chalk.cyan(`[Nx] Failed to resolve ${chalk.bold(realModuleName)}`)
       );
       console.log(
         chalk.cyan(
           `[Nx] The following tsconfig paths was used:\n:${chalk.bold(
-            JSON.stringify(paths, null, 2),
-          )}`,
-        ),
+            JSON.stringify(paths, null, 2)
+          )}`
+        )
       );
     }
   }
@@ -177,14 +175,14 @@ function getMatcher(debug: boolean) {
       paths = result.paths;
       if (debug) {
         console.log(
-          chalk.cyan(`[Nx] Located tsconfig at ${chalk.bold(absoluteBaseUrl)}`),
+          chalk.cyan(`[Nx] Located tsconfig at ${chalk.bold(absoluteBaseUrl)}`)
         );
         console.log(
           chalk.cyan(
             `[Nx] Found the following paths:\n:${chalk.bold(
-              JSON.stringify(paths, null, 2),
-            )}`,
-          ),
+              JSON.stringify(paths, null, 2)
+            )}`
+          )
         );
       }
       matcher = createMatchPath(absoluteBaseUrl, paths);

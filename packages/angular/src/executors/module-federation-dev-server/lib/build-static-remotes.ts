@@ -7,7 +7,7 @@ export async function buildStaticRemotes(
   staticRemotesConfig: StaticRemotesConfig,
   nxBin,
   context: ExecutorContext,
-  options: Schema,
+  options: Schema
 ) {
   if (!staticRemotesConfig.remotes.length) {
     return;
@@ -21,12 +21,12 @@ export async function buildStaticRemotes(
     }`;
   }
   process.env.NX_MF_DEV_SERVER_STATIC_REMOTES = JSON.stringify(
-    mappedLocationOfRemotes,
+    mappedLocationOfRemotes
   );
 
   await new Promise<void>((res) => {
     logger.info(
-      `NX Building ${staticRemotesConfig.remotes.length} static remotes...`,
+      `NX Building ${staticRemotesConfig.remotes.length} static remotes...`
     );
     const staticProcess = fork(
       nxBin,
@@ -42,7 +42,7 @@ export async function buildStaticRemotes(
       {
         cwd: context.root,
         stdio: ['ignore', 'pipe', 'pipe', 'ipc'],
-      },
+      }
     );
     staticProcess.stdout.on('data', (data) => {
       const ANSII_CODE_REGEX =
@@ -51,7 +51,7 @@ export async function buildStaticRemotes(
       if (stdoutString.includes('Successfully ran target build')) {
         staticProcess.stdout.removeAllListeners('data');
         logger.info(
-          `NX Built ${staticRemotesConfig.remotes.length} static remotes`,
+          `NX Built ${staticRemotesConfig.remotes.length} static remotes`
         );
         res();
       }

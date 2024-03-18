@@ -11,7 +11,7 @@ import { NormalizedSchema } from '../schema';
 export function addModuleFederationFiles(
   host: Tree,
   options: NormalizedSchema,
-  defaultRemoteManifest: { name: string; port: number }[],
+  defaultRemoteManifest: { name: string; port: number }[]
 ) {
   const templateVariables = {
     ...names(options.name),
@@ -29,7 +29,7 @@ export function addModuleFederationFiles(
   const projectConfig = readProjectConfiguration(host, options.name);
   const pathToMFManifest = joinPathFragments(
     projectConfig.sourceRoot,
-    'assets/module-federation.manifest.json',
+    'assets/module-federation.manifest.json'
   );
 
   // Module federation requires bootstrap code to be dynamically imported.
@@ -39,18 +39,18 @@ export function addModuleFederationFiles(
     joinPathFragments(options.appProjectRoot, maybeJs(options, 'src/main.tsx')),
     joinPathFragments(
       options.appProjectRoot,
-      maybeJs(options, 'src/bootstrap.tsx'),
-    ),
+      maybeJs(options, 'src/bootstrap.tsx')
+    )
   );
 
   generateFiles(
     host,
     joinPathFragments(
       __dirname,
-      `../files/${options.js ? 'common' : 'common-ts'}`,
+      `../files/${options.js ? 'common' : 'common-ts'}`
     ),
     options.appProjectRoot,
-    templateVariables,
+    templateVariables
   );
 
   const pathToModuleFederationFiles = options.typescriptConfiguration
@@ -61,7 +61,7 @@ export function addModuleFederationFiles(
     host,
     joinPathFragments(__dirname, `../files/${pathToModuleFederationFiles}`),
     options.appProjectRoot,
-    templateVariables,
+    templateVariables
   );
 
   function deleteFileIfExists(host, filePath) {
@@ -73,7 +73,7 @@ export function addModuleFederationFiles(
   function processWebpackConfig(options, host, fileName) {
     const pathToWebpackConfig = joinPathFragments(
       options.appProjectRoot,
-      fileName,
+      fileName
     );
     deleteFileIfExists(host, pathToWebpackConfig);
   }

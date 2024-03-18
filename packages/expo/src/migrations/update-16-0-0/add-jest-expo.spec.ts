@@ -36,7 +36,7 @@ describe('Change expo jest preset', () => {
       'apps/products/jest.config.ts',
       `module.exports = {
         preset: 'random-preset',
-      };`,
+      };`
     );
   });
 

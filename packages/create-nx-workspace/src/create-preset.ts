@@ -12,7 +12,7 @@ export async function createPreset<T extends CreateWorkspaceOptions>(
   preset: string,
   parsedArgs: T,
   packageManager: PackageManager,
-  directory: string,
+  directory: string
 ): Promise<void> {
   const { skipGit, commit, nxCloud, ...restArgs } = parsedArgs;
 
@@ -35,7 +35,7 @@ export async function createPreset<T extends CreateWorkspaceOptions>(
   ) {
     const pmVersion = +getPackageManagerVersion(
       packageManager,
-      workingDir,
+      workingDir
     ).split('.')[0];
     if (pmVersion < 7) {
       nxWorkspaceRoot = `\\"${nxWorkspaceRoot.slice(1, -1)}\\"`;
@@ -54,7 +54,7 @@ export async function createPreset<T extends CreateWorkspaceOptions>(
     args.push(
       'nx',
       `--nxWorkspaceRoot=${nxWorkspaceRoot}`,
-      ...command.split(' '),
+      ...command.split(' ')
     );
     await spawnAndWait(exec, args, directory);
   } catch (e) {

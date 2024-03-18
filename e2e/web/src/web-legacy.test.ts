@@ -27,7 +27,7 @@ describe('Web Components Applications (legacy)', () => {
         env: {
           NX_ADD_PLUGINS: 'false',
         },
-      },
+      }
     );
     runCLI(
       `generate @nx/react:lib ${libName} --bundler=rollup --no-interactive --compiler swc --unitTestRunner=jest`,
@@ -35,7 +35,7 @@ describe('Web Components Applications (legacy)', () => {
         env: {
           NX_ADD_PLUGINS: 'false',
         },
-      },
+      }
     );
 
     createFile(`dist/apps/${appName}/_should_remove.txt`);
@@ -43,19 +43,19 @@ describe('Web Components Applications (legacy)', () => {
     createFile(`dist/apps/_should_not_remove.txt`);
     checkFilesExist(
       `dist/apps/${appName}/_should_remove.txt`,
-      `dist/apps/_should_not_remove.txt`,
+      `dist/apps/_should_not_remove.txt`
     );
     runCLI(`build ${appName} --outputHashing none`);
     runCLI(`build ${libName}`);
     checkFilesDoNotExist(
       `dist/apps/${appName}/_should_remove.txt`,
-      `dist/libs/${libName}/_should_remove.txt`,
+      `dist/libs/${libName}/_should_remove.txt`
     );
     checkFilesExist(`dist/apps/_should_not_remove.txt`);
 
     // Asset that React runtime is imported
     expect(readFile(`dist/libs/${libName}/index.esm.js`)).toMatch(
-      /react\/jsx-runtime/,
+      /react\/jsx-runtime/
     );
 
     // `delete-output-path`
@@ -76,7 +76,7 @@ describe('Web Components Applications (legacy)', () => {
         env: {
           NX_ADD_PLUGINS: 'false',
         },
-      },
+      }
     );
 
     updateJson(join('apps', appName, 'project.json'), (config) => {
@@ -92,7 +92,7 @@ describe('Web Components Applications (legacy)', () => {
       module.exports = composePlugins(withNx(), withWeb(), (config, context) => {
         return config;
       });
-    `,
+    `
     );
     runCLI(`build ${appName} --outputHashing=none`);
     checkFilesExist(`dist/apps/${appName}/main.js`);
@@ -107,7 +107,7 @@ describe('Web Components Applications (legacy)', () => {
       module.exports = composePlugins(withNx(), withWeb(), async (config, context) => {
         return config;
       });
-    `,
+    `
     );
     runCLI(`build ${appName} --outputHashing=none`);
     checkFilesExist(`dist/apps/${appName}/main.js`);
@@ -122,7 +122,7 @@ describe('Web Components Applications (legacy)', () => {
       module.exports = composePlugins(withNx(), withWeb(), Promise.resolve((config, context) => {
         return config;
       }));
-    `,
+    `
     );
     runCLI(`build ${appName} --outputHashing=none`);
     checkFilesExist(`dist/apps/${appName}/main.js`);
@@ -141,7 +141,7 @@ describe('Build Options (legacy) ', () => {
         env: {
           NX_ADD_PLUGINS: 'false',
         },
-      },
+      }
     );
 
     const srcPath = `apps/${appName}/src`;
@@ -228,7 +228,7 @@ describe('index.html interpolation (legacy)', () => {
         env: {
           NX_ADD_PLUGINS: 'false',
         },
-      },
+      }
     );
 
     const srcPath = `apps/${appName}/src`;

@@ -27,7 +27,7 @@ import { InitSchema } from './schema';
 import { join } from 'path';
 
 async function getInstalledTypescriptVersion(
-  tree: Tree,
+  tree: Tree
 ): Promise<string | null> {
   const rootPackageJson = readJson(tree, 'package.json');
   const tsVersionInRootPackageJson =
@@ -62,7 +62,7 @@ async function getInstalledTypescriptVersion(
 
 export async function initGenerator(
   tree: Tree,
-  schema: InitSchema,
+  schema: InitSchema
 ): Promise<GeneratorCallback> {
   const tasks: GeneratorCallback[] = [];
   // add tsconfig.base.json
@@ -122,7 +122,7 @@ export async function initGenerator(
         /dist
         /coverage
         /.nx/cache
-      `,
+      `
     );
   }
   if (tree.exists('.vscode/extensions.json')) {
@@ -142,7 +142,7 @@ export async function initGenerator(
         {},
         devDependencies,
         undefined,
-        schema.keepExistingVersions,
+        schema.keepExistingVersions
       )
     : () => {};
   tasks.push(installTask);

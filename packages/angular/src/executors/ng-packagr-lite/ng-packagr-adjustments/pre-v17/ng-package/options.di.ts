@@ -16,11 +16,11 @@ export interface NgPackagrOptions extends NgPackagrOptionsBase {
 }
 
 export const NX_OPTIONS_TOKEN = new InjectionToken<NgPackagrOptions>(
-  `nx.v1.options`,
+  `nx.v1.options`
 );
 
 export const nxProvideOptions = (
-  options: NgPackagrOptions = {},
+  options: NgPackagrOptions = {}
 ): ValueProvider => ({
   provide: NX_OPTIONS_TOKEN,
   useValue: normalizeOptions(options),

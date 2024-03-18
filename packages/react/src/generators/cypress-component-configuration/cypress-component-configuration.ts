@@ -12,7 +12,7 @@ import { CypressComponentConfigurationSchema } from './schema.d';
 
 export function cypressComponentConfigGenerator(
   tree: Tree,
-  options: CypressComponentConfigurationSchema,
+  options: CypressComponentConfigurationSchema
 ) {
   return cypressComponentConfigGeneratorInternal(tree, {
     addPlugin: false,
@@ -27,7 +27,7 @@ export function cypressComponentConfigGenerator(
  */
 export async function cypressComponentConfigGeneratorInternal(
   tree: Tree,
-  options: CypressComponentConfigurationSchema,
+  options: CypressComponentConfigurationSchema
 ) {
   const { componentConfigurationGenerator: baseCyCtConfig } = ensurePackage<
     typeof import('@nx/cypress')

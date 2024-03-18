@@ -27,7 +27,7 @@ describe('setupDockerGenerator', () => {
             dependsOn: ['build'],
             command: 'docker build -f api/Dockerfile . -t api',
           },
-        }),
+        })
       );
     });
   });
@@ -51,7 +51,7 @@ describe('setupDockerGenerator', () => {
             dependsOn: ['build'],
             command: 'docker build -f Dockerfile . -t api',
           },
-        }),
+        })
       );
     });
   });

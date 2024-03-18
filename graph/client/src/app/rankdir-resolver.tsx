@@ -18,7 +18,7 @@ export function rankDirResolver(rankDir: RankDir) {
 
 export function selectValueByRankDirDynamic<T>(
   topBottomSetting: T,
-  leftRightSetting: T,
+  leftRightSetting: T
 ): () => T {
   return () => selectValueByRankDirStatic(topBottomSetting, leftRightSetting);
 }
@@ -27,7 +27,7 @@ export function selectValueByRankDirDynamic<T>(
 // It also prevents the dynamic change of rankDir for certain elements like tippy
 export function selectValueByRankDirStatic<T>(
   topBottomSetting: T,
-  leftRightSetting: T,
+  leftRightSetting: T
 ): T {
   return currentRankDir === 'TB' ? topBottomSetting : leftRightSetting;
 }

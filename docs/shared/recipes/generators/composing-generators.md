@@ -12,7 +12,7 @@ import { libraryGenerator } from '@nx/js';
 export default async function (tree: Tree, schema: any) {
   await libraryGenerator(
     tree, // virtual file system tree
-    { name: schema.name }, // options for the generator
+    { name: schema.name } // options for the generator
   );
 }
 ```
@@ -34,7 +34,7 @@ export default async function (tree: Tree, schema: { path: string }): any {
     const output = applyTransform(
       { default: arrowFunctionsTransform, parser: 'ts' },
       transformOptions,
-      { source: input, path: filePath },
+      { source: input, path: filePath }
     );
     tree.write(filePath, output);
   });

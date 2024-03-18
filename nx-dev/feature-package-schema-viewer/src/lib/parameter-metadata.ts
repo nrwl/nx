@@ -13,7 +13,7 @@ export function getParameterMetadata(schema: JsonSchema): ParameterMetadata[] {
 
   function createParameterMetadata(
     name: string,
-    value: unknown,
+    value: unknown
   ): ParameterMetadata {
     return {
       name,
@@ -29,17 +29,17 @@ export function getParameterMetadata(schema: JsonSchema): ParameterMetadata[] {
 
   if (schema.minItems !== undefined) {
     parameterMetadata.push(
-      createParameterMetadata('Min items', schema.minItems),
+      createParameterMetadata('Min items', schema.minItems)
     );
   }
   if (schema.maxItems !== undefined) {
     parameterMetadata.push(
-      createParameterMetadata('Max items', schema.maxItems),
+      createParameterMetadata('Max items', schema.maxItems)
     );
   }
   if (typeof schema.uniqueItems !== 'undefined') {
     parameterMetadata.push(
-      createParameterMetadata('Unique items', schema.uniqueItems),
+      createParameterMetadata('Unique items', schema.uniqueItems)
     );
   }
   if (schema.minimum !== undefined) {
@@ -48,8 +48,8 @@ export function getParameterMetadata(schema: JsonSchema): ParameterMetadata[] {
     parameterMetadata.push(
       createParameterMetadata(
         isExclusive ? 'Exclusive minimum' : 'minimum',
-        schema.minimum,
-      ),
+        schema.minimum
+      )
     );
   }
   if (schema.maximum !== undefined) {
@@ -58,8 +58,8 @@ export function getParameterMetadata(schema: JsonSchema): ParameterMetadata[] {
     parameterMetadata.push(
       createParameterMetadata(
         isExclusive ? 'Exclusive maximum' : 'maximum',
-        schema.maximum,
-      ),
+        schema.maximum
+      )
     );
   }
   if (
@@ -67,7 +67,7 @@ export function getParameterMetadata(schema: JsonSchema): ParameterMetadata[] {
     schema.minimum === undefined
   ) {
     parameterMetadata.push(
-      createParameterMetadata('Exclusive minimum', schema.exclusiveMinimum),
+      createParameterMetadata('Exclusive minimum', schema.exclusiveMinimum)
     );
   }
   if (
@@ -75,32 +75,32 @@ export function getParameterMetadata(schema: JsonSchema): ParameterMetadata[] {
     schema.maximum === undefined
   ) {
     parameterMetadata.push(
-      createParameterMetadata('Exclusive maximum', schema.exclusiveMaximum),
+      createParameterMetadata('Exclusive maximum', schema.exclusiveMaximum)
     );
   }
   if (schema.multipleOf !== undefined) {
     parameterMetadata.push(
-      createParameterMetadata('Multiple of', schema.multipleOf),
+      createParameterMetadata('Multiple of', schema.multipleOf)
     );
   }
   if (schema.minProperties !== undefined) {
     parameterMetadata.push(
-      createParameterMetadata('Min properties', schema.minProperties),
+      createParameterMetadata('Min properties', schema.minProperties)
     );
   }
   if (schema.maxProperties !== undefined) {
     parameterMetadata.push(
-      createParameterMetadata('Max properties', schema.maxProperties),
+      createParameterMetadata('Max properties', schema.maxProperties)
     );
   }
   if (schema.minLength !== undefined) {
     parameterMetadata.push(
-      createParameterMetadata('Min length', schema.minLength),
+      createParameterMetadata('Min length', schema.minLength)
     );
   }
   if (schema.maxLength !== undefined) {
     parameterMetadata.push(
-      createParameterMetadata('Max length', schema.maxLength),
+      createParameterMetadata('Max length', schema.maxLength)
     );
   }
   if (typeof schema.pattern !== 'undefined') {

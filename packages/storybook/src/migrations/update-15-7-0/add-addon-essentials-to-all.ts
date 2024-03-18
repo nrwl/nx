@@ -42,22 +42,22 @@ export default async function (tree: Tree) {
     
           Please add it manually in the addons array of your project's
           .storybook/main.js|ts file.
-          `,
+          `
     );
   }
 
   const rootMainJsTsPath = tree.exists('.storybook/main.js')
     ? '.storybook/main.js'
     : tree.exists('.storybook/main.ts')
-      ? '.storybook/main.ts'
-      : undefined;
+    ? '.storybook/main.ts'
+    : undefined;
 
   if (rootMainJsTsPath) {
     const addonArrayOrEssentialsRemoved =
       removeAddonEssentialsFromRootStorybook(tree, rootMainJsTsPath);
     const storiesArrayRemoved = removeStoriesArrayFromRootIfEmpty(
       tree,
-      rootMainJsTsPath,
+      rootMainJsTsPath
     );
 
     const removedRoot = removeRootConfig(tree, rootMainJsTsPath);
@@ -74,7 +74,7 @@ export default async function (tree: Tree) {
       } 
       ${storiesArrayRemoved ? 'and the stories array ' : ''}
       from the root .storybook/main.js|ts file.
-      `,
+      `
       );
     }
   }
@@ -83,7 +83,7 @@ export default async function (tree: Tree) {
     `
     Read more about our effort to deprecate the root .storybook folder here:
     https://nx.dev/packages/storybook/documents/configuring-storybook
-    `,
+    `
   );
 
   await formatFiles(tree);
@@ -91,19 +91,19 @@ export default async function (tree: Tree) {
 
 function removeAddonEssentialsFromRootStorybook(
   tree: Tree,
-  rootMainJsTsPath: string,
+  rootMainJsTsPath: string
 ): 'addons' | 'esssentials' | undefined {
   let rootMainJsTs = tree.read(rootMainJsTsPath, 'utf-8');
 
   const addonEssentials = tsquery.query(
     rootMainJsTs,
-    'StringLiteral:has([text="@storybook/addon-essentials"])',
+    'StringLiteral:has([text="@storybook/addon-essentials"])'
   )?.[0];
 
   if (addonEssentials?.getText()?.length) {
     const fullAddonsNode = tsquery.query(
       rootMainJsTs,
-      'PropertyAssignment:has([name="addons"])',
+      'PropertyAssignment:has([name="addons"])'
     )?.[0];
 
     const stringLiterals = tsquery.query(fullAddonsNode, 'StringLiteral');
@@ -152,7 +152,7 @@ function addAddonEssentialsToAllStorybooks(tree: Tree): string[] {
       if (failedToAddAddon) {
         projectsThatFailedTOAddAddonEssentials.push(failedToAddAddon);
       }
-    },
+    }
   );
 
   forEachExecutorOptions(
@@ -163,7 +163,7 @@ function addAddonEssentialsToAllStorybooks(tree: Tree): string[] {
       if (failedToAddAddon) {
         projectsThatFailedTOAddAddonEssentials.push(failedToAddAddon);
       }
-    },
+    }
   );
   return Array.from(new Set(projectsThatFailedTOAddAddonEssentials));
 }
@@ -175,8 +175,8 @@ function addAddon(tree: Tree, options: {}, projectName: string): string {
     const mainJsTsPath = tree.exists(`${storybookDir}/main.js`)
       ? `${storybookDir}/main.js`
       : tree.exists(`${storybookDir}/main.ts`)
-        ? `${storybookDir}/main.ts`
-        : undefined;
+      ? `${storybookDir}/main.ts`
+      : undefined;
 
     let addedAddons = mainJsTsPath
       ? transformMainJsTs(tree, mainJsTsPath)
@@ -193,7 +193,7 @@ function transformMainJsTs(tree: Tree, mainJsTsPath: string): boolean {
 
   const addonsArray = tsquery.query(
     mainJsTs,
-    'ArrayLiteralExpression:has(Identifier[name="addons"])',
+    'ArrayLiteralExpression:has(Identifier[name="addons"])'
   )?.[0];
 
   if (addonsArray?.getText()?.length) {
@@ -217,7 +217,7 @@ function transformMainJsTs(tree: Tree, mainJsTsPath: string): boolean {
 
     const storiesArray = tsquery.query(
       mainJsTs,
-      'ArrayLiteralExpression:has(Identifier[name="stories"])',
+      'ArrayLiteralExpression:has(Identifier[name="stories"])'
     )?.[0];
 
     if (storiesArray?.getText()?.length) {
@@ -246,7 +246,7 @@ function transformMainJsTs(tree: Tree, mainJsTsPath: string): boolean {
       // then check if it has addon-essentials, if not add it
       const addonsPropertyAccessExpression = tsquery.query(
         mainJsTs,
-        `PropertyAccessExpression:has([expression.name="${rootMainVariableName}"]):has([name="addons"])`,
+        `PropertyAccessExpression:has([expression.name="${rootMainVariableName}"]):has([name="addons"])`
       )?.[0];
 
       if (rootMainVariableName && importExpression) {
@@ -260,7 +260,7 @@ function transformMainJsTs(tree: Tree, mainJsTsPath: string): boolean {
           const hasAddonEssentials = !!tsquery
             .query(
               parentCallExpression,
-              `StringLiteral:has([text="@storybook/addon-essentials"])`,
+              `StringLiteral:has([text="@storybook/addon-essentials"])`
             )?.[0]
             ?.getText();
 
@@ -294,14 +294,14 @@ function transformMainJsTs(tree: Tree, mainJsTsPath: string): boolean {
 
 function removeStoriesArrayFromRootIfEmpty(
   tree: Tree,
-  rootMainJsTsPath: string,
+  rootMainJsTsPath: string
 ): boolean {
   if (rootMainJsTsPath) {
     let rootMainJsTs = tree.read(rootMainJsTsPath, 'utf-8');
 
     const fullStoriesNode = tsquery.query(
       rootMainJsTs,
-      'PropertyAssignment:has([name="stories"])',
+      'PropertyAssignment:has([name="stories"])'
     )?.[0];
 
     if (!fullStoriesNode) {
@@ -333,7 +333,7 @@ export function getRootMainVariableName(mainJsTs: string): {
 } {
   const requireVariableStatement = tsquery.query(
     mainJsTs,
-    `VariableStatement:has(CallExpression:has(Identifier[name="require"]))`,
+    `VariableStatement:has(CallExpression:has(Identifier[name="require"]))`
   );
 
   let rootMainVariableName;
@@ -343,7 +343,7 @@ export function getRootMainVariableName(mainJsTs: string): {
     importExpression = requireVariableStatement.find((statement) => {
       const requireCallExpression = tsquery.query(
         statement,
-        'CallExpression:has(Identifier[name="require"])',
+        'CallExpression:has(Identifier[name="require"])'
       );
       return requireCallExpression?.[0]?.getText()?.includes('.storybook/main');
     });

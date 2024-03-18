@@ -23,7 +23,7 @@ export function interactionTestsDependencies(): { [key: string]: string } {
 
 export function addInteractionsInAddons(
   tree: Tree,
-  projectConfig: ProjectConfiguration,
+  projectConfig: ProjectConfiguration
 ) {
   const mainJsTsPath = getMainTsJsPath(tree, projectConfig);
   if (!mainJsTsPath) return;
@@ -33,7 +33,7 @@ export function addInteractionsInAddons(
   // Find addons array
   const addonsArray = tsquery.query(
     mainJsTs,
-    `PropertyAssignment:has(Identifier:has([name="addons"]))`,
+    `PropertyAssignment:has(Identifier:has([name="addons"]))`
   )?.[0];
 
   // if there's no addons array don't do anything
@@ -43,14 +43,14 @@ export function addInteractionsInAddons(
   // Check if addons array already has addon-interactions
   const addonsArrayHasAddonInteractions = tsquery.query(
     addonsArray,
-    `StringLiteral:has([text="@storybook/addon-interactions"])`,
+    `StringLiteral:has([text="@storybook/addon-interactions"])`
   )?.[0];
   if (addonsArrayHasAddonInteractions) return;
 
   // get the array of the addons
   const arrayLiteralExpression = tsquery.query(
     addonsArray,
-    `ArrayLiteralExpression`,
+    `ArrayLiteralExpression`
   )?.[0];
   if (!arrayLiteralExpression) return;
   mainJsTs = applyChangesToString(mainJsTs, [
@@ -65,7 +65,7 @@ export function addInteractionsInAddons(
 
 function getMainTsJsPath(
   host: Tree,
-  projectConfig: ProjectConfiguration,
+  projectConfig: ProjectConfiguration
 ): string | undefined {
   let mainJsTsPath: string | undefined = undefined;
   Object.entries(projectConfig.targets).forEach(
@@ -82,7 +82,7 @@ function getMainTsJsPath(
           mainJsTsPath = `${configDir}/main.ts`;
         }
       }
-    },
+    }
   );
   return mainJsTsPath;
 }

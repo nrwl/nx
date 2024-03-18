@@ -9,7 +9,7 @@ export type ChangedFile = {
 export function getProjectsAndGlobalChanges(
   createdFiles: string[] | null,
   updatedFiles: string[] | null,
-  deletedFiles: string[] | null,
+  deletedFiles: string[] | null
 ) {
   const projectAndGlobalChanges: {
     projects: { [changedProject: string]: ChangedFile[] };
@@ -38,7 +38,7 @@ export function getProjectsAndGlobalChanges(
 
   const fileToProjectMap: Record<string, string> = {};
   for (const [projectName, projectFiles] of Object.entries(
-    fileMapWithFiles?.fileMap?.projectFileMap ?? {},
+    fileMapWithFiles?.fileMap?.projectFileMap ?? {}
   )) {
     for (const projectFile of projectFiles) {
       fileToProjectMap[projectFile.file] = projectName;
@@ -58,7 +58,7 @@ export function getProjectsAndGlobalChanges(
   performance.measure(
     'changed-projects',
     'changed-projects:start',
-    'changed-projects:end',
+    'changed-projects:end'
   );
 
   return projectAndGlobalChanges;

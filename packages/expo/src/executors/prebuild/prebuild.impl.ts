@@ -14,7 +14,7 @@ let childProcess: ChildProcess;
 
 export default async function* prebuildExecutor(
   options: ExpoPrebuildOptions,
-  context: ExecutorContext,
+  context: ExecutorContext
 ): AsyncGenerator<ExpoPrebuildOutput> {
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
@@ -42,13 +42,13 @@ export default async function* prebuildExecutor(
 export function prebuildAsync(
   workspaceRoot: string,
   projectRoot: string,
-  options: ExpoPrebuildOptions,
+  options: ExpoPrebuildOptions
 ): Promise<number> {
   return new Promise((resolve, reject) => {
     childProcess = fork(
       require.resolve('@expo/cli/build/bin/cli'),
       ['prebuild', ...createPrebuildOptions(options), '--no-install'],
-      { cwd: join(workspaceRoot, projectRoot), env: process.env },
+      { cwd: join(workspaceRoot, projectRoot), env: process.env }
     );
 
     // Ensure the child process is killed when the parent exits

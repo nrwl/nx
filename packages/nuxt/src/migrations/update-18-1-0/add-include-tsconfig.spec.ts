@@ -50,7 +50,7 @@ describe('addIncludeToTsConfig', () => {
           plugins: [nxViteTsPaths()],
         },
       });
-        `,
+        `
     );
 
     writeJson(tree, 'my-nuxt-app/tsconfig.json', {

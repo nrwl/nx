@@ -19,8 +19,8 @@ class ServerLogger {
             }
             return JSON.stringify(val);
           })
-          .join(' ')}`,
-      ),
+          .join(' ')}`
+      )
     );
   }
 

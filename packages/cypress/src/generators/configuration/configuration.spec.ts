@@ -74,7 +74,7 @@ describe('Cypress e2e configuration', () => {
         "
       `);
       expect(
-        readProjectConfiguration(tree, 'my-app').targets.e2e,
+        readProjectConfiguration(tree, 'my-app').targets.e2e
       ).toMatchInlineSnapshot(`undefined`);
 
       expect(readJson(tree, 'apps/my-app/tsconfig.json'))
@@ -132,7 +132,7 @@ describe('Cypress e2e configuration', () => {
         "
       `);
       expect(
-        readProjectConfiguration(tree, 'my-app').targets.e2e,
+        readProjectConfiguration(tree, 'my-app').targets.e2e
       ).toMatchInlineSnapshot(`undefined`);
 
       expect(readJson(tree, 'apps/my-app/tsconfig.json'))
@@ -279,8 +279,8 @@ describe('Cypress e2e configuration', () => {
             },
           },
           null,
-          2,
-        ),
+          2
+        )
       );
       await cypressE2EConfigurationGenerator(tree, {
         project: 'my-app',
@@ -313,7 +313,7 @@ describe('Cypress e2e configuration', () => {
         }
       `);
       expect(readJson(tree, 'apps/my-app/tsconfig.json').references).toEqual(
-        expect.arrayContaining([{ path: './e2e/something/tsconfig.json' }]),
+        expect.arrayContaining([{ path: './e2e/something/tsconfig.json' }])
       );
     });
 
@@ -369,7 +369,7 @@ describe('Cypress e2e configuration', () => {
       };
       tree.write(
         'libs/my-lib/.eslintrc.json',
-        JSON.stringify(ngEsLintContents, null, 2),
+        JSON.stringify(ngEsLintContents, null, 2)
       );
 
       await cypressE2EConfigurationGenerator(tree, {
@@ -399,7 +399,7 @@ describe('Cypress e2e configuration', () => {
       assertCypressFiles(tree, 'libs/my-lib/cypress');
       expect(
         readProjectConfiguration(tree, 'my-lib').targets['e2e'].configurations
-          .ci,
+          .ci
       ).toMatchInlineSnapshot(`
         {
           "devServerTarget": "my-app:serve-static",
@@ -437,7 +437,7 @@ import { nxComponentTestingPreset } from '@nx/angular/plugins/component-testing'
 export default defineConfig({
   component: nxComponentTestingPreset(__filename),
 });
-`,
+`
       );
       await cypressE2EConfigurationGenerator(tree, {
         project: 'my-lib',
@@ -463,10 +463,10 @@ export default defineConfig({
       `);
       // these files are only added when there isn't already a cypress config
       expect(
-        tree.exists('libs/my-lib/cypress/fixtures/example.json'),
+        tree.exists('libs/my-lib/cypress/fixtures/example.json')
       ).toBeFalsy();
       expect(
-        tree.exists('libs/my-lib/cypress/support/commands.ts'),
+        tree.exists('libs/my-lib/cypress/support/commands.ts')
       ).toBeFalsy();
     });
 
@@ -480,7 +480,7 @@ export default defineConfig({
 export default defineConfig({
   e2e: {exists: true},
 });
-`,
+`
       );
       await cypressE2EConfigurationGenerator(tree, {
         project: 'my-lib',
@@ -559,7 +559,7 @@ export default defineConfig({
 
 function addProject(
   tree: Tree,
-  opts: { name: string; standalone?: boolean; type: 'apps' | 'libs' },
+  opts: { name: string; standalone?: boolean; type: 'apps' | 'libs' }
 ) {
   const config: ProjectConfiguration = {
     name: opts.name,

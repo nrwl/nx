@@ -10,8 +10,8 @@ Specifying which tags a project is allowed to depend on can sometimes lead to a 
     "scope:shared",
     "scope:utils",
     "scope:core",
-    "scope:client",
-  ],
+    "scope:client"
+  ]
 }
 ```
 
@@ -21,7 +21,7 @@ The property `notDependOnLibsWithTags` is used to invert this condition by expli
 {
   "sourceTag": "scope:client",
   // we accept any tag except for `scope:admin`
-  "notDependOnLibsWithTags": ["scope:admin"],
+  "notDependOnLibsWithTags": ["scope:admin"]
 }
 ```
 
@@ -34,9 +34,9 @@ The property `notDependOnLibsWithTags` is used to invert this condition by expli
     "type:react",
     "type:utils",
     "type:animation",
-    "type:model",
+    "type:model"
   ],
   // make sure no `angular` code ends up being referenced by react projects
-  "notDependOnLibsWithTags": ["type:angular"],
+  "notDependOnLibsWithTags": ["type:angular"]
 }
 ```

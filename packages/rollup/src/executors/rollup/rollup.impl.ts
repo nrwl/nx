@@ -47,7 +47,7 @@ const fileExtensions = ['.js', '.jsx', '.ts', '.tsx'];
 
 export async function* rollupExecutor(
   rawOptions: RollupExecutorOptions,
-  context: ExecutorContext,
+  context: ExecutorContext
 ) {
   process.env.NODE_ENV ??= 'production';
 
@@ -60,13 +60,13 @@ export async function* rollupExecutor(
     context.projectName,
     context.targetName,
     context.configurationName,
-    true,
+    true
   );
 
   const options = normalizeRollupExecutorOptions(
     rawOptions,
     context,
-    sourceRoot,
+    sourceRoot
   );
 
   const packageJson = readJsonFile(options.project);
@@ -81,7 +81,7 @@ export async function* rollupExecutor(
     context,
     packageJson,
     sourceRoot,
-    npmDeps,
+    npmDeps
   );
 
   const outfile = resolveOutfile(context, options);
@@ -104,7 +104,7 @@ export async function* rollupExecutor(
         });
         // Teardown logic. Close watcher when unsubscribed.
         return () => watcher.close();
-      }),
+      })
     );
   } else {
     logger.info(`Bundling ${context.projectName}...`);
@@ -123,15 +123,15 @@ export async function* rollupExecutor(
             catchError((e) => {
               logger.error(`Error during bundle: ${e}`);
               return of({ success: false });
-            }),
-          ),
+            })
+          )
         ),
         scan<RollupExecutorEvent, RollupExecutorEvent>(
           (acc, result) => {
             if (!acc.success) return acc;
             return result;
           },
-          { success: true, outfile },
+          { success: true, outfile }
         ),
         last(),
         tap({
@@ -139,7 +139,7 @@ export async function* rollupExecutor(
             if (result.success) {
               const end = process.hrtime.bigint();
               const duration = `${(Number(end - start) / 1_000_000_000).toFixed(
-                2,
+                2
               )}s`;
 
               updatePackageJson(options, packageJson);
@@ -148,7 +148,7 @@ export async function* rollupExecutor(
               logger.error(`Bundle failed: ${context.projectName}`);
             }
           },
-        }),
+        })
       )
       .toPromise();
   }
@@ -162,7 +162,7 @@ export async function createRollupOptions(
   context: ExecutorContext,
   packageJson: PackageJson,
   sourceRoot: string,
-  npmDeps: string[],
+  npmDeps: string[]
 ): Promise<rollup.InputOptions[]> {
   const useBabel = options.compiler === 'babel';
   const useTsc = options.compiler === 'tsc';
@@ -173,7 +173,7 @@ export async function createRollupOptions(
   const config = ts.parseJsonConfigFileContent(
     configFile.config,
     ts.sys,
-    dirname(tsConfigPath),
+    dirname(tsConfigPath)
   );
 
   if (!options.format || !options.format.length) {
@@ -183,14 +183,14 @@ export async function createRollupOptions(
   if (packageJson.type === 'module') {
     if (options.format.includes('cjs')) {
       logger.warn(
-        `Package type is set to "module" but "cjs" format is included. Going to use "esm" format instead. You can change the package type to "commonjs" or remove type in the package.json file.`,
+        `Package type is set to "module" but "cjs" format is included. Going to use "esm" format instead. You can change the package type to "commonjs" or remove type in the package.json file.`
       );
     }
     options.format = ['esm'];
   } else if (packageJson.type === 'commonjs') {
     if (options.format.includes('esm')) {
       logger.warn(
-        `Package type is set to "commonjs" but "esm" format is included. Going to use "cjs" format instead. You can change the package type to "module" or remove type in the package.json file.`,
+        `Package type is set to "commonjs" but "esm" format is included. Going to use "cjs" format instead. You can change the package type to "module" or remove type in the package.json file.`
       );
     }
     options.format = ['cjs'];
@@ -205,7 +205,7 @@ export async function createRollupOptions(
       copy({
         targets: convertCopyAssetsToRollupOptions(
           options.outputPath,
-          options.assets,
+          options.assets
         ),
       }),
       image(),
@@ -218,7 +218,7 @@ export async function createRollupOptions(
             compilerOptions: createTsCompilerOptions(
               config,
               dependencies,
-              options,
+              options
             ),
           },
         }),
@@ -305,14 +305,14 @@ export async function createRollupOptions(
       },
       external: (id: string) => {
         return externalPackages.some(
-          (name) => id === name || id.startsWith(`${name}/`),
+          (name) => id === name || id.startsWith(`${name}/`)
         ); // Could be a deep import
       },
       plugins,
     };
 
     const userDefinedRollupConfigs = options.rollupConfig.map((plugin) =>
-      loadConfigFile(plugin),
+      loadConfigFile(plugin)
     );
     let finalConfig: rollup.InputOptions = rollupConfig;
     for (const _config of userDefinedRollupConfigs) {
@@ -345,7 +345,7 @@ export async function createRollupOptions(
 function createTsCompilerOptions(
   config: ts.ParsedCommandLine,
   dependencies: DependentBuildableProjectNode[],
-  options: NormalizedRollupExecutorOptions,
+  options: NormalizedRollupExecutorOptions
 ) {
   const compilerOptionPaths = computeCompilerOptionsPaths(config, dependencies);
   const compilerOptions = {
@@ -370,7 +370,7 @@ interface RollupCopyAssetOption {
 
 function convertCopyAssetsToRollupOptions(
   outputPath: string,
-  assets: AssetGlobPattern[],
+  assets: AssetGlobPattern[]
 ): RollupCopyAssetOption[] {
   return assets
     ? assets.map((a) => ({
@@ -381,7 +381,7 @@ function convertCopyAssetsToRollupOptions(
 }
 
 function readCompatibleFormats(
-  config: ts.ParsedCommandLine,
+  config: ts.ParsedCommandLine
 ): ('cjs' | 'esm')[] {
   switch (config.options.module) {
     case ts.ModuleKind.CommonJS:
@@ -395,7 +395,7 @@ function readCompatibleFormats(
 
 function resolveOutfile(
   context: ExecutorContext,
-  options: NormalizedRollupExecutorOptions,
+  options: NormalizedRollupExecutorOptions
 ) {
   if (!options.format?.includes('cjs')) return undefined;
   const { name } = parse(options.outputFileName ?? options.main);

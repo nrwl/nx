@@ -18,7 +18,7 @@ export function installPackagesTask(
   tree: Tree,
   alwaysRun: boolean = false,
   cwd: string = '',
-  packageManager: PackageManager = detectPackageManager(cwd),
+  packageManager: PackageManager = detectPackageManager(cwd)
 ): void {
   if (
     !tree
@@ -31,7 +31,7 @@ export function installPackagesTask(
 
   const packageJsonValue = tree.read(
     joinPathFragments(cwd, 'package.json'),
-    'utf-8',
+    'utf-8'
   );
   let storedPackageJsonValue: string = global['__packageJsonInstallCache__'];
   // Don't install again if install was already executed with package.json
@@ -47,7 +47,7 @@ export function installPackagesTask(
     if (
       process.env.npm_config_registry &&
       process.env.npm_config_registry.match(
-        /^https:\/\/registry\.(npmjs\.org|yarnpkg\.com)/,
+        /^https:\/\/registry\.(npmjs\.org|yarnpkg\.com)/
       )
     ) {
       delete process.env.npm_config_registry;

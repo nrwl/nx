@@ -29,12 +29,12 @@ function hasObject(s: JsonSchema1): boolean {
 
 function hasArray(s: JsonSchema1): boolean {
   return [s.items, s.minItems, s.maxItems, s.uniqueItems].some(
-    (v) => v !== undefined,
+    (v) => v !== undefined
   );
 }
 
 export function jsonTypeToSchemaType(
-  someType: unknown,
+  someType: unknown
 ): SimpleTypes | undefined {
   switch (typeof someType) {
     case 'boolean':
@@ -53,10 +53,10 @@ export function jsonTypeToSchemaType(
 }
 
 export function getTypesFromEnum(
-  enumValue: NonNullable<JsonSchema1['enum']>,
+  enumValue: NonNullable<JsonSchema1['enum']>
 ): JsonSchema1['type'] | undefined {
   const types = Array.from(
-    new Set(enumValue.map(jsonTypeToSchemaType).filter(isPresent)),
+    new Set(enumValue.map(jsonTypeToSchemaType).filter(isPresent))
   );
   if (types.length === 0) {
     return undefined;
@@ -68,7 +68,7 @@ export function getTypesFromEnum(
 }
 
 export function getOrInferType(
-  schema: JsonSchema1,
+  schema: JsonSchema1
 ): JsonSchema1['type'] | undefined {
   if (schema.type !== undefined) {
     return schema.type;

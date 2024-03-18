@@ -11,11 +11,11 @@ import { relative } from 'path';
 export function checkProjectIsSafeToRemove(
   tree: Tree,
   schema: Schema,
-  project: ProjectConfiguration,
+  project: ProjectConfiguration
 ) {
   if (project.root === '.') {
     throw new Error(
-      `"${schema.projectName}" is the root project. Running this would delete every file in your workspace.`,
+      `"${schema.projectName}" is the root project. Running this would delete every file in your workspace.`
     );
   }
   if (schema.forceRemove) {
@@ -36,8 +36,8 @@ export function checkProjectIsSafeToRemove(
       `"${
         schema.projectName
       }" is a project that has nested projects within it. Removing this project would remove the following projects as well:\n - ${containedProjects.join(
-        '\n - ',
-      )}\nPass --forceRemove to remove all of the above projects`,
+        '\n - '
+      )}\nPass --forceRemove to remove all of the above projects`
     );
   }
 }

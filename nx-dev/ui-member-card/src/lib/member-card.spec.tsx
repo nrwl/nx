@@ -8,7 +8,7 @@ describe('MemberCard', () => {
         description="description content"
         imageUrl="./image.png"
         name="name content"
-      />,
+      />
     );
     expect(baseElement).toBeTruthy();
   });

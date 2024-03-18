@@ -12,7 +12,7 @@ import { existsSync, removeSync, symlinkSync } from 'fs-extra';
  */
 export function ensureNodeModulesSymlink(
   workspaceRoot: string,
-  projectRoot: string,
+  projectRoot: string
 ): void {
   const worksapceNodeModulesPath = join(workspaceRoot, 'node_modules');
   if (!existsSync(worksapceNodeModulesPath)) {

@@ -64,7 +64,7 @@ describe('updateJestConfig', () => {
     const rootJestConfigAfter = tree.read(rootJestConfigPath, 'utf-8');
     expect(jestConfigAfter).toContain(`name: 'my-destination'`);
     expect(jestConfigAfter).toContain(
-      `coverageDirectory: '../coverage/my-destination'`,
+      `coverageDirectory: '../coverage/my-destination'`
     );
     expect(rootJestConfigAfter).toContain('getJestProjectsAsync()');
   });
@@ -100,7 +100,7 @@ describe('updateJestConfig', () => {
     const jestConfigAfter = tree.read(jestConfigPath, 'utf-8');
     expect(jestConfigAfter).toContain(`name: 'my-source-data-access'`);
     expect(jestConfigAfter).toContain(
-      `coverageDirectory: '../coverage/my-source/data-access'`,
+      `coverageDirectory: '../coverage/my-source/data-access'`
     );
   });
 
@@ -123,7 +123,7 @@ describe('updateJestConfig', () => {
     });
     const projectConfig = readProjectConfiguration(
       tree,
-      'some-test-dir-my-source',
+      'some-test-dir-my-source'
     );
     tree.write(jestConfigPath, jestConfig);
     const schema: NormalizedSchema = {
@@ -140,7 +140,7 @@ describe('updateJestConfig', () => {
     const rootJestConfigAfter = tree.read(rootJestConfigPath, 'utf-8');
     expect(jestConfigAfter).toContain(`name: 'other-test-dir-my-destination'`);
     expect(jestConfigAfter).toContain(
-      `coverageDirectory: '../coverage/other/test/dir/my-destination'`,
+      `coverageDirectory: '../coverage/other/test/dir/my-destination'`
     );
     expect(rootJestConfigAfter).toContain('getJestProjectsAsync()');
   });
@@ -157,11 +157,11 @@ describe('updateJestConfig', () => {
       `module.exports = {
   projects: ['<rootDir>/some/test/dir/my-source']
 };
-`,
+`
     );
     const projectConfig = readProjectConfiguration(
       tree,
-      'some-test-dir-my-source',
+      'some-test-dir-my-source'
     );
     const schema: NormalizedSchema = {
       projectName: 'some-test-dir-my-source',
@@ -176,10 +176,10 @@ describe('updateJestConfig', () => {
 
     const rootJestConfigAfter = tree.read(rootJestConfigPath, 'utf-8');
     expect(rootJestConfigAfter).not.toContain(
-      '<rootDir>/some/test/dir/my-source',
+      '<rootDir>/some/test/dir/my-source'
     );
     expect(rootJestConfigAfter).toContain(
-      '<rootDir>/other/test/dir/my-destination',
+      '<rootDir>/other/test/dir/my-destination'
     );
   });
 
@@ -197,11 +197,11 @@ describe('updateJestConfig', () => {
 module.exports = {
   projects: [...getJestProjects(), '<rootDir>/some/test/dir/my-source']
 };
-`,
+`
     );
     const projectConfig = readProjectConfiguration(
       tree,
-      'some-test-dir-my-source',
+      'some-test-dir-my-source'
     );
     const schema: NormalizedSchema = {
       projectName: 'some-test-dir-my-source',
@@ -216,10 +216,10 @@ module.exports = {
 
     const rootJestConfigAfter = tree.read(rootJestConfigPath, 'utf-8');
     expect(rootJestConfigAfter).not.toContain(
-      '<rootDir>/some/test/dir/my-source',
+      '<rootDir>/some/test/dir/my-source'
     );
     expect(rootJestConfigAfter).not.toContain(
-      '<rootDir>/other/test/dir/my-destination',
+      '<rootDir>/other/test/dir/my-destination'
     );
     expect(rootJestConfigAfter).toContain('getJestProjects()');
   });
@@ -238,11 +238,11 @@ module.exports = {
 module.exports = {
   projects: [...getJestProjects(), '<rootDir>/some/test/dir/my-source', '<rootDir>/foo']
 };
-`,
+`
     );
     const projectConfig = readProjectConfiguration(
       tree,
-      'some-test-dir-my-source',
+      'some-test-dir-my-source'
     );
     const schema: NormalizedSchema = {
       projectName: 'some-test-dir-my-source',
@@ -257,10 +257,10 @@ module.exports = {
 
     const rootJestConfigAfter = tree.read(rootJestConfigPath, 'utf-8');
     expect(rootJestConfigAfter).not.toContain(
-      '<rootDir>/some/test/dir/my-source',
+      '<rootDir>/some/test/dir/my-source'
     );
     expect(rootJestConfigAfter).not.toContain(
-      '<rootDir>/other/test/dir/my-destination',
+      '<rootDir>/other/test/dir/my-destination'
     );
     expect(rootJestConfigAfter).toContain('<rootDir>/foo');
     expect(rootJestConfigAfter).toContain('getJestProjects()');

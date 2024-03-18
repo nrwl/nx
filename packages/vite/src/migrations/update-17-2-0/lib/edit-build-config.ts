@@ -18,11 +18,11 @@ export function updateBuildOutDirAndRoot(
   targetName: string,
   tree: Tree,
   projectName: string,
-  configPath: string,
+  configPath: string
 ): string {
   const foundDefineConfig = tsquery.query(
     configContents,
-    'CallExpression:has(Identifier[name="defineConfig"])',
+    'CallExpression:has(Identifier[name="defineConfig"])'
   )?.[0];
 
   if (!foundDefineConfig) {
@@ -37,7 +37,7 @@ export function updateBuildOutDirAndRoot(
     targetName,
     tree,
     projectName,
-    configPath,
+    configPath
   );
 
   configContents = addRoot(configContents, configPath);
@@ -52,7 +52,7 @@ function fixBuild(
   targetName: string,
   tree: Tree,
   projectName: string,
-  configPath: string,
+  configPath: string
 ) {
   const configNode = getConfigNode(configContents);
   if (!configNode) {
@@ -66,13 +66,13 @@ function fixBuild(
   if (options.outputPath) {
     outputPath = joinPathFragments(
       offsetFromRoot(projectConfig.root),
-      options.outputPath,
+      options.outputPath
     );
   } else {
     outputPath = joinPathFragments(
       offsetFromRoot(projectConfig.root),
       'dist',
-      projectConfig.root,
+      projectConfig.root
     );
   }
 
@@ -84,25 +84,25 @@ function fixBuild(
 
   const buildObject = tsquery.query(
     configNode,
-    `PropertyAssignment:has(Identifier[name="build"])`,
+    `PropertyAssignment:has(Identifier[name="build"])`
   )?.[0];
 
   if (buildObject) {
     const reportCompressedSizeExists =
       tsquery.query(
         buildObject,
-        `PropertyAssignment:has(Identifier[name="reportCompressedSize"])`,
+        `PropertyAssignment:has(Identifier[name="reportCompressedSize"])`
       )?.length > 0;
 
     const commonjsOptionsExists =
       tsquery.query(
         buildObject,
-        `PropertyAssignment:has(Identifier[name="commonjsOptions"])`,
+        `PropertyAssignment:has(Identifier[name="commonjsOptions"])`
       )?.length > 0;
 
     const buildOutDir = tsquery.query(
       buildObject,
-      `PropertyAssignment:has(Identifier[name="outDir"])`,
+      `PropertyAssignment:has(Identifier[name="outDir"])`
     )?.length;
 
     // Array to store changes
@@ -155,7 +155,7 @@ function addRoot(configFileContents: string, configPath: string): string {
 
   const rootOption = tsquery.query(
     configNode,
-    `PropertyAssignment:has(Identifier[name="root"]) Identifier[name="__dirname"]`,
+    `PropertyAssignment:has(Identifier[name="root"]) Identifier[name="__dirname"]`
   )?.[0];
 
   if (rootOption) {
@@ -174,7 +174,7 @@ function addRoot(configFileContents: string, configPath: string): string {
 function addBuildProperty(
   configFileContents: string,
   outputPath: string,
-  configPath: string,
+  configPath: string
 ): string {
   const configNode = getConfigNode(configFileContents);
   if (!configNode) {

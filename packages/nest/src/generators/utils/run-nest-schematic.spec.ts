@@ -38,7 +38,7 @@ describe('runNestSchematic utility', () => {
 
   test.each(testTypes)('%p should run successfully', async (type) => {
     await expect(
-      runNestSchematic(tree, type, options),
+      runNestSchematic(tree, type, options)
     ).resolves.not.toThrowError();
   });
 

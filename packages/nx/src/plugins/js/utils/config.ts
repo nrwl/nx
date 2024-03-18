@@ -10,7 +10,7 @@ import { workspaceRoot } from '../../../utils/workspace-root';
 import { existsSync } from 'fs';
 
 export function jsPluginConfig(
-  nxJson: NxJsonConfiguration,
+  nxJson: NxJsonConfiguration
 ): Required<NrwlJsPluginConfig> {
   const nxJsonConfig: NrwlJsPluginConfig =
     nxJson?.pluginsConfig?.['@nx/js'] ?? nxJson?.pluginsConfig?.['@nrwl/js'];
@@ -42,7 +42,7 @@ export function jsPluginConfig(
   }
 
   const packageJson = readJsonFile<PackageJson>(
-    join(workspaceRoot, 'package.json'),
+    join(workspaceRoot, 'package.json')
   );
 
   const packageJsonDeps = {

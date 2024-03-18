@@ -41,21 +41,25 @@ function updateDetoxrcJson(host: Tree, project: ProjectConfiguration) {
   if (!host.exists(detoxConfigPath)) return;
   updateJson(host, detoxConfigPath, (json) => {
     if (json.apps?.['ios.eas']) {
-      json.apps['ios.eas'].build =
-        `${exec} nx run ${projectName}:download --platform ios --distribution simulator --output=${offset}${appRoot}/dist/`;
+      json.apps[
+        'ios.eas'
+      ].build = `${exec} nx run ${projectName}:download --platform ios --distribution simulator --output=${offset}${appRoot}/dist/`;
     }
     if (json.apps?.['android.eas']) {
-      json.apps['android.eas'].build =
-        `${exec} nx run ${projectName}:download --platform android --distribution simulator --output=${offset}${appRoot}/dist/`;
+      json.apps[
+        'android.eas'
+      ].build = `${exec} nx run ${projectName}:download --platform android --distribution simulator --output=${offset}${appRoot}/dist/`;
       json.apps['android.eas'].type = 'android.apk';
     }
     if (json.apps?.['ios.local']) {
-      json.apps['ios.local'].build =
-        `${exec} nx run ${projectName}:build --platform ios --profile preview --wait --local --no-interactive --output=${offset}${appRoot}/dist/${appName}.tar.gz`;
+      json.apps[
+        'ios.local'
+      ].build = `${exec} nx run ${projectName}:build --platform ios --profile preview --wait --local --no-interactive --output=${offset}${appRoot}/dist/${appName}.tar.gz`;
     }
     if (json.apps?.['android.local']) {
-      json.apps['android.local'].build =
-        `${exec} nx run ${projectName}:build --platform android --profile preview --wait --local --no-interactive --output=${offset}${appRoot}/dist/${appName}.apk`;
+      json.apps[
+        'android.local'
+      ].build = `${exec} nx run ${projectName}:build --platform android --profile preview --wait --local --no-interactive --output=${offset}${appRoot}/dist/${appName}.apk`;
       json.apps['android.local'].type = 'android.apk';
     }
     return json;

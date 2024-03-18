@@ -33,14 +33,14 @@ describe('application generator', () => {
 
     expect(tree.exists(`${appDirectory}/src/main.ts`)).toBeTruthy();
     expect(
-      tree.exists(`${appDirectory}/src/app/app.controller.spec.ts`),
+      tree.exists(`${appDirectory}/src/app/app.controller.spec.ts`)
     ).toBeTruthy();
     expect(
-      tree.exists(`${appDirectory}/src/app/app.controller.ts`),
+      tree.exists(`${appDirectory}/src/app/app.controller.ts`)
     ).toBeTruthy();
     expect(tree.exists(`${appDirectory}/src/app/app.module.ts`)).toBeTruthy();
     expect(
-      tree.exists(`${appDirectory}/src/app/app.service.spec.ts`),
+      tree.exists(`${appDirectory}/src/app/app.service.spec.ts`)
     ).toBeTruthy();
     expect(tree.exists(`${appDirectory}/src/app/app.service.ts`)).toBeTruthy();
   });
@@ -73,7 +73,7 @@ describe('application generator', () => {
     expect(tsConfig.compilerOptions.noImplicitAny).toBeTruthy();
     expect(tsConfig.compilerOptions.strictBindCallApply).toBeTruthy();
     expect(
-      tsConfig.compilerOptions.forceConsistentCasingInFileNames,
+      tsConfig.compilerOptions.forceConsistentCasingInFileNames
     ).toBeTruthy();
     expect(tsConfig.compilerOptions.noFallthroughCasesInSwitch).toBeTruthy();
   });

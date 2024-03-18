@@ -27,7 +27,7 @@ export default async function update(host: Tree) {
             projectConfig.targets[targetName].options.thirdParty ??= true;
           }
         }
-      },
+      }
     );
 
     if (shouldUpdate) {

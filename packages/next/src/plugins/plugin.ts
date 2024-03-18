@@ -40,7 +40,7 @@ function readTargetsCache(): Record<
 }
 
 function writeTargetsToCache(
-  targets: Record<string, Record<string, TargetConfiguration>>,
+  targets: Record<string, Record<string, TargetConfiguration>>
 ) {
   writeJsonFile(cachePath, targets);
 }
@@ -90,7 +90,7 @@ async function buildNextTargets(
   nextConfigPath: string,
   projectRoot: string,
   options: NextPluginOptions,
-  context: CreateNodesContext,
+  context: CreateNodesContext
 ) {
   const nextConfig = await getNextConfig(nextConfigPath, context);
   const namedInputs = getNamedInputs(projectRoot, context);
@@ -100,7 +100,7 @@ async function buildNextTargets(
   targets[options.buildTargetName] = await getBuildTargetConfig(
     namedInputs,
     projectRoot,
-    nextConfig,
+    nextConfig
   );
 
   targets[options.devTargetName] = getDevTargetConfig(projectRoot);
@@ -115,7 +115,7 @@ async function buildNextTargets(
 async function getBuildTargetConfig(
   namedInputs: { [inputName: string]: any[] },
   projectRoot: string,
-  nextConfig: any,
+  nextConfig: any
 ) {
   const nextOutputPath = await getOutputs(projectRoot, nextConfig);
   // Set output path here so that `withNx` can pick it up.
@@ -175,7 +175,7 @@ async function getOutputs(projectRoot, nextConfig) {
   if (typeof nextConfig === 'function') {
     // Works for both async and sync functions.
     const configResult = await Promise.resolve(
-      nextConfig(PHASE_PRODUCTION_BUILD, { defaultConfig: {} }),
+      nextConfig(PHASE_PRODUCTION_BUILD, { defaultConfig: {} })
     );
     if (configResult?.distDir) {
       dir = configResult?.distDir;
@@ -194,7 +194,7 @@ async function getOutputs(projectRoot, nextConfig) {
 
 async function getNextConfig(
   configFilePath: string,
-  context: CreateNodesContext,
+  context: CreateNodesContext
 ): Promise<any> {
   const resolvedPath = join(context.workspaceRoot, configFilePath);
 
@@ -217,7 +217,7 @@ function normalizeOptions(options: NextPluginOptions): NextPluginOptions {
 }
 
 function getInputs(
-  namedInputs: NxJsonConfiguration['namedInputs'],
+  namedInputs: NxJsonConfiguration['namedInputs']
 ): TargetConfiguration['inputs'] {
   return [
     ...('production' in namedInputs
@@ -256,7 +256,7 @@ export function loadEsmModule<T>(modulePath: string | URL): Promise<T> {
   const modulePathWithCacheBust = `${modulePath}?version=${Date.now()}`;
   dynamicLoad ??= new Function(
     'modulePath',
-    `return import(modulePath);`,
+    `return import(modulePath);`
   ) as Exclude<typeof dynamicLoad, undefined>;
 
   return dynamicLoad(modulePathWithCacheBust);

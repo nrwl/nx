@@ -16,7 +16,7 @@ import * as ts from 'typescript';
 import { ngCompilerCli } from './ng-compiler-cli';
 
 async function readDefaultTsConfig(
-  fileName: string,
+  fileName: string
 ): Promise<ParsedConfiguration> {
   // these options are mandatory
   const extraOptions: CompilerOptions = {
@@ -50,12 +50,12 @@ async function readDefaultTsConfig(
 export async function parseRemappedTsConfigAndMergeDefaults(
   workspaceRoot: string,
   originalFilePath: string,
-  remappedFilePath: string,
+  remappedFilePath: string
 ): Promise<ParsedConfiguration> {
   const parsedConfiguration = await readDefaultTsConfig(remappedFilePath);
   parsedConfiguration.options.configFilePath = resolve(
     workspaceRoot,
-    originalFilePath,
+    originalFilePath
   );
 
   return parsedConfiguration;

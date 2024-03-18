@@ -9,12 +9,12 @@ let tsModule: typeof import('typescript');
 
 export function addExportsToBarrel(
   tree: Tree,
-  options: NormalizedNgRxFeatureStoreGeneratorOptions,
+  options: NormalizedNgRxFeatureStoreGeneratorOptions
 ): void {
   const indexFilePath = joinPathFragments(
     options.parentDirectory,
     '..',
-    'index.ts',
+    'index.ts'
   );
   if (!tree.exists(indexFilePath)) {
     return;
@@ -28,7 +28,7 @@ export function addExportsToBarrel(
     indexFilePath,
     indexSourceText,
     tsModule.ScriptTarget.Latest,
-    true,
+    true
   );
 
   // Public API for the feature interfaces, selectors, and facade
@@ -44,7 +44,7 @@ export function addExportsToBarrel(
     indexFilePath,
     options.barrels
       ? `import * as ${className}Actions from '${statePath}.actions';`
-      : `export * from '${statePath}.actions';`,
+      : `export * from '${statePath}.actions';`
   );
   sourceFile = addGlobal(
     tree,
@@ -52,7 +52,7 @@ export function addExportsToBarrel(
     indexFilePath,
     options.barrels
       ? `import * as ${className}Feature from '${statePath}.reducer';`
-      : `export * from '${statePath}.reducer';`,
+      : `export * from '${statePath}.reducer';`
   );
   sourceFile = addGlobal(
     tree,
@@ -60,7 +60,7 @@ export function addExportsToBarrel(
     indexFilePath,
     options.barrels
       ? `import * as ${className}Selectors from '${statePath}.selectors';`
-      : `export * from '${statePath}.selectors';`,
+      : `export * from '${statePath}.selectors';`
   );
 
   if (options.barrels) {
@@ -68,7 +68,7 @@ export function addExportsToBarrel(
       tree,
       sourceFile,
       indexFilePath,
-      `export { ${className}Actions, ${className}Feature, ${className}Selectors };`,
+      `export { ${className}Actions, ${className}Feature, ${className}Selectors };`
     );
   }
 
@@ -76,7 +76,7 @@ export function addExportsToBarrel(
     tree,
     sourceFile,
     indexFilePath,
-    `export * from '${statePath}.models';`,
+    `export * from '${statePath}.models';`
   );
 
   if (options.facade) {
@@ -84,7 +84,7 @@ export function addExportsToBarrel(
       tree,
       sourceFile,
       indexFilePath,
-      `export * from '${statePath}.facade';`,
+      `export * from '${statePath}.facade';`
     );
   }
 }

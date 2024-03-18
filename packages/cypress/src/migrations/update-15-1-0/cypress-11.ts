@@ -37,12 +37,12 @@ export async function updateToCypress11(tree: Tree) {
         projectConfig.root,
         'cypress',
         'support',
-        'commands.ts',
+        'commands.ts'
       );
       const framework = getFramework(
         tree.exists(commandsFile)
           ? tree.read(commandsFile, 'utf-8')
-          : tree.read(options.cypressConfig, 'utf-8'),
+          : tree.read(options.cypressConfig, 'utf-8')
       );
 
       visitNotIgnoredFiles(tree, projectConfig.sourceRoot, (filePath) => {
@@ -59,13 +59,13 @@ export async function updateToCypress11(tree: Tree) {
           updateProviderUsage(tree, filePath);
         }
       });
-    },
+    }
   );
 
   const installTask = addDependenciesToPackageJson(
     tree,
     {},
-    { cypress: cypressVersion },
+    { cypress: cypressVersion }
   );
 
   await formatFiles(tree);
@@ -84,7 +84,7 @@ export function updateMountHookUsage(tree: Tree, filePath: string) {
 * Use a wrapper component instead. 
 * See post for details: https://www.cypress.io/blog/2022/11/04/upcoming-changes-to-component-testing/#reactmounthook-removed 
 * */\n${node.getText()}`;
-    },
+    }
   );
 
   tree.write(filePath, commentedMountHook);
@@ -103,7 +103,7 @@ export function updateUnmountUsage(tree: Tree, filePath: string) {
     (node) => {
       return `${node.getText().replace('unmount', 'getContainerEl')}
 ${reactDomImport}`;
-    },
+    }
   );
 
   const updatedUnmountApi = tsquery.replace(
@@ -113,7 +113,7 @@ ${reactDomImport}`;
       if (node.expression.getText() === 'unmount') {
         return `cy.then(() => ReactDom.unmountComponentAtNode(getContainerEl()))`;
       }
-    },
+    }
   );
 
   tree.write(filePath, updatedUnmountApi);
@@ -124,7 +124,7 @@ export function updateProviderUsage(tree: Tree, filePath: string) {
   const isTestBedImported =
     tsquery.query(
       originalContents,
-      ':matches(ImportDeclaration, VariableStatement):has(Identifier[name="TestBed"]):has(StringLiteral[value="@angular/core/testing"])',
+      ':matches(ImportDeclaration, VariableStatement):has(Identifier[name="TestBed"]):has(StringLiteral[value="@angular/core/testing"])'
     )?.length > 0;
 
   let updatedProviders = tsquery.replace(
@@ -145,14 +145,14 @@ export function updateProviderUsage(tree: Tree, filePath: string) {
             (n) => {
               // set it to undefined so we don't run into a hanging comma causing invalid syntax
               return 'providers: undefined';
-            },
+            }
           );
           return `TestBed.overrideComponent(${component}, { add: { ${providers} }});\n${noProviders}`;
         } else {
           return `TestBed.overrideComponent(${component}, {add: { providers: ${node.arguments[1].getText()}.providers}});\n${node.getText()}`;
         }
       }
-    },
+    }
   );
   tree.write(
     filePath,
@@ -160,7 +160,7 @@ export function updateProviderUsage(tree: Tree, filePath: string) {
       isTestBedImported
         ? ''
         : "import {TestBed} from '@angular/core/testing';\n"
-    }${updatedProviders}`,
+    }${updatedProviders}`
   );
 }
 

@@ -26,17 +26,17 @@ describe('create-nodes-plugin/generator generator', () => {
     writeJson(tree, 'packages/eslint/package.json', {});
     await generatorGenerator(tree);
     expect(
-      tree.read('packages/eslint/src/plugins/plugin.ts').toString(),
+      tree.read('packages/eslint/src/plugins/plugin.ts').toString()
     ).toMatchSnapshot();
     expect(
-      tree.read('packages/eslint/src/plugins/plugin.spec.ts').toString(),
+      tree.read('packages/eslint/src/plugins/plugin.spec.ts').toString()
     ).toMatchSnapshot();
     expect(
       tree
         .read(
-          'packages/eslint/src/migrations/update-17-2-0/add-eslint-plugin.ts',
+          'packages/eslint/src/migrations/update-17-2-0/add-eslint-plugin.ts'
         )
-        .toString(),
+        .toString()
     ).toMatchSnapshot();
   });
 
@@ -87,7 +87,7 @@ describe('create-nodes-plugin/generator generator', () => {
     });
     await generatorGenerator(tree);
     expect(
-      tree.read('packages/eslint/package.json', 'utf-8'),
+      tree.read('packages/eslint/package.json', 'utf-8')
     ).toMatchSnapshot();
   });
 });

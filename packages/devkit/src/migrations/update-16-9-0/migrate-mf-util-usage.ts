@@ -45,7 +45,7 @@ export default async (tree: Tree): Promise<GeneratorCallback | void> => {
     let fileContents = tree.read(path, 'utf-8');
     if (
       MODULE_FEDERATION_PUBLIC_TOKENS.every(
-        (token) => !fileContents.includes(token),
+        (token) => !fileContents.includes(token)
       )
     ) {
       return;
@@ -77,9 +77,9 @@ function replaceJSDoc(tree: Tree, path: string, fileContents: string) {
     newFileContents = newFileContents.replaceAll(
       new RegExp(
         `(@type)+\\s({)+(\\s)*(import\\(('|")+@nx\/devkit('|")+\\)\.)+(${token})+\\s*(})+`,
-        'g',
+        'g'
       ),
-      `@type {import('@nx/webpack').${token}}`,
+      `@type {import('@nx/webpack').${token}}`
     );
   }
 
@@ -89,7 +89,7 @@ function replaceJSDoc(tree: Tree, path: string, fileContents: string) {
 function replaceRequireCalls(
   tree: Tree,
   path: string,
-  fileContents: string,
+  fileContents: string
 ): string {
   if (!tsModule) {
     tsModule = ensurePackage('typescript', typescriptVersion);
@@ -99,27 +99,26 @@ function replaceRequireCalls(
     path,
     fileContents,
     tsModule.ScriptTarget.Latest,
-    true,
+    true
   );
 
   const allDevkitRequires = findNodes(
     sourceFile,
-    tsModule.SyntaxKind.VariableStatement,
+    tsModule.SyntaxKind.VariableStatement
   )
     .filter((node) =>
       [`require("@nx/devkit")`, `require('@nx/devkit')`].some((r) =>
-        node.getText().includes(r),
-      ),
+        node.getText().includes(r)
+      )
     )
     .filter(
-      (node) =>
-        findNodes(node, tsModule.SyntaxKind.ObjectBindingPattern).length,
+      (node) => findNodes(node, tsModule.SyntaxKind.ObjectBindingPattern).length
     );
 
   const mfUtilRequires = allDevkitRequires.filter((node) =>
     MODULE_FEDERATION_PUBLIC_TOKENS.some((token) =>
-      node.getText().includes(token),
-    ),
+      node.getText().includes(token)
+    )
   );
 
   if (!mfUtilRequires.length) {
@@ -129,7 +128,7 @@ function replaceRequireCalls(
   const mfUtilTokens = mfUtilRequires.map((node) => {
     const allTokens = findNodes(node, tsModule.SyntaxKind.BindingElement);
     const mfTokens = allTokens.filter((node) =>
-      MODULE_FEDERATION_PUBLIC_TOKENS.some((token) => node.getText() === token),
+      MODULE_FEDERATION_PUBLIC_TOKENS.some((token) => node.getText() === token)
     );
 
     return {
@@ -179,7 +178,7 @@ function replaceRequireCalls(
     newFileContents = `${newFileContents.substring(0, change.startPosition)}${
       change.content
     }${newFileContents.substring(
-      change.endPosition ? change.endPosition : change.startPosition,
+      change.endPosition ? change.endPosition : change.startPosition
     )}`;
   }
 
@@ -189,7 +188,7 @@ function replaceRequireCalls(
 function replaceTSImports(
   tree: Tree,
   path: string,
-  fileContents: string,
+  fileContents: string
 ): string {
   if (!tsModule) {
     tsModule = ensurePackage('typescript', typescriptVersion);
@@ -199,20 +198,18 @@ function replaceTSImports(
     path,
     fileContents,
     tsModule.ScriptTarget.Latest,
-    true,
+    true
   );
 
   const allImports = findNodes(
     sourceFile,
-    tsModule.SyntaxKind.ImportDeclaration,
+    tsModule.SyntaxKind.ImportDeclaration
   );
   const devkitImports = allImports.filter((i) =>
-    i.getText().includes(`'@nx/devkit';`),
+    i.getText().includes(`'@nx/devkit';`)
   );
   const mfUtilsImports = devkitImports.filter((i) =>
-    MODULE_FEDERATION_PUBLIC_TOKENS.some((token) =>
-      i.getText().includes(token),
-    ),
+    MODULE_FEDERATION_PUBLIC_TOKENS.some((token) => i.getText().includes(token))
   );
 
   if (!mfUtilsImports.length) {
@@ -222,12 +219,12 @@ function replaceTSImports(
   const mfUtilsWithMultipleImports = mfUtilsImports.map((i) => {
     const importSpecifierNodes = findNodes(
       i,
-      tsModule.SyntaxKind.ImportSpecifier,
+      tsModule.SyntaxKind.ImportSpecifier
     );
     const mfImportSpecifierNodes = importSpecifierNodes.filter((node) =>
       MODULE_FEDERATION_PUBLIC_TOKENS.some((token) =>
-        node.getText().includes(token),
-      ),
+        node.getText().includes(token)
+      )
     );
 
     return {
@@ -273,7 +270,7 @@ function replaceTSImports(
       ].importDeclarationNode.getEnd(),
     content: `\nimport { ${mfUtilsWithMultipleImports
       .map((importDeclaration) =>
-        importDeclaration.mfImportSpecifierNodes.map((node) => node.getText()),
+        importDeclaration.mfImportSpecifierNodes.map((node) => node.getText())
       )
       .join(', ')} } from '@nx/webpack';`,
   });
@@ -284,7 +281,7 @@ function replaceTSImports(
     newFileContents = `${newFileContents.substring(0, change.startPosition)}${
       change.content
     }${newFileContents.substring(
-      change.endPosition ? change.endPosition : change.startPosition,
+      change.endPosition ? change.endPosition : change.startPosition
     )}`;
   }
 
@@ -294,7 +291,7 @@ function replaceTSImports(
 function findNodes(
   node: Node,
   kind: SyntaxKind | SyntaxKind[],
-  max = Infinity,
+  max = Infinity
 ): Node[] {
   if (!node || max == 0) {
     return [];

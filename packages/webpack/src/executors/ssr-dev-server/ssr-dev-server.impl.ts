@@ -13,20 +13,20 @@ import { waitUntilServerIsListening } from './lib/wait-until-server-is-listening
 
 export async function* ssrDevServerExecutor(
   options: WebSsrDevServerOptions,
-  context: ExecutorContext,
+  context: ExecutorContext
 ) {
   const browserTarget = parseTargetString(
     options.browserTarget,
-    context.projectGraph,
+    context.projectGraph
   );
   const serverTarget = parseTargetString(options.serverTarget, context);
   const browserOptions = readTargetOptions<WebpackExecutorOptions>(
     browserTarget,
-    context,
+    context
   );
   const serverOptions = readTargetOptions<WebpackExecutorOptions>(
     serverTarget,
-    context,
+    context
   );
 
   const runBrowser = await runExecutor<{
@@ -36,7 +36,7 @@ export async function* ssrDevServerExecutor(
   }>(
     browserTarget,
     { ...browserOptions, ...options.browserTargetOptions },
-    context,
+    context
   );
   const runServer = await runExecutor<{
     success: boolean;
@@ -45,7 +45,7 @@ export async function* ssrDevServerExecutor(
   }>(
     serverTarget,
     { ...serverOptions, ...options.serverTargetOptions },
-    context,
+    context
   );
   let browserBuilt = false;
   let nodeStarted = false;
@@ -64,7 +64,7 @@ export async function* ssrDevServerExecutor(
     if (nodeStarted && browserBuilt) {
       await waitUntilServerIsListening(options.port);
       console.log(
-        `[ ${chalk.green('ready')} ] on http://localhost:${options.port}`,
+        `[ ${chalk.green('ready')} ] on http://localhost:${options.port}`
       );
       yield {
         ...output,

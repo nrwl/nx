@@ -12,14 +12,14 @@ import type { NxRemixGeneratorSchema } from './schema';
 
 export async function remixLibraryGenerator(
   tree: Tree,
-  schema: NxRemixGeneratorSchema,
+  schema: NxRemixGeneratorSchema
 ) {
   return remixLibraryGeneratorInternal(tree, { addPlugin: false, ...schema });
 }
 
 export async function remixLibraryGeneratorInternal(
   tree: Tree,
-  schema: NxRemixGeneratorSchema,
+  schema: NxRemixGeneratorSchema
 ) {
   const tasks: GeneratorCallback[] = [];
   const options = await normalizeOptions(tree, schema);

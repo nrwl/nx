@@ -7,7 +7,7 @@ import {
 } from './index';
 
 export function transformProjectGraphForRust(
-  graph: ProjectGraph,
+  graph: ProjectGraph
 ): RustProjectGraph {
   const dependencies: Record<string, string[]> = {};
   const nodes: Record<string, Project> = {};
@@ -15,7 +15,7 @@ export function transformProjectGraphForRust(
   for (const [projectName, projectNode] of Object.entries(graph.nodes)) {
     const targets: Record<string, Target> = {};
     for (const [targetName, targetConfig] of Object.entries(
-      projectNode.data.targets ?? {},
+      projectNode.data.targets ?? {}
     )) {
       targets[targetName] = {
         executor: targetConfig.executor,
@@ -39,7 +39,7 @@ export function transformProjectGraphForRust(
     }
   }
   for (const [projectName, externalNode] of Object.entries(
-    graph.externalNodes ?? {},
+    graph.externalNodes ?? {}
   )) {
     externalNodes[projectName] = {
       hash: externalNode.data.hash,

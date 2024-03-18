@@ -7,7 +7,7 @@ import { UpgradeNativeConfigureSchema } from '../schema';
 export function createNativeFiles(
   host: Tree,
   schema: UpgradeNativeConfigureSchema,
-  appProjectRoot: string,
+  appProjectRoot: string
 ) {
   const options = normalizeOptions(schema, appProjectRoot);
 
@@ -18,13 +18,13 @@ export function createNativeFiles(
     host,
     join(__dirname, '../../application/files/app/ios'),
     iosProjectRoot,
-    options,
+    options
   );
 
   generateFiles(
     host,
     join(__dirname, '../../application/files/app/android'),
     androidProjectRoot,
-    options,
+    options
   );
 }

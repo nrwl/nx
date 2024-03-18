@@ -19,7 +19,7 @@ process.env.NODE_ENV ??= 'test';
 
 export async function jestExecutor(
   options: JestExecutorOptions,
-  context: ExecutorContext,
+  context: ExecutorContext
 ): Promise<{ success: boolean }> {
   const config = await jestConfigParser(options, context);
 
@@ -30,7 +30,7 @@ export async function jestExecutor(
 
 function getExtraArgs(
   options: JestExecutorOptions,
-  schema: { properties: Record<string, any> },
+  schema: { properties: Record<string, any> }
 ) {
   const extraArgs = {};
   for (const key of Object.keys(options)) {
@@ -45,7 +45,7 @@ function getExtraArgs(
 export async function jestConfigParser(
   options: JestExecutorOptions,
   context: ExecutorContext,
-  multiProjects = false,
+  multiProjects = false
 ): Promise<Config.Argv> {
   let jestConfig:
     | {
@@ -127,7 +127,7 @@ export async function jestConfigParser(
   if (options.coverageDirectory) {
     config.coverageDirectory = path.join(
       context.root,
-      options.coverageDirectory,
+      options.coverageDirectory
     );
   }
 
@@ -155,7 +155,7 @@ export async function batchJest(
   taskGraph: TaskGraph,
   inputs: Record<string, JestExecutorOptions>,
   overrides: JestExecutorOptions,
-  context: ExecutorContext,
+  context: ExecutorContext
 ): Promise<BatchResults> {
   let configPaths: string[] = [];
   let selectedProjects: string[] = [];
@@ -170,7 +170,7 @@ export async function batchJest(
      * from the config file, but skip the project if it does not exist. */
     const displayNameValueRegex = new RegExp(
       /(['"]+.*['"])(?<=displayName+.*)/,
-      'g',
+      'g'
     );
     const fileContents = readFileSync(configPath, { encoding: 'utf-8' });
     if (!displayNameValueRegex.test(fileContents)) {
@@ -189,9 +189,9 @@ export async function batchJest(
 
       Projects missing "displayName":
       ${projectsWithNoName.map(
-        ([project, configPath]) => ` - ${project} - ${configPath}\r\n`,
+        ([project, configPath]) => ` - ${project} - ${configPath}\r\n`
       )}
-      You can learn more about this requirement from Jest here: https://jestjs.io/docs/cli#--selectprojects-project1--projectn`,
+      You can learn more about this requirement from Jest here: https://jestjs.io/docs/cli#--selectprojects-project1--projectn`
     );
   }
   const parsedConfigs = await jestConfigParser(overrides, context, true);
@@ -201,7 +201,7 @@ export async function batchJest(
       ...parsedConfigs,
       selectProjects: selectedProjects,
     },
-    [workspaceRoot],
+    [workspaceRoot]
   );
   const { configs } = await readConfigs({ $0: undefined, _: [] }, configPaths);
   const jestTaskExecutionResults: BatchResults = {};
@@ -231,7 +231,7 @@ export async function batchJest(
           jestReporterUtils.getResultHeader(
             testResult as any,
             globalConfig as any,
-            configs[i] as any,
+            configs[i] as any
           );
       }
     }

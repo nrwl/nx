@@ -48,15 +48,15 @@ describe('federate-module', () => {
 
       const content = tree.read(
         'my-remote/module-federation.config.ts',
-        'utf-8',
+        'utf-8'
       );
       expect(content).toContain(
-        `'./my-federated-module': 'my-remote/src/my-federated-module.ts'`,
+        `'./my-federated-module': 'my-remote/src/my-federated-module.ts'`
       );
 
       const tsconfig = JSON.parse(tree.read('tsconfig.base.json', 'utf-8'));
       expect(
-        tsconfig.compilerOptions.paths['my-remote/my-federated-module'],
+        tsconfig.compilerOptions.paths['my-remote/my-federated-module']
       ).toEqual(['my-remote/src/my-federated-module.ts']);
     });
 
@@ -66,7 +66,7 @@ describe('federate-module', () => {
         path: 'invalid/path',
       }).catch((e) => {
         expect(e.message).toContain(
-          'The "path" provided  does not exist. Please verify the path is correct and pointing to a file that exists in the workspace.',
+          'The "path" provided  does not exist. Please verify the path is correct and pointing to a file that exists in the workspace.'
         );
       });
     });
@@ -90,11 +90,11 @@ describe('federate-module', () => {
     it('should append the new path to the module federation config', async () => {
       let content = tree.read(
         `${remoteSchema.name}/module-federation.config.ts`,
-        'utf-8',
+        'utf-8'
       );
 
       expect(content).not.toContain(
-        `'./my-federated-module': 'my-remote/src/my-federated-module.ts'`,
+        `'./my-federated-module': 'my-remote/src/my-federated-module.ts'`
       );
 
       await federateModuleGenerator(tree, {
@@ -104,17 +104,17 @@ describe('federate-module', () => {
 
       content = tree.read(
         `${remoteSchema.name}/module-federation.config.ts`,
-        'utf-8',
+        'utf-8'
       );
       expect(content).toContain(
-        `'./my-federated-module': 'my-remote/src/my-federated-module.ts'`,
+        `'./my-federated-module': 'my-remote/src/my-federated-module.ts'`
       );
 
       const tsconfig = JSON.parse(tree.read('tsconfig.base.json', 'utf-8'));
       expect(
         tsconfig.compilerOptions.paths[
           `${remoteSchema.name}/my-federated-module`
-        ],
+        ]
       ).toEqual(['my-remote/src/my-federated-module.ts']);
     });
   });

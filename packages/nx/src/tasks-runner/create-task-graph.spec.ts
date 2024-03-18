@@ -74,7 +74,7 @@ describe('createTaskGraph', () => {
       [],
       ['test'],
       'development',
-      {},
+      {}
     );
 
     expect(tasks).toEqual({
@@ -93,7 +93,7 @@ describe('createTaskGraph', () => {
       'development',
       {
         a: 123,
-      },
+      }
     );
     expect(oneTask).toEqual({
       roots: ['app1:test'],
@@ -122,7 +122,7 @@ describe('createTaskGraph', () => {
       'development',
       {
         a: 123,
-      },
+      }
     );
 
     expect(twoTasks).toEqual({
@@ -168,7 +168,7 @@ describe('createTaskGraph', () => {
       'development',
       {
         a: 123,
-      },
+      }
     );
 
     expect(taskGraph.tasks['app1:test'].outputs).toEqual(['dist/app1']);
@@ -186,7 +186,7 @@ describe('createTaskGraph', () => {
       'development',
       {
         a: 123,
-      },
+      }
     );
 
     expect(taskGraph.tasks['app1:test'].outputs).toEqual(['dist/app1-root']);
@@ -270,7 +270,7 @@ describe('createTaskGraph', () => {
       ['lib1'],
       ['compile'],
       null,
-      {},
+      {}
     );
 
     expect(compileLib).toEqual({
@@ -312,7 +312,7 @@ describe('createTaskGraph', () => {
       ['app1'],
       ['compile'],
       'ci',
-      {},
+      {}
     );
 
     expect(compileApp).toEqual({
@@ -435,7 +435,7 @@ describe('createTaskGraph', () => {
       ['app1'],
       ['compile'],
       null,
-      {},
+      {}
     );
 
     expect(compileApp).toEqual({
@@ -480,7 +480,7 @@ describe('createTaskGraph', () => {
       'development',
       {
         a: '--value={project.root}',
-      },
+      }
     );
     expect(oneTask).toEqual({
       roots: ['app1:test'],
@@ -511,7 +511,7 @@ describe('createTaskGraph', () => {
       'development',
       {
         a: '--base-href=/{projectRoot}${deploymentId}',
-      },
+      }
     );
     expect(oneTask).toEqual({
       roots: ['app1:test'],
@@ -624,7 +624,7 @@ describe('createTaskGraph', () => {
       'development',
       {
         myFlag: 'flag value',
-      },
+      }
     );
 
     expect(taskResult).toEqual({
@@ -689,7 +689,7 @@ describe('createTaskGraph', () => {
       'development',
       {
         __overrides_unparsed__: [],
-      },
+      }
     );
     // precompile should also be in here
     expect(taskGraph).toEqual({
@@ -762,7 +762,7 @@ describe('createTaskGraph', () => {
       'development',
       {
         __overrides_unparsed__: [],
-      },
+      }
     );
     // precompile should also be in here
     expect(taskGraph).toEqual({
@@ -904,7 +904,7 @@ describe('createTaskGraph', () => {
       'development',
       {
         __overrides_unparsed__: [],
-      },
+      }
     );
     // precompile should also be in here
     expect(taskGraph).toEqual({
@@ -1067,7 +1067,7 @@ describe('createTaskGraph', () => {
       'development',
       {
         myFlag: 'flag value',
-      },
+      }
     );
 
     // precompile should also be in here
@@ -1157,7 +1157,7 @@ describe('createTaskGraph', () => {
       'development',
       {
         __overrides_unparsed__: [],
-      },
+      }
     );
     // precompile should also be in here
     expect(taskGraph).toEqual({
@@ -1251,7 +1251,7 @@ describe('createTaskGraph', () => {
       'development',
       {
         __overrides_unparsed__: [],
-      },
+      }
     );
     expect(taskGraph).toEqual({
       roots: [],
@@ -1341,7 +1341,7 @@ describe('createTaskGraph', () => {
       'development',
       {
         __overrides_unparsed__: [],
-      },
+      }
     );
     expect(taskGraph).toEqual({
       roots: ['app3:compile'],
@@ -1428,7 +1428,7 @@ describe('createTaskGraph', () => {
       {
         __overrides_unparsed__: [],
       },
-      true,
+      true
     );
     // precompile should also be in here
     expect(taskGraph).toEqual({
@@ -1461,7 +1461,7 @@ describe('createTaskGraph', () => {
       {
         __overrides_unparsed__: [],
       },
-      true,
+      true
     );
     // precompile should also be in here
     expect(taskGraph2).toEqual({

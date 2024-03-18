@@ -22,7 +22,7 @@ interface NormalizedWebStaticServeSchema extends WebStaticServeSchema {
 
 export function webStaticServeGenerator(
   tree: Tree,
-  options: WebStaticServeSchema,
+  options: WebStaticServeSchema
 ) {
   const opts = normalizeOptions(tree, options);
   addStaticConfig(tree, opts);
@@ -30,7 +30,7 @@ export function webStaticServeGenerator(
 
 function normalizeOptions(
   tree: Tree,
-  options: WebStaticServeSchema,
+  options: WebStaticServeSchema
 ): NormalizedWebStaticServeSchema {
   const target = parseTargetString(options.buildTarget);
   const opts: NormalizedWebStaticServeSchema = {
@@ -82,7 +82,7 @@ If this is incorrect, the update the staticFilePath option in the ${target.proje
       logger.warn(
         stripIndents`${opts.buildTarget} did not have an outputPath property set and --output-path was not provided.
 Without either options, the static serve will most likely be unable to serve your project.
-It's recommend to provide a --output-path option in this case.`,
+It's recommend to provide a --output-path option in this case.`
       );
     }
   }

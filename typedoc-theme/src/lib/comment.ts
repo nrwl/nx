@@ -25,7 +25,7 @@ export default function () {
                     : Handlebars.helpers.relativeURL((part.target as any).url);
                 const wrap = part.tag === '@linkcode' ? '`' : '';
                 result.push(
-                  url ? `[${wrap}${part.text}${wrap}](${url})` : part.text,
+                  url ? `[${wrap}${part.text}${wrap}](${url})` : part.text
                 );
               } else {
                 result.push(part.text);

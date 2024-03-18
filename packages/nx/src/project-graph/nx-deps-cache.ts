@@ -32,7 +32,7 @@ export interface FileMapCache {
 
 export const nxProjectGraph = join(
   projectGraphCacheDirectory,
-  'project-graph.json',
+  'project-graph.json'
 );
 export const nxFileMap = join(projectGraphCacheDirectory, 'file-map.json');
 
@@ -54,7 +54,7 @@ export function ensureCacheDirectory(): void {
      */
     if (!directoryExists(projectGraphCacheDirectory)) {
       throw new Error(
-        `Failed to create directory: ${projectGraphCacheDirectory}`,
+        `Failed to create directory: ${projectGraphCacheDirectory}`
       );
     }
   }
@@ -71,7 +71,7 @@ export function readFileMapCache(): null | FileMapCache {
     }
   } catch (error) {
     console.log(
-      `Error reading '${nxFileMap}'. Continue the process without the cache.`,
+      `Error reading '${nxFileMap}'. Continue the process without the cache.`
     );
     console.log(error);
   }
@@ -92,7 +92,7 @@ export function readProjectGraphCache(): null | ProjectGraph {
     }
   } catch (error) {
     console.log(
-      `Error reading '${nxProjectGraph}'. Continue the process without the cache.`,
+      `Error reading '${nxProjectGraph}'. Continue the process without the cache.`
     );
     console.log(error);
   }
@@ -101,7 +101,7 @@ export function readProjectGraphCache(): null | ProjectGraph {
   performance.measure(
     'read cache',
     'read project-graph:start',
-    'read project-graph:end',
+    'read project-graph:end'
   );
   return data ?? null;
 }
@@ -110,7 +110,7 @@ export function createProjectFileMapCache(
   nxJson: NxJsonConfiguration<'*' | string[]>,
   packageJsonDeps: Record<string, string>,
   fileMap: FileMap,
-  tsConfig: { compilerOptions?: { paths?: { [p: string]: any } } },
+  tsConfig: { compilerOptions?: { paths?: { [p: string]: any } } }
 ) {
   const nxJsonPlugins = getNxJsonPluginsData(nxJson, packageJsonDeps);
   const newValue: FileMapCache = {
@@ -128,7 +128,7 @@ export function createProjectFileMapCache(
 
 export function writeCache(
   cache: FileMapCache,
-  projectGraph: ProjectGraph,
+  projectGraph: ProjectGraph
 ): void {
   performance.mark('write cache:start');
   let retry = 1;
@@ -153,11 +153,11 @@ export function writeCache(
     } catch (err: any) {
       if (err instanceof Error) {
         console.log(
-          `ERROR (${retry}) when writing \n${err.message}\n${err.stack}`,
+          `ERROR (${retry}) when writing \n${err.message}\n${err.stack}`
         );
       } else {
         console.log(
-          `ERROR  (${retry}) unknown error when writing ${nxProjectGraph} and ${nxFileMap}`,
+          `ERROR  (${retry}) unknown error when writing ${nxProjectGraph} and ${nxFileMap}`
         );
       }
       ++retry;
@@ -172,7 +172,7 @@ export function shouldRecomputeWholeGraph(
   packageJsonDeps: Record<string, string>,
   projects: Record<string, ProjectConfiguration>,
   nxJson: NxJsonConfiguration,
-  tsConfig: { compilerOptions: { paths: { [k: string]: any } } },
+  tsConfig: { compilerOptions: { paths: { [k: string]: any } } }
 ): boolean {
   if (cache.version !== '6.0') {
     return true;
@@ -234,7 +234,7 @@ project in fileMap
 */
 export function extractCachedFileData(
   fileMap: FileMap,
-  c: FileMapCache,
+  c: FileMapCache
 ): {
   filesToProcess: FileMap;
   cachedFileData: CachedFileData;
@@ -249,7 +249,7 @@ export function extractCachedFileData(
   };
 
   const currentProjects = Object.keys(fileMap.projectFileMap).filter(
-    (name) => fileMap.projectFileMap[name].length > 0,
+    (name) => fileMap.projectFileMap[name].length > 0
   );
   currentProjects.forEach((p) => {
     processProjectNode(
@@ -257,7 +257,7 @@ export function extractCachedFileData(
       c.fileMap.projectFileMap,
       cachedFileData.projectFileMap,
       filesToProcess.projectFileMap,
-      fileMap,
+      fileMap
     );
   });
 
@@ -265,7 +265,7 @@ export function extractCachedFileData(
     c.fileMap.nonProjectFiles,
     fileMap.nonProjectFiles,
     filesToProcess.nonProjectFiles,
-    cachedFileData.nonProjectFiles,
+    cachedFileData.nonProjectFiles
   );
 
   return {
@@ -278,7 +278,7 @@ function processNonProjectFiles(
   cachedFiles: FileData[],
   nonProjectFiles: FileData[],
   filesToProcess: FileMap['nonProjectFiles'],
-  cachedFileData: CachedFileData['nonProjectFiles'],
+  cachedFileData: CachedFileData['nonProjectFiles']
 ) {
   const cachedHashMap = new Map(cachedFiles.map((f) => [f.file, f]));
   for (const f of nonProjectFiles) {
@@ -296,7 +296,7 @@ function processProjectNode(
   cachedFileMap: ProjectFileMap,
   cachedFileData: { [project: string]: { [file: string]: FileData } },
   filesToProcess: ProjectFileMap,
-  { projectFileMap }: FileMap,
+  { projectFileMap }: FileMap
 ) {
   if (!cachedFileMap[projectName]) {
     filesToProcess[projectName] = projectFileMap[projectName];
@@ -333,7 +333,7 @@ type PluginData = {
 
 function getNxJsonPluginsData(
   nxJson: NxJsonConfiguration,
-  packageJsonDeps: Record<string, string>,
+  packageJsonDeps: Record<string, string>
 ): PluginData[] {
   return (nxJson?.plugins || []).map((p) => {
     const [plugin, options] =

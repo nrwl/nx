@@ -32,7 +32,7 @@ describe('updateRootJestConfig', () => {
 
     tree.write(
       'jest.config.ts',
-      readFileSync(join(__dirname, './__fixtures__/jest.config.ts'), 'utf-8'),
+      readFileSync(join(__dirname, './__fixtures__/jest.config.ts'), 'utf-8')
     );
   });
 
@@ -50,7 +50,7 @@ describe('updateRootJestConfig', () => {
     updateJestConfig(
       tree,
       { ...schema, projectName: 'my-other-lib' },
-      readProjectConfiguration(tree, 'my-other-lib'),
+      readProjectConfiguration(tree, 'my-other-lib')
     );
 
     const updatedJestConfig2 = tree.read('jest.config.ts', 'utf-8');
@@ -64,7 +64,7 @@ describe('updateRootJestConfig', () => {
     const originalRootJestConfig = tree.read('jest.config.ts', 'utf-8');
     tree.write(
       'jest.config.ts',
-      originalRootJestConfig.replace(`'<rootDir>/libs/my-lib',`, ''),
+      originalRootJestConfig.replace(`'<rootDir>/libs/my-lib',`, '')
     );
 
     updateJestConfig(tree, schema, readProjectConfiguration(tree, 'my-lib'));
@@ -79,8 +79,8 @@ describe('updateRootJestConfig', () => {
       'jest.config.ts',
       readFileSync(
         join(__dirname, './__fixtures__/jest-project.config.ts'),
-        'utf-8',
-      ),
+        'utf-8'
+      )
     );
 
     updateJestConfig(tree, schema, readProjectConfiguration(tree, 'my-lib'));

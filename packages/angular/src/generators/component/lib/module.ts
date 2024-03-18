@@ -11,7 +11,7 @@ const routingModuleExt = '-routing.module.ts';
 export function findModuleFromOptions(
   tree: Tree,
   options: NormalizedSchema,
-  projectRoot: string,
+  projectRoot: string
 ): string {
   if (!options.module) {
     return normalizePath(findModule(tree, options.directory, projectRoot));
@@ -31,7 +31,7 @@ export function findModuleFromOptions(
     }
 
     const candidatesDirs = [...candidateSet].sort(
-      (a, b) => b.length - a.length,
+      (a, b) => b.length - a.length
     );
     for (const c of candidatesDirs) {
       const candidateFiles = [
@@ -51,8 +51,8 @@ export function findModuleFromOptions(
     throw new Error(
       `Specified module '${options.module}' does not exist.\n` +
         `Looked in the following directories:\n    ${candidatesDirs.join(
-          '\n    ',
-        )}`,
+          '\n    '
+        )}`
     );
   }
 }
@@ -60,7 +60,7 @@ export function findModuleFromOptions(
 function findModule(
   tree: Tree,
   generateDir: string,
-  projectRoot: string,
+  projectRoot: string
 ): string {
   let dir = generateDir;
   const projectRootParent = dirname(projectRoot);
@@ -71,14 +71,14 @@ function findModule(
       .map((path) => joinPathFragments(dir, path))
       .filter((path) => tree.isFile(path) && path.endsWith(moduleExt));
     const filteredMatches = allMatches.filter(
-      (path) => !path.endsWith(routingModuleExt),
+      (path) => !path.endsWith(routingModuleExt)
     );
 
     if (filteredMatches.length == 1) {
       return filteredMatches[0];
     } else if (filteredMatches.length > 1) {
       throw new Error(
-        "Found more than one candidate module to add the component to. Please specify which module the component should be added to by using the '--module' option.",
+        "Found more than one candidate module to add the component to. Please specify which module the component should be added to by using the '--module' option."
       );
     }
 
@@ -86,6 +86,6 @@ function findModule(
   }
 
   throw new Error(
-    "Could not find a candidate module to add the component to. Please specify which module the component should be added to by using the '--module' option, or pass '--standalone' to generate a standalone component.",
+    "Could not find a candidate module to add the component to. Please specify which module the component should be added to by using the '--module' option, or pass '--standalone' to generate a standalone component."
   );
 }

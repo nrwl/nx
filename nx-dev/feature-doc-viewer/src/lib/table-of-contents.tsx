@@ -10,7 +10,7 @@ interface Heading {
 
 export function collectHeadings(
   node: any,
-  sections: Heading[] = [],
+  sections: Heading[] = []
 ): Heading[] {
   if (node) {
     if (node.name && node.name === 'Heading') {
@@ -57,7 +57,7 @@ export function TableOfContents({
 }): JSX.Element {
   const headingLevelTargets: number[] = [1, 2, 3]; // matching to: H1, H2, H3...
   const items = headings.filter(
-    (item) => item.id && headingLevelTargets.includes(item.level),
+    (item) => item.id && headingLevelTargets.includes(item.level)
   );
 
   const activeId = useHeadingsObserver(
@@ -67,7 +67,7 @@ export function TableOfContents({
       root: null,
       rootMargin: '-10% 0% -45% 0%',
     },
-    headings.find((i) => i.level === 1)?.title || null,
+    headings.find((i) => i.level === 1)?.title || null
   );
 
   return (
@@ -88,7 +88,7 @@ export function TableOfContents({
                         'border-slate-500 bg-slate-50 dark:border-slate-700 dark:bg-slate-800/60':
                           activeId === item.id,
                         'pl-6': item.level === 3,
-                      },
+                      }
                     )}
                   >
                     {item.level === 1 ? 'Overview' : item.title}

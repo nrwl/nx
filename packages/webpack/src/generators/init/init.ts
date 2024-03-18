@@ -42,7 +42,7 @@ export async function webpackInitGeneratorInternal(tree: Tree, schema: Schema) {
       {},
       devDependencies,
       undefined,
-      schema.keepExistingVersions,
+      schema.keepExistingVersions
     );
   }
 

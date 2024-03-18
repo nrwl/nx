@@ -50,7 +50,7 @@ interface NormalizedCypressExecutorOptions extends CypressExecutorOptions {
 
 export default async function cypressExecutor(
   options: CypressExecutorOptions,
-  context: ExecutorContext,
+  context: ExecutorContext
 ) {
   options = normalizeOptions(options, context);
   // this is used by cypress component testing presets to build the executor contexts with the correct configuration options.
@@ -76,7 +76,7 @@ export default async function cypressExecutor(
 
 function normalizeOptions(
   options: CypressExecutorOptions,
-  context: ExecutorContext,
+  context: ExecutorContext
 ): NormalizedCypressExecutorOptions {
   options.env = options.env || {};
   if (options.testingType === 'component') {
@@ -152,7 +152,7 @@ A generator to migrate from v8 to v10 is provided. See https://nx.dev/cypress/v1
  */
 async function runCypress(
   baseUrl: string,
-  opts: NormalizedCypressExecutorOptions,
+  opts: NormalizedCypressExecutorOptions
 ) {
   const cypressVersion = installedCypressVersion();
   // Cypress expects the folder where a cypress config is present

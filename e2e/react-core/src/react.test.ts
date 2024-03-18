@@ -34,10 +34,10 @@ describe('React Applications', () => {
       const libName = uniq('lib');
 
       runCLI(
-        `generate @nx/react:app ${appName} --bundler=vite --no-interactive --skipFormat`,
+        `generate @nx/react:app ${appName} --bundler=vite --no-interactive --skipFormat`
       );
       runCLI(
-        `generate @nx/react:lib ${libName} --bundler=none --no-interactive --unit-test-runner=vitest --skipFormat`,
+        `generate @nx/react:lib ${libName} --bundler=none --no-interactive --unit-test-runner=vitest --skipFormat`
       );
 
       // Library generated with Vite
@@ -49,7 +49,7 @@ describe('React Applications', () => {
         `
         import '@${proj}/${libName}';
         ${readFile(mainPath)}
-      `,
+      `
       );
 
       runCLI(`build ${appName}`);
@@ -74,13 +74,13 @@ describe('React Applications', () => {
       const logoSvg = readFileSync(join(__dirname, 'logo.svg')).toString();
 
       runCLI(
-        `generate @nx/react:app ${appName} --style=css --bundler=webpack --no-interactive --skipFormat`,
+        `generate @nx/react:app ${appName} --style=css --bundler=webpack --no-interactive --skipFormat`
       );
       runCLI(
-        `generate @nx/react:lib ${libName} --style=css --no-interactive --unit-test-runner=jest --skipFormat`,
+        `generate @nx/react:lib ${libName} --style=css --no-interactive --unit-test-runner=jest --skipFormat`
       );
       runCLI(
-        `generate @nx/react:lib ${libWithNoComponents} --no-interactive --no-component --unit-test-runner=jest --skipFormat`,
+        `generate @nx/react:lib ${libWithNoComponents} --no-interactive --no-component --unit-test-runner=jest --skipFormat`
       );
 
       // Libs should not include package.json by default
@@ -93,7 +93,7 @@ describe('React Applications', () => {
         import '@${proj}/${libWithNoComponents}';
         import '@${proj}/${libName}';
         ${readFile(mainPath)}
-      `,
+      `
       );
 
       updateFile(`apps/${appName}/src/app/logo.svg`, logoSvg);
@@ -115,7 +115,7 @@ describe('React Applications', () => {
         }
 
         export default App;
-      `,
+      `
       );
 
       // Make sure global stylesheets are properly processed.
@@ -126,12 +126,12 @@ describe('React Applications', () => {
         .foobar {
           background-image: url('/bg.png');
         }
-      `,
+      `
       );
 
       const libTestResults = await runCLIAsync(`test ${libName}`);
       expect(libTestResults.combinedOutput).toContain(
-        'Test Suites: 1 passed, 1 total',
+        'Test Suites: 1 passed, 1 total'
       );
 
       await testGeneratedApp(appName, {
@@ -166,7 +166,7 @@ describe('React Applications', () => {
       const appName = uniq('app');
 
       runCLI(
-        `generate @nx/react:app ${appName} --routing --bundler=webpack --no-interactive --skipFormat`,
+        `generate @nx/react:app ${appName} --routing --bundler=webpack --no-interactive --skipFormat`
       );
 
       runCLI(`build ${appName}`);
@@ -183,30 +183,30 @@ describe('React Applications', () => {
       const libName = uniq('lib');
 
       runCLI(
-        `g @nx/react:app ${appName} --bundler=webpack --no-interactive --skipFormat`,
+        `g @nx/react:app ${appName} --bundler=webpack --no-interactive --skipFormat`
       );
       runCLI(`g @nx/react:redux lemon --project=${appName} --skipFormat`);
       runCLI(
-        `g @nx/react:lib ${libName} --unit-test-runner=jest --no-interactive --skipFormat`,
+        `g @nx/react:lib ${libName} --unit-test-runner=jest --no-interactive --skipFormat`
       );
       runCLI(`g @nx/react:redux orange --project=${libName} --skipFormat`);
 
       let lintResults = runCLI(`lint ${appName}`);
       expect(lintResults).toContain(
-        `Successfully ran target lint for project ${appName}`,
+        `Successfully ran target lint for project ${appName}`
       );
       const appTestResults = await runCLIAsync(`test ${appName}`);
       expect(appTestResults.combinedOutput).toContain(
-        'Test Suites: 2 passed, 2 total',
+        'Test Suites: 2 passed, 2 total'
       );
 
       lintResults = runCLI(`lint ${libName}`);
       expect(lintResults).toContain(
-        `Successfully ran target lint for project ${libName}`,
+        `Successfully ran target lint for project ${libName}`
       );
       const libTestResults = await runCLIAsync(`test ${libName}`);
       expect(libTestResults.combinedOutput).toContain(
-        'Test Suites: 2 passed, 2 total',
+        'Test Suites: 2 passed, 2 total'
       );
     }, 250_000);
 
@@ -215,7 +215,7 @@ describe('React Applications', () => {
       const libName = uniq('@my-org/lib1');
 
       runCLI(
-        `generate @nx/react:app ${appName} --bundler=webpack --project-name-and-root-format=as-provided --no-interactive --skipFormat`,
+        `generate @nx/react:app ${appName} --bundler=webpack --project-name-and-root-format=as-provided --no-interactive --skipFormat`
       );
 
       // check files are generated without the layout directory ("apps/") and
@@ -223,23 +223,23 @@ describe('React Applications', () => {
       checkFilesExist(`${appName}/src/main.tsx`);
       // check build works
       expect(runCLI(`build ${appName}`)).toContain(
-        `Successfully ran target build for project ${appName}`,
+        `Successfully ran target build for project ${appName}`
       );
       // check tests pass
       const appTestResult = runCLI(`test ${appName}`);
       expect(appTestResult).toContain(
-        `Successfully ran target test for project ${appName}`,
+        `Successfully ran target test for project ${appName}`
       );
 
       // assert scoped project names are not supported when --project-name-and-root-format=derived
       expect(() =>
         runCLI(
-          `generate @nx/react:lib ${libName} --unit-test-runner=jest --buildable --project-name-and-root-format=derived --no-interactive --skipFormat`,
-        ),
+          `generate @nx/react:lib ${libName} --unit-test-runner=jest --buildable --project-name-and-root-format=derived --no-interactive --skipFormat`
+        )
       ).toThrow();
 
       runCLI(
-        `generate @nx/react:lib ${libName} --unit-test-runner=jest --buildable --project-name-and-root-format=as-provided --no-interactive --skipFormat`,
+        `generate @nx/react:lib ${libName} --unit-test-runner=jest --buildable --project-name-and-root-format=as-provided --no-interactive --skipFormat`
       );
 
       // check files are generated without the layout directory ("libs/") and
@@ -247,12 +247,12 @@ describe('React Applications', () => {
       checkFilesExist(`${libName}/src/index.ts`);
       // check build works
       expect(runCLI(`build ${libName}`)).toContain(
-        `Successfully ran target build for project ${libName}`,
+        `Successfully ran target build for project ${libName}`
       );
       // check tests pass
       const libTestResult = runCLI(`test ${libName}`);
       expect(libTestResult).toContain(
-        `Successfully ran target test for project ${libName}`,
+        `Successfully ran target test for project ${libName}`
       );
     }, 500_000);
 
@@ -261,7 +261,7 @@ describe('React Applications', () => {
       xit('should support styled-jsx', async () => {
         const appName = uniq('app');
         runCLI(
-          `generate @nx/react:app ${appName} --style=styled-jsx --bundler=vite --no-interactive --skipFormat`,
+          `generate @nx/react:app ${appName} --style=styled-jsx --bundler=vite --no-interactive --skipFormat`
         );
 
         // update app to use styled-jsx
@@ -282,7 +282,7 @@ describe('React Applications', () => {
 
         export default App;
 
-       `,
+       `
         );
 
         // update e2e test to check for styled-jsx change
@@ -299,7 +299,7 @@ describe('React Applications', () => {
         });
       });
       
-       `,
+       `
         );
         if (runE2ETests()) {
           const e2eResults = runCLI(`e2e ${appName}-e2e --verbose`);
@@ -310,7 +310,7 @@ describe('React Applications', () => {
       it('should support tailwind', async () => {
         const appName = uniq('app');
         runCLI(
-          `generate @nx/react:app ${appName} --style=tailwind --bundler=vite --no-interactive --skipFormat`,
+          `generate @nx/react:app ${appName} --style=tailwind --bundler=vite --no-interactive --skipFormat`
         );
 
         // update app to use styled-jsx
@@ -329,19 +329,19 @@ describe('React Applications', () => {
 
         export default App;
 
-       `,
+       `
         );
 
         runCLI(`build ${appName}`);
         const outputAssetFiles = listFiles(`dist/apps/${appName}/assets`);
         const styleFile = outputAssetFiles.find((filename) =>
-          filename.endsWith('.css'),
+          filename.endsWith('.css')
         );
         if (!styleFile) {
           throw new Error('Could not find bundled css file');
         }
         const styleFileContents = readFile(
-          `dist/apps/${appName}/assets/${styleFile}`,
+          `dist/apps/${appName}/assets/${styleFile}`
         );
         const isStyleFileUsingTWClasses =
           styleFileContents.includes('w-20') &&
@@ -354,7 +354,7 @@ describe('React Applications', () => {
       it('should be formatted on freshly created apps', async () => {
         const appName = uniq('app');
         runCLI(
-          `generate @nx/react:app ${appName} --bundler=webpack --no-interactive`,
+          `generate @nx/react:app ${appName} --bundler=webpack --no-interactive`
         );
 
         const stdout = runCLI(`format:check --projects=${appName}`, {
@@ -384,23 +384,23 @@ describe('React Applications', () => {
       const plainJsLib = uniq('jslib');
 
       runCLI(
-        `generate @nx/react:app ${appName} --bundler=webpack --no-interactive --js --skipFormat`,
+        `generate @nx/react:app ${appName} --bundler=webpack --no-interactive --js --skipFormat`
       );
       runCLI(
-        `generate @nx/react:lib ${libName} --no-interactive --js --unit-test-runner=none --skipFormat`,
+        `generate @nx/react:lib ${libName} --no-interactive --js --unit-test-runner=none --skipFormat`
       );
       // Make sure plain JS libs can be imported as well.
       // There was an issue previously: https://github.com/nrwl/nx/issues/10990
       runCLI(
-        `generate @nx/js:lib ${plainJsLib} --js --unit-test-runner=none --bundler=none --compiler=tsc --no-interactive --skipFormat`,
+        `generate @nx/js:lib ${plainJsLib} --js --unit-test-runner=none --bundler=none --compiler=tsc --no-interactive --skipFormat`
       );
 
       const mainPath = `apps/${appName}/src/main.js`;
       updateFile(
         mainPath,
         `import '@${proj}/${libName}';\nimport '@${proj}/${plainJsLib}';\n${readFile(
-          mainPath,
-        )}`,
+          mainPath
+        )}`
       );
 
       await testGeneratedApp(appName, {
@@ -418,7 +418,7 @@ describe('React Applications', () => {
     `('should support global and css modules', async ({ style }) => {
       const appName = uniq('app');
       runCLI(
-        `generate @nx/react:app ${appName} --style=${style} --bundler=webpack --no-interactive --skipFormat`,
+        `generate @nx/react:app ${appName} --style=${style} --bundler=webpack --no-interactive --skipFormat`
       );
 
       // make sure stylePreprocessorOptions works
@@ -430,21 +430,21 @@ describe('React Applications', () => {
       });
       updateFile(
         `apps/${appName}/src/styles.${style}`,
-        `@import 'base.${style}';`,
+        `@import 'base.${style}';`
       );
       updateFile(
         `apps/${appName}/src/app/app.module.${style}`,
-        (s) => `@import 'base.${style}';\n${s}`,
+        (s) => `@import 'base.${style}';\n${s}`
       );
       updateFile(
         `libs/shared/lib/base.${style}`,
-        `body { font-family: "Comic Sans MS"; }`,
+        `body { font-family: "Comic Sans MS"; }`
       );
 
       runCLI(`build ${appName} --outputHashing none`);
 
       expect(readFile(`dist/apps/${appName}/styles.css`)).toMatch(
-        /Comic Sans MS/,
+        /Comic Sans MS/
       );
     });
 
@@ -454,16 +454,16 @@ describe('React Applications', () => {
         const libName = uniq('lib');
 
         runCLI(
-          `g @nx/react:app ${appName} --bundler=webpack --no-interactive --skipFormat`,
+          `g @nx/react:app ${appName} --bundler=webpack --no-interactive --skipFormat`
         );
         runCLI(
-          `g @nx/react:lib ${libName} --no-interactive --unit-test-runner=none --skipFormat`,
+          `g @nx/react:lib ${libName} --no-interactive --unit-test-runner=none --skipFormat`
         );
 
         const mainPath = `apps/${appName}/src/main.tsx`;
         updateFile(
           mainPath,
-          `import '@${proj}/${libName}';\n${readFile(mainPath)}`,
+          `import '@${proj}/${libName}';\n${readFile(mainPath)}`
         );
 
         createFile(
@@ -471,14 +471,14 @@ describe('React Applications', () => {
           `
       console.log('HELLO FROM APP'); // need this output for e2e test
       module.exports = {};
-    `,
+    `
         );
         createFile(
           `libs/${libName}/postcss.config.js`,
           `
       console.log('HELLO FROM LIB'); // need this output for e2e test
       module.exports = {};
-    `,
+    `
         );
 
         let buildResults = await runCLIAsync(`build ${appName}`);
@@ -508,12 +508,12 @@ async function testGeneratedApp(
     checkLinter: boolean;
     checkE2E: boolean;
     checkSourceMap?: boolean;
-  },
+  }
 ) {
   if (opts.checkLinter) {
     const lintResults = runCLI(`lint ${appName}`);
     expect(lintResults).toContain(
-      `Successfully ran target lint for project ${appName}`,
+      `Successfully ran target lint for project ${appName}`
     );
   }
 
@@ -523,7 +523,7 @@ async function testGeneratedApp(
   if (opts.checkStyles) {
     filesToCheck.push(`styles.*.css`);
     expect(
-      /styles.*.css/.test(readFile(`dist/apps/${appName}/index.html`)),
+      /styles.*.css/.test(readFile(`dist/apps/${appName}/index.html`))
     ).toBeTruthy();
   }
 
@@ -531,7 +531,7 @@ async function testGeneratedApp(
 
   const testResults = await runCLIAsync(`test ${appName}`);
   expect(testResults.combinedOutput).toContain(
-    'Test Suites: 1 passed, 1 total',
+    'Test Suites: 1 passed, 1 total'
   );
 
   if (opts.checkE2E && runE2ETests()) {
@@ -543,7 +543,7 @@ async function testGeneratedApp(
 
 function checkFilesExistWithHash(
   outputDirToCheck: string,
-  filesToCheck: string[],
+  filesToCheck: string[]
 ) {
   const filesInOutputDir = listFiles(outputDirToCheck);
   // REGEX CHECK

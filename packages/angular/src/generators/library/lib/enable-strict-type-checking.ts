@@ -7,7 +7,7 @@ import { NormalizedSchema } from './normalized-schema';
  * */
 export function enableStrictTypeChecking(
   host: Tree,
-  options: NormalizedSchema['libraryOptions'],
+  options: NormalizedSchema['libraryOptions']
 ) {
   updateTsConfig(host, options);
 }
@@ -29,7 +29,7 @@ export function setLibraryStrictDefault(host: Tree, isStrict: boolean) {
 
 function updateTsConfig(
   host: Tree,
-  options: NormalizedSchema['libraryOptions'],
+  options: NormalizedSchema['libraryOptions']
 ) {
   // Update the settings in the tsconfig.app.json to enable strict type checking.
   // This matches the settings defined by the Angular CL https://angular.io/guide/strict-mode

@@ -3,7 +3,7 @@ import type { BuildAngularLibraryExecutorOptions } from '../../package/schema';
 import { getInstalledAngularVersionInfo } from '../../utilities/angular-version-utils';
 
 export async function getNgPackagrInstance(
-  options: BuildAngularLibraryExecutorOptions,
+  options: BuildAngularLibraryExecutorOptions
 ): Promise<NgPackagr> {
   const { major: angularMajorVersion } = getInstalledAngularVersionInfo();
   if (angularMajorVersion >= 17) {

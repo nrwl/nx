@@ -24,7 +24,7 @@ describe('getUpdatedPackageJsonContent', () => {
         main: 'proj/src/index.ts',
         outputPath: 'dist/proj',
         projectRoot: 'proj',
-      },
+      }
     );
 
     expect(json).toEqual({
@@ -47,7 +47,7 @@ describe('getUpdatedPackageJsonContent', () => {
         outputPath: 'dist/proj',
         projectRoot: 'proj',
         format: ['esm'],
-      },
+      }
     );
 
     expect(json).toEqual({
@@ -71,7 +71,7 @@ describe('getUpdatedPackageJsonContent', () => {
         outputPath: 'dist/proj',
         projectRoot: 'proj',
         format: ['esm', 'cjs'],
-      },
+      }
     );
 
     expect(json).toEqual({
@@ -94,7 +94,7 @@ describe('getUpdatedPackageJsonContent', () => {
         outputPath: 'dist/proj',
         projectRoot: 'proj',
         skipTypings: true,
-      },
+      }
     );
 
     expect(json).toEqual({
@@ -116,7 +116,7 @@ describe('getUpdatedPackageJsonContent', () => {
         outputPath: 'dist/proj',
         projectRoot: 'proj',
         skipTypings: true,
-      },
+      }
     );
 
     expect(json).toEqual({
@@ -140,7 +140,7 @@ describe('getUpdatedPackageJsonContent', () => {
           projectRoot: 'proj',
           format: ['esm'],
           generateExportsField: true,
-        },
+        }
       );
 
       expect(json).toEqual({
@@ -170,7 +170,7 @@ describe('getUpdatedPackageJsonContent', () => {
           format: ['cjs'],
           outputFileExtensionForCjs: '.cjs',
           generateExportsField: true,
-        },
+        }
       );
 
       expect(json).toEqual({
@@ -205,8 +205,8 @@ describe('getUpdatedPackageJsonContent', () => {
             projectRoot: 'proj',
             format: ['cjs'],
             generateExportsField: true,
-          },
-        ),
+          }
+        )
       ).toEqual({
         name: 'test',
         main: './src/index.js',
@@ -236,8 +236,8 @@ describe('getUpdatedPackageJsonContent', () => {
             projectRoot: 'proj',
             format: ['esm'],
             generateExportsField: true,
-          },
-        ),
+          }
+        )
       ).toEqual({
         name: 'test',
         type: 'module',
@@ -268,8 +268,8 @@ describe('getUpdatedPackageJsonContent', () => {
             format: ['cjs', 'esm'],
             outputFileExtensionForCjs: '.cjs',
             generateExportsField: true,
-          },
-        ),
+          }
+        )
       ).toEqual({
         name: 'test',
         main: './src/index.cjs',
@@ -313,8 +313,8 @@ describe('getUpdatedPackageJsonContent', () => {
           format: ['esm', 'cjs'],
           outputFileExtensionForCjs: '.cjs',
           generateExportsField: true,
-        },
-      ),
+        }
+      )
     ).toEqual({
       name: 'test',
       main: './src/index.cjs',
@@ -434,7 +434,7 @@ describe('updatePackageJson', () => {
 
     expect(vol.existsSync('dist/libs/lib1/package.json')).toEqual(true);
     const distPackageJson = JSON.parse(
-      vol.readFileSync('dist/libs/lib1/package.json', 'utf-8').toString(),
+      vol.readFileSync('dist/libs/lib1/package.json', 'utf-8').toString()
     );
     expect(distPackageJson).toMatchInlineSnapshot(`
       {
@@ -462,10 +462,10 @@ describe('updatePackageJson', () => {
 
     expect(vol.existsSync('dist/libs/lib1/package.json')).toEqual(true);
     const distPackageJson = JSON.parse(
-      vol.readFileSync('dist/libs/lib1/package.json', 'utf-8').toString(),
+      vol.readFileSync('dist/libs/lib1/package.json', 'utf-8').toString()
     );
     expect(distPackageJson.dependencies).toEqual(
-      originalPackageJson.dependencies,
+      originalPackageJson.dependencies
     );
     expect(distPackageJson.main).toEqual('./main.js');
     expect(distPackageJson.types).toEqual('./main.d.ts');
@@ -488,7 +488,7 @@ describe('updatePackageJson', () => {
 
     expect(vol.existsSync('dist/libs/lib1/package.json')).toEqual(true);
     const distPackageJson = JSON.parse(
-      vol.readFileSync('dist/libs/lib1/package.json', 'utf-8').toString(),
+      vol.readFileSync('dist/libs/lib1/package.json', 'utf-8').toString()
     );
     expect(distPackageJson).toMatchInlineSnapshot(`
       {

@@ -17,7 +17,7 @@ import { ProjectDetailsHeader } from './project-details-header';
 
 export function ProjectDetailsPage() {
   const { project, sourceMap, hash } = useRouteLoaderData(
-    'selectedProjectDetails',
+    'selectedProjectDetails'
   ) as {
     hash: string;
     project: ProjectGraphProjectNode;
@@ -37,11 +37,11 @@ export function ProjectDetailsPage() {
             window.location.reload();
           }
           return;
-        },
+        }
       );
     },
     1000,
-    watch,
+    watch
   );
 
   return (

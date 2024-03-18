@@ -23,11 +23,11 @@ describe('getNextConfig', () => {
               options: {},
             },
           },
-        },
+        }
       );
 
       expect(
-        result.module.rules.some((rule) => rule.test?.test('cat.svg')),
+        result.module.rules.some((rule) => rule.test?.test('cat.svg'))
       ).toBe(true);
     });
 
@@ -55,11 +55,11 @@ describe('getNextConfig', () => {
               options: {},
             },
           },
-        },
+        }
       );
 
       expect(
-        result.module.rules.some((rule) => rule.test?.test('cat.svg')),
+        result.module.rules.some((rule) => rule.test?.test('cat.svg'))
       ).toBe(false);
     });
   });
@@ -82,8 +82,8 @@ describe('getAliasForProject', () => {
             root: 'packages/proj1',
           },
         },
-        paths,
-      ),
+        paths
+      )
     ).toEqual('@x/proj1');
 
     expect(
@@ -95,8 +95,8 @@ describe('getAliasForProject', () => {
             root: 'packages/proj2', // relative path
           },
         },
-        paths,
-      ),
+        paths
+      )
     ).toEqual('@x/proj2');
 
     expect(
@@ -108,8 +108,8 @@ describe('getAliasForProject', () => {
             root: 'packages/no-alias',
           },
         },
-        paths,
-      ),
+        paths
+      )
     ).toEqual(null);
   });
 });

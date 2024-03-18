@@ -44,8 +44,8 @@ export function compileTypeScriptWatcher(
     diagnostic: Diagnostic,
     newLine: string,
     options: ts.CompilerOptions,
-    errorCount: number,
-  ) => void | Promise<void>,
+    errorCount: number
+  ) => void | Promise<void>
 ) {
   if (!tsModule) {
     tsModule = ensureTypescript();
@@ -60,7 +60,7 @@ export function compileTypeScriptWatcher(
   const host = tsModule.createWatchCompilerHost(
     tsConfig.fileNames,
     tsConfig.options,
-    tsModule.sys,
+    tsModule.sys
   );
 
   const originalAfterProgramCreate = host.afterProgramCreate;
@@ -71,15 +71,15 @@ export function compileTypeScriptWatcher(
       writeFile,
       cancellationToken,
       emitOnlyDtsFiles,
-      customTransformers,
+      customTransformers
     ) => {
       const consumerCustomTransformers = options.getCustomTransformers?.(
-        builderProgram.getProgram(),
+        builderProgram.getProgram()
       );
 
       const mergedCustomTransformers = mergeCustomTransformers(
         customTransformers,
-        consumerCustomTransformers,
+        consumerCustomTransformers
       );
 
       return originalProgramEmit(
@@ -87,7 +87,7 @@ export function compileTypeScriptWatcher(
         writeFile,
         cancellationToken,
         emitOnlyDtsFiles,
-        mergedCustomTransformers,
+        mergedCustomTransformers
       );
     };
 
@@ -105,7 +105,7 @@ export function compileTypeScriptWatcher(
 
 function mergeCustomTransformers(
   originalCustomTransformers: CustomTransformers | undefined,
-  consumerCustomTransformers: CustomTransformers | undefined,
+  consumerCustomTransformers: CustomTransformers | undefined
 ): CustomTransformers | undefined {
   if (!consumerCustomTransformers) return originalCustomTransformers;
 
@@ -149,7 +149,7 @@ function getNormalizedTsConfig(options: TypeScriptCompilationOptions) {
   if (tsConfig.options.incremental && !tsConfig.options.tsBuildInfoFile) {
     tsConfig.options.tsBuildInfoFile = joinPathFragments(
       options.outputPath,
-      'tsconfig.tsbuildinfo',
+      'tsconfig.tsbuildinfo'
     );
   }
   return tsConfig;
@@ -157,7 +157,7 @@ function getNormalizedTsConfig(options: TypeScriptCompilationOptions) {
 
 function createProgram(
   tsconfig: ts.ParsedCommandLine,
-  { projectName, getCustomTransformers }: TypeScriptCompilationOptions,
+  { projectName, getCustomTransformers }: TypeScriptCompilationOptions
 ): { success: boolean } {
   if (!tsModule) {
     tsModule = ensureTypescript();
@@ -174,7 +174,7 @@ function createProgram(
     undefined,
     undefined,
     undefined,
-    getCustomTransformers?.(program),
+    getCustomTransformers?.(program)
   );
   if (results.emitSkipped) {
     const diagnostics = tsModule.formatDiagnosticsWithColorAndContext(
@@ -183,20 +183,20 @@ function createProgram(
         getCurrentDirectory: () => tsModule.sys.getCurrentDirectory(),
         getNewLine: () => tsModule.sys.newLine,
         getCanonicalFileName: (name) => name,
-      },
+      }
     );
     logger.error(diagnostics);
     return { success: false };
   } else {
     logger.info(
-      `Done compiling TypeScript files for project "${projectName}".`,
+      `Done compiling TypeScript files for project "${projectName}".`
     );
     return { success: true };
   }
 }
 
 function normalizeOptions(
-  options: TypeScriptCompilationOptions,
+  options: TypeScriptCompilationOptions
 ): TypeScriptCompilationOptions {
   return {
     ...options,

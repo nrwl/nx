@@ -13,17 +13,17 @@ describe('insertStatementInDefaultFunction', () => {
   it('should insert statement in default function', () => {
     tree.write(
       'component.tsx',
-      `export default function Component() { return (<p>Hello world!</p>); };`,
+      `export default function Component() { return (<p>Hello world!</p>); };`
     );
 
     insertStatementInDefaultFunction(
       tree,
       'component.tsx',
-      `const someVar = "whatever";`,
+      `const someVar = "whatever";`
     );
 
     expect(tree.read('component.tsx', 'utf-8')).toMatchInlineSnapshot(
-      `"export default function Component() {const someVar = "whatever"; return (<p>Hello world!</p>); };"`,
+      `"export default function Component() {const someVar = "whatever"; return (<p>Hello world!</p>); };"`
     );
   });
 
@@ -33,8 +33,8 @@ describe('insertStatementInDefaultFunction', () => {
       insertStatementInDefaultFunction(
         tree,
         'util.ts',
-        `const someVar = "whatever";`,
-      ),
+        `const someVar = "whatever";`
+      )
     ).toThrowErrorMatchingInlineSnapshot(`"No default export found!"`);
   });
 });

@@ -20,7 +20,7 @@ type TargetCommand = {
 
 export async function updatePackageScripts(
   tree: Tree,
-  createNodesTuple: CreateNodes,
+  createNodesTuple: CreateNodes
 ): Promise<void> {
   const nxJson = readNxJson(tree);
 
@@ -35,7 +35,7 @@ export async function updatePackageScripts(
       file,
       createNodes,
       nxJson,
-      matchingFiles,
+      matchingFiles
     );
   }
 }
@@ -46,7 +46,7 @@ async function processProject(
   projectConfigurationFile: string,
   createNodesFunction: CreateNodesFunction,
   nxJsonConfiguration: NxJsonConfiguration,
-  configFiles: string[],
+  configFiles: string[]
 ) {
   const packageJsonPath = `${projectRoot}/package.json`;
   if (!tree.exists(packageJsonPath)) {
@@ -64,7 +64,7 @@ async function processProject(
       nxJsonConfiguration,
       workspaceRoot,
       configFiles,
-    },
+    }
   );
 
   const targetCommands = getInferredTargetCommands(result);
@@ -77,7 +77,7 @@ async function processProject(
     const { command, target, configuration } = targetCommand;
     const targetCommandRegex = new RegExp(
       `(?<=^|&)((?: )*(?:[^&\\r\\n\\s]+ )*)(${command})((?: [^&\\r\\n\\s]+)*(?: )*)(?=$|&)`,
-      'g',
+      'g'
     );
     for (const scriptName of Object.keys(packageJson.scripts)) {
       const script = packageJson.scripts[scriptName];
@@ -87,7 +87,7 @@ async function processProject(
           targetCommandRegex,
           configuration
             ? `$1nx ${target} --configuration=${configuration}$3`
-            : `$1nx ${target}$3`,
+            : `$1nx ${target}$3`
         );
         replacedTargets.add(target);
       } else {
@@ -106,7 +106,7 @@ async function processProject(
         const commandCommand = parsedCommand._.join(' ');
         const commandRegex = new RegExp(
           `(?<=^|&)((?: )*(?:[^&\\r\\n\\s]+ )*)(${commandCommand})((?: [^&\\r\\n\\s]+)*( )*)(?=$|&)`,
-          'g',
+          'g'
         );
         const matches = script.match(commandRegex);
         if (!matches) {
@@ -163,8 +163,8 @@ async function processProject(
                 commandRegex,
                 configuration
                   ? `$1nx ${target} --configuration=${configuration}$4`
-                  : `$1nx ${target}$4`,
-              ),
+                  : `$1nx ${target}$4`
+              )
             );
             replacedTargets.add(target);
           } else {
@@ -177,8 +177,8 @@ async function processProject(
                 commandRegex,
                 configuration
                   ? `$1nx ${target} --configuration=${configuration}$3`
-                  : `$1nx ${target}$3`,
-              ),
+                  : `$1nx ${target}$3`
+              )
             );
             replacedTargets.add(target);
           }
@@ -200,7 +200,7 @@ async function processProject(
     const includedScripts =
       packageJson.nx?.includedScripts ?? Object.keys(packageJson.scripts);
     const filteredScripts = includedScripts.filter(
-      (s) => !replacedTargets.has(s),
+      (s) => !replacedTargets.has(s)
     );
     if (filteredScripts.length !== includedScripts.length) {
       packageJson.nx ??= {};
@@ -233,7 +233,7 @@ function getInferredTargetCommands(result: CreateNodesResult): TargetCommand[] {
       }
 
       for (const [configurationName, configuration] of Object.entries(
-        target.configurations,
+        target.configurations
       )) {
         if (configuration.command) {
           targetCommands.push({

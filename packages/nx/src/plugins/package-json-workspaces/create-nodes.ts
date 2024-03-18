@@ -56,7 +56,7 @@ export function createNodeFromPackageJson(pkgJsonPath: string, root: string) {
   const project = buildProjectConfigurationFromPackageJson(
     json,
     pkgJsonPath,
-    readNxJson(root),
+    readNxJson(root)
   );
   return {
     projects: {
@@ -68,14 +68,14 @@ export function createNodeFromPackageJson(pkgJsonPath: string, root: string) {
 export function buildProjectConfigurationFromPackageJson(
   packageJson: PackageJson,
   path: string,
-  nxJson: NxJsonConfiguration,
+  nxJson: NxJsonConfiguration
 ): ProjectConfiguration & { name: string } {
   const normalizedPath = path.split('\\').join('/');
   const directory = dirname(normalizedPath);
 
   if (!packageJson.name && directory === '.') {
     throw new Error(
-      'Nx requires the root package.json to specify a name if it is being used as an Nx project.',
+      'Nx requires the root package.json to specify a name if it is being used as an Nx project.'
     );
   }
 
@@ -103,7 +103,7 @@ export function buildProjectConfigurationFromPackageJson(
 export function getGlobPatternsFromPackageManagerWorkspaces(
   root: string,
   readJson: <T extends Object>(path: string) => T = <T extends Object>(path) =>
-    readJsonFile<T>(join(root, path)), // making this an arg allows us to reuse in devkit
+    readJsonFile<T>(join(root, path)) // making this an arg allows us to reuse in devkit
 ): string[] {
   try {
     const patterns: string[] = [];
@@ -113,14 +113,14 @@ export function getGlobPatternsFromPackageManagerWorkspaces(
       ...normalizePatterns(
         Array.isArray(packageJson.workspaces)
           ? packageJson.workspaces
-          : packageJson.workspaces?.packages ?? [],
-      ),
+          : packageJson.workspaces?.packages ?? []
+      )
     );
 
     if (existsSync(join(root, 'pnpm-workspace.yaml'))) {
       try {
         const { packages } = readYamlFile<{ packages: string[] }>(
-          join(root, 'pnpm-workspace.yaml'),
+          join(root, 'pnpm-workspace.yaml')
         );
         patterns.push(...normalizePatterns(packages || []));
       } catch (e: unknown) {
@@ -135,9 +135,7 @@ export function getGlobPatternsFromPackageManagerWorkspaces(
       try {
         const { packages } = readJson<any>('lerna.json');
         patterns.push(
-          ...normalizePatterns(
-            packages?.length > 0 ? packages : ['packages/*'],
-          ),
+          ...normalizePatterns(packages?.length > 0 ? packages : ['packages/*'])
         );
       } catch (e: unknown) {
         output.warn({
@@ -161,8 +159,8 @@ function normalizePatterns(patterns: string[]): string[] {
     removeRelativePath(
       pattern.endsWith('/package.json')
         ? pattern
-        : joinPathFragments(pattern, 'package.json'),
-    ),
+        : joinPathFragments(pattern, 'package.json')
+    )
   );
 }
 

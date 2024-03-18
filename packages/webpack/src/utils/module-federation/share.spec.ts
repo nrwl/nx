@@ -28,7 +28,7 @@ describe('MF Share Utils', () => {
       } catch (error) {
         // ASSERT
         expect(error.message).toContain(
-          'NX MF: TsConfig Path for workspace libraries does not exist!',
+          'NX MF: TsConfig Path for workspace libraries does not exist!'
         );
       }
     });
@@ -48,7 +48,7 @@ describe('MF Share Utils', () => {
       // ASSERT
       expect(sharedLibraries.getAliases()).toHaveProperty('@myorg/shared');
       expect(sharedLibraries.getAliases()['@myorg/shared']).toContain(
-        'libs/shared/src/index.ts',
+        'libs/shared/src/index.ts'
       );
       expect(sharedLibraries.getLibraries('libs/shared')).toEqual({
         '@myorg/shared': {
@@ -74,7 +74,7 @@ describe('MF Share Utils', () => {
       // ASSERT
       expect(sharedLibraries.getAliases()).toHaveProperty('@myorg/shared');
       expect(sharedLibraries.getAliases()['@myorg/shared']).toContain(
-        'libs/shared/src/index.ts',
+        'libs/shared/src/index.ts'
       );
       expect(sharedLibraries.getLibraries('libs/shared')).toEqual({
         '@myorg/shared': {
@@ -113,7 +113,7 @@ describe('MF Share Utils', () => {
       } catch (error) {
         // ASSERT
         expect(error.message).toEqual(
-          'NX MF: Could not find root package.json to determine dependency versions.',
+          'NX MF: Could not find root package.json to determine dependency versions.'
         );
       }
     });
@@ -274,7 +274,7 @@ describe('MF Share Utils', () => {
       jest
         .spyOn(fs, 'existsSync')
         .mockImplementation(
-          (path: string) => !path.endsWith('/secondary/package.json'),
+          (path: string) => !path.endsWith('/secondary/package.json')
         );
       jest.spyOn(nxFileutils, 'readJsonFile').mockImplementation((file) => {
         if (file.endsWith('pkg1/package.json')) {
@@ -351,7 +351,7 @@ describe('MF Share Utils', () => {
         .spyOn(fs, 'existsSync')
         .mockImplementation(
           (file: string) =>
-            !file.endsWith('non-existent-top-level-package/package.json'),
+            !file.endsWith('non-existent-top-level-package/package.json')
         );
       jest.spyOn(nxFileutils, 'readJsonFile').mockImplementation((file) => {
         return {
@@ -365,7 +365,7 @@ describe('MF Share Utils', () => {
 
       // ACT & ASSERT
       expect(() =>
-        sharePackages(['non-existent-top-level-package']),
+        sharePackages(['non-existent-top-level-package'])
       ).not.toThrow();
     });
   });
@@ -393,7 +393,7 @@ describe('MF Share Utils', () => {
     // ACT
     const sharedLibraries = shareWorkspaceLibraries(
       [{ name: 'shared', root: 'libs/shared', importKey: '@myorg/shared' }],
-      '/',
+      '/'
     );
 
     // ASSERT
@@ -429,7 +429,7 @@ describe('MF Share Utils', () => {
     // ACT
     const sharedLibraries = shareWorkspaceLibraries(
       [{ name: 'shared', root: 'libs/shared', importKey: '@myorg/shared' }],
-      null,
+      null
     );
 
     // ASSERT

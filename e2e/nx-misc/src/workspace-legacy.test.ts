@@ -24,7 +24,7 @@ describe('@nx/workspace:convert-to-monorepo', () => {
         env: {
           NX_ADD_PLUGINS: 'false',
         },
-      },
+      }
     );
 
     runCLI('generate @nx/workspace:convert-to-monorepo --no-interactive', {
@@ -35,7 +35,7 @@ describe('@nx/workspace:convert-to-monorepo', () => {
 
     checkFilesExist(
       `apps/${reactApp}/src/main.tsx`,
-      `apps/e2e/cypress.config.ts`,
+      `apps/e2e/cypress.config.ts`
     );
 
     expect(() => runCLI(`build ${reactApp}`)).not.toThrow();

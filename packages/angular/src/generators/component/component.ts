@@ -19,7 +19,7 @@ export async function componentGenerator(tree: Tree, rawOptions: Schema) {
 
 export async function componentGeneratorInternal(
   tree: Tree,
-  rawOptions: Schema,
+  rawOptions: Schema
 ) {
   const options = await normalizeOptions(tree, rawOptions);
 
@@ -43,13 +43,13 @@ export async function componentGeneratorInternal(
       selector: options.selector,
       angularMajorVersion,
       tpl: '',
-    },
+    }
   );
 
   if (options.skipTests) {
     const pathToSpecFile = joinPathFragments(
       options.directory,
-      `${options.fileName}.spec.ts`,
+      `${options.fileName}.spec.ts`
     );
 
     tree.delete(pathToSpecFile);
@@ -58,7 +58,7 @@ export async function componentGeneratorInternal(
   if (options.inlineTemplate) {
     const pathToTemplateFile = joinPathFragments(
       options.directory,
-      `${options.fileName}.html`,
+      `${options.fileName}.html`
     );
 
     tree.delete(pathToTemplateFile);
@@ -67,7 +67,7 @@ export async function componentGeneratorInternal(
   if (options.style === 'none' || options.inlineStyle) {
     const pathToStyleFile = joinPathFragments(
       options.directory,
-      `${options.fileName}.${options.style}`,
+      `${options.fileName}.${options.style}`
     );
 
     tree.delete(pathToStyleFile);
@@ -77,7 +77,7 @@ export async function componentGeneratorInternal(
     const modulePath = findModuleFromOptions(
       tree,
       options,
-      options.projectRoot,
+      options.projectRoot
     );
     addToNgModule(
       tree,
@@ -88,7 +88,7 @@ export async function componentGeneratorInternal(
       options.fileName,
       'declarations',
       true,
-      options.export,
+      options.export
     );
   }
 

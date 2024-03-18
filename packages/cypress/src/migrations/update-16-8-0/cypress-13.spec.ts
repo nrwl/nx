@@ -13,7 +13,7 @@ describe('Cypress 13', () => {
 
     await updateToCypress13(tree);
     expect(readJson(tree, 'package.json').devDependencies.cypress).toEqual(
-      '^13.0.0',
+      '^13.0.0'
     );
   });
 
@@ -21,10 +21,7 @@ describe('Cypress 13', () => {
     setup(tree, { name: 'my-app-video-upload-on-passes' });
     await updateToCypress13(tree);
     expect(
-      tree.read(
-        'apps/my-app-video-upload-on-passes/cypress.config.ts',
-        'utf-8',
-      ),
+      tree.read('apps/my-app-video-upload-on-passes/cypress.config.ts', 'utf-8')
     ).toMatchInlineSnapshot(`
       "import fs from 'fs';
 
@@ -154,15 +151,15 @@ Cypress.Commands.add('login', (email, password) => {
 });
 Cypress.Commands.overwrite('readFile', () => {});
 
-`,
+`
     );
     await updateToCypress13(tree);
 
     expect(
-      tree.read('apps/my-app-read-file/src/something.cy.ts', 'utf-8'),
+      tree.read('apps/my-app-read-file/src/something.cy.ts', 'utf-8')
     ).toEqual(testContent);
     expect(
-      tree.read('apps/my-app-read-file/cypress/support/commands.ts', 'utf-8'),
+      tree.read('apps/my-app-read-file/cypress/support/commands.ts', 'utf-8')
     ).toMatchInlineSnapshot(`
       "declare namespace Cypress {
         interface Chainable<Subject> {
@@ -214,11 +211,11 @@ export default defineConfig({
     }
   },
 })
-`,
+`
   );
   tree.write(
     'package.json',
-    JSON.stringify({ devDependencies: { cypress: '^12.16.0' } }),
+    JSON.stringify({ devDependencies: { cypress: '^12.16.0' } })
   );
   addProjectConfiguration(tree, options.name, {
     root: `apps/${options.name}`,

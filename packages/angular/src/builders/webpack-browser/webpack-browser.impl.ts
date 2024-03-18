@@ -25,11 +25,11 @@ import type { BrowserBuilderSchema } from './schema';
 function shouldSkipInitialTargetRun(
   projectGraph: ProjectGraph,
   project: string,
-  target: string,
+  target: string
 ): boolean {
   const nxJson = readNxJson();
   const defaultDependencyConfigs = Object.entries(
-    nxJson.targetDefaults ?? {},
+    nxJson.targetDefaults ?? {}
   ).reduce((acc, [targetName, dependencyConfig]) => {
     acc[targetName] = dependencyConfig.dependsOn;
     return acc;
@@ -37,18 +37,18 @@ function shouldSkipInitialTargetRun(
   const projectDependencyConfigs = getDependencyConfigs(
     { project, target },
     defaultDependencyConfigs,
-    projectGraph,
+    projectGraph
   );
 
   // if the task runner already ran the target, skip the initial run
   return projectDependencyConfigs.some(
-    (d) => d.target === target && d.projects === 'dependencies',
+    (d) => d.target === target && d.projects === 'dependencies'
   );
 }
 
 export function executeWebpackBrowserBuilder(
   options: BrowserBuilderSchema,
-  context: import('@angular-devkit/architect').BuilderContext,
+  context: import('@angular-devkit/architect').BuilderContext
 ): Observable<import('@angular-devkit/architect').BuilderOutput> {
   options.buildLibsFromSource ??= true;
 
@@ -68,7 +68,7 @@ export function executeWebpackBrowserBuilder(
     joinPathFragments(context.workspaceRoot, customWebpackConfig.path);
   if (pathToWebpackConfig && !existsSync(pathToWebpackConfig)) {
     throw new Error(
-      `Custom Webpack Config File Not Found!\nTo use a custom webpack config, please ensure the path to the custom webpack file is correct: \n${pathToWebpackConfig}`,
+      `Custom Webpack Config File Not Found!\nTo use a custom webpack config, please ensure the path to the custom webpack file is correct: \n${pathToWebpackConfig}`
     );
   }
 
@@ -79,7 +79,7 @@ export function executeWebpackBrowserBuilder(
     joinPathFragments(context.workspaceRoot, normalizedIndexHtmlTransformer);
   if (pathToIndexFileTransformer && !existsSync(pathToIndexFileTransformer)) {
     throw new Error(
-      `File containing Index File Transformer function Not Found!\n Please ensure the path to the file containing the function is correct: \n${pathToIndexFileTransformer}`,
+      `File containing Index File Transformer function Not Found!\n Please ensure the path to the file containing the function is correct: \n${pathToIndexFileTransformer}`
     );
   }
 
@@ -91,11 +91,11 @@ export function executeWebpackBrowserBuilder(
       createTmpTsConfigForBuildableLibs(
         delegateBuilderOptions.tsConfig,
         context,
-        { projectGraph },
+        { projectGraph }
       );
     dependencies = foundDependencies;
     delegateBuilderOptions.tsConfig = normalizePath(
-      relative(context.workspaceRoot, tsConfigPath),
+      relative(context.workspaceRoot, tsConfigPath)
     );
   }
 
@@ -115,7 +115,7 @@ export function executeWebpackBrowserBuilder(
               const skipInitialRun = shouldSkipInitialTargetRun(
                 projectGraph,
                 context.target.project,
-                context.target.target,
+                context.target.target
               );
 
               baseWebpackConfig.plugins.push(
@@ -124,8 +124,8 @@ export function executeWebpackBrowserBuilder(
                   `nx run-many --target=${
                     context.target.target
                   } --projects=${workspaceDependencies.join(',')}`,
-                  skipInitialRun,
-                ),
+                  skipInitialRun
+                )
               );
             }
           }
@@ -138,7 +138,7 @@ export function executeWebpackBrowserBuilder(
             baseWebpackConfig,
             pathToWebpackConfig,
             delegateBuilderOptions,
-            context.target,
+            context.target
           );
         },
         ...(pathToIndexFileTransformer
@@ -146,15 +146,15 @@ export function executeWebpackBrowserBuilder(
               indexHtml: resolveIndexHtmlTransformer(
                 pathToIndexFileTransformer,
                 delegateBuilderOptions.tsConfig,
-                context.target,
+                context.target
               ),
             }
           : {}),
-      }),
-    ),
+      })
+    )
   );
 }
 
 export default require('@angular-devkit/architect').createBuilder(
-  executeWebpackBrowserBuilder,
+  executeWebpackBrowserBuilder
 ) as any;

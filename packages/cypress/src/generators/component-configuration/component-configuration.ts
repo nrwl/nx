@@ -30,7 +30,7 @@ type NormalizeCTOptions = ReturnType<typeof normalizeOptions>;
 
 export function componentConfigurationGenerator(
   tree: Tree,
-  options: CypressComponentConfigurationSchema,
+  options: CypressComponentConfigurationSchema
 ) {
   return componentConfigurationGeneratorInternal(tree, {
     addPlugin: false,
@@ -40,7 +40,7 @@ export function componentConfigurationGenerator(
 
 export async function componentConfigurationGeneratorInternal(
   tree: Tree,
-  options: CypressComponentConfigurationSchema,
+  options: CypressComponentConfigurationSchema
 ) {
   const tasks: GeneratorCallback[] = [];
   const opts = normalizeOptions(tree, options);
@@ -49,14 +49,14 @@ export async function componentConfigurationGeneratorInternal(
     await init(tree, {
       ...opts,
       skipFormat: true,
-    }),
+    })
   );
 
   const nxJson = readNxJson(tree);
   const hasPlugin = nxJson.plugins?.some((p) =>
     typeof p === 'string'
       ? p === '@nx/cypress/plugin'
-      : p.plugin === '@nx/cypress/plugin',
+      : p.plugin === '@nx/cypress/plugin'
   );
 
   const projectConfig = readProjectConfiguration(tree, opts.project);
@@ -80,12 +80,12 @@ export async function componentConfigurationGeneratorInternal(
 
 function normalizeOptions(
   tree: Tree,
-  options: CypressComponentConfigurationSchema,
+  options: CypressComponentConfigurationSchema
 ) {
   const cyVersion = installedCypressVersion();
   if (cyVersion && cyVersion < 10) {
     throw new Error(
-      'Cypress version of 10 or higher is required to use component testing. See the migration guide to upgrade. https://nx.dev/cypress/v11-migration-guide',
+      'Cypress version of 10 or higher is required to use component testing. See the migration guide to upgrade. https://nx.dev/cypress/v11-migration-guide'
     );
   }
 
@@ -120,7 +120,7 @@ function updateDeps(tree: Tree, opts: NormalizeCTOptions) {
 function addProjectFiles(
   tree: Tree,
   projectConfig: ProjectConfiguration,
-  opts: NormalizeCTOptions,
+  opts: NormalizeCTOptions
 ) {
   addBaseCypressSetup(tree, {
     project: opts.project,
@@ -137,14 +137,14 @@ function addProjectFiles(
       projectRoot: projectConfig.root,
       offsetFromRoot: offsetFromRoot(projectConfig.root),
       ext: '',
-    },
+    }
   );
 }
 
 function addTargetToProject(
   tree: Tree,
   projectConfig: ProjectConfiguration,
-  opts: NormalizeCTOptions,
+  opts: NormalizeCTOptions
 ) {
   projectConfig.targets['component-test'] = {
     executor: '@nx/cypress:cypress',
@@ -168,7 +168,7 @@ function updateNxJsonConfiguration(tree: Tree, hasPlugin: boolean) {
         '!{projectRoot}/cypress/**/*',
         '!{projectRoot}/**/*.cy.[jt]s?(x)',
         '!{projectRoot}/cypress.config.[jt]s',
-      ]),
+      ])
     );
   }
   if (!hasPlugin) {
@@ -195,13 +195,13 @@ function updateNxJsonConfiguration(tree: Tree, hasPlugin: boolean) {
 
 export function updateTsConfigForComponentTesting(
   tree: Tree,
-  projectConfig: ProjectConfiguration,
+  projectConfig: ProjectConfiguration
 ) {
   const tsConfigPath = joinPathFragments(
     projectConfig.root,
     projectConfig.projectType === 'library'
       ? 'tsconfig.lib.json'
-      : 'tsconfig.app.json',
+      : 'tsconfig.app.json'
   );
 
   if (tree.exists(tsConfigPath)) {
@@ -223,13 +223,13 @@ export function updateTsConfigForComponentTesting(
 
   const projectBaseTsConfig = joinPathFragments(
     projectConfig.root,
-    'tsconfig.json',
+    'tsconfig.json'
   );
   if (tree.exists(projectBaseTsConfig)) {
     updateJson(tree, projectBaseTsConfig, (json) => {
       if (json.references) {
         const hasCyTsConfig = json.references.some((r) =>
-          r.path.includes('./cypress/tsconfig.json'),
+          r.path.includes('./cypress/tsconfig.json')
         );
         if (!hasCyTsConfig) {
           json.references.push({ path: './cypress/tsconfig.json' });

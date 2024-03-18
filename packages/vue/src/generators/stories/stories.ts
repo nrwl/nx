@@ -31,7 +31,7 @@ export async function createAllStories(
   interactionTests: boolean,
   js: boolean,
   projectConfiguration: ProjectConfiguration,
-  ignorePaths?: string[],
+  ignorePaths?: string[]
 ) {
   const { sourceRoot } = projectConfiguration;
   let componentPaths: string[] = [];
@@ -69,15 +69,15 @@ export async function createAllStories(
           interactionTests,
           js,
         },
-        relativeCmpDir,
+        relativeCmpDir
       );
-    }),
+    })
   );
 }
 
 export async function storiesGenerator(
   host: Tree,
-  schema: StorybookStoriesSchema,
+  schema: StorybookStoriesSchema
 ) {
   const projects = getProjects(host);
   const projectConfiguration = projects.get(schema.project);
@@ -88,7 +88,7 @@ export async function storiesGenerator(
     schema.interactionTests,
     schema.js,
     projectConfiguration,
-    schema.ignorePaths,
+    schema.ignorePaths
   );
 
   const tasks: GeneratorCallback[] = [];
@@ -97,7 +97,7 @@ export async function storiesGenerator(
     const { interactionTestsDependencies, addInteractionsInAddons } =
       ensurePackage<typeof import('@nx/storybook')>('@nx/storybook', nxVersion);
     tasks.push(
-      addDependenciesToPackageJson(host, {}, interactionTestsDependencies()),
+      addDependenciesToPackageJson(host, {}, interactionTestsDependencies())
     );
     addInteractionsInAddons(host, projectConfiguration);
   }

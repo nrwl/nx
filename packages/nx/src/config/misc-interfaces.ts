@@ -18,7 +18,7 @@ export type GeneratorCallback = () => void | Promise<void>;
  */
 export type Generator<T = unknown> = (
   tree,
-  schema: T,
+  schema: T
 ) => void | GeneratorCallback | Promise<void | GeneratorCallback>;
 
 export interface GeneratorsJsonEntry {
@@ -112,7 +112,7 @@ export type Executor<T = any> = (
    * Options that users configure or pass via the command line
    */
   options: T,
-  context: ExecutorContext,
+  context: ExecutorContext
 ) =>
   | Promise<{ success: boolean }>
   | AsyncIterableIterator<{ success: boolean }>;
@@ -127,7 +127,7 @@ export interface HasherContext {
 
 export type CustomHasher = (
   task: Task,
-  context: HasherContext,
+  context: HasherContext
 ) => Promise<Hash>;
 
 export type TaskResult = {
@@ -158,7 +158,7 @@ export type TaskGraphExecutor<T = any> = (
    * Set of overrides for the overall execution
    */
   overrides: T,
-  context: ExecutorContext,
+  context: ExecutorContext
 ) => Promise<
   BatchExecutorResult | AsyncIterableIterator<BatchExecutorTaskResult>
 >;

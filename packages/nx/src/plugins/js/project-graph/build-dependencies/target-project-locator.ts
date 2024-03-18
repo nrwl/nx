@@ -30,7 +30,7 @@ export class TargetProjectLocator {
 
   constructor(
     private readonly nodes: Record<string, ProjectGraphProjectNode>,
-    private readonly externalNodes: Record<string, ProjectGraphExternalNode>,
+    private readonly externalNodes: Record<string, ProjectGraphExternalNode>
   ) {}
 
   /**
@@ -77,7 +77,7 @@ export class TargetProjectLocator {
       // if import cannot be matched using tsconfig `paths` the compilation would fail anyway
       const resolvedProject = this.resolveImportWithTypescript(
         importExpr,
-        filePath,
+        filePath
       );
       if (resolvedProject) {
         return resolvedProject;
@@ -87,7 +87,7 @@ export class TargetProjectLocator {
     try {
       const resolvedModule = this.resolveImportWithRequire(
         importExpr,
-        filePath,
+        filePath
       );
 
       return this.findProjectOfResolvedModule(resolvedModule);
@@ -114,7 +114,7 @@ export class TargetProjectLocator {
       (path) =>
         path.endsWith('/*') &&
         (normalizedImportExpr.startsWith(path.replace(/\*$/, '')) ||
-          normalizedImportExpr === path.replace(/\/\*$/, '')),
+          normalizedImportExpr === path.replace(/\/\*$/, ''))
     );
     if (wildcardPath) {
       return [wildcardPath, this.paths[wildcardPath]];
@@ -124,7 +124,7 @@ export class TargetProjectLocator {
 
   private resolveImportWithTypescript(
     normalizedImportExpr: string,
-    filePath: string,
+    filePath: string
   ): string | undefined {
     let resolvedModule: string;
     if (this.typescriptResolutionCache.has(normalizedImportExpr)) {
@@ -133,11 +133,11 @@ export class TargetProjectLocator {
       resolvedModule = resolveModuleByImport(
         normalizedImportExpr,
         filePath,
-        this.tsConfig.absolutePath,
+        this.tsConfig.absolutePath
       );
       this.typescriptResolutionCache.set(
         normalizedImportExpr,
-        resolvedModule ? resolvedModule : null,
+        resolvedModule ? resolvedModule : null
       );
     }
 
@@ -153,13 +153,13 @@ export class TargetProjectLocator {
 
   private resolveImportWithRequire(
     normalizedImportExpr: string,
-    filePath: string,
+    filePath: string
   ) {
     return posix.relative(
       workspaceRoot,
       require.resolve(normalizedImportExpr, {
         paths: [dirname(filePath)],
-      }),
+      })
     );
   }
   private findNpmPackage(npmImport: string): string | undefined {
@@ -169,7 +169,7 @@ export class TargetProjectLocator {
       const pkg = this.npmProjects.find(
         (pkg) =>
           npmImport === pkg.data.packageName ||
-          npmImport.startsWith(`${pkg.data.packageName}/`),
+          npmImport.startsWith(`${pkg.data.packageName}/`)
       );
       if (pkg) {
         this.npmResolutionCache.set(npmImport, pkg.name);
@@ -179,7 +179,7 @@ export class TargetProjectLocator {
   }
 
   private findProjectOfResolvedModule(
-    resolvedModule: string,
+    resolvedModule: string
   ): string | undefined {
     if (
       resolvedModule.startsWith('node_modules/') ||
@@ -191,7 +191,7 @@ export class TargetProjectLocator {
       ? resolvedModule.substring(2)
       : resolvedModule;
     const importedProject = this.findMatchingProjectFiles(
-      normalizedResolvedModule,
+      normalizedResolvedModule
     );
     return importedProject ? importedProject.name : void 0;
   }
@@ -228,7 +228,7 @@ export class TargetProjectLocator {
 const ROOT_VERSION_PACKAGE_NAME_REGEX = /^npm:(?!.+@.+)/;
 
 function filterRootExternalDependencies(
-  externalNodes: Record<string, ProjectGraphExternalNode>,
+  externalNodes: Record<string, ProjectGraphExternalNode>
 ): ProjectGraphExternalNode[] {
   if (!externalNodes) {
     return [];

@@ -45,7 +45,7 @@ describe('extractStandaloneConfigFromBootstrap', () => {
           },
         },
       },
-      ['npm:@angular/core'],
+      ['npm:@angular/core']
     );
 
     tree.write('apps/app1/src/main.ts', TEST_MAIN_FILE);
@@ -95,7 +95,7 @@ describe('extractStandaloneConfigFromBootstrap', () => {
           },
         },
       },
-      ['npm:@angular/core'],
+      ['npm:@angular/core']
     );
 
     tree.write('apps/app1/src/main.ts', `import('./bootstrap');`);
@@ -106,7 +106,7 @@ describe('extractStandaloneConfigFromBootstrap', () => {
 
     // ASSERT
     expect(tree.read('apps/app1/src/main.ts', 'utf-8')).toMatchInlineSnapshot(
-      `"import('./bootstrap');"`,
+      `"import('./bootstrap');"`
     );
     expect(tree.read('apps/app1/src/bootstrap.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
@@ -150,7 +150,7 @@ describe('extractStandaloneConfigFromBootstrap', () => {
           },
         },
       },
-      [],
+      []
     );
 
     tree.write(
@@ -166,7 +166,7 @@ func Hello(name string) string {
 
 func main() {
   fmt.Println(Hello("app1"))
-}`,
+}`
     );
 
     // ACT && ASSERT
@@ -178,7 +178,7 @@ function addProject(
   tree: Tree,
   projectName: string,
   config: ProjectConfiguration,
-  dependencies: string[],
+  dependencies: string[]
 ): void {
   projectGraph = {
     dependencies: {

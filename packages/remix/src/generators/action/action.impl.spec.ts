@@ -17,7 +17,7 @@ describe('action', () => {
     (remixConfigUtils.getRemixConfigValues as jest.Mock) = jest.fn(() =>
       Promise.resolve({
         ignoredRouteFiles: ['**/.*'],
-      }),
+      })
     );
 
     await applicationGenerator(tree, { name: 'demo' });
@@ -55,10 +55,10 @@ describe('action', () => {
         const content = tree.read('apps/demo/app/routes/example.tsx', 'utf-8');
         expect(content).toMatch(`import { json } from '@remix-run/node';`);
         expect(content).toMatch(
-          `import type { ActionFunctionArgs } from '@remix-run/node';`,
+          `import type { ActionFunctionArgs } from '@remix-run/node';`
         );
         expect(content).toMatch(
-          `import { useActionData } from '@remix-run/react';`,
+          `import { useActionData } from '@remix-run/react';`
         );
       });
 
@@ -88,10 +88,10 @@ describe('action', () => {
     const actionFunction = `export const action = async ({ request }: ActionFunctionArgs)`;
     expect(content).toMatch(`import { json } from '@remix-run/node';`);
     expect(content).toMatch(
-      `import type { ActionFunctionArgs } from '@remix-run/node';`,
+      `import type { ActionFunctionArgs } from '@remix-run/node';`
     );
     expect(content).toMatch(
-      `import { useActionData } from '@remix-run/react';`,
+      `import { useActionData } from '@remix-run/react';`
     );
     expect(content).toMatch(useActionData);
     expect(content).toMatch(actionFunction);

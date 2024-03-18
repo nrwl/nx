@@ -26,7 +26,7 @@ describe('React Cypress Component Tests', () => {
     ensureCypressInstallation();
 
     runCLI(
-      `generate @nx/react:app ${appName} --bundler=webpack --no-interactive`,
+      `generate @nx/react:app ${appName} --bundler=webpack --no-interactive`
     );
 
     updateJson('nx.json', (json) => ({
@@ -42,13 +42,13 @@ describe('React Cypress Component Tests', () => {
     }));
 
     runCLI(
-      `generate @nx/react:component fancy-cmp --project=${appName} --no-interactive`,
+      `generate @nx/react:component fancy-cmp --project=${appName} --no-interactive`
     );
     runCLI(
-      `generate @nx/react:lib ${usedInAppLibName} --no-interactive --unitTestRunner=jest`,
+      `generate @nx/react:lib ${usedInAppLibName} --no-interactive --unitTestRunner=jest`
     );
     runCLI(
-      `generate @nx/react:component btn --project=${usedInAppLibName} --export --no-interactive`,
+      `generate @nx/react:component btn --project=${usedInAppLibName} --export --no-interactive`
     );
     // makes sure custom webpack is loading
     createFile(
@@ -61,7 +61,7 @@ describe('React Cypress Component Tests', () => {
   <circle cx="150" cy="100" r="80" fill="blue" />
   <text x="150" y="125" font-size="60" text-anchor="middle" fill="white">nrwl</text>
 </svg>
-`,
+`
     );
     updateFile(
       `libs/${usedInAppLibName}/src/lib/btn/btn.tsx`,
@@ -83,7 +83,7 @@ export function Btn(props: BtnProps) {
 }
 
 export default Btn;
-`,
+`
     );
 
     updateFile(
@@ -103,14 +103,14 @@ export function App() {
   );
 }
 
-export default App;`,
+export default App;`
     );
 
     runCLI(
-      `generate @nx/react:lib ${buildableLibName} --buildable --no-interactive --unitTestRunner=jest`,
+      `generate @nx/react:lib ${buildableLibName} --buildable --no-interactive --unitTestRunner=jest`
     );
     runCLI(
-      `generate @nx/react:component input --project=${buildableLibName} --export --no-interactive`,
+      `generate @nx/react:component input --project=${buildableLibName} --export --no-interactive`
     );
 
     updateFile(
@@ -132,7 +132,7 @@ export function Input(props: InputProps) {
 }
 
 export default Input;
-`,
+`
     );
     createFile('libs/assets/data.json', JSON.stringify({ data: 'data' }));
     updateJson(join('apps', appName, 'project.json'), (config) => {
@@ -152,40 +152,40 @@ export default Input;
 
   it('should test app', () => {
     runCLI(
-      `generate @nx/react:cypress-component-configuration --project=${appName} --generate-tests`,
+      `generate @nx/react:cypress-component-configuration --project=${appName} --generate-tests`
     );
     if (runE2ETests()) {
       expect(runCLI(`component-test ${appName} --no-watch`)).toContain(
-        'All specs passed!',
+        'All specs passed!'
       );
     }
   }, 300_000);
 
   it('should successfully component test lib being used in app', () => {
     runCLI(
-      `generate @nx/react:cypress-component-configuration --project=${usedInAppLibName} --generate-tests`,
+      `generate @nx/react:cypress-component-configuration --project=${usedInAppLibName} --generate-tests`
     );
     if (runE2ETests()) {
       expect(runCLI(`component-test ${usedInAppLibName} --no-watch`)).toContain(
-        'All specs passed!',
+        'All specs passed!'
       );
     }
   }, 300_000);
 
   it('should successfully component test lib being used in app using babel compiler', () => {
     runCLI(
-      `generate @nx/react:cypress-component-configuration --project=${usedInAppLibName} --generate-tests`,
+      `generate @nx/react:cypress-component-configuration --project=${usedInAppLibName} --generate-tests`
     );
     updateFile(`libs/${usedInAppLibName}/cypress.config.ts`, (content) => {
       // apply babel compiler
       return content.replace(
         'nxComponentTestingPreset(__filename)',
-        'nxComponentTestingPreset(__filename, {compiler: "babel"})',
+        'nxComponentTestingPreset(__filename, {compiler: "babel"})'
       );
     });
     if (runE2ETests()) {
       expect(runCLI(`component-test ${usedInAppLibName} --no-watch`)).toContain(
-        'All specs passed!',
+        'All specs passed!'
       );
     }
   }, 300_000);
@@ -208,16 +208,16 @@ describe(Input.name, () => {
     cy.get('input').should('have.attr', 'readonly');
   })
 });
-`,
+`
     );
 
     runCLI(
-      `generate @nx/react:cypress-component-configuration --project=${buildableLibName} --generate-tests --build-target=${appName}:build`,
+      `generate @nx/react:cypress-component-configuration --project=${buildableLibName} --generate-tests --build-target=${appName}:build`
     );
 
     if (runE2ETests()) {
       expect(runCLI(`component-test ${buildableLibName} --no-watch`)).toContain(
-        'All specs passed!',
+        'All specs passed!'
       );
     }
 
@@ -229,26 +229,26 @@ describe(Input.name, () => {
 @tailwind components;
 @tailwind base;
 @tailwind utilities;
-`,
+`
     );
     updateFile(
       `libs/${buildableLibName}/src/lib/input/input.cy.tsx`,
       (content) => {
         // text-green-500 should now apply
         return content.replace('rgb(0, 0, 0)', 'rgb(34, 197, 94)');
-      },
+      }
     );
     updateFile(
       `libs/${buildableLibName}/src/lib/input/input.tsx`,
       (content) => {
         return `import '../../styles.css';
 ${content}`;
-      },
+      }
     );
 
     if (runE2ETests()) {
       expect(runCLI(`component-test ${buildableLibName} --no-watch`)).toContain(
-        'All specs passed!',
+        'All specs passed!'
       );
     }
   }, 300_000);
@@ -275,11 +275,12 @@ ${content}`;
             return configuration;
           }
         );
-      `,
+      `
     );
     updateJson(join('apps', appName, 'project.json'), (config) => {
-      config.targets['build'].options.webpackConfig =
-        `apps/${appName}/webpack.config.js`;
+      config.targets[
+        'build'
+      ].options.webpackConfig = `apps/${appName}/webpack.config.js`;
 
       return config;
     });
@@ -295,7 +296,7 @@ ${content}`;
   it.skip('should CT vite projects importing other projects', () => {
     const viteLibName = uniq('vite-lib');
     runCLI(
-      `generate @nrwl/react:lib ${viteLibName} --bundler=vite --no-interactive`,
+      `generate @nrwl/react:lib ${viteLibName} --bundler=vite --no-interactive`
     );
 
     updateFile(`libs/${viteLibName}/src/lib/${viteLibName}.tsx`, () => {
@@ -313,11 +314,11 @@ export default MyComponent;`;
     });
 
     runCLI(
-      `generate @nrwl/react:cypress-component-configuration --project=${viteLibName} --generate-tests --bundler=vite --build-target=${appName}:build`,
+      `generate @nrwl/react:cypress-component-configuration --project=${viteLibName} --generate-tests --bundler=vite --build-target=${appName}:build`
     );
     if (runE2ETests()) {
       expect(runCLI(`component-test ${viteLibName}`)).toContain(
-        'All specs passed!',
+        'All specs passed!'
       );
     }
   });

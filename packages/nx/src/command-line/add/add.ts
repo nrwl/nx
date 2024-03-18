@@ -54,7 +54,7 @@ async function installPackage(pkgName: string, version: string): Promise<void> {
         }
 
         return resolve();
-      }),
+      })
     );
   } else {
     const nxJson = readNxJson();
@@ -84,7 +84,7 @@ async function installPackage(pkgName: string, version: string): Promise<void> {
 
 async function initializePlugin(
   pkgName: string,
-  options: AddOptions,
+  options: AddOptions
 ): Promise<void> {
   const capabilities = await getPluginCapabilities(workspaceRoot, pkgName, {});
   const generators = capabilities?.generators;
@@ -122,7 +122,7 @@ async function initializePlugin(
       }`,
       {
         silent: !options.verbose,
-      },
+      }
     );
   } catch (e) {
     spinner.fail();
@@ -138,7 +138,7 @@ async function initializePlugin(
 }
 
 function findInitGenerator(
-  generators: Record<string, GeneratorsJsonEntry>,
+  generators: Record<string, GeneratorsJsonEntry>
 ): string | undefined {
   if (generators['init']) {
     return 'init';
@@ -152,12 +152,12 @@ function findInitGenerator(
   return Object.keys(generators).find(
     (name) =>
       generators[name].aliases?.includes('init') ||
-      (angularPluginInstalled && generators[name].aliases?.includes('ng-add')),
+      (angularPluginInstalled && generators[name].aliases?.includes('ng-add'))
   );
 }
 
 function parsePackageSpecifier(
-  packageSpecifier: string,
+  packageSpecifier: string
 ): [pkgName: string, version: string] {
   const i = packageSpecifier.lastIndexOf('@');
 

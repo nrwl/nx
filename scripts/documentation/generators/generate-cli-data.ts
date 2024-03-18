@@ -21,7 +21,7 @@ const sharedCommands = ['generate', 'run', 'exec'];
 const hiddenCommands = ['$0'];
 
 export async function generateCliDocumentation(
-  commandsOutputDirectory: string,
+  commandsOutputDirectory: string
 ) {
   /**
    * For certain commands, they will output dynamic data at runtime in a real workspace,
@@ -31,14 +31,14 @@ export async function generateCliDocumentation(
   process.env.NX_GENERATE_DOCS_PROCESS = 'true';
 
   const config = readJsonSync(
-    join(__dirname, '../../../tsconfig.base.json'),
+    join(__dirname, '../../../tsconfig.base.json')
   ).compilerOptions;
   registerTsConfigPaths(config);
 
   console.log(`\n${chalk.blue('i')} Generating Documentation for Nx Commands`);
 
   const { commandsObject } = importFresh(
-    '../../../packages/nx/src/command-line/nx-commands',
+    '../../../packages/nx/src/command-line/nx-commands'
   );
 
   function generateMarkdown(command: ParsedCommand) {
@@ -60,7 +60,7 @@ description: "${command.description}"
       examples[command.name].forEach((example) => {
         templateLines.push(
           example.description + ':',
-          codeBlock(` nx ${example.command}`, 'shell'),
+          codeBlock(` nx ${example.command}`, 'shell')
         );
       });
     }
@@ -76,11 +76,11 @@ description: "${command.description}"
           codeBlock(
             `nx ${command.commandString} ${subcommand.commandString.replace(
               '$0 ',
-              '',
+              ''
             )}`,
-            'shell',
+            'shell'
           ),
-          generateOptionsMarkdown(subcommand, 2),
+          generateOptionsMarkdown(subcommand, 2)
         );
       }
     }
@@ -102,41 +102,41 @@ description: "${command.description}"
         (name) =>
           !sharedCommands.includes(name) &&
           !hiddenCommands.includes(name) &&
-          nxCommands[name].description,
+          nxCommands[name].description
       )
       .map((name) => parseCommand(name, nxCommands[name]))
       .map(async (command) => generateMarkdown(await command))
       .map(async (templateObject) =>
-        generateMarkdownFile(commandsOutputDirectory, await templateObject),
-      ),
+        generateMarkdownFile(commandsOutputDirectory, await templateObject)
+      )
   );
 
   await Promise.all(
     sharedCommands.map((command) => {
       const sharedCommandsDirectory = join(
         __dirname,
-        '../../../docs/shared/cli',
+        '../../../docs/shared/cli'
       );
       const sharedCommandsOutputDirectory = join(
         __dirname,
         '../../../docs/',
         'generated',
-        'cli',
+        'cli'
       );
 
       const templateObject = {
         name: command,
         template: readFileSync(
           join(sharedCommandsDirectory, `${command}.md`),
-          'utf-8',
+          'utf-8'
         ),
       };
 
       return generateMarkdownFile(
         sharedCommandsOutputDirectory,
-        templateObject,
+        templateObject
       );
-    }),
+    })
   );
 
   delete process.env.NX_GENERATE_DOCS_PROCESS;

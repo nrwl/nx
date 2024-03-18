@@ -31,7 +31,7 @@ export interface CypressConfigureSchema {
 
 export async function cypressProjectGenerator(
   tree: Tree,
-  schema: CypressConfigureSchema,
+  schema: CypressConfigureSchema
 ) {
   return await cypressProjectGeneratorInternal(tree, {
     projectNameAndRootFormat: 'derived',
@@ -41,7 +41,7 @@ export async function cypressProjectGenerator(
 
 export async function cypressProjectGeneratorInternal(
   tree: Tree,
-  schema: CypressConfigureSchema,
+  schema: CypressConfigureSchema
 ) {
   const { configurationGenerator } = ensurePackage<
     typeof import('@nx/cypress')
@@ -56,7 +56,7 @@ export async function cypressProjectGeneratorInternal(
       directory: schema.directory,
       projectNameAndRootFormat: schema.projectNameAndRootFormat,
       callingGenerator: '@nx/storybook:cypress-project',
-    },
+    }
   );
   const libConfig = readProjectConfiguration(tree, schema.name);
   const libRoot = libConfig.root;
@@ -81,7 +81,7 @@ export async function cypressProjectGeneratorInternal(
   const generatedCypressProjectName = getE2eProjectName(
     schema.name,
     libRoot,
-    schema.directory,
+    schema.directory
   );
   removeUnneededFiles(tree, generatedCypressProjectName, schema.js);
   addBaseUrlToCypressConfig(tree, generatedCypressProjectName);
@@ -137,7 +137,7 @@ function updateAngularJsonBuilder(
     e2eProjectName: string;
     targetProjectName: string;
     ciTargetName?: string;
-  },
+  }
 ) {
   const project = readProjectConfiguration(tree, opts.e2eProjectName);
   const e2eTarget = project.targets.e2e;

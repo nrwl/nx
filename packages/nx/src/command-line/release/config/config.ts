@@ -117,7 +117,7 @@ export interface CreateNxReleaseConfigError {
 export async function createNxReleaseConfig(
   projectGraph: ProjectGraph,
   projectFileMap: ProjectFileMap,
-  userConfig: NxJsonConfiguration['release'] = {},
+  userConfig: NxJsonConfiguration['release'] = {}
 ): Promise<{
   error: null | CreateNxReleaseConfigError;
   nxReleaseConfig: NxReleaseConfig | null;
@@ -194,7 +194,7 @@ export async function createNxReleaseConfig(
 
   const defaultRendererPath = join(
     __dirname,
-    '../../../../release/changelog-renderer',
+    '../../../../release/changelog-renderer'
   );
   const WORKSPACE_DEFAULTS: Omit<NxReleaseConfig, 'groups'> = {
     // By default all projects in all groups are released together
@@ -284,7 +284,7 @@ export async function createNxReleaseConfig(
    */
   const rootGitConfig: NxReleaseConfig['git'] = deepMergeDefaults(
     [WORKSPACE_DEFAULTS.git],
-    userConfig.git as Partial<NxReleaseConfig['git']>,
+    userConfig.git as Partial<NxReleaseConfig['git']>
   );
   const rootVersionConfig: NxReleaseConfig['version'] = deepMergeDefaults(
     [
@@ -295,17 +295,17 @@ export async function createNxReleaseConfig(
         git: userConfig.git as Partial<NxReleaseConfig['git']>,
       } as NxReleaseConfig['version'],
     ],
-    userConfig.version as Partial<NxReleaseConfig['version']>,
+    userConfig.version as Partial<NxReleaseConfig['version']>
   );
 
   if (userConfig.changelog?.workspaceChangelog) {
     userConfig.changelog.workspaceChangelog = normalizeTrueToEmptyObject(
-      userConfig.changelog.workspaceChangelog,
+      userConfig.changelog.workspaceChangelog
     );
   }
   if (userConfig.changelog?.projectChangelogs) {
     userConfig.changelog.projectChangelogs = normalizeTrueToEmptyObject(
-      userConfig.changelog.projectChangelogs,
+      userConfig.changelog.projectChangelogs
     );
   }
 
@@ -320,7 +320,7 @@ export async function createNxReleaseConfig(
     ],
     normalizeTrueToEmptyObject(userConfig.changelog) as Partial<
       NxReleaseConfig['changelog']
-    >,
+    >
   );
 
   const rootConventionalCommitsConfig: NxReleaseConfig['conventionalCommits'] =
@@ -328,9 +328,9 @@ export async function createNxReleaseConfig(
       [WORKSPACE_DEFAULTS.conventionalCommits],
       fillUnspecifiedConventionalCommitsProperties(
         normalizeConventionalCommitsConfig(
-          userConfig.conventionalCommits,
-        ) as NxReleaseConfig['conventionalCommits'],
-      ),
+          userConfig.conventionalCommits
+        ) as NxReleaseConfig['conventionalCommits']
+      )
     );
 
   // these options are not supported at the group level, only the root/command level
@@ -366,7 +366,7 @@ export async function createNxReleaseConfig(
               ? // user-defined top level "projects" config takes priority if set
                 findMatchingProjects(
                   ensureArray(userConfig.projects),
-                  projectGraph.nodes,
+                  projectGraph.nodes
                 )
               : await getDefaultProjects(projectGraph, projectFileMap),
 
@@ -377,7 +377,7 @@ export async function createNxReleaseConfig(
              */
             version: deepMergeDefaults(
               [GROUP_DEFAULTS.version],
-              rootVersionWithoutGlobalOptions,
+              rootVersionWithoutGlobalOptions
             ),
             // If the user has set something custom for releaseTagPattern at the top level, respect it for the implicit default group
             releaseTagPattern:
@@ -398,7 +398,7 @@ export async function createNxReleaseConfig(
     // Ensure that the config for the release group can resolve at least one project
     const matchingProjects = findMatchingProjects(
       releaseGroup.projects,
-      projectGraph.nodes,
+      projectGraph.nodes
     );
     if (!matchingProjects.length) {
       return {
@@ -416,7 +416,7 @@ export async function createNxReleaseConfig(
     if (releaseGroup.releaseTagPattern) {
       const error = ensureReleaseGroupReleaseTagPatternIsValid(
         releaseGroup.releaseTagPattern,
-        releaseGroupName,
+        releaseGroupName
       );
       if (error) {
         return {
@@ -454,7 +454,7 @@ export async function createNxReleaseConfig(
 
     if (releaseGroup.changelog) {
       releaseGroup.changelog = normalizeTrueToEmptyObject(
-        releaseGroup.changelog,
+        releaseGroup.changelog
       ) as NxReleaseConfig['groups']['string']['changelog'];
     }
 
@@ -464,14 +464,14 @@ export async function createNxReleaseConfig(
       version: deepMergeDefaults(
         // First apply any group level defaults, then apply actual root level config, then group level config
         [GROUP_DEFAULTS.version, rootVersionWithoutGlobalOptions],
-        releaseGroup.version,
+        releaseGroup.version
       ),
       // If the user has set any changelog config at all, including at the root level, then use one set of defaults, otherwise default to false for the whole feature
       changelog:
         releaseGroup.changelog || rootChangelogConfig.projectChangelogs
           ? deepMergeDefaults<NxReleaseConfig['groups']['string']['changelog']>(
               groupChangelogDefaults,
-              releaseGroup.changelog || {},
+              releaseGroup.changelog || {}
             )
           : false,
 
@@ -532,7 +532,7 @@ function normalizeTrueToEmptyObject<T>(value: T | boolean): T | {} {
 }
 
 function normalizeConventionalCommitsConfig(
-  userConventionalCommitsConfig: NxJsonConfiguration['release']['conventionalCommits'],
+  userConventionalCommitsConfig: NxJsonConfiguration['release']['conventionalCommits']
 ): NxJsonConfiguration['release']['conventionalCommits'] {
   if (!userConventionalCommitsConfig || !userConventionalCommitsConfig.types) {
     return userConventionalCommitsConfig;
@@ -541,7 +541,7 @@ function normalizeConventionalCommitsConfig(
   const types: NxJsonConfiguration['release']['conventionalCommits']['types'] =
     {};
   for (const [t, typeConfig] of Object.entries(
-    userConventionalCommitsConfig.types,
+    userConventionalCommitsConfig.types
   )) {
     if (typeConfig === false) {
       types[t] = {
@@ -587,7 +587,7 @@ function normalizeConventionalCommitsConfig(
  * defaults with `deepMergeDefaults`, so we need to fill in the gaps here.
  */
 function fillUnspecifiedConventionalCommitsProperties(
-  config: NxReleaseConfig['conventionalCommits'],
+  config: NxReleaseConfig['conventionalCommits']
 ) {
   if (!config || !config.types) {
     return config;
@@ -629,7 +629,7 @@ function fillUnspecifiedConventionalCommitsProperties(
 }
 
 export async function handleNxReleaseConfigError(
-  error: CreateNxReleaseConfigError,
+  error: CreateNxReleaseConfigError
 ): Promise<never> {
   switch (error.code) {
     case 'PROJECTS_AND_GROUPS_DEFINED':
@@ -714,7 +714,7 @@ export async function handleNxReleaseConfigError(
 
 function ensureReleaseGroupReleaseTagPatternIsValid(
   releaseTagPattern: string,
-  releaseGroupName: string,
+  releaseGroupName: string
 ): null | CreateNxReleaseConfigError {
   // ensure that any provided releaseTagPattern contains exactly one instance of {version}
   return releaseTagPattern.split('{version}').length === 2
@@ -728,7 +728,7 @@ function ensureReleaseGroupReleaseTagPatternIsValid(
 }
 
 function ensureProjectsConfigIsArray(
-  groups: NxJsonConfiguration['release']['groups'],
+  groups: NxJsonConfiguration['release']['groups']
 ): NxReleaseConfig['groups'] {
   const result: NxJsonConfiguration['release']['groups'] = {};
   for (const [groupName, groupConfig] of Object.entries(groups)) {
@@ -751,7 +751,7 @@ function isObject(value: any): value is Record<string, any> {
 // Helper function to merge two config objects
 function mergeConfig<T>(
   objA: DeepRequired<T>,
-  objB: Partial<T>,
+  objB: Partial<T>
 ): DeepRequired<T> {
   const merged: any = { ...objA };
 
@@ -783,7 +783,7 @@ function mergeConfig<T>(
  */
 function deepMergeDefaults<T>(
   defaultConfigs: DeepRequired<T>[],
-  userConfig?: Partial<T>,
+  userConfig?: Partial<T>
 ): DeepRequired<T> {
   let result: any;
 
@@ -809,7 +809,7 @@ function deepMergeDefaults<T>(
  * generatorOptions at the same time, since it is at best redundant, and at worst invalid.
  */
 function hasInvalidConventionalCommitsConfig(
-  userConfig: NxJsonConfiguration['release'],
+  userConfig: NxJsonConfiguration['release']
 ): boolean {
   // at the root
   if (
@@ -840,7 +840,7 @@ function hasInvalidConventionalCommitsConfig(
  * the subcommands or the programmatic API.
  */
 function hasInvalidGitConfig(
-  userConfig: NxJsonConfiguration['release'],
+  userConfig: NxJsonConfiguration['release']
 ): boolean {
   return (
     !!userConfig.git && !!(userConfig.version?.git || userConfig.changelog?.git)
@@ -849,7 +849,7 @@ function hasInvalidGitConfig(
 
 async function getDefaultProjects(
   projectGraph: ProjectGraph,
-  projectFileMap: ProjectFileMap,
+  projectFileMap: ProjectFileMap
 ): Promise<string[]> {
   // default to all library projects in the workspace with a package.json file
   return findMatchingProjects(['*'], projectGraph.nodes).filter(
@@ -858,14 +858,14 @@ async function getDefaultProjects(
       // Exclude all projects with "private": true in their package.json because this is
       // a common indicator that a project is not intended for release.
       // Users can override this behavior by explicitly defining the projects they want to release.
-      isProjectPublic(project, projectGraph, projectFileMap),
+      isProjectPublic(project, projectGraph, projectFileMap)
   );
 }
 
 function isProjectPublic(
   project: string,
   projectGraph: ProjectGraph,
-  projectFileMap: ProjectFileMap,
+  projectFileMap: ProjectFileMap
 ): boolean {
   const projectNode = projectGraph.nodes[project];
   const packageJsonPath = join(projectNode.data.root, 'package.json');

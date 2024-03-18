@@ -16,7 +16,7 @@ export function arrayToString(array: string[]): string {
 }
 
 export function getProjectValidationResultMessage(
-  validationResult: ValidationError[],
+  validationResult: ValidationError[]
 ): string {
   return `${chalk.bold('Validation results')}:
 

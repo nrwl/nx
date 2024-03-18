@@ -35,7 +35,7 @@ describe('Nx Plugin', () => {
     const plugin = uniq('plugin');
 
     runCLI(
-      `generate @nx/plugin:plugin ${plugin} --linter=eslint --e2eTestRunner=jest --publishable`,
+      `generate @nx/plugin:plugin ${plugin} --linter=eslint --e2eTestRunner=jest --publishable`
     );
     const lintResults = runCLI(`lint ${plugin}`);
     expect(lintResults).toContain('All files pass linting');
@@ -44,7 +44,7 @@ describe('Nx Plugin', () => {
     expect(buildResults).toContain('Done compiling TypeScript files');
     checkFilesExist(
       `dist/libs/${plugin}/package.json`,
-      `dist/libs/${plugin}/src/index.js`,
+      `dist/libs/${plugin}/src/index.js`
     );
     const project = readJson(`libs/${plugin}/project.json`);
     expect(project).toMatchObject({
@@ -60,7 +60,7 @@ describe('Nx Plugin', () => {
 
     runCLI(`generate @nx/plugin:plugin ${plugin} --linter=eslint`);
     runCLI(
-      `generate @nx/plugin:migration --project=${plugin} --packageVersion=${version} --packageJsonUpdates=false`,
+      `generate @nx/plugin:migration --project=${plugin} --packageVersion=${version} --packageJsonUpdates=false`
     );
 
     const lintResults = runCLI(`lint ${plugin}`);
@@ -72,7 +72,7 @@ describe('Nx Plugin', () => {
     expect(buildResults).toContain('Done compiling TypeScript files');
     checkFilesExist(
       `dist/libs/${plugin}/src/migrations/update-${version}/update-${version}.js`,
-      `libs/${plugin}/src/migrations/update-${version}/update-${version}.ts`,
+      `libs/${plugin}/src/migrations/update-${version}/update-${version}.ts`
     );
     const migrationsJson = readJson(`libs/${plugin}/migrations.json`);
     expect(migrationsJson).toMatchObject({
@@ -107,7 +107,7 @@ describe('Nx Plugin', () => {
       `libs/${plugin}/src/generators/${generator}/generator.spec.ts`,
       `dist/libs/${plugin}/src/generators/${generator}/schema.d.ts`,
       `dist/libs/${plugin}/src/generators/${generator}/schema.json`,
-      `dist/libs/${plugin}/src/generators/${generator}/generator.js`,
+      `dist/libs/${plugin}/src/generators/${generator}/generator.js`
     );
     const generatorJson = readJson(`libs/${plugin}/generators.json`);
     expect(generatorJson).toMatchObject({
@@ -127,7 +127,7 @@ describe('Nx Plugin', () => {
 
     runCLI(`generate @nx/plugin:plugin ${plugin} --linter=eslint`);
     runCLI(
-      `generate @nx/plugin:executor ${executor} --project=${plugin} --includeHasher`,
+      `generate @nx/plugin:executor ${executor} --project=${plugin} --includeHasher`
     );
 
     const lintResults = runCLI(`lint ${plugin}`);
@@ -146,7 +146,7 @@ describe('Nx Plugin', () => {
       `dist/libs/${plugin}/src/executors/${executor}/schema.d.ts`,
       `dist/libs/${plugin}/src/executors/${executor}/schema.json`,
       `dist/libs/${plugin}/src/executors/${executor}/executor.js`,
-      `dist/libs/${plugin}/src/executors/${executor}/hasher.js`,
+      `dist/libs/${plugin}/src/executors/${executor}/hasher.js`
     );
     const executorsJson = readJson(`libs/${plugin}/executors.json`);
     expect(executorsJson).toMatchObject({
@@ -176,36 +176,37 @@ describe('Nx Plugin', () => {
     runCLI(`generate @nx/plugin:plugin ${plugin} --linter=eslint`);
 
     runCLI(
-      `generate @nx/plugin:generator ${goodGenerator} --project=${plugin}`,
+      `generate @nx/plugin:generator ${goodGenerator} --project=${plugin}`
     );
 
     runCLI(
-      `generate @nx/plugin:generator ${badFactoryPath} --project=${plugin}`,
+      `generate @nx/plugin:generator ${badFactoryPath} --project=${plugin}`
     );
 
     runCLI(`generate @nx/plugin:executor ${goodExecutor} --project=${plugin}`);
 
     runCLI(
-      `generate @nx/plugin:executor ${badExecutorBadImplPath} --project=${plugin}`,
+      `generate @nx/plugin:executor ${badExecutorBadImplPath} --project=${plugin}`
     );
 
     runCLI(
-      `generate @nx/plugin:migration ${badMigrationVersion} --project=${plugin} --packageVersion="invalid"`,
+      `generate @nx/plugin:migration ${badMigrationVersion} --project=${plugin} --packageVersion="invalid"`
     );
 
     runCLI(
-      `generate @nx/plugin:migration ${missingMigrationVersion} --project=${plugin} --packageVersion="0.1.0"`,
+      `generate @nx/plugin:migration ${missingMigrationVersion} --project=${plugin} --packageVersion="0.1.0"`
     );
 
     runCLI(
-      `generate @nx/plugin:migration ${goodMigration} --project=${plugin} --packageVersion="0.1.0"`,
+      `generate @nx/plugin:migration ${goodMigration} --project=${plugin} --packageVersion="0.1.0"`
     );
 
     updateFile(`libs/${plugin}/generators.json`, (f) => {
       const json = JSON.parse(f);
       // @proj/plugin:plugin has an invalid implementation path
-      json.generators[badFactoryPath].factory =
-        `./generators/${plugin}/bad-path`;
+      json.generators[
+        badFactoryPath
+      ].factory = `./generators/${plugin}/bad-path`;
       // @proj/plugin:non-existant has a missing implementation path amd schema
       json.generators['non-existant-generator'] = {};
       return JSON.stringify(json);
@@ -229,32 +230,32 @@ describe('Nx Plugin', () => {
 
     const results = runCLI(`lint ${plugin}`, { silenceError: true });
     expect(results).toContain(
-      `${badFactoryPath}: Implementation path should point to a valid file`,
+      `${badFactoryPath}: Implementation path should point to a valid file`
     );
     expect(results).toContain(
-      `non-existant-generator: Missing required property - \`schema\``,
+      `non-existant-generator: Missing required property - \`schema\``
     );
     expect(results).toContain(
-      `non-existant-generator: Missing required property - \`implementation\``,
+      `non-existant-generator: Missing required property - \`implementation\``
     );
     expect(results).not.toContain(goodGenerator);
 
     expect(results).toContain(
-      `${badExecutorBadImplPath}: Implementation path should point to a valid file`,
+      `${badExecutorBadImplPath}: Implementation path should point to a valid file`
     );
     expect(results).toContain(
-      `non-existant-executor: Missing required property - \`schema\``,
+      `non-existant-executor: Missing required property - \`schema\``
     );
     expect(results).toContain(
-      `non-existant-executor: Missing required property - \`implementation\``,
+      `non-existant-executor: Missing required property - \`implementation\``
     );
     expect(results).not.toContain(goodExecutor);
 
     expect(results).toContain(
-      `${missingMigrationVersion}: Missing required property - \`version\``,
+      `${missingMigrationVersion}: Missing required property - \`version\``
     );
     expect(results).toContain(
-      `${badMigrationVersion}: Version should be a valid semver`,
+      `${badMigrationVersion}: Version should be a valid semver`
     );
     expect(results).not.toContain(goodMigration);
   });
@@ -286,7 +287,7 @@ describe('Nx Plugin', () => {
   }
 
   export const projectFilePatterns = ['my-project-file'];
-  `,
+  `
       );
 
       // Register plugin in nx.json (required for inference)
@@ -302,7 +303,7 @@ describe('Nx Plugin', () => {
 
       // Attempt to use inferred project w/ Nx
       expect(runCLI(`build ${inferredProject}`)).toContain(
-        'custom registered target',
+        'custom registered target'
       );
     });
 
@@ -328,10 +329,10 @@ describe('Nx Plugin', () => {
 
       // Attempt to use inferred project w/ Nx
       expect(runCLI(`build ${inferredProject}`)).toContain(
-        'custom registered target',
+        'custom registered target'
       );
       const configuration = JSON.parse(
-        runCLI(`show project ${inferredProject} --json`),
+        runCLI(`show project ${inferredProject} --json`)
       );
       expect(configuration.tags).toEqual(['my-tag']);
     });
@@ -347,11 +348,11 @@ describe('Nx Plugin', () => {
 
       updateFile(
         `libs/${plugin}/src/executors/${executor}/executor.ts`,
-        ASYNC_GENERATOR_EXECUTOR_CONTENTS,
+        ASYNC_GENERATOR_EXECUTOR_CONTENTS
       );
 
       runCLI(
-        `generate @${workspaceName}/${plugin}:${generator} --name ${generatedProject}`,
+        `generate @${workspaceName}/${plugin}:${generator} --name ${generatedProject}`
       );
 
       updateFile(`libs/${generatedProject}/project.json`, (f) => {
@@ -379,13 +380,13 @@ describe('Nx Plugin', () => {
 
       expect(() => {
         runCLI(
-          `generate @nx/plugin:generator ${generator} --project=${plugin}`,
+          `generate @nx/plugin:generator ${generator} --project=${plugin}`
         );
 
         runCLI(
           `generate @${workspaceName}/${plugin}:${generator} --name ${uniq(
-            'test',
-          )}`,
+            'test'
+          )}`
         );
       }).not.toThrow();
       updateFile('package.json', JSON.stringify(oldPackageJson, null, 2));
@@ -397,14 +398,14 @@ describe('Nx Plugin', () => {
     it('should create a plugin in the specified directory', async () => {
       const plugin = uniq('plugin');
       runCLI(
-        `generate @nx/plugin:plugin ${plugin} --linter=eslint --directory subdir --e2eTestRunner=jest`,
+        `generate @nx/plugin:plugin ${plugin} --linter=eslint --directory subdir --e2eTestRunner=jest`
       );
       checkFilesExist(`libs/subdir/${plugin}/package.json`);
       const pluginProject = readJson(
-        join('libs', 'subdir', plugin, 'project.json'),
+        join('libs', 'subdir', plugin, 'project.json')
       );
       const pluginE2EProject = readJson(
-        join('apps', 'subdir', `${plugin}-e2e`, 'project.json'),
+        join('apps', 'subdir', `${plugin}-e2e`, 'project.json')
       );
       expect(pluginProject.targets).toBeDefined();
       expect(pluginE2EProject).toBeTruthy();
@@ -414,7 +415,7 @@ describe('Nx Plugin', () => {
     it('should add tags to project configuration', () => {
       const plugin = uniq('plugin');
       runCLI(
-        `generate @nx/plugin:plugin ${plugin} --linter=eslint --tags=e2etag,e2ePackage `,
+        `generate @nx/plugin:plugin ${plugin} --linter=eslint --tags=e2etag,e2ePackage `
       );
       const pluginProject = readJson(join('libs', plugin, 'project.json'));
       expect(pluginProject.tags).toEqual(['e2etag', 'e2ePackage']);
@@ -425,10 +426,10 @@ describe('Nx Plugin', () => {
     const plugin = uniq('plugin');
     const createAppName = `create-${plugin}-app`;
     runCLI(
-      `generate @nx/plugin:plugin ${plugin} --e2eTestRunner jest --publishable`,
+      `generate @nx/plugin:plugin ${plugin} --e2eTestRunner jest --publishable`
     );
     runCLI(
-      `generate @nx/plugin:create-package ${createAppName} --project=${plugin} --e2eProject=${plugin}-e2e`,
+      `generate @nx/plugin:create-package ${createAppName} --project=${plugin} --e2eProject=${plugin}-e2e`
     );
 
     const buildResults = runCLI(`build ${createAppName}`);
@@ -437,7 +438,7 @@ describe('Nx Plugin', () => {
     checkFilesExist(
       `libs/${plugin}/src/generators/preset`,
       `libs/${createAppName}`,
-      `dist/libs/${createAppName}/bin/index.js`,
+      `dist/libs/${createAppName}/bin/index.js`
     );
 
     runCLI(`e2e ${plugin}-e2e`);
@@ -447,8 +448,8 @@ describe('Nx Plugin', () => {
     const plugin = uniq('plugin');
     expect(() =>
       runCLI(
-        `generate @nx/plugin:create-package ${plugin} --project=invalid-plugin`,
-      ),
+        `generate @nx/plugin:create-package ${plugin} --project=invalid-plugin`
+      )
     ).toThrow();
   });
 
@@ -457,7 +458,7 @@ describe('Nx Plugin', () => {
     const createAppName = `create-${plugin}-app`;
 
     runCLI(
-      `generate @nx/plugin:plugin ${plugin} --e2eTestRunner jest --publishable --project-name-and-root-format=as-provided`,
+      `generate @nx/plugin:plugin ${plugin} --e2eTestRunner jest --publishable --project-name-and-root-format=as-provided`
     );
 
     // check files are generated without the layout directory ("libs/") and
@@ -465,16 +466,16 @@ describe('Nx Plugin', () => {
     checkFilesExist(`${plugin}/src/index.ts`);
     // check build works
     expect(runCLI(`build ${plugin}`)).toContain(
-      `Successfully ran target build for project ${plugin}`,
+      `Successfully ran target build for project ${plugin}`
     );
     // check tests pass
     const appTestResult = runCLI(`test ${plugin}`);
     expect(appTestResult).toContain(
-      `Successfully ran target test for project ${plugin}`,
+      `Successfully ran target test for project ${plugin}`
     );
 
     runCLI(
-      `generate @nx/plugin:create-package ${createAppName} --project=${plugin} --e2eProject=${plugin}-e2e --project-name-and-root-format=as-provided`,
+      `generate @nx/plugin:create-package ${createAppName} --project=${plugin} --e2eProject=${plugin}-e2e --project-name-and-root-format=as-provided`
     );
 
     // check files are generated without the layout directory ("libs/") and
@@ -482,12 +483,12 @@ describe('Nx Plugin', () => {
     checkFilesExist(`${plugin}/src/generators/preset`, `${createAppName}`);
     // check build works
     expect(runCLI(`build ${createAppName}`)).toContain(
-      `Successfully ran target build for project ${createAppName}`,
+      `Successfully ran target build for project ${createAppName}`
     );
     // check tests pass
     const libTestResult = runCLI(`test ${createAppName}`);
     expect(libTestResult).toContain(
-      `Successfully ran target test for project ${createAppName}`,
+      `Successfully ran target test for project ${createAppName}`
     );
   });
 });

@@ -26,13 +26,13 @@ describe('ct-helpers', () => {
 
   it('should handle circular deps and find the relation', () => {
     expect(isCtProjectUsingBuildProject(projectGraph, 'app1', 'lib5')).toBe(
-      true,
+      true
     );
   });
 
   it('should handle circular deps and find no relation', () => {
     expect(isCtProjectUsingBuildProject(projectGraph, 'app1', 'lib6')).toBe(
-      false,
+      false
     );
   });
 });

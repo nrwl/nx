@@ -7,7 +7,7 @@ import type { LibraryGeneratorOptions, NormalizedOptions } from '../schema';
 
 export async function normalizeOptions(
   tree: Tree,
-  options: LibraryGeneratorOptions,
+  options: LibraryGeneratorOptions
 ): Promise<NormalizedOptions> {
   const {
     projectName,
@@ -58,7 +58,7 @@ export async function normalizeOptions(
 }
 
 export function toJsLibraryGeneratorOptions(
-  options: LibraryGeneratorOptions,
+  options: LibraryGeneratorOptions
 ): JsLibraryGeneratorSchema {
   return {
     name: options.name,

@@ -8,7 +8,7 @@ import {
 
 export const getTouchedProjects: TouchedProjectLocator = (
   touchedFiles,
-  projectGraphNodes,
+  projectGraphNodes
 ): string[] => {
   const projectRootMap = createProjectRootMappings(projectGraphNodes);
 
@@ -24,7 +24,7 @@ export const getTouchedProjects: TouchedProjectLocator = (
 export const getImplicitlyTouchedProjects: TouchedProjectLocator = (
   fileChanges,
   projectGraphNodes,
-  nxJson,
+  nxJson
 ): string[] => {
   const implicits = {};
   const globalFiles = [...extractGlobalFilesFromInputs(nxJson), 'nx.json'];
@@ -49,7 +49,7 @@ export const getImplicitlyTouchedProjects: TouchedProjectLocator = (
 
   for (const [pattern, projects] of Object.entries(implicits)) {
     const implicitDependencyWasChanged = fileChanges.some((f) =>
-      minimatch(f.file, pattern, { dot: true }),
+      minimatch(f.file, pattern, { dot: true })
     );
     if (!implicitDependencyWasChanged) {
       continue;

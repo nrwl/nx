@@ -8,7 +8,7 @@ import {
 
 export function updateAppEditorTsConfigExcludedFiles(
   tree: Tree,
-  projectConfig: ProjectConfiguration,
+  projectConfig: ProjectConfiguration
 ) {
   if (projectConfig.projectType !== 'application') {
     return;
@@ -16,11 +16,11 @@ export function updateAppEditorTsConfigExcludedFiles(
 
   const editorTsConfigPath = joinPathFragments(
     projectConfig.root,
-    'tsconfig.editor.json',
+    'tsconfig.editor.json'
   );
   const appTsConfigPath = joinPathFragments(
     projectConfig.root,
-    'tsconfig.app.json',
+    'tsconfig.app.json'
   );
   if (!tree.exists(editorTsConfigPath) || !tree.exists(appTsConfigPath)) {
     return;

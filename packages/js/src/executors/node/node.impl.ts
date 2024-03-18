@@ -41,7 +41,7 @@ function debounce(fn: () => void, wait: number) {
 
 export async function* nodeExecutor(
   options: NodeExecutorOptions,
-  context: ExecutorContext,
+  context: ExecutorContext
 ) {
   process.env.NODE_ENV ??= context?.configurationName ?? 'development';
   const project = context.projectGraph.nodes[context.projectName];
@@ -50,8 +50,8 @@ export async function* nodeExecutor(
   if (!project.data.targets[buildTarget.target]) {
     throw new Error(
       `Cannot find build target ${chalk.bold(
-        options.buildTarget,
-      )} for project ${chalk.bold(context.projectName)}`,
+        options.buildTarget
+      )} for project ${chalk.bold(context.projectName)}`
     );
   }
 
@@ -76,7 +76,7 @@ export async function* nodeExecutor(
     for (const [i, result] of results.entries()) {
       if (!result.success) {
         throw new Error(
-          `Wait until target failed: ${options.waitUntilTargets[i]}.`,
+          `Wait until target failed: ${options.waitUntilTargets[i]}.`
         );
       }
     }
@@ -88,7 +88,7 @@ export async function* nodeExecutor(
     context,
     project,
     buildOptions,
-    buildTargetExecutor,
+    buildTargetExecutor
   );
 
   let additionalExitHandler: null | (() => void) = null;
@@ -111,12 +111,12 @@ export async function* nodeExecutor(
 
     const debouncedProcessQueue = debounce(
       processQueue,
-      options.debounce ?? 1_000,
+      options.debounce ?? 1_000
     );
 
     const addToQueue = async (
       childProcess: null | ChildProcess,
-      buildResult: Promise<{ success: boolean }>,
+      buildResult: Promise<{ success: boolean }>
     ) => {
       const task: ActiveTask = {
         id: randomUUID(),
@@ -156,7 +156,7 @@ export async function* nodeExecutor(
                   NX_FILE_TO_RUN: fileToRunCorrectPath(fileToRun),
                   NX_MAPPINGS: JSON.stringify(mappings),
                 },
-              },
+              }
             );
 
             const handleStdErr = (data) => {
@@ -172,7 +172,7 @@ export async function* nodeExecutor(
               task.childProcess.off('data', handleStdErr);
               if (options.watch && !task.killed) {
                 logger.info(
-                  `NX Process exited with code ${code}, waiting for changes to restart...`,
+                  `NX Process exited with code ${code}, waiting for changes to restart...`
                 );
               }
               if (!options.watch) done();
@@ -218,7 +218,7 @@ export async function* nodeExecutor(
             {
               cwd: context.root,
               stdio: 'inherit',
-            },
+            }
           );
           childProcess.once('exit', (code) => {
             if (code === 0) resolve({ success: true });
@@ -244,7 +244,7 @@ export async function* nodeExecutor(
             logger.info(`NX File change detected. Restarting...`);
             await runBuild();
           }
-        },
+        }
       );
       await runBuild(); // run first build
     } else {
@@ -257,7 +257,7 @@ export async function* nodeExecutor(
           ...options.buildTargetOptions,
           watch: options.watch,
         },
-        context,
+        context
       );
       while (true) {
         const event = await output.next();
@@ -308,7 +308,7 @@ function getExecArgv(options: NodeExecutorOptions) {
 
 function calculateResolveMappings(
   context: ExecutorContext,
-  options: NodeExecutorOptions,
+  options: NodeExecutorOptions
 ) {
   const parsed = parseTargetString(options.buildTarget, context);
   const { dependencies } = calculateProjectBuildableDependencies(
@@ -317,7 +317,7 @@ function calculateResolveMappings(
     context.root,
     parsed.project,
     parsed.target,
-    parsed.configuration,
+    parsed.configuration
   );
   return dependencies.reduce((m, c) => {
     if (c.node.type !== 'npm' && c.outputs[0] != null) {
@@ -329,7 +329,7 @@ function calculateResolveMappings(
 
 function runWaitUntilTargets(
   options: NodeExecutorOptions,
-  context: ExecutorContext,
+  context: ExecutorContext
 ): Promise<{ success: boolean }[]> {
   return Promise.all(
     options.waitUntilTargets.map(async (waitUntilTarget) => {
@@ -345,7 +345,7 @@ function runWaitUntilTargets(
           event = await output.next();
         }
       });
-    }),
+    })
   );
 }
 
@@ -353,7 +353,7 @@ function getFileToRun(
   context: ExecutorContext,
   project: ProjectGraphProjectNode,
   buildOptions: Record<string, any>,
-  buildTargetExecutor: string,
+  buildTargetExecutor: string
 ): string {
   // If using run-commands or another custom executor, then user should set
   // outputFileName, but we can try the default value that we use.
@@ -361,8 +361,8 @@ function getFileToRun(
     const fallbackFile = path.join('dist', project.data.root, 'main.js');
     logger.warn(
       `Build option ${chalk.bold('outputFileName')} not set for ${chalk.bold(
-        project.name,
-      )}. Using fallback value of ${chalk.bold(fallbackFile)}.`,
+        project.name
+      )}. Using fallback value of ${chalk.bold(fallbackFile)}.`
     );
     return join(context.root, fallbackFile);
   }
@@ -377,7 +377,7 @@ function getFileToRun(
     ) {
       outputFileName = path.join(
         getRelativeDirectoryToProjectRoot(buildOptions.main, project.data.root),
-        fileName,
+        fileName
       );
     } else {
       outputFileName = fileName;
@@ -398,7 +398,7 @@ function fileToRunCorrectPath(fileToRun: string): string {
   }
 
   throw new Error(
-    `Could not find ${fileToRun}. Make sure your build succeeded.`,
+    `Could not find ${fileToRun}. Make sure your build succeeded.`
   );
 }
 

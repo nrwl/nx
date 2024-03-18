@@ -27,7 +27,7 @@ function addTypes(tree: Tree, options: NormalizedSchema) {
     (json) => {
       json.compilerOptions.types = [...json.compilerOptions.types, 'express'];
       return json;
-    },
+    }
   );
 }
 
@@ -55,7 +55,7 @@ const server = app.listen(port, () => {
   console.log(\`Listening at http://localhost:\${port}/api\`);
 });
 server.on('error', console.error);
-`,
+`
   );
 
   if (options.js) {
@@ -101,7 +101,7 @@ export default applicationGenerator;
 
 async function normalizeOptions(
   host: Tree,
-  options: Schema,
+  options: Schema
 ): Promise<NormalizedSchema> {
   const {
     projectName: appProjectName,
@@ -132,6 +132,6 @@ function ensureDependencies(tree: Tree): GeneratorCallback {
   return addDependenciesToPackageJson(
     tree,
     { tslib: tslibVersion },
-    { '@nx/express': nxVersion },
+    { '@nx/express': nxVersion }
   );
 }

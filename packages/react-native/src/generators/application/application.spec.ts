@@ -150,7 +150,7 @@ describe('app', () => {
       const detoxrc = appTree.read('my-dir-e2e/.detoxrc.json', 'utf-8');
       // Strip trailing commas
       const detoxrcJson = JSON.parse(
-        detoxrc.replace(/(?<=(true|false|null|["\d}\]])\s*),(?=\s*[}\]])/g, ''),
+        detoxrc.replace(/(?<=(true|false|null|["\d}\]])\s*),(?=\s*[}\]])/g, '')
       );
       expect(detoxrcJson.apps).toEqual({
         'android.debug': {
@@ -201,7 +201,7 @@ describe('app', () => {
       const detoxrc = appTree.read('my-app-e2e/.detoxrc.json', 'utf-8');
       // Strip trailing commas
       const detoxrcJson = JSON.parse(
-        detoxrc.replace(/(?<=(true|false|null|["\d}\]])\s*),(?=\s*[}\]])/g, ''),
+        detoxrc.replace(/(?<=(true|false|null|["\d}\]])\s*),(?=\s*[}\]])/g, '')
       );
       expect(detoxrcJson.apps).toEqual({
         'android.debug': {

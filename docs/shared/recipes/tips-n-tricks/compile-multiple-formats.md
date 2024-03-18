@@ -30,11 +30,11 @@ You can then configure Rollup to compile your library by adding a `build` target
       "build": {
         "executor": "@nx/rollup:rollup",
         "options": {
-          "main": "packages/my-awesome-lib/src/index.ts",
-        },
-      },
-    },
-  },
+          "main": "packages/my-awesome-lib/src/index.ts"
+        }
+      }
+    }
+  }
 }
 ```
 
@@ -48,10 +48,10 @@ You can then configure Rollup to compile your library by adding a `build` target
     "build": {
       "executor": "@nx/rollup:rollup",
       "options": {
-        "main": "packages/my-awesome-lib/src/index.ts",
-      },
-    },
-  },
+        "main": "packages/my-awesome-lib/src/index.ts"
+      }
+    }
+  }
 }
 ```
 
@@ -74,10 +74,10 @@ You'll need to specify `format`, `additionalEntryPoints` and `generateExportsFie
         "main": "packages/my-awesome-lib/src/index.ts",
         "format": ["esm", "cjs"],
         "additionalEntryPoints": ["packages/my-awesome-lib/src/foo.ts"],
-        "generateExportsField": true,
-      },
-    },
-  },
+        "generateExportsField": true
+      }
+    }
+  }
 }
 ```
 

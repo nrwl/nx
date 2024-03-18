@@ -122,13 +122,13 @@ describe('Linter (legacy)', () => {
         `generate @nx/js:lib ${mylib} --directory libs/${mylib} --projectNameAndRootFormat as-provided`,
         {
           env: { NX_ADD_PLUGINS: 'false' },
-        },
+        }
       );
       runCLI(
         `generate @nx/js:lib ${mylib2} --directory libs/${mylib2} --projectNameAndRootFormat as-provided`,
         {
           env: { NX_ADD_PLUGINS: 'false' },
-        },
+        }
       );
 
       // migrate to flat structure
@@ -139,13 +139,13 @@ describe('Linter (legacy)', () => {
         'eslint.config.js',
         `apps/${myapp}/eslint.config.js`,
         `libs/${mylib}/eslint.config.js`,
-        `libs/${mylib2}/eslint.config.js`,
+        `libs/${mylib2}/eslint.config.js`
       );
       checkFilesDoNotExist(
         '.eslintrc.json',
         `apps/${myapp}/.eslintrc.json`,
         `libs/${mylib}/.eslintrc.json`,
-        `libs/${mylib2}/.eslintrc.json`,
+        `libs/${mylib2}/.eslintrc.json`
       );
 
       // move eslint.config one step up
@@ -155,8 +155,8 @@ describe('Linter (legacy)', () => {
         `libs/eslint.config.js`,
         readFile(`libs/eslint.config.js`).replace(
           `../../eslint.config.js`,
-          `../eslint.config.js`,
-        ),
+          `../eslint.config.js`
+        )
       );
 
       const outFlat = runCLI(`affected -t lint`, {
@@ -188,12 +188,12 @@ describe('Linter (legacy)', () => {
       checkFilesExist(
         'eslint.config.js',
         `${mylib}/eslint.config.js`,
-        'eslint.base.config.js',
+        'eslint.base.config.js'
       );
       checkFilesDoNotExist(
         '.eslintrc.json',
         `${mylib}/.eslintrc.json`,
-        '.eslintrc.base.json',
+        '.eslintrc.base.json'
       );
 
       const outFlat = runCLI(`affected -t lint`, {

@@ -23,7 +23,7 @@ import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-com
 
 export async function expoApplicationGenerator(
   host: Tree,
-  schema: Schema,
+  schema: Schema
 ): Promise<GeneratorCallback> {
   return await expoApplicationGeneratorInternal(host, {
     addPlugin: false,
@@ -34,7 +34,7 @@ export async function expoApplicationGenerator(
 
 export async function expoApplicationGeneratorInternal(
   host: Tree,
-  schema: Schema,
+  schema: Schema
 ): Promise<GeneratorCallback> {
   const options = await normalizeOptions(host, schema);
 
@@ -70,7 +70,7 @@ export async function expoApplicationGeneratorInternal(
     options.appProjectRoot,
     options.js,
     options.skipPackageJson,
-    options.addPlugin,
+    options.addPlugin
   );
   tasks.push(jestTask);
   const e2eTask = await addE2e(host, options);

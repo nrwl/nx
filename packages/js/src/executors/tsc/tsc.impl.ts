@@ -21,7 +21,7 @@ import { readTsConfig } from '../../utils/typescript/ts-config';
 import { createEntryPoints } from '../../utils/package-json/create-entry-points';
 
 export function determineModuleFormatFromTsConfig(
-  absolutePathToTsConfig: string,
+  absolutePathToTsConfig: string
 ): 'cjs' | 'esm' {
   const tsConfig = readTsConfig(absolutePathToTsConfig);
   if (
@@ -38,7 +38,7 @@ export function determineModuleFormatFromTsConfig(
 
 export function createTypeScriptCompilationOptions(
   normalizedOptions: NormalizedExecutorOptions,
-  context: ExecutorContext,
+  context: ExecutorContext
 ): TypeScriptCompilationOptions {
   return {
     outputPath: normalizedOptions.outputPath,
@@ -49,14 +49,14 @@ export function createTypeScriptCompilationOptions(
     watch: normalizedOptions.watch,
     deleteOutputPath: normalizedOptions.clean,
     getCustomTransformers: getCustomTrasformersFactory(
-      normalizedOptions.transformers,
+      normalizedOptions.transformers
     ),
   };
 }
 
 export async function* tscExecutor(
   _options: ExecutorOptions,
-  context: ExecutorContext,
+  context: ExecutorContext
 ) {
   const { sourceRoot, root } =
     context.projectsConfigurations.projects[context.projectName];
@@ -64,7 +64,7 @@ export async function* tscExecutor(
 
   const { projectRoot, tmpTsConfig, target, dependencies } = checkDependencies(
     context,
-    options.tsConfig,
+    options.tsConfig
   );
 
   if (tmpTsConfig) {
@@ -75,7 +75,7 @@ export async function* tscExecutor(
     HelperDependency.tsc,
     options.tsConfig,
     dependencies,
-    context.projectGraph,
+    context.projectGraph
   );
 
   if (tsLibDependency) {
@@ -91,13 +91,13 @@ export async function* tscExecutor(
 
   const tsCompilationOptions = createTypeScriptCompilationOptions(
     options,
-    context,
+    context
   );
 
   const inlineProjectGraph = handleInliningBuild(
     context,
     options,
-    tsCompilationOptions.tsConfig,
+    tsCompilationOptions.tsConfig
   );
 
   if (!isInlineGraphEmpty(inlineProjectGraph)) {
@@ -114,7 +114,7 @@ export async function* tscExecutor(
           ...options,
           additionalEntryPoints: createEntryPoints(
             options.additionalEntryPoints,
-            context.root,
+            context.root
           ),
           format: [determineModuleFormatFromTsConfig(options.tsConfig)],
           // As long as d.ts files match their .js counterparts, we don't need to emit them.
@@ -123,14 +123,14 @@ export async function* tscExecutor(
         },
         context,
         target,
-        dependencies,
+        dependencies
       );
       postProcessInlinedDependencies(
         tsCompilationOptions.outputPath,
         tsCompilationOptions.projectRoot,
-        inlineProjectGraph,
+        inlineProjectGraph
       );
-    },
+    }
   );
 
   if (options.watch) {
@@ -146,7 +146,7 @@ export async function* tscExecutor(
             ...options,
             additionalEntryPoints: createEntryPoints(
               options.additionalEntryPoints,
-              context.root,
+              context.root
             ),
             // As long as d.ts files match their .js counterparts, we don't need to emit them.
             // TSC can match them correctly based on file names.
@@ -155,8 +155,8 @@ export async function* tscExecutor(
           },
           context,
           target,
-          dependencies,
-        ),
+          dependencies
+        )
     );
     const handleTermination = async (exitCode: number) => {
       await typescriptCompilation.close();

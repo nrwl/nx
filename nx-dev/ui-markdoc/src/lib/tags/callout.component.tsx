@@ -82,7 +82,7 @@ export function Callout({
       className={cx(
         'my-6 block rounded-md p-4 ring-1',
         ui.backgroundColor,
-        ui.borderColor,
+        ui.borderColor
       )}
     >
       <span className="flex">

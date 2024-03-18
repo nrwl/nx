@@ -6,7 +6,7 @@ export async function watchForSingleFileChanges(
   projectName: string,
   projectRoot: string,
   relativeFilePath: string,
-  callback: () => void,
+  callback: () => void
 ): Promise<() => void> {
   const unregisterFileWatcher = await daemonClient.registerFileWatcher(
     { watchProjects: [projectName] },
@@ -18,12 +18,12 @@ export async function watchForSingleFileChanges(
         logger.error(`Watch error: ${err?.message ?? 'Unknown'}`);
       } else if (
         data.changedFiles.some(
-          (file) => file.path == join(projectRoot, relativeFilePath),
+          (file) => file.path == join(projectRoot, relativeFilePath)
         )
       ) {
         callback();
       }
-    },
+    }
   );
 
   return () => unregisterFileWatcher();

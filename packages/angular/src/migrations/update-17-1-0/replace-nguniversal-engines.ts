@@ -37,7 +37,7 @@ export default async function (tree: Tree) {
   if (
     !UNIVERSAL_PACKAGES.some(
       (pkg) =>
-        packageJson.dependencies?.[pkg] || packageJson.devDependencies?.[pkg],
+        packageJson.dependencies?.[pkg] || packageJson.devDependencies?.[pkg]
     )
   ) {
     return;
@@ -93,7 +93,7 @@ export default async function (tree: Tree) {
         hasExpressTokens ||= true;
 
         let tokensFileRelativePath: string = normalizePath(
-          relative(dirname(path), tokensFilePath),
+          relative(dirname(path), tokensFilePath)
         );
 
         if (tokensFileRelativePath.charAt(0) !== '.') {
@@ -102,7 +102,7 @@ export default async function (tree: Tree) {
 
         content = content.replaceAll(
           '@nguniversal/express-engine/tokens',
-          tokensFileRelativePath.slice(0, -3),
+          tokensFileRelativePath.slice(0, -3)
         );
       }
 
@@ -135,7 +135,7 @@ export default async function (tree: Tree) {
         getInstalledPackageVersionInfo(tree, '@angular-devkit/build-angular')
           ?.version ?? pkgVersions.angularDevkitVersion,
     },
-    {},
+    {}
   );
 
   await formatFiles(tree);
@@ -151,7 +151,7 @@ export const RESPONSE = new InjectionToken<Response>('RESPONSE');
 
 function getServerFileContents(
   outputPath: string,
-  hasExpressTokens: boolean,
+  hasExpressTokens: boolean
 ): string {
   return (
     `

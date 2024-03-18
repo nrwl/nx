@@ -26,15 +26,15 @@ describe('tree', () => {
       writeFileSync(path.join(dir, 'root-file.txt'), 'root content');
       writeFileSync(
         path.join(dir, 'parent', 'parent-file.txt'),
-        'parent content',
+        'parent content'
       );
       writeFileSync(
         path.join(dir, 'parent', 'parent-file-with-write-options.txt'),
-        'parent content with write options',
+        'parent content with write options'
       );
       writeFileSync(
         path.join(dir, 'parent', 'child', 'child-file.txt'),
-        'child content',
+        'child content'
       );
 
       tree = new FsTree(dir, true);
@@ -55,13 +55,13 @@ describe('tree', () => {
 
     it('should be able to read and write files with Buffers', () => {
       expect(tree.read('parent/parent-file.txt')).toEqual(
-        Buffer.from('parent content'),
+        Buffer.from('parent content')
       );
 
       tree.write('parent/parent-file.txt', Buffer.from('new content'));
 
       expect(tree.read('parent/parent-file.txt')).toEqual(
-        Buffer.from('new content'),
+        Buffer.from('new content')
       );
 
       expect(s(tree.listChanges())).toEqual([
@@ -75,29 +75,29 @@ describe('tree', () => {
       flushChanges(dir, tree.listChanges());
 
       expect(
-        readFileSync(path.join(dir, 'parent/parent-file.txt'), 'utf-8'),
+        readFileSync(path.join(dir, 'parent/parent-file.txt'), 'utf-8')
       ).toEqual('new content');
     });
 
     it('should be able to read and write files with encodings and strings', () => {
       const writeOptions: TreeWriteOptions = { mode: '755' };
       expect(tree.read('parent/parent-file.txt', 'utf-8')).toEqual(
-        'parent content',
+        'parent content'
       );
 
       tree.write('parent/parent-file.txt', 'new content');
       tree.write(
         'parent/parent-file-with-write-options.txt',
         'new content with write options',
-        writeOptions,
+        writeOptions
       );
 
       expect(tree.read('parent/parent-file.txt', 'utf-8')).toEqual(
-        'new content',
+        'new content'
       );
 
       expect(
-        tree.read('parent/parent-file-with-write-options.txt').toString(),
+        tree.read('parent/parent-file-with-write-options.txt').toString()
       ).toEqual('new content with write options');
 
       expect(s(tree.listChanges())).toEqual([
@@ -117,7 +117,7 @@ describe('tree', () => {
       flushChanges(dir, tree.listChanges());
 
       expect(
-        readFileSync(path.join(dir, 'parent/parent-file.txt'), 'utf-8'),
+        readFileSync(path.join(dir, 'parent/parent-file.txt'), 'utf-8')
       ).toEqual('new content');
     });
 
@@ -155,13 +155,13 @@ describe('tree', () => {
       expect(tree.read('root-file.txt').toString()).toEqual('new content');
       tree.overwrite('root-file.txt', 'overwrite content');
       expect(tree.read('root-file.txt').toString()).toEqual(
-        'overwrite content',
+        'overwrite content'
       );
 
       flushChanges(dir, tree.listChanges());
 
       expect(readFileSync(path.join(dir, 'root-file.txt'), 'utf-8')).toEqual(
-        'overwrite content',
+        'overwrite content'
       );
     });
 
@@ -184,20 +184,20 @@ describe('tree', () => {
       tree.write(
         'parent/new-parent-file-with-write-options.txt',
         'new parent content with write options',
-        writeOptions,
+        writeOptions
       );
       tree.write('parent/new-child/new-child-file.txt', 'new child content');
 
       expect(tree.read('parent/new-parent-file.txt', 'utf-8')).toEqual(
-        'new parent content',
+        'new parent content'
       );
       expect(
         tree
           .read('parent/new-parent-file-with-write-options.txt', 'utf-8')
-          .toString(),
+          .toString()
       ).toEqual('new parent content with write options');
       expect(
-        tree.read('parent/new-child/new-child-file.txt', 'utf-8').toString(),
+        tree.read('parent/new-child/new-child-file.txt', 'utf-8').toString()
       ).toEqual('new child content');
 
       expect(s(tree.listChanges())).toEqual([
@@ -222,24 +222,24 @@ describe('tree', () => {
       flushChanges(dir, tree.listChanges());
 
       expect(
-        readFileSync(path.join(dir, 'parent/new-parent-file.txt'), 'utf-8'),
+        readFileSync(path.join(dir, 'parent/new-parent-file.txt'), 'utf-8')
       ).toEqual('new parent content');
       expect(
         readFileSync(
           path.join(dir, 'parent/new-parent-file-with-write-options.txt'),
-          'utf-8',
-        ).toString(),
+          'utf-8'
+        ).toString()
       ).toEqual('new parent content with write options');
       expect(
         lstatSync(
-          path.join(dir, 'parent/new-parent-file-with-write-options.txt'),
-        ).mode & octal(writeOptions.mode),
+          path.join(dir, 'parent/new-parent-file-with-write-options.txt')
+        ).mode & octal(writeOptions.mode)
       ).toEqual(octal(writeOptions.mode));
       expect(
         readFileSync(
           path.join(dir, 'parent/new-child/new-child-file.txt'),
-          'utf-8',
-        ).toString(),
+          'utf-8'
+        ).toString()
       ).toEqual('new child content');
     });
 
@@ -303,17 +303,17 @@ describe('tree', () => {
       tree.write('parent/new-child/new-child-file.txt', 'new child content');
       tree.rename(
         'parent/new-child/new-child-file.txt',
-        'renamed-new-child-file.txt',
+        'renamed-new-child-file.txt'
       );
       tree.rename('root-file.txt', 'renamed-root-file.txt');
 
       expect(tree.read('parent/new-child/new-child-file.txt')).toEqual(null);
       expect(tree.read('root-file.txt')).toEqual(null);
       expect(tree.read('renamed-new-child-file.txt', 'utf-8')).toEqual(
-        'new child content',
+        'new child content'
       );
       expect(tree.read('renamed-root-file.txt', 'utf-8')).toEqual(
-        'root content',
+        'root content'
       );
 
       expect(s(tree.listChanges())).toEqual([
@@ -333,10 +333,10 @@ describe('tree', () => {
       flushChanges(dir, tree.listChanges());
 
       expect(
-        readFileSync(path.join(dir, 'renamed-new-child-file.txt'), 'utf-8'),
+        readFileSync(path.join(dir, 'renamed-new-child-file.txt'), 'utf-8')
       ).toEqual('new child content');
       expect(
-        readFileSync(path.join(dir, 'renamed-root-file.txt'), 'utf-8'),
+        readFileSync(path.join(dir, 'renamed-root-file.txt'), 'utf-8')
       ).toEqual('root content');
     });
 
@@ -403,7 +403,7 @@ describe('tree', () => {
       it('should return the list of children after renaming', () => {
         tree.rename(
           'parent/child/child-file.txt',
-          'parent/child/renamed-child-file.txt',
+          'parent/child/renamed-child-file.txt'
         );
 
         expect(tree.children('parent/child')).toEqual([
@@ -412,7 +412,7 @@ describe('tree', () => {
 
         tree.rename(
           'parent/child/renamed-child-file.txt',
-          'parent/renamed-child/renamed-child-file.txt',
+          'parent/renamed-child/renamed-child-file.txt'
         );
 
         expect(tree.children('parent')).toEqual([
@@ -503,13 +503,13 @@ describe('tree', () => {
 
       printChanges(tree.listChanges());
       expect(console.log).toHaveBeenCalledWith(
-        expect.stringMatching(/CREATE.+new-file\.txt/),
+        expect.stringMatching(/CREATE.+new-file\.txt/)
       );
       expect(console.log).toHaveBeenCalledWith(
-        expect.stringMatching(/UPDATE.+root-file\.txt/),
+        expect.stringMatching(/UPDATE.+root-file\.txt/)
       );
       expect(console.log).toHaveBeenCalledWith(
-        expect.stringMatching(/DELETE.+parent\/parent-file\.txt/),
+        expect.stringMatching(/DELETE.+parent\/parent-file\.txt/)
       );
     });
 
@@ -519,7 +519,7 @@ describe('tree', () => {
         tree.delete(filePath);
 
         expect(() => tree.changePermissions(filePath, '755')).toThrowError(
-          `Cannot change permissions of deleted file ${filePath}.`,
+          `Cannot change permissions of deleted file ${filePath}.`
         );
       });
 
@@ -527,7 +527,7 @@ describe('tree', () => {
         const filePath = 'non-existent-file.txt';
 
         expect(() => tree.changePermissions(filePath, '755')).toThrowError(
-          `Cannot change permissions of non-existing file ${filePath}.`,
+          `Cannot change permissions of non-existing file ${filePath}.`
         );
       });
 
@@ -535,7 +535,7 @@ describe('tree', () => {
         const dirPath = 'parent';
 
         expect(() => tree.changePermissions(dirPath, '755')).toThrowError(
-          `Cannot change permissions of non-file ${dirPath}.`,
+          `Cannot change permissions of non-file ${dirPath}.`
         );
       });
 
@@ -546,7 +546,7 @@ describe('tree', () => {
         const newFilePath = 'some-new-file.txt';
         tree.write(
           updatedContentFilePath,
-          'file path with new updated content',
+          'file path with new updated content'
         );
         tree.write(newFilePath, 'new file created');
 
@@ -565,7 +565,7 @@ describe('tree', () => {
         });
         expect(
           lstatSync(path.join(dir, changePermissionsFilePath)).mode &
-            octal(mode),
+            octal(mode)
         ).toEqual(octal(mode));
         // updated file content with permissions changed
         expect(s(changes)).toContainEqual({
@@ -575,7 +575,7 @@ describe('tree', () => {
           options: { mode },
         });
         expect(
-          lstatSync(path.join(dir, updatedContentFilePath)).mode & octal(mode),
+          lstatSync(path.join(dir, updatedContentFilePath)).mode & octal(mode)
         ).toEqual(octal(mode));
         // new file with permissions changed
         expect(s(changes)).toContainEqual({
@@ -585,7 +585,7 @@ describe('tree', () => {
           options: { mode },
         });
         expect(
-          lstatSync(path.join(dir, newFilePath)).mode & octal(mode),
+          lstatSync(path.join(dir, newFilePath)).mode & octal(mode)
         ).toEqual(octal(mode));
       });
     });

@@ -24,9 +24,9 @@ async function createPreset(tree: Tree, options: Schema) {
   if (options.preset === Preset.Apps) {
     return;
   } else if (options.preset === Preset.AngularMonorepo) {
-    const { applicationGenerator: angularApplicationGenerator } = require(
-      '@nx' + '/angular/generators',
-    );
+    const {
+      applicationGenerator: angularApplicationGenerator,
+    } = require('@nx' + '/angular/generators');
 
     return angularApplicationGenerator(tree, {
       name: options.name,
@@ -42,9 +42,9 @@ async function createPreset(tree: Tree, options: Schema) {
       prefix: options.prefix,
     });
   } else if (options.preset === Preset.AngularStandalone) {
-    const { applicationGenerator: angularApplicationGenerator } = require(
-      '@nx' + '/angular/generators',
-    );
+    const {
+      applicationGenerator: angularApplicationGenerator,
+    } = require('@nx' + '/angular/generators');
 
     return angularApplicationGenerator(tree, {
       name: options.name,
@@ -61,9 +61,8 @@ async function createPreset(tree: Tree, options: Schema) {
       prefix: options.prefix,
     });
   } else if (options.preset === Preset.ReactMonorepo) {
-    const { applicationGenerator: reactApplicationGenerator } = require(
-      '@nx' + '/react',
-    );
+    const { applicationGenerator: reactApplicationGenerator } = require('@nx' +
+      '/react');
 
     return reactApplicationGenerator(tree, {
       name: options.name,
@@ -76,9 +75,8 @@ async function createPreset(tree: Tree, options: Schema) {
       addPlugin,
     });
   } else if (options.preset === Preset.ReactStandalone) {
-    const { applicationGenerator: reactApplicationGenerator } = require(
-      '@nx' + '/react',
-    );
+    const { applicationGenerator: reactApplicationGenerator } = require('@nx' +
+      '/react');
 
     return reactApplicationGenerator(tree, {
       name: options.name,
@@ -93,9 +91,8 @@ async function createPreset(tree: Tree, options: Schema) {
       addPlugin,
     });
   } else if (options.preset === Preset.RemixMonorepo) {
-    const { applicationGenerator: remixApplicationGenerator } = require(
-      '@nx' + '/remix/generators',
-    );
+    const { applicationGenerator: remixApplicationGenerator } = require('@nx' +
+      '/remix/generators');
 
     return remixApplicationGenerator(tree, {
       name: options.name,
@@ -107,9 +104,8 @@ async function createPreset(tree: Tree, options: Schema) {
       addPlugin,
     });
   } else if (options.preset === Preset.RemixStandalone) {
-    const { applicationGenerator: remixApplicationGenerator } = require(
-      '@nx' + '/remix/generators',
-    );
+    const { applicationGenerator: remixApplicationGenerator } = require('@nx' +
+      '/remix/generators');
 
     return remixApplicationGenerator(tree, {
       name: options.name,
@@ -122,9 +118,8 @@ async function createPreset(tree: Tree, options: Schema) {
       addPlugin,
     });
   } else if (options.preset === Preset.VueMonorepo) {
-    const { applicationGenerator: vueApplicationGenerator } = require(
-      '@nx' + '/vue',
-    );
+    const { applicationGenerator: vueApplicationGenerator } = require('@nx' +
+      '/vue');
 
     return vueApplicationGenerator(tree, {
       name: options.name,
@@ -136,9 +131,8 @@ async function createPreset(tree: Tree, options: Schema) {
       addPlugin,
     });
   } else if (options.preset === Preset.VueStandalone) {
-    const { applicationGenerator: vueApplicationGenerator } = require(
-      '@nx' + '/vue',
-    );
+    const { applicationGenerator: vueApplicationGenerator } = require('@nx' +
+      '/vue');
 
     return vueApplicationGenerator(tree, {
       name: options.name,
@@ -152,9 +146,8 @@ async function createPreset(tree: Tree, options: Schema) {
       addPlugin,
     });
   } else if (options.preset === Preset.Nuxt) {
-    const { applicationGenerator: nuxtApplicationGenerator } = require(
-      '@nx' + '/nuxt',
-    );
+    const { applicationGenerator: nuxtApplicationGenerator } = require('@nx' +
+      '/nuxt');
 
     return nuxtApplicationGenerator(tree, {
       name: options.name,
@@ -166,9 +159,8 @@ async function createPreset(tree: Tree, options: Schema) {
       addPlugin,
     });
   } else if (options.preset === Preset.NuxtStandalone) {
-    const { applicationGenerator: nuxtApplicationGenerator } = require(
-      '@nx' + '/nuxt',
-    );
+    const { applicationGenerator: nuxtApplicationGenerator } = require('@nx' +
+      '/nuxt');
 
     return nuxtApplicationGenerator(tree, {
       name: options.name,
@@ -182,9 +174,8 @@ async function createPreset(tree: Tree, options: Schema) {
       addPlugin,
     });
   } else if (options.preset === Preset.NextJs) {
-    const { applicationGenerator: nextApplicationGenerator } = require(
-      '@nx' + '/next',
-    );
+    const { applicationGenerator: nextApplicationGenerator } = require('@nx' +
+      '/next');
 
     return nextApplicationGenerator(tree, {
       name: options.name,
@@ -198,9 +189,8 @@ async function createPreset(tree: Tree, options: Schema) {
       addPlugin,
     });
   } else if (options.preset === Preset.NextJsStandalone) {
-    const { applicationGenerator: nextApplicationGenerator } = require(
-      '@nx' + '/next',
-    );
+    const { applicationGenerator: nextApplicationGenerator } = require('@nx' +
+      '/next');
     return nextApplicationGenerator(tree, {
       name: options.name,
       directory: '.',
@@ -214,9 +204,8 @@ async function createPreset(tree: Tree, options: Schema) {
       addPlugin,
     });
   } else if (options.preset === Preset.WebComponents) {
-    const { applicationGenerator: webApplicationGenerator } = require(
-      '@nx' + '/web',
-    );
+    const { applicationGenerator: webApplicationGenerator } = require('@nx' +
+      '/web');
 
     return webApplicationGenerator(tree, {
       name: options.name,
@@ -229,9 +218,8 @@ async function createPreset(tree: Tree, options: Schema) {
       addPlugin,
     });
   } else if (options.preset === Preset.Nest) {
-    const { applicationGenerator: nestApplicationGenerator } = require(
-      '@nx' + '/nest',
-    );
+    const { applicationGenerator: nestApplicationGenerator } = require('@nx' +
+      '/nest');
 
     return nestApplicationGenerator(tree, {
       name: options.name,
@@ -242,9 +230,9 @@ async function createPreset(tree: Tree, options: Schema) {
       addPlugin,
     });
   } else if (options.preset === Preset.Express) {
-    const { applicationGenerator: expressApplicationGenerator } = require(
-      '@nx' + '/express',
-    );
+    const {
+      applicationGenerator: expressApplicationGenerator,
+    } = require('@nx' + '/express');
     return expressApplicationGenerator(tree, {
       name: options.name,
       directory: join('apps', options.name),
@@ -255,9 +243,8 @@ async function createPreset(tree: Tree, options: Schema) {
     });
   } else if (options.preset === Preset.ReactNative) {
     console.log('Before require');
-    const { reactNativeApplicationGenerator } = require(
-      '@nx' + '/react-native',
-    );
+    const { reactNativeApplicationGenerator } = require('@nx' +
+      '/react-native');
     console.log('Hello', reactNativeApplicationGenerator);
     console.log('Active require');
     return reactNativeApplicationGenerator(tree, {
@@ -295,9 +282,8 @@ async function createPreset(tree: Tree, options: Schema) {
       addPlugin,
     });
   } else if (options.preset === Preset.NodeStandalone) {
-    const { applicationGenerator: nodeApplicationGenerator } = require(
-      '@nx' + '/node',
-    );
+    const { applicationGenerator: nodeApplicationGenerator } = require('@nx' +
+      '/node');
     const bundler = options.bundler === 'webpack' ? 'webpack' : 'esbuild';
     return nodeApplicationGenerator(tree, {
       bundler,
@@ -313,9 +299,8 @@ async function createPreset(tree: Tree, options: Schema) {
       addPlugin,
     });
   } else if (options.preset === Preset.NodeMonorepo) {
-    const { applicationGenerator: nodeApplicationGenerator } = require(
-      '@nx' + '/node',
-    );
+    const { applicationGenerator: nodeApplicationGenerator } = require('@nx' +
+      '/node');
     const bundler = options.bundler === 'webpack' ? 'webpack' : 'esbuild';
     return nodeApplicationGenerator(tree, {
       bundler,

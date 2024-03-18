@@ -40,7 +40,7 @@ describe('@nx/playwright/plugin', () => {
       {
         targetName: 'e2e',
       },
-      context,
+      context
     );
 
     expect(projects).toMatchInlineSnapshot(`
@@ -93,7 +93,7 @@ describe('@nx/playwright/plugin', () => {
       {
         targetName: 'e2e',
       },
-      context,
+      context
     );
 
     expect(projects).toMatchInlineSnapshot(`
@@ -145,7 +145,7 @@ describe('@nx/playwright/plugin', () => {
       `module.exports = {
       testDir: 'tests',
       testIgnore: [/.*skip.*/, '**/ignored/**'],
-    }`,
+    }`
     );
     await tempFs.createFiles({
       'tests/run-me.spec.ts': '',
@@ -161,7 +161,7 @@ describe('@nx/playwright/plugin', () => {
         targetName: 'e2e',
         ciTargetName: 'e2e-ci',
       },
-      context,
+      context
     );
     const { targets } = projects['.'];
     expect(targets['e2e-ci']).toMatchInlineSnapshot(`
@@ -229,12 +229,12 @@ describe('@nx/playwright/plugin', () => {
 
 async function mockPlaywrightConfig(
   tempFs: TempFs,
-  config: PlaywrightTestConfig | string,
+  config: PlaywrightTestConfig | string
 ) {
   await tempFs.writeFile(
     'playwright.config.js',
     typeof config === 'string'
       ? config
-      : `module.exports = ${JSON.stringify(config)}`,
+      : `module.exports = ${JSON.stringify(config)}`
   );
 }

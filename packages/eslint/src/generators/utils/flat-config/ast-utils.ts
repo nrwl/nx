@@ -17,7 +17,7 @@ export function removeOverridesFromLintConfig(content: string): string {
     content,
     ts.ScriptTarget.Latest,
     true,
-    ts.ScriptKind.JS,
+    ts.ScriptKind.JS
   );
 
   const exportsArray = findAllBlocks(source);
@@ -69,14 +69,14 @@ function isOverride(node: ts.Node): boolean {
 
 export function hasOverride(
   content: string,
-  lookup: (override: Linter.ConfigOverride<Linter.RulesRecord>) => boolean,
+  lookup: (override: Linter.ConfigOverride<Linter.RulesRecord>) => boolean
 ): boolean {
   const source = ts.createSourceFile(
     '',
     content,
     ts.ScriptTarget.Latest,
     true,
-    ts.ScriptKind.JS,
+    ts.ScriptKind.JS
   );
   const exportsArray = findAllBlocks(source);
   if (!exportsArray) {
@@ -97,7 +97,7 @@ export function hasOverride(
         objSource
           // ensure property names have double quotes so that JSON.parse works
           .replace(/'/g, '"')
-          .replace(/\s([a-zA-Z0-9_]+)\s*:/g, ' "$1": '),
+          .replace(/\s([a-zA-Z0-9_]+)\s*:/g, ' "$1": ')
       );
       if (lookup(data)) {
         return true;
@@ -114,7 +114,7 @@ function parseTextToJson(text: string): any {
     text
       // ensure property names have double quotes so that JSON.parse works
       .replace(/'/g, '"')
-      .replace(/\s([a-zA-Z0-9_]+)\s*:/g, ' "$1": '),
+      .replace(/\s([a-zA-Z0-9_]+)\s*:/g, ' "$1": ')
   );
 }
 
@@ -126,15 +126,15 @@ export function replaceOverride(
   root: string,
   lookup: (override: Linter.ConfigOverride<Linter.RulesRecord>) => boolean,
   update?: (
-    override: Linter.ConfigOverride<Linter.RulesRecord>,
-  ) => Linter.ConfigOverride<Linter.RulesRecord>,
+    override: Linter.ConfigOverride<Linter.RulesRecord>
+  ) => Linter.ConfigOverride<Linter.RulesRecord>
 ): string {
   const source = ts.createSourceFile(
     '',
     content,
     ts.ScriptTarget.Latest,
     true,
-    ts.ScriptKind.JS,
+    ts.ScriptKind.JS
   );
   const exportsArray = findAllBlocks(source);
   if (!exportsArray) {
@@ -188,7 +188,7 @@ export function replaceOverride(
 export function addImportToFlatConfig(
   content: string,
   variable: string | string[],
-  imp: string,
+  imp: string
 ): string {
   const printer = ts.createPrinter({ newLine: ts.NewLineKind.LineFeed });
   const source = ts.createSourceFile(
@@ -196,7 +196,7 @@ export function addImportToFlatConfig(
     content,
     ts.ScriptTarget.Latest,
     true,
-    ts.ScriptKind.JS,
+    ts.ScriptKind.JS
   );
 
   const foundBindingVars: ts.NodeArray<ts.BindingElement> = ts.forEachChild(
@@ -214,19 +214,19 @@ export function addImportToFlatConfig(
         node.declarationList.declarations[0].initializer.expression.getText() ===
           'require' &&
         ts.isStringLiteral(
-          node.declarationList.declarations[0].initializer.arguments[0],
+          node.declarationList.declarations[0].initializer.arguments[0]
         ) &&
         node.declarationList.declarations[0].initializer.arguments[0].text ===
           imp
       ) {
         return node.declarationList.declarations[0].name.elements;
       }
-    },
+    }
   );
 
   if (foundBindingVars && Array.isArray(variable)) {
     const newVariables = variable.filter(
-      (v) => !foundBindingVars.some((fv) => v === fv.name.getText()),
+      (v) => !foundBindingVars.some((fv) => v === fv.name.getText())
     );
     if (newVariables.length === 0) {
       return content;
@@ -235,13 +235,13 @@ export function addImportToFlatConfig(
     const pos = foundBindingVars.end;
     const nodes = ts.factory.createNodeArray(
       newVariables.map((v) =>
-        ts.factory.createBindingElement(undefined, undefined, v),
-      ),
+        ts.factory.createBindingElement(undefined, undefined, v)
+      )
     );
     const insert = printer.printList(
       ts.ListFormat.ObjectBindingPatternElements,
       nodes,
-      source,
+      source
     );
     return applyChangesToString(content, [
       {
@@ -268,14 +268,14 @@ export function addImportToFlatConfig(
         node.declarationList.declarations[0].initializer.expression.getText() ===
           'require' &&
         ts.isStringLiteral(
-          node.declarationList.declarations[0].initializer.arguments[0],
+          node.declarationList.declarations[0].initializer.arguments[0]
         ) &&
         node.declarationList.declarations[0].initializer.arguments[0].text ===
           imp
       ) {
         return true;
       }
-    },
+    }
   );
 
   if (hasSameIdentifierVar) {
@@ -288,15 +288,15 @@ export function addImportToFlatConfig(
       ? variable
       : ts.factory.createObjectBindingPattern(
           variable.map((v) =>
-            ts.factory.createBindingElement(undefined, undefined, v),
-          ),
+            ts.factory.createBindingElement(undefined, undefined, v)
+          )
         ),
-    imp,
+    imp
   );
   const insert = printer.printNode(
     ts.EmitHint.Unspecified,
     requireStatement,
-    source,
+    source
   );
   return applyChangesToString(content, [
     {
@@ -315,7 +315,7 @@ export function addBlockToFlatConfigExport(
   config: ts.Expression | ts.SpreadElement,
   options: { insertAtTheEnd?: boolean; checkBaseConfig?: boolean } = {
     insertAtTheEnd: true,
-  },
+  }
 ): string {
   const printer = ts.createPrinter({ newLine: ts.NewLineKind.LineFeed });
   const source = ts.createSourceFile(
@@ -323,7 +323,7 @@ export function addBlockToFlatConfigExport(
     content,
     ts.ScriptTarget.Latest,
     true,
-    ts.ScriptKind.JS,
+    ts.ScriptKind.JS
   );
 
   const exportsArray = ts.forEachChild(source, function analyze(node) {
@@ -365,14 +365,14 @@ export function addBlockToFlatConfigExport(
 export function removePlugin(
   content: string,
   pluginName: string,
-  pluginImport: string,
+  pluginImport: string
 ) {
   const source = ts.createSourceFile(
     '',
     content,
     ts.ScriptTarget.Latest,
     true,
-    ts.ScriptKind.JS,
+    ts.ScriptKind.JS
   );
   const changes: StringChange[] = [];
   ts.forEachChild(source, function analyze(node) {
@@ -382,7 +382,7 @@ export function removePlugin(
       ts.isCallExpression(node.declarationList.declarations[0].initializer) &&
       node.declarationList.declarations[0].initializer.arguments.length &&
       ts.isStringLiteral(
-        node.declarationList.declarations[0].initializer.arguments[0],
+        node.declarationList.declarations[0].initializer.arguments[0]
       ) &&
       node.declarationList.declarations[0].initializer.arguments[0].text ===
         pluginImport
@@ -405,7 +405,7 @@ export function removePlugin(
       blockElements.forEach((element) => {
         if (ts.isObjectLiteralExpression(element)) {
           const pluginsElem = element.properties.find(
-            (prop) => prop.name?.getText() === 'plugins',
+            (prop) => prop.name?.getText() === 'plugins'
           ) as ts.PropertyAssignment;
           if (!pluginsElem) {
             return;
@@ -415,7 +415,7 @@ export function removePlugin(
             const plugins = parseTextToJson(
               pluginsElem.initializer
                 .getText()
-                .replace(STRIP_SPREAD_ELEMENTS, ''),
+                .replace(STRIP_SPREAD_ELEMENTS, '')
             );
 
             if (plugins.length > 1) {
@@ -431,7 +431,7 @@ export function removePlugin(
               });
             } else {
               const keys = element.properties.map((prop) =>
-                prop.name?.getText(),
+                prop.name?.getText()
               );
               if (keys.length > 1) {
                 const removeComma =
@@ -458,7 +458,7 @@ export function removePlugin(
             const pluginsObj = pluginsElem.initializer;
             if (pluginsElem.initializer.properties.length > 1) {
               const plugin = pluginsObj.properties.find(
-                (prop) => prop.name?.['text'] === pluginName,
+                (prop) => prop.name?.['text'] === pluginName
               ) as ts.PropertyAssignment;
               const removeComma =
                 pluginsObj.properties.indexOf(plugin) <
@@ -471,7 +471,7 @@ export function removePlugin(
               });
             } else {
               const keys = element.properties.map((prop) =>
-                prop.name?.getText(),
+                prop.name?.getText()
               );
               if (keys.length > 1) {
                 const removeComma =
@@ -504,14 +504,14 @@ export function removePlugin(
 
 export function removeCompatExtends(
   content: string,
-  compatExtends: string[],
+  compatExtends: string[]
 ): string {
   const source = ts.createSourceFile(
     '',
     content,
     ts.ScriptTarget.Latest,
     true,
-    ts.ScriptKind.JS,
+    ts.ScriptKind.JS
   );
   const changes: StringChange[] = [];
   findAllBlocks(source).forEach((node) => {
@@ -529,7 +529,7 @@ export function removeCompatExtends(
           callExp.arguments[0].getText().includes('extends')) ||
           callExp.expression.getText() === 'compat.extends') &&
         compatExtends.some((ext) =>
-          callExp.arguments[0].getText().includes(ext),
+          callExp.arguments[0].getText().includes(ext)
         )
       ) {
         // remove the whole node
@@ -549,7 +549,7 @@ export function removeCompatExtends(
             '\n' +
             body.replace(
               new RegExp('[ \t]s*...' + paramName + '[ \t]*,?\\s*', 'g'),
-              '',
+              ''
             ),
         });
       }
@@ -564,7 +564,7 @@ export function removeCompatExtends(
  */
 export function addPluginsToExportsBlock(
   content: string,
-  plugins: { name: string; varName: string; imp: string }[],
+  plugins: { name: string; varName: string; imp: string }[]
 ): string {
   const pluginsBlock = ts.factory.createObjectLiteralExpression(
     [
@@ -574,13 +574,13 @@ export function addPluginsToExportsBlock(
           plugins.map(({ name, varName }) => {
             return ts.factory.createPropertyAssignment(
               ts.factory.createStringLiteral(name),
-              ts.factory.createIdentifier(varName),
+              ts.factory.createIdentifier(varName)
             );
-          }),
-        ),
+          })
+        )
       ),
     ],
-    false,
+    false
   );
   return addBlockToFlatConfigExport(content, pluginsBlock, {
     insertAtTheEnd: false,
@@ -621,7 +621,7 @@ const compat = new FlatCompat({
 export function createNodeList(
   importsMap: Map<string, string>,
   exportElements: ts.Expression[],
-  isFlatCompatNeeded: boolean,
+  isFlatCompatNeeded: boolean
 ): ts.NodeArray<
   ts.VariableStatement | ts.Identifier | ts.ExpressionStatement | ts.SourceFile
 > {
@@ -634,8 +634,8 @@ export function createNodeList(
         ts.factory.createObjectBindingPattern([
           ts.factory.createBindingElement(undefined, undefined, 'FlatCompat'),
         ]),
-        '@eslint/eslintrc',
-      ),
+        '@eslint/eslintrc'
+      )
     );
   }
 
@@ -652,7 +652,7 @@ export function createNodeList(
       isFlatCompatNeeded ? DEFAULT_FLAT_CONFIG : '',
       ts.ScriptTarget.Latest,
       false,
-      ts.ScriptKind.JS,
+      ts.ScriptKind.JS
     ),
     // creates:
     // module.exports = [ ... ];
@@ -660,11 +660,11 @@ export function createNodeList(
       ts.factory.createBinaryExpression(
         ts.factory.createPropertyAccessExpression(
           ts.factory.createIdentifier('module'),
-          ts.factory.createIdentifier('exports'),
+          ts.factory.createIdentifier('exports')
         ),
         ts.factory.createToken(ts.SyntaxKind.EqualsToken),
-        ts.factory.createArrayLiteralExpression(exportElements, true),
-      ),
+        ts.factory.createArrayLiteralExpression(exportElements, true)
+      )
     ),
   ]);
 }
@@ -674,17 +674,17 @@ export function generateSpreadElement(name: string): ts.SpreadElement {
 }
 
 export function generatePluginExtendsElement(
-  plugins: string[],
+  plugins: string[]
 ): ts.SpreadElement {
   return ts.factory.createSpreadElement(
     ts.factory.createCallExpression(
       ts.factory.createPropertyAccessExpression(
         ts.factory.createIdentifier('compat'),
-        ts.factory.createIdentifier('extends'),
+        ts.factory.createIdentifier('extends')
       ),
       undefined,
-      plugins.map((plugin) => ts.factory.createStringLiteral(plugin)),
-    ),
+      plugins.map((plugin) => ts.factory.createStringLiteral(plugin))
+    )
   );
 }
 
@@ -697,7 +697,7 @@ export function stringifyNodeList(
     | ts.Identifier
     | ts.ExpressionStatement
     | ts.SourceFile
-  >,
+  >
 ): string {
   const printer = ts.createPrinter({ newLine: ts.NewLineKind.LineFeed });
   const resultFile = ts.createSourceFile(
@@ -705,7 +705,7 @@ export function stringifyNodeList(
     '',
     ts.ScriptTarget.Latest,
     true,
-    ts.ScriptKind.JS,
+    ts.ScriptKind.JS
   );
   return (
     printer
@@ -713,7 +713,7 @@ export function stringifyNodeList(
       // add new line before compat initialization
       .replace(
         /const compat = new FlatCompat/,
-        '\nconst compat = new FlatCompat',
+        '\nconst compat = new FlatCompat'
       )
       // add new line before module.exports = ...
       .replace(/module\.exports/, '\nmodule.exports')
@@ -725,7 +725,7 @@ export function stringifyNodeList(
  */
 export function generateRequire(
   variableName: string | ts.ObjectBindingPattern,
-  imp: string,
+  imp: string
 ): ts.VariableStatement {
   return ts.factory.createVariableStatement(
     undefined,
@@ -738,12 +738,12 @@ export function generateRequire(
           ts.factory.createCallExpression(
             ts.factory.createIdentifier('require'),
             undefined,
-            [ts.factory.createStringLiteral(imp)],
-          ),
+            [ts.factory.createStringLiteral(imp)]
+          )
         ),
       ],
-      ts.NodeFlags.Const,
-    ),
+      ts.NodeFlags.Const
+    )
   );
 }
 
@@ -751,7 +751,7 @@ export function generateRequire(
  * Generates AST object or spread element based on JSON override object
  */
 export function generateFlatOverride(
-  override: Linter.ConfigOverride<Linter.RulesRecord>,
+  override: Linter.ConfigOverride<Linter.RulesRecord>
 ): ts.ObjectLiteralExpression | ts.SpreadElement {
   mapFilePaths(override);
   if (
@@ -777,12 +777,12 @@ export function generateFlatOverride(
         ts.factory.createCallExpression(
           ts.factory.createPropertyAccessExpression(
             ts.factory.createIdentifier('compat'),
-            ts.factory.createIdentifier('config'),
+            ts.factory.createIdentifier('config')
           ),
           undefined,
-          [generateAst(rest)],
+          [generateAst(rest)]
         ),
-        ts.factory.createIdentifier('map'),
+        ts.factory.createIdentifier('map')
       ),
       undefined,
       [
@@ -793,7 +793,7 @@ export function generateFlatOverride(
             ts.factory.createParameterDeclaration(
               undefined,
               undefined,
-              'config',
+              'config'
             ),
           ],
           undefined,
@@ -801,17 +801,17 @@ export function generateFlatOverride(
           ts.factory.createParenthesizedExpression(
             ts.factory.createObjectLiteralExpression(
               objectLiteralElements,
-              true,
-            ),
-          ),
+              true
+            )
+          )
         ),
-      ],
-    ),
+      ]
+    )
   );
 }
 
 export function mapFilePaths(
-  override: Linter.ConfigOverride<Linter.RulesRecord>,
+  override: Linter.ConfigOverride<Linter.RulesRecord>
 ) {
   if (override.files) {
     override.files = Array.isArray(override.files)
@@ -824,7 +824,7 @@ export function mapFilePaths(
       ? override.excludedFiles
       : [override.excludedFiles];
     override.excludedFiles = override.excludedFiles.map((file) =>
-      mapFilePath(file),
+      mapFilePath(file)
     );
   }
 }
@@ -832,7 +832,7 @@ export function mapFilePaths(
 function addTSObjectProperty(
   elements: ts.ObjectLiteralElementLike[],
   key: string,
-  value: unknown,
+  value: unknown
 ) {
   if (value) {
     elements.push(ts.factory.createPropertyAssignment(key, generateAst(value)));
@@ -846,7 +846,7 @@ export function generateAst<T>(input: unknown): T {
   if (Array.isArray(input)) {
     return ts.factory.createArrayLiteralExpression(
       input.map((item) => generateAst<ts.Expression>(item)),
-      input.length > 1, // multiline only if more than one item
+      input.length > 1 // multiline only if more than one item
     ) as T;
   }
   if (input === null) {
@@ -859,10 +859,10 @@ export function generateAst<T>(input: unknown): T {
         .map(([key, value]) =>
           ts.factory.createPropertyAssignment(
             isValidKey(key) ? key : ts.factory.createStringLiteral(key),
-            generateAst<ts.Expression>(value),
-          ),
+            generateAst<ts.Expression>(value)
+          )
         ),
-      Object.keys(input).length > 1, // multiline only if more than one property
+      Object.keys(input).length > 1 // multiline only if more than one property
     ) as T;
   }
   if (typeof input === 'string') {

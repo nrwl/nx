@@ -33,7 +33,7 @@ describe('@nx/eslint:init', () => {
     expect(
       readJson<NxJsonConfiguration>(tree, 'nx.json').targetDefaults[
         '@nx/eslint:lint'
-      ],
+      ]
     ).toBeUndefined();
     expect(readJson<NxJsonConfiguration>(tree, 'nx.json').plugins)
       .toMatchInlineSnapshot(`
@@ -74,7 +74,7 @@ describe('@nx/eslint:init', () => {
       await lintInitGenerator(tree, { ...options, addPlugin: false });
 
       expect(
-        readJson(tree, 'nx.json').targetDefaults['@nx/eslint:lint'],
+        readJson(tree, 'nx.json').targetDefaults['@nx/eslint:lint']
       ).toEqual({
         cache: true,
         inputs: [
@@ -98,7 +98,7 @@ describe('@nx/eslint:init', () => {
       expect(
         readJson<NxJsonConfiguration>(tree, 'nx.json').targetDefaults[
           '@nx/eslint:lint'
-        ],
+        ]
       ).toEqual({
         cache: true,
         inputs: [

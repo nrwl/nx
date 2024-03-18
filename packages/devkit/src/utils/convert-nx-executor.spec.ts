@@ -16,7 +16,7 @@ describe('Convert Nx Executor', () => {
 
     const convertedExecutor = convertNxExecutor(echoExecutor);
     const realBuilder = require('@angular-devkit/architect').createBuilder(
-      echo,
+      echo
     );
 
     testArchitectHost.addBuilder('nx:test', convertedExecutor);
@@ -83,7 +83,7 @@ describe('Convert Nx Executor', () => {
 
     expect(convertedExecutor.toString()).toEqual(realBuilder.toString());
     expect(convertedExecutor.handler.toString()).toEqual(
-      realBuilder.handler.toString(),
+      realBuilder.handler.toString()
     );
   });
 });

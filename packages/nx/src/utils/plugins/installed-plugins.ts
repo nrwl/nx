@@ -45,11 +45,11 @@ function getNxPluginPackageJsonOrNull(pkg: string): PackageJson | null {
 }
 
 function getDependenciesFromPackageJson(
-  packageJsonPath = 'package.json',
+  packageJsonPath = 'package.json'
 ): string[] {
   try {
     const { dependencies, devDependencies } = readJsonFile(
-      join(workspaceRoot, packageJsonPath),
+      join(workspaceRoot, packageJsonPath)
     );
     return Object.keys({ ...dependencies, ...devDependencies });
   } catch {}
@@ -66,7 +66,7 @@ function getDependenciesFromNxJson(): string[] {
 
 export async function getInstalledPluginsAndCapabilities(
   workspaceRoot: string,
-  projects: Record<string, ProjectConfiguration>,
+  projects: Record<string, ProjectConfiguration>
 ): Promise<Map<string, PluginCapabilities>> {
   const plugins = findInstalledPlugins().map((p) => p.name);
 
@@ -76,7 +76,7 @@ export async function getInstalledPluginsAndCapabilities(
       const capabilities = await getPluginCapabilities(
         workspaceRoot,
         plugin,
-        projects,
+        projects
       );
       if (
         capabilities &&
@@ -94,7 +94,7 @@ export async function getInstalledPluginsAndCapabilities(
 }
 
 export function listInstalledPlugins(
-  installedPlugins: Map<string, PluginCapabilities>,
+  installedPlugins: Map<string, PluginCapabilities>
 ) {
   const bodyLines: string[] = [];
 

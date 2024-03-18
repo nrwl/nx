@@ -13,7 +13,7 @@ async function generateGraph(directory: string, name: string) {
   try {
     execSync(
       'npx nx graph --file ./node_modules/.cache/nx-graph-gen/graph.html',
-      { cwd: directory, stdio: 'ignore' },
+      { cwd: directory, stdio: 'ignore' }
     );
   } catch {
     console.error(`Could not run graph command in directory ${directory}`);
@@ -21,72 +21,72 @@ async function generateGraph(directory: string, name: string) {
   }
   const environmentJs = readFileSync(
     join(directory, 'node_modules/.cache/nx-graph-gen/static/environment.js'),
-    { encoding: 'utf-8' },
+    { encoding: 'utf-8' }
   );
 
   const projectGraphResponse = environmentJs.match(
-    /window.projectGraphResponse = (.*?);/,
+    /window.projectGraphResponse = (.*?);/
   );
 
   const taskGraphResponse = environmentJs.match(
-    /window.taskGraphResponse = (.*?);/,
+    /window.taskGraphResponse = (.*?);/
   );
 
   const expandedTaskInputsReponse = environmentJs.match(
-    /window.expandedTaskInputsResponse = (.*?);/,
+    /window.expandedTaskInputsResponse = (.*?);/
   );
 
   const sourceMapsResponse = environmentJs.match(
-    /window.sourceMapsResponse = (.*?);/,
+    /window.sourceMapsResponse = (.*?);/
   );
 
   ensureDirSync(
-    join(__dirname, '../graph/client/src/assets/generated-project-graphs/'),
+    join(__dirname, '../graph/client/src/assets/generated-project-graphs/')
   );
   ensureDirSync(
-    join(__dirname, '../graph/client/src/assets/generated-task-graphs/'),
+    join(__dirname, '../graph/client/src/assets/generated-task-graphs/')
   );
   ensureDirSync(
-    join(__dirname, '../graph/client/src/assets/generated-task-inputs/'),
+    join(__dirname, '../graph/client/src/assets/generated-task-inputs/')
   );
   ensureDirSync(
-    join(__dirname, '../graph/client/src/assets/generated-source-maps/'),
+    join(__dirname, '../graph/client/src/assets/generated-source-maps/')
   );
 
   writeFileSync(
     join(
       __dirname,
       '../graph/client/src/assets/generated-project-graphs/',
-      `${name}.json`,
+      `${name}.json`
     ),
-    projectGraphResponse[1],
+    projectGraphResponse[1]
   );
 
   writeFileSync(
     join(
       __dirname,
       '../graph/client/src/assets/generated-task-graphs/',
-      `${name}.json`,
+      `${name}.json`
     ),
-    taskGraphResponse[1],
+    taskGraphResponse[1]
   );
 
   writeFileSync(
     join(
       __dirname,
       '../graph/client/src/assets/generated-task-inputs/',
-      `${name}.json`,
+      `${name}.json`
     ),
-    expandedTaskInputsReponse[1],
+    expandedTaskInputsReponse[1]
   );
 
   writeFileSync(
     join(
       __dirname,
       '../graph/client/src/assets/generated-source-maps/',
-      `${name}.json`,
+      `${name}.json`
     ),
-    sourceMapsResponse[1],
+    sourceMapsResponse[1]
   );
 }
 

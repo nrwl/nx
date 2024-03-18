@@ -37,7 +37,7 @@ describe('Next.js Applications', () => {
     const libName = uniq('@my-org/lib1');
 
     runCLI(
-      `generate @nx/next:app ${appName} --project-name-and-root-format=as-provided --no-interactive`,
+      `generate @nx/next:app ${appName} --project-name-and-root-format=as-provided --no-interactive`
     );
 
     // check files are generated without the layout directory ("apps/") and
@@ -45,16 +45,16 @@ describe('Next.js Applications', () => {
     checkFilesExist(`${appName}/src/app/page.tsx`);
     // check build works
     expect(runCLI(`build ${appName}`)).toContain(
-      `Successfully ran target build for project ${appName}`,
+      `Successfully ran target build for project ${appName}`
     );
     // check tests pass
     const appTestResult = runCLI(`test ${appName} --passWithNoTests`);
     expect(appTestResult).toContain(
-      `Successfully ran target test for project ${appName}`,
+      `Successfully ran target test for project ${appName}`
     );
 
     runCLI(
-      `generate @nx/next:lib ${libName} --buildable --project-name-and-root-format=as-provided --no-interactive`,
+      `generate @nx/next:lib ${libName} --buildable --project-name-and-root-format=as-provided --no-interactive`
     );
 
     // check files are generated without the layout directory ("libs/") and
@@ -62,7 +62,7 @@ describe('Next.js Applications', () => {
     checkFilesExist(`${libName}/src/index.ts`);
     // check build works
     expect(runCLI(`build ${libName}`)).toContain(
-      `Successfully ran target build for project ${libName}`,
+      `Successfully ran target build for project ${libName}`
     );
   }, 600_000);
 
@@ -70,7 +70,7 @@ describe('Next.js Applications', () => {
     const appName = uniq('app');
 
     runCLI(
-      `generate @nx/next:app ${appName} --no-interactive --style=css --appDir=false`,
+      `generate @nx/next:app ${appName} --no-interactive --style=css --appDir=false`
     );
 
     checkFilesDoNotExist(`apps/${appName}/.next/build-manifest.json`);
@@ -85,7 +85,7 @@ describe('Next.js Applications', () => {
     const appName = uniq('app');
 
     runCLI(
-      `generate @nx/next:app ${appName} --no-interactive --js --appDir=false --e2eTestRunner=playwright`,
+      `generate @nx/next:app ${appName} --no-interactive --js --appDir=false --e2eTestRunner=playwright`
     );
 
     checkFilesExist(`apps/${appName}/src/pages/index.js`);
@@ -101,13 +101,13 @@ describe('Next.js Applications', () => {
     const libName = uniq('lib');
 
     runCLI(
-      `generate @nx/next:lib ${libName} --no-interactive --style=none --js`,
+      `generate @nx/next:lib ${libName} --no-interactive --style=none --js`
     );
 
     const mainPath = `apps/${appName}/src/pages/index.js`;
     updateFile(
       mainPath,
-      `import '@${proj}/${libName}';\n` + readFile(mainPath),
+      `import '@${proj}/${libName}';\n` + readFile(mainPath)
     );
 
     // Update lib to use css modules
@@ -118,13 +118,13 @@ describe('Next.js Applications', () => {
           export function Test() {
             return <div className={styles.container}>Hello</div>;
           }
-        `,
+        `
     );
     updateFile(
       `libs/${libName}/src/lib/style.module.css`,
       `
           .container {}
-        `,
+        `
     );
 
     await checkApp(appName, {
@@ -163,7 +163,7 @@ describe('Next.js Applications', () => {
     checkFilesExist(`dist/apps/${appName}/server/main.js`);
 
     expect(result).toContain(
-      `Successfully ran target build for project ${appName}`,
+      `Successfully ran target build for project ${appName}`
     );
   }, 300_000);
 
@@ -171,7 +171,7 @@ describe('Next.js Applications', () => {
     const appName = uniq('app');
 
     runCLI(
-      `generate @nx/next:app ${appName} --swc=false --no-interactive --custom-server`,
+      `generate @nx/next:app ${appName} --swc=false --no-interactive --custom-server`
     );
 
     checkFilesExist(`apps/${appName}/server/main.ts`);
@@ -181,7 +181,7 @@ describe('Next.js Applications', () => {
     checkFilesExist(`dist/apps/${appName}/server/main.js`);
 
     expect(result).toContain(
-      `Successfully ran target build for project ${appName}`,
+      `Successfully ran target build for project ${appName}`
     );
   }, 300_000);
 
@@ -189,7 +189,7 @@ describe('Next.js Applications', () => {
     const appName = uniq('app');
 
     runCLI(
-      `generate @nx/next:app ${appName} --no-interactive --style=css --project-name-and-root-format=as-provided`,
+      `generate @nx/next:app ${appName} --no-interactive --style=css --project-name-and-root-format=as-provided`
     );
 
     if (runE2ETests('cypress')) {
@@ -197,7 +197,7 @@ describe('Next.js Applications', () => {
         verbose: true,
       });
       expect(e2eResults).toContain(
-        'Successfully ran target e2e-ci for project',
+        'Successfully ran target e2e-ci for project'
       );
     }
   }, 600_000);

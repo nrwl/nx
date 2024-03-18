@@ -3,7 +3,7 @@ import { handleServerProcessTermination } from './shutdown-utils';
 
 export async function handleRequestShutdown(
   server: Server,
-  numberOfConnections: number,
+  numberOfConnections: number
 ) {
   // 1 connection is the client asking to shut down
   if (numberOfConnections > 1) {

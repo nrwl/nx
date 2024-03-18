@@ -48,7 +48,7 @@ export const focusedStateConfig: ProjectGraphStateNodeConfig = {
           }),
           {
             to: (context) => context.graphActor,
-          },
+          }
         ),
         'notifyGraphFocusProject',
       ],

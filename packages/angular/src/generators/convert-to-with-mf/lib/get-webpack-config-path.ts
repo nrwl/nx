@@ -2,7 +2,7 @@ import type { ProjectConfiguration } from '@nx/devkit';
 
 export function getWebpackConfigPath(
   project: ProjectConfiguration,
-  projectName: string,
+  projectName: string
 ) {
   let pathToWebpackConfig = '';
   for (const target of Object.values(project.targets ?? {})) {
@@ -18,7 +18,7 @@ export function getWebpackConfigPath(
 
   if (!pathToWebpackConfig) {
     throw new Error(
-      `Could not find webpack config for \`${projectName}\` in your workspace.`,
+      `Could not find webpack config for \`${projectName}\` in your workspace.`
     );
   }
 

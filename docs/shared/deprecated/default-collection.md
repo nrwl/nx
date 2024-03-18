@@ -9,8 +9,8 @@ In the `nx.json` you can set a `defaultCollection` property like this:
 ```jsonc
 {
   "cli": {
-    "defaultCollection": "@nx/next",
-  },
+    "defaultCollection": "@nx/next"
+  }
 }
 ```
 

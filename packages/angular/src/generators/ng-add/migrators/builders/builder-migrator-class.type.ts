@@ -7,6 +7,6 @@ export type BuilderMigratorClassType = {
     tree: Tree,
     project: ProjectMigrationInfo,
     projectConfig: ProjectConfiguration,
-    logger: Logger,
+    logger: Logger
   ): BuilderMigrator;
 };

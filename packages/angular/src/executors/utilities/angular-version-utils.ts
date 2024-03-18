@@ -8,7 +8,7 @@ export function getInstalledAngularVersionInfo(): VersionInfo | null {
 }
 
 export function getInstalledPackageVersionInfo(
-  pkgName: string,
+  pkgName: string
 ): VersionInfo | null {
   try {
     const {

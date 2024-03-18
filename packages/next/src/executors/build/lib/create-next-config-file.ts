@@ -22,7 +22,7 @@ import type { NextBuildBuilderOptions } from '../../../utils/types';
 
 export function createNextConfigFile(
   options: NextBuildBuilderOptions,
-  context: ExecutorContext,
+  context: ExecutorContext
 ) {
   // Don't overwrite the next.config.js file if output path is the same as the source path.
   if (
@@ -35,7 +35,7 @@ export function createNextConfigFile(
   const configRelativeToProjectRoot = findNextConfigPath(
     projectRoot,
     // If user passed a config then it is relative to the workspace root, need to normalize it to be relative to the project root.
-    options.nextConfig ? relative(projectRoot, options.nextConfig) : undefined,
+    options.nextConfig ? relative(projectRoot, options.nextConfig) : undefined
   );
   const configAbsolutePath = join(projectRoot, configRelativeToProjectRoot);
 
@@ -48,7 +48,7 @@ export function createNextConfigFile(
   mkdirSync(helpersPath, { recursive: true });
   copyFileSync(
     join(__dirname, '../../../utils/compose-plugins.js'),
-    join(helpersPath, 'compose-plugins.js'),
+    join(helpersPath, 'compose-plugins.js')
   );
   writeFileSync(join(helpersPath, 'with-nx.js'), getWithNxContent());
   writeFileSync(
@@ -58,7 +58,7 @@ export function createNextConfigFile(
         module.exports = withNx;
         module.exports.withNx = withNx;
         module.exports.composePlugins = require('./compose-plugins').composePlugins;
-      `,
+      `
   );
   writeFileSync(
     join(options.outputPath, configRelativeToProjectRoot),
@@ -67,13 +67,13 @@ export function createNextConfigFile(
       .replace(/["']@nx\/next["']/, `'./.nx-helpers/compiled.js'`)
       // TODO(v17): Remove this once users have all migrated to new @nx scope and import from '@nx/next' not the deep import paths.
       .replace('@nx/next/plugins/with-nx', './.nx-helpers/compiled.js')
-      .replace('@nrwl/next/plugins/with-nx', './.nx-helpers/compiled.js'),
+      .replace('@nrwl/next/plugins/with-nx', './.nx-helpers/compiled.js')
   );
 
   // Find all relative imports needed by next.config.js and copy them to the dist folder.
   const moduleFilesToCopy = getRelativeFilesToCopy(
     configRelativeToProjectRoot,
-    projectRoot,
+    projectRoot
   );
   for (const moduleFile of moduleFilesToCopy) {
     ensureDirSync(dirname(join(context.root, options.outputPath, moduleFile)));
@@ -81,7 +81,7 @@ export function createNextConfigFile(
     if (moduleFile !== 'package.json') {
       copyFileSync(
         join(context.root, projectRoot, moduleFile),
-        join(context.root, options.outputPath, moduleFile),
+        join(context.root, options.outputPath, moduleFile)
       );
     }
   }
@@ -97,20 +97,20 @@ function readSource(getFile: () => string): { file: string; content: string } {
 // Exported for testing
 export function getWithNxContent(
   { file, content } = readSource(() =>
-    join(__dirname, '../../../../plugins/with-nx.js'),
-  ),
+    join(__dirname, '../../../../plugins/with-nx.js')
+  )
 ) {
   const withNxSource = ts.createSourceFile(
     file,
     content,
     ts.ScriptTarget.Latest,
-    true,
+    true
   );
   const getWithNxContextDeclaration = findNodes(
     withNxSource,
-    ts.SyntaxKind.FunctionDeclaration,
+    ts.SyntaxKind.FunctionDeclaration
   )?.find(
-    (node: ts.FunctionDeclaration) => node.name?.text === 'getWithNxContext',
+    (node: ts.FunctionDeclaration) => node.name?.text === 'getWithNxContext'
   );
   if (getWithNxContextDeclaration) {
     content = applyChangesToString(content, [
@@ -137,13 +137,13 @@ export function getWithNxContent(
 
 export function findNextConfigPath(
   dirname: string,
-  userDefinedConfigPath?: string,
+  userDefinedConfigPath?: string
 ): string {
   if (userDefinedConfigPath) {
     const file = userDefinedConfigPath;
     if (existsSync(join(dirname, file))) return file;
     throw new Error(
-      `Cannot find the Next.js config file: ${userDefinedConfigPath}. Is the path correct in project.json?`,
+      `Cannot find the Next.js config file: ${userDefinedConfigPath}. Is the path correct in project.json?`
     );
   }
 
@@ -153,15 +153,15 @@ export function findNextConfigPath(
   }
   throw new Error(
     `Cannot find any of the following files in your project: ${candidates.join(
-      ', ',
-    )}. Is this a Next.js project?`,
+      ', '
+    )}. Is this a Next.js project?`
   );
 }
 
 // Exported for testing
 export function getRelativeFilesToCopy(
   fileName: string,
-  cwd: string,
+  cwd: string
 ): string[] {
   const seen = new Set<string>();
   const collected = new Set<string>();
@@ -202,7 +202,7 @@ export function getRelativeImports({
     file,
     content,
     ts.ScriptTarget.Latest,
-    true,
+    true
   );
   const callExpressionsOrImportDeclarations = findNodes(source, [
     ts.SyntaxKind.CallExpression,
@@ -228,7 +228,7 @@ function stripOuterQuotes(str: string): string {
 // Exported for testing
 export function ensureFileExtensions(
   files: string[],
-  absoluteDir: string,
+  absoluteDir: string
 ): string[] {
   const extensions = ['.js', '.cjs', '.mjs', '.json'];
   return files.map((file) => {
@@ -236,15 +236,15 @@ export function ensureFileExtensions(
     if (providedExt && extensions.includes(providedExt)) return file;
 
     const ext = extensions.find((ext) =>
-      existsSync(join(absoluteDir, file + ext)),
+      existsSync(join(absoluteDir, file + ext))
     );
     if (ext) {
       return file + ext;
     } else {
       throw new Error(
         `Cannot find file "${file}" with any of the following extensions: ${extensions.join(
-          ', ',
-        )}`,
+          ', '
+        )}`
       );
     }
   });

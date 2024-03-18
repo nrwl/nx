@@ -9,7 +9,7 @@ import { NormalizedSchema } from '../schema';
 export function updateEslintConfig(
   tree: Tree,
   schema: NormalizedSchema,
-  project: ProjectConfiguration,
+  project: ProjectConfiguration
 ) {
   // if there is no suitable eslint config, we don't need to do anything
   if (
@@ -28,7 +28,7 @@ export function updateEslintConfig(
     updateRelativePathsInConfig(
       tree,
       project.root,
-      schema.relativeToRootDestination,
+      schema.relativeToRootDestination
     );
   } catch {
     output.warn({

@@ -32,7 +32,7 @@ export async function affected(
   extraTargetDependencies: Record<
     string,
     (TargetDependencyConfig | string)[]
-  > = {},
+  > = {}
 ): Promise<void> {
   performance.mark('code-loading:end');
   performance.measure('code-loading', 'init-local', 'code-loading:end');
@@ -46,7 +46,7 @@ export async function affected(
       printWarnings:
         command !== 'print-affected' && !args.plain && args.graph !== 'stdout',
     },
-    nxJson,
+    nxJson
   );
 
   if (nxArgs.verbose) {
@@ -73,7 +73,7 @@ export async function affected(
             projectGraph,
             { nxJson },
             nxArgs,
-            overrides,
+            overrides
           );
         } else {
           await printAffected(
@@ -81,7 +81,7 @@ export async function affected(
             projectGraph,
             { nxJson },
             nxArgs,
-            overrides,
+            overrides
           );
         }
         break;
@@ -101,7 +101,7 @@ export async function affected(
               projects: projectNames,
               file,
             },
-            projectNames,
+            projectNames
           );
         } else {
           const status = await runCommand(
@@ -112,7 +112,7 @@ export async function affected(
             overrides,
             null,
             extraTargetDependencies,
-            { excludeTaskDependencies: false, loadDotEnvFiles: true },
+            { excludeTaskDependencies: false, loadDotEnvFiles: true }
           );
           process.exit(status);
         }
@@ -128,7 +128,7 @@ export async function affected(
 
 export async function getAffectedGraphNodes(
   nxArgs: NxArgs,
-  projectGraph: ProjectGraph,
+  projectGraph: ProjectGraph
 ): Promise<ProjectGraphProjectNode[]> {
   let affectedGraph = nxArgs.all
     ? projectGraph
@@ -137,13 +137,13 @@ export async function getAffectedGraphNodes(
         calculateFileChanges(
           parseFiles(nxArgs).files,
           await allFileData(),
-          nxArgs,
-        ),
+          nxArgs
+        )
       );
 
   if (nxArgs.exclude) {
     const excludedProjects = new Set(
-      findMatchingProjects(nxArgs.exclude, affectedGraph.nodes),
+      findMatchingProjects(nxArgs.exclude, affectedGraph.nodes)
     );
 
     return Object.entries(affectedGraph.nodes)
@@ -156,10 +156,10 @@ export async function getAffectedGraphNodes(
 
 function allProjectsWithTarget(
   projects: ProjectGraphProjectNode[],
-  nxArgs: NxArgs,
+  nxArgs: NxArgs
 ) {
   return projects.filter((p) =>
-    nxArgs.targets.find((target) => projectHasTarget(p, target)),
+    nxArgs.targets.find((target) => projectHasTarget(p, target))
   );
 }
 

@@ -15,7 +15,7 @@ describe('@nx/detox', () => {
     project = newProject();
     appName = uniq('app');
     runCLI(
-      `generate @nx/react-native:app ${appName} --e2eTestRunner=detox --install=false --project-name-and-root-format=as-provided --interactive=false`,
+      `generate @nx/react-native:app ${appName} --e2eTestRunner=detox --install=false --project-name-and-root-format=as-provided --interactive=false`
     );
     updateJson(`${appName}-e2e/.detoxrc.json`, (json) => {
       json.apps['e2e.debug'] = {
@@ -36,7 +36,7 @@ describe('@nx/detox', () => {
   it('nx.json should contain plugin configuration', () => {
     const nxJson = readJson('nx.json');
     const detoxPlugin = nxJson.plugins.find(
-      (plugin) => plugin.plugin === '@nx/detox/plugin',
+      (plugin) => plugin.plugin === '@nx/detox/plugin'
     );
     expect(detoxPlugin).toBeDefined();
     expect(detoxPlugin.options).toBeDefined();
@@ -47,12 +47,12 @@ describe('@nx/detox', () => {
 
   it('should build the app', async () => {
     const result = runCLI(
-      `build ${appName}-e2e -- --configuration e2e.sim.debug`,
+      `build ${appName}-e2e -- --configuration e2e.sim.debug`
     );
 
     expect(result).toContain(`building ${appName}`);
     expect(result).toContain(
-      `Successfully ran target build for project ${appName}`,
+      `Successfully ran target build for project ${appName}`
     );
   }, 200_000);
 });

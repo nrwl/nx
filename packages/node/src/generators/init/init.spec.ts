@@ -28,7 +28,7 @@ describe('init', () => {
       },
       {
         [existing]: existingVersion,
-      },
+      }
     );
     await initGenerator(tree, {});
 

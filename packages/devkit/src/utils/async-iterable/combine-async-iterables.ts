@@ -27,12 +27,12 @@ export async function* combineAsyncIterables<T = any>(
 
   try {
     const asyncIteratorsValues = new Map(
-      iterators.map((it, idx) => [idx, getNextAsyncIteratorValue(it, idx)]),
+      iterators.map((it, idx) => [idx, getNextAsyncIteratorValue(it, idx)])
     );
 
     do {
       const { iterator, index } = await Promise.race(
-        asyncIteratorsValues.values(),
+        asyncIteratorsValues.values()
       );
       if (iterator.done) {
         asyncIteratorsValues.delete(index);
@@ -40,7 +40,7 @@ export async function* combineAsyncIterables<T = any>(
         yield iterator.value;
         asyncIteratorsValues.set(
           index,
-          getNextAsyncIteratorValue(iterators[index], index),
+          getNextAsyncIteratorValue(iterators[index], index)
         );
       }
     } while (asyncIteratorsValues.size > 0);

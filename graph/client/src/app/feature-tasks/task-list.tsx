@@ -110,7 +110,7 @@ function mapToSidebarProjectWithTasks(
   project: ProjectGraphProjectNode,
   selectedProjects: string[],
   selectedTarget: string,
-  errors: Record<string, string>,
+  errors: Record<string, string>
 ): SidebarProject {
   const taskId = createTaskName(project.name, selectedTarget);
 
@@ -142,7 +142,7 @@ export function TaskList({
 }: TaskListProps) {
   const filteredProjects = projects
     .filter((project) =>
-      (project.data as any).targets?.hasOwnProperty(selectedTarget),
+      (project.data as any).targets?.hasOwnProperty(selectedTarget)
     )
     .sort((a, b) => a.name.localeCompare(b.name));
   const appProjects = getProjectsByType('app', filteredProjects);
@@ -151,15 +151,15 @@ export function TaskList({
 
   const appDirectoryGroups = groupProjectsByDirectory(
     appProjects,
-    workspaceLayout,
+    workspaceLayout
   );
   const libDirectoryGroups = groupProjectsByDirectory(
     libProjects,
-    workspaceLayout,
+    workspaceLayout
   );
   const e2eDirectoryGroups = groupProjectsByDirectory(
     e2eProjects,
-    workspaceLayout,
+    workspaceLayout
   );
 
   const sortedAppDirectories = Object.keys(appDirectoryGroups).sort();
@@ -183,8 +183,8 @@ export function TaskList({
                 project,
                 selectedProjects,
                 selectedTarget,
-                errors,
-              ),
+                errors
+              )
             )}
             toggleTask={toggleProject}
           ></SubProjectList>
@@ -205,8 +205,8 @@ export function TaskList({
                 project,
                 selectedProjects,
                 selectedTarget,
-                errors,
-              ),
+                errors
+              )
             )}
             toggleTask={toggleProject}
           ></SubProjectList>
@@ -227,8 +227,8 @@ export function TaskList({
                 project,
                 selectedProjects,
                 selectedTarget,
-                errors,
-              ),
+                errors
+              )
             )}
             toggleTask={toggleProject}
           ></SubProjectList>

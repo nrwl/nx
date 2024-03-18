@@ -17,7 +17,7 @@ let tsModule: typeof import('typescript');
 
 export async function normalizeOptions(
   host: Tree,
-  options: ComponentGeneratorSchema,
+  options: ComponentGeneratorSchema
 ): Promise<NormalizedSchema> {
   const {
     artifactName: name,
@@ -46,7 +46,7 @@ export async function normalizeOptions(
 
   if (options.export && projectType === 'application') {
     logger.warn(
-      `The "--export" option should not be used with applications and will do nothing.`,
+      `The "--export" option should not be used with applications and will do nothing.`
     );
   }
 
@@ -75,7 +75,7 @@ export function addExportsToBarrel(host: Tree, options: NormalizedSchema) {
   if (options.export && !isApp) {
     const indexFilePath = joinPathFragments(
       options.projectSourceRoot,
-      options.js ? 'index.js' : 'index.ts',
+      options.js ? 'index.js' : 'index.ts'
     );
     const indexSource = host.read(indexFilePath, 'utf-8');
     if (indexSource !== null) {
@@ -83,19 +83,19 @@ export function addExportsToBarrel(host: Tree, options: NormalizedSchema) {
         indexFilePath,
         indexSource,
         tsModule.ScriptTarget.Latest,
-        true,
+        true
       );
 
       const relativePathFromIndex = getRelativeImportToFile(
         indexFilePath,
-        options.filePath,
+        options.filePath
       );
       const changes = applyChangesToString(
         indexSource,
         addImport(
           indexSourceFile,
-          `export { default as ${options.className} } from '${relativePathFromIndex}';`,
-        ),
+          `export { default as ${options.className} } from '${relativePathFromIndex}';`
+        )
       );
       host.write(indexFilePath, changes);
     }

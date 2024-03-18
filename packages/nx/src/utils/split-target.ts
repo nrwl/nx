@@ -2,7 +2,7 @@ import { ProjectGraph } from '../config/project-graph';
 
 export function splitTarget(
   s: string,
-  projectGraph: ProjectGraph,
+  projectGraph: ProjectGraph
 ): [project: string, target?: string, configuration?: string] {
   let [project, ...segments] = splitByColons(s);
   const validTargets = projectGraph.nodes[project]
@@ -13,7 +13,7 @@ export function splitTarget(
   return [project, ...groupJointSegments(segments, validTargetNames)] as [
     string,
     string?,
-    string?,
+    string?
   ];
 }
 

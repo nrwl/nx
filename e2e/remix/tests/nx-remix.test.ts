@@ -40,7 +40,7 @@ describe('Remix E2E Tests', () => {
         const plugin = uniq('remix');
         const appName = `sub-${plugin}`;
         runCLI(
-          `generate @nx/remix:app ${plugin} --directory=sub --projectNameAndRootFormat=derived --rootProject=false --no-interactive`,
+          `generate @nx/remix:app ${plugin} --directory=sub --projectNameAndRootFormat=derived --rootProject=false --no-interactive`
         );
 
         const result = runCLI(`build ${appName}`);
@@ -53,7 +53,7 @@ describe('Remix E2E Tests', () => {
       it('should create src in the specified directory --projectNameAndRootFormat=as-provided', async () => {
         const plugin = uniq('remix');
         runCLI(
-          `generate @nx/remix:app ${plugin} --directory=subdir --projectNameAndRootFormat=as-provided --rootProject=false --no-interactive`,
+          `generate @nx/remix:app ${plugin} --directory=subdir --projectNameAndRootFormat=as-provided --rootProject=false --no-interactive`
         );
 
         const result = runCLI(`build ${plugin}`);
@@ -93,11 +93,11 @@ describe('Remix E2E Tests', () => {
       it('should generate a library with jest and test correctly', async () => {
         const reactapp = uniq('react');
         runCLI(
-          `generate @nx/react:application ${reactapp} --unitTestRunner=jest`,
+          `generate @nx/react:application ${reactapp} --unitTestRunner=jest`
         );
         const plugin = uniq('remix');
         runCLI(
-          `generate @nx/remix:application ${plugin} --unitTestRunner=jest`,
+          `generate @nx/remix:application ${plugin} --unitTestRunner=jest`
         );
 
         const result = runCLI(`test ${plugin}`);
@@ -118,56 +118,54 @@ describe('Remix E2E Tests', () => {
       it('should check for un-escaped dollar signs in routes', async () => {
         await expect(async () =>
           runCLI(
-            `generate @nx/remix:route --project ${plugin} --path my.route.$withParams.tsx`,
-          ),
+            `generate @nx/remix:route --project ${plugin} --path my.route.$withParams.tsx`
+          )
         ).rejects.toThrow();
 
         runCLI(
-          `generate @nx/remix:route --project ${plugin} --path my.route.\\$withParams.tsx`,
+          `generate @nx/remix:route --project ${plugin} --path my.route.\\$withParams.tsx`
         );
 
         expect(() =>
-          checkFilesExist(`apps/${plugin}/app/routes/my.route.$withParams.tsx`),
+          checkFilesExist(`apps/${plugin}/app/routes/my.route.$withParams.tsx`)
         ).not.toThrow();
       }, 120000);
 
       it('should pass un-escaped dollar signs in routes with skipChecks flag', async () => {
         await runCommandAsync(
-          `someWeirdUseCase=route-segment && yarn nx generate @nx/remix:route --project ${plugin} --path my.route.$someWeirdUseCase.tsx --force`,
+          `someWeirdUseCase=route-segment && yarn nx generate @nx/remix:route --project ${plugin} --path my.route.$someWeirdUseCase.tsx --force`
         );
 
         expect(() =>
           checkFilesExist(
-            `apps/${plugin}/app/routes/my.route.route-segment.tsx`,
-          ),
+            `apps/${plugin}/app/routes/my.route.route-segment.tsx`
+          )
         ).not.toThrow();
       }, 120000);
 
       it('should check for un-escaped dollar signs in resource routes', async () => {
         await expect(async () =>
           runCLI(
-            `generate @nx/remix:resource-route --project ${plugin} --path my.route.$withParams.ts`,
-          ),
+            `generate @nx/remix:resource-route --project ${plugin} --path my.route.$withParams.ts`
+          )
         ).rejects.toThrow();
 
         runCLI(
-          `generate @nx/remix:resource-route --project ${plugin} --path my.route.\\$withParams.ts`,
+          `generate @nx/remix:resource-route --project ${plugin} --path my.route.\\$withParams.ts`
         );
 
         expect(() =>
-          checkFilesExist(`apps/${plugin}/app/routes/my.route.$withParams.ts`),
+          checkFilesExist(`apps/${plugin}/app/routes/my.route.$withParams.ts`)
         ).not.toThrow();
       }, 120000);
 
       xit('should pass un-escaped dollar signs in resource routes with skipChecks flag', async () => {
         await runCommandAsync(
-          `someWeirdUseCase=route-segment && yarn nx generate @nx/remix:resource-route --project ${plugin} --path my.route.$someWeirdUseCase.ts --force`,
+          `someWeirdUseCase=route-segment && yarn nx generate @nx/remix:resource-route --project ${plugin} --path my.route.$someWeirdUseCase.ts --force`
         );
 
         expect(() =>
-          checkFilesExist(
-            `apps/${plugin}/app/routes/my.route.route-segment.ts`,
-          ),
+          checkFilesExist(`apps/${plugin}/app/routes/my.route.route-segment.ts`)
         ).not.toThrow();
       }, 120000);
     });
@@ -200,7 +198,7 @@ describe('Remix E2E Tests', () => {
           <h1>{foo}</h1>
         );
       }
-    `,
+    `
       );
 
       const result = runCLI(`build ${appName}`);

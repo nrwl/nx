@@ -13,7 +13,7 @@ export interface NormalizedSchema extends NxRemixGeneratorSchema {
 
 export async function normalizeOptions(
   tree: Tree,
-  options: NxRemixGeneratorSchema,
+  options: NxRemixGeneratorSchema
 ): Promise<NormalizedSchema> {
   const { projectName, projectRoot, projectNameAndRootFormat } =
     await determineProjectNameAndRootOptions(tree, {

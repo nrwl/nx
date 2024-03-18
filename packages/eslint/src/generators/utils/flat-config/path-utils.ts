@@ -2,7 +2,7 @@ import { joinPathFragments } from '@nx/devkit';
 import type { Linter } from 'eslint';
 
 export function updateFiles(
-  override: Linter.ConfigOverride<Linter.RulesRecord>,
+  override: Linter.ConfigOverride<Linter.RulesRecord>
 ) {
   if (override.files) {
     override.files = Array.isArray(override.files)

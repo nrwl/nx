@@ -280,7 +280,7 @@ RouterModule.forRoot(
         import('./remote-entry/entry.module').then((m) => m.RemoteEntryModule),
     },
   ],
-  { initialNavigation: 'enabledBlocking' },
+  { initialNavigation: 'enabledBlocking' }
 );
 ```
 
@@ -328,10 +328,7 @@ import { UserService } from '@ng-mf/shared/data-access-user';
 })
 export class AppComponent implements OnInit {
   isLoggedIn$ = this.userService.isUserLoggedIn$;
-  constructor(
-    private userService: UserService,
-    private router: Router,
-  ) {}
+  constructor(private userService: UserService, private router: Router) {}
   ngOnInit() {
     this.isLoggedIn$
       .pipe(distinctUntilChanged())

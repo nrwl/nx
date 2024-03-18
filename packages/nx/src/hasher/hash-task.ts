@@ -10,7 +10,7 @@ export async function hashTasksThatDoNotDependOnOutputsOfOtherTasks(
   hasher: TaskHasher,
   projectGraph: ProjectGraph,
   taskGraph: TaskGraph,
-  nxJson: NxJsonConfiguration,
+  nxJson: NxJsonConfiguration
 ) {
   performance.mark('hashMultipleTasks:start');
   const tasks = Object.values(taskGraph.tasks);
@@ -18,7 +18,7 @@ export async function hashTasksThatDoNotDependOnOutputsOfOtherTasks(
     tasks.map(async (task) => {
       const customHasher = getCustomHasher(task, projectGraph);
       return { task, customHasher };
-    }),
+    })
   );
 
   const tasksToHash = tasksWithHashers
@@ -44,7 +44,7 @@ export async function hashTasksThatDoNotDependOnOutputsOfOtherTasks(
   performance.measure(
     'hashMultipleTasks',
     'hashMultipleTasks:start',
-    'hashMultipleTasks:end',
+    'hashMultipleTasks:end'
   );
 }
 
@@ -53,7 +53,7 @@ export async function hashTask(
   projectGraph: ProjectGraph,
   taskGraph: TaskGraph,
   task: Task,
-  env: NodeJS.ProcessEnv,
+  env: NodeJS.ProcessEnv
 ) {
   performance.mark('hashSingleTask:start');
   const customHasher = getCustomHasher(task, projectGraph);
@@ -76,6 +76,6 @@ export async function hashTask(
   performance.measure(
     'hashSingleTask',
     'hashSingleTask:start',
-    'hashSingleTask:end',
+    'hashSingleTask:end'
   );
 }

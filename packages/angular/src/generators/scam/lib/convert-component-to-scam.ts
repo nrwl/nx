@@ -9,7 +9,7 @@ let tsModule: typeof import('typescript');
 export function convertComponentToScam(tree: Tree, options: NormalizedSchema) {
   if (!tree.exists(options.filePath)) {
     throw new Error(
-      `Couldn't find component at path ${options.filePath} to add SCAM setup.`,
+      `Couldn't find component at path ${options.filePath} to add SCAM setup.`
     );
   }
 
@@ -23,7 +23,7 @@ export function convertComponentToScam(tree: Tree, options: NormalizedSchema) {
       options.filePath,
       currentComponentContents,
       tsModule.ScriptTarget.Latest,
-      true,
+      true
     );
 
     source = insertImport(
@@ -31,19 +31,19 @@ export function convertComponentToScam(tree: Tree, options: NormalizedSchema) {
       source,
       options.filePath,
       'NgModule',
-      '@angular/core',
+      '@angular/core'
     );
     source = insertImport(
       tree,
       source,
       options.filePath,
       'CommonModule',
-      '@angular/common',
+      '@angular/common'
     );
 
     let updatedComponentSource = source.getText();
     updatedComponentSource = `${updatedComponentSource}${getNgModuleDeclaration(
-      options.symbolName,
+      options.symbolName
     )}`;
 
     tree.write(options.filePath, updatedComponentSource);
@@ -52,18 +52,18 @@ export function convertComponentToScam(tree: Tree, options: NormalizedSchema) {
 
   const moduleFilePath = joinPathFragments(
     options.directory,
-    `${options.name}.module.ts`,
+    `${options.name}.module.ts`
   );
 
   tree.write(
     moduleFilePath,
-    getModuleFileContent(options.symbolName, options.fileName),
+    getModuleFileContent(options.symbolName, options.fileName)
   );
 }
 
 function getModuleFileContent(
   componentClassName: string,
-  componentFileName: string,
+  componentFileName: string
 ): string {
   return `import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';

@@ -9,7 +9,7 @@ export type DecoratorGeneratorOptions = NestGeneratorWithLanguageOption;
 
 export async function decoratorGenerator(
   tree: Tree,
-  rawOptions: DecoratorGeneratorOptions,
+  rawOptions: DecoratorGeneratorOptions
 ) {
   await decoratorGeneratorInternal(tree, {
     nameAndDirectoryFormat: 'derived',
@@ -19,7 +19,7 @@ export async function decoratorGenerator(
 
 export async function decoratorGeneratorInternal(
   tree: Tree,
-  rawOptions: DecoratorGeneratorOptions,
+  rawOptions: DecoratorGeneratorOptions
 ): Promise<any> {
   const options = await normalizeDecoratorOptions(tree, rawOptions);
 
@@ -30,13 +30,13 @@ export default decoratorGenerator;
 
 async function normalizeDecoratorOptions(
   tree: Tree,
-  options: DecoratorGeneratorOptions,
+  options: DecoratorGeneratorOptions
 ): Promise<NormalizedOptions> {
   const normalizedOptions = await normalizeOptions(
     tree,
     'decorator',
     '@nx/nest:decorator',
-    options,
+    options
   );
   return {
     ...normalizedOptions,

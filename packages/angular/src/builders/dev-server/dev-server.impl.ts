@@ -47,7 +47,7 @@ type BuildTargetOptions = {
 
 export function executeDevServerBuilder(
   rawOptions: Schema,
-  context: import('@angular-devkit/architect').BuilderContext,
+  context: import('@angular-devkit/architect').BuilderContext
 ) {
   validateOptions(rawOptions);
 
@@ -63,7 +63,7 @@ export function executeDevServerBuilder(
     isVerbose: false,
   });
   const browserTargetProjectConfiguration = readCachedProjectConfiguration(
-    parsedBuildTarget.project,
+    parsedBuildTarget.project
   );
 
   const buildTarget =
@@ -74,8 +74,8 @@ export function executeDevServerBuilder(
     ...(parsedBuildTarget.configuration
       ? buildTarget.configurations[parsedBuildTarget.configuration]
       : buildTarget.defaultConfiguration
-        ? buildTarget.configurations[buildTarget.defaultConfiguration]
-        : {}),
+      ? buildTarget.configurations[buildTarget.defaultConfiguration]
+      : {}),
   };
 
   const buildLibsFromSource =
@@ -90,12 +90,12 @@ export function executeDevServerBuilder(
   if (buildTargetOptions.customWebpackConfig?.path) {
     pathToWebpackConfig = joinPathFragments(
       context.workspaceRoot,
-      buildTargetOptions.customWebpackConfig.path,
+      buildTargetOptions.customWebpackConfig.path
     );
 
     if (pathToWebpackConfig && !existsSync(pathToWebpackConfig)) {
       throw new Error(
-        `Custom Webpack Config File Not Found!\nTo use a custom webpack config, please ensure the path to the custom webpack file is correct: \n${pathToWebpackConfig}`,
+        `Custom Webpack Config File Not Found!\nTo use a custom webpack config, please ensure the path to the custom webpack file is correct: \n${pathToWebpackConfig}`
       );
     }
   }
@@ -107,12 +107,12 @@ export function executeDevServerBuilder(
   if (normalizedIndexHtmlTransformer) {
     pathToIndexFileTransformer = joinPathFragments(
       context.workspaceRoot,
-      normalizedIndexHtmlTransformer,
+      normalizedIndexHtmlTransformer
     );
 
     if (pathToIndexFileTransformer && !existsSync(pathToIndexFileTransformer)) {
       throw new Error(
-        `File containing Index File Transformer function Not Found!\n Please ensure the path to the file containing the function is correct: \n${pathToIndexFileTransformer}`,
+        `File containing Index File Transformer function Not Found!\n Please ensure the path to the file containing the function is correct: \n${pathToIndexFileTransformer}`
       );
     }
   }
@@ -125,7 +125,7 @@ export function executeDevServerBuilder(
       });
     dependencies = foundDependencies;
     const relativeTsConfigPath = normalizePath(
-      relative(context.workspaceRoot, tsConfigPath),
+      relative(context.workspaceRoot, tsConfigPath)
     );
 
     // We can't just pass the tsconfig path in memory to the angular builder
@@ -168,15 +168,15 @@ export function executeDevServerBuilder(
     from(import('@angular-devkit/build-angular')),
     from(loadPlugins(buildTargetOptions.plugins, buildTargetOptions.tsConfig)),
     from(
-      loadMiddleware(options.esbuildMiddleware, buildTargetOptions.tsConfig),
+      loadMiddleware(options.esbuildMiddleware, buildTargetOptions.tsConfig)
     ),
     from(
       loadIndexHtmlFileTransformer(
         pathToIndexFileTransformer,
         buildTargetOptions.tsConfig,
         context,
-        isUsingWebpackBuilder,
-      ),
+        isUsingWebpackBuilder
+      )
     ),
   ]).pipe(
     switchMap(
@@ -206,8 +206,8 @@ export function executeDevServerBuilder(
                         new WebpackNxBuildCoordinationPlugin(
                           `nx run-many --target=${
                             parsedBuildTarget.target
-                          } --projects=${workspaceDependencies.join(',')}`,
-                        ),
+                          } --projects=${workspaceDependencies.join(',')}`
+                        )
                       );
                     }
                   }
@@ -220,7 +220,7 @@ export function executeDevServerBuilder(
                     baseWebpackConfig,
                     pathToWebpackConfig,
                     buildTargetOptions,
-                    context.target,
+                    context.target
                   );
                 }
               : undefined,
@@ -234,18 +234,18 @@ export function executeDevServerBuilder(
           {
             buildPlugins: plugins,
             middleware,
-          },
-        ),
-    ),
+          }
+        )
+    )
   );
 }
 
 export default require('@angular-devkit/architect').createBuilder(
-  executeDevServerBuilder,
+  executeDevServerBuilder
 ) as any;
 
 function getDelegateBuilderOptions(
-  options: NormalizedSchema,
+  options: NormalizedSchema
 ): DevServerBuilderOptions {
   const delegateBuilderOptions: NormalizedSchema & DevServerBuilderOptions = {
     ...options,
@@ -269,7 +269,7 @@ async function loadIndexHtmlFileTransformer(
   pathToIndexFileTransformer: string | undefined,
   tsConfig: string,
   context: BuilderContext,
-  isUsingWebpackBuilder: boolean,
+  isUsingWebpackBuilder: boolean
 ) {
   if (!pathToIndexFileTransformer) {
     return undefined;
@@ -279,7 +279,7 @@ async function loadIndexHtmlFileTransformer(
     ? resolveIndexHtmlTransformer(
         pathToIndexFileTransformer,
         tsConfig,
-        context.target,
+        context.target
       )
     : await loadIndexHtmlTransformer(pathToIndexFileTransformer, tsConfig);
 }

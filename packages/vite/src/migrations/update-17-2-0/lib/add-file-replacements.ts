@@ -6,7 +6,7 @@ import { getConfigNode, notFoundWarning } from '../update-vite-config';
 export function addFileReplacements(
   configContents: string,
   fileReplacements: FileReplacement[],
-  configPath: string,
+  configPath: string
 ): string {
   const configNode = getConfigNode(configContents);
   if (!configNode) {
@@ -15,16 +15,16 @@ export function addFileReplacements(
   }
   const pluginsObject = tsquery.query(
     configNode,
-    `PropertyAssignment:has(Identifier[name="plugins"])`,
+    `PropertyAssignment:has(Identifier[name="plugins"])`
   )?.[0];
   const replaceFilesPlugin = tsquery.query(
     configNode,
-    `PropertyAssignment:has(Identifier[name="plugins"]) CallExpression:has(Identifier[name="replaceFiles"])`,
+    `PropertyAssignment:has(Identifier[name="plugins"]) CallExpression:has(Identifier[name="replaceFiles"])`
   )?.[0];
 
   const firstImportDeclaration = tsquery.query(
     configContents,
-    'ImportDeclaration',
+    'ImportDeclaration'
   )?.[0];
 
   if (pluginsObject) {
@@ -53,7 +53,7 @@ export function addFileReplacements(
   } else {
     const foundDefineConfig = tsquery.query(
       configContents,
-      'CallExpression:has(Identifier[name="defineConfig"])',
+      'CallExpression:has(Identifier[name="defineConfig"])'
     )?.[0];
 
     if (!foundDefineConfig) {

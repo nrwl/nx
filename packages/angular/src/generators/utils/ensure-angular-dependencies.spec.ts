@@ -23,7 +23,7 @@ describe('ensureAngularDependencies', () => {
     expect(dependencies['@angular/core']).toBe(angularVersion);
     expect(dependencies['@angular/platform-browser']).toBe(angularVersion);
     expect(dependencies['@angular/platform-browser-dynamic']).toBe(
-      angularVersion,
+      angularVersion
     );
     expect(dependencies['@angular/router']).toBe(angularVersion);
     expect(dependencies['rxjs']).toBeDefined();
@@ -33,7 +33,7 @@ describe('ensureAngularDependencies', () => {
     expect(devDependencies['@angular/compiler-cli']).toBe(angularVersion);
     expect(devDependencies['@angular/language-service']).toBe(angularVersion);
     expect(devDependencies['@angular-devkit/build-angular']).toBe(
-      angularDevkitVersion,
+      angularDevkitVersion
     );
 
     // codelyzer should no longer be there by default

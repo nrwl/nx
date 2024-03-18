@@ -3,7 +3,7 @@ import * as net from 'net';
 
 export function waitForPortOpen(
   port: number,
-  options: { host?: string; retries?: number; retryDelay?: number } = {},
+  options: { host?: string; retries?: number; retryDelay?: number } = {}
 ): Promise<void> {
   const host = options.host ?? '127.0.0.1';
   const allowedErrorCodes = ['ECONNREFUSED', 'ECONNRESET', 'ETIMEDOUT'];
@@ -27,7 +27,7 @@ export function waitForPortOpen(
         if (retries === 0 || !allowedErrorCodes.includes(err['code'])) {
           if (process.env['NX_VERBOSE_LOGGING'] === 'true') {
             logger.info(
-              `Error connecting on ${host}:${port}: ${err['code'] || err}`,
+              `Error connecting on ${host}:${port}: ${err['code'] || err}`
             );
           }
           cleanupClient();

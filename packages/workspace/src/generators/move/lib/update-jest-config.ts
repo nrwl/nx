@@ -13,11 +13,11 @@ import { findRootJestConfig } from '../../utils/jest-config';
 export function updateJestConfig(
   tree: Tree,
   schema: NormalizedSchema,
-  project: ProjectConfiguration,
+  project: ProjectConfiguration
 ) {
   const jestConfigPath = path.join(
     schema.relativeToRootDestination,
-    'jest.config.ts',
+    'jest.config.ts'
   );
 
   if (tree.exists(jestConfigPath)) {
@@ -28,7 +28,7 @@ export function updateJestConfig(
       // ensure both single and double quotes are replaced
       const findName = new RegExp(
         `'${schema.projectName}'|"${schema.projectName}"|\`${schema.projectName}\``,
-        'g',
+        'g'
       );
       newContent = oldContent.replace(findName, `'${schema.newProjectName}'`);
     }
@@ -37,21 +37,21 @@ export function updateJestConfig(
     if (dirRegex.test(newContent)) {
       newContent = newContent.replace(
         dirRegex,
-        `/${schema.relativeToRootDestination}/`,
+        `/${schema.relativeToRootDestination}/`
       );
     }
     dirRegex = new RegExp(`\\/${project.root}['"\`]`, 'g');
     if (dirRegex.test(newContent)) {
       newContent = newContent.replace(
         dirRegex,
-        `/${schema.relativeToRootDestination}'`,
+        `/${schema.relativeToRootDestination}'`
       );
     }
     dirRegex = new RegExp(`['"\`]${project.root}\\/`, 'g');
     if (dirRegex.test(newContent)) {
       newContent = newContent.replace(
         dirRegex,
-        `'${schema.relativeToRootDestination}/`,
+        `'${schema.relativeToRootDestination}/`
       );
     }
 
@@ -74,7 +74,7 @@ export function updateJestConfig(
 
   const newRootJestConfigContent = oldRootJestConfigContent.replace(
     findProject,
-    usingJestProjects ? `` : `'<rootDir>/${schema.relativeToRootDestination}'`,
+    usingJestProjects ? `` : `'<rootDir>/${schema.relativeToRootDestination}'`
   );
 
   tree.write(rootJestConfigPath, newRootJestConfigContent);

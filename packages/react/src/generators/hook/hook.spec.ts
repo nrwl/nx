@@ -28,7 +28,7 @@ describe('hook', () => {
 
     expect(appTree.exists('my-lib/src/lib/use-form/use-form.ts')).toBeTruthy();
     expect(
-      appTree.exists('my-lib/src/lib/use-form/use-form.spec.tsx'),
+      appTree.exists('my-lib/src/lib/use-form/use-form.spec.tsx')
     ).toBeTruthy();
   });
 
@@ -40,7 +40,7 @@ describe('hook', () => {
 
     expect(appTree.exists('my-app/src/app/use-form/use-form.ts')).toBeTruthy();
     expect(
-      appTree.exists('my-app/src/app/use-form/use-form.spec.tsx'),
+      appTree.exists('my-app/src/app/use-form/use-form.spec.tsx')
     ).toBeTruthy();
   });
 
@@ -52,10 +52,10 @@ describe('hook', () => {
     });
 
     expect(
-      appTree.exists('my-lib/src/lib/use-hello/use-hello.ts'),
+      appTree.exists('my-lib/src/lib/use-hello/use-hello.ts')
     ).toBeTruthy();
     expect(
-      appTree.exists('my-lib/src/lib/use-hello/use-hello.spec.tsx'),
+      appTree.exists('my-lib/src/lib/use-hello/use-hello.spec.tsx')
     ).toBeFalsy();
   });
 
@@ -66,10 +66,10 @@ describe('hook', () => {
       skipTests: true,
     });
     expect(
-      appTree.exists('my-lib/src/lib/use-hello/use-hello.ts'),
+      appTree.exists('my-lib/src/lib/use-hello/use-hello.ts')
     ).toBeTruthy();
     expect(
-      appTree.exists('my-lib/src/lib/use-hello/use-hello.spec.tsx'),
+      appTree.exists('my-lib/src/lib/use-hello/use-hello.spec.tsx')
     ).toBeFalsy();
   });
 
@@ -107,10 +107,10 @@ describe('hook', () => {
         skipTests: true,
       });
       expect(
-        appTree.exists('my-lib/src/lib/use-hello/use-hello.ts'),
+        appTree.exists('my-lib/src/lib/use-hello/use-hello.ts')
       ).toBeTruthy();
       expect(
-        appTree.exists('my-lib/src/lib/use-hello/use-hello.spec.tsx'),
+        appTree.exists('my-lib/src/lib/use-hello/use-hello.spec.tsx')
       ).toBeFalsy();
     });
   });
@@ -123,10 +123,10 @@ describe('hook', () => {
         pascalCaseFiles: true,
       });
       expect(
-        appTree.exists('my-lib/src/lib/use-hello/useHello.ts'),
+        appTree.exists('my-lib/src/lib/use-hello/useHello.ts')
       ).toBeTruthy();
       expect(
-        appTree.exists('my-lib/src/lib/use-hello/useHello.spec.tsx'),
+        appTree.exists('my-lib/src/lib/use-hello/useHello.spec.tsx')
       ).toBeTruthy();
     });
   });
@@ -140,10 +140,10 @@ describe('hook', () => {
         pascalCaseDirectory: true,
       });
       expect(
-        appTree.exists('my-lib/src/lib/useHello/useHello.ts'),
+        appTree.exists('my-lib/src/lib/useHello/useHello.ts')
       ).toBeTruthy();
       expect(
-        appTree.exists('my-lib/src/lib/useHello/useHello.spec.tsx'),
+        appTree.exists('my-lib/src/lib/useHello/useHello.spec.tsx')
       ).toBeTruthy();
     });
   });
@@ -169,9 +169,7 @@ describe('hook', () => {
       });
 
       expect(
-        appTree.exists(
-          '/my-lib/src/lib/foo/use-hello-world/use-hello-world.ts',
-        ),
+        appTree.exists('/my-lib/src/lib/foo/use-hello-world/use-hello-world.ts')
       );
     });
   });

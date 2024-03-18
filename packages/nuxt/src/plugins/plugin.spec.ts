@@ -55,7 +55,7 @@ describe('@nx/nuxt/plugin', () => {
           buildStaticTargetName: 'build-static',
           serveStaticTargetName: 'serve-static',
         },
-        context,
+        context
       );
 
       expect(nodes).toMatchSnapshot();
@@ -78,7 +78,7 @@ describe('@nx/nuxt/plugin', () => {
 
       tempFs.createFileSync(
         'my-app/project.json',
-        JSON.stringify({ name: 'my-app' }),
+        JSON.stringify({ name: 'my-app' })
       );
       tempFs.createFileSync('my-app/nuxt.config.ts', '');
     });
@@ -96,7 +96,7 @@ describe('@nx/nuxt/plugin', () => {
           buildStaticTargetName: 'acme-build-static',
           serveStaticTargetName: 'acme-serve-static',
         },
-        context,
+        context
       );
 
       expect(nodes).toMatchSnapshot();

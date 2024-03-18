@@ -22,12 +22,12 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
   const layoutTypeSrcPath = joinPathFragments(
     offsetFromRoot,
     options.appProjectRoot,
-    '.next/types/**/*.ts',
+    '.next/types/**/*.ts'
   );
   const layoutTypeDistPath = joinPathFragments(
     offsetFromRoot,
     options.outputPath,
-    '.next/types/**/*.ts',
+    '.next/types/**/*.ts'
   );
 
   // scope tsconfig to the project directory so that it doesn't include other projects/libs
@@ -35,8 +35,8 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
     ? options.src
       ? 'src/'
       : options.appDir
-        ? 'app/'
-        : 'pages/'
+      ? 'app/'
+      : 'pages/'
     : '';
   const templateVariables = {
     ...names(options.name),
@@ -49,7 +49,7 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
     layoutTypeDistPath,
     rootTsConfigPath: getRelativePathToRootTsConfig(
       host,
-      options.appProjectRoot,
+      options.appProjectRoot
     ),
     appContent: createAppJsx(options.projectName),
     styleContent: createStyleRules(),
@@ -66,7 +66,7 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
     host,
     join(__dirname, '../files/common'),
     options.appProjectRoot,
-    templateVariables,
+    templateVariables
   );
 
   if (options.appDir) {
@@ -74,7 +74,7 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
       host,
       join(__dirname, '../files/app'),
       join(generatedAppFilePath, 'app'),
-      templateVariables,
+      templateVariables
     );
 
     if (options.unitTestRunner === 'none') {
@@ -82,8 +82,8 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
         joinPathFragments(
           options.appProjectRoot,
           'specs',
-          `index.spec.${options.js ? 'jsx' : 'tsx'}`,
-        ),
+          `index.spec.${options.js ? 'jsx' : 'tsx'}`
+        )
       );
     }
 
@@ -92,21 +92,21 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
         host,
         join(__dirname, '../files/app-styled-components'),
         join(generatedAppFilePath, 'app'),
-        templateVariables,
+        templateVariables
       );
     } else if (options.style === 'styled-jsx') {
       generateFiles(
         host,
         join(__dirname, '../files/app-styled-jsx'),
         join(generatedAppFilePath, 'app'),
-        templateVariables,
+        templateVariables
       );
     } else {
       generateFiles(
         host,
         join(__dirname, '../files/app-default-layout'),
         join(generatedAppFilePath, 'app'),
-        templateVariables,
+        templateVariables
       );
     }
   } else {
@@ -114,7 +114,7 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
       host,
       join(__dirname, '../files/pages'),
       join(generatedAppFilePath, 'pages'),
-      templateVariables,
+      templateVariables
     );
   }
 
@@ -169,7 +169,7 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
       host.delete(`${generatedAppFilePath}/app/page.module.${options.style}`);
     } else {
       host.delete(
-        `${generatedAppFilePath}/pages/${options.fileName}.module.${options.style}`,
+        `${generatedAppFilePath}/pages/${options.fileName}.module.${options.style}`
       );
     }
   }

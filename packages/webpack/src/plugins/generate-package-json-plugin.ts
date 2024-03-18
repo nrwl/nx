@@ -24,7 +24,7 @@ export class GeneratePackageJsonPlugin implements WebpackPluginInstance {
       projectName: string;
       targetName: string;
       projectGraph: ProjectGraph;
-    },
+    }
   ) {}
 
   apply(compiler: Compiler): void {
@@ -38,7 +38,7 @@ export class GeneratePackageJsonPlugin implements WebpackPluginInstance {
           const helperDependencies = getHelperDependenciesFromProjectGraph(
             this.options.root,
             this.options.projectName,
-            this.options.projectGraph,
+            this.options.projectGraph
           );
 
           const importHelpers = !!readTsConfig(this.options.tsConfig).options
@@ -46,7 +46,7 @@ export class GeneratePackageJsonPlugin implements WebpackPluginInstance {
           const shouldAddHelperDependency =
             importHelpers &&
             helperDependencies.every(
-              (dep) => dep.target !== HelperDependency.tsc,
+              (dep) => dep.target !== HelperDependency.tsc
             );
 
           if (shouldAddHelperDependency) {
@@ -65,13 +65,13 @@ export class GeneratePackageJsonPlugin implements WebpackPluginInstance {
               root: this.options.root,
               isProduction: true,
               helperDependencies: helperDependencies.map((dep) => dep.target),
-            },
+            }
           );
           packageJson.main = packageJson.main ?? this.options.outputFileName;
 
           compilation.emitAsset(
             'package.json',
-            new sources.RawSource(serializeJson(packageJson)),
+            new sources.RawSource(serializeJson(packageJson))
           );
           const packageManager = detectPackageManager(this.options.root);
           compilation.emitAsset(
@@ -80,11 +80,11 @@ export class GeneratePackageJsonPlugin implements WebpackPluginInstance {
               createLockFile(
                 packageJson,
                 this.options.projectGraph,
-                packageManager,
-              ),
-            ),
+                packageManager
+              )
+            )
           );
-        },
+        }
       );
     });
   }

@@ -25,7 +25,7 @@ describe('@nx/vite:init', () => {
       addDependenciesToPackageJson(
         tree,
         { '@nx/vite': nxVersion, [existing]: existingVersion },
-        { [existing]: existingVersion },
+        { [existing]: existingVersion }
       );
       await initGenerator(tree, {
         addPlugin: true,

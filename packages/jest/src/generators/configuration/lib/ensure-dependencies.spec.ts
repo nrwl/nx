@@ -50,7 +50,7 @@ describe('ensureDependencies', () => {
     expect(packageJson.devDependencies['ts-node']).toBeDefined();
     expect(packageJson.devDependencies['jest-environment-node']).toBeDefined();
     expect(
-      packageJson.devDependencies['jest-environment-jsdom'],
+      packageJson.devDependencies['jest-environment-jsdom']
     ).not.toBeDefined();
   });
 
@@ -62,10 +62,10 @@ describe('ensureDependencies', () => {
     expect(packageJson.devDependencies['ts-jest']).toBeDefined();
     expect(packageJson.devDependencies['ts-node']).toBeDefined();
     expect(
-      packageJson.devDependencies['jest-environment-jsdom'],
+      packageJson.devDependencies['jest-environment-jsdom']
     ).not.toBeDefined();
     expect(
-      packageJson.devDependencies['jest-environment-node'],
+      packageJson.devDependencies['jest-environment-node']
     ).not.toBeDefined();
   });
 });

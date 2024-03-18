@@ -13,7 +13,7 @@ type EslintExtensionSchema = {
  */
 export const extendAngularEslintJson = (
   json: Linter.Config,
-  options: EslintExtensionSchema,
+  options: EslintExtensionSchema
 ) => {
   const overrides = [
     {
@@ -65,7 +65,7 @@ export const extendAngularEslintJson = (
  */
 export function createEsLintConfiguration(
   tree: Tree,
-  options: AddLintingGeneratorSchema,
+  options: AddLintingGeneratorSchema
 ): void {
   const rootConfig = `${offsetFromRoot(options.projectRoot)}.eslintrc.json`;
   // Include all project files to be linted (since they are turned off in the root eslintrc file).
@@ -133,6 +133,6 @@ export function createEsLintConfiguration(
   writeJson(
     tree,
     joinPathFragments(options.projectRoot, '.eslintrc.json'),
-    configJson,
+    configJson
   );
 }

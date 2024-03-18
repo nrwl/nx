@@ -40,7 +40,7 @@ describe('detox application generator', () => {
       const detoxrc = tree.read('my-app-e2e/.detoxrc.json').toString();
       // Strip trailing commas
       const detoxrcJson = JSON.parse(
-        detoxrc.replace(/(?<=(true|false|null|["\d}\]])\s*),(?=\s*[}\]])/g, ''),
+        detoxrc.replace(/(?<=(true|false|null|["\d}\]])\s*),(?=\s*[}\]])/g, '')
       );
       const appsDetoxrcJson = detoxrcJson['apps'];
       expect(appsDetoxrcJson).toEqual({
@@ -112,7 +112,7 @@ describe('detox application generator', () => {
       const detoxrc = tree.read('my-dir/.detoxrc.json').toString();
       // Strip trailing commas
       const detoxrcJson = JSON.parse(
-        detoxrc.replace(/(?<=(true|false|null|["\d}\]])\s*),(?=\s*[}\]])/g, ''),
+        detoxrc.replace(/(?<=(true|false|null|["\d}\]])\s*),(?=\s*[}\]])/g, '')
       );
       const appsDetoxrcJson = detoxrcJson['apps'];
       expect(appsDetoxrcJson).toEqual({
@@ -184,7 +184,7 @@ describe('detox application generator', () => {
       const detoxrc = tree.read('e2e-dir/.detoxrc.json').toString();
       // Strip trailing commas
       const detoxrcJson = JSON.parse(
-        detoxrc.replace(/(?<=(true|false|null|["\d}\]])\s*),(?=\s*[}\]])/g, ''),
+        detoxrc.replace(/(?<=(true|false|null|["\d}\]])\s*),(?=\s*[}\]])/g, '')
       );
       const appsDetoxrcJson = detoxrcJson['apps'];
       expect(appsDetoxrcJson).toEqual({
@@ -255,7 +255,7 @@ describe('detox application generator', () => {
       const detoxrc = tree.read('my-dir/my-app-e2e/.detoxrc.json').toString();
       // Strip trailing commas
       const detoxrcJson = JSON.parse(
-        detoxrc.replace(/(?<=(true|false|null|["\d}\]])\s*),(?=\s*[}\]])/g, ''),
+        detoxrc.replace(/(?<=(true|false|null|["\d}\]])\s*),(?=\s*[}\]])/g, '')
       );
       const appsDetoxrcJson = detoxrcJson['apps'];
       expect(appsDetoxrcJson).toEqual({
@@ -325,7 +325,7 @@ describe('detox application generator', () => {
       const detoxrc = tree.read('my-dir/my-app-e2e/.detoxrc.json').toString();
       // Strip trailing commas
       const detoxrcJson = JSON.parse(
-        detoxrc.replace(/(?<=(true|false|null|["\d}\]])\s*),(?=\s*[}\]])/g, ''),
+        detoxrc.replace(/(?<=(true|false|null|["\d}\]])\s*),(?=\s*[}\]])/g, '')
       );
       const appsDetoxrcJson = detoxrcJson['apps'];
       expect(appsDetoxrcJson).toEqual({

@@ -20,7 +20,7 @@ export function createWebpackConfig(
   workspaceRoot: string,
   projectRoot: string,
   fileReplacements: FileReplacement[] = [],
-  assets: any = null,
+  assets: any = null
 ): (a, b) => Configuration {
   return function webpackConfig(
     config: Configuration,
@@ -30,7 +30,7 @@ export function createWebpackConfig(
       buildId: string;
       dev: boolean;
       isServer: boolean;
-    },
+    }
   ): Configuration {
     fileReplacements
       .map((fileReplacement) => ({

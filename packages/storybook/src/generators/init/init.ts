@@ -23,7 +23,7 @@ import { updateGitignore } from './lib/update-gitignore';
 
 function checkDependenciesInstalled(
   host: Tree,
-  schema: Schema,
+  schema: Schema
 ): GeneratorCallback {
   const devDependencies: Record<string, string> = {
     '@nx/storybook': nxVersion,
@@ -48,7 +48,7 @@ function checkDependenciesInstalled(
     {},
     devDependencies,
     undefined,
-    schema.keepExistingVersions,
+    schema.keepExistingVersions
   );
 }
 
@@ -59,7 +59,7 @@ function addCacheableOperation(tree: Tree) {
 
   if (cacheableOperations && cacheableOperations.includes('build-storybook')) {
     nxJson.tasksRunnerOptions.default.options.cacheableOperations.push(
-      'build-storybook',
+      'build-storybook'
     );
   }
 

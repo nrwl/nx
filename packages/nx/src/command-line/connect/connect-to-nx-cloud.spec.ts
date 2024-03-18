@@ -12,8 +12,8 @@ describe('connect-to-nx-cloud', () => {
           () =>
             onlyDefaultRunnerIsUsed({
               nxCloudAccessToken: 'xxx-xx-xxx',
-            }),
-        ),
+            })
+        )
       ).toBe(false);
     });
 
@@ -22,7 +22,7 @@ describe('connect-to-nx-cloud', () => {
         {
           NX_CLOUD_ACCESS_TOKEN: 'xxx-xx-xxx',
         },
-        () => onlyDefaultRunnerIsUsed({}),
+        () => onlyDefaultRunnerIsUsed({})
       );
 
       expect(defaultRunnerUsed).toBe(false);
@@ -34,8 +34,8 @@ describe('connect-to-nx-cloud', () => {
           {
             NX_CLOUD_ACCESS_TOKEN: null,
           },
-          () => onlyDefaultRunnerIsUsed({}),
-        ),
+          () => onlyDefaultRunnerIsUsed({})
+        )
       ).toBe(true);
     });
 
@@ -52,8 +52,8 @@ describe('connect-to-nx-cloud', () => {
                   runner: 'nx/tasks-runners/default',
                 },
               },
-            }),
-        ),
+            })
+        )
       ).toBeTruthy();
     });
 
@@ -70,8 +70,8 @@ describe('connect-to-nx-cloud', () => {
                   runner: 'custom-runner',
                 },
               },
-            }),
-        ),
+            })
+        )
       ).toBeFalsy();
     });
 
@@ -90,8 +90,8 @@ describe('connect-to-nx-cloud', () => {
                   },
                 },
               },
-            }),
-        ),
+            })
+        )
       ).toBeTruthy();
     });
 
@@ -111,8 +111,8 @@ describe('connect-to-nx-cloud', () => {
                 },
               },
               nxCloudAccessToken: 'xxx-xx-xxx',
-            }),
-        ),
+            })
+        )
       ).toBeFalsy();
     });
   });

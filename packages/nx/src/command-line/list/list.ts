@@ -43,7 +43,7 @@ export async function listHandler(args: ListArgs): Promise<void> {
     const localPlugins = await getLocalWorkspacePlugins(projects, nxJson);
     const installedPlugins = await getInstalledPluginsAndCapabilities(
       workspaceRoot,
-      projects.projects,
+      projects.projects
     );
 
     if (localPlugins.size) {

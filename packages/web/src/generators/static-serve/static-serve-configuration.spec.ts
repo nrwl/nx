@@ -36,7 +36,7 @@ describe('Static serve configuration generator', () => {
     });
 
     expect(
-      readProjectConfiguration(tree, 'angular-app').targets['serve-static'],
+      readProjectConfiguration(tree, 'angular-app').targets['serve-static']
     ).toMatchInlineSnapshot(`
       {
         "executor": "@nx/web:file-server",
@@ -69,9 +69,7 @@ describe('Static serve configuration generator', () => {
     });
 
     expect(
-      readProjectConfiguration(tree, 'react-app').targets[
-        'serve-static-custom'
-      ],
+      readProjectConfiguration(tree, 'react-app').targets['serve-static-custom']
     ).toMatchInlineSnapshot(`
       {
         "executor": "@nx/web:file-server",
@@ -96,7 +94,7 @@ describe('Static serve configuration generator', () => {
     });
 
     expect(
-      readProjectConfiguration(tree, 'angular-app').targets['serve-static'],
+      readProjectConfiguration(tree, 'angular-app').targets['serve-static']
     ).toMatchInlineSnapshot(`
       {
         "executor": "@nx/web:file-server",

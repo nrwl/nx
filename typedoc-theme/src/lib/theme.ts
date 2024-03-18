@@ -18,7 +18,7 @@ export default class NxMarkdownTheme extends MarkdownTheme {
 
   render(
     page: PageEvent<Reflection>,
-    template: RenderTemplate<PageEvent<Reflection>>,
+    template: RenderTemplate<PageEvent<Reflection>>
   ): string {
     return (
       super

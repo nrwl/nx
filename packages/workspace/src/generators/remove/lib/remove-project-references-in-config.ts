@@ -20,11 +20,11 @@ export function removeProjectReferencesInConfig(tree: Tree, schema: Schema) {
     if (
       project.implicitDependencies &&
       project.implicitDependencies.some(
-        (projectName) => projectName === schema.projectName,
+        (projectName) => projectName === schema.projectName
       )
     ) {
       project.implicitDependencies = project.implicitDependencies.filter(
-        (projectName) => projectName !== schema.projectName,
+        (projectName) => projectName !== schema.projectName
       );
       updateProjectConfiguration(tree, projectName, project);
     }

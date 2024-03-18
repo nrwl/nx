@@ -14,7 +14,7 @@ describe('upsertLinksFunctions', () => {
       'root.tsx',
       'styles',
       './tailwind.css',
-      '{ rel: "stylesheet", href: styles }',
+      '{ rel: "stylesheet", href: styles }'
     );
 
     // ASSERT
@@ -36,7 +36,7 @@ describe('upsertLinksFunctions', () => {
 
     export const links: LinksFunction = () => [
       { rel: "icon", href: "/favicon.png" type: "image/png" }
-    `,
+    `
     );
 
     // ACT
@@ -45,7 +45,7 @@ describe('upsertLinksFunctions', () => {
       'root.tsx',
       'styles',
       './tailwind.css',
-      '{ rel: "stylesheet", href: styles }',
+      '{ rel: "stylesheet", href: styles }'
     );
 
     // ASSERT

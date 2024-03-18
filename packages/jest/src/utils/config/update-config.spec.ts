@@ -32,7 +32,7 @@ describe('Update jest.config.js', () => {
         },
         numeric: 0,
       }
-    `,
+    `
     );
   });
 
@@ -77,7 +77,7 @@ describe('Update jest.config.js', () => {
         host,
         'jest.config.js',
         'myObjectProperty',
-        objectValue,
+        objectValue
       );
 
       const json = jestConfigObject(host, 'jest.config.js');
@@ -89,7 +89,7 @@ describe('Update jest.config.js', () => {
         host,
         'jest.config.js',
         'alreadyExistingArray',
-        'something new',
+        'something new'
       );
       const json = jestConfigObject(host, 'jest.config.js');
       expect(json.alreadyExistingArray).toEqual(['something', 'something new']);
@@ -100,7 +100,7 @@ describe('Update jest.config.js', () => {
         host,
         'jest.config.js',
         'alreadyExistingArray',
-        'something',
+        'something'
       );
       const json = jestConfigObject(host, 'jest.config.js');
       expect(json.alreadyExistingArray).toEqual(['something']);
@@ -112,11 +112,11 @@ describe('Update jest.config.js', () => {
         host,
         'jest.config.js',
         'alreadyExistingObject.something-new',
-        newPropertyValue,
+        newPropertyValue
       );
       const json = jestConfigObject(host, 'jest.config.js');
       expect(json.alreadyExistingObject['something-new']).toEqual(
-        newPropertyValue,
+        newPropertyValue
       );
     });
 
@@ -126,7 +126,7 @@ describe('Update jest.config.js', () => {
         host,
         'jest.config.js',
         'alreadyExistingObject.nestedProperty.childArray',
-        newPropertyValue,
+        newPropertyValue
       );
       const json = jestConfigObject(host, 'jest.config.js');
       expect(json.alreadyExistingObject.nestedProperty.childArray).toEqual([
@@ -142,11 +142,11 @@ describe('Update jest.config.js', () => {
         host,
         'jest.config.js',
         'alreadyExistingObject.nestedProperty.primitive',
-        newPropertyValue,
+        newPropertyValue
       );
       const json = jestConfigObject(host, 'jest.config.js');
       expect(json.alreadyExistingObject.nestedProperty.primitive).toEqual(
-        newPropertyValue,
+        newPropertyValue
       );
     });
 
@@ -156,11 +156,11 @@ describe('Update jest.config.js', () => {
         host,
         'jest.config.js',
         ['alreadyExistingObject', 'nestedProperty', 'key.with.dot'],
-        newPropertyValue,
+        newPropertyValue
       );
       const json = jestConfigObject(host, 'jest.config.js');
       expect(json.alreadyExistingObject.nestedProperty['key.with.dot']).toEqual(
-        newPropertyValue,
+        newPropertyValue
       );
     });
 
@@ -169,7 +169,7 @@ describe('Update jest.config.js', () => {
         host,
         'jest.config.js',
         'something-here',
-        'newPropertyValue',
+        'newPropertyValue'
       );
       let json = jestConfigObject(host, 'jest.config.js');
       expect(json['something-here']).toEqual('newPropertyValue');
@@ -203,13 +203,13 @@ describe('Update jest.config.js', () => {
         },
         numeric: 0,
       }
-    `,
+    `
       );
       addPropertyToJestConfig(
         host,
         'jest.config.js',
         'something-here',
-        'newPropertyValue',
+        'newPropertyValue'
       );
       let json = jestConfigObject(host, 'jest.config.js');
       expect(json['something-here']).toEqual('newPropertyValue');
@@ -229,7 +229,7 @@ describe('Update jest.config.js', () => {
           host,
           'jest.config.js',
           'alreadyExistingObject',
-          'should fail',
+          'should fail'
         );
         expect(console.warn).toHaveBeenCalled();
       });
@@ -243,13 +243,13 @@ describe('Update jest.config.js', () => {
           }
           
           module.exports = jestObject;
-        `,
+        `
         );
         addPropertyToJestConfig(
           host,
           'jest.unconventional.js',
           'stuffhere',
-          'should fail',
+          'should fail'
         );
         expect(console.warn).toHaveBeenCalled();
       });
@@ -267,11 +267,11 @@ describe('Update jest.config.js', () => {
       removePropertyFromJestConfig(
         host,
         'jest.config.js',
-        'alreadyExistingObject.nested-object.childArray',
+        'alreadyExistingObject.nested-object.childArray'
       );
       const json = jestConfigObject(host, 'jest.config.js');
       expect(
-        json['alreadyExistingObject']['nested-object']['childArray'],
+        json['alreadyExistingObject']['nested-object']['childArray']
       ).toEqual(undefined);
     });
     it('should remove single nested properties in the jest config, with a dot delimited key', () => {
@@ -289,7 +289,7 @@ describe('Update jest.config.js', () => {
           }
         },
       }
-    `,
+    `
       );
       removePropertyFromJestConfig(host, 'jest.config.js', [
         'alreadyExistingObject',
@@ -298,7 +298,7 @@ describe('Update jest.config.js', () => {
       ]);
       const json = jestConfigObject(host, 'jest.config.js');
       expect(
-        json['alreadyExistingObject']['nested-object']['child.dotted.value'],
+        json['alreadyExistingObject']['nested-object']['child.dotted.value']
       ).toEqual(undefined);
     });
     it('should remove single properties', () => {
@@ -310,7 +310,7 @@ describe('Update jest.config.js', () => {
       removePropertyFromJestConfig(
         host,
         'jest.config.js',
-        'alreadyExistingObject',
+        'alreadyExistingObject'
       );
       const json = jestConfigObject(host, 'jest.config.js');
       expect(json['alreadyExistingObject']).toEqual(undefined);
@@ -340,12 +340,12 @@ describe('Update jest.config.js', () => {
         },
         numeric: 0,
       }
-    `,
+    `
       );
       removePropertyFromJestConfig(
         host,
         'jest.config.js',
-        'alreadyExistingObject',
+        'alreadyExistingObject'
       );
       const json = jestConfigObject(host, 'jest.config.js');
       expect(json['alreadyExistingObject']).toEqual(undefined);

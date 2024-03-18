@@ -5,7 +5,7 @@ export function resolveEas(workspaceRoot: string): string {
     execSync('eas --version');
   } catch {
     throw new Error(
-      'EAS is not installed. Please run `npm install --global eas-cli` or `yarn global add eas-cli`.',
+      'EAS is not installed. Please run `npm install --global eas-cli` or `yarn global add eas-cli`.'
     );
   }
 
@@ -26,12 +26,12 @@ export function resolveEas(workspaceRoot: string): string {
   try {
     return require.resolve('eas-cli/bin/run', {
       paths: [npmGlobalPath, yarnGlobalPath, workspaceRoot].filter(
-        Boolean,
+        Boolean
       ) as string[],
     });
   } catch {
     throw new Error(
-      'Can not resolve EAS. Please run `npm install --global eas-cli` or `yarn global add eas-cli`.',
+      'Can not resolve EAS. Please run `npm install --global eas-cli` or `yarn global add eas-cli`.'
     );
   }
 }

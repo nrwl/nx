@@ -22,13 +22,13 @@ export function updateCliPropsForPlugins(tree: Tree) {
     if (tree.exists(joinPathFragments(project.root, 'package.json'))) {
       const packageJson: PackageJson = readJson(
         tree,
-        joinPathFragments(project.root, 'package.json'),
+        joinPathFragments(project.root, 'package.json')
       );
       const migrateConfig = readNxMigrateConfig(packageJson);
       if (migrateConfig.migrations) {
         const migrationsPath = joinPathFragments(
           project.root,
-          migrateConfig.migrations,
+          migrateConfig.migrations
         );
         if (tree.exists(migrationsPath)) {
           updateMigrationsJsonForPlugin(tree, migrationsPath);
@@ -44,7 +44,7 @@ export function updateCliPropsForPlugins(tree: Tree) {
       if (packageJson.generators) {
         const generatorsPath = joinPathFragments(
           project.root,
-          packageJson.generators,
+          packageJson.generators
         );
         if (tree.exists(generatorsPath)) {
           removeCliFromGeneratorSchemaJsonFiles(tree, generatorsPath);
@@ -60,7 +60,7 @@ export function updateCliPropsForPlugins(tree: Tree) {
       if (packageJson.executors) {
         const executorsPath = joinPathFragments(
           project.root,
-          packageJson.executors,
+          packageJson.executors
         );
         if (tree.exists(executorsPath)) {
           removeCliFromExecutorSchemaJsonFiles(tree, executorsPath);
@@ -76,7 +76,7 @@ export function updateCliPropsForPlugins(tree: Tree) {
       if (packageJson.builders) {
         const buildersPath = joinPathFragments(
           project.root,
-          packageJson.builders,
+          packageJson.builders
         );
         if (tree.exists(buildersPath)) {
           removeCliFromExecutorSchemaJsonFiles(tree, buildersPath);
@@ -92,7 +92,7 @@ export function updateCliPropsForPlugins(tree: Tree) {
       if (packageJson.schematics) {
         const schematicsPath = joinPathFragments(
           project.root,
-          packageJson.schematics,
+          packageJson.schematics
         );
         if (tree.exists(schematicsPath)) {
           removeCliFromGeneratorSchemaJsonFiles(tree, schematicsPath);
@@ -111,11 +111,11 @@ export function updateCliPropsForPlugins(tree: Tree) {
 
 function removeCliFromExecutorSchemaJsonFiles(
   tree: Tree,
-  collectionPath: string,
+  collectionPath: string
 ) {
   const collection: ExecutorsJson = readJson(tree, collectionPath);
   for (const [name, entry] of Object.entries(collection.executors ?? {}).concat(
-    Object.entries(collection.builders ?? {}),
+    Object.entries(collection.builders ?? {})
   )) {
     deleteCliPropFromSchemaFile(collectionPath, entry, tree);
   }
@@ -123,11 +123,11 @@ function removeCliFromExecutorSchemaJsonFiles(
 
 function removeCliFromGeneratorSchemaJsonFiles(
   tree: Tree,
-  collectionPath: string,
+  collectionPath: string
 ) {
   const collection: GeneratorsJson = readJson(tree, collectionPath);
   for (const [name, entry] of Object.entries(
-    collection.generators ?? {},
+    collection.generators ?? {}
   ).concat(Object.entries(collection.schematics ?? {}))) {
     deleteCliPropFromSchemaFile(collectionPath, entry, tree);
   }
@@ -158,7 +158,7 @@ export default updateCliPropsForPlugins;
 function deleteCliPropFromSchemaFile(
   collectionPath: string,
   entry: ExecutorsJsonEntry | GeneratorsJsonEntry,
-  tree: Tree,
+  tree: Tree
 ) {
   if (!entry.schema) {
     return;

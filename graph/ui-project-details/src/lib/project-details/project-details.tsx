@@ -56,18 +56,15 @@ export const ProjectDetails = forwardRef(
       onViewInTaskGraph,
       onRunTarget,
     }: ProjectDetailsProps,
-    ref: ForwardedRef<ProjectDetailsImperativeHandle>,
+    ref: ForwardedRef<ProjectDetailsImperativeHandle>
   ) => {
     const isCompact = variant === 'compact';
     const projectTargets = Object.keys(projectData.targets ?? {});
     const targetRefs = useRef(
-      projectTargets.reduce(
-        (acc, targetName) => {
-          acc[targetName] = createRef<TargetConfigurationDetailsHandle>();
-          return acc;
-        },
-        {} as Record<string, RefObject<TargetConfigurationDetailsHandle>>,
-      ),
+      projectTargets.reduce((acc, targetName) => {
+        acc[targetName] = createRef<TargetConfigurationDetailsHandle>();
+        return acc;
+      }, {} as Record<string, RefObject<TargetConfigurationDetailsHandle>>)
     );
 
     const displayType =
@@ -89,13 +86,13 @@ export const ProjectDetails = forwardRef(
         <header
           className={twMerge(
             `border-b border-slate-900/10 dark:border-slate-300/10`,
-            isCompact ? 'mb-2' : 'mb-4',
+            isCompact ? 'mb-2' : 'mb-4'
           )}
         >
           <h1
             className={twMerge(
               `flex items-center justify-between dark:text-slate-100`,
-              isCompact ? `gap-1 text-2xl` : `mb-4 gap-2 text-4xl`,
+              isCompact ? `gap-1 text-2xl` : `mb-4 gap-2 text-4xl`
             )}
           >
             <span>{name}</span>
@@ -169,7 +166,7 @@ export const ProjectDetails = forwardRef(
         </div>
       </>
     );
-  },
+  }
 );
 
 function sortNxReleasePublishLast(a: string, b: string) {

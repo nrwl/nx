@@ -20,14 +20,14 @@ export class NxConsoleProjectGraphService implements ProjectGraphService {
   }
 
   async getExpandedTaskInputs(
-    taskId: string,
+    taskId: string
   ): Promise<Record<string, string[]>> {
     const res = await window.externalApi.loadExpandedTaskInputs?.(taskId);
     return res ? res[taskId] : {};
   }
 
   async getSourceMaps(
-    url: string,
+    url: string
   ): Promise<Record<string, Record<string, string[]>>> {
     return await window.externalApi.loadSourceMaps?.(url);
   }

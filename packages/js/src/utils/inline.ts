@@ -33,7 +33,7 @@ export function handleInliningBuild(
   context: ExecutorContext,
   options: NormalizedExecutorOptions,
   tsConfigPath: string,
-  projectName: string = context.projectName,
+  projectName: string = context.projectName
 ): InlineProjectGraph {
   const tsConfigJson = readJsonFile(tsConfigPath);
   const pathAliases =
@@ -42,7 +42,7 @@ export function handleInliningBuild(
     context,
     options,
     pathAliases,
-    projectName,
+    projectName
   );
 
   if (isInlineGraphEmpty(inlineGraph)) {
@@ -57,7 +57,7 @@ export function handleInliningBuild(
 export function postProcessInlinedDependencies(
   outputPath: string,
   parentOutputPath: string,
-  inlineGraph: InlineProjectGraph,
+  inlineGraph: InlineProjectGraph
 ) {
   if (isInlineGraphEmpty(inlineGraph)) {
     return;
@@ -74,7 +74,7 @@ export function postProcessInlinedDependencies(
   // move inlined outputs
 
   for (const inlineDependenciesNames of Object.values(
-    inlineGraph.dependencies,
+    inlineGraph.dependencies
   )) {
     for (const inlineDependenciesName of inlineDependenciesNames) {
       const inlineDependency = inlineGraph.nodes[inlineDependenciesName];
@@ -116,7 +116,7 @@ export function getRootTsConfigPath(context: ExecutorContext): string | null {
   }
 
   throw new Error(
-    'Could not find a root tsconfig.json or tsconfig.base.json file.',
+    'Could not find a root tsconfig.json or tsconfig.base.json file.'
   );
 }
 
@@ -127,7 +127,7 @@ function emptyInlineGraph(): InlineProjectGraph {
 function projectNodeToInlineProjectNode(
   projectNode: ProjectGraphProjectNode,
   pathAlias = '',
-  buildOutputPath = '',
+  buildOutputPath = ''
 ): InlineProjectNode {
   return {
     name: projectNode.name,
@@ -143,7 +143,7 @@ function createInlineGraph(
   options: NormalizedExecutorOptions,
   pathAliases: Record<string, string[]>,
   projectName: string,
-  inlineGraph: InlineProjectGraph = emptyInlineGraph(),
+  inlineGraph: InlineProjectGraph = emptyInlineGraph()
 ) {
   if (options.external == null) return inlineGraph;
 
@@ -153,7 +153,7 @@ function createInlineGraph(
 
   if (!inlineGraph.nodes[projectName]) {
     inlineGraph.nodes[projectName] = projectNodeToInlineProjectNode(
-      context.projectGraph.nodes[projectName],
+      context.projectGraph.nodes[projectName]
     );
   }
 
@@ -173,13 +173,13 @@ function createInlineGraph(
 
     const pathAlias = getPathAliasForPackage(
       context.projectGraph.nodes[projectDependency.target],
-      pathAliases,
+      pathAliases
     );
 
     const buildOutputPath = getBuildOutputPath(
       projectDependency.target,
       context,
-      options,
+      options
     );
 
     const shouldInline =
@@ -211,7 +211,7 @@ function createInlineGraph(
       projectNodeToInlineProjectNode(
         context.projectGraph.nodes[projectDependency.target],
         pathAlias,
-        buildOutputPath,
+        buildOutputPath
       );
 
     if (
@@ -222,7 +222,7 @@ function createInlineGraph(
         options,
         pathAliases,
         projectDependency.target,
-        inlineGraph,
+        inlineGraph
       );
     }
   }
@@ -233,12 +233,12 @@ function createInlineGraph(
 function buildInlineGraphExternals(
   context: ExecutorContext,
   inlineProjectGraph: InlineProjectGraph,
-  pathAliases: Record<string, string[]>,
+  pathAliases: Record<string, string[]>
 ) {
   const allNodes = { ...context.projectGraph.nodes };
 
   for (const [parent, dependencies] of Object.entries(
-    inlineProjectGraph.dependencies,
+    inlineProjectGraph.dependencies
   )) {
     if (allNodes[parent]) {
       delete allNodes[parent];
@@ -263,7 +263,7 @@ function buildInlineGraphExternals(
       inlineProjectGraph.externals[projectName] =
         projectNodeToInlineProjectNode(
           projectNode,
-          getPathAliasForPackage(projectNode, pathAliases),
+          getPathAliasForPackage(projectNode, pathAliases)
         );
     }
   }
@@ -276,7 +276,7 @@ function movePackage(from: string, to: string) {
 
 function updateImports(
   destOutputPath: string,
-  inlinedDepsDestOutputRecord: Record<string, string>,
+  inlinedDepsDestOutputRecord: Record<string, string>
 ) {
   const pathAliases = Object.keys(inlinedDepsDestOutputRecord);
   if (pathAliases.length == 0) {
@@ -284,12 +284,12 @@ function updateImports(
   }
   const importRegex = new RegExp(
     pathAliases.map((pathAlias) => `["'](${pathAlias})["']`).join('|'),
-    'g',
+    'g'
   );
   recursiveUpdateImport(
     destOutputPath,
     importRegex,
-    inlinedDepsDestOutputRecord,
+    inlinedDepsDestOutputRecord
   );
 }
 
@@ -297,7 +297,7 @@ function recursiveUpdateImport(
   dirPath: string,
   importRegex: RegExp,
   inlinedDepsDestOutputRecord: Record<string, string>,
-  rootParentDir?: string,
+  rootParentDir?: string
 ) {
   const files = readdirSync(dirPath, { withFileTypes: true });
   for (const file of files) {
@@ -315,7 +315,7 @@ function recursiveUpdateImport(
           return matched;
         const importPath = `"${relative(
           dirPath,
-          inlinedDepsDestOutputRecord[result],
+          inlinedDepsDestOutputRecord[result]
         )}"`;
         return normalizePath(importPath);
       });
@@ -325,7 +325,7 @@ function recursiveUpdateImport(
         join(dirPath, file.name),
         importRegex,
         inlinedDepsDestOutputRecord,
-        rootParentDir || file.name,
+        rootParentDir || file.name
       );
     }
   }
@@ -333,7 +333,7 @@ function recursiveUpdateImport(
 
 function getPathAliasForPackage(
   packageNode: ProjectGraphProjectNode,
-  pathAliases: Record<string, string[]>,
+  pathAliases: Record<string, string[]>
 ): string {
   if (!packageNode) return '';
 
@@ -349,13 +349,13 @@ function getPathAliasForPackage(
 function getBuildOutputPath(
   projectName: string,
   context: ExecutorContext,
-  options: NormalizedExecutorOptions,
+  options: NormalizedExecutorOptions
 ): string {
   const projectTargets = context.projectGraph.nodes[projectName]?.data?.targets;
   if (!projectTargets) return '';
 
   const buildTarget = options.externalBuildTargets.find(
-    (buildTarget) => projectTargets[buildTarget],
+    (buildTarget) => projectTargets[buildTarget]
   );
 
   return buildTarget ? projectTargets[buildTarget].options['outputPath'] : '';

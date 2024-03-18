@@ -35,14 +35,14 @@ async function getTerminalOutputLifeCycle(
   tasks: Task[],
   nxArgs: NxArgs,
   nxJson: NxJsonConfiguration,
-  overrides: Record<string, unknown>,
+  overrides: Record<string, unknown>
 ): Promise<{ lifeCycle: LifeCycle; renderIsDone: Promise<void> }> {
   const { runnerOptions } = getRunner(nxArgs, nxJson);
   const isRunOne = initiatingProject != null;
   const useDynamicOutput = shouldUseDynamicLifeCycle(
     tasks,
     runnerOptions,
-    nxArgs.outputStyle,
+    nxArgs.outputStyle
   );
 
   const overridesWithoutHidden = { ...overrides };
@@ -62,7 +62,7 @@ async function getTerminalOutputLifeCycle(
         initiatingProject,
         projectNames,
         tasks,
-        nxArgs,
+        nxArgs
       ),
       renderIsDone: Promise.resolve(),
     };
@@ -80,7 +80,7 @@ async function getTerminalOutputLifeCycle(
           projectNames,
           tasks,
           nxArgs,
-          overridesWithoutHidden,
+          overridesWithoutHidden
         ),
         renderIsDone: Promise.resolve(),
       };
@@ -97,7 +97,7 @@ function createTaskGraphAndValidateCycles(
   extraOptions: {
     excludeTaskDependencies: boolean;
     loadDotEnvFiles: boolean;
-  },
+  }
 ) {
   const taskGraph = createTaskGraph(
     projectGraph,
@@ -106,7 +106,7 @@ function createTaskGraphAndValidateCycles(
     nxArgs.targets,
     nxArgs.configuration,
     overrides,
-    extraOptions.excludeTaskDependencies,
+    extraOptions.excludeTaskDependencies
   );
 
   const cycle = findCycle(taskGraph);
@@ -137,14 +137,14 @@ export async function runCommand(
   overrides: any,
   initiatingProject: string | null,
   extraTargetDependencies: Record<string, (TargetDependencyConfig | string)[]>,
-  extraOptions: { excludeTaskDependencies: boolean; loadDotEnvFiles: boolean },
+  extraOptions: { excludeTaskDependencies: boolean; loadDotEnvFiles: boolean }
 ): Promise<NodeJS.Process['exitCode']> {
   const status = await handleErrors(
     process.env.NX_VERBOSE_LOGGING === 'true',
     async () => {
       const defaultDependencyConfigs = mergeTargetDependencies(
         nxJson.targetDefaults,
-        extraTargetDependencies,
+        extraTargetDependencies
       );
       const projectNames = projectsToRun.map((t) => t.name);
 
@@ -154,7 +154,7 @@ export async function runCommand(
         projectNames,
         nxArgs,
         overrides,
-        extraOptions,
+        extraOptions
       );
       const tasks = Object.values(taskGraph.tasks);
 
@@ -164,7 +164,7 @@ export async function runCommand(
         tasks,
         nxArgs,
         nxJson,
-        overrides,
+        overrides
       );
 
       const status = await invokeTasksRunner({
@@ -181,7 +181,7 @@ export async function runCommand(
       await renderIsDone;
 
       return status;
-    },
+    }
   );
 
   return status;
@@ -237,7 +237,7 @@ export async function invokeTasksRunner({
     hasher,
     projectGraph,
     taskGraph,
-    nxJson,
+    nxJson
   );
 
   const promiseOrObservable = tasksRunner(
@@ -280,7 +280,7 @@ export async function invokeTasksRunner({
         hashTasks(
           task: Task[],
           taskGraph_?: TaskGraph,
-          env?: NodeJS.ProcessEnv,
+          env?: NodeJS.ProcessEnv
         ) {
           if (!taskGraph_) {
             output.warn({
@@ -307,7 +307,7 @@ export async function invokeTasksRunner({
         },
       },
       daemon: daemonClient,
-    },
+    }
   );
   let anyFailures;
   if ((promiseOrObservable as any).subscribe) {
@@ -334,7 +334,7 @@ function constructLifeCycles(lifeCycle: LifeCycle) {
 
 function mergeTargetDependencies(
   defaults: TargetDefaults | undefined | null,
-  deps: TargetDependencies,
+  deps: TargetDependencies
 ): TargetDependencies {
   const res = {};
   Object.keys(defaults ?? {}).forEach((k) => {
@@ -354,10 +354,10 @@ function mergeTargetDependencies(
 }
 
 async function anyFailuresInPromise(
-  promise: Promise<{ [id: string]: TaskStatus }>,
+  promise: Promise<{ [id: string]: TaskStatus }>
 ) {
   return Object.values(await promise).some(
-    (v) => v === 'failure' || v === 'skipped',
+    (v) => v === 'failure' || v === 'skipped'
   );
 }
 
@@ -379,7 +379,7 @@ async function anyFailuresInObservable(obs: any) {
       },
       () => {
         res(anyFailures);
-      },
+      }
     );
   });
 }
@@ -387,7 +387,7 @@ async function anyFailuresInObservable(obs: any) {
 function shouldUseDynamicLifeCycle(
   tasks: Task[],
   options: any,
-  outputStyle: string,
+  outputStyle: string
 ) {
   if (
     process.env.NX_BATCH_MODE === 'true' ||
@@ -426,7 +426,7 @@ function loadTasksRunner(modulePath: string) {
 
 export function getRunner(
   nxArgs: NxArgs,
-  nxJson: NxJsonConfiguration,
+  nxJson: NxJsonConfiguration
 ): {
   tasksRunner: TasksRunner;
   runnerOptions: any;
@@ -449,7 +449,7 @@ export function getRunner(
         runner,
         nxJson,
         nxArgs,
-        modulePath === 'nx-cloud',
+        modulePath === 'nx-cloud'
       ),
     };
   } catch {
@@ -458,7 +458,7 @@ export function getRunner(
 }
 function getTasksRunnerPath(
   runner: string,
-  nxJson: NxJsonConfiguration<string[] | '*'>,
+  nxJson: NxJsonConfiguration<string[] | '*'>
 ) {
   let modulePath: string = nxJson.tasksRunnerOptions?.[runner]?.runner;
 
@@ -484,7 +484,7 @@ export function getRunnerOptions(
   runner: string,
   nxJson: NxJsonConfiguration<string[] | '*'>,
   nxArgs: NxArgs,
-  isCloudDefault: boolean,
+  isCloudDefault: boolean
 ): any {
   const defaultCacheableOperations = [];
 
@@ -526,7 +526,7 @@ export function getRunnerOptions(
   if (defaultCacheableOperations.length) {
     result.cacheableOperations ??= [];
     result.cacheableOperations = result.cacheableOperations.concat(
-      defaultCacheableOperations,
+      defaultCacheableOperations
     );
   }
 

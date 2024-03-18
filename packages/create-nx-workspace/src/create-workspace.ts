@@ -11,7 +11,7 @@ import { mapErrorToBodyLines } from './utils/error-utils';
 
 export async function createWorkspace<T extends CreateWorkspaceOptions>(
   preset: string,
-  options: T,
+  options: T
 ) {
   const {
     packageManager,
@@ -34,7 +34,7 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
     tmpDir,
     name,
     packageManager,
-    { ...options, preset },
+    { ...options, preset }
   );
 
   // If the preset is a third-party preset, we need to call createPreset to install it
@@ -54,7 +54,7 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
         directory,
         nxCloud,
         packageManager,
-        nxCloudInstallRes?.code === 0,
+        nxCloudInstallRes?.code === 0
       );
     }
   }

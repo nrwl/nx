@@ -93,7 +93,7 @@ describe('removeProjectReferencesInConfig', () => {
 
       const { implicitDependencies } = readProjectConfiguration(
         tree,
-        'ng-app-e2e',
+        'ng-app-e2e'
       );
 
       expect(implicitDependencies).not.toContain('ng-app');

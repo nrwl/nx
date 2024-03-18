@@ -21,7 +21,7 @@ export default async function (tree: Tree) {
 
     const nuxtConfig = await getInfoFromNuxtConfig(
       nuxtConfigPath,
-      project.root,
+      project.root
     );
 
     const buildDir = nuxtConfig.buildDir ?? '.nuxt';
@@ -58,7 +58,7 @@ function findNuxtConfig(tree: Tree, projectRoot: string): string | undefined {
 
 async function getInfoFromNuxtConfig(
   configFilePath: string,
-  projectRoot: string,
+  projectRoot: string
 ): Promise<{
   buildDir: string;
 }> {

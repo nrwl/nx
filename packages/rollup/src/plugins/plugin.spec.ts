@@ -33,7 +33,7 @@ describe('@nx/rollup/plugin', () => {
         'src/index.js',
         `export function main() { 
       console.log("hello world");
-      }`,
+      }`
       );
       tempFs.createFileSync(
         'rollup.config.js',
@@ -56,7 +56,7 @@ const config = {
 };
 
 module.exports = config;
-      `,
+      `
       );
 
       process.chdir(tempFs.tempDir);
@@ -75,7 +75,7 @@ module.exports = config;
         {
           buildTargetName: 'build',
         },
-        context,
+        context
       );
 
       // ASSERT
@@ -99,13 +99,13 @@ module.exports = config;
 
       tempFs.createFileSync(
         'mylib/package.json',
-        JSON.stringify({ name: 'mylib' }),
+        JSON.stringify({ name: 'mylib' })
       );
       tempFs.createFileSync(
         'mylib/src/index.js',
         `export function main() { 
       console.log("hello world");
-      }`,
+      }`
       );
       tempFs.createFileSync(
         'mylib/rollup.config.js',
@@ -128,7 +128,7 @@ const config = {
 };
 
 module.exports = config;
-      `,
+      `
       );
 
       process.chdir(tempFs.tempDir);
@@ -147,7 +147,7 @@ module.exports = config;
         {
           buildTargetName: 'build',
         },
-        context,
+        context
       );
 
       // ASSERT

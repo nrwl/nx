@@ -13,7 +13,7 @@ export default async function update(tree: Tree) {
     let needsUpdate = false;
 
     for (const [targetName, targetConfig] of Object.entries(
-      projectConfiguration.targets ?? {},
+      projectConfiguration.targets ?? {}
     )) {
       if (targetConfig.executor !== '@nx/eslint:lint') {
         continue;
@@ -25,7 +25,7 @@ export default async function update(tree: Tree) {
         const nonRootPatterns = projectConfiguration.targets[
           targetName
         ].options.lintFilePatterns.filter(
-          (p) => !p.startsWith(rootPattern) && !p.startsWith('{projectRoot}'),
+          (p) => !p.startsWith(rootPattern) && !p.startsWith('{projectRoot}')
         );
 
         if (

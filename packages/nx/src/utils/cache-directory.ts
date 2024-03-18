@@ -57,18 +57,18 @@ function defaultCacheDirectory(root: string) {
  */
 export const cacheDir = cacheDirectory(
   workspaceRoot,
-  readCacheDirectoryProperty(workspaceRoot),
+  readCacheDirectoryProperty(workspaceRoot)
 );
 
 export function cacheDirectoryForWorkspace(workspaceRoot: string) {
   return cacheDirectory(
     workspaceRoot,
-    readCacheDirectoryProperty(workspaceRoot),
+    readCacheDirectoryProperty(workspaceRoot)
   );
 }
 
 export const projectGraphCacheDirectory = absolutePath(
   workspaceRoot,
   process.env.NX_PROJECT_GRAPH_CACHE_DIRECTORY ??
-    defaultCacheDirectory(workspaceRoot),
+    defaultCacheDirectory(workspaceRoot)
 );

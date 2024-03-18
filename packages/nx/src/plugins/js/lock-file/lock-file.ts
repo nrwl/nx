@@ -58,12 +58,12 @@ export function getLockFileNodes(
   packageManager: PackageManager,
   contents: string,
   lockFileHash: string,
-  context: CreateNodesContext,
+  context: CreateNodesContext
 ): Record<string, ProjectGraphExternalNode> {
   try {
     if (packageManager === 'yarn') {
       const packageJson = readJsonFile(
-        join(context.workspaceRoot, 'package.json'),
+        join(context.workspaceRoot, 'package.json')
       );
       return getYarnLockfileNodes(contents, lockFileHash, packageJson);
     }
@@ -92,7 +92,7 @@ export function getLockFileDependencies(
   packageManager: PackageManager,
   contents: string,
   lockFileHash: string,
-  context: CreateDependenciesContext,
+  context: CreateDependenciesContext
 ): RawProjectGraphDependency[] {
   try {
     if (packageManager === 'yarn') {
@@ -127,7 +127,7 @@ export function lockFileExists(packageManager: PackageManager): boolean {
     return existsSync(NPM_LOCK_PATH);
   }
   throw new Error(
-    `Unknown package manager ${packageManager} or lock file missing`,
+    `Unknown package manager ${packageManager} or lock file missing`
   );
 }
 
@@ -173,7 +173,7 @@ function getLockFilePath(packageManager: PackageManager): string {
 export function createLockFile(
   packageJson: PackageJson,
   graph: ProjectGraph,
-  packageManager: PackageManager = detectPackageManager(workspaceRoot),
+  packageManager: PackageManager = detectPackageManager(workspaceRoot)
 ): string {
   const normalizedPackageJson = normalizePackageJson(packageJson);
   const content = readFileSync(getLockFilePath(packageManager), 'utf8');
@@ -198,12 +198,12 @@ export function createLockFile(
       ];
       if (packageManager === 'npm') {
         additionalInfo.push(
-          'If you run `npm install --package-lock-only` in your output folder it will regenerate the correct pruned lockfile.',
+          'If you run `npm install --package-lock-only` in your output folder it will regenerate the correct pruned lockfile.'
         );
       }
       if (packageManager === 'pnpm') {
         additionalInfo.push(
-          'If you run `pnpm install --lockfile-only` in your output folder it will regenerate the correct pruned lockfile.',
+          'If you run `pnpm install --lockfile-only` in your output folder it will regenerate the correct pruned lockfile.'
         );
       }
       output.error({

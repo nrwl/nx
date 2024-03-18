@@ -47,7 +47,7 @@ export class NodeTaskHasherImpl implements TaskHasherImpl {
   >();
   private allExternalDependenciesHash: PartialHash;
   private projectRootMappings = createProjectRootMappings(
-    this.projectGraph.nodes,
+    this.projectGraph.nodes
   );
 
   constructor(
@@ -57,7 +57,7 @@ export class NodeTaskHasherImpl implements TaskHasherImpl {
     private readonly projectFileMap: ProjectFileMap,
     private readonly allWorkspaceFiles: FileData[],
     private readonly projectGraph: ProjectGraph,
-    private readonly options: { selectivelyHashTsConfig: boolean },
+    private readonly options: { selectivelyHashTsConfig: boolean }
   ) {
     // External Dependencies are all calculated up front in a deterministic order
     this.calculateExternalDependencyHashes();
@@ -66,7 +66,7 @@ export class NodeTaskHasherImpl implements TaskHasherImpl {
   hashTasks(
     tasks: Task[],
     taskGraph: TaskGraph,
-    env: NodeJS.ProcessEnv,
+    env: NodeJS.ProcessEnv
   ): Promise<PartialHash[]> {
     return Promise.all(tasks.map((t) => this.hashTask(t, taskGraph, env, [])));
   }
@@ -75,13 +75,13 @@ export class NodeTaskHasherImpl implements TaskHasherImpl {
     task: Task,
     taskGraph: TaskGraph,
     env: NodeJS.ProcessEnv,
-    visited: string[] = [],
+    visited: string[] = []
   ): Promise<PartialHash> {
     return Promise.resolve().then(async () => {
       const { selfInputs, depsInputs, depsOutputs, projectInputs } = getInputs(
         task,
         this.projectGraph,
-        this.nxJson,
+        this.nxJson
       );
 
       const selfAndInputs = await this.hashSelfAndDepsInputs(
@@ -93,13 +93,13 @@ export class NodeTaskHasherImpl implements TaskHasherImpl {
         projectInputs,
         taskGraph,
         env,
-        visited,
+        visited
       );
 
       const target = this.hashTarget(
         task.target.project,
         task.target.target,
-        selfInputs,
+        selfInputs
       );
       if (target) {
         return this.combinePartialHashes([selfAndInputs, target]);
@@ -114,7 +114,7 @@ export class NodeTaskHasherImpl implements TaskHasherImpl {
     namedInput: string,
     taskGraph: TaskGraph,
     env: NodeJS.ProcessEnv,
-    visited: string[],
+    visited: string[]
   ): Promise<PartialHash> {
     const projectNode = this.projectGraph.nodes[projectName];
     const namedInputs = {
@@ -136,7 +136,7 @@ export class NodeTaskHasherImpl implements TaskHasherImpl {
       [],
       taskGraph,
       env,
-      visited,
+      visited
     );
   }
 
@@ -149,7 +149,7 @@ export class NodeTaskHasherImpl implements TaskHasherImpl {
     projectInputs: { input: string; projects: string[] }[],
     taskGraph: TaskGraph,
     env: NodeJS.ProcessEnv,
-    visited: string[],
+    visited: string[]
   ) {
     const projectGraphDeps = this.projectGraph.dependencies[projectName] ?? [];
     // we don't want random order of dependencies to change the hash
@@ -158,7 +158,7 @@ export class NodeTaskHasherImpl implements TaskHasherImpl {
     const self = await this.hashSingleProjectInputs(
       projectName,
       selfInputs,
-      env,
+      env
     );
     const deps = await this.hashDepsInputs(
       task,
@@ -166,7 +166,7 @@ export class NodeTaskHasherImpl implements TaskHasherImpl {
       projectGraphDeps,
       taskGraph,
       env,
-      visited,
+      visited
     );
     const depsOut = await this.hashDepsOutputs(task, depsOutputs, taskGraph);
     const projects = await this.hashProjectInputs(projectInputs, env);
@@ -200,7 +200,7 @@ export class NodeTaskHasherImpl implements TaskHasherImpl {
     projectGraphDeps: ProjectGraphDependency[],
     taskGraph: TaskGraph,
     env: NodeJS.ProcessEnv,
-    visited: string[],
+    visited: string[]
   ): Promise<PartialHash[]> {
     return (
       await Promise.all(
@@ -218,15 +218,15 @@ export class NodeTaskHasherImpl implements TaskHasherImpl {
                     input.input || 'default',
                     taskGraph,
                     env,
-                    visited,
+                    visited
                   );
                 } else {
                   return this.getExternalDependencyHash(d.target);
                 }
               }
-            }),
+            })
           );
-        }),
+        })
       )
     )
       .flat()
@@ -236,7 +236,7 @@ export class NodeTaskHasherImpl implements TaskHasherImpl {
   private async hashDepsOutputs(
     task: Task,
     depsOutputs: ExpandedDepsOutput[],
-    taskGraph: TaskGraph,
+    taskGraph: TaskGraph
   ): Promise<PartialHash[]> {
     if (depsOutputs.length === 0) {
       return [];
@@ -248,8 +248,8 @@ export class NodeTaskHasherImpl implements TaskHasherImpl {
           task,
           dependentTasksOutputFiles,
           taskGraph,
-          transitive,
-        )),
+          transitive
+        ))
       );
     }
     return result;
@@ -259,7 +259,7 @@ export class NodeTaskHasherImpl implements TaskHasherImpl {
     task: Task,
     dependentTasksOutputFiles: string,
     taskGraph: TaskGraph,
-    transitive?: boolean,
+    transitive?: boolean
   ): Promise<PartialHash[]> {
     // task has no dependencies
     if (!taskGraph.dependencies[task.id]) {
@@ -272,7 +272,7 @@ export class NodeTaskHasherImpl implements TaskHasherImpl {
       const outputs = getOutputsForTargetAndConfiguration(
         childTask.target,
         childTask.overrides,
-        this.projectGraph.nodes[childTask.target.project],
+        this.projectGraph.nodes[childTask.target.project]
       );
       const { getFilesForOutputs } =
         require('../native') as typeof import('../native');
@@ -280,12 +280,12 @@ export class NodeTaskHasherImpl implements TaskHasherImpl {
       const filteredFiles = outputFiles.filter(
         (p) =>
           p === dependentTasksOutputFiles ||
-          minimatch(p, dependentTasksOutputFiles, { dot: true }),
+          minimatch(p, dependentTasksOutputFiles, { dot: true })
       );
       const hashDetails = {};
       const hashes: string[] = [];
       for (const [file, hash] of this.hashFiles(
-        filteredFiles.map((p) => join(workspaceRoot, p)),
+        filteredFiles.map((p) => join(workspaceRoot, p))
       )) {
         hashes.push(hash);
       }
@@ -303,8 +303,8 @@ export class NodeTaskHasherImpl implements TaskHasherImpl {
             childTask,
             dependentTasksOutputFiles,
             taskGraph,
-            transitive,
-          )),
+            transitive
+          ))
         );
       }
     }
@@ -321,7 +321,7 @@ export class NodeTaskHasherImpl implements TaskHasherImpl {
 
   private getExternalDependencyHash(externalNodeName: string) {
     const combinedHash = this.combinePartialHashes(
-      this.externalDependencyHashes.get(externalNodeName),
+      this.externalDependencyHashes.get(externalNodeName)
     );
     // Set the combined hash into the hashes so it's not recalculated next time
     this.externalDependencyHashes.set(externalNodeName, [combinedHash]);
@@ -355,7 +355,7 @@ export class NodeTaskHasherImpl implements TaskHasherImpl {
     const deps = findAllProjectNodeDependencies(
       externalNodeName,
       this.projectGraph,
-      true,
+      true
     );
     for (const dep of deps) {
       partialHashes.add(this.hashSingleExternalDependency(dep));
@@ -366,7 +366,7 @@ export class NodeTaskHasherImpl implements TaskHasherImpl {
   private hashTarget(
     projectName: string,
     targetName: string,
-    selfInputs: ExpandedSelfInput[],
+    selfInputs: ExpandedSelfInput[]
   ): PartialHash {
     const projectNode = this.projectGraph.nodes[projectName];
     const target = projectNode.data.targets[targetName];
@@ -406,7 +406,7 @@ export class NodeTaskHasherImpl implements TaskHasherImpl {
             dep = this.findExternalDependencyNodeName(dep);
             if (!dep) {
               throw new Error(
-                `The externalDependency "${dep}" for "${projectName}:${targetName}" could not be found`,
+                `The externalDependency "${dep}" for "${projectName}:${targetName}" could not be found`
               );
             }
 
@@ -453,7 +453,7 @@ export class NodeTaskHasherImpl implements TaskHasherImpl {
   private async hashSingleProjectInputs(
     projectName: string,
     inputs: ExpandedInput[],
-    env: NodeJS.ProcessEnv,
+    env: NodeJS.ProcessEnv
   ): Promise<PartialHash[]> {
     const filesets = extractPatternsFromFileSets(inputs);
 
@@ -482,7 +482,7 @@ export class NodeTaskHasherImpl implements TaskHasherImpl {
           'All filesets have to start with either {workspaceRoot} or {projectRoot}.',
           'For instance: "!{projectRoot}/**/*.spec.ts" or "{workspaceRoot}/package.json".',
           `If "${invalidFilesetNoPrefix}" is a named input, make sure it is defined in, for instance, nx.json.`,
-        ].join('\n'),
+        ].join('\n')
       );
     }
     if (invalidFilesetWorkspaceRootNegative) {
@@ -490,7 +490,7 @@ export class NodeTaskHasherImpl implements TaskHasherImpl {
         [
           `"${invalidFilesetWorkspaceRootNegative}" is an invalid fileset.`,
           'It is not possible to negative filesets starting with {workspaceRoot}.',
-        ].join('\n'),
+        ].join('\n')
       );
     }
 
@@ -506,32 +506,32 @@ export class NodeTaskHasherImpl implements TaskHasherImpl {
       ...[...notFilesets, ...this.legacyRuntimeInputs].map((r) =>
         r['runtime']
           ? this.hashRuntime(env, r['runtime'])
-          : this.hashEnv(env, r['env']),
+          : this.hashEnv(env, r['env'])
       ),
     ]);
   }
 
   private async hashProjectInputs(
     projectInputs: { input: string; projects: string[] }[],
-    env: NodeJS.ProcessEnv,
+    env: NodeJS.ProcessEnv
   ): Promise<PartialHash[]> {
     const partialHashes: Promise<PartialHash[]>[] = [];
     for (const input of projectInputs) {
       const projects = findMatchingProjects(
         input.projects,
-        this.projectGraph.nodes,
+        this.projectGraph.nodes
       );
       for (const project of projects) {
         const namedInputs = getNamedInputs(
           this.nxJson,
-          this.projectGraph.nodes[project],
+          this.projectGraph.nodes[project]
         );
         const expandedInput = expandSingleProjectInputs(
           [{ input: input.input }],
-          namedInputs,
+          namedInputs
         );
         partialHashes.push(
-          this.hashSingleProjectInputs(project, expandedInput, env),
+          this.hashSingleProjectInputs(project, expandedInput, env)
         );
       }
     }
@@ -545,7 +545,7 @@ export class NodeTaskHasherImpl implements TaskHasherImpl {
       this.filesetHashes[mapKey] = new Promise(async (res) => {
         const parts = [];
         const matchingFile = this.allWorkspaceFiles.find(
-          (t) => t.file === withoutWorkspaceRoot,
+          (t) => t.file === withoutWorkspaceRoot
         );
         if (matchingFile) {
           parts.push(matchingFile.hash);
@@ -595,7 +595,7 @@ export class NodeTaskHasherImpl implements TaskHasherImpl {
 
   private async hashProjectFileset(
     projectName: string,
-    filesetPatterns: string[],
+    filesetPatterns: string[]
   ): Promise<PartialHash> {
     const mapKey = `${projectName}:${filesetPatterns.join(',')}`;
     if (!this.filesetHashes[mapKey]) {
@@ -604,7 +604,7 @@ export class NodeTaskHasherImpl implements TaskHasherImpl {
         const filteredFiles = filterUsingGlobPatterns(
           p.data.root,
           this.projectFileMap[projectName] || [],
-          filesetPatterns,
+          filesetPatterns
         );
         const files: string[] = [];
         for (const { file, hash } of filteredFiles) {
@@ -623,7 +623,7 @@ export class NodeTaskHasherImpl implements TaskHasherImpl {
 
   private async hashRuntime(
     env: NodeJS.ProcessEnv,
-    runtime: string,
+    runtime: string
   ): Promise<PartialHash> {
     const env_key = JSON.stringify(env);
     const mapKey = `runtime:${runtime}-${env_key}`;
@@ -640,8 +640,8 @@ export class NodeTaskHasherImpl implements TaskHasherImpl {
             if (err) {
               rej(
                 new Error(
-                  `Nx failed to execute {runtime: '${runtime}'}. ${err}.`,
-                ),
+                  `Nx failed to execute {runtime: '${runtime}'}. ${err}.`
+                )
               );
             } else {
               const value = hashArray([`${stdout}${stderr}`.trim()]);
@@ -650,7 +650,7 @@ export class NodeTaskHasherImpl implements TaskHasherImpl {
                 value,
               });
             }
-          },
+          }
         );
       });
     }
@@ -659,7 +659,7 @@ export class NodeTaskHasherImpl implements TaskHasherImpl {
 
   private async hashEnv(
     env: NodeJS.ProcessEnv,
-    envVarName: string,
+    envVarName: string
   ): Promise<PartialHash> {
     const value = hashArray([env[envVarName] ?? '']);
     return {
@@ -673,7 +673,7 @@ export class NodeTaskHasherImpl implements TaskHasherImpl {
     for (const externalNodeName of keys) {
       this.externalDependencyHashes.set(
         externalNodeName,
-        this.hashExternalDependency(externalNodeName),
+        this.hashExternalDependency(externalNodeName)
       );
     }
   }

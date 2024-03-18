@@ -43,18 +43,18 @@ describe('browser-target-to-build-target migration', () => {
       expect(project.targets.serve.options.browserTarget).toBeUndefined();
       expect(project.targets.serve.options.buildTarget).toBe('app1:serve');
       expect(
-        project.targets.serve.configurations.development.browserTarget,
+        project.targets.serve.configurations.development.browserTarget
       ).toBeUndefined();
       expect(project.targets.serve.configurations.development.buildTarget).toBe(
-        'app1:serve:development',
+        'app1:serve:development'
       );
       expect(
-        project.targets.serve.configurations.production.browserTarget,
+        project.targets.serve.configurations.production.browserTarget
       ).toBeUndefined();
       expect(project.targets.serve.configurations.production.buildTarget).toBe(
-        'app1:serve:production',
+        'app1:serve:production'
       );
-    },
+    }
   );
 
   it('should not rename "browserTarget" from target not using the relevant executors', async () => {
@@ -77,10 +77,10 @@ describe('browser-target-to-build-target migration', () => {
     const project = readProjectConfiguration(tree, 'app1');
     expect(project.targets.serve.options.browserTarget).toBe('app1:serve');
     expect(project.targets.serve.configurations.development.browserTarget).toBe(
-      'app1:serve:development',
+      'app1:serve:development'
     );
     expect(project.targets.serve.configurations.production.browserTarget).toBe(
-      'app1:serve:production',
+      'app1:serve:production'
     );
   });
 
@@ -105,21 +105,21 @@ describe('browser-target-to-build-target migration', () => {
       const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
       expect(nxJson.targetDefaults.serve.options.browserTarget).toBeUndefined();
       expect(nxJson.targetDefaults.serve.options.buildTarget).toBe(
-        '{projectName}:serve',
+        '{projectName}:serve'
       );
       expect(
-        nxJson.targetDefaults.serve.configurations.development.browserTarget,
+        nxJson.targetDefaults.serve.configurations.development.browserTarget
       ).toBeUndefined();
       expect(
-        nxJson.targetDefaults.serve.configurations.development.buildTarget,
+        nxJson.targetDefaults.serve.configurations.development.buildTarget
       ).toBe('{projectName}:serve:development');
       expect(
-        nxJson.targetDefaults.serve.configurations.production.browserTarget,
+        nxJson.targetDefaults.serve.configurations.production.browserTarget
       ).toBeUndefined();
       expect(
-        nxJson.targetDefaults.serve.configurations.production.buildTarget,
+        nxJson.targetDefaults.serve.configurations.production.buildTarget
       ).toBe('{projectName}:serve:production');
-    },
+    }
   );
 
   it.each(executors)(
@@ -141,24 +141,23 @@ describe('browser-target-to-build-target migration', () => {
 
       const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
       expect(
-        nxJson.targetDefaults[executor].options.browserTarget,
+        nxJson.targetDefaults[executor].options.browserTarget
       ).toBeUndefined();
       expect(nxJson.targetDefaults[executor].options.buildTarget).toBe(
-        '{projectName}:serve',
+        '{projectName}:serve'
       );
       expect(
-        nxJson.targetDefaults[executor].configurations.development
-          .browserTarget,
+        nxJson.targetDefaults[executor].configurations.development.browserTarget
       ).toBeUndefined();
       expect(
-        nxJson.targetDefaults[executor].configurations.development.buildTarget,
+        nxJson.targetDefaults[executor].configurations.development.buildTarget
       ).toBe('{projectName}:serve:development');
       expect(
-        nxJson.targetDefaults[executor].configurations.production.browserTarget,
+        nxJson.targetDefaults[executor].configurations.production.browserTarget
       ).toBeUndefined();
       expect(
-        nxJson.targetDefaults[executor].configurations.production.buildTarget,
+        nxJson.targetDefaults[executor].configurations.production.buildTarget
       ).toBe('{projectName}:serve:production');
-    },
+    }
   );
 });

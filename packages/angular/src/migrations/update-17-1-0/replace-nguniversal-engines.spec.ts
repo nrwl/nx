@@ -136,7 +136,7 @@ const mainModule = __non_webpack_require__.main;
 const moduleFilename = (mainModule && mainModule.filename) || '';
 if (moduleFilename === __filename || moduleFilename.includes('iisnode')) {
   run();
-} `,
+} `
     );
   });
 
@@ -172,13 +172,13 @@ if (moduleFilename === __filename || moduleFilename.includes('iisnode')) {
       `
       import { CommonEngine } from '@nguniversal/common';
       import { Component } from '@angular/core';
-    `,
+    `
     );
 
     await migration(tree);
 
     expect(tree.read('src/file.ts', 'utf-8')).toContain(
-      `import { CommonEngine } from '@angular/ssr';`,
+      `import { CommonEngine } from '@angular/ssr';`
     );
   });
 
@@ -186,14 +186,14 @@ if (moduleFilename === __filename || moduleFilename.includes('iisnode')) {
     await migration(tree);
 
     expect(tree.read('server.ts.bak', 'utf-8')).toContain(
-      `import { ngExpressEngine } from '@nguniversal/express-engine';`,
+      `import { ngExpressEngine } from '@nguniversal/express-engine';`
     );
     const newServerFile = tree.read('server.ts', 'utf-8');
     expect(newServerFile).toContain(
-      `import { CommonEngine } from '@angular/ssr';`,
+      `import { CommonEngine } from '@angular/ssr';`
     );
     expect(newServerFile).toContain(
-      `const distFolder = join(process.cwd(), 'dist/app1/browser');`,
+      `const distFolder = join(process.cwd(), 'dist/app1/browser');`
     );
   });
 
@@ -201,18 +201,18 @@ if (moduleFilename === __filename || moduleFilename.includes('iisnode')) {
     const filePath = 'src/tokens-usage.ts';
     tree.write(
       filePath,
-      `import { RESPONSE } from '@nguniversal/express-engine/tokens';`,
+      `import { RESPONSE } from '@nguniversal/express-engine/tokens';`
     );
 
     await migration(tree);
 
     expect(tree.read(filePath, 'utf-8')).toContain(
-      `import { RESPONSE } from './express.tokens';`,
+      `import { RESPONSE } from './express.tokens';`
     );
     const newServerFile = tree.read('server.ts', 'utf-8');
     expect(newServerFile).toContain(`{ provide: RESPONSE, useValue: res }`);
     expect(newServerFile).toContain(
-      `import { REQUEST, RESPONSE } from './src/express.tokens';`,
+      `import { REQUEST, RESPONSE } from './src/express.tokens';`
     );
     expect(tree.exists('src/express.tokens.ts')).toBe(true);
   });
@@ -221,13 +221,13 @@ if (moduleFilename === __filename || moduleFilename.includes('iisnode')) {
     const filePath = 'src/nested/folder/home/home.component.ts';
     tree.write(
       filePath,
-      `import { RESPONSE } from '@nguniversal/express-engine/tokens';`,
+      `import { RESPONSE } from '@nguniversal/express-engine/tokens';`
     );
 
     await migration(tree);
 
     expect(tree.read(filePath, 'utf-8')).toContain(
-      `import { RESPONSE } from '../../../express.tokens';`,
+      `import { RESPONSE } from '../../../express.tokens';`
     );
   });
 
@@ -237,7 +237,7 @@ if (moduleFilename === __filename || moduleFilename.includes('iisnode')) {
     const newServerFile = tree.read('server.ts', 'utf-8');
     expect(newServerFile).not.toContain(`{ provide: RESPONSE, useValue: res }`);
     expect(newServerFile).not.toContain(
-      `import { REQUEST, RESPONSE } from './src/express.tokens';`,
+      `import { REQUEST, RESPONSE } from './src/express.tokens';`
     );
     expect(tree.exists('src/express.tokens.ts')).toBe(false);
   });

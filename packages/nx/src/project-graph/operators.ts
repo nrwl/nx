@@ -28,7 +28,7 @@ export function reverse(graph: ProjectGraph): ProjectGraph {
   // we need to keep external node's reverse dependencies to trace our route back
   if (graph.externalNodes) {
     Object.keys(graph.externalNodes).forEach(
-      (n) => (result.dependencies[n] = []),
+      (n) => (result.dependencies[n] = [])
     );
   }
   Object.values(graph.dependencies).forEach((byProject) => {
@@ -49,7 +49,7 @@ export function reverse(graph: ProjectGraph): ProjectGraph {
 }
 
 export function filterNodes(
-  predicate?: (n: ProjectGraphProjectNode) => boolean,
+  predicate?: (n: ProjectGraphProjectNode) => boolean
 ): (p: ProjectGraph) => ProjectGraph {
   return (original) => {
     const graph = { nodes: {}, dependencies: {} } as ProjectGraph;
@@ -73,7 +73,7 @@ export function filterNodes(
 }
 
 export function isNpmProject(
-  project: ProjectGraphProjectNode | ProjectGraphExternalNode,
+  project: ProjectGraphProjectNode | ProjectGraphExternalNode
 ): project is ProjectGraphExternalNode {
   return project?.type === 'npm';
 }
@@ -82,7 +82,7 @@ export const pruneExternalNodes = filterNodes();
 
 export function withDeps(
   original: ProjectGraph,
-  subsetNodes: ProjectGraphProjectNode[],
+  subsetNodes: ProjectGraphProjectNode[]
 ): ProjectGraph {
   const res = { nodes: {}, dependencies: {} } as ProjectGraph;
   const visitedNodes = [];

@@ -65,7 +65,7 @@ describe('ngrx', () => {
         ngrxGenerator(tree, {
           ...defaultOptions,
           module: modulePath,
-        }),
+        })
       ).rejects.toThrowError(`Module does not exist: ${modulePath}.`);
     });
 
@@ -76,7 +76,7 @@ describe('ngrx', () => {
         ngrxGenerator(tree, {
           ...defaultOptions,
           module: modulePath,
-        }),
+        })
       ).rejects.toThrowError(`Module does not exist: ${modulePath}.`);
     });
 
@@ -88,7 +88,7 @@ describe('ngrx', () => {
       });
 
       expect(
-        tree.read('myapp/src/app/app.module.ts', 'utf-8'),
+        tree.read('myapp/src/app/app.module.ts', 'utf-8')
       ).toMatchSnapshot();
     });
 
@@ -102,14 +102,14 @@ describe('ngrx', () => {
       expect(tree.exists('myapp/src/app/+state/users.actions.ts')).toBe(false);
       expect(tree.exists('myapp/src/app/+state/users.effects.ts')).toBe(false);
       expect(tree.exists('myapp/src/app/+state/users.effects.spec.ts')).toBe(
-        false,
+        false
       );
       expect(tree.exists('myapp/src/app/+state/users.reducer.ts')).toBe(false);
       expect(tree.exists('myapp/src/app/+state/users.selectors.ts')).toBe(
-        false,
+        false
       );
       expect(tree.exists('myapp/src/app/+state/users.selectors.spec.ts')).toBe(
-        false,
+        false
       );
     });
 
@@ -121,7 +121,7 @@ describe('ngrx', () => {
       });
 
       expect(
-        tree.read('myapp/src/app/app.module.ts', 'utf-8'),
+        tree.read('myapp/src/app/app.module.ts', 'utf-8')
       ).toMatchSnapshot();
     });
 
@@ -133,7 +133,7 @@ describe('ngrx', () => {
       });
 
       expect(
-        tree.read('myapp/src/app/app.module.ts', 'utf-8'),
+        tree.read('myapp/src/app/app.module.ts', 'utf-8')
       ).toMatchSnapshot();
     });
 
@@ -148,7 +148,7 @@ describe('ngrx', () => {
 
       const appModule = tree.read(
         'no-router-app/src/app/app.module.ts',
-        'utf-8',
+        'utf-8'
       );
       expect(appModule).not.toContain('StoreRouterConnectingModule.forRoot()');
     });
@@ -162,7 +162,7 @@ describe('ngrx', () => {
       });
 
       expect(tree.read('myapp/src/app/app.module.ts', 'utf-8')).toContain(
-        'providers: [UsersFacade]',
+        'providers: [UsersFacade]'
       );
     });
 
@@ -175,7 +175,7 @@ describe('ngrx', () => {
       });
 
       expect(tree.read('myapp/src/app/app.module.ts', 'utf-8')).not.toContain(
-        'providers: [UsersFacade]',
+        'providers: [UsersFacade]'
       );
     });
 
@@ -188,7 +188,7 @@ describe('ngrx', () => {
       });
 
       expect(tree.read('myapp/src/app/app.module.ts', 'utf-8')).not.toContain(
-        'providers: [UsersFacade]',
+        'providers: [UsersFacade]'
       );
     });
 
@@ -206,7 +206,7 @@ describe('ngrx', () => {
       expectFileToExist('myapp/src/app/+state/users.selectors.ts');
       expectFileToExist('myapp/src/app/+state/users.selectors.spec.ts');
       expect(
-        tree.read('myapp/src/app/app.module.ts', 'utf-8'),
+        tree.read('myapp/src/app/app.module.ts', 'utf-8')
       ).toMatchSnapshot();
     });
 
@@ -218,16 +218,16 @@ describe('ngrx', () => {
       expect(packageJson.dependencies['@ngrx/effects']).toEqual(ngrxVersion);
       expect(packageJson.dependencies['@ngrx/entity']).toEqual(ngrxVersion);
       expect(packageJson.dependencies['@ngrx/router-store']).toEqual(
-        ngrxVersion,
+        ngrxVersion
       );
       expect(packageJson.dependencies['@ngrx/component-store']).toEqual(
-        ngrxVersion,
+        ngrxVersion
       );
       expect(packageJson.devDependencies['@ngrx/schematics']).toEqual(
-        ngrxVersion,
+        ngrxVersion
       );
       expect(packageJson.devDependencies['@ngrx/store-devtools']).toEqual(
-        ngrxVersion,
+        ngrxVersion
       );
       expect(packageJson.devDependencies['jasmine-marbles']).toBeDefined();
     });
@@ -243,7 +243,7 @@ describe('ngrx', () => {
       expect(packageJson.dependencies['@ngrx/component-store']).toBeUndefined();
       expect(packageJson.devDependencies['@ngrx/schematics']).toBeUndefined();
       expect(
-        packageJson.devDependencies['@ngrx/store-devtools'],
+        packageJson.devDependencies['@ngrx/store-devtools']
       ).toBeUndefined();
     });
 
@@ -291,7 +291,7 @@ describe('ngrx', () => {
       });
 
       expect(
-        tree.read(`${statePath}/users.actions.ts`, 'utf-8'),
+        tree.read(`${statePath}/users.actions.ts`, 'utf-8')
       ).toMatchSnapshot();
     });
 
@@ -302,7 +302,7 @@ describe('ngrx', () => {
       });
 
       expect(
-        tree.read(`${statePath}/users.effects.ts`, 'utf-8'),
+        tree.read(`${statePath}/users.effects.ts`, 'utf-8')
       ).toMatchSnapshot();
     });
 
@@ -314,7 +314,7 @@ describe('ngrx', () => {
       });
 
       expect(
-        tree.read(`${statePath}/users.facade.ts`, 'utf-8'),
+        tree.read(`${statePath}/users.facade.ts`, 'utf-8')
       ).toMatchSnapshot();
     });
 
@@ -326,7 +326,7 @@ describe('ngrx', () => {
       });
 
       expect(
-        tree.read(`${statePath}/users.models.ts`, 'utf-8'),
+        tree.read(`${statePath}/users.models.ts`, 'utf-8')
       ).toMatchSnapshot();
     });
 
@@ -337,7 +337,7 @@ describe('ngrx', () => {
       });
 
       expect(
-        tree.read(`${statePath}/users.reducer.ts`, 'utf-8'),
+        tree.read(`${statePath}/users.reducer.ts`, 'utf-8')
       ).toMatchSnapshot();
     });
 
@@ -348,7 +348,7 @@ describe('ngrx', () => {
       });
 
       expect(
-        tree.read(`${statePath}/users.selectors.ts`, 'utf-8'),
+        tree.read(`${statePath}/users.selectors.ts`, 'utf-8')
       ).toMatchSnapshot();
     });
 
@@ -424,22 +424,22 @@ describe('ngrx', () => {
 
       expect(devkit.formatFiles).toHaveBeenCalled();
       expect(
-        tree.read('myapp/src/app/app.module.ts', 'utf-8'),
+        tree.read('myapp/src/app/app.module.ts', 'utf-8')
       ).toMatchSnapshot();
       expect(
-        tree.read('myapp/src/app/+state/users.actions.ts', 'utf-8'),
+        tree.read('myapp/src/app/+state/users.actions.ts', 'utf-8')
       ).toMatchSnapshot();
       expect(
-        tree.read('myapp/src/app/+state/users.effects.ts', 'utf-8'),
+        tree.read('myapp/src/app/+state/users.effects.ts', 'utf-8')
       ).toMatchSnapshot();
       expect(
-        tree.read('myapp/src/app/+state/users.models.ts', 'utf-8'),
+        tree.read('myapp/src/app/+state/users.models.ts', 'utf-8')
       ).toMatchSnapshot();
       expect(
-        tree.read('myapp/src/app/+state/users.reducer.ts', 'utf-8'),
+        tree.read('myapp/src/app/+state/users.reducer.ts', 'utf-8')
       ).toMatchSnapshot();
       expect(
-        tree.read('myapp/src/app/+state/users.selectors.ts', 'utf-8'),
+        tree.read('myapp/src/app/+state/users.selectors.ts', 'utf-8')
       ).toMatchSnapshot();
     });
 
@@ -461,7 +461,7 @@ describe('ngrx', () => {
         });
 
         expect(
-          tree.read(`${statePath}/super-users.effects.spec.ts`, 'utf-8'),
+          tree.read(`${statePath}/super-users.effects.spec.ts`, 'utf-8')
         ).toMatchSnapshot();
       });
 
@@ -475,7 +475,7 @@ describe('ngrx', () => {
         });
 
         expect(
-          tree.read(`${statePath}/super-users.facade.spec.ts`, 'utf-8'),
+          tree.read(`${statePath}/super-users.facade.spec.ts`, 'utf-8')
         ).toMatchSnapshot();
       });
 
@@ -488,7 +488,7 @@ describe('ngrx', () => {
         });
 
         expect(
-          tree.read(`${statePath}/super-users.reducer.spec.ts`, 'utf-8'),
+          tree.read(`${statePath}/super-users.reducer.spec.ts`, 'utf-8')
         ).toMatchSnapshot();
       });
 
@@ -501,7 +501,7 @@ describe('ngrx', () => {
         });
 
         expect(
-          tree.read(`${statePath}/super-users.selectors.spec.ts`, 'utf-8'),
+          tree.read(`${statePath}/super-users.selectors.spec.ts`, 'utf-8')
         ).toMatchSnapshot();
       });
     });
@@ -519,7 +519,7 @@ describe('ngrx', () => {
       });
       tree.write(
         'my-app/src/app/app.component.html',
-        '<router-outlet></router-outlet>',
+        '<router-outlet></router-outlet>'
       );
       tree.write(
         'my-app/src/app/app.routes.ts',
@@ -527,7 +527,7 @@ describe('ngrx', () => {
 import { NxWelcomeComponent } from './nx-welcome.component';
 
 export const appRoutes: Routes = [{ path: '', component: NxWelcomeComponent }];
-`,
+`
       );
     });
 
@@ -540,7 +540,7 @@ export const appRoutes: Routes = [{ path: '', component: NxWelcomeComponent }];
         ngrxGenerator(tree, {
           ...defaultStandaloneOptions,
           parent: parentPath,
-        }),
+        })
       ).rejects.toThrowError(`Parent does not exist: ${parentPath}.`);
     });
 
@@ -553,19 +553,19 @@ export const appRoutes: Routes = [{ path: '', component: NxWelcomeComponent }];
 
       expect(tree.read('my-app/src/main.ts', 'utf-8')).toMatchSnapshot();
       expect(
-        tree.read('my-app/src/app/app.config.ts', 'utf-8'),
+        tree.read('my-app/src/app/app.config.ts', 'utf-8')
       ).toMatchSnapshot();
       expect(tree.exists('my-app/src/app/+state/users.actions.ts')).toBe(false);
       expect(tree.exists('my-app/src/app/+state/users.effects.ts')).toBe(false);
       expect(tree.exists('my-app/src/app/+state/users.effects.spec.ts')).toBe(
-        false,
+        false
       );
       expect(tree.exists('my-app/src/app/+state/users.reducer.ts')).toBe(false);
       expect(tree.exists('my-app/src/app/+state/users.selectors.ts')).toBe(
-        false,
+        false
       );
       expect(tree.exists('my-app/src/app/+state/users.selectors.spec.ts')).toBe(
-        false,
+        false
       );
     });
 
@@ -578,7 +578,7 @@ export const appRoutes: Routes = [{ path: '', component: NxWelcomeComponent }];
 
       expect(tree.read('my-app/src/main.ts', 'utf-8')).toMatchSnapshot();
       expect(
-        tree.read('my-app/src/app/app.config.ts', 'utf-8'),
+        tree.read('my-app/src/app/app.config.ts', 'utf-8')
       ).toMatchSnapshot();
     });
 
@@ -591,7 +591,7 @@ export const appRoutes: Routes = [{ path: '', component: NxWelcomeComponent }];
       });
 
       expect(
-        tree.read('my-app/src/app/app.routes.ts', 'utf-8'),
+        tree.read('my-app/src/app/app.routes.ts', 'utf-8')
       ).toMatchSnapshot();
     });
 
@@ -602,7 +602,7 @@ export const appRoutes: Routes = [{ path: '', component: NxWelcomeComponent }];
 import { NxWelcomeComponent } from './nx-welcome.component';
 
 export const appRoutes: Routes = [{ path: 'home', component: NxWelcomeComponent }];
-`,
+`
       );
 
       await ngrxGenerator(tree, {
@@ -613,7 +613,7 @@ export const appRoutes: Routes = [{ path: 'home', component: NxWelcomeComponent 
       });
 
       expect(
-        tree.read('my-app/src/app/app.routes.ts', 'utf-8'),
+        tree.read('my-app/src/app/app.routes.ts', 'utf-8')
       ).toMatchSnapshot();
     });
 
@@ -626,7 +626,7 @@ export const appRoutes: Routes = [{ path: 'home', component: NxWelcomeComponent 
       });
 
       expect(
-        tree.read('my-app/src/app/app.routes.ts', 'utf-8'),
+        tree.read('my-app/src/app/app.routes.ts', 'utf-8')
       ).toMatchSnapshot();
     });
 
@@ -640,7 +640,7 @@ export const appRoutes: Routes = [{ path: 'home', component: NxWelcomeComponent 
 
       expect(tree.read('my-app/src/main.ts', 'utf-8')).toMatchSnapshot();
       expect(
-        tree.read('my-app/src/app/app.config.ts', 'utf-8'),
+        tree.read('my-app/src/app/app.config.ts', 'utf-8')
       ).toMatchSnapshot();
     });
 
@@ -654,7 +654,7 @@ export const appRoutes: Routes = [{ path: 'home', component: NxWelcomeComponent 
       });
 
       expect(
-        tree.read('my-app/src/app/app.routes.ts', 'utf-8'),
+        tree.read('my-app/src/app/app.routes.ts', 'utf-8')
       ).toMatchSnapshot();
     });
   });
@@ -682,25 +682,25 @@ export const appRoutes: Routes = [{ path: 'home', component: NxWelcomeComponent 
 
       const packageJson = devkit.readJson(tree, 'package.json');
       expect(packageJson.dependencies['@ngrx/store']).toEqual(
-        backwardCompatibleVersions.angularV15.ngrxVersion,
+        backwardCompatibleVersions.angularV15.ngrxVersion
       );
       expect(packageJson.dependencies['@ngrx/effects']).toEqual(
-        backwardCompatibleVersions.angularV15.ngrxVersion,
+        backwardCompatibleVersions.angularV15.ngrxVersion
       );
       expect(packageJson.dependencies['@ngrx/entity']).toEqual(
-        backwardCompatibleVersions.angularV15.ngrxVersion,
+        backwardCompatibleVersions.angularV15.ngrxVersion
       );
       expect(packageJson.dependencies['@ngrx/router-store']).toEqual(
-        backwardCompatibleVersions.angularV15.ngrxVersion,
+        backwardCompatibleVersions.angularV15.ngrxVersion
       );
       expect(packageJson.dependencies['@ngrx/component-store']).toEqual(
-        backwardCompatibleVersions.angularV15.ngrxVersion,
+        backwardCompatibleVersions.angularV15.ngrxVersion
       );
       expect(packageJson.devDependencies['@ngrx/schematics']).toEqual(
-        backwardCompatibleVersions.angularV15.ngrxVersion,
+        backwardCompatibleVersions.angularV15.ngrxVersion
       );
       expect(packageJson.devDependencies['@ngrx/store-devtools']).toEqual(
-        backwardCompatibleVersions.angularV15.ngrxVersion,
+        backwardCompatibleVersions.angularV15.ngrxVersion
       );
       expect(packageJson.devDependencies['jasmine-marbles']).toBeDefined();
     });
@@ -727,7 +727,7 @@ export const appRoutes: Routes = [{ path: 'home', component: NxWelcomeComponent 
       await ngrxGenerator(tree, defaultOptions);
 
       expect(
-        tree.read('myapp/src/app/+state/users.effects.ts', 'utf-8'),
+        tree.read('myapp/src/app/+state/users.effects.ts', 'utf-8')
       ).toMatchSnapshot();
     });
   });

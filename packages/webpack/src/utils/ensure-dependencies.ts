@@ -21,7 +21,7 @@ export type EnsureDependenciesOptions = {
 
 export function ensureDependencies(
   tree: Tree,
-  options: EnsureDependenciesOptions,
+  options: EnsureDependenciesOptions
 ) {
   const tasks: GeneratorCallback[] = [];
   const devDependencies: Record<string, string> = {};

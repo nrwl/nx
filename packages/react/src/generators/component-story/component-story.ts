@@ -25,11 +25,7 @@ export interface CreateComponentStoriesFileSchema {
 
 export function createComponentStoriesFile(
   host: Tree,
-  {
-    project,
-    componentPath,
-    interactionTests,
-  }: CreateComponentStoriesFileSchema,
+  { project, componentPath, interactionTests }: CreateComponentStoriesFileSchema
 ) {
   if (!tsModule) {
     tsModule = ensureTypescript();
@@ -41,7 +37,7 @@ export function createComponentStoriesFile(
 
   const componentDirectory = componentFilePath.replace(
     componentFilePath.slice(componentFilePath.lastIndexOf('/')),
-    '',
+    ''
   );
 
   const isPlainJs =
@@ -64,7 +60,7 @@ export function createComponentStoriesFile(
     componentFilePath,
     contents,
     tsModule.ScriptTarget.Latest,
-    true,
+    true
   );
 
   const cmpDeclaration = getComponentNode(sourceFile);
@@ -81,12 +77,12 @@ export function createComponentStoriesFile(
           name,
           interactionTests,
           isPlainJs,
-          componentNodes.length > 1,
+          componentNodes.length > 1
         );
       });
     } else {
       throw new Error(
-        `Could not find any React component in file ${componentFilePath}`,
+        `Could not find any React component in file ${componentFilePath}`
       );
     }
   } else {
@@ -97,7 +93,7 @@ export function createComponentStoriesFile(
       componentDirectory,
       name,
       interactionTests,
-      isPlainJs,
+      isPlainJs
     );
   }
 }
@@ -110,11 +106,11 @@ export function findPropsAndGenerateFile(
   name: string,
   interactionTests: boolean,
   isPlainJs: boolean,
-  fromNodeArray?: boolean,
+  fromNodeArray?: boolean
 ) {
   const { propsTypeName, props, argTypes } = getDefaultsForComponent(
     sourceFile,
-    cmpDeclaration,
+    cmpDeclaration
   );
 
   generateFiles(
@@ -132,13 +128,13 @@ export function findPropsAndGenerateFile(
       argTypes,
       componentName: (cmpDeclaration as any).name.text,
       interactionTests,
-    },
+    }
   );
 }
 
 export async function componentStoryGenerator(
   host: Tree,
-  schema: CreateComponentStoriesFileSchema,
+  schema: CreateComponentStoriesFileSchema
 ) {
   createComponentStoriesFile(host, {
     ...schema,

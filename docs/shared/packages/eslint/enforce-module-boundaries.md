@@ -17,12 +17,12 @@ You can use the `enforce-module-boundaries` rule by adding it to your ESLint rul
           "error",
           {
             // ...rule specific configuration
-          },
-        ],
-      },
-    },
+          }
+        ]
+      }
+    }
     // ... more ESLint overrides here
-  ],
+  ]
 }
 ```
 

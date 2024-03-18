@@ -24,7 +24,7 @@ export async function addLinting(
     rootProject?: boolean;
     addPlugin?: boolean;
   },
-  projectType: 'lib' | 'app',
+  projectType: 'lib' | 'app'
 ) {
   if (options.linter === Linter.EsLint) {
     const lintTask = await lintProjectGenerator(host, {
@@ -56,7 +56,7 @@ export async function addLinting(
       installTask = addDependenciesToPackageJson(
         host,
         extraEslintDependencies.dependencies,
-        extraEslintDependencies.devDependencies,
+        extraEslintDependencies.devDependencies
       );
     }
 
@@ -69,7 +69,7 @@ export async function addLinting(
 export function editEslintConfigFiles(
   tree: Tree,
   projectRoot: string,
-  rootProject?: boolean,
+  rootProject?: boolean
 ) {
   if (tree.exists(joinPathFragments(projectRoot, 'eslint.config.js'))) {
     const fileName = joinPathFragments(projectRoot, 'eslint.config.js');

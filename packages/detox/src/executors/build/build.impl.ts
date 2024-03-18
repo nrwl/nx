@@ -12,7 +12,7 @@ let childProcess: ChildProcess;
 
 export default async function* detoxBuildExecutor(
   options: DetoxBuildOptions,
-  context: ExecutorContext,
+  context: ExecutorContext
 ): AsyncGenerator<DetoxBuildOutput> {
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
@@ -31,7 +31,7 @@ export default async function* detoxBuildExecutor(
 export function runCliBuild(
   workspaceRoot: string,
   projectRoot: string,
-  options: DetoxBuildOptions,
+  options: DetoxBuildOptions
 ) {
   return new Promise((resolve, reject) => {
     childProcess = fork(
@@ -40,7 +40,7 @@ export function runCliBuild(
       {
         cwd: pathResolve(workspaceRoot, projectRoot),
         env: process.env,
-      },
+      }
     );
 
     // Ensure the child process is killed when the parent exits

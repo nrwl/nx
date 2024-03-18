@@ -85,7 +85,7 @@ nx add @nx/vite @nx/js
 Create your `index.html` at the root with the following:
 
 ```html
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -283,7 +283,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@acme/counter': fileURLToPath(
-        new URL('/libs/counter/src/index.ts', import.meta.url),
+        new URL('/libs/counter/src/index.ts', import.meta.url)
       ),
     },
   },

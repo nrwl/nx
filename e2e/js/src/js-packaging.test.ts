@@ -29,11 +29,11 @@ describe('packaging libs', () => {
     const rollupLib = uniq('rolluplib');
 
     runCLI(
-      `generate @nx/js:lib ${esbuildLib} --bundler=esbuild --no-interactive`,
+      `generate @nx/js:lib ${esbuildLib} --bundler=esbuild --no-interactive`
     );
     runCLI(`generate @nx/js:lib ${viteLib} --bundler=vite --no-interactive`);
     runCLI(
-      `generate @nx/js:lib ${rollupLib} --bundler=rollup --no-interactive`,
+      `generate @nx/js:lib ${rollupLib} --bundler=rollup --no-interactive`
     );
     updateFile(`libs/${rollupLib}/src/index.ts`, (content) => {
       // Test that default functions work in ESM (Node).
@@ -62,8 +62,8 @@ describe('packaging libs', () => {
           },
         },
         null,
-        2,
-      ),
+        2
+      )
     );
     createFile(
       'test-cjs/index.js',
@@ -75,7 +75,7 @@ describe('packaging libs', () => {
         console.log(${viteLib}());
         console.log(${rollupLib}());
         console.log(rollupDefault());
-      `,
+      `
     );
     runCommand(pmc.install, {
       cwd: join(tmpProjPath(), 'test-cjs'),
@@ -103,8 +103,8 @@ describe('packaging libs', () => {
           },
         },
         null,
-        2,
-      ),
+        2
+      )
     );
     createFile(
       'test-esm/index.js',
@@ -116,7 +116,7 @@ describe('packaging libs', () => {
         console.log(${viteLib}());
         console.log(${rollupLib}());
         console.log(rollupDefault());
-      `,
+      `
     );
     runCommand(pmc.install, {
       cwd: join(tmpProjPath(), 'test-esm'),
@@ -153,11 +153,11 @@ describe('packaging libs', () => {
     // Node ESM requires file extensions in imports so must add them before building
     updateFile(
       `libs/${tscEsmLib}/src/index.ts`,
-      `export * from './lib/${tscEsmLib}.js';`,
+      `export * from './lib/${tscEsmLib}.js';`
     );
     updateFile(
       `libs/${swcEsmLib}/src/index.ts`,
-      `export * from './lib/${swcEsmLib}.js';`,
+      `export * from './lib/${swcEsmLib}.js';`
     );
 
     // Add additional entry points for `exports` field
@@ -214,8 +214,8 @@ describe('packaging libs', () => {
           },
         },
         null,
-        2,
-      ),
+        2
+      )
     );
     createFile(
       'test-cjs/index.js',
@@ -229,7 +229,7 @@ describe('packaging libs', () => {
         console.log(${swcLib}());
         console.log(bar);
         console.log(faz);
-      `,
+      `
     );
     runCommand(pmc.install, {
       cwd: join(tmpProjPath(), 'test-cjs'),
@@ -256,8 +256,8 @@ describe('packaging libs', () => {
           },
         },
         null,
-        2,
-      ),
+        2
+      )
     );
     createFile(
       'test-esm/index.js',
@@ -266,7 +266,7 @@ describe('packaging libs', () => {
         import { ${swcEsmLib} } from '@proj/${swcEsmLib}';
         console.log(${tscEsmLib}());
         console.log(${swcEsmLib}());
-      `,
+      `
     );
     runCommand(pmc.install, {
       cwd: join(tmpProjPath(), 'test-esm'),

@@ -34,7 +34,7 @@ const NEWLINE = /\r\n|[\n\r\u2028\u2029]/;
 function getMarkerLines(
   loc: NodeLocation,
   source: Array<string>,
-  opts: { linesAbove?: number; linesBelow?: number } = {},
+  opts: { linesAbove?: number; linesBelow?: number } = {}
 ): { start: number; end: number; markerLines: Object } {
   const startLoc: Location = {
     column: 0,
@@ -105,7 +105,7 @@ export function codeFrameColumns(
     linesAbove?: number;
     linesBelow?: number;
     highlight?: (rawLines: string) => string;
-  } = {},
+  } = {}
 ): string {
   const defs = getDefs(chalk);
   const lines = rawLines.split(NEWLINE);
@@ -138,7 +138,7 @@ export function codeFrameColumns(
           ].join('');
         }
         return [defs.marker('>'), defs.gutter(gutter), line, markerLine].join(
-          '',
+          ''
         );
       } else {
         return ` ${defs.gutter(gutter)}${line}`;

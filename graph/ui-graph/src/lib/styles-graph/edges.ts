@@ -28,13 +28,13 @@ const affectedEdges: Stylesheet = {
       switchValueByDarkMode(
         node,
         NrwlPalette.fuchsia_500,
-        NrwlPalette.pink_500,
+        NrwlPalette.pink_500
       ),
     'target-arrow-color': (node) =>
       switchValueByDarkMode(
         node,
         NrwlPalette.fuchsia_500,
-        NrwlPalette.pink_500,
+        NrwlPalette.pink_500
       ),
     'curve-style': 'unbundled-bezier',
   },

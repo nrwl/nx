@@ -11,7 +11,7 @@ import { angularVersion } from './versions';
 
 export function getPkgVersionForAngularMajorVersion(
   pkgVersionName: LatestPackageVersionNames | CompatPackageVersionNames,
-  angularMajorVersion: number,
+  angularMajorVersion: number
 ): string {
   return angularMajorVersion < major(coerce(angularVersion))
     ? backwardCompatibleVersions[`angularV${angularMajorVersion}`]?.[
@@ -21,7 +21,7 @@ export function getPkgVersionForAngularMajorVersion(
 }
 
 export function getPkgVersionsForAngularMajorVersion(
-  angularMajorVersion: number,
+  angularMajorVersion: number
 ): PackageLatestVersions | PackageCompatVersions {
   return angularMajorVersion < major(coerce(angularVersion))
     ? backwardCompatibleVersions[`angularV${angularMajorVersion}`] ?? versions

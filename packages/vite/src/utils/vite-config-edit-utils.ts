@@ -18,7 +18,7 @@ export function ensureViteConfigIsCorrect(
   testConfigString: string,
   testConfigObject: {},
   cacheDir: string,
-  projectAlreadyHasViteTargets?: TargetFlags,
+  projectAlreadyHasViteTargets?: TargetFlags
 ): boolean {
   const fileContent = tree.read(path, 'utf-8');
 
@@ -29,7 +29,7 @@ export function ensureViteConfigIsCorrect(
       fileContent,
       testConfigString,
       testConfigObject,
-      'test',
+      'test'
     );
   }
 
@@ -38,7 +38,7 @@ export function ensureViteConfigIsCorrect(
       updatedContent ?? fileContent,
       buildConfigString,
       buildConfigObject,
-      'build',
+      'build'
     );
   }
 
@@ -49,7 +49,7 @@ export function ensureViteConfigIsCorrect(
   if (cacheDir?.length) {
     updatedContent = handleCacheDirNode(
       updatedContent ?? fileContent,
-      cacheDir,
+      cacheDir
     );
   }
 
@@ -65,12 +65,12 @@ function handleBuildOrTestNode(
   updatedFileContent: string,
   configContentString: string,
   configContentObject: {},
-  name: 'build' | 'test',
+  name: 'build' | 'test'
 ): string | undefined {
   const { tsquery } = require('@phenomnomnominal/tsquery');
   const buildOrTestNode = tsquery.query(
     updatedFileContent,
-    `PropertyAssignment:has(Identifier[name="${name}"])`,
+    `PropertyAssignment:has(Identifier[name="${name}"])`
   );
 
   if (buildOrTestNode.length) {
@@ -80,7 +80,7 @@ function handleBuildOrTestNode(
       (node: PropertyAssignment) => {
         const existingProperties = tsquery.query(
           node.initializer,
-          'PropertyAssignment',
+          'PropertyAssignment'
         ) as PropertyAssignment[];
         let updatedPropsString = '';
         for (const prop of existingProperties) {
@@ -95,27 +95,27 @@ function handleBuildOrTestNode(
           }
         }
         for (const [propName, propValue] of Object.entries(
-          configContentObject,
+          configContentObject
         )) {
           updatedPropsString += `'${propName}': ${JSON.stringify(
-            propValue,
+            propValue
           )},\n`;
         }
         return `${name}: {
           ${updatedPropsString}
         }`;
-      },
+      }
     );
   } else {
     const foundDefineConfig = tsquery.query(
       updatedFileContent,
-      'CallExpression:has(Identifier[name="defineConfig"])',
+      'CallExpression:has(Identifier[name="defineConfig"])'
     );
 
     if (foundDefineConfig.length) {
       const conditionalConfig = tsquery.query(
         foundDefineConfig[0],
-        'ArrowFunction',
+        'ArrowFunction'
       );
 
       if (conditionalConfig.length) {
@@ -123,7 +123,7 @@ function handleBuildOrTestNode(
           return transformConditionalConfig(
             conditionalConfig,
             updatedFileContent,
-            configContentString,
+            configContentString
           );
         } else {
           // no test config in conditional config
@@ -132,7 +132,7 @@ function handleBuildOrTestNode(
       } else {
         const propertyAssignments = tsquery.query(
           foundDefineConfig[0],
-          'PropertyAssignment',
+          'PropertyAssignment'
         );
 
         if (propertyAssignments.length) {
@@ -159,11 +159,11 @@ function handleBuildOrTestNode(
       try {
         const defaultExport = tsquery.query(
           updatedFileContent,
-          'ExportAssignment',
+          'ExportAssignment'
         );
         const found = tsquery.query(
           defaultExport?.[0],
-          'ObjectLiteralExpression',
+          'ObjectLiteralExpression'
         );
         const startOfObject = found?.[0].getStart();
         return applyChangesToString(updatedFileContent, [
@@ -184,7 +184,7 @@ function transformCurrentBuildObject(
   index: number,
   returnStatements: ReturnStatement[],
   appFileContent: string,
-  buildConfigObject: {},
+  buildConfigObject: {}
 ): string | undefined {
   if (!returnStatements?.[index]) {
     return undefined;
@@ -204,7 +204,7 @@ function transformCurrentBuildObject(
         ...${currentBuildObject},
         ...${JSON.stringify(buildConfigObject)}
       }`;
-    },
+    }
   );
 
   const newContents = applyChangesToString(appFileContent, [
@@ -226,7 +226,7 @@ function transformCurrentBuildObject(
 function transformConditionalConfig(
   conditionalConfig: Node[],
   appFileContent: string,
-  buildConfigObject: {},
+  buildConfigObject: {}
 ): string | undefined {
   const { tsquery } = require('@phenomnomnominal/tsquery');
   const { SyntaxKind } = require('typescript');
@@ -236,21 +236,21 @@ function transformConditionalConfig(
   const binaryExpressions = tsquery.query(ifStatement?.[0], 'BinaryExpression');
 
   const buildExists = binaryExpressions?.find(
-    (binaryExpression) => binaryExpression.getText() === `command === 'build'`,
+    (binaryExpression) => binaryExpression.getText() === `command === 'build'`
   );
 
   const buildExistsExpressionIndex = binaryExpressions?.findIndex(
-    (binaryExpression) => binaryExpression.getText() === `command === 'build'`,
+    (binaryExpression) => binaryExpression.getText() === `command === 'build'`
   );
 
   const serveExists = binaryExpressions?.find(
-    (binaryExpression) => binaryExpression.getText() === `command === 'serve'`,
+    (binaryExpression) => binaryExpression.getText() === `command === 'serve'`
   );
 
   const elseKeywordExists = findNodes(ifStatement?.[0], SyntaxKind.ElseKeyword);
   const returnStatements: ReturnStatement[] = tsquery.query(
     ifStatement[0],
-    'ReturnStatement',
+    'ReturnStatement'
   );
 
   if (!buildExists) {
@@ -261,7 +261,7 @@ function transformConditionalConfig(
           returnStatements?.length - 1,
           returnStatements,
           appFileContent,
-          buildConfigObject,
+          buildConfigObject
         ) ?? appFileContent
       );
     } else {
@@ -290,7 +290,7 @@ function transformConditionalConfig(
         buildExistsExpressionIndex,
         returnStatements,
         appFileContent,
-        buildConfigObject,
+        buildConfigObject
       ) ?? appFileContent
     );
   }
@@ -299,13 +299,13 @@ function transformConditionalConfig(
 function handlePluginNode(
   appFileContent: string,
   imports: string[],
-  plugins: string[],
+  plugins: string[]
 ): string | undefined {
   const { tsquery } = require('@phenomnomnominal/tsquery');
   const file = tsquery.ast(appFileContent);
   const pluginsNode = tsquery.query(
     file,
-    'PropertyAssignment:has(Identifier[name="plugins"])',
+    'PropertyAssignment:has(Identifier[name="plugins"])'
   );
 
   let writeFile = false;
@@ -317,7 +317,7 @@ function handlePluginNode(
       (node: Node) => {
         const found = tsquery.query(
           node,
-          'ArrayLiteralExpression',
+          'ArrayLiteralExpression'
         ) as ArrayLiteralExpression[];
         let updatedPluginsString = '';
 
@@ -330,7 +330,7 @@ function handlePluginNode(
         for (const plugin of plugins) {
           if (
             !existingPluginNodes?.some((node) =>
-              node.getText().includes(plugin),
+              node.getText().includes(plugin)
             )
           ) {
             updatedPluginsString += `${plugin},\n`;
@@ -338,7 +338,7 @@ function handlePluginNode(
         }
 
         return `plugins: [${updatedPluginsString}]`;
-      },
+      }
     );
     writeFile = true;
   } else {
@@ -347,13 +347,13 @@ function handlePluginNode(
 
     const foundDefineConfig = tsquery.query(
       file,
-      'CallExpression:has(Identifier[name="defineConfig"])',
+      'CallExpression:has(Identifier[name="defineConfig"])'
     );
 
     if (foundDefineConfig.length) {
       const conditionalConfig = tsquery.query(
         foundDefineConfig[0],
-        'ArrowFunction',
+        'ArrowFunction'
       );
 
       if (conditionalConfig.length) {
@@ -363,7 +363,7 @@ function handlePluginNode(
       } else {
         const propertyAssignments = tsquery.query(
           foundDefineConfig[0],
-          'PropertyAssignment',
+          'PropertyAssignment'
         );
 
         if (propertyAssignments.length) {
@@ -393,7 +393,7 @@ function handlePluginNode(
         const defaultExport = tsquery.query(file, 'ExportAssignment');
         const found = tsquery?.query(
           defaultExport?.[0],
-          'ObjectLiteralExpression',
+          'ObjectLiteralExpression'
         );
         const startOfObject = found?.[0].getStart();
         appFileContent = applyChangesToString(appFileContent, [
@@ -420,7 +420,7 @@ function filterImport(appFileContent: string, imports: string[]): string[] {
   const file = tsquery.ast(appFileContent);
   const importNodes = tsquery.query(
     file,
-    ':matches(ImportDeclaration, VariableStatement)',
+    ':matches(ImportDeclaration, VariableStatement)'
   );
 
   const importsArrayExisting = importNodes?.map((node) => {
@@ -438,7 +438,7 @@ function handleCacheDirNode(appFileContent: string, cacheDir: string): string {
   const file = tsquery.ast(appFileContent);
   const cacheDirNode = tsquery.query(
     file,
-    'PropertyAssignment:has(Identifier[name="cacheDir"])',
+    'PropertyAssignment:has(Identifier[name="cacheDir"])'
   );
 
   if (!cacheDirNode?.length || cacheDirNode?.length === 0) {
@@ -447,13 +447,13 @@ function handleCacheDirNode(appFileContent: string, cacheDir: string): string {
 
     const foundDefineConfig = tsquery.query(
       file,
-      'CallExpression:has(Identifier[name="defineConfig"])',
+      'CallExpression:has(Identifier[name="defineConfig"])'
     );
 
     if (foundDefineConfig.length) {
       const conditionalConfig = tsquery.query(
         foundDefineConfig[0],
-        'ArrowFunction',
+        'ArrowFunction'
       );
 
       if (conditionalConfig.length) {
@@ -462,7 +462,7 @@ function handleCacheDirNode(appFileContent: string, cacheDir: string): string {
       } else {
         const propertyAssignments = tsquery.query(
           foundDefineConfig[0],
-          'PropertyAssignment',
+          'PropertyAssignment'
         );
 
         if (propertyAssignments.length) {
@@ -490,7 +490,7 @@ function handleCacheDirNode(appFileContent: string, cacheDir: string): string {
         const defaultExport = tsquery.query(file, 'ExportAssignment');
         const found = tsquery?.query(
           defaultExport?.[0],
-          'ObjectLiteralExpression',
+          'ObjectLiteralExpression'
         );
         const startOfObject = found?.[0].getStart();
         appFileContent = applyChangesToString(appFileContent, [

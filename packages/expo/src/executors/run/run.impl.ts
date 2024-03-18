@@ -17,7 +17,7 @@ let childProcess: ChildProcess;
 
 export default async function* runExecutor(
   options: ExpoRunOptions,
-  context: ExecutorContext,
+  context: ExecutorContext
 ): AsyncGenerator<ExpoRunOutput> {
   if (platform() !== 'darwin' && options.platform === 'ios') {
     throw new Error(`The run-ios build requires Mac to run`);
@@ -54,7 +54,7 @@ export default async function* runExecutor(
 function runCliRun(
   workspaceRoot: string,
   projectRoot: string,
-  options: ExpoRunOptions,
+  options: ExpoRunOptions
 ) {
   return new Promise((resolve, reject) => {
     childProcess = fork(
@@ -63,7 +63,7 @@ function runCliRun(
       {
         cwd: pathResolve(workspaceRoot, projectRoot),
         env: process.env,
-      },
+      }
     );
 
     // Ensure the child process is killed when the parent exits

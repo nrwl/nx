@@ -18,7 +18,7 @@ import { ensureDependencies } from '../../utils/ensure-dependencies';
 
 export async function configurationGenerator(
   tree: Tree,
-  options: RollupProjectSchema,
+  options: RollupProjectSchema
 ) {
   const tasks: GeneratorCallback[] = [];
   tasks.push(await rollupInitGenerator(tree, { ...options, skipFormat: true }));
@@ -42,7 +42,7 @@ function checkForTargetConflicts(tree: Tree, options: RollupProjectSchema) {
   const project = readProjectConfiguration(tree, options.project);
   if (project.targets?.[options.buildTarget]) {
     throw new Error(
-      `Project "${options.project}" already has a ${options.buildTarget} target. Pass --skipValidation to ignore this error.`,
+      `Project "${options.project}" already has a ${options.buildTarget} target. Pass --skipValidation to ignore this error.`
     );
   }
 }
@@ -72,7 +72,7 @@ function addBuildTarget(tree: Tree, options: RollupProjectSchema) {
       prevBuildOptions?.outputPath ??
       joinPathFragments(
         'dist',
-        project.root === '.' ? project.name : project.root,
+        project.root === '.' ? project.name : project.root
       ),
     tsConfig:
       options.tsConfig ??

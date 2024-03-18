@@ -10,7 +10,7 @@ describe('app', () => {
     tree.write(
       '.gitignore',
       `/node_modules
-/dist`,
+/dist`
     );
   });
 

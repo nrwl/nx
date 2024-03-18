@@ -13,7 +13,7 @@ export interface NormalizedSchema extends Schema {
 
 export async function normalizeOptions(
   host: Tree,
-  options: Schema,
+  options: Schema
 ): Promise<NormalizedSchema> {
   const { projectName: e2eProjectName, projectRoot: e2eProjectRoot } =
     await determineProjectNameAndRootOptions(host, {
@@ -30,11 +30,11 @@ export async function normalizeOptions(
   options.addPlugin ??= addPlugin;
 
   const { fileName: appFileName, className: appClassName } = names(
-    options.appName || options.appProject,
+    options.appName || options.appProject
   );
   const { root: appRoot } = readProjectConfiguration(
     host,
-    names(options.appProject).fileName,
+    names(options.appProject).fileName
   );
 
   return {

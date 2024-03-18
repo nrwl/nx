@@ -1,7 +1,7 @@
 import { DocumentMetadata } from './documents.models';
 
 export function createDocumentMetadata(
-  defaults: Partial<DocumentMetadata> = {},
+  defaults: Partial<DocumentMetadata> = {}
 ): DocumentMetadata {
   if (!defaults.id) throw new Error('A document entry requires an "id".');
 
@@ -17,12 +17,12 @@ export function createDocumentMetadata(
       path: '',
       tags: [],
     },
-    defaults,
+    defaults
   );
 }
 
 export function convertToDocumentMetadata(
-  target: Partial<DocumentMetadata>,
+  target: Partial<DocumentMetadata>
 ): DocumentMetadata {
   if (!target.id) throw new Error('A document entry requires an "id".');
 

@@ -23,20 +23,20 @@ import { UpgradeNativeConfigureSchema } from './schema';
 
 export async function reactNativeUpgradeNativeGenerator(
   host: Tree,
-  schema: UpgradeNativeConfigureSchema,
+  schema: UpgradeNativeConfigureSchema
 ): Promise<GeneratorCallback> {
   logger.warn(
-    `Please run 'nx run @nx/react-native:upgrade ${schema.name}' instead.`,
+    `Please run 'nx run @nx/react-native:upgrade ${schema.name}' instead.`
   );
   const { projectType, root: appProjectRoot } = readProjectConfiguration(
     host,
-    schema.name,
+    schema.name
   );
   const iosProjectRoot = joinPathFragments(host.root, appProjectRoot, 'ios');
   const androidProjectRoot = joinPathFragments(
     host.root,
     appProjectRoot,
-    'android',
+    'android'
   );
 
   if (

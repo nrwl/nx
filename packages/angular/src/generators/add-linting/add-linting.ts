@@ -22,7 +22,7 @@ import type { AddLintingGeneratorSchema } from './schema';
 
 export async function addLintingGenerator(
   tree: Tree,
-  options: AddLintingGeneratorSchema,
+  options: AddLintingGeneratorSchema
 ): Promise<GeneratorCallback> {
   const tasks: GeneratorCallback[] = [];
   const rootProject = options.projectRoot === '.' || options.projectRoot === '';

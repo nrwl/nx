@@ -5,6 +5,6 @@ export function hasEslintPlugin(tree: Tree): boolean {
   return nxJson.plugins?.some((p) =>
     typeof p === 'string'
       ? p === '@nx/eslint/plugin'
-      : p.plugin === '@nx/eslint/plugin',
+      : p.plugin === '@nx/eslint/plugin'
   );
 }

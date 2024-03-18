@@ -85,7 +85,7 @@ describe('native task hasher', () => {
     });
     const builder = new ProjectGraphBuilder(
       undefined,
-      workspaceFiles.fileMap.projectFileMap,
+      workspaceFiles.fileMap.projectFileMap
     );
 
     builder.addNode({
@@ -135,7 +135,7 @@ describe('native task hasher', () => {
       ['parent'],
       ['build'],
       undefined,
-      {},
+      {}
     );
 
     const hash = await new NativeTaskHasherImpl(
@@ -143,7 +143,7 @@ describe('native task hasher', () => {
       nxJson,
       projectGraph,
       workspaceFiles.rustReferences,
-      { selectivelyHashTsConfig: false },
+      { selectivelyHashTsConfig: false }
     ).hashTasks(Object.values(taskGraph.tasks), taskGraph, {
       TESTENV: 'test',
     });
@@ -182,7 +182,7 @@ describe('native task hasher', () => {
     });
     const builder = new ProjectGraphBuilder(
       undefined,
-      workspaceFiles.fileMap.projectFileMap,
+      workspaceFiles.fileMap.projectFileMap
     );
 
     builder.addNode({
@@ -211,7 +211,7 @@ describe('native task hasher', () => {
       ['parent'],
       ['build'],
       undefined,
-      {},
+      {}
     );
 
     const hash = await new NativeTaskHasherImpl(
@@ -219,7 +219,7 @@ describe('native task hasher', () => {
       nxJson,
       projectGraph,
       workspaceFiles.rustReferences,
-      { selectivelyHashTsConfig: false },
+      { selectivelyHashTsConfig: false }
     ).hashTask(taskGraph.tasks['parent:build'], taskGraph, {});
 
     expect(hash).toMatchInlineSnapshot(`
@@ -256,7 +256,7 @@ describe('native task hasher', () => {
 
     let builder = new ProjectGraphBuilder(
       undefined,
-      workspaceFiles.fileMap.projectFileMap,
+      workspaceFiles.fileMap.projectFileMap
     );
 
     builder.addNode({
@@ -293,14 +293,14 @@ describe('native task hasher', () => {
       ['parent'],
       ['build'],
       undefined,
-      {},
+      {}
     );
     const hash = await new NativeTaskHasherImpl(
       tempFs.tempDir,
       nxJsonModified,
       projectGraph,
       workspaceFiles.rustReferences,
-      { selectivelyHashTsConfig: false },
+      { selectivelyHashTsConfig: false }
     ).hashTask(taskGraph.tasks['parent:build'], taskGraph, {});
 
     expect(hash).toMatchInlineSnapshot(`
@@ -334,7 +334,7 @@ describe('native task hasher', () => {
     });
     let builder = new ProjectGraphBuilder(
       undefined,
-      workspaceFiles.fileMap.projectFileMap,
+      workspaceFiles.fileMap.projectFileMap
     );
     builder.addNode({
       name: 'parent',
@@ -362,7 +362,7 @@ describe('native task hasher', () => {
       ['parent'],
       ['build', 'test'],
       undefined,
-      {},
+      {}
     );
 
     const hash = await new NativeTaskHasherImpl(
@@ -370,7 +370,7 @@ describe('native task hasher', () => {
       nxJson,
       projectGraph,
       workspaceFiles.rustReferences,
-      { selectivelyHashTsConfig: false },
+      { selectivelyHashTsConfig: false }
     ).hashTasks(Object.values(taskGraph.tasks), taskGraph, {});
 
     expect(hash).toMatchInlineSnapshot(`
@@ -417,7 +417,7 @@ describe('native task hasher', () => {
     });
     const builder = new ProjectGraphBuilder(
       undefined,
-      workspaceFiles.fileMap.projectFileMap,
+      workspaceFiles.fileMap.projectFileMap
     );
     builder.addNode({
       name: 'parent',
@@ -460,14 +460,14 @@ describe('native task hasher', () => {
       ['parent'],
       ['test'],
       undefined,
-      {},
+      {}
     );
     let hash = await new NativeTaskHasherImpl(
       tempFs.tempDir,
       nxJson,
       projectGraph,
       workspaceFiles.rustReferences,
-      { selectivelyHashTsConfig: false },
+      { selectivelyHashTsConfig: false }
     ).hashTasks(Object.values(taskGraph.tasks), taskGraph, {
       MY_TEST_HASH_ENV: 'MY_TEST_HASH_ENV_VALUE',
     });
@@ -502,7 +502,7 @@ describe('native task hasher', () => {
     });
     const builder = new ProjectGraphBuilder(
       undefined,
-      workspaceFiles.fileMap.projectFileMap,
+      workspaceFiles.fileMap.projectFileMap
     );
     builder.addNode({
       name: 'parent',
@@ -524,7 +524,7 @@ describe('native task hasher', () => {
       ['parent'],
       ['build'],
       undefined,
-      {},
+      {}
     );
 
     let hash = await new NativeTaskHasherImpl(
@@ -532,7 +532,7 @@ describe('native task hasher', () => {
       nxJson,
       projectGraph,
       workspaceFiles.rustReferences,
-      { selectivelyHashTsConfig: true },
+      { selectivelyHashTsConfig: true }
     ).hashTask(taskGraph.tasks['parent:build'], taskGraph, {});
 
     expect(hash).toMatchInlineSnapshot(`
@@ -558,7 +558,7 @@ describe('native task hasher', () => {
     });
     const builder = new ProjectGraphBuilder(
       undefined,
-      workspaceFiles.fileMap.projectFileMap,
+      workspaceFiles.fileMap.projectFileMap
     );
     builder.addNode({
       name: 'parent',
@@ -595,7 +595,7 @@ describe('native task hasher', () => {
       ['parent', 'child'],
       ['build'],
       undefined,
-      {},
+      {}
     );
 
     let hasher = new NativeTaskHasherImpl(
@@ -603,13 +603,13 @@ describe('native task hasher', () => {
       nxJson,
       projectGraph,
       workspaceFiles.rustReferences,
-      { selectivelyHashTsConfig: false },
+      { selectivelyHashTsConfig: false }
     );
 
     let taskHash = await hasher.hashTask(
       taskGraph.tasks['parent:build'],
       taskGraph,
-      {},
+      {}
     );
 
     expect(taskHash).toMatchInlineSnapshot(`
@@ -633,7 +633,7 @@ describe('native task hasher', () => {
     const hashb = await hasher.hashTask(
       taskGraph.tasks['child:build'],
       taskGraph,
-      {},
+      {}
     );
 
     expect(hashb).toMatchInlineSnapshot(`
@@ -662,7 +662,7 @@ describe('native task hasher', () => {
     });
     const builder = new ProjectGraphBuilder(
       undefined,
-      workspaceFiles.fileMap.projectFileMap,
+      workspaceFiles.fileMap.projectFileMap
     );
     builder.addNode({
       name: 'parent',
@@ -701,7 +701,7 @@ describe('native task hasher', () => {
     builder.addStaticDependency(
       'parent',
       'npm:typescript',
-      'libs/parent/filea.ts',
+      'libs/parent/filea.ts'
     );
     let projectGraph = builder.getUpdatedProjectGraph();
 
@@ -711,7 +711,7 @@ describe('native task hasher', () => {
       ['parent', 'child'],
       ['build'],
       undefined,
-      {},
+      {}
     );
 
     let hasher = new NativeTaskHasherImpl(
@@ -719,7 +719,7 @@ describe('native task hasher', () => {
       nxJson,
       projectGraph,
       workspaceFiles.rustReferences,
-      { selectivelyHashTsConfig: true },
+      { selectivelyHashTsConfig: true }
     );
 
     let typescriptHash = (

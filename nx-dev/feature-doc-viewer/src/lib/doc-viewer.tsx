@@ -34,7 +34,7 @@ export function DocViewer({
     document.content.toString(),
     {
       filePath: document.filePath,
-    },
+    }
   );
 
   const vm = {
@@ -96,7 +96,7 @@ export function DocViewer({
                 data-document="main"
                 className={cx(
                   'prose prose-slate dark:prose-invert w-full max-w-none 2xl:max-w-4xl',
-                  { 'xl:max-w-2xl': !hideTableOfContent },
+                  { 'xl:max-w-2xl': !hideTableOfContent }
                 )}
               >
                 {vm.content}
@@ -104,7 +104,7 @@ export function DocViewer({
               {!hideTableOfContent && (
                 <div
                   className={cx(
-                    'fixed top-36 right-[max(2rem,calc(50%-55rem))] z-20 hidden w-60 overflow-y-auto bg-white py-10 text-sm dark:bg-slate-900 xl:block',
+                    'fixed top-36 right-[max(2rem,calc(50%-55rem))] z-20 hidden w-60 overflow-y-auto bg-white py-10 text-sm dark:bg-slate-900 xl:block'
                   )}
                 >
                   <TableOfContents
@@ -127,7 +127,7 @@ export function DocViewer({
               data-document="related"
               className={cx(
                 'prose prose-slate dark:prose-invert w-full max-w-none pt-8 2xl:max-w-4xl',
-                { 'xl:max-w-2xl': !hideTableOfContent },
+                { 'xl:max-w-2xl': !hideTableOfContent }
               )}
             >
               <RelatedDocumentsSection

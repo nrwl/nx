@@ -18,7 +18,7 @@ import { loadViteDynamicImport } from '../../utils/executor-utils';
 
 export async function* vitePreviewServerExecutor(
   options: VitePreviewServerExecutorOptions,
-  context: ExecutorContext,
+  context: ExecutorContext
 ) {
   process.env.VITE_CJS_IGNORE_WARNING = 'true';
   // Allows ESM to be required in CJS modules. Vite will be published as ESM in the future.
@@ -42,7 +42,7 @@ export async function* vitePreviewServerExecutor(
   // Retrieve the option for the configured buildTarget.
   const buildTargetOptions: ViteBuildExecutorOptions = getNxTargetOptions(
     options.buildTarget,
-    context,
+    context
   );
 
   const { configuration } = parseTargetString(options.buildTarget, context);
@@ -50,7 +50,7 @@ export async function* vitePreviewServerExecutor(
   const viteConfigPath = normalizeViteConfigFilePath(
     context.root,
     projectRoot,
-    buildTargetOptions.configFile,
+    buildTargetOptions.configFile
   );
 
   const { buildOptions, otherOptions: otherOptionsFromBuild } =
@@ -59,27 +59,27 @@ export async function* vitePreviewServerExecutor(
   const { previewOptions, otherOptions } = await getExtraArgs(
     options,
     configuration,
-    otherOptionsFromBuild,
+    otherOptionsFromBuild
   );
   const resolved = await loadConfigFromFile(
     {
       mode: otherOptions?.mode ?? otherOptionsFromBuild?.mode ?? 'production',
       command: 'build',
     },
-    viteConfigPath,
+    viteConfigPath
   );
 
   const outDir =
     options.staticFilePath ??
     joinPathFragments(
       offsetFromRoot(projectRoot),
-      buildTargetOptions.outputPath,
+      buildTargetOptions.outputPath
     ) ??
     resolved?.config?.build?.outDir;
 
   if (!outDir) {
     throw new Error(
-      `Could not infer the "outputPath" or "outDir". It should be set in your vite.config.ts, or as a property of the "${options.buildTarget}" buildTarget or provided explicitly as a "staticFilePath" option.`,
+      `Could not infer the "outputPath" or "outDir". It should be set in your vite.config.ts, or as a property of the "${options.buildTarget}" buildTarget or provided explicitly as a "staticFilePath" option.`
     );
   }
   const root =
@@ -113,7 +113,7 @@ export async function* vitePreviewServerExecutor(
     },
     {
       ...mergedOptions,
-    },
+    }
   );
 
   if (serverConfig.mode === 'production') {
@@ -198,7 +198,7 @@ export default vitePreviewServerExecutor;
 async function getExtraArgs(
   options: VitePreviewServerExecutorOptions,
   configuration: string | undefined,
-  otherOptionsFromBuildTarget: Record<string, unknown> | undefined,
+  otherOptionsFromBuildTarget: Record<string, unknown> | undefined
 ): Promise<{
   // vite PreviewOptions
   previewOptions: Record<string, any>;

@@ -20,11 +20,11 @@ export function addRoute(
   route: string,
   lazy: boolean = true,
   routesConst?: string,
-  importPath?: string,
+  importPath?: string
 ) {
   if (!tree.exists(routesFile)) {
     throw new Error(
-      `Path to parent routing declaration (${routesFile}) does not exist. Please ensure path is correct.`,
+      `Path to parent routing declaration (${routesFile}) does not exist. Please ensure path is correct.`
     );
   }
   if (!tsModule) {
@@ -39,7 +39,7 @@ export function addRoute(
       routesFile,
       routesFileContents,
       tsModule.ScriptTarget.Latest,
-      true,
+      true
     );
 
     parentSourceFile = insertImport(
@@ -47,7 +47,7 @@ export function addRoute(
       parentSourceFile,
       routesFile,
       routesConst,
-      importPath,
+      importPath
     );
 
     routesFileContents = tree.read(routesFile, 'utf-8');
@@ -69,21 +69,21 @@ export function addRoute(
         routesFile,
         routesFileContents,
         tsModule.ScriptTarget.Latest,
-        true,
+        true
       );
 
       addRouteToNgModule(tree, routesFile, sourceFile, route);
       return;
     } else {
       throw new Error(
-        `Routing file (${routesFile}) does not a routing configuration. Please ensure the parent contains a routing configuration.`,
+        `Routing file (${routesFile}) does not a routing configuration. Please ensure the parent contains a routing configuration.`
       );
     }
   }
 
   const newRoutesFileContents = `${routesFileContents.slice(
     0,
-    routesArrayNodes[0].getStart() + 1,
+    routesArrayNodes[0].getStart() + 1
   )}
     ${route},${routesFileContents.slice(routesArrayNodes[0].getStart() + 1)}`;
 
@@ -101,11 +101,11 @@ export function addProviderToRoute(
   tree: Tree,
   routesFile: string,
   routeToAddProviderTo: string,
-  providerToAdd: string,
+  providerToAdd: string
 ) {
   if (!tree.exists(routesFile)) {
     throw new Error(
-      `Path to parent routing declaration (${routesFile}) does not exist. Please ensure path is correct.`,
+      `Path to parent routing declaration (${routesFile}) does not exist. Please ensure path is correct.`
     );
   }
 
@@ -125,7 +125,7 @@ export function addProviderToRoute(
 
   if (!isRoutesArray) {
     throw new Error(
-      `Routing file (${routesFile}) does not a routing configuration. Please ensure the parent contains a routing configuration.`,
+      `Routing file (${routesFile}) does not a routing configuration. Please ensure the parent contains a routing configuration.`
     );
   }
 
@@ -138,7 +138,7 @@ export function addProviderToRoute(
   });
   if (selectedRouteNodes.length === 0) {
     throw new Error(
-      `Could not find '${routeToAddProviderTo}' in routes definition.`,
+      `Could not find '${routeToAddProviderTo}' in routes definition.`
     );
   }
 
@@ -148,13 +148,13 @@ export function addProviderToRoute(
       ROUTE_PATH_PROVIDERS_SELECTOR,
       {
         visitAllChildren: true,
-      },
+      }
     );
 
     if (routeProivdersNodes.length === 0) {
       const newFileContents = `${routesFileContents.slice(
         0,
-        selectedRouteNode.getEnd() - 1,
+        selectedRouteNode.getEnd() - 1
       )}${
         routesFileContents
           .slice(0, selectedRouteNode.getEnd() - 1)
@@ -164,17 +164,17 @@ export function addProviderToRoute(
           : ', '
       }providers: [${providerToAdd}]${routesFileContents.slice(
         selectedRouteNode.getEnd() - 1,
-        routesFileContents.length,
+        routesFileContents.length
       )}`;
 
       tree.write(routesFile, newFileContents);
     } else {
       const newFileContents = `${routesFileContents.slice(
         0,
-        routeProivdersNodes[0].getEnd() - 1,
+        routeProivdersNodes[0].getEnd() - 1
       )}, ${providerToAdd}${routesFileContents.slice(
         routeProivdersNodes[0].getEnd() - 1,
-        routesFileContents.length,
+        routesFileContents.length
       )}`;
 
       tree.write(routesFile, newFileContents);

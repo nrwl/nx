@@ -12,7 +12,7 @@ import { NormalizedSchema, Schema } from '../schema';
 
 export async function normalizeOptions(
   host: Tree,
-  options: Schema,
+  options: Schema
 ): Promise<NormalizedSchema> {
   const {
     projectName,
@@ -47,13 +47,13 @@ export async function normalizeOptions(
   if (bundler === 'none') {
     if (options.publishable) {
       logger.warn(
-        `Publishable libraries cannot be used with bundler: 'none'. Defaulting to 'rollup'.`,
+        `Publishable libraries cannot be used with bundler: 'none'. Defaulting to 'rollup'.`
       );
       bundler = 'rollup';
     }
     if (options.buildable) {
       logger.warn(
-        `Buildable libraries cannot be used with bundler: 'none'. Defaulting to 'rollup'.`,
+        `Buildable libraries cannot be used with bundler: 'none'. Defaulting to 'rollup'.`
       );
       bundler = 'rollup';
     }
@@ -73,7 +73,7 @@ export async function normalizeOptions(
 
   // Libraries with a bundler or is publishable must also be buildable.
   normalized.buildable = Boolean(
-    normalized.bundler !== 'none' || options.buildable || options.publishable,
+    normalized.bundler !== 'none' || options.buildable || options.publishable
   );
 
   normalized.inSourceTests === normalized.minimal || normalized.inSourceTests;
@@ -83,7 +83,7 @@ export async function normalizeOptions(
 
     if (appProjectConfig.projectType !== 'application') {
       throw new Error(
-        `appProject expected type of "application" but got "${appProjectConfig.projectType}"`,
+        `appProject expected type of "application" but got "${appProjectConfig.projectType}"`
       );
     }
 
@@ -95,7 +95,7 @@ export async function normalizeOptions(
     // TODO(jack): We should use appEntryFile instead of appProject so users can directly set it rather than us inferring it.
     if (!normalized.appMain) {
       throw new Error(
-        `Could not locate project main for ${options.appProject}`,
+        `Could not locate project main for ${options.appProject}`
       );
     }
   }
@@ -127,7 +127,7 @@ function findMainEntry(tree: Tree, projectRoot: string): string | undefined {
     'index.jsx',
   ];
   const mainEntry = mainFiles.find((file) =>
-    tree.exists(joinPathFragments(projectRoot, file)),
+    tree.exists(joinPathFragments(projectRoot, file))
   );
   return mainEntry ? joinPathFragments(projectRoot, mainEntry) : undefined;
 }

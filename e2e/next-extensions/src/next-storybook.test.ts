@@ -17,10 +17,10 @@ xdescribe('Next.js Storybook', () => {
       packages: ['@nx/next'],
     });
     runCLI(
-      `generate @nx/next:app ${appName} --e2eTestRunner=none --project-name-and-root-format=as-provided --no-interactive`,
+      `generate @nx/next:app ${appName} --e2eTestRunner=none --project-name-and-root-format=as-provided --no-interactive`
     );
     runCLI(
-      `generate @nx/next:component Foo --directory=${appName}/components/foo/Foo.tsx --no-interactive`,
+      `generate @nx/next:component Foo --directory=${appName}/components/foo/Foo.tsx --no-interactive`
     );
   });
 
@@ -28,7 +28,7 @@ xdescribe('Next.js Storybook', () => {
 
   it('should run a Next.js based Storybook setup', async () => {
     runCLI(
-      `generate @nx/next:storybook-configuration ${appName} --generateStories --no-interactive`,
+      `generate @nx/next:storybook-configuration ${appName} --generateStories --no-interactive`
     );
     runCLI(`build-storybook ${appName}`);
     checkFilesExist(`${appName}/storybook-static/index.html`);

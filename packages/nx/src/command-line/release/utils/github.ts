@@ -50,7 +50,7 @@ export function getGitHubRepoSlug(remoteName = 'origin'): RepoSlug {
       return match[1] as RepoSlug;
     } else {
       throw new Error(
-        `Could not extract "user/repo" data from the resolved remote URL: ${remoteUrl}`,
+        `Could not extract "user/repo" data from the resolved remote URL: ${remoteUrl}`
       );
     }
   } catch (error) {
@@ -62,7 +62,7 @@ export async function createOrUpdateGithubRelease(
   releaseVersion: ReleaseVersion,
   changelogContents: string,
   latestCommit: string,
-  { dryRun }: { dryRun: boolean },
+  { dryRun }: { dryRun: boolean }
 ): Promise<void> {
   const githubRepoSlug = getGitHubRepoSlug();
   if (!githubRepoSlug) {
@@ -85,7 +85,7 @@ export async function createOrUpdateGithubRelease(
   try {
     existingGithubReleaseForVersion = await getGithubReleaseByTag(
       githubRequestConfig,
-      releaseVersion.gitTag,
+      releaseVersion.gitTag
     );
   } catch (err) {
     if (err.response?.status === 401) {
@@ -111,13 +111,13 @@ export async function createOrUpdateGithubRelease(
     console.error(
       `${chalk.white('UPDATE')} ${logTitle}${
         dryRun ? chalk.keyword('orange')(' [dry-run]') : ''
-      }`,
+      }`
     );
   } else {
     console.error(
       `${chalk.green('CREATE')} ${logTitle}${
         dryRun ? chalk.keyword('orange')(' [dry-run]') : ''
-      }`,
+      }`
     );
   }
 
@@ -126,7 +126,7 @@ export async function createOrUpdateGithubRelease(
     existingGithubReleaseForVersion ? existingGithubReleaseForVersion.body : '',
     changelogContents,
     3,
-    noDiffInChangelogMessage,
+    noDiffInChangelogMessage
   );
 
   if (!dryRun) {
@@ -138,7 +138,7 @@ export async function createOrUpdateGithubRelease(
         body: changelogContents,
         commit: latestCommit,
       },
-      existingGithubReleaseForVersion,
+      existingGithubReleaseForVersion
     );
   }
 }
@@ -153,12 +153,12 @@ interface GithubReleaseOptions {
 async function createOrUpdateGithubReleaseInternal(
   githubRequestConfig: GithubRequestConfig,
   release: GithubReleaseOptions,
-  existingGithubReleaseForVersion?: GithubRelease,
+  existingGithubReleaseForVersion?: GithubRelease
 ) {
   const result = await syncGithubRelease(
     githubRequestConfig,
     release,
-    existingGithubReleaseForVersion,
+    existingGithubReleaseForVersion
   );
 
   /**
@@ -185,7 +185,7 @@ async function createOrUpdateGithubReleaseInternal(
       } else {
         console.log(result.error);
         console.error(
-          `An unknown error occurred while trying to create a release on GitHub, please report this on https://github.com/nrwl/nx (NOTE: make sure to redact your GitHub token from the error message!)`,
+          `An unknown error occurred while trying to create a release on GitHub, please report this on https://github.com/nrwl/nx (NOTE: make sure to redact your GitHub token from the error message!)`
         );
       }
     }
@@ -201,14 +201,14 @@ async function createOrUpdateGithubReleaseInternal(
         console.info(
           `\nFollow up in the browser to manually create the release:\n\n` +
             chalk.underline(chalk.cyan(result.url)) +
-            `\n`,
+            `\n`
         );
       })
       .catch(() => {
         console.info(
           `Open this link to manually create a release: \n` +
             chalk.underline(chalk.cyan(result.url)) +
-            '\n',
+            '\n'
         );
       });
   }
@@ -226,14 +226,14 @@ async function createOrUpdateGithubReleaseInternal(
     await open(result.url)
       .then(() => {
         console.info(
-          `Follow up in the browser to manually create the release.`,
+          `Follow up in the browser to manually create the release.`
         );
       })
       .catch(() => {
         console.info(
           `Open this link to manually create a release: \n` +
             chalk.underline(chalk.cyan(result.url)) +
-            '\n',
+            '\n'
         );
       });
   }
@@ -269,7 +269,7 @@ async function promptForContinueInGitHub(): Promise<boolean> {
 async function syncGithubRelease(
   githubRequestConfig: GithubRequestConfig,
   release: GithubReleaseOptions,
-  existingGithubReleaseForVersion?: GithubRelease,
+  existingGithubReleaseForVersion?: GithubRelease
 ) {
   const ghRelease: GithubRelease = {
     tag_name: release.version,
@@ -283,7 +283,7 @@ async function syncGithubRelease(
       ? updateGithubRelease(
           githubRequestConfig,
           existingGithubReleaseForVersion.id,
-          ghRelease,
+          ghRelease
         )
       : createGithubRelease(githubRequestConfig, {
           ...ghRelease,
@@ -314,7 +314,7 @@ export async function resolveGithubToken(): Promise<string | null> {
   const ghCLIPath = joinPathFragments(
     process.env.XDG_CONFIG_HOME || joinPathFragments(homedir(), '.config'),
     'gh',
-    'hosts.yml',
+    'hosts.yml'
   );
   if (existsSync(ghCLIPath)) {
     const yamlContents = await fsp.readFile(ghCLIPath, 'utf8');
@@ -342,19 +342,19 @@ export async function resolveGithubToken(): Promise<string | null> {
 
 export async function getGithubReleaseByTag(
   config: GithubRequestConfig,
-  tag: string,
+  tag: string
 ): Promise<GithubRelease> {
   return await makeGithubRequest(
     config,
     `/repos/${config.repo}/releases/tags/${tag}`,
-    {},
+    {}
   );
 }
 
 async function makeGithubRequest(
   config: GithubRequestConfig,
   url: string,
-  opts: AxiosRequestConfig = {},
+  opts: AxiosRequestConfig = {}
 ) {
   return (
     await axios<any, any>(url, {
@@ -370,7 +370,7 @@ async function makeGithubRequest(
 
 async function createGithubRelease(
   config: GithubRequestConfig,
-  body: GithubRelease,
+  body: GithubRelease
 ) {
   return await makeGithubRequest(config, `/repos/${config.repo}/releases`, {
     method: 'POST',
@@ -381,7 +381,7 @@ async function createGithubRelease(
 async function updateGithubRelease(
   config: GithubRequestConfig,
   id: string,
-  body: GithubRelease,
+  body: GithubRelease
 ) {
   return await makeGithubRequest(
     config,
@@ -389,13 +389,13 @@ async function updateGithubRelease(
     {
       method: 'PATCH',
       data: body,
-    },
+    }
   );
 }
 
 function githubNewReleaseURL(
   config: GithubRequestConfig,
-  release: { version: string; body: string },
+  release: { version: string; body: string }
 ) {
   return `https://github.com/${config.repo}/releases/new?tag=${
     release.version

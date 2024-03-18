@@ -28,7 +28,7 @@ export function reactNativeInitGenerator(host: Tree, schema: Schema) {
 
 export async function reactNativeInitGeneratorInternal(
   host: Tree,
-  schema: Schema,
+  schema: Schema
 ) {
   addGitIgnoreEntry(host);
 
@@ -71,7 +71,7 @@ export function updateDependencies(host: Tree, schema: Schema) {
       '@nx/react-native': nxVersion,
     },
     undefined,
-    schema.keepExistingVersions,
+    schema.keepExistingVersions
   );
 }
 

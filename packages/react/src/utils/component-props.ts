@@ -25,7 +25,7 @@ export function getArgsDefaultValue(property: ts.SyntaxKind): string {
 
 export function getDefaultsForComponent(
   sourceFile: ts.SourceFile,
-  cmpDeclaration: ts.Node,
+  cmpDeclaration: ts.Node
 ): {
   propsTypeName: string;
   props: {
@@ -79,6 +79,6 @@ export function getImportForType(sourceFile: ts.SourceFile, typeName: string) {
   return sourceFile.statements.find(
     (statement: ts.Node) =>
       tsModule.isImportDeclaration(statement) &&
-      statement.getText().includes(typeName),
+      statement.getText().includes(typeName)
   );
 }

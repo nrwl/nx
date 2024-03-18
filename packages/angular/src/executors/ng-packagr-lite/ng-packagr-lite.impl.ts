@@ -13,7 +13,7 @@ import { getNgPackagrInstance } from './ng-packagr-adjustments/ng-packagr';
 async function initializeNgPackgrLite(
   options: BuildAngularLibraryExecutorOptions,
   context: ExecutorContext,
-  projectDependencies: DependentBuildableProjectNode[],
+  projectDependencies: DependentBuildableProjectNode[]
 ): Promise<NgPackagr> {
   const ngPackagr = await getNgPackagrInstance(options);
   ngPackagr.forProject(resolve(context.root, options.project));
@@ -23,12 +23,12 @@ async function initializeNgPackgrLite(
       options.tsConfig,
       context.root,
       context.projectsConfigurations.projects[context.projectName].root,
-      projectDependencies,
+      projectDependencies
     );
     const tsConfig = await parseRemappedTsConfigAndMergeDefaults(
       context.root,
       options.tsConfig,
-      remappedTsConfigFilePath,
+      remappedTsConfigFilePath
     );
     ngPackagr.withTsConfig(tsConfig);
   }
@@ -37,7 +37,7 @@ async function initializeNgPackgrLite(
 }
 
 export const ngPackagrLiteExecutor = createLibraryExecutor(
-  initializeNgPackgrLite,
+  initializeNgPackgrLite
 );
 
 export default ngPackagrLiteExecutor;

@@ -31,7 +31,7 @@ export function checkSharedNpmPackagesMatchExpected(ast: SourceFile) {
     sharedPackageConfigNodes = tsquery(
       sharedObjectNodes[0],
       SHARED_PACKAGE_CONFIG_SELECTOR,
-      { visitAllChildren: true },
+      { visitAllChildren: true }
     );
 
     settingsToMatch = [`singleton: true`, `strictVersion: true`];
@@ -39,7 +39,7 @@ export function checkSharedNpmPackagesMatchExpected(ast: SourceFile) {
     sharedPackageConfigNodes = tsquery(
       shareHelperNodes[0],
       SHARED_PACKAGE_CONFIG_SELECTOR,
-      { visitAllChildren: true },
+      { visitAllChildren: true }
     );
 
     settingsToMatch = [
@@ -58,7 +58,7 @@ export function checkSharedNpmPackagesMatchExpected(ast: SourceFile) {
   for (const configNode of sharedPackageConfigNodes) {
     const configText = configNode.getText();
     packagesMatch = settingsToMatch.every((setting) =>
-      configText.includes(setting),
+      configText.includes(setting)
     );
 
     if (!packagesMatch) {

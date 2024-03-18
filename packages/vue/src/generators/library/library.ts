@@ -30,7 +30,7 @@ export async function libraryGeneratorInternal(tree: Tree, schema: Schema) {
   const options = await normalizeOptions(tree, schema);
   if (options.publishable === true && !schema.importPath) {
     throw new Error(
-      `For publishable libs you have to provide a proper "--importPath" which needs to be a valid npm package name (e.g. my-awesome-lib or @myorg/my-lib)`,
+      `For publishable libs you have to provide a proper "--importPath" which needs to be a valid npm package name (e.g. my-awesome-lib or @myorg/my-lib)`
     );
   }
 
@@ -47,7 +47,7 @@ export async function libraryGeneratorInternal(tree: Tree, schema: Schema) {
     await vueInitGenerator(tree, {
       ...options,
       skipFormat: true,
-    }),
+    })
   );
   if (!options.skipPackageJson) {
     tasks.push(ensureDependencies(tree, options));
@@ -90,7 +90,7 @@ export async function libraryGeneratorInternal(tree: Tree, schema: Schema) {
       joinPathFragments(
         options.projectRoot,
         './src',
-        'index.' + (options.js ? 'js' : 'ts'),
+        'index.' + (options.js ? 'js' : 'ts')
       ),
     ]);
   }

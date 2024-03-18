@@ -59,7 +59,7 @@ export class ExternalApiImpl extends ExternalApi {
         } else {
           console.log('unhandled event', type, payload);
         }
-      },
+      }
     );
 
     // make sure properties set before are taken into account again
@@ -83,7 +83,7 @@ export class ExternalApiImpl extends ExternalApi {
 
   async openProjectDetails(projectName: string, targetName?: string) {
     await this.router.navigate(
-      `/project-details/${encodeURIComponent(projectName)}`,
+      `/project-details/${encodeURIComponent(projectName)}`
     );
     if (targetName) {
       this.focusTargetInProjectDetails(targetName);
@@ -131,8 +131,8 @@ export class ExternalApiImpl extends ExternalApi {
   focusTarget(projectName: string, targetName: string) {
     this.router.navigate(
       `/tasks/${encodeURIComponent(targetName)}?projects=${encodeURIComponent(
-        projectName,
-      )}`,
+        projectName
+      )}`
     );
   }
 

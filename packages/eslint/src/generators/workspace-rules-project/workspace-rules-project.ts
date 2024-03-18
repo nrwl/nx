@@ -30,11 +30,11 @@ export interface LintWorkspaceRulesProjectGeneratorOptions {
 
 export async function lintWorkspaceRulesProjectGenerator(
   tree: Tree,
-  options: LintWorkspaceRulesProjectGeneratorOptions = {},
+  options: LintWorkspaceRulesProjectGeneratorOptions = {}
 ) {
   const { configurationGenerator } = ensurePackage<typeof import('@nx/jest')>(
     '@nx/jest',
-    nxVersion,
+    nxVersion
   );
   const tasks: GeneratorCallback[] = [];
 
@@ -66,7 +66,7 @@ export async function lintWorkspaceRulesProjectGenerator(
 
   if (nxJson.targetDefaults?.lint?.inputs) {
     nxJson.targetDefaults.lint.inputs.push(
-      `{workspaceRoot}/${WORKSPACE_PLUGIN_DIR}/**/*`,
+      `{workspaceRoot}/${WORKSPACE_PLUGIN_DIR}/**/*`
     );
 
     updateNxJson(tree, nxJson);
@@ -82,7 +82,7 @@ export async function lintWorkspaceRulesProjectGenerator(
       setupFile: 'none',
       compiler: 'tsc',
       skipFormat: true,
-    }),
+    })
   );
 
   updateJson(
@@ -108,7 +108,7 @@ export async function lintWorkspaceRulesProjectGenerator(
         });
       }
       return json;
-    },
+    }
   );
 
   // Add swc dependencies
@@ -120,8 +120,8 @@ export async function lintWorkspaceRulesProjectGenerator(
       {},
       {
         '@typescript-eslint/utils': typescriptESLintVersion,
-      },
-    ),
+      }
+    )
   );
 
   if (!options.skipFormat) {

@@ -3,7 +3,7 @@ import * as ts from 'typescript';
 // adapted from TS default diagnostic reporter
 export function formatDiagnosticReport(
   diagnostic: ts.Diagnostic,
-  host: ts.FormatDiagnosticsHost,
+  host: ts.FormatDiagnosticsHost
 ): string {
   const diagnostics: ts.Diagnostic[] = new Array(1);
   diagnostics[0] = diagnostic;
@@ -18,15 +18,15 @@ export function formatDiagnosticReport(
 
 // adapted from TS default solution builder status reporter
 export function formatSolutionBuilderStatusReport(
-  diagnostic: ts.Diagnostic,
+  diagnostic: ts.Diagnostic
 ): string {
   let formattedDiagnostic = `[${formatColorAndReset(
     getLocaleTimeString(),
-    ForegroundColorEscapeSequences.Grey,
+    ForegroundColorEscapeSequences.Grey
   )}] `;
   formattedDiagnostic += `${ts.flattenDiagnosticMessageText(
     diagnostic.messageText,
-    ts.sys.newLine,
+    ts.sys.newLine
   )}${ts.sys.newLine + ts.sys.newLine}`;
 
   return formattedDiagnostic;

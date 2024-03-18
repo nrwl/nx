@@ -23,7 +23,7 @@ describe('init', () => {
       },
       {
         [existing]: existingVersion,
-      },
+      }
     );
     await webInitGenerator(tree, {});
     const packageJson = readJson(tree, 'package.json');

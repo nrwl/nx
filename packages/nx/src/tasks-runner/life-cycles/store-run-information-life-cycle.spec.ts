@@ -7,7 +7,7 @@ describe('StoreRunInformationLifeCycle', () => {
     const store = new StoreRunInformationLifeCycle(
       'nx run-many --target=test',
       (res) => (runDetails = res),
-      () => 'DATE',
+      () => 'DATE'
     );
 
     store.startCommand();
@@ -81,7 +81,7 @@ describe('StoreRunInformationLifeCycle', () => {
     const store = new StoreRunInformationLifeCycle(
       'nx run-many --target=test',
       (res) => (runDetails = res),
-      () => 'DATE',
+      () => 'DATE'
     );
 
     store.startCommand();

@@ -17,10 +17,10 @@ describe('update-nx-next-dependency', () => {
     await update(tree);
 
     expect(
-      readJson(tree, 'package.json').dependencies['@nx/next'],
+      readJson(tree, 'package.json').dependencies['@nx/next']
     ).not.toBeDefined();
     expect(
-      readJson(tree, 'package.json').devDependencies['@nx/next'],
+      readJson(tree, 'package.json').devDependencies['@nx/next']
     ).toBeDefined();
   });
 });

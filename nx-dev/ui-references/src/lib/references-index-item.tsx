@@ -13,7 +13,7 @@ export function ReferencesIndexItem(pkg: {
       onClick={() => pkg.callback(pkg.id)}
       className={cx(
         'group relative flex items-center justify-center gap-3 overflow-hidden rounded-lg border border-slate-200 px-3 py-2 text-slate-700 transition hover:bg-slate-50',
-        pkg.active === pkg.id ? 'bg-slate-200' : '',
+        pkg.active === pkg.id ? 'bg-slate-200' : ''
       )}
     >
       <img

@@ -10,7 +10,7 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
     offsetFromRoot: offsetFromRoot(options.appProjectRoot),
     rootTsConfigPath: getRelativePathToRootTsConfig(
       host,
-      options.appProjectRoot,
+      options.appProjectRoot
     ),
   });
   if (options.unitTestRunner === 'none') {
@@ -20,8 +20,8 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
     host.delete(
       join(
         options.androidProjectRoot,
-        `/app/src/androidTest/java/com/${options.lowerCaseName}/DetoxTest.java`,
-      ),
+        `/app/src/androidTest/java/com/${options.lowerCaseName}/DetoxTest.java`
+      )
     );
   }
   if (options.js) {

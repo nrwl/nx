@@ -22,7 +22,7 @@ export async function configureCypressCT(
     buildTarget: string;
     bundler: 'vite' | 'webpack';
     validExecutorNames: Set<string>;
-  },
+  }
 ): Promise<FoundTarget> {
   let found: FoundTarget = { target: options.buildTarget, config: undefined };
 
@@ -44,13 +44,13 @@ export async function configureCypressCT(
     const projectGraph = await createProjectGraphAsync();
     const { project, target } = parseTargetString(
       options.buildTarget,
-      projectGraph,
+      projectGraph
     );
     const buildTargetProject = readProjectConfiguration(tree, project);
     const executor = buildTargetProject.targets?.[target]?.executor;
     if (!executor || !options.validExecutorNames.has(executor)) {
       throw new Error(
-        `Cypress Component Testing is not currently supported for this project. Please check https://github.com/nrwl/nx/issues/21546 for more information.`,
+        `Cypress Component Testing is not currently supported for this project. Please check https://github.com/nrwl/nx/issues/21546 for more information.`
       );
     }
   }
@@ -78,15 +78,15 @@ export async function configureCypressCT(
 
   const cypressConfigFilePath = getProjectCypressConfigPath(
     tree,
-    projectConfig.root,
+    projectConfig.root
   );
   const updatedCyConfig = await addDefaultCTConfig(
     tree.read(cypressConfigFilePath, 'utf-8'),
-    ctConfigOptions,
+    ctConfigOptions
   );
   tree.write(
     cypressConfigFilePath,
-    `import { nxComponentTestingPreset } from '@nx/react/plugins/component-testing';\n${updatedCyConfig}`,
+    `import { nxComponentTestingPreset } from '@nx/react/plugins/component-testing';\n${updatedCyConfig}`
   );
 
   return found;
@@ -95,14 +95,14 @@ export async function configureCypressCT(
 function assertValidConfig(config: unknown) {
   if (!config) {
     throw new Error(
-      'Unable to find a valid build configuration. Try passing in a target for an app. --build-target=<project>:<target>[:<configuration>]',
+      'Unable to find a valid build configuration. Try passing in a target for an app. --build-target=<project>:<target>[:<configuration>]'
     );
   }
 }
 
 export async function getBundlerFromTarget(
   found: FoundTarget,
-  tree: Tree,
+  tree: Tree
 ): Promise<'vite' | 'webpack'> {
   if (found.target && found.config?.executor) {
     return found.config.executor === '@nrwl/vite:build' ||
@@ -113,7 +113,7 @@ export async function getBundlerFromTarget(
 
   const { target, project } = parseTargetString(
     found.target,
-    await createProjectGraphAsync(),
+    await createProjectGraphAsync()
   );
   const projectConfig = readProjectConfiguration(tree, project);
   const executor = projectConfig?.targets?.[target]?.executor;
@@ -125,7 +125,7 @@ export async function getBundlerFromTarget(
 export async function getActualBundler(
   tree: Tree,
   options: { buildTarget?: string; bundler?: 'vite' | 'webpack' },
-  found: FoundTarget,
+  found: FoundTarget
 ) {
   // Specifically undefined to allow Remix workaround of passing an empty string
   const actualBundler =
@@ -150,7 +150,7 @@ export function isComponent(tree: Tree, filePath: string): boolean {
     filePath,
     content,
     tsModule.ScriptTarget.Latest,
-    true,
+    true
   );
 
   const cmpDeclaration = getComponentNode(sourceFile);

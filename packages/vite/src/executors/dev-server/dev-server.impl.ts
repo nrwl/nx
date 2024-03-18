@@ -19,7 +19,7 @@ import { getBuildExtraArgs } from '../build/build.impl';
 
 export async function* viteDevServerExecutor(
   options: ViteDevServerExecutorOptions,
-  context: ExecutorContext,
+  context: ExecutorContext
 ): AsyncGenerator<{ success: boolean; baseUrl: string }> {
   process.env.VITE_CJS_IGNORE_WARNING = 'true';
   // Allows ESM to be required in CJS modules. Vite will be published as ESM in the future.
@@ -37,7 +37,7 @@ export async function* viteDevServerExecutor(
   // Retrieve the option for the configured buildTarget.
   const buildTargetOptions: ViteBuildExecutorOptions = getNxTargetOptions(
     options.buildTarget,
-    context,
+    context
   );
 
   const { configuration } = parseTargetString(options.buildTarget, context);
@@ -48,20 +48,20 @@ export async function* viteDevServerExecutor(
   const viteConfigPath = normalizeViteConfigFilePath(
     context.root,
     projectRoot,
-    buildTargetOptions.configFile,
+    buildTargetOptions.configFile
   );
   const { serverOptions, otherOptions } = await getServerExtraArgs(
     options,
     configuration,
     buildOptions,
-    otherOptionsFromBuild,
+    otherOptionsFromBuild
   );
   const resolved = await loadConfigFromFile(
     {
       mode: otherOptions?.mode ?? buildTargetOptions?.['mode'] ?? 'development',
       command: 'serve',
     },
-    viteConfigPath,
+    viteConfigPath
   );
 
   // vite InlineConfig
@@ -78,7 +78,7 @@ export async function* viteDevServerExecutor(
         ...serverOptions,
       },
       ...otherOptions,
-    },
+    }
   );
 
   try {
@@ -128,7 +128,7 @@ async function getServerExtraArgs(
   options: ViteDevServerExecutorOptions,
   configuration: string | undefined,
   buildOptionsFromBuildTarget: Record<string, unknown> | undefined,
-  otherOptionsFromBuildTarget: Record<string, unknown> | undefined,
+  otherOptionsFromBuildTarget: Record<string, unknown> | undefined
 ): Promise<{
   // vite ServerOptions
   serverOptions: Record<string, unknown>;

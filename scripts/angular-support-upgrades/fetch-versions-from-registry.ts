@@ -35,15 +35,15 @@ const packagesToUpdate: PackageSpec[] = [
 ];
 
 export async function fetchVersionsFromRegistry(
-  targetVersion: 'latest' | 'next',
+  targetVersion: 'latest' | 'next'
 ) {
   console.log('⏳ - Fetching versions from registry...');
 
   const packageVersionMap = new Map<string, string>();
   await Promise.all(
     packagesToUpdate.map((pkgSpec) =>
-      fetch(packageVersionMap, pkgSpec, targetVersion),
-    ),
+      fetch(packageVersionMap, pkgSpec, targetVersion)
+    )
   );
 
   console.log('✅ - Finished fetching versions from registry');
@@ -54,7 +54,7 @@ export async function fetchVersionsFromRegistry(
 async function fetch(
   packageVersionMap: Map<string, string>,
   pkgSpec: PackageSpec,
-  targetVersion: 'latest' | 'next',
+  targetVersion: 'latest' | 'next'
 ) {
   function setPackageVersions(pkgSpec: PackageSpec, version: string) {
     if (typeof pkgSpec === 'string') {

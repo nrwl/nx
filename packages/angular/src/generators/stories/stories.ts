@@ -25,7 +25,7 @@ import { nxVersion } from '../../utils/versions';
 
 export async function angularStoriesGenerator(
   tree: Tree,
-  options: StoriesGeneratorOptions,
+  options: StoriesGeneratorOptions
 ): Promise<GeneratorCallback> {
   const e2eProjectName = options.cypressProject ?? `${options.name}-e2e`;
   const e2eProject = getE2EProject(tree, e2eProjectName);
@@ -35,13 +35,13 @@ export async function angularStoriesGenerator(
     const moduleFilePaths = getModuleFilePaths(tree, entryPoint);
     componentsInfo.push(
       ...getComponentsInfo(tree, entryPoint, moduleFilePaths, options.name),
-      ...getStandaloneComponentsInfo(tree, entryPoint),
+      ...getStandaloneComponentsInfo(tree, entryPoint)
     );
   }
 
   if (options.generateCypressSpecs && !e2eProject) {
     logger.info(
-      `There was no e2e project "${e2eProjectName}" found, so cypress specs will not be generated. Pass "--cypressProject" to specify a different e2e project name.`,
+      `There was no e2e project "${e2eProjectName}" found, so cypress specs will not be generated. Pass "--cypressProject" to specify a different e2e project name.`
     );
   }
 
@@ -52,12 +52,12 @@ export async function angularStoriesGenerator(
           joinPathFragments(
             f.moduleFolderPath,
             f.path,
-            `${f.componentFileName}.ts`,
+            `${f.componentFileName}.ts`
           ),
-          pattern,
+          pattern
         );
         return shouldIgnorePath;
-      }),
+      })
   );
 
   for (const info of componentInfos) {
@@ -97,7 +97,7 @@ export async function angularStoriesGenerator(
     addInteractionsInAddons(tree, projectConfiguration);
 
     tasks.push(
-      addDependenciesToPackageJson(tree, {}, interactionTestsDependencies()),
+      addDependenciesToPackageJson(tree, {}, interactionTestsDependencies())
     );
   }
 

@@ -8,7 +8,7 @@ import { NormalizedNgRxGeneratorOptions } from './normalize-options';
  */
 export function generateNgrxFilesFromTemplates(
   tree: Tree,
-  options: NormalizedNgRxGeneratorOptions,
+  options: NormalizedNgRxGeneratorOptions
 ): void {
   const name = options.name;
   const projectNames = names(name);
@@ -22,7 +22,7 @@ export function generateNgrxFilesFromTemplates(
       ...projectNames,
       importFromOperators: lt(options.rxjsVersion, '7.2.0'),
       tmpl: '',
-    },
+    }
   );
 
   if (!options.facade) {
@@ -30,15 +30,15 @@ export function generateNgrxFilesFromTemplates(
       joinPathFragments(
         options.parentDirectory,
         options.directory,
-        `${projectNames.fileName}.facade.ts`,
-      ),
+        `${projectNames.fileName}.facade.ts`
+      )
     );
     tree.delete(
       joinPathFragments(
         options.parentDirectory,
         options.directory,
-        `${projectNames.fileName}.facade.spec.ts`,
-      ),
+        `${projectNames.fileName}.facade.spec.ts`
+      )
     );
   }
 }

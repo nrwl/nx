@@ -2,7 +2,7 @@ import { ModuleFederationConfig } from '@nx/webpack/src/utils/module-federation'
 import { getModuleFederationConfig } from './utils';
 
 export async function withModuleFederationForSSR(
-  options: ModuleFederationConfig,
+  options: ModuleFederationConfig
 ) {
   if (global.NX_GRAPH_CREATION) {
     return (config) => config;
@@ -46,7 +46,7 @@ export async function withModuleFederationForSSR(
           },
           isServer: true,
         },
-        {},
+        {}
       ),
       sharedLibraries.getReplacementPlugin(),
     ],

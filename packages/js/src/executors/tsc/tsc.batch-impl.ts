@@ -26,7 +26,7 @@ export async function* tscBatchExecutor(
   taskGraph: TaskGraph,
   inputs: Record<string, ExecutorOptions>,
   overrides: ExecutorOptions,
-  context: ExecutorContext,
+  context: ExecutorContext
 ) {
   const tasksOptions = normalizeTasksOptions(inputs, context);
 
@@ -43,18 +43,18 @@ export async function* tscBatchExecutor(
   const taskInMemoryTsConfigMap = getProcessedTaskTsConfigs(
     Object.keys(taskGraph.tasks),
     tasksOptions,
-    context,
+    context
   );
   const tsConfigTaskInfoMap = createTaskInfoPerTsConfigMap(
     tasksOptions,
     context,
     Object.keys(taskGraph.tasks),
-    taskInMemoryTsConfigMap,
+    taskInMemoryTsConfigMap
   );
   const tsCompilationContext = createTypescriptCompilationContext(
     tsConfigTaskInfoMap,
     taskInMemoryTsConfigMap,
-    context,
+    context
   );
 
   const logger: TypescripCompilationLogger = {
@@ -87,7 +87,7 @@ export async function* tscBatchExecutor(
           ...taskInfo.options,
           additionalEntryPoints: createEntryPoints(
             taskInfo.options.additionalEntryPoints,
-            context.root,
+            context.root
           ),
           format: [determineModuleFormatFromTsConfig(tsConfig)],
           // As long as d.ts files match their .js counterparts, we don't need to emit them.
@@ -96,7 +96,7 @@ export async function* tscBatchExecutor(
         },
         taskInfo.context,
         taskInfo.projectGraphNode,
-        taskInfo.buildableProjectNodeDependencies,
+        taskInfo.buildableProjectNodeDependencies
       );
       taskInfo.endTime = Date.now();
     }
@@ -113,7 +113,7 @@ export async function* tscBatchExecutor(
         }
       },
       afterProjectCompilationCallback: processTaskPostCompilation,
-    },
+    }
   );
 
   if (shouldWatch) {
@@ -130,7 +130,7 @@ export async function* tscBatchExecutor(
                 ...t.options,
                 additionalEntryPoints: createEntryPoints(
                   t.options.additionalEntryPoints,
-                  context.root,
+                  context.root
                 ),
                 format: [determineModuleFormatFromTsConfig(t.options.tsConfig)],
                 // As long as d.ts files match their .js counterparts, we don't need to emit them.
@@ -139,10 +139,10 @@ export async function* tscBatchExecutor(
               },
               t.context,
               t.projectGraphNode,
-              t.buildableProjectNodeDependencies,
+              t.buildableProjectNodeDependencies
             );
           }
-        },
+        }
       );
 
     const handleTermination = async (exitCode: number) => {
@@ -162,7 +162,7 @@ export async function* tscBatchExecutor(
 
   const toBatchExecutorTaskResult = (
     tsConfig: string,
-    success: boolean,
+    success: boolean
   ): BatchExecutorTaskResult => ({
     task: tsConfigTaskInfoMap[tsConfig].task,
     result: {
@@ -175,7 +175,7 @@ export async function* tscBatchExecutor(
 
   let isCompilationDone = false;
   const taskTsConfigsToReport = new Set(
-    Object.keys(taskGraph.tasks).map((t) => taskInMemoryTsConfigMap[t].path),
+    Object.keys(taskGraph.tasks).map((t) => taskInMemoryTsConfigMap[t].path)
   );
   let tasksToReportIterator: IterableIterator<string>;
 
@@ -230,8 +230,8 @@ export default tscBatchExecutor;
 async function* mapAsyncIterable(
   iterable: AsyncIterable<TypescriptCompilationResult>,
   nextFn: (
-    iterator: AsyncIterableIterator<TypescriptCompilationResult>,
-  ) => Promise<IteratorResult<BatchExecutorTaskResult>>,
+    iterator: AsyncIterableIterator<TypescriptCompilationResult>
+  ) => Promise<IteratorResult<BatchExecutorTaskResult>>
 ) {
   return yield* {
     [Symbol.asyncIterator]() {
@@ -250,20 +250,17 @@ async function* mapAsyncIterable(
 function createTypescriptCompilationContext(
   tsConfigTaskInfoMap: Record<string, TaskInfo>,
   taskInMemoryTsConfigMap: Record<string, TypescriptInMemoryTsConfig>,
-  context: ExecutorContext,
+  context: ExecutorContext
 ): Record<string, TypescriptProjectContext> {
   const tsCompilationContext: Record<string, TypescriptProjectContext> =
-    Object.entries(tsConfigTaskInfoMap).reduce(
-      (acc, [tsConfig, taskInfo]) => {
-        acc[tsConfig] = {
-          project: taskInfo.context.projectName,
-          tsConfig: taskInfo.tsConfig,
-          transformers: taskInfo.options.transformers,
-        };
-        return acc;
-      },
-      {} as Record<string, TypescriptProjectContext>,
-    );
+    Object.entries(tsConfigTaskInfoMap).reduce((acc, [tsConfig, taskInfo]) => {
+      acc[tsConfig] = {
+        project: taskInfo.context.projectName,
+        tsConfig: taskInfo.tsConfig,
+        transformers: taskInfo.options.transformers,
+      };
+      return acc;
+    }, {} as Record<string, TypescriptProjectContext>);
 
   Object.entries(taskInMemoryTsConfigMap).forEach(([task, tsConfig]) => {
     if (!tsCompilationContext[tsConfig.path]) {

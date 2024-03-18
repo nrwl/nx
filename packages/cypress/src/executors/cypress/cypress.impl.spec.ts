@@ -93,7 +93,7 @@ describe('Cypress builder', () => {
       expect.objectContaining({
         config: { baseUrl: 'http://localhost:4200' },
         project: path.dirname(cypressOptions.cypressConfig),
-      }),
+      })
     );
     expect(cypressOpen).not.toHaveBeenCalled();
   });
@@ -101,7 +101,7 @@ describe('Cypress builder', () => {
   it('should call `Cypress.open` if headless mode is `false`', async () => {
     const { success } = await cypressExecutor(
       { ...cypressOptions, headless: false, watch: true },
-      mockContext,
+      mockContext
     );
     expect(success).toEqual(true);
 
@@ -109,7 +109,7 @@ describe('Cypress builder', () => {
       expect.objectContaining({
         config: { baseUrl: 'http://localhost:4200' },
         project: path.dirname(cypressOptions.cypressConfig),
-      }),
+      })
     );
     expect(cypressRun).not.toHaveBeenCalled();
   });
@@ -133,7 +133,7 @@ describe('Cypress builder', () => {
         ...cypressOptions,
         browser: 'edge',
       },
-      mockContext,
+      mockContext
     );
 
     expect(devkit.logger.warn).toHaveBeenCalled();
@@ -146,7 +146,7 @@ describe('Cypress builder', () => {
         ...cypressOptions,
         browser: 'canary',
       },
-      mockContext,
+      mockContext
     );
 
     expect(devkit.logger.warn).toHaveBeenCalled();
@@ -159,7 +159,7 @@ describe('Cypress builder', () => {
         ...cypressOptions,
         headless: true,
       },
-      mockContext,
+      mockContext
     );
 
     expect(devkit.logger.warn).toHaveBeenCalled();
@@ -172,7 +172,7 @@ describe('Cypress builder', () => {
         ...cypressOptions,
         headless: true,
       },
-      mockContext,
+      mockContext
     );
     const deprecatedMessage = stripIndents`
 NOTE:
@@ -192,7 +192,7 @@ A generator to migrate from v8 to v10 is provided. See https://nx.dev/cypress/v1
         devServerTarget: undefined,
         baseUrl: 'http://my-distant-host.com',
       },
-      mockContext,
+      mockContext
     );
     expect(success).toEqual(true);
     expect(cypressRun).toHaveBeenCalledWith(
@@ -201,7 +201,7 @@ A generator to migrate from v8 to v10 is provided. See https://nx.dev/cypress/v1
           baseUrl: 'http://my-distant-host.com',
         },
         project: path.dirname(cypressOptions.cypressConfig),
-      }),
+      })
     );
   });
 
@@ -212,13 +212,13 @@ A generator to migrate from v8 to v10 is provided. See https://nx.dev/cypress/v1
         ...cypressOptions,
         ciBuildId,
       },
-      mockContext,
+      mockContext
     );
     expect(success).toEqual(true);
     expect(cypressRun).toHaveBeenCalledWith(
       expect.objectContaining({
         ciBuildId: ciBuildId.toString(),
-      }),
+      })
     );
   });
 
@@ -230,14 +230,14 @@ A generator to migrate from v8 to v10 is provided. See https://nx.dev/cypress/v1
         devServerTarget: undefined,
         ciBuildId,
       },
-      mockContext,
+      mockContext
     );
     expect(success).toEqual(true);
     expect(cypressRun).toHaveBeenCalledWith(
       expect.objectContaining({
         ciBuildId,
         project: path.dirname(cypressOptions.cypressConfig),
-      }),
+      })
     );
   });
 
@@ -247,14 +247,14 @@ A generator to migrate from v8 to v10 is provided. See https://nx.dev/cypress/v1
         ...cypressOptions,
         browser: 'chrome',
       },
-      mockContext,
+      mockContext
     );
     expect(success).toEqual(true);
     expect(cypressRun).toHaveBeenCalledWith(
       expect.objectContaining({
         browser: 'chrome',
         project: path.dirname(cypressOptions.cypressConfig),
-      }),
+      })
     );
   });
 
@@ -272,13 +272,13 @@ A generator to migrate from v8 to v10 is provided. See https://nx.dev/cypress/v1
         watch: false,
         skipServe: false,
       },
-      mockContext,
+      mockContext
     );
     expect(success).toEqual(true);
     expect(cypressRun).toHaveBeenCalledWith(
       expect.objectContaining({
         project: path.dirname(cypressOptions.cypressConfig),
-      }),
+      })
     );
   });
 
@@ -288,13 +288,13 @@ A generator to migrate from v8 to v10 is provided. See https://nx.dev/cypress/v1
         ...cypressOptions,
         ignoreTestFiles: '/some/path/to/a/file.js',
       },
-      mockContext,
+      mockContext
     );
     expect(success).toEqual(true);
     expect(cypressRun).toHaveBeenCalledWith(
       expect.objectContaining({
         ignoreTestFiles: '/some/path/to/a/file.js',
-      }),
+      })
     );
   });
 
@@ -305,14 +305,14 @@ A generator to migrate from v8 to v10 is provided. See https://nx.dev/cypress/v1
         reporter: 'junit',
         reporterOptions: 'mochaFile=reports/results-[hash].xml,toConsole=true',
       },
-      mockContext,
+      mockContext
     );
     expect(success).toEqual(true);
     expect(cypressRun).toHaveBeenCalledWith(
       expect.objectContaining({
         reporter: 'junit',
         reporterOptions: 'mochaFile=reports/results-[hash].xml,toConsole=true',
-      }),
+      })
     );
   });
 
@@ -322,14 +322,14 @@ A generator to migrate from v8 to v10 is provided. See https://nx.dev/cypress/v1
         ...cypressOptions,
         cypressConfig: 'some/project/my-cypress.json',
       },
-      mockContext,
+      mockContext
     );
     expect(success).toEqual(true);
     expect(cypressRun).toHaveBeenCalledWith(
       expect.objectContaining({
         project: 'some/project',
         configFile: 'my-cypress.json',
-      }),
+      })
     );
   });
 
@@ -339,7 +339,7 @@ A generator to migrate from v8 to v10 is provided. See https://nx.dev/cypress/v1
         ...cypressOptions,
         baseUrl: 'test-url-from-options',
       },
-      mockContext,
+      mockContext
     );
     expect(success).toEqual(true);
     expect(cypressRun).toHaveBeenLastCalledWith(
@@ -347,7 +347,7 @@ A generator to migrate from v8 to v10 is provided. See https://nx.dev/cypress/v1
         config: {
           baseUrl: 'test-url-from-options',
         },
-      }),
+      })
     );
   });
 
@@ -359,7 +359,7 @@ A generator to migrate from v8 to v10 is provided. See https://nx.dev/cypress/v1
         config: {
           baseUrl: 'http://localhost:4200',
         },
-      }),
+      })
     );
   });
 
@@ -370,7 +370,7 @@ A generator to migrate from v8 to v10 is provided. See https://nx.dev/cypress/v1
         skipServe: true,
         baseUrl: 'http://my-distant-host.com',
       },
-      mockContext,
+      mockContext
     );
     expect(success).toEqual(true);
     expect(runExecutor).not.toHaveBeenCalled();
@@ -379,7 +379,7 @@ A generator to migrate from v8 to v10 is provided. See https://nx.dev/cypress/v1
         config: {
           baseUrl: 'http://my-distant-host.com',
         },
-      }),
+      })
     );
   });
 
@@ -394,7 +394,7 @@ A generator to migrate from v8 to v10 is provided. See https://nx.dev/cypress/v1
       expect.objectContaining({
         project: 'my-app',
         target: 'serve',
-      }),
+      })
     );
     expect(Object.keys(runExecutor.mock.calls[0][1])).not.toContain('watch');
   });
@@ -406,7 +406,7 @@ A generator to migrate from v8 to v10 is provided. See https://nx.dev/cypress/v1
 
     const { success } = await cypressExecutor(
       { ...cypressOptions, port: 'cypress-auto' },
-      mockContext,
+      mockContext
     );
     expect(success).toEqual(true);
     expect(detectPort).toHaveBeenCalledWith(4200);
@@ -425,7 +425,7 @@ A generator to migrate from v8 to v10 is provided. See https://nx.dev/cypress/v1
       expect.objectContaining({
         project: 'my-app',
         target: 'serve',
-      }),
+      })
     );
     expect(Object.keys(runExecutor.mock.calls[0][1])).toContain('watch');
   });
@@ -436,13 +436,13 @@ A generator to migrate from v8 to v10 is provided. See https://nx.dev/cypress/v1
         ...cypressOptions,
         headed: true,
       },
-      mockContext,
+      mockContext
     );
     expect(success).toEqual(true);
     expect(cypressRun).toHaveBeenCalledWith(
       expect.objectContaining({
         headed: true,
-      }),
+      })
     );
   });
 
@@ -456,13 +456,13 @@ A generator to migrate from v8 to v10 is provided. See https://nx.dev/cypress/v1
           ...cypressOptions,
           testingType: 'component',
         },
-        mockContext,
+        mockContext
       );
       expect(success).toEqual(true);
       expect(cypressRun).toHaveBeenCalledWith(
         expect.objectContaining({
           testingType: 'component',
-        }),
+        })
       );
     });
   });

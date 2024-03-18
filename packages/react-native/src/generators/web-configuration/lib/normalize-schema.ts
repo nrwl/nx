@@ -9,7 +9,7 @@ export interface NormalizedSchema extends WebConfigurationGeneratorSchema {
 
 export function normalizeSchema(
   tree: Tree,
-  schema: WebConfigurationGeneratorSchema,
+  schema: WebConfigurationGeneratorSchema
 ) {
   const project = getProjects(tree).get(schema.project);
   const { fileName, className } = names(schema.project);

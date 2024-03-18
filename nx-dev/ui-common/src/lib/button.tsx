@@ -35,7 +35,7 @@ const sizes: Record<AllowedSizes, string> = {
 function getLayoutClassName(className = ''): string {
   return cx(
     'group relative inline-flex opacity-100 focus:outline-none disabled:opacity-80 disabled:cursor-not-allowed transition',
-    className,
+    className
   );
 }
 
@@ -56,7 +56,7 @@ function ButtonInner({
           rounded === 'full' ? 'rounded-full' : 'rounded-md',
           'border border-transparent font-medium shadow-sm transition',
           variantStyles[variant],
-          sizes[size],
+          sizes[size]
         )}
       >
         {children}
@@ -102,7 +102,7 @@ export const ButtonLink = forwardRef(function (
     href: string;
     title: string;
   } & AnchorHTMLAttributes<HTMLAnchorElement>,
-  ref: ForwardedRef<HTMLAnchorElement>,
+  ref: ForwardedRef<HTMLAnchorElement>
 ): JSX.Element {
   return (
     <Link

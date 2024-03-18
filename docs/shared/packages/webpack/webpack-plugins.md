@@ -473,7 +473,7 @@ module.exports = composePlugins(
   (config) => {
     // Further customize webpack config
     return config;
-  },
+  }
 );
 ```
 
@@ -508,7 +508,7 @@ module.exports = composePlugins(
   (config) => {
     // Further customize webpack config
     return config;
-  },
+  }
 );
 ```
 
@@ -600,7 +600,7 @@ module.exports = composePlugins(
   (config) => {
     // Further customize webpack config
     return config;
-  },
+  }
 );
 ```
 
@@ -622,7 +622,7 @@ module.exports = composePlugins(
   (config) => {
     // Further customize webpack config
     return config;
-  },
+  }
 );
 ```
 
@@ -644,7 +644,7 @@ module.exports = composePlugins(
   (config) => {
     // Further customize webpack config
     return config;
-  },
+  }
 );
 ```
 
@@ -666,7 +666,7 @@ module.exports = composePlugins(
   (config) => {
     // Further customize webpack config
     return config;
-  },
+  }
 );
 ```
 

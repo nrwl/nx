@@ -28,7 +28,7 @@ describe('getRunner', () => {
 
     const { tasksRunner, runnerOptions } = getRunner(
       { runner: 'custom' },
-      nxJson,
+      nxJson
     );
 
     expect(tasksRunner).toEqual(mockRunner);
@@ -50,7 +50,7 @@ describe('getRunner', () => {
 
     const { tasksRunner, runnerOptions } = getRunner(
       { runner: 'custom' },
-      nxJson,
+      nxJson
     );
     expect(tasksRunner).toBe(mockRunner);
     expect(runnerOptions).toEqual({
@@ -82,7 +82,7 @@ describe('getRunner', () => {
       {
         NX_CLOUD_ACCESS_TOKEN: undefined,
       },
-      () => getRunner({}, {}),
+      () => getRunner({}, {})
     );
 
     expect(tasksRunner).toEqual(mockRunner);
@@ -94,7 +94,7 @@ describe('getRunner', () => {
       {
         nxCloudAccessToken: 'XXXX-XXX-XXXX',
         nxCloudUrl: 'https://my-nx-cloud.app',
-      },
+      }
     );
 
     expect(tasksRunner).toEqual(nxCloudTasksRunnerShell);
@@ -111,7 +111,7 @@ describe('getRunner', () => {
       {
         NX_CLOUD_ACCESS_TOKEN: 'xxx-xx-xxx',
       },
-      () => getRunner({}, {}),
+      () => getRunner({}, {})
     );
     expect(tasksRunner).toEqual(nxCloudTasksRunnerShell);
   });
@@ -130,7 +130,7 @@ describe('getRunner', () => {
             cache: true,
           },
         },
-      },
+      }
     );
 
     expect(runnerOptions).toMatchInlineSnapshot(`

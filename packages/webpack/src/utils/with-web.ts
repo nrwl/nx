@@ -36,11 +36,11 @@ export type MergedOptions = Omit<
  * @returns {NxWebpackPlugin}
  */
 export function withWeb(
-  pluginOptions: WithWebOptions = {},
+  pluginOptions: WithWebOptions = {}
 ): NxComposableWebpackPlugin {
   return function configure(
     config: Configuration,
-    { options, context }: NxWebpackExecutionContext,
+    { options, context }: NxWebpackExecutionContext
   ): Configuration {
     if (processed.has(config)) return config;
 
@@ -53,7 +53,7 @@ export function withWeb(
         configurationName: context.configurationName,
         projectGraph: context.projectGraph,
       },
-      config,
+      config
     );
 
     processed.add(config);

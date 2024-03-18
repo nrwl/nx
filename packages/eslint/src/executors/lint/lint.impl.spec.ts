@@ -34,7 +34,7 @@ const mockResolveAndInstantiateESLint = jest.fn().mockReturnValue(
   Promise.resolve({
     ESLint: MockESLint,
     eslint: new MockESLint(),
-  }),
+  })
 );
 
 jest.mock('./utility/eslint-utils', () => {
@@ -48,7 +48,7 @@ import { resolve } from 'path';
 let mockChdir = jest.fn().mockImplementation(() => {});
 
 function createValidRunBuilderOptions(
-  additionalOptions: Partial<Schema> = {},
+  additionalOptions: Partial<Schema> = {}
 ): Schema {
   return {
     lintFilePatterns: [],
@@ -119,7 +119,7 @@ describe('Linter Builder', () => {
     setupMocks();
     const result = lintExecutor(createValidRunBuilderOptions(), mockContext);
     await expect(result).rejects.toThrow(
-      /ESLint must be version 7.6 or higher/,
+      /ESLint must be version 7.6 or higher/
     );
   });
 
@@ -147,7 +147,7 @@ describe('Linter Builder', () => {
         quiet: false,
         reportUnusedDisableDirectives: null,
       }),
-      mockContext,
+      mockContext
     );
     expect(mockResolveAndInstantiateESLint).toHaveBeenCalledWith(
       resolve('/root', '.eslintrc.json'),
@@ -170,7 +170,7 @@ describe('Linter Builder', () => {
         resolvePluginsRelativeTo: null,
         reportUnusedDisableDirectives: null,
       },
-      false,
+      false
     );
   });
 
@@ -190,10 +190,10 @@ describe('Linter Builder', () => {
       createValidRunBuilderOptions({
         lintFilePatterns: ['includedFile1'],
       }),
-      mockContext,
+      mockContext
     );
     await expect(result).rejects.toThrow(
-      /Invalid lint configuration. Nothing to lint. Please check your lint target pattern/,
+      /Invalid lint configuration. Nothing to lint. Please check your lint target pattern/
     );
   });
 
@@ -205,10 +205,10 @@ describe('Linter Builder', () => {
       createValidRunBuilderOptions({
         lintFilePatterns: ['includedFile1'],
       }),
-      mockContext,
+      mockContext
     );
     await expect(result).rejects.toThrow(
-      `All files matching the following patterns are ignored:\n- 'includedFile1'\n\nPlease check your '.eslintignore' file.`,
+      `All files matching the following patterns are ignored:\n- 'includedFile1'\n\nPlease check your '.eslintignore' file.`
     );
     mockIsPathIgnored.mockReturnValue(Promise.resolve(false));
   });
@@ -221,7 +221,7 @@ describe('Linter Builder', () => {
         lintFilePatterns: ['includedFile1'],
         errorOnUnmatchedPattern: false,
       }),
-      mockContext,
+      mockContext
     );
     await expect(result).resolves.not.toThrow();
   });
@@ -235,7 +235,7 @@ describe('Linter Builder', () => {
         lintFilePatterns: ['includedFile1'],
         errorOnUnmatchedPattern: false,
       }),
-      mockContext,
+      mockContext
     );
     await expect(result).resolves.not.toThrow();
     mockIsPathIgnored.mockReturnValue(Promise.resolve(false));
@@ -249,7 +249,7 @@ describe('Linter Builder', () => {
         lintFilePatterns: ['includedFile1'],
         format: 'json',
       }),
-      mockContext,
+      mockContext
     );
     expect(mockLoadFormatter).toHaveBeenCalledWith('json');
     await lintExecutor(
@@ -258,7 +258,7 @@ describe('Linter Builder', () => {
         lintFilePatterns: ['includedFile1'],
         format: 'html',
       }),
-      mockContext,
+      mockContext
     );
     expect(mockLoadFormatter).toHaveBeenCalledWith('html');
   });
@@ -272,7 +272,7 @@ describe('Linter Builder', () => {
         format: 'json',
         fix: false,
       }),
-      mockContext,
+      mockContext
     );
     expect(mockOutputFixes).toHaveBeenCalled();
   });
@@ -285,7 +285,7 @@ describe('Linter Builder', () => {
         lintFilePatterns: ['includedFile1'],
         _: 'some-random-text',
       }),
-      mockContext,
+      mockContext
     );
     await expect(result).resolves.not.toThrow();
   });
@@ -314,10 +314,10 @@ describe('Linter Builder', () => {
           format: 'json',
           silent: false,
         }),
-        mockContext,
+        mockContext
       );
       expect(console.info).toHaveBeenCalledWith(
-        '✖ 14 problems (4 errors, 10 warnings)\n',
+        '✖ 14 problems (4 errors, 10 warnings)\n'
       );
     });
 
@@ -348,13 +348,13 @@ describe('Linter Builder', () => {
           format: 'json',
           silent: false,
         }),
-        mockContext,
+        mockContext
       );
       expect(console.info).toHaveBeenCalledWith(
-        '✖ 15 problems (5 errors, 10 warnings)\n',
+        '✖ 15 problems (5 errors, 10 warnings)\n'
       );
       expect(console.info).toHaveBeenCalledWith(
-        '  3 errors and 6 warnings are potentially fixable with the `--fix` option.\n',
+        '  3 errors and 6 warnings are potentially fixable with the `--fix` option.\n'
       );
     });
 
@@ -363,7 +363,7 @@ describe('Linter Builder', () => {
 
       mockLintFiles.mockImplementation(() => {
         throw new Error(
-          `Error while loading rule '@typescript-eslint/await-thenable': You have used a rule which requires parserServices to be generated. You must therefore provide a value for the "parserOptions.project" property for @typescript-eslint/parser.`,
+          `Error while loading rule '@typescript-eslint/await-thenable': You have used a rule which requires parserServices to be generated. You must therefore provide a value for the "parserOptions.project" property for @typescript-eslint/parser.`
         );
       });
 
@@ -373,14 +373,14 @@ describe('Linter Builder', () => {
           format: 'json',
           silent: false,
         }),
-        mockContext,
+        mockContext
       );
       expect(console.error).toHaveBeenCalledWith(
         `
 Error: You have attempted to use the lint rule @typescript-eslint/await-thenable which requires the full TypeScript type-checker to be available, but you do not have \`parserOptions.project\` configured to point at your project tsconfig.json files in the relevant TypeScript file "overrides" block of your project ESLint config \`apps/proj/.eslintrc.json\`
 
 Please see https://nx.dev/guides/eslint for full guidance on how to resolve this issue.
-`,
+`
       );
     });
 
@@ -407,13 +407,13 @@ Please see https://nx.dev/guides/eslint for full guidance on how to resolve this
           format: 'json',
           silent: false,
         }),
-        mockContext,
+        mockContext
       );
       expect(console.info).not.toHaveBeenCalledWith(
-        '✖ 0 problems (0 errors, 0 warnings)\n',
+        '✖ 0 problems (0 errors, 0 warnings)\n'
       );
       expect(console.info).not.toHaveBeenCalledWith(
-        '  0 errors and 0 warnings are potentially fixable with the `--fix` option.\n',
+        '  0 errors and 0 warnings are potentially fixable with the `--fix` option.\n'
       );
       expect(console.info).toHaveBeenCalledWith('✔ All files pass linting\n');
     });
@@ -518,10 +518,10 @@ Please see https://nx.dev/guides/eslint for full guidance on how to resolve this
           silent: false,
           quiet: true,
         }),
-        mockContext,
+        mockContext
       );
       expect(console.info).toHaveBeenCalledWith(
-        '✖ 4 problems (4 errors, 0 warnings)\n',
+        '✖ 4 problems (4 errors, 0 warnings)\n'
       );
     });
     it('should not log if the silent flag was passed', async () => {
@@ -547,10 +547,10 @@ Please see https://nx.dev/guides/eslint for full guidance on how to resolve this
           format: 'json',
           silent: true,
         }),
-        mockContext,
+        mockContext
       );
       expect(console.info).not.toHaveBeenCalledWith(
-        '✖ 14 problems (4 errors, 10 warnings)\n',
+        '✖ 14 problems (4 errors, 10 warnings)\n'
       );
     });
   });
@@ -579,7 +579,7 @@ Please see https://nx.dev/guides/eslint for full guidance on how to resolve this
         silent: true,
         maxWarnings: -1,
       }),
-      mockContext,
+      mockContext
     );
     expect(output.success).toBeTruthy();
   });
@@ -608,7 +608,7 @@ Please see https://nx.dev/guides/eslint for full guidance on how to resolve this
         silent: true,
         force: true,
       }),
-      mockContext,
+      mockContext
     );
     expect(output.success).toBeTruthy();
   });
@@ -637,7 +637,7 @@ Please see https://nx.dev/guides/eslint for full guidance on how to resolve this
         silent: true,
         force: false,
       }),
-      mockContext,
+      mockContext
     );
     expect(output.success).toBeFalsy();
   });
@@ -653,14 +653,14 @@ Please see https://nx.dev/guides/eslint for full guidance on how to resolve this
         force: false,
         outputFile: 'a/b/c/outputFile1',
       }),
-      mockContext,
+      mockContext
     );
     expect(fs.mkdirSync).toHaveBeenCalledWith('/root/a/b/c', {
       recursive: true,
     });
     expect(fs.writeFileSync).toHaveBeenCalledWith(
       '/root/a/b/c/outputFile1',
-      formattedReports,
+      formattedReports
     );
   });
 
@@ -675,7 +675,7 @@ Please see https://nx.dev/guides/eslint for full guidance on how to resolve this
         silent: true,
         force: false,
       }),
-      mockContext,
+      mockContext
     );
     expect(fs.writeFileSync).not.toHaveBeenCalled();
   });
@@ -700,7 +700,7 @@ Please see https://nx.dev/guides/eslint for full guidance on how to resolve this
         reportUnusedDisableDirectives: null,
         printConfig: 'test-source.ts',
       }),
-      mockContext,
+      mockContext
     );
     expect(console.log).toHaveBeenCalledWith('{\n "file": "test-source.ts"\n}');
     expect(result).toEqual({ success: true });
@@ -731,7 +731,7 @@ Please see https://nx.dev/guides/eslint for full guidance on how to resolve this
         resolvePluginsRelativeTo: null,
         reportUnusedDisableDirectives: null,
       },
-      true,
+      true
     );
   });
 });

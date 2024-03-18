@@ -35,7 +35,7 @@ export class FetchProjectGraphService implements ProjectGraphService {
   }
 
   async getSourceMaps(
-    url: string,
+    url: string
   ): Promise<Record<string, Record<string, string[]>>> {
     const request = new Request(url, { mode: 'no-cors' });
 
@@ -49,7 +49,7 @@ export class FetchProjectGraphService implements ProjectGraphService {
   }
 
   async getExpandedTaskInputs(
-    taskId: string,
+    taskId: string
   ): Promise<Record<string, string[]>> {
     if (!this.taskInputsUrl) {
       return {};

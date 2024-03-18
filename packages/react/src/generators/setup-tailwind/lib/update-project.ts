@@ -6,7 +6,7 @@ import { SetupTailwindOptions } from '../schema';
 export function updateProject(
   tree: Tree,
   config: ProjectConfiguration,
-  options: SetupTailwindOptions,
+  options: SetupTailwindOptions
 ) {
   if (
     config?.targets?.build?.executor === '@nx/webpack:webpack' ||
@@ -15,7 +15,7 @@ export function updateProject(
     config.targets.build.options ??= {};
     config.targets.build.options.postcssConfig = joinPathFragments(
       config.root,
-      'postcss.config.js',
+      'postcss.config.js'
     );
     updateProjectConfiguration(tree, options.project, config);
   }

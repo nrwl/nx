@@ -22,7 +22,7 @@ describe('@nx/expo', () => {
     newProject();
     appName = uniq('app');
     runCLI(
-      `generate @nx/expo:app ${appName} --project-name-and-root-format=as-provided --no-interactive`,
+      `generate @nx/expo:app ${appName} --project-name-and-root-format=as-provided --no-interactive`
     );
   });
 
@@ -31,7 +31,7 @@ describe('@nx/expo', () => {
   it('nx.json should contain plugin configuration', () => {
     const nxJson = readJson('nx.json');
     const expoPlugin = nxJson.plugins.find(
-      (plugin) => plugin.plugin === '@nx/expo/plugin',
+      (plugin) => plugin.plugin === '@nx/expo/plugin'
     );
     expect(expoPlugin).toBeDefined();
     expect(expoPlugin.options).toBeDefined();
@@ -43,11 +43,11 @@ describe('@nx/expo', () => {
     const result = runCLI(`export ${appName}`);
     checkFilesExist(
       `${appName}/dist/index.html`,
-      `${appName}/dist/metadata.json`,
+      `${appName}/dist/metadata.json`
     );
 
     expect(result).toContain(
-      `Successfully ran target export for project ${appName}`,
+      `Successfully ran target export for project ${appName}`
     );
   }, 200_000);
 
@@ -58,7 +58,7 @@ describe('@nx/expo', () => {
     try {
       process = await runCommandUntil(
         `start ${appName} -- --port=${port}`,
-        (output) => output.includes(`http://localhost:8081`),
+        (output) => output.includes(`http://localhost:8081`)
       );
     } catch (err) {
       console.error(err);
@@ -77,7 +77,7 @@ describe('@nx/expo', () => {
     try {
       process = await runCommandUntil(
         `serve ${appName} -- --port=${port}`,
-        (output) => output.includes(`http://localhost:8081`),
+        (output) => output.includes(`http://localhost:8081`)
       );
     } catch (err) {
       console.error(err);
@@ -105,10 +105,10 @@ describe('@nx/expo', () => {
     // run prebuild command with git check disable
     process.env['EXPO_NO_GIT_STATUS'] = 'true';
     const prebuildResult = await runCLIAsync(
-      `prebuild ${appName} --no-interactive --install=false`,
+      `prebuild ${appName} --no-interactive --install=false`
     );
     expect(prebuildResult.combinedOutput).toContain(
-      'Successfully ran target prebuild for project',
+      'Successfully ran target prebuild for project'
     );
   });
 
@@ -128,11 +128,11 @@ describe('@nx/expo', () => {
 
   it('should create storybook with application', async () => {
     runCLI(
-      `generate @nx/react:storybook-configuration ${appName} --generateStories --no-interactive`,
+      `generate @nx/react:storybook-configuration ${appName} --generateStories --no-interactive`
     );
     checkFilesExist(
       `${appName}/.storybook/main.ts`,
-      `${appName}/src/app/App.stories.tsx`,
+      `${appName}/src/app/App.stories.tsx`
     );
   });
 });

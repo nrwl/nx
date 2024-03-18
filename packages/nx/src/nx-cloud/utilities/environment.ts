@@ -20,8 +20,8 @@ process.env.NX_CLOUD_DISTRIBUTED_EXECUTION_AGENT_COUNT
 process.env.NX_CLOUD_NUMBER_OF_RETRIES
   ? Number(process.env.NX_CLOUD_NUMBER_OF_RETRIES)
   : isCI()
-    ? 10
-    : 1;
+  ? 10
+  : 1;
 export let ACCESS_TOKEN;
 export let NX_CLOUD_NO_TIMEOUTS;
 

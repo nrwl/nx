@@ -35,7 +35,7 @@ describe('checkDestination', () => {
     expect(() => {
       checkDestination(tree, schema, schema.destination);
     }).toThrow(
-      `Invalid destination: [${schema.destination}] - Please specify explicit path.`,
+      `Invalid destination: [${schema.destination}] - Please specify explicit path.`
     );
   });
 
@@ -56,7 +56,7 @@ describe('checkDestination', () => {
     expect(() => {
       checkDestination(tree, schema, schema.destination);
     }).toThrow(
-      `Invalid destination: [${schema.destination}] - Path is not empty.`,
+      `Invalid destination: [${schema.destination}] - Path is not empty.`
     );
   });
 

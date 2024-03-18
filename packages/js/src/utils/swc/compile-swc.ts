@@ -8,7 +8,7 @@ import { runTypeCheck, TypeCheckOptions } from '../typescript/run-type-check';
 
 function getSwcCmd(
   { swcrcPath, srcPath, destPath }: SwcCliOptions,
-  watch = false,
+  watch = false
 ) {
   const swcCLI = require.resolve('@swc/cli/bin/swc.js');
   let swcCmd = `node ${swcCLI} ${
@@ -43,7 +43,7 @@ function getTypeCheckOptions(normalizedOptions: NormalizedSwcExecutorOptions) {
 export async function compileSwc(
   context: ExecutorContext,
   normalizedOptions: NormalizedSwcExecutorOptions,
-  postCompilationCallback: () => Promise<void>,
+  postCompilationCallback: () => Promise<void>
 ) {
   logger.log(`Compiling with SWC for ${context.projectName}...`);
 
@@ -64,7 +64,7 @@ export async function compileSwc(
   }
 
   const { errors, warnings } = await runTypeCheck(
-    getTypeCheckOptions(normalizedOptions),
+    getTypeCheckOptions(normalizedOptions)
   );
   const hasErrors = errors.length > 0;
   const hasWarnings = warnings.length > 0;
@@ -83,7 +83,7 @@ export async function compileSwc(
 export async function* compileSwcWatch(
   context: ExecutorContext,
   normalizedOptions: NormalizedSwcExecutorOptions,
-  postCompilationCallback: () => Promise<void>,
+  postCompilationCallback: () => Promise<void>
 ) {
   const getResult = (success: boolean) => ({
     success,
@@ -106,7 +106,7 @@ export async function* compileSwcWatch(
 
       const swcWatcher = exec(
         getSwcCmd(normalizedOptions.swcCliOptions, true),
-        { cwd: normalizedOptions.swcCliOptions.swcCwd },
+        { cwd: normalizedOptions.swcCliOptions.swcCwd }
       );
 
       processOnExit = () => {
@@ -160,8 +160,8 @@ export async function* compileSwcWatch(
                 }
 
                 return swcStatus;
-              }),
-            ),
+              })
+            )
           );
         }
       };
@@ -187,7 +187,7 @@ export async function* compileSwcWatch(
       process.on('exit', processOnExit);
 
       swcWatcher.on('exit', watcherOnExit);
-    },
+    }
   );
 }
 

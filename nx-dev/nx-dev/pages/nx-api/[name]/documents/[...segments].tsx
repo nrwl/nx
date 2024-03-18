@@ -56,7 +56,7 @@ export default function PackageDocument({
     menu: {
       sections: sortCorePackagesFirst<MenuSection>(
         getPackagesSections(menu),
-        'id',
+        'id'
       ),
     },
     relatedDocuments,

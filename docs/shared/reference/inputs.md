@@ -142,8 +142,8 @@ Named inputs defined in `nx.json` can be used by any project in the workspace in
 ```jsonc {% fileName="nx.json" highlightLines=["2-4"] %}
 {
   "namedInputs": {
-    "default": ["{projectRoot}/**/*"], // Default Inputs
-  },
+    "default": ["{projectRoot}/**/*"] // Default Inputs
+  }
 }
 ```
 
@@ -193,11 +193,11 @@ By default, Nx Workspaces are generated with the following named inputs:
   "namedInputs": {
     "default": ["{projectRoot}/**/*", "sharedGlobals"], // Default Inputs
     "production": ["default", "!{projectRoot}/jest.config.ts"], // Production Inputs
-    "sharedGlobals": [], // Shared Global Inputs
+    "sharedGlobals": [] // Shared Global Inputs
   },
   "targetDefaults": {
-    "inputs": ["default", "^default"],
-  },
+    "inputs": ["default", "^default"]
+  }
 }
 ```
 
@@ -226,9 +226,9 @@ It is common for most tasks to consider a set of inputs for the project it belon
   "name": "myreactapp",
   "targets": {
     "test": {
-      "inputs": ["default", "^production", "{projectRoot}/jest.config.js"],
-    },
-  },
+      "inputs": ["default", "^production", "{projectRoot}/jest.config.js"]
+    }
+  }
 }
 ```
 

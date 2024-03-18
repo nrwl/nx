@@ -34,7 +34,7 @@ interface NormalizedSchema extends Schema {
 
 async function normalizeOptions(
   host: Tree,
-  options: Schema,
+  options: Schema
 ): Promise<NormalizedSchema> {
   const projectName = options.rootProject ? 'e2e' : `${options.pluginName}-e2e`;
 
@@ -58,12 +58,12 @@ async function normalizeOptions(
             : `${options.projectDirectory}-e2e`,
         projectNameAndRootFormat: `as-provided`,
         callingGenerator: '@nx/plugin:e2e-project',
-      },
+      }
     );
     projectRoot = projectNameAndRootOptions.projectRoot;
   } else {
     const { layoutDirectory, projectDirectory } = extractLayoutDirectory(
-      options.projectDirectory,
+      options.projectDirectory
     );
     const { appsDir: defaultAppsDir } = getWorkspaceLayout(host);
     const appsDir = layoutDirectory ?? defaultAppsDir;
@@ -71,8 +71,8 @@ async function normalizeOptions(
     projectRoot = options.rootProject
       ? projectName
       : projectDirectory
-        ? joinPathFragments(appsDir, `${projectDirectory}-e2e`)
-        : joinPathFragments(appsDir, projectName);
+      ? joinPathFragments(appsDir, `${projectDirectory}-e2e`)
+      : joinPathFragments(appsDir, projectName);
   }
 
   const pluginPropertyName = names(options.pluginName).propertyName;
@@ -97,11 +97,11 @@ function validatePlugin(host: Tree, pluginName: string) {
 function addFiles(host: Tree, options: NormalizedSchema) {
   const projectConfiguration = readProjectConfiguration(
     host,
-    options.pluginName,
+    options.pluginName
   );
   const { name: pluginPackageName } = readJson(
     host,
-    join(projectConfiguration.root, 'package.json'),
+    join(projectConfiguration.root, 'package.json')
   );
 
   generateFiles(host, join(__dirname, './files'), options.projectRoot, {
@@ -139,13 +139,13 @@ async function addJest(host: Tree, options: NormalizedSchema) {
     host,
     join(options.projectRoot, 'jest.config.ts'),
     'globalSetup',
-    join(offsetFromRoot(options.projectRoot), startLocalRegistryPath),
+    join(offsetFromRoot(options.projectRoot), startLocalRegistryPath)
   );
   addPropertyToJestConfig(
     host,
     join(options.projectRoot, 'jest.config.ts'),
     'globalTeardown',
-    join(offsetFromRoot(options.projectRoot), stopLocalRegistryPath),
+    join(offsetFromRoot(options.projectRoot), stopLocalRegistryPath)
   );
 
   const project = readProjectConfiguration(host, options.projectName);
@@ -167,7 +167,7 @@ async function addJest(host: Tree, options: NormalizedSchema) {
 
 async function addLintingToApplication(
   tree: Tree,
-  options: NormalizedSchema,
+  options: NormalizedSchema
 ): Promise<GeneratorCallback> {
   const lintTask = await lintProjectGenerator(tree, {
     linter: options.linter,
@@ -201,7 +201,7 @@ export async function e2eProjectGeneratorInternal(host: Tree, schema: Schema) {
   tasks.push(
     await setupVerdaccio(host, {
       skipFormat: true,
-    }),
+    })
   );
   tasks.push(await addJest(host, options));
 
@@ -209,7 +209,7 @@ export async function e2eProjectGeneratorInternal(host: Tree, schema: Schema) {
     tasks.push(
       await addLintingToApplication(host, {
         ...options,
-      }),
+      })
     );
   }
 

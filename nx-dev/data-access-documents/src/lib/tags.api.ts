@@ -20,7 +20,7 @@ export class TagsApi {
 
   getAssociatedItemsFromTags(tags: string[]): RelatedDocument[] {
     return this.sortAndDeduplicateItems(
-      tags.map((t) => this.getAssociatedItems(t)),
+      tags.map((t) => this.getAssociatedItems(t))
     );
   }
 

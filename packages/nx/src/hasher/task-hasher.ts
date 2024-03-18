@@ -53,7 +53,7 @@ export interface TaskHasher {
   hashTask(
     task: Task,
     taskGraph: TaskGraph,
-    env: NodeJS.ProcessEnv,
+    env: NodeJS.ProcessEnv
   ): Promise<Hash>;
 
   /**
@@ -70,7 +70,7 @@ export interface TaskHasher {
   hashTasks(
     tasks: Task[],
     taskGraph: TaskGraph,
-    env: NodeJS.ProcessEnv,
+    env: NodeJS.ProcessEnv
   ): Promise<Hash[]>;
 }
 
@@ -78,14 +78,14 @@ export interface TaskHasherImpl {
   hashTasks(
     tasks: Task[],
     taskGraph: TaskGraph,
-    env: NodeJS.ProcessEnv,
+    env: NodeJS.ProcessEnv
   ): Promise<PartialHash[]>;
 
   hashTask(
     task: Task,
     taskGraph: TaskGraph,
     env: NodeJS.ProcessEnv,
-    visited?: string[],
+    visited?: string[]
   ): Promise<PartialHash>;
 }
 
@@ -94,33 +94,33 @@ export type Hasher = TaskHasher;
 export class DaemonBasedTaskHasher implements TaskHasher {
   constructor(
     private readonly daemonClient: DaemonClient,
-    private readonly runnerOptions: any,
+    private readonly runnerOptions: any
   ) {}
 
   async hashTasks(
     tasks: Task[],
     taskGraph?: TaskGraph,
-    env?: NodeJS.ProcessEnv,
+    env?: NodeJS.ProcessEnv
   ): Promise<Hash[]> {
     return this.daemonClient.hashTasks(
       this.runnerOptions,
       tasks,
       taskGraph,
-      env ?? process.env,
+      env ?? process.env
     );
   }
 
   async hashTask(
     task: Task,
     taskGraph?: TaskGraph,
-    env?: NodeJS.ProcessEnv,
+    env?: NodeJS.ProcessEnv
   ): Promise<Hash> {
     return (
       await this.daemonClient.hashTasks(
         this.runnerOptions,
         [task],
         taskGraph,
-        env ?? process.env,
+        env ?? process.env
       )
     )[0];
   }
@@ -138,7 +138,7 @@ export class InProcessTaskHasher implements TaskHasher {
     private readonly projectGraph: ProjectGraph,
     private readonly nxJson: NxJsonConfiguration,
     private readonly externalRustReferences: NxWorkspaceFilesExternals | null,
-    private readonly options: any,
+    private readonly options: any
   ) {
     const legacyRuntimeInputs = (
       this.options && this.options.runtimeCacheInputs
@@ -169,7 +169,7 @@ export class InProcessTaskHasher implements TaskHasher {
           {
             selectivelyHashTsConfig:
               this.options?.selectivelyHashTsConfig ?? false,
-          },
+          }
         )
       : new NativeTaskHasherImpl(
           workspaceRoot,
@@ -179,27 +179,27 @@ export class InProcessTaskHasher implements TaskHasher {
           {
             selectivelyHashTsConfig:
               this.options?.selectivelyHashTsConfig ?? false,
-          },
+          }
         );
   }
 
   async hashTasks(
     tasks: Task[],
     taskGraph?: TaskGraph,
-    env?: NodeJS.ProcessEnv,
+    env?: NodeJS.ProcessEnv
   ): Promise<Hash[]> {
     if (this.useNativeTaskHasher) {
       const hashes = await this.taskHasher.hashTasks(
         tasks,
         taskGraph,
-        env ?? process.env,
+        env ?? process.env
       );
       return tasks.map((task, index) =>
-        this.createHashDetails(task, hashes[index]),
+        this.createHashDetails(task, hashes[index])
       );
     } else {
       return await Promise.all(
-        tasks.map((t) => this.hashTask(t, taskGraph, env)),
+        tasks.map((t) => this.hashTask(t, taskGraph, env))
       );
     }
   }
@@ -207,12 +207,12 @@ export class InProcessTaskHasher implements TaskHasher {
   async hashTask(
     task: Task,
     taskGraph?: TaskGraph,
-    env?: NodeJS.ProcessEnv,
+    env?: NodeJS.ProcessEnv
   ): Promise<Hash> {
     const res = await this.taskHasher.hashTask(
       task,
       taskGraph,
-      env ?? process.env,
+      env ?? process.env
     );
     return this.createHashDetails(task, res);
   }
@@ -269,7 +269,7 @@ const DEFAULT_INPUTS: ReadonlyArray<InputDefinition> = [
 
 export function getNamedInputs(
   nxJson: NxJsonConfiguration,
-  project: ProjectGraphProjectNode,
+  project: ProjectGraphProjectNode
 ) {
   return {
     default: [{ fileset: '{projectRoot}/**/*' }],
@@ -281,7 +281,7 @@ export function getNamedInputs(
 export function getTargetInputs(
   nxJson: NxJsonConfiguration,
   projectNode: ProjectGraphProjectNode,
-  target: string,
+  target: string
 ) {
   const namedInputs = getNamedInputs(nxJson, projectNode);
 
@@ -290,20 +290,20 @@ export function getTargetInputs(
 
   const inputs = splitInputsIntoSelfAndDependencies(
     targetData.inputs || targetDefaults?.inputs || DEFAULT_INPUTS,
-    namedInputs,
+    namedInputs
   );
 
   const selfInputs = extractPatternsFromFileSets(inputs.selfInputs);
 
   const dependencyInputs = extractPatternsFromFileSets(
-    inputs.depsInputs.map((s) => expandNamedInput(s.input, namedInputs)).flat(),
+    inputs.depsInputs.map((s) => expandNamedInput(s.input, namedInputs)).flat()
   );
 
   return { selfInputs, dependencyInputs };
 }
 
 export function extractPatternsFromFileSets(
-  inputs: readonly ExpandedInput[],
+  inputs: readonly ExpandedInput[]
 ): string[] {
   return inputs
     .filter((c): c is { fileset: string } => !!c['fileset'])
@@ -313,7 +313,7 @@ export function extractPatternsFromFileSets(
 export function getInputs(
   task: Task,
   projectGraph: ProjectGraph,
-  nxJson: NxJsonConfiguration,
+  nxJson: NxJsonConfiguration
 ) {
   const projectNode = projectGraph.nodes[task.target.project];
   const namedInputs = getNamedInputs(nxJson, projectNode);
@@ -322,14 +322,14 @@ export function getInputs(
   const { selfInputs, depsInputs, depsOutputs, projectInputs } =
     splitInputsIntoSelfAndDependencies(
       targetData.inputs || targetDefaults?.inputs || (DEFAULT_INPUTS as any),
-      namedInputs,
+      namedInputs
     );
   return { selfInputs, depsInputs, depsOutputs, projectInputs };
 }
 
 function splitInputsIntoSelfAndDependencies(
   inputs: ReadonlyArray<InputDefinition | string>,
-  namedInputs: { [inputName: string]: ReadonlyArray<InputDefinition | string> },
+  namedInputs: { [inputName: string]: ReadonlyArray<InputDefinition | string> }
 ): {
   depsInputs: { input: string; dependencies: true }[];
   projectInputs: { input: string; projects: string[] }[];
@@ -387,14 +387,14 @@ export function isSelfInput(input: ExpandedInput): input is ExpandedSelfInput {
 }
 
 export function isDepsOutput(
-  input: ExpandedInput,
+  input: ExpandedInput
 ): input is ExpandedDepsOutput {
   return 'dependentTasksOutputFiles' in input;
 }
 
 export function expandSingleProjectInputs(
   inputs: ReadonlyArray<InputDefinition | string>,
-  namedInputs: { [inputName: string]: ReadonlyArray<InputDefinition | string> },
+  namedInputs: { [inputName: string]: ReadonlyArray<InputDefinition | string> }
 ): ExpandedInput[] {
   const expanded = [];
   for (const d of inputs) {
@@ -410,7 +410,7 @@ export function expandSingleProjectInputs(
     } else {
       if ((d as any).projects || (d as any).dependencies) {
         throw new Error(
-          `namedInputs definitions can only refer to other namedInputs definitions within the same project.`,
+          `namedInputs definitions can only refer to other namedInputs definitions within the same project.`
         );
       }
       if (
@@ -431,7 +431,7 @@ export function expandSingleProjectInputs(
 
 export function expandNamedInput(
   input: string,
-  namedInputs: { [inputName: string]: ReadonlyArray<InputDefinition | string> },
+  namedInputs: { [inputName: string]: ReadonlyArray<InputDefinition | string> }
 ): ExpandedInput[] {
   namedInputs ||= {};
   if (!namedInputs[input]) throw new Error(`Input '${input}' is not defined`);
@@ -441,7 +441,7 @@ export function expandNamedInput(
 export function filterUsingGlobPatterns(
   root: string,
   files: FileData[],
-  patterns: string[],
+  patterns: string[]
 ): FileData[] {
   const filesetWithExpandedProjectRoot = patterns
     .map((f) => f.replace('{projectRoot}', root))

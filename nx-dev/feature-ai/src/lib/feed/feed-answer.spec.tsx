@@ -4,7 +4,7 @@ describe('FeedAnswer', () => {
   describe('normalizeContent', () => {
     it('should normalize links to format expected by renderMarkdown', () => {
       expect(
-        normalizeContent(`[!](https://nx.dev/shared/assets/image.png)`),
+        normalizeContent(`[!](https://nx.dev/shared/assets/image.png)`)
       ).toEqual(`[!](/shared/assets/image.png)`);
     });
 
@@ -13,7 +13,7 @@ describe('FeedAnswer', () => {
         normalizeContent(`
 1. Hello
 2. World
-`),
+`)
       ).toEqual(`
 1\\. Hello
 2\\. World

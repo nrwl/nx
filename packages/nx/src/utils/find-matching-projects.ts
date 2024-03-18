@@ -29,7 +29,7 @@ const globCharacters = ['*', '|', '{', '}', '(', ')'];
  */
 export function findMatchingProjects(
   patterns: string[] = [],
-  projects: Record<string, ProjectGraphProjectNode>,
+  projects: Record<string, ProjectGraphProjectNode>
 ): string[] {
   if (!patterns.length || patterns.filter((p) => p.length).length === 0) {
     return []; // Short circuit if called with no patterns
@@ -65,7 +65,7 @@ export function findMatchingProjects(
           projectNames,
           projects,
           pattern,
-          matchedProjects,
+          matchedProjects
         );
         continue;
       }
@@ -74,7 +74,7 @@ export function findMatchingProjects(
           projectNames,
           projects,
           pattern,
-          matchedProjects,
+          matchedProjects
         );
         continue;
       }
@@ -83,7 +83,7 @@ export function findMatchingProjects(
           projectNames,
           projects,
           pattern,
-          matchedProjects,
+          matchedProjects
         );
         continue;
       }
@@ -98,7 +98,7 @@ export function findMatchingProjects(
           projectNames,
           projects,
           pattern,
-          matchedProjects,
+          matchedProjects
         );
         if (matchedProjects.size !== originalSize) {
           // There was some match by name, don't check other types
@@ -108,7 +108,7 @@ export function findMatchingProjects(
           projectNames,
           projects,
           pattern,
-          matchedProjects,
+          matchedProjects
         );
         if (matchedProjects.size !== originalSize) {
           // There was some match by directory, don't check other types
@@ -127,7 +127,7 @@ function addMatchingProjectsByDirectory(
   projectNames: string[],
   projects: Record<string, ProjectGraphProjectNode>,
   pattern: ProjectPattern,
-  matchedProjects: Set<string>,
+  matchedProjects: Set<string>
 ) {
   for (const projectName of projectNames) {
     const root = projects[projectName].data.root;
@@ -145,7 +145,7 @@ function addMatchingProjectsByName(
   projectNames: string[],
   projects: Record<string, ProjectGraphProjectNode>,
   pattern: ProjectPattern,
-  matchedProjects: Set<string>,
+  matchedProjects: Set<string>
 ) {
   if (projects[pattern.value]) {
     if (pattern.exclude) {
@@ -162,7 +162,7 @@ function addMatchingProjectsByName(
 
   const matchedProjectNames = getMatchingStringsWithCache(
     pattern.value,
-    projectNames,
+    projectNames
   );
   for (const projectName of matchedProjectNames) {
     if (pattern.exclude) {
@@ -177,7 +177,7 @@ function addMatchingProjectsByTag(
   projectNames: string[],
   projects: Record<string, ProjectGraphProjectNode>,
   pattern: ProjectPattern,
-  matchedProjects: Set<string>,
+  matchedProjects: Set<string>
 ) {
   for (const projectName of projectNames) {
     const tags = projects[projectName].data.tags || [];
@@ -207,7 +207,7 @@ function addMatchingProjectsByTag(
 
 function parseStringPattern(
   pattern: string,
-  projects: Record<string, ProjectGraphProjectNode>,
+  projects: Record<string, ProjectGraphProjectNode>
 ): ProjectPattern {
   const isExclude = pattern.startsWith('!');
 

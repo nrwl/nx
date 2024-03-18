@@ -26,11 +26,11 @@ export class ProjectNode {
   constructor(
     private fileMap: ProjectFileMap,
     private project: ProjectGraphProjectNode,
-    private workspaceRoot: string,
+    private workspaceRoot: string
   ) {}
 
   getCytoscapeNodeDef(
-    groupByFolder: boolean,
+    groupByFolder: boolean
   ): cy.NodeDefinition & { pannable: boolean } {
     return {
       group: 'nodes',
@@ -85,7 +85,7 @@ export class ProjectNode {
 
     const directories = parseParentDirectoriesFromFilePath(
       this.project.data.root,
-      this.workspaceRoot,
+      this.workspaceRoot
     );
 
     return directories.map((directory, index, allDirectories) => {

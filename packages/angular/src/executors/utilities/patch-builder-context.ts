@@ -17,7 +17,7 @@ const executorToBuilderMap = new Map<string, string>([
 export function patchBuilderContext(
   context: BuilderContext,
   isUsingEsbuildBuilder: boolean,
-  buildTarget: Target,
+  buildTarget: Target
 ): void {
   const originalGetBuilderNameForTarget = context.getBuilderNameForTarget;
   context.getBuilderNameForTarget = async (target) => {
@@ -49,7 +49,7 @@ export function patchBuilderContext(
 }
 
 function cleanBuildTargetOptions(
-  options: any,
+  options: any
 ):
   | ApplicationBuilderOptions
   | BrowserBuilderOptions

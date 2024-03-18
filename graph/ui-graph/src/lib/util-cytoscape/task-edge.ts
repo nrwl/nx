@@ -7,10 +7,7 @@ export interface TaskEdgeDataDefinition extends cy.NodeDataDefinition {
 }
 
 export class TaskEdge {
-  constructor(
-    private source: string,
-    private target: string,
-  ) {}
+  constructor(private source: string, private target: string) {}
 
   getCytoscapeNodeDef(): cy.NodeDefinition {
     let edge: cy.EdgeDefinition;

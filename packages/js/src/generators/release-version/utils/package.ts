@@ -9,7 +9,7 @@ export class Package {
   constructor(
     private packageJson: PackageJson,
     workspaceRoot: string,
-    workspaceRelativeLocation: string,
+    workspaceRelativeLocation: string
   ) {
     this.name = packageJson.name;
     this.version = packageJson.version;

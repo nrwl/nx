@@ -17,7 +17,7 @@ function validateProject(tree: Tree, project: string): void {
   const { projectType } = readProjectConfiguration(tree, project);
   if (projectType !== 'application') {
     throw new Error(
-      `The "${project}" project is not an application. Only application projects are supported by the "setup-ssr" generator.`,
+      `The "${project}" project is not an application. Only application projects are supported by the "setup-ssr" generator.`
     );
   }
 }
@@ -27,7 +27,7 @@ function validateBuildTarget(tree: Tree, project: string): void {
 
   if (!targets?.build) {
     throw new Error(
-      `The "${project}" project does not have a "build" target. Please add a "build" target.`,
+      `The "${project}" project does not have a "build" target. Please add a "build" target.`
     );
   }
 }

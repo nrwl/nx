@@ -54,7 +54,7 @@ export default function RspackConfigSetup({
     menu: {
       sections: sortCorePackagesFirst<MenuSection>(
         getPackagesSections(menu),
-        'id',
+        'id'
       ),
     },
     relatedDocuments,

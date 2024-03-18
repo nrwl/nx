@@ -13,7 +13,7 @@ export function normalizeOptions(
   options: WebpackExecutorOptions,
   root: string,
   projectRoot: string,
-  sourceRoot: string,
+  sourceRoot: string
 ): NormalizedWebpackExecutorOptions {
   const normalizedOptions = {
     ...options,
@@ -37,7 +37,7 @@ export function normalizeOptions(
       options.assets,
       root,
       sourceRoot,
-      projectRoot,
+      projectRoot
     );
   }
   return normalizedOptions as NormalizedWebpackExecutorOptions;

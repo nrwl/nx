@@ -17,7 +17,7 @@ const {
 export function replaceNrwlPackageWithNxPackage(
   tree: Tree,
   oldPackageName: string,
-  newPackageName: string,
+  newPackageName: string
 ): void {
   replacePackageInDependencies(tree, oldPackageName, newPackageName);
 
@@ -31,7 +31,7 @@ export function replaceNrwlPackageWithNxPackage(
 function replacePackageInDependencies(
   tree: Tree,
   oldPackageName: string,
-  newPackageName: string,
+  newPackageName: string
 ) {
   visitNotIgnoredFiles(tree, '.', (path) => {
     if (basename(path) !== 'package.json') {
@@ -55,7 +55,7 @@ function replacePackageInDependencies(
       });
     } catch (e) {
       console.warn(
-        `Could not replace ${oldPackageName} with ${newPackageName} in ${path}.`,
+        `Could not replace ${oldPackageName} with ${newPackageName} in ${path}.`
       );
     }
   });
@@ -64,7 +64,7 @@ function replacePackageInDependencies(
 function replacePackageInProjectConfigurations(
   tree: Tree,
   oldPackageName: string,
-  newPackageName: string,
+  newPackageName: string
 ) {
   const projects = getProjects(tree);
 
@@ -72,7 +72,7 @@ function replacePackageInProjectConfigurations(
     let needsUpdate = false;
 
     for (const [targetName, targetConfig] of Object.entries(
-      projectConfiguration.targets ?? {},
+      projectConfiguration.targets ?? {}
     )) {
       if (!targetConfig.executor) {
         continue;
@@ -88,7 +88,7 @@ function replacePackageInProjectConfigurations(
     }
 
     for (const [collection, collectionDefaults] of Object.entries(
-      projectConfiguration.generators ?? {},
+      projectConfiguration.generators ?? {}
     )) {
       if (collection === oldPackageName) {
         needsUpdate = true;
@@ -107,7 +107,7 @@ function replacePackageInProjectConfigurations(
 function replacePackageInNxJson(
   tree: Tree,
   oldPackageName: string,
-  newPackageName: string,
+  newPackageName: string
 ) {
   if (!tree.exists('nx.json')) {
     return;
@@ -118,7 +118,7 @@ function replacePackageInNxJson(
   let needsUpdate = false;
 
   for (const [targetName, targetConfig] of Object.entries(
-    nxJson.targetDefaults ?? {},
+    nxJson.targetDefaults ?? {}
   )) {
     if (!targetConfig.executor) {
       continue;
@@ -134,7 +134,7 @@ function replacePackageInNxJson(
   }
 
   for (const [collection, collectionDefaults] of Object.entries(
-    nxJson.generators ?? {},
+    nxJson.generators ?? {}
   )) {
     if (collection === oldPackageName) {
       needsUpdate = true;
@@ -152,7 +152,7 @@ function replacePackageInNxJson(
 function replaceMentions(
   tree: Tree,
   oldPackageName: string,
-  newPackageName: string,
+  newPackageName: string
 ) {
   visitNotIgnoredFiles(tree, '.', (path) => {
     if (isBinaryPath(path)) {
@@ -178,13 +178,13 @@ function replaceMentions(
 
       tree.write(
         path,
-        contents.replace(new RegExp(oldPackageName, 'g'), newPackageName),
+        contents.replace(new RegExp(oldPackageName, 'g'), newPackageName)
       );
     } catch {
       // Its **probably** ok, contents can be null if the file is too large or
       // there was an access exception.
       logger.warn(
-        `An error was thrown when trying to update ${path}. If you believe the migration should have updated it, be sure to review the file and open an issue.`,
+        `An error was thrown when trying to update ${path}. If you believe the migration should have updated it, be sure to review the file and open an issue.`
       );
     }
   });

@@ -10,7 +10,7 @@ export type ProjectRootMappings = Map<string, string>;
  * @param projects This is the map of project configurations commonly found in "workspace.json"
  */
 export function createProjectRootMappingsFromProjectConfigurations(
-  projects: Record<string, ProjectConfiguration>,
+  projects: Record<string, ProjectConfiguration>
 ) {
   const projectRootMappings: ProjectRootMappings = new Map();
   for (const projectName of Object.keys(projects)) {
@@ -25,7 +25,7 @@ export function createProjectRootMappingsFromProjectConfigurations(
  * @param nodes This is the nodes from the project graph
  */
 export function createProjectRootMappings(
-  nodes: Record<string, ProjectGraphProjectNode>,
+  nodes: Record<string, ProjectGraphProjectNode>
 ): ProjectRootMappings {
   const projectRootMappings = new Map<string, string>();
   for (const projectName of Object.keys(nodes)) {
@@ -43,7 +43,7 @@ export function createProjectRootMappings(
  */
 export function findProjectForPath(
   filePath: string,
-  projectRootMap: ProjectRootMappings,
+  projectRootMap: ProjectRootMappings
 ): string | null {
   /**
    * Project Mappings are in UNIX-style file paths

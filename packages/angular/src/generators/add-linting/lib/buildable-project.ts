@@ -2,7 +2,7 @@ import { readProjectConfiguration, type Tree } from '@nx/devkit';
 
 export function isBuildableLibraryProject(
   tree: Tree,
-  projectName: string,
+  projectName: string
 ): boolean {
   const projectConfig = readProjectConfiguration(tree, projectName);
 

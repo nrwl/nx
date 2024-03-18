@@ -24,7 +24,7 @@ function findAllProjectsWithViteConfig(tree: Tree): void {
     const viteConfig = normalizeViteConfigFilePathWithTree(
       tree,
       projectConfiguration.root,
-      options?.['configFile'],
+      options?.['configFile']
     );
     if (viteConfig) {
       const appFileContent = tree.read(viteConfig, 'utf-8');
@@ -32,7 +32,7 @@ function findAllProjectsWithViteConfig(tree: Tree): void {
       let newContents = appFileContent;
       const defineConfig = tsquery.query(
         file,
-        'CallExpression:has(Identifier[name="defineConfig"])',
+        'CallExpression:has(Identifier[name="defineConfig"])'
       );
       let startOfProjects, endOfProjects;
 

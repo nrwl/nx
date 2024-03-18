@@ -19,7 +19,7 @@ export default async function addDroppedDependencies(tree: Tree) {
 
   for (const [_, projectConfiguration] of projects) {
     for (const [_, targetConfiguration] of Object.entries(
-      projectConfiguration.targets ?? {},
+      projectConfiguration.targets ?? {}
     )) {
       for (const droppedDependency of droppedDependencies) {
         if (
@@ -34,7 +34,7 @@ export default async function addDroppedDependencies(tree: Tree) {
   const nxJson = readNxJson(tree);
 
   for (const [_, targetConfiguration] of Object.entries(
-    nxJson?.targetDefaults ?? {},
+    nxJson?.targetDefaults ?? {}
   )) {
     for (const droppedDependency of droppedDependencies) {
       if (

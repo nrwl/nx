@@ -11,7 +11,7 @@ Because we chose `npm` for the preset when we created the nx workspace, the `nx.
 ```jsonc
 // nx.json
 {
-  "extends": "nx/presets/npm.json",
+  "extends": "nx/presets/npm.json"
 }
 ```
 
@@ -84,7 +84,7 @@ var { message } = require('../messages');
 console.log(
   cowsay.say({
     text: message,
-  }),
+  })
 );
 ```
 

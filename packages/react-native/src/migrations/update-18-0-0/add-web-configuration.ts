@@ -32,7 +32,7 @@ export default async function update(tree: Tree) {
       if (tree.exists(joinPathFragments(config.root, 'babel.config.json'))) {
         tree.rename(
           joinPathFragments(config.root, 'babel.config.json'),
-          joinPathFragments(config.root, 'babel-v72.config.json'),
+          joinPathFragments(config.root, 'babel-v72.config.json')
         );
       }
 
@@ -40,7 +40,7 @@ export default async function update(tree: Tree) {
         await webConfigurationGenerator(tree, {
           project: config.name,
           bundler: 'webpack',
-        }),
+        })
       );
     }
   }

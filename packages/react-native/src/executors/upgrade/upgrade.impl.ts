@@ -14,7 +14,7 @@ export interface ReactNativeUpgradeOutput {
  */
 export default async function* upgradeExecutor(
   options: UpgradeExecutorSchema,
-  context: ExecutorContext,
+  context: ExecutorContext
 ): AsyncGenerator<ReactNativeUpgradeOutput> {
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
@@ -25,7 +25,7 @@ export default async function* upgradeExecutor(
 
 export function runCliUpgrade(
   workspaceRoot: string,
-  projectRoot: string,
+  projectRoot: string
 ): Promise<ChildProcess> {
   return new Promise<ChildProcess>((resolve, reject) => {
     const childProcess = fork(
@@ -35,7 +35,7 @@ export function runCliUpgrade(
         stdio: 'inherit',
         cwd: pathResolve(workspaceRoot, projectRoot),
         env: process.env,
-      },
+      }
     );
 
     /**

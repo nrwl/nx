@@ -59,7 +59,7 @@ export function addCypressOnErrorWorkaround(tree: Tree, schema: Schema) {
 
   const pathToCommandsFile = joinPathFragments(
     e2eProject.sourceRoot,
-    'support/e2e.ts',
+    'support/e2e.ts'
   );
 
   const commandsContent = tree.exists(pathToCommandsFile)

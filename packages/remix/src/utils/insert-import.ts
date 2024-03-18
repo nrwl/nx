@@ -14,11 +14,11 @@ export function insertImport(
   path: string,
   name: string,
   modulePath: string,
-  options: { typeOnly: boolean } = { typeOnly: false },
+  options: { typeOnly: boolean } = { typeOnly: false }
 ) {
   if (!tree.exists(path))
     throw Error(
-      `Could not insert import ${name} from ${modulePath} in ${path}: path not found`,
+      `Could not insert import ${name} from ${modulePath} in ${path}: path not found`
     );
 
   const contents = tree.read(path, 'utf-8');
@@ -29,11 +29,11 @@ export function insertImport(
 
   if (options.typeOnly) {
     importStatements = importStatements.filter(
-      (node) => node.importClause.isTypeOnly,
+      (node) => node.importClause.isTypeOnly
     );
   } else {
     importStatements = importStatements.filter(
-      (node) => !node.importClause.isTypeOnly,
+      (node) => !node.importClause.isTypeOnly
     );
   }
 
@@ -45,7 +45,7 @@ export function insertImport(
         .replace(/['"`]/g, '')
         .trim() === modulePath &&
       statement.importClause.namedBindings &&
-      isNamedImports(statement.importClause.namedBindings),
+      isNamedImports(statement.importClause.namedBindings)
   );
 
   if (!existingImport) {
@@ -54,7 +54,7 @@ export function insertImport(
       path,
       options.typeOnly
         ? `import type { ${name} } from '${modulePath}';`
-        : `import { ${name} } from '${modulePath}';`,
+        : `import { ${name} } from '${modulePath}';`
     );
     return;
   }
@@ -64,7 +64,7 @@ export function insertImport(
 
   const alreadyImported =
     namedImports.elements.find(
-      (element) => element.name.escapedText === name,
+      (element) => element.name.escapedText === name
     ) !== undefined;
 
   if (!alreadyImported) {

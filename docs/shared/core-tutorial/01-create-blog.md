@@ -159,7 +159,7 @@ Create the following files:
 `packages/blog/src/_includes/layout.liquid`:
 
 ```html
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />

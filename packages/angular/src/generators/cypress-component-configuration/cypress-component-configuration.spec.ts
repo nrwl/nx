@@ -102,10 +102,10 @@ describe('Cypress Component Testing Configuration', () => {
       });
 
       expect(
-        tree.exists('fancy-lib/src/lib/fancy-cmp/fancy-cmp.component.cy.ts'),
+        tree.exists('fancy-lib/src/lib/fancy-cmp/fancy-cmp.component.cy.ts')
       ).toBeFalsy();
       expect(
-        readProjectConfiguration(tree, 'fancy-lib').targets['component-test'],
+        readProjectConfiguration(tree, 'fancy-lib').targets['component-test']
       ).toEqual({
         executor: '@nx/cypress:cypress',
         options: {
@@ -168,10 +168,10 @@ describe('Cypress Component Testing Configuration', () => {
       });
 
       expect(
-        tree.exists('fancy-lib/src/lib/fancy-cmp/fancy-cmp.component.cy.ts'),
+        tree.exists('fancy-lib/src/lib/fancy-cmp/fancy-cmp.component.cy.ts')
       ).toBeFalsy();
       expect(
-        readProjectConfiguration(tree, 'fancy-lib').targets['component-test'],
+        readProjectConfiguration(tree, 'fancy-lib').targets['component-test']
       ).toEqual({
         executor: '@nx/cypress:cypress',
         options: {
@@ -274,7 +274,7 @@ describe('Cypress Component Testing Configuration', () => {
       });
 
       expect(
-        readProjectConfiguration(tree, 'fancy-app').targets['component-test'],
+        readProjectConfiguration(tree, 'fancy-app').targets['component-test']
       ).toEqual({
         executor: '@nx/cypress:cypress',
         options: {
@@ -304,7 +304,7 @@ describe('Cypress Component Testing Configuration', () => {
       });
       tree.write(
         'fancy-app/src/app/blah.component.ts',
-        `import {FancyCmpComponent} from '@something/fancy-lib'`,
+        `import {FancyCmpComponent} from '@something/fancy-lib'`
       );
       projectGraph = {
         nodes: {
@@ -341,7 +341,7 @@ describe('Cypress Component Testing Configuration', () => {
       });
 
       expect(
-        readProjectConfiguration(tree, 'fancy-lib').targets['component-test'],
+        readProjectConfiguration(tree, 'fancy-lib').targets['component-test']
       ).toEqual({
         executor: '@nx/cypress:cypress',
         options: {
@@ -410,7 +410,7 @@ describe('Cypress Component Testing Configuration', () => {
       "
     `);
     expect(
-      tree.read('my-lib/cypress/support/component.ts', 'utf-8'),
+      tree.read('my-lib/cypress/support/component.ts', 'utf-8')
     ).toMatchSnapshot('component.ts');
   });
 
@@ -454,7 +454,7 @@ describe('Cypress Component Testing Configuration', () => {
         '**/*.cy.js',
         '**/*.cy.tsx',
         '**/*.cy.jsx',
-      ]),
+      ])
     );
   });
 
@@ -736,14 +736,14 @@ describe('Cypress Component Testing Configuration', () => {
     expect(
       tree.read(
         'secondary/src/lib/button/fancy-button.component.cy.ts',
-        'utf-8',
-      ),
+        'utf-8'
+      )
     ).toMatchSnapshot();
     expect(
       tree.read(
         'secondary/src/lib/button/standalone-fancy-button.component.cy.ts',
-        'utf-8',
-      ),
+        'utf-8'
+      )
     ).toMatchSnapshot();
   });
 
@@ -756,15 +756,15 @@ describe('Cypress Component Testing Configuration', () => {
     await setup(tree, { project: 'cool-lib', name: 'abc', standalone: false });
     tree.write(
       'cool-lib/src/lib/abc-one/abc-one.component.cy.ts',
-      `const msg = 'should not overwrite abc-one';`,
+      `const msg = 'should not overwrite abc-one';`
     );
     tree.write(
       'cool-lib/src/lib/abc-two/abc-two.component.cy.ts',
-      `const msg = 'should not overwrite abc-two';`,
+      `const msg = 'should not overwrite abc-two';`
     );
     tree.write(
       'cool-lib/src/lib/abc-three/abc-three.component.cy.ts',
-      `const msg = 'should not overwrite abc-three';`,
+      `const msg = 'should not overwrite abc-three';`
     );
     projectGraph = {
       nodes: {
@@ -798,13 +798,13 @@ describe('Cypress Component Testing Configuration', () => {
       basePath: 'cool-lib/src/lib',
     });
     expect(one.cy).toMatchInlineSnapshot(
-      `"const msg = 'should not overwrite abc-one';"`,
+      `"const msg = 'should not overwrite abc-one';"`
     );
     expect(two.cy).toMatchInlineSnapshot(
-      `"const msg = 'should not overwrite abc-two';"`,
+      `"const msg = 'should not overwrite abc-two';"`
     );
     expect(three.cy).toMatchInlineSnapshot(
-      `"const msg = 'should not overwrite abc-three';"`,
+      `"const msg = 'should not overwrite abc-three';"`
     );
   });
 
@@ -856,7 +856,7 @@ export class CmpMultiComponent implements OnInit {
   constructor() { }
   ngOnInit(): void {}
 }
-`,
+`
     );
     tree.write(
       '',
@@ -876,7 +876,7 @@ import { CmpTwoComponent } from './cmp-two.component';
   ]
 })
 export class MultipleComponentsModule { }
-`,
+`
     );
 
     await cypressComponentConfiguration(tree, {
@@ -886,7 +886,7 @@ export class MultipleComponentsModule { }
     });
 
     expect(
-      tree.read('multiple-components/src/lib/cmp-one.component.cy.ts', 'utf-8'),
+      tree.read('multiple-components/src/lib/cmp-one.component.cy.ts', 'utf-8')
     ).toEqual('');
   });
 });
@@ -899,7 +899,7 @@ async function setup(
     standalone?: boolean;
     withInputs?: boolean;
     basePath?: string;
-  },
+  }
 ) {
   await generateTestApplication(tree, {
     name: options.name,
@@ -921,7 +921,7 @@ async function setup(
       const cmpPath = joinPathFragments(
         options.basePath,
         name,
-        `${name}.component.ts`,
+        `${name}.component.ts`
       );
       const oldContent = tree.read(cmpPath, 'utf-8');
 
@@ -936,7 +936,7 @@ async function setup(
   @Input() anotherProp: any;
   @Input() anotherNeverProp: never;
 
-  constructor()`,
+  constructor()`
       );
 
       tree.write(cmpPath, newContent);
@@ -946,7 +946,7 @@ async function setup(
 
 function getCmpsFromTree(
   tree: Tree,
-  options: { basePath: string; name: string },
+  options: { basePath: string; name: string }
 ) {
   return [
     `${options.name}-one`,
@@ -954,21 +954,21 @@ function getCmpsFromTree(
     `${options.name}-three`,
   ].map((n) => {
     expect(
-      tree.exists(joinPathFragments(options.basePath, n, `${n}.component.ts`)),
+      tree.exists(joinPathFragments(options.basePath, n, `${n}.component.ts`))
     ).toBeTruthy();
     expect(
       tree.exists(
-        joinPathFragments(options.basePath, n, `${n}.component.cy.ts`),
-      ),
+        joinPathFragments(options.basePath, n, `${n}.component.cy.ts`)
+      )
     ).toBeTruthy();
     return {
       cmp: tree.read(
         joinPathFragments(options.basePath, n, `${n}.component.ts`),
-        'utf-8',
+        'utf-8'
       ),
       cy: tree.read(
         joinPathFragments(options.basePath, n, `${n}.component.cy.ts`),
-        'utf-8',
+        'utf-8'
       ),
     };
   });

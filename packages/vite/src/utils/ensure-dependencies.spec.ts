@@ -16,7 +16,7 @@ describe('@nx/vite:init', () => {
     addDependenciesToPackageJson(
       tree,
       { '@nx/vite': nxVersion, [existing]: existingVersion },
-      { [existing]: existingVersion },
+      { [existing]: existingVersion }
     );
     ensureDependencies(tree, {
       uiFramework: 'react',

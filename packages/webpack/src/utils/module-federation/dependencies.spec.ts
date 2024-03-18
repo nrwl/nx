@@ -41,7 +41,7 @@ describe('getDependentPackagesForProject', () => {
           },
         } as any,
       },
-      'shell',
+      'shell'
     );
 
     expect(dependencies).toEqual({
@@ -90,7 +90,7 @@ describe('getDependentPackagesForProject', () => {
           },
         } as any,
       },
-      'shell',
+      'shell'
     );
 
     expect(dependencies).toEqual({
@@ -143,7 +143,7 @@ describe('getDependentPackagesForProject', () => {
           },
         } as any,
       },
-      'shell',
+      'shell'
     );
 
     expect(dependencies).toEqual({

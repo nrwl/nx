@@ -28,7 +28,7 @@ import type { RollupOutput, RollupWatcher, WatcherOptions } from 'rollup';
 import type { InlineConfig } from 'vite';
 
 type CypressPreprocessor = (
-  file: Record<string, any>,
+  file: Record<string, any>
 ) => string | Promise<string>;
 
 type BuildResult = RollupWatcher | RollupOutput | RollupOutput[];

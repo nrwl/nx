@@ -41,7 +41,7 @@ describe('Angular Cypress Component Test Generator', () => {
       skipFormat: true,
     });
     expect(
-      tree.read('my-lib/src/lib/my-lib/my-lib.component.cy.ts', 'utf-8'),
+      tree.read('my-lib/src/lib/my-lib/my-lib.component.cy.ts', 'utf-8')
     ).toMatchSnapshot();
   });
 
@@ -84,7 +84,7 @@ export class MyLibComponent implements OnInit {
   ngOnInit(): void {
   }
 
-}`,
+}`
     );
 
     await componentTestGenerator(tree, {
@@ -95,7 +95,7 @@ export class MyLibComponent implements OnInit {
     });
 
     expect(
-      tree.read('my-lib/src/lib/my-lib/my-lib.component.cy.ts', 'utf-8'),
+      tree.read('my-lib/src/lib/my-lib/my-lib.component.cy.ts', 'utf-8')
     ).toMatchSnapshot();
   });
 
@@ -139,7 +139,7 @@ export class MyLibComponent implements OnInit {
   }
 
 }
-`,
+`
     );
     await componentTestGenerator(tree, {
       componentName: 'MyLibComponent',
@@ -148,7 +148,7 @@ export class MyLibComponent implements OnInit {
       componentDir: 'src/lib/my-lib',
     });
     expect(
-      tree.read('my-lib/src/lib/my-lib/my-lib.component.cy.ts', 'utf-8'),
+      tree.read('my-lib/src/lib/my-lib/my-lib.component.cy.ts', 'utf-8')
     ).toMatchSnapshot();
   });
 
@@ -167,7 +167,7 @@ export class MyLibComponent implements OnInit {
     });
     tree.write(
       'my-lib/src/lib/my-lib/my-lib.component.cy.ts',
-      `should not overwrite`,
+      `should not overwrite`
     );
 
     await componentTestGenerator(tree, {
@@ -179,7 +179,7 @@ export class MyLibComponent implements OnInit {
     });
 
     expect(
-      tree.read('my-lib/src/lib/my-lib/my-lib.component.cy.ts', 'utf-8'),
+      tree.read('my-lib/src/lib/my-lib/my-lib.component.cy.ts', 'utf-8')
     ).toEqual('should not overwrite');
   });
 
@@ -224,7 +224,7 @@ describe(MyLibComponent.name, () => {
       skipFormat: true,
     });
     expect(
-      tree.read('my-lib/src/lib/my-lib/my-lib.component.cy.ts', 'utf-8'),
+      tree.read('my-lib/src/lib/my-lib/my-lib.component.cy.ts', 'utf-8')
     ).toEqual(expected);
 
     await componentTestGenerator(tree, {
@@ -235,7 +235,7 @@ describe(MyLibComponent.name, () => {
       skipFormat: true,
     });
     expect(
-      tree.read('my-lib/src/lib/my-lib/my-lib.component.cy.ts', 'utf-8'),
+      tree.read('my-lib/src/lib/my-lib/my-lib.component.cy.ts', 'utf-8')
     ).toEqual(expected);
   });
 });

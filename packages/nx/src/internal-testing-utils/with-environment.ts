@@ -1,6 +1,6 @@
 export function withEnvironmentVariables<T>(
   env: Record<string, string | false | null | undefined>,
-  callback: () => T,
+  callback: () => T
 ): T {
   const originalValues: Record<string, string> = {};
   for (const key in env) {

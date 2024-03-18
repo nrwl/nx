@@ -32,7 +32,7 @@ function readTargetsCache(): Record<
 }
 
 function writeTargetsToCache(
-  targets: Record<string, Record<string, TargetConfiguration>>,
+  targets: Record<string, Record<string, TargetConfiguration>>
 ) {
   writeJsonFile(cachePath, targets);
 }
@@ -77,7 +77,7 @@ export const createNodes: CreateNodes<RemixPluginOptions> = [
           projectRoot,
           options,
           context,
-          siblingFiles,
+          siblingFiles
         );
 
     calculatedTargets[hash] = targets;
@@ -98,7 +98,7 @@ async function buildRemixTargets(
   projectRoot: string,
   options: RemixPluginOptions,
   context: CreateNodesContext,
-  siblingFiles: string[],
+  siblingFiles: string[]
 ) {
   const namedInputs = getNamedInputs(projectRoot, context);
   const { buildDirectory, assetsBuildDirectory, serverBuildPath } =
@@ -110,18 +110,18 @@ async function buildRemixTargets(
     projectRoot,
     buildDirectory,
     assetsBuildDirectory,
-    namedInputs,
+    namedInputs
   );
   targets[options.devTargetName] = devTarget(serverBuildPath, projectRoot);
   targets[options.startTargetName] = startTarget(
     projectRoot,
     serverBuildPath,
-    options.buildTargetName,
+    options.buildTargetName
   );
   targets[options.typecheckTargetName] = typecheckTarget(
     projectRoot,
     namedInputs,
-    siblingFiles,
+    siblingFiles
   );
 
   return targets;
@@ -132,7 +132,7 @@ function buildTarget(
   projectRoot: string,
   buildDirectory: string,
   assetsBuildDirectory: string,
-  namedInputs: { [inputName: string]: any[] },
+  namedInputs: { [inputName: string]: any[] }
 ): TargetConfiguration {
   const serverBuildOutputPath =
     projectRoot === '.'
@@ -160,7 +160,7 @@ function buildTarget(
 
 function devTarget(
   serverBuildPath: string,
-  projectRoot: string,
+  projectRoot: string
 ): TargetConfiguration {
   return {
     command: 'remix dev --manual',
@@ -171,7 +171,7 @@ function devTarget(
 function startTarget(
   projectRoot: string,
   serverBuildPath: string,
-  buildTargetName: string,
+  buildTargetName: string
 ): TargetConfiguration {
   return {
     dependsOn: [buildTargetName],
@@ -185,7 +185,7 @@ function startTarget(
 function typecheckTarget(
   projectRoot: string,
   namedInputs: { [inputName: string]: any[] },
-  siblingFiles: string[],
+  siblingFiles: string[]
 ): TargetConfiguration {
   const hasTsConfigAppJson = siblingFiles.includes('tsconfig.app.json');
   const command = `tsc${
@@ -207,7 +207,7 @@ function typecheckTarget(
 
 async function getBuildPaths(
   configFilePath: string,
-  workspaceRoot: string,
+  workspaceRoot: string
 ): Promise<{
   buildDirectory: string;
   assetsBuildDirectory: string;

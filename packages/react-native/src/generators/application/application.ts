@@ -29,7 +29,7 @@ import { PackageJson } from 'nx/src/utils/package-json';
 
 export async function reactNativeApplicationGenerator(
   host: Tree,
-  schema: Schema,
+  schema: Schema
 ): Promise<GeneratorCallback> {
   return await reactNativeApplicationGeneratorInternal(host, {
     addPlugin: false,
@@ -40,7 +40,7 @@ export async function reactNativeApplicationGenerator(
 
 export async function reactNativeApplicationGeneratorInternal(
   host: Tree,
-  schema: Schema,
+  schema: Schema
 ): Promise<GeneratorCallback> {
   const options = await normalizeOptions(host, schema);
 
@@ -76,7 +76,7 @@ export async function reactNativeApplicationGeneratorInternal(
     options.appProjectRoot,
     options.js,
     options.skipPackageJson,
-    options.addPlugin,
+    options.addPlugin
   );
   tasks.push(jestTask);
 
@@ -91,30 +91,30 @@ export async function reactNativeApplicationGeneratorInternal(
   tasks.push(e2eTask);
 
   const chmodTaskGradlewTask = chmodAndroidGradlewFilesTask(
-    joinPathFragments(host.root, options.androidProjectRoot),
+    joinPathFragments(host.root, options.androidProjectRoot)
   );
   tasks.push(chmodTaskGradlewTask);
 
   const podInstallTask = runPodInstall(
-    joinPathFragments(host.root, options.iosProjectRoot),
+    joinPathFragments(host.root, options.iosProjectRoot)
   );
   if (options.install) {
     const projectPackageJsonPath = joinPathFragments(
       options.appProjectRoot,
-      'package.json',
+      'package.json'
     );
 
     const workspacePackageJson = readJson<PackageJson>(host, 'package.json');
     const projectPackageJson = readJson<PackageJson>(
       host,
-      projectPackageJsonPath,
+      projectPackageJsonPath
     );
 
     await syncDeps(
       options.name,
       projectPackageJson,
       projectPackageJsonPath,
-      workspacePackageJson,
+      workspacePackageJson
     );
     tasks.push(podInstallTask);
   } else {

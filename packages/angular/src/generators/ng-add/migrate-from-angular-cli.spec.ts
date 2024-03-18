@@ -57,19 +57,19 @@ describe('workspace', () => {
               },
             },
           },
-        }),
+        })
       );
       tree.write(
         '/tsconfig.app.json',
-        '{"extends": "../tsconfig.json", "compilerOptions": {}}',
+        '{"extends": "../tsconfig.json", "compilerOptions": {}}'
       );
       tree.write(
         '/tsconfig.spec.json',
-        '{"extends": "../tsconfig.json", "compilerOptions": {}}',
+        '{"extends": "../tsconfig.json", "compilerOptions": {}}'
       );
       tree.write(
         '/e2e/tsconfig.json',
-        '{"extends": "../tsconfig.json", "compilerOptions": {}}',
+        '{"extends": "../tsconfig.json", "compilerOptions": {}}'
       );
       tree.write('/tsconfig.json', '{"compilerOptions": {}}');
       tree.write(
@@ -105,7 +105,7 @@ describe('workspace', () => {
               rules: {},
             },
           ],
-        }),
+        })
       );
       tree.write('/e2e/protractor.conf.js', '// content');
       tree.write('/src/app/app.module.ts', '// content');
@@ -116,7 +116,7 @@ describe('workspace', () => {
         tree.delete('package.json');
 
         await expect(migrateFromAngularCli(tree, {})).rejects.toThrow(
-          'The "package.json" file could not be found.',
+          'The "package.json" file could not be found.'
         );
       });
 
@@ -124,7 +124,7 @@ describe('workspace', () => {
         tree.delete('angular.json');
 
         await expect(migrateFromAngularCli(tree, {})).rejects.toThrow(
-          'The "angular.json" file could not be found.',
+          'The "angular.json" file could not be found.'
         );
       });
     });
@@ -141,7 +141,7 @@ describe('workspace', () => {
             watch: 'ng build --watch --configuration development',
             test: 'ng test',
           },
-        }),
+        })
       );
 
       await migrateFromAngularCli(tree, { skipFormat: true });
@@ -198,7 +198,7 @@ describe('workspace', () => {
               },
             },
           },
-        }),
+        })
       );
 
       tree.write('/projects/myApp/.eslintrc.json', '{}');

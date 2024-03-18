@@ -49,7 +49,7 @@ export class ForkedProcessTaskRunner {
   public forkProcessForBatch(
     { executorName, taskGraph: batchTaskGraph }: Batch,
     fullTaskGraph: TaskGraph,
-    env: NodeJS.ProcessEnv,
+    env: NodeJS.ProcessEnv
   ) {
     return new Promise<BatchResults>((res, rej) => {
       try {
@@ -57,12 +57,12 @@ export class ForkedProcessTaskRunner {
         if (count > 1) {
           output.logSingleLine(
             `Running ${output.bold(count)} ${output.bold(
-              'tasks',
-            )} with ${output.bold(executorName)}`,
+              'tasks'
+            )} with ${output.bold(executorName)}`
           );
         } else {
           const args = getPrintableCommandArgsForTask(
-            Object.values(batchTaskGraph.tasks)[0],
+            Object.values(batchTaskGraph.tasks)[0]
           );
           output.logCommand(args.join(' '));
         }
@@ -86,8 +86,8 @@ export class ForkedProcessTaskRunner {
             }
             rej(
               new Error(
-                `"${executorName}" exited unexpectedly with code: ${code}`,
-              ),
+                `"${executorName}" exited unexpectedly with code: ${code}`
+              )
             );
           }
         });
@@ -137,7 +137,7 @@ export class ForkedProcessTaskRunner {
       pipeOutput: boolean;
       taskGraph: TaskGraph;
       env: NodeJS.ProcessEnv;
-    },
+    }
   ): Promise<{ code: number; terminalOutput: string }> {
     return pipeOutput
       ? await this.forkProcessPipeOutputCapture(task, {
@@ -169,7 +169,7 @@ export class ForkedProcessTaskRunner {
       taskGraph: TaskGraph;
       env: NodeJS.ProcessEnv;
       disablePseudoTerminal: boolean;
-    },
+    }
   ): Promise<{ code: number; terminalOutput: string }> {
     const shouldPrefix =
       streamOutput && process.env.NX_PREFIX_OUTPUT === 'true';
@@ -209,7 +209,7 @@ export class ForkedProcessTaskRunner {
       streamOutput: boolean;
       taskGraph: TaskGraph;
       env: NodeJS.ProcessEnv;
-    },
+    }
   ): Promise<{ code: number; terminalOutput: string }> {
     const args = getPrintableCommandArgsForTask(task);
     if (streamOutput) {
@@ -263,7 +263,7 @@ export class ForkedProcessTaskRunner {
       temporaryOutputPath: string;
       taskGraph: TaskGraph;
       env: NodeJS.ProcessEnv;
-    },
+    }
   ) {
     return this.forkProcessWithPrefixAndNotTTY(task, {
       streamOutput,
@@ -285,7 +285,7 @@ export class ForkedProcessTaskRunner {
       temporaryOutputPath: string;
       taskGraph: TaskGraph;
       env: NodeJS.ProcessEnv;
-    },
+    }
   ) {
     return new Promise<{ code: number; terminalOutput: string }>((res, rej) => {
       try {
@@ -322,7 +322,7 @@ export class ForkedProcessTaskRunner {
 
             p.stdout
               .pipe(
-                logClearLineToPrefixTransformer(color.bold(prefixText) + ' '),
+                logClearLineToPrefixTransformer(color.bold(prefixText) + ' ')
               )
               .pipe(logTransformer({ tag: color.bold(prefixText) }))
               .pipe(process.stdout);
@@ -355,7 +355,7 @@ export class ForkedProcessTaskRunner {
             this.options.lifeCycle.printTaskTerminalOutput(
               task,
               code === 0 ? 'success' : 'failure',
-              terminalOutput,
+              terminalOutput
             );
           }
           this.writeTerminalOutput(temporaryOutputPath, terminalOutput);
@@ -380,7 +380,7 @@ export class ForkedProcessTaskRunner {
       temporaryOutputPath: string;
       taskGraph: TaskGraph;
       env: NodeJS.ProcessEnv;
-    },
+    }
   ) {
     return new Promise<{ code: number; terminalOutput: string }>((res, rej) => {
       try {
@@ -420,7 +420,7 @@ export class ForkedProcessTaskRunner {
               this.options.lifeCycle.printTaskTerminalOutput(
                 task,
                 code === 0 ? 'success' : 'failure',
-                terminalOutput,
+                terminalOutput
               );
             }
           } catch (e) {

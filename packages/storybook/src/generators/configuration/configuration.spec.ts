@@ -51,7 +51,7 @@ describe('@nx/storybook:configuration for Storybook v7', () => {
       addDependenciesToPackageJson(
         tree,
         { '@nx/storybook': nxVersion, [existing]: existingVersion },
-        { [existing]: existingVersion },
+        { [existing]: existingVersion }
       );
 
       await configurationGenerator(tree, {
@@ -67,27 +67,27 @@ describe('@nx/storybook:configuration for Storybook v7', () => {
       expect(packageJson.dependencies[existing]).toBeDefined();
       expect(packageJson.devDependencies[existing]).toBeDefined();
       expect(
-        packageJson.devDependencies['@storybook/addon-essentials'],
+        packageJson.devDependencies['@storybook/addon-essentials']
       ).toBeDefined();
       expect(
-        packageJson.devDependencies['@storybook/core-server'],
+        packageJson.devDependencies['@storybook/core-server']
       ).toBeDefined();
       // angular specific
       expect(packageJson.devDependencies['@storybook/angular']).toBeDefined();
       expect(packageJson.devDependencies['@angular/forms']).toBeDefined();
       // react specific
       expect(
-        packageJson.devDependencies['@storybook/react-webpack5'],
+        packageJson.devDependencies['@storybook/react-webpack5']
       ).not.toBeDefined();
       expect(packageJson.devDependencies['@babel/core']).not.toBeDefined();
       expect(packageJson.devDependencies['babel-loader']).not.toBeDefined();
       // generic html specific
       expect(
-        packageJson.devDependencies['@storybook/html-webpack5'],
+        packageJson.devDependencies['@storybook/html-webpack5']
       ).not.toBeDefined();
       // generic svelte specific
       expect(
-        packageJson.devDependencies['@storybook/svelte-webpack5'],
+        packageJson.devDependencies['@storybook/svelte-webpack5']
       ).not.toBeDefined();
     });
 
@@ -97,7 +97,7 @@ describe('@nx/storybook:configuration for Storybook v7', () => {
       addDependenciesToPackageJson(
         tree,
         { '@nx/storybook': nxVersion, [existing]: existingVersion },
-        { [existing]: existingVersion },
+        { [existing]: existingVersion }
       );
 
       await configurationGenerator(tree, {
@@ -111,24 +111,24 @@ describe('@nx/storybook:configuration for Storybook v7', () => {
       expect(packageJson.dependencies[existing]).toBeDefined();
       expect(packageJson.devDependencies[existing]).toBeDefined();
       expect(
-        packageJson.devDependencies['@storybook/addon-essentials'],
+        packageJson.devDependencies['@storybook/addon-essentials']
       ).toBeDefined();
       // react specific
       expect(
-        packageJson.devDependencies['@storybook/react-webpack5'],
+        packageJson.devDependencies['@storybook/react-webpack5']
       ).toBeDefined();
       // angular specific
       expect(
-        packageJson.devDependencies['@storybook/angular'],
+        packageJson.devDependencies['@storybook/angular']
       ).not.toBeDefined();
       expect(packageJson.devDependencies['@angular/forms']).not.toBeDefined();
       // generic html specific
       expect(
-        packageJson.devDependencies['@storybook/html-webpack5'],
+        packageJson.devDependencies['@storybook/html-webpack5']
       ).not.toBeDefined();
       // generic svelte specific
       expect(
-        packageJson.devDependencies['@storybook/svelte-webpack5'],
+        packageJson.devDependencies['@storybook/svelte-webpack5']
       ).not.toBeDefined();
     });
 
@@ -138,7 +138,7 @@ describe('@nx/storybook:configuration for Storybook v7', () => {
       addDependenciesToPackageJson(
         tree,
         { '@nx/storybook': nxVersion, [existing]: existingVersion },
-        { [existing]: existingVersion },
+        { [existing]: existingVersion }
       );
 
       await configurationGenerator(tree, {
@@ -152,26 +152,26 @@ describe('@nx/storybook:configuration for Storybook v7', () => {
       expect(packageJson.dependencies[existing]).toBeDefined();
       expect(packageJson.devDependencies[existing]).toBeDefined();
       expect(
-        packageJson.devDependencies['@storybook/addon-essentials'],
+        packageJson.devDependencies['@storybook/addon-essentials']
       ).toBeDefined();
       // react specific
       expect(
-        packageJson.devDependencies['@storybook/react-webpack5'],
+        packageJson.devDependencies['@storybook/react-webpack5']
       ).not.toBeDefined();
       expect(packageJson.devDependencies['@babel/core']).not.toBeDefined();
       expect(packageJson.devDependencies['babel-loader']).not.toBeDefined();
       // angular specific
       expect(
-        packageJson.devDependencies['@storybook/angular'],
+        packageJson.devDependencies['@storybook/angular']
       ).not.toBeDefined();
       expect(packageJson.devDependencies['@angular/forms']).not.toBeDefined();
       // generic html specific
       expect(
-        packageJson.devDependencies['@storybook/html-webpack5'],
+        packageJson.devDependencies['@storybook/html-webpack5']
       ).toBeDefined();
       // generic svelte specific
       expect(
-        packageJson.devDependencies['@storybook/svelte-webpack5'],
+        packageJson.devDependencies['@storybook/svelte-webpack5']
       ).not.toBeDefined();
     });
 
@@ -181,7 +181,7 @@ describe('@nx/storybook:configuration for Storybook v7', () => {
       addDependenciesToPackageJson(
         tree,
         { '@nx/storybook': nxVersion, [existing]: existingVersion },
-        { [existing]: existingVersion },
+        { [existing]: existingVersion }
       );
 
       await configurationGenerator(tree, {
@@ -195,34 +195,34 @@ describe('@nx/storybook:configuration for Storybook v7', () => {
       expect(packageJson.dependencies[existing]).toBeDefined();
       expect(packageJson.devDependencies[existing]).toBeDefined();
       expect(
-        packageJson.devDependencies['@storybook/addon-essentials'],
+        packageJson.devDependencies['@storybook/addon-essentials']
       ).toBeDefined();
       // react specific
       expect(
-        packageJson.devDependencies['@storybook/react-webpack5'],
+        packageJson.devDependencies['@storybook/react-webpack5']
       ).not.toBeDefined();
       expect(packageJson.devDependencies['@babel/core']).not.toBeDefined();
       expect(packageJson.devDependencies['babel-loader']).not.toBeDefined();
       // angular specific
       expect(
-        packageJson.devDependencies['@storybook/angular'],
+        packageJson.devDependencies['@storybook/angular']
       ).not.toBeDefined();
       expect(packageJson.devDependencies['@angular/forms']).not.toBeDefined();
       // generic html specific
       expect(
-        packageJson.devDependencies['@storybook/html-webpack5'],
+        packageJson.devDependencies['@storybook/html-webpack5']
       ).not.toBeDefined();
       // generic web-components specific
       expect(
-        packageJson.devDependencies['@storybook/web-components-webpack5'],
+        packageJson.devDependencies['@storybook/web-components-webpack5']
       ).toBeDefined();
       // generic vue specific
       expect(
-        packageJson.devDependencies['@storybook/vue-webpack5'],
+        packageJson.devDependencies['@storybook/vue-webpack5']
       ).not.toBeDefined();
       // generic svelte specific
       expect(
-        packageJson.devDependencies['@storybook/svelte-webpack5'],
+        packageJson.devDependencies['@storybook/svelte-webpack5']
       ).not.toBeDefined();
     });
 
@@ -232,7 +232,7 @@ describe('@nx/storybook:configuration for Storybook v7', () => {
       addDependenciesToPackageJson(
         tree,
         { '@nx/storybook': nxVersion, [existing]: existingVersion },
-        { [existing]: existingVersion },
+        { [existing]: existingVersion }
       );
 
       await configurationGenerator(tree, {
@@ -246,34 +246,34 @@ describe('@nx/storybook:configuration for Storybook v7', () => {
       expect(packageJson.dependencies[existing]).toBeDefined();
       expect(packageJson.devDependencies[existing]).toBeDefined();
       expect(
-        packageJson.devDependencies['@storybook/addon-essentials'],
+        packageJson.devDependencies['@storybook/addon-essentials']
       ).toBeDefined();
       // react specific
       expect(
-        packageJson.devDependencies['@storybook/react-webpack5'],
+        packageJson.devDependencies['@storybook/react-webpack5']
       ).not.toBeDefined();
       expect(packageJson.devDependencies['@babel/core']).not.toBeDefined();
       expect(packageJson.devDependencies['babel-loader']).not.toBeDefined();
       // angular specific
       expect(
-        packageJson.devDependencies['@storybook/angular'],
+        packageJson.devDependencies['@storybook/angular']
       ).not.toBeDefined();
       expect(packageJson.devDependencies['@angular/forms']).not.toBeDefined();
       // generic html specific
       expect(
-        packageJson.devDependencies['@storybook/html-webpack5'],
+        packageJson.devDependencies['@storybook/html-webpack5']
       ).not.toBeDefined();
       // generic web-components specific
       expect(
-        packageJson.devDependencies['@storybook/web-components-webpack5'],
+        packageJson.devDependencies['@storybook/web-components-webpack5']
       ).not.toBeDefined();
       // generic svelte specific
       expect(
-        packageJson.devDependencies['@storybook/svelte-webpack5'],
+        packageJson.devDependencies['@storybook/svelte-webpack5']
       ).not.toBeDefined();
       // generic vue specific
       expect(
-        packageJson.devDependencies['@storybook/vue-webpack5'],
+        packageJson.devDependencies['@storybook/vue-webpack5']
       ).toBeDefined();
     });
 
@@ -283,7 +283,7 @@ describe('@nx/storybook:configuration for Storybook v7', () => {
       addDependenciesToPackageJson(
         tree,
         { '@nx/storybook': nxVersion, [existing]: existingVersion },
-        { [existing]: existingVersion },
+        { [existing]: existingVersion }
       );
 
       await configurationGenerator(tree, {
@@ -297,38 +297,38 @@ describe('@nx/storybook:configuration for Storybook v7', () => {
       expect(packageJson.dependencies[existing]).toBeDefined();
       expect(packageJson.devDependencies[existing]).toBeDefined();
       expect(
-        packageJson.devDependencies['@storybook/addon-essentials'],
+        packageJson.devDependencies['@storybook/addon-essentials']
       ).toBeDefined();
       // react specific
       expect(
-        packageJson.devDependencies['@storybook/react-webpack5'],
+        packageJson.devDependencies['@storybook/react-webpack5']
       ).not.toBeDefined();
       expect(packageJson.devDependencies['@babel/core']).not.toBeDefined();
       expect(packageJson.devDependencies['babel-loader']).not.toBeDefined();
       // angular specific
       expect(
-        packageJson.devDependencies['@storybook/angular'],
+        packageJson.devDependencies['@storybook/angular']
       ).not.toBeDefined();
       expect(packageJson.devDependencies['@angular/forms']).not.toBeDefined();
       // generic html specific
       expect(
-        packageJson.devDependencies['@storybook/html-webpack5'],
+        packageJson.devDependencies['@storybook/html-webpack5']
       ).not.toBeDefined();
       // generic vue specific
       expect(
-        packageJson.devDependencies['@storybook/vue-webpack5'],
+        packageJson.devDependencies['@storybook/vue-webpack5']
       ).not.toBeDefined();
       // generic web-components specific
       expect(
-        packageJson.devDependencies['@storybook/web-components-webpack5'],
+        packageJson.devDependencies['@storybook/web-components-webpack5']
       ).not.toBeDefined();
       // generic svelte specific
       expect(
-        packageJson.devDependencies['@storybook/svelte-webpack5'],
+        packageJson.devDependencies['@storybook/svelte-webpack5']
       ).not.toBeDefined();
       // generic vue3 specific
       expect(
-        packageJson.devDependencies['@storybook/vue3-webpack5'],
+        packageJson.devDependencies['@storybook/vue3-webpack5']
       ).toBeDefined();
     });
 
@@ -338,7 +338,7 @@ describe('@nx/storybook:configuration for Storybook v7', () => {
       addDependenciesToPackageJson(
         tree,
         { '@nx/storybook': nxVersion, [existing]: existingVersion },
-        { [existing]: existingVersion },
+        { [existing]: existingVersion }
       );
 
       await configurationGenerator(tree, {
@@ -352,38 +352,38 @@ describe('@nx/storybook:configuration for Storybook v7', () => {
       expect(packageJson.dependencies[existing]).toBeDefined();
       expect(packageJson.devDependencies[existing]).toBeDefined();
       expect(
-        packageJson.devDependencies['@storybook/addon-essentials'],
+        packageJson.devDependencies['@storybook/addon-essentials']
       ).toBeDefined();
       // react specific
       expect(
-        packageJson.devDependencies['@storybook/react-webpack5'],
+        packageJson.devDependencies['@storybook/react-webpack5']
       ).not.toBeDefined();
       expect(packageJson.devDependencies['@babel/core']).not.toBeDefined();
       expect(packageJson.devDependencies['babel-loader']).not.toBeDefined();
       // angular specific
       expect(
-        packageJson.devDependencies['@storybook/angular'],
+        packageJson.devDependencies['@storybook/angular']
       ).not.toBeDefined();
       expect(packageJson.devDependencies['@angular/forms']).not.toBeDefined();
       // generic html specific
       expect(
-        packageJson.devDependencies['@storybook/html-webpack5'],
+        packageJson.devDependencies['@storybook/html-webpack5']
       ).not.toBeDefined();
       // generic vue specific
       expect(
-        packageJson.devDependencies['@storybook/vue-webpack5'],
+        packageJson.devDependencies['@storybook/vue-webpack5']
       ).not.toBeDefined();
       // generic web-components specific
       expect(
-        packageJson.devDependencies['@storybook/web-components-webpack5'],
+        packageJson.devDependencies['@storybook/web-components-webpack5']
       ).not.toBeDefined();
       // generic vue3 specific
       expect(
-        packageJson.devDependencies['@storybook/vue3-webpack5'],
+        packageJson.devDependencies['@storybook/vue3-webpack5']
       ).not.toBeDefined();
       // generic svelte specific
       expect(
-        packageJson.devDependencies['@storybook/svelte-webpack5'],
+        packageJson.devDependencies['@storybook/svelte-webpack5']
       ).toBeDefined();
     });
   });
@@ -429,7 +429,7 @@ describe('@nx/storybook:configuration for Storybook v7', () => {
 
       expect(tree.exists('test-ui-lib/tsconfig.storybook.json')).toBeFalsy();
       expect(
-        tree.read('test-ui-lib/.storybook/main.ts', 'utf-8'),
+        tree.read('test-ui-lib/.storybook/main.ts', 'utf-8')
       ).toMatchSnapshot();
       expect(tree.exists('test-ui-lib/.storybook/preview.ts')).toBeTruthy();
     });
@@ -443,7 +443,7 @@ describe('@nx/storybook:configuration for Storybook v7', () => {
       });
       const tsconfigJson = readJson<TsConfig>(
         tree,
-        'test-ui-lib/tsconfig.lib.json',
+        'test-ui-lib/tsconfig.lib.json'
       ) as Required<TsConfig>;
 
       expect(tsconfigJson.exclude).toContain('**/*.stories.ts');
@@ -460,7 +460,7 @@ describe('@nx/storybook:configuration for Storybook v7', () => {
       });
       const tsconfigJson = readJson<TsConfig>(
         tree,
-        'test-ui-lib/tsconfig.json',
+        'test-ui-lib/tsconfig.json'
       );
 
       expect(tsconfigJson.references).toMatchInlineSnapshot(`
@@ -526,11 +526,11 @@ describe('@nx/storybook:configuration for Storybook v7', () => {
       });
 
       expect(
-        tree.read('test-ui-lib2/tsconfig.storybook.json', 'utf-8'),
+        tree.read('test-ui-lib2/tsconfig.storybook.json', 'utf-8')
       ).toMatchSnapshot();
 
       expect(
-        readJson(tree, 'package.json').devDependencies['core-js'],
+        readJson(tree, 'package.json').devDependencies['core-js']
       ).toBeTruthy();
     });
 
@@ -543,7 +543,7 @@ describe('@nx/storybook:configuration for Storybook v7', () => {
       });
 
       expect(
-        tree.read('test-ui-lib/.storybook/main.ts', 'utf-8'),
+        tree.read('test-ui-lib/.storybook/main.ts', 'utf-8')
       ).toMatchSnapshot();
       expect(tree.exists('test-ui-lib/.storybook/preview.ts')).toBeTruthy();
       expect(tree.exists('test-ui-lib/.storybook/main.js')).toBeFalsy();
@@ -559,29 +559,27 @@ describe('@nx/storybook:configuration for Storybook v7', () => {
       });
 
       expect(
-        readJson(tree, 'package.json').devDependencies[
-          '@storybook/test-runner'
-        ],
+        readJson(tree, 'package.json').devDependencies['@storybook/test-runner']
       ).toBeTruthy();
 
       expect(
-        readJson(tree, 'package.json').devDependencies['core-js'],
+        readJson(tree, 'package.json').devDependencies['core-js']
       ).toBeTruthy();
 
       expect(
         readJson(tree, 'package.json').devDependencies[
           '@storybook/testing-library'
-        ],
+        ]
       ).toBeTruthy();
 
       expect(
-        readJson(tree, 'package.json').devDependencies['@storybook/jest'],
+        readJson(tree, 'package.json').devDependencies['@storybook/jest']
       ).toBeTruthy();
 
       expect(
         readJson(tree, 'package.json').devDependencies[
           '@storybook/addon-interactions'
-        ],
+        ]
       ).toBeTruthy();
     });
   });
@@ -632,7 +630,7 @@ describe('@nx/storybook:configuration for Storybook v7', () => {
               path: './.storybook/tsconfig.json',
             },
           ],
-        }),
+        })
       );
 
       await configurationGenerator(tree, {
@@ -670,7 +668,7 @@ describe('@nx/storybook:configuration for Storybook v7', () => {
               module: 'my-module-value',
             },
           },
-        }),
+        })
       );
 
       await configurationGenerator(tree, {
@@ -706,7 +704,7 @@ describe('@nx/storybook:configuration for Storybook v7', () => {
           `${
             project.projectType === 'application' ? 'apps' : 'libs'
           }/${name}/tsconfig.json`,
-          {},
+          {}
         );
       }
 
@@ -787,19 +785,19 @@ describe('@nx/storybook:configuration for Storybook v7', () => {
         if (tree.exists(storybookConfigPath)) {
           if (tree.exists(`${storybookConfigPath}main.ts`)) {
             expect(
-              tree.read(`${storybookConfigPath}main.ts`, 'utf-8'),
+              tree.read(`${storybookConfigPath}main.ts`, 'utf-8')
             ).toMatchSnapshot();
           }
           if (tree.exists(`${storybookConfigPath}main.js`)) {
             expect(
-              tree.read(`${storybookConfigPath}main.js`, 'utf-8'),
+              tree.read(`${storybookConfigPath}main.js`, 'utf-8')
             ).toMatchSnapshot();
           }
           expect(
-            tree.read(`${storybookConfigPath}tsconfig.json`, 'utf-8'),
+            tree.read(`${storybookConfigPath}tsconfig.json`, 'utf-8')
           ).toMatchSnapshot();
         }
-      },
+      }
     );
   });
 });

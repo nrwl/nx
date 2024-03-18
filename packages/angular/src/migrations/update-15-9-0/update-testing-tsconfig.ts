@@ -23,7 +23,7 @@ export async function updateTestingTsconfigForJest(tree: Tree) {
       }
       const tsconfigPath = joinPathFragments(
         projectConfig.root,
-        'tsconfig.spec.json',
+        'tsconfig.spec.json'
       );
 
       if (tree.exists(tsconfigPath)) {
@@ -36,10 +36,10 @@ export async function updateTestingTsconfigForJest(tree: Tree) {
 
             return json;
           },
-          { expectComments: true, allowTrailingComma: true },
+          { expectComments: true, allowTrailingComma: true }
         );
       }
-    },
+    }
   );
 
   await formatFiles(tree);

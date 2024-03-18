@@ -40,18 +40,18 @@ function getBuildOptions(buildTarget: string, context: ExecutorContext) {
 function getModuleFederationConfig(
   tsconfigPath: string,
   workspaceRoot: string,
-  projectRoot: string,
+  projectRoot: string
 ) {
   const moduleFederationConfigPathJS = join(
     workspaceRoot,
     projectRoot,
-    'module-federation.config.js',
+    'module-federation.config.js'
   );
 
   const moduleFederationConfigPathTS = join(
     workspaceRoot,
     projectRoot,
-    'module-federation.config.ts',
+    'module-federation.config.ts'
   );
 
   let moduleFederationConfigPath = moduleFederationConfigPathJS;
@@ -73,14 +73,14 @@ function getModuleFederationConfig(
     return config.default || config;
   } catch {
     throw new Error(
-      `Could not load ${moduleFederationConfigPath}. Was this project generated with "@nx/react:host"?\nSee: https://nx.dev/concepts/more-concepts/faster-builds-with-module-federation`,
+      `Could not load ${moduleFederationConfigPath}. Was this project generated with "@nx/react:host"?\nSee: https://nx.dev/concepts/more-concepts/faster-builds-with-module-federation`
     );
   }
 }
 
 export default async function* moduleFederationSsrDevServer(
   options: ModuleFederationDevServerOptions,
-  context: ExecutorContext,
+  context: ExecutorContext
 ) {
   let iter: any = ssrDevServerExecutor(options, context);
   const p = context.projectsConfigurations.projects[context.projectName];
@@ -88,7 +88,7 @@ export default async function* moduleFederationSsrDevServer(
   const moduleFederationConfig = getModuleFederationConfig(
     buildOptions.tsConfig,
     context.root,
-    p.root,
+    p.root
   );
 
   const remotesToSkip = new Set(options.skipRemotes ?? []);
@@ -109,16 +109,16 @@ export default async function* moduleFederationSsrDevServer(
   if (remotesNotInWorkspace.length > 0) {
     logger.warn(
       `Skipping serving ${remotesNotInWorkspace.join(
-        ', ',
-      )} as they could not be found in the workspace. Ensure they are served correctly.`,
+        ', '
+      )} as they could not be found in the workspace. Ensure they are served correctly.`
     );
   }
 
   const devServeApps = !options.devRemotes
     ? []
     : Array.isArray(options.devRemotes)
-      ? options.devRemotes
-      : [options.devRemotes];
+    ? options.devRemotes
+    : [options.devRemotes];
 
   for (const app of knownRemotes) {
     const [appName] = Array.isArray(app) ? app : [app];
@@ -133,7 +133,7 @@ export default async function* moduleFederationSsrDevServer(
           {
             watch: isDev,
           },
-          context,
+          context
         )
       : mapAsyncIterable(
           createAsyncIterable(async ({ next, done }) => {
@@ -142,14 +142,14 @@ export default async function* moduleFederationSsrDevServer(
             const remoteServerOutput = join(
               workspaceRoot,
               remoteProject.targets.server.options.outputPath,
-              remoteProject.targets.server.options.outputFileName,
+              remoteProject.targets.server.options.outputFileName
             );
             const pm = getPackageManagerCommand();
             execSync(
               `${pm.exec} nx run ${appName}:server${
                 context.configurationName ? `:${context.configurationName}` : ''
               }`,
-              { stdio: 'inherit' },
+              { stdio: 'inherit' }
             );
             const child = fork(remoteServerOutput, {
               env: {
@@ -164,7 +164,7 @@ export default async function* moduleFederationSsrDevServer(
               }
             });
           }),
-          (x) => x,
+          (x) => x
         );
 
     iter = combineAsyncIterables(iter, remoteServeIter);
@@ -177,7 +177,7 @@ export default async function* moduleFederationSsrDevServer(
       logger.info(
         `[ ${chalk.green('ready')} ] http://${options.host ?? 'localhost'}:${
           options.port ?? 4200
-        }`,
+        }`
       );
     }
   });

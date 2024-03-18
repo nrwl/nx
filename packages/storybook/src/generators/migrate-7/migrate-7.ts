@@ -69,7 +69,7 @@ export async function migrate7Generator(tree: Tree, schema: Schema) {
 
       migrateResult = handleMigrationResult(
         migrateResult,
-        allStorybookProjects,
+        allStorybookProjects
       );
     }
   }

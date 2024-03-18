@@ -17,14 +17,15 @@ export function createApiAxiosInstance(options: CloudTaskRunnerOptions) {
 
   if (!accessToken) {
     throw new Error(
-      `Unable to authenticate. Either define accessToken in nx.json or set the NX_CLOUD_ACCESS_TOKEN env variable.`,
+      `Unable to authenticate. Either define accessToken in nx.json or set the NX_CLOUD_ACCESS_TOKEN env variable.`
     );
   }
 
   if (options.customProxyConfigPath) {
-    const { nxCloudProxyConfig } = require(
-      join(process.cwd(), options.customProxyConfigPath),
-    );
+    const { nxCloudProxyConfig } = require(join(
+      process.cwd(),
+      options.customProxyConfigPath
+    ));
     axiosConfigBuilder = nxCloudProxyConfig ?? axiosConfigBuilder;
   }
 
@@ -33,6 +34,6 @@ export function createApiAxiosInstance(options: CloudTaskRunnerOptions) {
       baseURL: baseUrl,
       timeout: NX_CLOUD_NO_TIMEOUTS ? UNLIMITED_TIMEOUT : 10000,
       headers: { authorization: accessToken },
-    }),
+    })
   );
 }

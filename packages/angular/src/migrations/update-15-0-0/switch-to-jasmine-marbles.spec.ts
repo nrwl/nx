@@ -44,15 +44,15 @@ describe('switchToJasmineMarbles', () => {
 
     tree.write(
       'test/a/b/mytest.spec.ts',
-      `import {hot, cold} from '@nrwl/angular/testing';`,
+      `import {hot, cold} from '@nrwl/angular/testing';`
     );
     tree.write(
       'test/c/d/mytest.spec.ts',
-      `import {hot, getTestScheduler} from '@nrwl/angular/testing';`,
+      `import {hot, getTestScheduler} from '@nrwl/angular/testing';`
     );
     tree.write(
       'test/e/mytest.spec.ts',
-      `import {getTestScheduler, time} from '@nrwl/angular/testing';`,
+      `import {getTestScheduler, time} from '@nrwl/angular/testing';`
     );
 
     // ACT
@@ -97,15 +97,15 @@ describe('switchToJasmineMarbles', () => {
     });
     tree.write(
       'a/b/mytest.spec.ts',
-      `import {hot, cold, readFirst} from '@nrwl/angular/testing';`,
+      `import {hot, cold, readFirst} from '@nrwl/angular/testing';`
     );
     tree.write(
       'c/d/mytest.spec.ts',
-      `import {hot, getTestScheduler, readAll} from '@nrwl/angular/testing';`,
+      `import {hot, getTestScheduler, readAll} from '@nrwl/angular/testing';`
     );
     tree.write(
       'e/mytest.spec.ts',
-      `import {getTestScheduler, time, readAll, readFirst} from '@nrwl/angular/testing';`,
+      `import {getTestScheduler, time, readAll, readFirst} from '@nrwl/angular/testing';`
     );
 
     // ACT
@@ -148,7 +148,7 @@ describe('switchToJasmineMarbles', () => {
     });
     tree.write(
       'a/b/mytest.spec.ts',
-      `import {hot, cold, readFirst} from '@nrwl/angular/testing';`,
+      `import {hot, cold, readFirst} from '@nrwl/angular/testing';`
     );
 
     // ACT
@@ -183,7 +183,7 @@ describe('switchToJasmineMarbles', () => {
     });
     tree.write(
       'a/b/mytest.spec.ts',
-      `import {hot, cold, readFirst} from '@nrwl/angular/testing';`,
+      `import {hot, cold, readFirst} from '@nrwl/angular/testing';`
     );
     updateJson(tree, 'package.json', (json) => ({
       ...json,

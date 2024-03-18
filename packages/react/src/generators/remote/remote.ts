@@ -26,7 +26,7 @@ import { maybeJs } from '../../utils/maybe-js';
 
 export function addModuleFederationFiles(
   host: Tree,
-  options: NormalizedSchema<Schema>,
+  options: NormalizedSchema<Schema>
 ) {
   const templateVariables = {
     ...names(options.name),
@@ -38,7 +38,7 @@ export function addModuleFederationFiles(
     host,
     join(__dirname, `./files/${options.js ? 'common' : 'common-ts'}`),
     options.appProjectRoot,
-    templateVariables,
+    templateVariables
   );
 
   const pathToModuleFederationFiles = options.typescriptConfiguration
@@ -49,17 +49,17 @@ export function addModuleFederationFiles(
     host,
     join(__dirname, `./files/${pathToModuleFederationFiles}`),
     options.appProjectRoot,
-    templateVariables,
+    templateVariables
   );
 
   if (options.typescriptConfiguration) {
     const pathToWebpackConfig = joinPathFragments(
       options.appProjectRoot,
-      'webpack.config.js',
+      'webpack.config.js'
     );
     const pathToWebpackProdConfig = joinPathFragments(
       options.appProjectRoot,
-      'webpack.config.prod.js',
+      'webpack.config.prod.js'
     );
     if (host.exists(pathToWebpackConfig)) {
       host.delete(pathToWebpackConfig);
@@ -107,7 +107,7 @@ export async function remoteGeneratorInternal(host: Tree, schema: Schema) {
   // new entry file.
   host.rename(
     join(options.appProjectRoot, maybeJs(options, 'src/main.tsx')),
-    join(options.appProjectRoot, maybeJs(options, 'src/bootstrap.tsx')),
+    join(options.appProjectRoot, maybeJs(options, 'src/bootstrap.tsx'))
   );
 
   addModuleFederationFiles(host, options);
@@ -125,20 +125,20 @@ export async function remoteGeneratorInternal(host: Tree, schema: Schema) {
     const setupSsrForRemoteTask = await setupSsrForRemote(
       host,
       options,
-      options.projectName,
+      options.projectName
     );
     tasks.push(setupSsrForRemoteTask);
 
     const projectConfig = readProjectConfiguration(host, options.projectName);
     projectConfig.targets.server.options.webpackConfig = joinPathFragments(
       projectConfig.root,
-      `webpack.server.config.${options.typescriptConfiguration ? 'ts' : 'js'}`,
+      `webpack.server.config.${options.typescriptConfiguration ? 'ts' : 'js'}`
     );
     updateProjectConfiguration(host, options.projectName, projectConfig);
   }
   if (!options.setParserOptionsProject) {
     host.delete(
-      joinPathFragments(options.appProjectRoot, 'tsconfig.lint.json'),
+      joinPathFragments(options.appProjectRoot, 'tsconfig.lint.json')
     );
   }
 
@@ -146,13 +146,13 @@ export async function remoteGeneratorInternal(host: Tree, schema: Schema) {
     const hostConfig = readProjectConfiguration(host, schema.host);
     const pathToMFManifest = joinPathFragments(
       hostConfig.sourceRoot,
-      'assets/module-federation.manifest.json',
+      'assets/module-federation.manifest.json'
     );
     addRemoteToDynamicHost(
       host,
       options.name,
       options.devServerPort,
-      pathToMFManifest,
+      pathToMFManifest
     );
   }
 

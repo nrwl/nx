@@ -15,7 +15,7 @@ export type ClassGeneratorOptions = NestGeneratorWithLanguageOption &
 
 export async function classGenerator(
   tree: Tree,
-  rawOptions: ClassGeneratorOptions,
+  rawOptions: ClassGeneratorOptions
 ) {
   await classGeneratorInternal(tree, {
     nameAndDirectoryFormat: 'derived',
@@ -25,7 +25,7 @@ export async function classGenerator(
 
 export async function classGeneratorInternal(
   tree: Tree,
-  rawOptions: ClassGeneratorOptions,
+  rawOptions: ClassGeneratorOptions
 ): Promise<any> {
   const options = await normalizeClassOptions(tree, rawOptions);
 
@@ -36,13 +36,13 @@ export default classGenerator;
 
 async function normalizeClassOptions(
   tree: Tree,
-  options: ClassGeneratorOptions,
+  options: ClassGeneratorOptions
 ): Promise<NormalizedOptions> {
   const normalizedOptions = await normalizeOptions(
     tree,
     'class',
     '@nx/nest:class',
-    options,
+    options
   );
   return {
     ...normalizedOptions,

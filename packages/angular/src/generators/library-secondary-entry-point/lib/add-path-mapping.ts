@@ -4,7 +4,7 @@ import { NormalizedGeneratorOptions } from '../schema';
 
 export function addPathMapping(
   tree: Tree,
-  options: NormalizedGeneratorOptions,
+  options: NormalizedGeneratorOptions
 ): void {
   updateJson(tree, getRootTsConfigPathInTree(tree), (json) => {
     const c = json.compilerOptions;

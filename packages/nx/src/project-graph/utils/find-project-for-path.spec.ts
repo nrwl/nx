@@ -70,15 +70,15 @@ describe('get project utils', () => {
 
     it('should find the project given a file within its src root', () => {
       expect(findProjectForPath('apps/demo-app', projectRootMappings)).toEqual(
-        'demo-app',
+        'demo-app'
       );
 
       expect(
-        findProjectForPath('apps/demo-app/src', projectRootMappings),
+        findProjectForPath('apps/demo-app/src', projectRootMappings)
       ).toEqual('demo-app');
 
       expect(
-        findProjectForPath('apps/demo-app/src/subdir/bla', projectRootMappings),
+        findProjectForPath('apps/demo-app/src/subdir/bla', projectRootMappings)
       ).toEqual('demo-app');
     });
   });

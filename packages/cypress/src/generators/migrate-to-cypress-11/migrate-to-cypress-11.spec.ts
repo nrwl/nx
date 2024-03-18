@@ -156,7 +156,7 @@ describe('convertToCypressTen', () => {
       expect(tree.exists('app-e2e/src/e2e/app.cy.ts')).toBeTruthy();
       expect(tree.exists('app-e2e/src/support/e2e.ts')).toBeTruthy();
       expect(
-        readProjectConfiguration(tree, 'app-e2e').targets,
+        readProjectConfiguration(tree, 'app-e2e').targets
       ).toMatchSnapshot();
     });
 
@@ -184,7 +184,7 @@ describe('convertToCypressTen', () => {
       expect(tree.exists('app-e2e/src/e2e/app.cy.ts')).toBeTruthy();
       expect(tree.exists('app-e2e/src/support/e2e.ts')).toBeTruthy();
       expect(
-        readProjectConfiguration(tree, 'app-e2e').targets,
+        readProjectConfiguration(tree, 'app-e2e').targets
       ).toMatchSnapshot();
     });
 
@@ -220,7 +220,7 @@ describe('convertToCypressTen', () => {
       expect(tree.exists('app-e2e/src/e2e/app.cy.ts')).toBeTruthy();
       expect(tree.exists('app-e2e/src/support/e2e.ts')).toBeTruthy();
       expect(
-        readProjectConfiguration(tree, 'app-e2e').targets['e2e'],
+        readProjectConfiguration(tree, 'app-e2e').targets['e2e']
       ).toMatchSnapshot();
     });
 
@@ -239,7 +239,7 @@ describe('convertToCypressTen', () => {
           videosFolder: '../dist/cypress/client-e2e/videos',
           screenshotsFolder: '../dist/cypress/client-e2e/screenshots',
           chromeWebSecurity: false,
-        }),
+        })
       );
       const pc = readProjectConfiguration(tree, 'app-e2e');
       pc.targets = {
@@ -277,7 +277,7 @@ describe('convertToCypressTen', () => {
       expect(tree.exists('app-e2e/src/e2e/app.cy.ts')).toBeTruthy();
       expect(tree.exists('app-e2e/src/support/e2e.ts')).toBeTruthy();
       expect(
-        readProjectConfiguration(tree, 'app-e2e').targets['e2e'],
+        readProjectConfiguration(tree, 'app-e2e').targets['e2e']
       ).toMatchSnapshot();
     });
 
@@ -316,7 +316,7 @@ describe('convertToCypressTen', () => {
           modifyObstructiveCode: false,
           video: true,
           chromeWebSecurity: false,
-        }),
+        })
       );
 
       await migrateCypressProject(tree);
@@ -350,7 +350,7 @@ describe('convertToCypressTen', () => {
       expect(tree.exists('app-two-e2e/src/e2e/app.cy.ts')).toBeTruthy();
       expect(tree.exists('app-two-e2e/src/support/e2e.ts')).toBeTruthy();
       expect(
-        readProjectConfiguration(tree, 'app-two-e2e').targets['e2e'],
+        readProjectConfiguration(tree, 'app-two-e2e').targets['e2e']
       ).toEqual({
         executor: '@nx/cypress:cypress',
         options: {
@@ -419,7 +419,7 @@ const eh = require('../../support')
 
 import { blah } from "../../support";
 const eh = require("../../support")
-`,
+`
         );
       }
     });
@@ -427,11 +427,11 @@ const eh = require("../../support")
     it('should rename old support file to e2e.ts', () => {
       const newSupportFile = joinPathFragments(
         projectConfig.root,
-        cypressConfigs.cypressConfigTs.e2e.supportFile,
+        cypressConfigs.cypressConfigTs.e2e.supportFile
       );
       const oldSupportFile = joinPathFragments(
         projectConfig.root,
-        cypressConfigs.cypressConfigJson.supportFile,
+        cypressConfigs.cypressConfigJson.supportFile
       );
       updateProjectPaths(tree, projectConfig, cypressConfigs);
 
@@ -459,11 +459,11 @@ const eh = require("../../support")
     it('should move files to the new integration folder (e2e/)', () => {
       const newIntegrationFolder = joinPathFragments(
         projectConfig.root,
-        cypressConfigs.cypressConfigTs.e2e.integrationFolder,
+        cypressConfigs.cypressConfigTs.e2e.integrationFolder
       );
       const oldIntegrationFolder = joinPathFragments(
         projectConfig.root,
-        cypressConfigs.cypressConfigJson.integrationFolder,
+        cypressConfigs.cypressConfigJson.integrationFolder
       );
       const oldIntegrationFolderContents = tree.children(oldIntegrationFolder);
 
@@ -473,7 +473,7 @@ const eh = require("../../support")
 
       expect(tree.exists(oldIntegrationFolder)).toEqual(false);
       expect(newIntegrationFolderContents.length).toEqual(
-        oldIntegrationFolderContents.length,
+        oldIntegrationFolderContents.length
       );
       expect(tree.exists('app-e2e/src/fixtures/example.json')).toEqual(true);
     });
@@ -481,11 +481,11 @@ const eh = require("../../support")
     it('should rename files', () => {
       const newIntegrationFolder = joinPathFragments(
         projectConfig.root,
-        cypressConfigs.cypressConfigTs.e2e.integrationFolder,
+        cypressConfigs.cypressConfigTs.e2e.integrationFolder
       );
       const oldIntegrationFolder = joinPathFragments(
         projectConfig.root,
-        cypressConfigs.cypressConfigJson.integrationFolder,
+        cypressConfigs.cypressConfigJson.integrationFolder
       );
       updateProjectPaths(tree, projectConfig, {
         cypressConfigTs: cypressConfigs.cypressConfigTs,
@@ -494,7 +494,7 @@ const eh = require("../../support")
       expect(tree.exists(newIntegrationFolder)).toEqual(true);
       expect(tree.exists(oldIntegrationFolder)).toEqual(false);
       expect(
-        tree.exists(`${newIntegrationFolder}/nested/something.cy.ts`),
+        tree.exists(`${newIntegrationFolder}/nested/something.cy.ts`)
       ).toBe(true);
     });
   });
@@ -549,7 +549,7 @@ describe('a', () => {
       const actual = createSupportFileImport(
         oldImport,
         newImport,
-        'app-e2e/src',
+        'app-e2e/src'
       );
       expect(actual).toEqual({
         oldImportPathLeaf: 'support',
@@ -563,7 +563,7 @@ describe('a', () => {
       const actual = createSupportFileImport(
         oldImport,
         newImport,
-        'app-e2e/src',
+        'app-e2e/src'
       );
       expect(actual).toEqual({
         oldImportPathLeaf: 'support/blah',
@@ -577,7 +577,7 @@ describe('a', () => {
       const actual = createSupportFileImport(
         oldImport,
         newImport,
-        'app-e2e/src',
+        'app-e2e/src'
       );
       expect(actual).toEqual({
         oldImportPathLeaf: 'support/blah/abc',
@@ -591,7 +591,7 @@ describe('a', () => {
       const actual = createSupportFileImport(
         oldImport,
         newImport,
-        'app-e2e/src',
+        'app-e2e/src'
       );
       expect(actual).toEqual({
         oldImportPathLeaf: 'support/something/neat',
@@ -614,7 +614,7 @@ module.exports = function(on, config) {
 }
 
 module.exports.blah = myCoolFunction;
-`,
+`
       );
       const actual = updatePluginFile(
         tree,
@@ -622,11 +622,11 @@ module.exports.blah = myCoolFunction;
         {
           cypressConfigJson: {},
           cypressConfigTs: { e2e: { pluginsFile: './src/plugins/index.ts' } },
-        },
+        }
       );
 
       expect(actual.cypressConfigTs.e2e.pluginsFile).toEqual(
-        './src/plugins/index',
+        './src/plugins/index'
       );
       expect(tree.read('app-e2e/src/plugins/index.ts', 'utf-8')).toEqual(`
 function myCoolFunction() {
@@ -659,14 +659,14 @@ module.exports.blah = myCoolFunction;
         {
           cypressConfigJson: {},
           cypressConfigTs: { e2e: { pluginsFile: './src/plugins/index.js' } },
-        },
+        }
       );
 
       expect(actual.cypressConfigTs.e2e.pluginsFile).toEqual(
-        './src/plugins/index',
+        './src/plugins/index'
       );
       expect(tree.read('app-e2e/src/plugins/index.js', 'utf-8')).toEqual(
-        pluginFileContent,
+        pluginFileContent
       );
     });
 
@@ -677,7 +677,7 @@ module.exports.blah = myCoolFunction;
         {
           cypressConfigJson: {},
           cypressConfigTs: { e2e: { pluginsFile: false } },
-        },
+        }
       );
 
       expect(actual.cypressConfigTs.e2e.pluginsFile).toBeFalsy();

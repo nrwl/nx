@@ -40,7 +40,7 @@ describe('update-nx-next-dependency', () => {
                   cwd: workspaceRoot,
                 }
               });
-              `,
+              `
     );
     await update(tree);
 
@@ -80,11 +80,11 @@ describe('update-nx-next-dependency', () => {
                   },
                   projects: []
                 });
-                `,
+                `
     );
     await update(tree);
     expect(tree.read('acme/playwright.config.ts', 'utf-8')).toContain(
-      'projects: []',
+      'projects: []'
     );
     expect(tree.read('acme/playwright.config.ts', 'utf-8')).toMatchSnapshot();
   });

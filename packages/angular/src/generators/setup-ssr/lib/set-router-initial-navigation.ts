@@ -44,7 +44,7 @@ export function setRouterInitialNavigation(tree: Tree, options: Schema): void {
 function processFileWithStandaloneSetup(
   tree: Tree,
   filePath: string,
-  printer: Printer,
+  printer: Printer
 ) {
   let content = tree.read(filePath, 'utf-8');
   let sourceFile = tsquery.ast(content);
@@ -60,7 +60,7 @@ function processFileWithStandaloneSetup(
       (arg) =>
         isCallExpression(arg) &&
         isIdentifier(arg.expression) &&
-        arg.expression.text === 'withEnabledBlockingInitialNavigation',
+        arg.expression.text === 'withEnabledBlockingInitialNavigation'
     )
   ) {
     return;
@@ -69,14 +69,14 @@ function processFileWithStandaloneSetup(
   const updatedProvideRouterCallExpression = printer.printNode(
     EmitHint.Unspecified,
     updateProvideRouterCallExpression(provideRouterCallExpression),
-    sourceFile,
+    sourceFile
   );
 
   content = `${content.slice(
     0,
-    provideRouterCallExpression.getStart(),
+    provideRouterCallExpression.getStart()
   )}${updatedProvideRouterCallExpression}${content.slice(
-    provideRouterCallExpression.getEnd(),
+    provideRouterCallExpression.getEnd()
   )}`;
 
   tree.write(filePath, content);
@@ -87,12 +87,12 @@ function processFileWithStandaloneSetup(
     sourceFile,
     filePath,
     'withEnabledBlockingInitialNavigation',
-    '@angular/router',
+    '@angular/router'
   );
 
   const withDisabledInitialNavigationImportNode = tsquery<ImportSpecifier>(
     sourceFile,
-    'ImportDeclaration ImportSpecifier:has(Identifier[name=withDisabledInitialNavigation])',
+    'ImportDeclaration ImportSpecifier:has(Identifier[name=withDisabledInitialNavigation])'
   )[0];
   if (!withDisabledInitialNavigationImportNode) {
     return;
@@ -106,16 +106,16 @@ function processFileWithStandaloneSetup(
     filePath,
     `${content.slice(
       0,
-      withDisabledInitialNavigationImportNode.getStart(),
+      withDisabledInitialNavigationImportNode.getStart()
     )}${content.slice(
       withDisabledInitialNavigationImportNode.getEnd() +
-        (hasTrailingComma ? 1 : 0),
-    )}`,
+        (hasTrailingComma ? 1 : 0)
+    )}`
   );
 }
 
 function updateProvideRouterCallExpression(
-  node: CallExpression,
+  node: CallExpression
 ): CallExpression {
   const filteredArgs = node.arguments.filter(
     (arg) =>
@@ -123,27 +123,27 @@ function updateProvideRouterCallExpression(
         isCallExpression(arg) &&
         isIdentifier(arg.expression) &&
         arg.expression.text === 'withDisabledInitialNavigation'
-      ),
+      )
   );
 
   const initialNavigationFeatureArg = factory.createCallExpression(
     factory.createIdentifier('withEnabledBlockingInitialNavigation'),
     [],
-    [],
+    []
   );
 
   return factory.updateCallExpression(
     node,
     node.expression,
     node.typeArguments,
-    [...filteredArgs, initialNavigationFeatureArg],
+    [...filteredArgs, initialNavigationFeatureArg]
   );
 }
 
 function processFileWithNgModuleSetup(
   tree: Tree,
   filePath: string,
-  printer: Printer,
+  printer: Printer
 ) {
   const content = tree.read(filePath, 'utf-8');
   const sourceFile = tsquery.ast(content);
@@ -157,22 +157,22 @@ function processFileWithNgModuleSetup(
   const updatedRouterModuleForRootCallExpression = printer.printNode(
     EmitHint.Unspecified,
     updateRouterModuleForRootCallExpression(routerModuleForRootCallExpression),
-    sourceFile,
+    sourceFile
   );
 
   tree.write(
     filePath,
     `${content.slice(
       0,
-      routerModuleForRootCallExpression.getStart(),
+      routerModuleForRootCallExpression.getStart()
     )}${updatedRouterModuleForRootCallExpression}${content.slice(
-      routerModuleForRootCallExpression.getEnd(),
-    )}`,
+      routerModuleForRootCallExpression.getEnd()
+    )}`
   );
 }
 
 function updateRouterModuleForRootCallExpression(
-  node: CallExpression,
+  node: CallExpression
 ): CallExpression {
   const existingOptions = node.arguments[1] as
     | ObjectLiteralExpression
@@ -186,15 +186,15 @@ function updateRouterModuleForRootCallExpression(
               isPropertyAssignment(exp) &&
               isIdentifier(exp.name) &&
               exp.name.text === 'initialNavigation'
-            ),
-        ),
+            )
+        )
       )
     : factory.createNodeArray<ObjectLiteralElementLike>();
 
   const enabledLiteral = factory.createStringLiteral('enabledBlocking', true);
   const initialNavigationProperty = factory.createPropertyAssignment(
     'initialNavigation',
-    enabledLiteral,
+    enabledLiteral
   );
 
   const routerOptions = existingOptions
@@ -203,39 +203,39 @@ function updateRouterModuleForRootCallExpression(
         factory.createNodeArray([
           ...existingProperties,
           initialNavigationProperty,
-        ]),
+        ])
       )
     : factory.createObjectLiteralExpression(
-        factory.createNodeArray([initialNavigationProperty]),
+        factory.createNodeArray([initialNavigationProperty])
       );
   const args = [node.arguments[0], routerOptions];
 
   return factory.createCallExpression(
     node.expression,
     node.typeArguments,
-    args,
+    args
   );
 }
 
 function getProvideRouterCallExpression(
-  sourceFile: SourceFile,
+  sourceFile: SourceFile
 ): CallExpression | null {
   const routerModuleForRootCalls = tsquery(
     sourceFile,
     'PropertyAssignment:has(Identifier[name=providers]) > ArrayLiteralExpression CallExpression:has(Identifier[name=provideRouter])',
-    { visitAllChildren: true },
+    { visitAllChildren: true }
   ) as CallExpression[];
 
   return routerModuleForRootCalls.length ? routerModuleForRootCalls[0] : null;
 }
 
 function getRouterModuleForRootCallExpression(
-  sourceFile: SourceFile,
+  sourceFile: SourceFile
 ): CallExpression | null {
   const routerModuleForRootCalls = tsquery(
     sourceFile,
     'Decorator > CallExpression:has(Identifier[name=NgModule]) PropertyAssignment:has(Identifier[name=imports]) > ArrayLiteralExpression CallExpression:has(Identifier[name=forRoot])',
-    { visitAllChildren: true },
+    { visitAllChildren: true }
   ) as CallExpression[];
 
   return routerModuleForRootCalls.length ? routerModuleForRootCalls[0] : null;

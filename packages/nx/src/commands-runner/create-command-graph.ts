@@ -7,7 +7,7 @@ import { CommandGraph } from './command-graph';
 export function createCommandGraph(
   projectGraph: ProjectGraph,
   projectNames: string[],
-  nxArgs: NxArgs,
+  nxArgs: NxArgs
 ): CommandGraph {
   const dependencies: Record<string, string[]> = {};
   for (const projectName of projectNames) {
@@ -16,7 +16,7 @@ export function createCommandGraph(
         ...new Set(
           projectGraph.dependencies[projectName]
             .map((projectDep) => projectDep.target)
-            .filter((projectDep) => projectGraph.nodes[projectDep]),
+            .filter((projectDep) => projectGraph.nodes[projectDep])
         ).values(),
       ];
     } else {
@@ -24,7 +24,7 @@ export function createCommandGraph(
     }
   }
   const roots = Object.keys(dependencies).filter(
-    (d) => dependencies[d].length === 0,
+    (d) => dependencies[d].length === 0
   );
   const commandGraph = {
     dependencies,

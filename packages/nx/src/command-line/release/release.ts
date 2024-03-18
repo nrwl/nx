@@ -26,7 +26,7 @@ export const releaseCLIHandler = (args: VersionOptions) =>
   handleErrors(args.verbose, () => release(args));
 
 export async function release(
-  args: ReleaseOptions,
+  args: ReleaseOptions
 ): Promise<NxReleaseVersionResult | number> {
   const projectGraph = await createProjectGraphAsync({ exitOnError: true });
   const nxJson = readNxJson();
@@ -43,8 +43,9 @@ export async function release(
     const jsonConfigErrorPath = hasVersionGitConfig
       ? ['release', 'version', 'git']
       : ['release', 'changelog', 'git'];
-    const nxJsonMessage =
-      await resolveNxJsonConfigErrorMessage(jsonConfigErrorPath);
+    const nxJsonMessage = await resolveNxJsonConfigErrorMessage(
+      jsonConfigErrorPath
+    );
     output.error({
       title: `The "release" top level command cannot be used with granular git configuration. Instead, configure git options in the "release.git" property in nx.json, or use the version, changelog, and publish subcommands or programmatic API directly.`,
       bodyLines: [nxJsonMessage],
@@ -56,7 +57,7 @@ export async function release(
   const { error: configError, nxReleaseConfig } = await createNxReleaseConfig(
     projectGraph,
     await createProjectFileMapUsingProjectGraph(projectGraph),
-    nxJson.release,
+    nxJson.release
   );
   if (configError) {
     return await handleNxReleaseConfigError(configError);
@@ -94,7 +95,7 @@ export async function release(
     projectGraph,
     nxReleaseConfig,
     args.projects,
-    args.groups,
+    args.groups
   );
   if (filterError) {
     output.error(filterError);
@@ -110,7 +111,7 @@ export async function release(
       releaseGroups,
       releaseGroupToFilteredProjects,
       versionResult.projectsVersionData,
-      commitMessage,
+      commitMessage
     );
 
     await gitCommit({
@@ -128,7 +129,7 @@ export async function release(
     const gitTagValues: string[] = createGitTagValues(
       releaseGroups,
       releaseGroupToFilteredProjects,
-      versionResult.projectsVersionData,
+      versionResult.projectsVersionData
     );
     handleDuplicateGitTags(gitTagValues);
 
@@ -144,7 +145,7 @@ export async function release(
   }
 
   const shouldCreateWorkspaceRelease = shouldCreateGitHubRelease(
-    nxReleaseConfig.changelog.workspaceChangelog,
+    nxReleaseConfig.changelog.workspaceChangelog
   );
 
   let hasPushedChanges = false;
@@ -168,13 +169,13 @@ export async function release(
       changelogResult.workspaceChangelog.releaseVersion,
       changelogResult.workspaceChangelog.contents,
       latestCommit,
-      { dryRun: args.dryRun },
+      { dryRun: args.dryRun }
     );
   }
 
   for (const releaseGroup of releaseGroups) {
     const shouldCreateProjectReleases = shouldCreateGitHubRelease(
-      releaseGroup.changelog,
+      releaseGroup.changelog
     );
 
     if (shouldCreateProjectReleases && changelogResult.projectChangelogs) {
@@ -213,7 +214,7 @@ export async function release(
           changelog.releaseVersion,
           changelog.contents,
           latestCommit,
-          { dryRun: args.dryRun },
+          { dryRun: args.dryRun }
         );
       }
     }
@@ -223,7 +224,7 @@ export async function release(
   // null means that all projects are versioned together but there were no changes
   if (versionResult.workspaceVersion !== null) {
     hasNewVersion = Object.values(versionResult.projectsVersionData).some(
-      (version) => version.newVersion !== null,
+      (version) => version.newVersion !== null
     );
   }
 

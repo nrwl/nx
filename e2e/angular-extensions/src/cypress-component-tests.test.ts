@@ -40,22 +40,22 @@ describe('Angular Cypress Component Tests', () => {
 
   it('should test app', () => {
     runCLI(
-      `generate @nx/angular:cypress-component-configuration --project=${appName} --generate-tests --no-interactive`,
+      `generate @nx/angular:cypress-component-configuration --project=${appName} --generate-tests --no-interactive`
     );
     if (runE2ETests('cypress')) {
       expect(runCLI(`component-test ${appName}`)).toContain(
-        'All specs passed!',
+        'All specs passed!'
       );
     }
   }, 300_000);
 
   it('should successfully component test lib being used in app', () => {
     runCLI(
-      `generate @nx/angular:cypress-component-configuration --project=${usedInAppLibName} --generate-tests --no-interactive`,
+      `generate @nx/angular:cypress-component-configuration --project=${usedInAppLibName} --generate-tests --no-interactive`
     );
     if (runE2ETests('cypress')) {
       expect(runCLI(`component-test ${usedInAppLibName}`)).toContain(
-        'All specs passed!',
+        'All specs passed!'
       );
     }
   }, 300_000);
@@ -64,18 +64,18 @@ describe('Angular Cypress Component Tests', () => {
     expect(() => {
       // should error since no edge in graph between lib and app
       runCLI(
-        `generate @nx/angular:cypress-component-configuration --project=${buildableLibName} --generate-tests --no-interactive`,
+        `generate @nx/angular:cypress-component-configuration --project=${buildableLibName} --generate-tests --no-interactive`
       );
     }).toThrow();
 
     updateTestToAssertTailwindIsNotApplied(buildableLibName);
 
     runCLI(
-      `generate @nx/angular:cypress-component-configuration --project=${buildableLibName} --generate-tests --build-target=${appName}:build --no-interactive`,
+      `generate @nx/angular:cypress-component-configuration --project=${buildableLibName} --generate-tests --build-target=${appName}:build --no-interactive`
     );
     if (runE2ETests('cypress')) {
       expect(runCLI(`component-test ${buildableLibName}`)).toContain(
-        'All specs passed!',
+        'All specs passed!'
       );
     }
     // add tailwind
@@ -85,19 +85,19 @@ describe('Angular Cypress Component Tests', () => {
       (content) => {
         // text-green-500 should now apply
         return content.replace('rgb(0, 0, 0)', 'rgb(34, 197, 94)');
-      },
+      }
     );
     updateFile(
       `${buildableLibName}/src/lib/input-standalone/input-standalone.component.cy.ts`,
       (content) => {
         // text-green-500 should now apply
         return content.replace('rgb(0, 0, 0)', 'rgb(34, 197, 94)');
-      },
+      }
     );
 
     if (runE2ETests('cypress')) {
       expect(runCLI(`component-test ${buildableLibName}`)).toContain(
-        'All specs passed!',
+        'All specs passed!'
       );
       checkFilesDoNotExist(`tmp${buildableLibName}/ct-styles.css`);
     }
@@ -113,7 +113,7 @@ describe('Angular Cypress Component Tests', () => {
 
     if (runE2ETests('cypress')) {
       expect(runCLI(`component-test ${buildableLibName}`)).toContain(
-        'All specs passed!',
+        'All specs passed!'
       );
     }
   });
@@ -125,7 +125,7 @@ describe('Angular Cypress Component Tests', () => {
 
     if (runE2ETests('cypress')) {
       expect(runCLI(`component-test ${buildableLibName}`)).toContain(
-        'All specs passed!',
+        'All specs passed!'
       );
     }
   });
@@ -133,22 +133,22 @@ describe('Angular Cypress Component Tests', () => {
 
 function createApp(appName: string) {
   runCLI(
-    `generate @nx/angular:app ${appName} --bundler=webpack --project-name-and-root-format=as-provided --no-interactive`,
+    `generate @nx/angular:app ${appName} --bundler=webpack --project-name-and-root-format=as-provided --no-interactive`
   );
   runCLI(
-    `generate @nx/angular:component fancy-component --project=${appName} --no-interactive`,
+    `generate @nx/angular:component fancy-component --project=${appName} --no-interactive`
   );
 }
 
 function createLib(projectName: string, appName: string, libName: string) {
   runCLI(
-    `generate @nx/angular:lib ${libName} --project-name-and-root-format=as-provided --no-interactive`,
+    `generate @nx/angular:lib ${libName} --project-name-and-root-format=as-provided --no-interactive`
   );
   runCLI(
-    `generate @nx/angular:component btn --project=${libName} --inlineTemplate --inlineStyle --export --no-interactive`,
+    `generate @nx/angular:component btn --project=${libName} --inlineTemplate --inlineStyle --export --no-interactive`
   );
   runCLI(
-    `generate @nx/angular:component btn-standalone --project=${libName} --inlineTemplate --inlineStyle --export --standalone --no-interactive`,
+    `generate @nx/angular:component btn-standalone --project=${libName} --inlineTemplate --inlineStyle --export --standalone --no-interactive`
   );
   updateFile(
     `${libName}/src/lib/btn/btn.component.ts`,
@@ -163,7 +163,7 @@ import { Component, Input } from '@angular/core';
 export class BtnComponent {
   @Input() text = 'something';
 }
-`,
+`
   );
   updateFile(
     `${libName}/src/lib/btn-standalone/btn-standalone.component.ts`,
@@ -180,22 +180,22 @@ import { CommonModule } from '@angular/common';
 export class BtnStandaloneComponent {
   @Input() text = 'something';
 }
-`,
+`
   );
 }
 
 function createBuildableLib(projectName: string, libName: string) {
   // create lib
   runCLI(
-    `generate @nx/angular:lib ${libName} --buildable --project-name-and-root-format=as-provided --no-interactive`,
+    `generate @nx/angular:lib ${libName} --buildable --project-name-and-root-format=as-provided --no-interactive`
   );
   // create cmp for lib
   runCLI(
-    `generate @nx/angular:component input --project=${libName} --inlineTemplate --inlineStyle --export --no-interactive`,
+    `generate @nx/angular:component input --project=${libName} --inlineTemplate --inlineStyle --export --no-interactive`
   );
   // create standlone cmp for lib
   runCLI(
-    `generate @nx/angular:component input-standalone --project=${libName} --inlineTemplate --inlineStyle --export --standalone --no-interactive`,
+    `generate @nx/angular:component input-standalone --project=${libName} --inlineTemplate --inlineStyle --export --standalone --no-interactive`
   );
   // update cmp implmentation to use tailwind clasasserting in tests
   updateFile(
@@ -211,7 +211,7 @@ import {Component, Input} from '@angular/core';
   export class InputComponent{
     @Input() readOnly = false;
   }
-  `,
+  `
   );
   updateFile(
     `${libName}/src/lib/input-standalone/input-standalone.component.ts`,
@@ -228,7 +228,7 @@ import {CommonModule} from '@angular/common';
   export class InputStandaloneComponent{
     @Input() readOnly = false;
   }
-  `,
+  `
   );
 }
 
@@ -239,7 +239,7 @@ function useLibInApp(projectName: string, appName: string, libName: string) {
 <${projectName}-btn></${projectName}-btn>
 <${projectName}-btn-standalone></${projectName}-btn-standalone>
 <${projectName}-nx-welcome></${projectName}-nx-welcome>
-`,
+`
   );
   const btnModuleName = names(libName).className;
   updateFile(
@@ -249,7 +249,7 @@ function useLibInApp(projectName: string, appName: string, libName: string) {
 
 h1 {
   @include headline;
-}`,
+}`
   );
   updateFile(
     `${appName}/src/app/app.module.ts`,
@@ -268,7 +268,7 @@ import { NxWelcomeComponent } from './nx-welcome.component';
   bootstrap: [AppComponent],
 })
 export class AppModule {}
-`,
+`
   );
 }
 
@@ -284,7 +284,7 @@ async function useWorkspaceAssetsInApp(appName: string) {
     background: lightcoral;
     font-weight: 24px;
   }
-  `,
+  `
   );
   updateJson(join(appName, 'project.json'), (config) => {
     config.targets['build'].options.stylePreprocessorOptions = {
@@ -328,7 +328,7 @@ describe(InputComponent.name, () => {
     cy.get('input').should('have.attr', 'readonly');
   });
 });
-`,
+`
   );
 
   createFile(
@@ -359,14 +359,14 @@ describe(InputStandaloneComponent.name, () => {
     cy.get('input').should('have.attr', 'readonly');
   });
 });
-`,
+`
   );
 }
 
 function useBuildableLibInLib(
   projectName: string,
   buildableLibName: string,
-  libName: string,
+  libName: string
 ) {
   const buildLibNames = names(buildableLibName);
   // use the buildable lib in lib so now buildableLib has an indirect dep on app
@@ -386,13 +386,13 @@ import { InputStandaloneComponent } from '@${projectName}/${buildLibNames.fileNa
 export class BtnStandaloneComponent {
   @Input() text = 'something';
 }
-`,
+`
   );
 }
 
 function updateBuilableLibTestsToAssertAppStyles(
   appName: string,
-  buildableLibName: string,
+  buildableLibName: string
 ) {
   updateFile(`${appName}/src/styles.css`, `label {color: pink !important;}`);
 
@@ -402,7 +402,7 @@ function updateBuilableLibTestsToAssertAppStyles(
     (content) => {
       // app styles should now apply
       return content.replace('rgb(34, 197, 94)', 'rgb(255, 192, 203)');
-    },
+    }
   );
 }
 
@@ -419,7 +419,7 @@ module.exports = {
   },
   plugins: [],
 };
-`,
+`
   );
   removeFile(existingConfigPath);
 }

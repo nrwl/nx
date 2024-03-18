@@ -25,7 +25,7 @@ let childProcess: ChildProcess;
 
 export default async function buildExecutor(
   options: NextBuildBuilderOptions,
-  context: ExecutorContext,
+  context: ExecutorContext
 ) {
   // Cast to any to overwrite NODE_ENV
   (process.env as any).NODE_ENV ||= 'production';
@@ -57,7 +57,7 @@ export default async function buildExecutor(
       logger.error(
         `Build process exited due to ${code ? 'code ' + code : ''} ${
           code && signal ? 'and' : ''
-        } ${signal ? 'signal ' + signal : ''}`,
+        } ${signal ? 'signal ' + signal : ''}`
       );
     } else {
       logger.error(`Error occurred while trying to run the build command`);
@@ -81,7 +81,7 @@ export default async function buildExecutor(
       target: context.targetName,
       root: context.root,
       isProduction: !options.includeDevDependenciesInPackageJson, // By default we remove devDependencies since this is a production build.
-    },
+    }
   );
 
   // Update `package.json` to reflect how users should run the build artifacts
@@ -97,14 +97,14 @@ export default async function buildExecutor(
     const lockFile = createLockFile(
       builtPackageJson,
       context.projectGraph,
-      packageManager,
+      packageManager
     );
     writeFileSync(
       `${options.outputPath}/${getLockFileName(packageManager)}`,
       lockFile,
       {
         encoding: 'utf-8',
-      },
+      }
     );
   }
 
@@ -122,7 +122,7 @@ export default async function buildExecutor(
 function runCliBuild(
   workspaceRoot: string,
   projectRoot: string,
-  options: NextBuildBuilderOptions,
+  options: NextBuildBuilderOptions
 ) {
   const { experimentalAppOnly, profile, debug, outputPath } = options;
 
@@ -139,7 +139,7 @@ function runCliBuild(
         cwd: pathResolve(workspaceRoot, projectRoot),
         stdio: ['ignore', 'inherit', 'inherit', 'ipc'],
         env: process.env,
-      },
+      }
     );
 
     // Ensure the child process is killed when the parent exits

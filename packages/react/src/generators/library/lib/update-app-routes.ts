@@ -31,13 +31,13 @@ export function updateAppRoutes(host: Tree, options: NormalizedSchema) {
 
   if (!componentImportPath) {
     throw new Error(
-      `Could not find App component in ${options.appMain} (Hint: you can omit --appProject, or make sure App exists)`,
+      `Could not find App component in ${options.appMain} (Hint: you can omit --appProject, or make sure App exists)`
     );
   }
 
   const appComponentPath = joinPathFragments(
     options.appSourceRoot,
-    maybeJs(options, `${componentImportPath}.tsx`),
+    maybeJs(options, `${componentImportPath}.tsx`)
   );
 
   const routerTask = addDependenciesToPackageJson(
@@ -45,7 +45,7 @@ export function updateAppRoutes(host: Tree, options: NormalizedSchema) {
     {
       'react-router-dom': reactRouterDomVersion,
     },
-    {},
+    {}
   );
 
   // addBrowserRouterToMain
@@ -53,7 +53,7 @@ export function updateAppRoutes(host: Tree, options: NormalizedSchema) {
   if (!isRouterPresent) {
     const changes = applyChangesToString(
       content,
-      addBrowserRouter(options.appMain, source),
+      addBrowserRouter(options.appMain, source)
     );
     host.write(options.appMain, changes);
   }
@@ -66,7 +66,7 @@ export function updateAppRoutes(host: Tree, options: NormalizedSchema) {
     if (!isComponentRouterPresent) {
       const changes = applyChangesToString(
         componentContent,
-        addInitialRoutes(appComponentPath, componentSource),
+        addInitialRoutes(appComponentPath, componentSource)
       );
       host.write(appComponentPath, changes);
     }
@@ -82,7 +82,7 @@ export function updateAppRoutes(host: Tree, options: NormalizedSchema) {
         routePath: options.routePath,
         componentName: names(options.name).className,
         moduleName: options.importPath,
-      }),
+      })
     );
     host.write(appComponentPath, changes);
   }
@@ -92,7 +92,7 @@ export function updateAppRoutes(host: Tree, options: NormalizedSchema) {
 
 function readComponent(
   host: Tree,
-  path: string,
+  path: string
 ): { content: string; source: ts.SourceFile } {
   if (!host.exists(path)) {
     throw new Error(`Cannot find ${path}`);
@@ -107,7 +107,7 @@ function readComponent(
     path,
     content,
     tsModule.ScriptTarget.Latest,
-    true,
+    true
   );
 
   return { content, source };

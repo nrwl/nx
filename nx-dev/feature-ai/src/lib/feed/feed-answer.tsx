@@ -32,9 +32,9 @@ export function FeedAnswer({
     () =>
       renderMarkdown(
         `{% callout type="warning" title="Always double-check!" %}The results may not be accurate, so please always double check with our documentation.{% /callout %}\n`,
-        { filePath: '' },
+        { filePath: '' }
       ).node,
-    [],
+    []
   );
   const [feedbackStatement, setFeedbackStatement] = useState<
     'bad' | 'good' | null
@@ -97,7 +97,7 @@ export function FeedAnswer({
               <button
                 className={cx(
                   'p-1 transition-all hover:rotate-12 hover:text-blue-500 disabled:cursor-not-allowed dark:hover:text-sky-500',
-                  { 'text-blue-500': feedbackStatement === 'bad' },
+                  { 'text-blue-500': feedbackStatement === 'bad' }
                 )}
                 disabled={!!feedbackStatement}
                 onClick={() => handleFeedbackButtonClicked('bad')}
@@ -109,7 +109,7 @@ export function FeedAnswer({
               <button
                 className={cx(
                   'p-1 transition-all hover:rotate-12 hover:text-blue-500 disabled:cursor-not-allowed dark:hover:text-sky-500',
-                  { 'text-blue-500': feedbackStatement === 'good' },
+                  { 'text-blue-500': feedbackStatement === 'good' }
                 )}
                 disabled={!!feedbackStatement}
                 onClick={() => handleFeedbackButtonClicked('good')}

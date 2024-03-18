@@ -123,7 +123,7 @@ export function Header(): JSX.Element {
                   <Popover.Button
                     className={cx(
                       open ? 'text-blue-500 dark:text-sky-500' : '',
-                      'text group inline-flex items-center px-3 py-2 font-medium leading-tight dark:text-slate-200',
+                      'text group inline-flex items-center px-3 py-2 font-medium leading-tight dark:text-slate-200'
                     )}
                   >
                     <span className="transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500">
@@ -132,7 +132,7 @@ export function Header(): JSX.Element {
                     <ChevronDownIcon
                       className={cx(
                         open ? 'text-blue-500 dark:text-sky-500' : '',
-                        'ml-2 h-5 w-5 transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500',
+                        'ml-2 h-5 w-5 transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500'
                       )}
                       aria-hidden="true"
                     />

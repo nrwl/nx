@@ -64,7 +64,7 @@ describe('@nx/vite/plugin with test node', () => {
           testTargetName: 'test',
           serveStaticTargetName: 'serve-static',
         },
-        context,
+        context
       );
 
       expect(nodes).toMatchSnapshot();

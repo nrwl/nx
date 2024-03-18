@@ -37,7 +37,7 @@ function Counter({
     return value.onChange((v) => {
       if (ref !== undefined && ref.current !== undefined)
         ref.current.firstChild.data = formatNumber(
-          round === 0 ? Math.round(v) : Number(v.toFixed(round)),
+          round === 0 ? Math.round(v) : Number(v.toFixed(round))
         );
     });
   }, [formatNumber, round, value]);

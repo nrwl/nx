@@ -98,7 +98,7 @@ export function PropertyInfoTooltip({ type }: PropertyInfoTooltipProps) {
           `flex flex-col py-2 font-mono`,
           propertyInfo.docsUrl
             ? 'border-b border-slate-200 dark:border-slate-700/60'
-            : '',
+            : ''
         )}
       >
         <p className="flex grow items-center gap-2 whitespace-pre-wrap">

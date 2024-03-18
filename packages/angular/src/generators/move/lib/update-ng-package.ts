@@ -22,7 +22,7 @@ export function updateNgPackage(tree: Tree, schema: MoveImplOptions): void {
   }
 
   const rootOffset = normalizePath(
-    relative(join(workspaceRoot, project.root), workspaceRoot),
+    relative(join(workspaceRoot, project.root), workspaceRoot)
   );
   const outputs = getOutputsForTargetAndConfiguration(
     {
@@ -37,7 +37,7 @@ export function updateNgPackage(tree: Tree, schema: MoveImplOptions): void {
         root: project.root,
         targets: project.targets,
       },
-    } as any,
+    } as any
   );
 
   const output = outputs[0] ?? `dist/${project.root}`;

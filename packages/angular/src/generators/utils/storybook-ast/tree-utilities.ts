@@ -4,7 +4,7 @@ import ignore from 'ignore';
 
 export function getAllFilesRecursivelyFromDir(
   tree: Tree,
-  dir: string,
+  dir: string
 ): string[] {
   if (isPathIgnored(tree, dir)) {
     return [];

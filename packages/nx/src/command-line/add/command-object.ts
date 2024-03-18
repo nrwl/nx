@@ -31,15 +31,15 @@ export const yargsAddCommand: CommandModule<
       })
       .example(
         '$0 add @nx/react',
-        'Install the latest version of the `@nx/react` package and run its `@nx/react:init` generator',
+        'Install the latest version of the `@nx/react` package and run its `@nx/react:init` generator'
       )
       .example(
         '$0 add non-core-nx-plugin',
-        'Install the latest version of the `non-core-nx-plugin` package and run its `non-core-nx-plugin:init` generator if available',
+        'Install the latest version of the `non-core-nx-plugin` package and run its `non-core-nx-plugin:init` generator if available'
       )
       .example(
         '$0 add @nx/react@17.0.0',
-        'Install version `17.0.0` of the `@nx/react` package and run its `@nx/react:init` generator',
+        'Install version `17.0.0` of the `@nx/react` package and run its `@nx/react:init` generator'
       ) as any,
   handler: (args) => import('./add').then((m) => m.addHandler(args)),
 };

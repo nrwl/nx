@@ -16,7 +16,7 @@ export function updateSpecConfig(host: Tree, options: NormalizedSchema) {
     }
     types.push(
       '@nx/react/typings/cssmodule.d.ts',
-      '@nx/react/typings/image.d.ts',
+      '@nx/react/typings/image.d.ts'
     );
     compilerOptions.types = types;
     json.compilerOptions = compilerOptions;
@@ -29,7 +29,7 @@ export function updateSpecConfig(host: Tree, options: NormalizedSchema) {
 
   const configPath = maybeJs(
     options,
-    `${options.appProjectRoot}/jest.config.ts`,
+    `${options.appProjectRoot}/jest.config.ts`
   );
   const originalContent = host.read(configPath, 'utf-8');
   const content = updateJestConfigContent(originalContent);

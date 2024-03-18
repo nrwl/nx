@@ -44,17 +44,17 @@ describe('task planner', () => {
     task: Task | Task[],
     taskGraph: TaskGraph,
     taskHasher: InProcessTaskHasher,
-    hashPlanner: HashPlanner,
+    hashPlanner: HashPlanner
   ) {
     if (!Array.isArray(task)) task = [task];
 
     function getHashPlans(
       tasks: Task[],
-      taskGraph: TaskGraph,
+      taskGraph: TaskGraph
     ): Record<string, string[]> {
       const plans = hashPlanner.getPlans(
         tasks.map((task) => task.id),
-        taskGraph,
+        taskGraph
       );
 
       for (const planId of Object.keys(plans)) {
@@ -150,7 +150,7 @@ describe('task planner', () => {
         ['build'],
         undefined,
         {},
-        false,
+        false
       );
 
       let nxJson = {} as any;
@@ -161,19 +161,19 @@ describe('task planner', () => {
         projectGraph,
         nxJson,
         null,
-        {},
+        {}
       );
 
       const planner = new HashPlanner(
         nxJson as any,
-        transferProjectGraph(transformProjectGraphForRust(projectGraph)),
+        transferProjectGraph(transformProjectGraphForRust(projectGraph))
       );
 
       await assertHashPlan(
         taskGraph.tasks['parent:build'],
         taskGraph,
         hasher,
-        planner,
+        planner
       );
     });
   });
@@ -232,7 +232,7 @@ describe('task planner', () => {
       ['parent'],
       ['build'],
       undefined,
-      {},
+      {}
     );
     let nxJson = {} as any;
     const hasher = new InProcessTaskHasher(
@@ -241,17 +241,17 @@ describe('task planner', () => {
       projectGraph,
       nxJson,
       null,
-      {},
+      {}
     );
     const planner = new HashPlanner(
       nxJson as any,
-      transferProjectGraph(transformProjectGraphForRust(projectGraph)),
+      transferProjectGraph(transformProjectGraphForRust(projectGraph))
     );
     const hashPlan = await assertHashPlan(
       taskGraph.tasks['parent:build'],
       taskGraph,
       hasher,
-      planner,
+      planner
     );
 
     expect(hashPlan).toMatchSnapshot();
@@ -305,7 +305,7 @@ describe('task planner', () => {
       ['parent'],
       ['build'],
       undefined,
-      {},
+      {}
     );
     let nxJson = {
       namedInputs: {
@@ -318,17 +318,17 @@ describe('task planner', () => {
       projectGraph,
       nxJson,
       null,
-      {},
+      {}
     );
     const planner = new HashPlanner(
       nxJson as any,
-      transferProjectGraph(transformProjectGraphForRust(projectGraph)),
+      transferProjectGraph(transformProjectGraphForRust(projectGraph))
     );
     let hashPlans = await assertHashPlan(
       taskGraph.tasks['parent:build'],
       taskGraph,
       hasher,
-      planner,
+      planner
     );
 
     expect(hashPlans).toMatchSnapshot();
@@ -368,7 +368,7 @@ describe('task planner', () => {
       ['parent'],
       ['build', 'test'],
       undefined,
-      {},
+      {}
     );
     let nxJson = {
       namedInputs: {
@@ -381,11 +381,11 @@ describe('task planner', () => {
       projectGraph,
       nxJson,
       null,
-      {},
+      {}
     );
     const planner = new HashPlanner(
       nxJson as any,
-      transferProjectGraph(transformProjectGraphForRust(projectGraph)),
+      transferProjectGraph(transformProjectGraphForRust(projectGraph))
     );
     const tasks = Object.values(taskGraph.tasks);
 
@@ -449,7 +449,7 @@ describe('task planner', () => {
           ['parent'],
           ['test'],
           undefined,
-          {},
+          {}
         );
         let nxJson = {
           namedInputs: {
@@ -463,17 +463,17 @@ describe('task planner', () => {
           projectGraph,
           nxJson as any,
           null,
-          {},
+          {}
         );
 
         const planner = new HashPlanner(
           nxJson as any,
-          transferProjectGraph(transformProjectGraphForRust(projectGraph)),
+          transferProjectGraph(transformProjectGraphForRust(projectGraph))
         );
         const tasks = Object.values(taskGraph.tasks);
         let plans = await assertHashPlan(tasks, taskGraph, hasher, planner);
         expect(plans).toMatchSnapshot();
-      },
+      }
     );
   });
 
@@ -508,7 +508,7 @@ describe('task planner', () => {
       ['parent'],
       ['build'],
       undefined,
-      {},
+      {}
     );
     let nxJson = {} as any;
     const hasher = new InProcessTaskHasher(
@@ -517,11 +517,11 @@ describe('task planner', () => {
       projectGraph,
       nxJson,
       null,
-      {},
+      {}
     );
     const planner = new HashPlanner(
       nxJson as any,
-      transferProjectGraph(transformProjectGraphForRust(projectGraph)),
+      transferProjectGraph(transformProjectGraphForRust(projectGraph))
     );
     let tasks = Object.values(taskGraph.tasks);
     let plans = await assertHashPlan(tasks, taskGraph, hasher, planner);
@@ -557,7 +557,7 @@ describe('task planner', () => {
       ['app'],
       ['build'],
       undefined,
-      {},
+      {}
     );
     let nxJson = {} as any;
     const hasher = new InProcessTaskHasher(
@@ -566,17 +566,17 @@ describe('task planner', () => {
       projectGraph,
       nxJson,
       null,
-      {},
+      {}
     );
     const transformed = transferProjectGraph(
-      transformProjectGraphForRust(projectGraph),
+      transformProjectGraphForRust(projectGraph)
     );
     const planner = new HashPlanner(nxJson as any, transformed);
     let plans = await assertHashPlan(
       taskGraph.tasks['app:build'],
       taskGraph,
       hasher,
-      planner,
+      planner
     );
     expect(plans).toMatchSnapshot();
   });
@@ -656,7 +656,7 @@ describe('task planner', () => {
         ['parent'],
         ['build'],
         undefined,
-        {},
+        {}
       );
 
       let nxJson = {
@@ -688,18 +688,18 @@ describe('task planner', () => {
         projectGraph,
         nxJson,
         null,
-        {},
+        {}
       );
 
       const transformed = transferProjectGraph(
-        transformProjectGraphForRust(projectGraph),
+        transformProjectGraphForRust(projectGraph)
       );
       const planner = new HashPlanner(nxJson, transformed);
       let plans = await assertHashPlan(
         taskGraph.tasks['parent:build'],
         taskGraph,
         hasher,
-        planner,
+        planner
       );
       expect(plans).toMatchSnapshot();
     });

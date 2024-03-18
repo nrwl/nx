@@ -91,7 +91,7 @@ export function newProject({
 
     if (!directoryExists(tmpBackupProjPath())) {
       const createNxWorkspaceStart = performance.mark(
-        'create-nx-workspace:start',
+        'create-nx-workspace:start'
       );
       runCreateWorkspace(projScope, {
         preset: 'apps',
@@ -101,12 +101,12 @@ export function newProject({
       createNxWorkspaceMeasure = performance.measure(
         'create-nx-workspace',
         createNxWorkspaceStart.name,
-        createNxWorkspaceEnd.name,
+        createNxWorkspaceEnd.name
       );
 
       if (unsetProjectNameAndRootFormat) {
         console.warn(
-          'ATTENTION: The workspace generated for this e2e test does not use the new as-provided project name/root format. Please update this test',
+          'ATTENTION: The workspace generated for this e2e test does not use the new as-provided project name/root format. Please update this test'
         );
         createFile('apps/.gitkeep');
         createFile('libs/.gitkeep');
@@ -116,13 +116,13 @@ export function newProject({
       if (isCI && packageManager === 'pnpm') {
         updateFile(
           '.npmrc',
-          'prefer-frozen-lockfile=false\nstrict-peer-dependencies=false\nauto-install-peers=true',
+          'prefer-frozen-lockfile=false\nstrict-peer-dependencies=false\nauto-install-peers=true'
         );
       }
 
       if (!packages) {
         console.warn(
-          'ATTENTION: All packages are installed into the new workspace. To make this test faster, please pass the subset of packages that this test needs by passing a packages array in the options',
+          'ATTENTION: All packages are installed into the new workspace. To make this test faster, please pass the subset of packages that this test needs by passing a packages array in the options'
         );
       }
       const packageInstallStart = performance.mark('packageInstall:start');
@@ -131,7 +131,7 @@ export function newProject({
       packageInstallMeasure = performance.measure(
         'packageInstall',
         packageInstallStart.name,
-        packageInstallEnd.name,
+        packageInstallEnd.name
       );
       // stop the daemon
       execSync(`${getPackageManagerCommand().runNx} reset`, {
@@ -147,7 +147,7 @@ export function newProject({
     copySync(`${tmpBackupProjPath()}`, `${projectDirectory}`);
 
     const dependencies = readJsonFile(
-      `${projectDirectory}/package.json`,
+      `${projectDirectory}/package.json`
     ).devDependencies;
     const missingPackages = (packages || []).filter((p) => !dependencies[p]);
 
@@ -168,7 +168,7 @@ export function newProject({
     const perfMeasure = performance.measure(
       'newProject',
       newProjectStart.name,
-      newProjectEnd.name,
+      newProjectEnd.name
     );
 
     if (isVerbose()) {
@@ -189,7 +189,7 @@ ${
                 packageInstallMeasure.duration / 1000
               } seconds\n`
             : ''
-        }`,
+        }`
       );
     }
 
@@ -210,7 +210,7 @@ ${
 export function addPnpmRc() {
   updateFile(
     '.npmrc',
-    'strict-peer-dependencies=false\nauto-install-peers=true',
+    'strict-peer-dependencies=false\nauto-install-peers=true'
   );
 }
 
@@ -254,7 +254,7 @@ export function runCreateWorkspace(
     ssr?: boolean;
     framework?: string;
     prefix?: string;
-  },
+  }
 ) {
   projName = name;
 
@@ -361,7 +361,7 @@ export function runCreatePlugin(
     packageManager?: 'npm' | 'yarn' | 'pnpm';
     extraArgs?: string;
     useDetectedPm?: boolean;
-  },
+  }
 ) {
   projName = name;
 
@@ -406,7 +406,7 @@ export function packageInstall(
   pkg: string,
   projName?: string,
   version = getPublishedVersion(),
-  mode: 'dev' | 'prod' = 'dev',
+  mode: 'dev' | 'prod' = 'dev'
 ) {
   const cwd = projName ? `${e2eCwd}/${projName}` : tmpProjPath();
   const pm = getPackageManagerCommand({ path: cwd });
@@ -448,13 +448,13 @@ export function packageInstall(
  */
 export function runNgNew(
   packageManager = getSelectedPackageManager(),
-  angularCliVersion = defaultAngularCliVersion,
+  angularCliVersion = defaultAngularCliVersion
 ): string {
   const pmc = getPackageManagerCommand({ packageManager });
 
   if (directoryExists(tmpBackupNgCliProjPath())) {
     const angularJson = JSON.parse(
-      readFileSync(join(tmpBackupNgCliProjPath(), 'angular.json'), 'utf-8'),
+      readFileSync(join(tmpBackupNgCliProjPath(), 'angular.json'), 'utf-8')
     );
     // the name of the workspace matches the name of the generated default app,
     // we need to reuse the same name that's cached in order to avoid issues
@@ -465,7 +465,7 @@ export function runNgNew(
     if (isVerboseE2ERun()) {
       logInfo(
         `NX`,
-        `E2E restored an Angular CLI project from cache: ${tmpProjPath()}`,
+        `E2E restored an Angular CLI project from cache: ${tmpProjPath()}`
       );
     }
 
@@ -506,11 +506,11 @@ export function newLernaWorkspace({
         'pnpm-workspace.yaml',
         dump({
           packages: ['packages/*'],
-        }),
+        })
       );
       updateFile(
         '.npmrc',
-        'prefer-frozen-lockfile=false\nstrict-peer-dependencies=false\nauto-install-peers=true',
+        'prefer-frozen-lockfile=false\nstrict-peer-dependencies=false\nauto-install-peers=true'
       );
     }
 
@@ -558,15 +558,15 @@ export function newLernaWorkspace({
         packageManager === 'pnpm'
           ? ' --workspace-root'
           : packageManager === 'yarn'
-            ? ' -W'
-            : ''
+          ? ' -W'
+          : ''
       }`,
       {
         cwd: tmpProjPath(),
         stdio: isVerbose() ? 'inherit' : 'pipe',
         env: { CI: 'true', ...process.env },
         encoding: 'utf-8',
-      },
+      }
     );
 
     execSync(`${pm.runLerna} init`, {
@@ -611,7 +611,7 @@ export function newWrappedNxWorkspace({
   projName = name;
   ensureDirSync(tmpProjPath());
   runCommand(
-    `${pmc.runUninstalledPackage} nx@latest init --use-dot-nx-installation`,
+    `${pmc.runUninstalledPackage} nx@latest init --use-dot-nx-installation`
   );
   return (command: string, opts: Partial<ExecSyncOptions> | undefined) => {
     if (process.platform === 'win32') {
@@ -632,7 +632,7 @@ export function tmpProjPath(path?: string) {
 
 export function createNonNxProjectDirectory(
   name = uniq('proj'),
-  addWorkspaces = true,
+  addWorkspaces = true
 ) {
   projName = name;
   ensureDirSync(tmpProjPath());
@@ -641,7 +641,7 @@ export function createNonNxProjectDirectory(
     JSON.stringify({
       name,
       workspaces: addWorkspaces ? ['packages/*'] : undefined,
-    }),
+    })
   );
 }
 

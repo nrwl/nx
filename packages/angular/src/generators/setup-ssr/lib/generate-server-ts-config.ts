@@ -10,7 +10,7 @@ import type { Schema } from '../schema';
 
 export function setServerTsConfigOptionsForApplicationBuilder(
   tree: Tree,
-  options: Schema,
+  options: Schema
 ) {
   const { targets } = readProjectConfiguration(tree, options.project);
   const tsConfigPath = targets.build.options.tsConfig;
@@ -32,7 +32,7 @@ export function setServerTsConfigOptionsForApplicationBuilder(
 
 export function generateTsConfigServerJsonForBrowserBuilder(
   tree: Tree,
-  options: Schema,
+  options: Schema
 ) {
   const { root } = readProjectConfiguration(tree, options.project);
 

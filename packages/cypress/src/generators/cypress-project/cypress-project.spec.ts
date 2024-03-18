@@ -201,7 +201,7 @@ describe('Cypress Project', () => {
 
         const cypressConfig = tree.read(
           'my-app-e2e/cypress.config.ts',
-          'utf-8',
+          'utf-8'
         );
         expect(cypressConfig).toMatchSnapshot();
       });
@@ -219,7 +219,7 @@ describe('Cypress Project', () => {
 
         const cypressConfig = tree.read(
           'my-dir/my-app-e2e/cypress.config.ts',
-          'utf-8',
+          'utf-8'
         );
         expect(cypressConfig).toMatchSnapshot();
       });
@@ -286,7 +286,7 @@ describe('Cypress Project', () => {
               'e2e-tests/src/support/commands.ts',
               'e2e-tests/src/support/e2e.ts',
               'e2e-tests/tsconfig.json',
-            ]),
+            ])
           );
         });
 
@@ -311,7 +311,7 @@ describe('Cypress Project', () => {
               'e2e-tests/src/support/commands.ts',
               'e2e-tests/src/support/e2e.ts',
               'e2e-tests/tsconfig.json',
-            ]),
+            ])
           );
         });
       });
@@ -347,7 +347,7 @@ describe('Cypress Project', () => {
 
         const projectConfig = readProjectConfiguration(tree, 'my-app-e2e');
         expect(projectConfig.targets['e2e'].options.devServerTarget).toEqual(
-          'my-app:serve',
+          'my-app:serve'
         );
       });
     });
@@ -447,7 +447,7 @@ describe('Cypress Project', () => {
       expect(tree.exists('my-app-e2e/cypress.json')).toBeTruthy();
       expect(tree.exists('my-app-e2e/src/fixtures/example.json')).toBeTruthy();
       expect(
-        tree.exists('my-app-e2e/src/integration/app.spec.ts'),
+        tree.exists('my-app-e2e/src/integration/app.spec.ts')
       ).toBeTruthy();
       expect(tree.exists('my-app-e2e/src/support/app.po.ts')).toBeTruthy();
       expect(tree.exists('my-app-e2e/src/support/commands.ts')).toBeTruthy();
@@ -533,7 +533,7 @@ describe('Cypress Project', () => {
 
         const projectConfig = readProjectConfiguration(
           tree,
-          'my-dir-my-app-e2e',
+          'my-dir-my-app-e2e'
         );
         expect(projectConfig).toBeDefined();
         expect(projectConfig.targets).toMatchSnapshot();
@@ -553,7 +553,7 @@ describe('Cypress Project', () => {
 
           const packageJson = readJson(tree, 'package.json');
           expect(
-            packageJson.devDependencies['eslint-plugin-cypress'],
+            packageJson.devDependencies['eslint-plugin-cypress']
           ).toBeTruthy();
           const eslintrcJson = readJson(tree, 'my-app-e2e/.eslintrc.json');
           expect(eslintrcJson).toMatchSnapshot();
@@ -576,7 +576,7 @@ describe('Cypress Project', () => {
       it('should update configuration', async () => {
         const projectConfig = readProjectConfiguration(
           tree,
-          'my-dir-my-app-e2e',
+          'my-dir-my-app-e2e'
         );
         expect(projectConfig).toBeDefined();
         expect(projectConfig.targets).toMatchSnapshot();
@@ -591,7 +591,7 @@ describe('Cypress Project', () => {
       it('should set right path names in `cypress.json`', async () => {
         const cypressConfig = tree.read(
           'my-dir/my-app-e2e/cypress.json',
-          'utf-8',
+          'utf-8'
         );
         expect(cypressConfig).toMatchSnapshot();
       });

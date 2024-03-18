@@ -9,7 +9,7 @@ import { NormalizedSchema } from '../schema';
 export function createProjectConfigurationInNewDestination(
   tree: Tree,
   schema: NormalizedSchema,
-  projectConfig: ProjectConfiguration,
+  projectConfig: ProjectConfiguration
 ) {
   projectConfig.name = schema.newProjectName;
   const isRootProject = projectConfig.root === '.';
@@ -24,15 +24,15 @@ export function createProjectConfigurationInNewDestination(
     // Only look for "./" and replace with new root.
     newProjectString = newProjectString.replace(
       /\.\//g,
-      schema.relativeToRootDestination + '/',
+      schema.relativeToRootDestination + '/'
     );
     newProjectString = newProjectString.replace(
       /"((tsconfig|jest|webpack|vite)\..*?\.(ts|js|json))"/g,
-      `"${schema.relativeToRootDestination}/$1"`,
+      `"${schema.relativeToRootDestination}/$1"`
     );
     newProjectString = newProjectString.replace(
       /"(\.\/)?src\/(.*?)"/g,
-      `"${schema.relativeToRootDestination}/src/$2"`,
+      `"${schema.relativeToRootDestination}/src/$2"`
     );
   } else {
     // There's another issue if project name === path, where the target
@@ -43,7 +43,7 @@ export function createProjectConfigurationInNewDestination(
     // Target string are going to be updated in the updateBuildTargets function
     newProjectString = newProjectString.replace(
       new RegExp(projectConfig.root + '(?!:)', 'g'),
-      schema.relativeToRootDestination,
+      schema.relativeToRootDestination
     );
   }
 
@@ -58,7 +58,7 @@ export function createProjectConfigurationInNewDestination(
   // e.g. my-app-e2e is safer to search and replace than "e2e".
   if (projectConfig.name === 'e2e') {
     for (const [targetName, targetConfig] of Object.entries(
-      newProject.targets,
+      newProject.targets
     )) {
       const wrongName = schema.relativeToRootDestination;
       if (targetName !== wrongName) continue;
@@ -77,7 +77,7 @@ export function createProjectConfigurationInNewDestination(
   if (isRootProject && projectConfig.sourceRoot) {
     newProject.sourceRoot = joinPathFragments(
       schema.relativeToRootDestination,
-      projectConfig.sourceRoot,
+      projectConfig.sourceRoot
     );
   }
 

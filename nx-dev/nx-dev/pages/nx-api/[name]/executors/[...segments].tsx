@@ -51,7 +51,7 @@ export default function PackageExecutor({
     menu: {
       sections: sortCorePackagesFirst<MenuSection>(
         getPackagesSections(menu),
-        'id',
+        'id'
       ),
     },
     package: pkg,
@@ -104,7 +104,7 @@ export const getStaticPaths: GetStaticPaths = () => {
 
 function getData(
   packageName: string,
-  segments: string[],
+  segments: string[]
 ): {
   pkg: ProcessedPackageMetadata;
   schema: SchemaMetadata;
@@ -115,7 +115,7 @@ function getData(
     schema: nxPackagesApi.getSchemaMetadata(
       nxPackagesApi.getPackageFileMetadatas(packageName, 'executors')[
         '/' + ['nx-api', packageName, 'executors', ...segments].join('/')
-      ],
+      ]
     ),
     menu: menusApi.getMenu('nx-api', 'nx-api'),
   };

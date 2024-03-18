@@ -21,7 +21,7 @@ export interface LintWorkspaceRuleGeneratorOptions {
 
 export async function lintWorkspaceRuleGenerator(
   tree: Tree,
-  options: LintWorkspaceRuleGeneratorOptions,
+  options: LintWorkspaceRuleGeneratorOptions
 ) {
   const nxJson = readNxJson(tree);
   // Ensure that the workspace rules project has been created
@@ -32,12 +32,12 @@ export async function lintWorkspaceRuleGenerator(
       addPlugin:
         process.env.NX_ADD_PLUGINS !== 'false' &&
         nxJson.useInferencePlugins !== false,
-    },
+    }
   );
 
   const ruleDir = joinPathFragments(
     workspaceLintPluginDir,
-    options.directory ?? '',
+    options.directory ?? ''
   );
 
   // Generate the required files for the new rule
@@ -58,7 +58,7 @@ export async function lintWorkspaceRuleGenerator(
     pluginIndexPath,
     existingPluginIndexContents,
     ts.ScriptTarget.Latest,
-    true,
+    true
   );
 
   function findRulesObject(node: ts.Node): ts.ObjectLiteralExpression {
@@ -75,7 +75,7 @@ export async function lintWorkspaceRuleGenerator(
   }
 
   const rulesObject = pluginIndexSourceFile.forEachChild((node) =>
-    findRulesObject(node),
+    findRulesObject(node)
   );
   if (rulesObject) {
     const ruleNameSymbol = `${nameCamelCase}Name`;

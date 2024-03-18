@@ -19,7 +19,7 @@ import { NX_OPTIONS_TOKEN } from '../options.di';
 import { nxCompileNgcTransformFactory } from './compile-ngc.transform';
 
 export const NX_COMPILE_NGC_TOKEN = new InjectionToken<Transform>(
-  `nx.v1.compileNgc`,
+  `nx.v1.compileNgc`
 );
 export const NX_COMPILE_NGC_TRANSFORM = provideTransform({
   provide: NX_COMPILE_NGC_TOKEN,

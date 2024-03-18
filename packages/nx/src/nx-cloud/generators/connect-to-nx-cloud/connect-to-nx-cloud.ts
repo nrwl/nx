@@ -37,7 +37,7 @@ function getNxInitDate(): string | null {
   try {
     const nxInitIso = execSync(
       'git log --diff-filter=A --follow --format=%aI -- nx.json | tail -1',
-      { stdio: 'pipe' },
+      { stdio: 'pipe' }
     )
       .toString()
       .trim();
@@ -51,10 +51,10 @@ function getNxInitDate(): string | null {
 async function createNxCloudWorkspace(
   workspaceName: string,
   installationSource: string,
-  nxInitDate: string | null,
+  nxInitDate: string | null
 ): Promise<{ token: string; url: string }> {
   const apiUrl = removeTrailingSlash(
-    process.env.NX_CLOUD_API || process.env.NRWL_API || `https://cloud.nx.app`,
+    process.env.NX_CLOUD_API || process.env.NRWL_API || `https://cloud.nx.app`
   );
   const response = await require('axios').post(
     `${apiUrl}/nx-cloud/create-org-and-workspace`,
@@ -62,7 +62,7 @@ async function createNxCloudWorkspace(
       workspaceName,
       installationSource,
       nxInitDate,
-    },
+    }
   );
 
   if (response.data.message) {
@@ -97,7 +97,7 @@ interface ConnectToNxCloudOptions {
 function addNxCloudOptionsToNxJson(
   tree: Tree,
   nxJson: NxJsonConfiguration,
-  token: string,
+  token: string
 ) {
   nxJson ??= {
     extends: 'nx/presets/npm.json',
@@ -112,7 +112,7 @@ function addNxCloudOptionsToNxJson(
 
 export async function connectToNxCloud(
   tree: Tree,
-  schema: ConnectToNxCloudOptions,
+  schema: ConnectToNxCloudOptions
 ) {
   const nxJson = readNxJson(tree) as
     | null
@@ -127,7 +127,7 @@ export async function connectToNxCloud(
     const r = await createNxCloudWorkspace(
       getRootPackageName(tree),
       schema.installationSource,
-      getNxInitDate(),
+      getNxInitDate()
     );
 
     addNxCloudOptionsToNxJson(tree, nxJson, r.token);

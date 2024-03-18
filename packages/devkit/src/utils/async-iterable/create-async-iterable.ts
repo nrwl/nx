@@ -5,7 +5,7 @@ export interface AsyncPushCallbacks<T> {
 }
 
 export function createAsyncIterable<T = unknown>(
-  listener: (ls: AsyncPushCallbacks<T>) => void,
+  listener: (ls: AsyncPushCallbacks<T>) => void
 ): AsyncIterable<T> {
   let done = false;
   let error: unknown | null = null;
@@ -14,7 +14,7 @@ export function createAsyncIterable<T = unknown>(
   const pullQueue: Array<
     [
       (x: { value: T | undefined; done: boolean }) => void,
-      (err: unknown) => void,
+      (err: unknown) => void
     ]
   > = [];
 
@@ -57,7 +57,7 @@ export function createAsyncIterable<T = unknown>(
               } else {
                 pullQueue.push([resolve, reject]);
               }
-            },
+            }
           );
         },
       };

@@ -18,8 +18,8 @@ function updateDependencies(tree: Tree, schema: Schema) {
       {},
       { '@nx/web': nxVersion },
       undefined,
-      schema.keepExistingVersions,
-    ),
+      schema.keepExistingVersions
+    )
   );
 
   return runTasksInSerial(...tasks);

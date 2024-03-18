@@ -41,7 +41,7 @@ const RESOLVED = Promise.resolve();
  * @param source the Observable source to await values from
  */
 export async function* eachValueFrom<T>(
-  source: Observable<T>,
+  source: Observable<T>
 ): AsyncIterableIterator<T> {
   const deferreds: Deferred<IteratorResult<T>>[] = [];
   const values: T[] = [];
@@ -124,7 +124,7 @@ export async function* eachValueFrom<T>(
  * @param source the Observable source to await values from
  */
 export async function* bufferedValuesFrom<T>(
-  source: Observable<T>,
+  source: Observable<T>
 ): AsyncGenerator<T[]> {
   let deferred: Deferred<IteratorResult<T[]>> | null = null;
   const buffer: T[] = [];
@@ -140,7 +140,7 @@ export async function* bufferedValuesFrom<T>(
             const bufferCopy = buffer.slice();
             buffer.length = 0;
             return { value: bufferCopy, done: false };
-          }),
+          })
         );
         deferred = null;
       }
@@ -214,7 +214,7 @@ export async function* bufferedValuesFrom<T>(
  * @param source the Observable source to await values from
  */
 export async function* latestValueFrom<T>(
-  source: Observable<T>,
+  source: Observable<T>
 ): AsyncGenerator<T> {
   let deferred: Deferred<IteratorResult<T>> | undefined = undefined;
   let latestValue: T;
@@ -232,7 +232,7 @@ export async function* latestValueFrom<T>(
           RESOLVED.then(() => {
             hasLatestValue = false;
             return { value: latestValue, done: false };
-          }),
+          })
         );
       }
     },
@@ -305,7 +305,7 @@ export async function* latestValueFrom<T>(
  * @param source the Observable source to await values from
  */
 export async function* nextValueFrom<T>(
-  source: Observable<T>,
+  source: Observable<T>
 ): AsyncGenerator<T, void, void> {
   let deferred: Deferred<IteratorResult<T>> | undefined = undefined;
   let hasError = false;

@@ -68,7 +68,7 @@ let numberOfOpenConnections = 0;
 const server = createServer(async (socket) => {
   numberOfOpenConnections += 1;
   serverLogger.log(
-    `Established a connection. Number of open connections: ${numberOfOpenConnections}`,
+    `Established a connection. Number of open connections: ${numberOfOpenConnections}`
   );
   resetInactivityTimeout(handleInactivityTimeout);
   if (!performanceObserver) {
@@ -83,7 +83,7 @@ const server = createServer(async (socket) => {
     'data',
     consumeMessagesFromSocket(async (message) => {
       await handleMessage(socket, message);
-    }),
+    })
   );
 
   socket.on('error', (e) => {
@@ -94,7 +94,7 @@ const server = createServer(async (socket) => {
   socket.on('close', () => {
     numberOfOpenConnections -= 1;
     serverLogger.log(
-      `Closed a connection. Number of open connections: ${numberOfOpenConnections}`,
+      `Closed a connection. Number of open connections: ${numberOfOpenConnections}`
     );
 
     removeRegisteredFileWatcherSocket(socket);
@@ -107,7 +107,7 @@ async function handleMessage(socket, data: string) {
     await respondWithErrorAndExit(
       socket,
       `File watcher error in the workspace '${workspaceRoot}'.`,
-      workspaceWatcherError,
+      workspaceWatcherError
     );
   }
 
@@ -128,41 +128,39 @@ async function handleMessage(socket, data: string) {
     await respondWithErrorAndExit(
       socket,
       `Invalid payload from the client`,
-      new Error(
-        `Unsupported payload sent to daemon server: ${unparsedPayload}`,
-      ),
+      new Error(`Unsupported payload sent to daemon server: ${unparsedPayload}`)
     );
   }
 
   if (payload.type === 'PING') {
     await handleResult(socket, 'PING', () =>
-      Promise.resolve({ response: JSON.stringify(true), description: 'ping' }),
+      Promise.resolve({ response: JSON.stringify(true), description: 'ping' })
     );
   } else if (payload.type === 'REQUEST_PROJECT_GRAPH') {
     await handleResult(socket, 'REQUEST_PROJECT_GRAPH', () =>
-      handleRequestProjectGraph(),
+      handleRequestProjectGraph()
     );
   } else if (payload.type === 'HASH_TASKS') {
     await handleResult(socket, 'HASH_TASKS', () => handleHashTasks(payload));
   } else if (payload.type === 'REQUEST_FILE_DATA') {
     await handleResult(socket, 'REQUEST_FILE_DATA', () =>
-      handleRequestFileData(),
+      handleRequestFileData()
     );
   } else if (payload.type === 'PROCESS_IN_BACKGROUND') {
     await handleResult(socket, 'PROCESS_IN_BACKGROUND', () =>
-      handleProcessInBackground(payload),
+      handleProcessInBackground(payload)
     );
   } else if (payload.type === 'RECORD_OUTPUTS_HASH') {
     await handleResult(socket, 'RECORD_OUTPUTS_HASH', () =>
-      handleRecordOutputsHash(payload),
+      handleRecordOutputsHash(payload)
     );
   } else if (payload.type === 'OUTPUTS_HASHES_MATCH') {
     await handleResult(socket, 'OUTPUTS_HASHES_MATCH', () =>
-      handleOutputsHashesMatch(payload),
+      handleOutputsHashesMatch(payload)
     );
   } else if (payload.type === 'REQUEST_SHUTDOWN') {
     await handleResult(socket, 'REQUEST_SHUTDOWN', () =>
-      handleRequestShutdown(server, numberOfOpenConnections),
+      handleRequestShutdown(server, numberOfOpenConnections)
     );
   } else if (payload.type === 'REGISTER_FILE_WATCHER') {
     registeredFileWatcherSockets.push({ socket, config: payload.config });
@@ -170,9 +168,7 @@ async function handleMessage(socket, data: string) {
     await respondWithErrorAndExit(
       socket,
       `Invalid payload from the client`,
-      new Error(
-        `Unsupported payload sent to daemon server: ${unparsedPayload}`,
-      ),
+      new Error(`Unsupported payload sent to daemon server: ${unparsedPayload}`)
     );
   }
 }
@@ -180,7 +176,7 @@ async function handleMessage(socket, data: string) {
 export async function handleResult(
   socket: Socket,
   type: string,
-  hrFn: () => Promise<HandlerResult>,
+  hrFn: () => Promise<HandlerResult>
 ) {
   const startMark = new Date();
   const hr = await hrFn();
@@ -194,14 +190,14 @@ export async function handleResult(
   serverLogger.log(
     `Handled ${type}. Handling time: ${
       doneHandlingMark.getTime() - startMark.getTime()
-    }. Response time: ${endMark.getTime() - doneHandlingMark.getTime()}.`,
+    }. Response time: ${endMark.getTime() - doneHandlingMark.getTime()}.`
   );
 }
 
 function handleInactivityTimeout() {
   if (numberOfOpenConnections > 0) {
     serverLogger.log(
-      `There are ${numberOfOpenConnections} open connections. Reset inactivity timer.`,
+      `There are ${numberOfOpenConnections} open connections. Reset inactivity timer.`
     );
     resetInactivityTimeout(handleInactivityTimeout);
   } else {
@@ -218,19 +214,19 @@ function registerProcessTerminationListeners() {
       handleServerProcessTermination({
         server,
         reason: 'received process SIGINT',
-      }),
+      })
     )
     .on('SIGTERM', () =>
       handleServerProcessTermination({
         server,
         reason: 'received process SIGTERM',
-      }),
+      })
     )
     .on('SIGHUP', () =>
       handleServerProcessTermination({
         server,
         reason: 'received process SIGHUP',
-      }),
+      })
     );
 }
 
@@ -281,11 +277,11 @@ function lockFileHashChanged(): boolean {
  */
 const handleWorkspaceChanges: FileWatcherCallback = async (
   err,
-  changeEvents,
+  changeEvents
 ) => {
   if (workspaceWatcherError) {
     serverLogger.watcherLog(
-      'Skipping handleWorkspaceChanges because of a previously recorded watcher error.',
+      'Skipping handleWorkspaceChanges because of a previously recorded watcher error.'
     );
     return;
   }
@@ -305,7 +301,7 @@ const handleWorkspaceChanges: FileWatcherCallback = async (
       let error = typeof err === 'string' ? new Error(err) : err;
       serverLogger.watcherLog(
         'Unexpected workspace watcher error',
-        error.message,
+        error.message
       );
       console.error(error);
       workspaceWatcherError = error;
@@ -340,7 +336,7 @@ const handleWorkspaceChanges: FileWatcherCallback = async (
     addUpdatedAndDeletedFiles(
       createdFilesToHash,
       updatedFilesToHash,
-      deletedFiles,
+      deletedFiles
     );
   } catch (err) {
     serverLogger.watcherLog(`Unexpected workspace error`, err.message);
@@ -355,7 +351,7 @@ const handleOutputsChanges: FileWatcherCallback = async (err, changeEvents) => {
       let error = typeof err === 'string' ? new Error(err) : err;
       serverLogger.watcherLog(
         'Unexpected outputs watcher error',
-        error.message,
+        error.message
       );
       console.error(error);
       outputsWatcherError = error;
@@ -399,17 +395,17 @@ export async function startServer(): Promise<Server> {
 
           if (!getWatcherInstance()) {
             storeWatcherInstance(
-              await watchWorkspace(server, handleWorkspaceChanges),
+              await watchWorkspace(server, handleWorkspaceChanges)
             );
 
             serverLogger.watcherLog(
-              `Subscribed to changes within: ${workspaceRoot} (native)`,
+              `Subscribed to changes within: ${workspaceRoot} (native)`
             );
           }
 
           if (!getOutputWatcherInstance()) {
             storeOutputWatcherInstance(
-              await watchOutputFiles(handleOutputsChanges),
+              await watchOutputFiles(handleOutputsChanges)
             );
           }
 

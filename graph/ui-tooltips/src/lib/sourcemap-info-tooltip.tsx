@@ -50,7 +50,7 @@ export function SourcemapInfoToolTip({
       <div
         className={twMerge(
           `flex flex-col py-2 font-mono`,
-          showLink ? 'border-b border-slate-200 dark:border-slate-700/60' : '',
+          showLink ? 'border-b border-slate-200 dark:border-slate-700/60' : ''
         )}
       >
         {tooltipContent}

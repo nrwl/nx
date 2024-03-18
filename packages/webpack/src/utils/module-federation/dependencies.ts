@@ -9,14 +9,14 @@ import { interpolate } from 'nx/src/tasks-runner/utils';
 
 export function getDependentPackagesForProject(
   projectGraph: ProjectGraph,
-  name: string,
+  name: string
 ): {
   workspaceLibraries: WorkspaceLibrary[];
   npmPackages: string[];
 } {
   const { npmPackages, workspaceLibraries } = collectDependencies(
     projectGraph,
-    name,
+    name
   );
 
   return {
@@ -32,7 +32,7 @@ function collectDependencies(
     workspaceLibraries: new Map<string, WorkspaceLibrary>(),
     npmPackages: new Set<string>(),
   },
-  seen: Set<string> = new Set(),
+  seen: Set<string> = new Set()
 ): {
   workspaceLibraries: Map<string, WorkspaceLibrary>;
   npmPackages: Set<string>;
@@ -60,7 +60,7 @@ function collectDependencies(
 
 function getLibraryImportPath(
   library: string,
-  projectGraph: ProjectGraph,
+  projectGraph: ProjectGraph
 ): string | undefined {
   let buildLibsFromSource = true;
   if (process.env.NX_BUILD_LIBS_FROM_SOURCE) {
@@ -72,12 +72,12 @@ function getLibraryImportPath(
   if (!buildLibsFromSource && process.env.NX_BUILD_TARGET) {
     const buildTarget = parseTargetString(
       process.env.NX_BUILD_TARGET,
-      projectGraph,
+      projectGraph
     );
     sourceRoots = getOutputsForTargetAndConfiguration(
       buildTarget,
       {},
-      libraryNode,
+      libraryNode
     );
   }
 

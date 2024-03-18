@@ -56,7 +56,7 @@ describe('getTouchedProjectsFromTsConfig', () => {
             },
           ],
           {},
-          {},
+          {}
         );
         expect(result).toEqual([]);
       });
@@ -74,7 +74,7 @@ describe('getTouchedProjectsFromTsConfig', () => {
             null,
             null,
             null,
-            graph,
+            graph
           );
           expect(result).toEqual(['proj1', 'proj2']);
         });
@@ -98,14 +98,14 @@ describe('getTouchedProjectsFromTsConfig', () => {
                       compilerOptions: {
                         strict: true,
                       },
-                    },
+                    }
                   ),
               },
             ],
             null,
             null,
             null,
-            graph,
+            graph
           );
           expect(result).toEqual(['proj1', 'proj2']);
         });
@@ -131,14 +131,14 @@ describe('getTouchedProjectsFromTsConfig', () => {
                           '@proj/proj1': ['proj1/index.ts'],
                         },
                       },
-                    },
+                    }
                   ),
               },
             ],
             null,
             null,
             null,
-            graph,
+            graph
           );
           expect(result).toEqual(['proj1']);
         });
@@ -162,14 +162,14 @@ describe('getTouchedProjectsFromTsConfig', () => {
                           '@proj/proj1': ['./proj1/index.ts'],
                         },
                       },
-                    },
+                    }
                   ),
               },
             ],
             null,
             null,
             null,
-            graph,
+            graph
           );
           expect(result).toEqual(['proj1']);
         });
@@ -195,14 +195,14 @@ describe('getTouchedProjectsFromTsConfig', () => {
                       compilerOptions: {
                         paths: {},
                       },
-                    },
+                    }
                   ),
               },
             ],
             null,
             null,
             null,
-            graph,
+            graph
           );
           expect(result).toEqual(['proj1', 'proj2']);
         });
@@ -228,14 +228,14 @@ describe('getTouchedProjectsFromTsConfig', () => {
                           '@proj/proj1': ['proj1/index.ts'],
                         },
                       },
-                    },
+                    }
                   ),
               },
             ],
             null,
             null,
             null,
-            graph,
+            graph
           );
           expect(result).toContainEqual('proj1');
           expect(result).toContainEqual('proj2');
@@ -264,14 +264,14 @@ describe('getTouchedProjectsFromTsConfig', () => {
                           '@proj/proj1': ['proj1/index2.ts'],
                         },
                       },
-                    },
+                    }
                   ),
               },
             ],
             null,
             null,
             null,
-            graph,
+            graph
           );
           expect(result).toContainEqual('proj1');
           expect(result).not.toContainEqual('proj2');
@@ -298,14 +298,14 @@ describe('getTouchedProjectsFromTsConfig', () => {
                           '@proj/proj1': ['proj2/index.ts'],
                         },
                       },
-                    },
+                    }
                   ),
               },
             ],
             null,
             null,
             null,
-            graph,
+            graph
           );
           expect(result).toContainEqual('proj1');
           expect(result).toContainEqual('proj2');

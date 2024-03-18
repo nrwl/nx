@@ -14,7 +14,7 @@ let childProcess: ChildProcess;
 
 export default async function* buildExecutor(
   options: ExpoEasBuildOptions,
-  context: ExecutorContext,
+  context: ExecutorContext
 ): AsyncGenerator<ReactNativeBuildOutput> {
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
@@ -32,7 +32,7 @@ export default async function* buildExecutor(
 function runCliBuild(
   workspaceRoot: string,
   projectRoot: string,
-  options: ExpoEasBuildOptions,
+  options: ExpoEasBuildOptions
 ) {
   return new Promise((resolve, reject) => {
     childProcess = fork(
@@ -41,7 +41,7 @@ function runCliBuild(
       {
         cwd: pathResolve(workspaceRoot, projectRoot),
         env: process.env,
-      },
+      }
     );
 
     // Ensure the child process is killed when the parent exits

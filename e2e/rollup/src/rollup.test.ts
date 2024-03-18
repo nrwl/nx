@@ -23,7 +23,7 @@ describe('Rollup Plugin', () => {
 
     // babel (default)
     runCLI(
-      `generate @nx/rollup:configuration ${myPkg} --target=node --tsConfig=libs/${myPkg}/tsconfig.lib.json --main=libs/${myPkg}/src/index.ts`,
+      `generate @nx/rollup:configuration ${myPkg} --target=node --tsConfig=libs/${myPkg}/tsconfig.lib.json --main=libs/${myPkg}/src/index.ts`
     );
     rmDist();
     runCLI(`build ${myPkg} --format=cjs,esm --generateExportsField`);
@@ -46,7 +46,7 @@ describe('Rollup Plugin', () => {
 
     // swc
     runCLI(
-      `generate @nx/rollup:configuration ${myPkg} --target=node --tsConfig=libs/${myPkg}/tsconfig.lib.json --main=libs/${myPkg}/src/index.ts --compiler=swc`,
+      `generate @nx/rollup:configuration ${myPkg} --target=node --tsConfig=libs/${myPkg}/tsconfig.lib.json --main=libs/${myPkg}/src/index.ts --compiler=swc`
     );
     rmDist();
     runCLI(`build ${myPkg} --format=cjs,esm --generateExportsField`);
@@ -60,7 +60,7 @@ describe('Rollup Plugin', () => {
 
     // tsc
     runCLI(
-      `generate @nx/rollup:configuration ${myPkg} --target=node --tsConfig=libs/${myPkg}/tsconfig.lib.json --main=libs/${myPkg}/src/index.ts --compiler=tsc`,
+      `generate @nx/rollup:configuration ${myPkg} --target=node --tsConfig=libs/${myPkg}/tsconfig.lib.json --main=libs/${myPkg}/src/index.ts --compiler=tsc`
     );
     rmDist();
     runCLI(`build ${myPkg} --format=cjs,esm --generateExportsField`);
@@ -72,7 +72,7 @@ describe('Rollup Plugin', () => {
     const myPkg = uniq('my-pkg');
     runCLI(`generate @nx/js:lib ${myPkg} --bundler=none`);
     runCLI(
-      `generate @nx/rollup:configuration ${myPkg} --target=node --tsConfig=libs/${myPkg}/tsconfig.lib.json --main=libs/${myPkg}/src/index.ts --compiler=tsc`,
+      `generate @nx/rollup:configuration ${myPkg} --target=node --tsConfig=libs/${myPkg}/tsconfig.lib.json --main=libs/${myPkg}/src/index.ts --compiler=tsc`
     );
     updateJson(join('libs', myPkg, 'project.json'), (config) => {
       config.targets.build.options.format = ['cjs', 'esm'];
@@ -133,7 +133,7 @@ describe('Rollup Plugin', () => {
           entryFileNames: "[name].cjs.js",
           chunkFileNames: "[name].cjs.js"
         }
-      }`,
+      }`
     );
     updateJson(join('libs', jsLib, 'project.json'), (config) => {
       config.targets.build.options.rollupConfig = `libs/${jsLib}/rollup.config.cjs`;
@@ -152,7 +152,7 @@ describe('Rollup Plugin', () => {
           entryFileNames: "[name].mjs.js",
           chunkFileNames: "[name].mjs.js"
         }
-      }`,
+      }`
     );
     updateJson(join('libs', jsLib, 'project.json'), (config) => {
       config.targets.build.options.rollupConfig = `libs/${jsLib}/rollup.config.mjs`;
@@ -168,7 +168,7 @@ describe('Rollup Plugin', () => {
       `libs/test/src/index.ts`,
       `export function helloWorld() {
       console.log("hello world");
-    }`,
+    }`
     );
     updateFile(`libs/test/package.json`, JSON.stringify({ name: 'test' }));
     updateFile(
@@ -199,7 +199,7 @@ const config = {
 };
 
 export default config;
-`,
+`
     );
     // ACT
     runCLI(`generate @nx/rollup:init --no-interactive`);

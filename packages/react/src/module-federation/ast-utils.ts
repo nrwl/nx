@@ -13,7 +13,7 @@ let tsModule: typeof import('typescript');
 
 export function addRemoteToConfig(
   source: ts.SourceFile,
-  app: string,
+  app: string
 ): StringChange[] {
   if (!tsModule) {
     tsModule = ensureTypescript();
@@ -21,11 +21,11 @@ export function addRemoteToConfig(
 
   const assignments = findNodes(
     source,
-    tsModule.SyntaxKind.PropertyAssignment,
+    tsModule.SyntaxKind.PropertyAssignment
   ) as ts.PropertyAssignment[];
 
   const remotesAssignment = assignments.find(
-    (s) => s.name.getText() === 'remotes',
+    (s) => s.name.getText() === 'remotes'
   );
 
   if (remotesAssignment) {
@@ -54,7 +54,7 @@ export function addRemoteToConfig(
 
   const binaryExpressions = findNodes(
     source,
-    tsModule.SyntaxKind.BinaryExpression,
+    tsModule.SyntaxKind.BinaryExpression
   ) as ts.BinaryExpression[];
   const exportExpression = binaryExpressions.find((b) => {
     if (b.left.kind === tsModule.SyntaxKind.PropertyAccessExpression) {
@@ -84,7 +84,7 @@ export function addRemoteToConfig(
 
 export function addRemoteDefinition(
   source: ts.SourceFile,
-  app: string,
+  app: string
 ): StringChange[] {
   return [
     {
@@ -100,7 +100,7 @@ export function addRemoteRoute(
   names: {
     fileName: string;
     className: string;
-  },
+  }
 ): StringChange[] {
   const routes = findElements(source, 'Route');
   const links = findElements(source, 'Link');
@@ -115,8 +115,8 @@ export function addRemoteRoute(
     changes.push(
       ...addImport(
         source,
-        `const ${names.className} = React.lazy(() => import('${names.fileName}/Module'));`,
-      ),
+        `const ${names.className} = React.lazy(() => import('${names.fileName}/Module'));`
+      )
     );
 
     changes.push({

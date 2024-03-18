@@ -52,5 +52,5 @@ export const ShowHideAll = memo(
         </button>
       </div>
     );
-  },
+  }
 );

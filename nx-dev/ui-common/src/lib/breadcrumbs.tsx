@@ -42,7 +42,7 @@ export function Breadcrumbs({ path }: { path: string }): JSX.Element {
                   className={classNames(
                     'text-sm font-medium capitalize hover:text-slate-600',
                     page.current ? 'text-slate-600' : 'text-slate-400',
-                    !!index ? 'ml-4' : '',
+                    !!index ? 'ml-4' : ''
                   )}
                   aria-current={page.current ? 'page' : undefined}
                 >
@@ -62,7 +62,7 @@ export function Breadcrumbs({ path }: { path: string }): JSX.Element {
                   href={path}
                   className={classNames(
                     'text-sm font-medium hover:text-slate-800',
-                    'ml-4 text-slate-500',
+                    'ml-4 text-slate-500'
                   )}
                   aria-current="page"
                 >

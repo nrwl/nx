@@ -20,7 +20,7 @@ export async function newWorkspace(cwd: string, args: { [k: string]: any }) {
           '@nx/workspace/generators.json',
           'new',
           null,
-          {},
+          {}
         );
       removeSpecialFlags(args);
       const combinedOpts = await combineOptionsForGenerator(
@@ -33,7 +33,7 @@ export async function newWorkspace(cwd: string, args: { [k: string]: any }) {
         isInteractive,
         null,
         null,
-        false,
+        false
       );
 
       const host = new FsTree(cwd, false, 'nx new');
@@ -44,6 +44,6 @@ export async function newWorkspace(cwd: string, args: { [k: string]: any }) {
       if (task) {
         await task();
       }
-    },
+    }
   );
 }

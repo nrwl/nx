@@ -28,7 +28,7 @@ describe('Storybook generators and executors for standalone workspaces - using R
     });
 
     runCLI(
-      `generate @nx/react:storybook-configuration ${appName} --generateStories --no-interactive`,
+      `generate @nx/react:storybook-configuration ${appName} --generateStories --no-interactive`
     );
 
     runCLI(`report`);
@@ -43,7 +43,7 @@ describe('Storybook generators and executors for standalone workspaces - using R
       checkFilesExist(
         '.storybook/main.ts',
         '.storybook/preview.ts',
-        'tsconfig.storybook.json',
+        'tsconfig.storybook.json'
       );
     });
 
@@ -72,7 +72,7 @@ describe('Storybook generators and executors for standalone workspaces - using R
 
     it('should build a React based storybook that references another lib and uses Vite', () => {
       runCLI(
-        `generate @nx/react:lib my-lib --bundler=vite --unitTestRunner=none --project-name-and-root-format=as-provided --no-interactive`,
+        `generate @nx/react:lib my-lib --bundler=vite --unitTestRunner=none --project-name-and-root-format=as-provided --no-interactive`
       );
 
       // create a component and a story in the first lib to reference the cmp from the 2nd lib
@@ -91,7 +91,7 @@ describe('Storybook generators and executors for standalone workspaces - using R
           }
 
           export default TestButton;
-        `,
+        `
       );
 
       // create a story in the first lib to reference the cmp from the 2nd lib
@@ -111,7 +111,7 @@ describe('Storybook generators and executors for standalone workspaces - using R
         export const Primary = {
           args: {},
         };
-              `,
+              `
       );
 
       // build React lib

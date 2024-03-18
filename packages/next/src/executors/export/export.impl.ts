@@ -33,12 +33,12 @@ const pmCmd = platform() === 'win32' ? `npx.cmd` : 'npx';
  **/
 export default async function exportExecutor(
   options: NextExportBuilderOptions,
-  context: ExecutorContext,
+  context: ExecutorContext
 ) {
   const nextJsVersion = require('next/package.json').version;
   if (satisfies(nextJsVersion, '>=14.0.0')) {
     throw new Error(
-      'The export command has been removed in Next.js 14. Please update your Next config to use the output property. Read more: https://nextjs.org/docs/pages/building-your-application/deploying/static-exports',
+      'The export command has been removed in Next.js 14. Please update your Next config to use the output property. Read more: https://nextjs.org/docs/pages/building-your-application/deploying/static-exports'
     );
   }
   // Returns { project: ProjectGraphNode; target: string; configuration?: string;}
@@ -56,7 +56,7 @@ export default async function exportExecutor(
 
   const buildOptions = readTargetOptions<NextBuildBuilderOptions>(
     buildTarget,
-    context,
+    context
   );
   const projectRoot = context.projectGraph.nodes[context.projectName].data.root;
 
@@ -72,7 +72,7 @@ export default async function exportExecutor(
       threads: options.threads,
       outdir: `${buildOptions.outputPath}/exported`,
     } as any,
-    nextExportCliSpan,
+    nextExportCliSpan
   );
 
   return { success: true };

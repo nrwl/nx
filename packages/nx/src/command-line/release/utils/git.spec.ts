@@ -16,7 +16,7 @@ my-lib-34.0.0-beta.1
 4.0.0-beta.0-my-lib-1
 3.0.0-beta.0-alpha
 1.0.0
-`),
+`)
   ),
 }));
 
@@ -97,7 +97,7 @@ describe('getLatestGitTagForPattern', () => {
 
       expect(result.tag).toEqual(expectedTag);
       expect(result.extractedVersion).toEqual(expectedVersion);
-    },
+    }
   );
 
   it('should return null if execCommand throws an error', async () => {
@@ -105,7 +105,7 @@ describe('getLatestGitTagForPattern', () => {
     (require('./exec-command').execCommand as jest.Mock).mockImplementationOnce(
       () => {
         throw new Error('error');
-      },
+      }
     );
     const result = await getLatestGitTagForPattern('#{version}', {
       projectName: 'my-lib-1',

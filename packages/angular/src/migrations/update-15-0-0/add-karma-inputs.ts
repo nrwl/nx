@@ -44,7 +44,7 @@ function getKarmaTargetNames(tree: Tree) {
     '@angular-devkit/build-angular:karma',
     (_, __, target) => {
       karmaTargetNames.add(target);
-    },
+    }
   );
   return karmaTargetNames;
 }

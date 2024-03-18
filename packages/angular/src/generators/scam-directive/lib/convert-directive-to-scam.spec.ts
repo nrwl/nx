@@ -40,7 +40,7 @@ describe('convertDirectiveToScam', () => {
     // ASSERT
     const directiveSource = tree.read(
       'apps/app1/src/app/example/example.directive.ts',
-      'utf-8',
+      'utf-8'
     );
     expect(directiveSource).toMatchInlineSnapshot(`
       "import { Directive, NgModule } from '@angular/core';
@@ -99,7 +99,7 @@ describe('convertDirectiveToScam', () => {
     // ASSERT
     const directiveModuleSource = tree.read(
       'apps/app1/src/app/example/example.module.ts',
-      'utf-8',
+      'utf-8'
     );
     expect(directiveModuleSource).toMatchInlineSnapshot(`
       "import { NgModule } from '@angular/core';
@@ -152,7 +152,7 @@ describe('convertDirectiveToScam', () => {
     // ASSERT
     const directiveSource = tree.read(
       'apps/app1/src/app/example.directive.ts',
-      'utf-8',
+      'utf-8'
     );
     expect(directiveSource).toMatchInlineSnapshot(`
       "import { Directive, NgModule } from '@angular/core';
@@ -211,7 +211,7 @@ describe('convertDirectiveToScam', () => {
     // ASSERT
     const directiveModuleSource = tree.read(
       'apps/app1/src/app/example.module.ts',
-      'utf-8',
+      'utf-8'
     );
     expect(directiveModuleSource).toMatchInlineSnapshot(`
       "import { NgModule } from '@angular/core';
@@ -265,7 +265,7 @@ describe('convertDirectiveToScam', () => {
     // ASSERT
     const directiveModuleSource = tree.read(
       'apps/app1/src/app/random/example/example.directive.ts',
-      'utf-8',
+      'utf-8'
     );
     expect(directiveModuleSource).toMatchInlineSnapshot(`
       "import { Directive, NgModule } from '@angular/core';
@@ -325,7 +325,7 @@ describe('convertDirectiveToScam', () => {
     // ASSERT
     const directiveModuleSource = tree.read(
       'apps/app1/src/app/random/example.directive.ts',
-      'utf-8',
+      'utf-8'
     );
     expect(directiveModuleSource).toMatchInlineSnapshot(`
       "import { Directive, NgModule } from '@angular/core';

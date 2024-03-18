@@ -153,7 +153,7 @@ describe('package-manager', () => {
   describe('modifyYarnRcYmlToFitNewDirectory', () => {
     it('should update paths properly', () => {
       expect(
-        modifyYarnRcYmlToFitNewDirectory('yarnPath: ./bin/yarn.js'),
+        modifyYarnRcYmlToFitNewDirectory('yarnPath: ./bin/yarn.js')
       ).toEqual('');
     });
 
@@ -166,8 +166,8 @@ describe('package-manager', () => {
             '  - ./scripts/yarn-plugin.js',
             '  - path: .yarn/plugins/imported-plugin.js',
             '    spec: imported-plugin',
-          ].join('\n'),
-        ),
+          ].join('\n')
+        )
       ).toEqual('enableProgressBars: false\n');
     });
   });
@@ -175,15 +175,15 @@ describe('package-manager', () => {
   describe('modifyYarnRcToFitNewDirectory', () => {
     it('should update paths properly', () => {
       expect(modifyYarnRcToFitNewDirectory('yarn-path ./bin/yarn.js')).toEqual(
-        '',
+        ''
       );
     });
 
     it('should not update other options', () => {
       expect(
         modifyYarnRcToFitNewDirectory(
-          ['yarn-path ./bin/yarn.js', 'enableProgressBars false'].join('\n'),
-        ),
+          ['yarn-path ./bin/yarn.js', 'enableProgressBars false'].join('\n')
+        )
       ).toEqual('enableProgressBars false');
     });
   });

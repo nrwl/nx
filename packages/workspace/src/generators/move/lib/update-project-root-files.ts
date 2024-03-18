@@ -15,7 +15,7 @@ const allowedExt = ['.ts', '.js', '.json'];
 export function updateProjectRootFiles(
   tree: Tree,
   schema: NormalizedSchema,
-  project: ProjectConfiguration,
+  project: ProjectConfiguration
 ): void {
   if (project.root === '.') {
     // Need to handle root project differently since replacing '.' with 'dir',
@@ -29,7 +29,7 @@ export function updateProjectRootFiles(
 export function updateFilesForRootProjects(
   tree: Tree,
   schema: NormalizedSchema,
-  project: ProjectConfiguration,
+  project: ProjectConfiguration
 ): void {
   // Skip updating "path" and "extends" for tsconfig files since they are mostly
   // relative to the project root. The only exception is tsconfig.json that
@@ -40,7 +40,7 @@ export function updateFilesForRootProjects(
     path
       .relative(
         path.join(workspaceRoot, schema.relativeToRootDestination),
-        workspaceRoot,
+        workspaceRoot
       )
       .split(path.sep)
       // Include trailing slash because the regex matches the trailing slash in "./"
@@ -57,14 +57,14 @@ export function updateFilesForRootProjects(
 
     const oldContent = tree.read(
       join(schema.relativeToRootDestination, file),
-      'utf-8',
+      'utf-8'
     );
     let newContent = oldContent.replace(regex, newRelativeRoot);
     if (file === 'tsconfig.json') {
       // Since we skipped updating "extends" earlier, need to point to the base config.
       newContent = newContent.replace(
         `./tsconfig.base.json`,
-        newRelativeRoot + `tsconfig.base.json`,
+        newRelativeRoot + `tsconfig.base.json`
       );
     }
     tree.write(join(schema.relativeToRootDestination, file), newContent);
@@ -74,13 +74,13 @@ export function updateFilesForRootProjects(
 export function updateFilesForNonRootProjects(
   tree: Tree,
   schema: NormalizedSchema,
-  project: ProjectConfiguration,
+  project: ProjectConfiguration
 ): void {
   const newRelativeRoot =
     path
       .relative(
         path.join(workspaceRoot, schema.relativeToRootDestination),
-        workspaceRoot,
+        workspaceRoot
       )
       .split(path.sep)
       .join('/') + '/';
@@ -97,7 +97,7 @@ export function updateFilesForNonRootProjects(
   const dots = /\./g;
   const regex = new RegExp(
     `(?<!\\.\\.\\/)${oldRelativeRoot.replace(dots, '\\.')}\/(?!\\.\\.\\/)`,
-    'g',
+    'g'
   );
   for (const file of tree.children(schema.relativeToRootDestination)) {
     const ext = extname(file);
@@ -110,7 +110,7 @@ export function updateFilesForNonRootProjects(
 
     const oldContent = tree.read(
       join(schema.relativeToRootDestination, file),
-      'utf-8',
+      'utf-8'
     );
     let newContent = oldContent.replace(regex, newRelativeRoot);
     if (file == 'tsconfig.json') {

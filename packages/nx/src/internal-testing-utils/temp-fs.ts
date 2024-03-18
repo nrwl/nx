@@ -23,10 +23,7 @@ export class TempFs {
 
   private previousWorkspaceRoot: string;
 
-  constructor(
-    private dirname: string,
-    overrideWorkspaceRoot = true,
-  ) {
+  constructor(private dirname: string, overrideWorkspaceRoot = true) {
     this.tempDir = realpathSync(mkdtempSync(join(tmpdir(), this.dirname)));
     this.previousWorkspaceRoot = workspaceRoot;
 
@@ -39,7 +36,7 @@ export class TempFs {
     await Promise.all(
       Object.keys(fileObject).map(async (path) => {
         await this.createFile(path, fileObject[path]);
-      }),
+      })
     );
   }
 
@@ -79,7 +76,7 @@ export class TempFs {
   renameFile(oldPath: string, newPath: string) {
     renameSync(
       joinPathFragments(this.tempDir, oldPath),
-      joinPathFragments(this.tempDir, newPath),
+      joinPathFragments(this.tempDir, newPath)
     );
   }
 

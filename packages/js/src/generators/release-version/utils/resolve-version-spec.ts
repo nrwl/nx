@@ -5,7 +5,7 @@ export function resolveVersionSpec(
   name: string,
   version: string,
   spec: string,
-  location?: string,
+  location?: string
 ): string {
   // yarn classic uses link instead of file, normalize to match what npm expects
   spec = spec.replace(/^link:/, 'file:');

@@ -12,7 +12,7 @@ import type { NgRxGeneratorOptions } from './schema';
 
 export async function ngrxGenerator(
   tree: Tree,
-  schema: NgRxGeneratorOptions,
+  schema: NgRxGeneratorOptions
 ): Promise<GeneratorCallback> {
   validateOptions(tree, schema);
   const options = normalizeOptions(tree, schema);

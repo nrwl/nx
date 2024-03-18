@@ -37,7 +37,7 @@ export function addStorybookTarget(
   tree: Tree,
   projectName: string,
   uiFramework: UiFramework,
-  interactionTests: boolean,
+  interactionTests: boolean
 ) {
   const projectConfig = readProjectConfiguration(tree, projectName);
   projectConfig.targets['storybook'] = {
@@ -82,11 +82,11 @@ export function addStorybookTarget(
 export function addAngularStorybookTarget(
   tree: Tree,
   projectName: string,
-  interactionTests: boolean,
+  interactionTests: boolean
 ) {
   const projectConfig = readProjectConfiguration(tree, projectName);
   const { ngBuildTarget } = findStorybookAndBuildTargetsAndCompiler(
-    projectConfig.targets,
+    projectConfig.targets
   );
   projectConfig.targets['storybook'] = {
     executor: '@storybook/angular:start-storybook',
@@ -159,13 +159,13 @@ export function createStorybookTsconfigFile(
   projectRoot: string,
   uiFramework: UiFramework,
   isRootProject: boolean,
-  mainDir: 'components' | 'src',
+  mainDir: 'components' | 'src'
 ) {
   // First let's check if old configuration file exists
   // If it exists, let's rename it and move it to the new location
   const oldStorybookTsConfigPath = joinPathFragments(
     projectRoot,
-    '.storybook/tsconfig.json',
+    '.storybook/tsconfig.json'
   );
 
   if (tree.exists(oldStorybookTsConfigPath)) {
@@ -174,7 +174,7 @@ export function createStorybookTsconfigFile(
       `It will be renamed and moved to tsconfig.storybook.json.
       Please make sure all settings look correct after this change.
       Also, please make sure to use "nx migrate" to move from one version of Nx to another.
-      `,
+      `
     );
     renameAndMoveOldTsConfig(projectRoot, oldStorybookTsConfigPath, tree);
     return;
@@ -182,7 +182,7 @@ export function createStorybookTsconfigFile(
 
   const storybookTsConfigPath = joinPathFragments(
     projectRoot,
-    'tsconfig.storybook.json',
+    'tsconfig.storybook.json'
   );
 
   if (tree.exists(storybookTsConfigPath)) {
@@ -201,7 +201,7 @@ export function createStorybookTsconfigFile(
       `${mainDir}/**/*.spec.tsx`,
       `${mainDir}/**/*.test.tsx`,
       `${mainDir}/**/*.spec.jsx`,
-      `${mainDir}/**/*.test.js`,
+      `${mainDir}/**/*.test.js`
     );
   }
 
@@ -273,7 +273,7 @@ export function editTsconfigBaseJson(tree: Tree) {
 
 export function configureTsProjectConfig(
   tree: Tree,
-  schema: StorybookConfigureSchema,
+  schema: StorybookConfigureSchema
 ) {
   const { project: projectName } = schema;
 
@@ -313,7 +313,7 @@ export function configureTsProjectConfig(
 
 export function configureTsSolutionConfig(
   tree: Tree,
-  schema: StorybookConfigureSchema,
+  schema: StorybookConfigureSchema
 ) {
   const { project: projectName } = schema;
 
@@ -373,7 +373,7 @@ export function updateLintConfig(tree: Tree, schema: StorybookConfigureSchema) {
     root,
     schema.uiFramework === '@storybook/angular'
       ? '.storybook/tsconfig.json'
-      : 'tsconfig.storybook.json',
+      : 'tsconfig.storybook.json'
   );
 
   if (useFlatConfig(tree)) {
@@ -382,7 +382,7 @@ export function updateLintConfig(tree: Tree, schema: StorybookConfigureSchema) {
     let match;
     while ((match = projectRegex.exec(config)) !== null) {
       const matchSet = new Set(
-        match[1].split(',').map((p) => p.trim().replace(/['"]/g, '')),
+        match[1].split(',').map((p) => p.trim().replace(/['"]/g, ''))
       );
       matchSet.add(parserConfigPath);
       const insert = `project: [${Array.from(matchSet)
@@ -431,7 +431,7 @@ export function updateLintConfig(tree: Tree, schema: StorybookConfigureSchema) {
 }
 
 export function normalizeSchema(
-  schema: StorybookConfigureSchema,
+  schema: StorybookConfigureSchema
 ): StorybookConfigureSchema {
   const defaults = {
     configureCypress: true,
@@ -452,16 +452,16 @@ export function addStorybookToNamedInputs(tree: Tree) {
     if (hasProductionFileset) {
       if (
         !nxJson.namedInputs.production.includes(
-          '!{projectRoot}/**/*.stories.@(js|jsx|ts|tsx|mdx)',
+          '!{projectRoot}/**/*.stories.@(js|jsx|ts|tsx|mdx)'
         )
       ) {
         nxJson.namedInputs.production.push(
-          '!{projectRoot}/**/*.stories.@(js|jsx|ts|tsx|mdx)',
+          '!{projectRoot}/**/*.stories.@(js|jsx|ts|tsx|mdx)'
         );
       }
       if (
         !nxJson.namedInputs.production.includes(
-          '!{projectRoot}/.storybook/**/*',
+          '!{projectRoot}/.storybook/**/*'
         )
       ) {
         nxJson.namedInputs.production.push('!{projectRoot}/.storybook/**/*');
@@ -469,11 +469,11 @@ export function addStorybookToNamedInputs(tree: Tree) {
 
       if (
         !nxJson.namedInputs.production.includes(
-          '!{projectRoot}/tsconfig.storybook.json',
+          '!{projectRoot}/tsconfig.storybook.json'
         )
       ) {
         nxJson.namedInputs.production.push(
-          '!{projectRoot}/tsconfig.storybook.json',
+          '!{projectRoot}/tsconfig.storybook.json'
         );
       }
     }
@@ -496,18 +496,18 @@ export function addStorybookToTargetDefaults(tree: Tree) {
 
   if (
     !nxJson.targetDefaults['build-storybook'].inputs.includes(
-      '{projectRoot}/.storybook/**/*',
+      '{projectRoot}/.storybook/**/*'
     )
   ) {
     nxJson.targetDefaults['build-storybook'].inputs.push(
-      '{projectRoot}/.storybook/**/*',
+      '{projectRoot}/.storybook/**/*'
     );
   }
 
   // Delete the !{projectRoot}/.storybook/**/* glob from build-storybook
   // because we want to rebuild Storybook if the .storybook folder changes
   const index = nxJson.targetDefaults['build-storybook'].inputs.indexOf(
-    '!{projectRoot}/.storybook/**/*',
+    '!{projectRoot}/.storybook/**/*'
   );
 
   if (index !== -1) {
@@ -516,11 +516,11 @@ export function addStorybookToTargetDefaults(tree: Tree) {
 
   if (
     !nxJson.targetDefaults['build-storybook'].inputs.includes(
-      '{projectRoot}/tsconfig.storybook.json',
+      '{projectRoot}/tsconfig.storybook.json'
     )
   ) {
     nxJson.targetDefaults['build-storybook'].inputs.push(
-      '{projectRoot}/tsconfig.storybook.json',
+      '{projectRoot}/tsconfig.storybook.json'
     );
   }
 
@@ -544,7 +544,7 @@ export function createProjectStorybookDir(
   viteConfigFilePath?: string,
   hasPlugin?: boolean,
   viteConfigFileName?: string,
-  useReactNative?: boolean,
+  useReactNative?: boolean
 ) {
   let projectDirectory =
     projectType === 'application'
@@ -564,14 +564,14 @@ export function createProjectStorybookDir(
 
   if (storybookConfigExists) {
     logger.warn(
-      `Storybook configuration files already exist for ${projectName}!`,
+      `Storybook configuration files already exist for ${projectName}!`
     );
     return;
   }
 
   const templatePath = join(
     __dirname,
-    `../project-files${tsConfiguration ? '-ts' : ''}`,
+    `../project-files${tsConfiguration ? '-ts' : ''}`
   );
 
   generateFiles(tree, templatePath, root, {
@@ -610,7 +610,7 @@ export function createProjectStorybookDir(
 export function getTsConfigPath(
   tree: Tree,
   projectName: string,
-  path?: string,
+  path?: string
 ): string {
   const { root, projectType } = readProjectConfiguration(tree, projectName);
   return join(
@@ -618,8 +618,8 @@ export function getTsConfigPath(
     path?.length > 0
       ? path
       : projectType === 'application'
-        ? 'tsconfig.app.json'
-        : 'tsconfig.lib.json',
+      ? 'tsconfig.app.json'
+      : 'tsconfig.lib.json'
   );
 }
 
@@ -637,7 +637,7 @@ export function addBuildStorybookToCacheableOperations(tree: Tree) {
               ...(json.tasksRunnerOptions?.default?.options
                 ?.cacheableOperations ?? []),
               'build-storybook',
-            ]),
+            ])
           ),
         },
       },
@@ -656,20 +656,20 @@ export function workspaceHasRootProject(tree: Tree) {
 export function rootFileIsTs(
   tree: Tree,
   rootFileName: string,
-  tsConfiguration: boolean,
+  tsConfiguration: boolean
 ): boolean {
   if (tree.exists(`.storybook/${rootFileName}.ts`) && !tsConfiguration) {
     logger.info(
       `The root Storybook configuration is in TypeScript,
       so Nx will generate TypeScript Storybook configuration files
-      in this project's .storybook folder as well.`,
+      in this project's .storybook folder as well.`
     );
     return true;
   } else if (tree.exists(`.storybook/${rootFileName}.js`) && tsConfiguration) {
     logger.info(
       `The root Storybook configuration is in JavaScript,
         so Nx will generate JavaScript Storybook configuration files
-        in this project's .storybook folder as well.`,
+        in this project's .storybook folder as well.`
     );
     return false;
   } else {
@@ -679,7 +679,7 @@ export function rootFileIsTs(
 
 export async function getE2EProjectName(
   tree: Tree,
-  mainProject: string,
+  mainProject: string
 ): Promise<string | undefined> {
   let e2eProject: string;
   const graph = await createProjectGraphAsync();
@@ -693,7 +693,7 @@ export async function getE2EProjectName(
       if (options['devServerTarget']) {
         const { project, target } = parseTargetString(
           options['devServerTarget'],
-          graph,
+          graph
         );
         if (
           (project === mainProject && target === 'serve') ||
@@ -702,14 +702,14 @@ export async function getE2EProjectName(
           e2eProject = projectName;
         }
       }
-    },
+    }
   );
   return e2eProject;
 }
 
 export function findViteConfig(
   tree: Tree,
-  projectRoot: string,
+  projectRoot: string
 ): {
   fullConfigPath: string | undefined;
   viteConfigFileName: string | undefined;
@@ -729,7 +729,7 @@ export function findViteConfig(
 
 export function findNextConfig(
   tree: Tree,
-  projectRoot: string,
+  projectRoot: string
 ): string | undefined {
   const allowsExt = ['js', 'mjs', 'cjs'];
 
@@ -743,7 +743,7 @@ export function findNextConfig(
 
 export function findMetroConfig(
   tree: Tree,
-  projectRoot: string,
+  projectRoot: string
 ): string | undefined {
   const nextConfigPath = joinPathFragments(projectRoot, `metro.config.js`);
   if (tree.exists(nextConfigPath)) {
@@ -754,7 +754,7 @@ export function findMetroConfig(
 export function renameAndMoveOldTsConfig(
   projectRoot: string,
   pathToStorybookConfigFile: string,
-  tree: Tree,
+  tree: Tree
 ) {
   if (pathToStorybookConfigFile && tree.exists(pathToStorybookConfigFile)) {
     updateJson(tree, pathToStorybookConfigFile, (json) => {
@@ -794,7 +794,7 @@ export function renameAndMoveOldTsConfig(
 
     tree.rename(
       pathToStorybookConfigFile,
-      joinPathFragments(projectRoot, `tsconfig.storybook.json`),
+      joinPathFragments(projectRoot, `tsconfig.storybook.json`)
     );
   }
 
@@ -818,7 +818,7 @@ export function renameAndMoveOldTsConfig(
     const config = tree.read(fileName, 'utf-8');
     tree.write(
       fileName,
-      config.replace(/\.storybook\/tsconfig\.json/g, 'tsconfig.storybook.json'),
+      config.replace(/\.storybook\/tsconfig\.json/g, 'tsconfig.storybook.json')
     );
   }
 }

@@ -16,7 +16,7 @@ expect.addSnapshotSerializer({
         .replaceAll(/my-pkg-\d+/g, '{project-name}')
         .replaceAll(
           /integrity:\s*.*/g,
-          'integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX',
+          'integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
         )
         .replaceAll(/\b[0-9a-f]{40}\b/g, '{SHASUM}')
         .replaceAll(/\d*B  index\.js/g, 'XXB  index.js')
@@ -96,7 +96,7 @@ describe('nx release create github release', () => {
 
     // We need a valid git origin to exist for the commit references to work (and later the test for createRelease)
     await runCommandAsync(
-      `git remote add origin https://github.com/nrwl/fake-repo.git`,
+      `git remote add origin https://github.com/nrwl/fake-repo.git`
     );
   });
   afterAll(() => cleanupProject());
@@ -115,17 +115,17 @@ describe('nx release create github release', () => {
     const result = runCLI('release patch -d --first-release --verbose');
 
     expect(
-      result.match(new RegExp(`NX   Pushing to git remote`, 'g')).length,
+      result.match(new RegExp(`NX   Pushing to git remote`, 'g')).length
     ).toEqual(1);
     expect(
-      result.match(new RegExp(`NX   Creating GitHub Release`, 'g')).length,
+      result.match(new RegExp(`NX   Creating GitHub Release`, 'g')).length
     ).toEqual(1);
 
     // should have two occurrences of each - one for the changelog file, one for the github release
     expect(result.match(new RegExp(`### 🚀 Features`, 'g')).length).toEqual(2);
     expect(result.match(new RegExp(`### 🩹 Fixes`, 'g')).length).toEqual(2);
     expect(
-      result.match(new RegExp(`#### ⚠️  Breaking Changes`, 'g')).length,
+      result.match(new RegExp(`#### ⚠️  Breaking Changes`, 'g')).length
     ).toEqual(2);
   });
 
@@ -149,17 +149,17 @@ describe('nx release create github release', () => {
     const result = runCLI('release -d --first-release --verbose');
 
     expect(
-      result.match(new RegExp(`NX   Pushing to git remote`, 'g')).length,
+      result.match(new RegExp(`NX   Pushing to git remote`, 'g')).length
     ).toEqual(1);
     expect(
-      result.match(new RegExp(`NX   Creating GitHub Release`, 'g')).length,
+      result.match(new RegExp(`NX   Creating GitHub Release`, 'g')).length
     ).toEqual(3);
 
     // should have one occurrence of each because files are disabled
     expect(result.match(new RegExp(`### 🚀 Features`, 'g')).length).toEqual(2);
     expect(result.match(new RegExp(`### 🩹 Fixes`, 'g')).length).toEqual(1);
     expect(
-      result.match(new RegExp(`#### ⚠️  Breaking Changes`, 'g')).length,
+      result.match(new RegExp(`#### ⚠️  Breaking Changes`, 'g')).length
     ).toEqual(1);
   });
 });

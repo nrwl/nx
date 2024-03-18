@@ -36,7 +36,7 @@ export async function generatorGenerator(tree: Tree) {
         json['exports']['./plugin'] = './plugin.js';
       }
       return json;
-    },
+    }
   );
 
   await formatFiles(tree);

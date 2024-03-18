@@ -50,7 +50,7 @@ describe('assertWorkspaceValidity', () => {
       fail('should not reach');
     } catch (e) {
       expect(e.message).toContain(
-        'The following implicitDependencies point to non-existent project(s)',
+        'The following implicitDependencies point to non-existent project(s)'
       );
       expect(e.message).toContain('invalid*');
       expect(e.message).toContain('invalid*');

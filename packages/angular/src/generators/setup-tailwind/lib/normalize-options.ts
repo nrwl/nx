@@ -1,7 +1,7 @@
 import type { GeneratorOptions, NormalizedGeneratorOptions } from '../schema';
 
 export function normalizeOptions(
-  options: GeneratorOptions,
+  options: GeneratorOptions
 ): NormalizedGeneratorOptions {
   return {
     ...options,

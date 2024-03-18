@@ -38,7 +38,7 @@ module.exports = composePlugins(withNx(), (config) => {
   return config;
 });
 `);
-    },
+    }
   );
 
   it('should not create webpack.config.js when webpackConfig is already set', async () => {
@@ -46,7 +46,7 @@ module.exports = composePlugins(withNx(), (config) => {
       `apps/myapp/webpack.config.js`,
       `
       module.exports = { /* CUSTOM */ };
-    `,
+    `
     );
     addProjectConfiguration(tree, 'myapp', {
       root: 'apps/myapp',
@@ -63,7 +63,7 @@ module.exports = composePlugins(withNx(), (config) => {
     await webpackConfigSetup(tree);
 
     expect(tree.read('apps/myapp/webpack.config.js', 'utf-8')).toContain(
-      '/* CUSTOM */',
+      '/* CUSTOM */'
     );
   });
 

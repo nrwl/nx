@@ -48,8 +48,8 @@ function updateDependencies(tree: Tree, options: Schema) {
         cypress: cypressVersion,
       },
       undefined,
-      options.keepExistingVersions,
-    ),
+      options.keepExistingVersions
+    )
   );
 
   return runTasksInSerial(...tasks);
@@ -90,7 +90,7 @@ function updateProductionFileset(tree: Tree) {
         '!{projectRoot}/cypress/**/*',
         '!{projectRoot}/**/*.cy.[jt]s?(x)',
         '!{projectRoot}/cypress.config.[jt]s',
-      ]),
+      ])
     );
   }
   updateNxJson(tree, nxJson);
@@ -102,7 +102,7 @@ export async function cypressInitGenerator(tree: Tree, options: Schema) {
 
 export async function cypressInitGeneratorInternal(
   tree: Tree,
-  options: Schema,
+  options: Schema
 ) {
   updateProductionFileset(tree);
 

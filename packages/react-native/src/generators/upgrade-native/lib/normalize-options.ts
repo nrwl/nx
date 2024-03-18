@@ -14,7 +14,7 @@ export interface NormalizedSchema {
 
 export function normalizeOptions(
   options: UpgradeNativeConfigureSchema,
-  appProjectRoot: string, // app root
+  appProjectRoot: string // app root
 ): NormalizedSchema {
   const { fileName, className } = names(options.name);
 

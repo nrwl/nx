@@ -66,7 +66,7 @@ export function lintProjectGenerator(tree: Tree, options: LintProjectOptions) {
 
 export async function lintProjectGeneratorInternal(
   tree: Tree,
-  options: LintProjectOptions,
+  options: LintProjectOptions
 ) {
   const nxJson = readNxJson(tree);
   const addPluginDefault =
@@ -106,7 +106,7 @@ export async function lintProjectGeneratorInternal(
       lintFilePatterns &&
       lintFilePatterns.length &&
       lintFilePatterns.some(
-        (p) => !['./src', '{projectRoot}', projectConfig.root].includes(p),
+        (p) => !['./src', '{projectRoot}', projectConfig.root].includes(p)
       )
     ) {
       projectConfig.targets['lint'] = {
@@ -146,7 +146,7 @@ export async function lintProjectGeneratorInternal(
         filteredProjects,
         tree,
         options.unitTestRunner,
-        options.keepExistingVersions,
+        options.keepExistingVersions
       );
     }
   }
@@ -159,7 +159,7 @@ export async function lintProjectGeneratorInternal(
       tree,
       projectConfig,
       options.setParserOptionsProject,
-      options.rootProject,
+      options.rootProject
     );
   }
 
@@ -189,7 +189,7 @@ function createEsLintConfiguration(
   tree: Tree,
   projectConfig: ProjectConfiguration,
   setParserOptionsProject: boolean,
-  rootProject: boolean,
+  rootProject: boolean
 ) {
   // we are only extending root for non-standalone projects or their complementary e2e apps
   const extendedRootConfig = rootProject ? undefined : findEslintFile(tree);
@@ -282,7 +282,7 @@ function isJsAnalyzeSourceFilesEnabled(tree: Tree): boolean {
 }
 
 function isBuildableLibraryProject(
-  projectConfig: ProjectConfiguration,
+  projectConfig: ProjectConfiguration
 ): boolean {
   return (
     projectConfig.projectType === 'library' &&
@@ -297,7 +297,7 @@ function isBuildableLibraryProject(
  */
 function isMigrationToMonorepoNeeded(
   projects: Record<string, ProjectConfiguration>,
-  tree: Tree,
+  tree: Tree
 ): boolean {
   // the base config is already created, migration has been done
   if (

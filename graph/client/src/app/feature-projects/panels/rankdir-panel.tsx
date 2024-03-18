@@ -11,7 +11,7 @@ import {
 
 export function RankdirPanel(): JSX.Element {
   const [rankDir, setRankDir] = useState(
-    (localStorage.getItem(localStorageRankDirKey) as RankDir) || 'TB',
+    (localStorage.getItem(localStorageRankDirKey) as RankDir) || 'TB'
   );
 
   useEffect(() => {

@@ -10,7 +10,7 @@ import { NormalizedSchema } from '../schema';
 
 export async function addVite(
   tree: Tree,
-  options: NormalizedSchema,
+  options: NormalizedSchema
 ): Promise<GeneratorCallback> {
   // Set up build target (and test target if using vitest)
   const viteTask = await viteConfigurationGenerator(tree, {
@@ -34,7 +34,7 @@ export async function addVite(
       imports: [`import vue from '@vitejs/plugin-vue'`],
       plugins: ['vue()'],
     },
-    false,
+    false
   );
 
   // Update build to skip type checking since tsc won't work on .vue files.

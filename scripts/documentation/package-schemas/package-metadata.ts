@@ -21,7 +21,7 @@ function createSchemaMetadata(
     folderName: string;
     root: string;
   },
-  type: 'executor' | 'generator',
+  type: 'executor' | 'generator'
 ): SchemaMetadata {
   const path = join(paths.root, data.schema);
 
@@ -57,7 +57,7 @@ function getSchemaList(
     root: string;
   },
   collectionFileName: string,
-  collectionEntries: string[],
+  collectionEntries: string[]
 ): SchemaMetadata[] {
   const targetPath = join(paths.absoluteRoot, paths.root, collectionFileName);
   // We assume the type of the collection of schema is the name of the collection file (executors or generators)
@@ -76,8 +76,8 @@ function getSchemaList(
         ...Object.entries<JsonSchema1>(collectionFile[entry])
           .filter(([name]) => !metadata.find((x) => x.name === name))
           .map(([name, schema]: [string, JsonSchema1]) =>
-            createSchemaMetadata(name, schema, paths, type),
-          ),
+            createSchemaMetadata(name, schema, paths, type)
+          )
       );
     }
 
@@ -86,7 +86,7 @@ function getSchemaList(
     console.log(
       `SchemaMetadata "${paths.root
         .split('/')
-        .pop()}" resolution skipped: no file found at "${targetPath}".`,
+        .pop()}" resolution skipped: no file found at "${targetPath}".`
     );
     return [];
   }
@@ -105,7 +105,7 @@ function getSchemaList(
  */
 export function findPackageMetadataList(
   absoluteRoot: string,
-  packagesDirectory: string = 'packages',
+  packagesDirectory: string = 'packages'
 ): PackageData[] {
   const packagesDir = resolve(join(absoluteRoot, packagesDirectory));
 
@@ -124,12 +124,12 @@ export function findPackageMetadataList(
       const relativeFolderPath = folderPath.replace(absoluteRoot, '');
       const packageJson = readJsonSync(
         join(folderPath, 'package.json'),
-        'utf8',
+        'utf8'
       );
       const isPrivate =
         packageJson.private && process.env.NODE_ENV !== 'development'; // skip this check in dev mode
       const hasDocumentation = additionalApiReferences.find(
-        (pkg) => pkg.id === folderName,
+        (pkg) => pkg.id === folderName
       );
 
       return isPrivate
@@ -148,7 +148,7 @@ export function findPackageMetadataList(
                   file: item.file,
                   content: readFileSync(
                     join('docs', item.file + '.md'),
-                    'utf8',
+                    'utf8'
                   ),
                 }))
               : [],
@@ -159,7 +159,7 @@ export function findPackageMetadataList(
                 root: relativeFolderPath,
               },
               'generators.json',
-              ['generators'],
+              ['generators']
             ),
             executors: getSchemaList(
               {
@@ -168,7 +168,7 @@ export function findPackageMetadataList(
                 root: relativeFolderPath,
               },
               'executors.json',
-              ['executors', 'builders'],
+              ['executors', 'builders']
             ),
           };
     })

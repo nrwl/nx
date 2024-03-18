@@ -19,7 +19,7 @@ export async function scrapeIssues(prevDate?: Date): Promise<ReportData> {
     for (const issue of issueSlice) {
       if (!(typeof issue === 'string')) {
         const bug = issue.labels.some(
-          (x) => (typeof x === 'string' ? x : x.name) === 'type: bug',
+          (x) => (typeof x === 'string' ? x : x.name) === 'type: bug'
         );
         const closed =
           issue.state === 'closed' &&
@@ -40,7 +40,7 @@ export async function scrapeIssues(prevDate?: Date): Promise<ReportData> {
         for (const scope of scopeLabels) {
           if (
             issue.labels.some(
-              (x) => x === scope || (typeof x === 'object' && x.name === scope),
+              (x) => x === scope || (typeof x === 'object' && x.name === scope)
             )
           ) {
             scopes[scope] ??= { bugCount: 0, count: 0, closed: 0 };
@@ -85,7 +85,7 @@ const getIssueIterator = () => {
 let labelCache: string[];
 export async function getScopeLabels(): Promise<string[]> {
   labelCache ??= await getAllLabels().then((labels) =>
-    labels.filter((l) => l.startsWith('scope:')),
+    labels.filter((l) => l.startsWith('scope:'))
   );
   return labelCache;
 }
@@ -98,7 +98,7 @@ async function getAllLabels() {
     {
       owner: 'nrwl',
       repo: 'nx',
-    },
+    }
   )) {
     const names = slice.data.map((l) => l.name);
     labels.push(...names);

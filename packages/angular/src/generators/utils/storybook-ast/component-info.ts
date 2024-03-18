@@ -28,7 +28,7 @@ export function getComponentsInfo(
   tree: Tree,
   entryPoint: EntryPoint,
   moduleFilePaths: string[],
-  projectName: string,
+  projectName: string
 ): ComponentInfo[] {
   return moduleFilePaths
     .flatMap((moduleFilePath) => {
@@ -36,7 +36,7 @@ export function getComponentsInfo(
       const declaredComponents = getModuleDeclaredComponents(
         file,
         moduleFilePath,
-        projectName,
+        projectName
       );
       if (declaredComponents.length === 0) {
         return undefined;
@@ -46,7 +46,7 @@ export function getComponentsInfo(
         tsModule = ensureTypescript();
       }
       const imports = file.statements.filter(
-        (statement) => statement.kind === tsModule.SyntaxKind.ImportDeclaration,
+        (statement) => statement.kind === tsModule.SyntaxKind.ImportDeclaration
       );
 
       const componentsInfo = declaredComponents.map((componentName) =>
@@ -56,8 +56,8 @@ export function getComponentsInfo(
           file,
           imports,
           moduleFilePath,
-          componentName,
-        ),
+          componentName
+        )
       );
 
       return componentsInfo;
@@ -67,7 +67,7 @@ export function getComponentsInfo(
 
 export function getStandaloneComponentsInfo(
   tree: Tree,
-  entryPoint: EntryPoint,
+  entryPoint: EntryPoint
 ): ComponentInfo[] {
   const componentsInfo: ComponentInfo[] = [];
 
@@ -76,7 +76,7 @@ export function getStandaloneComponentsInfo(
 
     if (
       entryPoint.excludeDirs?.some((excludeDir) =>
-        normalizedFilePath.startsWith(excludeDir),
+        normalizedFilePath.startsWith(excludeDir)
       )
     ) {
       return;
@@ -91,7 +91,7 @@ export function getStandaloneComponentsInfo(
 
     const standaloneComponents = getStandaloneComponents(
       tree,
-      normalizedFilePath,
+      normalizedFilePath
     );
     if (!standaloneComponents.length) {
       return;
@@ -121,7 +121,7 @@ function getStandaloneComponents(tree: Tree, filePath: string): string[] {
   const components = tsquery<Identifier>(
     ast,
     'ClassDeclaration:has(Decorator > CallExpression:has(Identifier[name=Component]) ObjectLiteralExpression PropertyAssignment Identifier[name=standalone] ~ TrueKeyword) > Identifier',
-    { visitAllChildren: true },
+    { visitAllChildren: true }
   );
 
   return components.map((component) => component.getText());
@@ -129,7 +129,7 @@ function getStandaloneComponents(tree: Tree, filePath: string): string[] {
 
 function getComponentImportPath(
   componentName: string,
-  imports: Statement[],
+  imports: Statement[]
 ): string {
   if (!tsModule) {
     tsModule = ensureTypescript();
@@ -168,7 +168,7 @@ function getComponentInfo(
   sourceFile: SourceFile,
   imports: Statement[],
   moduleFilePath: string,
-  componentName: string,
+  componentName: string
 ): ComponentInfo {
   try {
     if (!tsquery) {
@@ -182,7 +182,7 @@ function getComponentInfo(
     const node = tsquery(
       sourceFile,
       `ClassDeclaration:has(Decorator > CallExpression > Identifier[name=Component]):has(Identifier[name=${componentName}])`,
-      { visitAllChildren: true },
+      { visitAllChildren: true }
     )[0];
 
     if (node) {
@@ -198,11 +198,11 @@ function getComponentInfo(
     // try to get the component from the imports
     const componentFilePathRelativeToModule = getComponentImportPath(
       componentName,
-      imports,
+      imports
     );
     const componentImportPath = getFullComponentFilePath(
       moduleFolderPath,
-      componentFilePathRelativeToModule,
+      componentFilePathRelativeToModule
     );
 
     if (tree.exists(componentImportPath) && !tree.isFile(componentImportPath)) {
@@ -211,7 +211,7 @@ function getComponentInfo(
         entryPoint,
         componentImportPath,
         componentName,
-        moduleFolderPath,
+        moduleFolderPath
       );
     }
 
@@ -227,7 +227,7 @@ function getComponentInfo(
     };
   } catch (ex) {
     logger.warn(
-      `Could not generate a story for ${componentName}. Error: ${ex}`,
+      `Could not generate a story for ${componentName}. Error: ${ex}`
     );
     return undefined;
   }
@@ -238,7 +238,7 @@ function getComponentInfoFromDir(
   entryPoint: EntryPoint,
   dir: string,
   componentName: string,
-  moduleFolderPath: string,
+  moduleFolderPath: string
 ): ComponentInfo {
   let path = null;
   let componentFileName = null;
@@ -248,7 +248,7 @@ function getComponentInfoFromDir(
       const content = tree.read(candidateFile, 'utf-8');
       const classAndComponentRegex = new RegExp(
         `@Component[\\s\\S\n]*?\\bclass ${componentName}\\b`,
-        'g',
+        'g'
       );
       if (content.match(classAndComponentRegex)) {
         path = candidateFile
@@ -256,7 +256,7 @@ function getComponentInfoFromDir(
           .replace(moduleFolderPath, '.');
         componentFileName = candidateFile.slice(
           candidateFile.lastIndexOf('/') + 1,
-          candidateFile.lastIndexOf('.'),
+          candidateFile.lastIndexOf('.')
         );
         break;
       }
@@ -265,7 +265,7 @@ function getComponentInfoFromDir(
 
   if (path === null) {
     throw new Error(
-      `Path to component ${componentName} couldn't be found. Please open an issue on https://github.com/nrwl/nx/issues.`,
+      `Path to component ${componentName} couldn't be found. Please open an issue on https://github.com/nrwl/nx/issues.`
     );
   }
 
@@ -280,7 +280,7 @@ function getComponentInfoFromDir(
 
 function getFullComponentFilePath(
   moduleFolderPath: string,
-  componentFilePath: string,
+  componentFilePath: string
 ): string {
   if (moduleFolderPath.startsWith('/')) {
     moduleFolderPath = moduleFolderPath.slice(1, moduleFolderPath.length);

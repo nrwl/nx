@@ -21,7 +21,7 @@ import {
 
 export function updateProjectConfigForApplicationBuilder(
   tree: Tree,
-  options: Schema,
+  options: Schema
 ): void {
   const project = readProjectConfiguration(tree, options.project);
   const buildTarget = project.targets.build;
@@ -36,9 +36,9 @@ export function updateProjectConfigForApplicationBuilder(
     logger.warn(
       `The output location of the browser build has been updated from "${base}" to "${joinPathFragments(
         base,
-        DEFAULT_BROWSER_DIR,
+        DEFAULT_BROWSER_DIR
       )}".
-          You might need to adjust your deployment pipeline.`,
+          You might need to adjust your deployment pipeline.`
     );
 
     if (
@@ -55,7 +55,7 @@ export function updateProjectConfigForApplicationBuilder(
   buildTarget.options.outputPath = outputPath;
   buildTarget.options.server = joinPathFragments(
     project.sourceRoot ?? joinPathFragments(project.root, 'src'),
-    options.main,
+    options.main
   );
   buildTarget.options.prerender = true;
   buildTarget.options.ssr = {
@@ -67,7 +67,7 @@ export function updateProjectConfigForApplicationBuilder(
 
 export function updateProjectConfigForBrowserBuilder(
   tree: Tree,
-  schema: Schema,
+  schema: Schema
 ) {
   const projectConfig = readProjectConfiguration(tree, schema.project);
   const buildTarget = projectConfig.targets.build;
@@ -144,11 +144,11 @@ export function updateProjectConfigForBrowserBuilder(
   if (
     nxJson.tasksRunnerOptions?.default?.options?.cacheableOperations &&
     !nxJson.tasksRunnerOptions.default.options.cacheableOperations.includes(
-      'server',
+      'server'
     )
   ) {
     nxJson.tasksRunnerOptions.default.options.cacheableOperations.push(
-      'server',
+      'server'
     );
   }
   nxJson.targetDefaults ??= {};
@@ -158,7 +158,7 @@ export function updateProjectConfigForBrowserBuilder(
 }
 
 function getServerOptions(
-  options: Partial<BrowserBuilderOptions> = {},
+  options: Partial<BrowserBuilderOptions> = {}
 ): Partial<ServerBuilderOptions> {
   return {
     buildOptimizer: options?.buildOptimizer,

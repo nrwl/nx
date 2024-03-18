@@ -221,7 +221,7 @@ describe('moveProjectConfiguration', () => {
     createProjectConfigurationInNewDestination(tree, schema, projectConfig);
 
     expect(
-      readProjectConfiguration(tree, 'subfolder-my-destination'),
+      readProjectConfiguration(tree, 'subfolder-my-destination')
     ).toMatchSnapshot();
   });
 
@@ -231,16 +231,16 @@ describe('moveProjectConfiguration', () => {
     createProjectConfigurationInNewDestination(
       tree,
       { ...schema, projectName: 'my-flat-source' },
-      projectConfigFlat,
+      projectConfigFlat
     );
 
     const projectConfigFlatDestination = readProjectConfiguration(
       tree,
-      'subfolder-my-destination',
+      'subfolder-my-destination'
     );
 
     expect(
-      projectConfigFlatDestination.targets['preview'].options.buildTarget,
+      projectConfigFlatDestination.targets['preview'].options.buildTarget
     ).toBe('my-flat-source:build');
 
     expect(projectConfigFlatDestination).toMatchSnapshot();
@@ -253,7 +253,7 @@ describe('moveProjectConfiguration', () => {
 
     const actualProject = readProjectConfiguration(
       tree,
-      'subfolder-my-destination',
+      'subfolder-my-destination'
     );
     expect(actualProject).toBeDefined();
     expect(actualProject.root).toBe('apps/subfolder/my-destination');
@@ -270,7 +270,7 @@ describe('moveProjectConfiguration', () => {
 
     const actualProject = readProjectConfiguration(
       tree,
-      'subfolder-my-destination',
+      'subfolder-my-destination'
     );
     expect(actualProject.tags).toEqual(['type:ui']);
     expect(actualProject.implicitDependencies).toEqual(['my-other-lib']);
@@ -289,7 +289,7 @@ describe('moveProjectConfiguration', () => {
         root: 'libs/standalone',
         targets: {},
       },
-      true,
+      true
     );
     const moveSchema: NormalizedSchema = {
       projectName: 'standalone',

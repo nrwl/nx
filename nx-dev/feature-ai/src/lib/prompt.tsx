@@ -27,10 +27,10 @@ export function Prompt({
   showRegenerateCta: boolean;
   onSubmit: (
     e: FormEvent<HTMLFormElement>,
-    chatRequestOptions?: ChatRequestOptions | undefined,
+    chatRequestOptions?: ChatRequestOptions | undefined
   ) => void;
   onInputChange: (
-    e: ChangeEvent<HTMLTextAreaElement> | ChangeEvent<HTMLInputElement>,
+    e: ChangeEvent<HTMLTextAreaElement> | ChangeEvent<HTMLInputElement>
   ) => void;
   onNewChat: () => void;
   onStopGenerating: () => void;
@@ -67,7 +67,7 @@ export function Prompt({
       <div
         className={cx(
           'absolute -top-full left-1/2 mt-1 -translate-x-1/2',
-          'flex gap-4',
+          'flex gap-4'
         )}
       >
         {isGenerating && (

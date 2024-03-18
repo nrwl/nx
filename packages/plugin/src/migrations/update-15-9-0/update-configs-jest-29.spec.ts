@@ -79,7 +79,7 @@ module.exports = {
   moduleFileExtensions: ['ts', 'js', 'html'],
   coverageReporters: ['html'],
 };
-`,
+`
     );
 
     await updateConfigsJest29(tree);
@@ -103,7 +103,7 @@ module.exports = {
   moduleFileExtensions: ['ts', 'js', 'html'],
   coverageReporters: ['html'],
 };
-`,
+`
     );
 
     await updateConfigsJest29(tree);
@@ -132,23 +132,23 @@ module.exports = {
 
     const actualJestConfigTs1 = tree.read(
       'libs/my-lib/jest.config.ts',
-      'utf-8',
+      'utf-8'
     );
     expect(actualJestConfigTs1).toMatchSnapshot();
     const actualJestConfigJs1 = tree.read(
       'libs/my-lib/jest.config.js',
-      'utf-8',
+      'utf-8'
     );
     expect(actualJestConfigJs1).toMatchSnapshot();
 
     const actualJestConfigTs2 = tree.read(
       'libs/another-lib/jest.config.ts',
-      'utf-8',
+      'utf-8'
     );
     expect(actualJestConfigTs2).toMatchSnapshot();
     const actualJestConfigJs2 = tree.read(
       'libs/another-lib/jest.config.js',
-      'utf-8',
+      'utf-8'
     );
     expect(actualJestConfigJs2).toMatchSnapshot();
   });
@@ -175,7 +175,7 @@ export default {
   displayName: 'jest',
   testEnvironment: 'node',
   preset: '../../jest.preset.js',
-};`,
+};`
     );
     tree.write(
       `libs/jest-preset-angular/jest.config.js`,
@@ -202,17 +202,17 @@ module.exports = {
   displayName: 'jest',
   testEnvironment: 'node',
   preset: '../../jest.preset.js',
-};`,
+};`
     );
     await updateConfigsJest29(tree);
     const jpaJestConfigTs = tree.read(
       `libs/jest-preset-angular/jest.config.ts`,
-      'utf-8',
+      'utf-8'
     );
     expect(jpaJestConfigTs).toMatchSnapshot();
     const jpaJestConfigJs = tree.read(
       `libs/jest-preset-angular/jest.config.js`,
-      'utf-8',
+      'utf-8'
     );
     expect(jpaJestConfigJs).toMatchSnapshot();
   });
@@ -235,7 +235,7 @@ module.exports = {
   displayName: 'jest',
   testEnvironment: 'node',
   preset: '../../jest.preset.js',
-};`,
+};`
     );
     tree.write(
       `libs/jest-preset-angular/jest.config.js`,
@@ -253,17 +253,17 @@ module.exports = {
   displayName: 'jest',
   testEnvironment: 'node',
   preset: '../../jest.preset.js',
-};`,
+};`
     );
     await updateConfigsJest29(tree);
     const jpaJestConfigTs = tree.read(
       `libs/jest-preset-angular/jest.config.ts`,
-      'utf-8',
+      'utf-8'
     );
     expect(jpaJestConfigTs).toMatchSnapshot();
     const jpaJestConfigJs = tree.read(
       `libs/jest-preset-angular/jest.config.js`,
-      'utf-8',
+      'utf-8'
     );
     expect(jpaJestConfigJs).toMatchSnapshot();
   });
@@ -280,7 +280,7 @@ module.exports = {
   displayName: 'jest',
   testEnvironment: 'node',
   preset: '../../jest.preset.js',
-};`,
+};`
     );
     tree.write(
       `libs/no-ts-jest/jest.config.js`,
@@ -292,18 +292,18 @@ module.exports = {
   displayName: 'jest',
   testEnvironment: 'node',
   preset: '../../jest.preset.js',
-};`,
+};`
     );
 
     await updateConfigsJest29(tree);
     const noTsJestConfigTs = tree.read(
       `libs/no-ts-jest/jest.config.ts`,
-      'utf-8',
+      'utf-8'
     );
     expect(noTsJestConfigTs).toMatchSnapshot();
     const noTsJestConfigJs = tree.read(
       `libs/no-ts-jest/jest.config.js`,
-      'utf-8',
+      'utf-8'
     );
     expect(noTsJestConfigJs).toMatchSnapshot();
   });
@@ -328,7 +328,7 @@ module.exports = {
   testEnvironment: 'node',
   preset: '../../jest.preset.js',
   snapshotFormat: {escapeString: false, printBasicPrototype: true}
-};`,
+};`
     );
     tree.write(
       `libs/no-ts-jest/jest.config.js`,
@@ -348,18 +348,18 @@ module.exports = {
       abc: [1234, true, {abc: 'yes'}]
   },
   snapshotFormat: {escapeString: false, printBasicPrototype: true}
-};`,
+};`
     );
 
     await updateConfigsJest29(tree);
     const snapshotJestConfigTs = tree.read(
       'libs/no-ts-jest/jest.config.ts',
-      'utf-8',
+      'utf-8'
     );
     expect(snapshotJestConfigTs).toMatchSnapshot();
     const snapshotJestConfigJs = tree.read(
       `libs/no-ts-jest/jest.config.js`,
-      'utf-8',
+      'utf-8'
     );
     expect(snapshotJestConfigJs).toMatchSnapshot();
   });
@@ -370,12 +370,12 @@ module.exports = {
 
     const actualJestConfigTs1 = tree.read(
       'libs/my-lib/jest.config.ts',
-      'utf-8',
+      'utf-8'
     );
     expect(actualJestConfigTs1).toMatchSnapshot();
     const actualJestConfigJs1 = tree.read(
       'libs/my-lib/jest.config.js',
-      'utf-8',
+      'utf-8'
     );
     expect(actualJestConfigJs1).toMatchSnapshot();
 
@@ -383,12 +383,12 @@ module.exports = {
 
     const actualJestConfigTs2 = tree.read(
       'libs/my-lib/jest.config.ts',
-      'utf-8',
+      'utf-8'
     );
     expect(actualJestConfigTs2).toEqual(actualJestConfigTs1);
     const actualJestConfigJs2 = tree.read(
       'libs/my-lib/jest.config.js',
-      'utf-8',
+      'utf-8'
     );
     expect(actualJestConfigJs2).toEqual(actualJestConfigJs1);
   });
@@ -430,7 +430,7 @@ export default {
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
   coverageDirectory: '../../coverage/libs/${name}'
 };
-`,
+`
   );
 
   tree.write(
@@ -455,7 +455,7 @@ displayName: 'jest',
 testEnvironment: 'node',
 preset: '../../jest.preset.js'
 };
-`,
+`
   );
 
   tree.write(
@@ -463,7 +463,7 @@ preset: '../../jest.preset.js'
     tree
       .read('jest.config.ts')
       .toString()
-      .replace(new RegExp('@nx/jest', 'g'), '@nrwl/jest'),
+      .replace(new RegExp('@nx/jest', 'g'), '@nrwl/jest')
   );
 
   tree.write(
@@ -471,7 +471,7 @@ preset: '../../jest.preset.js'
     tree
       .read('jest.preset.js')
       .toString()
-      .replace(new RegExp('@nx/jest', 'g'), '@nrwl/jest'),
+      .replace(new RegExp('@nx/jest', 'g'), '@nrwl/jest')
   );
 
   projectGraph = {

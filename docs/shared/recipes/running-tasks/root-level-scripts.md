@@ -70,13 +70,13 @@ Our fully configured example would look like this:
         // generates docs from source code of all dependencies
         "inputs": ["^production"],
         // the docs site is created under /docs
-        "outputs": ["{workspaceRoot}/docs"],
-      },
-    },
+        "outputs": ["{workspaceRoot}/docs"]
+      }
+    }
   },
   "scripts": {
-    "docs": "node ./generateDocsSite.js",
-  },
+    "docs": "node ./generateDocsSite.js"
+  }
 }
 ```
 

@@ -6,7 +6,7 @@ export function parseChangelogMarkdown(contents: string) {
    */
   const CHANGELOG_RELEASE_HEAD_RE = new RegExp(
     '^#+\\s*\\[?(\\d+\\.\\d+\\.\\d+(?:-[a-zA-Z0-9\\.]+)?)\\]?',
-    'gm',
+    'gm'
   );
 
   const headings = [...contents.matchAll(CHANGELOG_RELEASE_HEAD_RE)];
@@ -22,7 +22,7 @@ export function parseChangelogMarkdown(contents: string) {
       body: contents
         .slice(
           heading.index + heading[0].length,
-          nextHeading ? nextHeading.index : contents.length,
+          nextHeading ? nextHeading.index : contents.length
         )
         .trim(),
     };

@@ -69,7 +69,7 @@ const jestOverride = {
 
 export const getGlobalEsLintConfiguration = (
   unitTestRunner?: string,
-  rootProject?: boolean,
+  rootProject?: boolean
 ): Linter.Config => {
   const config: Linter.Config = {
     root: true,
@@ -94,7 +94,7 @@ export const getGlobalEsLintConfiguration = (
 
 export const getGlobalFlatEslintConfiguration = (
   unitTestRunner?: string,
-  rootProject?: boolean,
+  rootProject?: boolean
 ): string => {
   const nodeList = createNodeList(new Map(), [], true);
   let content = stringifyNodeList(nodeList);
@@ -105,21 +105,21 @@ export const getGlobalFlatEslintConfiguration = (
   if (!rootProject) {
     content = addBlockToFlatConfigExport(
       content,
-      generateFlatOverride(moduleBoundariesOverride),
+      generateFlatOverride(moduleBoundariesOverride)
     );
   }
   content = addBlockToFlatConfigExport(
     content,
-    generateFlatOverride(typeScriptOverride),
+    generateFlatOverride(typeScriptOverride)
   );
   content = addBlockToFlatConfigExport(
     content,
-    generateFlatOverride(javaScriptOverride),
+    generateFlatOverride(javaScriptOverride)
   );
   if (unitTestRunner === 'jest') {
     content = addBlockToFlatConfigExport(
       content,
-      generateFlatOverride(jestOverride),
+      generateFlatOverride(jestOverride)
     );
   }
   // add ignore for .nx folder
@@ -127,7 +127,7 @@ export const getGlobalFlatEslintConfiguration = (
     content,
     generateAst({
       ignores: ['.nx'],
-    }),
+    })
   );
 
   return content;

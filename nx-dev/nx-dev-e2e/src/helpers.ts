@@ -9,13 +9,13 @@ import { Page, test, expect } from '@playwright/test';
 export function assertTextOnPage(
   path: string,
   title: string,
-  selector: string = 'h1',
+  selector: string = 'h1'
 ): void {
   test.describe(path, () =>
     test(`should display "${title}"`, async ({ page }) => {
       await page.goto(path);
       const locator = page.locator(selector);
       await expect(locator).toContainText(title);
-    }),
+    })
   );
 }

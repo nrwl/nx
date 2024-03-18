@@ -14,12 +14,12 @@ export const TS_QUERY_JEST_CONFIG_PREFIX =
 
 export function addTransformerToConfig(
   configContents: string,
-  transformer: string,
+  transformer: string
 ): string {
   // TODO make sure there isn't an existing matching transformer regex
   const transformerConfig = tsquery.query<ObjectLiteralExpression>(
     configContents,
-    `${TS_QUERY_JEST_CONFIG_PREFIX} > ObjectLiteralExpression PropertyAssignment:has(Identifier[name="transform"])`,
+    `${TS_QUERY_JEST_CONFIG_PREFIX} > ObjectLiteralExpression PropertyAssignment:has(Identifier[name="transform"])`
   );
   if (transformerConfig.length === 0) {
     return tsquery.replace(
@@ -30,7 +30,7 @@ export function addTransformerToConfig(
 ${node.properties.map((p) => p.getText()).join(',\n')},
 transform: { ${transformer} }
 }`;
-      },
+      }
     );
   }
   return tsquery.replace(
@@ -42,6 +42,6 @@ transform: { ${transformer} }
         .map((p) => p.getText())
         .join(',\n');
       return `transform: { ${transformer}, ${transformProperties} }`;
-    },
+    }
   );
 }

@@ -42,7 +42,7 @@ export default function DocumentsIndex({
     menu: {
       sections: sortCorePackagesFirst<MenuSection>(
         getPackagesSections(menu),
-        'id',
+        'id'
       ),
     },
     package: pkg,

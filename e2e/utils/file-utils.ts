@@ -23,7 +23,7 @@ export function createFile(f: string, content: string = ''): void {
 
 export function updateFile(
   f: string,
-  content: string | ((content: string) => string),
+  content: string | ((content: string) => string)
 ): void {
   ensureDirSync(path.dirname(tmpProjPath(f)));
   if (typeof content === 'string') {
@@ -31,7 +31,7 @@ export function updateFile(
   } else {
     writeFileSync(
       tmpProjPath(f),
-      content(readFileSync(tmpProjPath(f)).toString()),
+      content(readFileSync(tmpProjPath(f)).toString())
     );
   }
 }
@@ -52,7 +52,7 @@ export function checkFilesExist(...expectedFiles: string[]) {
 
 export function updateJson<T extends object = any, U extends object = T>(
   f: string,
-  updater: (value: T) => U,
+  updater: (value: T) => U
 ) {
   updateFile(f, (s) => {
     const json = JSON.parse(s);

@@ -6,14 +6,14 @@ import type { Schema } from '../schema';
 export function addRemoteEntry(
   tree: Tree,
   { appName, routing, prefix, standalone }: Schema,
-  appRoot: string,
+  appRoot: string
 ) {
   generateFiles(
     tree,
     standalone
       ? joinPathFragments(
           __dirname,
-          '../files/standalone-entry-component-files',
+          '../files/standalone-entry-component-files'
         )
       : joinPathFragments(__dirname, '../files/entry-module-files'),
     `${appRoot}/src/app/remote-entry`,
@@ -22,20 +22,20 @@ export function addRemoteEntry(
       appName,
       routing,
       prefix,
-    },
+    }
   );
 
   if (standalone && routing) {
     addRoute(
       tree,
       joinPathFragments(appRoot, 'src/app/app.routes.ts'),
-      `{path: '', loadChildren: () => import('./remote-entry/entry.routes').then(m => m.remoteRoutes)}`,
+      `{path: '', loadChildren: () => import('./remote-entry/entry.routes').then(m => m.remoteRoutes)}`
     );
   } else if (routing) {
     addRoute(
       tree,
       joinPathFragments(appRoot, 'src/app/app.routes.ts'),
-      `{ path: '', loadChildren: () => import('./remote-entry/entry.module').then(m => m.RemoteEntryModule) }`,
+      `{ path: '', loadChildren: () => import('./remote-entry/entry.module').then(m => m.RemoteEntryModule) }`
     );
   }
 }

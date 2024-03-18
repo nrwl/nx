@@ -38,7 +38,7 @@ function extractAllLinks(basePath: string): Record<string, string[]> {
   return glob.sync(`${basePath}/**/*.md`).reduce((acc, path) => {
     const fileContents = readFileContents(path);
     const cardLinks = (fileContents.match(/url="(.*?)"/g) || []).map((v) =>
-      v.slice(5, -1),
+      v.slice(5, -1)
     );
     const links = parseLinks(fileContents)
       .concat(cardLinks)
@@ -64,7 +64,7 @@ function readSiteMapIndex(directoryPath: string, filename: string): string[] {
   return [
     join(
       directoryPath,
-      sitemapIndex.sitemapindex.sitemap.loc.replace('https://nx.dev', ''),
+      sitemapIndex.sitemapindex.sitemap.loc.replace('https://nx.dev', '')
     ),
   ];
 }
@@ -87,7 +87,7 @@ function readSiteMapLinks(filePath: string): string[] {
 const documentLinks = extractAllLinks(join(workspaceRoot, 'docs'));
 const sitemapLinks = readSiteMapIndex(
   join(workspaceRoot, 'dist/nx-dev/nx-dev/public/'),
-  'sitemap.xml',
+  'sitemap.xml'
 ).flatMap((path) => readSiteMapLinks(path));
 const errors: Array<{ file: string; link: string }> = [];
 for (let file in documentLinks) {
@@ -102,7 +102,7 @@ console.log(`i/ Internal Link Check`);
 if (errors.length) {
   console.log(`ERROR\n${errors.length} links are pointing to nowhere:`);
   errors.forEach((error) =>
-    console.error(`⚠ File:${error.file}\n -> ${error.link}\n`),
+    console.error(`⚠ File:${error.file}\n -> ${error.link}\n`)
   );
   process.exit(1);
 }

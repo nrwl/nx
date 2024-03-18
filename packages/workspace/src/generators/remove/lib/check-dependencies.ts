@@ -23,7 +23,7 @@ export async function checkDependencies(_, schema: Schema): Promise<void> {
         schema.projectName
       } is still a dependency of the following projects:\n${deps
         .map((x) => x.target)
-        .join('\n')}`,
+        .join('\n')}`
     );
   }
 }

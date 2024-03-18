@@ -45,7 +45,7 @@ export function generatePackageSchemas(): Promise<void[]> {
           ...item,
           schema: processSchemaData(
             item.schema as NxSchema,
-            getCurrentSchemaPath(item['path'].replace('schema.json', '')),
+            getCurrentSchemaPath(item['path'].replace('schema.json', ''))
           ),
         }));
       }
@@ -54,12 +54,12 @@ export function generatePackageSchemas(): Promise<void[]> {
           ...item,
           schema: processSchemaData(
             item.schema as NxSchema,
-            getCurrentSchemaPath(item['path'].replace('schema.json', '')),
+            getCurrentSchemaPath(item['path'].replace('schema.json', ''))
           ),
         }));
       }
       return packageMetadata;
-    },
+    }
   );
   const packagesMetadata = packages.map(
     (p): PackageMetadata => ({
@@ -111,7 +111,7 @@ export function generatePackageSchemas(): Promise<void[]> {
       packageName: p.packageName,
       root: p.root,
       source: p.source,
-    }),
+    })
   );
 
   const outputPath: string = join(absoluteRoot, 'docs', 'generated');
@@ -125,24 +125,24 @@ export function generatePackageSchemas(): Promise<void[]> {
         generateMarkdownFile(join(outputPackagesPath, p.name, 'documents'), {
           name: d.id,
           template: d.content,
-        }),
-      ),
+        })
+      )
     );
     p.executors.forEach((e) =>
       fileGenerationPromises.push(
         generateJsonFile(
           join(outputPackagesPath, p.name, 'executors', e.name + '.json'),
-          e,
-        ),
-      ),
+          e
+        )
+      )
     );
     p.generators.forEach((g) =>
       fileGenerationPromises.push(
         generateJsonFile(
           join(outputPackagesPath, p.name, 'generators', g.name + '.json'),
-          g,
-        ),
-      ),
+          g
+        )
+      )
     );
   });
 
@@ -150,8 +150,8 @@ export function generatePackageSchemas(): Promise<void[]> {
   fileGenerationPromises.push(
     generateJsonFile(
       join(outputPath, 'packages-metadata.json'),
-      packagesMetadata,
-    ),
+      packagesMetadata
+    )
   );
   return Promise.all(fileGenerationPromises);
 }

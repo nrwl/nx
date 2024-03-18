@@ -23,7 +23,7 @@ function unparseOption(key: string, value: any, unparsed: string[]) {
       unparseOption(
         `${key}.${flattenedKey}`,
         flattened[flattenedKey],
-        unparsed,
+        unparsed
       );
     }
   } else if (typeof value === 'string' && value.includes(' ')) {

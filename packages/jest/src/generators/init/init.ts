@@ -22,7 +22,7 @@ function addPlugin(tree: Tree) {
     !nxJson.plugins.some((p) =>
       typeof p === 'string'
         ? p === '@nx/jest/plugin'
-        : p.plugin === '@nx/jest/plugin',
+        : p.plugin === '@nx/jest/plugin'
     )
   ) {
     nxJson.plugins.push({
@@ -51,7 +51,7 @@ function updateProductionFileSet(tree: Tree, presetExt: 'cjs' | 'js') {
       // Remove test-setup.js/ts
       // TODO(meeroslav) this should be standardized
       '!{projectRoot}/src/test-setup.[jt]s',
-      '!{projectRoot}/test-setup.[jt]s',
+      '!{projectRoot}/test-setup.[jt]s'
     );
     // Dedupe and set
     nxJson.namedInputs.production = Array.from(new Set(productionFileSet));
@@ -98,7 +98,7 @@ function updateDependencies(tree: Tree, options: JestInitSchema) {
       jest: jestVersion,
     },
     undefined,
-    options.keepExistingVersions,
+    options.keepExistingVersions
   );
 }
 
@@ -108,7 +108,7 @@ export function jestInitGenerator(tree: Tree, options: JestInitSchema) {
 
 export async function jestInitGeneratorInternal(
   tree: Tree,
-  options: JestInitSchema,
+  options: JestInitSchema
 ): Promise<GeneratorCallback> {
   const nxJson = readNxJson(tree);
   const addPluginDefault =

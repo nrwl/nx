@@ -48,7 +48,7 @@ describe('getTouchedProjectsFromLockFile', () => {
                 getChanges: () => [new WholeFileChange()],
               },
             ],
-            graph.nodes,
+            graph.nodes
           );
           expect(result).toEqual([]);
         });
@@ -62,11 +62,11 @@ describe('getTouchedProjectsFromLockFile', () => {
                 getChanges: () => [new WholeFileChange()],
               },
             ],
-            graph.nodes,
+            graph.nodes
           );
           expect(result).toEqual(allNodes);
         });
       });
-    },
+    }
   );
 });

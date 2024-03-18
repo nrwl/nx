@@ -28,13 +28,13 @@ describe('print-affected', () => {
 
     it('should throw when invalid key', () => {
       expect(() => selectPrintAffected(res, 'projects.invalid')).toThrowError(
-        `Cannot select 'projects.invalid' in the results of print-affected.`,
+        `Cannot select 'projects.invalid' in the results of print-affected.`
       );
     });
 
     it('should select an array if with nesting', () => {
       expect(selectPrintAffected(res, 'tasks.target.project')).toEqual(
-        'one, two',
+        'one, two'
       );
     });
   });

@@ -33,7 +33,7 @@ describe('jest', () => {
     const jestDefaults = readJson<NxJsonConfiguration>(tree, 'nx.json')
       .targetDefaults['@nx/jest:jest'];
     expect(productionFileSet).toContain(
-      '!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)',
+      '!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)'
     );
     expect(productionFileSet).toContain('!{projectRoot}/tsconfig.spec.json');
     expect(productionFileSet).toContain('!{projectRoot}/jest.config.[jt]s');

@@ -31,7 +31,7 @@ describe('ensure-webpack-package', () => {
         module.exports = {
           addons: ['@nrwl/react/plugins/storybook']
         };
-      `,
+      `
       );
 
       await update(tree);
@@ -41,7 +41,7 @@ describe('ensure-webpack-package', () => {
         '@nrwl/react': expect.any(String),
         '@nrwl/webpack': expect.any(String),
       });
-    },
+    }
   );
 
   it.each`
@@ -63,7 +63,7 @@ describe('ensure-webpack-package', () => {
           module.exports = {
             addons: []
           };
-        `,
+        `
         );
       }
 
@@ -73,6 +73,6 @@ describe('ensure-webpack-package', () => {
       expect(packageJson.devDependencies).toEqual({
         '@nrwl/react': expect.any(String),
       });
-    },
+    }
   );
 });

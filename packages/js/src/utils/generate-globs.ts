@@ -27,11 +27,11 @@ function configureIgnore() {
  */
 export function createGlobPatternsForDependencies(
   dirPath: string,
-  fileGlobPattern: string,
+  fileGlobPattern: string
 ): string[] {
   let ig = configureIgnore();
   const filenameRelativeToWorkspaceRoot = normalizePath(
-    relative(workspaceRoot, dirPath),
+    relative(workspaceRoot, dirPath)
   );
   const projectGraph = readCachedProjectGraph();
   const projectRootMappings = createProjectRootMappings(projectGraph.nodes);
@@ -41,17 +41,17 @@ export function createGlobPatternsForDependencies(
   try {
     projectName = findProjectForPath(
       filenameRelativeToWorkspaceRoot,
-      projectRootMappings,
+      projectRootMappings
     );
 
     if (!projectName) {
       throw new Error(
-        `createGlobPatternsForDependencies: Could not find any project containing the file "${filenameRelativeToWorkspaceRoot}" among it's project files`,
+        `createGlobPatternsForDependencies: Could not find any project containing the file "${filenameRelativeToWorkspaceRoot}" among it's project files`
       );
     }
   } catch (e) {
     throw new Error(
-      `createGlobPatternsForDependencies: Error when trying to determine main project.\n${e?.message}`,
+      `createGlobPatternsForDependencies: Error when trying to determine main project.\n${e?.message}`
     );
   }
 
@@ -59,7 +59,7 @@ export function createGlobPatternsForDependencies(
   try {
     const [projectDirs, warnings] = getSourceDirOfDependentProjects(
       projectName,
-      projectGraph,
+      projectGraph
     );
 
     const dirsToUse = [];
@@ -96,11 +96,11 @@ due to missing "sourceRoot" in the dependencies' project configuration
     }
 
     return dirsToUse.map((sourceDir) =>
-      resolve(workspaceRoot, joinPathFragments(sourceDir, fileGlobPattern)),
+      resolve(workspaceRoot, joinPathFragments(sourceDir, fileGlobPattern))
     );
   } catch (e) {
     throw new Error(
-      `createGlobPatternsForDependencies: Error when generating globs.\n${e?.message}`,
+      `createGlobPatternsForDependencies: Error when generating globs.\n${e?.message}`
     );
   }
 }

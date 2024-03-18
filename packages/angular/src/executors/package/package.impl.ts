@@ -17,7 +17,7 @@ import type { BuildAngularLibraryExecutorOptions } from './schema';
 async function initializeNgPackagr(
   options: BuildAngularLibraryExecutorOptions,
   context: ExecutorContext,
-  projectDependencies: DependentBuildableProjectNode[],
+  projectDependencies: DependentBuildableProjectNode[]
 ): Promise<NgPackagr> {
   const ngPackagr = await getNgPackagrInstance(options);
   ngPackagr.forProject(resolve(context.root, options.project));
@@ -27,12 +27,12 @@ async function initializeNgPackagr(
       options.tsConfig,
       context.root,
       context.projectsConfigurations.projects[context.projectName].root,
-      projectDependencies,
+      projectDependencies
     );
     const tsConfig = await parseRemappedTsConfigAndMergeDefaults(
       context.root,
       options.tsConfig,
-      remappedTsConfigFilePath,
+      remappedTsConfigFilePath
     );
     ngPackagr.withTsConfig(tsConfig);
   }
@@ -49,12 +49,12 @@ export function createLibraryExecutor(
   initializeNgPackagr: (
     options: BuildAngularLibraryExecutorOptions,
     context: ExecutorContext,
-    projectDependencies: DependentBuildableProjectNode[],
-  ) => Promise<NgPackagr>,
+    projectDependencies: DependentBuildableProjectNode[]
+  ) => Promise<NgPackagr>
 ) {
   return async function* (
     options: BuildAngularLibraryExecutorOptions,
-    context: ExecutorContext,
+    context: ExecutorContext
   ) {
     const { target, dependencies, topLevelDependencies } =
       calculateProjectBuildableDependencies(
@@ -63,14 +63,14 @@ export function createLibraryExecutor(
         context.root,
         context.projectName,
         context.targetName,
-        context.configurationName,
+        context.configurationName
       );
     if (
       !checkDependentProjectsHaveBeenBuilt(
         context.root,
         context.projectName,
         context.targetName,
-        dependencies,
+        dependencies
       )
     ) {
       return Promise.resolve({ success: false });
@@ -80,15 +80,15 @@ export function createLibraryExecutor(
       return yield* eachValueFrom(
         from(initializeNgPackagr(options, context, dependencies)).pipe(
           switchMap((packagr) => packagr.watch()),
-          mapTo({ success: true }),
-        ),
+          mapTo({ success: true })
+        )
       );
     }
 
     return from(initializeNgPackagr(options, context, dependencies))
       .pipe(
         switchMap((packagr) => packagr.build()),
-        mapTo({ success: true }),
+        mapTo({ success: true })
       )
       .toPromise();
   };

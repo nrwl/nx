@@ -22,7 +22,7 @@ import { join } from 'path';
 
 export async function createPackageGenerator(
   host: Tree,
-  schema: CreatePackageSchema,
+  schema: CreatePackageSchema
 ) {
   return await createPackageGeneratorInternal(host, {
     projectNameAndRootFormat: 'derived',
@@ -32,7 +32,7 @@ export async function createPackageGenerator(
 
 export async function createPackageGeneratorInternal(
   host: Tree,
-  schema: CreatePackageSchema,
+  schema: CreatePackageSchema
 ) {
   const tasks: GeneratorCallback[] = [];
 
@@ -44,7 +44,7 @@ export async function createPackageGeneratorInternal(
     {
       'create-nx-workspace': nxVersion,
     },
-    {},
+    {}
   );
   tasks.push(installTask);
 
@@ -68,7 +68,7 @@ export async function createPackageGeneratorInternal(
  */
 async function addPresetGenerator(
   host: Tree,
-  schema: NormalizedSchema,
+  schema: NormalizedSchema
 ): Promise<string> {
   const { root: projectRoot } = readProjectConfiguration(host, schema.project);
   if (!hasGenerator(host, schema.project, 'preset')) {
@@ -87,7 +87,7 @@ async function addPresetGenerator(
 async function createCliPackage(
   host: Tree,
   options: NormalizedSchema,
-  pluginPackageName: string,
+  pluginPackageName: string
 ) {
   await jsLibraryGenerator(host, {
     ...options,
@@ -114,21 +114,21 @@ async function createCliPackage(
         'create-nx-workspace': nxVersion,
       };
       return packageJson;
-    },
+    }
   );
 
   // update project build target to use the bin entry
   const projectConfiguration = readProjectConfiguration(
     host,
-    options.projectName,
+    options.projectName
   );
   projectConfiguration.sourceRoot = joinPathFragments(
     options.projectRoot,
-    'bin',
+    'bin'
   );
   projectConfiguration.targets.build.options.main = joinPathFragments(
     options.projectRoot,
-    'bin/index.ts',
+    'bin/index.ts'
   );
   projectConfiguration.implicitDependencies = [options.project];
   updateProjectConfiguration(host, options.projectName, projectConfiguration);
@@ -140,7 +140,7 @@ async function createCliPackage(
     (tsConfig) => {
       tsConfig.include.push('bin/**/*.ts');
       return tsConfig;
-    },
+    }
   );
 
   generateFiles(
@@ -151,7 +151,7 @@ async function createCliPackage(
       ...options,
       preset: pluginPackageName,
       tmpl: '',
-    },
+    }
   );
 }
 
@@ -164,12 +164,12 @@ async function createCliPackage(
 function addE2eProject(host: Tree, options: NormalizedSchema) {
   const e2eProjectConfiguration = readProjectConfiguration(
     host,
-    options.e2eProject,
+    options.e2eProject
   );
   const projectConfiguration = readProjectConfiguration(host, options.project);
   const { name: pluginPackageName } = readJson(
     host,
-    join(projectConfiguration.root, 'package.json'),
+    join(projectConfiguration.root, 'package.json')
   );
 
   generateFiles(
@@ -182,7 +182,7 @@ function addE2eProject(host: Tree, options: NormalizedSchema) {
       packageManagerCommands: getPackageManagerCommand('npm'),
       pluginPackageName,
       tmpl: '',
-    },
+    }
   );
 }
 

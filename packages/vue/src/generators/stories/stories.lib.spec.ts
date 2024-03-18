@@ -27,7 +27,7 @@ describe('vue:stories for libraries', () => {
     appTree = await createTestUILib('test-ui-lib');
     appTree.write(
       'test-ui-lib/src/lib/another-cmp/another-cmp.vue',
-      componentContent,
+      componentContent
     );
   });
 
@@ -37,22 +37,22 @@ describe('vue:stories for libraries', () => {
     });
 
     expect(
-      appTree.read('test-ui-lib/src/lib/test-ui-lib.stories.ts', 'utf-8'),
+      appTree.read('test-ui-lib/src/lib/test-ui-lib.stories.ts', 'utf-8')
     ).toMatchSnapshot();
     expect(
       appTree.read(
         'test-ui-lib/src/lib/another-cmp/another-cmp.stories.ts',
-        'utf-8',
-      ),
+        'utf-8'
+      )
     ).toMatchSnapshot();
 
     const packageJson = JSON.parse(appTree.read('package.json', 'utf-8'));
     expect(
-      packageJson.devDependencies['@storybook/addon-interactions'],
+      packageJson.devDependencies['@storybook/addon-interactions']
     ).toBeDefined();
     expect(packageJson.devDependencies['@storybook/test-runner']).toBeDefined();
     expect(
-      packageJson.devDependencies['@storybook/testing-library'],
+      packageJson.devDependencies['@storybook/testing-library']
     ).toBeDefined();
   });
 
@@ -62,23 +62,23 @@ describe('vue:stories for libraries', () => {
       interactionTests: false,
     });
     expect(
-      appTree.read('test-ui-lib/src/lib/test-ui-lib.stories.ts', 'utf-8'),
+      appTree.read('test-ui-lib/src/lib/test-ui-lib.stories.ts', 'utf-8')
     ).toMatchSnapshot();
     expect(
       appTree.read(
         'test-ui-lib/src/lib/another-cmp/another-cmp.stories.ts',
-        'utf-8',
-      ),
+        'utf-8'
+      )
     ).toMatchSnapshot();
     const packageJson = JSON.parse(appTree.read('package.json', 'utf-8'));
     expect(
-      packageJson.devDependencies['@storybook/addon-interactions'],
+      packageJson.devDependencies['@storybook/addon-interactions']
     ).toBeUndefined();
     expect(
-      packageJson.devDependencies['@storybook/test-runner'],
+      packageJson.devDependencies['@storybook/test-runner']
     ).toBeUndefined();
     expect(
-      packageJson.devDependencies['@storybook/testing-library'],
+      packageJson.devDependencies['@storybook/testing-library']
     ).toBeUndefined();
   });
 
@@ -86,12 +86,12 @@ describe('vue:stories for libraries', () => {
     beforeEach(() => {
       appTree.write(
         'test-ui-lib/src/lib/test-path/ignore-it/another-one.vue',
-        componentContent,
+        componentContent
       );
 
       appTree.write(
         'test-ui-lib/src/lib/another-cmp/another-cmp.skip.vue',
-        componentContent,
+        componentContent
       );
     });
     it('should generate stories for all if no ignorePaths', async () => {
@@ -100,21 +100,19 @@ describe('vue:stories for libraries', () => {
       });
 
       expect(
-        appTree.exists(
-          'test-ui-lib/src/lib/another-cmp/another-cmp.stories.ts',
-        ),
+        appTree.exists('test-ui-lib/src/lib/another-cmp/another-cmp.stories.ts')
       ).toBeTruthy();
 
       expect(
         appTree.exists(
-          'test-ui-lib/src/lib/test-path/ignore-it/another-one.stories.ts',
-        ),
+          'test-ui-lib/src/lib/test-path/ignore-it/another-one.stories.ts'
+        )
       ).toBeTruthy();
 
       expect(
         appTree.exists(
-          'test-ui-lib/src/lib/another-cmp/another-cmp.skip.stories.ts',
-        ),
+          'test-ui-lib/src/lib/another-cmp/another-cmp.skip.stories.ts'
+        )
       ).toBeTruthy();
     });
 
@@ -128,21 +126,19 @@ describe('vue:stories for libraries', () => {
       });
 
       expect(
-        appTree.exists(
-          'test-ui-lib/src/lib/another-cmp/another-cmp.stories.ts',
-        ),
+        appTree.exists('test-ui-lib/src/lib/another-cmp/another-cmp.stories.ts')
       ).toBeFalsy();
 
       expect(
         appTree.exists(
-          'test-ui-lib/src/lib/test-path/ignore-it/another-one.stories.ts',
-        ),
+          'test-ui-lib/src/lib/test-path/ignore-it/another-one.stories.ts'
+        )
       ).toBeFalsy();
 
       expect(
         appTree.exists(
-          'test-ui-lib/src/lib/another-cmp/another-cmp.skip.stories.ts',
-        ),
+          'test-ui-lib/src/lib/another-cmp/another-cmp.skip.stories.ts'
+        )
       ).toBeFalsy();
     });
 
@@ -156,21 +152,19 @@ describe('vue:stories for libraries', () => {
       });
 
       expect(
-        appTree.exists(
-          'test-ui-lib/src/lib/another-cmp/another-cmp.stories.ts',
-        ),
+        appTree.exists('test-ui-lib/src/lib/another-cmp/another-cmp.stories.ts')
       ).toBeTruthy();
 
       expect(
         appTree.exists(
-          'test-ui-lib/src/lib/test-path/ignore-it/another-one.stories.ts',
-        ),
+          'test-ui-lib/src/lib/test-path/ignore-it/another-one.stories.ts'
+        )
       ).toBeFalsy();
 
       expect(
         appTree.exists(
-          'test-ui-lib/src/lib/another-cmp/another-cmp.skip.stories.ts',
-        ),
+          'test-ui-lib/src/lib/another-cmp/another-cmp.skip.stories.ts'
+        )
       ).toBeFalsy();
     });
   });
@@ -178,7 +172,7 @@ describe('vue:stories for libraries', () => {
 
 export async function createTestUILib(
   libName: string,
-  plainJS = false,
+  plainJS = false
 ): Promise<Tree> {
   let appTree = createTreeWithEmptyWorkspace();
 

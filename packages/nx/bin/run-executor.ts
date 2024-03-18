@@ -5,7 +5,7 @@ import { TaskGraph } from '../src/config/task-graph';
 if (process.env.NX_TERMINAL_OUTPUT_PATH) {
   setUpOutputWatching(
     process.env.NX_TERMINAL_CAPTURE_STDERR === 'true',
-    process.env.NX_STREAM_OUTPUT === 'true',
+    process.env.NX_STREAM_OUTPUT === 'true'
   );
 }
 
@@ -38,7 +38,7 @@ function setUpOutputWatching(captureStderr: boolean, streamOutput: boolean) {
   process.stdout._write = (
     chunk: any,
     encoding: string,
-    callback: Function,
+    callback: Function
   ) => {
     onlyStdout.push(chunk);
     appendFileSync(stdoutAndStderrLogFileHandle, chunk);
@@ -52,7 +52,7 @@ function setUpOutputWatching(captureStderr: boolean, streamOutput: boolean) {
   process.stderr._write = (
     chunk: any,
     encoding: string,
-    callback: Function,
+    callback: Function
   ) => {
     appendFileSync(stdoutAndStderrLogFileHandle, chunk);
     if (streamOutput) {
@@ -86,12 +86,12 @@ process.on(
         message.targetDescription,
         message.overrides,
         message.isVerbose,
-        message.taskGraph,
+        message.taskGraph
       );
       process.exit(statusCode);
     } catch (e) {
       console.error(e);
       process.exit(1);
     }
-  },
+  }
 );

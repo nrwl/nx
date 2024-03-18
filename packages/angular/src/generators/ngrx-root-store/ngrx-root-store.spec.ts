@@ -16,7 +16,7 @@ describe('NgRxRootStoreGenerator', () => {
           minimal: true,
           name: '',
           skipFormat: true,
-        }),
+        })
       ).rejects.toThrowError();
     });
 
@@ -32,7 +32,7 @@ describe('NgRxRootStoreGenerator', () => {
           minimal: false,
           name: undefined,
           skipFormat: true,
-        }),
+        })
       ).rejects.toThrowError();
     });
 
@@ -50,25 +50,25 @@ describe('NgRxRootStoreGenerator', () => {
 
       // ASSERT
       expect(
-        tree.read('my-app/src/app/app.module.ts', 'utf-8'),
+        tree.read('my-app/src/app/app.module.ts', 'utf-8')
       ).toMatchSnapshot();
       expect(tree.exists('/my-app/src/app/+state/users.actions.ts')).toBe(
-        false,
+        false
       );
       expect(tree.exists('/my-app/src/app/+state/users.effects.ts')).toBe(
-        false,
+        false
       );
       expect(tree.exists('/my-app/src/app/+state/users.effects.spec.ts')).toBe(
-        false,
+        false
       );
       expect(tree.exists('/my-app/src/app/+state/users.reducer.ts')).toBe(
-        false,
+        false
       );
       expect(tree.exists('/my-app/src/app/+state/users.selectors.ts')).toBe(
-        false,
+        false
       );
       expect(
-        tree.exists('/my-app/src/app/+state/users.selectors.spec.ts'),
+        tree.exists('/my-app/src/app/+state/users.selectors.spec.ts')
       ).toBe(false);
     });
 
@@ -86,25 +86,25 @@ describe('NgRxRootStoreGenerator', () => {
 
       // ASSERT
       expect(
-        tree.read('my-app/src/app/app.module.ts', 'utf-8'),
+        tree.read('my-app/src/app/app.module.ts', 'utf-8')
       ).toMatchSnapshot();
       expect(
-        tree.read('/my-app/src/app/+state/users.actions.ts', 'utf-8'),
+        tree.read('/my-app/src/app/+state/users.actions.ts', 'utf-8')
       ).toMatchSnapshot();
       expect(
-        tree.read('/my-app/src/app/+state/users.effects.ts', 'utf-8'),
+        tree.read('/my-app/src/app/+state/users.effects.ts', 'utf-8')
       ).toMatchSnapshot();
       expect(
-        tree.read('/my-app/src/app/+state/users.effects.spec.ts', 'utf-8'),
+        tree.read('/my-app/src/app/+state/users.effects.spec.ts', 'utf-8')
       ).toMatchSnapshot();
       expect(
-        tree.read('/my-app/src/app/+state/users.reducer.ts', 'utf-8'),
+        tree.read('/my-app/src/app/+state/users.reducer.ts', 'utf-8')
       ).toMatchSnapshot();
       expect(
-        tree.read('/my-app/src/app/+state/users.selectors.ts', 'utf-8'),
+        tree.read('/my-app/src/app/+state/users.selectors.ts', 'utf-8')
       ).toMatchSnapshot();
       expect(
-        tree.read('/my-app/src/app/+state/users.selectors.spec.ts', 'utf-8'),
+        tree.read('/my-app/src/app/+state/users.selectors.spec.ts', 'utf-8')
       ).toMatchSnapshot();
     });
 
@@ -123,10 +123,10 @@ describe('NgRxRootStoreGenerator', () => {
 
       // ASSERT
       expect(
-        tree.read('my-app/src/app/app.module.ts', 'utf-8'),
+        tree.read('my-app/src/app/app.module.ts', 'utf-8')
       ).toMatchSnapshot();
       expect(
-        tree.read('/my-app/src/app/+state/users.facade.ts', 'utf-8'),
+        tree.read('/my-app/src/app/+state/users.facade.ts', 'utf-8')
       ).toMatchSnapshot();
     });
 
@@ -145,7 +145,7 @@ describe('NgRxRootStoreGenerator', () => {
 
       // ASSERT
       expect(
-        tree.read('my-app/src/app/app.module.ts', 'utf-8'),
+        tree.read('my-app/src/app/app.module.ts', 'utf-8')
       ).toMatchSnapshot();
     });
 
@@ -167,16 +167,16 @@ describe('NgRxRootStoreGenerator', () => {
       expect(packageJson.dependencies['@ngrx/effects']).toEqual(ngrxVersion);
       expect(packageJson.dependencies['@ngrx/entity']).toEqual(ngrxVersion);
       expect(packageJson.dependencies['@ngrx/router-store']).toEqual(
-        ngrxVersion,
+        ngrxVersion
       );
       expect(packageJson.dependencies['@ngrx/component-store']).toEqual(
-        ngrxVersion,
+        ngrxVersion
       );
       expect(packageJson.devDependencies['@ngrx/schematics']).toEqual(
-        ngrxVersion,
+        ngrxVersion
       );
       expect(
-        packageJson.devDependencies['@ngrx/store-devtools'],
+        packageJson.devDependencies['@ngrx/store-devtools']
       ).toBeUndefined();
       expect(packageJson.devDependencies['jasmine-marbles']).toBeDefined();
     });
@@ -197,7 +197,7 @@ describe('NgRxRootStoreGenerator', () => {
       // ASSERT
       const packageJson = readJson(tree, 'package.json');
       expect(packageJson.devDependencies['@ngrx/store-devtools']).toBe(
-        ngrxVersion,
+        ngrxVersion
       );
     });
 
@@ -223,7 +223,7 @@ describe('NgRxRootStoreGenerator', () => {
       expect(packageJson.dependencies['@ngrx/component-store']).toBeUndefined();
       expect(packageJson.devDependencies['@ngrx/schematics']).toBeUndefined();
       expect(
-        packageJson.devDependencies['@ngrx/store-devtools'],
+        packageJson.devDependencies['@ngrx/store-devtools']
       ).toBeUndefined();
       expect(packageJson.devDependencies['jasmine-marbles']).toBeUndefined();
     });
@@ -239,7 +239,7 @@ describe('NgRxRootStoreGenerator', () => {
           minimal: true,
           name: '',
           skipFormat: true,
-        }),
+        })
       ).rejects.toThrowError();
     });
 
@@ -255,7 +255,7 @@ describe('NgRxRootStoreGenerator', () => {
           minimal: false,
           name: undefined,
           skipFormat: true,
-        }),
+        })
       ).rejects.toThrowError();
     });
 
@@ -273,25 +273,25 @@ describe('NgRxRootStoreGenerator', () => {
 
       // ASSERT
       expect(
-        tree.read('my-app/src/app/app.config.ts', 'utf-8'),
+        tree.read('my-app/src/app/app.config.ts', 'utf-8')
       ).toMatchSnapshot();
       expect(tree.exists('/my-app/src/app/+state/users.actions.ts')).toBe(
-        false,
+        false
       );
       expect(tree.exists('/my-app/src/app/+state/users.effects.ts')).toBe(
-        false,
+        false
       );
       expect(tree.exists('/my-app/src/app/+state/users.effects.spec.ts')).toBe(
-        false,
+        false
       );
       expect(tree.exists('/my-app/src/app/+state/users.reducer.ts')).toBe(
-        false,
+        false
       );
       expect(tree.exists('/my-app/src/app/+state/users.selectors.ts')).toBe(
-        false,
+        false
       );
       expect(
-        tree.exists('/my-app/src/app/+state/users.selectors.spec.ts'),
+        tree.exists('/my-app/src/app/+state/users.selectors.spec.ts')
       ).toBe(false);
     });
 
@@ -310,25 +310,25 @@ describe('NgRxRootStoreGenerator', () => {
 
       // ASSERT
       expect(
-        tree.read('my-app/src/app/app.config.ts', 'utf-8'),
+        tree.read('my-app/src/app/app.config.ts', 'utf-8')
       ).toMatchSnapshot();
       expect(
-        tree.read('/my-app/src/app/+state/users.actions.ts', 'utf-8'),
+        tree.read('/my-app/src/app/+state/users.actions.ts', 'utf-8')
       ).toMatchSnapshot();
       expect(
-        tree.read('/my-app/src/app/+state/users.effects.ts', 'utf-8'),
+        tree.read('/my-app/src/app/+state/users.effects.ts', 'utf-8')
       ).toMatchSnapshot();
       expect(
-        tree.read('/my-app/src/app/+state/users.effects.spec.ts', 'utf-8'),
+        tree.read('/my-app/src/app/+state/users.effects.spec.ts', 'utf-8')
       ).toMatchSnapshot();
       expect(
-        tree.read('/my-app/src/app/+state/users.reducer.ts', 'utf-8'),
+        tree.read('/my-app/src/app/+state/users.reducer.ts', 'utf-8')
       ).toMatchSnapshot();
       expect(
-        tree.read('/my-app/src/app/+state/users.selectors.ts', 'utf-8'),
+        tree.read('/my-app/src/app/+state/users.selectors.ts', 'utf-8')
       ).toMatchSnapshot();
       expect(
-        tree.read('/my-app/src/app/+state/users.selectors.spec.ts', 'utf-8'),
+        tree.read('/my-app/src/app/+state/users.selectors.spec.ts', 'utf-8')
       ).toMatchSnapshot();
     });
 
@@ -348,10 +348,10 @@ describe('NgRxRootStoreGenerator', () => {
 
       // ASSERT
       expect(
-        tree.read('my-app/src/app/app.config.ts', 'utf-8'),
+        tree.read('my-app/src/app/app.config.ts', 'utf-8')
       ).toMatchSnapshot();
       expect(
-        tree.read('/my-app/src/app/+state/users.facade.ts', 'utf-8'),
+        tree.read('/my-app/src/app/+state/users.facade.ts', 'utf-8')
       ).toMatchSnapshot();
     });
 
@@ -370,7 +370,7 @@ describe('NgRxRootStoreGenerator', () => {
 
       // ASSERT
       expect(
-        tree.read('my-app/src/app/app.config.ts', 'utf-8'),
+        tree.read('my-app/src/app/app.config.ts', 'utf-8')
       ).toMatchSnapshot();
     });
 
@@ -392,16 +392,16 @@ describe('NgRxRootStoreGenerator', () => {
       expect(packageJson.dependencies['@ngrx/effects']).toEqual(ngrxVersion);
       expect(packageJson.dependencies['@ngrx/entity']).toEqual(ngrxVersion);
       expect(packageJson.dependencies['@ngrx/router-store']).toEqual(
-        ngrxVersion,
+        ngrxVersion
       );
       expect(packageJson.dependencies['@ngrx/component-store']).toEqual(
-        ngrxVersion,
+        ngrxVersion
       );
       expect(packageJson.devDependencies['@ngrx/schematics']).toEqual(
-        ngrxVersion,
+        ngrxVersion
       );
       expect(
-        packageJson.devDependencies['@ngrx/store-devtools'],
+        packageJson.devDependencies['@ngrx/store-devtools']
       ).toBeUndefined();
       expect(packageJson.devDependencies['jasmine-marbles']).toBeDefined();
     });
@@ -422,7 +422,7 @@ describe('NgRxRootStoreGenerator', () => {
       // ASSERT
       const packageJson = readJson(tree, 'package.json');
       expect(packageJson.devDependencies['@ngrx/store-devtools']).toBe(
-        ngrxVersion,
+        ngrxVersion
       );
     });
 
@@ -448,7 +448,7 @@ describe('NgRxRootStoreGenerator', () => {
       expect(packageJson.dependencies['@ngrx/component-store']).toBeUndefined();
       expect(packageJson.devDependencies['@ngrx/schematics']).toBeUndefined();
       expect(
-        packageJson.devDependencies['@ngrx/store-devtools'],
+        packageJson.devDependencies['@ngrx/store-devtools']
       ).toBeUndefined();
       expect(packageJson.devDependencies['jasmine-marbles']).toBeUndefined();
     });

@@ -36,7 +36,7 @@ export interface NxComponentTestingOptions {
 
 export function nxBaseCypressPreset(
   pathToConfig: string,
-  options?: { testingType: 'component' | 'e2e' },
+  options?: { testingType: 'component' | 'e2e' }
 ): BaseCypressPreset {
   // used to set babel settings for react CT.
   process.env.NX_CYPRESS_COMPONENT_TEST =
@@ -54,7 +54,7 @@ export function nxBaseCypressPreset(
     'dist',
     'cypress',
     projectPath,
-    'screenshots',
+    'screenshots'
   );
 
   return {
@@ -102,7 +102,7 @@ function startWebServer(webServerCommand: string) {
  */
 export function nxE2EPreset(
   pathToConfig: string,
-  options?: NxCypressE2EPresetOptions,
+  options?: NxCypressE2EPresetOptions
 ) {
   const basePath = options?.cypressDir || 'src';
 
@@ -146,12 +146,12 @@ export function nxE2EPreset(
               : options.webServerConfig.reuseExistingServer
           ) {
             console.log(
-              `Reusing the server already running on ${config.baseUrl}`,
+              `Reusing the server already running on ${config.baseUrl}`
             );
             return;
           } else {
             throw new Error(
-              `Web server is already running at ${config.baseUrl}`,
+              `Web server is already running at ${config.baseUrl}`
             );
           }
         }
@@ -170,7 +170,7 @@ export function nxE2EPreset(
 
 function waitForServer(
   url: string,
-  webServerConfig: WebServerConfig,
+  webServerConfig: WebServerConfig
 ): Promise<void> {
   return new Promise((resolve, reject) => {
     let pollTimeout: NodeJS.Timeout | null;
@@ -181,8 +181,8 @@ function waitForServer(
       clearTimeout(pollTimeout);
       reject(
         new Error(
-          `Web server failed to start in ${timeoutDuration}ms. This can be configured in cypress.config.ts.`,
-        ),
+          `Web server failed to start in ${timeoutDuration}ms. This can be configured in cypress.config.ts.`
+        )
       );
     }, timeoutDuration);
 
