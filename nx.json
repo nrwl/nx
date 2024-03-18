@@ -1,7 +1,10 @@
 {
   "$schema": "packages/nx/schemas/nx-schema.json",
   "namedInputs": {
-    "default": ["{projectRoot}/**/*", "sharedGlobals"],
+    "default": [
+      "{projectRoot}/**/*",
+      "sharedGlobals"
+    ],
     "production": [
       "default",
       "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
@@ -64,45 +67,76 @@
       }
     },
     "build": {
-      "dependsOn": ["build-base", "build-native"],
-      "inputs": ["production", "^production"],
+      "dependsOn": [
+        "build-base",
+        "build-native"
+      ],
+      "inputs": [
+        "production",
+        "^production"
+      ],
       "cache": true
     },
     "build-native": {
-      "inputs": ["native"],
+      "inputs": [
+        "native"
+      ],
       "cache": true
     },
     "build-base": {
-      "dependsOn": ["^build-base", "build-native"],
-      "inputs": ["production", "^production"],
+      "dependsOn": [
+        "^build-base",
+        "build-native"
+      ],
+      "inputs": [
+        "production",
+        "^production"
+      ],
       "executor": "@nx/js:tsc",
       "options": {
         "outputPath": "build/{projectRoot}",
         "tsConfig": "{projectRoot}/tsconfig.lib.json",
         "main": "{projectRoot}/index.ts"
       },
-      "outputs": ["{options.outputPath}"],
+      "outputs": [
+        "{options.outputPath}"
+      ],
       "cache": true
     },
     "test-native": {
-      "inputs": ["native"],
+      "inputs": [
+        "native"
+      ],
       "executor": "@monodon/rust:test",
       "options": {},
       "cache": true
     },
     "test": {
-      "dependsOn": ["test-native", "build-native", "^build-native"],
-      "inputs": ["default", "^production", "{workspaceRoot}/jest.preset.js"],
+      "dependsOn": [
+        "test-native",
+        "build-native",
+        "^build-native"
+      ],
+      "inputs": [
+        "default",
+        "^production",
+        "{workspaceRoot}/jest.preset.js"
+      ],
       "executor": "@nx/jest:jest",
       "options": {
         "jestConfig": "{projectRoot}/jest.config.ts",
         "passWithNoTests": true
       },
-      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "outputs": [
+        "{workspaceRoot}/coverage/{projectRoot}"
+      ],
       "cache": true
     },
     "lint": {
-      "dependsOn": ["build-native", "^build-native"],
+      "dependsOn": [
+        "build-native",
+        "^build-native"
+      ],
       "inputs": [
         "default",
         "{workspaceRoot}/.eslintrc.json",
@@ -110,9 +144,13 @@
       ],
       "executor": "@nx/eslint:lint",
       "options": {
-        "lintFilePatterns": ["{projectRoot}"]
+        "lintFilePatterns": [
+          "{projectRoot}"
+        ]
       },
-      "outputs": ["{options.outputFile}"],
+      "outputs": [
+        "{options.outputFile}"
+      ],
       "cache": true
     },
     "e2e": {
@@ -140,7 +178,9 @@
         "passWithNoTests": true,
         "runInBand": true
       },
-      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "outputs": [
+        "{workspaceRoot}/coverage/{projectRoot}"
+      ],
       "cache": true
     },
     "e2e-macos": {
@@ -165,11 +205,16 @@
         "passWithNoTests": true,
         "runInBand": true
       },
-      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "outputs": [
+        "{workspaceRoot}/coverage/{projectRoot}"
+      ],
       "cache": true
     },
     "e2e-base": {
-      "inputs": ["default", "^production"]
+      "inputs": [
+        "default",
+        "^production"
+      ]
     },
     "build-storybook": {
       "inputs": [
@@ -195,7 +240,11 @@
     },
     "@nx/jest:jest": {
       "cache": true,
-      "inputs": ["default", "^production", "{workspaceRoot}/jest.preset.js"],
+      "inputs": [
+        "default",
+        "^production",
+        "{workspaceRoot}/jest.preset.js"
+      ],
       "options": {
         "passWithNoTests": true
       },
@@ -207,11 +256,13 @@
       }
     }
   },
-  "plugins": ["@monodon/rust"],
+  "plugins": [
+    "@monodon/rust"
+  ],
   "nxCloudAccessToken": "YmZiOWQyNzctOThiZC00MjYwLWI3YTAtZDA3MDg4YWY1YTExfHJlYWQ=",
   "nxCloudUrl": "https://staging.nx.app",
   "parallel": 1,
   "cacheDirectory": "/tmp/nx-cache",
   "bust": 5,
-  "defaultBase": "master"
+  "defaultBase": "origin/master"
 }
