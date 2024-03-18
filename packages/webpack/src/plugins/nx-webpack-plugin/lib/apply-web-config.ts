@@ -170,7 +170,10 @@ export function applyWebConfig(
       use: [
         ...getCommonLoadersForCssModules(options, includePaths),
         {
-          loader: path.join(__dirname, 'webpack/deprecated-stylus-loader.js'),
+          loader: path.join(
+            __dirname,
+            '../../../utils/webpack/deprecated-stylus-loader.js'
+          ),
           options: {
             stylusOptions: {
               include: includePaths,
@@ -230,7 +233,10 @@ export function applyWebConfig(
       use: [
         ...getCommonLoadersForGlobalCss(options, includePaths),
         {
-          loader: path.join(__dirname, 'webpack/deprecated-stylus-loader.js'),
+          loader: path.join(
+            __dirname,
+            '../../../utils/webpack/deprecated-stylus-loader.js'
+          ),
           options: {
             sourceMap: !!options.sourceMap,
             stylusOptions: {
@@ -291,7 +297,10 @@ export function applyWebConfig(
       use: [
         ...getCommonLoadersForGlobalStyle(options, includePaths),
         {
-          loader: require.resolve('stylus-loader'),
+          loader: path.join(
+            __dirname,
+            '../../../utils/webpack/deprecated-stylus-loader.js'
+          ),
           options: {
             sourceMap: !!options.sourceMap,
             stylusOptions: {
