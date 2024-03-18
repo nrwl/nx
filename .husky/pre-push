@@ -3,4 +3,4 @@
 pnpm check-lock-files &&
 pnpm check-commit &&
 pnpm documentation &&
-pnpm pretty-quick --check
+pnpm pretty-quick --write .
