@@ -28,7 +28,7 @@ export function SourcemapInfoToolTip({
     <>
       <p className="flex grow items-center gap-2">
         <span className="font-bold">{isTarget ? 'Created' : 'Set'} by:</span>
-        <span className="inline-flex grow justify-between items-center">
+        <span className="inline-flex grow items-center justify-between">
           {docsUrlSlug ? (
             <ExternalLink
               text={plugin}
@@ -46,10 +46,10 @@ export function SourcemapInfoToolTip({
   );
 
   return (
-    <div className="text-sm text-slate-700 dark:text-slate-400 max-w-md sm:max-w-full">
+    <div className="max-w-md text-sm text-slate-700 dark:text-slate-400 sm:max-w-full">
       <div
         className={twMerge(
-          `flex flex-col font-mono py-2`,
+          `flex flex-col py-2 font-mono`,
           showLink ? 'border-b border-slate-200 dark:border-slate-700/60' : ''
         )}
       >

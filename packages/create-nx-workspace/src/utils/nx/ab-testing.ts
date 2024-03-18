@@ -52,7 +52,7 @@ const messageOptions = {
 } as const;
 
 export type MessageKey = keyof typeof messageOptions;
-type MessageData = typeof messageOptions[MessageKey][number];
+type MessageData = (typeof messageOptions)[MessageKey][number];
 
 export class PromptMessages {
   private selectedMessages: { [key in MessageKey]?: number } = {};

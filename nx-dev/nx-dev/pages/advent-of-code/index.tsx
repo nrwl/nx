@@ -66,7 +66,7 @@ export default function AdventOfCode(): JSX.Element {
                     together! We have a convenient TypeScript starter kit
                     available to help you get started right away.
                   </p>
-                  <div className="flex mt-8 gap-4">
+                  <div className="mt-8 flex gap-4">
                     <ButtonLink
                       href="https://github.com/nrwl/ts-aoc-starter#running-the-puzzles"
                       variant="primary"
@@ -84,7 +84,7 @@ export default function AdventOfCode(): JSX.Element {
                     >
                       <button
                         title="Use Nx to setup your Advent of Code workspace"
-                        className="group relative flex w-full items-center rounded-lg border border-slate-200 bg-white py-3 px-6 text-md font-semibold leading-6 transition hover:bg-slate-100 focus:ring-2 focus:ring-offset-2 focus:ring-offset-white dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:hover:bg-slate-700 sm:w-auto"
+                        className="text-md group relative flex w-full items-center rounded-lg border border-slate-200 bg-white py-3 px-6 font-semibold leading-6 transition hover:bg-slate-100 focus:ring-2 focus:ring-offset-2 focus:ring-offset-white dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:hover:bg-slate-700 sm:w-auto"
                       >
                         <span className="absolute top-1 right-1 flex opacity-0 transition-opacity group-hover:opacity-100">
                           {copied ? (
@@ -108,7 +108,7 @@ export default function AdventOfCode(): JSX.Element {
                 <div className="video-responsive flex items-center justify-center">
                   <iframe
                     src={`https://www.youtube.com/embed/cOHIO5UXqMw`}
-                    className="aspect-video w-full rounded-lg shadow-lg mb-1"
+                    className="mb-1 aspect-video w-full rounded-lg shadow-lg"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     allowFullScreen
                     title="Nx Advent of Code"
@@ -122,7 +122,7 @@ export default function AdventOfCode(): JSX.Element {
             {/* <div className="max-w-screen-lg mx-auto"> */}
             <div className="mx-auto max-w-7xl">
               <article className="mx-auto px-4 sm:px-6 lg:items-center lg:px-8">
-                <main className="grid grid-cols-1 gap-5 md:grid-cols-3 pt-10 pb-24">
+                <main className="grid grid-cols-1 gap-5 pt-10 pb-24 md:grid-cols-3">
                   <div className="group relative rounded-lg border border-slate-200 bg-white/60 p-5 transition duration-200 ease-out hover:border-slate-300 dark:border-slate-800/40 dark:bg-slate-800/60 dark:hover:border-slate-900 dark:hover:bg-slate-800">
                     <div className="relative m-2 mb-6 inline-flex h-10 w-10 items-center justify-center">
                       <div className="absolute inset-0 -m-2 rotate-6 transform rounded-3xl bg-slate-300 transition duration-200 ease-out group-hover:-rotate-3 group-hover:scale-105 dark:bg-slate-800" />

@@ -65,7 +65,7 @@ const nxPackages = [
   `@nx/expo`,
 ] as const;
 
-type NxPackage = typeof nxPackages[number];
+type NxPackage = (typeof nxPackages)[number];
 
 /**
  * Sets up a new project in the temporary project path

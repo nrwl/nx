@@ -5,7 +5,7 @@ const meta: Meta<typeof ThemePanel> = {
   component: ThemePanel,
   decorators: [
     (Story) => (
-      <div className="bg-white dark:bg-slate-800 block h-auto w-auto border-2 px-8 py-4">
+      <div className="block h-auto w-auto border-2 bg-white px-8 py-4 dark:bg-slate-800">
         <div className="flex justify-end">
           <Story className="justify-items-end" />
         </div>

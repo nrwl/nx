@@ -9,7 +9,7 @@ export type SpinnerProps = React.SVGProps<SVGSVGElement>;
 export function Spinner({ className, ...rest }: SpinnerProps) {
   return (
     <svg
-      className={`${className} animate-spin h-8 w-8`}
+      className={`${className} h-8 w-8 animate-spin`}
       viewBox="0 0 24 24"
       {...rest}
     >
