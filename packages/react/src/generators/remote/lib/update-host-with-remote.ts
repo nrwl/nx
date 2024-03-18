@@ -18,7 +18,7 @@ let tsModule: typeof import('typescript');
 export function updateHostWithRemote(
   host: Tree,
   hostName: string,
-  remoteName: string
+  remoteName: string,
 ) {
   if (!tsModule) {
     tsModule = ensureTypescript();
@@ -28,19 +28,19 @@ export function updateHostWithRemote(
 
   let moduleFederationConfigPath = joinPathFragments(
     hostConfig.root,
-    'module-federation.config.js'
+    'module-federation.config.js',
   );
 
   if (!host.exists(moduleFederationConfigPath)) {
     moduleFederationConfigPath = joinPathFragments(
       hostConfig.root,
-      'module-federation.config.ts'
+      'module-federation.config.ts',
     );
   }
 
   const remoteDefsPath = joinPathFragments(
     hostConfig.sourceRoot,
-    'remotes.d.ts'
+    'remotes.d.ts',
   );
   const appComponentPath = findAppComponentPath(host, hostConfig.sourceRoot);
 
@@ -52,16 +52,16 @@ export function updateHostWithRemote(
       moduleFederationConfigPath,
       sourceCode,
       tsModule.ScriptTarget.Latest,
-      true
+      true,
     );
     host.write(
       moduleFederationConfigPath,
-      applyChangesToString(sourceCode, addRemoteToConfig(source, remoteName))
+      applyChangesToString(sourceCode, addRemoteToConfig(source, remoteName)),
     );
   } else {
     // TODO(jack): Point to the nx.dev guide when ready.
     logger.warn(
-      `Could not find configuration at ${moduleFederationConfigPath}. Did you generate this project with "@nx/react:host"?`
+      `Could not find configuration at ${moduleFederationConfigPath}. Did you generate this project with "@nx/react:host"?`,
     );
   }
 
@@ -71,15 +71,15 @@ export function updateHostWithRemote(
       moduleFederationConfigPath,
       sourceCode,
       tsModule.ScriptTarget.Latest,
-      true
+      true,
     );
     host.write(
       remoteDefsPath,
-      applyChangesToString(sourceCode, addRemoteDefinition(source, remoteName))
+      applyChangesToString(sourceCode, addRemoteDefinition(source, remoteName)),
     );
   } else {
     logger.warn(
-      `Could not find remote definitions at ${remoteDefsPath}. Did you generate this project with "@nx/react:host"?`
+      `Could not find remote definitions at ${remoteDefsPath}. Did you generate this project with "@nx/react:host"?`,
     );
   }
 
@@ -89,18 +89,18 @@ export function updateHostWithRemote(
       moduleFederationConfigPath,
       sourceCode,
       tsModule.ScriptTarget.Latest,
-      true
+      true,
     );
     host.write(
       appComponentPath,
       applyChangesToString(
         sourceCode,
-        addRemoteRoute(source, names(remoteName))
-      )
+        addRemoteRoute(source, names(remoteName)),
+      ),
     );
   } else {
     logger.warn(
-      `Could not find app component at ${appComponentPath}. Did you generate this project with "@nx/react:host"?`
+      `Could not find app component at ${appComponentPath}. Did you generate this project with "@nx/react:host"?`,
     );
   }
 }

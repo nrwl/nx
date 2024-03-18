@@ -31,7 +31,7 @@ export type NormalizedPackageJson = Pick<
  * Strip off non-pruning related fields from package.json
  */
 export function normalizePackageJson(
-  packageJson: PackageJson
+  packageJson: PackageJson,
 ): NormalizedPackageJson {
   const {
     name,

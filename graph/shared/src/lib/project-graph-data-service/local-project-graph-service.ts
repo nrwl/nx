@@ -21,15 +21,15 @@ export class LocalProjectGraphService implements ProjectGraphService {
   }
 
   async getExpandedTaskInputs(
-    taskId: string
+    taskId: string,
   ): Promise<Record<string, string[]>> {
     return new Promise((resolve) =>
-      resolve(window.expandedTaskInputsResponse[taskId])
+      resolve(window.expandedTaskInputsResponse[taskId]),
     );
   }
 
   async getSourceMaps(
-    url: string
+    url: string,
   ): Promise<Record<string, Record<string, string[]>>> {
     return new Promise((resolve) => resolve(window.sourceMapsResponse));
   }

@@ -10,7 +10,7 @@ import {
 } from './migrate';
 
 const createPackageJson = (
-  overrides: Partial<PackageJson> = {}
+  overrides: Partial<PackageJson> = {},
 ): PackageJson => ({
   name: 'some-workspace',
   version: '0.0.0',
@@ -31,7 +31,7 @@ describe('Migration', () => {
       });
 
       await expect(
-        migrator.migrate('mypackage', 'myversion')
+        migrator.migrate('mypackage', 'myversion'),
       ).rejects.toThrowError(/cannot fetch/);
     });
 
@@ -409,7 +409,7 @@ describe('Migration', () => {
       });
 
       expect(
-        await migrator.migrate('@my-company/nx-workspace', '2.0.0')
+        await migrator.migrate('@my-company/nx-workspace', '2.0.0'),
       ).toStrictEqual({
         migrations: [],
         packageUpdates: {
@@ -493,7 +493,7 @@ describe('Migration', () => {
       });
 
       expect(
-        await migrator.migrate('@my-company/nx-workspace', '2.0.0')
+        await migrator.migrate('@my-company/nx-workspace', '2.0.0'),
       ).toStrictEqual({
         migrations: [],
         packageUpdates: {
@@ -642,7 +642,7 @@ describe('Migration', () => {
         expect(enquirer.prompt).toHaveBeenCalledWith(
           expect.arrayContaining([
             expect.objectContaining({ message: promptMessage }),
-          ])
+          ]),
         );
       });
 
@@ -973,7 +973,7 @@ describe('Migration', () => {
         expect(enquirer.prompt).toHaveBeenCalledWith(
           expect.arrayContaining([
             expect.objectContaining({ message: promptMessage }),
-          ])
+          ]),
         );
       });
 
@@ -1491,7 +1491,7 @@ describe('Migration', () => {
       expect(normalizeVersion('1.2.3')).toEqual('1.2.3');
       expect(normalizeVersion('1.2.3-beta.1')).toEqual('1.2.3-beta.1');
       expect(normalizeVersion('1.2.3-beta-next.1')).toEqual(
-        '1.2.3-beta-next.1'
+        '1.2.3-beta-next.1',
       );
     });
 
@@ -1503,7 +1503,7 @@ describe('Migration', () => {
 
     it('should handle incorrect versions', () => {
       expect(normalizeVersion('1-invalid-version')).toEqual(
-        '1.0.0-invalid-version'
+        '1.0.0-invalid-version',
       );
       expect(normalizeVersion('1.invalid-version')).toEqual('1.0.0');
       expect(normalizeVersion('invalid-version')).toEqual('0.0.0');
@@ -1550,49 +1550,49 @@ describe('Migration', () => {
           return Promise.resolve(version);
         });
       expect(
-        await parseMigrationsOptions({ packageAndVersion: '@angular/core' })
+        await parseMigrationsOptions({ packageAndVersion: '@angular/core' }),
       ).toMatchObject({
         targetPackage: '@angular/core',
         targetVersion: 'latest',
       });
       expect(
-        await parseMigrationsOptions({ packageAndVersion: '8.12' })
+        await parseMigrationsOptions({ packageAndVersion: '8.12' }),
       ).toMatchObject({
         targetPackage: '@nrwl/workspace',
         targetVersion: '8.12.0',
       });
       expect(
-        await parseMigrationsOptions({ packageAndVersion: '8' })
+        await parseMigrationsOptions({ packageAndVersion: '8' }),
       ).toMatchObject({
         targetPackage: '@nrwl/workspace',
         targetVersion: '8.0.0',
       });
       expect(
-        await parseMigrationsOptions({ packageAndVersion: '12' })
+        await parseMigrationsOptions({ packageAndVersion: '12' }),
       ).toMatchObject({
         targetPackage: '@nrwl/workspace',
         targetVersion: '12.0.0',
       });
       expect(
-        await parseMigrationsOptions({ packageAndVersion: '8.12.0-beta.0' })
+        await parseMigrationsOptions({ packageAndVersion: '8.12.0-beta.0' }),
       ).toMatchObject({
         targetPackage: '@nrwl/workspace',
         targetVersion: '8.12.0-beta.0',
       });
       expect(
-        await parseMigrationsOptions({ packageAndVersion: 'next' })
+        await parseMigrationsOptions({ packageAndVersion: 'next' }),
       ).toMatchObject({
         targetPackage: 'nx',
         targetVersion: 'next',
       });
       expect(
-        await parseMigrationsOptions({ packageAndVersion: 'canary' })
+        await parseMigrationsOptions({ packageAndVersion: 'canary' }),
       ).toMatchObject({
         targetPackage: 'nx',
         targetVersion: 'canary',
       });
       expect(
-        await parseMigrationsOptions({ packageAndVersion: '13.10.0' })
+        await parseMigrationsOptions({ packageAndVersion: '13.10.0' }),
       ).toMatchObject({
         targetPackage: '@nrwl/workspace',
         targetVersion: '13.10.0',
@@ -1600,25 +1600,25 @@ describe('Migration', () => {
       expect(
         await parseMigrationsOptions({
           packageAndVersion: '@nx/workspace@8.12',
-        })
+        }),
       ).toMatchObject({
         targetPackage: '@nx/workspace',
         targetVersion: '8.12.0',
       });
       expect(
-        await parseMigrationsOptions({ packageAndVersion: 'mypackage@8.12' })
+        await parseMigrationsOptions({ packageAndVersion: 'mypackage@8.12' }),
       ).toMatchObject({
         targetPackage: 'mypackage',
         targetVersion: '8.12.0',
       });
       expect(
-        await parseMigrationsOptions({ packageAndVersion: 'mypackage' })
+        await parseMigrationsOptions({ packageAndVersion: 'mypackage' }),
       ).toMatchObject({
         targetPackage: 'mypackage',
         targetVersion: 'latest',
       });
       expect(
-        await parseMigrationsOptions({ packageAndVersion: 'mypackage2' })
+        await parseMigrationsOptions({ packageAndVersion: 'mypackage2' }),
       ).toMatchObject({
         targetPackage: 'mypackage2',
         targetVersion: 'latest',
@@ -1626,7 +1626,7 @@ describe('Migration', () => {
       expect(
         await parseMigrationsOptions({
           packageAndVersion: '@nx/workspace@latest',
-        })
+        }),
       ).toMatchObject({
         targetPackage: '@nx/workspace',
         targetVersion: 'latest',
@@ -1634,7 +1634,7 @@ describe('Migration', () => {
       expect(
         await parseMigrationsOptions({
           packageAndVersion: '@nx/workspace@alpha',
-        })
+        }),
       ).toMatchObject({
         targetPackage: '@nx/workspace',
         targetVersion: 'alpha',
@@ -1646,22 +1646,25 @@ describe('Migration', () => {
         parseMigrationsOptions({
           packageAndVersion: '8.12.0',
           from: '@myscope/a@',
-        })
+        }),
       ).rejects.toThrowError(
-        `Incorrect 'from' section. Use --from="package@version"`
+        `Incorrect 'from' section. Use --from="package@version"`,
       );
       await expect(() =>
         parseMigrationsOptions({
           packageAndVersion: '8.12.0',
           from: '@myscope/a',
-        })
+        }),
       ).rejects.toThrowError(
-        `Incorrect 'from' section. Use --from="package@version"`
+        `Incorrect 'from' section. Use --from="package@version"`,
       );
       await expect(() =>
-        parseMigrationsOptions({ packageAndVersion: '8.12.0', from: 'myscope' })
+        parseMigrationsOptions({
+          packageAndVersion: '8.12.0',
+          from: 'myscope',
+        }),
       ).rejects.toThrowError(
-        `Incorrect 'from' section. Use --from="package@version"`
+        `Incorrect 'from' section. Use --from="package@version"`,
       );
     });
 
@@ -1670,22 +1673,22 @@ describe('Migration', () => {
         parseMigrationsOptions({
           packageAndVersion: '8.12.0',
           to: '@myscope/a@',
-        })
+        }),
       ).rejects.toThrowError(
-        `Incorrect 'to' section. Use --to="package@version"`
+        `Incorrect 'to' section. Use --to="package@version"`,
       );
       await expect(() =>
         parseMigrationsOptions({
           packageAndVersion: '8.12.0',
           to: '@myscope/a',
-        })
+        }),
       ).rejects.toThrowError(
-        `Incorrect 'to' section. Use --to="package@version"`
+        `Incorrect 'to' section. Use --to="package@version"`,
       );
       await expect(() =>
-        parseMigrationsOptions({ packageAndVersion: '8.12.0', to: 'myscope' })
+        parseMigrationsOptions({ packageAndVersion: '8.12.0', to: 'myscope' }),
       ).rejects.toThrowError(
-        `Incorrect 'to' section. Use --to="package@version"`
+        `Incorrect 'to' section. Use --to="package@version"`,
       );
     });
 

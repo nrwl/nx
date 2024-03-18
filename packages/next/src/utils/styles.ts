@@ -73,7 +73,7 @@ export const nextSpecificStyleDependenciesSwc = {
 
 export function addStyleDependencies(
   host: Tree,
-  options: { style?: string; swc?: boolean }
+  options: { style?: string; swc?: boolean },
 ): GeneratorCallback {
   const extraDependencies = options.swc
     ? nextSpecificStyleDependenciesSwc[options.style]
@@ -83,7 +83,7 @@ export function addStyleDependencies(
     ? addDependenciesToPackageJson(
         host,
         extraDependencies.dependencies,
-        extraDependencies.devDependencies
+        extraDependencies.devDependencies,
       )
     : () => {};
 }

@@ -74,7 +74,7 @@ export function IdeIntegrationTab(): JSX.Element {
             <div
               className={cx(
                 'absolute -left-4 hidden -translate-x-full translate-y-12 items-center xl:flex',
-                feature.connectionWidth
+                feature.connectionWidth,
               )}
             >
               <span className="absolute top-0 left-0 -mt-1 -ml-1 flex h-2 w-2">

@@ -29,7 +29,7 @@ export function expoBuildTarget(platform: 'ios.sim' | 'android.emu') {
 
 export function reactNativeTestTarget(
   platform: 'ios.sim' | 'android.emu',
-  e2eName: string
+  e2eName: string,
 ) {
   const buildPlatform = platform === 'ios.sim' ? 'ios' : 'android';
 
@@ -49,7 +49,7 @@ export function reactNativeTestTarget(
 
 export function expoTestTarget(
   platform: 'ios.sim' | 'android.emu',
-  e2eName: string
+  e2eName: string,
 ) {
   const buildPlatform = platform === 'ios.sim' ? 'ios' : 'android';
 

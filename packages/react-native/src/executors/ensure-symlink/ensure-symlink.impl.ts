@@ -11,7 +11,7 @@ export interface ReactNativeEnsureSymlinkOutput {
  */
 export default async function* ensureSymlinkExecutor(
   _,
-  context: ExecutorContext
+  context: ExecutorContext,
 ): AsyncGenerator<ReactNativeEnsureSymlinkOutput> {
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;

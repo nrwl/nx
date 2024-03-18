@@ -19,7 +19,7 @@ export function createFiles(tree: Tree, options: NormalizedOptions): void {
     tree,
     joinPathFragments(__dirname, '..', 'files', 'common'),
     options.projectRoot,
-    substitutions
+    substitutions,
   );
 
   if (options.controller) {
@@ -27,7 +27,7 @@ export function createFiles(tree: Tree, options: NormalizedOptions): void {
       tree,
       joinPathFragments(__dirname, '..', 'files', 'controller'),
       options.projectRoot,
-      substitutions
+      substitutions,
     );
 
     if (options.unitTestRunner === 'none') {
@@ -36,8 +36,8 @@ export function createFiles(tree: Tree, options: NormalizedOptions): void {
           options.projectRoot,
           'src',
           'lib',
-          `${substitutions.fileName}.controller.spec.ts`
-        )
+          `${substitutions.fileName}.controller.spec.ts`,
+        ),
       );
     }
   }
@@ -47,7 +47,7 @@ export function createFiles(tree: Tree, options: NormalizedOptions): void {
       tree,
       joinPathFragments(__dirname, '..', 'files', 'service'),
       options.projectRoot,
-      substitutions
+      substitutions,
     );
 
     if (options.unitTestRunner === 'none') {
@@ -56,8 +56,8 @@ export function createFiles(tree: Tree, options: NormalizedOptions): void {
           options.projectRoot,
           'src',
           'lib',
-          `${substitutions.fileName}.service.spec.ts`
-        )
+          `${substitutions.fileName}.service.spec.ts`,
+        ),
       );
     }
   }

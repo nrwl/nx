@@ -17,13 +17,13 @@ export type NormalizedNgRxRootStoreGeneratorOptions = Schema & {
 
 export function normalizeOptions(
   tree: Tree,
-  options: Schema
+  options: Schema,
 ): NormalizedNgRxRootStoreGeneratorOptions {
   let rxjsVersion: string;
   try {
     rxjsVersion = checkAndCleanWithSemver(
       'rxjs',
-      readJson(tree, 'package.json').dependencies['rxjs']
+      readJson(tree, 'package.json').dependencies['rxjs'],
     );
   } catch {
     rxjsVersion = checkAndCleanWithSemver('rxjs', defaultRxjsVersion);
@@ -33,7 +33,7 @@ export function normalizeOptions(
   const isStandalone = isNgStandaloneApp(tree, options.project);
   const appConfigPath = joinPathFragments(
     project.sourceRoot,
-    'app/app.config.ts'
+    'app/app.config.ts',
   );
   const appMainPath =
     project.targets.build.options.main ?? project.targets.build.options.browser;
@@ -48,8 +48,8 @@ export function normalizeOptions(
   const parent = !isStandalone
     ? joinPathFragments(project.sourceRoot, 'app/app.module.ts')
     : tree.exists(appConfigPath)
-    ? appConfigPath
-    : appMainPath;
+      ? appConfigPath
+      : appMainPath;
 
   options.directory = options.directory ?? '+state';
 

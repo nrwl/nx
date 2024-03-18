@@ -7,7 +7,7 @@ import type { NormalizedSchema, Schema } from '../schema';
 
 export async function normalizeOptions(
   tree: Tree,
-  options: Schema
+  options: Schema,
 ): Promise<NormalizedSchema> {
   options.type ??= 'component';
   const {
@@ -33,7 +33,7 @@ export async function normalizeOptions(
 
   const { prefix, root, sourceRoot } = readProjectConfiguration(
     tree,
-    projectName
+    projectName,
   ) as AngularProjectConfiguration;
 
   const selector =

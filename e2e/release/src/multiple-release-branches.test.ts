@@ -22,7 +22,7 @@ expect.addSnapshotSerializer({
         .replaceAll(' in /{project-name}', ' in {project-name}')
         .replaceAll(
           /integrity:\s*.*/g,
-          'integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
+          'integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX',
         )
         .replaceAll(/\b[0-9a-f]{40}\b/g, '{SHASUM}')
         .replaceAll(/\d*B  index\.js/g, 'XXB  index.js')
@@ -39,7 +39,7 @@ expect.addSnapshotSerializer({
         .replaceAll('npm install --package-lock-only', '{lock-file-command}')
         .replaceAll(
           'yarn install --mode update-lockfile',
-          '{lock-file-command}'
+          '{lock-file-command}',
         )
         .replaceAll('pnpm install --lockfile-only', '{lock-file-command}')
         .replaceAll(getSelectedPackageManager(), '{package-manager}')
@@ -97,7 +97,7 @@ describe('nx release multiple release branches', () => {
     runCommand(`git add .`);
     runCommand(`git commit -m "chore: initial commit"`);
     const initialVersionResult = runCLI(
-      `release version 0.0.7 --first-release`
+      `release version 0.0.7 --first-release`,
     );
 
     runCommand(`git checkout -b release/1.x`);

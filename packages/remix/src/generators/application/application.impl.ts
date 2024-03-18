@@ -39,7 +39,7 @@ import { updateJestTestMatch } from '../../utils/testing-config-utils';
 
 export function remixApplicationGenerator(
   tree: Tree,
-  options: NxRemixGeneratorSchema
+  options: NxRemixGeneratorSchema,
 ) {
   return remixApplicationGeneratorInternal(tree, {
     addPlugin: false,
@@ -49,7 +49,7 @@ export function remixApplicationGenerator(
 
 export async function remixApplicationGeneratorInternal(
   tree: Tree,
-  _options: NxRemixGeneratorSchema
+  _options: NxRemixGeneratorSchema,
 ) {
   const options = await normalizeOptions(tree, _options);
   const tasks: GeneratorCallback[] = [
@@ -124,21 +124,21 @@ export async function remixApplicationGeneratorInternal(
     tree,
     joinPathFragments(__dirname, 'files/common'),
     options.projectRoot,
-    vars
+    vars,
   );
 
   if (options.rootProject) {
     const gitignore = tree.read('.gitignore', 'utf-8');
     tree.write(
       '.gitignore',
-      `${gitignore}\n.cache\nbuild\npublic/build\n.env\n`
+      `${gitignore}\n.cache\nbuild\npublic/build\n.env\n`,
     );
   } else {
     generateFiles(
       tree,
       joinPathFragments(__dirname, 'files/integrated'),
       options.projectRoot,
-      vars
+      vars,
     );
   }
 
@@ -169,14 +169,14 @@ export async function remixApplicationGeneratorInternal(
         },
         true,
         undefined,
-        true
+        true,
       );
       tasks.push(vitestTask);
     } else {
       const { configurationGenerator: jestConfigurationGenerator } =
         ensurePackage<typeof import('@nx/jest')>(
           '@nx/jest',
-          getPackageVersion(tree, 'nx')
+          getPackageVersion(tree, 'nx'),
         );
       const jestTask = await jestConfigurationGenerator(tree, {
         project: options.projectName,
@@ -200,19 +200,19 @@ export async function remixApplicationGeneratorInternal(
       tree,
       options.projectRoot,
       options.unitTestRunner,
-      options.rootProject
+      options.rootProject,
     );
     tasks.push(pkgInstallTask);
   } else {
     tree.delete(
-      joinPathFragments(options.projectRoot, `tests/routes/_index.spec.tsx`)
+      joinPathFragments(options.projectRoot, `tests/routes/_index.spec.tsx`),
     );
   }
 
   if (options.linter !== 'none') {
     const { lintProjectGenerator } = ensurePackage<typeof import('@nx/eslint')>(
       '@nx/eslint',
-      getPackageVersion(tree, 'nx')
+      getPackageVersion(tree, 'nx'),
     );
     const eslintTask = await lintProjectGenerator(tree, {
       linter: options.linter,
@@ -230,7 +230,7 @@ export async function remixApplicationGeneratorInternal(
     tree.write(
       joinPathFragments(options.projectRoot, '.eslintignore'),
       stripIndents`build
-    public/build`
+    public/build`,
     );
   }
 
@@ -279,13 +279,13 @@ export async function remixApplicationGeneratorInternal(
         'jest.preset.js',
         `import { nxPreset } from '@nx/jest/preset/jest-preset.js';
 export default {...nxPreset};
-`
+`,
       );
 
       updateJestTestMatch(
         tree,
         'jest.config.ts',
-        '<rootDir>/tests/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'
+        '<rootDir>/tests/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}',
       );
     }
   }

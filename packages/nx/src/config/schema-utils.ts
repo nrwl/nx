@@ -10,14 +10,14 @@ import { registerPluginTSTranspiler } from '../utils/nx-plugin';
  */
 export function getImplementationFactory<T>(
   implementation: string,
-  directory: string
+  directory: string,
 ): () => T {
   const [implementationModulePath, implementationExportName] =
     implementation.split('#');
   return () => {
     const modulePath = resolveImplementation(
       implementationModulePath,
-      directory
+      directory,
     );
     if (extname(modulePath) === '.ts') {
       registerPluginTSTranspiler();
@@ -37,10 +37,10 @@ export function getImplementationFactory<T>(
  */
 export function resolveImplementation(
   implementationModulePath: string,
-  directory: string
+  directory: string,
 ): string {
   const validImplementations = ['', '.js', '.ts'].map(
-    (x) => implementationModulePath + x
+    (x) => implementationModulePath + x,
   );
 
   for (const maybeImplementation of validImplementations) {
@@ -57,7 +57,7 @@ export function resolveImplementation(
   }
 
   throw new Error(
-    `Could not resolve "${implementationModulePath}" from "${directory}".`
+    `Could not resolve "${implementationModulePath}" from "${directory}".`,
   );
 }
 

@@ -44,7 +44,7 @@ export interface CyLinterOptions {
 
 export async function addLinterToCyProject(
   tree: Tree,
-  options: CyLinterOptions
+  options: CyLinterOptions,
 ) {
   if (options.linter === Linter.None) {
     return () => {};
@@ -65,7 +65,7 @@ export async function addLinterToCyProject(
         skipPackageJson: options.skipPackageJson,
         rootProject: options.rootProject,
         addPlugin: options.addPlugin,
-      })
+      }),
     );
   }
 
@@ -80,9 +80,9 @@ export async function addLinterToCyProject(
       ? addDependenciesToPackageJson(
           tree,
           {},
-          { 'eslint-plugin-cypress': eslintPluginCypressVersion }
+          { 'eslint-plugin-cypress': eslintPluginCypressVersion },
         )
-      : () => {}
+      : () => {},
   );
 
   if (isEslintConfigSupported(tree)) {
@@ -95,7 +95,7 @@ export async function addLinterToCyProject(
     addExtendsToLintConfig(
       tree,
       projectConfig.root,
-      'plugin:cypress/recommended'
+      'plugin:cypress/recommended',
     );
     const cyVersion = installedCypressVersion();
     /**
@@ -142,7 +142,7 @@ export async function addLinterToCyProject(
         overrides.push(cy6Override);
       }
       overrides.forEach((override) =>
-        addOverrideToLintConfig(tree, projectConfig.root, override)
+        addOverrideToLintConfig(tree, projectConfig.root, override),
       );
     }
   }

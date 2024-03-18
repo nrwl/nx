@@ -43,7 +43,7 @@ describe('setup-build generator', () => {
   it('should support user-defined main and tsConfig files', async () => {
     tree.write(
       'packages/mypkg/src/custom-main.ts',
-      'console.log("hello world");'
+      'console.log("hello world");',
     );
     writeJson(tree, 'packages/mypkg/tsconfig.custom.json', {});
 
@@ -74,7 +74,7 @@ describe('setup-build generator', () => {
       setupBuildGenerator(tree, {
         project: 'mypkg',
         bundler: 'tsc',
-      })
+      }),
     ).rejects.toThrow(/Cannot locate a main file for mypkg/);
 
     tree.write('packages/mypkg/src/main.ts', 'console.log("hello world");');
@@ -83,7 +83,7 @@ describe('setup-build generator', () => {
       setupBuildGenerator(tree, {
         project: 'mypkg',
         bundler: 'tsc',
-      })
+      }),
     ).rejects.toThrow(/Cannot locate a tsConfig file for mypkg/);
 
     expect(
@@ -91,7 +91,7 @@ describe('setup-build generator', () => {
         project: 'mypkg',
         bundler: 'tsc',
         main: 'packages/mypkg/src/custom-main.ts',
-      })
+      }),
     ).rejects.toThrow(/Cannot locate a main file for mypkg/);
 
     expect(
@@ -99,7 +99,7 @@ describe('setup-build generator', () => {
         project: 'mypkg',
         bundler: 'tsc',
         tsConfig: 'packages/mypkg/tsconfig.custom.json',
-      })
+      }),
     ).rejects.toThrow(/Cannot locate a tsConfig file for mypkg/);
   });
 

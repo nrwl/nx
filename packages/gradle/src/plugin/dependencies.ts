@@ -17,7 +17,7 @@ import { calculatedTargets, writeTargetsToCache } from './nodes';
 
 export const createDependencies: CreateDependencies = async (
   _,
-  context: CreateDependenciesContext
+  context: CreateDependenciesContext,
 ) => {
   const gradleFiles: string[] = findGradleFiles(context.filesToProcess);
   if (gradleFiles.length === 0) {
@@ -44,8 +44,8 @@ export const createDependencies: CreateDependencies = async (
           gradleProjectToProjectName,
           projectName,
           gradleFile,
-          context
-        )
+          context,
+        ),
       );
     }
   }
@@ -53,7 +53,7 @@ export const createDependencies: CreateDependencies = async (
   performance.measure(
     'gradleDependencies',
     gradleDependenciesStart.name,
-    gradleDependenciesEnd.name
+    gradleDependenciesEnd.name,
   );
 
   writeTargetsToCache(calculatedTargets);
@@ -84,7 +84,7 @@ function processGradleDependencies(
   gradleProjectToProjectName: Map<string, string>,
   sourceProjectName: string,
   gradleFile: string,
-  context: CreateDependenciesContext
+  context: CreateDependenciesContext,
 ) {
   const dependencies: RawProjectGraphDependency[] = [];
   const lines = readFileSync(depsFile).toString().split('\n');
@@ -107,7 +107,7 @@ function processGradleDependencies(
           .replace(/ \(n\)$/, '')
           .trim();
         const target = gradleProjectToProjectName.get(
-          gradleProjectName
+          gradleProjectName,
         ) as string;
         const dependency: RawProjectGraphDependency = {
           source: sourceProjectName,

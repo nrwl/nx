@@ -17,7 +17,7 @@ describe('librarySecondaryEntryPoint generator', () => {
         name: 'testing',
         library: 'lib1',
         skipFormat: true,
-      })
+      }),
     ).rejects.toThrow();
   });
 
@@ -32,7 +32,7 @@ describe('librarySecondaryEntryPoint generator', () => {
         name: 'testing',
         library: 'app1',
         skipFormat: true,
-      })
+      }),
     ).rejects.toThrow();
   });
 
@@ -43,7 +43,7 @@ describe('librarySecondaryEntryPoint generator', () => {
     });
     tree.write(
       'libs/lib1/package.json',
-      JSON.stringify({ name: '@my-org/lib1' })
+      JSON.stringify({ name: '@my-org/lib1' }),
     );
     tree.write('libs/lib1/testing/ng-package.json', '');
 
@@ -52,7 +52,7 @@ describe('librarySecondaryEntryPoint generator', () => {
         name: 'testing',
         library: 'lib1',
         skipFormat: true,
-      })
+      }),
     ).rejects.toThrow();
   });
 
@@ -63,7 +63,7 @@ describe('librarySecondaryEntryPoint generator', () => {
     });
     tree.write(
       'libs/lib1/package.json',
-      JSON.stringify({ name: '@my-org/lib1' })
+      JSON.stringify({ name: '@my-org/lib1' }),
     );
 
     await librarySecondaryEntryPointGenerator(tree, {
@@ -76,10 +76,10 @@ describe('librarySecondaryEntryPoint generator', () => {
     expect(tree.exists('libs/lib1/testing/README.md')).toBeTruthy();
     expect(tree.exists('libs/lib1/testing/src/index.ts')).toBeTruthy();
     expect(
-      tree.exists('libs/lib1/testing/src/lib/testing.module.ts')
+      tree.exists('libs/lib1/testing/src/lib/testing.module.ts'),
     ).toBeTruthy();
     expect(
-      tree.read('libs/lib1/testing/src/index.ts', 'utf-8')
+      tree.read('libs/lib1/testing/src/index.ts', 'utf-8'),
     ).toMatchSnapshot();
   });
 
@@ -90,7 +90,7 @@ describe('librarySecondaryEntryPoint generator', () => {
     });
     tree.write(
       'libs/lib1/package.json',
-      JSON.stringify({ name: '@my-org/lib1' })
+      JSON.stringify({ name: '@my-org/lib1' }),
     );
 
     await librarySecondaryEntryPointGenerator(tree, {
@@ -110,7 +110,7 @@ describe('librarySecondaryEntryPoint generator', () => {
     });
     tree.write(
       'libs/lib1/package.json',
-      JSON.stringify({ name: '@my-org/lib1' })
+      JSON.stringify({ name: '@my-org/lib1' }),
     );
 
     await librarySecondaryEntryPointGenerator(tree, {
@@ -121,7 +121,7 @@ describe('librarySecondaryEntryPoint generator', () => {
 
     const tsConfig = readJson(tree, 'tsconfig.base.json');
     expect(
-      tsConfig.compilerOptions.paths['@my-org/lib1/testing']
+      tsConfig.compilerOptions.paths['@my-org/lib1/testing'],
     ).toStrictEqual(['libs/lib1/testing/src/index.ts']);
   });
 
@@ -133,7 +133,7 @@ describe('librarySecondaryEntryPoint generator', () => {
     });
     tree.write(
       'libs/lib1/package.json',
-      JSON.stringify({ name: '@my-org/lib1' })
+      JSON.stringify({ name: '@my-org/lib1' }),
     );
 
     await librarySecondaryEntryPointGenerator(tree, {
@@ -144,7 +144,7 @@ describe('librarySecondaryEntryPoint generator', () => {
 
     const tsConfig = readJson(tree, 'tsconfig.json');
     expect(
-      tsConfig.compilerOptions.paths['@my-org/lib1/testing']
+      tsConfig.compilerOptions.paths['@my-org/lib1/testing'],
     ).toStrictEqual(['libs/lib1/testing/src/index.ts']);
   });
 
@@ -190,7 +190,7 @@ describe('librarySecondaryEntryPoint generator', () => {
     });
     tree.write(
       'libs/lib1/package.json',
-      JSON.stringify({ name: '@my-org/lib1' })
+      JSON.stringify({ name: '@my-org/lib1' }),
     );
 
     await librarySecondaryEntryPointGenerator(tree, {
@@ -200,10 +200,10 @@ describe('librarySecondaryEntryPoint generator', () => {
 
     expect(devkit.formatFiles).toHaveBeenCalled();
     expect(
-      tree.read('libs/lib1/testing/src/index.ts', 'utf-8')
+      tree.read('libs/lib1/testing/src/index.ts', 'utf-8'),
     ).toMatchSnapshot();
     expect(
-      tree.read('libs/lib1/testing/src/lib/testing.module.ts', 'utf-8')
+      tree.read('libs/lib1/testing/src/lib/testing.module.ts', 'utf-8'),
     ).toMatchSnapshot();
   });
 
@@ -215,7 +215,7 @@ describe('librarySecondaryEntryPoint generator', () => {
       });
       tree.write(
         'libs/lib1/package.json',
-        JSON.stringify({ name: '@my-org/lib1' })
+        JSON.stringify({ name: '@my-org/lib1' }),
       );
 
       await librarySecondaryEntryPointGenerator(tree, {
@@ -226,13 +226,13 @@ describe('librarySecondaryEntryPoint generator', () => {
       });
 
       expect(
-        tree.exists('libs/lib1/testing/src/lib/testing.module.ts')
+        tree.exists('libs/lib1/testing/src/lib/testing.module.ts'),
       ).toBeFalsy();
       expect(tree.exists('libs/lib1/testing/ng-package.json')).toBeTruthy();
       expect(tree.exists('libs/lib1/testing/README.md')).toBeTruthy();
       expect(tree.exists('libs/lib1/testing/src/index.ts')).toBeTruthy();
       expect(
-        tree.read('libs/lib1/testing/src/index.ts', 'utf-8')
+        tree.read('libs/lib1/testing/src/index.ts', 'utf-8'),
       ).toMatchSnapshot();
     });
   });

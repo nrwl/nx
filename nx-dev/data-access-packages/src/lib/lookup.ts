@@ -7,7 +7,7 @@ import { get as pointerGet } from 'jsonpointer';
  */
 export function getSchemaFromReference(
   reference: string,
-  lookup: Lookup
+  lookup: Lookup,
 ): JsonSchema | undefined {
   return getSchemaFromResult(loadReference(reference, lookup));
 }
@@ -17,7 +17,7 @@ export function loadReference(reference: string, lookup: Lookup): LookupResult {
 }
 
 export function getSchemaFromResult(
-  result: LookupResult
+  result: LookupResult,
 ): JsonSchema | undefined {
   return result === undefined ? undefined : result.schema;
 }
@@ -68,7 +68,7 @@ export class InternalLookup {
       // We do not support non-internal references
       console.error(
         '[SCHEMA] The schema appears to have non-internal references which is not supported:',
-        ref
+        ref,
       );
       return undefined;
     }

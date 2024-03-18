@@ -23,10 +23,10 @@ export abstract class Migrator {
   constructor(
     protected readonly tree: Tree,
     protected projectConfig: ProjectConfiguration,
-    protected readonly logger: Logger
+    protected readonly logger: Logger,
   ) {
     this.originalProjectConfig = Object.freeze(
-      JSON.parse(JSON.stringify(this.projectConfig))
+      JSON.parse(JSON.stringify(this.projectConfig)),
     );
   }
 
@@ -46,7 +46,7 @@ export abstract class Migrator {
     return originalPath?.startsWith(this.project.oldRoot)
       ? joinPathFragments(
           this.project.newRoot,
-          originalPath.replace(this.project.oldRoot, '')
+          originalPath.replace(this.project.oldRoot, ''),
         )
       : originalPath;
   }
@@ -69,7 +69,7 @@ export abstract class Migrator {
 
   protected moveFilePathsFromTargetToProjectRoot(
     target: TargetConfiguration,
-    options: string[]
+    options: string[],
   ) {
     options.forEach((option) => {
       this.getTargetValuesForOption(target, option).forEach((path) => {
@@ -110,7 +110,7 @@ export abstract class Migrator {
   protected updateTsConfigFile(
     tsConfigPath: string,
     rootTsConfigFile: string,
-    projectOffsetFromRoot: string
+    projectOffsetFromRoot: string,
   ): void {
     updateJson(this.tree, tsConfigPath, (json) => {
       json.extends = `${projectOffsetFromRoot}${rootTsConfigFile}`;
@@ -124,14 +124,14 @@ export abstract class Migrator {
     return originalPath?.startsWith(this.project.oldSourceRoot)
       ? joinPathFragments(
           this.project.newSourceRoot,
-          originalPath.replace(this.project.oldSourceRoot, '')
+          originalPath.replace(this.project.oldSourceRoot, ''),
         )
       : originalPath;
   }
 
   private getTargetValuesForOption(
     target: TargetConfiguration,
-    optionPath: string
+    optionPath: string,
   ): any[] {
     const values = new Set();
     const value = this.getValueForOption(target.options, optionPath);
@@ -151,7 +151,7 @@ export abstract class Migrator {
 
   private getValueForOption(
     options: Record<string, any> | undefined,
-    optionPath: string
+    optionPath: string,
   ): any {
     if (!options) {
       return null;

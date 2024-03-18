@@ -62,7 +62,7 @@ describe('15.7.1 migration (add-eslintignore)', () => {
     await addEslintIgnore(tree);
 
     expect(tree.read('.eslintignore', 'utf-8')).toEqual(
-      `node_modules\n${original}`
+      `node_modules\n${original}`,
     );
   });
 

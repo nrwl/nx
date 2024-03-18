@@ -26,6 +26,6 @@ export function updateDependencies(tree: Tree) {
       '@types/react-dom': typesReactDomVersion,
       eslint: eslintVersion,
       typescript: typescriptVersion,
-    }
+    },
   );
 }

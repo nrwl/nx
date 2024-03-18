@@ -16,12 +16,12 @@ import type { SetupTailwindSchema } from './schema';
 
 export default async function setupTailwind(
   tree: Tree,
-  options: SetupTailwindSchema
+  options: SetupTailwindSchema,
 ) {
   const project = readProjectConfiguration(tree, options.project);
   if (project.projectType !== 'application') {
     throw new Error(
-      `Project "${options.project}" is not an application. Please ensure the project is an application.`
+      `Project "${options.project}" is not an application. Please ensure the project is an application.`,
     );
   }
 
@@ -34,7 +34,7 @@ export default async function setupTailwind(
   if (options.js) {
     tree.rename(
       joinPathFragments(project.root, 'app/root.js'),
-      joinPathFragments(project.root, 'app/root.tsx')
+      joinPathFragments(project.root, 'app/root.tsx'),
     );
   }
   const pathToRoot = joinPathFragments(project.root, 'app/root.tsx');
@@ -43,7 +43,7 @@ export default async function setupTailwind(
     pathToRoot,
     'twStyles',
     './tailwind.css',
-    `{ rel: "stylesheet", href: twStyles }`
+    `{ rel: "stylesheet", href: twStyles }`,
   );
 
   addDependenciesToPackageJson(
@@ -51,7 +51,7 @@ export default async function setupTailwind(
     {
       tailwindcss: tailwindVersion,
     },
-    {}
+    {},
   );
 
   if (options.js) {

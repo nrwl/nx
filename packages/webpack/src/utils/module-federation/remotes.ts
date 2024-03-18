@@ -13,7 +13,7 @@ export function mapRemotes(
   remotes: Remotes,
   remoteEntryExt: 'js' | 'mjs',
   determineRemoteUrl: (remote: string) => string,
-  isRemoteGlobal = false
+  isRemoteGlobal = false,
 ): Record<string, string> {
   const mappedRemotes = {};
 
@@ -22,13 +22,13 @@ export function mapRemotes(
       mappedRemotes[remote[0]] = handleArrayRemote(
         remote,
         remoteEntryExt,
-        isRemoteGlobal
+        isRemoteGlobal,
       );
     } else if (typeof remote === 'string') {
       mappedRemotes[remote] = handleStringRemote(
         remote,
         determineRemoteUrl,
-        isRemoteGlobal
+        isRemoteGlobal,
       );
     }
   }
@@ -40,7 +40,7 @@ export function mapRemotes(
 function handleArrayRemote(
   remote: [string, string],
   remoteEntryExt: 'js' | 'mjs',
-  isRemoteGlobal: boolean
+  isRemoteGlobal: boolean,
 ): string {
   const [remoteName, remoteLocation] = remote;
   const remoteLocationExt = extname(remoteLocation);
@@ -71,7 +71,7 @@ function handleArrayRemote(
 function handleStringRemote(
   remote: string,
   determineRemoteUrl: (remote: string) => string,
-  isRemoteGlobal: boolean
+  isRemoteGlobal: boolean,
 ): string {
   const globalPrefix = isRemoteGlobal ? `${remote.replace(/-/g, '_')}@` : '';
 
@@ -89,7 +89,7 @@ function handleStringRemote(
 export function mapRemotesForSSR(
   remotes: Remotes,
   remoteEntryExt: 'js' | 'mjs',
-  determineRemoteUrl: (remote: string) => string
+  determineRemoteUrl: (remote: string) => string,
 ): Record<string, string> {
   const mappedRemotes = {};
 

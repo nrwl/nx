@@ -36,7 +36,7 @@ describe('setup-tailwind', () => {
         @tailwind components;
         @tailwind utilities;
         /* existing content */
-      `
+      `,
     );
   });
 
@@ -70,7 +70,7 @@ describe('setup-tailwind', () => {
     expect(tree.exists(`example/tailwind.config.js`)).toBeTruthy();
     expect(
       readProjectConfiguration(tree, 'example').targets.build.options
-        .postcssConfig
+        .postcssConfig,
     ).toEqual('example/postcss.config.js');
   });
 
@@ -87,7 +87,7 @@ describe('setup-tailwind', () => {
     await update(tree, { project: 'example' });
 
     expect(tree.read('example/postcss.config.js').toString()).toEqual(
-      '// existing'
+      '// existing',
     );
   });
 
@@ -104,7 +104,7 @@ describe('setup-tailwind', () => {
     await update(tree, { project: 'example' });
 
     expect(tree.read('example/tailwind.config.js').toString()).toEqual(
-      '// existing'
+      '// existing',
     );
   });
 

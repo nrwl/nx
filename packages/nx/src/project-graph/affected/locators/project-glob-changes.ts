@@ -15,9 +15,9 @@ export const getTouchedProjectsFromProjectGlobChanges: TouchedProjectLocator =
         await loadNxPlugins(
           nxJson?.plugins,
           getNxRequirePaths(workspaceRoot),
-          workspaceRoot
-        )
-      )
+          workspaceRoot,
+        ),
+      ),
     );
 
     const touchedProjects = new Set<string>();

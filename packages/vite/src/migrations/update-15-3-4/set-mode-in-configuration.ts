@@ -30,6 +30,6 @@ function forAllProjectsUsingViteAddMode(tree: Tree): void {
       updateProjectConfiguration(tree, projectName, {
         ...projectConfiguration,
       });
-    }
+    },
   );
 }

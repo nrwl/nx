@@ -34,7 +34,7 @@ function modifyRules(parent: { rules?: Record<string, unknown> }) {
       parent.rules[
         rule.replace(
           '@angular-eslint/template/accessibility-',
-          '@angular-eslint/template/'
+          '@angular-eslint/template/',
         )
       ] = ruleConfig;
       delete parent.rules[rule];

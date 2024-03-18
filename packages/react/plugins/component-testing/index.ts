@@ -54,7 +54,7 @@ type WebpackDevServer = {
  */
 export function nxComponentTestingPreset(
   pathToConfig: string,
-  options?: NxComponentTestingOptions
+  options?: NxComponentTestingOptions,
 ): {
   specPattern: string;
   devServer: ViteDevServer | WebpackDevServer;
@@ -73,7 +73,7 @@ export function nxComponentTestingPreset(
   }
 
   const normalizedProjectRootPath = ['.ts', '.js'].some((ext) =>
-    pathToConfig.endsWith(ext)
+    pathToConfig.endsWith(ext),
   )
     ? pathToConfig
     : dirname(pathToConfig);
@@ -97,7 +97,7 @@ export function nxComponentTestingPreset(
               mode: 'watch',
               command: 'serve',
             },
-            viteConfigPath
+            viteConfigPath,
           );
           return mergeConfig(resolved.config, {
             server: {
@@ -120,7 +120,7 @@ export function nxComponentTestingPreset(
     const graph = readCachedProjectGraph();
     const { targets: ctTargets, name: ctProjectName } = getProjectConfigByPath(
       graph,
-      pathToConfig
+      pathToConfig,
     );
     const ctTargetName = options?.ctTargetName || 'component-test';
     const ctConfigurationName = process.env.NX_CYPRESS_TARGET_CONFIGURATION;
@@ -130,7 +130,7 @@ export function nxComponentTestingPreset(
       ctTargets,
       ctProjectName,
       ctTargetName,
-      ctConfigurationName
+      ctConfigurationName,
     );
 
     let buildTarget: string = options?.buildTarget;
@@ -141,7 +141,7 @@ export function nxComponentTestingPreset(
           target: ctTargetName,
           configuration: ctConfigurationName,
         },
-        ctExecutorContext
+        ctExecutorContext,
       );
 
       buildTarget = ctExecutorOptions.devServerTarget;
@@ -149,14 +149,14 @@ export function nxComponentTestingPreset(
 
     if (!buildTarget) {
       throw new Error(
-        `Unable to find the 'devServerTarget' executor option in the '${ctTargetName}' target of the '${ctProjectName}' project`
+        `Unable to find the 'devServerTarget' executor option in the '${ctTargetName}' target of the '${ctProjectName}' project`,
       );
     }
 
     webpackConfig = buildTargetWebpack(
       ctExecutorContext,
       buildTarget,
-      ctProjectName
+      ctProjectName,
     );
   } catch (e) {
     if (e instanceof InvalidExecutorError) {
@@ -165,7 +165,7 @@ export function nxComponentTestingPreset(
 
     logger.warn(
       stripIndents`Unable to build a webpack config with the project graph. 
-      Falling back to default webpack config.`
+      Falling back to default webpack config.`,
     );
     logger.warn(e);
 
@@ -219,7 +219,7 @@ function withSchemaDefaults(target: Target, context: ExecutorContext) {
 function buildTargetWebpack(
   ctx: ExecutorContext,
   buildTarget: string,
-  componentTestingProjectName: string
+  componentTestingProjectName: string,
 ) {
   const graph = ctx.projectGraph;
   const parsed = parseTargetString(buildTarget, graph);
@@ -241,7 +241,7 @@ function buildTargetWebpack(
   ) {
     throw new InvalidExecutorError(
       `The '${parsed.target}' target of the '${parsed.project}' project is not using the '@nx/webpack:webpack' executor. ` +
-        `Please make sure to use '@nx/webpack:webpack' executor in that target to use Cypress Component Testing.`
+        `Please make sure to use '@nx/webpack:webpack' executor in that target to use Cypress Component Testing.`,
     );
   }
 
@@ -250,7 +250,7 @@ function buildTargetWebpack(
     buildableProjectConfig.targets,
     parsed.project,
     parsed.target,
-    parsed.target
+    parsed.target,
   );
 
   const {
@@ -267,7 +267,7 @@ function buildTargetWebpack(
     withSchemaDefaults(parsed, context),
     workspaceRoot,
     buildableProjectConfig.root!,
-    buildableProjectConfig.sourceRoot!
+    buildableProjectConfig.sourceRoot!,
   );
 
   let customWebpack: any;
@@ -277,7 +277,7 @@ function buildTargetWebpack(
       options.webpackConfig,
       options.tsConfig.startsWith(context.root)
         ? options.tsConfig
-        : join(context.root, options.tsConfig)
+        : join(context.root, options.tsConfig),
     );
   }
 
@@ -299,7 +299,7 @@ function buildTargetWebpack(
           sourceRoot: ctProjectConfig.sourceRoot,
         },
         context,
-      }
+      },
     );
 
     if (customWebpack) {

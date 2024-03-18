@@ -29,5 +29,5 @@ export type TasksRunner<T = unknown> = (
     taskGraph?: TaskGraph;
     hasher?: TaskHasher;
     daemon?: DaemonClient;
-  }
+  },
 ) => any | Promise<{ [id: string]: TaskStatus }>;

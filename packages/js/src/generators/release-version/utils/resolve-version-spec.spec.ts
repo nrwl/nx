@@ -8,8 +8,8 @@ describe('resolveVersionSpec()', () => {
         'projectA',
         '1.0.4',
         '^1.0.0',
-        '/test/packages/packageB'
-      )
+        '/test/packages/packageB',
+      ),
     ).toEqual('^1.0.0');
   });
 
@@ -19,8 +19,8 @@ describe('resolveVersionSpec()', () => {
         'projectA',
         '1.0.4',
         'workspace:^1.0.0',
-        '/test/packages/packageB'
-      )
+        '/test/packages/packageB',
+      ),
     ).toEqual('^1.0.0');
   });
 
@@ -31,8 +31,8 @@ describe('resolveVersionSpec()', () => {
           'projectA',
           '1.0.4',
           'workspace:*',
-          '/test/packages/packageB'
-        )
+          '/test/packages/packageB',
+        ),
       ).toEqual('1.0.4');
     });
 
@@ -42,8 +42,8 @@ describe('resolveVersionSpec()', () => {
           'projectA',
           '1.0.4',
           'workspace:^',
-          '/test/packages/packageB'
-        )
+          '/test/packages/packageB',
+        ),
       ).toEqual('^1.0.4');
     });
 
@@ -53,8 +53,8 @@ describe('resolveVersionSpec()', () => {
           'projectA',
           '1.0.4',
           'workspace:~',
-          '/test/packages/packageB'
-        )
+          '/test/packages/packageB',
+        ),
       ).toEqual('~1.0.4');
     });
   });
@@ -65,8 +65,8 @@ describe('resolveVersionSpec()', () => {
         'projectA',
         '1.0.0',
         'file:../projectB',
-        '/packages/projectB'
-      )
+        '/packages/projectB',
+      ),
     ).toEqual(expect.stringContaining(join('/packages/projectB')));
   });
 
@@ -76,8 +76,8 @@ describe('resolveVersionSpec()', () => {
         'projectA',
         '1.0.0',
         'link:../projectB',
-        '/packages/projectB'
-      )
+        '/packages/projectB',
+      ),
     ).toEqual(expect.stringContaining(join('/packages/projectB')));
   });
 });

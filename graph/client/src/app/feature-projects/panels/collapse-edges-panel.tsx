@@ -35,5 +35,5 @@ export const CollapseEdgesPanel = memo(
         </div>
       </div>
     );
-  }
+  },
 );

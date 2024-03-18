@@ -19,13 +19,13 @@ import {
 export async function normalizeSchema(
   tree: Tree,
   schema: Schema,
-  projectConfiguration: ProjectConfiguration
+  projectConfiguration: ProjectConfiguration,
 ): Promise<NormalizedSchema> {
   const { destination, newProjectName, importPath } =
     await determineProjectNameAndRootOptions(
       tree,
       schema,
-      projectConfiguration
+      projectConfiguration,
     );
 
   return {
@@ -51,7 +51,7 @@ type ProjectNameAndRootFormats = {
 async function determineProjectNameAndRootOptions(
   tree: Tree,
   options: Schema,
-  projectConfiguration: ProjectConfiguration
+  projectConfiguration: ProjectConfiguration,
 ): Promise<ProjectNameAndRootOptions> {
   if (
     !options.projectNameAndRootFormat &&
@@ -63,12 +63,12 @@ async function determineProjectNameAndRootOptions(
   validateName(
     options.newProjectName,
     options.projectNameAndRootFormat,
-    projectConfiguration
+    projectConfiguration,
   );
   const formats = getProjectNameAndRootFormats(
     tree,
     options,
-    projectConfiguration
+    projectConfiguration,
   );
   const format =
     options.projectNameAndRootFormat ?? (await determineFormat(formats));
@@ -83,7 +83,7 @@ async function determineProjectNameAndRootOptions(
 function validateName(
   name: string | undefined,
   projectNameAndRootFormat: ProjectNameAndRootFormat | undefined,
-  projectConfiguration: ProjectConfiguration
+  projectConfiguration: ProjectConfiguration,
 ): void {
   if (!name) {
     return;
@@ -91,7 +91,7 @@ function validateName(
 
   if (projectNameAndRootFormat === 'derived' && name.startsWith('@')) {
     throw new Error(
-      `The new project name "${name}" cannot start with "@" when the "projectNameAndRootFormat" is "derived".`
+      `The new project name "${name}" cannot start with "@" when the "projectNameAndRootFormat" is "derived".`,
     );
   }
 
@@ -113,14 +113,14 @@ function validateName(
     const validationRegex = new RegExp(appPattern);
     if (!validationRegex.test(name)) {
       throw new Error(
-        `The new project name should match the pattern "${appPattern}". The provided value "${name}" does not match.`
+        `The new project name should match the pattern "${appPattern}". The provided value "${name}" does not match.`,
       );
     }
   } else if (projectConfiguration.projectType === 'library') {
     const validationRegex = new RegExp(libraryPattern);
     if (!validationRegex.test(name)) {
       throw new Error(
-        `The new project name should match the pattern "${libraryPattern}". The provided value "${name}" does not match.`
+        `The new project name should match the pattern "${libraryPattern}". The provided value "${name}" does not match.`,
       );
     }
   }
@@ -129,7 +129,7 @@ function validateName(
 function getProjectNameAndRootFormats(
   tree: Tree,
   options: Schema,
-  projectConfiguration: ProjectConfiguration
+  projectConfiguration: ProjectConfiguration,
 ): ProjectNameAndRootFormats {
   let destination = normalizePathSlashes(options.destination);
 
@@ -140,14 +140,14 @@ function getProjectNameAndRootFormats(
   ) {
     throw new Error(
       `You can't specify a new project name with a directory path (${options.newProjectName}). ` +
-        `Please provide a valid name without path segments and the full destination with the "--destination" option.`
+        `Please provide a valid name without path segments and the full destination with the "--destination" option.`,
     );
   }
 
   const asProvidedOptions = getAsProvidedOptions(
     tree,
     { ...options, destination },
-    projectConfiguration
+    projectConfiguration,
   );
 
   if (options.projectNameAndRootFormat === 'as-provided') {
@@ -174,14 +174,14 @@ function getProjectNameAndRootFormats(
 
     throw new Error(
       `The provided new project name "${options.newProjectName}" is a scoped project name and this is not supported by the move generator when using the "derived" format. ` +
-        `Please provide a name without "@" or use the "as-provided" format.`
+        `Please provide a name without "@" or use the "as-provided" format.`,
     );
   }
 
   const derivedOptions = getDerivedOptions(
     tree,
     { ...options, destination },
-    projectConfiguration
+    projectConfiguration,
   );
 
   return {
@@ -191,7 +191,7 @@ function getProjectNameAndRootFormats(
 }
 
 async function determineFormat(
-  formats: ProjectNameAndRootFormats
+  formats: ProjectNameAndRootFormats,
 ): Promise<ProjectNameAndRootFormat> {
   if (!formats.derived) {
     return 'as-provided';
@@ -223,7 +223,7 @@ async function determineFormat(
     ],
     initial: 0,
   }).then(({ format }) =>
-    format === asProvidedSelectedValue ? 'as-provided' : 'derived'
+    format === asProvidedSelectedValue ? 'as-provided' : 'derived',
   );
 
   return result;
@@ -231,7 +231,7 @@ async function determineFormat(
 
 function logDeprecationMessage(
   formats: ProjectNameAndRootFormats,
-  options: Schema
+  options: Schema,
 ) {
   const callingGenerator =
     process.env.NX_ANGULAR_MOVE_INVOKED === 'true'
@@ -245,14 +245,14 @@ function logDeprecationMessage(
     Example: nx g ${callingGenerator} --projectName ${options.projectName} --destination ${formats['derived'].destination}` +
       (options.projectName !== formats['derived'].newProjectName
         ? ` --newProjectName ${formats['derived'].newProjectName}`
-        : '')
+        : ''),
   );
 }
 
 function getAsProvidedOptions(
   tree: Tree,
   options: Schema,
-  projectConfiguration: ProjectConfiguration
+  projectConfiguration: ProjectConfiguration,
 ): ProjectNameAndRootOptions {
   const newProjectName = options.newProjectName ?? options.projectName;
   const destination = options.destination;
@@ -285,7 +285,7 @@ function getAsProvidedOptions(
 function getDerivedOptions(
   tree: Tree,
   options: Schema,
-  projectConfiguration: ProjectConfiguration
+  projectConfiguration: ProjectConfiguration,
 ): ProjectNameAndRootOptions {
   const newProjectName = options.newProjectName
     ? names(options.newProjectName).fileName

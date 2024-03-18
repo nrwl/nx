@@ -4,7 +4,7 @@ import type { NormalizedOptions, Schema } from '../schema';
 
 export function normalizeOptions(
   tree: Tree,
-  options: Schema
+  options: Schema,
 ): NormalizedOptions {
   return {
     ...options,

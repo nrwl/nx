@@ -6,7 +6,7 @@ export function locateLibraryEntryPointFromDirectory(
   tree: Tree,
   directory: string,
   projectRoot: string,
-  projectSourceRoot: string
+  projectSourceRoot: string,
 ): string | null {
   const ngPackageJsonPath = joinPathFragments(directory, 'ng-package.json');
   let entryPointFile = tree.exists(ngPackageJsonPath)
@@ -27,6 +27,6 @@ export function locateLibraryEntryPointFromDirectory(
     tree,
     dirname(directory),
     projectRoot,
-    projectSourceRoot
+    projectSourceRoot,
   );
 }

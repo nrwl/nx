@@ -23,7 +23,7 @@ function getCompilerSetup(rootDir: string) {
 
   if (!tsConfigPath) {
     console.error(
-      `Cannot locate a tsconfig.spec.json. Please create one at ${rootDir}/tsconfig.spec.json`
+      `Cannot locate a tsconfig.spec.json. Please create one at ${rootDir}/tsconfig.spec.json`,
     );
   }
 
@@ -31,7 +31,7 @@ function getCompilerSetup(rootDir: string) {
   const config = ts.parseJsonConfigFileContent(
     readResult.config,
     ts.sys,
-    dirname(tsConfigPath)
+    dirname(tsConfigPath),
   );
   const compilerOptions = config.options;
   const host = ts.createCompilerHost(compilerOptions, true);
@@ -79,7 +79,7 @@ module.exports = function (path: string, options: ResolveOptions) {
       path,
       join(options.basedir, 'fake-placeholder.ts'),
       compilerOptions,
-      host
+      host,
     ).resolvedModule.resolvedFileName;
   }
 };

@@ -84,7 +84,7 @@ export async function hostInternal(tree: Tree, schema: Schema) {
       tree,
       options,
       hostProjectName,
-      typescriptConfiguration
+      typescriptConfiguration,
     );
     installTasks.push(ssrInstallTask);
   }

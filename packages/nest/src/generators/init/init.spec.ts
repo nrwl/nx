@@ -17,7 +17,7 @@ describe('init generator', () => {
 
     const packageJson = devkit.readJson(tree, 'package.json');
     expect(packageJson.devDependencies['@nestjs/schematics']).toBe(
-      nestJsSchematicsVersion
+      nestJsSchematicsVersion,
     );
     expect(packageJson.devDependencies['@nx/nest']).toBe(nxVersion);
   });

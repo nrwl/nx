@@ -15,7 +15,7 @@ export type MiddlewareGeneratorOptions = NestGeneratorWithLanguageOption &
 
 export async function middlewareGenerator(
   tree: Tree,
-  rawOptions: MiddlewareGeneratorOptions
+  rawOptions: MiddlewareGeneratorOptions,
 ) {
   await middlewareGeneratorInternal(tree, {
     nameAndDirectoryFormat: 'derived',
@@ -25,7 +25,7 @@ export async function middlewareGenerator(
 
 export async function middlewareGeneratorInternal(
   tree: Tree,
-  rawOptions: MiddlewareGeneratorOptions
+  rawOptions: MiddlewareGeneratorOptions,
 ): Promise<any> {
   const options = await normalizeMiddlewareOptions(tree, rawOptions);
 
@@ -36,13 +36,13 @@ export default middlewareGenerator;
 
 async function normalizeMiddlewareOptions(
   tree: Tree,
-  options: MiddlewareGeneratorOptions
+  options: MiddlewareGeneratorOptions,
 ): Promise<NormalizedOptions> {
   const normalizedOptions = await normalizeOptions(
     tree,
     'middleware',
     '@nx/nest:middleware',
-    options
+    options,
   );
   return {
     ...normalizedOptions,

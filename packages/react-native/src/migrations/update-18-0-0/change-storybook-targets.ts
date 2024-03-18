@@ -32,7 +32,7 @@ export default async function changeStorybookTargets(tree: Tree) {
       tasks.push(
         await storybookConfigurationGenerator(tree, {
           project: projectName,
-        })
+        }),
       );
     }
   }
@@ -69,8 +69,8 @@ export default async function changeStorybookTargets(tree: Tree) {
         '@storybook/addon-ondevice-backgrounds',
         '@storybook/addon-ondevice-controls',
         '@storybook/addon-ondevice-notes',
-      ]
-    )
+      ],
+    ),
   );
 
   return runTasksInSerial(...tasks);

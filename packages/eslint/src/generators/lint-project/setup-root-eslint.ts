@@ -20,7 +20,7 @@ export type SetupRootEsLintOptions = {
 
 export function setupRootEsLint(
   tree: Tree,
-  options: SetupRootEsLintOptions
+  options: SetupRootEsLintOptions,
 ): GeneratorCallback {
   const rootEslintFile = findEslintFile(tree);
   if (rootEslintFile) {
@@ -30,7 +30,7 @@ export function setupRootEsLint(
   writeJson(
     tree,
     '.eslintrc.json',
-    getGlobalEsLintConfiguration(options.unitTestRunner, options.rootProject)
+    getGlobalEsLintConfiguration(options.unitTestRunner, options.rootProject),
   );
 
   if (tree.exists('.eslintignore')) {
@@ -52,7 +52,7 @@ export function setupRootEsLint(
           '@typescript-eslint/parser': typescriptESLintVersion,
           '@typescript-eslint/eslint-plugin': typescriptESLintVersion,
           'eslint-config-prettier': eslintConfigPrettierVersion,
-        }
+        },
       )
     : () => {};
 }

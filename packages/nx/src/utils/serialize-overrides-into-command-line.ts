@@ -27,7 +27,7 @@ function serializeOption(key: string, value: any, unparsed: string[]) {
       serializeOption(
         `${key}.${flattenedKey}`,
         flattened[flattenedKey],
-        unparsed
+        unparsed,
       );
     }
   } else if (

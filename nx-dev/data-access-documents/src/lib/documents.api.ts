@@ -21,7 +21,7 @@ export class DocumentsApi {
       prefix: string;
       publicDocsRoot: string;
       tagsApi: TagsApi;
-    }
+    },
   ) {
     if (!options.id) {
       throw new Error('id cannot be undefined');
@@ -58,7 +58,7 @@ export class DocumentsApi {
   getSlugsStaticDocumentPaths(): string[] {
     if (this.options.prefix)
       return Object.keys(this.manifest).map(
-        (path) => `/${this.options.prefix}` + path
+        (path) => `/${this.options.prefix}` + path,
       );
     return Object.keys(this.manifest);
   }
@@ -85,7 +85,7 @@ export class DocumentsApi {
         };
       }
       throw new Error(
-        `Document not found in manifest with: "${path.join('/')}"`
+        `Document not found in manifest with: "${path.join('/')}"`,
       );
     }
     if (this.isDocumentIndex(document)) return this.getDocumentIndex(path);
@@ -105,7 +105,7 @@ export class DocumentsApi {
     const relatedDocuments = {};
     tags.forEach(
       (tag) =>
-        (relatedDocuments[tag] = this.options.tagsApi.getAssociatedItems(tag))
+        (relatedDocuments[tag] = this.options.tagsApi.getAssociatedItems(tag)),
     );
 
     return relatedDocuments;
@@ -127,7 +127,7 @@ export class DocumentsApi {
             card.description
           }" url="${[this.options.prefix, card.url]
             .filter(Boolean)
-            .join('/')}" /%}\n`
+            .join('/')}" /%}\n`,
       )
       .join('');
     return [
@@ -143,7 +143,7 @@ export class DocumentsApi {
 
     if (!document)
       throw new Error(
-        `Document not found in manifest with: "${path.join('/')}"`
+        `Document not found in manifest with: "${path.join('/')}"`,
       );
 
     if (!!document.file)

@@ -15,13 +15,13 @@ import { loadViteDynamicImport } from './executor-utils';
 export function normalizeViteConfigFilePath(
   contextRoot: string,
   projectRoot: string,
-  configFile?: string
+  configFile?: string,
 ): string | undefined {
   if (configFile) {
     const normalized = joinPathFragments(configFile);
     if (!existsSync(normalized)) {
       throw new Error(
-        `Could not find vite config at provided path "${normalized}".`
+        `Could not find vite config at provided path "${normalized}".`,
       );
     }
     return normalized;
@@ -32,34 +32,34 @@ export function normalizeViteConfigFilePath(
   for (const ext of allowsExt) {
     if (
       existsSync(
-        joinPathFragments(contextRoot, projectRoot, `vite.config.${ext}`)
+        joinPathFragments(contextRoot, projectRoot, `vite.config.${ext}`),
       )
     ) {
       return joinPathFragments(contextRoot, projectRoot, `vite.config.${ext}`);
     } else if (
       existsSync(
-        joinPathFragments(contextRoot, projectRoot, `vitest.config.${ext}`)
+        joinPathFragments(contextRoot, projectRoot, `vitest.config.${ext}`),
       )
     ) {
       return joinPathFragments(
         contextRoot,
         projectRoot,
-        `vitest.config.${ext}`
+        `vitest.config.${ext}`,
       );
     }
   }
 }
 
 export function getProjectTsConfigPath(
-  projectRoot: string
+  projectRoot: string,
 ): string | undefined {
   return existsSync(joinPathFragments(projectRoot, 'tsconfig.app.json'))
     ? joinPathFragments(projectRoot, 'tsconfig.app.json')
     : existsSync(joinPathFragments(projectRoot, 'tsconfig.lib.json'))
-    ? joinPathFragments(projectRoot, 'tsconfig.lib.json')
-    : existsSync(joinPathFragments(projectRoot, 'tsconfig.json'))
-    ? joinPathFragments(projectRoot, 'tsconfig.json')
-    : undefined;
+      ? joinPathFragments(projectRoot, 'tsconfig.lib.json')
+      : existsSync(joinPathFragments(projectRoot, 'tsconfig.json'))
+        ? joinPathFragments(projectRoot, 'tsconfig.json')
+        : undefined;
 }
 
 /**
@@ -67,7 +67,7 @@ export function getProjectTsConfigPath(
  */
 export function getViteServerProxyConfigPath(
   nxProxyConfig: string | undefined,
-  context: ExecutorContext
+  context: ExecutorContext,
 ): string | undefined {
   if (nxProxyConfig) {
     const projectRoot =
@@ -88,7 +88,7 @@ export function getViteServerProxyConfigPath(
  */
 export async function getViteServerOptions(
   options: ViteDevServerExecutorOptions,
-  context: ExecutorContext
+  context: ExecutorContext,
 ): Promise<Record<string, unknown>> {
   // returns vite ServerOptions
   // Allows ESM to be required in CJS modules. Vite will be published as ESM in the future.
@@ -106,7 +106,7 @@ export async function getViteServerOptions(
 
   const proxyConfigPath = getViteServerProxyConfigPath(
     options.proxyConfig,
-    context
+    context,
   );
   if (proxyConfigPath) {
     logger.info(`Loading proxy configuration from: ${proxyConfigPath}`);
@@ -118,7 +118,7 @@ export async function getViteServerOptions(
 
 export function getProxyConfig(
   context: ExecutorContext,
-  proxyConfig?: string
+  proxyConfig?: string,
 ): Record<string, string | unknown> | undefined {
   const proxyConfigPath = getViteServerProxyConfigPath(proxyConfig, context);
   if (proxyConfigPath) {

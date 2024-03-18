@@ -32,7 +32,7 @@ export function runPodInstall(
     buildFolder: './build',
     repoUpdate: false,
     deployment: false,
-  }
+  },
 ): GeneratorCallback {
   return () => {
     if (platform() !== 'darwin') {
@@ -61,7 +61,7 @@ export function podInstall(
     buildFolder: './build',
     repoUpdate: false,
     deployment: false,
-  }
+  },
 ) {
   try {
     if (existsSync(join(iosDirectory, '.xcode.env'))) {
@@ -77,7 +77,7 @@ export function podInstall(
       {
         cwd: iosDirectory,
         stdio: 'inherit',
-      }
+      },
     );
   } catch (e) {
     logger.error(podInstallErrorMessage);

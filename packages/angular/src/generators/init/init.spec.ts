@@ -26,7 +26,7 @@ bar
 
 .angular
 
-`
+`,
       );
 
       await init(tree, { skipFormat: true });
@@ -53,7 +53,7 @@ bar
 
 .angular
 
-`
+`,
       );
 
       await init(tree, { skipFormat: true });
@@ -76,10 +76,10 @@ bar
       await init(tree, { skipFormat: true });
 
       expect(tree.read('.gitignore', 'utf-8')).toContain(
-        'node_modules/.cache/angular'
+        'node_modules/.cache/angular',
       );
       expect(tree.read('.prettierignore', 'utf-8')).toContain(
-        'node_modules/.cache/angular'
+        'node_modules/.cache/angular',
       );
     });
   });
@@ -114,7 +114,7 @@ bar
 
 .angular
 
-`
+`,
         );
 
         await init(tree, { skipFormat: true });
@@ -141,7 +141,7 @@ bar
 
 .angular
 
-`
+`,
         );
 
         await init(tree, { skipFormat: true });
@@ -164,10 +164,10 @@ bar
         await init(tree, { skipFormat: true });
 
         expect(tree.read('.gitignore', 'utf-8')).toContain(
-          'node_modules/.cache/angular'
+          'node_modules/.cache/angular',
         );
         expect(tree.read('.prettierignore', 'utf-8')).toContain(
-          'node_modules/.cache/angular'
+          'node_modules/.cache/angular',
         );
       });
     });

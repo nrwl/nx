@@ -26,21 +26,21 @@ describe('create-nx-plugin', () => {
     checkFilesExist(
       'package.json',
       packageManagerLockFile[packageManager],
-      `project.json`
+      `project.json`,
     );
 
     runCLI(`build ${pluginName}`);
 
     checkFilesExist(
       `dist/${pluginName}/package.json`,
-      `dist/${pluginName}/src/index.js`
+      `dist/${pluginName}/src/index.js`,
     );
 
     runCLI(
-      `generate @nx/plugin:generator ${generatorName} --project=${pluginName}`
+      `generate @nx/plugin:generator ${generatorName} --project=${pluginName}`,
     );
     runCLI(
-      `generate @nx/plugin:executor ${executorName} --project=${pluginName}`
+      `generate @nx/plugin:executor ${executorName} --project=${pluginName}`,
     );
 
     runCLI(`build ${pluginName}`);
@@ -48,7 +48,7 @@ describe('create-nx-plugin', () => {
     checkFilesExist(
       `dist/${pluginName}/package.json`,
       `dist/${pluginName}/generators.json`,
-      `dist/${pluginName}/executors.json`
+      `dist/${pluginName}/executors.json`,
     );
   });
 
@@ -64,7 +64,7 @@ describe('create-nx-plugin', () => {
     checkFilesExist(
       `dist/packages/${pluginName}/package.json`,
       `dist/packages/${pluginName}/generators.json`,
-      `packages/${pluginName}-e2e/src/${pluginName}.spec.ts`
+      `packages/${pluginName}-e2e/src/${pluginName}.spec.ts`,
     );
 
     runCLI(`build create-${pluginName}-package`);

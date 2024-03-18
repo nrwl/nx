@@ -19,7 +19,7 @@ export type EnsureDependenciesOptions = {
 
 export function ensureDependencies(
   tree: Tree,
-  options: EnsureDependenciesOptions
+  options: EnsureDependenciesOptions,
 ): GeneratorCallback {
   const dependencies: Record<string, string> = {};
   const devDependencies: Record<string, string> = {

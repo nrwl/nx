@@ -63,7 +63,7 @@ export interface CreateNodesContext {
 export type CreateNodesFunction<T = unknown> = (
   projectConfigurationFile: string,
   options: T | undefined,
-  context: CreateNodesContext
+  context: CreateNodesContext,
 ) => CreateNodesResult | Promise<CreateNodesResult>;
 
 export interface CreateNodesResult {
@@ -83,7 +83,7 @@ export interface CreateNodesResult {
  */
 export type CreateNodes<T = unknown> = readonly [
   configFilePattern: string,
-  createNodesFunction: CreateNodesFunction<T>
+  createNodesFunction: CreateNodesFunction<T>,
 ];
 
 /**
@@ -124,7 +124,7 @@ export interface CreateDependenciesContext {
  */
 export type CreateDependencies<T = unknown> = (
   options: T | undefined,
-  context: CreateDependenciesContext
+  context: CreateDependenciesContext,
 ) => RawProjectGraphDependency[] | Promise<RawProjectGraphDependency[]>;
 
 /**
@@ -168,7 +168,7 @@ export function getPluginPathAndName(
   moduleName: string,
   paths: string[],
   projects: Record<string, ProjectConfiguration>,
-  root: string
+  root: string,
 ) {
   let pluginPath: string;
   try {
@@ -181,11 +181,11 @@ export function getPluginPathAndName(
         moduleName,
         readNxJson(root),
         projects,
-        root
+        root,
       );
       if (plugin) {
         const main = readPluginMainFromProjectConfiguration(
-          plugin.projectConfig
+          plugin.projectConfig,
         );
         pluginPath = main ? path.join(root, main) : plugin.path;
       } else {
@@ -218,7 +218,7 @@ export async function loadNxPluginAsync(
   pluginConfiguration: PluginConfiguration,
   paths: string[],
   projects: Record<string, ProjectConfiguration>,
-  root: string
+  root: string,
 ): Promise<LoadedNxPlugin> {
   const { plugin: moduleName, options } =
     typeof pluginConfiguration === 'object'
@@ -233,10 +233,10 @@ export async function loadNxPluginAsync(
     moduleName,
     paths,
     projects,
-    root
+    root,
   );
   const plugin = ensurePluginIsV2(
-    (await import(pluginPath)) as LoadedNxPlugin['plugin']
+    (await import(pluginPath)) as LoadedNxPlugin['plugin'],
   );
   plugin.name ??= name;
   nxPluginCache.set(moduleName, plugin);
@@ -244,7 +244,7 @@ export async function loadNxPluginAsync(
   performance.measure(
     `Load Nx Plugin: ${moduleName}`,
     `Load Nx Plugin: ${moduleName} - start`,
-    `Load Nx Plugin: ${moduleName} - end`
+    `Load Nx Plugin: ${moduleName} - end`,
   );
   return { plugin, options };
 }
@@ -253,7 +253,7 @@ export async function loadNxPlugins(
   plugins: PluginConfiguration[],
   paths = getNxRequirePaths(),
   root = workspaceRoot,
-  projects?: Record<string, ProjectConfiguration>
+  projects?: Record<string, ProjectConfiguration>,
 ): Promise<LoadedNxPlugin[]> {
   const result: LoadedNxPlugin[] = [
     { plugin: PackageJsonProjectsNextToProjectJsonPlugin },
@@ -268,9 +268,8 @@ export async function loadNxPlugins(
       require.resolve(typeof plugin === 'string' ? plugin : plugin.plugin);
     } catch {
       // If a plugin cannot be resolved, we will need projects to resolve it
-      projects ??= await retrieveProjectConfigurationsWithoutPluginInference(
-        root
-      );
+      projects ??=
+        await retrieveProjectConfigurationsWithoutPluginInference(root);
       break;
     }
   }
@@ -322,7 +321,7 @@ export function isNxPluginV1(plugin: NxPlugin): plugin is NxPluginV1 {
 export function readPluginPackageJson(
   pluginName: string,
   projects: Record<string, ProjectConfiguration>,
-  paths = getNxRequirePaths()
+  paths = getNxRequirePaths(),
 ): {
   path: string;
   json: PackageJson;
@@ -339,12 +338,12 @@ export function readPluginPackageJson(
       const localPluginPath = resolveLocalNxPlugin(
         pluginName,
         nxJson,
-        projects
+        projects,
       );
       if (localPluginPath) {
         const localPluginPackageJson = path.join(
           localPluginPath.path,
-          'package.json'
+          'package.json',
         );
         return {
           path: localPluginPackageJson,
@@ -370,13 +369,13 @@ export function resolveLocalNxPlugin(
   importPath: string,
   nxJsonConfiguration: NxJsonConfiguration,
   projects: Record<string, ProjectConfiguration>,
-  root = workspaceRoot
+  root = workspaceRoot,
 ): { path: string; projectConfig: ProjectConfiguration } | null {
   localPluginCache[importPath] ??= lookupLocalPlugin(
     importPath,
     nxJsonConfiguration,
     projects,
-    root
+    root,
   );
   return localPluginCache[importPath];
 }
@@ -429,7 +428,7 @@ function lookupLocalPlugin(
   importPath: string,
   nxJsonConfiguration: NxJsonConfiguration,
   projects: Record<string, ProjectConfiguration>,
-  root = workspaceRoot
+  root = workspaceRoot,
 ) {
   const plugin = findNxProjectForImportPath(importPath, projects, root);
   if (!plugin) {
@@ -447,11 +446,11 @@ function lookupLocalPlugin(
 function findNxProjectForImportPath(
   importPath: string,
   projects: Record<string, ProjectConfiguration>,
-  root = workspaceRoot
+  root = workspaceRoot,
 ): string | null {
   const tsConfigPaths: Record<string, string[]> = readTsConfigPaths(root);
   const possiblePaths = tsConfigPaths[importPath]?.map((p) =>
-    normalizePath(path.relative(root, path.join(root, p)))
+    normalizePath(path.relative(root, path.join(root, p))),
   );
   if (possiblePaths?.length) {
     const projectRootMappings =
@@ -466,11 +465,11 @@ function findNxProjectForImportPath(
       console.log(
         'Unable to find local plugin',
         possiblePaths,
-        projectRootMappings
+        projectRootMappings,
       );
     }
     throw new Error(
-      'Unable to resolve local plugin with import path ' + importPath
+      'Unable to resolve local plugin with import path ' + importPath,
     );
   }
 }
@@ -492,7 +491,7 @@ function readTsConfigPaths(root: string = workspaceRoot) {
 }
 
 function readPluginMainFromProjectConfiguration(
-  plugin: ProjectConfiguration
+  plugin: ProjectConfiguration,
 ): string | null {
   const { main } =
     Object.values(plugin.targets).find((x) =>
@@ -503,7 +502,7 @@ function readPluginMainFromProjectConfiguration(
         '@nrwl/js:swc',
         '@nx/node:package',
         '@nrwl/node:package',
-      ].includes(x.executor)
+      ].includes(x.executor),
     )?.options ||
     plugin.targets?.build?.options ||
     {};
@@ -511,7 +510,7 @@ function readPluginMainFromProjectConfiguration(
 }
 
 export async function getDefaultPlugins(
-  root: string
+  root: string,
 ): Promise<LoadedNxPlugin[]> {
   const plugins: NxPluginV2[] = [
     await import('../plugins/js'),
@@ -519,7 +518,7 @@ export async function getDefaultPlugins(
     ...(shouldMergeAngularProjects(root, false)
       ? [
           await import('../adapter/angular-json').then(
-            (m) => m.NxAngularJsonPlugin
+            (m) => m.NxAngularJsonPlugin,
           ),
         ]
       : []),

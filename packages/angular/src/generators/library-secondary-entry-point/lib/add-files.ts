@@ -3,7 +3,7 @@ import { NormalizedGeneratorOptions } from '../schema';
 
 export function addFiles(
   tree: Tree,
-  options: NormalizedGeneratorOptions
+  options: NormalizedGeneratorOptions,
 ): void {
   const nameVariants = names(options.name);
 
@@ -15,15 +15,15 @@ export function addFiles(
       ...options,
       ...nameVariants,
       tmpl: '',
-    }
+    },
   );
 
   if (options.skipModule) {
     tree.delete(
       joinPathFragments(
         options.entryPointDestination,
-        `src/lib/${nameVariants.fileName}.module.ts`
-      )
+        `src/lib/${nameVariants.fileName}.module.ts`,
+      ),
     );
   }
 }

@@ -36,7 +36,7 @@ export interface Target {
 export function printRunHelp(
   opts: { project: string; target: string },
   schema: Schema,
-  plugin: { plugin: string; entity: string }
+  plugin: { plugin: string; entity: string },
 ) {
   printHelp(`run ${opts.project}:${opts.target}`, schema, {
     mode: 'run',
@@ -46,7 +46,7 @@ export function printRunHelp(
 
 export function validateProject(
   projects: ProjectsConfigurations,
-  projectName: string
+  projectName: string,
 ) {
   const project = projects.projects[projectName];
   if (!project) {
@@ -55,19 +55,19 @@ export function validateProject(
 }
 
 function isPromise<T extends { success: boolean }>(
-  v: Promise<T> | AsyncIterableIterator<T>
+  v: Promise<T> | AsyncIterableIterator<T>,
 ): v is Promise<T> {
   return typeof (v as any)?.then === 'function';
 }
 
 async function* promiseToIterator<T extends { success: boolean }>(
-  v: Promise<T>
+  v: Promise<T>,
 ): AsyncIterableIterator<T> {
   yield await v;
 }
 
 async function iteratorToProcessStatusCode(
-  i: AsyncIterableIterator<{ success: boolean }>
+  i: AsyncIterableIterator<{ success: boolean }>,
 ): Promise<number> {
   // This is a workaround to fix an issue that only happens with
   // the @angular-devkit/build-angular:browser builder. Starting
@@ -87,7 +87,7 @@ async function iteratorToProcessStatusCode(
 async function parseExecutorAndTarget(
   { project, target }: Target,
   root: string,
-  projectsConfigurations: ProjectsConfigurations
+  projectsConfigurations: ProjectsConfigurations,
 ) {
   const proj = projectsConfigurations.projects[project];
   const targetConfig = proj.targets?.[target];
@@ -101,7 +101,7 @@ async function parseExecutorAndTarget(
     nodeModule,
     executor,
     root,
-    projectsConfigurations.projects
+    projectsConfigurations.projects,
   );
 
   return { executor, implementationFactory, nodeModule, schema, targetConfig };
@@ -110,13 +110,13 @@ async function parseExecutorAndTarget(
 async function printTargetRunHelpInternal(
   { project, target }: Target,
   root: string,
-  projectsConfigurations: ProjectsConfigurations
+  projectsConfigurations: ProjectsConfigurations,
 ) {
   const { executor, nodeModule, schema, targetConfig } =
     await parseExecutorAndTarget(
       { project, target },
       root,
-      projectsConfigurations
+      projectsConfigurations,
     );
 
   printRunHelp({ project, target }, schema, {
@@ -159,7 +159,7 @@ async function runExecutorInternal<T extends { success: boolean }>(
   nxJsonConfiguration: NxJsonConfiguration,
   projectGraph: ProjectGraph,
   taskGraph: TaskGraph,
-  isVerbose: boolean
+  isVerbose: boolean,
 ): Promise<AsyncIterableIterator<T>> {
   validateProject(projectsConfigurations, project);
 
@@ -167,7 +167,7 @@ async function runExecutorInternal<T extends { success: boolean }>(
     await parseExecutorAndTarget(
       { project, target, configuration },
       root,
-      projectsConfigurations
+      projectsConfigurations,
     );
   configuration ??= targetConfig.defaultConfiguration;
 
@@ -178,7 +178,7 @@ async function runExecutorInternal<T extends { success: boolean }>(
     schema,
     project,
     relative(root, cwd),
-    isVerbose
+    isVerbose,
   );
 
   if (
@@ -186,7 +186,7 @@ async function runExecutorInternal<T extends { success: boolean }>(
       nodeModule,
       executor,
       root,
-      projectsConfigurations.projects
+      projectsConfigurations.projects,
     ).isNxExecutor
   ) {
     const implementation = implementationFactory() as Executor<any>;
@@ -210,7 +210,7 @@ async function runExecutorInternal<T extends { success: boolean }>(
       return r;
     } else {
       throw new TypeError(
-        `NX Executor "${targetConfig.executor}" should return either a Promise or an AsyncIterator`
+        `NX Executor "${targetConfig.executor}" should return either a Promise or an AsyncIterator`,
       );
     }
   } else {
@@ -226,7 +226,7 @@ async function runExecutorInternal<T extends { success: boolean }>(
         runOptions: combinedOptions,
         projects: projectsConfigurations.projects,
       },
-      isVerbose
+      isVerbose,
     );
     const { eachValueFrom } = await import('../../adapter/rxjs-for-await');
     return eachValueFrom(observable as any);
@@ -261,7 +261,7 @@ async function runExecutorInternal<T extends { success: boolean }>(
 export async function runExecutor<T extends { success: boolean }>(
   targetDescription: Target,
   overrides: { [k: string]: any },
-  context: ExecutorContext
+  context: ExecutorContext,
 ): Promise<AsyncIterableIterator<T>> {
   return await runExecutorInternal<T>(
     targetDescription,
@@ -275,7 +275,7 @@ export async function runExecutor<T extends { success: boolean }>(
     context.nxJsonConfiguration,
     context.projectGraph,
     context.taskGraph,
-    context.isVerbose
+    context.isVerbose,
   );
 }
 
@@ -288,7 +288,7 @@ export function printTargetRunHelp(targetDescription: Target, root: string) {
     await printTargetRunHelpInternal(
       targetDescription,
       root,
-      projectsConfigurations
+      projectsConfigurations,
     );
   });
 }
@@ -299,7 +299,7 @@ export function run(
   targetDescription: Target,
   overrides: { [k: string]: any },
   isVerbose: boolean,
-  taskGraph: TaskGraph
+  taskGraph: TaskGraph,
 ) {
   const projectGraph = readCachedProjectGraph();
   return handleErrors(isVerbose, async () => {
@@ -315,8 +315,8 @@ export function run(
         readNxJson(),
         projectGraph,
         taskGraph,
-        isVerbose
-      )
+        isVerbose,
+      ),
     );
   });
 }

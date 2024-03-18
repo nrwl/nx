@@ -42,7 +42,7 @@ function readTargetsCache(): Record<
 }
 
 function writeTargetsToCache(
-  targets: Record<string, Record<string, TargetConfiguration>>
+  targets: Record<string, Record<string, TargetConfiguration>>,
 ) {
   writeJsonFile(cachePath, targets);
 }
@@ -81,7 +81,7 @@ export const createNodes: CreateNodes<WebpackPluginOptions> = [
           configFilePath,
           projectRoot,
           options,
-          context
+          context,
         );
 
     return {
@@ -99,7 +99,7 @@ async function createWebpackTargets(
   configFilePath: string,
   projectRoot: string,
   options: WebpackPluginOptions,
-  context: CreateNodesContext
+  context: CreateNodesContext,
 ): Promise<
   Record<
     string,
@@ -111,14 +111,14 @@ async function createWebpackTargets(
   const webpackConfig = resolveUserDefinedWebpackConfig(
     join(context.workspaceRoot, configFilePath),
     getRootTsConfigPath(),
-    true
+    true,
   );
 
   const webpackOptions = await readWebpackOptions(webpackConfig);
 
   const outputPath = normalizeOutputPath(
     webpackOptions.output?.path,
-    projectRoot
+    projectRoot,
   );
 
   const targets = {};
@@ -175,7 +175,7 @@ async function createWebpackTargets(
 
 function normalizeOutputPath(
   outputPath: string | undefined,
-  projectRoot: string
+  projectRoot: string,
 ): string | undefined {
   if (!outputPath) {
     // If outputPath is undefined, use webpack's default `dist` directory.

@@ -7,7 +7,7 @@ import {
 
 export function updateModuleFederationE2eProject(
   host: Tree,
-  options: NormalizedSchema
+  options: NormalizedSchema,
 ) {
   try {
     let projectConfig = readProjectConfiguration(host, options.e2eProjectName);

@@ -23,7 +23,7 @@ export type Options = [
     ignoredFiles?: string[];
     includeTransitiveDependencies?: boolean;
     useLocalPathsForWorkspaceDependencies?: boolean;
-  }
+  },
 ];
 
 export type MessageIds =
@@ -36,7 +36,7 @@ export const RULE_NAME = 'dependency-checks';
 
 export default ESLintUtils.RuleCreator(
   () =>
-    `https://github.com/nrwl/nx/blob/${NX_VERSION}/docs/generated/packages/eslint-plugin/documents/dependency-checks.md`
+    `https://github.com/nrwl/nx/blob/${NX_VERSION}/docs/generated/packages/eslint-plugin/documents/dependency-checks.md`,
 )<Options, MessageIds>({
   name: RULE_NAME,
   meta: {
@@ -94,7 +94,7 @@ export default ESLintUtils.RuleCreator(
         includeTransitiveDependencies,
         useLocalPathsForWorkspaceDependencies,
       },
-    ]
+    ],
   ) {
     if (!(context.parserServices as any).isJSON) {
       return {};
@@ -116,7 +116,7 @@ export default ESLintUtils.RuleCreator(
     const sourceProject = findProject(
       projectGraph,
       projectRootMappings,
-      sourceFilePath
+      sourceFilePath,
     );
 
     // check if source project exists
@@ -126,7 +126,7 @@ export default ESLintUtils.RuleCreator(
 
     // check if library has a build target
     const buildTarget = buildTargets.find(
-      (t) => sourceProject.data.targets?.[t]
+      (t) => sourceProject.data.targets?.[t],
     );
     if (!buildTarget) {
       return {};
@@ -144,14 +144,14 @@ export default ESLintUtils.RuleCreator(
         includeTransitiveDependencies,
         ignoredFiles,
         useLocalPathsForWorkspaceDependencies,
-      }
+      },
     );
     const expectedDependencyNames = Object.keys(npmDependencies);
 
     const projPackageJsonPath = join(
       workspaceRoot,
       sourceProject.data.root,
-      'package.json'
+      'package.json',
     );
 
     const projPackageJsonDeps: Record<string, string> =
@@ -163,7 +163,7 @@ export default ESLintUtils.RuleCreator(
         return;
       }
       const missingDeps = expectedDependencyNames.filter(
-        (d) => !projPackageJsonDeps[d] && !ignoredDependencies.includes(d)
+        (d) => !projPackageJsonDeps[d] && !ignoredDependencies.includes(d),
       );
 
       if (missingDeps.length) {
@@ -189,12 +189,12 @@ export default ESLintUtils.RuleCreator(
             if (deps.length) {
               return fixer.insertTextAfter(
                 deps[deps.length - 1] as any,
-                `,${mappedDeps}`
+                `,${mappedDeps}`,
               );
             } else {
               return fixer.insertTextAfterRange(
                 [node.value.range[0] + 1, node.value.range[1] - 1],
-                `${mappedDeps}\n  `
+                `${mappedDeps}\n  `,
               );
             }
           },
@@ -205,7 +205,7 @@ export default ESLintUtils.RuleCreator(
     function validateVersionMatchesInstalled(
       node: AST.JSONProperty,
       packageName: string,
-      packageRange: string
+      packageRange: string,
     ) {
       if (!checkVersionMismatches) {
         return;
@@ -234,14 +234,14 @@ export default ESLintUtils.RuleCreator(
             node as any,
             `"${packageName}": "${
               rootPackageJsonDeps[packageName] || npmDependencies[packageName]
-            }"`
+            }"`,
           ),
       });
     }
 
     function reportObsoleteDependency(
       node: AST.JSONProperty,
-      packageName: string
+      packageName: string,
     ) {
       if (!checkObsoleteDependencies) {
         return;
@@ -283,7 +283,7 @@ export default ESLintUtils.RuleCreator(
     }
 
     function validateDependenciesSectionExistance(
-      node: AST.JSONObjectExpression
+      node: AST.JSONObjectExpression,
     ) {
       if (
         !expectedDependencyNames.length ||
@@ -295,8 +295,8 @@ export default ESLintUtils.RuleCreator(
         !node.properties ||
         !node.properties.some((p) =>
           ['dependencies', 'peerDependencies', 'optionalDependencies'].includes(
-            (p.key as any).value
-          )
+            (p.key as any).value,
+          ),
         )
       ) {
         context.report({
@@ -320,12 +320,12 @@ export default ESLintUtils.RuleCreator(
             if (!node.properties.length) {
               return fixer.replaceText(
                 node as any,
-                `{\n  "dependencies": {${dependencies}\n  }\n}`
+                `{\n  "dependencies": {${dependencies}\n  }\n}`,
               );
             } else {
               return fixer.insertTextAfter(
                 node.properties[node.properties.length - 1] as any,
-                `,\n  "dependencies": {${dependencies}\n  }`
+                `,\n  "dependencies": {${dependencies}\n  }`,
               );
             }
           },
@@ -335,12 +335,12 @@ export default ESLintUtils.RuleCreator(
 
     return {
       ['JSONExpressionStatement > JSONObjectExpression > JSONProperty[key.value=/^(peer|optional)?dependencies$/i]'](
-        node: AST.JSONProperty
+        node: AST.JSONProperty,
       ) {
         validateMissingDependencies(node);
       },
       ['JSONExpressionStatement > JSONObjectExpression > JSONProperty[key.value=/^(peer|optional)?dependencies$/i] > JSONObjectExpression > JSONProperty'](
-        node: AST.JSONProperty
+        node: AST.JSONProperty,
       ) {
         const packageName = (node.key as any).value;
         const packageRange = (node.value as any).value;
@@ -356,7 +356,7 @@ export default ESLintUtils.RuleCreator(
         }
       },
       ['JSONExpressionStatement > JSONObjectExpression'](
-        node: AST.JSONObjectExpression
+        node: AST.JSONObjectExpression,
       ) {
         validateDependenciesSectionExistance(node);
       },

@@ -43,7 +43,7 @@ describe('getRelativeDependencyPaths', () => {
           },
         },
         dependencies: {},
-      }
+      },
     );
 
     expect(result).toEqual(['lib-1', 'lib-2', 'lib-3']);
@@ -78,7 +78,7 @@ describe('getRelativeDependencyPaths', () => {
           },
         },
         dependencies: {},
-      }
+      },
     );
 
     expect(result).toEqual(['../../libs']);
@@ -113,7 +113,7 @@ describe('getRelativeDependencyPaths', () => {
           },
         },
         dependencies: {},
-      }
+      },
     );
 
     expect(result).toEqual(['../../packages']);
@@ -148,7 +148,7 @@ describe('getRelativeDependencyPaths', () => {
           },
         },
         dependencies: {},
-      }
+      },
     );
 
     expect(result).toEqual([

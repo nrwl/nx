@@ -163,7 +163,7 @@ describe('watcher', () => {
       watcher.watch((err, paths) => {
         expect(paths.some(({ path }) => path === '.env.local')).toBeTruthy();
         expect(
-          paths.some(({ path }) => path === 'inner/.env.inner')
+          paths.some(({ path }) => path === 'inner/.env.inner'),
         ).toBeTruthy();
         expect(paths.some(({ path }) => path === 'inner/boo.txt')).toBeFalsy();
         done();

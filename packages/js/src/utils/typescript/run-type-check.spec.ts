@@ -28,8 +28,8 @@ describe('runTypeCheck', () => {
           },
         },
         null,
-        2
-      )
+        2,
+      ),
     );
   });
 
@@ -43,7 +43,7 @@ describe('runTypeCheck', () => {
       `
         const a: number = '1';
         const b: boolean = 0;
-      `
+      `,
     );
     const result = await runTypeCheck({
       workspaceRoot,
@@ -60,7 +60,7 @@ describe('runTypeCheck', () => {
       join(projectRoot, 'valid-source.ts'),
       `
         export const msg = 'Hello';
-      `
+      `,
     );
 
     await runTypeCheck({

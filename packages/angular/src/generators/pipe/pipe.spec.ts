@@ -23,7 +23,7 @@ describe('pipe generator', () => {
     // ASSERT
     expect(tree.read('test/src/app/test.pipe.ts', 'utf-8')).toMatchSnapshot();
     expect(
-      tree.read('test/src/app/test.pipe.spec.ts', 'utf-8')
+      tree.read('test/src/app/test.pipe.spec.ts', 'utf-8'),
     ).toMatchSnapshot();
   });
 
@@ -36,7 +36,7 @@ describe('pipe generator', () => {
 
     // ASSERT
     expect(tree.read('test/src/app/test.module.ts', 'utf-8')).not.toContain(
-      'TestPipe'
+      'TestPipe',
     );
   });
 
@@ -50,7 +50,7 @@ describe('pipe generator', () => {
 
     // ASSERT
     expect(
-      tree.exists('test/src/app/my-pipes/test/test.pipe.spec.ts')
+      tree.exists('test/src/app/my-pipes/test/test.pipe.spec.ts'),
     ).toBeFalsy();
   });
 
@@ -71,10 +71,10 @@ describe('pipe generator', () => {
       // ASSERT
       expect(tree.read('test/src/app/test.pipe.ts', 'utf-8')).toMatchSnapshot();
       expect(
-        tree.read('test/src/app/test.pipe.spec.ts', 'utf-8')
+        tree.read('test/src/app/test.pipe.spec.ts', 'utf-8'),
       ).toMatchSnapshot();
       expect(
-        tree.read('test/src/app/test.module.ts', 'utf-8')
+        tree.read('test/src/app/test.module.ts', 'utf-8'),
       ).toMatchSnapshot();
     });
 
@@ -89,13 +89,13 @@ describe('pipe generator', () => {
 
       // ASSERT
       expect(
-        tree.read('test/src/app/test/test.pipe.ts', 'utf-8')
+        tree.read('test/src/app/test/test.pipe.ts', 'utf-8'),
       ).toMatchSnapshot();
       expect(
-        tree.read('test/src/app/test/test.pipe.spec.ts', 'utf-8')
+        tree.read('test/src/app/test/test.pipe.spec.ts', 'utf-8'),
       ).toMatchSnapshot();
       expect(
-        tree.read('test/src/app/test.module.ts', 'utf-8')
+        tree.read('test/src/app/test.module.ts', 'utf-8'),
       ).toMatchSnapshot();
     });
 
@@ -111,13 +111,13 @@ describe('pipe generator', () => {
 
       // ASSERT
       expect(
-        tree.read('test/src/app/my-pipes/test/test.pipe.ts', 'utf-8')
+        tree.read('test/src/app/my-pipes/test/test.pipe.ts', 'utf-8'),
       ).toMatchSnapshot();
       expect(
-        tree.read('test/src/app/my-pipes/test/test.pipe.spec.ts', 'utf-8')
+        tree.read('test/src/app/my-pipes/test/test.pipe.spec.ts', 'utf-8'),
       ).toMatchSnapshot();
       expect(
-        tree.read('test/src/app/test.module.ts', 'utf-8')
+        tree.read('test/src/app/test.module.ts', 'utf-8'),
       ).toMatchSnapshot();
     });
 
@@ -134,7 +134,7 @@ describe('pipe generator', () => {
 
       // ASSERT
       expect(
-        tree.read('test/src/app/test.module.ts', 'utf-8')
+        tree.read('test/src/app/test.module.ts', 'utf-8'),
       ).toMatchSnapshot();
     });
 
@@ -151,7 +151,7 @@ describe('pipe generator', () => {
 
       // ASSERT
       expect(tree.read('test/src/app/test.module.ts', 'utf-8')).not.toContain(
-        'TestPipe'
+        'TestPipe',
       );
     });
   });
@@ -167,13 +167,13 @@ function addModule(tree: Tree) {
   exports: [],
 })
 export class TestModule {}
-`
+`,
   );
 }
 
 async function generatePipeWithDefaultOptions(
   tree: Tree,
-  overrides: Partial<Schema> = {}
+  overrides: Partial<Schema> = {},
 ) {
   await pipeGenerator(tree, {
     name: 'test',

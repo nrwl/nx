@@ -10,7 +10,7 @@ import { isArray, isObject } from './utils';
 function traverseAndReplaceReferences(
   item: Record<string, any> | any[] = {},
   keyToMatch = '',
-  lookup: Lookup
+  lookup: Lookup,
 ) {
   if (isObject(item)) {
     const entries = Object.entries(item);
@@ -26,7 +26,7 @@ function traverseAndReplaceReferences(
         const child = traverseAndReplaceReferences(
           objectValue,
           keyToMatch,
-          lookup
+          lookup,
         );
 
         if (
@@ -35,7 +35,7 @@ function traverseAndReplaceReferences(
         ) {
           item[objectKey] = getSchemaFromReference(
             child.$$$matched,
-            lookup
+            lookup,
           ) as any;
         }
       }
@@ -51,7 +51,7 @@ function traverseAndReplaceReferences(
 
 function getExamplesFileFromPath(
   rootPath: string,
-  examplesFilePath: string | null
+  examplesFilePath: string | null,
 ): string {
   let result: string = '';
   const path: string = join(rootPath, examplesFilePath);
@@ -66,7 +66,7 @@ function getExamplesFileFromPath(
 export function schemaResolver(
   schema: NxSchema,
   lookup: Lookup,
-  path: string
+  path: string,
 ): {
   resolveReferences: () => void;
   resolveExamplesFile: () => void;
@@ -82,7 +82,7 @@ export function schemaResolver(
       if (Object.prototype.hasOwnProperty.call(updatedSchema, 'examplesFile'))
         updatedSchema.examplesFile = getExamplesFileFromPath(
           path,
-          updatedSchema.examplesFile as string
+          updatedSchema.examplesFile as string,
         );
       return void 0;
     },

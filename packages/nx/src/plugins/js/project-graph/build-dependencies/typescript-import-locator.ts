@@ -31,8 +31,8 @@ export class TypeScriptImportLocator {
     visitor: (
       importExpr: string,
       filePath: string,
-      type: DependencyType
-    ) => void
+      type: DependencyType,
+    ) => void,
   ): void {
     const extension = path.extname(filePath);
     if (
@@ -52,7 +52,7 @@ export class TypeScriptImportLocator {
         filePath,
         strippedContent,
         tsModule.ScriptTarget.Latest,
-        true
+        true,
       );
       this.fromNode(filePath, tsFile, visitor);
     }
@@ -64,8 +64,8 @@ export class TypeScriptImportLocator {
     visitor: (
       importExpr: string,
       filePath: string,
-      type: DependencyType
-    ) => void
+      type: DependencyType,
+    ) => void,
   ): void {
     if (
       tsModule.isImportDeclaration(node) ||
@@ -106,7 +106,7 @@ export class TypeScriptImportLocator {
 
     if (node.kind === tsModule.SyntaxKind.PropertyAssignment) {
       const name = this.getPropertyAssignmentName(
-        (node as PropertyAssignment).name
+        (node as PropertyAssignment).name,
       );
       if (name === 'loadChildren') {
         const init = (node as PropertyAssignment).initializer;
@@ -125,7 +125,7 @@ export class TypeScriptImportLocator {
      * Continue traversing down the AST from the current node
      */
     tsModule.forEachChild(node, (child) =>
-      this.fromNode(filePath, child, visitor)
+      this.fromNode(filePath, child, visitor),
     );
   }
 

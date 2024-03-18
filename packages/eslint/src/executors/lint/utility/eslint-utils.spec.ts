@@ -156,7 +156,7 @@ describe('eslint-utils', () => {
       expect(ESLint).toHaveBeenCalledWith(
         expect.objectContaining({
           reportUnusedDisableDirectives: undefined,
-        })
+        }),
       );
     });
   });
@@ -164,9 +164,9 @@ describe('eslint-utils', () => {
   describe('ESLint Flat Config', () => {
     it('should throw if a non eslint.config.js file is used with ESLint Flat Config', async () => {
       await expect(
-        resolveAndInstantiateESLint('./.eslintrc.json', {} as any, true)
+        resolveAndInstantiateESLint('./.eslintrc.json', {} as any, true),
       ).rejects.toThrowErrorMatchingInlineSnapshot(
-        `"When using the new Flat Config with ESLint, all configs must be named eslint.config.js and .eslintrc files may not be used. See https://eslint.org/docs/latest/use/configure/configuration-files-new"`
+        `"When using the new Flat Config with ESLint, all configs must be named eslint.config.js and .eslintrc files may not be used. See https://eslint.org/docs/latest/use/configure/configuration-files-new"`,
       );
     });
 
@@ -177,10 +177,10 @@ describe('eslint-utils', () => {
           {
             useEslintrc: false,
           } as any,
-          true
-        )
+          true,
+        ),
       ).rejects.toThrowErrorMatchingInlineSnapshot(
-        `"For Flat Config, the \`useEslintrc\` option is not applicable. See https://eslint.org/docs/latest/use/configure/configuration-files-new"`
+        `"For Flat Config, the \`useEslintrc\` option is not applicable. See https://eslint.org/docs/latest/use/configure/configuration-files-new"`,
       );
 
       await expect(
@@ -189,10 +189,10 @@ describe('eslint-utils', () => {
           {
             resolvePluginsRelativeTo: './some-path',
           } as any,
-          true
-        )
+          true,
+        ),
       ).rejects.toThrowErrorMatchingInlineSnapshot(
-        `"For Flat Config, ESLint removed \`resolvePluginsRelativeTo\` and so it is not supported as an option. See https://eslint.org/docs/latest/use/configure/configuration-files-new"`
+        `"For Flat Config, ESLint removed \`resolvePluginsRelativeTo\` and so it is not supported as an option. See https://eslint.org/docs/latest/use/configure/configuration-files-new"`,
       );
 
       await expect(
@@ -201,10 +201,10 @@ describe('eslint-utils', () => {
           {
             ignorePath: './some-path',
           } as any,
-          true
-        )
+          true,
+        ),
       ).rejects.toThrowErrorMatchingInlineSnapshot(
-        `"For Flat Config, ESLint removed \`ignorePath\` and so it is not supported as an option. See https://eslint.org/docs/latest/use/configure/configuration-files-new"`
+        `"For Flat Config, ESLint removed \`ignorePath\` and so it is not supported as an option. See https://eslint.org/docs/latest/use/configure/configuration-files-new"`,
       );
     });
   });

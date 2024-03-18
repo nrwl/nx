@@ -37,7 +37,7 @@ import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-com
 
 export async function expoLibraryGenerator(
   host: Tree,
-  schema: Schema
+  schema: Schema,
 ): Promise<GeneratorCallback> {
   return await expoLibraryGeneratorInternal(host, {
     addPlugin: false,
@@ -48,12 +48,12 @@ export async function expoLibraryGenerator(
 
 export async function expoLibraryGeneratorInternal(
   host: Tree,
-  schema: Schema
+  schema: Schema,
 ): Promise<GeneratorCallback> {
   const options = await normalizeOptions(host, schema);
   if (options.publishable === true && !schema.importPath) {
     throw new Error(
-      `For publishable libs you have to provide a proper "--importPath" which needs to be a valid npm package name (e.g. my-awesome-lib or @myorg/my-lib)`
+      `For publishable libs you have to provide a proper "--importPath" which needs to be a valid npm package name (e.g. my-awesome-lib or @myorg/my-lib)`,
     );
   }
 
@@ -94,7 +94,7 @@ export async function expoLibraryGeneratorInternal(
     options.projectRoot,
     options.js,
     options.skipPackageJson,
-    options.addPlugin
+    options.addPlugin,
   );
   tasks.push(jestTask);
 
@@ -107,7 +107,7 @@ export async function expoLibraryGeneratorInternal(
       joinPathFragments(
         options.projectRoot,
         './src',
-        'index.' + (options.js ? 'js' : 'ts')
+        'index.' + (options.js ? 'js' : 'ts'),
       ),
     ]);
   }
@@ -125,7 +125,7 @@ export async function expoLibraryGeneratorInternal(
 
 async function addProject(
   host: Tree,
-  options: NormalizedSchema
+  options: NormalizedSchema,
 ): Promise<GeneratorCallback> {
   const project: ProjectConfiguration = {
     root: options.projectRoot,
@@ -142,7 +142,7 @@ async function addProject(
 
   const { configurationGenerator } = ensurePackage<typeof import('@nx/rollup')>(
     '@nx/rollup',
-    nxVersion
+    nxVersion,
   );
   const rollupConfigTask = await configurationGenerator(host, {
     ...options,
@@ -195,7 +195,7 @@ function updateTsConfig(tree: Tree, options: NormalizedSchema) {
       }
 
       return json;
-    }
+    },
   );
 }
 
@@ -211,9 +211,9 @@ function createFiles(host: Tree, options: NormalizedSchema) {
       offsetFromRoot: offsetFromRoot(options.projectRoot),
       rootTsConfigPath: getRelativePathToRootTsConfig(
         host,
-        options.projectRoot
+        options.projectRoot,
       ),
-    }
+    },
   );
 
   if (!options.publishable && !options.buildable) {

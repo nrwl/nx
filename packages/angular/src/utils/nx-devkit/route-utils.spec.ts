@@ -11,7 +11,7 @@ describe.each([
     tree.write(
       'routes-file.ts',
       `import { ${routeType} } from '@angular/router';
-      export const ROUTES: ${routes} = [];`
+      export const ROUTES: ${routes} = [];`,
     );
 
     // ACT
@@ -21,7 +21,7 @@ describe.each([
       "{path: 'test', children: ROUTES }",
       false,
       'ROUTES',
-      '@proj/lib'
+      '@proj/lib',
     );
 
     // ASSERT
@@ -39,14 +39,14 @@ describe.each([
     tree.write(
       'routes-file.ts',
       `import { ${routeType} } from '@angular/router';
-      export const ROUTES: ${routes} = [];`
+      export const ROUTES: ${routes} = [];`,
     );
 
     // ACT
     addRoute(
       tree,
       'routes-file.ts',
-      "{path: 'test', loadChildren: () => import('@proj/lib').then(m => m.ROUTES) }"
+      "{path: 'test', loadChildren: () => import('@proj/lib').then(m => m.ROUTES) }",
     );
 
     // ASSERT
@@ -69,7 +69,7 @@ describe.each([
       {
         path: '',
         component: NxWelcomeComponent
-      },];`
+      },];`,
     );
 
     // ACT
@@ -79,7 +79,7 @@ describe.each([
       `{
     path: 'mfe-kitchen',
     loadChildren: () => import('mfe-kitchen/Module').then(m => m.RemoteEntryModule)
-    }`
+    }`,
     );
 
     // ASSERT
@@ -104,7 +104,7 @@ describe.each([
     tree.write(
       'routes-file.ts',
       `import { ${routeType} } from '@angular/router';
-      export const ROUTES: ${routes} = [{path: 'test', loadChildren: () => import('@proj/lib').then(m => m.ROUTES) }];`
+      export const ROUTES: ${routes} = [{path: 'test', loadChildren: () => import('@proj/lib').then(m => m.ROUTES) }];`,
     );
 
     // ACT
@@ -122,7 +122,7 @@ describe.each([
     tree.write(
       'routes-file.ts',
       `import { ${routeType} } from '@angular/router';
-      export const ROUTES: ${routes} = [{path: 'test', providers: [provideState()], loadChildren: () => import('@proj/lib').then(m => m.ROUTES) }];`
+      export const ROUTES: ${routes} = [{path: 'test', providers: [provideState()], loadChildren: () => import('@proj/lib').then(m => m.ROUTES) }];`,
     );
 
     // ACT
@@ -140,7 +140,7 @@ describe.each([
     tree.write(
       'routes-file.ts',
       `import { ${routeType} } from '@angular/router';
-      export const ROUTES: ${routes} = [{path: '', providers: [provideState()], children: [{ path: 'test' }]}];`
+      export const ROUTES: ${routes} = [{path: '', providers: [provideState()], children: [{ path: 'test' }]}];`,
     );
 
     // ACT

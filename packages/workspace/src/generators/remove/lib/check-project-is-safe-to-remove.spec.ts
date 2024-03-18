@@ -24,7 +24,7 @@ describe('checkProjectIsSafeToRemove', () => {
           forceRemove: false,
           skipFormat: false,
         },
-        readProjectConfiguration(tree, 'root-project')
+        readProjectConfiguration(tree, 'root-project'),
       );
     }).toThrow();
   });
@@ -45,7 +45,7 @@ describe('checkProjectIsSafeToRemove', () => {
           forceRemove: false,
           skipFormat: false,
         },
-        readProjectConfiguration(tree, 'parent-project')
+        readProjectConfiguration(tree, 'parent-project'),
       );
     }).toThrow();
   });
@@ -66,7 +66,7 @@ describe('checkProjectIsSafeToRemove', () => {
           forceRemove: false,
           skipFormat: false,
         },
-        readProjectConfiguration(tree, 'e2e')
+        readProjectConfiguration(tree, 'e2e'),
       );
     }).not.toThrow();
   });

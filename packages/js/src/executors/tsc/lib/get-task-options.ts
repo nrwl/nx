@@ -12,7 +12,7 @@ import { normalizeOptions } from './normalize-options';
 const tasksOptionsCache = new Map<string, NormalizedExecutorOptions>();
 export function getTaskOptions(
   taskName: string,
-  context: ExecutorContext
+  context: ExecutorContext,
 ): NormalizedExecutorOptions | null {
   if (tasksOptionsCache.has(taskName)) {
     return tasksOptionsCache.get(taskName);
@@ -21,14 +21,14 @@ export function getTaskOptions(
   try {
     const { taskOptions, sourceRoot, root } = parseTaskInfo<ExecutorOptions>(
       taskName,
-      context
+      context,
     );
 
     const normalizedTaskOptions = normalizeOptions(
       taskOptions,
       context.root,
       sourceRoot,
-      root
+      root,
     );
 
     tasksOptionsCache.set(taskName, normalizedTaskOptions);
@@ -42,7 +42,7 @@ export function getTaskOptions(
 
 function parseTaskInfo<T = Record<string, any>>(
   taskName: string,
-  context: ExecutorContext
+  context: ExecutorContext,
 ): {
   taskOptions: T;
   root: string;

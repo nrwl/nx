@@ -32,12 +32,12 @@ export function TasksSidebar() {
   const groupByProject = searchParams.get('groupByProject') === 'true';
 
   const selectedWorkspaceRouteData = useRouteLoaderData(
-    'selectedWorkspace'
+    'selectedWorkspace',
   ) as ProjectGraphClientResponse & { targets: string[] };
   const workspaceLayout = selectedWorkspaceRouteData.layout;
 
   const routeData = useRouteLoaderData(
-    'selectedTarget'
+    'selectedTarget',
   ) as TaskGraphClientResponse;
   const { taskGraphs, errors } = routeData;
   let { projects, targets } = selectedWorkspaceRouteData;
@@ -51,7 +51,7 @@ export function TasksSidebar() {
   const allProjectsWithTargetAndNoErrors = projects.filter(
     (project) =>
       project.data.targets?.hasOwnProperty(selectedTarget) &&
-      !errors?.hasOwnProperty(createTaskName(project.name, selectedTarget))
+      !errors?.hasOwnProperty(createTaskName(project.name, selectedTarget)),
   );
 
   const selectedProjects = useMemo(
@@ -59,7 +59,7 @@ export function TasksSidebar() {
       isAllRoute
         ? allProjectsWithTargetAndNoErrors.map(({ name }) => name)
         : searchParams.get('projects')?.split(' ') ?? [],
-    [allProjectsWithTargetAndNoErrors, searchParams, isAllRoute]
+    [allProjectsWithTargetAndNoErrors, searchParams, isAllRoute],
   );
 
   function selectTarget(target: string) {
@@ -106,14 +106,14 @@ export function TasksSidebar() {
             : `/tasks/${encodeURIComponent(selectedTarget)}`,
           search: searchParams.toString(),
         },
-        false
-      )
+        false,
+      ),
     );
   }
 
   function deselectProject(project: string) {
     const newSelectedProjects = selectedProjects.filter(
-      (selectedProject) => selectedProject !== project
+      (selectedProject) => selectedProject !== project,
     );
     if (newSelectedProjects.length === 0) {
       searchParams.delete('projects');
@@ -126,8 +126,8 @@ export function TasksSidebar() {
           pathname: `/tasks/${encodeURIComponent(selectedTarget)}`,
           search: searchParams.toString(),
         },
-        false
-      )
+        false,
+      ),
     );
   }
 
@@ -139,8 +139,8 @@ export function TasksSidebar() {
           pathname: `/tasks/${encodeURIComponent(selectedTarget)}/all`,
           search: searchParams.toString(),
         },
-        false
-      )
+        false,
+      ),
     );
   }
 
@@ -152,8 +152,8 @@ export function TasksSidebar() {
           pathname: `/tasks/${encodeURIComponent(selectedTarget)}`,
           search: searchParams.toString(),
         },
-        false
-      )
+        false,
+      ),
     );
   }
 
@@ -197,7 +197,7 @@ export function TasksSidebar() {
 
         return currentSearchParams;
       },
-      { relative: 'path' }
+      { relative: 'path' },
     );
   }
 

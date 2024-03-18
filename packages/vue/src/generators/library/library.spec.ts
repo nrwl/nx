@@ -61,7 +61,7 @@ describe('lib', () => {
     expect(project).toEqual(
       expect.objectContaining({
         tags: ['one', 'two'],
-      })
+      }),
     );
   });
 
@@ -158,7 +158,7 @@ describe('lib', () => {
       expect(myLib).toEqual(
         expect.objectContaining({
           tags: ['one'],
-        })
+        }),
       );
 
       await libraryGenerator(tree, {
@@ -172,7 +172,7 @@ describe('lib', () => {
       expect(myLib2).toEqual(
         expect.objectContaining({
           tags: ['one', 'two'],
-        })
+        }),
       );
     });
 
@@ -180,10 +180,10 @@ describe('lib', () => {
       await libraryGenerator(tree, { ...defaultSchema, directory: 'myDir' });
       expect(tree.exists('my-dir/my-lib/src/index.ts')).toBeTruthy();
       expect(
-        tree.exists('my-dir/my-lib/src/lib/my-dir-my-lib.vue')
+        tree.exists('my-dir/my-lib/src/lib/my-dir-my-lib.vue'),
       ).toBeTruthy();
       expect(
-        tree.exists('my-dir/my-lib/src/lib/my-dir-my-lib.spec.ts')
+        tree.exists('my-dir/my-lib/src/lib/my-dir-my-lib.spec.ts'),
       ).toBeTruthy();
     });
 
@@ -198,10 +198,10 @@ describe('lib', () => {
       await libraryGenerator(tree, { ...defaultSchema, directory: 'myDir' });
       const tsconfigJson = readJson(tree, '/tsconfig.base.json');
       expect(tsconfigJson.compilerOptions.paths['@proj/my-dir/my-lib']).toEqual(
-        ['my-dir/my-lib/src/index.ts']
+        ['my-dir/my-lib/src/index.ts'],
       );
       expect(
-        tsconfigJson.compilerOptions.paths['my-dir-my-lib/*']
+        tsconfigJson.compilerOptions.paths['my-dir-my-lib/*'],
       ).toBeUndefined();
     });
 
@@ -255,7 +255,7 @@ describe('lib', () => {
         });
       } catch (e) {
         expect(e.message).toContain(
-          'For publishable libs you have to provide a proper "--importPath" which needs to be a valid npm package name (e.g. my-awesome-lib or @myorg/my-lib)'
+          'For publishable libs you have to provide a proper "--importPath" which needs to be a valid npm package name (e.g. my-awesome-lib or @myorg/my-lib)',
         );
       }
     });
@@ -297,7 +297,7 @@ describe('lib', () => {
 
       expect(packageJson.name).toBe('@myorg/lib');
       expect(
-        tsconfigJson.compilerOptions.paths[packageJson.name]
+        tsconfigJson.compilerOptions.paths[packageJson.name],
       ).toBeDefined();
     });
 
@@ -318,7 +318,7 @@ describe('lib', () => {
         });
       } catch (e) {
         expect(e.message).toContain(
-          'You already have a library using the import path'
+          'You already have a library using the import path',
         );
       }
 

@@ -41,11 +41,11 @@ export async function initHandler(options: InitArgs): Promise<void> {
   if (!existsSync('package.json') || options.useDotNxInstallation) {
     if (process.platform !== 'win32') {
       console.log(
-        'Setting Nx up installation in `.nx`. You can run Nx commands like: `./nx --help`'
+        'Setting Nx up installation in `.nx`. You can run Nx commands like: `./nx --help`',
       );
     } else {
       console.log(
-        'Setting Nx up installation in `.nx`. You can run Nx commands like: `./nx.bat --help`'
+        'Setting Nx up installation in `.nx`. You can run Nx commands like: `./nx.bat --help`',
       );
     }
     generateDotNxSetup(version);
@@ -106,7 +106,7 @@ export async function initHandler(options: InitArgs): Promise<void> {
         {
           stdio: [0, 1, 2],
           cwd: repoRoot,
-        }
+        },
       );
     }
 
@@ -124,7 +124,7 @@ export async function initHandler(options: InitArgs): Promise<void> {
         {
           stdio: [0, 1, 2],
           cwd: repoRoot,
-        }
+        },
       );
     }
   }
@@ -164,7 +164,7 @@ async function detectPlugins(): Promise<
   undefined | { plugins: string[]; updatePackageScripts: boolean }
 > {
   let files = ['package.json'].concat(
-    globWithWorkspaceContext(process.cwd(), ['**/*/package.json'])
+    globWithWorkspaceContext(process.cwd(), ['**/*/package.json']),
   );
 
   const detectedPlugins = new Set<string>();

@@ -62,11 +62,11 @@ function parseLockFile(lockFileContent: string, lockFileHash: string) {
 export function getYarnLockfileNodes(
   lockFileContent: string,
   lockFileHash: string,
-  packageJson: NormalizedPackageJson
+  packageJson: NormalizedPackageJson,
 ) {
   const { __metadata, ...dependencies } = parseLockFile(
     lockFileContent,
-    lockFileHash
+    lockFileHash,
   );
 
   const isBerry = !!__metadata;
@@ -80,11 +80,11 @@ export function getYarnLockfileNodes(
 export function getYarnLockfileDependencies(
   lockFileContent: string,
   lockFileHash: string,
-  ctx: CreateDependenciesContext
+  ctx: CreateDependenciesContext,
 ) {
   const { __metadata, ...dependencies } = parseLockFile(
     lockFileContent,
-    lockFileHash
+    lockFileHash,
   );
 
   const isBerry = !!__metadata;
@@ -112,7 +112,7 @@ function getNodes(
   dependencies: Record<string, YarnDependency>,
   packageJson: NormalizedPackageJson,
   keyMap: Map<string, ProjectGraphExternalNode>,
-  isBerry: boolean
+  isBerry: boolean,
 ) {
   const nodes: Map<string, Map<string, ProjectGraphExternalNode>> = new Map();
   const combinedDeps = {
@@ -189,7 +189,7 @@ function getNodes(
 function findHoistedNode(
   packageName: string,
   versionMap: Map<string, ProjectGraphExternalNode>,
-  combinedDeps: Record<string, string>
+  combinedDeps: Record<string, string>,
 ): ProjectGraphExternalNode {
   const hoistedVersion = getHoistedVersion(packageName);
   if (hoistedVersion) {
@@ -200,7 +200,7 @@ function findHoistedNode(
     return;
   }
   const versions = Array.from(versionMap.keys()).sort((a, b) =>
-    gt(a, b) ? -1 : 1
+    gt(a, b) ? -1 : 1,
   );
   // take the highest version found
   if (rootVersionSpecifier === '*') {
@@ -212,7 +212,7 @@ function findHoistedNode(
     // try to find alias version
     version = versions.find(
       (v) =>
-        versionMap.get(v).name === `npm:${packageName}@${rootVersionSpecifier}`
+        versionMap.get(v).name === `npm:${packageName}@${rootVersionSpecifier}`,
     );
   }
   if (!version) {
@@ -228,7 +228,7 @@ function findVersion(
   packageName: string,
   key: string,
   snapshot: YarnDependency,
-  isBerry: boolean
+  isBerry: boolean,
 ): string {
   const versionRange = key.slice(key.indexOf('@', 1) + 1);
   // check for alias packages
@@ -260,7 +260,7 @@ function findVersion(
 // check if snapshot represents tarball package
 function isTarballPackage(
   versionRange: string,
-  snapshot: YarnDependency
+  snapshot: YarnDependency,
 ): boolean {
   // if resolved is missing it's internal link
   if (!snapshot.resolved) {
@@ -290,7 +290,7 @@ function getHoistedVersion(packageName: string): string {
 function getDependencies(
   dependencies: Record<string, YarnDependency>,
   keyMap: Map<string, ProjectGraphExternalNode>,
-  ctx: CreateDependenciesContext
+  ctx: CreateDependenciesContext,
 ) {
   const projectGraphDependencies: RawProjectGraphDependency[] = [];
   Object.keys(dependencies).forEach((keys) => {
@@ -316,7 +316,7 @@ function getDependencies(
                 }
               });
             }
-          }
+          },
         );
       }
     });
@@ -328,7 +328,7 @@ function getDependencies(
 export function stringifyYarnLockfile(
   graph: ProjectGraph,
   rootLockFileContent: string,
-  packageJson: NormalizedPackageJson
+  packageJson: NormalizedPackageJson,
 ): string {
   const { parseSyml, stringifySyml } = require('@yarnpkg/parsers');
   const { __metadata, ...dependencies } = parseSyml(rootLockFileContent);
@@ -338,7 +338,7 @@ export function stringifyYarnLockfile(
     dependencies,
     graph.externalNodes,
     packageJson,
-    isBerry
+    isBerry,
   );
 
   if (isBerry) {
@@ -361,7 +361,7 @@ export function stringifyYarnLockfile(
 
 function groupDependencies(
   dependencies: Record<string, YarnDependency>,
-  isBerry: boolean
+  isBerry: boolean,
 ): Record<string, YarnDependency> {
   if (isBerry) {
     return dependencies;
@@ -390,7 +390,7 @@ function addPackageVersion(
   packageName: string,
   version: string,
   collection: Map<string, Set<string>>,
-  isBerry?: boolean
+  isBerry?: boolean,
 ) {
   if (!collection.has(packageName)) {
     collection.set(packageName, new Set());
@@ -405,7 +405,7 @@ function mapSnapshots(
   dependencies: Record<string, YarnDependency>,
   nodes: Record<string, ProjectGraphExternalNode>,
   packageJson: NormalizedPackageJson,
-  isBerry: boolean
+  isBerry: boolean,
 ): Record<string, YarnDependency> {
   // map snapshot to set of keys (e.g. `eslint@^7.0.0, eslint@npm:^7.0.0`)
   const snapshotMap: Map<YarnDependency, Set<string>> = new Map();
@@ -426,7 +426,7 @@ function mapSnapshots(
     const foundOriginalKeys = findOriginalKeys(groupedDependencies, node);
     if (!foundOriginalKeys) {
       throw new Error(
-        `Original key(s) not found for "${node.data.packageName}@${node.data.version}" while pruning yarn.lock.`
+        `Original key(s) not found for "${node.data.packageName}@${node.data.version}" while pruning yarn.lock.`,
       );
     }
     const [matchedKeys, snapshot] = foundOriginalKeys;
@@ -436,9 +436,9 @@ function mapSnapshots(
     [snapshot.dependencies, snapshot.optionalDependencies].forEach(
       (section) => {
         Object.entries(section || {}).forEach(([name, versionSpec]) =>
-          addPackageVersion(name, versionSpec, existingKeys, isBerry)
+          addPackageVersion(name, versionSpec, existingKeys, isBerry),
         );
-      }
+      },
     );
 
     // add package.json requested version to keys
@@ -448,7 +448,7 @@ function mapSnapshots(
         node.data.packageName,
         requestedVersion,
         existingKeys,
-        isBerry
+        isBerry,
       );
       const requestedKey = isBerry
         ? reverseMapBerryKey(node, requestedVersion, snapshot)
@@ -505,7 +505,7 @@ function mapSnapshots(
 function reverseMapBerryKey(
   node: ProjectGraphExternalNode,
   version: string,
-  snapshot: YarnDependency
+  snapshot: YarnDependency,
 ): string {
   // alias packages already have version
   if (version.startsWith('npm:')) {
@@ -524,7 +524,7 @@ function reverseMapBerryKey(
 
 function getPackageJsonVersion(
   combinedDependencies: Record<string, string>,
-  node: ProjectGraphExternalNode
+  node: ProjectGraphExternalNode,
 ): string {
   const { packageName, version } = node.data;
 
@@ -540,7 +540,7 @@ function getPackageJsonVersion(
 
 function findOriginalKeys(
   dependencies: Record<string, YarnDependency>,
-  node: ProjectGraphExternalNode
+  node: ProjectGraphExternalNode,
 ): [string[], YarnDependency] {
   for (const keyExpr of Object.keys(dependencies)) {
     const snapshot = dependencies[keyExpr];
@@ -578,7 +578,7 @@ function findOriginalKeys(
 
 function findPatchedKeys(
   dependencies: Record<string, YarnDependency>,
-  node: ProjectGraphExternalNode
+  node: ProjectGraphExternalNode,
 ): [string[], YarnDependency] | void {
   for (const keyExpr of Object.keys(dependencies)) {
     const snapshot = dependencies[keyExpr];
@@ -599,7 +599,7 @@ function findPatchedKeys(
 const BERRY_LOCK_FILE_DISCLAIMER = `# This file is generated by running "yarn install" inside your project.\n# Manual changes might be lost - proceed with caution!\n\n`;
 
 function generateRootWorkspacePackage(
-  packageJson: NormalizedPackageJson
+  packageJson: NormalizedPackageJson,
 ): YarnDependency {
   return {
     version: '0.0.0-use.local',

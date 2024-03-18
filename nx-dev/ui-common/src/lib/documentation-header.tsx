@@ -24,7 +24,7 @@ function Menu({ tabs }: { tabs: any[] }): JSX.Element {
               tab.current
                 ? 'border-blue-500 text-blue-600 dark:border-sky-500 dark:text-sky-500'
                 : 'border-transparent hover:text-slate-900 dark:hover:text-sky-400',
-              'whitespace-nowrap border-b-2 py-2 text-sm font-medium'
+              'whitespace-nowrap border-b-2 py-2 text-sm font-medium',
             )}
             aria-current={tab.current ? 'page' : undefined}
           >

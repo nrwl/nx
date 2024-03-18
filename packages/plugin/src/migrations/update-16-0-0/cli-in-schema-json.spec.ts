@@ -47,12 +47,12 @@ describe('updateCliPropsForPlugins', () => {
             factory: './migrations/my-plugin-1',
           },
         },
-      }
+      },
     );
     await updateCliPropsForPlugins(tree);
     const updated = readJson<MigrationsJson>(
       tree,
-      joinPathFragments(root, 'migrations.json')
+      joinPathFragments(root, 'migrations.json'),
     );
     expect(updated.generators).not.toHaveProperty('migration-1');
     expect(updated.schematics).toHaveProperty('migration-1');
@@ -77,12 +77,12 @@ describe('updateCliPropsForPlugins', () => {
             cli: 'nx',
           },
         },
-      }
+      },
     );
     await updateCliPropsForPlugins(tree);
     const updated = readJson<MigrationsJson>(
       tree,
-      joinPathFragments(root, 'migrations.json')
+      joinPathFragments(root, 'migrations.json'),
     );
     expect(updated.schematics).not.toHaveProperty('migration-1');
     expect(updated.generators).toHaveProperty('migration-1');
@@ -125,12 +125,12 @@ describe('updateCliPropsForPlugins', () => {
             factory: './migrations/my-plugin-4',
           },
         },
-      }
+      },
     );
     await updateCliPropsForPlugins(tree);
     const updated = readJson<MigrationsJson>(
       tree,
-      joinPathFragments(root, 'migrations.json')
+      joinPathFragments(root, 'migrations.json'),
     );
     expect(updated.schematics).not.toHaveProperty('migration-1');
     expect(updated.generators).toHaveProperty('migration-1');
@@ -153,7 +153,7 @@ describe('updateCliPropsForPlugins', () => {
     });
     const schemaPath = joinPathFragments(
       root,
-      'src/executors/my-executor/schema.json'
+      'src/executors/my-executor/schema.json',
     );
     updateJson(tree, schemaPath, (schema) => {
       schema.cli = 'nx';
@@ -180,11 +180,11 @@ describe('updateCliPropsForPlugins', () => {
         json.builders = json.executors;
         delete json.builders;
         return json;
-      }
+      },
     );
     const schemaPath = joinPathFragments(
       root,
-      'src/executors/my-executor/schema.json'
+      'src/executors/my-executor/schema.json',
     );
     updateJson(tree, schemaPath, (schema) => {
       schema.cli = 'nx';
@@ -205,7 +205,7 @@ describe('updateCliPropsForPlugins', () => {
     });
     const schemaPath = joinPathFragments(
       root,
-      'src/generators/my-generator/schema.json'
+      'src/generators/my-generator/schema.json',
     );
     updateJson(tree, schemaPath, (schema) => {
       schema.cli = 'nx';
@@ -231,11 +231,11 @@ describe('updateCliPropsForPlugins', () => {
         json.schematics = json.generators;
         delete json.generators;
         return json;
-      }
+      },
     );
     const schemaPath = joinPathFragments(
       root,
-      'src/generators/my-schematic/schema.json'
+      'src/generators/my-schematic/schema.json',
     );
     updateJson(tree, schemaPath, (schema) => {
       schema.cli = 'nx';
@@ -264,7 +264,7 @@ async function createPlugin(tree: Tree) {
 
 function updatePluginPackageJson(
   tree: Tree,
-  packageJsonProps: Partial<PackageJson>
+  packageJsonProps: Partial<PackageJson>,
 ) {
   const { root } = readProjectConfiguration(tree, 'my-plugin');
   updateJson(tree, root + '/package.json', (json) => {

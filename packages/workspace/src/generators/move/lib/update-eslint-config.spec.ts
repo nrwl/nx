@@ -54,7 +54,7 @@ describe('updateEslint', () => {
     // This step is usually handled elsewhere
     tree.rename(
       'my-lib/.eslintrc.json',
-      'shared/my-destination/.eslintrc.json'
+      'shared/my-destination/.eslintrc.json',
     );
     const projectConfig = readProjectConfiguration(tree, 'my-lib');
 
@@ -63,7 +63,7 @@ describe('updateEslint', () => {
     expect(readJson(tree, 'shared/my-destination/.eslintrc.json')).toEqual(
       expect.objectContaining({
         extends: ['../../.eslintrc.json'],
-      })
+      }),
     );
   });
 
@@ -92,7 +92,7 @@ describe('updateEslint', () => {
     expect(readJson(tree, 'test/.eslintrc.json')).toEqual(
       expect.objectContaining({
         extends: ['../.eslintrc.json'],
-      })
+      }),
     );
   });
 
@@ -113,7 +113,7 @@ describe('updateEslint', () => {
     // This step is usually handled elsewhere
     tree.rename(
       'my-lib/.eslintrc.json',
-      'shared/my-destination/.eslintrc.json'
+      'shared/my-destination/.eslintrc.json',
     );
     const projectConfig = readProjectConfiguration(tree, 'my-lib');
 
@@ -126,7 +126,7 @@ describe('updateEslint', () => {
           '../../.eslintrc.json',
           './customrc.json',
         ],
-      })
+      }),
     );
   });
 
@@ -140,7 +140,7 @@ describe('updateEslint', () => {
     // This step is usually handled elsewhere
     tree.rename(
       'my-lib/.eslintrc.json',
-      'shared/my-destination/.eslintrc.json'
+      'shared/my-destination/.eslintrc.json',
     );
     const projectConfig = readProjectConfiguration(tree, 'my-lib');
 
@@ -155,7 +155,7 @@ describe('updateEslint', () => {
             }),
           }),
         ]),
-      })
+      }),
     );
   });
 
@@ -171,7 +171,7 @@ describe('updateEslint', () => {
     const storybookProject = '.storybook/tsconfig.json';
     updateJson(tree, 'my-lib/.eslintrc.json', (eslintRcJson) => {
       eslintRcJson.overrides[0].parserOptions.project.push(
-        `my-lib/${storybookProject}`
+        `my-lib/${storybookProject}`,
       );
       return eslintRcJson;
     });
@@ -179,7 +179,7 @@ describe('updateEslint', () => {
     // This step is usually handled elsewhere
     tree.rename(
       'my-lib/.eslintrc.json',
-      'shared/my-destination/.eslintrc.json'
+      'shared/my-destination/.eslintrc.json',
     );
     const projectConfig = readProjectConfiguration(tree, 'my-lib');
 
@@ -197,7 +197,7 @@ describe('updateEslint', () => {
             }),
           }),
         ]),
-      })
+      }),
     );
   });
 
@@ -219,7 +219,7 @@ describe('updateEslint', () => {
     // This step is usually handled elsewhere
     tree.rename(
       'my-lib/.eslintrc.json',
-      'shared/my-destination/.eslintrc.json'
+      'shared/my-destination/.eslintrc.json',
     );
     const projectConfig = readProjectConfiguration(tree, 'my-lib');
 
@@ -227,7 +227,7 @@ describe('updateEslint', () => {
 
     expect(
       readJson(tree, 'shared/my-destination/.eslintrc.json').overrides[0]
-        .parserOptions
+        .parserOptions,
     ).toEqual({ project: `shared/my-destination/${storybookProject}` });
   });
 });
@@ -275,14 +275,14 @@ describe('updateEslint (flat config)', () => {
     // This step is usually handled elsewhere
     tree.rename(
       'my-lib/eslint.config.js',
-      'shared/my-destination/eslint.config.js'
+      'shared/my-destination/eslint.config.js',
     );
     const projectConfig = readProjectConfiguration(tree, 'my-lib');
 
     updateEslintConfig(tree, schema, projectConfig);
 
     expect(
-      tree.read('shared/my-destination/eslint.config.js', 'utf-8')
+      tree.read('shared/my-destination/eslint.config.js', 'utf-8'),
     ).toEqual(expect.stringContaining(`require('../../eslint.config.js')`));
   });
 
@@ -311,7 +311,7 @@ describe('updateEslint (flat config)', () => {
     updateEslintConfig(tree, newSchema, projectConfig);
 
     expect(tree.read('test/eslint.config.js', 'utf-8')).toEqual(
-      expect.stringContaining(`require('../eslint.config.js')`)
+      expect.stringContaining(`require('../eslint.config.js')`),
     );
   });
 
@@ -326,18 +326,18 @@ describe('updateEslint (flat config)', () => {
     // This step is usually handled elsewhere
     tree.rename(
       'my-lib/eslint.config.js',
-      'shared/my-destination/eslint.config.js'
+      'shared/my-destination/eslint.config.js',
     );
     const projectConfig = readProjectConfiguration(tree, 'my-lib');
 
     updateEslintConfig(tree, schema, projectConfig);
 
     expect(
-      tree.read('shared/my-destination/eslint.config.js', 'utf-8')
+      tree.read('shared/my-destination/eslint.config.js', 'utf-8'),
     ).toEqual(
       expect.stringContaining(
-        `project: ["shared/my-destination/tsconfig.*?.json"]`
-      )
+        `project: ["shared/my-destination/tsconfig.*?.json"]`,
+      ),
     );
   });
 
@@ -357,18 +357,18 @@ describe('updateEslint (flat config)', () => {
     // This step is usually handled elsewhere
     tree.rename(
       'my-lib/eslint.config.js',
-      'shared/my-destination/eslint.config.js'
+      'shared/my-destination/eslint.config.js',
     );
     const projectConfig = readProjectConfiguration(tree, 'my-lib');
 
     updateEslintConfig(tree, schema, projectConfig);
 
     expect(
-      tree.read('shared/my-destination/eslint.config.js', 'utf-8')
+      tree.read('shared/my-destination/eslint.config.js', 'utf-8'),
     ).toEqual(
       expect.stringContaining(
-        `project: ["shared/my-destination/tsconfig.*?.json", "shared/my-destination/${storybookProject}"]`
-      )
+        `project: ["shared/my-destination/tsconfig.*?.json", "shared/my-destination/${storybookProject}"]`,
+      ),
     );
   });
 
@@ -384,18 +384,18 @@ describe('updateEslint (flat config)', () => {
     // This step is usually handled elsewhere
     tree.rename(
       'my-lib/eslint.config.js',
-      'shared/my-destination/eslint.config.js'
+      'shared/my-destination/eslint.config.js',
     );
     const projectConfig = readProjectConfiguration(tree, 'my-lib');
 
     updateEslintConfig(tree, schema, projectConfig);
 
     expect(
-      tree.read('shared/my-destination/eslint.config.js', 'utf-8')
+      tree.read('shared/my-destination/eslint.config.js', 'utf-8'),
     ).toEqual(
       expect.stringContaining(
-        `project: "shared/my-destination/tsconfig.*?.json"`
-      )
+        `project: "shared/my-destination/tsconfig.*?.json"`,
+      ),
     );
   });
 });
@@ -407,7 +407,7 @@ function convertToFlat(
     hasParser?: boolean;
     anotherProject?: string;
     isString?: boolean;
-  } = {}
+  } = {},
 ) {
   const offset = offsetFromRoot(path);
   tree.delete(joinPathFragments(path, '.eslintrc.json'));
@@ -417,8 +417,8 @@ function convertToFlat(
     const paths = options.anotherProject
       ? `["${path}/tsconfig.*?.json", "${path}/${options.anotherProject}"]`
       : options.isString
-      ? `"${path}/tsconfig.*?.json"`
-      : `["${path}/tsconfig.*?.json"]`;
+        ? `"${path}/tsconfig.*?.json"`
+        : `["${path}/tsconfig.*?.json"]`;
     parserOptions = `languageOptions: {
       parserOptions: {
         project: ${paths}
@@ -455,6 +455,6 @@ function convertToFlat(
       files: ["${path}/**/*.json"],
       rules: { "@nx/dependency-checks": "error" }
     }))
-  ];`
+  ];`,
   );
 }

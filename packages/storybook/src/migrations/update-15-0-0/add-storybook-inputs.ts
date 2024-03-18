@@ -44,7 +44,7 @@ function getStorybookBuildTargets(tree: Tree) {
     '@storybook/angular:build-storybook',
     (_, __, target) => {
       storybookBuildTargets.add(target);
-    }
+    },
   );
   return storybookBuildTargets;
 }

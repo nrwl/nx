@@ -22,7 +22,7 @@ export default async function* counter(opts: CounterOptions) {
 
 export async function batchCounter(
   taskGraph,
-  inputs: Record<string, CounterOptions>
+  inputs: Record<string, CounterOptions>,
 ) {
   const result: Record<string, { success: boolean; terminalOutput: string }> =
     {};
@@ -39,7 +39,7 @@ export async function batchCounter(
         }
 
         return [taskId, options.result, terminalOutput] as const;
-      })
+      }),
   );
 
   for (const [taskId, taskResult, terminalOutput] of results) {

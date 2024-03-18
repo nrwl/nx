@@ -175,7 +175,7 @@ export function PluginDirectory({
                 plugin.description
                   .toLowerCase()
                   .includes(modifiers.term.toLowerCase())
-              : true
+              : true,
           )
           .sort((a, b) => {
             if (modifiers.orderBy === 'lastPublishDate') {
@@ -214,7 +214,7 @@ export function PluginDirectory({
               function getValueFromVersion(version: string = 'unknown') {
                 const mapKey =
                   Object.keys(versionValueMap).find((key) =>
-                    version.startsWith(key)
+                    version.startsWith(key),
                   ) || 'unknown';
                 return versionValueMap[mapKey];
               }

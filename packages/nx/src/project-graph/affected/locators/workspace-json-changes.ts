@@ -10,7 +10,7 @@ export const getTouchedProjectsInWorkspaceJson: TouchedProjectLocator<
   WholeFileChange | JsonChange
 > = (touchedFiles, projectGraphNodes): string[] => {
   const workspaceChange = touchedFiles.find(
-    (change) => change.file === `angular.json`
+    (change) => change.file === `angular.json`,
   );
   if (!workspaceChange) {
     return [];

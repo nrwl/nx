@@ -26,13 +26,13 @@ if (!window.appConfig) {
       No environment could be found. Please run{' '}
       <pre>npx nx run graph-client:generate-dev-environment-js</pre>.
     </p>,
-    container
+    container,
   );
 } else {
   render(
     <StrictMode>
       <App />
     </StrictMode>,
-    container
+    container,
   );
 }

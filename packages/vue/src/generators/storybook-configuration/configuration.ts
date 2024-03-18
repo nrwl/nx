@@ -15,7 +15,7 @@ async function generateStories(host: Tree, schema: StorybookConfigureSchema) {
 
 export function storybookConfigurationGenerator(
   host: Tree,
-  schema: StorybookConfigureSchema
+  schema: StorybookConfigureSchema,
 ) {
   return storybookConfigurationGeneratorInternal(host, {
     addPlugin: false,
@@ -25,7 +25,7 @@ export function storybookConfigurationGenerator(
 
 export async function storybookConfigurationGeneratorInternal(
   host: Tree,
-  schema: StorybookConfigureSchema
+  schema: StorybookConfigureSchema,
 ) {
   const { configurationGenerator } = ensurePackage<
     typeof import('@nx/storybook')

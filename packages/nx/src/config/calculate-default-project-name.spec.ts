@@ -13,10 +13,10 @@ describe('calculateDefaultProjectName', () => {
         },
       };
       expect(findMatchingProjectInCwd(projects, 'apps/demo-app')).toEqual(
-        'demo-app'
+        'demo-app',
       );
       expect(
-        findMatchingProjectInCwd(projects, 'apps/demo-app/src/main.tsx')
+        findMatchingProjectInCwd(projects, 'apps/demo-app/src/main.tsx'),
       ).toEqual('demo-app');
     });
 
@@ -40,8 +40,8 @@ describe('calculateDefaultProjectName', () => {
               root: 'apps/demo-app',
             },
           },
-          'demo-app2'
-        )
+          'demo-app2',
+        ),
       ).toEqual(undefined);
     });
   });
@@ -52,8 +52,8 @@ describe('calculateDefaultProjectName', () => {
         '.',
         '.',
         { projects: { 'demo-app': { root: 'apps/demo-app' } }, version: 2 },
-        { cli: { defaultProjectName: 'demo-app2' } }
-      )
+        { cli: { defaultProjectName: 'demo-app2' } },
+      ),
     ).toEqual('demo-app2');
   });
 
@@ -63,8 +63,8 @@ describe('calculateDefaultProjectName', () => {
         'apps/demo-app',
         '.',
         { projects: { 'demo-app': { root: 'apps/demo-app' } }, version: 2 },
-        { cli: { defaultProjectName: 'demo-app2' } }
-      )
+        { cli: { defaultProjectName: 'demo-app2' } },
+      ),
     ).toEqual('demo-app');
   });
 
@@ -74,8 +74,8 @@ describe('calculateDefaultProjectName', () => {
         'demo-app',
         'demo-app',
         { projects: { 'demo-app': { root: '.' } }, version: 2 },
-        { cli: { defaultProjectName: 'demo-app2' } }
-      )
+        { cli: { defaultProjectName: 'demo-app2' } },
+      ),
     ).toEqual('demo-app');
   });
 });

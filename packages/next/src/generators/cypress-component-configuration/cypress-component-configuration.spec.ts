@@ -32,7 +32,7 @@ describe('cypress-component-configuration generator', () => {
         '**/*.cy.js',
         '**/*.cy.tsx',
         '**/*.cy.jsx',
-      ])
+      ]),
     );
     expect(readJson(tree, 'demo/cypress/tsconfig.json')).toMatchSnapshot(`
     {
@@ -94,7 +94,7 @@ describe('cypress-component-configuration generator', () => {
     `);
     expect(tree.exists('demo/pages/index.cy.ts')).toBeFalsy();
     expect(
-      readProjectConfiguration(tree, 'demo').targets['component-test']
+      readProjectConfiguration(tree, 'demo').targets['component-test'],
     ).toEqual({
       executor: '@nx/cypress:cypress',
       options: {
@@ -126,7 +126,7 @@ describe('cypress-component-configuration generator', () => {
       "
     `);
     expect(tree.read('demo/cypress/support/component.ts', 'utf-8')).toContain(
-      `import './styles.ct.css';`
+      `import './styles.ct.css';`,
     );
   });
 
@@ -148,7 +148,7 @@ describe('cypress-component-configuration generator', () => {
         {
           path: './cypress/tsconfig.json',
         },
-      ])
+      ]),
     );
     expect(readJson(tree, 'demo/cypress/tsconfig.json')).toMatchSnapshot(`
     {

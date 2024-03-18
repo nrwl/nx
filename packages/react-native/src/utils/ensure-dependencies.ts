@@ -49,6 +49,6 @@ export function ensureDependencies(tree: Tree): GeneratorCallback {
             '@babel/runtime': babelRuntimeVersion, // @babel/runtime is used by react-native-svg
           }
         : {}),
-    }
+    },
   );
 }

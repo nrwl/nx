@@ -32,7 +32,7 @@ let tsModule: typeof import('typescript');
 export function updateImports(
   tree: Tree,
   schema: NormalizedSchema,
-  project: ProjectConfiguration
+  project: ProjectConfiguration,
 ) {
   if (project.projectType !== 'library') {
     return;
@@ -53,28 +53,28 @@ export function updateImports(
       project.sourceRoot ?? joinPathFragments(project.root, 'src');
 
     mainEntryPointImportPath = Object.keys(
-      tsConfig.compilerOptions?.paths ?? {}
+      tsConfig.compilerOptions?.paths ?? {},
     ).find((path) =>
       tsConfig.compilerOptions.paths[path].some((x) =>
-        x.startsWith(ensureTrailingSlash(sourceRoot))
-      )
+        x.startsWith(ensureTrailingSlash(sourceRoot)),
+      ),
     );
     secondaryEntryPointImportPaths = Object.keys(
-      tsConfig.compilerOptions?.paths ?? {}
+      tsConfig.compilerOptions?.paths ?? {},
     ).filter((path) =>
       tsConfig.compilerOptions.paths[path].some(
         (x) =>
           x.startsWith(ensureTrailingSlash(project.root)) &&
-          !x.startsWith(ensureTrailingSlash(sourceRoot))
-      )
+          !x.startsWith(ensureTrailingSlash(sourceRoot)),
+      ),
     );
   }
 
   mainEntryPointImportPath ??= normalizePathSlashes(
     getImportPath(
       tree,
-      project.root.slice(libsDir.length).replace(/^\/|\\/, '')
-    )
+      project.root.slice(libsDir.length).replace(/^\/|\\/, ''),
+    ),
   );
 
   const projectRefs = [
@@ -127,11 +127,11 @@ export function updateImports(
           [
             `unable to find "${projectRef.from}" in`,
             `${tsConfigPath} compilerOptions.paths`,
-          ].join(' ')
+          ].join(' '),
         );
       }
       const updatedPath = path.map((x) =>
-        joinPathFragments(projectRoot.to, relative(projectRoot.from, x))
+        joinPathFragments(projectRoot.to, relative(projectRoot.from, x)),
       );
 
       if (schema.updateImportPath && projectRef.to) {
@@ -164,7 +164,7 @@ function updateImportPaths(tree: Tree, path: string, from: string, to: string) {
     path,
     contents,
     tsModule.ScriptTarget.Latest,
-    true
+    true,
   );
 
   // Apply changes on the various types of imports
@@ -182,7 +182,7 @@ function updateImportPaths(tree: Tree, path: string, from: string, to: string) {
 function updateImportDeclarations(
   sourceFile: ts.SourceFile,
   from: string,
-  to: string
+  to: string,
 ): StringChange[] {
   if (!tsModule) {
     tsModule = ensureTypescript();
@@ -209,14 +209,14 @@ function updateImportDeclarations(
 function updateDynamicImports(
   sourceFile: ts.SourceFile,
   from: string,
-  to: string
+  to: string,
 ): StringChange[] {
   if (!tsModule) {
     tsModule = ensureTypescript();
   }
   const expressions = findNodes(
     sourceFile,
-    tsModule.SyntaxKind.CallExpression
+    tsModule.SyntaxKind.CallExpression,
   ) as ts.CallExpression[];
 
   const changes: StringChange[] = [];
@@ -253,7 +253,7 @@ function updateDynamicImports(
 function updateModuleSpecifier(
   moduleSpecifier: ts.StringLiteral,
   from: string,
-  to: string
+  to: string,
 ): StringChange[] {
   if (
     moduleSpecifier.text === from ||

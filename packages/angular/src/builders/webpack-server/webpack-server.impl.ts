@@ -14,7 +14,7 @@ import { validateOptions } from './validate-options';
 
 function buildServerApp(
   options: Schema,
-  context: import('@angular-devkit/architect').BuilderContext
+  context: import('@angular-devkit/architect').BuilderContext,
 ): Observable<import('@angular-devkit/build-angular').ServerBuilderOutput> {
   const { buildLibsFromSource, customWebpackConfig, ...delegateOptions } =
     options;
@@ -23,33 +23,33 @@ function buildServerApp(
   if (customWebpackConfig && customWebpackConfig.path) {
     const pathToWebpackConfig = joinPathFragments(
       context.workspaceRoot,
-      customWebpackConfig.path
+      customWebpackConfig.path,
     );
 
     if (existsSync(pathToWebpackConfig)) {
       return buildServerAppWithCustomWebpackConfiguration(
         delegateOptions,
         context,
-        pathToWebpackConfig
+        pathToWebpackConfig,
       );
     } else {
       throw new Error(
-        `Custom Webpack Config File Not Found!\nTo use a custom webpack config, please ensure the path to the custom webpack file is correct: \n${pathToWebpackConfig}`
+        `Custom Webpack Config File Not Found!\nTo use a custom webpack config, please ensure the path to the custom webpack file is correct: \n${pathToWebpackConfig}`,
       );
     }
   }
 
   return from(import('@angular-devkit/build-angular')).pipe(
     switchMap(({ executeServerBuilder }) =>
-      executeServerBuilder(delegateOptions, context)
-    )
+      executeServerBuilder(delegateOptions, context),
+    ),
   );
 }
 
 function buildServerAppWithCustomWebpackConfiguration(
   options: Schema,
   context: import('@angular-devkit/architect').BuilderContext,
-  pathToWebpackConfig: string
+  pathToWebpackConfig: string,
 ) {
   return from(import('@angular-devkit/build-angular')).pipe(
     switchMap(({ executeServerBuilder }) =>
@@ -65,7 +65,7 @@ function buildServerAppWithCustomWebpackConfiguration(
             baseWebpackConfig,
             pathToWebpackConfig,
             options,
-            context.target
+            context.target,
           );
 
           if (
@@ -74,27 +74,27 @@ function buildServerAppWithCustomWebpackConfiguration(
               .includes('UniversalFederationPlugin')
           ) {
             mergedConfig.entry.main = mergedConfig.entry.main.filter(
-              (m) => !m.startsWith('@angular/platform-server/init')
+              (m) => !m.startsWith('@angular/platform-server/init'),
             );
             mergedConfig.module.rules = mergedConfig.module.rules.filter((m) =>
               !m.loader
                 ? true
                 : !m.loader.endsWith(
-                    '@angular-devkit/build-angular/src/builders/server/platform-server-exports-loader.js'
-                  )
+                    '@angular-devkit/build-angular/src/builders/server/platform-server-exports-loader.js',
+                  ),
             );
           }
 
           return mergedConfig;
         },
-      })
-    )
+      }),
+    ),
   );
 }
 
 export function executeWebpackServerBuilder(
   options: Schema,
-  context: import('@angular-devkit/architect').BuilderContext
+  context: import('@angular-devkit/architect').BuilderContext,
 ): Observable<import('@angular-devkit/build-angular').ServerBuilderOutput> {
   validateOptions(options);
 
@@ -106,10 +106,10 @@ export function executeWebpackServerBuilder(
   if (!options.buildLibsFromSource) {
     const { tsConfigPath } = createTmpTsConfigForBuildableLibs(
       options.tsConfig,
-      context
+      context,
     );
     options.tsConfig = normalizePath(
-      relative(context.workspaceRoot, tsConfigPath)
+      relative(context.workspaceRoot, tsConfigPath),
     );
   }
 
@@ -117,5 +117,5 @@ export function executeWebpackServerBuilder(
 }
 
 export default require('@angular-devkit/architect').createBuilder(
-  executeWebpackServerBuilder
+  executeWebpackServerBuilder,
 ) as any;

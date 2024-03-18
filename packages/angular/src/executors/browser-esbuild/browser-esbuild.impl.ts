@@ -8,7 +8,7 @@ import type { EsBuildSchema } from './schema';
 
 export default async function* esbuildExecutor(
   options: EsBuildSchema,
-  context: ExecutorContext
+  context: ExecutorContext,
 ) {
   if (options.plugins) {
     const { major: angularMajorVersion, version: angularVersion } =
@@ -33,7 +33,7 @@ export default async function* esbuildExecutor(
     const { tsConfigPath, dependencies: foundDependencies } =
       createTmpTsConfigForBuildableLibs(
         delegateExecutorOptions.tsConfig,
-        context
+        context,
       );
     dependencies = foundDependencies;
     delegateExecutorOptions.tsConfig = tsConfigPath;
@@ -53,13 +53,13 @@ export default async function* esbuildExecutor(
         '@angular-devkit/build-angular/src/builders/browser-esbuild/schema.json'
       ),
     },
-    context
+    context,
   );
 
   return yield* buildEsbuildBrowser(
     delegateExecutorOptions,
     builderContext,
     /* infrastructureSettings */ undefined,
-    plugins
+    plugins,
   );
 }

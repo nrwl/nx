@@ -13,7 +13,7 @@ export default async function (tree: Tree, schema: LoaderSchema) {
 
   if (!tree.exists(routeFilePath)) {
     throw new Error(
-      `Route path does not exist: ${routeFilePath}. Please generate a Remix route first.`
+      `Route path does not exist: ${routeFilePath}. Please generate a Remix route first.`,
     );
   }
 
@@ -33,7 +33,7 @@ export default async function (tree: Tree, schema: LoaderSchema) {
       return json({message: formData.toString()}, { status: 200 });
     };
 
-    `
+    `,
   );
 
   const statement = `\nconst actionMessage = useActionData<typeof action>();`;

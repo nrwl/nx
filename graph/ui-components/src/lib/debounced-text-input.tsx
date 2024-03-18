@@ -19,7 +19,7 @@ export function DebouncedTextInput({
 
   const [debouncedValue, setDebouncedValue] = useDebounce(
     currentTextFilter,
-    500
+    500,
   );
 
   function onTextFilterKeyUp(event: KeyboardEvent<HTMLInputElement>) {

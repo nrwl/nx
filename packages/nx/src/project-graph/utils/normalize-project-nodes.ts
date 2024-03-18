@@ -11,7 +11,7 @@ import { CreateDependenciesContext } from '../../utils/nx-plugin';
 
 export async function normalizeProjectNodes(
   ctx: CreateDependenciesContext,
-  builder: ProjectGraphBuilder
+  builder: ProjectGraphBuilder,
 ) {
   const toAdd = [];
   // Sorting projects by name to make sure that the order of projects in the graph is deterministic.
@@ -20,17 +20,20 @@ export async function normalizeProjectNodes(
   const projects = Object.keys(ctx.projects).sort();
 
   // Used for expanding implicit dependencies (e.g. `@proj/*` or `tag:foo`)
-  const partialProjectGraphNodes = projects.reduce((graph, project) => {
-    const projectConfiguration = ctx.projects[project];
-    graph[project] = {
-      name: project,
-      type: projectConfiguration.projectType === 'library' ? 'lib' : 'app', // missing fallback to `e2e`
-      data: {
-        ...projectConfiguration,
-      },
-    };
-    return graph;
-  }, {} as Record<string, ProjectGraphProjectNode>);
+  const partialProjectGraphNodes = projects.reduce(
+    (graph, project) => {
+      const projectConfiguration = ctx.projects[project];
+      graph[project] = {
+        name: project,
+        type: projectConfiguration.projectType === 'library' ? 'lib' : 'app', // missing fallback to `e2e`
+        data: {
+          ...projectConfiguration,
+        },
+      };
+      return graph;
+    },
+    {} as Record<string, ProjectGraphProjectNode>,
+  );
 
   for (const key of projects) {
     const p = ctx.projects[key];
@@ -38,7 +41,7 @@ export async function normalizeProjectNodes(
     p.implicitDependencies = normalizeImplicitDependencies(
       key,
       p.implicitDependencies,
-      partialProjectGraphNodes
+      partialProjectGraphNodes,
     );
 
     p.targets = normalizeProjectTargets(p, key);
@@ -83,7 +86,7 @@ export async function normalizeProjectNodes(
  */
 export function normalizeProjectTargets(
   project: ProjectConfiguration,
-  projectName: string
+  projectName: string,
 ): Record<string, TargetConfiguration> {
   // Any node on the graph will have a targets object, it just may be empty
   const targets = project.targets ?? {};
@@ -97,7 +100,7 @@ export function normalizeProjectTargets(
     targets[target].options = resolveNxTokensInOptions(
       targets[target].options,
       project,
-      `${projectName}:${target}`
+      `${projectName}:${target}`,
     );
 
     targets[target].configurations ??= {};
@@ -105,7 +108,7 @@ export function normalizeProjectTargets(
       targets[target].configurations[configuration] = resolveNxTokensInOptions(
         targets[target].configurations[configuration],
         project,
-        `${projectName}:${target}:${configuration}`
+        `${projectName}:${target}:${configuration}`,
       );
     }
   }
@@ -115,7 +118,7 @@ export function normalizeProjectTargets(
 export function normalizeImplicitDependencies(
   source: string,
   implicitDependencies: ProjectConfiguration['implicitDependencies'],
-  projects: Record<string, ProjectGraphProjectNode>
+  projects: Record<string, ProjectGraphProjectNode>,
 ) {
   if (!implicitDependencies?.length) {
     return implicitDependencies ?? [];

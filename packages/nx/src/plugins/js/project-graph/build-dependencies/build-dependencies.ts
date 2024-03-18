@@ -8,7 +8,7 @@ export function buildExplicitDependencies(
     analyzeSourceFiles?: boolean;
     analyzePackageJson?: boolean;
   },
-  ctx: CreateDependenciesContext
+  ctx: CreateDependenciesContext,
 ): RawProjectGraphDependency[] {
   if (totalNumberOfFilesToProcess(ctx) === 0) return [];
 
@@ -25,7 +25,7 @@ export function buildExplicitDependencies(
     } catch {}
     if (tsExists) {
       dependencies = dependencies.concat(
-        buildExplicitTypeScriptDependencies(ctx)
+        buildExplicitTypeScriptDependencies(ctx),
       );
     }
   }
@@ -34,7 +34,7 @@ export function buildExplicitDependencies(
     jsPluginConfig.analyzePackageJson === true
   ) {
     dependencies = dependencies.concat(
-      buildExplicitPackageJsonDependencies(ctx)
+      buildExplicitPackageJsonDependencies(ctx),
     );
   }
 
@@ -44,7 +44,7 @@ export function buildExplicitDependencies(
 function totalNumberOfFilesToProcess(ctx: CreateDependenciesContext) {
   let totalNumOfFilesToProcess = 0;
   Object.values(ctx.filesToProcess.projectFileMap).forEach(
-    (t) => (totalNumOfFilesToProcess += t.length)
+    (t) => (totalNumOfFilesToProcess += t.length),
   );
   return totalNumOfFilesToProcess;
 }

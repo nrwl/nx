@@ -21,7 +21,7 @@ function processEnv(color: boolean) {
 
 export default async function runExecutor(
   options: PublishExecutorSchema,
-  context: ExecutorContext
+  context: ExecutorContext,
 ) {
   /**
    * We need to check both the env var and the option because the executor may have been triggered
@@ -34,7 +34,7 @@ export default async function runExecutor(
 
   const packageRoot = joinPathFragments(
     context.root,
-    options.packageRoot ?? projectConfig.root
+    options.packageRoot ?? projectConfig.root,
   );
 
   const packageJsonPath = joinPathFragments(packageRoot, 'package.json');
@@ -49,7 +49,7 @@ export default async function runExecutor(
 
   if (projectPackageJson.private === true) {
     console.warn(
-      `Skipped ${packageTxt}, because it has \`"private": true\` in ${packageJsonPath}`
+      `Skipped ${packageTxt}, because it has \`"private": true\` in ${packageJsonPath}`,
     );
     return {
       success: true,
@@ -104,7 +104,7 @@ export default async function runExecutor(
       const distTags = resultJson['dist-tags'] || {};
       if (distTags[tag] === currentVersion) {
         console.warn(
-          `Skipped ${packageTxt} because v${currentVersion} already exists in ${registry} with tag "${tag}"`
+          `Skipped ${packageTxt} because v${currentVersion} already exists in ${registry} with tag "${tag}"`,
         );
         return {
           success: true,
@@ -120,16 +120,16 @@ export default async function runExecutor(
                 env: processEnv(true),
                 cwd: packageRoot,
                 stdio: 'ignore',
-              }
+              },
             );
             console.log(
-              `Added the dist-tag ${tag} to v${currentVersion} for registry ${registry}.\n`
+              `Added the dist-tag ${tag} to v${currentVersion} for registry ${registry}.\n`,
             );
           } else {
             console.log(
               `Would add the dist-tag ${tag} to v${currentVersion} for registry ${registry}, but ${chalk.keyword(
-                'orange'
-              )('[dry-run]')} was set.\n`
+                'orange',
+              )('[dry-run]')} was set.\n`,
             );
           }
           return {
@@ -169,7 +169,7 @@ export default async function runExecutor(
           } catch (err) {
             console.error(
               'Something unexpected went wrong when processing the npm dist-tag add output\n',
-              err
+              err,
             );
             return {
               success: false,
@@ -192,7 +192,7 @@ export default async function runExecutor(
       ) {
         console.error(
           `Something unexpected went wrong when checking for existing dist-tags.\n`,
-          err
+          err,
         );
         return {
           success: false,
@@ -222,8 +222,8 @@ export default async function runExecutor(
     if (isDryRun) {
       console.log(
         `Would publish to ${registry} with tag "${tag}", but ${chalk.keyword(
-          'orange'
-        )('[dry-run]')} was set`
+          'orange',
+        )('[dry-run]')} was set`,
       );
     } else {
       console.log(`Published to ${registry} with tag "${tag}"`);
@@ -254,7 +254,7 @@ export default async function runExecutor(
     } catch (err) {
       console.error(
         'Something unexpected went wrong when processing the npm publish output\n',
-        err
+        err,
       );
       return {
         success: false,

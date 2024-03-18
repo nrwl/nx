@@ -49,7 +49,7 @@ export default async function (tree: Tree) {
       {
         allowTrailingComma: true,
         disallowComments: false,
-      }
+      },
     );
   }
 
@@ -64,8 +64,8 @@ async function collectTsConfigPaths(tree: Tree): Promise<string[]> {
     .filter(([node, dep]) =>
       dep.some(
         ({ target }) =>
-          target === 'npm:@angular/core' && !projectGraph.externalNodes?.[node]
-      )
+          target === 'npm:@angular/core' && !projectGraph.externalNodes?.[node],
+      ),
     )
     .map(([projectName]) => ({
       projectName,
@@ -81,7 +81,7 @@ async function collectTsConfigPaths(tree: Tree): Promise<string[]> {
         tree,
         project,
         projectName,
-        false
+        false,
       );
       targetTsConfigPaths.forEach((tsConfigPath) => {
         const tsConfig = readJson(tree, tsConfigPath, {
@@ -109,7 +109,7 @@ function getProjectTsConfigPaths(
   tree: Tree,
   project: ProjectConfiguration,
   projectName: string,
-  shouldWarn: boolean = true
+  shouldWarn: boolean = true,
 ): string[] {
   const tsConfigPaths = new Set<string>();
 
@@ -117,7 +117,7 @@ function getProjectTsConfigPaths(
     if (executors.includes(target.executor)) {
       const tsConfigPathsFromTarget = getPathValuesFromTarget(
         target,
-        'tsConfig'
+        'tsConfig',
       );
       tsConfigPathsFromTarget.forEach((tsConfigPath) => {
         if (tree.exists(tsConfigPath)) {
@@ -125,7 +125,7 @@ function getProjectTsConfigPaths(
         } else if (shouldWarn) {
           logger.warn(
             `The "${tsConfigPath}" file specified in the "${targetName}" target of the "${projectName}" project could not be found. ` +
-              'Skipping setting the target to ES2020.'
+              'Skipping setting the target to ES2020.',
           );
         }
       });
@@ -135,7 +135,7 @@ function getProjectTsConfigPaths(
         target,
         targetName,
         projectName,
-        shouldWarn
+        shouldWarn,
       );
       tsConfigPathsFromJestTarget.forEach((tsConfigPath) => {
         tsConfigPaths.add(tsConfigPath);
@@ -143,7 +143,7 @@ function getProjectTsConfigPaths(
     } else if (shouldWarn) {
       logger.warn(
         `The "${targetName}" target of the "${projectName}" project is using an executor not supported by the migration. ` +
-          'Skipping setting the TS target to ES2020 for the project.'
+          'Skipping setting the TS target to ES2020 for the project.',
       );
     }
   }
@@ -156,7 +156,7 @@ function getTsConfigPathsFromJestTarget(
   target: TargetConfiguration,
   targetName: string,
   projectName: string,
-  shouldWarn: boolean
+  shouldWarn: boolean,
 ): string[] {
   const tsConfigPaths: string[] = [];
 
@@ -164,7 +164,7 @@ function getTsConfigPathsFromJestTarget(
   if (!jestConfigPaths.length && shouldWarn) {
     logger.warn(
       `The "${targetName}" target of the "${projectName}" project is using the "${jestExecutor}" executor but no "jestConfig" property was specified. ` +
-        'Skipping setting the TS compilation target to ES2020 for the project.'
+        'Skipping setting the TS compilation target to ES2020 for the project.',
     );
   }
 
@@ -174,7 +174,7 @@ function getTsConfigPathsFromJestTarget(
       jestConfigPath,
       targetName,
       projectName,
-      shouldWarn
+      shouldWarn,
     );
     if (tsConfigPath) {
       tsConfigPaths.push(tsConfigPath);
@@ -189,13 +189,13 @@ function getTsConfigFromJestConfig(
   jestConfigPath: string,
   targetName: string,
   projectName: string,
-  shouldWarn: boolean
+  shouldWarn: boolean,
 ): string {
   if (!tree.exists(jestConfigPath)) {
     if (shouldWarn) {
       logger.warn(
         `The "${jestConfigPath}" file specified in the "${targetName}" target of the "${projectName}" project could not be found. ` +
-          `The TS config file used by the target can't be determined. Skipping setting the target to ES2020.`
+          `The TS config file used by the target can't be determined. Skipping setting the target to ES2020.`,
       );
     }
     return undefined;
@@ -206,7 +206,7 @@ function getTsConfigFromJestConfig(
   const tsJestTsConfigStringLiteral = tsquery(
     jestConfigAst,
     'PropertyAssignment:has(Identifier[name=globals]) PropertyAssignment:has(StringLiteral[value=ts-jest]) PropertyAssignment Identifier[name=tsconfig] ~ StringLiteral',
-    { visitAllChildren: true }
+    { visitAllChildren: true },
   )[0] as StringLiteral;
 
   if (!tsJestTsConfigStringLiteral) {
@@ -214,7 +214,7 @@ function getTsConfigFromJestConfig(
       logger.warn(
         `Couldn't find the "tsconfig" property for "ts-jest" in the Jest configuration file "${jestConfigPath}" specified in the ` +
           `"${targetName}" target of the "${projectName}" project. The TS config file used by the target can't be determined. ` +
-          'Skipping setting the target to ES2020.'
+          'Skipping setting the target to ES2020.',
       );
     }
     return undefined;
@@ -225,14 +225,14 @@ function getTsConfigFromJestConfig(
     .replace(/['"]/g, '');
   const tsConfigPath = tsJestTsConfigValue.replace(
     '<rootDir>',
-    dirname(jestConfigPath)
+    dirname(jestConfigPath),
   );
 
   if (!tree.exists(tsConfigPath)) {
     if (shouldWarn) {
       logger.warn(
         `The "${tsJestTsConfigValue}" file specified in the Jest configuration file "${jestConfigPath}" of the "${targetName}" target ` +
-          `of the "${projectName}" project could not be found. Skipping setting the target to ES2020.`
+          `of the "${projectName}" project could not be found. Skipping setting the target to ES2020.`,
       );
     }
     return undefined;
@@ -243,7 +243,7 @@ function getTsConfigFromJestConfig(
 
 function getPathValuesFromTarget(
   target: TargetConfiguration,
-  option: string
+  option: string,
 ): string[] {
   const values: string[] = [];
 

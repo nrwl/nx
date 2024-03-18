@@ -53,8 +53,8 @@ Nx provides a utility (`nx list`) that lists both core and community plugins. Yo
   "repository": {
     "type": "git",
     "url": "https://github.com/nrwl/nx.git",
-    "directory": "packages/web"
-  }
+    "directory": "packages/web",
+  },
 }
 ```
 

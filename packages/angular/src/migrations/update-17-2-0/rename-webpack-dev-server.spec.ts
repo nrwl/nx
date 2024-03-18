@@ -72,7 +72,7 @@ describe('rename-webpack-dev-server migration', () => {
 
     const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
     expect(
-      nxJson.targetDefaults['@nx/angular:webpack-dev-server']
+      nxJson.targetDefaults['@nx/angular:webpack-dev-server'],
     ).toBeUndefined();
     expect(nxJson.targetDefaults['@nx/angular:dev-server']).toBeDefined();
   });
@@ -91,7 +91,7 @@ describe('rename-webpack-dev-server migration', () => {
 
     const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
     expect(
-      nxJson.targetDefaults['@nrwl/angular:webpack-dev-server']
+      nxJson.targetDefaults['@nrwl/angular:webpack-dev-server'],
     ).toBeUndefined();
     expect(nxJson.targetDefaults['@nx/angular:dev-server']).toBeDefined();
   });

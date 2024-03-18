@@ -16,7 +16,7 @@ import { execSync } from 'child_process';
 
 export async function setupVerdaccio(
   tree: Tree,
-  options: SetupVerdaccioGeneratorSchema
+  options: SetupVerdaccioGeneratorSchema,
 ) {
   if (!tree.exists('.verdaccio/config.yml')) {
     generateFiles(tree, path.join(__dirname, 'files'), '.verdaccio', {
@@ -69,7 +69,7 @@ export async function setupVerdaccio(
   return addDependenciesToPackageJson(
     tree,
     {},
-    { verdaccio: verdaccioVersion }
+    { verdaccio: verdaccioVersion },
   );
 }
 

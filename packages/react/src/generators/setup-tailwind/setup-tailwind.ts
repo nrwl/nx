@@ -21,7 +21,7 @@ import { join } from 'path';
 
 export async function setupTailwindGenerator(
   tree: Tree,
-  options: SetupTailwindOptions
+  options: SetupTailwindOptions,
 ) {
   const tasks: GeneratorCallback[] = [];
   const project = readProjectConfiguration(tree, options.project);
@@ -31,7 +31,7 @@ export async function setupTailwindGenerator(
     tree.exists(joinPathFragments(project.root, 'tailwind.config.js'))
   ) {
     logger.info(
-      `Skipping setup since there are existing PostCSS or Tailwind configuration files. For manual setup instructions, see https://nx.dev/guides/using-tailwind-css-in-react.`
+      `Skipping setup since there are existing PostCSS or Tailwind configuration files. For manual setup instructions, see https://nx.dev/guides/using-tailwind-css-in-react.`,
     );
     return;
   }
@@ -53,8 +53,8 @@ export async function setupTailwindGenerator(
           autoprefixer: autoprefixerVersion,
           postcss: postcssVersion,
           tailwindcss: tailwindcssVersion,
-        }
-      )
+        },
+      ),
     );
   }
 

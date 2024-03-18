@@ -4,7 +4,7 @@ import type { PropertyDeclaration } from 'typescript';
 let tsModule: typeof import('typescript');
 
 export function getArgsDefaultValue(
-  property: PropertyDeclaration
+  property: PropertyDeclaration,
 ): string | undefined {
   if (!property.initializer) {
     return undefined;

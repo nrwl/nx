@@ -24,14 +24,14 @@ const NxProjectGraphViz = dynamic(
   {
     ssr: false,
     loading: () => <Loading />,
-  }
+  },
 );
 const NxTaskGraphViz = dynamic(
   () => import('@nx/graph/ui-graph').then((module) => module.NxTaskGraphViz),
   {
     ssr: false,
     loading: () => <Loading />,
-  }
+  },
 );
 
 export function Graph({

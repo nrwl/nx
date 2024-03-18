@@ -6,11 +6,11 @@ const { workspaceRoot, registerTsProject } = requireNx();
 
 export let dynamicImport = new Function(
   'modulePath',
-  'return import(modulePath);'
+  'return import(modulePath);',
 );
 
 export async function loadConfigFile<T extends object = any>(
-  configFilePath: string
+  configFilePath: string,
 ): Promise<T> {
   {
     let module: any;

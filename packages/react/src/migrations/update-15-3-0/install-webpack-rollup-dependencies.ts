@@ -34,7 +34,7 @@ export function installWebpackRollupDependencies(tree: Tree) {
         webpack: '^5.75.0',
         'webpack-merge': '^5.8.0',
         '@nrwl/webpack': nxVersion,
-      }
+      },
     );
   }
 }

@@ -92,10 +92,10 @@ describe('updateBuildTargets', () => {
     const e2eProject = readProjectConfiguration(tree, 'my-source-e2e');
     expect(e2eProject).toBeDefined();
     expect(e2eProject.targets.e2e.options.devServerTarget).toBe(
-      'subfolder-my-destination:serve'
+      'subfolder-my-destination:serve',
     );
     expect(
-      e2eProject.targets.e2e.configurations.production.devServerTarget
+      e2eProject.targets.e2e.configurations.production.devServerTarget,
     ).toBe('subfolder-my-destination:serve:production');
   });
 
@@ -105,10 +105,10 @@ describe('updateBuildTargets', () => {
     const updatedProject = readProjectConfiguration(tree, 'my-flat-source');
     expect(updatedProject).toBeDefined();
     expect(updatedProject.targets.serve.options.buildTarget).toBe(
-      'subfolder-my-destination:build:development'
+      'subfolder-my-destination:build:development',
     );
     expect(
-      updatedProject.targets.serve.configurations.production.buildTarget
+      updatedProject.targets.serve.configurations.production.buildTarget,
     ).toBe('subfolder-my-destination:build:production');
   });
 
@@ -121,12 +121,12 @@ describe('updateBuildTargets', () => {
 
     expect(myProject).toBeDefined();
     expect(myProject.targets.storybook.executor).toBe(
-      '@nx/storybook:storybook'
+      '@nx/storybook:storybook',
     );
 
     expect(e2eProject).toBeDefined();
     expect(e2eProject.targets.e2e.options.browserTarget).toBe(
-      'subfolder-my-destination:serve'
+      'subfolder-my-destination:serve',
     );
   });
 

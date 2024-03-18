@@ -130,7 +130,7 @@ describe('convertToWithMF', () => {
     await expect(
       convertToWithMF(tree, {
         project: 'remote1',
-      })
+      }),
     ).rejects.toThrow();
   });
 
@@ -155,14 +155,14 @@ describe('convertToWithMF', () => {
 
     tree.write(
       'apps/host1/webpack.config.js',
-      ERROR_SHARED_PACKAGES_DOESNT_MATCH
+      ERROR_SHARED_PACKAGES_DOESNT_MATCH,
     );
 
     // ACT & ASSERT
     await expect(
       convertToWithMF(tree, {
         project: 'host1',
-      })
+      }),
     ).rejects.toThrow();
   });
 });

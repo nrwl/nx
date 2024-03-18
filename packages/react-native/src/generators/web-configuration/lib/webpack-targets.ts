@@ -5,7 +5,7 @@ import type { WithNxOptions } from '@nx/webpack';
 import { NormalizedSchema } from './normalize-schema';
 
 export function createBuildTarget(
-  options: NormalizedSchema
+  options: NormalizedSchema,
 ): TargetConfiguration {
   return {
     executor: '@nx/webpack:webpack',
@@ -16,7 +16,7 @@ export function createBuildTarget(
       outputPath: joinPathFragments(
         'dist',
         options.projectRoot != '.' ? options.projectRoot : options.project,
-        'web'
+        'web',
       ),
       index: joinPathFragments(options.projectRoot, 'src/index.html'),
       baseHref: '/',
@@ -28,7 +28,7 @@ export function createBuildTarget(
       ],
       webpackConfig: joinPathFragments(
         options.projectRoot,
-        'webpack.config.js'
+        'webpack.config.js',
       ),
     },
     configurations: {
@@ -51,7 +51,7 @@ export function createBuildTarget(
 }
 
 export function createServeTarget(
-  options: NormalizedSchema
+  options: NormalizedSchema,
 ): TargetConfiguration {
   return {
     executor: '@nx/webpack:dev-server',
@@ -73,14 +73,14 @@ export function createServeTarget(
 }
 
 export function createNxWebpackPluginOptions(
-  options: NormalizedSchema
+  options: NormalizedSchema,
 ): WithNxOptions & WithReactOptions {
   return {
     target: 'web',
     compiler: 'babel',
     outputPath: joinPathFragments(
       'dist',
-      options.projectRoot != '.' ? options.projectRoot : options.project
+      options.projectRoot != '.' ? options.projectRoot : options.project,
     ),
     index: './src/index.html',
     baseHref: '/',

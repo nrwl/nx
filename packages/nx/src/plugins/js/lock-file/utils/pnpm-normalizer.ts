@@ -41,7 +41,7 @@ export function parseAndNormalizePnpmLockfile(content: string): Lockfile {
   const { load } = require('@zkochan/js-yaml');
   const lockFileData = load(content);
   return revertFromInlineSpecifiersFormatIfNecessary(
-    convertFromLockfileFileMutable(lockFileData)
+    convertFromLockfileFileMutable(lockFileData),
   );
 }
 
@@ -90,9 +90,9 @@ export function stringifyToPnpmYaml(lockfile: Lockfile): string {
   const { dump } = require('@zkochan/js-yaml');
   return dump(
     sortLockfileKeys(
-      normalizeLockfile(adaptedLockfile as Lockfile, isLockfileV6)
+      normalizeLockfile(adaptedLockfile as Lockfile, isLockfileV6),
     ),
-    LOCKFILE_YAML_FORMAT
+    LOCKFILE_YAML_FORMAT,
   );
 }
 
@@ -150,7 +150,7 @@ function normalizeLockfile(lockfile: Lockfile, isLockfileV6: boolean) {
   if (lockfileToSave.time) {
     lockfileToSave.time = (isLockfileV6 ? pruneTimeInLockfileV6 : pruneTime)(
       lockfileToSave.time,
-      lockfile.importers
+      lockfile.importers,
     );
   }
   if (lockfileToSave.overrides != null && isEmpty(lockfileToSave.overrides)) {
@@ -183,7 +183,7 @@ function normalizeLockfile(lockfile: Lockfile, isLockfileV6: boolean) {
 // https://github.com/pnpm/pnpm/blob/af3e5559d377870d4c3d303429b3ed1a4e64fedc/lockfile/lockfile-file/src/write.ts#L173
 function pruneTimeInLockfileV6(
   time: Record<string, string>,
-  importers: Record<string, ProjectSnapshot>
+  importers: Record<string, ProjectSnapshot>,
 ): Record<string, string> {
   const rootDepPaths = new Set<string>();
   for (const importer of Object.values(importers)) {
@@ -227,7 +227,7 @@ function refToRelative(reference: string, pkgName: string): string | null {
 // https://github.com/pnpm/pnpm/blob/af3e5559d377870d4c3d303429b3ed1a4e64fedc/lockfile/lockfile-file/src/write.ts#L207
 function pruneTime(
   time: Record<string, string>,
-  importers: Record<string, ProjectSnapshot | ProjectSnapshotV6>
+  importers: Record<string, ProjectSnapshot | ProjectSnapshotV6>,
 ): Record<string, string> {
   const rootDepPaths = new Set<string>();
   for (const importer of Object.values(importers)) {
@@ -273,7 +273,7 @@ const ROOT_KEYS_ORDER = {
 function sortLockfileKeys(lockfile: LockfileFile): LockfileFile {
   let sortedLockfile = {} as Lockfile;
   const sortedKeys = Object.keys(lockfile).sort(
-    (a, b) => ROOT_KEYS_ORDER[a] - ROOT_KEYS_ORDER[b]
+    (a, b) => ROOT_KEYS_ORDER[a] - ROOT_KEYS_ORDER[b],
   );
   for (const key of sortedKeys) {
     sortedLockfile[key] = lockfile[key];
@@ -311,21 +311,21 @@ interface SpecifierAndResolution {
 
 // https://github.com/pnpm/pnpm/blob/af3e5559d377870d4c3d303429b3ed1a4e64fedc/lockfile/lockfile-file/src/experiments/inlineSpecifiersLockfileConverters.ts#L10
 function isExperimentalInlineSpecifiersFormat(
-  lockfile: InlineSpecifiersLockfile | Lockfile
+  lockfile: InlineSpecifiersLockfile | Lockfile,
 ): lockfile is InlineSpecifiersLockfile {
   const { lockfileVersion } = lockfile;
   return (
     lockfileVersion.toString().startsWith('6.') ||
     (typeof lockfileVersion === 'string' &&
       lockfileVersion.endsWith(
-        INLINE_SPECIFIERS_FORMAT_LOCKFILE_VERSION_SUFFIX
+        INLINE_SPECIFIERS_FORMAT_LOCKFILE_VERSION_SUFFIX,
       ))
   );
 }
 
 // https://github.com/pnpm/pnpm/blob/af3e5559d377870d4c3d303429b3ed1a4e64fedc/lockfile/lockfile-file/src/experiments/inlineSpecifiersLockfileConverters.ts#L17
 function convertToInlineSpecifiersFormat(
-  lockfile: Lockfile
+  lockfile: Lockfile,
 ): InlineSpecifiersLockfile {
   let importers = lockfile.importers;
   let packages = lockfile.packages;
@@ -337,24 +337,24 @@ function convertToInlineSpecifiersFormat(
           if (newSnapshot.dependencies != null) {
             newSnapshot.dependencies = mapValues(
               newSnapshot.dependencies,
-              convertOldRefToNewRef
+              convertOldRefToNewRef,
             );
           }
           if (newSnapshot.optionalDependencies != null) {
             newSnapshot.optionalDependencies = mapValues(
               newSnapshot.optionalDependencies,
-              convertOldRefToNewRef
+              convertOldRefToNewRef,
             );
           }
           if (newSnapshot.devDependencies != null) {
             newSnapshot.devDependencies = mapValues(
               newSnapshot.devDependencies,
-              convertOldRefToNewRef
+              convertOldRefToNewRef,
             );
           }
           return [importerId, newSnapshot];
-        }
-      )
+        },
+      ),
     );
     packages = Object.fromEntries(
       Object.entries(lockfile.packages ?? {}).map(([depPath, pkgSnapshot]) => {
@@ -362,17 +362,17 @@ function convertToInlineSpecifiersFormat(
         if (newSnapshot.dependencies != null) {
           newSnapshot.dependencies = mapValues(
             newSnapshot.dependencies,
-            convertOldRefToNewRef
+            convertOldRefToNewRef,
           );
         }
         if (newSnapshot.optionalDependencies != null) {
           newSnapshot.optionalDependencies = mapValues(
             newSnapshot.optionalDependencies,
-            convertOldRefToNewRef
+            convertOldRefToNewRef,
           );
         }
         return [convertOldDepPathToNewDepPath(depPath), newSnapshot];
-      })
+      }),
     );
   }
   const newLockfile = {
@@ -381,13 +381,13 @@ function convertToInlineSpecifiersFormat(
     lockfileVersion: isV6Lockfile(lockfile)
       ? lockfile.lockfileVersion.toString()
       : lockfile.lockfileVersion
-          .toString()
-          .endsWith(INLINE_SPECIFIERS_FORMAT_LOCKFILE_VERSION_SUFFIX)
-      ? lockfile.lockfileVersion.toString()
-      : `${lockfile.lockfileVersion}${INLINE_SPECIFIERS_FORMAT_LOCKFILE_VERSION_SUFFIX}`,
+            .toString()
+            .endsWith(INLINE_SPECIFIERS_FORMAT_LOCKFILE_VERSION_SUFFIX)
+        ? lockfile.lockfileVersion.toString()
+        : `${lockfile.lockfileVersion}${INLINE_SPECIFIERS_FORMAT_LOCKFILE_VERSION_SUFFIX}`,
     importers: mapValues(
       importers,
-      convertProjectSnapshotToInlineSpecifiersFormat
+      convertProjectSnapshotToInlineSpecifiersFormat,
     ),
   };
   if (isV6Lockfile(lockfile) && newLockfile.time) {
@@ -395,7 +395,7 @@ function convertToInlineSpecifiersFormat(
       Object.entries(newLockfile.time).map(([depPath, time]) => [
         convertOldDepPathToNewDepPath(depPath),
         time,
-      ])
+      ]),
     );
   }
   return newLockfile;
@@ -432,7 +432,7 @@ function convertOldRefToNewRef(oldRef: string) {
 
 // https://github.com/pnpm/pnpm/blob/af3e5559d377870d4c3d303429b3ed1a4e64fedc/lockfile/lockfile-file/src/experiments/inlineSpecifiersLockfileConverters.ts#L99
 function revertFromInlineSpecifiersFormatIfNecessary(
-  lockfile: Lockfile | InlineSpecifiersLockfile
+  lockfile: Lockfile | InlineSpecifiersLockfile,
 ): Lockfile {
   return isExperimentalInlineSpecifiersFormat(lockfile)
     ? revertFromInlineSpecifiersFormat(lockfile)
@@ -441,18 +441,18 @@ function revertFromInlineSpecifiersFormatIfNecessary(
 
 // https://github.com/pnpm/pnpm/blob/af3e5559d377870d4c3d303429b3ed1a4e64fedc/lockfile/lockfile-file/src/experiments/inlineSpecifiersLockfileConverters.ts#L105
 function revertFromInlineSpecifiersFormat(
-  lockfile: InlineSpecifiersLockfile
+  lockfile: InlineSpecifiersLockfile,
 ): Lockfile {
   const { lockfileVersion, importers, ...rest } = lockfile;
 
   const originalVersionStr = lockfileVersion.replace(
     INLINE_SPECIFIERS_FORMAT_LOCKFILE_VERSION_SUFFIX,
-    ''
+    '',
   );
   const originalVersion = Number(originalVersionStr);
   if (isNaN(originalVersion)) {
     throw new Error(
-      `Unable to revert lockfile from inline specifiers format. Invalid version parsed: ${originalVersionStr}`
+      `Unable to revert lockfile from inline specifiers format. Invalid version parsed: ${originalVersionStr}`,
     );
   }
 
@@ -466,24 +466,24 @@ function revertFromInlineSpecifiersFormat(
           if (newSnapshot.dependencies != null) {
             newSnapshot.dependencies = mapValues(
               newSnapshot.dependencies,
-              convertNewRefToOldRef
+              convertNewRefToOldRef,
             );
           }
           if (newSnapshot.optionalDependencies != null) {
             newSnapshot.optionalDependencies = mapValues(
               newSnapshot.optionalDependencies,
-              convertNewRefToOldRef
+              convertNewRefToOldRef,
             );
           }
           if (newSnapshot.devDependencies != null) {
             newSnapshot.devDependencies = mapValues(
               newSnapshot.devDependencies,
-              convertNewRefToOldRef
+              convertNewRefToOldRef,
             );
           }
           return [importerId, newSnapshot];
-        }
-      )
+        },
+      ),
     );
     packages = Object.fromEntries(
       Object.entries(lockfile.packages ?? {}).map(([depPath, pkgSnapshot]) => {
@@ -491,23 +491,23 @@ function revertFromInlineSpecifiersFormat(
         if (newSnapshot.dependencies != null) {
           newSnapshot.dependencies = mapValues(
             newSnapshot.dependencies,
-            convertNewRefToOldRef
+            convertNewRefToOldRef,
           );
         }
         if (newSnapshot.optionalDependencies != null) {
           newSnapshot.optionalDependencies = mapValues(
             newSnapshot.optionalDependencies,
-            convertNewRefToOldRef
+            convertNewRefToOldRef,
           );
         }
         return [convertNewDepPathToOldDepPath(depPath), newSnapshot];
-      })
+      }),
     );
   }
   const newLockfile = {
     ...rest,
     lockfileVersion: lockfileVersion.endsWith(
-      INLINE_SPECIFIERS_FORMAT_LOCKFILE_VERSION_SUFFIX
+      INLINE_SPECIFIERS_FORMAT_LOCKFILE_VERSION_SUFFIX,
     )
       ? originalVersion
       : lockfileVersion,
@@ -519,7 +519,7 @@ function revertFromInlineSpecifiersFormat(
       Object.entries(newLockfile.time).map(([depPath, time]) => [
         convertNewDepPathToOldDepPath(depPath),
         time,
-      ])
+      ]),
     );
   }
   return newLockfile;
@@ -547,7 +547,7 @@ function convertNewRefToOldRef(oldRef: string) {
 
 // https://github.com/pnpm/pnpm/blob/af3e5559d377870d4c3d303429b3ed1a4e64fedc/lockfile/lockfile-file/src/experiments/inlineSpecifiersLockfileConverters.ts#L179
 function convertProjectSnapshotToInlineSpecifiersFormat(
-  projectSnapshot: ProjectSnapshot
+  projectSnapshot: ProjectSnapshot,
 ): InlineSpecifiersProjectSnapshot {
   const { specifiers, ...rest } = projectSnapshot;
   const convertBlock = (block?: ResolvedDependencies) =>
@@ -567,7 +567,7 @@ function convertProjectSnapshotToInlineSpecifiersFormat(
 // https://github.com/pnpm/pnpm/blob/af3e5559d377870d4c3d303429b3ed1a4e64fedc/lockfile/lockfile-file/src/experiments/inlineSpecifiersLockfileConverters.ts#L195
 function convertResolvedDependenciesToInlineSpecifiersFormat(
   resolvedDependencies: ResolvedDependencies,
-  { specifiers }: { specifiers: ResolvedDependencies }
+  { specifiers }: { specifiers: ResolvedDependencies },
 ): InlineSpecifiersResolvedDependencies {
   return mapValues(resolvedDependencies, (version, depName) => ({
     specifier: specifiers[depName],
@@ -577,19 +577,19 @@ function convertResolvedDependenciesToInlineSpecifiersFormat(
 
 // https://github.com/pnpm/pnpm/blob/af3e5559d377870d4c3d303429b3ed1a4e64fedc/lockfile/lockfile-file/src/experiments/inlineSpecifiersLockfileConverters.ts#L205
 function revertProjectSnapshot(
-  from: InlineSpecifiersProjectSnapshot
+  from: InlineSpecifiersProjectSnapshot,
 ): ProjectSnapshot {
   const specifiers: ResolvedDependencies = {};
 
   function moveSpecifiers(
-    from: InlineSpecifiersResolvedDependencies
+    from: InlineSpecifiersResolvedDependencies,
   ): ResolvedDependencies {
     const resolvedDependencies: ResolvedDependencies = {};
     for (const [depName, { specifier, version }] of Object.entries(from)) {
       const existingValue = specifiers[depName];
       if (existingValue != null && existingValue !== specifier) {
         throw new Error(
-          `Project snapshot lists the same dependency more than once with conflicting versions: ${depName}`
+          `Project snapshot lists the same dependency more than once with conflicting versions: ${depName}`,
         );
       }
 
@@ -621,7 +621,7 @@ function revertProjectSnapshot(
 // https://github.com/pnpm/pnpm/blob/af3e5559d377870d4c3d303429b3ed1a4e64fedc/lockfile/lockfile-file/src/experiments/inlineSpecifiersLockfileConverters.ts#L241
 function mapValues<T, U>(
   obj: Record<string, T>,
-  mapper: (val: T, key: string) => U
+  mapper: (val: T, key: string) => U,
 ): Record<string, U> {
   const result: Record<string, U> = {};
   for (const [key, value] of Object.entries(obj)) {
@@ -676,7 +676,7 @@ function dpParse(dependencyPath) {
       `Expected \`dependencyPath\` to be of type \`string\`, got \`${
         // eslint-disable-next-line: strict-type-predicates
         dependencyPath === null ? 'null' : typeof dependencyPath
-      }\``
+      }\``,
     );
   }
   const _isAbsolute = isAbsolute(dependencyPath);

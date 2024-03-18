@@ -86,7 +86,7 @@ const defaultChangelogRenderer: ChangelogRenderer = async ({
     if (commit.type === 'revert') {
       for (const revertedHash of commit.revertedHashes) {
         const revertedCommit = commits.find((c) =>
-          revertedHash.startsWith(c.shortHash)
+          revertedHash.startsWith(c.shortHash),
         );
         if (revertedCommit) {
           commits.splice(commits.indexOf(revertedCommit), 1);
@@ -105,9 +105,9 @@ const defaultChangelogRenderer: ChangelogRenderer = async ({
           '',
           `${createVersionTitle(
             releaseVersion,
-            changelogRenderOptions
+            changelogRenderOptions,
           )}\n\n${entryWhenNoChanges}`,
-          ''
+          '',
         );
       }
       return markdownLines.join('\n').trim();
@@ -118,7 +118,7 @@ const defaultChangelogRenderer: ChangelogRenderer = async ({
     markdownLines.push(
       '',
       createVersionTitle(releaseVersion, changelogRenderOptions),
-      ''
+      '',
     );
 
     for (const type of Object.keys(commitTypes)) {
@@ -137,10 +137,10 @@ const defaultChangelogRenderer: ChangelogRenderer = async ({
       const commitsInChronologicalOrder = group.reverse();
       const commitsGroupedByScope = groupBy(
         commitsInChronologicalOrder,
-        'scope'
+        'scope',
       );
       const scopesSortedAlphabetically = Object.keys(
-        commitsGroupedByScope
+        commitsGroupedByScope,
       ).sort();
 
       for (const scope of scopesSortedAlphabetically) {
@@ -150,14 +150,14 @@ const defaultChangelogRenderer: ChangelogRenderer = async ({
           markdownLines.push(line);
           if (commit.isBreaking) {
             const breakingChangeExplanation = extractBreakingChangeExplanation(
-              commit.body
+              commit.body,
             );
             breakingChanges.push(
               breakingChangeExplanation
                 ? `- ${
                     commit.scope ? `**${commit.scope.trim()}:** ` : ''
                   }${breakingChangeExplanation}`
-                : line
+                : line,
             );
           }
         }
@@ -168,7 +168,7 @@ const defaultChangelogRenderer: ChangelogRenderer = async ({
     const relevantCommits = await getCommitsRelevantToProjects(
       projectGraph,
       commits,
-      [project]
+      [project],
     );
 
     // Generating for a named project, but that project has no relevant changes in the current set of commits, exit early
@@ -178,9 +178,9 @@ const defaultChangelogRenderer: ChangelogRenderer = async ({
           '',
           `${createVersionTitle(
             releaseVersion,
-            changelogRenderOptions
+            changelogRenderOptions,
           )}\n\n${entryWhenNoChanges}`,
-          ''
+          '',
         );
       }
       return markdownLines.join('\n').trim();
@@ -189,13 +189,13 @@ const defaultChangelogRenderer: ChangelogRenderer = async ({
     markdownLines.push(
       '',
       createVersionTitle(releaseVersion, changelogRenderOptions),
-      ''
+      '',
     );
 
     const typeGroups = groupBy(
       // Sort the relevant commits to have the unscoped commits first, before grouping by type
       relevantCommits.sort((a, b) => (b.scope ? 1 : 0) - (a.scope ? 1 : 0)),
-      'type'
+      'type',
     );
     for (const type of Object.keys(commitTypes)) {
       const group = typeGroups[type];
@@ -211,14 +211,14 @@ const defaultChangelogRenderer: ChangelogRenderer = async ({
         markdownLines.push(line + '\n');
         if (commit.isBreaking) {
           const breakingChangeExplanation = extractBreakingChangeExplanation(
-            commit.body
+            commit.body,
           );
           breakingChanges.push(
             breakingChangeExplanation
               ? `- ${
                   commit.scope ? `**${commit.scope.trim()}:** ` : ''
                 }${breakingChangeExplanation}`
-              : line
+              : line,
           );
         }
       }
@@ -257,7 +257,7 @@ const defaultChangelogRenderer: ChangelogRenderer = async ({
             // It could either be in the format: username@ or github_id+username@
             if (email.endsWith('@users.noreply.github.com')) {
               const match = email.match(
-                /^(\d+\+)?([^@]+)@users\.noreply\.github\.com$/
+                /^(\d+\+)?([^@]+)@users\.noreply\.github\.com$/,
               );
               if (match && match[2]) {
                 meta.github = match[2];
@@ -266,16 +266,17 @@ const defaultChangelogRenderer: ChangelogRenderer = async ({
             }
             // Look up any other emails against the ungh.cc API
             const { data } = await axios
-              .get<any, { data?: { user?: { username: string } } }>(
-                `https://ungh.cc/users/find/${email}`
-              )
+              .get<
+                any,
+                { data?: { user?: { username: string } } }
+              >(`https://ungh.cc/users/find/${email}`)
               .catch(() => ({ data: { user: null } }));
             if (data?.user) {
               meta.github = data.user.username;
               break;
             }
           }
-        })
+        }),
       );
     }
 
@@ -296,7 +297,7 @@ const defaultChangelogRenderer: ChangelogRenderer = async ({
             // Tag the author's Github username if we were able to resolve it so that Github adds them as a contributor
             const github = i.github ? ` @${i.github}` : '';
             return `- ${i.name}${github}`;
-          })
+          }),
       );
     }
   }
@@ -325,7 +326,7 @@ function groupBy(items: any[], key: string) {
 function formatCommit(
   commit: GitCommit,
   changelogRenderOptions: DefaultChangelogRenderOptions,
-  repoSlug?: RepoSlug
+  repoSlug?: RepoSlug,
 ): string {
   let commitLine =
     '- ' +
@@ -366,7 +367,7 @@ function extractBreakingChangeExplanation(message: string): string | null {
 
 function createVersionTitle(
   version: string,
-  changelogRenderOptions: DefaultChangelogRenderOptions
+  changelogRenderOptions: DefaultChangelogRenderOptions,
 ) {
   // Normalize by removing any leading `v` during comparison
   const isMajorVersion = `${major(version)}.0.0` === version.replace(/^v/, '');

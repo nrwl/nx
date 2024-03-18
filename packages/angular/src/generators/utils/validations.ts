@@ -6,7 +6,7 @@ export function validateProject(tree: Tree, projectName: string): void {
 
   if (!projects.has(projectName)) {
     throw new Error(
-      `Project "${projectName}" does not exist! Please provide an existing project name.`
+      `Project "${projectName}" does not exist! Please provide an existing project name.`,
     );
   }
 }

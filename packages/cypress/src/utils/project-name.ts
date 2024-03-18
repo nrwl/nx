@@ -7,11 +7,11 @@ export function getUnscopedLibName(libRoot: string) {
 export function getE2eProjectName(
   targetProjectName: string,
   targetLibRoot: string,
-  cypressDirectory?: string
+  cypressDirectory?: string,
 ) {
   if (cypressDirectory) {
     return `${filePathPrefix(cypressDirectory)}-${getUnscopedLibName(
-      targetLibRoot
+      targetLibRoot,
     )}-e2e`;
   }
   return `${targetProjectName}-e2e`;

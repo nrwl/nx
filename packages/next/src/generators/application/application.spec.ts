@@ -158,7 +158,7 @@ describe('app', () => {
 
       expect(readProjectConfiguration(tree, name).root).toEqual(name);
       expect(readProjectConfiguration(tree, `${name}-e2e`).root).toEqual(
-        `${name}-e2e`
+        `${name}-e2e`,
       );
     });
 
@@ -268,7 +268,7 @@ describe('app', () => {
       });
 
       expect(
-        tree.exists(`${name}/src/app/page.module.styled-components`)
+        tree.exists(`${name}/src/app/page.module.styled-components`),
       ).toBeFalsy();
       expect(tree.exists(`${name}/src/app/global.css`)).toBeTruthy();
 
@@ -352,7 +352,7 @@ describe('app', () => {
       });
 
       expect(
-        tree.exists(`${name}/src/app/page.module.styled-components`)
+        tree.exists(`${name}/src/app/page.module.styled-components`),
       ).toBeFalsy();
       expect(tree.exists(`${name}/src/app/global.css`)).toBeTruthy();
 
@@ -395,7 +395,7 @@ describe('app', () => {
       const tsconfigJson = readJson(tree, `${name}/tsconfig.json`);
 
       expect(tsconfigJson.compilerOptions['jsxImportSource']).toEqual(
-        '@emotion/react'
+        '@emotion/react',
       );
     });
   });
@@ -418,7 +418,7 @@ describe('app', () => {
 
       expect(indexContent).not.toContain(`import styles from './page.module`);
       expect(indexContent).not.toContain(
-        `import styled from 'styled-components'`
+        `import styled from 'styled-components'`,
       );
       expect(tree.read(`${name}/src/app/layout.tsx`, 'utf-8'))
         .toMatchInlineSnapshot(`
@@ -476,7 +476,7 @@ describe('app', () => {
     });
 
     expect(tree.read(`${name}/jest.config.ts`, 'utf-8')).toContain(
-      `moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],`
+      `moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],`,
     );
   });
 
@@ -490,7 +490,7 @@ describe('app', () => {
     });
 
     expect(tree.read(`${name}/jest.config.ts`, 'utf-8')).toContain(
-      `'^(?!.*\\\\.(js|jsx|ts|tsx|css|json)$)': '@nx/react/plugins/jest'`
+      `'^(?!.*\\\\.(js|jsx|ts|tsx|css|json)$)': '@nx/react/plugins/jest'`,
     );
   });
 
@@ -673,7 +673,7 @@ describe('app', () => {
             "next",
             "next/core-web-vitals",
           ]
-        `
+        `,
         );
       });
 

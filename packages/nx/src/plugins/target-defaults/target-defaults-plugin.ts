@@ -43,7 +43,7 @@ export const TargetDefaultsPlugin: NxPluginV2 = {
       const root = dirname(configFile);
 
       const packageManagerWorkspacesGlob = combineGlobPatterns(
-        getGlobPatternsFromPackageManagerWorkspaces(ctx.workspaceRoot)
+        getGlobPatternsFromPackageManagerWorkspaces(ctx.workspaceRoot),
       );
 
       // Only process once if package.json + project.json both exist
@@ -66,10 +66,10 @@ export const TargetDefaultsPlugin: NxPluginV2 = {
       }
 
       const projectJson = readJsonOrNull<ProjectConfiguration>(
-        join(ctx.workspaceRoot, root, 'project.json')
+        join(ctx.workspaceRoot, root, 'project.json'),
       );
       const packageJson = readJsonOrNull<PackageJson>(
-        join(ctx.workspaceRoot, root, 'package.json')
+        join(ctx.workspaceRoot, root, 'package.json'),
       );
       const packageJsonTargets = readTargetsFromPackageJson(packageJson);
       const projectDefinedTargets = new Set([
@@ -79,7 +79,7 @@ export const TargetDefaultsPlugin: NxPluginV2 = {
 
       const executorToTargetMap = getExecutorToTargetMap(
         packageJsonTargets,
-        projectJson?.targets
+        projectJson?.targets,
       );
 
       const modifiedTargets: Record<
@@ -96,13 +96,13 @@ export const TargetDefaultsPlugin: NxPluginV2 = {
           // and build is specified later in the ordering.
           if (!modifiedTargets[targetName] || targetName !== defaultSpecifier) {
             const defaults = JSON.parse(
-              JSON.stringify(targetDefaults[defaultSpecifier])
+              JSON.stringify(targetDefaults[defaultSpecifier]),
             );
             modifiedTargets[targetName] = {
               ...getTargetInfo(
                 targetName,
                 projectJson?.targets,
-                packageJsonTargets
+                packageJsonTargets,
               ),
               ...defaults,
             };
@@ -129,7 +129,7 @@ export const TargetDefaultsPlugin: NxPluginV2 = {
 
 function getExecutorToTargetMap(
   packageJsonTargets: Record<string, TargetConfiguration>,
-  projectJsonTargets: Record<string, TargetConfiguration>
+  projectJsonTargets: Record<string, TargetConfiguration>,
 ) {
   const executorToTargetMap = new Map<string, Set<string>>();
   const targets = Object.keys({
@@ -140,7 +140,7 @@ function getExecutorToTargetMap(
     const executor = getTargetExecutor(
       target,
       projectJsonTargets,
-      packageJsonTargets
+      packageJsonTargets,
     );
     const targetsForExecutor = executorToTargetMap.get(executor) ?? new Set();
     targetsForExecutor.add(target);
@@ -169,7 +169,7 @@ function readJsonOrNull<T extends Object = any>(path: string) {
 export function getTargetInfo(
   target: string,
   projectJsonTargets: Record<string, TargetConfiguration>,
-  packageJsonTargets: Record<string, TargetConfiguration>
+  packageJsonTargets: Record<string, TargetConfiguration>,
 ) {
   const projectJsonTarget = projectJsonTargets?.[target];
   const packageJsonTarget = packageJsonTargets?.[target];
@@ -177,7 +177,7 @@ export function getTargetInfo(
   const executor = getTargetExecutor(
     target,
     projectJsonTargets,
-    packageJsonTargets
+    packageJsonTargets,
   );
   const targetOptions = {
     ...packageJsonTarget?.options,
@@ -230,7 +230,7 @@ export function getTargetInfo(
 function getTargetExecutor(
   target: string,
   projectJsonTargets: Record<string, TargetConfiguration>,
-  packageJsonTargets: Record<string, TargetConfiguration>
+  packageJsonTargets: Record<string, TargetConfiguration>,
 ) {
   const projectJsonTargetConfiguration = projectJsonTargets?.[target];
   const packageJsonTargetConfiguration = packageJsonTargets?.[target];

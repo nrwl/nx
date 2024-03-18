@@ -29,20 +29,20 @@ describe('federate-module', () => {
       expect(projects.get('my-remote').root).toEqual('apps/my-remote');
 
       expect(tree.exists('apps/my-remote/module-federation.config.ts')).toBe(
-        true
+        true,
       );
 
       const content = tree.read(
         'apps/my-remote/module-federation.config.ts',
-        'utf-8'
+        'utf-8',
       );
       expect(content).toContain(
-        `'./my-federated-module': 'apps/my-remote/src/my-federated-module.ts'`
+        `'./my-federated-module': 'apps/my-remote/src/my-federated-module.ts'`,
       );
 
       const tsconfig = JSON.parse(tree.read('tsconfig.base.json', 'utf-8'));
       expect(
-        tsconfig.compilerOptions.paths['my-remote/my-federated-module']
+        tsconfig.compilerOptions.paths['my-remote/my-federated-module'],
       ).toEqual(['apps/my-remote/src/my-federated-module.ts']);
     });
   });
@@ -67,11 +67,11 @@ describe('federate-module', () => {
     it('should append the new path to the module federation config', async () => {
       let content = tree.read(
         `apps/${remoteSchema.name}/module-federation.config.ts`,
-        'utf-8'
+        'utf-8',
       );
 
       expect(content).not.toContain(
-        `'./my-federated-module': 'apps/my-remote/src/my-federated-module.ts'`
+        `'./my-federated-module': 'apps/my-remote/src/my-federated-module.ts'`,
       );
 
       await federateModuleGenerator(tree, {
@@ -82,17 +82,17 @@ describe('federate-module', () => {
 
       content = tree.read(
         `apps/${remoteSchema.name}/module-federation.config.ts`,
-        'utf-8'
+        'utf-8',
       );
       expect(content).toContain(
-        `'./my-federated-module': 'apps/my-remote/src/my-federated-module.ts'`
+        `'./my-federated-module': 'apps/my-remote/src/my-federated-module.ts'`,
       );
 
       const tsconfig = JSON.parse(tree.read('tsconfig.base.json', 'utf-8'));
       expect(
         tsconfig.compilerOptions.paths[
           `${remoteSchema.name}/my-federated-module`
-        ]
+        ],
       ).toEqual(['apps/my-remote/src/my-federated-module.ts']);
     });
   });

@@ -57,7 +57,7 @@ export interface NxCloudClient {
   nxCloudTasksRunner: TasksRunner<CloudTaskRunnerOptions>;
 }
 export async function verifyOrUpdateNxCloudClient(
-  options: CloudTaskRunnerOptions
+  options: CloudTaskRunnerOptions,
 ): Promise<{ nxCloudClient: NxCloudClient; version: string } | null> {
   debugLog('Verifying current cloud bundle');
   const currentBundle = getLatestInstalledRunnerBundle();
@@ -76,7 +76,7 @@ export async function verifyOrUpdateNxCloudClient(
 
       debugLog(
         'Could not verify bundle. Resetting validation timer and using previously installed or default runner. Error: ',
-        e
+        e,
       );
       writeBundleVerificationLock();
 
@@ -113,7 +113,7 @@ export async function verifyOrUpdateNxCloudClient(
       'Currently installed bundle is invalid, downloading version',
       version,
       ' from ',
-      url
+      url,
     );
 
     if (version === 'NX_ENTERPRISE_OUTDATED_IMAGE') {
@@ -124,7 +124,7 @@ export async function verifyOrUpdateNxCloudClient(
       axios,
       runnerBundleInstallDirectory,
       version,
-      url
+      url,
     );
 
     debugLog('Done: ', fullPath);
@@ -157,11 +157,11 @@ function getLatestInstalledRunnerBundle(): CloudBundleInstall | null {
 
   try {
     const installedBundles: CloudBundleInstall[] = readdirSync(
-      runnerBundleInstallDirectory
+      runnerBundleInstallDirectory,
     )
       .filter((potentialDirectory) => {
         return statSync(
-          join(runnerBundleInstallDirectory, potentialDirectory)
+          join(runnerBundleInstallDirectory, potentialDirectory),
         ).isDirectory();
       })
       .map((fileOrDirectory) => ({
@@ -182,7 +182,7 @@ function getLatestInstalledRunnerBundle(): CloudBundleInstall | null {
 }
 
 function shouldVerifyInstalledRunnerBundle(
-  currentBundle: CloudBundleInstall | null
+  currentBundle: CloudBundleInstall | null,
 ): boolean {
   if (process.env.NX_CLOUD_FORCE_REVALIDATE === 'true') {
     return true;
@@ -198,12 +198,12 @@ function shouldVerifyInstalledRunnerBundle(
       const THIRTY_MINUTES = 30 * 60 * 1000;
       if (Date.now() - lastVerification < THIRTY_MINUTES) {
         debugLog(
-          'Last verification was within the past 30 minutes, will not verify this time'
+          'Last verification was within the past 30 minutes, will not verify this time',
         );
         return false;
       }
       debugLog(
-        'Last verification was more than 30 minutes ago, verifying bundle is still valid'
+        'Last verification was more than 30 minutes ago, verifying bundle is still valid',
       );
     }
   }
@@ -212,7 +212,7 @@ function shouldVerifyInstalledRunnerBundle(
 
 async function verifyCurrentBundle(
   axios: AxiosInstance,
-  currentBundle: CloudBundleInstall | null
+  currentBundle: CloudBundleInstall | null,
 ): Promise<AxiosResponse<VerifyClientBundleResponse>> {
   return axios.get('/nx-cloud/client/verify', {
     params: currentBundle
@@ -248,7 +248,7 @@ function writeBundleVerificationLock() {
 }
 
 function getBundleContentHash(
-  bundle: CloudBundleInstall | null
+  bundle: CloudBundleInstall | null,
 ): string | null {
   if (bundle == null) {
     return null;
@@ -282,7 +282,7 @@ async function downloadAndExtractClientBundle(
   axios: AxiosInstance,
   runnerBundleInstallDirectory: string,
   version: string,
-  url: string
+  url: string,
 ): Promise<string> {
   let resp;
   try {

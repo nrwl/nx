@@ -14,7 +14,7 @@ export function createTaskInfoPerTsConfigMap(
   tasksOptions: Record<string, NormalizedExecutorOptions>,
   context: ExecutorContext,
   tasks: string[],
-  taskInMemoryTsConfigMap: Record<string, TypescriptInMemoryTsConfig>
+  taskInMemoryTsConfigMap: Record<string, TypescriptInMemoryTsConfig>,
 ): Record<string, TaskInfo> {
   const tsConfigTaskInfoMap: Record<string, TaskInfo> = {};
 
@@ -23,7 +23,7 @@ export function createTaskInfoPerTsConfigMap(
     tasksOptions,
     context,
     tasks,
-    taskInMemoryTsConfigMap
+    taskInMemoryTsConfigMap,
   );
 
   return tsConfigTaskInfoMap;
@@ -34,7 +34,7 @@ function processTasksAndPopulateTsConfigTaskInfoMap(
   tasksOptions: Record<string, NormalizedExecutorOptions>,
   context: ExecutorContext,
   tasks: string[],
-  taskInMemoryTsConfigMap: Record<string, TypescriptInMemoryTsConfig>
+  taskInMemoryTsConfigMap: Record<string, TypescriptInMemoryTsConfig>,
 ): void {
   for (const taskName of tasks) {
     if (taskTsConfigCache.has(taskName)) {
@@ -52,7 +52,7 @@ function processTasksAndPopulateTsConfigTaskInfoMap(
       const taskInfo = createTaskInfo(taskName, taskOptions, context, tsConfig);
       const tsConfigPath = join(
         context.root,
-        relative(context.root, taskOptions.tsConfig)
+        relative(context.root, taskOptions.tsConfig),
       ).replace(/\\/g, '/');
 
       tsConfigTaskInfoMap[tsConfigPath] = taskInfo;
@@ -64,7 +64,7 @@ function processTasksAndPopulateTsConfigTaskInfoMap(
       tasksOptions,
       context,
       context.taskGraph.dependencies[taskName],
-      taskInMemoryTsConfigMap
+      taskInMemoryTsConfigMap,
     );
   }
 }
@@ -73,7 +73,7 @@ function createTaskInfo(
   taskName: string,
   taskOptions: NormalizedExecutorOptions,
   context: ExecutorContext,
-  tsConfig: TypescriptInMemoryTsConfig
+  tsConfig: TypescriptInMemoryTsConfig,
 ): TaskInfo {
   const target = parseTargetString(taskName, context);
 
@@ -102,7 +102,7 @@ function createTaskInfo(
     context.root,
     context.taskGraph.tasks[taskName].target.project,
     context.taskGraph.tasks[taskName].target.target,
-    context.taskGraph.tasks[taskName].target.configuration
+    context.taskGraph.tasks[taskName].target.configuration,
   );
 
   return {

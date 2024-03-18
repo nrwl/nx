@@ -42,18 +42,18 @@ describe('react:storybook-configuration', () => {
     });
 
     expect(
-      appTree.read('test-ui-lib/.storybook/main.ts', 'utf-8')
+      appTree.read('test-ui-lib/.storybook/main.ts', 'utf-8'),
     ).toMatchSnapshot();
     expect(appTree.exists('test-ui-lib/tsconfig.storybook.json')).toBeTruthy();
 
     const packageJson = JSON.parse(appTree.read('package.json', 'utf-8'));
     expect(packageJson.devDependencies['@storybook/react-vite']).toBeDefined();
     expect(
-      packageJson.devDependencies['@storybook/addon-interactions']
+      packageJson.devDependencies['@storybook/addon-interactions'],
     ).toBeDefined();
     expect(packageJson.devDependencies['@storybook/test-runner']).toBeDefined();
     expect(
-      packageJson.devDependencies['@storybook/testing-library']
+      packageJson.devDependencies['@storybook/testing-library'],
     ).toBeDefined();
   });
 
@@ -66,7 +66,7 @@ describe('react:storybook-configuration', () => {
     });
 
     expect(
-      appTree.exists('test-ui-lib/src/lib/test-ui-lib.stories.tsx')
+      appTree.exists('test-ui-lib/src/lib/test-ui-lib.stories.tsx'),
     ).toBeTruthy();
   });
 
@@ -88,7 +88,7 @@ describe('react:storybook-configuration', () => {
       };
 
       export default Test;
-      `
+      `,
     );
     await storybookConfigurationGenerator(appTree, {
       project: 'test-ui-lib',
@@ -98,7 +98,7 @@ describe('react:storybook-configuration', () => {
     });
 
     expect(
-      appTree.read('test-ui-lib/src/lib/test-ui-libplain.stories.jsx', 'utf-8')
+      appTree.read('test-ui-lib/src/lib/test-ui-libplain.stories.jsx', 'utf-8'),
     ).toMatchSnapshot();
   });
 
@@ -127,8 +127,8 @@ describe('react:storybook-configuration', () => {
     expect(
       appTree.read(
         'test-ui-app/src/app/my-component/my-component.stories.tsx',
-        'utf-8'
-      )
+        'utf-8',
+      ),
     ).toMatchSnapshot();
   });
 
@@ -144,15 +144,15 @@ describe('react:storybook-configuration', () => {
     expect(
       appTree.read(
         'test-ui-app/src/app/my-component/my-component.stories.tsx',
-        'utf-8'
-      )
+        'utf-8',
+      ),
     ).toMatchSnapshot();
   });
 });
 
 export async function createTestUILib(
   libName: string,
-  plainJS = false
+  plainJS = false,
 ): Promise<Tree> {
   let appTree = createTreeWithEmptyWorkspace();
 
@@ -172,7 +172,7 @@ export async function createTestUILib(
 
 export async function createTestAppLib(
   libName: string,
-  plainJS = false
+  plainJS = false,
 ): Promise<Tree> {
   let appTree = createTreeWithEmptyWorkspace();
 

@@ -112,7 +112,7 @@ describe('TaskHasher', () => {
       null,
       {
         runtimeCacheInputs: ['echo runtime456'],
-      }
+      },
     );
 
     const hash = await hasher.hashTask(
@@ -134,7 +134,7 @@ describe('TaskHasher', () => {
         },
         dependencies: {},
       },
-      { TESTENV: 'env123' }
+      { TESTENV: 'env123' },
     );
 
     expect(hash).toMatchSnapshot();
@@ -179,7 +179,7 @@ describe('TaskHasher', () => {
       },
       {} as any,
       null,
-      {}
+      {},
     );
 
     const hash = await hasher.hashTask(
@@ -209,7 +209,7 @@ describe('TaskHasher', () => {
           'parent-build': ['child-build'],
         },
       },
-      {}
+      {},
     );
 
     expect(hash).toMatchSnapshot();
@@ -266,7 +266,7 @@ describe('TaskHasher', () => {
         },
       } as any,
       null,
-      {}
+      {},
     );
 
     const hash = await hasher.hashTask(
@@ -296,7 +296,7 @@ describe('TaskHasher', () => {
           'parent-build': ['child-build'],
         },
       },
-      {}
+      {},
     );
 
     expect(hash).toMatchSnapshot();
@@ -343,7 +343,7 @@ describe('TaskHasher', () => {
         },
       } as any,
       null,
-      {}
+      {},
     );
 
     const taskGraph = {
@@ -367,7 +367,7 @@ describe('TaskHasher', () => {
         outputs: [],
       },
       taskGraph,
-      {}
+      {},
     );
 
     expect(test).toMatchSnapshot();
@@ -380,7 +380,7 @@ describe('TaskHasher', () => {
         outputs: [],
       },
       taskGraph,
-      {}
+      {},
     );
 
     expect(build).toMatchSnapshot();
@@ -448,7 +448,7 @@ describe('TaskHasher', () => {
         },
       } as any,
       null,
-      {}
+      {},
     );
 
     const taskGraph = {
@@ -480,7 +480,7 @@ describe('TaskHasher', () => {
         outputs: [],
       },
       taskGraph,
-      { MY_TEST_HASH_ENV: 'MY_TEST_HASH_ENV_VALUE' }
+      { MY_TEST_HASH_ENV: 'MY_TEST_HASH_ENV_VALUE' },
     );
 
     expect(parentHash).toMatchSnapshot();
@@ -493,7 +493,7 @@ describe('TaskHasher', () => {
         outputs: [],
       },
       taskGraph,
-      { MY_TEST_HASH_ENV: 'MY_TEST_HASH_ENV_VALUE' }
+      { MY_TEST_HASH_ENV: 'MY_TEST_HASH_ENV_VALUE' },
     );
 
     expect(childHash).toMatchSnapshot();
@@ -550,7 +550,7 @@ describe('TaskHasher', () => {
         },
       } as any,
       null,
-      {}
+      {},
     );
 
     const hash = await hasher.hashTask(
@@ -580,7 +580,7 @@ describe('TaskHasher', () => {
           'parent-build': ['child-build'],
         },
       },
-      {}
+      {},
     );
     expect(hash).toMatchSnapshot();
   });
@@ -613,7 +613,7 @@ describe('TaskHasher', () => {
       {
         runtimeCacheInputs: ['echo runtime123', 'echo runtime456'],
         selectivelyHashTsConfig: true,
-      }
+      },
     );
 
     const hash = await hasher.hashTask(
@@ -635,7 +635,7 @@ describe('TaskHasher', () => {
         },
         dependencies: {},
       },
-      {}
+      {},
     );
 
     expect(hash).toMatchSnapshot();
@@ -676,7 +676,7 @@ describe('TaskHasher', () => {
 
       {} as any,
       null,
-      {}
+      {},
     );
 
     const taskGraph = {
@@ -708,7 +708,7 @@ describe('TaskHasher', () => {
         outputs: [],
       },
       taskGraph,
-      {}
+      {},
     );
 
     expect(tasksHash).toMatchSnapshot();
@@ -721,7 +721,7 @@ describe('TaskHasher', () => {
         outputs: [],
       },
       taskGraph,
-      {}
+      {},
     );
 
     expect(hashb).toMatchSnapshot();
@@ -753,7 +753,7 @@ describe('TaskHasher', () => {
       null,
       {
         runtimeCacheInputs: ['boom'],
-      }
+      },
     );
 
     try {
@@ -776,14 +776,15 @@ describe('TaskHasher', () => {
           },
           dependencies: {},
         },
-        {}
+        {},
       );
       fail('Should not be here');
     } catch (e) {
       expect(e.message).toContain('Nx failed to execute');
       expect(e.message).toContain('boom');
       expect(
-        e.message.includes(' not found') || e.message.includes('not recognized')
+        e.message.includes(' not found') ||
+          e.message.includes('not recognized'),
       ).toBeTruthy();
     }
   });
@@ -825,7 +826,7 @@ describe('TaskHasher', () => {
 
       {} as any,
       null,
-      {}
+      {},
     );
 
     const hash = await hasher.hashTask(
@@ -847,7 +848,7 @@ describe('TaskHasher', () => {
         },
         dependencies: {},
       },
-      {}
+      {},
     );
     expect(hash).toMatchSnapshot();
   });
@@ -893,7 +894,7 @@ describe('TaskHasher', () => {
 
       {} as any,
       null,
-      {}
+      {},
     );
 
     const hash = await hasher.hashTask(
@@ -915,7 +916,7 @@ describe('TaskHasher', () => {
         },
         dependencies: {},
       },
-      {}
+      {},
     );
 
     // note that the parent hash is based on parent source files only!
@@ -952,7 +953,7 @@ describe('TaskHasher', () => {
         },
         {} as any,
         null,
-        {}
+        {},
       );
 
       const hash = await hasher.hashTask(
@@ -974,7 +975,7 @@ describe('TaskHasher', () => {
           },
           dependencies: {},
         },
-        {}
+        {},
       );
 
       expect(hash).toMatchSnapshot();
@@ -1039,7 +1040,7 @@ describe('TaskHasher', () => {
 
           {} as any,
           null,
-          {}
+          {},
         );
       }
 
@@ -1073,7 +1074,7 @@ describe('TaskHasher', () => {
           outputs: [],
         },
         taskGraph,
-        {}
+        {},
       );
       const hashB1 = await hasher1.hashTask(
         {
@@ -1083,7 +1084,7 @@ describe('TaskHasher', () => {
           outputs: [],
         },
         taskGraph,
-        {}
+        {},
       );
 
       const hashB2 = await hasher2.hashTask(
@@ -1094,7 +1095,7 @@ describe('TaskHasher', () => {
           outputs: [],
         },
         taskGraph,
-        {}
+        {},
       );
       const hashA2 = await hasher2.hashTask(
         {
@@ -1104,7 +1105,7 @@ describe('TaskHasher', () => {
           outputs: [],
         },
         taskGraph,
-        {}
+        {},
       );
 
       expect(hashA1).toEqual(hashA2);
@@ -1192,7 +1193,7 @@ describe('TaskHasher', () => {
         },
         {} as any,
         null,
-        {}
+        {},
       );
 
       const hash = await hasher.hashTask(
@@ -1214,7 +1215,7 @@ describe('TaskHasher', () => {
           },
           dependencies: {},
         },
-        {}
+        {},
       );
 
       expect(hash).toMatchSnapshot();
@@ -1338,7 +1339,7 @@ describe('TaskHasher', () => {
 
           {} as any,
           null,
-          {}
+          {},
         );
 
       const computeTaskHash = async (hasher, appName) => {
@@ -1358,7 +1359,7 @@ describe('TaskHasher', () => {
               },
             },
             dependencies: {},
-          }
+          },
         );
       };
 
@@ -1409,7 +1410,7 @@ describe('TaskHasher', () => {
 
         {} as any,
         null,
-        {}
+        {},
       );
 
       const hash = await hasher.hashTask(
@@ -1431,11 +1432,11 @@ describe('TaskHasher', () => {
           },
           dependencies: {},
         },
-        {}
+        {},
       );
 
       expect(hash.details.nodes['AllExternalDependencies']).toEqual(
-        '5189537834781127994'
+        '5189537834781127994',
       );
     });
 
@@ -1493,7 +1494,7 @@ describe('TaskHasher', () => {
 
         {} as any,
         null,
-        {}
+        {},
       );
 
       const hash = await hasher.hashTask(
@@ -1515,7 +1516,7 @@ describe('TaskHasher', () => {
           },
           dependencies: {},
         },
-        {}
+        {},
       );
 
       expect(hash).toMatchSnapshot();
@@ -1575,7 +1576,7 @@ describe('TaskHasher', () => {
 
         {} as any,
         null,
-        {}
+        {},
       );
 
       const hash = await hasher.hashTask(
@@ -1597,7 +1598,7 @@ describe('TaskHasher', () => {
           },
           dependencies: {},
         },
-        {}
+        {},
       );
 
       expect(hash).toMatchSnapshot();
@@ -1696,7 +1697,7 @@ describe('TaskHasher', () => {
           },
         } as any,
         null,
-        {}
+        {},
       );
 
       await tempFs.createFiles({
@@ -1738,7 +1739,7 @@ describe('TaskHasher', () => {
             'child-build': ['grandchild-build'],
           },
         },
-        {}
+        {},
       );
 
       expect(hash).toMatchSnapshot();
@@ -1836,7 +1837,7 @@ describe('TaskHasher', () => {
           },
         } as any,
         null,
-        {}
+        {},
       );
 
       await tempFs.createFiles({
@@ -1878,7 +1879,7 @@ describe('TaskHasher', () => {
             'child-build': ['grandchild-build'],
           },
         },
-        {}
+        {},
       );
 
       expect(hash).toMatchSnapshot();
@@ -1904,7 +1905,7 @@ describe('TaskHasher', () => {
       expect(() =>
         expandNamedInput('b', {
           b: [{ input: 'c' }],
-        })
+        }),
       ).toThrow();
     });
 
@@ -1912,7 +1913,7 @@ describe('TaskHasher', () => {
       expect(() =>
         expandNamedInput('b', {
           b: ['^c'],
-        })
+        }),
       ).toThrowError('namedInputs definitions cannot start with ^');
     });
 
@@ -1939,7 +1940,7 @@ describe('TaskHasher', () => {
           '{projectRoot}/**/*.js',
           '!{projectRoot}/**/*.spec.ts',
           '!{projectRoot}/**/*.md',
-        ]
+        ],
       );
 
       expect(filtered.map((f) => f.file)).toEqual(['root/a.ts', 'root/b.js']);
@@ -1954,7 +1955,7 @@ describe('TaskHasher', () => {
           { file: 'root/c.spec.ts' },
           { file: 'root/d.md' },
         ] as any,
-        ['!{projectRoot}/**/*.spec.ts', '!{projectRoot}/**/*.md']
+        ['!{projectRoot}/**/*.spec.ts', '!{projectRoot}/**/*.md'],
       );
 
       expect(filtered.map((f) => f.file)).toEqual(['root/a.ts', 'root/b.js']);
@@ -1969,7 +1970,7 @@ describe('TaskHasher', () => {
           { file: 'root/c.spec.ts' },
           { file: 'root/d.md' },
         ] as any,
-        ['{projectRoot}/**/*.ts', '{projectRoot}/**/*.js']
+        ['{projectRoot}/**/*.ts', '{projectRoot}/**/*.js'],
       );
 
       expect(filtered.map((f) => f.file)).toEqual([
@@ -1988,7 +1989,7 @@ describe('TaskHasher', () => {
           { file: 'dir/a.ts' },
           { file: 'dir/b.md' },
         ] as any,
-        ['{projectRoot}/**/*.ts', '!{projectRoot}/**/*.md']
+        ['{projectRoot}/**/*.ts', '!{projectRoot}/**/*.md'],
       );
 
       expect(filtered.map((f) => f.file)).toEqual(['a.ts', 'dir/a.ts']);

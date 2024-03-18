@@ -2,7 +2,7 @@ import type { Tree } from 'nx/src/generators/tree';
 
 export function getComponentDataFromAST(
   tree: Tree,
-  normalizedComponentPath: string
+  normalizedComponentPath: string,
 ) {
   const COMPONENT_CONTENT_SELECTOR =
     'ClassDeclaration:has(Decorator > CallExpression:has(Identifier[name=Component]))';
@@ -18,13 +18,13 @@ export function getComponentDataFromAST(
   })[0];
   const componentContents = componentFileContents.slice(
     componentNode.getStart(),
-    componentNode.getEnd()
+    componentNode.getEnd(),
   );
 
   const componentNameNode = tsquery(
     tsquery.ast(componentContents),
     COMPONENT_NAME_SELECTOR,
-    { visitAllChildren: true }
+    { visitAllChildren: true },
   )[0];
   const componentName = componentNameNode.getText();
   return { componentFileContents, componentAST, componentName };

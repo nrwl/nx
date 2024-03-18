@@ -24,7 +24,7 @@ export async function createEmptyWorkspace<T extends CreateWorkspaceOptions>(
   tmpDir: string,
   name: string,
   packageManager: PackageManager,
-  options: T
+  options: T,
 ): Promise<string> {
   // Ensure to use packageManager for args
   // if it's not already passed in from previous process
@@ -54,14 +54,14 @@ export async function createEmptyWorkspace<T extends CreateWorkspaceOptions>(
     packageManager === 'npm'
   ) {
     const pmVersion = +getPackageManagerVersion(packageManager, tmpDir).split(
-      '.'
+      '.',
     )[0];
     if (pmVersion < 7) {
       nxWorkspaceRoot = `\\"${nxWorkspaceRoot.slice(1, -1)}\\"`;
     }
   }
   let workspaceSetupSpinner = ora(
-    `Creating your workspace in ${directory}`
+    `Creating your workspace in ${directory}`,
   ).start();
 
   try {
@@ -69,7 +69,7 @@ export async function createEmptyWorkspace<T extends CreateWorkspaceOptions>(
     await execAndWait(fullCommand, tmpDir);
 
     workspaceSetupSpinner.succeed(
-      `Successfully created the workspace: ${directory}.`
+      `Successfully created the workspace: ${directory}.`,
     );
   } catch (e) {
     workspaceSetupSpinner.fail();

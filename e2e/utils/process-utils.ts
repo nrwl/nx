@@ -8,7 +8,7 @@ const KILL_PORT_DELAY = 5000;
 
 export const promisifiedTreeKill: (
   pid: number,
-  signal: string
+  signal: string,
 ) => Promise<void> = promisify(treeKill);
 
 export async function killPort(port: number): Promise<boolean> {
@@ -18,7 +18,7 @@ export async function killPort(port: number): Promise<boolean> {
       logInfo(`Attempting to close port ${port}`);
       killPortResult = await kill(port);
       await new Promise<void>((resolve) =>
-        setTimeout(() => resolve(), KILL_PORT_DELAY)
+        setTimeout(() => resolve(), KILL_PORT_DELAY),
       );
       if (await portCheck(port)) {
         logError(`Port ${port} still open`, JSON.stringify(killPortResult));

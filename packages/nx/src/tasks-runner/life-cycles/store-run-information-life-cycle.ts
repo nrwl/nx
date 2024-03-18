@@ -24,7 +24,7 @@ export class StoreRunInformationLifeCycle implements LifeCycle {
   constructor(
     private readonly command: string = parseCommand(),
     private readonly storeFile = storeFileFunction,
-    private readonly now = () => new Date().toISOString()
+    private readonly now = () => new Date().toISOString(),
   ) {}
 
   startTasks(tasks: Task[]): void {
@@ -37,12 +37,12 @@ export class StoreRunInformationLifeCycle implements LifeCycle {
   }
 
   endTasks(
-    taskResults: Array<{ task: Task; status: TaskStatus; code: number }>
+    taskResults: Array<{ task: Task; status: TaskStatus; code: number }>,
   ): void {
     for (let tr of taskResults) {
       if (tr.task.startTime) {
         this.timings[tr.task.id].start = new Date(
-          tr.task.startTime
+          tr.task.startTime,
         ).toISOString();
       }
       if (tr.task.endTime) {
@@ -73,9 +73,9 @@ export class StoreRunInformationLifeCycle implements LifeCycle {
             tr.status === 'remote-cache'
               ? 'remote-cache-hit'
               : tr.status === 'local-cache' ||
-                tr.status === 'local-cache-kept-existing'
-              ? 'local-cache-hit'
-              : 'cache-miss';
+                  tr.status === 'local-cache-kept-existing'
+                ? 'local-cache-hit'
+                : 'cache-miss';
           return {
             taskId: tr.task.id,
             target: tr.task.target.target,
@@ -107,6 +107,6 @@ function parseCommand() {
 function storeFileFunction(runDetails: any) {
   writeFileSync(
     join(cacheDir, 'run.json'),
-    JSON.stringify(runDetails, null, 2)
+    JSON.stringify(runDetails, null, 2),
   );
 }

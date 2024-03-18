@@ -36,8 +36,8 @@ async function replaceJasmineMarbleUsagesInFiles(tree: Tree) {
     .filter(([node, dep]) =>
       dep.some(
         ({ target }) =>
-          target === 'npm:@nrwl/angular' && !projectGraph.externalNodes?.[node]
-      )
+          target === 'npm:@nrwl/angular' && !projectGraph.externalNodes?.[node],
+      ),
     )
     .map(([projectName]) => readProjectConfiguration(tree, projectName).root);
 
@@ -58,7 +58,7 @@ async function replaceJasmineMarbleUsagesInFiles(tree: Tree) {
       const nrwlAngularTestingImportNodes = tsquery(
         ast,
         NRWL_ANGULAR_TESTING_IMPORT_SELECTOR,
-        { visitAllChildren: true }
+        { visitAllChildren: true },
       );
 
       if (
@@ -69,11 +69,11 @@ async function replaceJasmineMarbleUsagesInFiles(tree: Tree) {
       }
 
       const jasmineMarblesExportsRegex = new RegExp(
-        /(hot|cold|getTestScheduler|time)/
+        /(hot|cold|getTestScheduler|time)/,
       );
       if (
         !jasmineMarblesExportsRegex.test(
-          nrwlAngularTestingImportNodes[0].getText()
+          nrwlAngularTestingImportNodes[0].getText(),
         )
       ) {
         return;
@@ -83,7 +83,7 @@ async function replaceJasmineMarbleUsagesInFiles(tree: Tree) {
       const importSpecifierNodes = tsquery(
         nrwlAngularTestingImportNodes[0],
         IMPORT_SPECIFIERS_SELECTOR,
-        { visitAllChildren: true }
+        { visitAllChildren: true },
       );
 
       if (!importSpecifierNodes || importSpecifierNodes.length === 0) {
@@ -107,21 +107,21 @@ async function replaceJasmineMarbleUsagesInFiles(tree: Tree) {
 
       const newFileContents = `${fileContents.slice(
         0,
-        nrwlAngularTestingImportNodes[0].getStart()
+        nrwlAngularTestingImportNodes[0].getStart(),
       )}${
         validNrwlTestingImports.length > 0
           ? `import {${validNrwlTestingImports.join(
-              ','
+              ',',
             )}} from '@nrwl/angular/testing';`
           : ''
       }
     ${
       validJasmineMarbleImports.length > 0
         ? `import {${validJasmineMarbleImports.join(
-            ','
+            ',',
           )}} from 'jasmine-marbles';${fileContents.slice(
             nrwlAngularTestingImportNodes[0].getEnd(),
-            -1
+            -1,
           )}`
         : ''
     }`;
@@ -134,7 +134,7 @@ async function replaceJasmineMarbleUsagesInFiles(tree: Tree) {
 
 function addJasmineMarblesDevDependencyIfUsed(
   tree: Tree,
-  usesJasmineMarbles: boolean
+  usesJasmineMarbles: boolean,
 ) {
   if (!usesJasmineMarbles) {
     return;
@@ -156,7 +156,7 @@ function addJasmineMarblesDevDependencyIfUsed(
     {},
     {
       'jasmine-marbles': jasmineMarblesVersion,
-    }
+    },
   );
 }
 
@@ -166,7 +166,7 @@ function getJasmineMarblesVersion(tree: Tree): string {
     const { dependencies, devDependencies } = readJson(tree, 'package.json');
     rxjsVersion = checkAndCleanWithSemver(
       'rxjs',
-      dependencies?.rxjs ?? devDependencies?.rxjs
+      dependencies?.rxjs ?? devDependencies?.rxjs,
     );
   } catch {
     rxjsVersion = checkAndCleanWithSemver('rxjs', latestRxjsVersion);

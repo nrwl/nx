@@ -25,7 +25,7 @@ describe('file-server', () => {
         env: {
           NX_ADD_PLUGINS: 'false',
         },
-      }
+      },
     );
     runCLI(
       `generate @nx/react:app ${reactAppName} --no-interactive --e2eTestRunner=none`,
@@ -33,7 +33,7 @@ describe('file-server', () => {
         env: {
           NX_ADD_PLUGINS: 'false',
         },
-      }
+      },
     );
     runCLI(
       `generate @nx/web:static-config --buildTarget=${ngAppName}:build --no-interactive`,
@@ -41,7 +41,7 @@ describe('file-server', () => {
         env: {
           NX_ADD_PLUGINS: 'false',
         },
-      }
+      },
     );
     runCLI(
       `generate @nx/web:static-config --buildTarget=${reactAppName}:build --targetName=custom-serve-static --no-interactive`,
@@ -49,7 +49,7 @@ describe('file-server', () => {
         env: {
           NX_ADD_PLUGINS: 'false',
         },
-      }
+      },
     );
 
     const port = 6200;
@@ -58,7 +58,7 @@ describe('file-server', () => {
       `serve-static ${ngAppName} --port=${port}`,
       (output) => {
         return output.indexOf(`localhost:${port}`) > -1;
-      }
+      },
     );
 
     try {
@@ -72,7 +72,7 @@ describe('file-server', () => {
       `custom-serve-static ${reactAppName} --port=${port + 1}`,
       (output) => {
         return output.indexOf(`localhost:${port + 1}`) > -1;
-      }
+      },
     );
 
     try {

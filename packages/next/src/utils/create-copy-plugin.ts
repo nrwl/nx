@@ -13,7 +13,7 @@ interface AssetGlobPattern {
 function normalizeAssets(
   assets: any[],
   root: string,
-  sourceRoot: string
+  sourceRoot: string,
 ): AssetGlobPattern[] {
   return assets.map((asset) => {
     if (typeof asset === 'string') {
@@ -23,7 +23,7 @@ function normalizeAssets(
 
       if (!resolvedAssetPath.startsWith(resolvedSourceRoot)) {
         throw new Error(
-          `The ${resolvedAssetPath} asset path must start with the project source root: ${sourceRoot}`
+          `The ${resolvedAssetPath} asset path must start with the project source root: ${sourceRoot}`,
         );
       }
 
@@ -41,7 +41,7 @@ function normalizeAssets(
     } else {
       if (asset.output.startsWith('..')) {
         throw new Error(
-          'An asset cannot be written to a location outside of the output path.'
+          'An asset cannot be written to a location outside of the output path.',
         );
       }
 
@@ -60,7 +60,7 @@ function normalizeAssets(
 export function createCopyPlugin(
   assets: any[],
   root: string,
-  sourceRoot: string
+  sourceRoot: string,
 ) {
   return new CopyWebpackPlugin({
     patterns: normalizeAssets(assets, root, sourceRoot).map((asset) => {

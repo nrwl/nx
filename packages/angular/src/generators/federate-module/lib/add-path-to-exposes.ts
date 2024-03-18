@@ -19,20 +19,20 @@ type AddPathToExposesOptions = {
 
 export function addPathToExposes(
   tree: Tree,
-  { projectPath, moduleName, modulePath }: AddPathToExposesOptions
+  { projectPath, moduleName, modulePath }: AddPathToExposesOptions,
 ) {
   const moduleFederationConfigPath = joinPathFragments(
     projectPath,
     tree.exists(joinPathFragments(projectPath, 'module-federation.config.ts'))
       ? 'module-federation.config.ts'
-      : 'module-federation.config.js'
+      : 'module-federation.config.js',
   );
 
   updateExposesProperty(
     tree,
     moduleFederationConfigPath,
     moduleName,
-    modulePath
+    modulePath,
   );
 }
 
@@ -40,7 +40,7 @@ function updateExposesProperty(
   tree: Tree,
   moduleFederationConfigPath: string,
   moduleName: string,
-  modulePath: string
+  modulePath: string,
 ) {
   if (!tsModule) {
     tsModule = ensureTypescript();
@@ -51,7 +51,7 @@ function updateExposesProperty(
     moduleFederationConfigPath,
     fileContent,
     tsModule.ScriptTarget.ES2015,
-    true
+    true,
   );
 
   const exposesObject = findExposes(source);
@@ -61,7 +61,7 @@ function updateExposesProperty(
   const updatedSourceFile = updateExposesPropertyinAST(
     source,
     exposesObject,
-    newEntry
+    newEntry,
   );
   writeToConfig(tree, moduleFederationConfigPath, source, updatedSourceFile);
 }
@@ -94,7 +94,7 @@ function findExposes(sourceFile: SourceFile) {
 // Create a new property assignment
 function createObjectEntry(
   moduleName: string,
-  modulePath: string
+  modulePath: string,
 ): PropertyAssignment {
   if (!tsModule) {
     tsModule = ensureTypescript();
@@ -102,7 +102,7 @@ function createObjectEntry(
 
   return tsModule.factory.createPropertyAssignment(
     tsModule.factory.createStringLiteral(`./${moduleName}`, true),
-    tsModule.factory.createStringLiteral(modulePath, true)
+    tsModule.factory.createStringLiteral(modulePath, true),
   );
 }
 
@@ -110,7 +110,7 @@ function createObjectEntry(
 function updateExposesPropertyinAST(
   source: SourceFile,
   exposesObject: ObjectLiteralExpression,
-  newEntry: PropertyAssignment
+  newEntry: PropertyAssignment,
 ) {
   if (!tsModule) {
     tsModule = ensureTypescript();
@@ -118,7 +118,7 @@ function updateExposesPropertyinAST(
 
   const updatedExposes = tsModule.factory.updateObjectLiteralExpression(
     exposesObject,
-    [...exposesObject.properties, newEntry]
+    [...exposesObject.properties, newEntry],
   );
 
   const transform: TransformerFactory<SourceFile> = (context) => {
@@ -139,7 +139,7 @@ function writeToConfig(
   tree: Tree,
   filename: string,
   source: SourceFile,
-  updatedSourceFile: SourceFile
+  updatedSourceFile: SourceFile,
 ) {
   if (!tsModule) {
     tsModule = ensureTypescript();
@@ -149,7 +149,7 @@ function writeToConfig(
   const update = printer.printNode(
     tsModule.EmitHint.Unspecified,
     updatedSourceFile,
-    source
+    source,
   );
   tree.write(filename, update);
 }

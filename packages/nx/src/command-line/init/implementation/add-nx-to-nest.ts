@@ -35,7 +35,7 @@ export async function addNxToNest(options: Options, packageJson: PackageJson) {
   // we check upstream that nest-cli.json exists before it reaches this function
   // so it is guaranteed to be here
   const nestCliJson = readJsonFile(
-    join(repoRoot, 'nest-cli.json')
+    join(repoRoot, 'nest-cli.json'),
   ) as NestCLIConfiguration;
   const nestCLIConfiguration = mergeWithDefaultConfig(nestCliJson);
 
@@ -113,7 +113,7 @@ export async function addNxToNest(options: Options, packageJson: PackageJson) {
     repoRoot,
     [],
     [...cacheableOperations, ...nestCacheableScripts],
-    scriptOutputs
+    scriptOutputs,
   );
 
   const pmc = getPackageManagerCommand();
@@ -156,7 +156,7 @@ function addNestPluginToPackageJson(repoRoot: string) {
 function createProjectJson(
   repoRoot: string,
   packageJson: PackageJson,
-  nestCLIOptions: NestCLIConfiguration
+  nestCLIOptions: NestCLIConfiguration,
 ) {
   const packageName = packageJson.name;
   const path = join(repoRoot, 'project.json');
@@ -249,7 +249,7 @@ function getJestOptions(
   isE2E: boolean,
   repoRoot: string,
   packageName: string,
-  existingOptions?: Record<string, unknown>
+  existingOptions?: Record<string, unknown>,
 ) {
   // try get the e2e json if we find it
   if (isE2E && !existingOptions) {
@@ -292,7 +292,7 @@ function tryCreateJestPreset(repoRoot: string) {
 const nxPreset = require('@nx/jest/preset').default;
 module.exports = {...nxPreset};
 `,
-      'utf8'
+      'utf8',
     );
     return true;
   }
@@ -304,13 +304,13 @@ function addJestTargets(
   repoRoot: string,
   packageName: string,
   projectJson: ProjectConfiguration,
-  packageJson: PackageJson
+  packageJson: PackageJson,
 ) {
   const unitTestOptions = getJestOptions(
     false,
     repoRoot,
     packageName,
-    packageJson['jest']
+    packageJson['jest'],
   );
   const unitTestConfigPath = 'jest.config.ts';
 
@@ -326,12 +326,12 @@ function addJestTargets(
   writeFileSync(
     unitTestConfigPath,
     `export default ${JSON.stringify(unitTestOptions, null, 2)}`,
-    'utf8'
+    'utf8',
   );
   writeFileSync(
     e2eTestConfigPath,
     `export default ${JSON.stringify(e2eTestOptions, null, 2)}`,
-    'utf8'
+    'utf8',
   );
 
   projectJson.targets['test'] = {

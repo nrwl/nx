@@ -11,7 +11,7 @@ describe('updateRemixConfig', () => {
       stripIndents`module.exports = {
       ignoredRouteFiles: ['**/.*'],
       watchPaths: ['../../libs']
-    };`
+    };`,
     );
 
     // ACT
@@ -36,7 +36,7 @@ describe('updateRemixConfig', () => {
       ignoredRouteFiles: ['**/.*'],
       tailwind: false,
       watchPaths: ['../../libs']
-    };`
+    };`,
     );
 
     // ACT
@@ -61,7 +61,7 @@ describe('updateRemixConfig', () => {
       ignoredRouteFiles: ['**/.*'],
       tailwind: true,
       watchPaths: ['../../libs']
-    };`
+    };`,
     );
 
     // ACT

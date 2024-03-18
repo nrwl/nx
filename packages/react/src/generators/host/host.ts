@@ -24,7 +24,7 @@ import { addMfEnvToTargetDefaultInputs } from '../../utils/add-mf-env-to-inputs'
 
 export async function hostGenerator(
   host: Tree,
-  schema: Schema
+  schema: Schema,
 ): Promise<GeneratorCallback> {
   return hostGeneratorInternal(host, {
     projectNameAndRootFormat: 'derived',
@@ -34,7 +34,7 @@ export async function hostGenerator(
 
 export async function hostGeneratorInternal(
   host: Tree,
-  schema: Schema
+  schema: Schema,
 ): Promise<GeneratorCallback> {
   const tasks: GeneratorCallback[] = [];
   const options: NormalizedSchema = {
@@ -103,21 +103,21 @@ export async function hostGeneratorInternal(
       host,
       options,
       options.projectName,
-      remotesWithPorts
+      remotesWithPorts,
     );
     tasks.push(setupSsrForHostTask);
 
     const projectConfig = readProjectConfiguration(host, options.projectName);
     projectConfig.targets.server.options.webpackConfig = joinPathFragments(
       projectConfig.root,
-      `webpack.server.config.${options.typescriptConfiguration ? 'ts' : 'js'}`
+      `webpack.server.config.${options.typescriptConfiguration ? 'ts' : 'js'}`,
     );
     updateProjectConfiguration(host, options.projectName, projectConfig);
   }
 
   if (!options.setParserOptionsProject) {
     host.delete(
-      joinPathFragments(options.appProjectRoot, 'tsconfig.lint.json')
+      joinPathFragments(options.appProjectRoot, 'tsconfig.lint.json'),
     );
   }
 

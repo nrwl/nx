@@ -25,10 +25,10 @@ import { DependentBuildableProjectNode } from '@nx/js/src/utils/buildable-libs-u
 import { join } from 'path';
 
 const BUILD_WATCH_FAILED = `[ ${chalk.red(
-  'watch'
+  'watch',
 )} ] build finished with errors (see above), watching for changes...`;
 const BUILD_WATCH_SUCCEEDED = `[ ${chalk.green(
-  'watch'
+  'watch',
 )} ] build succeeded, watching for changes...`;
 
 // since the workspace has esbuild 0.17+ installed, there's no definition
@@ -38,7 +38,7 @@ type EsBuild = typeof esbuild;
 
 export async function* esbuildExecutor(
   _options: EsBuildExecutorOptions,
-  context: ExecutorContext
+  context: ExecutorContext,
 ) {
   process.env.NODE_ENV ??= context.configurationName ?? 'production';
 
@@ -63,7 +63,7 @@ export async function* esbuildExecutor(
   if (!options.thirdParty) {
     const thirdPartyDependencies = getExtraDependencies(
       context.projectName,
-      context.projectGraph
+      context.projectGraph,
     );
     for (const tpd of thirdPartyDependencies) {
       options.external.push((tpd.node.data as any).packageName);
@@ -76,7 +76,7 @@ export async function* esbuildExecutor(
     if (context.projectGraph.nodes[context.projectName].type !== 'app') {
       logger.warn(
         stripIndents`The project ${context.projectName} is using the 'generatePackageJson' option which is deprecated for library projects. It should only be used for applications.
-        For libraries, configure the project to use the '@nx/dependency-checks' ESLint rule instead (https://nx.dev/packages/eslint-plugin/documents/dependency-checks).`
+        For libraries, configure the project to use the '@nx/dependency-checks' ESLint rule instead (https://nx.dev/packages/eslint-plugin/documents/dependency-checks).`,
       );
     }
 
@@ -112,7 +112,7 @@ export async function* esbuildExecutor(
             const esbuildOptions = buildEsbuildOptions(
               format,
               options,
-              context
+              context,
             );
             const ctx = await esbuild.context({
               ...esbuildOptions,
@@ -126,7 +126,7 @@ export async function* esbuildExecutor(
                           if (!options.skipTypeCheck) {
                             const { errors } = await runTypeCheck(
                               options,
-                              context
+                              context,
                             );
                             hasTypeErrors = errors.length > 0;
                           }
@@ -144,7 +144,7 @@ export async function* esbuildExecutor(
                             // Need to call getOutfile directly in the case of bundle=false and outfile is not set for esbuild.
                             outfile: join(
                               context.root,
-                              getOutfile(format, options, context)
+                              getOutfile(format, options, context),
                             ),
                           });
                         });
@@ -157,7 +157,7 @@ export async function* esbuildExecutor(
 
             await ctx.watch();
             return () => ctx.dispose();
-          })
+          }),
         );
 
         registerCleanupCallback(() => {
@@ -166,7 +166,7 @@ export async function* esbuildExecutor(
           disposeFns.forEach((fn) => fn());
           done(); // return from async iterable
         });
-      }
+      },
     );
   } else {
     // Run type-checks first and bail if they don't pass.
@@ -191,7 +191,7 @@ export async function* esbuildExecutor(
             : `meta.${options.format[i]}.json`;
         writeJsonSync(
           joinPathFragments(options.outputPath, filename),
-          buildResult.metafile
+          buildResult.metafile,
         );
       }
 
@@ -207,7 +207,7 @@ export async function* esbuildExecutor(
 
 function getTypeCheckOptions(
   options: EsBuildExecutorOptions,
-  context: ExecutorContext
+  context: ExecutorContext,
 ) {
   const { watch, tsConfig, outputPath } = options;
 
@@ -230,10 +230,10 @@ function getTypeCheckOptions(
 
 async function runTypeCheck(
   options: EsBuildExecutorOptions,
-  context: ExecutorContext
+  context: ExecutorContext,
 ) {
   const { errors, warnings } = await _runTypeCheck(
-    getTypeCheckOptions(options, context)
+    getTypeCheckOptions(options, context),
   );
   const hasErrors = errors.length > 0;
   const hasWarnings = warnings.length > 0;

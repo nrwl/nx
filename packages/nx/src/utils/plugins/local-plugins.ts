@@ -13,7 +13,7 @@ import { NxJsonConfiguration, readNxJson } from '../../config/nx-json';
 
 export async function getLocalWorkspacePlugins(
   projectsConfiguration: ProjectsConfigurations,
-  nxJson: NxJsonConfiguration
+  nxJson: NxJsonConfiguration,
 ): Promise<Map<string, PluginCapabilities>> {
   const plugins: Map<string, PluginCapabilities> = new Map();
   for (const project of Object.values(projectsConfiguration.projects)) {
@@ -21,13 +21,13 @@ export async function getLocalWorkspacePlugins(
     if (existsSync(packageJsonPath)) {
       const packageJson: PackageJson = readJsonFile(packageJsonPath);
       const includeRuntimeCapabilities = nxJson?.plugins?.some((p) =>
-        (typeof p === 'string' ? p : p.plugin).startsWith(packageJson.name)
+        (typeof p === 'string' ? p : p.plugin).startsWith(packageJson.name),
       );
       const capabilities = await getPluginCapabilities(
         workspaceRoot,
         packageJson.name,
         projectsConfiguration.projects,
-        includeRuntimeCapabilities
+        includeRuntimeCapabilities,
       );
       if (
         capabilities &&
@@ -47,7 +47,7 @@ export async function getLocalWorkspacePlugins(
 }
 
 export function listLocalWorkspacePlugins(
-  installedPlugins: Map<string, PluginCapabilities>
+  installedPlugins: Map<string, PluginCapabilities>,
 ) {
   const bodyLines: string[] = [];
 

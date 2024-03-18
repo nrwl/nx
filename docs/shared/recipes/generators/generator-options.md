@@ -140,12 +140,12 @@ Properties tagged with ⚠️ are required. Others are optional.
 ```jsonc
 {
   "properties": {
-    "name": {} // see Properties
+    "name": {}, // see Properties
   },
   "required": [],
   "description": "",
   "definitions": {}, // same as "properties"
-  "additionalProperties": false
+  "additionalProperties": false,
 }
 ```
 
@@ -157,7 +157,7 @@ The properties of a generator. Properties are listed by name:
 {
   "properties_name": {
     // properties configuration
-  }
+  },
 }
 ```
 
@@ -384,7 +384,7 @@ Make sure that the value is in the enumeration. Example:
 ```jsonc
 {
   "type": "string",
-  "enum": ["foo", "bar"]
+  "enum": ["foo", "bar"],
 
   // valid case: `foo`, `bar`
   // invalid case: any other string like `hello`

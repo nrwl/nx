@@ -23,7 +23,7 @@ export function updateNxJsonSettings(tree: Tree) {
   if (productionFileSet) {
     productionFileSet.push(
       '!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)',
-      '!{projectRoot}/tsconfig.spec.json'
+      '!{projectRoot}/tsconfig.spec.json',
     );
 
     nxJson.namedInputs.production = Array.from(new Set(productionFileSet));
@@ -32,7 +32,7 @@ export function updateNxJsonSettings(tree: Tree) {
   const hasPlugin = nxJson.plugins?.some((p) =>
     typeof p === 'string'
       ? p === '@nx/vite/plugin'
-      : p.plugin === '@nx/vite/plugin'
+      : p.plugin === '@nx/vite/plugin',
   );
 
   if (!hasPlugin) {
@@ -54,7 +54,7 @@ export function initGenerator(tree: Tree, schema: InitGeneratorSchema) {
 
 export async function initGeneratorInternal(
   tree: Tree,
-  schema: InitGeneratorSchema
+  schema: InitGeneratorSchema,
 ) {
   const nxJson = readNxJson(tree);
   const addPluginDefault =

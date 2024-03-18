@@ -8,7 +8,7 @@ import {
 
 export function normalizeOptions(
   tree: Tree,
-  options: WebWorkerGeneratorOptions
+  options: WebWorkerGeneratorOptions,
 ): WebWorkerGeneratorOptions {
   if (!getProjects(tree).has(options.project)) {
     throw new Error(`Project '${options.project}' does not exist!`);
@@ -16,11 +16,11 @@ export function normalizeOptions(
 
   const { projectType, sourceRoot, root } = readProjectConfiguration(
     tree,
-    options.project
+    options.project,
   );
   if (projectType !== 'application') {
     throw new Error(
-      `Web Worker can only be added to an application. Project '${options.project}' is a library.`
+      `Web Worker can only be added to an application. Project '${options.project}' is a library.`,
     );
   }
 

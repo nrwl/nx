@@ -89,10 +89,10 @@ Creating the equivalent configuration with Nx yields the following files:
   "nx": {
     "targets": {
       "build": {
-        "outputs": ["www/**"]
-      }
-    }
-  }
+        "outputs": ["www/**"],
+      },
+    },
+  },
 }
 ```
 

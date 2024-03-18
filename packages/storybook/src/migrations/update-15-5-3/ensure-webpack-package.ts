@@ -35,7 +35,7 @@ export default async function update(tree: Tree) {
     return addDependenciesToPackageJson(
       tree,
       {},
-      { '@nrwl/webpack': nxVersion }
+      { '@nrwl/webpack': nxVersion },
     );
   }
 }

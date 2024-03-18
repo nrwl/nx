@@ -111,7 +111,7 @@ abstract class BaseEmbeddingSource {
   constructor(
     public source: string,
     public path: string,
-    public url_partial: string
+    public url_partial: string,
   ) {}
 
   abstract load(): Promise<{
@@ -127,7 +127,7 @@ class MarkdownEmbeddingSource extends BaseEmbeddingSource {
     source: string,
     public filePath: string,
     public url_partial: string,
-    public fileContent?: string
+    public fileContent?: string,
   ) {
     const path = filePath.replace(/^docs/, '').replace(/\.md?$/, '');
     super(source, path, url_partial);
@@ -162,19 +162,19 @@ async function generateEmbeddings() {
 
   if (!process.env.NX_NEXT_PUBLIC_SUPABASE_URL) {
     throw new Error(
-      'Environment variable NX_NEXT_PUBLIC_SUPABASE_URL is required: skipping embeddings generation'
+      'Environment variable NX_NEXT_PUBLIC_SUPABASE_URL is required: skipping embeddings generation',
     );
   }
 
   if (!process.env.NX_SUPABASE_SERVICE_ROLE_KEY) {
     throw new Error(
-      'Environment variable NX_SUPABASE_SERVICE_ROLE_KEY is required: skipping embeddings generation'
+      'Environment variable NX_SUPABASE_SERVICE_ROLE_KEY is required: skipping embeddings generation',
     );
   }
 
   if (!process.env.NX_OPENAI_KEY) {
     throw new Error(
-      'Environment variable NX_OPENAI_KEY is required: skipping embeddings generation'
+      'Environment variable NX_OPENAI_KEY is required: skipping embeddings generation',
     );
   }
 
@@ -186,7 +186,7 @@ async function generateEmbeddings() {
         persistSession: false,
         autoRefreshToken: false,
       },
-    }
+    },
   );
 
   // Ensures that indentityMap gets populated first
@@ -201,7 +201,7 @@ async function generateEmbeddings() {
     ...getAllFilesWithItemList(manifestsTags),
   ].filter(
     (entry) =>
-      !entry.path.includes('sitemap') && !entry.path.includes('deprecated')
+      !entry.path.includes('sitemap') && !entry.path.includes('deprecated'),
   );
 
   const embeddingSources: EmbeddingSource[] = [
@@ -209,7 +209,7 @@ async function generateEmbeddings() {
       return new MarkdownEmbeddingSource(
         'guide',
         entry.path,
-        entry.url_partial
+        entry.url_partial,
       );
     }),
     ...createMarkdownForCommunityPlugins().map((content, index) => {
@@ -217,7 +217,7 @@ async function generateEmbeddings() {
         'community-plugins',
         '/community/approved-plugins.json#' + index,
         content.url,
-        content.text
+        content.text,
       );
     }),
   ];
@@ -256,11 +256,11 @@ async function generateEmbeddings() {
       if (existingPage) {
         if (!shouldRefresh) {
           console.log(
-            `#${index}: [${path}] Docs have changed, removing old page sections and their embeddings`
+            `#${index}: [${path}] Docs have changed, removing old page sections and their embeddings`,
           );
         } else {
           console.log(
-            `#${index}: [${path}] Refresh flag set, removing old page sections and their embeddings`
+            `#${index}: [${path}] Refresh flag set, removing old page sections and their embeddings`,
           );
         }
 
@@ -286,7 +286,7 @@ async function generateEmbeddings() {
             type,
             source,
           },
-          { onConflict: 'path' }
+          { onConflict: 'path' },
         )
         .select()
         .limit(1)
@@ -297,10 +297,10 @@ async function generateEmbeddings() {
       }
 
       console.log(
-        `#${index}: [${path}] Adding ${sections.length} page sections (with embeddings)`
+        `#${index}: [${path}] Adding ${sections.length} page sections (with embeddings)`,
       );
       console.log(
-        `${embeddingSources.length - index - 1} pages remaining to process.`
+        `${embeddingSources.length - index - 1} pages remaining to process.`,
       );
 
       for (const { slug, heading, content } of sections) {
@@ -354,8 +354,8 @@ async function generateEmbeddings() {
           console.error(
             `Failed to generate embeddings for '${path}' page section starting with '${input.slice(
               0,
-              40
-            )}...'`
+              40,
+            )}...'`,
           );
 
           throw err;
@@ -373,7 +373,7 @@ async function generateEmbeddings() {
       }
     } catch (err) {
       console.error(
-        `Page '${path}' or one/multiple of its page sections failed to store properly. Page has been marked with null checksum to indicate that it needs to be re-generated.`
+        `Page '${path}' or one/multiple of its page sections failed to store properly. Page has been marked with null checksum to indicate that it needs to be re-generated.`,
       );
       console.error(err);
     }
@@ -455,7 +455,7 @@ function getAllFilesWithItemList(data): WalkEntry[] {
 
 function createLongerHeading(
   heading?: string | null,
-  url_partial?: string
+  url_partial?: string,
 ): string | undefined {
   if (url_partial?.length) {
     if (heading?.length && heading !== null && heading !== 'null') {
@@ -468,7 +468,7 @@ function createLongerHeading(
         .split('#')[0]
         .split('/')
         .map((part) =>
-          part?.length ? part[0]?.toUpperCase() + part.slice(1) + ' - ' : ''
+          part?.length ? part[0]?.toUpperCase() + part.slice(1) + ' - ' : '',
         )
         .join('')
         .slice(0, -3);

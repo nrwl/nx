@@ -36,7 +36,7 @@ describe('Change expo jest preset', () => {
       'apps/products/jest.config.ts',
       `module.exports = {
       preset: 'jest-expo',
-    };`
+    };`,
     );
     await update(tree);
 
@@ -56,7 +56,7 @@ describe('Change expo jest preset', () => {
             'react-native/jest/assetFileTransformer.js'
           ),
         }
-      };`
+      };`,
     );
     await update(tree);
 
@@ -70,13 +70,13 @@ describe('Change expo jest preset', () => {
       'apps/products/jest.config.ts',
       `module.exports = {
       preset: 'jest-expo',
-    };`
+    };`,
     );
     tree.write(
       'apps/products/.babelrc',
       `{
         "presets": ["module:metro-react-native-babel-preset"]
-      }`
+      }`,
     );
     await update(tree);
 
@@ -84,10 +84,10 @@ describe('Change expo jest preset', () => {
     expect(tree.exists('apps/products/babel.config.json')).toBeTruthy();
     const babelConfigJson = tree.read(
       'apps/products/babel.config.json',
-      'utf-8'
+      'utf-8',
     );
     expect(babelConfigJson).toContain(
-      `"presets": ["module:metro-react-native-babel-preset"]`
+      `"presets": ["module:metro-react-native-babel-preset"]`,
     );
   });
 
@@ -96,13 +96,13 @@ describe('Change expo jest preset', () => {
       'apps/products/jest.config.ts',
       `module.exports = {
       preset: 'other',
-    };`
+    };`,
     );
     tree.write(
       'apps/products/.babelrc',
       `{
         "presets": ["module:metro-react-native-babel-preset"]
-      }`
+      }`,
     );
     await update(tree);
 
@@ -115,7 +115,7 @@ describe('Change expo jest preset', () => {
       'apps/products/jest.config.ts',
       `module.exports = {
       preset: 'jest-expo',
-    };`
+    };`,
     );
     await update(tree);
     const packageJson = readJson(tree, 'package.json');

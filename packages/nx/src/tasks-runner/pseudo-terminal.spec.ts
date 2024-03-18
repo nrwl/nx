@@ -21,7 +21,7 @@ describe('PseudoTerminal', () => {
   });
   it('should kill a running command', (done) => {
     const childProcess = terminal.runCommand(
-      'sleep 3 && echo "hello world" > file.txt'
+      'sleep 3 && echo "hello world" > file.txt',
     );
     childProcess.onExit((exit_code) => {
       expect(exit_code).not.toEqual(0);
@@ -48,7 +48,7 @@ describe('PseudoTerminal', () => {
   if (process.env.CI !== 'true') {
     it('should be tty', (done) => {
       const childProcess = terminal.runCommand(
-        'node -p "if (process.stdout.isTTY === undefined) process.exit(1)"'
+        'node -p "if (process.stdout.isTTY === undefined) process.exit(1)"',
       );
       childProcess.onExit((code) => {
         expect(code).toEqual(0);

@@ -35,7 +35,7 @@ import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-com
 
 export async function libraryGenerator(
   tree: Tree,
-  schema: Schema
+  schema: Schema,
 ): Promise<GeneratorCallback> {
   return await libraryGeneratorInternal(tree, {
     // provide a default projectNameAndRootFormat to avoid breaking changes
@@ -47,7 +47,7 @@ export async function libraryGenerator(
 
 export async function libraryGeneratorInternal(
   tree: Tree,
-  schema: Schema
+  schema: Schema,
 ): Promise<GeneratorCallback> {
   // Do some validation checks
   if (!schema.routing && schema.lazy) {
@@ -56,13 +56,13 @@ export async function libraryGeneratorInternal(
 
   if (schema.publishable === true && !schema.importPath) {
     throw new Error(
-      `For publishable libs you have to provide a proper "--importPath" which needs to be a valid npm package name (e.g. my-awesome-lib or @myorg/my-lib)`
+      `For publishable libs you have to provide a proper "--importPath" which needs to be a valid npm package name (e.g. my-awesome-lib or @myorg/my-lib)`,
     );
   }
 
   if (schema.addTailwind && !schema.buildable && !schema.publishable) {
     throw new Error(
-      `To use "--addTailwind" option, you have to set either "--buildable" or "--publishable".`
+      `To use "--addTailwind" option, you have to set either "--buildable" or "--publishable".`,
     );
   }
 
@@ -105,7 +105,7 @@ export async function libraryGeneratorInternal(
       {},
       {
         'ng-packagr': pkgVersions.ngPackagrVersion,
-      }
+      },
     );
     addBuildableLibrariesPostCssDependencies(tree);
   }
@@ -126,7 +126,7 @@ export async function libraryGeneratorInternal(
 
 async function addUnitTestRunner(
   host: Tree,
-  options: NormalizedSchema['libraryOptions']
+  options: NormalizedSchema['libraryOptions'],
 ) {
   if (options.unitTestRunner === 'jest') {
     await addJest(host, {
@@ -140,7 +140,7 @@ async function addUnitTestRunner(
 
 function updateNpmScopeIfBuildableOrPublishable(
   host: Tree,
-  options: NormalizedSchema['libraryOptions']
+  options: NormalizedSchema['libraryOptions'],
 ) {
   if (options.buildable || options.publishable) {
     updateLibPackageNpmScope(host, options);
@@ -149,7 +149,7 @@ function updateNpmScopeIfBuildableOrPublishable(
 
 function setStrictMode(
   host: Tree,
-  options: NormalizedSchema['libraryOptions']
+  options: NormalizedSchema['libraryOptions'],
 ) {
   if (options.strict) {
     enableStrictTypeChecking(host, options);
@@ -160,7 +160,7 @@ function setStrictMode(
 
 async function addLinting(
   host: Tree,
-  options: NormalizedSchema['libraryOptions']
+  options: NormalizedSchema['libraryOptions'],
 ) {
   if (options.linter === Linter.None) {
     return;

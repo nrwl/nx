@@ -28,7 +28,7 @@ type NormalizedSchema = Schema & {
 
 async function normalizeOptions(
   tree: Tree,
-  options: Schema
+  options: Schema,
 ): Promise<NormalizedSchema> {
   const { project, fileName, artifactName, filePath, directory } =
     await determineArtifactNameAndDirectoryOptions(tree, {
@@ -90,7 +90,7 @@ export async function createGeneratorsJson(
   projectRoot: string,
   projectName: string,
   skipLintChecks?: boolean,
-  skipFormat?: boolean
+  skipFormat?: boolean,
 ) {
   updateJson<PackageJson>(
     host,
@@ -98,14 +98,14 @@ export async function createGeneratorsJson(
     (json) => {
       json.generators ??= './generators.json';
       return json;
-    }
+    },
   );
   writeJson<GeneratorsJson>(
     host,
     joinPathFragments(projectRoot, 'generators.json'),
     {
       generators: {},
-    }
+    },
   );
   if (!skipLintChecks) {
     await pluginLintCheckGenerator(host, {
@@ -118,7 +118,7 @@ export async function createGeneratorsJson(
 async function updateGeneratorJson(host: Tree, options: NormalizedSchema) {
   const packageJson = readJson<PackageJson>(
     host,
-    joinPathFragments(options.projectRoot, 'package.json')
+    joinPathFragments(options.projectRoot, 'package.json'),
   );
   const packageJsonGenerators =
     packageJson.generators ?? packageJson.schematics;
@@ -135,7 +135,7 @@ async function updateGeneratorJson(host: Tree, options: NormalizedSchema) {
       options.projectRoot,
       options.project,
       options.skipLintChecks,
-      options.skipFormat
+      options.skipFormat,
     );
   }
   // add dependencies
@@ -148,7 +148,7 @@ async function updateGeneratorJson(host: Tree, options: NormalizedSchema) {
         ...json.dependencies,
       };
       return json;
-    }
+    },
   );
 
   updateJson<GeneratorsJson>(host, generatorsPath, (json) => {
@@ -157,11 +157,11 @@ async function updateGeneratorJson(host: Tree, options: NormalizedSchema) {
     generators[options.name] = {
       factory: `./${joinPathFragments(
         relative(options.projectRoot, options.directory),
-        'generator'
+        'generator',
       )}`,
       schema: `./${joinPathFragments(
         relative(options.projectRoot, options.directory),
-        'schema.json'
+        'schema.json',
       )}`,
       description: options.description,
     };

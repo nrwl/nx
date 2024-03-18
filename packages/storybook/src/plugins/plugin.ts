@@ -40,7 +40,7 @@ function readTargetsCache(): Record<
 }
 
 function writeTargetsToCache(
-  targets: Record<string, Record<string, TargetConfiguration>>
+  targets: Record<string, Record<string, TargetConfiguration>>,
 ) {
   writeJsonFile(cachePath, targets);
 }
@@ -87,7 +87,7 @@ export const createNodes: CreateNodes<StorybookPluginOptions> = [
           projectRoot,
           options,
           context,
-          projectName
+          projectName,
         );
 
     calculatedTargets[hash] = targets;
@@ -110,7 +110,7 @@ function buildStorybookTargets(
   projectRoot: string,
   options: StorybookPluginOptions,
   context: CreateNodesContext,
-  projectName: string
+  projectName: string,
 ) {
   const buildOutputs = getOutputs(projectRoot);
 
@@ -122,7 +122,7 @@ function buildStorybookTargets(
 
   if (frameworkIsAngular && !projectName) {
     throw new Error(
-      `Could not find a name for the project at '${projectRoot}'. Please make sure that the project has a package.json or project.json file with name specified.`
+      `Could not find a name for the project at '${projectRoot}'. Please make sure that the project has a package.json or project.json file with name specified.`,
     );
   }
 
@@ -134,21 +134,21 @@ function buildStorybookTargets(
     projectRoot,
     frameworkIsAngular,
     projectName,
-    configFilePath
+    configFilePath,
   );
 
   targets[options.serveStorybookTargetName] = serveTarget(
     projectRoot,
     frameworkIsAngular,
     projectName,
-    configFilePath
+    configFilePath,
   );
 
   targets[options.testStorybookTargetName] = testTarget(projectRoot);
 
   targets[options.staticStorybookTargetName] = serveStaticTarget(
     options,
-    projectRoot
+    projectRoot,
   );
 
   return targets;
@@ -162,7 +162,7 @@ function buildTarget(
   projectRoot: string,
   frameworkIsAngular: boolean,
   projectName: string,
-  configFilePath: string
+  configFilePath: string,
 ) {
   let targetConfig: TargetConfiguration;
 
@@ -214,7 +214,7 @@ function serveTarget(
   projectRoot: string,
   frameworkIsAngular: boolean,
   projectName: string,
-  configFilePath: string
+  configFilePath: string,
 ) {
   if (frameworkIsAngular) {
     return {
@@ -249,7 +249,7 @@ function testTarget(projectRoot: string) {
 
 function serveStaticTarget(
   options: StorybookPluginOptions,
-  projectRoot: string
+  projectRoot: string,
 ) {
   const targetConfig: TargetConfiguration = {
     executor: '@nx/web:file-server',
@@ -264,13 +264,13 @@ function serveStaticTarget(
 
 function getStorybookFramework(
   configFilePath: string,
-  context: CreateNodesContext
+  context: CreateNodesContext,
 ): string {
   const resolvedPath = join(context.workspaceRoot, configFilePath);
   const mainTsJs = readFileSync(resolvedPath, 'utf-8');
   const importDeclarations = tsquery.query(
     mainTsJs,
-    'ImportDeclaration:has(ImportSpecifier:has([text="StorybookConfig"]))'
+    'ImportDeclaration:has(ImportSpecifier:has([text="StorybookConfig"]))',
   )?.[0];
 
   if (!importDeclarations) {
@@ -279,7 +279,7 @@ function getStorybookFramework(
 
   const storybookConfigImportPackage = tsquery.query(
     importDeclarations,
-    'StringLiteral'
+    'StringLiteral',
   )?.[0];
 
   if (storybookConfigImportPackage?.getText() === `'@storybook/core-common'`) {
@@ -292,7 +292,7 @@ function getStorybookFramework(
 function parseFrameworkName(mainTsJs: string) {
   const frameworkPropertyAssignment = tsquery.query(
     mainTsJs,
-    `PropertyAssignment:has(Identifier:has([text="framework"]))`
+    `PropertyAssignment:has(Identifier:has([text="framework"]))`,
   )?.[0];
 
   if (!frameworkPropertyAssignment) {
@@ -301,7 +301,7 @@ function parseFrameworkName(mainTsJs: string) {
 
   const propertyAssignments = tsquery.query(
     frameworkPropertyAssignment,
-    `PropertyAssignment:has(Identifier:has([text="name"]))`
+    `PropertyAssignment:has(Identifier:has([text="name"]))`,
   );
 
   const namePropertyAssignment = propertyAssignments?.find((expression) => {
@@ -311,7 +311,7 @@ function parseFrameworkName(mainTsJs: string) {
   if (!namePropertyAssignment) {
     const storybookConfigImportPackage = tsquery.query(
       frameworkPropertyAssignment,
-      'StringLiteral'
+      'StringLiteral',
     )?.[0];
     return storybookConfigImportPackage?.getText();
   }
@@ -341,7 +341,7 @@ function normalizeOutputPath(projectRoot: string): string | undefined {
 }
 
 function normalizeOptions(
-  options: StorybookPluginOptions
+  options: StorybookPluginOptions,
 ): StorybookPluginOptions {
   options ??= {};
   options.buildStorybookTargetName = 'build-storybook';
@@ -353,7 +353,7 @@ function normalizeOptions(
 
 function buildProjectName(
   projectRoot: string,
-  workspaceRoot: string
+  workspaceRoot: string,
 ): string | undefined {
   const packageJsonPath = join(workspaceRoot, projectRoot, 'package.json');
   const projectJsonPath = join(workspaceRoot, projectRoot, 'project.json');

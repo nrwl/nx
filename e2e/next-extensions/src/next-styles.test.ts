@@ -24,7 +24,7 @@ describe('Next.js Styles', () => {
     const lessApp = uniq('app');
 
     runCLI(
-      `generate @nx/next:app ${lessApp} --no-interactive --style=less --appDir=false --src=false`
+      `generate @nx/next:app ${lessApp} --no-interactive --style=less --appDir=false --src=false`,
     );
 
     await checkApp(lessApp, {
@@ -36,7 +36,7 @@ describe('Next.js Styles', () => {
     const scApp = uniq('app');
 
     runCLI(
-      `generate @nx/next:app ${scApp} --no-interactive --style=styled-components --appDir=false`
+      `generate @nx/next:app ${scApp} --no-interactive --style=styled-components --appDir=false`,
     );
 
     await checkApp(scApp, {
@@ -48,7 +48,7 @@ describe('Next.js Styles', () => {
     const scAppWithAppRouter = uniq('app');
 
     runCLI(
-      `generate @nx/next:app ${scAppWithAppRouter} --no-interactive --style=styled-components --appDir=true`
+      `generate @nx/next:app ${scAppWithAppRouter} --no-interactive --style=styled-components --appDir=true`,
     );
 
     await checkApp(scAppWithAppRouter, {
@@ -60,7 +60,7 @@ describe('Next.js Styles', () => {
     const emotionApp = uniq('app');
 
     runCLI(
-      `generate @nx/next:app ${emotionApp} --no-interactive --style=@emotion/styled --appDir=false`
+      `generate @nx/next:app ${emotionApp} --no-interactive --style=@emotion/styled --appDir=false`,
     );
 
     await checkApp(emotionApp, {

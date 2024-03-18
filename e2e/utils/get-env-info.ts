@@ -26,9 +26,9 @@ export function detectPackageManager(dir: string = ''): PackageManager {
   return existsSync(join(dir, 'yarn.lock'))
     ? 'yarn'
     : existsSync(join(dir, 'pnpm-lock.yaml')) ||
-      existsSync(join(dir, 'pnpm-workspace.yaml'))
-    ? 'pnpm'
-    : 'npm';
+        existsSync(join(dir, 'pnpm-workspace.yaml'))
+      ? 'pnpm'
+      : 'npm';
 }
 
 export function isNotWindows() {
@@ -146,7 +146,7 @@ export function ensurePlaywrightBrowsersInstallation() {
   e2eConsoleLogger(
     `Playwright browsers ${execSync('npx playwright --version')
       .toString()
-      .trim()} installed.`
+      .trim()} installed.`,
   );
 }
 
@@ -168,6 +168,6 @@ export function getStrippedEnvironmentVariables() {
       }
 
       return true;
-    })
+    }),
   );
 }

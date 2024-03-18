@@ -34,21 +34,21 @@ describe('Angular Projects', () => {
   beforeAll(() => {
     proj = newProject({ packages: ['@nx/angular'] });
     runCLI(
-      `generate @nx/angular:app ${app1} --no-standalone --bundler=webpack --project-name-and-root-format=as-provided --no-interactive`
+      `generate @nx/angular:app ${app1} --no-standalone --bundler=webpack --project-name-and-root-format=as-provided --no-interactive`,
     );
     runCLI(
-      `generate @nx/angular:app ${esbuildApp} --bundler=esbuild --no-standalone --project-name-and-root-format=as-provided --no-interactive`
+      `generate @nx/angular:app ${esbuildApp} --bundler=esbuild --no-standalone --project-name-and-root-format=as-provided --no-interactive`,
     );
     runCLI(
-      `generate @nx/angular:lib ${lib1} --project-name-and-root-format=as-provided --no-interactive`
+      `generate @nx/angular:lib ${lib1} --project-name-and-root-format=as-provided --no-interactive`,
     );
     app1DefaultModule = readFile(`${app1}/src/app/app.module.ts`);
     app1DefaultComponentTemplate = readFile(
-      `${app1}/src/app/app.component.html`
+      `${app1}/src/app/app.component.html`,
     );
     esbuildAppDefaultModule = readFile(`${esbuildApp}/src/app/app.module.ts`);
     esbuildAppDefaultComponentTemplate = readFile(
-      `${esbuildApp}/src/app/app.component.html`
+      `${esbuildApp}/src/app/app.component.html`,
     );
     esbuildAppDefaultProjectConfig = readFile(`${esbuildApp}/project.json`);
   });
@@ -57,12 +57,12 @@ describe('Angular Projects', () => {
     updateFile(`${app1}/src/app/app.module.ts`, app1DefaultModule);
     updateFile(
       `${app1}/src/app/app.component.html`,
-      app1DefaultComponentTemplate
+      app1DefaultComponentTemplate,
     );
     updateFile(`${esbuildApp}/src/app/app.module.ts`, esbuildAppDefaultModule);
     updateFile(
       `${esbuildApp}/src/app/app.component.html`,
-      esbuildAppDefaultComponentTemplate
+      esbuildAppDefaultComponentTemplate,
     );
     updateFile(`${esbuildApp}/project.json`, esbuildAppDefaultProjectConfig);
   });
@@ -72,12 +72,12 @@ describe('Angular Projects', () => {
   it('should successfully generate apps and libs and work correctly', async () => {
     const standaloneApp = uniq('standalone-app');
     runCLI(
-      `generate @nx/angular:app ${standaloneApp} --directory=my-dir/${standaloneApp} --bundler=webpack --project-name-and-root-format=as-provided --no-interactive`
+      `generate @nx/angular:app ${standaloneApp} --directory=my-dir/${standaloneApp} --bundler=webpack --project-name-and-root-format=as-provided --no-interactive`,
     );
 
     const esbuildStandaloneApp = uniq('esbuild-app');
     runCLI(
-      `generate @nx/angular:app ${esbuildStandaloneApp} --bundler=esbuild --directory=my-dir/${esbuildStandaloneApp} --project-name-and-root-format=as-provided --no-interactive`
+      `generate @nx/angular:app ${esbuildStandaloneApp} --bundler=esbuild --directory=my-dir/${esbuildStandaloneApp} --project-name-and-root-format=as-provided --no-interactive`,
     );
 
     updateFile(
@@ -101,12 +101,12 @@ describe('Angular Projects', () => {
           bootstrap: [AppComponent]
         })
         export class AppModule {}
-      `
+      `,
     );
 
     // check build
     runCLI(
-      `run-many --target build --projects=${app1},${esbuildApp},${standaloneApp},${esbuildStandaloneApp} --parallel --prod --output-hashing none`
+      `run-many --target build --projects=${app1},${esbuildApp},${standaloneApp},${esbuildStandaloneApp} --parallel --prod --output-hashing none`,
     );
     checkFilesExist(`dist/${app1}/main.js`);
     checkFilesExist(`dist/${esbuildApp}/browser/main.js`);
@@ -116,13 +116,13 @@ describe('Angular Projects', () => {
     // influences external from this project that affect this.
     const es2015BundleSize = getSize(tmpProjPath(`dist/${app1}/main.js`));
     console.log(
-      `The current es2015 bundle size is ${es2015BundleSize / 1000} KB`
+      `The current es2015 bundle size is ${es2015BundleSize / 1000} KB`,
     );
     expect(es2015BundleSize).toBeLessThanOrEqual(220000);
 
     // check unit tests
     runCLI(
-      `run-many --target test --projects=${app1},${standaloneApp},${esbuildStandaloneApp},${lib1} --parallel`
+      `run-many --target test --projects=${app1},${standaloneApp},${esbuildStandaloneApp},${lib1} --parallel`,
     );
 
     // check e2e tests
@@ -135,7 +135,7 @@ describe('Angular Projects', () => {
     const appPort = 4207;
     const process = await runCommandUntil(
       `serve ${app1} -- --port=${appPort}`,
-      (output) => output.includes(`listening on localhost:${appPort}`)
+      (output) => output.includes(`listening on localhost:${appPort}`),
     );
 
     // port and process cleanup
@@ -145,7 +145,7 @@ describe('Angular Projects', () => {
       `serve ${esbuildStandaloneApp} -- --port=${appPort}`,
       (output) =>
         output.includes(`Application bundle generation complete`) &&
-        output.includes(`localhost:${appPort}`)
+        output.includes(`localhost:${appPort}`),
     );
 
     // port and process cleanup
@@ -156,13 +156,13 @@ describe('Angular Projects', () => {
     const app = uniq('app');
 
     runCLI(
-      `generate @nx/angular:app ${app} --e2eTestRunner=playwright --project-name-and-root-format=as-provided --no-interactive`
+      `generate @nx/angular:app ${app} --e2eTestRunner=playwright --project-name-and-root-format=as-provided --no-interactive`,
     );
 
     if (runE2ETests('playwright')) {
       const e2eResults = runCLI(`e2e ${app}-e2e`);
       expect(e2eResults).toContain(
-        `Successfully ran target e2e for project ${app}-e2e`
+        `Successfully ran target e2e for project ${app}-e2e`,
       );
       expect(await killPort(4200)).toBeTruthy();
     }
@@ -176,7 +176,7 @@ describe('Angular Projects', () => {
     const templateWhichFailsBananaInBoxLintCheck = `<div ([foo])="bar"></div>`;
     updateFile(
       `${app1}/src/app/app.component.html`,
-      templateWhichFailsBananaInBoxLintCheck
+      templateWhichFailsBananaInBoxLintCheck,
     );
     // Inline template within component.ts file
     const wrappedAsInlineTemplate = `
@@ -192,23 +192,23 @@ describe('Angular Projects', () => {
     `;
     updateFile(
       `${app1}/src/app/inline-template.component.ts`,
-      wrappedAsInlineTemplate
+      wrappedAsInlineTemplate,
     );
 
     const appLintStdOut = runCLI(`lint ${app1}`, {
       silenceError: true,
     });
     expect(appLintStdOut).toContain(
-      normalize(`${app1}/src/app/app.component.html`)
+      normalize(`${app1}/src/app/app.component.html`),
     );
     expect(appLintStdOut).toContain(`1:6`);
     expect(appLintStdOut).toContain(`Invalid binding syntax`);
     expect(appLintStdOut).toContain(
-      normalize(`${app1}/src/app/inline-template.component.ts`)
+      normalize(`${app1}/src/app/inline-template.component.ts`),
     );
     expect(appLintStdOut).toContain(`5:19`);
     expect(appLintStdOut).toContain(
-      `The selector should start with one of these prefixes`
+      `The selector should start with one of these prefixes`,
     );
     expect(appLintStdOut).toContain(`7:16`);
     expect(appLintStdOut).toContain(`Invalid binding syntax`);
@@ -223,10 +223,10 @@ describe('Angular Projects', () => {
     const buildableChildLib = uniq('buildlib2');
 
     runCLI(
-      `generate @nx/angular:library ${buildableLib} --buildable=true --no-standalone --project-name-and-root-format=as-provided --no-interactive`
+      `generate @nx/angular:library ${buildableLib} --buildable=true --no-standalone --project-name-and-root-format=as-provided --no-interactive`,
     );
     runCLI(
-      `generate @nx/angular:library ${buildableChildLib} --buildable=true --no-standalone --project-name-and-root-format=as-provided --no-interactive`
+      `generate @nx/angular:library ${buildableChildLib} --buildable=true --no-standalone --project-name-and-root-format=as-provided --no-interactive`,
     );
 
     // update the app module to include a ref to the buildable lib
@@ -254,7 +254,7 @@ describe('Angular Projects', () => {
           bootstrap: [AppComponent],
         })
         export class AppModule {}
-    `
+    `,
     );
     updateFile(
       `${esbuildApp}/src/app/app.module.ts`,
@@ -280,7 +280,7 @@ describe('Angular Projects', () => {
           bootstrap: [AppComponent],
         })
         export class AppModule {}
-    `
+    `,
     );
 
     // update the buildable lib module to include a ref to the buildable child lib
@@ -298,7 +298,7 @@ describe('Angular Projects', () => {
         })
         export class ${names(buildableLib).className}Module {}
         
-      `
+      `,
     );
 
     // update the project.json
@@ -347,12 +347,12 @@ describe('Angular Projects', () => {
     // ACT
     const libOutput = runCLI(`build ${app1} --configuration=development`);
     const esbuildLibOutput = runCLI(
-      `build ${esbuildApp} --configuration=development`
+      `build ${esbuildApp} --configuration=development`,
     );
 
     // ASSERT
     expect(libOutput).toContain(
-      `Building entry point '@${proj}/${buildableLib}'`
+      `Building entry point '@${proj}/${buildableLib}'`,
     );
     expect(libOutput).toContain(`nx run ${app1}:build:development`);
 
@@ -376,7 +376,7 @@ describe('Angular Projects', () => {
         },
       };
       
-      export default replaceTextPlugin;`
+      export default replaceTextPlugin;`,
     );
     updateFile(
       `${esbuildApp}/src/app/app.component.ts`,
@@ -391,7 +391,7 @@ describe('Angular Projects', () => {
       export class AppComponent {
         title = 'esbuild-app';
         buildDefined = BUILD_DEFINED;
-      }`
+      }`,
     );
 
     // check @nx/angular:application
@@ -408,7 +408,7 @@ describe('Angular Projects', () => {
 
     let mainBundle = readFile(`dist/${esbuildApp}/browser/main.js`);
     expect(mainBundle).toContain(
-      'this.buildDefined = "Value was provided at build time";'
+      'this.buildDefined = "Value was provided at build time";',
     );
 
     // check @nx/angular:browser-esbuild
@@ -426,7 +426,7 @@ describe('Angular Projects', () => {
 
     mainBundle = readFile(`dist/${esbuildApp}/main.js`);
     expect(mainBundle).toContain(
-      'this.buildDefined = "Value was provided at build time";'
+      'this.buildDefined = "Value was provided at build time";',
     );
   });
 
@@ -440,7 +440,7 @@ describe('Angular Projects', () => {
         );
       };
       
-      export default indexHtmlTransformer;`
+      export default indexHtmlTransformer;`,
     );
 
     updateJson(join(esbuildApp, 'project.json'), (config) => {
@@ -456,7 +456,7 @@ describe('Angular Projects', () => {
 
     let indexHtmlContent = readFile(`dist/${esbuildApp}/browser/index.html`);
     expect(indexHtmlContent).toContain(
-      `<title>${esbuildApp} (transformed)</title>`
+      `<title>${esbuildApp} (transformed)</title>`,
     );
   });
 
@@ -467,17 +467,17 @@ describe('Angular Projects', () => {
     const entryPoint = uniq('entrypoint');
 
     runCLI(
-      `generate @nx/angular:lib ${lib} --publishable --importPath=@${proj}/${lib} --no-standalone --project-name-and-root-format=as-provided --no-interactive`
+      `generate @nx/angular:lib ${lib} --publishable --importPath=@${proj}/${lib} --no-standalone --project-name-and-root-format=as-provided --no-interactive`,
     );
     runCLI(
-      `generate @nx/angular:secondary-entry-point --name=${entryPoint} --library=${lib} --no-interactive`
+      `generate @nx/angular:secondary-entry-point --name=${entryPoint} --library=${lib} --no-interactive`,
     );
 
     runCLI(
-      `generate @nx/angular:library ${childLib} --publishable=true --importPath=@${proj}/${childLib} --no-standalone --project-name-and-root-format=as-provided --no-interactive`
+      `generate @nx/angular:library ${childLib} --publishable=true --importPath=@${proj}/${childLib} --no-standalone --project-name-and-root-format=as-provided --no-interactive`,
     );
     runCLI(
-      `generate @nx/angular:secondary-entry-point --name=sub --library=${childLib} --no-interactive`
+      `generate @nx/angular:secondary-entry-point --name=sub --library=${childLib} --no-interactive`,
     );
 
     const moduleContent = `
@@ -500,7 +500,7 @@ describe('Angular Projects', () => {
     // ASSERT
     expect(buildOutput).toContain(`Building entry point '@${proj}/${lib}'`);
     expect(buildOutput).toContain(
-      `Building entry point '@${proj}/${lib}/${entryPoint}'`
+      `Building entry point '@${proj}/${lib}/${entryPoint}'`,
     );
     expect(buildOutput).toContain('Successfully ran target build');
   });
@@ -510,38 +510,38 @@ describe('Angular Projects', () => {
     const libName = uniq('lib1');
 
     runCLI(
-      `generate @nx/angular:app ${appName} --no-standalone --project-name-and-root-format=derived --no-interactive`
+      `generate @nx/angular:app ${appName} --no-standalone --project-name-and-root-format=derived --no-interactive`,
     );
 
     // check files are generated with the layout directory ("apps/")
     checkFilesExist(`apps/${appName}/src/app/app.module.ts`);
     // check build works
     expect(runCLI(`build ${appName}`)).toContain(
-      `Successfully ran target build for project ${appName}`
+      `Successfully ran target build for project ${appName}`,
     );
     // check tests pass
     const appTestResult = runCLI(`test ${appName}`);
     expect(appTestResult).toContain(
-      `Successfully ran target test for project ${appName}`
+      `Successfully ran target test for project ${appName}`,
     );
 
     runCLI(
-      `generate @nx/angular:lib ${libName} --standalone --buildable --project-name-and-root-format=derived`
+      `generate @nx/angular:lib ${libName} --standalone --buildable --project-name-and-root-format=derived`,
     );
 
     // check files are generated with the layout directory ("libs/")
     checkFilesExist(
       `libs/${libName}/src/index.ts`,
-      `libs/${libName}/src/lib/${libName}/${libName}.component.ts`
+      `libs/${libName}/src/lib/${libName}/${libName}.component.ts`,
     );
     // check build works
     expect(runCLI(`build ${libName}`)).toContain(
-      `Successfully ran target build for project ${libName}`
+      `Successfully ran target build for project ${libName}`,
     );
     // check tests pass
     const libTestResult = runCLI(`test ${libName}`);
     expect(libTestResult).toContain(
-      `Successfully ran target test for project ${libName}`
+      `Successfully ran target test for project ${libName}`,
     );
   }, 500_000);
 
@@ -551,12 +551,12 @@ describe('Angular Projects', () => {
     // assert scoped project names are not supported when --project-name-and-root-format=derived
     expect(() =>
       runCLI(
-        `generate @nx/angular:lib ${libName} --buildable --no-standalone --project-name-and-root-format=derived`
-      )
+        `generate @nx/angular:lib ${libName} --buildable --no-standalone --project-name-and-root-format=derived`,
+      ),
     ).toThrow();
 
     runCLI(
-      `generate @nx/angular:lib ${libName} --buildable --standalone --project-name-and-root-format=as-provided`
+      `generate @nx/angular:lib ${libName} --buildable --standalone --project-name-and-root-format=as-provided`,
     );
 
     // check files are generated without the layout directory ("libs/") and
@@ -565,16 +565,16 @@ describe('Angular Projects', () => {
       `${libName}/src/index.ts`,
       `${libName}/src/lib/${libName.split('/')[1]}/${
         libName.split('/')[1]
-      }.component.ts`
+      }.component.ts`,
     );
     // check build works
     expect(runCLI(`build ${libName}`)).toContain(
-      `Successfully ran target build for project ${libName}`
+      `Successfully ran target build for project ${libName}`,
     );
     // check tests pass
     const libTestResult = runCLI(`test ${libName}`);
     expect(libTestResult).toContain(
-      `Successfully ran target test for project ${libName}`
+      `Successfully ran target test for project ${libName}`,
     );
   }, 500_000);
 
@@ -583,18 +583,18 @@ describe('Angular Projects', () => {
     const webpackApp = uniq('webpack-app');
 
     runCLI(
-      `generate @nx/angular:app ${esbuildApp} --bundler=esbuild --ssr --project-name-and-root-format=as-provided --no-interactive`
+      `generate @nx/angular:app ${esbuildApp} --bundler=esbuild --ssr --project-name-and-root-format=as-provided --no-interactive`,
     );
 
     // check build produces both the browser and server bundles
     runCLI(`build ${esbuildApp} --output-hashing none`);
     checkFilesExist(
       `dist/${esbuildApp}/browser/main.js`,
-      `dist/${esbuildApp}/server/server.mjs`
+      `dist/${esbuildApp}/server/server.mjs`,
     );
 
     runCLI(
-      `generate @nx/angular:app ${webpackApp} --bundler=webpack --ssr --project-name-and-root-format=as-provided --no-interactive`
+      `generate @nx/angular:app ${webpackApp} --bundler=webpack --ssr --project-name-and-root-format=as-provided --no-interactive`,
     );
 
     // check build only produces the browser bundle
@@ -610,19 +610,19 @@ describe('Angular Projects', () => {
 
     // convert target with webpack-based executors to use the application executor
     runCLI(
-      `generate @nx/angular:convert-to-application-executor ${webpackApp}`
+      `generate @nx/angular:convert-to-application-executor ${webpackApp}`,
     );
 
     // check build now produces both the browser and server bundles
     runCLI(`build ${webpackApp} --output-hashing none`);
     checkFilesExist(
       `dist/${webpackApp}/browser/main.js`,
-      `dist/${webpackApp}/server/server.mjs`
+      `dist/${webpackApp}/server/server.mjs`,
     );
 
     // check server target is no longer available
     expect(() =>
-      runCLI(`server ${webpackApp} --output-hashing none`)
+      runCLI(`server ${webpackApp} --output-hashing none`),
     ).toThrow();
   }, 500_000);
 });

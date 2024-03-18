@@ -25,12 +25,12 @@ export default async function (tree: Tree) {
 
         updateProjectConfiguration(tree, projectName, project);
       }
-    }
+    },
   );
 
   const nxJson = readNxJson(tree);
   for (const [targetNameOrExecutor, target] of Object.entries(
-    nxJson.targetDefaults
+    nxJson.targetDefaults,
   )) {
     if (
       targetNameOrExecutor === '@nx/playwright:playwright' ||
@@ -44,7 +44,7 @@ export default async function (tree: Tree) {
 
       if (target.configurations) {
         for (const [configurationName, configuration] of Object.entries(
-          target.configurations
+          target.configurations,
         )) {
           if (configuration['baseUrl']) {
             delete nxJson.targetDefaults[targetNameOrExecutor].configurations[

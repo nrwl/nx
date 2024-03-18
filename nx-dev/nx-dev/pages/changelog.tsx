@@ -72,7 +72,7 @@ function formatDate(dateStr: string): string {
 
 async function fetchGithubRelease(
   octokit: Octokit,
-  page: number = 1
+  page: number = 1,
 ): Promise<GithubReleaseData[]> {
   const responseData = await octokit.request(
     'GET /repos/{owner}/{repo}/releases',
@@ -84,7 +84,7 @@ async function fetchGithubRelease(
       },
       page,
       per_page: 100,
-    }
+    },
   );
 
   return responseData.data.map(({ published_at, tag_name, prerelease }) => ({
@@ -244,7 +244,7 @@ export default function Changelog(props: ChangeLogProps): JSX.Element {
                 <div
                   className={cx(
                     idx === renderedChangelog.length - 1 ? 'h-6' : '-bottom-6',
-                    'absolute left-0 top-0 hidden w-6 justify-center sm:flex'
+                    'absolute left-0 top-0 hidden w-6 justify-center sm:flex',
                   )}
                 >
                   <div className="w-px bg-slate-200 dark:bg-slate-700" />
@@ -277,7 +277,7 @@ export default function Changelog(props: ChangeLogProps): JSX.Element {
                   <p className="py-0.5 text-xs leading-5 text-slate-400 dark:text-slate-500">
                     <time
                       dateTime={convertToDate(
-                        changelog.date
+                        changelog.date,
                       ).toLocaleDateString()}
                     >
                       {changelog.date}

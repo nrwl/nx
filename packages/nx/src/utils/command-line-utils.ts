@@ -59,7 +59,7 @@ export function splitArgsIntoNxArgsAndOverrides(
   args: { [k: string]: any },
   mode: 'run-one' | 'run-many' | 'affected' | 'print-affected',
   options = { printWarnings: true },
-  nxJson: NxJsonConfiguration
+  nxJson: NxJsonConfiguration,
 ): {
   nxArgs: NxArgs;
   overrides: Arguments & { __overrides_unparsed__: string[] };
@@ -109,11 +109,11 @@ export function splitArgsIntoNxArgsAndOverrides(
         title: `Running affected:* commands with --all can result in very slow builds.`,
         bodyLines: [
           `${output.bold(
-            '--all'
+            '--all',
           )} is not meant to be used for any sizable project or to be used in CI.`,
           '',
           `${output.dim(
-            'Learn more about checking only what is affected: https://nx.dev/nx/affected'
+            'Learn more about checking only what is affected: https://nx.dev/nx/affected',
           )}`,
         ],
       });
@@ -125,7 +125,7 @@ export function splitArgsIntoNxArgsAndOverrides(
       if (options.printWarnings) {
         output.note({
           title: `No explicit --base argument provided, but found environment variable NX_BASE so using its value as the affected base: ${output.bold(
-            `${nxArgs.base}`
+            `${nxArgs.base}`,
           )}`,
         });
       }
@@ -135,7 +135,7 @@ export function splitArgsIntoNxArgsAndOverrides(
       if (options.printWarnings) {
         output.note({
           title: `No explicit --head argument provided, but found environment variable NX_HEAD so using its value as the affected head: ${output.bold(
-            `${nxArgs.head}`
+            `${nxArgs.head}`,
           )}`,
         });
       }
@@ -156,7 +156,7 @@ export function splitArgsIntoNxArgsAndOverrides(
       ) {
         output.note({
           title: `Affected criteria defaulted to --base=${output.bold(
-            `${nxArgs.base}`
+            `${nxArgs.base}`,
           )} --head=${output.bold('HEAD')}`,
         });
       }
@@ -189,7 +189,7 @@ export function splitArgsIntoNxArgsAndOverrides(
       nxArgs['maxParallel'] ||
         nxArgs['max-parallel'] ||
         process.env.NX_PARALLEL ||
-        3
+        3,
     );
   } else if (args['parallel'] !== undefined) {
     nxArgs['parallel'] = Number(args['parallel']);
@@ -201,7 +201,7 @@ export function splitArgsIntoNxArgsAndOverrides(
 function normalizeNxArgsRunner(
   nxArgs: RawNxArgs,
   nxJson: NxJsonConfiguration<string[] | '*'>,
-  options: { printWarnings: boolean }
+  options: { printWarnings: boolean },
 ) {
   if (!nxArgs.runner) {
     // TODO: Remove NX_RUNNER environment variable support in Nx v17
@@ -213,7 +213,7 @@ function normalizeNxArgsRunner(
           if (runnerExists) {
             output.note({
               title: `No explicit --runner argument provided, but found environment variable ${envKey} so using its value: ${output.bold(
-                `${runner}`
+                `${runner}`,
               )}`,
             });
           } else if (
@@ -222,7 +222,7 @@ function normalizeNxArgsRunner(
           ) {
             output.warn({
               title: `Could not find ${output.bold(
-                `${runner}`
+                `${runner}`,
               )} within \`nx.json\` tasksRunnerOptions.`,
               bodyLines: [
                 `${output.bold(`${runner}`)} was set by ${envKey}`,
@@ -276,7 +276,7 @@ export function parseFiles(options: NxArgs): { files: string[] } {
           ...getFilesUsingBaseAndHead(base, 'HEAD'),
           ...getUncommittedFiles(),
           ...getUntrackedFiles(),
-        ])
+        ]),
       ),
     };
   }
@@ -316,10 +316,10 @@ function getMergeBase(base: string = 'main', head: string = 'HEAD') {
 
 function getFilesUsingBaseAndHead(
   base: string = 'main',
-  head: string
+  head: string,
 ): string[] {
   return parseGitOutput(
-    `git diff --name-only --no-renames --relative "${base}" "${head}"`
+    `git diff --name-only --no-renames --relative "${base}" "${head}"`,
   );
 }
 
@@ -333,7 +333,7 @@ function parseGitOutput(command: string): string[] {
 
 export function getProjectRoots(
   projectNames: string[],
-  { nodes }: ProjectGraph
+  { nodes }: ProjectGraph,
 ): string[] {
   return projectNames.map((name) => nodes[name].data.root);
 }

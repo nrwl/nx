@@ -31,23 +31,23 @@ describe('Cypress 11 Migration', () => {
     mockInstalledCypressVersion.mockReturnValue(9);
     const beforeReact = tree.read(
       'libs/my-react-lib/src/lib/no-import.cy.ts',
-      'utf-8'
+      'utf-8',
     );
 
     const beforeNg = tree.read(
       'libs/my-ng-lib/src/lib/no-import.component.cy.ts',
-      'utf-8'
+      'utf-8',
     );
 
     await updateToCypress11(tree);
     const actualReact = tree.read(
       'libs/my-react-lib/src/lib/no-import.cy.ts',
-      'utf-8'
+      'utf-8',
     );
 
     const actualNg = tree.read(
       'libs/my-ng-lib/src/lib/no-import.component.cy.ts',
-      'utf-8'
+      'utf-8',
     );
 
     expect(actualReact).toEqual(beforeReact);
@@ -59,26 +59,26 @@ describe('Cypress 11 Migration', () => {
     await setup(tree);
     await updateToCypress11(tree);
     expect(
-      tree.read('libs/my-react-lib/src/lib/no-import.cy.ts', 'utf-8')
+      tree.read('libs/my-react-lib/src/lib/no-import.cy.ts', 'utf-8'),
     ).toMatchSnapshot();
 
     expect(
       tree.read(
         'libs/my-react-lib/src/lib/with-import-18.component.cy.ts',
-        'utf-8'
-      )
+        'utf-8',
+      ),
     ).toMatchSnapshot();
     expect(
       tree.read(
         'libs/my-react-lib/src/lib/with-import.component.cy.ts',
-        'utf-8'
-      )
+        'utf-8',
+      ),
     ).toMatchSnapshot();
     expect(
-      tree.read('libs/my-ng-lib/src/lib/no-import.component.cy.ts', 'utf-8')
+      tree.read('libs/my-ng-lib/src/lib/no-import.component.cy.ts', 'utf-8'),
     ).toMatchSnapshot();
     expect(
-      tree.read('libs/my-ng-lib/src/lib/with-import.component.cy.ts', 'utf-8')
+      tree.read('libs/my-ng-lib/src/lib/with-import.component.cy.ts', 'utf-8'),
     ).toMatchSnapshot();
   });
 
@@ -113,7 +113,7 @@ describe('MyComponent', () => {
     tree.write('apps/my-e2e-app/src/somthing.component.cy.ts', content);
     await updateToCypress11(tree);
     expect(
-      tree.read('apps/my-e2e-app/src/somthing.component.cy.ts', 'utf-8')
+      tree.read('apps/my-e2e-app/src/somthing.component.cy.ts', 'utf-8'),
     ).toEqual(content);
   });
 });
@@ -145,7 +145,7 @@ declare global {
   }
 }
 Cypress.Commands.add('mount', mount)
-`
+`,
   );
   tree.write(
     'libs/my-react-lib/src/lib/no-import.cy.ts',
@@ -160,7 +160,7 @@ describe('again', () => {
     cy.mount(<Comp onUnmount={cy.stub().as('onUnmount')} />)
     cy.contains('My component')
   })
-})`
+})`,
   );
   tree.write(
     'libs/my-react-lib/src/lib/with-import.component.cy.ts',
@@ -211,7 +211,7 @@ describe('again', () => {
     cy.contains('My component').should('not.exist')
     cy.get('@onUnmount').should('have.been.calledOnce')
   })
-})`
+})`,
   );
   tree.write(
     'libs/my-react-lib/src/lib/with-import-18.component.cy.ts',
@@ -262,7 +262,7 @@ describe('again', () => {
     cy.contains('My component').should('not.exist')
     cy.get('@onUnmount').should('have.been.calledOnce')
   })
-})`
+})`,
   );
 
   await libraryGenerator(tree, {
@@ -292,7 +292,7 @@ declare global {
   }
 }
 Cypress.Commands.add('mount', mount)
-`
+`,
   );
   tree.write(
     'libs/my-ng-lib/src/lib/with-import.component.cy.ts',
@@ -315,7 +315,7 @@ Cypress.Commands.add('mount', mount)
         cy.mount(MyComponent, {imports: [], declarations: [], providers: [{provide: 'foo', useValue: 'bar'}]});
       });
       });
-    `
+    `,
   );
   tree.write(
     'libs/my-ng-lib/src/lib/no-import.component.cy.ts',
@@ -337,6 +337,6 @@ Cypress.Commands.add('mount', mount)
         cy.mount(MyComponent, {imports: [], declarations: [], providers: [{provide: 'foo', useValue: 'bar'}]});
       });
       });
-   `
+   `,
   );
 }

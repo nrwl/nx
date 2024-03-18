@@ -31,8 +31,8 @@ describe('splitArgs', () => {
         },
         'affected',
         {} as any,
-        {} as any
-      ).nxArgs
+        {} as any,
+      ).nxArgs,
     ).toEqual({
       base: 'sha1',
       head: 'sha2',
@@ -49,7 +49,7 @@ describe('splitArgs', () => {
       },
       'affected',
       {} as any,
-      {} as any
+      {} as any,
     ).nxArgs;
     expect(nxArgs['nxBail']).toEqual('some-value');
   });
@@ -63,8 +63,8 @@ describe('splitArgs', () => {
         },
         'affected',
         {} as any,
-        {} as any
-      ).nxArgs
+        {} as any,
+      ).nxArgs,
     ).toMatchSnapshot();
   });
 
@@ -77,8 +77,8 @@ describe('splitArgs', () => {
         },
         'affected',
         {} as any,
-        { affected: { defaultBase: 'develop' } }
-      ).nxArgs
+        { affected: { defaultBase: 'develop' } },
+      ).nxArgs,
     ).toEqual({
       base: 'develop',
       skipNxCache: false,
@@ -94,8 +94,8 @@ describe('splitArgs', () => {
         },
         'affected',
         {} as any,
-        {} as any
-      ).nxArgs
+        {} as any,
+      ).nxArgs,
     ).toMatchSnapshot();
   });
 
@@ -109,8 +109,8 @@ describe('splitArgs', () => {
         },
         'affected',
         {} as any,
-        {} as any
-      ).overrides
+        {} as any,
+      ).overrides,
     ).toEqual({
       __overrides_unparsed__: ['--notNxArg'],
       notNxArg: true,
@@ -127,8 +127,8 @@ describe('splitArgs', () => {
         },
         'affected',
         {} as any,
-        {} as any
-      ).overrides
+        {} as any,
+      ).overrides,
     ).toEqual({
       _: ['positional'],
       __overrides_unparsed__: ['positional', '--notNxArg'],
@@ -146,8 +146,8 @@ describe('splitArgs', () => {
         },
         'affected',
         {} as any,
-        {} as any
-      ).overrides
+        {} as any,
+      ).overrides,
     ).toEqual({
       __overrides_unparsed__: ['explicit'],
       _: ['explicit'],
@@ -164,8 +164,8 @@ describe('splitArgs', () => {
         },
         'affected',
         {} as any,
-        {} as any
-      ).overrides
+        {} as any,
+      ).overrides,
     ).toEqual({
       __overrides_unparsed__: ['explicit'],
       _: ['explicit'],
@@ -182,8 +182,8 @@ describe('splitArgs', () => {
         },
         'run-many',
         {} as any,
-        {} as any
-      ).nxArgs
+        {} as any,
+      ).nxArgs,
     ).toEqual({
       projects: ['aaa', 'bbb'],
       skipNxCache: false,
@@ -205,8 +205,8 @@ describe('splitArgs', () => {
             },
             'affected',
             {} as any,
-            {} as any
-          ).nxArgs
+            {} as any,
+          ).nxArgs,
         ).toEqual({
           base: 'envVarSha1',
           head: 'envVarSha2',
@@ -222,8 +222,8 @@ describe('splitArgs', () => {
             },
             'affected',
             {} as any,
-            {} as any
-          ).nxArgs
+            {} as any,
+          ).nxArgs,
         ).toEqual({
           base: 'envVarSha1',
           head: 'directlyOnCommandSha1',
@@ -239,14 +239,14 @@ describe('splitArgs', () => {
             },
             'affected',
             {} as any,
-            {} as any
-          ).nxArgs
+            {} as any,
+          ).nxArgs,
         ).toEqual({
           base: 'directlyOnCommandSha2',
           head: 'envVarSha2',
           skipNxCache: false,
         });
-      }
+      },
     );
   });
 
@@ -265,8 +265,8 @@ describe('splitArgs', () => {
               tasksRunnerOptions: {
                 'some-env-runner-name': { runner: '' },
               },
-            }
-          ).nxArgs.runner
+            },
+          ).nxArgs.runner,
         ).toEqual('some-env-runner-name');
 
         expect(
@@ -282,8 +282,8 @@ describe('splitArgs', () => {
               tasksRunnerOptions: {
                 'some-env-runner-name': { runner: '' },
               },
-            }
-          ).nxArgs.runner
+            },
+          ).nxArgs.runner,
         ).toEqual('directlyOnCommand');
       });
     });
@@ -302,8 +302,8 @@ describe('splitArgs', () => {
               tasksRunnerOptions: {
                 'some-env-runner-name': { runner: '' },
               },
-            }
-          ).nxArgs.runner
+            },
+          ).nxArgs.runner,
         ).toEqual('some-env-runner-name');
 
         expect(
@@ -319,8 +319,8 @@ describe('splitArgs', () => {
               tasksRunnerOptions: {
                 'some-env-runner-name': { runner: '' },
               },
-            }
-          ).nxArgs.runner
+            },
+          ).nxArgs.runner,
         ).toEqual('directlyOnCommand');
       });
     });
@@ -345,10 +345,10 @@ describe('splitArgs', () => {
                   'some-env-runner-name': { runner: '' },
                   'some-other-runner': { runner: '' },
                 },
-              }
-            ).nxArgs.runner
+              },
+            ).nxArgs.runner,
           ).toEqual('some-env-runner-name');
-        }
+        },
       );
     });
 
@@ -367,10 +367,10 @@ describe('splitArgs', () => {
               },
               'run-one',
               {} as any,
-              {} as any
-            ).nxArgs.runner
+              {} as any,
+            ).nxArgs.runner,
           ).not.toBeDefined();
-        }
+        },
       );
     });
   });
@@ -385,7 +385,7 @@ describe('splitArgs', () => {
         },
         'affected',
         {} as any,
-        {} as any
+        {} as any,
       ).nxArgs.parallel;
 
       expect(parallel).toEqual(5);
@@ -400,7 +400,7 @@ describe('splitArgs', () => {
         },
         'affected',
         {} as any,
-        {} as any
+        {} as any,
       ).nxArgs.parallel;
 
       expect(parallel).toEqual(3);
@@ -415,7 +415,7 @@ describe('splitArgs', () => {
         },
         'affected',
         {} as any,
-        {} as any
+        {} as any,
       ).nxArgs.parallel;
 
       expect(parallel).toEqual(3);
@@ -430,7 +430,7 @@ describe('splitArgs', () => {
         },
         'affected',
         {} as any,
-        {} as any
+        {} as any,
       ).nxArgs.parallel;
 
       expect(parallel).toEqual(1);
@@ -446,7 +446,7 @@ describe('splitArgs', () => {
         },
         'affected',
         {} as any,
-        {} as any
+        {} as any,
       ).nxArgs.parallel;
 
       expect(parallel).toEqual(5);
@@ -462,7 +462,7 @@ describe('splitArgs', () => {
         },
         'affected',
         {} as any,
-        {} as any
+        {} as any,
       ).nxArgs.parallel;
 
       expect(parallel).toEqual(5);

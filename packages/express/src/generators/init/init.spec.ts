@@ -16,7 +16,7 @@ describe('init', () => {
     addDependenciesToPackageJson(
       tree,
       { '@nx/express': expressVersion, [existing]: existingVersion },
-      { [existing]: existingVersion }
+      { [existing]: existingVersion },
     );
     await initGenerator(tree, {});
     const packageJson = readJson(tree, 'package.json');

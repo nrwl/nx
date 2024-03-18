@@ -83,7 +83,7 @@ export class Cache {
     task: Task,
     terminalOutput: string | null,
     outputs: string[],
-    code: number
+    code: number,
   ) {
     return this.tryAndRetry(async () => {
       const td = join(this.cachePath, task.hash);
@@ -96,7 +96,7 @@ export class Cache {
       await mkdir(td);
       await writeFile(
         join(td, 'terminalOutput'),
-        terminalOutput ?? 'no terminal output'
+        terminalOutput ?? 'no terminal output',
       );
 
       await mkdir(join(td, 'outputs'));
@@ -109,7 +109,7 @@ export class Cache {
             const cached = join(td, 'outputs', f);
             await this.copy(src, cached);
           }
-        })
+        }),
       );
       // we need this file to account for partial writes to the cache folder.
       // creating this file is atomic, whereas creating a folder is not.
@@ -133,12 +133,12 @@ export class Cache {
   async copyFilesFromCache(
     hash: string,
     cachedResult: CachedResult,
-    outputs: string[]
+    outputs: string[],
   ) {
     return this.tryAndRetry(async () => {
       const expandedOutputs = await this.expandOutputsInCache(
         outputs,
-        cachedResult
+        cachedResult,
       );
       await Promise.all(
         expandedOutputs.map(async (f) => {
@@ -148,7 +148,7 @@ export class Cache {
             await this.remove(src);
             await this.copy(cached, src);
           }
-        })
+        }),
       );
     });
   }
@@ -163,14 +163,14 @@ export class Cache {
 
   private async expandOutputsInCache(
     outputs: string[],
-    cachedResult: CachedResult
+    cachedResult: CachedResult,
   ) {
     return this._expandOutputs(outputs, cachedResult.outputsPath);
   }
 
   private async _expandOutputs(
     outputs: string[],
-    cwd: string
+    cwd: string,
   ): Promise<string[]> {
     const { expandOutputs } = require('../native');
     performance.mark('expandOutputs:start');
@@ -179,7 +179,7 @@ export class Cache {
     performance.measure(
       'expandOutputs',
       'expandOutputs:start',
-      'expandOutputs:end'
+      'expandOutputs:end',
     );
 
     return results;
@@ -221,7 +221,7 @@ export class Cache {
     if (await pathExists(tdCommit)) {
       const terminalOutput = await readFile(
         join(td, 'terminalOutput'),
-        'utf-8'
+        'utf-8',
       );
       let code = 0;
       try {

@@ -41,10 +41,10 @@ describe('addDroppedDependencies', () => {
     await addDroppedDependencies(tree);
 
     expect(
-      readJson(tree, 'package.json').devDependencies['@nrwl/rollup']
+      readJson(tree, 'package.json').devDependencies['@nrwl/rollup'],
     ).toBeDefined();
     expect(
-      readJson(tree, 'package.json').devDependencies['@nrwl/cypress']
+      readJson(tree, 'package.json').devDependencies['@nrwl/cypress'],
     ).not.toBeDefined();
   });
 
@@ -62,10 +62,10 @@ describe('addDroppedDependencies', () => {
     await addDroppedDependencies(tree);
 
     expect(
-      readJson(tree, 'package.json').devDependencies['@nrwl/cypress']
+      readJson(tree, 'package.json').devDependencies['@nrwl/cypress'],
     ).toBeDefined();
     expect(
-      readJson(tree, 'package.json').devDependencies['@nrwl/rollup']
+      readJson(tree, 'package.json').devDependencies['@nrwl/rollup'],
     ).not.toBeDefined();
   });
 
@@ -83,10 +83,10 @@ describe('addDroppedDependencies', () => {
     await addDroppedDependencies(tree);
 
     expect(
-      readJson(tree, 'package.json').devDependencies['@nrwl/linter']
+      readJson(tree, 'package.json').devDependencies['@nrwl/linter'],
     ).toBeDefined();
     expect(
-      readJson(tree, 'package.json').devDependencies['@nrwl/cypress']
+      readJson(tree, 'package.json').devDependencies['@nrwl/cypress'],
     ).not.toBeDefined();
   });
 
@@ -106,10 +106,10 @@ describe('addDroppedDependencies', () => {
     await addDroppedDependencies(tree);
 
     expect(
-      readJson(tree, 'package.json').devDependencies['@nrwl/linter']
+      readJson(tree, 'package.json').devDependencies['@nrwl/linter'],
     ).toBeDefined();
     expect(
-      readJson(tree, 'package.json').devDependencies['@nrwl/cypress']
+      readJson(tree, 'package.json').devDependencies['@nrwl/cypress'],
     ).not.toBeDefined();
   });
 });

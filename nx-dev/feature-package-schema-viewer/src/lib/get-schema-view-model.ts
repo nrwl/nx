@@ -34,7 +34,7 @@ export interface SchemaViewModel {
 export function getSchemaViewModel(
   routerQuery: ParsedUrlQuery,
   pkg: ProcessedPackageMetadata,
-  schema: SchemaMetadata
+  schema: SchemaMetadata,
 ): SchemaViewModel | null {
   if (!schema.schema) return null;
 
@@ -60,7 +60,7 @@ export function getSchemaViewModel(
       return generateJsonExampleFor(
         this.schemaMetadata.schema as JsonSchema,
         this.lookup,
-        'both'
+        'both',
       );
     },
     hidden: schema.hidden,

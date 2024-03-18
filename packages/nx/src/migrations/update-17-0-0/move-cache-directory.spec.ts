@@ -18,7 +18,7 @@ describe('move-cache-directory', () => {
     tree.delete('.gitignore');
     migrate(tree);
     expect(tree.read('.gitignore', 'utf-8')).toMatchInlineSnapshot(
-      `".nx/cache"`
+      `".nx/cache"`,
     );
   });
 
@@ -48,7 +48,7 @@ describe('move-cache-directory', () => {
     tree.write('lerna.json', '{}');
     migrate(tree);
     expect(tree.read('.gitignore', 'utf-8')).toMatchInlineSnapshot(
-      `"node_modules"`
+      `"node_modules"`,
     );
   });
 

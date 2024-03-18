@@ -14,7 +14,7 @@ describe('getWorkspaceLayout', () => {
           appsDir: 'custom-apps',
           libsDir: 'custom-libs',
         },
-      })
+      }),
     );
     expect(getWorkspaceLayout(tree)).toEqual({
       appsDir: 'custom-apps',

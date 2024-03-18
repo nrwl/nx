@@ -4,7 +4,7 @@ export function buildSelector(
   name: string,
   prefix: string | undefined,
   projectPrefix: string | undefined,
-  casing: keyof Pick<ReturnType<typeof names>, 'fileName' | 'propertyName'>
+  casing: keyof Pick<ReturnType<typeof names>, 'fileName' | 'propertyName'>,
 ): string {
   let selector = name;
   prefix ??= projectPrefix;

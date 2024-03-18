@@ -44,7 +44,7 @@ export class TestButtonComponent {
   @Input() style: ButtonStyle = 'default';
   @Input() age?: number;
   @Input() isOn = false;      
-}`
+}`,
     );
   });
 

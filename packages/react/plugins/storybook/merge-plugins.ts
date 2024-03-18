@@ -9,7 +9,7 @@ export const mergeRules = (...args: RuleSetRule[]) =>
     if (
       rules.some(
         (includedPlugin) =>
-          includedPlugin.constructor.name === rule.constructor.name
+          includedPlugin.constructor.name === rule.constructor.name,
       )
     ) {
       return rules;
@@ -20,14 +20,17 @@ export const mergeRules = (...args: RuleSetRule[]) =>
 export const mergePlugins = (
   ...args: (WebpackPluginInstance | ResolvePluginInstance)[]
 ): (WebpackPluginInstance | ResolvePluginInstance)[] =>
-  args.reduce((plugins, plugin) => {
-    if (
-      plugins.some(
-        (includedPlugin) =>
-          includedPlugin.constructor.name === plugin.constructor.name
-      )
-    ) {
-      return plugins;
-    }
-    return [...plugins, plugin];
-  }, [] as (WebpackPluginInstance | ResolvePluginInstance)[]);
+  args.reduce(
+    (plugins, plugin) => {
+      if (
+        plugins.some(
+          (includedPlugin) =>
+            includedPlugin.constructor.name === plugin.constructor.name,
+        )
+      ) {
+        return plugins;
+      }
+      return [...plugins, plugin];
+    },
+    [] as (WebpackPluginInstance | ResolvePluginInstance)[],
+  );

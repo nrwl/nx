@@ -38,13 +38,13 @@ export class TaskOrchestrator {
   private tasksSchedule = new TasksSchedule(
     this.projectGraph,
     this.taskGraph,
-    this.options
+    this.options,
   );
 
   // region internal state
   private batchEnv = getEnvVariablesForBatchProcess(
     this.options.skipNxCache,
-    this.options.captureStderr
+    this.options.captureStderr,
   );
   private reverseTaskDeps = calculateReverseDeps(this.taskGraph);
 
@@ -69,7 +69,7 @@ export class TaskOrchestrator {
     private readonly taskGraph: TaskGraph,
     private readonly options: DefaultTasksRunnerOptions,
     private readonly bail: boolean,
-    private readonly daemon: DaemonClient
+    private readonly daemon: DaemonClient,
   ) {}
 
   async run() {
@@ -96,7 +96,7 @@ export class TaskOrchestrator {
     performance.measure(
       'task-execution',
       'task-execution:start',
-      'task-execution:end'
+      'task-execution:end',
     );
     this.cache.removeOldCacheRecords();
 
@@ -137,13 +137,13 @@ export class TaskOrchestrator {
 
     // block until some other task completes, then try again
     return new Promise((res) => this.waitingForTasks.push(res)).then(() =>
-      this.executeNextBatchOfTasksUsingTaskSchedule()
+      this.executeNextBatchOfTasksUsingTaskSchedule(),
     );
   }
 
   // region Processing Scheduled Tasks
   private async processScheduledTask(
-    taskId: string
+    taskId: string,
   ): Promise<NodeJS.ProcessEnv> {
     const task = this.taskGraph.tasks[taskId];
     const taskSpecificEnv = getTaskSpecificEnv(task);
@@ -154,7 +154,7 @@ export class TaskOrchestrator {
         this.projectGraph,
         this.taskGraph,
         task,
-        taskSpecificEnv
+        taskSpecificEnv,
       );
     }
 
@@ -172,11 +172,11 @@ export class TaskOrchestrator {
             this.projectGraph,
             this.taskGraph,
             task,
-            this.batchEnv
+            this.batchEnv,
           );
         }
         this.options.lifeCycle.scheduleTask(task);
-      })
+      }),
     );
   }
 
@@ -205,10 +205,10 @@ export class TaskOrchestrator {
     }[]
   > {
     const cacheableTasks = tasks.filter((t) =>
-      isCacheableTask(t, this.options)
+      isCacheableTask(t, this.options),
     );
     const res = await Promise.all(
-      cacheableTasks.map((t) => this.applyCachedResult(t))
+      cacheableTasks.map((t) => this.applyCachedResult(t)),
     );
     return res.filter((r) => r !== null);
   }
@@ -232,12 +232,12 @@ export class TaskOrchestrator {
     const status = cachedResult.remote
       ? 'remote-cache'
       : shouldCopyOutputsFromCache
-      ? 'local-cache'
-      : 'local-cache-kept-existing';
+        ? 'local-cache'
+        : 'local-cache-kept-existing';
     this.options.lifeCycle.printTaskTerminalOutput(
       task,
       status,
-      cachedResult.terminalOutput
+      cachedResult.terminalOutput,
     );
     return {
       task,
@@ -251,7 +251,7 @@ export class TaskOrchestrator {
   private async applyFromCacheOrRunBatch(
     doNotSkipCache: boolean,
     batch: Batch,
-    groupId: number
+    groupId: number,
   ) {
     const taskEntries = Object.entries(batch.taskGraph.tasks);
     const tasks = taskEntries.map(([, task]) => task);
@@ -271,7 +271,7 @@ export class TaskOrchestrator {
     if (results.length !== taskEntries.length) {
       const unrunTaskGraph = removeTasksFromTaskGraph(
         batch.taskGraph,
-        results.map(({ task }) => task.id)
+        results.map(({ task }) => task.id),
       );
 
       const batchResults = await this.runBatch(
@@ -279,7 +279,7 @@ export class TaskOrchestrator {
           executorName: batch.executorName,
           taskGraph: unrunTaskGraph,
         },
-        this.batchEnv
+        this.batchEnv,
       );
 
       results.push(...batchResults);
@@ -288,7 +288,7 @@ export class TaskOrchestrator {
     await this.postRunSteps(tasks, results, doNotSkipCache, { groupId });
 
     const tasksCompleted = taskEntries.filter(
-      ([taskId]) => this.completedTasks[taskId]
+      ([taskId]) => this.completedTasks[taskId],
     );
 
     // Batch is still not done, run it again
@@ -299,10 +299,10 @@ export class TaskOrchestrator {
           executorName: batch.executorName,
           taskGraph: removeTasksFromTaskGraph(
             batch.taskGraph,
-            tasksCompleted.map(([taskId]) => taskId)
+            tasksCompleted.map(([taskId]) => taskId),
           ),
         },
-        groupId
+        groupId,
       );
     }
   }
@@ -312,7 +312,7 @@ export class TaskOrchestrator {
       const results = await this.forkedProcessTaskRunner.forkProcessForBatch(
         batch,
         this.taskGraph,
-        env
+        env,
       );
       const batchResultEntries = Object.entries(results);
       return batchResultEntries.map(([taskId, result]) => ({
@@ -339,7 +339,7 @@ export class TaskOrchestrator {
   private async applyFromCacheOrRunTask(
     doNotSkipCache: boolean,
     task: Task,
-    groupId: number
+    groupId: number,
   ) {
     // Wait for task to be processed
     const taskSpecificEnv = await this.processedTasks.get(task.id);
@@ -361,7 +361,7 @@ export class TaskOrchestrator {
           this.options.skipNxCache,
           this.options.captureStderr,
           null,
-          null
+          null,
         )
       : getEnvVariablesForTask(
           task,
@@ -370,7 +370,7 @@ export class TaskOrchestrator {
           this.options.skipNxCache,
           this.options.captureStderr,
           temporaryOutputPath,
-          streamOutput
+          streamOutput,
         );
 
     let results: {
@@ -385,7 +385,7 @@ export class TaskOrchestrator {
         streamOutput && process.env.NX_PREFIX_OUTPUT === 'true';
       const targetConfiguration = getTargetConfigurationForTask(
         task,
-        this.projectGraph
+        this.projectGraph,
       );
       if (
         process.env.NX_RUN_COMMANDS_DIRECTLY !== 'false' &&
@@ -401,7 +401,7 @@ export class TaskOrchestrator {
           schema,
           task.target.project,
           relative(task.projectRoot ?? workspaceRoot, process.cwd()),
-          process.env.NX_VERBOSE_LOGGING === 'true'
+          process.env.NX_VERBOSE_LOGGING === 'true',
         );
         if (streamOutput) {
           const args = getPrintableCommandArgsForTask(task);
@@ -416,7 +416,7 @@ export class TaskOrchestrator {
           },
           {
             root: workspaceRoot, // only root is needed in runCommandsImpl
-          } as any
+          } as any,
         );
 
         const status = success ? 'success' : 'failure';
@@ -424,7 +424,7 @@ export class TaskOrchestrator {
           this.options.lifeCycle.printTaskTerminalOutput(
             task,
             status,
-            terminalOutput
+            terminalOutput,
           );
         }
 
@@ -440,7 +440,7 @@ export class TaskOrchestrator {
           env,
           pipeOutput,
           temporaryOutputPath,
-          streamOutput
+          streamOutput,
         );
         results.push({
           task,
@@ -457,7 +457,7 @@ export class TaskOrchestrator {
     env: NodeJS.ProcessEnv,
     pipeOutput: boolean,
     temporaryOutputPath: string,
-    streamOutput: boolean
+    streamOutput: boolean,
   ) {
     try {
       const usePtyFork = process.env.NX_NATIVE_COMMAND_RUNNER !== 'false';
@@ -508,7 +508,7 @@ export class TaskOrchestrator {
       terminalOutput?: string;
     }[],
     doNotSkipCache: boolean,
-    { groupId }: { groupId: number }
+    { groupId }: { groupId: number },
   ) {
     for (const task of tasks) {
       await this.recordOutputsHash(task);
@@ -524,7 +524,7 @@ export class TaskOrchestrator {
               status !== 'local-cache' &&
               status !== 'local-cache-kept-existing' &&
               status !== 'remote-cache' &&
-              status !== 'skipped'
+              status !== 'skipped',
           )
           .map((result) => ({
             ...result,
@@ -540,14 +540,14 @@ export class TaskOrchestrator {
           .filter(({ task, code }) => this.shouldCacheTaskResult(task, code))
           .filter(({ terminalOutput, outputs }) => terminalOutput || outputs)
           .map(async ({ task, code, terminalOutput, outputs }) =>
-            this.cache.put(task, terminalOutput, outputs, code)
-          )
+            this.cache.put(task, terminalOutput, outputs, code),
+          ),
       );
       performance.mark('cache-results-end');
       performance.measure(
         'cache-results',
         'cache-results-start',
-        'cache-results-end'
+        'cache-results-end',
       );
     }
     this.options.lifeCycle.endTasks(
@@ -566,7 +566,7 @@ export class TaskOrchestrator {
           code,
         };
       }),
-      { groupId }
+      { groupId },
     );
 
     this.complete(
@@ -575,7 +575,7 @@ export class TaskOrchestrator {
           taskId: task.id,
           status,
         };
-      })
+      }),
     );
 
     await this.scheduleNextTasks();
@@ -595,7 +595,7 @@ export class TaskOrchestrator {
     taskResults: {
       taskId: string;
       status: TaskStatus;
-    }[]
+    }[],
   ) {
     this.tasksSchedule.complete(taskResults.map(({ taskId }) => taskId));
 
@@ -615,7 +615,7 @@ export class TaskOrchestrator {
               this.reverseTaskDeps[taskId].map((depTaskId) => ({
                 taskId: depTaskId,
                 status: 'skipped',
-              }))
+              })),
             );
           }
         }

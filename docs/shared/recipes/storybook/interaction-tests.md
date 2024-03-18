@@ -103,11 +103,11 @@ export const ButtonClicked: Story = {
     const button = canvas.getByRole('button');
     await userEvent.click(button);
     expect(canvas.getByRole('button').innerText).toBe(
-      "You've clicked me 1 times"
+      "You've clicked me 1 times",
     );
     await userEvent.click(button);
     expect(canvas.getByRole('button').innerText).toBe(
-      "You've clicked me 2 times"
+      "You've clicked me 2 times",
     );
   },
 };

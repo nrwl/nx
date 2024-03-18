@@ -56,8 +56,8 @@ export function nxViteTsPaths(options: nxViteTsPathsOptions = {}) {
           workspaceRoot,
           'tmp',
           projectRootFromWorkspaceRoot,
-          'tsconfig.generated.json'
-        )
+          'tsconfig.generated.json',
+        ),
       );
       if (!foundTsConfigPath) {
         throw new Error(stripIndents`Unable to find a tsconfig in the workspace! 
@@ -74,11 +74,11 @@ There should at least be a tsconfig.base.json or tsconfig.json in the root of th
       matchTsPathEsm = createMatchPath(
         parsed.absoluteBaseUrl,
         parsed.paths,
-        options.mainFields
+        options.mainFields,
       );
 
       const rootLevelTsConfig = getTsConfig(
-        join(workspaceRoot, 'tsconfig.base.json')
+        join(workspaceRoot, 'tsconfig.base.json'),
       );
       const rootLevelParsed = loadConfig(rootLevelTsConfig);
       logIt('fallback parsed tsconfig: ', rootLevelParsed);
@@ -87,7 +87,7 @@ There should at least be a tsconfig.base.json or tsconfig.json in the root of th
         matchTsPathFallback = createMatchPath(
           rootLevelParsed.absoluteBaseUrl,
           rootLevelParsed.paths,
-          ['main', 'module']
+          ['main', 'module'],
         );
       }
     },
@@ -103,7 +103,7 @@ There should at least be a tsconfig.base.json or tsconfig.json in the root of th
       if (!resolvedFile) {
         if (tsConfigPathsEsm || tsConfigPathsFallback) {
           logIt(
-            `Unable to resolve ${importPath} with tsconfig paths. Using fallback file matching.`
+            `Unable to resolve ${importPath} with tsconfig paths. Using fallback file matching.`,
           );
           resolvedFile =
             loadFileFromPaths(tsConfigPathsEsm, importPath) ||
@@ -141,10 +141,10 @@ There should at least be a tsconfig.base.json or tsconfig.json in the root of th
 
   function loadFileFromPaths(
     tsconfig: ConfigLoaderSuccessResult,
-    importPath: string
+    importPath: string,
   ) {
     logIt(
-      `Trying to resolve file from config in ${tsconfig.configFileAbsolutePath}`
+      `Trying to resolve file from config in ${tsconfig.configFileAbsolutePath}`,
     );
     let resolvedFile: string;
     for (const alias in tsconfig.paths) {
@@ -155,11 +155,11 @@ There should at least be a tsconfig.base.json or tsconfig.json in the root of th
       if (importPath.startsWith(normalizedImport)) {
         const joinedPath = joinPathFragments(
           tsconfig.absoluteBaseUrl,
-          paths[0].replace(/\/\*$/, '')
+          paths[0].replace(/\/\*$/, ''),
         );
 
         resolvedFile = findFile(
-          importPath.replace(normalizedImport, joinedPath)
+          importPath.replace(normalizedImport, joinedPath),
         );
       }
     }

@@ -33,7 +33,7 @@ function readTargetsCache(): Record<
 }
 
 function writeTargetsToCache(
-  targets: Record<string, Record<string, TargetConfiguration>>
+  targets: Record<string, Record<string, TargetConfiguration>>,
 ) {
   writeJsonFile(cachePath, targets);
 }
@@ -89,7 +89,7 @@ async function buildNuxtTargets(
   configFilePath: string,
   projectRoot: string,
   options: NuxtPluginOptions,
-  context: CreateNodesContext
+  context: CreateNodesContext,
 ) {
   const nuxtConfig: {
     buildDir: string;
@@ -105,7 +105,7 @@ async function buildNuxtTargets(
     options.buildTargetName,
     namedInputs,
     buildOutputs,
-    projectRoot
+    projectRoot,
   );
 
   targets[options.serveTargetName] = serveTarget(projectRoot);
@@ -116,7 +116,7 @@ async function buildNuxtTargets(
     options.buildStaticTargetName,
     namedInputs,
     buildOutputs,
-    projectRoot
+    projectRoot,
   );
 
   return targets;
@@ -128,7 +128,7 @@ function buildTarget(
     [inputName: string]: any[];
   },
   buildOutputs: string[],
-  projectRoot: string
+  projectRoot: string,
 ) {
   return {
     command: `nuxt build`,
@@ -178,7 +178,7 @@ function buildStaticTarget(
     [inputName: string]: any[];
   },
   buildOutputs: string[],
-  projectRoot: string
+  projectRoot: string,
 ) {
   const targetConfig: TargetConfiguration = {
     command: `nuxt build --prerender`,
@@ -202,7 +202,7 @@ function buildStaticTarget(
 async function getInfoFromNuxtConfig(
   configFilePath: string,
   context: CreateNodesContext,
-  projectRoot: string
+  projectRoot: string,
 ): Promise<{
   buildDir: string;
 }> {
@@ -220,7 +220,7 @@ async function getInfoFromNuxtConfig(
 
 function getOutputs(
   nuxtConfig: { buildDir: string },
-  projectRoot: string
+  projectRoot: string,
 ): {
   buildOutputs: string[];
 } {
@@ -230,7 +230,7 @@ function getOutputs(
     // we want the "general" outputPath to be `something/something`
     nuxtBuildDir = nuxtConfig.buildDir.replace(
       basename(nuxtConfig.buildDir),
-      ''
+      '',
     );
   }
   const buildOutputPath = normalizeOutputPath(nuxtBuildDir, projectRoot);
@@ -242,7 +242,7 @@ function getOutputs(
 
 function normalizeOutputPath(
   outputPath: string | undefined,
-  projectRoot: string
+  projectRoot: string,
 ): string {
   if (!outputPath) {
     if (projectRoot === '.') {

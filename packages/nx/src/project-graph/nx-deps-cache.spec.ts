@@ -17,8 +17,8 @@ describe('nx deps utils', () => {
           createPackageJsonDeps({}),
           createProjectsConfiguration({}),
           createNxJson({}),
-          createTsConfigJson()
-        )
+          createTsConfigJson(),
+        ),
       ).toEqual(false);
     });
 
@@ -29,8 +29,8 @@ describe('nx deps utils', () => {
           createPackageJsonDeps({}),
           createProjectsConfiguration({}),
           createNxJson({}),
-          createTsConfigJson()
-        )
+          createTsConfigJson(),
+        ),
       ).toEqual(true);
     });
 
@@ -43,8 +43,8 @@ describe('nx deps utils', () => {
           createPackageJsonDeps({}),
           createProjectsConfiguration({}),
           createNxJson({}),
-          createTsConfigJson()
-        )
+          createTsConfigJson(),
+        ),
       ).toEqual(true);
     });
 
@@ -62,8 +62,8 @@ describe('nx deps utils', () => {
           createPackageJsonDeps({}),
           createProjectsConfiguration({}),
           createNxJson({}),
-          createTsConfigJson()
-        )
+          createTsConfigJson(),
+        ),
       ).toEqual(true);
     });
 
@@ -74,8 +74,8 @@ describe('nx deps utils', () => {
           createPackageJsonDeps({}),
           createProjectsConfiguration({}),
           createNxJson({}),
-          createTsConfigJson({ mylib: ['libs/mylib/changed.ts'] })
-        )
+          createTsConfigJson({ mylib: ['libs/mylib/changed.ts'] }),
+        ),
       ).toEqual(true);
     });
 
@@ -88,8 +88,8 @@ describe('nx deps utils', () => {
           createNxJson({
             plugins: ['plugin', 'plugin2'],
           }),
-          createTsConfigJson()
-        )
+          createTsConfigJson(),
+        ),
       ).toEqual(true);
     });
 
@@ -100,8 +100,8 @@ describe('nx deps utils', () => {
           createPackageJsonDeps({ plugin: '2.0.0' }),
           createProjectsConfiguration({}),
           createNxJson({}),
-          createTsConfigJson()
-        )
+          createTsConfigJson(),
+        ),
       ).toEqual(true);
     });
 
@@ -112,8 +112,8 @@ describe('nx deps utils', () => {
           createPackageJsonDeps({ plugin: '2.0.0' }),
           createProjectsConfiguration({}),
           createNxJson({ pluginsConfig: { somePlugin: { one: 1 } } }),
-          createTsConfigJson()
-        )
+          createTsConfigJson(),
+        ),
       ).toEqual(true);
     });
   });
@@ -144,7 +144,7 @@ describe('nx deps utils', () => {
               ],
             },
           },
-        })
+        }),
       );
       expect(r.filesToProcess).toEqual({
         projectFileMap: {},
@@ -194,7 +194,7 @@ describe('nx deps utils', () => {
               ],
             },
           },
-        })
+        }),
       );
       expect(r.filesToProcess).toEqual({
         projectFileMap: {
@@ -261,7 +261,7 @@ describe('nx deps utils', () => {
               ],
             },
           },
-        })
+        }),
       );
       expect(r.filesToProcess).toEqual({
         nonProjectFiles: [],
@@ -302,7 +302,7 @@ describe('nx deps utils', () => {
         createNxJson({}),
         createPackageJsonDeps({}),
         {} as any,
-        undefined
+        undefined,
       );
 
       expect(result).toBeDefined();
@@ -329,7 +329,7 @@ describe('nx deps utils', () => {
   }
 
   function createPackageJsonDeps(
-    p: Record<string, string>
+    p: Record<string, string>,
   ): Record<string, string> {
     const defaults = {
       '@nx/workspace': '12.0.0',
@@ -339,7 +339,7 @@ describe('nx deps utils', () => {
   }
 
   function createProjectsConfiguration(
-    p: any
+    p: any,
   ): Record<string, ProjectConfiguration> {
     return { mylib: {}, ...p };
   }

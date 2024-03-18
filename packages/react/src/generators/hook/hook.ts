@@ -77,7 +77,7 @@ function addExportsToBarrel(host: Tree, options: NormalizedSchema) {
   if (options.export && !isApp) {
     const indexFilePath = joinPathFragments(
       options.projectSourceRoot,
-      options.js ? 'index.js' : 'index.ts'
+      options.js ? 'index.js' : 'index.ts',
     );
     const indexSource = host.read(indexFilePath, 'utf-8');
     if (indexSource !== null) {
@@ -85,14 +85,14 @@ function addExportsToBarrel(host: Tree, options: NormalizedSchema) {
         indexFilePath,
         indexSource,
         tsModule.ScriptTarget.Latest,
-        true
+        true,
       );
       const changes = applyChangesToString(
         indexSource,
         addImport(
           indexSourceFile,
-          `export * from './${options.directory}/${options.fileName}';`
-        )
+          `export * from './${options.directory}/${options.fileName}';`,
+        ),
       );
       host.write(indexFilePath, changes);
     }
@@ -101,7 +101,7 @@ function addExportsToBarrel(host: Tree, options: NormalizedSchema) {
 
 async function normalizeOptions(
   host: Tree,
-  options: Schema
+  options: Schema,
 ): Promise<NormalizedSchema> {
   assertValidOptions(options);
 
@@ -139,8 +139,8 @@ async function normalizeOptions(
     nameAndDirectoryFormat === 'as-provided'
       ? fileName
       : options.pascalCaseFiles
-      ? 'use'.concat(className)
-      : 'use-'.concat(fileName);
+        ? 'use'.concat(className)
+        : 'use-'.concat(fileName);
   const hookName = 'use'.concat(className);
   const hookTypeName = 'Use'.concat(className);
   const project = getProjects(host).get(projectName);
@@ -149,7 +149,7 @@ async function normalizeOptions(
 
   if (options.export && projectType === 'application') {
     logger.warn(
-      `The "--export" option should not be used with applications and will do nothing.`
+      `The "--export" option should not be used with applications and will do nothing.`,
     );
   }
 
@@ -162,7 +162,7 @@ async function normalizeOptions(
       parts.push(
         options.pascalCaseDirectory
           ? 'use'.concat(className)
-          : 'use-'.concat(fileName)
+          : 'use-'.concat(fileName),
       );
     }
     directory = parts.join('/');
@@ -189,7 +189,7 @@ function assertValidOptions(options: Schema) {
         suggestion = `${options.directory}${s}${suggestion}`;
       }
       throw new Error(
-        `Found "${s}" in the hook name. Did you mean to use the --directory option (e.g. \`nx g c ${name} --directory ${suggestion}\`)?`
+        `Found "${s}" in the hook name. Did you mean to use the --directory option (e.g. \`nx g c ${name} --directory ${suggestion}\`)?`,
       );
     }
   });

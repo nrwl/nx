@@ -33,7 +33,7 @@ describe('webWorker generator', () => {
     });
 
     expect(tree.read(`${appName}/tsconfig.worker.json`, 'utf-8')).toContain(
-      '"extends": "../tsconfig.base.json"'
+      '"extends": "../tsconfig.base.json"',
     );
   });
 
@@ -47,7 +47,7 @@ describe('webWorker generator', () => {
     });
 
     expect(tree.read(`${appName}/tsconfig.worker.json`, 'utf-8')).toContain(
-      '"extends": "../tsconfig.json"'
+      '"extends": "../tsconfig.json"',
     );
   });
 

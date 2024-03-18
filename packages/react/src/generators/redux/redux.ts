@@ -52,7 +52,7 @@ function generateReduxFiles(host: Tree, options: NormalizedSchema) {
     {
       ...options,
       tmpl: '',
-    }
+    },
   );
 
   if (options.js) {
@@ -67,7 +67,7 @@ function addReduxPackageDependencies(host: Tree) {
       '@reduxjs/toolkit': reduxjsToolkitVersion,
       'react-redux': reactReduxVersion,
     },
-    {}
+    {},
   );
 }
 
@@ -78,7 +78,7 @@ function addExportsToBarrel(host: Tree, options: NormalizedSchema) {
 
   const indexFilePath = path.join(
     options.projectSourcePath,
-    options.js ? 'index.js' : 'index.ts'
+    options.js ? 'index.js' : 'index.ts',
   );
 
   const indexSource = host.read(indexFilePath, 'utf-8');
@@ -87,7 +87,7 @@ function addExportsToBarrel(host: Tree, options: NormalizedSchema) {
       indexFilePath,
       indexSource,
       tsModule.ScriptTarget.Latest,
-      true
+      true,
     );
 
     const statePath = options.directory
@@ -95,7 +95,7 @@ function addExportsToBarrel(host: Tree, options: NormalizedSchema) {
       : `./lib/${options.fileName}`;
     const changes = applyChangesToString(
       indexSource,
-      addImport(indexSourceFile, `export * from '${statePath}.slice';`)
+      addImport(indexSourceFile, `export * from '${statePath}.slice';`),
     );
     host.write(indexFilePath, changes);
   }
@@ -112,11 +112,11 @@ function addStoreConfiguration(host: Tree, options: NormalizedSchema) {
       options.appMainFilePath,
       mainSource,
       tsModule.ScriptTarget.Latest,
-      true
+      true,
     );
     const changes = applyChangesToString(
       mainSource,
-      addReduxStoreToMain(options.appMainFilePath, mainSourceFile)
+      addReduxStoreToMain(options.appMainFilePath, mainSourceFile),
     );
     host.write(options.appMainFilePath, changes);
   }
@@ -136,7 +136,7 @@ function updateReducerConfiguration(host: Tree, options: NormalizedSchema) {
     options.appMainFilePath,
     mainSource,
     tsModule.ScriptTarget.Latest,
-    true
+    true,
   );
   const changes = applyChangesToString(
     mainSource,
@@ -144,14 +144,14 @@ function updateReducerConfiguration(host: Tree, options: NormalizedSchema) {
       keyName: `${options.constantName}_FEATURE_KEY`,
       reducerName: `${options.propertyName}Reducer`,
       modulePath: `${options.projectModulePath}`,
-    })
+    }),
   );
   host.write(options.appMainFilePath, changes);
 }
 
 async function normalizeOptions(
   host: Tree,
-  options: Schema
+  options: Schema,
 ): Promise<NormalizedSchema> {
   const {
     artifactName: name,
@@ -187,7 +187,7 @@ async function normalizeOptions(
         ? `./app/${options.directory}/${extraNames.fileName}.slice`
         : `./app/${extraNames.fileName}.slice`
       : Object.keys(tsPaths).find((k) =>
-          tsPaths[k].some((s) => s.includes(sourceRoot))
+          tsPaths[k].some((s) => s.includes(sourceRoot)),
         );
 
   // If --project is set to an app, automatically configure store
@@ -199,17 +199,17 @@ async function normalizeOptions(
     const appConfig = projects.get(options.appProject);
     if (appConfig.projectType !== 'application') {
       throw new Error(
-        `Expected ${options.appProject} to be an application but got ${appConfig.projectType}`
+        `Expected ${options.appProject} to be an application but got ${appConfig.projectType}`,
       );
     }
     appProjectSourcePath = appConfig.sourceRoot;
     appMainFilePath = path.join(
       appProjectSourcePath,
-      options.js ? 'main.js' : 'main.tsx'
+      options.js ? 'main.js' : 'main.tsx',
     );
     if (!host.exists(appMainFilePath)) {
       throw new Error(
-        `Could not find ${appMainFilePath} during store configuration`
+        `Could not find ${appMainFilePath} during store configuration`,
       );
     }
   }

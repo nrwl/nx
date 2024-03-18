@@ -30,7 +30,7 @@ describe('Cypress Migration - update-cy-tsconfig', () => {
     };
     tree.write(
       'libs/my-lib/cypress/tsconfig.json',
-      JSON.stringify(tsconfig, null, 2)
+      JSON.stringify(tsconfig, null, 2),
     );
     updateJson(tree, 'libs/my-lib/tsconfig.json', (json) => {
       json.references ??= [];
@@ -40,10 +40,10 @@ describe('Cypress Migration - update-cy-tsconfig', () => {
 
     await normalizeCyTsConfigNames(tree);
     expect(readJson(tree, 'libs/my-lib/tsconfig.json').references).toEqual(
-      expect.arrayContaining([{ path: './cypress/tsconfig.json' }])
+      expect.arrayContaining([{ path: './cypress/tsconfig.json' }]),
     );
     expect(readJson(tree, 'libs/my-lib/cypress/tsconfig.json')).toEqual(
-      tsconfig
+      tsconfig,
     );
   });
 
@@ -71,7 +71,7 @@ describe('Cypress Migration - update-cy-tsconfig', () => {
 
     tree.write(
       'libs/my-lib/cypress/tsconfig.cy.json',
-      JSON.stringify(tsconfig, null, 2)
+      JSON.stringify(tsconfig, null, 2),
     );
 
     updateJson(tree, 'libs/my-lib/tsconfig.json', (json) => {
@@ -83,10 +83,10 @@ describe('Cypress Migration - update-cy-tsconfig', () => {
     await normalizeCyTsConfigNames(tree);
     expect(tree.exists('libs/my-lib/cypress/tsconfig.cy.json')).toBeFalsy();
     expect(readJson(tree, 'libs/my-lib/tsconfig.json').references).toEqual(
-      expect.arrayContaining([{ path: './cypress/tsconfig.json' }])
+      expect.arrayContaining([{ path: './cypress/tsconfig.json' }]),
     );
     expect(readJson(tree, 'libs/my-lib/cypress/tsconfig.json')).toEqual(
-      tsconfig
+      tsconfig,
     );
   });
 
@@ -114,7 +114,7 @@ describe('Cypress Migration - update-cy-tsconfig', () => {
 
     tree.write(
       'libs/my-lib/tsconfig.cy.json',
-      JSON.stringify(tsconfig, null, 2)
+      JSON.stringify(tsconfig, null, 2),
     );
     updateJson(tree, 'libs/my-lib/tsconfig.json', (json) => {
       json.references ??= [];
@@ -125,7 +125,7 @@ describe('Cypress Migration - update-cy-tsconfig', () => {
     await normalizeCyTsConfigNames(tree);
     expect(tree.exists('libs/my-lib/tsconfig.cy.json')).toBeFalsy();
     expect(readJson(tree, 'libs/my-lib/tsconfig.json').references).toEqual(
-      expect.arrayContaining([{ path: './cypress/tsconfig.json' }])
+      expect.arrayContaining([{ path: './cypress/tsconfig.json' }]),
     );
     expect(readJson(tree, 'libs/my-lib/cypress/tsconfig.json')).toEqual({
       extends: '../tsconfig.json',
@@ -171,7 +171,7 @@ describe('Cypress Migration - update-cy-tsconfig', () => {
 
     tree.write(
       'libs/my-lib/tsconfig.cy.json',
-      JSON.stringify(tsconfig, null, 2)
+      JSON.stringify(tsconfig, null, 2),
     );
     updateJson(tree, 'libs/my-lib/tsconfig.json', (json) => {
       json.references ??= [];
@@ -182,7 +182,7 @@ describe('Cypress Migration - update-cy-tsconfig', () => {
     await normalizeCyTsConfigNames(tree);
     expect(tree.exists('libs/my-lib/tsconfig.cy.json')).toBeFalsy();
     expect(readJson(tree, 'libs/my-lib/tsconfig.json').references).toEqual(
-      expect.arrayContaining([{ path: './cypress/tsconfig.json' }])
+      expect.arrayContaining([{ path: './cypress/tsconfig.json' }]),
     );
     expect(readJson(tree, 'libs/my-lib/cypress/tsconfig.json')).toEqual({
       extends: '../tsconfig.json',

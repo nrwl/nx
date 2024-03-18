@@ -21,7 +21,7 @@ describe('exportScam', () => {
         projectName: 'app1',
         inlineScam: true,
         export: true,
-      })
+      }),
     ).not.toThrow();
   });
 
@@ -48,7 +48,7 @@ describe('exportScam', () => {
     // ASSERT
     const entryPointSource = tree.read(`libs/lib1/src/index.ts`, 'utf-8');
     expect(entryPointSource).toMatchInlineSnapshot(
-      `"export * from './lib/example/example.component';"`
+      `"export * from './lib/example/example.component';"`,
     );
   });
 
@@ -107,10 +107,10 @@ describe('exportScam', () => {
     // ASSERT
     const entryPointSource = tree.read(
       `libs/lib1/feature/src/index.ts`,
-      'utf-8'
+      'utf-8',
     );
     expect(entryPointSource).toMatchInlineSnapshot(
-      `"export * from './lib/example/example.component';"`
+      `"export * from './lib/example/example.component';"`,
     );
   });
 });

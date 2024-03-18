@@ -15,7 +15,7 @@ export async function addTestSetupToIgnoredInputs(tree: Tree) {
   if (
     nxJson.namedInputs?.production &&
     !nxJson.namedInputs.production.includes(
-      '!{projectRoot}/src/test-setup.[jt]s'
+      '!{projectRoot}/src/test-setup.[jt]s',
     )
   ) {
     nxJson.namedInputs.production.push('!{projectRoot}/src/test-setup.[jt]s');

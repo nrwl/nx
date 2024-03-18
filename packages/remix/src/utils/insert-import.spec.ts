@@ -15,7 +15,7 @@ describe('insertImport', () => {
     insertImport(tree, 'index.ts', 'b', 'a-path');
 
     expect(tree.read('index.ts', 'utf-8')).toMatchInlineSnapshot(
-      `"import { a ,b} from 'a-path';"`
+      `"import { a ,b} from 'a-path';"`,
     );
   });
 
@@ -25,7 +25,7 @@ describe('insertImport', () => {
     insertImport(tree, 'index.ts', 'b', 'a-path');
 
     expect(tree.read('index.ts', 'utf-8')).toMatchInlineSnapshot(
-      `"import { a, b,} from 'a-path';"`
+      `"import { a, b,} from 'a-path';"`,
     );
   });
 
@@ -46,7 +46,7 @@ describe('insertImport', () => {
     insertImport(tree, 'index.ts', 'b', 'a-path', { typeOnly: true });
 
     expect(tree.read('index.ts', 'utf-8')).toMatchInlineSnapshot(
-      `"import type { a ,b} from 'a-path';"`
+      `"import type { a ,b} from 'a-path';"`,
     );
   });
 
@@ -56,7 +56,7 @@ describe('insertImport', () => {
     insertImport(tree, 'index.ts', 'b', 'a-path', { typeOnly: true });
 
     expect(tree.read('index.ts', 'utf-8')).toMatchInlineSnapshot(
-      `"import type { a, b,} from 'a-path';"`
+      `"import type { a, b,} from 'a-path';"`,
     );
   });
 
@@ -87,7 +87,7 @@ describe('insertImport', () => {
     insertImport(tree, 'index.ts', 'a', 'a-path');
 
     expect(tree.read('index.ts', 'utf-8')).toMatchInlineSnapshot(
-      `"import { a } from 'a-path';"`
+      `"import { a } from 'a-path';"`,
     );
   });
 });

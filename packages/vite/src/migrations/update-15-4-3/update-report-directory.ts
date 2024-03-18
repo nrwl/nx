@@ -21,7 +21,9 @@ export function updateReportDirectoryPlaceholders(tree: Tree) {
         options.reportsDirectory = options.reportsDirectory
           .replace(
             '{workspaceRoot}/',
-            projectConfig.root === '.' ? '' : offsetFromRoot(projectConfig.root)
+            projectConfig.root === '.'
+              ? ''
+              : offsetFromRoot(projectConfig.root),
           )
           .replace('{projectRoot}', coverageOutput);
         if (configName) {
@@ -36,13 +38,13 @@ export function updateReportDirectoryPlaceholders(tree: Tree) {
           ].outputs.map((output) =>
             output.replace(
               '{projectRoot}/coverage',
-              `coverage/${coverageOutput}`
-            )
+              `coverage/${coverageOutput}`,
+            ),
           );
         }
         updateProjectConfiguration(tree, projectName, projectConfig);
       }
-    }
+    },
   );
 }
 

@@ -9,14 +9,14 @@ import type { RemixLibraryOptions } from './normalize-options';
 
 export function addTsconfigEntryPoints(
   tree: Tree,
-  options: RemixLibraryOptions
+  options: RemixLibraryOptions,
 ) {
   const { sourceRoot } = readProjectConfiguration(tree, options.projectName);
   const serverFilePath = joinPathFragments(sourceRoot, 'server.ts');
 
   tree.write(
     serverFilePath,
-    `// This file should be used to export ONLY server-code from the library.`
+    `// This file should be used to export ONLY server-code from the library.`,
   );
 
   const baseTsConfig = getRootTsConfigPathInTree(tree);

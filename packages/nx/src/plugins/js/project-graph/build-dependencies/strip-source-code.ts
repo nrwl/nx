@@ -155,7 +155,7 @@ export function stripSourceCode(scanner: Scanner, contents: string): string {
 }
 
 function shouldRescanSlashToken(
-  lastNonTriviaToken: import('typescript').SyntaxKind
+  lastNonTriviaToken: import('typescript').SyntaxKind,
 ) {
   switch (lastNonTriviaToken) {
     case SyntaxKind.Identifier:

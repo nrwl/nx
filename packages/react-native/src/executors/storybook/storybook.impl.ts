@@ -18,14 +18,14 @@ import { PackageJson } from 'nx/src/utils/package-json';
  */
 export default async function* reactNativeStorybookExecutor(
   options: ReactNativeStorybookOptions,
-  context: ExecutorContext
+  context: ExecutorContext,
 ): AsyncGenerator<{ success: boolean }> {
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
   logger.info(
     `${chalk.bold.cyan(
-      'info'
-    )} To see your Storybook stories on the device, you should start your mobile app for the <platform> of your choice (typically ios or android).`
+      'info',
+    )} To see your Storybook stories on the device, you should start your mobile app for the <platform> of your choice (typically ios or android).`,
   );
 
   // add storybook addons to app's package.json
@@ -33,7 +33,7 @@ export default async function* reactNativeStorybookExecutor(
   const workspacePackageJsonPath = join(context.root, 'package.json');
 
   const workspacePackageJson = readJsonFile<PackageJson>(
-    workspacePackageJsonPath
+    workspacePackageJsonPath,
   );
   const projectPackageJson = readJsonFile<PackageJson>(packageJsonPath);
 
@@ -54,8 +54,8 @@ export default async function* reactNativeStorybookExecutor(
           '@storybook/addon-ondevice-notes',
           '@react-native-async-storage/async-storage',
           'react-native-safe-area-context',
-        ]
-      )
+        ],
+      ),
     );
 
   runCliStorybook(context.root, options);
@@ -64,10 +64,10 @@ export default async function* reactNativeStorybookExecutor(
 
 export function runCliStorybook(
   workspaceRoot: string,
-  options: ReactNativeStorybookOptions
+  options: ReactNativeStorybookOptions,
 ) {
   const storiesFiles: string[] = options.searchDir.flatMap((dir) =>
-    globSync(join(dir, options.pattern))
+    globSync(join(dir, options.pattern)),
   );
   if (storiesFiles.length === 0) {
     logger.warn(`${chalk.bold.yellow('warn')} No stories found.`);

@@ -111,12 +111,12 @@ export type ActionStateStream<T, A> = Observable<
  * @param opts
  */
 export function pessimisticUpdate<T extends Array<unknown>, A extends Action>(
-  opts: PessimisticUpdateOpts<T, A>
+  opts: PessimisticUpdateOpts<T, A>,
 ) {
   return (source: ActionStatesStream<T, A>): Observable<Action> => {
     return source.pipe(
       mapActionAndState(),
-      concatMap(runWithErrorHandling(opts.run, opts.onError))
+      concatMap(runWithErrorHandling(opts.run, opts.onError)),
     );
   };
 }
@@ -180,12 +180,12 @@ export function pessimisticUpdate<T extends Array<unknown>, A extends Action>(
  * @param opts
  */
 export function optimisticUpdate<T extends Array<unknown>, A extends Action>(
-  opts: OptimisticUpdateOpts<T, A>
+  opts: OptimisticUpdateOpts<T, A>,
 ) {
   return (source: ActionStatesStream<T, A>): Observable<Action> => {
     return source.pipe(
       mapActionAndState(),
-      concatMap(runWithErrorHandling(opts.run, opts.undoAction))
+      concatMap(runWithErrorHandling(opts.run, opts.undoAction)),
     );
   };
 }
@@ -269,7 +269,7 @@ export function optimisticUpdate<T extends Array<unknown>, A extends Action>(
  * @param opts
  */
 export function fetch<T extends Array<unknown>, A extends Action>(
-  opts: FetchOpts<T, A>
+  opts: FetchOpts<T, A>,
 ) {
   return (source: ActionStatesStream<T, A>): Observable<Action> => {
     if (opts.id) {
@@ -277,19 +277,19 @@ export function fetch<T extends Array<unknown>, A extends Action>(
         mapActionAndState(),
         groupBy(([action, ...store]) => {
           return opts.id(action, ...store);
-        })
+        }),
       );
 
       return groupedFetches.pipe(
         mergeMap((pairs) =>
-          pairs.pipe(switchMap(runWithErrorHandling(opts.run, opts.onError)))
-        )
+          pairs.pipe(switchMap(runWithErrorHandling(opts.run, opts.onError))),
+        ),
       );
     }
 
     return source.pipe(
       mapActionAndState(),
-      concatMap(runWithErrorHandling(opts.run, opts.onError))
+      concatMap(runWithErrorHandling(opts.run, opts.onError)),
     );
   };
 }
@@ -345,7 +345,7 @@ export function fetch<T extends Array<unknown>, A extends Action>(
  */
 export function navigation<T extends Array<unknown>, A extends Action>(
   component: Type<any>,
-  opts: HandleNavigationOpts<T>
+  opts: HandleNavigationOpts<T>,
 ) {
   return (source: ActionStatesStream<T, A>) => {
     const nav = source.pipe(
@@ -363,7 +363,7 @@ export function navigation<T extends Array<unknown>, A extends Action>(
           ...slices,
         ] as [ActivatedRouteSnapshot, ...T];
       }),
-      filter(([snapshot]) => !!snapshot)
+      filter(([snapshot]) => !!snapshot),
     );
 
     return nav.pipe(switchMap(runWithErrorHandling(opts.run, opts.onError)));
@@ -371,14 +371,14 @@ export function navigation<T extends Array<unknown>, A extends Action>(
 }
 
 function isStateSnapshot(
-  action: any
+  action: any,
 ): action is RouterNavigationAction<RouterStateSnapshot> {
   return action.type === ROUTER_NAVIGATION;
 }
 
 function runWithErrorHandling<T extends Array<unknown>, A, R>(
   run: (a: A, ...slices: [...T]) => Observable<R> | R | void,
-  onError: any
+  onError: any,
 ) {
   return ([action, ...slices]: [A, ...T]): Observable<R> => {
     try {
@@ -397,7 +397,7 @@ function runWithErrorHandling<T extends Array<unknown>, A, R>(
 function mapActionAndState<T extends Array<unknown>, A>() {
   return (source: Observable<ActionOrActionWithStates<T, A>>) => {
     return source.pipe(
-      map((value) => normalizeActionAndState(value) as [A, ...T])
+      map((value) => normalizeActionAndState(value) as [A, ...T]),
     );
   };
 }
@@ -407,7 +407,7 @@ function mapActionAndState<T extends Array<unknown>, A>() {
  * into an array of action and slices (or undefined)
  */
 function normalizeActionAndState<T extends Array<unknown>, A>(
-  args: ActionOrActionWithStates<T, A>
+  args: ActionOrActionWithStates<T, A>,
 ): [A, ...T] {
   let action: A, slices: T;
 
@@ -423,7 +423,7 @@ function normalizeActionAndState<T extends Array<unknown>, A>(
 
 function findSnapshot(
   component: Type<any>,
-  s: ActivatedRouteSnapshot
+  s: ActivatedRouteSnapshot,
 ): ActivatedRouteSnapshot {
   if (s.routeConfig && s.routeConfig.component === component) {
     return s;

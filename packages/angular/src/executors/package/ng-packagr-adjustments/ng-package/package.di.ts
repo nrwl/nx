@@ -27,7 +27,7 @@ import { NX_ENTRY_POINT_TRANSFORM_TOKEN } from './entry-point/entry-point.di';
 import { NX_DEFAULT_OPTIONS_PROVIDER, NX_OPTIONS_TOKEN } from './options.di';
 
 export const NX_PACKAGE_TRANSFORM_TOKEN = new InjectionToken<Transform>(
-  `nx.v1.packageTransform`
+  `nx.v1.packageTransform`,
 );
 
 export const NX_PACKAGE_TRANSFORM: TransformProvider = provideTransform({

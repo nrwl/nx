@@ -30,7 +30,7 @@ describe('nextjs standalone playwright linting', () => {
 
     const output = runCLI(`lint ${appName}`);
     expect(output).toContain(
-      `Successfully ran target lint for project ${appName}`
+      `Successfully ran target lint for project ${appName}`,
     );
   });
 });

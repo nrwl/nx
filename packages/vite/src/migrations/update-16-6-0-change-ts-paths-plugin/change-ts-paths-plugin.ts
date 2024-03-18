@@ -22,7 +22,7 @@ export default function update(tree: Tree) {
       const oldTsConfigPathPlugin =
         tsquery.query(
           configContents,
-          'ImportDeclaration:has(StringLiteral[value="vite-tsconfig-paths"])'
+          'ImportDeclaration:has(StringLiteral[value="vite-tsconfig-paths"])',
         ) ?? [];
 
       if (oldTsConfigPathPlugin.length === 0) {
@@ -37,7 +37,7 @@ export default function update(tree: Tree) {
         `PropertyAssignment:has(Identifier[name="plugins"]) CallExpression:has(Identifier[name="${importName}"])`,
         () => {
           return `nxViteTsPaths()`;
-        }
+        },
       );
 
       const withImportChange = tsquery.replace(
@@ -45,10 +45,10 @@ export default function update(tree: Tree) {
         'ImportDeclaration:has(StringLiteral[value="vite-tsconfig-paths"])',
         () => {
           return "import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';";
-        }
+        },
       );
 
       tree.write(config, withImportChange);
-    }
+    },
   );
 }

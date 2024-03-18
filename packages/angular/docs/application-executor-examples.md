@@ -89,7 +89,7 @@ The executor accepts an `indexHtmlTransformer` option to provide a path to a fil
 export default function (indexContent: string) {
   return indexContent.replace(
     '<title>my-app</title>',
-    '<title>my-app (transformed)</title>'
+    '<title>my-app (transformed)</title>',
   );
 }
 ```

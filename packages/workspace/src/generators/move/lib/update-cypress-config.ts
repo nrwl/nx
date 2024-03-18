@@ -17,29 +17,29 @@ interface PartialCypressJson {
 export function updateCypressConfig(
   tree: Tree,
   schema: NormalizedSchema,
-  project: ProjectConfiguration
+  project: ProjectConfiguration,
 ) {
   const cypressJsonPath = path.join(
     schema.relativeToRootDestination,
-    'cypress.json'
+    'cypress.json',
   );
 
   if (tree.exists(cypressJsonPath)) {
     const cypressJson = JSON.parse(
-      tree.read(cypressJsonPath).toString('utf-8')
+      tree.read(cypressJsonPath).toString('utf-8'),
     ) as PartialCypressJson;
     // videosFolder is not required because videos can be turned off - it also has a default
     if (cypressJson.videosFolder) {
       cypressJson.videosFolder = cypressJson.videosFolder.replace(
         project.root,
-        schema.relativeToRootDestination
+        schema.relativeToRootDestination,
       );
     }
     // screenshotsFolder is not required as it has a default
     if (cypressJson.screenshotsFolder) {
       cypressJson.screenshotsFolder = cypressJson.screenshotsFolder.replace(
         project.root,
-        schema.relativeToRootDestination
+        schema.relativeToRootDestination,
       );
     }
 
@@ -49,7 +49,7 @@ export function updateCypressConfig(
 
   const cypressConfigPath = path.join(
     schema.relativeToRootDestination,
-    'cypress.config.ts'
+    'cypress.config.ts',
   );
   // Search and replace for "e2e" directory is not safe, and will result in an invalid config file.
   // Leave it and let users fix the config if needed.

@@ -299,10 +299,10 @@ When you check the CI logs for this PR, you'll notice that no tasks were run by 
     "default": ["{projectRoot}/**/*", "sharedGlobals"],
     "sharedGlobals": [
       "{workspaceRoot}/babel.config.json",
-      "{workspaceRoot}/.circleci/config.yml" // add this line
-    ]
+      "{workspaceRoot}/.circleci/config.yml", // add this line
+    ],
     // etc...
-  }
+  },
 }
 ```
 

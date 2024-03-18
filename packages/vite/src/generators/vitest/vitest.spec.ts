@@ -30,7 +30,8 @@ describe('vitest generator', () => {
 
     it('should add a tsconfig.spec.json file', async () => {
       const tsconfig = JSON.parse(
-        appTree.read('apps/my-test-react-app/tsconfig.json')?.toString() ?? '{}'
+        appTree.read('apps/my-test-react-app/tsconfig.json')?.toString() ??
+          '{}',
       );
       expect(tsconfig.references).toMatchInlineSnapshot(`
         [
@@ -45,7 +46,7 @@ describe('vitest generator', () => {
 
       const tsconfigSpec = JSON.parse(
         appTree.read('apps/my-test-react-app/tsconfig.spec.json')?.toString() ??
-          '{}'
+          '{}',
       );
       expect(tsconfigSpec).toMatchInlineSnapshot(`
         {
@@ -87,7 +88,7 @@ describe('vitest generator', () => {
       const tsconfig = JSON.parse(
         appTree
           .read('apps/my-test-react-app-2/tsconfig.app.json')
-          ?.toString() ?? '{}'
+          ?.toString() ?? '{}',
       );
       expect(tsconfig.compilerOptions.types).toMatchInlineSnapshot(`
         [
@@ -105,7 +106,7 @@ describe('vitest generator', () => {
     });
     it('should create correct vite.config.ts file for apps', async () => {
       expect(
-        appTree.read('apps/my-test-react-app/vite.config.ts', 'utf-8')
+        appTree.read('apps/my-test-react-app/vite.config.ts', 'utf-8'),
       ).toMatchSnapshot();
     });
 
@@ -113,7 +114,7 @@ describe('vitest generator', () => {
       mockReactLibNonBuildableJestTestRunnerGenerator(appTree);
       await generator(appTree, { ...options, project: 'react-lib-nonb-jest' });
       expect(
-        appTree.read('libs/react-lib-nonb-jest/vite.config.ts', 'utf-8')
+        appTree.read('libs/react-lib-nonb-jest/vite.config.ts', 'utf-8'),
       ).toMatchSnapshot();
     });
   });
@@ -126,7 +127,7 @@ describe('vitest generator', () => {
     });
     it('should add the insourceSource option in the vite config', async () => {
       expect(
-        appTree.read('apps/my-test-react-app/vite.config.ts', 'utf-8')
+        appTree.read('apps/my-test-react-app/vite.config.ts', 'utf-8'),
       ).toMatchSnapshot();
     });
   });

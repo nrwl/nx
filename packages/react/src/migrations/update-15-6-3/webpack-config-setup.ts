@@ -76,7 +76,7 @@ export default async function (tree: Tree) {
               // https://nx.dev/recipes/webpack/webpack-config-setup
               return require('./${justTheFileName}')(config, context);
             });
-            `
+            `,
         );
 
         options['isolatedConfig'] = true;
@@ -94,21 +94,20 @@ export default async function (tree: Tree) {
           You can read our guide on how to do this here: 
           
           https://nx.dev/recipes/webpack/webpack-config-setup
-          `
+          `,
         );
       } else {
         const projectConfiguration = readProjectConfiguration(
           tree,
-          projectName
+          projectName,
         );
 
         if (!options) {
           options = {} as WebpackExecutorOptions;
         }
 
-        options[
-          'webpackConfig'
-        ] = `${projectConfiguration.root}/webpack.config.js`;
+        options['webpackConfig'] =
+          `${projectConfiguration.root}/webpack.config.js`;
         options['isolatedConfig'] = true;
 
         tree.write(
@@ -125,13 +124,13 @@ export default async function (tree: Tree) {
             // https://nx.dev/recipes/webpack/webpack-config-setup
             return config;
           });
-        `
+        `,
         );
 
         projectConfiguration.targets[targetName].options = options;
         updateProjectConfiguration(tree, projectName, projectConfiguration);
       }
-    }
+    },
   );
 
   await formatFiles(tree);

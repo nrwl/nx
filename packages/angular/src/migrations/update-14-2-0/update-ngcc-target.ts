@@ -7,7 +7,7 @@ export default async function (tree: Tree) {
     if (json.scripts?.postinstall?.includes('ngcc ')) {
       json.scripts.postinstall = json.scripts.postinstall.replace(
         /(.*)(ngcc --properties es2015 )(.*)/,
-        '$1ngcc --properties es2020 $3'
+        '$1ngcc --properties es2020 $3',
       );
       shouldFormat = true;
     }

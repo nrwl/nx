@@ -33,7 +33,7 @@ describe('nx project.json plugin', () => {
           },
         }),
       },
-      '/root'
+      '/root',
     );
 
     expect(createNodes[1]('project.json', undefined, context))

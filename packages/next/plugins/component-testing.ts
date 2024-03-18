@@ -27,7 +27,7 @@ import { CypressExecutorOptions } from '@nx/cypress/src/executors/cypress/cypres
 
 export function nxComponentTestingPreset(
   pathToConfig: string,
-  options?: NxComponentTestingOptions
+  options?: NxComponentTestingOptions,
 ) {
   if (global.NX_GRAPH_CREATION || global.NX_CYPRESS_INIT_GENERATOR_RUNNING) {
     // this is only used by plugins, so we don't need the component testing
@@ -38,7 +38,7 @@ export function nxComponentTestingPreset(
   const graph = readCachedProjectGraph();
   const { targets: ctTargets, name: ctProjectName } = getProjectConfigByPath(
     graph,
-    pathToConfig
+    pathToConfig,
   );
   const ctTargetName = options?.ctTargetName || 'component-test';
   const ctConfigurationName = process.env.NX_CYPRESS_TARGET_CONFIGURATION;
@@ -47,7 +47,7 @@ export function nxComponentTestingPreset(
     ctTargets,
     ctProjectName,
     ctTargetName,
-    ctConfigurationName
+    ctConfigurationName,
   );
 
   let buildTarget: string = options?.buildTarget;
@@ -58,7 +58,7 @@ export function nxComponentTestingPreset(
         target: ctTargetName,
         configuration: ctConfigurationName,
       },
-      ctExecutorContext
+      ctExecutorContext,
     );
 
     buildTarget = ctExecutorOptions.devServerTarget;
@@ -85,7 +85,7 @@ export function nxComponentTestingPreset(
         `The '${parsedBuildTarget.target}' target of the '${[
           parsedBuildTarget.project,
         ]}' project is not using the '@nx/next:build' executor. ` +
-          `Please make sure to use '@nx/next:build' executor in that target to use Cypress Component Testing.`
+          `Please make sure to use '@nx/next:build' executor in that target to use Cypress Component Testing.`,
       );
     }
 
@@ -94,7 +94,7 @@ export function nxComponentTestingPreset(
       buildProjectConfig.targets,
       parsedBuildTarget.project,
       parsedBuildTarget.target,
-      parsedBuildTarget.configuration
+      parsedBuildTarget.configuration,
     );
     const buildExecutorOptions = readTargetOptions<NextBuildBuilderOptions>(
       {
@@ -102,7 +102,7 @@ export function nxComponentTestingPreset(
         target: parsedBuildTarget.target,
         configuration: parsedBuildTarget.configuration,
       },
-      buildExecutorContext
+      buildExecutorContext,
     );
 
     buildAssets ??= buildExecutorOptions.assets;
@@ -131,7 +131,7 @@ Able to find CT project, ${!!ctProjectConfig}.`);
     tsConfig: join(
       ctExecutorContext.root,
       ctProjectConfig.root,
-      'tsconfig.json'
+      'tsconfig.json',
     ),
   };
   const configure = composePluginsSync(
@@ -141,14 +141,14 @@ Able to find CT project, ${!!ctProjectConfig}.`);
       scripts: [],
       postcssConfig: ctProjectConfig.root,
     }),
-    withReact({})
+    withReact({}),
   );
   const webpackConfig = configure(
     {},
     {
       options: webpackOptions,
       context: ctExecutorContext,
-    }
+    },
   );
 
   return {

@@ -52,16 +52,16 @@ describe('15.4.5 migration (remove es2015-polyfills)', () => {
 
     expect(
       readProjectConfiguration(tree, 'app1').targets.build.options
-        .es2015Polyfills
+        .es2015Polyfills,
     ).toBeUndefined();
     expect(
       readProjectConfiguration(tree, 'app2').targets.custom.options
-        .es2015Polyfills
+        .es2015Polyfills,
     ).toBeUndefined();
     // Another executor, left intact.
     expect(
       readProjectConfiguration(tree, 'app3').targets.custom.options
-        .es2015Polyfills
+        .es2015Polyfills,
     ).toEqual('app3/polyfills.ts');
   });
 });

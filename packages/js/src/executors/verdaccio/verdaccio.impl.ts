@@ -16,13 +16,13 @@ let childProcess: ChildProcess;
  */
 export async function verdaccioExecutor(
   options: VerdaccioExecutorSchema,
-  context: ExecutorContext
+  context: ExecutorContext,
 ) {
   try {
     require.resolve('verdaccio');
   } catch (e) {
     throw new Error(
-      'Verdaccio is not installed. Please run `npm install verdaccio` or `yarn add verdaccio`'
+      'Verdaccio is not installed. Please run `npm install verdaccio` or `yarn add verdaccio`',
     );
   }
 
@@ -76,7 +76,7 @@ export async function verdaccioExecutor(
  */
 function startVerdaccio(
   options: VerdaccioExecutorSchema,
-  workspaceRoot: string
+  workspaceRoot: string,
 ) {
   return new Promise((resolve, reject) => {
     childProcess = fork(
@@ -91,7 +91,7 @@ function startVerdaccio(
             : {}),
         },
         stdio: 'inherit',
-      }
+      },
     );
 
     childProcess.on('error', (err) => {
@@ -112,7 +112,7 @@ function startVerdaccio(
 
 function createVerdaccioOptions(
   options: VerdaccioExecutorSchema,
-  workspaceRoot: string
+  workspaceRoot: string,
 ) {
   const verdaccioArgs: string[] = [];
   if (options.port) {
@@ -134,35 +134,35 @@ function setupNpm(options: VerdaccioExecutorSchema) {
   let npmRegistryPath: string;
   try {
     npmRegistryPath = execSync(
-      `npm config get registry --location ${options.location}`
+      `npm config get registry --location ${options.location}`,
     )
       ?.toString()
       ?.trim()
       ?.replace('\u001b[2K\u001b[1G', ''); // strip out ansi codes
     execSync(
-      `npm config set registry http://localhost:${options.port}/ --location ${options.location}`
+      `npm config set registry http://localhost:${options.port}/ --location ${options.location}`,
     );
     execSync(
-      `npm config set //localhost:${options.port}/:_authToken="secretVerdaccioToken" --location ${options.location}`
+      `npm config set //localhost:${options.port}/:_authToken="secretVerdaccioToken" --location ${options.location}`,
     );
     logger.info(`Set npm registry to http://localhost:${options.port}/`);
   } catch (e) {
     throw new Error(
-      `Failed to set npm registry to http://localhost:${options.port}/: ${e.message}`
+      `Failed to set npm registry to http://localhost:${options.port}/: ${e.message}`,
     );
   }
 
   return () => {
     try {
       const currentNpmRegistryPath = execSync(
-        `npm config get registry --location ${options.location}`
+        `npm config get registry --location ${options.location}`,
       )
         ?.toString()
         ?.trim()
         ?.replace('\u001b[2K\u001b[1G', ''); // strip out ansi codes
       if (npmRegistryPath && currentNpmRegistryPath.includes('localhost')) {
         execSync(
-          `npm config set registry ${npmRegistryPath} --location ${options.location}`
+          `npm config set registry ${npmRegistryPath} --location ${options.location}`,
         );
         logger.info(`Reset npm registry to ${npmRegistryPath}`);
       } else {
@@ -170,7 +170,7 @@ function setupNpm(options: VerdaccioExecutorSchema) {
         logger.info('Cleared custom npm registry');
       }
       execSync(
-        `npm config delete //localhost:${options.port}/:_authToken  --location ${options.location}`
+        `npm config delete //localhost:${options.port}/:_authToken  --location ${options.location}`,
       );
     } catch (e) {
       throw new Error(`Failed to reset npm registry: ${e.message}`);
@@ -182,26 +182,26 @@ function getYarnUnsafeHttpWhitelist(isYarnV1: boolean) {
   return !isYarnV1
     ? new Set<string>(
         JSON.parse(
-          execSync(`yarn config get unsafeHttpWhitelist --json`).toString()
-        )
+          execSync(`yarn config get unsafeHttpWhitelist --json`).toString(),
+        ),
       )
     : null;
 }
 
 function setYarnUnsafeHttpWhitelist(
   currentWhitelist: Set<string>,
-  options: VerdaccioExecutorSchema
+  options: VerdaccioExecutorSchema,
 ) {
   if (currentWhitelist.size > 0) {
     execSync(
       `yarn config set unsafeHttpWhitelist --json '${JSON.stringify(
-        Array.from(currentWhitelist)
-      )}'` + (options.location === 'user' ? ' --home' : '')
+        Array.from(currentWhitelist),
+      )}'` + (options.location === 'user' ? ' --home' : ''),
     );
   } else {
     execSync(
       `yarn config unset unsafeHttpWhitelist` +
-        (options.location === 'user' ? ' --home' : '')
+        (options.location === 'user' ? ' --home' : ''),
     );
   }
 }
@@ -225,7 +225,7 @@ function setupYarn(options: VerdaccioExecutorSchema) {
 
     execSync(
       `yarn config set ${registryConfigName} http://localhost:${options.port}/` +
-        (options.location === 'user' ? ' --home' : '')
+        (options.location === 'user' ? ' --home' : ''),
     );
 
     logger.info(`Set yarn registry to http://localhost:${options.port}/`);
@@ -241,14 +241,14 @@ function setupYarn(options: VerdaccioExecutorSchema) {
 
       setYarnUnsafeHttpWhitelist(currentWhitelist, options);
       logger.info(
-        `Whitelisted http://localhost:${options.port}/ as an unsafe http server`
+        `Whitelisted http://localhost:${options.port}/ as an unsafe http server`,
       );
     }
 
     return () => {
       try {
         const currentYarnRegistryPath = execSync(
-          `yarn config get ${registryConfigName}`
+          `yarn config get ${registryConfigName}`,
         )
           ?.toString()
           ?.trim()
@@ -256,17 +256,17 @@ function setupYarn(options: VerdaccioExecutorSchema) {
         if (yarnRegistryPath && currentYarnRegistryPath.includes('localhost')) {
           execSync(
             `yarn config set ${registryConfigName} ${yarnRegistryPath}` +
-              (options.location === 'user' ? ' --home' : '')
+              (options.location === 'user' ? ' --home' : ''),
           );
           logger.info(
-            `Reset yarn ${registryConfigName} to ${yarnRegistryPath}`
+            `Reset yarn ${registryConfigName} to ${yarnRegistryPath}`,
           );
         } else {
           execSync(
             `yarn config ${
               isYarnV1 ? 'delete' : 'unset'
             } ${registryConfigName}` +
-              (options.location === 'user' ? ' --home' : '')
+              (options.location === 'user' ? ' --home' : ''),
           );
           logger.info(`Cleared custom yarn ${registryConfigName}`);
         }
@@ -280,7 +280,7 @@ function setupYarn(options: VerdaccioExecutorSchema) {
 
             setYarnUnsafeHttpWhitelist(currentWhitelist, options);
             logger.info(
-              `Removed http://localhost:${options.port}/ as an unsafe http server`
+              `Removed http://localhost:${options.port}/ as an unsafe http server`,
             );
           }
         }
@@ -290,7 +290,7 @@ function setupYarn(options: VerdaccioExecutorSchema) {
     };
   } catch (e) {
     throw new Error(
-      `Failed to set yarn registry to http://localhost:${options.port}/: ${e.message}`
+      `Failed to set yarn registry to http://localhost:${options.port}/: ${e.message}`,
     );
   }
 }

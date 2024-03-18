@@ -203,7 +203,7 @@ describe('dev mode - task graph', () => {
           req.reply({
             body: expandedInputs,
           });
-        }
+        },
       ).as('getTaskInputs');
     });
     it('should display input files', () => {

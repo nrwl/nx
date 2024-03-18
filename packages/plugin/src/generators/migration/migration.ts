@@ -25,7 +25,7 @@ interface NormalizedSchema extends Schema {
 
 async function normalizeOptions(
   tree: Tree,
-  options: Schema
+  options: Schema,
 ): Promise<NormalizedSchema> {
   let name: string;
   if (options.name) {
@@ -75,7 +75,7 @@ function addFiles(host: Tree, options: NormalizedSchema) {
     host,
     path.join(__dirname, 'files/migration'),
     options.directory,
-    { ...options, tmpl: '' }
+    { ...options, tmpl: '' },
   );
 }
 
@@ -83,12 +83,12 @@ function updateMigrationsJson(host: Tree, options: NormalizedSchema) {
   const configuredMigrationPath = readNxMigrateConfig(
     readJson<PackageJson>(
       host,
-      joinPathFragments(options.projectRoot, 'package.json')
-    )
+      joinPathFragments(options.projectRoot, 'package.json'),
+    ),
   ).migrations;
   const migrationsPath = joinPathFragments(
     options.projectRoot,
-    configuredMigrationPath ?? 'migrations.json'
+    configuredMigrationPath ?? 'migrations.json',
   );
   const migrations = host.exists(migrationsPath)
     ? readJson(host, migrationsPath)
@@ -100,7 +100,7 @@ function updateMigrationsJson(host: Tree, options: NormalizedSchema) {
     description: options.description,
     implementation: `./${joinPathFragments(
       relative(options.projectRoot, options.directory),
-      options.name
+      options.name,
     )}`,
   };
   migrations.generators = generators;
@@ -143,7 +143,7 @@ function updatePackageJson(host: Tree, options: NormalizedSchema) {
       };
 
       return json;
-    }
+    },
   );
 }
 
@@ -186,12 +186,12 @@ export async function migrationGeneratorInternal(host: Tree, schema: Schema) {
   if (!host.exists('migrations.json')) {
     const packageJsonPath = joinPathFragments(
       options.projectRoot,
-      'package.json'
+      'package.json',
     );
     addMigrationJsonChecks(
       host,
       { projectName: options.project },
-      readJson<PackageJson>(host, packageJsonPath)
+      readJson<PackageJson>(host, packageJsonPath),
     );
   }
 

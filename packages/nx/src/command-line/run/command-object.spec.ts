@@ -25,7 +25,7 @@ describe('run-one command setup', () => {
       ]);
 
       compareArgs(infixArgs, runArgs);
-    }
+    },
   );
 
   describe('infix notation', () => {
@@ -97,7 +97,7 @@ function getParsedRunArgs(args: string[]) {
 function getParsedArgs(
   args: string[],
   command: yargs.CommandModule,
-  withOverridesLevel = 1
+  withOverridesLevel = 1,
 ) {
   let parsedArgs: any;
   yargs(args)

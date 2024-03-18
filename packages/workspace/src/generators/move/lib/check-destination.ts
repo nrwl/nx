@@ -12,7 +12,7 @@ import type { NormalizedSchema } from '../schema';
 export function checkDestination(
   tree: Tree,
   schema: NormalizedSchema,
-  providedDestination: string
+  providedDestination: string,
 ) {
   const INVALID_DESTINATION = `Invalid destination: [${providedDestination}]`;
 

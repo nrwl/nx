@@ -42,12 +42,12 @@ export function ProjectDetailsWrapper(props: ProjectDetailsProps) {
         navigate(
           routeConstructor(
             `/projects/${encodeURIComponent(data.projectName)}`,
-            true
-          )
+            true,
+          ),
         );
       }
     },
-    [externalApiService, routeConstructor, navigate, environment]
+    [externalApiService, routeConstructor, navigate, environment],
   );
 
   const handleViewInTaskGraph = useCallback(
@@ -67,12 +67,12 @@ export function ProjectDetailsWrapper(props: ProjectDetailsProps) {
               pathname: `/tasks/${encodeURIComponent(data.targetName)}`,
               search: `?projects=${encodeURIComponent(data.projectName)}`,
             },
-            true
-          )
+            true,
+          ),
         );
       }
     },
-    [externalApiService, routeConstructor, navigate, environment]
+    [externalApiService, routeConstructor, navigate, environment],
   );
 
   const handleRunTarget = useCallback(
@@ -82,7 +82,7 @@ export function ProjectDetailsWrapper(props: ProjectDetailsProps) {
         payload: { taskId: `${data.projectName}:${data.targetName}` },
       });
     },
-    [externalApiService]
+    [externalApiService],
   );
 
   const updateSearchParams = (params: URLSearchParams, sections: string[]) => {
@@ -98,7 +98,7 @@ export function ProjectDetailsWrapper(props: ProjectDetailsProps) {
       const expandedSections = searchParams.get('expanded')?.split(',') || [];
       if (!expandedSections.includes(targetName)) return;
       const newExpandedSections = expandedSections.filter(
-        (section) => section !== targetName
+        (section) => section !== targetName,
       );
       setSearchParams(
         (currentSearchParams) => {
@@ -108,10 +108,10 @@ export function ProjectDetailsWrapper(props: ProjectDetailsProps) {
         {
           replace: true,
           preventScrollReset: true,
-        }
+        },
       );
     },
-    [setSearchParams, searchParams]
+    [setSearchParams, searchParams],
   );
 
   const handleTargetExpand = useCallback(
@@ -124,10 +124,10 @@ export function ProjectDetailsWrapper(props: ProjectDetailsProps) {
           updateSearchParams(currentSearchParams, expandedSections);
           return currentSearchParams;
         },
-        { replace: true, preventScrollReset: true }
+        { replace: true, preventScrollReset: true },
       );
     },
-    [setSearchParams, searchParams]
+    [setSearchParams, searchParams],
   );
 
   useLayoutEffect(() => {

@@ -14,6 +14,6 @@ export function addTailwindRequiredPackages(tree: Tree): GeneratorCallback {
       autoprefixer: pkgVersions.autoprefixerVersion,
       postcss: pkgVersions.postcssVersion,
       tailwindcss: pkgVersions.tailwindVersion,
-    }
+    },
   );
 }

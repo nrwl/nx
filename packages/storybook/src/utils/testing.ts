@@ -5,7 +5,7 @@ import { Linter } from '@nx/eslint';
 
 export async function createTestUILibNoNgDevkit(
   appTree: Tree,
-  libName: string
+  libName: string,
 ): Promise<Tree> {
   await libraryGenerator(appTree, {
     linter: Linter.EsLint,
@@ -20,7 +20,7 @@ export async function createTestUILibNoNgDevkit(
 
 export function deleteNewConfigurationAndCreateNew(
   appTree: Tree,
-  projectStorybookRoot: string
+  projectStorybookRoot: string,
 ): Tree {
   // Remove new Storybook configuration
   appTree.delete(`.storybook/main.js`);
@@ -37,7 +37,7 @@ export function deleteNewConfigurationAndCreateNew(
   appTree.write(`${projectStorybookRoot}/addons.js`, 'console.log("hello")');
   appTree.write(
     `${projectStorybookRoot}/webpack.config.js`,
-    'console.log("hello")'
+    'console.log("hello")',
   );
   appTree.write(`${projectStorybookRoot}/tsconfig.json`, '{"test": "hello"}');
 

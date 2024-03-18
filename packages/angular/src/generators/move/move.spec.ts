@@ -148,7 +148,7 @@ describe('@nx/angular:move', () => {
     @NgModule({
       imports: [CommonModule]
     })
-    export class MyLibModule {}`
+    export class MyLibModule {}`,
       );
 
       tree.write(
@@ -166,14 +166,14 @@ describe('@nx/angular:move', () => {
       it('should create', () => {
         expect(MyLibModule).toBeDefined();
       });
-    });`
+    });`,
       );
       tree.write(
         'my-lib2/src/lib/my-lib2.module.ts',
         `import { MyLibModule } from '@proj/my-lib';
 
       export class MyLib2Module extends MyLibModule {}
-      `
+      `,
       );
     });
 
@@ -190,29 +190,29 @@ describe('@nx/angular:move', () => {
       });
 
       expect(tree.exists('shared/my-lib/src/lib/shared-my-lib.module.ts')).toBe(
-        true
+        true,
       );
       expect(
-        tree.exists('shared/my-lib/src/lib/shared-my-lib.module.spec.ts')
+        tree.exists('shared/my-lib/src/lib/shared-my-lib.module.spec.ts'),
       ).toBe(true);
 
       const moduleFile = tree.read(
         'shared/my-lib/src/lib/shared-my-lib.module.ts',
-        'utf-8'
+        'utf-8',
       );
       expect(moduleFile).toContain(`export class SharedMyLibModule {}`);
 
       const moduleSpecFile = tree.read(
         'shared/my-lib/src/lib/shared-my-lib.module.spec.ts',
-        'utf-8'
+        'utf-8',
       );
       expect(moduleSpecFile).toContain(
-        `import { SharedMyLibModule } from './shared-my-lib.module';`
+        `import { SharedMyLibModule } from './shared-my-lib.module';`,
       );
       expect(moduleSpecFile).toContain(`describe('SharedMyLibModule', () => {`);
       expect(moduleSpecFile).toContain(`imports: [SharedMyLibModule]`);
       expect(moduleSpecFile).toContain(
-        `expect(SharedMyLibModule).toBeDefined();`
+        `expect(SharedMyLibModule).toBeDefined();`,
       );
     });
 
@@ -230,13 +230,13 @@ describe('@nx/angular:move', () => {
 
       const importerFile = tree.read(
         'my-lib2/src/lib/my-lib2.module.ts',
-        'utf-8'
+        'utf-8',
       );
       expect(importerFile).toContain(
-        `import { SharedMyLibModule } from '@proj/shared-my-lib';`
+        `import { SharedMyLibModule } from '@proj/shared-my-lib';`,
       );
       expect(importerFile).toContain(
-        `export class MyLib2Module extends SharedMyLibModule {}`
+        `export class MyLib2Module extends SharedMyLibModule {}`,
       );
     });
 
@@ -254,7 +254,7 @@ describe('@nx/angular:move', () => {
 
       const indexFile = tree.read('shared/my-lib/src/index.ts', 'utf-8');
       expect(indexFile).toContain(
-        `export * from './lib/shared-my-lib.module';`
+        `export * from './lib/shared-my-lib.module';`,
       );
     });
   });
@@ -275,7 +275,7 @@ describe('@nx/angular:move', () => {
         'my-importer/src/lib/my-importing-file.ts',
         `import { MyLibModule } from '@proj/my-lib';
           export class MyExtendedLibModule extends MyLibModule {}
-          `
+          `,
       );
     });
 
@@ -292,12 +292,12 @@ describe('@nx/angular:move', () => {
       });
 
       expect(
-        tree.exists('my-destination/src/lib/my-destination.module.ts')
+        tree.exists('my-destination/src/lib/my-destination.module.ts'),
       ).toBe(true);
 
       const moduleFile = tree.read(
         'my-destination/src/lib/my-destination.module.ts',
-        'utf-8'
+        'utf-8',
       );
       expect(moduleFile).toContain(`export class MyDestinationModule {}`);
     });
@@ -316,13 +316,13 @@ describe('@nx/angular:move', () => {
 
       const importerFile = tree.read(
         'my-importer/src/lib/my-importing-file.ts',
-        'utf-8'
+        'utf-8',
       );
       expect(importerFile).toContain(
-        `import { MyDestinationModule } from '@proj/my-destination';`
+        `import { MyDestinationModule } from '@proj/my-destination';`,
       );
       expect(importerFile).toContain(
-        `export class MyExtendedLibModule extends MyDestinationModule {}`
+        `export class MyExtendedLibModule extends MyDestinationModule {}`,
       );
     });
 
@@ -340,7 +340,7 @@ describe('@nx/angular:move', () => {
 
       const indexFile = tree.read('my-destination/src/index.ts', 'utf-8');
       expect(indexFile).toContain(
-        `export * from './lib/my-destination.module';`
+        `export * from './lib/my-destination.module';`,
       );
     });
 
@@ -370,7 +370,7 @@ describe('@nx/angular:move', () => {
 
       const moduleFile = tree.read(
         'my-lib-demo/src/lib/my-lib-demo.module.ts',
-        'utf-8'
+        'utf-8',
       );
       expect(moduleFile).toContain(`export class MyLibDemoModule {}`);
     });
@@ -394,7 +394,7 @@ describe('@nx/angular:move', () => {
     });
 
     expect(tree.exists('libs/mynewlib/src/lib/mynewlib.module.ts')).toEqual(
-      true
+      true,
     );
     const ngPackageJson = readJson(tree, 'libs/mynewlib/ng-package.json');
     expect(ngPackageJson.dest).toEqual('../../dist/libs/mynewlib');

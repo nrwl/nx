@@ -8,7 +8,7 @@ export async function addJest(
   appProjectRoot: string,
   js: boolean,
   skipPackageJson: boolean,
-  addPlugin: boolean
+  addPlugin: boolean,
 ) {
   if (unitTestRunner !== 'jest') {
     return () => {};

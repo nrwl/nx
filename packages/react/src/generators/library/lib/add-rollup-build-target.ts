@@ -19,20 +19,20 @@ import { NormalizedSchema } from '../schema';
 
 export async function addRollupBuildTarget(
   host: Tree,
-  options: NormalizedSchema
+  options: NormalizedSchema,
 ) {
   const tasks: GeneratorCallback[] = [];
 
   const { configurationGenerator } = ensurePackage<typeof import('@nx/rollup')>(
     '@nx/rollup',
-    nxVersion
+    nxVersion,
   );
   tasks.push(
     await configurationGenerator(host, {
       ...options,
       project: options.name,
       skipFormat: true,
-    })
+    }),
   );
 
   if (!options.skipPackageJson) {
@@ -44,8 +44,8 @@ export async function addRollupBuildTarget(
         {
           '@rollup/plugin-url': rollupPluginUrlVersion,
           '@svgr/rollup': svgrRollupVersion,
-        }
-      )
+        },
+      ),
     );
   }
 

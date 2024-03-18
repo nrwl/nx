@@ -9,7 +9,7 @@ import { interpolate } from 'nx/src/tasks-runner/utils';
 
 export default async function run(
   options: Schema,
-  context: ExecutorContext
+  context: ExecutorContext,
 ): Promise<{ success: boolean }> {
   // this is only used for the hasher
   delete options.hasTypeAwareRules;
@@ -43,7 +43,7 @@ export default async function run(
    * their root ESLint config to use eslint.config.js
    */
   const hasFlatConfig = existsSync(
-    joinPathFragments(workspaceRoot, 'eslint.config.js')
+    joinPathFragments(workspaceRoot, 'eslint.config.js'),
   );
 
   // while standard eslint uses by default closest config to the file, if otherwise not specified,
@@ -66,7 +66,7 @@ export default async function run(
   const { eslint, ESLint } = await resolveAndInstantiateESLint(
     eslintConfigPath,
     normalizedOptions,
-    hasFlatConfig
+    hasFlatConfig,
   );
 
   const version = ESLint.version?.split('.');
@@ -103,14 +103,14 @@ export default async function run(
         projectRoot,
         projectName: context.projectName,
       });
-    }
+    },
   );
   try {
     lintResults = await eslint.lintFiles(normalizedLintFilePatterns);
   } catch (err) {
     if (
       err.message.includes(
-        'You must therefore provide a value for the "parserOptions.project" property for @typescript-eslint/parser'
+        'You must therefore provide a value for the "parserOptions.project" property for @typescript-eslint/parser',
       )
     ) {
       const ruleName = err.message.match(/rule '([^']+)':/)?.[1];
@@ -142,8 +142,8 @@ Please see https://nx.dev/guides/eslint for full guidance on how to resolve this
     const ignoredPatterns = (
       await Promise.all(
         normalizedLintFilePatterns.map(async (pattern) =>
-          (await eslint.isPathIgnored(pattern)) ? pattern : null
-        )
+          (await eslint.isPathIgnored(pattern)) ? pattern : null,
+        ),
       )
     )
       .filter((pattern) => !!pattern)
@@ -154,12 +154,12 @@ Please see https://nx.dev/guides/eslint for full guidance on how to resolve this
         : `'.eslintignore' file`;
       throw new Error(
         `All files matching the following patterns are ignored:\n${ignoredPatterns.join(
-          '\n'
-        )}\n\nPlease check your ${ignoreSection}.`
+          '\n',
+        )}\n\nPlease check your ${ignoreSection}.`,
       );
     }
     throw new Error(
-      'Invalid lint configuration. Nothing to lint. Please check your lint target pattern(s).'
+      'Invalid lint configuration. Nothing to lint. Please check your lint target pattern(s).',
     );
   }
 
@@ -179,7 +179,7 @@ Please see https://nx.dev/guides/eslint for full guidance on how to resolve this
   if (normalizedOptions.outputFile) {
     const pathToOutputFile = joinPathFragments(
       context.root,
-      normalizedOptions.outputFile
+      normalizedOptions.outputFile,
     );
     mkdirSync(dirname(pathToOutputFile), { recursive: true });
     writeFileSync(pathToOutputFile, formattedResults);
@@ -244,14 +244,14 @@ function outputPrintInfo({
   console.info(
     `\u2716 ${pluralizedOutput('problem', total)} (${pluralizedOutput(
       'error',
-      errors
-    )}, ${pluralizedOutput('warning', warnings)})\n`
+      errors,
+    )}, ${pluralizedOutput('warning', warnings)})\n`,
   );
   if (totalFixable <= 0) return;
   console.info(
     `  ${pluralizedOutput('error', fixableErrors)} and ${pluralizedOutput(
       'warning',
-      fixableWarnings
-    )} are potentially fixable with the \`--fix\` option.\n`
+      fixableWarnings,
+    )} are potentially fixable with the \`--fix\` option.\n`,
   );
 }

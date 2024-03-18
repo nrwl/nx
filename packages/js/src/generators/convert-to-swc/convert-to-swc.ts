@@ -15,7 +15,7 @@ import { ConvertToSwcGeneratorSchema } from './schema';
 
 export async function convertToSwcGenerator(
   tree: Tree,
-  schema: ConvertToSwcGeneratorSchema
+  schema: ConvertToSwcGeneratorSchema,
 ) {
   const options = normalizeOptions(schema);
   const projectConfiguration = readProjectConfiguration(tree, options.project);
@@ -24,13 +24,13 @@ export async function convertToSwcGenerator(
     tree,
     projectConfiguration,
     options.project,
-    options.targets
+    options.targets,
   );
   return checkSwcDependencies(tree, projectConfiguration);
 }
 
 function normalizeOptions(
-  schema: ConvertToSwcGeneratorSchema
+  schema: ConvertToSwcGeneratorSchema,
 ): ConvertToSwcGeneratorSchema {
   const options = { ...schema };
 
@@ -45,7 +45,7 @@ function updateProjectBuildTargets(
   tree: Tree,
   projectConfiguration: ProjectConfiguration,
   projectName: string,
-  projectTargets: string[]
+  projectTargets: string[],
 ) {
   for (const target of projectTargets) {
     const targetConfiguration = projectConfiguration.targets[target];
@@ -63,14 +63,14 @@ function updateProjectBuildTargets(
 
 function checkSwcDependencies(
   tree: Tree,
-  projectConfiguration: ProjectConfiguration
+  projectConfiguration: ProjectConfiguration,
 ) {
   const isSwcrcPresent = tree.exists(join(projectConfiguration.root, '.swcrc'));
 
   const packageJson = readJson(tree, 'package.json');
   const projectPackageJsonPath = join(
     projectConfiguration.root,
-    'package.json'
+    'package.json',
   );
   const projectPackageJson = readJson(tree, projectPackageJsonPath);
 
@@ -96,7 +96,7 @@ function checkSwcDependencies(
       tree,
       { '@swc/helpers': swcHelpersVersion },
       {},
-      projectPackageJsonPath
+      projectPackageJsonPath,
     );
   }
 

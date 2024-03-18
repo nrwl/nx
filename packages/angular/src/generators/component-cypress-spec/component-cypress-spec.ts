@@ -12,7 +12,7 @@ import type { ComponentCypressSpecGeneratorOptions } from './schema';
 
 export async function componentCypressSpecGenerator(
   tree: Tree,
-  options: ComponentCypressSpecGeneratorOptions
+  options: ComponentCypressSpecGeneratorOptions,
 ): Promise<void> {
   const {
     cypressProject,
@@ -26,21 +26,21 @@ export async function componentCypressSpecGenerator(
   const e2eProjectName = cypressProject || `${projectName}-e2e`;
   const { sourceRoot, root } = readProjectConfiguration(tree, e2eProjectName);
   const isCypressV10 = tree.exists(
-    joinPathFragments(root, 'cypress.config.ts')
+    joinPathFragments(root, 'cypress.config.ts'),
   );
   const e2eLibIntegrationFolderPath = joinPathFragments(
     sourceRoot,
-    isCypressV10 ? 'e2e' : 'integration'
+    isCypressV10 ? 'e2e' : 'integration',
   );
 
   const templatesDir = joinPathFragments(__dirname, 'files');
   const destinationDir = joinPathFragments(
     e2eLibIntegrationFolderPath,
-    specDirectory ?? componentPath
+    specDirectory ?? componentPath,
   );
   const storyFile = joinPathFragments(
     destinationDir,
-    `${componentFileName}.${isCypressV10 ? 'cy' : 'spec'}.ts`
+    `${componentFileName}.${isCypressV10 ? 'cy' : 'spec'}.ts`,
   );
 
   if (tree.exists(storyFile)) {
@@ -50,7 +50,7 @@ export async function componentCypressSpecGenerator(
   const fullComponentPath = joinPathFragments(
     projectPath,
     componentPath,
-    `${componentFileName}.ts`
+    `${componentFileName}.ts`,
   );
   const props = getComponentProps(tree, fullComponentPath, getArgsDefaultValue);
   const componentSelector = getComponentSelector(tree, fullComponentPath);

@@ -14,7 +14,7 @@ let childProcess: ChildProcess;
 
 export default async function* buildListExecutor(
   options: ExpoEasBuildListOptions,
-  context: ExecutorContext
+  context: ExecutorContext,
 ): AsyncGenerator<ReactNativeBuildListOutput> {
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
@@ -37,7 +37,7 @@ export default async function* buildListExecutor(
 export function runCliBuildList(
   workspaceRoot: string,
   projectRoot: string,
-  options: ExpoEasBuildListOptions
+  options: ExpoEasBuildListOptions,
 ): Promise<string> {
   return new Promise((resolve, reject) => {
     childProcess = fork(
@@ -47,7 +47,7 @@ export function runCliBuildList(
         cwd: pathResolve(workspaceRoot, projectRoot),
         env: process.env,
         stdio: ['inherit', 'pipe', 'inherit', 'ipc'], // only stream stdout on child process
-      }
+      },
     );
 
     // Ensure the child process is killed when the parent exits

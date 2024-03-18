@@ -52,7 +52,7 @@ const defaultOutputDirectory = 'dist';
 
 export async function libraryGenerator(
   tree: Tree,
-  schema: LibraryGeneratorSchema
+  schema: LibraryGeneratorSchema,
 ) {
   return await libraryGeneratorInternal(tree, {
     addPlugin: false,
@@ -65,7 +65,7 @@ export async function libraryGenerator(
 
 export async function libraryGeneratorInternal(
   tree: Tree,
-  schema: LibraryGeneratorSchema
+  schema: LibraryGeneratorSchema,
 ) {
   const tasks: GeneratorCallback[] = [];
   tasks.push(
@@ -73,7 +73,7 @@ export async function libraryGeneratorInternal(
       ...schema,
       skipFormat: true,
       tsConfigName: schema.rootProject ? 'tsconfig.json' : 'tsconfig.base.json',
-    })
+    }),
   );
   const options = await normalizeOptions(tree, schema);
 
@@ -111,7 +111,7 @@ export async function libraryGeneratorInternal(
         includeVitest: options.unitTestRunner === 'vitest',
         testEnvironment: options.testEnvironment,
       },
-      false
+      false,
     );
   }
   if (options.linter !== 'none') {
@@ -131,7 +131,7 @@ export async function libraryGeneratorInternal(
   ) {
     const { vitestGenerator, createOrEditViteConfig } = ensurePackage(
       '@nx/vite',
-      nxVersion
+      nxVersion,
     );
     const vitestTask = await vitestGenerator(tree, {
       project: options.name,
@@ -149,7 +149,7 @@ export async function libraryGeneratorInternal(
         includeVitest: true,
         testEnvironment: options.testEnvironment,
       },
-      true
+      true,
     );
   }
 
@@ -158,7 +158,7 @@ export async function libraryGeneratorInternal(
       joinPathFragments(
         options.projectRoot,
         './src',
-        'index.' + (options.js ? 'js' : 'ts')
+        'index.' + (options.js ? 'js' : 'ts'),
       ),
     ]);
   }
@@ -246,7 +246,7 @@ async function addProject(tree: Tree, options: NormalizedSchema) {
     ) {
       projectConfiguration.targets.build.options.assets ??= [];
       projectConfiguration.targets.build.options.assets.push(
-        joinPathFragments(options.projectRoot, '*.md')
+        joinPathFragments(options.projectRoot, '*.md'),
       );
     }
 
@@ -286,7 +286,7 @@ async function addProject(tree: Tree, options: NormalizedSchema) {
         tags: projectConfiguration.tags,
         targets: {},
       },
-      true
+      true,
     );
   }
 }
@@ -306,7 +306,7 @@ export type AddLintOptions = Pick<
 
 export async function addLint(
   tree: Tree,
-  options: AddLintOptions
+  options: AddLintOptions,
 ): Promise<GeneratorCallback> {
   const { lintProjectGenerator } = ensurePackage('@nx/eslint', nxVersion);
   const projectConfiguration = readProjectConfiguration(tree, options.name);
@@ -358,7 +358,7 @@ export async function addLint(
         Array.isArray(o.files)
           ? o.files.some((f) => f.match(/\.json$/))
           : !!o.files?.match(/\.json$/),
-      true
+      true,
     )
   ) {
     updateOverrideInLintConfig(
@@ -393,7 +393,7 @@ export async function addLint(
           o.rules['@nx/dependency-checks'] = [ruleSeverity, ruleOptions];
         }
         return o;
-      }
+      },
     );
   }
   return task;
@@ -446,7 +446,7 @@ function addBabelRc(tree: Tree, options: NormalizedSchema) {
 
 function createFiles(tree: Tree, options: NormalizedSchema) {
   const { className, name, propertyName } = names(
-    options.projectNames.projectFileName
+    options.projectNames.projectFileName,
   );
 
   createProjectTsConfigJson(tree, options);
@@ -484,7 +484,7 @@ function createFiles(tree: Tree, options: NormalizedSchema) {
         offsetFromRoot: offsetFromRoot(options.projectRoot),
         buildable: options.bundler && options.bundler !== 'none',
         hasUnitTestRunner: options.unitTestRunner !== 'none',
-      }
+      },
     );
   }
 
@@ -493,7 +493,7 @@ function createFiles(tree: Tree, options: NormalizedSchema) {
     addSwcConfig(
       tree,
       options.projectRoot,
-      options.bundler === 'swc' ? 'commonjs' : 'es6'
+      options.bundler === 'swc' ? 'commonjs' : 'es6',
     );
   } else if (options.includeBabelRc) {
     addBabelRc(tree, options);
@@ -501,10 +501,10 @@ function createFiles(tree: Tree, options: NormalizedSchema) {
 
   if (options.unitTestRunner === 'none') {
     tree.delete(
-      join(options.projectRoot, 'src/lib', `${options.fileName}.spec.ts`)
+      join(options.projectRoot, 'src/lib', `${options.fileName}.spec.ts`),
     );
     tree.delete(
-      join(options.projectRoot, 'src/app', `${options.fileName}.spec.ts`)
+      join(options.projectRoot, 'src/app', `${options.fileName}.spec.ts`),
     );
   }
 
@@ -514,7 +514,7 @@ function createFiles(tree: Tree, options: NormalizedSchema) {
 
   const packageJsonPath = joinPathFragments(
     options.projectRoot,
-    'package.json'
+    'package.json',
   );
   if (tree.exists(packageJsonPath)) {
     updateJson<PackageJson>(tree, packageJsonPath, (json) => {
@@ -573,7 +573,7 @@ function createFiles(tree: Tree, options: NormalizedSchema) {
 
 async function addJest(
   tree: Tree,
-  options: NormalizedSchema
+  options: NormalizedSchema,
 ): Promise<GeneratorCallback> {
   const { configurationGenerator } = ensurePackage('@nx/jest', nxVersion);
   return await configurationGenerator(tree, {
@@ -588,8 +588,8 @@ async function addJest(
       options.bundler === 'swc' || options.bundler === 'tsc'
         ? options.bundler
         : options.bundler === 'rollup'
-        ? 'swc'
-        : undefined,
+          ? 'swc'
+          : undefined,
   });
 }
 
@@ -598,7 +598,7 @@ function replaceJestConfig(tree: Tree, options: NormalizedSchema) {
   // the existing config has to be deleted otherwise the new config won't overwrite it
   const existingJestConfig = joinPathFragments(
     filesDir,
-    `jest.config.${options.js ? 'js' : 'ts'}`
+    `jest.config.${options.js ? 'js' : 'ts'}`,
   );
   if (tree.exists(existingJestConfig)) {
     tree.delete(existingJestConfig);
@@ -617,7 +617,7 @@ function replaceJestConfig(tree: Tree, options: NormalizedSchema) {
 
 async function normalizeOptions(
   tree: Tree,
-  options: LibraryGeneratorSchema
+  options: LibraryGeneratorSchema,
 ): Promise<NormalizedSchema> {
   const nxJson = readNxJson(tree);
   const addPlugin =
@@ -657,7 +657,7 @@ async function normalizeOptions(
   if (options.publishable) {
     if (!options.importPath) {
       throw new Error(
-        `For publishable libs you have to provide a proper "--importPath" which needs to be a valid npm package name (e.g. my-awesome-lib or @myorg/my-lib)`
+        `For publishable libs you have to provide a proper "--importPath" which needs to be a valid npm package name (e.g. my-awesome-lib or @myorg/my-lib)`,
       );
     }
 
@@ -745,7 +745,7 @@ function getCaseAwareFileName(options: {
 
 function addProjectDependencies(
   tree: Tree,
-  options: NormalizedSchema
+  options: NormalizedSchema,
 ): GeneratorCallback {
   if (options.bundler == 'esbuild') {
     return addDependenciesToPackageJson(
@@ -755,19 +755,19 @@ function addProjectDependencies(
         '@nx/esbuild': nxVersion,
         '@types/node': typesNodeVersion,
         esbuild: esbuildVersion,
-      }
+      },
     );
   } else if (options.bundler == 'rollup') {
     return addDependenciesToPackageJson(
       tree,
       {},
-      { '@nx/rollup': nxVersion, '@types/node': typesNodeVersion }
+      { '@nx/rollup': nxVersion, '@types/node': typesNodeVersion },
     );
   } else {
     return addDependenciesToPackageJson(
       tree,
       {},
-      { '@types/node': typesNodeVersion }
+      { '@types/node': typesNodeVersion },
     );
   }
 
@@ -824,12 +824,12 @@ function createProjectTsConfigJson(tree: Tree, options: NormalizedSchema) {
   writeJson(
     tree,
     joinPathFragments(options.projectRoot, 'tsconfig.json'),
-    tsconfig
+    tsconfig,
   );
 }
 
 function determineDependencies(
-  options: LibraryGeneratorSchema
+  options: LibraryGeneratorSchema,
 ): Record<string, string> {
   switch (options.bundler) {
     case 'tsc':
@@ -852,7 +852,7 @@ function determineDependencies(
 type EntryField = string | { [key: string]: EntryField };
 
 function determineEntryFields(
-  options: LibraryGeneratorSchema
+  options: LibraryGeneratorSchema,
 ): Record<string, EntryField> {
   switch (options.bundler) {
     case 'tsc':
@@ -901,7 +901,7 @@ function determineEntryFields(
 
 function projectsConfigMatchesProject(
   projectsConfig: string | string[] | undefined,
-  project: ProjectGraphProjectNode
+  project: ProjectGraphProjectNode,
 ): boolean {
   if (!projectsConfig) {
     return false;
@@ -923,7 +923,7 @@ function projectsConfigMatchesProject(
 async function addProjectToNxReleaseConfig(
   tree: Tree,
   options: NormalizedSchema,
-  projectConfiguration: ProjectConfiguration
+  projectConfiguration: ProjectConfiguration,
 ) {
   const nxJson = readNxJson(tree);
 

@@ -32,7 +32,7 @@ describe('ast-utils', () => {
           rules: {
             '@nx/do-something-with-svg': 'error',
           },
-        })
+        }),
       );
       expect(result).toMatchInlineSnapshot(`
               "const baseConfig = require("../../eslint.config.js");
@@ -70,7 +70,7 @@ describe('ast-utils', () => {
       const result = addBlockToFlatConfigExport(
         content,
         ts.factory.createSpreadElement(ts.factory.createIdentifier('config')),
-        { insertAtTheEnd: false }
+        { insertAtTheEnd: false },
       );
       expect(result).toMatchInlineSnapshot(`
               "const baseConfig = require("../../eslint.config.js");
@@ -107,7 +107,7 @@ describe('ast-utils', () => {
       const result = addImportToFlatConfig(
         content,
         'varName',
-        '@myorg/awesome-config'
+        '@myorg/awesome-config',
       );
       expect(result).toMatchInlineSnapshot(`
               "const varName = require("@myorg/awesome-config");
@@ -143,7 +143,7 @@ describe('ast-utils', () => {
       const result = addImportToFlatConfig(
         content,
         ['otherName', 'someName'],
-        '@myorg/awesome-config'
+        '@myorg/awesome-config',
       );
       expect(result).toMatchInlineSnapshot(`
               "const { varName, otherName, someName  } = require("@myorg/awesome-config");
@@ -179,7 +179,7 @@ describe('ast-utils', () => {
       const result = addImportToFlatConfig(
         content,
         ['otherName'],
-        '@myorg/awesome-config'
+        '@myorg/awesome-config',
       );
       expect(result).toEqual(content);
     });
@@ -201,7 +201,7 @@ describe('ast-utils', () => {
       const result = addImportToFlatConfig(
         content,
         'varName',
-        '@myorg/awesome-config'
+        '@myorg/awesome-config',
       );
       expect(result).toEqual(content);
     });
@@ -450,7 +450,7 @@ describe('ast-utils', () => {
           rules: {
             'my-rule': 'error',
           },
-        })
+        }),
       );
       expect(result).toMatchInlineSnapshot(`
         "const baseConfig = require("../../eslint.config.js");
@@ -521,7 +521,7 @@ describe('ast-utils', () => {
             ...o.rules,
             'my-new-rule': 'error',
           },
-        })
+        }),
       );
       expect(result).toMatchInlineSnapshot(`
         "const baseConfig = require("../../eslint.config.js");
@@ -576,7 +576,7 @@ describe('ast-utils', () => {
             ...o.rules,
             'my-new-rule': 'error',
           },
-        })
+        }),
       );
       expect(result).toMatchInlineSnapshot(`
         "const baseConfig = require("../../eslint.config.js");

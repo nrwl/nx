@@ -63,7 +63,7 @@ describe('@nx/vite/plugin', () => {
           testTargetName: 'test',
           serveStaticTargetName: 'serve-static',
         },
-        context
+        context,
       );
 
       expect(nodes).toMatchSnapshot();
@@ -86,7 +86,7 @@ describe('@nx/vite/plugin', () => {
 
       tempFs.createFileSync(
         'my-app/project.json',
-        JSON.stringify({ name: 'my-app' })
+        JSON.stringify({ name: 'my-app' }),
       );
       tempFs.createFileSync('my-app/vite.config.ts', '');
       tempFs.createFileSync('my-app/index.html', '');
@@ -106,7 +106,7 @@ describe('@nx/vite/plugin', () => {
           testTargetName: 'vitest',
           serveStaticTargetName: 'serve-static',
         },
-        context
+        context,
       );
 
       expect(nodes).toMatchSnapshot();

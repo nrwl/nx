@@ -101,8 +101,8 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
       addDependenciesToPackageJson(
         host,
         { tslib: tsLibVersion },
-        devDependencies
-      )
+        devDependencies,
+      ),
     );
   }
 

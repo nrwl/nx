@@ -34,7 +34,7 @@ export class TaskProfilingLifeCycle implements LifeCycle {
 
   endTasks(
     taskResults: Array<{ task: Task; status: TaskStatus; code: number }>,
-    metadata: TaskMetadata
+    metadata: TaskMetadata,
   ): void {
     for (let tr of taskResults) {
       if (tr.task.startTime) {
@@ -56,7 +56,7 @@ export class TaskProfilingLifeCycle implements LifeCycle {
 
   private recordTaskCompletions(
     tasks: Array<{ task: Task; status: TaskStatus }>,
-    { groupId }: TaskMetadata
+    { groupId }: TaskMetadata,
   ) {
     for (const { task, status } of tasks) {
       const { perfStart, perfEnd } = this.timings[task.id];

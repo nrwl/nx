@@ -126,7 +126,7 @@ function camelCase(input: string): string {
 
 export function convertToCamelCase(
   parsed: { [k: string]: any },
-  schema: Schema
+  schema: Schema,
 ): Options {
   return Object.keys(parsed).reduce((m, c) => {
     if (schema.properties[camelCase(c)]) {
@@ -200,7 +200,7 @@ function coerceType(prop: PropertyDescription | undefined, value: any) {
 export function convertAliases(
   opts: Options,
   schema: Schema,
-  excludeUnmatched: boolean
+  excludeUnmatched: boolean,
 ): Options {
   return Object.keys(opts).reduce((acc, k) => {
     const prop = findSchemaForProperty(k, schema);
@@ -227,7 +227,7 @@ export class SchemaError {
 
 export function validateOptsAgainstSchema(
   opts: { [k: string]: any },
-  schema: Schema
+  schema: Schema,
 ) {
   validateObject(opts, schema, schema.definitions || {});
 }
@@ -235,7 +235,7 @@ export function validateOptsAgainstSchema(
 export function validateObject(
   opts: { [p: string]: any },
   schema: Schema | PropertyDescription,
-  definitions: Properties
+  definitions: Properties,
 ) {
   if (schema.anyOf) {
     const errors: Error[] = [];
@@ -250,7 +250,7 @@ export function validateObject(
       throw new Error(
         `Options did not match schema. Please fix any of the following errors:\n${errors
           .map((e) => ' - ' + e.message)
-          .join('\n')}`
+          .join('\n')}`,
       );
     }
   }
@@ -268,7 +268,7 @@ export function validateObject(
         throw new Error(
           `Options did not match schema. Please fix 1 of the following errors:\n${errors
             .map((e) => ' - ' + e.message)
-            .join('\n')}`
+            .join('\n')}`,
         );
       }
       if (errors.length < schema.oneOf.length - 1) {
@@ -293,12 +293,12 @@ export function validateObject(
         Object.keys(schema.properties).indexOf(p) === -1 &&
         (!schema.patternProperties ||
           !Object.keys(schema.patternProperties).some((pattern) =>
-            new RegExp(pattern).test(p)
+            new RegExp(pattern).test(p),
           ))
       ) {
         if (p === '_') {
           throw new SchemaError(
-            `Schema does not support positional arguments. Argument '${opts[p]}' found`
+            `Schema does not support positional arguments. Argument '${opts[p]}' found`,
           );
         } else if (schema.additionalProperties === false) {
           throw new SchemaError(`'${p}' is not found in schema`);
@@ -307,7 +307,7 @@ export function validateObject(
             p,
             opts[p],
             schema.additionalProperties,
-            definitions
+            definitions,
           );
         }
       }
@@ -324,7 +324,7 @@ export function validateObject(
             p,
             opts[p],
             schema.patternProperties[pattern],
-            definitions
+            definitions,
           );
         }
       });
@@ -336,7 +336,7 @@ function validateProperty(
   propName: string,
   value: any,
   schema: PropertyDescription,
-  definitions: Properties
+  definitions: Properties,
 ) {
   if (!schema) return;
 
@@ -402,7 +402,7 @@ function validateProperty(
   if (isPrimitive) {
     if (schema.const !== undefined && value !== schema.const) {
       throw new SchemaError(
-        `Property '${propName}' does not match the schema. '${value}' should be '${schema.const}'.`
+        `Property '${propName}' does not match the schema. '${value}' should be '${schema.const}'.`,
       );
     }
 
@@ -418,7 +418,7 @@ function validateProperty(
       });
       if (!passes) {
         throw new SchemaError(
-          `Property '${propName}' does not match the schema. '${value}' should be a '${schema.type}'.`
+          `Property '${propName}' does not match the schema. '${value}' should be a '${schema.type}'.`,
         );
       }
     } else if (
@@ -426,15 +426,15 @@ function validateProperty(
       typeof value !== normalizedPrimitiveType(schema.type)
     ) {
       throw new SchemaError(
-        `Property '${propName}' does not match the schema. '${value}' should be a '${schema.type}'.`
+        `Property '${propName}' does not match the schema. '${value}' should be a '${schema.type}'.`,
       );
     }
 
     if (schema.enum && !schema.enum.includes(value)) {
       throw new SchemaError(
         `Property '${propName}' does not match the schema. '${value}' should be one of ${schema.enum.join(
-          ','
-        )}.`
+          ',',
+        )}.`,
       );
     }
 
@@ -444,12 +444,12 @@ function validateProperty(
         value % schema.multipleOf !== 0
       ) {
         throw new SchemaError(
-          `Property '${propName}' does not match the schema. ${value} should be a multiple of ${schema.multipleOf}.`
+          `Property '${propName}' does not match the schema. ${value} should be a multiple of ${schema.multipleOf}.`,
         );
       }
       if (typeof schema.minimum === 'number' && value < schema.minimum) {
         throw new SchemaError(
-          `Property '${propName}' does not match the schema. ${value} should be at least ${schema.minimum}`
+          `Property '${propName}' does not match the schema. ${value} should be at least ${schema.minimum}`,
         );
       }
       if (
@@ -457,12 +457,12 @@ function validateProperty(
         value <= schema.exclusiveMinimum
       ) {
         throw new SchemaError(
-          `Property '${propName}' does not match the schema. ${value} should be greater than ${schema.exclusiveMinimum}`
+          `Property '${propName}' does not match the schema. ${value} should be greater than ${schema.exclusiveMinimum}`,
         );
       }
       if (typeof schema.maximum === 'number' && value > schema.maximum) {
         throw new SchemaError(
-          `Property '${propName}' does not match the schema. ${value} should be at most ${schema.maximum}`
+          `Property '${propName}' does not match the schema. ${value} should be at most ${schema.maximum}`,
         );
       }
       if (
@@ -470,7 +470,7 @@ function validateProperty(
         value >= schema.exclusiveMaximum
       ) {
         throw new SchemaError(
-          `Property '${propName}' does not match the schema. ${value} should be less than ${schema.exclusiveMaximum}`
+          `Property '${propName}' does not match the schema. ${value} should be less than ${schema.exclusiveMaximum}`,
         );
       }
     }
@@ -478,7 +478,7 @@ function validateProperty(
     if (schema.type === 'string') {
       if (schema.pattern && !new RegExp(schema.pattern).test(value)) {
         throw new SchemaError(
-          `Property '${propName}' does not match the schema. '${value}' should match the pattern '${schema.pattern}'.`
+          `Property '${propName}' does not match the schema. '${value}' should match the pattern '${schema.pattern}'.`,
         );
       }
 
@@ -487,7 +487,7 @@ function validateProperty(
         value.length < schema.minLength
       ) {
         throw new SchemaError(
-          `Property '${propName}' does not match the schema. '${value}' (${value.length} character(s)) should have at least ${schema.minLength} character(s).`
+          `Property '${propName}' does not match the schema. '${value}' (${value.length} character(s)) should have at least ${schema.minLength} character(s).`,
         );
       }
 
@@ -496,14 +496,14 @@ function validateProperty(
         value.length > schema.maxLength
       ) {
         throw new SchemaError(
-          `Property '${propName}' does not match the schema. '${value}' (${value.length} character(s)) should have at most ${schema.maxLength} character(s).`
+          `Property '${propName}' does not match the schema. '${value}' (${value.length} character(s)) should have at most ${schema.maxLength} character(s).`,
         );
       }
     }
   } else if (Array.isArray(value)) {
     if (schema.type !== 'array') throwInvalidSchema(propName, schema);
     value.forEach((valueInArray) =>
-      validateProperty(propName, valueInArray, schema.items || {}, definitions)
+      validateProperty(propName, valueInArray, schema.items || {}, definitions),
     );
   } else {
     if (schema.type !== 'object') throwInvalidSchema(propName, schema);
@@ -525,8 +525,8 @@ function throwInvalidSchema(propName: string, schema: any) {
     `Property '${propName}' does not match the schema.\n${JSON.stringify(
       schema,
       null,
-      2
-    )}'`
+      2,
+    )}'`,
   );
 }
 
@@ -538,7 +538,7 @@ export function setDefaults(opts: { [k: string]: any }, schema: Schema) {
 function setDefaultsInObject(
   opts: { [k: string]: any },
   properties: Properties,
-  definitions: Properties
+  definitions: Properties,
 ) {
   Object.keys(properties).forEach((p) => {
     setPropertyDefault(opts, p, properties[p], definitions);
@@ -549,7 +549,7 @@ function setPropertyDefault(
   opts: { [k: string]: any },
   propName: string,
   schema: any,
-  definitions: Properties
+  definitions: Properties,
 ) {
   if (schema.$ref) {
     schema = resolveDefinition(schema.$ref, definitions);
@@ -567,7 +567,7 @@ function setPropertyDefault(
       items.type === 'object'
     ) {
       opts[propName].forEach((valueInArray) =>
-        setDefaultsInObject(valueInArray, items.properties || {}, definitions)
+        setDefaultsInObject(valueInArray, items.properties || {}, definitions),
       );
     } else if (!opts[propName] && schema.default) {
       opts[propName] = schema.default;
@@ -602,7 +602,7 @@ function resolveDefinition(ref: string, definitions: Properties) {
 export function applyVerbosity(
   options: Record<string, unknown>,
   schema: Schema,
-  isVerbose: boolean
+  isVerbose: boolean,
 ) {
   if (
     (schema.additionalProperties === true || 'verbose' in schema.properties) &&
@@ -619,12 +619,12 @@ export function combineOptionsForExecutor(
   schema: Schema,
   defaultProjectName: string | null,
   relativeCwd: string | null,
-  isVerbose = false
+  isVerbose = false,
 ) {
   const r = convertAliases(
     coerceTypesInOptions(convertToCamelCase(commandLineOpts, schema), schema),
     schema,
-    false
+    false,
   );
   let combined = target.options || {};
   if (config && target.configurations && target.configurations[config]) {
@@ -636,7 +636,7 @@ export function combineOptionsForExecutor(
     combined,
     schema,
     defaultProjectName,
-    relativeCwd
+    relativeCwd,
   );
   warnDeprecations(combined, schema);
   setDefaults(combined, schema);
@@ -655,7 +655,7 @@ export async function combineOptionsForGenerator(
   isInteractive: boolean,
   defaultProjectName: string | null,
   relativeCwd: string | null,
-  isVerbose = false
+  isVerbose = false,
 ) {
   const generatorDefaults = projectsConfigurations
     ? getGeneratorDefaults(
@@ -663,13 +663,13 @@ export async function combineOptionsForGenerator(
         projectsConfigurations,
         nxJsonConfiguration,
         collectionName,
-        generatorName
+        generatorName,
       )
     : {};
   let combined = convertAliases(
     coerceTypesInOptions({ ...generatorDefaults, ...commandLineOpts }, schema),
     schema,
-    false
+    false,
   );
 
   warnDeprecations(combined, schema);
@@ -677,7 +677,7 @@ export async function combineOptionsForGenerator(
     combined,
     schema,
     defaultProjectName,
-    relativeCwd
+    relativeCwd,
   );
 
   if (isInteractive && isTTY()) {
@@ -692,7 +692,7 @@ export async function combineOptionsForGenerator(
 
 export function warnDeprecations(
   opts: { [k: string]: any },
-  schema: Schema
+  schema: Schema,
 ): void {
   Object.keys(opts).forEach((option) => {
     const deprecated = schema.properties[option]?.['x-deprecated'];
@@ -700,7 +700,7 @@ export function warnDeprecations(
       logger.warn(
         `Option "${option}" is deprecated${
           typeof deprecated == 'string' ? ': ' + deprecated : '.'
-        }`
+        }`,
       );
     }
   });
@@ -710,7 +710,7 @@ export function convertSmartDefaultsIntoNamedParams(
   opts: { [k: string]: any },
   schema: Schema,
   defaultProjectName: string | null,
-  relativeCwd: string | null
+  relativeCwd: string | null,
 ) {
   const argv = opts['_'] || [];
   const usedPositionalArgs = {};
@@ -767,7 +767,7 @@ function getGeneratorDefaults(
   projectsConfigurations: ProjectsConfigurations,
   nxJsonConfiguration: NxJsonConfiguration,
   collectionName: string,
-  generatorName: string
+  generatorName: string,
 ) {
   let defaults = {};
   if (nxJsonConfiguration?.generators) {
@@ -814,7 +814,7 @@ type Prompt = ConstructorParameters<typeof import('enquirer').Prompt>[0] & {
 export function getPromptsForSchema(
   opts: Options,
   schema: Schema,
-  projectsConfigurations: ProjectsConfigurations
+  projectsConfigurations: ProjectsConfigurations,
 ): Prompt[] {
   const prompts: Prompt[] = [];
   Object.entries(schema.properties).forEach(([k, v]) => {
@@ -914,7 +914,7 @@ export function getPromptsForSchema(
 async function promptForValues(
   opts: Options,
   schema: Schema,
-  projectsConfigurations: ProjectsConfigurations
+  projectsConfigurations: ProjectsConfigurations,
 ) {
   return await (
     await import('enquirer')
@@ -929,7 +929,7 @@ async function promptForValues(
 
 function findSchemaForProperty(
   propName: string,
-  schema: Schema
+  schema: Schema,
 ): { name: string; description: PropertyDescription } | null {
   if (propName in schema.properties) {
     return {
@@ -940,7 +940,7 @@ function findSchemaForProperty(
   const found = Object.entries(schema.properties).find(
     ([_, d]) =>
       d.alias === propName ||
-      (Array.isArray(d.aliases) && d.aliases.includes(propName))
+      (Array.isArray(d.aliases) && d.aliases.includes(propName)),
   );
   if (found) {
     const [name, description] = found;

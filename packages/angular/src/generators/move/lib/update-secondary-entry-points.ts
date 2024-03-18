@@ -19,7 +19,7 @@ const libraryExecutors = [
 
 export function updateSecondaryEntryPoints(
   tree: Tree,
-  schema: MoveImplOptions
+  schema: MoveImplOptions,
 ): void {
   if (schema.oldProjectName === schema.newProjectName) {
     return;
@@ -33,7 +33,7 @@ export function updateSecondaryEntryPoints(
 
   if (
     !Object.values(project.targets ?? {}).some((target) =>
-      libraryExecutors.includes(target.executor)
+      libraryExecutors.includes(target.executor),
     )
   ) {
     return;
@@ -52,7 +52,7 @@ export function updateSecondaryEntryPoints(
       tree,
       dirname(filePath),
       schema.oldProjectName,
-      schema.newProjectName
+      schema.newProjectName,
     );
   });
 }
@@ -61,7 +61,7 @@ function updateReadme(
   tree: Tree,
   dir: string,
   oldProjectName: string,
-  newProjectName: string
+  newProjectName: string,
 ) {
   const readmePath = joinPathFragments(dir, 'README.md');
   if (!tree.exists(readmePath)) {

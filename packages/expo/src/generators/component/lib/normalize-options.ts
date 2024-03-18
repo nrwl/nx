@@ -12,7 +12,7 @@ export interface NormalizedSchema extends Schema {
 
 export async function normalizeOptions(
   host: Tree,
-  options: Schema
+  options: Schema,
 ): Promise<NormalizedSchema> {
   assertValidOptions(options);
 
@@ -43,7 +43,7 @@ export async function normalizeOptions(
 
   if (options.export && projectType === 'application') {
     logger.warn(
-      `The "--export" option should not be used with applications and will do nothing.`
+      `The "--export" option should not be used with applications and will do nothing.`,
     );
   }
 
@@ -70,7 +70,7 @@ function assertValidOptions(options: Schema) {
         suggestion = `${options.directory}${s}${suggestion}`;
       }
       throw new Error(
-        `Found "${s}" in the component name. Did you mean to use the --directory option (e.g. \`nx g c ${name} --directory ${suggestion}\`)?`
+        `Found "${s}" in the component name. Did you mean to use the --directory option (e.g. \`nx g c ${name} --directory ${suggestion}\`)?`,
       );
     }
   });

@@ -20,13 +20,13 @@ export class DaemonSocketMessenger {
   listen(
     onData: (message: string) => void,
     onClose: () => void = () => {},
-    onError: (err: Error) => void = (err) => {}
+    onError: (err: Error) => void = (err) => {},
   ) {
     this.socket.on(
       'data',
       consumeMessagesFromSocket(async (message) => {
         onData(message);
-      })
+      }),
     );
 
     this.socket.on('close', onClose);

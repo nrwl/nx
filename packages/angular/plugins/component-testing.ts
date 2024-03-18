@@ -45,7 +45,7 @@ import { gte } from 'semver';
  */
 export function nxComponentTestingPreset(
   pathToConfig: string,
-  options?: NxComponentTestingOptions
+  options?: NxComponentTestingOptions,
 ) {
   if (global.NX_GRAPH_CREATION || global.NX_CYPRESS_INIT_GENERATOR_RUNNING) {
     // this is only used by plugins, so we don't need the component testing
@@ -64,7 +64,7 @@ export function nxComponentTestingPreset(
       `Unable to read the project graph for component testing.
 This is likely due to not running via nx. i.e. 'nx component-test my-project'.
 Please open an issue if this error persists.
-${e.stack ? e.stack : e}`
+${e.stack ? e.stack : e}`,
     );
   }
 
@@ -75,7 +75,7 @@ ${e.stack ? e.stack : e}`
     ctProjectConfig.targets,
     ctProjectConfig.name,
     options?.ctTargetName || 'component-test',
-    ctConfigurationName
+    ctConfigurationName,
   );
 
   const buildTarget = options?.buildTarget
@@ -102,13 +102,13 @@ ${e.stack ? e.stack : e}`
     graph.nodes[buildTarget.project]?.data.targets,
     buildTarget.project,
     buildTarget.target,
-    buildTarget.configuration
+    buildTarget.configuration,
   );
 
   const buildableProjectConfig = normalizeBuildTargetOptions(
     buildContext,
     ctContext,
-    offset
+    offset,
   );
 
   return {
@@ -123,7 +123,7 @@ ${e.stack ? e.stack : e}`
           ctProjectConfig.root,
           'cypress',
           'support',
-          'component-index.html'
+          'component-index.html',
         )
       : undefined,
     devServer: {
@@ -153,7 +153,7 @@ function getBuildableTarget(ctContext: ExecutorContext) {
       Has targets? ${!!targets}
       Has target name? ${ctContext.targetName}
       Has ct project name? ${ctContext.projectName}
-      `
+      `,
     );
   }
 
@@ -163,25 +163,25 @@ function getBuildableTarget(ctContext: ExecutorContext) {
       target: ctContext.targetName,
       configuration: ctContext.configurationName,
     },
-    ctContext
+    ctContext,
   );
 
   if (!cypressCtOptions.devServerTarget) {
     throw new Error(
-      `Unable to find the 'devServerTarget' executor option in the '${ctContext.targetName}' target of the '${ctContext.projectName}' project`
+      `Unable to find the 'devServerTarget' executor option in the '${ctContext.targetName}' target of the '${ctContext.projectName}' project`,
     );
   }
 
   return parseTargetString(
     cypressCtOptions.devServerTarget,
-    ctContext.projectGraph
+    ctContext.projectGraph,
   );
 }
 
 function normalizeBuildTargetOptions(
   buildContext: ExecutorContext,
   ctContext: ExecutorContext,
-  offset?: string
+  offset?: string,
 ): {
   root: string;
   sourceRoot: string;
@@ -193,7 +193,7 @@ function normalizeBuildTargetOptions(
       target: buildContext.targetName,
       configuration: buildContext.configurationName,
     },
-    buildContext
+    buildContext,
   );
   const buildOptions = withSchemaDefaults(options);
 
@@ -218,7 +218,7 @@ function normalizeBuildTargetOptions(
         Array.isArray(buildOptions.polyfills) &&
         buildOptions.polyfills.length > 0
           ? (buildOptions.polyfills as string[]).map((p) =>
-              handlePolyfillPath(p)
+              handlePolyfillPath(p),
             )
           : handlePolyfillPath(buildOptions.polyfills as string);
     }
@@ -245,7 +245,7 @@ function normalizeBuildTargetOptions(
     isCtProjectUsingBuildProject(
       ctContext.projectGraph,
       buildContext.projectName,
-      ctContext.projectName
+      ctContext.projectName,
     )
   ) {
     if (offset) {
@@ -269,7 +269,7 @@ function normalizeBuildTargetOptions(
           includePaths: buildOptions.stylePreprocessorOptions.includePaths.map(
             (path) => {
               return joinPathFragments(offset, path);
-            }
+            },
           ),
         };
       }
@@ -351,15 +351,15 @@ function getTempStylesForTailwind(ctExecutorContext: ExecutorContext) {
   const ctProjectTailwindConfig = join(
     ctExecutorContext.root,
     ctProjectConfig.root,
-    'tailwind.config'
+    'tailwind.config',
   );
   const exts = ['js', 'cjs'];
   const isTailWindInCtProject = exts.some((ext) =>
-    existsSync(`${ctProjectTailwindConfig}.${ext}`)
+    existsSync(`${ctProjectTailwindConfig}.${ext}`),
   );
   const rootTailwindPath = join(ctExecutorContext.root, 'tailwind.config');
   const isTailWindInRoot = exts.some((ext) =>
-    existsSync(`${rootTailwindPath}.${ext}`)
+    existsSync(`${rootTailwindPath}.${ext}`),
   );
 
   if (isTailWindInRoot || isTailWindInCtProject) {
@@ -373,7 +373,7 @@ function getTempStylesForTailwind(ctExecutorContext: ExecutorContext) {
 @tailwind components;
 @tailwind utilities;
 `,
-        { encoding: 'utf-8' }
+        { encoding: 'utf-8' },
       );
 
       return pathToStyle;
@@ -387,7 +387,7 @@ function getTempStylesForTailwind(ctExecutorContext: ExecutorContext) {
 
 function isOffsetNeeded(
   ctExecutorContext: ExecutorContext,
-  ctProjectConfig: ProjectConfiguration
+  ctProjectConfig: ProjectConfiguration,
 ) {
   try {
     const supportsWorkspaceRoot = isCyVersionGreaterThanOrEqual('12.9.0');
@@ -407,9 +407,9 @@ function isOffsetNeeded(
           join(
             ctExecutorContext.root,
             ctProjectConfig.root,
-            `tailwind.config.${ext}`
-          )
-        )
+            `tailwind.config.${ext}`,
+          ),
+        ),
       )
     ) {
       return true;

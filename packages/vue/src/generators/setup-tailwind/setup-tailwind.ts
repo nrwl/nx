@@ -17,7 +17,7 @@ import { join } from 'path';
 
 export async function setupTailwindGenerator(
   tree: Tree,
-  options: SetupTailwindOptions
+  options: SetupTailwindOptions,
 ): Promise<void | GeneratorCallback> {
   let installTask: GeneratorCallback | undefined = undefined;
   const project = readProjectConfiguration(tree, options.project);
@@ -34,7 +34,7 @@ export async function setupTailwindGenerator(
         autoprefixer: autoprefixerVersion,
         postcss: postcssVersion,
         tailwindcss: tailwindcssVersion,
-      }
+      },
     );
   }
 

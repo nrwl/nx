@@ -18,7 +18,7 @@ describe('update-16-7-0-add-babel-core', () => {
     await addBabelCore(tree);
 
     expect(
-      readJson(tree, 'package.json').devDependencies['@babel/core']
+      readJson(tree, 'package.json').devDependencies['@babel/core'],
     ).toBeDefined();
   });
 
@@ -26,7 +26,7 @@ describe('update-16-7-0-add-babel-core', () => {
     await addBabelCore(tree);
 
     expect(
-      readJson(tree, 'package.json').devDependencies['@babel/core']
+      readJson(tree, 'package.json').devDependencies['@babel/core'],
     ).not.toBeDefined();
   });
 });

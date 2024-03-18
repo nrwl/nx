@@ -55,7 +55,7 @@ export function extractLayoutDirectory(directory?: string): {
 function inOrderOfPreference(
   tree: Tree,
   selectedFolders: string[],
-  defaultChoice: string
+  defaultChoice: string,
 ) {
   for (let i = 0; i < selectedFolders.length; ++i) {
     if (tree.exists(selectedFolders[i])) return selectedFolders[i];

@@ -22,13 +22,13 @@ export async function directiveGenerator(tree: Tree, schema: Schema) {
       fileName: options.fileName,
       standalone: options.standalone,
       tpl: '',
-    }
+    },
   );
 
   if (options.skipTests) {
     const pathToSpecFile = joinPathFragments(
       options.directory,
-      `${options.fileName}.spec.ts`
+      `${options.fileName}.spec.ts`,
     );
 
     tree.delete(pathToSpecFile);
@@ -45,7 +45,7 @@ export async function directiveGenerator(tree: Tree, schema: Schema) {
       options.fileName,
       'declarations',
       true,
-      options.export
+      options.export,
     );
   }
 

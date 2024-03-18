@@ -52,7 +52,7 @@ describe('migrate-mf-util-usage', () => {
     // ASSERT
     expect(tree.read('test.ts', 'utf-8')).toEqual(expectedTestFileContents);
     expect(
-      readJson(tree, 'package.json').devDependencies['@nx/webpack']
+      readJson(tree, 'package.json').devDependencies['@nx/webpack'],
     ).toBeDefined();
   });
 
@@ -74,7 +74,7 @@ describe('migrate-mf-util-usage', () => {
     // ASSERT
     expect(tree.read('test.ts', 'utf-8')).toEqual(expectedTestFileContents);
     expect(
-      readJson(tree, 'package.json').devDependencies['@nx/webpack']
+      readJson(tree, 'package.json').devDependencies['@nx/webpack'],
     ).toBeDefined();
   });
 
@@ -98,7 +98,7 @@ describe('migrate-mf-util-usage', () => {
     // ASSERT
     expect(tree.read('test.ts', 'utf-8')).toEqual(expectedTestFileContents);
     expect(
-      readJson(tree, 'package.json').devDependencies['@nx/webpack']
+      readJson(tree, 'package.json').devDependencies['@nx/webpack'],
     ).toBeDefined();
   });
 
@@ -150,7 +150,7 @@ describe('migrate-mf-util-usage', () => {
       // ASSERT
       expect(tree.read('test.ts', 'utf-8')).toEqual(expectedTestFileContents);
       expect(
-        readJson(tree, 'package.json').devDependencies['@nx/webpack']
+        readJson(tree, 'package.json').devDependencies['@nx/webpack'],
       ).toBeDefined();
     });
 
@@ -172,7 +172,7 @@ describe('migrate-mf-util-usage', () => {
       // ASSERT
       expect(tree.read('test.ts', 'utf-8')).toEqual(expectedTestFileContents);
       expect(
-        readJson(tree, 'package.json').devDependencies['@nx/webpack']
+        readJson(tree, 'package.json').devDependencies['@nx/webpack'],
       ).toBeDefined();
     });
 
@@ -196,7 +196,7 @@ describe('migrate-mf-util-usage', () => {
       // ASSERT
       expect(tree.read('test.ts', 'utf-8')).toEqual(expectedTestFileContents);
       expect(
-        readJson(tree, 'package.json').devDependencies['@nx/webpack']
+        readJson(tree, 'package.json').devDependencies['@nx/webpack'],
       ).toBeDefined();
     });
   });
@@ -225,7 +225,7 @@ describe('migrate-mf-util-usage', () => {
       "
     `);
     expect(
-      readJson(tree, 'package.json').devDependencies['@nx/webpack']
+      readJson(tree, 'package.json').devDependencies['@nx/webpack'],
     ).toBeDefined();
   });
 });

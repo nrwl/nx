@@ -171,7 +171,7 @@ describe('create-nx-workspace', () => {
         bundler: 'webpack',
         ssr: false,
         prefix: '1-one',
-      })
+      }),
     ).toThrow();
   });
 
@@ -389,7 +389,7 @@ describe('create-nx-workspace', () => {
         checkFilesExist(packageManagerLockFile['npm']);
         checkFilesDoNotExist(
           packageManagerLockFile['yarn'],
-          packageManagerLockFile['pnpm']
+          packageManagerLockFile['pnpm'],
         );
         process.env.SELECTED_PM = packageManager;
       }, 90000);
@@ -401,7 +401,7 @@ describe('create-nx-workspace', () => {
         checkFilesExist(packageManagerLockFile['pnpm']);
         checkFilesDoNotExist(
           packageManagerLockFile['yarn'],
-          packageManagerLockFile['npm']
+          packageManagerLockFile['npm'],
         );
         process.env.SELECTED_PM = packageManager;
       }, 90000);
@@ -414,7 +414,7 @@ describe('create-nx-workspace', () => {
         checkFilesExist(packageManagerLockFile['yarn']);
         checkFilesDoNotExist(
           packageManagerLockFile['pnpm'],
-          packageManagerLockFile['npm']
+          packageManagerLockFile['npm'],
         );
         process.env.SELECTED_PM = packageManager;
       }, 90000);
@@ -534,7 +534,7 @@ describe('create-nx-workspace yarn berry', () => {
 
     expect(existsSync(`${tmpDir}/${wsName}/.yarnrc.yml`)).toBeTruthy();
     expect(
-      readFileSync(`${tmpDir}/${wsName}/.yarnrc.yml`, { encoding: 'utf-8' })
+      readFileSync(`${tmpDir}/${wsName}/.yarnrc.yml`, { encoding: 'utf-8' }),
     ).toMatchInlineSnapshot(`
       "nodeLinker: node-modules
 
@@ -554,7 +554,7 @@ describe('create-nx-workspace yarn berry', () => {
 
     expect(existsSync(`${tmpDir}/${wsName}/.yarnrc.yml`)).toBeTruthy();
     expect(
-      readFileSync(`${tmpDir}/${wsName}/.yarnrc.yml`, { encoding: 'utf-8' })
+      readFileSync(`${tmpDir}/${wsName}/.yarnrc.yml`, { encoding: 'utf-8' }),
     ).toMatchInlineSnapshot(`
       "nodeLinker: node-modules
 

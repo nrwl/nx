@@ -16,7 +16,7 @@ export async function addFiles(
   tree: Tree,
   projectConfig: ProjectConfiguration,
   options: CypressComponentConfigurationSchema,
-  found: FoundTarget
+  found: FoundTarget,
 ) {
   // must dyanmicaly import to prevent packages not using cypress from erroring out
   // when importing react
@@ -30,7 +30,7 @@ export async function addFiles(
   if (options.bundler && options.bundler !== actualBundler) {
     logger.warn(
       `You have specified ${options.bundler} as the bundler but this project is configured to use ${actualBundler}.
-      This may cause errors. If you are seeing errors, try removing the --bundler option.`
+      This may cause errors. If you are seeing errors, try removing the --bundler option.`,
     );
   }
 
@@ -40,15 +40,15 @@ export async function addFiles(
     projectConfig.root,
     'cypress',
     'support',
-    'component.ts'
+    'component.ts',
   );
 
   const updatedCommandFile = await addMountDefinition(
-    tree.read(commandFile, 'utf-8')
+    tree.read(commandFile, 'utf-8'),
   );
   tree.write(
     commandFile,
-    `import { mount } from 'cypress/react18';\n${updatedCommandFile}`
+    `import { mount } from 'cypress/react18';\n${updatedCommandFile}`,
   );
 
   if (

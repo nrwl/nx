@@ -21,7 +21,7 @@ export function getRemixConfigPath(tree: Tree, projectName: string) {
 
 export function getRemixConfigPathFromProjectRoot(
   tree: Tree,
-  projectRoot: string
+  projectRoot: string,
 ) {
   let pathToRemixConfig: string;
   for (const ext of ['.js', '.mjs', '.cjs']) {
@@ -32,7 +32,7 @@ export function getRemixConfigPathFromProjectRoot(
   }
 
   throw new Error(
-    `Could not find a Remix Config File. Please ensure a "remix.config.js" file exists at the root of your project.`
+    `Could not find a Remix Config File. Please ensure a "remix.config.js" file exists at the root of your project.`,
   );
 }
 
@@ -41,7 +41,7 @@ const _remixConfigCache: Record<string, AppConfig> = {};
 export async function getRemixConfigValues(tree: Tree, projectName: string) {
   const remixConfigPath = joinPathFragments(
     workspaceRoot,
-    getRemixConfigPath(tree, projectName)
+    getRemixConfigPath(tree, projectName),
   );
   const cacheKey = `${projectName}/${remixConfigPath}`;
   let appConfig = _remixConfigCache[cacheKey];
@@ -49,7 +49,7 @@ export async function getRemixConfigValues(tree: Tree, projectName: string) {
   if (!appConfig) {
     try {
       const importedConfig = await Function(
-        `return import("${remixConfigPath}?t=${Date.now()}")`
+        `return import("${remixConfigPath}?t=${Date.now()}")`,
       )();
       appConfig = (importedConfig?.default || importedConfig) as AppConfig;
     } catch {

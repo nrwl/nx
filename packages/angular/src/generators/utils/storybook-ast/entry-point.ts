@@ -12,11 +12,11 @@ export type EntryPoint = { name: string; path: string; excludeDirs?: string[] };
 
 export function getProjectEntryPoints(
   tree: Tree,
-  projectName: string
+  projectName: string,
 ): EntryPoint[] {
   const { root, sourceRoot, projectType } = readProjectConfiguration(
     tree,
-    projectName
+    projectName,
   );
 
   const rootEntryPoint: EntryPoint = {
@@ -25,7 +25,7 @@ export function getProjectEntryPoints(
       tree,
       root,
       sourceRoot,
-      projectType
+      projectType,
     ),
   };
   const entryPointRootPaths = [rootEntryPoint];
@@ -50,7 +50,7 @@ export function getProjectEntryPoints(
 function collectLibrarySecondaryEntryPoints(
   tree: Tree,
   root: string,
-  entryPointPaths: EntryPoint[]
+  entryPointPaths: EntryPoint[],
 ): void {
   const exclude = new Set([`${root}/ng-package.json`, `${root}/package.json`]);
 
@@ -74,7 +74,7 @@ function collectLibrarySecondaryEntryPoints(
     const entryPointPath = getSourcePath(
       tree,
       normalizePath(dirname(normalizedPath)),
-      'lib'
+      'lib',
     );
 
     entryPointPaths.push({
@@ -88,13 +88,13 @@ function normalizeMainEntryPointSourceRoot(
   tree: Tree,
   root: string,
   sourceRoot: string,
-  projectType: ProjectType
+  projectType: ProjectType,
 ): string {
   const projectTypeDir = projectType === 'application' ? 'app' : 'lib';
 
   if (sourceRoot) {
     return [joinPathFragments(sourceRoot, projectTypeDir), sourceRoot].find(
-      (path) => tree.exists(path)
+      (path) => tree.exists(path),
     );
   }
 
@@ -104,7 +104,7 @@ function normalizeMainEntryPointSourceRoot(
 function getSourcePath(
   tree: Tree,
   basePath: string,
-  projectTypeDir: string
+  projectTypeDir: string,
 ): string | undefined {
   const candidatePaths = [
     joinPathFragments(basePath, 'src', projectTypeDir),

@@ -10,11 +10,11 @@ export const unselectedStateConfig: ProjectGraphStateNodeConfig = {
       actions: [
         assign((ctx, event) => {
           const existingProjectNames = ctx.projects.map(
-            (project) => project.name
+            (project) => project.name,
           );
           const newProjectNames = event.projects.map((project) => project.name);
           const newSelectedProjects = newProjectNames.filter(
-            (projectName) => !existingProjectNames.includes(projectName)
+            (projectName) => !existingProjectNames.includes(projectName),
           );
 
           ctx.selectedProjects = [
@@ -36,7 +36,7 @@ export const unselectedStateConfig: ProjectGraphStateNodeConfig = {
           }),
           {
             to: (context) => context.graphActor,
-          }
+          },
         ),
       ],
     },

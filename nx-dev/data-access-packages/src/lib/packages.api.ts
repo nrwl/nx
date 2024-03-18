@@ -23,7 +23,7 @@ export class PackagesApi {
       prefix: string;
       publicDocsRoot: string;
       tagsApi: TagsApi;
-    }
+    },
   ) {
     if (!options.id) {
       throw new Error('id cannot be undefined');
@@ -63,7 +63,7 @@ export class PackagesApi {
      */
     function generateSegments(
       path: string,
-      prefix: string = ''
+      prefix: string = '',
     ): StaticDocumentPaths {
       const segments = path.split('/').filter(Boolean).flat();
       return {
@@ -90,7 +90,7 @@ export class PackagesApi {
       experiment.packages.push(generateSegments(p.path, this.options.prefix));
 
       Object.keys(p.documents).map((path) =>
-        experiment.documents.push(generateSegments(path, this.options.prefix))
+        experiment.documents.push(generateSegments(path, this.options.prefix)),
       );
       if (p.name === 'devkit') {
         readdirSync('../../docs/generated/devkit').forEach((fileName) => {
@@ -98,8 +98,8 @@ export class PackagesApi {
             experiment.documents.push(
               generateSegments(
                 `packages/devkit/documents/${fileName.replace('.md', '')}`,
-                this.options.prefix
-              )
+                this.options.prefix,
+              ),
             );
           } else {
             readdirSync('../../docs/generated/devkit/' + fileName).forEach(
@@ -108,23 +108,23 @@ export class PackagesApi {
                   generateSegments(
                     `packages/devkit/documents/${fileName}/${subFileName.replace(
                       '.md',
-                      ''
+                      '',
                     )}`,
-                    this.options.prefix
-                  )
+                    this.options.prefix,
+                  ),
                 );
-              }
+              },
             );
           }
         });
       }
 
       Object.keys(p.executors).forEach((path) =>
-        experiment.executors.push(generateSegments(path, this.options.prefix))
+        experiment.executors.push(generateSegments(path, this.options.prefix)),
       );
 
       Object.keys(p.generators).forEach((path) =>
-        experiment.generators.push(generateSegments(path, this.options.prefix))
+        experiment.generators.push(generateSegments(path, this.options.prefix)),
       );
     });
 
@@ -137,7 +137,7 @@ export class PackagesApi {
 
     if (!pkg)
       throw new Error(
-        `Package not found in manifest with: "${path.join('/')}"`
+        `Package not found in manifest with: "${path.join('/')}"`,
       );
 
     return {
@@ -153,13 +153,13 @@ export class PackagesApi {
   }
   getPackageFileMetadatas(
     name: string,
-    type: 'executors' | 'generators'
+    type: 'executors' | 'generators',
   ): Record<string, FileMetadata> {
     return this.manifest[name][type];
   }
   getSchemaMetadata(fileMetadata: FileMetadata): SchemaMetadata {
     return JSON.parse(
-      readFileSync(this.getFilePath(fileMetadata.file), 'utf-8')
+      readFileSync(this.getFilePath(fileMetadata.file), 'utf-8'),
     );
   }
 

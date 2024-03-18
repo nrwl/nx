@@ -28,7 +28,7 @@ describe('getHelperDependency', () => {
       helperDependency,
       configPath,
       dependencies,
-      projectGraph
+      projectGraph,
     );
 
     expect(result).toEqual({

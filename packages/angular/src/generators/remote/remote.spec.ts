@@ -117,7 +117,7 @@ describe('MF Remote App Generator', () => {
     } catch (error) {
       // ASSERT
       expect(error.message).toEqual(
-        'The name of the application to be used as the host app does not exist. (host)'
+        'The name of the application to be used as the host app does not exist. (host)',
       );
     }
   });
@@ -191,18 +191,18 @@ describe('MF Remote App Generator', () => {
     expect(tree.exists(`test/src/app/app.module.ts`)).toBeFalsy();
     expect(tree.exists(`test/src/app/app.component.ts`)).toBeFalsy();
     expect(
-      tree.exists(`test/src/app/remote-entry/entry.module.ts`)
+      tree.exists(`test/src/app/remote-entry/entry.module.ts`),
     ).toBeFalsy();
     expect(tree.read(`test/src/bootstrap.ts`, 'utf-8')).toMatchSnapshot();
     expect(
-      tree.read(`test/module-federation.config.js`, 'utf-8')
+      tree.read(`test/module-federation.config.js`, 'utf-8'),
     ).toMatchSnapshot();
     expect(
-      tree.read(`test/src/app/remote-entry/entry.component.ts`, 'utf-8')
+      tree.read(`test/src/app/remote-entry/entry.component.ts`, 'utf-8'),
     ).toMatchSnapshot();
     expect(tree.read(`test/src/app/app.routes.ts`, 'utf-8')).toMatchSnapshot();
     expect(
-      tree.read(`test/src/app/remote-entry/entry.routes.ts`, 'utf-8')
+      tree.read(`test/src/app/remote-entry/entry.routes.ts`, 'utf-8'),
     ).toMatchSnapshot();
     const tsconfigJson = readJson(tree, getRootTsConfigPathInTree(tree));
     expect(tsconfigJson.compilerOptions.paths['test/Routes']).toEqual([
@@ -225,18 +225,18 @@ describe('MF Remote App Generator', () => {
     expect(tree.exists(`test/src/app/app.module.ts`)).toBeFalsy();
     expect(tree.exists(`test/src/app/app.component.ts`)).toBeFalsy();
     expect(
-      tree.exists(`test/src/app/remote-entry/entry.module.ts`)
+      tree.exists(`test/src/app/remote-entry/entry.module.ts`),
     ).toBeFalsy();
     expect(tree.read(`test/src/bootstrap.ts`, 'utf-8')).toMatchSnapshot();
     expect(
-      tree.read(`test/module-federation.config.ts`, 'utf-8')
+      tree.read(`test/module-federation.config.ts`, 'utf-8'),
     ).toMatchSnapshot();
     expect(
-      tree.read(`test/src/app/remote-entry/entry.component.ts`, 'utf-8')
+      tree.read(`test/src/app/remote-entry/entry.component.ts`, 'utf-8'),
     ).toMatchSnapshot();
     expect(tree.read(`test/src/app/app.routes.ts`, 'utf-8')).toMatchSnapshot();
     expect(
-      tree.read(`test/src/app/remote-entry/entry.routes.ts`, 'utf-8')
+      tree.read(`test/src/app/remote-entry/entry.routes.ts`, 'utf-8'),
     ).toMatchSnapshot();
   });
 
@@ -296,7 +296,7 @@ describe('MF Remote App Generator', () => {
     // ASSERT
     expect(tree.read('test/src/index.html', 'utf-8')).not.toContain('app-root');
     expect(tree.read('test/src/index.html', 'utf-8')).toContain(
-      'app-test-entry'
+      'app-test-entry',
     );
   });
 
@@ -316,35 +316,35 @@ describe('MF Remote App Generator', () => {
       // ASSERT
       const project = readProjectConfiguration(tree, 'test');
       expect(
-        tree.exists(`test/src/app/remote-entry/entry.module.ts`)
+        tree.exists(`test/src/app/remote-entry/entry.module.ts`),
       ).toBeTruthy();
       expect(
-        tree.read(`test/src/app/app.module.ts`, 'utf-8')
+        tree.read(`test/src/app/app.module.ts`, 'utf-8'),
       ).toMatchSnapshot();
       expect(tree.read(`test/src/bootstrap.ts`, 'utf-8')).toMatchSnapshot();
       expect(
-        tree.read(`test/src/bootstrap.server.ts`, 'utf-8')
+        tree.read(`test/src/bootstrap.server.ts`, 'utf-8'),
       ).toMatchSnapshot();
       expect(tree.read(`test/src/main.server.ts`, 'utf-8')).toMatchSnapshot();
       expect(tree.read(`test/server.ts`, 'utf-8')).toMatchSnapshot();
       expect(
-        tree.read(`test/module-federation.config.js`, 'utf-8')
+        tree.read(`test/module-federation.config.js`, 'utf-8'),
       ).toMatchSnapshot();
       expect(
-        tree.read(`test/webpack.server.config.js`, 'utf-8')
+        tree.read(`test/webpack.server.config.js`, 'utf-8'),
       ).toMatchSnapshot();
       expect(
-        tree.read(`test/src/app/remote-entry/entry.component.ts`, 'utf-8')
+        tree.read(`test/src/app/remote-entry/entry.component.ts`, 'utf-8'),
       ).toMatchSnapshot();
       expect(
-        tree.read(`test/src/app/app.routes.ts`, 'utf-8')
+        tree.read(`test/src/app/app.routes.ts`, 'utf-8'),
       ).toMatchSnapshot();
       expect(
-        tree.read(`test/src/app/remote-entry/entry.routes.ts`, 'utf-8')
+        tree.read(`test/src/app/remote-entry/entry.routes.ts`, 'utf-8'),
       ).toMatchSnapshot();
       expect(project.targets.server).toMatchSnapshot();
       expect(
-        tree.read(`test/src/app/remote-entry/entry.routes.ts`, 'utf-8')
+        tree.read(`test/src/app/remote-entry/entry.routes.ts`, 'utf-8'),
       ).toMatchSnapshot();
       expect(project.targets['static-server']).toMatchSnapshot();
     });
@@ -365,35 +365,35 @@ describe('MF Remote App Generator', () => {
       // ASSERT
       const project = readProjectConfiguration(tree, 'test');
       expect(
-        tree.exists(`test/src/app/remote-entry/entry.module.ts`)
+        tree.exists(`test/src/app/remote-entry/entry.module.ts`),
       ).toBeTruthy();
       expect(
-        tree.read(`test/src/app/app.module.ts`, 'utf-8')
+        tree.read(`test/src/app/app.module.ts`, 'utf-8'),
       ).toMatchSnapshot();
       expect(tree.read(`test/src/bootstrap.ts`, 'utf-8')).toMatchSnapshot();
       expect(
-        tree.read(`test/src/bootstrap.server.ts`, 'utf-8')
+        tree.read(`test/src/bootstrap.server.ts`, 'utf-8'),
       ).toMatchSnapshot();
       expect(tree.read(`test/src/main.server.ts`, 'utf-8')).toMatchSnapshot();
       expect(tree.read(`test/server.ts`, 'utf-8')).toMatchSnapshot();
       expect(
-        tree.read(`test/module-federation.config.ts`, 'utf-8')
+        tree.read(`test/module-federation.config.ts`, 'utf-8'),
       ).toMatchSnapshot();
       expect(
-        tree.read(`test/webpack.server.config.ts`, 'utf-8')
+        tree.read(`test/webpack.server.config.ts`, 'utf-8'),
       ).toMatchSnapshot();
       expect(
-        tree.read(`test/src/app/remote-entry/entry.component.ts`, 'utf-8')
+        tree.read(`test/src/app/remote-entry/entry.component.ts`, 'utf-8'),
       ).toMatchSnapshot();
       expect(
-        tree.read(`test/src/app/app.routes.ts`, 'utf-8')
+        tree.read(`test/src/app/app.routes.ts`, 'utf-8'),
       ).toMatchSnapshot();
       expect(
-        tree.read(`test/src/app/remote-entry/entry.routes.ts`, 'utf-8')
+        tree.read(`test/src/app/remote-entry/entry.routes.ts`, 'utf-8'),
       ).toMatchSnapshot();
       expect(project.targets.server).toMatchSnapshot();
       expect(
-        tree.read(`test/src/app/remote-entry/entry.routes.ts`, 'utf-8')
+        tree.read(`test/src/app/remote-entry/entry.routes.ts`, 'utf-8'),
       ).toMatchSnapshot();
       expect(project.targets['static-server']).toMatchSnapshot();
     });
@@ -451,7 +451,7 @@ describe('MF Remote App Generator', () => {
 
       expect(tree.exists('apps/shared/test/webpack.config.js')).toBe(true);
       expect(readProjectConfiguration(tree, 'shared-test').root).toBe(
-        'apps/shared/test'
+        'apps/shared/test',
       );
     });
   });

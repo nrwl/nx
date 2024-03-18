@@ -7,7 +7,7 @@ let tsModule: typeof import('typescript');
 
 export function addLoadChildren(
   tree: Tree,
-  options: NormalizedSchema['libraryOptions']
+  options: NormalizedSchema['libraryOptions'],
 ) {
   if (!tree.exists(options.parent)) {
     throw new Error(`Cannot find '${options.parent}'`);
@@ -21,7 +21,7 @@ export function addLoadChildren(
     options.parent,
     moduleSource,
     tsModule.ScriptTarget.Latest,
-    true
+    true,
   );
 
   const route = `{ path: '${

@@ -28,20 +28,20 @@ export function addPathToExposes(
   tree: Tree,
   projectPath: string,
   moduleName: string,
-  modulePath: string
+  modulePath: string,
 ) {
   const moduleFederationConfigPath = joinPathFragments(
     projectPath,
     tree.exists(joinPathFragments(projectPath, 'module-federation.config.ts'))
       ? 'module-federation.config.ts'
-      : 'module-federation.config.js'
+      : 'module-federation.config.js',
   );
 
   updateExposesProperty(
     tree,
     moduleFederationConfigPath,
     moduleName,
-    modulePath
+    modulePath,
   );
 }
 
@@ -55,7 +55,7 @@ export function checkRemoteExists(tree: Tree, remoteName: string) {
   if (!remote) return false;
   const hasModuleFederationConfig =
     tree.exists(
-      joinPathFragments(remote.root, 'module-federation.config.js')
+      joinPathFragments(remote.root, 'module-federation.config.js'),
     ) ||
     tree.exists(joinPathFragments(remote.root, 'module-federation.config.ts'));
 
@@ -93,11 +93,11 @@ export function findExposes(sourceFile: SourceFile) {
 // Create a new property assignment
 export function createObjectEntry(
   moduleName: string,
-  modulePath: string
+  modulePath: string,
 ): PropertyAssignment {
   return tsModule.factory.createPropertyAssignment(
     tsModule.factory.createStringLiteral(`./${moduleName}`, true),
-    tsModule.factory.createStringLiteral(modulePath, true)
+    tsModule.factory.createStringLiteral(modulePath, true),
   );
 }
 
@@ -105,11 +105,11 @@ export function createObjectEntry(
 export function updateExposesPropertyinAST(
   source: SourceFile,
   exposesObject: ObjectLiteralExpression,
-  newEntry: PropertyAssignment
+  newEntry: PropertyAssignment,
 ) {
   const updatedExposes = tsModule.factory.updateObjectLiteralExpression(
     exposesObject,
-    [...exposesObject.properties, newEntry]
+    [...exposesObject.properties, newEntry],
   );
 
   const transform: TransformerFactory<SourceFile> = (context) => {
@@ -130,13 +130,13 @@ export function writeToConfig(
   tree: Tree,
   filename: string,
   source: SourceFile,
-  updatedSourceFile: SourceFile
+  updatedSourceFile: SourceFile,
 ) {
   const printer = tsModule.createPrinter();
   const update = printer.printNode(
     tsModule.EmitHint.Unspecified,
     updatedSourceFile,
-    source
+    source,
   );
   tree.write(filename, update);
 }
@@ -145,14 +145,14 @@ export function updateExposesProperty(
   tree: Tree,
   filename: string,
   moduleName: string,
-  modulePath: string
+  modulePath: string,
 ) {
   const fileContent = tree.read(filename).toString();
   const source = tsModule.createSourceFile(
     filename,
     fileContent,
     tsModule.ScriptTarget.ES2015,
-    true
+    true,
   );
 
   const exposesObject = findExposes(source);
@@ -162,7 +162,7 @@ export function updateExposesProperty(
   const updatedSourceFile = updateExposesPropertyinAST(
     source,
     exposesObject,
-    newEntry
+    newEntry,
   );
   writeToConfig(tree, filename, source, updatedSourceFile);
 }

@@ -30,7 +30,7 @@ This command will update `.yarnrc.yml` with the path to the local yarn `bin` of 
 ```jsonc {% fileName="package.json" %}
 {
   // ...
-  "packageManager": "yarn@3.6.1"
+  "packageManager": "yarn@3.6.1",
 }
 ```
 

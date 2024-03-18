@@ -14,7 +14,7 @@ export type AssetGlob = FileInputOutput & {
 export function assetGlobsToFiles(
   assets: Array<AssetGlob | string>,
   rootDir: string,
-  outDir: string
+  outDir: string,
 ): FileInputOutput[] {
   const files: FileInputOutput[] = [];
 
@@ -22,7 +22,7 @@ export function assetGlobsToFiles(
     pattern: string,
     input = '',
     ignore: string[] = [],
-    dot: boolean = false
+    dot: boolean = false,
   ) => {
     return fastGlob.sync(pattern, {
       cwd: input,
@@ -45,7 +45,7 @@ export function assetGlobsToFiles(
         asset.glob,
         join(rootDir, asset.input),
         asset.ignore,
-        asset.dot ?? false
+        asset.dot ?? false,
       ).forEach((globbedFile) => {
         files.push({
           input: join(rootDir, asset.input, globbedFile),

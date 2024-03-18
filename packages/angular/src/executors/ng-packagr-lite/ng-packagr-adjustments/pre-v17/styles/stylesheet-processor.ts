@@ -58,7 +58,7 @@ export class StylesheetProcessor {
     private readonly cssUrl?: CssUrl,
     private readonly includePaths?: string[],
     private cacheDirectory?: string | false,
-    private readonly tailwindConfig?: string
+    private readonly tailwindConfig?: string,
   ) {
     // By default, browserslist defaults are too inclusive
     // https://github.com/browserslist/browserslist/blob/83764ea81ffaa39111c204b02c371afa44a4ff07/index.js#L516-L522
@@ -91,7 +91,7 @@ export class StylesheetProcessor {
     this.targets = transformSupportedBrowsersToTargets(this.browserslistData);
     const tailwindSetup = getTailwindSetup(
       this.projectBasePath,
-      this.tailwindConfig
+      this.tailwindConfig,
     );
     if (tailwindSetup) {
       this.cacheDirectory = undefined;
@@ -160,14 +160,14 @@ export class StylesheetProcessor {
         minify: true,
         target: this.targets,
         sourcefile: filePath,
-      }
+      },
     );
 
     if (esBuildWarnings.length > 0) {
       warnings.push(
         ...(await this.esbuild.formatMessages(esBuildWarnings, {
           kind: 'warning',
-        }))
+        })),
       );
     }
 
@@ -178,7 +178,7 @@ export class StylesheetProcessor {
         JSON.stringify({
           css: code,
           warnings,
-        })
+        }),
       );
     }
     warnings.forEach((msg) => log.warn(msg));
@@ -187,7 +187,7 @@ export class StylesheetProcessor {
   }
 
   private createPostCssProcessor(
-    tailwindSetup: TailwindSetup
+    tailwindSetup: TailwindSetup,
   ): ReturnType<typeof postcss> {
     const postCssPlugins = [];
     if (tailwindSetup) {
@@ -202,7 +202,7 @@ export class StylesheetProcessor {
       autoprefixer({
         ignoreUnknownVersions: true,
         overrideBrowserslist: this.browserslistData,
-      })
+      }),
     );
 
     return postcss(postCssPlugins);
@@ -239,7 +239,7 @@ export class StylesheetProcessor {
 }
 
 function transformSupportedBrowsersToTargets(
-  supportedBrowsers: string[]
+  supportedBrowsers: string[],
 ): string[] {
   const transformed: string[] = [];
 

@@ -15,7 +15,7 @@ describe('ProjectNode', () => {
             tags: [],
           },
         },
-        'apps'
+        'apps',
       );
 
       const result = projectNode.getCytoscapeNodeDef(false);
@@ -36,7 +36,7 @@ describe('ProjectNode', () => {
             tags: [],
           },
         },
-        'apps'
+        'apps',
       );
 
       const result = projectNode.getCytoscapeNodeDef(false);
@@ -57,7 +57,7 @@ describe('ProjectNode', () => {
             tags: [],
           },
         },
-        'apps'
+        'apps',
       );
 
       const result = projectNode.getCytoscapeNodeDef(true);
@@ -79,7 +79,7 @@ describe('ProjectNode', () => {
             projectType: 'library',
           },
         },
-        'libs'
+        'libs',
       );
 
       const result = projectNode.getCytoscapeNodeDef(false);
@@ -99,7 +99,7 @@ describe('ProjectNode', () => {
             projectType: 'library',
           },
         },
-        'libs'
+        'libs',
       );
 
       const result = projectNode.getCytoscapeNodeDef(false);
@@ -119,7 +119,7 @@ describe('ProjectNode', () => {
             projectType: 'library',
           },
         },
-        'libs'
+        'libs',
       );
 
       const result = projectNode.getCytoscapeNodeDef(true);

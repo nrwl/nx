@@ -22,13 +22,13 @@ export function replaceNrwlAngularMfImport(fileContents: string) {
       NRWL_ANGULAR_MFE_STATIC_IMPORT_SELECTOR,
       {
         visitAllChildren: true,
-      }
+      },
     );
 
     if (staticQueryResult && staticQueryResult.length > 0) {
       fileContents = `${fileContents.slice(
         0,
-        staticQueryResult[0].getStart()
+        staticQueryResult[0].getStart(),
       )}'@nrwl/angular/mf'${fileContents.slice(staticQueryResult[0].getEnd())}`;
     }
 
@@ -39,15 +39,15 @@ export function replaceNrwlAngularMfImport(fileContents: string) {
       NRWL_ANGULAR_MFE_DYNAMIC_IMPORT_SELECTOR,
       {
         visitAllChildren: true,
-      }
+      },
     );
 
     if (dynamicQueryResult && dynamicQueryResult.length > 0) {
       fileContents = `${fileContents.slice(
         0,
-        dynamicQueryResult[0].getStart()
+        dynamicQueryResult[0].getStart(),
       )}'@nrwl/angular/mf'${fileContents.slice(
-        dynamicQueryResult[0].getEnd()
+        dynamicQueryResult[0].getEnd(),
       )}`;
     }
   }
@@ -99,14 +99,14 @@ export function renameSetupMfeGeneratorUsages(fileContents: string) {
     SETUP_MFE_FUNCTION_CALL_MFE_TYPE_PROPERTY_ASSIGNMENT_SELECTOR,
     {
       visitAllChildren: true,
-    }
+    },
   );
 
   while (queryResult && queryResult.length > 0) {
     const node = queryResult[0];
     fileContents = `${fileContents.slice(
       0,
-      node.getStart()
+      node.getStart(),
     )}mfType${fileContents.slice(node.getEnd())}`;
 
     ast = tsquery.ast(fileContents);
@@ -116,7 +116,7 @@ export function renameSetupMfeGeneratorUsages(fileContents: string) {
       SETUP_MFE_FUNCTION_CALL_MFE_TYPE_PROPERTY_ASSIGNMENT_SELECTOR,
       {
         visitAllChildren: true,
-      }
+      },
     );
   }
 

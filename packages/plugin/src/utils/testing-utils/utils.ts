@@ -25,7 +25,7 @@ export function copyNodeModules(modules: string[]) {
     removeSync(`${tmpProjPath()}/node_modules/${module}`);
     copySync(
       `./node_modules/${module}`,
-      `${tmpProjPath()}/node_modules/${module}`
+      `${tmpProjPath()}/node_modules/${module}`,
     );
   });
 }
@@ -52,7 +52,7 @@ export function expectTestsPass(output: { stdout: string; stderr: string }) {
  */
 export function updateFile(
   file: string,
-  content: string | ((originalFileContent: string) => string)
+  content: string | ((originalFileContent: string) => string),
 ): void {
   ensureDirSync(dirname(tmpProjPath(file)));
   if (typeof content === 'string') {
@@ -60,7 +60,7 @@ export function updateFile(
   } else {
     writeFileSync(
       tmpProjPath(file),
-      content(readFileSync(tmpProjPath(file)).toString())
+      content(readFileSync(tmpProjPath(file)).toString()),
     );
   }
 }
@@ -107,7 +107,7 @@ export function listFiles(dirName: string): string[] {
  */
 export function readJson<T extends object = any>(
   path: string,
-  options?: JsonParseOptions
+  options?: JsonParseOptions,
 ): T {
   return parseJson<T>(readFile(path), options);
 }

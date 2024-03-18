@@ -76,7 +76,7 @@ export function NxProjectGraphViz({
             containerRef.current,
             resolvedTheme,
             'nx-docs',
-            'TB'
+            'TB',
           );
           graph.handleProjectEvent({
             type: 'notifyGraphInitGraph',

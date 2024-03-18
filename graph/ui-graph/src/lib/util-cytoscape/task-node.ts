@@ -12,10 +12,13 @@ export interface TaskNodeDataDefinition extends cy.NodeDataDefinition {
 }
 
 export class TaskNode {
-  constructor(private task: Task, private project: ProjectGraphProjectNode) {}
+  constructor(
+    private task: Task,
+    private project: ProjectGraphProjectNode,
+  ) {}
 
   getCytoscapeNodeDef(
-    groupByProject: boolean
+    groupByProject: boolean,
   ): cy.NodeDefinition & { pannable: boolean } {
     return {
       group: 'nodes',

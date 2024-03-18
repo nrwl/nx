@@ -187,10 +187,10 @@ describe('app', () => {
       const projectsConfigurations = getProjects(appTree);
 
       expect(projectsConfigurations.get('my-app').root).toEqual(
-        'my-dir/my-app'
+        'my-dir/my-app',
       );
       expect(projectsConfigurations.get('my-app-e2e').root).toEqual(
-        'my-dir/my-app-e2e'
+        'my-dir/my-app-e2e',
       );
     }, 35000);
 
@@ -222,10 +222,10 @@ describe('app', () => {
       const projectsConfigurations = getProjects(appTree);
 
       expect(projectsConfigurations.get('my-app').root).toEqual(
-        'my-outer-dir/my-inner-dir/my-app'
+        'my-outer-dir/my-inner-dir/my-app',
       );
       expect(projectsConfigurations.get('my-app-e2e').root).toEqual(
-        'my-outer-dir/my-inner-dir/my-app-e2e'
+        'my-outer-dir/my-inner-dir/my-app-e2e',
       );
     });
 
@@ -293,10 +293,10 @@ describe('app', () => {
       });
 
       expect(
-        appTree.exists('my-dir/my-app-e2e/playwright.config.ts')
+        appTree.exists('my-dir/my-app-e2e/playwright.config.ts'),
       ).toBeTruthy();
       expect(
-        appTree.exists('my-dir/my-app-e2e/src/example.spec.ts')
+        appTree.exists('my-dir/my-app-e2e/src/example.spec.ts'),
       ).toBeTruthy();
     });
   });
@@ -308,10 +308,10 @@ describe('app', () => {
     });
 
     expect(
-      appTree.read('my-dir/my-app/src/app/app.tsx', 'utf-8')
+      appTree.read('my-dir/my-app/src/app/app.tsx', 'utf-8'),
     ).toMatchSnapshot();
     expect(
-      appTree.read('my-dir/my-app/src/app/nx-welcome.tsx').toString()
+      appTree.read('my-dir/my-app/src/app/nx-welcome.tsx').toString(),
     ).toContain('Hello there');
   });
 
@@ -331,7 +331,7 @@ describe('app', () => {
       expect(() => {
         readJson(appTree, `my-app/.babelrc`);
       }).not.toThrow();
-    }
+    },
   );
 
   describe('--style scss', () => {
@@ -360,7 +360,7 @@ describe('app', () => {
     await applicationGenerator(appTree, { ...schema, name: 'my-app' });
 
     expect(appTree.read('my-app/jest.config.ts').toString()).toContain(
-      `moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],`
+      `moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],`,
     );
   });
 
@@ -368,7 +368,7 @@ describe('app', () => {
     await applicationGenerator(appTree, { ...schema, name: 'my-app' });
 
     expect(appTree.read('my-app/jest.config.ts').toString()).toContain(
-      "['babel-jest', { presets: ['@nx/react/babel'] }]"
+      "['babel-jest', { presets: ['@nx/react/babel'] }]",
     );
   });
 
@@ -376,7 +376,7 @@ describe('app', () => {
     await applicationGenerator(appTree, { ...schema, name: 'my-app' });
 
     expect(appTree.read('my-app/jest.config.ts').toString()).not.toContain(
-      `'jest-preset-angular/build/AngularSnapshotSerializer.js',`
+      `'jest-preset-angular/build/AngularSnapshotSerializer.js',`,
     );
   });
 
@@ -499,13 +499,13 @@ describe('app', () => {
     expect(packageJson.devDependencies['@nx/eslint-plugin']).toBeDefined();
     expect(packageJson.devDependencies['eslint-plugin-react']).toBeDefined();
     expect(
-      packageJson.devDependencies['eslint-plugin-react-hooks']
+      packageJson.devDependencies['eslint-plugin-react-hooks'],
     ).toBeDefined();
     expect(
-      packageJson.devDependencies['@typescript-eslint/parser']
+      packageJson.devDependencies['@typescript-eslint/parser'],
     ).toBeDefined();
     expect(
-      packageJson.devDependencies['@typescript-eslint/eslint-plugin']
+      packageJson.devDependencies['@typescript-eslint/eslint-plugin'],
     ).toBeDefined();
     expect(packageJson.devDependencies['eslint-config-prettier']).toBeDefined();
 
@@ -607,7 +607,7 @@ describe('app', () => {
       });
 
       expect(
-        appTree.read('my-app/webpack.config.js', 'utf-8')
+        appTree.read('my-app/webpack.config.js', 'utf-8'),
       ).toMatchSnapshot();
     });
 
@@ -630,7 +630,7 @@ describe('app', () => {
       });
 
       expect(
-        appTree.exists('my-app/src/app/app.styled-components')
+        appTree.exists('my-app/src/app/app.styled-components'),
       ).toBeFalsy();
       expect(appTree.exists('my-app/src/app/app.tsx')).toBeTruthy();
       expect(appTree.exists('my-app/src/styles.styled-components')).toBeFalsy();
@@ -674,7 +674,7 @@ describe('app', () => {
 
       const tsconfigJson = readJson(appTree, 'my-app/tsconfig.json');
       expect(tsconfigJson.compilerOptions['jsxImportSource']).toEqual(
-        '@emotion/react'
+        '@emotion/react',
       );
     });
 
@@ -686,7 +686,7 @@ describe('app', () => {
       });
 
       expect(
-        appTree.read('my-app/webpack.config.js', 'utf-8')
+        appTree.read('my-app/webpack.config.js', 'utf-8'),
       ).toMatchSnapshot();
     });
 
@@ -841,7 +841,7 @@ describe('app', () => {
       const tsconfigJson = readJson(appTree, '/my-app/tsconfig.json');
 
       expect(
-        tsconfigJson.compilerOptions.forceConsistentCasingInFileNames
+        tsconfigJson.compilerOptions.forceConsistentCasingInFileNames,
       ).not.toBeDefined();
       expect(tsconfigJson.compilerOptions.strict).toEqual(false);
     });
@@ -945,7 +945,7 @@ describe('app', () => {
       });
 
       expect(viteAppTree.exists('/insourceTests/src/app/app.spec.tsx')).toBe(
-        false
+        false,
       );
     });
 
@@ -969,7 +969,7 @@ describe('app', () => {
             [pkg]: expect.any(String),
           },
         });
-      }
+      },
     );
   });
 });

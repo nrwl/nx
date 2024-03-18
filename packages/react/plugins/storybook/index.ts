@@ -46,7 +46,7 @@ function getClientEnvironment(mode) {
         // even when deployed inside a subpath. (like in GitHub pages)
         // In development this is just empty as we always serves from the root.
         PUBLIC_URL: mode === 'production' ? '.' : '',
-      }
+      },
     );
 
   // Stringify all values so we can feed into webpack DefinePlugin
@@ -73,7 +73,7 @@ interface NxProjectData {
 }
 
 const getProjectData = async (
-  storybookOptions: any
+  storybookOptions: any,
 ): Promise<NxProjectData> => {
   const fallbackData = {
     workspaceRoot: storybookOptions.configDir,
@@ -99,12 +99,12 @@ const getProjectData = async (
 
 const fixBabelConfigurationIfNeeded = (
   webpackConfig: Configuration,
-  projectData: NxProjectData
+  projectData: NxProjectData,
 ): void => {
   if (!projectData.projectNode) return;
 
   const isUsingBabelUpwardRootMode = Object.keys(
-    projectData.projectNode.data.targets
+    projectData.projectNode.data.targets,
   ).find((k) => {
     const targetConfig = projectData.projectNode.data.targets[k];
     return (
@@ -121,7 +121,7 @@ const fixBabelConfigurationIfNeeded = (
     const candidate = join(
       projectData.workspaceRoot,
       projectData.projectRoot,
-      `.babelrc${ext}`
+      `.babelrc${ext}`,
     );
     if (existsSync(candidate)) {
       babelrcPath = candidate;
@@ -151,10 +151,10 @@ const fixBabelConfigurationIfNeeded = (
 
 export const webpack = async (
   storybookWebpackConfig: Configuration = {},
-  options: any
+  options: any,
 ): Promise<Configuration> => {
   logger.info(
-    '=> Loading Nx React Storybook Addon from "@nx/react/plugins/storybook"'
+    '=> Loading Nx React Storybook Addon from "@nx/react/plugins/storybook"',
   );
   // In case anyone is missing dep and did not run migrations.
   // See: https://github.com/nrwl/nx/issues/14455
@@ -162,7 +162,7 @@ export const webpack = async (
     require.resolve('@nx/webpack');
   } catch {
     throw new Error(
-      `'@nx/webpack' package is not installed. Install it and try again.`
+      `'@nx/webpack' package is not installed. Install it and try again.`,
     );
   }
 
@@ -170,7 +170,7 @@ export const webpack = async (
 
   const projectData = await getProjectData(options);
   const tsconfigPath = existsSync(
-    join(projectData.projectRoot, 'tsconfig.storybook.json')
+    join(projectData.projectRoot, 'tsconfig.storybook.json'),
   )
     ? join(projectData.projectRoot, 'tsconfig.storybook.json')
     : join(projectData.projectRoot, 'tsconfig.json');
@@ -197,7 +197,7 @@ export const webpack = async (
   let baseWebpackConfig: Configuration = {};
   const configure = composePluginsSync(
     withNx({ target: 'web', skipTypeChecking: true }),
-    withReact()
+    withReact(),
   );
   const finalConfig = configure(baseWebpackConfig, {
     options: builderOptions,
@@ -227,15 +227,15 @@ export const webpack = async (
         ...((storybookWebpackConfig.resolve.plugins ??
           []) as ResolvePluginInstance[]),
         ...((finalConfig.resolve
-          .plugins as unknown as ResolvePluginInstance[]) ?? [])
+          .plugins as unknown as ResolvePluginInstance[]) ?? []),
       ) as ResolvePluginInstance[],
     },
     plugins: mergePlugins(
       new DefinePlugin(
-        getClientEnvironment(storybookWebpackConfig.mode).stringified
+        getClientEnvironment(storybookWebpackConfig.mode).stringified,
       ),
       ...((storybookWebpackConfig.plugins as WebpackPluginInstance[]) ?? []),
-      ...((finalConfig.plugins as WebpackPluginInstance[]) ?? [])
+      ...((finalConfig.plugins as WebpackPluginInstance[]) ?? []),
     ) as WebpackPluginInstance[],
   };
 };

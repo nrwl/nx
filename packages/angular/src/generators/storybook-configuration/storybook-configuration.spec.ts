@@ -58,13 +58,13 @@ describe('StorybookConfiguration generator', () => {
     expect(tree.exists('test-ui-lib/.storybook/tsconfig.json')).toBeTruthy();
     expect(
       tree.exists(
-        'test-ui-lib/src/lib/test-button/test-button.component.stories.ts'
-      )
+        'test-ui-lib/src/lib/test-button/test-button.component.stories.ts',
+      ),
     ).toBeFalsy();
     expect(
       tree.exists(
-        'test-ui-lib/src/lib/test-other/test-other.component.stories.ts'
-      )
+        'test-ui-lib/src/lib/test-other/test-other.component.stories.ts',
+      ),
     ).toBeFalsy();
   });
 
@@ -77,7 +77,7 @@ describe('StorybookConfiguration generator', () => {
     });
 
     expect(
-      tree.read('test-ui-lib/.storybook/main.ts', 'utf-8')
+      tree.read('test-ui-lib/.storybook/main.ts', 'utf-8'),
     ).toMatchSnapshot();
   });
 
@@ -92,24 +92,24 @@ describe('StorybookConfiguration generator', () => {
     expect(
       tree.read(
         'test-ui-lib/src/lib/test-button/test-button.component.stories.ts',
-        'utf-8'
-      )
+        'utf-8',
+      ),
     ).toMatchSnapshot();
     expect(
       tree.read(
         'test-ui-lib/src/lib/test-other/test-other.component.stories.ts',
-        'utf-8'
-      )
+        'utf-8',
+      ),
     ).toMatchSnapshot();
 
     const packageJson = JSON.parse(tree.read('package.json', 'utf-8'));
     expect(packageJson.devDependencies['@storybook/angular']).toBeDefined();
     expect(
-      packageJson.devDependencies['@storybook/addon-interactions']
+      packageJson.devDependencies['@storybook/addon-interactions'],
     ).toBeDefined();
     expect(packageJson.devDependencies['@storybook/test-runner']).toBeDefined();
     expect(
-      packageJson.devDependencies['@storybook/testing-library']
+      packageJson.devDependencies['@storybook/testing-library'],
     ).toBeDefined();
   });
 
@@ -209,7 +209,7 @@ describe('StorybookConfiguration generator', () => {
 
     const tsConfig = readJson(tree, 'test-app/tsconfig.editor.json');
     expect(tsConfig.exclude).toStrictEqual(
-      expect.arrayContaining(['**/*.stories.ts', '**/*.stories.js'])
+      expect.arrayContaining(['**/*.stories.ts', '**/*.stories.js']),
     );
   });
 });

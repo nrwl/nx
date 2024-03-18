@@ -3,7 +3,7 @@ import { spawn } from 'node:child_process';
 export async function execCommand(
   cmd: string,
   args: string[],
-  options?: any
+  options?: any,
 ): Promise<string> {
   return new Promise((resolve, reject) => {
     const child = spawn(cmd, args, {
@@ -29,7 +29,7 @@ export async function execCommand(
       if (code !== 0) {
         reject(
           stderr ||
-            `Unknown error occurred while running "${cmd} ${args.join(' ')}"`
+            `Unknown error occurred while running "${cmd} ${args.join(' ')}"`,
         );
       } else {
         resolve(stdout);

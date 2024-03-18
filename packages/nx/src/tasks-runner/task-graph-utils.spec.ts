@@ -13,7 +13,7 @@ describe('task graph utils', () => {
             e: ['q', 'a'],
             q: [],
           },
-        } as any)
+        } as any),
       ).toEqual(['a', 'c', 'e', 'a']);
     });
 
@@ -28,7 +28,7 @@ describe('task graph utils', () => {
             e: ['q'],
             q: [],
           },
-        } as any)
+        } as any),
       ).toEqual(null);
     });
   });

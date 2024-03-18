@@ -105,7 +105,7 @@ describe('component', () => {
       });
       expect(appTree.exists('my-lib/src/lib/hello/Hello.tsx')).toBeTruthy();
       expect(
-        appTree.exists('my-lib/src/lib/hello/Hello.spec.tsx')
+        appTree.exists('my-lib/src/lib/hello/Hello.spec.tsx'),
       ).toBeTruthy();
     });
   });

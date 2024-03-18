@@ -2,7 +2,7 @@ import { RenderableTreeNode, Schema, Tag } from '@markdoc/markdoc';
 
 export function generateID(
   children: RenderableTreeNode[],
-  attributes: Record<string, any>
+  attributes: Record<string, any>,
 ) {
   if (attributes['id'] && typeof attributes['id'] === 'string') {
     return attributes['id'];
@@ -35,7 +35,7 @@ export const heading: Schema = {
       this.render,
       // `h${node.attributes['level']}`,
       { ...attributes, id },
-      children
+      children,
     );
   },
 };

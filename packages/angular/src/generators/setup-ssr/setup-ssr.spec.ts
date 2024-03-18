@@ -33,7 +33,7 @@ describe('setupSSR', () => {
 
       // ASSERT
       expect(
-        readProjectConfiguration(tree, 'app1').targets.build
+        readProjectConfiguration(tree, 'app1').targets.build,
       ).toMatchSnapshot();
       expect(tree.read('app1/server.ts', 'utf-8')).toMatchSnapshot();
       expect(tree.read('app1/src/main.server.ts', 'utf-8'))
@@ -106,7 +106,7 @@ describe('setupSSR', () => {
 
       // ASSERT
       expect(
-        readProjectConfiguration(tree, 'app1').targets.build
+        readProjectConfiguration(tree, 'app1').targets.build,
       ).toMatchSnapshot();
       expect(tree.read('app1/server.ts', 'utf-8')).toMatchSnapshot();
       expect(tree.read('app1/src/main.server.ts', 'utf-8'))
@@ -158,7 +158,7 @@ describe('setupSSR', () => {
 
       const serverFileContent = tree.read('app1/server.ts', 'utf-8');
       expect(serverFileContent).toContain(
-        `resolve(serverDistFolder, '../public')`
+        `resolve(serverDistFolder, '../public')`,
       );
     });
 
@@ -199,7 +199,7 @@ describe('setupSSR', () => {
 
       // ASSERT
       expect(
-        readProjectConfiguration(tree, 'app1').targets.server
+        readProjectConfiguration(tree, 'app1').targets.server,
       ).toMatchSnapshot();
       expect(tree.read('app1/server.ts', 'utf-8')).toMatchSnapshot();
       expect(tree.read('app1/src/main.server.ts', 'utf-8'))
@@ -290,7 +290,7 @@ describe('setupSSR', () => {
 
       // ASSERT
       expect(
-        readProjectConfiguration(tree, 'app1').targets.server
+        readProjectConfiguration(tree, 'app1').targets.server,
       ).toMatchSnapshot();
       expect(tree.read('app1/server.ts', 'utf-8')).toMatchSnapshot();
       expect(tree.read('app1/src/main.server.ts', 'utf-8'))
@@ -351,13 +351,13 @@ describe('setupSSR', () => {
       });
       // verify default output path
       expect(
-        readProjectConfiguration(tree, 'app1').targets.build.options.outputPath
+        readProjectConfiguration(tree, 'app1').targets.build.options.outputPath,
       ).toBe('dist/app1');
 
       await setupSsr(tree, { project: 'app1', skipFormat: true });
 
       expect(
-        readProjectConfiguration(tree, 'app1').targets.build.options.outputPath
+        readProjectConfiguration(tree, 'app1').targets.build.options.outputPath,
       ).toBe('dist/app1/browser');
     });
   });
@@ -370,7 +370,7 @@ describe('setupSSR', () => {
 
     const { dependencies, devDependencies } = readJson<PackageJson>(
       tree,
-      'package.json'
+      'package.json',
     );
     expect(dependencies['@angular/platform-server']).toEqual(angularVersion);
     expect(dependencies['@angular/ssr']).toEqual(angularDevkitVersion);
@@ -554,13 +554,13 @@ describe('setupSSR', () => {
       const pkgJson = readJson(tree, 'package.json');
       expect(pkgJson.dependencies['@angular/ssr']).toBeUndefined();
       expect(pkgJson.dependencies['@angular/platform-server']).toEqual(
-        backwardCompatibleVersions.angularV15.angularVersion
+        backwardCompatibleVersions.angularV15.angularVersion,
       );
       expect(pkgJson.dependencies['@nguniversal/express-engine']).toEqual(
-        backwardCompatibleVersions.angularV15.ngUniversalVersion
+        backwardCompatibleVersions.angularV15.ngUniversalVersion,
       );
       expect(pkgJson.devDependencies['@nguniversal/builders']).toEqual(
-        backwardCompatibleVersions.angularV15.ngUniversalVersion
+        backwardCompatibleVersions.angularV15.ngUniversalVersion,
       );
     });
 

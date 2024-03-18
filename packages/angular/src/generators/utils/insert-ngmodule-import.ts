@@ -22,7 +22,7 @@ export function insertNgModuleProperty(
   tree: Tree,
   modulePath: string,
   name: string,
-  property: ngModuleDecoratorProperty
+  property: ngModuleDecoratorProperty,
 ) {
   if (!tsModule) {
     tsModule = ensureTypescript();
@@ -32,14 +32,14 @@ export function insertNgModuleProperty(
   const sourceFile = tsModule.createSourceFile(
     modulePath,
     contents,
-    tsModule.ScriptTarget.ESNext
+    tsModule.ScriptTarget.ESNext,
   );
 
   const coreImport = findImport(sourceFile, '@angular/core');
 
   if (!coreImport) {
     throw new Error(
-      `There are no imports from "@angular/core" in ${modulePath}.`
+      `There are no imports from "@angular/core" in ${modulePath}.`,
     );
   }
 
@@ -54,7 +54,7 @@ export function insertNgModuleProperty(
     (decorator) =>
       tsModule.isCallExpression(decorator.expression) &&
       tsModule.isIdentifier(decorator.expression.expression) &&
-      decorator.expression.expression.escapedText === ngModuleName
+      decorator.expression.expression.escapedText === ngModuleName,
   );
 
   const ngModuleCall = ngModuleDecorator.expression as CallExpression;
@@ -71,7 +71,7 @@ export function insertNgModuleProperty(
   } else {
     if (!tsModule.isObjectLiteralExpression(ngModuleCall.arguments[0])) {
       throw new Error(
-        `The NgModule options for ${ngModuleClassDeclaration.name.escapedText} in ${modulePath} is not an object literal`
+        `The NgModule options for ${ngModuleClassDeclaration.name.escapedText} in ${modulePath} is not an object literal`,
       );
     }
 
@@ -98,7 +98,7 @@ export function insertNgModuleProperty(
     } else {
       if (!tsModule.isArrayLiteralExpression(typeProperty.initializer)) {
         throw new Error(
-          `The NgModule ${property} for ${ngModuleClassDeclaration.name.escapedText} in ${modulePath} is not an array literal`
+          `The NgModule ${property} for ${ngModuleClassDeclaration.name.escapedText} in ${modulePath} is not an array literal`,
         );
       }
 
@@ -125,7 +125,7 @@ export function insertNgModuleProperty(
 export function insertNgModuleImport(
   tree: Tree,
   modulePath: string,
-  importName: string
+  importName: string,
 ) {
   insertNgModuleProperty(tree, modulePath, importName, 'imports');
 }
@@ -136,7 +136,7 @@ function findImport(sourceFile: SourceFile, importPath: string) {
   }
 
   const importStatements = sourceFile.statements.filter(
-    tsModule.isImportDeclaration
+    tsModule.isImportDeclaration,
   );
 
   return importStatements.find(
@@ -144,7 +144,7 @@ function findImport(sourceFile: SourceFile, importPath: string) {
       statement.moduleSpecifier
         .getText(sourceFile)
         .replace(/['"`]/g, '')
-        .trim() === importPath
+        .trim() === importPath,
   );
 }
 
@@ -155,7 +155,7 @@ function getNamedImport(coreImport: ImportDeclaration, importName: string) {
 
   if (!tsModule.isNamedImports(coreImport.importClause.namedBindings)) {
     throw new Error(
-      `The import from ${coreImport.moduleSpecifier} does not have named imports.`
+      `The import from ${coreImport.moduleSpecifier} does not have named imports.`,
     );
   }
 
@@ -164,20 +164,20 @@ function getNamedImport(coreImport: ImportDeclaration, importName: string) {
       ? tsModule.isIdentifier(namedImport.propertyName) &&
         namedImport.propertyName.escapedText === importName
       : tsModule.isIdentifier(namedImport.name) &&
-        namedImport.name.escapedText === importName
+        namedImport.name.escapedText === importName,
   );
 }
 
 function findDecoratedClass(
   sourceFile: SourceFile,
-  ngModuleName: __String
+  ngModuleName: __String,
 ): ClassDeclaration | undefined {
   if (!tsModule) {
     tsModule = ensureTypescript();
   }
 
   const classDeclarations = sourceFile.statements.filter(
-    tsModule.isClassDeclaration
+    tsModule.isClassDeclaration,
   );
   const { getDecorators } = getTsEsLintTypeUtils();
 
@@ -188,7 +188,7 @@ function findDecoratedClass(
         (decorator) =>
           tsModule.isCallExpression(decorator.expression) &&
           tsModule.isIdentifier(decorator.expression.expression) &&
-          decorator.expression.expression.escapedText === ngModuleName
+          decorator.expression.expression.escapedText === ngModuleName,
       );
     }
     return undefined;
@@ -197,7 +197,7 @@ function findDecoratedClass(
 
 function findPropertyAssignment(
   ngModuleOptions: ObjectLiteralExpression,
-  propertyName: ngModuleDecoratorProperty
+  propertyName: ngModuleDecoratorProperty,
 ) {
   if (!tsModule) {
     tsModule = ensureTypescript();
@@ -207,7 +207,7 @@ function findPropertyAssignment(
     (property) =>
       tsModule.isPropertyAssignment(property) &&
       tsModule.isIdentifier(property.name) &&
-      property.name.escapedText === propertyName
+      property.name.escapedText === propertyName,
   ) as PropertyAssignment;
 }
 

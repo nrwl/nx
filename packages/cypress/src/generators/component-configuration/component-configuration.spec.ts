@@ -50,7 +50,7 @@ describe('Cypress Component Configuration', () => {
 /dist
 /tmp
 /out-tsc
-    `
+    `,
     );
     tree.write(
       'libs/cool-lib/tsconfig.lib.json',
@@ -75,7 +75,7 @@ describe('Cypress Component Configuration', () => {
     "**/*.tsx"
   ]
 }
-`
+`,
     );
     tree.write(
       'libs/cool-lib/tsconfig.json',
@@ -90,7 +90,7 @@ describe('Cypress Component Configuration', () => {
     }
   ]
 }
-`
+`,
     );
   });
 
@@ -116,7 +116,7 @@ describe('Cypress Component Configuration', () => {
     });
 
     expect(
-      readProjectConfiguration(tree, 'cool-lib').targets['component-test']
+      readProjectConfiguration(tree, 'cool-lib').targets['component-test'],
     ).toBeUndefined();
 
     expect(readNxJson(tree).namedInputs.production).toMatchInlineSnapshot(`
@@ -146,16 +146,16 @@ describe('Cypress Component Configuration', () => {
     `);
     expect(tree.exists('libs/cool-lib/cypress')).toEqual(true);
     expect(
-      tree.exists('libs/cool-lib/cypress/support/component-index.html')
+      tree.exists('libs/cool-lib/cypress/support/component-index.html'),
     ).toEqual(true);
     expect(tree.exists('libs/cool-lib/cypress/fixtures/example.json')).toEqual(
-      true
+      true,
     );
     expect(tree.exists('libs/cool-lib/cypress/support/commands.ts')).toEqual(
-      true
+      true,
     );
     expect(tree.exists('libs/cool-lib/cypress/support/component.ts')).toEqual(
-      true
+      true,
     );
 
     expect(tree.exists('libs/cool-lib/cypress/tsconfig.json')).toEqual(true);
@@ -180,11 +180,11 @@ describe('Cypress Component Configuration', () => {
         '**/*.cy.js',
         '**/*.cy.tsx',
         '**/*.cy.jsx',
-      ])
+      ]),
     );
     const baseTsConfig = readJson(tree, 'libs/cool-lib/tsconfig.json');
     expect(baseTsConfig.references).toEqual(
-      expect.arrayContaining([{ path: './cypress/tsconfig.json' }])
+      expect.arrayContaining([{ path: './cypress/tsconfig.json' }]),
     );
   });
 
@@ -243,7 +243,7 @@ export default defineConfig({
     const actualProjectConfig = readProjectConfiguration(tree, 'cool-lib');
 
     expect(tree.read('libs/cool-lib/cypress.config.ts', 'utf-8')).toEqual(
-      existingConfig
+      existingConfig,
     );
     expect(tree.exists('libs/cool-lib/cypress')).toEqual(true);
     expect(actualProjectConfig.targets['component-test']).toMatchSnapshot();
@@ -256,9 +256,9 @@ export default defineConfig({
         await componentConfigurationGenerator(tree, {
           project: 'cool-lib',
           skipFormat: true,
-        })
+        }),
     ).rejects.toThrowError(
-      'Cypress version of 10 or higher is required to use component testing. See the migration guide to upgrade. https://nx.dev/cypress/v11-migration-guide'
+      'Cypress version of 10 or higher is required to use component testing. See the migration guide to upgrade. https://nx.dev/cypress/v11-migration-guide',
     );
   });
 });

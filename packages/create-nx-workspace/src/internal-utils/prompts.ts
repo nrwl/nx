@@ -13,7 +13,7 @@ import { NxCloud } from '../utils/nx/nx-cloud';
 import chalk = require('chalk');
 
 export async function determineNxCloud(
-  parsedArgs: yargs.Arguments<{ nxCloud: NxCloud }>
+  parsedArgs: yargs.Arguments<{ nxCloud: NxCloud }>,
 ): Promise<NxCloud> {
   if (parsedArgs.nxCloud === undefined) {
     return nxCloudPrompt('setupCI');
@@ -49,7 +49,7 @@ async function nxCloudPrompt(key: MessageKey): Promise<NxCloud> {
 }
 
 export async function determineDefaultBase(
-  parsedArgs: yargs.Arguments<{ defaultBase?: string }>
+  parsedArgs: yargs.Arguments<{ defaultBase?: string }>,
 ): Promise<string> {
   if (parsedArgs.defaultBase) {
     return Promise.resolve(parsedArgs.defaultBase);
@@ -79,7 +79,7 @@ export async function determineDefaultBase(
 }
 
 export async function determinePackageManager(
-  parsedArgs: yargs.Arguments<{ packageManager: string }>
+  parsedArgs: yargs.Arguments<{ packageManager: string }>,
 ): Promise<PackageManager> {
   const packageManager: string = parsedArgs.packageManager;
 

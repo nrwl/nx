@@ -23,7 +23,7 @@ export function initLocal(workspace: WorkspaceTypeAndRoot) {
     if (workspace.type !== 'nx' && shouldDelegateToAngularCLI()) {
       console.warn(
         stripIndents`Using Nx to run Angular CLI commands is deprecated and will be removed in a future version.
-        To run Angular CLI commands, use \`ng\`.`
+        To run Angular CLI commands, use \`ng\`.`,
       );
       handleAngularCLIFallbacks(workspace);
       return;
@@ -91,7 +91,7 @@ function isKnownCommand(command: string) {
       (commandsObject as any)
         .getInternalMethods()
         .getCommandInstance()
-        .getCommandHandlers()
+        .getCommandHandlers(),
     ),
     'g',
     'dep-graph',
@@ -121,23 +121,23 @@ function shouldDelegateToAngularCLI() {
 function handleAngularCLIFallbacks(workspace: WorkspaceTypeAndRoot) {
   if (process.argv[2] === 'update' && process.env.FORCE_NG_UPDATE != 'true') {
     console.log(
-      `Nx provides a much improved version of "ng update". It runs the same migrations, but allows you to:`
+      `Nx provides a much improved version of "ng update". It runs the same migrations, but allows you to:`,
     );
     console.log(`- rerun the same migration multiple times`);
     console.log(`- reorder migrations, skip migrations`);
     console.log(`- fix migrations that "almost work"`);
     console.log(`- commit a partially migrated state`);
     console.log(
-      `- change versions of packages to match organizational requirements`
+      `- change versions of packages to match organizational requirements`,
     );
     console.log(
-      `And, in general, it is lot more reliable for non-trivial workspaces. Read more at: https://nx.dev/getting-started/nx-and-angular#ng-update-and-nx-migrate`
+      `And, in general, it is lot more reliable for non-trivial workspaces. Read more at: https://nx.dev/getting-started/nx-and-angular#ng-update-and-nx-migrate`,
     );
     console.log(
-      `Run "nx migrate latest" to update to the latest version of Nx.`
+      `Run "nx migrate latest" to update to the latest version of Nx.`,
     );
     console.log(
-      `Running "ng update" can still be useful in some dev workflows, so we aren't planning to remove it.`
+      `Running "ng update" can still be useful in some dev workflows, so we aren't planning to remove it.`,
     );
     console.log(`If you need to use it, run "FORCE_NG_UPDATE=true ng update".`);
   } else if (process.argv[2] === 'completion') {
@@ -160,7 +160,7 @@ To update the cache configuration, you can directly update the relevant options 
     } catch (e) {
       console.error(
         `Could not find '@angular/cli/lib/init.js' module in this workspace.`,
-        e
+        e,
       );
       process.exit(1);
     }
@@ -194,7 +194,7 @@ function monkeyPatchRequire() {
               } else {
                 return value.replace('@nrwl/', '@nx/');
               }
-            })
+            }),
           );
         } catch {
           // Throw the original error

@@ -17,7 +17,7 @@ export async function addE2e(host: Tree, options: NormalizedSchema) {
   const hasPlugin = nxJson.plugins?.some((p) =>
     typeof p === 'string'
       ? p === '@nx/next/plugin'
-      : p.plugin === '@nx/next/plugin'
+      : p.plugin === '@nx/next/plugin',
   );
 
   if (options.e2eTestRunner === 'cypress') {

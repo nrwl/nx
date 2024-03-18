@@ -20,14 +20,14 @@ import { ensureDependencies } from '../../utils/ensure-dependencies';
 
 export function configurationGenerator(
   tree: Tree,
-  options: ConfigurationGeneratorSchema
+  options: ConfigurationGeneratorSchema,
 ) {
   return configurationGeneratorInternal(tree, { addPlugin: false, ...options });
 }
 
 export async function configurationGeneratorInternal(
   tree: Tree,
-  options: ConfigurationGeneratorSchema
+  options: ConfigurationGeneratorSchema,
 ) {
   const tasks: GeneratorCallback[] = [];
   const nxJson = readNxJson(tree);
@@ -67,7 +67,7 @@ export async function configurationGeneratorInternal(
 
 function checkForTargetConflicts(
   tree: Tree,
-  options: ConfigurationGeneratorSchema
+  options: ConfigurationGeneratorSchema,
 ) {
   if (options.skipValidation) return;
 
@@ -75,20 +75,20 @@ function checkForTargetConflicts(
 
   if (project.targets?.build) {
     throw new Error(
-      `Project "${project.name}" already has a build target. Pass --skipValidation to ignore this error.`
+      `Project "${project.name}" already has a build target. Pass --skipValidation to ignore this error.`,
     );
   }
 
   if (options.devServer && project.targets?.serve) {
     throw new Error(
-      `Project "${project.name}" already has a serve target. Pass --skipValidation to ignore this error.`
+      `Project "${project.name}" already has a serve target. Pass --skipValidation to ignore this error.`,
     );
   }
 }
 
 function createWebpackConfig(
   tree: Tree,
-  options: ConfigurationGeneratorSchema
+  options: ConfigurationGeneratorSchema,
 ) {
   const project = readProjectConfiguration(tree, options.project);
   const buildOptions: WebpackExecutorOptions = {
@@ -112,8 +112,8 @@ const { join } = require('path');
 module.exports = {
   output: {
     path: join(__dirname, '${offsetFromRoot(project.root)}${
-            buildOptions.outputPath
-          }'),
+      buildOptions.outputPath
+    }'),
   },
   plugins: [
     new NxWebpackPlugin({
@@ -135,7 +135,7 @@ module.exports = composePlugins(withNx(), withWeb(), (config) => {
   // e.g. \`config.plugins.push(new MyPlugin())\`
   return config;
 });
-`
+`,
     );
   } else {
     tree.write(
@@ -148,8 +148,8 @@ const { join } = require('path');
 module.exports = {
   output: {
     path: join(__dirname, '${offsetFromRoot(project.root)}${
-            buildOptions.outputPath
-          }'),
+      buildOptions.outputPath
+    }'),
   },
   plugins: [
     new NxWebpackPlugin({
@@ -171,7 +171,7 @@ module.exports = composePlugins(withNx(), (config) => {
   // e.g. \`config.plugins.push(new MyPlugin())\`
   return config;
 });
-`
+`,
     );
   }
 }

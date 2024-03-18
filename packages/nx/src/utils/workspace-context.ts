@@ -10,19 +10,19 @@ export function setupWorkspaceContext(workspaceRoot: string) {
   performance.mark('workspace-context');
   workspaceContext = new WorkspaceContext(
     workspaceRoot,
-    cacheDirectoryForWorkspace(workspaceRoot)
+    cacheDirectoryForWorkspace(workspaceRoot),
   );
   performance.mark('workspace-context:end');
   performance.measure(
     'workspace context init',
     'workspace-context',
-    'workspace-context:end'
+    'workspace-context:end',
   );
 }
 
 export function getNxWorkspaceFilesFromContext(
   workspaceRoot: string,
-  projectRootMap: Record<string, string>
+  projectRootMap: Record<string, string>,
 ) {
   ensureContextAvailable(workspaceRoot);
   return workspaceContext.getWorkspaceFiles(projectRootMap);
@@ -31,7 +31,7 @@ export function getNxWorkspaceFilesFromContext(
 export function globWithWorkspaceContext(
   workspaceRoot: string,
   globs: string[],
-  exclude?: string[]
+  exclude?: string[],
 ) {
   ensureContextAvailable(workspaceRoot);
   return workspaceContext.glob(globs, exclude);
@@ -40,7 +40,7 @@ export function globWithWorkspaceContext(
 export function hashWithWorkspaceContext(
   workspaceRoot: string,
   globs: string[],
-  exclude?: string[]
+  exclude?: string[],
 ) {
   ensureContextAvailable(workspaceRoot);
   return workspaceContext.hashFilesMatchingGlob(globs, exclude);
@@ -48,7 +48,7 @@ export function hashWithWorkspaceContext(
 
 export function updateFilesInContext(
   updatedFiles: string[],
-  deletedFiles: string[]
+  deletedFiles: string[],
 ) {
   return workspaceContext?.incrementalUpdate(updatedFiles, deletedFiles);
 }
@@ -60,7 +60,7 @@ export function getAllFileDataInContext(workspaceRoot: string) {
 
 export function getFilesInDirectoryUsingContext(
   workspaceRoot: string,
-  dir: string
+  dir: string,
 ) {
   ensureContextAvailable(workspaceRoot);
   return workspaceContext.getFilesInDirectory(dir);
@@ -70,14 +70,14 @@ export function updateProjectFiles(
   projectRootMappings: Record<string, string>,
   rustReferences: NxWorkspaceFilesExternals,
   updatedFiles: Record<string, string>,
-  deletedFiles: string[]
+  deletedFiles: string[],
 ) {
   return workspaceContext?.updateProjectFiles(
     projectRootMappings,
     rustReferences.projectFiles,
     rustReferences.globalFiles,
     updatedFiles,
-    deletedFiles
+    deletedFiles,
   );
 }
 

@@ -58,7 +58,7 @@ describe('app', () => {
         }
       `);
       expect(() =>
-        readProjectConfiguration(tree, 'my-node-app-e2e')
+        readProjectConfiguration(tree, 'my-node-app-e2e'),
       ).not.toThrow();
     });
 
@@ -243,7 +243,7 @@ describe('app', () => {
       `);
 
       expect(() =>
-        readProjectConfiguration(tree, 'my-node-app-e2e')
+        readProjectConfiguration(tree, 'my-node-app-e2e'),
       ).not.toThrow();
     });
 

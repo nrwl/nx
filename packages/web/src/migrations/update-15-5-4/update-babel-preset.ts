@@ -16,7 +16,7 @@ export default async function update(tree: Tree) {
     {},
     {
       '@nrwl/js': nxVersion,
-    }
+    },
   );
 
   const projects = getProjects(tree);
@@ -30,7 +30,7 @@ export default async function update(tree: Tree) {
     const idx = babelrc?.presets?.findIndex((p) =>
       typeof p === 'string'
         ? p === '@nrwl/web/babel'
-        : p[0] === '@nrwl/web/babel'
+        : p[0] === '@nrwl/web/babel',
     );
 
     if (idx === -1) return;

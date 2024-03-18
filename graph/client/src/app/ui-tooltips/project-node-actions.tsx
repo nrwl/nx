@@ -33,8 +33,8 @@ export function ProjectNodeActions({ id }: ProjectNodeToolTipProps) {
     navigate(
       routeConstructor(
         `/projects/trace/${encodeURIComponent(start)}/${encodedId}`,
-        true
-      )
+        true,
+      ),
     );
   }
 

@@ -33,7 +33,7 @@ describe('Node Applications + webpack', () => {
       import { ${libName} } from '${importPath}';
       ${content}
       console.log(${libName}());
-      `
+      `,
       );
     } else {
       updateFile(
@@ -42,7 +42,7 @@ describe('Node Applications + webpack', () => {
       import { ${libName} } from '@${proj}/${libName}';
       ${content}
       console.log(${libName}());
-      `
+      `,
       );
     }
   }
@@ -75,14 +75,14 @@ describe('Node Applications + webpack', () => {
     runCLI(`generate @nx/node:lib ${testLib1}`);
     runCLI(`generate @nx/node:lib ${testLib2} --importPath=@acme/test2`);
     runCLI(
-      `generate @nx/node:app ${expressApp} --framework=express --no-interactive`
+      `generate @nx/node:app ${expressApp} --framework=express --no-interactive`,
     );
     runCLI(
-      `generate @nx/node:app ${fastifyApp} --framework=fastify --no-interactive`
+      `generate @nx/node:app ${fastifyApp} --framework=fastify --no-interactive`,
     );
     runCLI(`generate @nx/node:app ${koaApp} --framework=koa --no-interactive`);
     runCLI(
-      `generate @nx/node:app ${nestApp} --framework=nest --bundler=webpack --no-interactive`
+      `generate @nx/node:app ${nestApp} --framework=nest --bundler=webpack --no-interactive`,
     );
 
     // Use esbuild by default
@@ -114,11 +114,11 @@ describe('Node Applications + webpack', () => {
       ${nestMainContent}
       // Make sure this is not replaced during build time
       console.log('env: ' + process.env['NODE_ENV']);
-      `
+      `,
     );
     runCLI(`build ${nestApp}`);
     expect(readFile(`dist/apps/${nestApp}/main.js`)).toContain(
-      `'env: ' + process.env['NODE_ENV']`
+      `'env: ' + process.env['NODE_ENV']`,
     );
 
     addLibImport(expressApp, testLib1);
@@ -141,7 +141,7 @@ describe('Node Applications + webpack', () => {
     const expressApp = uniq('expressapp');
 
     runCLI(
-      `generate @nx/node:app  ${expressApp} --framework=express --docker --no-interactive`
+      `generate @nx/node:app  ${expressApp} --framework=express --docker --no-interactive`,
     );
 
     checkFilesExist(`apps/${expressApp}/Dockerfile`);
@@ -153,10 +153,10 @@ describe('Node Applications + webpack', () => {
 
     // Set ports to avoid conflicts with other tests that might run in parallel
     runCLI(
-      `generate @nx/node:app ${nodeApp1} --framework=none --no-interactive --port=4444`
+      `generate @nx/node:app ${nodeApp1} --framework=none --no-interactive --port=4444`,
     );
     runCLI(
-      `generate @nx/node:app ${nodeApp2} --framework=none --no-interactive --port=4445`
+      `generate @nx/node:app ${nodeApp2} --framework=none --no-interactive --port=4445`,
     );
     updateJson(join('apps', nodeApp1, 'project.json'), (config) => {
       config.targets.serve.options.waitUntilTargets = [`${nodeApp2}:build`];

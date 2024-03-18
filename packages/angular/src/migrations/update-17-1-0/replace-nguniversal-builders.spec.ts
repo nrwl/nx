@@ -50,7 +50,7 @@ describe('replace-nguniversal-builders migration', () => {
 
       const project = readProjectConfiguration(tree, 'app1');
       expect(project.targets[target].executor).toBe(toExecutor);
-    }
+    },
   );
 
   it('should replace the old "@nguniversal/builders:prerender" options', async () => {
@@ -106,7 +106,7 @@ describe('replace-nguniversal-builders migration', () => {
       const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
       expect(nxJson.targetDefaults[fromExecutor]).toBeUndefined();
       expect(nxJson.targetDefaults[toExecutor]).toBeDefined();
-    }
+    },
   );
 
   it('should replace options from nx.json targetDefaults with executor "@nguniversal/builders:prerender" as the key', async () => {
@@ -161,7 +161,7 @@ describe('replace-nguniversal-builders migration', () => {
 
       const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
       expect(nxJson.targetDefaults[target].executor).toBe(toExecutor);
-    }
+    },
   );
 
   it('should replace options from nx.json targetDefaults with executor "@nguniversal/builders:prerender"', async () => {

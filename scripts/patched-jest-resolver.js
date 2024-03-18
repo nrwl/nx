@@ -21,14 +21,14 @@ function getCompilerSetup(rootDir) {
     ts.findConfigFile(rootDir, ts.sys.fileExists, 'tsconfig.jest.json');
   if (!tsConfigPath) {
     console.error(
-      `Cannot locate a tsconfig.spec.json. Please create one at ${rootDir}/tsconfig.spec.json`
+      `Cannot locate a tsconfig.spec.json. Please create one at ${rootDir}/tsconfig.spec.json`,
     );
   }
   const readResult = ts.readConfigFile(tsConfigPath, ts.sys.readFile);
   const config = ts.parseJsonConfigFileContent(
     readResult.config,
     ts.sys,
-    path_1.dirname(tsConfigPath)
+    path_1.dirname(tsConfigPath),
   );
   const compilerOptions = config.options;
   const host = ts.createCompilerHost(compilerOptions, true);
@@ -68,7 +68,7 @@ module.exports = function (path, options) {
 
     if (path.indexOf('@nx/workspace') > -1) {
       throw new Error(
-        'Reference to local Nx package found. Use local version instead.'
+        'Reference to local Nx package found. Use local version instead.',
       );
     }
 
@@ -86,7 +86,7 @@ module.exports = function (path, options) {
       path,
       join(options.basedir, 'fake-placeholder.ts'),
       compilerOptions,
-      host
+      host,
     ).resolvedModule.resolvedFileName;
   }
 };

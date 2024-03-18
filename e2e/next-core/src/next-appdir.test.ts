@@ -15,7 +15,7 @@ describe('Next.js App Router', () => {
     () =>
       (proj = newProject({
         packages: ['@nx/next'],
-      }))
+      })),
   );
 
   afterAll(() => cleanupProject());
@@ -25,7 +25,7 @@ describe('Next.js App Router', () => {
     const jsLib = uniq('tslib');
 
     runCLI(
-      `generate @nx/next:app ${appName} --e2eTestRunner=playwright --appDir=true`
+      `generate @nx/next:app ${appName} --e2eTestRunner=playwright --appDir=true`,
     );
     runCLI(`generate @nx/js:lib ${jsLib} --no-interactive`);
 
@@ -40,7 +40,7 @@ describe('Next.js App Router', () => {
             <p>{${jsLib}()}</p>
           );
         }
-      `
+      `,
     );
 
     updateFile(
@@ -54,7 +54,7 @@ describe('Next.js App Router', () => {
         // Expect h1 to contain a substring.
         expect(await page.locator('p').innerText()).toContain('${jsLib}');
       });
-      `
+      `,
     );
 
     const lintResults = runCLI(`lint ${appName}`);
@@ -62,7 +62,7 @@ describe('Next.js App Router', () => {
 
     if (runE2ETests()) {
       const e2eResults = runCLI(
-        `e2e ${appName}-e2e --configuration=production`
+        `e2e ${appName}-e2e --configuration=production`,
       );
       expect(e2eResults).toContain('Successfully ran target e2e for project');
       expect(await killPorts()).toBeTruthy();

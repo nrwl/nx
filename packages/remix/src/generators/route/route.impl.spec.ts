@@ -17,7 +17,7 @@ describe('route', () => {
     (remixConfigUtils.getRemixConfigValues as jest.Mock) = jest.fn(() =>
       Promise.resolve({
         ignoredRouteFiles: ['**/.*'],
-      })
+      }),
     );
   });
   describe.each([
@@ -48,7 +48,7 @@ describe('route', () => {
       expectedRoutePath,
       expectedStylePath,
       expectedComponentName,
-      project: string
+      project: string,
     ) => {
       it('should add route component', async () => {
         await applicationGenerator(tree, { name: 'demo' });
@@ -199,7 +199,7 @@ describe('route', () => {
         });
 
         expect(
-          tree.exists('apps/demo/app/routes/path/to/example/route1/..tsx')
+          tree.exists('apps/demo/app/routes/path/to/example/route1/..tsx'),
         ).toBe(true);
 
         await routeGenerator(tree, {
@@ -214,7 +214,7 @@ describe('route', () => {
         });
 
         expect(
-          tree.exists('apps/demo/app/routes/path/to/example/route2/index.tsx')
+          tree.exists('apps/demo/app/routes/path/to/example/route2/index.tsx'),
         ).toBe(true);
 
         await routeGenerator(tree, {
@@ -229,7 +229,7 @@ describe('route', () => {
         });
 
         expect(
-          tree.exists('apps/demo/app/routes/path/to/example/route3/.tsx')
+          tree.exists('apps/demo/app/routes/path/to/example/route3/.tsx'),
         ).toBe(true);
       }, 120000);
 
@@ -246,13 +246,13 @@ describe('route', () => {
     module.exports = {
       ignoredRouteFiles: ["**/.*"],
       appDirectory: "my-custom-dir",
-    };`
+    };`,
           );
           (remixConfigUtils.getRemixConfigValues as jest.Mock) = jest.fn(() =>
             Promise.resolve({
               ignoredRouteFiles: ['**/.*'],
               appDirectory: 'my-custom-dir',
-            })
+            }),
           );
 
           await routeGenerator(tree, {
@@ -267,10 +267,10 @@ describe('route', () => {
           });
 
           expect(tree.exists('apps/demo/my-custom-dir/routes/route.tsx')).toBe(
-            true
+            true,
           );
           expect(tree.exists('apps/demo/my-custom-dir/styles/route.css')).toBe(
-            true
+            true,
           );
         });
       }
@@ -291,6 +291,6 @@ describe('route', () => {
 
         expect(tree.exists('app/routes/route.tsx')).toBe(true);
       });
-    }
+    },
   );
 });

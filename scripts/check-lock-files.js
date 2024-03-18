@@ -4,24 +4,24 @@ function checkLockFiles() {
   const errors = [];
   if (fs.existsSync('package-lock.json')) {
     errors.push(
-      'Invalid occurence of "package-lock.json" file. Please remove it and use only "pnpm-lock.yaml"'
+      'Invalid occurence of "package-lock.json" file. Please remove it and use only "pnpm-lock.yaml"',
     );
   }
   if (fs.existsSync('yarn.lock')) {
     errors.push(
-      'Invalid occurence of "yarn.lock" file. Please remove it and use only "pnpm-lock.yaml"'
+      'Invalid occurence of "yarn.lock" file. Please remove it and use only "pnpm-lock.yaml"',
     );
   }
   try {
     const content = fs.readFileSync('pnpm-lock.yaml', 'utf-8');
     if (content.match(/localhost:487/)) {
       errors.push(
-        'The "pnpm-lock.yaml" has reference to local repository ("localhost:4873"). Please use ensure you disable local registry before running "pnpm install"'
+        'The "pnpm-lock.yaml" has reference to local repository ("localhost:4873"). Please use ensure you disable local registry before running "pnpm install"',
       );
     }
     if (content.match(/resolution: \{tarball/)) {
       errors.push(
-        'The "pnpm-lock.yaml" has reference to tarball package. Please use npm registry only'
+        'The "pnpm-lock.yaml" has reference to tarball package. Please use npm registry only',
       );
     }
   } catch {

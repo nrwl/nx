@@ -66,7 +66,7 @@ type ProjectNameAndRootFormats = {
 
 export async function determineProjectNameAndRootOptions(
   tree: Tree,
-  options: ProjectGenerationOptions
+  options: ProjectGenerationOptions,
 ): Promise<
   ProjectNameAndRootOptions & {
     projectNameAndRootFormat: ProjectNameAndRootFormat;
@@ -97,11 +97,11 @@ export async function determineProjectNameAndRootOptions(
 
 function validateName(
   name: string,
-  projectNameAndRootFormat?: ProjectNameAndRootFormat
+  projectNameAndRootFormat?: ProjectNameAndRootFormat,
 ): void {
   if (projectNameAndRootFormat === 'derived' && name.startsWith('@')) {
     throw new Error(
-      `The project name "${name}" cannot start with "@" when the "projectNameAndRootFormat" is "derived".`
+      `The project name "${name}" cannot start with "@" when the "projectNameAndRootFormat" is "derived".`,
     );
   }
 
@@ -120,14 +120,14 @@ function validateName(
   const validationRegex = new RegExp(pattern);
   if (!validationRegex.test(name)) {
     throw new Error(
-      `The project name should match the pattern "${pattern}". The provided value "${name}" does not match.`
+      `The project name should match the pattern "${pattern}". The provided value "${name}" does not match.`,
     );
   }
 }
 
 function logDeprecationMessage(
   callingGenerator: string,
-  formats: ProjectNameAndRootFormats
+  formats: ProjectNameAndRootFormats,
 ) {
   logger.warn(stripIndents`
     In Nx 19, generating projects will no longer derive the name and root.
@@ -137,7 +137,7 @@ function logDeprecationMessage(
 }
 
 async function determineFormat(
-  formats: ProjectNameAndRootFormats
+  formats: ProjectNameAndRootFormats,
 ): Promise<ProjectNameAndRootFormat> {
   if (!formats.derived) {
     return 'as-provided';
@@ -173,7 +173,7 @@ async function determineFormat(
     ],
     initial: 0,
   }).then(({ format }) =>
-    format === asProvidedSelectedValue ? 'as-provided' : 'derived'
+    format === asProvidedSelectedValue ? 'as-provided' : 'derived',
   );
 
   return result;
@@ -181,7 +181,7 @@ async function determineFormat(
 
 function getProjectNameAndRootFormats(
   tree: Tree,
-  options: ProjectGenerationOptions
+  options: ProjectGenerationOptions,
 ): ProjectNameAndRootFormats {
   const directory = options.directory
     ? normalizePath(options.directory.replace(/^\.?\//, ''))
@@ -193,7 +193,7 @@ function getProjectNameAndRootFormats(
   if (asProvidedParsedDirectory && directory) {
     throw new Error(
       `You can't specify both a directory (${options.directory}) and a name with a directory path (${options.name}). ` +
-        `Please specify either a directory or a name with a directory path.`
+        `Please specify either a directory or a name with a directory path.`,
     );
   }
 
@@ -227,7 +227,7 @@ function getProjectNameAndRootFormats(
 
     throw new Error(
       `The provided name "${options.name}" contains a scoped project name and this is not supported by the "${options.callingGenerator}" when using the "derived" format. ` +
-        `Please provide a name without "@" or use the "as-provided" format.`
+        `Please provide a name without "@" or use the "as-provided" format.`,
     );
   }
 
@@ -247,7 +247,7 @@ function getProjectNameAndRootFormats(
 
 function getAsProvidedOptions(
   tree: Tree,
-  options: ProjectGenerationOptions
+  options: ProjectGenerationOptions,
 ): ProjectNameAndRootOptions {
   let projectSimpleName: string;
   let projectFileName: string;
@@ -314,19 +314,19 @@ function getAsProvidedOptions(
 
 function getDerivedOptions(
   tree: Tree,
-  options: ProjectGenerationOptions
+  options: ProjectGenerationOptions,
 ): ProjectNameAndRootOptions {
   const name = names(options.name).fileName;
   let { projectDirectory, layoutDirectory } = getDirectories(
     tree,
     options.directory,
-    options.projectType
+    options.projectType,
   );
   const projectDirectoryWithoutLayout = projectDirectory
     ? `${names(projectDirectory).fileName}/${name}`
     : options.rootProject
-    ? '.'
-    : name;
+      ? '.'
+      : name;
   // the project name uses the directory without the layout directory
   const projectName =
     projectDirectoryWithoutLayout === '.'
@@ -366,7 +366,7 @@ function getDerivedOptions(
 function getDirectories(
   tree: Tree,
   directory: string | undefined,
-  projectType: ProjectType
+  projectType: ProjectType,
 ): {
   projectDirectory: string;
   layoutDirectory: string;

@@ -8,7 +8,7 @@ export async function addJest(
   appProjectRoot: string,
   js: boolean,
   skipPackageJson: boolean,
-  addPlugin: boolean
+  addPlugin: boolean,
 ) {
   if (unitTestRunner !== 'jest') {
     return () => {};
@@ -49,7 +49,7 @@ export async function addJest(
     ),
   },
   coverageDirectory: '${offsetFromRoot(
-    appProjectRoot
+    appProjectRoot,
   )}coverage/${appProjectRoot}'
 };`;
   host.write(configPath, content);

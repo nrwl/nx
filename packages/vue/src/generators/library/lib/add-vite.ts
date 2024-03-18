@@ -9,7 +9,7 @@ import { nxVersion } from '../../../utils/versions';
 
 export async function addVite(
   tree: Tree,
-  options: NormalizedSchema
+  options: NormalizedSchema,
 ): Promise<GeneratorCallback> {
   const tasks: GeneratorCallback[] = [];
   // Set up build target
@@ -39,7 +39,7 @@ export async function addVite(
         imports: [`import vue from '@vitejs/plugin-vue'`],
         plugins: ['vue()'],
       },
-      false
+      false,
     );
   }
 
@@ -72,7 +72,7 @@ export async function addVite(
         imports: [`import vue from '@vitejs/plugin-vue'`],
         plugins: ['vue()'],
       },
-      true
+      true,
     );
   }
 

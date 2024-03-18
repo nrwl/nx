@@ -41,9 +41,9 @@ describe('explicitly-set-projects-to-update-buildable-deps migration', () => {
 
       const project = readProjectConfiguration(tree, 'lib1');
       expect(
-        project.targets.build.options.updateBuildableProjectDepsInPackageJson
+        project.targets.build.options.updateBuildableProjectDepsInPackageJson,
       ).toBe(true);
-    }
+    },
   );
 
   it.each([
@@ -64,9 +64,9 @@ describe('explicitly-set-projects-to-update-buildable-deps migration', () => {
 
       const project = readProjectConfiguration(tree, 'lib1');
       expect(
-        project.targets.build.options.updateBuildableProjectDepsInPackageJson
+        project.targets.build.options.updateBuildableProjectDepsInPackageJson,
       ).toBe(true);
-    }
+    },
   );
 
   it.each([
@@ -92,9 +92,9 @@ describe('explicitly-set-projects-to-update-buildable-deps migration', () => {
 
       const project = readProjectConfiguration(tree, 'lib1');
       expect(
-        project.targets.build.options.updateBuildableProjectDepsInPackageJson
+        project.targets.build.options.updateBuildableProjectDepsInPackageJson,
       ).toBe(false);
-    }
+    },
   );
 
   it('should not update targets using other executors', async () => {
@@ -120,7 +120,7 @@ describe('explicitly-set-projects-to-update-buildable-deps migration', () => {
 function addProject(
   tree: Tree,
   projectName: string,
-  config: ProjectConfiguration
+  config: ProjectConfiguration,
 ): void {
   projectGraph = {
     dependencies: {},

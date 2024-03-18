@@ -117,7 +117,7 @@ export class DaemonClient {
 
     this._daemonStatus = DaemonStatus.DISCONNECTED;
     this._waitForDaemonReady = new Promise<void>(
-      (resolve) => (this._daemonReady = resolve)
+      (resolve) => (this._daemonReady = resolve),
     );
   }
 
@@ -146,7 +146,7 @@ export class DaemonClient {
     runnerOptions: any,
     tasks: Task[],
     taskGraph: TaskGraph,
-    env: NodeJS.ProcessEnv
+    env: NodeJS.ProcessEnv,
   ): Promise<Hash[]> {
     return this.sendToDaemonViaQueue({
       type: 'HASH_TASKS',
@@ -168,15 +168,15 @@ export class DaemonClient {
       data: {
         changedProjects: string[];
         changedFiles: ChangedFile[];
-      } | null
-    ) => void
+      } | null,
+    ) => void,
   ): Promise<UnregisterCallback> {
     await this.getProjectGraphAndSourceMaps();
     let messenger: DaemonSocketMessenger | undefined;
 
     await this.queue.sendToQueue(() => {
       messenger = new DaemonSocketMessenger(
-        connect(FULL_OS_SOCKET_PATH)
+        connect(FULL_OS_SOCKET_PATH),
       ).listen(
         (message) => {
           try {
@@ -189,7 +189,7 @@ export class DaemonClient {
         () => {
           callback('closed', null);
         },
-        (err) => callback(err, null)
+        (err) => callback(err, null),
       );
       return messenger.sendMessage({ type: 'REGISTER_FILE_WATCHER', config });
     });
@@ -245,13 +245,13 @@ export class DaemonClient {
 
   private async sendToDaemonViaQueue(messageToDaemon: Message): Promise<any> {
     return this.queue.sendToQueue(() =>
-      this.sendMessageToDaemon(messageToDaemon)
+      this.sendMessageToDaemon(messageToDaemon),
     );
   }
 
   private setUpConnection() {
     this.socketMessenger = new DaemonSocketMessenger(
-      connect(FULL_OS_SOCKET_PATH)
+      connect(FULL_OS_SOCKET_PATH),
     ).listen(
       (message) => this.handleMessage(message),
       () => {
@@ -270,8 +270,8 @@ export class DaemonClient {
           this._daemonStatus = DaemonStatus.DISCONNECTED;
           this.currentReject?.(
             daemonProcessException(
-              'Daemon process terminated and closed the connection'
-            )
+              'Daemon process terminated and closed the connection',
+            ),
           );
           process.exit(1);
         }
@@ -287,7 +287,7 @@ export class DaemonClient {
           // a message from the queue
           return this.sendMessageToDaemon(this.currentMessage).then(
             this.currentResolve,
-            this.currentReject
+            this.currentReject,
           );
         }
 
@@ -296,18 +296,18 @@ export class DaemonClient {
           error = daemonProcessException('The Daemon Server is not running');
         } else if (err.message.startsWith('connect ECONNREFUSED')) {
           error = daemonProcessException(
-            `A server instance had not been fully shut down. Please try running the command again.`
+            `A server instance had not been fully shut down. Please try running the command again.`,
           );
           killSocketOrPath();
         } else if (err.message.startsWith('read ECONNRESET')) {
           error = daemonProcessException(
-            `Unable to connect to the daemon process.`
+            `Unable to connect to the daemon process.`,
           );
         } else {
           error = daemonProcessException(err.toString());
         }
         return this.currentReject(error);
-      }
+      },
     );
   }
 
@@ -344,7 +344,7 @@ export class DaemonClient {
       performance.measure(
         'deserialize daemon response',
         'json-parse-start',
-        'json-parse-end'
+        'json-parse-end',
       );
       if (parsedResult.error) {
         this.currentReject(parsedResult.error);
@@ -352,7 +352,7 @@ export class DaemonClient {
         performance.measure(
           'total for sendMessageToDaemon()',
           'sendMessageToDaemon-start',
-          'json-parse-end'
+          'json-parse-end',
         );
         return this.currentResolve(parsedResult);
       }
@@ -370,8 +370,8 @@ export class DaemonClient {
             `Received:`,
             endOfResponse,
             '\n',
-          ].join('\n')
-        )
+          ].join('\n'),
+        ),
       );
     }
   }
@@ -393,7 +393,7 @@ export class DaemonClient {
         windowsHide: true,
         shell: false,
         env: DAEMON_ENV_SETTINGS,
-      }
+      },
     );
     backgroundProcess.unref();
 
@@ -411,8 +411,8 @@ export class DaemonClient {
           // we print the logs and exit the client
           reject(
             daemonProcessException(
-              'Failed to start or connect to the Nx Daemon process.'
-            )
+              'Failed to start or connect to the Nx Daemon process.',
+            ),
           );
         } else {
           attempts++;
@@ -469,7 +469,7 @@ function daemonProcessException(message: string) {
         ...log,
         '\n',
         `More information: ${DAEMON_OUTPUT_LOG_FILE}`,
-      ].join('\n')
+      ].join('\n'),
     );
     (error as any).internalDaemonError = true;
     return error;

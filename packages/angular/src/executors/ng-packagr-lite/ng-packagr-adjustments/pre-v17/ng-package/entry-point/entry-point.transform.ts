@@ -37,20 +37,20 @@ import { pipe } from 'rxjs';
  */
 export const nxEntryPointTransformFactory = (
   compileTs: Transform,
-  writePackage: Transform
+  writePackage: Transform,
 ): Transform =>
   pipe(
     transformFromPromise(async (graph) => {
       // Peek the first entry point from the graph
       const entryPoint = graph.find(byEntryPoint().and(isInProgress));
       logger.info(
-        '\n------------------------------------------------------------------------------'
+        '\n------------------------------------------------------------------------------',
       );
       logger.info(
-        `Building entry point '${entryPoint.data.entryPoint.moduleId}'`
+        `Building entry point '${entryPoint.data.entryPoint.moduleId}'`,
       );
       logger.info(
-        '------------------------------------------------------------------------------'
+        '------------------------------------------------------------------------------',
       );
     }),
     // TypeScript sources compilation
@@ -60,5 +60,5 @@ export const nxEntryPointTransformFactory = (
     transformFromPromise(async (graph) => {
       const entryPoint = graph.find(byEntryPoint().and(isInProgress));
       entryPoint.state = STATE_DONE;
-    })
+    }),
   );

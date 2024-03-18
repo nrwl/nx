@@ -9,7 +9,7 @@ type AddPathToTsConfigOptions = {
 
 export function addPathToTsConfig(
   tree: Tree,
-  { remoteName, moduleName, pathToFile }: AddPathToTsConfigOptions
+  { remoteName, moduleName, pathToFile }: AddPathToTsConfigOptions,
 ) {
   const rootTsConfig = readJson(tree, getRootTsConfigPathInTree(tree));
   if (!rootTsConfig.compilerOptions?.paths[`${remoteName}/${moduleName}`]) {

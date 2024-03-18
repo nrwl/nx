@@ -41,7 +41,7 @@ describe('Update detoxrc for expo projects', () => {
     tree.write('apps/products/jest.config.json', `{"transform": {}}`);
     tree.write(
       'apps/products/.detoxrc.json',
-      `{"apps": {"ios.eas": {}, "android.eas": {}, "ios.local": {}, "android.local": {}}}`
+      `{"apps": {"ios.eas": {}, "android.eas": {}, "ios.local": {}, "android.local": {}}}`,
     );
   });
 

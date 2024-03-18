@@ -17,7 +17,7 @@ let childProcess: ChildProcess;
 
 export default async function* exportExecutor(
   options: ExportExecutorSchema,
-  context: ExecutorContext
+  context: ExecutorContext,
 ): AsyncGenerator<ExpoExportOutput> {
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
@@ -37,13 +37,13 @@ export default async function* exportExecutor(
 function exportAsync(
   workspaceRoot: string,
   projectRoot: string,
-  options: ExportExecutorSchema
+  options: ExportExecutorSchema,
 ): Promise<number> {
   return new Promise((resolve, reject) => {
     childProcess = fork(
       require.resolve('@expo/cli/build/bin/cli'),
       [`export`, ...createExportOptions(options, projectRoot)],
-      { cwd: pathResolve(workspaceRoot, projectRoot), env: process.env }
+      { cwd: pathResolve(workspaceRoot, projectRoot), env: process.env },
     );
 
     // Ensure the child process is killed when the parent exits
@@ -67,7 +67,7 @@ const nxOptions = ['bundler', 'interactive']; // interactive is passed in by e2e
 // options from https://github.com/expo/expo/blob/main/packages/@expo/cli/src/export/index.ts
 export function createExportOptions(
   options: ExportExecutorSchema,
-  projectRoot: string
+  projectRoot: string,
 ) {
   return Object.keys(options).reduce((acc, k) => {
     if (!nxOptions.includes(k)) {

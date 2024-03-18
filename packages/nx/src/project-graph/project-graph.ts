@@ -49,7 +49,7 @@ export function readCachedProjectGraph(): ProjectGraph {
 }
 
 export function readCachedProjectConfiguration(
-  projectName: string
+  projectName: string,
 ): ProjectConfiguration {
   const graph = readCachedProjectGraph();
   const node = graph.nodes[projectName];
@@ -64,14 +64,14 @@ export function readCachedProjectConfiguration(
  * Get the {@link ProjectsConfigurations} from the {@link ProjectGraph}
  */
 export function readProjectsConfigurationFromProjectGraph(
-  projectGraph: ProjectGraph
+  projectGraph: ProjectGraph,
 ): ProjectsConfigurations {
   return {
     projects: Object.fromEntries(
       Object.entries(projectGraph.nodes).map(([project, { data }]) => [
         project,
         data,
-      ])
+      ]),
     ),
     version: 2,
   };
@@ -102,7 +102,7 @@ export async function buildProjectGraphAndSourceMapsWithoutDaemon() {
       allWorkspaceFiles,
       rustReferences,
       cacheEnabled ? readFileMapCache() : null,
-      cacheEnabled
+      cacheEnabled,
     )
   ).projectGraph;
   performance.mark('build-project-graph-using-project-file-map:end');
@@ -154,11 +154,10 @@ export async function createProjectGraphAsync(
   opts: { exitOnError: boolean; resetDaemonClient?: boolean } = {
     exitOnError: false,
     resetDaemonClient: false,
-  }
+  },
 ): Promise<ProjectGraph> {
-  const projectGraphAndSourceMaps = await createProjectGraphAndSourceMapsAsync(
-    opts
-  );
+  const projectGraphAndSourceMaps =
+    await createProjectGraphAndSourceMapsAsync(opts);
   return projectGraphAndSourceMaps.projectGraph;
 }
 
@@ -166,7 +165,7 @@ export async function createProjectGraphAndSourceMapsAsync(
   opts: { exitOnError: boolean; resetDaemonClient?: boolean } = {
     exitOnError: false,
     resetDaemonClient: false,
-  }
+  },
 ) {
   performance.mark('create-project-graph-async:start');
 
@@ -176,23 +175,23 @@ export async function createProjectGraphAndSourceMapsAsync(
       performance.measure(
         'create-project-graph-async >> retrieve-project-configurations',
         'retrieve-project-configurations:start',
-        'retrieve-project-configurations:end'
+        'retrieve-project-configurations:end',
       );
       performance.measure(
         'create-project-graph-async >> retrieve-workspace-files',
         'retrieve-workspace-files:start',
-        'retrieve-workspace-files:end'
+        'retrieve-workspace-files:end',
       );
       performance.measure(
         'create-project-graph-async >> build-project-graph-using-project-file-map',
         'build-project-graph-using-project-file-map:start',
-        'build-project-graph-using-project-file-map:end'
+        'build-project-graph-using-project-file-map:end',
       );
       performance.mark('create-project-graph-async:end');
       performance.measure(
         'create-project-graph-async',
         'create-project-graph-async:start',
-        'create-project-graph-async:end'
+        'create-project-graph-async:end',
       );
       return res;
     } catch (e) {
@@ -209,7 +208,7 @@ export async function createProjectGraphAndSourceMapsAsync(
       performance.measure(
         'create-project-graph-async',
         'create-project-graph-async:start',
-        'create-project-graph-async:end'
+        'create-project-graph-async:end',
       );
       return projectGraphAndSourceMaps;
     } catch (e) {

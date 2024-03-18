@@ -1,6 +1,6 @@
 export type NextServer = (
   options: NextServerOptions,
-  proxyConfig?: ProxyConfig
+  proxyConfig?: ProxyConfig,
 ) => Promise<void>;
 
 export interface ProxyConfig {

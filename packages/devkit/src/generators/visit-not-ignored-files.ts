@@ -8,7 +8,7 @@ import { join, relative, sep } from 'path';
 export function visitNotIgnoredFiles(
   tree: Tree,
   dirPath: string = tree.root,
-  visitor: (path: string) => void
+  visitor: (path: string) => void,
 ): void {
   // TODO (v17): use packages/nx/src/utils/ignore.ts
   let ig: ReturnType<typeof ignore>;

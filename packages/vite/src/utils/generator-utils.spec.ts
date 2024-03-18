@@ -27,17 +27,17 @@ describe('generator utils', () => {
     it('should return correct path for vite.config file if no configFile is set', () => {
       const viteConfigPath = getViteConfigPathForProject(
         tree,
-        'my-test-react-vite-app'
+        'my-test-react-vite-app',
       );
       expect(viteConfigPath).toEqual(
-        'apps/my-test-react-vite-app/vite.config.ts'
+        'apps/my-test-react-vite-app/vite.config.ts',
       );
     });
 
     it('should return correct path for vite.config file if custom configFile is set', () => {
       const projectConfig = readProjectConfiguration(
         tree,
-        'my-test-react-vite-app'
+        'my-test-react-vite-app',
       );
       updateProjectConfiguration(tree, 'my-test-react-vite-app', {
         ...projectConfig,
@@ -57,17 +57,17 @@ describe('generator utils', () => {
 
       const viteConfigPath = getViteConfigPathForProject(
         tree,
-        'my-test-react-vite-app'
+        'my-test-react-vite-app',
       );
       expect(viteConfigPath).toEqual(
-        'apps/my-test-react-vite-app/vite.config.custom.ts'
+        'apps/my-test-react-vite-app/vite.config.custom.ts',
       );
     });
 
     it('should return correct path for vite.config file given a target name', () => {
       const projectConfig = readProjectConfiguration(
         tree,
-        'my-test-react-vite-app'
+        'my-test-react-vite-app',
       );
       updateProjectConfiguration(tree, 'my-test-react-vite-app', {
         ...projectConfig,
@@ -88,10 +88,10 @@ describe('generator utils', () => {
       const viteConfigPath = getViteConfigPathForProject(
         tree,
         'my-test-react-vite-app',
-        'other-build'
+        'other-build',
       );
       expect(viteConfigPath).toEqual(
-        'apps/my-test-react-vite-app/vite.other.custom.ts'
+        'apps/my-test-react-vite-app/vite.other.custom.ts',
       );
     });
   });

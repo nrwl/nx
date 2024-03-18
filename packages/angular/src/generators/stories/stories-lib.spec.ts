@@ -39,7 +39,7 @@ describe('angularStories generator: libraries', () => {
         async () =>
           await angularStoriesGenerator(tree, {
             name: libName,
-          })
+          }),
       ).not.toThrow();
     });
   });
@@ -71,34 +71,34 @@ describe('angularStories generator: libraries', () => {
 
       expect(
         tree.exists(
-          `${libName}/src/lib/barrel/barrel-button/barrel-button.component.stories.ts`
-        )
+          `${libName}/src/lib/barrel/barrel-button/barrel-button.component.stories.ts`,
+        ),
       ).toBeTruthy();
       expect(
         tree.exists(
-          `${libName}/src/lib/nested/nested-button/nested-button.component.stories.ts`
-        )
+          `${libName}/src/lib/nested/nested-button/nested-button.component.stories.ts`,
+        ),
       ).toBeTruthy();
       expect(
         tree.exists(
-          `${libName}/src/lib/test-button/test-button.component.stories.ts`
-        )
+          `${libName}/src/lib/test-button/test-button.component.stories.ts`,
+        ),
       ).toBeTruthy();
       expect(
         tree.exists(
-          `${libName}/src/lib/test-other/test-other.component.stories.ts`
-        )
+          `${libName}/src/lib/test-other/test-other.component.stories.ts`,
+        ),
       ).toBeTruthy();
       expect(
         tree.read(
           `${libName}/src/lib/test-button/test-button.component.stories.ts`,
-          'utf-8'
-        )
+          'utf-8',
+        ),
       ).toMatchSnapshot();
       expect(
         tree.exists(
-          `${libName}/secondary-entry-point/src/lib/secondary-button/secondary-button.component.stories.ts`
-        )
+          `${libName}/secondary-entry-point/src/lib/secondary-button/secondary-button.component.stories.ts`,
+        ),
       ).toBeTruthy();
     });
 
@@ -125,13 +125,13 @@ describe('angularStories generator: libraries', () => {
 
       expect(
         tree.exists(
-          `${libName}/src/lib/variable-declare/variable-declare-button/variable-declare-button.component.stories.ts`
-        )
+          `${libName}/src/lib/variable-declare/variable-declare-button/variable-declare-button.component.stories.ts`,
+        ),
       ).toBeTruthy();
       expect(
         tree.exists(
-          `${libName}/src/lib/variable-declare/variable-declare-view/variable-declare-view.component.stories.ts`
-        )
+          `${libName}/src/lib/variable-declare/variable-declare-view/variable-declare-view.component.stories.ts`,
+        ),
       ).toBeTruthy();
     });
 
@@ -143,18 +143,18 @@ describe('angularStories generator: libraries', () => {
 
       expect(
         tree.exists(
-          `${libName}/src/lib/variable-spread-declare/variable-spread-declare-anotherview/variable-spread-declare-anotherview.component.stories.ts`
-        )
+          `${libName}/src/lib/variable-spread-declare/variable-spread-declare-anotherview/variable-spread-declare-anotherview.component.stories.ts`,
+        ),
       ).toBeTruthy();
       expect(
         tree.exists(
-          `${libName}/src/lib/variable-spread-declare/variable-spread-declare-button/variable-spread-declare-button.component.stories.ts`
-        )
+          `${libName}/src/lib/variable-spread-declare/variable-spread-declare-button/variable-spread-declare-button.component.stories.ts`,
+        ),
       ).toBeTruthy();
       expect(
         tree.exists(
-          `${libName}/src/lib/variable-spread-declare/variable-spread-declare-view/variable-spread-declare-view.component.stories.ts`
-        )
+          `${libName}/src/lib/variable-spread-declare/variable-spread-declare-view/variable-spread-declare-view.component.stories.ts`,
+        ),
       ).toBeTruthy();
     });
 
@@ -166,13 +166,13 @@ describe('angularStories generator: libraries', () => {
 
       expect(
         tree.exists(
-          `${libName}/src/lib/static-member-declarations/cmp1/cmp1.component.stories.ts`
-        )
+          `${libName}/src/lib/static-member-declarations/cmp1/cmp1.component.stories.ts`,
+        ),
       ).toBeTruthy();
       expect(
         tree.exists(
-          `${libName}/src/lib/static-member-declarations/cmp2/cmp2.component.stories.ts`
-        )
+          `${libName}/src/lib/static-member-declarations/cmp2/cmp2.component.stories.ts`,
+        ),
       ).toBeTruthy();
     });
 
@@ -186,7 +186,7 @@ describe('angularStories generator: libraries', () => {
       await angularStoriesGenerator(tree, { name: libName, skipFormat: true });
 
       expect(
-        tree.exists(`${libName}/src/lib/my-scam/my-scam.component.stories.ts`)
+        tree.exists(`${libName}/src/lib/my-scam/my-scam.component.stories.ts`),
       ).toBeTruthy();
     });
 
@@ -201,7 +201,7 @@ describe('angularStories generator: libraries', () => {
       await angularStoriesGenerator(tree, { name: libName, skipFormat: true });
 
       expect(
-        tree.exists(`${libName}/src/lib/my-scam/my-scam.component.stories.ts`)
+        tree.exists(`${libName}/src/lib/my-scam/my-scam.component.stories.ts`),
       ).toBeTruthy();
     });
 
@@ -233,25 +233,25 @@ describe('angularStories generator: libraries', () => {
 
       expect(
         tree.exists(
-          `${libName}/src/lib/standalone/standalone.component.stories.ts`
-        )
+          `${libName}/src/lib/standalone/standalone.component.stories.ts`,
+        ),
       ).toBeTruthy();
       expect(
         tree.read(
           `${libName}/src/lib/standalone/standalone.component.stories.ts`,
-          'utf-8'
-        )
+          'utf-8',
+        ),
       ).toMatchSnapshot();
       expect(
         tree.exists(
-          `${libName}/secondary-entry-point/src/lib/secondary-standalone/secondary-standalone.component.stories.ts`
-        )
+          `${libName}/secondary-entry-point/src/lib/secondary-standalone/secondary-standalone.component.stories.ts`,
+        ),
       ).toBeTruthy();
       expect(
         tree.read(
           `${libName}/secondary-entry-point/src/lib/secondary-standalone/secondary-standalone.component.stories.ts`,
-          'utf-8'
-        )
+          'utf-8',
+        ),
       ).toMatchSnapshot();
     });
 
@@ -282,34 +282,34 @@ describe('angularStories generator: libraries', () => {
 
       expect(
         tree.exists(
-          `${libName}/src/lib/barrel/barrel-button/barrel-button.component.stories.ts`
-        )
+          `${libName}/src/lib/barrel/barrel-button/barrel-button.component.stories.ts`,
+        ),
       ).toBeFalsy();
       expect(
         tree.exists(
-          `${libName}/src/lib/nested/nested-button/nested-button.component.stories.ts`
-        )
+          `${libName}/src/lib/nested/nested-button/nested-button.component.stories.ts`,
+        ),
       ).toBeTruthy();
       expect(
         tree.exists(
-          `${libName}/src/lib/test-button/test-button.component.stories.ts`
-        )
+          `${libName}/src/lib/test-button/test-button.component.stories.ts`,
+        ),
       ).toBeTruthy();
       expect(
         tree.exists(
-          `${libName}/src/lib/test-other/test-other.component.stories.ts`
-        )
+          `${libName}/src/lib/test-other/test-other.component.stories.ts`,
+        ),
       ).toBeTruthy();
       expect(
         tree.read(
           `${libName}/src/lib/test-button/test-button.component.stories.ts`,
-          'utf-8'
-        )
+          'utf-8',
+        ),
       ).toMatchSnapshot();
       expect(
         tree.exists(
-          `${libName}/secondary-entry-point/src/lib/secondary-button/secondary-button.component.stories.ts`
-        )
+          `${libName}/secondary-entry-point/src/lib/secondary-button/secondary-button.component.stories.ts`,
+        ),
       ).toBeFalsy();
     });
   });

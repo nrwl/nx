@@ -31,7 +31,7 @@ import { existsSync } from 'fs';
 
 export async function* moduleFederationDevServerExecutor(
   schema: Schema,
-  context: ExecutorContext
+  context: ExecutorContext,
 ) {
   // Force Node to resolve to look for the nx binary that is inside node_modules
   const nxBin = require.resolve('nx/bin/nx');
@@ -54,7 +54,7 @@ export async function* moduleFederationDevServerExecutor(
           withDeps: false,
           cors: true,
         },
-        context
+        context,
       )
     : eachValueFrom(
         executeDevServerBuilder(
@@ -67,9 +67,9 @@ export async function* moduleFederationDevServerExecutor(
                 '../../builders/webpack-browser/schema.json'
               ),
             },
-            context
-          )
-        )
+            context,
+          ),
+        ),
       );
 
   if (options.isInitialHost === false) {
@@ -79,20 +79,20 @@ export async function* moduleFederationDevServerExecutor(
   let pathToManifestFile = join(
     context.root,
     project.sourceRoot,
-    'assets/module-federation.manifest.json'
+    'assets/module-federation.manifest.json',
   );
   if (options.pathToManifestFile) {
     const userPathToManifestFile = join(
       context.root,
-      options.pathToManifestFile
+      options.pathToManifestFile,
     );
     if (!existsSync(userPathToManifestFile)) {
       throw new Error(
-        `The provided Module Federation manifest file path does not exist. Please check the file exists at "${userPathToManifestFile}".`
+        `The provided Module Federation manifest file path does not exist. Please check the file exists at "${userPathToManifestFile}".`,
       );
     } else if (extname(options.pathToManifestFile) !== '.json') {
       throw new Error(
-        `The Module Federation manifest file must be a JSON. Please ensure the file at ${userPathToManifestFile} is a JSON.`
+        `The Module Federation manifest file must be a JSON. Please ensure the file at ${userPathToManifestFile} is a JSON.`,
       );
     }
 
@@ -105,7 +105,7 @@ export async function* moduleFederationDevServerExecutor(
     project.targets.build.options.tsConfig,
     context.root,
     project.root,
-    'angular'
+    'angular',
   );
 
   const remotes = getRemotes(
@@ -117,7 +117,7 @@ export async function* moduleFederationDevServerExecutor(
       projectGraph: context.projectGraph,
       root: context.root,
     },
-    pathToManifestFile
+    pathToManifestFile,
   );
 
   if (remotes.devRemotes.length > 0 && !schema.staticRemotesPort) {
@@ -134,7 +134,7 @@ export async function* moduleFederationDevServerExecutor(
 
   const staticRemotesConfig = parseStaticRemotesConfig(
     remotes.staticRemotes,
-    context
+    context,
   );
   await buildStaticRemotes(staticRemotesConfig, nxBin, context, options);
 
@@ -142,7 +142,7 @@ export async function* moduleFederationDevServerExecutor(
     remotes,
     workspaceProjects,
     options,
-    context
+    context,
   );
 
   const staticRemotesIter =
@@ -168,7 +168,7 @@ export async function* moduleFederationDevServerExecutor(
         }
         if (remotes.remotePorts.length === 0) {
           logger.info(
-            `NX All remotes started, server ready at http://localhost:${options.port}`
+            `NX All remotes started, server ready at http://localhost:${options.port}`,
           );
           next({ success: true, baseUrl: `http://localhost:${options.port}` });
           done();
@@ -184,12 +184,12 @@ export async function* moduleFederationDevServerExecutor(
                 retries: 480,
                 retryDelay: 2500,
                 host: 'localhost',
-              })
-            )
+              }),
+            ),
           );
 
           logger.info(
-            `NX All remotes started, server ready at http://localhost:${options.port}`
+            `NX All remotes started, server ready at http://localhost:${options.port}`,
           );
           next({ success: true, baseUrl: `http://localhost:${options.port}` });
         } catch (err) {
@@ -197,13 +197,13 @@ export async function* moduleFederationDevServerExecutor(
             `Failed to start remotes. Check above for any errors.`,
             {
               cause: err,
-            }
+            },
           );
         } finally {
           done();
         }
-      }
-    )
+      },
+    ),
   );
 }
 

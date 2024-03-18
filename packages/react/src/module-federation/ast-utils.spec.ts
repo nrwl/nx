@@ -22,12 +22,12 @@ describe('addRemoteToConfig', () => {
       '/module-federation.config.js',
       sourceCode,
       ts.ScriptTarget.Latest,
-      true
+      true,
     );
 
     const result = applyChangesToString(
       sourceCode,
-      addRemoteToConfig(source, 'new-app')
+      addRemoteToConfig(source, 'new-app'),
     );
 
     expect(result).toEqual(stripIndents`
@@ -53,12 +53,12 @@ describe('addRemoteToConfig', () => {
       '/module-federation.config.js',
       sourceCode,
       ts.ScriptTarget.Latest,
-      true
+      true,
     );
 
     const result = applyChangesToString(
       sourceCode,
-      addRemoteToConfig(source, 'new-app')
+      addRemoteToConfig(source, 'new-app'),
     );
 
     expect(result).toEqual(stripIndents`
@@ -79,12 +79,12 @@ describe('addRemoteToConfig', () => {
       '/module-federation.config.js',
       sourceCode,
       ts.ScriptTarget.Latest,
-      true
+      true,
     );
 
     const result = applyChangesToString(
       sourceCode,
-      addRemoteToConfig(source, 'new-app')
+      addRemoteToConfig(source, 'new-app'),
     );
 
     expect(result).toEqual(sourceCode);
@@ -105,12 +105,12 @@ describe('addRemoteToConfig', () => {
       '/module-federation.config.js',
       sourceCode,
       ts.ScriptTarget.Latest,
-      true
+      true,
     );
 
     const result = applyChangesToString(
       sourceCode,
-      addRemoteToConfig(source, 'new-app')
+      addRemoteToConfig(source, 'new-app'),
     );
 
     expect(result).toEqual(stripIndents`
@@ -136,12 +136,12 @@ describe('addRemoteDefinition', () => {
       '/remotes.d.ts',
       sourceCode,
       ts.ScriptTarget.Latest,
-      true
+      true,
     );
 
     const result = applyChangesToString(
       sourceCode,
-      addRemoteDefinition(source, 'app2')
+      addRemoteDefinition(source, 'app2'),
     );
 
     expect(result).toEqual(stripIndents`
@@ -179,12 +179,12 @@ describe('addRemoteRoute', () => {
       '/apps.tsx',
       sourceCode,
       ts.ScriptTarget.Latest,
-      true
+      true,
     );
 
     const result = applyChangesToString(
       sourceCode,
-      addRemoteRoute(source, { fileName: 'app2', className: 'App2' })
+      addRemoteRoute(source, { fileName: 'app2', className: 'App2' }),
     );
 
     expect(result).toEqual(
@@ -212,7 +212,7 @@ describe('addRemoteRoute', () => {
       }
 
       export default App;
-    `
+    `,
     );
   });
 });

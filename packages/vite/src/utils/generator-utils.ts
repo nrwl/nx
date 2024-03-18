@@ -81,14 +81,14 @@ export function findExistingJsBuildTargetInProject(targets: {
 export function addOrChangeTestTarget(
   tree: Tree,
   options: ViteConfigurationGeneratorSchema,
-  target: string
+  target: string,
 ) {
   const project = readProjectConfiguration(tree, options.project);
 
   const reportsDirectory = joinPathFragments(
     offsetFromRoot(project.root),
     'coverage',
-    project.root === '.' ? options.project : project.root
+    project.root === '.' ? options.project : project.root,
   );
   const testOptions: VitestExecutorOptions = {
     reportsDirectory,
@@ -113,14 +113,14 @@ export function addOrChangeTestTarget(
 export function addBuildTarget(
   tree: Tree,
   options: ViteConfigurationGeneratorSchema,
-  target: string
+  target: string,
 ) {
   addBuildTargetDefaults(tree, '@nx/vite:build');
   const project = readProjectConfiguration(tree, options.project);
   const buildOptions: ViteBuildExecutorOptions = {
     outputPath: joinPathFragments(
       'dist',
-      project.root != '.' ? project.root : options.project
+      project.root != '.' ? project.root : options.project,
     ),
   };
   project.targets ??= {};
@@ -145,7 +145,7 @@ export function addBuildTarget(
 export function addServeTarget(
   tree: Tree,
   options: ViteConfigurationGeneratorSchema,
-  target: string
+  target: string,
 ) {
   const project = readProjectConfiguration(tree, options.project);
 
@@ -182,7 +182,7 @@ export function addServeTarget(
 export function addPreviewTarget(
   tree: Tree,
   options: ViteConfigurationGeneratorSchema,
-  serveTarget: string
+  serveTarget: string,
 ) {
   const project = readProjectConfiguration(tree, options.project);
 
@@ -222,7 +222,7 @@ export function addPreviewTarget(
 
 export function editTsConfig(
   tree: Tree,
-  options: ViteConfigurationGeneratorSchema
+  options: ViteConfigurationGeneratorSchema,
 ) {
   const projectConfig = readProjectConfiguration(tree, options.project);
 
@@ -259,16 +259,16 @@ export function editTsConfig(
 export function deleteWebpackConfig(
   tree: Tree,
   projectRoot: string,
-  webpackConfigFilePath?: string
+  webpackConfigFilePath?: string,
 ) {
   const webpackConfigPath =
     webpackConfigFilePath && tree.exists(webpackConfigFilePath)
       ? webpackConfigFilePath
       : tree.exists(`${projectRoot}/webpack.config.js`)
-      ? `${projectRoot}/webpack.config.js`
-      : tree.exists(`${projectRoot}/webpack.config.ts`)
-      ? `${projectRoot}/webpack.config.ts`
-      : null;
+        ? `${projectRoot}/webpack.config.js`
+        : tree.exists(`${projectRoot}/webpack.config.ts`)
+          ? `${projectRoot}/webpack.config.ts`
+          : null;
   if (webpackConfigPath) {
     tree.delete(webpackConfigPath);
   }
@@ -276,7 +276,7 @@ export function deleteWebpackConfig(
 
 export function moveAndEditIndexHtml(
   tree: Tree,
-  options: ViteConfigurationGeneratorSchema
+  options: ViteConfigurationGeneratorSchema,
 ) {
   const projectConfig = readProjectConfiguration(tree, options.project);
 
@@ -300,7 +300,7 @@ export function moveAndEditIndexHtml(
     const indexHtmlContent = tree.read(indexHtmlPath, 'utf8');
     if (
       !indexHtmlContent.includes(
-        `<script type='module' src='${mainPath}'></script>`
+        `<script type='module' src='${mainPath}'></script>`,
       )
     ) {
       tree.write(
@@ -308,8 +308,8 @@ export function moveAndEditIndexHtml(
         indexHtmlContent.replace(
           '</body>',
           `<script type='module' src='${mainPath}'></script>
-          </body>`
-        )
+          </body>`,
+        ),
       );
 
       if (tree.exists(`${projectConfig.root}/src/index.html`)) {
@@ -331,7 +331,7 @@ export function moveAndEditIndexHtml(
           <div id='root'></div>
           <script type='module' src='${mainPath}'></script>
         </body>
-      </html>`
+      </html>`,
     );
   }
 }
@@ -353,7 +353,7 @@ export function createOrEditViteConfig(
   options: ViteConfigFileOptions,
   onlyVitest: boolean,
   projectAlreadyHasViteTargets?: TargetFlags,
-  vitestFileName?: boolean
+  vitestFileName?: boolean,
 ) {
   const { root: projectRoot } = readProjectConfiguration(tree, options.project);
 
@@ -369,7 +369,7 @@ export function createOrEditViteConfig(
   const buildOption = onlyVitest
     ? ''
     : options.includeLib
-    ? `
+      ? `
       // Configuration for building your library.
       // See: https://vitejs.dev/guide/build.html#library-mode
       build: {
@@ -392,7 +392,7 @@ export function createOrEditViteConfig(
           external: [${options.rollupOptionsExternal ?? ''}]
         },
       },`
-    : `
+      : `
     build: {
       outDir: '${buildOutDir}',
       reportCompressedSize: true,
@@ -407,7 +407,7 @@ export function createOrEditViteConfig(
   if (!onlyVitest && options.includeLib) {
     imports.push(
       `import dts from 'vite-plugin-dts'`,
-      `import * as path from 'path'`
+      `import * as path from 'path'`,
     );
   }
 
@@ -419,7 +419,7 @@ export function createOrEditViteConfig(
 
   if (!onlyVitest && options.includeLib) {
     plugins.push(
-      `dts({ entryRoot: 'src', tsConfigFilePath: path.join(__dirname, 'tsconfig.lib.json'), skipDiagnostics: true })`
+      `dts({ entryRoot: 'src', tsConfigFilePath: path.join(__dirname, 'tsconfig.lib.json'), skipDiagnostics: true })`,
     );
   }
 
@@ -460,8 +460,8 @@ export function createOrEditViteConfig(
   const devServerOption = onlyVitest
     ? ''
     : options.includeLib
-    ? ''
-    : `
+      ? ''
+      : `
     server:{
       port: 4200,
       host: 'localhost',
@@ -470,8 +470,8 @@ export function createOrEditViteConfig(
   const previewServerOption = onlyVitest
     ? ''
     : options.includeLib
-    ? ''
-    : `
+      ? ''
+      : `
     preview:{
       port: 4300,
       host: 'localhost',
@@ -484,7 +484,7 @@ export function createOrEditViteConfig(
     // },`;
 
   const cacheDir = `cacheDir: '${offsetFromRoot(
-    projectRoot
+    projectRoot,
   )}node_modules/.vite/${projectRoot}',`;
 
   if (tree.exists(viteConfigPath)) {
@@ -500,7 +500,7 @@ export function createOrEditViteConfig(
       reportsDirectory,
       cacheDir,
       offsetFromRoot(projectRoot),
-      projectAlreadyHasViteTargets
+      projectAlreadyHasViteTargets,
     );
     return;
   }
@@ -530,21 +530,21 @@ export function createOrEditViteConfig(
 export function normalizeViteConfigFilePathWithTree(
   tree: Tree,
   projectRoot: string,
-  configFile?: string
+  configFile?: string,
 ): string {
   return configFile && tree.exists(configFile)
     ? configFile
     : tree.exists(joinPathFragments(`${projectRoot}/vite.config.ts`))
-    ? joinPathFragments(`${projectRoot}/vite.config.ts`)
-    : tree.exists(joinPathFragments(`${projectRoot}/vite.config.js`))
-    ? joinPathFragments(`${projectRoot}/vite.config.js`)
-    : undefined;
+      ? joinPathFragments(`${projectRoot}/vite.config.ts`)
+      : tree.exists(joinPathFragments(`${projectRoot}/vite.config.js`))
+        ? joinPathFragments(`${projectRoot}/vite.config.js`)
+        : undefined;
 }
 
 export function getViteConfigPathForProject(
   tree: Tree,
   projectName: string,
-  target?: string
+  target?: string,
 ) {
   let viteConfigPath: string | undefined;
   const { targets, root } = readProjectConfiguration(tree, projectName);
@@ -554,7 +554,7 @@ export function getViteConfigPathForProject(
     const config = Object.values(targets).find(
       (config) =>
         config.executor === '@nrwl/nx:build' ||
-        config.executor === '@nrwl/vite:build'
+        config.executor === '@nrwl/vite:build',
     );
     viteConfigPath = config?.options?.configFile;
   }
@@ -565,14 +565,14 @@ export function getViteConfigPathForProject(
 export async function handleUnsupportedUserProvidedTargets(
   userProvidedTargetIsUnsupported: TargetFlags,
   userProvidedTargetName: UserProvidedTargetName,
-  validFoundTargetName: ValidFoundTargetName
+  validFoundTargetName: ValidFoundTargetName,
 ) {
   if (userProvidedTargetIsUnsupported.build && validFoundTargetName.build) {
     await handleUnsupportedUserProvidedTargetsErrors(
       userProvidedTargetName.build,
       validFoundTargetName.build,
       'build',
-      'build'
+      'build',
     );
   }
 
@@ -581,7 +581,7 @@ export async function handleUnsupportedUserProvidedTargets(
       userProvidedTargetName.serve,
       validFoundTargetName.serve,
       'serve',
-      'dev-server'
+      'dev-server',
     );
   }
 
@@ -590,7 +590,7 @@ export async function handleUnsupportedUserProvidedTargets(
       userProvidedTargetName.test,
       validFoundTargetName.test,
       'test',
-      'test'
+      'test',
     );
   }
 }
@@ -599,7 +599,7 @@ async function handleUnsupportedUserProvidedTargetsErrors(
   userProvidedTargetName: string,
   validFoundTargetName: string,
   target: Target,
-  executor: 'build' | 'dev-server' | 'test'
+  executor: 'build' | 'dev-server' | 'test',
 ) {
   logger.warn(
     `The custom ${target} target you provided (${userProvidedTargetName}) cannot be converted to use the @nx/vite:${executor} executor.
@@ -607,7 +607,7 @@ async function handleUnsupportedUserProvidedTargetsErrors(
 
      Please note that converting a potentially non-compatible project to use Vite.js may result in unexpected behavior. Always commit
      your changes before converting a project to use Vite.js, and test the converted project thoroughly before deploying it.
-    `
+    `,
   );
   const { Confirm } = require('enquirer');
   const prompt = new Confirm({
@@ -624,7 +624,7 @@ async function handleUnsupportedUserProvidedTargetsErrors(
 
       Please note that converting a potentially non-compatible project to use Vite.js may result in unexpected behavior. Always commit
       your changes before converting a project to use Vite.js, and test the converted project thoroughly before deploying it.
-      `
+      `,
     );
   }
 }
@@ -641,7 +641,7 @@ export async function handleUnknownConfiguration(projectName: string) {
       
       If you still want to convert your project to use Vite,
       please make sure to commit your changes before running this generator.
-      `
+      `,
   );
 
   const { Confirm } = require('enquirer');
@@ -671,7 +671,7 @@ function handleViteConfigFileExists(
   reportsDirectory: string,
   cacheDir: string,
   offsetFromRoot: string,
-  projectAlreadyHasViteTargets?: TargetFlags
+  projectAlreadyHasViteTargets?: TargetFlags,
 ) {
   if (
     projectAlreadyHasViteTargets?.build &&
@@ -682,7 +682,7 @@ function handleViteConfigFileExists(
 
   if (process.env.NX_VERBOSE_LOGGING === 'true') {
     logger.info(
-      `vite.config.ts already exists for project ${options.project}.`
+      `vite.config.ts already exists for project ${options.project}.`,
     );
   }
 
@@ -735,7 +735,7 @@ function handleViteConfigFileExists(
     testOption,
     testOptionObject,
     cacheDir,
-    projectAlreadyHasViteTargets ?? {}
+    projectAlreadyHasViteTargets ?? {},
   );
 
   if (!changed) {
@@ -744,7 +744,7 @@ function handleViteConfigFileExists(
         
         ${buildOption}
         
-        `
+        `,
     );
   }
 }

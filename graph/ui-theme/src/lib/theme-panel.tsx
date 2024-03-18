@@ -14,7 +14,7 @@ export function ThemePanel({
   onThemeChange?: (theme: Theme) => void;
 }): JSX.Element {
   const [theme, setTheme] = useState(
-    (localStorage.getItem(localStorageThemeKey) as Theme) || 'system'
+    (localStorage.getItem(localStorageThemeKey) as Theme) || 'system',
   );
 
   useEffect(() => {
@@ -62,7 +62,7 @@ export function ThemePanel({
                   className={classNames(
                     theme === 'system' ? 'text-blue-500 dark:text-sky-500' : '',
                     active ? 'bg-slate-50 dark:bg-slate-600/30' : '',
-                    'group flex w-full items-center rounded-md px-2 py-2 text-sm'
+                    'group flex w-full items-center rounded-md px-2 py-2 text-sm',
                   )}
                   onClick={() => setTheme('system')}
                 >
@@ -81,7 +81,7 @@ export function ThemePanel({
                   className={classNames(
                     theme === 'light' ? 'text-blue-500 dark:text-sky-500' : '',
                     active ? 'bg-slate-50 dark:bg-slate-600/30' : '',
-                    'group flex w-full items-center rounded-md px-2 py-2 text-sm'
+                    'group flex w-full items-center rounded-md px-2 py-2 text-sm',
                   )}
                   onClick={() => setTheme('light')}
                 >
@@ -97,7 +97,7 @@ export function ThemePanel({
                   className={classNames(
                     theme === 'dark' ? 'text-blue-500 dark:text-sky-500' : '',
                     active ? 'bg-slate-50 dark:bg-slate-600/30' : '',
-                    'group flex w-full items-center rounded-md px-2 py-2 text-sm'
+                    'group flex w-full items-center rounded-md px-2 py-2 text-sm',
                   )}
                   onClick={() => setTheme('dark')}
                 >

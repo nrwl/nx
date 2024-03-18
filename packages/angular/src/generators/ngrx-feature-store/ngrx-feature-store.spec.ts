@@ -20,9 +20,9 @@ describe('ngrx-feature-store', () => {
           directory: '+state',
           parent,
           skipFormat: true,
-        })
+        }),
       ).rejects.toThrowError(
-        `Parent does not exist: feature-module/src/lib/feature-module.module.ts.`
+        `Parent does not exist: feature-module/src/lib/feature-module.module.ts.`,
       );
     });
 
@@ -46,16 +46,16 @@ describe('ngrx-feature-store', () => {
       expect(packageJson.dependencies['@ngrx/effects']).toEqual(ngrxVersion);
       expect(packageJson.dependencies['@ngrx/entity']).toEqual(ngrxVersion);
       expect(packageJson.dependencies['@ngrx/router-store']).toEqual(
-        ngrxVersion
+        ngrxVersion,
       );
       expect(packageJson.dependencies['@ngrx/component-store']).toEqual(
-        ngrxVersion
+        ngrxVersion,
       );
       expect(packageJson.devDependencies['@ngrx/schematics']).toEqual(
-        ngrxVersion
+        ngrxVersion,
       );
       expect(packageJson.devDependencies['@ngrx/store-devtools']).toEqual(
-        ngrxVersion
+        ngrxVersion,
       );
       expect(packageJson.devDependencies['jasmine-marbles']).toBeDefined();
     });
@@ -84,7 +84,7 @@ describe('ngrx-feature-store', () => {
       expect(packageJson.dependencies['@ngrx/component-store']).toBeUndefined();
       expect(packageJson.devDependencies['@ngrx/schematics']).toBeUndefined();
       expect(
-        packageJson.devDependencies['@ngrx/store-devtools']
+        packageJson.devDependencies['@ngrx/store-devtools'],
       ).toBeUndefined();
       expect(packageJson.devDependencies['jasmine-marbles']).toBeUndefined();
     });
@@ -189,34 +189,34 @@ describe('ngrx-feature-store', () => {
       // ASSERT
       expect(tree.read(parent, 'utf-8')).toMatchSnapshot();
       expect(
-        tree.read(`${statePath}/users.facade.ts`, 'utf-8')
+        tree.read(`${statePath}/users.facade.ts`, 'utf-8'),
       ).toMatchSnapshot();
       expect(
-        tree.read(`${statePath}/users.facade.spec.ts`, 'utf-8')
+        tree.read(`${statePath}/users.facade.spec.ts`, 'utf-8'),
       ).toMatchSnapshot();
       expect(
-        tree.read(`${statePath}/users.actions.ts`, 'utf-8')
+        tree.read(`${statePath}/users.actions.ts`, 'utf-8'),
       ).toMatchSnapshot();
       expect(
-        tree.read(`${statePath}/users.effects.ts`, 'utf-8')
+        tree.read(`${statePath}/users.effects.ts`, 'utf-8'),
       ).toMatchSnapshot();
       expect(
-        tree.read(`${statePath}/users.effects.spec.ts`, 'utf-8')
+        tree.read(`${statePath}/users.effects.spec.ts`, 'utf-8'),
       ).toMatchSnapshot();
       expect(
-        tree.read(`${statePath}/users.models.ts`, 'utf-8')
+        tree.read(`${statePath}/users.models.ts`, 'utf-8'),
       ).toMatchSnapshot();
       expect(
-        tree.read(`${statePath}/users.reducer.ts`, 'utf-8')
+        tree.read(`${statePath}/users.reducer.ts`, 'utf-8'),
       ).toMatchSnapshot();
       expect(
-        tree.read(`${statePath}/users.reducer.spec.ts`, 'utf-8')
+        tree.read(`${statePath}/users.reducer.spec.ts`, 'utf-8'),
       ).toMatchSnapshot();
       expect(
-        tree.read(`${statePath}/users.selectors.ts`, 'utf-8')
+        tree.read(`${statePath}/users.selectors.ts`, 'utf-8'),
       ).toMatchSnapshot();
       expect(
-        tree.read(`${statePath}/users.selectors.spec.ts`, 'utf-8')
+        tree.read(`${statePath}/users.selectors.spec.ts`, 'utf-8'),
       ).toMatchSnapshot();
     });
 
@@ -237,7 +237,7 @@ describe('ngrx-feature-store', () => {
 
       // ASSERT
       expect(
-        tree.read(`feature-module/src/index.ts`, 'utf-8')
+        tree.read(`feature-module/src/index.ts`, 'utf-8'),
       ).toMatchSnapshot();
     });
 
@@ -259,7 +259,7 @@ describe('ngrx-feature-store', () => {
 
       // ASSERT
       expect(
-        tree.read(`feature-module/src/index.ts`, 'utf-8')
+        tree.read(`feature-module/src/index.ts`, 'utf-8'),
       ).toMatchSnapshot();
     });
 
@@ -280,37 +280,37 @@ describe('ngrx-feature-store', () => {
 
       // ASSERT
       expect(
-        tree.read(`feature-module/src/index.ts`, 'utf-8')
+        tree.read(`feature-module/src/index.ts`, 'utf-8'),
       ).toMatchSnapshot();
       expect(
         tree.read(
           `feature-module/src/lib/+state/users/users.actions.ts`,
-          'utf-8'
-        )
+          'utf-8',
+        ),
       ).toMatchSnapshot();
       expect(
         tree.read(
           `feature-module/src/lib/+state/users/users.effects.ts`,
-          'utf-8'
-        )
+          'utf-8',
+        ),
       ).toMatchSnapshot();
       expect(
         tree.read(
           `feature-module/src/lib/+state/users/users.facade.ts`,
-          'utf-8'
-        )
+          'utf-8',
+        ),
       ).toMatchSnapshot();
       expect(
         tree.read(
           `feature-module/src/lib/+state/users/users.reducer.ts`,
-          'utf-8'
-        )
+          'utf-8',
+        ),
       ).toMatchSnapshot();
       expect(
         tree.read(
           `feature-module/src/lib/+state/users/users.selectors.ts`,
-          'utf-8'
-        )
+          'utf-8',
+        ),
       ).toMatchSnapshot();
       expect(tree.read(parent, 'utf-8')).toMatchSnapshot();
     });
@@ -330,9 +330,9 @@ describe('ngrx-feature-store', () => {
           directory: '+state',
           parent,
           skipFormat: true,
-        })
+        }),
       ).rejects.toThrowError(
-        `Parent does not exist: feature/src/lib/lib.routes.ts`
+        `Parent does not exist: feature/src/lib/lib.routes.ts`,
       );
     });
 
@@ -356,16 +356,16 @@ describe('ngrx-feature-store', () => {
       expect(packageJson.dependencies['@ngrx/effects']).toEqual(ngrxVersion);
       expect(packageJson.dependencies['@ngrx/entity']).toEqual(ngrxVersion);
       expect(packageJson.dependencies['@ngrx/router-store']).toEqual(
-        ngrxVersion
+        ngrxVersion,
       );
       expect(packageJson.dependencies['@ngrx/component-store']).toEqual(
-        ngrxVersion
+        ngrxVersion,
       );
       expect(packageJson.devDependencies['@ngrx/schematics']).toEqual(
-        ngrxVersion
+        ngrxVersion,
       );
       expect(packageJson.devDependencies['@ngrx/store-devtools']).toEqual(
-        ngrxVersion
+        ngrxVersion,
       );
       expect(packageJson.devDependencies['jasmine-marbles']).toBeDefined();
     });
@@ -394,7 +394,7 @@ describe('ngrx-feature-store', () => {
       expect(packageJson.dependencies['@ngrx/component-store']).toBeUndefined();
       expect(packageJson.devDependencies['@ngrx/schematics']).toBeUndefined();
       expect(
-        packageJson.devDependencies['@ngrx/store-devtools']
+        packageJson.devDependencies['@ngrx/store-devtools'],
       ).toBeUndefined();
       expect(packageJson.devDependencies['jasmine-marbles']).toBeUndefined();
     });
@@ -499,37 +499,37 @@ describe('ngrx-feature-store', () => {
 
       // ASSERT
       expect(
-        tree.read(`${statePath}/users.facade.ts`, 'utf-8')
+        tree.read(`${statePath}/users.facade.ts`, 'utf-8'),
       ).toMatchSnapshot();
       expect(
-        tree.read(`${statePath}/users.facade.spec.ts`, 'utf-8')
+        tree.read(`${statePath}/users.facade.spec.ts`, 'utf-8'),
       ).toMatchSnapshot();
       expect(
-        tree.read(`${statePath}/users.actions.ts`, 'utf-8')
+        tree.read(`${statePath}/users.actions.ts`, 'utf-8'),
       ).toMatchSnapshot();
       expect(
-        tree.read(`${statePath}/users.effects.ts`, 'utf-8')
+        tree.read(`${statePath}/users.effects.ts`, 'utf-8'),
       ).toMatchSnapshot();
       expect(
-        tree.read(`${statePath}/users.effects.spec.ts`, 'utf-8')
+        tree.read(`${statePath}/users.effects.spec.ts`, 'utf-8'),
       ).toMatchSnapshot();
       expect(
-        tree.read(`${statePath}/users.models.ts`, 'utf-8')
+        tree.read(`${statePath}/users.models.ts`, 'utf-8'),
       ).toMatchSnapshot();
       expect(
-        tree.read(`${statePath}/users.reducer.ts`, 'utf-8')
+        tree.read(`${statePath}/users.reducer.ts`, 'utf-8'),
       ).toMatchSnapshot();
       expect(
-        tree.read(`${statePath}/users.reducer.spec.ts`, 'utf-8')
+        tree.read(`${statePath}/users.reducer.spec.ts`, 'utf-8'),
       ).toMatchSnapshot();
       expect(
-        tree.read(`${statePath}/users.selectors.ts`, 'utf-8')
+        tree.read(`${statePath}/users.selectors.ts`, 'utf-8'),
       ).toMatchSnapshot();
       expect(
-        tree.read(`${statePath}/users.selectors.spec.ts`, 'utf-8')
+        tree.read(`${statePath}/users.selectors.spec.ts`, 'utf-8'),
       ).toMatchSnapshot();
       expect(
-        tree.read(`feature/src/lib/lib.routes.ts`, 'utf-8')
+        tree.read(`feature/src/lib/lib.routes.ts`, 'utf-8'),
       ).toMatchSnapshot();
     });
 

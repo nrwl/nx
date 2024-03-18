@@ -29,14 +29,14 @@ describe('update-eas-scripts', () => {
 
     expect(tree.exists('tools/scripts/eas-build-pre-install.mjs')).toBeTruthy();
     expect(
-      tree.exists('tools/scripts/eas-build-post-install.mjs')
+      tree.exists('tools/scripts/eas-build-post-install.mjs'),
     ).toBeTruthy();
     const packageJson = readJson(tree, 'apps/products/package.json');
     expect(packageJson.scripts['eas-build-pre-install']).toEqual(
-      'cd ../../ && node tools/scripts/eas-build-pre-install.mjs . apps/products && cp package-lock.json apps/products'
+      'cd ../../ && node tools/scripts/eas-build-pre-install.mjs . apps/products && cp package-lock.json apps/products',
     );
     expect(packageJson.scripts['eas-build-post-install']).toEqual(
-      'cd ../../ && node tools/scripts/eas-build-post-install.mjs . apps/products'
+      'cd ../../ && node tools/scripts/eas-build-post-install.mjs . apps/products',
     );
   });
 

@@ -36,11 +36,11 @@ function getPackageManager(dir: string = '') {
   return existsSync(join(dir, 'yarn.lock'))
     ? 'yarn'
     : existsSync(join(dir, 'bun.lockb'))
-    ? 'bun'
-    : existsSync(join(dir, 'pnpm-lock.yaml')) ||
-      existsSync(join(dir, 'pnpm-workspace.yaml'))
-    ? 'pnpm'
-    : 'npm';
+      ? 'bun'
+      : existsSync(join(dir, 'pnpm-lock.yaml')) ||
+          existsSync(join(dir, 'pnpm-workspace.yaml'))
+        ? 'pnpm'
+        : 'npm';
 }
 
 /**
@@ -58,7 +58,7 @@ export function detectPackageManager(dir: string = ''): PackageManager {
  */
 export function isWorkspacesEnabled(
   packageManager: PackageManager = detectPackageManager(),
-  root: string = workspaceRoot
+  root: string = workspaceRoot,
 ): boolean {
   if (packageManager === 'pnpm') {
     return existsSync(join(root, 'pnpm-workspace.yaml'));
@@ -85,7 +85,7 @@ export function isWorkspacesEnabled(
  */
 export function getPackageManagerCommand(
   packageManager: PackageManager = detectPackageManager(),
-  root: string = workspaceRoot
+  root: string = workspaceRoot,
 ): PackageManagerCommands {
   const commands: { [pm in PackageManager]: () => PackageManagerCommands } = {
     yarn: () => {
@@ -178,7 +178,7 @@ export function getPackageManagerCommand(
  */
 export function getPackageManagerVersion(
   packageManager: PackageManager = detectPackageManager(),
-  cwd = process.cwd()
+  cwd = process.cwd(),
 ): string {
   return execSync(`${packageManager} --version`, {
     cwd,
@@ -192,7 +192,7 @@ export function getPackageManagerVersion(
  */
 export function findFileInPackageJsonDirectory(
   file: string,
-  directory: string = process.cwd()
+  directory: string = process.cwd(),
 ): string | null {
   while (!existsSync(join(directory, 'package.json'))) {
     directory = dirname(directory);
@@ -252,7 +252,7 @@ export function modifyYarnRcToFitNewDirectory(contents: string): string {
 
 export function copyPackageManagerConfigurationFiles(
   root: string,
-  destination: string
+  destination: string,
 ) {
   for (const packageManagerConfigFile of [
     '.npmrc',
@@ -283,7 +283,7 @@ export function copyPackageManagerConfigurationFiles(
         }
         case '.yarnrc.yml': {
           const updated = modifyYarnRcYmlToFitNewDirectory(
-            readFileIfExisting(f)
+            readFileIfExisting(f),
           );
           writeFileSync(destinationPath, updated);
           break;
@@ -324,7 +324,7 @@ export function createTempNpmDirectory() {
  */
 export async function resolvePackageVersionUsingRegistry(
   packageName: string,
-  version: string
+  version: string,
 ): Promise<string> {
   try {
     const result = await packageRegistryView(packageName, version, 'version');
@@ -354,7 +354,7 @@ export async function resolvePackageVersionUsingRegistry(
  */
 export async function resolvePackageVersionUsingInstallation(
   packageName: string,
-  version: string
+  version: string,
 ): Promise<string> {
   const { dir, cleanup } = createTempNpmDirectory();
 
@@ -373,7 +373,7 @@ export async function resolvePackageVersionUsingInstallation(
 export async function packageRegistryView(
   pkg: string,
   version: string,
-  args: string
+  args: string,
 ): Promise<string> {
   let pm = detectPackageManager();
   if (pm === 'yarn' || pm === 'bun') {
@@ -393,7 +393,7 @@ export async function packageRegistryView(
 export async function packageRegistryPack(
   cwd: string,
   pkg: string,
-  version: string
+  version: string,
 ): Promise<{ tarballPath: string }> {
   let pm = detectPackageManager();
   if (pm === 'yarn' || pm === 'bun') {

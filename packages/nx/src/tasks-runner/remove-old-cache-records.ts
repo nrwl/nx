@@ -12,7 +12,7 @@ removeOld(cachedFiles());
 function terminalOutputs() {
   try {
     return readdirSync(join(folder, 'terminalOutputs')).map((f) =>
-      join(folder, 'terminalOutputs', f)
+      join(folder, 'terminalOutputs', f),
     );
   } catch (e) {
     return [];

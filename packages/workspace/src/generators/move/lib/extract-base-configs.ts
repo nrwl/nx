@@ -29,12 +29,13 @@ export async function maybeExtractJestConfigBase(tree: Tree): Promise<void> {
 
 export function maybeMigrateEslintConfigIfRootProject(
   tree: Tree,
-  rootProject: ProjectConfiguration
+  rootProject: ProjectConfiguration,
 ): void {
   let migrateConfigToMonorepoStyle: any;
   try {
-    migrateConfigToMonorepoStyle = require('@nx/' +
-      'eslint/src/generators/init/init-migration').migrateConfigToMonorepoStyle;
+    migrateConfigToMonorepoStyle = require(
+      '@nx/' + 'eslint/src/generators/init/init-migration',
+    ).migrateConfigToMonorepoStyle;
   } catch {
     // eslint not installed
   }
@@ -44,6 +45,6 @@ export function maybeMigrateEslintConfigIfRootProject(
     tree.exists(joinPathFragments(rootProject.root, 'jest.config.ts')) ||
       tree.exists(joinPathFragments(rootProject.root, 'jest.config.js'))
       ? 'jest'
-      : 'none'
+      : 'none',
   );
 }

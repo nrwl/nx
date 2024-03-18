@@ -9,7 +9,7 @@ export const yargsNewCommand: CommandModule = {
     process.exit(
       await (
         await import('./new')
-      ).newWorkspace(args['nxWorkspaceRoot'] as string, args)
+      ).newWorkspace(args['nxWorkspaceRoot'] as string, args),
     );
   },
 };

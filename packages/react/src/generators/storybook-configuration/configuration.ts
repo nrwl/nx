@@ -20,7 +20,7 @@ async function generateStories(host: Tree, schema: StorybookConfigureSchema) {
   const cypressProject = getE2eProjectName(
     schema.project,
     projectConfig.root,
-    schema.cypressDirectory
+    schema.cypressDirectory,
   );
   await storiesGenerator(host, {
     project: schema.project,
@@ -36,7 +36,7 @@ async function generateStories(host: Tree, schema: StorybookConfigureSchema) {
 
 export function storybookConfigurationGenerator(
   host: Tree,
-  schema: StorybookConfigureSchema
+  schema: StorybookConfigureSchema,
 ) {
   return storybookConfigurationGeneratorInternal(host, {
     addPlugin: false,
@@ -46,7 +46,7 @@ export function storybookConfigurationGenerator(
 
 export async function storybookConfigurationGeneratorInternal(
   host: Tree,
-  schema: StorybookConfigureSchema
+  schema: StorybookConfigureSchema,
 ) {
   const nxJson = readNxJson(host);
   const addPluginDefault =
@@ -96,14 +96,14 @@ export default storybookConfigurationGenerator;
 
 export function findWebpackConfig(
   tree: Tree,
-  projectRoot: string
+  projectRoot: string,
 ): string | undefined {
   const allowsExt = ['js', 'mjs', 'ts', 'cjs', 'mts', 'cts'];
 
   for (const ext of allowsExt) {
     const webpackConfigPath = joinPathFragments(
       projectRoot,
-      `webpack.config.${ext}`
+      `webpack.config.${ext}`,
     );
     if (tree.exists(webpackConfigPath)) {
       return webpackConfigPath;

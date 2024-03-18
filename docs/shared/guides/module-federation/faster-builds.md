@@ -366,7 +366,7 @@ the following line to the `host`'s project configuration.
 ```jsonc {% fileName="apps/host/project.json" %}
 {
   //...
-  "implicitDependencies": ["about", "shop", "cart"]
+  "implicitDependencies": ["about", "shop", "cart"],
 }
 ```
 

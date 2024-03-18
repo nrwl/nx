@@ -34,8 +34,8 @@ export class GraphService {
     public renderMode?: 'nx-console' | 'nx-docs',
     rankDir: 'TB' | 'LR' = 'TB',
     public getTaskInputs: (
-      taskId: string
-    ) => Promise<Record<string, string[]>> = undefined
+      taskId: string,
+    ) => Promise<Record<string, string[]>> = undefined,
   ) {
     use(cytoscapeDagre);
     use(popper);
@@ -91,7 +91,7 @@ export class GraphService {
           event.workspaceLayout,
           event.dependencies,
           event.affectedProjects,
-          event.collapseEdges
+          event.collapseEdges,
         );
         break;
 
@@ -105,19 +105,19 @@ export class GraphService {
           event.workspaceLayout,
           event.dependencies,
           event.affectedProjects,
-          event.collapseEdges
+          event.collapseEdges,
         );
         elementsToSendToRender = this.projectTraversalGraph.setShownProjects(
           event.selectedProjects.length > 0
             ? event.selectedProjects
-            : this.renderGraph.getCurrentlyShownProjectIds()
+            : this.renderGraph.getCurrentlyShownProjectIds(),
         );
         break;
 
       case 'notifyGraphFocusProject':
         elementsToSendToRender = this.projectTraversalGraph.focusProject(
           event.projectName,
-          event.searchDepth
+          event.searchDepth,
         );
 
         break;
@@ -127,21 +127,21 @@ export class GraphService {
           this.projectTraversalGraph.filterProjectsByText(
             event.search,
             event.includeProjectsByPath,
-            event.searchDepth
+            event.searchDepth,
           );
         break;
 
       case 'notifyGraphShowProjects':
         elementsToSendToRender = this.projectTraversalGraph.showProjects(
           event.projectNames,
-          this.renderGraph.getCurrentlyShownProjectIds()
+          this.renderGraph.getCurrentlyShownProjectIds(),
         );
         break;
 
       case 'notifyGraphHideProjects':
         elementsToSendToRender = this.projectTraversalGraph.hideProjects(
           event.projectNames,
-          this.renderGraph.getCurrentlyShownProjectIds()
+          this.renderGraph.getCurrentlyShownProjectIds(),
         );
         break;
 
@@ -163,13 +163,13 @@ export class GraphService {
           if (event.algorithm === 'shortest') {
             elementsToSendToRender = this.projectTraversalGraph.traceProjects(
               event.start,
-              event.end
+              event.end,
             );
           } else {
             elementsToSendToRender =
               this.projectTraversalGraph.traceAllProjects(
                 event.start,
-                event.end
+                event.end,
               );
           }
         }
@@ -237,22 +237,22 @@ export class GraphService {
         break;
       case 'notifyTaskGraphSetTasks':
         elementsToSendToRender = this.taskTraversalGraph.setTasks(
-          event.taskIds
+          event.taskIds,
         );
         break;
       case 'notifyTaskGraphTasksSelected':
         elementsToSendToRender = this.taskTraversalGraph.selectTask(
-          event.taskIds
+          event.taskIds,
         );
         break;
       case 'notifyTaskGraphTasksDeselected':
         elementsToSendToRender = this.taskTraversalGraph.deselectTask(
-          event.taskIds
+          event.taskIds,
         );
         break;
       case 'setGroupByProject':
         elementsToSendToRender = this.taskTraversalGraph.setGroupByProject(
-          event.groupByProject
+          event.groupByProject,
         );
         break;
     }

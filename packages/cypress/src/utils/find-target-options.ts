@@ -34,7 +34,7 @@ export interface FoundTarget {
 
 export async function findBuildConfig(
   tree: Tree,
-  options: FindTargetOptions
+  options: FindTargetOptions,
 ): Promise<FoundTarget> {
   try {
     // attempt to use the provided target
@@ -50,7 +50,7 @@ export async function findBuildConfig(
       tree,
       graph,
       options.project,
-      options
+      options,
     );
     if (selfProject) {
       return selfProject;
@@ -74,11 +74,11 @@ export async function findBuildConfig(
 function findInTarget(
   tree: Tree,
   graph: ProjectGraph,
-  options: FindTargetOptions
+  options: FindTargetOptions,
 ): TargetConfiguration {
   const { project, target, configuration } = parseTargetString(
     options.buildTarget,
-    graph
+    graph,
   );
   const projectConfig = readProjectConfiguration(tree, project);
   const executorName = projectConfig?.targets?.[target]?.executor;
@@ -101,7 +101,7 @@ If you do not have an app in the workspace to you can make a new app with 'nx g 
 `);
 
     throw new Error(
-      'The provided --build-target does not use an executor in the allow list of executors defined.'
+      'The provided --build-target does not use an executor in the allow list of executors defined.',
     );
   }
   const foundConfig =
@@ -114,14 +114,14 @@ If you do not have an app in the workspace to you can make a new app with 'nx g 
       projectConfig.targets,
       project,
       target,
-      foundConfig
-    )
+      foundConfig,
+    ),
   );
 }
 
 function frameworkHelperMessage(
   validExecutorNames: string[],
-  executorName: string
+  executorName: string,
 ): string {
   const executorsToFramework = {
     '@nx/webpack:webpack': 'react',
@@ -136,7 +136,7 @@ function frameworkHelperMessage(
   };
   const buildTargetFramework = executorsToFramework[executorName];
   const invokedGeneratorFramework = validExecutorNames.find(
-    (e) => !!executorsToFramework[e]
+    (e) => !!executorsToFramework[e],
   );
 
   if (
@@ -155,7 +155,7 @@ Try using @nx/${buildTargetFramework} instead.`;
 async function findInGraph(
   tree: Tree,
   graph: ProjectGraph,
-  options: FindTargetOptions
+  options: FindTargetOptions,
 ): Promise<FoundTarget> {
   const parents = findParentsOfProject(graph, options.project);
   const potentialTargets = [];
@@ -165,7 +165,7 @@ async function findInGraph(
       tree,
       graph,
       parent.target,
-      options
+      options,
     );
     if (parentProject) {
       potentialTargets.push(parentProject);
@@ -183,7 +183,7 @@ async function findInGraph(
 
 function findParentsOfProject(
   graph: ProjectGraph,
-  projectName: string
+  projectName: string,
 ): ProjectGraphDependency[] {
   const reversedGraph = reverse(graph);
   return reversedGraph.dependencies[projectName]
@@ -195,7 +195,7 @@ function findTargetOptionsInProject(
   tree: Tree,
   graph: ProjectGraph,
   projectName: string,
-  options: FindTargetOptions
+  options: FindTargetOptions,
 ): FoundTarget {
   const projectConfig = readProjectConfiguration(tree, projectName);
 
@@ -214,8 +214,8 @@ function findTargetOptionsInProject(
                 projectConfig.targets,
                 projectName,
                 targetName,
-                null
-              )
+                null,
+              ),
             )
           : null,
       };
@@ -228,7 +228,7 @@ function createExecutorContext(
   targets: Record<string, TargetConfiguration>,
   projectName: string,
   targetName: string,
-  configurationName?: string
+  configurationName?: string,
 ): ExecutorContext {
   const nxJsonConfiguration = readNxJson();
   const projectsConfigurations =

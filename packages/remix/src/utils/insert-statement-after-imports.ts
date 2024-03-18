@@ -11,7 +11,7 @@ import {
 export function insertStatementAfterImports(
   tree: Tree,
   path: string,
-  statement: string
+  statement: string,
 ) {
   const contents = tree.read(path, 'utf-8');
 

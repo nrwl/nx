@@ -15,7 +15,7 @@ export interface NormalizedRollupExecutorOptions extends RollupExecutorOptions {
 export function normalizeRollupExecutorOptions(
   options: RollupExecutorOptions,
   context: ExecutorContext,
-  sourceRoot: string
+  sourceRoot: string,
 ): NormalizedRollupExecutorOptions {
   const { root } = context;
   const main = `${root}/${options.main}`;
@@ -45,7 +45,7 @@ export function normalizeRollupExecutorOptions(
     skipTypeCheck: options.skipTypeCheck || false,
     additionalEntryPoints: createEntryPoints(
       options.additionalEntryPoints,
-      context.root
+      context.root,
     ),
   };
 }
@@ -64,7 +64,7 @@ export function normalizePluginPath(pluginPath: void | string, root: string) {
 export function normalizeAssets(
   assets: any[],
   root: string,
-  sourceRoot: string
+  sourceRoot: string,
 ): AssetGlobPattern[] {
   return assets.map((asset) => {
     if (typeof asset === 'string') {
@@ -74,7 +74,7 @@ export function normalizeAssets(
 
       if (!resolvedAssetPath.startsWith(resolvedSourceRoot)) {
         throw new Error(
-          `The ${resolvedAssetPath} asset path must start with the project source root: ${sourceRoot}`
+          `The ${resolvedAssetPath} asset path must start with the project source root: ${sourceRoot}`,
         );
       }
 
@@ -92,7 +92,7 @@ export function normalizeAssets(
     } else {
       if (asset.output.startsWith('..')) {
         throw new Error(
-          'An asset cannot be written to a location outside of the output path.'
+          'An asset cannot be written to a location outside of the output path.',
         );
       }
 

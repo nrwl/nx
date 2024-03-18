@@ -199,7 +199,7 @@ export function ConfScheduleShort(): JSX.Element {
           </article>
         </div>
         {scheduleItemsConference.map((item) =>
-          item.type === 'event' ? scheduleRow(item) : breakRow(item)
+          item.type === 'event' ? scheduleRow(item) : breakRow(item),
         )}
       </section>
 

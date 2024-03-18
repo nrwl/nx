@@ -20,7 +20,7 @@ let childProcess: ChildProcess;
 
 export default async function* detoxTestExecutor(
   options: DetoxTestOptions,
-  context: ExecutorContext
+  context: ExecutorContext,
 ): AsyncGenerator<DetoxTestOutput> {
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
@@ -30,7 +30,7 @@ export default async function* detoxTestExecutor(
       const buildTarget = parseTargetString(options.buildTarget, context);
       const buildOptions = readTargetOptions<DetoxBuildOptions>(
         buildTarget,
-        context
+        context,
       );
 
       await runCliBuild(context.root, projectRoot, {
@@ -52,7 +52,7 @@ export default async function* detoxTestExecutor(
 function runCliTest(
   workspaceRoot: string,
   projectRoot: string,
-  options: DetoxTestOptions
+  options: DetoxTestOptions,
 ) {
   return new Promise((resolve, reject) => {
     childProcess = fork(
@@ -61,7 +61,7 @@ function runCliTest(
       {
         cwd: pathResolve(workspaceRoot, projectRoot),
         env: process.env,
-      }
+      },
     );
 
     // Ensure the child process is killed when the parent exits

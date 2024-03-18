@@ -23,13 +23,13 @@ describe('NextJs Component Testing', () => {
     createAppWithCt(appName);
     if (runE2ETests()) {
       expect(runCLI(`component-test ${appName}`)).toContain(
-        'All specs passed!'
+        'All specs passed!',
       );
     }
     addTailwindToApp(appName);
     if (runE2ETests()) {
       expect(runCLI(`component-test ${appName}`)).toContain(
-        'All specs passed!'
+        'All specs passed!',
       );
     }
   });
@@ -41,7 +41,7 @@ describe('NextJs Component Testing', () => {
     addBabelSupport(`apps/${appName}`);
     if (runE2ETests()) {
       expect(runCLI(`component-test ${appName}`)).toContain(
-        'All specs passed!'
+        'All specs passed!',
       );
     }
   });
@@ -53,7 +53,7 @@ describe('NextJs Component Testing', () => {
     addBabelSupport(`libs/${libName}`);
     if (runE2ETests()) {
       expect(runCLI(`component-test ${libName}`)).toContain(
-        'All specs passed!'
+        'All specs passed!',
       );
     }
   });
@@ -63,13 +63,13 @@ describe('NextJs Component Testing', () => {
     createLibWithCt(libName, false);
     if (runE2ETests()) {
       expect(runCLI(`component-test ${libName}`)).toContain(
-        'All specs passed!'
+        'All specs passed!',
       );
     }
     addTailwindToLib(libName);
     if (runE2ETests()) {
       expect(runCLI(`component-test ${libName}`)).toContain(
-        'All specs passed!'
+        'All specs passed!',
       );
     }
   });
@@ -79,14 +79,14 @@ describe('NextJs Component Testing', () => {
     createLibWithCt(buildableLibName, true);
     if (runE2ETests()) {
       expect(runCLI(`component-test ${buildableLibName}`)).toContain(
-        'All specs passed!'
+        'All specs passed!',
       );
     }
 
     addTailwindToLib(buildableLibName);
     if (runE2ETests()) {
       expect(runCLI(`component-test ${buildableLibName}`)).toContain(
-        'All specs passed!'
+        'All specs passed!',
       );
     }
   });
@@ -105,27 +105,27 @@ function addBabelSupport(path: string) {
     // apply babel compiler
     return content.replace(
       'nxComponentTestingPreset(__filename)',
-      'nxComponentTestingPreset(__filename, {compiler: "babel"})'
+      'nxComponentTestingPreset(__filename, {compiler: "babel"})',
     );
   });
 
   //  added needed .babelrc file with defaults
   createFile(
     `${path}/.babelrc`,
-    JSON.stringify({ presets: ['next/babel'], plugins: ['istanbul'] })
+    JSON.stringify({ presets: ['next/babel'], plugins: ['istanbul'] }),
   );
 }
 
 function createAppWithCt(appName: string) {
   runCLI(
-    `generate @nx/next:app ${appName} --no-interactive --appDir=false --src=false`
+    `generate @nx/next:app ${appName} --no-interactive --appDir=false --src=false`,
   );
   runCLI(
-    `generate @nx/next:component button --project=${appName} --directory=components --flat --no-interactive`
+    `generate @nx/next:component button --project=${appName} --directory=components --flat --no-interactive`,
   );
   createFile(
     `apps/${appName}/public/data.json`,
-    JSON.stringify({ message: 'loaded from app data.json' })
+    JSON.stringify({ message: 'loaded from app data.json' }),
   );
 
   updateFile(`apps/${appName}/components/button.tsx`, (content) => {
@@ -153,13 +153,13 @@ export default function Button(props: ButtonProps) {
   });
 
   runCLI(
-    `generate @nx/next:cypress-component-configuration --project=${appName} --generate-tests --no-interactive`
+    `generate @nx/next:cypress-component-configuration --project=${appName} --generate-tests --no-interactive`,
   );
 }
 
 function addTailwindToApp(appName: string) {
   runCLI(
-    `generate @nx/react:setup-tailwind --project=${appName} --no-interactive`
+    `generate @nx/react:setup-tailwind --project=${appName} --no-interactive`,
   );
   updateFile(`apps/${appName}/cypress/support/component.ts`, (content) => {
     return `${content}
@@ -187,11 +187,11 @@ describe(Button.name, () => {
 
 function createLibWithCt(libName: string, buildable: boolean) {
   runCLI(
-    `generate @nx/next:lib ${libName} --buildable=${buildable} --no-interactive`
+    `generate @nx/next:lib ${libName} --buildable=${buildable} --no-interactive`,
   );
 
   runCLI(
-    `generate @nx/next:component button --project=${libName} --flat --export --no-interactive`
+    `generate @nx/next:component button --project=${libName} --flat --export --no-interactive`,
   );
   updateFile(`libs/${libName}/src/lib/button.tsx`, (content) => {
     return `import { useEffect, useState } from 'react';
@@ -208,17 +208,17 @@ export default Button;
   });
 
   runCLI(
-    `generate @nx/next:cypress-component-configuration --project=${libName} --generate-tests --no-interactive`
+    `generate @nx/next:cypress-component-configuration --project=${libName} --generate-tests --no-interactive`,
   );
 }
 
 function createLibWithCtCypress(libName: string) {
   runCLI(
-    `generate @nx/next:lib ${libName} --no-interactive --projectNameAndRootFormat=as-provided`
+    `generate @nx/next:lib ${libName} --no-interactive --projectNameAndRootFormat=as-provided`,
   );
 
   runCLI(
-    `generate @nx/next:cypress-component-configuration --project=${libName} --no-interactive`
+    `generate @nx/next:cypress-component-configuration --project=${libName} --no-interactive`,
   );
 
   updateFile(`${libName}/src/lib/hello-server.tsx`, () => {
@@ -251,13 +251,13 @@ function createLibWithCtCypress(libName: string) {
       });
     });
     
-    `
+    `,
   );
 }
 function addTailwindToLib(libName: string) {
   createFile(`libs/${libName}/src/lib/styles.css`, ``);
   runCLI(
-    `generate @nx/react:setup-tailwind --project=${libName} --no-interactive`
+    `generate @nx/react:setup-tailwind --project=${libName} --no-interactive`,
   );
   updateFile(`libs/${libName}/src/lib/button.cy.tsx`, (content) => {
     return `import * as React from 'react';

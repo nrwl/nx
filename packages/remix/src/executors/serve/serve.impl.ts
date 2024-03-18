@@ -46,7 +46,7 @@ function buildRemixDevArgs(options: RemixServeSchema) {
 
 export default async function* serveExecutor(
   schema: RemixServeSchema,
-  context: ExecutorContext
+  context: ExecutorContext,
 ) {
   const options = normalizeOptions(schema);
   const projectRoot = context.workspace.projects[context.projectName].root;
@@ -90,6 +90,6 @@ export default async function* serveExecutor(
         success: true,
         baseUrl: `http://localhost:${options.port}`,
       });
-    }
+    },
   );
 }

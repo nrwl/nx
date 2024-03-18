@@ -40,7 +40,7 @@ describe('convertPipeToScam', () => {
     // ASSERT
     const pipeSource = tree.read(
       'apps/app1/src/app/example/example.pipe.ts',
-      'utf-8'
+      'utf-8',
     );
     expect(pipeSource).toMatchInlineSnapshot(`
       "import { Pipe, PipeTransform, NgModule } from '@angular/core';
@@ -100,7 +100,7 @@ describe('convertPipeToScam', () => {
     // ASSERT
     const pipeModuleSource = tree.read(
       'apps/app1/src/app/example/example.module.ts',
-      'utf-8'
+      'utf-8',
     );
     expect(pipeModuleSource).toMatchInlineSnapshot(`
       "import { NgModule } from '@angular/core';
@@ -211,7 +211,7 @@ describe('convertPipeToScam', () => {
     // ASSERT
     const pipeModuleSource = tree.read(
       'apps/app1/src/app/example.module.ts',
-      'utf-8'
+      'utf-8',
     );
     expect(pipeModuleSource).toMatchInlineSnapshot(`
       "import { NgModule } from '@angular/core';
@@ -265,7 +265,7 @@ describe('convertPipeToScam', () => {
     // ASSERT
     const pipeModuleSource = tree.read(
       'apps/app1/src/app/random/example/example.pipe.ts',
-      'utf-8'
+      'utf-8',
     );
     expect(pipeModuleSource).toMatchInlineSnapshot(`
       "import { Pipe, PipeTransform, NgModule } from '@angular/core';
@@ -327,7 +327,7 @@ describe('convertPipeToScam', () => {
     // ASSERT
     const pipeModuleSource = tree.read(
       'apps/app1/src/app/random/example.pipe.ts',
-      'utf-8'
+      'utf-8',
     );
     expect(pipeModuleSource).toMatchInlineSnapshot(`
       "import { Pipe, PipeTransform, NgModule } from '@angular/core';

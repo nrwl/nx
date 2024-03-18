@@ -15,7 +15,7 @@ export default async function (tree: Tree) {
       options: WebpackExecutorOptions,
       projectName,
       targetName,
-      _configurationName
+      _configurationName,
     ) => {
       if (options.babelUpwardRootMode !== undefined) {
         return;
@@ -25,7 +25,7 @@ export default async function (tree: Tree) {
       projectConfiguration.targets[targetName].options.babelUpwardRootMode =
         true;
       updateProjectConfiguration(tree, projectName, projectConfiguration);
-    }
+    },
   );
 
   await formatFiles(tree);

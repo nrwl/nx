@@ -12,7 +12,7 @@ export type SharedWorkspaceLibraryConfig = {
   getAliases: () => Record<string, string>;
   getLibraries: (
     projectRoot: string,
-    eager?: boolean
+    eager?: boolean,
   ) => Record<string, SharedLibraryConfig>;
   getReplacementPlugin: () => NormalModuleReplacementPlugin;
 };
@@ -28,7 +28,7 @@ export interface SharedLibraryConfig {
 
 export type SharedFunction = (
   libraryName: string,
-  sharedConfig: SharedLibraryConfig
+  sharedConfig: SharedLibraryConfig,
 ) => undefined | false | SharedLibraryConfig;
 
 export type AdditionalSharedConfig = Array<

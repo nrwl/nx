@@ -7,5 +7,5 @@ const path = require('path');
 copySync(
   path.resolve(path.join(__dirname, '../../docs')),
   path.resolve(path.join(__dirname, 'public/documentation')),
-  { overwrite: true }
+  { overwrite: true },
 );

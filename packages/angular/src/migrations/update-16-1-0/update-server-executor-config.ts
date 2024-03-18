@@ -21,7 +21,7 @@ export default async function (tree: Tree) {
       (_options, projectName, targetName, configurationName) => {
         const projectConfiguration = readProjectConfiguration(
           tree,
-          projectName
+          projectName,
         );
         const configToUpdate: ServerBuilderOptions = configurationName
           ? projectConfiguration.targets[targetName].configurations[
@@ -37,7 +37,7 @@ export default async function (tree: Tree) {
         }
 
         updateProjectConfiguration(tree, projectName, projectConfiguration);
-      }
+      },
     );
   });
 

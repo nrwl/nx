@@ -10,7 +10,7 @@ export default async function (tree: Tree) {
   const nxJson = readNxJson(tree);
   const projectFiles = await retrieveProjectConfigurationPaths(
     tree.root,
-    await loadNxPlugins(nxJson?.plugins)
+    await loadNxPlugins(nxJson?.plugins),
   );
   const projectJsons = projectFiles.filter((f) => f.endsWith('project.json'));
 

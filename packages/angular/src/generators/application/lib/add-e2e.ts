@@ -77,7 +77,7 @@ export async function addE2e(tree: Tree, options: NormalizedSchema) {
 function addFileServerTarget(
   tree: Tree,
   options: NormalizedSchema,
-  targetName: string
+  targetName: string,
 ) {
   addDependenciesToPackageJson(tree, {}, { '@nx/web': nxVersion });
 

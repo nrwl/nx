@@ -28,7 +28,7 @@ for (const possiblePath of possiblePaths) {
   try {
     jest.mock(possiblePath, () => {
       const originalModule = jest.requireActual(
-        possiblePath
+        possiblePath,
       ) as typeof import('@angular-devkit/core/src/workspace/json/reader');
       const originalReadJsonWorkspace = originalModule.readJsonWorkspace;
       return {

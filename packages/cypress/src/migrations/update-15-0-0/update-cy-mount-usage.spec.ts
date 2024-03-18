@@ -39,28 +39,28 @@ describe('update cy.mount usage', () => {
     await updateCyMountUsage(tree);
 
     expect(
-      tree.read('libs/my-lib/cypress/support/commands.ts', 'utf-8')
+      tree.read('libs/my-lib/cypress/support/commands.ts', 'utf-8'),
     ).toMatchSnapshot();
     expect(
-      tree.read('libs/my-lib/src/lib/my-cmp-one.cy.js', 'utf-8')
+      tree.read('libs/my-lib/src/lib/my-cmp-one.cy.js', 'utf-8'),
     ).toMatchSnapshot();
     expect(
-      tree.read('libs/my-lib/src/lib/my-cmp-two.cy.tsx', 'utf-8')
+      tree.read('libs/my-lib/src/lib/my-cmp-two.cy.tsx', 'utf-8'),
     ).toMatchSnapshot();
     expect(
-      tree.read('libs/my-lib/src/lib/my-cmp-three.cy.ts', 'utf-8')
+      tree.read('libs/my-lib/src/lib/my-cmp-three.cy.ts', 'utf-8'),
     ).toMatchSnapshot();
     expect(
-      tree.read('libs/another-lib/cypress/support/commands.ts', 'utf-8')
+      tree.read('libs/another-lib/cypress/support/commands.ts', 'utf-8'),
     ).toMatchSnapshot();
     expect(
-      tree.read('libs/another-lib/src/lib/my-cmp-one.cy.js', 'utf-8')
+      tree.read('libs/another-lib/src/lib/my-cmp-one.cy.js', 'utf-8'),
     ).toMatchSnapshot();
     expect(
-      tree.read('libs/another-lib/src/lib/my-cmp-two.cy.tsx', 'utf-8')
+      tree.read('libs/another-lib/src/lib/my-cmp-two.cy.tsx', 'utf-8'),
     ).toMatchSnapshot();
     expect(
-      tree.read('libs/another-lib/src/lib/my-cmp-three.cy.ts', 'utf-8')
+      tree.read('libs/another-lib/src/lib/my-cmp-three.cy.ts', 'utf-8'),
     ).toMatchSnapshot();
   });
 
@@ -105,11 +105,11 @@ Cypress.Commands.add('login', (email, password) => {
 //
 // -- This will overwrite an existing command --
 // Cypress.Commands.overwrite("visit", (originalFn, url, options) => { ... })
-`
+`,
     );
     addMountCommand(tree, 'apps/my-app', 'angular');
     expect(
-      tree.read('apps/my-app/cypress/support/commands.ts', 'utf-8')
+      tree.read('apps/my-app/cypress/support/commands.ts', 'utf-8'),
     ).toMatchSnapshot();
   });
 
@@ -128,7 +128,7 @@ Cypress.Commands.add('login', (email, password) => {
         mount(MyComponent, {...config, componentProperties: {foo: 'bar'}});
       });
     });
-    `
+    `,
     );
     updateCyFile(tree, 'my-file.cy.ts', 'angular');
 
@@ -149,7 +149,7 @@ Cypress.Commands.add('login', (email, password) => {
         mount(<MyComponent title={"blah"}/>);
       });
     });
-    `
+    `,
     );
     updateCyFile(tree, 'my-file.cy.ts', 'react18');
 
@@ -170,7 +170,7 @@ Cypress.Commands.add('login', (email, password) => {
         mount(<MyComponent title={"blah"}/>,);
       });
     });
-    `
+    `,
     );
     updateCyFile(tree, 'my-file.cy.ts', 'react');
 
@@ -220,7 +220,7 @@ declare namespace Cypress {
 // -- This is a parent command --
 Cypress.Commands.add('login', (email, password) => {
   console.log('Custom command example: Login', email, password);
-});`
+});`,
   );
   tree.write(
     'libs/my-lib/src/lib/my-cmp-one.cy.js',
@@ -235,7 +235,7 @@ Cypress.Commands.add('login', (email, password) => {
         mount(<MyComponent title={"blah"}/>,);
       });
     });
-    `
+    `,
   );
   tree.write(
     'libs/my-lib/src/lib/my-cmp-two.cy.tsx',
@@ -250,7 +250,7 @@ Cypress.Commands.add('login', (email, password) => {
         mount(<MyComponent title={"blah"}/>,);
       });
     });
-    `
+    `,
   );
   tree.write(
     'libs/my-lib/src/lib/my-cmp-three.cy.ts',
@@ -265,7 +265,7 @@ Cypress.Commands.add('login', (email, password) => {
         mount(MyComponent, {...config, componentProperties: {foo: 'bar'}});
       });
     });
-    `
+    `,
   );
 
   tree.write(
@@ -287,7 +287,7 @@ Cypress.Commands.add('login', (email, password) => {
 Cypress.Commands.add('mount', (any) => {
   console.log(mount);
 });
-`
+`,
   );
 
   tree.write(
@@ -303,7 +303,7 @@ Cypress.Commands.add('mount', (any) => {
         mount(<MyComponent title={"blah"}/>,);
       });
     });
-    `
+    `,
   );
   tree.write(
     'libs/another-lib/src/lib/my-cmp-two.cy.tsx',
@@ -318,7 +318,7 @@ Cypress.Commands.add('mount', (any) => {
         mount(<MyComponent title={"blah"}/>,);
       });
     });
-    `
+    `,
   );
   tree.write(
     'libs/another-lib/src/lib/my-cmp-three.cy.ts',
@@ -333,6 +333,6 @@ Cypress.Commands.add('mount', (any) => {
         mount(MyComponent, {...config, componentProperties: {foo: 'bar'}});
       });
     });
-    `
+    `,
   );
 }

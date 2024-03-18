@@ -75,12 +75,12 @@ describe('lib', () => {
         },
       ]);
       expect(
-        tsconfigJson.compilerOptions.forceConsistentCasingInFileNames
+        tsconfigJson.compilerOptions.forceConsistentCasingInFileNames,
       ).toEqual(true);
       expect(tsconfigJson.compilerOptions.strict).toEqual(true);
       expect(tsconfigJson.compilerOptions.noImplicitReturns).toEqual(true);
       expect(tsconfigJson.compilerOptions.noFallthroughCasesInSwitch).toEqual(
-        true
+        true,
       );
     });
 
@@ -128,7 +128,7 @@ describe('lib', () => {
 
       const lib2ProjectConfiguration = readProjectConfiguration(
         appTree,
-        'my-lib2'
+        'my-lib2',
       );
       expect(lib2ProjectConfiguration).toMatchObject({
         tags: ['one', 'two'],
@@ -145,7 +145,7 @@ describe('lib', () => {
         'my-dir/src/index.ts',
       ]);
       expect(
-        tsconfigJson.compilerOptions.paths['my-dir-my-lib/*']
+        tsconfigJson.compilerOptions.paths['my-dir-my-lib/*'],
       ).toBeUndefined();
     });
 
@@ -162,7 +162,7 @@ describe('lib', () => {
         'my-dir/src/index.ts',
       ]);
       expect(
-        tsconfigJson.compilerOptions.paths['my-dir-my-lib/*']
+        tsconfigJson.compilerOptions.paths['my-dir-my-lib/*'],
       ).toBeUndefined();
     });
 
@@ -315,7 +315,7 @@ describe('lib', () => {
         });
       } catch (e) {
         expect(e.message).toContain(
-          'For publishable libs you have to provide a proper "--importPath" which needs to be a valid npm package name (e.g. my-awesome-lib or @myorg/my-lib)'
+          'For publishable libs you have to provide a proper "--importPath" which needs to be a valid npm package name (e.g. my-awesome-lib or @myorg/my-lib)',
         );
       }
     });
@@ -357,7 +357,7 @@ describe('lib', () => {
 
       expect(packageJson.name).toBe('@myorg/lib');
       expect(
-        tsconfigJson.compilerOptions.paths[packageJson.name]
+        tsconfigJson.compilerOptions.paths[packageJson.name],
       ).toBeDefined();
     });
 
@@ -378,7 +378,7 @@ describe('lib', () => {
         });
       } catch (e) {
         expect(e.message).toContain(
-          'You already have a library using the import path'
+          'You already have a library using the import path',
         );
       }
 
@@ -395,12 +395,12 @@ describe('lib', () => {
       const tsconfigJson = readJson(appTree, 'my-lib/tsconfig.json');
 
       expect(
-        tsconfigJson.compilerOptions.forceConsistentCasingInFileNames
+        tsconfigJson.compilerOptions.forceConsistentCasingInFileNames,
       ).not.toBeDefined();
       expect(tsconfigJson.compilerOptions.strict).not.toBeDefined();
       expect(tsconfigJson.compilerOptions.noImplicitReturns).not.toBeDefined();
       expect(
-        tsconfigJson.compilerOptions.noFallthroughCasesInSwitch
+        tsconfigJson.compilerOptions.noFallthroughCasesInSwitch,
       ).not.toBeDefined();
     });
   });

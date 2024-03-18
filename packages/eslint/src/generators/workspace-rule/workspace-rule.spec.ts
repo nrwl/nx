@@ -16,11 +16,11 @@ describe('@nx/eslint:workspace-rule', () => {
     });
 
     expect(
-      tree.read('tools/eslint-rules/rules/my-rule.ts', 'utf-8')
+      tree.read('tools/eslint-rules/rules/my-rule.ts', 'utf-8'),
     ).toMatchSnapshot();
 
     expect(
-      tree.read('tools/eslint-rules/rules/my-rule.spec.ts', 'utf-8')
+      tree.read('tools/eslint-rules/rules/my-rule.spec.ts', 'utf-8'),
     ).toMatchSnapshot();
   });
 
@@ -43,7 +43,7 @@ describe('@nx/eslint:workspace-rule', () => {
       module.exports = {
         rules: {}
       };
-    `
+    `,
     );
 
     await lintWorkspaceRuleGenerator(tree, {
@@ -95,7 +95,7 @@ describe('@nx/eslint:workspace-rule', () => {
           'existing-rule-no-comma': 'error'
         }
       };
-    `
+    `,
     );
 
     await lintWorkspaceRuleGenerator(tree, {
@@ -127,7 +127,7 @@ describe('@nx/eslint:workspace-rule', () => {
           'existing-rule-with-comma': 'error',
         }
       };
-    `
+    `,
     );
 
     await lintWorkspaceRuleGenerator(tree, {
@@ -158,11 +158,11 @@ describe('@nx/eslint:workspace-rule', () => {
       });
 
       expect(
-        tree.read('tools/eslint-rules/some-dir/another-rule.ts', 'utf-8')
+        tree.read('tools/eslint-rules/some-dir/another-rule.ts', 'utf-8'),
       ).toMatchSnapshot();
 
       expect(
-        tree.read('tools/eslint-rules/some-dir/another-rule.spec.ts', 'utf-8')
+        tree.read('tools/eslint-rules/some-dir/another-rule.spec.ts', 'utf-8'),
       ).toMatchSnapshot();
     });
 
@@ -173,11 +173,11 @@ describe('@nx/eslint:workspace-rule', () => {
       });
 
       expect(
-        tree.read('tools/eslint-rules/a/b/c/one-more-rule.ts', 'utf-8')
+        tree.read('tools/eslint-rules/a/b/c/one-more-rule.ts', 'utf-8'),
       ).toMatchSnapshot();
 
       expect(
-        tree.read('tools/eslint-rules/a/b/c/one-more-rule.spec.ts', 'utf-8')
+        tree.read('tools/eslint-rules/a/b/c/one-more-rule.spec.ts', 'utf-8'),
       ).toMatchSnapshot();
     });
   });

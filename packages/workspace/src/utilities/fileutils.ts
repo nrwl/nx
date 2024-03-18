@@ -41,7 +41,7 @@ export function copyFile(file: string, target: string) {
 export function renameSync(
   from: string,
   to: string,
-  cb: (err: Error | null) => void
+  cb: (err: Error | null) => void,
 ) {
   try {
     if (!existsSync(from)) {

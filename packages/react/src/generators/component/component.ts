@@ -43,7 +43,7 @@ export async function componentGeneratorInternal(host: Tree, schema: Schema) {
     const routingTask = addDependenciesToPackageJson(
       host,
       { 'react-router-dom': reactRouterDomVersion },
-      {}
+      {},
     );
     tasks.push(routingTask);
   }
@@ -115,7 +115,7 @@ function addExportsToBarrel(host: Tree, options: NormalizedSchema) {
   if (options.export && !isApp) {
     const indexFilePath = joinPathFragments(
       options.projectSourceRoot,
-      options.js ? 'index.js' : 'index.ts'
+      options.js ? 'index.js' : 'index.ts',
     );
     const indexSource = host.read(indexFilePath, 'utf-8');
     if (indexSource !== null) {
@@ -123,15 +123,15 @@ function addExportsToBarrel(host: Tree, options: NormalizedSchema) {
         indexFilePath,
         indexSource,
         tsModule.ScriptTarget.Latest,
-        true
+        true,
       );
       const relativePathFromIndex = getRelativeImportToFile(
         indexFilePath,
-        options.filePath
+        options.filePath,
       );
       const changes = applyChangesToString(
         indexSource,
-        addImport(indexSourceFile, `export * from '${relativePathFromIndex}';`)
+        addImport(indexSourceFile, `export * from '${relativePathFromIndex}';`),
       );
       host.write(indexFilePath, changes);
     }

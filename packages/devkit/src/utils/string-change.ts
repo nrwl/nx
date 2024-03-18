@@ -65,7 +65,7 @@ export type StringChange = StringInsertion | StringDeletion;
  */
 export function applyChangesToString(
   text: string,
-  changes: StringChange[]
+  changes: StringChange[],
 ): string {
   assertChangesValid(changes);
   const sortedChanges = changes.sort((a, b) => {
@@ -95,7 +95,7 @@ export function applyChangesToString(
 }
 
 function assertChangesValid(
-  changes: Array<StringInsertion | StringDeletion>
+  changes: Array<StringInsertion | StringDeletion>,
 ): void {
   for (const change of changes) {
     if (isStringInsertion(change)) {

@@ -13,7 +13,7 @@ export function calculateDefaultProjectName(
   cwd: string,
   root: string,
   { projects }: ProjectsConfigurations,
-  nxJson: NxJsonConfiguration
+  nxJson: NxJsonConfiguration,
 ) {
   const relativeCwd = relative(root, cwd).replace(/\\/g, '/') ?? null;
   if (relativeCwd !== null) {
@@ -45,7 +45,7 @@ export function calculateDefaultProjectName(
 
 export function findMatchingProjectInCwd(
   projects: Record<string, ProjectConfiguration>,
-  relativeCwd: string
+  relativeCwd: string,
 ): string | undefined {
   const projectRootMappings = new Map<string, string>();
   for (const projectName of Object.keys(projects)) {

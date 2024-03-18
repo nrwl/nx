@@ -3,7 +3,7 @@ import { DependentBuildableProjectNode } from '@nx/js/src/utils/buildable-libs-u
 
 export function getExtraDependencies(
   projectName: string,
-  graph: ProjectGraph
+  graph: ProjectGraph,
 ): DependentBuildableProjectNode[] {
   const deps = new Map<string, DependentBuildableProjectNode>();
   recur(projectName);

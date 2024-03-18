@@ -15,7 +15,7 @@ export type ToJSOptions = {
 export function toJS(tree: Tree, options?: ToJSOptions): void {
   const { JsxEmit, ScriptTarget, transpile, ModuleKind } = ensurePackage(
     'typescript',
-    typescriptVersion
+    typescriptVersion,
   ) as typeof import('typescript');
 
   for (const c of tree.listChanges()) {
@@ -30,11 +30,11 @@ export function toJS(tree: Tree, options?: ToJSOptions): void {
           jsx: JsxEmit.Preserve,
           target: options?.target ?? ScriptTarget.ESNext,
           module: options?.module ?? ModuleKind.ESNext,
-        })
+        }),
       );
       tree.rename(
         c.path,
-        c.path.replace(/\.tsx?$/, options?.extension ?? '.js')
+        c.path.replace(/\.tsx?$/, options?.extension ?? '.js'),
       );
     }
   }

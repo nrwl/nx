@@ -14,7 +14,7 @@ expect.addSnapshotSerializer({
         .replaceAll(/my-pkg-\d+/g, '{project-name}')
         .replaceAll(
           /integrity:\s*.*/g,
-          'integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
+          'integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX',
         )
         .replaceAll(/\b[0-9a-f]{40}\b/g, '{SHASUM}')
         .replaceAll(/\d*B  index\.js/g, 'XXB  index.js')
@@ -48,7 +48,7 @@ describe('nx release pre-version command', () => {
 
     pkg1 = uniq('my-pkg-1');
     runCLI(
-      `generate @nx/js:library ${pkg1} --publishable --importPath=${pkg1}`
+      `generate @nx/js:library ${pkg1} --publishable --importPath=${pkg1}`,
     );
   });
   afterAll(() => cleanupProject());
@@ -64,7 +64,7 @@ describe('nx release pre-version command', () => {
 
     // command should fail because @nx/js:library configures the packageRoot to be dist/{project-name}, which doesn't exist yet
     expect(result1).toContain(
-      `NX   The project "${pkg1}" does not have a package.json available at dist/${pkg1}/package.json.`
+      `NX   The project "${pkg1}" does not have a package.json available at dist/${pkg1}/package.json.`,
     );
 
     updateJson(`nx.json`, (json) => {
@@ -102,7 +102,7 @@ describe('nx release pre-version command', () => {
       silenceError: true,
     });
     expect(result4).toContain(
-      'NX   The pre-version command failed. Retry with --verbose to see the full output of the pre-version command.'
+      'NX   The pre-version command failed. Retry with --verbose to see the full output of the pre-version command.',
     );
     expect(result4).toContain('echo "error" && exit 1');
 
@@ -110,7 +110,7 @@ describe('nx release pre-version command', () => {
       silenceError: true,
     });
     expect(result5).toContain(
-      'NX   The pre-version command failed. See the full output above.'
+      'NX   The pre-version command failed. See the full output above.',
     );
     expect(result4).toContain('echo "error" && exit 1');
   });

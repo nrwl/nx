@@ -28,7 +28,7 @@ export default function AiDocs(): JSX.Element {
         className={cx(
           'flex flex-col',
           // Adjust dynamically to mobile viewport height (e.g. when navigational tabs are open).
-          'h-[calc(100dvh)]'
+          'h-[calc(100dvh)]',
         )}
       >
         <div className="w-full flex-shrink-0">

@@ -47,7 +47,7 @@ function writeTargetsToCache(
   targets: Record<
     string,
     Record<string, TargetConfiguration<ReactNativePluginOptions>>
-  >
+  >,
 ) {
   writeJsonFile(cachePath, targets);
 }
@@ -99,7 +99,7 @@ export const createNodes: CreateNodes<ReactNativePluginOptions> = [
 function buildReactNativeTargets(
   projectRoot: string,
   options: ReactNativePluginOptions,
-  context: CreateNodesContext
+  context: CreateNodesContext,
 ) {
   const namedInputs = getNamedInputs(projectRoot, context);
 
@@ -163,7 +163,7 @@ function buildReactNativeTargets(
 
 function getAppConfig(
   configFilePath: string,
-  context: CreateNodesContext
+  context: CreateNodesContext,
 ): any {
   const resolvedPath = join(context.workspaceRoot, configFilePath);
 
@@ -172,7 +172,7 @@ function getAppConfig(
 }
 
 function getInputs(
-  namedInputs: NxJsonConfiguration['namedInputs']
+  namedInputs: NxJsonConfiguration['namedInputs'],
 ): TargetConfiguration['inputs'] {
   return [
     ...('production' in namedInputs
@@ -208,7 +208,7 @@ function load(path: string): any {
 }
 
 function normalizeOptions(
-  options: ReactNativePluginOptions
+  options: ReactNativePluginOptions,
 ): ReactNativePluginOptions {
   options ??= {};
   options.startTargetName ??= 'start';

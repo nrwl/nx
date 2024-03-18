@@ -95,16 +95,16 @@ export default defineConfig({
     screenshotsFolder: '../../dist/cypress/my-lib/screenshots',
   }
 });
-    `
+    `,
     );
 
     updateCypressConfig(tree, schema, projectConfig);
     const fileContent = tree.read('my-destination/cypress.config.ts', 'utf-8');
     expect(fileContent).toContain(
-      `videosFolder: '../../dist/cypress/my-destination/videos'`
+      `videosFolder: '../../dist/cypress/my-destination/videos'`,
     );
     expect(fileContent).toContain(
-      `screenshotsFolder: '../../dist/cypress/my-destination/screenshots'`
+      `screenshotsFolder: '../../dist/cypress/my-destination/screenshots'`,
     );
   });
 });

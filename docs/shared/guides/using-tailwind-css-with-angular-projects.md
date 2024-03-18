@@ -164,7 +164,7 @@ Add the project configuration for the project:
   "projectType": "library",
   "sourceRoot": "libs/tailwind-preset",
   "targets": {},
-  "tags": []
+  "tags": [],
 }
 ```
 

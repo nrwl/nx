@@ -24,7 +24,7 @@ export class TaskTimingsLifeCycle implements LifeCycle {
       task: Task;
       status: TaskStatus;
       code: number;
-    }>
+    }>,
   ): void {
     for (let tr of taskResults) {
       if (tr.task.startTime) {

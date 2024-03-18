@@ -20,7 +20,7 @@ import type {
 export async function setupStandaloneWorkspace(
   repoRoot: string,
   cacheableOperations: string[],
-  workspaceTargets: string[]
+  workspaceTargets: string[],
 ): Promise<void> {
   const angularJsonPath = join(repoRoot, 'angular.json');
   const angularJson = readJsonFile<AngularJsonConfig>(angularJsonPath);
@@ -30,7 +30,7 @@ export async function setupStandaloneWorkspace(
     angularJson,
     cacheableOperations,
     workspaceCapabilities,
-    workspaceTargets
+    workspaceTargets,
   );
   addVsCodeRecommendedExtensions(
     repoRoot,
@@ -40,7 +40,7 @@ export async function setupStandaloneWorkspace(
       workspaceCapabilities.eslintProjectConfigFile
         ? 'dbaeumer.vscode-eslint'
         : undefined,
-    ].filter(Boolean)
+    ].filter(Boolean),
   );
   replaceNgWithNxInPackageJsonScripts(repoRoot);
 
@@ -53,8 +53,8 @@ export async function setupStandaloneWorkspace(
       $schema: normalizePath(
         relative(
           join(repoRoot, project.root),
-          join(repoRoot, 'node_modules/nx/schemas/project-schema.json')
-        )
+          join(repoRoot, 'node_modules/nx/schemas/project-schema.json'),
+        ),
       ),
       name: projectName,
       ...project,
@@ -73,7 +73,7 @@ function createNxJson(
     test,
     karmaProjectConfigFile,
   }: WorkspaceCapabilities,
-  workspaceTargets: string[]
+  workspaceTargets: string[],
 ): void {
   createNxJsonFile(repoRoot, [], cacheableOperations, {});
 
@@ -145,7 +145,7 @@ function createNxJson(
 
 function updateProjectOutputs(
   repoRoot: string,
-  project: ProjectConfiguration
+  project: ProjectConfiguration,
 ): void {
   Object.values(project.targets ?? {}).forEach((target) => {
     if (
@@ -167,7 +167,7 @@ function updateProjectOutputs(
         const ngPackageJson = readJsonFile(ngPackageJsonPath);
         const outputPath = relative(
           repoRoot,
-          resolve(dirname(ngPackageJsonPath), ngPackageJson.dest)
+          resolve(dirname(ngPackageJsonPath), ngPackageJson.dest),
         );
         target.outputs = [`{workspaceRoot}/${normalizePath(outputPath)}`];
       } catch {}
@@ -176,7 +176,7 @@ function updateProjectOutputs(
 }
 
 function getWorkspaceCapabilities(
-  projects: Record<string, AngularJsonProjectConfiguration>
+  projects: Record<string, AngularJsonProjectConfiguration>,
 ): WorkspaceCapabilities {
   const capabilities = {
     eslintProjectConfigFile: false,
@@ -214,21 +214,21 @@ function getWorkspaceCapabilities(
 }
 
 function projectUsesKarmaBuilder(
-  project: AngularJsonProjectConfiguration
+  project: AngularJsonProjectConfiguration,
 ): boolean {
   return Object.values(project.architect ?? {}).some(
-    (target) => target.builder === '@angular-devkit/build-angular:karma'
+    (target) => target.builder === '@angular-devkit/build-angular:karma',
   );
 }
 
 function projectHasKarmaConfig(
-  project: AngularJsonProjectConfiguration
+  project: AngularJsonProjectConfiguration,
 ): boolean {
   return fileExists(join(project.root, 'karma.conf.js'));
 }
 
 function projectHasEslintConfig(
-  project: AngularJsonProjectConfiguration
+  project: AngularJsonProjectConfiguration,
 ): boolean {
   return (
     fileExists(join(project.root, '.eslintrc.json')) ||

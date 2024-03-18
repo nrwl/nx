@@ -14,7 +14,7 @@ export type StaticRemotesConfig = {
 
 export function parseStaticRemotesConfig(
   staticRemotes: string[] | undefined,
-  context: ExecutorContext
+  context: ExecutorContext,
 ): StaticRemotesConfig {
   if (!staticRemotes?.length) {
     return { remotes: [], config: undefined };

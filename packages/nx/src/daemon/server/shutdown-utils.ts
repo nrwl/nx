@@ -39,14 +39,14 @@ export async function handleServerProcessTermination({
     if (watcherInstance) {
       await watcherInstance.stop();
       serverLogger.watcherLog(
-        `Stopping the watcher for ${workspaceRoot} (sources)`
+        `Stopping the watcher for ${workspaceRoot} (sources)`,
       );
     }
 
     if (outputWatcherInstance) {
       await outputWatcherInstance.stop();
       serverLogger.watcherLog(
-        `Stopping the watcher for ${workspaceRoot} (outputs)`
+        `Stopping the watcher for ${workspaceRoot} (outputs)`,
       );
     }
 
@@ -68,7 +68,7 @@ export function resetInactivityTimeout(cb: () => void): void {
 export function respondToClient(
   socket: Socket,
   response: string,
-  description: string
+  description: string,
 ) {
   return new Promise(async (res) => {
     if (description) {
@@ -87,13 +87,13 @@ export function respondToClient(
 export async function respondWithErrorAndExit(
   socket: Socket,
   description: string,
-  error: Error
+  error: Error,
 ) {
   // print some extra stuff in the error message
   serverLogger.requestLog(
     `Responding to the client with an error.`,
     description,
-    error.message
+    error.message,
   );
   console.error(error);
 

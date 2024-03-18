@@ -9,7 +9,7 @@ export async function setupCI(
   directory: string,
   ci: string,
   packageManager: PackageManager,
-  nxCloudSuccessfullyInstalled: boolean
+  nxCloudSuccessfullyInstalled: boolean,
 ) {
   if (!nxCloudSuccessfullyInstalled) {
     output.error({
@@ -25,7 +25,7 @@ export async function setupCI(
     const pmc = getPackageManagerCommand(packageManager);
     const res = await execAndWait(
       `${pmc.exec} nx g @nx/workspace:ci-workflow --ci=${ci}`,
-      directory
+      directory,
     );
     ciSpinner.succeed('CI workflow has been generated successfully');
     return res;

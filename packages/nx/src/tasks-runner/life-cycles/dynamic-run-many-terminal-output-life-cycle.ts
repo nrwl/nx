@@ -38,7 +38,7 @@ export async function createRunManyDynamicOutputRenderer({
   cliCursor.hide();
   let resolveRenderIsDonePromise: (value: void) => void;
   const renderIsDone = new Promise<void>(
-    (resolve) => (resolveRenderIsDonePromise = resolve)
+    (resolve) => (resolveRenderIsDonePromise = resolve),
   ).then(() => {
     clearRenderInterval();
     cliCursor.show();
@@ -125,7 +125,7 @@ export async function createRunManyDynamicOutputRenderer({
             output.colors.green(figures.tick) +
             SPACER +
             output.formatCommand(task.id)
-          }  ${output.dim('[local cache]')}`
+          }  ${output.dim('[local cache]')}`,
         );
         if (isVerbose) {
           writeCommandOutputBlock(tasksToTerminalOutputs[task.id]);
@@ -137,7 +137,7 @@ export async function createRunManyDynamicOutputRenderer({
             output.colors.green(figures.tick) +
             SPACER +
             output.formatCommand(task.id)
-          }  ${output.dim('[existing outputs match the cache, left as is]')}`
+          }  ${output.dim('[existing outputs match the cache, left as is]')}`,
         );
         if (isVerbose) {
           writeCommandOutputBlock(tasksToTerminalOutputs[task.id]);
@@ -149,7 +149,7 @@ export async function createRunManyDynamicOutputRenderer({
             output.colors.green(figures.tick) +
             SPACER +
             output.formatCommand(task.id)
-          }  ${output.dim('[remote cache]')}`
+          }  ${output.dim('[remote cache]')}`,
         );
         if (isVerbose) {
           writeCommandOutputBlock(tasksToTerminalOutputs[task.id]);
@@ -157,13 +157,13 @@ export async function createRunManyDynamicOutputRenderer({
         break;
       case 'success': {
         const timeTakenText = prettyTime(
-          process.hrtime(tasksToProcessStartTimes[task.id])
+          process.hrtime(tasksToProcessStartTimes[task.id]),
         );
         writeCompletedTaskResultLine(
           output.colors.green(figures.tick) +
             SPACER +
             output.formatCommand(task.id) +
-            output.dim(` (${timeTakenText})`)
+            output.dim(` (${timeTakenText})`),
         );
         if (isVerbose) {
           writeCommandOutputBlock(tasksToTerminalOutputs[task.id]);
@@ -176,7 +176,7 @@ export async function createRunManyDynamicOutputRenderer({
         writeCompletedTaskResultLine(
           output.colors.red(figures.cross) +
             SPACER +
-            output.formatCommand(output.colors.red(task.id))
+            output.formatCommand(output.colors.red(task.id)),
         );
         writeCommandOutputBlock(tasksToTerminalOutputs[task.id]);
         break;
@@ -200,20 +200,20 @@ export async function createRunManyDynamicOutputRenderer({
       additionalFooterRows.push(
         output.dim(
           `${LEFT_PAD}${output.colors.cyan(
-            figures.arrowRight
+            figures.arrowRight,
           )}${SPACER}Executing ${
             runningTasks.length
           }/${remainingTasks} remaining tasks${
             runningTasks.length > 1 ? ' in parallel' : ''
-          }...`
-        )
+          }...`,
+        ),
       );
       additionalFooterRows.push('');
       for (const runningTask of runningTasks) {
         additionalFooterRows.push(
           `${LEFT_PAD}${output.dim.cyan(
-            dots.frames[currentFrame]
-          )}${SPACER}${output.formatCommand(runningTask.task.id)}`
+            dots.frames[currentFrame],
+          )}${SPACER}${output.formatCommand(runningTask.task.id)}`,
         );
       }
       /**
@@ -244,18 +244,18 @@ export async function createRunManyDynamicOutputRenderer({
     if (totalSuccessfulTasks > 0) {
       additionalFooterRows.push(
         `${LEFT_PAD}${output.colors.green(
-          figures.tick
+          figures.tick,
         )}${SPACER}${totalSuccessfulTasks}${`/${totalCompletedTasks}`} succeeded ${output.dim(
-          `[${totalCachedTasks} read from cache]`
-        )}`
+          `[${totalCachedTasks} read from cache]`,
+        )}`,
       );
     }
 
     if (totalFailedTasks > 0) {
       additionalFooterRows.push(
         `${LEFT_PAD}${output.colors.red(
-          figures.cross
-        )}${SPACER}${totalFailedTasks}${`/${totalCompletedTasks}`} failed`
+          figures.cross,
+        )}${SPACER}${totalFailedTasks}${`/${totalCompletedTasks}`} failed`,
       );
     }
 
@@ -265,17 +265,17 @@ export async function createRunManyDynamicOutputRenderer({
       const text = `Running ${formatTargetsAndProjects(
         projectNames,
         targets,
-        tasks
+        tasks,
       )}`;
       const taskOverridesRows = [];
       if (Object.keys(overrides).length > 0) {
         taskOverridesRows.push('');
         taskOverridesRows.push(
-          `${EXTENDED_LEFT_PAD}${output.dim.cyan('With additional flags:')}`
+          `${EXTENDED_LEFT_PAD}${output.dim.cyan('With additional flags:')}`,
         );
         Object.entries(overrides)
           .map(([flag, value]) =>
-            output.dim.cyan(formatFlags(EXTENDED_LEFT_PAD, flag, value))
+            output.dim.cyan(formatFlags(EXTENDED_LEFT_PAD, flag, value)),
           )
           .forEach((arg) => taskOverridesRows.push(arg));
       }
@@ -306,8 +306,8 @@ export async function createRunManyDynamicOutputRenderer({
           `No projects with ${formatTargetsAndProjects(
             projectNames,
             targets,
-            tasks
-          )} were run`
+            tasks,
+          )} were run`,
         ),
       ]);
       resolveRenderIsDonePromise();
@@ -325,17 +325,17 @@ export async function createRunManyDynamicOutputRenderer({
       const text = `Successfully ran ${formatTargetsAndProjects(
         projectNames,
         targets,
-        tasks
+        tasks,
       )}`;
       const taskOverridesRows = [];
       if (Object.keys(overrides).length > 0) {
         taskOverridesRows.push('');
         taskOverridesRows.push(
-          `${EXTENDED_LEFT_PAD}${output.dim.green('With additional flags:')}`
+          `${EXTENDED_LEFT_PAD}${output.dim.green('With additional flags:')}`,
         );
         Object.entries(overrides)
           .map(([flag, value]) =>
-            output.dim.green(formatFlags(EXTENDED_LEFT_PAD, flag, value))
+            output.dim.green(formatFlags(EXTENDED_LEFT_PAD, flag, value)),
           )
           .forEach((arg) => taskOverridesRows.push(arg));
       }
@@ -343,15 +343,15 @@ export async function createRunManyDynamicOutputRenderer({
       const pinnedFooterLines = [
         output.applyNxPrefix(
           'green',
-          output.colors.green(text) + output.dim.white(` (${timeTakenText})`)
+          output.colors.green(text) + output.dim.white(` (${timeTakenText})`),
         ),
         ...taskOverridesRows,
       ];
       if (totalCachedTasks > 0) {
         pinnedFooterLines.push(
           output.dim(
-            `${EOL}Nx read the output from the cache instead of running the command for ${totalCachedTasks} out of ${totalTasks} tasks.`
-          )
+            `${EOL}Nx read the output from the cache instead of running the command for ${totalCachedTasks} out of ${totalTasks} tasks.`,
+          ),
         );
       }
       renderPinnedFooter(pinnedFooterLines, 'green');
@@ -359,17 +359,17 @@ export async function createRunManyDynamicOutputRenderer({
       const text = `Ran ${formatTargetsAndProjects(
         projectNames,
         targets,
-        tasks
+        tasks,
       )}`;
       const taskOverridesRows = [];
       if (Object.keys(overrides).length > 0) {
         taskOverridesRows.push('');
         taskOverridesRows.push(
-          `${EXTENDED_LEFT_PAD}${output.dim.red('With additional flags:')}`
+          `${EXTENDED_LEFT_PAD}${output.dim.red('With additional flags:')}`,
         );
         Object.entries(overrides)
           .map(([flag, value]) =>
-            output.dim.red(formatFlags(EXTENDED_LEFT_PAD, flag, value))
+            output.dim.red(formatFlags(EXTENDED_LEFT_PAD, flag, value)),
           )
           .forEach((arg) => taskOverridesRows.push(arg));
       }
@@ -377,33 +377,33 @@ export async function createRunManyDynamicOutputRenderer({
       const numFailedToPrint = 5;
       const failedTasksForPrinting = Array.from(failedTasks).slice(
         0,
-        numFailedToPrint
+        numFailedToPrint,
       );
       const failureSummaryRows = [
         output.applyNxPrefix(
           'red',
-          output.colors.red(text) + output.dim.white(` (${timeTakenText})`)
+          output.colors.red(text) + output.dim.white(` (${timeTakenText})`),
         ),
         ...taskOverridesRows,
         '',
         output.dim(
           `${LEFT_PAD}${output.dim(
-            figures.tick
+            figures.tick,
           )}${SPACER}${totalSuccessfulTasks}${`/${totalCompletedTasks}`} succeeded ${output.dim(
-            `[${totalCachedTasks} read from cache]`
-          )}`
+            `[${totalCachedTasks} read from cache]`,
+          )}`,
         ),
         '',
         `${LEFT_PAD}${output.colors.red(
-          figures.cross
+          figures.cross,
         )}${SPACER}${totalFailedTasks}${`/${totalCompletedTasks}`} targets failed, including the following:`,
         '',
         `${failedTasksForPrinting
           .map(
             (t) =>
               `${EXTENDED_LEFT_PAD}${output.colors.red(
-                '-'
-              )} ${output.formatCommand(t.toString())}`
+                '-',
+              )} ${output.formatCommand(t.toString())}`,
           )
           .join('\n ')}`,
       ];
@@ -413,8 +413,8 @@ export async function createRunManyDynamicOutputRenderer({
           output.dim(
             `${EXTENDED_LEFT_PAD}...and ${
               failedTasks.size - numFailedToPrint
-            } more...`
-          )
+            } more...`,
+          ),
         );
       }
 

@@ -40,10 +40,10 @@ describe('updateFileServerExecutor', () => {
     // AWAIT
     const updatedProject = readProjectConfiguration(tree, 'test');
     expect(updatedProject.targets.serve.executor).toEqual(
-      '@nrwl/web:file-server'
+      '@nrwl/web:file-server',
     );
     expect(
-      readJson(tree, 'package.json').devDependencies['@nrwl/web']
+      readJson(tree, 'package.json').devDependencies['@nrwl/web'],
     ).toBeTruthy();
   });
 
@@ -68,7 +68,7 @@ describe('updateFileServerExecutor', () => {
     // AWAIT
     const updatedNxJson = readNxJson(tree);
     expect(updatedNxJson.targetDefaults.serve.executor).toEqual(
-      '@nrwl/web:file-server'
+      '@nrwl/web:file-server',
     );
   });
 

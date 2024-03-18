@@ -18,7 +18,7 @@ export type ControllerGeneratorOptions = NestGeneratorWithLanguageOption &
 
 export async function controllerGenerator(
   tree: Tree,
-  rawOptions: ControllerGeneratorOptions
+  rawOptions: ControllerGeneratorOptions,
 ) {
   await controllerGeneratorInternal(tree, {
     nameAndDirectoryFormat: 'derived',
@@ -28,7 +28,7 @@ export async function controllerGenerator(
 
 export async function controllerGeneratorInternal(
   tree: Tree,
-  rawOptions: ControllerGeneratorOptions
+  rawOptions: ControllerGeneratorOptions,
 ): Promise<any> {
   const options = await normalizeControllerOptions(tree, rawOptions);
 
@@ -39,13 +39,13 @@ export default controllerGenerator;
 
 async function normalizeControllerOptions(
   tree: Tree,
-  options: ControllerGeneratorOptions
+  options: ControllerGeneratorOptions,
 ): Promise<NormalizedOptions> {
   const normalizedOptions = await normalizeOptions(
     tree,
     'controller',
     '@nx/nest:controller',
-    options
+    options,
   );
   return {
     ...normalizedOptions,

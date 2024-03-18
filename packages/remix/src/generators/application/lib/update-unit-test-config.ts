@@ -22,7 +22,7 @@ export function updateUnitTestConfig(
   tree: Tree,
   pathToRoot: string,
   unitTestRunner: 'vitest' | 'jest',
-  rootProject: boolean
+  rootProject: boolean,
 ) {
   const pathToTestSetup = joinPathFragments(pathToRoot, `test-setup.ts`);
   tree.write(
@@ -30,7 +30,7 @@ export function updateUnitTestConfig(
     stripIndents`
   import { installGlobals } from '@remix-run/node';
   import '@testing-library/jest-dom/matchers';
-  installGlobals();`
+  installGlobals();`,
   );
 
   if (unitTestRunner === 'vitest') {
@@ -38,12 +38,12 @@ export function updateUnitTestConfig(
     updateVitestTestIncludes(
       tree,
       pathToViteConfig,
-      './app/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'
+      './app/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}',
     );
     updateVitestTestIncludes(
       tree,
       pathToViteConfig,
-      './tests/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'
+      './tests/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}',
     );
     updateVitestTestSetup(tree, pathToViteConfig, 'test-setup.ts');
   } else if (unitTestRunner === 'jest' && rootProject) {
@@ -54,13 +54,13 @@ export function updateUnitTestConfig(
       pathToJestConfig,
       tree
         .read(pathToJestConfig, 'utf-8')
-        .replace('jest.preset.js', 'jest.preset.cjs')
+        .replace('jest.preset.js', 'jest.preset.cjs'),
     );
   }
 
   const pathToTsConfigSpec = joinPathFragments(
     pathToRoot,
-    `tsconfig.spec.json`
+    `tsconfig.spec.json`,
   );
 
   updateJson(tree, pathToTsConfigSpec, (json) => {
@@ -93,6 +93,6 @@ export function updateUnitTestConfig(
       '@testing-library/user-event': testingLibraryUserEventsVersion,
       '@remix-run/node': getRemixVersion(tree),
       '@remix-run/testing': getRemixVersion(tree),
-    }
+    },
   );
 }

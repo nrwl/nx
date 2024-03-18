@@ -19,7 +19,7 @@ describe('meta v2', () => {
       (remixConfigUtils.getRemixConfigValues as jest.Mock) = jest.fn(() =>
         Promise.resolve({
           ignoredRouteFiles: ['**/.*'],
-        })
+        }),
       );
 
       await applicationGenerator(tree, { name: 'demo' });
@@ -40,11 +40,11 @@ describe('meta v2', () => {
 
       const content = tree.read('apps/demo/app/routes/example.tsx', 'utf-8');
       expect(content).toMatch(
-        `import type { MetaFunction } from '@remix-run/node';`
+        `import type { MetaFunction } from '@remix-run/node';`,
       );
 
       expect(content).toMatch(`export const meta: MetaFunction`);
       expect(content).toMatch(`return [`);
-    }
+    },
   );
 });

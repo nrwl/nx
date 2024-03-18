@@ -21,12 +21,12 @@ export async function updateLockFile(
     dryRun?: boolean;
     verbose?: boolean;
     generatorOptions?: Record<string, unknown>;
-  }
+  },
 ) {
   if (generatorOptions?.skipLockFileUpdate) {
     if (verbose) {
       console.log(
-        '\nSkipped lock file update because skipLockFileUpdate was set.'
+        '\nSkipped lock file update because skipLockFileUpdate was set.',
       );
     }
     return [];
@@ -41,7 +41,7 @@ export async function updateLockFile(
     // yarn classic does not store workspace data in the lock file, so we don't need to update it
     if (verbose) {
       console.log(
-        '\nSkipped lock file update because it is not necessary for Yarn Classic.'
+        '\nSkipped lock file update because it is not necessary for Yarn Classic.',
       );
     }
     return [];
@@ -51,7 +51,7 @@ export async function updateLockFile(
   if (!workspacesEnabled) {
     if (verbose) {
       console.log(
-        `\nSkipped lock file update because ${packageManager} workspaces are not enabled.`
+        `\nSkipped lock file update because ${packageManager} workspaces are not enabled.`,
       );
     }
     return [];
@@ -87,7 +87,7 @@ export async function updateLockFile(
   if (verbose) {
     if (dryRun) {
       console.log(
-        `Would update ${lockFile} with the following command, but --dry-run was set:`
+        `Would update ${lockFile} with the following command, but --dry-run was set:`,
       );
     } else {
       console.log(`Updating ${lockFile} with the following command:`);
@@ -122,7 +122,7 @@ export async function updateLockFile(
 function execLockFileUpdate(
   command: string,
   cwd: string,
-  env: object = {}
+  env: object = {},
 ): void {
   try {
     execSync(command, {

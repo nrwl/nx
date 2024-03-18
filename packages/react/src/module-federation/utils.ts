@@ -34,7 +34,7 @@ export function getFunctionDeterminateRemoteUrl(isServer: boolean = false) {
       remoteConfiguration = readCachedProjectConfiguration(remote);
     } catch (e) {
       throw new Error(
-        `Cannot find remote: "${remote}". Check that the remote name is correct in your module federation config file.\n`
+        `Cannot find remote: "${remote}". Check that the remote name is correct in your module federation config file.\n`,
       );
     }
     const serveTarget = remoteConfiguration?.targets?.[target];
@@ -42,7 +42,7 @@ export function getFunctionDeterminateRemoteUrl(isServer: boolean = false) {
     if (!serveTarget) {
       throw new Error(
         `Cannot automatically determine URL of remote (${remote}). Looked for property "host" in the project's "${serveTarget}" target.\n
-      You can also use the tuple syntax in your webpack config to configure your remotes. e.g. \`remotes: [['remote1', 'http://localhost:4201']]\``
+      You can also use the tuple syntax in your webpack config to configure your remotes. e.g. \`remotes: [['remote1', 'http://localhost:4201']]\``,
       );
     }
 
@@ -61,7 +61,7 @@ export async function getModuleFederationConfig(
   options: {
     isServer: boolean;
     determineRemoteUrl?: (remote: string) => string;
-  } = { isServer: false }
+  } = { isServer: false },
 ) {
   let projectGraph: ProjectGraph;
   try {
@@ -74,26 +74,26 @@ export async function getModuleFederationConfig(
 
   if (!project) {
     throw Error(
-      `Cannot find project "${mfConfig.name}". Check that the name is correct in module-federation.config.js`
+      `Cannot find project "${mfConfig.name}". Check that the name is correct in module-federation.config.js`,
     );
   }
 
   const dependencies = getDependentPackagesForProject(
     projectGraph,
-    mfConfig.name
+    mfConfig.name,
   );
 
   if (mfConfig.shared) {
     dependencies.workspaceLibraries = dependencies.workspaceLibraries.filter(
-      (lib) => mfConfig.shared(lib.importKey, {}) !== false
+      (lib) => mfConfig.shared(lib.importKey, {}) !== false,
     );
     dependencies.npmPackages = dependencies.npmPackages.filter(
-      (pkg) => mfConfig.shared(pkg, {}) !== false
+      (pkg) => mfConfig.shared(pkg, {}) !== false,
     );
   }
 
   const sharedLibraries = shareWorkspaceLibraries(
-    dependencies.workspaceLibraries
+    dependencies.workspaceLibraries,
   );
 
   const npmPackages = sharePackages(dependencies.npmPackages);
@@ -107,7 +107,7 @@ export async function getModuleFederationConfig(
   applyAdditionalShared(
     sharedDependencies,
     mfConfig.additionalShared,
-    projectGraph
+    projectGraph,
   );
 
   // Choose the correct mapRemotes function based on the server state.
@@ -127,7 +127,7 @@ export async function getModuleFederationConfig(
       mfConfig.remotes,
       'js',
       determineRemoteUrlFunction,
-      isLibraryTypeVar
+      isLibraryTypeVar,
     );
   }
 

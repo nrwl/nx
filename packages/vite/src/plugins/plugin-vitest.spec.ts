@@ -48,7 +48,7 @@ describe('@nx/vite/plugin', () => {
         {
           testTargetName: 'test',
         },
-        context
+        context,
       );
 
       expect(nodes).toMatchSnapshot();

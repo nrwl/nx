@@ -17,7 +17,7 @@ export class TaskTraversalGraph {
 
   setProjects(
     projects: ProjectGraphProjectNode[],
-    taskGraphs: TaskGraphRecord
+    taskGraphs: TaskGraphRecord,
   ) {
     this.selectedTasks.clear();
     this.projects = projects;
@@ -95,7 +95,7 @@ export class TaskTraversalGraph {
       for (let taskName in taskGraph.tasks) {
         const task = taskGraph.tasks[taskName];
         const project = this.projects.find(
-          (project) => project.name === task.target.project
+          (project) => project.name === task.target.project,
         );
 
         if (project === undefined) {
@@ -119,7 +119,7 @@ export class TaskTraversalGraph {
 
       for (let topDep in taskGraph.dependencies) {
         taskGraph.dependencies[topDep].forEach((childDep) =>
-          taskElements.push(new TaskEdge(topDep, childDep))
+          taskElements.push(new TaskEdge(topDep, childDep)),
         );
       }
     });
@@ -127,7 +127,7 @@ export class TaskTraversalGraph {
     this.cy = cytoscape({
       headless: true,
       elements: taskElements.map((element) =>
-        element.getCytoscapeNodeDef(groupByFolder)
+        element.getCytoscapeNodeDef(groupByFolder),
       ),
       boxSelectionEnabled: false,
     });

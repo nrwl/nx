@@ -4,7 +4,7 @@ export function resolveUserDefinedWebpackConfig(
   path: string,
   tsConfig: string,
   /** Skip require cache and return latest content */
-  reload = false
+  reload = false,
 ) {
   if (reload) {
     // Clear cache if the path is in the cache

@@ -16,7 +16,7 @@ export async function update(tree: Tree) {
     ) {
       const nextConfigContent = tree.read(
         joinPathFragments(config.root, 'next.config.js'),
-        'utf-8'
+        'utf-8',
       );
 
       if (nextConfigContent.includes('@nrwl/next/plugins/with-less')) {

@@ -28,7 +28,7 @@ export const shortEmbeds: Schema = {
               title: short?.attributes.title,
               embedUrl: short?.attributes.embedUrl,
             }
-          : null
+          : null,
       );
 
     return new Tag(this.render, { videoData }, node.transformChildren(config));
@@ -114,7 +114,7 @@ export function ShortEmbeds({
                 <div className="flex flex-col gap-2">
                   {videoData
                     .filter(
-                      ({ embedUrl }) => embedUrl !== currentVideo.embedUrl
+                      ({ embedUrl }) => embedUrl !== currentVideo.embedUrl,
                     )
                     .map((config) => {
                       const ytUrlPath = config.embedUrl.split('/');

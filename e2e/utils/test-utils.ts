@@ -22,11 +22,11 @@ type GeneratorsWithDefaultTests =
  * the generated project to make sure the default tests pass.
  */
 export async function expectJestTestsToPass(
-  generator: GeneratorsWithDefaultTests | string
+  generator: GeneratorsWithDefaultTests | string,
 ) {
   const name = uniq('proj');
   const generatedResults = runCLI(
-    `generate ${generator} ${name} --no-interactive`
+    `generate ${generator} ${name} --no-interactive`,
   );
   expect(generatedResults).toContain(`jest.config.ts`);
 
@@ -49,7 +49,7 @@ export function expectNoAngularDevkit() {
 // TODO(meeroslav): This is test specific, it should not be in the utils
 export function expectNoTsJestInJestConfig(appName: string) {
   const jestConfig = readFile(
-    joinPathFragments('apps', appName, 'jest.config.ts')
+    joinPathFragments('apps', appName, 'jest.config.ts'),
   );
   expect(jestConfig).not.toContain('ts-jest');
 }
@@ -60,7 +60,7 @@ export function expectCodeIsFormatted() {
 
 export function setCypressWebServerTimeout(
   cypressConfigPath: string,
-  timeout = 60_000
+  timeout = 60_000,
 ) {
   const cypressConfig = readFile(cypressConfigPath);
   updateFile(
@@ -70,7 +70,7 @@ export function setCypressWebServerTimeout(
       `nxE2EPreset(__filename, {
         webServerConfig: {
           timeout: ${timeout},
-        },`
-    )
+        },`,
+    ),
   );
 }

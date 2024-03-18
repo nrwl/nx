@@ -19,7 +19,7 @@ export function getComponentSelector(tree: Tree, path: string): string {
   const componentDecorators = getDecoratorMetadata(
     file,
     'Component',
-    '@angular/core'
+    '@angular/core',
   );
   if (componentDecorators.length === 0) {
     throw new Error(`No @Component decorator in ${path}.`);
@@ -27,7 +27,7 @@ export function getComponentSelector(tree: Tree, path: string): string {
   const componentDecorator = componentDecorators[0];
   const selectorNode = <PropertyAssignment>(
     findNodes(componentDecorator, tsModule.SyntaxKind.PropertyAssignment).find(
-      (node: PropertyAssignment) => node.name.getText() === 'selector'
+      (node: PropertyAssignment) => node.name.getText() === 'selector',
     )
   );
   if (!selectorNode) {

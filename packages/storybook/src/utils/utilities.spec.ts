@@ -28,7 +28,7 @@ describe('testing utilities', () => {
 
       export const Primary = Template.bind({});
       Primary.args = {};
-    `
+    `,
       );
 
       appTree.write(
@@ -46,7 +46,7 @@ describe('testing utilities', () => {
         export const Primary = {
           args: {},
         };
-        `
+        `,
       );
 
       appTree.write(
@@ -55,7 +55,7 @@ describe('testing utilities', () => {
         import { Button } from './button';
 
         // test test
-      `
+      `,
       );
 
       appTree.write(
@@ -65,7 +65,7 @@ describe('testing utilities', () => {
         import * as Storybook from '@storybook/react';
 
         // test test
-      `
+      `,
       );
 
       appTree.write(
@@ -74,7 +74,7 @@ describe('testing utilities', () => {
        import { storiesOf } from '@storybook/react-native';
 
         // test test
-      `
+      `,
       );
 
       appTree.write(
@@ -83,7 +83,7 @@ describe('testing utilities', () => {
        import { ComponentStory } from '@storybook/react';
 
         // test test
-      `
+      `,
       );
 
       appTree.write(
@@ -91,7 +91,7 @@ describe('testing utilities', () => {
         `
        var test = 1;
         // test test
-      `
+      `,
       );
 
       appTree.write(
@@ -99,21 +99,21 @@ describe('testing utilities', () => {
         `
        var test = 1;
         // test test
-      `
+      `,
       );
       appTree.write(
         `test-ui-lib/src/lib/button/button.component.js`,
         `
        var test = 1;
         // test test
-      `
+      `,
       );
       appTree.write(
         `test-ui-lib/src/lib/button/button.component.jsx`,
         `
        var test = 1;
         // test test
-      `
+      `,
       );
     });
 
@@ -121,7 +121,7 @@ describe('testing utilities', () => {
       it('should verify it is story', () => {
         const fileIsStory = isTheFileAStory(
           appTree,
-          'test-ui-lib/src/lib/button/button.component.stories.ts'
+          'test-ui-lib/src/lib/button/button.component.stories.ts',
         );
         expect(fileIsStory).toBeTruthy();
       });
@@ -129,7 +129,7 @@ describe('testing utilities', () => {
       it('should verify it is story when using Meta', () => {
         const fileIsStory = isTheFileAStory(
           appTree,
-          'test-ui-lib/src/lib/button/button.other.stories.ts'
+          'test-ui-lib/src/lib/button/button.other.stories.ts',
         );
         expect(fileIsStory).toBeTruthy();
       });
@@ -137,7 +137,7 @@ describe('testing utilities', () => {
       it('should verify it is story when using unnamed import', () => {
         const fileIsStory = isTheFileAStory(
           appTree,
-          'test-ui-lib/src/lib/button/button.test.stories.ts'
+          'test-ui-lib/src/lib/button/button.test.stories.ts',
         );
         expect(fileIsStory).toBeTruthy();
       });
@@ -145,7 +145,7 @@ describe('testing utilities', () => {
       it('should verify it is story for ReactNative', () => {
         const fileIsStory = isTheFileAStory(
           appTree,
-          'test-ui-lib/src/lib/button/button.component.react-native.ts'
+          'test-ui-lib/src/lib/button/button.component.react-native.ts',
         );
         expect(fileIsStory).toBeTruthy();
       });
@@ -153,7 +153,7 @@ describe('testing utilities', () => {
       it('should verify it is story for new Syntax', () => {
         const fileIsStory = isTheFileAStory(
           appTree,
-          'test-ui-lib/src/lib/button/button.component.new-syntax.ts'
+          'test-ui-lib/src/lib/button/button.component.new-syntax.ts',
         );
         expect(fileIsStory).toBeTruthy();
       });
@@ -161,7 +161,7 @@ describe('testing utilities', () => {
       it('should verify it is not a story', () => {
         const fileIsStory = isTheFileAStory(
           appTree,
-          'test-ui-lib/src/lib/button/button.component.other.ts'
+          'test-ui-lib/src/lib/button/button.component.other.ts',
         );
         expect(fileIsStory).toBeFalsy();
       });
@@ -171,28 +171,28 @@ describe('testing utilities', () => {
       it('should verify it is story if it ends in .stories.jsx', () => {
         const fileIsStory = isTheFileAStory(
           appTree,
-          'test-ui-lib/src/lib/button/button.component.stories.jsx'
+          'test-ui-lib/src/lib/button/button.component.stories.jsx',
         );
         expect(fileIsStory).toBeTruthy();
       });
       it('should verify it is story if it ends in .stories.js', () => {
         const fileIsStory = isTheFileAStory(
           appTree,
-          'test-ui-lib/src/lib/button/button.component.stories.js'
+          'test-ui-lib/src/lib/button/button.component.stories.js',
         );
         expect(fileIsStory).toBeTruthy();
       });
       it('should verify it is NOT a story if it does NOT end in .stories.jsx', () => {
         const fileIsStory = isTheFileAStory(
           appTree,
-          'test-ui-lib/src/lib/button/button.component.jsx'
+          'test-ui-lib/src/lib/button/button.component.jsx',
         );
         expect(fileIsStory).toBeFalsy();
       });
       it('should verify it is NOT a story if it does NOT end in .stories.js', () => {
         const fileIsStory = isTheFileAStory(
           appTree,
-          'test-ui-lib/src/lib/button/button.component.js'
+          'test-ui-lib/src/lib/button/button.component.js',
         );
         expect(fileIsStory).toBeFalsy();
       });
@@ -203,7 +203,7 @@ describe('testing utilities', () => {
     describe('findStorybookAndBuildTargetsAndCompiler', () => {
       it('should find correct targets and compiler for the provided next app config', () => {
         const result = findStorybookAndBuildTargetsAndCompiler(
-          targetVariations.nextapp
+          targetVariations.nextapp,
         );
         expect(result).toEqual({
           storybookBuildTarget: undefined,
@@ -217,7 +217,7 @@ describe('testing utilities', () => {
 
       it('should find correct targets and compiler for the provided web app config', () => {
         const result = findStorybookAndBuildTargetsAndCompiler(
-          targetVariations.web
+          targetVariations.web,
         );
         expect(result).toEqual({
           storybookBuildTarget: 'build-storybook',
@@ -231,7 +231,7 @@ describe('testing utilities', () => {
 
       it('should find correct targets and compiler for the provided react app config', () => {
         const result = findStorybookAndBuildTargetsAndCompiler(
-          targetVariations.react
+          targetVariations.react,
         );
         expect(result).toEqual({
           storybookBuildTarget: 'build-storybook',
@@ -245,7 +245,7 @@ describe('testing utilities', () => {
 
       it('should find correct targets and compiler for the provided angular app config', () => {
         const result = findStorybookAndBuildTargetsAndCompiler(
-          targetVariations.ngapp
+          targetVariations.ngapp,
         );
         expect(result).toEqual({
           storybookBuildTarget: 'build-storybook',
@@ -259,7 +259,7 @@ describe('testing utilities', () => {
 
       it('should find correct targets and compiler for the provided angular lib config', () => {
         const result = findStorybookAndBuildTargetsAndCompiler(
-          targetVariations.nglib
+          targetVariations.nglib,
         );
         expect(result).toEqual({
           storybookBuildTarget: undefined,
@@ -273,7 +273,7 @@ describe('testing utilities', () => {
 
       it('should find correct targets and compiler for the provided next lib config', () => {
         const result = findStorybookAndBuildTargetsAndCompiler(
-          targetVariations.nextlib
+          targetVariations.nextlib,
         );
         expect(result).toEqual({
           storybookBuildTarget: undefined,
@@ -287,7 +287,7 @@ describe('testing utilities', () => {
 
       it('should find correct targets and compiler for the provided react app config with swc', () => {
         const result = findStorybookAndBuildTargetsAndCompiler(
-          targetVariations['react-swc']
+          targetVariations['react-swc'],
         );
         expect(result).toEqual({
           storybookBuildTarget: 'build-storybook',
@@ -301,7 +301,7 @@ describe('testing utilities', () => {
 
       it('should find correct targets and compiler for the provided Next.js app config with swc', () => {
         const result = findStorybookAndBuildTargetsAndCompiler(
-          targetVariations['nextapp-swc']
+          targetVariations['nextapp-swc'],
         );
         expect(result).toEqual({
           storybookBuildTarget: undefined,
@@ -315,7 +315,7 @@ describe('testing utilities', () => {
 
       it('should find compiler for the provided config regardless of what builder', () => {
         const result = findStorybookAndBuildTargetsAndCompiler(
-          targetVariations.other
+          targetVariations.other,
         );
         expect(result).toEqual({
           storybookBuildTarget: undefined,

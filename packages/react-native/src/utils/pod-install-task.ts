@@ -34,7 +34,7 @@ export function runPodInstall(
     repoUpdate: false,
     deployment: false,
     useBundler: false,
-  }
+  },
 ): GeneratorCallback {
   return () => {
     if (platform() !== 'darwin') {
@@ -65,7 +65,7 @@ export function podInstall(
     repoUpdate: false,
     deployment: false,
     useBundler: false,
-  }
+  },
 ) {
   try {
     if (existsSync(join(iosDirectory, '.xcode.env'))) {

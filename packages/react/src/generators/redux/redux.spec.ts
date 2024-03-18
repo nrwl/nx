@@ -40,7 +40,7 @@ describe('redux', () => {
 
     expect(appTree.exists('/my-lib/src/lib/my-slice.slice.ts')).toBeTruthy();
     expect(
-      appTree.exists('/my-lib/src/lib/my-slice.slice.spec.ts')
+      appTree.exists('/my-lib/src/lib/my-slice.slice.spec.ts'),
     ).toBeTruthy();
   });
 
@@ -76,7 +76,7 @@ describe('redux', () => {
       expect(main).toContain('configureStore');
       expect(main).toContain('[THIRD_SLICE_FEATURE_KEY]: thirdSliceReducer,');
       expect(main).toContain(
-        '[ANOTHER_SLICE_FEATURE_KEY]: anotherSliceReducer,'
+        '[ANOTHER_SLICE_FEATURE_KEY]: anotherSliceReducer,',
       );
       expect(main).toContain('[MY_SLICE_FEATURE_KEY]: mySliceReducer');
       expect(main).toMatch(/<Provider store={store}>/);
@@ -88,7 +88,7 @@ describe('redux', () => {
           name: 'my-slice',
           project: 'my-lib',
           appProject: 'my-lib',
-        })
+        }),
       ).rejects.toThrow(/Expected m/);
     });
   });

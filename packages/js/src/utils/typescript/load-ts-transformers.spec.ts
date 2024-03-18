@@ -18,7 +18,7 @@ describe('loadTsTransformers', () => {
   it('should return correct compiler hooks', () => {
     const result = loadTsTransformers(
       ['plugin-a', 'plugin-b'],
-      mockRequireResolve as any
+      mockRequireResolve as any,
     );
 
     expect(result.hasPlugin).toEqual(true);

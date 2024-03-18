@@ -13,7 +13,7 @@ import { NormalizedSchema } from './normalize-options';
 
 export async function addE2e(
   tree: Tree,
-  options: NormalizedSchema
+  options: NormalizedSchema,
 ): Promise<GeneratorCallback> {
   const hasPlugin = hasExpoPlugin(tree);
   const port = hasPlugin ? 8081 : 4200;

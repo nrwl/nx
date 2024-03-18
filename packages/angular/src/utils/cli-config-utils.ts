@@ -1,12 +1,12 @@
 export function replaceAppNameWithPath(
   node: string | string[] | object | unknown,
   appName: string,
-  root: string
+  root: string,
 ): any {
   if (typeof node === 'string') {
     const matchPattern = new RegExp(
       `([^a-z0-9]*(${appName}))|((${appName})[^a-z0-9:]*)`,
-      'gi'
+      'gi',
     );
     if (
       !!node.match(matchPattern) &&
@@ -43,7 +43,7 @@ export function replaceAppNameWithPath(
           : node[c]),
         m
       ),
-      {} as any
+      {} as any,
     );
   } else {
     return node;

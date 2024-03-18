@@ -18,7 +18,7 @@ import { ProjectConfiguration } from '../../config/workspace-json-project-json';
 function tryGetCollection<T extends object>(
   packageJsonPath: string,
   collectionFile: string | undefined,
-  propName: string
+  propName: string,
 ): T | null {
   if (!collectionFile) {
     return null;
@@ -36,14 +36,14 @@ export async function getPluginCapabilities(
   workspaceRoot: string,
   pluginName: string,
   projects: Record<string, ProjectConfiguration>,
-  includeRuntimeCapabilities = false
+  includeRuntimeCapabilities = false,
 ): Promise<PluginCapabilities | null> {
   try {
     const { json: packageJson, path: packageJsonPath } =
       await readPluginPackageJson(
         pluginName,
         projects,
-        getNxRequirePaths(workspaceRoot)
+        getNxRequirePaths(workspaceRoot),
       );
     const pluginModule = includeRuntimeCapabilities
       ? await tryGetModule(packageJson, workspaceRoot, projects)
@@ -54,22 +54,22 @@ export async function getPluginCapabilities(
         ...tryGetCollection(
           packageJsonPath,
           packageJson.schematics,
-          'schematics'
+          'schematics',
         ),
         ...tryGetCollection(
           packageJsonPath,
           packageJson.generators,
-          'schematics'
+          'schematics',
         ),
         ...tryGetCollection(
           packageJsonPath,
           packageJson.schematics,
-          'generators'
+          'generators',
         ),
         ...tryGetCollection(
           packageJsonPath,
           packageJson.generators,
-          'generators'
+          'generators',
         ),
       },
       executors: {
@@ -79,7 +79,7 @@ export async function getPluginCapabilities(
         ...tryGetCollection(
           packageJsonPath,
           packageJson.executors,
-          'executors'
+          'executors',
         ),
       },
       projectGraphExtension:
@@ -100,7 +100,7 @@ export async function getPluginCapabilities(
 async function tryGetModule(
   packageJson: PackageJson,
   workspaceRoot: string,
-  projects: Record<string, ProjectConfiguration>
+  projects: Record<string, ProjectConfiguration>,
 ): Promise<NxPlugin | null> {
   try {
     return packageJson.generators ??
@@ -113,7 +113,7 @@ async function tryGetModule(
             packageJson.name,
             getNxRequirePaths(workspaceRoot),
             projects,
-            workspaceRoot
+            workspaceRoot,
           )
         ).plugin
       : ({
@@ -126,12 +126,12 @@ async function tryGetModule(
 
 export async function listPluginCapabilities(
   pluginName: string,
-  projects: Record<string, ProjectConfiguration>
+  projects: Record<string, ProjectConfiguration>,
 ) {
   const plugin = await getPluginCapabilities(
     workspaceRoot,
     pluginName,
-    projects
+    projects,
   );
 
   if (!plugin) {
@@ -169,8 +169,9 @@ export async function listPluginCapabilities(
     bodyLines.push('');
     bodyLines.push(
       ...Object.keys(plugin.generators).map(
-        (name) => `${chalk.bold(name)} : ${plugin.generators[name].description}`
-      )
+        (name) =>
+          `${chalk.bold(name)} : ${plugin.generators[name].description}`,
+      ),
     );
     if (hasBuilders) {
       bodyLines.push('');
@@ -182,8 +183,8 @@ export async function listPluginCapabilities(
     bodyLines.push('');
     bodyLines.push(
       ...Object.keys(plugin.executors).map(
-        (name) => `${chalk.bold(name)} : ${plugin.executors[name].description}`
-      )
+        (name) => `${chalk.bold(name)} : ${plugin.executors[name].description}`,
+      ),
     );
   }
 

@@ -37,10 +37,10 @@ describe('@nx/expo (legacy)', () => {
     });
     runCLI(
       `generate @nx/expo:application ${appName} --e2eTestRunner=cypress --no-interactive`,
-      { env: { NX_ADD_PLUGINS: 'false' } }
+      { env: { NX_ADD_PLUGINS: 'false' } },
     );
     runCLI(
-      `generate @nx/expo:library ${libName} --buildable --publishable --importPath=${proj}/${libName}`
+      `generate @nx/expo:library ${libName} --buildable --publishable --importPath=${proj}/${libName}`,
     );
   });
   afterAll(() => cleanupProject());
@@ -49,7 +49,7 @@ describe('@nx/expo (legacy)', () => {
     const componentName = uniq('Component');
 
     runCLI(
-      `generate @nx/expo:component ${componentName} --project=${libName} --export --no-interactive`
+      `generate @nx/expo:component ${componentName} --project=${libName} --export --no-interactive`,
     );
 
     updateFile(`apps/${appName}/src/app/App.tsx`, (content) => {
@@ -62,12 +62,12 @@ describe('@nx/expo (legacy)', () => {
 
     const appLintResults = await runCLIAsync(`lint ${appName}`);
     expect(appLintResults.combinedOutput).toContain(
-      'Successfully ran target lint'
+      'Successfully ran target lint',
     );
 
     const libLintResults = await runCLIAsync(`lint ${libName}`);
     expect(libLintResults.combinedOutput).toContain(
-      'Successfully ran target lint'
+      'Successfully ran target lint',
     );
   });
 
@@ -83,7 +83,7 @@ describe('@nx/expo (legacy)', () => {
             output.includes(`http://localhost::${port}`) ||
             output.includes('Starting JS server...')
           );
-        }
+        },
       );
     } catch (err) {
       console.error(err);
@@ -102,14 +102,14 @@ describe('@nx/expo (legacy)', () => {
 
   it('should export', async () => {
     const exportResults = await runCLIAsync(
-      `export ${appName} --no-interactive`
+      `export ${appName} --no-interactive`,
     );
     expect(exportResults.combinedOutput).toContain(
-      'Successfully ran target export for project'
+      'Successfully ran target export for project',
     );
     checkFilesExist(
       `dist/apps/${appName}/index.html`,
-      `dist/apps/${appName}/metadata.json`
+      `dist/apps/${appName}/metadata.json`,
     );
   });
 
@@ -130,10 +130,10 @@ describe('@nx/expo (legacy)', () => {
     // run prebuild command with git check disable
     process.env['EXPO_NO_GIT_STATUS'] = 'true';
     const prebuildResult = await runCLIAsync(
-      `prebuild ${appName} --no-interactive --install=false`
+      `prebuild ${appName} --no-interactive --install=false`,
     );
     expect(prebuildResult.combinedOutput).toContain(
-      'Successfully ran target prebuild for project'
+      'Successfully ran target prebuild for project',
     );
   });
 
@@ -142,10 +142,10 @@ describe('@nx/expo (legacy)', () => {
   xit('should install', async () => {
     // run install command
     const installResults = await runCLIAsync(
-      `install ${appName} --no-interactive`
+      `install ${appName} --no-interactive`,
     );
     expect(installResults.combinedOutput).toContain(
-      'Successfully ran target install'
+      'Successfully ran target install',
     );
   });
 
@@ -153,7 +153,7 @@ describe('@nx/expo (legacy)', () => {
     // run start command
     const startProcess = await runCommandUntil(
       `start ${appName} -- --port=8081`,
-      (output) => output.includes(`http://localhost:8081`)
+      (output) => output.includes(`http://localhost:8081`),
     );
 
     // port and process cleanup
@@ -177,13 +177,13 @@ describe('@nx/expo (legacy)', () => {
     expect(() => {
       const pmc = getPackageManagerCommand();
       runCommand(
-        `${pmc.runUninstalledPackage} tsc -p apps/${appName}/tsconfig.app.json`
+        `${pmc.runUninstalledPackage} tsc -p apps/${appName}/tsconfig.app.json`,
       );
       checkFilesExist(
         `dist/out-tsc/apps/${appName}/src/app/App.js`,
         `dist/out-tsc/apps/${appName}/src/app/App.d.ts`,
         `dist/out-tsc/libs/${libName}/src/index.js`,
-        `dist/out-tsc/libs/${libName}/src/index.d.ts`
+        `dist/out-tsc/libs/${libName}/src/index.d.ts`,
       );
     }).not.toThrow();
   });
@@ -194,7 +194,7 @@ describe('@nx/expo (legacy)', () => {
 
     runCLI(
       `generate @nx/expo:application ${appName} --project-name-and-root-format=as-provided --no-interactive`,
-      { env: { NX_ADD_PLUGINS: 'false' } }
+      { env: { NX_ADD_PLUGINS: 'false' } },
     );
 
     // check files are generated without the layout directory ("apps/") and
@@ -203,18 +203,18 @@ describe('@nx/expo (legacy)', () => {
     // check tests pass
     const appTestResult = runCLI(`test ${appName}`);
     expect(appTestResult).toContain(
-      `Successfully ran target test for project ${appName}`
+      `Successfully ran target test for project ${appName}`,
     );
 
     // assert scoped project names are not supported when --project-name-and-root-format=derived
     expect(() =>
       runCLI(
-        `generate @nx/expo:library ${libName} --buildable --project-name-and-root-format=derived`
-      )
+        `generate @nx/expo:library ${libName} --buildable --project-name-and-root-format=derived`,
+      ),
     ).toThrow();
 
     runCLI(
-      `generate @nx/expo:library ${libName} --buildable --project-name-and-root-format=as-provided`
+      `generate @nx/expo:library ${libName} --buildable --project-name-and-root-format=as-provided`,
     );
 
     // check files are generated without the layout directory ("libs/") and
@@ -223,17 +223,17 @@ describe('@nx/expo (legacy)', () => {
     // check tests pass
     const libTestResult = runCLI(`test ${libName}`);
     expect(libTestResult).toContain(
-      `Successfully ran target test for project ${libName}`
+      `Successfully ran target test for project ${libName}`,
     );
   });
 
   it('should create storybook with application', async () => {
     runCLI(
-      `generate @nx/react:storybook-configuration ${appName} --generateStories --no-interactive`
+      `generate @nx/react:storybook-configuration ${appName} --generateStories --no-interactive`,
     );
     checkFilesExist(
       `apps/${appName}/.storybook/main.ts`,
-      `apps/${appName}/src/app/App.stories.tsx`
+      `apps/${appName}/src/app/App.stories.tsx`,
     );
   });
 
@@ -269,7 +269,7 @@ describe('@nx/expo (legacy)', () => {
     const appName2 = uniq('my-app');
     runCLI(
       `generate @nx/expo:application ${appName2} --e2eTestRunner=playwright --no-interactive`,
-      { env: { NX_ADD_PLUGINS: 'false' } }
+      { env: { NX_ADD_PLUGINS: 'false' } },
     );
     if (runE2ETests()) {
       const results = runCLI(`e2e ${appName2}-e2e`, { verbose: true });

@@ -19,7 +19,7 @@ export default async function updateWorkspaceConfigurations(tree: Tree) {
       target.options.bundleDependencies = undefined;
 
       for (const [configurationName, configuration] of Object.entries(
-        target.configurations || {}
+        target.configurations || {},
       )) {
         configuration.bundleDependencies = undefined;
         target[configurationName] = configuration;

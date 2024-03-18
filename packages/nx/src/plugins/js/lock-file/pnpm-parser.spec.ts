@@ -119,10 +119,9 @@ describe('pnpm LockFile utility', () => {
         'node_modules/ts-node/package.json': '{"version": "10.9.1"}',
         'node_modules/tslib/package.json': '{"version": "2.4.1"}',
         'node_modules/typescript/package.json': '{"version": "4.8.4"}',
-        'node_modules/.modules.yaml': require(joinPathFragments(
-          __dirname,
-          '__fixtures__/nextjs/.modules.yaml'
-        )).default,
+        'node_modules/.modules.yaml': require(
+          joinPathFragments(__dirname, '__fixtures__/nextjs/.modules.yaml'),
+        ).default,
       };
       vol.fromJSON(fileSys, '/root');
     });
@@ -136,10 +135,9 @@ describe('pnpm LockFile utility', () => {
 
     describe('v5.4', () => {
       beforeEach(() => {
-        lockFile = require(joinPathFragments(
-          __dirname,
-          '__fixtures__/nextjs/pnpm-lock.yaml'
-        )).default;
+        lockFile = require(
+          joinPathFragments(__dirname, '__fixtures__/nextjs/pnpm-lock.yaml'),
+        ).default;
         lockFileHash = '__fixtures__/nextjs/pnpm-lock.yaml';
 
         externalNodes = getPnpmLockfileNodes(lockFile, lockFileHash);
@@ -170,7 +168,7 @@ describe('pnpm LockFile utility', () => {
             dep.source,
             dep.target,
             dep.type,
-            'sourceFile' in dep ? dep.sourceFile : null
+            'sourceFile' in dep ? dep.sourceFile : null,
           );
         }
         graph = builder.getUpdatedProjectGraph();
@@ -181,10 +179,9 @@ describe('pnpm LockFile utility', () => {
       });
 
       it('should prune lock file', async () => {
-        const appPackageJson = require(joinPathFragments(
-          __dirname,
-          '__fixtures__/nextjs/app/package.json'
-        ));
+        const appPackageJson = require(
+          joinPathFragments(__dirname, '__fixtures__/nextjs/app/package.json'),
+        );
 
         // this is our pruned lock file structure
         const prunedGraph = pruneProjectGraph(graph, appPackageJson);
@@ -192,22 +189,21 @@ describe('pnpm LockFile utility', () => {
         // which adds 119 more deps
         //  but it's still possible to run `pnpm install --frozen-lockfile` on it (there are e2e tests for that)
         expect(Object.keys(prunedGraph.externalNodes).length).toEqual(
-          863 + 119
+          863 + 119,
         );
 
         // this should not fail
         expect(() =>
-          stringifyPnpmLockfile(prunedGraph, lockFile, appPackageJson)
+          stringifyPnpmLockfile(prunedGraph, lockFile, appPackageJson),
         ).not.toThrow();
       });
     });
 
     describe('v6.0', () => {
       beforeEach(() => {
-        lockFile = require(joinPathFragments(
-          __dirname,
-          '__fixtures__/nextjs/pnpm-lock-v6.yaml'
-        )).default;
+        lockFile = require(
+          joinPathFragments(__dirname, '__fixtures__/nextjs/pnpm-lock-v6.yaml'),
+        ).default;
         lockFileHash = '__fixtures__/nextjs/pnpm-lock-v6.yaml';
         externalNodes = getPnpmLockfileNodes(lockFile, lockFileHash);
         graph = {
@@ -237,7 +233,7 @@ describe('pnpm LockFile utility', () => {
             dep.source,
             dep.target,
             dep.type,
-            'sourceFile' in dep ? dep.sourceFile : null
+            'sourceFile' in dep ? dep.sourceFile : null,
           );
         }
         graph = builder.getUpdatedProjectGraph();
@@ -248,20 +244,21 @@ describe('pnpm LockFile utility', () => {
       });
 
       it('should prune lock file', async () => {
-        const appPackageJson = require(joinPathFragments(
-          __dirname,
-          '__fixtures__/nextjs/app/package.json'
-        ));
+        const appPackageJson = require(
+          joinPathFragments(__dirname, '__fixtures__/nextjs/app/package.json'),
+        );
         // this is original generated lock file
-        const appLockFile = require(joinPathFragments(
-          __dirname,
-          '__fixtures__/nextjs/app/pnpm-lock-v6.yaml'
-        )).default;
+        const appLockFile = require(
+          joinPathFragments(
+            __dirname,
+            '__fixtures__/nextjs/app/pnpm-lock-v6.yaml',
+          ),
+        ).default;
         const appLockFileHash = '__fixtures__/nextjs/app/pnpm-lock-v6.yaml';
 
         const externalNodes = getPnpmLockfileNodes(
           appLockFile,
-          appLockFileHash
+          appLockFileHash,
         );
         let appGraph: ProjectGraph = {
           nodes: {},
@@ -285,7 +282,7 @@ describe('pnpm LockFile utility', () => {
         const dependencies = getPnpmLockfileDependencies(
           appLockFile,
           appLockFileHash,
-          appCtx
+          appCtx,
         );
 
         const builder = new ProjectGraphBuilder(appGraph);
@@ -294,7 +291,7 @@ describe('pnpm LockFile utility', () => {
             dep.source,
             dep.target,
             dep.type,
-            'sourceFile' in dep ? dep.sourceFile : null
+            'sourceFile' in dep ? dep.sourceFile : null,
           );
         }
         appGraph = builder.getUpdatedProjectGraph();
@@ -303,12 +300,12 @@ describe('pnpm LockFile utility', () => {
         // this is our pruned lock file structure
         const prunedGraph = pruneProjectGraph(graph, appPackageJson);
         expect(Object.keys(prunedGraph.externalNodes).length).toEqual(
-          864 + 119 // peer cypress adds additional 119 deps
+          864 + 119, // peer cypress adds additional 119 deps
         );
 
         // this should not fail
         expect(() =>
-          stringifyPnpmLockfile(prunedGraph, appLockFile, appPackageJson)
+          stringifyPnpmLockfile(prunedGraph, appLockFile, appPackageJson),
         ).not.toThrow();
       });
     });
@@ -331,19 +328,23 @@ describe('pnpm LockFile utility', () => {
         'node_modules/react/package.json': '{"version": "18.2.0"}',
         'node_modules/typescript/package.json': '{"version": "4.8.4"}',
         'node_modules/yargs/package.json': '{"version": "17.6.2"}',
-        'node_modules/.modules.yaml': require(joinPathFragments(
-          __dirname,
-          '__fixtures__/auxiliary-packages/.modules.yaml'
-        )).default,
+        'node_modules/.modules.yaml': require(
+          joinPathFragments(
+            __dirname,
+            '__fixtures__/auxiliary-packages/.modules.yaml',
+          ),
+        ).default,
       };
       vol.fromJSON(fileSys, '/root');
     });
 
     it('should parse root lock file', async () => {
-      const lockFile = require(joinPathFragments(
-        __dirname,
-        '__fixtures__/auxiliary-packages/pnpm-lock.yaml'
-      )).default;
+      const lockFile = require(
+        joinPathFragments(
+          __dirname,
+          '__fixtures__/auxiliary-packages/pnpm-lock.yaml',
+        ),
+      ).default;
       const lockFileHash = '__fixtures__/auxiliary-packages/pnpm-lock.yaml';
 
       const externalNodes = getPnpmLockfileNodes(lockFile, lockFileHash);
@@ -369,7 +370,7 @@ describe('pnpm LockFile utility', () => {
       const dependencies = getPnpmLockfileDependencies(
         lockFile,
         lockFileHash,
-        ctx
+        ctx,
       );
 
       const builder = new ProjectGraphBuilder(graph);
@@ -378,7 +379,7 @@ describe('pnpm LockFile utility', () => {
           dep.source,
           dep.target,
           dep.type,
-          'sourceFile' in dep ? dep.sourceFile : null
+          'sourceFile' in dep ? dep.sourceFile : null,
         );
       }
       graph = builder.getUpdatedProjectGraph();
@@ -433,15 +434,19 @@ describe('pnpm LockFile utility', () => {
     });
 
     it('should prune lock file', () => {
-      const lockFile = require(joinPathFragments(
-        __dirname,
-        '__fixtures__/auxiliary-packages/pnpm-lock.yaml'
-      )).default;
+      const lockFile = require(
+        joinPathFragments(
+          __dirname,
+          '__fixtures__/auxiliary-packages/pnpm-lock.yaml',
+        ),
+      ).default;
       const lockFileHash = '__fixtures__/auxiliary-packages/pnpm-lock.yaml';
-      const prunedLockFile: string = require(joinPathFragments(
-        __dirname,
-        '__fixtures__/auxiliary-packages/pnpm-lock.yaml.pruned'
-      )).default;
+      const prunedLockFile: string = require(
+        joinPathFragments(
+          __dirname,
+          '__fixtures__/auxiliary-packages/pnpm-lock.yaml.pruned',
+        ),
+      ).default;
 
       const prunedPackageJson = {
         name: 'test',
@@ -486,7 +491,7 @@ describe('pnpm LockFile utility', () => {
       const dependencies = getPnpmLockfileDependencies(
         lockFile,
         lockFileHash,
-        ctx
+        ctx,
       );
 
       const builder = new ProjectGraphBuilder(graph);
@@ -495,7 +500,7 @@ describe('pnpm LockFile utility', () => {
           dep.source,
           dep.target,
           dep.type,
-          'sourceFile' in dep ? dep.sourceFile : null
+          'sourceFile' in dep ? dep.sourceFile : null,
         );
       }
       graph = builder.getUpdatedProjectGraph();
@@ -503,13 +508,13 @@ describe('pnpm LockFile utility', () => {
       const result = stringifyPnpmLockfile(
         prunedGraph,
         lockFile,
-        prunedPackageJson
+        prunedPackageJson,
       );
       // we replace the dev: true with dev: false because the lock file is generated with dev: false
       // this does not break the intallation, despite being inaccurate
       const manipulatedLockFile = prunedLockFile.replace(
         /dev: true/g,
-        'dev: false'
+        'dev: false',
       );
       expect(result).toEqual(manipulatedLockFile);
     });
@@ -522,19 +527,23 @@ describe('pnpm LockFile utility', () => {
         'node_modules/@nrwl/workspace/package.json': '{"version": "14.8.6"}',
         'node_modules/@types/prettier/package.json': '{"version": "2.7.2"}',
         'node_modules/nx/package.json': '{"version": "15.4.0"}',
-        'node_modules/.modules.yaml': require(joinPathFragments(
-          __dirname,
-          '__fixtures__/duplicate-package/.modules.yaml'
-        )).default,
+        'node_modules/.modules.yaml': require(
+          joinPathFragments(
+            __dirname,
+            '__fixtures__/duplicate-package/.modules.yaml',
+          ),
+        ).default,
       };
       vol.fromJSON(fileSys, '/root');
     });
 
     it('should parse root lock file', async () => {
-      const lockFile = require(joinPathFragments(
-        __dirname,
-        '__fixtures__/duplicate-package/pnpm-lock.yaml'
-      )).default;
+      const lockFile = require(
+        joinPathFragments(
+          __dirname,
+          '__fixtures__/duplicate-package/pnpm-lock.yaml',
+        ),
+      ).default;
       const lockFileHash = '__fixtures__/duplicate-package/pnpm-lock.yaml';
 
       const externalNodes = getPnpmLockfileNodes(lockFile, lockFileHash);
@@ -560,7 +569,7 @@ describe('pnpm LockFile utility', () => {
       const dependencies = getPnpmLockfileDependencies(
         lockFile,
         lockFileHash,
-        ctx
+        ctx,
       );
 
       const builder = new ProjectGraphBuilder(graph);
@@ -569,7 +578,7 @@ describe('pnpm LockFile utility', () => {
           dep.source,
           dep.target,
           dep.type,
-          'sourceFile' in dep ? dep.sourceFile : null
+          'sourceFile' in dep ? dep.sourceFile : null,
         );
       }
       graph = builder.getUpdatedProjectGraph();
@@ -584,19 +593,17 @@ describe('pnpm LockFile utility', () => {
     beforeEach(() => {
       const fileSys = {
         'node_modules/ssh2/package.json': '{"version": "1.11.6"}',
-        'node_modules/.modules.yaml': require(joinPathFragments(
-          __dirname,
-          '__fixtures__/optional/.modules.yaml'
-        )).default,
+        'node_modules/.modules.yaml': require(
+          joinPathFragments(__dirname, '__fixtures__/optional/.modules.yaml'),
+        ).default,
       };
       vol.fromJSON(fileSys, '/root');
     });
 
     it('should match parsed and pruned graph', async () => {
-      const lockFile = require(joinPathFragments(
-        __dirname,
-        '__fixtures__/optional/pnpm-lock.yaml'
-      )).default;
+      const lockFile = require(
+        joinPathFragments(__dirname, '__fixtures__/optional/pnpm-lock.yaml'),
+      ).default;
       const lockFileHash = '__fixtures__/optional/pnpm-lock.yaml';
       const externalNodes = getPnpmLockfileNodes(lockFile, lockFileHash);
       let graph: ProjectGraph = {
@@ -621,7 +628,7 @@ describe('pnpm LockFile utility', () => {
       const dependencies = getPnpmLockfileDependencies(
         lockFile,
         lockFileHash,
-        ctx
+        ctx,
       );
 
       const builder = new ProjectGraphBuilder(graph);
@@ -630,16 +637,15 @@ describe('pnpm LockFile utility', () => {
           dep.source,
           dep.target,
           dep.type,
-          'sourceFile' in dep ? dep.sourceFile : null
+          'sourceFile' in dep ? dep.sourceFile : null,
         );
       }
       graph = builder.getUpdatedProjectGraph();
       expect(Object.keys(graph.externalNodes).length).toEqual(8);
 
-      const packageJson = require(joinPathFragments(
-        __dirname,
-        '__fixtures__/optional/package.json'
-      ));
+      const packageJson = require(
+        joinPathFragments(__dirname, '__fixtures__/optional/package.json'),
+      );
       const prunedGraph = pruneProjectGraph(graph, packageJson);
       expect(Object.keys(prunedGraph.externalNodes).length).toEqual(8);
     });
@@ -656,20 +662,18 @@ describe('pnpm LockFile utility', () => {
         'node_modules/js-yaml/package.json': '{"version": "4.1.0"}',
         'node_modules/minimatch/package.json': '{"version": "3.0.5"}',
         'node_modules/tslib/package.json': '{"version": "2.4.1"}',
-        'node_modules/.modules.yaml': require(joinPathFragments(
-          __dirname,
-          '__fixtures__/pruning/.modules.yaml'
-        )).default,
+        'node_modules/.modules.yaml': require(
+          joinPathFragments(__dirname, '__fixtures__/pruning/.modules.yaml'),
+        ).default,
       };
       vol.fromJSON(fileSys, '/root');
     });
 
     describe('v5.4', () => {
       beforeEach(() => {
-        lockFile = require(joinPathFragments(
-          __dirname,
-          '__fixtures__/pruning/pnpm-lock.yaml'
-        )).default;
+        lockFile = require(
+          joinPathFragments(__dirname, '__fixtures__/pruning/pnpm-lock.yaml'),
+        ).default;
         lockFileHash = '__fixtures__/pruning/pnpm-lock.yaml';
 
         const externalNodes = getPnpmLockfileNodes(lockFile, lockFileHash);
@@ -695,7 +699,7 @@ describe('pnpm LockFile utility', () => {
         const dependencies = getPnpmLockfileDependencies(
           lockFile,
           lockFileHash,
-          ctx
+          ctx,
         );
 
         const builder = new ProjectGraphBuilder(graph);
@@ -704,57 +708,67 @@ describe('pnpm LockFile utility', () => {
             dep.source,
             dep.target,
             dep.type,
-            'sourceFile' in dep ? dep.sourceFile : null
+            'sourceFile' in dep ? dep.sourceFile : null,
           );
         }
         graph = builder.getUpdatedProjectGraph();
       });
 
       it('should prune single package', () => {
-        const typescriptPackageJson = require(joinPathFragments(
-          __dirname,
-          '__fixtures__/pruning/typescript/package.json'
-        ));
+        const typescriptPackageJson = require(
+          joinPathFragments(
+            __dirname,
+            '__fixtures__/pruning/typescript/package.json',
+          ),
+        );
         const prunedGraph = pruneProjectGraph(graph, typescriptPackageJson);
         const result = stringifyPnpmLockfile(
           prunedGraph,
           lockFile,
-          typescriptPackageJson
+          typescriptPackageJson,
         );
         expect(result).toEqual(
-          require(joinPathFragments(
-            __dirname,
-            '__fixtures__/pruning/typescript/pnpm-lock.yaml'
-          )).default
+          require(
+            joinPathFragments(
+              __dirname,
+              '__fixtures__/pruning/typescript/pnpm-lock.yaml',
+            ),
+          ).default,
         );
       });
 
       it('should prune multi packages', () => {
-        const multiPackageJson = require(joinPathFragments(
-          __dirname,
-          '__fixtures__/pruning/devkit-yargs/package.json'
-        ));
+        const multiPackageJson = require(
+          joinPathFragments(
+            __dirname,
+            '__fixtures__/pruning/devkit-yargs/package.json',
+          ),
+        );
         const prunedGraph = pruneProjectGraph(graph, multiPackageJson);
         const result = stringifyPnpmLockfile(
           prunedGraph,
           lockFile,
-          multiPackageJson
+          multiPackageJson,
         );
         expect(result).toEqual(
-          require(joinPathFragments(
-            __dirname,
-            '__fixtures__/pruning/devkit-yargs/pnpm-lock.yaml'
-          )).default
+          require(
+            joinPathFragments(
+              __dirname,
+              '__fixtures__/pruning/devkit-yargs/pnpm-lock.yaml',
+            ),
+          ).default,
         );
       });
     });
 
     describe('v6.0', () => {
       beforeEach(() => {
-        lockFile = require(joinPathFragments(
-          __dirname,
-          '__fixtures__/pruning/pnpm-lock-v6.yaml'
-        )).default;
+        lockFile = require(
+          joinPathFragments(
+            __dirname,
+            '__fixtures__/pruning/pnpm-lock-v6.yaml',
+          ),
+        ).default;
         lockFileHash = '__fixtures__/pruning/pnpm-lock-v6.yaml';
 
         const externalNodes = getPnpmLockfileNodes(lockFile, lockFileHash);
@@ -780,7 +794,7 @@ describe('pnpm LockFile utility', () => {
         const dependencies = getPnpmLockfileDependencies(
           lockFile,
           lockFileHash,
-          ctx
+          ctx,
         );
 
         const builder = new ProjectGraphBuilder(graph);
@@ -789,47 +803,55 @@ describe('pnpm LockFile utility', () => {
             dep.source,
             dep.target,
             dep.type,
-            'sourceFile' in dep ? dep.sourceFile : null
+            'sourceFile' in dep ? dep.sourceFile : null,
           );
         }
         graph = builder.getUpdatedProjectGraph();
       });
 
       it('should prune single package', () => {
-        const typescriptPackageJson = require(joinPathFragments(
-          __dirname,
-          '__fixtures__/pruning/typescript/package.json'
-        ));
+        const typescriptPackageJson = require(
+          joinPathFragments(
+            __dirname,
+            '__fixtures__/pruning/typescript/package.json',
+          ),
+        );
         const prunedGraph = pruneProjectGraph(graph, typescriptPackageJson);
         const result = stringifyPnpmLockfile(
           prunedGraph,
           lockFile,
-          typescriptPackageJson
+          typescriptPackageJson,
         );
         expect(result).toEqual(
-          require(joinPathFragments(
-            __dirname,
-            '__fixtures__/pruning/typescript/pnpm-lock-v6.yaml'
-          )).default
+          require(
+            joinPathFragments(
+              __dirname,
+              '__fixtures__/pruning/typescript/pnpm-lock-v6.yaml',
+            ),
+          ).default,
         );
       });
 
       it('should prune multi packages', () => {
-        const multiPackageJson = require(joinPathFragments(
-          __dirname,
-          '__fixtures__/pruning/devkit-yargs/package.json'
-        ));
+        const multiPackageJson = require(
+          joinPathFragments(
+            __dirname,
+            '__fixtures__/pruning/devkit-yargs/package.json',
+          ),
+        );
         const prunedGraph = pruneProjectGraph(graph, multiPackageJson);
         const result = stringifyPnpmLockfile(
           prunedGraph,
           lockFile,
-          multiPackageJson
+          multiPackageJson,
         );
         expect(result).toEqual(
-          require(joinPathFragments(
-            __dirname,
-            '__fixtures__/pruning/devkit-yargs/pnpm-lock-v6.yaml'
-          )).default
+          require(
+            joinPathFragments(
+              __dirname,
+              '__fixtures__/pruning/devkit-yargs/pnpm-lock-v6.yaml',
+            ),
+          ).default,
         );
       });
     });
@@ -841,17 +863,15 @@ describe('pnpm LockFile utility', () => {
     beforeAll(() => {
       const fileSys = {
         'node_modules/react/package.json': '{"version": "17.0.2"}',
-        'node_modules/.modules.yaml': require(joinPathFragments(
-          __dirname,
-          '__fixtures__/workspaces/.modules.yaml'
-        )).default,
+        'node_modules/.modules.yaml': require(
+          joinPathFragments(__dirname, '__fixtures__/workspaces/.modules.yaml'),
+        ).default,
       };
       vol.fromJSON(fileSys, '/root');
 
-      lockFile = require(joinPathFragments(
-        __dirname,
-        '__fixtures__/workspaces/pnpm-lock.yaml'
-      )).default;
+      lockFile = require(
+        joinPathFragments(__dirname, '__fixtures__/workspaces/pnpm-lock.yaml'),
+      ).default;
       lockFileHash = '__fixtures__/workspaces/pnpm-lock.yaml';
     });
 

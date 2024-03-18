@@ -27,7 +27,7 @@ export class LibMigrator extends ProjectMigrator {
     tree: Tree,
     options: GeneratorOptions,
     project: MigrationProjectConfiguration,
-    logger?: Logger
+    logger?: Logger,
   ) {
     super(
       tree,
@@ -36,7 +36,7 @@ export class LibMigrator extends ProjectMigrator {
       project,
       'libs',
       logger,
-      supportedBuilderMigrators
+      supportedBuilderMigrators,
     );
   }
 
@@ -73,7 +73,7 @@ export class LibMigrator extends ProjectMigrator {
     convertToNxProject(this.tree, this.project.name);
     this.moveFile(
       joinPathFragments(this.project.oldRoot, 'project.json'),
-      joinPathFragments(this.project.newRoot, 'project.json')
+      joinPathFragments(this.project.newRoot, 'project.json'),
     );
 
     this.projectConfig.root = this.project.newRoot;
@@ -84,7 +84,7 @@ export class LibMigrator extends ProjectMigrator {
       !Object.keys(this.projectConfig.targets).length
     ) {
       this.logger.warn(
-        'The project does not have any targets configured. This might not be an issue. Skipping updating targets.'
+        'The project does not have any targets configured. This might not be an issue. Skipping updating targets.',
       );
     }
 

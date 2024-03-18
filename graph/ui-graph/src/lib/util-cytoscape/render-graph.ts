@@ -38,7 +38,7 @@ export class RenderGraph {
     private container: string | HTMLElement,
     theme: 'light' | 'dark',
     private renderMode?: 'nx-console' | 'nx-docs',
-    rankDir: 'TB' | 'LR' = 'TB'
+    rankDir: 'TB' | 'LR' = 'TB',
   ) {
     this._theme = theme;
     this._rankDir = rankDir;
@@ -183,11 +183,11 @@ export class RenderGraph {
               console.log(`Couldn't figure out how to draw edge ${edge.id()}`);
               console.log(
                 'source ancestors',
-                sourceAncestors.map((anc) => anc.id())
+                sourceAncestors.map((anc) => anc.id()),
               );
               console.log(
                 'target ancestors',
-                targetAncestors.map((anc) => anc.id())
+                targetAncestors.map((anc) => anc.id()),
               );
             }
           }
@@ -282,14 +282,14 @@ export class RenderGraph {
                   file.deps &&
                   file.deps.find(
                     (d) =>
-                      (typeof d === 'string' ? d : d[0]) === edge.target().id()
-                  )
+                      (typeof d === 'string' ? d : d[0]) === edge.target().id(),
+                  ),
               )
               .map((file) => {
                 return {
                   fileName: file.file.replace(
                     `${edge.source().data('root')}/`,
-                    ''
+                    '',
                   ),
                   target: edge.target().id(),
                 };

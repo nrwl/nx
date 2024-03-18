@@ -21,7 +21,7 @@ import type { Schema } from './schema';
 
 export function executeModuleFederationDevSSRBuilder(
   schema: Schema,
-  context: import('@angular-devkit/architect').BuilderContext
+  context: import('@angular-devkit/architect').BuilderContext,
 ) {
   const { ...options } = schema;
   const projectGraph = readCachedProjectGraph();
@@ -32,20 +32,20 @@ export function executeModuleFederationDevSSRBuilder(
   let pathToManifestFile = join(
     context.workspaceRoot,
     project.sourceRoot,
-    'assets/module-federation.manifest.json'
+    'assets/module-federation.manifest.json',
   );
   if (options.pathToManifestFile) {
     const userPathToManifestFile = join(
       context.workspaceRoot,
-      options.pathToManifestFile
+      options.pathToManifestFile,
     );
     if (!existsSync(userPathToManifestFile)) {
       throw new Error(
-        `The provided Module Federation manifest file path does not exist. Please check the file exists at "${userPathToManifestFile}".`
+        `The provided Module Federation manifest file path does not exist. Please check the file exists at "${userPathToManifestFile}".`,
       );
     } else if (extname(options.pathToManifestFile) !== '.json') {
       throw new Error(
-        `The Module Federation manifest file must be a JSON. Please ensure the file at ${userPathToManifestFile} is a JSON.`
+        `The Module Federation manifest file must be a JSON. Please ensure the file at ${userPathToManifestFile} is a JSON.`,
       );
     }
 
@@ -59,22 +59,22 @@ export function executeModuleFederationDevSSRBuilder(
     project,
     context,
     workspaceProjects,
-    remotesToSkip
+    remotesToSkip,
   );
   const dynamicRemotes = getDynamicRemotes(
     project,
     context,
     workspaceProjects,
     remotesToSkip,
-    pathToManifestFile
+    pathToManifestFile,
   );
   const remotes = [...staticRemotes, ...dynamicRemotes];
 
   const devServeRemotes = !options.devRemotes
     ? []
     : Array.isArray(options.devRemotes)
-    ? options.devRemotes
-    : [options.devRemotes];
+      ? options.devRemotes
+      : [options.devRemotes];
 
   const remoteProcessPromises = [];
   for (const remote of remotes) {
@@ -83,11 +83,11 @@ export function executeModuleFederationDevSSRBuilder(
 
     if (!workspaceProjects[remote].targets?.[target]) {
       throw new Error(
-        `Could not find "${target}" target in "${remote}" project.`
+        `Could not find "${target}" target in "${remote}" project.`,
       );
     } else if (!workspaceProjects[remote].targets?.[target].executor) {
       throw new Error(
-        `Could not find executor for "${target}" target in "${remote}" project.`
+        `Could not find executor for "${target}" target in "${remote}" project.`,
       );
     }
 
@@ -99,7 +99,7 @@ export function executeModuleFederationDevSSRBuilder(
         collection,
         executor,
         workspaceRoot,
-        workspaceProjects
+        workspaceProjects,
       );
 
       if (schema.additionalProperties || 'verbose' in schema.properties) {
@@ -113,7 +113,7 @@ export function executeModuleFederationDevSSRBuilder(
         const remoteServerOutput = join(
           workspaceRoot,
           remoteProject.targets.server.options.outputPath,
-          'main.js'
+          'main.js',
         );
         const pm = getPackageManagerCommand();
         execSync(
@@ -122,7 +122,7 @@ export function executeModuleFederationDevSSRBuilder(
               ? `:${context.target.configuration}`
               : ''
           }`,
-          { stdio: 'inherit' }
+          { stdio: 'inherit' },
         );
         const child = fork(remoteServerOutput, {
           env: { PORT: remoteProject.targets['serve-ssr'].options.port },
@@ -144,15 +144,15 @@ export function executeModuleFederationDevSSRBuilder(
             runOptions,
             projects: workspaceProjects,
           },
-          options.verbose
+          options.verbose,
         ).then((obs) =>
           obs
             .pipe(
               tap((result) => {
                 result.success && res();
-              })
+              }),
             )
-            .toPromise()
+            .toPromise(),
         );
       }
     });
@@ -167,10 +167,10 @@ export function executeModuleFederationDevSSRBuilder(
       : require('@nguniversal/builders');
 
   return from(Promise.all(remoteProcessPromises)).pipe(
-    switchMap(() => executeSSRDevServerBuilder(options, context))
+    switchMap(() => executeSSRDevServerBuilder(options, context)),
   );
 }
 
 export default require('@angular-devkit/architect').createBuilder(
-  executeModuleFederationDevSSRBuilder
+  executeModuleFederationDevSSRBuilder,
 );

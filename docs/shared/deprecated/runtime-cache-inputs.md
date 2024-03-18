@@ -26,9 +26,9 @@ The new style looks like this:
 {
   "targets": {
     "build": {
-      "inputs": ["^build", { "runtime": "node -v" }]
+      "inputs": ["^build", { "runtime": "node -v" }],
       // ...
-    }
-  }
+    },
+  },
 }
 ```

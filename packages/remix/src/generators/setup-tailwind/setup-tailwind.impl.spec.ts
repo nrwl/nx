@@ -23,7 +23,7 @@ describe('setup-tailwind generator', () => {
     expect(tree.read('app/root.tsx', 'utf-8')).toMatchSnapshot();
     expect(tree.read('remix.config.js', 'utf-8')).toMatchSnapshot();
     expect(
-      readJson(tree, 'package.json').dependencies['tailwindcss']
+      readJson(tree, 'package.json').dependencies['tailwindcss'],
     ).toBeTruthy();
   });
 
@@ -47,7 +47,7 @@ describe('setup-tailwind generator', () => {
     expect(tree.read('app/root.js', 'utf-8')).toMatchSnapshot();
     expect(tree.read('remix.config.js', 'utf-8')).toMatchSnapshot();
     expect(
-      readJson(tree, 'package.json').dependencies['tailwindcss']
+      readJson(tree, 'package.json').dependencies['tailwindcss'],
     ).toBeTruthy();
   });
 });

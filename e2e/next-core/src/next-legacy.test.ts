@@ -65,7 +65,7 @@ describe('@nx/next (legacy)', () => {
     updateFile(`apps/${appName}/redirects.js`, 'module.exports = [];');
     updateFile(
       `apps/${appName}/nested/headers.js`,
-      `module.exports = require('./headers-2');`
+      `module.exports = require('./headers-2');`,
     );
     updateFile(`apps/${appName}/nested/headers-2.js`, 'module.exports = [];');
     updateFile(`apps/${appName}/next.config.js`, (content) => {
@@ -87,7 +87,7 @@ describe('@nx/next (legacy)', () => {
     const result = runCLI(`build ${appName} --generateLockfile=true`);
     expect(result).not.toMatch(/Graph is not consistent/);
     checkFilesExist(
-      `dist/apps/${appName}/${packageManagerLockFile[packageManager]}`
+      `dist/apps/${appName}/${packageManagerLockFile[packageManager]}`,
     );
     runCommand(`${getPackageManagerCommand().ciInstall}`, {
       cwd: joinPathFragments(tmpProjPath(), 'dist/apps', appName),
@@ -112,7 +112,7 @@ describe('@nx/next (legacy)', () => {
       `generate @nx/next:app ${appName} --no-interactive --style=css --appDir=false`,
       {
         env: { NX_ADD_PLUGINS: 'false' },
-      }
+      },
     );
     runCLI(`generate @nx/next:lib ${nextLib} --no-interactive`, {
       env: { NX_ADD_PLUGINS: 'false' },
@@ -124,7 +124,7 @@ describe('@nx/next (legacy)', () => {
       `generate @nx/js:lib ${buildableLib} --no-interactive --bundler=vite`,
       {
         env: { NX_ADD_PLUGINS: 'false' },
-      }
+      },
     );
 
     // Create file in public that should be copied to dist
@@ -148,7 +148,7 @@ describe('@nx/next (legacy)', () => {
     // to test that it works as expected
     updateFile(
       'node_modules/@nx/next/test-styles.css',
-      'h1 { background-color: red; }'
+      'h1 { background-color: red; }',
     );
 
     updateFile(
@@ -162,7 +162,7 @@ describe('@nx/next (legacy)', () => {
               export async function jsLibAsync() {
                 return await Promise.resolve('hell0');
               }
-              `
+              `,
     );
 
     updateFile(
@@ -171,7 +171,7 @@ describe('@nx/next (legacy)', () => {
               export function buildableLib(): string {
                 return 'Hello Buildable';
               };
-              `
+              `,
     );
 
     const mainPath = `packages/${appName}/src/pages/index.tsx`;
@@ -187,7 +187,7 @@ describe('@nx/next (legacy)', () => {
                 const value = await jsLibAsync();
                 res.send(value);
               }
-            `
+            `,
     );
 
     updateFile(
@@ -200,8 +200,8 @@ describe('@nx/next (legacy)', () => {
     
               const TestComponent = dynamic(
                   () => import('@${proj}/${nextLib}').then(d => d.${capitalize(
-        nextLib
-      )})
+                    nextLib,
+                  )})
                 );
               ${content.replace(
                 `</h2>`,
@@ -211,8 +211,8 @@ describe('@nx/next (legacy)', () => {
                       {buildableLib()}
                       <TestComponent />
                     </div>
-                  `
-              )}`
+                  `,
+              )}`,
     );
 
     const e2eTestPath = `packages/${appName}-e2e/src/e2e/app.cy.ts`;
@@ -228,7 +228,7 @@ describe('@nx/next (legacy)', () => {
               });
               `
             }
-          `
+          `,
     );
 
     await checkApp(appName, {
@@ -242,7 +242,7 @@ describe('@nx/next (legacy)', () => {
     // public and shared assets should both be copied to dist
     checkFilesExist(
       `dist/packages/${appName}/public/a/b.txt`,
-      `dist/packages/${appName}/public/shared/ui/hello.txt`
+      `dist/packages/${appName}/public/shared/ui/hello.txt`,
     );
 
     // Check that compiled next config does not contain bad imports
@@ -257,7 +257,7 @@ describe('@nx/next (legacy)', () => {
       `run ${appName}:serve --prod --port=${prodServePort}`,
       (output) => {
         return output.includes(`localhost:${prodServePort}`);
-      }
+      },
     );
 
     // Check that the output is self-contained (i.e. can run with its own package.json + node_modules)
@@ -266,13 +266,13 @@ describe('@nx/next (legacy)', () => {
       `generate @nx/workspace:run-commands serve-prod --project ${appName} --cwd=dist/packages/${appName} --command="npx next start --port=${selfContainedPort}"`,
       {
         env: { NX_ADD_PLUGINS: 'false' },
-      }
+      },
     );
     const selfContainedProcess = await runCommandUntil(
       `run ${appName}:serve-prod`,
       (output) => {
         return output.includes(`localhost:${selfContainedPort}`);
-      }
+      },
     );
 
     prodServeProcess.kill();

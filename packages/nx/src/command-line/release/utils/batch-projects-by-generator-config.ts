@@ -9,7 +9,7 @@ import { ReleaseGroupWithName } from '../config/filter-release-groups';
 export function batchProjectsByGeneratorConfig(
   projectGraph: ProjectGraph,
   releaseGroup: ReleaseGroupWithName,
-  projectNamesToBatch: string[]
+  projectNamesToBatch: string[],
 ) {
   const configBatches = new Map<string, string[]>();
   for (const projectName of projectNamesToBatch) {

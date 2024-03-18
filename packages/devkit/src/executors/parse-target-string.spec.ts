@@ -67,7 +67,7 @@ describe('parseTargetString', () => {
   // isn't present within the project graph. In these cases, this function should still behave predictably.
   it('should produce accurate results if the project graph doesnt contain the project', () => {
     expect(
-      parseTargetString('foo:build', { ...mockContext, projectName: 'foo' })
+      parseTargetString('foo:build', { ...mockContext, projectName: 'foo' }),
     ).toEqual({
       project: 'foo',
       target: 'build',
@@ -76,7 +76,7 @@ describe('parseTargetString', () => {
       parseTargetString('foo:build:production', {
         ...mockContext,
         projectName: 'foo',
-      })
+      }),
     ).toEqual({
       project: 'foo',
       target: 'build',

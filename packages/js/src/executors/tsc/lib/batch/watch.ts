@@ -5,7 +5,7 @@ import type { TaskInfo } from './types';
 
 export async function watchTaskProjectsPackageJsonFileChanges(
   taskInfos: TaskInfo[],
-  callback: (changedTaskInfos: TaskInfo[]) => void
+  callback: (changedTaskInfos: TaskInfo[]) => void,
 ): Promise<() => void> {
   const projects: string[] = [];
   const packageJsonTaskInfoMap = new Map<string, TaskInfo>();
@@ -34,14 +34,14 @@ export async function watchTaskProjectsPackageJsonFileChanges(
           callback(changedTasks);
         }
       }
-    }
+    },
   );
 
   return () => unregisterFileWatcher();
 }
 
 export async function watchTaskProjectsFileChangesForAssets(
-  taskInfos: TaskInfo[]
+  taskInfos: TaskInfo[],
 ): Promise<() => void> {
   const unregisterFileWatcher = await daemonClient.registerFileWatcher(
     {
@@ -57,10 +57,10 @@ export async function watchTaskProjectsFileChangesForAssets(
         logger.error(`Watch error: ${err?.message ?? 'Unknown'}`);
       } else {
         taskInfos.forEach((t) =>
-          t.assetsHandler.processWatchEvents(data.changedFiles)
+          t.assetsHandler.processWatchEvents(data.changedFiles),
         );
       }
-    }
+    },
   );
 
   return () => unregisterFileWatcher();

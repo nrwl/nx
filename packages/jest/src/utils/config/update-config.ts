@@ -18,7 +18,7 @@ export function addPropertyToJestConfig(
   path: string,
   propertyName: string | string[],
   value: unknown,
-  options: { valueAsString: boolean } = { valueAsString: false }
+  options: { valueAsString: boolean } = { valueAsString: false },
 ) {
   if (!host.exists(path)) {
     throw new Error(`Cannot find '${path}' in your workspace.`);
@@ -31,12 +31,12 @@ export function addPropertyToJestConfig(
       configObject,
       properties,
       options.valueAsString ? value : JSON.stringify(value),
-      path
+      path,
     );
   } catch (e) {
     logger.info(`NX Please manually update ${path}`);
     logger.warn(
-      `Could not automatically add the following property to ${path}:`
+      `Could not automatically add the following property to ${path}:`,
     );
     logger.warn(`${propertyString}: ${JSON.stringify(value)}`);
     logger.warn(`Error: ${e.message}`);
@@ -52,7 +52,7 @@ export function addPropertyToJestConfig(
 export function removePropertyFromJestConfig(
   host: Tree,
   path: string,
-  propertyName: string | string[]
+  propertyName: string | string[],
 ) {
   if (!host.exists(path)) {
     throw new Error(`Cannot find '${path}' in your workspace.`);
@@ -81,7 +81,7 @@ export function removePropertyFromJestConfig(
   } catch (e) {
     logger.info(`NX Please manually update ${path}`);
     logger.warn(
-      `Could not automatically remove the '${propertyString}' property from ${path}:`
+      `Could not automatically remove the '${propertyString}' property from ${path}:`,
     );
   }
 }
@@ -100,7 +100,7 @@ function parsePropertyName(propertyName: string | string[]) {
 export function addImportStatementToJestConfig(
   host: Tree,
   path: string,
-  importStatement: string
+  importStatement: string,
 ) {
   const currentContents = host.read(path, 'utf-8');
   const newContents = `${importStatement}

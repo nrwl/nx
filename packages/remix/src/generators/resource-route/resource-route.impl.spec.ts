@@ -18,7 +18,7 @@ describe('resource route', () => {
     (remixConfigUtils.getRemixConfigValues as jest.Mock) = jest.fn(() =>
       Promise.resolve({
         ignoredRouteFiles: ['**/.*'],
-      })
+      }),
     );
 
     await applicationGenerator(tree, { name: 'demo' });
@@ -45,9 +45,9 @@ describe('resource route', () => {
           action: false,
           loader: false,
           skipChecks: false,
-        })
+        }),
     ).rejects.toThrowErrorMatchingInlineSnapshot(
-      `"The resource route generator requires either \`loader\` or \`action\` to be true"`
+      `"The resource route generator requires either \`loader\` or \`action\` to be true"`,
     );
   });
 
@@ -62,7 +62,7 @@ describe('resource route', () => {
     (
       nameAndDirectoryFormat: NameAndDirectoryFormat,
       path: string,
-      project: string
+      project: string,
     ) => {
       it(`should create correct file for path ${path}`, async () => {
         await resourceRouteGenerator(tree, {
@@ -98,8 +98,8 @@ describe('resource route', () => {
           nameAndDirectoryFormat,
         }).catch((e) =>
           expect(e).toMatchInlineSnapshot(
-            `[Error: Your route path has an indicator of an un-escaped dollar sign for a route param. If this was intended, include the --skipChecks flag.]`
-          )
+            `[Error: Your route path has an indicator of an un-escaped dollar sign for a route param. If this was intended, include the --skipChecks flag.]`,
+          ),
         );
 
         await resourceRouteGenerator(tree, {
@@ -130,7 +130,7 @@ describe('resource route', () => {
         });
 
         expect(tree.exists(`${basePath}/${normalizedPath}route1/..ts`)).toBe(
-          true
+          true,
         );
 
         await resourceRouteGenerator(tree, {
@@ -143,7 +143,7 @@ describe('resource route', () => {
         });
 
         expect(
-          tree.exists(`${basePath}/${normalizedPath}route2/index.ts`)
+          tree.exists(`${basePath}/${normalizedPath}route2/index.ts`),
         ).toBe(true);
 
         await resourceRouteGenerator(tree, {
@@ -156,9 +156,9 @@ describe('resource route', () => {
         });
 
         expect(tree.exists(`${basePath}/${normalizedPath}route3/.ts`)).toBe(
-          true
+          true,
         );
       });
-    }
+    },
   );
 });

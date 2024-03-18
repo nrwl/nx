@@ -13,7 +13,7 @@ export function setWorkspaceRoot(root: string): void {
 
 export function workspaceRootInner(
   dir: string,
-  candidateRoot: string | null
+  candidateRoot: string | null,
 ): string {
   if (process.env.NX_WORKSPACE_ROOT_PATH)
     return process.env.NX_WORKSPACE_ROOT_PATH;

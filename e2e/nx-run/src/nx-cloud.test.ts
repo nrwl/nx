@@ -5,7 +5,7 @@ describe('Nx Cloud', () => {
     newProject({
       unsetProjectNameAndRootFormat: false,
       packages: ['@nx/js'],
-    })
+    }),
   );
 
   const libName = 'test-lib';
@@ -25,7 +25,7 @@ describe('Nx Cloud', () => {
   xit('should cache tests', async () => {
     // Should be able to view logs with Nx Cloud
     expect(runCLI(`test ${libName}`)).toContain(
-      `View logs and investigate cache misses at https://staging.nx.app`
+      `View logs and investigate cache misses at https://staging.nx.app`,
     );
 
     // Reset Local cache
@@ -33,7 +33,7 @@ describe('Nx Cloud', () => {
 
     // Should be pull cache from Nx Cloud
     expect(runCLI(`test ${libName}`)).toContain(
-      `Nx Cloud made it possible to reuse test-lib: https://staging.nx.app`
+      `Nx Cloud made it possible to reuse test-lib: https://staging.nx.app`,
     );
   });
 });

@@ -29,7 +29,7 @@ export function getTempTailwindPath(context: ExecutorContext) {
 
   if (!project) {
     throw new Error(
-      `No project found in project graph for ${context.projectName}`
+      `No project found in project graph for ${context.projectName}`,
     );
   }
 
@@ -46,14 +46,14 @@ export function isCtProjectUsingBuildProject(
   graph: ProjectGraph,
   parentProjectName: string,
   childProjectName: string,
-  seen = new Set<string>()
+  seen = new Set<string>(),
 ): boolean {
   if (seen.has(parentProjectName)) {
     return false;
   }
   seen.add(parentProjectName);
   const isProjectDirectDep = graph.dependencies[parentProjectName].some(
-    (p) => p.target === childProjectName
+    (p) => p.target === childProjectName,
   );
   if (isProjectDirectDep) {
     return true;
@@ -68,7 +68,7 @@ export function isCtProjectUsingBuildProject(
         graph,
         maybeIntermediateProject.target,
         childProjectName,
-        seen
+        seen,
       )
     ) {
       return true;
@@ -79,19 +79,19 @@ export function isCtProjectUsingBuildProject(
 
 export function getProjectConfigByPath(
   graph: ProjectGraph,
-  configPath: string
+  configPath: string,
 ): ProjectConfiguration {
   const configFileFromWorkspaceRoot = relative(workspaceRoot, configPath);
   const normalizedPathFromWorkspaceRoot = normalizePath(
     lstatSync(configPath).isFile()
       ? configFileFromWorkspaceRoot.replace(extname(configPath), '')
-      : configFileFromWorkspaceRoot
+      : configFileFromWorkspaceRoot,
   );
 
   const projectRootMappings = createProjectRootMappings(graph.nodes);
   const componentTestingProjectName = findProjectForPath(
     normalizedPathFromWorkspaceRoot,
-    projectRootMappings
+    projectRootMappings,
   );
   if (
     !componentTestingProjectName ||
@@ -100,7 +100,7 @@ export function getProjectConfigByPath(
     throw new Error(
       stripIndents`Unable to find the project configuration that includes ${normalizedPathFromWorkspaceRoot}. 
       Found project name? ${componentTestingProjectName}. 
-      Graph has data? ${!!graph.nodes[componentTestingProjectName]?.data}`
+      Graph has data? ${!!graph.nodes[componentTestingProjectName]?.data}`,
     );
   }
   // make sure name is set since it can be undefined
@@ -114,7 +114,7 @@ export function createExecutorContext(
   targets: Record<string, TargetConfiguration>,
   projectName: string,
   targetName: string,
-  configurationName: string
+  configurationName: string,
 ): ExecutorContext {
   const projectsConfigurations =
     readProjectsConfigurationFromProjectGraph(graph);

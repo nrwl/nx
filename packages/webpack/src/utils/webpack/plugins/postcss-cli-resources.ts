@@ -27,7 +27,7 @@ export interface PostcssCliResourcesOptions {
 async function resolve(
   file: string,
   base: string,
-  resolver: (file: string, base: string) => Promise<boolean | string>
+  resolver: (file: string, base: string) => Promise<boolean | string>,
 ): Promise<boolean | string> {
   try {
     return await resolver(`./${file}`, base);
@@ -51,7 +51,7 @@ export function PostcssCliResources(options: PostcssCliResourcesOptions) {
   const process = async (
     inputUrl: string,
     context: string,
-    resourceCache: Map<string, string>
+    resourceCache: Map<string, string>,
   ) => {
     // If root-relative, absolute or protocol relative url, leave as is
     if (/^((?:\w+:)?\/\/|data:|chrome:|#)/.test(inputUrl)) {
@@ -112,7 +112,7 @@ export function PostcssCliResources(options: PostcssCliResourcesOptions) {
         let outputPath = interpolateName(
           { resourcePath: result } as LoaderContext<unknown>,
           filename,
-          { content }
+          { content },
         );
         if (resourcesOutputPath) {
           outputPath = path.posix.join(resourcesOutputPath, outputPath);
@@ -187,7 +187,7 @@ export function PostcssCliResources(options: PostcssCliResourcesOptions) {
           if (modified) {
             decl.value = segments.join('');
           }
-        })
+        }),
       );
     },
   };

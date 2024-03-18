@@ -12,7 +12,7 @@ export function normalizeOptions(
   options: ExecutorOptions,
   contextRoot: string,
   sourceRoot: string,
-  projectRoot: string
+  projectRoot: string,
 ): NormalizedExecutorOptions {
   const outputPath = join(contextRoot, options.outputPath);
   const rootDir = options.rootDir
@@ -40,7 +40,7 @@ export function normalizeOptions(
   const files: FileInputOutput[] = assetGlobsToFiles(
     options.assets,
     contextRoot,
-    outputPath
+    outputPath,
   );
 
   return {
@@ -54,7 +54,7 @@ export function normalizeOptions(
     rootDir,
     mainOutputPath: resolve(
       outputPath,
-      options.main.replace(`${projectRoot}/`, '').replace('.ts', '.js')
+      options.main.replace(`${projectRoot}/`, '').replace('.ts', '.js'),
     ),
   };
 }

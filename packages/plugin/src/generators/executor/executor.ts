@@ -33,7 +33,7 @@ function addFiles(host: Tree, options: NormalizedSchema) {
     options.directory,
     {
       ...options,
-    }
+    },
   );
 
   if (options.unitTestRunner === 'none') {
@@ -48,7 +48,7 @@ function addHasherFiles(host: Tree, options: NormalizedSchema) {
     options.directory,
     {
       ...options,
-    }
+    },
   );
 
   if (options.unitTestRunner === 'none') {
@@ -60,7 +60,7 @@ export async function createExecutorsJson(
   host: Tree,
   projectRoot: string,
   projectName: string,
-  skipLintChecks?: boolean
+  skipLintChecks?: boolean,
 ) {
   updateJson<PackageJson>(
     host,
@@ -68,14 +68,14 @@ export async function createExecutorsJson(
     (json) => {
       json.executors ??= './executors.json';
       return json;
-    }
+    },
   );
   writeJson<ExecutorsJson>(
     host,
     joinPathFragments(projectRoot, 'executors.json'),
     {
       executors: {},
-    }
+    },
   );
   if (!skipLintChecks) {
     await pluginLintCheckGenerator(host, {
@@ -87,7 +87,7 @@ export async function createExecutorsJson(
 async function updateExecutorJson(host: Tree, options: NormalizedSchema) {
   const packageJson = readJson<PackageJson>(
     host,
-    joinPathFragments(options.projectRoot, 'package.json')
+    joinPathFragments(options.projectRoot, 'package.json'),
   );
 
   const packageJsonExecutors = packageJson.executors ?? packageJson.builders;
@@ -103,7 +103,7 @@ async function updateExecutorJson(host: Tree, options: NormalizedSchema) {
       host,
       options.projectRoot,
       options.project,
-      options.skipLintChecks
+      options.skipLintChecks,
     );
   }
   // add dependencies
@@ -116,7 +116,7 @@ async function updateExecutorJson(host: Tree, options: NormalizedSchema) {
         ...json.dependencies,
       };
       return json;
-    }
+    },
   );
 
   return updateJson(host, executorsPath, (json) => {
@@ -125,18 +125,18 @@ async function updateExecutorJson(host: Tree, options: NormalizedSchema) {
     executors[options.name] = {
       implementation: `./${joinPathFragments(
         relative(options.projectRoot, options.directory),
-        'executor'
+        'executor',
       )}`,
       schema: `./${joinPathFragments(
         relative(options.projectRoot, options.directory),
-        'schema.json'
+        'schema.json',
       )}`,
       description: options.description,
     };
     if (options.includeHasher) {
       executors[options.name].hasher = `./${joinPathFragments(
         relative(options.projectRoot, options.directory),
-        'hasher'
+        'hasher',
       )}`;
     }
     json.executors = executors;
@@ -147,7 +147,7 @@ async function updateExecutorJson(host: Tree, options: NormalizedSchema) {
 
 async function normalizeOptions(
   tree: Tree,
-  options: Schema
+  options: Schema,
 ): Promise<NormalizedSchema> {
   const { project, artifactName, filePath, directory } =
     await determineArtifactNameAndDirectoryOptions(tree, {

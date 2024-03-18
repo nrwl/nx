@@ -12,12 +12,12 @@ export function readTsConfig(tsConfigPath: string): ts.ParsedCommandLine {
   }
   const readResult = tsModule.readConfigFile(
     tsConfigPath,
-    tsModule.sys.readFile
+    tsModule.sys.readFile,
   );
   return tsModule.parseJsonConfigFileContent(
     readResult.config,
     tsModule.sys,
-    dirname(tsConfigPath)
+    dirname(tsConfigPath),
   );
 }
 
@@ -33,7 +33,7 @@ export function getRootTsConfigPathInTree(tree: Tree): string | null {
 
 export function getRelativePathToRootTsConfig(
   tree: Tree,
-  targetPath: string
+  targetPath: string,
 ): string {
   return offsetFromRoot(targetPath) + getRootTsConfigPathInTree(tree);
 }
@@ -61,7 +61,7 @@ export function getRootTsConfigFileName(tree?: Tree): string | null {
 export function addTsConfigPath(
   tree: Tree,
   importPath: string,
-  lookupPaths: string[]
+  lookupPaths: string[],
 ) {
   updateJson(tree, getRootTsConfigPathInTree(tree), (json) => {
     json.compilerOptions ??= {};
@@ -70,7 +70,7 @@ export function addTsConfigPath(
 
     if (c.paths[importPath]) {
       throw new Error(
-        `You already have a library using the import path "${importPath}". Make sure to specify a unique one.`
+        `You already have a library using the import path "${importPath}". Make sure to specify a unique one.`,
       );
     }
 
@@ -92,12 +92,12 @@ export function readTsConfigPaths(tsConfig?: string | ts.ParsedCommandLine) {
     if (typeof tsConfig === 'string') {
       const configFile = tsModule.readConfigFile(
         tsConfig,
-        tsModule.sys.readFile
+        tsModule.sys.readFile,
       );
       config = tsModule.parseJsonConfigFileContent(
         configFile.config,
         tsModule.sys,
-        dirname(tsConfig)
+        dirname(tsConfig),
       );
     } else {
       config = tsConfig;

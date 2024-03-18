@@ -31,7 +31,7 @@ export const releasePublishCLIHandler = (args: PublishOptions) =>
  */
 export async function releasePublish(
   args: PublishOptions,
-  isCLI = false
+  isCLI = false,
 ): Promise<number> {
   /**
    * When used via the CLI, the args object will contain a __overrides_unparsed__ property that is
@@ -53,7 +53,7 @@ export async function releasePublish(
   const { error: configError, nxReleaseConfig } = await createNxReleaseConfig(
     projectGraph,
     await createProjectFileMapUsingProjectGraph(projectGraph),
-    nxJson.release
+    nxJson.release,
   );
   if (configError) {
     return await handleNxReleaseConfigError(configError);
@@ -67,7 +67,7 @@ export async function releasePublish(
     projectGraph,
     nxReleaseConfig,
     _args.projects,
-    _args.groups
+    _args.groups,
   );
   if (filterError) {
     output.error(filterError);
@@ -94,7 +94,7 @@ export async function releasePublish(
         nxJson,
         Array.from(releaseGroupToFilteredProjects.get(releaseGroup)),
         shouldExcludeTaskDependencies,
-        isCLI
+        isCLI,
       );
       if (status !== 0) {
         overallExitStatus = status || 1;
@@ -114,7 +114,7 @@ export async function releasePublish(
       nxJson,
       releaseGroup.projects,
       shouldExcludeTaskDependencies,
-      isCLI
+      isCLI,
     );
     if (status !== 0) {
       overallExitStatus = status || 1;
@@ -130,10 +130,10 @@ async function runPublishOnProjects(
   nxJson: NxJsonConfiguration,
   projectNames: string[],
   shouldExcludeTaskDependencies: boolean,
-  isCLI: boolean
+  isCLI: boolean,
 ): Promise<number> {
   const projectsToRun: ProjectGraphProjectNode[] = projectNames.map(
-    (projectName) => projectGraph.nodes[projectName]
+    (projectName) => projectGraph.nodes[projectName],
   );
 
   const overrides = createOverrides(args.__overrides_unparsed__);
@@ -171,7 +171,7 @@ async function runPublishOnProjects(
     const projectNamesWithTarget = projectsToRun
       .map((t) => t.name)
       .filter((projectName) =>
-        projectHasTarget(projectGraph.nodes[projectName], requiredTargetName)
+        projectHasTarget(projectGraph.nodes[projectName], requiredTargetName),
       );
     await generateGraph(
       {
@@ -183,13 +183,13 @@ async function runPublishOnProjects(
         projects: projectNamesWithTarget,
         file,
       },
-      projectNamesWithTarget
+      projectNamesWithTarget,
     );
     return 0;
   }
 
   const projectsWithTarget = projectsToRun.filter((project) =>
-    projectHasTarget(project, requiredTargetName)
+    projectHasTarget(project, requiredTargetName),
   );
 
   if (projectsWithTarget.length === 0) {
@@ -198,7 +198,7 @@ async function runPublishOnProjects(
         ...projectsToRun.map((p) => `- ${p.name}`),
         '',
         `This is usually caused by not having an appropriate plugin, such as "@nx/js" installed, which will add the appropriate "${requiredTargetName}" target for you automatically.`,
-      ].join('\n')}\n`
+      ].join('\n')}\n`,
     );
   }
 
@@ -220,7 +220,7 @@ async function runPublishOnProjects(
     {
       excludeTaskDependencies: shouldExcludeTaskDependencies,
       loadDotEnvFiles: true,
-    }
+    },
   );
 
   if (status !== 0) {
@@ -230,7 +230,7 @@ async function runPublishOnProjects(
     }
     // Throw an additional error for programmatic API usage
     throw new Error(
-      'One or more of the selected projects could not be published'
+      'One or more of the selected projects could not be published',
     );
   }
 

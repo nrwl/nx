@@ -11,7 +11,7 @@ export interface ReactNativeBuildOutput {
 
 export default async function* buildAndroidExecutor(
   options: ReactNativeBuildAndroidOptions,
-  context: ExecutorContext
+  context: ExecutorContext,
 ): AsyncGenerator<ReactNativeBuildOutput> {
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
@@ -24,7 +24,7 @@ export default async function* buildAndroidExecutor(
 function runCliBuild(
   workspaceRoot: string,
   projectRoot: string,
-  options: ReactNativeBuildAndroidOptions
+  options: ReactNativeBuildAndroidOptions,
 ) {
   return new Promise<ChildProcess>((res, reject) => {
     const childProcess = fork(
@@ -34,7 +34,7 @@ function runCliBuild(
         stdio: 'inherit',
         cwd: pathResolve(workspaceRoot, projectRoot),
         env: { ...process.env, RCT_METRO_PORT: options.port.toString() },
-      }
+      },
     );
 
     /**

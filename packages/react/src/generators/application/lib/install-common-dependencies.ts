@@ -15,7 +15,7 @@ import { NormalizedSchema } from '../schema';
 
 export function installCommonDependencies(
   host: Tree,
-  options: NormalizedSchema
+  options: NormalizedSchema,
 ) {
   if (options.skipPackageJson) {
     return () => {};

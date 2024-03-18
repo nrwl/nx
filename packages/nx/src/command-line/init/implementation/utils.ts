@@ -22,7 +22,7 @@ export function createNxJsonFile(
   repoRoot: string,
   topologicalTargets: string[],
   cacheableOperations: string[],
-  scriptOutputs: { [name: string]: string }
+  scriptOutputs: { [name: string]: string },
 ) {
   const nxJsonPath = joinPathFragments(repoRoot, 'nx.json');
   let nxJson = {} as Partial<NxJsonConfiguration> & { $schema: string };
@@ -96,7 +96,7 @@ function deduceDefaultBase() {
 
 export function addDepsToPackageJson(
   repoRoot: string,
-  additionalPackages?: string[]
+  additionalPackages?: string[],
 ) {
   const path = joinPathFragments(repoRoot, `package.json`);
   const json = readJsonFile(path);
@@ -123,7 +123,7 @@ export function updateGitIgnore(root: string) {
 
 export function runInstall(
   repoRoot: string,
-  pmc: PackageManagerCommands = getPackageManagerCommand()
+  pmc: PackageManagerCommands = getPackageManagerCommand(),
 ) {
   execSync(pmc.install, { stdio: [0, 1, 2], cwd: repoRoot });
 }
@@ -135,20 +135,20 @@ export function initCloud(
     | 'nx-init-cra'
     | 'nx-init-monorepo'
     | 'nx-init-nest'
-    | 'nx-init-npm-repo'
+    | 'nx-init-npm-repo',
 ) {
   runNxSync(
     `g nx:connect-to-nx-cloud --installationSource=${installationSource} --quiet --no-interactive`,
     {
       stdio: [0, 1, 2],
       cwd: repoRoot,
-    }
+    },
   );
 }
 
 export function addVsCodeRecommendedExtensions(
   repoRoot: string,
-  extensions: string[]
+  extensions: string[],
 ): void {
   const vsCodeExtensionsPath = join(repoRoot, '.vscode/extensions.json');
 
@@ -171,10 +171,10 @@ export function addVsCodeRecommendedExtensions(
 export function markRootPackageJsonAsNxProject(
   repoRoot: string,
   cacheableScripts: string[],
-  pmc: PackageManagerCommands
+  pmc: PackageManagerCommands,
 ) {
   const json = readJsonFile<PackageJson>(
-    joinPathFragments(repoRoot, `package.json`)
+    joinPathFragments(repoRoot, `package.json`),
   );
   json.nx = {};
   for (let script of cacheableScripts) {
@@ -202,7 +202,7 @@ export function printFinalMessage({
   bodyLines?: string[];
 }): void {
   const normalizedBodyLines = (bodyLines ?? []).map((l) =>
-    l.startsWith('- ') ? l : `- ${l}`
+    l.startsWith('- ') ? l : `- ${l}`,
   );
 
   output.success({

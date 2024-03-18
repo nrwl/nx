@@ -44,7 +44,7 @@ describe('Vite Plugin', () => {
       it('should build application', async () => {
         const myApp = uniq('my-app');
         runCLI(
-          `generate @nx/react:app ${myApp} --bundler=vite --directory=${myApp} --projectNameAndRootFormat=as-provided`
+          `generate @nx/react:app ${myApp} --bundler=vite --directory=${myApp} --projectNameAndRootFormat=as-provided`,
         );
         createFile(`${myApp}/public/hello.md`, `# Hello World`);
         runCLI(`build ${myApp}`);
@@ -62,7 +62,7 @@ describe('Vite Plugin', () => {
       beforeEach(() => {
         myApp = uniq('my-app');
         runCLI(
-          `generate @nx/web:app ${myApp} --bundler=vite --directory=${myApp} --projectNameAndRootFormat=as-provided`
+          `generate @nx/web:app ${myApp} --bundler=vite --directory=${myApp} --projectNameAndRootFormat=as-provided`,
         );
       });
       it('should build application', async () => {
@@ -100,7 +100,7 @@ describe('Vite Plugin', () => {
             scripts: {
               start: 'node server.js',
             },
-          })
+          }),
         );
         runCLI(`build ${myApp} --generatePackageJson`);
         expect(readFile(`dist/${myApp}/index.html`)).toBeDefined();
@@ -129,7 +129,7 @@ describe('Vite Plugin', () => {
             scripts: {
               start: 'node server.js',
             },
-          })
+          }),
         );
         runCLI(`build ${myApp} --generatePackageJson=false`);
         expect(readFile(`dist/${myApp}/index.html`)).toBeDefined();
@@ -154,22 +154,22 @@ describe('Vite Plugin', () => {
         packages: ['@nx/react'],
       });
       runCLI(
-        `generate @nx/react:app ${app} --bundler=vite --no-interactive  --directory=${app} --projectNameAndRootFormat=as-provided`
+        `generate @nx/react:app ${app} --bundler=vite --no-interactive  --directory=${app} --projectNameAndRootFormat=as-provided`,
       );
 
       // only this project will be directly used from dist
       runCLI(
-        `generate @nx/react:lib ${lib}-buildable --unitTestRunner=none --bundler=vite --importPath="@acme/buildable" --no-interactive --directory=${lib}-buildable --projectNameAndRootFormat=as-provided`
+        `generate @nx/react:lib ${lib}-buildable --unitTestRunner=none --bundler=vite --importPath="@acme/buildable" --no-interactive --directory=${lib}-buildable --projectNameAndRootFormat=as-provided`,
       );
 
       runCLI(
-        `generate @nx/react:lib ${lib} --unitTestRunner=none --bundler=none --importPath="@acme/non-buildable" --no-interactive --directory=${lib} --projectNameAndRootFormat=as-provided`
+        `generate @nx/react:lib ${lib} --unitTestRunner=none --bundler=none --importPath="@acme/non-buildable" --no-interactive --directory=${lib} --projectNameAndRootFormat=as-provided`,
       );
 
       // because the default js lib builds as cjs it cannot be loaded from dist
       // so the paths plugin should always resolve to the libs source
       runCLI(
-        `generate @nx/js:lib ${lib}-js --bundler=tsc --importPath="@acme/js-lib" --no-interactive  --directory=${lib}-js --projectNameAndRootFormat=as-provided`
+        `generate @nx/js:lib ${lib}-js --bundler=tsc --importPath="@acme/js-lib" --no-interactive  --directory=${lib}-js --projectNameAndRootFormat=as-provided`,
       );
       const buildableLibCmp = names(`${lib}-buildable`).className;
       const nonBuildableLibCmp = names(lib).className;
@@ -220,17 +220,17 @@ export default App;
       removeFile(`${lib}-buildable/package.json`);
 
       const buildFromSourceResults = runCLI(
-        `build ${app} --buildLibsFromSource=true`
+        `build ${app} --buildLibsFromSource=true`,
       );
       expect(buildFromSourceResults).toContain(
-        'Successfully ran target build for project'
+        'Successfully ran target build for project',
       );
 
       const noBuildFromSourceResults = runCLI(
-        `build ${app} --buildLibsFromSource=false`
+        `build ${app} --buildLibsFromSource=false`,
       );
       expect(noBuildFromSourceResults).toContain(
-        'Successfully ran target build for project'
+        'Successfully ran target build for project',
       );
     });
   });
@@ -247,14 +247,14 @@ export default App;
 
       const result = await runCLIAsync(`test ${lib}`);
       expect(result.combinedOutput).toContain(
-        `Successfully ran target test for project ${lib}`
+        `Successfully ran target test for project ${lib}`,
       );
 
       const nestedResults = await runCLIAsync(`test ${lib} --skip-nx-cache`, {
         cwd: `${tmpProjPath()}/libs/${lib}`,
       });
       expect(nestedResults.combinedOutput).toContain(
-        `Successfully ran target test for project ${lib}`
+        `Successfully ran target test for project ${lib}`,
       );
     }, 100_000);
 
@@ -298,7 +298,7 @@ export default App;
 
       const results = runCLI(`test ${lib} --coverage`, { silenceError: true });
       expect(results).toContain(
-        `Running target test for project ${lib} failed`
+        `Running target test for project ${lib} failed`,
       );
       expect(results).toContain(`ERROR: Coverage`);
       expect(directoryExists(coverageDir)).toBeTruthy();
@@ -352,17 +352,17 @@ export default defineConfig({
 
       expect(directoryExists(projectRoot)).toBeTruthy();
       expect(results).toContain(
-        `Successfully ran target test for project ${lib}`
+        `Successfully ran target test for project ${lib}`,
       );
       expect(results).toContain(`JUNIT report written`);
     }, 100_000);
 
     it('should be able to run tests with inSourceTests set to true', async () => {
       runCLI(
-        `generate @nx/react:lib ${lib} --unitTestRunner=vitest --inSourceTests`
+        `generate @nx/react:lib ${lib} --unitTestRunner=vitest --inSourceTests`,
       );
       expect(
-        exists(tmpProjPath(`libs/${lib}/src/lib/${lib}.spec.tsx`))
+        exists(tmpProjPath(`libs/${lib}/src/lib/${lib}.spec.tsx`)),
       ).toBeFalsy();
 
       updateFile(`libs/${lib}/src/lib/${lib}.tsx`, (content) => {
@@ -399,7 +399,7 @@ export default defineConfig({
           type: 'module',
           version: '1.0.0',
           main: 'index.js',
-        })
+        }),
       );
       updateFile(
         'foo/index.js',
@@ -411,7 +411,7 @@ export default defineConfig({
               console.log('Foo plugin');
             }
           }
-        }`
+        }`,
       );
       updateJson('package.json', (json) => {
         json.devDependencies['@acme/foo'] = 'file:./foo';
@@ -421,7 +421,7 @@ export default defineConfig({
 
       const rootApp = uniq('root');
       runCLI(
-        `generate @nx/react:app ${rootApp} --rootProject --bundler=vite --unitTestRunner=none --e2eTestRunner=none --style=css --no-interactive`
+        `generate @nx/react:app ${rootApp} --rootProject --bundler=vite --unitTestRunner=none --e2eTestRunner=none --style=css --no-interactive`,
       );
       updateJson(`package.json`, (json) => {
         // This allows us to use ESM-only packages in vite.config.ts.
@@ -443,7 +443,7 @@ export default defineConfig({
             host: 'localhost',
           },
           plugins: [react(), nxViteTsPaths(), fooPlugin()],
-        });`
+        });`,
       );
 
       runCLI(`build ${rootApp}`);

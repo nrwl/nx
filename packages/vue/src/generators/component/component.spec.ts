@@ -66,8 +66,8 @@ describe('component', () => {
     expect(
       appTree.read(
         `${libName}/src/foo/bar/hello-world/hello-world.vue`,
-        'utf-8'
-      )
+        'utf-8',
+      ),
     ).toContain('HelloWorld');
   });
 
@@ -81,8 +81,8 @@ describe('component', () => {
     expect(
       appTree.read(
         `${libName}/src/foo/bar-baz/hello-world/hello-world.vue`,
-        'utf-8'
-      )
+        'utf-8',
+      ),
     ).toContain('HelloWorld');
   });
 
@@ -93,10 +93,10 @@ describe('component', () => {
     });
 
     expect(
-      appTree.read(`${appName}/src/app/hello/hello.vue`, 'utf-8')
+      appTree.read(`${appName}/src/app/hello/hello.vue`, 'utf-8'),
     ).toContain('Hello');
     expect(
-      appTree.exists(`${appName}/src/app/hello/hello.spec.ts`)
+      appTree.exists(`${appName}/src/app/hello/hello.spec.ts`),
     ).toBeTruthy();
   });
 
@@ -134,10 +134,10 @@ describe('component', () => {
         directory: 'foo/bar',
       });
       expect(
-        appTree.read(`${libName}/src/foo/bar/hello/Hello.vue`, 'utf-8')
+        appTree.read(`${libName}/src/foo/bar/hello/Hello.vue`, 'utf-8'),
       ).toContain('Hello');
       expect(
-        appTree.exists(`${libName}/src/foo/bar/hello/Hello.spec.ts`)
+        appTree.exists(`${libName}/src/foo/bar/hello/Hello.spec.ts`),
       ).toBeTruthy();
     });
   });
@@ -151,10 +151,10 @@ describe('component', () => {
         pascalCaseDirectory: true,
       });
       expect(
-        appTree.exists(`${libName}/src/lib/HelloWorld/HelloWorld.vue`)
+        appTree.exists(`${libName}/src/lib/HelloWorld/HelloWorld.vue`),
       ).toBeTruthy();
       expect(
-        appTree.exists(`${libName}/src/lib/HelloWorld/HelloWorld.spec.ts`)
+        appTree.exists(`${libName}/src/lib/HelloWorld/HelloWorld.spec.ts`),
       ).toBeTruthy();
     });
   });

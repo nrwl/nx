@@ -3,7 +3,7 @@ import type { NgRxGeneratorOptions } from '../schema';
 
 export function validateOptions(
   tree: Tree,
-  options: NgRxGeneratorOptions
+  options: NgRxGeneratorOptions,
 ): void {
   if (!options.module && !options.parent) {
     throw new Error('Please provide a value for "--parent"!');

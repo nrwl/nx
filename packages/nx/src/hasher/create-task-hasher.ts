@@ -11,7 +11,7 @@ import {
 export function createTaskHasher(
   projectGraph: ProjectGraph,
   nxJson: NxJsonConfiguration,
-  runnerOptions?: any
+  runnerOptions?: any,
 ): TaskHasher {
   if (daemonClient.enabled()) {
     return new DaemonBasedTaskHasher(daemonClient, runnerOptions);
@@ -23,7 +23,7 @@ export function createTaskHasher(
       projectGraph,
       nxJson,
       rustReferences,
-      runnerOptions
+      runnerOptions,
     );
   }
 }

@@ -20,7 +20,7 @@ describe('change-vite-ts-paths-plugin migration', () => {
     await updateBuildDir(tree);
     expect(tree.read('apps/demo/vite.config.ts', 'utf-8')).toMatchSnapshot();
     expect(
-      readProjectConfiguration(tree, 'demo').targets.build.options.outputPath
+      readProjectConfiguration(tree, 'demo').targets.build.options.outputPath,
     ).toBe('dist/apps/demo');
   });
 
@@ -29,7 +29,7 @@ describe('change-vite-ts-paths-plugin migration', () => {
     await updateBuildDir(tree);
     expect(tree.read('demo2/vite.config.ts', 'utf-8')).toMatchSnapshot();
     expect(
-      readProjectConfiguration(tree, 'demo2').targets.build.options.outputPath
+      readProjectConfiguration(tree, 'demo2').targets.build.options.outputPath,
     ).toBe('dist/demo2');
   });
 
@@ -38,7 +38,7 @@ describe('change-vite-ts-paths-plugin migration', () => {
     await updateBuildDir(tree);
     expect(tree.read('demo3/vite.config.ts', 'utf-8')).toMatchSnapshot();
     expect(
-      readProjectConfiguration(tree, 'demo3').targets.build.options.outputPath
+      readProjectConfiguration(tree, 'demo3').targets.build.options.outputPath,
     ).toBe('dist/demo3');
   });
 
@@ -47,7 +47,7 @@ describe('change-vite-ts-paths-plugin migration', () => {
     await updateBuildDir(tree);
     expect(tree.read('demo4/vite.config.ts', 'utf-8')).toMatchSnapshot();
     expect(
-      readProjectConfiguration(tree, 'demo4').targets.build.options.outputPath
+      readProjectConfiguration(tree, 'demo4').targets.build.options.outputPath,
     ).toBe('dist/demo4');
   });
 
@@ -56,7 +56,7 @@ describe('change-vite-ts-paths-plugin migration', () => {
     await updateBuildDir(tree);
     expect(tree.read('demo4/vite.config.ts', 'utf-8')).toMatchSnapshot();
     expect(
-      readProjectConfiguration(tree, 'demo4').targets.build.options.outputPath
+      readProjectConfiguration(tree, 'demo4').targets.build.options.outputPath,
     ).toBe('dist/demo4');
   });
 
@@ -67,8 +67,8 @@ describe('change-vite-ts-paths-plugin migration', () => {
     expect(tree.read('demo5/vite.config.ts', 'utf-8')).toMatchSnapshot();
     expect(logger.warn).toHaveBeenCalledWith(
       expect.stringContaining(
-        `Could not migrate your demo5/vite.config.ts file.`
-      )
+        `Could not migrate your demo5/vite.config.ts file.`,
+      ),
     );
   });
 });
@@ -144,7 +144,7 @@ export default defineConfig({
   },
 });
 
-`
+`,
   );
 }
 
@@ -213,7 +213,7 @@ export default defineConfig({
   },
 });
 
-`
+`,
   );
 }
 
@@ -288,7 +288,7 @@ export default defineConfig({
   },
 });
 
-`
+`,
   );
 }
 
@@ -355,7 +355,7 @@ function addProject4(tree: Tree, name: string) {
         },
       };
     });    
-`
+`,
   );
 }
 
@@ -388,6 +388,6 @@ function addProject5(tree: Tree, name: string) {
     `${name}/vite.config.ts`,
     `
  // some invalid config   
-`
+`,
   );
 }

@@ -30,14 +30,14 @@ import { ConfigurationGeneratorSchema } from './schema';
 
 export function configurationGenerator(
   tree: Tree,
-  options: ConfigurationGeneratorSchema
+  options: ConfigurationGeneratorSchema,
 ) {
   return configurationGeneratorInternal(tree, { addPlugin: false, ...options });
 }
 
 export async function configurationGeneratorInternal(
   tree: Tree,
-  options: ConfigurationGeneratorSchema
+  options: ConfigurationGeneratorSchema,
 ) {
   const nxJson = readNxJson(tree);
   options.addPlugin ??=
@@ -49,12 +49,12 @@ export async function configurationGeneratorInternal(
       skipFormat: true,
       skipPackageJson: options.skipPackageJson,
       addPlugin: options.addPlugin,
-    })
+    }),
   );
   const projectConfig = readProjectConfiguration(tree, options.project);
 
   const hasTsConfig = tree.exists(
-    joinPathFragments(projectConfig.root, 'tsconfig.json')
+    joinPathFragments(projectConfig.root, 'tsconfig.json'),
   );
 
   const offsetFromProjectRoot = offsetFromRoot(projectConfig.root);
@@ -91,15 +91,15 @@ export async function configurationGeneratorInternal(
           ],
         },
         null,
-        2
-      )
+        2,
+      ),
     );
   }
 
   const hasPlugin = readNxJson(tree).plugins?.some((p) =>
     typeof p === 'string'
       ? p === '@nx/playwright/plugin'
-      : p.plugin === '@nx/playwright/plugin'
+      : p.plugin === '@nx/playwright/plugin',
   );
 
   if (!hasPlugin) {
@@ -117,13 +117,13 @@ export async function configurationGeneratorInternal(
       setParserOptionsProject: options.setParserOptionsProject,
       rootProject: options.rootProject ?? projectConfig.root === '.',
       addPlugin: options.addPlugin,
-    })
+    }),
   );
 
   if (options.js) {
     const { ModuleKind } = ensurePackage(
       'typescript',
-      typescriptVersion
+      typescriptVersion,
     ) as typeof import('typescript');
     toJS(tree, { extension: '.cjs', module: ModuleKind.CommonJS });
   }
@@ -138,8 +138,8 @@ export async function configurationGeneratorInternal(
         {
           // required since used in playwright config
           '@nx/devkit': nxVersion,
-        }
-      )
+        },
+      ),
     );
   }
 

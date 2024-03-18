@@ -74,11 +74,11 @@ function parsePackageLockFile(lockFileContent: string, lockFileHash: string) {
 
 export function getNpmLockfileNodes(
   lockFileContent: string,
-  lockFileHash: string
+  lockFileHash: string,
 ) {
   const data = parsePackageLockFile(
     lockFileContent,
-    lockFileHash
+    lockFileHash,
   ) as NpmLockFile;
 
   // we use key => node map to avoid duplicate work when parsing keys
@@ -88,11 +88,11 @@ export function getNpmLockfileNodes(
 export function getNpmLockfileDependencies(
   lockFileContent: string,
   lockFileHash: string,
-  ctx: CreateDependenciesContext
+  ctx: CreateDependenciesContext,
 ) {
   const data = parsePackageLockFile(
     lockFileContent,
-    lockFileHash
+    lockFileHash,
   ) as NpmLockFile;
 
   return getDependencies(data, keyMap, ctx);
@@ -100,7 +100,7 @@ export function getNpmLockfileDependencies(
 
 function getNodes(
   data: NpmLockFile,
-  keyMap: Map<string, ProjectGraphExternalNode>
+  keyMap: Map<string, ProjectGraphExternalNode>,
 ) {
   const nodes: Map<string, Map<string, ProjectGraphExternalNode>> = new Map();
 
@@ -127,9 +127,9 @@ function getNodes(
                 depSnapshot,
                 `${snapshot.version.slice(5)}/node_modules/${depName}`,
                 nodes,
-                keyMap
+                keyMap,
               );
-            }
+            },
           );
         }
       } else {
@@ -138,7 +138,7 @@ function getNodes(
           snapshot,
           `node_modules/${packageName}`,
           nodes,
-          keyMap
+          keyMap,
         );
       }
     });
@@ -166,7 +166,7 @@ function addV1Node(
   snapshot: NpmDependencyV1,
   path: string,
   nodes: Map<string, Map<string, ProjectGraphExternalNode>>,
-  keyMap: Map<string, ProjectGraphExternalNode>
+  keyMap: Map<string, ProjectGraphExternalNode>,
 ) {
   createNode(packageName, snapshot.version, path, nodes, keyMap, snapshot);
 
@@ -178,7 +178,7 @@ function addV1Node(
         depSnapshot,
         `${path}/node_modules/${depName}`,
         nodes,
-        keyMap
+        keyMap,
       );
     });
   }
@@ -190,7 +190,7 @@ function createNode(
   key: string,
   nodes: Map<string, Map<string, ProjectGraphExternalNode>>,
   keyMap: Map<string, ProjectGraphExternalNode>,
-  snapshot: NpmDependencyV3 | NpmDependencyV1
+  snapshot: NpmDependencyV3 | NpmDependencyV1,
 ) {
   const existingNode = nodes.get(packageName)?.get(version);
   if (existingNode) {
@@ -210,8 +210,8 @@ function createNode(
           snapshot.resolved
             ? [snapshot.resolved]
             : version
-            ? [packageName, version]
-            : [packageName]
+              ? [packageName, version]
+              : [packageName],
         ),
     },
   };
@@ -247,7 +247,7 @@ function findV3Version(snapshot: NpmDependencyV3, packageName: string): string {
 function getDependencies(
   data: NpmLockFile,
   keyMap: Map<string, ProjectGraphExternalNode>,
-  ctx: CreateDependenciesContext
+  ctx: CreateDependenciesContext,
 ): RawProjectGraphDependency[] {
   const dependencies: RawProjectGraphDependency[] = [];
   if (data.lockfileVersion > 1) {
@@ -285,7 +285,7 @@ function getDependencies(
         snapshot,
         dependencies,
         keyMap,
-        ctx
+        ctx,
       );
     });
   }
@@ -296,7 +296,7 @@ function findTarget(
   sourcePath: string,
   keyMap: Map<string, ProjectGraphExternalNode>,
   targetName: string,
-  versionRange: string
+  versionRange: string,
 ): ProjectGraphExternalNode {
   if (sourcePath && !sourcePath.endsWith('/')) {
     sourcePath = `${sourcePath}/`;
@@ -320,7 +320,7 @@ function findTarget(
     sourcePath.split('node_modules/').slice(0, -1).join('node_modules/'),
     keyMap,
     targetName,
-    versionRange
+    versionRange,
   );
 }
 
@@ -329,7 +329,7 @@ function addV1NodeDependencies(
   snapshot: NpmDependencyV1,
   dependencies: RawProjectGraphDependency[],
   keyMap: Map<string, ProjectGraphExternalNode>,
-  ctx: CreateDependenciesContext
+  ctx: CreateDependenciesContext,
 ) {
   if (keyMap.has(path) && snapshot.requires) {
     const source = keyMap.get(path).name;
@@ -354,7 +354,7 @@ function addV1NodeDependencies(
         depSnapshot,
         dependencies,
         keyMap,
-        ctx
+        ctx,
       );
     });
   }
@@ -379,7 +379,7 @@ function addV1NodeDependencies(
 export function stringifyNpmLockfile(
   graph: ProjectGraph,
   rootLockFileContent: string,
-  packageJson: NormalizedPackageJson
+  packageJson: NormalizedPackageJson,
 ): string {
   const rootLockFile = JSON.parse(rootLockFileContent) as NpmLockFile;
   const { lockfileVersion } = JSON.parse(rootLockFileContent) as NpmLockFile;
@@ -406,7 +406,7 @@ export function stringifyNpmLockfile(
 
 function mapV3Snapshots(
   mappedPackages: MappedPackage[],
-  packageJson: NormalizedPackageJson
+  packageJson: NormalizedPackageJson,
 ): Record<string, NpmDependencyV3> {
   const output: Record<string, NpmDependencyV3> = {};
   output[''] = packageJson;
@@ -419,7 +419,7 @@ function mapV3Snapshots(
 }
 
 function mapV1Snapshots(
-  mappedPackages: MappedPackage[]
+  mappedPackages: MappedPackage[],
 ): Record<string, NpmDependencyV1> {
   const output: Record<string, NpmDependencyV1> = {};
 
@@ -432,7 +432,7 @@ function mapV1Snapshots(
 
 function getPackageParent(
   path: string,
-  packages: Record<string, NpmDependencyV1>
+  packages: Record<string, NpmDependencyV1>,
 ): Record<string, NpmDependencyV1> {
   const segments = path.split(/\/?node_modules\//).slice(1, -1);
 
@@ -462,7 +462,7 @@ type MappedPackage = {
 
 function mapSnapshots(
   rootLockFile: NpmLockFile,
-  graph: ProjectGraph
+  graph: ProjectGraph,
 ): MappedPackage[] {
   const nestedNodes = new Set<ProjectGraphExternalNode>();
   const visitedNodes = new Map<ProjectGraphExternalNode, Set<string>>();
@@ -476,7 +476,7 @@ function mapSnapshots(
       const mappedPackage = mapPackage(
         rootLockFile,
         node.data.packageName,
-        node.data.version
+        node.data.version,
       );
       remappedPackages.set(mappedPackage.path, mappedPackage);
       visitedNodes.set(node, new Set([mappedPackage.path]));
@@ -495,7 +495,7 @@ function mapSnapshots(
       nestedNodes,
       visitedNodes,
       visitedPaths,
-      rootLockFile
+      rootLockFile,
     );
     // initially we naively map package paths to topParent/../parent/child
     // but some of those should be nested higher up the tree
@@ -510,7 +510,7 @@ function mapPackage(
   rootLockFile: NpmLockFile,
   packageName: string,
   version: string,
-  parentPath = ''
+  parentPath = '',
 ): MappedPackage {
   const lockfileVersion = rootLockFile.lockfileVersion;
 
@@ -519,14 +519,14 @@ function mapPackage(
     valueV1 = findMatchingPackageV1(
       rootLockFile.dependencies,
       packageName,
-      version
+      version,
     );
   }
   if (lockfileVersion > 1) {
     valueV3 = findMatchingPackageV3(
       rootLockFile.packages,
       packageName,
-      version
+      version,
     );
   }
 
@@ -544,7 +544,7 @@ function nestMappedPackages(
   nestedNodes: Set<ProjectGraphExternalNode>,
   visitedNodes: Map<ProjectGraphExternalNode, Set<string>>,
   visitedPaths: Set<string>,
-  rootLockFile: NpmLockFile
+  rootLockFile: NpmLockFile,
 ) {
   const initialSize = nestedNodes.size;
 
@@ -563,7 +563,7 @@ function nestMappedPackages(
             rootLockFile,
             node.data.packageName,
             node.data.version,
-            path + '/'
+            path + '/',
           );
           result.set(mappedPackage.path, mappedPackage);
           if (visitedNodes.has(node)) {
@@ -586,7 +586,7 @@ function nestMappedPackages(
       [
         'Following packages could not be mapped to the NPM lockfile:',
         ...Array.from(nestedNodes).map((n) => `- ${n.name}`),
-      ].join('\n')
+      ].join('\n'),
     );
   } else {
     nestMappedPackages(
@@ -595,7 +595,7 @@ function nestMappedPackages(
       nestedNodes,
       visitedNodes,
       visitedPaths,
-      rootLockFile
+      rootLockFile,
     );
   }
 }
@@ -616,7 +616,7 @@ function sortMappedPackagesPaths(mappedPackages: Map<string, MappedPackage>) {
 }
 
 function elevateNestedPaths(
-  remappedPackages: Map<string, MappedPackage>
+  remappedPackages: Map<string, MappedPackage>,
 ): MappedPackage[] {
   const result = new Map<string, MappedPackage>();
   const sortedPaths = sortMappedPackagesPaths(remappedPackages);
@@ -668,7 +668,7 @@ function elevateNestedPaths(
 function findMatchingPackageV3(
   packages: Record<string, NpmDependencyV3>,
   name: string,
-  version: string
+  version: string,
 ) {
   for (const [key, { dev, peer, ...snapshot }] of Object.entries(packages)) {
     if (key.endsWith(`node_modules/${name}`)) {
@@ -688,7 +688,7 @@ function findMatchingPackageV3(
 function findMatchingPackageV1(
   packages: Record<string, NpmDependencyV1>,
   name: string,
-  version: string
+  version: string,
 ) {
   for (const [
     packageName,

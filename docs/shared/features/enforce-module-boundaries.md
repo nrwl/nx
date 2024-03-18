@@ -30,9 +30,9 @@ And configure the rule in your root `.eslintrc.json` file:
       "error",
       {
         /* options */
-      }
-    ]
-  }
+      },
+    ],
+  },
 }
 ```
 
@@ -49,8 +49,8 @@ First, use your project configuration (in `project.json` or `package.json`) to a
 {
   // ... more project configuration here
   "nx": {
-    "tags": ["scope:client"]
-  }
+    "tags": ["scope:client"],
+  },
 }
 ```
 
@@ -58,8 +58,8 @@ First, use your project configuration (in `project.json` or `package.json`) to a
 {
   // ... more project configuration here
   "nx": {
-    "tags": ["scope:admin"]
-  }
+    "tags": ["scope:admin"],
+  },
 }
 ```
 
@@ -67,8 +67,8 @@ First, use your project configuration (in `project.json` or `package.json`) to a
 {
   // ... more project configuration here
   "nx": {
-    "tags": ["scope:shared"]
-  }
+    "tags": ["scope:shared"],
+  },
 }
 ```
 
@@ -78,21 +78,21 @@ First, use your project configuration (in `project.json` or `package.json`) to a
 ```jsonc {% fileName="client/project.json" %}
 {
   // ... more project configuration here
-  "tags": ["scope:client"]
+  "tags": ["scope:client"],
 }
 ```
 
 ```jsonc {% fileName="admin/project.json" %}
 {
   // ... more project configuration here
-  "tags": ["scope:admin"]
+  "tags": ["scope:admin"],
 }
 ```
 
 ```jsonc {% fileName="utils/project.json" %}
 {
   // ... more project configuration here
-  "tags": ["scope:shared"]
+  "tags": ["scope:shared"],
 }
 ```
 
@@ -116,19 +116,19 @@ Next, you should update your root lint configuration:
       "depConstraints": [
         {
           "sourceTag": "scope:shared",
-          "onlyDependOnLibsWithTags": ["scope:shared"]
+          "onlyDependOnLibsWithTags": ["scope:shared"],
         },
         {
           "sourceTag": "scope:admin",
-          "onlyDependOnLibsWithTags": ["scope:shared", "scope:admin"]
+          "onlyDependOnLibsWithTags": ["scope:shared", "scope:admin"],
         },
         {
           "sourceTag": "scope:client",
-          "onlyDependOnLibsWithTags": ["scope:shared", "scope:client"]
-        }
-      ]
-    }
-  ]
+          "onlyDependOnLibsWithTags": ["scope:shared", "scope:client"],
+        },
+      ],
+    },
+  ],
 
   // ... more ESLint config here
 }
@@ -154,7 +154,7 @@ Example: projects with any tags (including untagged) can depend on any other pro
 ```jsonc
 {
   "sourceTag": "*",
-  "onlyDependOnLibsWithTags": ["*"]
+  "onlyDependOnLibsWithTags": ["*"],
 }
 ```
 
@@ -165,7 +165,7 @@ Example: projects tagged with `scope:client` can only depend on projects tagged 
 ```jsonc
 {
   "sourceTag": "scope:client",
-  "onlyDependOnLibsWithTags": ["scope:util"]
+  "onlyDependOnLibsWithTags": ["scope:util"],
 }
 ```
 

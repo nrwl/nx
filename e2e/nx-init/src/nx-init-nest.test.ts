@@ -33,7 +33,7 @@ describe('nx init (for NestCLI - legacy)', () => {
         encoding: 'utf-8',
         env: process.env,
         stdio: 'pipe',
-      }
+      },
     );
 
     const output = execSync(
@@ -45,7 +45,7 @@ describe('nx init (for NestCLI - legacy)', () => {
         encoding: 'utf-8',
         env: process.env,
         stdio: 'pipe',
-      }
+      },
     );
 
     expect(output).toContain('Enabled computation caching');
@@ -60,7 +60,7 @@ describe('nx init (for NestCLI - legacy)', () => {
 
     runCLI('build', cliOptions);
     expect(
-      exists(`${projectRoot}/dist/${projectName}/src/main.js`)
+      exists(`${projectRoot}/dist/${projectName}/src/main.js`),
     ).toBeTruthy();
 
     // run build again for cache

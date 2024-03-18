@@ -24,10 +24,9 @@ describe('NPM lock file utility', () => {
   });
 
   describe('next.js generated', () => {
-    const rootLockFile = require(joinPathFragments(
-      __dirname,
-      '__fixtures__/nextjs/package-lock.json'
-    ));
+    const rootLockFile = require(
+      joinPathFragments(__dirname, '__fixtures__/nextjs/package-lock.json'),
+    );
 
     let graph: ProjectGraph;
 
@@ -35,7 +34,7 @@ describe('NPM lock file utility', () => {
       const hash = uniq('mock-hash');
       const externalNodes = getNpmLockfileNodes(
         JSON.stringify(rootLockFile),
-        hash
+        hash,
       );
       const ctx: CreateDependenciesContext = {
         projects: {},
@@ -59,7 +58,7 @@ describe('NPM lock file utility', () => {
       const dependencies = getNpmLockfileDependencies(
         JSON.stringify(rootLockFile),
         hash,
-        ctx
+        ctx,
       );
 
       const builder = new ProjectGraphBuilder(pg);
@@ -68,7 +67,7 @@ describe('NPM lock file utility', () => {
           dep.source,
           dep.target,
           dep.type,
-          'sourceFile' in dep ? dep.sourceFile : null
+          'sourceFile' in dep ? dep.sourceFile : null,
         );
       }
       graph = builder.getUpdatedProjectGraph();
@@ -79,20 +78,21 @@ describe('NPM lock file utility', () => {
     });
 
     it('should prune lock file', async () => {
-      const appPackageJson = require(joinPathFragments(
-        __dirname,
-        '__fixtures__/nextjs/app/package.json'
-      ));
-      const appLockFile = require(joinPathFragments(
-        __dirname,
-        '__fixtures__/nextjs/app/package-lock.json'
-      ));
+      const appPackageJson = require(
+        joinPathFragments(__dirname, '__fixtures__/nextjs/app/package.json'),
+      );
+      const appLockFile = require(
+        joinPathFragments(
+          __dirname,
+          '__fixtures__/nextjs/app/package-lock.json',
+        ),
+      );
 
       // this is original generated lock file
       const hash = uniq('mock-hash');
       const externalNodes = getNpmLockfileNodes(
         JSON.stringify(appLockFile),
-        hash
+        hash,
       );
       const pg = {
         nodes: {},
@@ -116,7 +116,7 @@ describe('NPM lock file utility', () => {
       const dependencies = getNpmLockfileDependencies(
         JSON.stringify(appLockFile),
         hash,
-        ctx
+        ctx,
       );
 
       const builder = new ProjectGraphBuilder(pg);
@@ -125,7 +125,7 @@ describe('NPM lock file utility', () => {
           dep.source,
           dep.target,
           dep.type,
-          'sourceFile' in dep ? dep.sourceFile : null
+          'sourceFile' in dep ? dep.sourceFile : null,
         );
       }
       const appGraph = builder.getUpdatedProjectGraph();
@@ -134,7 +134,7 @@ describe('NPM lock file utility', () => {
       // this is our pruned lock file structure
       const prunedGraph = pruneProjectGraph(graph, appPackageJson);
       expect(Object.keys(prunedGraph.externalNodes).length).toEqual(
-        Object.keys(appGraph.externalNodes).length
+        Object.keys(appGraph.externalNodes).length,
       );
 
       const keys = new Set(Object.keys(prunedGraph.externalNodes));
@@ -169,15 +169,17 @@ describe('NPM lock file utility', () => {
     });
 
     it('should parse v1', async () => {
-      const rootLockFile = require(joinPathFragments(
-        __dirname,
-        '__fixtures__/auxiliary-packages/package-lock.json'
-      ));
+      const rootLockFile = require(
+        joinPathFragments(
+          __dirname,
+          '__fixtures__/auxiliary-packages/package-lock.json',
+        ),
+      );
 
       const hash = uniq('mock-hash');
       const externalNodes = getNpmLockfileNodes(
         JSON.stringify(rootLockFile),
-        hash
+        hash,
       );
       const pg = {
         nodes: {},
@@ -201,7 +203,7 @@ describe('NPM lock file utility', () => {
       const dependencies = getNpmLockfileDependencies(
         JSON.stringify(rootLockFile),
         hash,
-        ctx
+        ctx,
       );
 
       const builder = new ProjectGraphBuilder(pg);
@@ -210,7 +212,7 @@ describe('NPM lock file utility', () => {
           dep.source,
           dep.target,
           dep.type,
-          'sourceFile' in dep ? dep.sourceFile : null
+          'sourceFile' in dep ? dep.sourceFile : null,
         );
       }
       const graph = builder.getUpdatedProjectGraph();
@@ -265,15 +267,17 @@ describe('NPM lock file utility', () => {
     });
 
     it('should parse v3', async () => {
-      const rootV2LockFile = require(joinPathFragments(
-        __dirname,
-        '__fixtures__/auxiliary-packages/package-lock-v2.json'
-      ));
+      const rootV2LockFile = require(
+        joinPathFragments(
+          __dirname,
+          '__fixtures__/auxiliary-packages/package-lock-v2.json',
+        ),
+      );
 
       const hash = uniq('mock-hash');
       const externalNodes = getNpmLockfileNodes(
         JSON.stringify(rootV2LockFile),
-        hash
+        hash,
       );
       const pg = {
         nodes: {},
@@ -297,7 +301,7 @@ describe('NPM lock file utility', () => {
       const dependencies = getNpmLockfileDependencies(
         JSON.stringify(rootV2LockFile),
         hash,
-        ctx
+        ctx,
       );
 
       const builder = new ProjectGraphBuilder(pg);
@@ -306,7 +310,7 @@ describe('NPM lock file utility', () => {
           dep.source,
           dep.target,
           dep.type,
-          'sourceFile' in dep ? dep.sourceFile : null
+          'sourceFile' in dep ? dep.sourceFile : null,
         );
       }
       const graph = builder.getUpdatedProjectGraph();
@@ -362,7 +366,7 @@ describe('NPM lock file utility', () => {
 
     function cleanupTypes(
       collection: Record<string, any>,
-      recursive?: boolean
+      recursive?: boolean,
     ) {
       Object.values(collection).forEach((p: any) => {
         delete p.peer;
@@ -375,14 +379,18 @@ describe('NPM lock file utility', () => {
     }
 
     it('should prune v2', async () => {
-      const rootV2LockFile = require(joinPathFragments(
-        __dirname,
-        '__fixtures__/auxiliary-packages/package-lock-v2.json'
-      ));
-      const prunedV2LockFile = require(joinPathFragments(
-        __dirname,
-        '__fixtures__/auxiliary-packages/package-lock-v2.pruned.json'
-      ));
+      const rootV2LockFile = require(
+        joinPathFragments(
+          __dirname,
+          '__fixtures__/auxiliary-packages/package-lock-v2.json',
+        ),
+      );
+      const prunedV2LockFile = require(
+        joinPathFragments(
+          __dirname,
+          '__fixtures__/auxiliary-packages/package-lock-v2.pruned.json',
+        ),
+      );
       const normalizedPackageJson = {
         name: 'test',
         version: '0.0.0',
@@ -409,7 +417,7 @@ describe('NPM lock file utility', () => {
       const hash = uniq('mock-hash');
       const externalNodes = getNpmLockfileNodes(
         JSON.stringify(rootV2LockFile),
-        hash
+        hash,
       );
       const pg = {
         nodes: {},
@@ -433,7 +441,7 @@ describe('NPM lock file utility', () => {
       const dependencies = getNpmLockfileDependencies(
         JSON.stringify(rootV2LockFile),
         hash,
-        ctx
+        ctx,
       );
 
       const builder = new ProjectGraphBuilder(pg);
@@ -442,7 +450,7 @@ describe('NPM lock file utility', () => {
           dep.source,
           dep.target,
           dep.type,
-          'sourceFile' in dep ? dep.sourceFile : null
+          'sourceFile' in dep ? dep.sourceFile : null,
         );
       }
       const graph = builder.getUpdatedProjectGraph();
@@ -451,7 +459,7 @@ describe('NPM lock file utility', () => {
       const result = stringifyNpmLockfile(
         prunedGraph,
         JSON.stringify(rootV2LockFile),
-        normalizedPackageJson
+        normalizedPackageJson,
       );
 
       expect(result).toEqual(JSON.stringify(prunedV2LockFile, null, 2));
@@ -526,15 +534,17 @@ describe('NPM lock file utility', () => {
     });
 
     it('should parse v1', async () => {
-      const rootLockFile = require(joinPathFragments(
-        __dirname,
-        '__fixtures__/duplicate-package/package-lock-v1.json'
-      ));
+      const rootLockFile = require(
+        joinPathFragments(
+          __dirname,
+          '__fixtures__/duplicate-package/package-lock-v1.json',
+        ),
+      );
 
       const hash = uniq('mock-hash');
       const externalNodes = getNpmLockfileNodes(
         JSON.stringify(rootLockFile),
-        hash
+        hash,
       );
       const pg = {
         nodes: {},
@@ -558,7 +568,7 @@ describe('NPM lock file utility', () => {
       const dependencies = getNpmLockfileDependencies(
         JSON.stringify(rootLockFile),
         hash,
-        ctx
+        ctx,
       );
 
       const builder = new ProjectGraphBuilder(pg);
@@ -567,7 +577,7 @@ describe('NPM lock file utility', () => {
           dep.source,
           dep.target,
           dep.type,
-          'sourceFile' in dep ? dep.sourceFile : null
+          'sourceFile' in dep ? dep.sourceFile : null,
         );
       }
       const graph = builder.getUpdatedProjectGraph();
@@ -575,15 +585,17 @@ describe('NPM lock file utility', () => {
       expect(Object.keys(graph.externalNodes).length).toEqual(369);
     });
     it('should parse v3', async () => {
-      const rootLockFile = require(joinPathFragments(
-        __dirname,
-        '__fixtures__/duplicate-package/package-lock.json'
-      ));
+      const rootLockFile = require(
+        joinPathFragments(
+          __dirname,
+          '__fixtures__/duplicate-package/package-lock.json',
+        ),
+      );
 
       const hash = uniq('mock-hash');
       const externalNodes = getNpmLockfileNodes(
         JSON.stringify(rootLockFile),
-        hash
+        hash,
       );
       const pg = {
         nodes: {},
@@ -607,7 +619,7 @@ describe('NPM lock file utility', () => {
       const dependencies = getNpmLockfileDependencies(
         JSON.stringify(rootLockFile),
         hash,
-        ctx
+        ctx,
       );
 
       const builder = new ProjectGraphBuilder(pg);
@@ -616,7 +628,7 @@ describe('NPM lock file utility', () => {
           dep.source,
           dep.target,
           dep.type,
-          'sourceFile' in dep ? dep.sourceFile : null
+          'sourceFile' in dep ? dep.sourceFile : null,
         );
       }
       const graph = builder.getUpdatedProjectGraph();
@@ -627,14 +639,12 @@ describe('NPM lock file utility', () => {
 
   describe('optional packages', () => {
     it('should match parsed and pruned graph', async () => {
-      const lockFile = require(joinPathFragments(
-        __dirname,
-        '__fixtures__/optional/package-lock.json'
-      ));
-      const packageJson = require(joinPathFragments(
-        __dirname,
-        '__fixtures__/optional/package.json'
-      ));
+      const lockFile = require(
+        joinPathFragments(__dirname, '__fixtures__/optional/package-lock.json'),
+      );
+      const packageJson = require(
+        joinPathFragments(__dirname, '__fixtures__/optional/package.json'),
+      );
 
       const hash = uniq('mock-hash');
       const externalNodes = getNpmLockfileNodes(JSON.stringify(lockFile), hash);
@@ -660,7 +670,7 @@ describe('NPM lock file utility', () => {
       const dependencies = getNpmLockfileDependencies(
         JSON.stringify(lockFile),
         hash,
-        ctx
+        ctx,
       );
 
       const builder = new ProjectGraphBuilder(pg);
@@ -669,7 +679,7 @@ describe('NPM lock file utility', () => {
           dep.source,
           dep.target,
           dep.type,
-          'sourceFile' in dep ? dep.sourceFile : null
+          'sourceFile' in dep ? dep.sourceFile : null,
         );
       }
       const graph = builder.getUpdatedProjectGraph();
@@ -685,22 +695,23 @@ describe('NPM lock file utility', () => {
     let rootLockFile;
 
     beforeAll(() => {
-      rootLockFile = require(joinPathFragments(
-        __dirname,
-        '__fixtures__/pruning/package-lock.json'
-      ));
+      rootLockFile = require(
+        joinPathFragments(__dirname, '__fixtures__/pruning/package-lock.json'),
+      );
     });
 
     it('should prune single package', () => {
-      const typescriptPackageJson = require(joinPathFragments(
-        __dirname,
-        '__fixtures__/pruning/typescript/package.json'
-      ));
+      const typescriptPackageJson = require(
+        joinPathFragments(
+          __dirname,
+          '__fixtures__/pruning/typescript/package.json',
+        ),
+      );
 
       const hash = uniq('mock-hash');
       const externalNodes = getNpmLockfileNodes(
         JSON.stringify(rootLockFile),
-        hash
+        hash,
       );
       const pg = {
         nodes: {},
@@ -724,7 +735,7 @@ describe('NPM lock file utility', () => {
       const dependencies = getNpmLockfileDependencies(
         JSON.stringify(rootLockFile),
         hash,
-        ctx
+        ctx,
       );
 
       const builder = new ProjectGraphBuilder(pg);
@@ -733,7 +744,7 @@ describe('NPM lock file utility', () => {
           dep.source,
           dep.target,
           dep.type,
-          'sourceFile' in dep ? dep.sourceFile : null
+          'sourceFile' in dep ? dep.sourceFile : null,
         );
       }
       const graph = builder.getUpdatedProjectGraph();
@@ -742,31 +753,35 @@ describe('NPM lock file utility', () => {
       const result = stringifyNpmLockfile(
         prunedGraph,
         JSON.stringify(rootLockFile),
-        typescriptPackageJson
+        typescriptPackageJson,
       );
 
       expect(result).toEqual(
         JSON.stringify(
-          require(joinPathFragments(
-            __dirname,
-            '__fixtures__/pruning/typescript/package-lock.json'
-          )),
+          require(
+            joinPathFragments(
+              __dirname,
+              '__fixtures__/pruning/typescript/package-lock.json',
+            ),
+          ),
           null,
-          2
-        )
+          2,
+        ),
       );
     });
 
     it('should prune multi packages', () => {
-      const multiPackageJson = require(joinPathFragments(
-        __dirname,
-        '__fixtures__/pruning/devkit-yargs/package.json'
-      ));
+      const multiPackageJson = require(
+        joinPathFragments(
+          __dirname,
+          '__fixtures__/pruning/devkit-yargs/package.json',
+        ),
+      );
 
       const hash = uniq('mock-hash');
       const externalNodes = getNpmLockfileNodes(
         JSON.stringify(rootLockFile),
-        hash
+        hash,
       );
       const pg = {
         nodes: {},
@@ -790,7 +805,7 @@ describe('NPM lock file utility', () => {
       const dependencies = getNpmLockfileDependencies(
         JSON.stringify(rootLockFile),
         hash,
-        ctx
+        ctx,
       );
 
       const builder = new ProjectGraphBuilder(pg);
@@ -799,7 +814,7 @@ describe('NPM lock file utility', () => {
           dep.source,
           dep.target,
           dep.type,
-          'sourceFile' in dep ? dep.sourceFile : null
+          'sourceFile' in dep ? dep.sourceFile : null,
         );
       }
       const graph = builder.getUpdatedProjectGraph();
@@ -808,18 +823,20 @@ describe('NPM lock file utility', () => {
       const result = stringifyNpmLockfile(
         prunedGraph,
         JSON.stringify(rootLockFile),
-        multiPackageJson
+        multiPackageJson,
       );
 
       expect(result).toEqual(
         JSON.stringify(
-          require(joinPathFragments(
-            __dirname,
-            '__fixtures__/pruning/devkit-yargs/package-lock.json'
-          )),
+          require(
+            joinPathFragments(
+              __dirname,
+              '__fixtures__/pruning/devkit-yargs/package-lock.json',
+            ),
+          ),
           null,
-          2
-        )
+          2,
+        ),
       );
     });
   });
@@ -828,27 +845,31 @@ describe('NPM lock file utility', () => {
     let lockFile;
 
     it('should parse v2 lock file', async () => {
-      lockFile = require(joinPathFragments(
-        __dirname,
-        '__fixtures__/workspaces/package-lock.json'
-      ));
+      lockFile = require(
+        joinPathFragments(
+          __dirname,
+          '__fixtures__/workspaces/package-lock.json',
+        ),
+      );
 
       const externalNodes = getNpmLockfileNodes(
         JSON.stringify(lockFile),
-        uniq('mock-hash')
+        uniq('mock-hash'),
       );
 
       expect(Object.keys(externalNodes).length).toEqual(5);
     });
 
     it('should parse v1 lock file', async () => {
-      lockFile = require(joinPathFragments(
-        __dirname,
-        '__fixtures__/workspaces/package-lock.v1.json'
-      ));
+      lockFile = require(
+        joinPathFragments(
+          __dirname,
+          '__fixtures__/workspaces/package-lock.v1.json',
+        ),
+      );
       const externalNodes = getNpmLockfileNodes(
         JSON.stringify(lockFile),
-        uniq('mock')
+        uniq('mock'),
       );
       expect(Object.keys(externalNodes).length).toEqual(5);
     });

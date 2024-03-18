@@ -13,12 +13,12 @@ import { workspaceRoot } from '../utils/workspace-root';
 
 export const DAEMON_DIR_FOR_CURRENT_WORKSPACE = join(
   projectGraphCacheDirectory,
-  'd'
+  'd',
 );
 
 export const DAEMON_OUTPUT_LOG_FILE = join(
   DAEMON_DIR_FOR_CURRENT_WORKSPACE,
-  'daemon.log'
+  'daemon.log',
 );
 
 export const socketDir = process.env.NX_DAEMON_SOCKET_DIR || createSocketDir();
@@ -26,7 +26,7 @@ export const socketDir = process.env.NX_DAEMON_SOCKET_DIR || createSocketDir();
 export const DAEMON_SOCKET_PATH = join(
   socketDir,
   // As per notes above on socket/named pipe length limitations, we keep this intentionally short
-  'd.sock'
+  'd.sock',
 );
 
 export function writeDaemonLogs(error?: string) {

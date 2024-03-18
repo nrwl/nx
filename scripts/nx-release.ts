@@ -85,7 +85,7 @@ const VALID_AUTHORS_FOR_LATEST = [
 
     if (isRelativeVersionKeyword(options.version)) {
       throw new Error(
-        'When creating actual releases, you must use an exact semver version'
+        'When creating actual releases, you must use an exact semver version',
       );
     }
 
@@ -116,7 +116,7 @@ const VALID_AUTHORS_FOR_LATEST = [
     });
 
     console.log(
-      'Check github: https://github.com/nrwl/nx/actions/workflows/publish.yml'
+      'Check github: https://github.com/nrwl/nx/actions/workflows/publish.yml',
     );
     process.exit(0);
   }
@@ -136,7 +136,7 @@ const VALID_AUTHORS_FOR_LATEST = [
     // If publishing locally, force all projects to not be private first
     if (options.local) {
       console.log(
-        chalk.dim`\n  Publishing locally, so setting all packages with existing nx-release-publish targets to not be private. If you have created a new private package and you want it to be published, you will need to manually configure the "nx-release-publish" target using executor "@nx/js:release-publish"`
+        chalk.dim`\n  Publishing locally, so setting all packages with existing nx-release-publish targets to not be private. If you have created a new private package and you want it to be published, you will need to manually configure the "nx-release-publish" target using executor "@nx/js:release-publish"`,
       );
       const projectGraph = await createProjectGraphAsync();
       for (const proj of Object.values(projectGraph.nodes)) {
@@ -144,18 +144,18 @@ const VALID_AUTHORS_FOR_LATEST = [
           const packageJsonPath = join(
             workspaceRoot,
             proj.data.targets?.['nx-release-publish']?.options.packageRoot,
-            'package.json'
+            'package.json',
           );
           try {
             const packageJson = require(packageJsonPath);
             if (packageJson.private) {
               console.log(
                 '- Publishing private package locally:',
-                packageJson.name
+                packageJson.name,
               );
               writeFileSync(
                 packageJsonPath,
-                JSON.stringify({ ...packageJson, private: false })
+                JSON.stringify({ ...packageJson, private: false }),
               );
             }
           } catch {}
@@ -169,8 +169,8 @@ const VALID_AUTHORS_FOR_LATEST = [
       if (!VALID_AUTHORS_FOR_LATEST.includes(author)) {
         throw new Error(
           `The GitHub user "${author}" is not allowed to publish to "latest". Please request one of the following users to carry out the release: ${VALID_AUTHORS_FOR_LATEST.join(
-            ', '
-          )}`
+            ', ',
+          )}`,
         );
       }
     }
@@ -208,7 +208,7 @@ function parseArgs() {
     .version(false)
     .command(
       '$0 [version]',
-      'This script is for publishing Nx both locally and publically'
+      'This script is for publishing Nx both locally and publically',
     )
     .option('dryRun', {
       type: 'boolean',
@@ -266,7 +266,7 @@ function parseArgs() {
           const nextMinorRelease = inc(
             currentLatestVersion,
             'minor',
-            undefined
+            undefined,
           );
           canaryBaseVersion = nextMinorRelease;
         }
@@ -304,27 +304,27 @@ function parseArgs() {
     })
     .example(
       '$0',
-      `By default, this will locally publish a minor version bump as latest. Great for local development. Most developers should only need this.`
+      `By default, this will locally publish a minor version bump as latest. Great for local development. Most developers should only need this.`,
     )
     .example(
       '$0 --local false 2.3.4-beta.0',
-      `This will really publish a new version to npm as next.`
+      `This will really publish a new version to npm as next.`,
     )
     .example(
       '$0 --local false 2.3.4',
-      `Given the current latest major version on npm is 2, this will really publish a new version to npm as latest.`
+      `Given the current latest major version on npm is 2, this will really publish a new version to npm as latest.`,
     )
     .example(
       '$0 --local false 1.3.4-beta.0',
-      `Given the current latest major version on npm is 2, this will really publish a new version to npm as previous.`
+      `Given the current latest major version on npm is 2, this will really publish a new version to npm as previous.`,
     )
     .group(
       ['local', 'clearLocalRegistry'],
-      'Local Publishing Options for most developers'
+      'Local Publishing Options for most developers',
     )
     .group(
       ['gitRemote', 'force'],
-      'Real Publishing Options for actually publishing to NPM'
+      'Real Publishing Options for actually publishing to NPM',
     )
     .demandOption('version')
     .check((args) => {
@@ -336,7 +336,7 @@ function parseArgs() {
         }
         if (!args.force && registryIsLocalhost) {
           throw new Error(
-            'Registry is still set to localhost! Run "pnpm local-registry disable" or pass --force'
+            'Registry is still set to localhost! Run "pnpm local-registry disable" or pass --force',
           );
         }
       } else {
@@ -357,7 +357,7 @@ function getRegistry() {
 }
 
 function determineDistTag(
-  newVersion: string
+  newVersion: string,
 ): 'latest' | 'next' | 'previous' | 'canary' {
   // Special case of canary
   if (newVersion.includes('canary')) {
@@ -378,7 +378,7 @@ function determineDistTag(
   const parsedGivenVersion = parse(newVersion);
   if (!parsedGivenVersion) {
     throw new Error(
-      `Unable to parse the given version: "${newVersion}". Is it valid semver?`
+      `Unable to parse the given version: "${newVersion}". Is it valid semver?`,
     );
   }
 
@@ -388,7 +388,7 @@ function determineDistTag(
   const parsedCurrentLatestVersion = parse(currentLatestVersion);
   if (!parsedCurrentLatestVersion) {
     throw new Error(
-      `The current version resolved from the npm registry could not be parsed (resolved "${currentLatestVersion}")`
+      `The current version resolved from the npm registry could not be parsed (resolved "${currentLatestVersion}")`,
     );
   }
 
@@ -396,8 +396,8 @@ function determineDistTag(
     parsedGivenVersion.prerelease.length > 0
       ? 'next'
       : parsedGivenVersion.major < parsedCurrentLatestVersion.major
-      ? 'previous'
-      : 'latest';
+        ? 'previous'
+        : 'latest';
 
   return distTag;
 }

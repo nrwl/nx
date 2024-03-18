@@ -13,17 +13,17 @@ Let's take an example of an ESLint config that Nx might generate for you out of 
   "overrides": [
     {
       "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
-      "rules": {}
+      "rules": {},
     },
     {
       "files": ["*.ts", "*.tsx"],
-      "rules": {}
+      "rules": {},
     },
     {
       "files": ["*.js", "*.jsx"],
-      "rules": {}
-    }
-  ]
+      "rules": {},
+    },
+  ],
 }
 ```
 
@@ -40,18 +40,18 @@ If we now come in and add a rule which does require type information, for exampl
       "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
       "rules": {
         // This rule requires the TypeScript type checker to be present when it runs
-        "@typescript-eslint/await-thenable": "error"
-      }
+        "@typescript-eslint/await-thenable": "error",
+      },
     },
     {
       "files": ["*.ts", "*.tsx"],
-      "rules": {}
+      "rules": {},
     },
     {
       "files": ["*.js", "*.jsx"],
-      "rules": {}
-    }
-  ]
+      "rules": {},
+    },
+  ],
 }
 ```
 
@@ -81,21 +81,21 @@ The solution is to update our config once more, this time to set `parserOptions.
       "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
       // We set parserOptions.project for the project to allow TypeScript to create the type-checker behind the scenes when we run linting
       "parserOptions": {
-        "project": ["apps/tuskdesk/tsconfig.*?.json"]
+        "project": ["apps/tuskdesk/tsconfig.*?.json"],
       },
       "rules": {
-        "@typescript-eslint/await-thenable": "error"
-      }
+        "@typescript-eslint/await-thenable": "error",
+      },
     },
     {
       "files": ["*.ts", "*.tsx"],
-      "rules": {}
+      "rules": {},
     },
     {
       "files": ["*.js", "*.jsx"],
-      "rules": {}
-    }
-  ]
+      "rules": {},
+    },
+  ],
 }
 ```
 

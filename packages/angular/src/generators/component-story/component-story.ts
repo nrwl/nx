@@ -5,7 +5,7 @@ import type { ComponentStoryGeneratorOptions } from './schema';
 
 export async function componentStoryGenerator(
   tree: Tree,
-  options: ComponentStoryGeneratorOptions
+  options: ComponentStoryGeneratorOptions,
 ): Promise<void> {
   const { componentFileName, componentName, componentPath, projectPath } =
     options;
@@ -14,7 +14,7 @@ export async function componentStoryGenerator(
   const destinationDir = joinPathFragments(projectPath, componentPath);
   const storyFile = joinPathFragments(
     destinationDir,
-    `${componentFileName}.stories.ts`
+    `${componentFileName}.stories.ts`,
   );
 
   if (tree.exists(storyFile)) {
@@ -23,7 +23,7 @@ export async function componentStoryGenerator(
 
   const props = getComponentProps(
     tree,
-    joinPathFragments(destinationDir, `${componentFileName}.ts`)
+    joinPathFragments(destinationDir, `${componentFileName}.ts`),
   );
 
   generateFiles(tree, templatesDir, destinationDir, {

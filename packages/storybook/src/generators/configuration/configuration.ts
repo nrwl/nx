@@ -52,14 +52,14 @@ import { editRootTsConfig } from './lib/edit-root-tsconfig';
 
 export function configurationGenerator(
   tree: Tree,
-  schema: StorybookConfigureSchema
+  schema: StorybookConfigureSchema,
 ) {
   return configurationGeneratorInternal(tree, { addPlugin: false, ...schema });
 }
 
 export async function configurationGeneratorInternal(
   tree: Tree,
-  rawSchema: StorybookConfigureSchema
+  rawSchema: StorybookConfigureSchema,
 ) {
   if (storybookMajorVersion() === 6) {
     throw new Error(pleaseUpgrade());
@@ -71,7 +71,7 @@ export async function configurationGeneratorInternal(
 
   const { projectType, targets, root } = readProjectConfiguration(
     tree,
-    schema.project
+    schema.project,
   );
   const { compiler } = findStorybookAndBuildTargetsAndCompiler(targets);
 
@@ -85,14 +85,14 @@ export async function configurationGeneratorInternal(
     if (schema.uiFramework === '@storybook/react-webpack5') {
       logger.info(
         `Your project ${schema.project} uses Vite as a bundler.
-        Nx will configure Storybook for this project to use Vite as well.`
+        Nx will configure Storybook for this project to use Vite as well.`,
       );
       schema.uiFramework = '@storybook/react-vite';
     }
     if (schema.uiFramework === '@storybook/web-components-webpack5') {
       logger.info(
         `Your project ${schema.project} uses Vite as a bundler.
-        Nx will configure Storybook for this project to use Vite as well.`
+        Nx will configure Storybook for this project to use Vite as well.`,
       );
       schema.uiFramework = '@storybook/web-components-vite';
     }
@@ -120,7 +120,7 @@ export async function configurationGeneratorInternal(
   const hasPlugin = nxJson.plugins?.some((p) =>
     typeof p === 'string'
       ? p === '@nx/storybook/plugin'
-      : p.plugin === '@nx/storybook/plugin'
+      : p.plugin === '@nx/storybook/plugin',
   );
 
   const mainDir =
@@ -149,7 +149,7 @@ export async function configurationGeneratorInternal(
     viteConfigFilePath,
     hasPlugin,
     viteConfigFileName,
-    useReactNative
+    useReactNative,
   );
 
   if (schema.uiFramework !== '@storybook/angular') {
@@ -158,7 +158,7 @@ export async function configurationGeneratorInternal(
       root,
       schema.uiFramework,
       projectIsRootProjectInStandaloneWorkspace(root),
-      mainDir
+      mainDir,
     );
   }
   configureTsProjectConfig(tree, schema);
@@ -182,7 +182,7 @@ export async function configurationGeneratorInternal(
         tree,
         schema.project,
         schema.uiFramework,
-        schema.interactionTests
+        schema.interactionTests,
       );
     }
     if (schema.configureStaticServe) {
@@ -210,7 +210,7 @@ export async function configurationGeneratorInternal(
       tasks.push(cypressTask);
     } else {
       logger.warn(
-        `There is already an e2e project setup for ${schema.project}, called ${e2eProject}.`
+        `There is already an e2e project setup for ${schema.project}, called ${e2eProject}.`,
       );
     }
   }
@@ -260,7 +260,7 @@ export async function configurationGeneratorInternal(
 
 function normalizeSchema(
   tree: Tree,
-  schema: StorybookConfigureSchema
+  schema: StorybookConfigureSchema,
 ): StorybookConfigureSchema {
   const nxJson = readNxJson(tree);
   const addPlugin =

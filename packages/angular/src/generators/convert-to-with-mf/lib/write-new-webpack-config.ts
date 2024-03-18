@@ -8,7 +8,7 @@ import {
 export function writeNewWebpackConfig(
   ast: SourceFile,
   mfType: IsHostRemoteConfigResult,
-  projectName: string
+  projectName: string,
 ) {
   const webpackConfig = `const { withModuleFederation } = require('@nx/angular/module-federation');
 const config = require('./module-federation.config');
@@ -53,7 +53,7 @@ function hostRemotesToString(ast: SourceFile) {
   const remotes: string = getRemotesFromHost(ast)
     .reduce(
       (acc, remotePair) => `['${remotePair[0]}', '${remotePair[1]}'], ${acc}`,
-      ''
+      '',
     )
     .trim();
   return `[${remotes.endsWith(',') ? remotes.slice(0, -1) : remotes}]`;

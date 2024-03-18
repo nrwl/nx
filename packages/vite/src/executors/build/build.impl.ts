@@ -29,7 +29,7 @@ import {
 
 export async function* viteBuildExecutor(
   options: Record<string, any> & ViteBuildExecutorOptions,
-  context: ExecutorContext
+  context: ExecutorContext,
 ) {
   process.env.VITE_CJS_IGNORE_WARNING = 'true';
   // Allows ESM to be required in CJS modules. Vite will be published as ESM in the future.
@@ -42,7 +42,7 @@ export async function* viteBuildExecutor(
   const viteConfigPath = normalizeViteConfigFilePath(
     context.root,
     projectRoot,
-    options.configFile
+    options.configFile,
   );
   const root =
     projectRoot === '.'
@@ -56,7 +56,7 @@ export async function* viteBuildExecutor(
       mode: otherOptions?.mode ?? 'production',
       command: 'build',
     },
-    viteConfigPath
+    viteConfigPath,
   );
 
   const outDir =
@@ -76,7 +76,7 @@ export async function* viteBuildExecutor(
         ...buildOptions,
       },
       ...otherOptions,
-    }
+    },
   );
 
   if (!options.skipTypeCheck) {
@@ -97,7 +97,7 @@ export async function* viteBuildExecutor(
   const outDirRelativeToWorkspaceRoot = outDir.replaceAll('../', '');
   const distPackageJson = resolve(
     outDirRelativeToWorkspaceRoot,
-    'package.json'
+    'package.json',
   );
 
   // Generate a package.json if option has been set.
@@ -105,7 +105,7 @@ export async function* viteBuildExecutor(
     if (context.projectGraph.nodes[context.projectName].type !== 'app') {
       logger.warn(
         stripIndents`The project ${context.projectName} is using the 'generatePackageJson' option which is deprecated for library projects. It should only be used for applications.
-        For libraries, configure the project to use the '@nx/dependency-checks' ESLint rule instead (https://nx.dev/packages/eslint-plugin/documents/dependency-checks).`
+        For libraries, configure the project to use the '@nx/dependency-checks' ESLint rule instead (https://nx.dev/packages/eslint-plugin/documents/dependency-checks).`,
       );
     }
 
@@ -116,28 +116,28 @@ export async function* viteBuildExecutor(
         target: context.targetName,
         root: context.root,
         isProduction: !options.includeDevDependenciesInPackageJson, // By default we remove devDependencies since this is a production build.
-      }
+      },
     );
 
     builtPackageJson.type = 'module';
 
     writeJsonFile(
       `${outDirRelativeToWorkspaceRoot}/package.json`,
-      builtPackageJson
+      builtPackageJson,
     );
     const packageManager = detectPackageManager(context.root);
 
     const lockFile = createLockFile(
       builtPackageJson,
       context.projectGraph,
-      packageManager
+      packageManager,
     );
     writeFileSync(
       `${outDirRelativeToWorkspaceRoot}/${getLockFileName(packageManager)}`,
       lockFile,
       {
         encoding: 'utf-8',
-      }
+      },
     );
   }
   // For buildable libs, copy package.json if it exists.
@@ -158,7 +158,7 @@ export async function* viteBuildExecutor(
           },
         ],
       },
-      context
+      context,
     );
   }
 
@@ -190,7 +190,7 @@ export async function* viteBuildExecutor(
 }
 
 export async function getBuildExtraArgs(
-  options: ViteBuildExecutorOptions
+  options: ViteBuildExecutorOptions,
 ): Promise<{
   // vite BuildOptions
   buildOptions: Record<string, unknown>;

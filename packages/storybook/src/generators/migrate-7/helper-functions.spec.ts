@@ -32,11 +32,11 @@ describe('Helper functions for the Storybook 7 migration generator', () => {
     it(`should remove path from nextConfigPath in main.js`, async () => {
       const { content: content1 } = removePathResolvesFromNextConfig(
         tree,
-        `apps/nextapp/.storybook/main.js`
+        `apps/nextapp/.storybook/main.js`,
       );
       const { content: content2 } = removePathResolvesFromNextConfig(
         tree,
-        `apps/nextapp-ts/.storybook/main.ts`
+        `apps/nextapp-ts/.storybook/main.ts`,
       );
 
       expect(content1).toMatchSnapshot();
@@ -49,11 +49,11 @@ describe('Helper functions for the Storybook 7 migration generator', () => {
     it(`should remove typecast from TypeScript files`, async () => {
       const { content: content1 } = removeTypecastFromMainTs(
         tree,
-        `apps/rv2-ts/.storybook/main.ts`
+        `apps/rv2-ts/.storybook/main.ts`,
       );
       const { content: content2 } = removeTypecastFromMainTs(
         tree,
-        `apps/nextapp-ts/.storybook/main.ts`
+        `apps/nextapp-ts/.storybook/main.ts`,
       );
 
       expect(content1).toMatchSnapshot();
@@ -102,7 +102,7 @@ describe('Helper functions for the Storybook 7 migration generator', () => {
             'nx g @nx/storybook:migrate-7 --afterMigration',
           ],
           title: 'Storybook 7 Migration Guide',
-        })
+        }),
       );
     });
   });
@@ -112,7 +112,7 @@ describe('Helper functions for the Storybook 7 migration generator', () => {
       removeViteTsConfigPathsPlugin(tree, `apps/rv1/.storybook/main.js`);
 
       expect(
-        tree.read('apps/rv1/.storybook/main.js', 'utf-8')
+        tree.read('apps/rv1/.storybook/main.js', 'utf-8'),
       ).toMatchSnapshot();
     });
 
@@ -121,7 +121,7 @@ describe('Helper functions for the Storybook 7 migration generator', () => {
       removeViteTsConfigPathsPlugin(tree, `apps/rv2-ts/.storybook/main.ts`);
 
       expect(
-        tree.read('apps/rv2-ts/.storybook/main.ts', 'utf-8')
+        tree.read('apps/rv2-ts/.storybook/main.ts', 'utf-8'),
       ).toMatchSnapshot();
     });
   });
@@ -133,11 +133,11 @@ describe('Helper functions for the Storybook 7 migration generator', () => {
       addViteConfigFilePathInFrameworkOptions(
         tree,
         'apps/rv1/.storybook/main.js',
-        'apps/rv1/vite.config.js'
+        'apps/rv1/vite.config.js',
       );
 
       expect(
-        tree.read('apps/rv1/.storybook/main.js', 'utf-8')
+        tree.read('apps/rv1/.storybook/main.js', 'utf-8'),
       ).toMatchSnapshot();
     });
 
@@ -147,11 +147,11 @@ describe('Helper functions for the Storybook 7 migration generator', () => {
       addViteConfigFilePathInFrameworkOptions(
         tree,
         'apps/wv1/.storybook/main.js',
-        'apps/wv1/vite.config.js'
+        'apps/wv1/vite.config.js',
       );
 
       expect(
-        tree.read('apps/wv1/.storybook/main.js', 'utf-8')
+        tree.read('apps/wv1/.storybook/main.js', 'utf-8'),
       ).toMatchSnapshot();
     });
   });
@@ -162,14 +162,14 @@ describe('Helper functions for the Storybook 7 migration generator', () => {
       changeCoreCommonImportToFramework(tree, `apps/rv2-ts/.storybook/main.ts`);
       changeCoreCommonImportToFramework(
         tree,
-        `apps/ngapp-ts/.storybook/main.ts`
+        `apps/ngapp-ts/.storybook/main.ts`,
       );
 
       expect(
-        tree.read('apps/rv2-ts/.storybook/main.ts', 'utf-8')
+        tree.read('apps/rv2-ts/.storybook/main.ts', 'utf-8'),
       ).toMatchSnapshot();
       expect(
-        tree.read('apps/ngapp-ts/.storybook/main.ts', 'utf-8')
+        tree.read('apps/ngapp-ts/.storybook/main.ts', 'utf-8'),
       ).toMatchSnapshot();
     });
   });
@@ -179,12 +179,12 @@ describe('Helper functions for the Storybook 7 migration generator', () => {
       expect(
         readProjectConfiguration(tree, 'rv1').targets['storybook']['options'][
           'uiFramework'
-        ]
+        ],
       ).toBeDefined();
       expect(
         readProjectConfiguration(tree, 'rv2-ts').targets['storybook'][
           'options'
-        ]['uiFramework']
+        ]['uiFramework'],
       ).toBeDefined();
 
       removeUiFrameworkFromProjectJson(tree);
@@ -192,13 +192,13 @@ describe('Helper functions for the Storybook 7 migration generator', () => {
       expect(
         readProjectConfiguration(tree, 'rv1').targets['storybook']['options'][
           'uiFramework'
-        ]
+        ],
       ).toBeUndefined();
 
       expect(
         readProjectConfiguration(tree, 'rv2-ts').targets['storybook'][
           'options'
-        ]['uiFramework']
+        ]['uiFramework'],
       ).toBeUndefined();
     });
   });
@@ -217,7 +217,7 @@ describe('Helper functions for the Storybook 7 migration generator', () => {
         },
       });
       expect(
-        tree.read('storybook-migration-summary.md', 'utf-8')
+        tree.read('storybook-migration-summary.md', 'utf-8'),
       ).toMatchSnapshot();
     });
   });
@@ -234,17 +234,17 @@ export function addAllProjectsToWorkspace(tree: Tree) {
 function writeViteConfig(tree: Tree) {
   tree.write(
     `apps/rv1/vite.config.js`,
-    `const { defineConfig } = require('vite');`
+    `const { defineConfig } = require('vite');`,
   );
 
   tree.write(
     `apps/rv2-ts/vite.config.ts`,
-    `const { defineConfig } = require('vite');`
+    `const { defineConfig } = require('vite');`,
   );
 
   tree.write(
     `apps/wv1/vite.config.ts`,
-    `const { defineConfig } = require('vite');`
+    `const { defineConfig } = require('vite');`,
   );
 }
 
@@ -272,7 +272,7 @@ function writeMainJs(tree: Tree) {
         });
       },
     };
-`
+`,
   );
 
   tree.write(
@@ -302,7 +302,7 @@ function writeMainJs(tree: Tree) {
     } as StorybookConfig;
 
     module.exports = config;
-  `
+  `,
   );
 
   tree.write(
@@ -328,7 +328,7 @@ function writeMainJs(tree: Tree) {
         },
       ],
     };
-  `
+  `,
   );
 
   tree.write(
@@ -357,7 +357,7 @@ function writeMainJs(tree: Tree) {
     } as StorybookConfig;
 
     module.exports = config;
-  `
+  `,
   );
 }
 
@@ -381,7 +381,7 @@ function writeNewMainJs(tree: Tree) {
         options: {},
       },
     };
-    `
+    `,
   );
 
   tree.write(
@@ -402,7 +402,7 @@ function writeNewMainJs(tree: Tree) {
         name: '@storybook/web-components-vite',
       },
     };
-    `
+    `,
   );
 }
 
@@ -425,7 +425,7 @@ function writeNewMainTs(tree: Tree) {
       }
     };
     module.exports = config;
-    `
+    `,
   );
 
   tree.write(
@@ -442,6 +442,6 @@ function writeNewMainTs(tree: Tree) {
       }
     };
     module.exports = config;
-    `
+    `,
   );
 }

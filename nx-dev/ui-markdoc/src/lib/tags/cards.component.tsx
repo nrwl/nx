@@ -73,7 +73,7 @@ export function Cards({
         colsClasses[cols] || '',
         smColsClasses[smCols] || '',
         mdColsClasses[mdCols] || '',
-        lgColsClasses[lgCols] || ''
+        lgColsClasses[lgCols] || '',
       )}
     >
       {children}
@@ -123,7 +123,7 @@ export function LinkCard({
             'mb-2 flex h-24 w-24 items-center justify-center rounded-lg',
             {
               'h-12 w-12': appearance === 'small',
-            }
+            },
           )}
         >
           {icon && frameworkIcons[icon]?.image}
@@ -138,7 +138,7 @@ export function LinkCard({
         <h3
           className={cx(
             'm-0 text-lg font-semibold text-slate-900 dark:text-white',
-            { 'text-sm font-normal': appearance === 'small' }
+            { 'text-sm font-normal': appearance === 'small' },
           )}
         >
           {title}
@@ -166,7 +166,7 @@ export function Card({
   };
   const youtubeRegex =
     /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/gi.exec(
-      url
+      url,
     );
   const hasYoutubeId = !!youtubeRegex ? youtubeRegex[1] : '';
 

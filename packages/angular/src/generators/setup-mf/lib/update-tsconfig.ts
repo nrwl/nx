@@ -19,7 +19,7 @@ export function updateTsConfig(tree: Tree, schema: Schema) {
       json.files.push(
         schema.standalone
           ? 'src/app/remote-entry/entry.routes.ts'
-          : 'src/app/remote-entry/entry.module.ts'
+          : 'src/app/remote-entry/entry.module.ts',
       );
     }
 

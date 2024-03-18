@@ -12,8 +12,9 @@ describe('update-17-2-6-rename-workspace-rules', () => {
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace();
 
-    const { lintWorkspaceRuleGenerator } = require('@nx/' +
-      'eslint/src/generators/workspace-rule/workspace-rule');
+    const { lintWorkspaceRuleGenerator } = require(
+      '@nx/' + 'eslint/src/generators/workspace-rule/workspace-rule',
+    );
 
     lintWorkspaceRuleGenerator(tree, {
       name: rule1Name,
@@ -58,20 +59,20 @@ describe('update-17-2-6-rename-workspace-rules', () => {
           "@nx/workspace/${rule2Name}": 'error',
         },
       }
-    `
+    `,
     );
 
     update(tree);
 
     expect(tree.read('custom.js', 'utf-8')).toContain(
-      `@nx/workspace-test-rule`
+      `@nx/workspace-test-rule`,
     );
     expect(tree.read('custom.js', 'utf-8')).toContain(`@nx/workspace-my-rule`);
     expect(tree.read('custom.js', 'utf-8')).not.toContain(
-      `@nx/workspace/test-rule`
+      `@nx/workspace/test-rule`,
     );
     expect(tree.read('custom.js', 'utf-8')).not.toContain(
-      `@nx/workspace/my-rule`
+      `@nx/workspace/my-rule`,
     );
   });
 
@@ -86,7 +87,7 @@ describe('update-17-2-6-rename-workspace-rules', () => {
       /* eslint-disable @nx/workspace/${rule2Name} */
       // something that should remain the same @nx/workspace/unknown-rule
       /* eslint-enable @nx/workspace/${rule2Name} */
-    `
+    `,
     );
 
     update(tree);
@@ -114,16 +115,16 @@ describe('update-17-2-6-rename-workspace-rules', () => {
           "@nx/workspace/random-rule": 'error',
         },
       }
-    `
+    `,
     );
 
     update(tree);
 
     expect(tree.read('custom.js', 'utf-8')).not.toContain(
-      `@nx/workspace-random-rule`
+      `@nx/workspace-random-rule`,
     );
     expect(tree.read('custom.js', 'utf-8')).toContain(
-      `@nx/workspace/random-rule`
+      `@nx/workspace/random-rule`,
     );
   });
 });

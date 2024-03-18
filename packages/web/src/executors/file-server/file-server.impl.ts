@@ -99,7 +99,7 @@ function getBuildTargetOutputPath(options: Schema, context: ExecutorContext) {
 
   if (!outputPath) {
     throw new Error(
-      `Unable to get the outputPath from buildTarget ${options.buildTarget}. Make sure ${options.buildTarget} has an outputPath property or manually provide an staticFilePath property`
+      `Unable to get the outputPath from buildTarget ${options.buildTarget}. Make sure ${options.buildTarget} has an outputPath property or manually provide an staticFilePath property`,
     );
   }
 
@@ -108,7 +108,7 @@ function getBuildTargetOutputPath(options: Schema, context: ExecutorContext) {
 
 function createFileWatcher(
   project: string | undefined,
-  changeHandler: () => void
+  changeHandler: () => void,
 ) {
   return daemonClient.registerFileWatcher(
     {
@@ -124,13 +124,13 @@ function createFileWatcher(
       } else if (val?.changedFiles.length > 0) {
         changeHandler();
       }
-    }
+    },
   );
 }
 
 export default async function* fileServerExecutor(
   options: Schema,
-  context: ExecutorContext
+  context: ExecutorContext,
 ) {
   if (!options.buildTarget && !options.staticFilePath) {
     throw new Error("You must set either 'buildTarget' or 'staticFilePath'.");
@@ -138,7 +138,7 @@ export default async function* fileServerExecutor(
 
   if (options.watch && !options.buildTarget) {
     throw new Error(
-      "Watch error: You can only specify 'watch' when 'buildTarget' is set."
+      "Watch error: You can only specify 'watch' when 'buildTarget' is set.",
     );
   }
 
@@ -162,7 +162,7 @@ export default async function* fileServerExecutor(
           });
         } catch {
           throw new Error(
-            `Build target failed: ${chalk.bold(options.buildTarget)}`
+            `Build target failed: ${chalk.bold(options.buildTarget)}`,
           );
         } finally {
           process.env.NX_SERVE_STATIC_BUILD_RUNNING = undefined;
@@ -195,12 +195,12 @@ export default async function* fileServerExecutor(
 
   const { path: pathToHttpServerPkgJson, packageJson } = readModulePackageJson(
     'http-server',
-    module.paths
+    module.paths,
   );
   const pathToHttpServerBin = packageJson.bin['http-server'];
   const pathToHttpServer = resolve(
     pathToHttpServerPkgJson.replace('package.json', ''),
-    pathToHttpServerBin
+    pathToHttpServerBin,
   );
 
   // detect port as close to when used to prevent port being used by another process

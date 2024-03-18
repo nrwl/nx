@@ -29,7 +29,7 @@ export async function validateSchema(schema: Schema, configName: string) {
     (configName === 'workspace.json' && schema.reformat)
   ) {
     throw new Error(
-      'workspace.json is no longer supported. Please pass --all to convert all projects and remove workspace.json.'
+      'workspace.json is no longer supported. Please pass --all to convert all projects and remove workspace.json.',
     );
   }
 
@@ -81,7 +81,7 @@ export async function convertToNxProjectGenerator(host: Tree, schema: Schema) {
     writeJson(
       host,
       'angular.json',
-      toOldFormat({ version: 1, projects: leftOverProjects })
+      toOldFormat({ version: 1, projects: leftOverProjects }),
     );
   } else {
     host.delete(configName);

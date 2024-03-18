@@ -118,11 +118,11 @@ describe('change-target-defaults-to-executor migration', () => {
     await update(tree);
 
     expect(
-      readProjectConfiguration(tree, 'test-lib1').targets.lint.outputs
+      readProjectConfiguration(tree, 'test-lib1').targets.lint.outputs,
     ).toBeUndefined();
 
     expect(
-      readNxJson(tree).targetDefaults['@nx/eslint:lint'].outputs
+      readNxJson(tree).targetDefaults['@nx/eslint:lint'].outputs,
     ).toBeUndefined();
   });
 
@@ -158,10 +158,10 @@ describe('change-target-defaults-to-executor migration', () => {
     await update(tree);
 
     expect(
-      readProjectConfiguration(tree, 'test-lib1').targets.lint.outputs
+      readProjectConfiguration(tree, 'test-lib1').targets.lint.outputs,
     ).toBeUndefined();
     expect(
-      readProjectConfiguration(tree, 'test-lib1').targets.lint.outputs
+      readProjectConfiguration(tree, 'test-lib1').targets.lint.outputs,
     ).toBeUndefined();
 
     expect(readNxJson(tree).targetDefaults['@nx/eslint:lint'].outputs).toEqual([

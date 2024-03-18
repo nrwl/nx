@@ -27,7 +27,7 @@ export class TasksSchedule {
   constructor(
     private readonly projectGraph: ProjectGraph,
     private readonly taskGraph: TaskGraph,
-    private readonly options: DefaultTasksRunnerOptions
+    private readonly options: DefaultTasksRunnerOptions,
   ) {}
 
   public async scheduleNextTasks() {
@@ -51,7 +51,7 @@ export class TasksSchedule {
     }
     this.notScheduledTaskGraph = removeTasksFromTaskGraph(
       this.notScheduledTaskGraph,
-      taskIds
+      taskIds,
     );
   }
 
@@ -90,7 +90,7 @@ export class TasksSchedule {
   private async scheduleTask(taskId: string) {
     this.notScheduledTaskGraph = removeTasksFromTaskGraph(
       this.notScheduledTaskGraph,
-      [taskId]
+      [taskId],
     );
     this.scheduledTasks = this.scheduledTasks
       .concat(taskId)
@@ -135,7 +135,7 @@ export class TasksSchedule {
     // Create a new task graph without the tasks that are being scheduled as part of this batch
     this.notScheduledTaskGraph = removeTasksFromTaskGraph(
       this.notScheduledTaskGraph,
-      Object.keys(taskGraph.tasks)
+      Object.keys(taskGraph.tasks),
     );
 
     this.scheduledBatches.push({ executorName, taskGraph });
@@ -145,7 +145,7 @@ export class TasksSchedule {
     batches: Record<string, TaskGraph>,
     task: Task,
     rootExecutorName: string,
-    isRoot: boolean
+    isRoot: boolean,
   ) {
     if (!this.canBatchTaskBeScheduled(task.id, batches[rootExecutorName])) {
       return;
@@ -153,7 +153,7 @@ export class TasksSchedule {
 
     const { batchImplementationFactory } = getExecutorForTask(
       task,
-      this.projectGraph
+      this.projectGraph,
     );
     const executorName = getExecutorNameForTask(task, this.projectGraph);
     if (rootExecutorName !== executorName) {
@@ -185,24 +185,24 @@ export class TasksSchedule {
         batches,
         depTask,
         rootExecutorName,
-        false
+        false,
       );
     }
   }
 
   private canBatchTaskBeScheduled(
     taskId: string,
-    batchTaskGraph: TaskGraph | undefined
+    batchTaskGraph: TaskGraph | undefined,
   ): boolean {
     // all deps have either completed or belong to the same batch
     return this.taskGraph.dependencies[taskId].every(
-      (id) => this.completedTasks.has(id) || !!batchTaskGraph?.tasks[id]
+      (id) => this.completedTasks.has(id) || !!batchTaskGraph?.tasks[id],
     );
   }
 
   private canBeScheduled(taskId: string) {
     return this.taskGraph.dependencies[taskId].every((id) =>
-      this.completedTasks.has(id)
+      this.completedTasks.has(id),
     );
   }
 }

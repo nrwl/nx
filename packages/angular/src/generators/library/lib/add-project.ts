@@ -6,7 +6,7 @@ import { addBuildTargetDefaults } from '@nx/devkit/src/generators/add-build-targ
 
 export function addProject(
   tree: Tree,
-  libraryOptions: NormalizedSchema['libraryOptions']
+  libraryOptions: NormalizedSchema['libraryOptions'],
 ) {
   const project: AngularProjectConfiguration = {
     name: libraryOptions.name,

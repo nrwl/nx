@@ -21,7 +21,7 @@ expect.addSnapshotSerializer({
         .replaceAll(/\s\/{private-project-name}/g, ' {private-project-name}')
         .replaceAll(
           /integrity:\s*.*/g,
-          'integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
+          'integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX',
         )
         .replaceAll(/\b[0-9a-f]{40}\b/g, '{SHASUM}')
         .replaceAll(/\d*B  index\.js/g, 'XXB  index.js')
@@ -216,15 +216,15 @@ describe('nx release - private JS packages', () => {
 
     // The two public packages should have been published
     expect(
-      execSync(`npm view @proj/${publicPkg1} version`).toString().trim()
+      execSync(`npm view @proj/${publicPkg1} version`).toString().trim(),
     ).toEqual('999.9.9');
     expect(
-      execSync(`npm view @proj/${publicPkg2} version`).toString().trim()
+      execSync(`npm view @proj/${publicPkg2} version`).toString().trim(),
     ).toEqual('999.9.9');
 
     // The private package should have never been published
     expect(() => execSync(`npm view @proj/${privatePkg} version`)).toThrowError(
-      /npm ERR! code E404/
+      /npm ERR! code E404/,
     );
   }, 500000);
 
@@ -304,15 +304,15 @@ describe('nx release - private JS packages', () => {
 
     // The two public packages should have been published
     expect(
-      execSync(`npm view @proj/${publicPkg1} version`).toString().trim()
+      execSync(`npm view @proj/${publicPkg1} version`).toString().trim(),
     ).toEqual('999.9.10');
     expect(
-      execSync(`npm view @proj/${publicPkg2} version`).toString().trim()
+      execSync(`npm view @proj/${publicPkg2} version`).toString().trim(),
     ).toEqual('999.9.10');
 
     // The private package should have never been published
     expect(() => execSync(`npm view @proj/${privatePkg} version`)).toThrowError(
-      /npm ERR! code E404/
+      /npm ERR! code E404/,
     );
   }, 500000);
 });

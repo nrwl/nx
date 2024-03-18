@@ -13,7 +13,7 @@ export default async function update(tree: Tree) {
       const projectConfig = readProjectConfiguration(tree, projectName);
       delete projectConfig.targets[targetName].options.root;
       updateProjectConfiguration(tree, projectName, projectConfig);
-    }
+    },
   );
   forEachExecutorOptions(
     tree,
@@ -22,6 +22,6 @@ export default async function update(tree: Tree) {
       const projectConfig = readProjectConfiguration(tree, projectName);
       delete projectConfig.targets[targetName].options.root;
       updateProjectConfiguration(tree, projectName, projectConfig);
-    }
+    },
   );
 }

@@ -5,7 +5,7 @@ import { getRemixConfigPathFromProjectRoot } from '../../../utils/remix-config';
 export function updateRemixConfig(tree: Tree, projectRoot: string) {
   const pathToRemixConfig = getRemixConfigPathFromProjectRoot(
     tree,
-    projectRoot
+    projectRoot,
   );
   const fileContents = tree.read(pathToRemixConfig, 'utf-8');
 
@@ -32,7 +32,7 @@ export function updateRemixConfig(tree: Tree, projectRoot: string) {
     } else if (nodeText.includes('tailwind') && nodeText.includes('false')) {
       const updatedFileContents = `${fileContents.slice(
         0,
-        propertyNode.getStart()
+        propertyNode.getStart(),
       )}tailwind: true${fileContents.slice(propertyNode.getEnd())}`;
       tree.write(pathToRemixConfig, updatedFileContents);
       return;
@@ -41,7 +41,7 @@ export function updateRemixConfig(tree: Tree, projectRoot: string) {
 
   const updatedFileContents = `${fileContents.slice(
     0,
-    configObjectNode.getStart() + 1
+    configObjectNode.getStart() + 1,
   )}\ntailwind: true,${fileContents.slice(configObjectNode.getStart() + 1)}`;
 
   tree.write(pathToRemixConfig, updatedFileContents);

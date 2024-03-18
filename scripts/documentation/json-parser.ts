@@ -12,7 +12,7 @@ export enum OptionType {
 function _getEnumFromValue<E, T extends E[keyof E]>(
   value: json.JsonValue,
   enumeration: E,
-  defaultValue: T
+  defaultValue: T,
 ): T {
   if (typeof value !== 'string') {
     return defaultValue;
@@ -27,14 +27,14 @@ function _getEnumFromValue<E, T extends E[keyof E]>(
 
 export async function parseJsonSchemaToOptions(
   flattener: SchemaFlattener,
-  schema: json.JsonObject
+  schema: json.JsonObject,
 ): Promise<any[]> {
   const options: any[] = [];
 
   function visitor(
     current: json.JsonObject | json.JsonArray,
     pointer: json.schema.JsonPointer,
-    parentSchema?: json.JsonObject | json.JsonArray
+    parentSchema?: json.JsonObject | json.JsonArray,
   ) {
     if (!parentSchema) {
       // Ignore root.
@@ -140,8 +140,8 @@ export async function parseJsonSchemaToOptions(
     const aliases = json.isJsonArray(current.aliases)
       ? [...current.aliases].map((x) => `${x}`)
       : current.alias
-      ? [`${current.alias}`]
-      : [];
+        ? [`${current.alias}`]
+        : [];
     const format =
       typeof current.format == 'string' ? current.format : undefined;
     const visible = current.visible === undefined || current.visible === true;

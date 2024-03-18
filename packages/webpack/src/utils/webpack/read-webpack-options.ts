@@ -11,7 +11,7 @@ import { Configuration } from 'webpack';
  * @param webpackConfig
  */
 export async function readWebpackOptions(
-  webpackConfig: unknown
+  webpackConfig: unknown,
 ): Promise<Configuration> {
   let config: Configuration;
   if (isNxWebpackComposablePlugin(webpackConfig)) {
@@ -29,14 +29,14 @@ export async function readWebpackOptions(
           assets: undefined,
         },
         context: { root: workspaceRoot, cwd: undefined, isVerbose: false },
-      }
+      },
     );
   } else if (typeof webpackConfig === 'function') {
     config = await webpackConfig(
       {
         production: true, // we want the production build options
       },
-      {}
+      {},
     );
   } else {
     config = webpackConfig;

@@ -54,7 +54,7 @@ describe('15.0.0 migration (add-eslint-inputs)', () => {
           'default',
           `!{projectRoot}/${eslintConfigFilename}`,
         ]);
-      }
+      },
     );
 
     test.each(ESLINT_CONFIG_FILENAMES)(
@@ -69,7 +69,7 @@ describe('15.0.0 migration (add-eslint-inputs)', () => {
 
         expect(updated.targetDefaults.lint.inputs).toEqual(result);
         expect(updated.targetDefaults.lint2.inputs).toEqual(result);
-      }
+      },
     );
   });
 
@@ -105,7 +105,7 @@ describe('15.0.0 migration (add-eslint-inputs)', () => {
         const updated = readNxJson(tree);
 
         expect(updated.namedInputs?.production).toBeUndefined();
-      }
+      },
     );
 
     test.each(ESLINT_CONFIG_FILENAMES)(
@@ -122,7 +122,7 @@ describe('15.0.0 migration (add-eslint-inputs)', () => {
         const updated = readNxJson(tree);
 
         expect(updated.namedInputs?.production).toBeUndefined();
-      }
+      },
     );
   });
 
@@ -172,7 +172,7 @@ describe('15.0.0 migration (add-eslint-inputs)', () => {
           'default',
           `{workspaceRoot}/${eslintConfigFilename}`,
         ]);
-      }
+      },
     );
 
     it('should return `default` if there is no globalEslintFile', async () => {

@@ -34,7 +34,7 @@ export class ProjectGraphBuilder {
   constructor(
     graph?: ProjectGraph,
     projectFileMap?: ProjectFileMap,
-    nonProjectFiles?: FileMap['nonProjectFiles']
+    nonProjectFiles?: FileMap['nonProjectFiles'],
   ) {
     if (!projectFileMap || !nonProjectFiles) {
       const fileMap = getFileMap().fileMap;
@@ -81,7 +81,7 @@ export class ProjectGraphBuilder {
             node.type
           }" and the other is of type "${
             this.graph.nodes[node.name].type
-          }". Please resolve the conflicting project names.`
+          }". Please resolve the conflicting project names.`,
         );
       }
     }
@@ -116,7 +116,7 @@ export class ProjectGraphBuilder {
           node.data.version
         }" and the other has version "${
           this.graph.externalNodes[node.name].data.version
-        }". Please resolve the conflicting package names.`
+        }". Please resolve the conflicting package names.`,
       );
     }
     this.graph.externalNodes[node.name] = node;
@@ -128,13 +128,13 @@ export class ProjectGraphBuilder {
   addStaticDependency(
     sourceProjectName: string,
     targetProjectName: string,
-    sourceProjectFile?: string
+    sourceProjectFile?: string,
   ): void {
     this.addDependency(
       sourceProjectName,
       targetProjectName,
       DependencyType.static,
-      sourceProjectFile
+      sourceProjectFile,
     );
   }
 
@@ -144,13 +144,13 @@ export class ProjectGraphBuilder {
   addDynamicDependency(
     sourceProjectName: string,
     targetProjectName: string,
-    sourceProjectFile: string
+    sourceProjectFile: string,
   ): void {
     this.addDependency(
       sourceProjectName,
       targetProjectName,
       DependencyType.dynamic,
-      sourceProjectFile
+      sourceProjectFile,
     );
   }
 
@@ -159,12 +159,12 @@ export class ProjectGraphBuilder {
    */
   addImplicitDependency(
     sourceProjectName: string,
-    targetProjectName: string
+    targetProjectName: string,
   ): void {
     this.addDependency(
       sourceProjectName,
       targetProjectName,
-      DependencyType.implicit
+      DependencyType.implicit,
     );
   }
 
@@ -200,12 +200,12 @@ export class ProjectGraphBuilder {
   addExplicitDependency(
     sourceProjectName: string,
     sourceProjectFile: string,
-    targetProjectName: string
+    targetProjectName: string,
   ): void {
     this.addStaticDependency(
       sourceProjectName,
       targetProjectName,
-      sourceProjectFile
+      sourceProjectFile,
     );
   }
 
@@ -257,13 +257,13 @@ export class ProjectGraphBuilder {
         for (const dep of file.deps) {
           if (!Array.isArray(dep)) {
             throw new Error(
-              'Cached data on non project files should be a tuple'
+              'Cached data on non project files should be a tuple',
             );
           }
           const [source, target, type] = dep;
           if (!source || !target || !type) {
             throw new Error(
-              'Cached dependencies for non project files should be a tuple of length 3.'
+              'Cached dependencies for non project files should be a tuple of length 3.',
             );
           }
           this.graph.dependencies[source].push({
@@ -281,7 +281,7 @@ export class ProjectGraphBuilder {
     source: string,
     target: string,
     type: DependencyType,
-    sourceFile?: string
+    sourceFile?: string,
   ): void {
     if (source === target) {
       return;
@@ -305,21 +305,21 @@ export class ProjectGraphBuilder {
         filesToProcess: null,
         nxJsonConfiguration: null,
         workspaceRoot: null,
-      }
+      },
     );
 
     if (!this.graph.dependencies[source]) {
       this.graph.dependencies[source] = [];
     }
     const isDuplicate = !!this.graph.dependencies[source].find(
-      (d) => d.target === target && d.type === type
+      (d) => d.target === target && d.type === type,
     );
 
     if (sourceFile) {
       let fileData = getProjectFileData(
         source,
         sourceFile,
-        this.projectFileMap
+        this.projectFileMap,
       );
       const isProjectFileData = !!fileData;
       fileData ??= getNonProjectFileData(sourceFile, this.nonProjectFiles);
@@ -330,7 +330,7 @@ export class ProjectGraphBuilder {
 
       if (
         !fileData.deps.find(
-          (t) => fileDataDepTarget(t) === target && fileDataDepType(t) === type
+          (t) => fileDataDepTarget(t) === target && fileDataDepType(t) === type,
         )
       ) {
         const dep: FileDataDependency = isProjectFileData
@@ -373,7 +373,7 @@ export class ProjectGraphBuilder {
   }
 
   private calculateTargetDepsFromFiles(
-    sourceProject: string
+    sourceProject: string,
   ): Map<string, Set<DependencyType | string>> {
     const fileDeps = new Map<string, Set<DependencyType | string>>();
     const files = this.projectFileMap[sourceProject] || [];
@@ -396,7 +396,7 @@ export class ProjectGraphBuilder {
   }
 
   private calculateAlreadySetTargetDeps(
-    sourceProject: string
+    sourceProject: string,
   ): Map<string, Map<DependencyType | string, ProjectGraphDependency>> {
     const alreadySetTargetProjects = new Map<
       string,
@@ -505,7 +505,7 @@ export type RawProjectGraphDependency =
  */
 export function validateDependency(
   dependency: RawProjectGraphDependency,
-  ctx: CreateDependenciesContext
+  ctx: CreateDependenciesContext,
 ): void {
   if (dependency.type === DependencyType.implicit) {
     validateImplicitDependency(dependency, ctx);
@@ -520,7 +520,7 @@ export function validateDependency(
 
 function validateCommonDependencyRules(
   d: RawProjectGraphDependency,
-  { externalNodes, projects, fileMap }: CreateDependenciesContext
+  { externalNodes, projects, fileMap }: CreateDependenciesContext,
 ) {
   if (!projects[d.source] && !externalNodes[d.source]) {
     throw new Error(`Source project does not exist: ${d.source}`);
@@ -546,7 +546,7 @@ function validateCommonDependencyRules(
         projects,
         externalNodes,
         fileMap.projectFileMap,
-        fileMap.nonProjectFiles
+        fileMap.nonProjectFiles,
       );
     }
   }
@@ -554,7 +554,7 @@ function validateCommonDependencyRules(
 
 function validateImplicitDependency(
   d: ImplicitDependency,
-  { externalNodes }: CreateDependenciesContext
+  { externalNodes }: CreateDependenciesContext,
 ) {
   if (externalNodes[d.source]) {
     throw new Error(`External projects can't have "implicit" dependencies`);
@@ -563,7 +563,7 @@ function validateImplicitDependency(
 
 function validateDynamicDependency(
   d: DynamicDependency,
-  { externalNodes }: CreateDependenciesContext
+  { externalNodes }: CreateDependenciesContext,
 ) {
   if (externalNodes[d.source]) {
     throw new Error(`External projects can't have "dynamic" dependencies`);
@@ -571,14 +571,14 @@ function validateDynamicDependency(
   // dynamic dependency is always bound to a file
   if (!d.sourceFile) {
     throw new Error(
-      `Source project file is required for "dynamic" dependencies`
+      `Source project file is required for "dynamic" dependencies`,
     );
   }
 }
 
 function validateStaticDependency(
   d: StaticDependency,
-  { projects }: CreateDependenciesContext
+  { projects }: CreateDependenciesContext,
 ) {
   // internal nodes must provide sourceProjectFile when creating static dependency
   // externalNodes do not have sourceProjectFile
@@ -590,7 +590,7 @@ function validateStaticDependency(
 function getProjectFileData(
   source: string,
   sourceFile: string,
-  fileMap: ProjectFileMap
+  fileMap: ProjectFileMap,
 ) {
   let fileData = (fileMap[source] || []).find((f) => f.file === sourceFile);
   if (fileData) {
@@ -602,7 +602,7 @@ function getNonProjectFileData(sourceFile: string, files: FileData[]) {
   const fileData = files.find((f) => f.file === sourceFile);
   if (!fileData) {
     throw new Error(
-      `Source file "${sourceFile}" does not exist in the workspace.`
+      `Source file "${sourceFile}" does not exist in the workspace.`,
     );
   }
   return fileData;
@@ -614,7 +614,7 @@ function getFileData(
   projects: Record<string, ProjectGraphProjectNode | ProjectConfiguration>,
   externalNodes: Record<string, ProjectGraphExternalNode>,
   fileMap: ProjectFileMap,
-  nonProjectFiles: FileData[]
+  nonProjectFiles: FileData[],
 ) {
   const sourceProject = projects[source];
   const matchingExternalNode = externalNodes[source];

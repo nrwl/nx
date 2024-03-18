@@ -2,7 +2,7 @@ import { ExtraEntryPoint, NormalizedEntryPoint } from '../models';
 
 export function normalizeExtraEntryPoints(
   extraEntryPoints: ExtraEntryPoint[],
-  defaultBundleName: string
+  defaultBundleName: string,
 ): NormalizedEntryPoint[] {
   return extraEntryPoints.map((entry) => {
     let normalizedEntry;

@@ -12,7 +12,7 @@ export default async function fixCoverageThreshold(tree: Tree) {
   const projects = getProjects(tree);
   forEachExecutorOptions(tree, '@nx/vite:test', (_options, projectName) => {
     const projectConfig: ProjectConfiguration = projects.get(
-      projectName
+      projectName,
     ) as ProjectConfiguration;
     const configPath = findViteConfig(tree, projectConfig.root);
     if (!configPath || !tree.exists(configPath)) {

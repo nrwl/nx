@@ -28,11 +28,11 @@ export async function handleHashTasks(payload: {
       projectGraph,
       nxJson,
       rustReferences,
-      payload.runnerOptions
+      payload.runnerOptions,
     );
   }
   const response = JSON.stringify(
-    await storedHasher.hashTasks(payload.tasks, payload.taskGraph, payload.env)
+    await storedHasher.hashTasks(payload.tasks, payload.taskGraph, payload.env),
   );
   return {
     response,

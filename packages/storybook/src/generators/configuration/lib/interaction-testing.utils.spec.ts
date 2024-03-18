@@ -22,7 +22,7 @@ describe('Helper functions for the Storybook 7 migration generator', () => {
               },
             };
             
-            export default config;`
+            export default config;`,
     );
     addInteractionsInAddons(tree, {
       name: 'my-proj',
@@ -52,7 +52,7 @@ describe('Helper functions for the Storybook 7 migration generator', () => {
               },
             };
             
-            export default config;`
+            export default config;`,
     );
     addInteractionsInAddons(tree, {
       name: 'my-proj',

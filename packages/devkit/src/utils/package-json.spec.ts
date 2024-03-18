@@ -32,7 +32,7 @@ describe('addDependenciesToPackageJson', () => {
       {
         tslib: '^2.3.0',
       },
-      { jest: '28.1.1' }
+      { jest: '28.1.1' },
     );
 
     expect(readJson(tree, 'package.json')).toEqual({
@@ -48,7 +48,7 @@ describe('addDependenciesToPackageJson', () => {
       {
         'react-dom': 'latest',
       },
-      {}
+      {},
     );
     expect(readJson(tree, 'package.json').dependencies).toEqual({
       react: 'latest',
@@ -64,7 +64,7 @@ describe('addDependenciesToPackageJson', () => {
       {
         react: 'next',
       },
-      {}
+      {},
     );
     expect(readJson(tree, 'package.json').dependencies).toEqual({
       react: 'next',
@@ -78,7 +78,7 @@ describe('addDependenciesToPackageJson', () => {
       {},
       {
         '@nx/react': 'latest',
-      }
+      },
     );
     expect(readJson(tree, 'package.json').devDependencies).toEqual({
       jest: 'latest',
@@ -93,7 +93,7 @@ describe('addDependenciesToPackageJson', () => {
       {},
       {
         jest: 'next',
-      }
+      },
     );
     expect(readJson(tree, 'package.json').devDependencies).toEqual({
       jest: 'next',
@@ -120,7 +120,7 @@ describe('addDependenciesToPackageJson', () => {
       },
       {
         '@nx/angular': 'next',
-      }
+      },
     );
 
     // ASSERT
@@ -153,7 +153,7 @@ describe('addDependenciesToPackageJson', () => {
       },
       {
         '@nx/angular': 'latest',
-      }
+      },
     );
 
     // ASSERT
@@ -186,7 +186,7 @@ describe('addDependenciesToPackageJson', () => {
       },
       {
         '@nx/angular': '14.1.0',
-      }
+      },
     );
 
     // ASSERT
@@ -219,7 +219,7 @@ describe('addDependenciesToPackageJson', () => {
       },
       {
         '@nx/angular': '14.0.0',
-      }
+      },
     );
 
     // ASSERT
@@ -254,7 +254,7 @@ describe('addDependenciesToPackageJson', () => {
       },
       {
         '@nx/next': '14.1.0',
-      }
+      },
     );
 
     // ASSERT
@@ -291,7 +291,7 @@ describe('addDependenciesToPackageJson', () => {
       },
       {
         '@nx/next': '14.1.0',
-      }
+      },
     );
 
     // ASSERT
@@ -326,7 +326,7 @@ describe('addDependenciesToPackageJson', () => {
       },
       {
         '@nx/angular': '14.1.0',
-      }
+      },
     );
 
     // ASSERT
@@ -363,7 +363,7 @@ describe('addDependenciesToPackageJson', () => {
       },
       {
         '@nx/angular': '14.1.0',
-      }
+      },
     );
 
     // ASSERT
@@ -399,7 +399,7 @@ describe('addDependenciesToPackageJson', () => {
       },
       {
         '@nx/angular': 'next',
-      }
+      },
     );
 
     // ASSERT
@@ -433,7 +433,7 @@ describe('addDependenciesToPackageJson', () => {
       },
       {
         nx: '15.0.0',
-      }
+      },
     );
 
     // ASSERT
@@ -461,7 +461,7 @@ describe('addDependenciesToPackageJson', () => {
       },
       {},
       undefined,
-      true
+      true,
     );
 
     const result = readJson(tree, 'package.json');
@@ -482,7 +482,7 @@ describe('ensurePackage', () => {
     writeJson(tree, 'package.json', {});
 
     expect(ensurePackage('@nx/devkit', '>=15.0.0')).toEqual(
-      require('@nx/devkit')
+      require('@nx/devkit'),
     ); // return void
   });
 });

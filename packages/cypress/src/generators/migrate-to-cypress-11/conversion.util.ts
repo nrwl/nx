@@ -28,7 +28,7 @@ export function findCypressConfigs(
   tree: Tree,
   projectConfig: ProjectConfiguration,
   target: string,
-  config: string
+  config: string,
 ): {
   cypressConfigPathJson: string;
   cypressConfigPathTs: string;
@@ -52,8 +52,8 @@ export function findCypressConfigs(
       ? 'cypress.config.ts' //default
       : `${basename(
           cypressConfigPathJson,
-          extname(cypressConfigPathJson)
-        )}.config.ts`
+          extname(cypressConfigPathJson),
+        )}.config.ts`,
   );
 
   return {
@@ -69,7 +69,7 @@ export function findCypressConfigs(
 export function createNewCypressConfig(
   tree: Tree,
   projectConfig: ProjectConfiguration,
-  cypressConfigPathJson: string
+  cypressConfigPathJson: string,
 ): {
   cypressConfigTs: Record<string, any>;
   cypressConfigJson: Record<string, any>;
@@ -84,7 +84,7 @@ export function createNewCypressConfig(
   } = cypressConfigJson;
 
   const newIntegrationFolder = tree.exists(
-    joinPathFragments(projectConfig.sourceRoot, 'integration')
+    joinPathFragments(projectConfig.sourceRoot, 'integration'),
   )
     ? 'src/e2e'
     : integrationFolder;
@@ -98,10 +98,10 @@ export function createNewCypressConfig(
       supportFile:
         (supportFile &&
           tree.exists(
-            joinPathFragments(projectConfig.sourceRoot, 'support', 'index.ts')
+            joinPathFragments(projectConfig.sourceRoot, 'support', 'index.ts'),
           )) ||
         tree.exists(
-          joinPathFragments(projectConfig.sourceRoot, 'support', 'e2e.ts')
+          joinPathFragments(projectConfig.sourceRoot, 'support', 'e2e.ts'),
         )
           ? 'src/support/e2e.ts'
           : supportFile,
@@ -117,7 +117,7 @@ export function createNewCypressConfig(
 export function createSupportFileImport(
   oldSupportFilePath: string,
   newSupportFilePath: string,
-  projectSourceRoot: string
+  projectSourceRoot: string,
 ): { oldImportPathLeaf: string; newImportPathLeaf: string } {
   // need to get the new import path for the support file.
   // before it was "<relative path>/support/index.ts" and the new path will be "<relative path>/support/e2e.ts"
@@ -130,14 +130,14 @@ export function createSupportFileImport(
   const newFileExt = extname(newSupportFilePath);
   const newImportPathLeaf = relative(
     projectSourceRoot,
-    newSupportFilePath
+    newSupportFilePath,
   ).replace(newFileExt, '');
 
   // apps/app-e2e/support/index.ts => support/index
   const oldFileExt = extname(oldSupportFilePath);
   const oldImportPathLeaf = relative(
     projectSourceRoot,
-    oldSupportFilePath
+    oldSupportFilePath,
   ).replace(oldFileExt, '');
 
   // support/index => support
@@ -162,17 +162,17 @@ export function updateProjectPaths(
   }: {
     cypressConfigTs: Record<string, any>;
     cypressConfigJson: Record<string, any>;
-  }
+  },
 ) {
   const { integrationFolder, supportFile } = cypressConfigTs['e2e'];
 
   const oldIntegrationFolder = joinPathFragments(
     projectConfig.root,
-    cypressConfigJson.integrationFolder
+    cypressConfigJson.integrationFolder,
   );
   const newIntegrationFolder = joinPathFragments(
     projectConfig.root,
-    integrationFolder
+    integrationFolder,
   );
 
   let newSupportFile: string;
@@ -187,7 +187,7 @@ export function updateProjectPaths(
     shouldUpdateSupportFileImports = true;
     oldSupportFile = joinPathFragments(
       projectConfig.root,
-      cypressConfigJson.supportFile
+      cypressConfigJson.supportFile,
     );
 
     newSupportFile = joinPathFragments(projectConfig.root, supportFile);
@@ -203,14 +203,14 @@ export function updateProjectPaths(
     const defaultSupportFile = joinPathFragments(
       projectConfig.sourceRoot,
       'support',
-      'index.ts'
+      'index.ts',
     );
 
     if (tree.exists(defaultSupportFile)) {
       const newSupportDefaultPath = joinPathFragments(
         projectConfig.sourceRoot,
         'support',
-        'e2e.ts'
+        'e2e.ts',
       );
       if (
         defaultSupportFile !== newSupportDefaultPath &&
@@ -225,7 +225,7 @@ export function updateProjectPaths(
     const newImportPaths = createSupportFileImport(
       oldSupportFile,
       newSupportFile,
-      projectConfig.sourceRoot
+      projectConfig.sourceRoot,
     );
     oldImportLeafPath = newImportPaths.oldImportPathLeaf;
     newImportLeafPath = newImportPaths.newImportPathLeaf;
@@ -241,7 +241,7 @@ export function updateProjectPaths(
     const fileName = basename(normalizedPath);
     let newPath = normalizedPath.replace(
       oldIntegrationFolder,
-      newIntegrationFolder
+      newIntegrationFolder,
     );
 
     if (fileName.includes('.spec.')) {
@@ -268,7 +268,7 @@ export function updateImports(
   tree: Tree,
   filePath: string,
   oldImportPath: string,
-  newImportPath: string
+  newImportPath: string,
 ) {
   if (!tsModule) {
     tsModule = ensureTypescript();
@@ -295,7 +295,7 @@ export function updateImports(
         return `'${node.text.replace(oldImportPath, newImportPath)}'`;
       }
       return node.text;
-    }
+    },
   );
   tree.write(filePath, newContent);
 }
@@ -306,7 +306,7 @@ export function writeNewConfig(
   cypressConfigs: {
     cypressConfigTs: Record<string, any>;
     cypressConfigJson: Record<string, any>;
-  }
+  },
 ) {
   // remove deprecated configs options
   const {
@@ -335,14 +335,14 @@ export default defineConfig({
     ${pluginsFile ? 'setupNodeEvents' : ''}
   }
 })
-`
+`,
   );
 }
 
 export function addConfigToTsConfig(
   tree: Tree,
   tsconfigPath: string,
-  cypressConfigPath: string
+  cypressConfigPath: string,
 ) {
   if (tree.exists(tsconfigPath)) {
     updateJson(
@@ -353,11 +353,11 @@ export function addConfigToTsConfig(
           new Set([
             ...(json.include || []),
             relative(dirname(tsconfigPath), cypressConfigPath),
-          ])
+          ]),
         );
         return json;
       },
-      { expectComments: true }
+      { expectComments: true },
     );
   }
 }
@@ -368,7 +368,7 @@ export function updatePluginFile(
   cypressConfigs: {
     cypressConfigTs: Record<string, any>;
     cypressConfigJson: Record<string, any>;
-  }
+  },
 ) {
   // if ts file change module.exports = to export default
   // if js file don't do anything
@@ -397,7 +397,7 @@ export function updatePluginFile(
       pluginFilePath,
       pluginFileContent
         .replace('module.exports =', 'export default')
-        .replace(/module\.exports\.(.*?)=/g, 'export const $1=')
+        .replace(/module\.exports\.(.*?)=/g, 'export const $1='),
     );
   }
 

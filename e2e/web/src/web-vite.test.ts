@@ -47,7 +47,7 @@ describe('Web Components Applications with bundler set as vite', () => {
 
     runCLI(`generate @nx/web:app ${appName} --bundler=vite --no-interactive`);
     runCLI(
-      `generate @nx/react:lib ${libName} --bundler=vite --no-interactive --unitTestRunner=vitest`
+      `generate @nx/react:lib ${libName} --bundler=vite --no-interactive --unitTestRunner=vitest`,
     );
 
     createFile(`dist/apps/${appName}/_should_remove.txt`);
@@ -55,13 +55,13 @@ describe('Web Components Applications with bundler set as vite', () => {
     createFile(`dist/apps/_should_not_remove.txt`);
     checkFilesExist(
       `dist/apps/${appName}/_should_remove.txt`,
-      `dist/apps/_should_not_remove.txt`
+      `dist/apps/_should_not_remove.txt`,
     );
     runCLI(`build ${appName} --emptyOutDir`);
     runCLI(`build ${libName} --emptyOutDir`);
     checkFilesDoNotExist(
       `dist/apps/${appName}/_should_remove.txt`,
-      `dist/libs/${libName}/_should_remove.txt`
+      `dist/libs/${libName}/_should_remove.txt`,
     );
     checkFilesExist(`dist/apps/_should_not_remove.txt`);
   }, 120000);

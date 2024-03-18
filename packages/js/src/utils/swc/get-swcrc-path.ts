@@ -4,7 +4,7 @@ import { SwcExecutorOptions } from '../schema';
 export function getSwcrcPath(
   options: SwcExecutorOptions,
   contextRoot: string,
-  projectRoot: string
+  projectRoot: string,
 ) {
   const swcrcPath = options.swcrc
     ? join(contextRoot, options.swcrc)
@@ -14,7 +14,7 @@ export function getSwcrcPath(
     contextRoot,
     projectRoot,
     'tmp',
-    '.generated.swcrc'
+    '.generated.swcrc',
   );
 
   return {

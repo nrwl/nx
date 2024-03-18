@@ -63,8 +63,8 @@ function readNxJsonExtends(tree: Tree, extendsPath: string) {
         tree.root,
         require.resolve(extendsPath, {
           paths: [tree.root],
-        })
-      )
+        }),
+      ),
     );
   } catch (e) {
     throw new Error(`Unable to resolve nx.json extends. Error: ${e.message}`);

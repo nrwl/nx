@@ -38,14 +38,14 @@ describe('@nx/jest/plugin', () => {
       {
         coverageDirectory: '../coverage',
       },
-      context
+      context,
     );
     const nodes = await createNodesFunction(
       'proj/jest.config.js',
       {
         targetName: 'test',
       },
-      context
+      context,
     );
 
     expect(nodes.projects.proj).toMatchInlineSnapshot(`

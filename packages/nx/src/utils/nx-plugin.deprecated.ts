@@ -10,7 +10,7 @@ import { LoadedNxPlugin, NxPluginV2 } from './nx-plugin';
  * @deprecated Add targets to the projects in a {@link CreateNodes} function instead. This will be removed in Nx 19
  */
 export type ProjectTargetConfigurator = (
-  file: string
+  file: string,
 ) => Record<string, TargetConfiguration>;
 
 /**

@@ -31,7 +31,7 @@ let tsConfigJson: TsconfigJsonConfiguration;
 export function hashTsConfig(
   p: ProjectGraphProjectNode,
   projectRootMappings: ProjectRootMappings,
-  { selectivelyHashTsConfig }: { selectivelyHashTsConfig: boolean }
+  { selectivelyHashTsConfig }: { selectivelyHashTsConfig: boolean },
 ) {
   if (!tsConfigJson) {
     tsConfigJson = readTsConfigJson();
@@ -46,7 +46,7 @@ export function hashTsConfig(
 function removeOtherProjectsPathRecords(
   p: ProjectGraphProjectNode,
   tsConfigJson: TsconfigJsonConfiguration,
-  projectRootMapping: ProjectRootMappings
+  projectRootMapping: ProjectRootMappings,
 ) {
   const { paths, ...compilerOptions } = tsConfigJson.compilerOptions;
   const filteredPaths: Record<string, string[]> = {};

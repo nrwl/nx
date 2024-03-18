@@ -1,6 +1,6 @@
 export async function printDiagnostics(
   errors: string[] = [],
-  warnings: string[] = []
+  warnings: string[] = [],
 ) {
   if (errors.length > 0) {
     errors.forEach((err) => {

@@ -1,7 +1,7 @@
 import { TargetConfiguration } from '@nx/devkit';
 
 export function* allTargetOptions<T>(
-  target: TargetConfiguration<T>
+  target: TargetConfiguration<T>,
 ): Iterable<[string | undefined, T]> {
   if (target.options) {
     yield [undefined, target.options];

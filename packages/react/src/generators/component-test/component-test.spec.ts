@@ -73,7 +73,7 @@ describe(componentTestGenerator.name, () => {
     });
 
     expect(tree.read('some-lib/src/lib/some-lib.cy.tsx', 'utf-8')).toEqual(
-      'existing content'
+      'existing content',
     );
   });
 
@@ -93,7 +93,7 @@ describe(componentTestGenerator.name, () => {
       componentTestGenerator(tree, {
         project: 'some-lib',
         componentPath: 'lib/blah/abc-123.blah',
-      })
+      }),
     ).resolves.not.toThrow();
   });
 
@@ -146,7 +146,7 @@ export interface AnotherCmpProps {
 export function AnotherCmp(props: AnotherCmpProps) {
  return <button onClick='{handleClick}'>{props.text}</button>;
 }
-`
+`,
       );
       await componentTestGenerator(tree, {
         project: 'some-lib',
@@ -155,7 +155,7 @@ export function AnotherCmp(props: AnotherCmpProps) {
 
       expect(tree.exists('some-lib/src/lib/some-lib.cy.tsx')).toBeTruthy();
       expect(
-        tree.read('some-lib/src/lib/some-lib.cy.tsx', 'utf-8')
+        tree.read('some-lib/src/lib/some-lib.cy.tsx', 'utf-8'),
       ).toMatchSnapshot();
     });
     it('should handle no props', async () => {
@@ -178,7 +178,7 @@ ${tree.read('some-lib/src/lib/some-lib.tsx')}
 export function AnotherCmp() {
  return <button>AnotherCmp</button>;
 }
-`
+`,
       );
       await componentTestGenerator(tree, {
         project: 'some-lib',
@@ -187,7 +187,7 @@ export function AnotherCmp() {
 
       expect(tree.exists('some-lib/src/lib/some-lib.cy.tsx')).toBeTruthy();
       expect(
-        tree.read('some-lib/src/lib/some-lib.cy.tsx', 'utf-8')
+        tree.read('some-lib/src/lib/some-lib.cy.tsx', 'utf-8'),
       ).toMatchSnapshot();
     });
     it('should handle default export', async () => {
@@ -221,7 +221,7 @@ export default function AnotherCmp(props: AnotherCmpProps) {
 export function AnotherCmp2() {
  return <button>AnotherCmp</button>;
 }
-`
+`,
       );
       await componentTestGenerator(tree, {
         project: 'some-lib',
@@ -230,7 +230,7 @@ export function AnotherCmp2() {
 
       expect(tree.exists('some-lib/src/lib/some-lib.cy.tsx')).toBeTruthy();
       expect(
-        tree.read('some-lib/src/lib/some-lib.cy.tsx', 'utf-8')
+        tree.read('some-lib/src/lib/some-lib.cy.tsx', 'utf-8'),
       ).toMatchSnapshot();
     });
 
@@ -265,7 +265,7 @@ export function AnotherCmp(props: AnotherCmpProps) {
 export function AnotherCmp2() {
  return <button>AnotherCmp2</button>;
 }
-`
+`,
       );
       await componentTestGenerator(tree, {
         project: 'some-lib',
@@ -274,7 +274,7 @@ export function AnotherCmp2() {
 
       expect(tree.exists('some-lib/src/lib/some-lib.cy.tsx')).toBeTruthy();
       expect(
-        tree.read('some-lib/src/lib/some-lib.cy.tsx', 'utf-8')
+        tree.read('some-lib/src/lib/some-lib.cy.tsx', 'utf-8'),
       ).toMatchSnapshot();
     });
   });
@@ -307,7 +307,7 @@ export interface AnotherCmpProps {
 export function AnotherCmp(props: AnotherCmpProps) {
  return <button onClick='{handleClick}'>{props.text}</button>;
 }
-`
+`,
       );
       await componentTestGenerator(tree, {
         project: 'some-lib',
@@ -316,7 +316,7 @@ export function AnotherCmp(props: AnotherCmpProps) {
 
       expect(tree.exists('some-lib/src/lib/some-lib.cy.tsx')).toBeTruthy();
       expect(
-        tree.read('some-lib/src/lib/some-lib.cy.tsx', 'utf-8')
+        tree.read('some-lib/src/lib/some-lib.cy.tsx', 'utf-8'),
       ).toMatchSnapshot();
     });
     it('should handle no props', async () => {
@@ -339,7 +339,7 @@ export function AnotherCmp(props: AnotherCmpProps) {
 
       expect(tree.exists('some-lib/src/lib/some-lib.cy.tsx')).toBeTruthy();
       expect(
-        tree.read('some-lib/src/lib/some-lib.cy.tsx', 'utf-8')
+        tree.read('some-lib/src/lib/some-lib.cy.tsx', 'utf-8'),
       ).toMatchSnapshot();
     });
     it('should handle default export', async () => {
@@ -369,7 +369,7 @@ export interface AnotherCmpProps {
 export default function AnotherCmp(props: AnotherCmpProps) {
  return <button onClick='{handleClick}'>{props.text}</button>;
 }
-`
+`,
       );
       await componentTestGenerator(tree, {
         project: 'some-lib',
@@ -378,7 +378,7 @@ export default function AnotherCmp(props: AnotherCmpProps) {
 
       expect(tree.exists('some-lib/src/lib/some-lib.cy.tsx')).toBeTruthy();
       expect(
-        tree.read('some-lib/src/lib/some-lib.cy.tsx', 'utf-8')
+        tree.read('some-lib/src/lib/some-lib.cy.tsx', 'utf-8'),
       ).toMatchSnapshot();
     });
     it('should handle named exports', async () => {
@@ -408,7 +408,7 @@ export interface AnotherCmpProps {
 export function AnotherCmp(props: AnotherCmpProps) {
  return <button onClick='{handleClick}'>{props.text}</button>;
 }
-`
+`,
       );
       await componentTestGenerator(tree, {
         project: 'some-lib',
@@ -417,7 +417,7 @@ export function AnotherCmp(props: AnotherCmpProps) {
 
       expect(tree.exists('some-lib/src/lib/some-lib.cy.tsx')).toBeTruthy();
       expect(
-        tree.read('some-lib/src/lib/some-lib.cy.tsx', 'utf-8')
+        tree.read('some-lib/src/lib/some-lib.cy.tsx', 'utf-8'),
       ).toMatchSnapshot();
     });
   });

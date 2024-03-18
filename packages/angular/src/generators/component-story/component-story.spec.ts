@@ -40,7 +40,7 @@ describe('componentStory generator', () => {
           @Input() message: string | undefined;
           @Input() anotherProp: any;
           @Input() anotherNeverProp: never;
-        }`
+        }`,
     );
   });
 

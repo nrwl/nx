@@ -32,7 +32,7 @@ node_modules
 .settings/
 *.sublime-workspace
 .output_data
-`
+`,
     );
 
     updateGitIgnore(tree);
@@ -69,7 +69,7 @@ node_modules
 .nuxt
 .nitro
 .cache
-`
+`,
     );
 
     updateGitIgnore(tree);

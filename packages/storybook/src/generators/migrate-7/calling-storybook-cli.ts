@@ -20,7 +20,7 @@ export function callUpgrade(schema: Schema): 1 | Buffer {
       }`,
       {
         stdio: [0, 1, 2],
-      }
+      },
     );
 
     output.log({
@@ -54,7 +54,7 @@ export function callAutomigrate(
       viteConfigFilePath?: string;
     };
   },
-  schema: Schema
+  schema: Schema,
 ): { successfulProjects: {}; failedProjects: {} } {
   output.log({
     title: `⚙️ Calling sb automigrate`,
@@ -85,7 +85,7 @@ export function callAutomigrate(
           `${commandToRun}  ${schema.autoAcceptAllPrompts ? '--yes' : ''}`,
           {
             stdio: 'inherit',
-          }
+          },
         );
 
         resultOfMigration.successfulProjects[projectName] = commandToRun;
@@ -101,7 +101,7 @@ export function callAutomigrate(
         });
         resultOfMigration.failedProjects[projectName] = commandToRun;
       }
-    }
+    },
   );
 
   return resultOfMigration;

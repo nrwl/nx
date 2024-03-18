@@ -73,7 +73,7 @@ export const projectGraphMachine = createMachine<
             }),
             {
               to: (context) => context.graphActor,
-            }
+            },
           ),
         ],
       },
@@ -150,7 +150,7 @@ export const projectGraphMachine = createMachine<
             }),
             {
               to: (context) => context.graphActor,
-            }
+            },
           ),
         ],
       },
@@ -171,7 +171,7 @@ export const projectGraphMachine = createMachine<
             }),
             {
               to: (context) => context.graphActor,
-            }
+            },
           ),
         ],
       },
@@ -274,7 +274,7 @@ export const projectGraphMachine = createMachine<
         },
         {
           to: (context) => context.graphActor,
-        }
+        },
       ),
 
       notifyGraphShowProjects: send(
@@ -296,7 +296,7 @@ export const projectGraphMachine = createMachine<
         },
         {
           to: (context) => context.graphActor,
-        }
+        },
       ),
       notifyGraphHideProjects: send(
         (context, event) => {
@@ -320,7 +320,7 @@ export const projectGraphMachine = createMachine<
         },
         {
           to: (context) => context.graphActor,
-        }
+        },
       ),
       notifyGraphShowAllProjects: send(
         (context, event) => ({
@@ -328,7 +328,7 @@ export const projectGraphMachine = createMachine<
         }),
         {
           to: (context) => context.graphActor,
-        }
+        },
       ),
       notifyGraphHideAllProjects: send(
         (context, event) => ({
@@ -336,7 +336,7 @@ export const projectGraphMachine = createMachine<
         }),
         {
           to: (context) => context.graphActor,
-        }
+        },
       ),
       notifyGraphShowAffectedProjects: send(
         {
@@ -344,7 +344,7 @@ export const projectGraphMachine = createMachine<
         },
         {
           to: (ctx) => ctx.graphActor,
-        }
+        },
       ),
       notifyGraphFocusProject: send(
         (context, event) => ({
@@ -354,7 +354,7 @@ export const projectGraphMachine = createMachine<
         }),
         {
           to: (context) => context.graphActor,
-        }
+        },
       ),
 
       notifyGraphFilterProjectsByText: send(
@@ -366,8 +366,8 @@ export const projectGraphMachine = createMachine<
         }),
         {
           to: (context) => context.graphActor,
-        }
+        },
       ),
     },
-  }
+  },
 );

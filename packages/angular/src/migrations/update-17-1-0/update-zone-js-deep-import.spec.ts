@@ -36,7 +36,7 @@ import 'zone.js/dist/zone'; // Included with Angular CLI.
 /***************************************************************************************************
  * APPLICATION IMPORTS
  */
-`
+`,
     );
 
     await migration(tree);
@@ -82,7 +82,7 @@ getTestBed().initTestEnvironment(
 const context = require.context('./', true, /\.spec\.ts$/);
 // And load the modules.
 context.keys().map(context);
-`
+`,
     );
 
     await migration(tree);
@@ -117,7 +117,7 @@ function addProject(
   tree: Tree,
   projectName: string,
   config: ProjectConfiguration,
-  dependencies: string[]
+  dependencies: string[],
 ): void {
   projectGraph = {
     dependencies: {

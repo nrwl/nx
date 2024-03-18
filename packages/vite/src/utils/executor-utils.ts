@@ -30,7 +30,7 @@ export async function validateTypes(opts: {
 export function createBuildableTsConfig(
   projectRoot: string,
   options: ViteBuildExecutorOptions | ViteDevServerExecutorOptions,
-  context: ExecutorContext
+  context: ExecutorContext,
 ) {
   const tsConfig = getProjectTsConfigPath(projectRoot);
   options['buildLibsFromSource'] ??= true;
@@ -44,7 +44,7 @@ export function createBuildableTsConfig(
       // When using incremental building and the serve target is called
       // we need to get the deps for the 'build' target instead.
       context.targetName === 'serve' ? 'build' : context.targetName,
-      context.configurationName
+      context.configurationName,
     );
     // This tsconfig is used via the Vite ts paths plugin.
     // It can be also used by other user-defined Vite plugins (e.g. for creating type declaration files).
@@ -52,7 +52,7 @@ export function createBuildableTsConfig(
       tsConfig,
       context.root,
       projectRoot,
-      dependencies
+      dependencies,
     );
     process.env.NX_TSCONFIG_PATH = tmpTsConfigPath;
   }

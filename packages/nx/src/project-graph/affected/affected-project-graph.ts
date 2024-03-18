@@ -18,7 +18,7 @@ export async function filterAffected(
   graph: ProjectGraph,
   touchedFiles: FileChange[],
   nxJson: NxJsonConfiguration = readNxJson(),
-  packageJson: any = readPackageJson()
+  packageJson: any = readPackageJson(),
 ): Promise<ProjectGraph> {
   // Additional affected logic should be in this array.
   const touchedProjectLocators: TouchedProjectLocator[] = [
@@ -35,7 +35,7 @@ export async function filterAffected(
       graph.nodes,
       nxJson,
       packageJson,
-      graph
+      graph,
     );
     touchedProjects.push(...projects);
   }
@@ -51,7 +51,7 @@ export async function filterAffected(
 
 function filterAffectedProjects(
   graph: ProjectGraph,
-  ctx: AffectedProjectGraphContext
+  ctx: AffectedProjectGraphContext,
 ): ProjectGraph {
   const result: ProjectGraph = {
     nodes: {},
@@ -72,7 +72,7 @@ function addAffectedNodes(
   startingProject: string,
   reversed: ProjectGraph,
   result: ProjectGraph,
-  visited: string[]
+  visited: string[],
 ): void {
   if (visited.indexOf(startingProject) > -1) return;
   const reversedNode = reversed.nodes[startingProject];
@@ -88,7 +88,7 @@ function addAffectedNodes(
     result.externalNodes[startingProject] = reversedExternalNode;
   }
   reversed.dependencies[startingProject]?.forEach(({ target }) =>
-    addAffectedNodes(target, reversed, result, visited)
+    addAffectedNodes(target, reversed, result, visited),
   );
 }
 
@@ -96,13 +96,13 @@ function addAffectedDependencies(
   startingProject: string,
   reversed: ProjectGraph,
   result: ProjectGraph,
-  visited: string[]
+  visited: string[],
 ): void {
   if (visited.indexOf(startingProject) > -1) return;
   visited.push(startingProject);
   if (reversed.dependencies[startingProject]) {
     reversed.dependencies[startingProject].forEach(({ target }) =>
-      addAffectedDependencies(target, reversed, result, visited)
+      addAffectedDependencies(target, reversed, result, visited),
     );
     reversed.dependencies[startingProject].forEach(
       ({ type, source, target }) => {
@@ -116,7 +116,7 @@ function addAffectedDependencies(
           source: target,
           target: source,
         });
-      }
+      },
     );
   }
 }

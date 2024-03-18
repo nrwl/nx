@@ -17,10 +17,10 @@ describe('update-16-0-0-add-nx-packages', () => {
     await replacePackage(tree);
 
     expect(
-      readJson(tree, 'package.json').dependencies['@nrwl/eslint-plugin-nx']
+      readJson(tree, 'package.json').dependencies['@nrwl/eslint-plugin-nx'],
     ).not.toBeDefined();
     expect(
-      readJson(tree, 'package.json').devDependencies['@nrwl/eslint-plugin-nx']
+      readJson(tree, 'package.json').devDependencies['@nrwl/eslint-plugin-nx'],
     ).not.toBeDefined();
   });
 
@@ -63,7 +63,7 @@ describe('update-16-0-0-add-nx-packages', () => {
   it('should replace eslint-ignore comments', async () => {
     tree.write(
       'ignored-file.ts',
-      '// eslint-disable-next-line @nrwl/nx/enforce-module-boundaries\n /*\n* eslint-disable @nrwl/nx/enforce-module-boundaries\n*/\n // eslint-disable-line @nrwl/nx/enforce-module-boundaries'
+      '// eslint-disable-next-line @nrwl/nx/enforce-module-boundaries\n /*\n* eslint-disable @nrwl/nx/enforce-module-boundaries\n*/\n // eslint-disable-line @nrwl/nx/enforce-module-boundaries',
     );
     tree.write('plugin.ts', `import * as p from '@nrwl/nx-plugin'`);
 
@@ -77,7 +77,7 @@ describe('update-16-0-0-add-nx-packages', () => {
        // eslint-disable-line @nx/enforce-module-boundaries"
     `);
     expect(tree.read('plugin.ts').toString()).toMatchInlineSnapshot(
-      `"import * as p from '@nrwl/nx-plugin'"`
+      `"import * as p from '@nrwl/nx-plugin'"`,
     );
   });
 });

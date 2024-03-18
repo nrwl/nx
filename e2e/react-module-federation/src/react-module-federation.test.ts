@@ -43,25 +43,25 @@ describe('React Module Federation', () => {
         const defaultRemotePort = 4201;
 
         runCLI(
-          `generate @nx/react:host ${shell} --remotes=${remote1},${remote2},${remote3} --style=css --no-interactive --skipFormat --js=${js}`
+          `generate @nx/react:host ${shell} --remotes=${remote1},${remote2},${remote3} --style=css --no-interactive --skipFormat --js=${js}`,
         );
 
         checkFilesExist(
-          `apps/${shell}/module-federation.config.${js ? 'js' : 'ts'}`
+          `apps/${shell}/module-federation.config.${js ? 'js' : 'ts'}`,
         );
         checkFilesExist(
-          `apps/${remote1}/module-federation.config.${js ? 'js' : 'ts'}`
+          `apps/${remote1}/module-federation.config.${js ? 'js' : 'ts'}`,
         );
         checkFilesExist(
-          `apps/${remote2}/module-federation.config.${js ? 'js' : 'ts'}`
+          `apps/${remote2}/module-federation.config.${js ? 'js' : 'ts'}`,
         );
         checkFilesExist(
-          `apps/${remote3}/module-federation.config.${js ? 'js' : 'ts'}`
+          `apps/${remote3}/module-federation.config.${js ? 'js' : 'ts'}`,
         );
 
         await expect(runCLIAsync(`test ${shell}`)).resolves.toMatchObject({
           combinedOutput: expect.stringContaining(
-            'Test Suites: 1 passed, 1 total'
+            'Test Suites: 1 passed, 1 total',
           ),
         });
 
@@ -86,7 +86,7 @@ describe('React Module Federation', () => {
 
         // Nx plugins for webpack to build config object from Nx options and context.
         module.exports = composePlugins(withNx(), withReact(), withModuleFederation(config));
-      `
+      `,
           );
         } else {
           updateFile(
@@ -109,7 +109,7 @@ describe('React Module Federation', () => {
 
         // Nx plugins for webpack to build config object from Nx options and context.
         export default composePlugins(withNx(), withReact(), withModuleFederation(config));
-      `
+      `,
           );
         }
 
@@ -139,7 +139,7 @@ describe('React Module Federation', () => {
             getGreeting().contains('Welcome ${remote3}');
           });
         });
-      `
+      `,
         );
 
         [shell, remote1, remote2, remote3].forEach((app) => {
@@ -150,25 +150,25 @@ describe('React Module Federation', () => {
         });
 
         const serveResult = await runCommandUntil(`serve ${shell}`, (output) =>
-          output.includes(`http://localhost:${readPort(shell)}`)
+          output.includes(`http://localhost:${readPort(shell)}`),
         );
 
         await killProcessAndPorts(
           serveResult.pid,
           readPort(shell),
-          defaultRemotePort
+          defaultRemotePort,
         );
 
         if (runE2ETests()) {
           const e2eResultsSwc = await runCommandUntil(
             `e2e ${shell}-e2e --no-watch --verbose`,
-            (output) => output.includes('All specs passed!')
+            (output) => output.includes('All specs passed!'),
           );
 
           await killProcessAndPorts(
             e2eResultsSwc.pid,
             readPort(shell),
-            defaultRemotePort
+            defaultRemotePort,
           );
 
           const e2eResultsTsNode = await runCommandUntil(
@@ -176,16 +176,16 @@ describe('React Module Federation', () => {
             (output) => output.includes('All specs passed!'),
             {
               env: { NX_PREFER_TS_NODE: 'true' },
-            }
+            },
           );
           await killProcessAndPorts(
             e2eResultsTsNode.pid,
             readPort(shell),
-            defaultRemotePort
+            defaultRemotePort,
           );
         }
       },
-      500_000
+      500_000,
     );
 
     it('should generate host and remote apps with ssr', async () => {
@@ -195,7 +195,7 @@ describe('React Module Federation', () => {
       const remote3 = uniq('remote3');
 
       await runCLIAsync(
-        `generate @nx/react:host ${shell} --ssr --remotes=${remote1},${remote2},${remote3} --style=css --no-interactive --projectNameAndRootFormat=derived --skipFormat`
+        `generate @nx/react:host ${shell} --ssr --remotes=${remote1},${remote2},${remote3} --style=css --no-interactive --projectNameAndRootFormat=derived --skipFormat`,
       );
 
       expect(readPort(shell)).toEqual(4200);
@@ -206,7 +206,7 @@ describe('React Module Federation', () => {
       [shell, remote1, remote2, remote3].forEach((app) => {
         checkFilesExist(
           `apps/${app}/module-federation.config.ts`,
-          `apps/${app}/module-federation.server.config.ts`
+          `apps/${app}/module-federation.server.config.ts`,
         );
         ['build', 'server'].forEach((target) => {
           ['development', 'production'].forEach(async (configuration) => {
@@ -224,10 +224,10 @@ describe('React Module Federation', () => {
       const remote = uniq('remote');
 
       runCLI(
-        `generate @nx/react:host ${shell} --project-name-and-root-format=as-provided --no-interactive --skipFormat`
+        `generate @nx/react:host ${shell} --project-name-and-root-format=as-provided --no-interactive --skipFormat`,
       );
       runCLI(
-        `generate @nx/react:remote ${remote} --host=${shell} --project-name-and-root-format=as-provided --no-interactive --skipFormat`
+        `generate @nx/react:remote ${remote} --host=${shell} --project-name-and-root-format=as-provided --no-interactive --skipFormat`,
       );
 
       const shellPort = readPort(shell);
@@ -252,33 +252,33 @@ describe('React Module Federation', () => {
         `serve ${shell} --devRemotes=${remote} --verbose`,
         (output) => {
           return output.includes(
-            `All remotes started, server ready at http://localhost:${shellPort}`
+            `All remotes started, server ready at http://localhost:${shellPort}`,
           );
-        }
+        },
       );
       await killProcessAndPorts(
         shellProcessSwc.pid,
         shellPort,
         remotePort + 1,
-        remotePort
+        remotePort,
       );
 
       const shellProcessTsNode = await runCommandUntil(
         `serve ${shell} --devRemotes=${remote} --verbose`,
         (output) => {
           return output.includes(
-            `All remotes started, server ready at http://localhost:${shellPort}`
+            `All remotes started, server ready at http://localhost:${shellPort}`,
           );
         },
         {
           env: { NX_PREFER_TS_NODE: 'true' },
-        }
+        },
       );
       await killProcessAndPorts(
         shellProcessTsNode.pid,
         shellPort,
         remotePort + 1,
-        remotePort
+        remotePort,
       );
     }, 500_000);
   });
@@ -300,25 +300,25 @@ describe('React Module Federation', () => {
       const host = uniq('host');
 
       runCLI(
-        `generate @nx/react:host ${host} --remotes=${remote} --no-interactive --projectNameAndRootFormat=as-provided --skipFormat`
+        `generate @nx/react:host ${host} --remotes=${remote} --no-interactive --projectNameAndRootFormat=as-provided --skipFormat`,
       );
 
       runCLI(
-        `generate @nx/js:lib ${lib} --no-interactive --projectNameAndRootFormat=as-provided --skipFormat`
+        `generate @nx/js:lib ${lib} --no-interactive --projectNameAndRootFormat=as-provided --skipFormat`,
       );
 
       // Federate Module
       runCLI(
-        `generate @nx/react:federate-module ${lib}/src/index.ts --name=${module} --remote=${remote} --no-interactive --skipFormat`
+        `generate @nx/react:federate-module ${lib}/src/index.ts --name=${module} --remote=${remote} --no-interactive --skipFormat`,
       );
 
       updateFile(
         `${lib}/src/index.ts`,
-        `export { default } from './lib/${lib}';`
+        `export { default } from './lib/${lib}';`,
       );
       updateFile(
         `${lib}/src/lib/${lib}.ts`,
-        `export default function lib() { return 'Hello from ${lib}'; };`
+        `export default function lib() { return 'Hello from ${lib}'; };`,
       );
 
       // Update Host to use the module
@@ -350,7 +350,7 @@ describe('React Module Federation', () => {
       }
 
       export default App;
-      `
+      `,
       );
 
       // Update e2e test to check the module
@@ -366,7 +366,7 @@ describe('React Module Federation', () => {
         });
       });
       
-      `
+      `,
       );
 
       const hostPort = readPort(host);
@@ -382,13 +382,13 @@ describe('React Module Federation', () => {
       if (runE2ETests()) {
         const hostE2eResults = await runCommandUntil(
           `e2e ${host}-e2e --no-watch --verbose`,
-          (output) => output.includes('All specs passed!')
+          (output) => output.includes('All specs passed!'),
         );
         await killProcessAndPorts(
           hostE2eResults.pid,
           hostPort,
           hostPort + 1,
-          remotePort
+          remotePort,
         );
       }
     }, 500_000);
@@ -401,25 +401,25 @@ describe('React Module Federation', () => {
       const host = uniq('host');
 
       runCLI(
-        `generate @nx/react:host ${host} --remotes=${remote} --no-interactive --projectNameAndRootFormat=as-provided --skipFormat`
+        `generate @nx/react:host ${host} --remotes=${remote} --no-interactive --projectNameAndRootFormat=as-provided --skipFormat`,
       );
 
       runCLI(
-        `generate @nx/js:lib ${lib} --no-interactive --projectNameAndRootFormat=as-provided --skipFormat`
+        `generate @nx/js:lib ${lib} --no-interactive --projectNameAndRootFormat=as-provided --skipFormat`,
       );
 
       // Federate Module
       runCLI(
-        `generate @nx/react:federate-module ${lib}/src/index.ts --name=${module} --remote=${childRemote} --no-interactive --skipFormat`
+        `generate @nx/react:federate-module ${lib}/src/index.ts --name=${module} --remote=${childRemote} --no-interactive --skipFormat`,
       );
 
       updateFile(
         `${lib}/src/index.ts`,
-        `export { default } from './lib/${lib}';`
+        `export { default } from './lib/${lib}';`,
       );
       updateFile(
         `${lib}/src/lib/${lib}.ts`,
-        `export default function lib() { return 'Hello from ${lib}'; };`
+        `export default function lib() { return 'Hello from ${lib}'; };`,
       );
 
       // Update Host to use the module
@@ -443,7 +443,7 @@ describe('React Module Federation', () => {
       }
 
       export default App;
-      `
+      `,
       );
 
       // Update e2e test to check the module
@@ -459,7 +459,7 @@ describe('React Module Federation', () => {
         });
       });
       
-      `
+      `,
       );
 
       const hostPort = readPort(host);
@@ -476,14 +476,14 @@ describe('React Module Federation', () => {
       if (runE2ETests()) {
         const hostE2eResults = await runCommandUntil(
           `e2e ${host}-e2e --no-watch --verbose`,
-          (output) => output.includes('All specs passed!')
+          (output) => output.includes('All specs passed!'),
         );
         await killProcessAndPorts(
           hostE2eResults.pid,
           hostPort,
           hostPort + 1,
           remotePort,
-          childRemotePort
+          childRemotePort,
         );
       }
     }, 500_000);
@@ -509,7 +509,7 @@ describe('React Module Federation', () => {
       const host = uniq('host');
 
       runCLI(
-        `generate @nx/react:host ${host} --remotes=${remote} --no-interactive --projectNameAndRootFormat=as-provided --typescriptConfiguration=false --skipFormat`
+        `generate @nx/react:host ${host} --remotes=${remote} --no-interactive --projectNameAndRootFormat=as-provided --typescriptConfiguration=false --skipFormat`,
       );
 
       // Update remote to be loaded via script
@@ -523,12 +523,12 @@ describe('React Module Federation', () => {
               './Module': './src/remote-entry.ts',
             },
           };
-          `
+          `,
       );
 
       updateFile(
         `${remote}/webpack.config.prod.js`,
-        `module.exports = require('./webpack.config');`
+        `module.exports = require('./webpack.config');`,
       );
 
       // Update host to use promise based remote
@@ -562,12 +562,12 @@ describe('React Module Federation', () => {
             ],
           ],
         };
-        `
+        `,
       );
 
       updateFile(
         `${host}/webpack.config.prod.js`,
-        `module.exports = require('./webpack.config');`
+        `module.exports = require('./webpack.config');`,
       );
 
       // Update e2e project.json
@@ -602,13 +602,13 @@ describe('React Module Federation', () => {
 
           it('should navigate to /${remote} from /', () => {
             cy.get('a').contains('${remote[0].toUpperCase()}${remote.slice(
-          1
-        )}').click();
+              1,
+            )}').click();
             cy.url().should('include', '/${remote}');
             getGreeting().contains('Welcome ${remote}');
           });
         });
-        `
+        `,
       );
 
       const hostPort = readPort(host);
@@ -626,11 +626,11 @@ describe('React Module Federation', () => {
           `serve-static ${remote} --no-watch --verbose`,
           () => {
             return true;
-          }
+          },
         );
         const hostE2eResults = await runCommandUntil(
           `e2e ${host}-e2e --no-watch --verbose`,
-          (output) => output.includes('All specs passed!')
+          (output) => output.includes('All specs passed!'),
         );
         await killProcessAndPorts(hostE2eResults.pid, hostPort, hostPort + 1);
         await killProcessAndPorts(remoteProcess.pid, remotePort);
@@ -643,11 +643,11 @@ describe('React Module Federation', () => {
       const lib = uniq('lib');
 
       runCLI(
-        `generate @nx/react:host ${shell} --remotes=${remote} --no-interactive --projectNameAndRootFormat=as-provided --skipFormat`
+        `generate @nx/react:host ${shell} --remotes=${remote} --no-interactive --projectNameAndRootFormat=as-provided --skipFormat`,
       );
 
       runCLI(
-        `generate @nx/js:lib ${lib} --importPath=@acme/${lib} --publishable=true --no-interactive --projectNameAndRootFormat=as-provided --skipFormat`
+        `generate @nx/js:lib ${lib} --importPath=@acme/${lib} --publishable=true --no-interactive --projectNameAndRootFormat=as-provided --skipFormat`,
       );
 
       const shellPort = readPort(shell);
@@ -657,7 +657,7 @@ describe('React Module Federation', () => {
         `${lib}/src/lib/${lib}.ts`,
         stripIndents`
       export const version = '0.0.1';
-      `
+      `,
       );
 
       updateJson(`${lib}/package.json`, (json) => {
@@ -703,7 +703,7 @@ describe('React Module Federation', () => {
       );
     }
 
-    export default App;`
+    export default App;`,
       );
 
       // Update remote to use the lib
@@ -726,7 +726,7 @@ describe('React Module Federation', () => {
       );
     }
 
-    export default App;`
+    export default App;`,
       );
 
       // update remote e2e test to check the version
@@ -739,7 +739,7 @@ describe('React Module Federation', () => {
             cy.get('div.remote').contains('Lib version: 0.0.1');
           });
         });        
-        `
+        `,
       );
 
       // update shell e2e test to check the version
@@ -753,14 +753,14 @@ describe('React Module Federation', () => {
           cy.get('div.home').contains('Lib version: 0.0.1');
         });
       });
-      `
+      `,
       );
 
       if (runE2ETests()) {
         // test remote e2e
         const remoteE2eResults = await runCommandUntil(
           `e2e ${remote}-e2e --no-watch --verbose`,
-          (output) => output.includes('All specs passed!')
+          (output) => output.includes('All specs passed!'),
         );
         await killProcessAndPorts(remoteE2eResults.pid, remotePort);
 
@@ -770,20 +770,20 @@ describe('React Module Federation', () => {
           `serve ${remote} --no-watch --verbose`,
           (output) => {
             return output.includes(
-              `Web Development Server is listening at http://localhost:${remotePort}/`
+              `Web Development Server is listening at http://localhost:${remotePort}/`,
             );
-          }
+          },
         );
         await killProcessAndPorts(remoteProcess.pid, remotePort);
         const shellE2eResults = await runCommandUntil(
           `e2e ${shell}-e2e --no-watch --verbose`,
-          (output) => output.includes('All specs passed!')
+          (output) => output.includes('All specs passed!'),
         );
         await killProcessAndPorts(
           shellE2eResults.pid,
           shellPort,
           shellPort + 1,
-          remotePort
+          remotePort,
         );
       }
     }, 500_000);
@@ -793,7 +793,7 @@ describe('React Module Federation', () => {
       const remote = uniq('remote');
 
       runCLI(
-        `generate @nx/react:host ${shell} --remotes=${remote} --project-name-and-root-format=as-provided --no-interactive --skipFormat`
+        `generate @nx/react:host ${shell} --remotes=${remote} --project-name-and-root-format=as-provided --no-interactive --skipFormat`,
       );
 
       const shellPort = readPort(shell);
@@ -812,12 +812,12 @@ describe('React Module Federation', () => {
       };
 
       export default config;
-      `
+      `,
       );
 
       updateFile(
         `${shell}/webpack.config.prod.ts`,
-        `export { default } from './webpack.config';`
+        `export { default } from './webpack.config';`,
       );
 
       updateFile(
@@ -834,12 +834,12 @@ describe('React Module Federation', () => {
       };
 
       export default config;
-      `
+      `,
       );
 
       updateFile(
         `${remote}/webpack.config.prod.ts`,
-        `export { default } from './webpack.config';`
+        `export { default } from './webpack.config';`,
       );
 
       // Update host e2e test to check that the remote works with library type var via navigation
@@ -858,13 +858,13 @@ describe('React Module Federation', () => {
     
       it('should navigate to /about from /', () => {
         cy.get('a').contains('${remote[0].toUpperCase()}${remote.slice(
-          1
+          1,
         )}').click();
         cy.url().should('include', '/${remote}');
         getGreeting().contains('Welcome ${remote}');
       });
     });
-    `
+    `,
       );
 
       // Build host and remote
@@ -877,18 +877,18 @@ describe('React Module Federation', () => {
       if (runE2ETests()) {
         const hostE2eResultsSwc = await runCommandUntil(
           `e2e ${shell}-e2e --no-watch --verbose`,
-          (output) => output.includes('All specs passed!')
+          (output) => output.includes('All specs passed!'),
         );
         await killProcessAndPorts(
           hostE2eResultsSwc.pid,
           shellPort,
           shellPort + 1,
-          remotePort
+          remotePort,
         );
 
         const remoteE2eResultsSwc = await runCommandUntil(
           `e2e ${remote}-e2e --no-watch --verbose`,
-          (output) => output.includes('All specs passed!')
+          (output) => output.includes('All specs passed!'),
         );
 
         await killProcessAndPorts(remoteE2eResultsSwc.pid, remotePort);
@@ -896,20 +896,20 @@ describe('React Module Federation', () => {
         const hostE2eResultsTsNode = await runCommandUntil(
           `e2e ${shell}-e2e --no-watch --verbose`,
           (output) => output.includes('All specs passed!'),
-          { env: { NX_PREFER_TS_NODE: 'true' } }
+          { env: { NX_PREFER_TS_NODE: 'true' } },
         );
 
         await killProcessAndPorts(
           hostE2eResultsTsNode.pid,
           shellPort,
           shellPort + 1,
-          remotePort
+          remotePort,
         );
 
         const remoteE2eResultsTsNode = await runCommandUntil(
           `e2e ${remote}-e2e --no-watch --verbose`,
           (output) => output.includes('All specs passed!'),
-          { env: { NX_PREFER_TS_NODE: 'true' } }
+          { env: { NX_PREFER_TS_NODE: 'true' } },
         );
 
         await killProcessAndPorts(remoteE2eResultsTsNode.pid, remotePort);
@@ -928,21 +928,21 @@ describe('React Module Federation', () => {
       const remote = uniq('remote');
 
       runCLI(
-        `generate @nx/react:host ${shell} --remotes=${remote} --dynamic=true --project-name-and-root-format=as-provided --no-interactive --skipFormat`
+        `generate @nx/react:host ${shell} --remotes=${remote} --dynamic=true --project-name-and-root-format=as-provided --no-interactive --skipFormat`,
       );
 
       // Webpack prod config should not exists when loading dynamic modules
       expect(
-        fileExists(`${tmpProjPath()}/${shell}/webpack.config.prod.ts`)
+        fileExists(`${tmpProjPath()}/${shell}/webpack.config.prod.ts`),
       ).toBeFalsy();
       expect(
         fileExists(
-          `${tmpProjPath()}/${shell}/src/assets/module-federation.manifest.json`
-        )
+          `${tmpProjPath()}/${shell}/src/assets/module-federation.manifest.json`,
+        ),
       ).toBeTruthy();
 
       const manifest = readJson(
-        `${shell}/src/assets/module-federation.manifest.json`
+        `${shell}/src/assets/module-federation.manifest.json`,
       );
 
       expect(manifest[remote]).toBeDefined();
@@ -963,13 +963,13 @@ describe('React Module Federation', () => {
 
           it('should navigate to /${remote} from /', () => {
             cy.get('a').contains('${remote[0].toUpperCase()}${remote.slice(
-          1
-        )}').click();
+              1,
+            )}').click();
             cy.url().should('include', '/${remote}');
             getGreeting().contains('Welcome ${remote}');
           });
         });
-        `
+        `,
       );
 
       // Build host and remote
@@ -988,11 +988,11 @@ describe('React Module Federation', () => {
           `serve-static ${remote} --no-watch --verbose`,
           () => {
             return true;
-          }
+          },
         );
         const hostE2eResultsSwc = await runCommandUntil(
           `e2e ${shell}-e2e --no-watch --verbose`,
-          (output) => output.includes('All specs passed!')
+          (output) => output.includes('All specs passed!'),
         );
 
         await killProcessAndPorts(remoteProcess.pid, remotePort);

@@ -68,7 +68,7 @@ function withGenerateOptions(yargs: Argv) {
     return res.help(false);
   } else {
     return res.epilog(
-      `Run "nx g collection:generator --help" to see information about the generator's schema.`
+      `Run "nx g collection:generator --help" to see information about the generator's schema.`,
     );
   }
 }

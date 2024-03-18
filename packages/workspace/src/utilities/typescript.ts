@@ -17,7 +17,7 @@ function readTsConfigOptions(tsConfigPath: string) {
 
   const readResult = tsModule.readConfigFile(
     tsConfigPath,
-    tsModule.sys.readFile
+    tsModule.sys.readFile,
   );
 
   // we don't need to scan the files, we only care about options
@@ -30,7 +30,7 @@ function readTsConfigOptions(tsConfigPath: string) {
   return tsModule.parseJsonConfigFileContent(
     readResult.config,
     host as ts.ParseConfigHost,
-    dirname(tsConfigPath)
+    dirname(tsConfigPath),
   ).options;
 }
 
@@ -50,7 +50,7 @@ let compilerHost: {
 export function resolveModuleByImport(
   importExpr: string,
   filePath: string,
-  tsConfigPath: string
+  tsConfigPath: string,
 ) {
   compilerHost = compilerHost || getCompilerHost(tsConfigPath);
   const { options, host, moduleResolutionCache } = compilerHost;
@@ -60,7 +60,7 @@ export function resolveModuleByImport(
     filePath,
     options,
     host,
-    moduleResolutionCache
+    moduleResolutionCache,
   );
 
   if (!resolvedModule) {
@@ -75,7 +75,7 @@ function getCompilerHost(tsConfigPath: string) {
   const host = tsModule.createCompilerHost(options, true);
   const moduleResolutionCache = tsModule.createModuleResolutionCache(
     workspaceRoot,
-    host.getCanonicalFileName
+    host.getCanonicalFileName,
   );
   return { options, host, moduleResolutionCache };
 }
@@ -83,7 +83,7 @@ function getCompilerHost(tsConfigPath: string) {
 export function ensureTypescript() {
   return ensurePackage<typeof import('typescript')>(
     'typescript',
-    typescriptVersion
+    typescriptVersion,
   );
 }
 

@@ -58,7 +58,7 @@ export interface NormalizedSchema extends Schema {
 
 function getWebpackBuildConfig(
   project: ProjectConfiguration,
-  options: NormalizedSchema
+  options: NormalizedSchema,
 ): TargetConfiguration {
   return {
     executor: `@nx/webpack:webpack`,
@@ -69,17 +69,17 @@ function getWebpackBuildConfig(
       compiler: 'tsc',
       outputPath: joinPathFragments(
         'dist',
-        options.rootProject ? options.name : options.appProjectRoot
+        options.rootProject ? options.name : options.appProjectRoot,
       ),
       main: joinPathFragments(
         project.sourceRoot,
-        'main' + (options.js ? '.js' : '.ts')
+        'main' + (options.js ? '.js' : '.ts'),
       ),
       tsConfig: joinPathFragments(options.appProjectRoot, 'tsconfig.app.json'),
       assets: [joinPathFragments(project.sourceRoot, 'assets')],
       webpackConfig: joinPathFragments(
         options.appProjectRoot,
-        'webpack.config.js'
+        'webpack.config.js',
       ),
     },
     configurations: {
@@ -93,7 +93,7 @@ function getWebpackBuildConfig(
 
 function getEsBuildConfig(
   project: ProjectConfiguration,
-  options: NormalizedSchema
+  options: NormalizedSchema,
 ): TargetConfiguration {
   return {
     executor: '@nx/esbuild:esbuild',
@@ -103,14 +103,14 @@ function getEsBuildConfig(
       platform: 'node',
       outputPath: joinPathFragments(
         'dist',
-        options.rootProject ? options.name : options.appProjectRoot
+        options.rootProject ? options.name : options.appProjectRoot,
       ),
       // Use CJS for Node apps for widest compatibility.
       format: ['cjs'],
       bundle: false,
       main: joinPathFragments(
         project.sourceRoot,
-        'main' + (options.js ? '.js' : '.ts')
+        'main' + (options.js ? '.js' : '.ts'),
       ),
       tsConfig: joinPathFragments(options.appProjectRoot, 'tsconfig.app.json'),
       assets: [joinPathFragments(project.sourceRoot, 'assets')],
@@ -177,7 +177,7 @@ function addProject(tree: Tree, options: NormalizedSchema) {
     tree,
     options.name,
     project,
-    options.standaloneConfig
+    options.standaloneConfig,
   );
 }
 
@@ -195,20 +195,20 @@ function addAppFiles(tree: Tree, options: NormalizedSchema) {
       offset: offsetFromRoot(options.appProjectRoot),
       rootTsConfigPath: getRelativePathToRootTsConfig(
         tree,
-        options.appProjectRoot
+        options.appProjectRoot,
       ),
       webpackPluginOptions: hasWebpackPlugin(tree)
         ? {
             outputPath: joinPathFragments(
               'dist',
-              options.rootProject ? options.name : options.appProjectRoot
+              options.rootProject ? options.name : options.appProjectRoot,
             ),
             main: './src/main' + (options.js ? '.js' : '.ts'),
             tsConfig: './tsconfig.app.json',
             assets: ['./src/assets'],
           }
         : null,
-    }
+    },
   );
 
   if (options.bundler !== 'webpack') {
@@ -228,9 +228,9 @@ function addAppFiles(tree: Tree, options: NormalizedSchema) {
         offset: offsetFromRoot(options.appProjectRoot),
         rootTsConfigPath: getRelativePathToRootTsConfig(
           tree,
-          options.appProjectRoot
+          options.appProjectRoot,
         ),
-      }
+      },
     );
   }
   if (options.js) {
@@ -261,8 +261,8 @@ function addProxy(tree: Tree, options: NormalizedSchema) {
             },
           },
           null,
-          2
-        )
+          2,
+        ),
       );
     } else {
       //add new entry to existing config
@@ -285,7 +285,7 @@ function addProxy(tree: Tree, options: NormalizedSchema) {
 
 export async function addLintingToApplication(
   tree: Tree,
-  options: NormalizedSchema
+  options: NormalizedSchema,
 ): Promise<GeneratorCallback> {
   const lintTask = await lintProjectGenerator(tree, {
     linter: options.linter,
@@ -305,7 +305,7 @@ export async function addLintingToApplication(
 
 function addProjectDependencies(
   tree: Tree,
-  options: NormalizedSchema
+  options: NormalizedSchema,
 ): GeneratorCallback {
   const bundlers = {
     webpack: {
@@ -350,7 +350,7 @@ function addProjectDependencies(
       ...frameworkDevDependencies[options.framework],
       ...bundlers[options.bundler],
       '@types/node': typesNodeVersion,
-    }
+    },
   );
 }
 
@@ -404,7 +404,7 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
         () => {
           logShowProjectCommand(options.name);
         },
-      ]
+      ],
     );
   }
 
@@ -440,7 +440,7 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
       tasks.push(
         ensureDependencies(tree, {
           uiFramework: options.isNest ? 'none' : 'react',
-        })
+        }),
       );
     }
   }
@@ -470,7 +470,7 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
   } else {
     // No need for default spec file if unit testing is not setup.
     tree.delete(
-      joinPathFragments(options.appProjectRoot, 'src/app/app.spec.ts')
+      joinPathFragments(options.appProjectRoot, 'src/app/app.spec.ts'),
     );
   }
 
@@ -520,7 +520,7 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
 
 async function normalizeOptions(
   host: Tree,
-  options: Schema
+  options: Schema,
 ): Promise<NormalizedSchema> {
   const {
     projectName: appProjectName,

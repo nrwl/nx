@@ -5,7 +5,7 @@ import type { Tree } from '../tree';
  * Creates a host for testing.
  */
 export function createTreeWithEmptyWorkspace(
-  opts = {} as { layout?: 'apps-libs' }
+  opts = {} as { layout?: 'apps-libs' },
 ): Tree {
   const tree = new FsTree('/virtual', false);
   return addCommonFiles(tree, opts.layout === 'apps-libs');
@@ -16,7 +16,7 @@ export function createTreeWithEmptyWorkspace(
  */
 export function createTreeWithEmptyV1Workspace(): Tree {
   throw new Error(
-    'Use createTreeWithEmptyWorkspace instead of createTreeWithEmptyV1Workspace'
+    'Use createTreeWithEmptyWorkspace instead of createTreeWithEmptyV1Workspace',
   );
 }
 
@@ -28,7 +28,7 @@ function addCommonFiles(tree: Tree, addAppsAndLibsFolders: boolean): Tree {
       name: '@proj/source',
       dependencies: {},
       devDependencies: {},
-    })
+    }),
   );
   tree.write(
     '/nx.json',
@@ -44,11 +44,11 @@ function addCommonFiles(tree: Tree, addAppsAndLibsFolders: boolean): Tree {
           cache: true,
         },
       },
-    })
+    }),
   );
   tree.write(
     '/tsconfig.base.json',
-    JSON.stringify({ compilerOptions: { paths: {} } })
+    JSON.stringify({ compilerOptions: { paths: {} } }),
   );
   if (addAppsAndLibsFolders) {
     tree.write('/apps/.gitignore', '');

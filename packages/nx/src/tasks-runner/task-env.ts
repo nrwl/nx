@@ -5,7 +5,7 @@ import { workspaceRoot } from '../utils/workspace-root';
 
 export function getEnvVariablesForBatchProcess(
   skipNxCache: boolean,
-  captureStderr: boolean
+  captureStderr: boolean,
 ): NodeJS.ProcessEnv {
   return {
     // User Process Env Variables override Dotenv Variables
@@ -14,7 +14,7 @@ export function getEnvVariablesForBatchProcess(
     ...getNxEnvVariablesForForkedProcess(
       process.env.FORCE_COLOR === undefined ? 'true' : process.env.FORCE_COLOR,
       skipNxCache,
-      captureStderr
+      captureStderr,
     ),
   };
 }
@@ -35,7 +35,7 @@ export function getEnvVariablesForTask(
   skipNxCache: boolean,
   captureStderr: boolean,
   outputPath: string,
-  streamOutput: boolean
+  streamOutput: boolean,
 ) {
   const res = {
     // Start With Dotenv Variables
@@ -47,7 +47,7 @@ export function getEnvVariablesForTask(
       skipNxCache,
       captureStderr,
       outputPath,
-      streamOutput
+      streamOutput,
     ),
   };
 
@@ -67,7 +67,7 @@ function getNxEnvVariablesForForkedProcess(
   skipNxCache: boolean,
   captureStderr: boolean,
   outputPath?: string,
-  streamOutput?: boolean
+  streamOutput?: boolean,
 ) {
   const env: NodeJS.ProcessEnv = {
     FORCE_COLOR: forceColor,
@@ -93,7 +93,7 @@ function getNxEnvVariablesForTask(
   skipNxCache: boolean,
   captureStderr: boolean,
   outputPath: string,
-  streamOutput: boolean
+  streamOutput: boolean,
 ) {
   const env: NodeJS.ProcessEnv = {
     NX_TASK_TARGET_PROJECT: task.target.project,
@@ -115,7 +115,7 @@ function getNxEnvVariablesForTask(
       skipNxCache,
       captureStderr,
       outputPath,
-      streamOutput
+      streamOutput,
     ),
     ...env,
   };
@@ -123,7 +123,7 @@ function getNxEnvVariablesForTask(
 
 function loadDotEnvFilesForTask(
   task: Task,
-  environmentVariables: NodeJS.ProcessEnv
+  environmentVariables: NodeJS.ProcessEnv,
 ) {
   // Collect dot env files that may pertain to a task
   const dotEnvFiles = [

@@ -36,7 +36,7 @@ export default async function (tree: Tree, options: RemixStyleSchema) {
   const stylesheetPath = joinPathFragments(
     appDir,
     'styles',
-    normalizedRoutePath
+    normalizedRoutePath,
   );
 
   tree.write(
@@ -50,7 +50,7 @@ export default async function (tree: Tree, options: RemixStyleSchema) {
         --font-body: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
           Liberation Mono, Courier New, monospace;
       }
-    `
+    `,
   );
 
   const routeFilePath = options.nameAndDirectoryFormat
@@ -71,7 +71,7 @@ export default async function (tree: Tree, options: RemixStyleSchema) {
     export const links: LinksFunction = () => {
       return [{ rel: 'stylesheet', href: stylesUrl }];
     };
-  `
+  `,
     );
   } else {
     insertStatementAfterImports(
@@ -83,7 +83,7 @@ export default async function (tree: Tree, options: RemixStyleSchema) {
     export const links: LinksFunction = () => {
       return [{ rel: 'stylesheet', href: stylesUrl }];
     };
-  `
+  `,
     );
   }
 

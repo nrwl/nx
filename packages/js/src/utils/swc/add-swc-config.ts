@@ -36,7 +36,7 @@ const swcOptionsString = (type: 'commonjs' | 'es6' = 'commonjs') => `{
 export function addSwcConfig(
   tree: Tree,
   projectDir: string,
-  type: 'commonjs' | 'es6' = 'commonjs'
+  type: 'commonjs' | 'es6' = 'commonjs',
 ) {
   const swcrcPath = join(projectDir, '.swcrc');
   if (tree.exists(swcrcPath)) return;

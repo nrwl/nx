@@ -86,7 +86,7 @@ function check() {
 const invalid = check();
 if (invalid.length > 0) {
   console.error(
-    'The following files import @schematics/angular or @angular/* or @angular-devkit/build-angular'
+    'The following files import @schematics/angular or @angular/* or @angular-devkit/build-angular',
   );
   invalid.forEach((e) => console.log(e));
   process.exit(1);

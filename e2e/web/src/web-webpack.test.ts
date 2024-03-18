@@ -19,14 +19,14 @@ describe('Web Components Applications with bundler set as webpack', () => {
         env: {
           NX_ADD_PLUGINS: 'false',
         },
-      }
+      },
     );
 
     const childProcess = await runCommandUntil(
       `serve ${appName} --port=5000 --ssl`,
       (output) => {
         return output.includes('listening at https://localhost:5000');
-      }
+      },
     );
 
     await killProcessAndPorts(childProcess.pid, 5000);

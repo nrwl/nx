@@ -28,6 +28,6 @@ describe('parseParentDirectoriesFromFilePath', () => {
       const result = parseParentDirectoriesFromFilePath(path, workspaceRoot);
 
       expect(result).toEqual(expected);
-    }
+    },
   );
 });

@@ -51,13 +51,13 @@ async function invokeCommandWithNxCloudClient(options: CloudTaskRunnerOptions) {
       } catch {}
       body.push(
         'If you are an Nx Enterprise customer, please reach out to your assigned Developer Productivity Engineer.',
-        'If you are NOT an Nx Enterprise customer but are seeing this message, please reach out to cloud-support@nrwl.io.'
+        'If you are NOT an Nx Enterprise customer but are seeing this message, please reach out to cloud-support@nrwl.io.',
       );
     }
 
     if (e instanceof NxCloudClientUnavailableError) {
       body.unshift(
-        'You may be offline. Please try again when you are back online.'
+        'You may be offline. Please try again when you are back online.',
       );
     }
 

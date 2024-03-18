@@ -105,7 +105,7 @@ module.exports = composePlugins(
     // `context` is the context passed to the `@nx/webpack:webpack` executor
     // customize configuration here
     return config;
-  }
+  },
 );
 ```
 
@@ -177,7 +177,7 @@ module.exports = composePlugins(
     // Update the webpack configuration as needed here.
     // e.g. config.plugins.push(new MyPlugin())
     return config;
-  }
+  },
 );
 ```
 
@@ -211,7 +211,7 @@ module.exports = composePlugins(
     return merge(federatedModules(config, { options, context }), {
       // overwrite values here
     });
-  }
+  },
 );
 ```
 
@@ -228,7 +228,7 @@ const { withNx } = require('@nx/next/plugins/with-nx');
 const nextConfig = {
   webpack: (
     config,
-    { buildId, dev, isServer, defaultLoaders, nextRuntime, webpack }
+    { buildId, dev, isServer, defaultLoaders, nextRuntime, webpack },
   ) => {
     // Important: return the modified config
     return config;

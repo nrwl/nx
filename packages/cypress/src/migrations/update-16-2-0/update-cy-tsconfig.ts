@@ -16,7 +16,7 @@ export async function normalizeCyTsConfigNames(tree: Tree) {
     const newTsConfigPath = joinPathFragments(
       projectConfig.root,
       'cypress',
-      'tsconfig.json'
+      'tsconfig.json',
     );
 
     // if there is already a tsconfig.json in the cypress folder, then assume things are setup already
@@ -33,12 +33,12 @@ export async function normalizeCyTsConfigNames(tree: Tree) {
 function moveProjectTsCyConfig(
   tree: Tree,
   projectConfig: ProjectConfiguration,
-  newTsConfigPath: string
+  newTsConfigPath: string,
 ) {
   if (tree.exists(joinPathFragments(projectConfig.root, 'tsconfig.cy.json'))) {
     tree.rename(
       joinPathFragments(projectConfig.root, 'tsconfig.cy.json'),
-      newTsConfigPath
+      newTsConfigPath,
     );
     updateJson(tree, newTsConfigPath, (json) => {
       json.extends = '../tsconfig.json';
@@ -65,16 +65,16 @@ function moveProjectTsCyConfig(
 function moveCyDirTsCyConfig(
   tree: Tree,
   projectConfig: ProjectConfiguration,
-  newTsConfigPath: string
+  newTsConfigPath: string,
 ) {
   if (
     tree.exists(
-      joinPathFragments(projectConfig.root, 'cypress', 'tsconfig.cy.json')
+      joinPathFragments(projectConfig.root, 'cypress', 'tsconfig.cy.json'),
     )
   ) {
     tree.rename(
       joinPathFragments(projectConfig.root, 'cypress', 'tsconfig.cy.json'),
-      newTsConfigPath
+      newTsConfigPath,
     );
     updateJson(tree, newTsConfigPath, (json) => {
       json.compilerOptions ??= {};
@@ -90,11 +90,11 @@ function moveCyDirTsCyConfig(
 
 function updateCyDirTsConfigReferences(
   tree: Tree,
-  projectConfig: ProjectConfiguration
+  projectConfig: ProjectConfiguration,
 ) {
   if (
     !tree.exists(
-      joinPathFragments(projectConfig.root, 'cypress', 'tsconfig.json')
+      joinPathFragments(projectConfig.root, 'cypress', 'tsconfig.json'),
     )
   ) {
     return;
@@ -108,7 +108,7 @@ function updateCyDirTsConfigReferences(
         return json;
       }
       const cyFile = json.references.find((p) =>
-        p.path.includes('tsconfig.cy.json')
+        p.path.includes('tsconfig.cy.json'),
       );
 
       if (cyFile) {
@@ -121,7 +121,7 @@ function updateCyDirTsConfigReferences(
         });
       }
       return json;
-    }
+    },
   );
 }
 

@@ -43,7 +43,7 @@ export function onlyShowGuide(storybookProjects: {
       ...Object.entries(storybookProjects).map(
         ([_projectName, storybookProjectInfo]) => {
           return `${pm.exec} storybook@latest automigrate --config-dir ${storybookProjectInfo.configDir} --renderer ${storybookProjectInfo.uiFramework}`;
-        }
+        },
       ),
       ``,
       `4. Call the Nx generator to finish the migration:`,
@@ -60,12 +60,12 @@ export function writeFile(file?: { path?: string; content?: string }) {
 
 export function removePathResolvesFromNextConfig(
   tree: Tree,
-  mainJsTsPath: string
+  mainJsTsPath: string,
 ): { path: string; content: string } | undefined {
   let mainJsTs = tree.read(mainJsTsPath, 'utf-8');
   const hasNextConfig = tsquery.query(
     mainJsTs,
-    `PropertyAssignment:has(Identifier:has([name="nextConfigPath"]))`
+    `PropertyAssignment:has(Identifier:has([name="nextConfigPath"]))`,
   );
 
   const nextConfigPathAssignment = hasNextConfig?.find((propertyAssignment) => {
@@ -79,7 +79,7 @@ export function removePathResolvesFromNextConfig(
 
   const pathResolve = tsquery.query(
     nextConfigPathAssignment,
-    `CallExpression:has(PropertyAccessExpression:has([name="path"]):has([name="resolve"]))`
+    `CallExpression:has(PropertyAccessExpression:has([name="path"]):has([name="resolve"]))`,
   )?.[0];
 
   if (pathResolve) {
@@ -108,7 +108,7 @@ export function removePathResolvesFromNextConfig(
 
 export function removeViteTsConfigPathsPlugin(
   tree: Tree,
-  mainJsTsPath: string
+  mainJsTsPath: string,
 ) {
   let mainJsTs = tree.read(mainJsTsPath, 'utf-8');
   const { vitePluginVariableName, importExpression } =
@@ -116,12 +116,12 @@ export function removeViteTsConfigPathsPlugin(
 
   const viteTsConfigPathsPluginParent = tsquery.query(
     mainJsTs,
-    `CallExpression:has(Identifier[name="${vitePluginVariableName}"])`
+    `CallExpression:has(Identifier[name="${vitePluginVariableName}"])`,
   );
   const viteTsConfigPathsPlugin = viteTsConfigPathsPluginParent?.find(
     (callExpression) => {
       return callExpression.getText().startsWith(vitePluginVariableName);
-    }
+    },
   );
 
   if (viteTsConfigPathsPlugin && importExpression) {
@@ -151,7 +151,7 @@ function getViteTsConfigPathsNameAndImport(mainJsTs: string): {
 } {
   const requireVariableStatement = tsquery.query(
     mainJsTs,
-    `VariableStatement:has(CallExpression:has(Identifier[name="require"]))`
+    `VariableStatement:has(CallExpression:has(Identifier[name="require"]))`,
   );
 
   let vitePluginVariableName: string;
@@ -161,7 +161,7 @@ function getViteTsConfigPathsNameAndImport(mainJsTs: string): {
     importExpression = requireVariableStatement.find((statement) => {
       const requireCallExpression = tsquery.query(
         statement,
-        'CallExpression:has(Identifier[name="require"])'
+        'CallExpression:has(Identifier[name="require"])',
       );
       return requireCallExpression?.[0]
         ?.getText()
@@ -196,21 +196,21 @@ function removePluginsArrayIfEmpty(tree: Tree, mainJsTsPath: string) {
 
   const viteFinalMethodDeclaration = tsquery.query(
     mainJsTs,
-    `MethodDeclaration:has([name="viteFinal"])`
+    `MethodDeclaration:has([name="viteFinal"])`,
   )?.[0];
   if (!viteFinalMethodDeclaration) {
     return;
   }
   const pluginsPropertyAssignment = tsquery.query(
     viteFinalMethodDeclaration,
-    `PropertyAssignment:has(Identifier:has([name="plugins"]))`
+    `PropertyAssignment:has(Identifier:has([name="plugins"]))`,
   )?.[0];
   if (!pluginsPropertyAssignment) {
     return;
   }
   const pluginsArrayLiteralExpression = tsquery.query(
     pluginsPropertyAssignment,
-    `ArrayLiteralExpression`
+    `ArrayLiteralExpression`,
   )?.[0];
   if (pluginsArrayLiteralExpression?.getText()?.replace(/\s/g, '') === '[]') {
     mainJsTs = applyChangesToString(mainJsTs, [
@@ -230,47 +230,47 @@ function removePluginsArrayIfEmpty(tree: Tree, mainJsTsPath: string) {
 export function addViteConfigFilePathInFrameworkOptions(
   tree: Tree,
   mainJsTsPath: string,
-  viteConfigPath: string
+  viteConfigPath: string,
 ) {
   let mainJsTs = tree.read(mainJsTsPath, 'utf-8');
 
   const viteFramework =
     tsquery.query(
       mainJsTs,
-      `PropertyAssignment:has(Identifier:has([name="framework"])):has(StringLiteral:has([text="@storybook/react-vite"]))`
+      `PropertyAssignment:has(Identifier:has([name="framework"])):has(StringLiteral:has([text="@storybook/react-vite"]))`,
     )?.[0] ??
     tsquery.query(
       mainJsTs,
-      `PropertyAssignment:has(Identifier:has([name="framework"])):has(StringLiteral:has([text="@storybook/web-components-vite"]))`
+      `PropertyAssignment:has(Identifier:has([name="framework"])):has(StringLiteral:has([text="@storybook/web-components-vite"]))`,
     )?.[0] ??
     tsquery.query(
       mainJsTs,
-      `PropertyAssignment:has(Identifier:has([name="framework"])):has(StringLiteral:has([text="@storybook/svelte-vite"]))`
+      `PropertyAssignment:has(Identifier:has([name="framework"])):has(StringLiteral:has([text="@storybook/svelte-vite"]))`,
     )?.[0] ??
     tsquery.query(
       mainJsTs,
-      `PropertyAssignment:has(Identifier:has([name="framework"])):has(StringLiteral:has([text="@storybook/vue-vite"]))`
+      `PropertyAssignment:has(Identifier:has([name="framework"])):has(StringLiteral:has([text="@storybook/vue-vite"]))`,
     )?.[0] ??
     tsquery.query(
       mainJsTs,
-      `PropertyAssignment:has(Identifier:has([name="framework"])):has(StringLiteral:has([text="@storybook/vue3-vite"]))`
+      `PropertyAssignment:has(Identifier:has([name="framework"])):has(StringLiteral:has([text="@storybook/vue3-vite"]))`,
     )?.[0];
 
   if (viteFramework) {
     const optionsPropertyAssignments = tsquery.query(
       viteFramework,
-      `PropertyAssignment:has(Identifier:has([name="options"]))`
+      `PropertyAssignment:has(Identifier:has([name="options"]))`,
     );
 
     const frameworkOptionsPropertyAssignment = optionsPropertyAssignments?.find(
       (expression) => {
         return expression.getText().startsWith('options');
-      }
+      },
     );
     if (frameworkOptionsPropertyAssignment) {
       const objectLiteralExpression = tsquery.query(
         frameworkOptionsPropertyAssignment,
-        `ObjectLiteralExpression`
+        `ObjectLiteralExpression`,
       )?.[0];
 
       mainJsTs = applyChangesToString(mainJsTs, [
@@ -288,7 +288,7 @@ export function addViteConfigFilePathInFrameworkOptions(
     } else {
       const objectLiteralExpression = tsquery.query(
         viteFramework,
-        `ObjectLiteralExpression`
+        `ObjectLiteralExpression`,
       )?.[0];
       if (!objectLiteralExpression) {
         return;
@@ -313,20 +313,20 @@ export function addViteConfigFilePathInFrameworkOptions(
 export function normalizeViteConfigFilePathWithTree(
   tree: Tree,
   projectRoot: string,
-  configFile?: string
+  configFile?: string,
 ): string {
   return configFile && tree.exists(configFile)
     ? configFile
     : tree.exists(joinPathFragments(`${projectRoot}/vite.config.ts`))
-    ? joinPathFragments(`${projectRoot}/vite.config.ts`)
-    : tree.exists(joinPathFragments(`${projectRoot}/vite.config.js`))
-    ? joinPathFragments(`${projectRoot}/vite.config.js`)
-    : undefined;
+      ? joinPathFragments(`${projectRoot}/vite.config.ts`)
+      : tree.exists(joinPathFragments(`${projectRoot}/vite.config.js`))
+        ? joinPathFragments(`${projectRoot}/vite.config.js`)
+        : undefined;
 }
 
 export function removeTypecastFromMainTs(
   tree: Tree,
-  mainTsPath: string
+  mainTsPath: string,
 ): { path: string; content: string } | undefined {
   let mainTs = tree.read(mainTsPath, 'utf-8');
   mainTs = mainTs.replace(/as StorybookConfig/g, '');
@@ -344,12 +344,12 @@ export function removeUiFrameworkFromProjectJson(tree: Tree) {
       if (projectName && options?.['uiFramework']) {
         const projectConfiguration = readProjectConfiguration(
           tree,
-          projectName
+          projectName,
         );
         delete projectConfiguration.targets[targetName].options['uiFramework'];
         updateProjectConfiguration(tree, projectName, projectConfiguration);
       }
-    }
+    },
   );
 
   forEachExecutorOptions(
@@ -359,36 +359,36 @@ export function removeUiFrameworkFromProjectJson(tree: Tree) {
       if (projectName && options?.['uiFramework']) {
         const projectConfiguration = readProjectConfiguration(
           tree,
-          projectName
+          projectName,
         );
         delete projectConfiguration.targets[targetName].options['uiFramework'];
         updateProjectConfiguration(tree, projectName, projectConfiguration);
       }
-    }
+    },
   );
 }
 
 export function changeCoreCommonImportToFramework(
   tree: Tree,
-  mainTsPath: string
+  mainTsPath: string,
 ) {
   let mainTs = tree.read(mainTsPath, 'utf-8');
 
   const importDeclarations = tsquery.query(
     mainTs,
-    'ImportDeclaration:has(ImportSpecifier:has([text="StorybookConfig"]))'
+    'ImportDeclaration:has(ImportSpecifier:has([text="StorybookConfig"]))',
   )?.[0];
   if (!importDeclarations) {
     return;
   }
   const storybookConfigImportPackage = tsquery.query(
     importDeclarations,
-    'StringLiteral'
+    'StringLiteral',
   )?.[0];
   if (storybookConfigImportPackage?.getText() === `'@storybook/core-common'`) {
     const frameworkPropertyAssignment = tsquery.query(
       mainTs,
-      `PropertyAssignment:has(Identifier:has([text="framework"]))`
+      `PropertyAssignment:has(Identifier:has([text="framework"]))`,
     )?.[0];
 
     if (!frameworkPropertyAssignment) {
@@ -397,7 +397,7 @@ export function changeCoreCommonImportToFramework(
 
     const propertyAssignments = tsquery.query(
       frameworkPropertyAssignment,
-      `PropertyAssignment:has(Identifier:has([text="name"]))`
+      `PropertyAssignment:has(Identifier:has([text="name"]))`,
     );
 
     const namePropertyAssignment = propertyAssignments?.find((expression) => {
@@ -410,7 +410,7 @@ export function changeCoreCommonImportToFramework(
 
     const frameworkName = tsquery.query(
       namePropertyAssignment,
-      `StringLiteral`
+      `StringLiteral`,
     )?.[0];
 
     if (frameworkName) {
@@ -446,7 +446,7 @@ export function getAllStorybookInfo(tree: Tree): {
       if (projectName && options?.['configDir']) {
         const projectConfiguration = readProjectConfiguration(
           tree,
-          projectName
+          projectName,
         );
 
         allStorybookDirs[projectName] = {
@@ -455,11 +455,11 @@ export function getAllStorybookInfo(tree: Tree): {
           viteConfigFilePath: normalizeViteConfigFilePathWithTree(
             tree,
             projectConfiguration.root,
-            projectConfiguration.targets?.build?.options?.configFile
+            projectConfiguration.targets?.build?.options?.configFile,
           ),
         };
       }
-    }
+    },
   );
 
   forEachExecutorOptions(
@@ -472,7 +472,7 @@ export function getAllStorybookInfo(tree: Tree): {
           uiFramework: '@storybook/angular',
         };
       }
-    }
+    },
   );
   return allStorybookDirs;
 }
@@ -485,7 +485,7 @@ export function prepareFiles(
       uiFramework: string;
       viteConfigFilePath?: string;
     };
-  }
+  },
 ) {
   output.log({
     title: `Preparing Storybook files.`,
@@ -501,12 +501,12 @@ export function prepareFiles(
   Object.entries(allStorybookProjects).forEach(
     ([projectName, storybookProjectInfo]) => {
       const mainJsTsPath = tree.exists(
-        `${storybookProjectInfo.configDir}/main.js`
+        `${storybookProjectInfo.configDir}/main.js`,
       )
         ? `${storybookProjectInfo.configDir}/main.js`
         : tree.exists(`${storybookProjectInfo.configDir}/main.ts`)
-        ? `${storybookProjectInfo.configDir}/main.ts`
-        : undefined;
+          ? `${storybookProjectInfo.configDir}/main.ts`
+          : undefined;
 
       if (!mainJsTsPath) {
         output.error({
@@ -522,7 +522,7 @@ export function prepareFiles(
         writeFile(removeTypecastFromMainTs(tree, mainJsTsPath));
       }
       writeFile(removePathResolvesFromNextConfig(tree, mainJsTsPath));
-    }
+    },
   );
 
   output.log({
@@ -543,7 +543,7 @@ export function handleMigrationResult(
       uiFramework: string;
       viteConfigFilePath?: string;
     };
-  }
+  },
 ): { successfulProjects: {}; failedProjects: {} } {
   if (
     fileExists(join(workspaceRoot, 'migration-storybook.log')) &&
@@ -551,12 +551,12 @@ export function handleMigrationResult(
   ) {
     const sbLogFile = readFileSync(
       join(workspaceRoot, 'migration-storybook.log'),
-      'utf-8'
+      'utf-8',
     );
     Object.keys(migrateResult.successfulProjects).forEach((projectName) => {
       if (
         sbLogFile.includes(
-          `The migration failed to update your ${allStorybookProjects[projectName].configDir}`
+          `The migration failed to update your ${allStorybookProjects[projectName].configDir}`,
         )
       ) {
         migrateResult.failedProjects[projectName] =
@@ -588,7 +588,7 @@ export function handleMigrationResult(
             `☑️ The automigrate command was successful.`,
             `The following projects were migrated successfully:`,
             ...Object.keys(migrateResult.successfulProjects).map(
-              (project) => `  - ${project}`
+              (project) => `  - ${project}`,
             ),
           ],
           color: 'green',
@@ -601,11 +601,11 @@ export function handleMigrationResult(
           `There were some projects that were not migrated successfully.`,
           `⚠️ The following projects were not migrated successfully:`,
           ...Object.keys(migrateResult.failedProjects).map(
-            (project) => `  - ${project}`
+            (project) => `  - ${project}`,
           ),
           `You can run the following commands to migrate them manually:`,
           ...Object.entries(migrateResult.failedProjects).map(
-            ([_project, command]) => `- ${command}`
+            ([_project, command]) => `- ${command}`,
           ),
         ],
         color: 'red',
@@ -644,29 +644,29 @@ export function afterMigration(
       uiFramework: string;
       viteConfigFilePath?: string;
     };
-  }
+  },
 ) {
   Object.entries(allStorybookProjects).forEach(
     async ([_projectName, storybookProjectInfo]) => {
       const mainJsTsPath = tree.exists(
-        `${storybookProjectInfo.configDir}/main.js`
+        `${storybookProjectInfo.configDir}/main.js`,
       )
         ? `${storybookProjectInfo.configDir}/main.js`
         : tree.exists(`${storybookProjectInfo.configDir}/main.ts`)
-        ? `${storybookProjectInfo.configDir}/main.ts`
-        : undefined;
+          ? `${storybookProjectInfo.configDir}/main.ts`
+          : undefined;
 
       removeViteTsConfigPathsPlugin(tree, mainJsTsPath);
       if (storybookProjectInfo.viteConfigFilePath) {
         addViteConfigFilePathInFrameworkOptions(
           tree,
           mainJsTsPath,
-          storybookProjectInfo.viteConfigFilePath
+          storybookProjectInfo.viteConfigFilePath,
         );
       }
 
       changeCoreCommonImportToFramework(tree, mainJsTsPath);
-    }
+    },
   );
 }
 
@@ -675,7 +675,7 @@ export function logResult(
   migrationSummary: {
     successfulProjects: { [key: string]: string };
     failedProjects: { [key: string]: string };
-  }
+  },
 ) {
   output.log({
     title: `Migration complete!`,
@@ -689,10 +689,10 @@ export function logResult(
   generateFiles(tree, join(__dirname, 'files'), '.', {
     tmpl: '',
     successfulProjects: Object.entries(
-      migrationSummary?.successfulProjects
+      migrationSummary?.successfulProjects,
     )?.map(([_projectName, command]) => command),
     failedProjects: Object.entries(migrationSummary?.failedProjects)?.map(
-      ([_projectName, command]) => command
+      ([_projectName, command]) => command,
     ),
     hasFailedProjects:
       Object.keys(migrationSummary?.failedProjects)?.length > 0,

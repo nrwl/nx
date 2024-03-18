@@ -18,7 +18,7 @@ import { relative } from 'path';
 
 export function cypressComponentConfiguration(
   tree: Tree,
-  options: CypressComponentConfigurationGeneratorSchema
+  options: CypressComponentConfigurationGeneratorSchema,
 ) {
   return cypressComponentConfigurationInternal(tree, {
     addPlugin: false,
@@ -28,7 +28,7 @@ export function cypressComponentConfiguration(
 
 export async function cypressComponentConfigurationInternal(
   tree: Tree,
-  options: CypressComponentConfigurationGeneratorSchema
+  options: CypressComponentConfigurationGeneratorSchema,
 ) {
   const tasks: GeneratorCallback[] = [];
 
@@ -42,24 +42,24 @@ export async function cypressComponentConfigurationInternal(
       framework: 'next',
       jsx: true,
       addPlugin: options.addPlugin,
-    })
+    }),
   );
 
   const { webpackInitGenerator } = ensurePackage<typeof import('@nx/webpack')>(
     '@nx/webpack',
-    nxVersion
+    nxVersion,
   );
   tasks.push(
     await webpackInitGenerator(tree, {
       skipFormat: true,
       addPlugin: options.addPlugin,
-    })
+    }),
   );
   const { ensureDependencies } = await import(
     '@nx/webpack/src/utils/ensure-dependencies'
   );
   tasks.push(
-    ensureDependencies(tree, { compiler: 'swc', uiFramework: 'react' })
+    ensureDependencies(tree, { compiler: 'swc', uiFramework: 'react' }),
   );
 
   const projectConfig = readProjectConfiguration(tree, options.project);
@@ -86,7 +86,7 @@ export async function cypressComponentConfigurationInternal(
 async function addFiles(
   tree: Tree,
   projectConfig: ProjectConfiguration,
-  opts: CypressComponentConfigurationGeneratorSchema
+  opts: CypressComponentConfigurationGeneratorSchema,
 ) {
   const { addMountDefinition, addDefaultCTConfig } = await import(
     '@nx/cypress/src/utils/config'
@@ -96,26 +96,28 @@ async function addFiles(
     projectConfig.root,
     'cypress',
     'support',
-    'component.ts'
+    'component.ts',
   );
 
   const updatedCommandFile = await addMountDefinition(
-    tree.read(ctFile, 'utf-8')
+    tree.read(ctFile, 'utf-8'),
   );
   tree.write(
     ctFile,
-    `import { mount } from 'cypress/react18';\nimport './styles.ct.css';\n${updatedCommandFile}`
+    `import { mount } from 'cypress/react18';\nimport './styles.ct.css';\n${updatedCommandFile}`,
   );
 
   const cyFile = joinPathFragments(projectConfig.root, 'cypress.config.ts');
   const updatedCyConfig = await addDefaultCTConfig(tree.read(cyFile, 'utf-8'));
   tree.write(
     cyFile,
-    `import { nxComponentTestingPreset } from '@nx/next/plugins/component-testing';\n${updatedCyConfig}`
+    `import { nxComponentTestingPreset } from '@nx/next/plugins/component-testing';\n${updatedCyConfig}`,
   );
 
   const isUsingTailwind = ['js', 'cjs'].some((ext) =>
-    tree.exists(joinPathFragments(projectConfig.root, `tailwind.config.${ext}`))
+    tree.exists(
+      joinPathFragments(projectConfig.root, `tailwind.config.${ext}`),
+    ),
   );
 
   tree.write(
@@ -123,7 +125,7 @@ async function addFiles(
       projectConfig.root,
       'cypress',
       'support',
-      'styles.ct.css'
+      'styles.ct.css',
     ),
     `/* This is where you can load global styles to apply to all components. */
 ${
@@ -133,7 +135,7 @@ ${
 @tailwind utilities;`
     : ''
 }
-`
+`,
   );
 
   if (opts.generateTests) {

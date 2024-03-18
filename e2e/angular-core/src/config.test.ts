@@ -14,7 +14,7 @@ describe('angular.json v1 config', () => {
   beforeAll(() => {
     newProject({ packages: ['@nx/angular'] });
     runCLI(
-      `generate @nx/angular:app ${app1} --project-name-and-root-format=as-provided --no-interactive`
+      `generate @nx/angular:app ${app1} --project-name-and-root-format=as-provided --no-interactive`,
     );
     // reset workspace to use v1 config
     updateFile(`angular.json`, angularV1Json(app1));
@@ -26,7 +26,7 @@ describe('angular.json v1 config', () => {
   it('should support projects in angular.json v1 config', async () => {
     expect(runCLI(`build ${app1}`)).toContain('Successfully ran target build');
     expect(runCLI(`test ${app1} --no-watch`)).toContain(
-      'Successfully ran target test'
+      'Successfully ran target test',
     );
   }, 1000000);
 
@@ -34,7 +34,7 @@ describe('angular.json v1 config', () => {
     // create new app
     const app2 = uniq('app2');
     runCLI(
-      `generate @nx/angular:app ${app2} --project-name-and-root-format=as-provided --no-interactive`
+      `generate @nx/angular:app ${app2} --project-name-and-root-format=as-provided --no-interactive`,
     );
 
     // should generate project.json for new projects
@@ -42,12 +42,12 @@ describe('angular.json v1 config', () => {
     // check it works correctly
     expect(runCLI(`build ${app2}`)).toContain('Successfully ran target build');
     expect(runCLI(`test ${app2} --no-watch`)).toContain(
-      'Successfully ran target test'
+      'Successfully ran target test',
     );
     // check existing app in angular.json still works
     expect(runCLI(`build ${app1}`)).toContain('Successfully ran target build');
     expect(runCLI(`test ${app1} --no-watch`)).toContain(
-      'Successfully ran target test'
+      'Successfully ran target test',
     );
   }, 1000000);
 });

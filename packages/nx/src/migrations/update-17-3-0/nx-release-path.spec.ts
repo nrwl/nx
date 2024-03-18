@@ -41,7 +41,7 @@ describe('nxReleasePath', () => {
       `
       import { releaseVersion } from 'nx/src/command-line/release';
       const { releaseChangelog } = require("nx/src/command-line/release");
-    `
+    `,
     );
 
     // these should not be updated, only the formalized programmatic API
@@ -50,7 +50,7 @@ describe('nxReleasePath', () => {
       `
       import { foo } from 'nx/src/command-line/release/nested/thing';
       const { releaseChangelog } = require("nx/src/command-line/release/another/nested/thing");
-    `
+    `,
     );
 
     nxReleasePath(tree);

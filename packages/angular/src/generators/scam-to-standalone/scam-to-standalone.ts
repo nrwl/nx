@@ -13,7 +13,7 @@ import {
 
 export async function scamToStandalone(
   tree: Tree,
-  { component, project: projectName, skipFormat }: Schema
+  { component, project: projectName, skipFormat }: Schema,
 ) {
   const projects = getProjects(tree);
   let project = getTargetProject(projectName, projects);
@@ -21,7 +21,7 @@ export async function scamToStandalone(
   const normalizedComponentPath = joinPathFragments(project.root, component);
   if (!tree.exists(normalizedComponentPath)) {
     throw new Error(
-      `The path provided to the component (${normalizedComponentPath}) does not exist. Please ensure the correct path has been provided.`
+      `The path provided to the component (${normalizedComponentPath}) does not exist. Please ensure the correct path has been provided.`,
     );
   }
 
@@ -32,7 +32,7 @@ export async function scamToStandalone(
 
   if (!isInlineScam) {
     throw new Error(
-      'This generator currently only supports inline SCAMs. We could not find an accompanying NgModule within the component file, please ensure the SCAM provided is an inline scam.'
+      'This generator currently only supports inline SCAMs. We could not find an accompanying NgModule within the component file, please ensure the SCAM provided is an inline scam.',
     );
   }
 
@@ -55,7 +55,7 @@ export async function scamToStandalone(
     moduleNodes,
     tree,
     normalizedComponentPath,
-    componentName
+    componentName,
   );
 
   replaceModuleUsagesWithComponent(tree, moduleName, componentName);

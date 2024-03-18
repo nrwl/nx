@@ -7,7 +7,7 @@ import printAllCaps from 'print-all-caps';
 
 export default async function (
   options: Schema,
-  context: ExecutorContext
+  context: ExecutorContext,
 ): Promise<{ success: true }> {
   // do something before
   await printAllCaps({ message: 'All caps' });
@@ -35,10 +35,10 @@ In this case we need to invoke the target configured in devSeverTarget. We can d
 ```typescript
 async function* startDevServer(
   opts: CypressExecutorOptions,
-  context: ExecutorContext
+  context: ExecutorContext,
 ) {
   const { project, target, configuration } = parseTargetString(
-    opts.devServerTarget
+    opts.devServerTarget,
   );
   for await (const output of await runExecutor<{
     success: boolean;
@@ -48,7 +48,7 @@ async function* startDevServer(
     {
       watch: opts.watch,
     },
-    context
+    context,
   )) {
     if (!output.success && !opts.watch)
       throw new Error('Could not compile application files');

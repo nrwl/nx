@@ -1,6 +1,6 @@
 export function selectSourceInfo(
   sourceMap: Record<string, Array<string>>,
-  path: string
+  path: string,
 ): Array<string> | null {
   let rootKey: string | undefined;
   let rootSource: Array<string> | undefined;

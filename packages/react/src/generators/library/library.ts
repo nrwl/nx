@@ -42,7 +42,7 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
   const options = await normalizeOptions(host, schema);
   if (options.publishable === true && !schema.importPath) {
     throw new Error(
-      `For publishable libs you have to provide a proper "--importPath" which needs to be a valid npm package name (e.g. my-awesome-lib or @myorg/my-lib)`
+      `For publishable libs you have to provide a proper "--importPath" which needs to be a valid npm package name (e.g. my-awesome-lib or @myorg/my-lib)`,
     );
   }
   if (!options.component) {
@@ -110,7 +110,7 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
         ],
         plugins: ['react()'],
       },
-      false
+      false,
     );
   } else if (options.buildable && options.bundler === 'rollup') {
     const rollupTask = await addRollupBuildTarget(host, options);
@@ -121,7 +121,7 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
   if (options.unitTestRunner === 'jest') {
     const { configurationGenerator } = ensurePackage<typeof import('@nx/jest')>(
       '@nx/jest',
-      nxVersion
+      nxVersion,
     );
 
     const jestTask = await configurationGenerator(host, {
@@ -136,11 +136,11 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
     tasks.push(jestTask);
     const jestConfigPath = joinPathFragments(
       options.projectRoot,
-      options.js ? 'jest.config.js' : 'jest.config.ts'
+      options.js ? 'jest.config.js' : 'jest.config.ts',
     );
     if (options.compiler === 'babel' && host.exists(jestConfigPath)) {
       const updatedContent = updateJestConfigContent(
-        host.read(jestConfigPath, 'utf-8')
+        host.read(jestConfigPath, 'utf-8'),
       );
       host.write(jestConfigPath, updatedContent);
     }
@@ -176,7 +176,7 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
         imports: [`import react from '@vitejs/plugin-react'`],
         plugins: ['react()'],
       },
-      true
+      true,
     );
   }
 
@@ -185,7 +185,7 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
     const name = joinPathFragments(
       options.projectRoot,
       'src/lib',
-      options.fileName
+      options.fileName,
     );
     const componentTask = await componentGenerator(host, {
       nameAndDirectoryFormat: 'as-provided',
@@ -229,7 +229,7 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
     addTsConfigPath(host, options.importPath, [
       maybeJs(
         options,
-        joinPathFragments(options.projectRoot, './src/index.ts')
+        joinPathFragments(options.projectRoot, './src/index.ts'),
       ),
     ]);
   }

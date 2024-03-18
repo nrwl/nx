@@ -26,11 +26,11 @@ function tryReadBaseJson() {
  * @returns
  */
 export function getBarrelEntryPointByImportScope(
-  importScope: string
+  importScope: string,
 ): string[] {
   const tryPaths = (
     paths: Record<string, string[]>,
-    importScope: string
+    importScope: string,
   ): string[] => {
     // TODO check and warn that the entries of paths[importScope] have no wildcards; that'd be user misconfiguration
     if (paths[importScope]) return paths[importScope];
@@ -62,7 +62,7 @@ export function getBarrelEntryPointByImportScope(
 }
 
 export function getBarrelEntryPointProjectNode(
-  projectNode: ProjectGraphProjectNode
+  projectNode: ProjectGraphProjectNode,
 ): { path: string; importScope: string }[] | null {
   const tsConfigBase = tryReadBaseJson();
 
@@ -81,7 +81,7 @@ export function getBarrelEntryPointProjectNode(
         tsConfigBase.compilerOptions.paths[entry].map((x) => ({
           path: x,
           importScope: entry,
-        }))
+        })),
       );
 
     return potentialEntryPoints.flat();
@@ -98,13 +98,13 @@ function hasMemberExport(exportedMember, filePath) {
     filePath,
     fileContent,
     ts.ScriptTarget.Latest,
-    true
+    true,
   );
 
   // search whether there is already an export with our node
   return (
     findNodes(sourceFile, ts.SyntaxKind.Identifier).filter(
-      (identifier: any) => identifier.text === exportedMember
+      (identifier: any) => identifier.text === exportedMember,
     ).length > 0
   );
 }
@@ -116,14 +116,14 @@ export function getRelativeImportPath(exportedMember, filePath, basePath) {
   if (!status /*not existed, but probably not full file with an extension*/) {
     // try to find an extension that exists
     const ext = ['.ts', '.tsx', '.js', '.jsx'].find((ext) =>
-      lstatSync(filePath + ext, { throwIfNoEntry: false })
+      lstatSync(filePath + ext, { throwIfNoEntry: false }),
     );
     if (ext) {
       filePath += ext;
     }
   } else if (status.isDirectory()) {
     const file = readdirSync(filePath).find((file) =>
-      /^index\.[jt]sx?$/.exec(file)
+      /^index\.[jt]sx?$/.exec(file),
     );
     if (file) {
       filePath = joinPathFragments(filePath, file);
@@ -139,12 +139,12 @@ export function getRelativeImportPath(exportedMember, filePath, basePath) {
     filePath,
     fileContent,
     ts.ScriptTarget.Latest,
-    true
+    true,
   );
 
   // Search in the current file whether there's an export already!
   const memberNodes = findNodes(sourceFile, ts.SyntaxKind.Identifier).filter(
-    (identifier: any) => identifier.text === exportedMember
+    (identifier: any) => identifier.text === exportedMember,
   );
 
   let hasExport = false;
@@ -180,7 +180,7 @@ export function getRelativeImportPath(exportedMember, filePath, basePath) {
 
           if (
             getModifiers(parent)?.find(
-              (modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword
+              (modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword,
             )
           ) {
             /**
@@ -232,7 +232,7 @@ export function getRelativeImportPath(exportedMember, filePath, basePath) {
   // exports the node we're searching for
   const exportDeclarations = findNodes(
     sourceFile,
-    ts.SyntaxKind.ExportDeclaration
+    ts.SyntaxKind.ExportDeclaration,
   ) as ts.ExportDeclaration[];
   for (const exportDeclaration of exportDeclarations) {
     if ((exportDeclaration as any).moduleSpecifier) {
@@ -242,7 +242,7 @@ export function getRelativeImportPath(exportedMember, filePath, basePath) {
       if (
         exportDeclaration.exportClause &&
         findNodes(exportDeclaration, ts.SyntaxKind.Identifier).filter(
-          (identifier: any) => identifier.text === exportedMember
+          (identifier: any) => identifier.text === exportedMember,
         ).length === 0
       ) {
         continue;
@@ -257,7 +257,7 @@ export function getRelativeImportPath(exportedMember, filePath, basePath) {
           const tsifiedModulePath = modulePath.replace(/\.js(x?)$/, '.ts$1');
           moduleFilePath = joinPathFragments(
             dirname(filePath),
-            `${tsifiedModulePath}`
+            `${tsifiedModulePath}`,
           );
         }
       } else if (modulePath.endsWith('.ts') || modulePath.endsWith('.tsx')) {
@@ -265,13 +265,13 @@ export function getRelativeImportPath(exportedMember, filePath, basePath) {
       } else {
         moduleFilePath = joinPathFragments(
           dirname(filePath),
-          `${modulePath}.ts`
+          `${modulePath}.ts`,
         );
         if (!existsSync(moduleFilePath)) {
           // might be a tsx file
           moduleFilePath = joinPathFragments(
             dirname(filePath),
-            `${modulePath}.tsx`
+            `${modulePath}.tsx`,
           );
         }
       }
@@ -279,7 +279,7 @@ export function getRelativeImportPath(exportedMember, filePath, basePath) {
         // might be an index.ts
         moduleFilePath = joinPathFragments(
           dirname(filePath),
-          `${modulePath}/index.ts`
+          `${modulePath}/index.ts`,
         );
       }
 
@@ -287,7 +287,7 @@ export function getRelativeImportPath(exportedMember, filePath, basePath) {
         const foundFilePath = getRelativeImportPath(
           exportedMember,
           moduleFilePath,
-          basePath
+          basePath,
         );
         if (foundFilePath) {
           return foundFilePath;

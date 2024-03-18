@@ -67,21 +67,21 @@ describe('15.6.3 migration (setup webpack.config file for React apps)', () => {
     await webpackConfigSetup(tree);
 
     expect(
-      tree.read('apps/react1/webpack.config.js', 'utf-8')
+      tree.read('apps/react1/webpack.config.js', 'utf-8'),
     ).toMatchSnapshot();
     expect(
-      tree.read('apps/react2/webpack.config.js', 'utf-8')
+      tree.read('apps/react2/webpack.config.js', 'utf-8'),
     ).toMatchSnapshot();
     expect(
-      tree.read('apps/react3/webpack.config.js', 'utf-8')
-    ).toMatchSnapshot();
-
-    expect(
-      tree.read('apps/react4/webpack.something.ts', 'utf-8')
+      tree.read('apps/react3/webpack.config.js', 'utf-8'),
     ).toMatchSnapshot();
 
     expect(
-      tree.read('apps/react4/webpack.something.old.ts', 'utf-8')
+      tree.read('apps/react4/webpack.something.ts', 'utf-8'),
+    ).toMatchSnapshot();
+
+    expect(
+      tree.read('apps/react4/webpack.something.old.ts', 'utf-8'),
     ).toMatchInlineSnapshot(`"some content"`);
   });
 
@@ -126,10 +126,10 @@ describe('15.6.3 migration (setup webpack.config file for React apps)', () => {
     await webpackConfigSetup(tree);
 
     expect(
-      tree.read('some/random/path/webpack.something.ts', 'utf-8')
+      tree.read('some/random/path/webpack.something.ts', 'utf-8'),
     ).toMatchInlineSnapshot(`"some content"`);
     expect(
-      tree.exists('some/random/path/webpack.something.old.ts')
+      tree.exists('some/random/path/webpack.something.old.ts'),
     ).toBeFalsy();
     expect(tree.exists('apps/app5/webpack.config.js')).toBeFalsy();
     expect(tree.exists('apps/app6/webpack.config.js')).toBeFalsy();
@@ -191,40 +191,40 @@ describe('15.6.3 migration (setup webpack.config file for React apps)', () => {
 
     expect(
       readProjectConfiguration(tree, 'react1').targets.build.options
-        .webpackConfig
+        .webpackConfig,
     ).toBe('apps/react1/webpack.config.js');
     expect(
       readProjectConfiguration(tree, 'react2').targets.custom.options
-        .webpackConfig
+        .webpackConfig,
     ).toBe('apps/react2/webpack.config.js');
 
     expect(
       readProjectConfiguration(tree, 'react3').targets.custom.options
-        .webpackConfig
+        .webpackConfig,
     ).toBe('apps/react3/webpack.config.js');
 
     expect(
       readProjectConfiguration(tree, 'react4').targets.custom.options
-        .webpackConfig
+        .webpackConfig,
     ).toBe('apps/react4/webpack.something.ts');
 
     expect(
       readProjectConfiguration(tree, 'react1').targets.build.options
-        .isolatedConfig
+        .isolatedConfig,
     ).toBeTruthy();
     expect(
       readProjectConfiguration(tree, 'react2').targets.custom.options
-        .isolatedConfig
+        .isolatedConfig,
     ).toBeTruthy();
 
     expect(
       readProjectConfiguration(tree, 'react3').targets.custom.options
-        .isolatedConfig
+        .isolatedConfig,
     ).toBeTruthy();
 
     expect(
       readProjectConfiguration(tree, 'react4').targets.custom.options
-        .isolatedConfig
+        .isolatedConfig,
     ).toBeTruthy();
   });
 
@@ -275,23 +275,23 @@ describe('15.6.3 migration (setup webpack.config file for React apps)', () => {
     await webpackConfigSetup(tree);
 
     expect(tree.read('apps/reactapp/webpack.config.old.js', 'utf-8')).toContain(
-      'default'
+      'default',
     );
     expect(
-      tree.read('apps/reactapp/webpack.config.bar.old.js', 'utf-8')
+      tree.read('apps/reactapp/webpack.config.bar.old.js', 'utf-8'),
     ).toContain('bar');
 
     expect(
-      tree.read('apps/alreadymigrated/webpack.config.js', 'utf-8')
+      tree.read('apps/alreadymigrated/webpack.config.js', 'utf-8'),
     ).toContain('default');
     expect(
-      tree.read('apps/alreadymigrated/webpack.config.bar.js', 'utf-8')
+      tree.read('apps/alreadymigrated/webpack.config.bar.js', 'utf-8'),
     ).toContain('bar');
     expect(
-      tree.exists('apps/alreadymigrated/webpack.config.old.js')
+      tree.exists('apps/alreadymigrated/webpack.config.old.js'),
     ).toBeFalsy();
     expect(
-      tree.exists('apps/alreadymigrated/webpack.config.bar.old.js')
+      tree.exists('apps/alreadymigrated/webpack.config.bar.old.js'),
     ).toBeFalsy();
   });
 });

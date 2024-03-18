@@ -23,7 +23,7 @@ describe('SCAM Generator', () => {
     // ASSERT
     const componentSource = tree.read(
       'apps/app1/src/app/example/example.component.ts',
-      'utf-8'
+      'utf-8',
     );
     expect(componentSource).toMatchInlineSnapshot(`
       "import { Component, NgModule } from '@angular/core';
@@ -66,7 +66,7 @@ describe('SCAM Generator', () => {
     // ASSERT
     const componentModuleSource = tree.read(
       'apps/app1/src/app/example/example.module.ts',
-      'utf-8'
+      'utf-8',
     );
     expect(componentModuleSource).toMatchInlineSnapshot(`
       "import { NgModule } from '@angular/core';
@@ -109,7 +109,7 @@ describe('SCAM Generator', () => {
     // ASSERT
     const componentModuleSource = tree.read(
       'libs/lib1/feature/src/lib/example/example.module.ts',
-      'utf-8'
+      'utf-8',
     );
     expect(componentModuleSource).toMatchInlineSnapshot(`
       "import { NgModule } from '@angular/core';
@@ -126,7 +126,7 @@ describe('SCAM Generator', () => {
     `);
     const secondaryEntryPointSource = tree.read(
       `libs/lib1/feature/src/index.ts`,
-      'utf-8'
+      'utf-8',
     );
     expect(secondaryEntryPointSource).toMatchInlineSnapshot(`
       "export * from './lib/example/example.component';
@@ -156,7 +156,7 @@ describe('SCAM Generator', () => {
       // ASSERT
       const componentSource = tree.read(
         'apps/app1/src/app/random/example/example.component.ts',
-        'utf-8'
+        'utf-8',
       );
       expect(componentSource).toMatchInlineSnapshot(`
         "import { Component, NgModule } from '@angular/core';
@@ -200,7 +200,7 @@ describe('SCAM Generator', () => {
       // ASSERT
       const componentSource = tree.read(
         'apps/app1/src/app/random/example/example.component.ts',
-        'utf-8'
+        'utf-8',
       );
       expect(componentSource).toMatchInlineSnapshot(`
         "import { Component, NgModule } from '@angular/core';
@@ -240,9 +240,9 @@ describe('SCAM Generator', () => {
           path: 'libs/proj/src/lib/random',
           inlineScam: true,
           skipFormat: true,
-        })
+        }),
       ).rejects.toThrowErrorMatchingInlineSnapshot(
-        `"The provided directory "libs/proj/src/lib/random" is not under the provided project root "apps/app1". Please provide a directory that is under the provided project root or use the "as-provided" format and only provide the directory."`
+        `"The provided directory "libs/proj/src/lib/random" is not under the provided project root "apps/app1". Please provide a directory that is under the provided project root or use the "as-provided" format and only provide the directory."`,
       );
     });
   });

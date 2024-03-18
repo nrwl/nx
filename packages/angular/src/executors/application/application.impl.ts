@@ -13,7 +13,7 @@ import { validateOptions } from './utils/validate-options';
 
 export default async function* applicationExecutor(
   options: ApplicationExecutorOptions,
-  context: ExecutorContext
+  context: ExecutorContext,
 ) {
   validateOptions(options);
 
@@ -30,7 +30,7 @@ export default async function* applicationExecutor(
     const { tsConfigPath, dependencies: foundDependencies } =
       createTmpTsConfigForBuildableLibs(
         delegateExecutorOptions.tsConfig,
-        context
+        context,
       );
     dependencies = foundDependencies;
     delegateExecutorOptions.tsConfig = tsConfigPath;
@@ -48,7 +48,7 @@ export default async function* applicationExecutor(
       description: 'Build an application.',
       optionSchema: await import('./schema.json'),
     },
-    context
+    context,
   );
 
   const { version: angularVersion } = getInstalledAngularVersionInfo();
@@ -62,6 +62,6 @@ export default async function* applicationExecutor(
   return yield* buildApplication(
     delegateExecutorOptions,
     builderContext,
-    plugins
+    plugins,
   );
 }

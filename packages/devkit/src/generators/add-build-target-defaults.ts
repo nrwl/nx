@@ -6,7 +6,7 @@ const { readNxJson, updateNxJson } = requireNx();
 export function addBuildTargetDefaults(
   tree: Tree,
   executorName: string,
-  buildTargetName = 'build'
+  buildTargetName = 'build',
 ): void {
   const nxJson = readNxJson(tree);
   nxJson.targetDefaults ??= {};

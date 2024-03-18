@@ -3,8 +3,8 @@ export async function* mapAsyncIterable<T = any, I = any, O = any>(
   transform: (
     input: I,
     index?: number,
-    data?: AsyncIterable<T> | AsyncIterableIterator<T>
-  ) => O
+    data?: AsyncIterable<T> | AsyncIterableIterator<T>,
+  ) => O,
 ): AsyncIterable<O> | AsyncIterableIterator<O> {
   async function* f() {
     const generator = data[Symbol.asyncIterator] || data[Symbol.iterator];

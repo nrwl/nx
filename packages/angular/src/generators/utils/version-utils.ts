@@ -42,7 +42,7 @@ export function getInstalledAngularVersionInfo(tree: Tree) {
 
 export function getInstalledPackageVersion(
   tree: Tree,
-  pkgName: string
+  pkgName: string,
 ): string | null {
   const { dependencies, devDependencies } = readJson(tree, 'package.json');
   const version = dependencies?.[pkgName] ?? devDependencies?.[pkgName];
@@ -60,17 +60,17 @@ export function addDependenciesToPackageJsonIfDontExist(
   tree: Tree,
   dependencies: Record<string, string>,
   devDependencies: Record<string, string>,
-  packageJsonPath: string = 'package.json'
+  packageJsonPath: string = 'package.json',
 ): GeneratorCallback {
   const packageJson = readJson(tree, packageJsonPath);
 
   function filterExisting(
-    deps: Record<string, string>
+    deps: Record<string, string>,
   ): Record<string, string> {
     return Object.keys(deps)
       .filter(
         (d) =>
-          !packageJson.dependencies?.[d] && !packageJson.devDependencies?.[d]
+          !packageJson.dependencies?.[d] && !packageJson.devDependencies?.[d],
       )
       .reduce((acc, d) => ({ ...acc, [d]: deps[d] }), {});
   }
@@ -82,12 +82,12 @@ export function addDependenciesToPackageJsonIfDontExist(
     tree,
     depsToAdd,
     devDepsToAdd,
-    packageJsonPath
+    packageJsonPath,
   );
 }
 
 export function versions(
-  tree: Tree
+  tree: Tree,
 ): PackageLatestVersions | PackageCompatVersions {
   const majorAngularVersion = getInstalledAngularMajorVersion(tree);
   switch (majorAngularVersion) {

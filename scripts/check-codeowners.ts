@@ -8,7 +8,7 @@ import { Octokit } from 'octokit';
 async function main() {
   const codeowners = fs.readFileSync(
     path.join(__dirname, '../CODEOWNERS'),
-    'utf-8'
+    'utf-8',
   );
   const codeownersLines = codeowners
     .split('\n')
@@ -98,7 +98,7 @@ main();
 async function validateTeam(
   gh: Octokit['rest'],
   org: string,
-  team: string
+  team: string,
 ): Promise<boolean> {
   try {
     await gh.teams.getByName({
@@ -113,7 +113,7 @@ async function validateTeam(
 
 async function validateUser(
   gh: Octokit['rest'],
-  username: string
+  username: string,
 ): Promise<boolean> {
   try {
     await gh.users.getByUsername({

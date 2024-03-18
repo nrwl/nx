@@ -15,7 +15,7 @@ describe('remove projects from vite-tsconfig-paths', () => {
     addDependenciesToPackageJson(
       tree,
       { 'vite-tsconfig-paths': '^3.6.0', [existing]: existingVersion },
-      { [existing]: existingVersion }
+      { [existing]: existingVersion },
     );
   });
 
@@ -23,7 +23,7 @@ describe('remove projects from vite-tsconfig-paths', () => {
     await removeProjectsFromViteTsConfigPaths(tree);
     const appFileContent = tree.read(
       'apps/my-test-react-vite-app/vite.config.ts',
-      'utf-8'
+      'utf-8',
     );
     const file = tsquery.ast(appFileContent);
 

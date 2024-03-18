@@ -193,18 +193,18 @@ If you don't have the command and need to find out from which version to run the
       "version": "16.1.0-beta.1",
       "x-prompt": "Do you want to update the Angular version to v16?",
       "requires": {
-        "@angular/core": ">=15.2.0 <16.0.0"
+        "@angular/core": ">=15.2.0 <16.0.0",
       },
       "packages": {
         "@angular/core": {
           "version": "~16.0.0",
-          "alwaysAddToPackageJson": true
-        }
+          "alwaysAddToPackageJson": true,
+        },
         // ...
-      }
-    }
+      },
+    },
     // ...
-  }
+  },
 }
 ```
 

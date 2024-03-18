@@ -30,18 +30,18 @@ export async function updateConfigsJest29(tree: Tree) {
           addSnapshotOptionsToConfig(
             tree,
             options.jestConfig,
-            `From within the project directory, run "nx test --update-snapshot"`
+            `From within the project directory, run "nx test --update-snapshot"`,
           );
         }
         updateTsJestOptions(tree, options.jestConfig);
         updateNgJestOptions(tree, options.jestConfig);
       }
-    }
+    },
   );
 
   if (rootPreset && tree.exists(rootPreset)) {
     const cmd = `"nx affected --targets=${Array.from(targetsWithJest).join(
-      ','
+      ',',
     )} --update-snapshot"`;
     addSnapshotOptionsToConfig(tree, rootPreset, cmd);
     updateTsJestOptions(tree, rootPreset);
@@ -60,12 +60,12 @@ More info: https://jestjs.io/docs/upgrading-to-jest29#snapshot-format`);
 function addSnapshotOptionsToConfig(
   tree: Tree,
   configPath: string,
-  updateSnapshotExample: string
+  updateSnapshotExample: string,
 ) {
   const config = tree.read(configPath, 'utf-8');
   const hasSnapshotOptions = tsquery.query(
     config,
-    `${TS_QUERY_JEST_CONFIG_PREFIX} > ObjectLiteralExpression PropertyAssignment:has(Identifier[name="snapshotFormat"])`
+    `${TS_QUERY_JEST_CONFIG_PREFIX} > ObjectLiteralExpression PropertyAssignment:has(Identifier[name="snapshotFormat"])`,
   );
   if (hasSnapshotOptions.length > 0) {
     return;
@@ -88,7 +88,7 @@ ${node.properties.map((p) => getNodeWithComments(config, p)).join(',\n')},
 snapshotFormat: { escapeString: true, printBasicPrototype: true }
 }`;
     },
-    { visitAllChildren: false }
+    { visitAllChildren: false },
   );
 
   tree.write(configPath, updatedConfig);
@@ -100,7 +100,7 @@ function hasPresetConfigured(tree: Tree, configPath: string): boolean {
   return (
     tsquery.query(
       contents,
-      `${TS_QUERY_JEST_CONFIG_PREFIX} > ObjectLiteralExpression PropertyAssignment:has(Identifier[name="preset"])`
+      `${TS_QUERY_JEST_CONFIG_PREFIX} > ObjectLiteralExpression PropertyAssignment:has(Identifier[name="preset"])`,
     )?.length > 0
   );
 }
@@ -116,13 +116,13 @@ function updateTsJestOptions(tree: Tree, configPath: string) {
       if (tsJestGlobalsConfig) {
         logger.warn(
           stripIndents`Found more than one "globals" object in the jest config, ${configPath}
-          Will use the first one`
+          Will use the first one`,
         );
         return;
       }
       tsJestGlobalsConfig = getGlobalTsJestConfig(node);
       return getGlobalConfigWithoutTsJest(node);
-    }
+    },
   );
 
   if (!tsJestGlobalsConfig) {
@@ -134,7 +134,7 @@ function updateTsJestOptions(tree: Tree, configPath: string) {
     `${TS_QUERY_JEST_CONFIG_PREFIX}> ObjectLiteralExpression PropertyAssignment:has(Identifier[name="transform"]) PropertyAssignment > :has(StringLiteral[value="ts-jest"], StringLiteral[value="jest-preset-angular"])`,
     (node: ts.StringLiteral) => {
       return `[${node.getText()}, ${tsJestGlobalsConfig}]`;
-    }
+    },
   );
 
   tree.write(configPath, updatedTsJestTransformer);
@@ -150,7 +150,7 @@ function updateNgJestOptions(tree: Tree, configPath: string) {
     (node: ts.PropertyAssignment) => {
       ngJestTeardownConfig = node.initializer.getText();
       return ' ';
-    }
+    },
   );
 
   if (!ngJestTeardownConfig) {
@@ -167,7 +167,7 @@ function updateNgJestOptions(tree: Tree, configPath: string) {
     .join(',\n')},
    teardown: ${ngJestTeardownConfig}
   }`;
-    }
+    },
   );
 
   if (maybeUpdatedTestEnvOpts !== noTeardownConfig) {
@@ -187,7 +187,7 @@ ${node.properties
 testEnvironmentOptions: { teardown: ${ngJestTeardownConfig} }, 
 }`;
     },
-    { visitAllChildren: false }
+    { visitAllChildren: false },
   );
   tree.write(configPath, updatedConfig);
 }
@@ -195,7 +195,7 @@ testEnvironmentOptions: { teardown: ${ngJestTeardownConfig} },
 function getGlobalTsJestConfig(node: ts.PropertyAssignment): string {
   const globalObject = node.initializer as ts.ObjectLiteralExpression;
   const foundConfig = globalObject.properties.find(
-    (p) => ts.isPropertyAssignment(p) && p.name.getText().includes('ts-jest')
+    (p) => ts.isPropertyAssignment(p) && p.name.getText().includes('ts-jest'),
   ) as ts.PropertyAssignment;
 
   return foundConfig?.initializer?.getText() || '';
@@ -216,7 +216,7 @@ function getGlobalConfigWithoutTsJest(node: ts.PropertyAssignment): string {
 function getNodeWithComments(fullText: string, node: ts.Node) {
   const commentRanges = ts.getLeadingCommentRanges(
     fullText,
-    node.getFullStart()
+    node.getFullStart(),
   );
 
   if (commentRanges?.length > 0) {

@@ -24,13 +24,13 @@ export async function pipeGenerator(tree: Tree, rawOptions: Schema) {
       selector: pipeNames.propertyName,
       standalone: options.standalone,
       tpl: '',
-    }
+    },
   );
 
   if (options.skipTests) {
     const pathToSpecFile = joinPathFragments(
       options.directory,
-      `${options.fileName}.spec.ts`
+      `${options.fileName}.spec.ts`,
     );
 
     tree.delete(pathToSpecFile);
@@ -47,7 +47,7 @@ export async function pipeGenerator(tree: Tree, rawOptions: Schema) {
       options.fileName,
       'declarations',
       true,
-      options.export
+      options.export,
     );
   }
 

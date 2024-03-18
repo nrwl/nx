@@ -23,7 +23,7 @@ export default async function update(tree: Tree) {
         addPropertyToJestConfig(tree, jestConfigPath, 'preset', 'jest-expo');
       } catch {
         logger.error(
-          stripIndents`Unable to update ${jestConfigPath} for project ${name}.`
+          stripIndents`Unable to update ${jestConfigPath} for project ${name}.`,
         );
       }
     }

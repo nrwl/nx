@@ -3,15 +3,15 @@ import { relative } from 'node:path';
 import { joinPathFragments, workspaceRoot } from '../../../devkit-exports';
 
 export async function resolveNxJsonConfigErrorMessage(
-  propPath: string[]
+  propPath: string[],
 ): Promise<string> {
   const errorLines = await getJsonConfigLinesForErrorMessage(
     readFileSync(joinPathFragments(workspaceRoot, 'nx.json'), 'utf-8'),
-    propPath
+    propPath,
   );
   let nxJsonMessage = `The relevant config is defined here: ${relative(
     process.cwd(),
-    joinPathFragments(workspaceRoot, 'nx.json')
+    joinPathFragments(workspaceRoot, 'nx.json'),
   )}`;
   if (errorLines) {
     nxJsonMessage +=
@@ -24,7 +24,7 @@ export async function resolveNxJsonConfigErrorMessage(
 
 async function getJsonConfigLinesForErrorMessage(
   rawConfig: string,
-  jsonPath: string[]
+  jsonPath: string[],
 ): Promise<{ startLine: number; endLine: number } | null> {
   try {
     const jsonParser = await import('jsonc-parser');
@@ -39,7 +39,7 @@ async function getJsonConfigLinesForErrorMessage(
 function computeJsonLineNumbers(
   inputText: string,
   startOffset: number,
-  characterCount: number
+  characterCount: number,
 ) {
   let lines = inputText.split('\n');
   let totalChars = 0;
@@ -63,7 +63,7 @@ function computeJsonLineNumbers(
   }
   if (!endLine) {
     throw new Error(
-      'Character count exceeds the text length after start offset'
+      'Character count exceeds the text length after start offset',
     );
   }
 
