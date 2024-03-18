@@ -1,0 +1,57 @@
+{
+  "name": "redux",
+  "factory": "./src/generators/redux/redux#reduxGeneratorInternal",
+  "schema": {
+    "$schema": "https://json-schema.org/schema",
+    "cli": "nx",
+    "$id": "redux",
+    "title": "Create Redux state",
+    "description": "Create a Redux state slice for a React project.",
+    "type": "object",
+    "properties": {
+      "name": {
+        "type": "string",
+        "description": "Redux slice name.",
+        "$default": { "$source": "argv", "index": 0 },
+        "x-priority": "important"
+      },
+      "project": {
+        "type": "string",
+        "description": "The name of the project to add the slice to. If it is an application, then the store configuration will be updated too.",
+        "alias": "p",
+        "$default": { "$source": "projectName" },
+        "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. The project will be determined from the directory provided. It will be removed in Nx v19."
+      },
+      "directory": {
+        "type": "string",
+        "alias": "dir",
+        "default": "",
+        "description": "The directory at which to create the Redux files. When `--nameAndDirectoryFormat=as-provided`, it will be relative to the current working directory. Otherwise, it will be relative to the project root.",
+        "x-priority": "important"
+      },
+      "nameAndDirectoryFormat": {
+        "description": "Whether to generate the component in the directory as provided, relative to the current working directory and ignoring the project (`as-provided`) or generate it using the project and directory relative to the workspace root (`derived`).",
+        "type": "string",
+        "enum": ["as-provided", "derived"]
+      },
+      "appProject": {
+        "type": "string",
+        "description": "The application project to add the slice to.",
+        "alias": "a"
+      },
+      "js": {
+        "type": "boolean",
+        "description": "Generate JavaScript files rather than TypeScript files.",
+        "default": false
+      }
+    },
+    "required": ["name"],
+    "presets": []
+  },
+  "description": "Create a Redux slice for a project.",
+  "aliases": ["slice"],
+  "implementation": "/packages/react/src/generators/redux/redux#reduxGeneratorInternal.ts",
+  "hidden": false,
+  "path": "/packages/react/src/generators/redux/schema.json",
+  "type": "generator"
+}

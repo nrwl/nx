@@ -1,0 +1,83 @@
+{
+  "name": "scam-pipe",
+  "factory": "./src/generators/scam-pipe/scam-pipe",
+  "schema": {
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "SCAMPipeGenerator",
+    "cli": "nx",
+    "title": "SCAM Pipe Generator Options Schema",
+    "type": "object",
+    "examples": [
+      {
+        "command": "nx g @nx/angular:scam-pipe --project=my-lib --flat=false my-transformation",
+        "description": "Generates a `MyTransformationPipe` in a `my-transformation` folder in the `my-lib` project"
+      }
+    ],
+    "description": "Creates a new, generic Angular pipe definition in the given or default project.",
+    "additionalProperties": false,
+    "properties": {
+      "name": {
+        "type": "string",
+        "description": "The name of the pipe.",
+        "$default": { "$source": "argv", "index": 0 },
+        "x-prompt": "What name would you like to use for the pipe?",
+        "x-priority": "important"
+      },
+      "directory": {
+        "type": "string",
+        "description": "The directory at which to create the component file. When `--nameAndDirectoryFormat=as-provided`, it will be relative to the current working directory. Otherwise, it will be relative to the workspace root.",
+        "aliases": ["dir", "path"],
+        "x-priority": "important"
+      },
+      "nameAndDirectoryFormat": {
+        "description": "Whether to generate the component in the directory as provided, relative to the current working directory and ignoring the project (`as-provided`) or generate it using the project and directory relative to the workspace root (`derived`).",
+        "type": "string",
+        "enum": ["as-provided", "derived"]
+      },
+      "project": {
+        "type": "string",
+        "description": "The name of the project.",
+        "$default": { "$source": "projectName" },
+        "x-dropdown": "projects",
+        "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. The project will be determined from the directory provided. It will be removed in Nx v19."
+      },
+      "skipTests": {
+        "type": "boolean",
+        "description": "Do not create `spec.ts` test files for the new pipe.",
+        "default": false
+      },
+      "inlineScam": {
+        "type": "boolean",
+        "description": "Create the NgModule in the same file as the Pipe.",
+        "default": true,
+        "x-priority": "important"
+      },
+      "flat": {
+        "type": "boolean",
+        "description": "Create the new files at the top level of the current project.",
+        "default": true,
+        "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. It will be removed in Nx v19."
+      },
+      "export": {
+        "type": "boolean",
+        "description": "Specifies if the SCAM should be exported from the project's entry point (normally `index.ts`). It only applies to libraries.",
+        "default": true,
+        "x-priority": "important"
+      },
+      "skipFormat": {
+        "description": "Skip formatting files.",
+        "type": "boolean",
+        "default": false,
+        "x-priority": "internal"
+      }
+    },
+    "required": ["name"],
+    "presets": []
+  },
+  "description": "Generate a pipe with an accompanying Single Component Angular Module (SCAM).",
+  "implementation": "/packages/angular/src/generators/scam-pipe/scam-pipe.ts",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/angular/src/generators/scam-pipe/schema.json",
+  "type": "generator"
+}

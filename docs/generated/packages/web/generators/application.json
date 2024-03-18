@@ -1,0 +1,119 @@
+{
+  "name": "application",
+  "factory": "./src/generators/application/application#applicationGeneratorInternal",
+  "schema": {
+    "$schema": "https://json-schema.org/schema",
+    "cli": "nx",
+    "$id": "NxWebApp",
+    "title": "Create a Web Application for Nx",
+    "description": "Create a web application using `swc` or `babel` as compiler.",
+    "type": "object",
+    "properties": {
+      "name": {
+        "description": "The name of the application.",
+        "type": "string",
+        "$default": { "$source": "argv", "index": 0 },
+        "x-prompt": "What name would you like to use for the application?",
+        "pattern": "^[a-zA-Z][^:]*$"
+      },
+      "directory": {
+        "description": "The directory of the new application.",
+        "type": "string"
+      },
+      "projectNameAndRootFormat": {
+        "description": "Whether to generate the project name and root directory as provided (`as-provided`) or generate them composing their values and taking the configured layout into account (`derived`).",
+        "type": "string",
+        "enum": ["as-provided", "derived"]
+      },
+      "style": {
+        "description": "The file extension to be used for style files.",
+        "type": "string",
+        "default": "css",
+        "x-prompt": {
+          "message": "Which stylesheet format would you like to use?",
+          "type": "list",
+          "items": [
+            { "value": "css", "label": "CSS" },
+            {
+              "value": "scss",
+              "label": "SASS(.scss)  [ https://sass-lang.com   ]"
+            },
+            {
+              "value": "less",
+              "label": "LESS         [ https://lesscss.org     ]"
+            }
+          ]
+        }
+      },
+      "compiler": {
+        "type": "string",
+        "description": "The compiler to use",
+        "enum": ["swc", "babel"],
+        "default": "swc",
+        "x-priority": "important"
+      },
+      "bundler": {
+        "type": "string",
+        "description": "The bundler to use.",
+        "enum": ["webpack", "none", "vite"],
+        "default": "webpack",
+        "x-prompt": "Which bundler do you want to use?",
+        "x-priority": "important"
+      },
+      "linter": {
+        "description": "The tool to use for running lint checks.",
+        "type": "string",
+        "enum": ["eslint", "none"],
+        "default": "eslint"
+      },
+      "skipFormat": {
+        "description": "Skip formatting files",
+        "type": "boolean",
+        "default": false,
+        "x-priority": "internal"
+      },
+      "unitTestRunner": {
+        "type": "string",
+        "enum": ["jest", "vitest", "none"],
+        "description": "Test runner to use for unit tests. Default value is 'jest' when using 'webpack' or 'none' as the bundler and 'vitest' when using 'vite' as the bundler"
+      },
+      "inSourceTests": {
+        "type": "boolean",
+        "default": false,
+        "description": "When using Vitest, separate spec files will not be generated and instead will be included within the source files."
+      },
+      "e2eTestRunner": {
+        "type": "string",
+        "enum": ["cypress", "playwright", "none"],
+        "x-prompt": "Which E2E test runner would you like to use?",
+        "description": "Test runner to use for end to end (e2e) tests",
+        "default": "cypress"
+      },
+      "tags": {
+        "type": "string",
+        "description": "Add tags to the application (used for linting)"
+      },
+      "setParserOptionsProject": {
+        "type": "boolean",
+        "description": "Whether or not to configure the ESLint `parserOptions.project` option. We do not do this by default for lint performance reasons.",
+        "default": false
+      },
+      "standaloneConfig": {
+        "description": "Split the project configuration into `<projectRoot>/project.json` rather than including it inside workspace.json",
+        "type": "boolean",
+        "default": true,
+        "x-deprecated": "Nx only supports standaloneConfig"
+      }
+    },
+    "required": ["name"],
+    "examplesFile": "## Examples\n\n{% tabs %}\n{% tab label=\"Simple Application\" %}\n\nCreate an application named `my-app`:\n\n```bash\nnx g @nx/web:application my-app\n```\n\n{% /tab %}\n\n{% tab label=\"Application using Vite as bundler\" %}\n\nCreate an application named `my-app`:\n\n```bash\nnx g @nx/web:app my-app --bundler=vite\n```\n\nWhen choosing `vite` as the bundler, your unit tests will be set up with `vitest`, unless you choose `none` for `unitTestRunner`.\n\n{% /tab %}\n\n{% tab label=\"Specify directory\" %}\n\nCreate an application named `my-app` in the `my-dir` directory:\n\n{% callout type=\"note\" title=\"Directory Flag Behavior Changes\" %}\nThe command below uses the `as-provided` directory flag behavior, which is the default in Nx 16.8.0. If you're on an earlier version of Nx or using the `derived` option, use `--directory=my-dir`. See the [as-provided vs. derived documentation](/deprecated/as-provided-vs-derived) for more details.\n{% /callout %}\n\n```bash\nnx g @nx/web:app my-app --directory=apps/my-dir/my-app\n```\n\n{% /tab %}\n\n{% tab label=\"Add tags\" %}\n\nAdd tags to the application (used for linting).\n\n```bash\nnx g @nx/web:app my-app --tags=scope:admin,type:ui\n```\n\n{% /tab %}\n{% /tabs %}\n",
+    "presets": []
+  },
+  "aliases": ["app"],
+  "x-type": "application",
+  "description": "Create an web application.",
+  "implementation": "/packages/web/src/generators/application/application#applicationGeneratorInternal.ts",
+  "hidden": false,
+  "path": "/packages/web/src/generators/application/schema.json",
+  "type": "generator"
+}

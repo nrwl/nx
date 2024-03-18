@@ -1,0 +1,76 @@
+{
+  "name": "application",
+  "implementation": "/packages/remix/src/generators/application/application.impl#remixApplicationGeneratorInternal.ts",
+  "schema": {
+    "$schema": "https://json-schema.org/schema",
+    "$id": "NxRemixApplication",
+    "title": "Create an Application",
+    "description": "Generate a new Remix application.",
+    "type": "object",
+    "properties": {
+      "name": {
+        "type": "string",
+        "description": "",
+        "$default": { "$source": "argv", "index": 0 },
+        "x-prompt": "What is the name of the application?"
+      },
+      "js": {
+        "type": "boolean",
+        "description": "Generate JavaScript files rather than TypeScript files.",
+        "default": false
+      },
+      "directory": {
+        "type": "string",
+        "description": "A directory where the app is placed.",
+        "alias": "dir",
+        "x-priority": "important"
+      },
+      "projectNameAndRootFormat": {
+        "description": "Whether to generate the project name and root directory as provided (`as-provided`) or generate them composing their values and taking the configured layout into account (`derived`).",
+        "type": "string",
+        "enum": ["as-provided", "derived"]
+      },
+      "linter": {
+        "description": "The tool to use for running lint checks.",
+        "type": "string",
+        "enum": ["eslint", "none"],
+        "default": "eslint"
+      },
+      "unitTestRunner": {
+        "type": "string",
+        "enum": ["vitest", "jest", "none"],
+        "default": "vitest",
+        "description": "Test runner to use for unit tests.",
+        "x-prompt": "What unit test runner should be used?"
+      },
+      "e2eTestRunner": {
+        "type": "string",
+        "enum": ["cypress", "playwright", "none"],
+        "default": "cypress",
+        "description": "Test runner to use for e2e tests"
+      },
+      "tags": {
+        "type": "string",
+        "description": "Add tags to the project (used for linting)",
+        "alias": "t"
+      },
+      "skipFormat": {
+        "type": "boolean",
+        "description": "Skip formatting files",
+        "default": false
+      },
+      "rootProject": {
+        "type": "boolean",
+        "x-priority": "internal",
+        "default": false
+      }
+    },
+    "presets": []
+  },
+  "description": "Generate a new Remix application",
+  "aliases": ["app"],
+  "x-type": "application",
+  "hidden": false,
+  "path": "/packages/remix/src/generators/application/schema.json",
+  "type": "generator"
+}
