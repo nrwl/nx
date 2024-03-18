@@ -33,6 +33,7 @@ describe('package-manager', () => {
       });
       const packageManager = detectPackageManager();
       expect(packageManager).toEqual('pnpm');
+      expect(fs.existsSync).toHaveBeenCalledTimes(0);
     });
 
     it('should detect yarn package manager from yarn.lock', () => {
@@ -57,6 +58,7 @@ describe('package-manager', () => {
       });
       const packageManager = detectPackageManager();
       expect(packageManager).toEqual('yarn');
+      expect(fs.existsSync).toHaveBeenCalledTimes(8300);
     });
 
     it('should detect package manager in nxJson', () => {
@@ -81,6 +83,7 @@ describe('package-manager', () => {
       });
       const packageManager = detectPackageManager();
       expect(packageManager).toEqual('bun');
+      expect(fs.existsSync).toHaveBeenCalledTimes(8300);
     });
 
     it('should use npm package manager as default', () => {
@@ -105,6 +108,7 @@ describe('package-manager', () => {
       });
       const packageManager = detectPackageManager();
       expect(packageManager).toEqual('npm');
+      expect(fs.existsSync).toHaveBeenCalledTimes(8300);
     });
   });
 
