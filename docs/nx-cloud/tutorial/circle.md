@@ -18,7 +18,7 @@ Note, many of these optimizations are incremental, meaning you could set up runn
 
 To follow along with this tutorial, we recommend using the [nx-shops sample repository](https://github.com/nrwl/nx-shops).
 
-{% github-repository url="https://github.com/nrwl/nx-shops" /%}
+{% github-repository url="<https://github.com/nrwl/nx-shops>" /%}
 
 The `nx-shops` repo is useful to demonstrate the value of the CI pipeline because it has the following characteristics:
 
@@ -399,7 +399,7 @@ The Nx Agents feature
 Let's enable Nx Agents
 
 ```
-pnpm exec nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
+npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
 ```
 
 We recommend you add this line right after you check out the repo, before installing node modules.
@@ -429,7 +429,7 @@ jobs:
       - image: cimg/node:lts-browsers
     steps:
       - checkout
-      - run: pnpm exec nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
+      - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
       - restore_cache:
           key: npm-dependencies-{{ checksum "pnpm-lock.yaml" }}
       - run:

@@ -40,7 +40,7 @@ jobs:
     pool:
       vmImage: 'ubuntu-latest'
     steps:
-      # Get last successfull commit from Azure Devops CLI
+      # Get last successful commit from Azure Devops CLI
       - displayName: 'Get last successful commit SHA'
         condition: ne(variables['Build.Reason'], 'PullRequest')
         env:

@@ -29,7 +29,7 @@ jobs:
       # Set Azure Devops CLI default settings
       - bash: az devops configure --defaults organization=$(System.TeamFoundationCollectionUri) project=$(System.TeamProject)
         displayName: 'Set default Azure DevOps organization and project'
-      # Get last successfull commit from Azure Devops CLI
+      # Get last successful commit from Azure Devops CLI
       - displayName: 'Get last successful commit SHA'
         condition: ne(variables['Build.Reason'], 'PullRequest')
         env:
@@ -232,7 +232,7 @@ jobs:
       # Set Azure Devops CLI default settings
       - bash: az devops configure --defaults organization=$(System.TeamFoundationCollectionUri) project=$(System.TeamProject)
         displayName: 'Set default Azure DevOps organization and project'
-      # Get last successfull commit from Azure Devops CLI
+      # Get last successful commit from Azure Devops CLI
       - displayName: 'Get last successful commit SHA'
         condition: ne(variables['Build.Reason'], 'PullRequest')
         env:
@@ -462,7 +462,7 @@ jobs:
       # Set Azure Devops CLI default settings
       - bash: az devops configure --defaults organization=$(System.TeamFoundationCollectionUri) project=$(System.TeamProject)
         displayName: 'Set default Azure DevOps organization and project'
-      # Get last successfull commit from Azure Devops CLI
+      # Get last successful commit from Azure Devops CLI
       - displayName: 'Get last successful commit SHA'
         condition: ne(variables['Build.Reason'], 'PullRequest')
         env:
@@ -479,7 +479,7 @@ jobs:
 
       # Connect your workspace on my.nx.app and uncomment this to enable task distribution.
       # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
-      # - script: pnpm exec nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+      # - script: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
 
       - script: npm install --prefix=$HOME/.local -g pnpm@8
         displayName: Install PNPM
@@ -506,7 +506,7 @@ pipelines:
 
             # Connect your workspace on my.nx.app and uncomment this to enable task distribution.
             # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
-            # - pnpm exec nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+            # - npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
 
             - npm install --prefix=$HOME/.local -g pnpm@8
 
@@ -522,7 +522,7 @@ pipelines:
           script:
             # Connect your workspace on my.nx.app and uncomment this to enable task distribution.
             # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
-            # - pnpm exec nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+            # - npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
 
             - npm install --prefix=$HOME/.local -g pnpm@8
 
@@ -548,7 +548,7 @@ jobs:
 
       # Connect your workspace on my.nx.app and uncomment this to enable task distribution.
       # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
-      # - run: pnpm exec nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+      # - run: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
 
       - run:
           name: Install PNPM
@@ -592,7 +592,7 @@ jobs:
 
       # Connect your workspace on my.nx.app and uncomment this to enable task distribution.
       # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
-      # - run: pnpm exec nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+      # - run: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
 
       - uses: pnpm/action-setup@v2
         with:
@@ -633,7 +633,7 @@ jobs:
 
       # Connect your workspace on my.nx.app and uncomment this to enable task distribution.
       # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
-      # - run: pnpm exec nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+      # - run: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
 
       - uses: pnpm/action-setup@v2
         with:
@@ -709,7 +709,7 @@ jobs:
       # Set Azure Devops CLI default settings
       - bash: az devops configure --defaults organization=$(System.TeamFoundationCollectionUri) project=$(System.TeamProject)
         displayName: 'Set default Azure DevOps organization and project'
-      # Get last successfull commit from Azure Devops CLI
+      # Get last successful commit from Azure Devops CLI
       - displayName: 'Get last successful commit SHA'
         condition: ne(variables['Build.Reason'], 'PullRequest')
         env:
@@ -726,7 +726,7 @@ jobs:
 
       # Connect your workspace on my.nx.app and uncomment this to enable task distribution.
       # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
-      # - script: yarn nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+      # - script: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
 
       - script: yarn install --frozen-lockfile
 
@@ -751,7 +751,7 @@ pipelines:
 
             # Connect your workspace on my.nx.app and uncomment this to enable task distribution.
             # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
-            # - yarn nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+            # - npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
 
             - yarn install --frozen-lockfile
 
@@ -765,7 +765,7 @@ pipelines:
           script:
             # Connect your workspace on my.nx.app and uncomment this to enable task distribution.
             # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
-            # - yarn nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+            # - npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
 
             - yarn install --frozen-lockfile
 
@@ -789,7 +789,7 @@ jobs:
 
       # Connect your workspace on my.nx.app and uncomment this to enable task distribution.
       # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
-      # - run: yarn nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+      # - run: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
 
       - run: yarn install --frozen-lockfile
       - nx/set-shas:
@@ -830,7 +830,7 @@ jobs:
 
       # Connect your workspace on my.nx.app and uncomment this to enable task distribution.
       # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
-      # - run: yarn nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+      # - run: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
 
       # Cache node_modules
       - uses: actions/setup-node@v3
@@ -868,7 +868,7 @@ jobs:
 
       # Connect your workspace on my.nx.app and uncomment this to enable task distribution.
       # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
-      # - run: yarn nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+      # - run: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
 
       # Cache node_modules
       - uses: actions/setup-node@v3
