@@ -39,9 +39,9 @@
                   "file": "shared/tutorials/npm-workspaces"
                 },
                 {
-                  "name": "Integrated Monorepo",
-                  "id": "integrated-repo-tutorial",
-                  "file": "shared/npm-tutorial/integrated"
+                  "name": "Epic Web App",
+                  "id": "epic-web-app-tutorial",
+                  "file": "shared/tutorials/epic-web-app"
                 },
                 {
                   "name": "React Standalone",

@@ -37,7 +37,7 @@ npx create-nx-workspace@latest
 
 {% link-card title="NPM Workspaces" type="tutorial" url="/getting-started/tutorials/npm-workspaces-tutorial" icon="jsMono" /%}
 
-{% link-card title="Integrated Monorepos" type="tutorial" url="/getting-started/tutorials/integrated-repo-tutorial" icon="nx" /%}
+{% link-card title="Integrated Monorepos" type="tutorial" url="/getting-started/tutorials/epic-web-app-tutorial" icon="epicWeb" /%}
 
 {% link-card title="Single React App" type="tutorial" url="/getting-started/tutorials/react-standalone-tutorial" icon="react" /%}
 

@@ -6,7 +6,7 @@
     - [Why Nx?](/getting-started/why-nx)
     - [Tutorials](/getting-started/tutorials)
       - [NPM Workspaces Monorepo](/getting-started/tutorials/npm-workspaces-tutorial)
-      - [Integrated Monorepo](/getting-started/tutorials/integrated-repo-tutorial)
+      - [Epic Web App](/getting-started/tutorials/epic-web-app-tutorial)
       - [React Standalone](/getting-started/tutorials/react-standalone-tutorial)
       - [React Monorepo](/getting-started/tutorials/react-monorepo-tutorial)
       - [Angular Standalone](/getting-started/tutorials/angular-standalone-tutorial)

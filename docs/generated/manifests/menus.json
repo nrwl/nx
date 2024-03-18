@@ -47,9 +47,9 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Integrated Monorepo",
-                "path": "/getting-started/tutorials/integrated-repo-tutorial",
-                "id": "integrated-repo-tutorial",
+                "name": "Epic Web App",
+                "path": "/getting-started/tutorials/epic-web-app-tutorial",
+                "id": "epic-web-app-tutorial",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -139,9 +139,9 @@
             "disableCollapsible": false
           },
           {
-            "name": "Integrated Monorepo",
-            "path": "/getting-started/tutorials/integrated-repo-tutorial",
-            "id": "integrated-repo-tutorial",
+            "name": "Epic Web App",
+            "path": "/getting-started/tutorials/epic-web-app-tutorial",
+            "id": "epic-web-app-tutorial",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -198,9 +198,9 @@
         "disableCollapsible": false
       },
       {
-        "name": "Integrated Monorepo",
-        "path": "/getting-started/tutorials/integrated-repo-tutorial",
-        "id": "integrated-repo-tutorial",
+        "name": "Epic Web App",
+        "path": "/getting-started/tutorials/epic-web-app-tutorial",
+        "id": "epic-web-app-tutorial",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
