@@ -107,7 +107,7 @@ export async function showProjectHandler(
     );
   } else {
     const chalk = require('chalk') as typeof import('chalk');
-    const logIfExists = (label, key: keyof (typeof node)['data']) => {
+    const logIfExists = (label, key: keyof typeof node['data']) => {
       if (node.data[key]) {
         console.log(`${chalk.bold(label)}: ${node.data[key]}`);
       }

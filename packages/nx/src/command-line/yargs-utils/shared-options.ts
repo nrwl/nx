@@ -238,7 +238,7 @@ const allOutputStyles = [
   'compact',
 ] as const;
 
-export type OutputStyle = (typeof allOutputStyles)[number];
+export type OutputStyle = typeof allOutputStyles[number];
 
 export function withOutputStyleOption(
   yargs: Argv,
