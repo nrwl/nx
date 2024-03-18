@@ -1,6 +1,8 @@
 #!/usr/bin/env sh
-
+pnpm documentation &&
+pnpx nx format:write --all &&
+git add -A . &&
+git commit --amend --no-edit &&
 pnpm check-lock-files &&
 pnpm check-commit &&
-pnpm documentation &&
 pnpm pretty-quick --check
