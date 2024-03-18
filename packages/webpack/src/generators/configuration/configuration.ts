@@ -3,6 +3,7 @@ import {
   GeneratorCallback,
   joinPathFragments,
   offsetFromRoot,
+  readNxJson,
   readProjectConfiguration,
   runTasksInSerial,
   Tree,
@@ -29,7 +30,11 @@ export async function configurationGeneratorInternal(
   options: ConfigurationGeneratorSchema
 ) {
   const tasks: GeneratorCallback[] = [];
-  options.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
+  const nxJson = readNxJson(tree);
+  const addPluginDefault =
+    process.env.NX_ADD_PLUGINS !== 'false' &&
+    nxJson.useInferencePlugins !== false;
+  options.addPlugin ??= addPluginDefault;
 
   const initTask = await webpackInitGenerator(tree, {
     ...options,

@@ -25,7 +25,7 @@ npx create-nx-workspace@latest
 
 {% link-card title="Nx in 10 minutes!" type="video" url="https://youtu.be/-_4WMl-Fn0w" icon="nx" /%}
 
-{% link-card title="What is Nx Cloud?" type="video" url="https://youtu.be/NZF0ZJpgaJM" icon="nxcloud" /%}
+{% link-card title="What is Nx Cloud?" type="video" url="https://youtu.be/4VI-q943J3o" icon="nxcloud" /%}
 
 {% link-card title="PNPM Monorepos with Nx" type="video" url="https://youtu.be/ngdoUQBvAjo" icon="pnpm" /%}
 
@@ -35,7 +35,7 @@ npx create-nx-workspace@latest
 
 {% cards cols="2" lgCols="5" mdCols="5" smCols="2" %}
 
-{% link-card title="Package Based Monorepos" type="tutorial" url="/getting-started/tutorials/package-based-repo-tutorial" icon="jsMono" /%}
+{% link-card title="NPM Workspaces" type="tutorial" url="/getting-started/tutorials/npm-workspaces-tutorial" icon="jsMono" /%}
 
 {% link-card title="Integrated Monorepos" type="tutorial" url="/getting-started/tutorials/integrated-repo-tutorial" icon="nx" /%}
 

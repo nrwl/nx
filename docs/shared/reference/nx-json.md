@@ -16,9 +16,7 @@ The following is an expanded example showing all options. Your `nx.json` will li
   ],
   "parallel": 4,
   "cacheDirectory": "tmp/my-nx-cache",
-  "affected": {
-    "defaultBase": "main"
-  },
+  "defaultBase": "main",
   "namedInputs": {
     "default": ["{projectRoot}/**/*"],
     "production": ["!{projectRoot}/**/*.spec.tsx"]
@@ -92,7 +90,7 @@ The following properties affect the way Nx runs tasks and can be set at the root
 | parallel                | defines the max number of targets run in parallel                                                                                                                                                                                                                                                                                       |
 | captureStderr           | defines whether the cache captures stderr or just stdout                                                                                                                                                                                                                                                                                |
 | skipNxCache             | defines whether the Nx Cache should be skipped (defaults to `false`)                                                                                                                                                                                                                                                                    |
-| cacheDirectory          | defines where the local cache is stored (defaults to `node_modules/.cache/nx`)                                                                                                                                                                                                                                                          |
+| cacheDirectory          | defines where the local cache is stored (defaults to `.nx/cache`)                                                                                                                                                                                                                                                                       |
 | encryptionKey           | (when using `"nx-cloud"` only) defines an encryption key to support end-to-end encryption of your cloud cache. You may also provide an environment variable with the key `NX_CLOUD_ENCRYPTION_KEY` that contains an encryption key as its value. The Nx Cloud task runner normalizes the key length, so any length of key is acceptable |
 | selectivelyHashTsConfig | only hash the path mapping of the active project in the `tsconfig.base.json` (e.g., adding/removing projects doesn't affect the hash of existing projects) (defaults to `false`)                                                                                                                                                        |
 
@@ -123,9 +121,9 @@ nx run-many -t build --runner=another
 
 The official types of `runner` supported by Nx are `"nx/tasks-runners/default"` and `"nx-cloud"`.
 
-## Affected
+## Default Base
 
-Tells Nx which branch and HEAD to use when calculating affected projects.
+Tells Nx which base branch to use when calculating affected projects.
 
 - `defaultBase` defines the default base branch, defaults to `main`.
 
@@ -463,3 +461,15 @@ pass `--buildable=true` when creating new libraries with the `@nx/js` plugin.
 ## Extends
 
 Some presets use the `extends` property to hide some default options in a separate json file. The json file specified in the `extends` property is located in your `node_modules` folder. The Nx preset files are specified in [the `nx` package](https://github.com/nrwl/nx/tree/master/packages/nx/presets).
+
+## Nx Cloud
+
+There are also options for [Nx Cloud](https://nx.app) that are set in the `nx.json` file. For instance, you authenticate with the Nx Cloud service using an `nxCloudAccessToken` like this:
+
+```json {% fileName="nx.json" %}
+{
+  "nxCloudAccessToken": "SOMETOKEN"
+}
+```
+
+For more details on configuring Nx Cloud, see the [Nx Cloud Configuration Options page](/ci/reference/config).

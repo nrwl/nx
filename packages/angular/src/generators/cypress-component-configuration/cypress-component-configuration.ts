@@ -1,17 +1,8 @@
-import { componentConfigurationGenerator as baseCyCTConfig } from '@nx/cypress';
-import { NxComponentTestingOptions } from '@nx/cypress/plugins/cypress-preset';
+import type { NxComponentTestingOptions } from '@nx/cypress/plugins/cypress-preset';
+import type { FoundTarget } from '@nx/cypress/src/utils/find-target-options';
 import {
-  addDefaultCTConfig,
-  addMountDefinition,
-  getProjectCypressConfigPath,
-} from '@nx/cypress/src/utils/config';
-import {
-  findBuildConfig,
-  FoundTarget,
-} from '@nx/cypress/src/utils/find-target-options';
-import {
+  ensurePackage,
   formatFiles,
-  glob,
   joinPathFragments,
   ProjectConfiguration,
   readProjectConfiguration,
@@ -19,6 +10,7 @@ import {
   updateProjectConfiguration,
 } from '@nx/devkit';
 import { relative } from 'path';
+import { nxVersion } from '../../utils/versions';
 import { componentTestGenerator } from '../component-test/component-test';
 import {
   getComponentsInfo,
@@ -26,6 +18,7 @@ import {
 } from '../utils/storybook-ast/component-info';
 import { getProjectEntryPoints } from '../utils/storybook-ast/entry-point';
 import { getModuleFilePaths } from '../utils/storybook-ast/module-info';
+import { updateAppEditorTsConfigExcludedFiles } from '../utils/update-app-editor-tsconfig-excluded-files';
 import { CypressComponentConfigSchema } from './schema';
 
 export function cypressComponentConfiguration(
@@ -33,7 +26,6 @@ export function cypressComponentConfiguration(
   options: CypressComponentConfigSchema
 ) {
   return cypressComponentConfigurationInternal(tree, {
-    addPlugin: false,
     ...options,
   });
 }
@@ -46,17 +38,23 @@ export async function cypressComponentConfigurationInternal(
   tree: Tree,
   options: CypressComponentConfigSchema
 ) {
-  options.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
-
   const projectConfig = readProjectConfiguration(tree, options.project);
+  const { componentConfigurationGenerator: baseCyCTConfig } = ensurePackage<
+    typeof import('@nx/cypress')
+  >('@nx/cypress', nxVersion);
   const installTask = await baseCyCTConfig(tree, {
     project: options.project,
     skipFormat: true,
-    addPlugin: options.addPlugin,
+    addPlugin: false,
+    addExplicitTargets: true,
   });
 
   await configureCypressCT(tree, options);
   await addFiles(tree, projectConfig, options);
+
+  if (projectConfig.projectType === 'application') {
+    updateAppEditorTsConfigExcludedFiles(tree, projectConfig);
+  }
 
   if (!options.skipFormat) {
     await formatFiles(tree);
@@ -76,6 +74,7 @@ async function addFiles(
     'support',
     'component.ts'
   );
+  const { addMountDefinition } = await import('@nx/cypress/src/utils/config');
   const updatedCmpContents = await addMountDefinition(
     tree.read(componentFile, 'utf-8')
   );
@@ -127,6 +126,9 @@ async function configureCypressCT(
   let found: FoundTarget = { target: options.buildTarget, config: undefined };
 
   if (!options.buildTarget) {
+    const { findBuildConfig } = await import(
+      '@nx/cypress/src/utils/find-target-options'
+    );
     found = await findBuildConfig(tree, {
       project: options.project,
       buildTarget: options.buildTarget,
@@ -156,6 +158,9 @@ async function configureCypressCT(
     ctConfigOptions.buildTarget = found.target;
   }
 
+  const { addDefaultCTConfig, getProjectCypressConfigPath } = await import(
+    '@nx/cypress/src/utils/config'
+  );
   const cypressConfigPath = getProjectCypressConfigPath(
     tree,
     projectConfig.root

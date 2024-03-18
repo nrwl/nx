@@ -1,7 +1,5 @@
 import { Tree, writeJson } from '@nx/devkit';
-import * as reactAppConfig from './test-files/react-project.config.json';
 import * as reactViteConfig from './test-files/react-vite-project.config.json';
-import * as webAppConfig from './test-files/web-project.config.json';
 import * as angularAppConfig from './test-files/angular-project.config.json';
 import * as randomAppConfig from './test-files/unknown-project.config.json';
 import * as mixedAppConfig from './test-files/react-mixed-project.config.json';
@@ -139,13 +137,15 @@ export function mockViteReactAppGenerator(tree: Tree): Tree {
   return tree;
 }
 
-export function mockReactAppGenerator(tree: Tree): Tree {
-  const appName = 'my-test-react-app';
+export function mockReactAppGenerator(tree: Tree, userAppName?: string): Tree {
+  const appName = userAppName ?? 'my-test-react-app';
 
   tree.write(
     `apps/${appName}/src/main.tsx`,
     `import ReactDOM from 'react-dom';\n`
   );
+
+  tree.write(`apps/${appName}/webpack.config.ts`, ``);
 
   tree.write(
     `apps/${appName}/tsconfig.json`,
@@ -221,18 +221,7 @@ export function mockReactAppGenerator(tree: Tree): Tree {
     </html>`
   );
 
-  writeJson(tree, 'workspace.json', {
-    projects: {
-      'my-test-react-app': {
-        ...reactAppConfig,
-        root: `apps/${appName}`,
-        projectType: 'application',
-      },
-    },
-  });
-
   writeJson(tree, `apps/${appName}/project.json`, {
-    ...reactAppConfig,
     root: `apps/${appName}`,
     projectType: 'application',
   });
@@ -363,6 +352,8 @@ export function mockWebAppGenerator(tree: Tree): Tree {
         `
   );
 
+  tree.write(`apps/${appName}/webpack.config.ts`, ``);
+
   tree.write(
     `apps/${appName}/src/index.html`,
     `<!DOCTYPE html>
@@ -382,23 +373,16 @@ export function mockWebAppGenerator(tree: Tree): Tree {
     `
   );
 
-  writeJson(
-    tree,
-    'workspace.json',
-
-    {
-      projects: {
-        'my-test-web-app': {
-          ...webAppConfig,
-          root: `apps/${appName}`,
-          projectType: 'application',
-        },
+  writeJson(tree, 'workspace.json', {
+    projects: {
+      'my-test-web-app': {
+        root: `apps/${appName}`,
+        projectType: 'application',
       },
-    }
-  );
+    },
+  });
 
   writeJson(tree, `apps/${appName}/project.json`, {
-    ...webAppConfig,
     root: `apps/${appName}`,
     projectType: 'application',
   });

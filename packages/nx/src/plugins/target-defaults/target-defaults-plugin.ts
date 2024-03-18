@@ -9,17 +9,30 @@ import {
 import { readJsonFile } from '../../utils/fileutils';
 import { combineGlobPatterns } from '../../utils/globs';
 import { NxPluginV2 } from '../../utils/nx-plugin';
-import { PackageJson } from '../../utils/package-json';
+import {
+  PackageJson,
+  readTargetsFromPackageJson,
+} from '../../utils/package-json';
 import { getGlobPatternsFromPackageManagerWorkspaces } from '../package-json-workspaces';
 
 /**
- * This symbol marks that a target provides information which should modify a target already registered
+ * This marks that a target provides information which should modify a target already registered
  * on the project via other plugins. If the target has not already been registered, and this symbol is true,
  * the information provided by it will be discarded.
+ *
+ * NOTE: This cannot be a symbol, as they are not serialized in JSON the communication
+ * between the plugin-worker and the main process.
  */
-export const ONLY_MODIFIES_EXISTING_TARGET = Symbol(
-  'ONLY_MODIFIES_EXISTING_TARGET'
-);
+export const ONLY_MODIFIES_EXISTING_TARGET = 'NX_ONLY_MODIFIES_EXISTING_TARGET';
+
+/**
+ * This is used to override the source file for the target defaults plugin.
+ * This allows the plugin to use the project files as the context, but point to nx.json as the source file.
+ *
+ * NOTE: This cannot be a symbol, as they are not serialized in JSON the communication
+ * between the plugin-worker and the main process.
+ */
+export const OVERRIDE_SOURCE_FILE = 'NX_OVERRIDE_SOURCE_FILE';
 
 export const TargetDefaultsPlugin: NxPluginV2 = {
   name: 'nx/core/target-defaults',
@@ -58,21 +71,15 @@ export const TargetDefaultsPlugin: NxPluginV2 = {
       const packageJson = readJsonOrNull<PackageJson>(
         join(ctx.workspaceRoot, root, 'package.json')
       );
-      const includedScripts = packageJson?.nx?.includedScripts;
+      const packageJsonTargets = readTargetsFromPackageJson(packageJson);
       const projectDefinedTargets = new Set([
-        ...Object.keys(packageJson?.scripts ?? {}).filter((script) => {
-          if (includedScripts) {
-            return includedScripts.includes(script);
-          }
-          return true;
-        }),
         ...Object.keys(projectJson?.targets ?? {}),
-        ...Object.keys(packageJson?.nx?.targets ?? {}),
+        ...(packageJson ? Object.keys(packageJsonTargets) : []),
       ]);
 
       const executorToTargetMap = getExecutorToTargetMap(
-        packageJson,
-        projectJson
+        packageJsonTargets,
+        projectJson?.targets
       );
 
       const modifiedTargets: Record<
@@ -92,7 +99,11 @@ export const TargetDefaultsPlugin: NxPluginV2 = {
               JSON.stringify(targetDefaults[defaultSpecifier])
             );
             modifiedTargets[targetName] = {
-              ...getTargetInfo(targetName, projectJson, packageJson),
+              ...getTargetInfo(
+                targetName,
+                projectJson?.targets,
+                packageJsonTargets
+              ),
               ...defaults,
             };
           }
@@ -110,26 +121,27 @@ export const TargetDefaultsPlugin: NxPluginV2 = {
             targets: modifiedTargets,
           },
         },
+        [OVERRIDE_SOURCE_FILE]: 'nx.json',
       };
     },
   ],
 };
 
 function getExecutorToTargetMap(
-  packageJson: PackageJson,
-  projectJson: ProjectConfiguration
+  packageJsonTargets: Record<string, TargetConfiguration>,
+  projectJsonTargets: Record<string, TargetConfiguration>
 ) {
   const executorToTargetMap = new Map<string, Set<string>>();
   const targets = Object.keys({
-    ...projectJson?.targets,
-    ...packageJson?.scripts,
-    ...packageJson?.nx?.targets,
+    ...projectJsonTargets,
+    ...packageJsonTargets,
   });
   for (const target of targets) {
-    const executor =
-      projectJson?.targets?.[target]?.executor ??
-      packageJson?.nx?.targets?.[target]?.executor ??
-      'nx:run-script';
+    const executor = getTargetExecutor(
+      target,
+      projectJsonTargets,
+      packageJsonTargets
+    );
     const targetsForExecutor = executorToTargetMap.get(executor) ?? new Set();
     targetsForExecutor.add(target);
     executorToTargetMap.set(executor, targetsForExecutor);
@@ -156,13 +168,17 @@ function readJsonOrNull<T extends Object = any>(path: string) {
  */
 export function getTargetInfo(
   target: string,
-  projectJson: Pick<ProjectConfiguration, 'targets'>,
-  packageJson: Pick<PackageJson, 'scripts' | 'nx'>
+  projectJsonTargets: Record<string, TargetConfiguration>,
+  packageJsonTargets: Record<string, TargetConfiguration>
 ) {
-  const projectJsonTarget = projectJson?.targets?.[target];
-  const packageJsonTarget = packageJson?.nx?.targets?.[target];
+  const projectJsonTarget = projectJsonTargets?.[target];
+  const packageJsonTarget = packageJsonTargets?.[target];
 
-  const executor = getTargetExecutor(target, projectJson, packageJson);
+  const executor = getTargetExecutor(
+    target,
+    projectJsonTargets,
+    packageJsonTargets
+  );
   const targetOptions = {
     ...packageJsonTarget?.options,
     ...projectJsonTarget?.options,
@@ -179,7 +195,7 @@ export function getTargetInfo(
       return {
         executor: 'nx:run-commands',
         options: {
-          command: projectJsonTarget.options?.command,
+          command: targetOptions?.command,
         },
       };
     } else if (targetOptions?.commands) {
@@ -213,24 +229,23 @@ export function getTargetInfo(
 
 function getTargetExecutor(
   target: string,
-  projectJson: Pick<ProjectConfiguration, 'targets'>,
-  packageJson: Pick<PackageJson, 'scripts' | 'nx'>
+  projectJsonTargets: Record<string, TargetConfiguration>,
+  packageJsonTargets: Record<string, TargetConfiguration>
 ) {
-  const projectJsonTarget = projectJson?.targets?.[target];
-  const packageJsonTarget = packageJson?.nx?.targets?.[target];
-  const packageJsonScript = packageJson?.scripts?.[target];
+  const projectJsonTargetConfiguration = projectJsonTargets?.[target];
+  const packageJsonTargetConfiguration = packageJsonTargets?.[target];
 
-  if (projectJsonTarget?.command) {
+  if (!projectJsonTargetConfiguration && packageJsonTargetConfiguration) {
+    return packageJsonTargetConfiguration?.executor;
+  }
+
+  if (projectJsonTargetConfiguration?.executor) {
+    return projectJsonTargetConfiguration.executor;
+  }
+
+  if (projectJsonTargetConfiguration?.command) {
     return 'nx:run-commands';
   }
 
-  if (
-    !projectJsonTarget?.executor &&
-    !packageJsonTarget?.executor &&
-    packageJsonScript
-  ) {
-    return 'nx:run-script';
-  }
-
-  return projectJsonTarget?.executor ?? packageJsonTarget?.executor;
+  return null;
 }

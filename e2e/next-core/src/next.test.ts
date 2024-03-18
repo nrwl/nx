@@ -5,6 +5,7 @@ import {
   newProject,
   readFile,
   runCLI,
+  runE2ETests,
   uniq,
   updateFile,
 } from '@nx/e2e/utils';
@@ -183,6 +184,23 @@ describe('Next.js Applications', () => {
       `Successfully ran target build for project ${appName}`
     );
   }, 300_000);
+
+  it('should run e2e-ci test', async () => {
+    const appName = uniq('app');
+
+    runCLI(
+      `generate @nx/next:app ${appName} --no-interactive --style=css --project-name-and-root-format=as-provided`
+    );
+
+    if (runE2ETests('cypress')) {
+      const e2eResults = runCLI(`e2e-ci ${appName}-e2e --verbose`, {
+        verbose: true,
+      });
+      expect(e2eResults).toContain(
+        'Successfully ran target e2e-ci for project'
+      );
+    }
+  }, 600_000);
 });
 
 function getData(port, path = ''): Promise<any> {

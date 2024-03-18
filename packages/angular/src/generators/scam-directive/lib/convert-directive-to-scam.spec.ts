@@ -47,7 +47,7 @@ describe('convertDirectiveToScam', () => {
       import { CommonModule } from '@angular/common';
 
       @Directive({
-        selector: '[projExample]'
+        selector: '[example]'
       })
       export class ExampleDirective {
         constructor() {}
@@ -159,7 +159,7 @@ describe('convertDirectiveToScam', () => {
       import { CommonModule } from '@angular/common';
 
       @Directive({
-        selector: '[projExample]'
+        selector: '[example]'
       })
       export class ExampleDirective {
         constructor() {}
@@ -272,7 +272,7 @@ describe('convertDirectiveToScam', () => {
       import { CommonModule } from '@angular/common';
 
       @Directive({
-        selector: '[projExample]'
+        selector: '[example]'
       })
       export class ExampleDirective {
         constructor() {}
@@ -332,7 +332,7 @@ describe('convertDirectiveToScam', () => {
       import { CommonModule } from '@angular/common';
 
       @Directive({
-        selector: '[projExample]'
+        selector: '[example]'
       })
       export class ExampleDirective {
         constructor() {}

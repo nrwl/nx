@@ -116,12 +116,12 @@ function _retrieveProjectConfigurations(
   plugins: LoadedNxPlugin[]
 ): Promise<RetrievedGraphNodes> {
   const globPatterns = configurationGlobs(plugins);
-  const projectFiles = globWithWorkspaceContext(workspaceRoot, globPatterns);
+  const workspaceFiles = globWithWorkspaceContext(workspaceRoot, globPatterns);
 
   return createProjectConfigurations(
     workspaceRoot,
     nxJson,
-    projectFiles,
+    workspaceFiles,
     plugins
   );
 }
@@ -152,7 +152,8 @@ export async function retrieveProjectConfigurationsWithoutPluginInference(
     return projectsWithoutPluginCache.get(cacheKey);
   }
 
-  const projectFiles = globWithWorkspaceContext(root, projectGlobPatterns);
+  const projectFiles =
+    globWithWorkspaceContext(root, projectGlobPatterns) ?? [];
   const { projects } = await createProjectConfigurations(
     root,
     nxJson,

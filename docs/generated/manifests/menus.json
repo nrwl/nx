@@ -39,9 +39,9 @@
             "isExternal": false,
             "children": [
               {
-                "name": "Package-Based Monorepo",
-                "path": "/getting-started/tutorials/package-based-repo-tutorial",
-                "id": "package-based-repo-tutorial",
+                "name": "NPM Workspaces Monorepo",
+                "path": "/getting-started/tutorials/npm-workspaces-tutorial",
+                "id": "npm-workspaces-tutorial",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -131,9 +131,9 @@
         "isExternal": false,
         "children": [
           {
-            "name": "Package-Based Monorepo",
-            "path": "/getting-started/tutorials/package-based-repo-tutorial",
-            "id": "package-based-repo-tutorial",
+            "name": "NPM Workspaces Monorepo",
+            "path": "/getting-started/tutorials/npm-workspaces-tutorial",
+            "id": "npm-workspaces-tutorial",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -190,9 +190,9 @@
         "disableCollapsible": false
       },
       {
-        "name": "Package-Based Monorepo",
-        "path": "/getting-started/tutorials/package-based-repo-tutorial",
-        "id": "package-based-repo-tutorial",
+        "name": "NPM Workspaces Monorepo",
+        "path": "/getting-started/tutorials/npm-workspaces-tutorial",
+        "id": "npm-workspaces-tutorial",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -1578,14 +1578,6 @@
                     "isExternal": false,
                     "children": [],
                     "disableCollapsible": false
-                  },
-                  {
-                    "name": "Migrating from AngularJS",
-                    "path": "/recipes/angular/migration/angularjs",
-                    "id": "angularjs",
-                    "isExternal": false,
-                    "children": [],
-                    "disableCollapsible": false
                   }
                 ],
                 "disableCollapsible": false
@@ -1761,6 +1753,14 @@
                 "disableCollapsible": false
               },
               {
+                "name": "Upgrading Storybook using the Storybook CLI",
+                "path": "/recipes/storybook/upgrading-storybook",
+                "id": "upgrading-storybook",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
                 "name": "Setting up Storybook Composition with Nx",
                 "path": "/recipes/storybook/storybook-composition-setup",
                 "id": "storybook-composition-setup",
@@ -1797,6 +1797,14 @@
                 "name": "Component Testing",
                 "path": "/recipes/cypress/cypress-component-testing",
                 "id": "cypress-component-testing",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Using setupNodeEvents with Cypress preset",
+                "path": "/recipes/cypress/cypress-setup-node-events",
+                "id": "cypress-setup-node-events",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -2299,6 +2307,38 @@
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
+              },
+              {
+                "name": "Automate GitHub Releases",
+                "path": "/recipes/nx-release/automate-github-releases",
+                "id": "automate-github-releases",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Publish Rust Crates",
+                "path": "/recipes/nx-release/publish-rust-crates",
+                "id": "publish-rust-crates",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Update Your Local Registry Setup to use Nx Release",
+                "path": "/recipes/nx-release/update-local-registry-setup",
+                "id": "update-local-registry-setup",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Customize Conventional Commit Types",
+                "path": "/recipes/nx-release/customize-conventional-commit-types",
+                "id": "customize-conventional-commit-types",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
               }
             ],
             "disableCollapsible": false
@@ -2753,14 +2793,6 @@
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
-              },
-              {
-                "name": "Migrating from AngularJS",
-                "path": "/recipes/angular/migration/angularjs",
-                "id": "angularjs",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
               }
             ],
             "disableCollapsible": false
@@ -2837,14 +2869,6 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
-          },
-          {
-            "name": "Migrating from AngularJS",
-            "path": "/recipes/angular/migration/angularjs",
-            "id": "angularjs",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -2869,14 +2893,6 @@
         "name": "Migrating Angular Application manually",
         "path": "/recipes/angular/migration/angular-manual",
         "id": "angular-manual",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Migrating from AngularJS",
-        "path": "/recipes/angular/migration/angularjs",
-        "id": "angularjs",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -3089,6 +3105,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Upgrading Storybook using the Storybook CLI",
+            "path": "/recipes/storybook/upgrading-storybook",
+            "id": "upgrading-storybook",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Setting up Storybook Composition with Nx",
             "path": "/recipes/storybook/storybook-composition-setup",
             "id": "storybook-composition-setup",
@@ -3188,6 +3212,14 @@
         "disableCollapsible": false
       },
       {
+        "name": "Upgrading Storybook using the Storybook CLI",
+        "path": "/recipes/storybook/upgrading-storybook",
+        "id": "upgrading-storybook",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
         "name": "Setting up Storybook Composition with Nx",
         "path": "/recipes/storybook/storybook-composition-setup",
         "id": "storybook-composition-setup",
@@ -3226,6 +3258,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Using setupNodeEvents with Cypress preset",
+            "path": "/recipes/cypress/cypress-setup-node-events",
+            "id": "cypress-setup-node-events",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Cypress v11 Migration Guide",
             "path": "/recipes/cypress/cypress-v11-migration",
             "id": "cypress-v11-migration",
@@ -3240,6 +3280,14 @@
         "name": "Component Testing",
         "path": "/recipes/cypress/cypress-component-testing",
         "id": "cypress-component-testing",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Using setupNodeEvents with Cypress preset",
+        "path": "/recipes/cypress/cypress-setup-node-events",
+        "id": "cypress-setup-node-events",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -4099,6 +4147,38 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
+          },
+          {
+            "name": "Automate GitHub Releases",
+            "path": "/recipes/nx-release/automate-github-releases",
+            "id": "automate-github-releases",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Publish Rust Crates",
+            "path": "/recipes/nx-release/publish-rust-crates",
+            "id": "publish-rust-crates",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Update Your Local Registry Setup to use Nx Release",
+            "path": "/recipes/nx-release/update-local-registry-setup",
+            "id": "update-local-registry-setup",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Customize Conventional Commit Types",
+            "path": "/recipes/nx-release/customize-conventional-commit-types",
+            "id": "customize-conventional-commit-types",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -4131,6 +4211,38 @@
         "name": "Publish in CI/CD",
         "path": "/recipes/nx-release/publish-in-ci-cd",
         "id": "publish-in-ci-cd",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Automate GitHub Releases",
+        "path": "/recipes/nx-release/automate-github-releases",
+        "id": "automate-github-releases",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Publish Rust Crates",
+        "path": "/recipes/nx-release/publish-rust-crates",
+        "id": "publish-rust-crates",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Update Your Local Registry Setup to use Nx Release",
+        "path": "/recipes/nx-release/update-local-registry-setup",
+        "id": "update-local-registry-setup",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Customize Conventional Commit Types",
+        "path": "/recipes/nx-release/customize-conventional-commit-types",
+        "id": "customize-conventional-commit-types",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -4173,7 +4285,7 @@
             "isExternal": false,
             "children": [
               {
-                "name": "Add an Express Project",
+                "name": "Express",
                 "path": "/showcase/example-repos/add-express",
                 "id": "add-express",
                 "isExternal": false,
@@ -4181,7 +4293,7 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Add a Lit Project",
+                "name": "Lit",
                 "path": "/showcase/example-repos/add-lit",
                 "id": "add-lit",
                 "isExternal": false,
@@ -4189,7 +4301,7 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Add a Solid Project",
+                "name": "Solid",
                 "path": "/showcase/example-repos/add-solid",
                 "id": "add-solid",
                 "isExternal": false,
@@ -4197,7 +4309,7 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Add a Qwik Project",
+                "name": "Qwik",
                 "path": "/showcase/example-repos/add-qwik",
                 "id": "add-qwik",
                 "isExternal": false,
@@ -4205,7 +4317,7 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Add a Rust Project",
+                "name": "Rust",
                 "path": "/showcase/example-repos/add-rust",
                 "id": "add-rust",
                 "isExternal": false,
@@ -4213,7 +4325,7 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Add a .NET Project",
+                "name": ".NET",
                 "path": "/showcase/example-repos/add-dotnet",
                 "id": "add-dotnet",
                 "isExternal": false,
@@ -4221,7 +4333,7 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Add an Astro Project",
+                "name": "Astro",
                 "path": "/showcase/example-repos/add-astro",
                 "id": "add-astro",
                 "isExternal": false,
@@ -4229,7 +4341,7 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Add a Svelte Project",
+                "name": "Svelte",
                 "path": "/showcase/example-repos/add-svelte",
                 "id": "add-svelte",
                 "isExternal": false,
@@ -4237,7 +4349,7 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Add a Fastify Project",
+                "name": "Fastify",
                 "path": "/showcase/example-repos/add-fastify",
                 "id": "add-fastify",
                 "isExternal": false,
@@ -4245,7 +4357,7 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Using Apollo GraphQL",
+                "name": "Apollo GraphQL",
                 "path": "/showcase/example-repos/apollo-react",
                 "id": "apollo-react",
                 "isExternal": false,
@@ -4253,7 +4365,7 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Using Prisma with NestJS",
+                "name": "Prisma with NestJS",
                 "path": "/showcase/example-repos/nestjs-prisma",
                 "id": "nestjs-prisma",
                 "isExternal": false,
@@ -4261,7 +4373,7 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Using Mongo with Fastify",
+                "name": "Mongo with Fastify",
                 "path": "/showcase/example-repos/mongo-fastify",
                 "id": "mongo-fastify",
                 "isExternal": false,
@@ -4269,7 +4381,7 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Using Redis with Fastify",
+                "name": "Redis with Fastify",
                 "path": "/showcase/example-repos/redis-fastify",
                 "id": "redis-fastify",
                 "isExternal": false,
@@ -4277,7 +4389,7 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Using Postgres with Fastify",
+                "name": "Postgres with Fastify",
                 "path": "/showcase/example-repos/postgres-fastify",
                 "id": "postgres-fastify",
                 "isExternal": false,
@@ -4285,7 +4397,7 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Using PlanetScale with Serverless Fastify",
+                "name": "PlanetScale with Serverless Fastify",
                 "path": "/showcase/example-repos/serverless-fastify-planetscale",
                 "id": "serverless-fastify-planetscale",
                 "isExternal": false,
@@ -4293,7 +4405,7 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Nx Micro-Frontend Example",
+                "name": "Nx with Micro-frontends",
                 "path": "/showcase/example-repos/mfe",
                 "id": "mfe",
                 "isExternal": false,
@@ -4346,7 +4458,7 @@
         "isExternal": false,
         "children": [
           {
-            "name": "Add an Express Project",
+            "name": "Express",
             "path": "/showcase/example-repos/add-express",
             "id": "add-express",
             "isExternal": false,
@@ -4354,7 +4466,7 @@
             "disableCollapsible": false
           },
           {
-            "name": "Add a Lit Project",
+            "name": "Lit",
             "path": "/showcase/example-repos/add-lit",
             "id": "add-lit",
             "isExternal": false,
@@ -4362,7 +4474,7 @@
             "disableCollapsible": false
           },
           {
-            "name": "Add a Solid Project",
+            "name": "Solid",
             "path": "/showcase/example-repos/add-solid",
             "id": "add-solid",
             "isExternal": false,
@@ -4370,7 +4482,7 @@
             "disableCollapsible": false
           },
           {
-            "name": "Add a Qwik Project",
+            "name": "Qwik",
             "path": "/showcase/example-repos/add-qwik",
             "id": "add-qwik",
             "isExternal": false,
@@ -4378,7 +4490,7 @@
             "disableCollapsible": false
           },
           {
-            "name": "Add a Rust Project",
+            "name": "Rust",
             "path": "/showcase/example-repos/add-rust",
             "id": "add-rust",
             "isExternal": false,
@@ -4386,7 +4498,7 @@
             "disableCollapsible": false
           },
           {
-            "name": "Add a .NET Project",
+            "name": ".NET",
             "path": "/showcase/example-repos/add-dotnet",
             "id": "add-dotnet",
             "isExternal": false,
@@ -4394,7 +4506,7 @@
             "disableCollapsible": false
           },
           {
-            "name": "Add an Astro Project",
+            "name": "Astro",
             "path": "/showcase/example-repos/add-astro",
             "id": "add-astro",
             "isExternal": false,
@@ -4402,7 +4514,7 @@
             "disableCollapsible": false
           },
           {
-            "name": "Add a Svelte Project",
+            "name": "Svelte",
             "path": "/showcase/example-repos/add-svelte",
             "id": "add-svelte",
             "isExternal": false,
@@ -4410,7 +4522,7 @@
             "disableCollapsible": false
           },
           {
-            "name": "Add a Fastify Project",
+            "name": "Fastify",
             "path": "/showcase/example-repos/add-fastify",
             "id": "add-fastify",
             "isExternal": false,
@@ -4418,7 +4530,7 @@
             "disableCollapsible": false
           },
           {
-            "name": "Using Apollo GraphQL",
+            "name": "Apollo GraphQL",
             "path": "/showcase/example-repos/apollo-react",
             "id": "apollo-react",
             "isExternal": false,
@@ -4426,7 +4538,7 @@
             "disableCollapsible": false
           },
           {
-            "name": "Using Prisma with NestJS",
+            "name": "Prisma with NestJS",
             "path": "/showcase/example-repos/nestjs-prisma",
             "id": "nestjs-prisma",
             "isExternal": false,
@@ -4434,7 +4546,7 @@
             "disableCollapsible": false
           },
           {
-            "name": "Using Mongo with Fastify",
+            "name": "Mongo with Fastify",
             "path": "/showcase/example-repos/mongo-fastify",
             "id": "mongo-fastify",
             "isExternal": false,
@@ -4442,7 +4554,7 @@
             "disableCollapsible": false
           },
           {
-            "name": "Using Redis with Fastify",
+            "name": "Redis with Fastify",
             "path": "/showcase/example-repos/redis-fastify",
             "id": "redis-fastify",
             "isExternal": false,
@@ -4450,7 +4562,7 @@
             "disableCollapsible": false
           },
           {
-            "name": "Using Postgres with Fastify",
+            "name": "Postgres with Fastify",
             "path": "/showcase/example-repos/postgres-fastify",
             "id": "postgres-fastify",
             "isExternal": false,
@@ -4458,7 +4570,7 @@
             "disableCollapsible": false
           },
           {
-            "name": "Using PlanetScale with Serverless Fastify",
+            "name": "PlanetScale with Serverless Fastify",
             "path": "/showcase/example-repos/serverless-fastify-planetscale",
             "id": "serverless-fastify-planetscale",
             "isExternal": false,
@@ -4466,7 +4578,7 @@
             "disableCollapsible": false
           },
           {
-            "name": "Nx Micro-Frontend Example",
+            "name": "Nx with Micro-frontends",
             "path": "/showcase/example-repos/mfe",
             "id": "mfe",
             "isExternal": false,
@@ -4477,7 +4589,7 @@
         "disableCollapsible": false
       },
       {
-        "name": "Add an Express Project",
+        "name": "Express",
         "path": "/showcase/example-repos/add-express",
         "id": "add-express",
         "isExternal": false,
@@ -4485,7 +4597,7 @@
         "disableCollapsible": false
       },
       {
-        "name": "Add a Lit Project",
+        "name": "Lit",
         "path": "/showcase/example-repos/add-lit",
         "id": "add-lit",
         "isExternal": false,
@@ -4493,7 +4605,7 @@
         "disableCollapsible": false
       },
       {
-        "name": "Add a Solid Project",
+        "name": "Solid",
         "path": "/showcase/example-repos/add-solid",
         "id": "add-solid",
         "isExternal": false,
@@ -4501,7 +4613,7 @@
         "disableCollapsible": false
       },
       {
-        "name": "Add a Qwik Project",
+        "name": "Qwik",
         "path": "/showcase/example-repos/add-qwik",
         "id": "add-qwik",
         "isExternal": false,
@@ -4509,7 +4621,7 @@
         "disableCollapsible": false
       },
       {
-        "name": "Add a Rust Project",
+        "name": "Rust",
         "path": "/showcase/example-repos/add-rust",
         "id": "add-rust",
         "isExternal": false,
@@ -4517,7 +4629,7 @@
         "disableCollapsible": false
       },
       {
-        "name": "Add a .NET Project",
+        "name": ".NET",
         "path": "/showcase/example-repos/add-dotnet",
         "id": "add-dotnet",
         "isExternal": false,
@@ -4525,7 +4637,7 @@
         "disableCollapsible": false
       },
       {
-        "name": "Add an Astro Project",
+        "name": "Astro",
         "path": "/showcase/example-repos/add-astro",
         "id": "add-astro",
         "isExternal": false,
@@ -4533,7 +4645,7 @@
         "disableCollapsible": false
       },
       {
-        "name": "Add a Svelte Project",
+        "name": "Svelte",
         "path": "/showcase/example-repos/add-svelte",
         "id": "add-svelte",
         "isExternal": false,
@@ -4541,7 +4653,7 @@
         "disableCollapsible": false
       },
       {
-        "name": "Add a Fastify Project",
+        "name": "Fastify",
         "path": "/showcase/example-repos/add-fastify",
         "id": "add-fastify",
         "isExternal": false,
@@ -4549,7 +4661,7 @@
         "disableCollapsible": false
       },
       {
-        "name": "Using Apollo GraphQL",
+        "name": "Apollo GraphQL",
         "path": "/showcase/example-repos/apollo-react",
         "id": "apollo-react",
         "isExternal": false,
@@ -4557,7 +4669,7 @@
         "disableCollapsible": false
       },
       {
-        "name": "Using Prisma with NestJS",
+        "name": "Prisma with NestJS",
         "path": "/showcase/example-repos/nestjs-prisma",
         "id": "nestjs-prisma",
         "isExternal": false,
@@ -4565,7 +4677,7 @@
         "disableCollapsible": false
       },
       {
-        "name": "Using Mongo with Fastify",
+        "name": "Mongo with Fastify",
         "path": "/showcase/example-repos/mongo-fastify",
         "id": "mongo-fastify",
         "isExternal": false,
@@ -4573,7 +4685,7 @@
         "disableCollapsible": false
       },
       {
-        "name": "Using Redis with Fastify",
+        "name": "Redis with Fastify",
         "path": "/showcase/example-repos/redis-fastify",
         "id": "redis-fastify",
         "isExternal": false,
@@ -4581,7 +4693,7 @@
         "disableCollapsible": false
       },
       {
-        "name": "Using Postgres with Fastify",
+        "name": "Postgres with Fastify",
         "path": "/showcase/example-repos/postgres-fastify",
         "id": "postgres-fastify",
         "isExternal": false,
@@ -4589,7 +4701,7 @@
         "disableCollapsible": false
       },
       {
-        "name": "Using PlanetScale with Serverless Fastify",
+        "name": "PlanetScale with Serverless Fastify",
         "path": "/showcase/example-repos/serverless-fastify-planetscale",
         "id": "serverless-fastify-planetscale",
         "isExternal": false,
@@ -4597,7 +4709,7 @@
         "disableCollapsible": false
       },
       {
-        "name": "Nx Micro-Frontend Example",
+        "name": "Nx with Micro-frontends",
         "path": "/showcase/example-repos/mfe",
         "id": "mfe",
         "isExternal": false,
@@ -5958,73 +6070,139 @@
             "disableCollapsible": false
           },
           {
-            "name": "On-Premise",
-            "path": "/ci/recipes/on-premise",
-            "id": "on-premise",
+            "name": "Enterprise",
+            "path": "/ci/recipes/enterprise",
+            "id": "enterprise",
             "isExternal": false,
             "children": [
               {
-                "name": "Authenticate with a Single Admin",
-                "path": "/ci/recipes/on-premise/auth-single-admin",
-                "id": "auth-single-admin",
+                "name": "On-Premise",
+                "path": "/ci/recipes/enterprise/on-premise",
+                "id": "on-premise",
                 "isExternal": false,
-                "children": [],
+                "children": [
+                  {
+                    "name": "Authenticate with a Single Admin",
+                    "path": "/ci/recipes/enterprise/on-premise/auth-single-admin",
+                    "id": "auth-single-admin",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  },
+                  {
+                    "name": "Authenticate with GitHub",
+                    "path": "/ci/recipes/enterprise/on-premise/auth-github",
+                    "id": "auth-github",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  },
+                  {
+                    "name": "On-Prem VM Setup",
+                    "path": "/ci/recipes/enterprise/on-premise/ami-setup",
+                    "id": "ami-setup",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  },
+                  {
+                    "name": "Authenticate with GitLab",
+                    "path": "/ci/recipes/enterprise/on-premise/auth-gitlab",
+                    "id": "auth-gitlab",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  },
+                  {
+                    "name": "Authenticate with BitBucket",
+                    "path": "/ci/recipes/enterprise/on-premise/auth-bitbucket",
+                    "id": "auth-bitbucket",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  },
+                  {
+                    "name": "Authenticate via SAML",
+                    "path": "/ci/recipes/enterprise/on-premise/auth-saml",
+                    "id": "auth-saml",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  },
+                  {
+                    "name": "Authenticate via SAML on Managed Version",
+                    "path": "/ci/recipes/enterprise/on-premise/auth-saml-managed",
+                    "id": "auth-saml-managed",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  },
+                  {
+                    "name": "Advanced Configuration",
+                    "path": "/ci/recipes/enterprise/on-premise/advanced-config",
+                    "id": "advanced-config",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  }
+                ],
                 "disableCollapsible": false
               },
               {
-                "name": "Authenticate with GitHub",
-                "path": "/ci/recipes/on-premise/auth-github",
-                "id": "auth-github",
+                "name": "Custom Distributed Task Execution",
+                "path": "/ci/recipes/enterprise/dte",
+                "id": "dte",
                 "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "On-Prem VM Setup",
-                "path": "/ci/recipes/on-premise/ami-setup",
-                "id": "ami-setup",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Authenticate with GitLab",
-                "path": "/ci/recipes/on-premise/auth-gitlab",
-                "id": "auth-gitlab",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Authenticate with BitBucket",
-                "path": "/ci/recipes/on-premise/auth-bitbucket",
-                "id": "auth-bitbucket",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Authenticate via SAML",
-                "path": "/ci/recipes/on-premise/auth-saml",
-                "id": "auth-saml",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Authenticate via SAML on Managed Version",
-                "path": "/ci/recipes/on-premise/auth-saml-managed",
-                "id": "auth-saml-managed",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Advanced Configuration",
-                "path": "/ci/recipes/on-premise/advanced-config",
-                "id": "advanced-config",
-                "isExternal": false,
-                "children": [],
+                "children": [
+                  {
+                    "name": "GitHub Actions Custom DTE",
+                    "path": "/ci/recipes/enterprise/dte/github-dte",
+                    "id": "github-dte",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  },
+                  {
+                    "name": "Circle CI Custom DTE",
+                    "path": "/ci/recipes/enterprise/dte/circle-ci-dte",
+                    "id": "circle-ci-dte",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  },
+                  {
+                    "name": "Azure Pipelines Custom DTE",
+                    "path": "/ci/recipes/enterprise/dte/azure-dte",
+                    "id": "azure-dte",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  },
+                  {
+                    "name": "Bitbucket Pipelines Custom DTE",
+                    "path": "/ci/recipes/enterprise/dte/bitbucket-dte",
+                    "id": "bitbucket-dte",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  },
+                  {
+                    "name": "GitLab Custom DTE",
+                    "path": "/ci/recipes/enterprise/dte/gitlab-dte",
+                    "id": "gitlab-dte",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  },
+                  {
+                    "name": "Jenkins Custom DTE",
+                    "path": "/ci/recipes/enterprise/dte/jenkins-dte",
+                    "id": "jenkins-dte",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  }
+                ],
                 "disableCollapsible": false
               }
             ],
@@ -6311,14 +6489,153 @@
         "disableCollapsible": false
       },
       {
+        "name": "Enterprise",
+        "path": "/ci/recipes/enterprise",
+        "id": "enterprise",
+        "isExternal": false,
+        "children": [
+          {
+            "name": "On-Premise",
+            "path": "/ci/recipes/enterprise/on-premise",
+            "id": "on-premise",
+            "isExternal": false,
+            "children": [
+              {
+                "name": "Authenticate with a Single Admin",
+                "path": "/ci/recipes/enterprise/on-premise/auth-single-admin",
+                "id": "auth-single-admin",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Authenticate with GitHub",
+                "path": "/ci/recipes/enterprise/on-premise/auth-github",
+                "id": "auth-github",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "On-Prem VM Setup",
+                "path": "/ci/recipes/enterprise/on-premise/ami-setup",
+                "id": "ami-setup",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Authenticate with GitLab",
+                "path": "/ci/recipes/enterprise/on-premise/auth-gitlab",
+                "id": "auth-gitlab",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Authenticate with BitBucket",
+                "path": "/ci/recipes/enterprise/on-premise/auth-bitbucket",
+                "id": "auth-bitbucket",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Authenticate via SAML",
+                "path": "/ci/recipes/enterprise/on-premise/auth-saml",
+                "id": "auth-saml",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Authenticate via SAML on Managed Version",
+                "path": "/ci/recipes/enterprise/on-premise/auth-saml-managed",
+                "id": "auth-saml-managed",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Advanced Configuration",
+                "path": "/ci/recipes/enterprise/on-premise/advanced-config",
+                "id": "advanced-config",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              }
+            ],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Custom Distributed Task Execution",
+            "path": "/ci/recipes/enterprise/dte",
+            "id": "dte",
+            "isExternal": false,
+            "children": [
+              {
+                "name": "GitHub Actions Custom DTE",
+                "path": "/ci/recipes/enterprise/dte/github-dte",
+                "id": "github-dte",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Circle CI Custom DTE",
+                "path": "/ci/recipes/enterprise/dte/circle-ci-dte",
+                "id": "circle-ci-dte",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Azure Pipelines Custom DTE",
+                "path": "/ci/recipes/enterprise/dte/azure-dte",
+                "id": "azure-dte",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Bitbucket Pipelines Custom DTE",
+                "path": "/ci/recipes/enterprise/dte/bitbucket-dte",
+                "id": "bitbucket-dte",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "GitLab Custom DTE",
+                "path": "/ci/recipes/enterprise/dte/gitlab-dte",
+                "id": "gitlab-dte",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Jenkins Custom DTE",
+                "path": "/ci/recipes/enterprise/dte/jenkins-dte",
+                "id": "jenkins-dte",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              }
+            ],
+            "disableCollapsible": false
+          }
+        ],
+        "disableCollapsible": false
+      },
+      {
         "name": "On-Premise",
-        "path": "/ci/recipes/on-premise",
+        "path": "/ci/recipes/enterprise/on-premise",
         "id": "on-premise",
         "isExternal": false,
         "children": [
           {
             "name": "Authenticate with a Single Admin",
-            "path": "/ci/recipes/on-premise/auth-single-admin",
+            "path": "/ci/recipes/enterprise/on-premise/auth-single-admin",
             "id": "auth-single-admin",
             "isExternal": false,
             "children": [],
@@ -6326,7 +6643,7 @@
           },
           {
             "name": "Authenticate with GitHub",
-            "path": "/ci/recipes/on-premise/auth-github",
+            "path": "/ci/recipes/enterprise/on-premise/auth-github",
             "id": "auth-github",
             "isExternal": false,
             "children": [],
@@ -6334,7 +6651,7 @@
           },
           {
             "name": "On-Prem VM Setup",
-            "path": "/ci/recipes/on-premise/ami-setup",
+            "path": "/ci/recipes/enterprise/on-premise/ami-setup",
             "id": "ami-setup",
             "isExternal": false,
             "children": [],
@@ -6342,7 +6659,7 @@
           },
           {
             "name": "Authenticate with GitLab",
-            "path": "/ci/recipes/on-premise/auth-gitlab",
+            "path": "/ci/recipes/enterprise/on-premise/auth-gitlab",
             "id": "auth-gitlab",
             "isExternal": false,
             "children": [],
@@ -6350,7 +6667,7 @@
           },
           {
             "name": "Authenticate with BitBucket",
-            "path": "/ci/recipes/on-premise/auth-bitbucket",
+            "path": "/ci/recipes/enterprise/on-premise/auth-bitbucket",
             "id": "auth-bitbucket",
             "isExternal": false,
             "children": [],
@@ -6358,7 +6675,7 @@
           },
           {
             "name": "Authenticate via SAML",
-            "path": "/ci/recipes/on-premise/auth-saml",
+            "path": "/ci/recipes/enterprise/on-premise/auth-saml",
             "id": "auth-saml",
             "isExternal": false,
             "children": [],
@@ -6366,7 +6683,7 @@
           },
           {
             "name": "Authenticate via SAML on Managed Version",
-            "path": "/ci/recipes/on-premise/auth-saml-managed",
+            "path": "/ci/recipes/enterprise/on-premise/auth-saml-managed",
             "id": "auth-saml-managed",
             "isExternal": false,
             "children": [],
@@ -6374,7 +6691,7 @@
           },
           {
             "name": "Advanced Configuration",
-            "path": "/ci/recipes/on-premise/advanced-config",
+            "path": "/ci/recipes/enterprise/on-premise/advanced-config",
             "id": "advanced-config",
             "isExternal": false,
             "children": [],
@@ -6385,7 +6702,7 @@
       },
       {
         "name": "Authenticate with a Single Admin",
-        "path": "/ci/recipes/on-premise/auth-single-admin",
+        "path": "/ci/recipes/enterprise/on-premise/auth-single-admin",
         "id": "auth-single-admin",
         "isExternal": false,
         "children": [],
@@ -6393,7 +6710,7 @@
       },
       {
         "name": "Authenticate with GitHub",
-        "path": "/ci/recipes/on-premise/auth-github",
+        "path": "/ci/recipes/enterprise/on-premise/auth-github",
         "id": "auth-github",
         "isExternal": false,
         "children": [],
@@ -6401,7 +6718,7 @@
       },
       {
         "name": "On-Prem VM Setup",
-        "path": "/ci/recipes/on-premise/ami-setup",
+        "path": "/ci/recipes/enterprise/on-premise/ami-setup",
         "id": "ami-setup",
         "isExternal": false,
         "children": [],
@@ -6409,7 +6726,7 @@
       },
       {
         "name": "Authenticate with GitLab",
-        "path": "/ci/recipes/on-premise/auth-gitlab",
+        "path": "/ci/recipes/enterprise/on-premise/auth-gitlab",
         "id": "auth-gitlab",
         "isExternal": false,
         "children": [],
@@ -6417,7 +6734,7 @@
       },
       {
         "name": "Authenticate with BitBucket",
-        "path": "/ci/recipes/on-premise/auth-bitbucket",
+        "path": "/ci/recipes/enterprise/on-premise/auth-bitbucket",
         "id": "auth-bitbucket",
         "isExternal": false,
         "children": [],
@@ -6425,7 +6742,7 @@
       },
       {
         "name": "Authenticate via SAML",
-        "path": "/ci/recipes/on-premise/auth-saml",
+        "path": "/ci/recipes/enterprise/on-premise/auth-saml",
         "id": "auth-saml",
         "isExternal": false,
         "children": [],
@@ -6433,7 +6750,7 @@
       },
       {
         "name": "Authenticate via SAML on Managed Version",
-        "path": "/ci/recipes/on-premise/auth-saml-managed",
+        "path": "/ci/recipes/enterprise/on-premise/auth-saml-managed",
         "id": "auth-saml-managed",
         "isExternal": false,
         "children": [],
@@ -6441,8 +6758,113 @@
       },
       {
         "name": "Advanced Configuration",
-        "path": "/ci/recipes/on-premise/advanced-config",
+        "path": "/ci/recipes/enterprise/on-premise/advanced-config",
         "id": "advanced-config",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Custom Distributed Task Execution",
+        "path": "/ci/recipes/enterprise/dte",
+        "id": "dte",
+        "isExternal": false,
+        "children": [
+          {
+            "name": "GitHub Actions Custom DTE",
+            "path": "/ci/recipes/enterprise/dte/github-dte",
+            "id": "github-dte",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Circle CI Custom DTE",
+            "path": "/ci/recipes/enterprise/dte/circle-ci-dte",
+            "id": "circle-ci-dte",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Azure Pipelines Custom DTE",
+            "path": "/ci/recipes/enterprise/dte/azure-dte",
+            "id": "azure-dte",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Bitbucket Pipelines Custom DTE",
+            "path": "/ci/recipes/enterprise/dte/bitbucket-dte",
+            "id": "bitbucket-dte",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "GitLab Custom DTE",
+            "path": "/ci/recipes/enterprise/dte/gitlab-dte",
+            "id": "gitlab-dte",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Jenkins Custom DTE",
+            "path": "/ci/recipes/enterprise/dte/jenkins-dte",
+            "id": "jenkins-dte",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          }
+        ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "GitHub Actions Custom DTE",
+        "path": "/ci/recipes/enterprise/dte/github-dte",
+        "id": "github-dte",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Circle CI Custom DTE",
+        "path": "/ci/recipes/enterprise/dte/circle-ci-dte",
+        "id": "circle-ci-dte",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Azure Pipelines Custom DTE",
+        "path": "/ci/recipes/enterprise/dte/azure-dte",
+        "id": "azure-dte",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Bitbucket Pipelines Custom DTE",
+        "path": "/ci/recipes/enterprise/dte/bitbucket-dte",
+        "id": "bitbucket-dte",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "GitLab Custom DTE",
+        "path": "/ci/recipes/enterprise/dte/gitlab-dte",
+        "id": "gitlab-dte",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Jenkins Custom DTE",
+        "path": "/ci/recipes/enterprise/dte/jenkins-dte",
+        "id": "jenkins-dte",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -8235,7 +8657,7 @@
             "name": "documents",
             "children": [
               {
-                "name": "Overview of the Nx Nuxt Plugin",
+                "name": "Overview",
                 "path": "/nx-api/nuxt/documents/overview",
                 "id": "overview",
                 "isExternal": false,
@@ -9369,7 +9791,7 @@
             "name": "documents",
             "children": [
               {
-                "name": "Nx Storybook Plugin Overview",
+                "name": "Overview",
                 "path": "/nx-api/storybook/documents/overview",
                 "id": "overview",
                 "isExternal": false,
@@ -9385,7 +9807,7 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Storybook 7 overview",
+                "name": "Storybook 7",
                 "path": "/nx-api/storybook/documents/storybook-7-setup",
                 "id": "storybook-7-setup",
                 "isExternal": false,
@@ -9485,7 +9907,7 @@
             "name": "documents",
             "children": [
               {
-                "name": "Overview of the Nx Vite Plugin",
+                "name": "Overview",
                 "path": "/nx-api/vite/documents/overview",
                 "id": "overview",
                 "isExternal": false,
@@ -9585,7 +10007,7 @@
             "name": "documents",
             "children": [
               {
-                "name": "Overview of the Nx Vue Plugin",
+                "name": "Overview",
                 "path": "/nx-api/vue/documents/overview",
                 "id": "overview",
                 "isExternal": false,
@@ -9752,7 +10174,7 @@
             "name": "documents",
             "children": [
               {
-                "name": "Overview of the Nx Webpack Plugin",
+                "name": "Overview",
                 "path": "/nx-api/webpack/documents/overview",
                 "id": "overview",
                 "isExternal": false,

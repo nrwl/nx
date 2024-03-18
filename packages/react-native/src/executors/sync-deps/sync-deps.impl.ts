@@ -2,12 +2,15 @@ import { join } from 'path';
 import * as chalk from 'chalk';
 import {
   ExecutorContext,
+  ProjectGraph,
   logger,
+  readCachedProjectGraph,
   readJsonFile,
   writeJsonFile,
 } from '@nx/devkit';
 
 import { ReactNativeSyncDepsOptions } from './schema';
+import { findAllNpmDependencies } from '../../utils/find-all-npm-dependencies';
 import { PackageJson } from 'nx/src/utils/package-json';
 
 export interface ReactNativeSyncDepsOutput {
@@ -33,15 +36,18 @@ export default async function* syncDepsExecutor(
   displayNewlyAddedDepsMessage(
     context.projectName,
     await syncDeps(
+      context.projectName,
       projectPackageJson,
       projectPackageJsonPath,
       workspacePackageJson,
+      context.projectGraph,
       typeof options.include === 'string'
         ? options.include.split(',')
         : options.include,
       typeof options.exclude === 'string'
         ? options.exclude.split(',')
-        : options.exclude
+        : options.exclude,
+      options.all
     )
   );
 
@@ -49,14 +55,21 @@ export default async function* syncDepsExecutor(
 }
 
 export async function syncDeps(
+  projectName: string,
   projectPackageJson: PackageJson,
   projectPackageJsonPath: string,
   workspacePackageJson: PackageJson,
+  projectGraph: ProjectGraph = readCachedProjectGraph(),
   include: string[] = [],
-  exclude: string[] = []
+  exclude: string[] = [],
+  all: boolean = false
 ): Promise<string[]> {
-  let npmDeps = Object.keys(workspacePackageJson.dependencies || {});
-  let npmDevdeps = Object.keys(workspacePackageJson.devDependencies || {});
+  let npmDeps = all
+    ? Object.keys(workspacePackageJson.dependencies || {})
+    : findAllNpmDependencies(projectGraph, projectName);
+  let npmDevdeps = all
+    ? Object.keys(workspacePackageJson.devDependencies || {})
+    : [];
 
   const newDeps = [];
   let updated = false;

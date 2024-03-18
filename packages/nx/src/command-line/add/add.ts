@@ -112,13 +112,17 @@ async function initializePlugin(
       updatePackageScripts = options.updatePackageScripts;
     } else {
       updatePackageScripts =
+        readNxJson().useInferencePlugins !== false &&
         process.env.NX_ADD_PLUGINS !== 'false' &&
         coreNxPlugins.includes(pkgName);
     }
     await runNxAsync(
       `g ${pkgName}:${initGenerator} --keepExistingVersions${
         updatePackageScripts ? ' --updatePackageScripts' : ''
-      }`
+      }`,
+      {
+        silent: !options.verbose,
+      }
     );
   } catch (e) {
     spinner.fail();

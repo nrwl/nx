@@ -1,15 +1,8 @@
-import {
-  ChevronRightIcon,
-  ClipboardDocumentCheckIcon,
-  ClipboardDocumentIcon,
-} from '@heroicons/react/24/outline';
 import { ButtonLink } from '@nx/nx-dev/ui-common';
-import Link from 'next/link';
-import React, { Fragment, useEffect, useState } from 'react';
-// @ts-ignore
-import { CopyToClipboard } from 'react-copy-to-clipboard';
+import { Fragment, useEffect, useState } from 'react';
 import { Transition } from '@headlessui/react';
 import { cx } from '@nx/nx-dev/ui-primitives';
+import Link from 'next/link';
 
 export function Hero(): JSX.Element {
   const [copied, setCopied] = useState(false);
@@ -36,14 +29,14 @@ export function Hero(): JSX.Element {
             Introducing{' '}
             <span className="text-blue-500 dark:text-sky-500">Nx Agents</span>,
             the next leap in CI.{' '}
-            <a
-              href="/ci/features/nx-agents"
+            <Link
+              href="/ci/features/distribute-task-execution"
               title="Discover Nx Agents"
               className="font-semibold text-blue-500 dark:text-sky-500"
             >
               <span className="absolute inset-0" aria-hidden="true"></span>Read
               more <span aria-hidden="true">→</span>
-            </a>
+            </Link>
           </div>
         </div>
         <div className="text-center">
@@ -153,30 +146,14 @@ export function Hero(): JSX.Element {
               Get started
             </ButtonLink>
 
-            <CopyToClipboard
-              text="npx create-nx-workspace@latest"
-              onCopy={() => {
-                setCopied(true);
-              }}
+            <ButtonLink
+              href="https://nx.app/enterprise?utm_source=nx.dev&utm_medium=hero"
+              variant="secondary"
+              size="large"
+              title="Contact us"
             >
-              <button
-                title="Create an Nx workspace"
-                className="group relative flex w-full items-center rounded-lg border border-slate-200 bg-white py-2 px-2 sm:px-6 text-sm sm:text-lg font-semibold leading-6 transition hover:bg-slate-100 focus:ring-2 focus:ring-offset-2 focus:ring-offset-white dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:hover:bg-slate-700 sm:w-auto"
-              >
-                <span className="absolute top-1 right-1 flex opacity-0 transition-opacity group-hover:opacity-100">
-                  {copied ? (
-                    <ClipboardDocumentCheckIcon className="h-4 w-4" />
-                  ) : (
-                    <ClipboardDocumentIcon className="h-4 w-4" />
-                  )}
-                </span>
-                <ChevronRightIcon
-                  aria-hidden="true"
-                  className="font-input-mono sm:mr-2 h-5 w-5 text-blue-500 dark:text-sky-500"
-                />
-                npx create-nx-workspace
-              </button>
-            </CopyToClipboard>
+              Contact us
+            </ButtonLink>
           </div>
           <div className="mt-4 flex gap-2 text-md items-center justify-center italic">
             Built with
@@ -221,14 +198,6 @@ export function Hero(): JSX.Element {
             aria-hidden="true"
             className="dark:block hidden"
           />
-          {/*<object*/}
-          {/*  type="image/svg+xml"*/}
-          {/*  data="/images/illustrations/nxdev-light.svg"*/}
-          {/*  title="PLACEHOLDER ILLUSTRATION"*/}
-          {/*  className="mb-[-70px] transition bg-white/90 hover:bg-white dark:bg-slate-800/90 dark:hover:bg-slate-800 rounded-xl shadow-2xl ring-1 ring-slate-200 dark:ring-slate-800/60 w-full min-h-[600px] dark:bg-slate-900"*/}
-          {/*>*/}
-          {/*  PLACEHOLDER ILLUSTRATION*/}
-          {/*</object>*/}
           <div className="relative" aria-hidden="true">
             <div className="absolute -inset-x-20 bottom-0 bg-gradient-to-t from-white dark:from-slate-900 pt-[7%]"></div>
           </div>

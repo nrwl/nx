@@ -4,6 +4,7 @@ import {
   ensurePackage,
   formatFiles,
   joinPathFragments,
+  readNxJson,
   readProjectConfiguration,
   Tree,
 } from '@nx/devkit';
@@ -47,7 +48,11 @@ export async function storybookConfigurationGeneratorInternal(
   host: Tree,
   schema: StorybookConfigureSchema
 ) {
-  schema.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
+  const nxJson = readNxJson(host);
+  const addPluginDefault =
+    process.env.NX_ADD_PLUGINS !== 'false' &&
+    nxJson.useInferencePlugins !== false;
+  schema.addPlugin ??= addPluginDefault;
   const { configurationGenerator } = ensurePackage<
     typeof import('@nx/storybook')
   >('@nx/storybook', nxVersion);

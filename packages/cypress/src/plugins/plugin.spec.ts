@@ -34,6 +34,7 @@ describe('@nx/cypress/plugin', () => {
         },
       },
       workspaceRoot: tempFs.tempDir,
+      configFiles: [],
     };
   });
 

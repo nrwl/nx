@@ -6,7 +6,7 @@ version: 2.1
 orbs:
   nx: nrwl/nx@1.6.2
   rust: circleci/rust@1.6.0
-  browser-tools: circleci/browser-tools@1.4.6
+  browser-tools: circleci/browser-tools@1.4.8
 
 # -------------------------
 #        EXECUTORS
@@ -48,7 +48,7 @@ commands:
             - run:
                 name: Install pnpm package manager (linux)
                 command: |
-                  npm install --prefix=$HOME/.local -g @pnpm/exe@8.14
+                  npm install --prefix=$HOME/.local -g @pnpm/exe@8
       - when:
           condition:
             equal: [<< parameters.os >>, macos]
@@ -56,12 +56,12 @@ commands:
             - run:
                 name: Install pnpm package manager (macos)
                 command: |
-                  npm install -g @pnpm/exe@8.14
+                  npm install -g @pnpm/exe@8
       - run:
           name: Install Dependencies
           command: |
             pnpm install --frozen-lockfile
-            pnpm playwright install --with-deps firefox webkit chrome
+            pnpm playwright install --with-deps
       - save_cache:
           name: Save pnpm Package Cache
           key: node-deps-{{ arch }}-v3-{{ checksum "pnpm-lock.yaml" }}
@@ -69,6 +69,50 @@ commands:
             - ~/.pnpm-store
             - ~/.cache/Cypress
             - node_modules
+  install-sdkman:
+    description: Install SDKMAN
+    steps:
+      - restore_cache:
+          name: Restore SDKMAN executable and binaries from cache
+          keys:
+            - sdkman-cli-{{ arch }}-v2
+      - run:
+          name: Installing SDKMAN
+          command: |
+            if [ ! -d ~/.sdkman ]
+            then
+              curl -s "https://get.sdkman.io?rcupdate=false" | bash
+              sed -i -e 's/sdkman_auto_answer=false/sdkman_auto_answer=true/g' ~/.sdkman/etc/config
+            fi
+            echo -e '\nsource "/home/circleci/.sdkman/bin/sdkman-init.sh"' >> $BASH_ENV
+            source $BASH_ENV
+            sdk version
+      - save_cache:
+          name: Save SDKMAN executable and binaries to cache
+          key: sdkman-cli-{{ arch }}-v2
+          paths:
+            - ~/.sdkman
+  install-gradle:
+    description: Install gradle
+    parameters:
+      gradle-version:
+        type: string
+        default: ''
+    steps:
+      - restore_cache:
+          name: Restore Gradle binary from cache
+          keys:
+            - gradle-cli-{{ arch }}-v1
+      - run:
+          name: Installing Gradle
+          command: |
+            sdk install gradle << parameters.gradle-version >>
+            gradle --version
+      - save_cache:
+          name: Save Gradle binary to cache
+          key: gradle-cli-{{ arch }}-v1
+          paths:
+            - ~/.sdkman/candidates/gradle/
 # -------------------------
 #          JOBS
 # -------------------------
@@ -96,6 +140,9 @@ jobs:
             sudo apt-get install -y ca-certificates lsof
       - browser-tools/install-chrome
       - browser-tools/install-chromedriver
+      - install-sdkman
+      - install-gradle:
+          gradle-version: '8.5'
       - run-pnpm-install:
           os: linux
       - run:

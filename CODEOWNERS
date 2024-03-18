@@ -11,7 +11,7 @@ rust-toolchain @nrwl/nx-native-reviewers
 # Docs Site + Graph
 /docs @nrwl/nx-docs-reviewers
 /docs/nx-cloud @StalkAltan @rarmatei @nrwl/nx-docs-reviewers
-/graph/** @philipjfulcher @FrozenPandaz @bcabanes @MaxKless
+/graph/** @philipjfulcher @FrozenPandaz @bcabanes @MaxKless @xiongemi
 /images @nrwl/nx-docs-reviewers
 /nx-dev/** @nrwl/nx-docs-reviewers
 /typedoc-theme @nrwl/nx-docs-reviewers
@@ -143,6 +143,10 @@ rust-toolchain @nrwl/nx-native-reviewers
 /packages/devkit/index.ts @FrozenPandaz @vsavkin
 /packages/devkit/public-api.ts @FrozenPandaz @vsavkin
 /packages/devkit/nx.ts @FrozenPandaz @vsavkin
+
+# Gradle
+/packages/gradle/** @FrozenPandaz @xiongemi
+/e2e/gradle/** @FrozenPandaz @xiongemi
 
 # Nx-Plugin
 /docs/generated/packages/plugin/** @nrwl/nx-devkit-reviewers @nrwl/nx-docs-reviewers

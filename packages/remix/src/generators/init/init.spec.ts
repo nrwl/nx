@@ -1,6 +1,7 @@
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { readJson } from '@nx/devkit';
 import initGenerator from './init';
+import { remixInitGeneratorInternal } from './init';
 
 describe('Remix Init Generator', () => {
   it('should setup the workspace and add dependencies', async () => {
@@ -8,23 +9,50 @@ describe('Remix Init Generator', () => {
     const tree = createTreeWithEmptyWorkspace();
 
     // ACT
-    await initGenerator(tree, {
-      addPlugin: true,
-    });
+    // Should default to adding the plugin
+    await remixInitGeneratorInternal(tree, {});
 
     // ASSERT
     const pkgJson = readJson(tree, 'package.json');
     expect(pkgJson.dependencies).toMatchInlineSnapshot(`
-        {
-          "@remix-run/serve": "^2.3.0",
-        }
-      `);
+      {
+        "@remix-run/serve": "^2.8.1",
+      }
+    `);
     expect(pkgJson.devDependencies).toMatchInlineSnapshot(`
-        {
-          "@nx/web": "0.0.1",
-          "@remix-run/dev": "^2.3.0",
-        }
-      `);
+      {
+        "@nx/web": "0.0.1",
+        "@remix-run/dev": "^2.8.1",
+      }
+    `);
+
+    const nxJson = readJson(tree, 'nx.json');
+    expect(nxJson).toMatchInlineSnapshot(`
+      {
+        "affected": {
+          "defaultBase": "main",
+        },
+        "plugins": [
+          {
+            "options": {
+              "buildTargetName": "build",
+              "devTargetName": "dev",
+              "startTargetName": "start",
+              "typecheckTargetName": "typecheck",
+            },
+            "plugin": "@nx/remix/plugin",
+          },
+        ],
+        "targetDefaults": {
+          "build": {
+            "cache": true,
+          },
+          "lint": {
+            "cache": true,
+          },
+        },
+      }
+    `);
   });
 
   describe('NX_ADD_PLUGINS=false', () => {
@@ -39,13 +67,13 @@ describe('Remix Init Generator', () => {
       const pkgJson = readJson(tree, 'package.json');
       expect(pkgJson.dependencies).toMatchInlineSnapshot(`
         {
-          "@remix-run/serve": "^2.3.0",
+          "@remix-run/serve": "^2.8.1",
         }
       `);
       expect(pkgJson.devDependencies).toMatchInlineSnapshot(`
         {
           "@nx/web": "0.0.1",
-          "@remix-run/dev": "^2.3.0",
+          "@remix-run/dev": "^2.8.1",
         }
       `);
     });

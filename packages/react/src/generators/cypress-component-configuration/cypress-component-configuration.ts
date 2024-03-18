@@ -1,6 +1,7 @@
 import {
   ensurePackage,
   formatFiles,
+  readNxJson,
   readProjectConfiguration,
   Tree,
 } from '@nx/devkit';
@@ -32,7 +33,12 @@ export async function cypressComponentConfigGeneratorInternal(
     typeof import('@nx/cypress')
   >('@nx/cypress', nxVersion);
 
-  options.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
+  const nxJson = readNxJson(tree);
+  const addPlugin =
+    process.env.NX_ADD_PLUGINS !== 'false' &&
+    nxJson.useInferencePlugins !== false;
+
+  options.addPlugin ??= addPlugin;
 
   const projectConfig = readProjectConfiguration(tree, options.project);
   const installTask = await baseCyCtConfig(tree, {

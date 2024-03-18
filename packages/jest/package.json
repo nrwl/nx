@@ -36,6 +36,8 @@
   "dependencies": {
     "@jest/reporters": "^29.4.1",
     "@jest/test-result": "^29.4.1",
+    "@nx/devkit": "file:../devkit",
+    "@nx/js": "file:../js",
     "@phenomnomnominal/tsquery": "~5.0.1",
     "chalk": "^4.1.0",
     "identity-obj-proxy": "3.0.0",
@@ -45,8 +47,7 @@
     "minimatch": "9.0.3",
     "resolve.exports": "1.1.0",
     "tslib": "^2.3.0",
-    "@nx/devkit": "file:../devkit",
-    "@nx/js": "file:../js"
+    "yargs-parser": "21.1.1"
   },
   "publishConfig": {
     "access": "public"

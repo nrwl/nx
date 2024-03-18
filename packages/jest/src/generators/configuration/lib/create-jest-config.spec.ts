@@ -162,11 +162,11 @@ export default {
         "
       `);
       expect(tree.read('jest.config.ts', 'utf-8'))
-        .toEqual(`import { getJestProjects } from '@nx/jest';
+        .toEqual(`import { getJestProjectsAsync } from '@nx/jest';
 
-export default {
-projects: getJestProjects()
-};`);
+export default async () => ({
+projects: await getJestProjectsAsync()
+});`);
       expect(readProjectConfiguration(tree, 'my-project').targets.test)
         .toMatchInlineSnapshot(`
         {
@@ -214,11 +214,11 @@ module.exports = {
 
       expect(tree.exists('jest.config.app.js')).toBeTruthy();
       expect(tree.read('jest.config.js', 'utf-8'))
-        .toEqual(`const { getJestProjects } = require('@nx/jest');
+        .toEqual(`const { getJestProjectsAsync } = require('@nx/jest');
 
-module.exports = {
-projects: getJestProjects()
-};`);
+module.exports = async () => ({
+projects: await getJestProjectsAsync()
+});`);
     });
   });
 });

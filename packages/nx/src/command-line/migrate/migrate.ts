@@ -716,6 +716,7 @@ async function parseTargetPackageAndVersion(
     if (
       args === 'latest' ||
       args === 'next' ||
+      args === 'canary' ||
       valid(args) ||
       args.match(/^\d+(?:\.\d+)?(?:\.\d+)?$/)
     ) {
@@ -724,7 +725,8 @@ async function parseTargetPackageAndVersion(
       // on the registry
       const targetVersion = await normalizeVersionWithTagCheck('nx', args);
       const targetPackage =
-        !['latest', 'next'].includes(args) && lt(targetVersion, '14.0.0-beta.0')
+        !['latest', 'next', 'canary'].includes(args) &&
+        lt(targetVersion, '14.0.0-beta.0')
           ? '@nrwl/workspace'
           : 'nx';
 
@@ -1177,7 +1179,7 @@ async function updateInstallationDetails(
 
 async function isMigratingToNewMajor(from: string, to: string) {
   from = normalizeVersion(from);
-  to = ['latest', 'next'].includes(to) ? to : normalizeVersion(to);
+  to = ['latest', 'next', 'canary'].includes(to) ? to : normalizeVersion(to);
   if (!valid(from)) {
     from = await resolvePackageVersionUsingRegistry('nx', from);
   }
@@ -1376,7 +1378,9 @@ export async function executeMigrations(
       return 1;
     }
 
-    return lt(a.version, b.version) ? -1 : 1;
+    return lt(normalizeVersion(a.version), normalizeVersion(b.version))
+      ? -1
+      : 1;
   });
 
   for (const m of sortedMigrations) {

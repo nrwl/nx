@@ -39,14 +39,14 @@ export function createNxJsonFile(
       nxJson.targetDefaults[scriptName] ??= {};
       nxJson.targetDefaults[scriptName] = { dependsOn: [`^${scriptName}`] };
     }
-    for (const [scriptName, output] of Object.entries(scriptOutputs)) {
-      if (!output) {
-        // eslint-disable-next-line no-continue
-        continue;
-      }
-      nxJson.targetDefaults[scriptName] ??= {};
-      nxJson.targetDefaults[scriptName].outputs = [`{projectRoot}/${output}`];
+  }
+  for (const [scriptName, output] of Object.entries(scriptOutputs)) {
+    if (!output) {
+      // eslint-disable-next-line no-continue
+      continue;
     }
+    nxJson.targetDefaults[scriptName] ??= {};
+    nxJson.targetDefaults[scriptName].outputs = [`{projectRoot}/${output}`];
   }
 
   for (const target of cacheableOperations) {
@@ -58,8 +58,7 @@ export function createNxJsonFile(
     delete nxJson.targetDefaults;
   }
 
-  nxJson.affected ??= {};
-  nxJson.affected.defaultBase ??= deduceDefaultBase();
+  nxJson.defaultBase ??= deduceDefaultBase();
   writeJsonFile(nxJsonPath, nxJson);
 }
 
@@ -172,20 +171,12 @@ export function addVsCodeRecommendedExtensions(
 export function markRootPackageJsonAsNxProject(
   repoRoot: string,
   cacheableScripts: string[],
-  scriptOutputs: { [script: string]: string },
   pmc: PackageManagerCommands
 ) {
   const json = readJsonFile<PackageJson>(
     joinPathFragments(repoRoot, `package.json`)
   );
-  json.nx = { targets: {} };
-  for (let script of Object.keys(scriptOutputs)) {
-    if (scriptOutputs[script]) {
-      json.nx.targets[script] = {
-        outputs: [`{projectRoot}/${scriptOutputs[script]}`],
-      };
-    }
-  }
+  json.nx = {};
   for (let script of cacheableScripts) {
     const scriptDefinition = json.scripts[script];
     if (!scriptDefinition) {

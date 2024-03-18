@@ -11,24 +11,18 @@ import {
 import { initGenerator as jsInitGenerator } from '@nx/js';
 
 import {
-  addOrChangeBuildTarget,
-  addOrChangeServeTarget,
+  addBuildTarget,
+  addServeTarget,
   addPreviewTarget,
   createOrEditViteConfig,
-  deleteWebpackConfig,
-  editTsConfig,
-  findExistingTargetsInProject,
-  handleUnknownExecutors,
-  handleUnsupportedUserProvidedTargets,
-  moveAndEditIndexHtml,
   TargetFlags,
-  UserProvidedTargetName,
 } from '../../utils/generator-utils';
 
 import initGenerator from '../init/init';
 import vitestGenerator from '../vitest/vitest-generator';
 import { ViteConfigurationGeneratorSchema } from './schema';
 import { ensureDependencies } from '../../utils/ensure-dependencies';
+import { convertNonVite } from './lib/convert-non-vite';
 
 export function viteConfigurationGenerator(
   host: Tree,
@@ -46,19 +40,10 @@ export async function viteConfigurationGeneratorInternal(
 ) {
   const tasks: GeneratorCallback[] = [];
 
-  schema.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
-
   const projectConfig = readProjectConfiguration(tree, schema.project);
-  const {
-    targets,
-
-    root: projectRoot,
-  } = projectConfig;
+  const { targets, root: projectRoot } = projectConfig;
 
   const projectType = projectConfig.projectType ?? 'library';
-  let buildTargetName = 'build';
-  let serveTargetName = 'serve';
-  let testTargetName = 'test';
 
   schema.includeLib ??= projectType === 'library';
 
@@ -73,104 +58,7 @@ export async function viteConfigurationGeneratorInternal(
   let projectAlreadyHasViteTargets: TargetFlags = {};
 
   if (!schema.newProject) {
-    const userProvidedTargetName: UserProvidedTargetName = {
-      build: schema.buildTarget,
-      serve: schema.serveTarget,
-      test: schema.testTarget,
-    };
-
-    const {
-      validFoundTargetName,
-      projectContainsUnsupportedExecutor,
-      userProvidedTargetIsUnsupported,
-      alreadyHasNxViteTargets,
-    } = findExistingTargetsInProject(targets, userProvidedTargetName);
-    projectAlreadyHasViteTargets = alreadyHasNxViteTargets;
-    /**
-     * This means that we only found unsupported build targets in that project.
-     * The only way that buildTarget is defined, means that it is supported.
-     *
-     * If the `unsupported` flag was false, it would mean that we did not find
-     * a build target at all, so we can create a new one.
-     *
-     * So we only throw if we found a target, but it is unsupported.
-     */
-    if (!validFoundTargetName.build && projectContainsUnsupportedExecutor) {
-      throw new Error(
-        `The project ${schema.project} cannot be converted to use the @nx/vite executors.`
-      );
-    }
-
-    if (
-      alreadyHasNxViteTargets.build &&
-      (alreadyHasNxViteTargets.serve || projectType === 'library') &&
-      alreadyHasNxViteTargets.test
-    ) {
-      throw new Error(
-        `The project ${schema.project} is already configured to use the @nx/vite executors.
-        Please try a different project, or remove the existing targets 
-        and re-run this generator to reset the existing Vite Configuration.
-        `
-      );
-    }
-
-    /**
-     * This means that we did not find any supported executors
-     * so we don't have any valid target names.
-     *
-     * However, the executors that we may have found are not in the
-     * list of the specifically unsupported executors either.
-     *
-     * So, we should warn the user about it.
-     */
-
-    if (
-      !projectContainsUnsupportedExecutor &&
-      !validFoundTargetName.build &&
-      !validFoundTargetName.serve &&
-      !validFoundTargetName.test
-    ) {
-      await handleUnknownExecutors(schema.project);
-    }
-
-    /**
-     * There is a possibility at this stage that the user has provided
-     * targets with unsupported executors.
-     * We keep track here of which of the targets that the user provided
-     * are unsupported.
-     * We do this with the `userProvidedTargetIsUnsupported` object,
-     * which contains flags for each target (whether it is supported or not).
-     *
-     * We also keep track of the targets that we found in the project,
-     * through the findExistingTargetsInProject function, which returns
-     * targets for build/serve/test that use supported executors, and
-     * can be converted to use the vite executors. These are the
-     * kept in the validFoundTargetName object.
-     */
-    await handleUnsupportedUserProvidedTargets(
-      userProvidedTargetIsUnsupported,
-      userProvidedTargetName,
-      validFoundTargetName
-    );
-
-    /**
-     * Once the user is at this stage, then they can go ahead and convert.
-     */
-
-    buildTargetName = validFoundTargetName.build ?? buildTargetName;
-    serveTargetName = validFoundTargetName.serve ?? serveTargetName;
-
-    if (projectType === 'application') {
-      moveAndEditIndexHtml(tree, schema, buildTargetName);
-    }
-
-    deleteWebpackConfig(
-      tree,
-      projectRoot,
-      targets?.[buildTargetName]?.options?.webpackConfig
-    );
-
-    editTsConfig(tree, schema);
+    await convertNonVite(tree, schema, projectRoot, projectType, targets);
   }
 
   const jsInitTask = await jsInitGenerator(tree, {
@@ -184,6 +72,11 @@ export async function viteConfigurationGeneratorInternal(
   tasks.push(ensureDependencies(tree, schema));
 
   const nxJson = readNxJson(tree);
+  const addPluginDefault =
+    process.env.NX_ADD_PLUGINS !== 'false' &&
+    nxJson.useInferencePlugins !== false;
+  schema.addPlugin ??= addPluginDefault;
+
   const hasPlugin = nxJson.plugins?.some((p) =>
     typeof p === 'string'
       ? p === '@nx/vite/plugin'
@@ -192,15 +85,15 @@ export async function viteConfigurationGeneratorInternal(
 
   if (!hasPlugin) {
     if (!projectAlreadyHasViteTargets.build) {
-      addOrChangeBuildTarget(tree, schema, buildTargetName);
+      addBuildTarget(tree, schema, 'build');
     }
 
     if (!schema.includeLib) {
       if (!projectAlreadyHasViteTargets.serve) {
-        addOrChangeServeTarget(tree, schema, serveTargetName);
+        addServeTarget(tree, schema, 'serve');
       }
       if (!projectAlreadyHasViteTargets.preview) {
-        addPreviewTarget(tree, schema, serveTargetName);
+        addPreviewTarget(tree, schema, 'preview');
       }
     }
   }
@@ -267,7 +160,7 @@ export async function viteConfigurationGeneratorInternal(
       inSourceTests: schema.inSourceTests,
       coverageProvider: 'v8',
       skipViteConfig: true,
-      testTarget: testTargetName,
+      testTarget: 'test',
       skipFormat: true,
       addPlugin: schema.addPlugin,
     });

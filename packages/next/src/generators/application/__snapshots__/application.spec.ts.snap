@@ -3,7 +3,7 @@
 exports[`app --style styled-jsx should use <style jsx> in index page 1`] = `
 "'use client';
 
-export default async function Index() {
+export default function Index() {
   /*
    * Replace the elements below with your own.
    *
@@ -328,7 +328,7 @@ export default async function Index() {
                   You can activate distributed tasks executions and caching by
                   running:
                 </p>
-                <pre>nx connect-to-nx-cloud</pre>
+                <pre>nx connect</pre>
                 <a
                   href="https://nx.app/?utm_source=nx-project"
                   target="_blank"

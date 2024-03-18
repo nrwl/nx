@@ -55,6 +55,7 @@ export const allowedProjectExtensions = [
 export const allowedWorkspaceExtensions = [
   'implicitDependencies',
   'affected',
+  'defaultBase',
   'tasksRunnerOptions',
   'workspaceLayout',
   'plugins',
@@ -74,6 +75,7 @@ export const allowedWorkspaceExtensions = [
   'parallel',
   'cacheDirectory',
   'useDaemonProcess',
+  'useInferencePlugins',
 ] as const;
 
 if (!patched) {

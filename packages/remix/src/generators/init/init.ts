@@ -30,7 +30,7 @@ function addPlugin(tree) {
     plugin: '@nx/remix/plugin',
     options: {
       buildTargetName: 'build',
-      serveTargetName: 'serve',
+      devTargetName: 'dev',
       startTargetName: 'start',
       typecheckTargetName: 'typecheck',
     },
@@ -62,6 +62,11 @@ export async function remixInitGeneratorInternal(tree: Tree, options: Schema) {
     tasks.push(installTask);
   }
 
+  const nxJson = readNxJson(tree);
+  const addPluginDefault =
+    process.env.NX_ADD_PLUGINS !== 'false' &&
+    nxJson.useInferencePlugins !== false;
+  options.addPlugin ??= addPluginDefault;
   if (options.addPlugin) {
     addPlugin(tree);
   }

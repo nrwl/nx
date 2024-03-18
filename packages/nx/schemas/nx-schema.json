@@ -18,7 +18,12 @@
           "description": "Default based branch used by affected commands."
         }
       },
-      "additionalProperties": false
+      "additionalProperties": false,
+      "deprecated": "Use `defaultBase` instead. Support for setting `defaultBase` in `affected` will be removed in Nx 19."
+    },
+    "defaultBase": {
+      "type": "string",
+      "description": "Default --base used by affected logic."
     },
     "tasksRunnerOptions": {
       "type": "object",
@@ -96,6 +101,10 @@
       "type": "boolean",
       "description": "Specifies whether the daemon should be used for the default tasks runner."
     },
+    "useInferencePlugins": {
+      "type": "boolean",
+      "description": "Specifies whether to add inference plugins when generating new projects."
+    },
     "release": {
       "type": "object",
       "description": "Configuration for the nx release commands.",
@@ -148,10 +157,15 @@
                     "$ref": "#/definitions/NxReleaseVersionConfiguration"
                   },
                   {
-                    "anyOf": [
+                    "allOf": [
                       {
                         "not": {
                           "required": ["git"]
+                        }
+                      },
+                      {
+                        "not": {
+                          "required": ["preVersionCommand"]
                         }
                       }
                     ]
@@ -206,6 +220,9 @@
               "$ref": "#/definitions/NxReleaseGitConfiguration"
             }
           }
+        },
+        "conventionalCommits": {
+          "$ref": "#/definitions/NxReleaseConventionalCommitsConfiguration"
         },
         "projectsRelationship": {
           "type": "string",
@@ -567,6 +584,10 @@
         },
         "git": {
           "$ref": "#/definitions/NxReleaseGitConfiguration"
+        },
+        "preVersionCommand": {
+          "type": "string",
+          "description": "A command to run after validation of nx release configuration, but before versioning begins. Used for preparing build artifacts. If --dry-run is passed, the command is still executed, but with the NX_DRY_RUN environment variable set to 'true'."
         }
       }
     },
@@ -618,6 +639,55 @@
     "ChangelogRenderOptions": {
       "type": "object",
       "additionalProperties": true
+    },
+    "NxReleaseConventionalCommitsConfiguration": {
+      "type": "object",
+      "properties": {
+        "types": {
+          "type": "object",
+          "description": "A map of commit types to their configuration. If a type is set to 'true', then it will be enabled with the default 'semverBump' of 'patch' and will appear in the changelog. If a type is set to 'false', then it will not trigger a version bump and will be hidden from the changelog.",
+          "additionalProperties": {
+            "oneOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "semverBump": {
+                    "type": "string",
+                    "enum": ["major", "minor", "patch", "none"],
+                    "description": "The semver bump to apply to the version of the project(s) when a commit of this type is included in the release.",
+                    "default": "patch"
+                  },
+                  "changelog": {
+                    "description": "Configuration for the changelog section for commits of this type. If set to 'true', then commits of this type will be included in the changelog with their default title for the type. If set to 'false', then commits of this type will not be included in the changelog.",
+                    "oneOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "title": {
+                            "type": "string",
+                            "description": "The title of the section in the changelog for commits of this type"
+                          },
+                          "hidden": {
+                            "type": "boolean",
+                            "description": "Whether or not to include commits of this type in the changelog",
+                            "default": false
+                          }
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
     }
   }
 }

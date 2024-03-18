@@ -1,12 +1,12 @@
 # Using environment variables in Angular applications
 
-Angular builders (e.g. `@nx/angular:webpack-browser` and `@angular-devkit/build-angular:browser`) don't have built-in support for using environment variables when building applications.
+Angular executors (e.g. `@nx/angular:webpack-browser` and `@angular-devkit/build-angular:browser`) don't have built-in support for using environment variables when building applications.
 
 To add support for environment variables we need to use the webpack `DefinePlugin` in our own custom webpack configuration. We'll see how to do so in the following sections.
 
 ## A note on `NODE_ENV`
 
-The webpack-based Angular builders (e.g. `@nx/angular:webpack-browser` and `@angular-devkit/build-angular:browser`) set the webpack's `mode` configuration option based on the values for the following in the builder options:
+The webpack-based Angular executors (e.g. `@nx/angular:webpack-browser` and `@angular-devkit/build-angular:browser`) set the webpack's `mode` configuration option based on the values for the following in the builder options:
 
 - `optimization`
 - `optimization.scripts`
@@ -21,7 +21,7 @@ To change the `NODE_ENV` variable we can do one of the following:
 
 - Turn on the builder optimizations to set it to `production`
 - Turn off the builder optimizations to set it to `development`
-- Use a custom webpack configuration to override the webpack `mode` set by Angular builders
+- Use a custom webpack configuration to override the webpack `mode` set by Angular executors
 
 The first two options is a matter of changing your build target configuration or passing the specific flag in the command line. We'll see how to do the last in the following section.
 

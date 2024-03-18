@@ -8,7 +8,10 @@ import { NX_PREFIX } from '../../utils/logger';
 import { CreateNodesResult, LoadedNxPlugin } from '../../utils/nx-plugin';
 import { readJsonFile } from '../../utils/fileutils';
 import { workspaceRoot } from '../../utils/workspace-root';
-import { ONLY_MODIFIES_EXISTING_TARGET } from '../../plugins/target-defaults/target-defaults-plugin';
+import {
+  ONLY_MODIFIES_EXISTING_TARGET,
+  OVERRIDE_SOURCE_FILE,
+} from '../../plugins/target-defaults/target-defaults-plugin';
 
 import { minimatch } from 'minimatch';
 import { join } from 'path';
@@ -155,20 +158,21 @@ export function mergeProjectConfigurationIntoRootMap(
         continue;
       }
 
-      // We don't want the symbol to live on past the merge process
-      if (target?.[ONLY_MODIFIES_EXISTING_TARGET])
-        delete target?.[ONLY_MODIFIES_EXISTING_TARGET];
+      const mergedTarget = mergeTargetConfigurations(
+        skipCommandNormalization
+          ? target
+          : resolveCommandSyntacticSugar(target, project.root),
+        matchingProject.targets?.[targetName],
+        sourceMap,
+        sourceInformation,
+        `targets.${targetName}`
+      );
 
-      updatedProjectConfiguration.targets[targetName] =
-        mergeTargetConfigurations(
-          skipCommandNormalization
-            ? target
-            : resolveCommandSyntacticSugar(target, project.root),
-          matchingProject.targets?.[targetName],
-          sourceMap,
-          sourceInformation,
-          `targets.${targetName}`
-        );
+      // We don't want the symbol to live on past the merge process
+      if (mergedTarget?.[ONLY_MODIFIES_EXISTING_TARGET])
+        delete mergedTarget?.[ONLY_MODIFIES_EXISTING_TARGET];
+
+      updatedProjectConfiguration.targets[targetName] = mergedTarget;
     }
   }
 
@@ -189,13 +193,13 @@ export type ConfigurationResult = {
  * Transforms a list of project paths into a map of project configurations.
  *
  * @param nxJson The NxJson configuration
- * @param projectFiles A list of files identified as projects
+ * @param workspaceFiles A list of non-ignored workspace files
  * @param plugins The plugins that should be used to infer project configuration
  * @param root The workspace root
  */
 export function buildProjectsConfigurationsFromProjectPathsAndPlugins(
   nxJson: NxJsonConfiguration,
-  projectFiles: string[], // making this parameter allows devkit to pick up newly created projects
+  workspaceFiles: string[], // making this parameter allows devkit to pick up newly created projects
   plugins: LoadedNxPlugin[],
   root: string = workspaceRoot
 ): Promise<ConfigurationResult> {
@@ -218,63 +222,62 @@ export function buildProjectsConfigurationsFromProjectPathsAndPlugins(
       continue;
     }
 
-    // Set this globally to allow plugins to know if they are being called from the project graph creation
-    global.NX_GRAPH_CREATION = true;
+    const matchingConfigFiles: string[] = workspaceFiles.filter(
+      minimatch.filter(pattern, { dot: true })
+    );
 
-    for (const file of projectFiles) {
+    for (const file of matchingConfigFiles) {
       performance.mark(`${plugin.name}:createNodes:${file} - start`);
-      if (minimatch(file, pattern, { dot: true })) {
-        try {
-          let r = createNodes(file, options, {
-            nxJsonConfiguration: nxJson,
-            workspaceRoot: root,
-          });
+      try {
+        let r = createNodes(file, options, {
+          nxJsonConfiguration: nxJson,
+          workspaceRoot: root,
+          configFiles: matchingConfigFiles,
+        });
 
-          if (r instanceof Promise) {
-            pluginResults.push(
-              r
-                .catch((e) => {
-                  performance.mark(`${plugin.name}:createNodes:${file} - end`);
-                  throw new CreateNodesError(
-                    `Unable to create nodes for ${file} using plugin ${plugin.name}.`,
-                    e
-                  );
-                })
-                .then((r) => {
-                  performance.mark(`${plugin.name}:createNodes:${file} - end`);
-                  performance.measure(
-                    `${plugin.name}:createNodes:${file}`,
-                    `${plugin.name}:createNodes:${file} - start`,
-                    `${plugin.name}:createNodes:${file} - end`
-                  );
-                  return { ...r, file, pluginName: plugin.name };
-                })
-            );
-          } else {
-            performance.mark(`${plugin.name}:createNodes:${file} - end`);
-            performance.measure(
-              `${plugin.name}:createNodes:${file}`,
-              `${plugin.name}:createNodes:${file} - start`,
-              `${plugin.name}:createNodes:${file} - end`
-            );
-            pluginResults.push({
-              ...r,
-              file,
-              pluginName: plugin.name,
-            });
-          }
-        } catch (e) {
-          throw new CreateNodesError(
-            `Unable to create nodes for ${file} using plugin ${plugin.name}.`,
-            e
+        if (r instanceof Promise) {
+          pluginResults.push(
+            r
+              .catch((e) => {
+                performance.mark(`${plugin.name}:createNodes:${file} - end`);
+                throw new CreateNodesError(
+                  `Unable to create nodes for ${file} using plugin ${plugin.name}.`,
+                  e
+                );
+              })
+              .then((r) => {
+                performance.mark(`${plugin.name}:createNodes:${file} - end`);
+                performance.measure(
+                  `${plugin.name}:createNodes:${file}`,
+                  `${plugin.name}:createNodes:${file} - start`,
+                  `${plugin.name}:createNodes:${file} - end`
+                );
+                return { ...r, file, pluginName: plugin.name };
+              })
           );
+        } else {
+          performance.mark(`${plugin.name}:createNodes:${file} - end`);
+          performance.measure(
+            `${plugin.name}:createNodes:${file}`,
+            `${plugin.name}:createNodes:${file} - start`,
+            `${plugin.name}:createNodes:${file} - end`
+          );
+          pluginResults.push({
+            ...r,
+            file,
+            pluginName: plugin.name,
+          });
         }
+      } catch (e) {
+        throw new CreateNodesError(
+          `Unable to create nodes for ${file} using plugin ${plugin.name}.`,
+          e
+        );
       }
     }
     // If there are no promises (counter undefined) or all promises have resolved (counter === 0)
     results.push(
       Promise.all(pluginResults).then((results) => {
-        delete global.NX_GRAPH_CREATION;
         performance.mark(`${plugin.name}:createNodes - end`);
         performance.measure(
           `${plugin.name}:createNodes`,
@@ -302,6 +305,13 @@ export function buildProjectsConfigurationsFromProjectPathsAndPlugins(
         file,
         pluginName,
       } = result;
+
+      const sourceInfo: SourceInformation = [file, pluginName];
+
+      if (result[OVERRIDE_SOURCE_FILE]) {
+        sourceInfo[0] = result[OVERRIDE_SOURCE_FILE];
+      }
+
       for (const node in projectNodes) {
         const project = {
           root: node,
@@ -312,7 +322,7 @@ export function buildProjectsConfigurationsFromProjectPathsAndPlugins(
             projectRootMap,
             project,
             configurationSourceMaps,
-            [file, pluginName]
+            sourceInfo
           );
         } catch (e) {
           throw new CreateNodesError(
@@ -353,6 +363,9 @@ export function readProjectConfigurationsFromRootMap(
   const errors: Map<string, string[]> = new Map();
 
   for (const [root, configuration] of projectRootMap.entries()) {
+    // We're setting `// targets` as a comment `targets` is empty due to Project Crystal.
+    // Strip it before returning configuration for usage.
+    if (configuration['// targets']) delete configuration['// targets'];
     if (!configuration.name) {
       try {
         const { name } = readJsonFile(join(root, 'package.json'));
@@ -433,6 +446,14 @@ export function mergeTargetConfigurations(
   // Target is "compatible", e.g. executor is defined only once or is the same
   // in both places. This means that it is likely safe to merge
   const isCompatible = isCompatibleTarget(baseTargetProperties, target);
+
+  // If the targets are not compatible, we would normally overwrite the old target
+  // with the new one. However, we have a special case for targets that have the
+  // ONLY_MODIFIES_EXISTING_TARGET symbol set. This prevents the merged target
+  // equaling info that should have only been used to modify the existing target.
+  if (!isCompatible && target[ONLY_MODIFIES_EXISTING_TARGET]) {
+    return baseTarget;
+  }
 
   if (!isCompatible && projectConfigSourceMap) {
     // if the target is not compatible, we will simply override the options

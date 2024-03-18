@@ -810,35 +810,35 @@
       "description": "",
       "file": "shared/recipes/database/nestjs-prisma",
       "id": "nestjs-prisma",
-      "name": "Using Prisma with NestJS",
+      "name": "Prisma with NestJS",
       "path": "/showcase/example-repos/nestjs-prisma"
     },
     {
       "description": "",
       "file": "shared/recipes/database/mongo-fastify",
       "id": "mongo-fastify",
-      "name": "Using Mongo with Fastify",
+      "name": "Mongo with Fastify",
       "path": "/showcase/example-repos/mongo-fastify"
     },
     {
       "description": "",
       "file": "shared/recipes/database/redis-fastify",
       "id": "redis-fastify",
-      "name": "Using Redis with Fastify",
+      "name": "Redis with Fastify",
       "path": "/showcase/example-repos/redis-fastify"
     },
     {
       "description": "",
       "file": "shared/recipes/database/postgres-fastify",
       "id": "postgres-fastify",
-      "name": "Using Postgres with Fastify",
+      "name": "Postgres with Fastify",
       "path": "/showcase/example-repos/postgres-fastify"
     },
     {
       "description": "",
       "file": "shared/recipes/database/serverless-fastify-planetscale",
       "id": "serverless-fastify-planetscale",
-      "name": "Using PlanetScale with Serverless Fastify",
+      "name": "PlanetScale with Serverless Fastify",
       "path": "/showcase/example-repos/serverless-fastify-planetscale"
     }
   ],
@@ -905,6 +905,13 @@
       "id": "storybook-interaction-tests",
       "name": "Setting up Storybook Interaction Tests with Nx",
       "path": "/recipes/storybook/storybook-interaction-tests"
+    },
+    {
+      "description": "This guide explains how you can upgrade Storybook using the Storybook CLI upgrade and automigrate commands.",
+      "file": "shared/recipes/storybook/upgrading-storybook",
+      "id": "upgrading-storybook",
+      "name": "Upgrading Storybook using the Storybook CLI",
+      "path": "/recipes/storybook/upgrading-storybook"
     },
     {
       "description": "This guide explains how you can set up Storybook composition on your Nx workspace.",
@@ -1008,6 +1015,34 @@
       "id": "publish-in-ci-cd",
       "name": "Publish in CI/CD",
       "path": "/recipes/nx-release/publish-in-ci-cd"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/nx-release/automate-github-releases",
+      "id": "automate-github-releases",
+      "name": "Automate GitHub Releases",
+      "path": "/recipes/nx-release/automate-github-releases"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/nx-release/publish-rust-crates",
+      "id": "publish-rust-crates",
+      "name": "Publish Rust Crates",
+      "path": "/recipes/nx-release/publish-rust-crates"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/nx-release/update-local-registry-setup",
+      "id": "update-local-registry-setup",
+      "name": "Update Your Local Registry Setup to use Nx Release",
+      "path": "/recipes/nx-release/update-local-registry-setup"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/nx-release/customize-conventional-commit-types",
+      "id": "customize-conventional-commit-types",
+      "name": "Customize Conventional Commit Types",
+      "path": "/recipes/nx-release/customize-conventional-commit-types"
     }
   ],
   "database": [
@@ -1015,35 +1050,35 @@
       "description": "",
       "file": "shared/recipes/database/nestjs-prisma",
       "id": "nestjs-prisma",
-      "name": "Using Prisma with NestJS",
+      "name": "Prisma with NestJS",
       "path": "/showcase/example-repos/nestjs-prisma"
     },
     {
       "description": "",
       "file": "shared/recipes/database/mongo-fastify",
       "id": "mongo-fastify",
-      "name": "Using Mongo with Fastify",
+      "name": "Mongo with Fastify",
       "path": "/showcase/example-repos/mongo-fastify"
     },
     {
       "description": "",
       "file": "shared/recipes/database/redis-fastify",
       "id": "redis-fastify",
-      "name": "Using Redis with Fastify",
+      "name": "Redis with Fastify",
       "path": "/showcase/example-repos/redis-fastify"
     },
     {
       "description": "",
       "file": "shared/recipes/database/postgres-fastify",
       "id": "postgres-fastify",
-      "name": "Using Postgres with Fastify",
+      "name": "Postgres with Fastify",
       "path": "/showcase/example-repos/postgres-fastify"
     },
     {
       "description": "",
       "file": "shared/recipes/database/serverless-fastify-planetscale",
       "id": "serverless-fastify-planetscale",
-      "name": "Using PlanetScale with Serverless Fastify",
+      "name": "PlanetScale with Serverless Fastify",
       "path": "/showcase/example-repos/serverless-fastify-planetscale"
     }
   ],
@@ -1052,7 +1087,7 @@
       "description": "",
       "file": "shared/recipes/database/serverless-fastify-planetscale",
       "id": "serverless-fastify-planetscale",
-      "name": "Using PlanetScale with Serverless Fastify",
+      "name": "PlanetScale with Serverless Fastify",
       "path": "/showcase/example-repos/serverless-fastify-planetscale"
     }
   ],
@@ -1098,7 +1133,7 @@
   "on-premise": [
     {
       "description": "Set up Nx Cloud on machines that you control",
-      "file": "nx-cloud/private/nx-enterprise-on-prem",
+      "file": "nx-cloud/features/nx-enterprise-on-prem",
       "id": "on-premise",
       "name": "Set up Nx Cloud On-Premise",
       "path": "/ci/features/on-premise"

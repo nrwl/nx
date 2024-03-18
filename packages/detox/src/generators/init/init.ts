@@ -20,7 +20,12 @@ export function detoxInitGenerator(host: Tree, schema: Schema) {
 export async function detoxInitGeneratorInternal(host: Tree, schema: Schema) {
   const tasks: GeneratorCallback[] = [];
 
-  schema.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
+  const nxJson = readNxJson(host);
+  const addPluginDefault =
+    process.env.NX_ADD_PLUGINS !== 'false' &&
+    nxJson.useInferencePlugins !== false;
+
+  schema.addPlugin ??= addPluginDefault;
 
   if (!schema.skipPackageJson) {
     tasks.push(moveDependency(host));

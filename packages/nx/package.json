@@ -125,6 +125,7 @@
       "@nrwl/next",
       "@nx/node",
       "@nrwl/node",
+      "@nx/nuxt",
       "@nx/playwright",
       "@nx/plugin",
       "@nrwl/nx-plugin",

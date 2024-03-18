@@ -5,10 +5,14 @@ import {
   formatFiles,
   generateFiles,
   GeneratorCallback,
+  getPackageManagerCommand,
   joinPathFragments,
   names,
   offsetFromRoot,
+  output,
   ProjectConfiguration,
+  ProjectGraphProjectNode,
+  readNxJson,
   readProjectConfiguration,
   runTasksInSerial,
   toJS,
@@ -21,15 +25,19 @@ import {
   type ProjectNameAndRootOptions,
 } from '@nx/devkit/src/generators/project-name-and-root-utils';
 
+import { addBuildTargetDefaults } from '@nx/devkit/src/generators/add-build-target-defaults';
+import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
+import { findMatchingProjects } from 'nx/src/utils/find-matching-projects';
+import { type PackageJson } from 'nx/src/utils/package-json';
+import { join } from 'path';
+import { Bundler, LibraryGeneratorSchema } from '../../utils/schema';
+import { addSwcConfig } from '../../utils/swc/add-swc-config';
+import { addSwcDependencies } from '../../utils/swc/add-swc-dependencies';
+import { tsConfigBaseOptions } from '../../utils/typescript/create-ts-config';
 import {
   addTsConfigPath,
   getRelativePathToRootTsConfig,
 } from '../../utils/typescript/ts-config';
-import { join } from 'path';
-import { addMinimalPublishScript } from '../../utils/minimal-publish-script';
-import { Bundler, LibraryGeneratorSchema } from '../../utils/schema';
-import { addSwcConfig } from '../../utils/swc/add-swc-config';
-import { addSwcDependencies } from '../../utils/swc/add-swc-dependencies';
 import {
   esbuildVersion,
   nxVersion,
@@ -38,11 +46,9 @@ import {
   typesNodeVersion,
 } from '../../utils/versions';
 import jsInitGenerator from '../init/init';
-import { type PackageJson } from 'nx/src/utils/package-json';
 import setupVerdaccio from '../setup-verdaccio/generator';
-import { tsConfigBaseOptions } from '../../utils/typescript/create-ts-config';
-import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
-import { addBuildTargetDefaults } from '@nx/devkit/src/generators/add-build-target-defaults';
+
+const defaultOutputDirectory = 'dist';
 
 export async function libraryGenerator(
   tree: Tree,
@@ -61,8 +67,6 @@ export async function libraryGeneratorInternal(
   tree: Tree,
   schema: LibraryGeneratorSchema
 ) {
-  const filesDir = join(__dirname, './files');
-
   const tasks: GeneratorCallback[] = [];
   tasks.push(
     await jsInitGenerator(tree, {
@@ -73,9 +77,9 @@ export async function libraryGeneratorInternal(
   );
   const options = await normalizeOptions(tree, schema);
 
-  createFiles(tree, options, `${filesDir}/lib`);
+  createFiles(tree, options);
 
-  addProject(tree, options);
+  await addProject(tree, options);
 
   if (!options.skipPackageJson) {
     tasks.push(addProjectDependencies(tree, options));
@@ -119,7 +123,7 @@ export async function libraryGeneratorInternal(
     const jestCallback = await addJest(tree, options);
     tasks.push(jestCallback);
     if (options.bundler === 'swc' || options.bundler === 'rollup') {
-      replaceJestConfig(tree, options, `${filesDir}/jest-config`);
+      replaceJestConfig(tree, options);
     }
   } else if (
     options.unitTestRunner === 'vitest' &&
@@ -167,6 +171,12 @@ export async function libraryGeneratorInternal(
     await formatFiles(tree);
   }
 
+  if (options.publishable) {
+    tasks.push(() => {
+      logNxReleaseDocsInfo();
+    });
+  }
+
   tasks.push(() => {
     logShowProjectCommand(options.name);
   });
@@ -183,7 +193,7 @@ export interface NormalizedSchema extends LibraryGeneratorSchema {
   importPath?: string;
 }
 
-function addProject(tree: Tree, options: NormalizedSchema) {
+async function addProject(tree: Tree, options: NormalizedSchema) {
   const projectConfiguration: ProjectConfiguration = {
     root: options.projectRoot,
     sourceRoot: joinPathFragments(options.projectRoot, 'src'),
@@ -241,12 +251,27 @@ function addProject(tree: Tree, options: NormalizedSchema) {
     }
 
     if (options.publishable) {
-      const publishScriptPath = addMinimalPublishScript(tree);
+      const packageRoot = join(defaultOutputDirectory, '{projectRoot}');
 
-      projectConfiguration.targets.publish = {
-        command: `node ${publishScriptPath} ${options.name} {args.ver} {args.tag}`,
-        dependsOn: ['build'],
+      projectConfiguration.targets ??= {};
+      projectConfiguration.targets['nx-release-publish'] = {
+        options: {
+          packageRoot,
+        },
       };
+
+      projectConfiguration.release = {
+        version: {
+          generatorOptions: {
+            packageRoot,
+            // using git tags to determine the current version is required here because
+            // the version in the package root is overridden with every build
+            currentVersionResolver: 'git-tag',
+          },
+        },
+      };
+
+      await addProjectToNxReleaseConfig(tree, options, projectConfiguration);
     }
   }
 
@@ -419,14 +444,14 @@ function addBabelRc(tree: Tree, options: NormalizedSchema) {
   writeJson(tree, join(options.projectRoot, filename), babelrc);
 }
 
-function createFiles(tree: Tree, options: NormalizedSchema, filesDir: string) {
+function createFiles(tree: Tree, options: NormalizedSchema) {
   const { className, name, propertyName } = names(
     options.projectNames.projectFileName
   );
 
   createProjectTsConfigJson(tree, options);
 
-  generateFiles(tree, filesDir, options.projectRoot, {
+  generateFiles(tree, join(__dirname, './files/lib'), options.projectRoot, {
     ...options,
     dot: '.',
     className,
@@ -440,6 +465,28 @@ function createFiles(tree: Tree, options: NormalizedSchema, filesDir: string) {
     buildable: options.bundler && options.bundler !== 'none',
     hasUnitTestRunner: options.unitTestRunner !== 'none',
   });
+
+  if (!options.rootProject) {
+    generateFiles(
+      tree,
+      join(__dirname, './files/readme'),
+      options.projectRoot,
+      {
+        ...options,
+        dot: '.',
+        className,
+        name,
+        propertyName,
+        js: !!options.js,
+        cliCommand: 'nx',
+        strict: undefined,
+        tmpl: '',
+        offsetFromRoot: offsetFromRoot(options.projectRoot),
+        buildable: options.bundler && options.bundler !== 'none',
+        hasUnitTestRunner: options.unitTestRunner !== 'none',
+      }
+    );
+  }
 
   if (options.bundler === 'swc' || options.bundler === 'rollup') {
     addSwcDependencies(tree);
@@ -477,6 +524,9 @@ function createFiles(tree: Tree, options: NormalizedSchema, filesDir: string) {
       if (json.private && (options.publishable || options.rootProject)) {
         delete json.private;
       }
+      if (!options.publishable && !options.rootProject) {
+        json.private = true;
+      }
       return {
         ...json,
         dependencies: {
@@ -487,12 +537,16 @@ function createFiles(tree: Tree, options: NormalizedSchema, filesDir: string) {
       };
     });
   } else {
-    writeJson<PackageJson>(tree, packageJsonPath, {
+    const packageJson: PackageJson = {
       name: options.importPath,
       version: '0.0.1',
       dependencies: determineDependencies(options),
       ...determineEntryFields(options),
-    });
+    };
+    if (!options.publishable && !options.rootProject) {
+      packageJson.private = true;
+    }
+    writeJson<PackageJson>(tree, packageJsonPath, packageJson);
   }
 
   if (options.config === 'npm-scripts') {
@@ -539,11 +593,8 @@ async function addJest(
   });
 }
 
-function replaceJestConfig(
-  tree: Tree,
-  options: NormalizedSchema,
-  filesDir: string
-) {
+function replaceJestConfig(tree: Tree, options: NormalizedSchema) {
+  const filesDir = join(__dirname, './files/jest-config');
   // the existing config has to be deleted otherwise the new config won't overwrite it
   const existingJestConfig = joinPathFragments(
     filesDir,
@@ -568,7 +619,11 @@ async function normalizeOptions(
   tree: Tree,
   options: LibraryGeneratorSchema
 ): Promise<NormalizedSchema> {
-  options.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
+  const nxJson = readNxJson(tree);
+  const addPlugin =
+    process.env.NX_ADD_PLUGINS !== 'false' &&
+    nxJson.useInferencePlugins !== false;
+  options.addPlugin ??= addPlugin;
 
   /**
    * We are deprecating the compiler and the buildable options.
@@ -611,7 +666,7 @@ async function normalizeOptions(
     }
   }
 
-  // This is to preserve old behaviour, buildable: false
+  // This is to preserve old behavior, buildable: false
   if (options.publishable === false && options.buildable === false) {
     options.bundler = 'none';
   }
@@ -739,7 +794,7 @@ function getBuildExecutor(bundler: Bundler) {
 }
 
 function getOutputPath(options: NormalizedSchema) {
-  const parts = ['dist'];
+  const parts = [defaultOutputDirectory];
   if (options.projectRoot === '.') {
     parts.push(options.name);
   } else {
@@ -842,6 +897,120 @@ function determineEntryFields(
       };
     }
   }
+}
+
+function projectsConfigMatchesProject(
+  projectsConfig: string | string[] | undefined,
+  project: ProjectGraphProjectNode
+): boolean {
+  if (!projectsConfig) {
+    return false;
+  }
+
+  if (typeof projectsConfig === 'string') {
+    projectsConfig = [projectsConfig];
+  }
+
+  const graph: Record<string, ProjectGraphProjectNode> = {
+    [project.name]: project,
+  };
+
+  const matchingProjects = findMatchingProjects(projectsConfig, graph);
+
+  return matchingProjects.includes(project.name);
+}
+
+async function addProjectToNxReleaseConfig(
+  tree: Tree,
+  options: NormalizedSchema,
+  projectConfiguration: ProjectConfiguration
+) {
+  const nxJson = readNxJson(tree);
+
+  const addPreVersionCommand = () => {
+    const pmc = getPackageManagerCommand();
+
+    nxJson.release = {
+      ...nxJson.release,
+      version: {
+        preVersionCommand: `${pmc.dlx} nx run-many -t build`,
+        ...nxJson.release?.version,
+      },
+    };
+  };
+
+  if (!nxJson.release || (!nxJson.release.projects && !nxJson.release.groups)) {
+    // skip adding any projects configuration since the new project should be
+    // automatically included by nx release's default project detection logic
+    addPreVersionCommand();
+    writeJson(tree, 'nx.json', nxJson);
+    return;
+  }
+
+  const project: ProjectGraphProjectNode = {
+    name: options.name,
+    type: 'lib' as const,
+    data: {
+      root: projectConfiguration.root,
+      tags: projectConfiguration.tags,
+    },
+  };
+
+  if (projectsConfigMatchesProject(nxJson.release.projects, project)) {
+    output.log({
+      title: `Project already included in existing release configuration`,
+    });
+    addPreVersionCommand();
+    writeJson(tree, 'nx.json', nxJson);
+    return;
+  }
+
+  if (Array.isArray(nxJson.release.projects)) {
+    nxJson.release.projects.push(options.name);
+    addPreVersionCommand();
+    writeJson(tree, 'nx.json', nxJson);
+    output.log({
+      title: `Added project to existing release configuration`,
+    });
+  }
+
+  if (nxJson.release.groups) {
+    const allGroups = Object.entries(nxJson.release.groups);
+
+    for (const [name, group] of allGroups) {
+      if (projectsConfigMatchesProject(group.projects, project)) {
+        addPreVersionCommand();
+        writeJson(tree, 'nx.json', nxJson);
+        return `Project already included in existing release configuration for group ${name}`;
+      }
+    }
+
+    output.warn({
+      title: `Could not find a release group that includes ${options.name}`,
+      bodyLines: [
+        `Ensure that ${options.name} is included in a release group's "projects" list in nx.json so it can be published with "nx release"`,
+      ],
+    });
+    addPreVersionCommand();
+    writeJson(tree, 'nx.json', nxJson);
+    return;
+  }
+
+  if (typeof nxJson.release.projects === 'string') {
+    nxJson.release.projects = [nxJson.release.projects, options.name];
+    addPreVersionCommand();
+    writeJson(tree, 'nx.json', nxJson);
+    output.log({
+      title: `Added project to existing release configuration`,
+    });
+    return;
+  }
+}
+
+function logNxReleaseDocsInfo() {
+  output.log({
+    title: `📦 To learn how to publish this library, see https://nx.dev/core-features/manage-releases.`,
+  });
 }
 
 export default libraryGenerator;

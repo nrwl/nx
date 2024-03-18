@@ -7,7 +7,7 @@ There are some cases where an issue could arise when using an outdated global in
 
 If you find yourself in this position, you will need to update your global install of Nx.
 
-In most cases, you can update a globally installed npm package by rerunning the command you used to install it, as described [above](#installing-nx-globally)
+In most cases, you can update a globally installed npm package by rerunning the command you used to install it.
 
 If you cannot remember which package manager you installed Nx globally with or are still encountering issues, you can locate other installs of Nx with these commands:
 

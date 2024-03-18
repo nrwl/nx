@@ -1,12 +1,17 @@
 # Automatically Split E2E Tasks by File
 
+{% youtube
+src="https://youtu.be/0YxcxIR7QU0"
+title="10x Faster e2e Tests!"
+width="100%" /%}
+
 In almost every codebase, e2e tests are the largest portion of the CI pipeline. Typically, e2e tests are grouped by application so that whenever an application's code changes, all the e2e tests for that application are run. These large groupings of e2e tests make caching and distribution less effective. Also, because e2e tests deal with a lot of integration code, they are at a much higher risk to be flaky.
 
 You could manually address these problems by splitting your e2e tests into smaller tasks, but this requires developer time to maintain and adds additional configuration overhead to your codebase. Or, you could allow Nx to automatically split your Cypress or Playwright e2e tests by file.
 
 ## Set up
 
-To enable automatically split e2e tasks, you need to turn on [inferred tasks](/concepts/inferred-tasks) for the [@nx/cypress](/nx-api/cypress) or [@nx/playwright](/nx-api/playwright) plugins. Run this command to set up inferred tasks:
+To enable automatically split e2e tasks, you need to turn on [inferred tasks](/concepts/inferred-tasks#existing-nx-workspaces) for the [@nx/cypress](/nx-api/cypress) or [@nx/playwright](/nx-api/playwright) plugins. Run this command to set up inferred tasks:
 
 {% tabs %}
 {% tab label="Cypress" %}

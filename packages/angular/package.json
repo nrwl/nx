@@ -2,7 +2,7 @@
   "name": "@nx/angular",
   "version": "0.0.1",
   "private": false,
-  "description": "The Nx Plugin for Angular contains executors, generators, and utilities for managing Angular applications and libraries within an Nx workspace. It provides: \n\n- Integration with libraries such as Storybook, Jest, ESLint, Tailwind CSS, and Cypress. \n\n- Generators to help scaffold code quickly (like: Micro Frontends, Libraries, both internal to your codebase and publishable to npm) \n\n- Upgrading AngularJS applications \n\n- Single Component Application Modules (SCAMs) \n\n- NgRx helpers. \n\n- Utilities for automatic workspace refactoring.",
+  "description": "The Nx Plugin for Angular contains executors, generators, and utilities for managing Angular applications and libraries within an Nx workspace. It provides: \n\n- Integration with libraries such as Storybook, Jest, ESLint, Tailwind CSS, and Cypress. \n\n- Generators to help scaffold code quickly (like: Micro Frontends, Libraries, both internal to your codebase and publishable to npm) \n\n- Single Component Application Modules (SCAMs) \n\n- NgRx helpers. \n\n- Utilities for automatic workspace refactoring.",
   "repository": {
     "type": "git",
     "url": "https://github.com/nrwl/nx.git",
@@ -58,8 +58,6 @@
     "webpack": "^5.80.0",
     "webpack-merge": "^5.8.0",
     "@nx/devkit": "file:../devkit",
-    "@nx/cypress": "file:../cypress",
-    "@nx/jest": "file:../jest",
     "@nx/js": "file:../js",
     "@nx/eslint": "file:../eslint",
     "@nx/webpack": "file:../webpack",
@@ -69,11 +67,11 @@
   },
   "peerDependencies": {
     "@angular-devkit/build-angular": ">= 15.0.0 < 18.0.0",
+    "@angular-devkit/core": ">= 15.0.0 < 18.0.0",
     "@angular-devkit/schematics": ">= 15.0.0 < 18.0.0",
     "@schematics/angular": ">= 15.0.0 < 18.0.0",
-    "@angular-devkit/core": ">= 15.0.0 < 18.0.0",
-    "rxjs": "^6.5.3 || ^7.5.0",
-    "esbuild": "^0.19.2"
+    "esbuild": "^0.19.2",
+    "rxjs": "^6.5.3 || ^7.5.0"
   },
   "peerDependenciesMeta": {
     "esbuild": {
