@@ -1,6 +1,6 @@
 # Mental Model
 
-Nx is a VSCode of build tools, with a powerful core, driven by metadata, and extensible through plugins. Nx works with a
+Nx is a VSCode of build tools, with a powerful core, driven by metadata, and extensible through [plugins](/concepts/nx-plugins). Nx works with a
 few concepts to drive your monorepo efficiently, and effectively. This guide covers the mental model around how Nx works
 with project graphs, task graphs, affected commands, computation hashing and caching.
 
@@ -11,9 +11,8 @@ authored in your repository, such as Webpack, React, Angular, and so forth.
 
 ![project-graph](/shared/mental-model/project-graph.svg)
 
-With Nx, nodes in the project graph are defined in `project.json` files. You can manually define dependencies between
-the
-nodes, but you don’t have to do it very often. Nx analyzes files’ source code, your installed dependencies, TypeScript
+Nx analyzes your file system to detect projects. Projects are identified by the presence of a `package.json` file or `project.json` file. Projects identification can also be customized through plugins. You can manually define dependencies between
+the project nodes, but you don’t have to do it very often. Nx analyzes files’ source code, your installed dependencies, TypeScript
 files, and others figuring out these dependencies for you. Nx also stores the cached project graph, so it only
 reanalyzes the files you have changed.
 
@@ -23,8 +22,7 @@ Nx provides an updated graph after each analysis is done.
 
 ## Metadata-driven
 
-Everything in Nx comes with metadata to enable toolability. The default values, validations, autocompletion work, and
-more are all defined in a schema, instead of in code.
+Everything in Nx comes with metadata to enable toolability. Nx gathers information about your projects and tasks and then uses that information to help you understand and interact with your codebase. With the right plugins installed, most of the metadata can be [inferred directly from your existing configuration files](/concepts/inferred-tasks) so you don't have to define it manually.
 
 This metadata is used by Nx itself, by VSCode and WebStorm integrations, by GitHub integration, and by third-party
 tools.
