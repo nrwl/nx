@@ -2,10 +2,6 @@
 
 Ƭ **ProjectTargetConfigurator**: (`file`: `string`) => `Record`\<`string`, [`TargetConfiguration`](../../devkit/documents/TargetConfiguration)\>
 
-**`Deprecated`**
-
-Add targets to the projects in a [CreateNodes](../../devkit/documents/CreateNodes) function instead. This will be removed in Nx 19
-
 #### Type declaration
 
 ▸ (`file`): `Record`\<`string`, [`TargetConfiguration`](../../devkit/documents/TargetConfiguration)\>
@@ -19,3 +15,7 @@ Add targets to the projects in a [CreateNodes](../../devkit/documents/CreateNode
 ##### Returns
 
 `Record`\<`string`, [`TargetConfiguration`](../../devkit/documents/TargetConfiguration)\>
+
+**`Deprecated`**
+
+Add targets to the projects in a [CreateNodes](../../devkit/documents/CreateNodes) function instead. This will be removed in Nx 19

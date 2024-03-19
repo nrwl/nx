@@ -2,6 +2,9 @@
 
 ▸ **defaultTasksRunner**(`tasks`, `options`, `context?`): `any`
 
+`any | Promise<{ [id: string]: TaskStatus }>`
+will change to Promise<{ [id: string]: TaskStatus }> after Nx 15 is released.
+
 #### Parameters
 
 | Name                         | Type                                                                                       |
