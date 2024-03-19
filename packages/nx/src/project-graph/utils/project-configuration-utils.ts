@@ -60,12 +60,23 @@ export function mergeProjectConfigurationIntoRootMap(
   // a project.json in which case it was already updated above.
   const updatedProjectConfiguration = {
     ...matchingProject,
-    ...project,
   };
 
-  if (sourceMap) {
-    for (const property in project) {
-      sourceMap[`${property}`] = sourceInformation;
+  for (const k in project) {
+    if (
+      ![
+        'tags',
+        'implicitDependencies',
+        'generators',
+        'targets',
+        'metadata',
+        'namedInputs',
+      ].includes(k)
+    ) {
+      updatedProjectConfiguration[k] = project[k];
+      if (sourceMap) {
+        sourceMap[`${k}`] = sourceInformation;
+      }
     }
   }
 
@@ -76,6 +87,7 @@ export function mergeProjectConfigurationIntoRootMap(
     );
 
     if (sourceMap) {
+      sourceMap['tags'] ??= sourceInformation;
       project.tags.forEach((tag) => {
         sourceMap[`tags.${tag}`] = sourceInformation;
       });
@@ -88,6 +100,7 @@ export function mergeProjectConfigurationIntoRootMap(
     ).concat(project.implicitDependencies);
 
     if (sourceMap) {
+      sourceMap['implicitDependencies'] ??= sourceInformation;
       project.implicitDependencies.forEach((implicitDependency) => {
         sourceMap[`implicitDependencies.${implicitDependency}`] =
           sourceInformation;
@@ -100,6 +113,7 @@ export function mergeProjectConfigurationIntoRootMap(
     updatedProjectConfiguration.generators = { ...project.generators };
 
     if (sourceMap) {
+      sourceMap['generators'] ??= sourceInformation;
       for (const generator in project.generators) {
         sourceMap[`generators.${generator}`] = sourceInformation;
         for (const property in project.generators[generator]) {
@@ -127,6 +141,7 @@ export function mergeProjectConfigurationIntoRootMap(
     };
 
     if (sourceMap) {
+      sourceMap['namedInputs'] ??= sourceInformation;
       for (const namedInput in project.namedInputs) {
         sourceMap[`namedInputs.${namedInput}`] = sourceInformation;
       }
@@ -137,6 +152,9 @@ export function mergeProjectConfigurationIntoRootMap(
     // We merge the targets with special handling, so clear this back to the
     // targets as defined originally before merging.
     updatedProjectConfiguration.targets = matchingProject?.targets ?? {};
+    if (sourceMap) {
+      sourceMap['targets'] ??= sourceInformation;
+    }
 
     // For each target defined in the new config
     for (const targetName in project.targets) {
@@ -173,6 +191,81 @@ export function mergeProjectConfigurationIntoRootMap(
         delete mergedTarget?.[ONLY_MODIFIES_EXISTING_TARGET];
 
       updatedProjectConfiguration.targets[targetName] = mergedTarget;
+    }
+  }
+
+  if (project.metadata) {
+    if (sourceMap) {
+      sourceMap['targets'] ??= sourceInformation;
+    }
+    for (const [metadataKey, value] of Object.entries({
+      ...project.metadata,
+    })) {
+      const existingValue = matchingProject.metadata?.[metadataKey];
+
+      if (Array.isArray(value) && Array.isArray(existingValue)) {
+        for (const item of [...value]) {
+          const newLength =
+            updatedProjectConfiguration.metadata[metadataKey].push(item);
+          if (sourceMap) {
+            sourceMap[`metadata.${metadataKey}.${newLength - 1}`] =
+              sourceInformation;
+          }
+        }
+      } else if (Array.isArray(value) && existingValue === undefined) {
+        updatedProjectConfiguration.metadata ??= {};
+        updatedProjectConfiguration.metadata[metadataKey] ??= value;
+        if (sourceMap) {
+          sourceMap[`metadata.${metadataKey}`] = sourceInformation;
+        }
+        for (let i = 0; i < value.length; i++) {
+          if (sourceMap) {
+            sourceMap[`metadata.${metadataKey}.${i}`] = sourceInformation;
+          }
+        }
+      } else if (
+        typeof value === 'object' &&
+        typeof existingValue === 'object'
+      ) {
+        for (const key in value) {
+          const existingValue = matchingProject.metadata?.[metadataKey]?.[key];
+
+          if (Array.isArray(value[key]) && Array.isArray(existingValue)) {
+            for (const item of value[key]) {
+              const i =
+                updatedProjectConfiguration.metadata[metadataKey][key].push(
+                  item
+                );
+              if (sourceMap) {
+                sourceMap[`metadata.${metadataKey}.${key}.${i - 1}`] =
+                  sourceInformation;
+              }
+            }
+          } else {
+            updatedProjectConfiguration.metadata[metadataKey] = value;
+            if (sourceMap) {
+              sourceMap[`metadata.${metadataKey}`] = sourceInformation;
+            }
+          }
+        }
+      } else {
+        updatedProjectConfiguration.metadata[metadataKey] = value;
+        if (sourceMap) {
+          sourceMap[`metadata.${metadataKey}`] = sourceInformation;
+
+          if (typeof value === 'object') {
+            for (const k in value) {
+              sourceMap[`metadata.${metadataKey}.${k}`] = sourceInformation;
+              if (Array.isArray(value[k])) {
+                for (let i = 0; i < value[k].length; i++) {
+                  sourceMap[`metadata.${metadataKey}.${k}.${i}`] =
+                    sourceInformation;
+                }
+              }
+            }
+          }
+        }
+      }
     }
   }
 
