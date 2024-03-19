@@ -70,4 +70,12 @@ export function validateOptions(options: ApplicationExecutorOptions): void {
       );
     }
   }
+
+  if (lt(angularVersion, '17.3.0')) {
+    if (options.deployUrl) {
+      throw new Error(
+        `The "deployUrl" option requires Angular version 17.3.0 or greater. You are currently using version ${angularVersion}.`
+      );
+    }
+  }
 }
