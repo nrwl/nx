@@ -106,7 +106,7 @@ describe('package-manager', () => {
       });
       const packageManager = detectPackageManager();
       expect(packageManager).toEqual('npm');
-      expect(fs.existsSync).toHaveBeenCalledTimes(10084);
+      expect(fs.existsSync).toHaveBeenCalledTimes(8300);
     });
   });
 
