@@ -2,7 +2,7 @@ import * as chalk from 'chalk';
 import { EOL } from 'os';
 import * as readline from 'readline';
 import { isCI } from './is-ci';
-import { TaskStatus } from '../tasks-runner/tasks-runner';
+import type { TaskStatus } from '../tasks-runner/tasks-runner';
 
 const GH_GROUP_PREFIX = '::group::';
 const GH_GROUP_SUFFIX = '::endgroup::';

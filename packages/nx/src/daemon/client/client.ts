@@ -25,6 +25,8 @@ import { safelyCleanUpExistingProcess } from '../cache';
 import { Hash } from '../../hasher/task-hasher';
 import { Task, TaskGraph } from '../../config/task-graph';
 import { ConfigurationSourceMaps } from '../../project-graph/utils/project-configuration-utils';
+import { DaemonProjectGraphError } from '../daemon-project-graph-error';
+import { ProjectGraphError } from '../../project-graph/project-graph';
 
 const DAEMON_ENV_SETTINGS = {
   ...process.env,
@@ -129,13 +131,21 @@ export class DaemonClient {
     projectGraph: ProjectGraph;
     sourceMaps: ConfigurationSourceMaps;
   }> {
-    const response = await this.sendToDaemonViaQueue({
-      type: 'REQUEST_PROJECT_GRAPH',
-    });
-    return {
-      projectGraph: response.projectGraph,
-      sourceMaps: response.sourceMaps,
-    };
+    try {
+      const response = await this.sendToDaemonViaQueue({
+        type: 'REQUEST_PROJECT_GRAPH',
+      });
+      return {
+        projectGraph: response.projectGraph,
+        sourceMaps: response.sourceMaps,
+      };
+    } catch (e) {
+      if (e.name === DaemonProjectGraphError.name) {
+        throw ProjectGraphError.fromDaemonProjectGraphError(e);
+      } else {
+        throw e;
+      }
+    }
   }
 
   async getAllFileData(): Promise<FileData[]> {
