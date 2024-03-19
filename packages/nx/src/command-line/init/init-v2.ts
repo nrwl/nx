@@ -49,6 +49,13 @@ export async function initHandler(options: InitArgs): Promise<void> {
       );
     }
     generateDotNxSetup(version);
+    const { plugins } = await detectPlugins();
+    plugins.forEach((plugin) => {
+      execSync(`./nx add ${plugin}`, {
+        stdio: 'inherit',
+      });
+    });
+
     // invokes the wrapper, thus invoking the initial installation process
     runNxSync('--version', { stdio: 'ignore' });
     return;
@@ -190,6 +197,9 @@ async function detectPlugins(): Promise<
       }
     }
   }
+  if (existsSync('gradlew') || existsSync('gradlew.bat')) {
+    detectedPlugins.add('@nx/gradle');
+  }
 
   const plugins = Array.from(detectedPlugins);
 
@@ -214,25 +224,24 @@ async function detectPlugins(): Promise<
 
   if (pluginsToInstall?.length === 0) return undefined;
 
-  const updatePackageScripts = await prompt<{ updatePackageScripts: string }>([
-    {
-      name: 'updatePackageScripts',
-      type: 'autocomplete',
-      message: `Do you want to start using Nx in your package.json scripts?`,
-      choices: [
-        {
-          name: 'Yes',
-        },
-        {
-          name: 'No',
-        },
-      ],
-      initial: 0,
-    },
-  ]).then((r) => r.updatePackageScripts === 'Yes');
+  const updatePackageScripts =
+    existsSync('package.json') &&
+    (await prompt<{ updatePackageScripts: string }>([
+      {
+        name: 'updatePackageScripts',
+        type: 'autocomplete',
+        message: `Do you want to start using Nx in your package.json scripts?`,
+        choices: [
+          {
+            name: 'Yes',
+          },
+          {
+            name: 'No',
+          },
+        ],
+        initial: 0,
+      },
+    ]).then((r) => r.updatePackageScripts === 'Yes'));
 
-  return {
-    plugins: pluginsToInstall,
-    updatePackageScripts,
-  };
+  return { plugins: pluginsToInstall, updatePackageScripts };
 }
