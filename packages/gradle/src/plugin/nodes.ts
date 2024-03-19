@@ -81,7 +81,6 @@ export const createNodes: CreateNodes<GradlePluginOptions> = [
 
     try {
       const {
-        tasksMap,
         gradleProjectToTasksTypeMap,
         gradleFileToOutputDirsMap,
         gradleFileToGradleProjectMap,
@@ -96,16 +95,16 @@ export const createNodes: CreateNodes<GradlePluginOptions> = [
         return;
       }
 
-      const availableTaskNames = tasksMap.get(gradleFilePath) as string[];
       const tasksTypeMap = gradleProjectToTasksTypeMap.get(
         gradleProject
       ) as Map<string, string>;
-      const tasks: GradleTask[] = availableTaskNames.map((taskName) => {
-        return {
-          type: tasksTypeMap.get(taskName) ?? 'Unknown',
+      let tasks: GradleTask[] = [];
+      for (let [taskName, taskType] of tasksTypeMap.entries()) {
+        tasks.push({
+          type: taskType,
           name: taskName,
-        };
-      });
+        });
+      }
 
       const outputDirs = gradleFileToOutputDirsMap.get(gradleFilePath) as Map<
         string,
