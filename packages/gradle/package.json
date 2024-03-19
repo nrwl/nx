@@ -22,6 +22,14 @@
     "url": "https://github.com/nrwl/nx/issues"
   },
   "homepage": "https://nx.dev",
+  "generators": "./generators.json",
+  "exports": {
+    ".": "./index.js",
+    "./package.json": "./package.json",
+    "./migrations.json": "./migrations.json",
+    "./generators.json": "./generators.json",
+    "./plugin": "./plugin.js"
+  },
   "nx-migrate": {
     "migrations": "./migrations.json"
   },
