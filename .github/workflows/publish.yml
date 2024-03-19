@@ -273,9 +273,9 @@ jobs:
         # Publish docs only on a full release
         if: ${{ !github.event.release.prerelease }}
         run: |
-          # Publish docs only when publishing the latest version
-          if [ "$(git describe --tags `git rev-list --tags --max-count=1`)" = "$GITHUB_REF_NAME" ]; then
+          # The GITHUB_REF_NAME is a full version (i.e. 17.3.2). The branchName will only use the major version number.
+          # We will publish docs to the website branch based on the current tag (i.e. website-17)
+          branchName=website-${$GITHUB_REF_NAME%.*.*}
           # We force recreate the branch in order to always be up to date and avoid merge conflicts within the automated workflow
-          git branch -f website
-          git push -f origin website
-          fi
+          git branch -f $branchName
+          git push -f origin $branchName

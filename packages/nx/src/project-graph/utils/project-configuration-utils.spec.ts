@@ -731,6 +731,177 @@ describe('project-configuration-utils', () => {
       `);
     });
 
+    it('should merge release', () => {
+      const rootMap = new RootMapBuilder()
+        .addProject({
+          root: 'libs/lib-a',
+          name: 'lib-a',
+        })
+        .getRootMap();
+      mergeProjectConfigurationIntoRootMap(rootMap, {
+        root: 'libs/lib-a',
+        name: 'lib-a',
+        release: {
+          version: {
+            generatorOptions: {
+              packageRoot: 'dist/libs/lib-a',
+            },
+          },
+        },
+      });
+      expect(rootMap.get('libs/lib-a').release).toMatchInlineSnapshot(`
+        {
+          "version": {
+            "generatorOptions": {
+              "packageRoot": "dist/libs/lib-a",
+            },
+          },
+        }
+      `);
+    });
+
+    describe('metadata', () => {
+      it('should be set if not previously defined', () => {
+        const rootMap = new RootMapBuilder()
+          .addProject({
+            root: 'libs/lib-a',
+            name: 'lib-a',
+          })
+          .getRootMap();
+        const sourceMap: ConfigurationSourceMaps = {
+          'libs/lib-a': {},
+        };
+        mergeProjectConfigurationIntoRootMap(
+          rootMap,
+          {
+            root: 'libs/lib-a',
+            name: 'lib-a',
+            metadata: {
+              technologies: ['technology'],
+              targetGroups: {
+                group1: ['target1', 'target2'],
+              },
+            },
+          },
+          sourceMap,
+          ['dummy', 'dummy.ts']
+        );
+
+        expect(rootMap.get('libs/lib-a').metadata).toEqual({
+          technologies: ['technology'],
+          targetGroups: {
+            group1: ['target1', 'target2'],
+          },
+        });
+        expect(sourceMap['libs/lib-a']).toMatchObject({
+          'metadata.technologies': ['dummy', 'dummy.ts'],
+          'metadata.targetGroups': ['dummy', 'dummy.ts'],
+          'metadata.targetGroups.group1': ['dummy', 'dummy.ts'],
+        });
+      });
+
+      it('should concat arrays', () => {
+        const rootMap = new RootMapBuilder()
+          .addProject({
+            root: 'libs/lib-a',
+            name: 'lib-a',
+            metadata: {
+              technologies: ['technology1'],
+            },
+          })
+          .getRootMap();
+        const sourceMap: ConfigurationSourceMaps = {
+          'libs/lib-a': {
+            'metadata.technologies': ['existing', 'existing.ts'],
+            'metadata.technologies.0': ['existing', 'existing.ts'],
+          },
+        };
+        mergeProjectConfigurationIntoRootMap(
+          rootMap,
+          {
+            root: 'libs/lib-a',
+            name: 'lib-a',
+            metadata: {
+              technologies: ['technology2'],
+            },
+          },
+          sourceMap,
+          ['dummy', 'dummy.ts']
+        );
+
+        expect(rootMap.get('libs/lib-a').metadata).toEqual({
+          technologies: ['technology1', 'technology2'],
+        });
+        expect(sourceMap['libs/lib-a']).toMatchObject({
+          'metadata.technologies': ['existing', 'existing.ts'],
+          'metadata.technologies.0': ['existing', 'existing.ts'],
+          'metadata.technologies.1': ['dummy', 'dummy.ts'],
+        });
+      });
+
+      it('should concat second level arrays', () => {
+        const rootMap = new RootMapBuilder()
+          .addProject({
+            root: 'libs/lib-a',
+            name: 'lib-a',
+            metadata: {
+              targetGroups: {
+                group1: ['target1'],
+              },
+            },
+          })
+          .getRootMap();
+        const sourceMap: ConfigurationSourceMaps = {
+          'libs/lib-a': {
+            'metadata.targetGroups': ['existing', 'existing.ts'],
+            'metadata.targetGroups.group1': ['existing', 'existing.ts'],
+            'metadata.targetGroups.group1.0': ['existing', 'existing.ts'],
+          },
+        };
+        mergeProjectConfigurationIntoRootMap(
+          rootMap,
+          {
+            root: 'libs/lib-a',
+            name: 'lib-a',
+            metadata: {
+              targetGroups: {
+                group1: ['target2'],
+              },
+            },
+          },
+          sourceMap,
+          ['dummy', 'dummy.ts']
+        );
+
+        expect(rootMap.get('libs/lib-a').metadata).toEqual({
+          targetGroups: {
+            group1: ['target1', 'target2'],
+          },
+        });
+
+        expect(sourceMap['libs/lib-a']).toMatchObject({
+          'metadata.targetGroups': ['existing', 'existing.ts'],
+          'metadata.targetGroups.group1': ['existing', 'existing.ts'],
+          'metadata.targetGroups.group1.0': ['existing', 'existing.ts'],
+          'metadata.targetGroups.group1.1': ['dummy', 'dummy.ts'],
+        });
+
+        expect(sourceMap['libs/lib-a']['metadata.targetGroups']).toEqual([
+          'existing',
+          'existing.ts',
+        ]);
+        expect(sourceMap['libs/lib-a']['metadata.targetGroups.group1']).toEqual(
+          ['existing', 'existing.ts']
+        );
+        expect(
+          sourceMap['libs/lib-a']['metadata.targetGroups.group1.0']
+        ).toEqual(['existing', 'existing.ts']);
+        expect(
+          sourceMap['libs/lib-a']['metadata.targetGroups.group1.1']
+        ).toEqual(['dummy', 'dummy.ts']);
+      });
+    });
+
     describe('source map', () => {
       it('should add new project info', () => {
         const rootMap = new RootMapBuilder().getRootMap();

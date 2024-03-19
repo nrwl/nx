@@ -436,7 +436,9 @@ function processEnv(color: boolean, cwd: string, env: Record<string, string>) {
     ...localEnv,
     ...env,
   };
-  res.PATH = localEnv.PATH; // need to override PATH to make sure we are using the local node_modules
+  // need to override PATH to make sure we are using the local node_modules
+  if (localEnv.PATH) res.PATH = localEnv.PATH; // UNIX-like
+  if (localEnv.Path) res.Path = localEnv.Path; // Windows
 
   if (color) {
     res.FORCE_COLOR = `${color}`;
