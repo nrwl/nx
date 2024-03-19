@@ -534,7 +534,7 @@ function printAndFlushChanges(tree: Tree, isDryRun: boolean) {
           isDryRun ? chalk.keyword('orange')(' [dry-run]') : ''
         }`
       );
-      printDiff('', f.content?.toString() || '');
+      printDiff('', f.content?.toString() ?? '');
     } else if (f.type === 'UPDATE') {
       console.error(
         `${chalk.white('UPDATE')} ${f.path}${

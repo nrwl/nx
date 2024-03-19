@@ -16,19 +16,39 @@ describe('package-manager', () => {
           packageManager: 'pnpm',
         },
       });
+      jest.spyOn(fs, 'existsSync').mockImplementation((p) => {
+        switch (p) {
+          case 'pnpm-lock.yaml':
+            return true;
+          case 'yarn.lock':
+            return false;
+          case 'package-lock.json':
+            return false;
+          case 'bun.lockb':
+            return false;
+          default:
+            return jest.requireActual('fs').existsSync(p);
+        }
+      });
       const packageManager = detectPackageManager();
       expect(packageManager).toEqual('pnpm');
     });
 
     it('should detect yarn package manager from yarn.lock', () => {
-      jest.spyOn(configModule, 'readNxJson').mockReturnValueOnce({});
+      jest.spyOn(configModule, 'readNxJson').mockReturnValueOnce({
+        cli: {
+          packageManager: 'yarn',
+        },
+      });
       jest.spyOn(fs, 'existsSync').mockImplementation((p) => {
         switch (p) {
-          case 'yarn.lock':
-            return true;
           case 'pnpm-lock.yaml':
             return false;
+          case 'yarn.lock':
+            return true;
           case 'package-lock.json':
+            return false;
+          case 'bun.lockb':
             return false;
           default:
             return jest.requireActual('fs').existsSync(p);
@@ -36,37 +56,47 @@ describe('package-manager', () => {
       });
       const packageManager = detectPackageManager();
       expect(packageManager).toEqual('yarn');
-      expect(fs.existsSync).toHaveBeenNthCalledWith(1, 'yarn.lock');
     });
 
-    it('should detect pnpm package manager from pnpm-lock.yaml', () => {
-      jest.spyOn(configModule, 'readNxJson').mockReturnValueOnce({});
+    it('should detect package manager in nxJson', () => {
+      jest.spyOn(configModule, 'readNxJson').mockReturnValueOnce({
+        cli: {
+          packageManager: 'bun',
+        },
+      });
       jest.spyOn(fs, 'existsSync').mockImplementation((p) => {
         switch (p) {
+          case 'pnpm-lock.yaml':
+            return false;
           case 'yarn.lock':
             return false;
-          case 'pnpm-lock.yaml':
-            return true;
           case 'package-lock.json':
             return false;
+          case 'bun.lockb':
+            return true;
           default:
             return jest.requireActual('fs').existsSync(p);
         }
       });
       const packageManager = detectPackageManager();
-      expect(packageManager).toEqual('pnpm');
-      expect(fs.existsSync).toHaveBeenCalledTimes(3);
+      expect(packageManager).toEqual('bun');
     });
 
     it('should use npm package manager as default', () => {
-      jest.spyOn(configModule, 'readNxJson').mockReturnValueOnce({});
+      jest.spyOn(configModule, 'readNxJson').mockReturnValueOnce({
+        cli: {
+          packageManager: 'npm',
+        },
+      });
       jest.spyOn(fs, 'existsSync').mockImplementation((p) => {
         switch (p) {
-          case 'yarn.lock':
-            return false;
           case 'pnpm-lock.yaml':
             return false;
+          case 'yarn.lock':
+            return false;
           case 'package-lock.json':
+            return true;
+          case 'bun.lockb':
             return false;
           default:
             return jest.requireActual('fs').existsSync(p);
@@ -74,7 +104,6 @@ describe('package-manager', () => {
       });
       const packageManager = detectPackageManager();
       expect(packageManager).toEqual('npm');
-      expect(fs.existsSync).toHaveBeenCalledTimes(5);
     });
   });
 

@@ -1659,7 +1659,10 @@ describe('Migration', () => {
         `Incorrect 'from' section. Use --from="package@version"`
       );
       await expect(() =>
-        parseMigrationsOptions({ packageAndVersion: '8.12.0', from: 'myscope' })
+        parseMigrationsOptions({
+          packageAndVersion: '8.12.0',
+          from: 'myscope',
+        })
       ).rejects.toThrowError(
         `Incorrect 'from' section. Use --from="package@version"`
       );
