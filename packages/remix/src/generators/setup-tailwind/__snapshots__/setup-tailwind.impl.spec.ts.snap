@@ -82,13 +82,13 @@ export default {
 `;
 
 exports[`setup-tailwind generator should add a tailwind config to an application correctly 1`] = `
-"import type { Config } from "tailwindcss";
+"import type { Config } from 'tailwindcss';
 import { createGlobPatternsForDependencies } from '@nx/react/tailwind';
 
 export default {
   content: [
-    "./app/**/*.{js,jsx,ts,tsx}",
-    ...createGlobPatternsForDependencies(__dirname)
+    './app/**/*.{js,jsx,ts,tsx}',
+    ...createGlobPatternsForDependencies(__dirname),
   ],
   theme: {
     extend: {},
