@@ -54,7 +54,7 @@ export interface PlaywrightExecutorSchema {
   updateSnapshots?: boolean;
   ui?: boolean;
   uiHost?: string;
-  uiPort?: string;
+  uiPort?: number;
   skipInstall?: boolean;
 }
 
