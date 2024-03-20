@@ -56,6 +56,7 @@ export default defineConfig({
     command: 'pnpm exec nx run nx-dev:start',
     url: 'http://localhost:4200',
     reuseExistingServer: !process.env.CI,
+    timeout: 120_000,
   },
   projects: [
     {

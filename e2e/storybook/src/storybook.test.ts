@@ -2,11 +2,14 @@ import {
   checkFilesExist,
   cleanupProject,
   killPorts,
+  listFiles,
   newProject,
+  readFile,
   runCLI,
   runCommandUntil,
   tmpProjPath,
   uniq,
+  updateFile,
 } from '@nx/e2e/utils';
 import { writeFileSync } from 'fs';
 import { createFileSync } from 'fs-extra';
@@ -105,6 +108,33 @@ describe('Storybook generators and executors for monorepos', () => {
       // build React lib
       runCLI(`run ${reactStorybookApp}:build-storybook --verbose`);
       checkFilesExist(`${reactStorybookApp}/storybook-static/index.html`);
+    }, 300_000);
+
+    it('should not bundle in sensitive NX_ environment variables', () => {
+      updateFile(
+        `${reactStorybookApp}/.storybook/main.ts`,
+        (content) => `
+      ${content}
+      console.log(process.env);
+      `
+      );
+      runCLI(`run ${reactStorybookApp}:build-storybook --verbose`, {
+        env: {
+          NX_CLOUD_ENCRYPTION_KEY: 'MY SECRET',
+          NX_CLOUD_ACCESS_TOKEN: 'MY SECRET',
+        },
+      });
+
+      // Check all output chunks for bundled environment variables
+      const outDir = `${reactStorybookApp}/storybook-static`;
+      const files = listFiles(outDir);
+      for (const file of files) {
+        if (!file.endsWith('.js')) continue;
+        const content = readFile(`${outDir}/${file}`);
+        expect(content).not.toMatch(/NX_CLOUD_ENCRYPTION_KEY/);
+        expect(content).not.toMatch(/NX_CLOUD_ACCESS_TOKEN/);
+        expect(content).not.toMatch(/MY SECRET/);
+      }
     }, 300_000);
   });
 });
