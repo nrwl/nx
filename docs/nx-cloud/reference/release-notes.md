@@ -1,5 +1,13 @@
 # Enterprise Release Notes
 
+### 2402.27.3.patch3
+
+- Feat: allows disabling the automated pod watcher which doesn't behave as expected in some k8s engines
+
+### 2402.27.3.patch2
+
+- Feat: allows volume class to be customised for Agents
+
 ### 2402.27.3.patch1
 
 - Fixes an issue with the aggregator creating empty organisations during the first migration

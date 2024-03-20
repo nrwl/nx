@@ -85,6 +85,19 @@
           "version": "~5.3.2"
         }
       }
+    },
+    "18.2.0": {
+      "version": "18.2.0-beta.0",
+      "x-prompt": "Do you want to update to TypeScript v5.4?",
+      "requires": {
+        "typescript": ">=5.3.0 <5.4.0"
+      },
+      "packages": {
+        "typescript": {
+          "version": "~5.4.2",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }

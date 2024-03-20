@@ -1,3 +1,9 @@
+// When plugins from root nx.json load through ts-jest, they can cause transpile errors such as `@nx/playwright/plugin.d.ts` containing an unexpected "export" keyword.
+// Mock `loadNxPlugins` function to prevent them from loading.
+jest.mock('nx/src/utils/nx-plugin', () => ({
+  loadNxPlugins: () => Promise.resolve([]),
+}));
+
 import { convertNxExecutor } from './convert-nx-executor';
 
 describe('Convert Nx Executor', () => {
