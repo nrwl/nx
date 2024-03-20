@@ -9,7 +9,7 @@ import { join } from 'path';
 
 export const packageManagerList = ['pnpm', 'yarn', 'npm'] as const;
 
-export type PackageManager = (typeof packageManagerList)[number];
+export type PackageManager = typeof packageManagerList[number];
 
 export function detectPackageManager(dir: string = ''): PackageManager {
   return existsSync(join(dir, 'yarn.lock'))
