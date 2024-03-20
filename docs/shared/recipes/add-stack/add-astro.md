@@ -13,7 +13,7 @@ Because we are not using an Nx plugin for Astro, there are few items we'll have 
 {% pill url="/ci/features/remote-cache" %}✅ Remote Caching{% /pill %}
 {% pill url="/features/explore-graph" %}✅ Explore the Graph{% /pill %}
 {% pill url="/ci/features/distribute-task-execution" %}✅ Distribute Task Execution{% /pill %}
-{% pill url="/features/integrate-with-editors" %}✅ Integrate with Editors{% /pill %}
+{% pill url="/getting-started/editor-setup" %}✅ Integrate with Editors{% /pill %}
 {% pill url="/features/automate-updating-dependencies" %}✅ Automate Updating Nx{% /pill %}
 {% pill url="/recipes/enforce-module-boundaries" %}✅ Enforce Project Boundaries{% /pill %}
 {% pill url="/features/generate-code" %}🚫 Use Code Generators{% /pill %}

@@ -40,6 +40,17 @@
         "tags": []
       },
       {
+        "id": "editor-setup",
+        "name": "Editor Setup",
+        "description": "Learn about Nx Console, an extension for VS Code and WebStorm.",
+        "mediaImage": "",
+        "file": "shared/getting-started/editor-setup",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/getting-started/editor-setup",
+        "tags": ["editor-setup"]
+      },
+      {
         "id": "tutorials",
         "name": "Tutorials",
         "description": "Get started with basic information, concepts and tutorials.",
@@ -165,6 +176,17 @@
     "isExternal": false,
     "path": "/getting-started/why-nx",
     "tags": []
+  },
+  "/getting-started/editor-setup": {
+    "id": "editor-setup",
+    "name": "Editor Setup",
+    "description": "Learn about Nx Console, an extension for VS Code and WebStorm.",
+    "mediaImage": "",
+    "file": "shared/getting-started/editor-setup",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/getting-started/editor-setup",
+    "tags": ["editor-setup"]
   },
   "/getting-started/tutorials": {
     "id": "tutorials",
@@ -550,17 +572,6 @@
         "tags": ["enforce-module-boundaries"]
       },
       {
-        "id": "integrate-with-editors",
-        "name": "Integrate with Editors",
-        "description": "Learn about Nx Console, an extension for VS Code and WebStorm.",
-        "mediaImage": "",
-        "file": "shared/features/integrate-with-editors",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/features/integrate-with-editors",
-        "tags": ["integrate-with-editors"]
-      },
-      {
         "id": "manage-releases",
         "name": "Manage Releases",
         "description": "Learn how Nx provides tools to help you manage releasing your projects.",
@@ -730,17 +741,6 @@
     "isExternal": false,
     "path": "/features/enforce-module-boundaries",
     "tags": ["enforce-module-boundaries"]
-  },
-  "/features/integrate-with-editors": {
-    "id": "integrate-with-editors",
-    "name": "Integrate with Editors",
-    "description": "Learn about Nx Console, an extension for VS Code and WebStorm.",
-    "mediaImage": "",
-    "file": "shared/features/integrate-with-editors",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/features/integrate-with-editors",
-    "tags": ["integrate-with-editors"]
   },
   "/features/manage-releases": {
     "id": "manage-releases",
@@ -3021,7 +3021,7 @@
             "itemList": [],
             "isExternal": false,
             "path": "/recipes/nx-console/console-telemetry",
-            "tags": ["integrate-with-editors"]
+            "tags": ["editor-setup"]
           },
           {
             "id": "console-project-details",
@@ -3032,7 +3032,7 @@
             "itemList": [],
             "isExternal": false,
             "path": "/recipes/nx-console/console-project-details",
-            "tags": ["integrate-with-editors"]
+            "tags": ["editor-setup"]
           },
           {
             "id": "console-generate-command",
@@ -3043,7 +3043,7 @@
             "itemList": [],
             "isExternal": false,
             "path": "/recipes/nx-console/console-generate-command",
-            "tags": ["integrate-with-editors"]
+            "tags": ["editor-setup"]
           },
           {
             "id": "console-run-command",
@@ -3054,7 +3054,7 @@
             "itemList": [],
             "isExternal": false,
             "path": "/recipes/nx-console/console-run-command",
-            "tags": ["integrate-with-editors"]
+            "tags": ["editor-setup"]
           },
           {
             "id": "console-add-dependency-command",
@@ -3065,7 +3065,7 @@
             "itemList": [],
             "isExternal": false,
             "path": "/recipes/nx-console/console-add-dependency-command",
-            "tags": ["integrate-with-editors"]
+            "tags": ["editor-setup"]
           },
           {
             "id": "console-project-pane",
@@ -3076,7 +3076,7 @@
             "itemList": [],
             "isExternal": false,
             "path": "/recipes/nx-console/console-project-pane",
-            "tags": ["integrate-with-editors"]
+            "tags": ["editor-setup"]
           },
           {
             "id": "console-shortcuts",
@@ -3087,7 +3087,7 @@
             "itemList": [],
             "isExternal": false,
             "path": "/recipes/nx-console/console-shortcuts",
-            "tags": ["integrate-with-editors"]
+            "tags": ["editor-setup"]
           },
           {
             "id": "console-troubleshooting",
@@ -3098,7 +3098,7 @@
             "itemList": [],
             "isExternal": false,
             "path": "/recipes/nx-console/console-troubleshooting",
-            "tags": ["integrate-with-editors"]
+            "tags": ["editor-setup"]
           }
         ],
         "isExternal": false,
@@ -5456,7 +5456,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/recipes/nx-console/console-telemetry",
-        "tags": ["integrate-with-editors"]
+        "tags": ["editor-setup"]
       },
       {
         "id": "console-project-details",
@@ -5467,7 +5467,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/recipes/nx-console/console-project-details",
-        "tags": ["integrate-with-editors"]
+        "tags": ["editor-setup"]
       },
       {
         "id": "console-generate-command",
@@ -5478,7 +5478,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/recipes/nx-console/console-generate-command",
-        "tags": ["integrate-with-editors"]
+        "tags": ["editor-setup"]
       },
       {
         "id": "console-run-command",
@@ -5489,7 +5489,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/recipes/nx-console/console-run-command",
-        "tags": ["integrate-with-editors"]
+        "tags": ["editor-setup"]
       },
       {
         "id": "console-add-dependency-command",
@@ -5500,7 +5500,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/recipes/nx-console/console-add-dependency-command",
-        "tags": ["integrate-with-editors"]
+        "tags": ["editor-setup"]
       },
       {
         "id": "console-project-pane",
@@ -5511,7 +5511,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/recipes/nx-console/console-project-pane",
-        "tags": ["integrate-with-editors"]
+        "tags": ["editor-setup"]
       },
       {
         "id": "console-shortcuts",
@@ -5522,7 +5522,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/recipes/nx-console/console-shortcuts",
-        "tags": ["integrate-with-editors"]
+        "tags": ["editor-setup"]
       },
       {
         "id": "console-troubleshooting",
@@ -5533,7 +5533,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/recipes/nx-console/console-troubleshooting",
-        "tags": ["integrate-with-editors"]
+        "tags": ["editor-setup"]
       }
     ],
     "isExternal": false,
@@ -5549,7 +5549,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/nx-console/console-telemetry",
-    "tags": ["integrate-with-editors"]
+    "tags": ["editor-setup"]
   },
   "/recipes/nx-console/console-project-details": {
     "id": "console-project-details",
@@ -5560,7 +5560,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/nx-console/console-project-details",
-    "tags": ["integrate-with-editors"]
+    "tags": ["editor-setup"]
   },
   "/recipes/nx-console/console-generate-command": {
     "id": "console-generate-command",
@@ -5571,7 +5571,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/nx-console/console-generate-command",
-    "tags": ["integrate-with-editors"]
+    "tags": ["editor-setup"]
   },
   "/recipes/nx-console/console-run-command": {
     "id": "console-run-command",
@@ -5582,7 +5582,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/nx-console/console-run-command",
-    "tags": ["integrate-with-editors"]
+    "tags": ["editor-setup"]
   },
   "/recipes/nx-console/console-add-dependency-command": {
     "id": "console-add-dependency-command",
@@ -5593,7 +5593,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/nx-console/console-add-dependency-command",
-    "tags": ["integrate-with-editors"]
+    "tags": ["editor-setup"]
   },
   "/recipes/nx-console/console-project-pane": {
     "id": "console-project-pane",
@@ -5604,7 +5604,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/nx-console/console-project-pane",
-    "tags": ["integrate-with-editors"]
+    "tags": ["editor-setup"]
   },
   "/recipes/nx-console/console-shortcuts": {
     "id": "console-shortcuts",
@@ -5615,7 +5615,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/nx-console/console-shortcuts",
-    "tags": ["integrate-with-editors"]
+    "tags": ["editor-setup"]
   },
   "/recipes/nx-console/console-troubleshooting": {
     "id": "console-troubleshooting",
@@ -5626,7 +5626,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/nx-console/console-troubleshooting",
-    "tags": ["integrate-with-editors"]
+    "tags": ["editor-setup"]
   },
   "/recipes/nx-release": {
     "id": "nx-release",
