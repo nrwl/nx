@@ -16,7 +16,7 @@ nx g @nx/plugin:plugin my-plugin
 Use the Nx CLI to generate the initial files needed for your executor.
 
 ```shell
-nx generate @nx/plugin:executor echo --project=my-plugin
+nx generate @nx/plugin:executor echo --directory=libs/my-plugin/src/executors/echo
 ```
 
 After the command is finished, the executor is created in the plugin `executors` folder.
@@ -94,19 +94,11 @@ export default async function echoExecutor(
 
 Our last step is to add this executor to a given project’s `targets` object in your project's `project.json` file:
 
-```jsonc {% fileName="project.json" %}
+```jsonc {% fileName="project.json" highlightLines=["5-10"] %}
 {
   //...
   "targets": {
-    "build": {
-      // ...
-    },
-    "serve": {
-      // ...
-    },
-    "lint": {
-      // ,,,
-    },
+    // ...
     "echo": {
       "executor": "@my-org/my-plugin:echo",
       "options": {
