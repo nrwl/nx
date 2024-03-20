@@ -360,9 +360,13 @@ export function getNextConfig(
   };
 }
 
+// Prevent sensitive keys from being bundled when source code uses entire `process.env` object rather than individual keys (e.g. `process.env.NX_FOO`).
+// TODO(v19): BREAKING: Only support NEXT_PUBLIC_ env vars and ignore NX_ vars since this is a standard Next.js feature.
+const excludedKeys = ['NX_CLOUD_ACCESS_TOKEN', 'NX_CLOUD_ENCRYPTION_KEY'];
+
 function getNxEnvironmentVariables() {
   return Object.keys(process.env)
-    .filter((env) => /^NX_/i.test(env))
+    .filter((env) => !excludedKeys.includes(env) && /^NX_/i.test(env))
     .reduce((env, key) => {
       env[key] = process.env[key];
       return env;
