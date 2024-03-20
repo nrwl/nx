@@ -2,6 +2,7 @@ import {
   checkFilesDoNotExist,
   checkFilesExist,
   cleanupProject,
+  createFile,
   detectPackageManager,
   newProject,
   packageInstall,
@@ -83,7 +84,9 @@ describe('EsBuild Plugin', () => {
     `
     );
     expect(() => runCLI(`build ${myPkg}`)).toThrow();
-    expect(() => runCLI(`build ${myPkg} --skipTypeCheck`)).not.toThrow();
+    expect(() =>
+      runCLI(`build ${myPkg} --skipTypeCheck --no-declaration`)
+    ).not.toThrow();
     expect(runCommand(`node dist/libs/${myPkg}/index.cjs`)).toMatch(/Bye/);
     // Reset file
     updateFile(
@@ -230,4 +233,40 @@ describe('EsBuild Plugin', () => {
     const output = runCLI(`build ${myPkg}`);
     expect(output).toContain('custom config loaded');
   }, 120_000);
+
+  it('should support declaration builds', () => {
+    const declarationPkg = uniq('declaration-pkg');
+    runCLI(`generate @nx/js:lib ${declarationPkg} --bundler=esbuild`);
+    createFile(
+      `libs/${declarationPkg}/src/lib/testDir/sub.ts`,
+      `
+        export function sub(): string {
+          return 'sub';
+        }
+      `
+    );
+    updateFile(
+      `libs/${declarationPkg}/src/lib/${declarationPkg}.ts`,
+      `
+        import { sub } from './testDir/sub';
+        
+        console.log('${declarationPkg}-' + sub());
+      `
+    );
+
+    runCLI(
+      `build ${declarationPkg} --declaration=true --declarationRootDir='libs/${declarationPkg}/src'`
+    );
+
+    checkFilesExist(
+      `dist/libs/${declarationPkg}/index.cjs`,
+      `dist/libs/${declarationPkg}/index.d.ts`,
+      `dist/libs/${declarationPkg}/lib/${declarationPkg}.d.ts`,
+      `dist/libs/${declarationPkg}/lib/testDir/sub.d.ts`
+    );
+
+    expect(runCommand(`node dist/libs/${declarationPkg}`)).toMatch(
+      new RegExp(`${declarationPkg}-sub`)
+    );
+  }, 300_000);
 });
