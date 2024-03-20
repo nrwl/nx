@@ -167,7 +167,7 @@ To fix this you will either need to add a package.json file at that location, or
               )}Resolving the current version for tag "${tag}" on ${registry}`
             );
             spinner.color =
-              color.spinnerColor as (typeof colors)[number]['spinnerColor'];
+              color.spinnerColor as typeof colors[number]['spinnerColor'];
             spinner.start();
 
             try {
