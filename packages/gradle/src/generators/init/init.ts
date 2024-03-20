@@ -51,7 +51,7 @@ function addPlugin(tree: Tree) {
   if (!hasGradlePlugin(tree)) {
     nxJson.plugins ??= [];
     nxJson.plugins.push({
-      plugin: '@nx/gradle/plugin',
+      plugin: '@nx/gradle',
       options: {
         testTargetName: 'test',
         classesTargetName: 'classes',
