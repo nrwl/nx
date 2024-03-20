@@ -6,7 +6,7 @@ A project's configuration is constructed by Nx from three sources:
 2. [Workspace `targetDefaults`](/reference/nx-json#target-defaults) defined in the `nx.json` file
 3. Individual project level configuration files (`package.json` and `project.json`)
 
-Each source will overwrite the previous source. That means `targetDefaults` will overwrite inferred tasks and project level configuration will overwrite both `targetDefaults` and inferred tasks. The combined project configuration can be viewed in the project details view by using [Nx Console](/features/integrate-with-editors) in your IDE or by running:
+Each source will overwrite the previous source. That means `targetDefaults` will overwrite inferred tasks and project level configuration will overwrite both `targetDefaults` and inferred tasks. The combined project configuration can be viewed in the project details view by using [Nx Console](/getting-started/editor-setup) in your IDE or by running:
 
 ```shell
 nx show project myproject --web

@@ -219,7 +219,7 @@ And, Nx already uses fast, modern tooling like [ESBuild](/nx-api/esbuild), [Vite
 
 ### Editor Integration
 
-Nx goes beyond being just a CLI and comes with [Nx Console](/features/integrate-with-editors), a VSCode and WebStorm extension allowing you to run commands, generate code and visualize your workspace.
+Nx goes beyond being just a CLI and comes with [Nx Console](/getting-started/editor-setup), a VSCode and WebStorm extension allowing you to run commands, generate code and visualize your workspace.
 
 ![Nx Console screenshot](/shared/images/nx-console/nx-console-screenshot.webp)
 
@@ -234,7 +234,7 @@ Nx is really made to scale with you. You can
 
 ### Visualize your Workspace
 
-As you start modularizing your Angular workspace, Nx can visualize it using the `nx graph` command or via [Nx Console](/features/integrate-with-editors) directly in your editor.
+As you start modularizing your Angular workspace, Nx can visualize it using the `nx graph` command or via [Nx Console](/getting-started/editor-setup) directly in your editor.
 
 {% graph height="450px" %}
 
