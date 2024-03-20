@@ -29,7 +29,7 @@ export type Json = {
 };
 
 export interface RunCommandsOptions extends Json {
-  command?: string;
+  command?: string | string[];
   commands?: (
     | {
         command: string;
@@ -200,7 +200,11 @@ function normalizeOptions(
   options: RunCommandsOptions
 ): NormalizedRunCommandsOptions {
   if (options.command) {
-    options.commands = [{ command: options.command }];
+    const commandToExecute = Array.isArray(options.command)
+      ? options.command.join(' ')
+      : options.command;
+
+    options.commands = [{ command: commandToExecute }];
     options.parallel = !!options.readyWhen;
   } else {
     options.commands = options.commands.map((c) =>
