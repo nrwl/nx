@@ -1,8 +1,7 @@
 import { readFileSync } from 'node:fs';
-import { dirname, join, relative } from 'node:path';
+import { join, relative } from 'node:path';
 
 import { workspaceRoot } from '@nx/devkit';
-import { hashWithWorkspaceContext } from 'nx/src/utils/workspace-context';
 
 import { execGradle } from './exec-gradle';
 
@@ -11,7 +10,6 @@ interface GradleReport {
   buildFileToDepsMap: Map<string, string>;
   gradleFileToOutputDirsMap: Map<string, Map<string, string>>;
   gradleProjectToTasksTypeMap: Map<string, Map<string, string>>;
-  tasksMap: Map<string, string[]>;
   gradleProjectToProjectName: Map<string, string>;
 }
 
@@ -55,10 +53,6 @@ function processProjectReports(projectReportLines: string[]): GradleReport {
   const gradleProjectToGradleFileMap = new Map<string, string>();
   const dependenciesMap = new Map<string, string>();
   /**
-   * Map of Gradle Build File to available tasks
-   */
-  const tasksMap = new Map<string, string[]>();
-  /**
    * Map of Gradle Build File to tasks type map
    */
   const gradleProjectToTasksTypeMap = new Map<string, Map<string, string>>();
@@ -95,7 +89,6 @@ function processProjectReports(projectReportLines: string[]): GradleReport {
         let projectName: string,
           absBuildFilePath: string,
           absBuildDirPath: string;
-        const tasks: string[] = [];
         const outputDirMap = new Map<string, string>();
         for (const line of propertyReportLines) {
           if (line.startsWith('name: ')) {
@@ -106,10 +99,6 @@ function processProjectReports(projectReportLines: string[]): GradleReport {
           }
           if (line.startsWith('buildDir: ')) {
             absBuildDirPath = line.substring('buildDir: '.length);
-          }
-          if (line.includes(': task ')) {
-            const taskSegments = line.split(': task ');
-            tasks.push(taskSegments[0]);
           }
           if (line.includes('Dir: ')) {
             const [dirName, dirPath] = line.split(': ');
@@ -141,7 +130,6 @@ function processProjectReports(projectReportLines: string[]): GradleReport {
         gradleFileToGradleProjectMap.set(buildFile, gradleProject);
         gradleProjectToGradleFileMap.set(gradleProject, buildFile);
         gradleProjectToProjectName.set(gradleProject, projectName);
-        tasksMap.set(buildFile, tasks);
       }
       if (line.endsWith('taskReport')) {
         const gradleProject = line.substring(
@@ -179,7 +167,6 @@ function processProjectReports(projectReportLines: string[]): GradleReport {
     buildFileToDepsMap,
     gradleFileToOutputDirsMap,
     gradleProjectToTasksTypeMap,
-    tasksMap,
     gradleProjectToProjectName,
   };
 }

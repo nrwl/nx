@@ -3,7 +3,10 @@ import {
   CreateNodes,
   CreateNodesContext,
   detectPackageManager,
+  joinPathFragments,
+  normalizePath,
   NxJsonConfiguration,
+  ProjectConfiguration,
   readJsonFile,
   TargetConfiguration,
   writeJsonFile,
@@ -12,7 +15,6 @@ import { dirname, join, relative } from 'path';
 
 import { getLockFileName } from '@nx/js';
 
-import { CypressExecutorOptions } from '../executors/cypress/cypress.impl';
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { existsSync, readdirSync } from 'fs';
 import { globWithWorkspaceContext } from 'nx/src/utils/workspace-context';
@@ -30,24 +32,13 @@ export interface CypressPluginOptions {
 const cachePath = join(projectGraphCacheDirectory, 'cypress.hash');
 const targetsCache = existsSync(cachePath) ? readTargetsCache() : {};
 
-const calculatedTargets: Record<
-  string,
-  Record<string, TargetConfiguration>
-> = {};
+const calculatedTargets: Record<string, CypressTargets> = {};
 
-function readTargetsCache(): Record<
-  string,
-  Record<string, TargetConfiguration<CypressExecutorOptions>>
-> {
+function readTargetsCache(): Record<string, CypressTargets> {
   return readJsonFile(cachePath);
 }
 
-function writeTargetsToCache(
-  targets: Record<
-    string,
-    Record<string, TargetConfiguration<CypressExecutorOptions>>
-  >
-) {
+function writeTargetsToCache(targets: Record<string, CypressTargets>) {
   writeJsonFile(cachePath, targets);
 }
 
@@ -75,7 +66,7 @@ export const createNodes: CreateNodes<CypressPluginOptions> = [
       getLockFileName(detectPackageManager(context.workspaceRoot)),
     ]);
 
-    const targets = targetsCache[hash]
+    const { targets, ciTestingGroup } = targetsCache[hash]
       ? targetsCache[hash]
       : await buildCypressTargets(
           configFilePath,
@@ -84,14 +75,25 @@ export const createNodes: CreateNodes<CypressPluginOptions> = [
           context
         );
 
-    calculatedTargets[hash] = targets;
+    calculatedTargets[hash] = { targets, ciTestingGroup };
+
+    const project: Omit<ProjectConfiguration, 'root'> = {
+      projectType: 'application',
+      targets,
+      metadata: {
+        technologies: ['cypress'],
+      },
+    };
+
+    if (ciTestingGroup) {
+      project.metadata.targetGroups = {
+        [`${projectRoot}:e2e-ci`]: ciTestingGroup,
+      };
+    }
 
     return {
       projects: {
-        [projectRoot]: {
-          projectType: 'application',
-          targets,
-        },
+        [projectRoot]: project,
       },
     };
   },
@@ -104,9 +106,9 @@ function getOutputs(
 ): string[] {
   function getOutput(path: string): string {
     if (path.startsWith('..')) {
-      return join('{workspaceRoot}', join(projectRoot, path));
+      return joinPathFragments('{workspaceRoot}', projectRoot, path);
     } else {
-      return join('{projectRoot}', path);
+      return joinPathFragments('{projectRoot}', path);
     }
   }
 
@@ -145,12 +147,17 @@ function getOutputs(
   return outputs;
 }
 
+interface CypressTargets {
+  targets: Record<string, TargetConfiguration>;
+  ciTestingGroup: string[];
+}
+
 async function buildCypressTargets(
   configFilePath: string,
   projectRoot: string,
   options: CypressPluginOptions,
   context: CreateNodesContext
-) {
+): Promise<CypressTargets> {
   const cypressConfig = await loadConfigFile(
     join(context.workspaceRoot, configFilePath)
   );
@@ -167,6 +174,7 @@ async function buildCypressTargets(
   const namedInputs = getNamedInputs(projectRoot, context);
 
   const targets: Record<string, TargetConfiguration> = {};
+  let ciTestingGroup: string[] = [];
 
   if ('e2e' in cypressConfig) {
     targets[options.targetName] = {
@@ -214,8 +222,10 @@ async function buildCypressTargets(
       const outputs = getOutputs(projectRoot, cypressConfig, 'e2e');
       const inputs = getInputs(namedInputs);
       for (const file of specFiles) {
-        const relativeSpecFilePath = relative(projectRoot, file);
+        const relativeSpecFilePath = normalizePath(relative(projectRoot, file));
         const targetName = options.ciTargetName + '--' + relativeSpecFilePath;
+
+        ciTestingGroup.push(targetName);
         targets[targetName] = {
           outputs,
           inputs,
@@ -240,6 +250,7 @@ async function buildCypressTargets(
         outputs,
         dependsOn,
       };
+      ciTestingGroup.push(options.ciTargetName);
     }
   }
 
@@ -254,7 +265,11 @@ async function buildCypressTargets(
     };
   }
 
-  return targets;
+  if (ciTestingGroup.length === 0) {
+    ciTestingGroup = null;
+  }
+
+  return { targets, ciTestingGroup };
 }
 
 function normalizeOptions(options: CypressPluginOptions): CypressPluginOptions {

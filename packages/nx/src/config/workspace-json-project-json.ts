@@ -111,6 +111,10 @@ export interface ProjectConfiguration {
       'generator' | 'generatorOptions'
     >;
   };
+  metadata?: {
+    technologies?: string[];
+    targetGroups?: Record<string, string[]>;
+  };
 }
 
 export interface TargetDependencyConfig {

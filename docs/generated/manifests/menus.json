@@ -8077,6 +8077,32 @@
         "disableCollapsible": false
       },
       {
+        "id": "gradle",
+        "path": "/nx-api/gradle",
+        "name": "gradle",
+        "children": [
+          {
+            "id": "generators",
+            "path": "/nx-api/gradle/generators",
+            "name": "generators",
+            "children": [
+              {
+                "id": "init",
+                "path": "/nx-api/gradle/generators/init",
+                "name": "init",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              }
+            ],
+            "isExternal": false,
+            "disableCollapsible": false
+          }
+        ],
+        "isExternal": false,
+        "disableCollapsible": false
+      },
+      {
         "id": "jest",
         "path": "/nx-api/jest",
         "name": "jest",
