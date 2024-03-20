@@ -159,7 +159,7 @@ export function ChampionPerks(): JSX.Element {
             <dd className="mt-2 text-base text-slate-500 dark:text-slate-400">
               When you're ready to join, fill out the{' '}
               <a
-                className="underline text-slate-900 dark:text-slate-100"
+                className="text-slate-900 underline dark:text-slate-100"
                 href="https://forms.gle/wYd9mC3ka64ki96G7"
               >
                 application form

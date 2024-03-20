@@ -68,7 +68,7 @@ export interface ReleaseVersionGeneratorSchema {
   fallbackCurrentVersionResolver?: 'disk';
   firstRelease?: boolean;
   // auto means the existing prefix will be preserved, and is the default behavior
-  versionPrefix?: typeof validReleaseVersionPrefixes[number];
+  versionPrefix?: (typeof validReleaseVersionPrefixes)[number];
   skipLockFileUpdate?: boolean;
   installArgs?: string;
   installIgnoreScripts?: boolean;

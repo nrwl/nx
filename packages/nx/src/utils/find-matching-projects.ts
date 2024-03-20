@@ -7,7 +7,7 @@ const validPatternTypes = [
   'directory', // Pattern is based on the project's root directory
   'unlabeled', // Pattern was passed without specifying a type
 ] as const;
-type ProjectPatternType = typeof validPatternTypes[number];
+type ProjectPatternType = (typeof validPatternTypes)[number];
 
 interface ProjectPattern {
   // If true, the pattern is an exclude pattern

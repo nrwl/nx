@@ -2,7 +2,7 @@ import { InformationCircleIcon } from '@heroicons/react/24/outline';
 
 export function ActivityLimitReached(): JSX.Element {
   return (
-    <div className="rounded-md bg-slate-50 dark:bg-slate-800/40 ring-slate-100 dark:ring-slate-700 ring-1 p-4 shadow-sm">
+    <div className="rounded-md bg-slate-50 p-4 shadow-sm ring-1 ring-slate-100 dark:bg-slate-800/40 dark:ring-slate-700">
       <div className="flex">
         <div className="flex-shrink-0">
           <InformationCircleIcon
