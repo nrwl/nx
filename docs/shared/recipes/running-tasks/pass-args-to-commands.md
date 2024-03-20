@@ -157,6 +157,10 @@ To statically pass some extra args to a specific project, you can update its `pr
 {% tabs %}
 {% tab label="Setting args directly as options" %}
 
+{% callout type="note" title="Providing command args as options" %}
+Support for providing command args as options was added in **Nx v18.1.1**.
+{% /callout %}
+
 ```json {% fileName="apps/my-app/project.json" highlightLines=["5-10"] %}
 {
   "sourceRoot": "apps/my-app/src",
@@ -175,10 +179,6 @@ To statically pass some extra args to a specific project, you can update its `pr
 {% /tab %}
 
 {% tab label="Setting the \"args\" option" %}
-
-{% callout type="note" title="Providing command args as options" %}
-Support for providing command args as options was added in **Nx v18.1.1**.
-{% /callout %}
 
 ```json {% fileName="apps/my-app/project.json" highlightLines=["5-11"] %}
 {
@@ -248,22 +248,8 @@ If multiple targets with the same name run different commands (or use different 
 
 ## Pass args when running the command in the terminal
 
-To pass args in a one-off manner when running a task, you can also provide them as individual options or by providing the `args` option when running the task:
-
-{% tabs %}
-{% tab label="Providing args directly as options" %}
+To pass args in a one-off manner when running a task, you can provide them as options directly:
 
 ```shell
 nx build my-app --assetsInlineLimit=2048 --assetsDir=static/assets
 ```
-
-{% /tab %}
-
-{% tab label="Providing the \"args\" option" %}
-
-```shell
-nx build my-app --args="--assetsInlineLimit=2048 --assetsDir=static/assets"
-```
-
-{% /tab %}
-{% /tabs %}
