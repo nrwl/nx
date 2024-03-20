@@ -14,6 +14,7 @@ describe('nx project.json plugin', () => {
     context = {
       nxJsonConfiguration: {},
       workspaceRoot: '/root',
+      configFiles: [],
     };
   });
 

@@ -53,6 +53,12 @@
       "version": "18.0.0-beta.0",
       "description": "Add NX_MF_DEV_SERVER_STATIC_REMOTES to inputs for task hashing when '@nx/webpack:webpack' is used for Module Federation.",
       "factory": "./src/migrations/update-18-0-0/add-mf-env-var-to-target-defaults"
+    },
+    "fix-target-defaults-for-webpack": {
+      "cli": "nx",
+      "version": "18.1.1-beta.0",
+      "description": "Ensure targetDefaults inputs for task hashing when '@nx/webpack:webpack' is used are correct for Module Federation.",
+      "factory": "./src/migrations/update-18-1-1/fix-target-defaults-inputs"
     }
   },
   "packageJsonUpdates": {

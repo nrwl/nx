@@ -16,13 +16,16 @@ import {
 } from '../../project-graph/project-graph';
 import { ProjectGraph } from '../../config/project-graph';
 import { readNxJson } from '../../config/configuration';
-import { runCommand } from '../../native';
 import {
   getLastValueFromAsyncIterableIterator,
   isAsyncIterator,
 } from '../../utils/async-iterator';
 import { getExecutorInformation } from './executor-utils';
-import { PseudoTtyProcess } from '../../utils/child-process';
+import {
+  getPseudoTerminal,
+  PseudoTerminal,
+} from '../../tasks-runner/pseudo-terminal';
+import { exec } from 'child_process';
 
 export interface Target {
   project: string;
@@ -127,12 +130,21 @@ async function printTargetRunHelpInternal(
     targetConfig.options.command
   ) {
     const command = targetConfig.options.command.split(' ')[0];
-    await new Promise(() => {
-      const cp = new PseudoTtyProcess(runCommand(`${command} --help`));
-      cp.onExit((code) => {
+    const helpCommand = `${command} --help`;
+    if (PseudoTerminal.isSupported()) {
+      const terminal = getPseudoTerminal();
+      await new Promise(() => {
+        const cp = terminal.runCommand(helpCommand);
+        cp.onExit((code) => {
+          process.exit(code);
+        });
+      });
+    } else {
+      const cp = exec(helpCommand);
+      cp.on('exit', (code) => {
         process.exit(code);
       });
-    });
+    }
   } else {
     process.exit(0);
   }

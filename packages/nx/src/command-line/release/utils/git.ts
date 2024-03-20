@@ -403,10 +403,7 @@ export function parseGitCommit(commit: RawGitCommit): GitCommit | null {
   const affectedFiles = Array.from(
     commit.body.matchAll(ChangedFileRegex)
   ).reduce(
-    (
-      prev,
-      [fullLine, changeType, file1, file2]: [string, string, string, string?]
-    ) =>
+    (prev, [fullLine, changeType, file1, file2]: RegExpExecArray) =>
       // file2 only exists for some change types, such as renames
       file2 ? [...prev, file1, file2] : [...prev, file1],
     [] as string[]

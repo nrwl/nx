@@ -50,6 +50,10 @@ import { TargetDefaultsPlugin } from '../plugins/target-defaults/target-defaults
 export interface CreateNodesContext {
   readonly nxJsonConfiguration: NxJsonConfiguration;
   readonly workspaceRoot: string;
+  /**
+   * The subset of configuration files which match the createNodes pattern
+   */
+  readonly configFiles: string[];
 }
 
 /**
@@ -78,7 +82,7 @@ export interface CreateNodesResult {
  * A pair of file patterns and {@link CreateNodesFunction}
  */
 export type CreateNodes<T = unknown> = readonly [
-  projectFilePattern: string,
+  configFilePattern: string,
   createNodesFunction: CreateNodesFunction<T>
 ];
 

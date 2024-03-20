@@ -271,7 +271,7 @@ describe('nx release - private JS packages', () => {
       integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
       total files:   3
 
-      Published to http://localhost:4873 with tag "latest"
+      Published to ${e2eRegistryUrl} with tag "latest"
 
       > nx run {public-project-name}:nx-release-publish
 
@@ -292,7 +292,7 @@ describe('nx release - private JS packages', () => {
       integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
       total files:   3
 
-      Published to http://localhost:4873 with tag "latest"
+      Published to ${e2eRegistryUrl} with tag "latest"
 
 
 

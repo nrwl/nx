@@ -8,6 +8,7 @@ import { frameworkIcons } from '../icons';
 
 import { cx } from '@nx/nx-dev/ui-primitives';
 import { ReactNode } from 'react';
+import Link from 'next/link';
 
 const colsClasses: Record<number, string> = {
   1: 'grid-cols-1',
@@ -79,7 +80,7 @@ export function Cards({
       {children}
       {moreLink && (
         <div className="flex justify-end mt-2 col-span-full">
-          <a
+          <Link
             className="transition-all duration-200 ease-in-out flex items-center no-underline text-sm px-4 py-0 border-transparent hover:text-slate-900 dark:hover:text-sky-400 whitespace-nowrap font-semibold group"
             href={moreLink}
           >
@@ -90,7 +91,7 @@ export function Cards({
             >
               →
             </span>
-          </a>
+          </Link>
         </div>
       )}
     </div>
@@ -111,7 +112,7 @@ export function LinkCard({
   appearance?: 'default' | 'small';
 }): JSX.Element {
   return (
-    <a
+    <Link
       key={title}
       href={url}
       className="no-prose relative col-span-1 flex flex-col items-center rounded-md border border-slate-200 bg-slate-50/40 p-4 text-center font-semibold shadow-sm transition focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 hover:bg-slate-100 dark:border-slate-800/40 dark:bg-slate-800/60 dark:hover:bg-slate-800"
@@ -144,7 +145,7 @@ export function LinkCard({
           {title}
         </h3>
       </div>
-    </a>
+    </Link>
   );
 }
 
@@ -171,7 +172,7 @@ export function Card({
   const hasYoutubeId = !!youtubeRegex ? youtubeRegex[1] : '';
 
   return (
-    <a
+    <Link
       key={title}
       href={url}
       title={title}
@@ -201,6 +202,6 @@ export function Card({
           <ArrowRightCircleIcon className="h-5 w-5" />
         </span>
       </div>
-    </a>
+    </Link>
   );
 }

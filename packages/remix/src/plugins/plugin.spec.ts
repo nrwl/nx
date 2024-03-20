@@ -34,6 +34,7 @@ describe('@nx/remix/plugin', () => {
           },
         },
         workspaceRoot: tempFs.tempDir,
+        configFiles: [],
       };
       tempFs.createFileSync(
         'package.json',
@@ -89,6 +90,7 @@ module.exports = {
           },
         },
         workspaceRoot: tempFs.tempDir,
+        configFiles: [],
       };
 
       tempFs.createFileSync(

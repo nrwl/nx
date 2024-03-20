@@ -49,7 +49,7 @@ jobs:
       - script: git branch --track main origin/main
       # This line enables distribution
       # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "e2e-ci" targets have been requested
-      - script: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="e2e-ci"
+      # - script: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="e2e-ci"
       - script: npm ci
 
       - script: npx nx-cloud record -- nx format:check --base=$(BASE_SHA)

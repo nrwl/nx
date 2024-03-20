@@ -266,7 +266,7 @@ class CLIOutput {
   private getStatusIcon(taskStatus: TaskStatus) {
     switch (taskStatus) {
       case 'success':
-        return '✔️';
+        return '✅';
       case 'failure':
         return '❌';
       case 'skipped':

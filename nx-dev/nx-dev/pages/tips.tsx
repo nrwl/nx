@@ -107,7 +107,7 @@ const tips: NewYearTip[] = [
           large monorepo - it also makes your CI fast. With features like remote
           caching, distributed task execution,{' '}
           <Link
-            href="/ci/features/nx-agents"
+            href="/ci/features/distribute-task-execution"
             className="underline text-slate-900 dark:text-slate-100"
           >
             Nx Agents
@@ -311,7 +311,7 @@ const tips: NewYearTip[] = [
         <p className="my-4">
           Read more about the upcoming{' '}
           <Link
-            href="/ci/features/nx-agents"
+            href="/ci/features/distribute-task-execution"
             className="underline text-slate-900 dark:text-slate-100"
           >
             Nx Agents

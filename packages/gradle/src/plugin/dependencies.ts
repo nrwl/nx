@@ -39,12 +39,14 @@ export const createDependencies: CreateDependencies = async (
 
     if (projectName && depsFile) {
       dependencies = dependencies.concat(
-        processGradleDependencies(
-          depsFile,
-          gradleProjectToProjectName,
-          projectName,
-          gradleFile,
-          context
+        Array.from(
+          processGradleDependencies(
+            depsFile,
+            gradleProjectToProjectName,
+            projectName,
+            gradleFile,
+            context
+          )
         )
       );
     }
@@ -85,12 +87,15 @@ function processGradleDependencies(
   sourceProjectName: string,
   gradleFile: string,
   context: CreateDependenciesContext
-) {
-  const dependencies: RawProjectGraphDependency[] = [];
+): Set<RawProjectGraphDependency> {
+  const dependencies: Set<RawProjectGraphDependency> = new Set();
   const lines = readFileSync(depsFile).toString().split('\n');
   let inDeps = false;
   for (const line of lines) {
-    if (line.startsWith('implementationDependenciesMetadata')) {
+    if (
+      line.startsWith('implementationDependenciesMetadata') ||
+      line.startsWith('compileClasspath')
+    ) {
       inDeps = true;
       continue;
     }
@@ -116,7 +121,7 @@ function processGradleDependencies(
           sourceFile: gradleFile,
         };
         validateDependency(dependency, context);
-        dependencies.push(dependency);
+        dependencies.add(dependency);
       }
     }
   }

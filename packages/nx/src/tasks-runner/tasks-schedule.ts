@@ -123,10 +123,7 @@ export class TasksSchedule {
     const batchMap: Record<string, TaskGraph> = {};
     for (const root of this.notScheduledTaskGraph.roots) {
       const rootTask = this.notScheduledTaskGraph.tasks[root];
-      const executorName = await getExecutorNameForTask(
-        rootTask,
-        this.projectGraph
-      );
+      const executorName = getExecutorNameForTask(rootTask, this.projectGraph);
       await this.processTaskForBatches(batchMap, rootTask, executorName, true);
     }
     for (const [executorName, taskGraph] of Object.entries(batchMap)) {
@@ -154,11 +151,11 @@ export class TasksSchedule {
       return;
     }
 
-    const { batchImplementationFactory } = await getExecutorForTask(
+    const { batchImplementationFactory } = getExecutorForTask(
       task,
       this.projectGraph
     );
-    const executorName = await getExecutorNameForTask(task, this.projectGraph);
+    const executorName = getExecutorNameForTask(task, this.projectGraph);
     if (rootExecutorName !== executorName) {
       return;
     }

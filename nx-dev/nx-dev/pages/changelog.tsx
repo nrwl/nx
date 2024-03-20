@@ -16,6 +16,7 @@ import { useNavToggle } from '../lib/navigation-toggle.effect';
 import { menusApi } from '../lib/menus.api';
 import { MenuItem } from '@nx/nx-dev/models-menu';
 import { getBasicNxSection } from '@nx/nx-dev/data-access-menu';
+import Link from 'next/link';
 
 interface ChangelogEntry {
   version: string;
@@ -269,9 +270,9 @@ export default function Changelog(props: ChangeLogProps): JSX.Element {
                       />{' '}
                       v{changelog.version.split('.').slice(0, 2).join('.')}
                     </a>
-                    <a aria-hidden="true" href={`#${changelog.version}`}>
+                    <Link aria-hidden="true" href={`#${changelog.version}`}>
                       <LinkIcon className="ml-2 mb-1 inline h-5 w-5 opacity-0 group-hover:opacity-100" />
-                    </a>
+                    </Link>
                   </p>
                   <p className="py-0.5 text-xs leading-5 text-slate-400 dark:text-slate-500">
                     <time

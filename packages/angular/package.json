@@ -47,7 +47,7 @@
   },
   "dependencies": {
     "@phenomnomnominal/tsquery": "~5.0.1",
-    "@typescript-eslint/type-utils": "^6.9.1",
+    "@typescript-eslint/type-utils": "^7.3.0",
     "chalk": "^4.1.0",
     "find-cache-dir": "^3.3.2",
     "ignore": "^5.0.4",
@@ -63,7 +63,7 @@
     "@nx/webpack": "file:../webpack",
     "@nx/web": "file:../web",
     "@nx/workspace": "file:../workspace",
-    "piscina": "^4.2.1"
+    "piscina": "^4.4.0"
   },
   "peerDependencies": {
     "@angular-devkit/build-angular": ">= 15.0.0 < 18.0.0",

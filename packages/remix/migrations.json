@@ -102,6 +102,35 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "18.1.1": {
+      "version": "18.1.1-beta.0",
+      "packages": {
+        "@remix-run/node": {
+          "version": "^2.8.0",
+          "alwaysAddToPackageJson": true
+        },
+        "@remix-run/react": {
+          "version": "^2.8.0",
+          "alwaysAddToPackageJson": true
+        },
+        "@remix-run/serve": {
+          "version": "^2.8.0",
+          "alwaysAddToPackageJson": true
+        },
+        "@remix-run/dev": {
+          "version": "^2.8.0",
+          "alwaysAddToPackageJson": true
+        },
+        "@remix-run/css-bundle": {
+          "version": "^2.8.0",
+          "alwaysAddToPackageJson": true
+        },
+        "@remix-run/eslint-config": {
+          "version": "^2.8.0",
+          "alwaysAddToPackageJson": true
+        }
+      }
     }
   }
 }

@@ -182,7 +182,7 @@ export { readNxJson, workspaceLayout } from '../config/configuration';
  * TODO(v19): Remove this function.
  */
 function getProjectsSyncNoInference(root: string, nxJson: NxJsonConfiguration) {
-  const projectFiles = retrieveProjectConfigurationPaths(
+  const allConfigFiles = retrieveProjectConfigurationPaths(
     root,
     getDefaultPluginsSync(root)
   );
@@ -199,11 +199,15 @@ function getProjectsSyncNoInference(root: string, nxJson: NxJsonConfiguration) {
     if (!pattern) {
       continue;
     }
-    for (const file of projectFiles) {
+    const matchingConfigFiles = allConfigFiles.filter((file) =>
+      minimatch(file, pattern, { dot: true })
+    );
+    for (const file of matchingConfigFiles) {
       if (minimatch(file, pattern, { dot: true })) {
         let r = createNodes(file, options, {
           nxJsonConfiguration: nxJson,
           workspaceRoot: root,
+          configFiles: matchingConfigFiles,
         }) as CreateNodesResult;
         for (const node in r.projects) {
           const project = {

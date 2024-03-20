@@ -34,6 +34,7 @@ describe('@nx/cypress/plugin', () => {
         },
       },
       workspaceRoot: tempFs.tempDir,
+      configFiles: [],
     };
   });
 
@@ -69,6 +70,11 @@ describe('@nx/cypress/plugin', () => {
       {
         "projects": {
           ".": {
+            "metadata": {
+              "technologies": [
+                "cypress",
+              ],
+            },
             "projectType": "application",
             "targets": {
               "e2e": {
@@ -128,6 +134,11 @@ describe('@nx/cypress/plugin', () => {
       {
         "projects": {
           ".": {
+            "metadata": {
+              "technologies": [
+                "cypress",
+              ],
+            },
             "projectType": "application",
             "targets": {
               "component-test": {
@@ -186,6 +197,17 @@ describe('@nx/cypress/plugin', () => {
       {
         "projects": {
           ".": {
+            "metadata": {
+              "targetGroups": {
+                ".:e2e-ci": [
+                  "e2e-ci--src/test.cy.ts",
+                  "e2e-ci",
+                ],
+              },
+              "technologies": [
+                "cypress",
+              ],
+            },
             "projectType": "application",
             "targets": {
               "e2e": {

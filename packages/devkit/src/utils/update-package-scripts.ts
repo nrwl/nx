@@ -25,11 +25,18 @@ export async function updatePackageScripts(
   const nxJson = readNxJson(tree);
 
   const [pattern, createNodes] = createNodesTuple;
-  const files = glob(tree, [pattern]);
+  const matchingFiles = glob(tree, [pattern]);
 
-  for (const file of files) {
+  for (const file of matchingFiles) {
     const projectRoot = getProjectRootFromConfigFile(file);
-    await processProject(tree, projectRoot, file, createNodes, nxJson);
+    await processProject(
+      tree,
+      projectRoot,
+      file,
+      createNodes,
+      nxJson,
+      matchingFiles
+    );
   }
 }
 
@@ -38,7 +45,8 @@ async function processProject(
   projectRoot: string,
   projectConfigurationFile: string,
   createNodesFunction: CreateNodesFunction,
-  nxJsonConfiguration: NxJsonConfiguration
+  nxJsonConfiguration: NxJsonConfiguration,
+  configFiles: string[]
 ) {
   const packageJsonPath = `${projectRoot}/package.json`;
   if (!tree.exists(packageJsonPath)) {
@@ -52,7 +60,11 @@ async function processProject(
   const result = await createNodesFunction(
     projectConfigurationFile,
     {},
-    { nxJsonConfiguration, workspaceRoot }
+    {
+      nxJsonConfiguration,
+      workspaceRoot,
+      configFiles,
+    }
   );
 
   const targetCommands = getInferredTargetCommands(result);

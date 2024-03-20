@@ -468,5 +468,10 @@
     "name": "@analogjs/platform",
     "description": "Official plugin to add Analog to your Nx monorepo.",
     "url": "https://analogjs.org/docs/integrations/nx"
+  },
+  {
+    "name": "@getlarge/nx-heroku",
+    "description": "Plugin to deploy and promote Nx apps on Heroku",
+    "url": "https://github.com/getlarge/nx-heroku"
   }
 ]

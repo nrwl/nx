@@ -22,7 +22,7 @@ npx nx connect
 
 {% link-card title="What is Nx Cloud?" type="video" url="https://youtu.be/4VI-q943J3o" icon="nxcloud" /%}
 
-{% link-card title="E2E Test Auto-Splitting and Distribution" type="video" url="https://youtu.be/XLOUFZeqRpM" icon="nxagents" /%}
+{% link-card title="E2E Test Auto-Splitting and Distribution" type="video" url="https://youtu.be/0YxcxIR7QU0" icon="nxagents" /%}
 
 {% link-card title="Circle CI with Nx" type="tutorial" url="/ci/intro/tutorials/circle" icon="circleci" /%}
 

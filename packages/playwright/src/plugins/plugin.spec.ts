@@ -24,6 +24,7 @@ describe('@nx/playwright/plugin', () => {
         },
       },
       workspaceRoot: tempFs.tempDir,
+      configFiles: [],
     };
   });
 
