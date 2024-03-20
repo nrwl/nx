@@ -202,7 +202,7 @@ const diataxis = {
   '/configuration/projectjson': '/reference/project-configuration',
   '/using-nx/nx-cli': '/getting-started/intro',
   '/using-nx/console': '/getting-started/editor-setup',
-  '/getting-started/editor-setup': '/getting-started/editor-setup',
+  '/features/integrate-with-editors': '/getting-started/editor-setup',
   '/using-nx/mental-model': '/concepts/mental-model',
   '/using-nx/caching': '/concepts/how-caching-works',
   '/using-nx/dte': '/features/distribute-task-execution',
