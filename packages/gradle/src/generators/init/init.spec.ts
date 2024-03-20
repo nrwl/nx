@@ -25,7 +25,7 @@ describe('@nx/gradle:init', () => {
             "classesTargetName": "classes",
             "testTargetName": "test",
           },
-          "plugin": "@nx/gradle/plugin",
+          "plugin": "@nx/gradle",
         },
       ]
     `);
@@ -49,7 +49,7 @@ describe('@nx/gradle:init', () => {
             "classesTargetName": "classes",
             "testTargetName": "test",
           },
-          "plugin": "@nx/gradle/plugin",
+          "plugin": "@nx/gradle",
         },
       ]
     `);
@@ -57,7 +57,7 @@ describe('@nx/gradle:init', () => {
 
   it('should not add plugin if already in array', async () => {
     updateNxJson(tree, {
-      plugins: ['@nx/gradle/plugin'],
+      plugins: ['@nx/gradle'],
     });
     await initGenerator(tree, {
       skipFormat: true,
@@ -66,7 +66,7 @@ describe('@nx/gradle:init', () => {
     const nxJson = readNxJson(tree);
     expect(nxJson.plugins).toMatchInlineSnapshot(`
       [
-        "@nx/gradle/plugin",
+        "@nx/gradle",
       ]
     `);
   });
