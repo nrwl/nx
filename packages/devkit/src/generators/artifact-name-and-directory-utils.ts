@@ -237,9 +237,20 @@ function getAsProvidedOptions(
 ): NameAndDirectoryOptions {
   const relativeCwd = getRelativeCwd();
 
-  const asProvidedDirectory = options.directory
-    ? joinPathFragments(relativeCwd, options.directory)
-    : relativeCwd;
+  let asProvidedDirectory: string;
+  if (options.directory) {
+    // append the directory to the current working directory if it doesn't start with it
+    if (
+      options.directory === relativeCwd ||
+      options.directory.startsWith(`${relativeCwd}/`)
+    ) {
+      asProvidedDirectory = options.directory;
+    } else {
+      asProvidedDirectory = joinPathFragments(relativeCwd, options.directory);
+    }
+  } else {
+    asProvidedDirectory = relativeCwd;
+  }
   const asProvidedProject = findProjectFromPath(tree, asProvidedDirectory);
 
   const asProvidedFileName =
