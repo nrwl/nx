@@ -14,7 +14,7 @@ Note, this tutorial sets up a repo with a single application at the root level t
 
 {% /callout %}
 
-## Warm Up
+## Final Code
 
 Here's the source code of the final result for this tutorial.
 
