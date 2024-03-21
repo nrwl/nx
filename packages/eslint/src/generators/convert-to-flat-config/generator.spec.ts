@@ -496,4 +496,70 @@ describe('convert-to-flat-config generator', () => {
     expect(tree.exists('eslint.config.js')).toBeTruthy();
     expect(tree.exists('libs/test-lib/eslint.config.js')).toBeTruthy();
   });
+
+  it('should handle parser options even if parser is extended', async () => {
+    addProjectConfiguration(tree, 'dx-assets-ui', {
+      root: 'apps/dx-assets-ui',
+      targets: {},
+    });
+    await lintProjectGenerator(tree, {
+      skipFormat: false,
+      linter: Linter.EsLint,
+
+      project: 'dx-assets-ui',
+      setParserOptionsProject: false,
+    });
+    updateJson(tree, 'apps/dx-assets-ui/.eslintrc.json', () => {
+      return {
+        extends: ['../../.eslintrc.json'],
+        ignorePatterns: ['!**/*', '__fixtures__/**/*'],
+        overrides: [
+          {
+            files: ['*.ts', '*.tsx', '*.js', '*.jsx'],
+            parserOptions: {
+              project: ['apps/dx-assets-ui/tsconfig.*?.json'],
+            },
+            rules: {},
+          },
+          {
+            files: ['*.ts', '*.tsx'],
+            rules: {},
+          },
+          {
+            files: ['*.js', '*.jsx'],
+            rules: {},
+          },
+        ],
+      };
+    });
+
+    await convertToFlatConfigGenerator(tree, options);
+    expect(tree.exists('apps/dx-assets-ui/eslint.config.js')).toBeTruthy();
+    expect(tree.exists('eslint.config.js')).toBeTruthy();
+    expect(tree.read('apps/dx-assets-ui/eslint.config.js', 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "const baseConfig = require('../../eslint.config.js');
+
+      module.exports = [
+        ...baseConfig,
+        {
+          files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
+          rules: {},
+          languageSettings: {
+            parserOptions: { project: ['apps/dx-assets-ui/tsconfig.*?.json'] },
+          },
+        },
+        {
+          files: ['**/*.ts', '**/*.tsx'],
+          rules: {},
+        },
+        {
+          files: ['**/*.js', '**/*.jsx'],
+          rules: {},
+        },
+        { ignores: ['__fixtures__/**/*'] },
+      ];
+      "
+    `);
+  });
 });
