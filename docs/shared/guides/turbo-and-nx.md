@@ -89,7 +89,7 @@ If you want to learn more, check out our article on [Distributing CI - Binning a
 
 All the available Nx commands can be executed via the command line. But as your monorepo grows, with multiple teams and hundreds of projects, even just finding the project to run a command against can sometimes be difficult. Having a high quality IDE integration can be a time saver there.
 
-- Nx has [VSCode](/features/integrate-with-editors) and WebStorm/Intellij plugins.
+- Nx has [VSCode](/getting-started/editor-setup) and WebStorm/Intellij plugins.
 - Turborepo doesn’t have any plugins, and the maintainer has indicated there's no intention to provide editor support.
 
 Learn more [by watching this Egghead lesson](https://egghead.io/lessons/javascript-generate-new-projects-for-nx-with-nx-console).

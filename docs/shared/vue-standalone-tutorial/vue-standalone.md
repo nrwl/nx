@@ -114,7 +114,7 @@ Nx uses the following syntax to run tasks:
 
 ### Inferred Tasks
 
-Nx identifies available tasks for your project from [tooling configuration files](/concepts/inferred-tasks), `package.json` scripts and the targets defined in `project.json`. To view the tasks that Nx has detected, look in the [Nx Console](/features/integrate-with-editors) project detail view or run:
+Nx identifies available tasks for your project from [tooling configuration files](/concepts/inferred-tasks), `package.json` scripts and the targets defined in `project.json`. To view the tasks that Nx has detected, look in the [Nx Console](/getting-started/editor-setup) project detail view or run:
 
 ```shell
 nx show project myvueapp --web
@@ -282,7 +282,7 @@ NX   Capabilities in @nx/vue:
 
 If you prefer a more integrated experience, you can install the "Nx Console" extension for your code editor. It has support for VSCode, IntelliJ and ships a LSP for Vim. Nx Console provides autocompletion support in Nx configuration files and has UIs for browsing and running generators.
 
-More info can be found in [the integrate with editors article](/features/integrate-with-editors).
+More info can be found in [the integrate with editors article](/getting-started/editor-setup).
 
 {% /callout %}
 

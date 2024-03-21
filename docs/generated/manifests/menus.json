@@ -33,6 +33,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Editor Setup",
+            "path": "/getting-started/editor-setup",
+            "id": "editor-setup",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Tutorials",
             "path": "/getting-started/tutorials",
             "id": "tutorials",
@@ -120,6 +128,14 @@
         "name": "Why Nx?",
         "path": "/getting-started/why-nx",
         "id": "why-nx",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Editor Setup",
+        "path": "/getting-started/editor-setup",
+        "id": "editor-setup",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -405,14 +421,6 @@
             "disableCollapsible": false
           },
           {
-            "name": "Integrate with Editors",
-            "path": "/features/integrate-with-editors",
-            "id": "integrate-with-editors",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
             "name": "Manage Releases",
             "path": "/features/manage-releases",
             "id": "manage-releases",
@@ -532,14 +540,6 @@
         "name": "Enforce Module Boundaries",
         "path": "/features/enforce-module-boundaries",
         "id": "enforce-module-boundaries",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Integrate with Editors",
-        "path": "/features/integrate-with-editors",
-        "id": "integrate-with-editors",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
