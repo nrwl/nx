@@ -165,6 +165,12 @@ Type: `boolean`
 
 Untracked changes
 
+##### verbose
+
+Type: `boolean`
+
+Prints additional information about the commands (e.g., stack traces)
+
 ##### version
 
 Type: `boolean`
@@ -198,6 +204,12 @@ Show help
 Type: `string`
 
 Which project should be viewed?
+
+##### verbose
+
+Type: `boolean`
+
+Prints additional information about the commands (e.g., stack traces)
 
 ##### version
 
