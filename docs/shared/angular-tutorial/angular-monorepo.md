@@ -32,7 +32,7 @@ Advantages of Nx over the Angular CLI:
 
 Visit our ["Nx and the Angular CLI" page](/concepts/more-concepts/nx-and-angular) for more details.
 
-## Warm Up
+## Final Code
 
 Here's the source code of the final result for this tutorial.
 
