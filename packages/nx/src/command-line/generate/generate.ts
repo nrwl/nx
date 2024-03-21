@@ -279,6 +279,7 @@ function throwInvalidInvocation(availableGenerators: string[]) {
     )})`
   );
 }
+
 export function printGenHelp(
   opts: GenerateOptions,
   schema: Schema,
@@ -306,12 +307,11 @@ export async function generate(cwd: string, args: { [k: string]: any }) {
   }
   const verbose = process.env.NX_VERBOSE_LOGGING === 'true';
 
-  const nxJsonConfiguration = readNxJson();
-  const projectGraph = await createProjectGraphAsync({ exitOnError: true });
-  const projectsConfigurations =
-    readProjectsConfigurationFromProjectGraph(projectGraph);
-
   return handleErrors(verbose, async () => {
+    const nxJsonConfiguration = readNxJson();
+    const projectGraph = await createProjectGraphAsync();
+    const projectsConfigurations =
+      readProjectsConfigurationFromProjectGraph(projectGraph);
     const opts = await convertToGenerateOptions(
       args,
       'generate',

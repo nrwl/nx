@@ -2,6 +2,7 @@ import { unlinkSync } from 'fs';
 import { platform } from 'os';
 import { join, resolve } from 'path';
 import { DAEMON_SOCKET_PATH, socketDir } from './tmp-dir';
+import { DaemonProjectGraphError } from './daemon-project-graph-error';
 
 export const isWindows = platform() === 'win32';
 
@@ -31,7 +32,14 @@ function serializeError(error: Error | null): string | null {
   if (!error) {
     return null;
   }
-  return JSON.stringify(error, Object.getOwnPropertyNames(error));
+
+  if (error instanceof DaemonProjectGraphError) {
+    error.errors = error.errors.map((e) => JSON.parse(serializeError(e)));
+  }
+
+  return `{${Object.getOwnPropertyNames(error)
+    .map((k) => `"${k}": ${JSON.stringify(error[k])}`)
+    .join(',')}}`;
 }
 
 // Prepare a serialized project graph result for sending over IPC from the server to the client

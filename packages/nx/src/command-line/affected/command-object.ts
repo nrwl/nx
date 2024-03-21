@@ -1,4 +1,4 @@
-import { boolean, CommandModule, middleware } from 'yargs';
+import { CommandModule } from 'yargs';
 import { linkToNxDevAndExamples } from '../yargs-utils/documentation';
 import {
   withAffectedOptions,
@@ -10,6 +10,7 @@ import {
   withRunOptions,
   withTargetAndConfigurationOption,
 } from '../yargs-utils/shared-options';
+import { handleErrors } from '../../utils/params';
 
 export const yargsAffectedCommand: CommandModule = {
   command: 'affected',
@@ -36,8 +37,17 @@ export const yargsAffectedCommand: CommandModule = {
         }),
       'affected'
     ),
-  handler: async (args) =>
-    (await import('./affected')).affected('affected', withOverrides(args)),
+  handler: async (args) => {
+    return handleErrors(
+      (args.verbose as boolean) ?? process.env.NX_VERBOSE_LOGGING === 'true',
+      async () => {
+        return (await import('./affected')).affected(
+          'affected',
+          withOverrides(args)
+        );
+      }
+    );
+  },
 };
 
 export const yargsAffectedTestCommand: CommandModule = {
@@ -50,11 +60,17 @@ export const yargsAffectedTestCommand: CommandModule = {
       ),
       'affected'
     ),
-  handler: async (args) =>
-    (await import('./affected')).affected('affected', {
-      ...withOverrides(args),
-      target: 'test',
-    }),
+  handler: async (args) => {
+    return handleErrors(
+      (args.verbose as boolean) ?? process.env.NX_VERBOSE_LOGGING === 'true',
+      async () => {
+        return (await import('./affected')).affected('affected', {
+          ...withOverrides(args),
+          target: 'test',
+        });
+      }
+    );
+  },
 };
 
 export const yargsAffectedBuildCommand: CommandModule = {
@@ -67,11 +83,17 @@ export const yargsAffectedBuildCommand: CommandModule = {
       ),
       'affected'
     ),
-  handler: async (args) =>
-    (await import('./affected')).affected('affected', {
-      ...withOverrides(args),
-      target: 'build',
-    }),
+  handler: async (args) => {
+    return handleErrors(
+      (args.verbose as boolean) ?? process.env.NX_VERBOSE_LOGGING === 'true',
+      async () => {
+        return (await import('./affected')).affected('affected', {
+          ...withOverrides(args),
+          target: 'build',
+        });
+      }
+    );
+  },
 };
 
 export const yargsAffectedLintCommand: CommandModule = {
@@ -84,11 +106,17 @@ export const yargsAffectedLintCommand: CommandModule = {
       ),
       'affected'
     ),
-  handler: async (args) =>
-    (await import('./affected')).affected('affected', {
-      ...withOverrides(args),
-      target: 'lint',
-    }),
+  handler: async (args) => {
+    return handleErrors(
+      (args.verbose as boolean) ?? process.env.NX_VERBOSE_LOGGING === 'true',
+      async () => {
+        return (await import('./affected')).affected('affected', {
+          ...withOverrides(args),
+          target: 'lint',
+        });
+      }
+    );
+  },
 };
 
 export const yargsAffectedE2ECommand: CommandModule = {
@@ -101,11 +129,17 @@ export const yargsAffectedE2ECommand: CommandModule = {
       ),
       'affected'
     ),
-  handler: async (args) =>
-    (await import('./affected')).affected('affected', {
-      ...withOverrides(args),
-      target: 'e2e',
-    }),
+  handler: async (args) => {
+    return handleErrors(
+      (args.verbose as boolean) ?? process.env.NX_VERBOSE_LOGGING === 'true',
+      async () => {
+        return (await import('./affected')).affected('affected', {
+          ...withOverrides(args),
+          target: 'e2e',
+        });
+      }
+    );
+  },
 };
 
 export const affectedGraphDeprecationMessage =
@@ -122,12 +156,18 @@ export const yargsAffectedGraphCommand: CommandModule = {
       withAffectedOptions(withDepGraphOptions(yargs)),
       'affected:graph'
     ),
-  handler: async (args) =>
-    await (
-      await import('./affected')
-    ).affected('graph', {
-      ...args,
-    }),
+  handler: async (args) => {
+    return handleErrors(
+      (args.verbose as boolean) ?? process.env.NX_VERBOSE_LOGGING === 'true',
+      async () => {
+        return await (
+          await import('./affected')
+        ).affected('graph', {
+          ...args,
+        });
+      }
+    );
+  },
   deprecated: affectedGraphDeprecationMessage,
 };
 
@@ -157,10 +197,15 @@ export const yargsPrintAffectedCommand: CommandModule = {
           'Select the type of projects to be returned (e.g., --type=app)',
       }),
   handler: async (args) => {
-    await (
-      await import('./affected')
-    ).affected('print-affected', withOverrides(args));
-    process.exit(0);
+    return handleErrors(
+      (args.verbose as boolean) ?? process.env.NX_VERBOSE_LOGGING === 'true',
+      async () => {
+        await (
+          await import('./affected')
+        ).affected('print-affected', withOverrides(args));
+        process.exit(0);
+      }
+    );
   },
   deprecated: printAffectedDeprecationMessage,
 };

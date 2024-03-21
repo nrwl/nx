@@ -7,11 +7,10 @@ import {
   shouldMergeAngularProjects,
 } from '../../adapter/angular-json';
 import { NxJsonConfiguration, readNxJson } from '../../config/nx-json';
-import { ProjectGraphExternalNode } from '../../config/project-graph';
 import { getNxPackageJsonWorkspacesPlugin } from '../../plugins/package-json-workspaces';
 import {
-  buildProjectsConfigurationsFromProjectPathsAndPlugins,
-  ConfigurationSourceMaps,
+  createProjectConfigurations,
+  ConfigurationResult,
 } from './project-configuration-utils';
 import {
   getDefaultPlugins,
@@ -73,7 +72,7 @@ export async function retrieveWorkspaceFiles(
 export async function retrieveProjectConfigurations(
   workspaceRoot: string,
   nxJson: NxJsonConfiguration
-): Promise<RetrievedGraphNodes> {
+): Promise<ConfigurationResult> {
   const plugins = await loadNxPlugins(
     nxJson?.plugins ?? [],
     getNxRequirePaths(workspaceRoot),
@@ -86,7 +85,7 @@ export async function retrieveProjectConfigurations(
 export async function retrieveProjectConfigurationsWithAngularProjects(
   workspaceRoot: string,
   nxJson: NxJsonConfiguration
-): Promise<RetrievedGraphNodes> {
+): Promise<ConfigurationResult> {
   const plugins = await loadNxPlugins(
     nxJson?.plugins ?? [],
     getNxRequirePaths(workspaceRoot),
@@ -103,18 +102,11 @@ export async function retrieveProjectConfigurationsWithAngularProjects(
   return _retrieveProjectConfigurations(workspaceRoot, nxJson, plugins);
 }
 
-export type RetrievedGraphNodes = {
-  externalNodes: Record<string, ProjectGraphExternalNode>;
-  projects: Record<string, ProjectConfiguration>;
-  sourceMaps: ConfigurationSourceMaps;
-  projectRootMap: Record<string, string>;
-};
-
 function _retrieveProjectConfigurations(
   workspaceRoot: string,
   nxJson: NxJsonConfiguration,
   plugins: LoadedNxPlugin[]
-): Promise<RetrievedGraphNodes> {
+): Promise<ConfigurationResult> {
   const globPatterns = configurationGlobs(plugins);
   const workspaceFiles = globWithWorkspaceContext(workspaceRoot, globPatterns);
 
@@ -167,37 +159,6 @@ export async function retrieveProjectConfigurationsWithoutPluginInference(
   projectsWithoutPluginCache.set(cacheKey, projects);
 
   return projects;
-}
-
-export async function createProjectConfigurations(
-  workspaceRoot: string,
-  nxJson: NxJsonConfiguration,
-  configFiles: string[],
-  plugins: LoadedNxPlugin[]
-): Promise<RetrievedGraphNodes> {
-  performance.mark('build-project-configs:start');
-
-  const { projects, externalNodes, rootMap, sourceMaps } =
-    await buildProjectsConfigurationsFromProjectPathsAndPlugins(
-      nxJson,
-      configFiles,
-      plugins,
-      workspaceRoot
-    );
-
-  performance.mark('build-project-configs:end');
-  performance.measure(
-    'build-project-configs',
-    'build-project-configs:start',
-    'build-project-configs:end'
-  );
-
-  return {
-    projects,
-    externalNodes,
-    projectRootMap: rootMap,
-    sourceMaps,
-  };
 }
 
 export function configurationGlobs(plugins: LoadedNxPlugin[]): string[] {
