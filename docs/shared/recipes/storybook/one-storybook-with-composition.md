@@ -50,7 +50,43 @@ nx g @nx/react:storybook-configuration storybook-host --interactionTests=true --
 
 ### Change the Storybook port in the hosted apps
 
-Now it’s important to change the Storybook ports in the `storybook-host-angular` and `storybook-host-react`. Go to the `project.json` of each of these libraries (`libs/storybook-host-angular/project.json` and `libs/storybook-host-react/project.json`), find the `storybook` target, and set the port to `4401` and `4402` accordingly. This is because the Storybook Composition host is going to be looking at these ports to find which Storybooks to host, and which Storybook goes where.
+It’s important to change the Storybook ports in the `storybook-host-angular` and `storybook-host-react` projects. This is because the Storybook Composition host is going to be looking at these ports to find which Storybooks to host, and which Storybook goes where.
+
+Update the `project.json` file of each library to set the `port` option to `4401` and `4402` accordingly:
+
+```json {% fileName="libs/storybook-host-angular/project.json" highlightLines=[7] %}
+{
+  // ...
+  "targets": {
+    // ...
+    "storybook": {
+      "options": {
+        "port": 4401
+      }
+    }
+  }
+}
+```
+
+```json {% fileName="libs/storybook-host-react/project.json" highlightLines=[7] %}
+{
+  // ...
+  "targets": {
+    // ...
+    "storybook": {
+      "options": {
+        "port": 4402
+      }
+    }
+  }
+}
+```
+
+{% callout type="note" title="Inferred tasks vs explicit tasks" %}
+Projects using [inferred tasks](/concepts/inferred-tasks) might not have the `storybook` target defined in the `project.json` file, so you need to add the target with only the `port` option set.
+
+If the project has the `storybook` target explicitly defined in the `project.json` file, you need to update or set the `port` option.
+{% /callout %}
 
 ### Add the `refs` to the main.ts of the host library
 
