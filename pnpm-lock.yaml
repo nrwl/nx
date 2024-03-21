@@ -234,8 +234,11 @@ devDependencies:
     specifier: 1.3.3
     version: 1.3.3(@swc-node/register@1.8.0)(@swc/core@1.3.86)(@types/node@18.19.8)(typescript@5.4.2)(verdaccio@5.15.4)
   '@napi-rs/cli':
-    specifier: 2.14.0
-    version: 2.14.0
+    specifier: 3.0.0-alpha.44
+    version: 3.0.0-alpha.44(emnapi@1.1.0)
+  '@napi-rs/wasm-runtime':
+    specifier: 0.1.2
+    version: 0.1.2
   '@nestjs/cli':
     specifier: ^9.0.0
     version: 9.1.8(@swc/core@1.3.86)(esbuild@0.19.5)
@@ -572,6 +575,9 @@ devDependencies:
   ejs:
     specifier: ^3.1.7
     version: 3.1.8
+  emnapi:
+    specifier: ^1.1.0
+    version: 1.1.0
   enhanced-resolve:
     specifier: ^5.8.3
     version: 5.10.0
@@ -5115,6 +5121,18 @@ packages:
       - '@algolia/client-search'
     dev: false
 
+  /@emnapi/core@1.1.0:
+    resolution: {integrity: sha512-gNEVZo0HhUfVjhr6rFG//HZXbauclxueiDxaKGBZHcK5h8i9pslABNPfG8kMwYTubAn3mV7AyOZN8gfPRgbU8A==}
+    dependencies:
+      tslib: 2.6.2
+    dev: true
+
+  /@emnapi/runtime@1.1.0:
+    resolution: {integrity: sha512-gCGlE0fJGWalfy+wbFApjhKn6uoSVvopru77IPyxNKkjkaiSx2HxDS7eOYSmo9dcMIhmmIvoxiC3N9TM1c3EaA==}
+    dependencies:
+      tslib: 2.6.2
+    dev: true
+
   /@emotion/hash@0.9.1:
     resolution: {integrity: sha512-gJB6HLm5rYwSLI6PQa+X1t5CFGrv1J1TWG+sOyMCeKz2ojaj6Fnl/rZEspogG+cvqbt4AE/2eIyD2QfLKTBNlQ==}
     dev: true
@@ -7214,10 +7232,350 @@ packages:
       '@napi-rs/canvas-win32-x64-msvc': 0.1.30
     dev: false
 
-  /@napi-rs/cli@2.14.0:
-    resolution: {integrity: sha512-hQW+gOTQ80nCoBAWA0hq49HM3QqyC7x879CdF/CEEFHeJNlHT8tgru8nbMQa6YqMP1XADfiudsYzy5V7TxBxCw==}
-    engines: {node: '>= 10'}
+  /@napi-rs/cli@3.0.0-alpha.44(emnapi@1.1.0):
+    resolution: {integrity: sha512-ED2hRtQfrCTi0jmWAziDMV2tb2+KdK0j90VdU9EYaBDYHD1X5FJOw0lxftwS2ifFql/Lb6QnM1SCgRGMbcDH4Q==}
+    engines: {node: '>= 16'}
     hasBin: true
+    peerDependencies:
+      '@emnapi/runtime': ^1.1.0
+      emnapi: ^1.1.0
+    peerDependenciesMeta:
+      '@emnapi/runtime':
+        optional: true
+      emnapi:
+        optional: true
+    dependencies:
+      '@napi-rs/cross-toolchain': 0.0.14
+      '@octokit/rest': 20.0.2
+      clipanion: 3.2.1(typanion@3.14.0)
+      colorette: 2.0.20
+      debug: 4.3.4(supports-color@5.5.0)
+      emnapi: 1.1.0
+      inquirer: 9.2.15
+      js-yaml: 4.1.0
+      lodash-es: 4.17.21
+      semver: 7.6.0
+      toml: 3.0.0
+      typanion: 3.14.0
+      wasm-sjlj: 1.0.5
+    transitivePeerDependencies:
+      - '@napi-rs/cross-toolchain-arm64-target-aarch64'
+      - '@napi-rs/cross-toolchain-arm64-target-armv7'
+      - '@napi-rs/cross-toolchain-arm64-target-x86_64'
+      - '@napi-rs/cross-toolchain-x64-target-aarch64'
+      - '@napi-rs/cross-toolchain-x64-target-armv7'
+      - '@napi-rs/cross-toolchain-x64-target-x86_64'
+      - supports-color
+    dev: true
+
+  /@napi-rs/cross-toolchain@0.0.14:
+    resolution: {integrity: sha512-Xgoe1gCEo5s5VUxmSnK4tYFJXW2JAVM02jptSbqA2+gp8pt4Vuk9oK2LvswwO9iRfHapKacYYhegD8Dq/+PBOQ==}
+    peerDependencies:
+      '@napi-rs/cross-toolchain-arm64-target-aarch64': ^0.0.14
+      '@napi-rs/cross-toolchain-arm64-target-armv7': ^0.0.14
+      '@napi-rs/cross-toolchain-arm64-target-x86_64': ^0.0.14
+      '@napi-rs/cross-toolchain-x64-target-aarch64': ^0.0.14
+      '@napi-rs/cross-toolchain-x64-target-armv7': ^0.0.14
+      '@napi-rs/cross-toolchain-x64-target-x86_64': ^0.0.14
+    peerDependenciesMeta:
+      '@napi-rs/cross-toolchain-arm64-target-aarch64':
+        optional: true
+      '@napi-rs/cross-toolchain-arm64-target-armv7':
+        optional: true
+      '@napi-rs/cross-toolchain-arm64-target-x86_64':
+        optional: true
+      '@napi-rs/cross-toolchain-x64-target-aarch64':
+        optional: true
+      '@napi-rs/cross-toolchain-x64-target-armv7':
+        optional: true
+      '@napi-rs/cross-toolchain-x64-target-x86_64':
+        optional: true
+    dependencies:
+      '@napi-rs/lzma': 1.2.1
+      '@napi-rs/tar': 0.1.0
+      debug: 4.3.4(supports-color@5.5.0)
+    transitivePeerDependencies:
+      - supports-color
+    dev: true
+
+  /@napi-rs/lzma-android-arm-eabi@1.2.1:
+    resolution: {integrity: sha512-GKXud2hTddxehff1mAGkbTfseBj+GcM+M/sZuxf9H9CJeOWpfI/HC9Oy3uv8mBqPTkOQdCcZ/xXPU34EOEwiRg==}
+    engines: {node: '>= 10'}
+    cpu: [arm]
+    os: [android]
+    requiresBuild: true
+    dev: true
+    optional: true
+
+  /@napi-rs/lzma-android-arm64@1.2.1:
+    resolution: {integrity: sha512-UKFvc56TdgljbdgLvSwM62pSItV/4SuXXCrJtruPDmbIDe8HKag8hsCKsb66hrc9aX7urJ+KGw1yz5hWiONLyw==}
+    engines: {node: '>= 10'}
+    cpu: [arm64]
+    os: [android]
+    requiresBuild: true
+    dev: true
+    optional: true
+
+  /@napi-rs/lzma-darwin-arm64@1.2.1:
+    resolution: {integrity: sha512-eLbHzK5xGVzEABb1ESFELQJzXKoQeP9QH9hMPd4Qq29xD6MkWD2VKlAy40AxrMeWc7fCUIImTTlGuGRvg6tI1g==}
+    engines: {node: '>= 10'}
+    cpu: [arm64]
+    os: [darwin]
+    requiresBuild: true
+    dev: true
+    optional: true
+
+  /@napi-rs/lzma-darwin-x64@1.2.1:
+    resolution: {integrity: sha512-/a5sHZkkO81w/PCpxlwXjADz++jDiTJquMzCLAhupd23wTRmJoCBAwp4Tur+qV5esI7ahAA0lS5P0M4TZv+OUg==}
+    engines: {node: '>= 10'}
+    cpu: [x64]
+    os: [darwin]
+    requiresBuild: true
+    dev: true
+    optional: true
+
+  /@napi-rs/lzma-freebsd-x64@1.2.1:
+    resolution: {integrity: sha512-Ehc0ld148YcqQrDWwUbVta1l45R4PthCIU6ZDbOYzzeYXQnhgr1fWiex7wu4KMFppteHlYntypUIhmMUklqchA==}
+    engines: {node: '>= 10'}
+    cpu: [x64]
+    os: [freebsd]
+    requiresBuild: true
+    dev: true
+    optional: true
+
+  /@napi-rs/lzma-linux-arm-gnueabihf@1.2.1:
+    resolution: {integrity: sha512-EkIsx3kC67viElNetZgaGAtAceA+4pVGj31HKKPn0RZYn3rCNdEEg2i1IRg07Y6m4bHwcaKutLoZ2LDcQ+yiBg==}
+    engines: {node: '>= 10'}
+    cpu: [arm]
+    os: [linux]
+    requiresBuild: true
+    dev: true
+    optional: true
+
+  /@napi-rs/lzma-linux-arm64-gnu@1.2.1:
+    resolution: {integrity: sha512-GxSbp1/X7Ppmf+aNiZ95vl1HgQzRS9C8zCv7unEhYRPAjRkAnlrsLluUBOTPIY2yquuUvfIog9XIml6Hpw2wrA==}
+    engines: {node: '>= 10'}
+    cpu: [arm64]
+    os: [linux]
+    requiresBuild: true
+    dev: true
+    optional: true
+
+  /@napi-rs/lzma-linux-arm64-musl@1.2.1:
+    resolution: {integrity: sha512-2L3KHFGGdt0xgU0WcKwKmnjVCYs88t4+ixBgPfEydtYsOceg6B8eOzdM7xsziKxJyUJKWBetGLgARQOy35bfvA==}
+    engines: {node: '>= 10'}
+    cpu: [arm64]
+    os: [linux]
+    requiresBuild: true
+    dev: true
+    optional: true
+
+  /@napi-rs/lzma-linux-x64-gnu@1.2.1:
+    resolution: {integrity: sha512-h29XttA2Og1+6vYHsVcp+i1PkeILKzYnoDun0ul/k/5hvfxJ2Jap+EM07sW4HSz/DiscLAeIZmLKbXEqJgF5bg==}
+    engines: {node: '>= 10'}
+    cpu: [x64]
+    os: [linux]
+    requiresBuild: true
+    dev: true
+    optional: true
+
+  /@napi-rs/lzma-linux-x64-musl@1.2.1:
+    resolution: {integrity: sha512-8EIkpLid4pepkBsljQ7rgma8jdwAuwVyJ2tY6Wuj1I/AqAkVVfxTwIuYc4zgRR3nfcrmWgOfZE0VneVmQCE5hw==}
+    engines: {node: '>= 10'}
+    cpu: [x64]
+    os: [linux]
+    requiresBuild: true
+    dev: true
+    optional: true
+
+  /@napi-rs/lzma-win32-arm64-msvc@1.2.1:
+    resolution: {integrity: sha512-RNPItarWUUbtwz6dyn8FGH9AXEaAsBcMBlTvcRjv8eoqRqyZ9R49Ruk/8WMS57MM1BKdiPDxHBtRi+nZn27Slw==}
+    engines: {node: '>= 10'}
+    cpu: [arm64]
+    os: [win32]
+    requiresBuild: true
+    dev: true
+    optional: true
+
+  /@napi-rs/lzma-win32-ia32-msvc@1.2.1:
+    resolution: {integrity: sha512-rNdsCZnzKVgeDd9NzXWk9WuADVUWUWdnws8qBRCfHRUQqJ56Ic1W7Y1XmP+bNa985MXlU6vbznHTHmU5zk2P+A==}
+    engines: {node: '>= 10'}
+    cpu: [ia32]
+    os: [win32]
+    requiresBuild: true
+    dev: true
+    optional: true
+
+  /@napi-rs/lzma-win32-x64-msvc@1.2.1:
+    resolution: {integrity: sha512-1AFrAh1n73Yw+IhDu5HnaiRD4vWEkafY0EarfziPfDsh/GeyNcjbE+Let+XFe8L3j0/CZfsRG3nXarOW1oadUQ==}
+    engines: {node: '>= 10'}
+    cpu: [x64]
+    os: [win32]
+    requiresBuild: true
+    dev: true
+    optional: true
+
+  /@napi-rs/lzma@1.2.1:
+    resolution: {integrity: sha512-vwl34tzF2mXWthnFVN2MP6nRzQ40C5+256EEUjxAwj9dbAhDqb7Yz376Up5SlB4YgNC0YvEqK4jsYP/NP0bgpg==}
+    engines: {node: '>= 10'}
+    optionalDependencies:
+      '@napi-rs/lzma-android-arm-eabi': 1.2.1
+      '@napi-rs/lzma-android-arm64': 1.2.1
+      '@napi-rs/lzma-darwin-arm64': 1.2.1
+      '@napi-rs/lzma-darwin-x64': 1.2.1
+      '@napi-rs/lzma-freebsd-x64': 1.2.1
+      '@napi-rs/lzma-linux-arm-gnueabihf': 1.2.1
+      '@napi-rs/lzma-linux-arm64-gnu': 1.2.1
+      '@napi-rs/lzma-linux-arm64-musl': 1.2.1
+      '@napi-rs/lzma-linux-x64-gnu': 1.2.1
+      '@napi-rs/lzma-linux-x64-musl': 1.2.1
+      '@napi-rs/lzma-win32-arm64-msvc': 1.2.1
+      '@napi-rs/lzma-win32-ia32-msvc': 1.2.1
+      '@napi-rs/lzma-win32-x64-msvc': 1.2.1
+    dev: true
+
+  /@napi-rs/tar-android-arm-eabi@0.1.0:
+    resolution: {integrity: sha512-gY9f7HfyU8MQs/ERi2/Fc4dGRf61ZM2pme31t0FkrzTtmeIaf56LiTeTt4aP8xh/0HOVnXrB6I3taY9IsQVB8Q==}
+    engines: {node: '>= 10'}
+    cpu: [arm]
+    os: [android]
+    requiresBuild: true
+    dev: true
+    optional: true
+
+  /@napi-rs/tar-android-arm64@0.1.0:
+    resolution: {integrity: sha512-NxszsTRdAYf25kKuzUYz514/5MFI3w3aHToZBcFjaxUmsayrimFrHIiPLwNQVe55lHPRi13njqQUPjMetHMCZw==}
+    engines: {node: '>= 10'}
+    cpu: [arm64]
+    os: [android]
+    requiresBuild: true
+    dev: true
+    optional: true
+
+  /@napi-rs/tar-darwin-arm64@0.1.0:
+    resolution: {integrity: sha512-G+fSNcwhbekTMOElS66mf3ccg8M4NcEHIgo7s6Hxo8U2obUSqEJ0WjTDV8oJy7lqRW/MeeDJj8Vz0ceXC8ueeA==}
+    engines: {node: '>= 10'}
+    cpu: [arm64]
+    os: [darwin]
+    requiresBuild: true
+    dev: true
+    optional: true
+
+  /@napi-rs/tar-darwin-x64@0.1.0:
+    resolution: {integrity: sha512-p9aOLk6O2+Cu62fNOdj1Zx0P3J1VkxtihXOVDaK49o5jszhms0roNA7kZfklwjVdwo8R7OQC6mJcFWmiamMNug==}
+    engines: {node: '>= 10'}
+    cpu: [x64]
+    os: [darwin]
+    requiresBuild: true
+    dev: true
+    optional: true
+
+  /@napi-rs/tar-freebsd-x64@0.1.0:
+    resolution: {integrity: sha512-mZQPtyCc2r+P84WV76Ddbe1+CxBscxlDHtgMIxZPveMgq4esZFKp26M735vjxtk/j2ahT0pZoC6fjsJ//Uxzlg==}
+    engines: {node: '>= 10'}
+    cpu: [x64]
+    os: [freebsd]
+    requiresBuild: true
+    dev: true
+    optional: true
+
+  /@napi-rs/tar-linux-arm-gnueabihf@0.1.0:
+    resolution: {integrity: sha512-FHxnmrOS345T3n3XDmY9QEoVv1PXkkuevQbu+gzq5np4fzN/NX2Az5oJTxKOTGtlJSaxxz90raeaWRZrnV5hZQ==}
+    engines: {node: '>= 10'}
+    cpu: [arm]
+    os: [linux]
+    requiresBuild: true
+    dev: true
+    optional: true
+
+  /@napi-rs/tar-linux-arm64-gnu@0.1.0:
+    resolution: {integrity: sha512-+8WHnL/8PPpePYc+5oqNLoE5o98vWF7lJvY/seji7tdcS5TPJ3tgXaF4/y1rFAaSxKsZ9l+ClHsZZ0MpCqMOOQ==}
+    engines: {node: '>= 10'}
+    cpu: [arm64]
+    os: [linux]
+    requiresBuild: true
+    dev: true
+    optional: true
+
+  /@napi-rs/tar-linux-arm64-musl@0.1.0:
+    resolution: {integrity: sha512-SXqU4H30/TD9BZa6pH/U5l2V6E4EKOutjHp9Sqr98iH52Zb+1N84ur1Ti7/+PapKunCIJeZzU+792CQagKIzuQ==}
+    engines: {node: '>= 10'}
+    cpu: [arm64]
+    os: [linux]
+    requiresBuild: true
+    dev: true
+    optional: true
+
+  /@napi-rs/tar-linux-x64-gnu@0.1.0:
+    resolution: {integrity: sha512-2uZHxl2nH1HbeJuifB1qdK8vU9wKDrxQkFm+u4psUaa/uHLZDUCGS7GMxTnCbR9OehqZcfQabaKsHbxR/8ElDQ==}
+    engines: {node: '>= 10'}
+    cpu: [x64]
+    os: [linux]
+    requiresBuild: true
+    dev: true
+    optional: true
+
+  /@napi-rs/tar-linux-x64-musl@0.1.0:
+    resolution: {integrity: sha512-S1vEqLK4UCHS4AjVZ3g6o7r0Yu6RbhmDj6JrqxBoEIjrMsuIPKQrODHhtlsykOPeu5IHQuyRT+DevorWAVYdoA==}
+    engines: {node: '>= 10'}
+    cpu: [x64]
+    os: [linux]
+    requiresBuild: true
+    dev: true
+    optional: true
+
+  /@napi-rs/tar-win32-arm64-msvc@0.1.0:
+    resolution: {integrity: sha512-x23Ganq0hcDbgnhzAFqOu5EWtKvngIsapJL7ZLGgQlqahRb15aQkagYvpju6CLZers6N6znmqxw9Pdov9VFzOQ==}
+    engines: {node: '>= 10'}
+    cpu: [arm64]
+    os: [win32]
+    requiresBuild: true
+    dev: true
+    optional: true
+
+  /@napi-rs/tar-win32-ia32-msvc@0.1.0:
+    resolution: {integrity: sha512-QJgJQEKDbVOrzSJ3EaUuCk+g7t9tKv085eALmRtkiHDBmzd0iAoudcU2N9YgdacSQMe1V/GMuQLky6BFrZb4nw==}
+    engines: {node: '>= 10'}
+    cpu: [ia32]
+    os: [win32]
+    requiresBuild: true
+    dev: true
+    optional: true
+
+  /@napi-rs/tar-win32-x64-msvc@0.1.0:
+    resolution: {integrity: sha512-aEhLcPZXmbcz46utpgYrkhY/TIGVCs4T5c+xpBf6H8feIEz7rF44Bm6kECC42OWcqnws2LGRW9TZsv0bWoAn0A==}
+    engines: {node: '>= 10'}
+    cpu: [x64]
+    os: [win32]
+    requiresBuild: true
+    dev: true
+    optional: true
+
+  /@napi-rs/tar@0.1.0:
+    resolution: {integrity: sha512-HodV5VS/ryhNvSmSHPb6CT5lJKzkoKaiyO8JPkVw3XCXbp51+vZs7LJ66kgFqyr4AagaKqmXsgpGVCIwNdFw/w==}
+    engines: {node: '>= 10'}
+    optionalDependencies:
+      '@napi-rs/tar-android-arm-eabi': 0.1.0
+      '@napi-rs/tar-android-arm64': 0.1.0
+      '@napi-rs/tar-darwin-arm64': 0.1.0
+      '@napi-rs/tar-darwin-x64': 0.1.0
+      '@napi-rs/tar-freebsd-x64': 0.1.0
+      '@napi-rs/tar-linux-arm-gnueabihf': 0.1.0
+      '@napi-rs/tar-linux-arm64-gnu': 0.1.0
+      '@napi-rs/tar-linux-arm64-musl': 0.1.0
+      '@napi-rs/tar-linux-x64-gnu': 0.1.0
+      '@napi-rs/tar-linux-x64-musl': 0.1.0
+      '@napi-rs/tar-win32-arm64-msvc': 0.1.0
+      '@napi-rs/tar-win32-ia32-msvc': 0.1.0
+      '@napi-rs/tar-win32-x64-msvc': 0.1.0
+    dev: true
+
+  /@napi-rs/wasm-runtime@0.1.2:
+    resolution: {integrity: sha512-8JuczewTFIZ/XIjHQ+YlQUydHvlKx2hkcxtuGwh+t/t5zWyZct6YG4+xjHcq8xyc/e7FmFwf42Zj2YgICwmlvA==}
+    dependencies:
+      '@emnapi/core': 1.1.0
+      '@emnapi/runtime': 1.1.0
+      '@tybys/wasm-util': 0.8.1
     dev: true
 
   /@nestjs/cli@9.1.8(@swc/core@1.3.86)(esbuild@0.19.5):
@@ -9244,6 +9602,11 @@ packages:
       '@octokit/types': 8.0.0
     dev: true
 
+  /@octokit/auth-token@4.0.0:
+    resolution: {integrity: sha512-tY/msAuJo6ARbK6SPIxZrPBms3xPbfwBrulZe0Wtr/DIY9lje2HeV1uoebShn6mx7SjCHif6EjMvoREj+gZ+SA==}
+    engines: {node: '>= 18'}
+    dev: true
+
   /@octokit/auth-unauthenticated@3.0.4:
     resolution: {integrity: sha512-AT74XGBylcLr4lmUp1s6mjSUgphGdlse21Qjtv5DzpX1YOl5FXKwvNcZWESdhyBbpDT8VkVyLFqa/7a7eqpPNw==}
     engines: {node: '>= 14'}
@@ -9267,12 +9630,33 @@ packages:
       - encoding
     dev: true
 
+  /@octokit/core@5.1.0:
+    resolution: {integrity: sha512-BDa2VAMLSh3otEiaMJ/3Y36GU4qf6GI+VivQ/P41NC6GHcdxpKlqV0ikSZ5gdQsmS3ojXeRx5vasgNTinF0Q4g==}
+    engines: {node: '>= 18'}
+    dependencies:
+      '@octokit/auth-token': 4.0.0
+      '@octokit/graphql': 7.0.2
+      '@octokit/request': 8.2.0
+      '@octokit/request-error': 5.0.1
+      '@octokit/types': 12.6.0
+      before-after-hook: 2.2.3
+      universal-user-agent: 6.0.0
+    dev: true
+
   /@octokit/endpoint@7.0.3:
     resolution: {integrity: sha512-57gRlb28bwTsdNXq+O3JTQ7ERmBTuik9+LelgcLIVfYwf235VHbN9QNo4kXExtp/h8T423cR5iJThKtFYxC7Lw==}
     engines: {node: '>= 14'}
     dependencies:
       '@octokit/types': 8.0.0
       is-plain-object: 5.0.0
+      universal-user-agent: 6.0.0
+    dev: true
+
+  /@octokit/endpoint@9.0.4:
+    resolution: {integrity: sha512-DWPLtr1Kz3tv8L0UvXTDP1fNwM0S+z6EJpRcvH66orY6Eld4XBMCSYsaWp4xIm61jTWxK68BrR7ibO+vSDnZqw==}
+    engines: {node: '>= 18'}
+    dependencies:
+      '@octokit/types': 12.6.0
       universal-user-agent: 6.0.0
     dev: true
 
@@ -9285,6 +9669,15 @@ packages:
       universal-user-agent: 6.0.0
     transitivePeerDependencies:
       - encoding
+    dev: true
+
+  /@octokit/graphql@7.0.2:
+    resolution: {integrity: sha512-OJ2iGMtj5Tg3s6RaXH22cJcxXRi7Y3EBqbHTBRq+PQAqfaS8f/236fUrWhfSn8P4jovyzqucxme7/vWSSZBX2Q==}
+    engines: {node: '>= 18'}
+    dependencies:
+      '@octokit/request': 8.2.0
+      '@octokit/types': 12.6.0
+      universal-user-agent: 6.0.0
     dev: true
 
   /@octokit/oauth-app@4.2.0:
@@ -9330,6 +9723,10 @@ packages:
     resolution: {integrity: sha512-JbFWOqTJVLHZSUUoF4FzAZKYtqdxWu9Z5m2QQnOyEa04fOFljvyh7D3GYKbfuaSWisqehImiVIMG4eyJeP5VEA==}
     dev: true
 
+  /@octokit/openapi-types@20.0.0:
+    resolution: {integrity: sha512-EtqRBEjp1dL/15V7WiX5LJMIxxkdiGJnabzYx5Apx4FkQIFgAfKumXeYAqqJCj1s+BMX4cPFIFC4OLCR6stlnA==}
+    dev: true
+
   /@octokit/plugin-paginate-rest@6.0.0(@octokit/core@4.2.0):
     resolution: {integrity: sha512-Sq5VU1PfT6/JyuXPyt04KZNVsFOSBaYOAq2QRZUwzVlI10KFvcbUo8lR258AAQL1Et60b0WuVik+zOWKLuDZxw==}
     engines: {node: '>= 14'}
@@ -9338,6 +9735,35 @@ packages:
     dependencies:
       '@octokit/core': 4.2.0
       '@octokit/types': 9.0.0
+    dev: true
+
+  /@octokit/plugin-paginate-rest@9.2.1(@octokit/core@5.1.0):
+    resolution: {integrity: sha512-wfGhE/TAkXZRLjksFXuDZdmGnJQHvtU/joFQdweXUgzo1XwvBCD4o4+75NtFfjfLK5IwLf9vHTfSiU3sLRYpRw==}
+    engines: {node: '>= 18'}
+    peerDependencies:
+      '@octokit/core': '5'
+    dependencies:
+      '@octokit/core': 5.1.0
+      '@octokit/types': 12.6.0
+    dev: true
+
+  /@octokit/plugin-request-log@4.0.1(@octokit/core@5.1.0):
+    resolution: {integrity: sha512-GihNqNpGHorUrO7Qa9JbAl0dbLnqJVrV8OXe2Zm5/Y4wFkZQDfTreBzVmiRfJVfE4mClXdihHnbpyyO9FSX4HA==}
+    engines: {node: '>= 18'}
+    peerDependencies:
+      '@octokit/core': '5'
+    dependencies:
+      '@octokit/core': 5.1.0
+    dev: true
+
+  /@octokit/plugin-rest-endpoint-methods@10.4.1(@octokit/core@5.1.0):
+    resolution: {integrity: sha512-xV1b+ceKV9KytQe3zCVqjg+8GTGfDYwaT1ATU5isiUyVtlVAO3HNdzpS4sr4GBx4hxQ46s7ITtZrAsxG22+rVg==}
+    engines: {node: '>= 18'}
+    peerDependencies:
+      '@octokit/core': '5'
+    dependencies:
+      '@octokit/core': 5.1.0
+      '@octokit/types': 12.6.0
     dev: true
 
   /@octokit/plugin-rest-endpoint-methods@7.0.1(@octokit/core@4.2.0):
@@ -9382,6 +9808,15 @@ packages:
       once: 1.4.0
     dev: true
 
+  /@octokit/request-error@5.0.1:
+    resolution: {integrity: sha512-X7pnyTMV7MgtGmiXBwmO6M5kIPrntOXdyKZLigNfQWSEQzVxR4a4vo49vJjTWX70mPndj8KhfT4Dx+2Ng3vnBQ==}
+    engines: {node: '>= 18'}
+    dependencies:
+      '@octokit/types': 12.6.0
+      deprecation: 2.3.1
+      once: 1.4.0
+    dev: true
+
   /@octokit/request@6.2.3:
     resolution: {integrity: sha512-TNAodj5yNzrrZ/VxP+H5HiYaZep0H3GU0O7PaF+fhDrt8FPrnkei9Aal/txsN/1P7V3CPiThG0tIvpPDYUsyAA==}
     engines: {node: '>= 14'}
@@ -9394,6 +9829,32 @@ packages:
       universal-user-agent: 6.0.0
     transitivePeerDependencies:
       - encoding
+    dev: true
+
+  /@octokit/request@8.2.0:
+    resolution: {integrity: sha512-exPif6x5uwLqv1N1irkLG1zZNJkOtj8bZxuVHd71U5Ftuxf2wGNvAJyNBcPbPC+EBzwYEbBDdSFb8EPcjpYxPQ==}
+    engines: {node: '>= 18'}
+    dependencies:
+      '@octokit/endpoint': 9.0.4
+      '@octokit/request-error': 5.0.1
+      '@octokit/types': 12.6.0
+      universal-user-agent: 6.0.0
+    dev: true
+
+  /@octokit/rest@20.0.2:
+    resolution: {integrity: sha512-Ux8NDgEraQ/DMAU1PlAohyfBBXDwhnX2j33Z1nJNziqAfHi70PuxkFYIcIt8aIAxtRE7KVuKp8lSR8pA0J5iOQ==}
+    engines: {node: '>= 18'}
+    dependencies:
+      '@octokit/core': 5.1.0
+      '@octokit/plugin-paginate-rest': 9.2.1(@octokit/core@5.1.0)
+      '@octokit/plugin-request-log': 4.0.1(@octokit/core@5.1.0)
+      '@octokit/plugin-rest-endpoint-methods': 10.4.1(@octokit/core@5.1.0)
+    dev: true
+
+  /@octokit/types@12.6.0:
+    resolution: {integrity: sha512-1rhSOfRa6H9w4YwK0yrf5faDaDTb+yLyBUKOCV4xtCDB5VmIPqd/v9yr9o6SAzOAlRxMiRiCic6JVM1/kunVkw==}
+    dependencies:
+      '@octokit/openapi-types': 20.0.0
     dev: true
 
   /@octokit/types@8.0.0:
@@ -12725,6 +13186,12 @@ packages:
     dependencies:
       '@tufjs/canonical-json': 2.0.0
       minimatch: 9.0.3
+    dev: true
+
+  /@tybys/wasm-util@0.8.1:
+    resolution: {integrity: sha512-GSsTwyBl4pIzsxAY5wroZdyQKyhXk0d8PCRZtrSZ2WEB1cBdrp2EgGBwHOGCZtIIPun/DL3+AykCv+J6fyRH4Q==}
+    dependencies:
+      tslib: 2.6.2
     dev: true
 
   /@types/acorn@4.0.6:
@@ -16496,6 +16963,14 @@ packages:
       typanion: 3.14.0
     dev: true
 
+  /clipanion@3.2.1(typanion@3.14.0):
+    resolution: {integrity: sha512-dYFdjLb7y1ajfxQopN05mylEpK9ZX0sO1/RfMXdfmwjlIsPkbh4p7A682x++zFPLDCo1x3p82dtljHf5cW2LKA==}
+    peerDependencies:
+      typanion: '*'
+    dependencies:
+      typanion: 3.14.0
+    dev: true
+
   /clipboardy@4.0.0:
     resolution: {integrity: sha512-5mOlNS0mhX0707P2I0aZ2V/cmHUEO/fL7VFLqszkhUsxt7RwnmrInf/eEQKlf5GzvYeHIjT+Ov1HRfNmymlG0w==}
     engines: {node: '>=18'}
@@ -18346,6 +18821,15 @@ packages:
   /emittery@0.13.1:
     resolution: {integrity: sha512-DeWwawk6r5yR9jFgnDKYt4sLS0LmHJJi3ZOnb5/JdbYwj3nW+FxQnHIjhBKz8YLC7oRNPVM9NQ47I3CVx34eqQ==}
     engines: {node: '>=12'}
+    dev: true
+
+  /emnapi@1.1.0:
+    resolution: {integrity: sha512-q4S4JY5Td/CeMXiTT78jejjfKlFNEO4/ID/y33K+8wFj4VQlz511xQC/dGNPMxaHkMcQJCsI/CGHzmJHZ5RFRw==}
+    peerDependencies:
+      node-addon-api: '>= 6.1.0'
+    peerDependenciesMeta:
+      node-addon-api:
+        optional: true
     dev: true
 
   /emoji-regex@8.0.0:
@@ -23546,6 +24030,10 @@ packages:
     resolution: {integrity: sha512-cvbTwETRfsFh4nHsL1eGWapU1XFi5Ot9E85sWAwia7Y7EgB7vfqcZhTKZ+l7hCGxSPoushMv5GKhT5PdLv03WA==}
     dependencies:
       signal-exit: 3.0.7
+    dev: true
+
+  /lodash-es@4.17.21:
+    resolution: {integrity: sha512-mKnC+QJ9pWVzv+C4/U3rRsHapFfHvQFoFB92e52xeyGMcX6/OlIl78je1u8vePzYZSkkogMPJ2yjxxsb89cxyw==}
     dev: true
 
   /lodash.camelcase@4.3.0:
@@ -33317,6 +33805,10 @@ packages:
     resolution: {integrity: sha512-ts/8E8l5b7kY0vlWLewOkDXMmPdLcVV4GmOQLyxuSswIJsweeFZtAsMF7k1Nszz+TYBQrlYRmzOnr398y1JemQ==}
     dependencies:
       makeerror: 1.0.12
+    dev: true
+
+  /wasm-sjlj@1.0.5:
+    resolution: {integrity: sha512-Z/MHJeOkAvJJVWnGX3/YZGYldGaawZbYHX4ldYG9kLhcdB8H31F5x66M7Zc4BP/7pg0aLsusQj1629m2B3Rilg==}
     dev: true
 
   /watchpack@2.4.0:
