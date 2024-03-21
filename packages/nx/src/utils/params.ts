@@ -306,7 +306,7 @@ export function validateObject(
   ) {
     Object.keys(opts).find((p) => {
       if (
-        Object.keys(schema.properties).indexOf(p) === -1 &&
+        Object.keys(schema.properties ?? {}).indexOf(p) === -1 &&
         (!schema.patternProperties ||
           !Object.keys(schema.patternProperties).some((pattern) =>
             new RegExp(pattern).test(p)
