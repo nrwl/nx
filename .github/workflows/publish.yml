@@ -275,7 +275,7 @@ jobs:
         run: |
           # The GITHUB_REF_NAME is a full version (i.e. 17.3.2). The branchName will only use the major version number.
           # We will publish docs to the website branch based on the current tag (i.e. website-17)
-          branchName=website-${$GITHUB_REF_NAME%.*.*}
+          branchName=website-${GITHUB_REF_NAME%.*.*}
           # We force recreate the branch in order to always be up to date and avoid merge conflicts within the automated workflow
           git branch -f $branchName
           git push -f origin $branchName
