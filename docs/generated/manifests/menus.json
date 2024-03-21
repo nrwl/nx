@@ -47,14 +47,6 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Epic Web App",
-                "path": "/getting-started/tutorials/epic-web-app-tutorial",
-                "id": "epic-web-app-tutorial",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
                 "name": "React Standalone",
                 "path": "/getting-started/tutorials/react-standalone-tutorial",
                 "id": "react-standalone-tutorial",
@@ -90,6 +82,14 @@
                 "name": "Vue Standalone",
                 "path": "/getting-started/tutorials/vue-standalone-tutorial",
                 "id": "vue-standalone-tutorial",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Epic Web App",
+                "path": "/getting-started/tutorials/epic-web-app-tutorial",
+                "id": "epic-web-app-tutorial",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -139,14 +139,6 @@
             "disableCollapsible": false
           },
           {
-            "name": "Epic Web App",
-            "path": "/getting-started/tutorials/epic-web-app-tutorial",
-            "id": "epic-web-app-tutorial",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
             "name": "React Standalone",
             "path": "/getting-started/tutorials/react-standalone-tutorial",
             "id": "react-standalone-tutorial",
@@ -185,6 +177,14 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
+          },
+          {
+            "name": "Epic Web App",
+            "path": "/getting-started/tutorials/epic-web-app-tutorial",
+            "id": "epic-web-app-tutorial",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -193,14 +193,6 @@
         "name": "NPM Workspaces Monorepo",
         "path": "/getting-started/tutorials/npm-workspaces-tutorial",
         "id": "npm-workspaces-tutorial",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Epic Web App",
-        "path": "/getting-started/tutorials/epic-web-app-tutorial",
-        "id": "epic-web-app-tutorial",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -241,6 +233,14 @@
         "name": "Vue Standalone",
         "path": "/getting-started/tutorials/vue-standalone-tutorial",
         "id": "vue-standalone-tutorial",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Epic Web App",
+        "path": "/getting-started/tutorials/epic-web-app-tutorial",
+        "id": "epic-web-app-tutorial",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false

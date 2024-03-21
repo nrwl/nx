@@ -7,10 +7,9 @@ description: In this tutorial you'll add Nx to an existing NPM workspaces repo
 
 In this tutorial, you'll learn how to add Nx to an app created with the [Epic Stack](https://www.epicweb.dev/epic-stack). You'll see how Nx can provide immediate value with very little configuration and then you can gradually enable more features.
 
-- Add Nx to the repository with a single command
-- Configure caching for your existing tasks
-- Use Nx Plugins to automatically configure caching
-- Configure a task pipeline
+- Add task caching
+- Make sure tasks run in the correct order (task pipeline)
+- Use the Nx Playwright plugin to enhance the Playwright experience
 
 <!-- ## Final Source Code
 
@@ -210,16 +209,7 @@ Now you can delete the `playwright-report` and `test-results` folders and re-run
 npx nx test:e2e:run
 ```
 
-There is still a problem with this set up. The `outputs` property is currently hard-coded in the `nx.json` file. If someone were to set the `outputDir` property in `playwright.config.ts` file, they would need to also update the `outputs` property for `test:run:e2e` to match. This is where plugins can help. They directly infer information from the actual tooling configuration files (`playwright.config.ts` in this case).
-
-Nx plugins can:
-
-- automatically configure caching for you, including inputs and outputs based on the underlying tooling configuration
-- infer tasks that can be run on a project because of the tooling present
-- provide code generators to help scaffold out projects
-- automatically keep the tooling versions and configuration files up to date
-
-For this tutorial, we'll just focus on the automatic caching configuration.
+There is still a problem with this set up. The `outputs` property is currently hard-coded in the `nx.json` file. If someone were to set the `outputDir` property in `playwright.config.ts` file, they would need to also update the `outputs` property for `test:run:e2e` to match. This is where [Nx plugins](/concepts/nx-plugins) can help. They directly infer information from the actual tooling configuration files (`playwright.config.ts` in this case).
 
 First, let's delete the `outputs` array from `nx.json` so that we don't override the inferred values from the plugin. Your `nx.json` should look like this:
 
@@ -278,6 +268,43 @@ export default defineConfig({
 Now if you look at the project details view again, you'll see that the `outputs` property for Nx's caching has been updated to stay in sync with the setting in the `playwright.config.ts` file.
 
 You can also add the `@nx/remix`, `@nx/vite` and `@nx/eslint` plugins to see how they infer their respective tasks based on the tooling configuration files.
+
+```shell
+npx nx add @nx/remix
+npx nx add @nx/vite
+npx nx add @nx/eslint
+```
+
+## E2E Task Splitting
+
+You may have noticed that the project details view shows individual tasks for each Playwright test file. The `@nx/playwright` plugin [automatically created those tasks](/ci/features/split-e2e-tasks) for you so that they can be run in parallel. This doesn't work locally because starting multiple simultaneous dev servers will cause port conflicts. However, on CI you can automatically parallelize these tasks across multiple machines when using [Nx Agents](/ci/features/distribute-task-execution).
+
+For a full understanding of how Nx can improve your CI pipeline, follow the [GitHub Actions](/ci/intro/tutorials/github-actions) or [Circle CI](/ci/intro/tutorials/circle) tutorial. For this repo, using Nx Agents in CI would look like this:
+
+```yaml {% fileName=".github/workflows/deploy.yml" %}
+# ...
+
+- name: ⬇️ Checkout repo
+  uses: actions/checkout@v3
+
+- name: Start Nx Agents
+  run: npm run nx-cloud start-ci-run \
+    --distribute-on="3 linux-medium-js" \
+    --stop-agents-after="e2e-ci"
+
+- name: 🏄 Copy test env vars
+  run: cp .env.example .env
+
+# ...
+
+- name: 🎭 Playwright tests
+  run: npx nx run e2e-ci --parallel=1
+```
+
+The key lines in this configuration are:
+
+- `--distribute-on="3 linux-medium-js"`: Distribute the tasks across 3 agent machines.
+- `npx nx run e2e-ci --parallel=1`: Run all the `e2e-ci` tasks, but only one at a time on a given machine.
 
 ## Configure Build Inputs
 

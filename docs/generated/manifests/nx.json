@@ -58,17 +58,6 @@
             "tags": []
           },
           {
-            "id": "epic-web-app-tutorial",
-            "name": "Epic Web App",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/tutorials/epic-web-app",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/getting-started/tutorials/epic-web-app-tutorial",
-            "tags": []
-          },
-          {
             "id": "react-standalone-tutorial",
             "name": "React Standalone",
             "description": "",
@@ -121,6 +110,17 @@
             "itemList": [],
             "isExternal": false,
             "path": "/getting-started/tutorials/vue-standalone-tutorial",
+            "tags": []
+          },
+          {
+            "id": "epic-web-app-tutorial",
+            "name": "Epic Web App",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/tutorials/epic-web-app",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/getting-started/tutorials/epic-web-app-tutorial",
             "tags": []
           }
         ],
@@ -185,17 +185,6 @@
         "tags": []
       },
       {
-        "id": "epic-web-app-tutorial",
-        "name": "Epic Web App",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/tutorials/epic-web-app",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/getting-started/tutorials/epic-web-app-tutorial",
-        "tags": []
-      },
-      {
         "id": "react-standalone-tutorial",
         "name": "React Standalone",
         "description": "",
@@ -249,6 +238,17 @@
         "isExternal": false,
         "path": "/getting-started/tutorials/vue-standalone-tutorial",
         "tags": []
+      },
+      {
+        "id": "epic-web-app-tutorial",
+        "name": "Epic Web App",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/tutorials/epic-web-app",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/getting-started/tutorials/epic-web-app-tutorial",
+        "tags": []
       }
     ],
     "isExternal": false,
@@ -264,17 +264,6 @@
     "itemList": [],
     "isExternal": false,
     "path": "/getting-started/tutorials/npm-workspaces-tutorial",
-    "tags": []
-  },
-  "/getting-started/tutorials/epic-web-app-tutorial": {
-    "id": "epic-web-app-tutorial",
-    "name": "Epic Web App",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/tutorials/epic-web-app",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/getting-started/tutorials/epic-web-app-tutorial",
     "tags": []
   },
   "/getting-started/tutorials/react-standalone-tutorial": {
@@ -330,6 +319,17 @@
     "itemList": [],
     "isExternal": false,
     "path": "/getting-started/tutorials/vue-standalone-tutorial",
+    "tags": []
+  },
+  "/getting-started/tutorials/epic-web-app-tutorial": {
+    "id": "epic-web-app-tutorial",
+    "name": "Epic Web App",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/tutorials/epic-web-app",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/getting-started/tutorials/epic-web-app-tutorial",
     "tags": []
   },
   "/core-tutorial": {

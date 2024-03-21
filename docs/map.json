@@ -39,11 +39,6 @@
                   "file": "shared/tutorials/npm-workspaces"
                 },
                 {
-                  "name": "Epic Web App",
-                  "id": "epic-web-app-tutorial",
-                  "file": "shared/tutorials/epic-web-app"
-                },
-                {
                   "name": "React Standalone",
                   "id": "react-standalone-tutorial",
                   "file": "shared/react-standalone-tutorial/react-standalone"
@@ -67,6 +62,11 @@
                   "name": "Vue Standalone",
                   "id": "vue-standalone-tutorial",
                   "file": "shared/vue-standalone-tutorial/vue-standalone"
+                },
+                {
+                  "name": "Epic Web App",
+                  "id": "epic-web-app-tutorial",
+                  "file": "shared/tutorials/epic-web-app"
                 }
               ]
             }

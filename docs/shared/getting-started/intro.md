@@ -37,13 +37,13 @@ npx create-nx-workspace@latest
 
 {% link-card title="NPM Workspaces" type="tutorial" url="/getting-started/tutorials/npm-workspaces-tutorial" icon="jsMono" /%}
 
-{% link-card title="Epic Web App" type="tutorial" url="/getting-started/tutorials/epic-web-app-tutorial" icon="epicWeb" /%}
-
 {% link-card title="Single React App" type="tutorial" url="/getting-started/tutorials/react-standalone-tutorial" icon="react" /%}
 
 {% link-card title="Single Angular App" type="tutorial" url="/getting-started/tutorials/angular-standalone-tutorial" icon="angular" /%}
 
 {% link-card title="Single Vue App" type="tutorial" url="/getting-started/tutorials/vue-standalone-tutorial" icon="vue" /%}
+
+{% link-card title="Epic Web App" type="tutorial" url="/getting-started/tutorials/epic-web-app-tutorial" icon="epicWeb" /%}
 
 <!-- {% link-card title="React Monorepo" type="tutorial" url="/getting-started/tutorials/react-standalone-tutorial" icon="reactMono" /%}
 
