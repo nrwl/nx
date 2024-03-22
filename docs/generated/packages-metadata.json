@@ -1858,7 +1858,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "nx/documents/release",
-        "tags": [],
+        "tags": ["nx-release"],
         "originalFilePath": "generated/cli/release"
       },
       {

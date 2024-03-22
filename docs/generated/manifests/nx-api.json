@@ -1879,7 +1879,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/nx-api/nx/documents/release",
-        "tags": [],
+        "tags": ["nx-release"],
         "originalFilePath": "generated/cli/release"
       },
       "/nx-api/nx/documents/add": {
