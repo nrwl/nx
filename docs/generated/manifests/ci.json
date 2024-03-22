@@ -569,6 +569,17 @@
             "isExternal": false,
             "path": "/ci/recipes/source-control-integration/gitlab",
             "tags": []
+          },
+          {
+            "id": "azure-devops",
+            "name": "Enable Azure DevOps PR Integration",
+            "description": "",
+            "mediaImage": "",
+            "file": "nx-cloud/set-up/azure-devops",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/ci/recipes/source-control-integration/azure-devops",
+            "tags": []
           }
         ],
         "isExternal": false,
@@ -1110,6 +1121,17 @@
         "isExternal": false,
         "path": "/ci/recipes/source-control-integration/gitlab",
         "tags": []
+      },
+      {
+        "id": "azure-devops",
+        "name": "Enable Azure DevOps PR Integration",
+        "description": "",
+        "mediaImage": "",
+        "file": "nx-cloud/set-up/azure-devops",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/recipes/source-control-integration/azure-devops",
+        "tags": []
       }
     ],
     "isExternal": false,
@@ -1147,6 +1169,17 @@
     "itemList": [],
     "isExternal": false,
     "path": "/ci/recipes/source-control-integration/gitlab",
+    "tags": []
+  },
+  "/ci/recipes/source-control-integration/azure-devops": {
+    "id": "azure-devops",
+    "name": "Enable Azure DevOps PR Integration",
+    "description": "",
+    "mediaImage": "",
+    "file": "nx-cloud/set-up/azure-devops",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/recipes/source-control-integration/azure-devops",
     "tags": []
   },
   "/ci/recipes/enterprise": {
