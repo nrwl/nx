@@ -20,10 +20,7 @@ describe('rm-default-collection-npm-scope migration', () => {
         cli: {
           defaultCollection: 'collection',
         },
-      } as NxJsonConfiguration & {
-        npmScope: string;
-        cli: { defaultCollection: string };
-      });
+      } as NxJsonConfiguration & { npmScope: string; cli: { defaultCollection: string } });
     });
 
     it('should remove npmScope', async () => {
