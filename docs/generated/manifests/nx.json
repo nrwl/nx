@@ -569,7 +569,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/features/manage-releases",
-        "tags": ["manage-releases"]
+        "tags": ["nx-release"]
       },
       {
         "id": "ci-features",
@@ -751,7 +751,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/features/manage-releases",
-    "tags": ["manage-releases"]
+    "tags": ["nx-release"]
   },
   "/features/ci-features": {
     "id": "ci-features",

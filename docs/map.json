@@ -165,7 +165,7 @@
               "name": "Manage Releases",
               "description": "Learn how Nx provides tools to help you manage releasing your projects.",
               "id": "manage-releases",
-              "tags": ["manage-releases"],
+              "tags": ["nx-release"],
               "file": "shared/features/manage-releases"
             },
             {
@@ -2157,6 +2157,7 @@
             {
               "name": "release",
               "id": "release",
+              "tags": ["nx-release"],
               "file": "generated/cli/release"
             },
             {
