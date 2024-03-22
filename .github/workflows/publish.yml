@@ -173,11 +173,12 @@ jobs:
           DEBUG: napi:*
           RUSTUP_IO_THREADS: 1
           NX_PREFER_TS_NODE: true
+          PLAYWRIGHT_BROWSERS_PATH: 0
         with:
           operating_system: freebsd
           version: '13.2'
           architecture: x86-64
-          environment_variables: DEBUG RUSTUP_IO_THREADS CI NX_PREFER_TS_NODE
+          environment_variables: DEBUG RUSTUP_IO_THREADS CI NX_PREFER_TS_NODE PLAYWRIGHT_BROWSERS_PATH
           shell: bash
           run: |
             env
