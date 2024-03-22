@@ -26,7 +26,8 @@ describe('Jest', () => {
       `generate @nx/js:lib ${name} --unitTestRunner=jest --no-interactive`
     );
 
-    const results = await runCLIAsync(`test ${name}`, {
+    const results = await runCLIAsync(`test ${name} --skip-nx-cache`, {
+      silenceError: true,
       env: {
         ...process.env, // need to set this for some reason, or else get "env: node: No such file or directory"
         NODE_ENV: 'foobar',

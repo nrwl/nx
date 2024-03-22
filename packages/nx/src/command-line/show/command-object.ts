@@ -1,6 +1,7 @@
 import type { ProjectGraphProjectNode } from '../../config/project-graph';
 import { CommandModule, showHelp } from 'yargs';
 import { parseCSV, withAffectedOptions } from '../yargs-utils/shared-options';
+import { handleErrors } from '../../utils/params';
 
 export interface NxShowArgs {
   json?: boolean;
@@ -17,11 +18,13 @@ export type ShowProjectsOptions = NxShowArgs & {
   type: ProjectGraphProjectNode['type'];
   projects: string[];
   withTarget: string[];
+  verbose: boolean;
 };
 
 export type ShowProjectOptions = NxShowArgs & {
   projectName: string;
   web?: boolean;
+  verbose: boolean;
 };
 
 export const yargsShowCommand: CommandModule<
@@ -83,6 +86,11 @@ const showProjectsCommand: CommandModule<NxShowArgs, ShowProjectsOptions> = {
         description: 'Select only projects of the given type',
         choices: ['app', 'lib', 'e2e'],
       })
+      .option('verbose', {
+        type: 'boolean',
+        description:
+          'Prints additional information about the commands (e.g., stack traces)',
+      })
       .implies('untracked', 'affected')
       .implies('uncommitted', 'affected')
       .implies('files', 'affected')
@@ -108,7 +116,14 @@ const showProjectsCommand: CommandModule<NxShowArgs, ShowProjectsOptions> = {
         '$0 show projects --affected --exclude=*-e2e',
         'Show affected projects in the workspace, excluding end-to-end projects'
       ) as any,
-  handler: (args) => import('./show').then((m) => m.showProjectsHandler(args)),
+  handler: (args) => {
+    return handleErrors(
+      args.verbose ?? process.env.NX_VERBOSE_LOGGING === 'true',
+      async () => {
+        return (await import('./show')).showProjectsHandler(args);
+      }
+    );
+  },
 };
 
 const showProjectCommand: CommandModule<NxShowArgs, ShowProjectOptions> = {
@@ -126,6 +141,11 @@ const showProjectCommand: CommandModule<NxShowArgs, ShowProjectOptions> = {
         type: 'boolean',
         description: 'Show project details in the browser',
       })
+      .option('verbose', {
+        type: 'boolean',
+        description:
+          'Prints additional information about the commands (e.g., stack traces)',
+      })
       .check((argv) => {
         if (argv.web) {
           argv.json = false;
@@ -136,5 +156,12 @@ const showProjectCommand: CommandModule<NxShowArgs, ShowProjectOptions> = {
         '$0 show project my-app',
         'View project information for my-app in JSON format'
       ),
-  handler: (args) => import('./show').then((m) => m.showProjectHandler(args)),
+  handler: (args) => {
+    return handleErrors(
+      args.verbose ?? process.env.NX_VERBOSE_LOGGING === 'true',
+      async () => {
+        return (await import('./show')).showProjectHandler(args);
+      }
+    );
+  },
 };

@@ -1,5 +1,14 @@
-import { readFileMapCache, readProjectGraphCache } from './nx-deps-cache';
-import { buildProjectGraphUsingProjectFileMap } from './build-project-graph';
+import {
+  readFileMapCache,
+  readProjectGraphCache,
+  writeCache,
+} from './nx-deps-cache';
+import {
+  CreateDependenciesError,
+  ProcessDependenciesError,
+  ProcessProjectGraphError,
+  buildProjectGraphUsingProjectFileMap,
+} from './build-project-graph';
 import { output } from '../utils/output';
 import { markDaemonAsDisabled, writeDaemonLogs } from '../daemon/tmp-dir';
 import { ProjectGraph } from '../config/project-graph';
@@ -18,6 +27,14 @@ import {
 } from './utils/retrieve-workspace-files';
 import { readNxJson } from '../config/nx-json';
 import { unregisterPluginTSTranspiler } from '../utils/nx-plugin';
+import {
+  ConfigurationResult,
+  ConfigurationSourceMaps,
+  CreateNodesError,
+  MergeNodesError,
+  ProjectConfigurationsError,
+} from './utils/project-configuration-utils';
+import { DaemonProjectGraphError } from '../daemon/daemon-project-graph-error';
 
 /**
  * Synchronously reads the latest cached copy of the workspace's ProjectGraph.
@@ -83,8 +100,23 @@ export async function buildProjectGraphAndSourceMapsWithoutDaemon() {
   const nxJson = readNxJson();
 
   performance.mark('retrieve-project-configurations:start');
+  let configurationResult: ConfigurationResult;
+  let projectConfigurationsError: ProjectConfigurationsError;
+  try {
+    configurationResult = await retrieveProjectConfigurations(
+      workspaceRoot,
+      nxJson
+    );
+  } catch (e) {
+    if (e instanceof ProjectConfigurationsError) {
+      projectConfigurationsError = e;
+      configurationResult = e.partialProjectConfigurationsResult;
+    } else {
+      throw e;
+    }
+  }
   const { projects, externalNodes, sourceMaps, projectRootMap } =
-    await retrieveProjectConfigurations(workspaceRoot, nxJson);
+    configurationResult;
   performance.mark('retrieve-project-configurations:end');
 
   performance.mark('retrieve-workspace-files:start');
@@ -94,34 +126,132 @@ export async function buildProjectGraphAndSourceMapsWithoutDaemon() {
 
   const cacheEnabled = process.env.NX_CACHE_PROJECT_GRAPH !== 'false';
   performance.mark('build-project-graph-using-project-file-map:start');
-  const projectGraph = (
-    await buildProjectGraphUsingProjectFileMap(
+  let createDependenciesError: CreateDependenciesError;
+  let projectGraphResult: Awaited<
+    ReturnType<typeof buildProjectGraphUsingProjectFileMap>
+  >;
+  try {
+    projectGraphResult = await buildProjectGraphUsingProjectFileMap(
       projects,
       externalNodes,
       fileMap,
       allWorkspaceFiles,
       rustReferences,
-      cacheEnabled ? readFileMapCache() : null,
-      cacheEnabled
-    )
-  ).projectGraph;
+      cacheEnabled ? readFileMapCache() : null
+    );
+  } catch (e) {
+    if (e instanceof CreateDependenciesError) {
+      projectGraphResult = {
+        projectGraph: e.partialProjectGraph,
+        projectFileMapCache: null,
+      };
+      createDependenciesError = e;
+    } else {
+      throw e;
+    }
+  }
+
+  const { projectGraph, projectFileMapCache } = projectGraphResult;
   performance.mark('build-project-graph-using-project-file-map:end');
 
   unregisterPluginTSTranspiler();
   delete global.NX_GRAPH_CREATION;
 
-  return { projectGraph, sourceMaps };
+  const errors = [
+    ...(projectConfigurationsError?.errors ?? []),
+    ...(createDependenciesError?.errors ?? []),
+  ];
+
+  if (errors.length > 0) {
+    throw new ProjectGraphError(errors, projectGraph, sourceMaps);
+  } else {
+    if (cacheEnabled) {
+      writeCache(projectFileMapCache, projectGraph);
+    }
+    return { projectGraph, sourceMaps };
+  }
+}
+
+export class ProjectGraphError extends Error {
+  readonly #errors: Array<
+    CreateNodesError | ProcessDependenciesError | ProcessProjectGraphError
+  >;
+  readonly #partialProjectGraph: ProjectGraph;
+  readonly #partialSourceMaps: ConfigurationSourceMaps;
+
+  constructor(
+    errors: Array<
+      | CreateNodesError
+      | MergeNodesError
+      | ProcessDependenciesError
+      | ProcessProjectGraphError
+    >,
+    partialProjectGraph: ProjectGraph,
+    partialSourceMaps: ConfigurationSourceMaps
+  ) {
+    super(`Failed to process project graph.`);
+    this.name = this.constructor.name;
+    this.#errors = errors;
+    this.#partialProjectGraph = partialProjectGraph;
+    this.#partialSourceMaps = partialSourceMaps;
+    this.stack = `${this.message}\n  ${errors
+      .map((error) => error.stack.split('\n').join('\n  '))
+      .join('\n')}`;
+  }
+
+  /**
+   * The daemon cannot throw errors which contain methods as they are not serializable.
+   *
+   * This method creates a new {@link ProjectGraphError} from a {@link DaemonProjectGraphError} with the methods based on the same serialized data.
+   */
+  static fromDaemonProjectGraphError(e: DaemonProjectGraphError) {
+    return new ProjectGraphError(e.errors, e.projectGraph, e.sourceMaps);
+  }
+
+  /**
+   * This gets the partial project graph despite the errors which occured.
+   * This partial project graph may be missing nodes, properties of nodes, or dependencies.
+   * This is useful mostly for visualization/debugging. It should not be used for running tasks.
+   */
+  getPartialProjectGraph() {
+    return this.#partialProjectGraph;
+  }
+
+  getPartialSourcemaps() {
+    return this.#partialSourceMaps;
+  }
+
+  getErrors() {
+    return this.#errors;
+  }
 }
 
 function handleProjectGraphError(opts: { exitOnError: boolean }, e) {
   if (opts.exitOnError) {
-    const lines = e.message.split('\n');
-    output.error({
-      title: lines[0],
-      bodyLines: lines.slice(1),
-    });
-    if (process.env.NX_VERBOSE_LOGGING === 'true') {
-      console.error(e);
+    const isVerbose = process.env.NX_VERBOSE_LOGGING === 'true';
+    if (e instanceof ProjectGraphError) {
+      let title = e.message;
+      if (isVerbose) {
+        title += ' See errors below.';
+      }
+
+      const bodyLines = isVerbose
+        ? [e.stack]
+        : ['Pass --verbose to see the stacktraces.'];
+
+      output.error({
+        title,
+        bodyLines: bodyLines,
+      });
+    } else {
+      const lines = e.message.split('\n');
+      output.error({
+        title: lines[0],
+        bodyLines: lines.slice(1),
+      });
+      if (isVerbose) {
+        console.error(e);
+      }
     }
     process.exit(1);
   } else {
@@ -202,9 +332,6 @@ export async function createProjectGraphAndSourceMapsAsync(
     try {
       const projectGraphAndSourceMaps =
         await daemonClient.getProjectGraphAndSourceMaps();
-      if (opts.resetDaemonClient) {
-        daemonClient.reset();
-      }
       performance.mark('create-project-graph-async:end');
       performance.measure(
         'create-project-graph-async',
@@ -241,6 +368,10 @@ export async function createProjectGraphAndSourceMapsAsync(
       }
 
       handleProjectGraphError(opts, e);
+    } finally {
+      if (opts.resetDaemonClient) {
+        daemonClient.reset();
+      }
     }
   }
 }

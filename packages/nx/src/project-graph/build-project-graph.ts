@@ -69,8 +69,7 @@ export async function buildProjectGraphUsingProjectFileMap(
   fileMap: FileMap,
   allWorkspaceFiles: FileData[],
   rustReferences: NxWorkspaceFilesExternals,
-  fileMapCache: FileMapCache | null,
-  shouldWriteCache: boolean
+  fileMapCache: FileMapCache | null
 ): Promise<{
   projectGraph: ProjectGraph;
   projectFileMapCache: FileMapCache;
@@ -116,7 +115,6 @@ export async function buildProjectGraphUsingProjectFileMap(
     filesToProcess
   );
   let projectGraph = await buildProjectGraphUsingContext(
-    nxJson,
     externalNodes,
     context,
     cachedFileData,
@@ -128,9 +126,6 @@ export async function buildProjectGraphUsingProjectFileMap(
     fileMap,
     rootTsConfig
   );
-  if (shouldWriteCache) {
-    writeCache(projectFileMapCache, projectGraph);
-  }
   return {
     projectGraph,
     projectFileMapCache,
@@ -162,7 +157,6 @@ function readCombinedDeps() {
 }
 
 async function buildProjectGraphUsingContext(
-  nxJson: NxJsonConfiguration,
   knownExternalNodes: Record<string, ProjectGraphExternalNode>,
   ctx: CreateDependenciesContext,
   cachedFileData: CachedFileData,
@@ -179,9 +173,23 @@ async function buildProjectGraphUsingContext(
   await normalizeProjectNodes(ctx, builder);
   const initProjectGraph = builder.getUpdatedProjectGraph();
 
-  const r = await updateProjectGraphWithPlugins(ctx, initProjectGraph);
+  let updatedGraph;
+  let error;
+  try {
+    updatedGraph = await updateProjectGraphWithPlugins(ctx, initProjectGraph);
+  } catch (e) {
+    if (e instanceof CreateDependenciesError) {
+      updatedGraph = e.partialProjectGraph;
+      error = e;
+    } else {
+      throw e;
+    }
+  }
 
-  const updatedBuilder = new ProjectGraphBuilder(r, ctx.fileMap.projectFileMap);
+  const updatedBuilder = new ProjectGraphBuilder(
+    updatedGraph,
+    ctx.fileMap.projectFileMap
+  );
   for (const proj of Object.keys(cachedFileData.projectFileMap)) {
     for (const f of ctx.fileMap.projectFileMap[proj] || []) {
       const cached = cachedFileData.projectFileMap[proj][f.file];
@@ -208,7 +216,11 @@ async function buildProjectGraphUsingContext(
     'build project graph:end'
   );
 
-  return finalGraph;
+  if (!error) {
+    return finalGraph;
+  } else {
+    throw new CreateDependenciesError(error.errors, finalGraph);
+  }
 }
 
 function createContext(
@@ -245,6 +257,7 @@ async function updateProjectGraphWithPlugins(
     context.projects
   );
   let graph = initProjectGraph;
+  const errors: Array<ProcessDependenciesError | ProcessProjectGraphError> = [];
   for (const { plugin } of plugins) {
     try {
       if (
@@ -281,12 +294,11 @@ async function updateProjectGraphWithPlugins(
         );
       }
     } catch (e) {
-      let message = `Failed to process the project graph with "${plugin.name}".`;
-      if (e instanceof Error) {
-        e.message = message + '\n' + e.message;
-        throw e;
-      }
-      throw new Error(message);
+      errors.push(
+        new ProcessProjectGraphError(plugin.name, {
+          cause: e,
+        })
+      );
     }
   }
 
@@ -316,13 +328,12 @@ async function updateProjectGraphWithPlugins(
             'sourceFile' in dep ? dep.sourceFile : null
           );
         }
-      } catch (e) {
-        let message = `Failed to process project dependencies with "${plugin.name}".`;
-        if (e instanceof Error) {
-          e.message = message + '\n' + e.message;
-          throw e;
-        }
-        throw new Error(message);
+      } catch (cause) {
+        errors.push(
+          new ProcessDependenciesError(plugin.name, {
+            cause,
+          })
+        );
       }
 
       performance.mark(`${plugin.name}:createDependencies - end`);
@@ -333,7 +344,52 @@ async function updateProjectGraphWithPlugins(
       );
     })
   );
-  return builder.getUpdatedProjectGraph();
+
+  const result = builder.getUpdatedProjectGraph();
+
+  if (errors.length === 0) {
+    return result;
+  } else {
+    throw new CreateDependenciesError(errors, result);
+  }
+}
+
+export class ProcessDependenciesError extends Error {
+  constructor(public readonly pluginName: string, { cause }) {
+    super(
+      `The "${pluginName}" plugin threw an error while creating dependencies:`,
+      {
+        cause,
+      }
+    );
+    this.name = this.constructor.name;
+    this.stack = `${this.message}\n  ${cause.stack.split('\n').join('\n  ')}`;
+  }
+}
+
+export class ProcessProjectGraphError extends Error {
+  constructor(public readonly pluginName: string, { cause }) {
+    super(
+      `The "${pluginName}" plugin threw an error while processing the project graph:`,
+      {
+        cause,
+      }
+    );
+    this.name = this.constructor.name;
+    this.stack = `${this.message}\n  ${cause.stack.split('\n').join('\n  ')}`;
+  }
+}
+
+export class CreateDependenciesError extends Error {
+  constructor(
+    public readonly errors: Array<
+      ProcessDependenciesError | ProcessProjectGraphError
+    >,
+    public readonly partialProjectGraph: ProjectGraph
+  ) {
+    super('Failed to create dependencies. See above for errors');
+    this.name = this.constructor.name;
+  }
 }
 
 function readRootTsConfig() {
