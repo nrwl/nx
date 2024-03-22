@@ -65,7 +65,10 @@ describe('splitArgs', () => {
         {} as any,
         {} as any
       ).nxArgs
-    ).toMatchSnapshot();
+    ).toEqual({
+      base: 'main',
+      skipNxCache: false,
+    });
   });
 
   it('should return configured base branch from nx.json', () => {
@@ -89,14 +92,17 @@ describe('splitArgs', () => {
     expect(
       splitArgsIntoNxArgsAndOverrides(
         {
-          __overrides_unparsed__: ['--notNxArg', 'affected', '--override'],
+          __overrides_unparsed__: ['--notNxArg', 'affecteda', '--override'],
           $0: '',
         },
         'affected',
         {} as any,
         {} as any
       ).nxArgs
-    ).toMatchSnapshot();
+    ).toEqual({
+      base: 'main',
+      skipNxCache: false,
+    });
   });
 
   it('should split non nx specific arguments into target args', () => {
