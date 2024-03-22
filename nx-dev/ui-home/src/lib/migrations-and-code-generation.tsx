@@ -113,12 +113,12 @@ export function MigrationsAndCodeGeneration(): JSX.Element {
                   <br />
                   - Run 'yarn nx migrate --run-migrations'
                   <br />- To learn more go to
-                  <Link
+                  <a
                     href="https://nx.dev/features/automate-updating-dependencies"
                     className="ml-2 underline"
                   >
                     https://nx.dev/features/automate-updating-dependencies
-                  </Link>
+                  </a>
                 </p>
               </div>
             </div>

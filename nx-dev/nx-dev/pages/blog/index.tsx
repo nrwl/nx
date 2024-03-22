@@ -31,7 +31,7 @@ export default function Blog(): JSX.Element {
       <Header />
       <main id="main" role="main">
         <div className="w-full">
-          <div className="bg-slate-50 py-8 dark:bg-slate-800/40">
+          <div className="py-8 bg-slate-50 dark:bg-slate-800/40">
             <article className="mx-auto max-w-7xl px-4 pt-12 sm:px-6 lg:items-center lg:py-4 lg:px-8">
               <header className="md:py-8">
                 <div>
@@ -50,7 +50,7 @@ export default function Blog(): JSX.Element {
                 Youtube.
               </p>
             </article>
-            <section className="mx-auto grid max-w-7xl grid-cols-1 gap-5 px-4 pt-12 pb-24 md:grid-cols-3">
+            <section className="mx-auto max-w-7xl px-4 pt-12 grid grid-cols-1 gap-5 md:grid-cols-3 pb-24">
               <div className="group relative rounded-lg border border-slate-200 bg-white/60 p-5 transition duration-200 ease-out hover:border-slate-300 dark:border-slate-800/40 dark:bg-slate-800/60 dark:hover:border-slate-900 dark:hover:bg-slate-800">
                 <div className="relative m-2 mb-6 inline-flex h-10 w-10 items-center justify-center">
                   <div className="absolute inset-0 -m-2 rotate-6 transform rounded-3xl bg-slate-300 transition duration-200 ease-out group-hover:-rotate-3 group-hover:scale-105 dark:bg-slate-800" />

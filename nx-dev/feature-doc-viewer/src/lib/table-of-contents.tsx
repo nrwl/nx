@@ -75,7 +75,7 @@ export function TableOfContents({
       <nav className="toc">
         <span className="pl-4 font-medium">On this page</span>
         {!!items.length ? (
-          <ul className="mt-4 flex-col">
+          <ul className="flex-col mt-4">
             {items.map((item) => {
               const href = `${path}#${item.id}`;
               return (

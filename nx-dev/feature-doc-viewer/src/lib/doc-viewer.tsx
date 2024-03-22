@@ -126,7 +126,7 @@ export function DocViewer({
             <div
               data-document="related"
               className={cx(
-                'prose prose-slate dark:prose-invert w-full max-w-none pt-8 2xl:max-w-4xl',
+                'pt-8 prose prose-slate dark:prose-invert w-full max-w-none 2xl:max-w-4xl',
                 { 'xl:max-w-2xl': !hideTableOfContent }
               )}
             >

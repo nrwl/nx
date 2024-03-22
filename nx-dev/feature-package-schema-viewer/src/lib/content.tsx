@@ -125,13 +125,13 @@ export function Content({
           >
             {schemaViewModel.type}
           </div>
-          <Link
+          <a
             className="relative mx-4 inline-flex rounded-md border border-green-100 bg-green-50 px-4 py-2 text-xs font-medium text-green-600 dark:border-green-900 dark:bg-green-900/30 dark:text-green-400"
             href="/recipes/other/rescope"
             title="Nx 16 package name changes"
           >
             Rescope @nrwl to @nx
-          </Link>
+          </a>
           {schemaViewModel.deprecated && (
             <div
               aria-hidden="true"
@@ -159,7 +159,7 @@ export function Content({
           >
             {schemaViewModel.packageName}
           </Link>
-          <Link
+          <a
             href={schemaViewModel.schemaGithubUrl}
             target="_blank"
             rel="noreferrer"
@@ -177,7 +177,7 @@ export function Content({
               ></path>
             </svg>
             See schema
-          </Link>
+          </a>
         </div>
       </div>
 

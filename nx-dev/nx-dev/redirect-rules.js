@@ -782,8 +782,6 @@ const nested5minuteTutorialUrls = {
   '/angular-tutorial': '/getting-started/tutorials/angular-monorepo-tutorial',
   '/angular-tutorial/1-code-generation':
     '/getting-started/tutorials/angular-monorepo-tutorial',
-  '/getting-started/angular-monorepo-tutorial':
-    '/getting-started/tutorials/angular-monorepo-tutorial',
   '/angular-tutorial/2-project-graph':
     '/getting-started/tutorials/angular-monorepo-tutorial',
   '/angular-tutorial/3-task-running':

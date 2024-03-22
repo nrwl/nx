@@ -209,7 +209,7 @@ export function DocumentationHeader({
           </Link>
           <Link
             href="/getting-started/intro"
-            className="ml-2 hidden items-center px-4 text-slate-900 dark:text-white lg:flex lg:px-0"
+            className="hidden lg:flex ml-2 items-center px-4 text-slate-900 dark:text-white lg:px-0"
           >
             <span className="text-xl font-bold uppercase tracking-wide">
               Docs
@@ -251,14 +251,14 @@ export function DocumentationHeader({
               {/*  <span className="relative inline-flex h-3 w-3 rounded-full bg-blue-500 dark:bg-sky-500" />*/}
               {/*</span>*/}Launch Nx
             </Link>
-            <Link
+            <a
               href="https://nx.app/enterprise?utm_source=nx.dev&utm_medium=header-menu"
               target="_blank"
               title="Contact us"
               className="hidden px-3 py-2 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500 md:inline-flex"
             >
               Contact us
-            </Link>
+            </a>
           </nav>
         </div>
         <div className="hidden flex-grow lg:flex">{/* SPACER */}</div>
@@ -274,7 +274,7 @@ export function DocumentationHeader({
               variant="secondary"
               size="small"
             >
-              <NxCloudIcon className="h-4 w-4" aria-hidden="true" />
+              <NxCloudIcon className="w-4 h-4" aria-hidden="true" />
               <span>Go to app</span>
             </ButtonLink>
           </nav>

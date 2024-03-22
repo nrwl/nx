@@ -83,7 +83,7 @@ export function ShortEmbeds({
     <ShortEmbedContext.Provider
       value={{ current: currentVideo, userInteraction }}
     >
-      <aside id="short-embed" className="fixed bottom-5 right-5 z-50 w-80">
+      <aside id="short-embed" className="fixed w-80 bottom-5 right-5 z-50">
         <Transition
           appear={true}
           show={isShowing}
@@ -94,7 +94,7 @@ export function ShortEmbeds({
           leaveFrom="opacity-100 translate-y-0"
           leaveTo="opacity-0 translate-y-full"
         >
-          <div className="coding relative mt-12 flex h-full w-full flex-col rounded-xl border border-slate-200 bg-slate-50 p-2 leading-normal text-slate-800 subpixel-antialiased shadow-xl dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
+          <div className="relative mt-12 w-full h-full rounded-xl shadow-xl coding flex flex-col border border-slate-200 bg-slate-50 p-2 leading-normal text-slate-800 subpixel-antialiased dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
             <Button
               size="small"
               variant="secondary"
@@ -104,13 +104,13 @@ export function ShortEmbeds({
               className="absolute top-2 right-2"
               title="Close"
             >
-              <XMarkIcon className="h-4 w-4" />
+              <XMarkIcon className="w-4 h-4" />
             </Button>
-            <h3 className="not-prose text-center">Relevant Videos</h3>
-            <div className="grid w-full grid-cols-1 justify-items-center gap-4">
+            <h3 className="text-center not-prose">Relevant Videos</h3>
+            <div className="grid grid-cols-1 gap-4 justify-items-center w-full">
               {children}
               <div>
-                <div className="pb-1 text-base font-medium">Continue with:</div>
+                <div className="text-base font-medium pb-1">Continue with:</div>
                 <div className="flex flex-col gap-2">
                   {videoData
                     .filter(
@@ -127,7 +127,7 @@ export function ShortEmbeds({
                             setUserInteraction(true);
                             setCurrentVideo(config);
                           }}
-                          className="flex h-24 overflow-hidden rounded-lg border border-slate-200 bg-white/40 text-sm shadow-sm transition focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 hover:cursor-pointer hover:bg-white dark:border-slate-800/40 dark:bg-slate-800/60 dark:hover:bg-slate-800"
+                          className="hover:cursor-pointer flex text-sm h-24 rounded-lg overflow-hidden border border-slate-200 bg-white/40 shadow-sm transition focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 hover:bg-white dark:border-slate-800/40 dark:bg-slate-800/60 dark:hover:bg-slate-800"
                         >
                           <div className="w-32 shrink-0">
                             <img
@@ -136,7 +136,7 @@ export function ShortEmbeds({
                               alt={`Another recommendation: ${config.title}`}
                             />
                           </div>
-                          <div className="grid h-full w-full shrink grid-cols-1 content-center overflow-ellipsis p-2">
+                          <div className="p-2 shrink overflow-ellipsis h-full w-full grid grid-cols-1 content-center">
                             {config.title}
                           </div>
                         </div>
@@ -160,7 +160,7 @@ export function ShortVideo({ embedUrl, title }: VideoData) {
   }
 
   return (
-    <div className="h-96 w-full overflow-hidden rounded-lg">
+    <div className="w-full h-96 rounded-lg overflow-hidden">
       <iframe
         className="!m-0 border-0"
         width="100%"

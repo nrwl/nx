@@ -1,8 +1,8 @@
 export function LoadingState(): JSX.Element {
   return (
-    <div className="flex w-full items-center justify-center gap-4 px-4 py-2 text-blue-500 transition duration-150 ease-in-out dark:text-sky-500">
+    <div className="w-full flex items-center justify-center px-4 gap-4 py-2 text-blue-500 dark:text-sky-500 transition ease-in-out duration-150">
       <svg
-        className="h-5 w-5 animate-spin"
+        className="animate-spin h-5 w-5"
         xmlns="http://www.w3.org/2000/svg"
         fill="none"
         stroke="currentColor"

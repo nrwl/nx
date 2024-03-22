@@ -1,5 +1,3 @@
-import Link from 'next/link';
-
 export function TopSchemaLayout({
   name,
   url,
@@ -17,13 +15,13 @@ export function TopSchemaLayout({
         >
           Package
         </div>
-        <Link
+        <a
           className="relative mx-4 inline-flex rounded-md border border-green-100 bg-green-50 px-4 py-2 text-xs font-medium text-green-600 dark:border-green-900 dark:bg-green-900/30 dark:text-green-400"
           href="/recipes/other/rescope"
           title="Nx 16 package name changes"
         >
           Rescope @nrwl to @nx
-        </Link>
+        </a>
       </div>
       <div className="relative z-0 inline-flex flex-shrink-0">
         <a

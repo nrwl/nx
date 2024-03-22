@@ -1,6 +1,5 @@
 import { LinkIcon } from '@heroicons/react/24/solid';
 import { slugify } from '../slugify.utils';
-import Link from 'next/link';
 
 export const Heading1 = ({ title }: { title: string }) => (
   <h1
@@ -8,12 +7,12 @@ export const Heading1 = ({ title }: { title: string }) => (
     className="group mb-5 text-4xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100"
   >
     <span>{title}</span>
-    <Link aria-hidden="true" tabIndex={-1} href={'#' + slugify(title)}>
+    <a aria-hidden="true" tabIndex={-1} href={'#' + slugify(title)}>
       <LinkIcon
         role="img"
         className="ml-2 mb-1 inline h-5 w-5 opacity-0 group-hover:opacity-100"
       />
-    </Link>
+    </a>
   </h1>
 );
 
@@ -23,12 +22,12 @@ export const Heading2 = ({ title }: { title: string }) => (
     className="group mb-5 text-2xl font-bold tracking-tight text-slate-800 dark:text-slate-200"
   >
     <span>{title}</span>
-    <Link aria-hidden="true" tabIndex={-1} href={'#' + slugify(title)}>
+    <a aria-hidden="true" tabIndex={-1} href={'#' + slugify(title)}>
       <LinkIcon
         role="img"
         className="ml-2 mb-1 inline h-5 w-5 opacity-0 group-hover:opacity-100"
       />
-    </Link>
+    </a>
   </h2>
 );
 
@@ -38,11 +37,11 @@ export const Heading3 = ({ title }: { title: string }) => (
     className="group text-xl font-semibold tracking-tight text-slate-700 dark:text-slate-300"
   >
     <span>{title}</span>
-    <Link aria-hidden="true" tabIndex={-1} href={'#' + slugify(title)}>
+    <a aria-hidden="true" tabIndex={-1} href={'#' + slugify(title)}>
       <LinkIcon
         role="img"
         className="ml-2 mb-1 inline h-5 w-5 opacity-0 group-hover:opacity-100"
       />
-    </Link>
+    </a>
   </h3>
 );

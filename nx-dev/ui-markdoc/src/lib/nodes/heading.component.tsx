@@ -1,5 +1,4 @@
 import { LinkIcon } from '@heroicons/react/24/outline';
-import Link from 'next/link';
 import { ReactNode } from 'react';
 
 export function Heading({
@@ -21,9 +20,9 @@ export function Heading({
       className={['not-prose group', className].filter(Boolean).join(' ')}
     >
       {children}
-      <Link aria-hidden="true" href={`#${id}`}>
+      <a aria-hidden="true" href={`#${id}`}>
         <LinkIcon className="ml-2 mb-1 inline h-5 w-5 opacity-0 group-hover:opacity-100" />
-      </Link>
+      </a>
     </Component>
   );
 }

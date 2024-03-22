@@ -10,12 +10,12 @@ export function Feed({
   onFeedback: (statement: 'bad' | 'good', chatItemUid: string) => void;
 }) {
   return (
-    <div className="my-12 flow-root">
+    <div className="flow-root my-12">
       <ul role="list" className="-mb-8 space-y-12">
         {activity.map((activityItem, activityItemIdx) => (
           <li
             key={[activityItem.role, activityItem.id].join('-')}
-            className="feed-item relative flex items-start space-x-3 pt-12"
+            className="pt-12 relative flex items-start space-x-3 feed-item"
           >
             {activityItem.role === 'assistant' ? (
               <FeedAnswer

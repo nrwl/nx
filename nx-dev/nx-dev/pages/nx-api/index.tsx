@@ -110,9 +110,9 @@ export default function Packages({
                     <p>
                       In version 16, we have rescoped our packages to{' '}
                       <code>@nx/*</code> from <code>@nrwl/*</code>.{' '}
-                      <Link href="/recipes/other/rescope" className="underline">
+                      <a href="/recipes/other/rescope" className="underline">
                         Read more about the rescope ≫
-                      </Link>
+                      </a>
                     </p>
                   </section>
                   <section id="packages-section" className="py-12">

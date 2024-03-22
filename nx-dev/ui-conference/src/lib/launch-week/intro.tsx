@@ -1,5 +1,3 @@
-import Link from 'next/link';
-
 export function LaunchNxIntro() {
   return (
     <div className="mx-auto max-w-screen-lg px-5 py-5 xl:max-w-screen-xl">
@@ -41,9 +39,9 @@ export function LaunchNxIntro() {
           </h3>
           <p className="mb-6 sm:text-lg">
             Missed our Launch Nx Conf? Then follow up with the{' '}
-            <Link href="#announcements" className="underline">
+            <a href="#announcements" className="underline">
               announcements
-            </Link>{' '}
+            </a>{' '}
             below or watch the conference recording:
           </p>
 
