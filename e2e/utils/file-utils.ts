@@ -15,7 +15,7 @@ import { tmpProjPath } from './create-project-utils';
 
 export function createFile(f: string, content: string = ''): void {
   const path = tmpProjPath(f);
-  createFileSync(path);
+  createFileSync(osSpecificFilePath(path));
   if (content) {
     updateFile(f, content);
   }
@@ -25,13 +25,14 @@ export function updateFile(
   f: string,
   content: string | ((content: string) => string)
 ): void {
-  ensureDirSync(path.dirname(tmpProjPath(f)));
+  const sanitizedPath = osSpecificFilePath(tmpProjPath(f));
+  ensureDirSync(path.dirname(sanitizedPath));
   if (typeof content === 'string') {
-    writeFileSync(tmpProjPath(f), content);
+    writeFileSync(sanitizedPath, content);
   } else {
     writeFileSync(
-      tmpProjPath(f),
-      content(readFileSync(tmpProjPath(f)).toString())
+      sanitizedPath,
+      content(readFileSync(sanitizedPath).toString())
     );
   }
 }
@@ -44,7 +45,7 @@ export function renameFile(f: string, newPath: string): void {
 export function checkFilesExist(...expectedFiles: string[]) {
   expectedFiles.forEach((f) => {
     const ff = f.startsWith('/') ? f : tmpProjPath(f);
-    if (!exists(ff)) {
+    if (!exists(osSpecificFilePath(ff))) {
       throw new Error(`File '${ff}' does not exist`);
     }
   });
@@ -63,38 +64,38 @@ export function updateJson<T extends object = any, U extends object = T>(
 export function checkFilesDoNotExist(...expectedFiles: string[]) {
   expectedFiles.forEach((f) => {
     const ff = f.startsWith('/') ? f : tmpProjPath(f);
-    if (exists(ff)) {
+    if (exists(osSpecificFilePath(ff))) {
       throw new Error(`File '${ff}' should not exist`);
     }
   });
 }
 
 export function listFiles(dirName: string) {
-  return readdirSync(tmpProjPath(dirName));
+  return readdirSync(osSpecificFilePath(tmpProjPath(dirName)));
 }
 
 export function readJson<T extends Object = any>(f: string): T {
-  const content = readFile(f);
+  const content = readFile(osSpecificFilePath(f));
   return parseJson<T>(content);
 }
 
 export function readFile(f: string) {
   const ff = f.startsWith('/') ? f : tmpProjPath(f);
-  return readFileSync(ff, 'utf-8');
+  return readFileSync(osSpecificFilePath(ff), 'utf-8');
 }
 
 export function removeFile(f: string) {
   const ff = f.startsWith('/') ? f : tmpProjPath(f);
-  removeSync(ff);
+  removeSync(osSpecificFilePath(ff));
 }
 
 export function rmDist() {
-  removeSync(`${tmpProjPath()}/dist`);
+  removeSync(osSpecificFilePath(`${tmpProjPath()}/dist`));
 }
 
 export function directoryExists(filePath: string): boolean {
   try {
-    return statSync(filePath).isDirectory();
+    return statSync(osSpecificFilePath(filePath)).isDirectory();
   } catch (err) {
     return false;
   }
@@ -102,7 +103,7 @@ export function directoryExists(filePath: string): boolean {
 
 export function fileExists(filePath: string): boolean {
   try {
-    return statSync(filePath).isFile();
+    return statSync(osSpecificFilePath(filePath)).isFile();
   } catch (err) {
     return false;
   }
@@ -124,4 +125,8 @@ export function tmpBackupNgCliProjPath(path?: string) {
   return path
     ? `${e2eCwd}/ng-cli-proj-backup/${path}`
     : `${e2eCwd}/ng-cli-proj-backup`;
+}
+
+function osSpecificFilePath(filePath: string) {
+  return filePath.replace(/\//g, path.sep);
 }
