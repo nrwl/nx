@@ -187,9 +187,9 @@ export function splitArgsIntoNxArgsAndOverrides(
   ) {
     nxArgs['parallel'] = Number(
       nxArgs['maxParallel'] ||
-      nxArgs['max-parallel'] ||
-      process.env.NX_PARALLEL ||
-      3
+        nxArgs['max-parallel'] ||
+        process.env.NX_PARALLEL ||
+        3
     );
   } else if (args['parallel'] !== undefined) {
     nxArgs['parallel'] = Number(args['parallel']);
