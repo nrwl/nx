@@ -21,9 +21,6 @@ async function createPreset(tree: Tree, options: Schema) {
     process.env.NX_ADD_PLUGINS !== 'false' &&
     nxJson.useInferencePlugins !== false;
 
-  console.log('Add plugin', addPlugin);
-  console.log(options.preset, Preset.ReactNative);
-
   if (options.preset === Preset.Apps) {
     return;
   } else if (options.preset === Preset.AngularMonorepo) {
@@ -91,6 +88,33 @@ async function createPreset(tree: Tree, options: Schema) {
       bundler: options.bundler ?? 'vite',
       e2eTestRunner: options.e2eTestRunner ?? 'cypress',
       unitTestRunner: options.bundler === 'vite' ? 'vitest' : 'jest',
+      addPlugin,
+    });
+  } else if (options.preset === Preset.RemixMonorepo) {
+    const { applicationGenerator: remixApplicationGenerator } = require('@nx' +
+      '/remix/generators');
+
+    return remixApplicationGenerator(tree, {
+      name: options.name,
+      directory: join('apps', options.name),
+      projectNameAndRootFormat: 'as-provided',
+      linter: options.linter,
+      e2eTestRunner: options.e2eTestRunner ?? 'cypress',
+      unitTestRunner: 'vitest',
+      addPlugin,
+    });
+  } else if (options.preset === Preset.RemixStandalone) {
+    const { applicationGenerator: remixApplicationGenerator } = require('@nx' +
+      '/remix/generators');
+
+    return remixApplicationGenerator(tree, {
+      name: options.name,
+      directory: '.',
+      projectNameAndRootFormat: 'as-provided',
+      linter: options.linter,
+      e2eTestRunner: options.e2eTestRunner ?? 'cypress',
+      rootProject: true,
+      unitTestRunner: 'vitest',
       addPlugin,
     });
   } else if (options.preset === Preset.VueMonorepo) {

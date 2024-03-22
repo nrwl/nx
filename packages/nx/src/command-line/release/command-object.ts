@@ -115,8 +115,8 @@ export const yargsReleaseCommand: CommandModule<
           );
         }
         const nxJson = readNxJson();
-        if (argv.groups?.length) {
-          for (const group of argv.groups) {
+        if ((argv.groups as string[] | string)?.length) {
+          for (const group of argv.groups as string[] | string) {
             if (!nxJson.release?.groups?.[group]) {
               throw new Error(
                 `The specified release group "${group}" was not found in nx.json`

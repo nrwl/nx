@@ -1,0 +1,15 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`splitArgs should default to having a base of main 1`] = `
+{
+  "base": "main",
+  "skipNxCache": false,
+}
+`;
+
+exports[`splitArgs should return a default base branch if not configured in nx.json 1`] = `
+{
+  "base": "main",
+  "skipNxCache": false,
+}
+`;

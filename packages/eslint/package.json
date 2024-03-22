@@ -37,7 +37,7 @@
     "@nx/js": "file:../js",
     "eslint": "^8.0.0",
     "tslib": "^2.3.0",
-    "typescript": "~5.3.2"
+    "typescript": "~5.4.2"
   },
   "peerDependenciesMeta": {
     "js-yaml": {

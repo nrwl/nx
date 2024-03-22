@@ -22,6 +22,7 @@ import { parseGeneratorString } from '../generate/generate';
 import { getGeneratorInformation } from '../generate/generator-utils';
 import { VersionOptions } from './command-object';
 import {
+  NxReleaseConfig,
   createNxReleaseConfig,
   handleNxReleaseConfigError,
 } from './config/config';
@@ -71,6 +72,7 @@ export interface ReleaseVersionGeneratorSchema {
   skipLockFileUpdate?: boolean;
   installArgs?: string;
   installIgnoreScripts?: boolean;
+  conventionalCommitsConfig?: NxReleaseConfig['conventionalCommits'];
 }
 
 export interface NxReleaseVersionResult {
@@ -210,7 +212,8 @@ export async function releaseVersion(
           args.generatorOptionsOverrides,
           projectNames,
           releaseGroup,
-          versionData
+          versionData,
+          nxReleaseConfig.conventionalCommits
         );
         // Capture the callback so that we can run it after flushing the changes to disk
         generatorCallbacks.push(async () => {
@@ -341,7 +344,8 @@ export async function releaseVersion(
         args.generatorOptionsOverrides,
         projectNames,
         releaseGroup,
-        versionData
+        versionData,
+        nxReleaseConfig.conventionalCommits
       );
       // Capture the callback so that we can run it after flushing the changes to disk
       generatorCallbacks.push(async () => {
@@ -466,7 +470,8 @@ async function runVersionOnProjects(
   generatorOverrides: Record<string, unknown> | undefined,
   projectNames: string[],
   releaseGroup: ReleaseGroupWithName,
-  versionData: VersionData
+  versionData: VersionData,
+  conventionalCommitsConfig: NxReleaseConfig['conventionalCommits']
 ): Promise<ReleaseVersionGeneratorResult['callback']> {
   const generatorOptions: ReleaseVersionGeneratorSchema = {
     // Always ensure a string to avoid generator schema validation errors
@@ -479,6 +484,7 @@ async function runVersionOnProjects(
     projectGraph,
     releaseGroup,
     firstRelease: args.firstRelease ?? false,
+    conventionalCommitsConfig,
   };
 
   // Apply generator defaults from schema.json file etc
@@ -528,7 +534,7 @@ function printAndFlushChanges(tree: Tree, isDryRun: boolean) {
           isDryRun ? chalk.keyword('orange')(' [dry-run]') : ''
         }`
       );
-      printDiff('', f.content?.toString() || '');
+      printDiff('', f.content?.toString() ?? '');
     } else if (f.type === 'UPDATE') {
       console.error(
         `${chalk.white('UPDATE')} ${f.path}${

@@ -25,6 +25,7 @@ describe('@nx/rollup/plugin', () => {
           },
         },
         workspaceRoot: tempFs.tempDir,
+        configFiles: [],
       };
 
       tempFs.createFileSync('package.json', JSON.stringify({ name: 'mylib' }));
@@ -93,6 +94,7 @@ module.exports = config;
           },
         },
         workspaceRoot: tempFs.tempDir,
+        configFiles: [],
       };
 
       tempFs.createFileSync(

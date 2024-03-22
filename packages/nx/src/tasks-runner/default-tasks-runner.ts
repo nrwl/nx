@@ -1,6 +1,5 @@
 import { TasksRunner, TaskStatus } from './tasks-runner';
 import { TaskOrchestrator } from './task-orchestrator';
-import { performance } from 'perf_hooks';
 import { TaskHasher } from '../hasher/task-hasher';
 import { LifeCycle } from './life-cycle';
 import { ProjectGraph } from '../config/project-graph';

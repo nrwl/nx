@@ -13,7 +13,7 @@ import { workspaceRoot } from './workspace-root';
 
 const execAsync = promisify(exec);
 
-export type PackageManager = 'yarn' | 'pnpm' | 'npm';
+export type PackageManager = 'yarn' | 'pnpm' | 'npm' | 'bun';
 
 export interface PackageManagerCommands {
   preInstall?: string;
@@ -32,16 +32,23 @@ export interface PackageManagerCommands {
 /**
  * Detects which package manager is used in the workspace based on the lock file.
  */
+function getPackageManager(dir: string = '') {
+  return existsSync(join(dir, 'yarn.lock'))
+    ? 'yarn'
+    : existsSync(join(dir, 'bun.lockb'))
+    ? 'bun'
+    : existsSync(join(dir, 'pnpm-lock.yaml')) ||
+      existsSync(join(dir, 'pnpm-workspace.yaml'))
+    ? 'pnpm'
+    : 'npm';
+}
+
+/**
+ * Detects which package manager is used in the workspace based on the lock file.
+ */
 export function detectPackageManager(dir: string = ''): PackageManager {
   const nxJson = readNxJson();
-  return (
-    nxJson.cli?.packageManager ??
-    (existsSync(join(dir, 'yarn.lock'))
-      ? 'yarn'
-      : existsSync(join(dir, 'pnpm-lock.yaml'))
-      ? 'pnpm'
-      : 'npm')
-  );
+  return nxJson.cli?.packageManager ?? getPackageManager(dir);
 }
 
 /**
@@ -142,6 +149,23 @@ export function getPackageManagerCommand(
         list: 'npm ls',
       };
     },
+    bun: () => {
+      // TODO: Remove this
+      process.env.npm_config_legacy_peer_deps ??= 'true';
+
+      return {
+        install: 'bun install',
+        ciInstall: 'bun install --no-cache',
+        updateLockFile: 'bun install --frozen-lockfile',
+        add: 'bun install',
+        addDev: 'bun install -D',
+        rm: 'bun rm',
+        exec: 'bun',
+        dlx: 'bunx',
+        run: (script: string, args: string) => `bun run ${script} -- ${args}`,
+        list: 'bun pm ls',
+      };
+    },
   };
 
   return commands[packageManager]();
@@ -230,7 +254,12 @@ export function copyPackageManagerConfigurationFiles(
   root: string,
   destination: string
 ) {
-  for (const packageManagerConfigFile of ['.npmrc', '.yarnrc', '.yarnrc.yml']) {
+  for (const packageManagerConfigFile of [
+    '.npmrc',
+    '.yarnrc',
+    '.yarnrc.yml',
+    'bunfig.toml',
+  ]) {
     // f is an absolute path, including the {workspaceRoot}.
     const f = findFileInPackageJsonDirectory(packageManagerConfigFile, root);
     if (f) {
@@ -240,6 +269,10 @@ export function copyPackageManagerConfigurationFiles(
       const destinationPath = join(destination, relative(root, f));
       switch (packageManagerConfigFile) {
         case '.npmrc': {
+          copyFileSync(f, destinationPath);
+          break;
+        }
+        case 'bunfig.toml': {
           copyFileSync(f, destinationPath);
           break;
         }
@@ -343,7 +376,7 @@ export async function packageRegistryView(
   args: string
 ): Promise<string> {
   let pm = detectPackageManager();
-  if (pm === 'yarn') {
+  if (pm === 'yarn' || pm === 'bun') {
     /**
      * yarn has `yarn info` but it behaves differently than (p)npm,
      * which makes it's usage unreliable
@@ -363,7 +396,7 @@ export async function packageRegistryPack(
   version: string
 ): Promise<{ tarballPath: string }> {
   let pm = detectPackageManager();
-  if (pm === 'yarn') {
+  if (pm === 'yarn' || pm === 'bun') {
     /**
      * `(p)npm pack` will download a tarball of the specified version,
      * whereas `yarn` pack creates a tarball of the active workspace, so it
