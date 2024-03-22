@@ -13,12 +13,14 @@ import {
   updateProjectConfiguration,
 } from '@nx/devkit';
 import { libraryGenerator as jsLibraryGenerator } from '@nx/js';
+import { addTsLibDependencies } from '@nx/js/src/utils/typescript/add-tslib-dependencies';
 import { nxVersion } from 'nx/src/utils/versions';
 import generatorGenerator from '../generator/generator';
 import { CreatePackageSchema } from './schema';
 import { NormalizedSchema, normalizeSchema } from './utils/normalize-schema';
 import { hasGenerator } from '../../utils/has-generator';
 import { join } from 'path';
+import { tsLibVersion } from '@nx/js/src/utils/versions';
 
 export async function createPackageGenerator(
   host: Tree,
@@ -38,6 +40,10 @@ export async function createPackageGeneratorInternal(
 
   const options = await normalizeSchema(host, schema);
   const pluginPackageName = await addPresetGenerator(host, options);
+
+  if (options.bundler === 'tsc') {
+    tasks.push(addTsLibDependencies(host));
+  }
 
   const installTask = addDependenciesToPackageJson(
     host,
@@ -112,6 +118,7 @@ async function createCliPackage(
       };
       packageJson.dependencies = {
         'create-nx-workspace': nxVersion,
+        ...(options.bundler === 'tsc' && { tslib: tsLibVersion }),
       };
       return packageJson;
     }
