@@ -39,7 +39,7 @@ export interface NxArgs {
 }
 
 export function createOverrides(__overrides_unparsed__: string[] = []) {
-  let overrides: any =
+  let overrides =
     yargsParser(__overrides_unparsed__, {
       configuration: {
         'camel-case-expansion': false,
@@ -121,7 +121,7 @@ export function splitArgsIntoNxArgsAndOverrides(
 
     // Allow setting base and head via environment variables (lower priority then direct command arguments)
     if (!nxArgs.base && process.env.NX_BASE) {
-      nxArgs.base = process.env.NX_BASE ?? 'main';
+      nxArgs.base = process.env.NX_BASE;
       if (options.printWarnings) {
         output.note({
           title: `No explicit --base argument provided, but found environment variable NX_BASE so using its value as the affected base: ${output.bold(
@@ -143,7 +143,7 @@ export function splitArgsIntoNxArgsAndOverrides(
 
     if (!nxArgs.base) {
       nxArgs.base =
-        nxJson?.defaultBase ?? nxJson?.affected?.defaultBase ?? 'main';
+        nxJson.defaultBase ?? nxJson.affected?.defaultBase ?? 'main';
 
       // No user-provided arguments to set the affected criteria, so inform the user of the defaults being used
       if (
@@ -290,7 +290,7 @@ function getUntrackedFiles(): string[] {
   return parseGitOutput(`git ls-files --others --exclude-standard`);
 }
 
-function getMergeBase(base: string = 'main', head: string = 'HEAD') {
+function getMergeBase(base: string, head: string = 'HEAD') {
   try {
     return execSync(`git merge-base "${base}" "${head}"`, {
       maxBuffer: TEN_MEGABYTES,
@@ -314,10 +314,7 @@ function getMergeBase(base: string = 'main', head: string = 'HEAD') {
   }
 }
 
-function getFilesUsingBaseAndHead(
-  base: string = 'main',
-  head: string
-): string[] {
+function getFilesUsingBaseAndHead(base: string, head: string): string[] {
   return parseGitOutput(
     `git diff --name-only --no-renames --relative "${base}" "${head}"`
   );
