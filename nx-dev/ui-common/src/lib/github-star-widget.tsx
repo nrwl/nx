@@ -1,6 +1,6 @@
 import { sendCustomEvent } from '@nx/nx-dev/feature-analytics';
 
-const GithubIcon = (props: any) => {
+export const GithubIcon = (props: any) => {
   return (
     <svg
       fill="currentColor"
