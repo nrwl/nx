@@ -36,11 +36,11 @@ function getPackageManager(dir: string = '') {
   return existsSync(join(dir, 'yarn.lock'))
     ? 'yarn'
     : existsSync(join(dir, 'bun.lockb'))
-    ? 'bun'
-    : existsSync(join(dir, 'pnpm-lock.yaml')) ||
-      existsSync(join(dir, 'pnpm-workspace.yaml'))
-    ? 'pnpm'
-    : 'npm';
+      ? 'bun'
+      : existsSync(join(dir, 'pnpm-lock.yaml')) ||
+        existsSync(join(dir, 'pnpm-workspace.yaml'))
+        ? 'pnpm'
+        : 'npm';
 }
 
 /**
@@ -133,7 +133,6 @@ export function getPackageManagerCommand(
       };
     },
     npm: () => {
-      // TODO: Remove this
       process.env.npm_config_legacy_peer_deps ??= 'true';
 
       return {
@@ -150,7 +149,6 @@ export function getPackageManagerCommand(
       };
     },
     bun: () => {
-      // TODO: Remove this
       process.env.npm_config_legacy_peer_deps ??= 'true';
 
       return {
