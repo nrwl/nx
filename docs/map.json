@@ -1851,6 +1851,11 @@
                   "name": "Enable GitLab MR Integration",
                   "id": "gitlab",
                   "file": "nx-cloud/set-up/gitlab"
+                },
+                {
+                  "name": "Enable Azure DevOps PR Integration",
+                  "id": "azure-devops",
+                  "file": "nx-cloud/set-up/azure-devops"
                 }
               ]
             },
