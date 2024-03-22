@@ -156,6 +156,8 @@ export type NxPlugin = NxPluginV1 | NxPluginV2;
 export type LoadedNxPlugin = {
   plugin: NxPluginV2 & Pick<NxPluginV1, 'processProjectGraph'>;
   options?: unknown;
+  include?: string[];
+  exclude?: string[];
 };
 
 // Short lived cache (cleared between cmd runs)
@@ -225,8 +227,22 @@ export async function loadNxPluginAsync(
       ? pluginConfiguration
       : { plugin: pluginConfiguration, options: undefined };
   let pluginModule = nxPluginCache.get(moduleName);
+
+  const include =
+    typeof pluginConfiguration === 'object'
+      ? pluginConfiguration.include
+      : undefined;
+  const exclude =
+    typeof pluginConfiguration === 'object'
+      ? pluginConfiguration.exclude
+      : undefined;
   if (pluginModule) {
-    return { plugin: pluginModule, options };
+    return {
+      plugin: pluginModule,
+      options,
+      include,
+      exclude,
+    };
   }
   performance.mark(`Load Nx Plugin: ${moduleName} - start`);
   let { pluginPath, name } = await getPluginPathAndName(
@@ -246,7 +262,12 @@ export async function loadNxPluginAsync(
     `Load Nx Plugin: ${moduleName} - start`,
     `Load Nx Plugin: ${moduleName} - end`
   );
-  return { plugin, options };
+  return {
+    plugin,
+    options,
+    include,
+    exclude,
+  };
 }
 
 export async function loadNxPlugins(

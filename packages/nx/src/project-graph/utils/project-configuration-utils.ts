@@ -307,7 +307,7 @@ export function createProjectConfigurations(
   const errors: Array<CreateNodesError | MergeNodesError> = [];
 
   // We iterate over plugins first - this ensures that plugins specified first take precedence.
-  for (const { plugin, options } of plugins) {
+  for (const { plugin, options, include, exclude } of plugins) {
     const [pattern, createNodes] = plugin.createNodes ?? [];
     const pluginResults: Array<
       CreateNodesResultWithContext | Promise<CreateNodesResultWithContext>
@@ -318,10 +318,31 @@ export function createProjectConfigurations(
       continue;
     }
 
-    const matchingConfigFiles: string[] = workspaceFiles.filter(
-      minimatch.filter(pattern, { dot: true })
-    );
+    const matchingConfigFiles: string[] = [];
 
+    for (const file of workspaceFiles) {
+      if (minimatch(file, pattern, { dot: true })) {
+        if (include) {
+          const included = include.some((includedPattern) =>
+            minimatch(file, includedPattern, { dot: true })
+          );
+          if (!included) {
+            continue;
+          }
+        }
+
+        if (exclude) {
+          const excluded = include.some((excludedPattern) =>
+            minimatch(file, excludedPattern, { dot: true })
+          );
+          if (excluded) {
+            continue;
+          }
+        }
+
+        matchingConfigFiles.push(file);
+      }
+    }
     for (const file of matchingConfigFiles) {
       performance.mark(`${plugin.name}:createNodes:${file} - start`);
       try {
