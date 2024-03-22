@@ -6065,6 +6065,14 @@
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
+              },
+              {
+                "name": "Enable Azure DevOps PR Integration",
+                "path": "/ci/recipes/source-control-integration/azure-devops",
+                "id": "azure-devops",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
               }
             ],
             "disableCollapsible": false
@@ -6460,6 +6468,14 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
+          },
+          {
+            "name": "Enable Azure DevOps PR Integration",
+            "path": "/ci/recipes/source-control-integration/azure-devops",
+            "id": "azure-devops",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -6484,6 +6500,14 @@
         "name": "Enable GitLab MR Integration",
         "path": "/ci/recipes/source-control-integration/gitlab",
         "id": "gitlab",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Enable Azure DevOps PR Integration",
+        "path": "/ci/recipes/source-control-integration/azure-devops",
+        "id": "azure-devops",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false

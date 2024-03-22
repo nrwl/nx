@@ -296,6 +296,7 @@
       - [Enable GitHub PR Integration](/ci/recipes/source-control-integration/github)
       - [Enable Bitbucket Cloud PR Integration](/ci/recipes/source-control-integration/bitbucket-cloud)
       - [Enable GitLab MR Integration](/ci/recipes/source-control-integration/gitlab)
+      - [Enable Azure DevOps PR Integration](/ci/recipes/source-control-integration/azure-devops)
     - [Enterprise](/ci/recipes/enterprise)
       - [On-Premise](/ci/recipes/enterprise/on-premise)
         - [Authenticate with a Single Admin](/ci/recipes/enterprise/on-premise/auth-single-admin)
