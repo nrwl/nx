@@ -21,7 +21,7 @@ Note, this tutorial sets up a repo with a single application at the root level t
 
 Note, while you could easily use Nx together with your manually set up React application, we're going to use the `@nx/react` plugin for this tutorial which provides some nice enhancements when working with React. [Visit our "Why Nx" page](/getting-started/why-nx) to learn more about plugins and what role they play in the Nx architecture.
 
-## Warm Up
+## Final Code
 
 Here's the source code of the final result for this tutorial.
 
