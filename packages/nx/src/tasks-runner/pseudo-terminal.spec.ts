@@ -1,7 +1,5 @@
 import { getPseudoTerminal, PseudoTerminal } from './pseudo-terminal';
 
-jest.setTimeout(30000);
-
 describe('PseudoTerminal', () => {
   let terminal: PseudoTerminal;
   beforeAll(() => {
