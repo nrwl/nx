@@ -1,4 +1,4 @@
-import { spawn, exec } from 'child_process';
+import { spawn, execFile } from 'child_process';
 import { writeFileSync } from 'fs';
 import { join } from 'path';
 import { CreateNxWorkspaceError } from './error-utils';
@@ -26,21 +26,33 @@ export function spawnAndWait(command: string, args: string[], cwd: string) {
   });
 }
 
-export function execAndWait(command: string, cwd: string) {
+export function execAndWait(
+  file: string,
+  args: string[],
+  cwd: string,
+  workspaceRoot?: string
+) {
   return new Promise<{ code: number; stdout: string }>((res, rej) => {
-    exec(
-      command,
-      { cwd, env: { ...process.env, NX_DAEMON: 'false' } },
-      (error, stdout, stderr) => {
-        if (error) {
-          const logFile = join(cwd, 'error.log');
-          writeFileSync(logFile, `${stdout}\n${stderr}`);
-          const message = stderr && stderr.trim().length ? stderr : stdout;
-          rej(new CreateNxWorkspaceError(message, error.code, logFile));
-        } else {
-          res({ code: 0, stdout });
-        }
+    const env: any = { ...process.env, NX_DAEMON: 'false' };
+
+    if (workspaceRoot) {
+      env.NX_WORKSPACE_ROOT = workspaceRoot;
+    }
+    const childProcess = execFile(file, args, {
+      cwd,
+      env,
+    });
+    let log = Buffer.from('');
+    childProcess.on('exit', (code: number) => {
+      if (code !== 0) {
+        const logFile = join(cwd, 'error.log');
+        writeFileSync(logFile, log);
+        rej(new CreateNxWorkspaceError(log.toString().trim(), code, logFile));
+      } else {
+        res({ code, stdout: log.toString().trim() });
       }
-    );
+    });
+    childProcess.stdout?.on('data', (data) => (log += data));
+    childProcess.stderr?.on('data', (data) => (log += data));
   });
 }

@@ -8,7 +8,6 @@ import { getPackageManagerCommand, PackageManager } from '../package-manager';
 export async function setupCI(
   directory: string,
   ci: string,
-  packageManager: PackageManager,
   nxCloudSuccessfullyInstalled: boolean
 ) {
   if (!nxCloudSuccessfullyInstalled) {
@@ -22,9 +21,12 @@ export async function setupCI(
   }
   const ciSpinner = ora(`Generating CI workflow`).start();
   try {
-    const pmc = getPackageManagerCommand(packageManager);
+    const nx = require.resolve('nx', {
+      paths: [directory],
+    });
     const res = await execAndWait(
-      `${pmc.exec} nx g @nx/workspace:ci-workflow --ci=${ci}`,
+      `node`,
+      [nx, 'g', '@nx/workspace:ci-workflow', `--ci=${ci}`],
       directory
     );
     ciSpinner.succeed('CI workflow has been generated successfully');

@@ -10,7 +10,8 @@ function removeSpecialFlags(generatorOptions: { [p: string]: any }): void {
   delete generatorOptions['$0'];
 }
 
-export async function newWorkspace(cwd: string, args: { [k: string]: any }) {
+export async function newWorkspace(args: { [k: string]: any }) {
+  const cwd = process.env.NX_WORKSPACE_ROOT;
   return handleErrors(
     process.env.NX_VERBOSE_LOGGING === 'true' || args.verbose,
     async () => {
@@ -19,7 +20,7 @@ export async function newWorkspace(cwd: string, args: { [k: string]: any }) {
         getGeneratorInformation(
           '@nx/workspace/generators.json',
           'new',
-          null,
+          cwd,
           {}
         );
       removeSpecialFlags(args);
