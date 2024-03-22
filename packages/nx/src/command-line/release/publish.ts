@@ -136,7 +136,7 @@ async function runPublishOnProjects(
     (projectName) => projectGraph.nodes[projectName]
   );
 
-  const overrides = createOverrides(args.__overrides_unparsed__);
+  const overrides: any = createOverrides(args.__overrides_unparsed__);
 
   if (args.registry) {
     overrides.registry = args.registry;

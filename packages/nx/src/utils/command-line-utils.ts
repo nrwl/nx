@@ -39,7 +39,7 @@ export interface NxArgs {
 }
 
 export function createOverrides(__overrides_unparsed__: string[] = []) {
-  let overrides =
+  let overrides: any =
     yargsParser(__overrides_unparsed__, {
       configuration: {
         'camel-case-expansion': false,
@@ -187,9 +187,9 @@ export function splitArgsIntoNxArgsAndOverrides(
   ) {
     nxArgs['parallel'] = Number(
       nxArgs['maxParallel'] ||
-        nxArgs['max-parallel'] ||
-        process.env.NX_PARALLEL ||
-        3
+      nxArgs['max-parallel'] ||
+      process.env.NX_PARALLEL ||
+      3
     );
   } else if (args['parallel'] !== undefined) {
     nxArgs['parallel'] = Number(args['parallel']);
