@@ -997,27 +997,6 @@
     "source": "/packages/express/src"
   },
   {
-    "description": "The Nx Plugin for gradle",
-    "documents": [],
-    "executors": [],
-    "generators": [
-      {
-        "description": "Initializes a Gradle project in the current workspace",
-        "file": "generated/packages/gradle/generators/init.json",
-        "hidden": false,
-        "name": "init",
-        "originalFilePath": "/packages/gradle/src/generators/init/schema.json",
-        "path": "gradle/generators/init",
-        "type": "generator"
-      }
-    ],
-    "githubRoot": "https://github.com/nrwl/nx/blob/master",
-    "name": "gradle",
-    "packageName": "@nx/gradle",
-    "root": "/packages/gradle",
-    "source": "/packages/gradle/src"
-  },
-  {
     "description": "The Nx Plugin for Jest contains executors and generators allowing your workspace to use the powerful Jest testing capabilities.",
     "documents": [
       {

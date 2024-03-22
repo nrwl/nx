@@ -74,7 +74,9 @@ The `@nx/next/plugin` is configured in the `plugins` array in `nx.json`.
 - The `serveStaticTargetName` option controls the name of Next.js' static export task which exports the application to static HTML files. The default name is `serve-static`.
 
 {% /tab %}
+{% tab label="Nx < 18" %}
 
+{% /tab %}
 {% tab label="Nx < 18" %}
 
 Install the `@nx/next` package with your package manager.

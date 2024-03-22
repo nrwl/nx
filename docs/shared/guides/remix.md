@@ -81,8 +81,8 @@ NX   Successfully ran target build for project myapp (3s)
 
 2. To serve your application for use during development run:
 
-```{% command="nx dev myapp" path="~/acme" %}
-> nx run myapp:dev
+```{% command="nx serve myapp" path="~/acme" %}
+> nx run myapp:serve
 
 💿 Building...
 💿 Rebuilt in 377ms

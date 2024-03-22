@@ -1,3 +1,3 @@
 # Type alias: PackageManager
 
-Ƭ **PackageManager**: `"yarn"` \| `"pnpm"` \| `"npm"` \| `"bun"`
+Ƭ **PackageManager**: `"yarn"` \| `"pnpm"` \| `"npm"`

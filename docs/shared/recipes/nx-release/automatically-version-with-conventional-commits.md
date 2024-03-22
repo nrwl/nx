@@ -32,7 +32,7 @@ For example, if the git history looks like this:
   - chore(release): 1.0.0
 ```
 
-then Nx Release will select the `minor` version bump and elect to release version 1.1.0. This is because there is a `feat` commit since the last release of 1.0.0. To customize the version bump for different types of commits, or to trigger a version bump with custom commit types, see the [Customize Conventional Commit Types](/recipes/nx-release/customize-conventional-commit-types) recipe.
+then Nx Release will select the `minor` version bump and elect to release version 1.1.0. This is because there is a `feat` commit since the last release of 1.0.0.
 
 {% callout type="info" title="No changes detected" %}
 If Nx Release does not find any relevant commits since the last release, it will skip releasing a new version. This works with [independent releases](/recipes/nx-release/release-projects-independently) as well, allowing for only some projects to be released and some to be skipped.

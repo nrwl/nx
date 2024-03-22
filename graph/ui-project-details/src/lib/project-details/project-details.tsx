@@ -92,14 +92,14 @@ export const ProjectDetails = forwardRef(
           <h1
             className={twMerge(
               `flex items-center justify-between dark:text-slate-100`,
-              isCompact ? `gap-1 text-2xl` : `mb-4 gap-2 text-4xl`
+              isCompact ? `text-2xl gap-1` : `text-4xl mb-4 gap-2`
             )}
           >
             <span>{name}</span>
             <span>
               {onViewInProjectGraph ? (
                 <button
-                  className="inline-flex cursor-pointer items-center gap-2 rounded-md py-1 px-2 text-base text-slate-600 ring-2 ring-inset ring-slate-400/40 hover:bg-slate-50 dark:text-slate-300 dark:ring-slate-400/30 dark:hover:bg-slate-800/60"
+                  className="text-base cursor-pointer items-center inline-flex gap-2 text-slate-600 dark:text-slate-300 ring-2 ring-inset ring-slate-400/40 dark:ring-slate-400/30 hover:bg-slate-50 dark:hover:bg-slate-800/60 rounded-md py-1 px-2"
                   onClick={() => onViewInProjectGraph({ projectName: name })}
                 >
                   <EyeIcon className="h-5 w-5 "></EyeIcon>
@@ -111,7 +111,7 @@ export const ProjectDetails = forwardRef(
           <div className="py-2 ">
             {projectData.tags && projectData.tags.length ? (
               <p>
-                <span className="inline-block w-10 font-medium">Tags:</span>
+                <span className="font-medium inline-block w-10">Tags:</span>
                 {projectData.tags?.map((tag) => (
                   <span className="ml-2 font-mono">
                     <Pill text={tag} />
@@ -120,19 +120,19 @@ export const ProjectDetails = forwardRef(
               </p>
             ) : null}
             <p>
-              <span className="inline-block w-10 font-medium">Root:</span>
+              <span className="font-medium inline-block w-10">Root:</span>
               <span className="font-mono"> {root}</span>
             </p>
             {displayType ? (
               <p>
-                <span className="inline-block w-10 font-medium">Type:</span>
+                <span className="font-medium inline-block w-10">Type:</span>
                 <span className="font-mono"> {displayType}</span>
               </p>
             ) : null}
           </div>
         </header>
         <div>
-          <h2 className={isCompact ? `mb-3 text-lg` : `mb-4 text-xl`}>
+          <h2 className={isCompact ? `text-lg mb-3` : `text-xl mb-4`}>
             <Tooltip
               openAction="hover"
               content={(<PropertyInfoTooltip type="targets" />) as any}

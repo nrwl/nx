@@ -810,35 +810,35 @@
       "description": "",
       "file": "shared/recipes/database/nestjs-prisma",
       "id": "nestjs-prisma",
-      "name": "Prisma with NestJS",
+      "name": "Using Prisma with NestJS",
       "path": "/showcase/example-repos/nestjs-prisma"
     },
     {
       "description": "",
       "file": "shared/recipes/database/mongo-fastify",
       "id": "mongo-fastify",
-      "name": "Mongo with Fastify",
+      "name": "Using Mongo with Fastify",
       "path": "/showcase/example-repos/mongo-fastify"
     },
     {
       "description": "",
       "file": "shared/recipes/database/redis-fastify",
       "id": "redis-fastify",
-      "name": "Redis with Fastify",
+      "name": "Using Redis with Fastify",
       "path": "/showcase/example-repos/redis-fastify"
     },
     {
       "description": "",
       "file": "shared/recipes/database/postgres-fastify",
       "id": "postgres-fastify",
-      "name": "Postgres with Fastify",
+      "name": "Using Postgres with Fastify",
       "path": "/showcase/example-repos/postgres-fastify"
     },
     {
       "description": "",
       "file": "shared/recipes/database/serverless-fastify-planetscale",
       "id": "serverless-fastify-planetscale",
-      "name": "PlanetScale with Serverless Fastify",
+      "name": "Using PlanetScale with Serverless Fastify",
       "path": "/showcase/example-repos/serverless-fastify-planetscale"
     }
   ],
@@ -1036,13 +1036,6 @@
       "id": "update-local-registry-setup",
       "name": "Update Your Local Registry Setup to use Nx Release",
       "path": "/recipes/nx-release/update-local-registry-setup"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/nx-release/customize-conventional-commit-types",
-      "id": "customize-conventional-commit-types",
-      "name": "Customize Conventional Commit Types",
-      "path": "/recipes/nx-release/customize-conventional-commit-types"
     }
   ],
   "database": [
@@ -1050,35 +1043,35 @@
       "description": "",
       "file": "shared/recipes/database/nestjs-prisma",
       "id": "nestjs-prisma",
-      "name": "Prisma with NestJS",
+      "name": "Using Prisma with NestJS",
       "path": "/showcase/example-repos/nestjs-prisma"
     },
     {
       "description": "",
       "file": "shared/recipes/database/mongo-fastify",
       "id": "mongo-fastify",
-      "name": "Mongo with Fastify",
+      "name": "Using Mongo with Fastify",
       "path": "/showcase/example-repos/mongo-fastify"
     },
     {
       "description": "",
       "file": "shared/recipes/database/redis-fastify",
       "id": "redis-fastify",
-      "name": "Redis with Fastify",
+      "name": "Using Redis with Fastify",
       "path": "/showcase/example-repos/redis-fastify"
     },
     {
       "description": "",
       "file": "shared/recipes/database/postgres-fastify",
       "id": "postgres-fastify",
-      "name": "Postgres with Fastify",
+      "name": "Using Postgres with Fastify",
       "path": "/showcase/example-repos/postgres-fastify"
     },
     {
       "description": "",
       "file": "shared/recipes/database/serverless-fastify-planetscale",
       "id": "serverless-fastify-planetscale",
-      "name": "PlanetScale with Serverless Fastify",
+      "name": "Using PlanetScale with Serverless Fastify",
       "path": "/showcase/example-repos/serverless-fastify-planetscale"
     }
   ],
@@ -1087,7 +1080,7 @@
       "description": "",
       "file": "shared/recipes/database/serverless-fastify-planetscale",
       "id": "serverless-fastify-planetscale",
-      "name": "PlanetScale with Serverless Fastify",
+      "name": "Using PlanetScale with Serverless Fastify",
       "path": "/showcase/example-repos/serverless-fastify-planetscale"
     }
   ],
