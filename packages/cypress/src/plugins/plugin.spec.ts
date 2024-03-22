@@ -199,7 +199,7 @@ describe('@nx/cypress/plugin', () => {
           ".": {
             "metadata": {
               "targetGroups": {
-                ".:e2e-ci": [
+                "e2e-ci": [
                   "e2e-ci--src/test.cy.ts",
                   "e2e-ci",
                 ],
