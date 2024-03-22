@@ -18,6 +18,7 @@ import { resolveUserDefinedWebpackConfig } from '../utils/webpack/resolve-user-d
 import { getLockFileName, getRootTsConfigPath } from '@nx/js';
 import { projectGraphCacheDirectory } from 'nx/src/utils/cache-directory';
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
+import { projectFoundInRootPath } from '@nx/devkit/src/utils/project-found-in-root-path';
 
 export interface WebpackPluginOptions {
   buildTargetName?: string;
@@ -63,12 +64,8 @@ export const createNodes: CreateNodes<WebpackPluginOptions> = [
 
     const projectRoot = dirname(configFilePath);
 
-    // Do not create a project if package.json and project.json isn't there.
-    const siblingFiles = readdirSync(join(context.workspaceRoot, projectRoot));
-    if (
-      !siblingFiles.includes('package.json') &&
-      !siblingFiles.includes('project.json')
-    ) {
+    // Configurations will be generated only if project exists at projectRoot
+    if (!projectFoundInRootPath(projectRoot, context)) {
       return {};
     }
 

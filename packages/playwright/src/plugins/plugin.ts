@@ -21,6 +21,7 @@ import { minimatch } from 'minimatch';
 import { projectGraphCacheDirectory } from 'nx/src/utils/cache-directory';
 import { getLockFileName } from '@nx/js';
 import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
+import { projectFoundInRootPath } from '@nx/devkit/src/utils/project-found-in-root-path';
 
 export interface PlaywrightPluginOptions {
   targetName?: string;
@@ -64,12 +65,8 @@ export const createNodes: CreateNodes<PlaywrightPluginOptions> = [
   async (configFilePath, options, context) => {
     const projectRoot = dirname(configFilePath);
 
-    // Do not create a project if package.json and project.json isn't there.
-    const siblingFiles = readdirSync(join(context.workspaceRoot, projectRoot));
-    if (
-      !siblingFiles.includes('package.json') &&
-      !siblingFiles.includes('project.json')
-    ) {
+    // Configurations will be generated only if project exists at projectRoot
+    if (!projectFoundInRootPath(projectRoot, context)) {
       return {};
     }
 

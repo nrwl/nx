@@ -2,23 +2,19 @@ import {
   CreateDependencies,
   CreateNodes,
   CreateNodesContext,
-  joinPathFragments,
   NxJsonConfiguration,
   readJsonFile,
   TargetConfiguration,
   writeJsonFile,
 } from '@nx/devkit';
 import { dirname, join, relative, resolve } from 'path';
-
 import { readTargetDefaultsForTarget } from 'nx/src/project-graph/utils/project-configuration-utils';
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
-import { existsSync, readdirSync, readFileSync } from 'fs';
+import { existsSync, readFileSync } from 'fs';
 import { readConfig } from 'jest-config';
 import { projectGraphCacheDirectory } from 'nx/src/utils/cache-directory';
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
-import { getGlobPatternsFromPackageManagerWorkspaces } from 'nx/src/plugins/package-json-workspaces';
-import { combineGlobPatterns } from 'nx/src/utils/globs';
-import { minimatch } from 'minimatch';
+import { projectFoundInRootPath } from '@nx/devkit/src/utils/project-found-in-root-path';
 
 export interface JestPluginOptions {
   targetName?: string;
@@ -55,31 +51,9 @@ export const createNodes: CreateNodes<JestPluginOptions> = [
   async (configFilePath, options, context) => {
     const projectRoot = dirname(configFilePath);
 
-    const packageManagerWorkspacesGlob = combineGlobPatterns(
-      getGlobPatternsFromPackageManagerWorkspaces(context.workspaceRoot)
-    );
-
-    // Do not create a project if package.json and project.json isn't there.
-    const siblingFiles = readdirSync(join(context.workspaceRoot, projectRoot));
-    if (
-      !siblingFiles.includes('package.json') &&
-      !siblingFiles.includes('project.json')
-    ) {
+    // Configurations will be generated only if project exists at projectRoot
+    if (!projectFoundInRootPath(projectRoot, context)) {
       return {};
-    } else if (
-      !siblingFiles.includes('project.json') &&
-      siblingFiles.includes('package.json')
-    ) {
-      const path = joinPathFragments(projectRoot, 'package.json');
-
-      const isPackageJsonProject = minimatch(
-        path,
-        packageManagerWorkspacesGlob
-      );
-
-      if (!isPackageJsonProject) {
-        return {};
-      }
     }
 
     const jestConfigContent = readFileSync(

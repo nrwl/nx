@@ -21,3 +21,5 @@ export {
   findProjectForPath,
 } from './project-graph/utils/find-project-for-path';
 export { registerTsProject } from './plugins/js/utils/register';
+export { combineGlobPatterns } from './utils/globs';
+export { getGlobPatternsFromPackageManagerWorkspaces } from './plugins/package-json-workspaces';
