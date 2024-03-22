@@ -1714,7 +1714,7 @@
               "file": "nx-cloud/features/dynamic-agents"
             },
             {
-              "name": "Automatically Split E2E Tasks (TestAtomizer)",
+              "name": "Automatically Split E2E Tasks (Atomizer)",
               "id": "split-e2e-tasks",
               "file": "nx-cloud/features/split-e2e-tasks"
             },
