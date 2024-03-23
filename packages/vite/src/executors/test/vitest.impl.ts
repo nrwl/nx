@@ -22,7 +22,9 @@ export async function* vitestExecutor(
   const resolvedOptions =
     (await getOptions(options, context, projectRoot)) ?? {};
 
-  const nxReporter = new NxReporter(resolvedOptions['watch']);
+  const watch = resolvedOptions['watch'] === true;
+
+  const nxReporter = new NxReporter(watch);
   if (resolvedOptions['reporters'] === undefined) {
     resolvedOptions['reporters'] = [];
   } else if (typeof resolvedOptions['reporters'] === 'string') {
@@ -49,7 +51,7 @@ export async function* vitestExecutor(
     }
   };
 
-  if (resolvedOptions['watch'] === true) {
+  if (watch) {
     process.on('SIGINT', processExit);
     process.on('SIGTERM', processExit);
     process.on('exit', processExit);
