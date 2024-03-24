@@ -304,8 +304,7 @@ export default App;
       expect(directoryExists(coverageDir)).toBeTruthy();
     }, 100_000);
 
-    // TODO: This takes forever and times out everything - find out why
-    xit('should not delete the project directory when coverage is enabled', async () => {
+    it('should not delete the project directory when coverage is enabled', async () => {
       // when coverage is enabled in the vite.config.ts but reportsDirectory is removed
       // from the @nx/vite:test executor options, vite will delete the project root directory
       runCLI(`generate @nx/react:lib ${lib} --unitTestRunner=vitest`);
@@ -348,7 +347,11 @@ export default defineConfig({
 
       const projectRoot = `${tmpProjPath()}/libs/${lib}`;
 
-      const results = runCLI(`test ${lib}`);
+      const results = runCLI(`test ${lib}`, {
+        env: {
+          CI: 'true', // prevent vitest from watching for file changes and making the process hang
+        },
+      });
 
       expect(directoryExists(projectRoot)).toBeTruthy();
       expect(results).toContain(

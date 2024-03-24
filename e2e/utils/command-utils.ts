@@ -68,6 +68,9 @@ export function runCommand(
       cwd: tmpProjPath(),
       stdio: 'pipe',
       env: {
+        // TODO: allign runCommand, runCommandUntil and runCommandAsync so that
+        //  - they both set CI=true
+        //  - or neither of them sets CI=true
         ...getStrippedEnvironmentVariables(),
         ...childProcessOptions?.env,
         FORCE_COLOR: 'false',
@@ -211,6 +214,9 @@ export function runCommandAsync(
       {
         cwd: opts.cwd || tmpProjPath(),
         env: {
+          // TODO: allign runCommand, runCommandUntil and runCommandAsync so that
+          //  - they both set CI=true
+          //  - or neither of them sets CI=true
           CI: 'true',
           ...(opts.env || getStrippedEnvironmentVariables()),
           FORCE_COLOR: 'false',
@@ -243,6 +249,9 @@ export function runCommandUntil(
     cwd: tmpProjPath(),
     encoding: 'utf-8',
     env: {
+      // TODO: allign runCommand, runCommandUntil and runCommandAsync so that
+      //  - they both set CI=true
+      //  - or neither of them sets CI=true
       CI: 'true',
       ...getStrippedEnvironmentVariables(),
       ...opts.env,
