@@ -168,7 +168,7 @@ export function addVsCodeRecommendedExtensions(
   }
 }
 
-export function markRootPackageJsonAsNxProject(
+export function markRootPackageJsonAsNxProjectLegacy(
   repoRoot: string,
   cacheableScripts: string[],
   pmc: PackageManagerCommands
@@ -192,6 +192,24 @@ export function markRootPackageJsonAsNxProject(
     }
   }
   writeJsonFile(`package.json`, json);
+}
+
+export function markPackageJsonAsNxProject(
+  packageJsonPath: string,
+  cacheableScripts: string[]
+) {
+  const json = readJsonFile<PackageJson>(packageJsonPath);
+  if (!json.scripts) {
+    return;
+  }
+
+  json.nx = { includedScripts: [] };
+  for (let script of cacheableScripts) {
+    if (json.scripts[script]) {
+      json.nx.includedScripts.push(script);
+    }
+  }
+  writeJsonFile(packageJsonPath, json);
 }
 
 export function printFinalMessage({
