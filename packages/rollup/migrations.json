@@ -25,5 +25,15 @@
       "factory": "./src/migrations/update-16-6-0/explicitly-set-projects-to-update-buildable-deps"
     }
   },
-  "packageJsonUpdates": {}
+  "packageJsonUpdates": {
+    "18.2.0": {
+      "version": "18.2.0-beta.1",
+      "packages": {
+        "core-js": {
+          "version": "3.36.1",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    }
+  }
 }
