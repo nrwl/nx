@@ -71,7 +71,7 @@
       "path": "/recipes/running-tasks/workspace-watching"
     },
     {
-      "description": "",
+      "description": "This allows to only run tasks on projects that got changed in a given PR.",
       "file": "shared/using-nx/affected",
       "id": "affected",
       "name": "Run Only Tasks Affected by a PR",
