@@ -17,6 +17,7 @@ describe('@nx/storybook/plugin', () => {
         },
       },
       workspaceRoot: tempFs.tempDir,
+      configFiles: [],
     };
     tempFs.createFileSync(
       'my-app/project.json',

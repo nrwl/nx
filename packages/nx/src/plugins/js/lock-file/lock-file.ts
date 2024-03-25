@@ -37,7 +37,10 @@ import {
 import { pruneProjectGraph } from './project-graph-pruning';
 import { normalizePackageJson } from './utils/package-json';
 import { readJsonFile } from '../../../utils/fileutils';
-import { CreateDependenciesContext } from '../../../project-graph/plugins';
+import {
+  CreateDependenciesContext,
+  CreateNodesContext,
+} from '../../../utils/nx-plugin';
 
 const YARN_LOCK_FILE = 'yarn.lock';
 const NPM_LOCK_FILE = 'package-lock.json';
@@ -54,11 +57,14 @@ const PNPM_LOCK_PATH = join(workspaceRoot, PNPM_LOCK_FILE);
 export function getLockFileNodes(
   packageManager: PackageManager,
   contents: string,
-  lockFileHash: string
+  lockFileHash: string,
+  context: CreateNodesContext
 ): Record<string, ProjectGraphExternalNode> {
   try {
     if (packageManager === 'yarn') {
-      const packageJson = readJsonFile('package.json');
+      const packageJson = readJsonFile(
+        join(context.workspaceRoot, 'package.json')
+      );
       return getYarnLockfileNodes(contents, lockFileHash, packageJson);
     }
     if (packageManager === 'pnpm') {

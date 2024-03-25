@@ -47,14 +47,14 @@
         "file": "",
         "itemList": [
           {
-            "id": "package-based-repo-tutorial",
-            "name": "Package-Based Monorepo",
+            "id": "npm-workspaces-tutorial",
+            "name": "NPM Workspaces Monorepo",
             "description": "",
             "mediaImage": "",
-            "file": "shared/npm-tutorial/package-based",
+            "file": "shared/tutorials/npm-workspaces",
             "itemList": [],
             "isExternal": false,
-            "path": "/getting-started/tutorials/package-based-repo-tutorial",
+            "path": "/getting-started/tutorials/npm-workspaces-tutorial",
             "tags": []
           },
           {
@@ -174,14 +174,14 @@
     "file": "",
     "itemList": [
       {
-        "id": "package-based-repo-tutorial",
-        "name": "Package-Based Monorepo",
+        "id": "npm-workspaces-tutorial",
+        "name": "NPM Workspaces Monorepo",
         "description": "",
         "mediaImage": "",
-        "file": "shared/npm-tutorial/package-based",
+        "file": "shared/tutorials/npm-workspaces",
         "itemList": [],
         "isExternal": false,
-        "path": "/getting-started/tutorials/package-based-repo-tutorial",
+        "path": "/getting-started/tutorials/npm-workspaces-tutorial",
         "tags": []
       },
       {
@@ -255,15 +255,15 @@
     "path": "/getting-started/tutorials",
     "tags": []
   },
-  "/getting-started/tutorials/package-based-repo-tutorial": {
-    "id": "package-based-repo-tutorial",
-    "name": "Package-Based Monorepo",
+  "/getting-started/tutorials/npm-workspaces-tutorial": {
+    "id": "npm-workspaces-tutorial",
+    "name": "NPM Workspaces Monorepo",
     "description": "",
     "mediaImage": "",
-    "file": "shared/npm-tutorial/package-based",
+    "file": "shared/tutorials/npm-workspaces",
     "itemList": [],
     "isExternal": false,
-    "path": "/getting-started/tutorials/package-based-repo-tutorial",
+    "path": "/getting-started/tutorials/npm-workspaces-tutorial",
     "tags": []
   },
   "/getting-started/tutorials/integrated-repo-tutorial": {
@@ -569,7 +569,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/features/manage-releases",
-        "tags": ["manage-releases"]
+        "tags": ["nx-release"]
       },
       {
         "id": "ci-features",
@@ -751,7 +751,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/features/manage-releases",
-    "tags": ["manage-releases"]
+    "tags": ["nx-release"]
   },
   "/features/ci-features": {
     "id": "ci-features",
@@ -3187,6 +3187,17 @@
             "itemList": [],
             "isExternal": false,
             "path": "/recipes/nx-release/update-local-registry-setup",
+            "tags": ["nx-release"]
+          },
+          {
+            "id": "customize-conventional-commit-types",
+            "name": "Customize Conventional Commit Types",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/recipes/nx-release/customize-conventional-commit-types",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/nx-release/customize-conventional-commit-types",
             "tags": ["nx-release"]
           }
         ],
@@ -5700,6 +5711,17 @@
         "isExternal": false,
         "path": "/recipes/nx-release/update-local-registry-setup",
         "tags": ["nx-release"]
+      },
+      {
+        "id": "customize-conventional-commit-types",
+        "name": "Customize Conventional Commit Types",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/nx-release/customize-conventional-commit-types",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/nx-release/customize-conventional-commit-types",
+        "tags": ["nx-release"]
       }
     ],
     "isExternal": false,
@@ -5783,6 +5805,17 @@
     "path": "/recipes/nx-release/update-local-registry-setup",
     "tags": ["nx-release"]
   },
+  "/recipes/nx-release/customize-conventional-commit-types": {
+    "id": "customize-conventional-commit-types",
+    "name": "Customize Conventional Commit Types",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/nx-release/customize-conventional-commit-types",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/nx-release/customize-conventional-commit-types",
+    "tags": ["nx-release"]
+  },
   "/recipes/other": {
     "id": "other",
     "name": "Other",
@@ -5829,11 +5862,11 @@
         "name": "Nx with your favorite tech",
         "description": "Examples of different ways to use Nx with your favorite tech",
         "mediaImage": "",
-        "file": "",
+        "file": "shared/showcase/example-repos",
         "itemList": [
           {
             "id": "add-express",
-            "name": "Add an Express Project",
+            "name": "Express",
             "description": "Add an Express application to your repo",
             "mediaImage": "",
             "file": "shared/recipes/add-stack/add-express",
@@ -5844,8 +5877,8 @@
           },
           {
             "id": "add-lit",
-            "name": "Add a Lit Project",
-            "description": "Add a Lit project to your repo",
+            "name": "Lit",
+            "description": "Lit to your repo",
             "mediaImage": "",
             "file": "shared/recipes/add-stack/add-lit",
             "itemList": [],
@@ -5855,8 +5888,8 @@
           },
           {
             "id": "add-solid",
-            "name": "Add a Solid Project",
-            "description": "Add a Solid project to your repo",
+            "name": "Solid",
+            "description": "Solid to your repo",
             "mediaImage": "",
             "file": "shared/recipes/add-stack/add-solid",
             "itemList": [],
@@ -5866,8 +5899,8 @@
           },
           {
             "id": "add-qwik",
-            "name": "Add a Qwik Project",
-            "description": "Add a Qwik project to your repo",
+            "name": "Qwik",
+            "description": "Qwik to your repo",
             "mediaImage": "",
             "file": "shared/recipes/add-stack/add-qwik",
             "itemList": [],
@@ -5877,8 +5910,8 @@
           },
           {
             "id": "add-rust",
-            "name": "Add a Rust Project",
-            "description": "Add a Rust project to your repo",
+            "name": "Rust",
+            "description": "Rust to your repo",
             "mediaImage": "",
             "file": "shared/recipes/add-stack/add-rust",
             "itemList": [],
@@ -5888,8 +5921,8 @@
           },
           {
             "id": "add-dotnet",
-            "name": "Add a .NET Project",
-            "description": "Add a .NET project to your repo",
+            "name": ".NET",
+            "description": ".NET to your repo",
             "mediaImage": "",
             "file": "shared/recipes/add-stack/add-dotnet",
             "itemList": [],
@@ -5899,7 +5932,7 @@
           },
           {
             "id": "add-astro",
-            "name": "Add an Astro Project",
+            "name": "Astro",
             "description": "Add Nx to an Astro project",
             "mediaImage": "",
             "file": "shared/recipes/add-stack/add-astro",
@@ -5910,8 +5943,8 @@
           },
           {
             "id": "add-svelte",
-            "name": "Add a Svelte Project",
-            "description": "Add a Svelte project to your repo",
+            "name": "Svelte",
+            "description": "Svelte to your repo",
             "mediaImage": "",
             "file": "shared/recipes/add-stack/add-svelte",
             "itemList": [],
@@ -5921,8 +5954,8 @@
           },
           {
             "id": "add-fastify",
-            "name": "Add a Fastify Project",
-            "description": "Add a Fastify project to your repo",
+            "name": "Fastify",
+            "description": "Fastify to your repo",
             "mediaImage": "",
             "file": "shared/recipes/add-stack/add-fastify",
             "itemList": [],
@@ -5932,7 +5965,7 @@
           },
           {
             "id": "apollo-react",
-            "name": "Using Apollo GraphQL",
+            "name": "Apollo GraphQL",
             "description": "",
             "mediaImage": "",
             "file": "shared/examples/apollo-react",
@@ -5943,7 +5976,7 @@
           },
           {
             "id": "nestjs-prisma",
-            "name": "Using Prisma with NestJS",
+            "name": "Prisma with NestJS",
             "description": "",
             "mediaImage": "",
             "file": "shared/recipes/database/nestjs-prisma",
@@ -5954,7 +5987,7 @@
           },
           {
             "id": "mongo-fastify",
-            "name": "Using Mongo with Fastify",
+            "name": "Mongo with Fastify",
             "description": "",
             "mediaImage": "",
             "file": "shared/recipes/database/mongo-fastify",
@@ -5965,7 +5998,7 @@
           },
           {
             "id": "redis-fastify",
-            "name": "Using Redis with Fastify",
+            "name": "Redis with Fastify",
             "description": "",
             "mediaImage": "",
             "file": "shared/recipes/database/redis-fastify",
@@ -5976,7 +6009,7 @@
           },
           {
             "id": "postgres-fastify",
-            "name": "Using Postgres with Fastify",
+            "name": "Postgres with Fastify",
             "description": "",
             "mediaImage": "",
             "file": "shared/recipes/database/postgres-fastify",
@@ -5987,7 +6020,7 @@
           },
           {
             "id": "serverless-fastify-planetscale",
-            "name": "Using PlanetScale with Serverless Fastify",
+            "name": "PlanetScale with Serverless Fastify",
             "description": "",
             "mediaImage": "",
             "file": "shared/recipes/database/serverless-fastify-planetscale",
@@ -5998,7 +6031,7 @@
           },
           {
             "id": "mfe",
-            "name": "Nx Micro-Frontend Example",
+            "name": "Nx with Micro-frontends",
             "description": "",
             "mediaImage": "",
             "file": "shared/examples/nx-examples",
@@ -6067,11 +6100,11 @@
     "name": "Nx with your favorite tech",
     "description": "Examples of different ways to use Nx with your favorite tech",
     "mediaImage": "",
-    "file": "",
+    "file": "shared/showcase/example-repos",
     "itemList": [
       {
         "id": "add-express",
-        "name": "Add an Express Project",
+        "name": "Express",
         "description": "Add an Express application to your repo",
         "mediaImage": "",
         "file": "shared/recipes/add-stack/add-express",
@@ -6082,8 +6115,8 @@
       },
       {
         "id": "add-lit",
-        "name": "Add a Lit Project",
-        "description": "Add a Lit project to your repo",
+        "name": "Lit",
+        "description": "Lit to your repo",
         "mediaImage": "",
         "file": "shared/recipes/add-stack/add-lit",
         "itemList": [],
@@ -6093,8 +6126,8 @@
       },
       {
         "id": "add-solid",
-        "name": "Add a Solid Project",
-        "description": "Add a Solid project to your repo",
+        "name": "Solid",
+        "description": "Solid to your repo",
         "mediaImage": "",
         "file": "shared/recipes/add-stack/add-solid",
         "itemList": [],
@@ -6104,8 +6137,8 @@
       },
       {
         "id": "add-qwik",
-        "name": "Add a Qwik Project",
-        "description": "Add a Qwik project to your repo",
+        "name": "Qwik",
+        "description": "Qwik to your repo",
         "mediaImage": "",
         "file": "shared/recipes/add-stack/add-qwik",
         "itemList": [],
@@ -6115,8 +6148,8 @@
       },
       {
         "id": "add-rust",
-        "name": "Add a Rust Project",
-        "description": "Add a Rust project to your repo",
+        "name": "Rust",
+        "description": "Rust to your repo",
         "mediaImage": "",
         "file": "shared/recipes/add-stack/add-rust",
         "itemList": [],
@@ -6126,8 +6159,8 @@
       },
       {
         "id": "add-dotnet",
-        "name": "Add a .NET Project",
-        "description": "Add a .NET project to your repo",
+        "name": ".NET",
+        "description": ".NET to your repo",
         "mediaImage": "",
         "file": "shared/recipes/add-stack/add-dotnet",
         "itemList": [],
@@ -6137,7 +6170,7 @@
       },
       {
         "id": "add-astro",
-        "name": "Add an Astro Project",
+        "name": "Astro",
         "description": "Add Nx to an Astro project",
         "mediaImage": "",
         "file": "shared/recipes/add-stack/add-astro",
@@ -6148,8 +6181,8 @@
       },
       {
         "id": "add-svelte",
-        "name": "Add a Svelte Project",
-        "description": "Add a Svelte project to your repo",
+        "name": "Svelte",
+        "description": "Svelte to your repo",
         "mediaImage": "",
         "file": "shared/recipes/add-stack/add-svelte",
         "itemList": [],
@@ -6159,8 +6192,8 @@
       },
       {
         "id": "add-fastify",
-        "name": "Add a Fastify Project",
-        "description": "Add a Fastify project to your repo",
+        "name": "Fastify",
+        "description": "Fastify to your repo",
         "mediaImage": "",
         "file": "shared/recipes/add-stack/add-fastify",
         "itemList": [],
@@ -6170,7 +6203,7 @@
       },
       {
         "id": "apollo-react",
-        "name": "Using Apollo GraphQL",
+        "name": "Apollo GraphQL",
         "description": "",
         "mediaImage": "",
         "file": "shared/examples/apollo-react",
@@ -6181,7 +6214,7 @@
       },
       {
         "id": "nestjs-prisma",
-        "name": "Using Prisma with NestJS",
+        "name": "Prisma with NestJS",
         "description": "",
         "mediaImage": "",
         "file": "shared/recipes/database/nestjs-prisma",
@@ -6192,7 +6225,7 @@
       },
       {
         "id": "mongo-fastify",
-        "name": "Using Mongo with Fastify",
+        "name": "Mongo with Fastify",
         "description": "",
         "mediaImage": "",
         "file": "shared/recipes/database/mongo-fastify",
@@ -6203,7 +6236,7 @@
       },
       {
         "id": "redis-fastify",
-        "name": "Using Redis with Fastify",
+        "name": "Redis with Fastify",
         "description": "",
         "mediaImage": "",
         "file": "shared/recipes/database/redis-fastify",
@@ -6214,7 +6247,7 @@
       },
       {
         "id": "postgres-fastify",
-        "name": "Using Postgres with Fastify",
+        "name": "Postgres with Fastify",
         "description": "",
         "mediaImage": "",
         "file": "shared/recipes/database/postgres-fastify",
@@ -6225,7 +6258,7 @@
       },
       {
         "id": "serverless-fastify-planetscale",
-        "name": "Using PlanetScale with Serverless Fastify",
+        "name": "PlanetScale with Serverless Fastify",
         "description": "",
         "mediaImage": "",
         "file": "shared/recipes/database/serverless-fastify-planetscale",
@@ -6236,7 +6269,7 @@
       },
       {
         "id": "mfe",
-        "name": "Nx Micro-Frontend Example",
+        "name": "Nx with Micro-frontends",
         "description": "",
         "mediaImage": "",
         "file": "shared/examples/nx-examples",
@@ -6252,7 +6285,7 @@
   },
   "/showcase/example-repos/add-express": {
     "id": "add-express",
-    "name": "Add an Express Project",
+    "name": "Express",
     "description": "Add an Express application to your repo",
     "mediaImage": "",
     "file": "shared/recipes/add-stack/add-express",
@@ -6263,8 +6296,8 @@
   },
   "/showcase/example-repos/add-lit": {
     "id": "add-lit",
-    "name": "Add a Lit Project",
-    "description": "Add a Lit project to your repo",
+    "name": "Lit",
+    "description": "Lit to your repo",
     "mediaImage": "",
     "file": "shared/recipes/add-stack/add-lit",
     "itemList": [],
@@ -6274,8 +6307,8 @@
   },
   "/showcase/example-repos/add-solid": {
     "id": "add-solid",
-    "name": "Add a Solid Project",
-    "description": "Add a Solid project to your repo",
+    "name": "Solid",
+    "description": "Solid to your repo",
     "mediaImage": "",
     "file": "shared/recipes/add-stack/add-solid",
     "itemList": [],
@@ -6285,8 +6318,8 @@
   },
   "/showcase/example-repos/add-qwik": {
     "id": "add-qwik",
-    "name": "Add a Qwik Project",
-    "description": "Add a Qwik project to your repo",
+    "name": "Qwik",
+    "description": "Qwik to your repo",
     "mediaImage": "",
     "file": "shared/recipes/add-stack/add-qwik",
     "itemList": [],
@@ -6296,8 +6329,8 @@
   },
   "/showcase/example-repos/add-rust": {
     "id": "add-rust",
-    "name": "Add a Rust Project",
-    "description": "Add a Rust project to your repo",
+    "name": "Rust",
+    "description": "Rust to your repo",
     "mediaImage": "",
     "file": "shared/recipes/add-stack/add-rust",
     "itemList": [],
@@ -6307,8 +6340,8 @@
   },
   "/showcase/example-repos/add-dotnet": {
     "id": "add-dotnet",
-    "name": "Add a .NET Project",
-    "description": "Add a .NET project to your repo",
+    "name": ".NET",
+    "description": ".NET to your repo",
     "mediaImage": "",
     "file": "shared/recipes/add-stack/add-dotnet",
     "itemList": [],
@@ -6318,7 +6351,7 @@
   },
   "/showcase/example-repos/add-astro": {
     "id": "add-astro",
-    "name": "Add an Astro Project",
+    "name": "Astro",
     "description": "Add Nx to an Astro project",
     "mediaImage": "",
     "file": "shared/recipes/add-stack/add-astro",
@@ -6329,8 +6362,8 @@
   },
   "/showcase/example-repos/add-svelte": {
     "id": "add-svelte",
-    "name": "Add a Svelte Project",
-    "description": "Add a Svelte project to your repo",
+    "name": "Svelte",
+    "description": "Svelte to your repo",
     "mediaImage": "",
     "file": "shared/recipes/add-stack/add-svelte",
     "itemList": [],
@@ -6340,8 +6373,8 @@
   },
   "/showcase/example-repos/add-fastify": {
     "id": "add-fastify",
-    "name": "Add a Fastify Project",
-    "description": "Add a Fastify project to your repo",
+    "name": "Fastify",
+    "description": "Fastify to your repo",
     "mediaImage": "",
     "file": "shared/recipes/add-stack/add-fastify",
     "itemList": [],
@@ -6351,7 +6384,7 @@
   },
   "/showcase/example-repos/apollo-react": {
     "id": "apollo-react",
-    "name": "Using Apollo GraphQL",
+    "name": "Apollo GraphQL",
     "description": "",
     "mediaImage": "",
     "file": "shared/examples/apollo-react",
@@ -6362,7 +6395,7 @@
   },
   "/showcase/example-repos/nestjs-prisma": {
     "id": "nestjs-prisma",
-    "name": "Using Prisma with NestJS",
+    "name": "Prisma with NestJS",
     "description": "",
     "mediaImage": "",
     "file": "shared/recipes/database/nestjs-prisma",
@@ -6373,7 +6406,7 @@
   },
   "/showcase/example-repos/mongo-fastify": {
     "id": "mongo-fastify",
-    "name": "Using Mongo with Fastify",
+    "name": "Mongo with Fastify",
     "description": "",
     "mediaImage": "",
     "file": "shared/recipes/database/mongo-fastify",
@@ -6384,7 +6417,7 @@
   },
   "/showcase/example-repos/redis-fastify": {
     "id": "redis-fastify",
-    "name": "Using Redis with Fastify",
+    "name": "Redis with Fastify",
     "description": "",
     "mediaImage": "",
     "file": "shared/recipes/database/redis-fastify",
@@ -6395,7 +6428,7 @@
   },
   "/showcase/example-repos/postgres-fastify": {
     "id": "postgres-fastify",
-    "name": "Using Postgres with Fastify",
+    "name": "Postgres with Fastify",
     "description": "",
     "mediaImage": "",
     "file": "shared/recipes/database/postgres-fastify",
@@ -6406,7 +6439,7 @@
   },
   "/showcase/example-repos/serverless-fastify-planetscale": {
     "id": "serverless-fastify-planetscale",
-    "name": "Using PlanetScale with Serverless Fastify",
+    "name": "PlanetScale with Serverless Fastify",
     "description": "",
     "mediaImage": "",
     "file": "shared/recipes/database/serverless-fastify-planetscale",
@@ -6417,7 +6450,7 @@
   },
   "/showcase/example-repos/mfe": {
     "id": "mfe",
-    "name": "Nx Micro-Frontend Example",
+    "name": "Nx with Micro-frontends",
     "description": "",
     "mediaImage": "",
     "file": "shared/examples/nx-examples",

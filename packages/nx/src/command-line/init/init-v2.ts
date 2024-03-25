@@ -49,6 +49,13 @@ export async function initHandler(options: InitArgs): Promise<void> {
       );
     }
     generateDotNxSetup(version);
+    const { plugins } = await detectPlugins();
+    plugins.forEach((plugin) => {
+      execSync(`./nx add ${plugin}`, {
+        stdio: 'inherit',
+      });
+    });
+
     // invokes the wrapper, thus invoking the initial installation process
     runNxSync('--version', { stdio: 'ignore' });
     return;
@@ -65,9 +72,9 @@ export async function initHandler(options: InitArgs): Promise<void> {
 
   output.log({ title: '🧐 Checking dependencies' });
 
-  const detectPluginsResponse = await detectPlugins();
+  const { plugins, updatePackageScripts } = await detectPlugins();
 
-  if (!detectPluginsResponse?.plugins.length) {
+  if (!plugins.length) {
     // If no plugins are detected/chosen, guide users to setup
     // their targetDefaults correctly so their package scripts will work.
     const packageJson: PackageJson = readJsonFile('package.json');
@@ -89,19 +96,17 @@ export async function initHandler(options: InitArgs): Promise<void> {
     createNxJsonFile(repoRoot, [], [], {});
     updateGitIgnore(repoRoot);
 
-    addDepsToPackageJson(repoRoot, detectPluginsResponse.plugins);
+    addDepsToPackageJson(repoRoot, plugins);
 
     output.log({ title: '📦 Installing Nx' });
 
     runInstall(repoRoot, pmc);
 
     output.log({ title: '🔨 Configuring plugins' });
-    for (const plugin of detectPluginsResponse.plugins) {
+    for (const plugin of plugins) {
       execSync(
         `${pmc.exec} nx g ${plugin}:init --keepExistingVersions ${
-          detectPluginsResponse.updatePackageScripts
-            ? '--updatePackageScripts'
-            : ''
+          updatePackageScripts ? '--updatePackageScripts' : ''
         } --no-interactive`,
         {
           stdio: [0, 1, 2],
@@ -110,7 +115,7 @@ export async function initHandler(options: InitArgs): Promise<void> {
       );
     }
 
-    if (!detectPluginsResponse.updatePackageScripts) {
+    if (!updatePackageScripts) {
       const rootPackageJsonPath = join(repoRoot, 'package.json');
       const json = readJsonFile<PackageJson>(rootPackageJsonPath);
       json.nx = { includedScripts: [] };
@@ -160,9 +165,10 @@ const npmPackageToPluginMap: Record<string, string> = {
   '@remix-run/dev': '@nx/remix',
 };
 
-async function detectPlugins(): Promise<
-  undefined | { plugins: string[]; updatePackageScripts: boolean }
-> {
+async function detectPlugins(): Promise<{
+  plugins: string[];
+  updatePackageScripts: boolean;
+}> {
   let files = ['package.json'].concat(
     globWithWorkspaceContext(process.cwd(), ['**/*/package.json'])
   );
@@ -190,10 +196,18 @@ async function detectPlugins(): Promise<
       }
     }
   }
+  if (existsSync('gradlew') || existsSync('gradlew.bat')) {
+    detectedPlugins.add('@nx/gradle');
+  }
 
   const plugins = Array.from(detectedPlugins);
 
-  if (plugins.length === 0) return undefined;
+  if (plugins.length === 0) {
+    return {
+      plugins: [],
+      updatePackageScripts: false,
+    };
+  }
 
   output.log({
     title: `Recommended Plugins:`,
@@ -212,27 +226,30 @@ async function detectPlugins(): Promise<
     },
   ]).then((r) => r.plugins);
 
-  if (pluginsToInstall?.length === 0) return undefined;
+  if (pluginsToInstall?.length === 0)
+    return {
+      plugins: [],
+      updatePackageScripts: false,
+    };
 
-  const updatePackageScripts = await prompt<{ updatePackageScripts: string }>([
-    {
-      name: 'updatePackageScripts',
-      type: 'autocomplete',
-      message: `Do you want to start using Nx in your package.json scripts?`,
-      choices: [
-        {
-          name: 'Yes',
-        },
-        {
-          name: 'No',
-        },
-      ],
-      initial: 0,
-    },
-  ]).then((r) => r.updatePackageScripts === 'Yes');
+  const updatePackageScripts =
+    existsSync('package.json') &&
+    (await prompt<{ updatePackageScripts: string }>([
+      {
+        name: 'updatePackageScripts',
+        type: 'autocomplete',
+        message: `Do you want to start using Nx in your package.json scripts?`,
+        choices: [
+          {
+            name: 'Yes',
+          },
+          {
+            name: 'No',
+          },
+        ],
+        initial: 0,
+      },
+    ]).then((r) => r.updatePackageScripts === 'Yes'));
 
-  return {
-    plugins: pluginsToInstall,
-    updatePackageScripts,
-  };
+  return { plugins: pluginsToInstall, updatePackageScripts };
 }

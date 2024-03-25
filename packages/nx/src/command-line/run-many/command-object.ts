@@ -7,6 +7,7 @@ import {
   withOverrides,
   withBatch,
 } from '../yargs-utils/shared-options';
+import { handleErrors } from '../../utils/params';
 
 export const yargsRunManyCommand: CommandModule = {
   command: 'run-many',
@@ -21,5 +22,10 @@ export const yargsRunManyCommand: CommandModule = {
       'run-many'
     ),
   handler: async (args) =>
-    (await import('./run-many')).runMany(withOverrides(args)),
+    await handleErrors(
+      (args.verbose as boolean) ?? process.env.NX_VERBOSE_LOGGING === 'true',
+      async () => {
+        (await import('./run-many')).runMany(withOverrides(args));
+      }
+    ),
 };

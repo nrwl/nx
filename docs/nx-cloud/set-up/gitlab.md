@@ -10,7 +10,7 @@ The Nx Cloud GitLab Integration lets you access the result of every run—with a
 
 Once on the VCS Integrations setup page, select "GitLab". You will be prompted to enter your project's ID.
 
-![Locate Gitlab Project ID](/nx-cloud/set-up/find-gitlab-project-id.png)
+![Locate Gitlab Project ID](/nx-cloud/set-up/find-gitlab-project-id.webp)
 
 To locate the ID for your project, visit the home page of your repository on GitLab. The value can be found underneath the name of your project, and has a clickable button to copy to your clipboard.
 
@@ -22,7 +22,7 @@ To locate the ID for your project, visit the home page of your repository on Git
 
 To use a Personal Access Token for authentication, one must be generated with proper permissions. The minimum required permissions are shown in the screenshot below.
 
-![Minimum GitLab Personal Access Token Permissions](/nx-cloud/set-up/minimal-gitlab-access-token.png)
+![Minimum GitLab Personal Access Token Permissions](/nx-cloud/set-up/minimal-gitlab-access-token.webp)
 
 Once this token is created, select the radio button for providing a personal access token, paste the value, and then click "Connect".
 

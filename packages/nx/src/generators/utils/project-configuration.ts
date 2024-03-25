@@ -4,7 +4,7 @@ import { basename, join, relative } from 'path';
 import {
   buildProjectConfigurationFromPackageJson,
   getGlobPatternsFromPackageManagerWorkspaces,
-  createNodes as packageJsonWorkspacesCreateNodes,
+  getNxPackageJsonWorkspacesPlugin,
 } from '../../plugins/package-json-workspaces';
 import {
   buildProjectFromProjectJson,
@@ -200,8 +200,8 @@ function readAndCombineAllProjectConfigurations(tree: Tree): {
     ),
   ];
   const projectGlobPatterns = configurationGlobs([
-    ProjectJsonProjectsPlugin,
-    { createNodes: packageJsonWorkspacesCreateNodes },
+    { plugin: ProjectJsonProjectsPlugin },
+    { plugin: getNxPackageJsonWorkspacesPlugin(tree.root) },
   ]);
   const globbedFiles = globWithWorkspaceContext(tree.root, projectGlobPatterns);
   const createdFiles = findCreatedProjectFiles(tree, patterns);

@@ -107,6 +107,7 @@ function createFiles(tree: Tree, options: NormalizedSchema) {
     options.preset === Preset.NuxtStandalone ||
     options.preset === Preset.NodeStandalone ||
     options.preset === Preset.NextJsStandalone ||
+    options.preset === Preset.RemixStandalone ||
     options.preset === Preset.TsStandalone
       ? './files-root-app'
       : options.preset === Preset.NPM

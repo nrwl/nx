@@ -1,5 +1,17 @@
 # Enterprise Release Notes
 
+### 2402.27.3.patch3
+
+- Feat: allows disabling the automated pod watcher which doesn't behave as expected in some k8s engines
+
+### 2402.27.3.patch2
+
+- Feat: allows volume class to be customised for Agents
+
+### 2402.27.3.patch1
+
+- Fixes an issue with the aggregator creating empty organisations during the first migration
+
 ### 2402.27.3
 
 With this version you can take advantage of most features announced during our recent [launch week](https://nx.dev/launch-nx).
@@ -92,7 +104,7 @@ To enable the light runner feature, make sure you:
 
 ##### Nx Agents
 
-This release is also the first one to support ["Nx Agents"](https://nx.dev/ci/features/nx-agents#managed-agents-seamless-configuration).
+This release is also the first one to support ["Nx Agents"](https://nx.dev/ci/features/distribute-task-execution#managed-agents-seamless-configuration).
 
 While currently experimental and disabled by default for on-prem users, we are looking for more on-prem workspaces to try it out with
 so please reach out to your DPE contact or to [cloud-suppport@nrwl.io](cloud-support@nrwl.io) if you are interested in helping us shape this according to your needs!

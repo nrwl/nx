@@ -54,18 +54,19 @@ You cannot interpolate environment variables into your `index.html` file for Rea
 
 ## For non-Vite React applications
 
-In React applications (e.g. those using `@nx/web:webpack` or `@nx/next:build` executors for `build` target), Nx
+In React applications (e.g. those using the `@nx/web:webpack` executor or an [inferred task](/concepts/inferred-tasks) that runs the Webpack CLI for building), Nx
 includes the following variables in the build process:
 
 - `NODE_ENV`
-- Variables prefixed with `NX_`, such as `NX_CUSTOM_VAR`
+- Variables prefixed with `NX_`, such as `NX_CUSTOM_VAR` (when using the [NxWebpackPlugin](/recipes/webpack/webpack-plugins#nxwebpackplugin) or the [withNx](/recipes/webpack/webpack-plugins#withnx) plugins)
 
 Defining environment variables can vary between OSes. It's also important to know that this is temporary for the life of
 the shell session.
 
 ### Using environment variables in `index.html`
 
-Nx supports interpolating environment variables into your `index.html` file for React and Web applications.
+Nx supports interpolating environment variables into your `index.html` file for React and Web applications built with Webpack.
+This feature is available when using the [NxWebpackPlugin](/recipes/webpack/webpack-plugins#nxwebpackplugin) or the [withNx](/recipes/webpack/webpack-plugins#withnx) plugins.
 
 To interpolate an environment variable named `NX_DOMAIN_NAME` into your `index.html`, surround it with `%` symbols like so:
 

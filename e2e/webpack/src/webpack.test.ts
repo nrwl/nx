@@ -1,7 +1,8 @@
 import {
-  checkFilesExist,
   cleanupProject,
+  listFiles,
   newProject,
+  readFile,
   rmDist,
   runCLI,
   runCommand,
@@ -159,4 +160,32 @@ describe('Webpack Plugin', () => {
     let output = runCommand(`node dist/${appName}/main.js`);
     expect(output).toMatch(/Hello/);
   }, 500_000);
+
+  it('should bundle in non-sensitive NX_ environment variables', () => {
+    const appName = uniq('app');
+    runCLI(`generate @nx/web:app ${appName} --bundler webpack`);
+    updateFile(
+      `apps/${appName}/src/main.ts`,
+      `
+      console.log(process.env['NX_CLOUD_ENCRYPTION_KEY']);
+      console.log(process.env['NX_CLOUD_ACCESS_TOKEN']);
+      console.log(process.env['NX_PUBLIC_TEST']);
+      `
+    );
+
+    runCLI(`build ${appName}`, {
+      env: {
+        NX_CLOUD_ENCRYPTION_KEY: 'secret',
+        NX_CLOUD_ACCESS_TOKEN: 'secret',
+        NX_PUBLIC_TEST: 'foobar',
+      },
+    });
+
+    const mainFile = listFiles(`dist/apps/${appName}`).filter((f) =>
+      f.startsWith('main.')
+    );
+    const content = readFile(`dist/apps/${appName}/${mainFile}`);
+    expect(content).not.toMatch(/secret/);
+    expect(content).toMatch(/foobar/);
+  });
 });

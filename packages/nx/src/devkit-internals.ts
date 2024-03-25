@@ -21,4 +21,3 @@ export {
   findProjectForPath,
 } from './project-graph/utils/find-project-for-path';
 export { registerTsProject } from './plugins/js/utils/register';
-export { shutdownPluginWorkers } from './project-graph/plugins/plugin-pool';

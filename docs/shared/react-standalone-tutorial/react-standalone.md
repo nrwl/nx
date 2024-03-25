@@ -21,7 +21,7 @@ Note, this tutorial sets up a repo with a single application at the root level t
 
 Note, while you could easily use Nx together with your manually set up React application, we're going to use the `@nx/react` plugin for this tutorial which provides some nice enhancements when working with React. [Visit our "Why Nx" page](/getting-started/why-nx) to learn more about plugins and what role they play in the Nx architecture.
 
-## Warm Up
+## Final Code
 
 Here's the source code of the final result for this tutorial.
 
@@ -847,17 +847,43 @@ When you are ready to add another application to the repo, you'll probably want 
 
 You can also go through the full [React monorepo tutorial](/getting-started/tutorials/react-monorepo-tutorial)
 
+## Setup CI for Your React App
+
+This tutorial walked you through how Nx can improve the developer experience for local development, but Nx can also make a big difference in CI. Without adequate tooling, CI times tend to grow exponentially with the size of the codebase. Nx helps reduce wasted time in CI with the [`affected` command](/ci/features/affected) and Nx Replay's [remote caching](/ci/features/remote-cache). Nx also [efficiently parallelizes tasks across machines](/ci/concepts/parallelization-distribution) with Nx Agents.
+
+To set up Nx Cloud run:
+
+```shell
+nx connect
+```
+
+And click the link provided. You'll need to follow the instructions on the website to sign up for your account.
+
+Then you can set up your CI with the following command:
+
+```shell
+nx generate ci-workflow --ci=github
+```
+
+{% callout type="note" title="Choose your CI provider" %}
+You can choose `github`, `circleci`, `azure`, `bitbucket-pipelines`, or `gitlab` for the `ci` flag.
+{% /callout %}
+
+This will create a default CI configuration that sets up Nx Cloud to [use distributed task execution](/ci/features/distribute-task-execution). This automatically runs all tasks on separate machines in parallel wherever possible, without requiring you to manually coordinate copying the output from one machine to another.
+
+Check out one of these detailed tutorials on setting up CI with Nx:
+
+- [Circle CI with Nx](/ci/intro/tutorials/circle)
+- [GitHub Actions with Nx](/ci/intro/tutorials/github-actions)
+
 ## Next Steps
 
-Here's some more things you can dive into next:
+Here's some things you can dive into next:
 
 - Learn more about the [underlying mental model of Nx](/concepts/mental-model)
 - Learn how to [migrate your CRA app to Nx](/recipes/react/migration-cra)
 - [Learn how to setup Tailwind](/recipes/react/using-tailwind-css-in-react)
 - [Setup Storybook for our shared UI library](/recipes/storybook/overview-react)
-- [Speed up CI: Run only tasks for project that got changed](/features/run-tasks#run-tasks-affected-by-a-pr)
-- [Speed up CI: Share your cache](/ci/features/remote-cache)
-- [Speed up CI: Distribute your tasks across machines](/ci/features/distribute-task-execution)
 
 Also, make sure you
 

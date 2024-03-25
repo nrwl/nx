@@ -3,7 +3,7 @@ import * as memfs from 'memfs';
 import '../../../internal-testing-utils/mock-fs';
 
 import { PackageJsonProjectsNextToProjectJsonPlugin } from './package-json-next-to-project-json';
-import { CreateNodesContext } from '../../../project-graph/plugins';
+import { CreateNodesContext } from '../../../utils/nx-plugin';
 const { createNodes } = PackageJsonProjectsNextToProjectJsonPlugin;
 
 describe('nx project.json plugin', () => {
@@ -14,6 +14,7 @@ describe('nx project.json plugin', () => {
     context = {
       nxJsonConfiguration: {},
       workspaceRoot: '/root',
+      configFiles: [],
     };
   });
 

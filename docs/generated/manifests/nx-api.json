@@ -1007,6 +1007,28 @@
     },
     "path": "/nx-api/express"
   },
+  "gradle": {
+    "githubRoot": "https://github.com/nrwl/nx/blob/master",
+    "name": "gradle",
+    "packageName": "@nx/gradle",
+    "description": "The Nx Plugin for gradle",
+    "documents": {},
+    "root": "/packages/gradle",
+    "source": "/packages/gradle/src",
+    "executors": {},
+    "generators": {
+      "/nx-api/gradle/generators/init": {
+        "description": "Initializes a Gradle project in the current workspace",
+        "file": "generated/packages/gradle/generators/init.json",
+        "hidden": false,
+        "name": "init",
+        "originalFilePath": "/packages/gradle/src/generators/init/schema.json",
+        "path": "/nx-api/gradle/generators/init",
+        "type": "generator"
+      }
+    },
+    "path": "/nx-api/gradle"
+  },
   "jest": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "jest",
@@ -1857,7 +1879,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/nx-api/nx/documents/release",
-        "tags": [],
+        "tags": ["nx-release"],
         "originalFilePath": "generated/cli/release"
       },
       "/nx-api/nx/documents/add": {

@@ -11,7 +11,7 @@ What are you going to learn?
 
 Note, while you could easily use Nx together with your manually set up Vue application, we're going to use the `@nx/vue` plugin for this tutorial which provides some nice enhancements when working with Vue. [Visit our "Why Nx" page](/getting-started/why-nx) to learn more about plugins and what role they play in the Nx architecture.
 
-## Warm Up
+## Final Code
 
 Here's the source code of the final result for this tutorial.
 
@@ -860,18 +860,38 @@ Learn more about how to [enforce module boundaries](/features/enforce-module-bou
 
 When you are ready to add another application to the repo, you'll probably want to move `myvueapp` to its own folder. To do this, you can run the [`convert-to-monorepo` generator](/nx-api/workspace/generators/convert-to-monorepo) or [manually move the configuration files](/recipes/tips-n-tricks/standalone-to-integrated).
 
+## Setup CI for Your Vue App
+
+This tutorial walked you through how Nx can improve the developer experience for local development, but Nx can also make a big difference in CI. Without adequate tooling, CI times tend to grow exponentially with the size of the codebase. Nx helps reduce wasted time in CI with the [`affected` command](/ci/features/affected) and Nx Replay's [remote caching](/ci/features/remote-cache). Nx also [efficiently parallelizes tasks across machines](/ci/concepts/parallelization-distribution) with Nx Agents.
+
+To set up Nx Cloud run:
+
+```shell
+nx connect
+```
+
+And click the link provided. You'll need to follow the instructions on the website to sign up for your account.
+
+Then you can set up your CI with the following command:
+
+```shell
+nx generate ci-workflow --ci=github
+```
+
+{% callout type="note" title="Choose your CI provider" %}
+You can choose `github`, `circleci`, `azure`, `bitbucket-pipelines`, or `gitlab` for the `ci` flag.
+{% /callout %}
+
+This will create a default CI configuration that sets up Nx Cloud to [use distributed task execution](/ci/features/distribute-task-execution). This automatically runs all tasks on separate machines in parallel wherever possible, without requiring you to manually coordinate copying the output from one machine to another.
+
+Check out one of these detailed tutorials on setting up CI with Nx:
+
+- [Circle CI with Nx](/ci/intro/tutorials/circle)
+- [GitHub Actions with Nx](/ci/intro/tutorials/github-actions)
+
 ## Next Steps
 
-Congrats, you made it!! You now know how to leverage the Nx standalone applications preset to build modular Vue applications.
-
-Here's some more things you can dive into next:
-
-- Learn more about the [underlying mental model of Nx](/concepts/mental-model)
-- [Speed up CI: Run only tasks for project that got changed](/features/run-tasks#run-tasks-affected-by-a-pr)
-- [Speed up CI: Share your cache](/ci/features/remote-cache)
-- [Speed up CI: Distribute your tasks across machines](/ci/features/distribute-task-execution)
-
-Also, make sure you
+Connect with the rest of the Nx community with these resources:
 
 - [Join the Official Nx Discord Server](https://go.nx.dev/community) to ask questions and find out the latest news about Nx.
 - [Follow Nx on Twitter](https://twitter.com/nxdevtools) to stay up to date with Nx news

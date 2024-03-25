@@ -34,9 +34,9 @@
               "description": "Get started with basic information, concepts and tutorials.",
               "itemList": [
                 {
-                  "name": "Package-Based Monorepo",
-                  "id": "package-based-repo-tutorial",
-                  "file": "shared/npm-tutorial/package-based"
+                  "name": "NPM Workspaces Monorepo",
+                  "id": "npm-workspaces-tutorial",
+                  "file": "shared/tutorials/npm-workspaces"
                 },
                 {
                   "name": "Integrated Monorepo",
@@ -165,7 +165,7 @@
               "name": "Manage Releases",
               "description": "Learn how Nx provides tools to help you manage releasing your projects.",
               "id": "manage-releases",
-              "tags": ["manage-releases"],
+              "tags": ["nx-release"],
               "file": "shared/features/manage-releases"
             },
             {
@@ -1155,6 +1155,12 @@
                   "id": "update-local-registry-setup",
                   "tags": ["nx-release"],
                   "file": "shared/recipes/nx-release/update-local-registry-setup"
+                },
+                {
+                  "name": "Customize Conventional Commit Types",
+                  "id": "customize-conventional-commit-types",
+                  "tags": ["nx-release"],
+                  "file": "shared/recipes/nx-release/customize-conventional-commit-types"
                 }
               ]
             },
@@ -1182,98 +1188,99 @@
               "name": "Nx with your favorite tech",
               "id": "example-repos",
               "description": "Examples of different ways to use Nx with your favorite tech",
+              "file": "shared/showcase/example-repos",
               "itemList": [
                 {
-                  "name": "Add an Express Project",
+                  "name": "Express",
                   "id": "add-express",
                   "description": "Add an Express application to your repo",
                   "file": "shared/recipes/add-stack/add-express"
                 },
                 {
-                  "name": "Add a Lit Project",
+                  "name": "Lit",
                   "id": "add-lit",
-                  "description": "Add a Lit project to your repo",
+                  "description": "Lit to your repo",
                   "file": "shared/recipes/add-stack/add-lit"
                 },
                 {
-                  "name": "Add a Solid Project",
+                  "name": "Solid",
                   "id": "add-solid",
-                  "description": "Add a Solid project to your repo",
+                  "description": "Solid to your repo",
                   "file": "shared/recipes/add-stack/add-solid"
                 },
                 {
-                  "name": "Add a Qwik Project",
+                  "name": "Qwik",
                   "id": "add-qwik",
-                  "description": "Add a Qwik project to your repo",
+                  "description": "Qwik to your repo",
                   "file": "shared/recipes/add-stack/add-qwik"
                 },
                 {
-                  "name": "Add a Rust Project",
+                  "name": "Rust",
                   "id": "add-rust",
-                  "description": "Add a Rust project to your repo",
+                  "description": "Rust to your repo",
                   "file": "shared/recipes/add-stack/add-rust"
                 },
                 {
-                  "name": "Add a .NET Project",
+                  "name": ".NET",
                   "id": "add-dotnet",
-                  "description": "Add a .NET project to your repo",
+                  "description": ".NET to your repo",
                   "file": "shared/recipes/add-stack/add-dotnet"
                 },
                 {
-                  "name": "Add an Astro Project",
+                  "name": "Astro",
                   "id": "add-astro",
                   "description": "Add Nx to an Astro project",
                   "file": "shared/recipes/add-stack/add-astro"
                 },
                 {
-                  "name": "Add a Svelte Project",
+                  "name": "Svelte",
                   "id": "add-svelte",
-                  "description": "Add a Svelte project to your repo",
+                  "description": "Svelte to your repo",
                   "file": "shared/recipes/add-stack/add-svelte"
                 },
                 {
-                  "name": "Add a Fastify Project",
+                  "name": "Fastify",
                   "id": "add-fastify",
-                  "description": "Add a Fastify project to your repo",
+                  "description": "Fastify to your repo",
                   "file": "shared/recipes/add-stack/add-fastify"
                 },
                 {
-                  "name": "Using Apollo GraphQL",
+                  "name": "Apollo GraphQL",
                   "id": "apollo-react",
                   "file": "shared/examples/apollo-react"
                 },
                 {
-                  "name": "Using Prisma with NestJS",
+                  "name": "Prisma with NestJS",
                   "id": "nestjs-prisma",
                   "tags": ["database", "node"],
                   "file": "shared/recipes/database/nestjs-prisma"
                 },
                 {
-                  "name": "Using Mongo with Fastify",
+                  "name": "Mongo with Fastify",
                   "id": "mongo-fastify",
                   "tags": ["database", "node"],
                   "file": "shared/recipes/database/mongo-fastify"
                 },
                 {
-                  "name": "Using Redis with Fastify",
+                  "name": "Redis with Fastify",
                   "id": "redis-fastify",
                   "tags": ["database", "node"],
                   "file": "shared/recipes/database/redis-fastify"
                 },
                 {
-                  "name": "Using Postgres with Fastify",
+                  "name": "Postgres with Fastify",
                   "id": "postgres-fastify",
                   "tags": ["database", "node"],
                   "file": "shared/recipes/database/postgres-fastify"
                 },
                 {
-                  "name": "Using PlanetScale with Serverless Fastify",
+                  "name": "PlanetScale with Serverless Fastify",
                   "id": "serverless-fastify-planetscale",
                   "tags": ["database", "node", "serverless"],
                   "file": "shared/recipes/database/serverless-fastify-planetscale"
                 },
                 {
-                  "name": "Nx Micro-Frontend Example",
+                  "name": "Nx with Micro-frontends",
                   "id": "mfe",
                   "file": "shared/examples/nx-examples"
                 }
@@ -1707,7 +1714,7 @@
               "file": "nx-cloud/features/dynamic-agents"
             },
             {
-              "name": "Automatically Split E2E Tasks (TestAtomizer)",
+              "name": "Automatically Split E2E Tasks (Atomizer)",
               "id": "split-e2e-tasks",
               "file": "nx-cloud/features/split-e2e-tasks"
             },
@@ -1844,6 +1851,11 @@
                   "name": "Enable GitLab MR Integration",
                   "id": "gitlab",
                   "file": "nx-cloud/set-up/gitlab"
+                },
+                {
+                  "name": "Enable Azure DevOps PR Integration",
+                  "id": "azure-devops",
+                  "file": "nx-cloud/set-up/azure-devops"
                 }
               ]
             },
@@ -2150,6 +2162,7 @@
             {
               "name": "release",
               "id": "release",
+              "tags": ["nx-release"],
               "file": "generated/cli/release"
             },
             {
