@@ -28,7 +28,8 @@ export async function resolveSemverSpecifierFromConventionalCommits(
   const relevantCommits = await getCommitsRelevantToProjects(
     projectGraph,
     parsedCommits,
-    projectNames
+    projectNames,
+    true
   );
   return determineSemverChange(relevantCommits, CONVENTIONAL_COMMITS_CONFIG);
 }
