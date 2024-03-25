@@ -35,7 +35,7 @@ jobs:
       - checkout: self
         fetchDepth: 1
         persistCredentials: true
-      
+
       - script: npm ci
       - script: npx nx-cloud start-agent
 
