@@ -445,12 +445,7 @@ export function getRunner(
 
     return {
       tasksRunner,
-      runnerOptions: getRunnerOptions(
-        runner,
-        nxJson,
-        nxArgs,
-        modulePath === 'nx-cloud'
-      ),
+      runnerOptions: getRunnerOptions(runner, nxJson, nxArgs),
     };
   } catch {
     throw new Error(`Could not find runner configuration for ${runner}`);
@@ -483,8 +478,7 @@ function getTasksRunnerPath(
 export function getRunnerOptions(
   runner: string,
   nxJson: NxJsonConfiguration<string[] | '*'>,
-  nxArgs: NxArgs,
-  isCloudDefault: boolean
+  nxArgs: NxArgs
 ): any {
   const defaultCacheableOperations = [];
 
@@ -499,21 +493,10 @@ export function getRunnerOptions(
     ...nxArgs,
   };
 
-  // NOTE: we don't pull from env here because the cloud package
-  // supports it within nx-cloud's implementation. We could
-  // normalize it here, and that may make more sense, but
-  // leaving it as is for now.
-  if (nxJson.nxCloudAccessToken && isCloudDefault) {
-    result.accessToken ??= nxJson.nxCloudAccessToken;
-  }
-
-  if (nxJson.nxCloudUrl && isCloudDefault) {
-    result.url ??= nxJson.nxCloudUrl;
-  }
-
-  if (nxJson.nxCloudEncryptionKey && isCloudDefault) {
-    result.encryptionKey ??= nxJson.nxCloudEncryptionKey;
-  }
+  // Take values from non-nested configuration if they are not already set
+  result.accessToken ??= nxJson.nxCloudAccessToken;
+  result.url ??= nxJson.nxCloudUrl;
+  result.encryptionKey ??= nxJson.nxCloudEncryptionKey;
 
   if (nxJson.parallel) {
     result.parallel ??= nxJson.parallel;

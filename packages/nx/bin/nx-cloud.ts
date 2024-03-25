@@ -12,7 +12,13 @@ import { output } from '../src/utils/output';
 
 const command = process.argv[2];
 
-const options = getCloudOptions();
+const taskRunnerConfiguration =
+  getTaskRunnerConfigurationFromArgs(process.argv) ??
+  process.env.NX_TASKS_RUNNER ??
+  process.env.NX_RUNNER ??
+  'default';
+
+const options = getCloudOptions(taskRunnerConfiguration);
 
 Promise.resolve().then(async () => invokeCommandWithNxCloudClient(options));
 
@@ -67,4 +73,13 @@ async function invokeCommandWithNxCloudClient(options: CloudTaskRunnerOptions) {
     });
     process.exit(1);
   }
+}
+
+function getTaskRunnerConfigurationFromArgs(args: string[]): string | null {
+  for (const arg of args) {
+    if (arg.includes('--runner=')) {
+      return arg.slice(9);
+    }
+  }
+  return null;
 }
