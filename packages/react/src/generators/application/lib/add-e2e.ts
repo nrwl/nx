@@ -22,9 +22,10 @@ export async function addE2e(
         (options.bundler === 'webpack' && hasWebpackPlugin(tree)) ||
         (options.bundler === 'vite' && hasVitePlugin(tree));
       if (!hasNxBuildPlugin) {
-        webStaticServeGenerator(tree, {
+        await webStaticServeGenerator(tree, {
           buildTarget: `${options.projectName}:build`,
           targetName: 'serve-static',
+          spa: true,
         });
       }
 

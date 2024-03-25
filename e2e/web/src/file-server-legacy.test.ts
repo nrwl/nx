@@ -36,7 +36,7 @@ describe('file-server', () => {
       }
     );
     runCLI(
-      `generate @nx/web:static-config --buildTarget=${ngAppName}:build --no-interactive`,
+      `generate @nx/web:static-config --buildTarget=${ngAppName}:build --outputPath=dist/apps/${ngAppName}/browser --no-interactive`,
       {
         env: {
           NX_ADD_PLUGINS: 'false',

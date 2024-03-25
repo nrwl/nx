@@ -33,6 +33,7 @@ exports[`@nx/nuxt/plugin not root project should create nodes 1`] = `
           "options": {
             "buildTarget": "acme-build-static",
             "port": 4200,
+            "spa": false,
             "staticFilePath": "{projectRoot}/dist",
           },
         },
@@ -131,6 +132,7 @@ exports[`@nx/nuxt/plugin root project should create nodes 1`] = `
           "options": {
             "buildTarget": "build-static",
             "port": 4200,
+            "spa": false,
             "staticFilePath": "{projectRoot}/dist",
           },
         },

@@ -135,9 +135,15 @@ export function addAngularStorybookTarget(
   updateProjectConfiguration(tree, projectName, projectConfig);
 }
 
-export function addStaticTarget(tree: Tree, opts: StorybookConfigureSchema) {
-  const nrwlWeb = ensurePackage<typeof import('@nx/web')>('@nx/web', nxVersion);
-  nrwlWeb.webStaticServeGenerator(tree, {
+export async function addStaticTarget(
+  tree: Tree,
+  opts: StorybookConfigureSchema
+) {
+  const { webStaticServeGenerator } = ensurePackage<typeof import('@nx/web')>(
+    '@nx/web',
+    nxVersion
+  );
+  await webStaticServeGenerator(tree, {
     buildTarget: `${opts.project}:build-storybook`,
     outputPath: joinPathFragments('dist/storybook', opts.project),
     targetName: 'static-storybook',
