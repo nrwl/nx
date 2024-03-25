@@ -439,10 +439,6 @@ jobs:
       - uses: pnpm/action-setup@v2
         with:
           version: 8
-      - run: |
-          pnpm exec nx-cloud start-ci-run \
-            --distribute-on="3 linux-medium-js" \
-            --stop-agents-after="e2e-ci"
       - name: Restore cached npm dependencies
         id: cache-dependencies-restore
         uses: actions/cache/restore@v3
@@ -452,6 +448,8 @@ jobs:
             ~/.cache/Cypress # needed for the Cypress binary
           key: npm-dependencies-${{ hashFiles('pnpm-lock.yaml') }}
       - run: pnpm install --frozen-lockfile
+      # Avoiding command "nx-cloud" not found
+      - run: pnpm exec nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="affected:test-storybook"
       - name: Cache npm dependencies
         id: cache-dependencies-save
         uses: actions/cache/save@v3
