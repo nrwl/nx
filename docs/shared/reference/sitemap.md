@@ -263,6 +263,7 @@
 
   - [Intro](/ci/intro)
     - [CI with Nx](/ci/intro/ci-with-nx)
+    - [Why Nx Cloud?](/ci/intro/why-nx-cloud)
     - [Tutorials](/ci/intro/tutorials)
       - [Circle CI with Nx](/ci/intro/tutorials/circle)
       - [GitHub Actions with Nx](/ci/intro/tutorials/github-actions)
