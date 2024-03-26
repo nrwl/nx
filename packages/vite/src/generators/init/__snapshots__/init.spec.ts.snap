@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`@nx/vite:init dependencies for package.json should add required packages 1`] = `
+exports[`@nx/vite:init vite basic setup should add required packages 1`] = `
 {
   "dependencies": {
     "existing": "1.0.0",

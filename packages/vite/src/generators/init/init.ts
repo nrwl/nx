@@ -45,6 +45,11 @@ export function updateNxJsonSettings(tree: Tree) {
     ];
   }
 
+  const sharedGlobalsFileSet = nxJson.namedInputs?.sharedGlobals;
+  if (sharedGlobalsFileSet) {
+    sharedGlobalsFileSet.push('{workspaceRoot}/.env?(.*)');
+  }
+
   updateNxJson(tree, nxJson);
 }
 
