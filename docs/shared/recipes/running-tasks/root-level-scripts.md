@@ -80,7 +80,7 @@ Our fully configured example would look like this:
 }
 ```
 
-To cache the `docs` target, you can set `cache: true` to the `docs` target shown in the `package.json` above and then your output would look like this:
+To cache the `docs` target, you can set `cache: true` on the `docs` target shown in the `package.json` above. Your output would then look as follows:
 
 ```{% command="nx docs" path="~/myorg" %}
 > nx run myorg:docs  [existing outputs match the cache, left as is]

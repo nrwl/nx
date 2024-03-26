@@ -4,7 +4,7 @@ Problem: A task is being executed when you expect it to be replayed from the cac
 
 1. Check if your task is marked as cacheable:
 
-   - Check the task has a "Cacheable" label in the Project Details View. You can do so by running `nx show project <project-name> --web` or by checking the [Project Details View in Nx Console](/recipes/nx-console/console-project-details).
+   - Check the task has a "Cacheable" label in the Project Details View. You can do so by running `nx show project <project-name> --web` or by checking it in [Nx Console](/recipes/nx-console/console-project-details).
    - If you're using a version lower than Nx 17.2.0, check:
      - the target configuration in the project's `project.json` file has `"cache": true` set, or
      - the target configuration in `nx.json#targetDefaults` has `"cache": true` set, or
