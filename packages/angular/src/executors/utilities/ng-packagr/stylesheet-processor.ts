@@ -93,12 +93,32 @@ export class StylesheetProcessor {
 
     const { version: ngPackagrVersion } =
       getInstalledPackageVersionInfo('ng-packagr');
+    let tailwindConfigPath: string | undefined;
     let postcssConfiguration: PostcssConfiguration | undefined;
-    if (gte(ngPackagrVersion, '17.3.0')) {
+    // TODO(leo): change to a stable version when it's released
+    if (gte(ngPackagrVersion, '18.0.0-next.3')) {
+      const {
+        findTailwindConfiguration,
+        generateSearchDirectories,
+        loadPostcssConfiguration,
+      } = require('ng-packagr/lib/styles/postcss-configuration');
+      let searchDirs = generateSearchDirectories([this.projectBasePath]);
+      postcssConfiguration = loadPostcssConfiguration(searchDirs);
+      // (nx-specific): we support loading the TailwindCSS config from the root of the workspace
+      searchDirs = generateSearchDirectories([
+        this.projectBasePath,
+        workspaceRoot,
+      ]);
+      tailwindConfigPath = findTailwindConfiguration(searchDirs);
+    } else if (gte(ngPackagrVersion, '17.3.0')) {
       const {
         loadPostcssConfiguration,
       } = require('ng-packagr/lib/styles/postcss-configuration');
       postcssConfiguration = loadPostcssConfiguration(this.projectBasePath);
+      tailwindConfigPath = getTailwindConfigPath(
+        this.projectBasePath,
+        workspaceRoot
+      );
     }
 
     this.renderWorker = new Piscina({
@@ -113,10 +133,7 @@ export class StylesheetProcessor {
       },
       workerData: {
         postcssConfiguration,
-        tailwindConfigPath: getTailwindConfigPath(
-          this.projectBasePath,
-          workspaceRoot
-        ),
+        tailwindConfigPath,
         projectBasePath: this.projectBasePath,
         browserslistData,
         targets: transformSupportedBrowsersToTargets(browserslistData),
@@ -200,9 +217,9 @@ export class AsyncStylesheetProcessor {
       getInstalledPackageVersionInfo('ng-packagr');
     let postcssConfiguration: PostcssConfiguration | undefined;
     if (ngPackagrVersion === '17.2.0') {
-      const { loadPostcssConfiguration } = await import(
-        'ng-packagr/lib/styles/postcss-configuration'
-      );
+      const {
+        loadPostcssConfiguration,
+      } = require('ng-packagr/lib/styles/postcss-configuration');
       postcssConfiguration = await loadPostcssConfiguration(
         this.projectBasePath
       );
