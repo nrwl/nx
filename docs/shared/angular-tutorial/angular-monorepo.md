@@ -891,7 +891,7 @@ NX   Successfully ran targets test, lint, e2e for 5 projects (54ms)
 Nx read the output from the cache instead of running the command for 10 out of 10 tasks.
 ```
 
-Not all tasks might be cacheable though. You can configure `cacheableOperations` in the `nx.json` file. You can also [learn more about how caching works](/features/cache-task-results).
+Not all tasks might be cacheable though. You can [configure which tasks are cacheable](/features/cache-task-results) in [the project configuration](/reference/project-configuration#cache) or in [the global Nx configuration](/reference/nx-json#cache). You can also [learn more about how caching works](/concepts/how-caching-works).
 
 ### Testing Affected Projects
 
