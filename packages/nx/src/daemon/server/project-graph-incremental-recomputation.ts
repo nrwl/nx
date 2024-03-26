@@ -239,6 +239,8 @@ async function processFilesAndCreateAndSerializeProjectGraph(): Promise<Serializ
       if (e instanceof ProjectConfigurationsError) {
         graphNodes = e.partialProjectConfigurationsResult;
         projectConfigurationsError = e;
+      } else {
+        throw e;
       }
     }
     await processCollectedUpdatedAndDeletedFiles(
