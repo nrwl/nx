@@ -4,7 +4,7 @@ In a package-based repository, you've intentionally opted out of some of Nx's fe
 
 To add an integrated project:
 
-1. Install the plugin you want to use (i.e. `npm install @nx/react`)
+1. Install the plugin you want to use (i.e. `nx add @nx/react`)
 2. Generate an application or library using that plugin (i.e. `nx g @nx/react:app`)
 
 The integrated project is now ready to use. Next, we'll discuss some of the changes that were applied to your codebase.
