@@ -8,7 +8,6 @@
 
 import * as browserslist from 'browserslist';
 import { existsSync } from 'fs';
-import { EsbuildExecutor } from 'ng-packagr/lib/esbuild/esbuild-executor';
 import {
   generateKey,
   readCacheEntry,
@@ -42,7 +41,8 @@ export class StylesheetProcessor {
   private browserslistData: string[];
   private targets: string[];
   private postCssProcessor: ReturnType<typeof postcss>;
-  private esbuild = new EsbuildExecutor();
+  private esbuild =
+    new (require('ng-packagr/lib/esbuild/esbuild-executor').EsbuildExecutor)();
   private styleIncludePaths: string[];
 
   constructor(
