@@ -14,6 +14,7 @@ are a few reasons why this could potentially happen:
 1. The package-lock.json file was not correctly updated by npm, and missed optional dependencies used by Nx.
    You can read more about this [issue on the npm repository.](https://github.com/npm/cli/issues/4828)
 1. [Your platform is not supported](#supported-native-module-platforms)
+1. [Node.js wasn't installed for the proper architecture ](#nodejs-installation-issues)
 
 {% callout type="note" title="Updating Nx" %}
 When updating Nx that is already on 15.8, the package-lock.json should continue to be updated properly with all the proper optional dependencies.
@@ -45,3 +46,12 @@ We publish modules for the following platforms:
 - FreeBSD (x64)
 
 If you're running a machine that isn't part of the list above, then Nx does not support it at this time. [Please open an issue on GitHub](https://github.com/nrwl/nx/issues/new/choose) if you feel Nx should support that platform and we will assess what can be done, please make sure to include your platform and architecture in the issue.
+
+### Node.js Installation Issues
+
+Especially on MacOS, it's possible that Node.js is installed with the wrong architecture (`x64` instead of `arm64`). Because of the Rosetta compatibility layer, Node.js will still run but the Nx CLI won't be able to find the proper native binary for your platform.
+
+If you are on ARM hardware, make sure Node.js is installed for ARM.
+Often, the culprit is a faulty installation of Homebrew, Node.js or VSCode (if using Nx Console). You should reinstall each of these for the correct `arm64` architecture.
+
+If you're not sure what architecture your Node is installed for, you can run `nx report` and see the `OS` property. If it contains `x64` even though you're on an `arm64` chip, something is wrong. For issues inside VSCode or Nx Console, also refer to the [Nx Console troubleshooting docs](recipes/nx-console/console-troubleshooting)
