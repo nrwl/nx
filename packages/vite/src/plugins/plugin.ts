@@ -123,8 +123,8 @@ async function buildViteTargets(
 
   const targets: Record<string, TargetConfiguration> = {};
 
-  // If file is not vitest.config and buildable, create targets for build, serve, preview and serve-static
-  if (!configFilePath.includes('vitest.config') && isBuildable) {
+  // If file is vite.config and buildable, create targets for build, serve, preview and serve-static
+  if (configFilePath.includes('vite.config') && isBuildable) {
     targets[options.buildTargetName] = await buildTarget(
       options.buildTargetName,
       namedInputs,
