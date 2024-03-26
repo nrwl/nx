@@ -3,7 +3,7 @@ import { dirname, join } from 'node:path';
 import { ProjectConfiguration } from '../../../config/workspace-json-project-json';
 import { toProjectName } from '../../../config/workspaces';
 import { readJsonFile } from '../../../utils/fileutils';
-import { NxPluginV2 } from '../../../utils/nx-plugin';
+import { NxPluginV2 } from '../../../project-graph/plugins';
 
 export const ProjectJsonProjectsPlugin: NxPluginV2 = {
   name: 'nx/core/project-json',
@@ -22,6 +22,8 @@ export const ProjectJsonProjectsPlugin: NxPluginV2 = {
     },
   ],
 };
+
+export default ProjectJsonProjectsPlugin;
 
 export function buildProjectFromProjectJson(
   json: Partial<ProjectConfiguration>,

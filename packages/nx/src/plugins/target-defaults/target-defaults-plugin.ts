@@ -8,7 +8,7 @@ import {
 } from '../../config/workspace-json-project-json';
 import { readJsonFile } from '../../utils/fileutils';
 import { combineGlobPatterns } from '../../utils/globs';
-import { NxPluginV2 } from '../../utils/nx-plugin';
+import { NxPluginV2 } from '../../project-graph/plugins';
 import {
   PackageJson,
   readTargetsFromPackageJson,
@@ -126,6 +126,8 @@ export const TargetDefaultsPlugin: NxPluginV2 = {
     },
   ],
 };
+
+export default TargetDefaultsPlugin;
 
 function getExecutorToTargetMap(
   packageJsonTargets: Record<string, TargetConfiguration>,

@@ -14,7 +14,7 @@ import {
 } from '../../../config/project-graph';
 import { hashArray } from '../../../hasher/file-hasher';
 import { sortObjectByKeys } from '../../../utils/object-sort';
-import { CreateDependenciesContext } from '../../../utils/nx-plugin';
+import { CreateDependenciesContext } from '../../../project-graph/plugins';
 
 /**
  * Yarn
