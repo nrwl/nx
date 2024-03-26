@@ -1,4 +1,4 @@
-import { ONLY_MODIFIES_EXISTING_TARGET } from '../../plugins/target-defaults/target-defaults-plugin';
+import { ONLY_MODIFIES_EXISTING_TARGET } from '../../plugins/target-defaults/symbols';
 import {
   ProjectConfiguration,
   TargetConfiguration,

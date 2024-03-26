@@ -27,6 +27,7 @@ import { getDefaultPluginsSync } from '../utils/nx-plugin.deprecated';
 import { minimatch } from 'minimatch';
 import { CreateNodesResult } from '../devkit-exports';
 import { PackageJsonProjectsNextToProjectJsonPlugin } from '../plugins/project-json/build-nodes/package-json-next-to-project-json';
+import { LoadedNxPlugin } from './plugins/internal-api';
 
 export interface Change {
   type: string;
@@ -183,17 +184,17 @@ export { readNxJson, workspaceLayout } from '../config/configuration';
 function getProjectsSyncNoInference(root: string, nxJson: NxJsonConfiguration) {
   const allConfigFiles = retrieveProjectConfigurationPaths(
     root,
-    getDefaultPluginsSync(root).map((p) => p.plugin)
+    getDefaultPluginsSync(root)
   );
   const plugins = [
-    { plugin: PackageJsonProjectsNextToProjectJsonPlugin },
+    PackageJsonProjectsNextToProjectJsonPlugin,
     ...getDefaultPluginsSync(root),
   ];
 
   const projectRootMap: Map<string, ProjectConfiguration> = new Map();
 
   // We iterate over plugins first - this ensures that plugins specified first take precedence.
-  for (const { plugin } of plugins) {
+  for (const plugin of plugins) {
     const [pattern, createNodes] = plugin.createNodes ?? [];
     if (!pattern) {
       continue;

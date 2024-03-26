@@ -22,6 +22,7 @@ const patterns = getGlobPatternsFromPackageManagerWorkspaces(
   workspaceRoot,
   readJson
 );
+
 const negativePatterns = patterns.filter((p) => p.startsWith('!'));
 const positivePatterns = patterns.filter((p) => !p.startsWith('!'));
 if (

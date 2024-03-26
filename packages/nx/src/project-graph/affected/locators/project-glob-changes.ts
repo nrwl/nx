@@ -4,15 +4,13 @@ import { workspaceRoot } from '../../../utils/workspace-root';
 import { join } from 'path';
 import { existsSync } from 'fs';
 import { configurationGlobs } from '../../utils/retrieve-workspace-files';
-import { loadPlugins } from '../../plugins/internal-api';
+import { loadNxPlugins } from '../../plugins/internal-api';
 import { combineGlobPatterns } from '../../../utils/globs';
 
 export const getTouchedProjectsFromProjectGlobChanges: TouchedProjectLocator =
   async (touchedFiles, projectGraphNodes, nxJson): Promise<string[]> => {
-    const plugins = await loadPlugins(nxJson?.plugins ?? [], workspaceRoot);
-    const globPattern = combineGlobPatterns(
-      configurationGlobs(plugins.map((p) => p.plugin))
-    );
+    const [plugins] = await loadNxPlugins(nxJson?.plugins ?? [], workspaceRoot);
+    const globPattern = combineGlobPatterns(configurationGlobs(plugins));
 
     const touchedProjects = new Set<string>();
     for (const touchedFile of touchedFiles) {

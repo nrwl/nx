@@ -3,7 +3,6 @@ import { dirname, join } from 'path';
 
 import { ProjectConfiguration } from '../../config/workspace-json-project-json';
 import { NxPlugin, readPluginPackageJson } from '../../project-graph/plugins';
-import { loadPlugin } from '../../project-graph/plugins/internal-api';
 import { readJsonFile } from '../fileutils';
 import { getNxRequirePaths } from '../installation-directory';
 import { output } from '../output';
@@ -13,6 +12,7 @@ import { workspaceRoot } from '../workspace-root';
 import { hasElements } from './shared';
 
 import type { PluginCapabilities } from './models';
+import { loadNxPlugin } from 'nx/src/project-graph/plugins/loader';
 
 function tryGetCollection<T extends object>(
   packageJsonPath: string,
@@ -101,15 +101,21 @@ async function tryGetModule(
   workspaceRoot: string
 ): Promise<NxPlugin | null> {
   try {
-    return packageJson.generators ??
+    if (
+      packageJson.generators ??
       packageJson.executors ??
       packageJson['nx-migrations'] ??
       packageJson['schematics'] ??
       packageJson['builders']
-      ? (await loadPlugin(packageJson.name, workspaceRoot)).plugin
-      : ({
-          name: packageJson.name,
-        } as NxPlugin);
+    ) {
+      const [pluginPromise] = loadNxPlugin(packageJson.name, workspaceRoot);
+      const plugin = await pluginPromise;
+      return plugin;
+    } else {
+      return {
+        name: packageJson.name,
+      };
+    }
   } catch {
     return null;
   }

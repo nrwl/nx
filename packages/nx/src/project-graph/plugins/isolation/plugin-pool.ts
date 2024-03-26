@@ -1,12 +1,12 @@
 import { ChildProcess, fork } from 'child_process';
 import path = require('path');
 
-import { PluginConfiguration } from '../../config/nx-json';
+import { PluginConfiguration } from '../../../config/nx-json';
 
 // TODO (@AgentEnder): After scoped verbose logging is implemented, re-add verbose logs here.
 // import { logger } from '../../utils/logger';
 
-import { LoadedNxPlugin, nxPluginCache } from './internal-api';
+import { LoadedNxPlugin, nxPluginCache } from '../internal-api';
 import { PluginWorkerResult, consumeMessage, createMessage } from './messaging';
 
 const cleanupFunctions = new Set<() => void>();
@@ -61,17 +61,13 @@ export function loadRemoteNxPlugin(
   cleanupFunctions.add(cleanupFunction);
 
   return [
-    new Promise<LoadedNxPlugin['plugin']>((res, rej) => {
+    new Promise<LoadedNxPlugin>((res, rej) => {
       worker.on(
         'message',
         createWorkerHandler(worker, pendingPromises, res, rej)
       );
       worker.on('exit', exitHandler);
-    }).then((loadedPlugin) =>
-      typeof plugin === 'string'
-        ? { plugin: loadedPlugin }
-        : { ...plugin, plugin: loadedPlugin }
-    ),
+    }),
     () => {
       cleanupFunction();
       cleanupFunctions.delete(cleanupFunction);
@@ -108,7 +104,7 @@ async function shutdownPluginWorker(
 function createWorkerHandler(
   worker: ChildProcess,
   pending: Map<string, PendingPromise>,
-  onload: (plugin: LoadedNxPlugin['plugin']) => void,
+  onload: (plugin: LoadedNxPlugin) => void,
   onloadError: (err?: unknown) => void
 ) {
   let pluginName: string;
@@ -145,7 +141,7 @@ function createWorkerHandler(
                 ]
               : undefined,
             createDependencies: result.hasCreateDependencies
-              ? (opts, ctx) => {
+              ? (ctx) => {
                   const tx =
                     pluginName + ':createDependencies:' + performance.now();
                   return registerPendingPromise(tx, pending, () => {

@@ -202,7 +202,7 @@ function readAndCombineAllProjectConfigurations(tree: Tree): {
   ];
   const projectGlobPatterns = configurationGlobs([
     ProjectJsonProjectsPlugin,
-    { createNodes: packageJsonWorkspacesCreateNodes } as NxPlugin,
+    { createNodes: packageJsonWorkspacesCreateNodes },
   ]);
   const globbedFiles = globWithWorkspaceContext(tree.root, projectGlobPatterns);
   const createdFiles = findCreatedProjectFiles(tree, patterns);
