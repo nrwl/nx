@@ -165,7 +165,9 @@ function createTempWorkspace(options: NormalizedOptions) {
       options.isVite ? 'vite' : 'webpack'
     } --packageManager=${options.packageManager} ${
       options.nxCloud ? '--nxCloud=yes' : '--nxCloud=skip'
-    } ${options.addE2e ? '--e2eTestRunner=cypress' : '--e2eTestRunner=none'}`,
+    } ${
+      options.addE2e ? '--e2eTestRunner=playwright' : '--e2eTestRunner=none'
+    }`,
     { stdio: [0, 1, 2] }
   );
 

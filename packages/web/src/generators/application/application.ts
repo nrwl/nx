@@ -380,6 +380,7 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
       sourceRoot: joinPathFragments(options.e2eProjectRoot, 'src'),
       projectType: 'application',
       targets: {},
+      tags: [],
       implicitDependencies: [options.projectName],
     });
     const playwrightTask = await playwrightConfigGenerator(host, {
@@ -528,7 +529,7 @@ async function normalizeOptions(
   options.style = options.style || 'css';
   options.linter = options.linter || ('eslint' as Linter.EsLint);
   options.unitTestRunner = options.unitTestRunner || 'jest';
-  options.e2eTestRunner = options.e2eTestRunner || 'cypress';
+  options.e2eTestRunner = options.e2eTestRunner || 'playwright';
 
   return {
     ...options,
