@@ -1,4 +1,5 @@
 import { dirname, join } from 'path';
+import type { TsConfigOptions } from 'ts-node';
 import type { CompilerOptions } from 'typescript';
 import { logger, NX_PREFIX, stripIndent } from '../../../utils/logger';
 import { existsSync } from 'fs';
@@ -80,7 +81,8 @@ export function getSwcTranspiler(
 }
 
 export function getTsNodeTranspiler(
-  compilerOptions: CompilerOptions
+  compilerOptions: CompilerOptions,
+  tsNodeOptions?: TsConfigOptions
 ): (...args: unknown[]) => unknown {
   const { register } = require('ts-node') as typeof import('ts-node');
   // ts-node doesn't provide a cleanup method
@@ -103,7 +105,84 @@ export function getTsNodeTranspiler(
   };
 }
 
-export function getTranspiler(compilerOptions: CompilerOptions) {
+/**
+ * Given the raw "ts-node" sub-object from a tsconfig, return an object with only the properties
+ * recognized by "ts-node"
+ *
+ * Adapted from the function of the same name in ts-node
+ */
+function filterRecognizedTsConfigTsNodeOptions(jsonObject: any): {
+  recognized: TsConfigOptions;
+  unrecognized: any;
+} {
+  if (typeof jsonObject !== 'object' || jsonObject === null) {
+    return { recognized: {}, unrecognized: {} };
+  }
+  const {
+    compiler,
+    compilerHost,
+    compilerOptions,
+    emit,
+    files,
+    ignore,
+    ignoreDiagnostics,
+    logError,
+    preferTsExts,
+    pretty,
+    require,
+    skipIgnore,
+    transpileOnly,
+    typeCheck,
+    transpiler,
+    scope,
+    scopeDir,
+    moduleTypes,
+    experimentalReplAwait,
+    swc,
+    experimentalResolver,
+    esm,
+    experimentalSpecifierResolution,
+    experimentalTsImportSpecifiers,
+    ...unrecognized
+  } = jsonObject as TsConfigOptions;
+  const filteredTsConfigOptions = {
+    compiler,
+    compilerHost,
+    compilerOptions,
+    emit,
+    experimentalReplAwait,
+    files,
+    ignore,
+    ignoreDiagnostics,
+    logError,
+    preferTsExts,
+    pretty,
+    require,
+    skipIgnore,
+    transpileOnly,
+    typeCheck,
+    transpiler,
+    scope,
+    scopeDir,
+    moduleTypes,
+    swc,
+    experimentalResolver,
+    esm,
+    experimentalSpecifierResolution,
+    experimentalTsImportSpecifiers,
+  };
+  // Use the typechecker to make sure this implementation has the correct set of properties
+  const catchExtraneousProps: keyof TsConfigOptions =
+    null as any as keyof typeof filteredTsConfigOptions;
+  const catchMissingProps: keyof typeof filteredTsConfigOptions =
+    null as any as keyof TsConfigOptions;
+  return { recognized: filteredTsConfigOptions, unrecognized };
+}
+
+export function getTranspiler(
+  compilerOptions: CompilerOptions,
+  tsConfigRaw?: unknown
+) {
   const preferTsNode = process.env.NX_PREFER_TS_NODE === 'true';
 
   if (!ts) {
@@ -125,7 +204,9 @@ export function getTranspiler(compilerOptions: CompilerOptions) {
 
   // We can fall back on ts-node if it's available
   if (tsNodeInstalled) {
-    return () => getTsNodeTranspiler(compilerOptions);
+    const tsNodeOptions =
+      filterRecognizedTsConfigTsNodeOptions(tsConfigRaw).recognized;
+    return () => getTsNodeTranspiler(compilerOptions, tsNodeOptions);
   }
 }
 
@@ -138,7 +219,8 @@ export function getTranspiler(compilerOptions: CompilerOptions) {
  * @returns cleanup method
  */
 export function registerTranspiler(
-  compilerOptions: CompilerOptions
+  compilerOptions: CompilerOptions,
+  tsConfigRaw?: unknown
 ): () => void {
   // Function to register transpiler that returns cleanup function
   const transpiler = getTranspiler(compilerOptions);

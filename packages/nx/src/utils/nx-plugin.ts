@@ -424,11 +424,14 @@ export function registerPluginTSTranspiler() {
       : {};
 
     const unregisterTsConfigPaths = registerTsConfigPaths(tsConfigName);
-    const unregisterTranspiler = registerTranspiler({
-      experimentalDecorators: true,
-      emitDecoratorMetadata: true,
-      ...tsConfig.options,
-    });
+    const unregisterTranspiler = registerTranspiler(
+      {
+        experimentalDecorators: true,
+        emitDecoratorMetadata: true,
+        ...tsConfig.options,
+      },
+      tsConfig.raw
+    );
     tsNodeAndPathsUnregisterCallback = () => {
       unregisterTsConfigPaths();
       unregisterTranspiler();
