@@ -9,10 +9,7 @@ import {
   createProjectConfigurations,
   ConfigurationResult,
 } from './project-configuration-utils';
-import {
-  LoadedNxPlugin,
-  loadNxPluginsInIsolation,
-} from '../plugins/internal-api';
+import { LoadedNxPlugin, loadNxPlugins } from '../plugins/internal-api';
 import {
   getNxWorkspaceFilesFromContext,
   globWithWorkspaceContext,
@@ -93,7 +90,7 @@ export async function retrieveProjectConfigurationsWithAngularProjects(
     pluginsToLoad.push(join(__dirname, '../../adapter/angular-json'));
   }
 
-  const [plugins, cleanup] = await loadNxPluginsInIsolation(
+  const [plugins, cleanup] = await loadNxPlugins(
     nxJson?.plugins ?? [],
     workspaceRoot
   );
@@ -125,7 +122,7 @@ function _retrieveProjectConfigurations(
 
 export function retrieveProjectConfigurationPaths(
   root: string,
-  plugins: LoadedNxPlugin[]
+  plugins: Array<{ createNodes?: readonly [string, ...unknown[]] } & unknown>
 ): string[] {
   const projectGlobPatterns = configurationGlobs(plugins);
   return globWithWorkspaceContext(root, projectGlobPatterns);
@@ -141,7 +138,7 @@ export async function retrieveProjectConfigurationsWithoutPluginInference(
   root: string
 ): Promise<Record<string, ProjectConfiguration>> {
   const nxJson = readNxJson(root);
-  const [plugins, cleanup] = await loadNxPluginsInIsolation([]); // only load default plugins
+  const [plugins, cleanup] = await loadNxPlugins([]); // only load default plugins
   const projectGlobPatterns = retrieveProjectConfigurationPaths(root, plugins);
   const cacheKey = root + ',' + projectGlobPatterns.join(',');
 
@@ -165,7 +162,9 @@ export async function retrieveProjectConfigurationsWithoutPluginInference(
   return projects;
 }
 
-export function configurationGlobs(plugins: LoadedNxPlugin[]): string[] {
+export function configurationGlobs(
+  plugins: Array<{ createNodes?: readonly [string, ...unknown[]] }>
+): string[] {
   const globPatterns = [];
   for (const plugin of plugins) {
     if ('createNodes' in plugin && plugin.createNodes) {

@@ -256,7 +256,7 @@ async function updateProjectGraphWithPlugins(
 ) {
   let graph = initProjectGraph;
   const errors: Array<ProcessDependenciesError | ProcessProjectGraphError> = [];
-  for (const { plugin } of plugins) {
+  for (const plugin of plugins) {
     try {
       if (
         isNxPluginV1(plugin) &&
@@ -307,15 +307,14 @@ async function updateProjectGraphWithPlugins(
   );
 
   const createDependencyPlugins = plugins.filter(
-    ({plugin}) => isNxPluginV2(plugin) && plugin.createDependencies
+    (plugin) => isNxPluginV2(plugin) && plugin.createDependencies
   );
   await Promise.all(
-    createDependencyPlugins.map(async ({plugin, options}) => {
+    createDependencyPlugins.map(async (plugin) => {
       performance.mark(`${plugin.name}:createDependencies - start`);
 
       try {
-        // TODO: we shouldn't have to pass null here
-        const dependencies = await plugin.createDependencies(options, {
+        const dependencies = await plugin.createDependencies({
           ...context,
         });
 

@@ -4,15 +4,20 @@ import { toProjectName } from '../../config/workspaces';
 import { combineGlobPatterns } from '../../utils/globs';
 
 import type { NxPluginV1 } from '../../utils/nx-plugin.deprecated';
-import type { NormalizedPlugin, RemotePlugin } from './internal-api';
-import type { NxPlugin, NxPluginV2 } from './public-api';
+import type {
+  CreateNodesResultWithContext,
+  LoadedNxPlugin,
+  NormalizedPlugin,
+} from './internal-api';
+import type { CreateNodesContext, NxPlugin, NxPluginV2 } from './public-api';
+import { AggregateCreateNodesError, CreateNodesError } from '../error-types';
 
 export function isNxPluginV2(plugin: NxPlugin): plugin is NxPluginV2 {
   return 'createNodes' in plugin || 'createDependencies' in plugin;
 }
 
 export function isNxPluginV1(
-  plugin: NxPlugin | RemotePlugin
+  plugin: NxPlugin | LoadedNxPlugin
 ): plugin is NxPluginV1 {
   return 'processProjectGraph' in plugin || 'projectFilePatterns' in plugin;
 }
@@ -43,19 +48,81 @@ export function normalizeNxPlugin(plugin: NxPlugin): NormalizedPlugin {
   return plugin;
 }
 
-export class CreateNodesError extends Error {
-  constructor(msg, cause: Error | unknown) {
-    const message = `${msg} ${
-      !cause
-        ? ''
-        : cause instanceof Error
-        ? `\n\n\t Inner Error: ${cause.stack}`
-        : cause
-    }`;
-    // These errors are thrown during a JS callback which is invoked via rust.
-    // The errors messaging gets lost in the rust -> js -> rust transition, but
-    // logging the error here will ensure that it is visible in the console.
-    console.error(message);
-    super(message, { cause });
+export async function runCreateNodesInParallel(
+  configFiles: string[],
+  plugin: NormalizedPlugin,
+  options: unknown,
+  context: CreateNodesContext
+): Promise<CreateNodesResultWithContext[]> {
+  performance.mark(`${plugin.name}:createNodes - start`);
+
+  console.log('FINDING NODES', {
+    plugin: plugin.name,
+    configFiles,
+  })
+
+  const promises: Array<
+    CreateNodesResultWithContext | Promise<CreateNodesResultWithContext>
+  > = configFiles.map((file) => {
+    performance.mark(`${plugin.name}:createNodes:${file} - start`);
+    // Result is either static or a promise, using Promise.resolve lets us
+    // handle both cases with same logic
+    const value = Promise.resolve(
+      plugin.createNodes[1](file, options, context)
+    );
+    return value
+      .catch((e) => {
+        performance.mark(`${plugin.name}:createNodes:${file} - end`);
+        return new CreateNodesError({
+          error: e,
+          pluginName: plugin.name,
+          file,
+        });
+      })
+      .then((r) => {
+        performance.mark(`${plugin.name}:createNodes:${file} - end`);
+        performance.measure(
+          `${plugin.name}:createNodes:${file}`,
+          `${plugin.name}:createNodes:${file} - start`,
+          `${plugin.name}:createNodes:${file} - end`
+        );
+
+        return { ...r, pluginName: plugin.name, file };
+      });
+  });
+  const results = await Promise.all(promises).then((results) => {
+    performance.mark(`${plugin.name}:createNodes - end`);
+    performance.measure(
+      `${plugin.name}:createNodes`,
+      `${plugin.name}:createNodes - start`,
+      `${plugin.name}:createNodes - end`
+    );
+    return results;
+  });
+
+  const [errors, successful] = partition<
+    CreateNodesError,
+    CreateNodesResultWithContext
+  >(results, (r): r is CreateNodesError => r instanceof CreateNodesError);
+
+  if (errors.length > 0) {
+    throw new AggregateCreateNodesError(plugin.name, errors, successful);
   }
+  return results;
+}
+
+function partition<T, T2 = T>(
+  arr: Array<T | T2>,
+  test: (item: T | T2) => item is T
+): [T[], T2[]] {
+  const pass: T[] = [];
+  const fail: T2[] = [];
+  for (const item of arr) {
+    if (test(item)) {
+      pass.push(item);
+    } else {
+      fail.push(item as any as T2);
+    }
+  }
+  return [pass, fail];
 }

@@ -26,16 +26,17 @@ import {
   retrieveWorkspaceFiles,
 } from './utils/retrieve-workspace-files';
 import { readNxJson } from '../config/nx-json';
-import { unregisterPluginTSTranspiler } from '../utils/nx-plugin';
 import {
   ConfigurationResult,
   ConfigurationSourceMaps,
+} from './utils/project-configuration-utils';
+import {
   CreateNodesError,
   MergeNodesError,
   ProjectConfigurationsError,
-} from './utils/project-configuration-utils';
+} from './error-types';
 import { DaemonProjectGraphError } from '../daemon/daemon-project-graph-error';
-import { loadNxPluginsInIsolation, LoadedNxPlugin } from './plugins/internal-api';
+import { loadNxPlugins, LoadedNxPlugin } from './plugins/internal-api';
 
 /**
  * Synchronously reads the latest cached copy of the workspace's ProjectGraph.
@@ -102,9 +103,8 @@ export async function buildProjectGraphAndSourceMapsWithoutDaemon() {
   performance.mark('retrieve-project-configurations:start');
   let configurationResult: ConfigurationResult;
   let projectConfigurationsError: ProjectConfigurationsError;
-  const [plugins, cleanup] = await loadNxPluginsInIsolation(nxJson.plugins);
+  const [plugins, cleanup] = await loadNxPlugins(nxJson.plugins);
   try {
-
     configurationResult = await retrieveProjectConfigurations(
       plugins,
       workspaceRoot,
@@ -122,10 +122,10 @@ export async function buildProjectGraphAndSourceMapsWithoutDaemon() {
     configurationResult;
   performance.mark('retrieve-project-configurations:end');
 
-    performance.mark('retrieve-workspace-files:start');
-    const { allWorkspaceFiles, fileMap, rustReferences } =
-      await retrieveWorkspaceFiles(workspaceRoot, projectRootMap);
-    performance.mark('retrieve-workspace-files:end');
+  performance.mark('retrieve-workspace-files:start');
+  const { allWorkspaceFiles, fileMap, rustReferences } =
+    await retrieveWorkspaceFiles(workspaceRoot, projectRootMap);
+  performance.mark('retrieve-workspace-files:end');
 
   const cacheEnabled = process.env.NX_CACHE_PROJECT_GRAPH !== 'false';
   performance.mark('build-project-graph-using-project-file-map:start');
@@ -160,7 +160,6 @@ export async function buildProjectGraphAndSourceMapsWithoutDaemon() {
   const { projectGraph, projectFileMapCache } = projectGraphResult;
   performance.mark('build-project-graph-using-project-file-map:end');
 
-  unregisterPluginTSTranspiler();
   delete global.NX_GRAPH_CREATION;
 
   const errors = [

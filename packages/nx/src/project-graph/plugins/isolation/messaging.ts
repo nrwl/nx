@@ -1,10 +1,10 @@
 import {
   ProjectGraph,
   ProjectGraphProcessorContext,
-} from '../../config/project-graph';
-import { PluginConfiguration } from '../../config/nx-json';
-import { CreateDependenciesContext, CreateNodesContext } from './public-api';
-import { RemotePlugin } from './internal-api';
+} from '../../../config/project-graph';
+import { PluginConfiguration } from '../../../config/nx-json';
+import { CreateDependenciesContext, CreateNodesContext } from '../public-api';
+import { LoadedNxPlugin } from '../internal-api';
 
 export interface PluginWorkerLoadMessage {
   type: 'load';
@@ -44,7 +44,7 @@ export interface PluginWorkerCreateNodesResult {
   payload:
     | {
         success: true;
-        result: Awaited<ReturnType<RemotePlugin['createNodes'][1]>>;
+        result: Awaited<ReturnType<LoadedNxPlugin['createNodes'][1]>>;
         tx: string;
       }
     | {
@@ -66,7 +66,7 @@ export interface PluginCreateDependenciesResult {
   type: 'createDependenciesResult';
   payload:
     | {
-        dependencies: ReturnType<RemotePlugin['createDependencies']>;
+        dependencies: ReturnType<LoadedNxPlugin['createDependencies']>;
         success: true;
         tx: string;
       }

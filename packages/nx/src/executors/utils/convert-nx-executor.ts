@@ -7,7 +7,7 @@ import { readNxJson } from '../../config/nx-json';
 import { Executor, ExecutorContext } from '../../config/misc-interfaces';
 import { retrieveProjectConfigurations } from '../../project-graph/utils/retrieve-workspace-files';
 import { ProjectsConfigurations } from '../../config/workspace-json-project-json';
-import { loadNxPluginsInIsolation } from '../../project-graph/plugins/internal-api';
+import { loadNxPlugins } from '../../project-graph/plugins/internal-api';
 
 /**
  * Convert an Nx Executor into an Angular Devkit Builder
@@ -19,7 +19,7 @@ export function convertNxExecutor(executor: Executor) {
     const promise = async () => {
       const nxJsonConfiguration = readNxJson(builderContext.workspaceRoot);
 
-      const [plugins, cleanup] = await loadNxPluginsInIsolation(
+      const [plugins, cleanup] = await loadNxPlugins(
         nxJsonConfiguration.plugins,
         builderContext.workspaceRoot
       );

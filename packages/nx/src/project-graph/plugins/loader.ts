@@ -75,6 +75,8 @@ export function resolveLocalNxPlugin(
   return lookupLocalPlugin(importPath, projects, root);
 }
 
+export let unregisterPluginTSTranspiler: (() => void) | null = null;
+
 /**
  * Register swc-node or ts-node if they are not currently registered
  * with some default settings which work well for Nx plugins.
@@ -86,16 +88,24 @@ export function registerPluginTSTranspiler() {
     join(workspaceRoot, 'tsconfig.json'),
   ].find((x) => existsSync(x));
 
+  if (!tsConfigName) {
+    return;
+  }
+
   const tsConfig: Partial<ts.ParsedCommandLine> = tsConfigName
     ? readTsConfig(tsConfigName)
     : {};
-
-  registerTsConfigPaths(tsConfigName);
-  registerTranspiler({
-    experimentalDecorators: true,
-    emitDecoratorMetadata: true,
-    ...tsConfig.options,
-  });
+  const cleanupFns = [
+    registerTsConfigPaths(tsConfigName),
+    registerTranspiler({
+      experimentalDecorators: true,
+      emitDecoratorMetadata: true,
+      ...tsConfig.options,
+    }),
+  ];
+  unregisterPluginTSTranspiler = () => {
+    cleanupFns.forEach((fn) => fn?.());
+  };
 }
 
 function lookupLocalPlugin(
@@ -225,27 +235,16 @@ export function getPluginPathAndName(
 
 let projectsWithoutInference: Record<string, ProjectConfiguration>;
 
-export async function loadPlugins(
-  plugins: PluginConfiguration[],
-  root: string
-): Promise<LoadedNxPlugin[]> {
-  return await Promise.all(plugins.map((p) => loadPlugin(p, root)));
-}
-
-export async function loadPlugin(plugin: PluginConfiguration, root: string) {
-  try {
-    require.resolve(typeof plugin === 'string' ? plugin : plugin.plugin);
-  } catch {
-    // If a plugin cannot be resolved, we will need projects to resolve it
-    projectsWithoutInference ??=
-      await retrieveProjectConfigurationsWithoutPluginInference(root);
-  }
-  return await loadNxPluginAsync(
-    plugin,
-    getNxRequirePaths(root),
-    projectsWithoutInference,
-    root
-  );
+export function loadNxPlugin(plugin: PluginConfiguration, root: string) {
+  return [
+    loadNxPluginAsync(
+      plugin,
+      getNxRequirePaths(root),
+      projectsWithoutInference,
+      root
+    ),
+    () => {},
+  ] as const;
 }
 
 export async function loadNxPluginAsync(
@@ -254,14 +253,22 @@ export async function loadNxPluginAsync(
   projects: Record<string, ProjectConfiguration>,
   root: string
 ): Promise<LoadedNxPlugin> {
-  const {
-    plugin: moduleName,
-    options,
-    include,
-    exclude,
-  } = typeof pluginConfiguration === 'object'
-    ? pluginConfiguration
-    : ({ plugin: pluginConfiguration } as ExpandedPluginConfiguration);
+  try {
+    require.resolve(
+      typeof pluginConfiguration === 'string'
+        ? pluginConfiguration
+        : pluginConfiguration.plugin
+    );
+  } catch {
+    // If a plugin cannot be resolved, we will need projects to resolve it
+    projectsWithoutInference ??=
+      await retrieveProjectConfigurationsWithoutPluginInference(root);
+  }
+
+  const moduleName =
+    typeof pluginConfiguration === 'string'
+      ? pluginConfiguration
+      : pluginConfiguration.plugin;
 
   performance.mark(`Load Nx Plugin: ${moduleName} - start`);
   let { pluginPath, name } = await getPluginPathAndName(
@@ -278,7 +285,7 @@ export async function loadNxPluginAsync(
     `Load Nx Plugin: ${moduleName} - start`,
     `Load Nx Plugin: ${moduleName} - end`
   );
-  return { plugin, options, include, exclude };
+  return new LoadedNxPlugin(plugin, pluginConfiguration);
 }
 
 async function importPluginModule(pluginPath: string): Promise<NxPlugin> {

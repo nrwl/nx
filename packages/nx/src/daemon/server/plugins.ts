@@ -1,11 +1,11 @@
 import { readNxJson } from '../../config/nx-json';
 import {
-  RemotePlugin,
-  loadNxPluginsInIsolation,
+  LoadedNxPlugin,
+  loadNxPlugins,
 } from '../../project-graph/plugins/internal-api';
 import { workspaceRoot } from '../../utils/workspace-root';
 
-let loadedPlugins: Promise<RemotePlugin[]>;
+let loadedPlugins: Promise<LoadedNxPlugin[]>;
 let cleanup: () => void;
 
 export async function getPlugins() {
@@ -13,7 +13,7 @@ export async function getPlugins() {
     return loadedPlugins;
   }
   const pluginsConfiguration = readNxJson().plugins ?? [];
-  const [result, cleanupFn] = await loadNxPluginsInIsolation(
+  const [result, cleanupFn] = await loadNxPlugins(
     pluginsConfiguration,
     workspaceRoot
   );
