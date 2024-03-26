@@ -407,10 +407,18 @@ export class TaskOrchestrator {
           const args = getPrintableCommandArgsForTask(task);
           output.logCommand(args.join(' '));
         }
+
+        // The `nx:run-commands` executor schema has a property called `env` that we want to combine
+        // with the values we loaded, if it exists.
+        const combinedEnv =
+          combinedOptions.env !== undefined
+            ? { ...env, ...combinedOptions.env }
+            : env;
+
         const { success, terminalOutput } = await runCommandsImpl(
           {
             ...combinedOptions,
-            env,
+            env: combinedEnv,
             usePty: isRunOne && !this.tasksSchedule.hasTasks(),
             streamOutput,
           },
