@@ -38,11 +38,3 @@ Like when moving projects, some steps are often missed when removing projects. T
 4. The path mapping in `tsconfig.base.json` will be removed.
 
 > See more about [`@nx/workspace:remove`](/nx-api/workspace/generators/remove)
-
-## Running custom commands
-
-Executors provide an optimized way of running targets but unfortunately, not every target has an executor written for it. The [`nx:run-commands`](/nx-api/nx/executors/run-commands) executor is an executor that runs any command or multiple commands in the shell. This can be useful when integrating with other tools which do not have an executor provided. There is also a generator to help configure this executor.
-
-Running `nx g @nx/workspace:run-commands printhello --project my-feature-lib --command 'echo hello'` will create a `my-feature-lib:printhello` target that executes `echo hello` in the shell.
-
-> See more about [`nx:run-commands`](/nx-api/nx/executors/run-commands)
