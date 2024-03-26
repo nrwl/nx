@@ -34,7 +34,10 @@ This command will register the appropriate plugin in the `plugins` array of `nx.
 
 ## Manual Configuration
 
-If you are already using the `@nx/cypress` or `@nx/playwright` plugin, you need to manually add the appropriate configuration to the `plugins` array of `nx.json`. The configuration settings can be found on the [Cypress](/nx-api/cypress#nxcypress-configuration) or [Playwright](/nx-api/playwright#nxplaywright-configuration) plugin docs.
+If you are already using the `@nx/cypress` or `@nx/playwright` plugin, you need to manually add the appropriate configuration to the `plugins` array of `nx.json`. Follow the instructions for the plugin you are using:
+
+- [Configure Cypress Task Splitting](/nx-api/cypress#nxcypress-configuration)
+- [Configure Playwright Task Splitting](/nx-api/playwright#nxplaywright-configuration)
 
 ## Usage
 
