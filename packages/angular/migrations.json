@@ -386,6 +386,15 @@
       },
       "description": "Update the @angular/cli package version to ~17.3.0.",
       "factory": "./src/migrations/update-18-2-0/update-angular-cli"
+    },
+    "update-angular-cli-version-18-0-0-rc-2": {
+      "cli": "nx",
+      "version": "19.2.0-beta.0",
+      "requires": {
+        "@angular/core": ">=18.0.0-rc.1"
+      },
+      "description": "Update the @angular/cli package version to ~18.0.0-rc.2.",
+      "factory": "./src/migrations/update-19-2-0/update-angular-cli"
     }
   },
   "packageJsonUpdates": {
@@ -1802,6 +1811,63 @@
         },
         "@angular-eslint/template-parser": {
           "version": "~17.3.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "19.2.0": {
+      "version": "19.2.0-beta.0",
+      "x-prompt": "Do you want to update the Angular version to v18?",
+      "requires": {
+        "@angular/core": ">=17.3.0 <18.0.0-rc.1"
+      },
+      "packages": {
+        "@angular-devkit/build-angular": {
+          "version": "~18.0.0-rc.2",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/core": {
+          "version": "~18.0.0-rc.2",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/schematics": {
+          "version": "~18.0.0-rc.2",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/pwa": {
+          "version": "~18.0.0-rc.2",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/ssr": {
+          "version": "~18.0.0-rc.2",
+          "alwaysAddToPackageJson": false
+        },
+        "@schematics/angular": {
+          "version": "~18.0.0-rc.2",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/architect": {
+          "version": "~0.1800.0-rc.2",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/build-webpack": {
+          "version": "~0.1800.0-rc.2",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/core": {
+          "version": "~18.0.0-rc.1",
+          "alwaysAddToPackageJson": true
+        },
+        "@angular/material": {
+          "version": "~18.0.0-rc.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/cdk": {
+          "version": "~18.0.0-rc.1",
+          "alwaysAddToPackageJson": false
+        },
+        "ng-packagr": {
+          "version": "~18.0.0-rc.0",
           "alwaysAddToPackageJson": false
         }
       }
