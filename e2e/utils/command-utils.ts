@@ -5,6 +5,7 @@ import {
   ensureCypressInstallation,
   ensurePlaywrightBrowsersInstallation,
   getNpmMajorVersion,
+  getPnpmVersion,
   getPublishedVersion,
   getStrippedEnvironmentVariables,
   getYarnMajorVersion,
@@ -17,6 +18,7 @@ import * as isCI from 'is-ci';
 import { fileExists, readJson, updateJson } from './file-utils';
 import { logError, stripConsoleColors } from './log-utils';
 import { existsSync } from 'fs-extra';
+import { gte } from 'semver';
 
 export interface RunCmdOpts {
   silenceError?: boolean;
@@ -96,10 +98,7 @@ export function runCommand(
   }
 }
 
-export function getPackageManagerCommand({
-  path = tmpProjPath(),
-  packageManager = detectPackageManager(path),
-} = {}): {
+export type PackageManagerCommands = {
   createWorkspace: string;
   run: (script: string, args: string) => string;
   runNx: string;
@@ -111,67 +110,81 @@ export function getPackageManagerCommand({
   addDev: string;
   list: string;
   runLerna: string;
-} {
+  exec: string;
+};
+export function getPackageManagerCommand({
+  path = tmpProjPath(),
+  packageManager = detectPackageManager(path),
+} = {}): PackageManagerCommands {
   const npmMajorVersion = getNpmMajorVersion();
-  const yarnMajorVersion = getYarnMajorVersion(path);
   const publishedVersion = getPublishedVersion();
-  const isYarnWorkspace = fileExists(join(path, 'package.json'))
-    ? readJson('package.json').workspaces
-    : false;
-  const isPnpmWorkspace = existsSync(join(path, 'pnpm-workspace.yaml'));
 
-  return {
-    npm: {
-      createWorkspace: `npx ${
-        npmMajorVersion && +npmMajorVersion >= 7 ? '--yes' : ''
-      } create-nx-workspace@${publishedVersion}`,
-      run: (script: string, args: string) => `npm run ${script} -- ${args}`,
-      runNx: `npx nx`,
-      runNxSilent: `npx nx`,
-      runUninstalledPackage: `npx --yes`,
-      install: 'npm install',
-      ciInstall: 'npm ci',
-      addProd: `npm install --legacy-peer-deps`,
-      addDev: `npm install --legacy-peer-deps -D`,
-      list: 'npm ls --depth 10',
-      runLerna: `npx lerna`,
+  const commands: { [pm in PackageManager]: () => PackageManagerCommands } = {
+    npm: () => {
+      return {
+        createWorkspace: `npx ${
+          npmMajorVersion && +npmMajorVersion >= 7 ? '--yes' : ''
+        } create-nx-workspace@${publishedVersion}`,
+        run: (script: string, args: string) => `npm run ${script} -- ${args}`,
+        runNx: `npx nx`,
+        runNxSilent: `npx nx`,
+        runUninstalledPackage: `npx --yes`,
+        install: 'npm install',
+        ciInstall: 'npm ci',
+        addProd: `npm install --legacy-peer-deps`,
+        addDev: `npm install --legacy-peer-deps -D`,
+        list: 'npm ls --depth 10',
+        runLerna: `npx lerna`,
+        exec: 'npx',
+      };
     },
-    yarn: {
-      createWorkspace: `npx ${
-        npmMajorVersion && +npmMajorVersion >= 7 ? '--yes' : ''
-      } create-nx-workspace@${publishedVersion}`,
-      run: (script: string, args: string) => `yarn ${script} ${args}`,
-      runNx: `yarn nx`,
-      runNxSilent:
-        yarnMajorVersion && +yarnMajorVersion >= 2
-          ? 'yarn nx'
-          : `yarn --silent nx`,
-      runUninstalledPackage: 'npx --yes',
-      install: 'yarn',
-      ciInstall: 'yarn --frozen-lockfile',
-      addProd: isYarnWorkspace ? 'yarn add -W' : 'yarn add',
-      addDev: isYarnWorkspace ? 'yarn add -DW' : 'yarn add -D',
-      list: 'yarn list --pattern',
-      runLerna:
-        yarnMajorVersion && +yarnMajorVersion >= 2
-          ? 'yarn lerna'
-          : `yarn --silent lerna`,
+    yarn: () => {
+      const yarnMajorVersion = getYarnMajorVersion(path);
+      const useYarnBerry = yarnMajorVersion && +yarnMajorVersion >= 2;
+      const isYarnWorkspace = fileExists(join(path, 'package.json'))
+        ? readJson('package.json').workspaces
+        : false;
+
+      return {
+        createWorkspace: `npx ${
+          npmMajorVersion && +npmMajorVersion >= 7 ? '--yes' : ''
+        } create-nx-workspace@${publishedVersion}`,
+        run: (script: string, args: string) => `yarn ${script} ${args}`,
+        runNx: `yarn nx`,
+        runNxSilent: useYarnBerry ? 'yarn nx' : `yarn --silent nx`,
+        runUninstalledPackage: 'npx --yes',
+        install: 'yarn',
+        ciInstall: 'yarn --frozen-lockfile',
+        addProd: isYarnWorkspace ? 'yarn add -W' : 'yarn add',
+        addDev: isYarnWorkspace ? 'yarn add -DW' : 'yarn add -D',
+        list: 'yarn list --pattern',
+        runLerna: useYarnBerry ? 'yarn lerna' : `yarn --silent lerna`,
+        exec: 'yarn',
+      };
     },
-    // Pnpm 3.5+ adds nx to
-    pnpm: {
-      createWorkspace: `pnpm dlx create-nx-workspace@${publishedVersion}`,
-      run: (script: string, args: string) => `pnpm run ${script} -- ${args}`,
-      runNx: `pnpm exec nx`,
-      runNxSilent: `pnpm exec nx`,
-      runUninstalledPackage: 'pnpm dlx',
-      install: 'pnpm i',
-      ciInstall: 'pnpm install --frozen-lockfile',
-      addProd: isPnpmWorkspace ? 'pnpm add -w' : 'pnpm add',
-      addDev: isPnpmWorkspace ? 'pnpm add -Dw' : 'pnpm add -D',
-      list: 'pnpm ls --depth 10',
-      runLerna: `pnpm exec lerna`,
+    pnpm: () => {
+      const pnpmVersion = getPnpmVersion(path);
+      const modernPnpm = pnpmVersion && gte(pnpmVersion, '6.13.0');
+      const isPnpmWorkspace = existsSync(join(path, 'pnpm-workspace.yaml'));
+
+      return {
+        createWorkspace: `pnpm dlx create-nx-workspace@${publishedVersion}`,
+        run: (script: string, args: string) => `pnpm run ${script} -- ${args}`,
+        runNx: `pnpm exec nx`,
+        runNxSilent: `pnpm exec nx`,
+        runUninstalledPackage: 'pnpm dlx',
+        install: 'pnpm i',
+        ciInstall: 'pnpm install --frozen-lockfile',
+        addProd: isPnpmWorkspace ? 'pnpm add -w' : 'pnpm add',
+        addDev: isPnpmWorkspace ? 'pnpm add -Dw' : 'pnpm add -D',
+        list: 'pnpm ls --depth 10',
+        runLerna: `pnpm exec lerna`,
+        exec: modernPnpm ? 'pnpm exec' : 'pnpx',
+      };
     },
-  }[packageManager.trim() as PackageManager];
+  };
+
+  return commands[packageManager]();
 }
 
 export function runE2ETests(runner?: 'cypress' | 'playwright') {
