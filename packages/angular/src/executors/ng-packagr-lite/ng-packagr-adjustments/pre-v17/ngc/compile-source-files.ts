@@ -6,10 +6,6 @@
  * - Support Angular Compiler `incrementalDriver` for Angular < 16.
  */
 
-import type {
-  CompilerOptions,
-  ParsedConfiguration,
-} from '@angular/compiler-cli';
 import { BuildGraph } from 'ng-packagr/lib/graph/build-graph';
 import {
   EntryPointNode,
@@ -25,21 +21,23 @@ import * as log from 'ng-packagr/lib/utils/log';
 import { join } from 'node:path';
 import * as ts from 'typescript';
 import { getInstalledAngularVersionInfo } from '../../../../utilities/angular-version-utils';
-import { ngCompilerCli } from '../../../../utilities/ng-compiler-cli';
+import { loadEsmModule } from '../../../../utilities/module-loader';
 import { NgPackagrOptions } from '../ng-package/options.di';
 import { StylesheetProcessor } from '../styles/stylesheet-processor';
 
 export async function compileSourceFiles(
   graph: BuildGraph,
-  tsConfig: ParsedConfiguration,
+  tsConfig: any,
   moduleResolutionCache: ts.ModuleResolutionCache,
   options: NgPackagrOptions,
-  extraOptions?: Partial<CompilerOptions>,
+  extraOptions?: Partial<ts.CompilerOptions>,
   stylesheetProcessor?: StylesheetProcessor
 ) {
-  const { NgtscProgram, formatDiagnostics } = await ngCompilerCli();
+  const { NgtscProgram, formatDiagnostics } = await loadEsmModule(
+    '@angular/compiler-cli'
+  );
   const { cacheDirectory, watch, cacheEnabled } = options;
-  const tsConfigOptions: CompilerOptions = {
+  const tsConfigOptions: ts.CompilerOptions = {
     ...tsConfig.options,
     ...extraOptions,
   };

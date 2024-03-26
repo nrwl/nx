@@ -197,13 +197,13 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
           budgets: [
             {
               type: 'initial',
-              maximumWarning: '500kb',
-              maximumError: '1mb',
+              maximumWarning: '500kB',
+              maximumError: '1MB',
             },
             {
               type: 'anyComponentStyle',
-              maximumWarning: '2kb',
-              maximumError: '4kb',
+              maximumWarning: '2kB',
+              maximumError: '4kB',
             },
           ],
           outputHashing: 'all',

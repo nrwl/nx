@@ -1,7 +1,8 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "module": "commonjs",
+    "moduleResolution": "node16",
+    "module": "node16",
     "outDir": "../../dist/out-tsc",
     "declaration": true,
     "types": ["node"]
@@ -12,7 +13,11 @@
     "**/*_spec.ts",
     "**/*_test.ts",
     "jest.config.ts",
-    "test-setup.ts"
+    "test-setup.ts",
+    "index.ts",
+    "src/runtime/**/*",
+    "mf/**/*",
+    "testing/**/*"
   ],
   "include": ["**/*.ts"]
 }
