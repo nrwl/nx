@@ -44,6 +44,15 @@ Next, we'll create a blank `nx.json` configuration file for Nx:
 {}
 ```
 
+## Add `.nx/cache` to `.gitignore`
+
+Next, we'll add [the Nx default cache directory](/features/cache-task-results#where-is-the-cache-stored) to the list of files to be ignored by Git. Update the `.gitignore` file adding the `.nx/cache` entry:
+
+```text {% fileName=".gitignore" %}
+...
+.nx/cache
+```
+
 ## Set Up Caching For a Task
 
 Now, let's set up caching for a script in your `package.json` file. Let's say you have a `build` script that looks like this:
