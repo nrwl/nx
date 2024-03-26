@@ -32,7 +32,14 @@ export function getIgnoredGlobs(
 }
 
 export function getAlwaysIgnore(root?: string) {
-  const paths = ['node_modules', '**/node_modules', '.git', '.nx', '.vscode'];
+  const paths = [
+    'node_modules',
+    '**/node_modules',
+    '.git',
+    '.nx',
+    '.vscode',
+    '.yarn/cache',
+  ];
   return root ? paths.map((x) => joinPathFragments(root, x)) : paths;
 }
 
