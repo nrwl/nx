@@ -56,11 +56,6 @@ export async function runCreateNodesInParallel(
 ): Promise<CreateNodesResultWithContext[]> {
   performance.mark(`${plugin.name}:createNodes - start`);
 
-  console.log('FINDING NODES', {
-    plugin: plugin.name,
-    configFiles,
-  })
-
   const promises: Array<
     CreateNodesResultWithContext | Promise<CreateNodesResultWithContext>
   > = configFiles.map((file) => {

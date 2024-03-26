@@ -204,11 +204,15 @@ function getProjectsSyncNoInference(root: string, nxJson: NxJsonConfiguration) {
     );
     for (const file of matchingConfigFiles) {
       if (minimatch(file, pattern, { dot: true })) {
-        let r = createNodes(file, {}, {
-          nxJsonConfiguration: nxJson,
-          workspaceRoot: root,
-          configFiles: matchingConfigFiles,
-        }) as CreateNodesResult;
+        let r = createNodes(
+          file,
+          {},
+          {
+            nxJsonConfiguration: nxJson,
+            workspaceRoot: root,
+            configFiles: matchingConfigFiles,
+          }
+        ) as CreateNodesResult;
         for (const node in r.projects) {
           const project = {
             root: node,

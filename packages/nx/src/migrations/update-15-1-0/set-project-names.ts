@@ -8,11 +8,11 @@ import { loadNxPlugins } from '../../project-graph/plugins/internal-api';
 
 export default async function (tree: Tree) {
   const nxJson = readNxJson(tree);
-  const [plugins, cleanup] = (await loadNxPlugins(nxJson?.plugins ?? [], tree.root))
-  const projectFiles = retrieveProjectConfigurationPaths(
-    tree.root,
-    plugins
+  const [plugins, cleanup] = await loadNxPlugins(
+    nxJson?.plugins ?? [],
+    tree.root
   );
+  const projectFiles = retrieveProjectConfigurationPaths(tree.root, plugins);
   const projectJsons = projectFiles.filter((f) => f.endsWith('project.json'));
 
   for (let f of projectJsons) {

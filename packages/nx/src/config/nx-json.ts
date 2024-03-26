@@ -436,9 +436,7 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
   useInferencePlugins?: boolean;
 }
 
-export type PluginConfiguration =
-  | string
-  | ExpandedPluginConfiguration;
+export type PluginConfiguration = string | ExpandedPluginConfiguration;
 
 export type ExpandedPluginConfiguration = {
   plugin: string;

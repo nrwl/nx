@@ -15,7 +15,7 @@ import {
   CreateNodesResult,
   NxPluginV2,
 } from './public-api';
-import { ProjectGraphProcessor } from 'nx/src/config/project-graph';
+import { ProjectGraphProcessor } from '../../config/project-graph';
 import { runCreateNodesInParallel } from './utils';
 import { loadNxPluginInIsolation } from './isolation';
 import { loadNxPlugin, unregisterPluginTSTranspiler } from './loader';
@@ -89,11 +89,9 @@ export async function loadNxPlugins(
   const result: Promise<LoadedNxPlugin>[] = [];
 
   const loadingMethod =
-    process.env.NX_PLUGIN_ISOLATION === 'true'
+    process.env.NX_ISOLATE_PLUGINS === 'true'
       ? loadNxPluginInIsolation
       : loadNxPlugin;
-
-  console.log(loadingMethod === loadNxPluginInIsolation ? 'isolated' : 'not isolated')
 
   plugins = await normalizePlugins(plugins, root);
 
