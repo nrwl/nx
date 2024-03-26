@@ -438,12 +438,14 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
 
 export type PluginConfiguration =
   | string
-  | {
-      plugin: string;
-      options?: unknown;
-      include?: string[];
-      exclude?: string[];
-    };
+  | ExpandedPluginConfiguration;
+
+export type ExpandedPluginConfiguration = {
+  plugin: string;
+  options?: unknown;
+  include?: string[];
+  exclude?: string[];
+};
 
 export function readNxJson(root: string = workspaceRoot): NxJsonConfiguration {
   const nxJson = join(root, 'nx.json');

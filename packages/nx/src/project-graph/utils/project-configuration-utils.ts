@@ -5,7 +5,6 @@ import {
   TargetConfiguration,
 } from '../../config/workspace-json-project-json';
 import { NX_PREFIX } from '../../utils/logger';
-import { CreateNodesResult, LoadedNxPlugin } from '../../utils/nx-plugin';
 import { readJsonFile } from '../../utils/fileutils';
 import { workspaceRoot } from '../../utils/workspace-root';
 import {
@@ -16,6 +15,8 @@ import {
 import { minimatch } from 'minimatch';
 import { join } from 'path';
 import { performance } from 'perf_hooks';
+import { CreateNodesResult } from '../plugins/public-api';
+import { CreateNodesResultWithContext, LoadedNxPlugin } from '../plugins/internal-api';
 
 export type SourceInformation = [file: string, plugin: string];
 export type ConfigurationSourceMaps = Record<
@@ -282,10 +283,6 @@ export type ConfigurationResult = {
   projectRootMap: Record<string, string>;
   sourceMaps: ConfigurationSourceMaps;
 };
-type CreateNodesResultWithContext = CreateNodesResult & {
-  file: string;
-  pluginName: string;
-};
 
 /**
  * Transforms a list of project paths into a map of project configurations.
@@ -298,8 +295,8 @@ type CreateNodesResultWithContext = CreateNodesResult & {
 export function createProjectConfigurations(
   root: string = workspaceRoot,
   nxJson: NxJsonConfiguration,
-  workspaceFiles: string[], // making this parameter allows devkit to pick up newly created projects
-  plugins: LoadedNxPlugin[]
+  projectFiles: string[], // making this parameter allows devkit to pick up newly created projects
+  plugins: LoadedNxPlugin[],
 ): Promise<ConfigurationResult> {
   performance.mark('build-project-configs:start');
 
@@ -313,14 +310,13 @@ export function createProjectConfigurations(
       CreateNodesResultWithContext | Promise<CreateNodesResultWithContext>
     > = [];
 
-    performance.mark(`${plugin.name}:createNodes - start`);
     if (!pattern) {
       continue;
     }
 
     const matchingConfigFiles: string[] = [];
 
-    for (const file of workspaceFiles) {
+    for (const file of projectFiles) {
       if (minimatch(file, pattern, { dot: true })) {
         if (include) {
           const included = include.some((includedPattern) =>
@@ -345,14 +341,12 @@ export function createProjectConfigurations(
     }
     for (const file of matchingConfigFiles) {
       performance.mark(`${plugin.name}:createNodes:${file} - start`);
-      try {
-        let r = createNodes(file, options, {
+        let r = createNodes(matchingConfigFiles, {
           nxJsonConfiguration: nxJson,
           workspaceRoot: root,
           configFiles: matchingConfigFiles,
         });
 
-        if (r instanceof Promise) {
           pluginResults.push(
             r
               .catch((error) => {
@@ -378,28 +372,7 @@ export function createProjectConfigurations(
                 return { ...r, file, pluginName: plugin.name };
               })
           );
-        } else {
-          performance.mark(`${plugin.name}:createNodes:${file} - end`);
-          performance.measure(
-            `${plugin.name}:createNodes:${file}`,
-            `${plugin.name}:createNodes:${file} - start`,
-            `${plugin.name}:createNodes:${file} - end`
-          );
-          pluginResults.push({
-            ...r,
-            file,
-            pluginName: plugin.name,
-          });
-        }
-      } catch (error) {
-        errors.push(
-          new CreateNodesError({
-            file,
-            pluginName: plugin.name,
-            error,
-          })
-        );
-      }
+      
     }
 
     results.push(

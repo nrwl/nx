@@ -1,22 +1,9 @@
-import { toProjectName, Workspaces } from './workspaces';
+import { toProjectName } from './workspaces';
 import { TempFs } from '../internal-testing-utils/temp-fs';
 import { withEnvironmentVariables } from '../internal-testing-utils/with-environment';
 import { retrieveProjectConfigurations } from '../project-graph/utils/retrieve-workspace-files';
 import { readNxJson } from './configuration';
-
-const libConfig = (root, name?: string) => ({
-  name: name ?? toProjectName(`${root}/some-file`),
-  projectType: 'library',
-  root: `libs/${root}`,
-  sourceRoot: `libs/${root}/src`,
-  targets: {
-    'nx-release-publish': {
-      dependsOn: ['^nx-release-publish'],
-      executor: '@nx/js:release-publish',
-      options: {},
-    },
-  },
-});
+import { loadNxPluginsInIsolation } from '../project-graph/plugins/internal-api';
 
 describe('Workspaces', () => {
   let fs: TempFs;
@@ -48,9 +35,21 @@ describe('Workspaces', () => {
 
       const { projects } = await withEnvironmentVariables(
         {
-          NX_WORKSPACE_ROOT: fs.tempDir,
+          NX_WORKSPACE_ROOT_PATH: fs.tempDir,
         },
-        () => retrieveProjectConfigurations(fs.tempDir, readNxJson(fs.tempDir))
+        async () => {
+          const [plugins, cleanup] = await loadNxPluginsInIsolation(
+            readNxJson(fs.tempDir).plugins,
+            fs.tempDir
+          );
+          const res = retrieveProjectConfigurations(
+            plugins,
+            fs.tempDir,
+            readNxJson(fs.tempDir)
+          );
+          cleanup();
+          return res;
+        }
       );
       expect(projects['my-package']).toEqual({
         name: 'my-package',
