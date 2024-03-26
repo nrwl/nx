@@ -3,6 +3,7 @@ import { dirname, join } from 'path';
 
 import { ProjectConfiguration } from '../../config/workspace-json-project-json';
 import { NxPlugin, readPluginPackageJson } from '../../project-graph/plugins';
+import { loadNxPlugin } from '../../project-graph/plugins/loader';
 import { readJsonFile } from '../fileutils';
 import { getNxRequirePaths } from '../installation-directory';
 import { output } from '../output';
@@ -12,7 +13,6 @@ import { workspaceRoot } from '../workspace-root';
 import { hasElements } from './shared';
 
 import type { PluginCapabilities } from './models';
-import { loadNxPlugin } from 'nx/src/project-graph/plugins/loader';
 
 function tryGetCollection<T extends object>(
   packageJsonPath: string,

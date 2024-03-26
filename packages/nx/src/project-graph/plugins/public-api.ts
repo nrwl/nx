@@ -22,7 +22,7 @@ export interface CreateNodesContext {
   /**
    * The subset of configuration files which match the createNodes pattern
    */
-  readonly configFiles: string[]; 
+  readonly configFiles: string[];
 }
 
 /**

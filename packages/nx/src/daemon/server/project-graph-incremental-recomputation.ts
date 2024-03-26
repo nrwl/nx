@@ -32,13 +32,11 @@ import { workspaceRoot } from '../../utils/workspace-root';
 import { notifyFileWatcherSockets } from './file-watching/file-watcher-sockets';
 import { serverLogger } from './logger';
 import { NxWorkspaceFilesExternals } from '../../native';
-import {
-  ConfigurationResult,
-} from '../../project-graph/utils/project-configuration-utils';
+import { ConfigurationResult } from '../../project-graph/utils/project-configuration-utils';
 import { DaemonProjectGraphError } from '../daemon-project-graph-error';
 import { LoadedNxPlugin } from '../../project-graph/plugins/internal-api';
 import { getPlugins } from './plugins';
-import { ProjectConfigurationsError } from 'nx/src/project-graph/error-types';
+import { ProjectConfigurationsError } from '../../project-graph/error-types';
 
 interface SerializedProjectGraph {
   error: Error | null;

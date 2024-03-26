@@ -237,12 +237,7 @@ let projectsWithoutInference: Record<string, ProjectConfiguration>;
 
 export function loadNxPlugin(plugin: PluginConfiguration, root: string) {
   return [
-    loadNxPluginAsync(
-      plugin,
-      getNxRequirePaths(root),
-      projectsWithoutInference,
-      root
-    ),
+    loadNxPluginAsync(plugin, getNxRequirePaths(root), root),
     () => {},
   ] as const;
 }
@@ -250,7 +245,6 @@ export function loadNxPlugin(plugin: PluginConfiguration, root: string) {
 export async function loadNxPluginAsync(
   pluginConfiguration: PluginConfiguration,
   paths: string[],
-  projects: Record<string, ProjectConfiguration>,
   root: string
 ): Promise<LoadedNxPlugin> {
   try {
@@ -274,7 +268,7 @@ export async function loadNxPluginAsync(
   let { pluginPath, name } = await getPluginPathAndName(
     moduleName,
     paths,
-    projects,
+    projectsWithoutInference,
     root
   );
   const plugin = normalizeNxPlugin(await importPluginModule(pluginPath));

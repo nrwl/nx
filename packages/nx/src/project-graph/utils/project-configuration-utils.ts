@@ -353,15 +353,14 @@ export async function createProjectConfigurations(
       nxJsonConfiguration: nxJson,
       workspaceRoot: root,
       configFiles: matchingConfigFiles,
-    })
-      .catch((e) => {
-        if (isAggregateCreateNodesError(e)) {
-          errors.push(...e.errors);
-          return e.partialResults;
-        } else {
-          throw e;
-        }
-      });
+    }).catch((e) => {
+      if (isAggregateCreateNodesError(e)) {
+        errors.push(...e.errors);
+        return e.partialResults;
+      } else {
+        throw e;
+      }
+    });
 
     results.push(r);
   }

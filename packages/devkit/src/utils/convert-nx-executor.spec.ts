@@ -1,10 +1,9 @@
-import { requireNx } from '../../nx';
+import { TempFs } from '../../internal-testing-utils';
 import { convertNxExecutor } from './convert-nx-executor';
-
-const { workspaceRoot } = requireNx();
 
 describe('Convert Nx Executor', () => {
   it('should convertNxExecutor to builder correctly and produce the same output', async () => {
+    const fs = new TempFs('convert-nx-executor');
     // ARRANGE
     const { schema } = require('@angular-devkit/core');
     const {
@@ -16,7 +15,7 @@ describe('Convert Nx Executor', () => {
     const registry = new schema.CoreSchemaRegistry();
     registry.addPostTransform(schema.transforms.addUndefinedDefaults);
     const testArchitectHost = new TestingArchitectHost();
-    testArchitectHost.workspaceRoot = workspaceRoot;
+    testArchitectHost.workspaceRoot = fs.tempDir;
     const architect = new Architect(testArchitectHost, registry);
 
     const convertedExecutor = convertNxExecutor(echoExecutor);
@@ -90,6 +89,7 @@ describe('Convert Nx Executor', () => {
     expect(convertedExecutor.handler.toString()).toEqual(
       realBuilder.handler.toString()
     );
+    fs.cleanup();
   });
 });
 
