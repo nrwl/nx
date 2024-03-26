@@ -45,7 +45,7 @@ let load: (<T>(modulePath: string | URL) => Promise<T>) | undefined;
  * @param modulePath The path of the module to load.
  * @returns A Promise that resolves to the dynamically imported module.
  */
-export function loadEsmModule<T>(modulePath: string | URL): Promise<T> {
+export function loadEsmModule<T = any>(modulePath: string | URL): Promise<T> {
   load ??= new Function('modulePath', `return import(modulePath);`) as Exclude<
     typeof load,
     undefined

@@ -29,7 +29,7 @@ export default async function* extractI18nExecutor(
     {
       builderName: 'extrct-i18n',
       description: 'Extracts i18n messages from source code.',
-      optionSchema: await import('./schema.json'),
+      optionSchema: require('./schema.json'),
     },
     context
   );
