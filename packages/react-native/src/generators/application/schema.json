@@ -75,8 +75,8 @@
     "e2eTestRunner": {
       "description": "Adds the specified e2e test runner.",
       "type": "string",
-      "enum": ["cypress", "playwright", "detox", "none"],
-      "default": "cypress"
+      "enum": ["playwright", "cypress", "detox", "none"],
+      "default": "playwright"
     },
     "install": {
       "type": "boolean",

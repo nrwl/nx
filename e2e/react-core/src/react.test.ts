@@ -57,12 +57,8 @@ describe('React Applications', () => {
       checkFilesExist(`dist/apps/${appName}/index.html`);
 
       if (runE2ETests()) {
-        const e2eResults = runCLI(`e2e ${appName}-e2e`, {
-          env: {
-            DEBUG: 'cypress:server:*',
-          },
-        });
-        expect(e2eResults).toContain('All specs passed!');
+        const e2eResults = runCLI(`e2e ${appName}-e2e`);
+        expect(e2eResults).toContain('Successfully ran target e2e for project');
         expect(await killPorts()).toBeTruthy();
       }
     }, 250_000);
