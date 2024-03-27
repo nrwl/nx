@@ -1,6 +1,9 @@
 import Link from 'next/link';
 import { cx } from '@nx/nx-dev/ui-primitives';
 import { useHeadingsObserver } from './use-headings-observer';
+import { useState } from 'react';
+import { FeedbackDialog } from '@nx/feature-feedback';
+import { sendCustomEvent } from '@nx/nx-dev/feature-analytics';
 
 interface Heading {
   id: string;
@@ -70,6 +73,17 @@ export function TableOfContents({
     headings.find((i) => i.level === 1)?.title || null
   );
 
+  const [showFeedback, setShowFeedback] = useState(false);
+
+  function submitIdeaFeedback(feedback: string) {
+    // sanitize the feedback from the user script tags/other malicious code
+    const sanitizedFeedback = feedback.replace(/(<([^>]+)>)/gi, '');
+
+    sendCustomEvent('feedback', 'feedback', 'idea', undefined, {
+      feedback: sanitizedFeedback,
+    });
+  }
+
   return (
     <>
       <nav className="toc">
@@ -100,6 +114,22 @@ export function TableOfContents({
         ) : null}
       </nav>
       <div className="p-4">{children}</div>
+      <div className="flex w-full items-center space-x-2 sm:px-6 xl:px-8">
+        <div className="flex items-center justify-between pl-2 pr-2 space-x-2 border rounded-md border-slate-200 hover:border-slate-400 dark:border-slate-700 print:hidden">
+          <button
+            className="px-4 py-2 border-transparent hover:text-slate-900 dark:hover:text-sky-400 whitespace-nowrap"
+            onClick={() => setShowFeedback(true)}
+          >
+            {' '}
+            Feedback?{' '}
+          </button>
+        </div>
+      </div>
+      <FeedbackDialog
+        isOpen={showFeedback}
+        onClose={() => setShowFeedback(false)}
+        onFeedbackSubmit={submitIdeaFeedback}
+      />
     </>
   );
 }

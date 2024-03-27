@@ -35,6 +35,7 @@
       "@nx/expo": ["packages/expo"],
       "@nx/expo/*": ["packages/expo/*"],
       "@nx/express": ["packages/express"],
+      "@nx/feature-feedback": ["nx-dev/feature-feedback/src/index.ts"],
       "@nx/gradle": ["packages/gradle/src/index.ts"],
       "@nx/gradle/*": ["packages/gradle/*"],
       "@nx/graph/project-details": ["graph/project-details/src/index.ts"],
