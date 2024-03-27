@@ -1197,6 +1197,15 @@
         "originalFilePath": "/packages/js/src/generators/setup-build/schema.json",
         "path": "js/generators/setup-build",
         "type": "generator"
+      },
+      {
+        "description": "Synchronize TypeScript project references based on the project graph",
+        "file": "generated/packages/js/generators/sync.json",
+        "hidden": true,
+        "name": "sync",
+        "originalFilePath": "/packages/js/src/generators/sync/schema.json",
+        "path": "js/generators/sync",
+        "type": "generator"
       }
     ],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
