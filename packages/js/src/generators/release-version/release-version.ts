@@ -147,10 +147,26 @@ To fix this you will either need to add a package.json file at that location, or
 
       switch (options.currentVersionResolver) {
         case 'registry': {
+          if (tree.exists(joinPathFragments(packageRoot, '.npmrc'))) {
+            output.warn({
+              title: `Ignoring .npmrc file detected in the package root`,
+              bodyLines: [
+                `A .npmrc file was detected in ${packageRoot}.`,
+                `npm does not support nested .npmrc files, so it will be ignored.`,
+                `Only the .npmrc file at the root of the workspace will be used.`,
+                `To customize the registry or tag for specific packages, see https://nx.dev/recipes/nx-release/configure-custom-registries.`,
+              ],
+            });
+          }
+
           const metadata = options.currentVersionResolverMetadata;
           const registry =
             metadata?.registry ??
-            (await getNpmRegistry(packageName, workspaceRoot));
+            (await getNpmRegistry(
+              packageName,
+              workspaceRoot,
+              projectPackageJson.publishConfig
+            ));
           const tag = metadata?.tag ?? (await getNpmTag(workspaceRoot));
 
           /**

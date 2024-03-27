@@ -1,46 +1,46 @@
 import { exec } from 'child_process';
+import type { PackageJson } from 'nx/src/utils/package-json';
 
 /**
  * Returns the npm registry that is used for publishing.
  *
  * Uses the packageName to determine the scope, then looks
  * for the registry for that scope in the npm config. If
- * not found, falls back to the registry for packages with
- * no scope, which will default to the npm public registry
- * if not set.
+ * not found, falls back to the publishConfig for the package.
+ * Lastly, defers to the registry in the npm config, which
+ * will default to the npm public registry if not set. This
+ * hierarchy matches what the npm CLI uses when publishing packages.
  *
  * @param packageName the name of the package from which to determine the scope
  * @param cwd the directory where the npm config should be read from
+ * @param publishConfig the publishConfig for the package
  */
 export async function getNpmRegistry(
   packageName: string,
-  cwd: string
+  cwd: string,
+  publishConfig: PackageJson['publishConfig']
 ): Promise<string> {
   const scope = packageName.startsWith('@') ? packageName.split('/')[0] : null;
 
-  let registry = undefined;
+  // npm gives precedence to scoped package config in .npmrc, even over publishConfig in the package.json file
   if (scope) {
-    registry = await getNpmConfigValue(`${scope}:registry`, cwd);
+    return getNpmConfigValue(`${scope}:registry`, cwd);
   }
 
-  if (!registry) {
-    registry = await getNpmConfigValue('registry', cwd);
+  if (publishConfig?.registry) {
+    return publishConfig.registry;
   }
 
-  return registry;
+  return getNpmConfigValue('registry', cwd);
 }
 
 /**
  * Returns the npm tag that is used for publishing.
  *
- * Note: We can't support @scope:tag because it will always return
- * the default value of 'latest', and there's no way to tell
- * (without parsing npm config ourselves) if that's the npm default
- * that we should override or if the user specifically set it to 'latest'.
- *
  * @param cwd the directory where the npm config should be read from
  */
 export async function getNpmTag(cwd: string): Promise<string> {
+  // npm does not support '@scope:tag' in the npm config, so we only need to check for 'tag'.
   return getNpmConfigValue('tag', cwd);
 }
 

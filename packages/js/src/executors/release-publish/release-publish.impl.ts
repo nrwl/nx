@@ -1,5 +1,6 @@
 import { ExecutorContext, joinPathFragments, readJsonFile } from '@nx/devkit';
 import { execSync } from 'child_process';
+import { existsSync } from 'fs';
 import { env as appendLocalEnv } from 'npm-run-path';
 import { getNpmRegistry, getNpmTag } from '../../utils/npm-config';
 import { logTar } from './log-tar';
@@ -57,6 +58,12 @@ export default async function runExecutor(
     };
   }
 
+  if (existsSync(joinPathFragments(packageRoot, '.npmrc'))) {
+    console.warn(
+      `Ignoring .npmrc file detected in the package root. Nested .npmrc files are not supported by npm. Only the .npmrc file at the root of the workspace will be used. To customize the registry or tag for specific packages, see https://nx.dev/recipes/nx-release/configure-custom-registries.`
+    );
+  }
+
   /*
    * The registry obtained here is just used for logging. The tag is used for
    * logging as well as updating the dist tag, if necessary.
@@ -65,20 +72,20 @@ export default async function runExecutor(
    * publishing are detected automatically by npm.
    */
   const registry =
-    options.registry ?? (await getNpmRegistry(packageName, context.root));
+    options.registry ??
+    (await getNpmRegistry(
+      packageName,
+      context.root,
+      projectPackageJson.publishConfig
+    ));
   const tag = options.tag ?? (await getNpmTag(context.root));
 
   const npmViewCommandSegments = [
-    `npm view ${packageName} versions dist-tags --json`,
+    `npm view ${packageName} versions dist-tags --json --registry=${registry}`,
   ];
   const npmDistTagAddCommandSegments = [
-    `npm dist-tag add ${packageName}@${projectPackageJson.version} ${tag}`,
+    `npm dist-tag add ${packageName}@${projectPackageJson.version} ${tag} --registry=${registry}`,
   ];
-
-  if (options.registry) {
-    npmViewCommandSegments.push(`--registry=${options.registry}`);
-    npmDistTagAddCommandSegments.push(`--registry=${options.registry}`);
-  }
 
   /**
    * In a dry-run scenario, it is most likely that all commands are being run with dry-run, therefore
@@ -199,15 +206,9 @@ export default async function runExecutor(
     console.log('Skipped npm view because --first-release was set');
   }
 
-  const npmPublishCommandSegments = [`npm publish ${packageRoot} --json`];
-
-  if (options.registry) {
-    npmPublishCommandSegments.push(`--registry=${options.registry}`);
-  }
-
-  if (options.tag) {
-    npmPublishCommandSegments.push(`--tag=${options.tag}`);
-  }
+  const npmPublishCommandSegments = [
+    `npm publish ${packageRoot} --json --registry=${registry} --tag=${tag}`,
+  ];
 
   if (options.otp) {
     npmPublishCommandSegments.push(`--otp=${options.otp}`);
