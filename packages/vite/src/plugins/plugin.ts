@@ -11,7 +11,7 @@ import {
 } from '@nx/devkit';
 import { dirname, isAbsolute, join, relative } from 'path';
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
-import { existsSync, readdirSync } from 'fs';
+import { existsSync, readdirSync, readFileSync } from 'fs';
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { projectGraphCacheDirectory } from 'nx/src/utils/cache-directory';
 import { getLockFileName } from '@nx/js';
@@ -89,6 +89,9 @@ export const createNodes: CreateNodes<VitePluginOptions> = [
   },
 ];
 
+// Anything like import ... (including newlines) from '@remix-run/dev'
+const remixViteImportPattern = /import\s+.*\s+from\s+['"]@remix-run\/dev['"]/s;
+
 async function buildViteTargets(
   configFilePath: string,
   projectRoot: string,
@@ -99,6 +102,16 @@ async function buildViteTargets(
     context.workspaceRoot,
     configFilePath
   );
+
+  if (existsSync(absoluteConfigFilePath)) {
+    const fileContent = readFileSync(absoluteConfigFilePath, 'utf-8');
+
+    // If the config file imports from '@remix-run/dev', we skip creating targets
+    // as it should be handled by the @nx/remix plugin
+    if (remixViteImportPattern.test(fileContent)) {
+      return {};
+    }
+  }
 
   // Workaround for the `build$3 is not a function` error that we sometimes see in agents.
   // This should be removed later once we address the issue properly
