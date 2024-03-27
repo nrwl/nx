@@ -1,5 +1,6 @@
 import {
   cleanupProject,
+  fileExists,
   listFiles,
   newProject,
   packageInstall,
@@ -217,6 +218,49 @@ describe('Webpack Plugin', () => {
     updateFile(`apps/${appName}/.browserslistrc`, `IE 11\n`);
     runCLI(`build ${appName}`);
     expect(readMainFile(`dist/apps/${appName}`)).not.toMatch(`await Promise`);
+  });
+
+  it('should allow options to be passed from the executor', async () => {
+    const appName = uniq('app');
+    runCLI(`generate @nx/web:app ${appName} --bundler webpack`);
+    updateJson(`apps/${appName}/project.json`, (json) => {
+      json.targets.build = {
+        executor: '@nx/webpack:webpack',
+        outputs: ['{options.outputPath}'],
+        options: {
+          generatePackageJson: true, // This should be passed to the plugin.
+          outputPath: `dist/apps/${appName}`,
+          webpackConfig: `apps/${appName}/webpack.config.js`,
+        },
+      };
+      return json;
+    });
+    updateFile(
+      `apps/${appName}/webpack.config.js`,
+      `
+        const { NxWebpackPlugin } = require('@nx/webpack');
+        const { join } = require('path');
+        module.exports = {
+          output: {
+            path: join(__dirname, '../../dist/apps/demo'),
+          },
+          plugins: [
+            new NxWebpackPlugin({
+              // NOTE: generatePackageJson is missing here, but executor passes it.
+              target: 'web',
+              compiler: 'swc',
+              main: './src/main.ts',
+              tsConfig: './tsconfig.app.json',
+              optimization: false,
+              outputHashing: 'none',
+            }),
+          ],
+        };`
+    );
+
+    runCLI(`build ${appName}`);
+
+    fileExists(`dist/apps/${appName}/package.json`);
   });
 });
 
