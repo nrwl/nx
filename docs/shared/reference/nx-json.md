@@ -29,6 +29,12 @@ The following is an expanded example showing all options. Your `nx.json` will li
         "main": "{projectRoot}/src/index.ts"
       },
       "cache": true
+    },
+    "test": {
+      "cache": true,
+      "inputs": ["default", "^production", "{workspaceRoot}/jest.preset.js"],
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "executor": "@nx/jest:jest"
     }
   },
   "release": {
