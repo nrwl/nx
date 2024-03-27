@@ -1,5 +1,12 @@
 {
-  "generators": {},
+  "generators": {
+    "migrate-executors-to-crystal": {
+      "cli": "nx",
+      "version": "19.0.0-beta.0",
+      "description": "Update projects to remove executor usage in targets defined in project.json files. Add '@nx/remix/plugin' to infer targets for these projects instead.",
+      "factory": "./src/migrations/update-19-0-0/migrate-executors-to-crystal"
+    }
+  },
   "packageJsonUpdates": {
     "17.2.1": {
       "version": "17.2.1-beta.0",
