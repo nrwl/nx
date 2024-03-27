@@ -49,9 +49,8 @@ If you're running a machine that isn't part of the list above, then Nx does not 
 
 ### Node.js Installation Issues
 
-Especially on MacOS, it's possible that Node.js is installed with the wrong architecture (`x64` instead of `arm64`). Because of the Rosetta compatibility layer, Node.js will still run but the Nx CLI won't be able to find the proper native binary for your platform.
+Ensure that the architecture of your Node.js installation matches your hardware. Run `nx report` and check that the `OS` property is correct (e.g. `darwin-arm64` for MacOS on Apple silicon). If it contains `x64` even though you're on an `arm64` chip, then something is wrong. A mismatch in architecture can lead to errors loading Nx's native binary.
 
-If you are on ARM hardware, make sure Node.js is installed for ARM.
-Often, the culprit is a faulty installation of Homebrew, Node.js or VSCode (if using Nx Console). You should reinstall each of these for the correct `arm64` architecture.
+Often, the culprit of the mismatch is a faulty installation of your toolchain: Homebrew (MacOS), Node.js or VSCode (if using Nx Console). You should reinstall your toolchain with the correct architecture. Run `nx report` again to validate the installation.
 
-If you're not sure what architecture your Node is installed for, you can run `nx report` and see the `OS` property. If it contains `x64` even though you're on an `arm64` chip, something is wrong. For issues inside VSCode or Nx Console, also refer to the [Nx Console troubleshooting docs](recipes/nx-console/console-troubleshooting)
+For issues inside VSCode or Nx Console, also refer to the [Nx Console troubleshooting docs](recipes/nx-console/console-troubleshooting)
