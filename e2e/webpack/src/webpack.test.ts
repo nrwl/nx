@@ -1,4 +1,5 @@
 import {
+  checkFilesExist,
   cleanupProject,
   fileExists,
   listFiles,
@@ -261,6 +262,34 @@ describe('Webpack Plugin', () => {
     runCLI(`build ${appName}`);
 
     fileExists(`dist/apps/${appName}/package.json`);
+  });
+
+  it('should resolve assets from executors as relative to workspace root', () => {
+    const appName = uniq('app');
+    runCLI(`generate @nx/web:app ${appName} --bundler webpack`);
+    updateFile('shared/docs/TEST.md', 'TEST');
+    updateJson(`apps/${appName}/project.json`, (json) => {
+      json.targets.build = {
+        executor: '@nx/webpack:webpack',
+        outputs: ['{options.outputPath}'],
+        options: {
+          assets: [
+            {
+              input: 'shared/docs',
+              glob: 'TEST.md',
+              output: '.',
+            },
+          ],
+          outputPath: `dist/apps/${appName}`,
+          webpackConfig: `apps/${appName}/webpack.config.js`,
+        },
+      };
+      return json;
+    });
+
+    runCLI(`build ${appName}`);
+
+    checkFilesExist(`dist/apps/${appName}/TEST.md`);
   });
 });
 
