@@ -113,6 +113,26 @@ commands:
           key: gradle-cli-{{ arch }}-v1
           paths:
             - ~/.sdkman/candidates/gradle/
+  install-simutils:
+    description: Install Apple Sim Utils
+    steps:
+      - restore_cache:
+          name: Restore Homebrew packages
+          keys:
+            - nrwl-nx-homebrew-packages
+      - run:
+          name: Configure Detox Environment, Install applesimutils
+          command: |
+            HOMEBREW_NO_AUTO_UPDATE=1 brew tap wix/brew >/dev/null
+            HOMEBREW_NO_AUTO_UPDATE=1 brew install applesimutils >/dev/null
+            xcrun simctl shutdown all && xcrun simctl erase all
+          no_output_timeout: 20m
+      - save_cache:
+          name: Save Homebrew Cache
+          key: nrwl-nx-homebrew-packages
+          paths:
+            - /usr/local/Homebrew
+            - ~/Library/Caches/Homebrew
 # -------------------------
 #          JOBS
 # -------------------------
@@ -175,33 +195,20 @@ jobs:
     executor: macos
     environment:
       NX_E2E_CI_CACHE_KEY: e2e-circleci-macos
+      NX_DAEMON: 'true'
       NX_PERF_LOGGING: 'false'
+      NX_NATIVE_LOGGING: 'false'
       NX_CI_EXECUTION_ENV: 'macos'
       SELECTED_PM: 'npm' # explicitly define npm for macOS tests
+      NX_CLOUD_DISTRIBUTED_EXECUTION: false
     steps:
       - checkout
-      - restore_cache:
-          name: Restore Homebrew packages
-          keys:
-            - nrwl-nx-homebrew-packages
-      - run:
-          name: Configure Detox Environment, Install applesimutils
-          command: |
-            HOMEBREW_NO_AUTO_UPDATE=1 brew tap wix/brew >/dev/null
-            HOMEBREW_NO_AUTO_UPDATE=1 brew install applesimutils >/dev/null
-            xcrun simctl shutdown all && xcrun simctl erase all
-          no_output_timeout: 20m
-      - save_cache:
-          name: Save Homebrew Cache
-          key: nrwl-nx-homebrew-packages
-          paths:
-            - /usr/local/Homebrew
-            - ~/Library/Caches/Homebrew
-      - run-pnpm-install:
-          os: macos
-      - rust/install
       - nx/set-shas:
           main-branch-name: 'master'
+      - install-simutils
+      - rust/install
+      - run-pnpm-install:
+          os: macos
       - run:
           name: Run E2E Tests for macOS
           command: |
