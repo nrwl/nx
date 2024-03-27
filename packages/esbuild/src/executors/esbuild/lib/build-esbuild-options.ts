@@ -34,6 +34,7 @@ export function buildEsbuildOptions(
           ...options.external,
         ]
       : undefined,
+    packages: options.thirdParty ? undefined : 'external',
     minify: options.minify,
     platform: options.platform,
     target: options.target,
