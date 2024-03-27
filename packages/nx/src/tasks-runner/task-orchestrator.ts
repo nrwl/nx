@@ -351,7 +351,7 @@ export class TaskOrchestrator {
     const temporaryOutputPath = this.cache.temporaryOutputPath(task);
     const streamOutput = shouldStreamOutput(task, this.initiatingProject);
 
-    const env = pipeOutput
+    let env = pipeOutput
       ? getEnvVariablesForTask(
           task,
           taskSpecificEnv,
@@ -403,6 +403,12 @@ export class TaskOrchestrator {
           relative(task.projectRoot ?? workspaceRoot, process.cwd()),
           process.env.NX_VERBOSE_LOGGING === 'true'
         );
+        if (combinedOptions.env) {
+          env = {
+            ...env,
+            ...combinedOptions.env,
+          };
+        }
         if (streamOutput) {
           const args = getPrintableCommandArgsForTask(task);
           output.logCommand(args.join(' '));
