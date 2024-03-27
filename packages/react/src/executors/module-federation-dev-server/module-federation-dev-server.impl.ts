@@ -24,7 +24,13 @@ import { basename, dirname, join } from 'node:path';
 import { createWriteStream, cpSync } from 'node:fs';
 
 type ModuleFederationDevServerOptions = WebDevServerOptions & {
-  devRemotes?: string[];
+  devRemotes?: (
+    | string
+    | {
+        remoteName: string;
+        configuration: string;
+      }
+  )[];
   skipRemotes?: string[];
   static?: boolean;
   isInitialHost?: boolean;
@@ -112,12 +118,21 @@ async function startDevRemotes(
         'module-federation-dev-server'
       );
 
+    const configurationOverride = options.devRemotes.find(
+      (
+        r
+      ): r is {
+        remoteName: string;
+        configuration: string;
+      } => typeof r !== 'string' && r.remoteName === app
+    )?.configuration;
+
     devRemoteIters.push(
       await runExecutor(
         {
           project: app,
           target: 'serve',
-          configuration: context.configurationName,
+          configuration: configurationOverride ?? context.configurationName,
         },
         {
           watch: true,
@@ -280,8 +295,12 @@ export default async function* moduleFederationDevServer(
     'react'
   );
 
+  const remoteNames = options.devRemotes?.map((r) =>
+    typeof r === 'string' ? r : r.remoteName
+  );
+
   const remotes = getRemotes(
-    options.devRemotes,
+    remoteNames,
     options.skipRemotes,
     moduleFederationConfig,
     {
@@ -293,8 +312,10 @@ export default async function* moduleFederationDevServer(
 
   if (remotes.devRemotes.length > 0 && !initialStaticRemotesPorts) {
     options.staticRemotesPort = options.devRemotes.reduce((portToUse, r) => {
+      const remoteName = typeof r === 'string' ? r : r.remoteName;
       const remotePort =
-        context.projectGraph.nodes[r].data.targets['serve'].options.port;
+        context.projectGraph.nodes[remoteName].data.targets['serve'].options
+          .port;
       if (remotePort >= portToUse) {
         return remotePort + 1;
       } else {
