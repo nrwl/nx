@@ -1,12 +1,13 @@
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-
 import { useNavigate, useSearchParams } from 'react-router-dom';
-
 /* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
-import { ProjectGraphProjectNode } from '@nx/devkit';
+import type { ProjectGraphProjectNode } from '@nx/devkit';
+// nx-ignore-next-line
+import type { ExpandedInputs } from 'nx/src/command-line/graph/inputs-utils';
+/* eslint-enable @nx/enforce-module-boundaries */
 import {
   getExternalApiService,
+  getProjectGraphDataService,
   useEnvironmentConfig,
   useRouteConstructor,
 } from '@nx/graph/shared';
@@ -25,6 +26,7 @@ export function ProjectDetailsWrapper(props: ProjectDetailsProps) {
   const projectDetailsRef = useRef<ProjectDetailsImperativeHandle>(null);
   const environment = useEnvironmentConfig()?.environment;
   const externalApiService = getExternalApiService();
+  const projectDataService = getProjectGraphDataService();
   const navigate = useNavigate();
   const routeConstructor = useRouteConstructor();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -93,6 +95,17 @@ export function ProjectDetailsWrapper(props: ProjectDetailsProps) {
     }
   };
 
+  const getInpustForTaskId = useCallback(
+    async (
+      taskId: string
+    ): Promise<{ [inputName: string]: ExpandedInputs } | undefined> => {
+      if (projectDataService.getExpandedTaskInputs) {
+        return projectDataService.getExpandedTaskInputs(taskId);
+      }
+    },
+    [projectDataService]
+  );
+
   const handleTargetCollapse = useCallback(
     (targetName: string) => {
       const expandedSections = searchParams.get('expanded')?.split(',') || [];
@@ -147,6 +160,7 @@ export function ProjectDetailsWrapper(props: ProjectDetailsProps) {
     <ProjectDetails
       ref={projectDetailsRef}
       {...props}
+      getInpustForTaskId={getInpustForTaskId}
       onTargetCollapse={handleTargetCollapse}
       onTargetExpand={handleTargetExpand}
       onViewInProjectGraph={handleViewInProjectGraph}

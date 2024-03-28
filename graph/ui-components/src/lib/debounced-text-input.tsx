@@ -1,19 +1,27 @@
-import { KeyboardEvent, useEffect, useState } from 'react';
+import {
+  ComponentProps,
+  ComponentType,
+  KeyboardEvent,
+  useEffect,
+  useState,
+} from 'react';
 import { useDebounce } from './use-debounce';
 import { BackspaceIcon, FunnelIcon } from '@heroicons/react/24/outline';
 
 export interface DebouncedTextInputProps {
-  initialText: string;
+  initialText?: string;
   placeholderText: string;
   resetTextFilter: () => void;
   updateTextFilter: (textFilter: string) => void;
+  Icon?: ComponentType<ComponentProps<'svg'>>;
 }
 
 export function DebouncedTextInput({
-  initialText,
+  initialText = '',
   placeholderText,
   resetTextFilter,
   updateTextFilter,
+  Icon = FunnelIcon,
 }: DebouncedTextInputProps) {
   const [currentTextFilter, setCurrentTextFilter] = useState(initialText ?? '');
 
@@ -58,7 +66,7 @@ export function DebouncedTextInput({
       onSubmit={(event) => event.preventDefault()}
     >
       <span className="inline-flex items-center rounded-l-md border border-r-0 border-slate-300 bg-slate-50 p-2 dark:border-slate-900 dark:bg-slate-800">
-        <FunnelIcon className="h-4 w-4"></FunnelIcon>
+        <Icon className="h-4 w-4"></Icon>
       </span>
       <input
         type="text"

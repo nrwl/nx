@@ -1,8 +1,8 @@
 import { execSync } from 'child_process';
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
+import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
 import * as yargs from 'yargs';
-import { ensureDirSync, statSync } from 'fs-extra';
+import { ensureDirSync } from 'fs-extra';
 
 async function generateGraph(directory: string, name: string) {
   if (!existsSync(directory)) {
@@ -53,41 +53,49 @@ async function generateGraph(directory: string, name: string) {
     join(__dirname, '../graph/client/src/assets/generated-source-maps/')
   );
 
-  writeFileSync(
-    join(
-      __dirname,
-      '../graph/client/src/assets/generated-project-graphs/',
-      `${name}.json`
-    ),
-    projectGraphResponse[1]
-  );
+  if (projectGraphResponse?.[1]) {
+    writeFileSync(
+      join(
+        __dirname,
+        '../graph/client/src/assets/generated-project-graphs/',
+        `${name}.json`
+      ),
+      projectGraphResponse[1]
+    );
+  }
 
-  writeFileSync(
-    join(
-      __dirname,
-      '../graph/client/src/assets/generated-task-graphs/',
-      `${name}.json`
-    ),
-    taskGraphResponse[1]
-  );
+  if (taskGraphResponse?.[1]) {
+    writeFileSync(
+      join(
+        __dirname,
+        '../graph/client/src/assets/generated-task-graphs/',
+        `${name}.json`
+      ),
+      taskGraphResponse[1]
+    );
+  }
 
-  writeFileSync(
-    join(
-      __dirname,
-      '../graph/client/src/assets/generated-task-inputs/',
-      `${name}.json`
-    ),
-    expandedTaskInputsReponse[1]
-  );
+  if (expandedTaskInputsReponse?.[1]) {
+    writeFileSync(
+      join(
+        __dirname,
+        '../graph/client/src/assets/generated-task-inputs/',
+        `${name}.json`
+      ),
+      expandedTaskInputsReponse[1]
+    );
+  }
 
-  writeFileSync(
-    join(
-      __dirname,
-      '../graph/client/src/assets/generated-source-maps/',
-      `${name}.json`
-    ),
-    sourceMapsResponse[1]
-  );
+  if (sourceMapsResponse?.[1]) {
+    writeFileSync(
+      join(
+        __dirname,
+        '../graph/client/src/assets/generated-source-maps/',
+        `${name}.json`
+      ),
+      sourceMapsResponse[1]
+    );
+  }
 }
 
 (async () => {
@@ -106,5 +114,8 @@ async function generateGraph(directory: string, name: string) {
     })
     .parseSync();
 
-  await generateGraph(parsedArgs.directory, parsedArgs.name);
+  await generateGraph(
+    parsedArgs.directory as string,
+    parsedArgs.name as string
+  );
 })();

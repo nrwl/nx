@@ -9,6 +9,8 @@ import type {
   ProjectGraphClientResponse,
   TaskGraphClientResponse,
 } from 'nx/src/command-line/graph/graph';
+// nx-ignore-next-line
+import type { ExpandedInputs } from 'nx/src/command-line/graph/inputs-utils';
 import { ProjectGraphService } from './get-project-graph-data-service';
 /* eslint-enable @nx/enforce-module-boundaries */
 
@@ -87,6 +89,12 @@ export class MockProjectGraphService implements ProjectGraphService {
   getSourceMaps(
     url: string
   ): Promise<Record<string, Record<string, string[]>>> {
+    return new Promise((resolve) => resolve({}));
+  }
+
+  async getExpandedTaskInputs(
+    taskId: string
+  ): Promise<{ [inputName: string]: ExpandedInputs }> {
     return new Promise((resolve) => resolve({}));
   }
 
