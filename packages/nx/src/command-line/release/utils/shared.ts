@@ -3,6 +3,7 @@ import { prerelease } from 'semver';
 import { ProjectGraph } from '../../../config/project-graph';
 import { Tree } from '../../../generators/tree';
 import { createFileMapUsingProjectGraph } from '../../../project-graph/file-map-utils';
+import { findAllProjectNodeDependencies } from '../../../utils/project-graph-utils';
 import { interpolate } from '../../../tasks-runner/utils';
 import { output } from '../../../utils/output';
 import type { ReleaseGroupWithName } from '../config/filter-release-groups';
@@ -288,11 +289,26 @@ export function handleDuplicateGitTags(gitTagValues: string[]): void {
 export async function getCommitsRelevantToProjects(
   projectGraph: ProjectGraph,
   commits: GitCommit[],
-  projects: string[]
+  projects: string[],
+  includeInternalDependencies = false
 ): Promise<GitCommit[]> {
+  const relevantProjects = [...projects];
+  if (includeInternalDependencies) {
+    const projectDependencies = new Set<string>(
+      projects.reduce(
+        (deps, p) => [
+          ...deps,
+          ...findAllProjectNodeDependencies(p, projectGraph, false),
+        ],
+        [] as string[]
+      )
+    );
+    relevantProjects.push(...projectDependencies);
+  }
+
   const { fileMap } = await createFileMapUsingProjectGraph(projectGraph);
   const filesInReleaseGroup = new Set<string>(
-    projects.reduce(
+    relevantProjects.reduce(
       (files, p) => [...files, ...fileMap.projectFileMap[p].map((f) => f.file)],
       [] as string[]
     )
