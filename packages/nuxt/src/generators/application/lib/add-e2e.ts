@@ -27,14 +27,14 @@ export async function addE2e(host: Tree, options: NormalizedSchema) {
       directory: 'src',
       bundler: 'vite',
       skipFormat: true,
-      devServerTarget: `${options.projectName}:serve`,
+      devServerTarget: `${options.projectName}:${options.e2eWebServerTarget}`,
       webServerCommands: {
-        default: `${getPackageManagerCommand().exec} nx serve ${
-          options.projectName
-        }`,
+        default: `${getPackageManagerCommand().exec} nx ${
+          options.e2eWebServerTarget
+        } ${options.projectName}`,
       },
       ciWebServerCommand: `nx run ${options.projectName}:serve-static`,
-      baseUrl: 'http://localhost:4200',
+      baseUrl: options.e2eWebServerAddress,
       jsx: true,
       addPlugin: true,
     });
@@ -56,10 +56,10 @@ export async function addE2e(host: Tree, options: NormalizedSchema) {
       js: false,
       linter: options.linter,
       setParserOptionsProject: options.setParserOptionsProject,
-      webServerAddress: 'http://localhost:4200',
-      webServerCommand: `${getPackageManagerCommand().exec} nx serve ${
-        options.projectName
-      }`,
+      webServerAddress: options.e2eWebServerAddress,
+      webServerCommand: `${getPackageManagerCommand().exec} nx ${
+        options.e2eWebServerTarget
+      } ${options.projectName}`,
       addPlugin: true,
     });
   }
