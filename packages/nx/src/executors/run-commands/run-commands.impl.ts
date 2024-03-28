@@ -477,7 +477,9 @@ export function interpolateArgsIntoCommand(
       args += ` ${opts.args}`;
     }
     if (opts.__unparsed__?.length > 0) {
-      args += ` ${opts.__unparsed__.join(' ')}`;
+      args += ` ${filterPropKeysFromUnParsedOptions(opts.__unparsed__).join(
+        ' '
+      )}`;
     }
     return `${command}${args}`;
   } else {
@@ -496,4 +498,38 @@ function parseArgs(
   return yargsParser(args.replace(/(^"|"$)/g, ''), {
     configuration: { 'camel-case-expansion': false },
   });
+}
+
+/**
+ * This function filters out the prop keys from the unparsed options
+ * @param __unparsed__
+ * @returns filtered options
+ */
+function filterPropKeysFromUnParsedOptions(__unparsed__: string[]): string[] {
+  const parsedOptions = [];
+  for (let index = 0; index < __unparsed__.length; index++) {
+    const element = __unparsed__[index];
+    if (element.startsWith('--')) {
+      const key = element.replace('--', '');
+      if (element.includes('=')) {
+        if (!propKeys.includes(key.split('=')[0])) {
+          parsedOptions.push(element);
+        }
+      } else {
+        // check if the next element is a value for the key
+        if (
+          propKeys.includes(key) &&
+          index + 1 < __unparsed__.length &&
+          !__unparsed__[index + 1].startsWith('--')
+        ) {
+          index++; // skip the next element
+        } else {
+          parsedOptions.push(element);
+        }
+      }
+    } else {
+      parsedOptions.push(element);
+    }
+  }
+  return parsedOptions;
 }
