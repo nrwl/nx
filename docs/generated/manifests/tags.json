@@ -1011,6 +1011,13 @@
     },
     {
       "description": "",
+      "file": "shared/recipes/nx-release/configure-custom-registries",
+      "id": "configure-custom-registries",
+      "name": "Configure Custom Registries",
+      "path": "/recipes/nx-release/configure-custom-registries"
+    },
+    {
+      "description": "",
       "file": "shared/recipes/nx-release/publish-in-ci-cd",
       "id": "publish-in-ci-cd",
       "name": "Publish in CI/CD",
