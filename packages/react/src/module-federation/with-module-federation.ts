@@ -32,6 +32,14 @@ export async function withModuleFederation(
       runtimeChunk: false,
     };
 
+    if (
+      config.mode === 'development' &&
+      Object.keys(mappedRemotes).length > 1 &&
+      !options.exposes
+    ) {
+      config.optimization.runtimeChunk = 'single';
+    }
+
     config.experiments = {
       ...config.experiments,
       outputModule: !isGlobal,
