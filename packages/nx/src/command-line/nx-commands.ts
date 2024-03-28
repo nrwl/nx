@@ -53,7 +53,7 @@ export const parserConfiguration: Partial<yargs.ParserConfigurationOptions> = {
  * from the `.argv` call, so the object and it's relative scripts can
  * le executed correctly.
  */
-export const commandsObject = yargs
+export const commandsObject: any = yargs
   .parserConfiguration(parserConfiguration)
   .usage(chalk.bold('Smart Monorepos · Fast CI'))
   .demandCommand(1, '')

@@ -19,6 +19,7 @@ export default function update(tree: Tree) {
     npm: 'package-lock.json',
     yarn: 'yarn.lock',
     pnpm: 'pnpm-lock.yaml',
+    bun: 'bun.lockb',
   };
 
   for (const [name, config] of projects.entries()) {
