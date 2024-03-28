@@ -14,6 +14,7 @@ import { projectGraphCacheDirectory } from 'nx/src/utils/cache-directory';
 import { getGradleBinaryPath } from '../utils/exec-gradle';
 import { getGradleReport } from '../utils/get-gradle-report';
 
+const cacheableTaskType = new Set(['Build', 'Verification']);
 const dependsOnMap = {
   build: ['^build', 'classes'],
   test: ['classes'],
@@ -184,7 +185,7 @@ function createGradleTargets(
       options: {
         cwd: projectRoot,
       },
-      cache: !!outputs,
+      cache: cacheableTaskType.has(task.type),
       inputs: inputsMap[task.name],
       outputs: outputs ? [outputs] : undefined,
       dependsOn: dependsOnMap[task.name],
