@@ -22,16 +22,22 @@ export async function getNpmRegistry(
 ): Promise<string> {
   const scope = packageName.startsWith('@') ? packageName.split('/')[0] : null;
 
+  let registry: string | undefined;
+
   // npm gives precedence to scoped package config in .npmrc, even over publishConfig in the package.json file
   if (scope) {
-    return getNpmConfigValue(`${scope}:registry`, cwd);
+    registry = await getNpmConfigValue(`${scope}:registry`, cwd);
   }
 
-  if (publishConfig?.registry) {
-    return publishConfig.registry;
+  if (!registry) {
+    registry = publishConfig?.registry;
   }
 
-  return getNpmConfigValue('registry', cwd);
+  if (!registry) {
+    registry = await getNpmConfigValue('registry', cwd);
+  }
+
+  return registry;
 }
 
 /**
