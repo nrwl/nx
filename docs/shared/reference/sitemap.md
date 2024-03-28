@@ -454,6 +454,8 @@
       - [init](/nx-api/express/generators/init)
       - [application](/nx-api/express/generators/application)
   - [gradle](/nx-api/gradle)
+    - [documents](/nx-api/gradle/documents)
+      - [Overview](/nx-api/gradle/documents/overview)
     - [generators](/nx-api/gradle/generators)
       - [init](/nx-api/gradle/generators/init)
   - [jest](/nx-api/jest)

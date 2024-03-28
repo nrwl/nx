@@ -8106,6 +8106,23 @@
         "name": "gradle",
         "children": [
           {
+            "id": "documents",
+            "path": "/nx-api/gradle/documents",
+            "name": "documents",
+            "children": [
+              {
+                "name": "Overview",
+                "path": "/nx-api/gradle/documents/overview",
+                "id": "overview",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              }
+            ],
+            "isExternal": false,
+            "disableCollapsible": false
+          },
+          {
             "id": "generators",
             "path": "/nx-api/gradle/generators",
             "name": "generators",
