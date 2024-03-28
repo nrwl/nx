@@ -7,7 +7,7 @@ import { printDiagnostics } from '../typescript/print-diagnostics';
 import { runTypeCheck, TypeCheckOptions } from '../typescript/run-type-check';
 
 function getSwcCmd(
-  { swcrcPath, srcPath, destPath }: SwcCliOptions,
+  { swcrcPath, srcPath, destPath, swcStripLeadingPaths }: SwcCliOptions,
   watch = false
 ) {
   const swcCLI = require.resolve('@swc/cli/bin/swc.js');
@@ -17,7 +17,9 @@ function getSwcCmd(
     srcPath === '.' ? 'src' : srcPath
   } -d ${
     srcPath === '.' ? `${destPath}/src` : destPath
-  } --config-file=${swcrcPath}`;
+  } --config-file=${swcrcPath} ${
+    swcStripLeadingPaths ? '--strip-leading-paths' : ''
+  }`;
   return watch ? swcCmd.concat(' --watch') : swcCmd;
 }
 
