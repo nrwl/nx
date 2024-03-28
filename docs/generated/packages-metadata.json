@@ -998,7 +998,19 @@
   },
   {
     "description": "The Nx Plugin for gradle",
-    "documents": [],
+    "documents": [
+      {
+        "id": "overview",
+        "name": "Overview",
+        "description": "The Nx Plugin for gradle",
+        "file": "generated/packages/gradle/documents/overview",
+        "itemList": [],
+        "isExternal": false,
+        "path": "gradle/documents/overview",
+        "tags": [],
+        "originalFilePath": "shared/packages/gradle/gradle-plugin"
+      }
+    ],
     "executors": [],
     "generators": [
       {
