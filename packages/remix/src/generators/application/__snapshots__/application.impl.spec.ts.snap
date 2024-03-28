@@ -154,7 +154,6 @@ export default defineConfig({
     ...nxE2EPreset(__filename, {
       cypressDir: 'src',
       webServerCommands: { default: 'nx run test:serve:development' },
-      ciWebServerCommand: 'nx run test:serve-static',
     }),
     baseUrl: 'http://localhost:4200',
   },
@@ -668,7 +667,6 @@ export default defineConfig({
     ...nxE2EPreset(__filename, {
       cypressDir: 'src',
       webServerCommands: { default: 'nx run test:serve:development' },
-      ciWebServerCommand: 'nx run test:serve-static',
     }),
     baseUrl: 'http://localhost:4200',
   },
@@ -1038,7 +1036,6 @@ export default defineConfig({
     ...nxE2EPreset(__filename, {
       cypressDir: 'src',
       webServerCommands: { default: 'nx run test:serve:development' },
-      ciWebServerCommand: 'nx run test:serve-static',
     }),
     baseUrl: 'http://localhost:4200',
   },
@@ -1147,8 +1144,7 @@ export default {
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
   coverageDirectory: './coverage/test',
   testMatch: [
-    '<rootDir>/src/**/__tests__/**/*.[jt]s?(x)',
-    '<rootDir>/src/**/*(*.)@(spec|test).[jt]s?(x)',
+    '<rootDir>/tests/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}',
   ],
 };
 "

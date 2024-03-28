@@ -1,4 +1,5 @@
 import { major } from 'semver';
+import { NxReleaseConfig } from '../../src/command-line/release/config/config';
 import type { GitCommit } from '../../src/command-line/release/utils/git';
 import {
   RepoSlug,
@@ -37,6 +38,7 @@ export type ChangelogRenderer = (config: {
   entryWhenNoChanges: string | false;
   changelogRenderOptions: DefaultChangelogRenderOptions;
   repoSlug?: RepoSlug;
+  conventionalCommitsConfig: NxReleaseConfig['conventionalCommits'];
 }) => Promise<string> | string;
 
 /**
@@ -73,25 +75,11 @@ const defaultChangelogRenderer: ChangelogRenderer = async ({
   entryWhenNoChanges,
   changelogRenderOptions,
   repoSlug,
+  conventionalCommitsConfig,
 }): Promise<string> => {
+  const commitTypes = conventionalCommitsConfig.types;
   const markdownLines: string[] = [];
   const breakingChanges = [];
-
-  const commitTypes = {
-    feat: { title: '🚀 Features' },
-    perf: { title: '🔥 Performance' },
-    fix: { title: '🩹 Fixes' },
-    refactor: { title: '💅 Refactors' },
-    docs: { title: '📖 Documentation' },
-    build: { title: '📦 Build' },
-    types: { title: '🌊 Types' },
-    chore: { title: '🏡 Chore' },
-    examples: { title: '🏀 Examples' },
-    test: { title: '✅ Tests' },
-    style: { title: '🎨 Styles' },
-    ci: { title: '🤖 CI' },
-    revert: { title: '⏪ Revert' },
-  };
 
   // If the current range of commits contains both a commit and its revert, we strip them both from the final list
   for (const commit of commits) {
@@ -139,7 +127,7 @@ const defaultChangelogRenderer: ChangelogRenderer = async ({
         continue;
       }
 
-      markdownLines.push('', '### ' + commitTypes[type].title, '');
+      markdownLines.push('', '### ' + commitTypes[type].changelog.title, '');
 
       /**
        * In order to make the final changelog most readable, we organize commits as follows:
@@ -215,7 +203,7 @@ const defaultChangelogRenderer: ChangelogRenderer = async ({
         continue;
       }
 
-      markdownLines.push('', `### ${commitTypes[type].title}`, '');
+      markdownLines.push('', `### ${commitTypes[type].changelog.title}`, '');
 
       const commitsInChronologicalOrder = group.reverse();
       for (const commit of commitsInChronologicalOrder) {

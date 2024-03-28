@@ -6,28 +6,28 @@
  * Main Nx Process
  *   * Calls Rust Fork Function
  *     * `node fork.js`
- *     * Create a Rust - Node.js Agnostic Channel aka Psuedo IPC Channel
+ *     * Create a Rust - Node.js Agnostic Channel aka Pseudo IPC Channel
  *     * This returns RustChildProcess
  *         * RustChildProcess.onMessage(msg => ());
- *         * psuedo_ipc_channel.on_message() => tx.send(msg);
+ *         * pseudo_ipc_channel.on_message() => tx.send(msg);
  *   * Node.js Fork Wrapper (fork.js)
  *     * fork(run-command.js) with `inherit` and `ipc`
  *         * This will create a Node IPC Channel
- *     * channel = getPsuedoIpcChannel(process.env.NX_IPC_CHANNEL_ID)
- *     * forkChildProcess.on('message', writeToPsuedoIpcChannel)
+ *     * channel = getPseudoIpcChannel(process.env.NX_IPC_CHANNEL_ID)
+ *     * forkChildProcess.on('message', writeToPseudoIpcChannel)
  */
 
 import { connect, Server, Socket } from 'net';
 import { consumeMessagesFromSocket } from '../utils/consume-messages-from-socket';
 import { Serializable } from 'child_process';
 
-export interface PsuedoIPCMessage {
+export interface PseudoIPCMessage {
   type: 'TO_CHILDREN_FROM_PARENT' | 'TO_PARENT_FROM_CHILDREN' | 'CHILD_READY';
   id: string | undefined;
   message: Serializable;
 }
 
-export class PsuedoIPCServer {
+export class PseudoIPCServer {
   private sockets = new Set<Socket>();
   private server: Server | undefined;
 
@@ -66,7 +66,7 @@ export class PsuedoIPCServer {
     socket.on(
       'data',
       consumeMessagesFromSocket(async (rawMessage) => {
-        const { type, message }: PsuedoIPCMessage = JSON.parse(rawMessage);
+        const { type, message }: PseudoIPCMessage = JSON.parse(rawMessage);
         if (type === 'TO_PARENT_FROM_CHILDREN') {
           for (const childMessage of this.childMessages) {
             childMessage.onMessage(message);
@@ -110,6 +110,7 @@ export class PsuedoIPCServer {
       socket.write(String.fromCodePoint(4));
     });
   }
+
   onMessageFromChildren(
     onMessage: (message: Serializable) => void,
     onClose: () => void = () => {},
@@ -128,10 +129,11 @@ export class PsuedoIPCServer {
   }
 }
 
-export class PsuedoIPCClient {
+export class PseudoIPCClient {
   private socket: Socket | undefined = connect(this.path);
 
   constructor(private path: string) {}
+
   sendMessageToParent(message: Serializable) {
     this.socket.write(
       JSON.stringify({ type: 'TO_PARENT_FROM_CHILDREN', message })
@@ -145,7 +147,7 @@ export class PsuedoIPCClient {
       JSON.stringify({
         type: 'CHILD_READY',
         message: id,
-      } as PsuedoIPCMessage)
+      } as PseudoIPCMessage)
     );
     // send EOT to indicate that the message has been fully written
     this.socket.write(String.fromCodePoint(4));
@@ -160,7 +162,7 @@ export class PsuedoIPCClient {
     this.socket.on(
       'data',
       consumeMessagesFromSocket(async (rawMessage) => {
-        const { id, type, message }: PsuedoIPCMessage = JSON.parse(rawMessage);
+        const { id, type, message }: PseudoIPCMessage = JSON.parse(rawMessage);
         if (type === 'TO_CHILDREN_FROM_PARENT') {
           if (id && id === forkId) {
             onMessage(message);
@@ -176,6 +178,7 @@ export class PsuedoIPCClient {
 
     return this;
   }
+
   close() {
     this.socket?.destroy();
   }

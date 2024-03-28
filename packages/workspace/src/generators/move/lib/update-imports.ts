@@ -195,7 +195,7 @@ function updateImportDeclarations(
   const changes: StringChange[] = [];
 
   for (const { moduleSpecifier } of importDecls) {
-    if (tsModule.isStringLiteral(moduleSpecifier)) {
+    if (moduleSpecifier && tsModule.isStringLiteral(moduleSpecifier)) {
       changes.push(...updateModuleSpecifier(moduleSpecifier, from, to));
     }
   }

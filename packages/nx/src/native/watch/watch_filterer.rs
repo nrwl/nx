@@ -61,7 +61,6 @@ impl Filterer for WatchFilterer {
             return Ok(false);
         }
 
-        //
         // Tags will be a Vec that contains multiple types of information for a given event
         // We are only interested if:
         // 1) A `FileEventKind` is modified, created, removed, or renamed

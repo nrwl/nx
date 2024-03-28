@@ -34,7 +34,7 @@ Features of an integrated monorepo:
 
 Visit our ["Why Nx" page](/getting-started/why-nx) for more details.
 
-## Warm Up
+## Final Code
 
 Here's the source code of the final result for this tutorial.
 

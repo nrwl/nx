@@ -2339,6 +2339,14 @@
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
+              },
+              {
+                "name": "Customize Conventional Commit Types",
+                "path": "/recipes/nx-release/customize-conventional-commit-types",
+                "id": "customize-conventional-commit-types",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
               }
             ],
             "disableCollapsible": false
@@ -4179,6 +4187,14 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
+          },
+          {
+            "name": "Customize Conventional Commit Types",
+            "path": "/recipes/nx-release/customize-conventional-commit-types",
+            "id": "customize-conventional-commit-types",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -4248,6 +4264,14 @@
         "disableCollapsible": false
       },
       {
+        "name": "Customize Conventional Commit Types",
+        "path": "/recipes/nx-release/customize-conventional-commit-types",
+        "id": "customize-conventional-commit-types",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
         "name": "Other",
         "path": "/recipes/other",
         "id": "other",
@@ -4285,7 +4309,7 @@
             "isExternal": false,
             "children": [
               {
-                "name": "Add an Express Project",
+                "name": "Express",
                 "path": "/showcase/example-repos/add-express",
                 "id": "add-express",
                 "isExternal": false,
@@ -4293,7 +4317,7 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Add a Lit Project",
+                "name": "Lit",
                 "path": "/showcase/example-repos/add-lit",
                 "id": "add-lit",
                 "isExternal": false,
@@ -4301,7 +4325,7 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Add a Solid Project",
+                "name": "Solid",
                 "path": "/showcase/example-repos/add-solid",
                 "id": "add-solid",
                 "isExternal": false,
@@ -4309,7 +4333,7 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Add a Qwik Project",
+                "name": "Qwik",
                 "path": "/showcase/example-repos/add-qwik",
                 "id": "add-qwik",
                 "isExternal": false,
@@ -4317,7 +4341,7 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Add a Rust Project",
+                "name": "Rust",
                 "path": "/showcase/example-repos/add-rust",
                 "id": "add-rust",
                 "isExternal": false,
@@ -4325,7 +4349,7 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Add a .NET Project",
+                "name": ".NET",
                 "path": "/showcase/example-repos/add-dotnet",
                 "id": "add-dotnet",
                 "isExternal": false,
@@ -4333,7 +4357,7 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Add an Astro Project",
+                "name": "Astro",
                 "path": "/showcase/example-repos/add-astro",
                 "id": "add-astro",
                 "isExternal": false,
@@ -4341,7 +4365,7 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Add a Svelte Project",
+                "name": "Svelte",
                 "path": "/showcase/example-repos/add-svelte",
                 "id": "add-svelte",
                 "isExternal": false,
@@ -4349,7 +4373,7 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Add a Fastify Project",
+                "name": "Fastify",
                 "path": "/showcase/example-repos/add-fastify",
                 "id": "add-fastify",
                 "isExternal": false,
@@ -4357,7 +4381,7 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Using Apollo GraphQL",
+                "name": "Apollo GraphQL",
                 "path": "/showcase/example-repos/apollo-react",
                 "id": "apollo-react",
                 "isExternal": false,
@@ -4365,7 +4389,7 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Using Prisma with NestJS",
+                "name": "Prisma with NestJS",
                 "path": "/showcase/example-repos/nestjs-prisma",
                 "id": "nestjs-prisma",
                 "isExternal": false,
@@ -4373,7 +4397,7 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Using Mongo with Fastify",
+                "name": "Mongo with Fastify",
                 "path": "/showcase/example-repos/mongo-fastify",
                 "id": "mongo-fastify",
                 "isExternal": false,
@@ -4381,7 +4405,7 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Using Redis with Fastify",
+                "name": "Redis with Fastify",
                 "path": "/showcase/example-repos/redis-fastify",
                 "id": "redis-fastify",
                 "isExternal": false,
@@ -4389,7 +4413,7 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Using Postgres with Fastify",
+                "name": "Postgres with Fastify",
                 "path": "/showcase/example-repos/postgres-fastify",
                 "id": "postgres-fastify",
                 "isExternal": false,
@@ -4397,7 +4421,7 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Using PlanetScale with Serverless Fastify",
+                "name": "PlanetScale with Serverless Fastify",
                 "path": "/showcase/example-repos/serverless-fastify-planetscale",
                 "id": "serverless-fastify-planetscale",
                 "isExternal": false,
@@ -4405,7 +4429,7 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Nx Micro-Frontend Example",
+                "name": "Nx with Micro-frontends",
                 "path": "/showcase/example-repos/mfe",
                 "id": "mfe",
                 "isExternal": false,
@@ -4458,7 +4482,7 @@
         "isExternal": false,
         "children": [
           {
-            "name": "Add an Express Project",
+            "name": "Express",
             "path": "/showcase/example-repos/add-express",
             "id": "add-express",
             "isExternal": false,
@@ -4466,7 +4490,7 @@
             "disableCollapsible": false
           },
           {
-            "name": "Add a Lit Project",
+            "name": "Lit",
             "path": "/showcase/example-repos/add-lit",
             "id": "add-lit",
             "isExternal": false,
@@ -4474,7 +4498,7 @@
             "disableCollapsible": false
           },
           {
-            "name": "Add a Solid Project",
+            "name": "Solid",
             "path": "/showcase/example-repos/add-solid",
             "id": "add-solid",
             "isExternal": false,
@@ -4482,7 +4506,7 @@
             "disableCollapsible": false
           },
           {
-            "name": "Add a Qwik Project",
+            "name": "Qwik",
             "path": "/showcase/example-repos/add-qwik",
             "id": "add-qwik",
             "isExternal": false,
@@ -4490,7 +4514,7 @@
             "disableCollapsible": false
           },
           {
-            "name": "Add a Rust Project",
+            "name": "Rust",
             "path": "/showcase/example-repos/add-rust",
             "id": "add-rust",
             "isExternal": false,
@@ -4498,7 +4522,7 @@
             "disableCollapsible": false
           },
           {
-            "name": "Add a .NET Project",
+            "name": ".NET",
             "path": "/showcase/example-repos/add-dotnet",
             "id": "add-dotnet",
             "isExternal": false,
@@ -4506,7 +4530,7 @@
             "disableCollapsible": false
           },
           {
-            "name": "Add an Astro Project",
+            "name": "Astro",
             "path": "/showcase/example-repos/add-astro",
             "id": "add-astro",
             "isExternal": false,
@@ -4514,7 +4538,7 @@
             "disableCollapsible": false
           },
           {
-            "name": "Add a Svelte Project",
+            "name": "Svelte",
             "path": "/showcase/example-repos/add-svelte",
             "id": "add-svelte",
             "isExternal": false,
@@ -4522,7 +4546,7 @@
             "disableCollapsible": false
           },
           {
-            "name": "Add a Fastify Project",
+            "name": "Fastify",
             "path": "/showcase/example-repos/add-fastify",
             "id": "add-fastify",
             "isExternal": false,
@@ -4530,7 +4554,7 @@
             "disableCollapsible": false
           },
           {
-            "name": "Using Apollo GraphQL",
+            "name": "Apollo GraphQL",
             "path": "/showcase/example-repos/apollo-react",
             "id": "apollo-react",
             "isExternal": false,
@@ -4538,7 +4562,7 @@
             "disableCollapsible": false
           },
           {
-            "name": "Using Prisma with NestJS",
+            "name": "Prisma with NestJS",
             "path": "/showcase/example-repos/nestjs-prisma",
             "id": "nestjs-prisma",
             "isExternal": false,
@@ -4546,7 +4570,7 @@
             "disableCollapsible": false
           },
           {
-            "name": "Using Mongo with Fastify",
+            "name": "Mongo with Fastify",
             "path": "/showcase/example-repos/mongo-fastify",
             "id": "mongo-fastify",
             "isExternal": false,
@@ -4554,7 +4578,7 @@
             "disableCollapsible": false
           },
           {
-            "name": "Using Redis with Fastify",
+            "name": "Redis with Fastify",
             "path": "/showcase/example-repos/redis-fastify",
             "id": "redis-fastify",
             "isExternal": false,
@@ -4562,7 +4586,7 @@
             "disableCollapsible": false
           },
           {
-            "name": "Using Postgres with Fastify",
+            "name": "Postgres with Fastify",
             "path": "/showcase/example-repos/postgres-fastify",
             "id": "postgres-fastify",
             "isExternal": false,
@@ -4570,7 +4594,7 @@
             "disableCollapsible": false
           },
           {
-            "name": "Using PlanetScale with Serverless Fastify",
+            "name": "PlanetScale with Serverless Fastify",
             "path": "/showcase/example-repos/serverless-fastify-planetscale",
             "id": "serverless-fastify-planetscale",
             "isExternal": false,
@@ -4578,7 +4602,7 @@
             "disableCollapsible": false
           },
           {
-            "name": "Nx Micro-Frontend Example",
+            "name": "Nx with Micro-frontends",
             "path": "/showcase/example-repos/mfe",
             "id": "mfe",
             "isExternal": false,
@@ -4589,7 +4613,7 @@
         "disableCollapsible": false
       },
       {
-        "name": "Add an Express Project",
+        "name": "Express",
         "path": "/showcase/example-repos/add-express",
         "id": "add-express",
         "isExternal": false,
@@ -4597,7 +4621,7 @@
         "disableCollapsible": false
       },
       {
-        "name": "Add a Lit Project",
+        "name": "Lit",
         "path": "/showcase/example-repos/add-lit",
         "id": "add-lit",
         "isExternal": false,
@@ -4605,7 +4629,7 @@
         "disableCollapsible": false
       },
       {
-        "name": "Add a Solid Project",
+        "name": "Solid",
         "path": "/showcase/example-repos/add-solid",
         "id": "add-solid",
         "isExternal": false,
@@ -4613,7 +4637,7 @@
         "disableCollapsible": false
       },
       {
-        "name": "Add a Qwik Project",
+        "name": "Qwik",
         "path": "/showcase/example-repos/add-qwik",
         "id": "add-qwik",
         "isExternal": false,
@@ -4621,7 +4645,7 @@
         "disableCollapsible": false
       },
       {
-        "name": "Add a Rust Project",
+        "name": "Rust",
         "path": "/showcase/example-repos/add-rust",
         "id": "add-rust",
         "isExternal": false,
@@ -4629,7 +4653,7 @@
         "disableCollapsible": false
       },
       {
-        "name": "Add a .NET Project",
+        "name": ".NET",
         "path": "/showcase/example-repos/add-dotnet",
         "id": "add-dotnet",
         "isExternal": false,
@@ -4637,7 +4661,7 @@
         "disableCollapsible": false
       },
       {
-        "name": "Add an Astro Project",
+        "name": "Astro",
         "path": "/showcase/example-repos/add-astro",
         "id": "add-astro",
         "isExternal": false,
@@ -4645,7 +4669,7 @@
         "disableCollapsible": false
       },
       {
-        "name": "Add a Svelte Project",
+        "name": "Svelte",
         "path": "/showcase/example-repos/add-svelte",
         "id": "add-svelte",
         "isExternal": false,
@@ -4653,7 +4677,7 @@
         "disableCollapsible": false
       },
       {
-        "name": "Add a Fastify Project",
+        "name": "Fastify",
         "path": "/showcase/example-repos/add-fastify",
         "id": "add-fastify",
         "isExternal": false,
@@ -4661,7 +4685,7 @@
         "disableCollapsible": false
       },
       {
-        "name": "Using Apollo GraphQL",
+        "name": "Apollo GraphQL",
         "path": "/showcase/example-repos/apollo-react",
         "id": "apollo-react",
         "isExternal": false,
@@ -4669,7 +4693,7 @@
         "disableCollapsible": false
       },
       {
-        "name": "Using Prisma with NestJS",
+        "name": "Prisma with NestJS",
         "path": "/showcase/example-repos/nestjs-prisma",
         "id": "nestjs-prisma",
         "isExternal": false,
@@ -4677,7 +4701,7 @@
         "disableCollapsible": false
       },
       {
-        "name": "Using Mongo with Fastify",
+        "name": "Mongo with Fastify",
         "path": "/showcase/example-repos/mongo-fastify",
         "id": "mongo-fastify",
         "isExternal": false,
@@ -4685,7 +4709,7 @@
         "disableCollapsible": false
       },
       {
-        "name": "Using Redis with Fastify",
+        "name": "Redis with Fastify",
         "path": "/showcase/example-repos/redis-fastify",
         "id": "redis-fastify",
         "isExternal": false,
@@ -4693,7 +4717,7 @@
         "disableCollapsible": false
       },
       {
-        "name": "Using Postgres with Fastify",
+        "name": "Postgres with Fastify",
         "path": "/showcase/example-repos/postgres-fastify",
         "id": "postgres-fastify",
         "isExternal": false,
@@ -4701,7 +4725,7 @@
         "disableCollapsible": false
       },
       {
-        "name": "Using PlanetScale with Serverless Fastify",
+        "name": "PlanetScale with Serverless Fastify",
         "path": "/showcase/example-repos/serverless-fastify-planetscale",
         "id": "serverless-fastify-planetscale",
         "isExternal": false,
@@ -4709,7 +4733,7 @@
         "disableCollapsible": false
       },
       {
-        "name": "Nx Micro-Frontend Example",
+        "name": "Nx with Micro-frontends",
         "path": "/showcase/example-repos/mfe",
         "id": "mfe",
         "isExternal": false,
@@ -5662,6 +5686,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Why Nx Cloud?",
+            "path": "/ci/intro/why-nx-cloud",
+            "id": "why-nx-cloud",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Tutorials",
             "path": "/ci/intro/tutorials",
             "id": "tutorials",
@@ -5693,6 +5725,14 @@
         "name": "CI with Nx",
         "path": "/ci/intro/ci-with-nx",
         "id": "ci-with-nx",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Why Nx Cloud?",
+        "path": "/ci/intro/why-nx-cloud",
+        "id": "why-nx-cloud",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -5777,7 +5817,7 @@
             "disableCollapsible": false
           },
           {
-            "name": "Automatically Split E2E Tasks (TestAtomizer)",
+            "name": "Automatically Split E2E Tasks (Atomizer)",
             "path": "/ci/features/split-e2e-tasks",
             "id": "split-e2e-tasks",
             "isExternal": false,
@@ -5836,7 +5876,7 @@
         "disableCollapsible": false
       },
       {
-        "name": "Automatically Split E2E Tasks (TestAtomizer)",
+        "name": "Automatically Split E2E Tasks (Atomizer)",
         "path": "/ci/features/split-e2e-tasks",
         "id": "split-e2e-tasks",
         "isExternal": false,
@@ -6062,6 +6102,14 @@
                 "name": "Enable GitLab MR Integration",
                 "path": "/ci/recipes/source-control-integration/gitlab",
                 "id": "gitlab",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Enable Azure DevOps PR Integration",
+                "path": "/ci/recipes/source-control-integration/azure-devops",
+                "id": "azure-devops",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -6460,6 +6508,14 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
+          },
+          {
+            "name": "Enable Azure DevOps PR Integration",
+            "path": "/ci/recipes/source-control-integration/azure-devops",
+            "id": "azure-devops",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -6484,6 +6540,14 @@
         "name": "Enable GitLab MR Integration",
         "path": "/ci/recipes/source-control-integration/gitlab",
         "id": "gitlab",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Enable Azure DevOps PR Integration",
+        "path": "/ci/recipes/source-control-integration/azure-devops",
+        "id": "azure-devops",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -8064,6 +8128,32 @@
                 "id": "application",
                 "path": "/nx-api/express/generators/application",
                 "name": "application",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              }
+            ],
+            "isExternal": false,
+            "disableCollapsible": false
+          }
+        ],
+        "isExternal": false,
+        "disableCollapsible": false
+      },
+      {
+        "id": "gradle",
+        "path": "/nx-api/gradle",
+        "name": "gradle",
+        "children": [
+          {
+            "id": "generators",
+            "path": "/nx-api/gradle/generators",
+            "name": "generators",
+            "children": [
+              {
+                "id": "init",
+                "path": "/nx-api/gradle/generators/init",
+                "name": "init",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false

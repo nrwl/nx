@@ -1,6 +1,6 @@
 # Continuous Integration with Nx
 
-When implemented well, continuous integration (CI) allows a team of developers to efficiently make changes to a codebase with the confidence that they haven't broken existing functionality. When implemented poorly, CI slows down the team by adding obstacles to deploying code without actually providing any confidence that the code is correct.
+Implementing an efficient CI setup for monorepos - while crucial - can be challenging and maintenance heavy. That is [not your fault, though](/ci/intro/why-nx-cloud). Nx Cloud comes with a series of features that help make CI for monorepos faster, more reliable and more cost-effective.
 
 ## Core Features
 
@@ -22,7 +22,7 @@ npx nx connect
 
 {% link-card title="What is Nx Cloud?" type="video" url="https://youtu.be/4VI-q943J3o" icon="nxcloud" /%}
 
-{% link-card title="E2E Test Auto-Splitting and Distribution" type="video" url="https://youtu.be/XLOUFZeqRpM" icon="nxagents" /%}
+{% link-card title="E2E Test Auto-Splitting and Distribution" type="video" url="https://youtu.be/0YxcxIR7QU0" icon="nxagents" /%}
 
 {% link-card title="Circle CI with Nx" type="tutorial" url="/ci/intro/tutorials/circle" icon="circleci" /%}
 

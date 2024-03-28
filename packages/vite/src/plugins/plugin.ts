@@ -226,6 +226,7 @@ function serveStaticTarget(options: VitePluginOptions) {
     executor: '@nx/web:file-server',
     options: {
       buildTarget: `${options.buildTargetName}`,
+      spa: true,
     },
   };
 

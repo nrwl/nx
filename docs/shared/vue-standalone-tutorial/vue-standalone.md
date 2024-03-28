@@ -11,7 +11,7 @@ What are you going to learn?
 
 Note, while you could easily use Nx together with your manually set up Vue application, we're going to use the `@nx/vue` plugin for this tutorial which provides some nice enhancements when working with Vue. [Visit our "Why Nx" page](/getting-started/why-nx) to learn more about plugins and what role they play in the Nx architecture.
 
-## Warm Up
+## Final Code
 
 Here's the source code of the final result for this tutorial.
 

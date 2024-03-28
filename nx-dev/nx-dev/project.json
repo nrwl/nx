@@ -80,6 +80,10 @@
         "parallel": true
       }
     },
+    "start": {
+      "dependsOn": ["build-base"],
+      "command": "nx run nx-dev:serve:production"
+    },
     "serve": {
       "executor": "@nx/next:server",
       "dependsOn": ["copy-docs"],

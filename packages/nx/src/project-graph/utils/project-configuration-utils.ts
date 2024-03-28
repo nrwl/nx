@@ -15,6 +15,7 @@ import {
 
 import { minimatch } from 'minimatch';
 import { join } from 'path';
+import { performance } from 'perf_hooks';
 
 export type SourceInformation = [file: string, plugin: string];
 export type ConfigurationSourceMaps = Record<
@@ -60,12 +61,23 @@ export function mergeProjectConfigurationIntoRootMap(
   // a project.json in which case it was already updated above.
   const updatedProjectConfiguration = {
     ...matchingProject,
-    ...project,
   };
 
-  if (sourceMap) {
-    for (const property in project) {
-      sourceMap[`${property}`] = sourceInformation;
+  for (const k in project) {
+    if (
+      ![
+        'tags',
+        'implicitDependencies',
+        'generators',
+        'targets',
+        'metadata',
+        'namedInputs',
+      ].includes(k)
+    ) {
+      updatedProjectConfiguration[k] = project[k];
+      if (sourceMap) {
+        sourceMap[`${k}`] = sourceInformation;
+      }
     }
   }
 
@@ -76,6 +88,7 @@ export function mergeProjectConfigurationIntoRootMap(
     );
 
     if (sourceMap) {
+      sourceMap['tags'] ??= sourceInformation;
       project.tags.forEach((tag) => {
         sourceMap[`tags.${tag}`] = sourceInformation;
       });
@@ -88,6 +101,7 @@ export function mergeProjectConfigurationIntoRootMap(
     ).concat(project.implicitDependencies);
 
     if (sourceMap) {
+      sourceMap['implicitDependencies'] ??= sourceInformation;
       project.implicitDependencies.forEach((implicitDependency) => {
         sourceMap[`implicitDependencies.${implicitDependency}`] =
           sourceInformation;
@@ -100,6 +114,7 @@ export function mergeProjectConfigurationIntoRootMap(
     updatedProjectConfiguration.generators = { ...project.generators };
 
     if (sourceMap) {
+      sourceMap['generators'] ??= sourceInformation;
       for (const generator in project.generators) {
         sourceMap[`generators.${generator}`] = sourceInformation;
         for (const property in project.generators[generator]) {
@@ -127,6 +142,7 @@ export function mergeProjectConfigurationIntoRootMap(
     };
 
     if (sourceMap) {
+      sourceMap['namedInputs'] ??= sourceInformation;
       for (const namedInput in project.namedInputs) {
         sourceMap[`namedInputs.${namedInput}`] = sourceInformation;
       }
@@ -137,6 +153,9 @@ export function mergeProjectConfigurationIntoRootMap(
     // We merge the targets with special handling, so clear this back to the
     // targets as defined originally before merging.
     updatedProjectConfiguration.targets = matchingProject?.targets ?? {};
+    if (sourceMap) {
+      sourceMap['targets'] ??= sourceInformation;
+    }
 
     // For each target defined in the new config
     for (const targetName in project.targets) {
@@ -176,6 +195,81 @@ export function mergeProjectConfigurationIntoRootMap(
     }
   }
 
+  if (project.metadata) {
+    if (sourceMap) {
+      sourceMap['targets'] ??= sourceInformation;
+    }
+    for (const [metadataKey, value] of Object.entries({
+      ...project.metadata,
+    })) {
+      const existingValue = matchingProject.metadata?.[metadataKey];
+
+      if (Array.isArray(value) && Array.isArray(existingValue)) {
+        for (const item of [...value]) {
+          const newLength =
+            updatedProjectConfiguration.metadata[metadataKey].push(item);
+          if (sourceMap) {
+            sourceMap[`metadata.${metadataKey}.${newLength - 1}`] =
+              sourceInformation;
+          }
+        }
+      } else if (Array.isArray(value) && existingValue === undefined) {
+        updatedProjectConfiguration.metadata ??= {};
+        updatedProjectConfiguration.metadata[metadataKey] ??= value;
+        if (sourceMap) {
+          sourceMap[`metadata.${metadataKey}`] = sourceInformation;
+        }
+        for (let i = 0; i < value.length; i++) {
+          if (sourceMap) {
+            sourceMap[`metadata.${metadataKey}.${i}`] = sourceInformation;
+          }
+        }
+      } else if (
+        typeof value === 'object' &&
+        typeof existingValue === 'object'
+      ) {
+        for (const key in value) {
+          const existingValue = matchingProject.metadata?.[metadataKey]?.[key];
+
+          if (Array.isArray(value[key]) && Array.isArray(existingValue)) {
+            for (const item of value[key]) {
+              const i =
+                updatedProjectConfiguration.metadata[metadataKey][key].push(
+                  item
+                );
+              if (sourceMap) {
+                sourceMap[`metadata.${metadataKey}.${key}.${i - 1}`] =
+                  sourceInformation;
+              }
+            }
+          } else {
+            updatedProjectConfiguration.metadata[metadataKey] = value;
+            if (sourceMap) {
+              sourceMap[`metadata.${metadataKey}`] = sourceInformation;
+            }
+          }
+        }
+      } else {
+        updatedProjectConfiguration.metadata[metadataKey] = value;
+        if (sourceMap) {
+          sourceMap[`metadata.${metadataKey}`] = sourceInformation;
+
+          if (typeof value === 'object') {
+            for (const k in value) {
+              sourceMap[`metadata.${metadataKey}.${k}`] = sourceInformation;
+              if (Array.isArray(value[k])) {
+                for (let i = 0; i < value[k].length; i++) {
+                  sourceMap[`metadata.${metadataKey}.${k}.${i}`] =
+                    sourceInformation;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
   projectRootMap.set(
     updatedProjectConfiguration.root,
     updatedProjectConfiguration
@@ -185,33 +279,35 @@ export function mergeProjectConfigurationIntoRootMap(
 export type ConfigurationResult = {
   projects: Record<string, ProjectConfiguration>;
   externalNodes: Record<string, ProjectGraphExternalNode>;
-  rootMap: Record<string, string>;
+  projectRootMap: Record<string, string>;
   sourceMaps: ConfigurationSourceMaps;
+};
+type CreateNodesResultWithContext = CreateNodesResult & {
+  file: string;
+  pluginName: string;
 };
 
 /**
  * Transforms a list of project paths into a map of project configurations.
  *
- * @param nxJson The NxJson configuration
- * @param projectFiles A list of files identified as projects
- * @param plugins The plugins that should be used to infer project configuration
  * @param root The workspace root
+ * @param nxJson The NxJson configuration
+ * @param workspaceFiles A list of non-ignored workspace files
+ * @param plugins The plugins that should be used to infer project configuration
  */
-export function buildProjectsConfigurationsFromProjectPathsAndPlugins(
+export function createProjectConfigurations(
+  root: string = workspaceRoot,
   nxJson: NxJsonConfiguration,
-  projectFiles: string[], // making this parameter allows devkit to pick up newly created projects
-  plugins: LoadedNxPlugin[],
-  root: string = workspaceRoot
+  workspaceFiles: string[], // making this parameter allows devkit to pick up newly created projects
+  plugins: LoadedNxPlugin[]
 ): Promise<ConfigurationResult> {
-  type CreateNodesResultWithContext = CreateNodesResult & {
-    file: string;
-    pluginName: string;
-  };
+  performance.mark('build-project-configs:start');
 
   const results: Array<Promise<Array<CreateNodesResultWithContext>>> = [];
+  const errors: Array<CreateNodesError | MergeNodesError> = [];
 
   // We iterate over plugins first - this ensures that plugins specified first take precedence.
-  for (const { plugin, options } of plugins) {
+  for (const { plugin, options, include, exclude } of plugins) {
     const [pattern, createNodes] = plugin.createNodes ?? [];
     const pluginResults: Array<
       CreateNodesResultWithContext | Promise<CreateNodesResultWithContext>
@@ -222,57 +318,90 @@ export function buildProjectsConfigurationsFromProjectPathsAndPlugins(
       continue;
     }
 
-    for (const file of projectFiles) {
-      performance.mark(`${plugin.name}:createNodes:${file} - start`);
-      if (minimatch(file, pattern, { dot: true })) {
-        try {
-          let r = createNodes(file, options, {
-            nxJsonConfiguration: nxJson,
-            workspaceRoot: root,
-          });
+    const matchingConfigFiles: string[] = [];
 
-          if (r instanceof Promise) {
-            pluginResults.push(
-              r
-                .catch((e) => {
-                  performance.mark(`${plugin.name}:createNodes:${file} - end`);
-                  throw new CreateNodesError(
-                    `Unable to create nodes for ${file} using plugin ${plugin.name}.`,
-                    e
-                  );
-                })
-                .then((r) => {
-                  performance.mark(`${plugin.name}:createNodes:${file} - end`);
-                  performance.measure(
-                    `${plugin.name}:createNodes:${file}`,
-                    `${plugin.name}:createNodes:${file} - start`,
-                    `${plugin.name}:createNodes:${file} - end`
-                  );
-                  return { ...r, file, pluginName: plugin.name };
-                })
-            );
-          } else {
-            performance.mark(`${plugin.name}:createNodes:${file} - end`);
-            performance.measure(
-              `${plugin.name}:createNodes:${file}`,
-              `${plugin.name}:createNodes:${file} - start`,
-              `${plugin.name}:createNodes:${file} - end`
-            );
-            pluginResults.push({
-              ...r,
-              file,
-              pluginName: plugin.name,
-            });
-          }
-        } catch (e) {
-          throw new CreateNodesError(
-            `Unable to create nodes for ${file} using plugin ${plugin.name}.`,
-            e
+    for (const file of workspaceFiles) {
+      if (minimatch(file, pattern, { dot: true })) {
+        if (include) {
+          const included = include.some((includedPattern) =>
+            minimatch(file, includedPattern, { dot: true })
           );
+          if (!included) {
+            continue;
+          }
         }
+
+        if (exclude) {
+          const excluded = include.some((excludedPattern) =>
+            minimatch(file, excludedPattern, { dot: true })
+          );
+          if (excluded) {
+            continue;
+          }
+        }
+
+        matchingConfigFiles.push(file);
       }
     }
-    // If there are no promises (counter undefined) or all promises have resolved (counter === 0)
+    for (const file of matchingConfigFiles) {
+      performance.mark(`${plugin.name}:createNodes:${file} - start`);
+      try {
+        let r = createNodes(file, options, {
+          nxJsonConfiguration: nxJson,
+          workspaceRoot: root,
+          configFiles: matchingConfigFiles,
+        });
+
+        if (r instanceof Promise) {
+          pluginResults.push(
+            r
+              .catch((error) => {
+                performance.mark(`${plugin.name}:createNodes:${file} - end`);
+                errors.push(
+                  new CreateNodesError({
+                    file,
+                    pluginName: plugin.name,
+                    error,
+                  })
+                );
+                return {
+                  projects: {},
+                };
+              })
+              .then((r) => {
+                performance.mark(`${plugin.name}:createNodes:${file} - end`);
+                performance.measure(
+                  `${plugin.name}:createNodes:${file}`,
+                  `${plugin.name}:createNodes:${file} - start`,
+                  `${plugin.name}:createNodes:${file} - end`
+                );
+                return { ...r, file, pluginName: plugin.name };
+              })
+          );
+        } else {
+          performance.mark(`${plugin.name}:createNodes:${file} - end`);
+          performance.measure(
+            `${plugin.name}:createNodes:${file}`,
+            `${plugin.name}:createNodes:${file} - start`,
+            `${plugin.name}:createNodes:${file} - end`
+          );
+          pluginResults.push({
+            ...r,
+            file,
+            pluginName: plugin.name,
+          });
+        }
+      } catch (error) {
+        errors.push(
+          new CreateNodesError({
+            file,
+            pluginName: plugin.name,
+            error,
+          })
+        );
+      }
+    }
+
     results.push(
       Promise.all(pluginResults).then((results) => {
         performance.mark(`${plugin.name}:createNodes - end`);
@@ -321,10 +450,13 @@ export function buildProjectsConfigurationsFromProjectPathsAndPlugins(
             configurationSourceMaps,
             sourceInfo
           );
-        } catch (e) {
-          throw new CreateNodesError(
-            `Unable to merge project information for "${project.root}" from ${result.file} using plugin ${result.pluginName}.`,
-            e
+        } catch (error) {
+          errors.push(
+            new MergeNodesError({
+              file,
+              pluginName,
+              error,
+            })
           );
         }
       }
@@ -341,12 +473,28 @@ export function buildProjectsConfigurationsFromProjectPathsAndPlugins(
       'createNodes:merge - end'
     );
 
-    return {
-      projects,
-      externalNodes,
-      rootMap,
-      sourceMaps: configurationSourceMaps,
-    };
+    performance.mark('build-project-configs:end');
+    performance.measure(
+      'build-project-configs',
+      'build-project-configs:start',
+      'build-project-configs:end'
+    );
+
+    if (errors.length === 0) {
+      return {
+        projects,
+        externalNodes,
+        projectRootMap: rootMap,
+        sourceMaps: configurationSourceMaps,
+      };
+    } else {
+      throw new ProjectConfigurationsError(errors, {
+        projects,
+        externalNodes,
+        projectRootMap: rootMap,
+        sourceMaps: configurationSourceMaps,
+      });
+    }
   });
 }
 
@@ -397,20 +545,59 @@ export function readProjectConfigurationsFromRootMap(
   return projects;
 }
 
-class CreateNodesError extends Error {
-  constructor(msg, cause: Error | unknown) {
-    const message = `${msg} ${
-      !cause
-        ? ''
-        : cause instanceof Error
-        ? `\n\n\t Inner Error: ${cause.stack}`
-        : cause
-    }`;
-    // These errors are thrown during a JS callback which is invoked via rust.
-    // The errors messaging gets lost in the rust -> js -> rust transition, but
-    // logging the error here will ensure that it is visible in the console.
-    console.error(message);
-    super(message, { cause });
+export class ProjectConfigurationsError extends Error {
+  constructor(
+    public readonly errors: Array<MergeNodesError | CreateNodesError>,
+    public readonly partialProjectConfigurationsResult: ConfigurationResult
+  ) {
+    super('Failed to create project configurations');
+    this.name = this.constructor.name;
+  }
+}
+
+export class CreateNodesError extends Error {
+  file: string;
+  pluginName: string;
+
+  constructor({
+    file,
+    pluginName,
+    error,
+  }: {
+    file: string;
+    pluginName: string;
+    error: Error;
+  }) {
+    const msg = `The "${pluginName}" plugin threw an error while creating nodes from ${file}:`;
+
+    super(msg, { cause: error });
+    this.name = this.constructor.name;
+    this.file = file;
+    this.pluginName = pluginName;
+    this.stack = `${this.message}\n  ${error.stack.split('\n').join('\n  ')}`;
+  }
+}
+
+export class MergeNodesError extends Error {
+  file: string;
+  pluginName: string;
+
+  constructor({
+    file,
+    pluginName,
+    error,
+  }: {
+    file: string;
+    pluginName: string;
+    error: Error;
+  }) {
+    const msg = `The nodes created from ${file} by the "${pluginName}" could not be merged into the project graph:`;
+
+    super(msg, { cause: error });
+    this.name = this.constructor.name;
+    this.file = file;
+    this.pluginName = pluginName;
+    this.stack = `${this.message}\n  ${error.stack.split('\n').join('\n  ')}`;
   }
 }
 

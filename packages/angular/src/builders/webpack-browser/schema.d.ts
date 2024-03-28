@@ -1,4 +1,4 @@
-import { Schema } from '@angular-devkit/build-angular/src/builders/browser/schema';
+import type { Schema } from '@angular-devkit/build-angular/src/builders/browser/schema';
 
 export type BrowserBuilderSchema = Schema & {
   customWebpackConfig?: {

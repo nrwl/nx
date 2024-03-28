@@ -18,6 +18,17 @@
         "tags": []
       },
       {
+        "id": "why-nx-cloud",
+        "name": "Why Nx Cloud?",
+        "description": "",
+        "mediaImage": "",
+        "file": "nx-cloud/intro/why-nx-cloud",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/intro/why-nx-cloud",
+        "tags": []
+      },
+      {
         "id": "tutorials",
         "name": "Tutorials",
         "description": "Tutorials setting up CI with Nx",
@@ -65,6 +76,17 @@
     "itemList": [],
     "isExternal": false,
     "path": "/ci/intro/ci-with-nx",
+    "tags": []
+  },
+  "/ci/intro/why-nx-cloud": {
+    "id": "why-nx-cloud",
+    "name": "Why Nx Cloud?",
+    "description": "",
+    "mediaImage": "",
+    "file": "nx-cloud/intro/why-nx-cloud",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/intro/why-nx-cloud",
     "tags": []
   },
   "/ci/intro/tutorials": {
@@ -133,7 +155,7 @@
       {
         "id": "affected",
         "name": "Run Only Tasks Affected by a PR",
-        "description": "",
+        "description": "This allows to only run tasks on projects that got changed in a given PR.",
         "mediaImage": "",
         "file": "shared/using-nx/affected",
         "itemList": [],
@@ -166,7 +188,7 @@
       {
         "id": "dynamic-agents",
         "name": "Dynamically Allocate Agents",
-        "description": "",
+        "description": "Learn how to dynamically allocate agents based on the size of a PR, keeping the balance of speed and cost.",
         "mediaImage": "",
         "file": "nx-cloud/features/dynamic-agents",
         "itemList": [],
@@ -176,8 +198,8 @@
       },
       {
         "id": "split-e2e-tasks",
-        "name": "Automatically Split E2E Tasks (TestAtomizer)",
-        "description": "",
+        "name": "Automatically Split E2E Tasks (Atomizer)",
+        "description": "Learn how Nx can automatically split e2e tests into fine-grained chunks for a much better distribution on Nx Agents.",
         "mediaImage": "",
         "file": "nx-cloud/features/split-e2e-tasks",
         "itemList": [],
@@ -188,7 +210,7 @@
       {
         "id": "flaky-tasks",
         "name": "Identify and Re-run Flaky Tasks",
-        "description": "",
+        "description": "Learn how Nx Cloud is able to automatically identify flaky tasks and re-run them for you.",
         "mediaImage": "",
         "file": "nx-cloud/features/flaky-tasks",
         "itemList": [],
@@ -215,7 +237,7 @@
   "/ci/features/affected": {
     "id": "affected",
     "name": "Run Only Tasks Affected by a PR",
-    "description": "",
+    "description": "This allows to only run tasks on projects that got changed in a given PR.",
     "mediaImage": "",
     "file": "shared/using-nx/affected",
     "itemList": [],
@@ -248,7 +270,7 @@
   "/ci/features/dynamic-agents": {
     "id": "dynamic-agents",
     "name": "Dynamically Allocate Agents",
-    "description": "",
+    "description": "Learn how to dynamically allocate agents based on the size of a PR, keeping the balance of speed and cost.",
     "mediaImage": "",
     "file": "nx-cloud/features/dynamic-agents",
     "itemList": [],
@@ -258,8 +280,8 @@
   },
   "/ci/features/split-e2e-tasks": {
     "id": "split-e2e-tasks",
-    "name": "Automatically Split E2E Tasks (TestAtomizer)",
-    "description": "",
+    "name": "Automatically Split E2E Tasks (Atomizer)",
+    "description": "Learn how Nx can automatically split e2e tests into fine-grained chunks for a much better distribution on Nx Agents.",
     "mediaImage": "",
     "file": "nx-cloud/features/split-e2e-tasks",
     "itemList": [],
@@ -270,7 +292,7 @@
   "/ci/features/flaky-tasks": {
     "id": "flaky-tasks",
     "name": "Identify and Re-run Flaky Tasks",
-    "description": "",
+    "description": "Learn how Nx Cloud is able to automatically identify flaky tasks and re-run them for you.",
     "mediaImage": "",
     "file": "nx-cloud/features/flaky-tasks",
     "itemList": [],
@@ -568,6 +590,17 @@
             "itemList": [],
             "isExternal": false,
             "path": "/ci/recipes/source-control-integration/gitlab",
+            "tags": []
+          },
+          {
+            "id": "azure-devops",
+            "name": "Enable Azure DevOps PR Integration",
+            "description": "",
+            "mediaImage": "",
+            "file": "nx-cloud/set-up/azure-devops",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/ci/recipes/source-control-integration/azure-devops",
             "tags": []
           }
         ],
@@ -1110,6 +1143,17 @@
         "isExternal": false,
         "path": "/ci/recipes/source-control-integration/gitlab",
         "tags": []
+      },
+      {
+        "id": "azure-devops",
+        "name": "Enable Azure DevOps PR Integration",
+        "description": "",
+        "mediaImage": "",
+        "file": "nx-cloud/set-up/azure-devops",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/recipes/source-control-integration/azure-devops",
+        "tags": []
       }
     ],
     "isExternal": false,
@@ -1147,6 +1191,17 @@
     "itemList": [],
     "isExternal": false,
     "path": "/ci/recipes/source-control-integration/gitlab",
+    "tags": []
+  },
+  "/ci/recipes/source-control-integration/azure-devops": {
+    "id": "azure-devops",
+    "name": "Enable Azure DevOps PR Integration",
+    "description": "",
+    "mediaImage": "",
+    "file": "nx-cloud/set-up/azure-devops",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/recipes/source-control-integration/azure-devops",
     "tags": []
   },
   "/ci/recipes/enterprise": {
