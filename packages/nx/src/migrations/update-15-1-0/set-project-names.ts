@@ -4,14 +4,15 @@ import { dirname } from 'path';
 import { readJson, writeJson } from '../../generators/utils/json';
 import { formatChangedFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available';
 import { retrieveProjectConfigurationPaths } from '../../project-graph/utils/retrieve-workspace-files';
-import { loadNxPlugins } from '../../utils/nx-plugin';
+import { loadNxPlugins } from '../../project-graph/plugins/internal-api';
 
 export default async function (tree: Tree) {
   const nxJson = readNxJson(tree);
-  const projectFiles = await retrieveProjectConfigurationPaths(
-    tree.root,
-    await loadNxPlugins(nxJson?.plugins)
+  const [plugins, cleanup] = await loadNxPlugins(
+    nxJson?.plugins ?? [],
+    tree.root
   );
+  const projectFiles = retrieveProjectConfigurationPaths(tree.root, plugins);
   const projectJsons = projectFiles.filter((f) => f.endsWith('project.json'));
 
   for (let f of projectJsons) {
@@ -22,6 +23,7 @@ export default async function (tree: Tree) {
     }
   }
   await formatChangedFilesWithPrettierIfAvailable(tree);
+  cleanup();
 }
 
 function toProjectName(directory: string, nxJson: any): string {

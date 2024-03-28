@@ -6,7 +6,7 @@ import {
 import { join, relative } from 'path';
 import { workspaceRoot } from '../../../../utils/workspace-root';
 import { normalizePath } from '../../../../utils/path';
-import { CreateDependenciesContext } from '../../../../utils/nx-plugin';
+import { CreateDependenciesContext } from '../../../../project-graph/plugins';
 import {
   RawProjectGraphDependency,
   validateDependency,
