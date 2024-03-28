@@ -23,6 +23,35 @@ describe('NPM lock file utility', () => {
     vol.reset();
   });
 
+  describe('getNpmLockfileNodes', () => {
+    it('should parse lock file and not prune aliased packages', async () => {
+      const lockFile = require(joinPathFragments(
+        __dirname,
+        '__fixtures__/mixed-keys/package-lock.json'
+      ));
+      const hash = uniq('mock-hash');
+      const result = getNpmLockfileNodes(JSON.stringify(lockFile), hash);
+
+      expect(Object.keys(result).length).toEqual(31);
+      expect(result['npm:string-width-cjs']).toMatchInlineSnapshot(`
+        {
+          "name": "string-width",
+          "version": "4.2.3",
+          "resolved": "https://registry.npmjs.org/string-width/-/string-width-4.2.3.tgz",
+          "integrity": "sha512-wKyQRQpjJ0sIp62ErSZdGsjMJWsap5oRNihHhu6G7JVO/9jIB6UyevL+tXuOqrng8j/cxKTWyWUwvSTriiZz/g==",
+          "dependencies": {
+            "emoji-regex": "^8.0.0",
+            "is-fullwidth-code-point": "^3.0.0",
+            "strip-ansi": "^6.0.1"
+          },
+          "engines": {
+            "node": ">=8"
+          }
+        },
+      `);
+    });
+  });
+
   describe('next.js generated', () => {
     const rootLockFile = require(joinPathFragments(
       __dirname,
