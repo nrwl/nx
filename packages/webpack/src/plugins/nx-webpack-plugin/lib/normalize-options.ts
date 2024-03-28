@@ -51,14 +51,16 @@ export function normalizeOptions(
     }
     Object.assign(
       combinedPluginAndMaybeExecutorOptions,
-      buildTargetOptions,
-      options // plugin options take precedence
+      options,
+      // executor options take precedence (especially for overriding with CLI args)
+      buildTargetOptions
     );
   } else {
     Object.assign(
       combinedPluginAndMaybeExecutorOptions,
-      originalTargetOptions,
-      options // plugin options take precedence
+      options,
+      // executor options take precedence (especially for overriding with CLI args)
+      originalTargetOptions
     );
   }
 
@@ -121,7 +123,8 @@ export function normalizeAssets(
   assets: any[],
   root: string,
   sourceRoot: string,
-  projectRoot: string
+  projectRoot: string,
+  resolveRelativePathsToProjectRoot = true
 ): AssetGlobPattern[] {
   return assets.map((asset) => {
     if (typeof asset === 'string') {
@@ -155,7 +158,7 @@ export function normalizeAssets(
 
       const assetPath = normalizePath(asset.input);
       let resolvedAssetPath = resolve(root, assetPath);
-      if (asset.input.startsWith('.')) {
+      if (resolveRelativePathsToProjectRoot && asset.input.startsWith('.')) {
         const resolvedProjectRoot = resolve(root, projectRoot);
         resolvedAssetPath = resolve(resolvedProjectRoot, assetPath);
       }
