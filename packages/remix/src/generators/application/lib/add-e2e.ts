@@ -33,8 +33,8 @@ export async function addE2E(tree: Tree, options: NormalizedSchema) {
       project: options.e2eProjectName,
       directory: 'src',
       skipFormat: true,
-      devServerTarget: `${options.projectName}:serve:development`,
-      baseUrl: 'http://localhost:4200',
+      devServerTarget: `${options.projectName}:${options.e2eWebServerTarget}:development`,
+      baseUrl: options.e2eWebServerAddress,
       addPlugin: options.addPlugin,
     });
   } else if (options.e2eTestRunner === 'playwright') {
@@ -59,10 +59,10 @@ export async function addE2E(tree: Tree, options: NormalizedSchema) {
       js: false,
       linter: options.linter,
       setParserOptionsProject: false,
-      webServerCommand: `${getPackageManagerCommand().exec} nx serve ${
-        options.name
-      }`,
-      webServerAddress: 'http://localhost:4200',
+      webServerCommand: `${getPackageManagerCommand().exec} nx ${
+        options.e2eWebServerTarget
+      } ${options.name}`,
+      webServerAddress: options.e2eWebServerAddress,
       rootProject: options.rootProject,
       addPlugin: options.addPlugin,
     });
@@ -81,7 +81,7 @@ function addFileServerTarget(
     executor: '@nx/web:file-server',
     options: {
       buildTarget: `${options.projectName}:build`,
-      port: 4200,
+      port: options.e2ePort,
     },
   };
   updateProjectConfiguration(tree, options.projectName, projectConfig);
