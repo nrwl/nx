@@ -102,6 +102,12 @@ describe('@nx/cypress/plugin', () => {
                   "{projectRoot}/dist/screenshots",
                 ],
               },
+              "open-cypress": {
+                "command": "cypress open",
+                "options": {
+                  "cwd": ".",
+                },
+              },
             },
           },
         },
@@ -160,6 +166,12 @@ describe('@nx/cypress/plugin', () => {
                   "{projectRoot}/dist/videos",
                   "{projectRoot}/dist/screenshots",
                 ],
+              },
+              "open-cypress": {
+                "command": "cypress open",
+                "options": {
+                  "cwd": ".",
+                },
               },
             },
           },
@@ -278,6 +290,12 @@ describe('@nx/cypress/plugin', () => {
                   "{projectRoot}/dist/cypress/videos",
                   "{projectRoot}/dist/cypress/screenshots",
                 ],
+              },
+              "open-cypress": {
+                "command": "cypress open",
+                "options": {
+                  "cwd": ".",
+                },
               },
             },
           },

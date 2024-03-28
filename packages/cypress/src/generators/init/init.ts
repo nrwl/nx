@@ -74,6 +74,8 @@ export function addPlugin(tree: Tree) {
     options: {
       targetName: 'e2e',
       componentTestingTargetName: 'component-test',
+      ciTargetName: 'e2e-ci',
+      openTargetName: 'open-cypress',
     } as CypressPluginOptions,
   });
   updateNxJson(tree, nxJson);
