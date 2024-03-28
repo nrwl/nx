@@ -553,7 +553,9 @@ describe('app', () => {
           [
             {
               "options": {
+                "ciTargetName": "e2e-ci",
                 "componentTestingTargetName": "component-test",
+                "openTargetName": "open-cypress",
                 "targetName": "e2e",
               },
               "plugin": "@nx/cypress/plugin",

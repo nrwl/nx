@@ -39,7 +39,7 @@ The benefits of Nx are not restricted to local development. [Nx Cloud](https://n
 - Run only tasks [affected](/ci/features/affected) by that PR
 - [Share the task cache](/ci/features/remote-cache) between CI and local development machines (Nx Replay)
 - [Distribute task execution](/ci/features/distribute-task-execution) across multiple agent machines (Nx Agents)
-- Automatically [split long e2e tasks](/ci/features/split-e2e-tasks) into smaller tasks (Test Atomizer)
+- Automatically [split long e2e tasks](/ci/features/split-e2e-tasks) into smaller tasks (Atomizer)
 - Identify and Re-run [Flaky Tasks](/ci/features/flaky-tasks)
 
 Nx Cloud also provides direct integration with GitHub, GitLab, Bitbucket and Azure version control systems. Learn more at [nx.app](https://nx.app).

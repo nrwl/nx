@@ -186,7 +186,7 @@ export async function configurationGeneratorInternal(
       );
     }
     if (schema.configureStaticServe) {
-      addStaticTarget(tree, schema);
+      await addStaticTarget(tree, schema);
     }
   } else {
     devDeps['storybook'] = storybookVersion;

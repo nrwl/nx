@@ -1,7 +1,7 @@
 {
   "name": "@nx/gradle",
   "version": "0.0.1",
-  "private": true,
+  "private": false,
   "description": "The Nx Plugin for gradle",
   "repository": {
     "type": "git",
@@ -27,8 +27,7 @@
     ".": "./index.js",
     "./package.json": "./package.json",
     "./migrations.json": "./migrations.json",
-    "./generators.json": "./generators.json",
-    "./plugin": "./plugin.js"
+    "./generators.json": "./generators.json"
   },
   "nx-migrate": {
     "migrations": "./migrations.json"

@@ -10,4 +10,7 @@ Review the [nx migrate](/features/automate-updating-dependencies) documentation 
 
 ## Prevention
 
-To ensure that the Nx plugin versions do not get out of sync, always run `nx migrate` when updating versions instead of manually updating modifying the `package.json` file.
+To ensure that the Nx plugin versions do not get out of sync, make sure to:
+
+- always run `nx add <plugin>` when installing an Nx official plugin instead of using the package manager to install it
+- always run `nx migrate <version>` when updating versions instead of manually updating the `package.json` file

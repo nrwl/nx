@@ -107,18 +107,18 @@ For each `turbo.json` configuration property, the equivalent Nx property is list
 | `globalPassThroughEnv`    | N/A. See [Defining Environment Variables](/recipes/tips-n-tricks/define-environment-variables)                                                         |
 | `globalDotEnv`            | add to the [`sharedGlobals` `namedInput`](/recipes/running-tasks/configure-inputs)                                                                     |
 
-| **Task Configuration:**         |                                                                                                   |
-| ------------------------------- | ------------------------------------------------------------------------------------------------- |
-| `extends`                       | N/A. The project configurations will always extend the `targetDefaults` defined in `nx.json`.     |
-| `pipeline[task].dependsOn`      | [Same syntax](/reference/project-configuration#dependson).                                        |
-| `pipeline[task].dotEnv`         | Define [file `inputs`](/reference/project-configuration#filesets)                                 |
-| `pipeline[task].env`            | Define [env `inputs`](/reference/project-configuration#env-variables)                             |
-| `pipeline[task].passThroughEnv` | N/A. See [Defining Environment Variables](/recipes/tips-n-tricks/define-environment-variables)    |
-| `pipeline[task].outputs`        | [Same syntax](/reference/project-configuration#outputs).                                          |
-| `pipeline[task].cache`          | Define in the [`nx.json` `cacheableOperations` property](/reference/nx-json#tasks-runner-options) |
-| `pipeline[task].inputs`         | [Same syntax](/reference/project-configuration#filesets).                                         |
-| `pipeline[task].outputMode`     | Use the [`--output-style` command line flag](/nx-api/nx/documents/run-many#output-style)          |
-| `pipeline[task].persistent`     | N/A.                                                                                              |
+| **Task Configuration:**         |                                                                                                |
+| ------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `extends`                       | N/A. The project configurations will always extend the `targetDefaults` defined in `nx.json`.  |
+| `pipeline[task].dependsOn`      | [Same syntax](/reference/project-configuration#dependson).                                     |
+| `pipeline[task].dotEnv`         | Define [file `inputs`](/reference/project-configuration#filesets)                              |
+| `pipeline[task].env`            | Define [env `inputs`](/reference/project-configuration#env-variables)                          |
+| `pipeline[task].passThroughEnv` | N/A. See [Defining Environment Variables](/recipes/tips-n-tricks/define-environment-variables) |
+| `pipeline[task].outputs`        | [Same syntax](/reference/project-configuration#outputs).                                       |
+| `pipeline[task].cache`          | [Same syntax](/reference/project-configuration#cache)                                          |
+| `pipeline[task].inputs`         | [Same syntax](/reference/project-configuration#filesets).                                      |
+| `pipeline[task].outputMode`     | Use the [`--output-style` command line flag](/nx-api/nx/documents/run-many#output-style)       |
+| `pipeline[task].persistent`     | N/A.                                                                                           |
 
 ## Command Equivalents
 

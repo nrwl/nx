@@ -5662,6 +5662,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Why Nx Cloud?",
+            "path": "/ci/intro/why-nx-cloud",
+            "id": "why-nx-cloud",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Tutorials",
             "path": "/ci/intro/tutorials",
             "id": "tutorials",
@@ -5693,6 +5701,14 @@
         "name": "CI with Nx",
         "path": "/ci/intro/ci-with-nx",
         "id": "ci-with-nx",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Why Nx Cloud?",
+        "path": "/ci/intro/why-nx-cloud",
+        "id": "why-nx-cloud",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -5777,7 +5793,7 @@
             "disableCollapsible": false
           },
           {
-            "name": "Automatically Split E2E Tasks (TestAtomizer)",
+            "name": "Automatically Split E2E Tasks (Atomizer)",
             "path": "/ci/features/split-e2e-tasks",
             "id": "split-e2e-tasks",
             "isExternal": false,
@@ -5836,7 +5852,7 @@
         "disableCollapsible": false
       },
       {
-        "name": "Automatically Split E2E Tasks (TestAtomizer)",
+        "name": "Automatically Split E2E Tasks (Atomizer)",
         "path": "/ci/features/split-e2e-tasks",
         "id": "split-e2e-tasks",
         "isExternal": false,
@@ -6062,6 +6078,14 @@
                 "name": "Enable GitLab MR Integration",
                 "path": "/ci/recipes/source-control-integration/gitlab",
                 "id": "gitlab",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Enable Azure DevOps PR Integration",
+                "path": "/ci/recipes/source-control-integration/azure-devops",
+                "id": "azure-devops",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -6460,6 +6484,14 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
+          },
+          {
+            "name": "Enable Azure DevOps PR Integration",
+            "path": "/ci/recipes/source-control-integration/azure-devops",
+            "id": "azure-devops",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -6484,6 +6516,14 @@
         "name": "Enable GitLab MR Integration",
         "path": "/ci/recipes/source-control-integration/gitlab",
         "id": "gitlab",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Enable Azure DevOps PR Integration",
+        "path": "/ci/recipes/source-control-integration/azure-devops",
+        "id": "azure-devops",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -8064,6 +8104,32 @@
                 "id": "application",
                 "path": "/nx-api/express/generators/application",
                 "name": "application",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              }
+            ],
+            "isExternal": false,
+            "disableCollapsible": false
+          }
+        ],
+        "isExternal": false,
+        "disableCollapsible": false
+      },
+      {
+        "id": "gradle",
+        "path": "/nx-api/gradle",
+        "name": "gradle",
+        "children": [
+          {
+            "id": "generators",
+            "path": "/nx-api/gradle/generators",
+            "name": "generators",
+            "children": [
+              {
+                "id": "init",
+                "path": "/nx-api/gradle/generators/init",
+                "name": "init",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false

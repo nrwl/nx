@@ -760,9 +760,13 @@ export function generateFlatOverride(
     !override.plugins &&
     !override.parser
   ) {
+    if (override.parserOptions) {
+      const { parserOptions, ...rest } = override;
+      return generateAst({ ...rest, languageSettings: { parserOptions } });
+    }
     return generateAst(override);
   }
-  const { files, excludedFiles, rules, ...rest } = override;
+  const { files, excludedFiles, rules, parserOptions, ...rest } = override;
 
   const objectLiteralElements: ts.ObjectLiteralElementLike[] = [
     ts.factory.createSpreadAssignment(ts.factory.createIdentifier('config')),
@@ -770,6 +774,11 @@ export function generateFlatOverride(
   addTSObjectProperty(objectLiteralElements, 'files', files);
   addTSObjectProperty(objectLiteralElements, 'excludedFiles', excludedFiles);
   addTSObjectProperty(objectLiteralElements, 'rules', rules);
+  if (parserOptions) {
+    addTSObjectProperty(objectLiteralElements, 'languageSettings', {
+      parserOptions,
+    });
+  }
 
   return ts.factory.createSpreadElement(
     ts.factory.createCallExpression(

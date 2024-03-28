@@ -238,6 +238,8 @@ describe('updateImports', () => {
       importerFilePath,
       `
         import { MyClass } from '@proj/my-source';
+        
+        export { MyClass };
         export { MyOtherClass } from '@proj/my-source';
         
         export class MyExtendedClass extends MyClass {};

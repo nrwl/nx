@@ -102,6 +102,12 @@ describe('@nx/cypress/plugin', () => {
                   "{projectRoot}/dist/screenshots",
                 ],
               },
+              "open-cypress": {
+                "command": "cypress open",
+                "options": {
+                  "cwd": ".",
+                },
+              },
             },
           },
         },
@@ -161,6 +167,12 @@ describe('@nx/cypress/plugin', () => {
                   "{projectRoot}/dist/screenshots",
                 ],
               },
+              "open-cypress": {
+                "command": "cypress open",
+                "options": {
+                  "cwd": ".",
+                },
+              },
             },
           },
         },
@@ -199,7 +211,7 @@ describe('@nx/cypress/plugin', () => {
           ".": {
             "metadata": {
               "targetGroups": {
-                ".:e2e-ci": [
+                "E2E (CI)": [
                   "e2e-ci--src/test.cy.ts",
                   "e2e-ci",
                 ],
@@ -278,6 +290,12 @@ describe('@nx/cypress/plugin', () => {
                   "{projectRoot}/dist/cypress/videos",
                   "{projectRoot}/dist/cypress/screenshots",
                 ],
+              },
+              "open-cypress": {
+                "command": "cypress open",
+                "options": {
+                  "cwd": ".",
+                },
               },
             },
           },

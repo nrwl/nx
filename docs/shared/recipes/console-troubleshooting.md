@@ -1,5 +1,7 @@
 # Nx Console Troubleshooting
 
+Often, issues with Nx Console are the result of underlying issues with Nx. Make sure to read the [Nx installation troubleshooting docs](recipes/troubleshooting/troubleshoot-nx-install-issues) for more help.
+
 ## VSCode + nvm Issues
 
 VSCode loads a version of Node when it starts. It can use versions set via [`nvm`](https://github.com/nvm-sh/nvm) but there are some caveats.
@@ -10,7 +12,7 @@ VSCode loads a version of Node when it starts. It can use versions set via [`nvm
 - If you work with lots of different Node versions, there are various VSCode extensions available to dynamically run `nvm use` whenever you open a new integrated terminal. Search for `nvm`.
 - You can set a static version by using a launch configuration with `runtimeVersion` set. Refer to [this guide](https://code.visualstudio.com/docs/nodejs/nodejs-debugging#_multi-version-support).
 
-We try to make noticing discrepancies easier by showing you the currently loaded Node version on startup. You can disable this in the Nx Console settings.
+We try to make noticing discrepancies easier by showing you the currently loaded Node version on startup. To enable this, toggle the `nxConsole.showNodeVersionOnStartup` setting in VSCode.
 
 ## JetBrains WSL Support
 
