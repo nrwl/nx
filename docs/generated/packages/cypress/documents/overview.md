@@ -236,20 +236,71 @@ For adding more dynamic configurations to your Cypress configuration, you can lo
 
 ## Environment Variables
 
-If you're needing to pass a variable to Cypress that you wish to not commit to your repository, i.e. API keys, or dynamic values based on configurations, i.e. API URLs. This is where [Cypress environment variables](https://docs.cypress.io/guides/guides/environment-variables) can be used.
+If you need to pass a variable to Cypress that you don't want to commit to your repository (i.e. API keys, dynamic values based on configurations, API URLs), you can use [Cypress environment variables](https://docs.cypress.io/guides/guides/environment-variables).
 
-There are a handful of ways to pass environment variables to Cypress, but the most common is going to be via the [`cypress.env.json` file](https://docs.cypress.io/guides/guides/environment-variables#Option-1-configuration-file), the `env` option in the [project configuration](/reference/project-configuration#targets) or the commandline.
+There are a handful of ways to pass environment variables to Cypress, but the most common is going to be via the [`cypress.env.json` file](https://docs.cypress.io/guides/guides/environment-variables#Option-1-configuration-file), the `-e` Cypress arg or the `env` option from the `@nx/cypress:cypress` executor in the [project configuration](/reference/project-configuration#targets) or the command line.
 
-Create a `cypress.env.json` file in the projects root i.e. `apps/my-cool-app-e2e/cypress.env.json`. Cypress will automatically pick up this file. This method is helpful for configurations that you want to not commit. Just don't forget to add the file to the `.gitignore` and add documentation so people in your repo know what values to populate in their local copy of the `cypress.env.json` file.
+Create a `cypress.env.json` file in the projects root (i.e. `apps/my-cool-app-e2e/cypress.env.json`). Cypress will automatically pick up this file. This method is helpful for configurations that you don't want to commit. Just don't forget to add the file to the `.gitignore` and add documentation so people in your repo know what values to populate in their local copy of the `cypress.env.json` file.
 
-Set the `env` option in the project configuration is a good way to add values you want to define that you don't mind committing to the repository, such as a base API URL. You can leverage target configurations to define different values as well.
+Setting the `-e` Cypress arg or the `env` option from the `@nx/cypress:cypress` executor in the project configuration is a good way to add values you want to define that you don't mind committing to the repository, such as a base API URL.
 
-Optionally, you can pass environment variables via the commandline with the `--env` flag.
+{% tabs %}
+{% tab label="Using inferred tasks" %}
 
-{% callout type="warning" title="Executor options and --env" %}
-Providing the `--env` flag will override the `env` option set in the project configuration.
-{% /callout %}
+```json {% fileName="project.json" %}
+{
+  ...
+  "targets": {
+    "e2e": {
+      "options": {
+        "args": "--env=API_URL=https://api.my-nx-website.com"
+      }
+    }
+  }
+}
+```
+
+{% /tab %}
+
+{% tab label="Using the @nx/cypress:cypress executor" %}
+
+```json {% fileName="project.json" %}
+{
+  ...
+  "targets": {
+    "e2e": {
+      "executor": "@nx/cypress:cypress",
+      "options": {
+        "env": "API_URL=https://api.my-nx-website.com"
+      }
+    }
+  }
+}
+```
+
+{% /tab %}
+{% /tabs %}
+
+Finally, you can also pass environment variables via the command line with the `-e` Cypress arg or the `--env` option for the `@nx/cypress:cypress` executor.
+
+{% tabs %}
+{% tab label="Using inferred tasks" %}
+
+```shell
+nx e2e frontend-e2e -e=API_URL=https://api.my-nx-website.com,API_KEY=abc-123
+```
+
+{% /tab %}
+
+{% tab label="Using the @nx/cypress:cypress executor" %}
 
 ```shell
 nx e2e frontend-e2e --env.API_URL="https://api.my-nx-website.com" --env.API_KEY="abc-123"
 ```
+
+{% /tab %}
+{% /tabs %}
+
+{% callout type="warning" title="Command-line args vs configuration options" %}
+Providing a flag will override any option with the same name set in the project or workspace configuration.
+{% /callout %}
