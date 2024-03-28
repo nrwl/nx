@@ -47,7 +47,8 @@
       "type": "string",
       "enum": ["cypress", "playwright", "none"],
       "default": "cypress",
-      "description": "Test runner to use for e2e tests"
+      "description": "Test runner to use for e2e tests",
+      "x-prompt": "Which E2E test runner would you like to use?"
     },
     "tags": {
       "type": "string",
