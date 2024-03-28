@@ -76,16 +76,17 @@ The `@nx/cypress/plugin` is configured in the `plugins` array in `nx.json`.
     {
       "plugin": "@nx/cypress/plugin",
       "options": {
-        "ciTargetName": "e2e-ci",
         "targetName": "e2e",
-        "componentTestingTargetName": "component-test"
+        "ciTargetName": "e2e-ci",
+        "componentTestingTargetName": "component-test",
+        "openTargetName": "open-cypress"
       }
     }
   ]
 }
 ```
 
-- The `targetName`, `ciTargetName` and `componentTestingTargetName` options control the namea of the inferred Cypress tasks. The default names are `e2e`, `e2e-ci` and `component-test`.
+The `targetName`, `ciTargetName`, `componentTestingTargetName`, and `open-cypress` options control the names of the inferred Cypress tasks. The default names are `e2e`, `e2e-ci`, `component-test`, and `open-cypress`.
 
 ### Splitting E2E tasks by file
 
