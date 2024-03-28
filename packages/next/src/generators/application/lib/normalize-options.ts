@@ -75,7 +75,7 @@ export async function normalizeOptions(
     appProjectRoot,
     e2eProjectName,
     e2eProjectRoot,
-    e2eTestRunner: options.e2eTestRunner || 'cypress',
+    e2eTestRunner: options.e2eTestRunner || 'playwright',
     fileName,
     linter: options.linter || Linter.EsLint,
     name,

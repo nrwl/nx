@@ -43,7 +43,7 @@ describe('React Module Federation', () => {
         const defaultRemotePort = 4201;
 
         runCLI(
-          `generate @nx/react:host ${shell} --remotes=${remote1},${remote2},${remote3} --style=css --no-interactive --skipFormat --js=${js}`
+          `generate @nx/react:host ${shell} --remotes=${remote1},${remote2},${remote3} --e2eTestRunner=cypress --style=css --no-interactive --skipFormat --js=${js}`
         );
 
         checkFilesExist(
@@ -173,7 +173,8 @@ describe('React Module Federation', () => {
 
           const e2eResultsTsNode = await runCommandUntil(
             `e2e ${shell}-e2e --no-watch --verbose`,
-            (output) => output.includes('All specs passed!'),
+            (output) =>
+              output.includes('Successfully ran target e2e for project'),
             {
               env: { NX_PREFER_TS_NODE: 'true' },
             }
@@ -300,7 +301,7 @@ describe('React Module Federation', () => {
       const host = uniq('host');
 
       runCLI(
-        `generate @nx/react:host ${host} --remotes=${remote} --no-interactive --projectNameAndRootFormat=as-provided --skipFormat`
+        `generate @nx/react:host ${host} --remotes=${remote} --e2eTestRunner=cypress --no-interactive --projectNameAndRootFormat=as-provided --skipFormat`
       );
 
       runCLI(
@@ -401,7 +402,7 @@ describe('React Module Federation', () => {
       const host = uniq('host');
 
       runCLI(
-        `generate @nx/react:host ${host} --remotes=${remote} --no-interactive --projectNameAndRootFormat=as-provided --skipFormat`
+        `generate @nx/react:host ${host} --remotes=${remote} --e2eTestRunner=cypress --no-interactive --projectNameAndRootFormat=as-provided --skipFormat`
       );
 
       runCLI(
@@ -509,7 +510,7 @@ describe('React Module Federation', () => {
       const host = uniq('host');
 
       runCLI(
-        `generate @nx/react:host ${host} --remotes=${remote} --no-interactive --projectNameAndRootFormat=as-provided --typescriptConfiguration=false --skipFormat`
+        `generate @nx/react:host ${host} --remotes=${remote} --e2eTestRunner=cypress --no-interactive --projectNameAndRootFormat=as-provided --typescriptConfiguration=false --skipFormat`
       );
 
       // Update remote to be loaded via script
@@ -643,7 +644,7 @@ describe('React Module Federation', () => {
       const lib = uniq('lib');
 
       runCLI(
-        `generate @nx/react:host ${shell} --remotes=${remote} --no-interactive --projectNameAndRootFormat=as-provided --skipFormat`
+        `generate @nx/react:host ${shell} --remotes=${remote} --e2eTestRunner=cypress --no-interactive --projectNameAndRootFormat=as-provided --skipFormat`
       );
 
       runCLI(
@@ -793,7 +794,7 @@ describe('React Module Federation', () => {
       const remote = uniq('remote');
 
       runCLI(
-        `generate @nx/react:host ${shell} --remotes=${remote} --project-name-and-root-format=as-provided --no-interactive --skipFormat`
+        `generate @nx/react:host ${shell} --remotes=${remote} --e2eTestRunner=cypress --project-name-and-root-format=as-provided --no-interactive --skipFormat`
       );
 
       const shellPort = readPort(shell);
@@ -928,7 +929,7 @@ describe('React Module Federation', () => {
       const remote = uniq('remote');
 
       runCLI(
-        `generate @nx/react:host ${shell} --remotes=${remote} --dynamic=true --project-name-and-root-format=as-provided --no-interactive --skipFormat`
+        `generate @nx/react:host ${shell} --remotes=${remote} --e2eTestRunner=cypress --dynamic=true --project-name-and-root-format=as-provided --no-interactive --skipFormat`
       );
 
       // Webpack prod config should not exists when loading dynamic modules
