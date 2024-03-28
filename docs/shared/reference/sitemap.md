@@ -180,6 +180,7 @@
       - [Get Started with Nx Release](/recipes/nx-release/get-started-with-nx-release)
       - [Release Projects Independently](/recipes/nx-release/release-projects-independently)
       - [Automatically Version with Conventional Commits](/recipes/nx-release/automatically-version-with-conventional-commits)
+      - [Configure Custom Registries](/recipes/nx-release/configure-custom-registries)
       - [Publish in CI/CD](/recipes/nx-release/publish-in-ci-cd)
       - [Automate GitHub Releases](/recipes/nx-release/automate-github-releases)
       - [Publish Rust Crates](/recipes/nx-release/publish-rust-crates)
