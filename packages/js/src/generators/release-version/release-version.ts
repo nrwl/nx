@@ -10,6 +10,7 @@ import {
   writeJson,
 } from '@nx/devkit';
 import * as chalk from 'chalk';
+import { existsSync } from 'fs';
 import { exec } from 'node:child_process';
 import { relative } from 'node:path';
 import { IMPLICIT_DEFAULT_RELEASE_GROUP } from 'nx/src/command-line/release/config/config';
@@ -147,7 +148,7 @@ To fix this you will either need to add a package.json file at that location, or
 
       switch (options.currentVersionResolver) {
         case 'registry': {
-          if (tree.exists(joinPathFragments(packageRoot, '.npmrc'))) {
+          if (existsSync(joinPathFragments(packageRoot, '.npmrc'))) {
             output.warn({
               title: `Ignoring .npmrc file detected in the package root`,
               bodyLines: [
