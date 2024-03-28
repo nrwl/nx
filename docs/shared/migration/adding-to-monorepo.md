@@ -50,7 +50,22 @@ This will set up Nx for you - updating the `package.json` file and creating a ne
 }
 ```
 
-When Nx updates your `package.json` scripts, it looks for scripts that can be replaced with an Nx command that has caching automatically enabled. The `package.json` defined above would be updated to look like this:
+When Nx updates your `package.json` scripts, it looks for scripts that can be replaced with an Nx command that has caching automatically enabled. Assuming you initially had a `package.json` file looking like the following:
+
+```json {% fileName="package.json" %}
+{
+  "name": "my-workspace",
+  ...
+  "scripts": {
+    "build": "next build",
+    "lint": "eslint ./src",
+    "test": "node ./run-tests.js"
+  },
+  ...
+}
+```
+
+After setting up Nx, the `package.json` file would be updated to look like this:
 
 ```json {% fileName="package.json" %}
 {
