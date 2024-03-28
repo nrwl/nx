@@ -1,13 +1,11 @@
 import {
   cleanupProject,
-  killProcessAndPorts,
   newProject,
   readJson,
   runCLI,
-  runCommandUntil,
+  runCLIUntil,
   uniq,
 } from '@nx/e2e/utils';
-import { ChildProcess } from 'child_process';
 
 const myApp = uniq('my-app');
 const myVueApp = uniq('my-vue-app');
@@ -63,25 +61,14 @@ describe('@nx/vite/plugin', () => {
       }, 200_000);
     });
 
-    it('should run serve-static', async () => {
-      let process: ChildProcess;
+    it('should run serve-static', () => {
       const port = 8081;
-
-      try {
-        process = await runCommandUntil(
-          `serve-static ${myApp} --port=${port}`,
-          (output) => {
-            return output.includes(`http://localhost:${port}`);
-          }
-        );
-      } catch (err) {
-        console.error(err);
-      }
-
-      // port and process cleanup
-      if (process && process.pid) {
-        await killProcessAndPorts(process.pid, port);
-      }
+      return runCLIUntil(`serve-static ${myApp} --port=${port}`, {
+        portsToKillOnComplete: [port],
+        criteria: (output) => {
+          return output.includes(`http://localhost:${port}`);
+        },
+      });
     });
   });
 

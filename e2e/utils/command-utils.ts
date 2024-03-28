@@ -17,6 +17,7 @@ import * as isCI from 'is-ci';
 import { fileExists, readJson, updateJson } from './file-utils';
 import { logError, stripConsoleColors } from './log-utils';
 import { existsSync } from 'fs-extra';
+import { killProcessAndPorts } from './process-utils';
 
 export interface RunCmdOpts {
   silenceError?: boolean;
@@ -68,6 +69,9 @@ export function runCommand(
       cwd: tmpProjPath(),
       stdio: 'pipe',
       env: {
+        // TODO: allign runCommand, runCommandUntil and runCommandAsync so that
+        //  - they both set CI=true
+        //  - or neither of them sets CI=true
         ...getStrippedEnvironmentVariables(),
         ...childProcessOptions?.env,
         FORCE_COLOR: 'false',
@@ -211,6 +215,9 @@ export function runCommandAsync(
       {
         cwd: opts.cwd || tmpProjPath(),
         env: {
+          // TODO: allign runCommand, runCommandUntil and runCommandAsync so that
+          //  - they both set CI=true
+          //  - or neither of them sets CI=true
           CI: 'true',
           ...(opts.env || getStrippedEnvironmentVariables()),
           FORCE_COLOR: 'false',
@@ -243,6 +250,9 @@ export function runCommandUntil(
     cwd: tmpProjPath(),
     encoding: 'utf-8',
     env: {
+      // TODO: allign runCommand, runCommandUntil and runCommandAsync so that
+      //  - they both set CI=true
+      //  - or neither of them sets CI=true
       CI: 'true',
       ...getStrippedEnvironmentVariables(),
       ...opts.env,
@@ -293,6 +303,30 @@ export function runCLIAsync(
     `${opts.silent ? pm.runNxSilent : pm.runNx} ${command}`,
     opts
   );
+}
+
+export async function runCLIUntil(
+  command: string,
+  {
+    criteria,
+    portsToKillOnComplete,
+    ...runCmdOptions
+  }: RunCmdOpts & {
+    criteria?: Parameters<typeof runCommandUntil>[1];
+    portsToKillOnComplete?: number[];
+  } = {
+    silenceError: false,
+    env: getStrippedEnvironmentVariables(),
+    silent: false,
+  }
+) {
+  let process: ChildProcess | undefined;
+
+  process = await runCommandUntil(command, criteria, runCmdOptions);
+
+  if (process?.pid) {
+    killProcessAndPorts(process.pid, ...(portsToKillOnComplete ?? []));
+  }
 }
 
 export function runNgAdd(
