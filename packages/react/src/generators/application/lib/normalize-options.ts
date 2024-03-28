@@ -3,6 +3,8 @@ import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/pr
 import { assertValidStyle } from '../../../utils/assertion';
 import { NormalizedSchema, Schema } from '../schema';
 import { findFreePort } from './find-free-port';
+import { VitePluginOptions } from '@nx/vite/src/plugins/plugin';
+import { WebpackPluginOptions } from '@nx/webpack/src/plugins/plugin';
 
 export function normalizeDirectory(options: Schema) {
   options.directory = options.directory?.replace(/\\{1,2}/g, '/');
@@ -43,8 +45,43 @@ export async function normalizeOptions<T extends Schema = Schema>(
 
   options.rootProject = appProjectRoot === '.';
   options.projectNameAndRootFormat = projectNameAndRootFormat;
+
+  let e2eWebServerTarget = 'serve';
+  if (options.addPlugin) {
+    if (nxJson.plugins) {
+      for (const plugin of nxJson.plugins) {
+        if (
+          options.bundler === 'vite' &&
+          typeof plugin === 'object' &&
+          plugin.plugin === '@nx/vite/plugin' &&
+          (plugin.options as VitePluginOptions).serveTargetName
+        ) {
+          e2eWebServerTarget = (plugin.options as VitePluginOptions)
+            .serveTargetName;
+        } else if (
+          options.bundler === 'webpack' &&
+          typeof plugin === 'object' &&
+          plugin.plugin === '@nx/webpack/plugin' &&
+          (plugin.options as WebpackPluginOptions).serveTargetName
+        ) {
+          e2eWebServerTarget = (plugin.options as WebpackPluginOptions)
+            .serveTargetName;
+        }
+      }
+    }
+  }
+
+  let e2ePort = options.devServerPort ?? 4200;
+  if (
+    nxJson.targetDefaults?.[e2eWebServerTarget] &&
+    nxJson.targetDefaults?.[e2eWebServerTarget].options?.port
+  ) {
+    e2ePort = nxJson.targetDefaults?.[e2eWebServerTarget].options?.port;
+  }
+
   const e2eProjectName = options.rootProject ? 'e2e' : `${appProjectName}-e2e`;
   const e2eProjectRoot = options.rootProject ? 'e2e' : `${appProjectRoot}-e2e`;
+  const e2eWebServerAddress = `http://localhost:${e2ePort}`;
 
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())
@@ -69,6 +106,9 @@ export async function normalizeOptions<T extends Schema = Schema>(
     appProjectRoot,
     e2eProjectName,
     e2eProjectRoot,
+    e2eWebServerAddress,
+    e2eWebServerTarget,
+    e2ePort,
     parsedTags,
     fileName,
     styledModule,

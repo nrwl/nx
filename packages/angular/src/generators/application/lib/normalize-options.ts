@@ -1,4 +1,4 @@
-import { joinPathFragments, type Tree } from '@nx/devkit';
+import { joinPathFragments, readNxJson, type Tree } from '@nx/devkit';
 import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { Linter } from '@nx/eslint';
 import { E2eTestRunner, UnitTestRunner } from '../../../utils/test-runners';
@@ -25,8 +25,22 @@ export async function normalizeOptions(
   options.rootProject = appProjectRoot === '.';
   options.projectNameAndRootFormat = projectNameAndRootFormat;
 
+  const nxJson = readNxJson(host);
+  let e2eWebServerTarget = 'serve';
+  let e2ePort = options.port ?? 4200;
+  if (
+    nxJson.targetDefaults?.[e2eWebServerTarget] &&
+    (nxJson.targetDefaults?.[e2eWebServerTarget].options?.port ||
+      nxJson.targetDefaults?.[e2eWebServerTarget].options?.env?.PORT)
+  ) {
+    e2ePort =
+      nxJson.targetDefaults?.[e2eWebServerTarget].options?.port ||
+      nxJson.targetDefaults?.[e2eWebServerTarget].options?.env?.PORT;
+  }
+
   const e2eProjectName = options.rootProject ? 'e2e' : `${appProjectName}-e2e`;
   const e2eProjectRoot = options.rootProject ? 'e2e' : `${appProjectRoot}-e2e`;
+  const e2eWebServerAddress = `http://localhost:${e2ePort}`;
 
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())
@@ -58,6 +72,9 @@ export async function normalizeOptions(
     appProjectSourceRoot: `${appProjectRoot}/src`,
     e2eProjectRoot,
     e2eProjectName,
+    e2eWebServerAddress,
+    e2eWebServerTarget,
+    e2ePort,
     parsedTags,
     bundler,
     outputPath: joinPathFragments(

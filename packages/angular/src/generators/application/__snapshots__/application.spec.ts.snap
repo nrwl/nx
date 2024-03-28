@@ -287,6 +287,7 @@ exports[`app --project-name-and-root-format=derived should generate correctly wh
       "executor": "@nx/web:file-server",
       "options": {
         "buildTarget": "my-dir-my-app:build",
+        "port": 4200,
         "spa": true,
         "staticFilePath": "dist/apps/my-dir/my-app/browser",
       },
@@ -487,6 +488,7 @@ exports[`app --project-name-and-root-format=derived should generate correctly wh
       "executor": "@nx/web:file-server",
       "options": {
         "buildTarget": "my-app:build",
+        "port": 4200,
         "spa": true,
         "staticFilePath": "dist/apps/my-app/browser",
       },
@@ -982,6 +984,7 @@ exports[`app nested should create project configs 1`] = `
       "executor": "@nx/web:file-server",
       "options": {
         "buildTarget": "my-app:build",
+        "port": 4200,
         "spa": true,
         "staticFilePath": "dist/my-dir/my-app/browser",
       },
@@ -1095,6 +1098,7 @@ exports[`app not nested should create project configs 1`] = `
       "executor": "@nx/web:file-server",
       "options": {
         "buildTarget": "my-app:build",
+        "port": 4200,
         "spa": true,
         "staticFilePath": "dist/my-app/browser",
       },
