@@ -935,7 +935,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/concepts/mental-model",
-        "tags": ["intro"]
+        "tags": ["intro", "inferred-tasks"]
       },
       {
         "id": "how-caching-works",
@@ -968,7 +968,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/concepts/nx-plugins",
-        "tags": ["generate-code", "create-your-own-plugin"]
+        "tags": ["generate-code", "create-your-own-plugin", "inferred-tasks"]
       },
       {
         "id": "inferred-tasks",
@@ -1251,7 +1251,7 @@
             "itemList": [],
             "isExternal": false,
             "path": "/concepts/more-concepts/how-project-graph-is-built",
-            "tags": ["explore-graph"]
+            "tags": ["explore-graph", "inferred-tasks"]
           }
         ],
         "isExternal": false,
@@ -1272,7 +1272,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/concepts/mental-model",
-    "tags": ["intro"]
+    "tags": ["intro", "inferred-tasks"]
   },
   "/concepts/how-caching-works": {
     "id": "how-caching-works",
@@ -1305,7 +1305,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/concepts/nx-plugins",
-    "tags": ["generate-code", "create-your-own-plugin"]
+    "tags": ["generate-code", "create-your-own-plugin", "inferred-tasks"]
   },
   "/concepts/inferred-tasks": {
     "id": "inferred-tasks",
@@ -1632,7 +1632,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/concepts/more-concepts/how-project-graph-is-built",
-        "tags": ["explore-graph"]
+        "tags": ["explore-graph", "inferred-tasks"]
       }
     ],
     "isExternal": false,
@@ -1813,7 +1813,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/concepts/more-concepts/how-project-graph-is-built",
-    "tags": ["explore-graph"]
+    "tags": ["explore-graph", "inferred-tasks"]
   },
   "/recipes": {
     "id": "recipes",
