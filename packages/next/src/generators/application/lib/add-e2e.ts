@@ -26,10 +26,11 @@ export async function addE2e(host: Tree, options: NormalizedSchema) {
     >('@nx/cypress', nxVersion);
 
     if (!hasPlugin) {
-      webStaticServeGenerator(host, {
+      await webStaticServeGenerator(host, {
         buildTarget: `${options.projectName}:build`,
         outputPath: `${options.outputPath}/out`,
         targetName: 'serve-static',
+        spa: true,
       });
     }
 

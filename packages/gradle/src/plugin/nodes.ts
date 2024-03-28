@@ -1,6 +1,7 @@
 import {
   CreateNodes,
   CreateNodesContext,
+  ProjectConfiguration,
   TargetConfiguration,
   readJsonFile,
   writeJsonFile,
@@ -13,7 +14,6 @@ import { projectGraphCacheDirectory } from 'nx/src/utils/cache-directory';
 import { getGradleBinaryPath } from '../utils/exec-gradle';
 import { getGradleReport } from '../utils/get-gradle-report';
 
-const nonCacheableGradleTaskTypes = new Set(['Application']);
 const dependsOnMap = {
   build: ['^build', 'classes'],
   test: ['classes'],
@@ -37,12 +37,20 @@ const targetsCache = existsSync(cachePath) ? readTargetsCache() : {};
 
 export const calculatedTargets: Record<
   string,
-  { name: string; targets: Record<string, TargetConfiguration> }
+  {
+    name: string;
+    targets: Record<string, TargetConfiguration>;
+    targetGroups: Record<string, string[]>;
+  }
 > = {};
 
 function readTargetsCache(): Record<
   string,
-  { name: string; targets: Record<string, TargetConfiguration> }
+  {
+    name: string;
+    targets: Record<string, TargetConfiguration>;
+    targetGroups: Record<string, string[]>;
+  }
 > {
   return readJsonFile(cachePath);
 }
@@ -50,7 +58,11 @@ function readTargetsCache(): Record<
 export function writeTargetsToCache(
   targets: Record<
     string,
-    { name: string; targets: Record<string, TargetConfiguration> }
+    {
+      name: string;
+      targets: Record<string, TargetConfiguration>;
+      targetGroups: Record<string, string[]>;
+    }
   >
 ) {
   writeJsonFile(cachePath, targets);
@@ -74,7 +86,12 @@ export const createNodes: CreateNodes<GradlePluginOptions> = [
       calculatedTargets[hash] = targetsCache[hash];
       return {
         projects: {
-          [projectRoot]: targetsCache[hash],
+          [projectRoot]: {
+            ...targetsCache[hash],
+            metadata: {
+              technologies: ['gradle'],
+            },
+          },
         },
       };
     }
@@ -111,7 +128,7 @@ export const createNodes: CreateNodes<GradlePluginOptions> = [
         string
       >;
 
-      const targets = createGradleTargets(
+      const { targets, targetGroups } = createGradleTargets(
         tasks,
         projectRoot,
         options,
@@ -121,15 +138,20 @@ export const createNodes: CreateNodes<GradlePluginOptions> = [
       calculatedTargets[hash] = {
         name: projectName,
         targets,
+        targetGroups,
+      };
+
+      const project: Omit<ProjectConfiguration, 'root'> = {
+        name: projectName,
+        targets,
+        metadata: {
+          technologies: ['gradle'],
+        },
       };
 
       return {
         projects: {
-          [projectRoot]: {
-            root: projectRoot,
-            name: projectName,
-            targets,
-          },
+          [projectRoot]: project,
         },
       };
     } catch (e) {
@@ -145,10 +167,14 @@ function createGradleTargets(
   options: GradlePluginOptions | undefined,
   context: CreateNodesContext,
   outputDirs: Map<string, string>
-): Record<string, TargetConfiguration> {
+): {
+  targetGroups: Record<string, string[]>;
+  targets: Record<string, TargetConfiguration>;
+} {
   const inputsMap = createInputsMap(context);
 
   const targets: Record<string, TargetConfiguration> = {};
+  const targetGroups: Record<string, string[]> = {};
   for (const task of tasks) {
     const targetName = options?.[`${task.name}TargetName`] ?? task.name;
 
@@ -158,13 +184,17 @@ function createGradleTargets(
       options: {
         cwd: projectRoot,
       },
-      cache: !nonCacheableGradleTaskTypes.has(task.type),
+      cache: !!outputs,
       inputs: inputsMap[task.name],
       outputs: outputs ? [outputs] : undefined,
       dependsOn: dependsOnMap[task.name],
     };
+    if (!targetGroups[task.type]) {
+      targetGroups[task.type] = [];
+    }
+    targetGroups[task.type].push(task.name);
   }
-  return targets;
+  return { targetGroups, targets };
 }
 
 function createInputsMap(

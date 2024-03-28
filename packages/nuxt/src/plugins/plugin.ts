@@ -166,6 +166,8 @@ function serveStaticTarget(options: NuxtPluginOptions) {
       buildTarget: `${options.buildStaticTargetName}`,
       staticFilePath: '{projectRoot}/dist',
       port: 4200,
+      // Routes are found correctly with serve-static
+      spa: false,
     },
   };
 

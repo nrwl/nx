@@ -47,7 +47,7 @@
       },
       "proxyUrl": {
         "type": "string",
-        "description": "URL to proxy unhandled requests to."
+        "description": "URL to proxy unhandled requests to. _Note: If the 'spa' flag is set to true, manually setting this value will override the catch-all redirect functionality from http-server which may lead to unexpected behavior._"
       },
       "proxyOptions": {
         "type": "object",

@@ -8,11 +8,6 @@
     "build-base": {
       "executor": "@nx/js:tsc",
       "options": {
-        "generateExportsField": true,
-        "additionalEntryPoints": [
-          "{projectRoot}/{executors,generators,migrations}.json",
-          "{projectRoot}/plugin.ts"
-        ],
         "assets": [
           {
             "input": "packages/rollup",

@@ -190,6 +190,27 @@ describe('Nx Running Tests', () => {
         expect(output).toContain(app);
       });
     });
+
+    it('should pass env option to nx:run-commands executor', () => {
+      const mylib = uniq('mylib');
+      runCLI(`generate @nx/js:lib ${mylib}`);
+
+      updateJson(`libs/${mylib}/project.json`, (c) => {
+        c.targets['echo'] = {
+          executor: 'nx:run-commands',
+          options: {
+            command: 'node -e "console.log(process.env.ONE)"',
+            env: {
+              ONE: 'TWO',
+            },
+          },
+        };
+        return c;
+      });
+
+      const output = runCLI(`echo ${mylib}`);
+      expect(output).toContain('TWO');
+    });
   });
 
   describe('Nx Bail', () => {

@@ -14,6 +14,7 @@ are a few reasons why this could potentially happen:
 1. The package-lock.json file was not correctly updated by npm, and missed optional dependencies used by Nx.
    You can read more about this [issue on the npm repository.](https://github.com/npm/cli/issues/4828)
 1. [Your platform is not supported](#supported-native-module-platforms)
+1. [Node.js wasn't installed for the proper architecture ](#nodejs-installation-issues)
 
 {% callout type="note" title="Updating Nx" %}
 When updating Nx that is already on 15.8, the package-lock.json should continue to be updated properly with all the proper optional dependencies.
@@ -45,3 +46,11 @@ We publish modules for the following platforms:
 - FreeBSD (x64)
 
 If you're running a machine that isn't part of the list above, then Nx does not support it at this time. [Please open an issue on GitHub](https://github.com/nrwl/nx/issues/new/choose) if you feel Nx should support that platform and we will assess what can be done, please make sure to include your platform and architecture in the issue.
+
+### Node.js Installation Issues
+
+Ensure that the architecture of your Node.js installation matches your hardware. Run `nx report` and check that the `OS` property is correct (e.g. `darwin-arm64` for MacOS on Apple silicon). If it contains `x64` even though you're on an `arm64` chip, then something is wrong. A mismatch in architecture can lead to errors loading Nx's native binary.
+
+Often, the culprit of the mismatch is a faulty installation of your toolchain: Homebrew (MacOS), Node.js or VSCode (if using Nx Console). You should reinstall your toolchain with the correct architecture. Run `nx report` again to validate the installation.
+
+For issues inside VSCode or Nx Console, also refer to the [Nx Console troubleshooting docs](recipes/nx-console/console-troubleshooting)

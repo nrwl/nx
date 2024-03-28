@@ -38,7 +38,7 @@ describe('Storybook executors for Angular', () => {
         }
       );
       p.kill();
-    }, 200_000);
+    }, 300_000);
 
     // Increased timeout because 92% sealing asset processing TerserPlugin
     // TODO(meeroslav) this test is still flaky and breaks the PR runs. We need to investigate why.

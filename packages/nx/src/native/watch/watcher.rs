@@ -45,6 +45,7 @@ impl Watcher {
             ".nx/".into(),
             "vitest.config.ts.timestamp*.mjs".into(),
             "vite.config.ts.timestamp*.mjs".into(),
+            ".yarn/cache/".into(),
         ];
         if let Some(additional_globs) = additional_globs {
             globs.extend(additional_globs);

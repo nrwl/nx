@@ -10,13 +10,16 @@ import {
   addDepsToPackageJson,
   createNxJsonFile,
   initCloud,
+  markPackageJsonAsNxProject,
   printFinalMessage,
   runInstall,
   updateGitIgnore,
 } from './utils';
 import { connectExistingRepoToNxCloudPrompt } from '../../connect/connect-to-nx-cloud';
 
-type Options = Pick<InitArgs, 'nxCloud' | 'interactive' | 'cacheable'>;
+type Options = Pick<InitArgs, 'nxCloud' | 'interactive' | 'cacheable'> & {
+  legacy?: boolean;
+};
 
 export async function addNxToMonorepo(options: Options) {
   const repoRoot = process.cwd();
@@ -91,6 +94,14 @@ export async function addNxToMonorepo(options: Options) {
     cacheableOperations,
     scriptOutputs
   );
+  if (!options.legacy) {
+    packageJsonFiles.forEach((packageJsonPath) => {
+      markPackageJsonAsNxProject(
+        join(repoRoot, packageJsonPath),
+        cacheableOperations
+      );
+    });
+  }
 
   updateGitIgnore(repoRoot);
   addDepsToPackageJson(repoRoot);

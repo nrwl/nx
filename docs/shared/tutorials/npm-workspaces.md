@@ -20,7 +20,7 @@ Here's the source code of the final result for this tutorial.
 
 ## Starting Repository
 
-To get started, check out [the sample repository](https://github.com/nrwl/tuskydesigns) on your local machine:
+To get started, check out [the sample repository](https://github.com/nrwl/tuskydesign) on your local machine:
 
 ```shell
 git clone https://github.com/nrwl/tuskydesign.git

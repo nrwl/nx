@@ -18,6 +18,11 @@
       "type": "string",
       "description": "Name of the serve target to add. Defaults to 'serve-static'.",
       "default": "serve-static"
+    },
+    "spa": {
+      "type": "boolean",
+      "description": "Whether to set the 'spa' flag on the generated target.",
+      "default": true
     }
   },
   "required": ["buildTarget"]

@@ -220,8 +220,9 @@ async function buildCypressTargets(
       const outputs = getOutputs(projectRoot, cypressConfig, 'e2e');
       const inputs = getInputs(namedInputs);
 
-      targetGroups = { [options.ciTargetName]: [] };
-      const ciTargetGroup = targetGroups[options.ciTargetName];
+      const groupName = 'E2E (CI)';
+      targetGroups = { [groupName]: [] };
+      const ciTargetGroup = targetGroups[groupName];
       for (const file of specFiles) {
         const relativeSpecFilePath = normalizePath(relative(projectRoot, file));
         const targetName = options.ciTargetName + '--' + relativeSpecFilePath;

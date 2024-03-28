@@ -16,7 +16,9 @@ export async function addE2E(tree: Tree, options: NormalizedSchema) {
       typeof import('@nx/cypress')
     >('@nx/cypress', getPackageVersion(tree, 'nx'));
 
-    addFileServerTarget(tree, options, 'serve-static');
+    // TODO(colum): Remix needs a different approach to serve-static
+    // Likely via remix start
+    // addFileServerTarget(tree, options, 'serve-static');
 
     addProjectConfiguration(tree, options.e2eProjectName, {
       projectType: 'application',

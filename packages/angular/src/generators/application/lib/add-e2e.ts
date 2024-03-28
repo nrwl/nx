@@ -94,6 +94,7 @@ function addFileServerTarget(
       staticFilePath: isUsingApplicationBuilder
         ? joinPathFragments(options.outputPath, 'browser')
         : undefined,
+      spa: true,
     },
   };
   updateProjectConfiguration(tree, options.name, projectConfig);

@@ -45,9 +45,9 @@ export async function initHandler(options: InitArgs) {
     } else if (isNestCLI(packageJson)) {
       await addNxToNest(options, packageJson);
     } else if (isMonorepo(packageJson)) {
-      await addNxToMonorepo(options);
+      await addNxToMonorepo({ ...options, legacy: true });
     } else {
-      await addNxToNpmRepo(options);
+      await addNxToNpmRepo({ ...options, legacy: true });
     }
   } else {
     const useDotNxFolder = await prompt<{ useDotNxFolder: string }>([

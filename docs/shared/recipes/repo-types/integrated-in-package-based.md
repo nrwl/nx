@@ -4,7 +4,7 @@ In a package-based repository, you've intentionally opted out of some of Nx's fe
 
 To add an integrated project:
 
-1. Install the plugin you want to use (i.e. `npm install @nx/react`)
+1. Install the plugin you want to use (i.e. `nx add @nx/react`)
 2. Generate an application or library using that plugin (i.e. `nx g @nx/react:app`)
 
 The integrated project is now ready to use. Next, we'll discuss some of the changes that were applied to your codebase.
@@ -19,7 +19,7 @@ Even if the project you added only uses javascript, a `tsconfig.base.json` file 
 
 ## project.json
 
-The project itself will have a `project.json` file that defines all the tasks that can be run on the project. This includes tasks like `build`, `serve` and `test`. See [Executors and Configurations](/concepts/executors-and-configurations) for more information.
+The project itself will have [a `project.json` file](/reference/project-configuration#project-level-configuration-files) where some tasks might be explicitly defined while other [tasks will be inferred by the plugin](/concepts/inferred-tasks) used. This can include tasks like `build`, `serve` and `test`.
 
 ## Other Configuration Files
 

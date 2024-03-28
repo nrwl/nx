@@ -15,7 +15,8 @@ import {
 export function normalizeOptions(
   options: NxWebpackPluginOptions
 ): NormalizedNxWebpackPluginOptions {
-  const combinedOptions: Partial<NormalizedNxWebpackPluginOptions> = {};
+  const combinedPluginAndMaybeExecutorOptions: Partial<NormalizedNxWebpackPluginOptions> =
+    {};
   const isProd = process.env.NODE_ENV === 'production';
   const projectName = process.env.NX_TASK_TARGET_PROJECT;
   const targetName = process.env.NX_TASK_TARGET_TARGET;
@@ -26,6 +27,8 @@ export function normalizeOptions(
 
   const projectNode = projectGraph.nodes[projectName];
   const targetConfig = projectNode.data.targets[targetName];
+
+  normalizeRelativePaths(projectNode.data.root, options);
 
   // Merge options from `@nx/webpack:webpack` into plugin options.
   // Options from `@nx/webpack:webpack` take precedence.
@@ -46,12 +49,20 @@ export function normalizeOptions(
         targetConfig.configurations?.[configurationName]
       );
     }
-    Object.assign(combinedOptions, buildTargetOptions);
+    Object.assign(
+      combinedPluginAndMaybeExecutorOptions,
+      options,
+      // executor options take precedence (especially for overriding with CLI args)
+      buildTargetOptions
+    );
   } else {
-    Object.assign(combinedOptions, originalTargetOptions, options);
+    Object.assign(
+      combinedPluginAndMaybeExecutorOptions,
+      options,
+      // executor options take precedence (especially for overriding with CLI args)
+      originalTargetOptions
+    );
   }
-
-  normalizeRelativePaths(projectNode.data.root, options);
 
   const sourceRoot = projectNode.data.sourceRoot ?? projectNode.data.root;
 
@@ -62,44 +73,49 @@ export function normalizeOptions(
   }
 
   return {
-    ...options,
-    assets: options.assets
+    ...combinedPluginAndMaybeExecutorOptions,
+    assets: combinedPluginAndMaybeExecutorOptions.assets
       ? normalizeAssets(
-          options.assets,
+          combinedPluginAndMaybeExecutorOptions.assets,
           workspaceRoot,
           sourceRoot,
           projectNode.data.root
         )
       : [],
-    baseHref: options.baseHref ?? '/',
-    commonChunk: options.commonChunk ?? true,
-    compiler: options.compiler ?? 'babel',
+    baseHref: combinedPluginAndMaybeExecutorOptions.baseHref ?? '/',
+    commonChunk: combinedPluginAndMaybeExecutorOptions.commonChunk ?? true,
+    compiler: combinedPluginAndMaybeExecutorOptions.compiler ?? 'babel',
     configurationName,
-    deleteOutputPath: options.deleteOutputPath ?? true,
-    extractCss: options.extractCss ?? true,
+    deleteOutputPath:
+      combinedPluginAndMaybeExecutorOptions.deleteOutputPath ?? true,
+    extractCss: combinedPluginAndMaybeExecutorOptions.extractCss ?? true,
     fileReplacements: normalizeFileReplacements(
       workspaceRoot,
-      options.fileReplacements
+      combinedPluginAndMaybeExecutorOptions.fileReplacements
     ),
-    generateIndexHtml: options.generateIndexHtml ?? true,
-    main: options.main,
-    namedChunks: options.namedChunks ?? !isProd,
-    optimization: options.optimization ?? isProd,
-    outputFileName: options.outputFileName ?? 'main.js',
-    outputHashing: options.outputHashing ?? (isProd ? 'all' : 'none'),
-    outputPath: options.outputPath,
+    generateIndexHtml:
+      combinedPluginAndMaybeExecutorOptions.generateIndexHtml ?? true,
+    main: combinedPluginAndMaybeExecutorOptions.main,
+    namedChunks: combinedPluginAndMaybeExecutorOptions.namedChunks ?? !isProd,
+    optimization: combinedPluginAndMaybeExecutorOptions.optimization ?? isProd,
+    outputFileName:
+      combinedPluginAndMaybeExecutorOptions.outputFileName ?? 'main.js',
+    outputHashing:
+      combinedPluginAndMaybeExecutorOptions.outputHashing ??
+      (isProd ? 'all' : 'none'),
+    outputPath: combinedPluginAndMaybeExecutorOptions.outputPath,
     projectGraph,
     projectName,
     projectRoot: projectNode.data.root,
     root: workspaceRoot,
-    runtimeChunk: options.runtimeChunk ?? true,
-    scripts: options.scripts ?? [],
-    sourceMap: options.sourceMap ?? !isProd,
+    runtimeChunk: combinedPluginAndMaybeExecutorOptions.runtimeChunk ?? true,
+    scripts: combinedPluginAndMaybeExecutorOptions.scripts ?? [],
+    sourceMap: combinedPluginAndMaybeExecutorOptions.sourceMap ?? !isProd,
     sourceRoot,
-    styles: options.styles ?? [],
-    target: options.target,
+    styles: combinedPluginAndMaybeExecutorOptions.styles ?? [],
+    target: combinedPluginAndMaybeExecutorOptions.target,
     targetName,
-    vendorChunk: options.vendorChunk ?? !isProd,
+    vendorChunk: combinedPluginAndMaybeExecutorOptions.vendorChunk ?? !isProd,
   };
 }
 
@@ -107,7 +123,8 @@ export function normalizeAssets(
   assets: any[],
   root: string,
   sourceRoot: string,
-  projectRoot: string
+  projectRoot: string,
+  resolveRelativePathsToProjectRoot = true
 ): AssetGlobPattern[] {
   return assets.map((asset) => {
     if (typeof asset === 'string') {
@@ -141,7 +158,7 @@ export function normalizeAssets(
 
       const assetPath = normalizePath(asset.input);
       let resolvedAssetPath = resolve(root, assetPath);
-      if (asset.input.startsWith('.')) {
+      if (resolveRelativePathsToProjectRoot && asset.input.startsWith('.')) {
         const resolvedProjectRoot = resolve(root, projectRoot);
         resolvedAssetPath = resolve(resolvedProjectRoot, assetPath);
       }

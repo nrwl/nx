@@ -21,7 +21,7 @@ export async function addE2e(
     case 'cypress': {
       const hasNxExpoPlugin = hasExpoPlugin(tree);
       if (!hasNxExpoPlugin) {
-        webStaticServeGenerator(tree, {
+        await webStaticServeGenerator(tree, {
           buildTarget: `${options.projectName}:export`,
           targetName: 'serve-static',
         });

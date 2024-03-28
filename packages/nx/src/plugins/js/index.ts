@@ -88,7 +88,7 @@ export const createDependencies: CreateDependencies = (
   if (
     pluginConfig.analyzeLockfile &&
     lockFileExists(packageManager) &&
-    parsedLockFile
+    parsedLockFile.externalNodes
   ) {
     const lockFilePath = join(workspaceRoot, getLockFileName(packageManager));
     const lockFileContents = readFileSync(lockFilePath).toString();
