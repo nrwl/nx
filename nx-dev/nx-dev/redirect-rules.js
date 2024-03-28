@@ -774,6 +774,8 @@ const nested5minuteTutorialUrls = {
     '/getting-started/tutorials/npm-workspaces-tutorial',
   '/tutorials/integrated-repo-tutorial':
     '/getting-started/tutorials/integrated-repo-tutorial',
+  '/getting-started/tutorials/integrated-repo-tutorial':
+    '/getting-started/tutorials/epic-web-app-tutorial',
   '/tutorials/react-standalone-tutorial':
     '/getting-started/tutorials/react-standalone-tutorial',
   '/tutorials/angular-standalone-tutorial':

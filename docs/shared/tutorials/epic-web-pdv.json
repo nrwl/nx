@@ -1,0 +1,48 @@
+{
+  "project": {
+    "name": "epic-web-app-7d25",
+    "type": "lib",
+    "data": {
+      "root": ".",
+      "targets": {
+        "e2e": {
+          "options": {
+            "cwd": ".",
+            "command": "playwright test"
+          },
+          "cache": true,
+          "inputs": ["default", "^default"],
+          "outputs": [
+            "{projectRoot}/playwright-report",
+            "{projectRoot}/test-results"
+          ],
+          "executor": "nx:run-commands",
+          "configurations": {}
+        }
+      },
+      "sourceRoot": ".",
+      "name": "epic-web-app-7d25",
+      "projectType": "library",
+      "implicitDependencies": [],
+      "tags": []
+    }
+  },
+  "sourceMap": {
+    "root": ["package.json", "nx/core/package-json-workspaces"],
+    "targets": ["package.json", "nx/core/package-json-workspaces"],
+    "targets.e2e": ["playwright.config.ts", "@nx/playwright/plugin"],
+    "targets.e2e.options": ["playwright.config.ts", "@nx/playwright/plugin"],
+    "targets.e2e.cache": ["playwright.config.ts", "@nx/playwright/plugin"],
+    "targets.e2e.inputs": ["playwright.config.ts", "@nx/playwright/plugin"],
+    "targets.e2e.outputs": ["playwright.config.ts", "@nx/playwright/plugin"],
+    "targets.e2e.executor": ["playwright.config.ts", "@nx/playwright/plugin"],
+    "targets.e2e.options.cwd": [
+      "playwright.config.ts",
+      "@nx/playwright/plugin"
+    ],
+    "targets.e2e.options.command": [
+      "playwright.config.ts",
+      "@nx/playwright/plugin"
+    ]
+  }
+}
