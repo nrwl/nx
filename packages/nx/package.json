@@ -42,7 +42,7 @@
     "cli-spinners": "2.6.1",
     "cliui": "^8.0.1",
     "dotenv": "~16.3.1",
-    "dotenv-expand": "~10.0.0",
+    "dotenv-expand": "~11.0.0",
     "enquirer": "~2.3.6",
     "figures": "3.2.0",
     "flat": "^5.0.2",
