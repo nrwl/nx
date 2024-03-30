@@ -48,42 +48,89 @@ describe('npm-config', () => {
   describe('getNpmRegistry', () => {
     it('should return registry from publishConfig if it exists', async () => {
       expect(
-        await getNpmRegistry('package', cwd, {
-          registry: 'https://publish-config.com',
-        })
+        await getNpmRegistry(
+          'package',
+          cwd,
+          {
+            registry: 'https://publish-config.com',
+          },
+          undefined
+        )
       ).toEqual('https://publish-config.com');
     });
 
     it('should return scoped registry over publishConfig', async () => {
       expect(
-        await getNpmRegistry('@scope/package', cwd, {
-          registry: 'https://publish-config.com',
-        })
+        await getNpmRegistry(
+          '@scope/package',
+          cwd,
+          {
+            registry: 'https://publish-config.com',
+          },
+          undefined
+        )
+      ).toEqual('https://scoped-registry.com');
+    });
+
+    it('should return scoped registry over passed registry arg', async () => {
+      expect(
+        await getNpmRegistry(
+          '@scope/package',
+          cwd,
+          undefined,
+          'https://test-registry-arg.com'
+        )
       ).toEqual('https://scoped-registry.com');
     });
 
     it('should return scoped registry if it exists', async () => {
-      expect(await getNpmRegistry('@scope/package', cwd, undefined)).toEqual(
-        'https://scoped-registry.com'
-      );
+      expect(
+        await getNpmRegistry('@scope/package', cwd, undefined, undefined)
+      ).toEqual('https://scoped-registry.com');
     });
 
     it('should return registry if scoped registry does not exist', async () => {
-      expect(await getNpmRegistry('@missing/package', cwd, undefined)).toEqual(
-        'https://custom-registry.com'
-      );
+      expect(
+        await getNpmRegistry('@missing/package', cwd, undefined, undefined)
+      ).toEqual('https://custom-registry.com');
+    });
+
+    it('should return registry arg when passed if scoped registry does not exist', async () => {
+      expect(
+        await getNpmRegistry(
+          '@missing/package',
+          cwd,
+          undefined,
+          'https://test-registry-arg.com'
+        )
+      ).toEqual('https://test-registry-arg.com');
     });
 
     it('should return registry if package is not scoped', async () => {
-      expect(await getNpmRegistry('package', cwd, undefined)).toEqual(
-        'https://custom-registry.com'
-      );
+      expect(
+        await getNpmRegistry('package', cwd, undefined, undefined)
+      ).toEqual('https://custom-registry.com');
+    });
+
+    it('should return arg if package is not scoped and no publish config exists', async () => {
+      expect(
+        await getNpmRegistry(
+          'package',
+          cwd,
+          undefined,
+          'https://test-registry-arg.com'
+        )
+      ).toEqual('https://test-registry-arg.com');
     });
   });
 
   describe('getNpmTag', () => {
     it('should return tag', async () => {
-      expect(await getNpmTag(cwd)).toEqual('next');
+      expect(await getNpmTag(cwd, undefined)).toEqual('next');
+    });
+
+    it('should return tag from args over the npm config tag', async () => {
+      expect(await getNpmTag(cwd, 'beta')).toEqual('beta');
     });
   });
 });

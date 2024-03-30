@@ -71,14 +71,13 @@ export default async function runExecutor(
    * If not set in the options, then the actual registry and tag used for
    * publishing are detected automatically by npm.
    */
-  const registry =
-    options.registry ??
-    (await getNpmRegistry(
-      packageName,
-      context.root,
-      projectPackageJson.publishConfig
-    ));
-  const tag = options.tag ?? (await getNpmTag(context.root));
+  const registry = await getNpmRegistry(
+    packageName,
+    context.root,
+    projectPackageJson.publishConfig,
+    options.registry
+  );
+  const tag = options.tag ?? (await getNpmTag(context.root, options.tag));
 
   const npmViewCommandSegments = [
     `npm view ${packageName} versions dist-tags --json --registry=${registry}`,

@@ -161,14 +161,19 @@ To fix this you will either need to add a package.json file at that location, or
           }
 
           const metadata = options.currentVersionResolverMetadata;
-          const registry =
-            metadata?.registry ??
-            (await getNpmRegistry(
-              packageName,
-              workspaceRoot,
-              projectPackageJson.publishConfig
-            ));
-          const tag = metadata?.tag ?? (await getNpmTag(workspaceRoot));
+          const registryArg =
+            typeof metadata?.registry === 'string'
+              ? metadata.registry
+              : undefined;
+          const tagArg =
+            typeof metadata?.tag === 'string' ? metadata.tag : undefined;
+          const registry = await getNpmRegistry(
+            packageName,
+            workspaceRoot,
+            projectPackageJson.publishConfig,
+            registryArg
+          );
+          const tag = await getNpmTag(workspaceRoot, tagArg);
 
           /**
            * If the currentVersionResolver is set to registry, and the projects are not independent, we only want to make the request once for the whole batch of projects.
