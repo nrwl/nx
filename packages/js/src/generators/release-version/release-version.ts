@@ -2,7 +2,6 @@ import {
   ProjectGraphProjectNode,
   Tree,
   formatFiles,
-  joinPathFragments,
   output,
   readJson,
   updateJson,
@@ -10,9 +9,8 @@ import {
   writeJson,
 } from '@nx/devkit';
 import * as chalk from 'chalk';
-import { existsSync } from 'fs';
 import { exec } from 'node:child_process';
-import { relative } from 'node:path';
+import { join, relative } from 'node:path';
 import { IMPLICIT_DEFAULT_RELEASE_GROUP } from 'nx/src/command-line/release/config/config';
 import {
   getFirstGitCommit,
@@ -32,7 +30,7 @@ import {
 import { interpolate } from 'nx/src/tasks-runner/utils';
 import * as ora from 'ora';
 import { prerelease } from 'semver';
-import { getNpmRegistry, getNpmTag } from '../../utils/npm-config';
+import { parseRegistryOptions } from '../../utils/npm-config';
 import { ReleaseVersionGeneratorSchema } from './schema';
 import { resolveLocalPackageDependencies } from './utils/resolve-local-package-dependencies';
 import { updateLockFile } from './utils/update-lock-file';
@@ -113,7 +111,7 @@ Valid values are: ${validReleaseVersionPrefixes
         );
       }
 
-      const packageJsonPath = joinPathFragments(packageRoot, 'package.json');
+      const packageJsonPath = join(packageRoot, 'package.json');
       const workspaceRelativePackageJsonPath = relative(
         workspaceRoot,
         packageJsonPath
@@ -148,18 +146,6 @@ To fix this you will either need to add a package.json file at that location, or
 
       switch (options.currentVersionResolver) {
         case 'registry': {
-          if (existsSync(joinPathFragments(packageRoot, '.npmrc'))) {
-            output.warn({
-              title: `Ignoring .npmrc file detected in the package root`,
-              bodyLines: [
-                `A .npmrc file was detected in ${packageRoot}.`,
-                `npm does not support nested .npmrc files, so it will be ignored.`,
-                `Only the .npmrc file at the root of the workspace will be used.`,
-                `To customize the registry or tag for specific packages, see https://nx.dev/recipes/nx-release/configure-custom-registries.`,
-              ],
-            });
-          }
-
           const metadata = options.currentVersionResolverMetadata;
           const registryArg =
             typeof metadata?.registry === 'string'
@@ -167,13 +153,20 @@ To fix this you will either need to add a package.json file at that location, or
               : undefined;
           const tagArg =
             typeof metadata?.tag === 'string' ? metadata.tag : undefined;
-          const registry = await getNpmRegistry(
-            packageName,
-            workspaceRoot,
-            projectPackageJson.publishConfig,
-            registryArg
-          );
-          const tag = await getNpmTag(workspaceRoot, tagArg);
+
+          const { registry, tag, registryConfigKey } =
+            await parseRegistryOptions(
+              workspaceRoot,
+              {
+                root: packageRoot,
+                manifest: projectPackageJson,
+                manifestPath: packageJsonPath,
+              },
+              {
+                registry: registryArg,
+                tag: tagArg,
+              }
+            );
 
           /**
            * If the currentVersionResolver is set to registry, and the projects are not independent, we only want to make the request once for the whole batch of projects.
@@ -196,7 +189,7 @@ To fix this you will either need to add a package.json file at that location, or
               // Must be non-blocking async to allow spinner to render
               currentVersion = await new Promise<string>((resolve, reject) => {
                 exec(
-                  `npm view ${packageName} version --registry=${registry} --tag=${tag}`,
+                  `npm view ${packageName} version --"${registryConfigKey}=${registry}" --tag=${tag}`,
                   (error, stdout, stderr) => {
                     if (error) {
                       return reject(error);
@@ -493,34 +486,30 @@ To fix this you will either need to add a package.json file at that location, or
             `The dependent project "${dependentProject.source}" does not have a packageRoot available. Please report this issue on https://github.com/nrwl/nx`
           );
         }
-        updateJson(
-          tree,
-          joinPathFragments(dependentPackageRoot, 'package.json'),
-          (json) => {
-            // Auto (i.e.infer existing) by default
-            let versionPrefix = options.versionPrefix ?? 'auto';
+        updateJson(tree, join(dependentPackageRoot, 'package.json'), (json) => {
+          // Auto (i.e.infer existing) by default
+          let versionPrefix = options.versionPrefix ?? 'auto';
 
-            // For auto, we infer the prefix based on the current version of the dependent
-            if (versionPrefix === 'auto') {
-              versionPrefix = ''; // we don't want to end up printing auto
+          // For auto, we infer the prefix based on the current version of the dependent
+          if (versionPrefix === 'auto') {
+            versionPrefix = ''; // we don't want to end up printing auto
 
-              const current =
-                json[dependentProject.dependencyCollection][packageName];
-              if (current) {
-                const prefixMatch = current.match(/^[~^]/);
-                if (prefixMatch) {
-                  versionPrefix = prefixMatch[0];
-                } else {
-                  versionPrefix = '';
-                }
+            const current =
+              json[dependentProject.dependencyCollection][packageName];
+            if (current) {
+              const prefixMatch = current.match(/^[~^]/);
+              if (prefixMatch) {
+                versionPrefix = prefixMatch[0];
+              } else {
+                versionPrefix = '';
               }
             }
-            json[dependentProject.dependencyCollection][
-              packageName
-            ] = `${versionPrefix}${newVersion}`;
-            return json;
           }
-        );
+          json[dependentProject.dependencyCollection][
+            packageName
+          ] = `${versionPrefix}${newVersion}`;
+          return json;
+        });
       }
     }
 

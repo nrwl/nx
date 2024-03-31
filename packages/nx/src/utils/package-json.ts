@@ -59,10 +59,7 @@ export interface PackageJson {
     | {
         packages: string[];
       };
-  publishConfig?: {
-    access?: string;
-    registry?: string;
-  };
+  publishConfig?: Record<string, string>;
 
   // Nx Project Configuration
   nx?: NxProjectPackageJsonConfiguration;

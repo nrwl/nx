@@ -1,6 +1,6 @@
 # Configure Custom Registries
 
-For publishing javaScript packages, Nx Release uses `npm` under the hood, which defaults to publishing to the `npm` registry (`https://registry.npmjs.org/`). If you need to publish to a different registry, you can configure the registry in the `.npmrc` file in the root of your workspace, or at the project level in either the `package.json` file or the project configuration.
+For publishing javaScript packages, Nx Release uses `npm` under the hood, which defaults to publishing to the `npm` registry (`https://registry.npmjs.org/`). If you need to publish to a different registry, you can configure the registry in the `.npmrc` file in the root of your workspace or at the project level in the project configuration.
 
 # Set the Registry in the Root .npmrc File
 

@@ -1,8 +1,8 @@
-import { ExecutorContext, joinPathFragments, readJsonFile } from '@nx/devkit';
+import { ExecutorContext, readJsonFile } from '@nx/devkit';
 import { execSync } from 'child_process';
-import { existsSync } from 'fs';
 import { env as appendLocalEnv } from 'npm-run-path';
-import { getNpmRegistry, getNpmTag } from '../../utils/npm-config';
+import { join } from 'path';
+import { parseRegistryOptions } from '../../utils/npm-config';
 import { logTar } from './log-tar';
 import { PublishExecutorSchema } from './schema';
 import chalk = require('chalk');
@@ -34,12 +34,12 @@ export default async function runExecutor(
   const projectConfig =
     context.projectsConfigurations!.projects[context.projectName!]!;
 
-  const packageRoot = joinPathFragments(
+  const packageRoot = join(
     context.root,
     options.packageRoot ?? projectConfig.root
   );
 
-  const packageJsonPath = joinPathFragments(packageRoot, 'package.json');
+  const packageJsonPath = join(packageRoot, 'package.json');
   const projectPackageJson = readJsonFile(packageJsonPath);
   const packageName = projectPackageJson.name;
 
@@ -58,32 +58,24 @@ export default async function runExecutor(
     };
   }
 
-  if (existsSync(joinPathFragments(packageRoot, '.npmrc'))) {
-    console.warn(
-      `Ignoring .npmrc file detected in the package root. Nested .npmrc files are not supported by npm. Only the .npmrc file at the root of the workspace will be used. To customize the registry or tag for specific packages, see https://nx.dev/recipes/nx-release/configure-custom-registries.`
-    );
-  }
-
-  /*
-   * The registry obtained here is just used for logging. The tag is used for
-   * logging as well as updating the dist tag, if necessary.
-   *
-   * If not set in the options, then the actual registry and tag used for
-   * publishing are detected automatically by npm.
-   */
-  const registry = await getNpmRegistry(
-    packageName,
+  const { registry, tag, registryConfigKey } = await parseRegistryOptions(
     context.root,
-    projectPackageJson.publishConfig,
-    options.registry
+    {
+      root: packageRoot,
+      manifest: projectPackageJson,
+      manifestPath: packageJsonPath,
+    },
+    {
+      registry: options.registry,
+      tag: options.tag,
+    }
   );
-  const tag = options.tag ?? (await getNpmTag(context.root, options.tag));
 
   const npmViewCommandSegments = [
-    `npm view ${packageName} versions dist-tags --json --registry=${registry}`,
+    `npm view ${packageName} versions dist-tags --json --"${registryConfigKey}=${registry}"`,
   ];
   const npmDistTagAddCommandSegments = [
-    `npm dist-tag add ${packageName}@${projectPackageJson.version} ${tag} --registry=${registry}`,
+    `npm dist-tag add ${packageName}@${projectPackageJson.version} ${tag} --"${registryConfigKey}=${registry}"`,
   ];
 
   /**
@@ -206,7 +198,7 @@ export default async function runExecutor(
   }
 
   const npmPublishCommandSegments = [
-    `npm publish ${packageRoot} --json --registry=${registry} --tag=${tag}`,
+    `npm publish ${packageRoot} --json --"${registryConfigKey}=${registry}" --tag=${tag}`,
   ];
 
   if (options.otp) {
