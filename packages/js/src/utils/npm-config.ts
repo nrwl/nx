@@ -18,7 +18,7 @@ export async function parseRegistryOptions(
 ): Promise<{ registry: string; tag: string; registryConfigKey: string }> {
   if (existsSync(joinPathFragments(pkg.root, '.npmrc'))) {
     logWarnFn(
-      `Ignoring .npmrc file detected in the package root. Nested .npmrc files are not supported by npm. Only the .npmrc file at the root of the workspace will be used. To customize the registry or tag for specific packages, see https://nx.dev/recipes/nx-release/configure-custom-registries.`
+      `\nIgnoring .npmrc file detected in the package root. Nested .npmrc files are not supported by npm. Only the .npmrc file at the root of the workspace will be used. To customize the registry or tag for specific packages, see https://nx.dev/recipes/nx-release/configure-custom-registries.`
     );
   }
 
@@ -37,7 +37,7 @@ export async function parseRegistryOptions(
   // set a 'registry' in 'publishConfig' for a scoped package.
   if (publishConfigRegistry || pkg.manifest.publishConfig?.registry) {
     logWarnFn(
-      `Registry detected in the 'publishConfig' ${pkg.manifestPath}. Configuring the registry this way prevents it from being overridden via the --registry argument. To customize the registry or tag for specific packages in a way that can be overridden, see https://nx.dev/recipes/nx-release/configure-custom-registries.`
+      `\nRegistry detected in the 'publishConfig' ${pkg.manifestPath}. Configuring the registry this way prevents it from being overridden via the --registry argument. To customize the registry or tag for specific packages in a way that can be overridden, see https://nx.dev/recipes/nx-release/configure-custom-registries.`
     );
   }
 
