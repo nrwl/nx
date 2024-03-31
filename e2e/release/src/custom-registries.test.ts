@@ -40,15 +40,16 @@ describe('nx release - custom npm registries', () => {
 
     const npmrcEntries = [
       `@${scope}:registry=http://scoped-registry.com`,
-      `registry=${e2eRegistryUrl}`,
       'tag=next',
+      // We can't test overriding the default registry in this file since our e2e tests override it anyway.
+      // Instead, we'll just assert that the e2e registry is used anytime we expect the default registry
     ];
     createFile('.npmrc', npmrcEntries.join('\n'));
 
-    const scopedWithPublishConfig = newPackage('pkg1', {
+    const scopedWithPublishConfig = newPackage('pkg-scoped-publish-config', {
       scoped: true,
       publishConfig: {
-        registry: 'http://ignored-registry.com',
+        [`@${scope}:registry`]: 'http://publish-config-registry.com',
       },
     });
 
@@ -56,25 +57,28 @@ describe('nx release - custom npm registries', () => {
       `release publish -p ${scopedWithPublishConfig} --dry-run`
     );
     expect(publishResultScopedWithPublishConfig).toContain(
-      'Would publish to http://scoped-registry.com with tag "next"'
+      'Would publish to http://publish-config-registry.com with tag "next"'
     );
 
-    const scopedWithPublishConfigAndProjectConfig = newPackage('pkg2', {
-      scoped: true,
-      publishConfig: {
-        registry: 'http://ignored-registry.com',
-      },
-      projectConfig: {
-        registry: 'http://ignored-registry.com',
-        tag: 'alpha',
-      },
-    });
+    const scopedWithPublishConfigAndProjectConfig = newPackage(
+      'pkg-scoped-publish-config-project-config',
+      {
+        scoped: true,
+        publishConfig: {
+          [`@${scope}:registry`]: 'http://publish-config-registry.com',
+        },
+        projectConfig: {
+          registry: 'http://ignored-registry.com',
+          tag: 'alpha',
+        },
+      }
+    );
 
     const publishResultScopedWithPublishConfigAndProjectConfig = runCLI(
       `release publish -p ${scopedWithPublishConfigAndProjectConfig} --dry-run`
     );
     expect(publishResultScopedWithPublishConfigAndProjectConfig).toContain(
-      'Would publish to http://scoped-registry.com with tag "alpha"'
+      'Would publish to http://publish-config-registry.com with tag "alpha"'
     );
 
     const publishResultScopedWithPublishConfigAndProjectConfigAndArg = runCLI(
@@ -82,9 +86,11 @@ describe('nx release - custom npm registries', () => {
     );
     expect(
       publishResultScopedWithPublishConfigAndProjectConfigAndArg
-    ).toContain('Would publish to http://scoped-registry.com with tag "alpha"');
+    ).toContain(
+      'Would publish to http://publish-config-registry.com with tag "alpha"'
+    );
 
-    const scopedNoOtherConfig = newPackage('pkg3', {
+    const scopedNoOtherConfig = newPackage('pkg-scoped-no-other-config', {
       scoped: true,
     });
 
@@ -96,21 +102,24 @@ describe('nx release - custom npm registries', () => {
     );
 
     const publishResultScopedWithRegistryArg = runCLI(
-      `release publish -p ${scopedNoOtherConfig} --dry-run --registry=http://ignored-registry.com`
+      `release publish -p ${scopedNoOtherConfig} --dry-run --registry=http://scope-override-registry.com`
     );
     expect(publishResultScopedWithRegistryArg).toContain(
-      'Would publish to http://scoped-registry.com with tag "next"'
+      'Would publish to http://scope-override-registry.com with tag "next"'
     );
 
-    const noScopeWithPublishConfigAndProjectConfig = newPackage('pkg4', {
-      publishConfig: {
-        registry: 'http://publish-config-registry.com',
-      },
-      projectConfig: {
-        registry: 'http://ignored-registry.com',
-        tag: 'alpha',
-      },
-    });
+    const noScopeWithPublishConfigAndProjectConfig = newPackage(
+      'pkg-no-scope-publish-config-project-config',
+      {
+        publishConfig: {
+          registry: 'http://publish-config-registry.com',
+        },
+        projectConfig: {
+          registry: 'http://ignored-registry.com',
+          tag: 'alpha',
+        },
+      }
+    );
 
     const publishResultNoScopeWithPublishConfigAndProjectConfig = runCLI(
       `release publish -p ${noScopeWithPublishConfigAndProjectConfig} --dry-run`
@@ -119,8 +128,6 @@ describe('nx release - custom npm registries', () => {
       'Would publish to http://publish-config-registry.com with tag "alpha"'
     );
 
-    // custom registry url will be ignored because publishConfig takes precedence,
-    // but tag arg will properly override that from the project config
     const publishResultNoScopeWithPublishConfigAndProjectConfigAndArg = runCLI(
       `release publish -p ${noScopeWithPublishConfigAndProjectConfig} --dry-run --registry=http://ignored-registry.com --tag=beta`
     );
@@ -130,7 +137,7 @@ describe('nx release - custom npm registries', () => {
       `Would publish to http://publish-config-registry.com with tag "beta"`
     );
 
-    const noScopeNoOtherConfig = newPackage('pkg6', {});
+    const noScopeNoOtherConfig = newPackage('pkg-no-scope-no-config', {});
 
     const publishResultNoScope = runCLI(
       `release publish -p ${noScopeNoOtherConfig} --dry-run`
@@ -144,6 +151,47 @@ describe('nx release - custom npm registries', () => {
     );
     expect(publishResultNoScopeWithRegistryArg).toContain(
       `Would publish to ${customRegistryUrl} with tag "alpha"`
+    );
+
+    const scopeWithProjectConfig = newPackage('pkg-scope-project-config', {
+      scoped: true,
+      projectConfig: {
+        registry: 'http://scope-override-registry.com',
+        tag: 'alpha',
+      },
+    });
+
+    const publishResultScopedWithProjectConfig = runCLI(
+      `release publish -p ${scopeWithProjectConfig} --dry-run`
+    );
+    expect(publishResultScopedWithProjectConfig).toContain(
+      'Would publish to http://scope-override-registry.com with tag "alpha"'
+    );
+    const publishResultScopedWithProjectConfigAndArg = runCLI(
+      `release publish -p ${scopeWithProjectConfig} --dry-run --registry=http://scope-override-arg-registry.com --tag=prev`
+    );
+    expect(publishResultScopedWithProjectConfigAndArg).toContain(
+      'Would publish to http://scope-override-arg-registry.com with tag "prev"'
+    );
+
+    const noScopeWithProjectConfig = newPackage('pkg-no-scope-project-config', {
+      projectConfig: {
+        registry: 'http://default-override-registry.com',
+        tag: 'alpha',
+      },
+    });
+
+    const publishResultNoScopeWithProjectConfig = runCLI(
+      `release publish -p ${noScopeWithProjectConfig} --dry-run`
+    );
+    expect(publishResultNoScopeWithProjectConfig).toContain(
+      'Would publish to http://default-override-registry.com with tag "alpha"'
+    );
+    const publishResultNoScopeWithProjectConfigAndArg = runCLI(
+      `release publish -p ${noScopeWithProjectConfig} --dry-run --registry=http://default-override-arg-registry.com --tag=prev`
+    );
+    expect(publishResultNoScopeWithProjectConfigAndArg).toContain(
+      'Would publish to http://default-override-arg-registry.com with tag "prev"'
     );
 
     runCLI(`generate setup-verdaccio`);
@@ -160,58 +208,84 @@ describe('nx release - custom npm registries', () => {
     ];
     updateFile('.npmrc', npmrcEntries2.join('\n'));
 
-    const actualScopedWithPublishConfigAndProjectConfig = newPackage('pkg7', {
-      scoped: true,
-      publishConfig: {
-        registry: 'http://ignored-registry.com',
-      },
-      projectConfig: {
-        registry: 'http://ignored-registry.com',
-        tag: 'beta',
-        version: {
-          tag: 'alpha', // alpha tag will be passed via publish CLI arg to override the above 'beta'
+    const actualScopedWithPublishConfigAndProjectConfig = newPackage(
+      'pkg-actual-scoped-publish-config-project-config',
+      {
+        scoped: true,
+        publishConfig: {
+          [`@${scope}:registry`]: e2eRegistryUrl,
         },
-      },
-    });
+        projectConfig: {
+          registry: 'http://ignored-registry.com',
+          tag: 'beta',
+          version: {
+            tag: 'alpha', // alpha tag will be passed via publish CLI arg to override the above 'beta'
+          },
+        },
+      }
+    );
 
     const actualPublishResultScoped = runCLI(
       `release publish -p ${actualScopedWithPublishConfigAndProjectConfig} --registry=http://ignored-registry.com --tag=alpha`
     );
 
-    const actualNoScopeWithPublishConfig = newPackage('pkg8', {
-      publishConfig: {
-        registry: customRegistryUrl,
-      },
-      projectConfig: {}, // this will still set the current version resolver to 'registry', it just won't set the registry url
-    });
-
-    const actualPublishResultNoScopeWithPublishConfig = runCLI(
-      `release publish -p ${actualNoScopeWithPublishConfig} --registry=http://ignored-registry.com`
+    const actualScopedWithWrongPublishConfig = newPackage(
+      'pkg-actual-scoped-wrong-publish-config',
+      {
+        scoped: true,
+        publishConfig: {
+          // to properly override the registry for a scoped package, the key needs to include the scope
+          registry: 'http://ignored-registry.com',
+        },
+        projectConfig: {}, // this will still set the current version resolver to 'registry', it just won't set the registry url
+      }
     );
 
-    const actualNoScopeWithProjectConfig = newPackage('pkg9', {
-      projectConfig: {
-        registry: customRegistryUrl,
-        tag: 'beta',
-      },
-    });
+    const actualPublishResultScopedWithWrongPublishConfig = runCLI(
+      `release publish -p ${actualScopedWithWrongPublishConfig}`
+    );
+
+    const actualNoScopeWithProjectConfig = newPackage(
+      'pkg-actual-no-scope-project-config',
+      {
+        projectConfig: {
+          registry: customRegistryUrl,
+          tag: 'beta',
+        },
+      }
+    );
 
     const actualPublishResultNoScopeWithProjectConfig = runCLI(
       `release publish -p ${actualNoScopeWithProjectConfig}`
     );
 
+    const actualScopedWithProjectConfig = newPackage(
+      'pkg-actual-scoped-project-config',
+      {
+        scoped: true,
+        projectConfig: {
+          registry: e2eRegistryUrl,
+          tag: 'prev',
+        },
+      }
+    );
+
+    const actualPublishResultScopedWithProjectConfig = runCLI(
+      `release publish -p ${actualScopedWithProjectConfig}`
+    );
+
     const versionResult = runCLI(
-      `release version 999.9.9 -p ${actualScopedWithPublishConfigAndProjectConfig},${actualNoScopeWithPublishConfig},${actualNoScopeWithProjectConfig} --dry-run`,
+      `release version 999.9.9 -p "${actualScopedWithPublishConfigAndProjectConfig},${actualScopedWithWrongPublishConfig},${actualNoScopeWithProjectConfig},${actualScopedWithProjectConfig}" --dry-run`,
       { silenceError: true } // don't error on this command because the verdaccio process needs to be killed regardless before the test exits
     );
 
     await killProcessAndPorts(process.pid, verdaccioPort);
 
     expect(actualPublishResultScoped).toContain(
-      `Published to ${customRegistryUrl} with tag "alpha"`
+      `Published to ${e2eRegistryUrl} with tag "alpha"`
     );
 
-    expect(actualPublishResultNoScopeWithPublishConfig).toContain(
+    expect(actualPublishResultScopedWithWrongPublishConfig).toContain(
       `Published to ${customRegistryUrl} with tag "next"`
     );
 
@@ -219,10 +293,14 @@ describe('nx release - custom npm registries', () => {
       `Published to ${customRegistryUrl} with tag "beta"`
     );
 
+    expect(actualPublishResultScopedWithProjectConfig).toContain(
+      `Published to ${e2eRegistryUrl} with tag "prev"`
+    );
+
     expect(
       versionResult.match(
         new RegExp(
-          `Resolved the current version as 0.0.0 for tag "alpha" from registry ${customRegistryUrl}`,
+          `Resolved the current version as 0.0.0 for tag "alpha" from registry ${e2eRegistryUrl}`,
           'g'
         )
       ).length
@@ -245,15 +323,22 @@ describe('nx release - custom npm registries', () => {
         )
       ).length
     ).toBe(1);
+
+    expect(
+      versionResult.match(
+        new RegExp(
+          `Resolved the current version as 0.0.0 for tag "prev" from registry ${e2eRegistryUrl}`,
+          'g'
+        )
+      ).length
+    ).toBe(1);
   }, 600000);
 
   function newPackage(
     name: string,
     options: {
       scoped?: true;
-      publishConfig?: {
-        registry?: string;
-      };
+      publishConfig?: Record<string, string>;
       projectConfig?: {
         registry?: string;
         tag?: string;
