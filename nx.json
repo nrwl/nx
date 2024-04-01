@@ -218,9 +218,9 @@
     }
   ],
   "nxCloudAccessToken": "YmZiOWQyNzctOThiZC00MjYwLWI3YTAtZDA3MDg4YWY1YTExfHJlYWQ=",
-  "nxCloudUrl": "http://localhost:4203",
+  "nxCloudUrl": "https://snapshot.nx.app",
   "parallel": 1,
   "cacheDirectory": "/tmp/nx-cache",
-  "bust": 7007,
+  "bust": 7008,
   "defaultBase": "master"
 }
