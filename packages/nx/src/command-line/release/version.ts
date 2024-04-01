@@ -60,7 +60,7 @@ export interface ReleaseVersionGeneratorSchema {
   releaseGroup: ReleaseGroupWithName;
   projectGraph: ProjectGraph;
   specifier?: string;
-  specifierSource?: 'prompt' | 'conventional-commits';
+  specifierSource?: 'prompt' | 'conventional-commits' | 'version-plans';
   preid?: string;
   packageRoot?: string;
   currentVersionResolver?: 'registry' | 'disk' | 'git-tag';

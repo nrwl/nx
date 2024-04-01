@@ -334,6 +334,7 @@
     "enquirer": "~2.3.6",
     "fast-glob": "3.2.7",
     "framer-motion": "^4.1.17",
+    "front-matter": "^4.0.2",
     "glob": "7.1.4",
     "history": "^5.3.0",
     "json-schema-to-typescript": "^10.1.5",

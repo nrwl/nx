@@ -29,11 +29,18 @@ import {
 } from 'nx/src/command-line/release/version';
 import { interpolate } from 'nx/src/tasks-runner/utils';
 import * as ora from 'ora';
-import { prerelease } from 'semver';
+import { ReleaseType, gt, prerelease } from 'semver';
 import { parseRegistryOptions } from '../../utils/npm-config';
 import { ReleaseVersionGeneratorSchema } from './schema';
 import { resolveLocalPackageDependencies } from './utils/resolve-local-package-dependencies';
 import { updateLockFile } from './utils/update-lock-file';
+import {
+  GroupVersionPlan,
+  ProjectsVersionPlan,
+  VersionPlan,
+  getVersionPlansForFixedGroup,
+  getVersionPlansForIndependentGroup,
+} from './utils/version-plans';
 
 export async function releaseVersionGenerator(
   tree: Tree,
@@ -101,6 +108,9 @@ Valid values are: ${validReleaseVersionPrefixes
     let specifier: string | null | undefined = options.specifier
       ? options.specifier
       : undefined;
+
+    // only parse the version plans once, then keep them in memory for the rest of the projects
+    let versionPlans: VersionPlan[] = undefined;
 
     for (const project of projects) {
       const projectName = project.name;
@@ -400,6 +410,59 @@ To fix this you will either need to add a package.json file at that location, or
                 `${maybeLogReleaseGroup(
                   `What is the exact version for the ${projects.length} matched project(s)`
                 )}?`
+              );
+            }
+            break;
+          }
+          case 'version-plans': {
+            if (!versionPlans) {
+              if (options.releaseGroup.projectsRelationship === 'independent') {
+                versionPlans = await getVersionPlansForIndependentGroup(
+                  options.releaseGroup.name,
+                  projects.map((p) => p.name)
+                );
+              } else {
+                versionPlans = await getVersionPlansForFixedGroup(
+                  options.releaseGroup.name
+                );
+              }
+            }
+
+            if (options.releaseGroup.projectsRelationship === 'independent') {
+              specifier = (versionPlans as ProjectsVersionPlan[]).reduce(
+                (spec: ReleaseType, plan: ProjectsVersionPlan) => {
+                  if (!spec) {
+                    return plan.projectVersionBumps[projectName];
+                  }
+                  if (plan.projectVersionBumps[projectName]) {
+                    return gt(plan.projectVersionBumps[projectName], spec)
+                      ? plan.projectVersionBumps[projectName]
+                      : spec;
+                  }
+                  return spec;
+                },
+                null
+              );
+            } else {
+              specifier = (versionPlans as GroupVersionPlan[]).reduce(
+                (spec: ReleaseType, plan: GroupVersionPlan) => {
+                  if (!spec) {
+                    return plan.groupVersionBump;
+                  }
+                  return gt(plan.groupVersionBump, spec)
+                    ? plan.groupVersionBump
+                    : spec;
+                },
+                null
+              );
+            }
+
+            if (!specifier) {
+              specifier = null;
+              log(`🚫 No changes were detected within version plans.`);
+            } else {
+              log(
+                `📄 Resolved the specifier as "${specifier}" using version plans.`
               );
             }
             break;
