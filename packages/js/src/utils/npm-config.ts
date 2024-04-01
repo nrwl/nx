@@ -19,7 +19,7 @@ export async function parseRegistryOptions(
   if (existsSync(npmRcPath)) {
     const relativeNpmRcPath = relative(cwd, npmRcPath);
     logWarnFn(
-      `\nIgnoring .npmrc file detected in the package root: ${relativeNpmRcPath}. Nested .npmrc files are not supported by npm. Only the .npmrc file at the root of the workspace will be used. To customize the registry or tag for specific packages, see https://nx.dev/recipes/nx-release/configure-custom-registries`
+      `\nIgnoring .npmrc file detected in the package root: ${relativeNpmRcPath}. Nested .npmrc files are not supported by npm. Only the .npmrc file at the root of the workspace will be used. To customize the registry or tag for specific packages, see https://nx.dev/recipes/nx-release/configure-custom-registries\n`
     );
   }
 
@@ -43,7 +43,7 @@ export async function parseRegistryOptions(
       join(pkg.packageRoot, 'package.json')
     );
     logWarnFn(
-      `\nRegistry detected in the 'publishConfig' of the package manifest: ${relativePackageJsonPath}. Configuring the registry this way prevents it from being overridden via the --registry argument. To customize the registry or tag for specific packages in a way that can be overridden, see https://nx.dev/recipes/nx-release/configure-custom-registries`
+      `\nRegistry detected in the 'publishConfig' of the package manifest: ${relativePackageJsonPath}. Configuring the registry this way prevents it from being overridden via the --registry argument. To customize the registry or tag for specific packages in a way that can be overridden, see https://nx.dev/recipes/nx-release/configure-custom-registries\n`
     );
   }
 

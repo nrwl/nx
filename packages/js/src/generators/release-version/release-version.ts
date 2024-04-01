@@ -150,6 +150,9 @@ To fix this you will either need to add a package.json file at that location, or
           const tagArg =
             typeof metadata?.tag === 'string' ? metadata.tag : undefined;
 
+          const warnFn = (message: string) => {
+            console.log(chalk.keyword('orange')(message));
+          };
           const { registry, tag, registryConfigKey } =
             await parseRegistryOptions(
               workspaceRoot,
@@ -160,7 +163,8 @@ To fix this you will either need to add a package.json file at that location, or
               {
                 registry: registryArg,
                 tag: tagArg,
-              }
+              },
+              warnFn
             );
 
           /**

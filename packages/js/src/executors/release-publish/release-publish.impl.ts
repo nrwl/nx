@@ -58,6 +58,9 @@ export default async function runExecutor(
     };
   }
 
+  const warnFn = (message: string) => {
+    console.log(chalk.keyword('orange')(message));
+  };
   const { registry, tag, registryConfigKey } = await parseRegistryOptions(
     context.root,
     {
@@ -67,7 +70,8 @@ export default async function runExecutor(
     {
       registry: options.registry,
       tag: options.tag,
-    }
+    },
+    warnFn
   );
 
   const npmViewCommandSegments = [
