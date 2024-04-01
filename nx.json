@@ -218,7 +218,7 @@
     }
   ],
   "nxCloudAccessToken": "YmZiOWQyNzctOThiZC00MjYwLWI3YTAtZDA3MDg4YWY1YTExfHJlYWQ=",
-  "nxCloudUrl": "https://176c30a1dfa7.ngrok.app",
+  "nxCloudUrl": "http://localhost:4203",
   "parallel": 1,
   "cacheDirectory": "/tmp/nx-cache",
   "bust": 7007,
