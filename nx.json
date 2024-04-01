@@ -221,6 +221,6 @@
   "nxCloudUrl": "https://176c30a1dfa7.ngrok.app",
   "parallel": 1,
   "cacheDirectory": "/tmp/nx-cache",
-  "bust": 7005,
+  "bust": 7007,
   "defaultBase": "master"
 }
