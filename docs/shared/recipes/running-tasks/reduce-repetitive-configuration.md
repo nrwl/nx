@@ -169,7 +169,7 @@ If you scan through these three files, they look very similar. The only differen
 
 ## Reduce Configuration with targetDefaults
 
-Let's use the `targetDefaults` property in `nx.json` to reduce some of this duplicate configuration code.
+Let's use [the `targetDefaults` property](/reference/nx-json#target-defaults) in `nx.json` to reduce some of this duplicate configuration code.
 
 ```json {% fileName="nx.json" %}
 {
@@ -275,6 +275,10 @@ Now the `project.json` files can be reduced to this:
 
 {% /tab %}
 {% /tabs %}
+
+{% callout type="warning" title="Target defaults" %}
+This recipe assumes every target with the same name uses the same executor. If you have targets with the same name using different executors and you're providing target defaults for executor options, don't place the executor options under a default target using the target name as the key. Instead, separate target default configurations can be added using the executors as the keys, each with their specific configuration.
+{% /callout %}
 
 ## Ramifications
 

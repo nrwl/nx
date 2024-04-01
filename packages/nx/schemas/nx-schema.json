@@ -270,7 +270,9 @@
                   {
                     "type": "array",
                     "description": "The projects that the targets belong to.",
-                    "items": { "type": "string" }
+                    "items": {
+                      "type": "string"
+                    }
                   }
                 ]
               },
@@ -294,8 +296,12 @@
                 "required": ["input"],
                 "not": {
                   "anyOf": [
-                    { "required": ["projects"] },
-                    { "required": ["dependencies"] }
+                    {
+                      "required": ["projects"]
+                    },
+                    {
+                      "required": ["dependencies"]
+                    }
                   ]
                 }
               }
@@ -327,7 +333,9 @@
             "properties": {
               "externalDependencies": {
                 "type": "array",
-                "items": { "type": "string" },
+                "items": {
+                  "type": "string"
+                },
                 "description": "The list of external dependencies that our target depends on for `nx:run-commands` and community plugins."
               }
             },
@@ -495,8 +503,12 @@
                     "required": ["target"],
                     "not": {
                       "anyOf": [
-                        { "required": ["projects"] },
-                        { "required": ["dependencies"] }
+                        {
+                          "required": ["projects"]
+                        },
+                        {
+                          "required": ["dependencies"]
+                        }
                       ]
                     }
                   }
@@ -529,6 +541,20 @@
             "options": {
               "type": "object",
               "description": "The options passed to the plugin when creating nodes and dependencies"
+            },
+            "include": {
+              "type": "array",
+              "description": "File patterns which are included by the plugin",
+              "items": {
+                "type": "string"
+              }
+            },
+            "exclude": {
+              "type": "array",
+              "description": "File patterns which are excluded by the plugin",
+              "items": {
+                "type": "string"
+              }
             }
           }
         }

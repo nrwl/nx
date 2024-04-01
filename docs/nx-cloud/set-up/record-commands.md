@@ -10,7 +10,7 @@ To record a command with Nx Cloud:
 2. Prefix your command with `npx nx-cloud record --`, or the appropriate execute command of your package manager. The `--` is optional but makes it easier to read what portion of the command will be recorded. (example: npx nx-cloud record -- echo "hello world")
 3. Run the command! Nx Cloud will record output and status codes, and generate a link for you to view your output on so you can easily view or share the result. Make sure you run this command from your workspace root or one of its subdirectories so Nx Cloud can properly locate configuration information.
 
-![npx nx-cloud record -- echo "hello world"](/nx-cloud/set-up/record-hello-world.png)
+![npx nx-cloud record -- echo "hello world"](/nx-cloud/set-up/record-hello-world.webp)
 
 ## Locating Command Output in Nx Cloud
 

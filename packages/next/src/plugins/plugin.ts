@@ -162,6 +162,8 @@ function getStaticServeTargetConfig(options: NextPluginOptions) {
       buildTarget: options.buildTargetName,
       staticFilePath: '{projectRoot}/out',
       port: 3000,
+      // Routes are found correctly with serve-static
+      spa: false,
     },
   };
 

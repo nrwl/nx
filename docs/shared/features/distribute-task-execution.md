@@ -37,7 +37,7 @@ For a more thorough explanation of how Nx Agents optimizes your CI pipeline, rea
 
 To enable task distribution with Nx Agents, there are two requirements:
 
-1. Enable version control system integration. The integrations currently available are [GitHub](/ci/recipes/source-control-integration/github), [GitLab](/ci/recipes/source-control-integration/gitlab) and [Bitbucket](/ci/recipes/source-control-integration/bitbucket-cloud). These integrations can be enabled from your [Nx Cloud dashboard](https://nx.app).
+1. Enable version control system integration. The integrations currently available are [GitHub](/ci/recipes/source-control-integration/github), [GitLab](/ci/recipes/source-control-integration/gitlab), [Bitbucket](/ci/recipes/source-control-integration/bitbucket-cloud) and [Azure DevOps](/ci/recipes/source-control-integration/azure-devops). These integrations can be enabled from your [Nx Cloud dashboard](https://nx.app).
 2. Add a single line to your CI pipeline configuration.
 
 Add the `start-ci-run` command to your CI pipeline configuration after checking out the repository and before installing `node_modules`:

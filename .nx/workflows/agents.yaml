@@ -1,7 +1,7 @@
 launch-templates:
   linux-medium:
     resource-class: 'docker_linux_amd64/medium+'
-    image: 'ubuntu22.04-node20.9-v3'
+    image: 'ubuntu22.04-node20.11-v3'
     env:
       GIT_AUTHOR_EMAIL: test@test.com
       GIT_AUTHOR_NAME: Test
@@ -11,9 +11,9 @@ launch-templates:
       NPM_CONFIG_PREFIX: '/home/workflows/.npm-global'
     init-steps:
       - name: Checkout
-        uses: 'nrwl/nx-cloud-workflows/v1.1/workflow-steps/checkout/main.yaml'
+        uses: 'nrwl/nx-cloud-workflows/v3.6/workflow-steps/checkout/main.yaml'
       - name: Cache restore
-        uses: 'nrwl/nx-cloud-workflows/v1.1/workflow-steps/cache/main.yaml'
+        uses: 'nrwl/nx-cloud-workflows/v3.6/workflow-steps/cache/main.yaml'
         env:
           KEY: 'pnpm-lock.yaml'
           PATHS: |
@@ -30,7 +30,7 @@ launch-templates:
           sudo apt-get install -y ca-certificates lsof
       - name: Install Pnpm
         script: |
-          npm install -g @pnpm/exe@8.7.4
+          npm install -g pnpm@8.15.5
 
       - name: Pnpm Install
         script: |

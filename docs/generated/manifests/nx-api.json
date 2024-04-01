@@ -1011,7 +1011,7 @@
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "gradle",
     "packageName": "@nx/gradle",
-    "description": "The Nx Plugin for gradle",
+    "description": "The Nx Plugin for Gradle allows Gradle tasks to be run through Nx",
     "documents": {},
     "root": "/packages/gradle",
     "source": "/packages/gradle/src",
@@ -1879,7 +1879,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/nx-api/nx/documents/release",
-        "tags": [],
+        "tags": ["nx-release"],
         "originalFilePath": "generated/cli/release"
       },
       "/nx-api/nx/documents/add": {

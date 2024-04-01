@@ -997,7 +997,7 @@
     "source": "/packages/express/src"
   },
   {
-    "description": "The Nx Plugin for gradle",
+    "description": "The Nx Plugin for Gradle allows Gradle tasks to be run through Nx",
     "documents": [],
     "executors": [],
     "generators": [
@@ -1858,7 +1858,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "nx/documents/release",
-        "tags": [],
+        "tags": ["nx-release"],
         "originalFilePath": "generated/cli/release"
       },
       {

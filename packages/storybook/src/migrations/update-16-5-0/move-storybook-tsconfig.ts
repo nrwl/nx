@@ -27,6 +27,6 @@ export default async function (tree: Tree) {
   );
 
   addStorybookToNamedInputs(tree);
-  addStorybookToTargetDefaults(tree);
+  addStorybookToTargetDefaults(tree, false);
   await formatFiles(tree);
 }
