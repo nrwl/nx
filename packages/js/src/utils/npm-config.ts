@@ -42,9 +42,15 @@ export async function parseRegistryOptions(
       cwd,
       join(pkg.packageRoot, 'package.json')
     );
-    logWarnFn(
-      `\nRegistry detected in the 'publishConfig' of the package manifest: ${relativePackageJsonPath}. Configuring the registry this way prevents it from being overridden via the --registry argument. To customize the registry or tag for specific packages in a way that can be overridden, see https://nx.dev/recipes/nx-release/configure-custom-registries\n`
-    );
+    if (options.registry) {
+      logWarnFn(
+        `\nRegistry detected in the 'publishConfig' of the package manifest: ${relativePackageJsonPath}. This will override your registry option set in the project configuration or passed via the --registry argument, which is why configuring the registry with 'publishConfig' is not recommended. For details, see https://nx.dev/recipes/nx-release/configure-custom-registries\n`
+      );
+    } else {
+      logWarnFn(
+        `\nRegistry detected in the 'publishConfig' of the package manifest: ${relativePackageJsonPath}. Configuring the registry in this way is not recommended because it prevents the registry from being overridden in project configuration or via the --registry argument. To customize the registry for specific packages, see https://nx.dev/recipes/nx-release/configure-custom-registries\n`
+      );
+    }
   }
 
   const registry =

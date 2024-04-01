@@ -108,6 +108,30 @@ describe('npm-config', () => {
       );
     });
 
+    it('should warn and return registry set in publishConfig', async () => {
+      const { registry, registryConfigKey } = await parseRegistryOptions(
+        tempFs.tempDir,
+        {
+          packageRoot: tempFs.tempDir,
+          packageJson: {
+            name: 'pkg1',
+            publishConfig: {
+              registry: 'https://publish-config.com',
+            } as PackageJson['publishConfig'],
+          } as PackageJson,
+        },
+        {},
+        logFn
+      );
+
+      expect(logMessage).toContain("Registry detected in the 'publishConfig'");
+      expect(logMessage).toContain(
+        'prevents the registry from being overridden'
+      );
+      expect(registry).toEqual('https://publish-config.com');
+      expect(registryConfigKey).toEqual('registry');
+    });
+
     it('should warn and return registry set in publishConfig instead of registry arg', async () => {
       const { registry, registryConfigKey } = await parseRegistryOptions(
         tempFs.tempDir,
@@ -127,6 +151,7 @@ describe('npm-config', () => {
       );
 
       expect(logMessage).toContain("Registry detected in the 'publishConfig'");
+      expect(logMessage).toContain('This will override your registry option');
       expect(registry).toEqual('https://publish-config.com');
       expect(registryConfigKey).toEqual('registry');
     });
