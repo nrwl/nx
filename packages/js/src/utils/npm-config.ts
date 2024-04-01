@@ -1,14 +1,13 @@
-import { joinPathFragments } from '@nx/devkit';
 import { exec } from 'child_process';
 import { existsSync } from 'fs';
 import { PackageJson } from 'nx/src/utils/package-json';
+import { join, relative } from 'path';
 
 export async function parseRegistryOptions(
   cwd: string,
   pkg: {
-    root: string;
-    manifest: PackageJson;
-    manifestPath: string;
+    packageRoot: string;
+    packageJson: PackageJson;
   },
   options: {
     registry?: string;
@@ -16,28 +15,35 @@ export async function parseRegistryOptions(
   },
   logWarnFn: (message: string) => void = console.warn
 ): Promise<{ registry: string; tag: string; registryConfigKey: string }> {
-  if (existsSync(joinPathFragments(pkg.root, '.npmrc'))) {
+  const npmRcPath = join(pkg.packageRoot, '.npmrc');
+  if (existsSync(npmRcPath)) {
+    const relativeNpmRcPath = relative(cwd, npmRcPath);
     logWarnFn(
-      `\nIgnoring .npmrc file detected in the package root. Nested .npmrc files are not supported by npm. Only the .npmrc file at the root of the workspace will be used. To customize the registry or tag for specific packages, see https://nx.dev/recipes/nx-release/configure-custom-registries.`
+      `\nIgnoring .npmrc file detected in the package root: ${relativeNpmRcPath}. Nested .npmrc files are not supported by npm. Only the .npmrc file at the root of the workspace will be used. To customize the registry or tag for specific packages, see https://nx.dev/recipes/nx-release/configure-custom-registries`
     );
   }
 
-  const scope = pkg.manifest.name.startsWith('@')
-    ? pkg.manifest.name.split('/')[0]
+  const scope = pkg.packageJson.name.startsWith('@')
+    ? pkg.packageJson.name.split('/')[0]
     : '';
 
   // If the package is scoped, then the registry argument that will
   // correctly override the registry in the .npmrc file must be scoped.
   const registryConfigKey = scope ? `${scope}:registry` : 'registry';
 
-  const publishConfigRegistry = pkg.manifest.publishConfig?.[registryConfigKey];
+  const publishConfigRegistry =
+    pkg.packageJson.publishConfig?.[registryConfigKey];
 
   // Even though it won't override the actual registry that's actually used,
   // the user might think otherwise, so we should still warn if the user has
   // set a 'registry' in 'publishConfig' for a scoped package.
-  if (publishConfigRegistry || pkg.manifest.publishConfig?.registry) {
+  if (publishConfigRegistry || pkg.packageJson.publishConfig?.registry) {
+    const relativePackageJsonPath = relative(
+      cwd,
+      join(pkg.packageRoot, 'package.json')
+    );
     logWarnFn(
-      `\nRegistry detected in the 'publishConfig' ${pkg.manifestPath}. Configuring the registry this way prevents it from being overridden via the --registry argument. To customize the registry or tag for specific packages in a way that can be overridden, see https://nx.dev/recipes/nx-release/configure-custom-registries.`
+      `\nRegistry detected in the 'publishConfig' of the package manifest: ${relativePackageJsonPath}. Configuring the registry this way prevents it from being overridden via the --registry argument. To customize the registry or tag for specific packages in a way that can be overridden, see https://nx.dev/recipes/nx-release/configure-custom-registries`
     );
   }
 

@@ -10,7 +10,7 @@ import {
 } from '@nx/devkit';
 import * as chalk from 'chalk';
 import { exec } from 'node:child_process';
-import { join, relative } from 'node:path';
+import { join } from 'node:path';
 import { IMPLICIT_DEFAULT_RELEASE_GROUP } from 'nx/src/command-line/release/config/config';
 import {
   getFirstGitCommit,
@@ -112,10 +112,6 @@ Valid values are: ${validReleaseVersionPrefixes
       }
 
       const packageJsonPath = join(packageRoot, 'package.json');
-      const workspaceRelativePackageJsonPath = relative(
-        workspaceRoot,
-        packageJsonPath
-      );
 
       const color = getColor(projectName);
       const log = (msg: string) => {
@@ -124,7 +120,7 @@ Valid values are: ${validReleaseVersionPrefixes
 
       if (!tree.exists(packageJsonPath)) {
         throw new Error(
-          `The project "${projectName}" does not have a package.json available at ${workspaceRelativePackageJsonPath}.
+          `The project "${projectName}" does not have a package.json available at ${packageJsonPath}.
 
 To fix this you will either need to add a package.json file at that location, or configure "release" within your nx.json to exclude "${projectName}" from the current release group, or amend the packageRoot configuration to point to where the package.json should be.`
         );
@@ -136,13 +132,13 @@ To fix this you will either need to add a package.json file at that location, or
         )}`
       );
 
-      const projectPackageJson = readJson(tree, packageJsonPath);
+      const packageJson = readJson(tree, packageJsonPath);
       log(
-        `🔍 Reading data for package "${projectPackageJson.name}" from ${workspaceRelativePackageJsonPath}`
+        `🔍 Reading data for package "${packageJson.name}" from ${packageJsonPath}`
       );
 
       const { name: packageName, version: currentVersionFromDisk } =
-        projectPackageJson;
+        packageJson;
 
       switch (options.currentVersionResolver) {
         case 'registry': {
@@ -158,9 +154,8 @@ To fix this you will either need to add a package.json file at that location, or
             await parseRegistryOptions(
               workspaceRoot,
               {
-                root: packageRoot,
-                manifest: projectPackageJson,
-                manifestPath: packageJsonPath,
+                packageRoot: join(workspaceRoot, packageRoot),
+                packageJson,
               },
               {
                 registry: registryArg,
@@ -444,7 +439,7 @@ To fix this you will either need to add a package.json file at that location, or
 
       if (!specifier) {
         log(
-          `🚫 Skipping versioning "${projectPackageJson.name}" as no changes were detected.`
+          `🚫 Skipping versioning "${packageJson.name}" as no changes were detected.`
         );
         continue;
       }
@@ -457,13 +452,11 @@ To fix this you will either need to add a package.json file at that location, or
       versionData[projectName].newVersion = newVersion;
 
       writeJson(tree, packageJsonPath, {
-        ...projectPackageJson,
+        ...packageJson,
         version: newVersion,
       });
 
-      log(
-        `✍️  New version ${newVersion} written to ${workspaceRelativePackageJsonPath}`
-      );
+      log(`✍️  New version ${newVersion} written to ${packageJsonPath}`);
 
       if (dependentProjects.length > 0) {
         log(

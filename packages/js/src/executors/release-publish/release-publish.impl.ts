@@ -40,8 +40,8 @@ export default async function runExecutor(
   );
 
   const packageJsonPath = join(packageRoot, 'package.json');
-  const projectPackageJson = readJsonFile(packageJsonPath);
-  const packageName = projectPackageJson.name;
+  const packageJson = readJsonFile(packageJsonPath);
+  const packageName = packageJson.name;
 
   // If package and project name match, we can make log messages terser
   let packageTxt =
@@ -49,7 +49,7 @@ export default async function runExecutor(
       ? `package "${packageName}"`
       : `package "${packageName}" from project "${context.projectName}"`;
 
-  if (projectPackageJson.private === true) {
+  if (packageJson.private === true) {
     console.warn(
       `Skipped ${packageTxt}, because it has \`"private": true\` in ${packageJsonPath}`
     );
@@ -61,9 +61,8 @@ export default async function runExecutor(
   const { registry, tag, registryConfigKey } = await parseRegistryOptions(
     context.root,
     {
-      root: packageRoot,
-      manifest: projectPackageJson,
-      manifestPath: packageJsonPath,
+      packageRoot,
+      packageJson,
     },
     {
       registry: options.registry,
@@ -75,7 +74,7 @@ export default async function runExecutor(
     `npm view ${packageName} versions dist-tags --json --"${registryConfigKey}=${registry}"`,
   ];
   const npmDistTagAddCommandSegments = [
-    `npm dist-tag add ${packageName}@${projectPackageJson.version} ${tag} --"${registryConfigKey}=${registry}"`,
+    `npm dist-tag add ${packageName}@${packageJson.version} ${tag} --"${registryConfigKey}=${registry}"`,
   ];
 
   /**
@@ -87,7 +86,7 @@ export default async function runExecutor(
    * perform the npm view step, and just show npm publish's dry-run output.
    */
   if (!isDryRun && !options.firstRelease) {
-    const currentVersion = projectPackageJson.version;
+    const currentVersion = packageJson.version;
     try {
       const result = execSync(npmViewCommandSegments.join(' '), {
         env: processEnv(true),

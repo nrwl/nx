@@ -94,16 +94,10 @@ describe('npm-config', () => {
       await parseRegistryOptions(
         tempFs.tempDir,
         {
-          root: join(tempFs.tempDir, 'packages', 'pkg1'),
-          manifest: {
+          packageRoot: join(tempFs.tempDir, 'packages', 'pkg1'),
+          packageJson: {
             name: 'pkg1',
           } as PackageJson,
-          manifestPath: join(
-            tempFs.tempDir,
-            'packages',
-            'pkg1',
-            'package.json'
-          ),
         },
         {},
         logFn
@@ -118,14 +112,13 @@ describe('npm-config', () => {
       const { registry, registryConfigKey } = await parseRegistryOptions(
         tempFs.tempDir,
         {
-          root: tempFs.tempDir,
-          manifest: {
+          packageRoot: tempFs.tempDir,
+          packageJson: {
             name: 'pkg1',
             publishConfig: {
               registry: 'https://publish-config.com',
             } as PackageJson['publishConfig'],
           } as PackageJson,
-          manifestPath: join(tempFs.tempDir, 'package.json'),
         },
         {
           registry: 'https://ignored-registry.com',
@@ -142,14 +135,13 @@ describe('npm-config', () => {
       const { registry, registryConfigKey } = await parseRegistryOptions(
         tempFs.tempDir,
         {
-          root: tempFs.tempDir,
-          manifest: {
+          packageRoot: tempFs.tempDir,
+          packageJson: {
             name: '@scope/pkg1',
             publishConfig: {
               '@scope:registry': 'https://publish-config.com',
             } as PackageJson['publishConfig'],
           } as PackageJson,
-          manifestPath: join(tempFs.tempDir, 'package.json'),
         },
         {
           registry: 'https://ignored-registry.com',
@@ -166,14 +158,13 @@ describe('npm-config', () => {
       const { registry, registryConfigKey } = await parseRegistryOptions(
         tempFs.tempDir,
         {
-          root: tempFs.tempDir,
-          manifest: {
+          packageRoot: tempFs.tempDir,
+          packageJson: {
             name: '@scope/pkg1',
             publishConfig: {
               registry: 'https://publish-config.com',
             } as PackageJson['publishConfig'],
           } as PackageJson,
-          manifestPath: join(tempFs.tempDir, 'package.json'),
         },
         {
           registry: 'https://registry-arg.com',
@@ -190,11 +181,10 @@ describe('npm-config', () => {
       const { registry, registryConfigKey } = await parseRegistryOptions(
         tempFs.tempDir,
         {
-          root: tempFs.tempDir,
-          manifest: {
+          packageRoot: tempFs.tempDir,
+          packageJson: {
             name: 'pkg1',
           } as PackageJson,
-          manifestPath: join(tempFs.tempDir, 'package.json'),
         },
         {
           registry: 'https://registry-arg.com',
@@ -210,11 +200,10 @@ describe('npm-config', () => {
       const { registry, registryConfigKey } = await parseRegistryOptions(
         tempFs.tempDir,
         {
-          root: tempFs.tempDir,
-          manifest: {
+          packageRoot: tempFs.tempDir,
+          packageJson: {
             name: '@scope/pkg1',
           } as PackageJson,
-          manifestPath: join(tempFs.tempDir, 'package.json'),
         },
         {
           registry: 'https://registry-arg.com',
@@ -230,11 +219,10 @@ describe('npm-config', () => {
       const { registry, registryConfigKey } = await parseRegistryOptions(
         tempFs.tempDir,
         {
-          root: tempFs.tempDir,
-          manifest: {
+          packageRoot: tempFs.tempDir,
+          packageJson: {
             name: '@scope/pkg1',
           } as PackageJson,
-          manifestPath: join(tempFs.tempDir, 'package.json'),
         },
         {},
         logFn
@@ -248,11 +236,10 @@ describe('npm-config', () => {
       const { registry, registryConfigKey } = await parseRegistryOptions(
         tempFs.tempDir,
         {
-          root: tempFs.tempDir,
-          manifest: {
+          packageRoot: tempFs.tempDir,
+          packageJson: {
             name: '@missing/pkg1',
           } as PackageJson,
-          manifestPath: join(tempFs.tempDir, 'package.json'),
         },
         {},
         logFn
@@ -266,11 +253,10 @@ describe('npm-config', () => {
       const { registry, registryConfigKey } = await parseRegistryOptions(
         tempFs.tempDir,
         {
-          root: tempFs.tempDir,
-          manifest: {
+          packageRoot: tempFs.tempDir,
+          packageJson: {
             name: 'pkg1',
           } as PackageJson,
-          manifestPath: join(tempFs.tempDir, 'package.json'),
         },
         {},
         logFn
@@ -284,11 +270,10 @@ describe('npm-config', () => {
       const { tag } = await parseRegistryOptions(
         tempFs.tempDir,
         {
-          root: tempFs.tempDir,
-          manifest: {
+          packageRoot: tempFs.tempDir,
+          packageJson: {
             name: 'pkg1',
           } as PackageJson,
-          manifestPath: join(tempFs.tempDir, 'package.json'),
         },
         {},
         logFn
@@ -301,11 +286,10 @@ describe('npm-config', () => {
       const { tag } = await parseRegistryOptions(
         tempFs.tempDir,
         {
-          root: tempFs.tempDir,
-          manifest: {
+          packageRoot: tempFs.tempDir,
+          packageJson: {
             name: 'pkg1',
           } as PackageJson,
-          manifestPath: join(tempFs.tempDir, 'package.json'),
         },
         {
           tag: 'alpha',
