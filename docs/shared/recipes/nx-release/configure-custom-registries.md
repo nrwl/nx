@@ -101,3 +101,9 @@ The publish step of Nx Release is responsible for publishing the package to the 
   }
 }
 ```
+
+## Set the Registry in the Package Manifest
+
+{% callout type="caution" title="Caution" %}
+It is not recommended to set the registry for a package in the 'publishConfig' property of its 'package.json' file. 'npm publish' will always prefer the registry from the 'publishConfig' over the '--registry' argument. Because of this, the '--registry' CLI and programmatic API options of Nx Release will no longer be able to override the registry for purposes such publishing locally for end to end testing.
+{% /callout %}
