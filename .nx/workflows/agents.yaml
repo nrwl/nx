@@ -11,9 +11,9 @@ launch-templates:
       NPM_CONFIG_PREFIX: '/home/workflows/.npm-global'
     init-steps:
       - name: Checkout
-        uses: 'nrwl/nx-cloud-workflows/v1.1/workflow-steps/checkout/main.yaml'
+        uses: 'nrwl/nx-cloud-workflows/v3.6/workflow-steps/checkout/main.yaml'
       - name: Cache restore
-        uses: 'nrwl/nx-cloud-workflows/v1.1/workflow-steps/cache/main.yaml'
+        uses: 'nrwl/nx-cloud-workflows/v3.6/workflow-steps/cache/main.yaml'
         env:
           KEY: 'pnpm-lock.yaml'
           PATHS: |
