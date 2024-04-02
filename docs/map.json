@@ -236,7 +236,7 @@
           "itemList": [
             {
               "name": "Mental Model",
-              "tags": ["intro"],
+              "tags": ["intro", "inferred-tasks"],
               "id": "mental-model",
               "file": "shared/mental-model"
             },
@@ -254,7 +254,11 @@
             },
             {
               "name": "What Are Nx Plugins",
-              "tags": ["generate-code", "create-your-own-plugin"],
+              "tags": [
+                "generate-code",
+                "create-your-own-plugin",
+                "inferred-tasks"
+              ],
               "id": "nx-plugins",
               "file": "shared/concepts/nx-plugins"
             },
@@ -402,7 +406,7 @@
                 {
                   "name": "How the Project Graph is Built",
                   "id": "how-project-graph-is-built",
-                  "tags": ["explore-graph"],
+                  "tags": ["explore-graph", "inferred-tasks"],
                   "file": "shared/concepts/how-project-graph-is-built"
                 }
               ]
@@ -1643,7 +1647,11 @@
             {
               "name": "Modify the Project Graph",
               "id": "project-graph-plugins",
-              "tags": ["create-your-own-plugin", "explore-graph"],
+              "tags": [
+                "create-your-own-plugin",
+                "explore-graph",
+                "inferred-tasks"
+              ],
               "file": "shared/recipes/plugins/project-graph-plugins"
             }
           ]
