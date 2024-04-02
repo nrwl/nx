@@ -71,7 +71,11 @@ export async function libraryGeneratorInternal(
 
   const pkgVersions = versions(tree);
 
-  await jsInitGenerator(tree, { ...options, js: false, skipFormat: true });
+  await jsInitGenerator(tree, {
+    ...libraryOptions,
+    js: false,
+    skipFormat: true,
+  });
   await init(tree, { ...libraryOptions, skipFormat: true });
   ensureAngularDependencies(tree);
 
@@ -96,6 +100,7 @@ export async function libraryGeneratorInternal(
     await setupTailwindGenerator(tree, {
       project: libraryOptions.name,
       skipFormat: true,
+      skipPackageJson: libraryOptions.skipPackageJson,
     });
   }
 
