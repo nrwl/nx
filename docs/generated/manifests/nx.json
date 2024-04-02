@@ -3146,6 +3146,17 @@
             "tags": ["nx-release"]
           },
           {
+            "id": "configure-custom-registries",
+            "name": "Configure Custom Registries",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/recipes/nx-release/configure-custom-registries",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/nx-release/configure-custom-registries",
+            "tags": ["nx-release"]
+          },
+          {
             "id": "publish-in-ci-cd",
             "name": "Publish in CI/CD",
             "description": "",
@@ -5669,6 +5680,17 @@
         "tags": ["nx-release"]
       },
       {
+        "id": "configure-custom-registries",
+        "name": "Configure Custom Registries",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/nx-release/configure-custom-registries",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/nx-release/configure-custom-registries",
+        "tags": ["nx-release"]
+      },
+      {
         "id": "publish-in-ci-cd",
         "name": "Publish in CI/CD",
         "description": "",
@@ -5759,6 +5781,17 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/nx-release/automatically-version-with-conventional-commits",
+    "tags": ["nx-release"]
+  },
+  "/recipes/nx-release/configure-custom-registries": {
+    "id": "configure-custom-registries",
+    "name": "Configure Custom Registries",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/nx-release/configure-custom-registries",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/nx-release/configure-custom-registries",
     "tags": ["nx-release"]
   },
   "/recipes/nx-release/publish-in-ci-cd": {

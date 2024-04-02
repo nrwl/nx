@@ -2,7 +2,6 @@ import {
   ProjectGraphProjectNode,
   Tree,
   formatFiles,
-  joinPathFragments,
   output,
   readJson,
   updateJson,
@@ -11,7 +10,7 @@ import {
 } from '@nx/devkit';
 import * as chalk from 'chalk';
 import { exec } from 'node:child_process';
-import { relative } from 'node:path';
+import { join } from 'node:path';
 import { IMPLICIT_DEFAULT_RELEASE_GROUP } from 'nx/src/command-line/release/config/config';
 import {
   getFirstGitCommit,
@@ -31,6 +30,7 @@ import {
 import { interpolate } from 'nx/src/tasks-runner/utils';
 import * as ora from 'ora';
 import { prerelease } from 'semver';
+import { parseRegistryOptions } from '../../utils/npm-config';
 import { ReleaseVersionGeneratorSchema } from './schema';
 import { resolveLocalPackageDependencies } from './utils/resolve-local-package-dependencies';
 import { updateLockFile } from './utils/update-lock-file';
@@ -111,11 +111,7 @@ Valid values are: ${validReleaseVersionPrefixes
         );
       }
 
-      const packageJsonPath = joinPathFragments(packageRoot, 'package.json');
-      const workspaceRelativePackageJsonPath = relative(
-        workspaceRoot,
-        packageJsonPath
-      );
+      const packageJsonPath = join(packageRoot, 'package.json');
 
       const color = getColor(projectName);
       const log = (msg: string) => {
@@ -124,7 +120,7 @@ Valid values are: ${validReleaseVersionPrefixes
 
       if (!tree.exists(packageJsonPath)) {
         throw new Error(
-          `The project "${projectName}" does not have a package.json available at ${workspaceRelativePackageJsonPath}.
+          `The project "${projectName}" does not have a package.json available at ${packageJsonPath}.
 
 To fix this you will either need to add a package.json file at that location, or configure "release" within your nx.json to exclude "${projectName}" from the current release group, or amend the packageRoot configuration to point to where the package.json should be.`
         );
@@ -136,22 +132,40 @@ To fix this you will either need to add a package.json file at that location, or
         )}`
       );
 
-      const projectPackageJson = readJson(tree, packageJsonPath);
+      const packageJson = readJson(tree, packageJsonPath);
       log(
-        `🔍 Reading data for package "${projectPackageJson.name}" from ${workspaceRelativePackageJsonPath}`
+        `🔍 Reading data for package "${packageJson.name}" from ${packageJsonPath}`
       );
 
       const { name: packageName, version: currentVersionFromDisk } =
-        projectPackageJson;
+        packageJson;
 
       switch (options.currentVersionResolver) {
         case 'registry': {
           const metadata = options.currentVersionResolverMetadata;
-          const registry =
-            metadata?.registry ??
-            (await getNpmRegistry()) ??
-            'https://registry.npmjs.org';
-          const tag = metadata?.tag ?? 'latest';
+          const registryArg =
+            typeof metadata?.registry === 'string'
+              ? metadata.registry
+              : undefined;
+          const tagArg =
+            typeof metadata?.tag === 'string' ? metadata.tag : undefined;
+
+          const warnFn = (message: string) => {
+            console.log(chalk.keyword('orange')(message));
+          };
+          const { registry, tag, registryConfigKey } =
+            await parseRegistryOptions(
+              workspaceRoot,
+              {
+                packageRoot: join(workspaceRoot, packageRoot),
+                packageJson,
+              },
+              {
+                registry: registryArg,
+                tag: tagArg,
+              },
+              warnFn
+            );
 
           /**
            * If the currentVersionResolver is set to registry, and the projects are not independent, we only want to make the request once for the whole batch of projects.
@@ -174,7 +188,7 @@ To fix this you will either need to add a package.json file at that location, or
               // Must be non-blocking async to allow spinner to render
               currentVersion = await new Promise<string>((resolve, reject) => {
                 exec(
-                  `npm view ${packageName} version --registry=${registry} --tag=${tag}`,
+                  `npm view ${packageName} version --"${registryConfigKey}=${registry}" --tag=${tag}`,
                   (error, stdout, stderr) => {
                     if (error) {
                       return reject(error);
@@ -429,7 +443,7 @@ To fix this you will either need to add a package.json file at that location, or
 
       if (!specifier) {
         log(
-          `🚫 Skipping versioning "${projectPackageJson.name}" as no changes were detected.`
+          `🚫 Skipping versioning "${packageJson.name}" as no changes were detected.`
         );
         continue;
       }
@@ -442,13 +456,11 @@ To fix this you will either need to add a package.json file at that location, or
       versionData[projectName].newVersion = newVersion;
 
       writeJson(tree, packageJsonPath, {
-        ...projectPackageJson,
+        ...packageJson,
         version: newVersion,
       });
 
-      log(
-        `✍️  New version ${newVersion} written to ${workspaceRelativePackageJsonPath}`
-      );
+      log(`✍️  New version ${newVersion} written to ${packageJsonPath}`);
 
       if (dependentProjects.length > 0) {
         log(
@@ -471,34 +483,30 @@ To fix this you will either need to add a package.json file at that location, or
             `The dependent project "${dependentProject.source}" does not have a packageRoot available. Please report this issue on https://github.com/nrwl/nx`
           );
         }
-        updateJson(
-          tree,
-          joinPathFragments(dependentPackageRoot, 'package.json'),
-          (json) => {
-            // Auto (i.e.infer existing) by default
-            let versionPrefix = options.versionPrefix ?? 'auto';
+        updateJson(tree, join(dependentPackageRoot, 'package.json'), (json) => {
+          // Auto (i.e.infer existing) by default
+          let versionPrefix = options.versionPrefix ?? 'auto';
 
-            // For auto, we infer the prefix based on the current version of the dependent
-            if (versionPrefix === 'auto') {
-              versionPrefix = ''; // we don't want to end up printing auto
+          // For auto, we infer the prefix based on the current version of the dependent
+          if (versionPrefix === 'auto') {
+            versionPrefix = ''; // we don't want to end up printing auto
 
-              const current =
-                json[dependentProject.dependencyCollection][packageName];
-              if (current) {
-                const prefixMatch = current.match(/^[~^]/);
-                if (prefixMatch) {
-                  versionPrefix = prefixMatch[0];
-                } else {
-                  versionPrefix = '';
-                }
+            const current =
+              json[dependentProject.dependencyCollection][packageName];
+            if (current) {
+              const prefixMatch = current.match(/^[~^]/);
+              if (prefixMatch) {
+                versionPrefix = prefixMatch[0];
+              } else {
+                versionPrefix = '';
               }
             }
-            json[dependentProject.dependencyCollection][
-              packageName
-            ] = `${versionPrefix}${newVersion}`;
-            return json;
           }
-        );
+          json[dependentProject.dependencyCollection][
+            packageName
+          ] = `${versionPrefix}${newVersion}`;
+          return json;
+        });
       }
     }
 
@@ -570,19 +578,4 @@ function getColor(projectName: string) {
   const colorIndex = code % colors.length;
 
   return colors[colorIndex];
-}
-
-async function getNpmRegistry() {
-  // Must be non-blocking async to allow spinner to render
-  return await new Promise<string>((resolve, reject) => {
-    exec('npm config get registry', (error, stdout, stderr) => {
-      if (error) {
-        return reject(error);
-      }
-      if (stderr) {
-        return reject(stderr);
-      }
-      return resolve(stdout.trim());
-    });
-  });
 }
