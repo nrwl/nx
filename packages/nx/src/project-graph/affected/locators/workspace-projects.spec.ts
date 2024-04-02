@@ -7,7 +7,6 @@ import { WholeFileChange } from '../../file-utils';
 import {
   getTouchedProjects,
   getImplicitlyTouchedProjects,
-  extractGlobalFilesFromInputs,
 } from './workspace-projects';
 
 function getFileChanges(files: string[]) {
@@ -84,6 +83,9 @@ describe('getImplicitlyTouchedProjects', () => {
   beforeEach(() => {
     nxJson = {
       npmScope: 'nrwl',
+      namedInputs: {
+        files: ['{workspaceRoot}/a.txt'],
+      },
       projects: {},
     };
   });
@@ -94,6 +96,11 @@ describe('getImplicitlyTouchedProjects', () => {
         root: 'a',
         namedInputs: {
           projectSpecificFiles: ['{workspaceRoot}/a.txt'],
+        },
+        targets: {
+          build: {
+            inputs: ['projectSpecificFiles'],
+          },
         },
       },
       b: {
@@ -125,25 +132,44 @@ describe('getImplicitlyTouchedProjects', () => {
       'a',
     ]);
   });
-});
 
-describe('extractGlobalFilesFromInputs', () => {
-  it('should return list of global files from nx.json', () => {
-    const globalFiles = extractGlobalFilesFromInputs({
-      namedInputs: {
-        one: [
-          '{workspaceRoot}/global1.txt',
-          { fileset: '{workspaceRoot}/global2.txt' },
-          '{projectRoot}/local.txt',
-        ],
-      },
-      targetDefaults: {
-        build: {
-          inputs: ['{workspaceRoot}/global3.txt'],
+  it('should return projects which have touched files in their target inputs which are named inputs defined in nx.json', () => {
+    const graph = buildProjectGraphNodes({
+      a: {
+        root: 'a',
+        targets: {
+          build: {
+            inputs: ['files'],
+          },
         },
       },
+      b: {
+        root: 'b',
+      },
     });
-    expect(globalFiles).toEqual(['global1.txt', 'global2.txt', 'global3.txt']);
+    let fileChanges = getFileChanges(['a.txt']);
+    expect(getImplicitlyTouchedProjects(fileChanges, graph, nxJson)).toEqual([
+      'a',
+    ]);
+  });
+
+  it('should not return projects which have touched files inputs which are not used by its targets', () => {
+    const graph = buildProjectGraphNodes({
+      a: {
+        root: 'a',
+        namedInputs: {
+          files: ['{workspaceRoot}/a.txt'],
+        },
+        targets: {},
+      },
+      b: {
+        root: 'b',
+      },
+    });
+    let fileChanges = getFileChanges(['a.txt']);
+    expect(getImplicitlyTouchedProjects(fileChanges, graph, nxJson)).toEqual(
+      []
+    );
   });
 });
 
