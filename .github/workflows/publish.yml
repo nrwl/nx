@@ -4,6 +4,11 @@ on:
   schedule:
     - cron: "0 3 * * 2-6" # Tuesdays - Saturdays, at 3am UTC
   workflow_dispatch:
+    inputs:
+      pr:
+        description: "If creating a PR-release, specify the PR number, otherwise leave blank for dry-run"
+        required: false
+        type: number
   release:
     types: [ published ]
 
@@ -92,8 +97,55 @@ jobs:
             build: pnpm nx run-many --target=build-native -- --target=aarch64-pc-windows-msvc
     name: stable - ${{ matrix.settings.target }} - node@18
     runs-on: ${{ matrix.settings.host }}
+    outputs:
+      clean_branch_name: ${{ steps.set_branch_name.outputs.clean_branch_name }}
+      clean_fork_repo: ${{ steps.set_clean_fork_repo.outputs.clean_fork_repo }}
+      full_pr_sha: ${{ steps.set_full_pr_sha.outputs.full_pr_sha }}
     steps:
+      - name: Fetch PR details (if PR number provided)
+        if: github.event.inputs.pr
+        id: pr_details
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            const pr = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: ${{ github.event.inputs.pr }},
+            });
+            console.log(`Owner: ${context.repo.owner}`);
+            console.log(`Repo: ${context.repo.repo}`);
+            console.log(`Fork repo:`, pr.data.head.repo.full_name);
+            console.log(`Fetched PR details: ${pr.data.head.ref}`);
+            console.log(`Full PR SHA: ${pr.data.head.sha}`);
+            core.setOutput('pr_branch_name', pr.data.head.ref);
+            core.setOutput('fork_repo', pr.data.head.repo.full_name);
+            core.setOutput('full_pr_sha', pr.data.head.sha);
+
+      - name: Set Clean Branch Name
+        # The reason we're doing this is because the branch name comes back 
+        # in double quotes, and we need to remove them to use it as a ref to checkout
+        if: github.event.inputs.pr
+        id: set_branch_name
+        run: echo "clean_branch_name=$(echo '${{ steps.pr_details.outputs.pr_branch_name }}' | sed 's/"//g')" >> $GITHUB_OUTPUT
+         
+      - name: Set Clean Fork Repo name
+        # The reason we're doing this is because the fork name comes back 
+        # in double quotes, and we need to remove them to use in checkout
+        if: github.event.inputs.pr
+        id: set_clean_fork_repo
+        run: echo "clean_fork_repo=$(echo '${{ steps.pr_details.outputs.fork_repo }}' | sed 's/"//g')" >> $GITHUB_OUTPUT   
+        
+      - name: Set long PR SHA
+        if: github.event.inputs.pr
+        id: set_full_pr_sha
+        run: echo "full_pr_sha=$(echo '${{ steps.pr_details.outputs.full_pr_sha }}')" >> $GITHUB_OUTPUT   
+          
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.set_branch_name.outputs.clean_branch_name }}
+          repository: ${{ steps.set_clean_fork_repo.outputs.clean_fork_repo }} 
 
       - uses: pnpm/action-setup@v2
         with:
@@ -173,6 +225,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         if: ${{ github.event_name != 'schedule' }}
+        with:
+          ref: ${{ needs.build.outputs.clean_branch_name  }}
+          repository: ${{ needs.build.outputs.clean_fork_repo }} 
       - name: Build
         id: build
         if: ${{ github.event_name != 'schedule' }}
@@ -232,6 +287,7 @@ jobs:
     permissions:
       id-token: write
       contents: write
+      pull-requests: write
     needs:
       - build-freebsd
       - build
@@ -241,6 +297,9 @@ jobs:
       NPM_CONFIG_PROVENANCE: true
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.build.outputs.clean_branch_name  }}
+          repository: ${{ needs.build.outputs.clean_fork_repo }} 
       - uses: pnpm/action-setup@v2
         with:
           version: 8
@@ -262,9 +321,36 @@ jobs:
       - name: List artifacts
         run: ls -R artifacts
         shell: bash
+      - name: Generate version string for PR release
+        if: github.event.inputs.pr
+        id: versioning
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            const date = new Date();
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
+            const day = String(date.getDate()).padStart(2, '0');
+            const YYYYMMDD = `${year}${month}${day}`;
+            // Get the current PR short git sha
+            const fullSHA = "${{ needs.build.outputs.full_pr_sha }}";
+            const shortSHA = fullSHA.slice(0, 7);
+            const prInput = ${{ github.event.inputs.pr }};
+            const prReleaseVersion = `0.0.0-pr-${prInput}-${YYYYMMDD}-${shortSHA}`;
+            core.setOutput('pr_release_version', prReleaseVersion); 
+            core.setOutput('short_sha', shortSHA); 
+            core.setOutput('long_sha', fullSHA); 
+            console.log(`Generated PR release version: ${prReleaseVersion}`);
       - name: Publish
         run: |
-          git checkout -b publish/$GITHUB_REF_NAME
+          # If the PR number is set, and the branch name is set, use that to construct the publish branch name
+          # else use existing logic of using the $GITHUB_REF_NAME
+          if [ -n "${{ github.event.inputs.pr }}" ] && [ -n "${{  needs.build.outputs.clean_branch_name }}" ]; then
+            git checkout -b publish/${{ needs.build.outputs.clean_branch_name }}
+          else
+            git checkout -b publish/$GITHUB_REF_NAME
+          fi
           # If triggered by the cron, create a canary release
           if [ "${{ github.event_name }}" = "schedule" ]; then
             VERSION="canary"
@@ -272,13 +358,27 @@ jobs:
             # Otherwise, use the tag name (if triggered via release), or explicit version (if triggered via workflow_dispatch)
             VERSION="${GITHUB_REF_NAME}"
           fi
-          # If triggered via workflow_dispatch, perform a dry-run
+          # If triggered via workflow_dispatch, we are either performing a dry-run on the current branch, or creating a PR-release for the given PR number
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            DRY_RUN="--dry-run"
+            echo "Workflow dispatch"
+            # If the PR number is set, and pr_release_version is set, use the generated pr_release_version
+            if [ -n "${{ github.event.inputs.pr }}" ] && [ -n "${{ steps.versioning.outputs.pr_release_version }}" ]; then
+              DRY_RUN=""
+              VERSION="${{ steps.versioning.outputs.pr_release_version }}"
+              echo "Version for PR release set to: $VERSION"
+              echo "PR Release from branch: ${{ needs.build.outputs.clean_branch_name  }}"
+              echo "PR Release from fork: ${{ needs.build.outputs.clean_fork_repo  }}"
+            else
+              # Otherwise, perform a dry-run on the current branch
+              DRY_RUN="--dry-run"
+              VERSION="0.0.0-dry-run.0"
+            fi
           else
             DRY_RUN=""
           fi
-          pnpm nx-release --local=false $VERSION $DRY_RUN
+          echo "Version set to: $VERSION"
+          echo "DRY_RUN set to: $DRY_RUN"
+          pnpm nx-release --local=false $VERSION --dry-run
       - name: Trigger Docs Release
         # Publish docs only on a full release
         if: ${{ !github.event.release.prerelease }}
@@ -289,3 +389,64 @@ jobs:
           # We force recreate the branch in order to always be up to date and avoid merge conflicts within the automated workflow
           git branch -f $branchName
           git push -f origin $branchName
+          fi
+      - name: Post Release Comment on PR
+        if: success() && github.event.inputs.pr && steps.versioning.outputs.pr_release_version
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            const issue_number = ${{ github.event.inputs.pr }};
+            const prReleaseVersion = "${{ steps.versioning.outputs.pr_release_version }}";
+            const repo = "${{ needs.build.outputs.clean_fork_repo }}"?.length > 0 ? "${{ needs.build.outputs.clean_fork_repo }}" : "nrwl/nx";
+            const message = `
+            ## 🐳 We have a release for that!
+
+            This PR has a release associated with it. You can try it out using this command:
+            
+            \`\`\`bash
+            npx create-nx-workspace@${prReleaseVersion} my-workspace
+            \`\`\`
+
+            Or just copy this version and use it in your own command:
+            \`\`\`bash
+            ${prReleaseVersion}
+            \`\`\`
+
+            | Release details | 📑 |
+            | ------------- | ------------- |
+            | **Published version** | [${prReleaseVersion}](https://www.npmjs.com/package/nx/v/${prReleaseVersion}) |
+            | **Triggered by** | @${{ github.triggering_actor }} |
+            | **Branch** | [${{ needs.build.outputs.clean_branch_name }}](https://github.com/${repo}/tree/${{ needs.build.outputs.clean_branch_name }}) |
+            | **Commit** | [${{ steps.versioning.outputs.short_sha }}](https://github.com/${repo}/commit/${{ steps.versioning.outputs.long_sha }}) |
+            | **Workflow run** | [${{ github.run_id }}](https://github.com/nrwl/nx/actions/runs/${{ github.run_id }}) |
+
+            To request a new release for this pull request, mention someone from the Nx team or the \`@nrwl/nx-pipelines-reviewers\`.   
+            `;
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issue_number,
+              body: message
+            });
+      
+      - name: Create failing comment on PR
+        if: failure() && github.event.inputs.pr && steps.versioning.outputs.pr_release_version
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            const issue_number = ${{ github.event.inputs.pr }};
+            const prReleaseVersion = "${{ steps.versioning.outputs.pr_release_version }}";
+            const message = `
+            Failed to publish a PR release of this pull request, triggered by @${{ github.triggering_actor }}. 
+
+            See the failed workflow run at: https://github.com/nrwl/nx/actions/runs/${{ github.run_id }}
+            `;
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issue_number,
+              body: message
+            });
+    

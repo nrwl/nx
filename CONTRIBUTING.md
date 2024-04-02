@@ -355,3 +355,7 @@ Closes #157
 To simplify and automate the process of committing with this format,
 **Nx is a [Commitizen](https://github.com/commitizen/cz-cli) friendly repository**, just do `git add` and
 execute `pnpm commit`.
+
+#### PR releases
+
+You can request a release for your PR by mentioning someone from the Nx team or the `@nrwl/nx-pipelines-reviewers`. Depending on the nature of the PR, the team will decide if a release for testing purposes is necessary.
