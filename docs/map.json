@@ -1137,6 +1137,12 @@
                   "file": "shared/recipes/nx-release/automatically-version-with-conventional-commits"
                 },
                 {
+                  "name": "Configure Custom Registries",
+                  "id": "configure-custom-registries",
+                  "tags": ["nx-release"],
+                  "file": "shared/recipes/nx-release/configure-custom-registries"
+                },
+                {
                   "name": "Publish in CI/CD",
                   "id": "publish-in-ci-cd",
                   "tags": ["nx-release"],
