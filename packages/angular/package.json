@@ -23,7 +23,7 @@
     "./executors": "./executors.js",
     "./tailwind": "./tailwind.js",
     "./module-federation": "./module-federation/index.js",
-    "./src/utils": "./src/utils/public-api.js",
+    "./src/utils": "./src/utils/index.js",
     "./plugins/component-testing": "./plugins/component-testing.js",
     "./src/generators/utils": "./src/generators/utils/index.js",
     "./src/generators/move/move-impl": "./src/generators/move/move-impl.js",
