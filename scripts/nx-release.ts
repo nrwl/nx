@@ -358,10 +358,15 @@ function getRegistry() {
 
 function determineDistTag(
   newVersion: string
-): 'latest' | 'next' | 'previous' | 'canary' {
+): 'latest' | 'next' | 'previous' | 'canary' | 'pull-request' {
   // Special case of canary
   if (newVersion.includes('canary')) {
     return 'canary';
+  }
+
+  // Special case of PR release
+  if (newVersion.startsWith('0.0.0-pr-')) {
+    return 'pull-request';
   }
 
   // For a relative version keyword, it cannot be previous
