@@ -122,7 +122,7 @@ Learn more about the advantages of Nx in the following guides:
 - [Using Jest for unit tests](/nx-api/jest)
 - [Computation Caching](/concepts/how-caching-works)
 - [Rebuilding and Retesting What is Affected](/ci/features/affected)
-- [Integrate with Editors](/features/integrate-with-editors)
+- [Integrate with Editors](/getting-started/editor-setup)
 - [Advanced Angular Micro Frontends with Dynamic Module Federation](/recipes/angular/dynamic-module-federation-with-angular)
 
 ## From Nx Console

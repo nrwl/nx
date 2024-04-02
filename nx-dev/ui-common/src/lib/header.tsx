@@ -52,7 +52,7 @@ export function Header(): JSX.Element {
       name: 'Nx Console',
       description:
         'The official VSCode & JetBrains plugin bringing Nx to your editor.',
-      href: '/features/integrate-with-editors#vscode',
+      href: '/getting-started/editor-setup#vscode',
     },
     {
       name: 'Set Up CI',
