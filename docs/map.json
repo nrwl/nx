@@ -2031,11 +2031,6 @@
               "file": "nx-cloud/reference/env-vars"
             },
             {
-              "name": "Server API Reference",
-              "id": "server-api",
-              "file": "nx-cloud/reference/server-api"
-            },
-            {
               "name": "Release Notes",
               "id": "release-notes",
               "file": "nx-cloud/reference/release-notes"
