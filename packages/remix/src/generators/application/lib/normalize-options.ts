@@ -38,7 +38,6 @@ export async function normalizeOptions(
 
   let e2eWebServerTarget = options.addPlugin ? 'dev' : 'serve';
   if (options.addPlugin) {
-    const nxJson = readNxJson(tree);
     if (nxJson.plugins) {
       for (const plugin of nxJson.plugins) {
         if (
