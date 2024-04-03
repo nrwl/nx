@@ -7038,14 +7038,6 @@
             "disableCollapsible": false
           },
           {
-            "name": "Server API Reference",
-            "path": "/ci/reference/server-api",
-            "id": "server-api",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
             "name": "Release Notes",
             "path": "/ci/reference/release-notes",
             "id": "release-notes",
@@ -7084,14 +7076,6 @@
         "name": "Environment Variables",
         "path": "/ci/reference/env-vars",
         "id": "env-vars",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Server API Reference",
-        "path": "/ci/reference/server-api",
-        "id": "server-api",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
