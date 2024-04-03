@@ -100,6 +100,10 @@ export async function* devServerExecutor(
           configuration: serveOptions.buildTarget.split(':')[2],
         }
       );
+    } else if (userDefinedWebpackConfig) {
+      // New behavior, we want the webpack config to export object
+      config = userDefinedWebpackConfig;
+      config.devServer ??= devServer;
     }
   }
 
