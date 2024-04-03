@@ -186,7 +186,7 @@ const guideUrls = {
   '/migration/lerna-and-nx': 'https://lerna.js.org',
   '/cypress/v10-migration-guide': '/cypress/v11-migration-guide',
   '/cypress/generators/migrate-to-cypress-10':
-    '/cypress/generators/migrate-to-cypress-11',
+    '/packages/cypress/generators/migrate-to-cypress-11',
 };
 
 /**
