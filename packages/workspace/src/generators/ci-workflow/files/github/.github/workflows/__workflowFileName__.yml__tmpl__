@@ -34,5 +34,8 @@ jobs:
       - run: <%= packageManagerInstall %>
       - uses: nrwl/nx-set-shas@v4
 
+      - run: git branch --track main origin/main
+        if: ${{ github.event_name == 'pull_request' }}
+
       - run: <%= packageManagerPrefix %> nx-cloud record -- nx format:check
       - run: <%= packageManagerPrefix %> nx affected -t lint test build<% if(hasE2E){ %> e2e-ci<% } %>

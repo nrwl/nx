@@ -22,6 +22,10 @@ jobs:
       - nx/set-shas:
           main-branch-name: '<%= mainBranch %>'
 
+      # Required for nx affected if we're on a branch
+      - run: git branch --track main origin/main
+        condition: eq(variables['Build.Reason'], 'PullRequest')
+
       - run: <%= packageManagerPrefix %> nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD
       - run: <%= packageManagerPrefix %> nx affected --base=$NX_BASE --head=$NX_HEAD -t lint test build<% if(hasE2E){ %> e2e-ci<% } %>
 
