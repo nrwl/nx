@@ -1,4 +1,4 @@
-import { AnnouncementBanner, Footer, Header } from '@nx/nx-dev/ui-common';
+import { Footer, Header } from '@nx/nx-dev/ui-common';
 import {
   ExtensibleAndIntegrated,
   GettingStarted,
