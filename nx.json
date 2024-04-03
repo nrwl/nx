@@ -218,6 +218,14 @@
         "targetName": "pw-e2e",
         "ciTargetName": "e2e-ci"
       }
+    },
+    {
+      "plugin": "@nx/cypress/plugin",
+      "options": {
+        "targetName": "e2e-base",
+        "componentTestingTargetName": "component-test",
+        "ciTargetName": "e2e-ci"
+      }
     }
   ],
   "nxCloudAccessToken": "YmZiOWQyNzctOThiZC00MjYwLWI3YTAtZDA3MDg4YWY1YTExfHJlYWQ=",

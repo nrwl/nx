@@ -16,12 +16,10 @@
     "rootDir": ".",
     "allowJs": true,
     "paths": {
-      "@nrwl/tao": ["packages/tao"],
-      "@nrwl/tao/*": ["packages/tao/*"],
       "@nx/angular": ["packages/angular"],
       "@nx/angular/*": ["packages/angular/*"],
       "@nx/cypress": ["packages/cypress"],
-      "@nx/cypress/plugin": ["packages/cypress/plugin"],
+      "@nx/cypress/*": ["packages/cypress/*"],
       "@nx/detox": ["packages/detox"],
       "@nx/devkit": ["packages/devkit"],
       "@nx/devkit/*": ["packages/devkit/*"],
