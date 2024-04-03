@@ -21,7 +21,7 @@
       "@nx/angular": ["packages/angular"],
       "@nx/angular/*": ["packages/angular/*"],
       "@nx/cypress": ["packages/cypress"],
-      "@nx/cypress/*": ["packages/cypress/*"],
+      "@nx/cypress/plugin": ["packages/cypress/plugin"],
       "@nx/detox": ["packages/detox"],
       "@nx/devkit": ["packages/devkit"],
       "@nx/devkit/*": ["packages/devkit/*"],
