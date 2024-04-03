@@ -1,6 +1,7 @@
 import { names, readNxJson, Tree } from '@nx/devkit';
 import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { Schema } from '../schema';
+import { ExpoPluginOptions } from '../../../../plugins/plugin';
 
 export interface NormalizedSchema extends Schema {
   className: string;
@@ -11,6 +12,9 @@ export interface NormalizedSchema extends Schema {
   rootProject: boolean;
   e2eProjectName: string;
   e2eProjectRoot: string;
+  e2eWebServerAddress: string;
+  e2eWebServerTarget: string;
+  e2ePort: number;
 }
 
 export async function normalizeOptions(
@@ -41,8 +45,34 @@ export async function normalizeOptions(
     ? options.tags.split(',').map((s) => s.trim())
     : [];
   const rootProject = appProjectRoot === '.';
+
+  let e2eWebServerTarget = 'serve';
+  if (options.addPlugin) {
+    if (nxJson.plugins) {
+      for (const plugin of nxJson.plugins) {
+        if (
+          typeof plugin === 'object' &&
+          plugin.plugin === '@nx/expo/plugin' &&
+          (plugin.options as ExpoPluginOptions).serveTargetName
+        ) {
+          e2eWebServerTarget = (plugin.options as ExpoPluginOptions)
+            .serveTargetName;
+        }
+      }
+    }
+  }
+
+  let e2ePort = options.addPlugin ? 8081 : 4200;
+  if (
+    nxJson.targetDefaults?.[e2eWebServerTarget] &&
+    nxJson.targetDefaults?.[e2eWebServerTarget].options?.port
+  ) {
+    e2ePort = nxJson.targetDefaults?.[e2eWebServerTarget].options.port;
+  }
+
   const e2eProjectName = rootProject ? 'e2e' : `${appProjectName}-e2e`;
   const e2eProjectRoot = rootProject ? 'e2e' : `${appProjectRoot}-e2e`;
+  const e2eWebServerAddress = `http://localhost:${e2ePort}`;
 
   return {
     ...options,
@@ -58,5 +88,8 @@ export async function normalizeOptions(
     rootProject,
     e2eProjectName,
     e2eProjectRoot,
+    e2eWebServerAddress,
+    e2eWebServerTarget,
+    e2ePort,
   };
 }
