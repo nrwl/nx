@@ -2,6 +2,17 @@ import { type CreateNodesContext, joinPathFragments } from '@nx/devkit';
 import { createNodes } from './plugin';
 import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
 
+// Jest 29 does not support dynamic import() unless --experimental-vm-modules is set.
+// For now, we will mock the loadConfigFile function. We should remove this once we upgrade to Jest 30.
+jest.mock('rollup/loadConfigFile', () => {
+  return {
+    loadConfigFile: jest.fn(),
+  };
+});
+
+// @ts-ignore
+import { loadConfigFile } from 'rollup/loadConfigFile';
+
 describe('@nx/rollup/plugin', () => {
   let createNodesFunction = createNodes[1];
   let context: CreateNodesContext;
@@ -35,29 +46,18 @@ describe('@nx/rollup/plugin', () => {
       console.log("hello world");
       }`
       );
-      tempFs.createFileSync(
-        'rollup.config.js',
-        `
-const config = {
-  input: 'src/index.js',
-  output: [
-    {
-      file: 'dist/bundle.js',
-      format: 'cjs',
-      sourcemap: true
-    },
-    {
-      file: 'dist/bundle.es.js',
-      format: 'es',
-      sourcemap: true
-    }
-  ],
-  plugins: [],
-};
 
-module.exports = config;
-      `
-      );
+      loadConfigFile.mockReturnValue({
+        options: [
+          {
+            output: {
+              file: 'dist/bundle.js',
+              format: 'cjs',
+              sourcemap: true,
+            },
+          },
+        ],
+      });
 
       process.chdir(tempFs.tempDir);
     });
@@ -82,6 +82,7 @@ module.exports = config;
       expect(nodes).toMatchSnapshot();
     });
   });
+
   describe('non-root project', () => {
     const tempFs = new TempFs('test');
 
@@ -107,29 +108,24 @@ module.exports = config;
       console.log("hello world");
       }`
       );
-      tempFs.createFileSync(
-        'mylib/rollup.config.js',
-        `
-const config = {
-  input: 'src/index.js',
-  output: [
-    {
-      file: 'build/bundle.js',
-      format: 'cjs',
-      sourcemap: true
-    },
-    {
-      file: 'dist/bundle.es.js',
-      format: 'es',
-      sourcemap: true
-    }
-  ],
-  plugins: [],
-};
-
-module.exports = config;
-      `
-      );
+      loadConfigFile.mockReturnValue({
+        options: [
+          {
+            output: {
+              file: 'build/bundle.js',
+              format: 'cjs',
+              sourcemap: true,
+            },
+          },
+          {
+            output: {
+              file: 'dist/bundle.es.js',
+              format: 'es',
+              sourcemap: true,
+            },
+          },
+        ],
+      });
 
       process.chdir(tempFs.tempDir);
     });
