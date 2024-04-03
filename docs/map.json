@@ -29,6 +29,13 @@
               "file": "shared/getting-started/why-nx"
             },
             {
+              "name": "Editor Setup",
+              "description": "Learn about Nx Console, an extension for VS Code and WebStorm.",
+              "id": "editor-setup",
+              "tags": ["editor-setup"],
+              "file": "shared/getting-started/editor-setup"
+            },
+            {
               "name": "Tutorials",
               "id": "tutorials",
               "description": "Get started with basic information, concepts and tutorials.",
@@ -153,13 +160,6 @@
               "id": "enforce-module-boundaries",
               "tags": ["enforce-module-boundaries"],
               "file": "shared/features/enforce-module-boundaries"
-            },
-            {
-              "name": "Integrate with Editors",
-              "description": "Learn about Nx Console, an extension for VS Code and WebStorm.",
-              "id": "integrate-with-editors",
-              "tags": ["integrate-with-editors"],
-              "file": "shared/features/integrate-with-editors"
             },
             {
               "name": "Manage Releases",
@@ -1066,49 +1066,49 @@
                 {
                   "name": "Telemetry",
                   "id": "console-telemetry",
-                  "tags": ["integrate-with-editors"],
+                  "tags": ["editor-setup"],
                   "file": "shared/recipes/console-telemetry"
                 },
                 {
                   "name": "Project Details View",
                   "id": "console-project-details",
-                  "tags": ["integrate-with-editors"],
+                  "tags": ["editor-setup"],
                   "file": "shared/recipes/console-project-details"
                 },
                 {
                   "name": "Generate Command",
                   "id": "console-generate-command",
-                  "tags": ["integrate-with-editors"],
+                  "tags": ["editor-setup"],
                   "file": "shared/recipes/console-generate-command"
                 },
                 {
                   "name": "Run Command",
                   "id": "console-run-command",
-                  "tags": ["integrate-with-editors"],
+                  "tags": ["editor-setup"],
                   "file": "shared/recipes/console-run-command"
                 },
                 {
                   "name": "Add Dependency Command",
                   "id": "console-add-dependency-command",
-                  "tags": ["integrate-with-editors"],
+                  "tags": ["editor-setup"],
                   "file": "shared/recipes/console-add-dependency-command"
                 },
                 {
                   "name": "Project Pane",
                   "id": "console-project-pane",
-                  "tags": ["integrate-with-editors"],
+                  "tags": ["editor-setup"],
                   "file": "shared/recipes/console-project-pane"
                 },
                 {
                   "name": "Keyboard Shortcuts",
                   "id": "console-shortcuts",
-                  "tags": ["integrate-with-editors"],
+                  "tags": ["editor-setup"],
                   "file": "shared/recipes/console-shortcuts"
                 },
                 {
                   "name": "Troubleshooting",
                   "id": "console-troubleshooting",
-                  "tags": ["integrate-with-editors"],
+                  "tags": ["editor-setup"],
                   "file": "shared/recipes/console-troubleshooting"
                 }
               ]
@@ -1135,6 +1135,12 @@
                   "id": "automatically-version-with-conventional-commits",
                   "tags": ["nx-release"],
                   "file": "shared/recipes/nx-release/automatically-version-with-conventional-commits"
+                },
+                {
+                  "name": "Configure Custom Registries",
+                  "id": "configure-custom-registries",
+                  "tags": ["nx-release"],
+                  "file": "shared/recipes/nx-release/configure-custom-registries"
                 },
                 {
                   "name": "Publish in CI/CD",

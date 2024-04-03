@@ -1,4 +1,69 @@
 {
+  "editor-setup": [
+    {
+      "description": "Learn about Nx Console, an extension for VS Code and WebStorm.",
+      "file": "shared/getting-started/editor-setup",
+      "id": "editor-setup",
+      "name": "Editor Setup",
+      "path": "/getting-started/editor-setup"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/console-telemetry",
+      "id": "console-telemetry",
+      "name": "Telemetry",
+      "path": "/recipes/nx-console/console-telemetry"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/console-project-details",
+      "id": "console-project-details",
+      "name": "Project Details View",
+      "path": "/recipes/nx-console/console-project-details"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/console-generate-command",
+      "id": "console-generate-command",
+      "name": "Generate Command",
+      "path": "/recipes/nx-console/console-generate-command"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/console-run-command",
+      "id": "console-run-command",
+      "name": "Run Command",
+      "path": "/recipes/nx-console/console-run-command"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/console-add-dependency-command",
+      "id": "console-add-dependency-command",
+      "name": "Add Dependency Command",
+      "path": "/recipes/nx-console/console-add-dependency-command"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/console-project-pane",
+      "id": "console-project-pane",
+      "name": "Project Pane",
+      "path": "/recipes/nx-console/console-project-pane"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/console-shortcuts",
+      "id": "console-shortcuts",
+      "name": "Keyboard Shortcuts",
+      "path": "/recipes/nx-console/console-shortcuts"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/console-troubleshooting",
+      "id": "console-troubleshooting",
+      "name": "Troubleshooting",
+      "path": "/recipes/nx-console/console-troubleshooting"
+    }
+  ],
   "run-tasks": [
     {
       "description": "Learn about the various ways you can use Nx to run tasks in your workspace.",
@@ -438,71 +503,6 @@
       "path": "/nx-api/nx/documents/format-write"
     }
   ],
-  "integrate-with-editors": [
-    {
-      "description": "Learn about Nx Console, an extension for VS Code and WebStorm.",
-      "file": "shared/features/integrate-with-editors",
-      "id": "integrate-with-editors",
-      "name": "Integrate with Editors",
-      "path": "/features/integrate-with-editors"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/console-telemetry",
-      "id": "console-telemetry",
-      "name": "Telemetry",
-      "path": "/recipes/nx-console/console-telemetry"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/console-project-details",
-      "id": "console-project-details",
-      "name": "Project Details View",
-      "path": "/recipes/nx-console/console-project-details"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/console-generate-command",
-      "id": "console-generate-command",
-      "name": "Generate Command",
-      "path": "/recipes/nx-console/console-generate-command"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/console-run-command",
-      "id": "console-run-command",
-      "name": "Run Command",
-      "path": "/recipes/nx-console/console-run-command"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/console-add-dependency-command",
-      "id": "console-add-dependency-command",
-      "name": "Add Dependency Command",
-      "path": "/recipes/nx-console/console-add-dependency-command"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/console-project-pane",
-      "id": "console-project-pane",
-      "name": "Project Pane",
-      "path": "/recipes/nx-console/console-project-pane"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/console-shortcuts",
-      "id": "console-shortcuts",
-      "name": "Keyboard Shortcuts",
-      "path": "/recipes/nx-console/console-shortcuts"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/console-troubleshooting",
-      "id": "console-troubleshooting",
-      "name": "Troubleshooting",
-      "path": "/recipes/nx-console/console-troubleshooting"
-    }
-  ],
   "nx-release": [
     {
       "description": "Learn how Nx provides tools to help you manage releasing your projects.",
@@ -531,6 +531,13 @@
       "id": "automatically-version-with-conventional-commits",
       "name": "Automatically Version with Conventional Commits",
       "path": "/recipes/nx-release/automatically-version-with-conventional-commits"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/nx-release/configure-custom-registries",
+      "id": "configure-custom-registries",
+      "name": "Configure Custom Registries",
+      "path": "/recipes/nx-release/configure-custom-registries"
     },
     {
       "description": "",
