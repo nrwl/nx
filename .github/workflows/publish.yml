@@ -80,6 +80,13 @@ jobs:
               set -e &&
               rustup target add aarch64-unknown-linux-musl &&
               pnpm nx run-many --target=build-native -- --target=aarch64-unknown-linux-musl
+          - host: ubuntu-latest
+            target: wasm32-wasi-preview1-threads
+            build: |-
+              set -e &&
+              pnpm --version &&
+              pnpm exec napi build --release --platform -c packages/nx/package.json --manifest-path packages/nx/Cargo.toml --js ./index.js -o packages/nx/src/native --target wasm32-wasi-preview1-threads
+              #              pnpm nx run-many --target=build-native -- --target=wasm32-wasi-preview1-threads
           - host: windows-latest
             target: aarch64-pc-windows-msvc
             build: pnpm nx run-many --target=build-native -- --target=aarch64-pc-windows-msvc

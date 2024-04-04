@@ -234,8 +234,8 @@ devDependencies:
     specifier: 1.3.3
     version: 1.3.3(@swc-node/register@1.8.0)(@swc/core@1.3.86)(@types/node@18.19.8)(typescript@5.4.2)(verdaccio@5.15.4)
   '@napi-rs/cli':
-    specifier: 3.0.0-alpha.44
-    version: 3.0.0-alpha.44(emnapi@1.1.0)
+    specifier: 3.0.0-alpha.45
+    version: 3.0.0-alpha.45(emnapi@1.1.0)
   '@napi-rs/wasm-runtime':
     specifier: 0.1.2
     version: 0.1.2
@@ -7495,8 +7495,8 @@ packages:
       '@napi-rs/canvas-win32-x64-msvc': 0.1.30
     dev: false
 
-  /@napi-rs/cli@3.0.0-alpha.44(emnapi@1.1.0):
-    resolution: {integrity: sha512-ED2hRtQfrCTi0jmWAziDMV2tb2+KdK0j90VdU9EYaBDYHD1X5FJOw0lxftwS2ifFql/Lb6QnM1SCgRGMbcDH4Q==}
+  /@napi-rs/cli@3.0.0-alpha.45(emnapi@1.1.0):
+    resolution: {integrity: sha512-69m9ssfRMZMLI5A8+nAUrEVTdRe3w8q8oOiH2idI79yt+Uvwj2F+Lde7GN4AV5Z9+Oc17kkf9UQZawNia0ZfkA==}
     engines: {node: '>= 16'}
     hasBin: true
     peerDependencies:
