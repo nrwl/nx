@@ -3,6 +3,7 @@ import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/pr
 import { Linter } from '@nx/eslint';
 import { assertValidStyle } from '@nx/react/src/utils/assertion';
 import { Schema } from '../schema';
+import { NextPluginOptions } from '../../../plugins/plugin';
 
 export interface NormalizedSchema extends Schema {
   projectName: string;
@@ -10,6 +11,9 @@ export interface NormalizedSchema extends Schema {
   outputPath: string;
   e2eProjectName: string;
   e2eProjectRoot: string;
+  e2eWebServerAddress: string;
+  e2eWebServerTarget: string;
+  e2ePort: number;
   parsedTags: string[];
   fileName: string;
   styledModule: null | string;
@@ -42,8 +46,36 @@ export async function normalizeOptions(
 
   options.addPlugin ??= addPlugin;
 
+  let e2eWebServerTarget = options.addPlugin ? 'start' : 'serve';
+  if (options.addPlugin) {
+    if (nxJson.plugins) {
+      for (const plugin of nxJson.plugins) {
+        if (
+          typeof plugin === 'object' &&
+          plugin.plugin === '@nx/next/plugin' &&
+          (plugin.options as NextPluginOptions).startTargetName
+        ) {
+          e2eWebServerTarget = (plugin.options as NextPluginOptions)
+            .startTargetName;
+        }
+      }
+    }
+  }
+
+  let e2ePort = options.addPlugin ? 3000 : 4200;
+  if (
+    nxJson.targetDefaults?.[e2eWebServerTarget] &&
+    (nxJson.targetDefaults?.[e2eWebServerTarget].options?.port ||
+      nxJson.targetDefaults?.[e2eWebServerTarget].options?.env?.PORT)
+  ) {
+    e2ePort =
+      nxJson.targetDefaults?.[e2eWebServerTarget].options?.port ||
+      nxJson.targetDefaults?.[e2eWebServerTarget].options?.env?.PORT;
+  }
+
   const e2eProjectName = options.rootProject ? 'e2e' : `${appProjectName}-e2e`;
   const e2eProjectRoot = options.rootProject ? 'e2e' : `${appProjectRoot}-e2e`;
+  const e2eWebServerAddress = `http://localhost:${e2ePort}`;
 
   const name = names(options.name).fileName;
 
@@ -75,6 +107,9 @@ export async function normalizeOptions(
     appProjectRoot,
     e2eProjectName,
     e2eProjectRoot,
+    e2eWebServerAddress,
+    e2eWebServerTarget,
+    e2ePort,
     e2eTestRunner: options.e2eTestRunner || 'cypress',
     fileName,
     linter: options.linter || Linter.EsLint,
