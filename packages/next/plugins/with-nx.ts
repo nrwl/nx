@@ -450,7 +450,7 @@ export function getAliasForProject(
 export function forNextVersion(range: string, fn: () => void) {
   const semver = require('semver');
   const nextJsVersion = require('next/package.json').version;
-  if (semver.satisfies(nextJsVersion, range)) {
+  if (semver.satisfies(nextJsVersion, range, { includePrerelease: true })) {
     fn();
   }
 }
