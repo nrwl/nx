@@ -49,6 +49,8 @@ jobs:
       # - script: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="e2e-ci"
 
       - script: npm ci
+      - script: git branch --track main origin/main
+        condition: eq(variables['Build.Reason'], 'PullRequest')
 
       - script: npx nx-cloud record -- nx format:check --base=$(BASE_SHA) --head=$(HEAD_SHA)
       - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build e2e-ci
@@ -116,6 +118,10 @@ jobs:
       - nx/set-shas:
           main-branch-name: 'main'
 
+      # Required for nx affected if we're on a branch
+      - run: git branch --track main origin/main
+        condition: eq(variables['Build.Reason'], 'PullRequest')
+
       - run: npx nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD
       - run: npx nx affected --base=$NX_BASE --head=$NX_HEAD -t lint test build e2e-ci
 
@@ -161,6 +167,9 @@ jobs:
       - run: npm ci
       - uses: nrwl/nx-set-shas@v4
 
+      - run: git branch --track main origin/main
+        if: \${{ github.event_name == 'pull_request' }}
+
       - run: npx nx-cloud record -- nx format:check
       - run: npx nx affected -t lint test build e2e-ci
 "
@@ -198,6 +207,9 @@ jobs:
           cache: 'npm'
       - run: npm ci
       - uses: nrwl/nx-set-shas@v4
+
+      - run: git branch --track main origin/main
+        if: \${{ github.event_name == 'pull_request' }}
 
       - run: npx nx-cloud record -- nx format:check
       - run: npx nx affected -t lint test build e2e-ci
@@ -253,6 +265,8 @@ jobs:
       # - script: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
 
       - script: npm ci
+      - script: git branch --track main origin/main
+        condition: eq(variables['Build.Reason'], 'PullRequest')
 
       - script: npx nx-cloud record -- nx format:check --base=$(BASE_SHA) --head=$(HEAD_SHA)
       - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build
@@ -320,6 +334,10 @@ jobs:
       - nx/set-shas:
           main-branch-name: 'main'
 
+      # Required for nx affected if we're on a branch
+      - run: git branch --track main origin/main
+        condition: eq(variables['Build.Reason'], 'PullRequest')
+
       - run: npx nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD
       - run: npx nx affected --base=$NX_BASE --head=$NX_HEAD -t lint test build
 
@@ -365,6 +383,9 @@ jobs:
       - run: npm ci
       - uses: nrwl/nx-set-shas@v4
 
+      - run: git branch --track main origin/main
+        if: \${{ github.event_name == 'pull_request' }}
+
       - run: npx nx-cloud record -- nx format:check
       - run: npx nx affected -t lint test build
 "
@@ -402,6 +423,9 @@ jobs:
           cache: 'npm'
       - run: npm ci
       - uses: nrwl/nx-set-shas@v4
+
+      - run: git branch --track main origin/main
+        if: \${{ github.event_name == 'pull_request' }}
 
       - run: npx nx-cloud record -- nx format:check
       - run: npx nx affected -t lint test build
@@ -486,6 +510,8 @@ jobs:
       - script: npm install --prefix=$HOME/.local -g pnpm@8
         displayName: Install PNPM
       - script: pnpm install --frozen-lockfile
+      - script: git branch --track main origin/main
+        condition: eq(variables['Build.Reason'], 'PullRequest')
 
       - script: pnpm exec nx-cloud record -- nx format:check --base=$(BASE_SHA) --head=$(HEAD_SHA)
       - script: pnpm exec nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build
@@ -560,6 +586,10 @@ jobs:
       - nx/set-shas:
           main-branch-name: 'main'
 
+      # Required for nx affected if we're on a branch
+      - run: git branch --track main origin/main
+        condition: eq(variables['Build.Reason'], 'PullRequest')
+
       - run: pnpm exec nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD
       - run: pnpm exec nx affected --base=$NX_BASE --head=$NX_HEAD -t lint test build
 
@@ -608,6 +638,9 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - uses: nrwl/nx-set-shas@v4
 
+      - run: git branch --track main origin/main
+        if: \${{ github.event_name == 'pull_request' }}
+
       - run: pnpm exec nx-cloud record -- nx format:check
       - run: pnpm exec nx affected -t lint test build
 "
@@ -648,6 +681,9 @@ jobs:
           cache: 'pnpm'
       - run: pnpm install --frozen-lockfile
       - uses: nrwl/nx-set-shas@v4
+
+      - run: git branch --track main origin/main
+        if: \${{ github.event_name == 'pull_request' }}
 
       - run: pnpm exec nx-cloud record -- nx format:check
       - run: pnpm exec nx affected -t lint test build
@@ -732,6 +768,8 @@ jobs:
       # - script: yarn nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
 
       - script: yarn install --frozen-lockfile
+      - script: git branch --track main origin/main
+        condition: eq(variables['Build.Reason'], 'PullRequest')
 
       - script: yarn nx-cloud record -- nx format:check --base=$(BASE_SHA) --head=$(HEAD_SHA)
       - script: yarn nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build
@@ -799,6 +837,10 @@ jobs:
       - nx/set-shas:
           main-branch-name: 'main'
 
+      # Required for nx affected if we're on a branch
+      - run: git branch --track main origin/main
+        condition: eq(variables['Build.Reason'], 'PullRequest')
+
       - run: yarn nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD
       - run: yarn nx affected --base=$NX_BASE --head=$NX_HEAD -t lint test build
 
@@ -844,6 +886,9 @@ jobs:
       - run: yarn install --frozen-lockfile
       - uses: nrwl/nx-set-shas@v4
 
+      - run: git branch --track main origin/main
+        if: \${{ github.event_name == 'pull_request' }}
+
       - run: yarn nx-cloud record -- nx format:check
       - run: yarn nx affected -t lint test build
 "
@@ -881,6 +926,9 @@ jobs:
           cache: 'yarn'
       - run: yarn install --frozen-lockfile
       - uses: nrwl/nx-set-shas@v4
+
+      - run: git branch --track main origin/main
+        if: \${{ github.event_name == 'pull_request' }}
 
       - run: yarn nx-cloud record -- nx format:check
       - run: yarn nx affected -t lint test build

@@ -71,10 +71,6 @@ const pages: Array<{ title: string; path: string }> = [
     path: '/ci/reference/env-vars',
   },
   {
-    title: 'Nx Cloud Server API Reference',
-    path: '/ci/reference/server-api',
-  },
-  {
     title: 'Enterprise Release Notes',
     path: '/ci/reference/release-notes',
   },

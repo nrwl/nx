@@ -55,14 +55,6 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Integrated Monorepo",
-                "path": "/getting-started/tutorials/integrated-repo-tutorial",
-                "id": "integrated-repo-tutorial",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
                 "name": "React Standalone",
                 "path": "/getting-started/tutorials/react-standalone-tutorial",
                 "id": "react-standalone-tutorial",
@@ -155,14 +147,6 @@
             "disableCollapsible": false
           },
           {
-            "name": "Integrated Monorepo",
-            "path": "/getting-started/tutorials/integrated-repo-tutorial",
-            "id": "integrated-repo-tutorial",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
             "name": "React Standalone",
             "path": "/getting-started/tutorials/react-standalone-tutorial",
             "id": "react-standalone-tutorial",
@@ -209,14 +193,6 @@
         "name": "NPM Workspaces Monorepo",
         "path": "/getting-started/tutorials/npm-workspaces-tutorial",
         "id": "npm-workspaces-tutorial",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Integrated Monorepo",
-        "path": "/getting-started/tutorials/integrated-repo-tutorial",
-        "id": "integrated-repo-tutorial",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -7038,14 +7014,6 @@
             "disableCollapsible": false
           },
           {
-            "name": "Server API Reference",
-            "path": "/ci/reference/server-api",
-            "id": "server-api",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
             "name": "Release Notes",
             "path": "/ci/reference/release-notes",
             "id": "release-notes",
@@ -7084,14 +7052,6 @@
         "name": "Environment Variables",
         "path": "/ci/reference/env-vars",
         "id": "env-vars",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Server API Reference",
-        "path": "/ci/reference/server-api",
-        "id": "server-api",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false

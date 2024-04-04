@@ -46,11 +46,6 @@
                   "file": "shared/tutorials/npm-workspaces"
                 },
                 {
-                  "name": "Integrated Monorepo",
-                  "id": "integrated-repo-tutorial",
-                  "file": "shared/npm-tutorial/integrated"
-                },
-                {
                   "name": "React Standalone",
                   "id": "react-standalone-tutorial",
                   "file": "shared/react-standalone-tutorial/react-standalone"
@@ -2029,11 +2024,6 @@
               "name": "Environment Variables",
               "id": "env-vars",
               "file": "nx-cloud/reference/env-vars"
-            },
-            {
-              "name": "Server API Reference",
-              "id": "server-api",
-              "file": "nx-cloud/reference/server-api"
             },
             {
               "name": "Release Notes",

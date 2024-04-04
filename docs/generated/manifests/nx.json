@@ -69,17 +69,6 @@
             "tags": []
           },
           {
-            "id": "integrated-repo-tutorial",
-            "name": "Integrated Monorepo",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/npm-tutorial/integrated",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/getting-started/tutorials/integrated-repo-tutorial",
-            "tags": []
-          },
-          {
             "id": "react-standalone-tutorial",
             "name": "React Standalone",
             "description": "",
@@ -207,17 +196,6 @@
         "tags": []
       },
       {
-        "id": "integrated-repo-tutorial",
-        "name": "Integrated Monorepo",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/npm-tutorial/integrated",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/getting-started/tutorials/integrated-repo-tutorial",
-        "tags": []
-      },
-      {
         "id": "react-standalone-tutorial",
         "name": "React Standalone",
         "description": "",
@@ -286,17 +264,6 @@
     "itemList": [],
     "isExternal": false,
     "path": "/getting-started/tutorials/npm-workspaces-tutorial",
-    "tags": []
-  },
-  "/getting-started/tutorials/integrated-repo-tutorial": {
-    "id": "integrated-repo-tutorial",
-    "name": "Integrated Monorepo",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/npm-tutorial/integrated",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/getting-started/tutorials/integrated-repo-tutorial",
     "tags": []
   },
   "/getting-started/tutorials/react-standalone-tutorial": {

@@ -1868,17 +1868,6 @@
         "tags": []
       },
       {
-        "id": "server-api",
-        "name": "Server API Reference",
-        "description": "",
-        "mediaImage": "",
-        "file": "nx-cloud/reference/server-api",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/ci/reference/server-api",
-        "tags": []
-      },
-      {
         "id": "release-notes",
         "name": "Release Notes",
         "description": "",
@@ -1936,17 +1925,6 @@
     "itemList": [],
     "isExternal": false,
     "path": "/ci/reference/env-vars",
-    "tags": []
-  },
-  "/ci/reference/server-api": {
-    "id": "server-api",
-    "name": "Server API Reference",
-    "description": "",
-    "mediaImage": "",
-    "file": "nx-cloud/reference/server-api",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/ci/reference/server-api",
     "tags": []
   },
   "/ci/reference/release-notes": {

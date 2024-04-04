@@ -39,7 +39,7 @@ export const ParameterView = (props: {
             Deprecated
           </span>
         )}
-        {props.schema['x-priority'] === 'internal' && (
+        {(props.schema as any)['x-priority'] === 'internal' && (
           <span
             data-tooltip="Intended for use by other generators"
             className="relative -top-0.5 inline-flex rounded-md bg-yellow-300 px-2 text-xs font-semibold uppercase leading-5 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100"

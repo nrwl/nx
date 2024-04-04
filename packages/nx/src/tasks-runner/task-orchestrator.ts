@@ -1,6 +1,7 @@
 import { defaultMaxListeners } from 'events';
 import { performance } from 'perf_hooks';
 import { relative } from 'path';
+import { writeFileSync } from 'fs';
 import { TaskHasher } from '../hasher/task-hasher';
 import runCommandsImpl from '../executors/run-commands/run-commands.impl';
 import { ForkedProcessTaskRunner } from './forked-process-task-runner';
@@ -433,7 +434,7 @@ export class TaskOrchestrator {
             terminalOutput
           );
         }
-
+        writeFileSync(temporaryOutputPath, terminalOutput);
         results.push({
           task,
           status,

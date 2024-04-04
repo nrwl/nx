@@ -7,7 +7,6 @@
     - [Editor Setup](/getting-started/editor-setup)
     - [Tutorials](/getting-started/tutorials)
       - [NPM Workspaces Monorepo](/getting-started/tutorials/npm-workspaces-tutorial)
-      - [Integrated Monorepo](/getting-started/tutorials/integrated-repo-tutorial)
       - [React Standalone](/getting-started/tutorials/react-standalone-tutorial)
       - [React Monorepo](/getting-started/tutorials/react-monorepo-tutorial)
       - [Angular Standalone](/getting-started/tutorials/angular-standalone-tutorial)
@@ -326,7 +325,6 @@
     - [nx-cloud CLI](/ci/reference/nx-cloud-cli)
     - [Launch Templates](/ci/reference/launch-templates)
     - [Environment Variables](/ci/reference/env-vars)
-    - [Server API Reference](/ci/reference/server-api)
     - [Release Notes](/ci/reference/release-notes)
 
 - Nx-api
