@@ -55,14 +55,6 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Integrated Monorepo",
-                "path": "/getting-started/tutorials/integrated-repo-tutorial",
-                "id": "integrated-repo-tutorial",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
                 "name": "React Standalone",
                 "path": "/getting-started/tutorials/react-standalone-tutorial",
                 "id": "react-standalone-tutorial",
@@ -155,14 +147,6 @@
             "disableCollapsible": false
           },
           {
-            "name": "Integrated Monorepo",
-            "path": "/getting-started/tutorials/integrated-repo-tutorial",
-            "id": "integrated-repo-tutorial",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
             "name": "React Standalone",
             "path": "/getting-started/tutorials/react-standalone-tutorial",
             "id": "react-standalone-tutorial",
@@ -209,14 +193,6 @@
         "name": "NPM Workspaces Monorepo",
         "path": "/getting-started/tutorials/npm-workspaces-tutorial",
         "id": "npm-workspaces-tutorial",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Integrated Monorepo",
-        "path": "/getting-started/tutorials/integrated-repo-tutorial",
-        "id": "integrated-repo-tutorial",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
