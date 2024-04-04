@@ -1,0 +1,26 @@
+{
+  "name": "@nx/wasm32-wasi-preview1-threads",
+  "version": "0.0.0",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nrwl/nx.git",
+    "directory": "packages/nx/native-packages/wasm32-wasi-preview1-threads"
+  },
+  "os": [
+    "win32"
+  ],
+  "cpu": [
+    "x64"
+  ],
+  "main": "nx.wasm32-wasi.wasm",
+  "files": [
+    "nx.wasm32-wasi.wasm"
+  ],
+  "engines": {
+    "node": ">= 10"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
