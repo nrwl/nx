@@ -759,7 +759,9 @@ const conceptUrls = {
   '/getting-started/tutorials/package-based-repo-tutorial':
     '/getting-started/tutorials/npm-workspaces-tutorial',
   '/getting-started/integrated-repo-tutorial':
-    '/getting-started/tutorials/integrated-repo-tutorial',
+    '/getting-started/tutorials/react-monorepo-tutorial',
+  '/getting-started/tutorials/integrated-repo-tutorial':
+    '/getting-started/tutorials/react-monorepo-tutorial',
   '/getting-started/react-standalone-tutorial':
     '/getting-started/tutorials/react-standalone-tutorial',
   '/getting-started/angular-standalone-tutorial':
