@@ -46,11 +46,6 @@
                   "file": "shared/tutorials/npm-workspaces"
                 },
                 {
-                  "name": "Integrated Monorepo",
-                  "id": "integrated-repo-tutorial",
-                  "file": "shared/npm-tutorial/integrated"
-                },
-                {
                   "name": "React Standalone",
                   "id": "react-standalone-tutorial",
                   "file": "shared/react-standalone-tutorial/react-standalone"

@@ -7,7 +7,6 @@
     - [Editor Setup](/getting-started/editor-setup)
     - [Tutorials](/getting-started/tutorials)
       - [NPM Workspaces Monorepo](/getting-started/tutorials/npm-workspaces-tutorial)
-      - [Integrated Monorepo](/getting-started/tutorials/integrated-repo-tutorial)
       - [React Standalone](/getting-started/tutorials/react-standalone-tutorial)
       - [React Monorepo](/getting-started/tutorials/react-monorepo-tutorial)
       - [Angular Standalone](/getting-started/tutorials/angular-standalone-tutorial)
