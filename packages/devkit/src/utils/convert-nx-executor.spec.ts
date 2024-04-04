@@ -2,8 +2,22 @@ import { TempFs } from '../../internal-testing-utils';
 import { convertNxExecutor } from './convert-nx-executor';
 
 describe('Convert Nx Executor', () => {
+  let fs: TempFs;
+
+  beforeAll(async () => {
+    fs = new TempFs('convert-nx-executor');
+    // The tests in this file don't actually care about the files in the temp dir.
+    // The converted executor reads project configuration from the workspace root,
+    // which is set to the temp dir in the tests. If there are no files in the temp
+    // dir, the glob search currently hangs. So we create a dummy file to prevent that.
+    await fs.createFile('blah.json', JSON.stringify({}));
+  });
+
+  afterAll(() => {
+    fs.cleanup();
+  });
+
   it('should convertNxExecutor to builder correctly and produce the same output', async () => {
-    const fs = new TempFs('convert-nx-executor');
     // ARRANGE
     const { schema } = require('@angular-devkit/core');
     const {
@@ -89,7 +103,6 @@ describe('Convert Nx Executor', () => {
     expect(convertedExecutor.handler.toString()).toEqual(
       realBuilder.handler.toString()
     );
-    fs.cleanup();
   });
 });
 

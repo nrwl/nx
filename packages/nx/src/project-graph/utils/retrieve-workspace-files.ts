@@ -95,11 +95,7 @@ export async function retrieveProjectConfigurationsWithAngularProjects(
     workspaceRoot
   );
 
-  const res = _retrieveProjectConfigurations(
-    workspaceRoot,
-    nxJson,
-    await plugins
-  );
+  const res = _retrieveProjectConfigurations(workspaceRoot, nxJson, plugins);
   cleanup();
   return res;
 }
