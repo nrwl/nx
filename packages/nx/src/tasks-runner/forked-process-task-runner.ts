@@ -201,6 +201,7 @@ export class ForkedProcessTaskRunner {
   private async forkProcessWithPseudoTerminal(
     task: Task,
     {
+      temporaryOutputPath,
       streamOutput,
       taskGraph,
       env,
@@ -242,7 +243,7 @@ export class ForkedProcessTaskRunner {
         if (code >= 128) {
           process.exit(code);
         }
-
+        this.writeTerminalOutput(temporaryOutputPath, terminalOutput);
         res({
           code,
           terminalOutput,
