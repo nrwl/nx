@@ -49,6 +49,8 @@ jobs:
       - script: npm install --prefix=$HOME/.local -g pnpm@8
         displayName: Install PNPM
       <% } %>- script: <%= packageManagerInstall %>
+      - script: git branch --track main origin/main
+        condition: eq(variables['Build.Reason'], 'PullRequest')
 
       - script: <%= packageManagerPrefix %> nx-cloud record -- nx format:check --base=$(BASE_SHA) --head=$(HEAD_SHA)
       - script: <%= packageManagerPrefix %> nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build<% if(hasE2E){ %> e2e-ci<% } %>
