@@ -56,6 +56,7 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
     pageStyleContent: `.page {}`,
 
     stylesExt: options.style === 'less' ? options.style : 'css',
+    style: options.style === 'tailwind' ? 'css' : options.style,
   };
 
   const generatedAppFilePath = options.src
