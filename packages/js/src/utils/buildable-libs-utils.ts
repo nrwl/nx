@@ -434,6 +434,7 @@ export function createTmpTsConfig(
     workspaceRoot,
     'tmp',
     projectRoot,
+    process.env.NX_TASK_TARGET_TARGET ?? 'build',
     'tsconfig.generated.json'
   );
   const parsedTSConfig = readTsConfigWithRemappedPaths(
