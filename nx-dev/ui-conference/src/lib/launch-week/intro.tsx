@@ -48,13 +48,34 @@ export function LaunchNxIntro() {
           </p>
 
           <a
+            href="#conf"
+            className="font-input-mono group flex w-full items-center text-blue-500 dark:text-sky-500 sm:text-xl"
+          >
+            <span className="group-hover:underline">Watch the talks</span>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="ml-1 h-8 w-8 transform-gpu transition duration-200 ease-out group-hover:translate-x-2 "
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M13 7l5 5m0 0l-5 5m5-5H6"
+              />
+            </svg>
+          </a>
+
+          <a
             rel="noreferrer"
             target="_blank"
             href="https://youtu.be/fy0K2Smyj5A"
             className="font-input-mono group flex w-full items-center text-blue-500 dark:text-sky-500 sm:text-xl"
           >
             <span className="group-hover:underline">
-              Watch the conference recording
+              Watch the full conference recording
             </span>
             <svg
               xmlns="http://www.w3.org/2000/svg"

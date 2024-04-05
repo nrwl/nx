@@ -16,7 +16,7 @@ export function LaunchWeekAgenda(): JSX.Element {
       title: 'Nx Project Crystal',
       description: '',
       speakers: ['Juri Strumpflohner'],
-      videoUrl: '',
+      videoUrl: 'https://youtu.be/PzCgpM7qtTU',
     },
     {
       type: 'event',
@@ -24,7 +24,7 @@ export function LaunchWeekAgenda(): JSX.Element {
       title: 'Project Crystal + .NET in Action',
       description: '',
       speakers: ['Craigory Coppola'],
-      videoUrl: '',
+      videoUrl: 'https://youtu.be/fh-yzOuQGE8',
     },
     {
       type: 'event',
@@ -32,7 +32,7 @@ export function LaunchWeekAgenda(): JSX.Element {
       title: 'Nx Agents Walkthrough: Effortlessly Fast CI Built for Monorepos',
       description: '',
       speakers: ['Rareş Matei'],
-      videoUrl: '',
+      videoUrl: 'https://youtu.be/XS-exYYP_Gg',
     },
     {
       type: 'event',
@@ -40,7 +40,7 @@ export function LaunchWeekAgenda(): JSX.Element {
       title: 'Solving E2E Tests',
       description: '',
       speakers: ['Altan Stalker'],
-      videoUrl: '',
+      videoUrl: 'https://youtu.be/EO_tGa0Nx1s',
     },
     {
       type: 'event',
@@ -48,7 +48,7 @@ export function LaunchWeekAgenda(): JSX.Element {
       title: 'Releasing Nx Release',
       description: ``,
       speakers: ['James Henry'],
-      videoUrl: '',
+      videoUrl: 'https://youtu.be/KjZKFGu3_9I',
     },
     {
       type: 'event',
@@ -56,7 +56,7 @@ export function LaunchWeekAgenda(): JSX.Element {
       title: 'Special Announcement',
       description: ``,
       speakers: ['Zack DeRose'],
-      videoUrl: '',
+      videoUrl: 'https://youtu.be/Xfvv09wSoM8',
     },
     {
       type: 'event',
