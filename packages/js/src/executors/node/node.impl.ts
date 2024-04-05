@@ -175,7 +175,13 @@ export async function* nodeExecutor(
                   `NX Process exited with code ${code}, waiting for changes to restart...`
                 );
               }
-              if (!options.watch) done();
+              if (!options.watch) {
+                if (code !== 0) {
+                  error(new Error(`Process exited with code ${code}`));
+                } else {
+                  done();
+                }
+              }
               resolve();
             });
 
