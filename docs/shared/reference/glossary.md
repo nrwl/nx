@@ -201,8 +201,8 @@ A [project](#project) that has its own root folder at the root of the repository
 Runs in Nx Cloud are Nx commands that result in some number of `Task`s being performed.
 
 - `nx run my-app:build` is a run that performs a single task
-- `nx run-many -t build` is a run that performs many tasks.
-- `nx affected -t test` is a run that performs zero to many tasks.
+- `nx run-many -t test,build` is a run that performs many tasks.
+- `nx affected -t test,build` is a run that performs zero to many tasks.
 
 When a run exists in a CI environment, Nx Cloud will automatically associate it
 with the appropriate `Run Group` and `CI Pipeline Execution`
