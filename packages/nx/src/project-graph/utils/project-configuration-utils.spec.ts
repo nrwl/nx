@@ -444,6 +444,101 @@ describe('project-configuration-utils', () => {
         expect(result.cache).not.toBeDefined();
       });
     });
+
+    describe('metadata', () => {
+      it('should be added', () => {
+        const rootMap = new RootMapBuilder()
+          .addProject({
+            root: 'libs/lib-a',
+            name: 'lib-a',
+          })
+          .getRootMap();
+        const sourceMap: ConfigurationSourceMaps = {
+          'libs/lib-a': {},
+        };
+        mergeProjectConfigurationIntoRootMap(
+          rootMap,
+          {
+            root: 'libs/lib-a',
+            name: 'lib-a',
+            targets: {
+              build: {
+                metadata: {
+                  description: 'do stuff',
+                  technologies: ['tech'],
+                },
+              },
+            },
+          },
+          sourceMap,
+          ['dummy', 'dummy.ts']
+        );
+
+        expect(rootMap.get('libs/lib-a').targets.build.metadata).toEqual({
+          description: 'do stuff',
+          technologies: ['tech'],
+        });
+        expect(sourceMap['libs/lib-a']).toMatchObject({
+          'targets.build.metadata.description': ['dummy', 'dummy.ts'],
+          'targets.build.metadata.technologies': ['dummy', 'dummy.ts'],
+          'targets.build.metadata.technologies.0': ['dummy', 'dummy.ts'],
+        });
+      });
+
+      it('should be merged', () => {
+        const rootMap = new RootMapBuilder()
+          .addProject({
+            root: 'libs/lib-a',
+            name: 'lib-a',
+            targets: {
+              build: {
+                metadata: {
+                  description: 'do stuff',
+                  technologies: ['tech'],
+                },
+              },
+            },
+          })
+          .getRootMap();
+        const sourceMap: ConfigurationSourceMaps = {
+          'libs/lib-a': {
+            'targets.build.metadata.technologies': ['existing', 'existing.ts'],
+            'targets.build.metadata.technologies.0': [
+              'existing',
+              'existing.ts',
+            ],
+          },
+        };
+        mergeProjectConfigurationIntoRootMap(
+          rootMap,
+          {
+            root: 'libs/lib-a',
+            name: 'lib-a',
+            targets: {
+              build: {
+                metadata: {
+                  description: 'do cool stuff',
+                  technologies: ['tech2'],
+                },
+              },
+            },
+          },
+          sourceMap,
+          ['dummy', 'dummy.ts']
+        );
+
+        expect(rootMap.get('libs/lib-a').targets.build.metadata).toEqual({
+          description: 'do cool stuff',
+          technologies: ['tech', 'tech2'],
+        });
+        expect(sourceMap['libs/lib-a']).toMatchObject({
+          'targets.build.metadata.description': ['dummy', 'dummy.ts'],
+          'targets.build.metadata.technologies': ['existing', 'existing.ts'],
+          'targets.build.metadata.technologies.0': ['existing', 'existing.ts'],
+          'targets.build.metadata.technologies.1': ['dummy', 'dummy.ts'],
+        });
+      });
+    });
   });
 
   describe('mergeProjectConfigurationIntoRootMap', () => {
