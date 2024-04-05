@@ -5,41 +5,38 @@ import {
   runExecutor,
 } from '@nx/devkit';
 
-export async function startDevRemotes(
-  remotes: {
-    remotePorts: any[];
-    staticRemotes: string[];
-    devRemotes: string[];
-  },
+export async function startRemotes(
+  remotes: string[],
   workspaceProjects: Record<string, ProjectConfiguration>,
   options: Schema,
-  context: ExecutorContext
+  context: ExecutorContext,
+  target: 'serve' | 'serve-static' = 'serve'
 ) {
-  const devRemotesIters: AsyncIterable<{ success: boolean }>[] = [];
-  for (const app of remotes.devRemotes) {
-    if (!workspaceProjects[app].targets?.['serve']) {
-      throw new Error(`Could not find "serve" target in "${app}" project.`);
-    } else if (!workspaceProjects[app].targets?.['serve'].executor) {
+  const remoteIters: AsyncIterable<{ success: boolean }>[] = [];
+  for (const app of remotes) {
+    if (!workspaceProjects[app].targets?.[target]) {
+      throw new Error(`Could not find "${target}" target in "${app}" project.`);
+    } else if (!workspaceProjects[app].targets?.[target].executor) {
       throw new Error(
-        `Could not find executor for "serve" target in "${app}" project.`
+        `Could not find executor for "${target}" target in "${app}" project.`
       );
     }
 
     const [collection, executor] =
-      workspaceProjects[app].targets['serve'].executor.split(':');
+      workspaceProjects[app].targets[target].executor.split(':');
     const isUsingModuleFederationDevServerExecutor = executor.includes(
       'module-federation-dev-server'
     );
 
-    devRemotesIters.push(
+    remoteIters.push(
       await runExecutor(
         {
           project: app,
-          target: 'serve',
+          target,
           configuration: context.configurationName,
         },
         {
-          verbose: options.verbose ?? false,
+          ...(target === 'serve' ? { verbose: options.verbose ?? false } : {}),
           ...(isUsingModuleFederationDevServerExecutor
             ? { isInitialHost: false }
             : {}),
@@ -48,5 +45,5 @@ export async function startDevRemotes(
       )
     );
   }
-  return devRemotesIters;
+  return remoteIters;
 }
