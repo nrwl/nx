@@ -145,7 +145,8 @@ async function reorgnizeWorkspaceStructure(options: NormalizedOptions) {
     ? `npx nx build ${options.reactAppName}`
     : 'npm run build';
   printFinalMessage({
-    learnMoreLink: 'https://nx.dev/recipes/react/migration-cra',
+    learnMoreLink:
+      'https://nx.dev/recipes/adopting-nx/adding-to-existing-project',
     bodyLines: [
       `- Execute "${buildCommand}" twice to see the computation caching in action.`,
     ],
