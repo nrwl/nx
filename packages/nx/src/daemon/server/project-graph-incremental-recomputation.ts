@@ -256,7 +256,7 @@ async function processFilesAndCreateAndSerializeProjectGraph(): Promise<Serializ
 
     if (g.error) {
       if (g.error instanceof CreateDependenciesError) {
-        errors.concat(g.error.errors);
+        errors.push(...g.error.errors);
       } else {
         return {
           error: g.error,
