@@ -511,11 +511,6 @@
               "description": "Advanced guides to adopt Nx in React.",
               "itemList": [
                 {
-                  "name": "Migrating from CRA",
-                  "id": "migration-cra",
-                  "file": "shared/migration/migration-cra"
-                },
-                {
                   "name": "React 18 Migration",
                   "id": "react-18",
                   "file": "shared/guides/react-18"

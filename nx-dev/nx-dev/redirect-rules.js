@@ -218,7 +218,7 @@ const diataxis = {
     '/recipes/advanced-plugins/project-graph-plugins',
   '/migration/lerna-and-nx': '/recipes/adopting-nx/lerna-and-nx',
   '/migration/adding-to-monorepo': '/recipes/adopting-nx/adding-to-monorepo',
-  '/migration/migration-cra': '/recipes/adopting-nx/migration-cra',
+  '/migration/migration-cra': '/recipes/adopting-nx/adding-to-existing-project',
   '/migration/migration-angular': '/recipes/adopting-nx/migration-angular',
   '/migration/migration-angularjs': '/recipes/adopting-nx/migration-angular',
   '/recipes/angular/migration/angularjs':
@@ -905,7 +905,10 @@ const latestRecipesRefactoring = {
   '/recipes/other/setup-incremental-builds-angular':
     '/recipes/angular/setup-incremental-builds-angular',
   // react
-  '/recipes/adopting-nx/migration-cra': '/recipes/react/migration-cra',
+  '/recipes/adopting-nx/migration-cra':
+    '/recipes/adopting-nx/adding-to-existing-project',
+  '/recipes/react/migration-cra':
+    '/recipes/adopting-nx/adding-to-existing-project',
   '/recipes/other/react-18': '/recipes/react/react-18',
   '/recipes/other/react-native': '/recipes/react/react-native',
   '/recipes/other/remix': '/recipes/react/remix',
