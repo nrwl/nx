@@ -86,4 +86,7 @@ export interface NormalizedSwcExecutorOptions
   skipTypeCheck: boolean;
   swcCliOptions: SwcCliOptions;
   tmpSwcrcPath: string;
+  sourceRoot?: string;
+  // TODO(v20): remove inline feature
+  inline?: boolean;
 }
