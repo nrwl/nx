@@ -148,12 +148,6 @@ The umbrella term for all CI-related products that Nx provides.
 
 > See: [CI with Nx](/ci/intro/ci-with-nx)
 
-### Nx Cloud Workflows
-
-(coming soon)
-
-A fully featured, general-use CI pipeline product. This product can fully replace your existing CI provider.
-
 ### Nx Replay
 
 Nx Replay is the product offered by [Nx Cloud](#nx-cloud) that enables [remote caching](#remote-cache).
