@@ -109,6 +109,10 @@
     "staticRemotesPort": {
       "type": "number",
       "description": "The port at which to serve the file-server for the static remotes."
+    },
+    "pathToManifestFile": {
+      "type": "string",
+      "description": "Path to a Module Federation manifest file (e.g. `my/path/to/module-federation.manifest.json`) containing the dynamic remote applications relative to the workspace root."
     }
   }
 }

@@ -8,7 +8,7 @@ import {
   buildStaticRemotes,
   normalizeOptions,
   parseStaticRemotesConfig,
-  startDevRemotes,
+  startRemotes,
   startStaticRemotesFileServer,
 } from './lib';
 import { eachValueFrom } from '@nx/devkit/src/utils/rxjs-for-await';
@@ -138,11 +138,20 @@ export async function* moduleFederationDevServerExecutor(
   );
   await buildStaticRemotes(staticRemotesConfig, nxBin, context, options);
 
-  const devRemoteIters = await startDevRemotes(
-    remotes,
+  const devRemoteIters = await startRemotes(
+    remotes.devRemotes,
     workspaceProjects,
     options,
-    context
+    context,
+    'serve'
+  );
+
+  const dynamicRemoteIters = await startRemotes(
+    remotes.dynamicRemotes,
+    workspaceProjects,
+    options,
+    context,
+    'serve-static'
   );
 
   const staticRemotesIter =
@@ -159,6 +168,7 @@ export async function* moduleFederationDevServerExecutor(
   return yield* combineAsyncIterables(
     removeBaseUrlEmission(currIter),
     ...devRemoteIters.map(removeBaseUrlEmission),
+    ...dynamicRemoteIters.map(removeBaseUrlEmission),
     ...(staticRemotesIter ? [removeBaseUrlEmission(staticRemotesIter)] : []),
     createAsyncIterable<{ success: true; baseUrl: string }>(
       async ({ next, done }) => {
