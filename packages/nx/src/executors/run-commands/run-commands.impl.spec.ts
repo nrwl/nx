@@ -7,10 +7,6 @@ import runCommands, {
 } from './run-commands.impl';
 import { env } from 'npm-run-path';
 
-const {
-  devDependencies: { nx: version },
-} = require('package.json');
-
 function normalize(p: string) {
   return p.startsWith('/private') ? p.substring(8) : p;
 }
@@ -38,6 +34,20 @@ describe('Run Commands', () => {
     );
     expect(result).toEqual(expect.objectContaining({ success: true }));
     expect(readFile(f)).toEqual('123');
+  });
+
+  it('should not pass --args into underlying command', async () => {
+    const f = fileSync().name;
+    const result = await runCommands(
+      {
+        command: `echo`,
+        __unparsed__: ['--args=--key=123'],
+        args: '--key=123',
+        unparsedCommandArgs: { args: '--key=123' },
+      },
+      context
+    );
+    expect(result.terminalOutput.trim()).not.toContain('--args=--key=123');
   });
 
   it('should interpolate all unknown args as if they were --args', async () => {
@@ -178,6 +188,37 @@ describe('Run Commands', () => {
           true
         )
       ).toEqual('echo one -a=b');
+    });
+
+    it('should not forward all unparsed args when the options is a prop to run command', () => {
+      expect(
+        interpolateArgsIntoCommand(
+          'echo',
+          {
+            __unparsed__: ['--args', 'test', 'hello'],
+            unparsedCommandArgs: { args: 'test' },
+          } as any,
+          true
+        )
+      ).toEqual('echo hello');
+
+      expect(
+        interpolateArgsIntoCommand(
+          'echo',
+          {
+            __unparsed__: ['--args=test', 'hello'],
+          } as any,
+          true
+        )
+      ).toEqual('echo hello');
+
+      expect(
+        interpolateArgsIntoCommand(
+          'echo',
+          { __unparsed__: ['--parallel=true', 'hello'] } as any,
+          true
+        )
+      ).toEqual('echo hello');
     });
 
     it('should add all args when forwardAllArgs is true', () => {
