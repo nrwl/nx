@@ -2,7 +2,9 @@ import { NxJsonConfiguration, TargetDefaults } from '../../config/nx-json';
 import { ProjectGraphExternalNode } from '../../config/project-graph';
 import {
   ProjectConfiguration,
+  ProjectMetadata,
   TargetConfiguration,
+  TargetMetadata,
 } from '../../config/workspace-json-project-json';
 import { NX_PREFIX } from '../../utils/logger';
 import { CreateNodesResult, LoadedNxPlugin } from '../../utils/nx-plugin';
@@ -149,6 +151,16 @@ export function mergeProjectConfigurationIntoRootMap(
     }
   }
 
+  if (project.metadata) {
+    updatedProjectConfiguration.metadata = mergeMetadata(
+      sourceMap,
+      sourceInformation,
+      'metadata',
+      project.metadata,
+      matchingProject.metadata
+    );
+  }
+
   if (project.targets) {
     // We merge the targets with special handling, so clear this back to the
     // targets as defined originally before merging.
@@ -195,73 +207,77 @@ export function mergeProjectConfigurationIntoRootMap(
     }
   }
 
-  if (project.metadata) {
-    if (sourceMap) {
-      sourceMap['targets'] ??= sourceInformation;
-    }
-    for (const [metadataKey, value] of Object.entries({
-      ...project.metadata,
-    })) {
-      const existingValue = matchingProject.metadata?.[metadataKey];
+  projectRootMap.set(
+    updatedProjectConfiguration.root,
+    updatedProjectConfiguration
+  );
+}
 
-      if (Array.isArray(value) && Array.isArray(existingValue)) {
-        for (const item of [...value]) {
-          const newLength =
-            updatedProjectConfiguration.metadata[metadataKey].push(item);
+function mergeMetadata<T = ProjectMetadata | TargetMetadata>(
+  sourceMap: Record<string, [file: string, plugin: string]>,
+  sourceInformation: [file: string, plugin: string],
+  baseSourceMapPath: string,
+  metadata: T,
+  matchingMetadata?: T
+): T {
+  const result: T = {
+    ...(matchingMetadata ?? ({} as T)),
+  };
+  for (const [metadataKey, value] of Object.entries(metadata)) {
+    const existingValue = matchingMetadata?.[metadataKey];
+
+    if (Array.isArray(value) && Array.isArray(existingValue)) {
+      for (const item of [...value]) {
+        const newLength = result[metadataKey].push(item);
+        if (sourceMap) {
+          sourceMap[`${baseSourceMapPath}.${metadataKey}.${newLength - 1}`] =
+            sourceInformation;
+        }
+      }
+    } else if (Array.isArray(value) && existingValue === undefined) {
+      result[metadataKey] ??= value;
+      if (sourceMap) {
+        sourceMap[`${baseSourceMapPath}.${metadataKey}`] = sourceInformation;
+      }
+      for (let i = 0; i < value.length; i++) {
+        if (sourceMap) {
+          sourceMap[`${baseSourceMapPath}.${metadataKey}.${i}`] =
+            sourceInformation;
+        }
+      }
+    } else if (typeof value === 'object' && typeof existingValue === 'object') {
+      for (const key in value) {
+        const existingValue = matchingMetadata?.[metadataKey]?.[key];
+
+        if (Array.isArray(value[key]) && Array.isArray(existingValue)) {
+          for (const item of value[key]) {
+            const i = result[metadataKey][key].push(item);
+            if (sourceMap) {
+              sourceMap[`${baseSourceMapPath}.${metadataKey}.${key}.${i - 1}`] =
+                sourceInformation;
+            }
+          }
+        } else {
+          result[metadataKey] = value;
           if (sourceMap) {
-            sourceMap[`metadata.${metadataKey}.${newLength - 1}`] =
+            sourceMap[`${baseSourceMapPath}.${metadataKey}`] =
               sourceInformation;
           }
         }
-      } else if (Array.isArray(value) && existingValue === undefined) {
-        updatedProjectConfiguration.metadata ??= {};
-        updatedProjectConfiguration.metadata[metadataKey] ??= value;
-        if (sourceMap) {
-          sourceMap[`metadata.${metadataKey}`] = sourceInformation;
-        }
-        for (let i = 0; i < value.length; i++) {
-          if (sourceMap) {
-            sourceMap[`metadata.${metadataKey}.${i}`] = sourceInformation;
-          }
-        }
-      } else if (
-        typeof value === 'object' &&
-        typeof existingValue === 'object'
-      ) {
-        for (const key in value) {
-          const existingValue = matchingProject.metadata?.[metadataKey]?.[key];
+      }
+    } else {
+      result[metadataKey] = value;
+      if (sourceMap) {
+        sourceMap[`${baseSourceMapPath}.${metadataKey}`] = sourceInformation;
 
-          if (Array.isArray(value[key]) && Array.isArray(existingValue)) {
-            for (const item of value[key]) {
-              const i =
-                updatedProjectConfiguration.metadata[metadataKey][key].push(
-                  item
-                );
-              if (sourceMap) {
-                sourceMap[`metadata.${metadataKey}.${key}.${i - 1}`] =
+        if (typeof value === 'object') {
+          for (const k in value) {
+            sourceMap[`${baseSourceMapPath}.${metadataKey}.${k}`] =
+              sourceInformation;
+            if (Array.isArray(value[k])) {
+              for (let i = 0; i < value[k].length; i++) {
+                sourceMap[`${baseSourceMapPath}.${metadataKey}.${k}.${i}`] =
                   sourceInformation;
-              }
-            }
-          } else {
-            updatedProjectConfiguration.metadata[metadataKey] = value;
-            if (sourceMap) {
-              sourceMap[`metadata.${metadataKey}`] = sourceInformation;
-            }
-          }
-        }
-      } else {
-        updatedProjectConfiguration.metadata[metadataKey] = value;
-        if (sourceMap) {
-          sourceMap[`metadata.${metadataKey}`] = sourceInformation;
-
-          if (typeof value === 'object') {
-            for (const k in value) {
-              sourceMap[`metadata.${metadataKey}.${k}`] = sourceInformation;
-              if (Array.isArray(value[k])) {
-                for (let i = 0; i < value[k].length; i++) {
-                  sourceMap[`metadata.${metadataKey}.${k}.${i}`] =
-                    sourceInformation;
-                }
               }
             }
           }
@@ -269,11 +285,7 @@ export function mergeProjectConfigurationIntoRootMap(
       }
     }
   }
-
-  projectRootMap.set(
-    updatedProjectConfiguration.root,
-    updatedProjectConfiguration
-  );
+  return result;
 }
 
 export type ConfigurationResult = {
@@ -689,6 +701,17 @@ export function mergeTargetConfigurations(
       targetIdentifier
     );
   }
+
+  if (target.metadata) {
+    result.metadata = mergeMetadata(
+      projectConfigSourceMap,
+      sourceInformation,
+      `${targetIdentifier}.metadata`,
+      target.metadata,
+      baseTarget?.metadata
+    );
+  }
+
   return result as TargetConfiguration;
 }
 
