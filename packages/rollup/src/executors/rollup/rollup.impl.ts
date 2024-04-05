@@ -133,7 +133,8 @@ export async function* rollupExecutor(
       updatePackageJson(options, packageJson);
       logger.info(`⚡ Done in ${duration}`);
       return { success: true, outfile };
-    } catch {
+    } catch (e) {
+      logger.error(e);
       logger.error(`Bundle failed: ${context.projectName}`);
       return { success: false };
     }
