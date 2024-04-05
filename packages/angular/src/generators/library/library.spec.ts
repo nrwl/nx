@@ -652,7 +652,7 @@ describe('lib', () => {
                   "error",
                   {
                     "type": "attribute",
-                    "prefix": "proj",
+                    "prefix": "lib",
                     "style": "camelCase"
                   }
                 ],
@@ -660,7 +660,7 @@ describe('lib', () => {
                   "error",
                   {
                     "type": "element",
-                    "prefix": "proj",
+                    "prefix": "lib",
                     "style": "kebab-case"
                   }
                 ]
@@ -1201,7 +1201,7 @@ describe('lib', () => {
                   "@angular-eslint/component-selector": [
                     "error",
                     {
-                      "prefix": "proj",
+                      "prefix": "lib",
                       "style": "kebab-case",
                       "type": "element",
                     },
@@ -1209,7 +1209,7 @@ describe('lib', () => {
                   "@angular-eslint/directive-selector": [
                     "error",
                     {
-                      "prefix": "proj",
+                      "prefix": "lib",
                       "style": "camelCase",
                       "type": "attribute",
                     },
@@ -1261,7 +1261,7 @@ describe('lib', () => {
                   "@angular-eslint/component-selector": [
                     "error",
                     {
-                      "prefix": "proj",
+                      "prefix": "lib",
                       "style": "kebab-case",
                       "type": "element",
                     },
@@ -1269,7 +1269,7 @@ describe('lib', () => {
                   "@angular-eslint/directive-selector": [
                     "error",
                     {
-                      "prefix": "proj",
+                      "prefix": "lib",
                       "style": "camelCase",
                       "type": "attribute",
                     },

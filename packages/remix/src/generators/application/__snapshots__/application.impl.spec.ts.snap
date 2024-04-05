@@ -151,8 +151,11 @@ import { defineConfig } from 'cypress';
 
 export default defineConfig({
   e2e: {
-    ...nxE2EPreset(__filename, { cypressDir: 'src' }),
-    baseUrl: 'http://localhost:4200',
+    ...nxE2EPreset(__filename, {
+      cypressDir: 'src',
+      webServerCommands: { default: 'nx run test:dev:development' },
+    }),
+    baseUrl: 'http://localhost:3000',
   },
 });
 "
@@ -165,7 +168,7 @@ import { nxE2EPreset } from '@nx/playwright/preset';
 import { workspaceRoot } from '@nx/devkit';
 
 // For CI, you may want to set BASE_URL to the deployed application.
-const baseURL = process.env['BASE_URL'] || 'http://localhost:4200';
+const baseURL = process.env['BASE_URL'] || 'http://localhost:3000';
 
 /**
  * Read environment variables from file.
@@ -186,8 +189,8 @@ export default defineConfig({
   },
   /* Run your local dev server before starting the tests */
   webServer: {
-    command: 'pnpm exec nx serve test',
-    url: 'http://localhost:4200',
+    command: 'pnpm exec nx dev test',
+    url: 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
     cwd: workspaceRoot,
   },
@@ -661,8 +664,11 @@ import { defineConfig } from 'cypress';
 
 export default defineConfig({
   e2e: {
-    ...nxE2EPreset(__filename, { cypressDir: 'src' }),
-    baseUrl: 'http://localhost:4200',
+    ...nxE2EPreset(__filename, {
+      cypressDir: 'src',
+      webServerCommands: { default: 'nx run test:dev:development' },
+    }),
+    baseUrl: 'http://localhost:3000',
   },
 });
 "
@@ -675,7 +681,7 @@ import { nxE2EPreset } from '@nx/playwright/preset';
 import { workspaceRoot } from '@nx/devkit';
 
 // For CI, you may want to set BASE_URL to the deployed application.
-const baseURL = process.env['BASE_URL'] || 'http://localhost:4200';
+const baseURL = process.env['BASE_URL'] || 'http://localhost:3000';
 
 /**
  * Read environment variables from file.
@@ -696,8 +702,8 @@ export default defineConfig({
   },
   /* Run your local dev server before starting the tests */
   webServer: {
-    command: 'pnpm exec nx serve test',
-    url: 'http://localhost:4200',
+    command: 'pnpm exec nx dev test',
+    url: 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
     cwd: workspaceRoot,
   },
@@ -1027,8 +1033,11 @@ import { defineConfig } from 'cypress';
 
 export default defineConfig({
   e2e: {
-    ...nxE2EPreset(__filename, { cypressDir: 'src' }),
-    baseUrl: 'http://localhost:4200',
+    ...nxE2EPreset(__filename, {
+      cypressDir: 'src',
+      webServerCommands: { default: 'nx run test:dev:development' },
+    }),
+    baseUrl: 'http://localhost:3000',
   },
 });
 "
@@ -1135,8 +1144,7 @@ export default {
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
   coverageDirectory: './coverage/test',
   testMatch: [
-    '<rootDir>/src/**/__tests__/**/*.[jt]s?(x)',
-    '<rootDir>/src/**/*(*.)@(spec|test).[jt]s?(x)',
+    '<rootDir>/tests/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}',
   ],
 };
 "
@@ -1408,7 +1416,7 @@ import { nxE2EPreset } from '@nx/playwright/preset';
 import { workspaceRoot } from '@nx/devkit';
 
 // For CI, you may want to set BASE_URL to the deployed application.
-const baseURL = process.env['BASE_URL'] || 'http://localhost:4200';
+const baseURL = process.env['BASE_URL'] || 'http://localhost:3000';
 
 /**
  * Read environment variables from file.
@@ -1429,8 +1437,8 @@ export default defineConfig({
   },
   /* Run your local dev server before starting the tests */
   webServer: {
-    command: 'pnpm exec nx serve test',
-    url: 'http://localhost:4200',
+    command: 'pnpm exec nx dev test',
+    url: 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
     cwd: workspaceRoot,
   },

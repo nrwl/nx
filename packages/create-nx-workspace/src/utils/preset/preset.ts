@@ -15,6 +15,8 @@ export enum Preset {
   NuxtStandalone = 'nuxt-standalone',
   NextJs = 'next',
   NextJsStandalone = 'nextjs-standalone',
+  RemixMonorepo = 'remix-monorepo',
+  RemixStandalone = 'remix-standalone',
   ReactNative = 'react-native',
   Expo = 'expo',
   Nest = 'nest',

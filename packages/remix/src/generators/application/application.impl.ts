@@ -35,6 +35,7 @@ import initGenerator from '../init/init';
 import { initGenerator as jsInitGenerator } from '@nx/js';
 import { addBuildTargetDefaults } from '@nx/devkit/src/generators/add-build-target-defaults';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
+import { updateJestTestMatch } from '../../utils/testing-config-utils';
 
 export function remixApplicationGenerator(
   tree: Tree,
@@ -265,6 +266,28 @@ export async function remixApplicationGeneratorInternal(
   } else {
     // Otherwise, extract the tsconfig.base.json from tsconfig.json so we can share settings.
     extractTsConfigBase(tree);
+  }
+
+  if (options.rootProject) {
+    updateJson(tree, `package.json`, (json) => {
+      json.type = 'module';
+      return json;
+    });
+
+    if (options.unitTestRunner === 'jest') {
+      tree.write(
+        'jest.preset.js',
+        `import { nxPreset } from '@nx/jest/preset/jest-preset.js';
+export default {...nxPreset};
+`
+      );
+
+      updateJestTestMatch(
+        tree,
+        'jest.config.ts',
+        '<rootDir>/tests/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'
+      );
+    }
   }
 
   tasks.push(await addE2E(tree, options));

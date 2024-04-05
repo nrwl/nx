@@ -10,12 +10,10 @@ import {
   readJson,
   runCLI,
   runCommand,
-  runCommandUntil,
   tmpProjPath,
   uniq,
   updateFile,
   updateJson,
-  waitUntil,
 } from '@nx/e2e/utils';
 import { join } from 'path';
 
@@ -44,6 +42,7 @@ describe('EsBuild Plugin', () => {
     expect(packageJson).toEqual({
       name: `@proj/${myPkg}`,
       version: '0.0.1',
+      private: true,
       type: 'commonjs',
       main: './index.cjs',
       dependencies: {},
@@ -231,4 +230,32 @@ describe('EsBuild Plugin', () => {
     const output = runCLI(`build ${myPkg}`);
     expect(output).toContain('custom config loaded');
   }, 120_000);
+
+  it('should bundle in non-sensitive NX_ environment variables', () => {
+    const myPkg = uniq('my-pkg');
+    runCLI(`generate @nx/js:lib ${myPkg} --bundler=esbuild`, {});
+
+    updateFile(
+      `libs/${myPkg}/src/index.ts`,
+      `
+      console.log(process.env['NX_CLOUD_ENCRYPTION_KEY']);
+      console.log(process.env['NX_CLOUD_ACCESS_TOKEN']);
+      console.log(process.env['NX_PUBLIC_TEST']);
+      `
+    );
+
+    runCLI(`build ${myPkg} --platform=browser`, {
+      env: {
+        NX_CLOUD_ENCRYPTION_KEY: 'secret',
+        NX_CLOUD_ACCESS_TOKEN: 'secret',
+        NX_PUBLIC_TEST: 'foobar',
+      },
+    });
+
+    const output = runCommand(`node dist/libs/${myPkg}/index.cjs`, {
+      failOnError: true,
+    });
+    expect(output).not.toMatch(/secret/);
+    expect(output).toMatch(/foobar/);
+  });
 });

@@ -1,11 +1,11 @@
 import {
   checkFilesExist,
+  cleanupProject,
   getSelectedPackageManager,
   packageManagerLockFile,
   runCLI,
-  uniq,
   runCreatePlugin,
-  cleanupProject,
+  uniq,
 } from '@nx/e2e/utils';
 
 describe('create-nx-plugin', () => {

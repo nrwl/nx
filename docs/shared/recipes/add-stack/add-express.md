@@ -9,7 +9,7 @@ Because we are using an Nx plugin for Express, all the features of Nx are availa
 {% pill url="/ci/features/remote-cache" %}✅ Share Your Cache{% /pill %}
 {% pill url="/features/explore-graph" %}✅ Explore the Graph{% /pill %}
 {% pill url="/ci/features/distribute-task-execution" %}✅ Distribute Task Execution{% /pill %}
-{% pill url="/features/integrate-with-editors" %}✅ Integrate with Editors{% /pill %}
+{% pill url="/getting-started/editor-setup" %}✅ Integrate with Editors{% /pill %}
 {% pill url="/features/automate-updating-dependencies" %}✅ Automate Updating Nx{% /pill %}
 {% pill url="/features/enforce-module-boundaries" %}✅ Enforce Module Boundaries{% /pill %}
 {% pill url="/features/generate-code" %}✅ Use Code Generators{% /pill %}
@@ -73,13 +73,14 @@ export function someFunction(): string {
 
 import express from 'express';
 import * as path from 'path';
+import { someFunction } from '@my-express-app/my-lib';
 
 const app = express();
 
 app.use('/assets', express.static(path.join(__dirname, 'assets')));
 
 app.get('/api', (req, res) => {
-  res.send({ message: 'Welcome to my-express-app!' });
+  res.send({ message: `Welcome to my-express-app! ${someFunction()}` });
 });
 
 const port = process.env.PORT || 3333;

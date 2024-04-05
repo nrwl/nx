@@ -1,7 +1,9 @@
 import * as fs from 'fs';
 import * as configModule from '../config/configuration';
+import * as projectGraphFileUtils from '../project-graph/file-utils';
 import {
   detectPackageManager,
+  isWorkspacesEnabled,
   modifyYarnRcToFitNewDirectory,
   modifyYarnRcYmlToFitNewDirectory,
 } from './package-manager';
@@ -73,6 +75,46 @@ describe('package-manager', () => {
       const packageManager = detectPackageManager();
       expect(packageManager).toEqual('npm');
       expect(fs.existsSync).toHaveBeenCalledTimes(5);
+    });
+  });
+
+  describe('isWorkspacesEnabled', () => {
+    it('should return true if package manager is pnpm and pnpm-workspace.yaml exists', () => {
+      jest.spyOn(fs, 'existsSync').mockReturnValueOnce(true);
+      expect(isWorkspacesEnabled('pnpm')).toEqual(true);
+    });
+
+    it('should return false if package manager is pnpm and pnpm-workspace.yaml does not exist', () => {
+      jest.spyOn(fs, 'existsSync').mockReturnValueOnce(false);
+      expect(isWorkspacesEnabled('pnpm')).toEqual(false);
+    });
+
+    it('should return true if package manager is yarn and workspaces exists in package.json', () => {
+      jest
+        .spyOn(projectGraphFileUtils, 'readPackageJson')
+        .mockReturnValueOnce({ workspaces: ['packages/*'] });
+      expect(isWorkspacesEnabled('yarn')).toEqual(true);
+    });
+
+    it('should return false if package manager is yarn and workspaces does not exist in package.json', () => {
+      jest
+        .spyOn(projectGraphFileUtils, 'readPackageJson')
+        .mockReturnValueOnce({});
+      expect(isWorkspacesEnabled('yarn')).toEqual(false);
+    });
+
+    it('should return true if package manager is npm and workspaces exists in package.json', () => {
+      jest
+        .spyOn(projectGraphFileUtils, 'readPackageJson')
+        .mockReturnValueOnce({ workspaces: ['packages/*'] });
+      expect(isWorkspacesEnabled('npm')).toEqual(true);
+    });
+
+    it('should return false if package manager is npm and workspaces does not exist in package.json', () => {
+      jest
+        .spyOn(projectGraphFileUtils, 'readPackageJson')
+        .mockReturnValueOnce({});
+      expect(isWorkspacesEnabled('npm')).toEqual(false);
     });
   });
 

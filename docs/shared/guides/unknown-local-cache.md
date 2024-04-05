@@ -5,7 +5,7 @@ This document will explain why the following error happens and how to address it
 ```
 NX Invalid Cache Directory for Task "myapp:build"
 
-The local cache artifact in "node_modules/.cache/nx/786524780459028195" was not been generated on this machine.
+The local cache artifact in ".nx/cache/nx/786524780459028195" was not generated on this machine.
 As a result, the cache's content integrity cannot be confirmed, which may make cache restoration potentially unsafe.
 If your machine ID has changed since the artifact was cached, run "nx reset" to fix this issue.
 Read about the error and how to address it here: https://nx.dev/recipes/troubleshooting/unknown-local-cache

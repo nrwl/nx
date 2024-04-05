@@ -24,7 +24,7 @@ exports[`app --minimal should skip "nx-welcome.component.ts" file and references
 "import { Component } from '@angular/core';
 
 @Component({
-  selector: 'proj-root',
+  selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrl: './app.component.css',
 })
@@ -83,7 +83,7 @@ exports[`app --minimal should skip "nx-welcome.component.ts" file and references
 "import { Component } from '@angular/core';
 
 @Component({
-  selector: 'proj-root',
+  selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrl: './app.component.css',
 })
@@ -127,7 +127,7 @@ import { RouterModule } from '@angular/router';
 @Component({
   standalone: true,
   imports: [RouterModule],
-  selector: 'proj-root',
+  selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrl: './app.component.css',
 })
@@ -170,7 +170,7 @@ exports[`app --minimal should skip "nx-welcome.component.ts" file and references
 @Component({
   standalone: true,
   imports: [],
-  selector: 'proj-root',
+  selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrl: './app.component.css',
 })
@@ -210,7 +210,7 @@ exports[`app --project-name-and-root-format=derived should generate correctly wh
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "my-dir-my-app",
-  "prefix": "proj",
+  "prefix": "app",
   "projectType": "application",
   "root": "apps/my-dir/my-app",
   "sourceRoot": "apps/my-dir/my-app/src",
@@ -287,6 +287,8 @@ exports[`app --project-name-and-root-format=derived should generate correctly wh
       "executor": "@nx/web:file-server",
       "options": {
         "buildTarget": "my-dir-my-app:build",
+        "port": 4200,
+        "spa": true,
         "staticFilePath": "dist/apps/my-dir/my-app/browser",
       },
     },
@@ -393,13 +395,13 @@ exports[`app --project-name-and-root-format=derived should generate correctly wh
   "include": [],
   "references": [
     {
+      "path": "./tsconfig.editor.json",
+    },
+    {
       "path": "./tsconfig.app.json",
     },
     {
       "path": "./tsconfig.spec.json",
-    },
-    {
-      "path": "./tsconfig.editor.json",
     },
   ],
 }
@@ -409,7 +411,7 @@ exports[`app --project-name-and-root-format=derived should generate correctly wh
 {
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "name": "my-app",
-  "prefix": "proj",
+  "prefix": "app",
   "projectType": "application",
   "root": "apps/my-app",
   "sourceRoot": "apps/my-app/src",
@@ -486,6 +488,8 @@ exports[`app --project-name-and-root-format=derived should generate correctly wh
       "executor": "@nx/web:file-server",
       "options": {
         "buildTarget": "my-app:build",
+        "port": 4200,
+        "spa": true,
         "staticFilePath": "dist/apps/my-app/browser",
       },
     },
@@ -592,13 +596,13 @@ exports[`app --project-name-and-root-format=derived should generate correctly wh
   "include": [],
   "references": [
     {
+      "path": "./tsconfig.editor.json",
+    },
+    {
       "path": "./tsconfig.app.json",
     },
     {
       "path": "./tsconfig.spec.json",
-    },
-    {
-      "path": "./tsconfig.editor.json",
     },
   ],
 }
@@ -641,7 +645,7 @@ import { NxWelcomeComponent } from './nx-welcome.component';
 @Component({
   standalone: true,
   imports: [NxWelcomeComponent, RouterModule],
-  selector: 'proj-root',
+  selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrl: './app.component.css',
 })
@@ -709,7 +713,7 @@ import { NxWelcomeComponent } from './nx-welcome.component';
 @Component({
   standalone: true,
   imports: [NxWelcomeComponent, ],
-  selector: 'proj-root',
+  selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrl: './app.component.css',
 })
@@ -773,13 +777,13 @@ exports[`app --strict should enable strict type checking: app tsconfig.json 1`] 
   "include": [],
   "references": [
     {
+      "path": "./tsconfig.editor.json",
+    },
+    {
       "path": "./tsconfig.app.json",
     },
     {
       "path": "./tsconfig.spec.json",
-    },
-    {
-      "path": "./tsconfig.editor.json",
     },
   ],
 }
@@ -850,7 +854,7 @@ exports[`app format files should format files 2`] = `
 "import { Component } from '@angular/core';
 
 @Component({
-  selector: 'proj-root',
+  selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrl: './app.component.css',
 })
@@ -903,7 +907,7 @@ exports[`app nested should create project configs 1`] = `
 {
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "name": "my-app",
-  "prefix": "proj",
+  "prefix": "app",
   "projectType": "application",
   "root": "my-dir/my-app",
   "sourceRoot": "my-dir/my-app/src",
@@ -980,6 +984,8 @@ exports[`app nested should create project configs 1`] = `
       "executor": "@nx/web:file-server",
       "options": {
         "buildTarget": "my-app:build",
+        "port": 4200,
+        "spa": true,
         "staticFilePath": "dist/my-dir/my-app/browser",
       },
     },
@@ -1015,7 +1021,7 @@ exports[`app not nested should create project configs 1`] = `
 {
   "$schema": "../node_modules/nx/schemas/project-schema.json",
   "name": "my-app",
-  "prefix": "proj",
+  "prefix": "app",
   "projectType": "application",
   "root": "my-app",
   "sourceRoot": "my-app/src",
@@ -1092,6 +1098,8 @@ exports[`app not nested should create project configs 1`] = `
       "executor": "@nx/web:file-server",
       "options": {
         "buildTarget": "my-app:build",
+        "port": 4200,
+        "spa": true,
         "staticFilePath": "dist/my-app/browser",
       },
     },
@@ -1198,14 +1206,29 @@ exports[`app not nested should generate files: tsconfig.json 1`] = `
   "include": [],
   "references": [
     {
+      "path": "./tsconfig.editor.json",
+    },
+    {
       "path": "./tsconfig.app.json",
     },
     {
       "path": "./tsconfig.spec.json",
     },
-    {
-      "path": "./tsconfig.editor.json",
-    },
+  ],
+}
+`;
+
+exports[`app should generate correct tsconfig.editor.json 1`] = `
+{
+  "compilerOptions": {},
+  "exclude": [
+    "jest.config.ts",
+    "src/**/*.test.ts",
+    "src/**/*.spec.ts",
+  ],
+  "extends": "./tsconfig.json",
+  "include": [
+    "src/**/*.ts",
   ],
 }
 `;

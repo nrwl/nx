@@ -1,10 +1,11 @@
 import { logger } from './logger';
-import { NxJsonConfiguration } from '../config/nx-json';
-import {
+import type { NxJsonConfiguration } from '../config/nx-json';
+import type {
   TargetConfiguration,
   ProjectsConfigurations,
 } from '../config/workspace-json-project-json';
 import { output } from './output';
+import type { ProjectGraphError } from '../project-graph/project-graph';
 
 const LIST_CHOICE_DISPLAY_LIMIT = 10;
 
@@ -96,6 +97,21 @@ export async function handleErrors(isVerbose: boolean, fn: Function) {
     err ||= new Error('Unknown error caught');
     if (err.constructor.name === 'UnsuccessfulWorkflowExecution') {
       logger.error('The generator workflow failed. See above.');
+    } else if (err.name === 'ProjectGraphError') {
+      const projectGraphError = err as ProjectGraphError;
+      let title = projectGraphError.message;
+      if (isVerbose) {
+        title += ' See errors below.';
+      }
+
+      const bodyLines = isVerbose
+        ? [projectGraphError.stack]
+        : ['Pass --verbose to see the stacktraces.'];
+
+      output.error({
+        title,
+        bodyLines: bodyLines,
+      });
     } else {
       const lines = (err.message ? err.message : err.toString()).split('\n');
       const bodyLines = lines.slice(1);
@@ -290,7 +306,7 @@ export function validateObject(
   ) {
     Object.keys(opts).find((p) => {
       if (
-        Object.keys(schema.properties).indexOf(p) === -1 &&
+        Object.keys(schema.properties ?? {}).indexOf(p) === -1 &&
         (!schema.patternProperties ||
           !Object.keys(schema.patternProperties).some((pattern) =>
             new RegExp(pattern).test(p)

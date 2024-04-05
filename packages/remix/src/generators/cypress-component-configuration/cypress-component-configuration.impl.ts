@@ -2,6 +2,7 @@ import {
   formatFiles,
   generateFiles,
   readProjectConfiguration,
+  readNxJson,
   type Tree,
 } from '@nx/devkit';
 import { join } from 'path';
@@ -22,7 +23,11 @@ export async function cypressComponentConfigurationGeneratorInternal(
   tree: Tree,
   options: CypressComponentConfigurationSchema
 ) {
-  options.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
+  const nxJson = readNxJson(tree);
+  const addPluginDefault =
+    process.env.NX_ADD_PLUGINS !== 'false' &&
+    nxJson.useInferencePlugins !== false;
+  options.addPlugin ??= addPluginDefault;
   await cypressComponentConfigGenerator(tree, {
     project: options.project,
     generateTests: options.generateTests,

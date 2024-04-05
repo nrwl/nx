@@ -1,5 +1,6 @@
 import { type ProjectGraph } from '../../../devkit-exports';
 import { IMPLICIT_DEFAULT_RELEASE_GROUP, NxReleaseConfig } from './config';
+import { DEFAULT_CONVENTIONAL_COMMITS_CONFIG } from './conventional-commits';
 import { filterReleaseGroups } from './filter-release-groups';
 
 describe('filterReleaseGroups()', () => {
@@ -37,6 +38,7 @@ describe('filterReleaseGroups()', () => {
           tagMessage: '',
           tagArgs: '',
         },
+        preVersionCommand: '',
       },
       releaseTagPattern: '',
       git: {
@@ -48,6 +50,7 @@ describe('filterReleaseGroups()', () => {
         tagArgs: '',
         stageChanges: false,
       },
+      conventionalCommits: DEFAULT_CONVENTIONAL_COMMITS_CONFIG,
     };
     projectGraph = {
       nodes: {

@@ -1,9 +1,4 @@
-import {
-  CloudArrowDownIcon,
-  CogIcon,
-  ServerStackIcon,
-  SparklesIcon,
-} from '@heroicons/react/24/outline';
+import { SparklesIcon } from '@heroicons/react/24/outline';
 import { SectionHeading } from '@nx/nx-dev/ui-common';
 import {
   animate,
@@ -13,6 +8,7 @@ import {
   useMotionValue,
   useTransform,
 } from 'framer-motion';
+import Link from 'next/link';
 import { useEffect, useRef } from 'react';
 import { useInView } from 'react-intersection-observer';
 
@@ -142,20 +138,20 @@ export function NxWithCi(): JSX.Element {
           </div>
         </div>
       </motion.div>
-      <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 pb-8 lg:pb-16">
-        <dl className="grid grid-cols-1 gap-x-8 gap-y-16 sm:grid-cols-2">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pb-8 lg:pb-16">
+        <dl className="grid grid-cols-1 gap-x-8 gap-y-16 sm:grid-cols-3">
           <div className="relative">
             <dt className="text-base font-semibold leading-7 text-slate-900 dark:text-slate-100">
               <div className="relative group">
                 <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-lg blur-sm opacity-25 group-hover:opacity-90 transition duration-1000 group-hover:duration-200"></div>
                 <div className="relative flex gap-4 items-center rounded-lg border border-slate-200 bg-white p-4 text-lg shadow-sm transition focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 dark:border-slate-800/40 dark:bg-slate-800">
                   <NxCacheIcon className="h-8 w-8" aria-hidden="true" />
-                  <a
+                  <Link
                     href="/ci/features/remote-cache"
                     title="Discover Nx Replay"
                   >
                     <span className="absolute inset-0"></span>Nx Replay
-                  </a>
+                  </Link>
                 </div>
               </div>
             </dt>
@@ -167,10 +163,13 @@ export function NxWithCi(): JSX.Element {
           <div className="relative">
             <dt className="text-base font-semibold leading-7 text-slate-900 dark:text-slate-100">
               <div className="relative group">
-                <div className="absolute -inset-1 bg-gradient-to-r from-orange-500 to-rose-500 rounded-lg blur-sm opacity-25 group-hover:opacity-90 transition duration-1000 group-hover:duration-200"></div>
+                <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500 to-green-500 rounded-lg blur-sm opacity-25 group-hover:opacity-90 transition duration-1000 group-hover:duration-200"></div>
                 <div className="relative flex gap-4 items-center rounded-lg border border-slate-200 bg-white p-4 text-lg shadow-sm transition focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 dark:border-slate-800/40 dark:bg-slate-800">
                   <NxAgentsIcon className="h-8 w-8" aria-hidden="true" />
-                  <a href="/ci/features/nx-agents" title="Discover Nx Agents">
+                  <a
+                    href="/ci/features/distribute-task-execution"
+                    title="Discover Nx Agents"
+                  >
                     <span className="absolute inset-0"></span>Nx Agents
                   </a>
                 </div>
@@ -185,28 +184,7 @@ export function NxWithCi(): JSX.Element {
           <div className="relative">
             <dt className="text-base font-semibold leading-7 text-slate-900 dark:text-slate-100">
               <div className="relative group opacity-70">
-                <div className="absolute -inset-1 bg-gradient-to-r from-pink-500 to-fuchsia-500 rounded-lg blur-sm opacity-25"></div>
-                <div className="relative flex gap-4 items-center rounded-lg border border-slate-200 bg-white p-4 text-lg shadow-sm transition focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 dark:border-slate-800/40 dark:bg-slate-800">
-                  <NxWorkflowsIcon className="h-8 w-8" aria-hidden="true" />
-                  {/*<a href="/ci/features/nx-workflows" title="Discover Nx Workflows">*/}
-                  <span className="absolute inset-0"></span>Nx Workflows
-                  {/*</a>*/}
-                  <div className="flex-grow" />
-                  <span className="dark:bg-slate-400/10 dark:text-slate-400 dark:ring-slate-400/20 inline-flex items-center rounded-md bg-slate-50 px-2 py-1 text-xs font-medium text-slate-600 ring-1 ring-inset ring-slate-500/10">
-                    Coming soon
-                  </span>
-                </div>
-              </div>
-            </dt>
-            <dd className="mt-4 text-base leading-7 text-slate-700 dark:text-slate-400">
-              Next generation, fully managed CI solution with distribution at
-              its core, designed from the ground up for monorepos.
-            </dd>
-          </div>
-          <div className="relative">
-            <dt className="text-base font-semibold leading-7 text-slate-900 dark:text-slate-100">
-              <div className="relative group opacity-70">
-                <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500 to-green-500 rounded-lg blur-sm opacity-25"></div>
+                <div className="absolute -inset-1 bg-slate-500 rounded-lg blur-sm opacity-25"></div>
                 <div className="relative flex gap-4 items-center rounded-lg border border-slate-200 bg-white p-4 text-lg shadow-sm transition focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 dark:border-slate-800/40 dark:bg-slate-800">
                   <SparklesIcon
                     className="block h-8 w-8 sm:hidden md:block"

@@ -27,7 +27,11 @@ export type ReleaseVersionGeneratorResult = {
 export type VersionData = Record<
   string,
   {
-    newVersion: string;
+    /**
+     * newVersion will be null in the case that no changes are detected for the project,
+     * e.g. when using conventional commits
+     */
+    newVersion: string | null;
     currentVersion: string;
     dependentProjects: any[]; // TODO: investigate generic type for this once more ecosystems are explored
   }

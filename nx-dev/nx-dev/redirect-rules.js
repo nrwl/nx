@@ -186,7 +186,7 @@ const guideUrls = {
   '/migration/lerna-and-nx': 'https://lerna.js.org',
   '/cypress/v10-migration-guide': '/cypress/v11-migration-guide',
   '/cypress/generators/migrate-to-cypress-10':
-    '/cypress/generators/migrate-to-cypress-11',
+    '/packages/cypress/generators/migrate-to-cypress-11',
 };
 
 /**
@@ -201,7 +201,8 @@ const diataxis = {
   '/configuration/packagejson': '/reference/project-configuration',
   '/configuration/projectjson': '/reference/project-configuration',
   '/using-nx/nx-cli': '/getting-started/intro',
-  '/using-nx/console': '/features/integrate-with-editors',
+  '/using-nx/console': '/getting-started/editor-setup',
+  '/features/integrate-with-editors': '/getting-started/editor-setup',
   '/using-nx/mental-model': '/concepts/mental-model',
   '/using-nx/caching': '/concepts/how-caching-works',
   '/using-nx/dte': '/features/distribute-task-execution',
@@ -219,7 +220,9 @@ const diataxis = {
   '/migration/adding-to-monorepo': '/recipes/adopting-nx/adding-to-monorepo',
   '/migration/migration-cra': '/recipes/adopting-nx/migration-cra',
   '/migration/migration-angular': '/recipes/adopting-nx/migration-angular',
-  '/migration/migration-angularjs': '/recipes/adopting-nx/migration-angularjs',
+  '/migration/migration-angularjs': '/recipes/adopting-nx/migration-angular',
+  '/recipes/angular/migration/angularjs':
+    '/recipes/adopting-nx/migration-angular',
   '/migration/preserving-git-histories':
     '/recipes/adopting-nx/preserving-git-histories',
   '/migration/manual': '/recipes/adopting-nx/manual',
@@ -424,22 +427,41 @@ const nxCloudUrls = {
   '/core-features/distribute-task-execution':
     '/nx-cloud/features/distribute-task-execution',
   '/concepts/affected': '/ci/features/affected',
-  '/nx-cloud/private-cloud': '/ci/recipes/on-premise',
+  '/nx-cloud/private-cloud': '/ci/recipes/enterprise/on-premise',
   '/nx-cloud/private-cloud/get-started': '/ci/features/on-premise',
   '/nx-cloud/private-cloud/auth-single-admin':
-    '/nx-cloud/recipes/on-premise/auth-single-admin',
+    '/nx-cloud/recipes/enterprise/on-premise/auth-single-admin',
   '/nx-cloud/private-cloud/auth-github':
-    '/nx-cloud/recipes/on-premise/auth-github',
-  '/nx-cloud/private-cloud/ami-setup': '/ci/recipes/on-premise/ami-setup',
+    '/nx-cloud/recipes/enterprise/on-premise/auth-github',
+  '/nx-cloud/private-cloud/ami-setup':
+    '/ci/recipes/enterprise/on-premise/ami-setup',
   '/nx-cloud/private-cloud/auth-gitlab':
-    '/nx-cloud/recipes/on-premise/auth-gitlab',
+    '/nx-cloud/recipes/enterprise/on-premise/auth-gitlab',
   '/nx-cloud/private-cloud/auth-bitbucket':
-    '/nx-cloud/recipes/on-premise/auth-bitbucket',
-  '/nx-cloud/private-cloud/auth-saml': '/ci/recipes/on-premise/auth-saml',
+    '/nx-cloud/recipes/enterprise/on-premise/auth-bitbucket',
+  '/nx-cloud/private-cloud/auth-saml':
+    '/ci/recipes/enterprise/on-premise/auth-saml',
   '/nx-cloud/private-cloud/auth-saml-managed':
-    '/nx-cloud/recipes/on-premise/auth-saml-managed',
+    '/nx-cloud/recipes/enterprise/on-premise/auth-saml-managed',
   '/nx-cloud/private-cloud/advanced-config':
-    '/nx-cloud/recipes/on-premise/advanced-config',
+    '/nx-cloud/recipes/enterprise/on-premise/advanced-config',
+  '/ci/recipes/on-premise': '/ci/recipes/enterprise/on-premise',
+  '/ci/recipes/on-premise/auth-single-admin':
+    '/ci/recipes/enterprise/on-premise/auth-single-admin',
+  '/ci/recipes/on-premise/auth-github':
+    '/ci/recipes/enterprise/on-premise/auth-github',
+  '/ci/recipes/on-premise/ami-setup':
+    '/ci/recipes/enterprise/on-premise/ami-setup',
+  '/ci/recipes/on-premise/auth-gitlab':
+    '/ci/recipes/enterprise/on-premise/auth-gitlab',
+  '/ci/recipes/on-premise/auth-bitbucket':
+    '/ci/recipes/enterprise/on-premise/auth-bitbucket',
+  '/ci/recipes/on-premise/auth-saml':
+    '/ci/recipes/enterprise/on-premise/auth-saml',
+  '/ci/recipes/on-premise/auth-saml-managed':
+    '/ci/recipes/enterprise/on-premise/auth-saml-managed',
+  '/ci/recipes/on-premise/advanced-config':
+    '/ci/recipes/enterprise/on-premise/advanced-config',
   '/concepts/dte': '/ci/concepts/parallelization-distribution',
   '/nx-cloud/concepts/dte': '/ci/concepts/parallelization-distribution',
   '/nx-cloud/intro/nx-cloud-workflows': '/ci/features/nx-cloud-workflows',
@@ -733,9 +755,13 @@ const conceptUrls = {
   '/concepts/more-concepts/global-nx':
     '/getting-started/installation#installing-nx-globally',
   '/getting-started/package-based-repo-tutorial':
-    '/getting-started/tutorials/package-based-repo-tutorial',
+    '/getting-started/tutorials/npm-workspaces-tutorial',
+  '/getting-started/tutorials/package-based-repo-tutorial':
+    '/getting-started/tutorials/npm-workspaces-tutorial',
   '/getting-started/integrated-repo-tutorial':
-    '/getting-started/tutorials/integrated-repo-tutorial',
+    '/getting-started/tutorials/react-monorepo-tutorial',
+  '/getting-started/tutorials/integrated-repo-tutorial':
+    '/getting-started/tutorials/react-monorepo-tutorial',
   '/getting-started/react-standalone-tutorial':
     '/getting-started/tutorials/react-standalone-tutorial',
   '/getting-started/angular-standalone-tutorial':
@@ -748,7 +774,7 @@ const conceptUrls = {
 
 const nested5minuteTutorialUrls = {
   '/tutorials/package-based-repo-tutorial':
-    '/getting-started/tutorials/package-based-repo-tutorial',
+    '/getting-started/tutorials/npm-workspaces-tutorial',
   '/tutorials/integrated-repo-tutorial':
     '/getting-started/tutorials/integrated-repo-tutorial',
   '/tutorials/react-standalone-tutorial':
@@ -758,6 +784,8 @@ const nested5minuteTutorialUrls = {
   '/tutorials/node-server-tutorial': '/getting-started/tutorials',
   '/angular-tutorial': '/getting-started/tutorials/angular-monorepo-tutorial',
   '/angular-tutorial/1-code-generation':
+    '/getting-started/tutorials/angular-monorepo-tutorial',
+  '/getting-started/angular-monorepo-tutorial':
     '/getting-started/tutorials/angular-monorepo-tutorial',
   '/angular-tutorial/2-project-graph':
     '/getting-started/tutorials/angular-monorepo-tutorial',

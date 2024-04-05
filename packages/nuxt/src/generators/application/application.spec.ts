@@ -22,6 +22,8 @@ describe('app', () => {
         expect(projectConfig.targets.build).toBeUndefined();
         expect(projectConfig.targets.serve).toBeUndefined();
         expect(projectConfig.targets.test).toBeUndefined();
+        expect(projectConfig.targets['build-static']).toBeUndefined();
+        expect(projectConfig.targets['serve-static']).toBeUndefined();
       });
 
       it('should create all new files in the correct location', async () => {
@@ -48,7 +50,7 @@ describe('app', () => {
         ).toMatchSnapshot();
         expect(tree.read('my-app/tsconfig.json', 'utf-8')).toMatchSnapshot();
         const packageJson = readJson(tree, 'package.json');
-        expect(packageJson.devDependencies['vitest']).toEqual('^1.0.4');
+        expect(packageJson.devDependencies['vitest']).toEqual('^1.3.1');
       });
 
       it('should configure tsconfig and project.json correctly', () => {

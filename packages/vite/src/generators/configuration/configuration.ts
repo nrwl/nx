@@ -40,8 +40,6 @@ export async function viteConfigurationGeneratorInternal(
 ) {
   const tasks: GeneratorCallback[] = [];
 
-  schema.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
-
   const projectConfig = readProjectConfiguration(tree, schema.project);
   const { targets, root: projectRoot } = projectConfig;
 
@@ -74,6 +72,11 @@ export async function viteConfigurationGeneratorInternal(
   tasks.push(ensureDependencies(tree, schema));
 
   const nxJson = readNxJson(tree);
+  const addPluginDefault =
+    process.env.NX_ADD_PLUGINS !== 'false' &&
+    nxJson.useInferencePlugins !== false;
+  schema.addPlugin ??= addPluginDefault;
+
   const hasPlugin = nxJson.plugins?.some((p) =>
     typeof p === 'string'
       ? p === '@nx/vite/plugin'

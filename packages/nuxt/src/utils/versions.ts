@@ -7,4 +7,4 @@ export const nuxtDevtoolsVersion = '1.0.0';
 export const nuxtUiTemplatesVersion = '^1.3.1';
 
 // linting deps
-export const nuxtEslintConfigVersion = '0.2.0';
+export const nuxtEslintConfigVersion = '~0.3.0-alpha.1';

@@ -7,6 +7,7 @@ import {
   MagnifyingGlassIcon,
   InformationCircleIcon,
 } from '@heroicons/react/24/outline';
+import Link from 'next/link';
 
 export function RelatedDocumentsSection({
   relatedCategories,
@@ -50,13 +51,13 @@ function CategoryBox({ category }: { category: RelatedDocumentsCategory }) {
             key={d.id}
             className="flex justify-between items-center py-1 pl-0 text-sm"
           >
-            <a
+            <Link
               href={d.path}
               className="no-underline hover:underline hover:text-sky-600 dark:hover:text-sky-400 flex-grow flex justify-between items-center"
             >
               <span>{d.name}</span>
               <ArrowRightIcon className="w-4 h-4 text-slate-500 dark:text-slate-400" />
-            </a>
+            </Link>
           </li>
         ))}
       </ul>

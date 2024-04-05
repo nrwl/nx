@@ -16,7 +16,7 @@ import {
   addDepsToPackageJson,
   createNxJsonFile,
   initCloud,
-  markRootPackageJsonAsNxProject,
+  markRootPackageJsonAsNxProjectLegacy,
   printFinalMessage,
   runInstall,
   updateGitIgnore,
@@ -113,7 +113,7 @@ export async function addNxToNest(options: Options, packageJson: PackageJson) {
     repoRoot,
     [],
     [...cacheableOperations, ...nestCacheableScripts],
-    {}
+    scriptOutputs
   );
 
   const pmc = getPackageManagerCommand();
@@ -121,12 +121,7 @@ export async function addNxToNest(options: Options, packageJson: PackageJson) {
   updateGitIgnore(repoRoot);
   addDepsToPackageJson(repoRoot);
   addNestPluginToPackageJson(repoRoot);
-  markRootPackageJsonAsNxProject(
-    repoRoot,
-    cacheableOperations,
-    scriptOutputs,
-    pmc
-  );
+  markRootPackageJsonAsNxProjectLegacy(repoRoot, cacheableOperations, pmc);
 
   createProjectJson(repoRoot, packageJson, nestCLIConfiguration);
   removeFile(repoRoot, 'nest-cli.json');

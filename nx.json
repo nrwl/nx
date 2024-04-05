@@ -1,8 +1,5 @@
 {
   "$schema": "packages/nx/schemas/nx-schema.json",
-  "affected": {
-    "defaultBase": "master"
-  },
   "namedInputs": {
     "default": ["{projectRoot}/**/*", "sharedGlobals"],
     "production": [
@@ -210,10 +207,20 @@
       }
     }
   },
-  "plugins": ["@monodon/rust"],
+  "plugins": [
+    "@monodon/rust",
+    {
+      "plugin": "@nx/playwright/plugin",
+      "options": {
+        "targetName": "pw-e2e",
+        "ciTargetName": "e2e-ci"
+      }
+    }
+  ],
   "nxCloudAccessToken": "YmZiOWQyNzctOThiZC00MjYwLWI3YTAtZDA3MDg4YWY1YTExfHJlYWQ=",
   "nxCloudUrl": "https://staging.nx.app",
   "parallel": 1,
   "cacheDirectory": "/tmp/nx-cache",
-  "bust": 5
+  "bust": 5,
+  "defaultBase": "master"
 }

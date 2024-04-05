@@ -13,9 +13,9 @@ import { basename, dirname, isAbsolute, join, relative } from 'path';
 import { projectGraphCacheDirectory } from 'nx/src/utils/cache-directory';
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { existsSync, readdirSync } from 'fs';
-import { loadNuxtKitDynamicImport } from '../utils/executor-utils';
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { getLockFileName } from '@nx/js';
+import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
 
 const cachePath = join(projectGraphCacheDirectory, 'nuxt.hash');
 const targetsCache = existsSync(cachePath) ? readTargetsCache() : {};
@@ -46,6 +46,8 @@ export const createDependencies: CreateDependencies = () => {
 export interface NuxtPluginOptions {
   buildTargetName?: string;
   serveTargetName?: string;
+  serveStaticTargetName?: string;
+  buildStaticTargetName?: string;
 }
 
 export const createNodes: CreateNodes<NuxtPluginOptions> = [
@@ -93,11 +95,7 @@ async function buildNuxtTargets(
     buildDir: string;
   } = await getInfoFromNuxtConfig(configFilePath, context, projectRoot);
 
-  const { buildOutputs } = getOutputs(
-    nuxtConfig,
-
-    projectRoot
-  );
+  const { buildOutputs } = getOutputs(nuxtConfig, projectRoot);
 
   const namedInputs = getNamedInputs(projectRoot, context);
 
@@ -111,6 +109,15 @@ async function buildNuxtTargets(
   );
 
   targets[options.serveTargetName] = serveTarget(projectRoot);
+
+  targets[options.serveStaticTargetName] = serveStaticTarget(options);
+
+  targets[options.buildStaticTargetName] = buildStaticTarget(
+    options.buildStaticTargetName,
+    namedInputs,
+    buildOutputs,
+    projectRoot
+  );
 
   return targets;
 }
@@ -152,6 +159,48 @@ function serveTarget(projectRoot: string) {
   return targetConfig;
 }
 
+function serveStaticTarget(options: NuxtPluginOptions) {
+  const targetConfig: TargetConfiguration = {
+    executor: '@nx/web:file-server',
+    options: {
+      buildTarget: `${options.buildStaticTargetName}`,
+      staticFilePath: '{projectRoot}/dist',
+      port: 4200,
+      // Routes are found correctly with serve-static
+      spa: false,
+    },
+  };
+
+  return targetConfig;
+}
+
+function buildStaticTarget(
+  buildStaticTargetName: string,
+  namedInputs: {
+    [inputName: string]: any[];
+  },
+  buildOutputs: string[],
+  projectRoot: string
+) {
+  const targetConfig: TargetConfiguration = {
+    command: `nuxt build --prerender`,
+    options: { cwd: projectRoot },
+    cache: true,
+    dependsOn: [`^${buildStaticTargetName}`],
+    inputs: [
+      ...('production' in namedInputs
+        ? ['production', '^production']
+        : ['default', '^default']),
+
+      {
+        externalDependencies: ['nuxt'],
+      },
+    ],
+    outputs: buildOutputs,
+  };
+  return targetConfig;
+}
+
 async function getInfoFromNuxtConfig(
   configFilePath: string,
   context: CreateNodesContext,
@@ -159,15 +208,16 @@ async function getInfoFromNuxtConfig(
 ): Promise<{
   buildDir: string;
 }> {
-  const { loadNuxtConfig } = await loadNuxtKitDynamicImport();
-
-  const config = await loadNuxtConfig({
-    cwd: joinPathFragments(context.workspaceRoot, projectRoot),
-    configFile: basename(configFilePath),
-  });
-
+  // TODO(Colum): Once plugins are isolated we can go back to @nuxt/kit since each plugin will be run in its own worker.
+  const config = await loadConfigFile(
+    join(context.workspaceRoot, configFilePath)
+  );
   return {
-    buildDir: config?.buildDir,
+    buildDir:
+      config?.buildDir ??
+      // Match .nuxt default build dir from '@nuxt/schema'
+      // See: https://github.com/nuxt/nuxt/blob/871404ae5673425aeedde82f123ea58aa7c6facf/packages/schema/src/config/common.ts#L117-L119
+      '.nuxt',
   };
 }
 
@@ -177,18 +227,10 @@ function getOutputs(
 ): {
   buildOutputs: string[];
 } {
-  let nuxtBuildDir = nuxtConfig?.buildDir;
-  if (nuxtConfig?.buildDir && basename(nuxtConfig?.buildDir) === '.nuxt') {
-    // buildDir will most probably be `../dist/my-app/.nuxt`
-    // we want the "general" outputPath to be `../dist/my-app`
-    nuxtBuildDir = nuxtConfig.buildDir.replace(
-      basename(nuxtConfig.buildDir),
-      ''
-    );
-  }
-  const buildOutputPath =
-    normalizeOutputPath(nuxtBuildDir, projectRoot) ??
-    '{workspaceRoot}/dist/{projectRoot}';
+  const buildOutputPath = normalizeOutputPath(
+    nuxtConfig?.buildDir,
+    projectRoot
+  );
 
   return {
     buildOutputs: [buildOutputPath],
@@ -198,12 +240,12 @@ function getOutputs(
 function normalizeOutputPath(
   outputPath: string | undefined,
   projectRoot: string
-): string | undefined {
+): string {
   if (!outputPath) {
     if (projectRoot === '.') {
-      return `{projectRoot}/dist`;
+      return `{projectRoot}`;
     } else {
-      return `{workspaceRoot}/dist/{projectRoot}`;
+      return `{workspaceRoot}/{projectRoot}`;
     }
   } else {
     if (isAbsolute(outputPath)) {
@@ -222,5 +264,7 @@ function normalizeOptions(options: NuxtPluginOptions): NuxtPluginOptions {
   options ??= {};
   options.buildTargetName ??= 'build';
   options.serveTargetName ??= 'serve';
+  options.serveStaticTargetName ??= 'serve-static';
+  options.buildStaticTargetName ??= 'build-static';
   return options;
 }

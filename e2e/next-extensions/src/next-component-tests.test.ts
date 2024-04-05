@@ -90,6 +90,14 @@ describe('NextJs Component Testing', () => {
       );
     }
   });
+
+  it('should test a NextJs server component that uses router', async () => {
+    const lib = uniq('next-lib');
+    createLibWithCtCypress(lib);
+    if (runE2ETests()) {
+      expect(runCLI(`component-test ${lib}`)).toContain('All specs passed!');
+    }
+  }, 600_000);
 });
 
 function addBabelSupport(path: string) {
@@ -201,6 +209,49 @@ export default Button;
 
   runCLI(
     `generate @nx/next:cypress-component-configuration --project=${libName} --generate-tests --no-interactive`
+  );
+}
+
+function createLibWithCtCypress(libName: string) {
+  runCLI(
+    `generate @nx/next:lib ${libName} --no-interactive --projectNameAndRootFormat=as-provided`
+  );
+
+  runCLI(
+    `generate @nx/next:cypress-component-configuration --project=${libName} --no-interactive`
+  );
+
+  updateFile(`${libName}/src/lib/hello-server.tsx`, () => {
+    return `import { useRouter } from 'next/router';
+
+    export function HelloServer() {
+      useRouter();
+    
+      return <h1>Hello Server</h1>;
+    }
+    `;
+  });
+  // Add cypress component test
+  createFile(
+    `${libName}/src/lib/hello-server.cy.tsx`,
+    `import * as Router from 'next/router';
+    import { HelloServer } from './hello-server';
+    
+    describe('HelloServer', () => {
+      context('stubbing out \`useRouter\` hook', () => {
+        let router;
+        beforeEach(() => {
+          router = cy.stub();
+      
+          cy.stub(Router, 'useRouter').returns(router);
+        });
+      it('should work', () => {
+        cy.mount(<HelloServer />);
+      });
+      });
+    });
+    
+    `
   );
 }
 function addTailwindToLib(libName: string) {

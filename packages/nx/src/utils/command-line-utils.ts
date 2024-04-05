@@ -142,7 +142,8 @@ export function splitArgsIntoNxArgsAndOverrides(
     }
 
     if (!nxArgs.base) {
-      nxArgs.base = nxJson.affected?.defaultBase || 'main';
+      nxArgs.base =
+        nxJson.defaultBase ?? nxJson.affected?.defaultBase ?? 'main';
 
       // No user-provided arguments to set the affected criteria, so inform the user of the defaults being used
       if (

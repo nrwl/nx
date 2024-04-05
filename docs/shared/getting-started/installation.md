@@ -28,17 +28,17 @@ npx create-nx-workspace --pm pnpm
 
 This will guide you through the setup, asking whether you want a monorepo or a standalone app and whether you want to start with a blank or a preconfigured setup.
 
-```{% command="npx create-nx-workspace" path="~" %}
+```{% command="npx create-nx-workspace@latest" path="~" %}
 
 NX   Let's create a new workspace [https://nx.dev/getting-started/intro]
 
 ✔ Where would you like to create your workspace? · myorg
 ? Which stack do you want to use? …
-None:          Configures a minimal structure without specific frameworks or technologies.
-TS/JS:         Configures a TypeScript/JavaScript package without specific frameworks or platforms.
-React:         Configures a React app with your framework of choice.
-Angular:       Configures a Angular app with modern tooling.
-Node:          Configures a Node API with your framework of choice.
+None:          Configures a TypeScript/JavaScript project with minimal structure.
+React:         Configures a React application with your framework of choice.
+Vue:           Configures a Vue application with your framework of choice.
+Angular:       Configures a Angular application with modern tooling.
+Node:          Configures a Node API application with your framework of choice.
 ```
 
 Once you've created your workspace, you can
@@ -90,7 +90,48 @@ pnpm add --global nx@latest
 
 The advantage of a global installation is that you don't have to prefix your commands with npx, yarn or pnpm. The global Nx installation hands off the process execution to the local Nx installation in your repository, which eliminates any issues with outdated globally installed packages.
 
+## Install Nx in a Non-Javascript Repo
+
+Nx can manage its own installation without requiring a `package.json` file or a `node_modules` folder. This type of installation is useful for repositories that may not contain any JavaScript or TypeScript (e.g. .Net or Java based workspaces that want to leverage Nx features). In this setup, the Nx CLI is all contained within a `.nx` folder. To set this up run the `nx init` command in a folder without a `package.json` file.
+
+```shell
+npx nx init
+```
+
+See the [install Nx in a non-javascript repo](/recipes/installation/install-non-javascript) recipe for more information.
+
+## Update Nx
+
+When you update Nx, Nx will also [automatically update your dependencies](/features/automate-updating-dependencies) if you have an [Nx plugin](/concepts/nx-plugins) installed for that dependency. To update Nx, run:
+
+```shell
+npx nx migrate latest
+```
+
+This will create a `migrations.json` file with any update scripts that need to be run. Run them with:
+
+```shell
+npx nx migrate --run-migrations
+```
+
+{% callout title="Update One Major Version at a Time" %}
+To avoid potential issues, it is recommended to update one major version of Nx at a time.
+{% /callout %}
+
+## Tutorials
+
+Try one of these tutorials for a full walkthrough of what to do after you install Nx
+
+- [NPM Workspaces Tutorial](/getting-started/tutorials/npm-workspaces-tutorial)
+- [Single React App Tutorial](/getting-started/tutorials/react-standalone-tutorial)
+- [Single Angular App Tutorial](/getting-started/tutorials/angular-standalone-tutorial)
+- [Single Vue App Tutorial](/getting-started/tutorials/vue-standalone-tutorial)
+- [React Monorepo Tutorial](/getting-started/tutorials/react-standalone-tutorial)
+- [Angular Monorepo Tutorial](/getting-started/tutorials/angular-standalone-tutorial)
+
 ## More Documentation
 
+- [Add Nx to an Existing Repository](/recipes/adopting-nx)
+- [Update Nx](/features/automate-updating-dependencies)
 - [Update Your Global Nx Installation](/recipes/installation/update-global-installation)
 - [Install Nx in a Non-Javascript Repo](/recipes/installation/install-non-javascript)

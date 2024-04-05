@@ -5,6 +5,7 @@ import type {
   Tree,
 } from '@nx/devkit';
 import {
+  readNxJson,
   formatFiles,
   offsetFromRoot,
   readJson,
@@ -67,7 +68,11 @@ export async function lintProjectGeneratorInternal(
   tree: Tree,
   options: LintProjectOptions
 ) {
-  options.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
+  const nxJson = readNxJson(tree);
+  const addPluginDefault =
+    process.env.NX_ADD_PLUGINS !== 'false' &&
+    nxJson.useInferencePlugins !== false;
+  options.addPlugin ??= addPluginDefault;
   const tasks: GeneratorCallback[] = [];
   const initTask = await lintInitGenerator(tree, {
     skipPackageJson: options.skipPackageJson,

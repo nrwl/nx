@@ -63,7 +63,7 @@ async function installPackage(pkgName: string, version: string): Promise<void> {
     writeJsonFile('nx.json', nxJson);
 
     try {
-      await runNxAsync('');
+      await runNxAsync('--help', { silent: true });
     } catch (e) {
       // revert adding the plugin to nx.json
       nxJson.installation.plugins[pkgName] = undefined;
@@ -112,6 +112,7 @@ async function initializePlugin(
       updatePackageScripts = options.updatePackageScripts;
     } else {
       updatePackageScripts =
+        readNxJson().useInferencePlugins !== false &&
         process.env.NX_ADD_PLUGINS !== 'false' &&
         coreNxPlugins.includes(pkgName);
     }

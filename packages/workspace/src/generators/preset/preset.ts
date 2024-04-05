@@ -1,4 +1,4 @@
-import { installPackagesTask, names, Tree } from '@nx/devkit';
+import { installPackagesTask, names, readNxJson, Tree } from '@nx/devkit';
 import { Schema } from './schema';
 import { Preset } from '../utils/presets';
 import { join } from 'path';
@@ -15,7 +15,12 @@ export async function presetGenerator(tree: Tree, options: Schema) {
 export default presetGenerator;
 
 async function createPreset(tree: Tree, options: Schema) {
-  const addPlugin = process.env.NX_ADD_PLUGINS !== 'false';
+  console.log('Crate preset');
+  const nxJson = readNxJson(tree);
+  const addPlugin =
+    process.env.NX_ADD_PLUGINS !== 'false' &&
+    nxJson.useInferencePlugins !== false;
+
   if (options.preset === Preset.Apps) {
     return;
   } else if (options.preset === Preset.AngularMonorepo) {
@@ -34,6 +39,7 @@ async function createPreset(tree: Tree, options: Schema) {
       e2eTestRunner: options.e2eTestRunner ?? 'cypress',
       bundler: options.bundler,
       ssr: options.ssr,
+      prefix: options.prefix,
     });
   } else if (options.preset === Preset.AngularStandalone) {
     const {
@@ -52,6 +58,7 @@ async function createPreset(tree: Tree, options: Schema) {
       e2eTestRunner: options.e2eTestRunner ?? 'cypress',
       bundler: options.bundler,
       ssr: options.ssr,
+      prefix: options.prefix,
     });
   } else if (options.preset === Preset.ReactMonorepo) {
     const { applicationGenerator: reactApplicationGenerator } = require('@nx' +
@@ -81,6 +88,33 @@ async function createPreset(tree: Tree, options: Schema) {
       bundler: options.bundler ?? 'vite',
       e2eTestRunner: options.e2eTestRunner ?? 'cypress',
       unitTestRunner: options.bundler === 'vite' ? 'vitest' : 'jest',
+      addPlugin,
+    });
+  } else if (options.preset === Preset.RemixMonorepo) {
+    const { applicationGenerator: remixApplicationGenerator } = require('@nx' +
+      '/remix/generators');
+
+    return remixApplicationGenerator(tree, {
+      name: options.name,
+      directory: join('apps', options.name),
+      projectNameAndRootFormat: 'as-provided',
+      linter: options.linter,
+      e2eTestRunner: options.e2eTestRunner ?? 'cypress',
+      unitTestRunner: 'vitest',
+      addPlugin,
+    });
+  } else if (options.preset === Preset.RemixStandalone) {
+    const { applicationGenerator: remixApplicationGenerator } = require('@nx' +
+      '/remix/generators');
+
+    return remixApplicationGenerator(tree, {
+      name: options.name,
+      directory: '.',
+      projectNameAndRootFormat: 'as-provided',
+      linter: options.linter,
+      e2eTestRunner: options.e2eTestRunner ?? 'cypress',
+      rootProject: true,
+      unitTestRunner: 'vitest',
       addPlugin,
     });
   } else if (options.preset === Preset.VueMonorepo) {
@@ -208,8 +242,11 @@ async function createPreset(tree: Tree, options: Schema) {
       addPlugin,
     });
   } else if (options.preset === Preset.ReactNative) {
+    console.log('Before require');
     const { reactNativeApplicationGenerator } = require('@nx' +
       '/react-native');
+    console.log('Hello', reactNativeApplicationGenerator);
+    console.log('Active require');
     return reactNativeApplicationGenerator(tree, {
       name: options.name,
       directory: join('apps', options.name),

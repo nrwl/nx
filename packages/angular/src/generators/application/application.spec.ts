@@ -80,6 +80,13 @@ describe('app', () => {
     expect(devDependencies['codelyzer']).toBeUndefined();
   });
 
+  it('should generate correct tsconfig.editor.json', async () => {
+    await generateApp(appTree);
+
+    const tsConfig = readJson(appTree, 'my-app/tsconfig.editor.json');
+    expect(tsConfig).toMatchSnapshot();
+  });
+
   describe('not nested', () => {
     it('should create project configs', async () => {
       // ACT
@@ -449,7 +456,7 @@ describe('app', () => {
       await generateApp(appTree, 'my-app', { directory: 'my-dir/my-app' });
       expect(
         appTree.read('my-dir/my-app/src/app/app.component.html', 'utf-8')
-      ).toContain('<proj-nx-welcome></proj-nx-welcome>');
+      ).toContain('<app-nx-welcome></app-nx-welcome>');
     });
 
     it("should update `template`'s property of AppComponent with Nx content", async () => {
@@ -459,7 +466,7 @@ describe('app', () => {
       });
       expect(
         appTree.read('my-dir/my-app/src/app/app.component.ts', 'utf-8')
-      ).toContain('<proj-nx-welcome></proj-nx-welcome>');
+      ).toContain('<app-nx-welcome></app-nx-welcome>');
     });
 
     it('should create Nx specific `nx-welcome.component.ts` file', async () => {
@@ -546,7 +553,9 @@ describe('app', () => {
           [
             {
               "options": {
+                "ciTargetName": "e2e-ci",
                 "componentTestingTargetName": "component-test",
+                "openTargetName": "open-cypress",
                 "targetName": "e2e",
               },
               "plugin": "@nx/cypress/plugin",
@@ -598,7 +607,7 @@ describe('app', () => {
                   "@angular-eslint/component-selector": [
                     "error",
                     {
-                      "prefix": "proj",
+                      "prefix": "app",
                       "style": "kebab-case",
                       "type": "element",
                     },
@@ -606,7 +615,7 @@ describe('app', () => {
                   "@angular-eslint/directive-selector": [
                     "error",
                     {
-                      "prefix": "proj",
+                      "prefix": "app",
                       "style": "camelCase",
                       "type": "attribute",
                     },

@@ -155,7 +155,7 @@
       "description": "Host to serve UI on; specifying this option opens UI in a browser tab"
     },
     "uiPort": {
-      "type": "string",
+      "type": "number",
       "description": "Port to serve UI on, 0 for any free port; specifying this option opens UI in a browser tab"
     },
     "skipInstall": {

@@ -8,15 +8,18 @@ import {
 } from '../../config/project-graph';
 import { ProjectConfiguration } from '../../config/workspace-json-project-json';
 import { hashArray } from '../../hasher/file-hasher';
-import { buildProjectGraphUsingProjectFileMap as buildProjectGraphUsingFileMap } from '../../project-graph/build-project-graph';
+import {
+  buildProjectGraphUsingProjectFileMap as buildProjectGraphUsingFileMap,
+  CreateDependenciesError,
+} from '../../project-graph/build-project-graph';
 import { updateFileMap } from '../../project-graph/file-map-utils';
 import {
   FileMapCache,
   nxProjectGraph,
   readFileMapCache,
+  writeCache,
 } from '../../project-graph/nx-deps-cache';
 import {
-  RetrievedGraphNodes,
   retrieveProjectConfigurations,
   retrieveWorkspaceFiles,
 } from '../../project-graph/utils/retrieve-workspace-files';
@@ -29,10 +32,16 @@ import { workspaceRoot } from '../../utils/workspace-root';
 import { notifyFileWatcherSockets } from './file-watching/file-watcher-sockets';
 import { serverLogger } from './logger';
 import { NxWorkspaceFilesExternals } from '../../native';
+import {
+  ConfigurationResult,
+  ProjectConfigurationsError,
+} from '../../project-graph/utils/project-configuration-utils';
+import { DaemonProjectGraphError } from '../daemon-project-graph-error';
 
 interface SerializedProjectGraph {
   error: Error | null;
   projectGraph: ProjectGraph | null;
+  projectFileMapCache: FileMapCache | null;
   fileMap: FileMap | null;
   allWorkspaceFiles: FileData[] | null;
   serializedProjectGraph: string | null;
@@ -85,6 +94,7 @@ export async function getCachedSerializedProjectGraphPromise(): Promise<Serializ
       serializedProjectGraph: null,
       serializedSourceMaps: null,
       projectGraph: null,
+      projectFileMapCache: null,
       fileMap: null,
       allWorkspaceFiles: null,
       rustReferences: null,
@@ -148,7 +158,7 @@ function computeWorkspaceConfigHash(
 }
 
 async function processCollectedUpdatedAndDeletedFiles(
-  { projects, externalNodes, projectRootMap }: RetrievedGraphNodes,
+  { projects, externalNodes, projectRootMap }: ConfigurationResult,
   updatedFileHashes: Record<string, string>,
   deletedFiles: string[]
 ) {
@@ -217,26 +227,80 @@ async function processFilesAndCreateAndSerializeProjectGraph(): Promise<Serializ
     serverLogger.requestLog([...updatedFiles.values()]);
     serverLogger.requestLog([...deletedFiles]);
     const nxJson = readNxJson(workspaceRoot);
-    const graphNodes = await retrieveProjectConfigurations(
-      workspaceRoot,
-      nxJson
-    );
+    // Set this globally to allow plugins to know if they are being called from the project graph creation
+    global.NX_GRAPH_CREATION = true;
+
+    let graphNodes: ConfigurationResult;
+    let projectConfigurationsError;
+
+    try {
+      graphNodes = await retrieveProjectConfigurations(workspaceRoot, nxJson);
+    } catch (e) {
+      if (e instanceof ProjectConfigurationsError) {
+        graphNodes = e.partialProjectConfigurationsResult;
+        projectConfigurationsError = e;
+      } else {
+        throw e;
+      }
+    }
     await processCollectedUpdatedAndDeletedFiles(
       graphNodes,
       updatedFileHashes,
       deletedFiles
     );
-    return createAndSerializeProjectGraph(graphNodes);
+    const g = await createAndSerializeProjectGraph(graphNodes);
+
+    delete global.NX_GRAPH_CREATION;
+
+    const errors = [...(projectConfigurationsError?.errors ?? [])];
+
+    if (g.error) {
+      if (g.error instanceof CreateDependenciesError) {
+        errors.concat(g.error.errors);
+      } else {
+        return {
+          error: g.error,
+          projectGraph: null,
+          projectFileMapCache: null,
+          fileMap: null,
+          rustReferences: null,
+          allWorkspaceFiles: null,
+          serializedProjectGraph: null,
+          serializedSourceMaps: null,
+        };
+      }
+    }
+
+    if (errors.length > 0) {
+      return {
+        error: new DaemonProjectGraphError(
+          errors,
+          g.projectGraph,
+          graphNodes.sourceMaps
+        ),
+        projectGraph: null,
+        projectFileMapCache: null,
+        fileMap: null,
+        rustReferences: null,
+        allWorkspaceFiles: null,
+        serializedProjectGraph: null,
+        serializedSourceMaps: null,
+      };
+    } else {
+      writeCache(g.projectFileMapCache, g.projectGraph);
+      return g;
+    }
   } catch (err) {
-    return Promise.resolve({
+    return {
       error: err,
       projectGraph: null,
+      projectFileMapCache: null,
       fileMap: null,
       rustReferences: null,
       allWorkspaceFiles: null,
       serializedProjectGraph: null,
       serializedSourceMaps: null,
-    });
+    };
   }
 }
 
@@ -258,7 +322,7 @@ function copyFileMap(m: FileMap) {
 async function createAndSerializeProjectGraph({
   projects,
   sourceMaps,
-}: RetrievedGraphNodes): Promise<SerializedProjectGraph> {
+}: ConfigurationResult): Promise<SerializedProjectGraph> {
   try {
     performance.mark('create-project-graph-start');
     const fileMap = copyFileMap(fileMapWithFiles.fileMap);
@@ -271,9 +335,9 @@ async function createAndSerializeProjectGraph({
         fileMap,
         allWorkspaceFiles,
         rustReferences,
-        currentProjectFileMapCache || readFileMapCache(),
-        true
+        currentProjectFileMapCache || readFileMapCache()
       );
+
     currentProjectFileMapCache = projectFileMapCache;
     currentProjectGraph = projectGraph;
 
@@ -297,6 +361,7 @@ async function createAndSerializeProjectGraph({
     return {
       error: null,
       projectGraph,
+      projectFileMapCache,
       fileMap,
       allWorkspaceFiles,
       serializedProjectGraph,
@@ -310,6 +375,7 @@ async function createAndSerializeProjectGraph({
     return {
       error: e,
       projectGraph: null,
+      projectFileMapCache: null,
       fileMap: null,
       allWorkspaceFiles: null,
       serializedProjectGraph: null,

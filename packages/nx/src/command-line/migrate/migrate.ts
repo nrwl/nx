@@ -1378,7 +1378,9 @@ export async function executeMigrations(
       return 1;
     }
 
-    return lt(a.version, b.version) ? -1 : 1;
+    return lt(normalizeVersion(a.version), normalizeVersion(b.version))
+      ? -1
+      : 1;
   });
 
   for (const m of sortedMigrations) {

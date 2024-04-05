@@ -17,6 +17,7 @@ describe('@nx/storybook/plugin', () => {
         },
       },
       workspaceRoot: tempFs.tempDir,
+      configFiles: [],
     };
     tempFs.createFileSync(
       'my-app/project.json',
@@ -25,6 +26,10 @@ describe('@nx/storybook/plugin', () => {
     tempFs.createFileSync(
       'my-ng-app/project.json',
       JSON.stringify({ name: 'my-ng-app' })
+    );
+    tempFs.createFileSync(
+      'my-react-lib/project.json',
+      JSON.stringify({ name: 'my-react-lib' })
     );
   });
 
@@ -172,6 +177,68 @@ describe('@nx/storybook/plugin', () => {
     });
     expect(
       nodes?.['projects']?.['my-ng-app']?.targets?.['test-storybook']
+    ).toMatchObject({
+      command: 'test-storybook',
+    });
+  });
+
+  it('should support main.js', () => {
+    tempFs.createFileSync(
+      'my-react-lib/.storybook/main.js',
+      `const config = {
+        stories: ['../src/lib/**/*.stories.@(js|jsx|ts|tsx|mdx)'],
+        addons: ['@storybook/addon-essentials'],
+        framework: {
+          name: '@storybook/react-vite',
+          options: {
+            builder: {
+              viteConfigPath: 'vite.config.js',
+            },
+          },
+        },
+      };
+      export default config;`
+    );
+    const nodes = createNodesFunction(
+      'my-react-lib/.storybook/main.js',
+      {
+        buildStorybookTargetName: 'build-storybook',
+        staticStorybookTargetName: 'static-storybook',
+        serveStorybookTargetName: 'serve-storybook',
+        testStorybookTargetName: 'test-storybook',
+      },
+      context
+    );
+
+    expect(nodes?.['projects']?.['my-react-lib']?.targets).toBeDefined();
+    expect(
+      nodes?.['projects']?.['my-react-lib']?.targets?.['build-storybook']
+    ).toMatchObject({
+      command: 'storybook build',
+      options: {
+        cwd: 'my-react-lib',
+      },
+      cache: true,
+      outputs: [
+        '{workspaceRoot}/{projectRoot}/storybook-static',
+        '{options.output-dir}',
+        '{options.outputDir}',
+        '{options.o}',
+      ],
+      inputs: [
+        'production',
+        '^production',
+        { externalDependencies: ['storybook', '@storybook/test-runner'] },
+      ],
+    });
+
+    expect(
+      nodes?.['projects']?.['my-react-lib']?.targets?.['storybook']
+    ).toMatchObject({
+      command: 'storybook dev',
+    });
+    expect(
+      nodes?.['projects']?.['my-react-lib']?.targets?.['test-storybook']
     ).toMatchObject({
       command: 'test-storybook',
     });

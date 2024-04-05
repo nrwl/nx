@@ -26,6 +26,8 @@ describe('addMfEnvVarToTargetDefaults', () => {
       {
         "@nx/angular:webpack-browser": {
           "inputs": [
+            "production",
+            "^production",
             {
               "env": "NX_MF_DEV_SERVER_STATIC_REMOTES",
             },

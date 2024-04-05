@@ -1,6 +1,9 @@
 import { defaultMaxListeners } from 'events';
 import { performance } from 'perf_hooks';
+import { relative } from 'path';
+import { writeFileSync } from 'fs';
 import { TaskHasher } from '../hasher/task-hasher';
+import runCommandsImpl from '../executors/run-commands/run-commands.impl';
 import { ForkedProcessTaskRunner } from './forked-process-task-runner';
 import { Cache } from './cache';
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
@@ -8,6 +11,8 @@ import { TaskStatus } from './tasks-runner';
 import {
   calculateReverseDeps,
   getExecutorForTask,
+  getPrintableCommandArgsForTask,
+  getTargetConfigurationForTask,
   isCacheableTask,
   removeTasksFromTaskGraph,
   shouldStreamOutput,
@@ -23,6 +28,9 @@ import {
   getEnvVariablesForTask,
   getTaskSpecificEnv,
 } from './task-env';
+import { workspaceRoot } from '../utils/workspace-root';
+import { output } from '../utils/output';
+import { combineOptionsForExecutor } from '../utils/params';
 
 export class TaskOrchestrator {
   private cache = new Cache(this.options);
@@ -91,7 +99,6 @@ export class TaskOrchestrator {
       'task-execution:start',
       'task-execution:end'
     );
-    this.forkedProcessTaskRunner.destroy();
     this.cache.removeOldCacheRecords();
 
     return this.completedTasks;
@@ -345,7 +352,7 @@ export class TaskOrchestrator {
     const temporaryOutputPath = this.cache.temporaryOutputPath(task);
     const streamOutput = shouldStreamOutput(task, this.initiatingProject);
 
-    const env = pipeOutput
+    let env = pipeOutput
       ? getEnvVariablesForTask(
           task,
           taskSpecificEnv,
@@ -375,20 +382,79 @@ export class TaskOrchestrator {
 
     // the task wasn't cached
     if (results.length === 0) {
-      // cache prep
-      const { code, terminalOutput } = await this.runTaskInForkedProcess(
+      const shouldPrefix =
+        streamOutput && process.env.NX_PREFIX_OUTPUT === 'true';
+      const targetConfiguration = getTargetConfigurationForTask(
         task,
-        env,
-        pipeOutput,
-        temporaryOutputPath,
-        streamOutput
+        this.projectGraph
       );
+      if (
+        process.env.NX_RUN_COMMANDS_DIRECTLY !== 'false' &&
+        targetConfiguration.executor === 'nx:run-commands' &&
+        !shouldPrefix
+      ) {
+        const { schema } = getExecutorForTask(task, this.projectGraph);
+        const isRunOne = this.initiatingProject != null;
+        const combinedOptions = combineOptionsForExecutor(
+          task.overrides,
+          task.target.configuration ?? targetConfiguration.defaultConfiguration,
+          targetConfiguration,
+          schema,
+          task.target.project,
+          relative(task.projectRoot ?? workspaceRoot, process.cwd()),
+          process.env.NX_VERBOSE_LOGGING === 'true'
+        );
+        if (combinedOptions.env) {
+          env = {
+            ...env,
+            ...combinedOptions.env,
+          };
+        }
+        if (streamOutput) {
+          const args = getPrintableCommandArgsForTask(task);
+          output.logCommand(args.join(' '));
+        }
+        const { success, terminalOutput } = await runCommandsImpl(
+          {
+            ...combinedOptions,
+            env,
+            usePty: isRunOne && !this.tasksSchedule.hasTasks(),
+            streamOutput,
+          },
+          {
+            root: workspaceRoot, // only root is needed in runCommandsImpl
+          } as any
+        );
 
-      results.push({
-        task,
-        status: code === 0 ? 'success' : 'failure',
-        terminalOutput,
-      });
+        const status = success ? 'success' : 'failure';
+        if (!streamOutput) {
+          this.options.lifeCycle.printTaskTerminalOutput(
+            task,
+            status,
+            terminalOutput
+          );
+        }
+        writeFileSync(temporaryOutputPath, terminalOutput);
+        results.push({
+          task,
+          status,
+          terminalOutput,
+        });
+      } else {
+        // cache prep
+        const { code, terminalOutput } = await this.runTaskInForkedProcess(
+          task,
+          env,
+          pipeOutput,
+          temporaryOutputPath,
+          streamOutput
+        );
+        results.push({
+          task,
+          status: code === 0 ? 'success' : 'failure',
+          terminalOutput,
+        });
+      }
     }
     await this.postRunSteps([task], results, doNotSkipCache, { groupId });
   }
@@ -401,23 +467,27 @@ export class TaskOrchestrator {
     streamOutput: boolean
   ) {
     try {
+      const usePtyFork = process.env.NX_NATIVE_COMMAND_RUNNER !== 'false';
+
+      // Disable the pseudo terminal if this is a run-many
+      const disablePseudoTerminal = !this.initiatingProject;
       // execution
-      const { code, terminalOutput } =
-        process.env.NX_NATIVE_COMMAND_RUNNER !== 'false'
-          ? await this.forkedProcessTaskRunner.forkProcess(task, {
-              temporaryOutputPath,
-              streamOutput,
-              pipeOutput,
-              taskGraph: this.taskGraph,
-              env,
-            })
-          : await this.forkedProcessTaskRunner.forkProcessLegacy(task, {
-              temporaryOutputPath,
-              streamOutput,
-              pipeOutput,
-              taskGraph: this.taskGraph,
-              env,
-            });
+      const { code, terminalOutput } = usePtyFork
+        ? await this.forkedProcessTaskRunner.forkProcess(task, {
+            temporaryOutputPath,
+            streamOutput,
+            pipeOutput,
+            taskGraph: this.taskGraph,
+            env,
+            disablePseudoTerminal,
+          })
+        : await this.forkedProcessTaskRunner.forkProcessLegacy(task, {
+            temporaryOutputPath,
+            streamOutput,
+            pipeOutput,
+            taskGraph: this.taskGraph,
+            env,
+          });
 
       return {
         code,
@@ -570,7 +640,7 @@ export class TaskOrchestrator {
         return true;
       }
 
-      const { schema } = await getExecutorForTask(task, this.projectGraph);
+      const { schema } = getExecutorForTask(task, this.projectGraph);
 
       return (
         schema.outputCapture === 'pipe' ||

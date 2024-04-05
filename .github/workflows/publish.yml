@@ -5,7 +5,7 @@ on:
     - cron: "0 3 * * 2-6" # Tuesdays - Saturdays, at 3am UTC
   workflow_dispatch:
   release:
-    types: [published]
+    types: [ published ]
 
 env:
   DEBUG: napi:*
@@ -158,62 +158,64 @@ jobs:
           if-no-files-found: error
 
   build-freebsd:
-     if: ${{ github.repository_owner == 'nrwl' }}
-     runs-on: macos-13-large
-     name: Build FreeBSD
-     timeout-minutes: 45
-     steps:
-       - uses: actions/checkout@v4
-         if: ${{ github.event_name != 'schedule' }}
-       - name: Build
-         id: build
-         if: ${{ github.event_name != 'schedule' }}
-         uses: cross-platform-actions/action@v0.22.0
-         env:
-           DEBUG: napi:*
-           RUSTUP_IO_THREADS: 1
-         with:
-           operating_system: freebsd
-           version: '13.2'
-           architecture: x86-64
-           environment_variables: DEBUG RUSTUP_IO_THREADS CI
-           shell: bash
-           run: |
-             env
-             whoami
-             sudo pkg install -y -f node libnghttp2 npm git
-             sudo npm install --location=global --ignore-scripts pnpm
-             curl https://sh.rustup.rs -sSf --output rustup.sh
-             sh rustup.sh -y --profile minimal --default-toolchain stable
-             source "$HOME/.cargo/env"
-             echo "~~~~ rustc --version ~~~~"
-             rustc --version
-             echo "~~~~ node -v ~~~~"
-             node -v
-             echo "~~~~ pnpm --version ~~~~"
-             pnpm --version
-             pwd
-             ls -lah
-             whoami
-             env
-             freebsd-version
-             mkdir -p /Users/runner/work/_temp/_github_workflow
-             echo "{}" > /Users/runner/work/_temp/_github_workflow/event.json
-             pnpm install --frozen-lockfile --ignore-scripts
-             pnpm nx run-many --outputStyle stream --target=build-native -- --target=x86_64-unknown-freebsd
-             pnpm nx reset
-             rm -rf node_modules
-             rm -rf dist
-             echo "KILL ALL NODE PROCESSES"
-             killall node || true
-             echo "COMPLETE"
-       - name: Upload artifact
-         if: ${{ github.event_name != 'schedule' }}
-         uses: actions/upload-artifact@v3
-         with:
-           name: bindings-freebsd
-           path: packages/**/*.node
-           if-no-files-found: error
+    if: ${{ github.repository_owner == 'nrwl' }}
+    runs-on: macos-13-large
+    name: Build FreeBSD
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        if: ${{ github.event_name != 'schedule' }}
+      - name: Build
+        id: build
+        if: ${{ github.event_name != 'schedule' }}
+        uses: cross-platform-actions/action@v0.22.0
+        env:
+          DEBUG: napi:*
+          RUSTUP_IO_THREADS: 1
+          NX_PREFER_TS_NODE: true
+          PLAYWRIGHT_BROWSERS_PATH: 0
+        with:
+          operating_system: freebsd
+          version: '13.2'
+          architecture: x86-64
+          environment_variables: DEBUG RUSTUP_IO_THREADS CI NX_PREFER_TS_NODE PLAYWRIGHT_BROWSERS_PATH
+          shell: bash
+          run: |
+            env
+            whoami
+            sudo pkg install -y -f node libnghttp2 npm git
+            sudo npm install --location=global --ignore-scripts pnpm
+            curl https://sh.rustup.rs -sSf --output rustup.sh
+            sh rustup.sh -y --profile minimal --default-toolchain stable
+            source "$HOME/.cargo/env"
+            echo "~~~~ rustc --version ~~~~"
+            rustc --version
+            echo "~~~~ node -v ~~~~"
+            node -v
+            echo "~~~~ pnpm --version ~~~~"
+            pnpm --version
+            pwd
+            ls -lah
+            whoami
+            env
+            freebsd-version
+            mkdir -p /Users/runner/work/_temp/_github_workflow
+            echo "{}" > /Users/runner/work/_temp/_github_workflow/event.json
+            pnpm install --frozen-lockfile --ignore-scripts
+            pnpm nx run-many --outputStyle stream --target=build-native -- --target=x86_64-unknown-freebsd
+            pnpm nx reset
+            rm -rf node_modules
+            rm -rf dist
+            echo "KILL ALL NODE PROCESSES"
+            killall node || true
+            echo "COMPLETE"
+      - name: Upload artifact
+        if: ${{ github.event_name != 'schedule' }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: bindings-freebsd
+          path: packages/**/*.node
+          if-no-files-found: error
 
   publish:
     if: ${{ github.repository_owner == 'nrwl' }}
@@ -273,9 +275,9 @@ jobs:
         # Publish docs only on a full release
         if: ${{ !github.event.release.prerelease }}
         run: |
-          # Publish docs only when publishing the latest version
-          if [ "$(git describe --tags `git rev-list --tags --max-count=1`)" = "$GITHUB_REF_NAME" ]; then
+          # The GITHUB_REF_NAME is a full version (i.e. 17.3.2). The branchName will only use the major version number.
+          # We will publish docs to the website branch based on the current tag (i.e. website-17)
+          branchName=website-${GITHUB_REF_NAME%.*.*}
           # We force recreate the branch in order to always be up to date and avoid merge conflicts within the automated workflow
-          git branch -f website
-          git push -f origin website
-          fi
+          git branch -f $branchName
+          git push -f origin $branchName

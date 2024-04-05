@@ -9,7 +9,7 @@ The Nx plugin for [Vue](https://vuejs.org/).
 
 ### Generating a new Workspace
 
-To create a new workspace with React, run `npx create-nx-workspace@latest --preset=vue`.
+To create a new workspace with Vue, run `npx create-nx-workspace@latest --preset=vue`.
 
 {% callout type="note" title="Vue Standalone Tutorial" %}
 For a full tutorial experience, follow the [Vue Standalone Tutorial](/getting-started/tutorials/vue-standalone-tutorial)

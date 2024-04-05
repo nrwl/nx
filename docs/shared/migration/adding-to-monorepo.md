@@ -4,7 +4,7 @@
 Interested in migrating from [Lerna](https://github.com/lerna/lerna) in particular? In case you missed it, Lerna v6 is powering Nx underneath. As a result, Lerna gets all the modern features such as caching and task pipelines. Read more on [https://lerna.js.org/upgrade](https://lerna.js.org/upgrade).
 {% /callout %}
 
-Nx has first-class support for [monorepos](/getting-started/tutorials/package-based-repo-tutorial). As a result, if you have an existing NPM/Yarn or PNPM-based monorepo setup, you can easily add Nx to get
+Nx has first-class support for [monorepos](/getting-started/tutorials/npm-workspaces-tutorial). As a result, if you have an existing NPM/Yarn or PNPM-based monorepo setup, you can easily add Nx to get
 
 - fast [task scheduling](/features/run-tasks)
 - support for [task pipelines](/concepts/task-pipeline-configuration)
@@ -50,7 +50,22 @@ This will set up Nx for you - updating the `package.json` file and creating a ne
 }
 ```
 
-When Nx updates your `package.json` scripts, it looks for scripts that can be replaced with an Nx command that has caching automatically enabled. The `package.json` defined above would be updated to look like this:
+When Nx updates your `package.json` scripts, it looks for scripts that can be replaced with an Nx command that has caching automatically enabled. Assuming you initially had a `package.json` file looking like the following:
+
+```json {% fileName="package.json" %}
+{
+  "name": "my-workspace",
+  ...
+  "scripts": {
+    "build": "next build",
+    "lint": "eslint ./src",
+    "test": "node ./run-tests.js"
+  },
+  ...
+}
+```
+
+After setting up Nx, the `package.json` file would be updated to look like this:
 
 ```json {% fileName="package.json" %}
 {

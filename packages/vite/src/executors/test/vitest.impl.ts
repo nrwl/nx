@@ -3,7 +3,8 @@ import { VitestExecutorOptions } from './schema';
 import { resolve } from 'path';
 import { registerTsConfigPaths } from '@nx/js/src/internal';
 import { NxReporter } from './lib/nx-reporter';
-import { getExtraArgs, getOptions } from './lib/utils';
+import { getOptions } from './lib/utils';
+import { loadVitestDynamicImport } from '../../utils/executor-utils';
 
 export async function* vitestExecutor(
   options: VitestExecutorOptions,
@@ -16,13 +17,10 @@ export async function* vitestExecutor(
 
   process.env.VITE_CJS_IGNORE_WARNING = 'true';
   // Allows ESM to be required in CJS modules. Vite will be published as ESM in the future.
-  const { startVitest } = await (Function(
-    'return import("vitest/node")'
-  )() as Promise<typeof import('vitest/node')>);
+  const { startVitest } = await loadVitestDynamicImport();
 
-  const extraArgs = await getExtraArgs(options);
   const resolvedOptions =
-    (await getOptions(options, context, projectRoot, extraArgs)) ?? {};
+    (await getOptions(options, context, projectRoot)) ?? {};
 
   const nxReporter = new NxReporter(resolvedOptions['watch']);
   if (resolvedOptions['reporters'] === undefined) {

@@ -46,10 +46,8 @@ export async function vitestGeneratorInternal(
 ) {
   const tasks: GeneratorCallback[] = [];
 
-  const { targets, root, projectType } = readProjectConfiguration(
-    tree,
-    schema.project
-  );
+  const { root, projectType } = readProjectConfiguration(tree, schema.project);
+  const isRootProject = root === '.';
 
   tasks.push(await jsInitGenerator(tree, { ...schema, skipFormat: true }));
   const initTask = await initGenerator(tree, {
@@ -117,6 +115,22 @@ export async function vitestGeneratorInternal(
     coverageProviderDependency
   );
   tasks.push(installCoverageProviderTask);
+
+  // Setup workspace config file (https://vitest.dev/guide/workspace.html)
+  if (
+    !isRootProject &&
+    !tree.exists(`vitest.workspace.ts`) &&
+    !tree.exists(`vitest.workspace.js`) &&
+    !tree.exists(`vitest.workspace.json`) &&
+    !tree.exists(`vitest.projects.ts`) &&
+    !tree.exists(`vitest.projects.js`) &&
+    !tree.exists(`vitest.projects.json`)
+  ) {
+    tree.write(
+      'vitest.workspace.ts',
+      `export default ['**/*/vite.config.ts', '**/*/vitest.config.ts'];`
+    );
+  }
 
   if (!schema.skipFormat) {
     await formatFiles(tree);

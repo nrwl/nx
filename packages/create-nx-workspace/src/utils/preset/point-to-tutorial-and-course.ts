@@ -10,7 +10,7 @@ export function pointToTutorialAndCourse(preset: Preset) {
       output.note({
         title,
         bodyLines: [
-          `https://nx.dev/getting-started/tutorials/package-based-repo-tutorial`,
+          `https://nx.dev/getting-started/tutorials/npm-workspaces-tutorial`,
         ],
       });
       break;

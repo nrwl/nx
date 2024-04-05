@@ -112,12 +112,12 @@ function withNx(
     const { PHASE_PRODUCTION_SERVER, PHASE_DEVELOPMENT_SERVER } = await import(
       'next/constants'
     );
-    if (
-      PHASE_PRODUCTION_SERVER === phase ||
-      !process.env.NX_TASK_TARGET_TARGET
-    ) {
-      // If we are running an already built production server, just return the configuration.
-      // NOTE: Avoid any `require(...)` or `import(...)` statements here. Development dependencies are not available at production runtime.
+    // Two scenarios where we want to skip graph creation:
+    // 1. Running production server means the build is already done so we just need to start the Next.js server.
+    // 2. During graph creation (i.e. create nodes), we won't have a graph to read, and it is not needed anyway since it's a build-time concern.
+    //
+    // NOTE: Avoid any `require(...)` or `import(...)` statements here. Development dependencies are not available at production runtime.
+    if (PHASE_PRODUCTION_SERVER === phase || global.NX_GRAPH_CREATION) {
       const { nx, ...validNextConfig } = _nextConfig;
       return {
         distDir: '.next',
@@ -126,21 +126,19 @@ function withNx(
     } else {
       const {
         createProjectGraphAsync,
-        readCachedProjectGraph,
         joinPathFragments,
         offsetFromRoot,
         workspaceRoot,
       } = require('@nx/devkit');
 
-      let graph = readCachedProjectGraph();
-      if (!graph) {
-        try {
-          graph = await createProjectGraphAsync();
-        } catch (e) {
-          throw new Error(
-            'Could not create project graph. Please ensure that your workspace is valid.'
-          );
-        }
+      let graph: ProjectGraph;
+      try {
+        graph = await createProjectGraphAsync();
+      } catch (e) {
+        throw new Error(
+          'Could not create project graph. Please ensure that your workspace is valid.',
+          { cause: e }
+        );
       }
 
       const originalTarget = {
@@ -339,22 +337,55 @@ export function getNextConfig(
 
       // Default SVGR support to be on for projects.
       if (nx?.svgr !== false) {
-        config.module.rules.push(
-          // Apply rule for svg imports ending in ?url
-          {
-            test: /\.svg$/i,
-            type: 'asset',
-            resourceQuery: /url/, // apply to *.svg?url
+        // TODO(v20): Remove file-loader and use `?react` querystring to differentiate between asset and SVGR.
+        // It should be:
+        // use: [{
+        //   test: /\.svg$/i,
+        //   type: 'asset',
+        //   resourceQuery: /react/, // *.svg?react
+        // },
+        // {
+        //   test: /\.svg$/i,
+        //   issuer: /\.[jt]sx?$/,
+        //   resourceQuery: { not: [/react/] }, // exclude react component if *.svg?react
+        //   use: ['@svgr/webpack'],
+        // }],
+        // See:
+        // - SVGR: https://react-svgr.com/docs/webpack/#use-svgr-and-asset-svg-in-the-same-project
+        // - Vite: https://www.npmjs.com/package/vite-plugin-svgr
+        // - Rsbuild: https://github.com/web-infra-dev/rsbuild/pull/1783
+        // Note: We also need a migration for any projects that are using SVGR to convert
+        //       `import { ReactComponent as X } from './x.svg` to
+        //       `import X from './x.svg?react';
+        config.module.rules.push({
+          test: /\.svg$/,
+          issuer: { not: /\.(css|scss|sass)$/ },
+          resourceQuery: {
+            not: [
+              /__next_metadata__/,
+              /__next_metadata_route__/,
+              /__next_metadata_image_meta__/,
+            ],
           },
-
-          // Convert all other svg imports to React components
-          {
-            test: /\.svg$/i,
-            issuer: /\.[jt]sx?$/,
-            resourceQuery: { not: [/url/] },
-            use: ['@svgr/webpack'],
-          }
-        );
+          use: [
+            {
+              loader: require.resolve('@svgr/webpack'),
+              options: {
+                svgo: false,
+                titleProp: true,
+                ref: true,
+              },
+            },
+            {
+              loader: require.resolve('file-loader'),
+              options: {
+                // Next.js hard-codes assets to load from "static/media".
+                // See: https://github.com/vercel/next.js/blob/53d017d/packages/next/src/build/webpack-config.ts#L1993
+                name: 'static/media/[name].[hash].[ext]',
+              },
+            },
+          ],
+        });
       }
 
       return userWebpack(config, options);
@@ -362,9 +393,13 @@ export function getNextConfig(
   };
 }
 
+// Prevent sensitive keys from being bundled when source code uses entire `process.env` object rather than individual keys (e.g. `process.env.NX_FOO`).
+// TODO(v19): BREAKING: Only support NEXT_PUBLIC_ env vars and ignore NX_ vars since this is a standard Next.js feature.
+const excludedKeys = ['NX_CLOUD_ACCESS_TOKEN', 'NX_CLOUD_ENCRYPTION_KEY'];
+
 function getNxEnvironmentVariables() {
   return Object.keys(process.env)
-    .filter((env) => /^NX_/i.test(env))
+    .filter((env) => !excludedKeys.includes(env) && /^NX_/i.test(env))
     .reduce((env, key) => {
       env[key] = process.env[key];
       return env;

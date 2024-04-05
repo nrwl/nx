@@ -4,8 +4,10 @@ import * as yargsParser from 'yargs-parser';
 import { env as appendLocalEnv } from 'npm-run-path';
 import { ExecutorContext } from '../../config/misc-interfaces';
 import * as chalk from 'chalk';
-import { runCommand } from '../../native';
-import { PseudoTtyProcess } from '../../utils/child-process';
+import {
+  getPseudoTerminal,
+  PseudoTerminal,
+} from '../../tasks-runner/pseudo-terminal';
 
 export const LARGE_BUFFER = 1024 * 1000000;
 
@@ -51,6 +53,8 @@ export interface RunCommandsOptions extends Json {
   args?: string | string[];
   envFile?: string;
   __unparsed__: string[];
+  usePty?: boolean;
+  streamOutput?: boolean;
 }
 
 const propKeys = [
@@ -62,6 +66,11 @@ const propKeys = [
   'cwd',
   'args',
   'envFile',
+  '__unparsed__',
+  'env',
+  'usePty',
+  'streamOutput',
+  'verbose',
 ];
 
 export interface NormalizedRunCommandsOptions extends RunCommandsOptions {
@@ -69,6 +78,9 @@ export interface NormalizedRunCommandsOptions extends RunCommandsOptions {
     command: string;
     forwardAllArgs?: boolean;
   }[];
+  unknownOptions?: {
+    [k: string]: any;
+  };
   parsedArgs: {
     [k: string]: any;
   };
@@ -80,6 +92,7 @@ export default async function (
   context: ExecutorContext
 ): Promise<{
   success: boolean;
+  terminalOutput: string;
 }> {
   await loadEnvVars(options.envFile);
   const normalized = normalizeOptions(options);
@@ -100,10 +113,10 @@ export default async function (
   }
 
   try {
-    const success = options.parallel
+    const result = options.parallel
       ? await runInParallel(normalized, context)
       : await runSerially(normalized, context);
-    return { success };
+    return result;
   } catch (e) {
     if (process.env.NX_VERBOSE_LOGGING === 'true') {
       console.error(e);
@@ -117,43 +130,68 @@ export default async function (
 async function runInParallel(
   options: NormalizedRunCommandsOptions,
   context: ExecutorContext
-) {
+): Promise<{ success: boolean; terminalOutput: string }> {
   const procs = options.commands.map((c) =>
     createProcess(
+      null,
       c,
       options.readyWhen,
       options.color,
       calculateCwd(options.cwd, context),
       options.env ?? {},
-      true
-    ).then((result) => ({
+      true,
+      options.usePty,
+      options.streamOutput
+    ).then((result: { success: boolean; terminalOutput: string }) => ({
       result,
       command: c.command,
     }))
   );
 
+  let terminalOutput = '';
   if (options.readyWhen) {
-    const r = await Promise.race(procs);
-    if (!r.result) {
-      process.stderr.write(
-        `Warning: command "${r.command}" exited with non-zero status code`
-      );
-      return false;
+    const r: {
+      result: { success: boolean; terminalOutput: string };
+      command: string;
+    } = await Promise.race(procs);
+    terminalOutput += r.result.terminalOutput;
+    if (!r.result.success) {
+      const output = `Warning: command "${r.command}" exited with non-zero status code`;
+      terminalOutput += output;
+      if (options.streamOutput) {
+        process.stderr.write(output);
+      }
+      return { success: false, terminalOutput };
     } else {
-      return true;
+      return { success: true, terminalOutput };
     }
   } else {
-    const r = await Promise.all(procs);
-    const failed = r.filter((v) => !v.result);
+    const r: {
+      result: { success: boolean; terminalOutput: string };
+      command: string;
+    }[] = await Promise.all(procs);
+    terminalOutput += r.map((f) => f.result.terminalOutput).join('');
+    const failed = r.filter((v) => !v.result.success);
     if (failed.length > 0) {
-      failed.forEach((f) => {
-        process.stderr.write(
-          `Warning: command "${f.command}" exited with non-zero status code`
-        );
-      });
-      return false;
+      const output = failed
+        .map(
+          (f) =>
+            `Warning: command "${f.command}" exited with non-zero status code`
+        )
+        .join('\r\n');
+      terminalOutput += output;
+      if (options.streamOutput) {
+        process.stderr.write(output);
+      }
+      return {
+        success: false,
+        terminalOutput,
+      };
     } else {
-      return true;
+      return {
+        success: true,
+        terminalOutput,
+      };
     }
   }
 }
@@ -173,7 +211,25 @@ function normalizeOptions(
   if (options.args && Array.isArray(options.args)) {
     options.args = options.args.join(' ');
   }
-  options.parsedArgs = parseArgs(options, options.args as string);
+
+  const unparsedCommandArgs = yargsParser(options.__unparsed__, {
+    configuration: {
+      'parse-numbers': false,
+      'parse-positional-numbers': false,
+      'dot-notation': false,
+    },
+  });
+  options.unknownOptions = Object.keys(options)
+    .filter(
+      (p) => propKeys.indexOf(p) === -1 && unparsedCommandArgs[p] === undefined
+    )
+    .reduce((m, c) => ((m[c] = options[c]), m), {});
+
+  options.parsedArgs = parseArgs(
+    unparsedCommandArgs,
+    options.unknownOptions,
+    options.args as string
+  );
 
   (options as NormalizedRunCommandsOptions).commands.forEach((c) => {
     c.command = interpolateArgsIntoCommand(
@@ -188,28 +244,39 @@ function normalizeOptions(
 async function runSerially(
   options: NormalizedRunCommandsOptions,
   context: ExecutorContext
-) {
+): Promise<{ success: boolean; terminalOutput: string }> {
+  const pseudoTerminal = PseudoTerminal.isSupported()
+    ? getPseudoTerminal()
+    : null;
+  let terminalOutput = '';
   for (const c of options.commands) {
-    const success = await createProcess(
-      c,
-      undefined,
-      options.color,
-      calculateCwd(options.cwd, context),
-      options.env ?? {},
-      false
-    );
-    if (!success) {
-      process.stderr.write(
-        `Warning: command "${c.command}" exited with non-zero status code`
+    const result: { success: boolean; terminalOutput: string } =
+      await createProcess(
+        pseudoTerminal,
+        c,
+        undefined,
+        options.color,
+        calculateCwd(options.cwd, context),
+        options.env ?? {},
+        false,
+        options.usePty,
+        options.streamOutput
       );
-      return false;
+    terminalOutput += result.terminalOutput;
+    if (!result.success) {
+      const output = `Warning: command "${c.command}" exited with non-zero status code`;
+      result.terminalOutput += output;
+      if (options.streamOutput) {
+        process.stderr.write(output);
+      }
+      return { success: false, terminalOutput };
     }
   }
-
-  return true;
+  return { success: true, terminalOutput };
 }
 
 async function createProcess(
+  pseudoTerminal: PseudoTerminal | null,
   commandConfig: {
     command: string;
     color?: string;
@@ -220,41 +287,46 @@ async function createProcess(
   color: boolean,
   cwd: string,
   env: Record<string, string>,
-  isParallel: boolean
-): Promise<boolean> {
+  isParallel: boolean,
+  usePty: boolean = true,
+  streamOutput: boolean = true
+): Promise<{ success: boolean; terminalOutput: string }> {
   env = processEnv(color, cwd, env);
   // The rust runCommand is always a tty, so it will not look nice in parallel and if we need prefixes
   // currently does not work properly in windows
   if (
+    pseudoTerminal &&
     process.env.NX_NATIVE_COMMAND_RUNNER !== 'false' &&
-    process.stdout.isTTY &&
     !commandConfig.prefix &&
-    !isParallel
+    !isParallel &&
+    usePty
   ) {
-    const cp = new PseudoTtyProcess(
-      runCommand(commandConfig.command, cwd, env)
-    );
+    const cp = pseudoTerminal.runCommand(commandConfig.command, {
+      cwd,
+      jsEnv: env,
+      quiet: !streamOutput,
+    });
 
+    let terminalOutput = '';
     return new Promise((res) => {
       cp.onOutput((output) => {
+        terminalOutput += output;
         if (readyWhen && output.indexOf(readyWhen) > -1) {
-          res(true);
+          res({ success: true, terminalOutput });
         }
       });
 
       cp.onExit((code) => {
-        if (code === 0) {
-          res(true);
-        } else if (code >= 128) {
+        if (code >= 128) {
           process.exit(code);
         } else {
-          res(false);
+          res({ success: code === 0, terminalOutput });
         }
       });
     });
   }
 
-  return nodeProcess(commandConfig, color, cwd, env, readyWhen);
+  return nodeProcess(commandConfig, cwd, env, readyWhen, streamOutput);
 }
 
 function nodeProcess(
@@ -264,11 +336,12 @@ function nodeProcess(
     bgColor?: string;
     prefix?: string;
   },
-  color: boolean,
   cwd: string,
   env: Record<string, string>,
-  readyWhen: string
-): Promise<boolean> {
+  readyWhen: string,
+  streamOutput = true
+): Promise<{ success: boolean; terminalOutput: string }> {
+  let terminalOutput = '';
   return new Promise((res) => {
     const childProcess = exec(commandConfig.command, {
       maxBuffer: LARGE_BUFFER,
@@ -287,24 +360,36 @@ function nodeProcess(
     process.on('SIGQUIT', processExitListener);
 
     childProcess.stdout.on('data', (data) => {
-      process.stdout.write(addColorAndPrefix(data, commandConfig));
+      const output = addColorAndPrefix(data, commandConfig);
+      terminalOutput += output;
+      if (streamOutput) {
+        process.stdout.write(output);
+      }
       if (readyWhen && data.toString().indexOf(readyWhen) > -1) {
-        res(true);
+        res({ success: true, terminalOutput });
       }
     });
     childProcess.stderr.on('data', (err) => {
-      process.stderr.write(addColorAndPrefix(err, commandConfig));
+      const output = addColorAndPrefix(err, commandConfig);
+      terminalOutput += output;
+      if (streamOutput) {
+        process.stderr.write(output);
+      }
       if (readyWhen && err.toString().indexOf(readyWhen) > -1) {
-        res(true);
+        res({ success: true, terminalOutput });
       }
     });
     childProcess.on('error', (err) => {
-      process.stderr.write(addColorAndPrefix(err.toString(), commandConfig));
-      res(false);
+      const ouptput = addColorAndPrefix(err.toString(), commandConfig);
+      terminalOutput += ouptput;
+      if (streamOutput) {
+        process.stderr.write(ouptput);
+      }
+      res({ success: false, terminalOutput });
     });
     childProcess.on('exit', (code) => {
       if (!readyWhen) {
-        res(code === 0);
+        res({ success: code === 0, terminalOutput });
       }
     });
   });
@@ -345,11 +430,15 @@ function calculateCwd(
 }
 
 function processEnv(color: boolean, cwd: string, env: Record<string, string>) {
+  const localEnv = appendLocalEnv({ cwd: cwd ?? process.cwd() });
   const res = {
     ...process.env,
-    ...appendLocalEnv({ cwd: cwd ?? process.cwd() }),
+    ...localEnv,
     ...env,
   };
+  // need to override PATH to make sure we are using the local node_modules
+  if (localEnv.PATH) res.PATH = localEnv.PATH; // UNIX-like
+  if (localEnv.Path) res.Path = localEnv.Path; // Windows
 
   if (color) {
     res.FORCE_COLOR = `${color}`;
@@ -361,38 +450,48 @@ export function interpolateArgsIntoCommand(
   command: string,
   opts: Pick<
     NormalizedRunCommandsOptions,
-    'args' | 'parsedArgs' | '__unparsed__'
+    'args' | 'parsedArgs' | '__unparsed__' | 'unknownOptions'
   >,
   forwardAllArgs: boolean
-) {
+): string {
   if (command.indexOf('{args.') > -1) {
     const regex = /{args\.([^}]+)}/g;
     return command.replace(regex, (_, group: string) =>
       opts.parsedArgs[group] !== undefined ? opts.parsedArgs[group] : ''
     );
   } else if (forwardAllArgs) {
-    return `${command}${opts.args ? ' ' + opts.args : ''}${
-      opts.__unparsed__.length > 0 ? ' ' + opts.__unparsed__.join(' ') : ''
-    }`;
+    let args = '';
+    if (Object.keys(opts.unknownOptions ?? {}).length > 0) {
+      args +=
+        ' ' +
+        Object.keys(opts.unknownOptions)
+          .filter(
+            (k) =>
+              typeof opts.unknownOptions[k] !== 'object' &&
+              opts.parsedArgs[k] === opts.unknownOptions[k]
+          )
+          .map((k) => `--${k} ${opts.unknownOptions[k]}`)
+          .join(' ');
+    }
+    if (opts.args) {
+      args += ` ${opts.args}`;
+    }
+    if (opts.__unparsed__?.length > 0) {
+      args += ` ${opts.__unparsed__.join(' ')}`;
+    }
+    return `${command}${args}`;
   } else {
     return command;
   }
 }
 
-function parseArgs(options: RunCommandsOptions, args?: string) {
+function parseArgs(
+  unparsedCommandArgs: { [k: string]: string },
+  unknownOptions: { [k: string]: string },
+  args?: string
+) {
   if (!args) {
-    const unknownOptionsTreatedAsArgs = Object.keys(options)
-      .filter((p) => propKeys.indexOf(p) === -1)
-      .reduce((m, c) => ((m[c] = options[c]), m), {});
-
-    const unparsedCommandArgs = yargsParser(options.__unparsed__, {
-      configuration: {
-        'parse-numbers': false,
-        'parse-positional-numbers': false,
-        'dot-notation': false,
-      },
-    });
-    return { ...unknownOptionsTreatedAsArgs, ...unparsedCommandArgs };
+    return { ...unknownOptions, ...unparsedCommandArgs };
   }
   return yargsParser(args.replace(/(^"|"$)/g, ''), {
     configuration: { 'camel-case-expansion': false },
