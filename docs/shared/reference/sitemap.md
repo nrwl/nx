@@ -77,7 +77,6 @@
       - [Preserving Git Histories](/recipes/adopting-nx/preserving-git-histories)
       - [Manual migration](/recipes/adopting-nx/manual)
     - [React](/recipes/react)
-      - [Migrating from CRA](/recipes/react/migration-cra)
       - [React 18 Migration](/recipes/react/react-18)
       - [React Native with Nx](/recipes/react/react-native)
       - [Remix with Nx](/recipes/react/remix)

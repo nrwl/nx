@@ -1975,17 +1975,6 @@
         "file": "",
         "itemList": [
           {
-            "id": "migration-cra",
-            "name": "Migrating from CRA",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/migration/migration-cra",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/react/migration-cra",
-            "tags": []
-          },
-          {
             "id": "react-18",
             "name": "React 18 Migration",
             "description": "",
@@ -3551,17 +3540,6 @@
     "file": "",
     "itemList": [
       {
-        "id": "migration-cra",
-        "name": "Migrating from CRA",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/migration/migration-cra",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/react/migration-cra",
-        "tags": []
-      },
-      {
         "id": "react-18",
         "name": "React 18 Migration",
         "description": "",
@@ -3652,17 +3630,6 @@
     ],
     "isExternal": false,
     "path": "/recipes/react",
-    "tags": []
-  },
-  "/recipes/react/migration-cra": {
-    "id": "migration-cra",
-    "name": "Migrating from CRA",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/migration/migration-cra",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/react/migration-cra",
     "tags": []
   },
   "/recipes/react/react-18": {

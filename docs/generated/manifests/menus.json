@@ -1445,14 +1445,6 @@
             "isExternal": false,
             "children": [
               {
-                "name": "Migrating from CRA",
-                "path": "/recipes/react/migration-cra",
-                "id": "migration-cra",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
                 "name": "React 18 Migration",
                 "path": "/recipes/react/react-18",
                 "id": "react-18",
@@ -2596,14 +2588,6 @@
         "isExternal": false,
         "children": [
           {
-            "name": "Migrating from CRA",
-            "path": "/recipes/react/migration-cra",
-            "id": "migration-cra",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
             "name": "React 18 Migration",
             "path": "/recipes/react/react-18",
             "id": "react-18",
@@ -2668,14 +2652,6 @@
             "disableCollapsible": false
           }
         ],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Migrating from CRA",
-        "path": "/recipes/react/migration-cra",
-        "id": "migration-cra",
-        "isExternal": false,
-        "children": [],
         "disableCollapsible": false
       },
       {
