@@ -75,10 +75,6 @@ After the changes are applied, your workspace file structure should look similar
 └── tsconfig.base.json
 ```
 
-### Older Versions of Angular
-
-Support for workspaces with multiple applications and libraries was added in Nx v14.1.0. If you are migrating using an older version of Nx, your workspace can only contain one application and no libraries in order to use the automated migration, otherwise, you can still [migrate manually](/recipes/angular/migration/angular-manual).
-
 ### Modified Folder Structure
 
 The automated migration supports Angular CLI workspaces with a standard structure, configurations and features. If your workspace has deviated from what the Angular CLI generates, you might not be able to use the automated migration and you will need to [manually migrate your workspace](/recipes/angular/migration/angular-manual).
