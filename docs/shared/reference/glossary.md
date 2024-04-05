@@ -74,7 +74,7 @@ A set of preconfigured options for a [target](#target) that should be enabled al
 
 ### Distributed Task Execution
 
-A system for running [tasks](#task) in CI across multiple agent processes in the most efficient way possible. [Nx Agents](#nx-agents) enables distributed task execution on agent machines that are managed by Nx.
+A system for running [tasks](#task) in CI across multiple agent processes across many machines. [Nx Agents](#nx-agents) enables distributed task execution on agent machines that are managed by Nx.
 
 > See: [Distribute Task Execution](/ci/features/distribute-task-execution)
 
@@ -138,7 +138,7 @@ A [project](#project) that is located in a sub-folder of another project. This w
 
 ### Nx Agents
 
-A CI product where [tasks](#tasks) are automatically processed in parallel across multiple agent machines that are managed by Nx.
+A paid service that hosts and manages customizable worker machines for use with [distributed task execution](#distributed-task-execution).
 
 > See: [Distribute Task Execution](/ci/features/distribute-task-execution)
 
@@ -152,7 +152,7 @@ The umbrella term for all CI-related products that Nx provides.
 
 (coming soon)
 
-A CI product that completely replaces your existing CI provider.
+A fully featured, general-use CI pipeline product. This product can fully replace your existing CI provider.
 
 ### Nx Replay
 
