@@ -476,7 +476,8 @@ function mapSnapshots(
       if (isBerry && key.includes('@patch:') && key.includes('#')) {
         normalizedKey = key
           .slice(0, key.indexOf('#'))
-          .replace(`@patch:${packageName}@`, '@npm:');
+          .replace(`@patch:${packageName}@`, '@npm:')
+          .replace(/:.*$/u, ':' + snapshotKey.version);
       }
       if (
         !existingKeys.get(packageName) ||
