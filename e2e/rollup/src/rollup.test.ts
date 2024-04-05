@@ -210,4 +210,30 @@ export default config;
     checkFilesExist(`libs/test/dist/bundle.js`);
     checkFilesExist(`libs/test/dist/bundle.es.js`);
   });
+
+  it('should support array config from rollup.config.js', () => {
+    const jsLib = uniq('jslib');
+    runCLI(`generate @nx/js:lib ${jsLib} --bundler rollup`);
+    updateFile(
+      `libs/${jsLib}/rollup.config.js`,
+      `module.exports = (config) => [{
+        ...config,
+        output: {
+          format: "esm",
+          dir: "dist/test",
+          name: "Mylib",
+          entryFileNames: "[name].js",
+          chunkFileNames: "[name].js"
+        }
+      }]`
+    );
+    updateJson(join('libs', jsLib, 'project.json'), (config) => {
+      config.targets.build.options.rollupConfig = `libs/${jsLib}/rollup.config.js`;
+      return config;
+    });
+
+    expect(() => runCLI(`build ${jsLib} --format=esm`)).not.toThrow();
+
+    checkFilesExist(`dist/test/index.js`);
+  });
 });
