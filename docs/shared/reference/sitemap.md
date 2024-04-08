@@ -89,7 +89,6 @@
       - [Migration](/recipes/angular/migration)
         - [Migrating from Angular CLI](/recipes/angular/migration/angular)
         - [Migrating From Multiple Angular CLI Repos](/recipes/angular/migration/angular-multiple)
-        - [Migrating Angular Application manually](/recipes/angular/migration/angular-manual)
       - [Use Environment Variables in Angular](/recipes/angular/use-environment-variables-in-angular)
       - [Using Tailwind CSS with Angular projects](/recipes/angular/using-tailwind-css-with-angular-projects)
       - [Setup Module Federation with SSR for Angular](/recipes/angular/module-federation-with-ssr)

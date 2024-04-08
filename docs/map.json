@@ -572,11 +572,6 @@
                       "name": "Migrating From Multiple Angular CLI Repos",
                       "id": "angular-multiple",
                       "file": "shared/migration/angular-multiple"
-                    },
-                    {
-                      "name": "Migrating Angular Application manually",
-                      "id": "angular-manual",
-                      "file": "shared/migration/angular-manual"
                     }
                   ]
                 },

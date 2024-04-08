@@ -75,15 +75,9 @@ After the changes are applied, your workspace file structure should look similar
 └── tsconfig.base.json
 ```
 
-### Older Versions of Angular
-
-Support for workspaces with multiple applications and libraries was added in Nx v14.1.0. If you are migrating using an older version of Nx, your workspace can only contain one application and no libraries in order to use the automated migration, otherwise, you can still [migrate manually](/recipes/angular/migration/angular-manual).
-
 ### Modified Folder Structure
 
-The automated migration supports Angular CLI workspaces with a standard structure, configurations and features. If your workspace has deviated from what the Angular CLI generates, you might not be able to use the automated migration and you will need to [manually migrate your workspace](/recipes/angular/migration/angular-manual).
-
-Currently, the automated migration supports workspaces using the following executors (builders):
+The automated migration supports Angular CLI workspaces with a standard structure, configurations and features. It supports workspaces using the following executors (builders):
 
 - `@angular-devkit/build-angular:application`
 - `@angular-devkit/build-angular:browser`
@@ -139,8 +133,6 @@ Once the script has run, commit the changes. Reverting this commit will effectiv
 {% cards cols="1" mdCols="3" smCols="3" lgCols="3" %}
 
 {% card title="Nx and the Angular CLI" description="Differences between Nx and the Angular CLI" type="documentation" url="/concepts/more-concepts/nx-and-angular" /%}
-
-{% card title="Angular CLI manual migration" description="Add Nx by hand" type="documentation" url="/recipes/angular/migration/angular-manual" /%}
 
 {% card title="Multiple Angular Repositories to one Nx Workspace" description="Combine multiple Angular CLI workspaces into one Nx workspace" type="documentation" url="/recipes/angular/migration/angular-multiple" /%}
 

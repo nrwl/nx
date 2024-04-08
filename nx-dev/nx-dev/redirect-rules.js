@@ -891,7 +891,9 @@ const latestRecipesRefactoring = {
   '/recipes/adopting-nx-angular/angular-integrated':
     '/recipes/angular/migration/angular',
   '/recipes/adopting-nx-angular/angular-manual':
-    '/recipes/angular/migration/angular-manual',
+    '/recipes/angular/migration/angular',
+  '/recipes/angular/migration/angular-manual':
+    '/recipes/angular/migration/angular',
   '/recipes/adopting-nx-angular/angular-multiple':
     '/recipes/angular/migration/angular-multiple',
   '/recipes/adopting-nx/migration-angularjs':

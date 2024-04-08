@@ -2102,17 +2102,6 @@
                 "isExternal": false,
                 "path": "/recipes/angular/migration/angular-multiple",
                 "tags": []
-              },
-              {
-                "id": "angular-manual",
-                "name": "Migrating Angular Application manually",
-                "description": "",
-                "mediaImage": "",
-                "file": "shared/migration/angular-manual",
-                "itemList": [],
-                "isExternal": false,
-                "path": "/recipes/angular/migration/angular-manual",
-                "tags": []
               }
             ],
             "isExternal": false,
@@ -3755,17 +3744,6 @@
             "isExternal": false,
             "path": "/recipes/angular/migration/angular-multiple",
             "tags": []
-          },
-          {
-            "id": "angular-manual",
-            "name": "Migrating Angular Application manually",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/migration/angular-manual",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/angular/migration/angular-manual",
-            "tags": []
           }
         ],
         "isExternal": false,
@@ -3860,17 +3838,6 @@
         "isExternal": false,
         "path": "/recipes/angular/migration/angular-multiple",
         "tags": []
-      },
-      {
-        "id": "angular-manual",
-        "name": "Migrating Angular Application manually",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/migration/angular-manual",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/angular/migration/angular-manual",
-        "tags": []
       }
     ],
     "isExternal": false,
@@ -3897,17 +3864,6 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/angular/migration/angular-multiple",
-    "tags": []
-  },
-  "/recipes/angular/migration/angular-manual": {
-    "id": "angular-manual",
-    "name": "Migrating Angular Application manually",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/migration/angular-manual",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/angular/migration/angular-manual",
     "tags": []
   },
   "/recipes/angular/use-environment-variables-in-angular": {

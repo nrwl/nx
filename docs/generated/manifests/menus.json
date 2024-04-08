@@ -1538,14 +1538,6 @@
                     "isExternal": false,
                     "children": [],
                     "disableCollapsible": false
-                  },
-                  {
-                    "name": "Migrating Angular Application manually",
-                    "path": "/recipes/angular/migration/angular-manual",
-                    "id": "angular-manual",
-                    "isExternal": false,
-                    "children": [],
-                    "disableCollapsible": false
                   }
                 ],
                 "disableCollapsible": false
@@ -2745,14 +2737,6 @@
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
-              },
-              {
-                "name": "Migrating Angular Application manually",
-                "path": "/recipes/angular/migration/angular-manual",
-                "id": "angular-manual",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
               }
             ],
             "disableCollapsible": false
@@ -2821,14 +2805,6 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
-          },
-          {
-            "name": "Migrating Angular Application manually",
-            "path": "/recipes/angular/migration/angular-manual",
-            "id": "angular-manual",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -2845,14 +2821,6 @@
         "name": "Migrating From Multiple Angular CLI Repos",
         "path": "/recipes/angular/migration/angular-multiple",
         "id": "angular-multiple",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Migrating Angular Application manually",
-        "path": "/recipes/angular/migration/angular-manual",
-        "id": "angular-manual",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
