@@ -1,5 +1,11 @@
 # Enterprise Release Notes
 
+### 2402.27.3.patch3,4,5,6
+
+- Feat: allows customising the base image for the agent init-container (in case it is self-hosted internally in the company)
+- Feat: adds more logging to debug authorization errors for Github, Gitlab and SAML
+- Fix: fixes an issue with using custom launch templates on GitLab
+
 ### 2402.27.3.patch3
 
 - Feat: allows disabling the automated pod watcher which doesn't behave as expected in some k8s engines
