@@ -144,9 +144,7 @@ describe('@nx/expo (legacy)', () => {
     );
   });
 
-  // TODO (@xiongemi): this test is disabled due to expo requires typescript ^5.3.0
-  // re-enable it when typescript is updated
-  xit('should install', async () => {
+  it('should install', async () => {
     // run install command
     const installResults = await runCLIAsync(
       `install ${appName} --no-interactive`
