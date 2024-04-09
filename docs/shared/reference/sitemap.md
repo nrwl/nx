@@ -310,8 +310,6 @@
         - [Bitbucket Pipelines Custom DTE](/ci/recipes/enterprise/dte/bitbucket-dte)
         - [GitLab Custom DTE](/ci/recipes/enterprise/dte/gitlab-dte)
         - [Jenkins Custom DTE](/ci/recipes/enterprise/dte/jenkins-dte)
-    - [Troubleshooting](/ci/recipes/troubleshooting)
-      - [CI Execution Failed](/ci/recipes/troubleshooting/ci-execution-failed)
     - [Other](/ci/recipes/other)
       - [Record Non-Nx Commands](/ci/recipes/other/record-commands)
       - [Prepare applications for deployment via CI](/ci/recipes/other/ci-deployment)
@@ -321,6 +319,8 @@
     - [Launch Templates](/ci/reference/launch-templates)
     - [Environment Variables](/ci/reference/env-vars)
     - [Release Notes](/ci/reference/release-notes)
+  - [Troubleshooting](/ci/troubleshooting)
+    - [CI Execution Failed](/ci/troubleshooting/ci-execution-failed)
 
 - Nx-api
   - [angular](/nx-api/angular)

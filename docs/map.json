@@ -1943,18 +1943,6 @@
               ]
             },
             {
-              "name": "Troubleshooting",
-              "id": "troubleshooting",
-              "description": "Learn how to solve common issues in Nx Cloud.",
-              "itemList": [
-                {
-                  "name": "CI Execution Failed",
-                  "id": "ci-execution-failed",
-                  "file": "nx-cloud/troubleshooting/ci-execution-failed"
-                }
-              ]
-            },
-            {
               "name": "Other",
               "id": "other",
               "description": "Learn how to set up Nx Cloud for your workspace.",
@@ -2003,6 +1991,18 @@
               "name": "Release Notes",
               "id": "release-notes",
               "file": "nx-cloud/reference/release-notes"
+            }
+          ]
+        },
+        {
+          "name": "Troubleshooting",
+          "id": "troubleshooting",
+          "description": "Learn how to solve common issues in Nx Cloud.",
+          "itemList": [
+            {
+              "name": "CI Execution Failed",
+              "id": "ci-execution-failed",
+              "file": "nx-cloud/troubleshooting/ci-execution-failed"
             }
           ]
         }

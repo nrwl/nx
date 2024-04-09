@@ -1024,6 +1024,7 @@ const eslintRename = {
 const troubleshootingOutOfRecipes = {
   '/recipes/troubleshooting': '/troubleshooting',
   '/recipes/troubleshooting/:path*': '/troubleshooting/:path*',
+  '/ci/recipes/troubleshooting/:path*': '/ci/troubleshooting/:path*',
   '/recipes/other/resolve-circular-dependencies':
     '/troubleshooting/resolve-circular-dependencies',
   '/recipes/ci/troubleshoot-nx-install-issues':
