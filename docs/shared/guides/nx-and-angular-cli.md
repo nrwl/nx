@@ -391,10 +391,7 @@ npx nx@latest init
 
 or alternatively using the `--integrated` flag if you want to create an Nx monorepo right away. Learn more about all the details on the [dedicated docs page](/recipes/angular/migration/angular).
 
-There are also guides describing how to:
-
-- [manually migrate an Angular CLI app](/recipes/angular/migration/angular-manual) and
-- how to [consolidate multiple Angular CLI projects into a single Nx monorepo](/recipes/angular/migration/angular-multiple)
+There is also a guide describing how to [consolidate multiple Angular CLI projects into a single Nx monorepo](/recipes/angular/migration/angular-multiple).
 
 You can learn more about Angular & Nx by following our dedicated tutorials:
 
