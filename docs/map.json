@@ -1079,24 +1079,6 @@
                   "file": "shared/recipes/console-run-command"
                 },
                 {
-                  "name": "Add Dependency Command",
-                  "id": "console-add-dependency-command",
-                  "tags": ["editor-setup"],
-                  "file": "shared/recipes/console-add-dependency-command"
-                },
-                {
-                  "name": "Project Pane",
-                  "id": "console-project-pane",
-                  "tags": ["editor-setup"],
-                  "file": "shared/recipes/console-project-pane"
-                },
-                {
-                  "name": "Keyboard Shortcuts",
-                  "id": "console-shortcuts",
-                  "tags": ["editor-setup"],
-                  "file": "shared/recipes/console-shortcuts"
-                },
-                {
                   "name": "Troubleshooting",
                   "id": "console-troubleshooting",
                   "tags": ["editor-setup"],
