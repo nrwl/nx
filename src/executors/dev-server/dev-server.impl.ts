@@ -42,6 +42,7 @@ export default async function* runExecutor(
   devServerConfig = {
     ...devServerConfig,
     ...firstCompiler.options.devServer,
+    port: devServerConfig.port,
   };
 
   yield* createAsyncIterable(({ next }) => {
