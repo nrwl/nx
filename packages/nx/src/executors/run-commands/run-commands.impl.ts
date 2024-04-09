@@ -486,7 +486,7 @@ export function interpolateArgsIntoCommand(
               typeof opts.unknownOptions[k] !== 'object' &&
               opts.parsedArgs[k] === opts.unknownOptions[k]
           )
-          .map((k) => `--${k} ${opts.unknownOptions[k]}`)
+          .map((k) => `--${k}=${opts.unknownOptions[k]}`)
           .join(' ');
     }
     if (opts.args) {
