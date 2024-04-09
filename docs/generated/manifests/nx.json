@@ -2102,17 +2102,6 @@
                 "isExternal": false,
                 "path": "/recipes/angular/migration/angular-multiple",
                 "tags": []
-              },
-              {
-                "id": "angular-manual",
-                "name": "Migrating Angular Application manually",
-                "description": "",
-                "mediaImage": "",
-                "file": "shared/migration/angular-manual",
-                "itemList": [],
-                "isExternal": false,
-                "path": "/recipes/angular/migration/angular-manual",
-                "tags": []
               }
             ],
             "isExternal": false,
@@ -3013,39 +3002,6 @@
             "tags": ["editor-setup"]
           },
           {
-            "id": "console-add-dependency-command",
-            "name": "Add Dependency Command",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/recipes/console-add-dependency-command",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/nx-console/console-add-dependency-command",
-            "tags": ["editor-setup"]
-          },
-          {
-            "id": "console-project-pane",
-            "name": "Project Pane",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/recipes/console-project-pane",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/nx-console/console-project-pane",
-            "tags": ["editor-setup"]
-          },
-          {
-            "id": "console-shortcuts",
-            "name": "Keyboard Shortcuts",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/recipes/console-shortcuts",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/nx-console/console-shortcuts",
-            "tags": ["editor-setup"]
-          },
-          {
             "id": "console-troubleshooting",
             "name": "Troubleshooting",
             "description": "",
@@ -3755,17 +3711,6 @@
             "isExternal": false,
             "path": "/recipes/angular/migration/angular-multiple",
             "tags": []
-          },
-          {
-            "id": "angular-manual",
-            "name": "Migrating Angular Application manually",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/migration/angular-manual",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/angular/migration/angular-manual",
-            "tags": []
           }
         ],
         "isExternal": false,
@@ -3860,17 +3805,6 @@
         "isExternal": false,
         "path": "/recipes/angular/migration/angular-multiple",
         "tags": []
-      },
-      {
-        "id": "angular-manual",
-        "name": "Migrating Angular Application manually",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/migration/angular-manual",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/angular/migration/angular-manual",
-        "tags": []
       }
     ],
     "isExternal": false,
@@ -3897,17 +3831,6 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/angular/migration/angular-multiple",
-    "tags": []
-  },
-  "/recipes/angular/migration/angular-manual": {
-    "id": "angular-manual",
-    "name": "Migrating Angular Application manually",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/migration/angular-manual",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/angular/migration/angular-manual",
     "tags": []
   },
   "/recipes/angular/use-environment-variables-in-angular": {
@@ -5437,39 +5360,6 @@
         "tags": ["editor-setup"]
       },
       {
-        "id": "console-add-dependency-command",
-        "name": "Add Dependency Command",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/recipes/console-add-dependency-command",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/nx-console/console-add-dependency-command",
-        "tags": ["editor-setup"]
-      },
-      {
-        "id": "console-project-pane",
-        "name": "Project Pane",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/recipes/console-project-pane",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/nx-console/console-project-pane",
-        "tags": ["editor-setup"]
-      },
-      {
-        "id": "console-shortcuts",
-        "name": "Keyboard Shortcuts",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/recipes/console-shortcuts",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/nx-console/console-shortcuts",
-        "tags": ["editor-setup"]
-      },
-      {
         "id": "console-troubleshooting",
         "name": "Troubleshooting",
         "description": "",
@@ -5527,39 +5417,6 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/nx-console/console-run-command",
-    "tags": ["editor-setup"]
-  },
-  "/recipes/nx-console/console-add-dependency-command": {
-    "id": "console-add-dependency-command",
-    "name": "Add Dependency Command",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/recipes/console-add-dependency-command",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/nx-console/console-add-dependency-command",
-    "tags": ["editor-setup"]
-  },
-  "/recipes/nx-console/console-project-pane": {
-    "id": "console-project-pane",
-    "name": "Project Pane",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/recipes/console-project-pane",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/nx-console/console-project-pane",
-    "tags": ["editor-setup"]
-  },
-  "/recipes/nx-console/console-shortcuts": {
-    "id": "console-shortcuts",
-    "name": "Keyboard Shortcuts",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/recipes/console-shortcuts",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/nx-console/console-shortcuts",
     "tags": ["editor-setup"]
   },
   "/recipes/nx-console/console-troubleshooting": {

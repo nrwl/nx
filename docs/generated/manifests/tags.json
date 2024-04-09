@@ -37,27 +37,6 @@
     },
     {
       "description": "",
-      "file": "shared/recipes/console-add-dependency-command",
-      "id": "console-add-dependency-command",
-      "name": "Add Dependency Command",
-      "path": "/recipes/nx-console/console-add-dependency-command"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/console-project-pane",
-      "id": "console-project-pane",
-      "name": "Project Pane",
-      "path": "/recipes/nx-console/console-project-pane"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/console-shortcuts",
-      "id": "console-shortcuts",
-      "name": "Keyboard Shortcuts",
-      "path": "/recipes/nx-console/console-shortcuts"
-    },
-    {
-      "description": "",
       "file": "shared/recipes/console-troubleshooting",
       "id": "console-troubleshooting",
       "name": "Troubleshooting",

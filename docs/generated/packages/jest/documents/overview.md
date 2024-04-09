@@ -28,7 +28,23 @@ nx add @nx/jest
 
 This will install the correct version of `@nx/jest`.
 
+{% /tab %}
+{% tab label="Nx < 18" %}
+
+Install the `@nx/jest` package with your package manager.
+
+```shell
+npm add -D @nx/jest
+```
+
+{% /tab %}
+{% /tabs %}
+
 ### How @nx/jest Infers Tasks
+
+{% callout type="note" title="Inferred Tasks" %}
+Since Nx 18, Nx plugins can infer tasks for your projects based on the configuration of different tools. You can read more about it at the [Inferred Tasks concept page](/concepts/inferred-tasks).
+{% /callout %}
 
 The `@nx/jest` plugin will create a task for any project that has an Jest configuration file present. Any of the following files will be recognized as an Jest configuration file:
 
@@ -61,18 +77,6 @@ The `@nx/jest/plugin` is configured in the `plugins` array in `nx.json`.
 ```
 
 - The `targetName` option controls the name of the inferred Jest tasks. The default name is `test`.
-
-{% /tab %}
-{% tab label="Nx < 18" %}
-
-Install the `@nx/jest` package with your package manager.
-
-```shell
-npm add -D @nx/jest
-```
-
-{% /tab %}
-{% /tabs %}
 
 ## Using Jest
 
@@ -124,9 +128,9 @@ Jest has support for **Snapshot Testing**, a tool which simplifies validating da
 Example of using snapshots:
 
 ```typescript
-describe('SuperAwesomFunction', () => {
+describe('SuperAwesomeFunction', () => {
   it('should return the correct data shape', () => {
-    const actual = superAwesomFunction();
+    const actual = superAwesomeFunction();
     expect(actual).toMatchSnapshot();
   });
 });
@@ -157,11 +161,33 @@ Primary configurations for Jest will be via the `jest.config.ts` file that gener
 The root level `jest.config.ts` file configures [Jest multi project support](https://jestjs.io/docs/configuration#projects-arraystring--projectconfig).
 This configuration allows editor/IDE integrations to pick up individual project's configurations rather than the one at the root.
 
+{% tabs %}
+{% tab label="Nx 18+" %}
+
+The set of Jest projects within Nx workspaces tends to change. Instead of statically defining a list in `jest.config.ts`, Nx provides a utility function called `getJestProjectsAsync` which retrieves a list of paths to all the Jest config files from projects using the `@nx/jest:jest` executor or with tasks running the `jest` command.
+
+You can manually add Jest projects not identified by the `getJestProjectsAsync` function by doing something like the following:
+
+```typescript {% fileName="jest.config.ts" %}
+import { getJestProjectsAsync } from '@nx/jest';
+
+export default async () => ({
+  projects: [
+    ...(await getJestProjectsAsync()),
+    '<rootDir>/path/to/jest.config.ts',
+  ],
+});
+```
+
+{% /tab %}
+
+{% tab label="Nx < 18" %}
+
 The set of Jest projects within Nx workspaces tends to change. Instead of statically defining a list in `jest.config.ts`, Nx provides a utility function called `getJestProjects` which queries for Jest configurations defined for targets which use the `@nx/jest:jest` executor.
 
 You can add Jest projects which are not included in `getJestProjects()`, because they do not use the Nx Jest executor, by doing something like the following:
 
-```typescript {% fileName="jest.config.ts"}
+```typescript {% fileName="jest.config.ts" %}
 import { getJestProjects } from '@nx/jest';
 
 export default {
@@ -169,15 +195,16 @@ export default {
 };
 ```
 
+{% /tab %}
+{% /tabs %}
+
 ### Nx
 
-Nx Jest Plugin options can be configured via the [project config file](/reference/project-configuration) or via the [command line flags](/nx-api/jest).
+The Nx task options can be configured via the [project config file](/reference/project-configuration) or via the command line flags.
 
-> Hint: Use `--help` to see all available options
->
-> ```shell
-> nx test <project-name> --help
-> ```
+If you're using [inferred tasks](/concepts/inferred-tasks), or running Jest directly with the `nx:run-commands` executor, you can [provide the Jest args](/recipes/running-tasks/pass-args-to-commands) for the command you're running.
+
+If you're using the `@nx/jest:jest` executor, you can provide [the options the executor accepts](/nx-api/jest/executors/jest#options).
 
 ### Code Coverage
 
@@ -204,9 +231,7 @@ export default async function () {
 cleanupRegisteredPaths();
 ```
 
-{% callout type="note" title="@swc/jest & global scripts" %}
-When using @swc/jest and a global setup/teardown file,
-You have to set the `noInterop: false` and use dynamic imports within the setup function
+If you're using `@swc/jest` and a global setup/teardown file, you have to set the `noInterop: false` and use dynamic imports within the setup function:
 
 ```typescript {% fileName="apps/<your-project>/jest.config.ts" %}
 /* eslint-disable */
@@ -252,9 +277,6 @@ export default async function () {
 }
 ```
 
-{% /callout %}
-
 ## More Documentation
 
 - [Jest Docs](https://jestjs.io/)
-- [@nx/jest options](/nx-api/jest)

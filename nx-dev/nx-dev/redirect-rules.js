@@ -388,6 +388,10 @@ const recipesUrls = {
   '/showcase/example-repos/add-nuxt': '/nx-api/nuxt',
   '/showcase/example-repos/add-vue': '/nx-api/vue',
   '/recipes/react/react-18': '/nx-api/react',
+  '/recipes/nx-console/console-shortcuts': '/getting-started/editor-setup',
+  '/recipes/nx-console/console-project-pane': '/getting-started/editor-setup',
+  '/recipes/nx-console/console-add-dependency-command':
+    '/getting-started/editor-setup',
 };
 
 /**
@@ -892,7 +896,9 @@ const latestRecipesRefactoring = {
   '/recipes/adopting-nx-angular/angular-integrated':
     '/recipes/angular/migration/angular',
   '/recipes/adopting-nx-angular/angular-manual':
-    '/recipes/angular/migration/angular-manual',
+    '/recipes/angular/migration/angular',
+  '/recipes/angular/migration/angular-manual':
+    '/recipes/angular/migration/angular',
   '/recipes/adopting-nx-angular/angular-multiple':
     '/recipes/angular/migration/angular-multiple',
   '/recipes/adopting-nx/migration-angularjs':
