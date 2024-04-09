@@ -66,6 +66,7 @@
       - [Define a Task Pipeline](/recipes/running-tasks/defining-task-pipeline)
       - [Change Cache Location](/recipes/running-tasks/change-cache-location)
       - [Run Custom Commands](/recipes/running-tasks/run-commands-executor)
+      - [Pass Args to Commands](/recipes/running-tasks/pass-args-to-commands)
       - [Run Tasks in Parallel](/recipes/running-tasks/run-tasks-in-parallel)
       - [Run Root-Level NPM Scripts with Nx](/recipes/running-tasks/root-level-scripts)
       - [Workspace Watching](/recipes/running-tasks/workspace-watching)
