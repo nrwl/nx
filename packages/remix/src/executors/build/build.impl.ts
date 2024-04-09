@@ -14,7 +14,7 @@ import { join } from 'path';
 import { type RemixBuildSchema } from './schema';
 
 function buildRemixBuildArgs(options: RemixBuildSchema) {
-  const args = ['build'];
+  const args = ['vite:build'];
 
   if (options.sourcemap) {
     args.push(`--sourcemap`);

@@ -17,6 +17,7 @@ function normalizeOptions(schema: RemixServeSchema) {
 function buildRemixDevArgs(options: RemixServeSchema) {
   const args = [];
 
+  // TODO this might be deprecated
   if (options.command) {
     args.push(`--command=${options.command}`);
   }
@@ -61,7 +62,7 @@ export default async function* serveExecutor(
 
   yield* createAsyncIterable<{ success: boolean; baseUrl: string }>(
     async ({ done, next, error }) => {
-      const server = fork(remixBin, ['dev', ...args], {
+      const server = fork(remixBin, ['vite:dev', ...args], {
         cwd: join(workspaceRoot, projectRoot),
         stdio: 'inherit',
       });
