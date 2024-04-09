@@ -344,7 +344,7 @@ export function createProjectConfigurations(
         }
 
         if (exclude) {
-          const excluded = include.some((excludedPattern) =>
+          const excluded = exclude.some((excludedPattern) =>
             minimatch(file, excludedPattern, { dot: true })
           );
           if (excluded) {
