@@ -63,6 +63,7 @@ export interface RunCommandsOptions extends Json {
   readyWhen?: string;
   cwd?: string;
   env?: Record<string, string>;
+  forwardAllArgs?: boolean; // default is true
   args?: string | string[];
   envFile?: string;
   __unparsed__: string[];
@@ -84,6 +85,7 @@ const propKeys = [
   'usePty',
   'streamOutput',
   'verbose',
+  'forwardAllArgs',
 ];
 
 export interface NormalizedRunCommandsOptions extends RunCommandsOptions {
@@ -252,7 +254,7 @@ function normalizeOptions(
     c.command = interpolateArgsIntoCommand(
       c.command,
       options as NormalizedRunCommandsOptions,
-      c.forwardAllArgs ?? true
+      c.forwardAllArgs ?? options.forwardAllArgs ?? true
     );
   });
   return options as NormalizedRunCommandsOptions;
