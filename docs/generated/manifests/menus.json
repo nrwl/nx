@@ -2212,30 +2212,6 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Add Dependency Command",
-                "path": "/recipes/nx-console/console-add-dependency-command",
-                "id": "console-add-dependency-command",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Project Pane",
-                "path": "/recipes/nx-console/console-project-pane",
-                "id": "console-project-pane",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Keyboard Shortcuts",
-                "path": "/recipes/nx-console/console-shortcuts",
-                "id": "console-shortcuts",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
                 "name": "Troubleshooting",
                 "path": "/recipes/nx-console/console-troubleshooting",
                 "id": "console-troubleshooting",
@@ -3996,30 +3972,6 @@
             "disableCollapsible": false
           },
           {
-            "name": "Add Dependency Command",
-            "path": "/recipes/nx-console/console-add-dependency-command",
-            "id": "console-add-dependency-command",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Project Pane",
-            "path": "/recipes/nx-console/console-project-pane",
-            "id": "console-project-pane",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Keyboard Shortcuts",
-            "path": "/recipes/nx-console/console-shortcuts",
-            "id": "console-shortcuts",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
             "name": "Troubleshooting",
             "path": "/recipes/nx-console/console-troubleshooting",
             "id": "console-troubleshooting",
@@ -4058,30 +4010,6 @@
         "name": "Run Command",
         "path": "/recipes/nx-console/console-run-command",
         "id": "console-run-command",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Add Dependency Command",
-        "path": "/recipes/nx-console/console-add-dependency-command",
-        "id": "console-add-dependency-command",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Project Pane",
-        "path": "/recipes/nx-console/console-project-pane",
-        "id": "console-project-pane",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Keyboard Shortcuts",
-        "path": "/recipes/nx-console/console-shortcuts",
-        "id": "console-shortcuts",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
