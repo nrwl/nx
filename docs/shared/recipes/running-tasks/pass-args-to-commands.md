@@ -248,8 +248,34 @@ If multiple targets with the same name run different commands (or use different 
 
 ## Pass args when running the command in the terminal
 
-To pass args in a one-off manner when running a task, you can provide them as options directly:
+To pass args in a one-off manner when running a task, you can also provide them as individual options or by providing the `--args` option when running the task:
+
+{% tabs %}
+{% tab label="Providing args directly as options" %}
 
 ```shell
 nx build my-app --assetsInlineLimit=2048 --assetsDir=static/assets
 ```
+
+{% /tab %}
+
+{% tab label="Providing the \"--args\" option" %}
+
+```shell
+nx build my-app --args="--assetsInlineLimit=2048 --assetsDir=static/assets"
+```
+
+{% /tab %}
+{% /tabs %}
+
+{% callout type="warning" title="Conflicting options" %}
+
+If you provide an arg with the same name as an Nx CLI option (e.g. `--configuration`) or an `nx:run-commands` option (e.g. `--env`), the arg will be parsed as an option for the Nx CLI or the executor and won't be forwarded to the underlying command. You should provide the arg using the `-args` option in such cases.
+
+You can also provide an arg with the same name to both the Nx CLI and the underlying command. For example, to run the `ci` configuration of a `test` target that runs the command `detox test` and pass the `--configuration` arg to the command, you can run:
+
+```shell
+nx test mobile-e2e --configuration=ci --args="--configuration=ios.sim.release"
+```
+
+{% /callout %}
