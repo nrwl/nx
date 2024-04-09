@@ -387,6 +387,7 @@ const recipesUrls = {
     '/recipes/webpack/webpack-config-setup',
   '/showcase/example-repos/add-nuxt': '/nx-api/nuxt',
   '/showcase/example-repos/add-vue': '/nx-api/vue',
+  '/recipes/react/react-18': '/nx-api/react',
   '/recipes/nx-console/console-shortcuts': '/getting-started/editor-setup',
   '/recipes/nx-console/console-project-pane': '/getting-started/editor-setup',
   '/recipes/nx-console/console-add-dependency-command':

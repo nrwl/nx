@@ -1986,17 +1986,6 @@
         "file": "",
         "itemList": [
           {
-            "id": "react-18",
-            "name": "React 18 Migration",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/guides/react-18",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/react/react-18",
-            "tags": []
-          },
-          {
             "id": "react-native",
             "name": "React Native with Nx",
             "description": "",
@@ -3529,17 +3518,6 @@
     "file": "",
     "itemList": [
       {
-        "id": "react-18",
-        "name": "React 18 Migration",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/guides/react-18",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/react/react-18",
-        "tags": []
-      },
-      {
         "id": "react-native",
         "name": "React Native with Nx",
         "description": "",
@@ -3619,17 +3597,6 @@
     ],
     "isExternal": false,
     "path": "/recipes/react",
-    "tags": []
-  },
-  "/recipes/react/react-18": {
-    "id": "react-18",
-    "name": "React 18 Migration",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/guides/react-18",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/react/react-18",
     "tags": []
   },
   "/recipes/react/react-native": {
