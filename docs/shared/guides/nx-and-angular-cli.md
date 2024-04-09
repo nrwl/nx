@@ -199,7 +199,7 @@ The [`nx add` command](/nx-api/nx/documents/add) is similar to the `ng add` comm
 nx add [package]
 ```
 
-If you're using a version of Nx older than **17.3.0**, we recommend running:
+The command was introduced in **Nx 17.3.0**. If you're using an older version, you can instead run:
 
 {% tabs %}
 {% tab label="npm" %}
