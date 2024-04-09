@@ -2544,6 +2544,19 @@
               "file": "shared/packages/expo/expo-plugin"
             }
           ]
+        },
+        {
+          "name": "gradle",
+          "id": "gradle",
+          "description": "Gradle package.",
+          "itemList": [
+            {
+              "id": "overview",
+              "name": "Overview",
+              "path": "/nx-api/gradle",
+              "file": "shared/packages/gradle/gradle-plugin"
+            }
+          ]
         }
       ]
     }

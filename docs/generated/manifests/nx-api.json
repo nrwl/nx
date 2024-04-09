@@ -1012,7 +1012,19 @@
     "name": "gradle",
     "packageName": "@nx/gradle",
     "description": "The Nx Plugin for Gradle allows Gradle tasks to be run through Nx",
-    "documents": {},
+    "documents": {
+      "/nx-api/gradle/documents/overview": {
+        "id": "overview",
+        "name": "Overview",
+        "description": "The Nx Plugin for Gradle allows Gradle tasks to be run through Nx",
+        "file": "generated/packages/gradle/documents/overview",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-api/gradle/documents/overview",
+        "tags": [],
+        "originalFilePath": "shared/packages/gradle/gradle-plugin"
+      }
+    },
     "root": "/packages/gradle",
     "source": "/packages/gradle/src",
     "executors": {},
