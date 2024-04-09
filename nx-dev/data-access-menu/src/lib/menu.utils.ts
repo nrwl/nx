@@ -13,7 +13,8 @@ export function getBasicNxSection(items: MenuItem[]): MenuSection {
           m.id === 'concepts' ||
           m.id === 'recipes' ||
           m.id === 'showcase' ||
-          m.id === 'reference'
+          m.id === 'reference' ||
+          m.id === 'troubleshooting'
       )
       .map((m) => {
         return {
