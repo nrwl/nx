@@ -5,12 +5,14 @@ import {
 } from '../../config/workspace-json-project-json';
 import {
   ConfigurationSourceMaps,
+  createProjectConfigurations,
   isCompatibleTarget,
   mergeProjectConfigurationIntoRootMap,
   mergeTargetConfigurations,
   readProjectConfigurationsFromRootMap,
   readTargetDefaultsForTarget,
 } from './project-configuration-utils';
+import { NxPluginV2 } from '../../utils/nx-plugin';
 
 describe('project-configuration-utils', () => {
   describe('target merging', () => {
@@ -1523,6 +1525,98 @@ describe('project-configuration-utils', () => {
           }
         )
       ).toBe(false);
+    });
+  });
+
+  describe('createProjectConfigurations', () => {
+    /* A fake plugin that sets `fake-lib` tag to libs. */
+    const fakeTagPlugin: NxPluginV2 = {
+      name: 'fake-tag-plugin',
+      createNodes: [
+        'libs/*/project.json',
+        (vitestConfigPath) => {
+          const [_libs, name, _config] = vitestConfigPath.split('/');
+          return {
+            projects: {
+              [name]: {
+                name: name,
+                root: `libs/${name}`,
+                tags: ['fake-lib'],
+              },
+            },
+          };
+        },
+      ],
+    };
+
+    it('should create nodes for files matching included patterns only', async () => {
+      const projectConfigurations = await createProjectConfigurations(
+        undefined,
+        {},
+        ['libs/a/project.json', 'libs/b/project.json'],
+        [
+          {
+            plugin: fakeTagPlugin,
+          },
+        ]
+      );
+
+      expect(projectConfigurations.projects).toEqual({
+        a: {
+          name: 'a',
+          root: 'libs/a',
+          tags: ['fake-lib'],
+        },
+        b: {
+          name: 'b',
+          root: 'libs/b',
+          tags: ['fake-lib'],
+        },
+      });
+    });
+
+    it('should create nodes for files matching included patterns only', async () => {
+      const projectConfigurations = await createProjectConfigurations(
+        undefined,
+        {},
+        ['libs/a/project.json', 'libs/b/project.json'],
+        [
+          {
+            plugin: fakeTagPlugin,
+            include: ['libs/a/**'],
+          },
+        ]
+      );
+
+      expect(projectConfigurations.projects).toEqual({
+        a: {
+          name: 'a',
+          root: 'libs/a',
+          tags: ['fake-lib'],
+        },
+      });
+    });
+
+    it('should not create nodes for files matching excluded patterns', async () => {
+      const projectConfigurations = await createProjectConfigurations(
+        undefined,
+        {},
+        ['libs/a/project.json', 'libs/b/project.json'],
+        [
+          {
+            plugin: fakeTagPlugin,
+            exclude: ['libs/b/**'],
+          },
+        ]
+      );
+
+      expect(projectConfigurations.projects).toEqual({
+        a: {
+          name: 'a',
+          root: 'libs/a',
+          tags: ['fake-lib'],
+        },
+      });
     });
   });
 });
