@@ -59,7 +59,7 @@ import {
   ExecutorsJson,
   TaskGraphExecutor,
 } from '../config/misc-interfaces';
-import { readPluginPackageJson } from '../utils/nx-plugin';
+import { readPluginPackageJson } from '../project-graph/plugins';
 import {
   getImplementationFactory,
   resolveImplementation,

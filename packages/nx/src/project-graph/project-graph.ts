@@ -26,15 +26,17 @@ import {
   retrieveWorkspaceFiles,
 } from './utils/retrieve-workspace-files';
 import { readNxJson } from '../config/nx-json';
-import { unregisterPluginTSTranspiler } from '../utils/nx-plugin';
 import {
   ConfigurationResult,
   ConfigurationSourceMaps,
+} from './utils/project-configuration-utils';
+import {
   CreateNodesError,
   MergeNodesError,
   ProjectConfigurationsError,
-} from './utils/project-configuration-utils';
+} from './error-types';
 import { DaemonProjectGraphError } from '../daemon/daemon-project-graph-error';
+import { loadNxPlugins, LoadedNxPlugin } from './plugins/internal-api';
 
 /**
  * Synchronously reads the latest cached copy of the workspace's ProjectGraph.
@@ -95,15 +97,16 @@ export function readProjectsConfigurationFromProjectGraph(
 }
 
 export async function buildProjectGraphAndSourceMapsWithoutDaemon() {
-  // Set this globally to allow plugins to know if they are being called from the project graph creation
   global.NX_GRAPH_CREATION = true;
   const nxJson = readNxJson();
 
   performance.mark('retrieve-project-configurations:start');
   let configurationResult: ConfigurationResult;
   let projectConfigurationsError: ProjectConfigurationsError;
+  const [plugins, cleanup] = await loadNxPlugins(nxJson.plugins);
   try {
     configurationResult = await retrieveProjectConfigurations(
+      plugins,
       workspaceRoot,
       nxJson
     );
@@ -137,7 +140,8 @@ export async function buildProjectGraphAndSourceMapsWithoutDaemon() {
       fileMap,
       allWorkspaceFiles,
       rustReferences,
-      cacheEnabled ? readFileMapCache() : null
+      cacheEnabled ? readFileMapCache() : null,
+      plugins
     );
   } catch (e) {
     if (e instanceof CreateDependenciesError) {
@@ -149,12 +153,13 @@ export async function buildProjectGraphAndSourceMapsWithoutDaemon() {
     } else {
       throw e;
     }
+  } finally {
+    cleanup();
   }
 
   const { projectGraph, projectFileMapCache } = projectGraphResult;
   performance.mark('build-project-graph-using-project-file-map:end');
 
-  unregisterPluginTSTranspiler();
   delete global.NX_GRAPH_CREATION;
 
   const errors = [

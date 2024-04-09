@@ -69,6 +69,7 @@ It only uses language primitives and immutable objects
 - [CustomHasher](../../devkit/documents/CustomHasher)
 - [DynamicDependency](../../devkit/documents/DynamicDependency)
 - [Executor](../../devkit/documents/Executor)
+- [ExpandedPluginConfiguration](../../devkit/documents/ExpandedPluginConfiguration)
 - [Generator](../../devkit/documents/Generator)
 - [GeneratorCallback](../../devkit/documents/GeneratorCallback)
 - [Hasher](../../devkit/documents/Hasher)

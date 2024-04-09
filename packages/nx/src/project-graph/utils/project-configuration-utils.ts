@@ -7,17 +7,26 @@ import {
   TargetMetadata,
 } from '../../config/workspace-json-project-json';
 import { NX_PREFIX } from '../../utils/logger';
-import { CreateNodesResult, LoadedNxPlugin } from '../../utils/nx-plugin';
 import { readJsonFile } from '../../utils/fileutils';
 import { workspaceRoot } from '../../utils/workspace-root';
 import {
   ONLY_MODIFIES_EXISTING_TARGET,
   OVERRIDE_SOURCE_FILE,
-} from '../../plugins/target-defaults/target-defaults-plugin';
+} from '../../plugins/target-defaults/symbols';
 
 import { minimatch } from 'minimatch';
 import { join } from 'path';
 import { performance } from 'perf_hooks';
+import {
+  CreateNodesResultWithContext,
+  LoadedNxPlugin,
+} from '../plugins/internal-api';
+import {
+  CreateNodesError,
+  MergeNodesError,
+  ProjectConfigurationsError,
+  isAggregateCreateNodesError,
+} from '../error-types';
 
 export type SourceInformation = [file: string, plugin: string];
 export type ConfigurationSourceMaps = Record<
@@ -294,10 +303,6 @@ export type ConfigurationResult = {
   projectRootMap: Record<string, string>;
   sourceMaps: ConfigurationSourceMaps;
 };
-type CreateNodesResultWithContext = CreateNodesResult & {
-  file: string;
-  pluginName: string;
-};
 
 /**
  * Transforms a list of project paths into a map of project configurations.
@@ -307,10 +312,10 @@ type CreateNodesResultWithContext = CreateNodesResult & {
  * @param workspaceFiles A list of non-ignored workspace files
  * @param plugins The plugins that should be used to infer project configuration
  */
-export function createProjectConfigurations(
+export async function createProjectConfigurations(
   root: string = workspaceRoot,
   nxJson: NxJsonConfiguration,
-  workspaceFiles: string[], // making this parameter allows devkit to pick up newly created projects
+  projectFiles: string[], // making this parameter allows devkit to pick up newly created projects
   plugins: LoadedNxPlugin[]
 ): Promise<ConfigurationResult> {
   performance.mark('build-project-configs:start');
@@ -319,20 +324,21 @@ export function createProjectConfigurations(
   const errors: Array<CreateNodesError | MergeNodesError> = [];
 
   // We iterate over plugins first - this ensures that plugins specified first take precedence.
-  for (const { plugin, options, include, exclude } of plugins) {
-    const [pattern, createNodes] = plugin.createNodes ?? [];
-    const pluginResults: Array<
-      CreateNodesResultWithContext | Promise<CreateNodesResultWithContext>
-    > = [];
+  for (const {
+    name: pluginName,
+    createNodes: createNodesTuple,
+    include,
+    exclude,
+  } of plugins) {
+    const [pattern, createNodes] = createNodesTuple ?? [];
 
-    performance.mark(`${plugin.name}:createNodes - start`);
     if (!pattern) {
       continue;
     }
 
     const matchingConfigFiles: string[] = [];
 
-    for (const file of workspaceFiles) {
+    for (const file of projectFiles) {
       if (minimatch(file, pattern, { dot: true })) {
         if (include) {
           const included = include.some((includedPattern) =>
@@ -355,76 +361,20 @@ export function createProjectConfigurations(
         matchingConfigFiles.push(file);
       }
     }
-    for (const file of matchingConfigFiles) {
-      performance.mark(`${plugin.name}:createNodes:${file} - start`);
-      try {
-        let r = createNodes(file, options, {
-          nxJsonConfiguration: nxJson,
-          workspaceRoot: root,
-          configFiles: matchingConfigFiles,
-        });
-
-        if (r instanceof Promise) {
-          pluginResults.push(
-            r
-              .catch((error) => {
-                performance.mark(`${plugin.name}:createNodes:${file} - end`);
-                errors.push(
-                  new CreateNodesError({
-                    file,
-                    pluginName: plugin.name,
-                    error,
-                  })
-                );
-                return {
-                  projects: {},
-                };
-              })
-              .then((r) => {
-                performance.mark(`${plugin.name}:createNodes:${file} - end`);
-                performance.measure(
-                  `${plugin.name}:createNodes:${file}`,
-                  `${plugin.name}:createNodes:${file} - start`,
-                  `${plugin.name}:createNodes:${file} - end`
-                );
-                return { ...r, file, pluginName: plugin.name };
-              })
-          );
-        } else {
-          performance.mark(`${plugin.name}:createNodes:${file} - end`);
-          performance.measure(
-            `${plugin.name}:createNodes:${file}`,
-            `${plugin.name}:createNodes:${file} - start`,
-            `${plugin.name}:createNodes:${file} - end`
-          );
-          pluginResults.push({
-            ...r,
-            file,
-            pluginName: plugin.name,
-          });
-        }
-      } catch (error) {
-        errors.push(
-          new CreateNodesError({
-            file,
-            pluginName: plugin.name,
-            error,
-          })
-        );
+    let r = createNodes(matchingConfigFiles, {
+      nxJsonConfiguration: nxJson,
+      workspaceRoot: root,
+      configFiles: matchingConfigFiles,
+    }).catch((e) => {
+      if (isAggregateCreateNodesError(e)) {
+        errors.push(...e.errors);
+        return e.partialResults;
+      } else {
+        throw e;
       }
-    }
+    });
 
-    results.push(
-      Promise.all(pluginResults).then((results) => {
-        performance.mark(`${plugin.name}:createNodes - end`);
-        performance.measure(
-          `${plugin.name}:createNodes`,
-          `${plugin.name}:createNodes - start`,
-          `${plugin.name}:createNodes - end`
-        );
-        return results;
-      })
-    );
+    results.push(r);
   }
 
   return Promise.all(results).then((results) => {
@@ -555,62 +505,6 @@ export function readProjectConfigurationsFromRootMap(
     );
   }
   return projects;
-}
-
-export class ProjectConfigurationsError extends Error {
-  constructor(
-    public readonly errors: Array<MergeNodesError | CreateNodesError>,
-    public readonly partialProjectConfigurationsResult: ConfigurationResult
-  ) {
-    super('Failed to create project configurations');
-    this.name = this.constructor.name;
-  }
-}
-
-export class CreateNodesError extends Error {
-  file: string;
-  pluginName: string;
-
-  constructor({
-    file,
-    pluginName,
-    error,
-  }: {
-    file: string;
-    pluginName: string;
-    error: Error;
-  }) {
-    const msg = `The "${pluginName}" plugin threw an error while creating nodes from ${file}:`;
-
-    super(msg, { cause: error });
-    this.name = this.constructor.name;
-    this.file = file;
-    this.pluginName = pluginName;
-    this.stack = `${this.message}\n  ${error.stack.split('\n').join('\n  ')}`;
-  }
-}
-
-export class MergeNodesError extends Error {
-  file: string;
-  pluginName: string;
-
-  constructor({
-    file,
-    pluginName,
-    error,
-  }: {
-    file: string;
-    pluginName: string;
-    error: Error;
-  }) {
-    const msg = `The nodes created from ${file} by the "${pluginName}" could not be merged into the project graph:`;
-
-    super(msg, { cause: error });
-    this.name = this.constructor.name;
-    this.file = file;
-    this.pluginName = pluginName;
-    this.stack = `${this.message}\n  ${error.stack.split('\n').join('\n  ')}`;
-  }
 }
 
 /**

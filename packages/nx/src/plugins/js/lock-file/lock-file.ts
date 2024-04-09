@@ -40,7 +40,7 @@ import { readJsonFile } from '../../../utils/fileutils';
 import {
   CreateDependenciesContext,
   CreateNodesContext,
-} from '../../../utils/nx-plugin';
+} from '../../../project-graph/plugins';
 
 const YARN_LOCK_FILE = 'yarn.lock';
 const NPM_LOCK_FILE = 'package-lock.json';
