@@ -238,7 +238,7 @@ describe('Run Commands', () => {
           { unknownOptions: { hello: 123 }, parsedArgs: { hello: 123 } } as any,
           true
         )
-      ).toEqual('echo --hello 123');
+      ).toEqual('echo --hello=123');
     });
 
     it('should add all args and unparsed args when forwardAllArgs is true', () => {

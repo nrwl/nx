@@ -165,7 +165,7 @@ describe('Extra Nx Misc Tests', () => {
       });
 
       const result = runCLI(`run ${mylib}:echo`, { silent: true });
-      expect(result).toContain('--var1 a');
+      expect(result).toContain('--var1=a');
     }, 120000);
 
     it('should interpolate provided arguments', async () => {
