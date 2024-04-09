@@ -195,9 +195,11 @@ To reiterate: `nx migrate` runs the migrations written by the Angular team the s
 
 The [`nx add` command](/nx-api/nx/documents/add) is similar to the `ng add` command. It installs a given package specifier (e.g. `@nx/react`, `@nx/react@18.1.0`, `@nx/react@latest`) and it runs an `init` or `ng-add` generator if the installed package contains it.
 
-This command was introduced in **Nx 17.3.0**.
+```shell
+nx add [package]
+```
 
-If you're using a version of Nx older than **17.3.0**, we recommend running:
+The command was introduced in **Nx 17.3.0**. If you're using an older version, you can instead run:
 
 {% tabs %}
 {% tab label="npm" %}
