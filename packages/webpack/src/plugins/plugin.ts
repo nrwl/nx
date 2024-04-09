@@ -181,7 +181,7 @@ function normalizeOutputPath(
   if (!outputPath) {
     // If outputPath is undefined, use webpack's default `dist` directory.
     if (projectRoot === '.') {
-      return `{projectRoot}/dist}`;
+      return `{projectRoot}/dist`;
     } else {
       return `{workspaceRoot}/dist/{projectRoot}`;
     }
