@@ -1453,14 +1453,6 @@
             "isExternal": false,
             "children": [
               {
-                "name": "React 18 Migration",
-                "path": "/recipes/react/react-18",
-                "id": "react-18",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
                 "name": "React Native with Nx",
                 "path": "/recipes/react/react-native",
                 "id": "react-native",
@@ -2612,14 +2604,6 @@
         "isExternal": false,
         "children": [
           {
-            "name": "React 18 Migration",
-            "path": "/recipes/react/react-18",
-            "id": "react-18",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
             "name": "React Native with Nx",
             "path": "/recipes/react/react-native",
             "id": "react-native",
@@ -2676,14 +2660,6 @@
             "disableCollapsible": false
           }
         ],
-        "disableCollapsible": false
-      },
-      {
-        "name": "React 18 Migration",
-        "path": "/recipes/react/react-18",
-        "id": "react-18",
-        "isExternal": false,
-        "children": [],
         "disableCollapsible": false
       },
       {

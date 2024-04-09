@@ -78,7 +78,6 @@
       - [Preserving Git Histories](/recipes/adopting-nx/preserving-git-histories)
       - [Manual migration](/recipes/adopting-nx/manual)
     - [React](/recipes/react)
-      - [React 18 Migration](/recipes/react/react-18)
       - [React Native with Nx](/recipes/react/react-native)
       - [Remix with Nx](/recipes/react/remix)
       - [Use Environment Variables in React](/recipes/react/use-environment-variables-in-react)

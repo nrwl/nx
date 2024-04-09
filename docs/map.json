@@ -517,11 +517,6 @@
               "description": "Advanced guides to adopt Nx in React.",
               "itemList": [
                 {
-                  "name": "React 18 Migration",
-                  "id": "react-18",
-                  "file": "shared/guides/react-18"
-                },
-                {
                   "name": "React Native with Nx",
                   "id": "react-native",
                   "file": "shared/guides/react-native"

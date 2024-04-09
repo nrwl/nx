@@ -387,6 +387,7 @@ const recipesUrls = {
     '/recipes/webpack/webpack-config-setup',
   '/showcase/example-repos/add-nuxt': '/nx-api/nuxt',
   '/showcase/example-repos/add-vue': '/nx-api/vue',
+  '/recipes/react/react-18': '/nx-api/react',
 };
 
 /**
