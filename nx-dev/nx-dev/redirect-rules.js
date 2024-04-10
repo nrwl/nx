@@ -1032,6 +1032,26 @@ const eslintRename = {
 };
 
 /**
+ * Removed deprecated URLs
+ */
+const removedDeprecatedUrls = {
+  '/deprecated/default-collection': '/features/generate-code', // 46 views: has not worked since Nx 17 and has very little views
+  '/deprecated/workspace-lint': '/nx-api/nx/documents/report', // 168 views: workspace-lint hasn't worked since Nx 15 and users should use `nx report` to check versions and other info
+  '/deprecated/storybook/angular-storybook-targets':
+    '/recipes/storybook/overview-angular', // 49 views
+  '/deprecated/storybook/angular-project-build-config':
+    '/recipes/storybook/overview-angular', // 126 views: outdated since Nx 14
+  '/deprecated/storybook/migrate-webpack-final-angular':
+    '/recipes/storybook/overview-angular', // 50 views: For Nx < 12.7
+  '/deprecated/storybook/upgrade-storybook-v6-angular':
+    '/recipes/storybook/overview-angular', // 44 views: outdated since Nx 14
+  '/deprecated/storybook/migrate-webpack-final-react':
+    '/recipes/storybook/overview-react', // 417 views: mostly people searching "React Storybook" is matching this outdated page that was for Nx 12.7
+  '/deprecated/storybook/upgrade-storybook-v6-react':
+    '/recipes/storybook/overview-react', // 80 views
+};
+
+/**
  * Public export API
  */
 module.exports = {
@@ -1058,4 +1078,5 @@ module.exports = {
   coreFeatureRefactoring: coreFeatureAndConceptsRefactoring,
   aiChat,
   eslintRename,
+  removedDeprecatedUrls,
 };

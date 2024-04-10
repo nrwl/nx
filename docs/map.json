@@ -1348,11 +1348,6 @@
               "file": "shared/deprecated/workspace-json"
             },
             {
-              "name": "workspace-lint",
-              "id": "workspace-lint",
-              "file": "shared/deprecated/workspace-lint"
-            },
-            {
               "name": "As Provided vs. Derived",
               "id": "as-provided-vs-derived",
               "file": "shared/deprecated/as-provided-vs-derived"
@@ -1366,11 +1361,6 @@
               "name": "Workspace Executors",
               "id": "workspace-executors",
               "file": "shared/deprecated/workspace-executors"
-            },
-            {
-              "name": "defaultCollection",
-              "id": "default-collection",
-              "file": "shared/deprecated/default-collection"
             },
             {
               "name": "runtimeCacheInputs",
@@ -1396,49 +1386,6 @@
               "name": "Angular Schematics and Builders",
               "id": "angular-schematics-builders",
               "file": "shared/deprecated/angular-schematics-builders"
-            },
-            {
-              "name": "Storybook deprecated docs",
-              "id": "storybook",
-              "description": "Deprecated @nx/storybook package documentation and guides.",
-              "itemList": [
-                {
-                  "id": "angular-storybook-targets",
-                  "name": "Angular: Information about the Storybook targets",
-                  "description": "This document explains the role of the storybook and build-storybook targets in Angular projects with a Storybook configuration, and specifically which executors are used for them.",
-                  "file": "shared/deprecated/storybook/angular-storybook-targets"
-                },
-                {
-                  "id": "angular-project-build-config",
-                  "name": "Angular - The projectBuildConfig",
-                  "description": "This document explains the role of the projectBuildConfig in Angular projects with a Storybook configuration, and how the Storybook executors use it.",
-                  "file": "shared/deprecated/storybook/angular-project-build-config"
-                },
-                {
-                  "id": "migrate-webpack-final-angular",
-                  "name": "Angular: Storybook Migration to webpackFinal",
-                  "description": "This guide explains how migrate from older versions of Storybook which used a custom webpack.config.js to the new Storybook 6.3+ which uses the webpackFinal property in the main configuration.",
-                  "file": "shared/deprecated/storybook/migrate-webpack-final-angular"
-                },
-                {
-                  "id": "upgrade-storybook-v6-angular",
-                  "name": "Angular: Upgrading to Storybook 6",
-                  "description": "This guide explains how you can upgrade your Storybook from versions 5.3 and below to Storybook 6, for Angular projects.",
-                  "file": "shared/deprecated/storybook/storybook-v6-angular"
-                },
-                {
-                  "id": "migrate-webpack-final-react",
-                  "name": "React: Storybook Migration to webpackFinal and the Nx Addon",
-                  "description": "This guide explains how migrate from older versions of Storybook which used a custom webpack.config.js to the new Storybook 6.3+ which uses the webpackFinal property in the main configuration and the Nx React Addon.",
-                  "file": "shared/deprecated/storybook/migrate-webpack-final-react"
-                },
-                {
-                  "id": "upgrade-storybook-v6-react",
-                  "name": "React: Upgrading to Storybook 6",
-                  "description": "This guide explains how you can upgrade your Storybook from versions 5.3 and below to Storybook 6, for React projects.",
-                  "file": "shared/deprecated/storybook/storybook-v6-react"
-                }
-              ]
             },
             {
               "name": "v1 Nx Plugin API",

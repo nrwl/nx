@@ -6546,17 +6546,6 @@
         "tags": []
       },
       {
-        "id": "workspace-lint",
-        "name": "workspace-lint",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/deprecated/workspace-lint",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/deprecated/workspace-lint",
-        "tags": []
-      },
-      {
         "id": "as-provided-vs-derived",
         "name": "As Provided vs. Derived",
         "description": "",
@@ -6587,17 +6576,6 @@
         "itemList": [],
         "isExternal": false,
         "path": "/deprecated/workspace-executors",
-        "tags": []
-      },
-      {
-        "id": "default-collection",
-        "name": "defaultCollection",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/deprecated/default-collection",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/deprecated/default-collection",
         "tags": []
       },
       {
@@ -6656,84 +6634,6 @@
         "tags": []
       },
       {
-        "id": "storybook",
-        "name": "Storybook deprecated docs",
-        "description": "Deprecated @nx/storybook package documentation and guides.",
-        "mediaImage": "",
-        "file": "",
-        "itemList": [
-          {
-            "id": "angular-storybook-targets",
-            "name": "Angular: Information about the Storybook targets",
-            "description": "This document explains the role of the storybook and build-storybook targets in Angular projects with a Storybook configuration, and specifically which executors are used for them.",
-            "mediaImage": "",
-            "file": "shared/deprecated/storybook/angular-storybook-targets",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/deprecated/storybook/angular-storybook-targets",
-            "tags": []
-          },
-          {
-            "id": "angular-project-build-config",
-            "name": "Angular - The projectBuildConfig",
-            "description": "This document explains the role of the projectBuildConfig in Angular projects with a Storybook configuration, and how the Storybook executors use it.",
-            "mediaImage": "",
-            "file": "shared/deprecated/storybook/angular-project-build-config",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/deprecated/storybook/angular-project-build-config",
-            "tags": []
-          },
-          {
-            "id": "migrate-webpack-final-angular",
-            "name": "Angular: Storybook Migration to webpackFinal",
-            "description": "This guide explains how migrate from older versions of Storybook which used a custom webpack.config.js to the new Storybook 6.3+ which uses the webpackFinal property in the main configuration.",
-            "mediaImage": "",
-            "file": "shared/deprecated/storybook/migrate-webpack-final-angular",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/deprecated/storybook/migrate-webpack-final-angular",
-            "tags": []
-          },
-          {
-            "id": "upgrade-storybook-v6-angular",
-            "name": "Angular: Upgrading to Storybook 6",
-            "description": "This guide explains how you can upgrade your Storybook from versions 5.3 and below to Storybook 6, for Angular projects.",
-            "mediaImage": "",
-            "file": "shared/deprecated/storybook/storybook-v6-angular",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/deprecated/storybook/upgrade-storybook-v6-angular",
-            "tags": []
-          },
-          {
-            "id": "migrate-webpack-final-react",
-            "name": "React: Storybook Migration to webpackFinal and the Nx Addon",
-            "description": "This guide explains how migrate from older versions of Storybook which used a custom webpack.config.js to the new Storybook 6.3+ which uses the webpackFinal property in the main configuration and the Nx React Addon.",
-            "mediaImage": "",
-            "file": "shared/deprecated/storybook/migrate-webpack-final-react",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/deprecated/storybook/migrate-webpack-final-react",
-            "tags": []
-          },
-          {
-            "id": "upgrade-storybook-v6-react",
-            "name": "React: Upgrading to Storybook 6",
-            "description": "This guide explains how you can upgrade your Storybook from versions 5.3 and below to Storybook 6, for React projects.",
-            "mediaImage": "",
-            "file": "shared/deprecated/storybook/storybook-v6-react",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/deprecated/storybook/upgrade-storybook-v6-react",
-            "tags": []
-          }
-        ],
-        "isExternal": false,
-        "path": "/deprecated/storybook",
-        "tags": []
-      },
-      {
         "id": "v1-nx-plugin-api",
         "name": "v1 Nx Plugin API",
         "description": "",
@@ -6758,17 +6658,6 @@
     "itemList": [],
     "isExternal": false,
     "path": "/deprecated/workspace-json",
-    "tags": []
-  },
-  "/deprecated/workspace-lint": {
-    "id": "workspace-lint",
-    "name": "workspace-lint",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/deprecated/workspace-lint",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/deprecated/workspace-lint",
     "tags": []
   },
   "/deprecated/as-provided-vs-derived": {
@@ -6802,17 +6691,6 @@
     "itemList": [],
     "isExternal": false,
     "path": "/deprecated/workspace-executors",
-    "tags": []
-  },
-  "/deprecated/default-collection": {
-    "id": "default-collection",
-    "name": "defaultCollection",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/deprecated/default-collection",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/deprecated/default-collection",
     "tags": []
   },
   "/deprecated/runtime-cache-inputs": {
@@ -6868,150 +6746,6 @@
     "itemList": [],
     "isExternal": false,
     "path": "/deprecated/angular-schematics-builders",
-    "tags": []
-  },
-  "/deprecated/storybook": {
-    "id": "storybook",
-    "name": "Storybook deprecated docs",
-    "description": "Deprecated @nx/storybook package documentation and guides.",
-    "mediaImage": "",
-    "file": "",
-    "itemList": [
-      {
-        "id": "angular-storybook-targets",
-        "name": "Angular: Information about the Storybook targets",
-        "description": "This document explains the role of the storybook and build-storybook targets in Angular projects with a Storybook configuration, and specifically which executors are used for them.",
-        "mediaImage": "",
-        "file": "shared/deprecated/storybook/angular-storybook-targets",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/deprecated/storybook/angular-storybook-targets",
-        "tags": []
-      },
-      {
-        "id": "angular-project-build-config",
-        "name": "Angular - The projectBuildConfig",
-        "description": "This document explains the role of the projectBuildConfig in Angular projects with a Storybook configuration, and how the Storybook executors use it.",
-        "mediaImage": "",
-        "file": "shared/deprecated/storybook/angular-project-build-config",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/deprecated/storybook/angular-project-build-config",
-        "tags": []
-      },
-      {
-        "id": "migrate-webpack-final-angular",
-        "name": "Angular: Storybook Migration to webpackFinal",
-        "description": "This guide explains how migrate from older versions of Storybook which used a custom webpack.config.js to the new Storybook 6.3+ which uses the webpackFinal property in the main configuration.",
-        "mediaImage": "",
-        "file": "shared/deprecated/storybook/migrate-webpack-final-angular",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/deprecated/storybook/migrate-webpack-final-angular",
-        "tags": []
-      },
-      {
-        "id": "upgrade-storybook-v6-angular",
-        "name": "Angular: Upgrading to Storybook 6",
-        "description": "This guide explains how you can upgrade your Storybook from versions 5.3 and below to Storybook 6, for Angular projects.",
-        "mediaImage": "",
-        "file": "shared/deprecated/storybook/storybook-v6-angular",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/deprecated/storybook/upgrade-storybook-v6-angular",
-        "tags": []
-      },
-      {
-        "id": "migrate-webpack-final-react",
-        "name": "React: Storybook Migration to webpackFinal and the Nx Addon",
-        "description": "This guide explains how migrate from older versions of Storybook which used a custom webpack.config.js to the new Storybook 6.3+ which uses the webpackFinal property in the main configuration and the Nx React Addon.",
-        "mediaImage": "",
-        "file": "shared/deprecated/storybook/migrate-webpack-final-react",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/deprecated/storybook/migrate-webpack-final-react",
-        "tags": []
-      },
-      {
-        "id": "upgrade-storybook-v6-react",
-        "name": "React: Upgrading to Storybook 6",
-        "description": "This guide explains how you can upgrade your Storybook from versions 5.3 and below to Storybook 6, for React projects.",
-        "mediaImage": "",
-        "file": "shared/deprecated/storybook/storybook-v6-react",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/deprecated/storybook/upgrade-storybook-v6-react",
-        "tags": []
-      }
-    ],
-    "isExternal": false,
-    "path": "/deprecated/storybook",
-    "tags": []
-  },
-  "/deprecated/storybook/angular-storybook-targets": {
-    "id": "angular-storybook-targets",
-    "name": "Angular: Information about the Storybook targets",
-    "description": "This document explains the role of the storybook and build-storybook targets in Angular projects with a Storybook configuration, and specifically which executors are used for them.",
-    "mediaImage": "",
-    "file": "shared/deprecated/storybook/angular-storybook-targets",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/deprecated/storybook/angular-storybook-targets",
-    "tags": []
-  },
-  "/deprecated/storybook/angular-project-build-config": {
-    "id": "angular-project-build-config",
-    "name": "Angular - The projectBuildConfig",
-    "description": "This document explains the role of the projectBuildConfig in Angular projects with a Storybook configuration, and how the Storybook executors use it.",
-    "mediaImage": "",
-    "file": "shared/deprecated/storybook/angular-project-build-config",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/deprecated/storybook/angular-project-build-config",
-    "tags": []
-  },
-  "/deprecated/storybook/migrate-webpack-final-angular": {
-    "id": "migrate-webpack-final-angular",
-    "name": "Angular: Storybook Migration to webpackFinal",
-    "description": "This guide explains how migrate from older versions of Storybook which used a custom webpack.config.js to the new Storybook 6.3+ which uses the webpackFinal property in the main configuration.",
-    "mediaImage": "",
-    "file": "shared/deprecated/storybook/migrate-webpack-final-angular",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/deprecated/storybook/migrate-webpack-final-angular",
-    "tags": []
-  },
-  "/deprecated/storybook/upgrade-storybook-v6-angular": {
-    "id": "upgrade-storybook-v6-angular",
-    "name": "Angular: Upgrading to Storybook 6",
-    "description": "This guide explains how you can upgrade your Storybook from versions 5.3 and below to Storybook 6, for Angular projects.",
-    "mediaImage": "",
-    "file": "shared/deprecated/storybook/storybook-v6-angular",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/deprecated/storybook/upgrade-storybook-v6-angular",
-    "tags": []
-  },
-  "/deprecated/storybook/migrate-webpack-final-react": {
-    "id": "migrate-webpack-final-react",
-    "name": "React: Storybook Migration to webpackFinal and the Nx Addon",
-    "description": "This guide explains how migrate from older versions of Storybook which used a custom webpack.config.js to the new Storybook 6.3+ which uses the webpackFinal property in the main configuration and the Nx React Addon.",
-    "mediaImage": "",
-    "file": "shared/deprecated/storybook/migrate-webpack-final-react",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/deprecated/storybook/migrate-webpack-final-react",
-    "tags": []
-  },
-  "/deprecated/storybook/upgrade-storybook-v6-react": {
-    "id": "upgrade-storybook-v6-react",
-    "name": "React: Upgrading to Storybook 6",
-    "description": "This guide explains how you can upgrade your Storybook from versions 5.3 and below to Storybook 6, for React projects.",
-    "mediaImage": "",
-    "file": "shared/deprecated/storybook/storybook-v6-react",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/deprecated/storybook/upgrade-storybook-v6-react",
     "tags": []
   },
   "/deprecated/v1-nx-plugin-api": {
