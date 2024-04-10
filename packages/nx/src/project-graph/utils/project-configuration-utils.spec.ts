@@ -12,7 +12,8 @@ import {
   readProjectConfigurationsFromRootMap,
   readTargetDefaultsForTarget,
 } from './project-configuration-utils';
-import { NxPluginV2 } from '../../utils/nx-plugin';
+import { NxPluginV2 } from '../plugins';
+import { LoadedNxPlugin } from '../plugins/internal-api';
 
 describe('project-configuration-utils', () => {
   describe('target merging', () => {
@@ -1554,11 +1555,7 @@ describe('project-configuration-utils', () => {
         undefined,
         {},
         ['libs/a/project.json', 'libs/b/project.json'],
-        [
-          {
-            plugin: fakeTagPlugin,
-          },
-        ]
+        [new LoadedNxPlugin(fakeTagPlugin, { plugin: fakeTagPlugin.name })]
       );
 
       expect(projectConfigurations.projects).toEqual({
@@ -1581,10 +1578,10 @@ describe('project-configuration-utils', () => {
         {},
         ['libs/a/project.json', 'libs/b/project.json'],
         [
-          {
-            plugin: fakeTagPlugin,
+          new LoadedNxPlugin(fakeTagPlugin, {
+            plugin: fakeTagPlugin.name,
             include: ['libs/a/**'],
-          },
+          }),
         ]
       );
 
@@ -1603,10 +1600,10 @@ describe('project-configuration-utils', () => {
         {},
         ['libs/a/project.json', 'libs/b/project.json'],
         [
-          {
-            plugin: fakeTagPlugin,
+          new LoadedNxPlugin(fakeTagPlugin, {
+            plugin: fakeTagPlugin.name,
             exclude: ['libs/b/**'],
-          },
+          }),
         ]
       );
 
