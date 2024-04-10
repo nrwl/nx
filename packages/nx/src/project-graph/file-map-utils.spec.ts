@@ -28,10 +28,10 @@ describe('fileMapUtils', () => {
         },
       };
       const files = [
-        { file: 'apps/demo/src/main.ts', hash: 'some-hash' },
-        { file: 'apps/demo-e2e/src/main.ts', hash: 'some-hash' },
-        { file: 'libs/ui/src/index.ts', hash: 'some-hash' },
-        { file: 'tools/myfile.txt', hash: 'some-hash' },
+        { file: 'apps/demo/src/main.ts', hash: 'some-hash', size: 0 },
+        { file: 'apps/demo-e2e/src/main.ts', hash: 'some-hash', size: 0 },
+        { file: 'libs/ui/src/index.ts', hash: 'some-hash', size: 0 },
+        { file: 'tools/myfile.txt', hash: 'some-hash', size: 0 },
       ];
 
       const result = createFileMap(projectsConfigurations, files);
@@ -39,19 +39,23 @@ describe('fileMapUtils', () => {
       expect(result).toEqual({
         fileMap: {
           projectFileMap: {
-            demo: [{ file: 'apps/demo/src/main.ts', hash: 'some-hash' }],
-            'demo-e2e': [
-              { file: 'apps/demo-e2e/src/main.ts', hash: 'some-hash' },
+            demo: [
+              { file: 'apps/demo/src/main.ts', hash: 'some-hash', size: 0 },
             ],
-            ui: [{ file: 'libs/ui/src/index.ts', hash: 'some-hash' }],
+            'demo-e2e': [
+              { file: 'apps/demo-e2e/src/main.ts', hash: 'some-hash', size: 0 },
+            ],
+            ui: [{ file: 'libs/ui/src/index.ts', hash: 'some-hash', size: 0 }],
           },
-          nonProjectFiles: [{ file: 'tools/myfile.txt', hash: 'some-hash' }],
+          nonProjectFiles: [
+            { file: 'tools/myfile.txt', hash: 'some-hash', size: 0 },
+          ],
         },
         allWorkspaceFiles: [
-          { file: 'apps/demo/src/main.ts', hash: 'some-hash' },
-          { file: 'apps/demo-e2e/src/main.ts', hash: 'some-hash' },
-          { file: 'libs/ui/src/index.ts', hash: 'some-hash' },
-          { file: 'tools/myfile.txt', hash: 'some-hash' },
+          { file: 'apps/demo/src/main.ts', hash: 'some-hash', size: 0 },
+          { file: 'apps/demo-e2e/src/main.ts', hash: 'some-hash', size: 0 },
+          { file: 'libs/ui/src/index.ts', hash: 'some-hash', size: 0 },
+          { file: 'tools/myfile.txt', hash: 'some-hash', size: 0 },
         ],
       });
     });

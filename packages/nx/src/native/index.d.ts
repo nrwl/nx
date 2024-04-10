@@ -78,6 +78,7 @@ export interface TaskGraph {
 export interface FileData {
   file: string
   hash: string
+  size: number
 }
 export interface InputsInput {
   input: string
@@ -185,8 +186,8 @@ export class WorkspaceContext {
   getWorkspaceFiles(projectRootMap: Record<string, string>): NxWorkspaceFiles
   glob(globs: Array<string>, exclude?: Array<string> | undefined | null): Array<string>
   hashFilesMatchingGlob(globs: Array<string>, exclude?: Array<string> | undefined | null): string
-  incrementalUpdate(updatedFiles: Array<string>, deletedFiles: Array<string>): Record<string, string>
-  updateProjectFiles(projectRootMappings: ProjectRootMappings, projectFiles: ExternalObject<ProjectFiles>, globalFiles: ExternalObject<Array<FileData>>, updatedFiles: Record<string, string>, deletedFiles: Array<string>): UpdatedWorkspaceFiles
+  incrementalUpdate(updatedFiles: Array<string>, deletedFiles: Array<string>): Array<FileData>
+  updateProjectFiles(projectRootMappings: ProjectRootMappings, projectFiles: ExternalObject<ProjectFiles>, globalFiles: ExternalObject<Array<FileData>>, updatedFiles: Array<FileData>, deletedFiles: Array<string>): UpdatedWorkspaceFiles
   allFileData(): Array<FileData>
   getFilesInDirectory(directory: string): Array<string>
 }

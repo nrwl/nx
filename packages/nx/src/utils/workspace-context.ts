@@ -1,4 +1,8 @@
-import type { NxWorkspaceFilesExternals, WorkspaceContext } from '../native';
+import type {
+  FileData,
+  NxWorkspaceFilesExternals,
+  WorkspaceContext,
+} from '../native';
 import { performance } from 'perf_hooks';
 import { cacheDirectoryForWorkspace } from './cache-directory';
 
@@ -69,7 +73,7 @@ export function getFilesInDirectoryUsingContext(
 export function updateProjectFiles(
   projectRootMappings: Record<string, string>,
   rustReferences: NxWorkspaceFilesExternals,
-  updatedFiles: Record<string, string>,
+  updatedFiles: FileData[],
   deletedFiles: string[]
 ) {
   return workspaceContext?.updateProjectFiles(

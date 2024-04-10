@@ -97,24 +97,28 @@ describe('createNxReleaseConfig()', () => {
       'lib-a': [
         {
           file: 'libs/lib-a/package.json',
+          size: 0,
           hash: 'abc',
         },
       ],
       'lib-b': [
         {
           file: 'libs/lib-b/package.json',
+          size: 0,
           hash: 'abc',
         },
       ],
       nx: [
         {
           file: 'packages/nx/package.json',
+          size: 0,
           hash: 'abc',
         },
       ],
       root: [
         {
           file: 'package.json',
+          size: 0,
           hash: 'abc',
         },
       ],
@@ -667,6 +671,7 @@ describe('createNxReleaseConfig()', () => {
         {
           file: 'apps/app-1/package.json',
           hash: 'abc',
+          size: 0,
         },
       ];
 
@@ -674,6 +679,7 @@ describe('createNxReleaseConfig()', () => {
         {
           file: 'apps/e2e-1/package.json',
           hash: 'abc',
+          size: 0,
         },
       ];
 
@@ -864,6 +870,7 @@ describe('createNxReleaseConfig()', () => {
         {
           file: 'libs/lib-c/cargo.toml',
           hash: 'abc',
+          size: 0,
         },
       ];
 
@@ -1054,6 +1061,7 @@ describe('createNxReleaseConfig()', () => {
         {
           file: 'package.json',
           hash: 'abc',
+          size: 0,
         },
       ];
 
@@ -1252,6 +1260,7 @@ describe('createNxReleaseConfig()', () => {
         {
           file: 'package.json',
           hash: 'abc',
+          size: 0,
         },
       ];
 

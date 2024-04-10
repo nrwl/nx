@@ -62,18 +62,22 @@ mod test {
         let gitignore_file = FileData {
             file: ".gitignore".into(),
             hash: "123".into(),
+            size: 0
         };
         let nxignore_file = FileData {
             file: ".nxignore".into(),
             hash: "456".into(),
+            size: 0
         };
         let package_json_file = FileData {
             file: "package.json".into(),
             hash: "789".into(),
+            size: 0
         };
         let project_file = FileData {
             file: "packages/project/project.json".into(),
             hash: "abc".into(),
+            size: 0
         };
         let result = hash_workspace_files(
             "{workspaceRoot}/.gitignore",

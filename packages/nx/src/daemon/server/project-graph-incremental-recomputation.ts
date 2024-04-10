@@ -160,7 +160,7 @@ function computeWorkspaceConfigHash(
 
 async function processCollectedUpdatedAndDeletedFiles(
   { projects, externalNodes, projectRootMap }: ConfigurationResult,
-  updatedFileHashes: Record<string, string>,
+  updatedFileHashes: FileData[],
   deletedFiles: string[]
 ) {
   try {

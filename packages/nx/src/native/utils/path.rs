@@ -49,22 +49,27 @@ mod test {
             FileData {
                 file: "foo/bar".into(),
                 hash: "123".into(),
+                size: 0
             },
             FileData {
                 file: "foo/baz".into(),
                 hash: "123".into(),
+                size: 0
             },
             FileData {
                 file: "foo/child/bar".into(),
                 hash: "123".into(),
+                size: 0
             },
             FileData {
                 file: "bar/baz".into(),
                 hash: "123".into(),
+                size: 0
             },
             FileData {
                 file: "foo-other/not-child".into(),
                 hash: "123".into(),
+                size: 0
             }
         ];
         let child_files = get_child_files(&directory, files);

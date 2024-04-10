@@ -16,6 +16,7 @@ pub struct NxFile {
     pub full_path: String,
     pub normalized_path: String,
     pub mod_time: i64,
+    pub file_size: u64,
 }
 
 /// Walks the directory in a single thread and does not ignore any files
@@ -110,6 +111,7 @@ where
                 full_path: String::from(dir_entry.path().to_string_lossy()),
                 normalized_path: file_path.to_normalized_string(),
                 mod_time: get_mod_time(&metadata),
+                file_size: metadata.len()
             })
             .ok();
 

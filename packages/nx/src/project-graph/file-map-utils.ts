@@ -86,7 +86,7 @@ export function createFileMap(
 export function updateFileMap(
   projectsConfigurations: Record<string, ProjectConfiguration>,
   rustReferences: NxWorkspaceFilesExternals,
-  updatedFiles: Record<string, string>,
+  updatedFiles: FileData[],
   deletedFiles: string[]
 ) {
   const updates = updateProjectFiles(

@@ -25,15 +25,15 @@ describe('TaskHasher', () => {
     },
   });
   const allWorkspaceFiles = [
-    { file: 'yarn.lock', hash: 'yarn.lock.hash' },
-    { file: 'nx.json', hash: 'nx.json.hash' },
-    { file: 'package-lock.json', hash: 'package-lock.json.hash' },
-    { file: 'package.json', hash: 'package.json.hash' },
-    { file: 'pnpm-lock.yaml', hash: 'pnpm-lock.yaml.hash' },
-    { file: 'tsconfig.base.json', hash: tsConfigBaseJson },
-    { file: 'workspace.json', hash: 'workspace.json.hash' },
-    { file: 'global1', hash: 'global1.hash' },
-    { file: 'global2', hash: 'global2.hash' },
+    { file: 'yarn.lock', hash: 'yarn.lock.hash', size: 0 },
+    { file: 'nx.json', hash: 'nx.json.hash', size: 0 },
+    { file: 'package-lock.json', hash: 'package-lock.json.hash', size: 0 },
+    { file: 'package.json', hash: 'package.json.hash', size: 0 },
+    { file: 'pnpm-lock.yaml', hash: 'pnpm-lock.yaml.hash', size: 0 },
+    { file: 'tsconfig.base.json', hash: tsConfigBaseJson, size: 0 },
+    { file: 'workspace.json', hash: 'workspace.json.hash', size: 0 },
+    { file: 'global1', hash: 'global1.hash', size: 0 },
+    { file: 'global2', hash: 'global2.hash', size: 0 },
   ];
 
   beforeEach(async () => {
@@ -55,8 +55,10 @@ describe('TaskHasher', () => {
   it('should create task hash', async () => {
     const hasher = new InProcessTaskHasher(
       {
-        parent: [{ file: '/file', hash: 'file.hash' }],
-        unrelated: [{ file: 'libs/unrelated/filec.ts', hash: 'filec.hash' }],
+        parent: [{ file: '/file', hash: 'file.hash', size: 0 }],
+        unrelated: [
+          { file: 'libs/unrelated/filec.ts', hash: 'filec.hash', size: 0 },
+        ],
       },
       allWorkspaceFiles,
       {
@@ -144,12 +146,12 @@ describe('TaskHasher', () => {
     const hasher = new InProcessTaskHasher(
       {
         parent: [
-          { file: '/filea.ts', hash: 'a.hash' },
-          { file: '/filea.spec.ts', hash: 'a.spec.hash' },
+          { file: '/filea.ts', hash: 'a.hash', size: 0 },
+          { file: '/filea.spec.ts', hash: 'a.spec.hash', size: 0 },
         ],
         child: [
-          { file: '/fileb.ts', hash: 'b.hash' },
-          { file: '/fileb.spec.ts', hash: 'b.spec.hash' },
+          { file: '/fileb.ts', hash: 'b.hash', size: 0 },
+          { file: '/fileb.spec.ts', hash: 'b.spec.hash', size: 0 },
         ],
       },
       allWorkspaceFiles,
@@ -219,12 +221,12 @@ describe('TaskHasher', () => {
     const hasher = new InProcessTaskHasher(
       {
         parent: [
-          { file: 'libs/parent/filea.ts', hash: 'a.hash' },
-          { file: 'libs/parent/filea.spec.ts', hash: 'a.spec.hash' },
+          { file: 'libs/parent/filea.ts', hash: 'a.hash', size: 0 },
+          { file: 'libs/parent/filea.spec.ts', hash: 'a.spec.hash', size: 0 },
         ],
         child: [
-          { file: 'libs/child/fileb.ts', hash: 'b.hash' },
-          { file: 'libs/child/fileb.spec.ts', hash: 'b.spec.hash' },
+          { file: 'libs/child/fileb.ts', hash: 'b.hash', size: 0 },
+          { file: 'libs/child/fileb.spec.ts', hash: 'b.spec.hash', size: 0 },
         ],
       },
       allWorkspaceFiles,
@@ -306,8 +308,8 @@ describe('TaskHasher', () => {
     const hasher = new InProcessTaskHasher(
       {
         parent: [
-          { file: 'libs/parent/filea.ts', hash: 'a.hash' },
-          { file: 'libs/parent/filea.spec.ts', hash: 'a.spec.hash' },
+          { file: 'libs/parent/filea.ts', hash: 'a.hash', size: 0 },
+          { file: 'libs/parent/filea.spec.ts', hash: 'a.spec.hash', size: 0 },
         ],
       },
       allWorkspaceFiles,
@@ -390,12 +392,12 @@ describe('TaskHasher', () => {
     const hasher = new InProcessTaskHasher(
       {
         parent: [
-          { file: 'libs/parent/filea.ts', hash: 'a.hash' },
-          { file: 'libs/parent/filea.spec.ts', hash: 'a.spec.hash' },
+          { file: 'libs/parent/filea.ts', hash: 'a.hash', size: 0 },
+          { file: 'libs/parent/filea.spec.ts', hash: 'a.spec.hash', size: 0 },
         ],
         child: [
-          { file: 'libs/child/fileb.ts', hash: 'b.hash' },
-          { file: 'libs/child/fileb.spec.ts', hash: 'b.spec.hash' },
+          { file: 'libs/child/fileb.ts', hash: 'b.hash', size: 0 },
+          { file: 'libs/child/fileb.spec.ts', hash: 'b.spec.hash', size: 0 },
         ],
       },
       allWorkspaceFiles,
@@ -503,12 +505,12 @@ describe('TaskHasher', () => {
     const hasher = new InProcessTaskHasher(
       {
         parent: [
-          { file: 'libs/parent/filea.ts', hash: 'a.hash' },
-          { file: 'libs/parent/filea.spec.ts', hash: 'a.spec.hash' },
+          { file: 'libs/parent/filea.ts', hash: 'a.hash', size: 0 },
+          { file: 'libs/parent/filea.spec.ts', hash: 'a.spec.hash', size: 0 },
         ],
         child: [
-          { file: 'libs/child/fileb.ts', hash: 'b.hash' },
-          { file: 'libs/child/fileb.spec.ts', hash: 'b.spec.hash' },
+          { file: 'libs/child/fileb.ts', hash: 'b.hash', size: 0 },
+          { file: 'libs/child/fileb.spec.ts', hash: 'b.spec.hash', size: 0 },
         ],
       },
       allWorkspaceFiles,
@@ -588,7 +590,7 @@ describe('TaskHasher', () => {
   it('should be able to include only a part of the base tsconfig', async () => {
     const hasher = new InProcessTaskHasher(
       {
-        parent: [{ file: '/file', hash: 'file.hash' }],
+        parent: [{ file: '/file', hash: 'file.hash', size: 0 }],
       },
       allWorkspaceFiles,
       {
@@ -644,8 +646,8 @@ describe('TaskHasher', () => {
   it('should hash tasks where the project graph has circular dependencies', async () => {
     const hasher = new InProcessTaskHasher(
       {
-        parent: [{ file: '/filea.ts', hash: 'a.hash' }],
-        child: [{ file: '/fileb.ts', hash: 'b.hash' }],
+        parent: [{ file: '/filea.ts', hash: 'a.hash', size: 0 }],
+        child: [{ file: '/fileb.ts', hash: 'b.hash', size: 0 }],
       },
       allWorkspaceFiles,
       {
@@ -730,7 +732,7 @@ describe('TaskHasher', () => {
   it('should throw an error when failed to execute runtimeCacheInputs', async () => {
     const hasher = new InProcessTaskHasher(
       {
-        parent: [{ file: '/file', hash: 'some-hash' }],
+        parent: [{ file: '/file', hash: 'some-hash', size: 0 }],
       },
       allWorkspaceFiles,
       {
@@ -791,7 +793,7 @@ describe('TaskHasher', () => {
   it('should hash npm project versions', async () => {
     const hasher = new InProcessTaskHasher(
       {
-        app: [{ file: '/filea.ts', hash: 'a.hash' }],
+        app: [{ file: '/filea.ts', hash: 'a.hash', size: 0 }],
       },
       allWorkspaceFiles,
       {
@@ -855,7 +857,7 @@ describe('TaskHasher', () => {
   it('should hash missing dependent npm project versions', async () => {
     const hasher = new InProcessTaskHasher(
       {
-        app: [{ file: '/filea.ts', hash: 'a.hash' }],
+        app: [{ file: '/filea.ts', hash: 'a.hash', size: 0 }],
       },
       allWorkspaceFiles,
       {
@@ -984,8 +986,8 @@ describe('TaskHasher', () => {
       function createHasher() {
         return new InProcessTaskHasher(
           {
-            a: [{ file: 'a/filea.ts', hash: 'a.hash' }],
-            b: [{ file: 'b/fileb.ts', hash: 'b.hash' }],
+            a: [{ file: 'a/filea.ts', hash: 'a.hash', size: 0 }],
+            b: [{ file: 'b/fileb.ts', hash: 'b.hash', size: 0 }],
           },
           allWorkspaceFiles,
           {
@@ -1609,16 +1611,20 @@ describe('TaskHasher', () => {
       const hasher = new InProcessTaskHasher(
         {
           parent: [
-            { file: 'libs/parent/filea.ts', hash: 'a.hash' },
-            { file: 'libs/parent/filea.spec.ts', hash: 'a.spec.hash' },
+            { file: 'libs/parent/filea.ts', hash: 'a.hash', size: 0 },
+            { file: 'libs/parent/filea.spec.ts', hash: 'a.spec.hash', size: 0 },
           ],
           child: [
-            { file: 'libs/child/fileb.ts', hash: 'b.hash' },
-            { file: 'libs/child/fileb.spec.ts', hash: 'b.spec.hash' },
+            { file: 'libs/child/fileb.ts', hash: 'b.hash', size: 0 },
+            { file: 'libs/child/fileb.spec.ts', hash: 'b.spec.hash', size: 0 },
           ],
           grandchild: [
-            { file: 'libs/grandchild/filec.ts', hash: 'c.hash' },
-            { file: 'libs/grandchild/filec.spec.ts', hash: 'c.spec.hash' },
+            { file: 'libs/grandchild/filec.ts', hash: 'c.hash', size: 0 },
+            {
+              file: 'libs/grandchild/filec.spec.ts',
+              hash: 'c.spec.hash',
+              size: 0,
+            },
           ],
         },
         allWorkspaceFiles,
@@ -1748,16 +1754,20 @@ describe('TaskHasher', () => {
       const hasher = new InProcessTaskHasher(
         {
           parent: [
-            { file: 'libs/parent/filea.ts', hash: 'a.hash' },
-            { file: 'libs/parent/filea.spec.ts', hash: 'a.spec.hash' },
+            { file: 'libs/parent/filea.ts', hash: 'a.hash', size: 0 },
+            { file: 'libs/parent/filea.spec.ts', hash: 'a.spec.hash', size: 0 },
           ],
           child: [
-            { file: 'libs/child/fileb.ts', hash: 'b.hash' },
-            { file: 'libs/child/fileb.spec.ts', hash: 'b.spec.hash' },
+            { file: 'libs/child/fileb.ts', hash: 'b.hash', size: 0 },
+            { file: 'libs/child/fileb.spec.ts', hash: 'b.spec.hash', size: 0 },
           ],
           grandchild: [
-            { file: 'libs/grandchild/filec.ts', hash: 'c.hash' },
-            { file: 'libs/grandchild/filec.spec.ts', hash: 'c.spec.hash' },
+            { file: 'libs/grandchild/filec.ts', hash: 'c.hash', size: 0 },
+            {
+              file: 'libs/grandchild/filec.spec.ts',
+              hash: 'c.spec.hash',
+              size: 0,
+            },
           ],
         },
         allWorkspaceFiles,

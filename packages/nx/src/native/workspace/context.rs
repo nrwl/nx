@@ -15,8 +15,9 @@ use crate::native::types::FileData;
 use parking_lot::{Condvar, Mutex};
 use tracing::{trace, warn};
 
-use crate::native::workspace::files_archive::{read_files_archive, write_files_archive};
-use crate::native::workspace::files_hashing::{full_files_hash, selective_files_hash};
+use crate::native::workspace::files_archive::{
+    create_file_archive, read_files_archive, update_file_archive, write_files_archive,
+};
 use crate::native::workspace::types::{
     FileMap, NxWorkspaceFilesExternals, ProjectFiles, UpdatedWorkspaceFiles,
 };
@@ -29,7 +30,13 @@ pub struct WorkspaceContext {
     files_worker: FilesWorker,
 }
 
-type Files = Vec<(PathBuf, String)>;
+#[derive(Ord, PartialOrd, Eq, PartialEq)]
+struct InternalFileData {
+    file: PathBuf,
+    hash: String,
+    size: i64,
+}
+type Files = Vec<InternalFileData>;
 
 struct FilesWorker(Option<Arc<(Mutex<Files>, Condvar)>>);
 impl FilesWorker {
@@ -53,15 +60,19 @@ impl FilesWorker {
             let (lock, cvar) = &*files_lock_clone;
             let mut workspace_files = lock.lock();
             let now = std::time::Instant::now();
-            let file_hashes = if let Some(archived_files) = archived_files {
-                selective_files_hash(&workspace_root, archived_files)
+            let archive_files = if let Some(archived_files) = archived_files {
+                update_file_archive(&workspace_root, archived_files)
             } else {
-                full_files_hash(&workspace_root)
+                create_file_archive(&workspace_root)
             };
 
-            let mut files = file_hashes
+            let mut files = archive_files
                 .iter()
-                .map(|(path, file_hashed)| (PathBuf::from(path), file_hashed.0.to_owned()))
+                .map(|(path, archived_file)| InternalFileData {
+                    file: PathBuf::from(path),
+                    hash: archived_file.hash.to_owned(),
+                    size: archived_file.file_size,
+                })
                 .collect::<Vec<_>>();
             files.par_sort();
             trace!("hashed and sorted files in {:?}", now.elapsed());
@@ -72,7 +83,7 @@ impl FilesWorker {
 
             cvar.notify_all();
 
-            write_files_archive(&cache_dir, file_hashes);
+            write_files_archive(&cache_dir, archive_files);
         });
 
         FilesWorker(Some(files_lock))
@@ -91,9 +102,10 @@ impl FilesWorker {
 
             let file_data = files
                 .iter()
-                .map(|(path, hash)| FileData {
-                    file: path.to_normalized_string(),
+                .map(|InternalFileData { file, hash, size }| FileData {
+                    file: file.to_normalized_string(),
                     hash: hash.clone(),
+                    size: *size,
                 })
                 .collect();
 
@@ -111,39 +123,52 @@ impl FilesWorker {
         workspace_root_path: &Path,
         updated_files: Vec<&str>,
         deleted_files: Vec<&str>,
-    ) -> HashMap<String, String> {
+    ) -> Vec<(String, (String, i64))> {
         let Some(files_sync) = &self.0 else {
             trace!("there were no files because the workspace root did not exist");
-            return HashMap::new();
+            return vec![];
         };
 
         let (files_lock, _) = &files_sync.deref();
         let mut files = files_lock.lock();
-        let mut map: HashMap<PathBuf, String> = files.drain(..).collect();
+        let mut map: HashMap<PathBuf, (String, i64)> = files
+            .drain(..)
+            .map(|file| (file.file, (file.hash, file.size)))
+            .collect();
 
         for deleted_file in deleted_files {
             map.remove(&PathBuf::from(deleted_file));
         }
 
-        let updated_files_hashes: HashMap<String, String> = updated_files
+        let updated_files_hashes: Vec<_> = updated_files
             .par_iter()
             .filter_map(|path| {
                 let full_path = workspace_root_path.join(path);
+                let file_size = std::fs::metadata(&full_path)
+                    .map(|metadata| metadata.len())
+                    .unwrap_or(0) as i64;
                 let Ok(content) = std::fs::read(&full_path) else {
                     trace!("could not read file: {full_path:?}");
                     return None;
                 };
-                Some((path.to_string(), hash(&content)))
+                Some((path.to_string(), (hash(&content), file_size)))
             })
             .collect();
 
-        for (file, hash) in &updated_files_hashes {
+        for (file, file_data) in &updated_files_hashes {
             map.entry(file.into())
-                .and_modify(|e| *e = hash.clone())
-                .or_insert(hash.clone());
+                .and_modify(|e| *e = file_data.clone())
+                .or_insert(file_data.clone());
         }
 
-        *files = map.into_iter().collect();
+        *files = map
+            .into_iter()
+            .map(|m| InternalFileData {
+                file: m.0,
+                size: m.1 .1,
+                hash: m.1 .0,
+            })
+            .collect();
         files.par_sort();
 
         updated_files_hashes
@@ -208,9 +233,16 @@ impl WorkspaceContext {
         &self,
         updated_files: Vec<&str>,
         deleted_files: Vec<&str>,
-    ) -> HashMap<String, String> {
+    ) -> Vec<FileData> {
         self.files_worker
             .update_files(&self.workspace_root_path, updated_files, deleted_files)
+            .into_iter()
+            .map(|updated| FileData {
+                file: updated.0,
+                size: updated.1 .1,
+                hash: updated.1 .0,
+            })
+            .collect()
     }
 
     #[napi]
@@ -219,7 +251,7 @@ impl WorkspaceContext {
         project_root_mappings: ProjectRootMappings,
         project_files: External<ProjectFiles>,
         global_files: External<Vec<FileData>>,
-        updated_files: HashMap<String, String>,
+        updated_files: Vec<FileData>,
         deleted_files: Vec<&str>,
     ) -> UpdatedWorkspaceFiles {
         trace!("updating project files");
@@ -227,7 +259,7 @@ impl WorkspaceContext {
         let mut project_files_map = project_files.clone();
         let mut global_files = global_files
             .iter()
-            .map(|f| (f.file.clone(), f.hash.clone()))
+            .map(|f| (f.file.clone(), (f.hash.clone(), f.size)))
             .collect::<HashMap<_, _>>();
 
         trace!(
@@ -235,8 +267,9 @@ impl WorkspaceContext {
             updated_files.len()
         );
         for updated_file in updated_files.into_iter() {
-            let file = updated_file.0;
-            let hash = updated_file.1;
+            let file = updated_file.file;
+            let hash = updated_file.hash;
+            let size = updated_file.size;
             if let Some(project_files) = find_project_for_path(&file, &project_root_mappings)
                 .and_then(|project| project_files_map.get_mut(project))
             {
@@ -244,16 +277,17 @@ impl WorkspaceContext {
                 if let Some(file) = project_files.iter_mut().find(|f| f.file == file) {
                     trace!("updating hash for file");
                     file.hash = hash;
+                    file.size = size;
                 } else {
                     trace!("{file:?} was not part of a project, adding to project files");
-                    project_files.push(FileData { file, hash });
+                    project_files.push(FileData { file, hash, size });
                 }
             } else {
                 trace!("{file:?} was not found in any project, updating global files");
                 global_files
                     .entry(file)
-                    .and_modify(|e| *e = hash.clone())
-                    .or_insert(hash);
+                    .and_modify(|e| *e = (hash.clone(), size))
+                    .or_insert((hash, size));
             }
         }
 
@@ -279,7 +313,11 @@ impl WorkspaceContext {
 
         let non_project_files = global_files
             .into_iter()
-            .map(|(file, hash)| FileData { file, hash })
+            .map(|(file, data)| FileData {
+                file,
+                hash: data.0,
+                size: data.1,
+            })
             .collect::<Vec<_>>();
 
         UpdatedWorkspaceFiles {

@@ -45,6 +45,7 @@ describe('getTouchedProjectsFromLockFile', () => {
               {
                 file: 'source.ts',
                 hash: 'some-hash',
+                size: 0,
                 getChanges: () => [new WholeFileChange()],
               },
             ],
@@ -59,6 +60,7 @@ describe('getTouchedProjectsFromLockFile', () => {
               {
                 file: lockFile,
                 hash: 'some-hash',
+                size: 0,
                 getChanges: () => [new WholeFileChange()],
               },
             ],

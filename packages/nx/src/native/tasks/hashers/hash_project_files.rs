@@ -76,18 +76,22 @@ mod tests {
         let tsfile_1 = FileData {
             file: "test/root/test1.ts".into(),
             hash: Default::default(),
+            size: 0
         };
         let testfile_1 = FileData {
             file: "test/root/test.spec.ts".into(),
             hash: Default::default(),
+            size: 0
         };
         let tsfile_2 = FileData {
             file: "test/root/src/module/test3.ts".into(),
             hash: Default::default(),
+            size: 0
         };
         let testfile_2 = FileData {
             file: "test/root/test.spec.tsx.snap".into(),
             hash: Default::default(),
+            size: 0
         };
         file_map.insert(
             String::from(proj_name),
@@ -121,29 +125,36 @@ mod tests {
     }
 
     #[test]
+    
     fn should_hash_deterministically() {
         let proj_name = "test_project";
         let proj_root = "test/root";
         let file_sets = &[
             "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)".to_string(),
+            
             "{projectRoot}/**/*".to_string(),
         ];
         let mut file_map = HashMap::new();
         let file_data1 = FileData {
             file: "test/root/test1.ts".into(),
+            
             hash: "file_data1".into(),
+            size: 0
         };
         let file_data2 = FileData {
             file: "test/root/test.spec.ts".into(),
             hash: "file_data2".into(),
+            size: 0
         };
         let file_data3 = FileData {
             file: "test/root/test3.ts".into(),
             hash: "file_data3".into(),
+            size: 0
         };
         let file_data4 = FileData {
             file: "test/root/test.spec.tsx.snap".into(),
             hash: "file_data4".into(),
+            size: 0
         };
         file_map.insert(
             String::from(proj_name),
@@ -174,18 +185,26 @@ mod tests {
         let file_data1 = FileData {
             file: "test/root/test1.ts".into(),
             hash: "file_data1".into(),
+            size: 0
+            
         };
         let file_data2 = FileData {
             file: "test/root/test.spec.ts".into(),
             hash: "file_data2".into(),
+            size: 0
+            
         };
         let file_data3 = FileData {
             file: "test/root/test3.ts".into(),
             hash: "file_data3".into(),
+            size: 0
+            
         };
         let file_data4 = FileData {
             file: "test/root/test.spec.tsx.snap".into(),
             hash: "file_data4".into(),
+            size: 0
+            
         };
         file_map.insert(
             String::from(proj_name),

@@ -5,6 +5,7 @@ use std::cmp::Ordering;
 pub struct FileData {
     pub file: String,
     pub hash: String,
+    pub size: i64,
 }
 
 impl Eq for FileData {}
