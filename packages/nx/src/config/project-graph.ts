@@ -12,7 +12,7 @@ export interface FileData {
   file: string;
   hash: string;
   /** The size in bytes of this file on the file system **/
-  size: number;
+  size?: number;
   /**
    * An array of dependencies. If an element is just a string,
    * the dependency is assumed to be a static dependency targetting

@@ -28,7 +28,10 @@ import {
 import { workspaceRoot } from '../../utils/workspace-root';
 import { notifyFileWatcherSockets } from './file-watching/file-watcher-sockets';
 import { serverLogger } from './logger';
-import { NxWorkspaceFilesExternals } from '../../native';
+import {
+  FileData as NativeFileData,
+  NxWorkspaceFilesExternals,
+} from '../../native';
 import { ConfigurationResult } from '../../project-graph/utils/project-configuration-utils';
 import { LoadedNxPlugin } from '../../project-graph/plugins/internal-api';
 import { getPlugins } from './plugins';
@@ -160,7 +163,7 @@ function computeWorkspaceConfigHash(
 
 async function processCollectedUpdatedAndDeletedFiles(
   { projects, externalNodes, projectRootMap }: ConfigurationResult,
-  updatedFileHashes: FileData[],
+  updatedFileHashes: NativeFileData[],
   deletedFiles: string[]
 ) {
   try {

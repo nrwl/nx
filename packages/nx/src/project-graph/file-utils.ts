@@ -70,13 +70,11 @@ export function calculateFileChanges(
     const ext = extname(f);
     const file = allWorkspaceFiles.find((fileData) => fileData.file == f);
     const hash = file?.hash;
-    const size = file?.size;
 
     return {
       file: f,
       ext,
       hash,
-      size,
       getChanges: (): Change[] => {
         if (!existsSync(join(workspaceRoot, f))) {
           return [new DeletedFileChange()];

@@ -13,7 +13,6 @@ function getFileChanges(files: string[]) {
   return files.map((f) => ({
     file: f,
     hash: 'some-hash',
-    size: 0,
     getChanges: () => [new WholeFileChange()],
   }));
 }

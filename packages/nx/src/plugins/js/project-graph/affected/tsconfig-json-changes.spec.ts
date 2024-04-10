@@ -52,7 +52,6 @@ describe('getTouchedProjectsFromTsConfig', () => {
             {
               file: 'source.ts',
               hash: 'some-hash',
-              size: 0,
               getChanges: () => [new WholeFileChange()],
             },
           ],
@@ -69,7 +68,6 @@ describe('getTouchedProjectsFromTsConfig', () => {
               {
                 file: tsConfig,
                 hash: 'some-hash',
-                size: 0,
                 getChanges: () => [new WholeFileChange()],
               },
             ],
@@ -89,7 +87,6 @@ describe('getTouchedProjectsFromTsConfig', () => {
               {
                 file: tsConfig,
                 hash: 'some-hash',
-                size: 0,
                 getChanges: () =>
                   jsonDiff(
                     {
@@ -121,7 +118,6 @@ describe('getTouchedProjectsFromTsConfig', () => {
               {
                 file: tsConfig,
                 hash: 'some-hash',
-                size: 0,
                 getChanges: () =>
                   jsonDiff(
                     {
@@ -153,7 +149,6 @@ describe('getTouchedProjectsFromTsConfig', () => {
               {
                 file: tsConfig,
                 hash: 'some-hash',
-                size: 0,
                 getChanges: () =>
                   jsonDiff(
                     {
@@ -187,7 +182,6 @@ describe('getTouchedProjectsFromTsConfig', () => {
               {
                 file: tsConfig,
                 hash: 'some-hash',
-                size: 0,
                 getChanges: () =>
                   jsonDiff(
                     {
@@ -219,7 +213,6 @@ describe('getTouchedProjectsFromTsConfig', () => {
               {
                 file: tsConfig,
                 hash: 'some-hash',
-                size: 0,
                 getChanges: () =>
                   jsonDiff(
                     {
@@ -256,7 +249,6 @@ describe('getTouchedProjectsFromTsConfig', () => {
               {
                 file: tsConfig,
                 hash: 'some-hash',
-                size: 0,
                 getChanges: () =>
                   jsonDiff(
                     {
@@ -291,7 +283,6 @@ describe('getTouchedProjectsFromTsConfig', () => {
               {
                 file: tsConfig,
                 hash: 'some-hash',
-                size: 0,
                 getChanges: () =>
                   jsonDiff(
                     {

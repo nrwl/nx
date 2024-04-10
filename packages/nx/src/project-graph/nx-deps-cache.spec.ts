@@ -128,7 +128,6 @@ describe('nx deps utils', () => {
               {
                 file: 'index.ts',
                 hash: 'hash1',
-                size: 0,
               },
             ],
           },
@@ -141,7 +140,6 @@ describe('nx deps utils', () => {
                 {
                   file: 'index.ts',
                   hash: 'hash1',
-                  size: 0,
                 },
               ],
             },
@@ -159,7 +157,6 @@ describe('nx deps utils', () => {
             'index.ts': {
               file: 'index.ts',
               hash: 'hash1',
-              size: 0,
             },
           },
         },
@@ -175,14 +172,12 @@ describe('nx deps utils', () => {
               {
                 file: 'index.ts',
                 hash: 'hash1',
-                size: 0,
               },
             ],
             secondlib: [
               {
                 file: 'index.ts',
                 hash: 'hash2',
-                size: 0,
               },
             ],
           },
@@ -194,7 +189,6 @@ describe('nx deps utils', () => {
               mylib: [
                 {
                   file: 'index.ts',
-                  size: 0,
                   hash: 'hash1',
                 },
               ],
@@ -208,7 +202,6 @@ describe('nx deps utils', () => {
             {
               file: 'index.ts',
               hash: 'hash2',
-              size: 0,
             },
           ],
         },
@@ -221,7 +214,6 @@ describe('nx deps utils', () => {
             'index.ts': {
               file: 'index.ts',
               hash: 'hash1',
-              size: 0,
             },
           },
         },
@@ -237,16 +229,13 @@ describe('nx deps utils', () => {
               {
                 file: 'index1.ts',
                 hash: 'hash1',
-                size: 0,
               },
               {
                 file: 'index2.ts',
-                size: 0,
                 hash: 'hash2b',
               },
               {
                 file: 'index4.ts',
-                size: 0,
                 hash: 'hash4',
               },
             ],
@@ -259,17 +248,14 @@ describe('nx deps utils', () => {
               mylib: [
                 {
                   file: 'index1.ts',
-                  size: 0,
                   hash: 'hash1',
                 },
                 {
                   file: 'index2.ts',
-                  size: 0,
                   hash: 'hash2',
                 },
                 {
                   file: 'index3.ts',
-                  size: 0,
                   hash: 'hash3',
                 },
               ],
@@ -284,12 +270,10 @@ describe('nx deps utils', () => {
             {
               file: 'index2.ts',
               hash: 'hash2b',
-              size: 0,
             },
             {
               file: 'index4.ts',
               hash: 'hash4',
-              size: 0,
             },
           ],
         },
@@ -301,7 +285,6 @@ describe('nx deps utils', () => {
             'index1.ts': {
               file: 'index1.ts',
               hash: 'hash1',
-              size: 0,
             },
           },
         },

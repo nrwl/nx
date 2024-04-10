@@ -9,7 +9,11 @@ import {
   ProjectsConfigurations,
 } from '../config/workspace-json-project-json';
 import { daemonClient } from '../daemon/client/client';
-import { NxWorkspaceFilesExternals } from '../native';
+import {
+  NxWorkspaceFilesExternals,
+  FileData as NativeFileData,
+} from '../native';
+
 import {
   getAllFileDataInContext,
   updateProjectFiles,
@@ -86,7 +90,7 @@ export function createFileMap(
 export function updateFileMap(
   projectsConfigurations: Record<string, ProjectConfiguration>,
   rustReferences: NxWorkspaceFilesExternals,
-  updatedFiles: FileData[],
+  updatedFiles: NativeFileData[],
   deletedFiles: string[]
 ) {
   const updates = updateProjectFiles(

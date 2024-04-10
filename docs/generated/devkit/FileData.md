@@ -9,6 +9,7 @@ Some metadata about a file
 - [deps](../../devkit/documents/FileData#deps): FileDataDependency[]
 - [file](../../devkit/documents/FileData#file): string
 - [hash](../../devkit/documents/FileData#hash): string
+- [size](../../devkit/documents/FileData#size): number
 
 ## Properties
 
@@ -33,3 +34,11 @@ If the tuple has 3 elements, the first is preceded by a source.
 ### hash
 
 • **hash**: `string`
+
+---
+
+### size
+
+• `Optional` **size**: `number`
+
+The size in bytes of this file on the file system \*
