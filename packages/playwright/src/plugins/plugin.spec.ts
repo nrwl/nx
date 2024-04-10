@@ -46,6 +46,13 @@ describe('@nx/playwright/plugin', () => {
     expect(projects).toMatchInlineSnapshot(`
       {
         ".": {
+          "metadata": {
+            "targetGroups": {
+              "E2E (CI)": [
+                "e2e-ci",
+              ],
+            },
+          },
           "root": ".",
           "targets": {
             "e2e": {
@@ -55,6 +62,12 @@ describe('@nx/playwright/plugin', () => {
                 "default",
                 "^production",
               ],
+              "metadata": {
+                "description": "Runs Playwright Tests",
+                "technologies": [
+                  "playwright",
+                ],
+              },
               "options": {
                 "cwd": "{projectRoot}",
               },
@@ -70,6 +83,12 @@ describe('@nx/playwright/plugin', () => {
                 "default",
                 "^production",
               ],
+              "metadata": {
+                "description": "Runs Playwright Tests in CI",
+                "technologies": [
+                  "playwright",
+                ],
+              },
               "outputs": [
                 "{projectRoot}/test-results",
               ],
@@ -99,6 +118,13 @@ describe('@nx/playwright/plugin', () => {
     expect(projects).toMatchInlineSnapshot(`
       {
         ".": {
+          "metadata": {
+            "targetGroups": {
+              "E2E (CI)": [
+                "e2e-ci",
+              ],
+            },
+          },
           "root": ".",
           "targets": {
             "e2e": {
@@ -108,6 +134,12 @@ describe('@nx/playwright/plugin', () => {
                 "default",
                 "^production",
               ],
+              "metadata": {
+                "description": "Runs Playwright Tests",
+                "technologies": [
+                  "playwright",
+                ],
+              },
               "options": {
                 "cwd": "{projectRoot}",
               },
@@ -126,6 +158,12 @@ describe('@nx/playwright/plugin', () => {
                 "default",
                 "^production",
               ],
+              "metadata": {
+                "description": "Runs Playwright Tests in CI",
+                "technologies": [
+                  "playwright",
+                ],
+              },
               "outputs": [
                 "{projectRoot}/playwright-report",
                 "{projectRoot}/test-results/report.json",
@@ -164,6 +202,15 @@ describe('@nx/playwright/plugin', () => {
       context
     );
     const { targets } = projects['.'];
+    expect(projects['.'].metadata.targetGroups).toMatchInlineSnapshot(`
+      {
+        "E2E (CI)": [
+          "e2e-ci--tests/run-me-2.spec.ts",
+          "e2e-ci--tests/run-me.spec.ts",
+          "e2e-ci",
+        ],
+      }
+    `);
     expect(targets['e2e-ci']).toMatchInlineSnapshot(`
       {
         "cache": true,
@@ -184,6 +231,12 @@ describe('@nx/playwright/plugin', () => {
           "default",
           "^production",
         ],
+        "metadata": {
+          "description": "Runs Playwright Tests in CI",
+          "technologies": [
+            "playwright",
+          ],
+        },
         "outputs": [
           "{projectRoot}/test-results",
         ],
@@ -197,6 +250,12 @@ describe('@nx/playwright/plugin', () => {
           "default",
           "^production",
         ],
+        "metadata": {
+          "description": "Runs Playwright Tests in tests/run-me.spec.ts in CI",
+          "technologies": [
+            "playwright",
+          ],
+        },
         "options": {
           "cwd": "{projectRoot}",
         },
@@ -213,6 +272,12 @@ describe('@nx/playwright/plugin', () => {
           "default",
           "^production",
         ],
+        "metadata": {
+          "description": "Runs Playwright Tests in tests/run-me-2.spec.ts in CI",
+          "technologies": [
+            "playwright",
+          ],
+        },
         "options": {
           "cwd": "{projectRoot}",
         },
