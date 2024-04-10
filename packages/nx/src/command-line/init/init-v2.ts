@@ -74,16 +74,27 @@ export async function initHandler(options: InitArgs): Promise<void> {
 
   const { plugins, updatePackageScripts } = await detectPlugins();
 
+  const packageJson: PackageJson = readJsonFile('package.json');
   if (!plugins.length) {
     // If no plugins are detected/chosen, guide users to setup
     // their targetDefaults correctly so their package scripts will work.
-    const packageJson: PackageJson = readJsonFile('package.json');
     if (isMonorepo(packageJson)) {
       await addNxToMonorepo({ interactive: options.interactive });
     } else {
       await addNxToNpmRepo({ interactive: options.interactive });
     }
   } else {
+    if (isMonorepo(packageJson)) {
+      await addNxToMonorepo({
+        interactive: options.interactive,
+        nxCloud: false,
+      });
+    } else {
+      await addNxToNpmRepo({
+        interactive: options.interactive,
+        nxCloud: false,
+      });
+    }
     const useNxCloud =
       options.nxCloud ??
       (options.interactive
@@ -221,8 +232,7 @@ async function detectPlugins(): Promise<{
       name: 'plugins',
       type: 'multiselect',
       message: `Which plugins would you like to add?`,
-      choices: plugins.map((p) => ({ name: p, value: p })),
-      initial: plugins.map((_, i) => i) as unknown as number, // casting to avoid type error due to bad d.ts file from enquirer
+      choices: plugins.map((p) => ({ name: p, value: p })), // casting to avoid type error due to bad d.ts file from enquirer
     },
   ]).then((r) => r.plugins);
 

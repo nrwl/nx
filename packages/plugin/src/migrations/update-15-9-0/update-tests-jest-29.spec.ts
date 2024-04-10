@@ -5,8 +5,6 @@ import {
   updateProjectConfiguration,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { libraryGenerator } from '@nx/js';
-import { updateTestsJest29 } from './jest-29-tests';
 
 let projectGraph: ProjectGraph;
 jest.mock('@nx/devkit', () => ({
@@ -15,6 +13,10 @@ jest.mock('@nx/devkit', () => ({
     .fn()
     .mockImplementation(async () => projectGraph),
 }));
+
+import { libraryGenerator } from '@nx/js';
+import { updateTestsJest29 } from './jest-29-tests';
+
 describe('Nx Plugin Migration - jest 29 mocked usage in tests', () => {
   let tree: Tree;
   beforeEach(() => {

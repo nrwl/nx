@@ -96,10 +96,7 @@ export async function addNxToMonorepo(options: Options) {
   );
   if (!options.legacy) {
     packageJsonFiles.forEach((packageJsonPath) => {
-      markPackageJsonAsNxProject(
-        join(repoRoot, packageJsonPath),
-        cacheableOperations
-      );
+      markPackageJsonAsNxProject(join(repoRoot, packageJsonPath));
     });
   }
 

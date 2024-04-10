@@ -1,3 +1,5 @@
+import 'nx/src/internal-testing-utils/mock-project-graph';
+
 import { formatFiles, GeneratorCallback, readNxJson, Tree } from '@nx/devkit';
 
 import { runTasksInSerial } from '@nx/devkit';

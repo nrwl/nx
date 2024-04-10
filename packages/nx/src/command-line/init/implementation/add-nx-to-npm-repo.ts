@@ -85,10 +85,7 @@ export async function addNxToNpmRepo(options: Options) {
   if (options.legacy) {
     markRootPackageJsonAsNxProjectLegacy(repoRoot, cacheableOperations, pmc);
   } else {
-    markPackageJsonAsNxProject(
-      join(repoRoot, 'package.json'),
-      cacheableOperations
-    );
+    markPackageJsonAsNxProject(join(repoRoot, 'package.json'));
   }
 
   output.log({ title: '📦 Installing dependencies' });
