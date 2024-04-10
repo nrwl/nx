@@ -41,7 +41,7 @@ export function applyBaseConfig(
   } = {}
 ): void {
   // Defaults that was applied from executor schema previously.
-  options.compiler ??= 'babel';
+  options.compiler ??= options.tsConfig ? 'babel' : undefined;
   options.deleteOutputPath ??= true;
   options.externalDependencies ??= 'all';
   options.fileReplacements ??= [];
