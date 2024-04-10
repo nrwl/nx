@@ -3,7 +3,11 @@ import {
   ProjectGraphProcessorContext,
 } from '../../../config/project-graph';
 import { PluginConfiguration } from '../../../config/nx-json';
-import { CreateDependenciesContext, CreateNodesContext } from '../public-api';
+import {
+  CreateDependenciesContext,
+  CreateMetadataContext,
+  CreateNodesContext,
+} from '../public-api';
 import { LoadedNxPlugin } from '../internal-api';
 import { Serializable } from 'child_process';
 
@@ -23,6 +27,7 @@ export interface PluginWorkerLoadResult {
         createNodesPattern: string;
         hasCreateDependencies: boolean;
         hasProcessProjectGraph: boolean;
+        hasCreateMetadata: boolean;
         success: true;
       }
     | {
@@ -63,6 +68,14 @@ export interface PluginCreateDependenciesMessage {
   };
 }
 
+export interface PluginCreateMetadataMessage {
+  type: 'createMetadata';
+  payload: {
+    context: CreateMetadataContext;
+    tx: string;
+  };
+}
+
 export interface PluginCreateDependenciesResult {
   type: 'createDependenciesResult';
   payload:
@@ -74,6 +87,21 @@ export interface PluginCreateDependenciesResult {
     | {
         success: false;
         error: Error;
+        tx: string;
+      };
+}
+
+export interface PluginCreateMetadataResult {
+  type: 'createMetadataResult';
+  payload:
+    | {
+        metadata: ReturnType<LoadedNxPlugin['createMetadata']>;
+        success: true;
+        tx: string;
+      }
+    | {
+        success: false;
+        error: string;
         tx: string;
       };
 }
@@ -106,13 +134,15 @@ export type PluginWorkerMessage =
   | PluginWorkerLoadMessage
   | PluginWorkerCreateNodesMessage
   | PluginCreateDependenciesMessage
-  | PluginWorkerProcessProjectGraphMessage;
+  | PluginWorkerProcessProjectGraphMessage
+  | PluginCreateMetadataMessage;
 
 export type PluginWorkerResult =
   | PluginWorkerLoadResult
   | PluginWorkerCreateNodesResult
   | PluginCreateDependenciesResult
-  | PluginWorkerProcessProjectGraphResult;
+  | PluginWorkerProcessProjectGraphResult
+  | PluginCreateMetadataResult;
 
 export function isPluginWorkerMessage(
   message: Serializable

@@ -11,6 +11,8 @@ import { shouldMergeAngularProjects } from '../../adapter/angular-json';
 import {
   CreateDependencies,
   CreateDependenciesContext,
+  CreateMetadata,
+  CreateMetadataContext,
   CreateNodesContext,
   CreateNodesResult,
   NxPluginV2,
@@ -34,6 +36,9 @@ export class LoadedNxPlugin {
   readonly createDependencies?: (
     context: CreateDependenciesContext
   ) => ReturnType<CreateDependencies>;
+  readonly createMetadata?: (
+    context: CreateMetadataContext
+  ) => ReturnType<CreateMetadata>;
   readonly processProjectGraph?: ProjectGraphProcessor;
 
   readonly options?: unknown;
@@ -59,6 +64,11 @@ export class LoadedNxPlugin {
     if (plugin.createDependencies) {
       this.createDependencies = (context) =>
         plugin.createDependencies(this.options, context);
+    }
+
+    if (plugin.createMetadata) {
+      this.createMetadata = (context) =>
+        plugin.createMetadata(this.options, context);
     }
 
     this.processProjectGraph = plugin.processProjectGraph;

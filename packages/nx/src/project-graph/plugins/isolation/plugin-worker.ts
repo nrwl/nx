@@ -27,6 +27,8 @@ process.on('message', async (message: Serializable) => {
               'createDependencies' in plugin && !!plugin.createDependencies,
             hasProcessProjectGraph:
               'processProjectGraph' in plugin && !!plugin.processProjectGraph,
+            hasCreateMetadata:
+              'createMetadata' in plugin && !!plugin.createMetadata,
             success: true,
           },
         };
@@ -91,6 +93,20 @@ process.on('message', async (message: Serializable) => {
             error: createSerializableError(e),
             tx,
           },
+        };
+      }
+    },
+    createMetadata: async ({ context, tx }) => {
+      try {
+        const result = await plugin.createMetadata(context);
+        return {
+          type: 'createMetadataResult',
+          payload: { metadata: result, success: true, tx },
+        };
+      } catch (e) {
+        return {
+          type: 'createMetadataResult',
+          payload: { success: false, error: e.stack, tx },
         };
       }
     },

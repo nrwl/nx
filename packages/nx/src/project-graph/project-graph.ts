@@ -1,5 +1,30 @@
+<<<<<<< HEAD
 import { performance } from 'perf_hooks';
 import { readNxJson } from '../config/nx-json';
+||||||| parent of 557186fb1 (feat(core): add API entrypoint to register metadata)
+import {
+  readFileMapCache,
+  readProjectGraphCache,
+  writeCache,
+} from './nx-deps-cache';
+import {
+  CreateDependenciesError,
+  ProcessDependenciesError,
+  ProcessProjectGraphError,
+  buildProjectGraphUsingProjectFileMap,
+} from './build-project-graph';
+import { output } from '../utils/output';
+import { markDaemonAsDisabled, writeDaemonLogs } from '../daemon/tmp-dir';
+=======
+import {
+  readFileMapCache,
+  readProjectGraphCache,
+  writeCache,
+} from './nx-deps-cache';
+import { buildProjectGraphUsingProjectFileMap } from './build-project-graph';
+import { output } from '../utils/output';
+import { markDaemonAsDisabled, writeDaemonLogs } from '../daemon/tmp-dir';
+>>>>>>> 557186fb1 (feat(core): add API entrypoint to register metadata)
 import { ProjectGraph } from '../config/project-graph';
 import {
   ProjectConfiguration,
@@ -28,6 +53,43 @@ import {
   retrieveProjectConfigurations,
   retrieveWorkspaceFiles,
 } from './utils/retrieve-workspace-files';
+<<<<<<< HEAD
+||||||| parent of 557186fb1 (feat(core): add API entrypoint to register metadata)
+import { readNxJson } from '../config/nx-json';
+import {
+  ConfigurationResult,
+  ConfigurationSourceMaps,
+} from './utils/project-configuration-utils';
+import {
+  CreateNodesError,
+  MergeNodesError,
+  ProjectConfigurationsError,
+  ProjectsWithNoNameError,
+  ProjectsWithConflictingNamesError,
+} from './error-types';
+import { DaemonProjectGraphError } from '../daemon/daemon-project-graph-error';
+import { loadNxPlugins, LoadedNxPlugin } from './plugins/internal-api';
+=======
+import { readNxJson } from '../config/nx-json';
+import {
+  ConfigurationResult,
+  ConfigurationSourceMaps,
+} from './utils/project-configuration-utils';
+import {
+  CreateNodesError,
+  MergeNodesError,
+  ProjectConfigurationsError,
+  ProjectsWithNoNameError,
+  ProjectsWithConflictingNamesError,
+  isProjectGraphError,
+  ProjectGraphError as SomeProjectGraphError,
+  ProcessDependenciesError,
+  ProcessProjectGraphError,
+  CreateMetadataError,
+} from './error-types';
+import { DaemonProjectGraphError } from '../daemon/daemon-project-graph-error';
+import { loadNxPlugins } from './plugins/internal-api';
+>>>>>>> 557186fb1 (feat(core): add API entrypoint to register metadata)
 
 /**
  * Synchronously reads the latest cached copy of the workspace's ProjectGraph.
@@ -120,7 +182,7 @@ export async function buildProjectGraphAndSourceMapsWithoutDaemon() {
 
   const cacheEnabled = process.env.NX_CACHE_PROJECT_GRAPH !== 'false';
   performance.mark('build-project-graph-using-project-file-map:start');
-  let createDependenciesError: CreateDependenciesError;
+  let projectGraphError: SomeProjectGraphError;
   let projectGraphResult: Awaited<
     ReturnType<typeof buildProjectGraphUsingProjectFileMap>
   >;
@@ -135,12 +197,12 @@ export async function buildProjectGraphAndSourceMapsWithoutDaemon() {
       plugins
     );
   } catch (e) {
-    if (e instanceof CreateDependenciesError) {
+    if (isProjectGraphError(e)) {
       projectGraphResult = {
         projectGraph: e.partialProjectGraph,
         projectFileMapCache: null,
       };
-      createDependenciesError = e;
+      projectGraphError = e;
     } else {
       throw e;
     }
@@ -155,7 +217,7 @@ export async function buildProjectGraphAndSourceMapsWithoutDaemon() {
 
   const errors = [
     ...(projectConfigurationsError?.errors ?? []),
-    ...(createDependenciesError?.errors ?? []),
+    ...(projectGraphError?.errors ?? []),
   ];
 
   if (errors.length > 0) {
@@ -168,6 +230,135 @@ export async function buildProjectGraphAndSourceMapsWithoutDaemon() {
   }
 }
 
+<<<<<<< HEAD
+||||||| parent of 557186fb1 (feat(core): add API entrypoint to register metadata)
+export class ProjectGraphError extends Error {
+  readonly #errors: Array<
+    | CreateNodesError
+    | MergeNodesError
+    | ProjectsWithNoNameError
+    | ProjectsWithConflictingNamesError
+    | ProcessDependenciesError
+    | ProcessProjectGraphError
+  >;
+  readonly #partialProjectGraph: ProjectGraph;
+  readonly #partialSourceMaps: ConfigurationSourceMaps;
+
+  constructor(
+    errors: Array<
+      | CreateNodesError
+      | MergeNodesError
+      | ProjectsWithNoNameError
+      | ProjectsWithConflictingNamesError
+      | ProcessDependenciesError
+      | ProcessProjectGraphError
+    >,
+    partialProjectGraph: ProjectGraph,
+    partialSourceMaps: ConfigurationSourceMaps
+  ) {
+    super(`Failed to process project graph.`);
+    this.name = this.constructor.name;
+    this.#errors = errors;
+    this.#partialProjectGraph = partialProjectGraph;
+    this.#partialSourceMaps = partialSourceMaps;
+    this.stack = `${this.message}\n  ${errors
+      .map((error) => error.stack.split('\n').join('\n  '))
+      .join('\n')}`;
+  }
+
+  /**
+   * The daemon cannot throw errors which contain methods as they are not serializable.
+   *
+   * This method creates a new {@link ProjectGraphError} from a {@link DaemonProjectGraphError} with the methods based on the same serialized data.
+   */
+  static fromDaemonProjectGraphError(e: DaemonProjectGraphError) {
+    return new ProjectGraphError(e.errors, e.projectGraph, e.sourceMaps);
+  }
+
+  /**
+   * This gets the partial project graph despite the errors which occured.
+   * This partial project graph may be missing nodes, properties of nodes, or dependencies.
+   * This is useful mostly for visualization/debugging. It should not be used for running tasks.
+   */
+  getPartialProjectGraph() {
+    return this.#partialProjectGraph;
+  }
+
+  getPartialSourcemaps() {
+    return this.#partialSourceMaps;
+  }
+
+  getErrors() {
+    return this.#errors;
+  }
+}
+
+=======
+export class ProjectGraphError extends Error {
+  readonly #errors: Array<
+    | CreateNodesError
+    | MergeNodesError
+    | ProjectsWithNoNameError
+    | ProjectsWithConflictingNamesError
+    | ProcessDependenciesError
+    | ProcessProjectGraphError
+    | CreateMetadataError
+
+  >;
+  readonly #partialProjectGraph: ProjectGraph;
+  readonly #partialSourceMaps: ConfigurationSourceMaps;
+
+  constructor(
+    errors: Array<
+      | CreateNodesError
+      | MergeNodesError
+      | ProjectsWithNoNameError
+      | ProjectsWithConflictingNamesError
+      | ProcessDependenciesError
+      | ProcessProjectGraphError
+      | CreateMetadataError
+    >,
+    partialProjectGraph: ProjectGraph,
+    partialSourceMaps: ConfigurationSourceMaps
+  ) {
+    super(`Failed to process project graph.`);
+    this.name = this.constructor.name;
+    this.#errors = errors;
+    this.#partialProjectGraph = partialProjectGraph;
+    this.#partialSourceMaps = partialSourceMaps;
+    this.stack = `${this.message}\n  ${errors
+      .map((error) => error.stack.split('\n').join('\n  '))
+      .join('\n')}`;
+  }
+
+  /**
+   * The daemon cannot throw errors which contain methods as they are not serializable.
+   *
+   * This method creates a new {@link ProjectGraphError} from a {@link DaemonProjectGraphError} with the methods based on the same serialized data.
+   */
+  static fromDaemonProjectGraphError(e: DaemonProjectGraphError) {
+    return new ProjectGraphError(e.errors, e.projectGraph, e.sourceMaps);
+  }
+
+  /**
+   * This gets the partial project graph despite the errors which occured.
+   * This partial project graph may be missing nodes, properties of nodes, or dependencies.
+   * This is useful mostly for visualization/debugging. It should not be used for running tasks.
+   */
+  getPartialProjectGraph() {
+    return this.#partialProjectGraph;
+  }
+
+  getPartialSourcemaps() {
+    return this.#partialSourceMaps;
+  }
+
+  getErrors() {
+    return this.#errors;
+  }
+}
+
+>>>>>>> 557186fb1 (feat(core): add API entrypoint to register metadata)
 function handleProjectGraphError(opts: { exitOnError: boolean }, e) {
   if (opts.exitOnError) {
     const isVerbose = process.env.NX_VERBOSE_LOGGING === 'true';

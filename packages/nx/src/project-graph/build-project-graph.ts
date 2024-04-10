@@ -9,13 +9,16 @@ import {
   extractCachedFileData,
   FileMapCache,
   shouldRecomputeWholeGraph,
-  writeCache,
 } from './nx-deps-cache';
 import { applyImplicitDependencies } from './utils/implicit-project-dependencies';
 import { normalizeProjectNodes } from './utils/normalize-project-nodes';
 import { LoadedNxPlugin } from './plugins/internal-api';
 import { isNxPluginV1, isNxPluginV2 } from './plugins/utils';
-import { CreateDependenciesContext } from './plugins';
+import {
+  CreateDependenciesContext,
+  CreateMetadataContext,
+  ProjectsMetadata,
+} from './plugins';
 import { getRootTsConfigPath } from '../plugins/js/utils/typescript';
 import {
   FileMap,
@@ -31,6 +34,16 @@ import { existsSync } from 'fs';
 import { PackageJson } from '../utils/package-json';
 import { output } from '../utils/output';
 import { NxWorkspaceFilesExternals } from '../native';
+import {
+  AggregateCreateMetadataError,
+  AggregateProjectGraphError,
+  CreateDependenciesError,
+  CreateMetadataError,
+  isCreateMetadataError,
+  isPartialProjectGraphError,
+  ProcessDependenciesError,
+  ProcessProjectGraphError,
+} from './error-types';
 
 let storedFileMap: FileMap | null = null;
 let storedAllWorkspaceFiles: FileData[] | null = null;
@@ -173,7 +186,10 @@ async function buildProjectGraphUsingContext(
   const initProjectGraph = builder.getUpdatedProjectGraph();
 
   let updatedGraph;
-  let error;
+  let error:
+    | CreateDependenciesError
+    | AggregateCreateMetadataError
+    | AggregateProjectGraphError;
   try {
     updatedGraph = await updateProjectGraphWithPlugins(
       ctx,
@@ -181,7 +197,7 @@ async function buildProjectGraphUsingContext(
       plugins
     );
   } catch (e) {
-    if (e instanceof CreateDependenciesError) {
+    if (isPartialProjectGraphError(e)) {
       updatedGraph = e.partialProjectGraph;
       error = e;
     } else {
@@ -222,7 +238,7 @@ async function buildProjectGraphUsingContext(
   if (!error) {
     return finalGraph;
   } else {
-    throw new CreateDependenciesError(error.errors, finalGraph);
+    throw new AggregateProjectGraphError(error.errors, finalGraph);
   }
 }
 
@@ -345,49 +361,15 @@ async function updateProjectGraphWithPlugins(
 
   const result = builder.getUpdatedProjectGraph();
 
-  if (errors.length === 0) {
-    return result;
-  } else {
+  if (errors.length > 0) {
     throw new CreateDependenciesError(errors, result);
   }
-}
 
-export class ProcessDependenciesError extends Error {
-  constructor(public readonly pluginName: string, { cause }) {
-    super(
-      `The "${pluginName}" plugin threw an error while creating dependencies:`,
-      {
-        cause,
-      }
-    );
-    this.name = this.constructor.name;
-    this.stack = `${this.message}\n  ${cause.stack.split('\n').join('\n  ')}`;
-  }
-}
-
-export class ProcessProjectGraphError extends Error {
-  constructor(public readonly pluginName: string, { cause }) {
-    super(
-      `The "${pluginName}" plugin threw an error while processing the project graph:`,
-      {
-        cause,
-      }
-    );
-    this.name = this.constructor.name;
-    this.stack = `${this.message}\n  ${cause.stack.split('\n').join('\n  ')}`;
-  }
-}
-
-export class CreateDependenciesError extends Error {
-  constructor(
-    public readonly errors: Array<
-      ProcessDependenciesError | ProcessProjectGraphError
-    >,
-    public readonly partialProjectGraph: ProjectGraph
-  ) {
-    super('Failed to create dependencies. See above for errors');
-    this.name = this.constructor.name;
-  }
+  return await applyProjectMetadata(result, plugins, {
+    graph: result,
+    nxJsonConfiguration: context.nxJsonConfiguration,
+    workspaceRoot,
+  });
 }
 
 function readRootTsConfig() {
@@ -399,4 +381,94 @@ function readRootTsConfig() {
   } catch (e) {
     return {};
   }
+}
+
+export async function applyProjectMetadata(
+  graph: ProjectGraph,
+  plugins: LoadedNxPlugin[],
+  context: CreateMetadataContext
+): Promise<ProjectGraph> {
+  const metadataResultPromises: Array<
+    Promise<ProjectsMetadata | CreateMetadataError>
+  > = [];
+
+  for (const plugin of plugins) {
+    if (plugin.createMetadata) {
+      const metadata = Promise.resolve(plugin.createMetadata(context)).catch(
+        (e) => new CreateMetadataError(e, plugin.name)
+      );
+      metadataResultPromises.push(metadata);
+    }
+  }
+
+  const metadataResults = await Promise.all(metadataResultPromises);
+  const errors: CreateMetadataError[] = [];
+
+  for (const result of metadataResults) {
+    if (isCreateMetadataError(result)) {
+      errors.push(result);
+    } else {
+      for (const project in result) {
+        const projectConfiguration: ProjectConfiguration =
+          graph.nodes[project]?.data;
+        if (projectConfiguration) {
+          projectConfiguration.metadata = mergeProjectLevelMetadata(
+            projectConfiguration.metadata,
+            result[project].metadata
+          );
+          for (const target in result[project].targets || {}) {
+            if (projectConfiguration.targets[target]) {
+              projectConfiguration.targets[target].metadata =
+                mergeTargetLevelMetadata(
+                  projectConfiguration.targets[target].metadata,
+                  result[project].targets[target].metadata
+                );
+            }
+          }
+        }
+      }
+    }
+  }
+
+  return graph;
+}
+
+function mergeProjectLevelMetadata(
+  a: ProjectConfiguration['metadata'],
+  b: ProjectConfiguration['metadata']
+) {
+  if ('targetGroups' in b) {
+    a.targetGroups ??= {};
+    for (const targetGroup in b.targetGroups) {
+      a.targetGroups[targetGroup] = {
+        ...a.targetGroups[targetGroup],
+        ...b.targetGroups[targetGroup],
+      };
+    }
+  }
+
+  if ('technologies' in b) {
+    a.technologies ??= [];
+    a.technologies = Array.from(
+      new Set([...a.technologies, ...b.technologies])
+    );
+  }
+
+  return a;
+}
+
+function mergeTargetLevelMetadata(
+  a: ProjectConfiguration['targets'][string]['metadata'],
+  b: ProjectConfiguration['targets'][string]['metadata']
+) {
+  if ('technologies' in b) {
+    a.technologies ??= [];
+    a.technologies = Array.from(
+      new Set([...a.technologies, ...b.technologies])
+    );
+  }
+
+  a.description = b.description ?? a.description;
+
+  return a;
 }
