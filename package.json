@@ -206,6 +206,7 @@
     "jest-environment-jsdom": "29.4.3",
     "jest-environment-node": "^29.4.1",
     "jest-resolve": "^29.4.1",
+    "jest-runtime": "^29.4.1",
     "jest-util": "^29.4.1",
     "js-tokens": "^4.0.0",
     "js-yaml": "4.1.0",
