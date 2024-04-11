@@ -39,11 +39,13 @@ export async function setupMf(tree: Tree, rawOptions: Schema) {
     addRemoteEntry(tree, options, projectConfig.root);
     removeDeadCodeFromRemote(tree, options);
     setupTspathForRemote(tree, options);
-    installTask = addDependenciesToPackageJson(
-      tree,
-      {},
-      { '@nx/web': nxVersion, '@nx/webpack': nxVersion }
-    );
+    if (!options.skipPackageJson) {
+      installTask = addDependenciesToPackageJson(
+        tree,
+        {},
+        { '@nx/web': nxVersion, '@nx/webpack': nxVersion }
+      );
+    }
   }
 
   const remotesWithPorts = getRemotesWithPorts(tree, options);
@@ -67,11 +69,13 @@ export async function setupMf(tree: Tree, rawOptions: Schema) {
         port,
       });
     }
-    installTask = addDependenciesToPackageJson(
-      tree,
-      {},
-      { '@nx/webpack': nxVersion }
-    );
+    if (!options.skipPackageJson) {
+      installTask = addDependenciesToPackageJson(
+        tree,
+        {},
+        { '@nx/webpack': nxVersion }
+      );
+    }
   }
 
   if (!options.skipE2E) {

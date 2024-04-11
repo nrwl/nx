@@ -104,7 +104,7 @@ describe('Remix E2E Tests', () => {
         expect(result).toContain(`Successfully ran target test`);
 
         const reactResult = runCLI(`test ${reactapp}`);
-        expect(result).toContain(`Successfully ran target test`);
+        expect(reactResult).toContain(`Successfully ran target test`);
       }, 120_000);
     });
 

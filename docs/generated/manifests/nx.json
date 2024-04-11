@@ -1790,6 +1790,40 @@
     "file": "",
     "itemList": [
       {
+        "id": "installation",
+        "name": "Installation",
+        "description": "Installing Nx",
+        "mediaImage": "",
+        "file": "",
+        "itemList": [
+          {
+            "id": "install-non-javascript",
+            "name": "Install Nx in a Non-Javascript Repo",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/recipes/installation/install-non-javascript",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/installation/install-non-javascript",
+            "tags": ["installation"]
+          },
+          {
+            "id": "update-global-installation",
+            "name": "Update Your Global Nx Installation",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/recipes/installation/update-global-installation",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/installation/update-global-installation",
+            "tags": ["installation"]
+          }
+        ],
+        "isExternal": false,
+        "path": "/recipes/installation",
+        "tags": []
+      },
+      {
         "id": "running-tasks",
         "name": "Tasks & Caching",
         "description": "A series of recipes that show how to run tasks efficiently with Nx",
@@ -2640,40 +2674,6 @@
         "tags": []
       },
       {
-        "id": "installation",
-        "name": "Installation",
-        "description": "Installing Nx",
-        "mediaImage": "",
-        "file": "",
-        "itemList": [
-          {
-            "id": "install-non-javascript",
-            "name": "Install Nx in a Non-Javascript Repo",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/recipes/installation/install-non-javascript",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/installation/install-non-javascript",
-            "tags": ["installation"]
-          },
-          {
-            "id": "update-global-installation",
-            "name": "Update Your Global Nx Installation",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/recipes/installation/update-global-installation",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/installation/update-global-installation",
-            "tags": ["installation"]
-          }
-        ],
-        "isExternal": false,
-        "path": "/recipes/installation",
-        "tags": []
-      },
-      {
         "id": "tips-n-tricks",
         "name": "Tips and tricks",
         "description": "Various tips and tricks for using Nx.",
@@ -2884,73 +2884,6 @@
         "tags": []
       },
       {
-        "id": "troubleshooting",
-        "name": "Troubleshooting",
-        "description": "Learn how to troubleshoot common problems.",
-        "mediaImage": "",
-        "file": "",
-        "itemList": [
-          {
-            "id": "resolve-circular-dependencies",
-            "name": "Resolve Circular Dependencies",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/recipes/resolve-circular-dependencies",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/troubleshooting/resolve-circular-dependencies",
-            "tags": ["explore-graph"]
-          },
-          {
-            "id": "troubleshoot-nx-install-issues",
-            "name": "Troubleshooting Nx Install Issues",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/installation/troubleshoot-installation",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/troubleshooting/troubleshoot-nx-install-issues",
-            "tags": []
-          },
-          {
-            "id": "troubleshoot-cache-misses",
-            "name": "Troubleshoot Cache Misses",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/recipes/troubleshoot-cache-misses",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/troubleshooting/troubleshoot-cache-misses",
-            "tags": ["cache-task-results"]
-          },
-          {
-            "id": "unknown-local-cache",
-            "name": "Unknown Local Cache Error",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/guides/unknown-local-cache",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/troubleshooting/unknown-local-cache",
-            "tags": []
-          },
-          {
-            "id": "performance-profiling",
-            "name": "Profiling Build Performance",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/guides/performance-profiling",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/troubleshooting/performance-profiling",
-            "tags": ["environment-variables"]
-          }
-        ],
-        "isExternal": false,
-        "path": "/recipes/troubleshooting",
-        "tags": []
-      },
-      {
         "id": "nx-console",
         "name": "Nx Console",
         "description": "Checkout all the recipes related to Nx Console.",
@@ -3155,6 +3088,62 @@
     "isExternal": false,
     "path": "/recipes",
     "tags": []
+  },
+  "/recipes/installation": {
+    "id": "installation",
+    "name": "Installation",
+    "description": "Installing Nx",
+    "mediaImage": "",
+    "file": "",
+    "itemList": [
+      {
+        "id": "install-non-javascript",
+        "name": "Install Nx in a Non-Javascript Repo",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/installation/install-non-javascript",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/installation/install-non-javascript",
+        "tags": ["installation"]
+      },
+      {
+        "id": "update-global-installation",
+        "name": "Update Your Global Nx Installation",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/installation/update-global-installation",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/installation/update-global-installation",
+        "tags": ["installation"]
+      }
+    ],
+    "isExternal": false,
+    "path": "/recipes/installation",
+    "tags": []
+  },
+  "/recipes/installation/install-non-javascript": {
+    "id": "install-non-javascript",
+    "name": "Install Nx in a Non-Javascript Repo",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/installation/install-non-javascript",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/installation/install-non-javascript",
+    "tags": ["installation"]
+  },
+  "/recipes/installation/update-global-installation": {
+    "id": "update-global-installation",
+    "name": "Update Your Global Nx Installation",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/installation/update-global-installation",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/installation/update-global-installation",
+    "tags": ["installation"]
   },
   "/recipes/running-tasks": {
     "id": "running-tasks",
@@ -4722,62 +4711,6 @@
     "path": "/recipes/enforce-module-boundaries/tags-allow-list",
     "tags": ["enforce-module-boundaries"]
   },
-  "/recipes/installation": {
-    "id": "installation",
-    "name": "Installation",
-    "description": "Installing Nx",
-    "mediaImage": "",
-    "file": "",
-    "itemList": [
-      {
-        "id": "install-non-javascript",
-        "name": "Install Nx in a Non-Javascript Repo",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/recipes/installation/install-non-javascript",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/installation/install-non-javascript",
-        "tags": ["installation"]
-      },
-      {
-        "id": "update-global-installation",
-        "name": "Update Your Global Nx Installation",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/recipes/installation/update-global-installation",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/installation/update-global-installation",
-        "tags": ["installation"]
-      }
-    ],
-    "isExternal": false,
-    "path": "/recipes/installation",
-    "tags": []
-  },
-  "/recipes/installation/install-non-javascript": {
-    "id": "install-non-javascript",
-    "name": "Install Nx in a Non-Javascript Repo",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/recipes/installation/install-non-javascript",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/installation/install-non-javascript",
-    "tags": ["installation"]
-  },
-  "/recipes/installation/update-global-installation": {
-    "id": "update-global-installation",
-    "name": "Update Your Global Nx Installation",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/recipes/installation/update-global-installation",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/installation/update-global-installation",
-    "tags": ["installation"]
-  },
   "/recipes/tips-n-tricks": {
     "id": "tips-n-tricks",
     "name": "Tips and tricks",
@@ -5185,128 +5118,6 @@
     "isExternal": false,
     "path": "/recipes/tips-n-tricks/flat-config",
     "tags": ["eslint", "flat config"]
-  },
-  "/recipes/troubleshooting": {
-    "id": "troubleshooting",
-    "name": "Troubleshooting",
-    "description": "Learn how to troubleshoot common problems.",
-    "mediaImage": "",
-    "file": "",
-    "itemList": [
-      {
-        "id": "resolve-circular-dependencies",
-        "name": "Resolve Circular Dependencies",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/recipes/resolve-circular-dependencies",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/troubleshooting/resolve-circular-dependencies",
-        "tags": ["explore-graph"]
-      },
-      {
-        "id": "troubleshoot-nx-install-issues",
-        "name": "Troubleshooting Nx Install Issues",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/installation/troubleshoot-installation",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/troubleshooting/troubleshoot-nx-install-issues",
-        "tags": []
-      },
-      {
-        "id": "troubleshoot-cache-misses",
-        "name": "Troubleshoot Cache Misses",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/recipes/troubleshoot-cache-misses",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/troubleshooting/troubleshoot-cache-misses",
-        "tags": ["cache-task-results"]
-      },
-      {
-        "id": "unknown-local-cache",
-        "name": "Unknown Local Cache Error",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/guides/unknown-local-cache",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/troubleshooting/unknown-local-cache",
-        "tags": []
-      },
-      {
-        "id": "performance-profiling",
-        "name": "Profiling Build Performance",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/guides/performance-profiling",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/troubleshooting/performance-profiling",
-        "tags": ["environment-variables"]
-      }
-    ],
-    "isExternal": false,
-    "path": "/recipes/troubleshooting",
-    "tags": []
-  },
-  "/recipes/troubleshooting/resolve-circular-dependencies": {
-    "id": "resolve-circular-dependencies",
-    "name": "Resolve Circular Dependencies",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/recipes/resolve-circular-dependencies",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/troubleshooting/resolve-circular-dependencies",
-    "tags": ["explore-graph"]
-  },
-  "/recipes/troubleshooting/troubleshoot-nx-install-issues": {
-    "id": "troubleshoot-nx-install-issues",
-    "name": "Troubleshooting Nx Install Issues",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/installation/troubleshoot-installation",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/troubleshooting/troubleshoot-nx-install-issues",
-    "tags": []
-  },
-  "/recipes/troubleshooting/troubleshoot-cache-misses": {
-    "id": "troubleshoot-cache-misses",
-    "name": "Troubleshoot Cache Misses",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/recipes/troubleshoot-cache-misses",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/troubleshooting/troubleshoot-cache-misses",
-    "tags": ["cache-task-results"]
-  },
-  "/recipes/troubleshooting/unknown-local-cache": {
-    "id": "unknown-local-cache",
-    "name": "Unknown Local Cache Error",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/guides/unknown-local-cache",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/troubleshooting/unknown-local-cache",
-    "tags": []
-  },
-  "/recipes/troubleshooting/performance-profiling": {
-    "id": "performance-profiling",
-    "name": "Profiling Build Performance",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/guides/performance-profiling",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/troubleshooting/performance-profiling",
-    "tags": ["environment-variables"]
   },
   "/recipes/nx-console": {
     "id": "nx-console",
@@ -6526,6 +6337,128 @@
     "isExternal": false,
     "path": "/reference/glossary",
     "tags": []
+  },
+  "/troubleshooting": {
+    "id": "troubleshooting",
+    "name": "Troubleshooting",
+    "description": "Learn how to troubleshoot common problems.",
+    "mediaImage": "",
+    "file": "",
+    "itemList": [
+      {
+        "id": "resolve-circular-dependencies",
+        "name": "Resolve Circular Dependencies",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/resolve-circular-dependencies",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/troubleshooting/resolve-circular-dependencies",
+        "tags": ["explore-graph"]
+      },
+      {
+        "id": "troubleshoot-nx-install-issues",
+        "name": "Troubleshooting Nx Install Issues",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/installation/troubleshoot-installation",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/troubleshooting/troubleshoot-nx-install-issues",
+        "tags": []
+      },
+      {
+        "id": "troubleshoot-cache-misses",
+        "name": "Troubleshoot Cache Misses",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/troubleshoot-cache-misses",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/troubleshooting/troubleshoot-cache-misses",
+        "tags": ["cache-task-results"]
+      },
+      {
+        "id": "unknown-local-cache",
+        "name": "Unknown Local Cache Error",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/guides/unknown-local-cache",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/troubleshooting/unknown-local-cache",
+        "tags": []
+      },
+      {
+        "id": "performance-profiling",
+        "name": "Profiling Build Performance",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/guides/performance-profiling",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/troubleshooting/performance-profiling",
+        "tags": ["environment-variables"]
+      }
+    ],
+    "isExternal": false,
+    "path": "/troubleshooting",
+    "tags": []
+  },
+  "/troubleshooting/resolve-circular-dependencies": {
+    "id": "resolve-circular-dependencies",
+    "name": "Resolve Circular Dependencies",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/resolve-circular-dependencies",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/troubleshooting/resolve-circular-dependencies",
+    "tags": ["explore-graph"]
+  },
+  "/troubleshooting/troubleshoot-nx-install-issues": {
+    "id": "troubleshoot-nx-install-issues",
+    "name": "Troubleshooting Nx Install Issues",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/installation/troubleshoot-installation",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/troubleshooting/troubleshoot-nx-install-issues",
+    "tags": []
+  },
+  "/troubleshooting/troubleshoot-cache-misses": {
+    "id": "troubleshoot-cache-misses",
+    "name": "Troubleshoot Cache Misses",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/troubleshoot-cache-misses",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/troubleshooting/troubleshoot-cache-misses",
+    "tags": ["cache-task-results"]
+  },
+  "/troubleshooting/unknown-local-cache": {
+    "id": "unknown-local-cache",
+    "name": "Unknown Local Cache Error",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/guides/unknown-local-cache",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/troubleshooting/unknown-local-cache",
+    "tags": []
+  },
+  "/troubleshooting/performance-profiling": {
+    "id": "performance-profiling",
+    "name": "Profiling Build Performance",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/guides/performance-profiling",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/troubleshooting/performance-profiling",
+    "tags": ["environment-variables"]
   },
   "/deprecated": {
     "id": "deprecated",

@@ -40,6 +40,54 @@ npm add -D @nx/jest
 {% /tab %}
 {% /tabs %}
 
+#### Configuring @nx/jest/plugin for both E2E and Unit Tests
+
+While Jest is most often used for unit tests, there are cases where it can be used for e2e tests as well as unit tests
+within the same workspace. In this case, you can configure the `@nx/jest/plugin` twice for the different cases.
+
+```json {% fileName="nx.json" %}
+{
+  "plugins": [
+    {
+      "plugin": "@nx/jest/plugin",
+      "exclude": ["e2e/**/*"],
+      "options": {
+        "targetName": "test"
+      }
+    },
+    {
+      "plugin": "@nx/jest/plugin",
+      "include": ["e2e/**/*"],
+      "options": {
+        "targetName": "e2e-local",
+        "ciTargetName": "e2e-ci"
+      }
+    }
+  ]
+}
+```
+
+### Splitting E2E Tests
+
+If Jest is used to run E2E tests, you can enable [splitting the tasks](/ci/features/split-e2e-tasks) by file to get
+improved caching, distribution, and retrying flaky tests. Enable this, by providing a `ciTargetName`. This will create a
+target with that name which can be used in CI to run the tests for each file in a distributed fashion.
+
+```json {% fileName="nx.json" %}
+{
+  "plugins": [
+    {
+      "plugin": "@nx/jest/plugin",
+      "include": ["e2e/**/*"],
+      "options": {
+        "targetName": "e2e-local",
+        "ciTargetName": "e2e-ci"
+      }
+    }
+  ]
+}
+```
+
 ### How @nx/jest Infers Tasks
 
 {% callout type="note" title="Inferred Tasks" %}
