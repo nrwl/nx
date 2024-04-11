@@ -1,6 +1,6 @@
 # Nx Console Troubleshooting
 
-Often, issues with Nx Console are the result of underlying issues with Nx. Make sure to read the [Nx installation troubleshooting docs](recipes/troubleshooting/troubleshoot-nx-install-issues) for more help.
+Often, issues with Nx Console are the result of underlying issues with Nx. Make sure to read the [Nx installation troubleshooting docs](/troubleshooting/troubleshoot-nx-install-issues) for more help.
 
 ## VSCode + nvm Issues
 

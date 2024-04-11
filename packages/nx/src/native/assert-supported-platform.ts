@@ -28,7 +28,7 @@ export function assertSupportedPlatform() {
     }
 
     bodyLines.push(
-      'For more information please see https://nx.dev/recipes/troubleshooting/troubleshoot-nx-install-issues'
+      'For more information please see https://nx.dev/troubleshooting/troubleshoot-nx-install-issues'
     );
 
     output.error({
