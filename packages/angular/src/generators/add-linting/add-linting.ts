@@ -38,6 +38,7 @@ export async function addLintingGenerator(
     rootProject: rootProject,
     addPlugin: false,
     addExplicitTargets: true,
+    skipPackageJson: options.skipPackageJson,
   });
   tasks.push(lintTask);
 
