@@ -82,7 +82,7 @@ If you create targets for a project within a plugin's code, the Nx migration gen
 
 #### Example (extending projects / adding targets)
 
-A plugin can also be written to modify existing projects. Most of Nx's first party are written to add a target to a given project based on the configuration files present for that project. The below example shows how a plugin could add a target to a project based on the presence of a `tsconfig.json` file.
+A plugin can also be written to modify existing projects. Most of Nx's first party plugins are written to add a target to a given project based on the configuration files present for that project. The below example shows how a plugin could add a target to a project based on the presence of a `tsconfig.json` file.
 
 ```typescript {% fileName="/my-plugin/index.ts" %}
 export const createNodes: CreateNodes = [
@@ -112,7 +112,7 @@ export const createNodes: CreateNodes = [
 
 By checking for the presence of a `project.json` file, the plugin can ensure that the project it is modifying is an existing Nx project.
 
-When extending an existing project, its important to consider how Nx will merge the returned project configurations. In general, plugins are ran in the order they are listed in `nx.json`, with Nx's built-in plugins being ran last. Plugins overwrite information that was identified by plugins that ran before them if a merge is not possible.
+When extending an existing project, its important to consider how Nx will merge the returned project configurations. In general, plugins are run in the order they are listed in `nx.json`, abd then Nx's built-in plugins are run last. Plugins overwrite information that was identified by plugins that run before them if a merge is not possible.
 
 Nx considers two identified projects to be the same if and only if they have the same root. If two projects are identified with the same name, but different roots, there will be an error.
 
