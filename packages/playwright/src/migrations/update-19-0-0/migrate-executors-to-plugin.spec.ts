@@ -2,6 +2,23 @@ import {
   getRelativeProjectJsonSchemaPath,
   updateProjectConfiguration,
 } from 'nx/src/generators/utils/project-configuration';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import migrateExecutorsToPlugin from './migrate-executors-to-plugin';
+import {
+  addProjectConfiguration as _addProjectConfiguration,
+  joinPathFragments,
+  type ProjectConfiguration,
+  type ProjectGraph,
+  readNxJson,
+  readProjectConfiguration,
+  type Tree,
+  updateNxJson,
+  writeJson,
+} from '@nx/devkit';
+import { TempFs } from '@nx/devkit/internal-testing-utils';
+import { join } from 'node:path';
+
+let fs: TempFs;
 
 let projectGraph: ProjectGraph;
 jest.mock('@nx/devkit', () => ({
@@ -51,21 +68,6 @@ jest.mock('@nx/devkit', () => ({
       projectGraph.nodes[projectName].data = projectConfiguration;
     }),
 }));
-
-import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import migrateExecutorsToPlugin from './migrate-executors-to-plugin';
-import {
-  type ProjectConfiguration,
-  type ProjectGraph,
-  type Tree,
-  readProjectConfiguration,
-  addProjectConfiguration as _addProjectConfiguration,
-  readNxJson,
-  joinPathFragments,
-  writeJson,
-  updateNxJson,
-  getPackageManagerCommand,
-} from '@nx/devkit';
 
 function addProjectConfiguration(
   tree: Tree,
@@ -119,51 +121,81 @@ function createTestProject(
     },
   };
 
+  const playwrightConfigContents = `import { defineConfig, devices } from '@playwright/test';
+  import { nxE2EPreset } from '@nx/playwright/preset';
+  import { workspaceRoot } from '@nx/devkit';
+  
+  const baseURL = process.env['BASE_URL'] || 'http://localhost:4200';
+  
+  export default defineConfig({
+    ...nxE2EPreset(__filename, { testDir: './src' }),
+    use: {
+      baseURL,
+      trace: 'on-first-retry',
+    },
+    webServer: {
+      command: 'npx nx serve myapp',
+      url: 'http://localhost:4200',
+      reuseExistingServer: !process.env.CI,
+      cwd: workspaceRoot,
+    },
+    projects: [
+      {
+        name: 'chromium',
+        use: { ...devices['Desktop Chrome'] },
+      },
+  
+      {
+        name: 'firefox',
+        use: { ...devices['Desktop Firefox'] },
+      },
+  
+      {
+        name: 'webkit',
+        use: { ...devices['Desktop Safari'] },
+      },
+    ],
+  });`;
+
   tree.write(
     `${projectOpts.appRoot}/playwright.config.ts`,
-    `import { defineConfig, devices } from '@playwright/test';
-import { nxE2EPreset } from '@nx/playwright/preset';
-import { workspaceRoot } from '@nx/devkit';
-
-const baseURL = process.env['BASE_URL'] || 'http://localhost:4200';
-
-export default defineConfig({
-  ...nxE2EPreset(__filename, { testDir: './src' }),
-  use: {
-    baseURL,
-    trace: 'on-first-retry',
-  },
-  webServer: {
-    command: 'npx nx serve myapp',
-    url: 'http://localhost:4200',
-    reuseExistingServer: !process.env.CI,
-    cwd: workspaceRoot,
-  },
-  projects: [
+    playwrightConfigContents
+  );
+  fs.createFileSync(
+    `${projectOpts.appRoot}/playwright.config.ts`,
+    playwrightConfigContents
+  );
+  jest.doMock(
+    join(fs.tempDir, `${projectOpts.appRoot}/playwright.config.ts`),
+    () => ({
+      default: {
+        outputDir: '../dist/.playwright/myapp-e2e',
+      },
+    }),
     {
-      name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
-    },
-
-    {
-      name: 'firefox',
-      use: { ...devices['Desktop Firefox'] },
-    },
-
-    {
-      name: 'webkit',
-      use: { ...devices['Desktop Safari'] },
-    },
-  ],
-});`
+      virtual: true,
+    }
   );
 
   addProjectConfiguration(tree, project.name, project);
+  fs.createFileSync(
+    `${projectOpts.appRoot}/project.json`,
+    JSON.stringify(project)
+  );
   return project;
 }
 
 describe('Playwright - Migrate Executors To Plugin', () => {
+  let tree: Tree;
+
+  beforeAll(() => {
+    fs = new TempFs('playwright');
+  });
+
   beforeEach(() => {
+    tree = createTreeWithEmptyWorkspace();
+    tree.root = fs.tempDir;
+
     projectGraph = {
       nodes: {},
       dependencies: {},
@@ -171,9 +203,11 @@ describe('Playwright - Migrate Executors To Plugin', () => {
     };
   });
 
+  afterEach(() => {
+    fs.reset();
+  });
+
   it('should successfully migrate a project using Playwright executors to plugin', async () => {
-    // ARRANGE
-    const tree = createTreeWithEmptyWorkspace();
     const project = createTestProject(tree);
 
     // ACT
@@ -183,7 +217,7 @@ describe('Playwright - Migrate Executors To Plugin', () => {
     // project.json modifications
     const updatedProject = readProjectConfiguration(tree, project.name);
     const targetKeys = Object.keys(updatedProject.targets);
-    ['e2e'].forEach((key) => expect(targetKeys).not.toContain(key));
+    expect(targetKeys).not.toContain('e2e');
 
     // nx.json modifications
     const nxJsonPlugins = readNxJson(tree).plugins;
@@ -207,7 +241,6 @@ describe('Playwright - Migrate Executors To Plugin', () => {
 
   it('should setup Playwright plugin to match projects', async () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace();
     const project = createTestProject(tree, {
       e2eTargetName: 'test',
     });
@@ -243,7 +276,6 @@ describe('Playwright - Migrate Executors To Plugin', () => {
 
   it('should keep Playwright options in project.json', async () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace();
     const project = createTestProject(tree);
     project.targets.e2e.options.globalTimeout = 100000;
     updateProjectConfiguration(tree, project.name, project);
@@ -284,7 +316,6 @@ describe('Playwright - Migrate Executors To Plugin', () => {
 
   it('should add Playwright options found in targetDefaults for the executor to the project.json', async () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace();
     const nxJson = readNxJson(tree);
     nxJson.targetDefaults ??= {};
     nxJson.targetDefaults['@nx/playwright:playwright'] = {

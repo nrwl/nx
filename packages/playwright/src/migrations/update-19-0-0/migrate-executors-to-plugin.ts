@@ -3,111 +3,66 @@ import {
   joinPathFragments,
   readNxJson,
   TargetConfiguration,
-  type NxJsonConfiguration,
-  type ProjectGraph,
   type Tree,
   updateProjectConfiguration,
   updateNxJson,
   formatFiles,
+  glob,
+  readProjectConfiguration,
 } from '@nx/devkit';
 import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-options-utils';
-import { PlaywrightPluginOptions } from '../../plugins/plugin';
-
-const executors = {
-  e2e: '@nx/playwright:playwright',
-};
-
-const defaultOptionsForExecutors = {
-  e2e: (projectRoot: string) => ({
-    cache: true,
-    dependsOn: ['^build'],
-    inputs: ['production', '^production'],
-    executor: '@nx/playwright:playwright',
-    outputs: [
-      joinPathFragments('{workspaceRoot}', 'dist', '.playwright', projectRoot),
-    ],
-    options: {
-      config: joinPathFragments(projectRoot, 'playwright.config.ts'),
-    },
-  }),
-};
+import { createNodes, PlaywrightPluginOptions } from '../../plugins/plugin';
+import { RunCommandsOptions } from 'nx/src/executors/run-commands/run-commands.impl';
+import { mergeTargetConfigurations } from 'nx/src/project-graph/utils/project-configuration-utils';
 
 const defaultPluginOptions = {
   targetName: 'e2e',
   ciTargetName: 'e2e-ci',
 };
 
-function getProjectsAndTargetToMigrate(
-  tree: Tree,
-  nxJson: NxJsonConfiguration,
-  playwrightProjectNames: Record<string, Set<string>>,
-  targetNameCounts: Record<keyof typeof executors, Record<string, number>>
-) {
-  for (const targetExecutor of Object.keys(executors)) {
-    forEachExecutorOptions(
-      tree,
-      executors[targetExecutor],
-      (targetOptions, projectName, targetName) => {
-        if (!(projectName in playwrightProjectNames)) {
-          playwrightProjectNames[projectName] = new Set();
-        }
-        playwrightProjectNames[projectName].add(targetName);
+function getProjectsToMigrate(tree: Tree, executor: string) {
+  const allProjectsWithExecutor = new Map<string, Set<string>>();
+  const targetCounts = new Map<string, number>();
 
-        targetNameCounts[targetExecutor][targetName] =
-          targetName in targetNameCounts[targetExecutor]
-            ? targetNameCounts[targetExecutor][targetName] + 1
-            : 1;
+  forEachExecutorOptions(
+    tree,
+    executor,
+    (_, projectName, targetName, configurationName) => {
+      if (configurationName) {
+        return;
       }
-    );
-  }
-}
 
-/**
- * Create a key-value pair of options that need to be migrated to the build target in project.json
- * @param nxJson NxJsonConfiguration
- */
-function getTargetDefaultOptionsToAddToProject(
-  nxJson: NxJsonConfiguration
-): Record<string, any> {
-  let canMigrateBuildExecutor = true;
-  let targetDefaultOptions: Record<string, any> = {};
-  if (nxJson.targetDefaults) {
-    if (
-      executors.e2e in nxJson.targetDefaults &&
-      nxJson.targetDefaults[executors.e2e].options
-    ) {
-      const targetDefaultConfigKeys = Object.keys(
-        nxJson.targetDefaults[executors.e2e].options
-      );
-      // the options are migratable, list them in key-value pair
-      // to be added to the build target on the project.json
-      targetDefaultOptions = targetDefaultConfigKeys.reduce(
-        (opts, key) => ({
-          ...opts,
-          [key]: nxJson.targetDefaults[executors.e2e].options[key],
-        }),
-        targetDefaultOptions
-      );
+      if (allProjectsWithExecutor.has(projectName)) {
+        allProjectsWithExecutor.get(projectName).add(targetName);
+      } else {
+        allProjectsWithExecutor.set(projectName, new Set([targetName]));
+      }
+
+      if (targetCounts.has(targetName)) {
+        targetCounts.set(targetName, targetCounts.get(targetName) + 1);
+      } else {
+        targetCounts.set(targetName, 1);
+      }
+    }
+  );
+
+  let preferredTargetName: string = Array.from(targetCounts.keys())[0];
+  for (const [targetName, count] of targetCounts) {
+    if (count > targetCounts.get(preferredTargetName)) {
+      preferredTargetName = targetName;
     }
   }
-  return targetDefaultOptions;
-}
 
-function getPreferredTargetName(
-  targetNameCounts: Record<keyof typeof executors, Record<string, number>>
-) {
-  const targetNames = Object.keys(targetNameCounts.e2e);
-  let preferredTargetName = targetNames[0] ?? defaultPluginOptions.targetName;
-  if (targetNames.length > 1) {
-    preferredTargetName = targetNames.reduce(
-      (preferredName, currentName) =>
-        targetNameCounts.e2e[preferredName] >= targetNameCounts.e2e[currentName]
-          ? preferredName
-          : currentName,
-      preferredTargetName
-    );
-  }
-  return { preferredTargetName };
+  const projects = Array.from(allProjectsWithExecutor)
+    .filter(([_, targets]) => {
+      return targets.has(preferredTargetName);
+    })
+    .map(([projectName, _]) => projectName);
+
+  return {
+    projects,
+    targetName: preferredTargetName,
+  };
 }
 
 function deleteMatchingProperties(
@@ -137,45 +92,6 @@ function deleteMatchingProperties(
       delete currentTarget[key];
     }
   }
-}
-
-function migrateE2ETarget(
-  tree: Tree,
-  projectGraph: ProjectGraph,
-  targetNames: Set<string>,
-  preferredTargetName: string,
-  projectName: string,
-  projectTargets: Record<string, TargetConfiguration>,
-  updatedProject: boolean,
-  targetDefaultOptionsToMigrate: Record<string, any>
-) {
-  if (targetNames.has(preferredTargetName)) {
-    const defaultOptions = defaultOptionsForExecutors.e2e(
-      projectGraph.nodes[projectName].data.root
-    );
-    let currentTargetOptions = projectTargets[preferredTargetName];
-
-    currentTargetOptions = {
-      // current target options exist in the project.json, and would override targetDefaults
-      ...currentTargetOptions,
-      options: {
-        ...targetDefaultOptionsToMigrate,
-        ...(currentTargetOptions.options ?? {}),
-      },
-    };
-
-    deleteMatchingProperties(currentTargetOptions, defaultOptions);
-    delete projectTargets[preferredTargetName].executor;
-
-    if (Object.values(currentTargetOptions).length === 0) {
-      delete projectTargets[preferredTargetName];
-    } else {
-      projectTargets[preferredTargetName] = currentTargetOptions;
-    }
-
-    updatedProject = true;
-  }
-  return updatedProject;
 }
 
 /**
@@ -232,56 +148,70 @@ function addPlugin(tree: Tree, preferredE2ETargetName: string) {
 
 export default async function migrateExecutorsToPlugin(tree: Tree) {
   const projectGraph = await createProjectGraphAsync();
-  const nxJson = readNxJson(tree);
+  const nxJsonConfiguration = readNxJson(tree);
 
-  const playwrightProjectNames: Record<string, Set<string>> = {};
-
-  const targetNameCounts: Record<
-    keyof typeof executors,
-    Record<string, number>
-  > = {
-    e2e: {},
-  };
-
-  const targetDefaultOptionsToMigrate =
-    getTargetDefaultOptionsToAddToProject(nxJson);
-
-  getProjectsAndTargetToMigrate(
+  const { projects, targetName } = getProjectsToMigrate(
     tree,
-    nxJson,
-    playwrightProjectNames,
-    targetNameCounts
+    '@nx/playwright:playwright'
   );
+  const targetDefaultsForExecutor =
+    nxJsonConfiguration.targetDefaults?.['@nx/playwright:playwright'];
 
-  const { preferredTargetName } = getPreferredTargetName(targetNameCounts);
+  const configFiles = glob(tree, [createNodes[0]]);
+  for (const projectName of projects) {
+    const projectFromGraph = projectGraph.nodes[projectName];
+    const playwrightConfigPath = ['js', 'ts', 'cjs', 'cts', 'mjs', 'mts']
+      .map((ext) =>
+        joinPathFragments(
+          projectFromGraph.data.root,
+          `playwright.config.${ext}`
+        )
+      )
+      .find((path) => tree.exists(path));
+    if (!playwrightConfigPath) {
+      continue;
+    }
 
-  for (const [projectName, targetNames] of Object.entries(
-    playwrightProjectNames
-  )) {
-    const projectTargets = projectGraph.nodes[projectName].data.targets;
-
-    let updatedProject = false;
-
-    updatedProject = migrateE2ETarget(
-      tree,
-      projectGraph,
-      targetNames,
-      preferredTargetName,
-      projectName,
-      projectTargets,
-      updatedProject,
-      targetDefaultOptionsToMigrate
+    const { projects } = await createNodes[1](
+      playwrightConfigPath,
+      {
+        targetName,
+        ciTargetName: 'e2e-ci',
+      },
+      {
+        workspaceRoot: tree.root,
+        nxJsonConfiguration,
+        configFiles,
+      }
     );
 
-    if (updatedProject) {
-      updateProjectConfiguration(tree, projectName, {
-        ...projectGraph.nodes[projectName].data,
-        targets: projectTargets,
-      });
+    const createdProject = Object.entries(projects ?? {}).find(
+      ([root]) => root === projectFromGraph.data.root
+    )[1];
+
+    const createdTarget: TargetConfiguration<RunCommandsOptions> =
+      createdProject.targets[targetName];
+    delete createdTarget.command;
+    delete createdTarget.options?.cwd;
+
+    const projectConfig = readProjectConfiguration(tree, projectName);
+    let target = projectConfig.targets[targetName];
+
+    target = mergeTargetConfigurations(target, targetDefaultsForExecutor);
+    delete target.executor;
+    delete target.options?.config;
+
+    deleteMatchingProperties(target, createdTarget);
+
+    if (Object.keys(target).length > 0) {
+      projectConfig.targets[targetName] = target;
+    } else {
+      delete projectConfig.targets[targetName];
     }
+    updateProjectConfiguration(tree, projectName, projectConfig);
   }
 
-  addPlugin(tree, preferredTargetName);
+  addPlugin(tree, targetName);
 
   await formatFiles(tree);
 }
