@@ -29,7 +29,6 @@ import { DaemonProjectGraphError } from '../daemon-project-graph-error';
 import { ProjectGraphError } from '../../project-graph/project-graph';
 
 const DAEMON_ENV_SETTINGS = {
-  ...process.env,
   NX_PROJECT_GLOB_CACHE: 'false',
   NX_CACHE_PROJECTS_CONFIG: 'false',
 };
@@ -402,7 +401,7 @@ export class DaemonClient {
         detached: true,
         windowsHide: true,
         shell: false,
-        env: DAEMON_ENV_SETTINGS,
+        env: { ...process.env, ...DAEMON_ENV_SETTINGS },
       }
     );
     backgroundProcess.unref();
