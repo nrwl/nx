@@ -1,6 +1,10 @@
-import { ensurePackage, joinPathFragments, type Tree } from '@nx/devkit';
+import {
+  addDependenciesToPackageJson,
+  ensurePackage,
+  joinPathFragments,
+  type Tree,
+} from '@nx/devkit';
 import { jestPresetAngularVersion, nxVersion } from '../../utils/versions';
-import { addDependenciesToPackageJsonIfDontExist } from './version-utils';
 
 export type AddJestOptions = {
   name: string;
@@ -16,10 +20,12 @@ export async function addJest(
   if (!options.skipPackageJson) {
     process.env.npm_config_legacy_peer_deps ??= 'true';
 
-    addDependenciesToPackageJsonIfDontExist(
+    addDependenciesToPackageJson(
       tree,
       {},
-      { 'jest-preset-angular': jestPresetAngularVersion }
+      { 'jest-preset-angular': jestPresetAngularVersion },
+      undefined,
+      true
     );
   }
 
