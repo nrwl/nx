@@ -12,7 +12,7 @@ launch-templates:
     init-steps:
       - name: Checkout
         uses: 'nrwl/nx-cloud-workflows/v3.6/workflow-steps/checkout/main.yaml'
-      - name: Print HEAD
+      - name: Print HEAD Commit 2
         script: git rev-parse HEAD
       - name: Cache restore
         uses: 'nrwl/nx-cloud-workflows/v3.6/workflow-steps/cache/main.yaml'
