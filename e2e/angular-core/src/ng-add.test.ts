@@ -76,7 +76,7 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
     cleanupProject();
   });
 
-  it('hhhhhhshould generate a workspace', () => {
+  it('should generate a workspace', () => {
     addProtractor();
 
     // update package.json
