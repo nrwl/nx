@@ -37,7 +37,7 @@ error.
 ## You Share Cache with Another Machine Using a Network Drive
 
 You can prefix any Nx command with `NX_REJECT_UNKNOWN_LOCAL_CACHE=0` to ignore the error (
-e.g., `NX REJECT_UNKNOWN_LOCAL_CACHE=0 nx run-many -t build test`). This is similar to
+e.g., `NX_REJECT_UNKNOWN_LOCAL_CACHE=0 nx run-many -t build test`). This is similar to
 setting `NODE_TLS_REJECT_UNAUTHORIZED=0` to ignore any errors stemming form self-signed certificates. Even though it
 will make it work, this approach is discouraged.
 
