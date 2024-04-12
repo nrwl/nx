@@ -1,15 +1,17 @@
-import { createProjectGraphAsync, GeneratorCallback, Tree } from '@nx/devkit';
 import {
   addDependenciesToPackageJson,
+  createProjectGraphAsync,
+  GeneratorCallback,
   readNxJson,
   removeDependenciesFromPackageJson,
   runTasksInSerial,
+  Tree,
   updateNxJson,
 } from '@nx/devkit';
 import { addPlugin } from '@nx/devkit/src/utils/add-plugin';
 import { eslintVersion, nxVersion } from '../../utils/versions';
 import { findEslintFile } from '../utils/eslint-file';
-import { EslintPluginOptions, createNodes } from '../../plugins/plugin';
+import { createNodes } from '../../plugins/plugin';
 import { hasEslintPlugin } from '../utils/plugin';
 
 export interface LinterInitOptions {

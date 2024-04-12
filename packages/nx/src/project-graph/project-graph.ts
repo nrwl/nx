@@ -34,6 +34,8 @@ import {
   CreateNodesError,
   MergeNodesError,
   ProjectConfigurationsError,
+  ProjectsWithNoNameError,
+  ProjectsWithConflictingNamesError,
 } from './error-types';
 import { DaemonProjectGraphError } from '../daemon/daemon-project-graph-error';
 import { loadNxPlugins, LoadedNxPlugin } from './plugins/internal-api';
@@ -179,7 +181,12 @@ export async function buildProjectGraphAndSourceMapsWithoutDaemon() {
 
 export class ProjectGraphError extends Error {
   readonly #errors: Array<
-    CreateNodesError | ProcessDependenciesError | ProcessProjectGraphError
+    | CreateNodesError
+    | MergeNodesError
+    | ProjectsWithNoNameError
+    | ProjectsWithConflictingNamesError
+    | ProcessDependenciesError
+    | ProcessProjectGraphError
   >;
   readonly #partialProjectGraph: ProjectGraph;
   readonly #partialSourceMaps: ConfigurationSourceMaps;
@@ -188,6 +195,8 @@ export class ProjectGraphError extends Error {
     errors: Array<
       | CreateNodesError
       | MergeNodesError
+      | ProjectsWithNoNameError
+      | ProjectsWithConflictingNamesError
       | ProcessDependenciesError
       | ProcessProjectGraphError
     >,

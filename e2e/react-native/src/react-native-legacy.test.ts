@@ -23,8 +23,12 @@ describe('@nx/react-native (legacy)', () => {
   let proj: string;
   let appName = uniq('my-app');
   let libName = uniq('lib');
+  let originalEnv: string;
 
   beforeAll(() => {
+    originalEnv = process.env.NX_ADD_PLUGINS;
+    process.env.NX_ADD_PLUGINS = 'false';
+
     proj = newProject();
     // we create empty preset above which skips creation of `production` named input
     updateJson('nx.json', (nxJson) => {
@@ -36,14 +40,16 @@ describe('@nx/react-native (legacy)', () => {
       return nxJson;
     });
     runCLI(
-      `generate @nx/react-native:application ${appName} --bunlder=webpack --e2eTestRunner=cypress --install=false --no-interactive`,
-      { env: { NX_ADD_PLUGINS: 'false' } }
+      `generate @nx/react-native:application ${appName} --bunlder=webpack --e2eTestRunner=cypress --install=false --no-interactive`
     );
     runCLI(
       `generate @nx/react-native:library ${libName} --buildable --publishable --importPath=${proj}/${libName} --no-interactive`
     );
   });
-  afterAll(() => cleanupProject());
+  afterAll(() => {
+    process.env.NX_ADD_PLUGINS = originalEnv;
+    cleanupProject();
+  });
 
   it('should build for web', async () => {
     const results = runCLI(`build ${appName}`);
@@ -269,8 +275,7 @@ describe('@nx/react-native (legacy)', () => {
     const libName = uniq('@my-org/lib1');
 
     runCLI(
-      `generate @nx/react-native:application ${appName} --project-name-and-root-format=as-provided --install=false --no-interactive`,
-      { env: { NX_ADD_PLUGINS: 'false' } }
+      `generate @nx/react-native:application ${appName} --project-name-and-root-format=as-provided --install=false --no-interactive`
     );
 
     // check files are generated without the layout directory ("apps/") and
@@ -306,8 +311,7 @@ describe('@nx/react-native (legacy)', () => {
   it('should run build with vite bundler and e2e with playwright', async () => {
     const appName2 = uniq('my-app');
     runCLI(
-      `generate @nx/react-native:application ${appName2} --bundler=vite --e2eTestRunner=playwright --install=false --no-interactive`,
-      { env: { NX_ADD_PLUGINS: 'false' } }
+      `generate @nx/react-native:application ${appName2} --bundler=vite --e2eTestRunner=playwright --install=false --no-interactive`
     );
     const buildResults = runCLI(`build ${appName2}`);
     expect(buildResults).toContain('Successfully ran target build');

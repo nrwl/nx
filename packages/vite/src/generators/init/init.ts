@@ -7,10 +7,7 @@ import {
   Tree,
   updateNxJson,
 } from '@nx/devkit';
-import {
-  addPlugin,
-  generateCombinations,
-} from '@nx/devkit/src/utils/add-plugin';
+import { addPlugin } from '@nx/devkit/src/utils/add-plugin';
 
 import { createNodes } from '../../plugins/plugin';
 import { InitGeneratorSchema } from './schema';

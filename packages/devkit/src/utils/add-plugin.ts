@@ -8,17 +8,15 @@ import type { PackageJson } from 'nx/src/utils/package-json';
 import * as yargs from 'yargs-parser';
 import { requireNx } from '../../nx';
 
-const nx = requireNx();
 const {
   readJson,
   writeJson,
   readNxJson,
   updateNxJson,
   retrieveProjectConfigurations,
-} = nx;
-
-// eslint-disable-next-line @typescript-eslint/no-restricted-imports
-import { LoadedNxPlugin } from 'nx/src/devkit-internals';
+  LoadedNxPlugin,
+  ProjectConfigurationsError,
+} = requireNx();
 
 import type { ConfigurationResult } from 'nx/src/project-graph/utils/project-configuration-utils';
 
@@ -55,22 +53,31 @@ export async function addPlugin<PluginOptions>(
       return;
     }
     global.NX_GRAPH_CREATION = true;
-    projConfigs = await retrieveProjectConfigurations(
-      [
-        new LoadedNxPlugin(
-          {
-            name: pluginName,
-            createNodes: createNodesTuple,
-          },
-          {
-            plugin: pluginName,
-            options: pluginOptions,
-          }
-        ),
-      ],
-      tree.root,
-      nxJson
-    );
+    try {
+      projConfigs = await retrieveProjectConfigurations(
+        [
+          new LoadedNxPlugin(
+            {
+              name: pluginName,
+              createNodes: createNodesTuple,
+            },
+            {
+              plugin: pluginName,
+              options: pluginOptions,
+            }
+          ),
+        ],
+        tree.root,
+        nxJson
+      );
+    } catch (e) {
+      // Errors are okay for this because we're only running 1 plugin
+      if (e instanceof ProjectConfigurationsError) {
+        projConfigs = e.partialProjectConfigurationsResult;
+      } else {
+        throw e;
+      }
+    }
     global.NX_GRAPH_CREATION = false;
 
     for (const projConfig of Object.values(projConfigs.projects)) {

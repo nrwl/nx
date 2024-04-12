@@ -71,14 +71,14 @@ export function addPlugin(
     '@nx/cypress/plugin',
     createNodes,
     {
-      ciTargetName: ['e2e-ci', 'cypress:e2e-ci', 'cypress-e2e-ci'],
+      targetName: ['e2e', 'cypress:e2e', 'cypress-e2e'],
       openTargetName: ['open-cypress', 'cypress-open'],
       componentTestingTargetName: [
         'component-test',
         'cypress:component-test',
         'cypress-component-test',
       ],
-      targetName: ['e2e', 'cypress:e2e', 'cypress-e2e'],
+      ciTargetName: ['e2e-ci', 'cypress:e2e-ci', 'cypress-e2e-ci'],
     },
     updatePackageScripts
   );

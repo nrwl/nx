@@ -35,7 +35,8 @@ Running this command will ask you a few questions about your workspace and then 
 process detects tools which are used in your workspace and suggests installing Nx plugins to integrate the tools you use
 with Nx. Running those tools through Nx will have caching enabled when possible, providing you with a faster alternative
 for running those tools. You can start with a few to see how it works and then add more with
-the [`nx add`](/cli/commands/add) command later. You can also decide to add them all and get the full experience right
+the [`nx add`](/nx-api/nx/documents/add) command later. You can also decide to add them all and get the full experience
+right
 away because adding plugins will not break your existing workflow.
 
 The first thing you may notice is that Nx updates your `package.json` scripts during the setup process. Nx Plugins setup
@@ -239,8 +240,7 @@ configuration values are being set.
 If you want to run one of your existing scripts with Nx, you need to tell Nx about it.
 
 1. Preface the script with `nx exec -- ` to have `npm run test` invoke the command with Nx.
-2. Add the script to `includedScripts`.
-3. Define caching settings.
+2. Define caching settings.
 
 The `nx exec` command allows you to keep using `npm test` or `npm run test` (or other package manager's alternatives) as
 you're accustomed to. But still get the benefits of making those operations cacheable. Configuring the `test` script

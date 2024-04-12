@@ -62,7 +62,11 @@ export async function nextInitGeneratorInternal(
         startTargetName: ['start', 'next:start', 'next-start'],
         buildTargetName: ['build', 'next:build', 'next-build'],
         devTargetName: ['dev', 'next:dev', 'next-dev'],
-        serveStaticTargetName: ['serve', 'next:serve', 'next-serve'],
+        serveStaticTargetName: [
+          'serve-static',
+          'next:serve-static',
+          'next-serve-static',
+        ],
       },
       schema.updatePackageScripts
     );
