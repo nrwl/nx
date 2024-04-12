@@ -549,6 +549,10 @@ function createResolvePackageRoot(customPackageRoot?: string) {
     if (!customPackageRoot) {
       return projectNode.data.root;
     }
+    if (projectNode.data.root === '.') {
+      // TODO This is a temporary workaround to fix NXC-574 until NXC-573 is resolved
+      return projectNode.data.root;
+    }
     return interpolate(customPackageRoot, {
       workspaceRoot: '',
       projectRoot: projectNode.data.root,
