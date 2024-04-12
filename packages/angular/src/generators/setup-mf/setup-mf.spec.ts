@@ -1,4 +1,9 @@
-import { readJson, readProjectConfiguration, Tree } from '@nx/devkit';
+import {
+  readJson,
+  readProjectConfiguration,
+  Tree,
+  updateJson,
+} from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { generateTestApplication } from '../utils/testing';
 import { setupMf } from './setup-mf';
@@ -677,5 +682,26 @@ describe('Init MF', () => {
       remote1: 'http://localhost:4201',
     });
     expect(tree.read('app1/src/app/app.routes.ts', 'utf-8')).toMatchSnapshot();
+  });
+
+  it('should not touch the package.json when run with `--skipPackageJson`', async () => {
+    let initialPackageJson;
+    updateJson(tree, 'package.json', (json) => {
+      json.dependencies = {};
+      json.devDependencies = {};
+      initialPackageJson = json;
+
+      return json;
+    });
+
+    await setupMf(tree, {
+      appName: 'app1',
+      mfType: 'host',
+      skipFormat: true,
+      skipPackageJson: true,
+    });
+
+    const packageJson = readJson(tree, 'package.json');
+    expect(packageJson).toEqual(initialPackageJson);
   });
 });

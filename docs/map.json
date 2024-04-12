@@ -414,6 +414,25 @@
           "description": "In depth recipes for common tasks",
           "itemList": [
             {
+              "name": "Installation",
+              "id": "installation",
+              "description": "Installing Nx",
+              "itemList": [
+                {
+                  "name": "Install Nx in a Non-Javascript Repo",
+                  "id": "install-non-javascript",
+                  "tags": ["installation"],
+                  "file": "shared/recipes/installation/install-non-javascript"
+                },
+                {
+                  "name": "Update Your Global Nx Installation",
+                  "id": "update-global-installation",
+                  "tags": ["installation"],
+                  "file": "shared/recipes/installation/update-global-installation"
+                }
+              ]
+            },
+            {
               "name": "Tasks & Caching",
               "id": "running-tasks",
               "description": "A series of recipes that show how to run tasks efficiently with Nx",
@@ -881,25 +900,6 @@
               ]
             },
             {
-              "name": "Installation",
-              "id": "installation",
-              "description": "Installing Nx",
-              "itemList": [
-                {
-                  "name": "Install Nx in a Non-Javascript Repo",
-                  "id": "install-non-javascript",
-                  "tags": ["installation"],
-                  "file": "shared/recipes/installation/install-non-javascript"
-                },
-                {
-                  "name": "Update Your Global Nx Installation",
-                  "id": "update-global-installation",
-                  "tags": ["installation"],
-                  "file": "shared/recipes/installation/update-global-installation"
-                }
-              ]
-            },
-            {
               "name": "Tips and tricks",
               "id": "tips-n-tricks",
               "description": "Various tips and tricks for using Nx.",
@@ -1005,42 +1005,6 @@
                   "id": "flat-config",
                   "tags": ["eslint", "flat config"],
                   "file": "shared/recipes/tips-n-tricks/migrating-to-flat-eslint"
-                }
-              ]
-            },
-            {
-              "name": "Troubleshooting",
-              "id": "troubleshooting",
-              "description": "Learn how to troubleshoot common problems.",
-              "itemList": [
-                {
-                  "name": "Resolve Circular Dependencies",
-                  "id": "resolve-circular-dependencies",
-                  "tags": ["explore-graph"],
-                  "file": "shared/recipes/resolve-circular-dependencies"
-                },
-                {
-                  "name": "Troubleshooting Nx Install Issues",
-                  "id": "troubleshoot-nx-install-issues",
-                  "file": "shared/installation/troubleshoot-installation"
-                },
-                {
-                  "name": "Troubleshoot Cache Misses",
-                  "id": "troubleshoot-cache-misses",
-                  "tags": ["cache-task-results"],
-                  "file": "shared/recipes/troubleshoot-cache-misses"
-                },
-                {
-                  "name": "Unknown Local Cache Error",
-                  "id": "unknown-local-cache",
-                  "tags": [],
-                  "file": "shared/guides/unknown-local-cache"
-                },
-                {
-                  "name": "Profiling Build Performance",
-                  "id": "performance-profiling",
-                  "tags": ["environment-variables"],
-                  "file": "shared/guides/performance-profiling"
                 }
               ]
             },
@@ -1334,6 +1298,43 @@
               "id": "glossary",
               "tags": [],
               "file": "shared/reference/glossary"
+            }
+          ]
+        },
+
+        {
+          "name": "Troubleshooting",
+          "id": "troubleshooting",
+          "description": "Learn how to troubleshoot common problems.",
+          "itemList": [
+            {
+              "name": "Resolve Circular Dependencies",
+              "id": "resolve-circular-dependencies",
+              "tags": ["explore-graph"],
+              "file": "shared/recipes/resolve-circular-dependencies"
+            },
+            {
+              "name": "Troubleshooting Nx Install Issues",
+              "id": "troubleshoot-nx-install-issues",
+              "file": "shared/installation/troubleshoot-installation"
+            },
+            {
+              "name": "Troubleshoot Cache Misses",
+              "id": "troubleshoot-cache-misses",
+              "tags": ["cache-task-results"],
+              "file": "shared/recipes/troubleshoot-cache-misses"
+            },
+            {
+              "name": "Unknown Local Cache Error",
+              "id": "unknown-local-cache",
+              "tags": [],
+              "file": "shared/guides/unknown-local-cache"
+            },
+            {
+              "name": "Profiling Build Performance",
+              "id": "performance-profiling",
+              "tags": ["environment-variables"],
+              "file": "shared/guides/performance-profiling"
             }
           ]
         },
@@ -1889,18 +1890,6 @@
               ]
             },
             {
-              "name": "Troubleshooting",
-              "id": "troubleshooting",
-              "description": "Learn how to solve common issues in Nx Cloud.",
-              "itemList": [
-                {
-                  "name": "CI Execution Failed",
-                  "id": "ci-execution-failed",
-                  "file": "nx-cloud/troubleshooting/ci-execution-failed"
-                }
-              ]
-            },
-            {
               "name": "Other",
               "id": "other",
               "description": "Learn how to set up Nx Cloud for your workspace.",
@@ -1949,6 +1938,18 @@
               "name": "Release Notes",
               "id": "release-notes",
               "file": "nx-cloud/reference/release-notes"
+            }
+          ]
+        },
+        {
+          "name": "Troubleshooting",
+          "id": "troubleshooting",
+          "description": "Learn how to solve common issues in Nx Cloud.",
+          "itemList": [
+            {
+              "name": "CI Execution Failed",
+              "id": "ci-execution-failed",
+              "file": "nx-cloud/troubleshooting/ci-execution-failed"
             }
           ]
         }

@@ -943,17 +943,6 @@ const latestRecipesRefactoring = {
   '/recipes/database/serverless-fastify-planetscale':
     '/showcase/example-repos/serverless-fastify-planetscale',
   '/recipes/example-repos/:path*': '/showcase/example-repos/:path*',
-  // troubleshooting
-  '/recipes/other/resolve-circular-dependencies':
-    '/recipes/troubleshooting/resolve-circular-dependencies',
-  '/recipes/ci/troubleshoot-nx-install-issues':
-    '/recipes/troubleshooting/troubleshoot-nx-install-issues',
-  '/recipes/other/troubleshoot-cache-misses':
-    '/recipes/troubleshooting/troubleshoot-cache-misses',
-  '/recipes/other/unknown-local-cache':
-    '/recipes/troubleshooting/unknown-local-cache',
-  '/recipes/other/performance-profiling':
-    '/recipes/troubleshooting/performance-profiling',
   // tips and tricks
   '/recipes/environment-variables/define-environment-variables':
     '/recipes/tips-n-tricks/define-environment-variables',
@@ -1031,6 +1020,22 @@ const eslintRename = {
   '/packages/linter': '/packages/eslint',
 };
 
+// move troubleshooting out of recipes
+const troubleshootingOutOfRecipes = {
+  '/recipes/troubleshooting': '/troubleshooting',
+  '/recipes/troubleshooting/:path*': '/troubleshooting/:path*',
+  '/ci/recipes/troubleshooting/:path*': '/ci/troubleshooting/:path*',
+  '/recipes/other/resolve-circular-dependencies':
+    '/troubleshooting/resolve-circular-dependencies',
+  '/recipes/ci/troubleshoot-nx-install-issues':
+    '/troubleshooting/troubleshoot-nx-install-issues',
+  '/recipes/other/troubleshoot-cache-misses':
+    '/troubleshooting/troubleshoot-cache-misses',
+  '/recipes/other/unknown-local-cache': '/troubleshooting/unknown-local-cache',
+  '/recipes/other/performance-profiling':
+    '/troubleshooting/performance-profiling',
+};
+
 /**
  * Removed deprecated URLs
  */
@@ -1079,4 +1084,5 @@ module.exports = {
   aiChat,
   eslintRename,
   removedDeprecatedUrls,
+  troubleshootingOutOfRecipes,
 };

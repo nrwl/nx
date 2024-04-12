@@ -79,7 +79,9 @@ function addFileServerTarget(
   options: NormalizedSchema,
   targetName: string
 ) {
-  addDependenciesToPackageJson(tree, {}, { '@nx/web': nxVersion });
+  if (!options.skipPackageJson) {
+    addDependenciesToPackageJson(tree, {}, { '@nx/web': nxVersion });
+  }
 
   const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
   const isUsingApplicationBuilder =

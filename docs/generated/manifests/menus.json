@@ -1309,6 +1309,31 @@
         "isExternal": false,
         "children": [
           {
+            "name": "Installation",
+            "path": "/recipes/installation",
+            "id": "installation",
+            "isExternal": false,
+            "children": [
+              {
+                "name": "Install Nx in a Non-Javascript Repo",
+                "path": "/recipes/installation/install-non-javascript",
+                "id": "install-non-javascript",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Update Your Global Nx Installation",
+                "path": "/recipes/installation/update-global-installation",
+                "id": "update-global-installation",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              }
+            ],
+            "disableCollapsible": false
+          },
+          {
             "name": "Tasks & Caching",
             "path": "/recipes/running-tasks",
             "id": "running-tasks",
@@ -1931,31 +1956,6 @@
             "disableCollapsible": false
           },
           {
-            "name": "Installation",
-            "path": "/recipes/installation",
-            "id": "installation",
-            "isExternal": false,
-            "children": [
-              {
-                "name": "Install Nx in a Non-Javascript Repo",
-                "path": "/recipes/installation/install-non-javascript",
-                "id": "install-non-javascript",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Update Your Global Nx Installation",
-                "path": "/recipes/installation/update-global-installation",
-                "id": "update-global-installation",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              }
-            ],
-            "disableCollapsible": false
-          },
-          {
             "name": "Tips and tricks",
             "path": "/recipes/tips-n-tricks",
             "id": "tips-n-tricks",
@@ -2101,55 +2101,6 @@
                 "name": "Switching to ESLint's flat config format",
                 "path": "/recipes/tips-n-tricks/flat-config",
                 "id": "flat-config",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              }
-            ],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Troubleshooting",
-            "path": "/recipes/troubleshooting",
-            "id": "troubleshooting",
-            "isExternal": false,
-            "children": [
-              {
-                "name": "Resolve Circular Dependencies",
-                "path": "/recipes/troubleshooting/resolve-circular-dependencies",
-                "id": "resolve-circular-dependencies",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Troubleshooting Nx Install Issues",
-                "path": "/recipes/troubleshooting/troubleshoot-nx-install-issues",
-                "id": "troubleshoot-nx-install-issues",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Troubleshoot Cache Misses",
-                "path": "/recipes/troubleshooting/troubleshoot-cache-misses",
-                "id": "troubleshoot-cache-misses",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Unknown Local Cache Error",
-                "path": "/recipes/troubleshooting/unknown-local-cache",
-                "id": "unknown-local-cache",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Profiling Build Performance",
-                "path": "/recipes/troubleshooting/performance-profiling",
-                "id": "performance-profiling",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -2305,6 +2256,47 @@
             "disableCollapsible": false
           }
         ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Installation",
+        "path": "/recipes/installation",
+        "id": "installation",
+        "isExternal": false,
+        "children": [
+          {
+            "name": "Install Nx in a Non-Javascript Repo",
+            "path": "/recipes/installation/install-non-javascript",
+            "id": "install-non-javascript",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Update Your Global Nx Installation",
+            "path": "/recipes/installation/update-global-installation",
+            "id": "update-global-installation",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          }
+        ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Install Nx in a Non-Javascript Repo",
+        "path": "/recipes/installation/install-non-javascript",
+        "id": "install-non-javascript",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Update Your Global Nx Installation",
+        "path": "/recipes/installation/update-global-installation",
+        "id": "update-global-installation",
+        "isExternal": false,
+        "children": [],
         "disableCollapsible": false
       },
       {
@@ -3451,47 +3443,6 @@
         "disableCollapsible": false
       },
       {
-        "name": "Installation",
-        "path": "/recipes/installation",
-        "id": "installation",
-        "isExternal": false,
-        "children": [
-          {
-            "name": "Install Nx in a Non-Javascript Repo",
-            "path": "/recipes/installation/install-non-javascript",
-            "id": "install-non-javascript",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Update Your Global Nx Installation",
-            "path": "/recipes/installation/update-global-installation",
-            "id": "update-global-installation",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          }
-        ],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Install Nx in a Non-Javascript Repo",
-        "path": "/recipes/installation/install-non-javascript",
-        "id": "install-non-javascript",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Update Your Global Nx Installation",
-        "path": "/recipes/installation/update-global-installation",
-        "id": "update-global-installation",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
         "name": "Tips and tricks",
         "path": "/recipes/tips-n-tricks",
         "id": "tips-n-tricks",
@@ -3784,95 +3735,6 @@
         "name": "Switching to ESLint's flat config format",
         "path": "/recipes/tips-n-tricks/flat-config",
         "id": "flat-config",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Troubleshooting",
-        "path": "/recipes/troubleshooting",
-        "id": "troubleshooting",
-        "isExternal": false,
-        "children": [
-          {
-            "name": "Resolve Circular Dependencies",
-            "path": "/recipes/troubleshooting/resolve-circular-dependencies",
-            "id": "resolve-circular-dependencies",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Troubleshooting Nx Install Issues",
-            "path": "/recipes/troubleshooting/troubleshoot-nx-install-issues",
-            "id": "troubleshoot-nx-install-issues",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Troubleshoot Cache Misses",
-            "path": "/recipes/troubleshooting/troubleshoot-cache-misses",
-            "id": "troubleshoot-cache-misses",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Unknown Local Cache Error",
-            "path": "/recipes/troubleshooting/unknown-local-cache",
-            "id": "unknown-local-cache",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Profiling Build Performance",
-            "path": "/recipes/troubleshooting/performance-profiling",
-            "id": "performance-profiling",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          }
-        ],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Resolve Circular Dependencies",
-        "path": "/recipes/troubleshooting/resolve-circular-dependencies",
-        "id": "resolve-circular-dependencies",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Troubleshooting Nx Install Issues",
-        "path": "/recipes/troubleshooting/troubleshoot-nx-install-issues",
-        "id": "troubleshoot-nx-install-issues",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Troubleshoot Cache Misses",
-        "path": "/recipes/troubleshooting/troubleshoot-cache-misses",
-        "id": "troubleshoot-cache-misses",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Unknown Local Cache Error",
-        "path": "/recipes/troubleshooting/unknown-local-cache",
-        "id": "unknown-local-cache",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Profiling Build Performance",
-        "path": "/recipes/troubleshooting/performance-profiling",
-        "id": "performance-profiling",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -4762,6 +4624,95 @@
         "name": "Glossary",
         "path": "/reference/glossary",
         "id": "glossary",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Troubleshooting",
+        "path": "/troubleshooting",
+        "id": "troubleshooting",
+        "isExternal": false,
+        "children": [
+          {
+            "name": "Resolve Circular Dependencies",
+            "path": "/troubleshooting/resolve-circular-dependencies",
+            "id": "resolve-circular-dependencies",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Troubleshooting Nx Install Issues",
+            "path": "/troubleshooting/troubleshoot-nx-install-issues",
+            "id": "troubleshoot-nx-install-issues",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Troubleshoot Cache Misses",
+            "path": "/troubleshooting/troubleshoot-cache-misses",
+            "id": "troubleshoot-cache-misses",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Unknown Local Cache Error",
+            "path": "/troubleshooting/unknown-local-cache",
+            "id": "unknown-local-cache",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Profiling Build Performance",
+            "path": "/troubleshooting/performance-profiling",
+            "id": "performance-profiling",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          }
+        ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Resolve Circular Dependencies",
+        "path": "/troubleshooting/resolve-circular-dependencies",
+        "id": "resolve-circular-dependencies",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Troubleshooting Nx Install Issues",
+        "path": "/troubleshooting/troubleshoot-nx-install-issues",
+        "id": "troubleshoot-nx-install-issues",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Troubleshoot Cache Misses",
+        "path": "/troubleshooting/troubleshoot-cache-misses",
+        "id": "troubleshoot-cache-misses",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Unknown Local Cache Error",
+        "path": "/troubleshooting/unknown-local-cache",
+        "id": "unknown-local-cache",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Profiling Build Performance",
+        "path": "/troubleshooting/performance-profiling",
+        "id": "performance-profiling",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -5911,23 +5862,6 @@
             "disableCollapsible": false
           },
           {
-            "name": "Troubleshooting",
-            "path": "/ci/recipes/troubleshooting",
-            "id": "troubleshooting",
-            "isExternal": false,
-            "children": [
-              {
-                "name": "CI Execution Failed",
-                "path": "/ci/recipes/troubleshooting/ci-execution-failed",
-                "id": "ci-execution-failed",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              }
-            ],
-            "disableCollapsible": false
-          },
-          {
             "name": "Other",
             "path": "/ci/recipes/other",
             "id": "other",
@@ -6588,31 +6522,6 @@
         "disableCollapsible": false
       },
       {
-        "name": "Troubleshooting",
-        "path": "/ci/recipes/troubleshooting",
-        "id": "troubleshooting",
-        "isExternal": false,
-        "children": [
-          {
-            "name": "CI Execution Failed",
-            "path": "/ci/recipes/troubleshooting/ci-execution-failed",
-            "id": "ci-execution-failed",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          }
-        ],
-        "disableCollapsible": false
-      },
-      {
-        "name": "CI Execution Failed",
-        "path": "/ci/recipes/troubleshooting/ci-execution-failed",
-        "id": "ci-execution-failed",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
         "name": "Other",
         "path": "/ci/recipes/other",
         "id": "other",
@@ -6738,6 +6647,31 @@
         "name": "Release Notes",
         "path": "/ci/reference/release-notes",
         "id": "release-notes",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Troubleshooting",
+        "path": "/ci/troubleshooting",
+        "id": "troubleshooting",
+        "isExternal": false,
+        "children": [
+          {
+            "name": "CI Execution Failed",
+            "path": "/ci/troubleshooting/ci-execution-failed",
+            "id": "ci-execution-failed",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          }
+        ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "CI Execution Failed",
+        "path": "/ci/troubleshooting/ci-execution-failed",
+        "id": "ci-execution-failed",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
