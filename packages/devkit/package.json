@@ -37,7 +37,7 @@
     "yargs-parser": "21.1.1"
   },
   "peerDependencies": {
-    "nx": ">= 16 <= 18"
+    "nx": ">= 16 <= 19"
   },
   "publishConfig": {
     "access": "public"
