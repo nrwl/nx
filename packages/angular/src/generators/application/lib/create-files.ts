@@ -36,6 +36,7 @@ export async function createFiles(
     angularMajorVersion,
     rootOffset,
     isUsingApplicationBuilder,
+    useEventCoalescing: angularMajorVersion >= 18,
     tpl: '',
   };
 
