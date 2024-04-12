@@ -157,7 +157,7 @@ describe('shared', () => {
       expect(tags).toEqual(['my-group-1.1.0']);
     });
 
-    it.failing('should not tag if fixed group is not bumping', () => {
+    it('should not tag if fixed group is not bumping', () => {
       const { releaseGroup, releaseGroupToFilteredProjects } =
         setUpReleaseGroup();
 
