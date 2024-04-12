@@ -1,6 +1,5 @@
 import {
   addProjectConfiguration,
-  ensurePackage,
   formatFiles,
   generateFiles,
   GeneratorCallback,
@@ -8,18 +7,14 @@ import {
   joinPathFragments,
   offsetFromRoot,
   readJson,
-  readProjectConfiguration,
   runTasksInSerial,
-  stripIndents,
   toJS,
   Tree,
   updateJson,
-  updateProjectConfiguration,
 } from '@nx/devkit';
 import { extractTsConfigBase } from '@nx/js/src/utils/typescript/create-ts-config';
 import {
   eslintVersion,
-  getPackageVersion,
   isbotVersion,
   reactDomVersion,
   reactVersion,
@@ -28,7 +23,7 @@ import {
   typesReactDomVersion,
   typesReactVersion,
 } from '../../utils/versions';
-import { normalizeOptions, updateUnitTestConfig, addE2E } from './lib';
+import { normalizeOptions, addE2E, addLint, addUnitTest } from './lib';
 import { NxRemixGeneratorSchema } from './schema';
 import { updateDependencies } from '../utils/update-dependencies';
 import initGenerator from '../init/init';
@@ -143,66 +138,7 @@ export async function remixApplicationGeneratorInternal(
   }
 
   if (options.unitTestRunner !== 'none') {
-    if (options.unitTestRunner === 'vitest') {
-      const { vitestGenerator, createOrEditViteConfig } = ensurePackage<
-        typeof import('@nx/vite')
-      >('@nx/vite', getPackageVersion(tree, 'nx'));
-      const vitestTask = await vitestGenerator(tree, {
-        uiFramework: 'react',
-        project: options.projectName,
-        coverageProvider: 'v8',
-        inSourceTests: false,
-        skipFormat: true,
-        testEnvironment: 'jsdom',
-        skipViteConfig: true,
-        addPlugin: options.addPlugin,
-      });
-      createOrEditViteConfig(
-        tree,
-        {
-          project: options.projectName,
-          includeLib: false,
-          includeVitest: true,
-          testEnvironment: 'jsdom',
-          imports: [`import react from '@vitejs/plugin-react';`],
-          plugins: [`react()`],
-        },
-        true,
-        undefined,
-        true
-      );
-      tasks.push(vitestTask);
-    } else {
-      const { configurationGenerator: jestConfigurationGenerator } =
-        ensurePackage<typeof import('@nx/jest')>(
-          '@nx/jest',
-          getPackageVersion(tree, 'nx')
-        );
-      const jestTask = await jestConfigurationGenerator(tree, {
-        project: options.projectName,
-        setupFile: 'none',
-        supportTsx: true,
-        skipSerializers: false,
-        skipPackageJson: false,
-        skipFormat: true,
-        addPlugin: options.addPlugin,
-      });
-      const projectConfig = readProjectConfiguration(tree, options.projectName);
-      if (projectConfig.targets['test']?.options) {
-        projectConfig.targets['test'].options.passWithNoTests = true;
-        updateProjectConfiguration(tree, options.projectName, projectConfig);
-      }
-
-      tasks.push(jestTask);
-    }
-
-    const pkgInstallTask = updateUnitTestConfig(
-      tree,
-      options.projectRoot,
-      options.unitTestRunner,
-      options.rootProject
-    );
-    tasks.push(pkgInstallTask);
+    tasks.push(...(await addUnitTest(tree, options)));
   } else {
     tree.delete(
       joinPathFragments(options.projectRoot, `tests/routes/_index.spec.tsx`)
@@ -210,28 +146,7 @@ export async function remixApplicationGeneratorInternal(
   }
 
   if (options.linter !== 'none') {
-    const { lintProjectGenerator } = ensurePackage<typeof import('@nx/eslint')>(
-      '@nx/eslint',
-      getPackageVersion(tree, 'nx')
-    );
-    const eslintTask = await lintProjectGenerator(tree, {
-      linter: options.linter,
-      project: options.projectName,
-      tsConfigPaths: [
-        joinPathFragments(options.projectRoot, 'tsconfig.app.json'),
-      ],
-      unitTestRunner: options.unitTestRunner,
-      skipFormat: true,
-      rootProject: options.rootProject,
-      addPlugin: options.addPlugin,
-    });
-    tasks.push(eslintTask);
-
-    tree.write(
-      joinPathFragments(options.projectRoot, '.eslintignore'),
-      stripIndents`build
-    public/build`
-    );
+    tasks.push(await addLint(tree, options));
   }
 
   if (options.js) {

@@ -4,7 +4,6 @@ import {
   stripIndents,
   type Tree,
   updateJson,
-  workspaceRoot,
 } from '@nx/devkit';
 import {
   updateJestTestSetup,
