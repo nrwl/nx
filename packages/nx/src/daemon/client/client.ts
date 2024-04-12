@@ -26,7 +26,7 @@ import { Hash } from '../../hasher/task-hasher';
 import { Task, TaskGraph } from '../../config/task-graph';
 import { ConfigurationSourceMaps } from '../../project-graph/utils/project-configuration-utils';
 import { DaemonProjectGraphError } from '../daemon-project-graph-error';
-import { ProjectGraphError } from '../../project-graph/project-graph';
+import { ProjectGraphError } from '../../project-graph/project-graph-error';
 
 const DAEMON_ENV_SETTINGS = {
   NX_PROJECT_GLOB_CACHE: 'false',

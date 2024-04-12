@@ -1,8 +1,8 @@
 const { join,  basename } = require('path');
 const { copyFileSync, existsSync, mkdirSync } = require('fs');
 const Module = require('module');
-const { cacheDir } = require("../utils/cache-directory.js")
-const { nxVersion } = require('../utils/versions.js');
+const { nxVersion} = require("../utils/versions")
+const { cacheDir} = require("../utils/cache-directory")
 
 const nxPackages = [
   '@nx/nx-android-arm64',
@@ -48,7 +48,6 @@ Module._load = function (request, parent, isMain) {
   ) {
     const nativeLocation = require.resolve(modulePath);
     const fileName = basename(nativeLocation)
-    
     const tmpFile = join(cacheDir, nxVersion + '-' + fileName);
     if (existsSync(tmpFile)) {
       return originalLoad.apply(this, [tmpFile, parent, isMain]);
