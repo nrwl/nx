@@ -1,29 +1,8 @@
 import { readFileSync, readdirSync } from 'fs';
 import { join, basename } from 'path';
 import { extractFrontmatter } from '@nx/nx-dev/ui-markdoc';
-
-export type BlogPostFrontmatter = {
-  title: string;
-  description: string;
-  authors: string[];
-  published: string;
-  updated?: string;
-  cover_image: string;
-  tags: string[];
-  reposts: string[];
-};
-
-export type BlogPostDataEntry = {
-  content: string;
-  frontmatter: BlogPostFrontmatter;
-  filePath: string;
-  slug: string;
-};
-
-const calculateSlug = (filePath: string, frontmatter: any) => {
-  const baseName = basename(filePath, '.md');
-  return frontmatter.slug || baseName;
-};
+import { sortPosts } from './blog.util';
+import { BlogPostDataEntry } from './blog.model';
 
 export class BlogApi {
   constructor(
@@ -41,38 +20,59 @@ export class BlogApi {
   }
 
   getBlogPosts(): BlogPostDataEntry[] {
-    const files = readdirSync(this.options.blogRoot);
+    const files: string[] = readdirSync(this.options.blogRoot);
+    const allPosts: BlogPostDataEntry[] = [];
 
-    return files
-      .map((file) => {
-        const filePath = join(this.options.blogRoot, file);
+    for (const file of files) {
+      const filePath = join(this.options.blogRoot, file);
+      // filter out directories (e.g. images)
+      if (!filePath.endsWith('.md')) continue;
 
-        // filter out directories (e.g. images etc)
-        if (!filePath.endsWith('.md')) {
-          return null;
-        }
+      const content = readFileSync(filePath, 'utf8');
+      const frontmatter = extractFrontmatter(content);
+      const slug = this.calculateSlug(filePath, frontmatter);
+      const post = {
+        content,
+        frontmatter: {
+          title: frontmatter.title,
+          description: frontmatter.description,
+          authors: frontmatter.authors,
+          date: this.calculateDate(file, frontmatter),
+          cover_image: frontmatter.cover_image ?? null,
+          tags: frontmatter.tags,
+          reposts: frontmatter.reposts,
+          pinned: frontmatter.pinned ?? false,
+        },
+        filePath,
+        slug,
+      };
 
-        const content = readFileSync(filePath, 'utf8');
+      if (!frontmatter.draft || process.env.NODE_ENV === 'development') {
+        allPosts.push(post);
+      }
+    }
 
-        const frontmatter = extractFrontmatter(content);
-        const slug = calculateSlug(filePath, frontmatter);
+    return sortPosts(allPosts);
+  }
 
-        return {
-          content,
-          frontmatter: {
-            title: frontmatter.title,
-            description: frontmatter.description,
-            authors: frontmatter.authors,
-            published: frontmatter.published,
-            updated: frontmatter.updated ?? null,
-            cover_image: frontmatter.cover_image ?? null,
-            tags: frontmatter.tags,
-            reposts: frontmatter.reposts,
-          },
-          filePath,
-          slug,
-        };
-      })
-      .filter((x) => !!x);
+  private calculateSlug(filePath: string, frontmatter: any): string {
+    const baseName = basename(filePath, '.md');
+    return frontmatter.slug || baseName;
+  }
+
+  private calculateDate(filename: string, frontmatter: any): string {
+    const date: Date = new Date();
+    const timeString = date.toTimeString();
+    if (frontmatter.date) {
+      return new Date(frontmatter.date + ' ' + timeString).toISOString();
+    } else {
+      const regexp = /^(\d\d\d\d-\d\d-\d\d).+$/;
+      const match = filename.match(regexp);
+      if (match) {
+        return new Date(match[1] + ' ' + timeString).toISOString();
+      } else {
+        throw new Error(`Could not parse date from filename: ${filename}`);
+      }
+    }
   }
 }

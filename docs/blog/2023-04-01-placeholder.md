@@ -1,11 +1,9 @@
 ---
-title: 'Design Article 5'
+title: 'Post with a very long title that spans more than one line'
 description: ''
 authors:
   - 'Juri Strumpflohner'
-published: '2019-01-01'
-updated: '2019-01-01'
-cover_image: '/documentation/blog/images/thumbnail-build-own-cli.png'
+cover_image: '/documentation/blog/images/thumbnail-nx15_7.png'
 tags:
   - design
   - Nx

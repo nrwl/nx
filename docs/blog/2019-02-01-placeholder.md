@@ -1,12 +1,10 @@
 ---
-title: 'Design Article 2x'
+title: 'Placeholder'
 description: ''
 authors:
   - 'Juri Strumpflohner'
-published: '2019-01-01'
-updated: '2019-01-01'
-cover_image: '/documentation/blog/images/thumbnail-nx-console-nx-cloud.png'
-slug: custom-slug
+  - 'Zack DeRose'
+cover_image: '/documentation/blog/images/thumbnail-nx15_7.png'
 tags:
   - design
   - Nx

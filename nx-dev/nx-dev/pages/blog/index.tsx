@@ -1,31 +1,28 @@
+import Link from 'next/link';
 import { Footer, Header, SectionHeading } from '@nx/nx-dev/ui-common';
 import { NextSeo } from 'next-seo';
 import { useRouter } from 'next/router';
-import { blogApi } from '../../lib/blog.api';
-import { BlogEntry } from '../../lib/blog/blogentry';
 import { BlogPostDataEntry } from '@nx/nx-dev/data-access-documents/node-only';
+
+import { blogApi } from '../../lib/blog.api';
+import { BlogAuthors, BlogEntry } from '@nx/nx-dev/ui-blog';
 
 interface BlogListProps {
   blogposts: BlogPostDataEntry[];
 }
 
-export async function getStaticProps(): Promise<{ props: BlogListProps }> {
-  const blogposts = await blogApi.getBlogPosts();
-
+export function getStaticProps(): { props: BlogListProps } {
+  const blogposts = blogApi.getBlogPosts();
   return {
     props: {
-      blogposts: blogposts.sort(
-        (a, b) =>
-          new Date(b.frontmatter.published).valueOf() -
-          new Date(a.frontmatter.published).valueOf()
-      ),
+      blogposts,
     },
   };
 }
 
 export default function Blog(props: BlogListProps): JSX.Element {
   const router = useRouter();
-  const [blog1, blog2, blog3, blog4, blog5, ...allPosts] = props.blogposts;
+  const [blog1, blog2, blog3, blog4, blog5, ...restOfPosts] = props.blogposts;
 
   return (
     <>
@@ -51,63 +48,62 @@ export default function Blog(props: BlogListProps): JSX.Element {
         }}
       />
       <Header />
-      <main id="main" role="main">
-        <div className="w-full">
-          <div className="py-8 bg-slate-50 dark:bg-slate-800/40">
-            <div className="max-w-screen-xl mx-auto">
-              <article className="py-8 mx-auto text-center">
-                <header>
-                  <SectionHeading as="h1" variant="display" id="blog-title">
-                    The Nx Blog
-                  </SectionHeading>
-                  <p className="pt-5 text-lg text-slate-700 dark:text-slate-400">
-                    First Hand from the Nx Team
-                  </p>
-                </header>
-              </article>
-              <article className="mx-auto px-6 items-center">
-                <div className="flex space-x-4">
-                  <BlogEntry blogpost={blog1} showImage={true} />
-                  <BlogEntry blogpost={blog2} showImage={true} />
-                </div>
-                <div className="flex space-x-4 pt-4">
-                  <BlogEntry blogpost={blog3} showImage={true} />
-                  <BlogEntry blogpost={blog4} showImage={true} />
-                  <BlogEntry blogpost={blog5} showImage={true} />
-                </div>
-              </article>
-              <div className="p-16">
-                <hr />
+      <main id="main" role="main" className="w-full py-8">
+        <div className="max-w-screen-xl mx-auto mb-8 px-4 sm:px-8">
+          <header className="mx-auto mb-16">
+            <SectionHeading as="h1" variant="display" id="blog-title">
+              Blog
+            </SectionHeading>
+          </header>
+          <div className="mx-auto flex flex-col gap-4">
+            <div className="flex flex-wrap gap-4">
+              <div className="flex-1 basis-full md:basis-[48%]">
+                <BlogEntry blogpost={blog1} showImage={true} />
               </div>
-              <article className="mx-auto px-6 items-center">
-                <div className="grid grid-rows-6 lg:grid-cols-3 md:grid-cols-2 grid-cols-1  gap-4">
-                  <div className="row-span-6">
-                    <BlogEntry blogpost={blog1} showImage={true} />
-                  </div>
-                  <div className="row-span-2">
-                    <BlogEntry blogpost={blog2} />
-                  </div>
-                  <div className="row-span-4">
-                    <BlogEntry blogpost={blog3} showImage={true} />
-                  </div>
-                  <div className="row-span-4">
-                    <BlogEntry blogpost={blog4} showImage={true} />
-                  </div>
-                  <div className="row-span-2">
-                    <BlogEntry blogpost={blog5} />
-                  </div>
-                </div>
-              </article>
-
-              <ul className="grid grid-rows-6 lg:grid-cols-3 md:grid-cols-2 grid-cols-1  gap-4">
-                {allPosts &&
-                  allPosts.map((post) => (
-                    <li key={post.slug}>
-                      <BlogEntry blogpost={post} />
-                    </li>
-                  ))}
-              </ul>
+              <div className="flex-1 basis-full md:basis-[48%]">
+                <BlogEntry blogpost={blog2} showImage={true} />
+              </div>
             </div>
+            <div className="flex flex-wrap gap-4">
+              <div className="flex-1 basis-full md:basis-[31%]">
+                <BlogEntry blogpost={blog3} showImage={true} />
+              </div>
+              <div className="flex-1 basis-full md:basis-[31%]">
+                <BlogEntry blogpost={blog4} showImage={true} />
+              </div>
+              <div className="flex-1 basis-full md:basis-[31%]">
+                <BlogEntry blogpost={blog5} showImage={true} />
+              </div>
+            </div>
+          </div>
+          <div className="mx-auto mt-16 mb-8">
+            <h2 className="text-3xl font-semibold">More Posts</h2>
+          </div>
+          <div className="mx-auto">
+            {restOfPosts?.map((post) => {
+              const formattedDate = new Date(
+                post.frontmatter.date
+              ).toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric',
+              });
+              return (
+                <Link
+                  href={`/blog/${post.slug}`}
+                  key={post.slug}
+                  className="flex mb-4 pb-2 border-b last:border-0 border-slate-300 dark:border-slate-700 hover:text-slate-500 dark:hover:text-white"
+                >
+                  <span className="font-semibold w-[400px]">
+                    {post.frontmatter.title}
+                  </span>
+                  <span className="text-slate-500 flex-1">{formattedDate}</span>
+                  <span className="flex-none">
+                    <BlogAuthors authors={post.frontmatter.authors} />
+                  </span>
+                </Link>
+              );
+            })}
           </div>
         </div>
       </main>

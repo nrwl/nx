@@ -1,16 +1,15 @@
 ---
-title: 'Design Article 4'
+title: 'Build Your Own CLI'
 description: ''
 authors:
   - 'Juri Strumpflohner'
-published: '2019-01-01'
-updated: '2019-01-01'
-cover_image: '/documentation/blog/images/thumbnail-own-trpc.png'
+cover_image: '/documentation/blog/images/thumbnail-build-own-cli.png'
 tags:
   - design
   - Nx
 reposts:
   - https://dev.to/nx/nx-conf-2023-recap-53ep
+pinned: true
 ---
 
 Bla bla some intro text.

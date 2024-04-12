@@ -1,16 +1,15 @@
 ---
-title: 'Design Article 3'
+title: 'Nx Console Meets Nx Cloud'
 description: ''
 authors:
   - 'Juri Strumpflohner'
-published: '2019-01-01'
-updated: '2019-01-01'
-cover_image: '/documentation/blog/images/thumbnail-nx15_7.png'
+cover_image: '/documentation/blog/images/thumbnail-nx-console-nx-cloud.png'
 tags:
   - design
   - Nx
 reposts:
   - https://dev.to/nx/nx-conf-2023-recap-53ep
+pinned: true
 ---
 
 Bla bla some intro text.
