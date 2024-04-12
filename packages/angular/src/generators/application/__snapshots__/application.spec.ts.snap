@@ -620,12 +620,12 @@ bootstrapApplication(AppComponent, appConfig).catch((err) =>
 `;
 
 exports[`app --standalone should generate a standalone app correctly with routing 2`] = `
-"import { ApplicationConfig } from '@angular/core';
+"import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { appRoutes } from './app.routes';
 
 export const appConfig: ApplicationConfig = {
-  providers: [provideRouter(appRoutes) ]
+  providers: [provideZoneChangeDetection({ eventCoalescing: true }), provideRouter(appRoutes) ]
 };
 "
 `;
@@ -698,10 +698,10 @@ bootstrapApplication(AppComponent, appConfig).catch((err) =>
 `;
 
 exports[`app --standalone should generate a standalone app correctly without routing 2`] = `
-"import { ApplicationConfig } from '@angular/core';
+"import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
 
 export const appConfig: ApplicationConfig = {
-  providers: []
+  providers: [provideZoneChangeDetection({ eventCoalescing: true }), ]
 };
 "
 `;
@@ -750,6 +750,17 @@ describe('AppComponent', () => {
     expect(app.title).toEqual('standalone');
   });
 });
+"
+`;
+
+exports[`app --standalone should should not use event coalescing in versions lower than v18 1`] = `
+"import { ApplicationConfig } from '@angular/core';
+import { provideRouter } from '@angular/router';
+import { appRoutes } from './app.routes';
+
+export const appConfig: ApplicationConfig = {
+  providers: [provideRouter(appRoutes) ]
+};
 "
 `;
 
