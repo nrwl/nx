@@ -46,7 +46,9 @@ describe('setupSSR', () => {
         import { AppModule } from './app/app.module';
 
         platformBrowserDynamic()
-          .bootstrapModule(AppModule)
+          .bootstrapModule(AppModule, {
+            ngZoneEventCoalescing: true,
+          })
           .catch((err) => console.error(err));
         "
       `);
@@ -212,7 +214,9 @@ describe('setupSSR', () => {
         import { AppModule } from './app/app.module';
 
         platformBrowserDynamic()
-          .bootstrapModule(AppModule)
+          .bootstrapModule(AppModule, {
+            ngZoneEventCoalescing: true
+          })
           .catch((err) => console.error(err));
         "
       `);
@@ -462,13 +466,13 @@ describe('setupSSR', () => {
     // ASSERT
     expect(tree.read('app1/src/app/app.config.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
-      "import { ApplicationConfig } from '@angular/core';
+      "import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
       import { provideRouter } from '@angular/router';
       import { appRoutes } from './app.routes';
       import { provideClientHydration } from '@angular/platform-browser';
 
       export const appConfig: ApplicationConfig = {
-        providers: [provideClientHydration(),provideRouter(appRoutes) ]
+        providers: [provideClientHydration(),provideZoneChangeDetection({ eventCoalescing: true }), provideRouter(appRoutes) ]
       };
       "
     `);
@@ -540,12 +544,12 @@ describe('setupSSR', () => {
 
     expect(tree.read('app1/src/app/app.config.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
-      "import { ApplicationConfig } from '@angular/core';
+      "import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
       import { provideRouter, withEnabledBlockingInitialNavigation } from '@angular/router';
       import { appRoutes } from './app.routes';
 
       export const appConfig: ApplicationConfig = {
-        providers: [provideRouter(appRoutes, withEnabledBlockingInitialNavigation()) ]
+        providers: [provideZoneChangeDetection({ eventCoalescing: true }), provideRouter(appRoutes, withEnabledBlockingInitialNavigation()) ]
       };
       "
     `);
