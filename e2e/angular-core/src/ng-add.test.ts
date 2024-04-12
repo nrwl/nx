@@ -76,7 +76,7 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
     cleanupProject();
   });
 
-  it('should generate a workspace', () => {
+  it('hhhhhhshould generate a workspace', () => {
     addProtractor();
 
     // update package.json
@@ -185,10 +185,7 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
         browser: `apps/${project}/src/main.ts`,
         polyfills: [`zone.js`],
         tsConfig: `apps/${project}/tsconfig.app.json`,
-        assets: [
-          `apps/${project}/src/favicon.ico`,
-          `apps/${project}/src/assets`,
-        ],
+        assets: [{ glob: '**/*', input: `apps/${project}/public` }],
         styles: [`apps/${project}/src/styles.css`],
         scripts: [`apps/${project}/src/scripts.js`],
       },
@@ -229,10 +226,7 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
       options: {
         polyfills: [`zone.js`, `zone.js/testing`],
         tsConfig: `apps/${project}/tsconfig.spec.json`,
-        assets: [
-          `apps/${project}/src/favicon.ico`,
-          `apps/${project}/src/assets`,
-        ],
+        assets: [{ glob: '**/*', input: `apps/${project}/public` }],
         styles: [`apps/${project}/src/styles.css`],
         scripts: [`apps/${project}/src/scripts.js`],
       },
