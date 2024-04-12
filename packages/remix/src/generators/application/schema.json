@@ -19,6 +19,13 @@
       "description": "Generate JavaScript files rather than TypeScript files.",
       "default": false
     },
+    "version": {
+      "type": "string",
+      "enum": ["classic", "vite"],
+      "default": "vite",
+      "description": "Version of remix compiler",
+      "x-prompt": "What version of remix compiler should be used?"
+    },
     "directory": {
       "type": "string",
       "description": "A directory where the app is placed.",
