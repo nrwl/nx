@@ -3,6 +3,7 @@ import { RemixGeneratorSchema } from '../schema';
 
 export interface NormalizedSchema extends RemixGeneratorSchema {
   appName: string;
+  version?: 'classic' | 'vite';
   projectRoot: string;
   parsedTags: string[];
   unitTestRunner?: 'jest' | 'none' | 'vitest';
@@ -11,7 +12,7 @@ export interface NormalizedSchema extends RemixGeneratorSchema {
 }
 
 export function normalizeOptions(
-  tree: Tree,
+  _: Tree,
   options: RemixGeneratorSchema
 ): NormalizedSchema {
   // There is a bug in Nx core where custom preset args are not passed correctly for boolean values, thus causing the name to be "commit" or "nx-cloud" when not passed.
