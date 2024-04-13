@@ -10,7 +10,6 @@ export * from './lib/nx-cloud-icon';
 export * from './lib/footer';
 export * from './lib/sidebar-container';
 export * from './lib/sidebar';
-export * from './lib/nx-users-showcase';
 export * from './lib/plugin-card';
 export * from './lib/testimonial-card';
 export * from './lib/typography';
