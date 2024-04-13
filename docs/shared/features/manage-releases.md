@@ -56,6 +56,7 @@ The configuration lives in your `nx.json` file under the `"release"` section.
   }
 }
 ```
+
 ### Customize changelog output
 
 Changelog render options can be passed as [an object](https://github.com/nrwl/nx/blob/36f297cf7607fa63112415a0b5d76de09193746c/packages/nx/release/changelog-renderer/index.ts#L48) under `release.changelog.projectChangelogs.renderOptions` and `release.changelog.workspaceChangelog.renderOptions` in your `nx.json` file. Below are all options with their default values for the built-in changelog renderer.
