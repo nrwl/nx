@@ -9,6 +9,7 @@ describe('setup-tailwind generator', () => {
     const tree = createTreeWithEmptyWorkspace();
     await applicationGenerator(tree, {
       name: 'test',
+      bundler: 'classic',
       rootProject: true,
     });
 
@@ -32,6 +33,7 @@ describe('setup-tailwind generator', () => {
     const tree = createTreeWithEmptyWorkspace();
     await applicationGenerator(tree, {
       name: 'test',
+      bundler: 'classic',
       js: true,
       rootProject: true,
     });

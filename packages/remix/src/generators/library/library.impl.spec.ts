@@ -36,6 +36,7 @@ describe('Remix Library Generator', () => {
           const tree = createTreeWithEmptyWorkspace();
           await applicationGenerator(tree, {
             name: 'demo',
+            bundler: 'classic',
             rootProject: true,
             addPlugin: true,
           });

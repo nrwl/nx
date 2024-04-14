@@ -4,7 +4,7 @@ import type { Linter } from '@nx/eslint';
 export interface NxRemixGeneratorSchema {
   name: string;
   tags?: string;
-  version: 'classic' | 'vite';
+  bundler: 'classic' | 'vite';
   js?: boolean;
   directory?: string;
   projectNameAndRootFormat?: ProjectNameAndRootFormat;

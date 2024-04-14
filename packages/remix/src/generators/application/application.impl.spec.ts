@@ -14,7 +14,7 @@ describe('Classic Remix Application', () => {
       // ACT
       await applicationGenerator(tree, {
         name: 'test',
-        version: 'classic',
+        bundler: 'classic',
         rootProject: true,
         addPlugin: true,
       });
@@ -40,7 +40,7 @@ describe('Classic Remix Application', () => {
         // ACT
         await applicationGenerator(tree, {
           name: 'test',
-          version: 'classic',
+          bundler: 'classic',
           js: true,
           rootProject: true,
           addPlugin: true,
@@ -63,7 +63,7 @@ describe('Classic Remix Application', () => {
         // ACT
         await applicationGenerator(tree, {
           name: 'test',
-          version: 'classic',
+          bundler: 'classic',
           unitTestRunner: 'vitest',
           rootProject: true,
           addPlugin: true,
@@ -88,7 +88,7 @@ describe('Classic Remix Application', () => {
         // ACT
         await applicationGenerator(tree, {
           name: 'test',
-          version: 'classic',
+          bundler: 'classic',
           unitTestRunner: 'jest',
           rootProject: true,
           addPlugin: true,
@@ -115,7 +115,7 @@ describe('Classic Remix Application', () => {
         // ACT
         await applicationGenerator(tree, {
           name: 'test',
-          version: 'classic',
+          bundler: 'classic',
           e2eTestRunner: 'cypress',
           rootProject: true,
           addPlugin: true,
@@ -135,7 +135,7 @@ describe('Classic Remix Application', () => {
       // ACT
       await applicationGenerator(tree, {
         name: 'test',
-        version: 'classic',
+        bundler: 'classic',
         e2eTestRunner: 'playwright',
         rootProject: true,
         addPlugin: true,
@@ -161,7 +161,7 @@ describe('Classic Remix Application', () => {
         // ACT
         await applicationGenerator(tree, {
           name: 'test',
-          version: 'classic',
+          bundler: 'classic',
           projectNameAndRootFormat,
           addPlugin: true,
         });
@@ -186,7 +186,7 @@ describe('Classic Remix Application', () => {
           // ACT
           await applicationGenerator(tree, {
             name: 'test',
-            version: 'classic',
+            bundler: 'classic',
             js: true,
             projectNameAndRootFormat,
             addPlugin: true,
@@ -216,7 +216,7 @@ describe('Classic Remix Application', () => {
           // ACT
           await applicationGenerator(tree, {
             name: 'test',
-            version: 'classic',
+            bundler: 'classic',
             directory: 'demo',
             projectNameAndRootFormat,
             addPlugin: true,
@@ -247,7 +247,7 @@ describe('Classic Remix Application', () => {
           // ACT
           await applicationGenerator(tree, {
             name: 'test',
-            version: 'classic',
+            bundler: 'classic',
             directory: 'apps/demo',
             projectNameAndRootFormat,
             addPlugin: true,
@@ -276,7 +276,7 @@ describe('Classic Remix Application', () => {
           // ACT
           await applicationGenerator(tree, {
             name: 'test',
-            version: 'classic',
+            bundler: 'classic',
             unitTestRunner: 'vitest',
             projectNameAndRootFormat,
             addPlugin: true,
@@ -306,7 +306,7 @@ describe('Classic Remix Application', () => {
           // ACT
           await applicationGenerator(tree, {
             name: 'test',
-            version: 'classic',
+            bundler: 'classic',
             unitTestRunner: 'jest',
             projectNameAndRootFormat,
             addPlugin: true,
@@ -335,7 +335,7 @@ describe('Classic Remix Application', () => {
           // ACT
           await applicationGenerator(tree, {
             name: 'test',
-            version: 'classic',
+            bundler: 'classic',
             e2eTestRunner: 'cypress',
             projectNameAndRootFormat,
             addPlugin: true,
@@ -356,7 +356,7 @@ describe('Classic Remix Application', () => {
           // ACT
           await applicationGenerator(tree, {
             name: 'test',
-            version: 'classic',
+            bundler: 'classic',
             e2eTestRunner: 'playwright',
             projectNameAndRootFormat,
             addPlugin: true,

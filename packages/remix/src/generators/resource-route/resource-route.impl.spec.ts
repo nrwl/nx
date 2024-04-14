@@ -21,7 +21,7 @@ describe('resource route', () => {
       })
     );
 
-    await applicationGenerator(tree, { name: 'demo' });
+    await applicationGenerator(tree, { name: 'demo', bundler: 'classic' });
   });
 
   it('should not create a component', async () => {

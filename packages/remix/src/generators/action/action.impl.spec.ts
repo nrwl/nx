@@ -20,7 +20,7 @@ describe('action', () => {
       })
     );
 
-    await applicationGenerator(tree, { name: 'demo' });
+    await applicationGenerator(tree, { name: 'demo', bundler: 'classic' });
     await routeGenerator(tree, {
       path: 'example',
       project: 'demo',

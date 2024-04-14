@@ -51,7 +51,7 @@ describe('route', () => {
       project: string
     ) => {
       it('should add route component', async () => {
-        await applicationGenerator(tree, { name: 'demo' });
+        await applicationGenerator(tree, { name: 'demo', bundler: 'classic' });
         await routeGenerator(tree, {
           project,
           path,
@@ -71,7 +71,7 @@ describe('route', () => {
       }, 25_000);
 
       it('should support --style=none', async () => {
-        await applicationGenerator(tree, { name: 'demo' });
+        await applicationGenerator(tree, { name: 'demo', bundler: 'classic' });
         await routeGenerator(tree, {
           project,
           path,
@@ -89,7 +89,7 @@ describe('route', () => {
       });
 
       it('should handle trailing and prefix slashes', async () => {
-        await applicationGenerator(tree, { name: 'demo' });
+        await applicationGenerator(tree, { name: 'demo', bundler: 'classic' });
         await routeGenerator(tree, {
           project,
           path: `/${path}/`,
@@ -106,7 +106,7 @@ describe('route', () => {
       });
 
       it('should handle routes that end in a file', async () => {
-        await applicationGenerator(tree, { name: 'demo' });
+        await applicationGenerator(tree, { name: 'demo', bundler: 'classic' });
         await routeGenerator(tree, {
           project: 'demo',
           path: `${path}.tsx`,
@@ -127,7 +127,7 @@ describe('route', () => {
           nameAndDirectoryFormat === 'as-provided'
             ? 'WithParam'
             : `${expectedComponentName}WithParam`;
-        await applicationGenerator(tree, { name: 'demo' });
+        await applicationGenerator(tree, { name: 'demo', bundler: 'vite' });
         await routeGenerator(tree, {
           project,
           path: `/${path}/$withParam.tsx`,
@@ -146,7 +146,7 @@ describe('route', () => {
       });
 
       it('should error if it detects a possible missing route param because of un-escaped dollar sign', async () => {
-        await applicationGenerator(tree, { name: 'demo' });
+        await applicationGenerator(tree, { name: 'demo', bundler: 'classic' });
 
         expect.assertions(3);
 
@@ -185,7 +185,7 @@ describe('route', () => {
       });
 
       it('should succeed if skipChecks flag is passed, and it detects a possible missing route param because of un-escaped dollar sign', async () => {
-        await applicationGenerator(tree, { name: 'demo' });
+        await applicationGenerator(tree, { name: 'demo', bundler: 'classic' });
 
         await routeGenerator(tree, {
           project,
@@ -235,7 +235,10 @@ describe('route', () => {
 
       if (nameAndDirectoryFormat === 'derived') {
         it('should place routes correctly when app dir is changed', async () => {
-          await applicationGenerator(tree, { name: 'demo' });
+          await applicationGenerator(tree, {
+            name: 'demo',
+            bundler: 'classic',
+          });
 
           tree.write(
             'apps/demo/remix.config.js',
