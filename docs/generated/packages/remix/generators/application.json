@@ -19,12 +19,12 @@
         "description": "Generate JavaScript files rather than TypeScript files.",
         "default": false
       },
-      "version": {
+      "bundler": {
         "type": "string",
         "enum": ["classic", "vite"],
         "default": "vite",
-        "description": "Version of remix compiler",
-        "x-prompt": "What version of remix compiler should be used?"
+        "description": "Bundler option (newer Remix versions use vite by default)",
+        "x-prompt": "What type of bundler should be used?"
       },
       "directory": {
         "type": "string",
