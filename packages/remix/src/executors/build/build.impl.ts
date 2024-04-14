@@ -113,6 +113,7 @@ export default async function buildExecutor(
 }
 
 function updatePackageJson(packageJson: PackageJson, context: ExecutorContext) {
+  const projectRoot = context.projectGraph.nodes[context.projectName].data.root;
   if (!packageJson.scripts) {
     packageJson.scripts = {};
   }
@@ -125,7 +126,7 @@ function updatePackageJson(packageJson: PackageJson, context: ExecutorContext) {
   // These are always required for a production Remix app to run.
   const requiredPackages = ['react', 'react-dom', 'isbot', '@remix-run/node'];
 
-  const bundlerType = getBunlderType(context.root);
+  const bundlerType = getBunlderType(projectRoot);
 
   if (bundlerType === 'classic') {
     // These packages seem to be required for the older Remix version
