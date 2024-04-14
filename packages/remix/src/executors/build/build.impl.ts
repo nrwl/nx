@@ -12,6 +12,7 @@ import { copySync, mkdir, writeFileSync } from 'fs-extra';
 import { type PackageJson } from 'nx/src/utils/package-json';
 import { join } from 'path';
 import { type RemixBuildSchema } from './schema';
+import { getBunlderType } from '../../utils/versions';
 
 function buildRemixBuildArgs(options: RemixBuildSchema) {
   const args = ['vite:build'];
@@ -122,16 +123,23 @@ function updatePackageJson(packageJson: PackageJson, context: ExecutorContext) {
   packageJson.dependencies ??= {};
 
   // These are always required for a production Remix app to run.
-  const requiredPackages = [
-    'react',
-    'react-dom',
-    'isbot',
-    '@remix-run/css-bundle',
-    '@remix-run/node',
-    '@remix-run/react',
-    '@remix-run/serve',
-    '@remix-run/dev',
-  ];
+  const requiredPackages = ['react', 'react-dom', 'isbot', '@remix-run/node'];
+
+  const bundlerType = getBunlderType(context.root);
+
+  if (bundlerType === 'classic') {
+    // These packages seem to be required for the older Remix version
+    // However, newer Vite version does not need them
+    requiredPackages.push(
+      ...[
+        '@remix-run/css-bundle',
+        '@remix-run/react',
+        '@remix-run/serve',
+        '@remix-run/dev',
+      ]
+    );
+  }
+
   for (const pkg of requiredPackages) {
     const externalNode = context.projectGraph.externalNodes[`npm:${pkg}`];
     if (externalNode) {
