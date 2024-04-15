@@ -1,5 +1,5 @@
 import {
-  addPluginWithPreferredTargetNames,
+  addPluginWithOptions,
   deleteMatchingProperties,
   getProjectsToMigrate,
 } from './plugin-migration-utils';
@@ -26,7 +26,7 @@ describe('Plugin Migration Utils', () => {
       };
 
       // ACT
-      let updatedNxJson = addPluginWithPreferredTargetNames(
+      let updatedNxJson = addPluginWithOptions(
         '@nx/playwright/plugin',
         preferredTargetNames,
         defaultTargetNames,
@@ -61,7 +61,7 @@ describe('Plugin Migration Utils', () => {
       };
 
       // ACT
-      let updatedNxJson = addPluginWithPreferredTargetNames(
+      let updatedNxJson = addPluginWithOptions(
         '@nx/playwright/plugin',
         preferredTargetNames,
         defaultTargetNames,
@@ -96,7 +96,7 @@ describe('Plugin Migration Utils', () => {
       };
 
       // ACT
-      let updatedNxJson = addPluginWithPreferredTargetNames(
+      let updatedNxJson = addPluginWithOptions(
         '@nx/playwright/plugin',
         preferredTargetNames,
         defaultTargetNames,
@@ -123,7 +123,7 @@ describe('Plugin Migration Utils', () => {
       };
 
       // ACT
-      let updatedNxJson = addPluginWithPreferredTargetNames(
+      let updatedNxJson = addPluginWithOptions(
         '@nx/playwright/plugin',
         preferredTargetNames,
         defaultTargetNames,

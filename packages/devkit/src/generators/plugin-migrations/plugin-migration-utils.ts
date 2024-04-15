@@ -1,10 +1,112 @@
-import { type NxJsonConfiguration } from 'nx/src/config/nx-json';
-import { type Tree } from 'nx/src/generators/tree';
+import type {
+  ExpandedPluginConfiguration,
+  NxJsonConfiguration,
+} from 'nx/src/config/nx-json';
+import type { Tree } from 'nx/src/generators/tree';
+import type { TargetConfiguration } from 'nx/src/config/workspace-json-project-json';
+import type { RunCommandsOptions } from 'nx/src/executors/run-commands/run-commands.impl';
+import type {
+  CreateNodes,
+  CreateNodesContext,
+  CreateNodesResult,
+} from 'nx/src/project-graph/plugins';
+import type { ProjectGraph } from 'nx/src/config/project-graph';
+
 import { forEachExecutorOptions } from '../executor-options-utils';
 
-type TargetNameOptions<T extends object, K extends keyof T = keyof T> = {
-  [key in K]: string;
-};
+import { requireNx } from '../../../nx';
+import { minimatch } from 'minimatch';
+
+const {
+  glob,
+  readNxJson,
+  updateNxJson,
+  mergeTargetConfigurations,
+  updateProjectConfiguration,
+  readProjectConfiguration,
+} = requireNx();
+
+export async function migrateExecutorToPlugin<T>(
+  tree: Tree,
+  projectGraph: ProjectGraph,
+  createProjectsConfig: (
+    tree: Tree,
+    projectRoot: string,
+    targetName: string,
+    context: CreateNodesContext
+  ) => CreateNodesResult | Promise<CreateNodesResult>,
+  executor: string,
+  createNodes: CreateNodes<T>
+): Promise<{ targetName: string; include: string[] }> {
+  const { projects, targetName } = getProjectsToMigrate(tree, executor);
+  const nxJsonConfiguration = readNxJson(tree);
+  const targetDefaultsForExecutor =
+    nxJsonConfiguration.targetDefaults?.[executor];
+
+  const configFiles = glob(tree, [createNodes[0]]);
+  let include: string[] = [];
+  for (const projectName of projects) {
+    const projectFromGraph = projectGraph.nodes[projectName];
+
+    const context = {
+      workspaceRoot: tree.root,
+      nxJsonConfiguration,
+      configFiles,
+    };
+    const projectConfigurations = await createProjectsConfig(
+      tree,
+      projectFromGraph.data.root,
+      targetName,
+      context
+    );
+
+    if (!projectConfigurations) {
+      continue;
+    }
+
+    include.push(`${projectFromGraph.data.root}/**/*`);
+
+    const createdProject = Object.entries(
+      projectConfigurations?.projects ?? {}
+    ).find(([root]) => root === projectFromGraph.data.root)[1];
+
+    const createdTarget: TargetConfiguration<RunCommandsOptions> =
+      createdProject.targets[targetName];
+    delete createdTarget.command;
+    delete createdTarget.options?.cwd;
+
+    const projectConfig = readProjectConfiguration(tree, projectName);
+    let target = projectConfig.targets[targetName];
+
+    target = mergeTargetConfigurations(target, targetDefaultsForExecutor);
+    delete target.executor;
+    delete target.options?.config;
+
+    deleteMatchingProperties(target, createdTarget);
+
+    if (Object.keys(target).length > 0) {
+      projectConfig.targets[targetName] = target;
+    } else {
+      delete projectConfig.targets[targetName];
+    }
+    updateProjectConfiguration(tree, projectName, projectConfig);
+  }
+
+  const allConfigFilesAreIncluded = configFiles.every((configFile) => {
+    for (const includePattern of include) {
+      if (minimatch(configFile, includePattern, { dot: true })) {
+        return true;
+      }
+    }
+    return false;
+  });
+
+  if (allConfigFilesAreIncluded) {
+    include = undefined;
+  }
+
+  return { targetName, include };
+}
 
 /**
  * Add the plugin to nx.json using the preferred target names
@@ -20,60 +122,60 @@ type TargetNameOptions<T extends object, K extends keyof T = keyof T> = {
  * );
  * updateNxJson(tree, nxJson);
  *
- * @param pluginToAdd The name of the plugin to add to NxJson if it does not exist
+ * @param pluginPath The name of the plugin to add to NxJson if it does not exist
  * @param preferredTargetNames The record of the targets and the desired names for them
  * @param defaultTargetNames The record of the default names for the targets
  * @param nxJson The current NxJson Configuration
  *
  * @return NxJsonConfiguration The potentially updated NxJson
  */
-export function addPluginWithPreferredTargetNames<T extends object>(
-  pluginToAdd: string,
-  preferredTargetNames: TargetNameOptions<T>,
-  defaultTargetNames: TargetNameOptions<T>,
-  nxJson: NxJsonConfiguration
+export function addPluginWithOptions<T extends object>(
+  tree: Tree,
+  pluginPath: string,
+  include: string[],
+  pluginOptions: T
 ): NxJsonConfiguration {
+  const nxJson = readNxJson(tree);
   nxJson.plugins ??= [];
 
-  let preferredTargetNamesMatchDefaults = true;
-  for (const key in preferredTargetNames) {
-    if (preferredTargetNames[key] !== defaultTargetNames[key]) {
-      preferredTargetNamesMatchDefaults = false;
-    }
-  }
+  // TODO: Remove these comments or move them somewhere else
+  // 1. We had executors
+  // 2. We simplified it down to 1 target to replace
+  // 3. 1 plugin can replace multiple executors by creating multiple targets
 
-  let addNewPluginEntry = true;
-  for (let i = 0; i < nxJson.plugins.length; i++) {
-    const plugin = nxJson.plugins[i];
-    if (
-      typeof plugin === 'string' &&
-      plugin === pluginToAdd &&
-      preferredTargetNamesMatchDefaults
-    ) {
-      addNewPluginEntry = false;
-    } else if (typeof plugin === 'object' && plugin.plugin === pluginToAdd) {
-      const pluginOptions = plugin.options as T;
-      if (!pluginOptions && preferredTargetNamesMatchDefaults) {
-        addNewPluginEntry = false;
-      } else if (
-        Object.entries(pluginOptions).every(
-          ([targetName, targetNameValue]) =>
-            preferredTargetNames[targetName] === targetNameValue
-        )
-      ) {
-        addNewPluginEntry = false;
+  // 1. If the plugin does not exist, add it with those options
+  // 2. If the plugin exists AND the options match the options that are being added, do nothing
+  // 3. If the plugin exists AND the options do not match, add the plugin with the new options
+
+  // 1. User uses @nx/playwright/plugin for test
+  //   a. NxJson has { options: { targetName: test } }
+  // 2. User uses @nx/playwright:playwright for e2e
+  // 3. We want to add { options: { targetName: e2e }, includes: [] }
+
+  const pluginExists = nxJson.plugins.find(
+    (plugin: ExpandedPluginConfiguration<T>) => {
+      if (typeof plugin === 'string' || plugin.plugin !== pluginPath) {
+        return;
       }
+      for (const key in plugin.options) {
+        if (plugin.options[key] !== pluginOptions[key]) {
+          return false;
+        }
+      }
+      return true;
     }
+  );
+  if (pluginExists) {
+    return;
   }
 
-  if (addNewPluginEntry) {
-    nxJson.plugins.push({
-      plugin: pluginToAdd,
-      options: preferredTargetNames,
-    });
-  }
+  nxJson.plugins.push({
+    plugin: pluginPath,
+    include,
+    options: pluginOptions,
+  });
 
-  return nxJson;
+  updateNxJson(tree, nxJson);
 }
 
 /**
