@@ -14,6 +14,8 @@ A [project](#project) that can run on its own. Generally uses [libraries](#libra
 
 The Atomizer automatically splits tasks so that they can be executed in parallel.
 
+Atomizer is natively supported by [Nx Agents](#nx-agents), providing you detailed task information in the UI, including interpreted logs and artifacts, automatically grouped by project and workflow.
+
 > See: [Automatically Split E2E Tasks](/ci/features/split-e2e-tasks)
 
 ### Buildable Library
@@ -86,7 +88,7 @@ A script that performs some action on your code. This can include building, lint
 
 ### Flaky Tasks
 
-Tasks that will sometimes succeed and sometimes fail without any change to the inputs. These tasks are particularly problematic in CI.
+Tasks that will sometimes succeed and sometimes fail without any change to the inputs. These tasks are often e2e tests and are particularly problematic in CI.
 
 > See: [Identify and Re-run Flaky Tasks](/ci/features/flaky-tasks)
 
@@ -138,7 +140,7 @@ A [project](#project) that is located in a sub-folder of another project. This w
 
 ### Nx Agents
 
-A paid service that hosts and manages customizable worker machines for use with [distributed task execution](#distributed-task-execution).
+A paid service that hosts and manages customizable worker machines to run parts of your CI pipeline faster and cheaper than a traditional CI provider. When possible, Nx Agents uses [distributed task execution](#distributed-task-execution) to optimize your pipeline.
 
 > See: [Distribute Task Execution](/ci/features/distribute-task-execution)
 
