@@ -38,11 +38,12 @@
                 },
                 "output": {
                   "type": "string",
+                  "default": "",
                   "description": "Absolute path within the output."
                 }
               },
               "additionalProperties": false,
-              "required": ["glob", "input", "output"]
+              "required": ["glob", "input"]
             },
             { "type": "string" }
           ]
@@ -572,11 +573,12 @@
               },
               "output": {
                 "type": "string",
+                "default": "",
                 "description": "Absolute path within the output."
               }
             },
             "additionalProperties": false,
-            "required": ["glob", "input", "output"]
+            "required": ["glob", "input"]
           },
           { "type": "string" }
         ]
