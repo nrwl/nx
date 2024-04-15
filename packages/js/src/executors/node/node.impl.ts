@@ -21,6 +21,7 @@ import { calculateProjectBuildableDependencies } from '../../utils/buildable-lib
 import { killTree } from './lib/kill-tree';
 import { fileExists } from 'nx/src/utils/fileutils';
 import { getRelativeDirectoryToProjectRoot } from '../../utils/get-main-file-dir';
+import { interpolate } from 'nx/src/tasks-runner/utils';
 
 interface ActiveTask {
   id: string;
@@ -69,6 +70,7 @@ export async function* nodeExecutor(
   const buildOptions: Record<string, any> = {
     ...readTargetOptions(buildTarget, context),
     ...options.buildTargetOptions,
+    target: buildTarget.target,
   };
 
   if (options.waitUntilTargets && options.waitUntilTargets.length > 0) {
@@ -175,7 +177,13 @@ export async function* nodeExecutor(
                   `NX Process exited with code ${code}, waiting for changes to restart...`
                 );
               }
-              if (!options.watch) done();
+              if (!options.watch) {
+                if (code !== 0) {
+                  error(new Error(`Process exited with code ${code}`));
+                } else {
+                  done();
+                }
+              }
               resolve();
             });
 
@@ -358,7 +366,21 @@ function getFileToRun(
   // If using run-commands or another custom executor, then user should set
   // outputFileName, but we can try the default value that we use.
   if (!buildOptions?.outputPath && !buildOptions?.outputFileName) {
+    // If we are using crystal for infering the target, we can use the output path from the target.
+    // Since the output path has a token for the project name, we need to interpolate it.
+    // {workspaceRoot}/dist/{projectRoot} -> dist/my-app
+    const outputPath = project.data.targets[buildOptions.target]?.outputs?.[0];
+
+    if (outputPath) {
+      const outputFilePath = interpolate(outputPath, {
+        projectName: project.name,
+        projectRoot: project.data.root,
+        workspaceRoot: '',
+      });
+      return path.join(outputFilePath, 'main.js');
+    }
     const fallbackFile = path.join('dist', project.data.root, 'main.js');
+
     logger.warn(
       `Build option ${chalk.bold('outputFileName')} not set for ${chalk.bold(
         project.name

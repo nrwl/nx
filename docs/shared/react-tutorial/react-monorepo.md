@@ -1100,7 +1100,7 @@ Check out one of these detailed tutorials on setting up CI with Nx:
 Here's some things you can dive into next:
 
 - Learn more about the [underlying mental model of Nx](/concepts/mental-model)
-- Learn how to [migrate your CRA app to Nx](/recipes/react/migration-cra)
+- Learn how to [migrate your React app to Nx](/recipes/adopting-nx/adding-to-existing-project)
 - [Learn how to setup Tailwind](/recipes/react/using-tailwind-css-in-react)
 - [Setup Storybook for our shared UI library](/recipes/storybook/overview-react)
 

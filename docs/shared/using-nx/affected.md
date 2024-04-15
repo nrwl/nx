@@ -1,6 +1,6 @@
 # Run Only Tasks Affected by a PR
 
-As your workspace grows, re-testing, re-building an re-linting all projects becomes too slow. To address this Nx implements code change analysis to determine the minimum set of projects that were affected by the change. How does this work?
+As your workspace grows, re-testing, re-building and re-linting all projects becomes too slow. To address this Nx implements code change analysis to determine the minimum set of projects that were affected by the change. How does this work?
 
 ```shell
 nx affected -t <task>

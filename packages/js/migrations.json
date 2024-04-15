@@ -167,6 +167,15 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "18.2.5": {
+      "version": "18.2.5-beta.0",
+      "packages": {
+        "@swc/cli": {
+          "version": "~0.3.12",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }

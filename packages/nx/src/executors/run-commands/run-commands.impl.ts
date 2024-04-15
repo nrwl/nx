@@ -8,6 +8,7 @@ import {
   getPseudoTerminal,
   PseudoTerminal,
 } from '../../tasks-runner/pseudo-terminal';
+import { output } from '../../utils/output';
 
 export const LARGE_BUFFER = 1024 * 1000000;
 
@@ -83,6 +84,9 @@ export interface NormalizedRunCommandsOptions extends RunCommandsOptions {
   };
   parsedArgs: {
     [k: string]: any;
+  };
+  unparsedCommandArgs?: {
+    [k: string]: string;
   };
   args?: string;
 }
@@ -230,6 +234,7 @@ function normalizeOptions(
     options.unknownOptions,
     options.args as string
   );
+  options.unparsedCommandArgs = unparsedCommandArgs;
 
   (options as NormalizedRunCommandsOptions).commands.forEach((c) => {
     c.command = interpolateArgsIntoCommand(
@@ -301,13 +306,17 @@ async function createProcess(
     !isParallel &&
     usePty
   ) {
+    let terminalOutput = chalk.dim('> ') + commandConfig.command + '\r\n\r\n';
+    if (streamOutput) {
+      process.stdout.write(terminalOutput);
+    }
+
     const cp = pseudoTerminal.runCommand(commandConfig.command, {
       cwd,
       jsEnv: env,
       quiet: !streamOutput,
     });
 
-    let terminalOutput = '';
     return new Promise((res) => {
       cp.onOutput((output) => {
         terminalOutput += output;
@@ -341,7 +350,10 @@ function nodeProcess(
   readyWhen: string,
   streamOutput = true
 ): Promise<{ success: boolean; terminalOutput: string }> {
-  let terminalOutput = '';
+  let terminalOutput = chalk.dim('> ') + commandConfig.command + '\r\n\r\n';
+  if (streamOutput) {
+    process.stdout.write(terminalOutput);
+  }
   return new Promise((res) => {
     const childProcess = exec(commandConfig.command, {
       maxBuffer: LARGE_BUFFER,
@@ -450,7 +462,11 @@ export function interpolateArgsIntoCommand(
   command: string,
   opts: Pick<
     NormalizedRunCommandsOptions,
-    'args' | 'parsedArgs' | '__unparsed__' | 'unknownOptions'
+    | 'args'
+    | 'parsedArgs'
+    | '__unparsed__'
+    | 'unknownOptions'
+    | 'unparsedCommandArgs'
   >,
   forwardAllArgs: boolean
 ): string {
@@ -470,14 +486,20 @@ export function interpolateArgsIntoCommand(
               typeof opts.unknownOptions[k] !== 'object' &&
               opts.parsedArgs[k] === opts.unknownOptions[k]
           )
-          .map((k) => `--${k} ${opts.unknownOptions[k]}`)
+          .map((k) => `--${k}=${opts.unknownOptions[k]}`)
           .join(' ');
     }
     if (opts.args) {
       args += ` ${opts.args}`;
     }
     if (opts.__unparsed__?.length > 0) {
-      args += ` ${opts.__unparsed__.join(' ')}`;
+      const filterdParsedOptions = filterPropKeysFromUnParsedOptions(
+        opts.__unparsed__,
+        opts.unparsedCommandArgs
+      );
+      if (filterdParsedOptions.length > 0) {
+        args += ` ${filterdParsedOptions.join(' ')}`;
+      }
     }
     return `${command}${args}`;
   } else {
@@ -496,4 +518,46 @@ function parseArgs(
   return yargsParser(args.replace(/(^"|"$)/g, ''), {
     configuration: { 'camel-case-expansion': false },
   });
+}
+
+/**
+ * This function filters out the prop keys from the unparsed options
+ * @param __unparsed__ e.g. ['--prop1', 'value1', '--prop2=value2', '--args=test']
+ * @param unparsedCommandArgs e.g. { prop1: 'value1', prop2: 'value2', args: 'test'}
+ * @returns filtered options that are not part of the propKeys array e.g. ['--prop1', 'value1', '--prop2=value2']
+ */
+function filterPropKeysFromUnParsedOptions(
+  __unparsed__: string[],
+  unparsedCommandArgs: {
+    [k: string]: string;
+  } = {}
+): string[] {
+  const parsedOptions = [];
+  for (let index = 0; index < __unparsed__.length; index++) {
+    const element = __unparsed__[index];
+    if (element.startsWith('--')) {
+      const key = element.replace('--', '');
+      if (element.includes('=')) {
+        if (!propKeys.includes(key.split('=')[0].split('.')[0])) {
+          // check if the key is part of the propKeys array
+          parsedOptions.push(element);
+        }
+      } else {
+        // check if the next element is a value for the key
+        if (propKeys.includes(key)) {
+          if (
+            index + 1 < __unparsed__.length &&
+            __unparsed__[index + 1] === unparsedCommandArgs[key]
+          ) {
+            index++; // skip the next element
+          }
+        } else {
+          parsedOptions.push(element);
+        }
+      }
+    } else {
+      parsedOptions.push(element);
+    }
+  }
+  return parsedOptions;
 }

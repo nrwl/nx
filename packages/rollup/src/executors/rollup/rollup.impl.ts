@@ -118,13 +118,17 @@ export async function* rollupExecutor(
       }
 
       const start = process.hrtime.bigint();
-      const bundle = await rollup.rollup(rollupOptions);
-      const output = Array.isArray(rollupOptions.output)
-        ? rollupOptions.output
-        : [rollupOptions.output];
+      const allRollupOptions = Array.isArray(rollupOptions)
+        ? rollupOptions
+        : [rollupOptions];
 
-      for (const o of output) {
-        await bundle.write(o);
+      for (const opts of allRollupOptions) {
+        const bundle = await rollup.rollup(opts);
+        const output = Array.isArray(opts.output) ? opts.output : [opts.output];
+
+        for (const o of output) {
+          await bundle.write(o);
+        }
       }
 
       const end = process.hrtime.bigint();
@@ -133,7 +137,8 @@ export async function* rollupExecutor(
       updatePackageJson(options, packageJson);
       logger.info(`⚡ Done in ${duration}`);
       return { success: true, outfile };
-    } catch {
+    } catch (e) {
+      logger.error(e);
       logger.error(`Bundle failed: ${context.projectName}`);
       return { success: false };
     }
@@ -150,7 +155,7 @@ export async function createRollupOptions(
   packageJson: PackageJson,
   sourceRoot: string,
   npmDeps: string[]
-): Promise<rollup.RollupOptions> {
+): Promise<rollup.RollupOptions | rollup.RollupOptions[]> {
   const useBabel = options.compiler === 'babel';
   const useTsc = options.compiler === 'tsc';
   const useSwc = options.compiler === 'swc';
@@ -287,7 +292,7 @@ export async function createRollupOptions(
   const userDefinedRollupConfigs = options.rollupConfig.map((plugin) =>
     loadConfigFile(plugin)
   );
-  let finalConfig: rollup.InputOptions = rollupConfig;
+  let finalConfig: rollup.RollupOptions = rollupConfig;
   for (const _config of userDefinedRollupConfigs) {
     const config = await _config;
     if (typeof config === 'function') {

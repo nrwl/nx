@@ -38,6 +38,7 @@ describe('normalizeRollupExecutorOptions', () => {
     );
     expect(result.rollupConfig).toHaveLength(1);
     expect(result.rollupConfig[0]).toMatch('react');
+    // This fails if the nx repo has been cloned in `/root/...`
     expect(result.rollupConfig[0]).not.toMatch(root);
   });
 
