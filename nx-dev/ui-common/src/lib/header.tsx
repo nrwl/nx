@@ -20,11 +20,6 @@ export function Header(): JSX.Element {
       description: 'Learn how to efficiently use Nx on CI',
       href: '/ci/intro/ci-with-nx',
     },
-    // {
-    //   name: 'Concepts',
-    //   description: 'What to know more about how Nx is working?',
-    //   href: '/concepts',
-    // },
     {
       name: 'Features',
       description:
@@ -84,7 +79,7 @@ export function Header(): JSX.Element {
     {
       name: 'Contact us',
       description: 'Give us a call!',
-      href: 'https://nx.app/enterprise?utm_source=nx.dev&utm_medium=header-menu',
+      href: '/contact',
     },
   ];
 
@@ -197,14 +192,13 @@ export function Header(): JSX.Element {
               {/*  <span className="relative inline-flex h-3 w-3 rounded-full bg-blue-500 dark:bg-sky-500" />*/}
               {/*</span>*/}Launch Nx
             </Link>
-            <a
-              href="https://nx.app/enterprise?utm_source=nx.dev&utm_medium=header-menu"
-              target="_blank"
+            <Link
+              href="/contact"
               title="Contact us"
               className="hidden px-3 py-2 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500 md:inline-flex"
             >
               Contact us
-            </a>
+            </Link>
           </nav>
         </div>
         <div className="flex-shrink-0 text-sm">
