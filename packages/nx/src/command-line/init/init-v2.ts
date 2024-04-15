@@ -74,34 +74,35 @@ export async function initHandler(options: InitArgs): Promise<void> {
 
   const { plugins, updatePackageScripts } = await detectPlugins();
 
-  if (!plugins.length) {
-    // If no plugins are detected/chosen, guide users to setup
-    // their targetDefaults correctly so their package scripts will work.
-    const packageJson: PackageJson = readJsonFile('package.json');
-    if (isMonorepo(packageJson)) {
-      await addNxToMonorepo({ interactive: options.interactive });
-    } else {
-      await addNxToNpmRepo({ interactive: options.interactive });
-    }
+  const packageJson: PackageJson = readJsonFile('package.json');
+  if (isMonorepo(packageJson)) {
+    await addNxToMonorepo({
+      interactive: options.interactive,
+      nxCloud: false,
+    });
   } else {
-    const useNxCloud =
-      options.nxCloud ??
-      (options.interactive
-        ? await connectExistingRepoToNxCloudPrompt()
-        : false);
+    await addNxToNpmRepo({
+      interactive: options.interactive,
+      nxCloud: false,
+    });
+  }
+  const useNxCloud =
+    options.nxCloud ??
+    (options.interactive ? await connectExistingRepoToNxCloudPrompt() : false);
 
-    const repoRoot = process.cwd();
-    const pmc = getPackageManagerCommand();
+  const repoRoot = process.cwd();
+  const pmc = getPackageManagerCommand();
 
-    createNxJsonFile(repoRoot, [], [], {});
-    updateGitIgnore(repoRoot);
+  createNxJsonFile(repoRoot, [], [], {});
+  updateGitIgnore(repoRoot);
 
-    addDepsToPackageJson(repoRoot, plugins);
+  addDepsToPackageJson(repoRoot, plugins);
 
-    output.log({ title: '📦 Installing Nx' });
+  output.log({ title: '📦 Installing Nx' });
 
-    runInstall(repoRoot, pmc);
+  runInstall(repoRoot, pmc);
 
+  if (plugins.length > 0) {
     output.log({ title: '🔨 Configuring plugins' });
     for (const plugin of plugins) {
       execSync(
@@ -114,24 +115,17 @@ export async function initHandler(options: InitArgs): Promise<void> {
         }
       );
     }
+  }
 
-    if (!updatePackageScripts) {
-      const rootPackageJsonPath = join(repoRoot, 'package.json');
-      const json = readJsonFile<PackageJson>(rootPackageJsonPath);
-      json.nx = { includedScripts: [] };
-      writeJsonFile(rootPackageJsonPath, json);
-    }
-
-    if (useNxCloud) {
-      output.log({ title: '🛠️ Setting up Nx Cloud' });
-      execSync(
-        `${pmc.exec} nx g nx:connect-to-nx-cloud --installationSource=nx-init --quiet --hideFormatLogs --no-interactive`,
-        {
-          stdio: [0, 1, 2],
-          cwd: repoRoot,
-        }
-      );
-    }
+  if (useNxCloud) {
+    output.log({ title: '🛠️ Setting up Nx Cloud' });
+    execSync(
+      `${pmc.exec} nx g nx:connect-to-nx-cloud --installationSource=nx-init --quiet --hideFormatLogs --no-interactive`,
+      {
+        stdio: [0, 1, 2],
+        cwd: repoRoot,
+      }
+    );
   }
 
   output.log({
@@ -220,9 +214,8 @@ async function detectPlugins(): Promise<{
     {
       name: 'plugins',
       type: 'multiselect',
-      message: `Which plugins would you like to add?`,
+      message: `Which plugins would you like to add? Press <Space> to select and <Enter> to submit.`,
       choices: plugins.map((p) => ({ name: p, value: p })),
-      initial: plugins.map((_, i) => i) as unknown as number, // casting to avoid type error due to bad d.ts file from enquirer
     },
   ]).then((r) => r.plugins);
 

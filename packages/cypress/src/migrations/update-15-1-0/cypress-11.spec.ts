@@ -1,3 +1,5 @@
+import 'nx/src/internal-testing-utils/mock-project-graph';
+
 import {
   addProjectConfiguration,
   readProjectConfiguration,
@@ -8,6 +10,7 @@ import { libraryGenerator } from '@nx/js';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import updateToCypress11 from './cypress-11';
 import { installedCypressVersion } from '../../utils/cypress-version';
+
 jest.mock('../../utils/cypress-version');
 import cypressComponentConfiguration from '../../generators/component-configuration/component-configuration';
 
@@ -21,7 +24,6 @@ describe('Cypress 11 Migration', () => {
 
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-    jest.resetAllMocks();
   });
 
   it('should not update if cypress <v10 is used', async () => {

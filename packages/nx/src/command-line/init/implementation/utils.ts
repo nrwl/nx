@@ -194,21 +194,13 @@ export function markRootPackageJsonAsNxProjectLegacy(
   writeJsonFile(`package.json`, json);
 }
 
-export function markPackageJsonAsNxProject(
-  packageJsonPath: string,
-  cacheableScripts: string[]
-) {
+export function markPackageJsonAsNxProject(packageJsonPath: string) {
   const json = readJsonFile<PackageJson>(packageJsonPath);
   if (!json.scripts) {
     return;
   }
 
-  json.nx = { includedScripts: [] };
-  for (let script of cacheableScripts) {
-    if (json.scripts[script]) {
-      json.nx.includedScripts.push(script);
-    }
-  }
+  json.nx = {};
   writeJsonFile(packageJsonPath, json);
 }
 

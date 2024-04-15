@@ -20,4 +20,7 @@ export {
   createProjectRootMappingsFromProjectConfigurations,
   findProjectForPath,
 } from './project-graph/utils/find-project-for-path';
+export { retrieveProjectConfigurations } from './project-graph/utils/retrieve-workspace-files';
+export { LoadedNxPlugin } from './project-graph/plugins/internal-api';
+export * from './project-graph/error-types';
 export { registerTsProject } from './plugins/js/utils/register';
