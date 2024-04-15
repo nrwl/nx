@@ -14,8 +14,15 @@ import { join } from 'path';
 import { type RemixBuildSchema } from './schema';
 import { getBunlderType } from '../../utils/versions';
 
-function buildRemixBuildArgs(options: RemixBuildSchema) {
-  const args = ['vite:build'];
+function buildRemixBuildArgs(
+  options: RemixBuildSchema,
+  context: ExecutorContext
+) {
+  const projectRoot = context.projectGraph.nodes[context.projectName].data.root;
+  const bundlerType = getBunlderType(projectRoot);
+  const buildTargetName = bundlerType === 'vite' ? 'vite:build' : 'build';
+
+  const args = [buildTargetName];
 
   if (options.sourcemap) {
     args.push(`--sourcemap`);
@@ -31,7 +38,7 @@ async function runBuild(
   const projectRoot = context.projectGraph.nodes[context.projectName].data.root;
   return new Promise<void>((resolve, reject) => {
     const remixBin = require.resolve('@remix-run/dev/dist/cli');
-    const args = buildRemixBuildArgs(options);
+    const args = buildRemixBuildArgs(options, context);
     const p = fork(remixBin, args, {
       cwd: join(context.root, projectRoot),
       stdio: 'inherit',
