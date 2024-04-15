@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { ButtonLink } from './button';
 import { NxCloudIcon } from './nx-cloud-icon';
+import { AnnouncementBanner } from './announcement-banner';
 
 function Menu({ tabs }: { tabs: any[] }): JSX.Element {
   return (
@@ -227,13 +228,13 @@ export function DocumentationHeader({
             className="items-justified hidden justify-center space-x-2 text-sm lg:flex"
           >
             <h2 className="sr-only">Main navigation</h2>
-            <Link
+            {/* <Link
               href="/blog"
               title="Blog"
               className="hidden px-3 py-2 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500 md:inline-flex"
             >
               Blog
-            </Link>
+            </Link> */}
             <Link
               href="/community"
               title="Nx Community: Join us!"
@@ -261,6 +262,9 @@ export function DocumentationHeader({
           </nav>
         </div>
         <div className="hidden flex-grow lg:flex">{/* SPACER */}</div>
+        <div className="hidden w-full xl:flex">
+          <AnnouncementBanner />
+        </div>
         <div className="hidden flex-shrink-0 lg:flex">
           <nav
             role="menu"
