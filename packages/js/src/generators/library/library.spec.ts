@@ -44,7 +44,6 @@ describe('lib', () => {
         name: '@proj/my-lib',
         private: true,
         version: '0.0.1',
-        type: 'commonjs',
         scripts: {
           build: "echo 'implement build'",
           test: "echo 'implement test'",
@@ -977,6 +976,9 @@ describe('lib', () => {
         expect(config.targets.build.options.project).toEqual(
           `my-lib/package.json`
         );
+
+        const pkgJson = readJson(tree, 'my-lib/package.json');
+        expect(pkgJson.type).not.toBeDefined();
       });
 
       it('should always set compiler to swc if bundler is rollup', async () => {
