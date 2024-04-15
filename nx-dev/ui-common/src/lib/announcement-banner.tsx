@@ -11,12 +11,12 @@ export function AnnouncementBanner(): JSX.Element {
                 href="https://go.nx.dev/april-webinar?utm_source=nx.dev"
                 className="underline"
               >
-                Webinar: Making the Argument for Monorepos
+                Webinar April 17: Making the Argument for Monorepos
               </Link>
             </span>
             <span className="hidden md:inline">
               <span className="font-semibold">
-                Webinar: Making the Argument for Monorepos
+                Webinar April 17: Making the Argument for Monorepos
               </span>
             </span>
             <span className="ml-2 inline-block">
