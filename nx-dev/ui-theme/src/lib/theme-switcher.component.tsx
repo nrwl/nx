@@ -6,9 +6,9 @@ import {
 } from '@heroicons/react/24/outline';
 import cx from 'classnames';
 import { Fragment } from 'react';
-import { useTheme } from './theme.provider';
+import { Theme, useTheme } from './theme.provider';
 
-export function ThemeSwitcher() {
+export function ThemeSwitcher({ useContext = true }) {
   const [theme, setTheme] = useTheme();
   const themeMap = {
     dark: {
@@ -27,22 +27,22 @@ export function ThemeSwitcher() {
   const availableThemes = [
     {
       label: 'Light',
-      value: 'light',
-      icon: <SunIcon className="mr-4 h-4 w-4" />,
+      value: 'light' as Theme,
+      icon: <SunIcon className="h-4 w-4" />,
     },
     {
       label: 'Dark',
-      value: 'dark',
-      icon: <MoonIcon className="mr-4 h-4 w-4" />,
+      value: 'dark' as Theme,
+      icon: <MoonIcon className="h-4 w-4" />,
     },
     {
       label: 'System',
-      value: 'system',
-      icon: <ComputerDesktopIcon className="mr-4 h-4 w-4" />,
+      value: 'system' as Theme,
+      icon: <ComputerDesktopIcon className="h-4 w-4" />,
     },
   ];
 
-  return (
+  return useContext ? (
     <div className="inline-block">
       <div className="group relative flex h-full w-full items-center px-1">
         <Listbox value={theme} onChange={setTheme}>
@@ -80,7 +80,7 @@ export function ThemeSwitcher() {
                         }
                       )}
                     >
-                      {icon}
+                      <span className="mr-4">{icon}</span>
                       {label}
                     </li>
                   )}
@@ -90,6 +90,36 @@ export function ThemeSwitcher() {
           </Transition>
         </Listbox>
       </div>
+    </div>
+  ) : (
+    <div className="-ml-3 mt-4">
+      <ul className="flex xl:justify-between">
+        {availableThemes.map(({ value, label, icon }) => {
+          return (
+            <li
+              key={value}
+              className={cx(
+                'inline-block rounded-full lg:px-1',
+                theme === value
+                  ? 'bg-slate-200 dark:bg-slate-800 text-blue-500 dark:text-sky-500'
+                  : ''
+              )}
+            >
+              <button
+                aria-label={label}
+                title={label}
+                onClick={() => setTheme(value)}
+                className={cx(
+                  'inline-flex p-2 text-sm font-medium opacity-60 transition-opacity group-hover:opacity-100',
+                  themeMap[value].className
+                )}
+              >
+                {icon}
+              </button>
+            </li>
+          );
+        })}
+      </ul>
     </div>
   );
 }

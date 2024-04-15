@@ -1,85 +1,235 @@
-import { Popover, Transition } from '@headlessui/react';
-import { Bars4Icon, ChevronDownIcon } from '@heroicons/react/24/outline';
+import { Dialog, Menu, Popover, Transition } from '@headlessui/react';
+import {
+  ArrowPathIcon,
+  ArrowTopRightOnSquareIcon,
+  Bars4Icon,
+  ChevronDownIcon,
+  ClipboardDocumentCheckIcon,
+  XMarkIcon,
+} from '@heroicons/react/24/outline';
 import { AlgoliaSearch } from '@nx/nx-dev/feature-search';
-import { ThemeSwitcher } from '@nx/nx-dev/ui-theme';
 import cx from 'classnames';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { Fragment } from 'react';
+import { Fragment, useEffect, useState } from 'react';
+import { headerMenuIcons } from './header-icons';
+import { ButtonLink } from './button';
 
 export function Header(): JSX.Element {
+  let [isOpen, setIsOpen] = useState(false);
   const router = useRouter();
-  const flyoutMenu = [
+
+  // We need to close the popover if the route changes or the window is resized to prevent the popover from being stuck open.
+  const checkSizeAndClosePopover = () => {
+    const breakpoint = 1024; // This is the standard Tailwind lg breakpoint value
+    if (window.innerWidth < breakpoint) {
+      setIsOpen(false);
+    }
+  };
+
+  useEffect(() => {
+    window.addEventListener('resize', checkSizeAndClosePopover);
+
+    return () => {
+      window.removeEventListener('resize', checkSizeAndClosePopover);
+    };
+  }, []);
+
+  const flyoutMobileMenu = [
+    // {
+    //   name: 'Getting started',
+    //   description: 'Jump right in and start building!',
+    //   href: '/getting-started/intro',
+    // },
     {
-      name: 'Getting started',
-      description: 'Jump right in and start building!',
+      name: 'Docs',
+      description: 'Latest news from the Nx & Nx Cloud core team',
       href: '/getting-started/intro',
     },
     {
-      name: 'Nx on CI',
-      description: 'Learn how to efficiently use Nx on CI',
-      href: '/ci/intro/ci-with-nx',
+      name: 'CI Pricing',
+      href: 'https://nx.app/pricing',
+    },
+    // {
+    //   name: 'Community',
+    //   description: 'Check how to reach out and be part of the Nx community.',
+    //   href: '/community',
+    // },
+    // {
+    //   name: 'Launch Nx',
+    //   description: 'A week of exciting announcements about Nx and Nx Cloud!',
+    //   href: '/launch-nx',
+    // },
+    // {
+    //   name: 'Contact us',
+    //   description: 'Give us a call!',
+    //   href: 'https://nx.app/enterprise?utm_source=nx.dev&utm_medium=header-menu',
+    // },
+  ];
+
+  const flyOutMenuFeaturesOSS = [
+    {
+      name: 'Task Running',
+      description: 'Maximize your CI/CD pipeline.',
+      href: '/features/run-tasks',
+      icon: headerMenuIcons['task-running'].image,
     },
     {
-      name: 'Features',
-      description:
-        'Learn the features of Nx with in depth guides and explainers.',
-      href: '/features',
+      name: 'Local Caching',
+      description: 'Speed up your development by caching.',
+      href: '/features/cache-task-results',
+      icon: headerMenuIcons['local-caching'].image,
     },
+    // {
+    //   name: 'Nx Graph',
+    //   description: 'Visualize structure and dependencies.',
+    //   href: '/features/nx-graph',
+    //   icon: 'nx-graph',
+    // },
+    {
+      name: 'Automated Updating',
+      description: 'Keep your dependecies up to date using Nx.',
+      href: '/features/automate-updating-dependencies',
+      icon: headerMenuIcons['automatic-update'].image,
+    },
+    {
+      name: 'Module Boundaries',
+      description: 'Define and enforce module boundaries.',
+      href: '/features/enforce-module-boundaries',
+      icon: headerMenuIcons['module-boundary'].image,
+    },
+    {
+      name: 'Nx Release',
+      description: 'Automate your release process with Nx.',
+      href: '/features/manage-releases',
+      icon: headerMenuIcons['nx-release'].image,
+    },
+    // {
+    //   name: 'IDE Integration',
+    //   description: 'Use Nx in your favorite IDE.',
+    //   href: '/features/ide-integration',
+    //   icon: 'ide-integration',
+    // },
+  ];
+
+  const flyOutMenuFeaturesCI = [
     {
       name: 'Nx Replay',
-      description:
-        'Built-in local and remote caching to speed up your tasks and save you time and money.',
-      href: '/features/cache-task-results',
-    },
-    {
-      name: 'Recipes',
-      description: 'Follow instructions to do common specific tasks.',
-      href: '/recipes',
+      description: 'Replay previously executed tasks.',
+      href: '/ci/features/remote-cache#use-remote-caching-nx-replay',
+      icon: headerMenuIcons['replay'].image,
     },
     {
       name: 'Nx Agents',
-      description:
-        'Executes tasks remotely on different agents in parallel. Enable remote cache in one command.',
+      description: 'Distribute tasks across multiple agents.',
       href: '/ci/features/distribute-task-execution',
+      icon: headerMenuIcons['agent'].image,
     },
     {
-      name: 'Nx Console',
-      description:
-        'The official VSCode & JetBrains plugin bringing Nx to your editor.',
-      href: '/getting-started/editor-setup#vscode',
-    },
-    {
-      name: 'Set Up CI',
-      description: 'Configure Nx for your CI provider',
-      href: '/ci/recipes/set-up',
+      name: 'Atomizer',
+      description: 'Use Nx to optimize your E2E tests.',
+      href: '/ci/features/split-e2e-tasks',
+      icon: headerMenuIcons['atomizer'].image,
     },
   ];
-  const flyoutMobileMenu = [
+
+  const flyOutMenuSolutions = [
     {
-      name: 'Getting started',
-      description: 'Jump right in and start building!',
-      href: '/getting-started/intro',
+      name: 'Startups',
+      description: 'How Nx can help your startup grow.',
+      href: 'https://nx.app/pricing#plans',
     },
+    {
+      name: 'Pro',
+      description: 'How Nx can help your organization scale.',
+      href: 'https://nx.app/pricing#plans',
+    },
+    {
+      name: 'Enterprise',
+      description: 'How Nx can help your enterprise evolve.',
+      href: 'https://nx.app/enterprise',
+    },
+  ];
+
+  const flyOutMenuSolutionsUseCases = [
+    {
+      name: 'AI Apps',
+      description: 'Build AI applications with Nx.',
+      href: '',
+    },
+    {
+      name: 'Composable Apps',
+      description: 'Build composable applications with Nx.',
+      href: '',
+    },
+    {
+      name: 'Web Apps',
+      description: 'Lightning speed with Nx.',
+      href: '',
+    },
+    {
+      name: 'Platform Engineering',
+      description: 'Nx for platform engineering.',
+      href: '',
+    },
+  ];
+
+  const flyOutMenuResources = [
+    {
+      name: 'Nx Plugins',
+      description: 'Discover Nx plugins to help you build faster.',
+      href: '/plugin-registry',
+    },
+    {
+      name: 'Youtube',
+      description: 'Watch our latest videos on Youtube.',
+      href: 'https://www.youtube.com/@nxdevtools',
+    },
+    {
+      name: 'Community',
+      description: 'Join the Nx community.',
+      href: '/community',
+    },
+    {
+      name: 'Newsletter',
+      description: 'Stay up to date with the latest Nx news.',
+      href: 'https://go.nrwl.io/nx-newsletter',
+    },
+  ];
+
+  const flyOutMenuResourcesEvents = [
+    {
+      name: 'Nx Conf',
+      description: 'The official Nx conference.',
+      href: '/conf',
+    },
+    {
+      name: 'Nx Launch Week',
+      description: 'A week of exciting announcements about Nx and Nx Cloud!',
+      href: '/launch-nx',
+    },
+    // {
+    //   name: 'Talks by Nx Members',
+    //   description: 'Watch talks by Nx members.',
+    //   href: 'https://www.youtube.com/playlist?list=PLakNactNC1dGq93RSekGUHM8v-lirD4LZ',
+    // },
+  ];
+
+  const flyOutMenuResourcesAboutUs = [
     {
       name: 'Blog',
       description: 'Latest news from the Nx & Nx Cloud core team',
       href: '/blog',
     },
+    // {
+    //   name: 'Nx Champions',
+    //   description: 'Meet the Nx Champions.',
+    //   href: '/community#nx-champions',
+    // },
     {
-      name: 'Community',
-      description: 'Check how to reach out and be part of the Nx community.',
-      href: '/community',
-    },
-    {
-      name: 'Launch Nx',
-      description: 'A week of exciting announcements about Nx and Nx Cloud!',
-      href: '/launch-nx',
-    },
-    {
-      name: 'Contact us',
-      description: 'Give us a call!',
-      href: '/contact',
+      name: 'Nx Conf',
+      description: 'The official Nx conference.',
+      href: '/conf',
     },
   ];
 
@@ -87,26 +237,26 @@ export function Header(): JSX.Element {
     <div className="relative flex print:hidden">
       {/*DESKTOP*/}
       <div className="mx-auto hidden w-full max-w-7xl items-center justify-between space-x-10 p-4 px-8 lg:flex">
-        {/*LOGO*/}
-        <div className="flex items-center">
-          <Link
-            href="/"
-            className="flex items-center text-slate-900 dark:text-white"
-          >
-            <svg
-              role="img"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-8 w-8"
-              fill="currentColor"
-            >
-              <title>Nx</title>
-              <path d="m12 14.1-3.1 5-5.2-8.5v8.9H0v-15h3.7l5.2 8.9v-4l3 4.7zm.6-5.7V4.5H8.9v3.9h3.7zm5.6 4.1a2 2 0 0 0-2 1.3 2 2 0 0 1 2.4-.7c.4.2 1 .4 1.3.3a2.1 2.1 0 0 0-1.7-.9zm3.4 1c-.4 0-.8-.2-1.1-.6l-.2-.3a2.1 2.1 0 0 0-.5-.6 2 2 0 0 0-1.2-.3 2.5 2.5 0 0 0-2.3 1.5 2.3 2.3 0 0 1 4 .4.8.8 0 0 0 .9.3c.5 0 .4.4 1.2.5v-.1c0-.4-.3-.5-.8-.7zm2 1.3a.7.7 0 0 0 .4-.6c0-3-2.4-5.5-5.4-5.5a5.4 5.4 0 0 0-4.5 2.4l-1.5-2.4H8.9l3.5 5.4L9 19.5h3.6L14 17l1.6 2.4h3.5l-3.1-5a.7.7 0 0 1 0-.3 2.7 2.7 0 0 1 2.6-2.7c1.5 0 1.7.9 2 1.3.7.8 2 .5 2 1.5a.7.7 0 0 0 1 .6zm.4.2c-.2.3-.6.3-.8.6-.1.3.1.4.1.4s.4.2.6-.3V15z" />
-            </svg>
-          </Link>
-        </div>
         {/*PRIMARY NAVIGATION*/}
-        <div className="flex-shrink-0 text-sm">
+        <div className="flex flex-shrink-0 text-sm">
+          {/*LOGO*/}
+          <div className="flex items-center">
+            <Link
+              href="/"
+              className="flex items-center text-slate-900 dark:text-white mr-4"
+            >
+              <svg
+                role="img"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-8 w-8"
+                fill="currentColor"
+              >
+                <title>Nx</title>
+                <path d="m12 14.1-3.1 5-5.2-8.5v8.9H0v-15h3.7l5.2 8.9v-4l3 4.7zm.6-5.7V4.5H8.9v3.9h3.7zm5.6 4.1a2 2 0 0 0-2 1.3 2 2 0 0 1 2.4-.7c.4.2 1 .4 1.3.3a2.1 2.1 0 0 0-1.7-.9zm3.4 1c-.4 0-.8-.2-1.1-.6l-.2-.3a2.1 2.1 0 0 0-.5-.6 2 2 0 0 0-1.2-.3 2.5 2.5 0 0 0-2.3 1.5 2.3 2.3 0 0 1 4 .4.8.8 0 0 0 .9.3c.5 0 .4.4 1.2.5v-.1c0-.4-.3-.5-.8-.7zm2 1.3a.7.7 0 0 0 .4-.6c0-3-2.4-5.5-5.4-5.5a5.4 5.4 0 0 0-4.5 2.4l-1.5-2.4H8.9l3.5 5.4L9 19.5h3.6L14 17l1.6 2.4h3.5l-3.1-5a.7.7 0 0 1 0-.3 2.7 2.7 0 0 1 2.6-2.7c1.5 0 1.7.9 2 1.3.7.8 2 .5 2 1.5a.7.7 0 0 0 1 .6zm.4.2c-.2.3-.6.3-.8.6-.1.3.1.4.1.4s.4.2.6-.3V15z" />
+              </svg>
+            </Link>
+          </div>
           <nav
             role="menu"
             className="items-justified flex justify-center space-x-2 py-0.5"
@@ -122,12 +272,14 @@ export function Header(): JSX.Element {
                     )}
                   >
                     <span className="transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500">
-                      Documentation
+                      Features
                     </span>
                     <ChevronDownIcon
                       className={cx(
-                        open ? 'text-blue-500 dark:text-sky-500' : '',
-                        'ml-2 h-5 w-5 transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500'
+                        open
+                          ? 'text-blue-500 dark:text-sky-500 rotate-180 transform'
+                          : '',
+                        'ml-2 h-3.5 w-3.5 transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500'
                       )}
                       aria-hidden="true"
                     />
@@ -142,17 +294,137 @@ export function Header(): JSX.Element {
                     leaveFrom="opacity-100 translate-y-0"
                     leaveTo="opacity-0 translate-y-1"
                   >
-                    <Popover.Panel className="absolute left-1/2 z-10 mt-3 w-screen max-w-md -translate-x-1/2 transform xl:max-w-3xl">
-                      <div className="overflow-hidden rounded-lg bg-white shadow-lg ring-1 ring-black/5 dark:bg-slate-900 dark:ring-white/5">
-                        <div className="relative grid gap-6 p-6 xl:grid-cols-2">
-                          {flyoutMenu.map((item) => (
+                    <Popover.Panel className="absolute z-10 mt-3 w-max max-w-3xl xl:max-w-3xl">
+                      <div className="overflow-hidden grid grid-gap-4 grid-cols-2 rounded-lg bg-white shadow-lg ring-1 ring-black/5 dark:bg-slate-900 dark:ring-white/[0.15]">
+                        <div className="relative pt-6 p-4">
+                          {flyOutMenuFeaturesOSS.map((item) => (
                             <Link
                               key={item.name}
                               href={item.href}
-                              className="-m-3 flex items-start rounded-lg p-3 transition duration-150 ease-in-out hover:bg-slate-50 dark:hover:bg-slate-800/60"
+                              className="-m-3 flex items-center py-4 rounded-lg px-2 transition duration-150 ease-in-out hover:bg-slate-50 dark:hover:bg-slate-800/60"
+                            >
+                              {item.icon ? (
+                                <div className="flex justify-center ml-4">
+                                  {item.icon}
+                                </div>
+                              ) : null}
+                              <div className="ml-4">
+                                <p className="text-sm font-medium text-slate-900 dark:text-slate-200">
+                                  {item.name}
+                                </p>
+                                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                                  {item.description}
+                                </p>
+                              </div>
+                            </Link>
+                          ))}
+                        </div>
+                        <div className="relative pt-6 p-4">
+                          {flyOutMenuFeaturesCI.map((item) => (
+                            <Link
+                              key={item.name}
+                              href={item.href}
+                              className="-m-3 flex items-center rounded-lg py-4 px-2 transition text-base font-medium duration-150 ease-in-out text-slate-900 hover:bg-slate-50 hover:text-sky-600 dark:hover:bg-slate-800/60 dark:text-slate-200 dark:hover:text-sky-600"
+                            >
+                              {item.icon ? (
+                                <div className="flex justify-center ml-4">
+                                  {item.icon}
+                                </div>
+                              ) : null}
+                              <div className="ml-4">
+                                <p>{item.name}</p>
+                                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                                  {item.description}
+                                </p>
+                              </div>
+                            </Link>
+                          ))}
+                        </div>
+                      </div>
+                    </Popover.Panel>
+                  </Transition>
+                </>
+              )}
+            </Popover>
+            <Popover className="relative">
+              {({ open }) => (
+                <>
+                  <Popover.Button
+                    className={cx(
+                      open ? 'text-blue-500 dark:text-sky-500' : '',
+                      'text group inline-flex items-center px-3 py-2 font-medium leading-tight dark:text-slate-200'
+                    )}
+                  >
+                    <span className="transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500">
+                      Solutions
+                    </span>
+                    <ChevronDownIcon
+                      className={cx(
+                        open
+                          ? 'text-blue-500 dark:text-sky-500 rotate-180 transform'
+                          : '',
+                        'ml-2 h-4 w-4 transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500'
+                      )}
+                      aria-hidden="true"
+                    />
+                  </Popover.Button>
+
+                  <Transition
+                    as={Fragment}
+                    enter="transition ease-out duration-200"
+                    enterFrom="opacity-0 translate-y-1"
+                    enterTo="opacity-100 translate-y-0"
+                    leave="transition ease-in duration-150"
+                    leaveFrom="opacity-100 translate-y-0"
+                    leaveTo="opacity-0 translate-y-1"
+                  >
+                    <Popover.Panel className="absolute z-10 mt-3 w-max max-w-3xl">
+                      <div className="overflow-hidden rounded-lg bg-white shadow-lg ring-1 ring-black/5 dark:bg-slate-900 dark:ring-white/[0.15]">
+                        <h5 className="text-sm px-6 pt-4 text-slate-700 dark:text-slate-400">
+                          Scale{' '}
+                        </h5>
+                        <div className="relative grid gap-6 px-6 pt-6 pb-6 xl:grid-cols-2">
+                          {flyOutMenuSolutions.map((item) => (
+                            <Link
+                              key={item.name}
+                              href={item.href}
+                              target={
+                                item.href.startsWith('http')
+                                  ? '_blank'
+                                  : undefined
+                              }
+                              className="-m-3 flex items-start rounded-lg p-2 transition duration-150 ease-in-out hover:bg-slate-50 dark:hover:bg-slate-800/60"
                             >
                               <div className="ml-4">
-                                <p className="text-base font-medium text-slate-900 dark:text-slate-200">
+                                <p className="text-sm font-medium text-slate-900 dark:text-slate-200">
+                                  {item.name}
+                                </p>
+                                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                                  {item.description}
+                                </p>
+                              </div>
+                            </Link>
+                          ))}
+                        </div>
+                        <div className="border-t border-slate-100/[0.50] border-solid dark:border-slate-700/[0.50]" />
+
+                        <h5 className="text-sm px-6 pt-4 text-slate-700 dark:text-slate-400">
+                          Use Case{' '}
+                        </h5>
+                        <div className="relative grid gap-6 px-6 pt-6 pb-6 xl:grid-cols-2">
+                          {flyOutMenuSolutionsUseCases.map((item) => (
+                            <Link
+                              key={item.name}
+                              href={item.href}
+                              target={
+                                item.href.startsWith('http')
+                                  ? '_blank'
+                                  : undefined
+                              }
+                              className="-m-3 flex items-start rounded-lg p-2 transition duration-150 ease-in-out hover:bg-slate-50 dark:hover:bg-slate-800/60"
+                            >
+                              <div className="ml-4">
+                                <p className="text-sm font-medium text-slate-900 dark:text-slate-200">
                                   {item.name}
                                 </p>
                                 <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
@@ -168,43 +440,148 @@ export function Header(): JSX.Element {
                 </>
               )}
             </Popover>
+
+            <Popover className="relative">
+              {({ open }) => (
+                <>
+                  <Popover.Button
+                    className={cx(
+                      open ? 'text-blue-500 dark:text-sky-500' : '',
+                      'text group inline-flex items-center px-3 py-2 font-medium leading-tight dark:text-slate-200'
+                    )}
+                  >
+                    <span className="transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500">
+                      Resources
+                    </span>
+                    <ChevronDownIcon
+                      className={cx(
+                        open
+                          ? 'text-blue-500 dark:text-sky-500 rotate-180 transform'
+                          : '',
+                        'ml-2 h-4 w-4 transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500'
+                      )}
+                      aria-hidden="true"
+                    />
+                  </Popover.Button>
+
+                  <Transition
+                    as={Fragment}
+                    enter="transition ease-out duration-200"
+                    enterFrom="opacity-0 translate-y-1"
+                    enterTo="opacity-100 translate-y-0"
+                    leave="transition ease-in duration-150"
+                    leaveFrom="opacity-100 translate-y-0"
+                    leaveTo="opacity-0 translate-y-1"
+                  >
+                    <Popover.Panel className="absolute left-60 z-10 mt-3 w-max max-w-md -translate-x-1/2 transform xl:max-w-3xl">
+                      <div className="overflow-hidden rounded-lg bg-white shadow-lg ring-1 ring-black/5 dark:bg-slate-900 dark:ring-white/[0.15]">
+                        <h5 className="text-sm px-6 pt-4 text-slate-700 dark:text-slate-400">
+                          Events{' '}
+                        </h5>
+                        <div className="relative grid gap-6 px-6 pt-6 pb-6 xl:grid-cols-2">
+                          {flyOutMenuResources.map((item) => (
+                            <Link
+                              key={item.name}
+                              href={item.href}
+                              target={
+                                item.href.startsWith('http')
+                                  ? '_blank'
+                                  : undefined
+                              }
+                              className="-m-3 flex items-start rounded-lg p-2 transition duration-150 ease-in-out hover:bg-slate-50 dark:hover:bg-slate-800/60"
+                            >
+                              <div className="ml-4">
+                                <p className="text-sm font-medium text-slate-900 dark:text-slate-200">
+                                  {item.name}
+                                </p>
+                                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                                  {item.description}
+                                </p>
+                              </div>
+                            </Link>
+                          ))}
+                        </div>
+                        <div className="border-t border-slate-100/[0.50] border-solid dark:border-slate-700/[0.50]" />
+
+                        <h5 className="text-sm px-6 pt-4 text-slate-700 dark:text-slate-400">
+                          Company{' '}
+                        </h5>
+                        <div className="relative grid gap-6 px-6 pt-6 pb-6 xl:grid-cols-2">
+                          {flyOutMenuResourcesAboutUs.map((item) => (
+                            <Link
+                              key={item.name}
+                              href={item.href}
+                              target={
+                                item.href.startsWith('http')
+                                  ? '_blank'
+                                  : undefined
+                              }
+                              className="-m-3 flex items-start rounded-lg p-2 transition duration-150 ease-in-out hover:bg-slate-50 dark:hover:bg-slate-800/60"
+                            >
+                              <div className="ml-4">
+                                <p className="text-sm font-medium text-slate-900 dark:text-slate-200">
+                                  {item.name}
+                                </p>
+                                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                                  {item.description}
+                                </p>
+                              </div>
+                            </Link>
+                          ))}
+                        </div>
+                      </div>
+                    </Popover.Panel>
+                  </Transition>
+                </>
+              )}
+            </Popover>
+
             <Link
+              href="/getting-started/intro"
+              title="Documentation"
+              className="hidden px-3 py-2 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500 md:inline-flex"
+            >
+              Documentation
+            </Link>
+            {/* <Link
               href="/blog"
               title="Blog"
               className="hidden px-3 py-2 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500 md:inline-flex"
             >
               Blog
-            </Link>
-            <Link
-              href="/community"
-              title="Nx Community: Join us!"
+            </Link> */}
+            <a
+              href="https://nx.app/pricing"
+              title="CI Pricing"
+              target="_blank"
               className="hidden px-3 py-2 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500 md:inline-flex"
             >
-              Community
-            </Link>
-            <Link
-              href="/launch-nx"
-              title="Launch Nx"
-              className="relative hidden px-3 py-2 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500 md:inline-flex"
-            >
-              {/*<span className="absolute top-0 right-0 -mt-1 -mr-1 flex h-3 w-3">*/}
-              {/*  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-500 opacity-75 dark:bg-sky-500" />*/}
-              {/*  <span className="relative inline-flex h-3 w-3 rounded-full bg-blue-500 dark:bg-sky-500" />*/}
-              {/*</span>*/}Launch Nx
-            </Link>
-            <Link
-              href="/contact"
-              title="Contact us"
-              className="hidden px-3 py-2 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500 md:inline-flex"
-            >
-              Contact us
-            </Link>
+              CI Pricing{' '}
+              <ArrowTopRightOnSquareIcon className="w-3.5 h-3.5 inline-block ml-1" />
+            </a>
           </nav>
         </div>
         <div className="flex-shrink-0 text-sm">
           <nav className="items-justified flex justify-center space-x-1">
             <AlgoliaSearch tiny={true} />
-            <ThemeSwitcher />
+            <Link
+              className="hidden px-3 py-2 font-medium leading-tight hover:text-blue-500 cursor-pointer dark:text-slate-200 dark:hover:text-sky-500 md:inline-flex"
+              title="Contact Us"
+              href="/contact"
+            >
+              {' '}
+              Contact{' '}
+              <ArrowTopRightOnSquareIcon className="w-3.5 h-3.5 inline-block ml-1" />
+            </Link>
+            <ButtonLink
+              href="https://cloud.nx.app"
+              variant="secondary"
+              size="small"
+              target="_blank"
+              title="Log in to your Nx Cloud Account"
+            >
+              Go to App
+            </ButtonLink>
             <a
               title="Nx is open source, check the code on GitHub"
               href="https://github.com/nrwl/nx"
@@ -246,62 +623,220 @@ export function Header(): JSX.Element {
             </svg>
           </Link>
           {/*MENU*/}
-          <div className="ml-4 flex flex-shrink-0">
-            <Popover className="">
-              {({ open }) => (
-                <>
-                  <Popover.Button
-                    type="button"
-                    className="inline-flex flex-shrink-0 items-center rounded-md border border-slate-200 bg-slate-50/60 px-3 py-2 text-sm text-sm font-semibold font-medium capitalize leading-4 shadow-sm transition hover:bg-slate-50 focus:outline-none dark:border-slate-700 dark:bg-slate-800/60 dark:hover:bg-slate-800"
-                  >
-                    <Bars4Icon
-                      className="-ml-0.5 mr-2 h-4 w-4"
-                      aria-hidden="true"
-                    />
-                    {router.pathname === '/'
-                      ? 'Home'
-                      : router.pathname.replace('/', '')}
-                  </Popover.Button>
-
-                  <Transition
-                    as={Fragment}
-                    enter="transition ease-out duration-200"
-                    enterFrom="opacity-0 translate-y-1"
-                    enterTo="opacity-100 translate-y-0"
-                    leave="transition ease-in duration-150"
-                    leaveFrom="opacity-100 translate-y-0"
-                    leaveTo="opacity-0 translate-y-1"
-                  >
-                    <Popover.Panel className="absolute left-0 z-10 mt-3 w-screen px-2">
-                      <div className="overflow-hidden rounded-lg bg-white shadow-lg ring-1 ring-black/5 dark:bg-slate-900 dark:ring-white/5">
-                        <nav className="relative grid gap-8 p-8 md:grid-cols-2">
-                          {flyoutMobileMenu.map((item) => (
+          <div className="ml-4 flex flex-shrink-0 items-center">
+            <button onClick={() => setIsOpen(!isOpen)}>
+              {!isOpen ? (
+                <Bars4Icon
+                  strokeWidth="2"
+                  title="Open navigation menu"
+                  className="ml-2 mr-2 h-6 w-6"
+                  aria-hidden="true"
+                />
+              ) : (
+                <XMarkIcon
+                  strokeWidth="2"
+                  title="Close navigation menu"
+                  className="ml-2 mr-2 h-7 w-7"
+                  aria-hidden="true"
+                />
+              )}
+            </button>
+            <Transition show={isOpen} as={Fragment}>
+              <Dialog
+                open={isOpen}
+                onClose={() => {}}
+                className="relative z-50 lg:hidden"
+              >
+                <div className="fixed inset-0 flex w-screen mt-32 bg-white dark:bg-slate-900">
+                  <Dialog.Panel className="w-full">
+                    <Transition.Child
+                      as={Fragment}
+                      enter="transition-opacity duration-300"
+                      enterFrom="opacity-0"
+                      enterTo="opacity-100"
+                      leave="transition-opacity duration-300"
+                      leaveFrom="opacity-100"
+                      leaveTo="opacity-0"
+                    >
+                      <Dialog.Description as="div">
+                        <Menu
+                          as="div"
+                          className="border-b border-slate-100/[0.50] pt-8 mx-4 dark:border-slate-700/[0.50]"
+                        >
+                          {() => (
+                            <div>
+                              <Menu.Button
+                                as="h3"
+                                className={cx(
+                                  'pb-4 w-full flex relative text-slate-900 hover:text-blue-500 cursor-pointer dark:text-slate-200 dark:hover:text-sky-500'
+                                )}
+                              >
+                                {' '}
+                                Features{' '}
+                                <ChevronDownIcon
+                                  className={cx(
+                                    'absolute right-0 -top-0 h-4 w-4 transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500'
+                                  )}
+                                />
+                              </Menu.Button>
+                              <Menu.Items>
+                                {[
+                                  ...flyOutMenuFeaturesCI,
+                                  ...flyOutMenuFeaturesOSS,
+                                ].map((item) => (
+                                  <Menu.Item key={item.name}>
+                                    {({ active }) => (
+                                      <Link
+                                        href={item.href}
+                                        className={cx(
+                                          active
+                                            ? 'bg-slate-50 dark:bg-slate-800/60'
+                                            : '',
+                                          'block py-3 flex items-center text-base text-slate-500 last:pb-6 dark:text-slate-400'
+                                        )}
+                                      >
+                                        <span className="pr-3">
+                                          {item.icon}
+                                        </span>
+                                        {item.name}
+                                      </Link>
+                                    )}
+                                  </Menu.Item>
+                                ))}
+                              </Menu.Items>
+                            </div>
+                          )}
+                        </Menu>
+                        <Menu
+                          as="div"
+                          className="border-b border-slate-100/[0.50] pt-4 mx-4 dark:border-slate-700/[0.50]"
+                        >
+                          {() => (
+                            <div>
+                              <Menu.Button
+                                as="h3"
+                                className={cx(
+                                  'pb-4 w-full flex relative text-slate-900 hover:text-blue-500 cursor-pointer dark:text-slate-200 dark:hover:text-sky-500'
+                                )}
+                              >
+                                {' '}
+                                Solutions{' '}
+                                <ChevronDownIcon className="absolute right-0 -top-0 h-4 w-4 transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500" />
+                              </Menu.Button>
+                              <Menu.Items>
+                                {[
+                                  ...flyOutMenuSolutions,
+                                  ...flyOutMenuSolutionsUseCases,
+                                ].map((item) => (
+                                  <Menu.Item key={item.name}>
+                                    {({ active }) => (
+                                      <Link
+                                        href={item.href}
+                                        className={cx(
+                                          active
+                                            ? 'bg-slate-50 dark:bg-slate-800/60'
+                                            : '',
+                                          'block py-3 flex items-center text-base text-slate-500 last:pb-6 dark:text-slate-400'
+                                        )}
+                                      >
+                                        {item.name}
+                                      </Link>
+                                    )}
+                                  </Menu.Item>
+                                ))}
+                              </Menu.Items>
+                            </div>
+                          )}
+                        </Menu>
+                        <Menu
+                          as="div"
+                          className="border-b border-slate-100/[0.50] pt-4 mx-4 dark:border-slate-700/[0.50]"
+                        >
+                          {() => (
+                            <div>
+                              <Menu.Button
+                                as="h3"
+                                className="pb-4 w-full flex text-slate-900 dark:text-slate-200 relative cursor-pointer text-base hover:text-blue-500 dark:hover:text-sky-500"
+                              >
+                                {' '}
+                                Resources{' '}
+                                <ChevronDownIcon className="absolute right-0 -top-0 h-4 w-4 transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500" />
+                              </Menu.Button>
+                              <Menu.Items>
+                                {[
+                                  ...flyOutMenuResources,
+                                  ...flyOutMenuResourcesAboutUs,
+                                ].map((item) => (
+                                  <Menu.Item key={item.name}>
+                                    {({ active }) => (
+                                      <Link
+                                        href={item.href}
+                                        className={cx(
+                                          active
+                                            ? 'bg-slate-50 dark:bg-slate-800/60'
+                                            : '',
+                                          'block py-3 flex items-center text-base text-slate-500 last:pb-6 dark:text-slate-400'
+                                        )}
+                                      >
+                                        {item.name}
+                                      </Link>
+                                    )}
+                                  </Menu.Item>
+                                ))}
+                              </Menu.Items>
+                            </div>
+                          )}
+                        </Menu>
+                        {flyoutMobileMenu.map((item) => (
+                          <div
+                            key={item.name}
+                            className="border-b pt-4 mx-4 text-slate-900 border-slate-100/[0.50] dark:text-slate-200 hover:text-blue-500 dark:hover:text-sky-500 dark:border-slate-700/[0.50]"
+                          >
                             <Link
                               key={item.name}
                               href={item.href}
-                              className="-m-3 flex items-start rounded-lg p-3 transition duration-150 ease-in-out hover:bg-slate-50 dark:hover:bg-slate-800/60"
+                              target={
+                                item.href.startsWith('http')
+                                  ? '_blank'
+                                  : undefined
+                              }
+                              className="flex items-start rounded-lg pb-4 transition duration-150 ease-in-out"
                             >
-                              <div className="ml-4">
-                                <p className="text-base font-medium text-slate-900 dark:text-slate-200">
+                              <div className="">
+                                <p className="text-base hover:text-blue-500 dark:hover:text-sky-500">
                                   {item.name}
-                                </p>
-                                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                                  {item.description}
                                 </p>
                               </div>
                             </Link>
-                          ))}
-                        </nav>
-                      </div>
-                    </Popover.Panel>
-                  </Transition>
-                </>
-              )}
-            </Popover>
+                          </div>
+                        ))}
+                      </Dialog.Description>
+                    </Transition.Child>
+                  </Dialog.Panel>
+                </div>
+              </Dialog>
+            </Transition>
           </div>
         </div>
         <div className="items-justified flex flex-shrink-0 justify-center space-x-1 text-sm">
-          <ThemeSwitcher />
+          <Link
+            className="inline-flex px-3 py-2 font-medium leading-tight hover:text-blue-500 cursor-pointer dark:text-slate-200 dark:hover:text-sky-500"
+            title="Contact Us"
+            href="/contact"
+          >
+            {' '}
+            Contact{' '}
+            <ArrowTopRightOnSquareIcon className="w-3.5 h-3.5 inline-block ml-1" />
+          </Link>
+          <ButtonLink
+            href="https://cloud.nx.app"
+            variant="secondary"
+            size="small"
+            target="_blank"
+            title="Log in to your Nx Cloud Account"
+          >
+            Go to App
+          </ButtonLink>
           <a
             title="Nx is open source, check the code on GitHub"
             href="https://github.com/nrwl/nx"

@@ -1,4 +1,5 @@
 import { HeartIcon } from '@heroicons/react/24/solid';
+import { ThemeSwitcher } from '@nx/nx-dev/ui-theme';
 import Link from 'next/link';
 
 export function Footer(): JSX.Element {
@@ -217,7 +218,7 @@ export function Footer(): JSX.Element {
                 </ul>
               </div>
             </div>
-            <div className="md:grid md:grid-cols-2 md:gap-8">
+            <div className="md:grid md:grid-cols-3 md:gap-8">
               <div>
                 <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-400">
                   Community
@@ -251,6 +252,12 @@ export function Footer(): JSX.Element {
                     </li>
                   ))}
                 </ul>
+              </div>
+              <div className="pt-8">
+                <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-400 ">
+                  Preferences
+                </h3>
+                <ThemeSwitcher useContext={false} />
               </div>
             </div>
           </div>
