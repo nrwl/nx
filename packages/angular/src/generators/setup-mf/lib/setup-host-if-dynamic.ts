@@ -5,17 +5,25 @@ import {
   updateProjectConfiguration,
 } from '@nx/devkit';
 import type { Schema } from '../schema';
+import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
 
 export function setupHostIfDynamic(tree: Tree, options: Schema) {
   if (options.federationType === 'static') {
     return;
   }
 
+  const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
   const project = readProjectConfiguration(tree, options.appName);
-  const pathToMFManifest = joinPathFragments(
-    project.sourceRoot,
-    'assets/module-federation.manifest.json'
-  );
+  const pathToMFManifest =
+    angularMajorVersion >= 18
+      ? joinPathFragments(
+          project.root,
+          'public/module-federation.manifest.json'
+        )
+      : joinPathFragments(
+          project.sourceRoot,
+          'assets/module-federation.manifest.json'
+        );
 
   if (!tree.exists(pathToMFManifest)) {
     tree.write(pathToMFManifest, '{}');

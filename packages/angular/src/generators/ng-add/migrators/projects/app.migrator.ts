@@ -257,8 +257,10 @@ export class AppMigrator extends ProjectMigrator<SupportedTargets> {
     buildOptions.polyfills =
       buildOptions.polyfills &&
       (Array.isArray(buildOptions.polyfills)
-        ? buildOptions.polyfills.map((asset) => this.convertAsset(asset))
-        : this.convertAsset(buildOptions.polyfills as string));
+        ? buildOptions.polyfills.map((asset) =>
+            this.convertSourceRootPath(asset)
+          )
+        : this.convertSourceRootPath(buildOptions.polyfills));
     buildOptions.tsConfig =
       buildOptions.tsConfig &&
       joinPathFragments(this.project.newRoot, basename(buildOptions.tsConfig));

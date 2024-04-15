@@ -32,14 +32,8 @@ export function checkIsCommaNeeded(mfRemoteText: string) {
 export function addRemoteToHost(tree: Tree, options: AddRemoteOptions) {
   if (options.host) {
     const hostProject = readProjectConfiguration(tree, options.host);
-    const pathToMFManifest = joinPathFragments(
-      hostProject.sourceRoot,
-      'assets/module-federation.manifest.json'
-    );
-    const hostFederationType = determineHostFederationType(
-      tree,
-      pathToMFManifest
-    );
+    const pathToMFManifest = getDynamicManifestFile(tree, hostProject);
+    const hostFederationType = !!pathToMFManifest ? 'dynamic' : 'static';
 
     const isHostUsingTypescriptConfig = tree.exists(
       joinPathFragments(hostProject.root, 'module-federation.config.ts')
@@ -60,11 +54,23 @@ export function addRemoteToHost(tree: Tree, options: AddRemoteOptions) {
   }
 }
 
-function determineHostFederationType(
+function getDynamicManifestFile(
   tree: Tree,
-  pathToMfManifest: string
-): 'dynamic' | 'static' {
-  return tree.exists(pathToMfManifest) ? 'dynamic' : 'static';
+  project: ProjectConfiguration
+): string | undefined {
+  // {sourceRoot}/assets/module-federation.manifest.json was the generated
+  // path for the manifest file in the past. We now generate the manifest
+  // file at {root}/public/module-federation.manifest.json. This check
+  // ensures that we can still support the old path for backwards
+  // compatibility since old projects may still have the manifest file
+  // at the old path.
+  return [
+    joinPathFragments(project.root, 'public/module-federation.manifest.json'),
+    joinPathFragments(
+      project.sourceRoot,
+      'assets/module-federation.manifest.json'
+    ),
+  ].find((path) => tree.exists(path));
 }
 
 function addRemoteToStaticHost(

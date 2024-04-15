@@ -514,7 +514,7 @@ describe('Init MF', () => {
         'remotes: []'
       );
       expect(
-        tree.exists('app1/src/assets/module-federation.manifest.json')
+        tree.exists('app1/public/module-federation.manifest.json')
       ).toBeTruthy();
       expect(tree.read('app1/src/main.ts', 'utf-8')).toMatchSnapshot();
     });
@@ -536,7 +536,7 @@ describe('Init MF', () => {
         'remotes: []'
       );
       expect(
-        tree.exists('app1/src/assets/module-federation.manifest.json')
+        tree.exists('app1/public/module-federation.manifest.json')
       ).toBeTruthy();
       expect(tree.read('app1/src/main.ts', 'utf-8')).toMatchSnapshot();
     });
@@ -567,7 +567,7 @@ describe('Init MF', () => {
         'remotes: []'
       );
       expect(
-        readJson(tree, 'app1/src/assets/module-federation.manifest.json')
+        readJson(tree, 'app1/public/module-federation.manifest.json')
       ).toEqual({
         remote1: 'http://localhost:4201',
       });
@@ -602,7 +602,7 @@ describe('Init MF', () => {
         'remotes: []'
       );
       expect(
-        readJson(tree, 'app1/src/assets/module-federation.manifest.json')
+        readJson(tree, 'app1/public/module-federation.manifest.json')
       ).toEqual({
         remote1: 'http://localhost:4201',
       });
@@ -641,7 +641,7 @@ describe('Init MF', () => {
       'remotes: []'
     );
     expect(
-      readJson(tree, 'app1/src/assets/module-federation.manifest.json')
+      readJson(tree, 'app1/public/module-federation.manifest.json')
     ).toEqual({
       remote1: 'http://localhost:4201',
     });
@@ -677,7 +677,7 @@ describe('Init MF', () => {
       'remotes: []'
     );
     expect(
-      readJson(tree, 'app1/src/assets/module-federation.manifest.json')
+      readJson(tree, 'app1/public/module-federation.manifest.json')
     ).toEqual({
       remote1: 'http://localhost:4201',
     });
