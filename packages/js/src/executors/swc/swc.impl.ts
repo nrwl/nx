@@ -17,7 +17,6 @@ import {
 import { copyPackageJson } from '../../utils/package-json';
 import {
   NormalizedSwcExecutorOptions,
-  SwcCliOptions,
   SwcExecutorOptions,
 } from '../../utils/schema';
 import { compileSwc, compileSwcWatch } from '../../utils/swc/compile-swc';
@@ -60,16 +59,20 @@ function normalizeOptions(
     outputPath
   );
 
-  // Always execute from root of project, same as with SWC CLI.
-  const swcCwd = join(root, projectRoot);
+  const projectRootParts = projectRoot.split('/');
+  // We pop the last part of the `projectRoot` to pass
+  // the last part (projectDir) and the remainder (projectRootParts) to swc
+  const projectDir = projectRootParts.pop();
+  // default to current directory if projectRootParts is [].
+  // Eg: when a project is at the root level, outside of layout dir
+  const swcCwd = projectRootParts.join('/') || '.';
   const { swcrcPath, tmpSwcrcPath } = getSwcrcPath(options, root, projectRoot);
 
   const swcCliOptions = {
-    srcPath: projectRoot,
-    destPath: relative(swcCwd, outputPath),
+    srcPath: projectDir,
+    destPath: relative(join(root, swcCwd), outputPath),
     swcCwd,
     swcrcPath,
-    stripLeadingPaths: Boolean(options.stripLeadingPaths),
   };
 
   return {
@@ -124,16 +127,11 @@ export async function* swcExecutor(
   );
 
   if (!isInlineGraphEmpty(inlineProjectGraph)) {
-    if (options.stripLeadingPaths) {
-      throw new Error(`Cannot use --strip-leading-paths with inlining.`);
-    }
-
     options.projectRoot = '.'; // set to root of workspace to include other libs for type check
 
     // remap paths for SWC compilation
-    options.inline = true;
-    options.swcCliOptions.swcCwd = '.';
     options.swcCliOptions.srcPath = options.swcCliOptions.swcCwd;
+    options.swcCliOptions.swcCwd = '.';
     options.swcCliOptions.destPath = join(
       options.swcCliOptions.destPath.split(normalize('../')).at(-1),
       options.swcCliOptions.srcPath

@@ -51,7 +51,6 @@ export interface ExecutorOptions {
   external?: 'all' | 'none' | string[];
   externalBuildTargets?: string[];
   generateLockfile?: boolean;
-  stripLeadingPaths?: boolean;
 }
 
 export interface NormalizedExecutorOptions extends ExecutorOptions {
@@ -76,7 +75,6 @@ export interface SwcCliOptions {
   destPath: string;
   swcrcPath: string;
   swcCwd: string;
-  stripLeadingPaths: boolean;
 }
 
 export interface NormalizedSwcExecutorOptions
@@ -86,7 +84,4 @@ export interface NormalizedSwcExecutorOptions
   skipTypeCheck: boolean;
   swcCliOptions: SwcCliOptions;
   tmpSwcrcPath: string;
-  sourceRoot?: string;
-  // TODO(v20): remove inline feature
-  inline?: boolean;
 }
