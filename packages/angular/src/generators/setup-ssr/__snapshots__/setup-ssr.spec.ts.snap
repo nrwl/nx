@@ -91,8 +91,10 @@ exports[`setupSSR with application builder should create the files correctly for
   "executor": "@angular-devkit/build-angular:application",
   "options": {
     "assets": [
-      "app1/src/favicon.ico",
-      "app1/src/assets",
+      {
+        "glob": "**/*",
+        "input": "app1/public",
+      },
     ],
     "browser": "app1/src/main.ts",
     "index": "app1/src/index.html",
@@ -208,8 +210,10 @@ exports[`setupSSR with application builder should create the files correctly for
   "executor": "@angular-devkit/build-angular:application",
   "options": {
     "assets": [
-      "app1/src/favicon.ico",
-      "app1/src/assets",
+      {
+        "glob": "**/*",
+        "input": "app1/public",
+      },
     ],
     "browser": "app1/src/main.ts",
     "index": "app1/src/index.html",
