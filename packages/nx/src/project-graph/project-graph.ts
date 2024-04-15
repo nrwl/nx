@@ -13,8 +13,6 @@ import { stripIndents } from '../utils/strip-indents';
 import { workspaceRoot } from '../utils/workspace-root';
 import {
   CreateDependenciesError,
-  ProcessDependenciesError,
-  ProcessProjectGraphError,
   buildProjectGraphUsingProjectFileMap,
 } from './build-project-graph';
 import {
@@ -23,24 +21,14 @@ import {
   writeCache,
 } from './nx-deps-cache';
 
+import { ProjectConfigurationsError } from './error-types';
+import { loadNxPlugins } from './plugins/internal-api';
+import { ProjectGraphError } from './project-graph-error';
+import { ConfigurationResult } from './utils/project-configuration-utils';
 import {
   retrieveProjectConfigurations,
   retrieveWorkspaceFiles,
 } from './utils/retrieve-workspace-files';
-import {
-  ConfigurationResult,
-  ConfigurationSourceMaps,
-} from './utils/project-configuration-utils';
-import {
-  CreateNodesError,
-  MergeNodesError,
-  ProjectConfigurationsError,
-  ProjectsWithNoNameError,
-  ProjectsWithConflictingNamesError,
-} from './error-types';
-import { DaemonProjectGraphError } from '../daemon/daemon-project-graph-error';
-import { loadNxPlugins, LoadedNxPlugin } from './plugins/internal-api';
-import { ProjectGraphError } from './project-graph-error';
 
 /**
  * Synchronously reads the latest cached copy of the workspace's ProjectGraph.
