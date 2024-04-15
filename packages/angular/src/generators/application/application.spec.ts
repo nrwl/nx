@@ -1224,7 +1224,7 @@ describe('app', () => {
     });
   });
 
-  describe('angular v15 support', () => {
+  describe('angular compat support', () => {
     beforeEach(() => {
       appTree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
       updateJson(appTree, 'package.json', (json) => ({
@@ -1297,6 +1297,21 @@ describe('app', () => {
         readJson(appTree, 'my-app/tsconfig.json').compilerOptions
           .esModuleInterop
       ).toBeUndefined();
+    });
+
+    it('should configure the correct assets for versions lower than v18', async () => {
+      updateJson(appTree, 'package.json', (json) => ({
+        ...json,
+        dependencies: { ...json.dependencies, '@angular/core': '~17.0.0' },
+      }));
+
+      await generateApp(appTree, 'my-app', { rootProject: true });
+
+      const project = readProjectConfiguration(appTree, 'my-app');
+      expect(project.targets.build.options.assets).toStrictEqual([
+        './src/favicon.ico',
+        './src/assets',
+      ]);
     });
   });
 });

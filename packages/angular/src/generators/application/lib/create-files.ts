@@ -47,6 +47,22 @@ export async function createFiles(
     substitutions
   );
 
+  if (angularMajorVersion >= 18) {
+    generateFiles(
+      tree,
+      joinPathFragments(__dirname, '../files/base-18+'),
+      options.appProjectRoot,
+      substitutions
+    );
+  } else {
+    generateFiles(
+      tree,
+      joinPathFragments(__dirname, '../files/base-pre18'),
+      options.appProjectRoot,
+      substitutions
+    );
+  }
+
   if (options.standalone) {
     generateFiles(
       tree,
