@@ -97,7 +97,7 @@ export function ContactLinks(): JSX.Element {
             features, releases and more.
           </p>
           <a
-            href="https://go.nx.dev/community"
+            href="https://x.com/NxDevTools?utm_source=nx.dev"
             rel="noreferrer"
             target="_blank"
             title="Nx Official X account"
@@ -121,7 +121,7 @@ export function ContactLinks(): JSX.Element {
             your inbox.
           </p>
           <a
-            href="https://go.nx.dev/community"
+            href="https://go.nx.dev/nx-newsletter?utm_source=nx.dev"
             rel="noreferrer"
             target="_blank"
             title="Nx monthly newsletter"
@@ -162,7 +162,7 @@ export function ContactLinks(): JSX.Element {
             source projects.
           </p>
           <a
-            href="https://go.nx.dev/community"
+            href="https://nx.app/company?utm_source=nx.dev"
             rel="noreferrer"
             target="_blank"
             title="Nx the company"
