@@ -51,11 +51,13 @@ describe('version-plans', () => {
       expect(versionPlans).toEqual([
         {
           filePath: expect.stringContaining('plan5.md'),
+          relativePath: expect.stringContaining('.nx/version-plans/plan5.md'),
           groupVersionBump: 'minor',
           message: 'This is a change to fixed-group-1',
         },
         {
           filePath: expect.stringContaining('plan6.md'),
+          relativePath: expect.stringContaining('.nx/version-plans/plan6.md'),
           groupVersionBump: 'major',
           message: 'This is a major change to fixed-group-1',
         },
@@ -88,6 +90,7 @@ describe('version-plans', () => {
       expect(versionPlans).toEqual([
         {
           filePath: expect.stringContaining('plan1.md'),
+          relativePath: expect.stringContaining('.nx/version-plans/plan1.md'),
           projectVersionBumps: {
             pkg1: 'patch',
           },
@@ -96,6 +99,7 @@ describe('version-plans', () => {
         },
         {
           filePath: expect.stringContaining('plan2.md'),
+          relativePath: expect.stringContaining('.nx/version-plans/plan2.md'),
           projectVersionBumps: {
             pkg1: 'minor',
             pkg2: 'patch',
@@ -115,6 +119,7 @@ describe('version-plans', () => {
       expect(versionPlans).toEqual([
         {
           filePath: expect.stringContaining('plan3.md'),
+          relativePath: expect.stringContaining('.nx/version-plans/plan3.md'),
           projectVersionBumps: {
             pkg3: 'major',
             pkg4: 'minor',
@@ -124,6 +129,7 @@ describe('version-plans', () => {
         },
         {
           filePath: expect.stringContaining('plan4.md'),
+          relativePath: expect.stringContaining('.nx/version-plans/plan4.md'),
           projectVersionBumps: {
             pkg3: 'patch',
             pkg4: 'minor',

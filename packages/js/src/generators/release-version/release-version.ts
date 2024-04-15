@@ -426,6 +426,9 @@ To fix this you will either need to add a package.json file at that location, or
                   options.releaseGroup.name
                 );
               }
+              versionPlans.forEach((plan) => {
+                tree.delete(plan.relativePath);
+              });
             }
 
             if (options.releaseGroup.projectsRelationship === 'independent') {

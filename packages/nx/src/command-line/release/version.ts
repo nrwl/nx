@@ -545,7 +545,7 @@ function printAndFlushChanges(tree: Tree, isDryRun: boolean) {
         joinPathFragments(tree.root, f.path)
       ).toString();
       printDiff(currentContentsOnDisk, f.content?.toString() || '');
-    } else if (f.type === 'DELETE') {
+    } else if (f.type === 'DELETE' && !f.path.includes('.nx')) {
       throw new Error(
         'Unexpected DELETE change, please report this as an issue'
       );

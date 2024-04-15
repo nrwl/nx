@@ -1,11 +1,13 @@
 import { workspaceRoot } from '@nx/devkit';
 import { readFileSync, readdirSync } from 'fs';
+import { pathExists } from 'fs-extra';
 import { join } from 'path';
 import { RELEASE_TYPES, ReleaseType } from 'semver';
 const fm = require('front-matter');
 
 export interface VersionPlan {
   filePath: string;
+  relativePath: string;
   message: string;
 }
 
@@ -17,12 +19,18 @@ export interface ProjectsVersionPlan extends VersionPlan {
   projectVersionBumps: Record<string, ReleaseType>;
 }
 
+const versionPlansDirectory = join('.nx', 'version-plans');
+
 export async function getVersionPlansForFixedGroup(
   groupName: string
 ): Promise<GroupVersionPlan[]> {
   const versionPlans: GroupVersionPlan[] = [];
 
-  const versionPlansPath = getVersionPlansPath();
+  const versionPlansPath = getVersionPlansAbsolutePath();
+  const versionPlansPathExists = await pathExists(versionPlansPath);
+  if (!versionPlansPathExists) {
+    return [];
+  }
   const versionPlanFiles = readdirSync(versionPlansPath);
 
   for (const versionPlanFile of versionPlanFiles) {
@@ -40,6 +48,7 @@ export async function getVersionPlansForFixedGroup(
     ) {
       versionPlans.push({
         filePath,
+        relativePath: join(versionPlansDirectory, versionPlanFile),
         groupVersionBump,
         message: parsedContent.body.trim(),
       });
@@ -55,7 +64,12 @@ export async function getVersionPlansForIndependentGroup(
 ): Promise<ProjectsVersionPlan[]> {
   const versionPlans: ProjectsVersionPlan[] = [];
 
-  const versionPlansPath = getVersionPlansPath();
+  const versionPlansPath = getVersionPlansAbsolutePath();
+  const versionPlansPathExists = await pathExists(versionPlansPath);
+  if (!versionPlansPathExists) {
+    return [];
+  }
+
   const versionPlanFiles = readdirSync(versionPlansPath);
 
   for (const versionPlanFile of versionPlanFiles) {
@@ -79,6 +93,7 @@ export async function getVersionPlansForIndependentGroup(
       if (Object.keys(projectVersionBumps).length) {
         versionPlans.push({
           filePath,
+          relativePath: join(versionPlansDirectory, versionPlanFile),
           projectVersionBumps,
           message: parsedContent.body.trim(),
         });
@@ -89,8 +104,8 @@ export async function getVersionPlansForIndependentGroup(
   return versionPlans;
 }
 
-function getVersionPlansPath() {
-  return join(workspaceRoot, '.nx', 'version-plans');
+function getVersionPlansAbsolutePath() {
+  return join(workspaceRoot, versionPlansDirectory);
 }
 
 function isReleaseType(value: string): value is ReleaseType {

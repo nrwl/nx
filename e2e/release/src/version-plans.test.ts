@@ -1,6 +1,7 @@
 import { NxJsonConfiguration } from '@nx/devkit';
 import {
   cleanupProject,
+  exists,
   newProject,
   runCLI,
   runCommandAsync,
@@ -72,11 +73,10 @@ describe('nx release version plans', () => {
 
     await runCommandAsync(`git add .`);
     await runCommandAsync(`git commit -m "chore: initial commit"`);
-    await runCommandAsync(`git tag -a ${pkg1}@0.0.1 -m "${pkg1}@0.0.1"`);
-    await runCommandAsync(`git tag -a ${pkg2}@0.0.1 -m "${pkg2}@0.0.1"`);
-    await runCommandAsync(`git tag -a ${pkg3}@0.0.1 -m "${pkg3}@0.0.1"`);
-    await runCommandAsync(`git tag -a ${pkg4}@0.0.1 -m "${pkg4}@0.0.1"`);
-    await runCommandAsync(`git tag -a ${pkg5}@0.0.1 -m "${pkg5}@0.0.1"`);
+    await runCommandAsync(`git tag -a v0.0.0 -m "v0.0.0"`);
+    await runCommandAsync(`git tag -a ${pkg3}@0.0.0 -m "${pkg3}@0.0.0"`);
+    await runCommandAsync(`git tag -a ${pkg4}@0.0.0 -m "${pkg4}@0.0.0"`);
+    await runCommandAsync(`git tag -a ${pkg5}@0.0.0 -m "${pkg5}@0.0.0"`);
   }, 60000);
   afterAll(() => cleanupProject());
 
@@ -86,16 +86,21 @@ describe('nx release version plans', () => {
         groups: {
           'fixed-group': {
             projects: [pkg1, pkg2],
+            releaseTagPattern: 'v{version}',
           },
           'independent-group': {
             projects: [pkg3, pkg4, pkg5],
             projectsRelationship: 'independent',
+            releaseTagPattern: '{projectName}@{version}',
           },
         },
         version: {
           generatorOptions: {
             specifierSource: 'version-plans',
           },
+        },
+        changelog: {
+          projectChangelogs: true,
         },
       };
       return nxJson;
@@ -127,7 +132,18 @@ Update the independent packages with a patch, preminor, and prerelease.
 `
     );
 
-    const result = runCLI('release version --dry-run --verbose', {
+    expect(exists(join(versionPlansDir, 'bump-fixed.md'))).toBe(true);
+    expect(exists(join(versionPlansDir, 'bump-independent.md'))).toBe(true);
+
+    await runCommandAsync(`git add ${join(versionPlansDir, 'bump-fixed.md')}`);
+    await runCommandAsync(
+      `git add ${join(versionPlansDir, 'bump-independent.md')}`
+    );
+    await runCommandAsync(
+      `git commit -m "chore: add version plans for fixed and independent groups"`
+    );
+
+    const result = runCLI('release --dry-run --verbose', {
       silenceError: true,
     });
 
@@ -147,5 +163,8 @@ Update the independent packages with a patch, preminor, and prerelease.
     expect(result).toContain(
       `${pkg5} 📄 Resolved the specifier as "prerelease" using version plans.`
     );
+
+    expect(exists(join(versionPlansDir, 'bump-fixed.md'))).toBeFalsy();
+    expect(exists(join(versionPlansDir, 'bump-independent.md'))).toBeFalsy();
   });
 });
