@@ -25,7 +25,10 @@ import { waitForPortOpen } from '@nx/web/src/utils/wait-for-port-open';
 import fileServerExecutor from '@nx/web/src/executors/file-server/file-server.impl';
 import { createBuilderContext } from 'nx/src/adapter/ngcli-adapter';
 import { executeDevServerBuilder } from '../../builders/dev-server/dev-server.impl';
-import { validateDevRemotes } from '../../builders/utilities/module-federation';
+import {
+  getDynamicMfManifestFile,
+  validateDevRemotes,
+} from '../../builders/utilities/module-federation';
 import { extname, join } from 'path';
 import { existsSync } from 'fs';
 
@@ -74,12 +77,10 @@ export async function* moduleFederationDevServerExecutor(
     return yield* currIter;
   }
 
-  let pathToManifestFile = join(
-    context.root,
-    project.sourceRoot,
-    'assets/module-federation.manifest.json'
-  );
-  if (options.pathToManifestFile) {
+  let pathToManifestFile: string;
+  if (!options.pathToManifestFile) {
+    pathToManifestFile = getDynamicMfManifestFile(project, context.root);
+  } else {
     const userPathToManifestFile = join(
       context.root,
       options.pathToManifestFile
