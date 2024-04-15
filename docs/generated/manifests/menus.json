@@ -4732,14 +4732,6 @@
             "disableCollapsible": false
           },
           {
-            "name": "workspace-lint",
-            "path": "/deprecated/workspace-lint",
-            "id": "workspace-lint",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
             "name": "As Provided vs. Derived",
             "path": "/deprecated/as-provided-vs-derived",
             "id": "as-provided-vs-derived",
@@ -4759,14 +4751,6 @@
             "name": "Workspace Executors",
             "path": "/deprecated/workspace-executors",
             "id": "workspace-executors",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "defaultCollection",
-            "path": "/deprecated/default-collection",
-            "id": "default-collection",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -4812,63 +4796,6 @@
             "disableCollapsible": false
           },
           {
-            "name": "Storybook deprecated docs",
-            "path": "/deprecated/storybook",
-            "id": "storybook",
-            "isExternal": false,
-            "children": [
-              {
-                "name": "Angular: Information about the Storybook targets",
-                "path": "/deprecated/storybook/angular-storybook-targets",
-                "id": "angular-storybook-targets",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Angular - The projectBuildConfig",
-                "path": "/deprecated/storybook/angular-project-build-config",
-                "id": "angular-project-build-config",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Angular: Storybook Migration to webpackFinal",
-                "path": "/deprecated/storybook/migrate-webpack-final-angular",
-                "id": "migrate-webpack-final-angular",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Angular: Upgrading to Storybook 6",
-                "path": "/deprecated/storybook/upgrade-storybook-v6-angular",
-                "id": "upgrade-storybook-v6-angular",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "React: Storybook Migration to webpackFinal and the Nx Addon",
-                "path": "/deprecated/storybook/migrate-webpack-final-react",
-                "id": "migrate-webpack-final-react",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "React: Upgrading to Storybook 6",
-                "path": "/deprecated/storybook/upgrade-storybook-v6-react",
-                "id": "upgrade-storybook-v6-react",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              }
-            ],
-            "disableCollapsible": false
-          },
-          {
             "name": "v1 Nx Plugin API",
             "path": "/deprecated/v1-nx-plugin-api",
             "id": "v1-nx-plugin-api",
@@ -4883,14 +4810,6 @@
         "name": "workspace.json",
         "path": "/deprecated/workspace-json",
         "id": "workspace-json",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "workspace-lint",
-        "path": "/deprecated/workspace-lint",
-        "id": "workspace-lint",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -4915,14 +4834,6 @@
         "name": "Workspace Executors",
         "path": "/deprecated/workspace-executors",
         "id": "workspace-executors",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "defaultCollection",
-        "path": "/deprecated/default-collection",
-        "id": "default-collection",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -4963,111 +4874,6 @@
         "name": "Angular Schematics and Builders",
         "path": "/deprecated/angular-schematics-builders",
         "id": "angular-schematics-builders",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Storybook deprecated docs",
-        "path": "/deprecated/storybook",
-        "id": "storybook",
-        "isExternal": false,
-        "children": [
-          {
-            "name": "Angular: Information about the Storybook targets",
-            "path": "/deprecated/storybook/angular-storybook-targets",
-            "id": "angular-storybook-targets",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Angular - The projectBuildConfig",
-            "path": "/deprecated/storybook/angular-project-build-config",
-            "id": "angular-project-build-config",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Angular: Storybook Migration to webpackFinal",
-            "path": "/deprecated/storybook/migrate-webpack-final-angular",
-            "id": "migrate-webpack-final-angular",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Angular: Upgrading to Storybook 6",
-            "path": "/deprecated/storybook/upgrade-storybook-v6-angular",
-            "id": "upgrade-storybook-v6-angular",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "React: Storybook Migration to webpackFinal and the Nx Addon",
-            "path": "/deprecated/storybook/migrate-webpack-final-react",
-            "id": "migrate-webpack-final-react",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "React: Upgrading to Storybook 6",
-            "path": "/deprecated/storybook/upgrade-storybook-v6-react",
-            "id": "upgrade-storybook-v6-react",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          }
-        ],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Angular: Information about the Storybook targets",
-        "path": "/deprecated/storybook/angular-storybook-targets",
-        "id": "angular-storybook-targets",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Angular - The projectBuildConfig",
-        "path": "/deprecated/storybook/angular-project-build-config",
-        "id": "angular-project-build-config",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Angular: Storybook Migration to webpackFinal",
-        "path": "/deprecated/storybook/migrate-webpack-final-angular",
-        "id": "migrate-webpack-final-angular",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Angular: Upgrading to Storybook 6",
-        "path": "/deprecated/storybook/upgrade-storybook-v6-angular",
-        "id": "upgrade-storybook-v6-angular",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "React: Storybook Migration to webpackFinal and the Nx Addon",
-        "path": "/deprecated/storybook/migrate-webpack-final-react",
-        "id": "migrate-webpack-final-react",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "React: Upgrading to Storybook 6",
-        "path": "/deprecated/storybook/upgrade-storybook-v6-react",
-        "id": "upgrade-storybook-v6-react",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
