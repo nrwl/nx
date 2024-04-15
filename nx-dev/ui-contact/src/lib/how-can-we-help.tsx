@@ -26,7 +26,7 @@ export function HowCanWeHelp(): JSX.Element {
               </h3>
             </div>
             <p className="mt-4">
-              Ask a question, need guidance, talk new ideas or simply leave
+              Ask a question, receive guidance, share ideas or simply leave
               feedback about our products on the Discord channel.
             </p>
             <ButtonLink

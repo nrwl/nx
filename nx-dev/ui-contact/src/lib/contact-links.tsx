@@ -31,7 +31,7 @@ export function ContactLinks(): JSX.Element {
             </h4>
           </div>
           <p className="mt-2">
-            Fill a bug report or want to contribute to the OSS products.
+            File a bug report, check releases or contribute to the OSS products.
           </p>
           <a
             href="https://github.com/nrwl/nx"
