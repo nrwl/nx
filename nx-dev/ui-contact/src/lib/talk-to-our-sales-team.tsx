@@ -14,9 +14,9 @@ export function TalkToOurSalesTeam(): JSX.Element {
           <section className="mt-4">
             <p className="text-lg leading-relaxed">
               We’re here to help you find the right plan and pricing for your
-              company constraints and requirements. We will talk about{' '}
+              requirements. We can talk about{' '}
               <span className="font-medium">
-                how Nx Cloud Enterprise works for your organization
+                how Nx Cloud Enterprise helps you drive better business outcomes
               </span>
               .
             </p>
