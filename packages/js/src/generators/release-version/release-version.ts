@@ -37,7 +37,7 @@ import {
 } from 'nx/src/command-line/release/version';
 import { interpolate } from 'nx/src/tasks-runner/utils';
 import * as ora from 'ora';
-import { ReleaseType, gt, prerelease } from 'semver';
+import { ReleaseType, gt, inc, prerelease } from 'semver';
 import { parseRegistryOptions } from '../../utils/npm-config';
 import { ReleaseVersionGeneratorSchema } from './schema';
 import { resolveLocalPackageDependencies } from './utils/resolve-local-package-dependencies';
@@ -444,7 +444,12 @@ To fix this you will either need to add a package.json file at that location, or
                     return plan.projectVersionBumps[projectName];
                   }
                   if (plan.projectVersionBumps[projectName]) {
-                    return gt(plan.projectVersionBumps[projectName], spec)
+                    const prevNewVersion = inc(currentVersion, spec);
+                    const nextNewVersion = inc(
+                      currentVersion,
+                      plan.projectVersionBumps[projectName]
+                    );
+                    return gt(nextNewVersion, prevNewVersion)
                       ? plan.projectVersionBumps[projectName]
                       : spec;
                   }
@@ -458,7 +463,13 @@ To fix this you will either need to add a package.json file at that location, or
                   if (!spec) {
                     return plan.groupVersionBump;
                   }
-                  return gt(plan.groupVersionBump, spec)
+
+                  const prevNewVersion = inc(currentVersion, spec);
+                  const nextNewVersion = inc(
+                    currentVersion,
+                    plan.groupVersionBump
+                  );
+                  return gt(nextNewVersion, prevNewVersion)
                     ? plan.groupVersionBump
                     : spec;
                 },
