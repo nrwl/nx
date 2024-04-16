@@ -12,7 +12,7 @@ A [project](#project) that can run on its own. Generally uses [libraries](#libra
 
 ### Atomizer
 
-The Atomizer automatically splits tasks so that they can be executed in parallel.
+The Atomizer is an Nx Cloud feature that automatically splits tasks so that they can be executed in parallel.
 
 Atomizer automatically splits tasks on [Nx Agents](#nx-agents), providing you detailed task information in the UI, including interpreted logs and artifacts, automatically grouped by project and workflow.
 
@@ -88,7 +88,7 @@ A script that performs some action on your code. This can include building, lint
 
 ### Flaky Tasks
 
-Tasks that will sometimes succeed and sometimes fail without any change to the inputs. These tasks are often e2e tests and are particularly problematic in CI.
+Tasks that will sometimes succeed and sometimes fail without any change to the inputs. These tasks are often e2e tests and are particularly problematic in CI. Nx Cloud automatically detects flaky tasks and re-runs them.
 
 > See: [Identify and Re-run Flaky Tasks](/ci/features/flaky-tasks)
 
