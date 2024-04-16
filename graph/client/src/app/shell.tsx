@@ -1,30 +1,48 @@
+/* eslint-disable @nx/enforce-module-boundaries */
+// nx-ignore-next-line
+import {
+  GraphError,
+  ProjectGraphClientResponse,
+} from 'nx/src/command-line/graph/graph';
+/* eslint-enable @nx/enforce-module-boundaries */
+
 import {
   ArrowDownTrayIcon,
   ArrowLeftCircleIcon,
   InformationCircleIcon,
 } from '@heroicons/react/24/outline';
+import {
+  ErrorToast,
+  fetchProjectGraph,
+  getProjectGraphDataService,
+  useEnvironmentConfig,
+  useIntervalWhen,
+} from '@nx/graph/shared';
+import { Dropdown, Spinner } from '@nx/graph/ui-components';
+import { getSystemTheme, Theme, ThemePanel } from '@nx/graph/ui-theme';
+import { Tooltip } from '@nx/graph/ui-tooltips';
 import classNames from 'classnames';
-import { DebuggerPanel } from './ui-components/debugger-panel';
-import { getGraphService } from './machines/graph.service';
+import { useLayoutEffect, useState } from 'react';
 import {
   Outlet,
   useNavigate,
   useNavigation,
   useParams,
+  useRouteLoaderData,
 } from 'react-router-dom';
-import { getSystemTheme, Theme, ThemePanel } from '@nx/graph/ui-theme';
-import { Dropdown, Spinner } from '@nx/graph/ui-components';
-import { useCurrentPath } from './hooks/use-current-path';
-import { ExperimentalFeature } from './ui-components/experimental-feature';
-import { RankdirPanel } from './feature-projects/panels/rankdir-panel';
-import { getProjectGraphService } from './machines/get-services';
 import { useSyncExternalStore } from 'use-sync-external-store/shim';
-import { Tooltip } from '@nx/graph/ui-tooltips';
+import { RankdirPanel } from './feature-projects/panels/rankdir-panel';
+import { useCurrentPath } from './hooks/use-current-path';
+import { getProjectGraphService } from './machines/get-services';
+import { getGraphService } from './machines/graph.service';
+import { DebuggerPanel } from './ui-components/debugger-panel';
+import { ExperimentalFeature } from './ui-components/experimental-feature';
 import { TooltipDisplay } from './ui-tooltips/graph-tooltip-display';
-import { useEnvironmentConfig } from '@nx/graph/shared';
 
 export function Shell(): JSX.Element {
   const projectGraphService = getProjectGraphService();
+  const projectGraphDataService = getProjectGraphDataService();
+
   const graphService = getGraphService();
 
   const lastPerfReport = useSyncExternalStore(
@@ -43,8 +61,29 @@ export function Shell(): JSX.Element {
   const navigate = useNavigate();
   const { state: navigationState } = useNavigation();
   const currentPath = useCurrentPath();
-  const { selectedWorkspaceId } = useParams();
+  const params = useParams();
   const currentRoute = currentPath.currentPath;
+
+  const [errors, setErrors] = useState<GraphError[] | undefined>(undefined);
+  const { errors: routerErrors } = useRouteLoaderData('selectedWorkspace') as {
+    errors: GraphError[];
+  };
+  useLayoutEffect(() => {
+    setErrors(routerErrors);
+  }, [routerErrors]);
+  useIntervalWhen(
+    () => {
+      fetchProjectGraph(
+        projectGraphDataService,
+        params,
+        environmentConfig.appConfig
+      ).then((response: ProjectGraphClientResponse) => {
+        setErrors(response.errors);
+      });
+    },
+    1000,
+    environmentConfig.watch
+  );
 
   const topLevelRoute = currentRoute.startsWith('/tasks')
     ? '/tasks'
@@ -165,7 +204,7 @@ export function Shell(): JSX.Element {
         {environment.appConfig.showDebugger ? (
           <DebuggerPanel
             projects={environment.appConfig.workspaces}
-            selectedProject={selectedWorkspaceId}
+            selectedProject={params.selectedWorkspaceId}
             lastPerfReport={lastPerfReport}
             selectedProjectChange={projectChange}
           ></DebuggerPanel>
@@ -217,6 +256,7 @@ export function Shell(): JSX.Element {
           </Tooltip>
         </div>
       </div>
+      <ErrorToast errors={errors} />
     </div>
   );
 }

@@ -1,9 +1,13 @@
 /* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
 import type { ProjectGraphProjectNode } from '@nx/devkit';
+// nx-ignore-next-line
+import { GraphError } from 'nx/src/command-line/graph/graph';
+/* eslint-enable @nx/enforce-module-boundaries */
 import { useNavigate, useNavigation, useSearchParams } from 'react-router-dom';
 import { connect } from 'react-redux';
 import {
+  ErrorToast,
   getExternalApiService,
   useEnvironmentConfig,
   useRouteConstructor,
@@ -23,6 +27,7 @@ type ProjectDetailsProps = mapStateToPropsType &
   mapDispatchToPropsType & {
     project: ProjectGraphProjectNode;
     sourceMap: Record<string, string[]>;
+    errors?: GraphError[];
   };
 
 export function ProjectDetailsWrapperComponent({
@@ -31,6 +36,7 @@ export function ProjectDetailsWrapperComponent({
   setExpandTargets,
   expandTargets,
   collapseAllTargets,
+  errors,
 }: ProjectDetailsProps) {
   const environment = useEnvironmentConfig()?.environment;
   const externalApiService = getExternalApiService();
@@ -158,13 +164,16 @@ export function ProjectDetailsWrapperComponent({
   }
 
   return (
-    <ProjectDetails
-      project={project}
-      sourceMap={sourceMap}
-      onViewInProjectGraph={handleViewInProjectGraph}
-      onViewInTaskGraph={handleViewInTaskGraph}
-      onRunTarget={environment === 'nx-console' ? handleRunTarget : undefined}
-    />
+    <>
+      <ProjectDetails
+        project={project}
+        sourceMap={sourceMap}
+        onViewInProjectGraph={handleViewInProjectGraph}
+        onViewInTaskGraph={handleViewInTaskGraph}
+        onRunTarget={environment === 'nx-console' ? handleRunTarget : undefined}
+      />
+      <ErrorToast errors={errors} />
+    </>
   );
 }
 

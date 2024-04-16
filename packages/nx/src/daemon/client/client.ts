@@ -179,6 +179,7 @@ export class DaemonClient {
       watchProjects: string[] | 'all';
       includeGlobalWorkspaceFiles?: boolean;
       includeDependentProjects?: boolean;
+      allowPartialGraph?: boolean;
     },
     callback: (
       error: Error | null | 'closed',
@@ -188,7 +189,15 @@ export class DaemonClient {
       } | null
     ) => void
   ): Promise<UnregisterCallback> {
-    await this.getProjectGraphAndSourceMaps();
+    try {
+      await this.getProjectGraphAndSourceMaps();
+    } catch (e) {
+      if (config.allowPartialGraph && e instanceof ProjectGraphError) {
+        // we are fine with partial graph
+      } else {
+        throw e;
+      }
+    }
     let messenger: DaemonSocketMessenger | undefined;
 
     await this.queue.sendToQueue(() => {

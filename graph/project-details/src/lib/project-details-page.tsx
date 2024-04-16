@@ -1,6 +1,10 @@
 /* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
-import type { ProjectGraphProjectNode } from '@nx/devkit';
+import { ProjectGraphProjectNode } from '@nx/devkit';
+// nx-ignore-next-line
+import { GraphError } from 'nx/src/command-line/graph/graph';
+/* eslint-enable @nx/enforce-module-boundaries */
+
 import {
   ScrollRestoration,
   useParams,
@@ -16,12 +20,13 @@ import {
 import { ProjectDetailsHeader } from './project-details-header';
 
 export function ProjectDetailsPage() {
-  const { project, sourceMap, hash } = useRouteLoaderData(
+  const { project, sourceMap, hash, errors } = useRouteLoaderData(
     'selectedProjectDetails'
   ) as {
     hash: string;
     project: ProjectGraphProjectNode;
     sourceMap: Record<string, string[]>;
+    errors?: GraphError[];
   };
 
   const { environment, watch, appConfig } = useEnvironmentConfig();
@@ -56,6 +61,7 @@ export function ProjectDetailsPage() {
         <ProjectDetailsWrapper
           project={project}
           sourceMap={sourceMap}
+          errors={errors}
         ></ProjectDetailsWrapper>
       </div>
     </div>
