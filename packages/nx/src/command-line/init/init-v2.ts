@@ -11,6 +11,7 @@ import {
   addDepsToPackageJson,
   createNxJsonFile,
   isMonorepo,
+  printFinalMessage,
   runInstall,
   updateGitIgnore,
 } from './implementation/utils';
@@ -67,6 +68,10 @@ export async function initHandler(options: InitArgs): Promise<void> {
       ...options,
       integrated: !!options.integrated,
     });
+
+    printFinalMessage({
+      learnMoreLink: 'https://nx.dev/recipes/angular/migration/angular',
+    });
     return;
   }
 
@@ -86,6 +91,9 @@ export async function initHandler(options: InitArgs): Promise<void> {
       nxCloud: false,
     });
   }
+  const learnMoreLink = isMonorepo(packageJson)
+    ? 'https://nx.dev/getting-started/tutorials/npm-workspaces-tutorial'
+    : 'https://nx.dev/recipes/adopting-nx/adding-to-existing-project';
   const useNxCloud =
     options.nxCloud ??
     (options.interactive ? await connectExistingRepoToNxCloudPrompt() : false);
@@ -128,12 +136,8 @@ export async function initHandler(options: InitArgs): Promise<void> {
     );
   }
 
-  output.log({
-    title: '👀 Explore Your Workspace',
-    bodyLines: [
-      `Run "nx graph" to show the graph of the workspace. It will show tasks that you can run with Nx.`,
-      `Read this guide on exploring your workspace: https://nx.dev/core-features/explore-graph`,
-    ],
+  printFinalMessage({
+    learnMoreLink,
   });
 }
 
