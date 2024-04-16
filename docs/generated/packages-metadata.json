@@ -1975,6 +1975,15 @@
         "originalFilePath": "/packages/playwright/src/generators/init/schema.json",
         "path": "playwright/generators/init",
         "type": "generator"
+      },
+      {
+        "description": "Convert existing Playwright project(s) using `@nx/playwright:playwright` executor to use `@nx/playwright/plugin`.",
+        "file": "generated/packages/playwright/generators/convert-to-inferred.json",
+        "hidden": false,
+        "name": "convert-to-inferred",
+        "originalFilePath": "/packages/playwright/src/generators/convert-to-inferred/schema.json",
+        "path": "playwright/generators/convert-to-inferred",
+        "type": "generator"
       }
     ],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",

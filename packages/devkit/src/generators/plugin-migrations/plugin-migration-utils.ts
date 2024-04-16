@@ -53,12 +53,27 @@ const {
  *   );
  * }
  *
+ * function projectOptionsTransformer(
+ *   target: TargetConfiguration
+ * ): TargetConfiguration {
+ *   if (target.options) {
+ *     for (const [key, value] of Object.entries(target.options)) {
+ *       const newKeyName = names(key).fileName;
+ *       delete target.options[key];
+ *       target.options[newKeyName] = value;
+ *     }
+ *   }
+ *
+ *   return target;
+ * }
+ *
  * const { targetName, include } = await migrateExecutorToPlugin(
  *   tree,
  *   projectGraph,
  *   createProjectConfigs,
  *   '@nx/playwright:playwright',
- *   createNodes
+ *   createNodes,
+ *   projectOptionsTransformer
  * );
  *
  *
@@ -204,7 +219,20 @@ export function addPluginWithOptions<T extends object>(
           return false;
         }
       }
-      return true;
+
+      let includesContainsAllNewIncludePaths = !(!include && plugin.include);
+
+      if (include && plugin.include) {
+        for (const pluginIncludes of plugin.include) {
+          for (const projectPath of include) {
+            if (!minimatch(projectPath, pluginIncludes, { dot: true })) {
+              includesContainsAllNewIncludePaths = false;
+            }
+          }
+        }
+      }
+
+      return includesContainsAllNewIncludePaths;
     }
   );
   if (pluginExists) {

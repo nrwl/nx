@@ -11,12 +11,6 @@
       "version": "18.1.0-beta.3",
       "description": "Remove invalid baseUrl option from @nx/playwright:playwright targets in project.json.",
       "implementation": "./src/migrations/update-18-1-0/remove-baseUrl-from-project-json"
-    },
-    "19-0-0-migrate-executor-to-plugin": {
-      "cli": "nx",
-      "version": "19.0.0",
-      "description": "Migrate @nx/playwright:playwright executor usage to Plugin usage",
-      "implementation": "./src/migrations/update-19-0-0/migrate-executors-to-plugin"
     }
   }
 }
