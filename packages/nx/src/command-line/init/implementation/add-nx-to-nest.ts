@@ -17,7 +17,6 @@ import {
   createNxJsonFile,
   initCloud,
   markRootPackageJsonAsNxProjectLegacy,
-  printFinalMessage,
   runInstall,
   updateGitIgnore,
 } from './utils';
@@ -139,10 +138,6 @@ export async function addNxToNest(options: Options, packageJson: PackageJson) {
     output.log({ title: '🛠️ Setting up Nx Cloud' });
     initCloud(repoRoot, 'nx-init-nest');
   }
-
-  printFinalMessage({
-    learnMoreLink: 'https://nx.dev/recipes/adopting-nx/adding-to-monorepo',
-  });
 }
 
 function addNestPluginToPackageJson(repoRoot: string) {
@@ -177,8 +172,6 @@ function createProjectJson(
         buildTarget: `${packageName}:build`,
       },
     };
-
-    console.log(nestCLIOptions);
 
     if (nestCLIOptions.webpackOptions) {
       json.targets['build'] = {

@@ -10,7 +10,6 @@ import {
   initCloud,
   markPackageJsonAsNxProject,
   markRootPackageJsonAsNxProjectLegacy,
-  printFinalMessage,
   runInstall,
   updateGitIgnore,
 } from './utils';
@@ -96,9 +95,4 @@ export async function addNxToNpmRepo(options: Options) {
     output.log({ title: '🛠️ Setting up Nx Cloud' });
     initCloud(repoRoot, 'nx-init-npm-repo');
   }
-
-  printFinalMessage({
-    learnMoreLink:
-      'https://nx.dev/recipes/adopting-nx/adding-to-existing-project',
-  });
 }

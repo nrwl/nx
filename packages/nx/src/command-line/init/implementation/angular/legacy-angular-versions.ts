@@ -11,7 +11,7 @@ import {
   resolvePackageVersionUsingInstallation,
   resolvePackageVersionUsingRegistry,
 } from '../../../../utils/package-manager';
-import { initCloud, printFinalMessage } from '../utils';
+import { initCloud } from '../utils';
 import type { Options } from './types';
 import { connectExistingRepoToNxCloudPrompt } from '../../../connect/connect-to-nx-cloud';
 
@@ -111,13 +111,6 @@ export async function getLegacyMigrationFunctionIfApplicable(
       output.log({ title: '🛠️ Setting up Nx Cloud' });
       initCloud(repoRoot, 'nx-init-angular');
     }
-
-    printFinalMessage({
-      learnMoreLink: 'https://nx.dev/recipes/angular/migration/angular',
-      bodyLines: [
-        '- Execute "npx nx build" twice to see the computation caching in action.',
-      ],
-    });
   };
 }
 
