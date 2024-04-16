@@ -3,134 +3,93 @@ import {
   deleteMatchingProperties,
   getProjectsToMigrate,
 } from './plugin-migration-utils';
-import { type Tree } from 'nx/src/generators/tree';
-import { beforeEach } from 'vitest';
 import { createTreeWithEmptyWorkspace } from 'nx/src/generators/testing-utils/create-tree-with-empty-workspace';
-import { addProjectConfiguration } from 'nx/src/generators/utils/project-configuration';
+import {
+  addProjectConfiguration,
+  readNxJson,
+} from 'nx/src/generators/utils/project-configuration';
 
 describe('Plugin Migration Utils', () => {
   describe('addPluginWithPreferredTargetNames', () => {
-    it('should not add the plugin if it already exists as a string and the preferred target names match the default', () => {
+    it('should not add the plugin if it already exists the preferred target names match the default', () => {
       // ARRANGE
-      let nxJson = {
-        plugins: ['@nx/playwright/plugin'],
-      };
+      const tree = createTreeWithEmptyWorkspace();
+
+      const nxJson = readNxJson(tree);
+      nxJson.plugins ??= [];
+      nxJson.plugins.push({
+        plugin: '@nx/playwright/plugin',
+        options: { targetName: 'e2e', ciTargetName: 'e2e-ci' },
+      });
 
       const preferredTargetNames = {
         targetName: 'e2e',
         ciTargetName: 'e2e-ci',
       };
-      const defaultTargetNames = {
-        targetName: 'e2e',
-        ciTargetName: 'e2e-ci',
-      };
 
       // ACT
-      let updatedNxJson = addPluginWithOptions(
+      addPluginWithOptions(
+        tree,
         '@nx/playwright/plugin',
-        preferredTargetNames,
-        defaultTargetNames,
-        nxJson
+        undefined,
+        preferredTargetNames
       );
 
       // ASSERT
-      expect(updatedNxJson).toEqual(nxJson);
-    });
-
-    it('should not add the plugin if it already exists as an object and the preferred target names match the default', () => {
-      // ARRANGE
-      let nxJson = {
-        plugins: [
-          {
-            plugin: '@nx/playwright/plugin',
-            options: {
-              targetName: 'e2e',
-              ciTargetName: 'e2e-ci',
-            },
-          },
-        ],
-      };
-
-      const preferredTargetNames = {
-        targetName: 'e2e',
-        ciTargetName: 'e2e-ci',
-      };
-      const defaultTargetNames = {
-        targetName: 'e2e',
-        ciTargetName: 'e2e-ci',
-      };
-
-      // ACT
-      let updatedNxJson = addPluginWithOptions(
-        '@nx/playwright/plugin',
-        preferredTargetNames,
-        defaultTargetNames,
-        nxJson
-      );
-
-      // ASSERT
+      const updatedNxJson = readNxJson(tree);
       expect(updatedNxJson).toEqual(nxJson);
     });
 
     it('should not add the plugin if it already exists as an object and the preferred target names do not match the default but do match what is present in nxJson', () => {
       // ARRANGE
-      let nxJson = {
-        plugins: [
-          {
-            plugin: '@nx/playwright/plugin',
-            options: {
-              targetName: 'test',
-              ciTargetName: 'test-ci',
-            },
-          },
-        ],
-      };
+      const tree = createTreeWithEmptyWorkspace();
+
+      const nxJson = readNxJson(tree);
+      nxJson.plugins ??= [];
+      nxJson.plugins.push({
+        plugin: '@nx/playwright/plugin',
+        options: { targetName: 'test', ciTargetName: 'test-ci' },
+      });
 
       const preferredTargetNames = {
         targetName: 'test',
         ciTargetName: 'test-ci',
       };
-      const defaultTargetNames = {
-        targetName: 'e2e',
-        ciTargetName: 'e2e-ci',
-      };
-
       // ACT
-      let updatedNxJson = addPluginWithOptions(
+      addPluginWithOptions(
+        tree,
         '@nx/playwright/plugin',
-        preferredTargetNames,
-        defaultTargetNames,
-        nxJson
+        undefined,
+        preferredTargetNames
       );
 
       // ASSERT
+      const updatedNxJson = readNxJson(tree);
       expect(updatedNxJson).toEqual(nxJson);
     });
 
     it('should add the plugin if it does not exist', () => {
       // ARRANGE
-      let nxJson = {
-        plugins: [],
-      };
+      const tree = createTreeWithEmptyWorkspace();
+
+      const nxJson = readNxJson(tree);
+      nxJson.plugins ??= [];
 
       const preferredTargetNames = {
         targetName: 'e2e',
         ciTargetName: 'e2e-ci',
       };
-      const defaultTargetNames = {
-        targetName: 'e2e',
-        ciTargetName: 'e2e-ci',
-      };
 
       // ACT
-      let updatedNxJson = addPluginWithOptions(
+      addPluginWithOptions(
+        tree,
         '@nx/playwright/plugin',
-        preferredTargetNames,
-        defaultTargetNames,
-        nxJson
+        undefined,
+        preferredTargetNames
       );
 
       // ASSERT
+      const updatedNxJson = readNxJson(tree);
       expect(updatedNxJson.plugins).toMatchInlineSnapshot(`
         [
           {

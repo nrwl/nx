@@ -3,6 +3,8 @@ import {
   createProjectGraphAsync,
   formatFiles,
   joinPathFragments,
+  names,
+  type TargetConfiguration,
   type Tree,
 } from '@nx/devkit';
 import {
@@ -17,14 +19,13 @@ import {
 export default async function migrateExecutorsToPlugin(tree: Tree) {
   const projectGraph = await createProjectGraphAsync();
 
-  // Migrate Other Executor Options before this.
-
   const { targetName, include } = await migrateExecutorToPlugin(
     tree,
     projectGraph,
     createProjectConfigs,
     '@nx/playwright:playwright',
-    createNodes
+    createNodes,
+    projectOptionsTransformer
   );
 
   addPluginWithOptions<PlaywrightPluginOptions>(
@@ -57,4 +58,18 @@ function createProjectConfigs(
     },
     context
   );
+}
+
+function projectOptionsTransformer(
+  target: TargetConfiguration
+): TargetConfiguration {
+  if (target.options) {
+    for (const [key, value] of Object.entries(target.options)) {
+      const newKeyName = names(key).fileName;
+      delete target.options[key];
+      target.options[newKeyName] = value;
+    }
+  }
+
+  return target;
 }

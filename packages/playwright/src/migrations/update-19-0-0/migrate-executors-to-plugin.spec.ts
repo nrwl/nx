@@ -6,6 +6,7 @@ import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import migrateExecutorsToPlugin from './migrate-executors-to-plugin';
 import {
   addProjectConfiguration as _addProjectConfiguration,
+  type ExpandedPluginConfiguration,
   joinPathFragments,
   type ProjectConfiguration,
   type ProjectGraph,
@@ -188,11 +189,8 @@ function createTestProject(
 describe('Playwright - Migrate Executors To Plugin', () => {
   let tree: Tree;
 
-  beforeAll(() => {
-    fs = new TempFs('playwright');
-  });
-
   beforeEach(() => {
+    fs = new TempFs('playwright');
     tree = createTreeWithEmptyWorkspace();
     tree.root = fs.tempDir;
 
@@ -274,6 +272,58 @@ describe('Playwright - Migrate Executors To Plugin', () => {
     }
   });
 
+  it('should setup a new Playwright plugin to match only projects migrated', async () => {
+    // ARRANGE
+    const existingProject = createTestProject(tree, {
+      appRoot: 'existing',
+      appName: 'existing',
+      e2eTargetName: 'e2e',
+    });
+    const project = createTestProject(tree, {
+      e2eTargetName: 'test',
+    });
+    const secondProject = createTestProject(tree, {
+      appRoot: 'second',
+      appName: 'second',
+      e2eTargetName: 'test',
+    });
+    const nxJson = readNxJson(tree);
+    nxJson.plugins ??= [];
+    nxJson.plugins.push({
+      plugin: '@nx/playwright/plugin',
+      options: {
+        targetName: 'e2e',
+        ciTargetName: 'e2e-ci',
+      },
+    });
+    updateNxJson(tree, nxJson);
+
+    // ACT
+    await migrateExecutorsToPlugin(tree);
+
+    // ASSERT
+    // project.json modifications
+    const updatedProject = readProjectConfiguration(tree, project.name);
+    const targetKeys = Object.keys(updatedProject.targets);
+    ['test'].forEach((key) => expect(targetKeys).not.toContain(key));
+
+    // nx.json modifications
+    const nxJsonPlugins = readNxJson(tree).plugins;
+    const addedPlaywrightPlugin = nxJsonPlugins.find((plugin) => {
+      if (
+        typeof plugin !== 'string' &&
+        plugin.plugin === '@nx/playwright/plugin' &&
+        plugin.include?.length > 0
+      ) {
+        return true;
+      }
+    });
+    expect(addedPlaywrightPlugin).toBeTruthy();
+    expect(
+      (addedPlaywrightPlugin as ExpandedPluginConfiguration).include
+    ).toEqual(['myapp-e2e/**/*', 'second/**/*']);
+  });
+
   it('should keep Playwright options in project.json', async () => {
     // ARRANGE
     const project = createTestProject(tree);
@@ -289,7 +339,7 @@ describe('Playwright - Migrate Executors To Plugin', () => {
     expect(updatedProject.targets.e2e).toMatchInlineSnapshot(`
       {
         "options": {
-          "globalTimeout": 100000,
+          "global-timeout": 100000,
         },
       }
     `);
@@ -335,7 +385,7 @@ describe('Playwright - Migrate Executors To Plugin', () => {
     expect(updatedProject.targets.e2e).toMatchInlineSnapshot(`
       {
         "options": {
-          "globalTimeout": 100000,
+          "global-timeout": 100000,
         },
       }
     `);
