@@ -96,9 +96,9 @@ process.on('message', async (message: Serializable) => {
         };
       }
     },
-    createMetadata: async ({ context, tx }) => {
+    createMetadata: async ({ graph, context, tx }) => {
       try {
-        const result = await plugin.createMetadata(context);
+        const result = await plugin.createMetadata(graph, context);
         return {
           type: 'createMetadataResult',
           payload: { metadata: result, success: true, tx },

@@ -71,6 +71,7 @@ export interface PluginCreateDependenciesMessage {
 export interface PluginCreateMetadataMessage {
   type: 'createMetadata';
   payload: {
+    graph: ProjectGraph;
     context: CreateMetadataContext;
     tx: string;
   };

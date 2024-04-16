@@ -35,7 +35,7 @@ import { getPlugins } from './plugins';
 import {
   DaemonProjectGraphError,
   ProjectConfigurationsError,
-  isPartialProjectGraphError,
+  isAggregateProjectGraphError,
 } from '../../project-graph/error-types';
 
 interface SerializedProjectGraph {
@@ -261,7 +261,7 @@ async function processFilesAndCreateAndSerializeProjectGraph(
     const errors = [...(projectConfigurationsError?.errors ?? [])];
 
     if (g.error) {
-      if (isPartialProjectGraphError(g.error)) {
+      if (isAggregateProjectGraphError(g.error)) {
         errors.push(...g.error.errors);
       } else {
         return {
@@ -342,7 +342,8 @@ async function createAndSerializeProjectGraph({
         allWorkspaceFiles,
         rustReferences,
         currentProjectFileMapCache || readFileMapCache(),
-        await getPlugins()
+        await getPlugins(),
+        sourceMaps
       );
 
     currentProjectFileMapCache = projectFileMapCache;

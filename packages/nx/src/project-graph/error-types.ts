@@ -203,16 +203,6 @@ export class CreateMetadataError extends Error {
   }
 }
 
-export class AggregateCreateMetadataError extends Error {
-  constructor(
-    public readonly errors: Array<CreateMetadataError>,
-    public readonly partialProjectGraph: ProjectGraph
-  ) {
-    super('Failed to create metadata');
-    this.name = this.constructor.name;
-  }
-}
-
 export class ProcessDependenciesError extends Error {
   constructor(public readonly pluginName: string, { cause }) {
     super(
@@ -239,18 +229,6 @@ export class ProcessProjectGraphError extends Error {
   }
 }
 
-export class CreateDependenciesError extends Error {
-  constructor(
-    public readonly errors: Array<
-      ProcessDependenciesError | ProcessProjectGraphError
-    >,
-    public readonly partialProjectGraph: ProjectGraph
-  ) {
-    super('Failed to create dependencies. See above for errors');
-    this.name = this.constructor.name;
-  }
-}
-
 export class AggregateProjectGraphError extends Error {
   constructor(
     public readonly errors: Array<
@@ -263,15 +241,6 @@ export class AggregateProjectGraphError extends Error {
   }
 }
 
-export type PartialProjectGraphError =
-  | CreateDependenciesError
-  | AggregateCreateMetadataError
-  | AggregateProjectGraphError;
-
-export function isPartialProjectGraphError(e: unknown): e is PartialProjectGraphError {
-  return isCreateDependenciesError(e) || isAggregateCreateNodesError(e);
-}
-
 export function isAggregateProjectGraphError(
   e: unknown
 ): e is AggregateProjectGraphError {
@@ -280,17 +249,6 @@ export function isAggregateProjectGraphError(
     (typeof e === 'object' &&
       'name' in e &&
       e?.name === AggregateProjectGraphError.prototype.name)
-  );
-}
-
-export function isCreateDependenciesError(
-  e: unknown
-): e is CreateDependenciesError {
-  return (
-    e instanceof CreateDependenciesError ||
-    (typeof e === 'object' &&
-      'name' in e &&
-      e?.name === CreateDependenciesError.prototype.name)
   );
 }
 

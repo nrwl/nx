@@ -17,7 +17,10 @@ import {
   CreateNodesResult,
   NxPluginV2,
 } from './public-api';
-import { ProjectGraphProcessor } from '../../config/project-graph';
+import {
+  ProjectGraph,
+  ProjectGraphProcessor,
+} from '../../config/project-graph';
 import { runCreateNodesInParallel } from './utils';
 import { loadNxPluginInIsolation } from './isolation';
 import { loadNxPlugin, unregisterPluginTSTranspiler } from './loader';
@@ -37,6 +40,7 @@ export class LoadedNxPlugin {
     context: CreateDependenciesContext
   ) => ReturnType<CreateDependencies>;
   readonly createMetadata?: (
+    graph: ProjectGraph,
     context: CreateMetadataContext
   ) => ReturnType<CreateMetadata>;
   readonly processProjectGraph?: ProjectGraphProcessor;
@@ -67,8 +71,8 @@ export class LoadedNxPlugin {
     }
 
     if (plugin.createMetadata) {
-      this.createMetadata = (context) =>
-        plugin.createMetadata(this.options, context);
+      this.createMetadata = (graph, context) =>
+        plugin.createMetadata(graph, this.options, context);
     }
 
     this.processProjectGraph = plugin.processProjectGraph;

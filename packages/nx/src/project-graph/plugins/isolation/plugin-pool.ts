@@ -154,13 +154,13 @@ function createWorkerHandler(
                 }
               : undefined,
             createMetadata: result.hasCreateMetadata
-              ? (ctx) => {
+              ? (graph, ctx) => {
                   const tx =
                     pluginName + ':createMetadata:' + performance.now();
                   return registerPendingPromise(tx, pending, () => {
                     worker.send({
                       type: 'createMetadata',
-                      payload: { context: ctx, tx },
+                      payload: { graph, context: ctx, tx },
                     });
                   });
                 }

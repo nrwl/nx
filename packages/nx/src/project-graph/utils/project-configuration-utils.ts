@@ -32,7 +32,7 @@ import {
   isProjectsWithNoNameError,
 } from '../error-types';
 
-export type SourceInformation = [file: string, plugin: string];
+export type SourceInformation = [file: string | null, plugin: string];
 export type ConfigurationSourceMaps = Record<
   string,
   Record<string, SourceInformation>

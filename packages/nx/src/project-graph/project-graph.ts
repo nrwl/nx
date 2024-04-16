@@ -81,11 +81,11 @@ import {
   ProjectConfigurationsError,
   ProjectsWithNoNameError,
   ProjectsWithConflictingNamesError,
-  isProjectGraphError,
-  ProjectGraphError as SomeProjectGraphError,
   ProcessDependenciesError,
   ProcessProjectGraphError,
   CreateMetadataError,
+  AggregateProjectGraphError,
+  isAggregateProjectGraphError,
 } from './error-types';
 import { DaemonProjectGraphError } from '../daemon/daemon-project-graph-error';
 import { loadNxPlugins } from './plugins/internal-api';
@@ -182,7 +182,7 @@ export async function buildProjectGraphAndSourceMapsWithoutDaemon() {
 
   const cacheEnabled = process.env.NX_CACHE_PROJECT_GRAPH !== 'false';
   performance.mark('build-project-graph-using-project-file-map:start');
-  let projectGraphError: SomeProjectGraphError;
+  let projectGraphError: AggregateProjectGraphError;
   let projectGraphResult: Awaited<
     ReturnType<typeof buildProjectGraphUsingProjectFileMap>
   >;
@@ -194,10 +194,11 @@ export async function buildProjectGraphAndSourceMapsWithoutDaemon() {
       allWorkspaceFiles,
       rustReferences,
       cacheEnabled ? readFileMapCache() : null,
-      plugins
+      plugins,
+      sourceMaps
     );
   } catch (e) {
-    if (isProjectGraphError(e)) {
+    if (isAggregateProjectGraphError(e)) {
       projectGraphResult = {
         projectGraph: e.partialProjectGraph,
         projectFileMapCache: null,
@@ -303,7 +304,6 @@ export class ProjectGraphError extends Error {
     | ProcessDependenciesError
     | ProcessProjectGraphError
     | CreateMetadataError
-
   >;
   readonly #partialProjectGraph: ProjectGraph;
   readonly #partialSourceMaps: ConfigurationSourceMaps;

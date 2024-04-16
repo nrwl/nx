@@ -105,12 +105,7 @@ export type CreateMetadataContext = {
 
 export type ProjectsMetadata = Record<
   string,
-  Pick<ProjectConfiguration, 'metadata'> & {
-    targets: Record<
-      string,
-      Pick<ProjectConfiguration['targets'][string], 'metadata'>
-    >;
-  }
+  Pick<ProjectConfiguration, 'metadata'>
 >;
 
 export type CreateMetadata<T = unknown> = (
