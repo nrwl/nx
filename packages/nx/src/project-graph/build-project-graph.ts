@@ -44,6 +44,7 @@ import {
   ProcessDependenciesError,
   ProcessProjectGraphError,
 } from './error-types';
+import { mergeMetadata } from './utils/project-configuration-utils';
 
 let storedFileMap: FileMap | null = null;
 let storedAllWorkspaceFiles: FileData[] | null = null;
@@ -366,7 +367,6 @@ async function updateProjectGraphWithPlugins(
   }
 
   return await applyProjectMetadata(result, plugins, {
-    graph: result,
     nxJsonConfiguration: context.nxJsonConfiguration,
     workspaceRoot,
   });
@@ -388,87 +388,60 @@ export async function applyProjectMetadata(
   plugins: LoadedNxPlugin[],
   context: CreateMetadataContext
 ): Promise<ProjectGraph> {
-  const metadataResultPromises: Array<
-    Promise<ProjectsMetadata | CreateMetadataError>
-  > = [];
-
-  for (const plugin of plugins) {
-    if (plugin.createMetadata) {
-      const metadata = Promise.resolve(plugin.createMetadata(context)).catch(
-        (e) => new CreateMetadataError(e, plugin.name)
-      );
-      metadataResultPromises.push(metadata);
-    }
-  }
-
-  const metadataResults = await Promise.all(metadataResultPromises);
+  const results: ProjectsMetadata[] = [];
   const errors: CreateMetadataError[] = [];
 
-  for (const result of metadataResults) {
-    if (isCreateMetadataError(result)) {
-      errors.push(result);
-    } else {
-      for (const project in result) {
-        const projectConfiguration: ProjectConfiguration =
-          graph.nodes[project]?.data;
-        if (projectConfiguration) {
-          projectConfiguration.metadata = mergeProjectLevelMetadata(
-            projectConfiguration.metadata,
-            result[project].metadata
-          );
-          for (const target in result[project].targets || {}) {
-            if (projectConfiguration.targets[target]) {
-              projectConfiguration.targets[target].metadata =
-                mergeTargetLevelMetadata(
-                  projectConfiguration.targets[target].metadata,
-                  result[project].targets[target].metadata
-                );
-            }
+  const promises = plugins.map(async (plugin) => {
+    if (isNxPluginV2(plugin) && plugin.createMetadata) {
+      performance.mark(`${plugin.name}:createMetadata - start`);
+      try {
+        const metadata = await plugin.createMetadata(graph, undefined, context);
+        results.push(metadata);
+      } catch (e) {
+        errors.push(new CreateMetadataError(e, plugin.name));
+      } finally {
+        performance.mark(`${plugin.name}:createMetadata - end`);
+        performance.measure(
+          `${plugin.name}:createMetadata`,
+          `${plugin.name}:createMetadata - start`,
+          `${plugin.name}:createMetadata - end`
+        );
+      }
+    }
+  });
+
+  await Promise.all(promises);
+
+  for (const result of results) {
+    for (const project in result) {
+      const projectConfiguration: ProjectConfiguration =
+        graph.nodes[project]?.data;
+      if (projectConfiguration) {
+        projectConfiguration.metadata = mergeMetadata(
+          null,
+          null,
+          null,
+          projectConfiguration.metadata,
+          result[project].metadata
+        );
+        for (const target in result[project].targets || {}) {
+          if (projectConfiguration.targets[target]) {
+            projectConfiguration.targets[target].metadata = mergeMetadata(
+              null,
+              null,
+              null,
+              projectConfiguration.targets[target].metadata,
+              result[project].targets[target].metadata
+            );
           }
         }
       }
     }
   }
 
+  if (errors.length) {
+    throw new AggregateCreateMetadataError(errors, graph);
+  }
+
   return graph;
-}
-
-function mergeProjectLevelMetadata(
-  a: ProjectConfiguration['metadata'],
-  b: ProjectConfiguration['metadata']
-) {
-  if ('targetGroups' in b) {
-    a.targetGroups ??= {};
-    for (const targetGroup in b.targetGroups) {
-      a.targetGroups[targetGroup] = {
-        ...a.targetGroups[targetGroup],
-        ...b.targetGroups[targetGroup],
-      };
-    }
-  }
-
-  if ('technologies' in b) {
-    a.technologies ??= [];
-    a.technologies = Array.from(
-      new Set([...a.technologies, ...b.technologies])
-    );
-  }
-
-  return a;
-}
-
-function mergeTargetLevelMetadata(
-  a: ProjectConfiguration['targets'][string]['metadata'],
-  b: ProjectConfiguration['targets'][string]['metadata']
-) {
-  if ('technologies' in b) {
-    a.technologies ??= [];
-    a.technologies = Array.from(
-      new Set([...a.technologies, ...b.technologies])
-    );
-  }
-
-  a.description = b.description ?? a.description;
-
-  return a;
 }

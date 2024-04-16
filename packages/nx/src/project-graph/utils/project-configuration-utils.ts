@@ -226,10 +226,10 @@ export function mergeProjectConfigurationIntoRootMap(
   );
 }
 
-function mergeMetadata<T = ProjectMetadata | TargetMetadata>(
-  sourceMap: Record<string, [file: string, plugin: string]>,
-  sourceInformation: [file: string, plugin: string],
-  baseSourceMapPath: string,
+export function mergeMetadata<T = ProjectMetadata | TargetMetadata>(
+  sourceMap: Record<string, [file: string, plugin: string]> | null,
+  sourceInformation: [file: string, plugin: string] | null,
+  baseSourceMapPath: string | null,
   metadata: T,
   matchingMetadata?: T
 ): T {

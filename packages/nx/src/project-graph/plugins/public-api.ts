@@ -101,7 +101,6 @@ export type CreateDependencies<T = unknown> = (
 export type CreateMetadataContext = {
   readonly nxJsonConfiguration: NxJsonConfiguration;
   readonly workspaceRoot: string;
-  readonly graph: ProjectGraph;
 };
 
 export type ProjectsMetadata = Record<
@@ -115,6 +114,7 @@ export type ProjectsMetadata = Record<
 >;
 
 export type CreateMetadata<T = unknown> = (
+  graph: ProjectGraph,
   options: T | undefined,
   context: CreateMetadataContext
 ) => ProjectsMetadata | Promise<ProjectsMetadata>;
