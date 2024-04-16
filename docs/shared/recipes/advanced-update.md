@@ -33,6 +33,23 @@ All changes to your source code will be unstaged and ready for you to review and
 
 After you run all the migrations, you can remove `migrations.json` and commit any outstanding changes.
 
+## Recommendations
+
+### One major version at a time, small steps
+
+Migrating Jest, Cypress, ESLint, React, Angular, Next, and more is a difficult task. All the tools change at different rates, and they can conflict with each other. In addition, every workspace is different. Even though our goal is for you to update any version of Nx to a newer version of Nx in a single go, sometimes it doesn't work. The recommended process is to update, at most, one major version at a time.
+
+Say you want to migrate from Nx 17.1.0 to Nx 18.2.4. The following steps are more likely to work comparing to `nx migrate 18.2.4`.
+
+- Run `nx migrate 17.3.2` to update the latest version in the 17.x branch.
+- Run `nx migrate --run-migrations`.
+- Next, run `nx migrate 18.2.4`.
+- Run `nx migrate --run-migrations`.
+
+{% callout type="warning" title="Angular updates" %}
+If your workspace uses Angular, this becomes a requirement rather than a recommendation. The Angular packages maintain migrations for a single major version at a time. If you try to update over multiple major versions, only the migrations for the latest major version will be applied. This can lead to issues in your workspace.
+{% /callout %}
+
 ## Managing migration steps
 
 When you run into problems running the `nx migrate --run-migrations` command, here are some solutions to break the process down into manageable steps.
@@ -244,16 +261,3 @@ git clean -fd # Delete newly added files and directories
 {% callout type="warning" title="--create-commits" %}
 If using `--create-commits`, you will need to first retrieve the SHA of the commit before your first automated migration commit in order to jump back to the point before the migrations ran, e.g. `git reset --hard YOUR_APPROPRIATE_SHA_HERE`)
 {% /callout %}
-
-## Recommendations
-
-### One major version at a time, small steps
-
-Migrating Jest, Cypress, ESLint, React, Angular, Next, and more is a difficult task. All the tools change at different rates, they can conflict with each other. In addition, every workspace is different. Even though our goal is for you to update any version of Nx to a newer version of Nx in a single go, sometimes it doesn't work. The following process is better for large workspaces.
-
-Say you want to migrate from Nx 10.1.0 to Nx 11.0.1. The following steps are more likely to work comparing to `nx migrate 11.0.1`.
-
-- Run `nx migrate 10.4.5` to update the latest version in the 10.x branch.
-- Run `nx migrate --run-migrations`.
-- Next, run `nx migrate 11.0.1`.
-- Run `nx migrate --run-migrations`.
