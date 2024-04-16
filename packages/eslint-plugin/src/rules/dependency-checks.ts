@@ -96,10 +96,10 @@ export default ESLintUtils.RuleCreator(
       },
     ]
   ) {
-    if (!(context.parserServices as any).isJSON) {
+    if (!(context.sourceCode.parserServices as any).isJSON) {
       return {};
     }
-    const fileName = normalizePath(context.getFilename());
+    const fileName = normalizePath(context.filename ?? context.getFilename());
     // support only package.json
     if (!fileName.endsWith('/package.json')) {
       return {};
