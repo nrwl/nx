@@ -9,6 +9,7 @@ import {
   writeJson,
 } from '@nx/devkit';
 import * as chalk from 'chalk';
+import { remove } from 'fs-extra';
 import { exec } from 'node:child_process';
 import { join } from 'node:path';
 import { IMPLICIT_DEFAULT_RELEASE_GROUP } from 'nx/src/command-line/release/config/config';
@@ -22,6 +23,13 @@ import {
 } from 'nx/src/command-line/release/utils/resolve-semver-specifier';
 import { isValidSemverSpecifier } from 'nx/src/command-line/release/utils/semver';
 import {
+  GroupVersionPlan,
+  ProjectsVersionPlan,
+  VersionPlan,
+  getVersionPlansForFixedGroup,
+  getVersionPlansForIndependentGroup,
+} from 'nx/src/command-line/release/utils/version-plans';
+import {
   ReleaseVersionGeneratorResult,
   VersionData,
   deriveNewSemverVersion,
@@ -34,13 +42,6 @@ import { parseRegistryOptions } from '../../utils/npm-config';
 import { ReleaseVersionGeneratorSchema } from './schema';
 import { resolveLocalPackageDependencies } from './utils/resolve-local-package-dependencies';
 import { updateLockFile } from './utils/update-lock-file';
-import {
-  GroupVersionPlan,
-  ProjectsVersionPlan,
-  VersionPlan,
-  getVersionPlansForFixedGroup,
-  getVersionPlansForIndependentGroup,
-} from './utils/version-plans';
 
 export async function releaseVersionGenerator(
   tree: Tree,
@@ -111,6 +112,7 @@ Valid values are: ${validReleaseVersionPrefixes
 
     // only parse the version plans once, then keep them in memory for the rest of the projects
     let versionPlans: VersionPlan[] = undefined;
+    const additionalCallbacks: (() => Promise<string>)[] = [];
 
     for (const project of projects) {
       const projectName = project.name;
@@ -427,7 +429,11 @@ To fix this you will either need to add a package.json file at that location, or
                 );
               }
               versionPlans.forEach((plan) => {
-                tree.delete(plan.relativePath);
+                additionalCallbacks.push(async () => {
+                  const fullPath = join(workspaceRoot, plan.relativePath);
+                  await remove(fullPath);
+                  return plan.relativePath;
+                });
               });
             }
 
@@ -586,8 +592,14 @@ To fix this you will either need to add a package.json file at that location, or
     return {
       data: versionData,
       callback: async (tree, opts) => {
+        const updatedFiles: string[] = [];
+
+        // for (const cb of additionalCallbacks) {
+        //   updatedFiles.push(await cb());
+        // }
+
         const cwd = tree.root;
-        const updatedFiles = await updateLockFile(cwd, opts);
+        updatedFiles.push(...(await updateLockFile(cwd, opts)));
         return updatedFiles;
       },
     };

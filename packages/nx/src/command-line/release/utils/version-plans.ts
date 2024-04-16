@@ -1,8 +1,8 @@
-import { workspaceRoot } from '@nx/devkit';
 import { readFileSync, readdirSync } from 'fs';
 import { pathExists } from 'fs-extra';
 import { join } from 'path';
 import { RELEASE_TYPES, ReleaseType } from 'semver';
+import { workspaceRoot } from '../../../utils/workspace-root';
 const fm = require('front-matter');
 
 export interface VersionPlan {
@@ -50,7 +50,7 @@ export async function getVersionPlansForFixedGroup(
         filePath,
         relativePath: join(versionPlansDirectory, versionPlanFile),
         groupVersionBump,
-        message: parsedContent.body.trim(),
+        message: getSingleLineMessage(parsedContent.body),
       });
     }
   }
@@ -95,7 +95,7 @@ export async function getVersionPlansForIndependentGroup(
           filePath,
           relativePath: join(versionPlansDirectory, versionPlanFile),
           projectVersionBumps,
-          message: parsedContent.body.trim(),
+          message: getSingleLineMessage(parsedContent.body),
         });
       }
     }
@@ -110,4 +110,9 @@ function getVersionPlansAbsolutePath() {
 
 function isReleaseType(value: string): value is ReleaseType {
   return RELEASE_TYPES.includes(value as ReleaseType);
+}
+
+// changelog messages may only be a single line long, so ignore anything else
+function getSingleLineMessage(message: string) {
+  return message.trim().split('\n')[0];
 }

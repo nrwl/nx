@@ -341,6 +341,25 @@ export function parseCommits(commits: RawGitCommit[]): GitCommit[] {
   return commits.map((commit) => parseGitCommit(commit)).filter(Boolean);
 }
 
+export function parseConventionalCommitsMessage(message: string): {
+  type: string;
+  scope: string;
+  description: string;
+  breaking: boolean;
+} | null {
+  const match = message.match(ConventionalCommitRegex);
+  if (!match) {
+    return null;
+  }
+
+  return {
+    type: match.groups.type || '',
+    scope: match.groups.scope || '',
+    description: match.groups.description || '',
+    breaking: Boolean(match.groups.breaking),
+  };
+}
+
 // https://www.conventionalcommits.org/en/v1.0.0/
 // https://regex101.com/r/FSfNvA/1
 const ConventionalCommitRegex =
@@ -352,16 +371,15 @@ const ChangedFileRegex = /(A|M|D|R\d*|C\d*)\t([^\t\n]*)\t?(.*)?/gm;
 const RevertHashRE = /This reverts commit (?<hash>[\da-f]{40})./gm;
 
 export function parseGitCommit(commit: RawGitCommit): GitCommit | null {
-  const match = commit.message.match(ConventionalCommitRegex);
-  if (!match) {
+  const parsedMessage = parseConventionalCommitsMessage(commit.message);
+  if (!parsedMessage) {
     return null;
   }
 
-  const scope = match.groups.scope || '';
-
+  const scope = parsedMessage.scope;
   const isBreaking =
-    Boolean(match.groups.breaking) || commit.body.includes('BREAKING CHANGE:');
-  let description = match.groups.description;
+    parsedMessage.breaking || commit.body.includes('BREAKING CHANGE:');
+  let description = parsedMessage.description;
 
   // Extract references from message
   const references: Reference[] = [];
@@ -378,7 +396,7 @@ export function parseGitCommit(commit: RawGitCommit): GitCommit | null {
   // Remove references and normalize
   description = description.replace(PullRequestRE, '').trim();
 
-  let type = match.groups.type;
+  let type = parsedMessage.type;
   // Extract any reverted hashes, if applicable
   const revertedHashes = [];
   const matchedHashes = commit.body.matchAll(RevertHashRE);

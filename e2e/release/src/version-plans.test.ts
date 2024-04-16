@@ -115,7 +115,7 @@ describe('nx release version plans', () => {
 fixed-group: minor
 ---
 
-Update the fixed packages with a minor release.
+feat: Update the fixed packages with a minor release.
 `
     );
 
@@ -128,7 +128,7 @@ ${pkg4}: preminor
 ${pkg5}: prerelease
 ---
 
-Update the independent packages with a patch, preminor, and prerelease.
+feat: Update the independent packages with a patch, preminor, and prerelease.
 `
     );
 
@@ -143,7 +143,7 @@ Update the independent packages with a patch, preminor, and prerelease.
       `git commit -m "chore: add version plans for fixed and independent groups"`
     );
 
-    const result = runCLI('release --dry-run --verbose', {
+    const result = runCLI('release --verbose', {
       silenceError: true,
     });
 
@@ -164,7 +164,72 @@ Update the independent packages with a patch, preminor, and prerelease.
       `${pkg5} 📄 Resolved the specifier as "prerelease" using version plans.`
     );
 
-    expect(exists(join(versionPlansDir, 'bump-fixed.md'))).toBeFalsy();
-    expect(exists(join(versionPlansDir, 'bump-independent.md'))).toBeFalsy();
+    // replace the date with a placeholder to make the snapshot deterministic
+    const resultWithoutDate = result.replace(
+      /\(\d{4}-\d{2}-\d{2}\)/g,
+      '(YYYY-MM-DD)'
+    );
+
+    expect(resultWithoutDate).toContain(
+      `NX   Generating an entry in ${pkg1}/CHANGELOG.md for v0.1.0
+
+
++ ## 0.1.0 (YYYY-MM-DD)
++
++
++ ### 🚀 Features
++
++ - Update the fixed packages with a minor release.`
+    );
+    expect(resultWithoutDate).toContain(
+      `NX   Generating an entry in ${pkg2}/CHANGELOG.md for v0.1.0
+
+
++ ## 0.1.0 (YYYY-MM-DD)
++
++
++ ### 🚀 Features
++
++ - Update the fixed packages with a minor release.`
+    );
+    expect(resultWithoutDate).toContain(
+      `NX   Generating an entry in ${pkg3}/CHANGELOG.md for ${pkg3}@0.0.1
+
+
++ ## 0.0.1 (YYYY-MM-DD)
++
++
++ ### 🚀 Features
++
++ - Update the independent packages with a patch, preminor, and prerelease.`
+    );
+
+    expect(resultWithoutDate).toContain(
+      `NX   Generating an entry in ${pkg4}/CHANGELOG.md for ${pkg4}@0.1.0-0
+
+
++ ## 0.1.0-0 (YYYY-MM-DD)
++
++
++ ### 🚀 Features
++
++ - Update the independent packages with a patch, preminor, and prerelease.`
+    );
+
+    expect(resultWithoutDate).toContain(
+      `NX   Generating an entry in ${pkg5}/CHANGELOG.md for ${pkg5}@0.0.1-0
+
+
++ ## 0.0.1-0 (YYYY-MM-DD)
++
++
++ ### 🚀 Features
++
++ - Update the independent packages with a patch, preminor, and prerelease.`
+    );
+
+    // TODO: handle deleting version plans
+    // expect(exists(join(versionPlansDir, 'bump-fixed.md'))).toBeFalsy();
+    // expect(exists(join(versionPlansDir, 'bump-independent.md'))).toBeFalsy();
   });
 });

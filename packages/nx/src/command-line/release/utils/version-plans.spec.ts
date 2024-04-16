@@ -1,6 +1,6 @@
 import { readFileSync } from 'fs';
-import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
 import { join } from 'path';
+import { TempFs } from '../../../internal-testing-utils/temp-fs';
 import {
   getVersionPlansForFixedGroup,
   getVersionPlansForIndependentGroup,
