@@ -132,9 +132,7 @@ export class MergeNodesError extends Error {
 export function isCreateNodesError(e: unknown): e is CreateNodesError {
   return (
     e instanceof CreateNodesError ||
-    (typeof e === 'object' &&
-      'name' in e &&
-      e?.name === CreateNodesError.prototype.name)
+    (typeof e === 'object' && 'name' in e && e?.name === CreateNodesError.name)
   );
 }
 
@@ -145,15 +143,13 @@ export function isAggregateCreateNodesError(
     e instanceof AggregateCreateNodesError ||
     (typeof e === 'object' &&
       'name' in e &&
-      e?.name === AggregateCreateNodesError.prototype.name)
+      e?.name === AggregateCreateNodesError.name)
   );
 }
 
 export function isMergeNodesError(e: unknown): e is MergeNodesError {
   return (
     e instanceof MergeNodesError ||
-    (typeof e === 'object' &&
-      'name' in e &&
-      e?.name === MergeNodesError.prototype.name)
+    (typeof e === 'object' && 'name' in e && e?.name === MergeNodesError.name)
   );
 }
