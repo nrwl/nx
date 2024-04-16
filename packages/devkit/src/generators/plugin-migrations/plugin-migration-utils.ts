@@ -67,6 +67,7 @@ const {
  * @param createProjectsConfig Function returning the CreateNodesResult for the plugin using the projects that have been marked for migration
  * @param executor The executor to migrate from
  * @param createNodes The CreateNodes tuple used by the plugin
+ * @param projectOptionsTransformer Apply transformations to the remaining options in the project's target, if there are any
  */
 export async function migrateExecutorToPlugin<T>(
   tree: Tree,
@@ -79,10 +80,14 @@ export async function migrateExecutorToPlugin<T>(
   ) => CreateNodesResult | Promise<CreateNodesResult>,
   executor: string,
   createNodes: CreateNodes<T>,
-  projectOptionsTransfomer: (TargetConfiguration) => TargetConfiguration = (
-    targetConfiguration
-  ) => targetConfiguration
-): Promise<{ targetName: string; include: string[] | undefined }> {
+  projectOptionsTransformer: (
+    target: TargetConfiguration
+  ) => TargetConfiguration = (targetConfiguration) => targetConfiguration
+): Promise<{
+  targetName: string;
+  include: string[] | undefined;
+  migratedProjects: string[];
+}> {
   const { projects, targetName } = getProjectsToMigrate(tree, executor);
   const nxJsonConfiguration = readNxJson(tree);
   const targetDefaultsForExecutor =
@@ -90,6 +95,7 @@ export async function migrateExecutorToPlugin<T>(
 
   const configFiles = glob(tree, [createNodes[0]]);
   let include: string[] = [];
+  const migratedProjects = [];
   for (const projectName of projects) {
     const projectFromGraph = projectGraph.nodes[projectName];
 
@@ -110,6 +116,7 @@ export async function migrateExecutorToPlugin<T>(
     }
 
     include.push(`${projectFromGraph.data.root}/**/*`);
+    migratedProjects.push(projectName);
 
     const createdProject = Object.entries(
       projectConfigurations?.projects ?? {}
@@ -129,7 +136,7 @@ export async function migrateExecutorToPlugin<T>(
 
     deleteMatchingProperties(target, createdTarget);
 
-    target = projectOptionsTransfomer(target);
+    target = projectOptionsTransformer(target);
 
     if (Object.keys(target).length > 0) {
       projectConfig.targets[targetName] = target;
@@ -152,7 +159,7 @@ export async function migrateExecutorToPlugin<T>(
     include = undefined;
   }
 
-  return { targetName, include };
+  return { targetName, include, migratedProjects };
 }
 
 /**
@@ -307,12 +314,16 @@ export function deleteMatchingProperties(
  *
  * @param tree Virtual Tree
  * @param executor Executor that is being migrated
- * @return {{ projects: string[]; targetName: string }} - Array of projects that can be migrated and the most common target name
+ * @return {{ projects: string[]; targetName: string, allProjectsWithExecutor: Set<string> }} - Array of projects that can be migrated, the most common target name and all the projects containing the executor
  */
 export function getProjectsToMigrate(
   tree: Tree,
   executor: string
-): { projects: string[]; targetName: string } {
+): {
+  projects: string[];
+  targetName: string;
+  allProjectsWithExecutor: Set<string>;
+} {
   const allProjectsWithExecutor = new Map<string, Set<string>>();
   const targetCounts = new Map<string, number>();
 
@@ -354,5 +365,6 @@ export function getProjectsToMigrate(
   return {
     projects,
     targetName: preferredTargetName,
+    allProjectsWithExecutor: new Set(allProjectsWithExecutor.keys()),
   };
 }

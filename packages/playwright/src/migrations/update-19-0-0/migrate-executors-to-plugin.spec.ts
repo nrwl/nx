@@ -287,6 +287,11 @@ describe('Playwright - Migrate Executors To Plugin', () => {
       appName: 'second',
       e2eTargetName: 'test',
     });
+    const thirdProject = createTestProject(tree, {
+      appRoot: 'third',
+      appName: 'third',
+      e2eTargetName: 'integration',
+    });
     const nxJson = readNxJson(tree);
     nxJson.plugins ??= [];
     nxJson.plugins.push({
@@ -309,19 +314,33 @@ describe('Playwright - Migrate Executors To Plugin', () => {
 
     // nx.json modifications
     const nxJsonPlugins = readNxJson(tree).plugins;
-    const addedPlaywrightPlugin = nxJsonPlugins.find((plugin) => {
+    const addedTestPlaywrightPlugin = nxJsonPlugins.find((plugin) => {
       if (
         typeof plugin !== 'string' &&
         plugin.plugin === '@nx/playwright/plugin' &&
-        plugin.include?.length > 0
+        plugin.include?.length === 2
       ) {
         return true;
       }
     });
-    expect(addedPlaywrightPlugin).toBeTruthy();
+    expect(addedTestPlaywrightPlugin).toBeTruthy();
     expect(
-      (addedPlaywrightPlugin as ExpandedPluginConfiguration).include
+      (addedTestPlaywrightPlugin as ExpandedPluginConfiguration).include
     ).toEqual(['myapp-e2e/**/*', 'second/**/*']);
+
+    const addedIntegrationPlaywrightPlugin = nxJsonPlugins.find((plugin) => {
+      if (
+        typeof plugin !== 'string' &&
+        plugin.plugin === '@nx/playwright/plugin' &&
+        plugin.include?.length === 1
+      ) {
+        return true;
+      }
+    });
+    expect(addedIntegrationPlaywrightPlugin).toBeTruthy();
+    expect(
+      (addedIntegrationPlaywrightPlugin as ExpandedPluginConfiguration).include
+    ).toEqual(['third/**/*']);
   });
 
   it('should keep Playwright options in project.json', async () => {

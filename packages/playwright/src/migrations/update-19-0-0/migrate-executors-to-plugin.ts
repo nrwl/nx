@@ -9,6 +9,7 @@ import {
 } from '@nx/devkit';
 import {
   addPluginWithOptions,
+  getProjectsToMigrate,
   migrateExecutorToPlugin,
 } from '@nx/devkit/src/generators/plugin-migrations/plugin-migration-utils';
 import {
@@ -18,22 +19,33 @@ import {
 
 export default async function migrateExecutorsToPlugin(tree: Tree) {
   const projectGraph = await createProjectGraphAsync();
-
-  const { targetName, include } = await migrateExecutorToPlugin(
+  const { allProjectsWithExecutor } = getProjectsToMigrate(
     tree,
-    projectGraph,
-    createProjectConfigs,
-    '@nx/playwright:playwright',
-    createNodes,
-    projectOptionsTransformer
+    '@nx/playwright:playwright'
   );
 
-  addPluginWithOptions<PlaywrightPluginOptions>(
-    tree,
-    '@nx/playwright/plugin',
-    include,
-    { targetName, ciTargetName: 'e2e-ci' }
-  );
+  while (allProjectsWithExecutor.size !== 0) {
+    const { targetName, include, migratedProjects } =
+      await migrateExecutorToPlugin(
+        tree,
+        projectGraph,
+        createProjectConfigs,
+        '@nx/playwright:playwright',
+        createNodes,
+        projectOptionsTransformer
+      );
+
+    addPluginWithOptions<PlaywrightPluginOptions>(
+      tree,
+      '@nx/playwright/plugin',
+      include,
+      { targetName, ciTargetName: 'e2e-ci' }
+    );
+
+    for (const project of migratedProjects) {
+      allProjectsWithExecutor.delete(project);
+    }
+  }
 
   await formatFiles(tree);
 }
