@@ -14,7 +14,7 @@ A [project](#project) that can run on its own. Generally uses [libraries](#libra
 
 The Atomizer automatically splits tasks so that they can be executed in parallel.
 
-Atomizer is natively supported by [Nx Agents](#nx-agents), providing you detailed task information in the UI, including interpreted logs and artifacts, automatically grouped by project and workflow.
+Atomizer automatically splits tasks on [Nx Agents](#nx-agents), providing you detailed task information in the UI, including interpreted logs and artifacts, automatically grouped by project and workflow.
 
 > See: [Automatically Split E2E Tasks](/ci/features/split-e2e-tasks)
 
