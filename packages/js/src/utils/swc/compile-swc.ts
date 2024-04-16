@@ -1,66 +1,35 @@
 import { cacheDir, ExecutorContext, logger } from '@nx/devkit';
-import { exec, execSync } from 'node:child_process';
-import { join } from 'node:path';
-import { existsSync, removeSync } from 'fs-extra';
+import { exec, execSync } from 'child_process';
+import { removeSync } from 'fs-extra';
 import { createAsyncIterable } from '@nx/devkit/src/utils/async-iterable';
 import { NormalizedSwcExecutorOptions, SwcCliOptions } from '../schema';
 import { printDiagnostics } from '../typescript/print-diagnostics';
 import { runTypeCheck, TypeCheckOptions } from '../typescript/run-type-check';
-import { relative } from 'path';
 
 function getSwcCmd(
-  {
-    swcCliOptions: { swcrcPath, destPath, stripLeadingPaths },
-    root,
-    projectRoot,
-    originalProjectRoot,
-    sourceRoot,
-    inline,
-  }: NormalizedSwcExecutorOptions,
+  { swcrcPath, srcPath, destPath }: SwcCliOptions,
   watch = false
 ) {
   const swcCLI = require.resolve('@swc/cli/bin/swc.js');
-  let inputDir: string;
-  // TODO(v20): remove inline feature
-  if (inline) {
-    inputDir = originalProjectRoot.split('/')[0];
-  } else {
-    if (sourceRoot) {
-      inputDir = relative(projectRoot, sourceRoot);
-    } else {
-      // If sourceRoot is not provided, check if `src` exists and use that instead.
-      // This is important for root projects to avoid compiling too many directories.
-      inputDir = existsSync(join(root, projectRoot, 'src')) ? 'src' : '.';
-    }
-  }
-
   let swcCmd = `node ${swcCLI} ${
-    inputDir || '.'
-  } -d ${destPath} --config-file=${swcrcPath} ${
-    stripLeadingPaths ? '--strip-leading-paths' : ''
-  }`;
+    // TODO(jack): clean this up when we remove inline module support
+    // Handle root project
+    srcPath === '.' ? 'src' : srcPath
+  } -d ${
+    srcPath === '.' ? `${destPath}/src` : destPath
+  } --config-file=${swcrcPath}`;
   return watch ? swcCmd.concat(' --watch') : swcCmd;
 }
 
 function getTypeCheckOptions(normalizedOptions: NormalizedSwcExecutorOptions) {
-  const { sourceRoot, projectRoot, watch, tsConfig, root, outputPath } =
-    normalizedOptions;
-  const inputDir =
-    // If `--strip-leading-paths` SWC option is used, we need to transpile from `src` directory.
-    !normalizedOptions.swcCliOptions.stripLeadingPaths
-      ? projectRoot
-      : sourceRoot
-      ? sourceRoot
-      : existsSync(join(root, projectRoot, 'src'))
-      ? join(projectRoot, 'src')
-      : projectRoot;
+  const { projectRoot, watch, tsConfig, root, outputPath } = normalizedOptions;
 
   const typeCheckOptions: TypeCheckOptions = {
     mode: 'emitDeclarationOnly',
     tsConfigPath: tsConfig,
     outDir: outputPath,
     workspaceRoot: root,
-    rootDir: inputDir,
+    rootDir: projectRoot,
   };
 
   if (watch) {
@@ -82,7 +51,7 @@ export async function compileSwc(
     removeSync(normalizedOptions.outputPath);
   }
 
-  const swcCmdLog = execSync(getSwcCmd(normalizedOptions), {
+  const swcCmdLog = execSync(getSwcCmd(normalizedOptions.swcCliOptions), {
     encoding: 'utf8',
     cwd: normalizedOptions.swcCliOptions.swcCwd,
   });
@@ -135,9 +104,10 @@ export async function* compileSwcWatch(
       let stderrOnData: () => void;
       let watcherOnExit: () => void;
 
-      const swcWatcher = exec(getSwcCmd(normalizedOptions, true), {
-        cwd: normalizedOptions.swcCliOptions.swcCwd,
-      });
+      const swcWatcher = exec(
+        getSwcCmd(normalizedOptions.swcCliOptions, true),
+        { cwd: normalizedOptions.swcCliOptions.swcCwd }
+      );
 
       processOnExit = () => {
         swcWatcher.kill();
