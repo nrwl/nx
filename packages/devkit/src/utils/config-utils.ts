@@ -1,6 +1,7 @@
 import { dirname, extname, join } from 'path';
 import { existsSync, readdirSync } from 'fs';
 import { requireNx } from '../../nx';
+import { pathToFileURL } from 'node:url';
 
 const { workspaceRoot, registerTsProject } = requireNx();
 
@@ -70,8 +71,9 @@ async function load(path: string): Promise<any> {
     return require(path);
   } catch (e: any) {
     if (e.code === 'ERR_REQUIRE_ESM') {
-      // If `require` fails to load ESM, try dynamic `import()`.
-      return await dynamicImport(`${path}?t=${Date.now()}`);
+      // If `require` fails to load ESM, try dynamic `import()`. ESM requires file url protocol for handling absolute paths.
+      const pathAsFileUrl = pathToFileURL(path).pathname;
+      return await dynamicImport(`${pathAsFileUrl}?t=${Date.now()}`);
     }
 
     // Re-throw all other errors
