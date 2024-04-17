@@ -22,7 +22,7 @@ interface PendingPromise {
 export function loadRemoteNxPlugin(
   plugin: PluginConfiguration,
   root: string
-): [Promise<LoadedNxPlugin>, () => void] {
+): Promise<LoadedNxPlugin> {
   // this should only really be true when running unit tests within
   // the Nx repo. We still need to start the worker in this case,
   // but its typescript.
@@ -60,19 +60,13 @@ export function loadRemoteNxPlugin(
 
   cleanupFunctions.add(cleanupFunction);
 
-  return [
-    new Promise<LoadedNxPlugin>((res, rej) => {
-      worker.on(
-        'message',
-        createWorkerHandler(worker, pendingPromises, res, rej)
-      );
-      worker.on('exit', exitHandler);
-    }),
-    () => {
-      cleanupFunction();
-      cleanupFunctions.delete(cleanupFunction);
-    },
-  ] as const;
+  return new Promise<LoadedNxPlugin>((res, rej) => {
+    worker.on(
+      'message',
+      createWorkerHandler(worker, pendingPromises, res, rej)
+    );
+    worker.on('exit', exitHandler);
+  });
 }
 
 async function shutdownPluginWorker(
