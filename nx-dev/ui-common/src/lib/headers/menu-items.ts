@@ -160,7 +160,7 @@ export const learnItems = [
     isHighlight: false,
   },
   {
-    name: 'Code exmaple for your stack',
+    name: 'Code examples for your stack',
     description: null,
     href: '/showcase/example-repos',
     icon: CodeBracketIcon,
