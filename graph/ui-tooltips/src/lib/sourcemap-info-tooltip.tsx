@@ -20,7 +20,7 @@ export function SourcemapInfoToolTip({
   // Every other property within in the target has the form `target.${targetName}.${propertyName}
   const isTarget = propertyKey.split('.').length === 2;
 
-  const docsUrlSlug: string | undefined = plugin.startsWith('@nx/')
+  const docsUrlSlug: string | undefined = plugin?.startsWith('@nx/')
     ? plugin.replace('@nx/', '').split('/')[0]
     : undefined;
 
