@@ -180,9 +180,9 @@ export function Footer(): JSX.Element {
                 </Link>
               ))}
             </div>
-            <p className="flex items-center text-sm">
+            <div className="flex items-center text-sm">
               Preferences <ThemeSwitcher />
-            </p>
+            </div>
           </div>
           <div className="mt-12 grid grid-cols-2 gap-8 xl:col-span-2 xl:mt-0">
             <div className="md:grid md:grid-cols-2 md:gap-8">
