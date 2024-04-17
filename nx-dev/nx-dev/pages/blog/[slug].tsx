@@ -63,23 +63,23 @@ export default function BlogPostDetail({ post }: BlogPostDetailProps) {
           </div>
           <div className="w-16 hidden sm:block" />
         </div>
-        {post.cover_image && (
-          <div className="max-w-4xl mx-auto mb-4">
-            <Image
-              className="w-full h-auto object-cover"
-              src={post.cover_image}
-              alt=""
-              width={1024}
-              height={496}
-            />
-          </div>
-        )}
         <div id="content-wrapper" className="px-4 lg:px-0">
-          <header className="max-w-3xl mx-auto mt-16">
-            <h1 className="prose prose-slate dark:prose-invert text-5xl font-semibold mb-4">
+          <header className="max-w-3xl mx-auto mt-8 mb-16">
+            <h1 className="prose prose-slate dark:prose-invert text-5xl font-semibold text-center">
               {post.title}
             </h1>
           </header>
+          {post.cover_image && (
+            <div className="max-w-4xl mx-auto mb-16">
+              <Image
+                className="w-full h-auto object-cover"
+                src={post.cover_image}
+                alt=""
+                width={1024}
+                height={496}
+              />
+            </div>
+          )}
           <div className="max-w-3xl mx-auto min-w-0 flex-auto pb-24 lg:pb-16">
             <div className="relative">
               <div

@@ -12,6 +12,7 @@ export * from './lib/sidebar-container';
 export * from './lib/sidebar';
 export * from './lib/plugin-card';
 export * from './lib/testimonial-card';
+export * from './lib/tweet';
 export * from './lib/typography';
 export * from './lib/github-star-widget';
 export * from './lib/youtube.component';
