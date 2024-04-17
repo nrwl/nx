@@ -1157,7 +1157,100 @@ Valid values are: "auto", "", "~", "^", "="`,
       jest.clearAllMocks();
     });
 
-    it('should update transitive dependents when updateDependents.when is set to "always"', async () => {
+    it('should not update transitive dependents when updateDependents.when is set to "auto" and the transitive dependents are not in the same batch', async () => {
+      expect(readJson(tree, 'libs/my-lib/package.json').version).toEqual(
+        '0.0.1'
+      );
+      expect(
+        readJson(tree, 'libs/project-with-dependency-on-my-lib/package.json')
+      ).toMatchInlineSnapshot(`
+        {
+          "dependencies": {
+            "my-lib": "~0.0.1",
+          },
+          "name": "project-with-dependency-on-my-lib",
+          "version": "0.0.1",
+        }
+      `);
+      expect(
+        readJson(
+          tree,
+          'libs/project-with-transitive-dependency-on-my-lib/package.json'
+        )
+      ).toMatchInlineSnapshot(`
+        {
+          "devDependencies": {
+            "project-with-dependency-on-my-lib": "^0.0.1",
+          },
+          "name": "project-with-transitive-dependency-on-my-lib",
+          "version": "0.0.1",
+        }
+      `);
+
+      // It should not include transitive dependents in the versionData because we are filtering to only my-lib and updateDependents.when is set to "auto"
+      expect(
+        await releaseVersionGenerator(tree, {
+          projects: [projectGraph.nodes['my-lib']], // version only my-lib
+          projectGraph,
+          specifier: '9.9.9',
+          currentVersionResolver: 'disk',
+          specifierSource: 'prompt',
+          releaseGroup: createReleaseGroup('independent'),
+          updateDependents: {
+            when: 'auto',
+          },
+        })
+      ).toMatchInlineSnapshot(`
+        {
+          "callback": [Function],
+          "data": {
+            "my-lib": {
+              "currentVersion": "0.0.1",
+              "dependentProjects": [],
+              "newVersion": "9.9.9",
+            },
+          },
+        }
+      `);
+
+      expect(readJson(tree, 'libs/my-lib/package.json')).toMatchInlineSnapshot(`
+        {
+          "name": "my-lib",
+          "version": "9.9.9",
+        }
+      `);
+
+      // The version of project-with-dependency-on-my-lib is untouched because it is not in the same batch as my-lib and updateDependents.when is set to "auto"
+      expect(
+        readJson(tree, 'libs/project-with-dependency-on-my-lib/package.json')
+      ).toMatchInlineSnapshot(`
+        {
+          "dependencies": {
+            "my-lib": "~0.0.1",
+          },
+          "name": "project-with-dependency-on-my-lib",
+          "version": "0.0.1",
+        }
+      `);
+
+      // The version of project-with-transitive-dependency-on-my-lib is untouched because it is not in the same batch as my-lib and updateDependents.when is set to "auto"
+      expect(
+        readJson(
+          tree,
+          'libs/project-with-transitive-dependency-on-my-lib/package.json'
+        )
+      ).toMatchInlineSnapshot(`
+        {
+          "devDependencies": {
+            "project-with-dependency-on-my-lib": "^0.0.1",
+          },
+          "name": "project-with-transitive-dependency-on-my-lib",
+          "version": "0.0.1",
+        }
+      `);
+    });
+
+    it('should always update transitive dependents when updateDependents.when is set to "always"', async () => {
       expect(readJson(tree, 'libs/my-lib/package.json').version).toEqual(
         '0.0.1'
       );

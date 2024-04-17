@@ -519,7 +519,10 @@ To fix this you will either need to add a package.json file at that location, or
       versionData[projectName] = {
         currentVersion,
         newVersion: null, // will stay as null in the final result in the case that no changes are detected
-        dependentProjects: allDependentProjects,
+        dependentProjects:
+          updateDependentsOptions.when === 'always'
+            ? allDependentProjects
+            : dependentProjectsInCurrentBatch,
       };
 
       if (!specifier) {
