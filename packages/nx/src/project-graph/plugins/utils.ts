@@ -89,7 +89,7 @@ export async function runCreateNodesInParallel(
         // Existing behavior is to ignore null results of
         // createNodes function.
         if (r) {
-          results.push(r);
+          results.push({ ...r, file, pluginName: plugin.name });
         }
       });
   });
