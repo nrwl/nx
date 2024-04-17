@@ -18,14 +18,11 @@ export default function BlogPostDetail({ post }: BlogPostDetailProps) {
     filePath: post.filePath ?? '',
   });
 
-  const formattedDate = new Date(post.frontmatter.date).toLocaleDateString(
-    'en-US',
-    {
-      month: 'long',
-      day: 'numeric',
-      year: 'numeric',
-    }
-  );
+  const formattedDate = new Date(post.date).toLocaleDateString('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  });
 
   return (
     <>
@@ -61,16 +58,16 @@ export default function BlogPostDetail({ post }: BlogPostDetailProps) {
             Blog
           </Link>
           <div className="flex flex-1 items-center justify-end text-right sm:justify-center sm:text-center">
-            <BlogAuthors authors={post.frontmatter.authors} />
+            <BlogAuthors authors={post.authors} />
             <span className="ml-3 text-slate-500">{formattedDate}</span>
           </div>
           <div className="w-16 hidden sm:block" />
         </div>
-        {post.frontmatter.cover_image && (
-          <div className="max-w-3xl mx-auto mb-4">
+        {post.cover_image && (
+          <div className="max-w-4xl mx-auto mb-4">
             <Image
               className="w-full h-auto object-cover"
-              src={post.frontmatter.cover_image}
+              src={post.cover_image}
               alt=""
               width={1024}
               height={496}
@@ -80,7 +77,7 @@ export default function BlogPostDetail({ post }: BlogPostDetailProps) {
         <div id="content-wrapper" className="px-4 lg:px-0">
           <header className="max-w-3xl mx-auto mt-16">
             <h1 className="prose prose-slate dark:prose-invert text-5xl font-semibold mb-4">
-              {post.frontmatter.title}
+              {post.title}
             </h1>
           </header>
           <div className="max-w-3xl mx-auto min-w-0 flex-auto pb-24 lg:pb-16">

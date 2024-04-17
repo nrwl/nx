@@ -1,18 +1,14 @@
-export type BlogPostFrontmatter = {
+export type BlogPostDataEntry = {
   title: string;
+  content: string;
   description: string;
   authors: string[];
   date: string;
-  updated?: string;
-  cover_image: string;
+  cover_image: string | null;
   tags: string[];
   reposts: string[];
+  updated?: string;
   pinned?: boolean;
-};
-
-export type BlogPostDataEntry = {
-  content: string;
-  frontmatter: BlogPostFrontmatter;
   filePath: string;
   slug: string;
 };

@@ -58,53 +58,60 @@ export default function Blog(props: BlogListProps): JSX.Element {
           <div className="mx-auto flex flex-col gap-4">
             <div className="flex flex-wrap gap-4">
               <div className="flex-1 basis-full md:basis-[48%]">
-                <BlogEntry blogpost={blog1} showImage={true} />
+                {blog1 && <BlogEntry blogpost={blog1} showImage={true} />}
               </div>
               <div className="flex-1 basis-full md:basis-[48%]">
-                <BlogEntry blogpost={blog2} showImage={true} />
+                {blog2 && <BlogEntry blogpost={blog2} showImage={true} />}
               </div>
             </div>
             <div className="flex flex-wrap gap-4">
               <div className="flex-1 basis-full md:basis-[31%]">
-                <BlogEntry blogpost={blog3} showImage={true} />
+                {blog3 && <BlogEntry blogpost={blog3} showImage={true} />}
               </div>
               <div className="flex-1 basis-full md:basis-[31%]">
-                <BlogEntry blogpost={blog4} showImage={true} />
+                {blog4 && <BlogEntry blogpost={blog4} showImage={true} />}
               </div>
               <div className="flex-1 basis-full md:basis-[31%]">
-                <BlogEntry blogpost={blog5} showImage={true} />
+                {blog5 && <BlogEntry blogpost={blog5} showImage={true} />}
               </div>
             </div>
           </div>
-          <div className="mx-auto mt-16 mb-8">
-            <h2 className="text-3xl font-semibold">More Posts</h2>
-          </div>
-          <div className="mx-auto">
-            {restOfPosts?.map((post) => {
-              const formattedDate = new Date(
-                post.frontmatter.date
-              ).toLocaleDateString('en-US', {
-                month: 'short',
-                day: 'numeric',
-                year: 'numeric',
-              });
-              return (
-                <Link
-                  href={`/blog/${post.slug}`}
-                  key={post.slug}
-                  className="flex mb-4 pb-2 border-b last:border-0 border-slate-300 dark:border-slate-700 hover:text-slate-500 dark:hover:text-white"
-                >
-                  <span className="font-semibold w-[400px]">
-                    {post.frontmatter.title}
-                  </span>
-                  <span className="text-slate-500 flex-1">{formattedDate}</span>
-                  <span className="flex-none">
-                    <BlogAuthors authors={post.frontmatter.authors} />
-                  </span>
-                </Link>
-              );
-            })}
-          </div>
+          {restOfPosts.length > 0 ? (
+            <>
+              <div className="mx-auto mt-16 mb-8">
+                <h2 className="text-3xl font-semibold">More Posts</h2>
+              </div>
+              <div className="mx-auto">
+                {restOfPosts?.map((post) => {
+                  const formattedDate = new Date(post.date).toLocaleDateString(
+                    'en-US',
+                    {
+                      month: 'short',
+                      day: 'numeric',
+                      year: 'numeric',
+                    }
+                  );
+                  return (
+                    <Link
+                      href={`/blog/${post.slug}`}
+                      key={post.slug}
+                      className="flex mb-4 pb-2 border-b last:border-0 border-slate-300 dark:border-slate-700 hover:text-slate-500 dark:hover:text-white"
+                    >
+                      <span className="font-semibold w-[400px]">
+                        {post.title}
+                      </span>
+                      <span className="text-slate-500 flex-1">
+                        {formattedDate}
+                      </span>
+                      <span className="flex-none">
+                        <BlogAuthors authors={post.authors} />
+                      </span>
+                    </Link>
+                  );
+                })}
+              </div>
+            </>
+          ) : null}
         </div>
       </main>
       <Footer />

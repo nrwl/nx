@@ -33,16 +33,16 @@ export class BlogApi {
       const slug = this.calculateSlug(filePath, frontmatter);
       const post = {
         content,
-        frontmatter: {
-          title: frontmatter.title,
-          description: frontmatter.description,
-          authors: frontmatter.authors,
-          date: this.calculateDate(file, frontmatter),
-          cover_image: frontmatter.cover_image ?? null,
-          tags: frontmatter.tags,
-          reposts: frontmatter.reposts,
-          pinned: frontmatter.pinned ?? false,
-        },
+        title: frontmatter.title ?? null,
+        description: frontmatter.description ?? null,
+        authors: frontmatter.authors ?? [],
+        date: this.calculateDate(file, frontmatter),
+        cover_image: frontmatter.cover_image
+          ? `/documentation${frontmatter.cover_image}` // Match the prefix used by markdown parser
+          : null,
+        tags: frontmatter.tags ?? [],
+        reposts: frontmatter.reposts ?? [],
+        pinned: frontmatter.pinned ?? false,
         filePath,
         slug,
       };

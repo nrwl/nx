@@ -10,14 +10,11 @@ export interface BlogEntryProps {
 }
 
 export function BlogEntry({ blogpost, showImage }: BlogEntryProps) {
-  const formattedDate = new Date(blogpost.frontmatter.date).toLocaleDateString(
-    'en-US',
-    {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    }
-  );
+  const formattedDate = new Date(blogpost.date).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
 
   return (
     <div
@@ -29,10 +26,10 @@ export function BlogEntry({ blogpost, showImage }: BlogEntryProps) {
       )}
     >
       <Link href={`/blog/${blogpost.slug}`}>
-        {showImage && blogpost.frontmatter.cover_image && (
+        {showImage && blogpost.cover_image && (
           <Image
             className="mb-4 object-cover"
-            src={blogpost.frontmatter.cover_image}
+            src={blogpost.cover_image}
             alt=""
             width={768}
             height={372}
@@ -40,11 +37,11 @@ export function BlogEntry({ blogpost, showImage }: BlogEntryProps) {
         )}
         <div className="px-4">
           <div className="flex items-start justify-between w-full pt-2 mb-2">
-            <BlogAuthors authors={blogpost.frontmatter.authors} />
+            <BlogAuthors authors={blogpost.authors} />
             <span className="flex-1 ml-3">{formattedDate}</span>
           </div>
           <span className="text-2xl font-semibold text-gray-900 dark:text-white">
-            {blogpost.frontmatter.title}
+            {blogpost.title}
           </span>
         </div>
       </Link>

@@ -58,15 +58,13 @@ function createPost(data: {
     content: '',
     filePath: `${data.slug}.md`,
     slug: data.slug,
-    frontmatter: {
-      date: data.date,
-      title: data.title,
-      description: '',
-      authors: [],
-      cover_image: '',
-      tags: [],
-      reposts: [],
-      pinned: data.pinned ?? undefined,
-    },
+    date: data.date,
+    title: data.title,
+    description: '',
+    authors: [],
+    cover_image: '',
+    tags: [],
+    reposts: [],
+    pinned: data.pinned ?? undefined,
   };
 }
