@@ -180,6 +180,9 @@ export function Footer(): JSX.Element {
                 </Link>
               ))}
             </div>
+            <p className="text-sm flex items-center">
+              Preferences <ThemeSwitcher />
+            </p>
           </div>
           <div className="mt-12 grid grid-cols-2 gap-8 xl:col-span-2 xl:mt-0">
             <div className="md:grid md:grid-cols-2 md:gap-8">
@@ -218,7 +221,7 @@ export function Footer(): JSX.Element {
                 </ul>
               </div>
             </div>
-            <div className="md:grid md:grid-cols-3 md:gap-8">
+            <div className="md:grid md:grid-cols-2 md:gap-8">
               <div>
                 <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-400">
                   Community
@@ -252,12 +255,6 @@ export function Footer(): JSX.Element {
                     </li>
                   ))}
                 </ul>
-              </div>
-              <div className="pt-8">
-                <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-400 ">
-                  Preferences
-                </h3>
-                <ThemeSwitcher useContext={false} />
               </div>
             </div>
           </div>

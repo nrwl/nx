@@ -5,10 +5,10 @@ import {
   SunIcon,
 } from '@heroicons/react/24/outline';
 import cx from 'classnames';
-import { Fragment } from 'react';
+import { ElementType, Fragment } from 'react';
 import { Theme, useTheme } from './theme.provider';
 
-export function ThemeSwitcher({ useContext = true }) {
+export function ThemeSwitcher() {
   const [theme, setTheme] = useTheme();
   const themeMap = {
     dark: {
@@ -27,22 +27,22 @@ export function ThemeSwitcher({ useContext = true }) {
   const availableThemes = [
     {
       label: 'Light',
-      value: 'light' as Theme,
-      icon: <SunIcon className="h-4 w-4" />,
+      value: 'light',
+      icon: SunIcon,
     },
     {
       label: 'Dark',
-      value: 'dark' as Theme,
-      icon: <MoonIcon className="h-4 w-4" />,
+      value: 'dark',
+      icon: MoonIcon,
     },
     {
       label: 'System',
-      value: 'system' as Theme,
-      icon: <ComputerDesktopIcon className="h-4 w-4" />,
+      value: 'system',
+      icon: ComputerDesktopIcon,
     },
-  ];
+  ] satisfies {label: string; value:Theme; icon: ElementType}[];
 
-  return useContext ? (
+  return (
     <div className="inline-block">
       <div className="group relative flex h-full w-full items-center px-1">
         <Listbox value={theme} onChange={setTheme}>
@@ -66,13 +66,13 @@ export function ThemeSwitcher({ useContext = true }) {
             leaveFrom="transform opacity-100 scale-100"
             leaveTo="transform opacity-0 scale-95"
           >
-            <Listbox.Options className="absolute top-full right-0 z-50  mt-2 w-36 origin-top-right divide-y divide-slate-100 rounded-md bg-white shadow-lg ring-1 ring-black/5 focus:outline-none dark:divide-slate-800 dark:bg-slate-900 dark:ring-white/5">
-              {availableThemes.map(({ value, label, icon }) => (
-                <Listbox.Option key={value} value={value} as={Fragment}>
+            <Listbox.Options className="absolute top-full -right-10 z-50 mt-2 w-36 origin-top-right divide-y divide-slate-100 rounded-md bg-white shadow-lg ring-1 ring-black/5 focus:outline-none dark:divide-slate-800 dark:bg-slate-900 dark:ring-white/5">
+              {availableThemes.map((t) => (
+                <Listbox.Option key={t.value} value={t.value} as={Fragment}>
                   {({ active, selected }) => (
                     <li
                       className={cx(
-                        'flex cursor-pointer items-center px-4 py-2 text-sm',
+                        'flex cursor-pointer items-center px-4 py-2 text-sm gap-2',
                         {
                           'bg-slate-100 dark:bg-slate-800/60': active,
                           'text-blue-500 dark:text-sky-500': active || selected,
@@ -80,8 +80,8 @@ export function ThemeSwitcher({ useContext = true }) {
                         }
                       )}
                     >
-                      <span className="mr-4">{icon}</span>
-                      {label}
+                      <t.icon aria-hidden="true" className="w-4 h-4 shrink-0" />
+                      {t.label}
                     </li>
                   )}
                 </Listbox.Option>
@@ -90,36 +90,6 @@ export function ThemeSwitcher({ useContext = true }) {
           </Transition>
         </Listbox>
       </div>
-    </div>
-  ) : (
-    <div className="-ml-3 mt-4">
-      <ul className="flex xl:justify-between">
-        {availableThemes.map(({ value, label, icon }) => {
-          return (
-            <li
-              key={value}
-              className={cx(
-                'inline-block rounded-full lg:px-1',
-                theme === value
-                  ? 'bg-slate-200 dark:bg-slate-800 text-blue-500 dark:text-sky-500'
-                  : ''
-              )}
-            >
-              <button
-                aria-label={label}
-                title={label}
-                onClick={() => setTheme(value)}
-                className={cx(
-                  'inline-flex p-2 text-sm font-medium opacity-60 transition-opacity group-hover:opacity-100',
-                  themeMap[value].className
-                )}
-              >
-                {icon}
-              </button>
-            </li>
-          );
-        })}
-      </ul>
     </div>
   );
 }
