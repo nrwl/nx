@@ -47,7 +47,7 @@ export function AlgoliaSearch({
       setIsOpen(true);
       setInitialQuery(event.key);
     },
-    [setIsOpen, setInitialQuery]
+    [setIsOpen, setInitialQuery],
   );
 
   useDocSearchKeyboardEvents({
@@ -86,8 +86,8 @@ export function AlgoliaSearch({
           className="flex w-full items-center rounded-md bg-white py-1.5 px-2 text-sm leading-4 ring-1 ring-slate-300 transition dark:bg-slate-700 dark:ring-slate-900"
         >
           <MagnifyingGlassIcon className="h-4 w-4 flex-none" />
-          <span className="mx-3 text-xs text-slate-300 dark:text-slate-400 md:text-sm inline-flex">
-            Search <span className="ml-1 hidden lg:inline">the docs ...</span>
+          <span className="mx-3 inline-flex text-xs text-slate-300 dark:text-slate-400 md:text-sm">
+            Search
           </span>
           <span
             style={{ opacity: browserDetected ? '1' : '0' }}
@@ -159,7 +159,7 @@ export function AlgoliaSearch({
                 if (item.hierarchy?.lvl0) {
                   item.hierarchy.lvl0 = item.hierarchy.lvl0.replace(
                     /&amp;/g,
-                    '&'
+                    '&',
                   );
                 }
 
@@ -170,7 +170,7 @@ export function AlgoliaSearch({
               });
             }}
           />,
-          document.body
+          document.body,
         )}
     </>
   );
