@@ -21,9 +21,7 @@ export function Tweet(props: { url: string }) {
         data-lang="en"
         data-dnt="true"
       >
-        <a href={props.url}>
-          Loading tweet...
-        </a>
+        <a href={props.url}>Loading tweet...</a>
       </blockquote>
       <Script
         async

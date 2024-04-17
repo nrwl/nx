@@ -102,7 +102,7 @@ Nx Cloud introduces an entirely different model. Instead of the graph of VMs, th
 
 By adding the following line…
 
-```
+```shell
 npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js"
 ```
 
