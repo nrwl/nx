@@ -180,7 +180,7 @@ export function Footer(): JSX.Element {
                 </Link>
               ))}
             </div>
-            <p className="text-sm flex items-center">
+            <p className="flex items-center text-sm">
               Preferences <ThemeSwitcher />
             </p>
           </div>

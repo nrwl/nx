@@ -54,14 +54,14 @@ export function Header(): JSX.Element {
           {/*LOGO*/}
           <Link
             href="/"
-            className="flex items-center text-slate-900 dark:text-white mr-4"
+            className="mr-4 flex items-center text-slate-900 dark:text-white"
           >
             <span className="sr-only">Nx</span>
             <NxIcon aria-hidden="true" className="h-8 w-8" />
           </Link>
           <nav
             role="menu"
-            className="items-justified items-center flex justify-center space-x-2 py-0.5"
+            className="items-justified flex items-center justify-center space-x-2 py-0.5"
           >
             <h2 className="sr-only">Main navigation</h2>
             {/*FEATURES*/}
@@ -71,13 +71,13 @@ export function Header(): JSX.Element {
                   <Popover.Button
                     className={cx(
                       open ? 'text-blue-500 dark:text-sky-500' : '',
-                      'text group inline-flex items-center px-3 py-2 gap-2 font-medium leading-tight dark:text-slate-200 outline-0'
+                      'group inline-flex items-center gap-2 px-3 py-2 font-medium leading-tight outline-0 dark:text-slate-200',
                     )}
                   >
                     <span
                       className={cx(
                         open ? 'text-blue-500 dark:text-sky-500' : '',
-                        'transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500'
+                        'transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500',
                       )}
                     >
                       Features
@@ -86,9 +86,9 @@ export function Header(): JSX.Element {
                       aria-hidden="true"
                       className={cx(
                         open
-                          ? 'text-blue-500 dark:text-sky-500 rotate-180 transform'
+                          ? 'rotate-180 transform text-blue-500 dark:text-sky-500'
                           : '',
-                        'h-3 w-3 transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500'
+                        'h-3 w-3 transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500',
                       )}
                     />
                   </Popover.Button>
@@ -115,13 +115,13 @@ export function Header(): JSX.Element {
                   <Popover.Button
                     className={cx(
                       open ? 'text-blue-500 dark:text-sky-500' : '',
-                      'text group inline-flex items-center px-3 py-2 font-medium leading-tight dark:text-slate-200 outline-0'
+                      'group inline-flex items-center px-3 py-2 font-medium leading-tight outline-0 dark:text-slate-200',
                     )}
                   >
                     <span
                       className={cx(
                         open ? 'text-blue-500 dark:text-sky-500' : '',
-                        'transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500'
+                        'transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500',
                       )}
                     >
                       Solutions
@@ -129,9 +129,9 @@ export function Header(): JSX.Element {
                     <ChevronDownIcon
                       className={cx(
                         open
-                          ? 'text-blue-500 dark:text-sky-500 rotate-180 transform'
+                          ? 'rotate-180 transform text-blue-500 dark:text-sky-500'
                           : '',
-                        'ml-2 h-3 w-3 transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500'
+                        'ml-2 h-3 w-3 transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500',
                       )}
                       aria-hidden="true"
                     />
@@ -171,10 +171,10 @@ export function Header(): JSX.Element {
               href="https://nx.app/pricing"
               title="Nx Cloud"
               target="_blank"
-              className="hidden px-3 py-2 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500 md:inline-flex gap-2"
+              className="hidden gap-2 px-3 py-2 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500 md:inline-flex"
             >
               CI Pricing
-              <ArrowUpRightIcon className="w-2 h-2 align-super" />
+              <ArrowUpRightIcon className="h-2 w-2 align-super" />
             </a>
             {/*RESOURCES*/}
             <Popover className="relative">
@@ -183,7 +183,7 @@ export function Header(): JSX.Element {
                   <Popover.Button
                     className={cx(
                       open ? 'text-blue-500 dark:text-sky-500' : '',
-                      'text group inline-flex items-center px-3 py-2 font-medium leading-tight dark:text-slate-200 outline-0'
+                      'group inline-flex items-center px-3 py-2 font-medium leading-tight outline-0 dark:text-slate-200',
                     )}
                   >
                     <span className="transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500">
@@ -192,9 +192,9 @@ export function Header(): JSX.Element {
                     <ChevronDownIcon
                       className={cx(
                         open
-                          ? 'text-blue-500 dark:text-sky-500 rotate-180 transform'
+                          ? 'rotate-180 transform text-blue-500 dark:text-sky-500'
                           : '',
-                        'ml-2 h-3 w-3 transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500'
+                        'ml-2 h-3 w-3 transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500',
                       )}
                       aria-hidden="true"
                     />
@@ -223,9 +223,9 @@ export function Header(): JSX.Element {
         </div>
         {/*SECONDARY NAVIGATION*/}
         <div className="flex-shrink-0 text-sm">
-          <nav className="items-center flex justify-center space-x-1">
+          <nav className="flex items-center justify-center space-x-1">
             <Link
-              className="hidden px-3 py-2 font-medium leading-tight hover:text-blue-500 cursor-pointer dark:text-slate-200 dark:hover:text-sky-500 md:inline-flex"
+              className="hidden cursor-pointer px-3 py-2 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500 md:inline-flex"
               title="Contact Us"
               href="/contact"
             >
@@ -238,7 +238,7 @@ export function Header(): JSX.Element {
               target="_blank"
               title="Log in to your Nx Cloud Account"
             >
-              <NxCloudIcon className="w-4 h-4" aria-hidden="true" />
+              <NxCloudIcon className="h-4 w-4" aria-hidden="true" />
               <span>Go to App</span>
             </ButtonLink>
             <a
@@ -246,7 +246,7 @@ export function Header(): JSX.Element {
               href="https://github.com/nrwl/nx"
               target="_blank"
               rel="noreferrer"
-              className="px-3 py-2 inline-flex items-center opacity-60 hover:opacity-90"
+              className="inline-flex items-center px-3 py-2 opacity-60 hover:opacity-90"
             >
               <span className="sr-only">Nx on GitHub</span>
               <GitHubIcon aria-hidden="true" className="h-5 w-5" />
@@ -271,7 +271,7 @@ export function Header(): JSX.Element {
               href="https://github.com/nrwl/nx"
               target="_blank"
               rel="noreferrer"
-              className="px-3 py-2 inline-flex items-center opacity-60 hover:opacity-90"
+              className="inline-flex items-center px-3 py-2 opacity-60 hover:opacity-90"
             >
               <span className="sr-only">Nx on GitHub</span>
               <GitHubIcon aria-hidden="true" className="h-5 w-5" />
@@ -309,7 +309,7 @@ export function Header(): JSX.Element {
                   leaveTo="translate-x-full"
                 >
                   <Dialog.Panel className="pointer-events-auto w-screen">
-                    <div className="flex h-full flex-col overflow-y-scroll bg-white dark:bg-slate-900 py-6 shadow-xl">
+                    <div className="flex h-full flex-col overflow-y-scroll bg-white py-6 shadow-xl dark:bg-slate-900">
                       <div className="px-4 sm:px-6">
                         <div className="flex items-start justify-between">
                           <Dialog.Title>
@@ -333,7 +333,7 @@ export function Header(): JSX.Element {
                           <div className="ml-3 flex h-7 items-center">
                             <button
                               type="button"
-                              className="relative rounded-md text-slate-600 dark:text-slate-400 hover:text-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-sky-500 dark:hovers:text-sky-500 focus:ring-offset-2"
+                              className="dark:hovers:text-sky-500 relative rounded-md text-slate-600 hover:text-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:text-slate-400 dark:focus:ring-sky-500"
                               onClick={() => setIsOpen(!isOpen)}
                             >
                               <span className="absolute -inset-2.5" />
@@ -360,7 +360,7 @@ export function Header(): JSX.Element {
                           Go to App
                         </ButtonLink>
 
-                        <div className="mt-4 divide-y divide-slate-200 dark:divide-slate-800 border-slate-200 dark:border-slate-800 border-b">
+                        <div className="mt-4 divide-y divide-slate-200 border-b border-slate-200 dark:divide-slate-800 dark:border-slate-800">
                           {/*FEATURES*/}
                           <Disclosure as="div">
                             {({ open }) => (
@@ -370,7 +370,7 @@ export function Header(): JSX.Element {
                                     open
                                       ? 'text-blue-500 dark:text-sky-500'
                                       : 'tex-slate-800 dark:text-slate-200',
-                                    'flex w-full items-center justify-between py-4 text-left text-base font-medium focus:outline-none'
+                                    'flex w-full items-center justify-between py-4 text-left text-base font-medium focus:outline-none',
                                   )}
                                 >
                                   <span>Features</span>
@@ -378,9 +378,9 @@ export function Header(): JSX.Element {
                                     aria-hidden="true"
                                     className={cx(
                                       open
-                                        ? 'text-blue-500 dark:text-sky-500 rotate-180 transform'
+                                        ? 'rotate-180 transform text-blue-500 dark:text-sky-500'
                                         : 'tex-slate-800 dark:text-slate-200',
-                                      'h-3 w-3 transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500'
+                                      'h-3 w-3 transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500',
                                     )}
                                   />
                                 </Disclosure.Button>
@@ -407,7 +407,7 @@ export function Header(): JSX.Element {
                                     open
                                       ? 'text-blue-500 dark:text-sky-500'
                                       : 'tex-slate-800 dark:text-slate-200',
-                                    'flex w-full items-center justify-between py-4 text-left text-base font-medium focus:outline-none'
+                                    'flex w-full items-center justify-between py-4 text-left text-base font-medium focus:outline-none',
                                   )}
                                 >
                                   <span>Solutions</span>
@@ -415,9 +415,9 @@ export function Header(): JSX.Element {
                                     aria-hidden="true"
                                     className={cx(
                                       open
-                                        ? 'text-blue-500 dark:text-sky-500 rotate-180 transform'
+                                        ? 'rotate-180 transform text-blue-500 dark:text-sky-500'
                                         : 'tex-slate-800 dark:text-slate-200',
-                                      'h-3 w-3 transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500'
+                                      'h-3 w-3 transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500',
                                     )}
                                   />
                                 </Disclosure.Button>
@@ -450,10 +450,10 @@ export function Header(): JSX.Element {
                             href="https://nx.app/pricing"
                             title="Nx Cloud"
                             target="_blank"
-                            className="py-4 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500 flex w-full gap-2"
+                            className="flex w-full gap-2 py-4 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500"
                           >
                             CI Pricing
-                            <ArrowUpRightIcon className="w-2 h-2 align-super" />
+                            <ArrowUpRightIcon className="h-2 w-2 align-super" />
                           </a>
                           {/*RESOURCES*/}
                           <Disclosure as="div">
@@ -464,7 +464,7 @@ export function Header(): JSX.Element {
                                     'flex w-full items-center justify-between py-4 text-left text-base font-medium focus:outline-none',
                                     open
                                       ? 'text-blue-500 dark:text-sky-500'
-                                      : 'tex-slate-800 dark:text-slate-200'
+                                      : 'tex-slate-800 dark:text-slate-200',
                                   )}
                                 >
                                   <span>Resources</span>
@@ -472,9 +472,9 @@ export function Header(): JSX.Element {
                                     aria-hidden="true"
                                     className={cx(
                                       open
-                                        ? 'text-blue-500 dark:text-sky-500 rotate-180 transform'
+                                        ? 'rotate-180 transform text-blue-500 dark:text-sky-500'
                                         : 'tex-slate-800 dark:text-slate-200',
-                                      'h-3 w-3 transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500'
+                                      'h-3 w-3 transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500',
                                     )}
                                   />
                                 </Disclosure.Button>

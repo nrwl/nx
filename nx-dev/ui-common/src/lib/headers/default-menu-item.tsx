@@ -19,16 +19,16 @@ export function DefaultMenuItem({
   return (
     <Tag
       className={cx(
-        'relative flex flex-1 gap-4 py-4 px-2 rounded-lg transition duration-150 ease-in-out',
+        'relative flex flex-1 gap-4 rounded-lg py-4 px-2 transition duration-150 ease-in-out',
         item.isHighlight
           ? 'bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/80 dark:hover:bg-slate-700/60'
           : 'hover:bg-slate-50 dark:hover:bg-slate-800/60',
-        className
+        className,
       )}
       {...rest}
     >
       {item.icon ? (
-        <item.icon aria-hidden="true" className="w-5 h-5 shrink-0" />
+        <item.icon aria-hidden="true" className="h-5 w-5 shrink-0" />
       ) : null}
       <div className="grow">
         <Link

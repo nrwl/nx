@@ -8,7 +8,7 @@ import {
   NewspaperIcon,
   PlayCircleIcon,
   ShareIcon,
-  Squares2X2Icon
+  Squares2X2Icon,
 } from '@heroicons/react/24/outline';
 import { FC, SVGProps } from 'react';
 import { NxAgentsIcon } from '../nx-agents-icon';
@@ -17,7 +17,7 @@ import { NxReplayIcon } from '../nx-replay-icon';
 export interface MenuItem {
   name: string;
   href: string;
-  description: string|null;
+  description: string | null;
   icon: FC<SVGProps<SVGSVGElement>> | null;
   isHighlight: boolean;
   isNew: boolean;
@@ -31,7 +31,7 @@ export const featuresItems = [
     href: '/features/run-tasks',
     icon: BoltIcon,
     isNew: false,
-    isHighlight: false
+    isHighlight: false,
   },
   {
     name: 'Local Caching',
@@ -40,7 +40,7 @@ export const featuresItems = [
     href: '/features/cache-task-results',
     icon: CircleStackIcon,
     isNew: false,
-    isHighlight: false
+    isHighlight: false,
   },
   {
     name: 'Nx Graph',
@@ -49,7 +49,7 @@ export const featuresItems = [
     href: '/features/cache-task-results',
     icon: ShareIcon,
     isNew: false,
-    isHighlight: false
+    isHighlight: false,
   },
   {
     name: 'Automated updates',
@@ -58,7 +58,7 @@ export const featuresItems = [
     href: '/features/automate-updating-dependencies',
     icon: ArrowPathIcon,
     isNew: false,
-    isHighlight: false
+    isHighlight: false,
   },
   {
     name: 'Module Boundaries',
@@ -67,7 +67,7 @@ export const featuresItems = [
     href: '/features/enforce-module-boundaries',
     icon: Squares2X2Icon,
     isNew: false,
-    isHighlight: false
+    isHighlight: false,
   },
   {
     name: 'Nx Release',
@@ -76,7 +76,7 @@ export const featuresItems = [
     href: '/features/manage-releases',
     icon: CubeIcon,
     isNew: true,
-    isHighlight: false
+    isHighlight: false,
   },
   {
     name: 'Nx Replay',
@@ -84,25 +84,27 @@ export const featuresItems = [
     href: '/ci/features/remote-cache',
     icon: NxReplayIcon,
     isNew: false,
-    isHighlight: true
+    isHighlight: true,
   },
   {
     name: 'Nx Agents',
-    description: 'One-line config for distributing tasks, E2E tests split & flaky tasks rerun.',
+    description:
+      'One-line config for distributing tasks, E2E tests split & flaky tasks rerun.',
     href: '/ci/features/distribute-task-execution',
     icon: NxAgentsIcon,
     isNew: true,
-    isHighlight: true
-  }
+    isHighlight: true,
+  },
 ] satisfies MenuItem[];
 export const plans = [
   {
     name: 'Nx Cloud',
-    description: 'End-to-end solution for smart, efficient and maintainable CI.',
+    description:
+      'End-to-end solution for smart, efficient and maintainable CI.',
     href: 'https://nx.app',
     icon: null,
     isNew: false,
-    isHighlight: false
+    isHighlight: false,
   },
   {
     name: 'Nx Enterprise',
@@ -111,16 +113,17 @@ export const plans = [
     href: 'https://nx.app/enterprise',
     icon: null,
     isNew: false,
-    isHighlight: false
-  }
+    isHighlight: false,
+  },
 ] satisfies MenuItem[];
 const useCaseItems = [
   {
     name: 'Get actionable feedback',
     description: 'Enhanced analysis & analytics of your workflows.',
-    href: '', icon: null,
+    href: '',
+    icon: null,
     isNew: false,
-    isHighlight: false
+    isHighlight: false,
   },
   {
     name: 'Reduce CI timings with remote caching',
@@ -128,7 +131,7 @@ const useCaseItems = [
     href: '',
     icon: null,
     isNew: false,
-    isHighlight: false
+    isHighlight: false,
   },
   {
     name: 'Performant task distribution at scale',
@@ -136,7 +139,7 @@ const useCaseItems = [
     href: '',
     icon: null,
     isNew: false,
-    isHighlight: false
+    isHighlight: false,
   },
   {
     name: 'Improve E2E time execution on CI',
@@ -144,8 +147,8 @@ const useCaseItems = [
     href: '',
     icon: null,
     isNew: false,
-    isHighlight: false
-  }
+    isHighlight: false,
+  },
 ] satisfies MenuItem[];
 export const learnItems = [
   {
@@ -154,7 +157,7 @@ export const learnItems = [
     href: '/getting-started/intro#learn-nx',
     icon: AcademicCapIcon,
     isNew: false,
-    isHighlight: false
+    isHighlight: false,
   },
   {
     name: 'Code exmaple for your stack',
@@ -162,7 +165,7 @@ export const learnItems = [
     href: '/showcase/example-repos',
     icon: CodeBracketIcon,
     isNew: false,
-    isHighlight: false
+    isHighlight: false,
   },
   {
     name: 'Video tutorials',
@@ -170,7 +173,7 @@ export const learnItems = [
     href: 'https://www.youtube.com/@nxdevtools',
     icon: PlayCircleIcon,
     isNew: false,
-    isHighlight: false
+    isHighlight: false,
   },
   {
     name: 'Newsletter',
@@ -178,29 +181,34 @@ export const learnItems = [
     href: 'https://go.nrwl.io/nx-newsletter',
     icon: NewspaperIcon,
     isNew: false,
-    isHighlight: false
-  }
+    isHighlight: false,
+  },
 ] satisfies MenuItem[];
-export const eventItems = [{
-  name: 'Nx Conf',
-  description: 'In person & virtual conference about latest monorepo advancements.',
-  href: '/conf',
-  icon: null,
-  isNew: false,
-  isHighlight: false
-}, {
-  name: 'Webinars',
-  description: 'Virtual courses to get a deeper understanding on monorepos animated by the Nx team.',
-  href: 'https://go.nx.dev/april-webinar',
-  icon: null,
-  isNew: false,
-  isHighlight: false
-}] satisfies MenuItem[];
+export const eventItems = [
+  {
+    name: 'Nx Conf',
+    description:
+      'In person & virtual conference about latest monorepo advancements.',
+    href: '/conf',
+    icon: null,
+    isNew: false,
+    isHighlight: false,
+  },
+  {
+    name: 'Webinars',
+    description:
+      'Virtual courses to get a deeper understanding on monorepos animated by the Nx team.',
+    href: 'https://go.nx.dev/april-webinar',
+    icon: null,
+    isNew: false,
+    isHighlight: false,
+  },
+] satisfies MenuItem[];
 export const solutionsMenuItems = {
-  'Helping you grow': plans
+  'Helping you grow': plans,
   // 'Use cases': useCaseItems
 };
 export const resourceMenuItems = {
-  'Learn': learnItems,
-  'Events': eventItems
+  Learn: learnItems,
+  Events: eventItems,
 };

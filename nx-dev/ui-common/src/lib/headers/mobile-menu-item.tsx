@@ -19,14 +19,14 @@ export function MobileMenuItem({
   return (
     <Tag
       className={cx(
-        'relative flex items-center flex-1 gap-2 rounded-lg py-3',
-        item.isHighlight ? 'px-2 bg-slate-50 dark:bg-slate-800/80' : '',
-        className
+        'relative flex flex-1 items-center gap-2 rounded-lg py-3',
+        item.isHighlight ? 'bg-slate-50 px-2 dark:bg-slate-800/80' : '',
+        className,
       )}
       {...rest}
     >
       {item.icon ? (
-        <item.icon aria-hidden="true" className="w-4 h-4 shrink-0" />
+        <item.icon aria-hidden="true" className="h-4 w-4 shrink-0" />
       ) : null}
       <div className="grow">
         <Link

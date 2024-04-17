@@ -37,7 +37,7 @@ function Menu({ tabs }: { tabs: any[] }): JSX.Element {
               tab.current
                 ? 'border-blue-500 text-blue-600 dark:border-sky-500 dark:text-sky-500'
                 : 'border-transparent hover:text-slate-900 dark:hover:text-sky-400',
-              'whitespace-nowrap border-b-2 py-2 text-sm font-medium'
+              'whitespace-nowrap border-b-2 py-2 text-sm font-medium',
             )}
             aria-current={tab.current ? 'page' : undefined}
           >
@@ -214,7 +214,7 @@ export function DocumentationHeader({
           </Link>
           <Link
             href="/getting-started/intro"
-            className="hidden lg:flex ml-2 items-center px-4 text-slate-900 dark:text-white lg:px-0"
+            className="ml-2 hidden items-center px-4 text-slate-900 dark:text-white lg:flex lg:px-0"
           >
             <span className="text-xl font-bold uppercase tracking-wide">
               Docs
@@ -239,13 +239,13 @@ export function DocumentationHeader({
                   <Popover.Button
                     className={cx(
                       open ? 'text-blue-500 dark:text-sky-500' : '',
-                      'text group inline-flex items-center px-3 py-2 gap-2 font-medium leading-tight dark:text-slate-200 outline-0'
+                      'text group inline-flex items-center gap-2 px-3 py-2 font-medium leading-tight outline-0 dark:text-slate-200',
                     )}
                   >
                     <span
                       className={cx(
                         open ? 'text-blue-500 dark:text-sky-500' : '',
-                        'transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500'
+                        'transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500',
                       )}
                     >
                       Features
@@ -254,9 +254,9 @@ export function DocumentationHeader({
                       aria-hidden="true"
                       className={cx(
                         open
-                          ? 'text-blue-500 dark:text-sky-500 rotate-180 transform'
+                          ? 'rotate-180 transform text-blue-500 dark:text-sky-500'
                           : '',
-                        'h-3 w-3 transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500'
+                        'h-3 w-3 transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500',
                       )}
                     />
                   </Popover.Button>
@@ -283,13 +283,13 @@ export function DocumentationHeader({
                   <Popover.Button
                     className={cx(
                       open ? 'text-blue-500 dark:text-sky-500' : '',
-                      'text group inline-flex items-center px-3 py-2 font-medium leading-tight dark:text-slate-200 outline-0'
+                      'text group inline-flex items-center px-3 py-2 font-medium leading-tight outline-0 dark:text-slate-200',
                     )}
                   >
                     <span
                       className={cx(
                         open ? 'text-blue-500 dark:text-sky-500' : '',
-                        'transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500'
+                        'transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500',
                       )}
                     >
                       Solutions
@@ -297,9 +297,9 @@ export function DocumentationHeader({
                     <ChevronDownIcon
                       className={cx(
                         open
-                          ? 'text-blue-500 dark:text-sky-500 rotate-180 transform'
+                          ? 'rotate-180 transform text-blue-500 dark:text-sky-500'
                           : '',
-                        'ml-2 h-3 w-3 transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500'
+                        'ml-2 h-3 w-3 transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500',
                       )}
                       aria-hidden="true"
                     />
@@ -339,10 +339,10 @@ export function DocumentationHeader({
               href="https://nx.app/pricing"
               title="Nx Cloud"
               target="_blank"
-              className="hidden px-3 py-2 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500 md:inline-flex gap-2"
+              className="hidden gap-2 px-3 py-2 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500 md:inline-flex"
             >
               CI Pricing
-              <ArrowUpRightIcon className="w-2 h-2 align-super" />
+              <ArrowUpRightIcon className="h-2 w-2 align-super" />
             </a>
             {/*RESOURCES*/}
             <Popover className="relative">
@@ -351,7 +351,7 @@ export function DocumentationHeader({
                   <Popover.Button
                     className={cx(
                       open ? 'text-blue-500 dark:text-sky-500' : '',
-                      'text group inline-flex items-center px-3 py-2 font-medium leading-tight dark:text-slate-200 outline-0'
+                      'text group inline-flex items-center px-3 py-2 font-medium leading-tight outline-0 dark:text-slate-200',
                     )}
                   >
                     <span className="transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500">
@@ -360,9 +360,9 @@ export function DocumentationHeader({
                     <ChevronDownIcon
                       className={cx(
                         open
-                          ? 'text-blue-500 dark:text-sky-500 rotate-180 transform'
+                          ? 'rotate-180 transform text-blue-500 dark:text-sky-500'
                           : '',
-                        'ml-2 h-3 w-3 transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500'
+                        'ml-2 h-3 w-3 transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500',
                       )}
                       aria-hidden="true"
                     />
@@ -396,7 +396,7 @@ export function DocumentationHeader({
             className="items-justified hidden justify-center space-x-4 lg:flex"
           >
             <Link
-              className="text-sm hidden px-3 py-2 font-medium leading-tight hover:text-blue-500 cursor-pointer dark:text-slate-200 dark:hover:text-sky-500 md:inline-flex"
+              className="hidden cursor-pointer px-3 py-2 text-sm font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500 md:inline-flex"
               title="Contact Us"
               href="/contact"
             >
@@ -408,7 +408,7 @@ export function DocumentationHeader({
               variant="secondary"
               size="small"
             >
-              <NxCloudIcon className="w-4 h-4" aria-hidden="true" />
+              <NxCloudIcon className="h-4 w-4" aria-hidden="true" />
               <span>Go to app</span>
             </ButtonLink>
           </nav>

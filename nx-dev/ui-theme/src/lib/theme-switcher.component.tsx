@@ -40,7 +40,7 @@ export function ThemeSwitcher() {
       value: 'system',
       icon: ComputerDesktopIcon,
     },
-  ] satisfies {label: string; value:Theme; icon: ElementType}[];
+  ] satisfies { label: string; value: Theme; icon: ElementType }[];
 
   return (
     <div className="inline-block">
@@ -51,7 +51,7 @@ export function ThemeSwitcher() {
             type="button"
             className={cx(
               'inline-flex p-2 text-sm font-medium opacity-60 transition-opacity group-hover:opacity-100',
-              themeMap[theme].className
+              themeMap[theme].className,
             )}
           >
             {themeMap[theme].icon}
@@ -72,15 +72,15 @@ export function ThemeSwitcher() {
                   {({ active, selected }) => (
                     <li
                       className={cx(
-                        'flex cursor-pointer items-center px-4 py-2 text-sm gap-2',
+                        'flex cursor-pointer items-center gap-2 px-4 py-2 text-sm',
                         {
                           'bg-slate-100 dark:bg-slate-800/60': active,
                           'text-blue-500 dark:text-sky-500': active || selected,
                           'text-slate-700 dark:text-slate-400': !active,
-                        }
+                        },
                       )}
                     >
-                      <t.icon aria-hidden="true" className="w-4 h-4 shrink-0" />
+                      <t.icon aria-hidden="true" className="h-4 w-4 shrink-0" />
                       {t.label}
                     </li>
                   )}
