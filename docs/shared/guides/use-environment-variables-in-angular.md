@@ -51,7 +51,7 @@ export class ApiService {
 }
 ```
 
-You can also define the variables in a way that allows to consume them as you would do in Node.js applications:
+You can also define the variables in a way that allows you to consume them as you would do in Node.js applications:
 
 ```json {% fileName="apps/my-app/project.json" highlightLines=[5,"8-10"] %}
 {
@@ -106,7 +106,7 @@ Support for custom ESBuild plugins requires Angular **17.0.0** or later.
 
 The previous method is useful to statically define variables in the project configuration that will be available at build time. However, if you need to dynamically collect and define the environment variables available at build time, you can create a custom ESBuild plugin.
 
-You can provide custom ESBuild plugin to the `@nx/angular:application` or `@nx/angular:browser-esbuild` executors:
+You can provide a custom ESBuild plugin to the `@nx/angular:application` or `@nx/angular:browser-esbuild` executors:
 
 ```json {% fileName="apps/my-app/project.json" highlightLines=[5,8] %}
 {
