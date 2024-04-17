@@ -8,9 +8,7 @@ reposts: []
 
 ## From 90-minute to 10-minute CI Pipelines
 
-{% youtube
-src="https://www.youtube.com/embed/_FSHQIwITic?si=GaAz4B0nYUEzVftN"
-title="Fast, Effortless CI"/%}
+{% youtube src="https://www.youtube.com/embed/_FSHQIwITic?si=GaAz4B0nYUEzVftN" title="Fast, Effortless CI" /%}
 
 > TL;DR; Nx is releasing a new product called Nx Agents that dramatically improves the speed and maintainability of your CI pipeline.
 

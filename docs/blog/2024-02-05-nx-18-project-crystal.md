@@ -10,23 +10,20 @@ Enhance, but don’t interfere! That’s the ideal! And this is how extensions w
 
 Table of Contents
 
-- [Adding Nx to an Existing Monorepo]()
-- [Project Crystal]()
-- [Project Crystal Plugins in an Nx Monorepo]()
-  - [Inferred Targets]()
-  - [Visualizing Inferred Targets]()
-- [More Transparency and a Single Source of Truth]()
-- [Enhancing existing Monorepos with Nx Plugins]()
-- [This is just the Beginning]()
-- [Learn more]()
+- [Adding Nx to an Existing Monorepo](#adding-nx-to-an-existing-monorepo)
+- [Project Crystal](#project-crystal)
+- [Project Crystal Plugins in an Nx Monorepo](#project-crystal-plugins-in-an-nx-monorepo)
+  - [Inferred Targets](#inferred-targets)
+  - [Visualizing Inferred Targets](#visualizing-inferred-targets)
+- [More Transparency and a Single Source of Truth](#more-transparency-and-a-single-source-of-truth)
+- [Enhancing existing Monorepos with Nx Plugins](#enhancing-existing-monorepos-with-nx-plugins)
+- [This is just the Beginning](#this-is-just-the-beginning)
+- [Learn more](#learn-more)
 
 ---
 
 **Prefer a video? We’ve got you covered!**
-{% youtube
-src="https://www.youtube.com/embed/wADNsVItnsM?si=sQ3-Dlx6KBRBUMkE"
-title="What if Nx Plugins Were More Like VSCode Extensions"
-/%}
+{% youtube src="https://www.youtube.com/embed/wADNsVItnsM?si=sQ3-Dlx6KBRBUMkE" title="What if Nx Plugins Were More Like VSCode Extensions" /%}
 
 Also, make sure to check out [Launch Nx Conf](/launch-nx) on Thursday, Feb 8th, where we’ll have more in-depth talks about Project Crystal as well as other exciting features around Nx and Nx Cloud.
 
@@ -72,13 +69,13 @@ Some of the main objectives of Project Crystal are to...
 
 When you create a new Nx workspace using
 
-```
+```shell
 npx create-nx-workspace myorg
 ```
 
 ... and you choose an “integrated monorepo” you’ll get the usual setup powered by Nx Plugins and all the features and benefits that come with them. Where you’ll see Project Crystal in action is when you open a `project.json` file, which will most likely look like the following:
 
-```json
+```json {% filename="project.json" }
 {
   "name": "reactapp",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
@@ -93,7 +90,7 @@ npx create-nx-workspace myorg
 
 Starting with Nx 18 and Project Crystal, we don’t generate any targets anymore, but the corresponding Nx plugin instead [infers them](/concepts/inferred-tasks). If we open the `nx.json`, you'll see a new property, `plugins`:
 
-```json
+```json {% filename="nx.json" %}
 {
   ...
   "plugins": [
