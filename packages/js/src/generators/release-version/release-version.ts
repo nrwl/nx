@@ -460,6 +460,22 @@ To fix this you will either need to add a package.json file at that location, or
           return localPackageDependency.target === project.name;
         });
 
+      const includeTransitiveDependents =
+        updateDependentsOptions.when === 'always';
+      const transitiveLocalPackageDependents: LocalPackageDependency[] = [];
+      if (includeTransitiveDependents) {
+        for (const directDependent of allDependentProjects) {
+          // Look through localPackageDependencies to find any which have a target on the current dependent
+          for (const localPackageDependency of Object.values(
+            localPackageDependencies
+          ).flat()) {
+            if (localPackageDependency.target === directDependent.source) {
+              transitiveLocalPackageDependents.push(localPackageDependency);
+            }
+          }
+        }
+      }
+
       const dependentProjectsInCurrentBatch = [];
       const dependentProjectsOutsideCurrentBatch = [];
 
@@ -530,7 +546,8 @@ To fix this you will either need to add a package.json file at that location, or
       if (allDependentProjects.length > 0) {
         const totalProjectsToUpdate =
           updateDependentsOptions.when === 'always'
-            ? allDependentProjects.length
+            ? allDependentProjects.length +
+              transitiveLocalPackageDependents.length
             : dependentProjectsInCurrentBatch.length;
         if (totalProjectsToUpdate > 0) {
           log(
@@ -545,9 +562,13 @@ To fix this you will either need to add a package.json file at that location, or
 
       const updateDependentProjectAndAddToVersionData = ({
         dependentProject,
+        dependencyPackageName,
+        newDependencyVersion,
         forceVersionBump,
       }: {
         dependentProject: LocalPackageDependency;
+        dependencyPackageName: string;
+        newDependencyVersion: string;
         forceVersionBump: 'major' | 'minor' | 'patch' | false;
       }) => {
         const updatedFilePath = joinPathFragments(
@@ -558,7 +579,7 @@ To fix this you will either need to add a package.json file at that location, or
           // Auto (i.e.infer existing) by default
           let versionPrefix = options.versionPrefix ?? 'auto';
           const currentDependencyVersion =
-            json[dependentProject.dependencyCollection][packageName];
+            json[dependentProject.dependencyCollection][dependencyPackageName];
 
           // For auto, we infer the prefix based on the current version of the dependent
           if (versionPrefix === 'auto') {
@@ -574,8 +595,8 @@ To fix this you will either need to add a package.json file at that location, or
           }
 
           // Apply the new version of the dependency to the dependent
-          const newDepVersion = `${versionPrefix}${newVersion}`;
-          json[dependentProject.dependencyCollection][packageName] =
+          const newDepVersion = `${versionPrefix}${newDependencyVersion}`;
+          json[dependentProject.dependencyCollection][dependencyPackageName] =
             newDepVersion;
 
           // Bump the dependent's version if applicable and record it in the version data
@@ -587,10 +608,18 @@ To fix this you will either need to add a package.json file at that location, or
               options.preid
             );
             json.version = newPackageVersion;
+
+            // Look up any dependent projects from the transitiveLocalPackageDependents list
+            const transitiveDependentProjects =
+              transitiveLocalPackageDependents.filter(
+                (localPackageDependency) =>
+                  localPackageDependency.target === dependentProject.source
+              );
+
             versionData[dependentProject.source] = {
               currentVersion: currentPackageVersion,
               newVersion: newPackageVersion,
-              dependentProjects: [], // TODO: missing recursion here?
+              dependentProjects: transitiveDependentProjects,
             };
           }
 
@@ -612,6 +641,8 @@ To fix this you will either need to add a package.json file at that location, or
         }
         updateDependentProjectAndAddToVersionData({
           dependentProject,
+          dependencyPackageName: packageName,
+          newDependencyVersion: newVersion,
           // We don't force bump because we know they will come later in the topologically sorted projects loop and may have their own version update logic to take into account
           forceVersionBump: false,
         });
@@ -621,10 +652,36 @@ To fix this you will either need to add a package.json file at that location, or
         for (const dependentProject of dependentProjectsOutsideCurrentBatch) {
           updateDependentProjectAndAddToVersionData({
             dependentProject,
+            dependencyPackageName: packageName,
+            newDependencyVersion: newVersion,
             // For these additional dependents, we need to update their package.json version as well because we know they will not come later in the topologically sorted projects loop
             forceVersionBump: updateDependentsOptions.bump,
           });
         }
+      }
+      for (const transitiveDependentProject of transitiveLocalPackageDependents) {
+        const dependencyProjectName = transitiveDependentProject.target;
+        const dependencyPackageRoot = projectNameToPackageRootMap.get(
+          dependencyProjectName
+        );
+        if (!dependencyPackageRoot) {
+          throw new Error(
+            `The project "${dependencyProjectName}" does not have a packageRoot available. Please report this issue on https://github.com/nrwl/nx`
+          );
+        }
+        const dependencyPackageJsonPath = join(
+          dependencyPackageRoot,
+          'package.json'
+        );
+        const dependencyPackageJson = readJson(tree, dependencyPackageJsonPath);
+
+        updateDependentProjectAndAddToVersionData({
+          dependentProject: transitiveDependentProject,
+          dependencyPackageName: dependencyPackageJson.name,
+          newDependencyVersion: dependencyPackageJson.version,
+          // For these additional dependents, we need to update their package.json version as well because we know they will not come later in the topologically sorted projects loop
+          forceVersionBump: updateDependentsOptions.bump,
+        });
       }
     }
 

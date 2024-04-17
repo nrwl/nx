@@ -1111,6 +1111,171 @@ Valid values are: "auto", "", "~", "^", "="`,
       stubProcessExit = false;
     });
   });
+
+  describe('transitive updateDependents', () => {
+    beforeEach(() => {
+      projectGraph = createWorkspaceWithPackageDependencies(tree, {
+        'my-lib': {
+          projectRoot: 'libs/my-lib',
+          packageName: 'my-lib',
+          version: '0.0.1',
+          packageJsonPath: 'libs/my-lib/package.json',
+          localDependencies: [],
+        },
+        'project-with-dependency-on-my-lib': {
+          projectRoot: 'libs/project-with-dependency-on-my-lib',
+          packageName: 'project-with-dependency-on-my-lib',
+          version: '0.0.1',
+          packageJsonPath:
+            'libs/project-with-dependency-on-my-lib/package.json',
+          localDependencies: [
+            {
+              projectName: 'my-lib',
+              dependencyCollection: 'dependencies',
+              version: '~0.0.1',
+            },
+          ],
+        },
+        'project-with-transitive-dependency-on-my-lib': {
+          projectRoot: 'libs/project-with-transitive-dependency-on-my-lib',
+          packageName: 'project-with-transitive-dependency-on-my-lib',
+          version: '0.0.1',
+          packageJsonPath:
+            'libs/project-with-transitive-dependency-on-my-lib/package.json',
+          localDependencies: [
+            {
+              // Depends on my-lib via the project-with-dependency-on-my-lib
+              projectName: 'project-with-dependency-on-my-lib',
+              dependencyCollection: 'devDependencies',
+              version: '^0.0.1',
+            },
+          ],
+        },
+      });
+    });
+    afterEach(() => {
+      jest.clearAllMocks();
+    });
+
+    it('should update transitive dependents when updateDependents.when is set to "always"', async () => {
+      expect(readJson(tree, 'libs/my-lib/package.json').version).toEqual(
+        '0.0.1'
+      );
+      expect(
+        readJson(tree, 'libs/project-with-dependency-on-my-lib/package.json')
+      ).toMatchInlineSnapshot(`
+        {
+          "dependencies": {
+            "my-lib": "~0.0.1",
+          },
+          "name": "project-with-dependency-on-my-lib",
+          "version": "0.0.1",
+        }
+      `);
+      expect(
+        readJson(
+          tree,
+          'libs/project-with-transitive-dependency-on-my-lib/package.json'
+        )
+      ).toMatchInlineSnapshot(`
+        {
+          "devDependencies": {
+            "project-with-dependency-on-my-lib": "^0.0.1",
+          },
+          "name": "project-with-transitive-dependency-on-my-lib",
+          "version": "0.0.1",
+        }
+      `);
+
+      // It should include the appropriate versionData for transitive dependents
+      expect(
+        await releaseVersionGenerator(tree, {
+          projects: [projectGraph.nodes['my-lib']], // version only my-lib
+          projectGraph,
+          specifier: '9.9.9',
+          currentVersionResolver: 'disk',
+          specifierSource: 'prompt',
+          releaseGroup: createReleaseGroup('independent'),
+          updateDependents: {
+            when: 'always',
+          },
+        })
+      ).toMatchInlineSnapshot(`
+        {
+          "callback": [Function],
+          "data": {
+            "my-lib": {
+              "currentVersion": "0.0.1",
+              "dependentProjects": [
+                {
+                  "dependencyCollection": "dependencies",
+                  "rawVersionSpec": "~0.0.1",
+                  "source": "project-with-dependency-on-my-lib",
+                  "target": "my-lib",
+                  "type": "static",
+                },
+              ],
+              "newVersion": "9.9.9",
+            },
+            "project-with-dependency-on-my-lib": {
+              "currentVersion": "0.0.1",
+              "dependentProjects": [
+                {
+                  "dependencyCollection": "devDependencies",
+                  "rawVersionSpec": "^0.0.1",
+                  "source": "project-with-transitive-dependency-on-my-lib",
+                  "target": "project-with-dependency-on-my-lib",
+                  "type": "static",
+                },
+              ],
+              "newVersion": "0.0.2",
+            },
+            "project-with-transitive-dependency-on-my-lib": {
+              "currentVersion": "0.0.1",
+              "dependentProjects": [],
+              "newVersion": "0.0.2",
+            },
+          },
+        }
+      `);
+
+      expect(readJson(tree, 'libs/my-lib/package.json')).toMatchInlineSnapshot(`
+        {
+          "name": "my-lib",
+          "version": "9.9.9",
+        }
+      `);
+
+      // The version of project-with-dependency-on-my-lib gets bumped by a patch number and the dependencies reference is updated to the new version of my-lib
+      expect(
+        readJson(tree, 'libs/project-with-dependency-on-my-lib/package.json')
+      ).toMatchInlineSnapshot(`
+        {
+          "dependencies": {
+            "my-lib": "~9.9.9",
+          },
+          "name": "project-with-dependency-on-my-lib",
+          "version": "0.0.2",
+        }
+      `);
+
+      // The version of project-with-transitive-dependency-on-my-lib gets bumped by a patch number and the devDependencies reference is updated to the new version of project-with-dependency-on-my-lib because of the transitive dependency on my-lib
+      expect(
+        readJson(
+          tree,
+          'libs/project-with-transitive-dependency-on-my-lib/package.json'
+        )
+      ).toMatchInlineSnapshot(`
+        {
+          "devDependencies": {
+            "project-with-dependency-on-my-lib": "^0.0.2",
+          },
+          "name": "project-with-transitive-dependency-on-my-lib",
+          "version": "0.0.2",
+        }
+      `);
+    });
+  });
 });
 
 function createReleaseGroup(
