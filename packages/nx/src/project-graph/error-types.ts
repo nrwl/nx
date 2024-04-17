@@ -1,6 +1,75 @@
 import { CreateNodesResultWithContext } from './plugins/internal-api';
-import { ConfigurationResult } from './utils/project-configuration-utils';
+import {
+  ConfigurationResult,
+  ConfigurationSourceMaps,
+} from './utils/project-configuration-utils';
 import { ProjectConfiguration } from '../config/workspace-json-project-json';
+import {
+  ProcessDependenciesError,
+  ProcessProjectGraphError,
+} from './build-project-graph';
+import { ProjectGraph } from '../config/project-graph';
+
+export class ProjectGraphError extends Error {
+  readonly #errors: Array<
+    | CreateNodesError
+    | MergeNodesError
+    | ProjectsWithNoNameError
+    | ProjectsWithConflictingNamesError
+    | ProcessDependenciesError
+    | ProcessProjectGraphError
+  >;
+  readonly #partialProjectGraph: ProjectGraph;
+  readonly #partialSourceMaps: ConfigurationSourceMaps;
+
+  constructor(
+    errors: Array<
+      | CreateNodesError
+      | MergeNodesError
+      | ProjectsWithNoNameError
+      | ProjectsWithConflictingNamesError
+      | ProcessDependenciesError
+      | ProcessProjectGraphError
+    >,
+    partialProjectGraph: ProjectGraph,
+    partialSourceMaps: ConfigurationSourceMaps
+  ) {
+    super(`Failed to process project graph.`);
+    this.name = this.constructor.name;
+    this.#errors = errors;
+    this.#partialProjectGraph = partialProjectGraph;
+    this.#partialSourceMaps = partialSourceMaps;
+    this.stack = `${this.message}\n  ${errors
+      .map((error) => error.stack.split('\n').join('\n  '))
+      .join('\n')}`;
+  }
+
+  /**
+   * The daemon cannot throw errors which contain methods as they are not serializable.
+   *
+   * This method creates a new {@link ProjectGraphError} from a {@link DaemonProjectGraphError} with the methods based on the same serialized data.
+   */
+  static fromDaemonProjectGraphError(e: DaemonProjectGraphError) {
+    return new ProjectGraphError(e.errors, e.projectGraph, e.sourceMaps);
+  }
+
+  /**
+   * This gets the partial project graph despite the errors which occured.
+   * This partial project graph may be missing nodes, properties of nodes, or dependencies.
+   * This is useful mostly for visualization/debugging. It should not be used for running tasks.
+   */
+  getPartialProjectGraph() {
+    return this.#partialProjectGraph;
+  }
+
+  getPartialSourcemaps() {
+    return this.#partialSourceMaps;
+  }
+
+  getErrors() {
+    return this.#errors;
+  }
+}
 
 export class ProjectsWithConflictingNamesError extends Error {
   constructor(
@@ -156,4 +225,17 @@ export function isMergeNodesError(e: unknown): e is MergeNodesError {
       'name' in e &&
       e?.name === MergeNodesError.prototype.name)
   );
+}
+
+export class DaemonProjectGraphError extends Error {
+  constructor(
+    public errors: any[],
+    readonly projectGraph: ProjectGraph,
+    readonly sourceMaps: ConfigurationSourceMaps
+  ) {
+    super(
+      `The Daemon Process threw an error while calculating the project graph. Convert this error to a ProjectGraphError to get more information.`
+    );
+    this.name = this.constructor.name;
+  }
 }

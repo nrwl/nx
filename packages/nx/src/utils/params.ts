@@ -5,7 +5,7 @@ import type {
   ProjectsConfigurations,
 } from '../config/workspace-json-project-json';
 import { output } from './output';
-import type { ProjectGraphError } from '../project-graph/project-graph-error';
+import type { ProjectGraphError } from '../project-graph/error-types';
 
 const LIST_CHOICE_DISPLAY_LIMIT = 10;
 

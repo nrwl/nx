@@ -21,9 +21,8 @@ import {
   writeCache,
 } from './nx-deps-cache';
 
-import { ProjectConfigurationsError } from './error-types';
+import { ProjectConfigurationsError, ProjectGraphError } from './error-types';
 import { loadNxPlugins } from './plugins/internal-api';
-import { ProjectGraphError } from './project-graph-error';
 import { ConfigurationResult } from './utils/project-configuration-utils';
 import {
   retrieveProjectConfigurations,

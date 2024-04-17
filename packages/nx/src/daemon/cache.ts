@@ -43,10 +43,12 @@ export async function safelyCleanUpExistingProcess(): Promise<void> {
   if (daemonProcessJson && daemonProcessJson.processId) {
     try {
       process.kill(daemonProcessJson.processId);
+      // we wait for the process to actually shut down before returning
       await new Promise<void>((resolve, reject) => {
         let count = 0;
         const interval = setInterval(() => {
           try {
+            // sending a signal 0 to a process checks if the process is running instead of actually killing it
             process.kill(daemonProcessJson.processId, 0);
           } catch (e) {
             clearInterval(interval);
