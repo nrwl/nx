@@ -46,7 +46,7 @@ export const featuresItems = [
     name: 'Nx Graph',
     // description: 'See interactions for tasks and modules.',
     description: null,
-    href: '/features/cache-task-results',
+    href: '/features/explore-graph',
     icon: ShareIcon,
     isNew: false,
     isHighlight: false,
