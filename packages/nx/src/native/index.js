@@ -1,268 +1,77 @@
-const { existsSync, readFileSync } = require('fs')
-const { join } = require('path')
+const { join,  basename } = require('path');
+const { copyFileSync, existsSync, mkdirSync } = require('fs');
+const Module = require('module');
+const { nxVersion} = require("../utils/versions")
+const { cacheDir} = require("../utils/cache-directory")
 
-const { platform, arch } = process
+const nxPackages = new Set([
+  '@nx/nx-android-arm64',
+  '@nx/nx-android-arm-eabi',
+  '@nx/nx-win32-x64-msvc',
+  '@nx/nx-win32-ia32-msvc',
+  '@nx/nx-win32-arm64-msvc',
+  '@nx/nx-darwin-universal',
+  '@nx/nx-darwin-x64',
+  '@nx/nx-darwin-arm64',
+  '@nx/nx-freebsd-x64',
+  '@nx/nx-linux-x64-musl',
+  '@nx/nx-linux-x64-gnu',
+  '@nx/nx-linux-arm64-musl',
+  '@nx/nx-linux-arm64-gnu',
+  '@nx/nx-linux-arm-gnueabihf',
+]);
 
-let nativeBinding = null
-let localFileExisted = false
-let loadError = null
+const localNodeFiles = [
+  'nx.android-arm64.node',
+  'nx.android-arm-eabi.node',
+  'nx.win32-x64-msvc.node',
+  'nx.win32-ia32-msvc.node',
+  'nx.win32-arm64-msvc.node',
+  'nx.darwin-universal.node',
+  'nx.darwin-x64.node',
+  'nx.darwin-arm64.node',
+  'nx.freebsd-x64.node',
+  'nx.linux-x64-musl.node',
+  'nx.linux-x64-gnu.node',
+  'nx.linux-arm64-musl.node',
+  'nx.linux-arm64-gnu.node',
+  'nx.linux-arm-gnueabihf.node',
+];
 
-function isMusl() {
-  // For Node 10
-  if (!process.report || typeof process.report.getReport !== 'function') {
-    try {
-      const lddPath = require('child_process').execSync('which ldd').toString().trim();
-      return readFileSync(lddPath, 'utf8').includes('musl')
-    } catch (e) {
-      return true
+const originalLoad = Module._load;
+
+// We override the _load function so that when a native file is required, 
+// we copy it to a cache directory and require it from there.
+// This prevents the file being loaded from node_modules and causing file locking issues.
+// Will only be called once because the require cache takes over afterwards.
+Module._load = function (request, parent, isMain) {
+  const modulePath = request;
+  if (
+    nxPackages.has(modulePath) ||
+    localNodeFiles.some((f) => modulePath.endsWith(f))
+  ) {
+    const nativeLocation = require.resolve(modulePath);
+    const fileName = basename(nativeLocation)
+    // we copy the file to the cache directory (.nx/cache by default) and prefix with nxVersion to avoid stale files being loaded
+    const tmpFile = join(cacheDir, nxVersion + '-' + fileName);
+    if (existsSync(tmpFile)) {
+      return originalLoad.apply(this, [tmpFile, parent, isMain]);
     }
+    if (!existsSync(cacheDir)) {
+      mkdirSync(cacheDir, { recursive: true });
+    }
+    copyFileSync(nativeLocation, tmpFile);
+    return originalLoad.apply(this, [tmpFile, parent, isMain]);
   } else {
-    const { glibcVersionRuntime } = process.report.getReport().header
-    return !glibcVersionRuntime
+    // call the original _load function for everything else
+    return originalLoad.apply(this, arguments);
   }
-}
+};
 
-switch (platform) {
-  case 'android':
-    switch (arch) {
-      case 'arm64':
-        localFileExisted = existsSync(join(__dirname, 'nx.android-arm64.node'))
-        try {
-          if (localFileExisted) {
-            nativeBinding = require('./nx.android-arm64.node')
-          } else {
-            nativeBinding = require('@nx/nx-android-arm64')
-          }
-        } catch (e) {
-          loadError = e
-        }
-        break
-      case 'arm':
-        localFileExisted = existsSync(join(__dirname, 'nx.android-arm-eabi.node'))
-        try {
-          if (localFileExisted) {
-            nativeBinding = require('./nx.android-arm-eabi.node')
-          } else {
-            nativeBinding = require('@nx/nx-android-arm-eabi')
-          }
-        } catch (e) {
-          loadError = e
-        }
-        break
-      default:
-        throw new Error(`Unsupported architecture on Android ${arch}`)
-    }
-    break
-  case 'win32':
-    switch (arch) {
-      case 'x64':
-        localFileExisted = existsSync(
-          join(__dirname, 'nx.win32-x64-msvc.node')
-        )
-        try {
-          if (localFileExisted) {
-            nativeBinding = require('./nx.win32-x64-msvc.node')
-          } else {
-            nativeBinding = require('@nx/nx-win32-x64-msvc')
-          }
-        } catch (e) {
-          loadError = e
-        }
-        break
-      case 'ia32':
-        localFileExisted = existsSync(
-          join(__dirname, 'nx.win32-ia32-msvc.node')
-        )
-        try {
-          if (localFileExisted) {
-            nativeBinding = require('./nx.win32-ia32-msvc.node')
-          } else {
-            nativeBinding = require('@nx/nx-win32-ia32-msvc')
-          }
-        } catch (e) {
-          loadError = e
-        }
-        break
-      case 'arm64':
-        localFileExisted = existsSync(
-          join(__dirname, 'nx.win32-arm64-msvc.node')
-        )
-        try {
-          if (localFileExisted) {
-            nativeBinding = require('./nx.win32-arm64-msvc.node')
-          } else {
-            nativeBinding = require('@nx/nx-win32-arm64-msvc')
-          }
-        } catch (e) {
-          loadError = e
-        }
-        break
-      default:
-        throw new Error(`Unsupported architecture on Windows: ${arch}`)
-    }
-    break
-  case 'darwin':
-    localFileExisted = existsSync(join(__dirname, 'nx.darwin-universal.node'))
-    try {
-      if (localFileExisted) {
-        nativeBinding = require('./nx.darwin-universal.node')
-      } else {
-        nativeBinding = require('@nx/nx-darwin-universal')
-      }
-      break
-    } catch {}
-    switch (arch) {
-      case 'x64':
-        localFileExisted = existsSync(join(__dirname, 'nx.darwin-x64.node'))
-        try {
-          if (localFileExisted) {
-            nativeBinding = require('./nx.darwin-x64.node')
-          } else {
-            nativeBinding = require('@nx/nx-darwin-x64')
-          }
-        } catch (e) {
-          loadError = e
-        }
-        break
-      case 'arm64':
-        localFileExisted = existsSync(
-          join(__dirname, 'nx.darwin-arm64.node')
-        )
-        try {
-          if (localFileExisted) {
-            nativeBinding = require('./nx.darwin-arm64.node')
-          } else {
-            nativeBinding = require('@nx/nx-darwin-arm64')
-          }
-        } catch (e) {
-          loadError = e
-        }
-        break
-      default:
-        throw new Error(`Unsupported architecture on macOS: ${arch}`)
-    }
-    break
-  case 'freebsd':
-    if (arch !== 'x64') {
-      throw new Error(`Unsupported architecture on FreeBSD: ${arch}`)
-    }
-    localFileExisted = existsSync(join(__dirname, 'nx.freebsd-x64.node'))
-    try {
-      if (localFileExisted) {
-        nativeBinding = require('./nx.freebsd-x64.node')
-      } else {
-        nativeBinding = require('@nx/nx-freebsd-x64')
-      }
-    } catch (e) {
-      loadError = e
-    }
-    break
-  case 'linux':
-    switch (arch) {
-      case 'x64':
-        if (isMusl()) {
-          localFileExisted = existsSync(
-            join(__dirname, 'nx.linux-x64-musl.node')
-          )
-          try {
-            if (localFileExisted) {
-              nativeBinding = require('./nx.linux-x64-musl.node')
-            } else {
-              nativeBinding = require('@nx/nx-linux-x64-musl')
-            }
-          } catch (e) {
-            loadError = e
-          }
-        } else {
-          localFileExisted = existsSync(
-            join(__dirname, 'nx.linux-x64-gnu.node')
-          )
-          try {
-            if (localFileExisted) {
-              nativeBinding = require('./nx.linux-x64-gnu.node')
-            } else {
-              nativeBinding = require('@nx/nx-linux-x64-gnu')
-            }
-          } catch (e) {
-            loadError = e
-          }
-        }
-        break
-      case 'arm64':
-        if (isMusl()) {
-          localFileExisted = existsSync(
-            join(__dirname, 'nx.linux-arm64-musl.node')
-          )
-          try {
-            if (localFileExisted) {
-              nativeBinding = require('./nx.linux-arm64-musl.node')
-            } else {
-              nativeBinding = require('@nx/nx-linux-arm64-musl')
-            }
-          } catch (e) {
-            loadError = e
-          }
-        } else {
-          localFileExisted = existsSync(
-            join(__dirname, 'nx.linux-arm64-gnu.node')
-          )
-          try {
-            if (localFileExisted) {
-              nativeBinding = require('./nx.linux-arm64-gnu.node')
-            } else {
-              nativeBinding = require('@nx/nx-linux-arm64-gnu')
-            }
-          } catch (e) {
-            loadError = e
-          }
-        }
-        break
-      case 'arm':
-        localFileExisted = existsSync(
-          join(__dirname, 'nx.linux-arm-gnueabihf.node')
-        )
-        try {
-          if (localFileExisted) {
-            nativeBinding = require('./nx.linux-arm-gnueabihf.node')
-          } else {
-            nativeBinding = require('@nx/nx-linux-arm-gnueabihf')
-          }
-        } catch (e) {
-          loadError = e
-        }
-        break
-      default:
-        throw new Error(`Unsupported architecture on Linux: ${arch}`)
-    }
-    break
-  default:
-    throw new Error(`Unsupported OS: ${platform}, architecture: ${arch}`)
-}
+const indexModulePath = require.resolve('./native-bindings.js');
+delete require.cache[indexModulePath];
+const indexModule = require('./native-bindings.js');
 
-if (!nativeBinding) {
-  if (loadError) {
-    throw loadError
-  }
-  throw new Error(`Failed to load native binding`)
-}
 
-const { expandOutputs, getFilesForOutputs, remove, copy, hashArray, hashFile, ImportResult, findImports, transferProjectGraph, ChildProcess, RustPseudoTerminal, HashPlanner, TaskHasher, EventType, Watcher, WorkspaceContext, WorkspaceErrors, testOnlyTransferFileMap } = nativeBinding
-
-module.exports.expandOutputs = expandOutputs
-module.exports.getFilesForOutputs = getFilesForOutputs
-module.exports.remove = remove
-module.exports.copy = copy
-module.exports.hashArray = hashArray
-module.exports.hashFile = hashFile
-module.exports.ImportResult = ImportResult
-module.exports.findImports = findImports
-module.exports.transferProjectGraph = transferProjectGraph
-module.exports.ChildProcess = ChildProcess
-module.exports.RustPseudoTerminal = RustPseudoTerminal
-module.exports.HashPlanner = HashPlanner
-module.exports.TaskHasher = TaskHasher
-module.exports.EventType = EventType
-module.exports.Watcher = Watcher
-module.exports.WorkspaceContext = WorkspaceContext
-module.exports.WorkspaceErrors = WorkspaceErrors
-module.exports.testOnlyTransferFileMap = testOnlyTransferFileMap
+module.exports = indexModule;
+Module._load = originalLoad;

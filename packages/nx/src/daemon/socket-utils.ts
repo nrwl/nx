@@ -2,7 +2,7 @@ import { unlinkSync } from 'fs';
 import { platform } from 'os';
 import { join, resolve } from 'path';
 import { DAEMON_SOCKET_PATH, socketDir } from './tmp-dir';
-import { DaemonProjectGraphError } from './daemon-project-graph-error';
+import { DaemonProjectGraphError } from '../project-graph/error-types';
 
 export const isWindows = platform() === 'win32';
 
