@@ -1,8 +1,8 @@
-const { join,  basename } = require('path');
+const { join, basename } = require('path');
 const { copyFileSync, existsSync, mkdirSync } = require('fs');
 const Module = require('module');
-const { nxVersion} = require("../utils/versions")
-const { cacheDir} = require("../utils/cache-directory")
+const { nxVersion } = require('../utils/versions');
+const { cacheDir } = require('../utils/cache-directory');
 
 const nxPackages = new Set([
   '@nx/nx-android-arm64',
@@ -40,7 +40,7 @@ const localNodeFiles = [
 
 const originalLoad = Module._load;
 
-// We override the _load function so that when a native file is required, 
+// We override the _load function so that when a native file is required,
 // we copy it to a cache directory and require it from there.
 // This prevents the file being loaded from node_modules and causing file locking issues.
 // Will only be called once because the require cache takes over afterwards.
@@ -51,7 +51,7 @@ Module._load = function (request, parent, isMain) {
     localNodeFiles.some((f) => modulePath.endsWith(f))
   ) {
     const nativeLocation = require.resolve(modulePath);
-    const fileName = basename(nativeLocation)
+    const fileName = basename(nativeLocation);
     // we copy the file to the cache directory (.nx/cache by default) and prefix with nxVersion to avoid stale files being loaded
     const tmpFile = join(cacheDir, nxVersion + '-' + fileName);
     if (existsSync(tmpFile)) {
@@ -71,7 +71,6 @@ Module._load = function (request, parent, isMain) {
 const indexModulePath = require.resolve('./native-bindings.js');
 delete require.cache[indexModulePath];
 const indexModule = require('./native-bindings.js');
-
 
 module.exports = indexModule;
 Module._load = originalLoad;
