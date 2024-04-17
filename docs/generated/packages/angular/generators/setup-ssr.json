@@ -61,6 +61,12 @@
         "type": "boolean",
         "description": "Skip formatting the workspace after the generator completes.",
         "x-priority": "internal"
+      },
+      "skipPackageJson": {
+        "type": "boolean",
+        "default": false,
+        "description": "Do not add dependencies to `package.json`.",
+        "x-priority": "internal"
       }
     },
     "required": ["project"],

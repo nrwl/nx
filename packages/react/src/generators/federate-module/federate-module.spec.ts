@@ -1,3 +1,5 @@
+import 'nx/src/internal-testing-utils/mock-project-graph';
+
 import { Tree, getProjects } from '@nx/devkit';
 import { Schema } from './schema';
 import { Schema as remoteSchma } from '../remote/schema';

@@ -188,17 +188,17 @@
     },
     {
       "description": "",
-      "file": "shared/recipes/troubleshoot-cache-misses",
-      "id": "troubleshoot-cache-misses",
-      "name": "Troubleshoot Cache Misses",
-      "path": "/recipes/troubleshooting/troubleshoot-cache-misses"
-    },
-    {
-      "description": "",
       "file": "shared/reference/inputs",
       "id": "inputs",
       "name": "Inputs and Named Inputs",
       "path": "/reference/inputs"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/troubleshoot-cache-misses",
+      "id": "troubleshoot-cache-misses",
+      "name": "Troubleshoot Cache Misses",
+      "path": "/troubleshooting/troubleshoot-cache-misses"
     },
     {
       "description": "",
@@ -277,7 +277,7 @@
       "file": "shared/recipes/resolve-circular-dependencies",
       "id": "resolve-circular-dependencies",
       "name": "Resolve Circular Dependencies",
-      "path": "/recipes/troubleshooting/resolve-circular-dependencies"
+      "path": "/troubleshooting/resolve-circular-dependencies"
     },
     {
       "description": "",
@@ -785,6 +785,22 @@
       "path": "/recipes/react/module-federation-with-ssr"
     }
   ],
+  "installation": [
+    {
+      "description": "",
+      "file": "shared/recipes/installation/install-non-javascript",
+      "id": "install-non-javascript",
+      "name": "Install Nx in a Non-Javascript Repo",
+      "path": "/recipes/installation/install-non-javascript"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/installation/update-global-installation",
+      "id": "update-global-installation",
+      "name": "Update Your Global Nx Installation",
+      "path": "/recipes/installation/update-global-installation"
+    }
+  ],
   "workspace-watching": [
     {
       "description": "",
@@ -825,17 +841,17 @@
     },
     {
       "description": "",
-      "file": "shared/guides/performance-profiling",
-      "id": "performance-profiling",
-      "name": "Profiling Build Performance",
-      "path": "/recipes/troubleshooting/performance-profiling"
-    },
-    {
-      "description": "",
       "file": "shared/reference/environment-variables",
       "id": "environment-variables",
       "name": "Environment Variables",
       "path": "/reference/environment-variables"
+    },
+    {
+      "description": "",
+      "file": "shared/guides/performance-profiling",
+      "id": "performance-profiling",
+      "name": "Profiling Build Performance",
+      "path": "/troubleshooting/performance-profiling"
     }
   ],
   "deployment": [
@@ -1017,22 +1033,6 @@
       "id": "angular-configuring-styles",
       "name": "Angular: Configuring styles and preprocessor options",
       "path": "/recipes/storybook/angular-configuring-styles"
-    }
-  ],
-  "installation": [
-    {
-      "description": "",
-      "file": "shared/recipes/installation/install-non-javascript",
-      "id": "install-non-javascript",
-      "name": "Install Nx in a Non-Javascript Repo",
-      "path": "/recipes/installation/install-non-javascript"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/installation/update-global-installation",
-      "id": "update-global-installation",
-      "name": "Update Your Global Nx Installation",
-      "path": "/recipes/installation/update-global-installation"
     }
   ],
   "yarn": [

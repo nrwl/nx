@@ -9,6 +9,15 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "18.3.0": {
+      "version": "18.3.0-beta.2",
+      "packages": {
+        "@nuxt/eslint-config": {
+          "version": "~0.3.6",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }

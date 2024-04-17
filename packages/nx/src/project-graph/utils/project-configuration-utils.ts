@@ -26,6 +26,10 @@ import {
   MergeNodesError,
   ProjectConfigurationsError,
   isAggregateCreateNodesError,
+  ProjectsWithNoNameError,
+  ProjectsWithConflictingNamesError,
+  isProjectsWithConflictingNamesError,
+  isProjectsWithNoNameError,
 } from '../error-types';
 
 export type SourceInformation = [file: string, plugin: string];
@@ -321,7 +325,12 @@ export async function createProjectConfigurations(
   performance.mark('build-project-configs:start');
 
   const results: Array<Promise<Array<CreateNodesResultWithContext>>> = [];
-  const errors: Array<CreateNodesError | MergeNodesError> = [];
+  const errors: Array<
+    | CreateNodesError
+    | MergeNodesError
+    | ProjectsWithNoNameError
+    | ProjectsWithConflictingNamesError
+  > = [];
 
   // We iterate over plugins first - this ensures that plugins specified first take precedence.
   for (const {
@@ -425,7 +434,21 @@ export async function createProjectConfigurations(
       Object.assign(externalNodes, pluginExternalNodes);
     }
 
-    const projects = readProjectConfigurationsFromRootMap(projectRootMap);
+    let projects: Record<string, ProjectConfiguration>;
+    try {
+      projects = readProjectConfigurationsFromRootMap(projectRootMap);
+    } catch (e) {
+      if (
+        isProjectsWithNoNameError(e) ||
+        isProjectsWithConflictingNamesError(e)
+      ) {
+        projects = e.projects;
+        errors.push(e);
+      } else {
+        throw e;
+      }
+    }
+
     const rootMap = createRootMap(projectRootMap);
 
     performance.mark('createNodes:merge - end');
@@ -467,7 +490,8 @@ export function readProjectConfigurationsFromRootMap(
   // If there are projects that have the same name, that is an error.
   // This object tracks name -> (all roots of projects with that name)
   // to provide better error messaging.
-  const errors: Map<string, string[]> = new Map();
+  const conflicts = new Map<string, string[]>();
+  const projectRootsWithNoName: string[] = [];
 
   for (const [root, configuration] of projectRootMap.entries()) {
     // We're setting `// targets` as a comment `targets` is empty due to Project Crystal.
@@ -478,31 +502,26 @@ export function readProjectConfigurationsFromRootMap(
         const { name } = readJsonFile(join(root, 'package.json'));
         configuration.name = name;
       } catch {
-        throw new Error(`Project at ${root} has no name provided.`);
+        projectRootsWithNoName.push(root);
       }
     }
     if (configuration.name in projects) {
-      let rootErrors = errors.get(configuration.name) ?? [
+      let rootErrors = conflicts.get(configuration.name) ?? [
         projects[configuration.name].root,
       ];
       rootErrors.push(root);
-      errors.set(configuration.name, rootErrors);
+      conflicts.set(configuration.name, rootErrors);
+      projects[configuration.name] = configuration;
     } else {
       projects[configuration.name] = configuration;
     }
   }
 
-  if (errors.size > 0) {
-    throw new Error(
-      [
-        `The following projects are defined in multiple locations:`,
-        ...Array.from(errors.entries()).map(([project, roots]) =>
-          [`- ${project}: `, ...roots.map((r) => `  - ${r}`)].join('\n')
-        ),
-        '',
-        "To fix this, set a unique name for each project in a project.json inside the project's root. If the project does not currently have a project.json, you can create one that contains only a name.",
-      ].join('\n')
-    );
+  if (conflicts.size > 0) {
+    throw new ProjectsWithConflictingNamesError(conflicts, projects);
+  }
+  if (projectRootsWithNoName.length > 0) {
+    throw new ProjectsWithNoNameError(projectRootsWithNoName, projects);
   }
   return projects;
 }

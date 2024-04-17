@@ -56,9 +56,10 @@ export async function runCreateNodesInParallel(
 ): Promise<CreateNodesResultWithContext[]> {
   performance.mark(`${plugin.name}:createNodes - start`);
 
-  const promises: Array<
-    CreateNodesResultWithContext | Promise<CreateNodesResultWithContext>
-  > = configFiles.map((file) => {
+  const errors: CreateNodesError[] = [];
+  const results: CreateNodesResultWithContext[] = [];
+
+  const promises: Array<Promise<void>> = configFiles.map((file) => {
     performance.mark(`${plugin.name}:createNodes:${file} - start`);
     // Result is either static or a promise, using Promise.resolve lets us
     // handle both cases with same logic
@@ -68,11 +69,14 @@ export async function runCreateNodesInParallel(
     return value
       .catch((e) => {
         performance.mark(`${plugin.name}:createNodes:${file} - end`);
-        return new CreateNodesError({
-          error: e,
-          pluginName: plugin.name,
-          file,
-        });
+        errors.push(
+          new CreateNodesError({
+            error: e,
+            pluginName: plugin.name,
+            file,
+          })
+        );
+        return null;
       })
       .then((r) => {
         performance.mark(`${plugin.name}:createNodes:${file} - end`);
@@ -82,42 +86,25 @@ export async function runCreateNodesInParallel(
           `${plugin.name}:createNodes:${file} - end`
         );
 
-        return { ...r, pluginName: plugin.name, file };
+        // Existing behavior is to ignore null results of
+        // createNodes function.
+        if (r) {
+          results.push({ ...r, file, pluginName: plugin.name });
+        }
       });
   });
-  const results = await Promise.all(promises).then((results) => {
+
+  await Promise.all(promises).then(() => {
     performance.mark(`${plugin.name}:createNodes - end`);
     performance.measure(
       `${plugin.name}:createNodes`,
       `${plugin.name}:createNodes - start`,
       `${plugin.name}:createNodes - end`
     );
-    return results;
   });
 
-  const [errors, successful] = partition<
-    CreateNodesError,
-    CreateNodesResultWithContext
-  >(results, (r): r is CreateNodesError => r instanceof CreateNodesError);
-
   if (errors.length > 0) {
-    throw new AggregateCreateNodesError(plugin.name, errors, successful);
+    throw new AggregateCreateNodesError(plugin.name, errors, results);
   }
   return results;
-}
-
-function partition<T, T2 = T>(
-  arr: Array<T | T2>,
-  test: (item: T | T2) => item is T
-): [T[], T2[]] {
-  const pass: T[] = [];
-  const fail: T2[] = [];
-  for (const item of arr) {
-    if (test(item)) {
-      pass.push(item);
-    } else {
-      fail.push(item as any as T2);
-    }
-  }
-  return [pass, fail];
 }

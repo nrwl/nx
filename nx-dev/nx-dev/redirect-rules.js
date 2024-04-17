@@ -943,17 +943,6 @@ const latestRecipesRefactoring = {
   '/recipes/database/serverless-fastify-planetscale':
     '/showcase/example-repos/serverless-fastify-planetscale',
   '/recipes/example-repos/:path*': '/showcase/example-repos/:path*',
-  // troubleshooting
-  '/recipes/other/resolve-circular-dependencies':
-    '/recipes/troubleshooting/resolve-circular-dependencies',
-  '/recipes/ci/troubleshoot-nx-install-issues':
-    '/recipes/troubleshooting/troubleshoot-nx-install-issues',
-  '/recipes/other/troubleshoot-cache-misses':
-    '/recipes/troubleshooting/troubleshoot-cache-misses',
-  '/recipes/other/unknown-local-cache':
-    '/recipes/troubleshooting/unknown-local-cache',
-  '/recipes/other/performance-profiling':
-    '/recipes/troubleshooting/performance-profiling',
   // tips and tricks
   '/recipes/environment-variables/define-environment-variables':
     '/recipes/tips-n-tricks/define-environment-variables',
@@ -1031,6 +1020,42 @@ const eslintRename = {
   '/packages/linter': '/packages/eslint',
 };
 
+// move troubleshooting out of recipes
+const troubleshootingOutOfRecipes = {
+  '/recipes/troubleshooting': '/troubleshooting',
+  '/recipes/troubleshooting/:path*': '/troubleshooting/:path*',
+  '/ci/recipes/troubleshooting/:path*': '/ci/troubleshooting/:path*',
+  '/recipes/other/resolve-circular-dependencies':
+    '/troubleshooting/resolve-circular-dependencies',
+  '/recipes/ci/troubleshoot-nx-install-issues':
+    '/troubleshooting/troubleshoot-nx-install-issues',
+  '/recipes/other/troubleshoot-cache-misses':
+    '/troubleshooting/troubleshoot-cache-misses',
+  '/recipes/other/unknown-local-cache': '/troubleshooting/unknown-local-cache',
+  '/recipes/other/performance-profiling':
+    '/troubleshooting/performance-profiling',
+};
+
+/**
+ * Removed deprecated URLs
+ */
+const removedDeprecatedUrls = {
+  '/deprecated/default-collection': '/features/generate-code', // 46 views: has not worked since Nx 17 and has very little views
+  '/deprecated/workspace-lint': '/nx-api/nx/documents/report', // 168 views: workspace-lint hasn't worked since Nx 15 and users should use `nx report` to check versions and other info
+  '/deprecated/storybook/angular-storybook-targets':
+    '/recipes/storybook/overview-angular', // 49 views
+  '/deprecated/storybook/angular-project-build-config':
+    '/recipes/storybook/overview-angular', // 126 views: outdated since Nx 14
+  '/deprecated/storybook/migrate-webpack-final-angular':
+    '/recipes/storybook/overview-angular', // 50 views: For Nx < 12.7
+  '/deprecated/storybook/upgrade-storybook-v6-angular':
+    '/recipes/storybook/overview-angular', // 44 views: outdated since Nx 14
+  '/deprecated/storybook/migrate-webpack-final-react':
+    '/recipes/storybook/overview-react', // 417 views: mostly people searching "React Storybook" is matching this outdated page that was for Nx 12.7
+  '/deprecated/storybook/upgrade-storybook-v6-react':
+    '/recipes/storybook/overview-react', // 80 views
+};
+
 /**
  * Public export API
  */
@@ -1058,4 +1083,6 @@ module.exports = {
   coreFeatureRefactoring: coreFeatureAndConceptsRefactoring,
   aiChat,
   eslintRename,
+  removedDeprecatedUrls,
+  troubleshootingOutOfRecipes,
 };

@@ -32,6 +32,10 @@ jest.mock('@nx/devkit', () => {
   return {
     ...original,
     ensurePackage: (pkg: string) => jest.requireActual(pkg),
+    createProjectGraphAsync: jest.fn().mockResolvedValue({
+      nodes: {},
+      dependencies: {},
+    }),
   };
 });
 
@@ -85,6 +89,22 @@ describe('app', () => {
 
     const tsConfig = readJson(appTree, 'my-app/tsconfig.editor.json');
     expect(tsConfig).toMatchSnapshot();
+  });
+
+  it('should not touch the package.json when run with `--skipPackageJson`', async () => {
+    let initialPackageJson;
+    updateJson(appTree, 'package.json', (json) => {
+      json.dependencies = {};
+      json.devDependencies = {};
+      initialPackageJson = json;
+
+      return json;
+    });
+
+    await generateApp(appTree, 'my-app', { skipPackageJson: true });
+
+    const packageJson = readJson(appTree, 'package.json');
+    expect(packageJson).toEqual(initialPackageJson);
   });
 
   describe('not nested', () => {
@@ -1182,58 +1202,19 @@ describe('app', () => {
       }));
     });
 
-    it('should add angular dependencies', async () => {
-      // ACT
+    it('should add angular peer dependencies when not installed', async () => {
       await generateApp(appTree, 'my-app');
 
-      // ASSERT
-      const { dependencies, devDependencies } = readJson(
-        appTree,
-        'package.json'
-      );
-
-      expect(dependencies['@angular/animations']).toEqual(
-        backwardCompatibleVersions.angularV15.angularVersion
-      );
-      expect(dependencies['@angular/common']).toEqual(
-        backwardCompatibleVersions.angularV15.angularVersion
-      );
-      expect(dependencies['@angular/compiler']).toEqual(
-        backwardCompatibleVersions.angularV15.angularVersion
-      );
-      expect(dependencies['@angular/core']).toEqual(
-        backwardCompatibleVersions.angularV15.angularVersion
-      );
-      expect(dependencies['@angular/platform-browser']).toEqual(
-        backwardCompatibleVersions.angularV15.angularVersion
-      );
-      expect(dependencies['@angular/platform-browser-dynamic']).toEqual(
-        backwardCompatibleVersions.angularV15.angularVersion
-      );
-      expect(dependencies['@angular/router']).toEqual(
-        backwardCompatibleVersions.angularV15.angularVersion
-      );
-      expect(dependencies['rxjs']).toEqual(
-        backwardCompatibleVersions.angularV15.rxjsVersion
-      );
-      expect(dependencies['zone.js']).toEqual(
-        backwardCompatibleVersions.angularV15.zoneJsVersion
-      );
-      expect(devDependencies['@angular/cli']).toEqual(
-        backwardCompatibleVersions.angularV15.angularDevkitVersion
-      );
-      expect(devDependencies['@angular/compiler-cli']).toEqual(
-        backwardCompatibleVersions.angularV15.angularDevkitVersion
-      );
-      expect(devDependencies['@angular/language-service']).toEqual(
-        backwardCompatibleVersions.angularV15.angularVersion
-      );
+      const { devDependencies } = readJson(appTree, 'package.json');
       expect(devDependencies['@angular-devkit/build-angular']).toEqual(
         backwardCompatibleVersions.angularV15.angularDevkitVersion
       );
-
-      // codelyzer should no longer be there by default
-      expect(devDependencies['codelyzer']).toBeUndefined();
+      expect(devDependencies['@angular-devkit/schematics']).toEqual(
+        backwardCompatibleVersions.angularV15.angularDevkitVersion
+      );
+      expect(devDependencies['@schematics/angular']).toEqual(
+        backwardCompatibleVersions.angularV15.angularDevkitVersion
+      );
     });
 
     it('should import "ApplicationConfig" from "@angular/platform-browser"', async () => {

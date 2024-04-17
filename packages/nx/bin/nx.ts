@@ -26,7 +26,8 @@ function main() {
   if (
     process.argv[2] !== 'report' &&
     process.argv[2] !== '--version' &&
-    process.argv[2] !== '--help'
+    process.argv[2] !== '--help' &&
+    process.argv[2] !== 'reset'
   ) {
     assertSupportedPlatform();
   }

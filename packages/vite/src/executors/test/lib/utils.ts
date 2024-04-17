@@ -63,12 +63,14 @@ export async function getOptions(
 
   const { parseCLI } = await loadVitestDynamicImport();
 
-  const normalizedExtraArgs = parseCLI([
-    'vitest',
-    ...getOptionsAsArgv(options),
-  ]);
+  const {
+    options: { watch, ...normalizedExtraArgs },
+  } = parseCLI(['vitest', ...getOptionsAsArgv(options)]);
 
   const settings = {
+    // Explicitly set watch mode to false if not provided otherwise vitest
+    // will enable watch mode by default for non CI environments
+    watch: watch ?? false,
     ...normalizedExtraArgs,
     // This should not be needed as it's going to be set in vite.config.ts
     // but leaving it here in case someone did not migrate correctly

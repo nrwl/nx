@@ -173,6 +173,7 @@ export function readPackageJson(): any {
     return {}; // if package.json doesn't exist
   }
 }
+
 // Original Exports
 export { FileData };
 // TODO(17): Remove these exports

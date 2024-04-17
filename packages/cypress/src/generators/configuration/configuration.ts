@@ -70,6 +70,7 @@ export async function configurationGeneratorInternal(
   opts.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
   const tasks: GeneratorCallback[] = [];
 
+  const projectGraph = await createProjectGraphAsync();
   if (!installedCypressVersion()) {
     tasks.push(await jsInitGenerator(tree, { ...options, skipFormat: true }));
     tasks.push(
@@ -79,10 +80,9 @@ export async function configurationGeneratorInternal(
       })
     );
   } else if (opts.addPlugin) {
-    addPlugin(tree);
+    await addPlugin(tree, projectGraph, false);
   }
 
-  const projectGraph = await createProjectGraphAsync();
   const nxJson = readNxJson(tree);
   const hasPlugin = nxJson.plugins?.some((p) =>
     typeof p === 'string'

@@ -1555,7 +1555,11 @@ describe('project-configuration-utils', () => {
         undefined,
         {},
         ['libs/a/project.json', 'libs/b/project.json'],
-        [new LoadedNxPlugin(fakeTagPlugin, { plugin: fakeTagPlugin.name })]
+        [
+          new LoadedNxPlugin(fakeTagPlugin, {
+            plugin: fakeTagPlugin.name,
+          }),
+        ]
       );
 
       expect(projectConfigurations.projects).toEqual({
