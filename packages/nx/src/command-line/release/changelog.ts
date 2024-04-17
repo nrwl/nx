@@ -177,8 +177,6 @@ export async function releaseChangelog(
 
   const tree = new FsTree(workspaceRoot, args.verbose);
 
-  const versionPlansEnabled = true; // TODO: read from config
-
   const useAutomaticFromRef =
     nxReleaseConfig.changelog?.automaticFromRef || args.firstRelease;
 
@@ -244,7 +242,10 @@ export async function releaseChangelog(
 
   let workspaceChangelogChanges: ChangelogChange[] = [];
 
-  if (versionPlansEnabled) {
+  // If there are multiple release groups, we'll just skip the workspace changelog anyway.
+  const versionPlansEnabledForWorkspaceChangelog =
+    releaseGroups[0].versionPlans;
+  if (versionPlansEnabledForWorkspaceChangelog) {
     if (releaseGroups.length === 1) {
       const releaseGroup = releaseGroups[0];
       if (releaseGroup.projectsRelationship === 'fixed') {
@@ -381,7 +382,7 @@ export async function releaseChangelog(
       for (const project of projectNodes) {
         let changes: ChangelogChange[] | null = null;
 
-        if (versionPlansEnabled) {
+        if (releaseGroup.versionPlans) {
           const versionPlans = await getVersionPlansForIndependentGroup(
             releaseGroup.name,
             [project.name]
@@ -527,7 +528,7 @@ export async function releaseChangelog(
       }
     } else {
       let changes: ChangelogChange[] = [];
-      if (versionPlansEnabled) {
+      if (releaseGroup.versionPlans) {
         const versionPlans = await getVersionPlansForFixedGroup(
           releaseGroup.name
         );

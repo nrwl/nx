@@ -247,6 +247,7 @@ export async function createNxReleaseConfig(
         ? defaultIndependentReleaseTagPattern
         : defaultFixedReleaseTagPattern),
     conventionalCommits: DEFAULT_CONVENTIONAL_COMMITS_CONFIG,
+    versionPlans: false,
   };
 
   const groupProjectsRelationship =
@@ -276,6 +277,7 @@ export async function createNxReleaseConfig(
       groupProjectsRelationship === 'independent'
         ? defaultIndependentReleaseTagPattern
         : WORKSPACE_DEFAULTS.releaseTagPattern,
+    versionPlans: false,
   };
 
   /**
@@ -323,6 +325,9 @@ export async function createNxReleaseConfig(
     >
   );
 
+  const rootVersionPlansConfig: NxReleaseConfig['versionPlans'] =
+    userConfig.versionPlans ?? WORKSPACE_DEFAULTS.versionPlans;
+
   const rootConventionalCommitsConfig: NxReleaseConfig['conventionalCommits'] =
     deepMergeDefaults(
       [WORKSPACE_DEFAULTS.conventionalCommits],
@@ -360,7 +365,7 @@ export async function createNxReleaseConfig(
          * as being in one release group together in which the projects are released in lock step.
          */
         {
-          [IMPLICIT_DEFAULT_RELEASE_GROUP]: {
+          [IMPLICIT_DEFAULT_RELEASE_GROUP]: <NxReleaseConfig['groups'][string]>{
             projectsRelationship: GROUP_DEFAULTS.projectsRelationship,
             projects: userConfig.projects
               ? // user-defined top level "projects" config takes priority if set
@@ -384,6 +389,7 @@ export async function createNxReleaseConfig(
               userConfig.releaseTagPattern || GROUP_DEFAULTS.releaseTagPattern,
             // Directly inherit the root level config for projectChangelogs, if set
             changelog: rootChangelogConfig.projectChangelogs || false,
+            versionPlans: rootVersionPlansConfig || GROUP_DEFAULTS.versionPlans,
           },
         };
 
@@ -481,6 +487,7 @@ export async function createNxReleaseConfig(
         (projectsRelationship === 'independent'
           ? defaultIndependentReleaseTagPattern
           : userConfig.releaseTagPattern || defaultFixedReleaseTagPattern),
+      versionPlans: releaseGroup.versionPlans ?? rootVersionPlansConfig,
     };
 
     const finalReleaseGroup = deepMergeDefaults([groupDefaults], {
@@ -518,6 +525,7 @@ export async function createNxReleaseConfig(
       changelog: rootChangelogConfig,
       groups: releaseGroups,
       conventionalCommits: rootConventionalCommitsConfig,
+      versionPlans: rootVersionPlansConfig,
     },
   };
 }

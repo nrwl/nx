@@ -218,6 +218,11 @@ interface NxReleaseConfiguration {
        * Optionally override the git/release tag pattern to use for this group.
        */
       releaseTagPattern?: string;
+      /**
+       * Enables using version plans as a specifier source for versioning and
+       * to determine changes for the changelog generation.
+       */
+      versionPlans?: boolean;
     }
   >;
   /**
@@ -285,6 +290,11 @@ interface NxReleaseConfiguration {
    */
   git?: NxReleaseGitConfiguration;
   conventionalCommits?: NxReleaseConventionalCommitsConfiguration;
+  /**
+   * Enables using version plans as a specifier source for versioning and
+   * to determine changes for the changelog generation.
+   */
+  versionPlans?: boolean;
 }
 
 /**

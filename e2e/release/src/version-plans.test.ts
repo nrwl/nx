@@ -102,6 +102,7 @@ describe('nx release version plans', () => {
         changelog: {
           projectChangelogs: true,
         },
+        versionPlans: true,
       };
       return nxJson;
     });
