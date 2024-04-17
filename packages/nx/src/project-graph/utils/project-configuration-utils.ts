@@ -554,7 +554,7 @@ export function mergeTargetConfigurations(
 
   // Target is "compatible", e.g. executor is defined only once or is the same
   // in both places. This means that it is likely safe to merge
-  const isCompatible = isCompatibleTarget(baseTargetProperties, target);
+  const isCompatible = isCompatibleTarget(baseTarget ?? {}, target);
 
   // If the targets are not compatible, we would normally overwrite the old target
   // with the new one. However, we have a special case for targets that have the

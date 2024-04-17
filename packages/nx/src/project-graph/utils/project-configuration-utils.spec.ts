@@ -1527,6 +1527,25 @@ describe('project-configuration-utils', () => {
         )
       ).toBe(false);
     });
+
+    it('should return false if one target specifies a command, and the other specifies commands', () => {
+      expect(
+        isCompatibleTarget(
+          {
+            executor: 'nx:run-commands',
+            options: {
+              command: 'echo',
+            },
+          },
+          {
+            executor: 'nx:run-commands',
+            options: {
+              commands: ['echo', 'other'],
+            },
+          }
+        )
+      ).toBe(false);
+    });
   });
 
   describe('createProjectConfigurations', () => {
