@@ -1,7 +1,7 @@
 import { CommandModule } from 'yargs';
 import { withOverrides } from '../yargs-utils/shared-options';
 
-export interface AddOptions extends Record<string, unknown> {
+export interface AddOptions {
   packageSpecifier: string;
   updatePackageScripts?: boolean;
   verbose?: boolean;
@@ -16,6 +16,10 @@ export const yargsAddCommand: CommandModule<
   describe: 'Install a plugin and initialize it.',
   builder: (yargs) =>
     yargs
+      .parserConfiguration({
+        'strip-dashed': true,
+        'unknown-options-as-args': true,
+      })
       .positional('packageSpecifier', {
         type: 'string',
         description:

@@ -116,11 +116,14 @@ async function initializePlugin(
         process.env.NX_ADD_PLUGINS !== 'false' &&
         coreNxPlugins.includes(pkgName);
     }
-    const extraArgs = getExtraArgs(options);
     await runNxAsync(
       `g ${pkgName}:${initGenerator} --keepExistingVersions${
         updatePackageScripts ? ' --updatePackageScripts' : ''
-      }${extraArgs.length ? ' ' + extraArgs.join(' ') : ''}`,
+      }${
+        options.__overrides_unparsed__.length
+          ? ' ' + options.__overrides_unparsed__.join(' ')
+          : ''
+      }`,
       {
         silent: !options.verbose,
       }
@@ -174,21 +177,6 @@ function parsePackageSpecifier(
   const version = packageSpecifier.substring(i + 1);
 
   return [pkgName, version];
-}
-
-const knownCommandArgs = [
-  'packageSpecifier',
-  'updatePackageScripts',
-  'verbose',
-  '__overrides_unparsed__',
-  '$0',
-];
-function getExtraArgs(options: AddOptions): string[] {
-  const unknownOptions = Object.keys(options)
-    .filter((p) => knownCommandArgs.indexOf(p) === -1)
-    .map((p) => `--${p}=${options[p]}`);
-
-  return [...options.__overrides_unparsed__, ...unknownOptions];
 }
 
 const coreNxPlugins = [
