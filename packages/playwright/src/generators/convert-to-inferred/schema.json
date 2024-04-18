@@ -12,7 +12,7 @@
     },
     "all": {
       "type": "boolean",
-      "description": "Convert all projects using the `@nx/playwright:playwright` executor to use `@nx/playwright/plugin`",
+      "description": "Convert all projects using the `@nx/playwright:playwright` executor to use `@nx/playwright/plugin`. Defaults to true.",
       "x-priority": "important"
     },
     "skipFormat": {

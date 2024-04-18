@@ -1,9 +1,9 @@
-import type {
-  ExpandedPluginConfiguration,
-  NxJsonConfiguration,
-} from 'nx/src/config/nx-json';
+import type { ExpandedPluginConfiguration } from 'nx/src/config/nx-json';
 import type { Tree } from 'nx/src/generators/tree';
-import type { TargetConfiguration } from 'nx/src/config/workspace-json-project-json';
+import type {
+  ProjectConfiguration,
+  TargetConfiguration,
+} from 'nx/src/config/workspace-json-project-json';
 import type { RunCommandsOptions } from 'nx/src/executors/run-commands/run-commands.impl';
 import type {
   CreateNodes,
@@ -26,9 +26,13 @@ const {
   readProjectConfiguration,
 } = requireNx();
 
+export interface MigrateExecutorToPluginGeneratorOptions {
+  project?: string;
+  all?: boolean;
+}
+
 /**
  * Migrate project targets using a specified executor to its plugin equivalent
- * Get the targetName that should be used for the plugin and an optional list of include paths for the projects the plugin applies to
  *
  * @example
  * function createProjectConfigs(
@@ -67,26 +71,127 @@ const {
  *   return target;
  * }
  *
- * const { targetName, include } = await migrateExecutorToPlugin(
+ * await migrateExecutorToPlugin<PlaywrightPluginOptions>(
  *   tree,
+ *   options,
  *   projectGraph,
- *   createProjectConfigs,
  *   '@nx/playwright:playwright',
+ *   '@nx/playwright/plugin',
+ *   (targetName) => ({
+ *       targetName,
+ *       ciTargetName: 'e2e-ci',
+ *   }),
+ *   createProjectConfigs,
  *   createNodes,
- *   postTargetTransformer
+ *   postTargetTransformer,
  * );
  *
  *
  * @param tree Virtual Tree
+ * @param options Options from the calling generator
  * @param projectGraph ProjectGraph
- * @param createProjectsConfig Function returning the CreateNodesResult for the plugin using the projects that have been marked for migration
  * @param executor The executor to migrate from
+ * @param pluginPath The plugin path to migrate to
+ * @param createPluginOptions Function to create the correct plugin options
+ * @param createProjectsConfig Function returning the CreateNodesResult for the plugin using the projects that have been marked for migration
  * @param createNodes The CreateNodes tuple used by the plugin
  * @param postTargetTransformer Apply transformations to the project's target after matching properties have been deleted
+ * @param pluginProjectFilter Filter the projects to be migrated
  */
-export async function migrateExecutorToPlugin<T>(
+export async function migrateExecutorToPlugin<T extends object>(
+  tree: Tree,
+  options: MigrateExecutorToPluginGeneratorOptions,
+  projectGraph: ProjectGraph,
+  executor: string,
+  pluginPath: string,
+  createPluginOptions: (targetName: string) => T,
+  createProjectsConfig: (
+    tree: Tree,
+    projectRoot: string,
+    targetName: string,
+    context: CreateNodesContext
+  ) => CreateNodesResult | Promise<CreateNodesResult>,
+  createNodes: CreateNodes<T>,
+  postTargetTransformer: (
+    target: TargetConfiguration,
+    tree?: Tree,
+    projectRoot?: string
+  ) => TargetConfiguration = (targetConfiguration) => targetConfiguration,
+  pluginProjectFilter?: (
+    tree: Tree,
+    allProjectsWithExecutor: Map<string, Set<string>>
+  ) => Set<string>
+): Promise<void> {
+  if (!options.project && !options.all) {
+    options.all = true;
+  }
+
+  if (options.project && options.all) {
+    throw new Error(
+      `Both "--project" and "--all" options were passed. Please select one.`
+    );
+  }
+
+  let project: ProjectConfiguration;
+  if (options.project) {
+    project = readProjectConfiguration(tree, options.project);
+  }
+
+  const projectFilter = project?.name
+    ? (tree: Tree, allProjectsWithExecutor: Map<string, Set<string>>) => {
+        if (project?.name && !allProjectsWithExecutor.has(project?.name)) {
+          throw new Error(
+            `Project "${project?.name}" does not use "${executor}" executor. Please select a project that does."`
+          );
+        }
+
+        let filteredProjects = new Set(allProjectsWithExecutor.keys());
+        if (pluginProjectFilter) {
+          filteredProjects = pluginProjectFilter(tree, allProjectsWithExecutor);
+        }
+
+        if (!filteredProjects.has(project.name)) {
+          throw new Error(`Project "${project.name} cannot be migrated."`);
+        }
+
+        return new Set<string>([project.name]);
+      }
+    : pluginProjectFilter;
+
+  let projectsLeftToMigrate: Set<string> = new Set();
+  do {
+    const { projects, targetName, projectsStillToBeMigrated } =
+      getProjectsToMigrate(tree, executor, projectFilter);
+
+    if (projects) {
+      const { include, migratedProjects } = await migrateProjectsToPlugin<T>(
+        tree,
+        projectGraph,
+        projects,
+        targetName,
+        createProjectsConfig,
+        executor,
+        createNodes,
+        postTargetTransformer
+      );
+
+      addPluginWithOptions<T>(
+        tree,
+        pluginPath,
+        include,
+        createPluginOptions(targetName)
+      );
+    }
+
+    projectsLeftToMigrate = projectsStillToBeMigrated;
+  } while (projectsLeftToMigrate.size !== 0);
+}
+
+export async function migrateProjectsToPlugin<T>(
   tree: Tree,
   projectGraph: ProjectGraph,
+  projects: string[],
+  targetName: string,
   createProjectsConfig: (
     tree: Tree,
     projectRoot: string,
@@ -105,7 +210,6 @@ export async function migrateExecutorToPlugin<T>(
   include: string[] | undefined;
   migratedProjects: string[];
 }> {
-  const { projects, targetName } = getProjectsToMigrate(tree, executor);
   const nxJsonConfiguration = readNxJson(tree);
   const targetDefaultsForExecutor =
     nxJsonConfiguration.targetDefaults?.[executor];
@@ -343,15 +447,21 @@ export function deleteMatchingProperties(
  *
  * @param tree Virtual Tree
  * @param executor Executor that is being migrated
+ * @param projectFilter Filter function to filter the projects to be migrated
  * @return {{ projects: string[]; targetName: string, allProjectsWithExecutor: Set<string> }} - Array of projects that can be migrated, the most common target name and all the projects containing the executor
  */
 export function getProjectsToMigrate(
   tree: Tree,
-  executor: string
+  executor: string,
+  projectFilter: (
+    tree: Tree,
+    allProjectsWithExecutor: Map<string, Set<string>>
+  ) => Set<string> = (_, allProjectsWithExecutor) =>
+    new Set(allProjectsWithExecutor.keys())
 ): {
   projects: string[];
   targetName: string;
-  allProjectsWithExecutor: Set<string>;
+  projectsStillToBeMigrated: Set<string>;
 } {
   const allProjectsWithExecutor = new Map<string, Set<string>>();
   const targetCounts = new Map<string, number>();
@@ -385,15 +495,27 @@ export function getProjectsToMigrate(
     }
   }
 
+  const filteredProjectsWithExecutor = projectFilter(
+    tree,
+    allProjectsWithExecutor
+  );
   const projects = Array.from(allProjectsWithExecutor)
+    .filter(([projectName]) => filteredProjectsWithExecutor.has(projectName))
     .filter(([_, targets]) => {
       return targets.has(preferredTargetName);
     })
     .map(([projectName, _]) => projectName);
 
+  const projectsStillToBeMigrated = new Set<string>();
+  for (const project of filteredProjectsWithExecutor) {
+    if (!projects.includes(project)) {
+      projectsStillToBeMigrated.add(project);
+    }
+  }
+
   return {
     projects,
     targetName: preferredTargetName,
-    allProjectsWithExecutor: new Set(allProjectsWithExecutor.keys()),
+    projectsStillToBeMigrated,
   };
 }
