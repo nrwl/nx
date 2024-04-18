@@ -110,7 +110,7 @@ export const plans: MenuItem[] = [
     name: 'Nx Enterprise',
     description:
       'The ultimate Nx & Nx Cloud toolchain, tailored to your needs.',
-    href: 'https://nx.app/enterprise',
+    href: '/enterprise',
     icon: null,
     isNew: false,
     isHighlight: false,
