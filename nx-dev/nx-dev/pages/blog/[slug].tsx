@@ -64,14 +64,14 @@ export default function BlogPostDetail({ post }: BlogPostDetailProps) {
           </div>
           <div className="w-16 hidden sm:block" />
         </div>
-        <div id="content-wrapper" className="px-4 lg:px-0">
-          <header className="max-w-3xl mx-auto mt-8 mb-16">
+        <div id="content-wrapper">
+          <header className="max-w-3xl mx-auto mt-8 mb-16 px-4 lg:px-0">
             <h1 className="prose prose-slate dark:prose-invert text-5xl font-semibold text-center">
               {post.title}
             </h1>
           </header>
           {post.cover_image && (
-            <div className="max-w-4xl mx-auto mb-16 w-full aspect-[1.9]">
+            <div className="max-w-screen-lg mx-auto mb-16 w-full aspect-[1.9]">
               <Image
                 className="w-full h-full object-cover"
                 src={post.cover_image}
@@ -81,7 +81,7 @@ export default function BlogPostDetail({ post }: BlogPostDetailProps) {
               />
             </div>
           )}
-          <div className="max-w-3xl mx-auto min-w-0 flex-auto pb-24 lg:pb-16">
+          <div className="max-w-3xl mx-auto min-w-0 flex-auto pb-24 lg:pb-16 px-4 lg:px-0">
             <div className="relative">
               <div
                 data-document="main"

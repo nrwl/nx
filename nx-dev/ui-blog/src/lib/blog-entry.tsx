@@ -28,6 +28,7 @@ export function BlogEntry({ post }: BlogEntryProps) {
         {post.cover_image && (
           <div className="w-full aspect-[1.9] mb-4">
             <Image
+              quality={100}
               className="h-full w-full object-cover"
               src={post.cover_image}
               alt=""
