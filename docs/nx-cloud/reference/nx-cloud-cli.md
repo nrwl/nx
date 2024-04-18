@@ -70,14 +70,18 @@ For example:
 
 ```yaml
 - run: npx nx-cloud start-ci-run --stop-agents-after=build
-- run: nx affected -t build,lint,test
+- run: nx affected -t build
+- run: nx affected -t lint
+- run: nx affected -t test
 ```
 
 If build tasks are all cached, then all build tasks will complete immediately causing lint and test tasks to fail with an error saying the CI pipeline execution has already been completed. Instead you should re-order your targets to make sure the build target is last
 
 ```yaml
 - run: npx nx-cloud start-ci-run --stop-agents-after=build
-- run: nx affected -t lint,test,build
+- run: nx affected -t lint
+- run: nx affected -t test
+- run: nx affected -t build
 ```
 
 ### --require-explicit-completion
