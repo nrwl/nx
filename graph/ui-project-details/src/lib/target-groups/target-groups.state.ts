@@ -1,20 +1,20 @@
 import {
   AppDispatch,
   RootState,
-  selectTargetGroupActions,
-  getSelectedTargetGroup,
+  selectTargetActions,
+  getSelectedTarget,
 } from '@nx/graph/state';
 
 const mapStateToProps = (state: RootState) => {
   return {
-    selectedTargetGroup: getSelectedTargetGroup(state),
+    selectedTargetGroup: getSelectedTarget(state),
   };
 };
 
 const mapDispatchToProps = (dispatch: AppDispatch) => {
   return {
     selectTargetGroup(targetGroup: string) {
-      dispatch(selectTargetGroupActions.selectTargetGroup(targetGroup));
+      dispatch(selectTargetActions.selectTarget(targetGroup));
     },
   };
 };

@@ -9,7 +9,10 @@ import {
   mapStateToProps,
   mapStateToPropsType,
 } from './target-configuration-details-list.state';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
+import { groupTargets } from '../utils/group-targets';
+import { TargetConfigurationDetailsListItem } from '../target-configuration-details-list-item/target-configuration-details-list-item';
+import { TargetConfigurationGroupList } from '../target-configuration-details-group-list/target-configuration-details-group-list';
 
 export type TargetConfigurationDetailsListProps = mapStateToPropsType &
   mapDispatchToPropsType & {
@@ -31,52 +34,31 @@ export function TargetConfigurationDetailsListComponent({
   onRunTarget,
   onViewInTaskGraph,
   className,
-  selectedTargetGroup,
+  selectedTarget,
 }: TargetConfigurationDetailsListProps) {
-  const [targetsUnderTargetGroup, setTargetsUnderTargetGroup] = useState<
-    string[]
-  >([]);
-
-  useEffect(() => {
-    if (selectedTargetGroup) {
-      let targets: string[] = [];
-      if (project.data.metadata?.targetGroups) {
-        targets = project.data.metadata.targetGroups[selectedTargetGroup] ?? [];
-      }
-      if (targets.length === 0 && project.data.targets?.[selectedTargetGroup]) {
-        targets = [selectedTargetGroup];
-      }
-      setTargetsUnderTargetGroup(targets);
-    }
-  }, [
-    selectedTargetGroup,
-    project.data.metadata?.targetGroups,
-    project.data.targets,
-  ]);
+  if (selectedTarget) {
+    return (
+      <TargetConfigurationDetailsListItem
+        project={project}
+        sourceMap={sourceMap}
+        variant={variant}
+        onRunTarget={onRunTarget}
+        onViewInTaskGraph={onViewInTaskGraph}
+        targetName={selectedTarget}
+        collapsable={false}
+      />
+    );
+  }
 
   return (
-    <ul className={className}>
-      {targetsUnderTargetGroup.map((targetName) => {
-        const target = project.data.targets?.[targetName];
-        if (!target) {
-          return null;
-        }
-        return (
-          <li className="mb-4 last:mb-0" key={`target-${targetName}`}>
-            <TargetConfigurationDetails
-              variant={variant}
-              projectName={project.name}
-              targetName={targetName}
-              targetConfiguration={target}
-              sourceMap={sourceMap}
-              onRunTarget={onRunTarget}
-              onViewInTaskGraph={onViewInTaskGraph}
-              collapsable={targetsUnderTargetGroup.length > 1}
-            />
-          </li>
-        );
-      })}
-    </ul>
+    <TargetConfigurationGroupList
+      project={project}
+      sourceMap={sourceMap}
+      variant={variant}
+      onRunTarget={onRunTarget}
+      onViewInTaskGraph={onViewInTaskGraph}
+      className={className}
+    />
   );
 }
 

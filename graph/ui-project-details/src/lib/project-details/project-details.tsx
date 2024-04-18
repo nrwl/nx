@@ -51,14 +51,14 @@ export const ProjectDetails = ({
         <h1
           className={twMerge(
             `flex items-center justify-between dark:text-slate-100`,
-            isCompact ? `text-2xl gap-1` : `text-4xl mb-4 gap-2`
+            isCompact ? `gap-1 text-2xl` : `mb-4 gap-2 text-4xl`
           )}
         >
           <span>{project.name}</span>
           <span>
             {onViewInProjectGraph ? (
               <button
-                className="text-base cursor-pointer items-center inline-flex gap-2 text-slate-600 dark:text-slate-300 ring-2 ring-inset ring-slate-400/40 dark:ring-slate-400/30 hover:bg-slate-50 dark:hover:bg-slate-800/60 rounded-md py-1 px-2"
+                className="inline-flex cursor-pointer items-center gap-2 rounded-md py-1 px-2 text-base text-slate-600 ring-2 ring-inset ring-slate-400/40 hover:bg-slate-50 dark:text-slate-300 dark:ring-slate-400/30 dark:hover:bg-slate-800/60"
                 onClick={() =>
                   onViewInProjectGraph({ projectName: project.name })
                 }
@@ -72,7 +72,7 @@ export const ProjectDetails = ({
         <div className="py-2 ">
           {projectData.tags && projectData.tags.length ? (
             <p>
-              <span className="font-medium inline-block w-10">Tags:</span>
+              <span className="inline-block w-10 font-medium">Tags:</span>
               {projectData.tags?.map((tag) => (
                 <span className="ml-2 font-mono">
                   <Pill text={tag} />
@@ -81,19 +81,19 @@ export const ProjectDetails = ({
             </p>
           ) : null}
           <p>
-            <span className="font-medium inline-block w-10">Root:</span>
+            <span className="inline-block w-10 font-medium">Root:</span>
             <span className="font-mono"> {projectData.root}</span>
           </p>
           {displayType ? (
             <p>
-              <span className="font-medium inline-block w-10">Type:</span>
+              <span className="inline-block w-10 font-medium">Type:</span>
               <span className="font-mono"> {displayType}</span>
             </p>
           ) : null}
         </div>
       </header>
       <div>
-        <h2 className={isCompact ? `text-lg mb-3` : `text-xl mb-4`}>
+        <h2 className={isCompact ? `mb-3 text-lg` : `mb-4 text-xl`}>
           <Tooltip
             openAction="hover"
             content={(<PropertyInfoTooltip type="targets" />) as any}
@@ -104,21 +104,14 @@ export const ProjectDetails = ({
           </Tooltip>
         </h2>
 
-        <div className="flex items-start gap-2 flex-wrap md:flex-nowrap">
-          <TargetGroups
-            className="w-full md:w-1/4"
-            project={project}
-            variant={variant}
-          />
-          <TargetConfigurationDetailsList
-            className="w-full md:w-3/4"
-            project={project}
-            sourceMap={sourceMap}
-            variant={variant}
-            onRunTarget={onRunTarget}
-            onViewInTaskGraph={onViewInTaskGraph}
-          />
-        </div>
+        <TargetConfigurationDetailsList
+          className="w-full"
+          project={project}
+          sourceMap={sourceMap}
+          variant={variant}
+          onRunTarget={onRunTarget}
+          onViewInTaskGraph={onViewInTaskGraph}
+        />
       </div>
     </>
   );

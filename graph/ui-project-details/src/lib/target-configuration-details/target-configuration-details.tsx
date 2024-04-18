@@ -120,7 +120,7 @@ export const TargetConfigurationDetailsComponent = ({
       : true);
 
   return (
-    <div className="rounded-md border border-slate-200 dark:border-slate-700/60 relative overflow-hidden">
+    <div className="relative overflow-hidden rounded-md border border-slate-200 dark:border-slate-700/60">
       <TargetConfigurationDetailsHeader
         isCollasped={collapsed}
         toggleCollapse={handleCollapseToggle}
@@ -136,12 +136,12 @@ export const TargetConfigurationDetailsComponent = ({
       {/* body */}
       {!collapsed && (
         <div className="p-4 text-base">
-          <div className="mb-4 group">
+          <div className="group mb-4">
             <h4 className="mb-4">
               {singleCommand ? (
                 <span className="font-medium">
                   Command
-                  <span className="hidden group-hover:inline ml-2 mb-1">
+                  <span className="ml-2 mb-1 hidden group-hover:inline">
                     <CopyToClipboard
                       onCopy={() =>
                         handleCopyClick(`"command": "${singleCommand}"`)
@@ -191,7 +191,7 @@ export const TargetConfigurationDetailsComponent = ({
                     <TooltipTriggerText>Inputs</TooltipTriggerText>
                   </span>
                 </Tooltip>
-                <span className="hidden group-hover:inline ml-2 mb-1">
+                <span className="ml-2 mb-1 hidden group-hover:inline">
                   <CopyToClipboard
                     onCopy={() =>
                       handleCopyClick(
@@ -203,7 +203,7 @@ export const TargetConfigurationDetailsComponent = ({
                   />
                 </span>
               </h4>
-              <ul className="list-disc pl-5 mb-4">
+              <ul className="mb-4 list-disc pl-5">
                 {targetConfiguration.inputs.map((input, idx) => {
                   const sourceInfo = selectSourceInfo(
                     sourceMap,
@@ -216,7 +216,7 @@ export const TargetConfigurationDetailsComponent = ({
                     >
                       <TargetConfigurationProperty data={input}>
                         {sourceInfo && (
-                          <span className="opacity-0 flex shrink-1 min-w-0 group-hover/line:opacity-100 transition-opacity duration-150 ease-in-out inline pl-4">
+                          <span className="shrink-1 inline flex min-w-0 pl-4 opacity-0 transition-opacity duration-150 ease-in-out group-hover/line:opacity-100">
                             <SourceInfo
                               data={sourceInfo}
                               propertyKey={`targets.${targetName}.inputs`}
@@ -241,7 +241,7 @@ export const TargetConfigurationDetailsComponent = ({
                     <TooltipTriggerText>Outputs</TooltipTriggerText>
                   </span>
                 </Tooltip>
-                <span className="hidden group-hover:inline ml-2 mb-1">
+                <span className="ml-2 mb-1 hidden group-hover:inline">
                   <CopyToClipboard
                     onCopy={() =>
                       handleCopyClick(
@@ -253,7 +253,7 @@ export const TargetConfigurationDetailsComponent = ({
                   />
                 </span>
               </h4>
-              <ul className="list-disc pl-5 mb-4">
+              <ul className="mb-4 list-disc pl-5">
                 {targetConfiguration.outputs?.map((output, idx) => {
                   const sourceInfo = selectSourceInfo(
                     sourceMap,
@@ -266,7 +266,7 @@ export const TargetConfigurationDetailsComponent = ({
                     >
                       <TargetConfigurationProperty data={output}>
                         {sourceInfo && (
-                          <span className="opacity-0 flex shrink-1 min-w-0 group-hover/line:opacity-100 transition-opacity duration-150 ease-in-out inline pl-4">
+                          <span className="shrink-1 inline flex min-w-0 pl-4 opacity-0 transition-opacity duration-150 ease-in-out group-hover/line:opacity-100">
                             <SourceInfo
                               data={sourceInfo}
                               propertyKey={`targets.${targetName}.outputs`}
@@ -291,7 +291,7 @@ export const TargetConfigurationDetailsComponent = ({
                     <TooltipTriggerText>Depends On</TooltipTriggerText>
                   </span>
                 </Tooltip>
-                <span className="opacity-0 group-hover/line:opacity-100 transition-opacity duration-150 ease-in-out inline pl-4">
+                <span className="inline pl-4 opacity-0 transition-opacity duration-150 ease-in-out group-hover/line:opacity-100">
                   <CopyToClipboard
                     onCopy={() =>
                       handleCopyClick(
@@ -303,7 +303,7 @@ export const TargetConfigurationDetailsComponent = ({
                   />
                 </span>
               </h4>
-              <ul className="list-disc pl-5 mb-4">
+              <ul className="mb-4 list-disc pl-5">
                 {targetConfiguration.dependsOn.map((dep, idx) => {
                   const sourceInfo = selectSourceInfo(
                     sourceMap,
@@ -316,7 +316,7 @@ export const TargetConfigurationDetailsComponent = ({
                       key={`dependsOn-${idx}`}
                     >
                       <TargetConfigurationProperty data={dep}>
-                        <span className="opacity-0 flex shrink-1 min-w-0 group-hover/line:opacity-100 transition-opacity duration-150 ease-in-out inline pl-4">
+                        <span className="shrink-1 inline flex min-w-0 pl-4 opacity-0 transition-opacity duration-150 ease-in-out group-hover/line:opacity-100">
                           {sourceInfo && (
                             <SourceInfo
                               data={sourceInfo}
@@ -372,7 +372,7 @@ export const TargetConfigurationDetailsComponent = ({
 
           {shouldRenderConfigurations ? (
             <>
-              <h4 className="py-2 mb-4">
+              <h4 className="mb-4 py-2">
                 <Tooltip
                   openAction="hover"
                   content={
@@ -402,7 +402,7 @@ export const TargetConfigurationDetailsComponent = ({
                       `targets.${targetName}.configurations.${propertyName}`
                     );
                     return sourceInfo ? (
-                      <span className="pl-4 flex shrink-1 min-w-0">
+                      <span className="shrink-1 flex min-w-0 pl-4">
                         <SourceInfo
                           data={sourceInfo}
                           propertyKey={`targets.${targetName}.configurations.${propertyName}`}

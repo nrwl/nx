@@ -44,7 +44,7 @@ export function TargetGroupsComponent({
 
   return (
     <>
-      <div className="w-full z-10 block md:hidden">
+      <div className="z-10 block w-full md:hidden">
         <TargetGroupsInSelectBox
           targetGroupNames={Object.keys(targetGroups)}
           selectTargetGroup={selectTargetGroup}
@@ -52,7 +52,7 @@ export function TargetGroupsComponent({
         />
       </div>
       <ul
-        className={`hidden md:block border rounded-md border-slate-200 dark:border-slate-700/60 divide-y divide-slate-200 dark:divide-slate-700/60 ${className}`}
+        className={`hidden divide-y divide-slate-200 rounded-md border border-slate-200 dark:divide-slate-700/60 dark:border-slate-700/60 md:block ${className}`}
       >
         {Object.keys(targetGroups).map((targetGroup) => {
           return (
@@ -83,8 +83,8 @@ export function TargetGroupsInSelectBox({
 }) {
   return (
     <Listbox value={selectedTargetGroup} onChange={selectTargetGroup}>
-      <div className="border rounded-md border-slate-200 dark:border-slate-700/60 relative bg-slate-50 dark:bg-slate-800/60">
-        <Listbox.Button className="relative w-full cursor-default rounded-lg py-2 pl-3 pr-10 text-left shadow-sm text-slate-600 dark:text-slate-300 font-medium">
+      <div className="relative rounded-md border border-slate-200 bg-slate-50 dark:border-slate-700/60 dark:bg-slate-800">
+        <Listbox.Button className="relative w-full cursor-default rounded-lg py-2 pl-3 pr-10 text-left font-medium text-slate-600 shadow-sm dark:text-slate-300">
           <span className="block truncate">{selectedTargetGroup}</span>
           <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
             <ChevronUpDownIcon className="h-5 w-5" aria-hidden="true" />
@@ -96,14 +96,14 @@ export function TargetGroupsInSelectBox({
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
-          <Listbox.Options className="absolute mt-1 max-h-60 w-full overflow-auto bg-white text-slate-500 dark:bg-slate-900 dark:text-slate-400 rounded-md py-1 text-base shadow-lg">
+          <Listbox.Options className="absolute mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base text-slate-500 shadow-lg dark:bg-slate-900 dark:text-slate-400">
             {targetGroupNames.map((targetGroupName, index) => (
               <Listbox.Option
                 key={index}
                 className={({ active }) =>
                   `relative cursor-default select-none py-2 pl-10 pr-4 ${
                     active
-                      ? 'bg-slate-50 dark:bg-slate-800/60 dark:border-slate-700/60 dark:border-slate-300/10'
+                      ? 'bg-slate-50 dark:border-slate-700/60 dark:border-slate-300/10 dark:bg-slate-800'
                       : 'text-slate-500 dark:text-slate-400 '
                   }`
                 }

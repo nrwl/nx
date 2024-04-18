@@ -3,14 +3,14 @@ import {
   RootState,
   expandTargetActions,
   getExpandedTargets,
-  getSelectedTargetGroup,
-  selectTargetGroupActions,
+  getSelectedTarget,
+  selectTargetActions,
 } from '@nx/graph/state';
 
 const mapStateToProps = (state: RootState) => {
   return {
     expandTargets: getExpandedTargets(state),
-    selectedTargetGroup: getSelectedTargetGroup(state),
+    getSelectedTarget: getSelectedTarget(state),
   };
 };
 
@@ -19,14 +19,14 @@ const mapDispatchToProps = (dispatch: AppDispatch) => {
     setExpandTargets(targets: string[]) {
       dispatch(expandTargetActions.setExpandTargets(targets));
     },
-    selectTargetGroup(targetGroup: string) {
-      dispatch(selectTargetGroupActions.selectTargetGroup(targetGroup));
+    selectTarget(targetGroup: string) {
+      dispatch(selectTargetActions.selectTarget(targetGroup));
     },
     collapseAllTargets() {
       dispatch(expandTargetActions.collapseAllTargets());
     },
     clearTargetGroup() {
-      dispatch(selectTargetGroupActions.clearTargetGroup());
+      dispatch(selectTargetActions.clearSelectedTarget());
     },
   };
 };

@@ -4,16 +4,12 @@ import {
   expandTargetReducer,
 } from '../expand-targets/expand-targets.slice';
 import {
-  SELECT_TARGET_GROUP_KEY,
-  selectTargetGroupReducer,
-} from '../select-target-group/select-target-group.slice';
+  SELECT_TARGET_KEY,
+  selectTargetReducer,
+} from '../select-target/select-target.slice';
+import { RootState } from './root-state.interface';
 
-export const rootReducer = combineReducers<{
-  [EXPAND_TARGETS_KEY]: string[];
-  [SELECT_TARGET_GROUP_KEY]: string;
-}>({
+export const rootReducer = combineReducers<RootState>({
   [EXPAND_TARGETS_KEY]: expandTargetReducer,
-  [SELECT_TARGET_GROUP_KEY]: selectTargetGroupReducer as any,
+  [SELECT_TARGET_KEY]: selectTargetReducer as any,
 });
-
-export type RootState = ReturnType<typeof rootReducer>;

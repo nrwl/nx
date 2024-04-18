@@ -3,13 +3,13 @@
 import {
   AppDispatch,
   RootState,
-  getSelectedTargetGroup,
+  getSelectedTarget,
   expandTargetActions,
 } from '@nx/graph/state';
 
 const mapStateToProps = (state: RootState) => {
   return {
-    selectedTargetGroup: getSelectedTargetGroup(state),
+    selectedTarget: getSelectedTarget(state),
   };
 };
 

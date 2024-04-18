@@ -21,16 +21,16 @@ export function TargetGroup({
     <li
       role="menuitem"
       className={twMerge(
-        `relative overflow-hidden group hover:bg-slate-50 dark:hover:bg-slate-800/60 cursor-pointer`,
+        `group relative cursor-pointer overflow-hidden hover:bg-slate-50 dark:hover:bg-slate-800/60`,
         isCompact ? 'px-2 py-1' : 'p-2',
         selected
-          ? 'bg-slate-50 dark:bg-slate-800/60 dark:border-slate-700/60 dark:border-slate-300/10'
+          ? 'bg-slate-50 dark:border-slate-700/60 dark:border-slate-300/10 dark:bg-slate-800'
           : ''
       )}
       onClick={() => onClick(name)}
     >
       <div className="flex items-center justify-between gap-2">
-        <h3 className="font-medium dark:text-slate-300 flex items-center justify-between gap-2">
+        <h3 className="flex items-center justify-between gap-2 font-medium dark:text-slate-300">
           <TargetTechnologies technologies={technologies} showTooltip={false} />
           {name}
         </h3>

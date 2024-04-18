@@ -17,7 +17,7 @@ import { CopyToClipboard } from '../copy-to-clipboard/copy-to-clipboard';
 
 export interface TargetConfigurationDetailsHeaderProps {
   isCollasped: boolean;
-  toggleCollapse: () => void;
+  toggleCollapse?: () => void;
   collapsable: boolean;
   isCompact?: boolean;
   targetConfiguration: TargetConfiguration;
@@ -64,7 +64,7 @@ export const TargetConfigurationDetailsHeader = ({
         collapsable ? 'cursor-pointer' : '',
         isCompact ? 'px-2 py-1' : 'p-2',
         !isCollasped || !collapsable
-          ? 'bg-slate-50 dark:bg-slate-800/60 border-b dark:border-slate-700/60 dark:border-slate-300/10 '
+          ? 'border-b bg-slate-50 dark:border-slate-700/60 dark:border-slate-300/10 dark:bg-slate-800 '
           : ''
       )}
       onClick={collapsable ? toggleCollapse : undefined}
@@ -84,7 +84,7 @@ export const TargetConfigurationDetailsHeader = ({
           <h3 className="font-medium dark:text-slate-300">{targetName}</h3>
           {isCollasped &&
             targetConfiguration?.executor !== '@nx/js:release-publish' && (
-              <p className="text-slate-400 text-sm">
+              <p className="text-sm text-slate-400">
                 {singleCommand ? singleCommand : targetConfiguration.executor}
               </p>
             )}
@@ -114,7 +114,7 @@ export const TargetConfigurationDetailsHeader = ({
         <div className="flex items-center gap-2">
           {onViewInTaskGraph && (
             <button
-              className="text-slate-600 dark:text-slate-300 text-sm ring-1 ring-inset ring-slate-400/40 dark:ring-slate-400/30 hover:bg-slate-200 dark:hover:bg-slate-700/60 p-1 bg-inherit rounded-md"
+              className="rounded-md bg-inherit p-1 text-sm text-slate-600 ring-1 ring-inset ring-slate-400/40 hover:bg-slate-200 dark:text-slate-300 dark:ring-slate-400/30 dark:hover:bg-slate-700/60"
               // TODO: fix tooltip overflow in collapsed state
               data-tooltip={isCollasped ? false : 'View in Task Graph'}
               data-tooltip-align-right
@@ -131,7 +131,7 @@ export const TargetConfigurationDetailsHeader = ({
 
           {onRunTarget && (
             <span
-              className="text-slate-600 dark:text-slate-300 text-sm ring-1 ring-inset ring-slate-400/40 dark:ring-slate-400/30 hover:bg-slate-200 dark:hover:bg-slate-700/60 p-1 bg-inherit rounded-md"
+              className="rounded-md bg-inherit p-1 text-sm text-slate-600 ring-1 ring-inset ring-slate-400/40 hover:bg-slate-200 dark:text-slate-300 dark:ring-slate-400/30 dark:hover:bg-slate-700/60"
               // TODO: fix tooltip overflow in collapsed state
               data-tooltip={isCollasped ? false : 'Run Target'}
               data-tooltip-align-right
@@ -148,8 +148,8 @@ export const TargetConfigurationDetailsHeader = ({
         </div>
       </div>
       {!isCollasped && (
-        <div className="flex items-center text-sm mt-2 ml-5">
-          <span className="flex-1 flex min-w-0 items-center">
+        <div className="mt-2 ml-5 flex items-center text-sm">
+          <span className="flex min-w-0 flex-1 items-center">
             <SourceInfo
               data={sourceMap[`targets.${targetName}`]}
               propertyKey={`targets.${targetName}`}
@@ -158,7 +158,7 @@ export const TargetConfigurationDetailsHeader = ({
           </span>
           {targetName !== 'nx-release-publish' && (
             <div className="flex items-center gap-2">
-              <code className="ml-4 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300 font-mono px-2 py-1 rounded">
+              <code className="ml-4 rounded bg-gray-100 px-2 py-1 font-mono text-gray-800 dark:bg-gray-700 dark:text-gray-300">
                 nx run {projectName}:{targetName}
               </code>
               <span>

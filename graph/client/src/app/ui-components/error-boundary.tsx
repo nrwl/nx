@@ -19,7 +19,7 @@ export function ErrorBoundary() {
       <ProjectDetailsHeader />
       <h1 className="mb-4 text-4xl dark:text-slate-100">Error</h1>
       <div>
-        <p className="text-lg mb-4 dark:text-slate-200">{message}</p>
+        <p className="mb-4 text-lg dark:text-slate-200">{message}</p>
         <p className="text-sm">Error message: {error?.toString()}</p>
       </div>
     </div>
