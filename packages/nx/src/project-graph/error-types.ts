@@ -10,6 +10,7 @@ export class ProjectGraphError extends Error {
   readonly #errors: Array<
     | CreateNodesError
     | MergeNodesError
+    | CreateMetadataError
     | ProjectsWithNoNameError
     | ProjectsWithConflictingNamesError
     | ProcessDependenciesError
@@ -26,6 +27,7 @@ export class ProjectGraphError extends Error {
       | ProjectsWithConflictingNamesError
       | ProcessDependenciesError
       | ProcessProjectGraphError
+      | CreateMetadataError
     >,
     partialProjectGraph: ProjectGraph,
     partialSourceMaps: ConfigurationSourceMaps

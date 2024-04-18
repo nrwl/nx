@@ -436,8 +436,8 @@ export async function applyProjectMetadata(
           sourceMap[project],
           [null, pluginName],
           'metadata',
-          projectConfiguration.metadata,
-          projectsMetadata[project].metadata
+          projectsMetadata[project].metadata,
+          projectConfiguration.metadata
         );
       }
     }
