@@ -8,9 +8,21 @@ import {
   getPseudoTerminal,
   PseudoTerminal,
 } from '../../tasks-runner/pseudo-terminal';
-import { output } from '../../utils/output';
 
 export const LARGE_BUFFER = 1024 * 1000000;
+
+const exitListeners: Set<() => void> = new Set();
+
+function processExitListener() {
+  for (const listener of exitListeners) {
+    listener();
+  }
+}
+
+process.on('exit', processExitListener);
+process.on('SIGTERM', processExitListener);
+process.on('SIGINT', processExitListener);
+process.on('SIGQUIT', processExitListener);
 
 async function loadEnvVars(path?: string) {
   if (path) {
@@ -363,13 +375,10 @@ function nodeProcess(
     /**
      * Ensure the child process is killed when the parent exits
      */
-    const processExitListener = (signal?: number | NodeJS.Signals) =>
+    const childProcessKiller = (signal?: number | NodeJS.Signals) =>
       childProcess.kill(signal);
 
-    process.on('exit', processExitListener);
-    process.on('SIGTERM', processExitListener);
-    process.on('SIGINT', processExitListener);
-    process.on('SIGQUIT', processExitListener);
+    exitListeners.add(childProcessKiller);
 
     childProcess.stdout.on('data', (data) => {
       const output = addColorAndPrefix(data, commandConfig);
@@ -400,6 +409,7 @@ function nodeProcess(
       res({ success: false, terminalOutput });
     });
     childProcess.on('exit', (code) => {
+      exitListeners.delete(childProcessKiller);
       if (!readyWhen) {
         res({ success: code === 0, terminalOutput });
       }
