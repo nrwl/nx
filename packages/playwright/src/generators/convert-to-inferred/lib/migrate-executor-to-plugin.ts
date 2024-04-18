@@ -96,6 +96,10 @@ function projectOptionsTransformer(
   target: TargetConfiguration
 ): TargetConfiguration {
   if (target.options) {
+    if (target.options?.config) {
+      delete target.options.config;
+    }
+
     for (const [key, value] of Object.entries(target.options)) {
       const newKeyName = names(key).fileName;
       delete target.options[key];

@@ -53,7 +53,7 @@ const {
  *   );
  * }
  *
- * function projectOptionsTransformer(
+ * function postTargetTransformer(
  *   target: TargetConfiguration
  * ): TargetConfiguration {
  *   if (target.options) {
@@ -73,7 +73,7 @@ const {
  *   createProjectConfigs,
  *   '@nx/playwright:playwright',
  *   createNodes,
- *   projectOptionsTransformer
+ *   postTargetTransformer
  * );
  *
  *
@@ -82,7 +82,7 @@ const {
  * @param createProjectsConfig Function returning the CreateNodesResult for the plugin using the projects that have been marked for migration
  * @param executor The executor to migrate from
  * @param createNodes The CreateNodes tuple used by the plugin
- * @param projectOptionsTransformer Apply transformations to the remaining options in the project's target, if there are any
+ * @param postTargetTransformer Apply transformations to the project's target after matching properties have been deleted
  */
 export async function migrateExecutorToPlugin<T>(
   tree: Tree,
@@ -95,8 +95,10 @@ export async function migrateExecutorToPlugin<T>(
   ) => CreateNodesResult | Promise<CreateNodesResult>,
   executor: string,
   createNodes: CreateNodes<T>,
-  projectOptionsTransformer: (
-    target: TargetConfiguration
+  postTargetTransformer: (
+    target: TargetConfiguration,
+    tree?: Tree,
+    projectRoot?: string
   ) => TargetConfiguration = (targetConfiguration) => targetConfiguration
 ): Promise<{
   targetName: string;
@@ -147,11 +149,10 @@ export async function migrateExecutorToPlugin<T>(
 
     target = mergeTargetConfigurations(target, targetDefaultsForExecutor);
     delete target.executor;
-    delete target.options?.config;
 
     deleteMatchingProperties(target, createdTarget);
 
-    target = projectOptionsTransformer(target);
+    target = postTargetTransformer(target, tree, projectFromGraph.data.root);
 
     if (Object.keys(target).length > 0) {
       projectConfig.targets[targetName] = target;
@@ -308,8 +309,8 @@ export function deleteMatchingProperties(
   for (const key in targetToMigrate) {
     if (Array.isArray(targetToMigrate[key])) {
       if (
-        targetToMigrate[key].every((v) => createdTarget[key].includes(v)) &&
-        targetToMigrate[key].length === createdTarget[key].length
+        targetToMigrate[key].every((v) => createdTarget[key]?.includes(v)) &&
+        targetToMigrate[key].length === createdTarget[key]?.length
       ) {
         delete targetToMigrate[key];
       }
