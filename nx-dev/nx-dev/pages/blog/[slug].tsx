@@ -27,16 +27,17 @@ export default function BlogPostDetail({ post }: BlogPostDetailProps) {
   return (
     <>
       <NextSeo
-        title="Nx Blog"
+        title={`${post.title} | Nx Blog`}
         description="Latest news from the Nx & Nx Cloud core team"
         openGraph={{
           url: 'https://nx.dev', // + router.asPath,
-          title: 'Nx Blog',
-          description:
-            'Stay updated with the latest news, articles, and updates from the Nx & Nx Cloud team.',
+          title: post.title,
+          description: post.description,
           images: [
             {
-              url: 'https://nx.dev/socials/nx-media.png',
+              url: post.cover_image
+                ? `https://nx.dev${post.cover_image}`
+                : 'https://nx.dev/socials/nx-media.png',
               width: 800,
               height: 421,
               alt: 'Nx: Smart, Fast and Extensible Build System',
@@ -70,13 +71,13 @@ export default function BlogPostDetail({ post }: BlogPostDetailProps) {
             </h1>
           </header>
           {post.cover_image && (
-            <div className="max-w-4xl mx-auto mb-16">
+            <div className="max-w-4xl mx-auto mb-16 w-full aspect-[1.9]">
               <Image
-                className="w-full h-auto object-cover"
+                className="w-full h-full object-cover"
                 src={post.cover_image}
                 alt=""
-                width={1024}
-                height={496}
+                width={1400}
+                height={735}
               />
             </div>
           )}

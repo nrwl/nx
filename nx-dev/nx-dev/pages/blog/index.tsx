@@ -27,11 +27,11 @@ export default function Blog(props: BlogListProps): JSX.Element {
   return (
     <>
       <NextSeo
-        title="Nx Blog"
+        title="Nx Blog - Updates from the Nx & Nx Cloud team"
         description="Latest news from the Nx & Nx Cloud core team"
         openGraph={{
           url: 'https://nx.dev' + router.asPath,
-          title: 'Nx Blog',
+          title: 'Nx Blog - Updates from the Nx & Nx Cloud team',
           description:
             'Stay updated with the latest news, articles, and updates from the Nx & Nx Cloud team.',
           images: [
@@ -49,30 +49,28 @@ export default function Blog(props: BlogListProps): JSX.Element {
       />
       <Header />
       <main id="main" role="main" className="w-full py-8">
-        <div className="max-w-screen-xl mx-auto mb-8 px-4 sm:px-8">
+        <div className="max-w-screen-xl mx-auto mb-8 px-4 lg:px-8">
           <header className="mx-auto mb-16">
             <SectionHeading as="h1" variant="display" id="blog-title">
               Blog
             </SectionHeading>
           </header>
           <div className="mx-auto flex flex-col gap-4">
-            <div className="flex flex-wrap gap-4">
-              <div className="flex-1 basis-full md:basis-[48%]">
-                {blog1 && <BlogEntry blogpost={blog1} showImage={true} />}
+            <div className="grid grid-cols-6 gap-4">
+              <div className="col-span-6 md:col-span-3">
+                {blog1 && <BlogEntry post={blog1} />}
               </div>
-              <div className="flex-1 basis-full md:basis-[48%]">
-                {blog2 && <BlogEntry blogpost={blog2} showImage={true} />}
+              <div className="col-span-6 sm:col-span-3 md:col-span-3">
+                {blog2 && <BlogEntry post={blog2} />}
               </div>
-            </div>
-            <div className="flex flex-wrap gap-4">
-              <div className="flex-1 basis-full md:basis-[31%]">
-                {blog3 && <BlogEntry blogpost={blog3} showImage={true} />}
+              <div className="col-span-6 sm:col-span-3 md:col-span-2">
+                {blog3 && <BlogEntry post={blog3} />}
               </div>
-              <div className="flex-1 basis-full md:basis-[31%]">
-                {blog4 && <BlogEntry blogpost={blog4} showImage={true} />}
+              <div className="col-span-6 sm:col-span-3 md:col-span-2">
+                {blog4 && <BlogEntry post={blog4} />}
               </div>
-              <div className="flex-1 basis-full md:basis-[31%]">
-                {blog5 && <BlogEntry blogpost={blog5} showImage={true} />}
+              <div className="col-span-6 sm:col-span-3 md:col-span-2">
+                {blog5 && <BlogEntry post={blog5} />}
               </div>
             </div>
           </div>
