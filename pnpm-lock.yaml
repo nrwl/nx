@@ -289,7 +289,7 @@ devDependencies:
     version: 18.3.0-beta.3(@swc-node/register@1.8.0)(@swc/core@1.3.86)(@types/node@18.19.8)(js-yaml@4.1.0)(nx@18.3.0-beta.3)(verdaccio@5.15.4)
   '@nx/eslint-plugin':
     specifier: 18.3.0-beta.3
-    version: 18.3.0-beta.3(@swc-node/register@1.8.0)(@swc/core@1.3.86)(@types/node@18.19.8)(@typescript-eslint/parser@7.4.0)(eslint-config-prettier@9.0.0)(eslint@8.57.0)(nx@18.3.0-beta.3)(typescript@5.4.2)(verdaccio@5.15.4)
+    version: 18.3.0-beta.3(@swc-node/register@1.8.0)(@swc/core@1.3.86)(@types/node@18.19.8)(@typescript-eslint/parser@7.4.0)(eslint-config-prettier@9.1.0)(eslint@8.57.0)(nx@18.3.0-beta.3)(typescript@5.4.2)(verdaccio@5.15.4)
   '@nx/jest':
     specifier: 18.3.0-beta.3
     version: 18.3.0-beta.3(@swc-node/register@1.8.0)(@swc/core@1.3.86)(@types/node@18.19.8)(nx@18.3.0-beta.3)(ts-node@10.9.1)(typescript@5.4.2)(verdaccio@5.15.4)
@@ -810,14 +810,14 @@ devDependencies:
     specifier: ~10.1.3
     version: 10.1.3(postcss@8.4.19)
   prettier:
-    specifier: ^3.2.5
-    version: 3.2.5
+    specifier: ^2.7.1
+    version: 2.7.1
   prettier-plugin-tailwindcss:
-    specifier: ^0.5.14
-    version: 0.5.14(prettier@3.2.5)
+    specifier: ^0.1.13
+    version: 0.1.13(prettier@2.7.1)
   pretty-quick:
     specifier: ^3.1.0
-    version: 3.1.3(prettier@3.2.5)
+    version: 3.1.3(prettier@2.7.1)
   raw-loader:
     specifier: ^4.0.2
     version: 4.0.2(webpack@5.88.0)
@@ -7816,10 +7816,10 @@ packages:
       - verdaccio
     dev: true
 
-  /@nrwl/eslint-plugin-nx@18.3.0-beta.3(@swc-node/register@1.8.0)(@swc/core@1.3.86)(@types/node@18.19.8)(@typescript-eslint/parser@7.4.0)(eslint-config-prettier@9.0.0)(eslint@8.57.0)(nx@18.3.0-beta.3)(typescript@5.4.2)(verdaccio@5.15.4):
+  /@nrwl/eslint-plugin-nx@18.3.0-beta.3(@swc-node/register@1.8.0)(@swc/core@1.3.86)(@types/node@18.19.8)(@typescript-eslint/parser@7.4.0)(eslint-config-prettier@9.1.0)(eslint@8.57.0)(nx@18.3.0-beta.3)(typescript@5.4.2)(verdaccio@5.15.4):
     resolution: {integrity: sha512-M1XcAYnavTKZTC/kj1D4fYx9w2Q5Rbr6nyQ8vuZpukwWgxoDiNZ7CcHBdsUYO6EyFL3b331iCpQgcK+8tmSAhA==}
     dependencies:
-      '@nx/eslint-plugin': 18.3.0-beta.3(@swc-node/register@1.8.0)(@swc/core@1.3.86)(@types/node@18.19.8)(@typescript-eslint/parser@7.4.0)(eslint-config-prettier@9.0.0)(eslint@8.57.0)(nx@18.3.0-beta.3)(typescript@5.4.2)(verdaccio@5.15.4)
+      '@nx/eslint-plugin': 18.3.0-beta.3(@swc-node/register@1.8.0)(@swc/core@1.3.86)(@types/node@18.19.8)(@typescript-eslint/parser@7.4.0)(eslint-config-prettier@9.1.0)(eslint@8.57.0)(nx@18.3.0-beta.3)(typescript@5.4.2)(verdaccio@5.15.4)
     transitivePeerDependencies:
       - '@babel/traverse'
       - '@swc-node/register'
@@ -8474,7 +8474,7 @@ packages:
       - verdaccio
     dev: true
 
-  /@nx/eslint-plugin@18.3.0-beta.3(@swc-node/register@1.8.0)(@swc/core@1.3.86)(@types/node@18.19.8)(@typescript-eslint/parser@7.4.0)(eslint-config-prettier@9.0.0)(eslint@8.57.0)(nx@18.3.0-beta.3)(typescript@5.4.2)(verdaccio@5.15.4):
+  /@nx/eslint-plugin@18.3.0-beta.3(@swc-node/register@1.8.0)(@swc/core@1.3.86)(@types/node@18.19.8)(@typescript-eslint/parser@7.4.0)(eslint-config-prettier@9.1.0)(eslint@8.57.0)(nx@18.3.0-beta.3)(typescript@5.4.2)(verdaccio@5.15.4):
     resolution: {integrity: sha512-3LNegAAk+ENBwM7frkoC7WSZ/K1n05mCDZOc6jKdHhP68KNiS1NeHn872l66qDgyf1Lb/qFizlZACWoVWVtkOw==}
     peerDependencies:
       '@typescript-eslint/parser': ^6.13.2 || ^7.0.0
@@ -8483,7 +8483,7 @@ packages:
       eslint-config-prettier:
         optional: true
     dependencies:
-      '@nrwl/eslint-plugin-nx': 18.3.0-beta.3(@swc-node/register@1.8.0)(@swc/core@1.3.86)(@types/node@18.19.8)(@typescript-eslint/parser@7.4.0)(eslint-config-prettier@9.0.0)(eslint@8.57.0)(nx@18.3.0-beta.3)(typescript@5.4.2)(verdaccio@5.15.4)
+      '@nrwl/eslint-plugin-nx': 18.3.0-beta.3(@swc-node/register@1.8.0)(@swc/core@1.3.86)(@types/node@18.19.8)(@typescript-eslint/parser@7.4.0)(eslint-config-prettier@9.1.0)(eslint@8.57.0)(nx@18.3.0-beta.3)(typescript@5.4.2)(verdaccio@5.15.4)
       '@nx/devkit': 18.3.0-beta.3(nx@18.3.0-beta.3)
       '@nx/js': 18.3.0-beta.3(@swc-node/register@1.8.0)(@swc/core@1.3.86)(@types/node@18.19.8)(nx@18.3.0-beta.3)(typescript@5.4.2)(verdaccio@5.15.4)
       '@typescript-eslint/parser': 7.4.0(eslint@8.57.0)(typescript@5.4.2)
@@ -28274,71 +28274,19 @@ packages:
     resolution: {integrity: sha512-dLbWOa4xBn+qeWeIF60qRoB6Pk2jX5P3DIVgOQyMyvBpu931Q+8dXz8X0snJiFkQdohDDLnZQECjzsAj75hgZQ==}
     dev: true
 
-  /prettier-plugin-tailwindcss@0.5.14(prettier@3.2.5):
-    resolution: {integrity: sha512-Puaz+wPUAhFp8Lo9HuciYKM2Y2XExESjeT+9NQoVFXZsPPnc9VYss2SpxdQ6vbatmt8/4+SN0oe0I1cPDABg9Q==}
-    engines: {node: '>=14.21.3'}
+  /prettier-plugin-tailwindcss@0.1.13(prettier@2.7.1):
+    resolution: {integrity: sha512-/EKQURUrxLu66CMUg4+1LwGdxnz8of7IDvrSLqEtDqhLH61SAlNNUSr90UTvZaemujgl3OH/VHg+fyGltrNixw==}
+    engines: {node: '>=12.17.0'}
     peerDependencies:
-      '@ianvs/prettier-plugin-sort-imports': '*'
-      '@prettier/plugin-pug': '*'
-      '@shopify/prettier-plugin-liquid': '*'
-      '@trivago/prettier-plugin-sort-imports': '*'
-      '@zackad/prettier-plugin-twig-melody': '*'
-      prettier: ^3.0
-      prettier-plugin-astro: '*'
-      prettier-plugin-css-order: '*'
-      prettier-plugin-import-sort: '*'
-      prettier-plugin-jsdoc: '*'
-      prettier-plugin-marko: '*'
-      prettier-plugin-organize-attributes: '*'
-      prettier-plugin-organize-imports: '*'
-      prettier-plugin-sort-imports: '*'
-      prettier-plugin-style-order: '*'
-      prettier-plugin-svelte: '*'
-    peerDependenciesMeta:
-      '@ianvs/prettier-plugin-sort-imports':
-        optional: true
-      '@prettier/plugin-pug':
-        optional: true
-      '@shopify/prettier-plugin-liquid':
-        optional: true
-      '@trivago/prettier-plugin-sort-imports':
-        optional: true
-      '@zackad/prettier-plugin-twig-melody':
-        optional: true
-      prettier-plugin-astro:
-        optional: true
-      prettier-plugin-css-order:
-        optional: true
-      prettier-plugin-import-sort:
-        optional: true
-      prettier-plugin-jsdoc:
-        optional: true
-      prettier-plugin-marko:
-        optional: true
-      prettier-plugin-organize-attributes:
-        optional: true
-      prettier-plugin-organize-imports:
-        optional: true
-      prettier-plugin-sort-imports:
-        optional: true
-      prettier-plugin-style-order:
-        optional: true
-      prettier-plugin-svelte:
-        optional: true
+      prettier: '>=2.2.0'
     dependencies:
-      prettier: 3.2.5
+      prettier: 2.7.1
     dev: true
 
   /prettier@2.7.1:
     resolution: {integrity: sha512-ujppO+MkdPqoVINuDFDRLClm7D78qbDt0/NR+wp5FqEZOoTNAjPHWj17QRhu7geIHJfcNhRk1XVQmF8Bp3ye+g==}
     engines: {node: '>=10.13.0'}
     hasBin: true
-
-  /prettier@3.2.5:
-    resolution: {integrity: sha512-3/GWa9aOC0YeD7LUfvOG2NiDyhOWRvt1k+rcKhOuYnMY24iiCphgneUfJDyFXd6rZCAnuLBv6UeAULtrhT/F4A==}
-    engines: {node: '>=14'}
-    hasBin: true
-    dev: true
 
   /pretty-bytes@5.6.0:
     resolution: {integrity: sha512-FFw039TmrBqFK8ma/7OL3sDz/VytdtJr044/QUJtH0wK9lb9jLq9tJyIxUwtQJHwar2BqtiA4iCWSwo9JLkzFg==}
@@ -28396,7 +28344,7 @@ packages:
       parse-ms: 2.1.0
     dev: true
 
-  /pretty-quick@3.1.3(prettier@3.2.5):
+  /pretty-quick@3.1.3(prettier@2.7.1):
     resolution: {integrity: sha512-kOCi2FJabvuh1as9enxYmrnBC6tVMoVOenMaBqRfsvBHB0cbpYHjdQEpSglpASDFEXVwplpcGR4CLEaisYAFcA==}
     engines: {node: '>=10.13'}
     hasBin: true
@@ -28409,7 +28357,7 @@ packages:
       ignore: 5.2.0
       mri: 1.2.0
       multimatch: 4.0.0
-      prettier: 3.2.5
+      prettier: 2.7.1
     dev: true
 
   /prismjs@1.27.0:
