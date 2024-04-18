@@ -165,21 +165,20 @@
     "access": "public"
   },
   "napi": {
-    "name": "nx",
-    "package": {
-      "name": "@nx/nx"
-    },
-    "triples": {
-      "additional": [
-        "aarch64-apple-darwin",
-        "aarch64-unknown-linux-gnu",
-        "aarch64-unknown-linux-musl",
-        "aarch64-pc-windows-msvc",
-        "armv7-unknown-linux-gnueabihf",
-        "x86_64-unknown-linux-musl",
-        "wasm32-wasi-preview1-threads",
-        "x86_64-unknown-freebsd"
-      ]
-    }
+    "binaryName": "nx",
+    "packageName": "@nx/nx",
+    "targets": [
+      "x86_64-unknown-linux-gnu",
+      "x86_64-pc-windows-msvc",
+      "x86_64-apple-darwin",
+      "aarch64-apple-darwin",
+      "aarch64-unknown-linux-gnu",
+      "aarch64-unknown-linux-musl",
+      "aarch64-pc-windows-msvc",
+      "armv7-unknown-linux-gnueabihf",
+      "x86_64-unknown-linux-musl",
+      "wasm32-wasi-preview1-threads",
+      "x86_64-unknown-freebsd"
+    ]
   }
 }

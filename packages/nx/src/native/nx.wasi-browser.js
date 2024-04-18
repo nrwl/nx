@@ -21,8 +21,8 @@ const __wasi = new __WASI({
 const __emnapiContext = __emnapiGetDefaultContext()
 
 const __sharedMemory = new WebAssembly.Memory({
-  initial: 1024,
-  maximum: 10240,
+  initial: 4000,
+  maximum: 65536,
   shared: true,
 })
 

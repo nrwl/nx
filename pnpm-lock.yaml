@@ -234,8 +234,8 @@ devDependencies:
     specifier: 1.3.3
     version: 1.3.3(@swc-node/register@1.8.0)(@swc/core@1.3.86)(@types/node@18.19.8)(typescript@5.4.2)(verdaccio@5.15.4)
   '@napi-rs/cli':
-    specifier: 3.0.0-alpha.45
-    version: 3.0.0-alpha.45(emnapi@1.1.0)
+    specifier: 3.0.0-alpha.50
+    version: 3.0.0-alpha.50(emnapi@1.1.0)
   '@napi-rs/wasm-runtime':
     specifier: 0.1.2
     version: 0.1.2
@@ -7232,8 +7232,8 @@ packages:
       '@napi-rs/canvas-win32-x64-msvc': 0.1.30
     dev: false
 
-  /@napi-rs/cli@3.0.0-alpha.45(emnapi@1.1.0):
-    resolution: {integrity: sha512-69m9ssfRMZMLI5A8+nAUrEVTdRe3w8q8oOiH2idI79yt+Uvwj2F+Lde7GN4AV5Z9+Oc17kkf9UQZawNia0ZfkA==}
+  /@napi-rs/cli@3.0.0-alpha.50(emnapi@1.1.0):
+    resolution: {integrity: sha512-5lnOzph5H58C7PKQRHbHj6V+fEfkAmEkrsg+UxbUs3l7H84dn4KmypEymfPvxHr3ShluT+dOUwCv66qpJrB6+w==}
     engines: {node: '>= 16'}
     hasBin: true
     peerDependencies:
@@ -7246,6 +7246,7 @@ packages:
         optional: true
     dependencies:
       '@napi-rs/cross-toolchain': 0.0.14
+      '@napi-rs/wasm-tools': 0.0.1
       '@octokit/rest': 20.0.2
       clipanion: 3.2.1(typanion@3.14.0)
       colorette: 2.0.20
@@ -7576,6 +7577,143 @@ packages:
       '@emnapi/core': 1.1.0
       '@emnapi/runtime': 1.1.0
       '@tybys/wasm-util': 0.8.1
+    dev: true
+
+  /@napi-rs/wasm-tools-android-arm-eabi@0.0.1:
+    resolution: {integrity: sha512-Q/SyyO60dbpoLcN/hvGzNWDaCjuaMGFeg92GnsDBWm3OCwhvltr51+VDZbCIHQwfIvH4d63X29nEls7FHK75dA==}
+    engines: {node: '>= 10'}
+    cpu: [arm]
+    os: [android]
+    requiresBuild: true
+    dev: true
+    optional: true
+
+  /@napi-rs/wasm-tools-android-arm64@0.0.1:
+    resolution: {integrity: sha512-mn7QpSWJlQS7Z14DkWqW14HqEiI2R8FV3KT4SNdqm+O+K5uIUvAexxMn9Qu6gqLq1fHXj+7l2luAWmtN7RKLjA==}
+    engines: {node: '>= 10'}
+    cpu: [arm64]
+    os: [android]
+    requiresBuild: true
+    dev: true
+    optional: true
+
+  /@napi-rs/wasm-tools-darwin-arm64@0.0.1:
+    resolution: {integrity: sha512-WuxMRtd5rCgqfuk7dehcft5eyGDOuNSMaJybprbX4IXvnjlLQf1zsCfp6wBI2Ptp2D+qEgE2SAMWBfzF9XDDkw==}
+    engines: {node: '>= 10'}
+    cpu: [arm64]
+    os: [darwin]
+    requiresBuild: true
+    dev: true
+    optional: true
+
+  /@napi-rs/wasm-tools-darwin-x64@0.0.1:
+    resolution: {integrity: sha512-YGPjgIo1/Y774aAFb/UT+d8VQtTaIkdF0/ynlChe/UilBZX48vLaEM0HaoSqxA1WHvRm8Il8R3rBDDle0965rw==}
+    engines: {node: '>= 10'}
+    cpu: [x64]
+    os: [darwin]
+    requiresBuild: true
+    dev: true
+    optional: true
+
+  /@napi-rs/wasm-tools-freebsd-x64@0.0.1:
+    resolution: {integrity: sha512-e5y+Z89XwI7HpLyCNEvDKdtO5Sga2+o8bDcNQNHjhMunnnHKPtlTvtIhieVmdqnNGPbuNkIx8xbTjkoWCZ49Tw==}
+    engines: {node: '>= 10'}
+    cpu: [x64]
+    os: [freebsd]
+    requiresBuild: true
+    dev: true
+    optional: true
+
+  /@napi-rs/wasm-tools-linux-arm64-gnu@0.0.1:
+    resolution: {integrity: sha512-Hcy+XiCJd8XshxVOYvmyU5FgeY8d6txZf7ZefI38Y3eRm7rzGt/EvABGjvJfujnPaBeWi9fQVm3Zav5pwyxViw==}
+    engines: {node: '>= 10'}
+    cpu: [arm64]
+    os: [linux]
+    requiresBuild: true
+    dev: true
+    optional: true
+
+  /@napi-rs/wasm-tools-linux-arm64-musl@0.0.1:
+    resolution: {integrity: sha512-1mSquGy4N7jlRu/0OY/rqZa/XdCFGKrsl8SH4jRB318DVweOHLqn15QG4iwIrRVjCJROpaU9HRU/sgOKVbdqrA==}
+    engines: {node: '>= 10'}
+    cpu: [arm64]
+    os: [linux]
+    requiresBuild: true
+    dev: true
+    optional: true
+
+  /@napi-rs/wasm-tools-linux-x64-gnu@0.0.1:
+    resolution: {integrity: sha512-/+XuGQ9667EqrxRbpt2izLDNzWUWLTXl6KaRSh9TjcT7qL5+yllTqchc0JwIHJW5QnQlC1NW7HnSnwQZ+/v+8g==}
+    engines: {node: '>= 10'}
+    cpu: [x64]
+    os: [linux]
+    requiresBuild: true
+    dev: true
+    optional: true
+
+  /@napi-rs/wasm-tools-linux-x64-musl@0.0.1:
+    resolution: {integrity: sha512-L+5QcEsUS+QNcMI1AF6aBRKLzhxQ5VHRHVslaQwOxHoxyhMB/2hRH4ON6Zea1PyQS/zzZugwBuDEOcFtc3UjPQ==}
+    engines: {node: '>= 10'}
+    cpu: [x64]
+    os: [linux]
+    requiresBuild: true
+    dev: true
+    optional: true
+
+  /@napi-rs/wasm-tools-wasm32-wasi@0.0.1:
+    resolution: {integrity: sha512-I1vAhMQcBblPJPg6pr+xydZ1NjPwKU2ympmI54BZfCOAMHs0ZfVb4yEqYAVIcSWOx3CF/0T2YrcOmiULTU3iGw==}
+    engines: {node: '>=14.0.0'}
+    cpu: [wasm32]
+    requiresBuild: true
+    dependencies:
+      '@napi-rs/wasm-runtime': 0.1.2
+    dev: true
+    optional: true
+
+  /@napi-rs/wasm-tools-win32-arm64-msvc@0.0.1:
+    resolution: {integrity: sha512-A9peDWijE9X6qt5SNzqlmSMlOZiqeB9zhUVP5dtJKtpqVO098YVnZFsz/4Hv7LkSoxQE7brAd9yln/wz5qb1yQ==}
+    engines: {node: '>= 10'}
+    cpu: [arm64]
+    os: [win32]
+    requiresBuild: true
+    dev: true
+    optional: true
+
+  /@napi-rs/wasm-tools-win32-ia32-msvc@0.0.1:
+    resolution: {integrity: sha512-6Y7GqnBCIdl8YsSQ+5AjnZ4iWDJnJrqzRlMDegCmPPf3WmRZ0sgnRU9iAHWcId9AEIf7SAs3x7Bnv2992zCwJA==}
+    engines: {node: '>= 10'}
+    cpu: [ia32]
+    os: [win32]
+    requiresBuild: true
+    dev: true
+    optional: true
+
+  /@napi-rs/wasm-tools-win32-x64-msvc@0.0.1:
+    resolution: {integrity: sha512-Ab6ljJCQmXqJvE4/8DLvHEVTI7vVUrVfh6gCwnVwwrA/B2LgR98SanpT8/951ZaIH/lSuqkeVm+wqzgYM1FHRg==}
+    engines: {node: '>= 10'}
+    cpu: [x64]
+    os: [win32]
+    requiresBuild: true
+    dev: true
+    optional: true
+
+  /@napi-rs/wasm-tools@0.0.1:
+    resolution: {integrity: sha512-itoKmaVqRKIV37sKIEri1qjaYlWNtXyfymUaqXkLu5F16s+FwqwOmvxmdTHsvNKkMy4qCsSSetiLZO1IwvBMLQ==}
+    engines: {node: '>= 10'}
+    optionalDependencies:
+      '@napi-rs/wasm-tools-android-arm-eabi': 0.0.1
+      '@napi-rs/wasm-tools-android-arm64': 0.0.1
+      '@napi-rs/wasm-tools-darwin-arm64': 0.0.1
+      '@napi-rs/wasm-tools-darwin-x64': 0.0.1
+      '@napi-rs/wasm-tools-freebsd-x64': 0.0.1
+      '@napi-rs/wasm-tools-linux-arm64-gnu': 0.0.1
+      '@napi-rs/wasm-tools-linux-arm64-musl': 0.0.1
+      '@napi-rs/wasm-tools-linux-x64-gnu': 0.0.1
+      '@napi-rs/wasm-tools-linux-x64-musl': 0.0.1
+      '@napi-rs/wasm-tools-wasm32-wasi': 0.0.1
+      '@napi-rs/wasm-tools-win32-arm64-msvc': 0.0.1
+      '@napi-rs/wasm-tools-win32-ia32-msvc': 0.0.1
+      '@napi-rs/wasm-tools-win32-x64-msvc': 0.0.1
     dev: true
 
   /@nestjs/cli@9.1.8(@swc/core@1.3.86)(esbuild@0.19.5):

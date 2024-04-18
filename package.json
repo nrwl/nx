@@ -52,7 +52,7 @@
     "@jest/test-result": "^29.4.1",
     "@jest/types": "^29.4.1",
     "@monodon/rust": "1.3.3",
-    "@napi-rs/cli": "3.0.0-alpha.45",
+    "@napi-rs/cli": "3.0.0-alpha.50",
     "@napi-rs/wasm-runtime": "0.1.2",
     "@nestjs/cli": "^9.0.0",
     "@nestjs/common": "^9.0.0",

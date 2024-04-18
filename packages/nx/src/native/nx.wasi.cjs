@@ -17,25 +17,28 @@ const __wasi = new __nodeWASI({
   version: 'preview1',
   env: process.env,
   preopens: {
-    '/': '/',
+    '/': '/'
   }
 })
 
 const __emnapiContext = __emnapiGetDefaultContext()
 
 const __sharedMemory = new WebAssembly.Memory({
-  initial: 1024,
-  maximum: 10240,
+  initial: 4000,
+  maximum: 65536,
   shared: true,
 })
 
 let __wasmFilePath = __nodePath.join(__dirname, 'nx.wasm32-wasi.wasm')
+const __wasmDebugFilePath = __nodePath.join(__dirname, 'nx.wasm32-wasi.debug.wasm')
 
-if (!__nodeFs.existsSync(__wasmFilePath)) {
+if (__nodeFs.existsSync(__wasmDebugFilePath)) {
+  __wasmFilePath = __wasmDebugFilePath
+} else if (!__nodeFs.existsSync(__wasmFilePath)) {
   try {
-    __wasmFilePath = __nodePath.resolve('nx-wasm32-wasi')
+    __wasmFilePath = __nodePath.resolve('@nx/nx-wasm32-wasi')
   } catch {
-    throw new Error('Cannot find nx.wasm32-wasi.wasm file, and nx-wasm32-wasi package is not installed.')
+    throw new Error('Cannot find nx.wasm32-wasi.wasm file, and @nx/nx-wasm32-wasi package is not installed.')
   }
 }
 

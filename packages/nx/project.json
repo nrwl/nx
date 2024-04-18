@@ -6,13 +6,11 @@
   "implicitDependencies": ["graph-client"],
   "targets": {
     "build-native": {
-      "outputs": ["{projectRoot}/src/native/*.node"],
-      "executor": "@monodon/rust:napi",
-      "options": {
-        "dist": "packages/nx/src/native",
-        "jsFile": "packages/nx/src/native/native-bindings.js",
-        "release": true
-      },
+      "outputs": [
+        "{projectRoot}/src/native/*.node",
+        "{projectRoot}/src/native/*.wasm"
+      ],
+      "command": "napi build --release --platform --package-json-path packages/nx/package.json --manifest-path packages/nx/Cargo.toml --js ./native-bindings.js -o packages/nx/src/native",
       "configurations": {
         "local": {
           "release": false

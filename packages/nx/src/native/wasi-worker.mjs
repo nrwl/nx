@@ -1,10 +1,11 @@
 import fs from "node:fs";
 import { createRequire } from "node:module";
+import { WASI } from "node:wasi";
 import { parentPort, Worker } from "node:worker_threads";
 
-import { instantiateNapiModuleSync, MessageHandler, WASI } from "@napi-rs/wasm-runtime";
-
 const require = createRequire(import.meta.url);
+
+const { instantiateNapiModuleSync, MessageHandler, getDefaultContext } = require("@napi-rs/wasm-runtime");
 
 if (parentPort) {
   parentPort.on("message", (data) => {
@@ -26,13 +27,22 @@ Object.assign(globalThis, {
   },
 });
 
+const emnapiContext = getDefaultContext()
+
 const handler = new MessageHandler({
   onLoad({ wasmModule, wasmMemory }) {
-    const wasi = new WASI({ fs });
+    const wasi = new WASI({
+      version: 'preview1',
+      env: process.env,
+      preopens: {
+        '/': '/',
+      },
+    });
 
     return instantiateNapiModuleSync(wasmModule, {
       childThread: true,
       wasi,
+      context: emnapiContext,
       overwriteImports(importObject) {
         importObject.env = {
           ...importObject.env,
