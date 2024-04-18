@@ -1,7 +1,7 @@
 ---
 title: Fast, Effortless CI
 authors: [Isaac Mann]
-cover_image: '/blog/images/2024-02-07/featured_img.webp'
+cover_image: '/blog/images/2024-02-07/featured_img.png'
 tags: [nx, nx-cloud, releases]
 reposts: []
 ---

@@ -1,7 +1,7 @@
 ---
 title: What if Nx Plugins Were More Like VSCode Extensions
 authors: [Juri Strumpflohner]
-cover_image: '/blog/images/2024-02-05/featured_img.webp'
+cover_image: '/blog/images/2024-02-05/featured_img.png'
 tags: [nx, releases]
 reposts: []
 ---

@@ -1,7 +1,7 @@
 ---
 title: Reliable CI. A new execution model fixing both flakiness and slowness.
 authors: [Victor Savkin]
-cover_image: '/blog/images/2024-03-21/featured_img.webp'
+cover_image: '/blog/images/2024-03-21/featured_img.png'
 tags: [nx, nx-cloud, releases]
 reposts: []
 ---
