@@ -6,9 +6,9 @@ At the beginning of your main job, invoke `npx nx-cloud start-ci-run`. This tell
 command correspond to the same CI run.
 
 {% callout type="warning" title="Do not run start-ci-run locally" %}
-`nx-cloud start-ci-run` is designed to run in CI. If you run the command locally, it can cause your local Nx repo think it's apart of a CI run. This can cause strange behavior like Nx commands timing out or throwing unexpected errors.
+`nx-cloud start-ci-run` is designed to run in CI. If you run the command locally, it can cause your local Nx repo to think it's a part of a CI run. This can cause strange behavior like Nx commands timing out or throwing unexpected errors.
 
-If you ran the command locally, you can remove your systems temp files to reset your local system. Typically restarting your system is enough to fix this issue.
+If you accidentally run the command locally, you can remove your system's temp files to reset your local system. Typically restarting your system is enough to fix this issue.
 {% /callout %}
 
 You can configure your CI run by passing the following flags:
@@ -64,9 +64,9 @@ run.
 You can fix it by telling Nx Cloud that it can terminate agents after it sees a certain
 target: `npx nx-cloud start-ci-run --stop-agents-after=e2e`.
 
-The target name for `--stop-agents-after` should be the last target ran within your pipeline. If not Nx Cloud will complete the CI pipeline execution, preventing the subsequent commands from running.
+The target name for `--stop-agents-after` should be the last target run within your pipeline. If not, Nx Cloud will end the CI pipeline execution, preventing the subsequent commands from running.
 
-For example:
+Incorrect example:
 
 ```yaml
 - run: npx nx-cloud start-ci-run --stop-agents-after=build
@@ -75,7 +75,9 @@ For example:
 - run: nx affected -t test
 ```
 
-If build tasks are all cached, then all build tasks will complete immediately causing lint and test tasks to fail with an error saying the CI pipeline execution has already been completed. Instead you should re-order your targets to make sure the build target is last
+If build tasks are all cached, then all build tasks will complete immediately causing lint and test tasks to fail with an error saying the CI pipeline execution has already been completed. Instead you should re-order your targets to make sure the build target is last.
+
+Corrected example:
 
 ```yaml
 - run: npx nx-cloud start-ci-run --stop-agents-after=build
