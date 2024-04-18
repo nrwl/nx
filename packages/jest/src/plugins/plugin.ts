@@ -109,18 +109,36 @@ export const createNodes: CreateNodes<JestPluginOptions> = [
   },
 ];
 
+const jestValidatePath = dirname(
+  require.resolve('jest-validate/package.json', {
+    paths: [dirname(require.resolve('jest-config'))],
+  })
+);
+
 async function buildJestTargets(
   configFilePath: string,
   projectRoot: string,
   options: JestPluginOptions,
   context: CreateNodesContext
 ): Promise<Pick<ProjectConfiguration, 'targets' | 'metadata'>> {
+  const absConfigFilePath = resolve(context.workspaceRoot, configFilePath);
+
+  if (require.cache[absConfigFilePath]) {
+    for (const k of Object.keys(require.cache)) {
+      // Only delete the cache outside of jest-validate
+      // jest-validate has a Symbol which is important for jest config validation which breaks if the require cache is broken
+      if (relative(jestValidatePath, k).startsWith('../')) {
+        delete require.cache[k];
+      }
+    }
+  }
+
   const config = await readConfig(
     {
       _: [],
       $0: undefined,
     },
-    resolve(context.workspaceRoot, configFilePath)
+    absConfigFilePath
   );
 
   const namedInputs = getNamedInputs(projectRoot, context);
