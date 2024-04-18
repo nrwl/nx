@@ -8,8 +8,6 @@ module.exports = {
     '^.+\\.(ts|tsx|js|jsx|mts|mjs)$': 'ts-jest',
   },
   resolver: '../../../scripts/patched-jest-resolver.js',
-  // Fixes https://github.com/jestjs/jest/issues/11956
-  runtime: '@side/jest-runtime',
   moduleFileExtensions: ['ts', 'js', 'mts', 'html'],
   coverageReporters: ['html'],
   maxWorkers: 1,
