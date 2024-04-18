@@ -119,6 +119,10 @@ async function initializePlugin(
     await runNxAsync(
       `g ${pkgName}:${initGenerator} --keepExistingVersions${
         updatePackageScripts ? ' --updatePackageScripts' : ''
+      }${
+        options.__overrides_unparsed__.length
+          ? ' ' + options.__overrides_unparsed__.join(' ')
+          : ''
       }`,
       {
         silent: !options.verbose,
