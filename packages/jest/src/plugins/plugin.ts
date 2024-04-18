@@ -153,12 +153,12 @@ async function buildJestTargets(
       // nx-ignore-next-line
     })) as typeof import('jest-runtime');
 
-    const context = await Runtime.createContext(config.projectConfig, {
+    const jestContext = await Runtime.createContext(config.projectConfig, {
       maxWorkers: 1,
       watchman: false,
     });
 
-    const source = new jest.SearchSource(context);
+    const source = new jest.SearchSource(jestContext);
 
     const specs = await source.getTestPaths(config.globalConfig);
 
@@ -188,7 +188,9 @@ async function buildJestTargets(
       targetGroup.push(options.ciTargetName);
 
       for (const testPath of testPaths) {
-        const relativePath = normalize(relative(projectRoot, testPath));
+        const relativePath = normalize(
+          relative(join(context.workspaceRoot, projectRoot), testPath)
+        );
         const targetName = `${options.ciTargetName}--${relativePath}`;
         dependsOn.push(targetName);
         targets[targetName] = {
