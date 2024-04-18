@@ -29,11 +29,8 @@ export function findImports(projectFileMap: Record<string, Array<string>>): Arra
  * This wont be needed once the project graph is created in Rust
  */
 export function transferProjectGraph(projectGraph: ProjectGraph): ExternalObject<ProjectGraph>
-export interface ExternalNodeData {
-  version: string
-  hash?: string
-}
 export interface ExternalNode {
+  packageName?: string
   version: string
   hash?: string
 }
