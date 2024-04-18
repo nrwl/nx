@@ -289,7 +289,7 @@ devDependencies:
     version: 18.3.0-beta.3(@swc-node/register@1.8.0)(@swc/core@1.3.86)(@types/node@18.19.8)(js-yaml@4.1.0)(nx@18.3.0-beta.3)(verdaccio@5.15.4)
   '@nx/eslint-plugin':
     specifier: 18.3.0-beta.3
-    version: 18.3.0-beta.3(@swc-node/register@1.8.0)(@swc/core@1.3.86)(@types/node@18.19.8)(@typescript-eslint/parser@7.4.0)(eslint-config-prettier@9.0.0)(eslint@8.57.0)(nx@18.3.0-beta.3)(typescript@5.4.2)(verdaccio@5.15.4)
+    version: 18.3.0-beta.3(@swc-node/register@1.8.0)(@swc/core@1.3.86)(@types/node@18.19.8)(@typescript-eslint/parser@7.4.0)(eslint-config-prettier@9.1.0)(eslint@8.57.0)(nx@18.3.0-beta.3)(typescript@5.4.2)(verdaccio@5.15.4)
   '@nx/jest':
     specifier: 18.3.0-beta.3
     version: 18.3.0-beta.3(@swc-node/register@1.8.0)(@swc/core@1.3.86)(@types/node@18.19.8)(nx@18.3.0-beta.3)(ts-node@10.9.1)(typescript@5.4.2)(verdaccio@5.15.4)
@@ -449,9 +449,6 @@ devDependencies:
   '@types/npm-package-arg':
     specifier: 6.1.1
     version: 6.1.1
-  '@types/prettier':
-    specifier: ^2.6.2
-    version: 2.7.1
   '@types/react':
     specifier: 18.2.33
     version: 18.2.33
@@ -585,8 +582,8 @@ devDependencies:
     specifier: 14.0.4
     version: 14.0.4(eslint@8.57.0)(typescript@5.4.2)
   eslint-config-prettier:
-    specifier: 9.0.0
-    version: 9.0.0(eslint@8.57.0)
+    specifier: 9.1.0
+    version: 9.1.0(eslint@8.57.0)
   eslint-plugin-cypress:
     specifier: 2.14.0
     version: 2.14.0(eslint@8.57.0)
@@ -813,10 +810,10 @@ devDependencies:
     specifier: ~10.1.3
     version: 10.1.3(postcss@8.4.19)
   prettier:
-    specifier: ^2.6.2
+    specifier: ^2.7.1
     version: 2.7.1
   prettier-plugin-tailwindcss:
-    specifier: ^0.1.5
+    specifier: ^0.1.13
     version: 0.1.13(prettier@2.7.1)
   pretty-quick:
     specifier: ^3.1.0
@@ -7819,10 +7816,10 @@ packages:
       - verdaccio
     dev: true
 
-  /@nrwl/eslint-plugin-nx@18.3.0-beta.3(@swc-node/register@1.8.0)(@swc/core@1.3.86)(@types/node@18.19.8)(@typescript-eslint/parser@7.4.0)(eslint-config-prettier@9.0.0)(eslint@8.57.0)(nx@18.3.0-beta.3)(typescript@5.4.2)(verdaccio@5.15.4):
+  /@nrwl/eslint-plugin-nx@18.3.0-beta.3(@swc-node/register@1.8.0)(@swc/core@1.3.86)(@types/node@18.19.8)(@typescript-eslint/parser@7.4.0)(eslint-config-prettier@9.1.0)(eslint@8.57.0)(nx@18.3.0-beta.3)(typescript@5.4.2)(verdaccio@5.15.4):
     resolution: {integrity: sha512-M1XcAYnavTKZTC/kj1D4fYx9w2Q5Rbr6nyQ8vuZpukwWgxoDiNZ7CcHBdsUYO6EyFL3b331iCpQgcK+8tmSAhA==}
     dependencies:
-      '@nx/eslint-plugin': 18.3.0-beta.3(@swc-node/register@1.8.0)(@swc/core@1.3.86)(@types/node@18.19.8)(@typescript-eslint/parser@7.4.0)(eslint-config-prettier@9.0.0)(eslint@8.57.0)(nx@18.3.0-beta.3)(typescript@5.4.2)(verdaccio@5.15.4)
+      '@nx/eslint-plugin': 18.3.0-beta.3(@swc-node/register@1.8.0)(@swc/core@1.3.86)(@types/node@18.19.8)(@typescript-eslint/parser@7.4.0)(eslint-config-prettier@9.1.0)(eslint@8.57.0)(nx@18.3.0-beta.3)(typescript@5.4.2)(verdaccio@5.15.4)
     transitivePeerDependencies:
       - '@babel/traverse'
       - '@swc-node/register'
@@ -8477,7 +8474,7 @@ packages:
       - verdaccio
     dev: true
 
-  /@nx/eslint-plugin@18.3.0-beta.3(@swc-node/register@1.8.0)(@swc/core@1.3.86)(@types/node@18.19.8)(@typescript-eslint/parser@7.4.0)(eslint-config-prettier@9.0.0)(eslint@8.57.0)(nx@18.3.0-beta.3)(typescript@5.4.2)(verdaccio@5.15.4):
+  /@nx/eslint-plugin@18.3.0-beta.3(@swc-node/register@1.8.0)(@swc/core@1.3.86)(@types/node@18.19.8)(@typescript-eslint/parser@7.4.0)(eslint-config-prettier@9.1.0)(eslint@8.57.0)(nx@18.3.0-beta.3)(typescript@5.4.2)(verdaccio@5.15.4):
     resolution: {integrity: sha512-3LNegAAk+ENBwM7frkoC7WSZ/K1n05mCDZOc6jKdHhP68KNiS1NeHn872l66qDgyf1Lb/qFizlZACWoVWVtkOw==}
     peerDependencies:
       '@typescript-eslint/parser': ^6.13.2 || ^7.0.0
@@ -8486,7 +8483,7 @@ packages:
       eslint-config-prettier:
         optional: true
     dependencies:
-      '@nrwl/eslint-plugin-nx': 18.3.0-beta.3(@swc-node/register@1.8.0)(@swc/core@1.3.86)(@types/node@18.19.8)(@typescript-eslint/parser@7.4.0)(eslint-config-prettier@9.0.0)(eslint@8.57.0)(nx@18.3.0-beta.3)(typescript@5.4.2)(verdaccio@5.15.4)
+      '@nrwl/eslint-plugin-nx': 18.3.0-beta.3(@swc-node/register@1.8.0)(@swc/core@1.3.86)(@types/node@18.19.8)(@typescript-eslint/parser@7.4.0)(eslint-config-prettier@9.1.0)(eslint@8.57.0)(nx@18.3.0-beta.3)(typescript@5.4.2)(verdaccio@5.15.4)
       '@nx/devkit': 18.3.0-beta.3(nx@18.3.0-beta.3)
       '@nx/js': 18.3.0-beta.3(@swc-node/register@1.8.0)(@swc/core@1.3.86)(@types/node@18.19.8)(nx@18.3.0-beta.3)(typescript@5.4.2)(verdaccio@5.15.4)
       '@typescript-eslint/parser': 7.4.0(eslint@8.57.0)(typescript@5.4.2)
@@ -8494,7 +8491,7 @@ packages:
       '@typescript-eslint/utils': 7.4.0(eslint@8.57.0)(typescript@5.4.2)
       chalk: 4.1.2
       confusing-browser-globals: 1.0.11
-      eslint-config-prettier: 9.0.0(eslint@8.57.0)
+      eslint-config-prettier: 9.1.0(eslint@8.57.0)
       jsonc-eslint-parser: 2.1.0
       semver: 7.6.0
       tslib: 2.6.2
@@ -13165,6 +13162,7 @@ packages:
 
   /@types/prettier@2.7.1:
     resolution: {integrity: sha512-ri0UmynRRvZiiUJdiz38MmIblKK+oH30MztdBVR95dv/Ubw6neWSb8u1XpRb72L4qsZOhz+L+z9JD40SJmfWow==}
+    dev: false
 
   /@types/pretty-hrtime@1.0.1:
     resolution: {integrity: sha512-VjID5MJb1eGKthz2qUerWT8+R4b9N+CHvGCzg9fn4kWZgaF9AhdYikQio3R7wV8YY1NsQKPaCwKz1Yff+aHNUQ==}
@@ -18946,8 +18944,8 @@ packages:
       - supports-color
     dev: true
 
-  /eslint-config-prettier@9.0.0(eslint@8.57.0):
-    resolution: {integrity: sha512-IcJsTkJae2S35pRsRAwoCE+925rJJStOdkKnLVgtE+tEpqU0EVVM7OqrwxqgptKdX29NUwC82I5pXsGFIgSevw==}
+  /eslint-config-prettier@9.1.0(eslint@8.57.0):
+    resolution: {integrity: sha512-NSWl5BFQWEPi1j4TjVNItzYV7dZXZ+wP6I6ZhrBGpChQhZRUaElihE9uRRkcbRnNb76UMKDF3r+WTmNcGPKsqw==}
     hasBin: true
     peerDependencies:
       eslint: '>=7.0.0'
@@ -23371,6 +23369,8 @@ packages:
     peerDependenciesMeta:
       webpack:
         optional: true
+      webpack-sources:
+        optional: true
     dependencies:
       webpack: 5.88.0(@swc/core@1.3.86)(esbuild@0.19.5)
       webpack-sources: 3.2.3
@@ -23382,6 +23382,8 @@ packages:
       webpack: '*'
     peerDependenciesMeta:
       webpack:
+        optional: true
+      webpack-sources:
         optional: true
     dependencies:
       webpack: 5.90.3(@swc/core@1.3.86)(esbuild@0.20.1)
