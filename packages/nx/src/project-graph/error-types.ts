@@ -235,3 +235,12 @@ export class DaemonProjectGraphError extends Error {
     this.name = this.constructor.name;
   }
 }
+
+export class LoadPluginError extends Error {
+  constructor(public plugin: string, cause: Error) {
+    super(`Could not load plugin ${plugin}`, {
+      cause,
+    });
+    this.name = this.constructor.name;
+  }
+}
