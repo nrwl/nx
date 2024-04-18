@@ -146,6 +146,10 @@ You can also run Angular Schematics through the Nx CLI. So something like this w
 npx nx g @schematics/angular:component my-component
 ```
 
+{% callout type="check" title="Important" %}
+Support to run Angular Devkit builders and schematics is enabled by installing the [`@nx/angular` plugin](/nx-api/angular/documents/overview). This plugin is installed by default when creating a new Angular workspace with Nx or [migrate an existing Angular CLI workspace to Nx](#migrate-from-the-angular-cli).
+{% /callout %}
+
 ### Running Commands
 
 Commands are run in the very same way as with the Angular CLI. You just switch `ng` with `nx`. For example:
