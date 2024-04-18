@@ -71,13 +71,13 @@ export function Header(): JSX.Element {
                   <Popover.Button
                     className={cx(
                       open ? 'text-blue-500 dark:text-sky-500' : '',
-                      'group inline-flex items-center gap-2 px-3 py-2 font-medium leading-tight outline-0 dark:text-slate-200',
+                      'group inline-flex items-center gap-2 px-3 py-2 font-medium leading-tight outline-0 dark:text-slate-200'
                     )}
                   >
                     <span
                       className={cx(
                         open ? 'text-blue-500 dark:text-sky-500' : '',
-                        'transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500',
+                        'transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500'
                       )}
                     >
                       Features
@@ -88,7 +88,7 @@ export function Header(): JSX.Element {
                         open
                           ? 'rotate-180 transform text-blue-500 dark:text-sky-500'
                           : '',
-                        'h-3 w-3 transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500',
+                        'h-3 w-3 transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500'
                       )}
                     />
                   </Popover.Button>
@@ -115,13 +115,13 @@ export function Header(): JSX.Element {
                   <Popover.Button
                     className={cx(
                       open ? 'text-blue-500 dark:text-sky-500' : '',
-                      'group inline-flex items-center px-3 py-2 font-medium leading-tight outline-0 dark:text-slate-200',
+                      'group inline-flex items-center px-3 py-2 font-medium leading-tight outline-0 dark:text-slate-200'
                     )}
                   >
                     <span
                       className={cx(
                         open ? 'text-blue-500 dark:text-sky-500' : '',
-                        'transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500',
+                        'transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500'
                       )}
                     >
                       Solutions
@@ -131,7 +131,7 @@ export function Header(): JSX.Element {
                         open
                           ? 'rotate-180 transform text-blue-500 dark:text-sky-500'
                           : '',
-                        'ml-2 h-3 w-3 transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500',
+                        'ml-2 h-3 w-3 transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500'
                       )}
                       aria-hidden="true"
                     />
@@ -183,7 +183,7 @@ export function Header(): JSX.Element {
                   <Popover.Button
                     className={cx(
                       open ? 'text-blue-500 dark:text-sky-500' : '',
-                      'group inline-flex items-center px-3 py-2 font-medium leading-tight outline-0 dark:text-slate-200',
+                      'group inline-flex items-center px-3 py-2 font-medium leading-tight outline-0 dark:text-slate-200'
                     )}
                   >
                     <span className="transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500">
@@ -194,7 +194,7 @@ export function Header(): JSX.Element {
                         open
                           ? 'rotate-180 transform text-blue-500 dark:text-sky-500'
                           : '',
-                        'ml-2 h-3 w-3 transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500',
+                        'ml-2 h-3 w-3 transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500'
                       )}
                       aria-hidden="true"
                     />
@@ -370,7 +370,7 @@ export function Header(): JSX.Element {
                                     open
                                       ? 'text-blue-500 dark:text-sky-500'
                                       : 'tex-slate-800 dark:text-slate-200',
-                                    'flex w-full items-center justify-between py-4 text-left text-base font-medium focus:outline-none',
+                                    'flex w-full items-center justify-between py-4 text-left text-base font-medium focus:outline-none'
                                   )}
                                 >
                                   <span>Features</span>
@@ -380,7 +380,7 @@ export function Header(): JSX.Element {
                                       open
                                         ? 'rotate-180 transform text-blue-500 dark:text-sky-500'
                                         : 'tex-slate-800 dark:text-slate-200',
-                                      'h-3 w-3 transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500',
+                                      'h-3 w-3 transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500'
                                     )}
                                   />
                                 </Disclosure.Button>
@@ -407,7 +407,7 @@ export function Header(): JSX.Element {
                                     open
                                       ? 'text-blue-500 dark:text-sky-500'
                                       : 'tex-slate-800 dark:text-slate-200',
-                                    'flex w-full items-center justify-between py-4 text-left text-base font-medium focus:outline-none',
+                                    'flex w-full items-center justify-between py-4 text-left text-base font-medium focus:outline-none'
                                   )}
                                 >
                                   <span>Solutions</span>
@@ -417,7 +417,7 @@ export function Header(): JSX.Element {
                                       open
                                         ? 'rotate-180 transform text-blue-500 dark:text-sky-500'
                                         : 'tex-slate-800 dark:text-slate-200',
-                                      'h-3 w-3 transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500',
+                                      'h-3 w-3 transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500'
                                     )}
                                   />
                                 </Disclosure.Button>
@@ -464,7 +464,7 @@ export function Header(): JSX.Element {
                                     'flex w-full items-center justify-between py-4 text-left text-base font-medium focus:outline-none',
                                     open
                                       ? 'text-blue-500 dark:text-sky-500'
-                                      : 'tex-slate-800 dark:text-slate-200',
+                                      : 'tex-slate-800 dark:text-slate-200'
                                   )}
                                 >
                                   <span>Resources</span>
@@ -474,7 +474,7 @@ export function Header(): JSX.Element {
                                       open
                                         ? 'rotate-180 transform text-blue-500 dark:text-sky-500'
                                         : 'tex-slate-800 dark:text-slate-200',
-                                      'h-3 w-3 transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500',
+                                      'h-3 w-3 transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500'
                                     )}
                                   />
                                 </Disclosure.Button>

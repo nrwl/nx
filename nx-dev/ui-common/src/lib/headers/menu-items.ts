@@ -23,7 +23,7 @@ export interface MenuItem {
   isNew: boolean;
 }
 
-export const featuresItems = [
+export const featuresItems: MenuItem[] = [
   {
     name: 'Task Running',
     // description: 'Run one or many tasks in parallel.',
@@ -95,8 +95,8 @@ export const featuresItems = [
     isNew: true,
     isHighlight: true,
   },
-] satisfies MenuItem[];
-export const plans = [
+];
+export const plans: MenuItem[] = [
   {
     name: 'Nx Cloud',
     description:
@@ -115,8 +115,8 @@ export const plans = [
     isNew: false,
     isHighlight: false,
   },
-] satisfies MenuItem[];
-const useCaseItems = [
+];
+const useCaseItems: MenuItem[] = [
   {
     name: 'Get actionable feedback',
     description: 'Enhanced analysis & analytics of your workflows.',
@@ -149,8 +149,8 @@ const useCaseItems = [
     isNew: false,
     isHighlight: false,
   },
-] satisfies MenuItem[];
-export const learnItems = [
+];
+export const learnItems: MenuItem[] = [
   {
     name: 'Step by step tutorials',
     description: null,
@@ -183,8 +183,8 @@ export const learnItems = [
     isNew: false,
     isHighlight: false,
   },
-] satisfies MenuItem[];
-export const eventItems = [
+];
+export const eventItems: MenuItem[] = [
   {
     name: 'Nx Conf',
     description:
@@ -203,7 +203,7 @@ export const eventItems = [
     isNew: false,
     isHighlight: false,
   },
-] satisfies MenuItem[];
+];
 export const solutionsMenuItems = {
   'Helping you grow': plans,
   // 'Use cases': useCaseItems

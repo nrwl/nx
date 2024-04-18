@@ -21,7 +21,7 @@ export function MobileMenuItem({
       className={cx(
         'relative flex flex-1 items-center gap-2 rounded-lg py-3',
         item.isHighlight ? 'bg-slate-50 px-2 dark:bg-slate-800/80' : '',
-        className,
+        className
       )}
       {...rest}
     >

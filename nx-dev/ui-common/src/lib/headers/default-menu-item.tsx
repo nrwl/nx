@@ -23,7 +23,7 @@ export function DefaultMenuItem({
         item.isHighlight
           ? 'bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/80 dark:hover:bg-slate-700/60'
           : 'hover:bg-slate-50 dark:hover:bg-slate-800/60',
-        className,
+        className
       )}
       {...rest}
     >

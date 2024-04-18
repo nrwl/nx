@@ -8,7 +8,7 @@ import cx from 'classnames';
 import { ElementType, Fragment } from 'react';
 import { Theme, useTheme } from './theme.provider';
 
-export function ThemeSwitcher() {
+export function ThemeSwitcher(): JSX.Element {
   const [theme, setTheme] = useTheme();
   const themeMap = {
     dark: {
@@ -24,23 +24,24 @@ export function ThemeSwitcher() {
       icon: <ComputerDesktopIcon className="h-4 w-4" />,
     },
   };
-  const availableThemes = [
-    {
-      label: 'Light',
-      value: 'light',
-      icon: SunIcon,
-    },
-    {
-      label: 'Dark',
-      value: 'dark',
-      icon: MoonIcon,
-    },
-    {
-      label: 'System',
-      value: 'system',
-      icon: ComputerDesktopIcon,
-    },
-  ] satisfies { label: string; value: Theme; icon: ElementType }[];
+  const availableThemes: { label: string; value: Theme; icon: ElementType }[] =
+    [
+      {
+        label: 'Light',
+        value: 'light',
+        icon: SunIcon,
+      },
+      {
+        label: 'Dark',
+        value: 'dark',
+        icon: MoonIcon,
+      },
+      {
+        label: 'System',
+        value: 'system',
+        icon: ComputerDesktopIcon,
+      },
+    ];
 
   return (
     <div className="inline-block">
@@ -51,7 +52,7 @@ export function ThemeSwitcher() {
             type="button"
             className={cx(
               'inline-flex p-2 text-sm font-medium opacity-60 transition-opacity group-hover:opacity-100',
-              themeMap[theme].className,
+              themeMap[theme].className
             )}
           >
             {themeMap[theme].icon}
@@ -77,7 +78,7 @@ export function ThemeSwitcher() {
                           'bg-slate-100 dark:bg-slate-800/60': active,
                           'text-blue-500 dark:text-sky-500': active || selected,
                           'text-slate-700 dark:text-slate-400': !active,
-                        },
+                        }
                       )}
                     >
                       <t.icon aria-hidden="true" className="h-4 w-4 shrink-0" />
