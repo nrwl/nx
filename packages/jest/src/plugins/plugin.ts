@@ -16,6 +16,7 @@ import { existsSync, readdirSync, readFileSync } from 'fs';
 import { readConfig } from 'jest-config';
 import { projectGraphCacheDirectory } from 'nx/src/utils/cache-directory';
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
+import { clearRequireCache } from '@nx/devkit/src/utils/config-utils';
 import { getGlobPatternsFromPackageManagerWorkspaces } from 'nx/src/plugins/package-json-workspaces';
 import { combineGlobPatterns } from 'nx/src/utils/globs';
 import { minimatch } from 'minimatch';
@@ -109,12 +110,6 @@ export const createNodes: CreateNodes<JestPluginOptions> = [
   },
 ];
 
-const jestValidatePath = dirname(
-  require.resolve('jest-validate/package.json', {
-    paths: [dirname(require.resolve('jest-config'))],
-  })
-);
-
 async function buildJestTargets(
   configFilePath: string,
   projectRoot: string,
@@ -124,13 +119,7 @@ async function buildJestTargets(
   const absConfigFilePath = resolve(context.workspaceRoot, configFilePath);
 
   if (require.cache[absConfigFilePath]) {
-    for (const k of Object.keys(require.cache)) {
-      // Only delete the cache outside of jest-validate
-      // jest-validate has a Symbol which is important for jest config validation which breaks if the require cache is broken
-      if (relative(jestValidatePath, k).startsWith('../')) {
-        delete require.cache[k];
-      }
-    }
+    clearRequireCache();
   }
 
   const config = await readConfig(
