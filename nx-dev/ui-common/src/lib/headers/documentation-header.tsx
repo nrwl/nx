@@ -1,13 +1,25 @@
-import { type JSX } from 'react';
-import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
+import { Fragment, type JSX } from 'react';
+import {
+  ArrowUpRightIcon,
+  Bars3Icon,
+  ChevronDownIcon,
+  XMarkIcon,
+} from '@heroicons/react/24/outline';
 import { AlgoliaSearch } from '@nx/nx-dev/feature-search';
-import { ThemeSwitcher } from '@nx/nx-dev/ui-theme';
 import cx from 'classnames';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { ButtonLink } from './button';
-import { NxCloudIcon } from './nx-cloud-icon';
-import { AnnouncementBanner } from './announcement-banner';
+import { ButtonLink } from '../button';
+import { NxIcon } from '../nx-icon';
+import { Popover, Transition } from '@headlessui/react';
+import { TwoColumnsMenu } from './two-columns-menu';
+import {
+  featuresItems,
+  resourceMenuItems,
+  solutionsMenuItems,
+} from './menu-items';
+import { SectionsMenu } from './sections-menu';
+import { NxCloudIcon } from '../nx-cloud-icon';
 
 function Menu({ tabs }: { tabs: any[] }): JSX.Element {
   return (
@@ -197,20 +209,12 @@ export function DocumentationHeader({
             href="/"
             className="flex flex-grow items-center px-4 text-slate-900 dark:text-white lg:px-0"
           >
-            <svg
-              role="img"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-8 w-8"
-              fill="currentColor"
-            >
-              <title>Nx</title>
-              <path d="M11.987 14.138l-3.132 4.923-5.193-8.427-.012 8.822H0V4.544h3.691l5.247 8.833.005-3.998 3.044 4.759zm.601-5.761c.024-.048 0-3.784.008-3.833h-3.65c.002.059-.005 3.776-.003 3.833h3.645zm5.634 4.134a2.061 2.061 0 0 0-1.969 1.336 1.963 1.963 0 0 1 2.343-.739c.396.161.917.422 1.33.283a2.1 2.1 0 0 0-1.704-.88zm3.39 1.061c-.375-.13-.8-.277-1.109-.681-.06-.08-.116-.17-.176-.265a2.143 2.143 0 0 0-.533-.642c-.294-.216-.68-.322-1.18-.322a2.482 2.482 0 0 0-2.294 1.536 2.325 2.325 0 0 1 4.002.388.75.75 0 0 0 .836.334c.493-.105.46.36 1.203.518v-.133c-.003-.446-.246-.55-.75-.733zm2.024 1.266a.723.723 0 0 0 .347-.638c-.01-2.957-2.41-5.487-5.37-5.487a5.364 5.364 0 0 0-4.487 2.418c-.01-.026-1.522-2.39-1.538-2.418H8.943l3.463 5.423-3.379 5.32h3.54l1.54-2.366 1.568 2.366h3.541l-3.21-5.052a.7.7 0 0 1-.084-.32 2.69 2.69 0 0 1 2.69-2.691h.001c1.488 0 1.736.89 2.057 1.308.634.826 1.9.464 1.9 1.541a.707.707 0 0 0 1.066.596zm.35.133c-.173.372-.56.338-.755.639-.176.271.114.412.114.412s.337.156.538-.311c.104-.231.14-.488.103-.74z" />
-            </svg>
+            <span className="sr-only">Nx</span>
+            <NxIcon aria-hidden="true" className="h-8 w-8" />
           </Link>
           <Link
             href="/getting-started/intro"
-            className="hidden lg:flex ml-2 items-center px-4 text-slate-900 dark:text-white lg:px-0"
+            className="ml-2 hidden items-center px-4 text-slate-900 dark:text-white lg:flex lg:px-0"
           >
             <span className="text-xl font-bold uppercase tracking-wide">
               Docs
@@ -218,66 +222,193 @@ export function DocumentationHeader({
           </Link>
         </div>
         {/*SEARCH*/}
-        <div className="hidden w-full max-w-sm lg:inline">
+        <div className="hidden w-full max-w-[14rem] lg:inline">
           <AlgoliaSearch />
         </div>
         {/*NAVIGATION*/}
-        <div className="hidden flex-shrink-0 lg:flex">
+        <div className="hidden flex-shrink-0 xl:flex">
           <nav
             role="menu"
             className="items-justified hidden justify-center space-x-2 text-sm lg:flex"
           >
             <h2 className="sr-only">Main navigation</h2>
-            {/* <Link
+            {/*FEATURES*/}
+            <Popover className="relative">
+              {({ open }) => (
+                <>
+                  <Popover.Button
+                    className={cx(
+                      open ? 'text-blue-500 dark:text-sky-500' : '',
+                      'group inline-flex items-center gap-2 px-3 py-2 font-medium leading-tight outline-0 dark:text-slate-200'
+                    )}
+                  >
+                    <span
+                      className={cx(
+                        open ? 'text-blue-500 dark:text-sky-500' : '',
+                        'transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500'
+                      )}
+                    >
+                      Features
+                    </span>
+                    <ChevronDownIcon
+                      aria-hidden="true"
+                      className={cx(
+                        open
+                          ? 'rotate-180 transform text-blue-500 dark:text-sky-500'
+                          : '',
+                        'h-3 w-3 transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500'
+                      )}
+                    />
+                  </Popover.Button>
+                  <Transition
+                    as={Fragment}
+                    enter="transition ease-out duration-200"
+                    enterFrom="opacity-0 translate-y-1"
+                    enterTo="opacity-100 translate-y-0"
+                    leave="transition ease-in duration-150"
+                    leaveFrom="opacity-100 translate-y-0"
+                    leaveTo="opacity-0 translate-y-1"
+                  >
+                    <Popover.Panel className="absolute z-30 mt-3 w-max max-w-3xl xl:max-w-3xl">
+                      <TwoColumnsMenu items={featuresItems} />
+                    </Popover.Panel>
+                  </Transition>
+                </>
+              )}
+            </Popover>
+            {/*SOLUTIONS*/}
+            <Popover className="relative">
+              {({ open }) => (
+                <>
+                  <Popover.Button
+                    className={cx(
+                      open ? 'text-blue-500 dark:text-sky-500' : '',
+                      'group inline-flex items-center px-3 py-2 font-medium leading-tight outline-0 dark:text-slate-200'
+                    )}
+                  >
+                    <span
+                      className={cx(
+                        open ? 'text-blue-500 dark:text-sky-500' : '',
+                        'transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500'
+                      )}
+                    >
+                      Solutions
+                    </span>
+                    <ChevronDownIcon
+                      className={cx(
+                        open
+                          ? 'rotate-180 transform text-blue-500 dark:text-sky-500'
+                          : '',
+                        'ml-2 h-3 w-3 transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500'
+                      )}
+                      aria-hidden="true"
+                    />
+                  </Popover.Button>
+
+                  <Transition
+                    as={Fragment}
+                    enter="transition ease-out duration-200"
+                    enterFrom="opacity-0 translate-y-1"
+                    enterTo="opacity-100 translate-y-0"
+                    leave="transition ease-in duration-150"
+                    leaveFrom="opacity-100 translate-y-0"
+                    leaveTo="opacity-0 translate-y-1"
+                  >
+                    <Popover.Panel className="absolute z-30 mt-3 w-max max-w-2xl">
+                      <SectionsMenu sections={solutionsMenuItems} />
+                    </Popover.Panel>
+                  </Transition>
+                </>
+              )}
+            </Popover>
+            <Link
+              href="/getting-started/intro"
+              title="Documentation"
+              className="hidden px-3 py-2 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500 md:inline-flex"
+            >
+              Documentation
+            </Link>
+            <Link
               href="/blog"
               title="Blog"
               className="hidden px-3 py-2 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500 md:inline-flex"
             >
               Blog
-            </Link> */}
-            <Link
-              href="/community"
-              title="Nx Community: Join us!"
-              className="hidden px-3 py-2 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500 md:inline-flex"
-            >
-              Community
             </Link>
-            <Link
-              href="/launch-nx"
-              title="Launch Nx"
-              className="relative hidden px-3 py-2 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500 md:inline-flex"
+            <a
+              href="https://nx.app/pricing"
+              title="Nx Cloud"
+              target="_blank"
+              className="hidden gap-2 px-3 py-2 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500 md:inline-flex"
             >
-              {/*<span className="absolute top-0 right-0 -mt-1 -mr-1 flex h-3 w-3">*/}
-              {/*  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-500 opacity-75 dark:bg-sky-500" />*/}
-              {/*  <span className="relative inline-flex h-3 w-3 rounded-full bg-blue-500 dark:bg-sky-500" />*/}
-              {/*</span>*/}Launch Nx
-            </Link>
-            <Link
-              href="/contact"
-              title="Contact us"
-              className="hidden px-3 py-2 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500 md:inline-flex"
-            >
-              Contact us
-            </Link>
+              CI Pricing
+              <ArrowUpRightIcon className="h-2 w-2 align-super" />
+            </a>
+            {/*RESOURCES*/}
+            <Popover className="relative">
+              {({ open }) => (
+                <>
+                  <Popover.Button
+                    className={cx(
+                      open ? 'text-blue-500 dark:text-sky-500' : '',
+                      'group inline-flex items-center px-3 py-2 font-medium leading-tight outline-0 dark:text-slate-200'
+                    )}
+                  >
+                    <span className="transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500">
+                      Resources
+                    </span>
+                    <ChevronDownIcon
+                      className={cx(
+                        open
+                          ? 'rotate-180 transform text-blue-500 dark:text-sky-500'
+                          : '',
+                        'ml-2 h-3 w-3 transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500'
+                      )}
+                      aria-hidden="true"
+                    />
+                  </Popover.Button>
+
+                  <Transition
+                    as={Fragment}
+                    enter="transition ease-out duration-200"
+                    enterFrom="opacity-0 translate-y-1"
+                    enterTo="opacity-100 translate-y-0"
+                    leave="transition ease-in duration-150"
+                    leaveFrom="opacity-100 translate-y-0"
+                    leaveTo="opacity-0 translate-y-1"
+                  >
+                    <Popover.Panel className="absolute left-60 z-30 mt-3 w-max max-w-2xl -translate-x-1/2 transform lg:left-20">
+                      <SectionsMenu sections={resourceMenuItems} />
+                    </Popover.Panel>
+                  </Transition>
+                </>
+              )}
+            </Popover>
           </nav>
         </div>
         <div className="hidden flex-grow lg:flex">{/* SPACER */}</div>
-        <div className="hidden w-full xl:flex">
-          <AnnouncementBanner />
-        </div>
+        {/*<div className="hidden w-full xl:flex">*/}
+        {/*  <AnnouncementBanner />*/}
+        {/*</div>*/}
         <div className="hidden flex-shrink-0 lg:flex">
           <nav
             role="menu"
             className="items-justified hidden justify-center space-x-4 lg:flex"
           >
-            <ThemeSwitcher />
+            <Link
+              className="hidden cursor-pointer px-3 py-2 text-sm font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500 md:inline-flex"
+              title="Contact Us"
+              href="/contact"
+            >
+              Contact
+            </Link>
             <ButtonLink
               href="https://nx.app/?utm_source=nx.dev&utm_medium=header-menu"
               title="Go to app"
               variant="secondary"
               size="small"
             >
-              <NxCloudIcon className="w-4 h-4" aria-hidden="true" />
+              <NxCloudIcon className="h-4 w-4" aria-hidden="true" />
               <span>Go to app</span>
             </ButtonLink>
           </nav>

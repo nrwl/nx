@@ -159,6 +159,12 @@ Type: `boolean`
 
 Untracked changes
 
+### verbose
+
+Type: `boolean`
+
+Prints additional information about the commands (e.g., stack traces)
+
 ### version
 
 Type: `boolean`
