@@ -5,6 +5,7 @@ import {
 import { PluginConfiguration } from '../../../config/nx-json';
 import { CreateDependenciesContext, CreateNodesContext } from '../public-api';
 import { LoadedNxPlugin } from '../internal-api';
+import { Serializable } from 'child_process';
 
 export interface PluginWorkerLoadMessage {
   type: 'load';
@@ -26,7 +27,7 @@ export interface PluginWorkerLoadResult {
       }
     | {
         success: false;
-        error: string;
+        error: Error;
       };
 }
 
@@ -49,7 +50,7 @@ export interface PluginWorkerCreateNodesResult {
       }
     | {
         success: false;
-        error: string;
+        error: Error;
         tx: string;
       };
 }
@@ -72,7 +73,7 @@ export interface PluginCreateDependenciesResult {
       }
     | {
         success: false;
-        error: string;
+        error: Error;
         tx: string;
       };
 }
@@ -96,7 +97,7 @@ export interface PluginWorkerProcessProjectGraphResult {
       }
     | {
         success: false;
-        error: string;
+        error: Error;
         tx: string;
       };
 }
@@ -113,6 +114,38 @@ export type PluginWorkerResult =
   | PluginCreateDependenciesResult
   | PluginWorkerProcessProjectGraphResult;
 
+export function isPluginWorkerMessage(
+  message: Serializable
+): message is PluginWorkerMessage {
+  return (
+    typeof message === 'object' &&
+    'type' in message &&
+    typeof message.type === 'string' &&
+    [
+      'load',
+      'createNodes',
+      'createDependencies',
+      'processProjectGraph',
+    ].includes(message.type)
+  );
+}
+
+export function isPluginWorkerResult(
+  message: Serializable
+): message is PluginWorkerResult {
+  return (
+    typeof message === 'object' &&
+    'type' in message &&
+    typeof message.type === 'string' &&
+    [
+      'load-result',
+      'createNodesResult',
+      'createDependenciesResult',
+      'processProjectGraphResult',
+    ].includes(message.type)
+  );
+}
+
 type MaybePromise<T> = T | Promise<T>;
 
 // The handler can return a message to be sent back to the process from which the message originated
@@ -126,7 +159,7 @@ type MessageHandlerReturn<T extends PluginWorkerMessage | PluginWorkerResult> =
 export async function consumeMessage<
   T extends PluginWorkerMessage | PluginWorkerResult
 >(
-  raw: string | T,
+  raw: T,
   handlers: {
     [K in T['type']]: (
       // Extract restricts the type of payload to the payload of the message with the type K
@@ -134,20 +167,12 @@ export async function consumeMessage<
     ) => MessageHandlerReturn<T>;
   }
 ) {
-  const message: T = typeof raw === 'string' ? JSON.parse(raw) : raw;
+  const message: T = raw;
   const handler = handlers[message.type];
   if (handler) {
     const response = await handler(message.payload);
     if (response) {
-      process.send!(createMessage(response));
+      process.send!(response);
     }
-  } else {
-    throw new Error(`Unhandled message type: ${message.type}`);
   }
-}
-
-export function createMessage(
-  message: PluginWorkerMessage | PluginWorkerResult
-): string {
-  return JSON.stringify(message);
 }

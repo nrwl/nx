@@ -1,4 +1,4 @@
-import { ChildProcess, fork } from 'child_process';
+import { ChildProcess, Serializable, fork } from 'child_process';
 import path = require('path');
 
 import { PluginConfiguration } from '../../../config/nx-json';
@@ -7,7 +7,7 @@ import { PluginConfiguration } from '../../../config/nx-json';
 // import { logger } from '../../utils/logger';
 
 import { LoadedNxPlugin, nxPluginCache } from '../internal-api';
-import { PluginWorkerResult, consumeMessage, createMessage } from './messaging';
+import { consumeMessage, isPluginWorkerResult } from './messaging';
 
 const cleanupFunctions = new Set<() => void>();
 
@@ -45,7 +45,7 @@ export function loadRemoteNxPlugin(
       ...(isWorkerTypescript ? ['-r', 'ts-node/register'] : []),
     ],
   });
-  worker.send(createMessage({ type: 'load', payload: { plugin, root } }));
+  worker.send({ type: 'load', payload: { plugin, root } });
 
   // logger.verbose(`[plugin-worker] started worker: ${worker.pid}`);
 
@@ -103,14 +103,11 @@ function createWorkerHandler(
 ) {
   let pluginName: string;
 
-  return function (message: string) {
-    const parsed = JSON.parse(message);
-    // logger.verbose(
-    //   `[plugin-pool] received message: ${parsed.type} from ${
-    //     pluginName ?? worker.pid
-    //   }`
-    // );
-    consumeMessage<PluginWorkerResult>(parsed, {
+  return function (message: Serializable) {
+    if (!isPluginWorkerResult(message)) {
+      return;
+    }
+    return consumeMessage(message, {
       'load-result': (result) => {
         if (result.success) {
           const { name, createNodesPattern } = result;
@@ -124,12 +121,10 @@ function createWorkerHandler(
                   (configFiles, ctx) => {
                     const tx = pluginName + ':createNodes:' + performance.now();
                     return registerPendingPromise(tx, pending, () => {
-                      worker.send(
-                        createMessage({
-                          type: 'createNodes',
-                          payload: { configFiles, context: ctx, tx },
-                        })
-                      );
+                      worker.send({
+                        type: 'createNodes',
+                        payload: { configFiles, context: ctx, tx },
+                      });
                     });
                   },
                 ]
@@ -139,12 +134,10 @@ function createWorkerHandler(
                   const tx =
                     pluginName + ':createDependencies:' + performance.now();
                   return registerPendingPromise(tx, pending, () => {
-                    worker.send(
-                      createMessage({
-                        type: 'createDependencies',
-                        payload: { context: ctx, tx },
-                      })
-                    );
+                    worker.send({
+                      type: 'createDependencies',
+                      payload: { context: ctx, tx },
+                    });
                   });
                 }
               : undefined,
@@ -153,12 +146,10 @@ function createWorkerHandler(
                   const tx =
                     pluginName + ':processProjectGraph:' + performance.now();
                   return registerPendingPromise(tx, pending, () => {
-                    worker.send(
-                      createMessage({
-                        type: 'processProjectGraph',
-                        payload: { graph, ctx, tx },
-                      })
-                    );
+                    worker.send({
+                      type: 'processProjectGraph',
+                      payload: { graph, ctx, tx },
+                    });
                   });
                 }
               : undefined,
