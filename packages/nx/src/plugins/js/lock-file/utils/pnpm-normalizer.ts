@@ -6,7 +6,6 @@
 import type {
   Lockfile,
   ProjectSnapshot,
-  ProjectSnapshotV6,
   ResolvedDependencies,
 } from '@pnpm/lockfile-types';
 import { existsSync, readFileSync } from 'fs';
@@ -162,18 +161,6 @@ function normalizeLockfile(lockfile: Lockfile, isLockfileV6: boolean) {
   ) {
     delete lockfileToSave.patchedDependencies;
   }
-  if (lockfileToSave.neverBuiltDependencies != null) {
-    if (isEmpty(lockfileToSave.neverBuiltDependencies)) {
-      delete lockfileToSave.neverBuiltDependencies;
-    } else {
-      lockfileToSave.neverBuiltDependencies =
-        lockfileToSave.neverBuiltDependencies.sort();
-    }
-  }
-  if (lockfileToSave.onlyBuiltDependencies != null) {
-    lockfileToSave.onlyBuiltDependencies =
-      lockfileToSave.onlyBuiltDependencies.sort();
-  }
   if (!lockfileToSave.packageExtensionsChecksum) {
     delete lockfileToSave.packageExtensionsChecksum;
   }
@@ -227,7 +214,7 @@ function refToRelative(reference: string, pkgName: string): string | null {
 // https://github.com/pnpm/pnpm/blob/af3e5559d377870d4c3d303429b3ed1a4e64fedc/lockfile/lockfile-file/src/write.ts#L207
 function pruneTime(
   time: Record<string, string>,
-  importers: Record<string, ProjectSnapshot | ProjectSnapshotV6>
+  importers: Record<string, ProjectSnapshot>
 ): Record<string, string> {
   const rootDepPaths = new Set<string>();
   for (const importer of Object.values(importers)) {
@@ -381,10 +368,10 @@ function convertToInlineSpecifiersFormat(
     lockfileVersion: isV6Lockfile(lockfile)
       ? lockfile.lockfileVersion.toString()
       : lockfile.lockfileVersion
-          .toString()
-          .endsWith(INLINE_SPECIFIERS_FORMAT_LOCKFILE_VERSION_SUFFIX)
-      ? lockfile.lockfileVersion.toString()
-      : `${lockfile.lockfileVersion}${INLINE_SPECIFIERS_FORMAT_LOCKFILE_VERSION_SUFFIX}`,
+        .toString()
+        .endsWith(INLINE_SPECIFIERS_FORMAT_LOCKFILE_VERSION_SUFFIX)
+        ? lockfile.lockfileVersion.toString()
+        : `${lockfile.lockfileVersion}${INLINE_SPECIFIERS_FORMAT_LOCKFILE_VERSION_SUFFIX}`,
     importers: mapValues(
       importers,
       convertProjectSnapshotToInlineSpecifiersFormat
@@ -553,8 +540,8 @@ function convertProjectSnapshotToInlineSpecifiersFormat(
   const convertBlock = (block?: ResolvedDependencies) =>
     block != null
       ? convertResolvedDependenciesToInlineSpecifiersFormat(block, {
-          specifiers,
-        })
+        specifiers,
+      })
       : block;
   return {
     ...rest,
@@ -674,8 +661,8 @@ function dpParse(dependencyPath) {
   if (typeof dependencyPath !== 'string') {
     throw new TypeError(
       `Expected \`dependencyPath\` to be of type \`string\`, got \`${
-        // eslint-disable-next-line: strict-type-predicates
-        dependencyPath === null ? 'null' : typeof dependencyPath
+      // eslint-disable-next-line: strict-type-predicates
+      dependencyPath === null ? 'null' : typeof dependencyPath
       }\``
     );
   }

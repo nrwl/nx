@@ -351,7 +351,7 @@ function mapSnapshots(
     // the package manager doesn't check for types of dependencies
     // so we can safely set all to prod
     matchedKeys.forEach(([key, snapshot]) => {
-      snapshot.dev = false;
+      delete snapshot['dev'];
       result[key] = snapshot;
     });
   });
