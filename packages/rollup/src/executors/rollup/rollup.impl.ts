@@ -1,6 +1,5 @@
 import * as ts from 'typescript';
 import * as rollup from 'rollup';
-import * as peerDepsExternal from 'rollup-plugin-peer-deps-external';
 import { getBabelInputPlugin } from '@rollup/plugin-babel';
 import { dirname, join, parse, resolve } from 'path';
 import * as autoprefixer from 'autoprefixer';
@@ -161,7 +160,6 @@ export async function createRollupOptions(
   npmDeps: string[]
 ): Promise<rollup.RollupOptions | rollup.RollupOptions[]> {
   const useBabel = options.compiler === 'babel';
-  const useTsc = options.compiler === 'tsc';
   const useSwc = options.compiler === 'swc';
 
   const tsConfigPath = joinPathFragments(context.root, options.tsConfig);
@@ -213,9 +211,6 @@ export async function createRollupOptions(
     typeDefinitions({
       main: options.main,
       projectRoot: options.projectRoot,
-    }),
-    peerDepsExternal({
-      packageJsonPath: options.project,
     }),
     postcss({
       inject: true,
@@ -306,7 +301,10 @@ export async function createRollupOptions(
         ...finalConfig,
         ...config,
         plugins: [
-          ...(finalConfig.plugins?.length > 0 ? finalConfig.plugins : []),
+          ...(Array.isArray(finalConfig.plugins) &&
+          finalConfig.plugins?.length > 0
+            ? finalConfig.plugins
+            : []),
           ...(config.plugins?.length > 0 ? config.plugins : []),
         ],
       };

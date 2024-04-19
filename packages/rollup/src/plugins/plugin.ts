@@ -15,7 +15,10 @@ import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash
 import { getLockFileName } from '@nx/js';
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { type RollupOptions } from 'rollup';
-import * as loadConfigFile from 'rollup/dist/loadConfigFile';
+
+// This import causes an error due to the module resolution used. If we switch to bundler or nodenext in the future we remove this ignore.
+// @ts-ignore
+import { loadConfigFile } from 'rollup/loadConfigFile';
 
 const cachePath = join(projectGraphCacheDirectory, 'rollup.hash');
 const targetsCache = existsSync(cachePath) ? readTargetsCache() : {};

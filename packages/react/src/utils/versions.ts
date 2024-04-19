@@ -61,8 +61,8 @@ export const lessVersion = '3.12.2';
 export const sassVersion = '^1.55.0';
 
 // rollup plugins (if needed)
-export const rollupPluginUrlVersion = '^7.0.0';
-export const svgrRollupVersion = '^8.0.1';
+export const rollupPluginUrlVersion = '^8.0.2';
+export const svgrRollupVersion = '^8.1.0';
 
 export const swcPluginStyledJsxVersion = '^1.5.67';
 export const swcPluginEmotionVersion = '^2.5.67';
