@@ -185,7 +185,8 @@ function createGradleTargets(
       options: {
         cwd: projectRoot,
       },
-      cache: cacheableTaskType.has(task.type),
+      cache:
+        cacheableTaskType.has(task.type) && task.name !== 'buildDependents',
       inputs: inputsMap[task.name],
       outputs: outputs ? [outputs] : undefined,
       dependsOn: dependsOnMap[task.name],
