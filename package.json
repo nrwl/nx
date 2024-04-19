@@ -94,7 +94,6 @@
     "@rollup/plugin-node-resolve": "^15.2.3",
     "@rollup/plugin-url": "^8.0.2",
     "@schematics/angular": "~17.3.0",
-    "@side/jest-runtime": "^1.1.0",
     "@storybook/addon-essentials": "7.5.3",
     "@storybook/core-server": "7.5.3",
     "@storybook/react": "7.5.3",
