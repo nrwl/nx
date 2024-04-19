@@ -62,5 +62,12 @@ function plugin2({ someOption }) {
 module.exports = plugin2;
 ```
 
+Additionally, we need to inform TypeScript of the defined variables to prevent type-checking errors during the build. We can achieve this by creating or updating a type definition file included in the TypeScript build process (e.g. `src/types.d.ts`) with the following content:
+
+```ts {% fileName="apps/my-app/src/types.d.ts" %}
+declare const PLUGIN1_TEXT: number;
+declare const PLUGIN2_TEXT: string;
+```
+
 {% /tab %}
 {% /tabs %}

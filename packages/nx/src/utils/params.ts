@@ -5,7 +5,7 @@ import type {
   ProjectsConfigurations,
 } from '../config/workspace-json-project-json';
 import { output } from './output';
-import type { ProjectGraphError } from '../project-graph/project-graph';
+import type { ProjectGraphError } from '../project-graph/error-types';
 
 const LIST_CHOICE_DISPLAY_LIMIT = 10;
 
@@ -271,26 +271,39 @@ export function validateObject(
     }
   }
   if (schema.oneOf) {
-    for (const s of schema.oneOf) {
-      const errors: Error[] = [];
-      for (const s of schema.oneOf) {
-        try {
-          validateObject(opts, s, definitions);
-        } catch (e) {
-          errors.push(e);
-        }
+    const matches: Array<PropertyDescription> = [];
+    const errors: Array<Error> = [];
+    for (const propertyDescription of schema.oneOf) {
+      try {
+        validateObject(opts, propertyDescription, definitions);
+        matches.push(propertyDescription);
+      } catch (error) {
+        errors.push(error);
       }
-      if (errors.length === schema.oneOf.length) {
-        throw new Error(
-          `Options did not match schema. Please fix 1 of the following errors:\n${errors
-            .map((e) => ' - ' + e.message)
-            .join('\n')}`
-        );
-      }
-      if (errors.length < schema.oneOf.length - 1) {
-        // TODO: This error could be better.
-        throw new Error(`Options did not match schema.`);
-      }
+    }
+    // If the options matched none of the oneOf property descriptions
+    if (matches.length === 0) {
+      throw new Error(
+        `Options did not match schema: ${JSON.stringify(
+          opts,
+          null,
+          2
+        )}.\nPlease fix 1 of the following errors:\n${errors
+          .map((e) => ' - ' + e.message)
+          .join('\n')}`
+      );
+    }
+    // If the options matched none of the oneOf property descriptions
+    if (matches.length > 1) {
+      throw new Error(
+        `Options did not match schema: ${JSON.stringify(
+          opts,
+          null,
+          2
+        )}.\nShould only match one of \n${matches
+          .map((m) => ' - ' + JSON.stringify(m))
+          .join('\n')}`
+      );
     }
   }
 

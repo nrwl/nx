@@ -380,6 +380,8 @@ async function determineStack(
       case Preset.NextJsStandalone:
       case Preset.RemixStandalone:
       case Preset.RemixMonorepo:
+      case Preset.ReactNative:
+      case Preset.Expo:
         return 'react';
       case Preset.Vue:
       case Preset.VueStandalone:
@@ -397,8 +399,6 @@ async function determineStack(
       case Preset.TsStandalone:
         return 'none';
       case Preset.WebComponents:
-      case Preset.ReactNative:
-      case Preset.Expo:
       default:
         return 'unknown';
     }

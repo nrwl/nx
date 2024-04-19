@@ -13,12 +13,9 @@ import {
 } from './nx-deps-cache';
 import { applyImplicitDependencies } from './utils/implicit-project-dependencies';
 import { normalizeProjectNodes } from './utils/normalize-project-nodes';
-import {
-  CreateDependenciesContext,
-  isNxPluginV1,
-  isNxPluginV2,
-  loadNxPlugins,
-} from '../utils/nx-plugin';
+import { LoadedNxPlugin } from './plugins/internal-api';
+import { isNxPluginV1, isNxPluginV2 } from './plugins/utils';
+import { CreateDependenciesContext } from './plugins';
 import { getRootTsConfigPath } from '../plugins/js/utils/typescript';
 import {
   FileMap,
@@ -32,9 +29,8 @@ import { ProjectConfiguration } from '../config/workspace-json-project-json';
 import { readNxJson } from '../config/configuration';
 import { existsSync } from 'fs';
 import { PackageJson } from '../utils/package-json';
-import { getNxRequirePaths } from '../utils/installation-directory';
 import { output } from '../utils/output';
-import { ExternalObject, NxWorkspaceFilesExternals } from '../native';
+import { NxWorkspaceFilesExternals } from '../native';
 
 let storedFileMap: FileMap | null = null;
 let storedAllWorkspaceFiles: FileData[] | null = null;
@@ -69,7 +65,8 @@ export async function buildProjectGraphUsingProjectFileMap(
   fileMap: FileMap,
   allWorkspaceFiles: FileData[],
   rustReferences: NxWorkspaceFilesExternals,
-  fileMapCache: FileMapCache | null
+  fileMapCache: FileMapCache | null,
+  plugins: LoadedNxPlugin[]
 ): Promise<{
   projectGraph: ProjectGraph;
   projectFileMapCache: FileMapCache;
@@ -118,7 +115,8 @@ export async function buildProjectGraphUsingProjectFileMap(
     externalNodes,
     context,
     cachedFileData,
-    projectGraphVersion
+    projectGraphVersion,
+    plugins
   );
   const projectFileMapCache = createProjectFileMapCache(
     nxJson,
@@ -160,7 +158,8 @@ async function buildProjectGraphUsingContext(
   knownExternalNodes: Record<string, ProjectGraphExternalNode>,
   ctx: CreateDependenciesContext,
   cachedFileData: CachedFileData,
-  projectGraphVersion: string
+  projectGraphVersion: string,
+  plugins: LoadedNxPlugin[]
 ) {
   performance.mark('build project graph:start');
 
@@ -176,7 +175,11 @@ async function buildProjectGraphUsingContext(
   let updatedGraph;
   let error;
   try {
-    updatedGraph = await updateProjectGraphWithPlugins(ctx, initProjectGraph);
+    updatedGraph = await updateProjectGraphWithPlugins(
+      ctx,
+      initProjectGraph,
+      plugins
+    );
   } catch (e) {
     if (e instanceof CreateDependenciesError) {
       updatedGraph = e.partialProjectGraph;
@@ -248,17 +251,12 @@ function createContext(
 
 async function updateProjectGraphWithPlugins(
   context: CreateDependenciesContext,
-  initProjectGraph: ProjectGraph
+  initProjectGraph: ProjectGraph,
+  plugins: LoadedNxPlugin[]
 ) {
-  const plugins = await loadNxPlugins(
-    context.nxJsonConfiguration?.plugins,
-    getNxRequirePaths(),
-    context.workspaceRoot,
-    context.projects
-  );
   let graph = initProjectGraph;
   const errors: Array<ProcessDependenciesError | ProcessProjectGraphError> = [];
-  for (const { plugin } of plugins) {
+  for (const plugin of plugins) {
     try {
       if (
         isNxPluginV1(plugin) &&
@@ -309,14 +307,14 @@ async function updateProjectGraphWithPlugins(
   );
 
   const createDependencyPlugins = plugins.filter(
-    ({ plugin }) => isNxPluginV2(plugin) && plugin.createDependencies
+    (plugin) => isNxPluginV2(plugin) && plugin.createDependencies
   );
   await Promise.all(
-    createDependencyPlugins.map(async ({ plugin, options }) => {
+    createDependencyPlugins.map(async (plugin) => {
       performance.mark(`${plugin.name}:createDependencies - start`);
 
       try {
-        const dependencies = await plugin.createDependencies(options, {
+        const dependencies = await plugin.createDependencies({
           ...context,
         });
 

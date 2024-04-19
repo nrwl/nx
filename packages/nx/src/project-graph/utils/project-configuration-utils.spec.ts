@@ -1,16 +1,19 @@
-import { ONLY_MODIFIES_EXISTING_TARGET } from '../../plugins/target-defaults/target-defaults-plugin';
+import { ONLY_MODIFIES_EXISTING_TARGET } from '../../plugins/target-defaults/symbols';
 import {
   ProjectConfiguration,
   TargetConfiguration,
 } from '../../config/workspace-json-project-json';
 import {
   ConfigurationSourceMaps,
+  createProjectConfigurations,
   isCompatibleTarget,
   mergeProjectConfigurationIntoRootMap,
   mergeTargetConfigurations,
   readProjectConfigurationsFromRootMap,
   readTargetDefaultsForTarget,
 } from './project-configuration-utils';
+import { NxPluginV2 } from '../plugins';
+import { LoadedNxPlugin } from '../plugins/internal-api';
 
 describe('project-configuration-utils', () => {
   describe('target merging', () => {
@@ -442,6 +445,101 @@ describe('project-configuration-utils', () => {
           }
         );
         expect(result.cache).not.toBeDefined();
+      });
+    });
+
+    describe('metadata', () => {
+      it('should be added', () => {
+        const rootMap = new RootMapBuilder()
+          .addProject({
+            root: 'libs/lib-a',
+            name: 'lib-a',
+          })
+          .getRootMap();
+        const sourceMap: ConfigurationSourceMaps = {
+          'libs/lib-a': {},
+        };
+        mergeProjectConfigurationIntoRootMap(
+          rootMap,
+          {
+            root: 'libs/lib-a',
+            name: 'lib-a',
+            targets: {
+              build: {
+                metadata: {
+                  description: 'do stuff',
+                  technologies: ['tech'],
+                },
+              },
+            },
+          },
+          sourceMap,
+          ['dummy', 'dummy.ts']
+        );
+
+        expect(rootMap.get('libs/lib-a').targets.build.metadata).toEqual({
+          description: 'do stuff',
+          technologies: ['tech'],
+        });
+        expect(sourceMap['libs/lib-a']).toMatchObject({
+          'targets.build.metadata.description': ['dummy', 'dummy.ts'],
+          'targets.build.metadata.technologies': ['dummy', 'dummy.ts'],
+          'targets.build.metadata.technologies.0': ['dummy', 'dummy.ts'],
+        });
+      });
+
+      it('should be merged', () => {
+        const rootMap = new RootMapBuilder()
+          .addProject({
+            root: 'libs/lib-a',
+            name: 'lib-a',
+            targets: {
+              build: {
+                metadata: {
+                  description: 'do stuff',
+                  technologies: ['tech'],
+                },
+              },
+            },
+          })
+          .getRootMap();
+        const sourceMap: ConfigurationSourceMaps = {
+          'libs/lib-a': {
+            'targets.build.metadata.technologies': ['existing', 'existing.ts'],
+            'targets.build.metadata.technologies.0': [
+              'existing',
+              'existing.ts',
+            ],
+          },
+        };
+        mergeProjectConfigurationIntoRootMap(
+          rootMap,
+          {
+            root: 'libs/lib-a',
+            name: 'lib-a',
+            targets: {
+              build: {
+                metadata: {
+                  description: 'do cool stuff',
+                  technologies: ['tech2'],
+                },
+              },
+            },
+          },
+          sourceMap,
+          ['dummy', 'dummy.ts']
+        );
+
+        expect(rootMap.get('libs/lib-a').targets.build.metadata).toEqual({
+          description: 'do cool stuff',
+          technologies: ['tech', 'tech2'],
+        });
+        expect(sourceMap['libs/lib-a']).toMatchObject({
+          'targets.build.metadata.description': ['dummy', 'dummy.ts'],
+          'targets.build.metadata.technologies': ['existing', 'existing.ts'],
+          'targets.build.metadata.technologies.0': ['existing', 'existing.ts'],
+          'targets.build.metadata.technologies.1': ['dummy', 'dummy.ts'],
+        });
       });
     });
   });
@@ -1428,6 +1526,98 @@ describe('project-configuration-utils', () => {
           }
         )
       ).toBe(false);
+    });
+  });
+
+  describe('createProjectConfigurations', () => {
+    /* A fake plugin that sets `fake-lib` tag to libs. */
+    const fakeTagPlugin: NxPluginV2 = {
+      name: 'fake-tag-plugin',
+      createNodes: [
+        'libs/*/project.json',
+        (vitestConfigPath) => {
+          const [_libs, name, _config] = vitestConfigPath.split('/');
+          return {
+            projects: {
+              [name]: {
+                name: name,
+                root: `libs/${name}`,
+                tags: ['fake-lib'],
+              },
+            },
+          };
+        },
+      ],
+    };
+
+    it('should create nodes for files matching included patterns only', async () => {
+      const projectConfigurations = await createProjectConfigurations(
+        undefined,
+        {},
+        ['libs/a/project.json', 'libs/b/project.json'],
+        [
+          new LoadedNxPlugin(fakeTagPlugin, {
+            plugin: fakeTagPlugin.name,
+          }),
+        ]
+      );
+
+      expect(projectConfigurations.projects).toEqual({
+        a: {
+          name: 'a',
+          root: 'libs/a',
+          tags: ['fake-lib'],
+        },
+        b: {
+          name: 'b',
+          root: 'libs/b',
+          tags: ['fake-lib'],
+        },
+      });
+    });
+
+    it('should create nodes for files matching included patterns only', async () => {
+      const projectConfigurations = await createProjectConfigurations(
+        undefined,
+        {},
+        ['libs/a/project.json', 'libs/b/project.json'],
+        [
+          new LoadedNxPlugin(fakeTagPlugin, {
+            plugin: fakeTagPlugin.name,
+            include: ['libs/a/**'],
+          }),
+        ]
+      );
+
+      expect(projectConfigurations.projects).toEqual({
+        a: {
+          name: 'a',
+          root: 'libs/a',
+          tags: ['fake-lib'],
+        },
+      });
+    });
+
+    it('should not create nodes for files matching excluded patterns', async () => {
+      const projectConfigurations = await createProjectConfigurations(
+        undefined,
+        {},
+        ['libs/a/project.json', 'libs/b/project.json'],
+        [
+          new LoadedNxPlugin(fakeTagPlugin, {
+            plugin: fakeTagPlugin.name,
+            exclude: ['libs/b/**'],
+          }),
+        ]
+      );
+
+      expect(projectConfigurations.projects).toEqual({
+        a: {
+          name: 'a',
+          root: 'libs/a',
+          tags: ['fake-lib'],
+        },
+      });
     });
   });
 });

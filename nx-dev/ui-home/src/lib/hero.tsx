@@ -147,7 +147,7 @@ export function Hero(): JSX.Element {
             </ButtonLink>
 
             <ButtonLink
-              href="https://nx.app/enterprise?utm_source=nx.dev&utm_medium=hero"
+              href="/contact"
               variant="secondary"
               size="large"
               title="Contact us"

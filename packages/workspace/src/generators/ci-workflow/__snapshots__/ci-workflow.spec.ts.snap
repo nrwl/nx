@@ -85,6 +85,7 @@ pipelines:
       - step:
           name: 'Build and test affected apps on "main" branch changes'
           script:
+            - export NX_BRANCH=$BITBUCKET_BRANCH
             # Connect your workspace on my.nx.app and uncomment this to enable task distribution.
             # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "e2e-ci" targets have been requested
             # - npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="e2e-ci"
@@ -300,6 +301,7 @@ pipelines:
       - step:
           name: 'Build and test affected apps on "main" branch changes'
           script:
+            - export NX_BRANCH=$BITBUCKET_BRANCH
             # Connect your workspace on my.nx.app and uncomment this to enable task distribution.
             # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
             # - npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
@@ -547,6 +549,7 @@ pipelines:
       - step:
           name: 'Build and test affected apps on "main" branch changes'
           script:
+            - export NX_BRANCH=$BITBUCKET_BRANCH
             # Connect your workspace on my.nx.app and uncomment this to enable task distribution.
             # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
             # - pnpm exec nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
@@ -805,6 +808,7 @@ pipelines:
       - step:
           name: 'Build and test affected apps on "main" branch changes'
           script:
+            - export NX_BRANCH=$BITBUCKET_BRANCH
             # Connect your workspace on my.nx.app and uncomment this to enable task distribution.
             # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
             # - yarn nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"

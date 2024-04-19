@@ -43,7 +43,6 @@
     "fs-extra": "^11.1.0",
     "ignore": "^5.0.4",
     "semver": "^7.5.3",
-    "url-loader": "^4.1.1",
     "tslib": "^2.3.0",
     "webpack-merge": "^5.8.0",
     "@nx/js": "file:../js",

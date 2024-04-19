@@ -14,7 +14,6 @@ import {
   PackageManagerCommands,
 } from '../../../../utils/package-manager';
 import { PackageJson } from '../../../../utils/package-json';
-import { printFinalMessage } from '../utils';
 import { checkForCustomWebpackSetup } from './check-for-custom-webpack-setup';
 import { checkForUncommittedChanges } from './check-for-uncommitted-changes';
 import { cleanUpFiles } from './clean-up-files';
@@ -140,26 +139,6 @@ async function reorgnizeWorkspaceStructure(options: NormalizedOptions) {
 
   output.log({ title: '📦 Installing dependencies' });
   installDependencies(options);
-
-  const buildCommand = options.integrated
-    ? `npx nx build ${options.reactAppName}`
-    : 'npm run build';
-  printFinalMessage({
-    learnMoreLink: 'https://nx.dev/recipes/react/migration-cra',
-    bodyLines: [
-      `- Execute "${buildCommand}" twice to see the computation caching in action.`,
-    ],
-  });
-
-  output.note({
-    title: 'First time using Nx? Check out this interactive Nx tutorial.',
-    bodyLines: [
-      `https://nx.dev/react-tutorial/1-code-generation`,
-      ` `,
-      `Prefer watching videos? Check out this free Nx course on Egghead.io.`,
-      `https://egghead.io/playlists/scale-react-development-with-nx-4038`,
-    ],
-  });
 
   if (options.isVite) {
     const indexPath = options.isStandalone

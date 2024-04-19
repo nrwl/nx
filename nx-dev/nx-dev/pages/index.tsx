@@ -1,4 +1,4 @@
-import { Footer, Header } from '@nx/nx-dev/ui-common';
+import { AnnouncementBanner, Footer, Header } from '@nx/nx-dev/ui-common';
 import {
   ExtensibleAndIntegrated,
   GettingStarted,
@@ -39,7 +39,7 @@ export default function Index(): JSX.Element {
         }}
       />
       <h1 className="sr-only">Next generation monorepo tool</h1>
-      {/*<AnnouncementBanner />*/}
+      <AnnouncementBanner />
       <Header />
       <main id="main" role="main">
         <div className="w-full">

@@ -46,11 +46,6 @@
                   "file": "shared/tutorials/npm-workspaces"
                 },
                 {
-                  "name": "Integrated Monorepo",
-                  "id": "integrated-repo-tutorial",
-                  "file": "shared/npm-tutorial/integrated"
-                },
-                {
                   "name": "React Standalone",
                   "id": "react-standalone-tutorial",
                   "file": "shared/react-standalone-tutorial/react-standalone"
@@ -419,6 +414,25 @@
           "description": "In depth recipes for common tasks",
           "itemList": [
             {
+              "name": "Installation",
+              "id": "installation",
+              "description": "Installing Nx",
+              "itemList": [
+                {
+                  "name": "Install Nx in a Non-Javascript Repo",
+                  "id": "install-non-javascript",
+                  "tags": ["installation"],
+                  "file": "shared/recipes/installation/install-non-javascript"
+                },
+                {
+                  "name": "Update Your Global Nx Installation",
+                  "id": "update-global-installation",
+                  "tags": ["installation"],
+                  "file": "shared/recipes/installation/update-global-installation"
+                }
+              ]
+            },
+            {
               "name": "Tasks & Caching",
               "id": "running-tasks",
               "description": "A series of recipes that show how to run tasks efficiently with Nx",
@@ -451,6 +465,12 @@
                   "id": "run-commands-executor",
                   "tags": ["run-tasks"],
                   "file": "shared/recipes/running-tasks/running-custom-commands"
+                },
+                {
+                  "name": "Pass Args to Commands",
+                  "id": "pass-args-to-commands",
+                  "tags": ["run-tasks"],
+                  "file": "shared/recipes/running-tasks/pass-args-to-commands"
                 },
                 {
                   "name": "Run Tasks in Parallel",
@@ -516,16 +536,6 @@
               "description": "Advanced guides to adopt Nx in React.",
               "itemList": [
                 {
-                  "name": "Migrating from CRA",
-                  "id": "migration-cra",
-                  "file": "shared/migration/migration-cra"
-                },
-                {
-                  "name": "React 18 Migration",
-                  "id": "react-18",
-                  "file": "shared/guides/react-18"
-                },
-                {
                   "name": "React Native with Nx",
                   "id": "react-native",
                   "file": "shared/guides/react-native"
@@ -582,11 +592,6 @@
                       "name": "Migrating From Multiple Angular CLI Repos",
                       "id": "angular-multiple",
                       "file": "shared/migration/angular-multiple"
-                    },
-                    {
-                      "name": "Migrating Angular Application manually",
-                      "id": "angular-manual",
-                      "file": "shared/migration/angular-manual"
                     }
                   ]
                 },
@@ -895,25 +900,6 @@
               ]
             },
             {
-              "name": "Installation",
-              "id": "installation",
-              "description": "Installing Nx",
-              "itemList": [
-                {
-                  "name": "Install Nx in a Non-Javascript Repo",
-                  "id": "install-non-javascript",
-                  "tags": ["installation"],
-                  "file": "shared/recipes/installation/install-non-javascript"
-                },
-                {
-                  "name": "Update Your Global Nx Installation",
-                  "id": "update-global-installation",
-                  "tags": ["installation"],
-                  "file": "shared/recipes/installation/update-global-installation"
-                }
-              ]
-            },
-            {
               "name": "Tips and tricks",
               "id": "tips-n-tricks",
               "description": "Various tips and tricks for using Nx.",
@@ -1023,42 +1009,6 @@
               ]
             },
             {
-              "name": "Troubleshooting",
-              "id": "troubleshooting",
-              "description": "Learn how to troubleshoot common problems.",
-              "itemList": [
-                {
-                  "name": "Resolve Circular Dependencies",
-                  "id": "resolve-circular-dependencies",
-                  "tags": ["explore-graph"],
-                  "file": "shared/recipes/resolve-circular-dependencies"
-                },
-                {
-                  "name": "Troubleshooting Nx Install Issues",
-                  "id": "troubleshoot-nx-install-issues",
-                  "file": "shared/installation/troubleshoot-installation"
-                },
-                {
-                  "name": "Troubleshoot Cache Misses",
-                  "id": "troubleshoot-cache-misses",
-                  "tags": ["cache-task-results"],
-                  "file": "shared/recipes/troubleshoot-cache-misses"
-                },
-                {
-                  "name": "Unknown Local Cache Error",
-                  "id": "unknown-local-cache",
-                  "tags": [],
-                  "file": "shared/guides/unknown-local-cache"
-                },
-                {
-                  "name": "Profiling Build Performance",
-                  "id": "performance-profiling",
-                  "tags": ["environment-variables"],
-                  "file": "shared/guides/performance-profiling"
-                }
-              ]
-            },
-            {
               "name": "Nx Console",
               "id": "nx-console",
               "description": "Checkout all the recipes related to Nx Console.",
@@ -1086,24 +1036,6 @@
                   "id": "console-run-command",
                   "tags": ["editor-setup"],
                   "file": "shared/recipes/console-run-command"
-                },
-                {
-                  "name": "Add Dependency Command",
-                  "id": "console-add-dependency-command",
-                  "tags": ["editor-setup"],
-                  "file": "shared/recipes/console-add-dependency-command"
-                },
-                {
-                  "name": "Project Pane",
-                  "id": "console-project-pane",
-                  "tags": ["editor-setup"],
-                  "file": "shared/recipes/console-project-pane"
-                },
-                {
-                  "name": "Keyboard Shortcuts",
-                  "id": "console-shortcuts",
-                  "tags": ["editor-setup"],
-                  "file": "shared/recipes/console-shortcuts"
                 },
                 {
                   "name": "Troubleshooting",
@@ -1369,6 +1301,43 @@
             }
           ]
         },
+
+        {
+          "name": "Troubleshooting",
+          "id": "troubleshooting",
+          "description": "Learn how to troubleshoot common problems.",
+          "itemList": [
+            {
+              "name": "Resolve Circular Dependencies",
+              "id": "resolve-circular-dependencies",
+              "tags": ["explore-graph"],
+              "file": "shared/recipes/resolve-circular-dependencies"
+            },
+            {
+              "name": "Troubleshooting Nx Install Issues",
+              "id": "troubleshoot-nx-install-issues",
+              "file": "shared/installation/troubleshoot-installation"
+            },
+            {
+              "name": "Troubleshoot Cache Misses",
+              "id": "troubleshoot-cache-misses",
+              "tags": ["cache-task-results"],
+              "file": "shared/recipes/troubleshoot-cache-misses"
+            },
+            {
+              "name": "Unknown Local Cache Error",
+              "id": "unknown-local-cache",
+              "tags": [],
+              "file": "shared/guides/unknown-local-cache"
+            },
+            {
+              "name": "Profiling Build Performance",
+              "id": "performance-profiling",
+              "tags": ["environment-variables"],
+              "file": "shared/guides/performance-profiling"
+            }
+          ]
+        },
         {
           "name": "Deprecated",
           "id": "deprecated",
@@ -1378,11 +1347,6 @@
               "name": "workspace.json",
               "id": "workspace-json",
               "file": "shared/deprecated/workspace-json"
-            },
-            {
-              "name": "workspace-lint",
-              "id": "workspace-lint",
-              "file": "shared/deprecated/workspace-lint"
             },
             {
               "name": "As Provided vs. Derived",
@@ -1398,11 +1362,6 @@
               "name": "Workspace Executors",
               "id": "workspace-executors",
               "file": "shared/deprecated/workspace-executors"
-            },
-            {
-              "name": "defaultCollection",
-              "id": "default-collection",
-              "file": "shared/deprecated/default-collection"
             },
             {
               "name": "runtimeCacheInputs",
@@ -1428,49 +1387,6 @@
               "name": "Angular Schematics and Builders",
               "id": "angular-schematics-builders",
               "file": "shared/deprecated/angular-schematics-builders"
-            },
-            {
-              "name": "Storybook deprecated docs",
-              "id": "storybook",
-              "description": "Deprecated @nx/storybook package documentation and guides.",
-              "itemList": [
-                {
-                  "id": "angular-storybook-targets",
-                  "name": "Angular: Information about the Storybook targets",
-                  "description": "This document explains the role of the storybook and build-storybook targets in Angular projects with a Storybook configuration, and specifically which executors are used for them.",
-                  "file": "shared/deprecated/storybook/angular-storybook-targets"
-                },
-                {
-                  "id": "angular-project-build-config",
-                  "name": "Angular - The projectBuildConfig",
-                  "description": "This document explains the role of the projectBuildConfig in Angular projects with a Storybook configuration, and how the Storybook executors use it.",
-                  "file": "shared/deprecated/storybook/angular-project-build-config"
-                },
-                {
-                  "id": "migrate-webpack-final-angular",
-                  "name": "Angular: Storybook Migration to webpackFinal",
-                  "description": "This guide explains how migrate from older versions of Storybook which used a custom webpack.config.js to the new Storybook 6.3+ which uses the webpackFinal property in the main configuration.",
-                  "file": "shared/deprecated/storybook/migrate-webpack-final-angular"
-                },
-                {
-                  "id": "upgrade-storybook-v6-angular",
-                  "name": "Angular: Upgrading to Storybook 6",
-                  "description": "This guide explains how you can upgrade your Storybook from versions 5.3 and below to Storybook 6, for Angular projects.",
-                  "file": "shared/deprecated/storybook/storybook-v6-angular"
-                },
-                {
-                  "id": "migrate-webpack-final-react",
-                  "name": "React: Storybook Migration to webpackFinal and the Nx Addon",
-                  "description": "This guide explains how migrate from older versions of Storybook which used a custom webpack.config.js to the new Storybook 6.3+ which uses the webpackFinal property in the main configuration and the Nx React Addon.",
-                  "file": "shared/deprecated/storybook/migrate-webpack-final-react"
-                },
-                {
-                  "id": "upgrade-storybook-v6-react",
-                  "name": "React: Upgrading to Storybook 6",
-                  "description": "This guide explains how you can upgrade your Storybook from versions 5.3 and below to Storybook 6, for React projects.",
-                  "file": "shared/deprecated/storybook/storybook-v6-react"
-                }
-              ]
             },
             {
               "name": "v1 Nx Plugin API",
@@ -1974,18 +1890,6 @@
               ]
             },
             {
-              "name": "Troubleshooting",
-              "id": "troubleshooting",
-              "description": "Learn how to solve common issues in Nx Cloud.",
-              "itemList": [
-                {
-                  "name": "CI Execution Failed",
-                  "id": "ci-execution-failed",
-                  "file": "nx-cloud/troubleshooting/ci-execution-failed"
-                }
-              ]
-            },
-            {
               "name": "Other",
               "id": "other",
               "description": "Learn how to set up Nx Cloud for your workspace.",
@@ -2034,6 +1938,18 @@
               "name": "Release Notes",
               "id": "release-notes",
               "file": "nx-cloud/reference/release-notes"
+            }
+          ]
+        },
+        {
+          "name": "Troubleshooting",
+          "id": "troubleshooting",
+          "description": "Learn how to solve common issues in Nx Cloud.",
+          "itemList": [
+            {
+              "name": "CI Execution Failed",
+              "id": "ci-execution-failed",
+              "file": "nx-cloud/troubleshooting/ci-execution-failed"
             }
           ]
         }
@@ -2569,6 +2485,19 @@
               "name": "Overview",
               "path": "/nx-api/expo",
               "file": "shared/packages/expo/expo-plugin"
+            }
+          ]
+        },
+        {
+          "name": "gradle",
+          "id": "gradle",
+          "description": "Gradle package.",
+          "itemList": [
+            {
+              "id": "overview",
+              "name": "Overview",
+              "path": "/nx-api/gradle",
+              "file": "shared/packages/gradle/gradle-plugin"
             }
           ]
         }

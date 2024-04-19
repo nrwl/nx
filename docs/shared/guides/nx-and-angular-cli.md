@@ -146,6 +146,10 @@ You can also run Angular Schematics through the Nx CLI. So something like this w
 npx nx g @schematics/angular:component my-component
 ```
 
+{% callout type="check" title="Important" %}
+Support to run Angular Devkit builders and schematics is enabled by installing the [`@nx/angular` plugin](/nx-api/angular/documents/overview). This plugin is installed by default when creating a new Angular workspace with Nx or [migrate an existing Angular CLI workspace to Nx](#migrate-from-the-angular-cli).
+{% /callout %}
+
 ### Running Commands
 
 Commands are run in the very same way as with the Angular CLI. You just switch `ng` with `nx`. For example:
@@ -195,9 +199,11 @@ To reiterate: `nx migrate` runs the migrations written by the Angular team the s
 
 The [`nx add` command](/nx-api/nx/documents/add) is similar to the `ng add` command. It installs a given package specifier (e.g. `@nx/react`, `@nx/react@18.1.0`, `@nx/react@latest`) and it runs an `init` or `ng-add` generator if the installed package contains it.
 
-This command was introduced in **Nx 17.3.0**.
+```shell
+nx add [package]
+```
 
-If you're using a version of Nx older than **17.3.0**, we recommend running:
+The command was introduced in **Nx 17.3.0**. If you're using an older version, you can instead run:
 
 {% tabs %}
 {% tab label="npm" %}
@@ -389,10 +395,7 @@ npx nx@latest init
 
 or alternatively using the `--integrated` flag if you want to create an Nx monorepo right away. Learn more about all the details on the [dedicated docs page](/recipes/angular/migration/angular).
 
-There are also guides describing how to:
-
-- [manually migrate an Angular CLI app](/recipes/angular/migration/angular-manual) and
-- how to [consolidate multiple Angular CLI projects into a single Nx monorepo](/recipes/angular/migration/angular-multiple)
+There is also a guide describing how to [consolidate multiple Angular CLI projects into a single Nx monorepo](/recipes/angular/migration/angular-multiple).
 
 You can learn more about Angular & Nx by following our dedicated tutorials:
 

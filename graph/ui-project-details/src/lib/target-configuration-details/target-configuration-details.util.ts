@@ -11,7 +11,7 @@ export function selectSourceInfo(
       // When the key is a prefix of the filter, we can record it as the root source.
       // Use the most specific key for the root "." source value.
       // e.g. `targets.build` takes precedence over `targets`
-      if (!rootKey || key.startsWith(rootKey)) {
+      if (!rootKey || key?.startsWith(rootKey)) {
         rootKey = key;
         rootSource = value;
       }
