@@ -1,4 +1,5 @@
-import { nxE2EPreset } from '../../packages/cypress/plugins/cypress-preset';
+// eslint-disable-next-line @nx/enforce-module-boundaries
+import { nxE2EPreset } from '../../node_modules/@nx/cypress/plugins/cypress-preset';
 
 export const cypressBaseConfig = {
   ...nxE2EPreset(__dirname, {

@@ -348,7 +348,7 @@ export function calculateReverseDeps(
 }
 
 export function getCliPath() {
-  return require.resolve(`../../bin/run-executor.js`);
+  return require.resolve(`../../bin/run-executor`);
 }
 
 export function getPrintableCommandArgsForTask(task: Task) {
