@@ -82,7 +82,7 @@
     "@phenomnomnominal/tsquery": "~5.0.1",
     "@playwright/test": "^1.36.1",
     "@pmmmwh/react-refresh-webpack-plugin": "^0.5.7",
-    "@pnpm/lockfile-types": "^5.0.0",
+    "@pnpm/lockfile-types": "^6.0.0",
     "@reduxjs/toolkit": "1.9.0",
     "@remix-run/dev": "^2.8.1",
     "@remix-run/node": "^2.8.1",
@@ -367,7 +367,7 @@
       "documentation"
     ]
   },
-  "packageManager": "pnpm@8.15.7",
+  "packageManager": "pnpm@9.0.4",
   "pnpm": {
     "patchedDependencies": {
       "@nx/js@19.0.0-rc.1": "patches/@nx__js@19.0.0-rc.1.patch"

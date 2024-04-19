@@ -39,7 +39,7 @@ jobs:
 
       - name: Install PNPM
         run: |
-          npm install -g @pnpm/exe@8.14
+          npm install -g @pnpm/exe@9.0.4
 
       - name: Set node
         uses: actions/setup-node@v3
