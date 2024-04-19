@@ -5,7 +5,7 @@ import type {
   ProjectSnapshot,
 } from '@pnpm/lockfile-types';
 import {
-  isV6Lockfile,
+  usesParenthesisVersionSeparator,
   loadPnpmHoistedDepsDefinition,
   parseAndNormalizePnpmLockfile,
   stringifyToPnpmYaml,
@@ -49,9 +49,9 @@ export function getPnpmLockfileNodes(
   lockFileHash: string
 ) {
   const data = parsePnpmLockFile(lockFileContent, lockFileHash);
-  const isV6 = isV6Lockfile(data);
+  const useParenSeparator = usesParenthesisVersionSeparator(data);
 
-  return getNodes(data, keyMap, isV6);
+  return getNodes(data, keyMap, useParenSeparator);
 }
 
 export function getPnpmLockfileDependencies(
@@ -60,9 +60,9 @@ export function getPnpmLockfileDependencies(
   ctx: CreateDependenciesContext
 ) {
   const data = parsePnpmLockFile(lockFileContent, lockFileHash);
-  const isV6 = isV6Lockfile(data);
+  const useParenSeparator = usesParenthesisVersionSeparator(data);
 
-  return getDependencies(data, keyMap, isV6, ctx);
+  return getDependencies(data, keyMap, useParenSeparator, ctx);
 }
 
 function matchPropValue(
@@ -114,7 +114,7 @@ function isLockFileKey(depVersion: string) {
 function getNodes(
   data: Lockfile,
   keyMap: Map<string, ProjectGraphExternalNode>,
-  isV6: boolean
+  useParenSeparator: boolean
 ): Record<string, ProjectGraphExternalNode> {
   const nodes: Map<string, Map<string, ProjectGraphExternalNode>> = new Map();
 
@@ -205,7 +205,7 @@ function getNodes(
     if (!rawVersion) {
       continue;
     }
-    const version = parseBaseVersion(rawVersion, isV6);
+    const version = parseBaseVersion(rawVersion, useParenSeparator);
     if (!version) {
       continue;
     }
@@ -239,7 +239,11 @@ function getNodes(
     if (versionMap.size === 1) {
       hoistedNode = versionMap.values().next().value;
     } else {
-      const hoistedVersion = getHoistedVersion(hoistedDeps, packageName, isV6);
+      const hoistedVersion = getHoistedVersion(
+        hoistedDeps,
+        packageName,
+        useParenSeparator
+      );
       hoistedNode = versionMap.get(hoistedVersion);
     }
     if (hoistedNode) {
@@ -256,7 +260,7 @@ function getNodes(
 function getHoistedVersion(
   hoistedDependencies: Record<string, any>,
   packageName: string,
-  isV6: boolean
+  useParenSeparator: boolean
 ): string {
   let version = getHoistedPackageVersion(packageName);
 
@@ -265,7 +269,10 @@ function getHoistedVersion(
       k.startsWith(`/${packageName}/`)
     );
     if (key) {
-      version = parseBaseVersion(getVersion(key, packageName), isV6);
+      version = parseBaseVersion(
+        getVersion(key, packageName),
+        useParenSeparator
+      );
     } else {
       // pnpm might not hoist every package
       // similarly those packages will not be available to be used via import
@@ -279,7 +286,7 @@ function getHoistedVersion(
 function getDependencies(
   data: Lockfile,
   keyMap: Map<string, ProjectGraphExternalNode>,
-  isV6: boolean,
+  useParenSeparator: boolean,
   ctx: CreateDependenciesContext
 ): RawProjectGraphDependency[] {
   const results: RawProjectGraphDependency[] = [];
@@ -291,7 +298,7 @@ function getDependencies(
           Object.entries(section).forEach(([name, versionRange]) => {
             const version = parseBaseVersion(
               findVersion(versionRange, name),
-              isV6
+              useParenSeparator
             );
             const target =
               ctx.externalNodes[`npm:${name}@${version}`] ||
@@ -314,8 +321,13 @@ function getDependencies(
   return results;
 }
 
-function parseBaseVersion(rawVersion: string, isV6: boolean): string {
-  return isV6 ? rawVersion.split('(')[0] : rawVersion.split('_')[0];
+function parseBaseVersion(
+  rawVersion: string,
+  useParenSeparator: boolean
+): string {
+  return useParenSeparator
+    ? rawVersion.split('(')[0]
+    : rawVersion.split('_')[0];
 }
 
 export function stringifyPnpmLockfile(
