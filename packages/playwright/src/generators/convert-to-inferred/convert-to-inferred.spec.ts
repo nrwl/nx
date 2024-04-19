@@ -262,6 +262,122 @@ describe('Playwright - Convert Executors To Plugin', () => {
         (addedTestPlaywrightPlugin as ExpandedPluginConfiguration).include
       ).toEqual(['myapp-e2e/**/*']);
     });
+
+    it('should add project to existing plugins includes', async () => {
+      // ARRANGE
+      const existingProject = createTestProject(tree, {
+        appRoot: 'existing',
+        appName: 'existing',
+        e2eTargetName: 'e2e',
+      });
+      const project = createTestProject(tree, {
+        e2eTargetName: 'e2e',
+      });
+      const secondProject = createTestProject(tree, {
+        appRoot: 'second',
+        appName: 'second',
+        e2eTargetName: 'e2e',
+      });
+      const thirdProject = createTestProject(tree, {
+        appRoot: 'third',
+        appName: 'third',
+        e2eTargetName: 'e2e',
+      });
+      const nxJson = readNxJson(tree);
+      nxJson.plugins ??= [];
+      nxJson.plugins.push({
+        plugin: '@nx/playwright/plugin',
+        include: ['existing/**/*'],
+        options: {
+          targetName: 'e2e',
+          ciTargetName: 'e2e-ci',
+        },
+      });
+      updateNxJson(tree, nxJson);
+
+      // ACT
+      await convertToInferred(tree, { project: 'myapp-e2e', skipFormat: true });
+
+      // ASSERT
+      // project.json modifications
+      const updatedProject = readProjectConfiguration(tree, project.name);
+      const targetKeys = Object.keys(updatedProject.targets);
+      ['test'].forEach((key) => expect(targetKeys).not.toContain(key));
+
+      // nx.json modifications
+      const nxJsonPlugins = readNxJson(tree).plugins;
+      const addedTestPlaywrightPlugin = nxJsonPlugins.find((plugin) => {
+        if (
+          typeof plugin !== 'string' &&
+          plugin.plugin === '@nx/playwright/plugin' &&
+          plugin.include?.length === 2
+        ) {
+          return true;
+        }
+      });
+      expect(addedTestPlaywrightPlugin).toBeTruthy();
+      expect(
+        (addedTestPlaywrightPlugin as ExpandedPluginConfiguration).include
+      ).toEqual(['existing/**/*', 'myapp-e2e/**/*']);
+    });
+
+    it('should remove include when all projects are included', async () => {
+      // ARRANGE
+      const existingProject = createTestProject(tree, {
+        appRoot: 'existing',
+        appName: 'existing',
+        e2eTargetName: 'e2e',
+      });
+      const project = createTestProject(tree, {
+        e2eTargetName: 'e2e',
+      });
+      const secondProject = createTestProject(tree, {
+        appRoot: 'second',
+        appName: 'second',
+        e2eTargetName: 'e2e',
+      });
+      const thirdProject = createTestProject(tree, {
+        appRoot: 'third',
+        appName: 'third',
+        e2eTargetName: 'e2e',
+      });
+      const nxJson = readNxJson(tree);
+      nxJson.plugins ??= [];
+      nxJson.plugins.push({
+        plugin: '@nx/playwright/plugin',
+        include: ['existing/**/*', 'second/**/*', 'third/**/*'],
+        options: {
+          targetName: 'e2e',
+          ciTargetName: 'e2e-ci',
+        },
+      });
+      updateNxJson(tree, nxJson);
+
+      // ACT
+      await convertToInferred(tree, { project: 'myapp-e2e', skipFormat: true });
+
+      // ASSERT
+      // project.json modifications
+      const updatedProject = readProjectConfiguration(tree, project.name);
+      const targetKeys = Object.keys(updatedProject.targets);
+      ['test'].forEach((key) => expect(targetKeys).not.toContain(key));
+
+      // nx.json modifications
+      const nxJsonPlugins = readNxJson(tree).plugins;
+      const addedTestPlaywrightPlugin = nxJsonPlugins.find((plugin) => {
+        if (
+          typeof plugin !== 'string' &&
+          plugin.plugin === '@nx/playwright/plugin' &&
+          !plugin.include
+        ) {
+          return true;
+        }
+      });
+      expect(addedTestPlaywrightPlugin).toBeTruthy();
+      expect(
+        (addedTestPlaywrightPlugin as ExpandedPluginConfiguration).include
+      ).not.toBeDefined();
+    });
   });
 
   describe('--all', () => {

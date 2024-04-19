@@ -46,7 +46,9 @@ export async function addPlugin<PluginOptions>(
     nxJson.plugins ??= [];
     if (
       nxJson.plugins.some((p) =>
-        typeof p === 'string' ? p === pluginName : p.plugin === pluginName
+        typeof p === 'string'
+          ? p === pluginName
+          : p.plugin === pluginName && !p.include
       )
     ) {
       // Plugin has already been added
