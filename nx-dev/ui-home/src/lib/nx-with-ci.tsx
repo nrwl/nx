@@ -3,69 +3,67 @@ import { SectionHeading } from '@nx/nx-dev/ui-common';
 import {
   animate,
   motion,
-  MotionValue,
-  useAnimation,
   useMotionValue,
   useTransform,
+  Variants,
 } from 'framer-motion';
 import Link from 'next/link';
-import { useEffect, useRef } from 'react';
-import { useInView } from 'react-intersection-observer';
+import { useEffect } from 'react';
 
 function Counter({
-  from = 0,
-  to = 10,
-  round = 0,
-  progress,
+  value,
+  duration = 2,
 }: {
-  from: number;
-  to: number;
-  round: number;
-  progress: MotionValue<number>;
-}): JSX.Element {
-  const ref = useRef<any>();
-  const value = useTransform(progress, [0, 1000], [from, to], {
-    clamp: false,
-  });
-
-  const { format: formatNumber } = new Intl.NumberFormat('en-US', {
-    minimumFractionDigits: round,
-    maximumFractionDigits: round,
-  });
+  value: number;
+  duration?: number;
+}) {
+  const count = useMotionValue(0);
+  const rounded = useTransform(count, Math.round);
 
   useEffect(() => {
-    return value.onChange((v) => {
-      if (ref !== undefined && ref.current !== undefined)
-        ref.current.firstChild.data = formatNumber(
-          round === 0 ? Math.round(v) : Number(v.toFixed(round))
-        );
+    const animation = animate(count, value, {
+      type: 'tween',
+      ease: 'easeOut',
+      duration,
     });
-  }, [formatNumber, round, value]);
 
-  return <span ref={ref}>{formatNumber(value.get())}</span>;
+    return animation.stop;
+  }, []);
+
+  return <motion.span>{rounded}</motion.span>;
 }
 
 export function NxWithCi(): JSX.Element {
-  const progress: MotionValue<number> = useMotionValue(0);
-  const controls = useAnimation();
-  const [ref, inView] = useInView({ triggerOnce: true });
-
-  useEffect(() => {
-    if (!inView) return;
-    controls.start('visible');
-    animate(progress, 1000, {
-      type: 'spring',
-      damping: 100,
-    });
-  }, [controls, inView, progress]);
+  const ciBar: Variants = {
+    start: {
+      width: 0,
+    },
+    end: {
+      width: '100%',
+      transition: {
+        type: 'tween',
+        ease: 'easeOut',
+        duration: 1.2,
+      },
+    },
+  };
+  const nxBar: Variants = {
+    start: {
+      width: 0,
+    },
+    end: {
+      width: '50%',
+      transition: {
+        type: 'tween',
+        ease: 'easeOut',
+        duration: 1.2,
+      },
+    },
+  };
 
   return (
     <article id="nx-is-fast" className="relative pt-12 sm:pt-28">
-      <motion.div
-        ref={ref}
-        animate={controls}
-        className="mx-auto max-w-7xl px-4 pb-12 sm:grid sm:grid-cols-2 sm:gap-8 sm:px-6 lg:px-8 lg:pb-16"
-      >
+      <div className="mx-auto max-w-7xl px-4 pb-12 sm:grid sm:grid-cols-2 sm:gap-8 sm:px-6 lg:px-8 lg:pb-16">
         <div>
           <header>
             <SectionHeading as="h1" variant="title" id="nx-is-fast">
@@ -97,12 +95,13 @@ export function NxWithCi(): JSX.Element {
               </div>
               <div className="flex-grow py-1">
                 <motion.div
-                  initial={{ display: 'none', width: 0 }}
-                  variants={{ visible: { display: 'flex', width: '90%' } }}
-                  transition={{ type: 'tween', duration: 1 }}
+                  initial="start"
+                  whileInView="end"
+                  variants={ciBar}
+                  viewport={{ once: true }}
                   className="flex-grow items-center justify-end rounded-r-lg bg-slate-200 py-2 px-4 text-slate-600 dark:bg-slate-700 dark:text-slate-400"
                 >
-                  <Counter from={0} to={90} round={0} progress={progress} />
+                  <Counter value={90}></Counter>
                   <span className="ml-1">minutes</span>
                 </motion.div>
               </div>
@@ -113,13 +112,14 @@ export function NxWithCi(): JSX.Element {
               </div>
               <div className="flex flex-grow gap-4 py-1 font-medium">
                 <motion.div
-                  initial={{ display: 'none', width: 0 }}
-                  variants={{ visible: { display: 'flex', width: '10%' } }}
-                  transition={{ type: 'tween', duration: 1 }}
+                  initial="start"
+                  whileInView="end"
+                  variants={nxBar}
+                  viewport={{ once: true }}
                   className="rounded-r-lg bg-blue-500 dark:bg-sky-500"
                 />
                 <div className="flex items-center text-slate-700 dark:text-slate-400">
-                  <Counter from={0} to={10} round={0} progress={progress} />
+                  <Counter value={10}></Counter>
                   <span className="ml-1">minutes</span>
                 </div>
               </div>
@@ -137,7 +137,7 @@ export function NxWithCi(): JSX.Element {
             </div>
           </div>
         </div>
-      </motion.div>
+      </div>
       <div className="mx-auto max-w-7xl px-4 pb-8 sm:px-6 lg:px-8 lg:pb-16">
         <dl className="grid grid-cols-1 gap-x-8 gap-y-16 sm:grid-cols-3">
           <div className="relative">
