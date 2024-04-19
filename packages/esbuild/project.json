@@ -56,7 +56,6 @@
     },
     "add-extra-dependencies": {
       "command": "node ./scripts/add-dependency-to-build.js esbuild @nrwl/esbuild"
-    },
-    "lint": {}
+    }
   }
 }

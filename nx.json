@@ -102,18 +102,7 @@
       "cache": true
     },
     "lint": {
-      "dependsOn": ["build-native", "^build-native"],
-      "inputs": [
-        "default",
-        "{workspaceRoot}/.eslintrc.json",
-        "{workspaceRoot}/tools/eslint-rules/**/*"
-      ],
-      "executor": "@nx/eslint:lint",
-      "options": {
-        "lintFilePatterns": ["{projectRoot}"]
-      },
-      "outputs": ["{options.outputFile}"],
-      "cache": true
+      "dependsOn": ["build-native", "^build-native"]
     },
     "e2e": {
       "inputs": [
@@ -214,6 +203,12 @@
       "options": {
         "targetName": "pw-e2e",
         "ciTargetName": "e2e-ci"
+      }
+    },
+    {
+      "plugin": "@nx/eslint/plugin",
+      "options": {
+        "targetName": "lint"
       }
     }
   ],

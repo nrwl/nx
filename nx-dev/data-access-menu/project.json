@@ -4,7 +4,6 @@
   "sourceRoot": "nx-dev/data-access-menu/src",
   "projectType": "library",
   "targets": {
-    "lint": {},
     "test": {}
   },
   "tags": []

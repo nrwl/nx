@@ -87,7 +87,6 @@
         ],
         "parallel": false
       }
-    },
-    "lint": {}
+    }
   }
 }

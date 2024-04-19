@@ -63,7 +63,6 @@
     },
     "add-extra-dependencies": {
       "command": "node ./scripts/add-dependency-to-build.js storybook @nrwl/storybook"
-    },
-    "lint": {}
+    }
   }
 }

@@ -4,7 +4,6 @@
   "sourceRoot": "nx-dev/data-access-packages/src",
   "projectType": "library",
   "targets": {
-    "lint": {},
     "test": {}
   },
   "tags": ["scope:nx-dev", "type:data-access"]

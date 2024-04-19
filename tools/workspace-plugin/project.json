@@ -4,7 +4,6 @@
   "sourceRoot": "tools/workspace-plugin/src",
   "projectType": "library",
   "targets": {
-    "lint": {},
     "test": {
       "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
