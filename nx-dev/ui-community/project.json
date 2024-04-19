@@ -5,7 +5,6 @@
   "projectType": "library",
   "tags": ["scope:nx-dev", "type:ui"],
   "targets": {
-    "lint": {},
     "test": {}
   }
 }

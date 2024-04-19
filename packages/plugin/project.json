@@ -53,7 +53,6 @@
     },
     "add-extra-dependencies": {
       "command": "node ./scripts/add-dependency-to-build.js plugin @nrwl/nx-plugin"
-    },
-    "lint": {}
+    }
   }
 }

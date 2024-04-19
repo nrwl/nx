@@ -21,7 +21,6 @@
       },
       "outputs": ["{workspaceRoot}/dist/typedoc-theme"]
     },
-    "lint": {},
     "test": {}
   },
   "tags": []

@@ -58,7 +58,6 @@
         ],
         "parallel": false
       }
-    },
-    "lint": {}
+    }
   }
 }

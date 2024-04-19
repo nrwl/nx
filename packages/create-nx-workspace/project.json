@@ -62,8 +62,7 @@
         ],
         "parallel": false
       }
-    },
-    "lint": {}
+    }
   },
   "implicitDependencies": [
     "workspace",

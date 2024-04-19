@@ -53,8 +53,7 @@
     },
     "add-extra-dependencies": {
       "command": "node ./scripts/add-dependency-to-build.js eslint @nx/linter @nrwl/linter"
-    },
-    "lint": {}
+    }
   },
   "implicitDependencies": ["eslint-plugin"]
 }
