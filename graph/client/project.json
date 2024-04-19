@@ -248,7 +248,6 @@
       },
       "defaultConfiguration": "dev"
     },
-    "lint": {},
     "test": {},
     "storybook": {
       "executor": "@nx/storybook:storybook",
