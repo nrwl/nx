@@ -1,4 +1,4 @@
-import { dirname, extname, join } from 'path';
+import { dirname, extname, join, sep } from 'path';
 import { existsSync, readdirSync } from 'fs';
 import { requireNx } from '../../nx';
 import { pathToFileURL } from 'node:url';
@@ -54,15 +54,26 @@ export function getRootTsConfigFileName(): string | null {
   return null;
 }
 
+const packageInstallationDirectories = [
+  `${sep}node_modules${sep}`,
+  `${sep}.yarn${sep}`,
+];
+
+export function clearRequireCache(): void {
+  for (const k of Object.keys(require.cache)) {
+    if (!packageInstallationDirectories.some((dir) => k.includes(dir))) {
+      delete require.cache[k];
+    }
+  }
+}
+
 /**
  * Load the module after ensuring that the require cache is cleared.
  */
 async function load(path: string): Promise<any> {
   // Clear cache if the path is in the cache
   if (require.cache[path]) {
-    for (const k of Object.keys(require.cache)) {
-      delete require.cache[k];
-    }
+    clearRequireCache();
   }
 
   try {
