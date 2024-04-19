@@ -1,4 +1,4 @@
-import { exec } from 'child_process';
+import { ChildProcess, exec, Serializable } from 'child_process';
 import * as path from 'path';
 import * as yargsParser from 'yargs-parser';
 import { env as appendLocalEnv } from 'npm-run-path';
@@ -7,22 +7,13 @@ import * as chalk from 'chalk';
 import {
   getPseudoTerminal,
   PseudoTerminal,
+  PseudoTtyProcess,
 } from '../../tasks-runner/pseudo-terminal';
+import { signalToCode } from '../../utils/exit-codes';
 
 export const LARGE_BUFFER = 1024 * 1000000;
-
-const exitListeners: Set<() => void> = new Set();
-
-function processExitListener() {
-  for (const listener of exitListeners) {
-    listener();
-  }
-}
-
-process.on('exit', processExitListener);
-process.on('SIGTERM', processExitListener);
-process.on('SIGINT', processExitListener);
-process.on('SIGQUIT', processExitListener);
+let pseudoTerminal: PseudoTerminal | null;
+const childProcesses = new Set<ChildProcess | PseudoTtyProcess>();
 
 async function loadEnvVars(path?: string) {
   if (path) {
@@ -110,6 +101,7 @@ export default async function (
   success: boolean;
   terminalOutput: string;
 }> {
+  registerProcessListener();
   await loadEnvVars(options.envFile);
   const normalized = normalizeOptions(options);
 
@@ -262,9 +254,7 @@ async function runSerially(
   options: NormalizedRunCommandsOptions,
   context: ExecutorContext
 ): Promise<{ success: boolean; terminalOutput: string }> {
-  const pseudoTerminal = PseudoTerminal.isSupported()
-    ? getPseudoTerminal()
-    : null;
+  pseudoTerminal ??= PseudoTerminal.isSupported() ? getPseudoTerminal() : null;
   let terminalOutput = '';
   for (const c of options.commands) {
     const result: { success: boolean; terminalOutput: string } =
@@ -329,6 +319,8 @@ async function createProcess(
       quiet: !streamOutput,
     });
 
+    childProcesses.add(cp);
+
     return new Promise((res) => {
       cp.onOutput((output) => {
         terminalOutput += output;
@@ -372,13 +364,8 @@ function nodeProcess(
       env,
       cwd,
     });
-    /**
-     * Ensure the child process is killed when the parent exits
-     */
-    const childProcessKiller = (signal?: number | NodeJS.Signals) =>
-      childProcess.kill(signal);
 
-    exitListeners.add(childProcessKiller);
+    childProcesses.add(childProcess);
 
     childProcess.stdout.on('data', (data) => {
       const output = addColorAndPrefix(data, commandConfig);
@@ -409,7 +396,7 @@ function nodeProcess(
       res({ success: false, terminalOutput });
     });
     childProcess.on('exit', (code) => {
-      exitListeners.delete(childProcessKiller);
+      childProcesses.delete(childProcess);
       if (!readyWhen) {
         res({ success: code === 0, terminalOutput });
       }
@@ -570,4 +557,63 @@ function filterPropKeysFromUnParsedOptions(
     }
   }
   return parsedOptions;
+}
+
+let registered = false;
+
+function registerProcessListener() {
+  if (registered) {
+    return;
+  }
+
+  registered = true;
+  // When the nx process gets a message, it will be sent into the task's process
+  process.on('message', (message: Serializable) => {
+    // this.publisher.publish(message.toString());
+    if (pseudoTerminal) {
+      pseudoTerminal.sendMessageToChildren(message);
+    }
+
+    childProcesses.forEach((p) => {
+      if ('connected' in p && p.connected) {
+        p.send(message);
+      }
+    });
+  });
+
+  // Terminate any task processes on exit
+  process.on('exit', () => {
+    childProcesses.forEach((p) => {
+      if ('connected' in p ? p.connected : p.isAlive) {
+        p.kill();
+      }
+    });
+  });
+  process.on('SIGINT', () => {
+    childProcesses.forEach((p) => {
+      if ('connected' in p ? p.connected : p.isAlive) {
+        p.kill('SIGTERM');
+      }
+    });
+    // we exit here because we don't need to write anything to cache.
+    process.exit(signalToCode('SIGINT'));
+  });
+  process.on('SIGTERM', () => {
+    childProcesses.forEach((p) => {
+      if ('connected' in p ? p.connected : p.isAlive) {
+        p.kill('SIGTERM');
+      }
+    });
+    // no exit here because we expect child processes to terminate which
+    // will store results to the cache and will terminate this process
+  });
+  process.on('SIGHUP', () => {
+    childProcesses.forEach((p) => {
+      if ('connected' in p ? p.connected : p.isAlive) {
+        p.kill('SIGTERM');
+      }
+    });
+    // no exit here because we expect child processes to terminate which
+    // will store results to the cache and will terminate this process
+  });
 }
