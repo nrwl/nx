@@ -9,6 +9,7 @@ launch-templates:
       GIT_COMMITTER_NAME: Test
       SELECTED_PM: 'pnpm'
       NPM_CONFIG_PREFIX: '/home/workflows/.npm-global'
+      UNUSED: test
     init-steps:
       - name: Checkout
         uses: 'nrwl/nx-cloud-workflows/v3.6/workflow-steps/checkout/main.yaml'
