@@ -80,7 +80,6 @@ exports[`lib nested should create a local tsconfig.json 1`] = `
     "moduleResolution": "node",
     "resolveJsonModule": true,
     "strict": true,
-    "verbatimModuleSyntax": true,
   },
   "extends": "../../tsconfig.base.json",
   "files": [],
