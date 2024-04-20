@@ -762,7 +762,7 @@ export function generateFlatOverride(
   ) {
     if (override.parserOptions) {
       const { parserOptions, ...rest } = override;
-      return generateAst({ ...rest, languageSettings: { parserOptions } });
+      return generateAst({ ...rest, languageOptions: { parserOptions } });
     }
     return generateAst(override);
   }
@@ -775,7 +775,7 @@ export function generateFlatOverride(
   addTSObjectProperty(objectLiteralElements, 'excludedFiles', excludedFiles);
   addTSObjectProperty(objectLiteralElements, 'rules', rules);
   if (parserOptions) {
-    addTSObjectProperty(objectLiteralElements, 'languageSettings', {
+    addTSObjectProperty(objectLiteralElements, 'languageOptions', {
       parserOptions,
     });
   }
