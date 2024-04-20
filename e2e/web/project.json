@@ -3,8 +3,25 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "e2e/web",
   "projectType": "application",
+  "implicitDependencies": ["web"],
   "targets": {
-    "e2e": {}
-  },
-  "implicitDependencies": ["web"]
+    "e2e-ci--src/file-server-legacy.test.ts": {
+      "inputs": ["e2eInputs"]
+    },
+    "e2e-ci--src/file-server.test.ts": {
+      "inputs": ["e2eInputs"]
+    },
+    "e2e-ci--src/web-legacy.test.ts": {
+      "inputs": ["e2eInputs"]
+    },
+    "e2e-ci--src/web-vite.test.ts": {
+      "inputs": ["e2eInputs"]
+    },
+    "e2e-ci--src/web-webpack.test.ts": {
+      "inputs": ["e2eInputs"]
+    },
+    "e2e-ci--src/web.test.ts": {
+      "inputs": ["e2eInputs"]
+    }
+  }
 }

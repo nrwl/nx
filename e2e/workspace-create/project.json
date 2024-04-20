@@ -3,8 +3,16 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "e2e/workspace-create",
   "projectType": "application",
+  "implicitDependencies": ["create-nx-workspace"],
   "targets": {
-    "e2e": {}
-  },
-  "implicitDependencies": ["create-nx-workspace"]
+    "e2e-ci--src/create-nx-plugin.test.ts": {
+      "inputs": ["e2eInputs"]
+    },
+    "e2e-ci--src/create-nx-workspace-npm.test.ts": {
+      "inputs": ["e2eInputs"]
+    },
+    "e2e-ci--src/create-nx-workspace.test.ts": {
+      "inputs": ["e2eInputs"]
+    }
+  }
 }

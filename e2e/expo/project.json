@@ -4,7 +4,12 @@
   "sourceRoot": "e2e/expo",
   "projectType": "application",
   "targets": {
-    "e2e-macos": {}
+    "e2e-macos-ci--src/expo.test.ts": {
+      "inputs": ["e2eInputs"]
+    },
+    "e2e-macos-ci--src/expo-legacy.test.ts": {
+      "inputs": ["e2eInputs"]
+    }
   },
   "implicitDependencies": ["expo"]
 }
