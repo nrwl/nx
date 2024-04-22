@@ -135,6 +135,11 @@
         "$source": "unparsed"
       },
       "x-priority": "internal"
+    },
+    "forwardAllArgs": {
+      "type": "boolean",
+      "description": "Whether arguments should be forwarded when interpolation is not present.",
+      "default": true
     }
   },
   "additionalProperties": true,
