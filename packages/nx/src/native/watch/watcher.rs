@@ -118,10 +118,13 @@ impl Watcher {
             let events = action
                 .events
                 .par_iter()
-                .map(|ev| {
-                    let mut watch_event: WatchEventInternal = ev.into();
-                    watch_event.origin = Some(origin_path.clone());
-                    watch_event
+                .filter_map(|ev| {
+                    ev.try_into()
+                        .map(|mut watch_event: WatchEventInternal| {
+                            watch_event.origin = Some(origin_path.clone());
+                            watch_event
+                        })
+                        .ok()
                 })
                 .collect::<Vec<WatchEventInternal>>();
 
