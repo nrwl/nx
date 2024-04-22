@@ -268,7 +268,7 @@ The assemble task was run for the `app` project, but not for `list` or `utilitie
 
 Now that you have added Nx to your Gradle repository, you can take advantage of Nx's dependency graph visualisation and leverage the `affected` command to speed up your CI pipeline. You can also more easily add javascript projects along side your Gradle projects and use Nx to manage them all.
 
-## Setup CI for Your NPM Workspace
+## Setup CI for Your Gradle Repository
 
 This tutorial walked you through how Nx can improve the developer experience for local development, but Nx can also make a big difference in CI. Without adequate tooling, CI times tend to grow exponentially with the size of the codebase. Nx helps reduce wasted time in CI with the [`affected` command](/ci/features/affected) and Nx Replay's [remote caching](/ci/features/remote-cache). Nx also [efficiently parallelizes tasks across machines](/ci/concepts/parallelization-distribution) with Nx Agents.
 
