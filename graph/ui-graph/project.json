@@ -5,7 +5,6 @@
   "projectType": "library",
   "tags": [],
   "targets": {
-    "test": {},
     "storybook": {
       "executor": "@nx/storybook:storybook",
       "options": {

@@ -4,13 +4,6 @@
   "sourceRoot": "packages/vite",
   "projectType": "library",
   "targets": {
-    "test": {
-      "executor": "@nx/jest:jest",
-      "options": {
-        "jestConfig": "packages/vite/jest.config.ts"
-      },
-      "outputs": ["{workspaceRoot}/coverage/packages/vite"]
-    },
     "build-base": {
       "executor": "@nx/js:swc",
       "options": {

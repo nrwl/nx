@@ -93,13 +93,9 @@
     "test": {
       "dependsOn": ["test-native", "build-native", "^build-native"],
       "inputs": ["default", "^production", "{workspaceRoot}/jest.preset.js"],
-      "executor": "@nx/jest:jest",
       "options": {
-        "jestConfig": "{projectRoot}/jest.config.ts",
-        "passWithNoTests": true
-      },
-      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
-      "cache": true
+        "args": ["--passWithNoTests"]
+      }
     },
     "lint": {
       "dependsOn": ["build-native", "^build-native"]
@@ -209,6 +205,13 @@
       "plugin": "@nx/eslint/plugin",
       "options": {
         "targetName": "lint"
+      }
+    },
+    {
+      "plugin": "@nx/jest/plugin",
+      "include": ["packages/**/*", "graph/**/*", "nx-dev/**/*", "tools/**/*"],
+      "options": {
+        "targetName": "test"
       }
     }
   ],
