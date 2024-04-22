@@ -268,6 +268,57 @@ The assemble task was run for the `app` project, but not for `list` or `utilitie
 
 Now that you have added Nx to your Gradle repository, you can take advantage of Nx's dependency graph visualisation and leverage the `affected` command to speed up your CI pipeline. You can also more easily add javascript projects along side your Gradle projects and use Nx to manage them all.
 
+## Setup CI for Your NPM Workspace
+
+This tutorial walked you through how Nx can improve the developer experience for local development, but Nx can also make a big difference in CI. Without adequate tooling, CI times tend to grow exponentially with the size of the codebase. Nx helps reduce wasted time in CI with the [`affected` command](/ci/features/affected) and Nx Replay's [remote caching](/ci/features/remote-cache). Nx also [efficiently parallelizes tasks across machines](/ci/concepts/parallelization-distribution) with Nx Agents.
+
+To set up Nx Replay run:
+
+```shell
+nx connect
+```
+
+And click the link provided. You'll need to follow the instructions on the website to sign up for your account.
+
+Then you can set up your CI by creating the following file:
+
+```yml {% fileName=".github/workflows/ci.yml" %}
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout project sources
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@v2
+
+      - uses: nrwl/nx-set-shas@v3
+
+      # This line is needed for nx affected to work when CI is running on a PR
+      - run: git branch --track main origin/main
+        if: ${{ github.event_name == 'pull_request' }}
+
+      - name: Run build with Gradle Wrapper
+        run: ./nx affected -t test build --parallel=3
+```
+
+This is a default CI configuration that sets up Nx Cloud to [use nx affected](/ci/features/affected). This will only run the tasks that are needed for a particular PR.
+
+Check out one of these detailed tutorials on setting up CI with Nx:
+
+- [Circle CI with Nx](/ci/intro/tutorials/circle)
+- [GitHub Actions with Nx](/ci/intro/tutorials/github-actions)
+
 ## Next Steps
 
 Connect with the rest of the Nx community with these resources:
