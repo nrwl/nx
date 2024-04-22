@@ -9,8 +9,8 @@ import { PropertyInfoTooltip, Tooltip } from '@nx/graph/ui-tooltips';
 import { TooltipTriggerText } from '../target-configuration-details/tooltip-trigger-text';
 import { twMerge } from 'tailwind-merge';
 import { Pill } from '../pill';
-import { TargetGroups } from '../target-groups/target-groups';
 import { TargetConfigurationDetailsList } from '../target-configuration-details-list/target-configuration-details-list';
+import { TargetTechnologies } from '../target-technologies/target-technologies';
 
 export interface ProjectDetailsProps {
   project: ProjectGraphProjectNode;
@@ -40,6 +40,17 @@ export const ProjectDetails = ({
     projectData.projectType?.charAt(0)?.toUpperCase() +
       projectData.projectType?.slice(1);
 
+  const technologies = [
+    ...new Set(
+      [
+        ...(projectData.metadata?.technologies ?? []),
+        ...Object.values(projectData.targets ?? {})
+          .map((target) => target?.metadata?.technologies)
+          .flat(),
+      ].filter(Boolean)
+    ),
+  ] as string[];
+
   return (
     <>
       <header
@@ -48,13 +59,26 @@ export const ProjectDetails = ({
           isCompact ? 'mb-2' : 'mb-4'
         )}
       >
-        <h1
+        <div
           className={twMerge(
-            `flex items-center justify-between dark:text-slate-100`,
-            isCompact ? `gap-1 text-2xl` : `mb-4 gap-2 text-4xl`
+            `flex items-center justify-between`,
+            isCompact ? `gap-1` : `mb-4 gap-2`
           )}
         >
-          <span>{project.name}</span>
+          <div className="flex items-center gap-2">
+            <h1
+              className={twMerge(
+                `dark:text-slate-100`,
+                isCompact ? `text-2xl` : `text-4xl`
+              )}
+            >
+              {project.name}
+            </h1>
+            <TargetTechnologies
+              technologies={technologies}
+              showTooltip={true}
+            />
+          </div>
           <span>
             {onViewInProjectGraph ? (
               <button
@@ -68,7 +92,7 @@ export const ProjectDetails = ({
               </button>
             ) : null}{' '}
           </span>
-        </h1>
+        </div>
         <div className="py-2 ">
           {projectData.tags && projectData.tags.length ? (
             <p>

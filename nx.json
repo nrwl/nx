@@ -87,10 +87,7 @@
     },
     "build-native": {
       "inputs": ["native"],
-      "cache": true,
-      "metadata": {
-        "technologies": ["rust"]
-      }
+      "cache": true
     },
     "build-base": {
       "dependsOn": ["^build-base", "build-native"],
@@ -102,19 +99,13 @@
         "main": "{projectRoot}/index.ts"
       },
       "outputs": ["{options.outputPath}"],
-      "cache": true,
-      "metadata": {
-        "technologies": ["typescript"]
-      }
+      "cache": true
     },
     "test-native": {
       "inputs": ["native"],
       "executor": "@monodon/rust:test",
       "options": {},
-      "cache": true,
-      "metadata": {
-        "technologies": ["rust"]
-      }
+      "cache": true
     },
     "test": {
       "dependsOn": ["test-native", "build-native", "^build-native"],
@@ -151,10 +142,7 @@
         "{projectRoot}/.storybook/**/*",
         "{projectRoot}/tsconfig.storybook.json"
       ],
-      "cache": true,
-      "metadata": {
-        "technologies": ["storybook"]
-      }
+      "cache": true
     },
     "build-ng": {
       "cache": true

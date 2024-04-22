@@ -68,6 +68,7 @@ export const frameworkIcons: Record<
   reactMono: {
     image: (
       <svg
+        role="img"
         xmlns="http://www.w3.org/2000/svg"
         fill="none"
         className="h-full w-full"
@@ -83,6 +84,7 @@ export const frameworkIcons: Record<
   tsMono: {
     image: (
       <svg
+        role="img"
         xmlns="http://www.w3.org/2000/svg"
         fill="none"
         className="h-full w-full"
@@ -118,6 +120,7 @@ export const frameworkIcons: Record<
   jsMono: {
     image: (
       <svg
+        role="img"
         xmlns="http://www.w3.org/2000/svg"
         fill="none"
         className="h-full w-full"
@@ -144,6 +147,7 @@ export const frameworkIcons: Record<
   nodeMono: {
     image: (
       <svg
+        role="img"
         xmlns="http://www.w3.org/2000/svg"
         fill="none"
         className="h-full w-full"
@@ -159,6 +163,7 @@ export const frameworkIcons: Record<
   angularMono: {
     image: (
       <svg
+        role="img"
         xmlns="http://www.w3.org/2000/svg"
         fill="none"
         className="h-full w-full"
@@ -197,6 +202,7 @@ export const frameworkIcons: Record<
   typescript: {
     image: (
       <svg
+        role="img"
         xmlns="http://www.w3.org/2000/svg"
         fill="#3178C6"
         className="h-full w-full"
@@ -210,6 +216,7 @@ export const frameworkIcons: Record<
   youtube: {
     image: (
       <svg
+        role="img"
         xmlns="http://www.w3.org/2000/svg"
         fill="red"
         className="h-full w-full"
@@ -239,6 +246,7 @@ export const frameworkIcons: Record<
   nxcloud: {
     image: (
       <svg
+        role="img"
         xmlns="http://www.w3.org/2000/svg"
         stroke="currentColor"
         fill="transparent"
@@ -252,6 +260,7 @@ export const frameworkIcons: Record<
   nx: {
     image: (
       <svg
+        role="img"
         fill="currentColor"
         className="h-full w-full"
         viewBox="0 0 24 24"
@@ -264,8 +273,8 @@ export const frameworkIcons: Record<
   node: {
     image: (
       <svg
-        fill="#339933"
         role="img"
+        fill="#339933"
         className="h-full w-full"
         viewBox="0 0 24 24"
         xmlns="http://www.w3.org/2000/svg"
@@ -278,9 +287,8 @@ export const frameworkIcons: Record<
   nextjs: {
     image: (
       <svg
-        fill="#000000"
-        className="adaptive-icon h-full w-full"
         role="img"
+        className="adaptive-icon h-full w-full"
         viewBox="0 0 24 24"
         xmlns="http://www.w3.org/2000/svg"
       >
@@ -293,8 +301,8 @@ export const frameworkIcons: Record<
   nestjs: {
     image: (
       <svg
-        fill="#E0234E"
         role="img"
+        fill="#E0234E"
         className="h-full w-full"
         viewBox="0 0 24 24"
         xmlns="http://www.w3.org/2000/svg"
@@ -307,6 +315,7 @@ export const frameworkIcons: Record<
   rspack: {
     image: (
       <svg
+        role="img"
         xmlns="http://www.w3.org/2000/svg"
         className="h-full w-full"
         viewBox="20 0 350 339.32"
@@ -337,6 +346,7 @@ export const frameworkIcons: Record<
   jest: {
     image: (
       <svg
+        role="img"
         xmlns="http://www.w3.org/2000/svg"
         className="h-full w-full"
         viewBox="100 150 450 450"
@@ -390,7 +400,6 @@ export const frameworkIcons: Record<
   fastify: {
     image: (
       <svg
-        fill="#000000"
         role="img"
         className="adaptive-icon h-full w-full"
         viewBox="0 0 24 24"
@@ -405,9 +414,8 @@ export const frameworkIcons: Record<
   express: {
     image: (
       <svg
-        fill="#000000"
-        className="adaptive-icon h-full w-full"
         role="img"
+        className="adaptive-icon h-full w-full"
         viewBox="0 0 24 24"
         xmlns="http://www.w3.org/2000/svg"
       >
@@ -420,8 +428,8 @@ export const frameworkIcons: Record<
   storybook: {
     image: (
       <svg
-        fill="#FF4785"
         role="img"
+        fill="#FF4785"
         className="h-full w-full"
         viewBox="0 0 24 24"
         xmlns="http://www.w3.org/2000/svg"
@@ -434,11 +442,12 @@ export const frameworkIcons: Record<
   solid: {
     image: (
       <svg
-        xmlns="http://www.w3.org/2000/svg"
         role="img"
+        xmlns="http://www.w3.org/2000/svg"
         className="h-full w-full"
         viewBox="0 0 166 155.3"
       >
+        <title>Solid</title>
         <defs>
           <linearGradient
             id="a"
@@ -531,8 +540,8 @@ export const frameworkIcons: Record<
   lit: {
     image: (
       <svg
-        fill="#324FFF"
         role="img"
+        fill="#324FFF"
         className="h-full w-full"
         viewBox="0 0 24 24"
         xmlns="http://www.w3.org/2000/svg"
@@ -545,8 +554,8 @@ export const frameworkIcons: Record<
   vite: {
     image: (
       <svg
-        viewBox="0 0 410 404"
         role="img"
+        viewBox="0 0 410 404"
         className="h-full w-full"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
@@ -591,8 +600,8 @@ export const frameworkIcons: Record<
   trpc: {
     image: (
       <svg
-        fill="#2596BE"
         role="img"
+        fill="#2596BE"
         className="h-full w-full"
         viewBox="0 0 24 24"
         xmlns="http://www.w3.org/2000/svg"
@@ -605,6 +614,7 @@ export const frameworkIcons: Record<
   remix: {
     image: (
       <svg
+        role="img"
         xmlns="http://www.w3.org/2000/svg"
         fill="none"
         className="h-full w-full"
@@ -669,6 +679,7 @@ export const frameworkIcons: Record<
   dotnet: {
     image: (
       <svg
+        role="img"
         className="h-full w-full"
         viewBox="0 0 456 456"
         fill="none"
@@ -697,6 +708,7 @@ export const frameworkIcons: Record<
   qwik: {
     image: (
       <svg
+        role="img"
         xmlns="http://www.w3.org/2000/svg"
         fill="none"
         className="h-full w-full"
@@ -720,6 +732,7 @@ export const frameworkIcons: Record<
   gradle: {
     image: (
       <svg
+        role="img"
         id="Layer_1"
         data-name="Layer 1"
         xmlns="http://www.w3.org/2000/svg"
@@ -750,6 +763,7 @@ export const frameworkIcons: Record<
   go: {
     image: (
       <svg
+        role="img"
         className="h-full w-full"
         viewBox="0 0 32 32"
         fill="none"
@@ -779,6 +793,7 @@ export const frameworkIcons: Record<
   vue: {
     image: (
       <svg
+        role="img"
         className="h-full w-full"
         viewBox="0 -17.5 256 256"
         xmlns="http://www.w3.org/2000/svg"
@@ -802,6 +817,7 @@ export const frameworkIcons: Record<
   rust: {
     image: (
       <svg
+        role="img"
         version="1.1"
         viewBox="0 0 108 108"
         className="adaptive-icon h-full w-full"
@@ -889,6 +905,7 @@ export const frameworkIcons: Record<
   nuxt: {
     image: (
       <svg
+        role="img"
         className="h-full w-full"
         viewBox="0 0 900 900"
         fill="none"
@@ -904,6 +921,7 @@ export const frameworkIcons: Record<
   svelte: {
     image: (
       <svg
+        role="img"
         xmlns="http://www.w3.org/2000/svg"
         className="h-full w-full"
         viewBox="0 0 98.1 118"
@@ -931,6 +949,7 @@ export const frameworkIcons: Record<
   gatsby: {
     image: (
       <svg
+        role="img"
         className="h-full w-full"
         viewBox="0 0 32 32"
         xmlns="http://www.w3.org/2000/svg"
@@ -950,8 +969,8 @@ export const frameworkIcons: Record<
   astro: {
     image: (
       <svg
-        fill="#FF5D01"
         role="img"
+        fill="#FF5D01"
         className="h-full w-full"
         viewBox="0 0 24 24"
         xmlns="http://www.w3.org/2000/svg"
@@ -964,8 +983,8 @@ export const frameworkIcons: Record<
   playwright: {
     image: (
       <svg
-        fill="#2EAD33"
         role="img"
+        fill="#2EAD33"
         className="h-full w-full"
         viewBox="0 0 24 24"
         xmlns="http://www.w3.org/2000/svg"
@@ -978,8 +997,8 @@ export const frameworkIcons: Record<
   pnpm: {
     image: (
       <svg
-        fill="#F69220"
         role="img"
+        fill="#F69220"
         className="h-full w-full"
         viewBox="0 0 24 24"
         xmlns="http://www.w3.org/2000/svg"
@@ -992,6 +1011,7 @@ export const frameworkIcons: Record<
   monorepo: {
     image: (
       <svg
+        role="img"
         xmlns="http://www.w3.org/2000/svg"
         fill="currentColor"
         className="h-full w-full"
@@ -1014,6 +1034,7 @@ export const frameworkIcons: Record<
   javascript: {
     image: (
       <svg
+        role="img"
         xmlns="http://www.w3.org/2000/svg"
         className="h-full w-full"
         viewBox="0 0 630 630"
@@ -1027,6 +1048,7 @@ export const frameworkIcons: Record<
   cra: {
     image: (
       <svg
+        role="img"
         xmlns="http://www.w3.org/2000/svg"
         fill="#09D3AC"
         className="h-full w-full"
@@ -1039,6 +1061,7 @@ export const frameworkIcons: Record<
   angular: {
     image: (
       <svg
+        role="img"
         xmlns="http://www.w3.org/2000/svg"
         className="h-full w-full text-black dark:text-white"
         viewBox="0 0 24 24"
@@ -1074,6 +1097,7 @@ export const frameworkIcons: Record<
   cypress: {
     image: (
       <svg
+        role="img"
         xmlns="http://www.w3.org/2000/svg"
         className="adaptive-icon h-full w-full"
         viewBox="0 0 24 24"
@@ -1087,6 +1111,7 @@ export const frameworkIcons: Record<
   expo: {
     image: (
       <svg
+        role="img"
         xmlns="http://www.w3.org/2000/svg"
         className="adaptive-icon h-full w-full"
         fill="#000020"
@@ -1101,8 +1126,8 @@ export const frameworkIcons: Record<
   react: {
     image: (
       <svg
-        fill="#61DAFB"
         role="img"
+        fill="#61DAFB"
         className="h-full w-full"
         viewBox="0 0 24 24"
         xmlns="http://www.w3.org/2000/svg"
@@ -1115,6 +1140,7 @@ export const frameworkIcons: Record<
   azure: {
     image: (
       <svg
+        role="img"
         xmlns="http://www.w3.org/2000/svg"
         className="h-full w-full"
         viewBox="0 0 728.55 727.44"
@@ -1161,6 +1187,7 @@ export const frameworkIcons: Record<
   bitbucket: {
     image: (
       <svg
+        role="img"
         xmlns="http://www.w3.org/2000/svg"
         className="h-full w-full"
         width="500"
@@ -1199,6 +1226,7 @@ export const frameworkIcons: Record<
   circleci: {
     image: (
       <svg
+        role="img"
         className="adaptive-icon h-full w-full"
         xmlns="http://www.w3.org/2000/svg"
         viewBox="0 0 390 390"
@@ -1216,6 +1244,7 @@ export const frameworkIcons: Record<
   github: {
     image: (
       <svg
+        role="img"
         className="adaptive-icon h-full w-full"
         xmlns="http://www.w3.org/2000/svg"
         viewBox="-1 0 100 100"
@@ -1233,6 +1262,7 @@ export const frameworkIcons: Record<
   gitlab: {
     image: (
       <svg
+        role="img"
         xmlns="http://www.w3.org/2000/svg"
         className="h-full w-full"
         width="463.16"
@@ -1268,6 +1298,7 @@ export const frameworkIcons: Record<
   jenkins: {
     image: (
       <svg
+        role="img"
         xmlns="http://www.w3.org/2000/svg"
         className="h-full w-full"
         viewBox="-2 0 448 620"
@@ -1524,7 +1555,6 @@ export const frameworkIcons: Record<
   apollo: {
     image: (
       <svg
-        fill="#000000"
         role="img"
         className="adaptive-icon h-full w-full"
         height="256"
@@ -1540,7 +1570,6 @@ export const frameworkIcons: Record<
   prisma: {
     image: (
       <svg
-        fill="currentColor"
         role="img"
         className="adaptive-icon h-full w-full"
         viewBox="0.34 -0.059977834648891726 33.11668247084116 39.96397783464889"
@@ -1559,6 +1588,7 @@ export const frameworkIcons: Record<
   redis: {
     image: (
       <svg
+        role="img"
         width="32"
         className="h-full w-full"
         height="32"
@@ -1607,6 +1637,7 @@ export const frameworkIcons: Record<
   postgres: {
     image: (
       <svg
+        role="img"
         xmlns="http://www.w3.org/2000/svg"
         width="32"
         height="32"
@@ -1637,6 +1668,7 @@ export const frameworkIcons: Record<
   planetscale: {
     image: (
       <svg
+        role="img"
         xmlns="http://www.w3.org/2000/svg"
         width="24"
         height="24"
@@ -1658,10 +1690,10 @@ export const frameworkIcons: Record<
   mongodb: {
     image: (
       <svg
+        role="img"
         width="15"
         height="15"
         viewBox="0 0 15 15"
-        fill="none"
         className="adaptive-icon h-full w-full"
         xmlns="http://www.w3.org/2000/svg"
       >
@@ -1675,6 +1707,7 @@ export const frameworkIcons: Record<
   mfe: {
     image: (
       <svg
+        role="img"
         xmlns="http://www.w3.org/2000/svg"
         width="24"
         height="24"
@@ -1692,6 +1725,7 @@ export const frameworkIcons: Record<
   eslint: {
     image: (
       <svg
+        role="img"
         width="256"
         height="263"
         viewBox="0 0 256 263"

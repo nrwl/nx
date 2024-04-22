@@ -11,7 +11,7 @@ export function SourceInfo(props: {
   // Every other property within in the target has the form `target.${targetName}.${propertyName}
   const isTarget = props.propertyKey.split('.').length === 2;
   return (
-    <span className="shrink-1 inline-flex min-w-0 items-center gap-2">
+    <span className="inline-flex min-w-0 items-center gap-2">
       <Tooltip
         openAction="hover"
         strategy="fixed"

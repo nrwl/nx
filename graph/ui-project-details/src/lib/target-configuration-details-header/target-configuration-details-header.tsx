@@ -70,21 +70,21 @@ export const TargetConfigurationDetailsHeader = ({
       onClick={collapsable ? toggleCollapse : undefined}
     >
       <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2">
+        <div className="flex min-w-0 flex-1 items-center gap-2">
           {collapsable &&
             (isCollasped ? (
               <ChevronDownIcon className="h-3 w-3" />
             ) : (
               <ChevronUpIcon className="h-3 w-3" />
             ))}
+          <h3 className="font-medium dark:text-slate-300">{targetName}</h3>
           <TargetTechnologies
             technologies={targetConfiguration.metadata?.technologies}
             showTooltip={!isCollasped}
           />
-          <h3 className="font-medium dark:text-slate-300">{targetName}</h3>
           {isCollasped &&
             targetConfiguration?.executor !== '@nx/js:release-publish' && (
-              <p className="text-sm text-slate-400">
+              <p className="min-w-0 flex-1 truncate text-sm text-slate-400">
                 {singleCommand ? singleCommand : targetConfiguration.executor}
               </p>
             )}
@@ -148,16 +148,14 @@ export const TargetConfigurationDetailsHeader = ({
         </div>
       </div>
       {!isCollasped && (
-        <div className="mt-2 ml-5 flex items-center text-sm">
-          <span className="flex min-w-0 flex-1 items-center">
-            <SourceInfo
-              data={sourceMap[`targets.${targetName}`]}
-              propertyKey={`targets.${targetName}`}
-              color="text-gray-500 dark:text-slate-400"
-            />
-          </span>
+        <div className="mt-2 ml-5 text-sm">
+          <SourceInfo
+            data={sourceMap[`targets.${targetName}`]}
+            propertyKey={`targets.${targetName}`}
+            color="text-gray-500 dark:text-slate-400"
+          />
           {targetName !== 'nx-release-publish' && (
-            <div className="flex items-center gap-2">
+            <div className="text-right">
               <code className="ml-4 rounded bg-gray-100 px-2 py-1 font-mono text-gray-800 dark:bg-gray-700 dark:text-gray-300">
                 nx run {projectName}:{targetName}
               </code>

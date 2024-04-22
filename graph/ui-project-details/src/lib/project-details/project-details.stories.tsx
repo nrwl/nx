@@ -619,7 +619,7 @@ export const Gradle = {
   },
 };
 
-export const CartE2e = {
+export const Cart = {
   args: {
     project: {
       name: 'cart-e2e',

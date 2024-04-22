@@ -1,12 +1,13 @@
 /* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
 import type { ProjectGraphProjectNode } from '@nx/devkit';
+import { RefObject, createRef, useEffect, useRef, useState } from 'react';
+import { Transition } from '@headlessui/react';
+
 import { TargetConfigurationDetailsListItem } from '../target-configuration-details-list-item/target-configuration-details-list-item';
 import { TargetConfigurationGroupContainer } from '../target-configuration-details-group-container/target-configuration-details-group-container';
-import { RefObject, createRef, useEffect, useRef, useState } from 'react';
-import { TargetConfigurationDetailsHeader } from '../target-configuration-details-header/target-configuration-details-header';
-import { Transition } from '@headlessui/react';
-import { Pill } from '../pill';
+import { TargetConfigurationGroupHeader } from '../target-configuration-details-group-header/target-configuration-details-group-header';
+import { groupTargets } from '../utils/group-targets';
 
 export interface TargetConfigurationGroupListProps {
   project: ProjectGraphProjectNode;
@@ -18,7 +19,6 @@ export interface TargetConfigurationGroupListProps {
     targetName: string;
   }) => void;
   className?: string;
-  isCompact?: boolean;
 }
 
 export function TargetConfigurationGroupList({
@@ -27,22 +27,18 @@ export function TargetConfigurationGroupList({
   sourceMap,
   onRunTarget,
   onViewInTaskGraph,
-  className,
-  isCompact,
+  className = '',
 }: TargetConfigurationGroupListProps) {
   const [stickyHeaderContent, setStickHeaderContent] = useState('');
-  const [stickyTargetName, setStickyTargetName] = useState('');
+  const targetsGroup = groupTargets(project);
   const targetGroupRefs = useRef(
-    Object.keys(project.data.metadata?.targetGroups ?? {}).reduce(
-      (acc, targetGroupName) => {
-        acc[targetGroupName] = createRef();
-        return acc;
-      },
-      {} as Record<string, RefObject<any>>
-    )
+    Object.keys(targetsGroup.groups).reduce((acc, targetGroupName) => {
+      acc[targetGroupName] = createRef();
+      return acc;
+    }, {} as Record<string, RefObject<any>>)
   );
   const targetNameRefs = useRef(
-    Object.keys(project.data.targets ?? {}).reduce((acc, targetName) => {
+    targetsGroup.targets.reduce((acc, targetName) => {
       acc[targetName] = createRef();
       return acc;
     }, {} as Record<string, RefObject<any>>)
@@ -56,7 +52,7 @@ export function TargetConfigurationGroupList({
   }, []);
 
   const isSticky = () => {
-    const scrollTop = window.scrollY + 20;
+    const scrollTop = window.scrollY + 30; // 30px for the header
     const foundTargetGroup: string | undefined = Object.keys(
       targetGroupRefs.current
     ).find((targetGroupName) => {
@@ -77,28 +73,6 @@ export function TargetConfigurationGroupList({
     } else {
       setStickHeaderContent('');
     }
-
-    if (!targetNameRefs.current) return;
-
-    const foundTargetName: string | undefined = Object.keys(
-      targetNameRefs.current
-    ).find((targetName) => {
-      const target = targetNameRefs.current[targetName];
-      if (
-        target &&
-        target.current &&
-        scrollTop >= target.current.offsetTop &&
-        scrollTop < target.current.offsetTop + target.current.offsetHeight
-      ) {
-        return true;
-      }
-      return false;
-    });
-    if (foundTargetName) {
-      setStickyTargetName(foundTargetName);
-    } else {
-      setStickyTargetName('');
-    }
   };
 
   return (
@@ -112,70 +86,60 @@ export function TargetConfigurationGroupList({
         leaveFrom="opacity-100"
         leaveTo="opacity-0"
       >
-        <div className="duration-100000 fixed top-0 left-0 right-0 z-10 bg-slate-50 text-lg ease-in dark:bg-slate-800">
-          <div className="mx-auto max-w-6xl flex-grow px-8 pt-2">
-            <header className="border-b-2 pb-2">
-              {stickyHeaderContent}{' '}
-              <Pill
-                text={
-                  Object.values(
-                    project.data.metadata?.targetGroups?.[
-                      stickyHeaderContent
-                    ] ?? {}
-                  ).length.toString() + ' Targets'
-                }
-              />
-            </header>
+        <div className="fixed top-0 left-0 right-0 z-10 mb-8 border-b-2 border-slate-900/10 bg-slate-50 dark:border-slate-300/10 dark:bg-slate-800 dark:text-slate-300">
+          <div className="mx-auto max-w-6xl px-8 pt-2">
+            <TargetConfigurationGroupHeader
+              targetGroupName={stickyHeaderContent}
+              targetsNumber={
+                project.data.metadata?.targetGroups?.[stickyHeaderContent]
+                  ?.length ?? 0
+              }
+            />
           </div>
         </div>
       </Transition>
 
-      <ul className={className}>
-        {Object.entries(project.data.metadata?.targetGroups ?? {}).map(
-          ([targetGroupName, targets], index) => {
-            return (
-              <TargetConfigurationGroupContainer
-                ref={targetGroupRefs.current[targetGroupName]}
-                targetGroupName={targetGroupName}
-                targetsNumber={targets.length}
-              >
-                {targets.map((targetName) => (
-                  <TargetConfigurationDetailsListItem
-                    ref={targetNameRefs.current[targetName]}
-                    project={project}
-                    sourceMap={sourceMap}
-                    variant={variant}
-                    onRunTarget={onRunTarget}
-                    onViewInTaskGraph={onViewInTaskGraph}
-                    targetName={targetName}
-                    collapsable={true}
-                  />
-                ))}
-              </TargetConfigurationGroupContainer>
-            );
-          }
-        )}
-        {Object.keys(project.data.targets ?? {}).map((targetName) => {
-          if (
-            !project.data.metadata?.targetGroups ||
-            !Object.values(project.data.metadata?.targetGroups ?? {})
-              .flat()
-              .includes(targetName)
-          ) {
-            return (
-              <TargetConfigurationDetailsListItem
-                ref={targetNameRefs.current[targetName]}
-                project={project}
-                sourceMap={sourceMap}
-                variant={variant}
-                onRunTarget={onRunTarget}
-                onViewInTaskGraph={onViewInTaskGraph}
-                targetName={targetName}
-                collapsable={true}
-              />
-            );
-          }
-          return null;
+      {Object.entries(targetsGroup.groups).map(([targetGroupName, targets]) => {
+        return (
+          <TargetConfigurationGroupContainer
+            ref={targetGroupRefs.current[targetGroupName]}
+            targetGroupName={targetGroupName}
+            targetsNumber={targets.length}
+            key={targetGroupName}
+          >
+            <ul className={className}>
+              {targets.map((targetName) => (
+                <TargetConfigurationDetailsListItem
+                  ref={targetNameRefs.current[targetName]}
+                  project={project}
+                  sourceMap={sourceMap}
+                  variant={variant}
+                  onRunTarget={onRunTarget}
+                  onViewInTaskGraph={onViewInTaskGraph}
+                  targetName={targetName}
+                  collapsable={true}
+                  key={targetName}
+                />
+              ))}
+            </ul>
+          </TargetConfigurationGroupContainer>
+        );
+      })}
+      <ul className={`mt-8 p-2 ${className}`}>
+        {targetsGroup.targets.map((targetName) => {
+          return (
+            <TargetConfigurationDetailsListItem
+              ref={targetNameRefs.current[targetName]}
+              project={project}
+              sourceMap={sourceMap}
+              variant={variant}
+              onRunTarget={onRunTarget}
+              onViewInTaskGraph={onViewInTaskGraph}
+              targetName={targetName}
+              collapsable={true}
+              key={targetName}
+            />
+          );
         })}
       </ul>
     </>

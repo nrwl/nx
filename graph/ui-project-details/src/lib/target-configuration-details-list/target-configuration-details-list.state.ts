@@ -1,16 +1,9 @@
 /* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
-import {
-  AppDispatch,
-  RootState,
-  getSelectedTarget,
-  expandTargetActions,
-} from '@nx/graph/state';
+import { AppDispatch, RootState, expandTargetActions } from '@nx/graph/state';
 
 const mapStateToProps = (state: RootState) => {
-  return {
-    selectedTarget: getSelectedTarget(state),
-  };
+  return {};
 };
 
 const mapDispatchToProps = (dispatch: AppDispatch) => {

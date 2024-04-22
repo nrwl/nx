@@ -69,6 +69,11 @@ describe('@nx/gradle/plugin', () => {
     expect(nodes.projects.proj).toMatchInlineSnapshot(`
       {
         "metadata": {
+          "targetGroups": {
+            "Test": [
+              "test",
+            ],
+          },
           "technologies": [
             "gradle",
           ],
@@ -85,6 +90,11 @@ describe('@nx/gradle/plugin', () => {
               "default",
               "^production",
             ],
+            "metadata": {
+              "technologies": [
+                "gradle",
+              ],
+            },
             "options": {
               "cwd": "proj",
             },
@@ -124,6 +134,11 @@ describe('@nx/gradle/plugin', () => {
     expect(nodes.projects['nested/nested/proj']).toMatchInlineSnapshot(`
       {
         "metadata": {
+          "targetGroups": {
+            "Test": [
+              "test",
+            ],
+          },
           "technologies": [
             "gradle",
           ],
@@ -140,6 +155,11 @@ describe('@nx/gradle/plugin', () => {
               "default",
               "^production",
             ],
+            "metadata": {
+              "technologies": [
+                "gradle",
+              ],
+            },
             "options": {
               "cwd": "nested/nested/proj",
             },

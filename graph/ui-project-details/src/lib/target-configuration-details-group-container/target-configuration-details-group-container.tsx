@@ -1,5 +1,5 @@
 import { forwardRef } from 'react';
-import { Pill } from '../pill';
+import { TargetConfigurationGroupHeader } from '../target-configuration-details-group-header/target-configuration-details-group-header';
 
 export interface TargetConfigurationGroupContainerProps {
   targetGroupName: string;
@@ -14,22 +14,19 @@ export const TargetConfigurationGroupContainer = forwardRef(
       targetsNumber,
       children,
     }: TargetConfigurationGroupContainerProps,
-    ref: React.Ref<HTMLDivElement>
+    ref: React.Ref<any>
   ) => {
     return (
-      <div ref={ref} className="mb-4">
-        <header className="p-2 text-lg">
-          {targetGroupName}{' '}
-          <Pill
-            text={
-              targetsNumber.toString() +
-              (targetsNumber === 1 ? ' target' : ' targets')
-            }
+      <div>
+        <div ref={ref} className="mb-4 w-full">
+          <TargetConfigurationGroupHeader
+            targetGroupName={targetGroupName}
+            targetsNumber={targetsNumber}
           />
-        </header>
-        <section className="rounded-md border border-slate-200 p-2 dark:border-slate-700/60">
-          {children}
-        </section>
+          <div className="rounded-md border border-slate-200 p-2 dark:border-slate-700">
+            {children}
+          </div>
+        </div>
       </div>
     );
   }

@@ -216,7 +216,7 @@ export const TargetConfigurationDetailsComponent = ({
                     >
                       <TargetConfigurationProperty data={input}>
                         {sourceInfo && (
-                          <span className="shrink-1 inline flex min-w-0 pl-4 opacity-0 transition-opacity duration-150 ease-in-out group-hover/line:opacity-100">
+                          <span className="inline flex min-w-0 pl-4 opacity-0 transition-opacity duration-150 ease-in-out group-hover/line:opacity-100">
                             <SourceInfo
                               data={sourceInfo}
                               propertyKey={`targets.${targetName}.inputs`}
@@ -266,7 +266,7 @@ export const TargetConfigurationDetailsComponent = ({
                     >
                       <TargetConfigurationProperty data={output}>
                         {sourceInfo && (
-                          <span className="shrink-1 inline flex min-w-0 pl-4 opacity-0 transition-opacity duration-150 ease-in-out group-hover/line:opacity-100">
+                          <span className="inline flex min-w-0 pl-4 opacity-0 transition-opacity duration-150 ease-in-out group-hover/line:opacity-100">
                             <SourceInfo
                               data={sourceInfo}
                               propertyKey={`targets.${targetName}.outputs`}
@@ -316,7 +316,7 @@ export const TargetConfigurationDetailsComponent = ({
                       key={`dependsOn-${idx}`}
                     >
                       <TargetConfigurationProperty data={dep}>
-                        <span className="shrink-1 inline flex min-w-0 pl-4 opacity-0 transition-opacity duration-150 ease-in-out group-hover/line:opacity-100">
+                        <span className="inline flex min-w-0 pl-4 opacity-0 transition-opacity duration-150 ease-in-out group-hover/line:opacity-100">
                           {sourceInfo && (
                             <SourceInfo
                               data={sourceInfo}
@@ -354,7 +354,7 @@ export const TargetConfigurationDetailsComponent = ({
                         `targets.${targetName}.options.${propertyName}`
                       );
                       return sourceInfo ? (
-                        <span className="shrink-1 flex min-w-0 pl-4">
+                        <span className="flex min-w-0 pl-4">
                           <SourceInfo
                             data={sourceInfo}
                             propertyKey={`targets.${targetName}.options.${propertyName}`}
@@ -402,7 +402,7 @@ export const TargetConfigurationDetailsComponent = ({
                       `targets.${targetName}.configurations.${propertyName}`
                     );
                     return sourceInfo ? (
-                      <span className="shrink-1 flex min-w-0 pl-4">
+                      <span className="flex min-w-0 pl-4">
                         <SourceInfo
                           data={sourceInfo}
                           propertyKey={`targets.${targetName}.configurations.${propertyName}`}

@@ -19,10 +19,6 @@ const meta: Meta<typeof frameworkIcons> = {
 export default meta;
 type Story = StoryObj<typeof frameworkIcons>;
 
-export const Primary = {
-  args: {},
-};
-
-export const Heading: Story = {
+export const Primary: Story = {
   args: {},
 };

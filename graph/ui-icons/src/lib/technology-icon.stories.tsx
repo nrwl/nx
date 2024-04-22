@@ -14,3 +14,9 @@ export const Simple: Story = {
     technology: 'react',
   },
 };
+
+export const UnknownTechnology: Story = {
+  args: {
+    technology: 'unknown',
+  },
+};
