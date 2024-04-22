@@ -4,6 +4,7 @@ import {
   CreateNodesResult,
   TargetConfiguration,
 } from '@nx/devkit';
+import type { ESLint } from 'eslint';
 import { existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { combineGlobPatterns } from 'nx/src/utils/globs';
@@ -28,18 +29,30 @@ export const createNodes: CreateNodes<EslintPluginOptions> = [
     baseEsLintConfigFile,
     baseEsLintFlatConfigFile,
   ]),
-  (configFilePath, options, context) => {
+  async (configFilePath, options, context) => {
     options = normalizeOptions(options);
 
     // Ensure that configFiles are set, e2e-run fails due to them being undefined in CI (does not occur locally)
     // TODO(JamesHenry): Further troubleshoot this in CI
     (context as any).configFiles = context.configFiles ?? [];
 
-    // Create a Set of all the directories containing eslint configs
-    const eslintRoots = new Set(context.configFiles.map(dirname));
-    const configDir = dirname(configFilePath);
+    // Create a Set of all the directories containing eslint configs, and a
+    // list of globs to exclude from child projects
+    const eslintRoots = new Set();
+    const filesToExclude: string[] = [];
+    for (const configFile of context.configFiles) {
+      const configDir = dirname(configFile);
+      eslintRoots.add(configDir);
+      if (configDir !== '.' && configDir !== dirname(configFilePath)) {
+        filesToExclude.push(`${configDir}/**/*`);
+      }
+    }
 
-    const childProjectRoots = globWithWorkspaceContext(
+    const configDir = dirname(configFilePath);
+    const childProjectRoots = new Set<string>();
+    const ESLint = resolveESLintClass(isFlatConfig(configFilePath));
+
+    const projectFiles = globWithWorkspaceContext(
       context.workspaceRoot,
       [
         'project.json',
@@ -47,29 +60,41 @@ export const createNodes: CreateNodes<EslintPluginOptions> = [
         '**/project.json',
         '**/package.json',
       ].map((f) => join(configDir, f))
-    )
-      .map((f) => dirname(f))
-      .filter((childProjectRoot) => {
-        // Filter out projects under other eslint configs
-        let root = childProjectRoot;
-        // Traverse up from the childProjectRoot to either the workspaceRoot or the dir of this config file
-        while (root !== dirname(root) && root !== dirname(configFilePath)) {
-          if (eslintRoots.has(root)) {
-            return false;
-          }
-          root = dirname(root);
-        }
-        return true;
-      })
-      .filter((dir) => {
-        // Ignore project roots where the project does not contain any lintable files
-        const lintableFiles = globWithWorkspaceContext(context.workspaceRoot, [
-          join(dir, `**/*.{${options.extensions.join(',')}}`),
-        ]);
-        return lintableFiles.length > 0;
-      });
+    );
+    projectFileLoop: for (const projectFile of projectFiles) {
+      const childProjectRoot = dirname(projectFile);
+      if (childProjectRoots.has(childProjectRoot)) {
+        continue;
+      }
 
-    const uniqueChildProjectRoots = Array.from(new Set(childProjectRoots));
+      // Filter out projects under other eslint configs
+      let root = childProjectRoot;
+      // Traverse up from the childProjectRoot to either the workspaceRoot or the dir of this config file
+      while (root !== dirname(root) && root !== dirname(configFilePath)) {
+        if (eslintRoots.has(root)) {
+          continue projectFileLoop;
+        }
+        root = dirname(root);
+      }
+
+      // Ignore project roots where the project does not contain any lintable files
+      const lintableFiles = globWithWorkspaceContext(
+        context.workspaceRoot,
+        [join(childProjectRoot, `**/*.{${options.extensions.join(',')}}`)],
+        filesToExclude.length ? filesToExclude : undefined
+      );
+      const eslint = new ESLint({
+        cwd: join(context.workspaceRoot, childProjectRoot),
+      });
+      for (const file of lintableFiles) {
+        if (!(await eslint.isPathIgnored(join(context.workspaceRoot, file)))) {
+          childProjectRoots.add(childProjectRoot);
+          break;
+        }
+      }
+    }
+
+    const uniqueChildProjectRoots = Array.from(childProjectRoots);
 
     return {
       projects: getProjectsUsingESLintConfig(
@@ -118,6 +143,7 @@ function getProjectsUsingESLintConfig(
       targets: buildEslintTargets(
         eslintConfigs,
         projectRoot,
+        context.workspaceRoot,
         options,
         isStandaloneWorkspace
       ),
@@ -130,6 +156,7 @@ function getProjectsUsingESLintConfig(
 function buildEslintTargets(
   eslintConfigs: string[],
   projectRoot: string,
+  workspaceRoot: string,
   options: EslintPluginOptions,
   isStandaloneWorkspace = false
 ) {
@@ -153,6 +180,9 @@ function buildEslintTargets(
           isRootProject ? '{projectRoot}/' : '{projectRoot}'
         )
       ),
+      ...(existsSync(join(workspaceRoot, projectRoot, '.eslintignore'))
+        ? ['{projectRoot}/.eslintignore']
+        : []),
       '{workspaceRoot}/tools/eslint-rules/**/*',
       { externalDependencies: ['eslint'] },
     ],
@@ -180,4 +210,16 @@ function normalizeOptions(options: EslintPluginOptions): EslintPluginOptions {
   }
 
   return options;
+}
+
+function resolveESLintClass(useFlatConfig = false): typeof ESLint {
+  try {
+    if (!useFlatConfig) {
+      return require('eslint').ESLint;
+    }
+
+    return require('eslint/use-at-your-own-risk').FlatESLint;
+  } catch {
+    throw new Error('Unable to find ESLint. Ensure ESLint is installed.');
+  }
 }
