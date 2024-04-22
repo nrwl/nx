@@ -94,7 +94,7 @@
       "dependsOn": ["test-native", "build-native", "^build-native"],
       "inputs": ["default", "^production", "{workspaceRoot}/jest.preset.js"],
       "options": {
-        "args": ["--passWithNoTests"]
+        "args": ["--passWithNoTests", "--detectOpenHandles", "--forceExit"]
       }
     },
     "lint": {
@@ -177,19 +177,6 @@
     },
     "copy-docs": {
       "cache": true
-    },
-    "@nx/jest:jest": {
-      "cache": true,
-      "inputs": ["default", "^production", "{workspaceRoot}/jest.preset.js"],
-      "options": {
-        "passWithNoTests": true
-      },
-      "configurations": {
-        "ci": {
-          "ci": true,
-          "codeCoverage": true
-        }
-      }
     }
   },
   "plugins": [
