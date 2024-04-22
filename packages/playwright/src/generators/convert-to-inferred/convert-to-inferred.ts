@@ -6,7 +6,7 @@ import {
   type Tree,
 } from '@nx/devkit';
 import { createNodes, PlaywrightPluginOptions } from '../../plugins/plugin';
-import { ExecutorToPluginMigrator } from '@nx/devkit/src/generators/plugin-migrations/executor-to-plugin-migrator';
+import { migrateExecutorToPlugin } from '@nx/devkit/src/generators/plugin-migrations/executor-to-plugin-migrator';
 
 interface Schema {
   project?: string;
@@ -16,7 +16,7 @@ interface Schema {
 
 export async function convertToInferred(tree: Tree, options: Schema) {
   const projectGraph = await createProjectGraphAsync();
-  const migrator = new ExecutorToPluginMigrator<PlaywrightPluginOptions>(
+  await migrateExecutorToPlugin<PlaywrightPluginOptions>(
     tree,
     projectGraph,
     '@nx/playwright:playwright',
@@ -26,7 +26,6 @@ export async function convertToInferred(tree: Tree, options: Schema) {
     createNodes,
     options.project
   );
-  await migrator.run();
 
   if (!options.skipFormat) {
     await formatFiles(tree);
