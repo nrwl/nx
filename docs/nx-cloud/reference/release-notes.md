@@ -7,9 +7,10 @@
 For the past 2 months, we've been re-writing our entire task distribution algorithm. The aim was to allocate tasks more efficiently to agents,
 reduce total time spent by agents downloading artefacts and reduce idle agent time waiting for tasks.
 
-Initial tests show up to 50% improvement in overall CI completion time but this varies on a case by case basis.
+While the features is still in its beta stage, initial tests do show a big improvement in overall CI completion time
+(but this varies on a case by case basis).
 
-If you are already using DTE or Nx Agents, you can enable this by adding the following env var to your main job (the job
+If you are already using DTE or Nx Agents, you can enable this experimental feature by adding the following env var to your main job (the job
 where you invoke `npx start-ci-run`):
 
 ```yaml
