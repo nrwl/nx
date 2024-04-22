@@ -196,6 +196,13 @@ function supportedPtyPlatform() {
     return true;
   }
 
+  // TODO: Re-enable Windows support when it's stable
+  // Currently, there's an issue with control chars.
+  // See: https://github.com/nrwl/nx/issues/22358
+  if (process.env.NX_WINDOWS_PTY_SUPPORT !== 'true') {
+    return false;
+  }
+
   let windowsVersion = os.release().split('.');
   let windowsBuild = windowsVersion[2];
 
