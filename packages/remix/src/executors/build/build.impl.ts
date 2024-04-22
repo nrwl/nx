@@ -12,14 +12,14 @@ import { copySync, mkdir, writeFileSync } from 'fs-extra';
 import { type PackageJson } from 'nx/src/utils/package-json';
 import { join } from 'path';
 import { type RemixBuildSchema } from './schema';
-import { getBunlderType } from '../../utils/versions';
+import { getBunlderType } from '../../utils/vite-config';
 
-function buildRemixBuildArgs(
+async function buildRemixBuildArgs(
   options: RemixBuildSchema,
   context: ExecutorContext
 ) {
   const projectRoot = context.projectGraph.nodes[context.projectName].data.root;
-  const bundlerType = getBunlderType(projectRoot);
+  const bundlerType = await getBunlderType(projectRoot);
   const buildTargetName = bundlerType === 'vite' ? 'vite:build' : 'build';
 
   const args = [buildTargetName];
@@ -36,9 +36,9 @@ async function runBuild(
   context: ExecutorContext
 ): Promise<void> {
   const projectRoot = context.projectGraph.nodes[context.projectName].data.root;
-  return new Promise<void>((resolve, reject) => {
+  return new Promise<void>(async (resolve, reject) => {
     const remixBin = require.resolve('@remix-run/dev/dist/cli');
-    const args = buildRemixBuildArgs(options, context);
+    const args = await buildRemixBuildArgs(options, context);
     const p = fork(remixBin, args, {
       cwd: join(context.root, projectRoot),
       stdio: 'inherit',
@@ -83,7 +83,7 @@ export default async function buildExecutor(
       packageJson.scripts['start'] = 'remix-serve ./build/index.js';
     }
 
-    updatePackageJson(packageJson, context);
+    await updatePackageJson(packageJson, context);
     writeJsonFile(`${options.outputPath}/package.json`, packageJson);
   } else {
     packageJson = readJsonFile(join(projectRoot, 'package.json'));
@@ -119,7 +119,10 @@ export default async function buildExecutor(
   return { success: true };
 }
 
-function updatePackageJson(packageJson: PackageJson, context: ExecutorContext) {
+async function updatePackageJson(
+  packageJson: PackageJson,
+  context: ExecutorContext
+) {
   const projectRoot = context.projectGraph.nodes[context.projectName].data.root;
   if (!packageJson.scripts) {
     packageJson.scripts = {};
@@ -133,7 +136,7 @@ function updatePackageJson(packageJson: PackageJson, context: ExecutorContext) {
   // These are always required for a production Remix app to run.
   const requiredPackages = ['react', 'react-dom', 'isbot', '@remix-run/node'];
 
-  const bundlerType = getBunlderType(projectRoot);
+  const bundlerType = await getBunlderType(projectRoot);
 
   if (bundlerType === 'classic') {
     // These packages seem to be required for the older Remix version

@@ -1,6 +1,4 @@
-import { join } from 'path';
 import { readJson, Tree } from '@nx/devkit';
-import { existsSync, readdirSync } from 'fs';
 
 export const nxVersion = require('../../package.json').version;
 
@@ -28,12 +26,4 @@ export function getPackageVersion(tree: Tree, packageName: string) {
     packageJsonContents?.['dependencies']?.[packageName] ??
     null
   );
-}
-
-/**
- * Infer bundler type depending on vite.config.ts presence
- * @param root workspace root path
- */
-export function getBunlderType(root: string): 'classic' | 'vite' {
-  return existsSync(join(root, 'vite.config.ts')) ? 'vite' : 'classic';
 }
