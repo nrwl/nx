@@ -60,7 +60,7 @@ export function getFileMap(): {
 }
 
 export async function buildProjectGraphUsingProjectFileMap(
-  projects: Record<string, ProjectConfiguration>,
+  projectRootMap: Record<string, ProjectConfiguration>,
   externalNodes: Record<string, ProjectGraphExternalNode>,
   fileMap: FileMap,
   allWorkspaceFiles: FileData[],
@@ -74,6 +74,12 @@ export async function buildProjectGraphUsingProjectFileMap(
   storedFileMap = fileMap;
   storedAllWorkspaceFiles = allWorkspaceFiles;
   storedRustReferences = rustReferences;
+
+  const projects: Record<string, ProjectConfiguration> = {};
+  for (const root in projectRootMap) {
+    const project = projectRootMap[root];
+    projects[project.name] = project;
+  }
 
   const nxJson = readNxJson();
   const projectGraphVersion = '6.0';
@@ -233,15 +239,9 @@ function createContext(
   fileMap: FileMap,
   filesToProcess: FileMap
 ): CreateDependenciesContext {
-  const clonedProjects = Object.keys(projects).reduce((map, projectName) => {
-    map[projectName] = {
-      ...projects[projectName],
-    };
-    return map;
-  }, {} as Record<string, ProjectConfiguration>);
   return {
     nxJsonConfiguration: nxJson,
-    projects: clonedProjects,
+    projects,
     externalNodes,
     workspaceRoot,
     fileMap,

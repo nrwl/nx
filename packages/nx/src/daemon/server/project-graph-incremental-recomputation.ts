@@ -234,29 +234,29 @@ async function processFilesAndCreateAndSerializeProjectGraph(
     const nxJson = readNxJson(workspaceRoot);
     global.NX_GRAPH_CREATION = true;
 
-    let graphNodes: ConfigurationResult;
+    let projectConfigurationsResult: ConfigurationResult;
     let projectConfigurationsError;
 
     try {
-      graphNodes = await retrieveProjectConfigurations(
+      projectConfigurationsResult = await retrieveProjectConfigurations(
         plugins,
         workspaceRoot,
         nxJson
       );
     } catch (e) {
       if (e instanceof ProjectConfigurationsError) {
-        graphNodes = e.partialProjectConfigurationsResult;
+        projectConfigurationsResult = e.partialProjectConfigurationsResult;
         projectConfigurationsError = e;
       } else {
         throw e;
       }
     }
     await processCollectedUpdatedAndDeletedFiles(
-      graphNodes,
+      projectConfigurationsResult,
       updatedFileHashes,
       deletedFiles
     );
-    const g = await createAndSerializeProjectGraph(graphNodes);
+    const g = await createAndSerializeProjectGraph(projectConfigurationsResult);
 
     delete global.NX_GRAPH_CREATION;
 
@@ -284,7 +284,7 @@ async function processFilesAndCreateAndSerializeProjectGraph(
         error: new DaemonProjectGraphError(
           errors,
           g.projectGraph,
-          graphNodes.sourceMaps
+          projectConfigurationsResult.sourceMaps
         ),
         projectGraph: null,
         projectFileMapCache: null,
