@@ -4,7 +4,6 @@
   "sourceRoot": "packages/js/src",
   "projectType": "library",
   "targets": {
-    "test": {},
     "build-base": {
       "executor": "@nx/js:tsc",
       "options": {

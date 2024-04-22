@@ -4,7 +4,6 @@
   "sourceRoot": "packages/create-nx-workspace",
   "projectType": "library",
   "targets": {
-    "test": {},
     "build-base": {
       "executor": "@nx/js:tsc",
       "options": {

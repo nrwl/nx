@@ -248,7 +248,6 @@
       },
       "defaultConfiguration": "dev"
     },
-    "test": {},
     "storybook": {
       "executor": "@nx/storybook:storybook",
       "options": {

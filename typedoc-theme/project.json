@@ -20,8 +20,7 @@
         "command": "echo 'Building TypeDoc custom theme'"
       },
       "outputs": ["{workspaceRoot}/dist/typedoc-theme"]
-    },
-    "test": {}
+    }
   },
   "tags": []
 }
