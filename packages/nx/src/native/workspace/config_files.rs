@@ -25,7 +25,7 @@ pub(super) fn glob_files(
 
         exclude_glob_set
             .as_ref()
-            .map(|exclude_glob_set| exclude_glob_set.is_match(path))
+            .map(|exclude_glob_set| !exclude_glob_set.is_match(path))
             .unwrap_or(is_match)
     }))
 }
