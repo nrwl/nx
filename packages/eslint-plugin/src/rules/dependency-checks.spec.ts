@@ -26,19 +26,6 @@ jest.mock('nx/src/utils/workspace-root', () => ({
   workspaceRoot: '/root',
 }));
 
-jest.mock('nx/src/config/configuration', () => ({
-  readNxJson: jest.fn(() => ({
-    targetDefaults: {
-      build: {
-        inputs: [
-          '{projectRoot}/**/*',
-          '!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)',
-        ],
-      },
-    },
-  })),
-}));
-
 const rootPackageJson = {
   dependencies: {
     external1: '~16.1.2',
@@ -169,7 +156,16 @@ describe('Dependency checks (eslint)', () => {
         null,
         2
       ),
-      './nx.json': JSON.stringify({}),
+      './nx.json': JSON.stringify({
+        targetDefaults: {
+          build: {
+            inputs: [
+              '{projectRoot}/**/*',
+              '!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)',
+            ],
+          },
+        },
+      }),
       './package.json': JSON.stringify(rootPackageJson, null, 2),
     };
     vol.fromJSON(fileSys, '/root');

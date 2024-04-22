@@ -190,13 +190,14 @@
     },
     {
       "plugin": "@nx/eslint/plugin",
+      "exclude": ["packages/**/__fixtures__/**/*"],
       "options": {
         "targetName": "lint"
       }
     },
     {
       "plugin": "@nx/jest/plugin",
-      "include": ["packages/**/*", "graph/**/*", "nx-dev/**/*", "tools/**/*"],
+      "exclude": ["e2e/**/*", "packages/**/__fixtures__/**/*"],
       "options": {
         "targetName": "test"
       }
