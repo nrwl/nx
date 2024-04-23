@@ -17,6 +17,7 @@ import {
   registerTsConfigPaths,
 } from '../../plugins/js/utils/register';
 import {
+  ProjectRootMappings,
   createProjectRootMappingsFromProjectConfigurations,
   findProjectForPath,
 } from '../utils/find-project-for-path';
@@ -111,8 +112,8 @@ function lookupLocalPlugin(
   projects: Record<string, ProjectConfiguration>,
   root = workspaceRoot
 ) {
-  const plugin = findNxProjectForImportPath(importPath, projects, root);
-  if (!plugin) {
+  const projectConfig = findNxProjectForImportPath(importPath, projects, root);
+  if (!projectConfig) {
     return null;
   }
 
@@ -120,7 +121,6 @@ function lookupLocalPlugin(
     registerPluginTSTranspiler();
   }
 
-  const projectConfig: ProjectConfiguration = projects[plugin];
   return { path: path.join(root, projectConfig.root), projectConfig };
 }
 
@@ -128,18 +128,23 @@ function findNxProjectForImportPath(
   importPath: string,
   projects: Record<string, ProjectConfiguration>,
   root = workspaceRoot
-): string | null {
+): ProjectConfiguration | null {
   const tsConfigPaths: Record<string, string[]> = readTsConfigPaths(root);
   const possiblePaths = tsConfigPaths[importPath]?.map((p) =>
     normalizePath(path.relative(root, path.join(root, p)))
   );
   if (possiblePaths?.length) {
-    const projectRootMappings =
-      createProjectRootMappingsFromProjectConfigurations(projects);
+    const projectRootMappings: ProjectRootMappings = new Map();
+    const projectNameMap = new Map<string, ProjectConfiguration>();
+    for (const projectRoot in projects) {
+      const project = projects[projectRoot];
+      projectRootMappings.set(project.root, project.name);
+      projectNameMap.set(project.name, project);
+    }
     for (const tsConfigPath of possiblePaths) {
       const nxProject = findProjectForPath(tsConfigPath, projectRootMappings);
       if (nxProject) {
-        return nxProject;
+        return projectNameMap.get(nxProject);
       }
     }
     logger.verbose(
