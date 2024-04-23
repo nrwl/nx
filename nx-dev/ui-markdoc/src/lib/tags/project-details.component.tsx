@@ -1,5 +1,6 @@
-import { useTheme } from '@nx/nx-dev/ui-theme';
 import { JSX, ReactElement, useEffect, useState } from 'react';
+import { Provider as StoreProvider } from 'react-redux';
+import { rootStore } from '@nx/graph/state';
 import { ProjectDetails as ProjectDetailsUi } from '@nx/graph/ui-project-details';
 
 export function Loading() {
@@ -26,7 +27,6 @@ export function ProjectDetails({
   jsonFile?: string;
   children: ReactElement;
 }): JSX.Element {
-  const [theme] = useTheme();
   const [parsedProps, setParsedProps] = useState<any>();
   const getData = async (path: string) => {
     const response = await fetch('/documentation/' + path, {
@@ -82,11 +82,13 @@ export function ProjectDetails({
           height ? `p-4 h-[${height}] overflow-y-auto` : 'p-4'
         }`}
       >
-        <ProjectDetailsUi
-          project={parsedProps.project}
-          sourceMap={parsedProps.sourceMap}
-          variant="compact"
-        />
+        <StoreProvider store={rootStore}>
+          <ProjectDetailsUi
+            project={parsedProps.project}
+            sourceMap={parsedProps.sourceMap}
+            variant="compact"
+          />
+        </StoreProvider>
       </div>
     </div>
   );

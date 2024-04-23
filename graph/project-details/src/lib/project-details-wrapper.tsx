@@ -1,10 +1,8 @@
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-
-import { useNavigate, useNavigation, useSearchParams } from 'react-router-dom';
-
 /* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
-import { ProjectGraphProjectNode } from '@nx/devkit';
+import type { ProjectGraphProjectNode } from '@nx/devkit';
+import { useNavigate, useNavigation, useSearchParams } from 'react-router-dom';
+import { connect } from 'react-redux';
 import {
   getExternalApiService,
   useEnvironmentConfig,
@@ -14,17 +12,33 @@ import { Spinner } from '@nx/graph/ui-components';
 
 import {
   ProjectDetails,
-  ProjectDetailsImperativeHandle,
+  defaultSelectTargetGroup,
+  getTargetGroupForTarget,
 } from '@nx/graph/ui-project-details';
-import { useCallback, useLayoutEffect, useRef } from 'react';
+import { useCallback, useEffect } from 'react';
+import {
+  mapStateToProps,
+  mapDispatchToProps,
+  mapStateToPropsType,
+  mapDispatchToPropsType,
+} from './project-details-wrapper.state';
 
-export interface ProjectDetailsProps {
-  project: ProjectGraphProjectNode;
-  sourceMap: Record<string, string[]>;
-}
+type ProjectDetailsProps = mapStateToPropsType &
+  mapDispatchToPropsType & {
+    project: ProjectGraphProjectNode;
+    sourceMap: Record<string, string[]>;
+  };
 
-export function ProjectDetailsWrapper(props: ProjectDetailsProps) {
-  const projectDetailsRef = useRef<ProjectDetailsImperativeHandle>(null);
+export function ProjectDetailsWrapperComponent({
+  project,
+  sourceMap,
+  setExpandTargets,
+  expandTargets,
+  selectedTargetGroup,
+  selectTargetGroup,
+  clearTargetGroup,
+  collapseAllTargets,
+}: ProjectDetailsProps) {
   const environment = useEnvironmentConfig()?.environment;
   const externalApiService = getExternalApiService();
   const navigate = useNavigate();
@@ -88,63 +102,91 @@ export function ProjectDetailsWrapper(props: ProjectDetailsProps) {
     [externalApiService]
   );
 
-  const updateSearchParams = (params: URLSearchParams, sections: string[]) => {
-    if (sections.length === 0) {
-      params.delete('expanded');
+  const updateSearchParams = (
+    params: URLSearchParams,
+    targetGroup: string | null,
+    targetNames: string[]
+  ) => {
+    if (targetGroup) {
+      params.set('targetGroup', targetGroup);
     } else {
-      params.set('expanded', sections.join(','));
+      params.delete('targetGroup');
+    }
+    if (targetNames.length === 0) {
+      params.delete('targetName');
+    } else {
+      params.set('targetName', targetNames.join(','));
     }
   };
 
-  const handleTargetCollapse = useCallback(
-    (targetName: string) => {
-      const expandedSections = searchParams.get('expanded')?.split(',') || [];
-      if (!expandedSections.includes(targetName)) return;
-      const newExpandedSections = expandedSections.filter(
-        (section) => section !== targetName
-      );
-      setSearchParams(
-        (currentSearchParams) => {
-          updateSearchParams(currentSearchParams, newExpandedSections);
-          return currentSearchParams;
-        },
-        {
-          replace: true,
-          preventScrollReset: true,
-        }
-      );
-    },
-    [setSearchParams, searchParams]
-  );
+  useEffect(() => {
+    if (!project.data.targets) return;
 
-  const handleTargetExpand = useCallback(
-    (targetName: string) => {
-      const expandedSections = searchParams.get('expanded')?.split(',') || [];
-      if (expandedSections.includes(targetName)) return;
-      expandedSections.push(targetName);
-      setSearchParams(
-        (currentSearchParams) => {
-          updateSearchParams(currentSearchParams, expandedSections);
-          return currentSearchParams;
-        },
-        { replace: true, preventScrollReset: true }
-      );
-    },
-    [setSearchParams, searchParams]
-  );
-
-  useLayoutEffect(() => {
-    if (!props.project.data.targets) return;
-
-    const expandedSections = searchParams.get('expanded')?.split(',') || [];
-    for (const targetName of Object.keys(props.project.data.targets)) {
-      if (expandedSections.includes(targetName)) {
-        projectDetailsRef.current?.expandTarget(targetName);
-      } else {
-        projectDetailsRef.current?.collapseTarget(targetName);
-      }
+    const selectedTargetGroupParams = searchParams.get('targetGroup');
+    if (
+      selectedTargetGroupParams &&
+      selectedTargetGroup !== selectedTargetGroupParams
+    ) {
+      selectTargetGroup(selectedTargetGroupParams);
+    } else if (!selectedTargetGroupParams) {
+      selectTargetGroup(defaultSelectTargetGroup(project)); // set first target group as default
     }
-  }, [searchParams, props.project.data.targets, projectDetailsRef]);
+
+    const expandedTargetsParams =
+      searchParams.get('targetName')?.split(',') || [];
+    if (expandedTargetsParams.length > 0) {
+      setExpandTargets(expandedTargetsParams);
+    }
+
+    const targetName = searchParams.get('targetName');
+    if (targetName) {
+      const targetGroup = getTargetGroupForTarget(targetName, project);
+      selectTargetGroup(targetGroup);
+      setExpandTargets([targetName]);
+    }
+
+    return () => {
+      clearTargetGroup();
+      collapseAllTargets();
+      searchParams.delete('targetGroup');
+      searchParams.delete('targetName');
+      setSearchParams(searchParams, { replace: true });
+    };
+  }, []); // only run on mount
+
+  useEffect(() => {
+    if (!project.data.targets) return;
+
+    const selectedTargetGroupParams = searchParams.get('targetGroup');
+    const expandedTargetsParams =
+      searchParams.get('targetName')?.split(',') || [];
+
+    if (
+      selectedTargetGroup === selectedTargetGroupParams &&
+      expandedTargetsParams.join(',') === expandTargets.join(',')
+    ) {
+      return;
+    }
+
+    setSearchParams(
+      (currentSearchParams) => {
+        updateSearchParams(
+          currentSearchParams,
+          selectedTargetGroup,
+          expandTargets
+        );
+        return currentSearchParams;
+      },
+      { replace: true, preventScrollReset: true }
+    );
+  }, [
+    expandTargets,
+    selectedTargetGroup,
+    project.data.targets,
+    setExpandTargets,
+    searchParams,
+    setSearchParams,
+  ]);
 
   if (
     navigationState === 'loading' &&
@@ -159,10 +201,8 @@ export function ProjectDetailsWrapper(props: ProjectDetailsProps) {
 
   return (
     <ProjectDetails
-      ref={projectDetailsRef}
-      {...props}
-      onTargetCollapse={handleTargetCollapse}
-      onTargetExpand={handleTargetExpand}
+      project={project}
+      sourceMap={sourceMap}
       onViewInProjectGraph={handleViewInProjectGraph}
       onViewInTaskGraph={handleViewInTaskGraph}
       onRunTarget={environment === 'nx-console' ? handleRunTarget : undefined}
@@ -170,4 +210,8 @@ export function ProjectDetailsWrapper(props: ProjectDetailsProps) {
   );
 }
 
+export const ProjectDetailsWrapper = connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(ProjectDetailsWrapperComponent);
 export default ProjectDetailsWrapper;

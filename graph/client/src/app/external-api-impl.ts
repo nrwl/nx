@@ -94,7 +94,7 @@ export class ExternalApiImpl extends ExternalApi {
     const currentLocation = this.router.state.location;
 
     const searchParams = new URLSearchParams(currentLocation.search);
-    searchParams.set('expanded', targetName);
+    searchParams.set('targetName', targetName);
 
     const newUrl = `${currentLocation.pathname}?${searchParams.toString()}`;
     this.router.navigate(newUrl);

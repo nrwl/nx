@@ -147,6 +147,7 @@ export const createNodes: CreateNodes<GradlePluginOptions> = [
         name: projectName,
         targets,
         metadata: {
+          targetGroups,
           technologies: ['gradle'],
         },
       };
