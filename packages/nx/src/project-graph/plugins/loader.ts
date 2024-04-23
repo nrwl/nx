@@ -116,6 +116,10 @@ function lookupLocalPlugin(
     return null;
   }
 
+  if (!unregisterPluginTSTranspiler) {
+    registerPluginTSTranspiler();
+  }
+
   const projectConfig: ProjectConfiguration = projects[plugin];
   return { path: path.join(root, projectConfig.root), projectConfig };
 }
