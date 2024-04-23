@@ -82,7 +82,9 @@ If you create targets for a project within a plugin's code, the Nx migration gen
 
 #### Example (extending projects / adding targets)
 
-A plugin can also be written to modify existing projects. Most of Nx's first party plugins are written to add a target to a given project based on the configuration files present for that project. The below example shows how a plugin could add a target to a project based on the presence of a `tsconfig.json` file.
+When writing a plugin to add support for some tooling, it may need to add a target to an existing project. For example, our @nx/jest plugin adds a target to the project for running Jest tests. This is done by checking for the presence of a jest configuration file, and if it is present, adding a target to the project.
+
+Most of Nx's first party plugins are written to add a target to a given project based on the configuration files present for that project. The below example shows how a plugin could add a target to a project based on the presence of a `tsconfig.json` file.
 
 ```typescript {% fileName="/my-plugin/index.ts" %}
 export const createNodes: CreateNodes = [
@@ -90,7 +92,9 @@ export const createNodes: CreateNodes = [
   (fileName: string, opts, context: CreateNodesContext) => {
     const root = dirname(fileName);
 
-    const isProject = existsSync(join(root, 'project.json'));
+    const isProject =
+      existsSync(join(root, 'project.json')) ||
+      existsSync(join(root, 'package.json'));
     if (!isProject) {
       return {};
     }
@@ -110,7 +114,7 @@ export const createNodes: CreateNodes = [
 ];
 ```
 
-By checking for the presence of a `project.json` file, the plugin can ensure that the project it is modifying is an existing Nx project.
+By checking for the presence of a `project.json` or 'package.json' file, the plugin can be more confident that the project it is modifying is an existing Nx project.
 
 When extending an existing project, its important to consider how Nx will merge the returned project configurations. In general, plugins are run in the order they are listed in `nx.json`, abd then Nx's built-in plugins are run last. Plugins overwrite information that was identified by plugins that run before them if a merge is not possible.
 
