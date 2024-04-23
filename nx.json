@@ -197,7 +197,11 @@
     },
     {
       "plugin": "@nx/jest/plugin",
-      "exclude": ["e2e/**/*", "packages/**/__fixtures__/**/*"],
+      "exclude": [
+        "e2e/**/*",
+        "packages/**/__fixtures__/**/*",
+        "jest.config.ts"
+      ],
       "options": {
         "targetName": "test"
       }
