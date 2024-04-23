@@ -126,9 +126,9 @@ describe('Angular Projects', () => {
     );
 
     // check e2e tests
-    if (runE2ETests('cypress')) {
+    if (runE2ETests('playwright')) {
       const e2eResults = runCLI(`e2e ${app1}-e2e`);
-      expect(e2eResults).toContain('All specs passed!');
+      expect(e2eResults).toContain('Successfully ran target e2e for project');
       expect(await killPort(4200)).toBeTruthy();
     }
 

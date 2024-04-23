@@ -7,6 +7,7 @@ import {
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { generateTestApplication } from '../utils/testing';
 import { setupMf } from './setup-mf';
+import { E2eTestRunner } from '../../utils/test-runners';
 
 describe('Init MF', () => {
   let tree: Tree;
@@ -474,6 +475,7 @@ describe('Init MF', () => {
       routing: true,
       standalone: false,
       skipFormat: true,
+      e2eTestRunner: E2eTestRunner.Cypress,
     });
 
     // ACT
