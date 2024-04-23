@@ -132,18 +132,18 @@ export function DocViewer({
                           starsCount={widgetData.githubStarsCount}
                         />
                       )}
-                      <div className="flex items-center justify-center my-4 pl-2 pr-2 space-x-2 border rounded-md border-slate-200 hover:border-slate-400 dark:border-slate-700 print:hidden">
+                      <div className="my-4 flex items-center justify-center space-x-2 rounded-md border border-slate-200 pl-2 pr-2 hover:border-slate-400 dark:border-slate-700 print:hidden">
                         <button
                           type="button"
                           aria-label="Give feedback on this page"
                           title="Give feedback of this page"
-                          className="px-4 py-2 border-transparent hover:text-slate-900 dark:hover:text-sky-400 whitespace-nowrap font-bold"
+                          className="whitespace-nowrap border-transparent px-4 py-2 font-bold hover:text-slate-900 dark:hover:text-sky-400"
                           onClick={() => setShowFeedback(true)}
                         >
                           Feedback
                         </button>
                       </div>
-                      <div className="flex items-center justify-center my-4 pl-2 pr-2 space-x-2 border rounded-md border-slate-200 hover:border-slate-400 dark:border-slate-700 print:hidden">
+                      <div className="my-4 flex items-center justify-center space-x-2 rounded-md border border-slate-200 pl-2 pr-2 hover:border-slate-400 dark:border-slate-700 print:hidden">
                         {document.filePath ? (
                           <a
                             aria-hidden="true"
@@ -159,7 +159,7 @@ export function DocViewer({
                             target="_blank"
                             rel="noreferrer"
                             title="Edit this page on GitHub"
-                            className="px-4 py-2 border-transparent hover:text-slate-900 dark:hover:text-sky-400 whitespace-nowrap font-bold"
+                            className="whitespace-nowrap border-transparent px-4 py-2 font-bold hover:text-slate-900 dark:hover:text-sky-400"
                           >
                             Edit this page
                           </a>
@@ -175,7 +175,7 @@ export function DocViewer({
             <div
               data-document="related"
               className={cx(
-                'pt-8 prose prose-slate dark:prose-invert w-full max-w-none 2xl:max-w-4xl',
+                'prose prose-slate dark:prose-invert w-full max-w-none pt-8 2xl:max-w-4xl',
                 { 'xl:max-w-2xl': !hideTableOfContent }
               )}
             >

@@ -1,5 +1,43 @@
 # Enterprise Release Notes
 
+### 2402.27.3
+
+##### DTE Algorithm V2 Experimental Flag
+
+For the past 2 months, we've been re-writing our entire task distribution algorithm. The aim was to allocate tasks more efficiently to agents,
+reduce total time spent by agents downloading artefacts and reduce idle agent time waiting for tasks.
+
+While the features is still in its beta stage, initial tests do show a big improvement in overall CI completion time
+(but this varies on a case by case basis).
+
+If you are already using DTE or Nx Agents, you can enable this experimental feature by adding the following env var to your main job (the job
+where you invoke `npx start-ci-run`):
+
+```yaml
+NX_CLOUD_DTE_V2: 'true'
+```
+
+##### Nx Agents On-Prem Availability
+
+Since the previous release, we've been testing various options for deploying Nx Agents on-premise.
+
+We now have a dedicate Helm chart dedicated to setting up an Nx Agents cluster on your infrastructure:
+
+1. ⚠️ Please reach out to your DPE first so we can start an Nx Agents trial and discuss any limitations and requirements up-front
+2. You can view the example `values.yaml` [here](https://github.com/nrwl/nx-cloud-helm/blob/main/charts/nx-agents/values.yaml)
+3. Once we had a chance to look at your existing CI compute requirements, you deploy the chart via `helm install nx-cloud nx-cloud/nx-agents --values=helm-values.yml`
+
+##### Audit logger
+
+As an Enterprise installation admin, you can now view audit logs over NxCloud workspace events by visiting `https://<NXCLOUD-URL>/audit-log`.
+
+This includes events such as when a workspace was created, when a new VCS integration was set-up and so on.
+
+##### UI improvements
+
+- Organizations can now be created directly from the "Connect a workspace" screen
+- Full screen terminal outputs for your tasks
+
 ### 2402.27.3.patch3,4,5,6
 
 - Feat: allows customising the base image for the agent init-container (in case it is self-hosted internally in the company)

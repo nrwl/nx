@@ -50,21 +50,32 @@ pub(super) struct WatchEventInternal {
     pub origin: Option<String>,
 }
 
-impl From<&Event> for WatchEventInternal {
-    fn from(value: &Event) -> Self {
+
+
+impl TryFrom<&Event> for WatchEventInternal {
+    type Error = anyhow::Error;
+
+    fn try_from(value: &Event) -> std::result::Result<Self, Self::Error> {
         let transformed = transform_event(value);
         let value = transformed.as_ref().unwrap_or(value);
 
-        let path = value.paths().next().expect("there should always be a path");
+        let Some(path) =  value.paths().next() else {
+             let error_msg = "unable to get path from the event";
+             trace!(?value, error_msg);
+             anyhow::bail!(error_msg)
+        };
 
-        let event_kind = value
+        let Some( event_kind ) = value
             .tags
             .iter()
             .find_map(|t| match t {
                 Tag::FileEventKind(event_kind) => Some(event_kind),
                 _ => None,
-            })
-            .expect("there should always be a file event kind");
+            }) else {
+            let error_msg = "unable to get the file event kind";
+            trace!(?value, error_msg);
+            anyhow::bail!(error_msg)
+        };
 
         let path_ref = path.0;
         let event_type = if path.1.is_none() && !path_ref.exists() {
@@ -112,10 +123,10 @@ impl From<&Event> for WatchEventInternal {
 
         trace!(?path, ?event_kind, ?event_type, "event kind -> event type");
 
-        WatchEventInternal {
+        Ok(WatchEventInternal {
             path: path.0.into(),
             r#type: event_type,
             origin: None,
-        }
+        })
     }
 }
