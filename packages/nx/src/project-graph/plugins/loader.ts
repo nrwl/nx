@@ -56,6 +56,9 @@ export function readPluginPackageJson(
           localPluginPath.path,
           'package.json'
         );
+        if (!unregisterPluginTSTranspiler) {
+          registerPluginTSTranspiler();
+        }
         return {
           path: localPluginPackageJson,
           json: readJsonFile(localPluginPackageJson),
