@@ -17,7 +17,7 @@ import { getLockFileName } from '@nx/js';
 
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { existsSync, readdirSync } from 'fs';
-import { globWithWorkspaceContext } from 'nx/src/utils/workspace-context';
+import { globAsync } from 'nx/src/utils/globs';
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { projectGraphCacheDirectory } from 'nx/src/utils/cache-directory';
 import { NX_PLUGIN_OPTIONS } from '../utils/constants';
@@ -205,11 +205,7 @@ async function buildCypressTargets(
         : Array.isArray(cypressConfig.e2e.excludeSpecPattern)
         ? cypressConfig.e2e.excludeSpecPattern.map((p) => join(projectRoot, p))
         : [join(projectRoot, cypressConfig.e2e.excludeSpecPattern)];
-      const specFiles = globWithWorkspaceContext(
-        context.workspaceRoot,
-        specPatterns,
-        excludeSpecPatterns
-      );
+      const specFiles = await globAsync(specPatterns, excludeSpecPatterns);
 
       const dependsOn: TargetConfiguration['dependsOn'] = [];
       const outputs = getOutputs(projectRoot, cypressConfig, 'e2e');

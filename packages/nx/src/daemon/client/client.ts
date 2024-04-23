@@ -30,10 +30,14 @@ import {
   ProjectGraphError,
 } from '../../project-graph/error-types';
 import { loadRootEnvFiles } from '../../utils/dotenv';
+import { HandleGlobMessage } from '../message-types/glob';
 
 const DAEMON_ENV_SETTINGS = {
   NX_PROJECT_GLOB_CACHE: 'false',
   NX_CACHE_PROJECTS_CONFIG: 'false',
+
+  // Used to identify that the code is running in the daemon process.
+  NX_ON_DAEMON_PROCESS: 'true',
 };
 
 export type UnregisterCallback = () => void;
@@ -254,6 +258,15 @@ export class DaemonClient {
         hash,
       },
     });
+  }
+
+  glob(globs: string[], exclude?: string[]): Promise<string[]> {
+    const message: HandleGlobMessage = {
+      type: 'GLOB',
+      globs,
+      exclude,
+    };
+    return this.sendToDaemonViaQueue(message);
   }
 
   async isServerAvailable(): Promise<boolean> {

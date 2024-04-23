@@ -52,6 +52,8 @@ import {
   watchOutputFiles,
   watchWorkspace,
 } from './watcher';
+import { handleGlob } from './handle-glob';
+import { GLOB, isHandleGlobMessage } from '../message-types/glob';
 
 let performanceObserver: PerformanceObserver | undefined;
 let workspaceWatcherError: Error | undefined;
@@ -165,6 +167,10 @@ async function handleMessage(socket, data: string) {
     );
   } else if (payload.type === 'REGISTER_FILE_WATCHER') {
     registeredFileWatcherSockets.push({ socket, config: payload.config });
+  } else if (isHandleGlobMessage(payload)) {
+    await handleResult(socket, GLOB, () =>
+      handleGlob(payload.globs, payload.exclude)
+    );
   } else {
     await respondWithErrorAndExit(
       socket,

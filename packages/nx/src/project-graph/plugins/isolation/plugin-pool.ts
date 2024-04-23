@@ -28,17 +28,22 @@ export function loadRemoteNxPlugin(
   // but its typescript.
   const isWorkerTypescript = path.extname(__filename) === '.ts';
   const workerPath = path.join(__dirname, 'plugin-worker');
+
+  const env: Record<string, string> = {
+    ...process.env,
+    ...(isWorkerTypescript
+      ? {
+          // Ensures that the worker uses the same tsconfig as the main process
+          TS_NODE_PROJECT: path.join(__dirname, '../../../tsconfig.lib.json'),
+        }
+      : {}),
+  };
+
+  delete env.NX_ON_DAEMON_PROCESS;
+
   const worker = fork(workerPath, [], {
     stdio: ['ignore', 'inherit', 'inherit', 'ipc'],
-    env: {
-      ...process.env,
-      ...(isWorkerTypescript
-        ? {
-            // Ensures that the worker uses the same tsconfig as the main process
-            TS_NODE_PROJECT: path.join(__dirname, '../../../tsconfig.lib.json'),
-          }
-        : {}),
-    },
+    env,
     execArgv: [
       ...process.execArgv,
       // If the worker is typescript, we need to register ts-node
