@@ -56,6 +56,9 @@ export function readPluginPackageJson(
           localPluginPath.path,
           'package.json'
         );
+        if (!unregisterPluginTSTranspiler) {
+          registerPluginTSTranspiler();
+        }
         return {
           path: localPluginPackageJson,
           json: readJsonFile(localPluginPackageJson),
@@ -115,10 +118,6 @@ function lookupLocalPlugin(
   const projectConfig = findNxProjectForImportPath(importPath, projects, root);
   if (!projectConfig) {
     return null;
-  }
-
-  if (!unregisterPluginTSTranspiler) {
-    registerPluginTSTranspiler();
   }
 
   return { path: path.join(root, projectConfig.root), projectConfig };
