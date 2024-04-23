@@ -75,7 +75,7 @@ npx create-nx-workspace myorg
 
 ... and you choose an “integrated monorepo” you’ll get the usual setup powered by Nx Plugins and all the features and benefits that come with them. Where you’ll see Project Crystal in action is when you open a `project.json` file, which will most likely look like the following:
 
-```json {% filename="project.json" }
+```json {% fileName="project.json" }
 {
   "name": "reactapp",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
@@ -90,7 +90,7 @@ npx create-nx-workspace myorg
 
 Starting with Nx 18 and Project Crystal, we don’t generate any targets anymore, but the corresponding Nx plugin instead [infers them](/concepts/inferred-tasks). If we open the `nx.json`, you'll see a new property, `plugins`:
 
-```json {% filename="nx.json" %}
+```json {% fileName="nx.json" %}
 {
   ...
   "plugins": [

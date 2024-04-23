@@ -87,7 +87,7 @@ After running this command, you’ll see a new directory and file created in you
 
 The newly created file should look like this:
 
-```js
+```js {% fileName="apps/todo/src/routes/todo/index.tsx" %}
 import { component$ } from '@builder.io/qwik';
 
 export default component$(() => {
@@ -107,7 +107,7 @@ We want to build a todo application, so let’s add some UI elements to make thi
 
 Update `apps/todo/src/routes/todo/index.tsx` to match the following:
 
-```js {% filename="apps/todo/src/routes/todo/index.tsx" %}
+```js {% fileName="apps/todo/src/routes/todo/index.tsx" %}
 import { component$ } from '@builder.io/qwik';
 import { Form } from '@builder.io/qwik-city';
 
@@ -176,7 +176,7 @@ We’ll use a Context to store the todos in the application, but first, let’s 
 
 Create `libs/data-access/src/lib/api.ts` and add the following:
 
-```ts {% filename="libs/data-access/src/lib/api.ts" %}
+```ts {% fileName="libs/data-access/src/lib/api.ts" %}
 export interface Todo {
   id: number;
   message: string;
@@ -185,7 +185,7 @@ export interface Todo {
 
 Next, let’s create a new file `libs/data-access/src/lib/todo.context.tsx` and add the following content:
 
-```tsx {% filename="libs/data-access/src/lib/todo.context.tsx" %}
+```tsx {% fileName="libs/data-access/src/lib/todo.context.tsx" %}
 import {
   component$,
   createContextId,
@@ -221,7 +221,7 @@ Finally, let’s update the public entry point to the library to expose our Cont
 
 Let’s update the root page to add our Context Provider. Open `apps/todo/src/root.tsx` and add `TodoContextProvider` after `QwikCityProvider` in the component tree. Your file should look like the following:
 
-```tsx {% filename="apps/todo/src/root.tsx" %}
+```tsx {% fileName="apps/todo/src/root.tsx" %}
 import { component$, useStyles$ } from '@builder.io/qwik';
 import {
   QwikCityProvider,
@@ -260,7 +260,7 @@ export default component$(() => {
 
 Update `libs/data-access/src/index.ts` to match the following:
 
-```ts {% filename="libs/data-access/src/index.ts" %}
+```ts {% fileName="libs/data-access/src/index.ts" %}
 export * from './lib/todo.context';
 export * from './lib/api';
 ```
@@ -269,7 +269,7 @@ Now that our Context is in place, let’s use it in our todo route to manage our
 
 Update `apps/todo/src/routes/todo/index.tsx` to match the following:
 
-```tsx {% filename="apps/todo/src/routes/todo/index.tsx" %}
+```tsx {% fileName="apps/todo/src/routes/todo/index.tsx" %}
 import { component$ } from '@builder.io/qwik';
 import { Form } from '@builder.io/qwik-city';
 import { TodoContext } from '@qwik-todo-app/data-access';
@@ -310,7 +310,7 @@ For this blog post, we’ll create an in-memory db to store some initial todos.
 
 We’ll start by updating our `libs/data-access/src/lib/api.ts` to add our in-memory DB.
 
-```ts {% filename="libs/data-access/src/lib/api.ts" %}
+```ts {% fileName="libs/data-access/src/lib/api.ts" %}
 export interface Todo {
   id: number;
   message: string;
@@ -350,7 +350,7 @@ Now that we have this, let’s use it in our `/todo` route to load some data whe
 
 Update `apps/todo/src/routes/todo/index.tsx` to match the following:
 
-```tsx {% filename="apps/todo/src/routes/todo/index.tsx" %}
+```tsx {% fileName="apps/todo/src/routes/todo/index.tsx" %}
 import { component$ } from '@builder.io/qwik';
 import { Form, routeLoader$ } from '@builder.io/qwik-city';
 import { TodoContext, db } from '@qwik-todo-app/data-access';
@@ -414,7 +414,7 @@ Qwik also allows you to handle form actions on the server using the `routeAction
 
 Update `apps/todo/src/routes/todo/index.tsx`:
 
-```tsx {% filename="apps/todo/src/routes/todo/index.tsx" %}
+```tsx {% fileName="apps/todo/src/routes/todo/index.tsx" %}
 import { component$ } from '@builder.io/qwik';
 import { Form, routeLoader$ } from '@builder.io/qwik-city';
 import { TodoContext, db } from '@qwik-todo-app/data-access';
@@ -489,7 +489,7 @@ However, you might have noticed that our file is starting to get very long. Not 
 
 To separate the logic, create a new file `libs/data-access/src/lib/todos.ts` and move the logic for loading and adding todos into their own functions:
 
-```ts {% filename="libs/data-access/src/lib/todos.ts" %}
+```ts {% fileName="libs/data-access/src/lib/todos.ts" %}
 import { db, Todo } from './api';
 
 export function getTodos() {
@@ -519,7 +519,7 @@ export function addTodo(todo: { id: string; message: string }) {
 
 Next, update `libs/data-access/src/index.ts`
 
-```ts {% filename="libs/data-access/src/index.ts" %}
+```ts {% fileName="libs/data-access/src/index.ts" %}
 export * from './lib/todo.context';
 export * from './lib/api';
 export * from './lib/todo';
@@ -527,7 +527,7 @@ export * from './lib/todo';
 
 Finally, let’s update `apps/todo/src/routes/todo/index.tsx` to use our newly created functions:
 
-```tsx {% filename="apps/todo/src/routes/todo/index.tsx" %}
+```tsx {% fileName="apps/todo/src/routes/todo/index.tsx" %}
 import { component$, useContext, useTask$ } from '@builder.io/qwik';
 import {
   Form,
