@@ -353,7 +353,8 @@
     "tailwind-merge": "^1.8.1",
     "tailwindcss": "3.2.4",
     "tslib": "^2.3.0",
-    "weak-napi": "^2.0.2"
+    "weak-napi": "^2.0.2",
+    "webpack-cli": "^5.1.4"
   },
   "resolutions": {
     "minimist": "^1.2.6",
