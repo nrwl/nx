@@ -32,7 +32,7 @@ export async function syncGenerator(tree: Tree, options: SyncSchema) {
     });
   if (!tscPluginConfig) {
     throw new Error(
-      `The ${PLUGIN_NAME} must be added to the "plugins" array in nx.json before syncing tsconfigs`
+      `The ${PLUGIN_NAME} plugin must be added to the "plugins" array in nx.json before syncing tsconfigs`
     );
   }
 
@@ -59,12 +59,13 @@ export async function syncGenerator(tree: Tree, options: SyncSchema) {
     // Sync the root tsconfig references from the project graph (do not destroy existing references)
     rootTsconfig.references = rootTsconfig.references || [];
     const referencesSet = new Set(
-      rootTsconfig.references.map((ref) => ref.path)
+      rootTsconfig.references.map((ref) => normalizeReferencePath(ref.path))
     );
     for (const node of tsconfigProjectNodeValues) {
+      const normalizedPath = normalizeReferencePath(node.data.root);
       // Skip the root tsconfig itself
-      if (node.data.root !== '.' && !referencesSet.has(node.data.root)) {
-        rootTsconfig.references.push({ path: node.data.root });
+      if (node.data.root !== '.' && !referencesSet.has(normalizedPath)) {
+        rootTsconfig.references.push({ path: `./${normalizedPath}` });
       }
     }
     writeJson(tree, rootTsconfigPath, rootTsconfig);
@@ -121,4 +122,9 @@ export async function syncGenerator(tree: Tree, options: SyncSchema) {
   }
 
   await formatFiles(tree);
+}
+
+// Normalize the paths to strip leading `./` and trailing `/tsconfig.json`
+function normalizeReferencePath(path: string): string {
+  return path.replace(/\/tsconfig.json$/, '').replace(/^\.\//, '');
 }

@@ -44,8 +44,8 @@ describe('syncGenerator()', () => {
     };
 
     writeJson(tree, 'nx.json', {
-      // Wire up the @nx/js/typescript-plugin with default options
-      plugins: ['@nx/js/typescript-plugin'],
+      // Wire up the @nx/js/typescript plugin with default options
+      plugins: ['@nx/js/typescript'],
     });
 
     // Root tsconfigs
@@ -76,15 +76,13 @@ describe('syncGenerator()', () => {
     });
   });
 
-  it('should error if the @nx/js/typescript-plugin is not configured in nx.json', async () => {
+  it('should error if the @nx/js/typescript plugin is not configured in nx.json', async () => {
     const nxJson = readJson(tree, 'nx.json');
-    nxJson.plugins = nxJson.plugins.filter(
-      (p) => p !== '@nx/js/typescript-plugin'
-    );
+    nxJson.plugins = nxJson.plugins.filter((p) => p !== '@nx/js/typescript');
     writeJson(tree, 'nx.json', nxJson);
 
     await expect(syncGenerator(tree, {})).rejects.toMatchInlineSnapshot(
-      `[Error: The @nx/js/typescript-plugin must be added to the "plugins" array in nx.json before syncing tsconfigs]`
+      `[Error: The @nx/js/typescript plugin must be added to the "plugins" array in nx.json before syncing tsconfigs]`
     );
   });
 
@@ -100,10 +98,10 @@ describe('syncGenerator()', () => {
       expect(rootTsconfig.references).toMatchInlineSnapshot(`
         [
           {
-            "path": "packages/a",
+            "path": "./packages/a",
           },
           {
-            "path": "packages/b",
+            "path": "./packages/b",
           },
         ]
       `);

@@ -75,7 +75,7 @@ export const createDependencies: CreateDependencies = () => {
   return [];
 };
 
-export const PLUGIN_NAME = '@nx/js/typescript-plugin';
+export const PLUGIN_NAME = '@nx/js/typescript';
 
 export const createNodes: CreateNodes<TscPluginOptions> = [
   '**/tsconfig*.json',
@@ -335,6 +335,7 @@ function getOutputs(
           relative(workspaceRoot, config.options.outFile)
         )
       );
+      // outFile is not be used with .cjs, .mjs, .jsx, so the list is simpler
       const outDir = relative(workspaceRoot, outFileDir);
       outputs.add(
         joinPathFragments('{workspaceRoot}', outDir, `${outFileName}.js.map`)
@@ -369,9 +370,17 @@ function getOutputs(
     } else if (config.fileNames.length) {
       // tsc produce files in place when no outDir or outFile is set
       outputs.add(joinPathFragments('{projectRoot}', '**/*.js'));
-      outputs.add(joinPathFragments('{projectRoot}', '**/*.js.map'));
+      outputs.add(joinPathFragments('{projectRoot}', '**/*.cjs'));
+      outputs.add(joinPathFragments('{projectRoot}', '**/*.mjs'));
+      outputs.add(joinPathFragments('{projectRoot}', '**/*.jsx'));
+      outputs.add(joinPathFragments('{projectRoot}', '**/*.js.map')); // should also include .cjs and .mjs data
+      outputs.add(joinPathFragments('{projectRoot}', '**/*.jsx.map'));
       outputs.add(joinPathFragments('{projectRoot}', '**/*.d.ts'));
+      outputs.add(joinPathFragments('{projectRoot}', '**/*.d.cts'));
+      outputs.add(joinPathFragments('{projectRoot}', '**/*.d.mts'));
       outputs.add(joinPathFragments('{projectRoot}', '**/*.d.ts.map'));
+      outputs.add(joinPathFragments('{projectRoot}', '**/*.d.cts.map'));
+      outputs.add(joinPathFragments('{projectRoot}', '**/*.d.mts.map'));
 
       // https://www.typescriptlang.org/tsconfig#tsBuildInfoFile
       const name = basename(configFilePath, '.json');
