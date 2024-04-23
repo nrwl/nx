@@ -14,7 +14,7 @@ jobs:
       fail-fast: false
       matrix:
         settings:
-          - host: macos-latest
+          - host: macos-13
             target: x86_64-apple-darwin
             build: |
               pnpm nx run-many --target=build-native -- --target=x86_64-apple-darwin
@@ -37,7 +37,7 @@ jobs:
             target: x86_64-unknown-linux-musl
             docker: ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-alpine
             build: set -e && pnpm nx run-many --target=build-native -- --target=x86_64-unknown-linux-musl
-          - host: macos-latest
+          - host: macos-13
             target: aarch64-apple-darwin
             build: |
               sudo rm -Rf /Library/Developer/CommandLineTools/SDKs/*;
