@@ -500,6 +500,51 @@ describe('@nx/eslint/plugin', () => {
         }
       `);
     });
+
+    it('should handle multiple levels of nesting and ignored files correctly', async () => {
+      createFiles({
+        '.eslintrc.json': '{ "root": true, "ignorePatterns": ["**/*"] }',
+        'apps/myapp/.eslintrc.json': '{ "extends": "../../.eslintrc.json" }', // no lintable files, don't create task
+        'apps/myapp/project.json': '{}',
+        'apps/myapp/index.ts': 'console.log("hello world")',
+        'apps/myapp/nested/mylib/.eslintrc.json': JSON.stringify({
+          extends: '../../../../.eslintrc.json',
+          ignorePatterns: ['!**/*'], // include all files, create task
+        }),
+        'apps/myapp/nested/mylib/project.json': '{}',
+        'apps/myapp/nested/mylib/index.ts': 'console.log("hello world")',
+      });
+      expect(await invokeCreateNodesOnMatchingFiles(context, 'lint'))
+        .toMatchInlineSnapshot(`
+        {
+          "projects": {
+            "apps/myapp/nested/mylib": {
+              "targets": {
+                "lint": {
+                  "cache": true,
+                  "command": "eslint .",
+                  "inputs": [
+                    "default",
+                    "^default",
+                    "{workspaceRoot}/.eslintrc.json",
+                    "{projectRoot}/.eslintrc.json",
+                    "{workspaceRoot}/tools/eslint-rules/**/*",
+                    {
+                      "externalDependencies": [
+                        "eslint",
+                      ],
+                    },
+                  ],
+                  "options": {
+                    "cwd": "apps/myapp/nested/mylib",
+                  },
+                },
+              },
+            },
+          },
+        }
+      `);
+    });
   });
 
   function createFiles(fileSys: Record<string, string>) {
