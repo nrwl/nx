@@ -1,3 +1,21 @@
+import 'nx/src/internal-testing-utils/mock-fs';
+
+let fsRoot: string = '';
+
+jest.mock(
+  'nx/src/utils/globs',
+  (): Partial<typeof import('nx/src/utils/globs')> => {
+    const glob: typeof import('fast-glob') = require('fast-glob');
+    return {
+      ...jest.requireActual('nx/src/utils/globs'),
+      globAsync(patterns: string[]) {
+        // This glob will operate on memfs thanks to 'nx/src/internal-testing-utils/mock-fs'
+        return glob(patterns, { cwd: fsRoot });
+      },
+    };
+  }
+);
+
 import { CreateNodesContext } from '@nx/devkit';
 import { minimatch } from 'minimatch';
 import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
