@@ -8,10 +8,7 @@ import {
 } from '../../config/project-graph';
 import { ProjectConfiguration } from '../../config/workspace-json-project-json';
 import { hashArray } from '../../hasher/file-hasher';
-import {
-  buildProjectGraphUsingProjectFileMap as buildProjectGraphUsingFileMap,
-  CreateDependenciesError,
-} from '../../project-graph/build-project-graph';
+import { buildProjectGraphUsingProjectFileMap as buildProjectGraphUsingFileMap } from '../../project-graph/build-project-graph';
 import { updateFileMap } from '../../project-graph/file-map-utils';
 import {
   FileMapCache,
@@ -38,6 +35,7 @@ import { getPlugins } from './plugins';
 import {
   DaemonProjectGraphError,
   ProjectConfigurationsError,
+  isAggregateProjectGraphError,
 } from '../../project-graph/error-types';
 
 interface SerializedProjectGraph {
@@ -263,7 +261,7 @@ async function processFilesAndCreateAndSerializeProjectGraph(
     const errors = [...(projectConfigurationsError?.errors ?? [])];
 
     if (g.error) {
-      if (g.error instanceof CreateDependenciesError) {
+      if (isAggregateProjectGraphError(g.error)) {
         errors.push(...g.error.errors);
       } else {
         return {
@@ -344,7 +342,8 @@ async function createAndSerializeProjectGraph({
         allWorkspaceFiles,
         rustReferences,
         currentProjectFileMapCache || readFileMapCache(),
-        await getPlugins()
+        await getPlugins(),
+        sourceMaps
       );
 
     currentProjectFileMapCache = projectFileMapCache;

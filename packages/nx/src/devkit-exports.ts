@@ -54,6 +54,9 @@ export type {
   CreateNodesContext,
   CreateDependencies,
   CreateDependenciesContext,
+  CreateMetadata,
+  CreateMetadataContext,
+  ProjectsMetadata,
 } from './project-graph/plugins';
 
 export type {

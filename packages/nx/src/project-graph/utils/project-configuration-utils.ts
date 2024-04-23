@@ -32,7 +32,7 @@ import {
   isProjectsWithNoNameError,
 } from '../error-types';
 
-export type SourceInformation = [file: string, plugin: string];
+export type SourceInformation = [file: string | null, plugin: string];
 export type ConfigurationSourceMaps = Record<
   string,
   Record<string, SourceInformation>
@@ -224,7 +224,7 @@ export function mergeProjectConfigurationIntoRootMap(
     updatedProjectConfiguration;
 }
 
-function mergeMetadata<T = ProjectMetadata | TargetMetadata>(
+export function mergeMetadata<T = ProjectMetadata | TargetMetadata>(
   sourceMap: Record<string, [file: string, plugin: string]>,
   sourceInformation: [file: string, plugin: string],
   baseSourceMapPath: string,
