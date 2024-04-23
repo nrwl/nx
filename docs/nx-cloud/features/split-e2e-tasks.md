@@ -1,4 +1,4 @@
-# Automatically Split E2E Tasks by File
+# Automatically Split E2E Tasks by File (Atomizer)
 
 {% youtube
 src="https://youtu.be/0YxcxIR7QU0"
