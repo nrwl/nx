@@ -21,6 +21,7 @@
     "./executors.json": "./executors.json",
     "./generators": "./generators.js",
     "./executors": "./executors.js",
+    "./plugin": "./plugin.js",
     "./tailwind": "./tailwind.js",
     "./module-federation": "./module-federation/index.js",
     "./src/utils": "./src/utils/index.js",
