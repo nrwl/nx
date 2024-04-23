@@ -114,7 +114,7 @@ export const createNodes: CreateNodes = [
 ];
 ```
 
-By checking for the presence of a `project.json` or 'package.json' file, the plugin can be more confident that the project it is modifying is an existing Nx project.
+By checking for the presence of a `project.json` or `package.json` file, the plugin can be more confident that the project it is modifying is an existing Nx project.
 
 When extending an existing project, its important to consider how Nx will merge the returned project configurations. In general, plugins are run in the order they are listed in `nx.json`, abd then Nx's built-in plugins are run last. Plugins overwrite information that was identified by plugins that run before them if a merge is not possible.
 
