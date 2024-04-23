@@ -111,7 +111,7 @@ describe('syncGenerator()', () => {
       writeJson(tree, 'tsconfig.json', {
         // Swapped order and additional manual reference
         references: [
-          { path: 'packages/b' },
+          { path: './packages/b' },
           { path: 'packages/a' },
           { path: 'packages/c' },
         ],
@@ -119,7 +119,7 @@ describe('syncGenerator()', () => {
       expect(readJson(tree, 'tsconfig.json').references).toMatchInlineSnapshot(`
         [
           {
-            "path": "packages/b",
+            "path": "./packages/b",
           },
           {
             "path": "packages/a",
@@ -136,7 +136,7 @@ describe('syncGenerator()', () => {
       expect(rootTsconfig.references).toMatchInlineSnapshot(`
         [
           {
-            "path": "packages/b",
+            "path": "./packages/b",
           },
           {
             "path": "packages/a",
