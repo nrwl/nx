@@ -39,7 +39,7 @@ export type ConfigurationSourceMaps = Record<
 >;
 
 export function mergeProjectConfigurationIntoRootMap(
-  projectRootMap: Map<string, ProjectConfiguration>,
+  projectRootMap: Record<string, ProjectConfiguration>,
   project: ProjectConfiguration & {
     targets?: Record<
       string,
@@ -57,13 +57,13 @@ export function mergeProjectConfigurationIntoRootMap(
   }
   const sourceMap = configurationSourceMaps?.[project.root];
 
-  let matchingProject = projectRootMap.get(project.root);
+  let matchingProject = projectRootMap[project.root];
 
   if (!matchingProject) {
-    projectRootMap.set(project.root, {
+    projectRootMap[project.root] = {
       root: project.root,
-    });
-    matchingProject = projectRootMap.get(project.root);
+    };
+    matchingProject = projectRootMap[project.root];
     if (sourceMap) {
       sourceMap[`root`] = sourceInformation;
     }
@@ -220,10 +220,8 @@ export function mergeProjectConfigurationIntoRootMap(
     }
   }
 
-  projectRootMap.set(
-    updatedProjectConfiguration.root,
-    updatedProjectConfiguration
-  );
+  projectRootMap[updatedProjectConfiguration.root] =
+    updatedProjectConfiguration;
 }
 
 function mergeMetadata<T = ProjectMetadata | TargetMetadata>(
@@ -302,10 +300,29 @@ function mergeMetadata<T = ProjectMetadata | TargetMetadata>(
 }
 
 export type ConfigurationResult = {
-  projects: Record<string, ProjectConfiguration>;
+  /**
+   * A map of project configurations, keyed by project root.
+   */
+  projects: {
+    [projectRoot: string]: ProjectConfiguration;
+  };
+
+  /**
+   * Node Name -> Node info
+   */
   externalNodes: Record<string, ProjectGraphExternalNode>;
+
+  /**
+   * Project Root -> Project Name
+   */
   projectRootMap: Record<string, string>;
+
   sourceMaps: ConfigurationSourceMaps;
+
+  /**
+   * The list of files that were used to create project configurations
+   */
+  matchingProjectFiles: string[];
 };
 
 /**
@@ -388,7 +405,7 @@ export async function createProjectConfigurations(
 
   return Promise.all(results).then((results) => {
     performance.mark('createNodes:merge - start');
-    const projectRootMap: Map<string, ProjectConfiguration> = new Map();
+    const projectRootMap: Record<string, ProjectConfiguration> = {};
     const externalNodes: Record<string, ProjectGraphExternalNode> = {};
     const configurationSourceMaps: Record<
       string,
@@ -434,15 +451,18 @@ export async function createProjectConfigurations(
       Object.assign(externalNodes, pluginExternalNodes);
     }
 
-    let projects: Record<string, ProjectConfiguration>;
     try {
-      projects = readProjectConfigurationsFromRootMap(projectRootMap);
+      // We still call this just to assert that the root map
+      // only contains valid project names. This is a safety check.
+      //
+      // The signature itself can't be changed as we need it to return
+      // project configurations for use in devkit.
+      readProjectConfigurationsFromRootMap(projectRootMap);
     } catch (e) {
       if (
         isProjectsWithNoNameError(e) ||
         isProjectsWithConflictingNamesError(e)
       ) {
-        projects = e.projects;
         errors.push(e);
       } else {
         throw e;
@@ -467,24 +487,26 @@ export async function createProjectConfigurations(
 
     if (errors.length === 0) {
       return {
-        projects,
+        projects: projectRootMap,
         externalNodes,
         projectRootMap: rootMap,
         sourceMaps: configurationSourceMaps,
+        matchingProjectFiles: projectFiles,
       };
     } else {
       throw new ProjectConfigurationsError(errors, {
-        projects,
+        projects: projectRootMap,
         externalNodes,
         projectRootMap: rootMap,
         sourceMaps: configurationSourceMaps,
+        matchingProjectFiles: projectFiles,
       });
     }
   });
 }
 
 export function readProjectConfigurationsFromRootMap(
-  projectRootMap: Map<string, ProjectConfiguration>
+  projectRootMap: Record<string, ProjectConfiguration>
 ) {
   const projects: Record<string, ProjectConfiguration> = {};
   // If there are projects that have the same name, that is an error.
@@ -493,7 +515,8 @@ export function readProjectConfigurationsFromRootMap(
   const conflicts = new Map<string, string[]>();
   const projectRootsWithNoName: string[] = [];
 
-  for (const [root, configuration] of projectRootMap.entries()) {
+  for (const root in projectRootMap) {
+    const configuration = projectRootMap[root];
     // We're setting `// targets` as a comment `targets` is empty due to Project Crystal.
     // Strip it before returning configuration for usage.
     if (configuration['// targets']) delete configuration['// targets'];
@@ -779,9 +802,10 @@ export function readTargetDefaultsForTarget(
   }
 }
 
-function createRootMap(projectRootMap: Map<string, ProjectConfiguration>) {
+function createRootMap(projectRootMap: Record<string, ProjectConfiguration>) {
   const map: Record<string, string> = {};
-  for (const [projectRoot, { name: projectName }] of projectRootMap) {
+  for (const projectRoot in projectRootMap) {
+    const projectName = projectRootMap[projectRoot].name;
     map[projectRoot] = projectName;
   }
   return map;

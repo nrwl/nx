@@ -52,7 +52,7 @@ describe('Workspaces', () => {
         }
       );
       console.log(projects);
-      expect(projects['my-package']).toEqual({
+      expect(projects['packages/my-package']).toEqual({
         name: 'my-package',
         root: 'packages/my-package',
         sourceRoot: 'packages/my-package',
