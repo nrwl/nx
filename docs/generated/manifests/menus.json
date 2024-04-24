@@ -767,22 +767,6 @@
             "isExternal": false,
             "children": [
               {
-                "name": "Incremental Builds",
-                "path": "/concepts/more-concepts/incremental-builds",
-                "id": "incremental-builds",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Nx and Turborepo",
-                "path": "/concepts/more-concepts/turbo-and-nx",
-                "id": "turbo-and-nx",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
                 "name": "Monorepos",
                 "path": "/concepts/more-concepts/why-monorepos",
                 "id": "why-monorepos",
@@ -807,14 +791,6 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Using Nx at Enterprises",
-                "path": "/concepts/more-concepts/monorepo-nx-enterprise",
-                "id": "monorepo-nx-enterprise",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
                 "name": "Nx Daemon",
                 "path": "/concepts/more-concepts/nx-daemon",
                 "id": "nx-daemon",
@@ -823,25 +799,9 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Nx and the Angular CLI",
-                "path": "/concepts/more-concepts/nx-and-angular",
-                "id": "nx-and-angular",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Folder Structure",
-                "path": "/concepts/more-concepts/folder-structure",
-                "id": "folder-structure",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Nx Devkit and Angular Devkit",
-                "path": "/concepts/more-concepts/nx-devkit-angular-devkit",
-                "id": "nx-devkit-angular-devkit",
+                "name": "Nx and Turborepo",
+                "path": "/concepts/more-concepts/turbo-and-nx",
+                "id": "turbo-and-nx",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -855,7 +815,7 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Creating Libraries",
+                "name": "When to Create a New Library",
                 "path": "/concepts/more-concepts/creating-libraries",
                 "id": "creating-libraries",
                 "isExternal": false,
@@ -882,14 +842,6 @@
                 "name": "Buildable and Publishable Libraries",
                 "path": "/concepts/more-concepts/buildable-and-publishable-libraries",
                 "id": "buildable-and-publishable-libraries",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "How the Project Graph is Built",
-                "path": "/concepts/more-concepts/how-project-graph-is-built",
-                "id": "how-project-graph-is-built",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -1044,22 +996,6 @@
         "isExternal": false,
         "children": [
           {
-            "name": "Incremental Builds",
-            "path": "/concepts/more-concepts/incremental-builds",
-            "id": "incremental-builds",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Nx and Turborepo",
-            "path": "/concepts/more-concepts/turbo-and-nx",
-            "id": "turbo-and-nx",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
             "name": "Monorepos",
             "path": "/concepts/more-concepts/why-monorepos",
             "id": "why-monorepos",
@@ -1084,14 +1020,6 @@
             "disableCollapsible": false
           },
           {
-            "name": "Using Nx at Enterprises",
-            "path": "/concepts/more-concepts/monorepo-nx-enterprise",
-            "id": "monorepo-nx-enterprise",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
             "name": "Nx Daemon",
             "path": "/concepts/more-concepts/nx-daemon",
             "id": "nx-daemon",
@@ -1100,25 +1028,9 @@
             "disableCollapsible": false
           },
           {
-            "name": "Nx and the Angular CLI",
-            "path": "/concepts/more-concepts/nx-and-angular",
-            "id": "nx-and-angular",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Folder Structure",
-            "path": "/concepts/more-concepts/folder-structure",
-            "id": "folder-structure",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Nx Devkit and Angular Devkit",
-            "path": "/concepts/more-concepts/nx-devkit-angular-devkit",
-            "id": "nx-devkit-angular-devkit",
+            "name": "Nx and Turborepo",
+            "path": "/concepts/more-concepts/turbo-and-nx",
+            "id": "turbo-and-nx",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -1132,7 +1044,7 @@
             "disableCollapsible": false
           },
           {
-            "name": "Creating Libraries",
+            "name": "When to Create a New Library",
             "path": "/concepts/more-concepts/creating-libraries",
             "id": "creating-libraries",
             "isExternal": false,
@@ -1162,32 +1074,8 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
-          },
-          {
-            "name": "How the Project Graph is Built",
-            "path": "/concepts/more-concepts/how-project-graph-is-built",
-            "id": "how-project-graph-is-built",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
           }
         ],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Incremental Builds",
-        "path": "/concepts/more-concepts/incremental-builds",
-        "id": "incremental-builds",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Nx and Turborepo",
-        "path": "/concepts/more-concepts/turbo-and-nx",
-        "id": "turbo-and-nx",
-        "isExternal": false,
-        "children": [],
         "disableCollapsible": false
       },
       {
@@ -1215,14 +1103,6 @@
         "disableCollapsible": false
       },
       {
-        "name": "Using Nx at Enterprises",
-        "path": "/concepts/more-concepts/monorepo-nx-enterprise",
-        "id": "monorepo-nx-enterprise",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
         "name": "Nx Daemon",
         "path": "/concepts/more-concepts/nx-daemon",
         "id": "nx-daemon",
@@ -1231,25 +1111,9 @@
         "disableCollapsible": false
       },
       {
-        "name": "Nx and the Angular CLI",
-        "path": "/concepts/more-concepts/nx-and-angular",
-        "id": "nx-and-angular",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Folder Structure",
-        "path": "/concepts/more-concepts/folder-structure",
-        "id": "folder-structure",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Nx Devkit and Angular Devkit",
-        "path": "/concepts/more-concepts/nx-devkit-angular-devkit",
-        "id": "nx-devkit-angular-devkit",
+        "name": "Nx and Turborepo",
+        "path": "/concepts/more-concepts/turbo-and-nx",
+        "id": "turbo-and-nx",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -1263,7 +1127,7 @@
         "disableCollapsible": false
       },
       {
-        "name": "Creating Libraries",
+        "name": "When to Create a New Library",
         "path": "/concepts/more-concepts/creating-libraries",
         "id": "creating-libraries",
         "isExternal": false,
@@ -1290,14 +1154,6 @@
         "name": "Buildable and Publishable Libraries",
         "path": "/concepts/more-concepts/buildable-and-publishable-libraries",
         "id": "buildable-and-publishable-libraries",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "How the Project Graph is Built",
-        "path": "/concepts/more-concepts/how-project-graph-is-built",
-        "id": "how-project-graph-is-built",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -6695,6 +6551,22 @@
                 "name": "Overview",
                 "path": "/nx-api/angular/documents/overview",
                 "id": "overview",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Nx and the Angular CLI",
+                "path": "/nx-api/angular/documents/nx-and-angular",
+                "id": "nx-and-angular",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Nx Devkit and Angular Devkit",
+                "path": "/nx-api/angular/documents/nx-devkit-angular-devkit",
+                "id": "nx-devkit-angular-devkit",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
