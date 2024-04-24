@@ -11,7 +11,7 @@ export const fileSeparator = process.platform.startsWith('win')
 
 const newLineSeparator = process.platform.startsWith('win') ? '\r\n' : '\n';
 
-interface GradleReport {
+export interface GradleReport {
   gradleFileToGradleProjectMap: Map<string, string>;
   buildFileToDepsMap: Map<string, string>;
   gradleFileToOutputDirsMap: Map<string, Map<string, string>>;
