@@ -169,9 +169,6 @@
     "build-ng": {
       "cache": true
     },
-    "build-client": {
-      "cache": true
-    },
     "sitemap": {
       "cache": true
     },
@@ -204,6 +201,13 @@
       ],
       "options": {
         "targetName": "test"
+      }
+    },
+    {
+      "plugin": "@nx/webpack/plugin",
+      "options": {
+        "serveTargetName": "serve-base",
+        "buildTargetName": "build-client"
       }
     }
   ],
