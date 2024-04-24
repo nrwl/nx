@@ -3,9 +3,14 @@ use std::fs::read_dir;
 
 use crate::native::utils::Normalize;
 use crate::native::walker::nx_walker_sync;
+use ignore::gitignore::{GitignoreBuilder, Glob};
+use ignore::Match;
 use std::path::{Path, PathBuf};
 use tracing::trace;
 use watchexec_events::filekind::CreateKind;
+use watchexec_events::filekind::FileEventKind;
+use watchexec_events::filekind::ModifyKind::Name;
+use watchexec_events::filekind::RenameMode;
 use watchexec_events::{Event, Tag};
 
 use crate::native::watch::utils::transform_event;
@@ -91,12 +96,8 @@ pub fn transform_event_to_watch_events(
 
             let origin = origin.to_owned();
             let t = fs::metadata(path_ref);
-            match t {
-                Err(_) => Ok(vec![WatchEventInternal {
-                    path: path_ref.into(),
-                    r#type: EventType::delete,
-                    origin,
-                }]),
+            let event_type = match t {
+                Err(_) => EventType::delete,
                 Ok(t) => {
                     let modified_time = t.st_mtime();
                     let birth_time = t.st_birthtime();
@@ -105,54 +106,42 @@ pub fn transform_event_to_watch_events(
                     // so we need to check the timestamps to see if it was created or updated
                     // if the modified time is the same as birth_time then it was created
                     if modified_time == birth_time {
-                        Ok(vec![WatchEventInternal {
-                            path: path_ref.into(),
-                            r#type: EventType::create,
-                            origin,
-                        }])
+                        EventType::create
                     } else {
-                        Ok(vec![WatchEventInternal {
-                            path: path_ref.into(),
-                            r#type: EventType::update,
-                            origin,
-                        }])
+                        EventType::update
                     }
                 }
-            }
-        }
-
-        #[cfg(target_os = "windows")]
-        {
-            use watchexec_events::filekind::FileEventKind;
-            use watchexec_events::filekind::ModifyKind::Name;
-            use watchexec_events::filekind::RenameMode;
-
-            let event_kind = match event_kind {
-                FileEventKind::Create(CreateKind::File) => EventType::create,
-                FileEventKind::Modify(Name(RenameMode::To)) => EventType::create,
-                FileEventKind::Modify(Name(RenameMode::From)) => EventType::delete,
-                FileEventKind::Modify(_) => EventType::update,
-                _ => EventType::update,
             };
 
             Ok(vec![WatchEventInternal {
                 path: path_ref.into(),
-                r#type: event_kind,
-                origin: origin.to_owned(),
+                r#type: event_type,
+                origin,
             }])
+        }
+
+        #[cfg(target_os = "windows")]
+        {
+            Ok(create_watch_event_internal(origin, event_kind, path_ref))
         }
 
         #[cfg(all(not(target_os = "macos"), not(target_os = "windows")))]
         {
-            use watchexec_events::filekind::FileEventKind;
-            use watchexec_events::filekind::ModifyKind::Name;
-            use watchexec_events::filekind::RenameMode;
-
             if matches!(event_kind, FileEventKind::Create(CreateKind::Folder)) {
                 let mut result = vec![];
 
+                let mut gitignore_builder = GitignoreBuilder::new(origin);
+                let origin_path: &Path = origin.as_ref();
+                gitignore_builder.add(origin_path.join(".nxignore"));
+                let ignore = gitignore_builder.build()?;
+
                 for path in nx_walker_sync(path_ref, None) {
                     let path = path_ref.join(path);
+                    match ignore.matched_path_or_any_parents(&path, path.is_dir()) {
+                        Match::Ignore(_) => continue,
+                        _ => {}
+                    }
+
                     if !path.is_dir() {
                         result.push(WatchEventInternal {
                             path,
@@ -164,22 +153,30 @@ pub fn transform_event_to_watch_events(
 
                 Ok(result)
             } else {
-                let event_kind = match event_kind {
-                    FileEventKind::Create(CreateKind::File) => EventType::create,
-                    FileEventKind::Modify(Name(RenameMode::To)) => EventType::create,
-                    FileEventKind::Modify(Name(RenameMode::From)) => EventType::delete,
-                    FileEventKind::Modify(_) => EventType::update,
-                    _ => EventType::update,
-                };
-
-                Ok(vec![WatchEventInternal {
-                    path: path_ref.into(),
-                    r#type: event_kind,
-                    origin: origin.to_owned(),
-                }])
+                Ok(create_watch_event_internal(origin, event_kind, path_ref))
             }
         }
     }
 
-    // trace!(?path, ?event_kind, ?event_type, "event kind -> event type");
+    
+}
+
+fn create_watch_event_internal(
+    origin: &str,
+    event_kind: &FileEventKind,
+    path_ref: &Path,
+) -> Vec<WatchEventInternal> {
+    let event_kind = match event_kind {
+        FileEventKind::Create(CreateKind::File) => EventType::create,
+        FileEventKind::Modify(Name(RenameMode::To)) => EventType::create,
+        FileEventKind::Modify(Name(RenameMode::From)) => EventType::delete,
+        FileEventKind::Modify(_) => EventType::update,
+        _ => EventType::update,
+    };
+
+    vec![WatchEventInternal {
+        path: path_ref.into(),
+        r#type: event_kind,
+        origin: origin.to_owned(),
+    }]
 }
