@@ -74,6 +74,7 @@
       "@nx/nx-dev/feature-doc-viewer": [
         "nx-dev/feature-doc-viewer/src/index.ts"
       ],
+      "@nx/nx-dev/feature-feedback": ["nx-dev/feature-feedback/src/index.ts"],
       "@nx/nx-dev/feature-package-schema-viewer": [
         "nx-dev/feature-package-schema-viewer/src/index.ts"
       ],
@@ -88,6 +89,7 @@
       "@nx/nx-dev/ui-common": ["nx-dev/ui-common/src/index.ts"],
       "@nx/nx-dev/ui-community": ["nx-dev/ui-community/src/index.ts"],
       "@nx/nx-dev/ui-conference": ["nx-dev/ui-conference/src/index.ts"],
+      "@nx/nx-dev/ui-contact": ["nx-dev/ui-contact/src/index.ts"],
       "@nx/nx-dev/ui-fence": ["nx-dev/ui-fence/src/index.ts"],
       "@nx/nx-dev/ui-home": ["nx-dev/ui-home/src/index.ts"],
       "@nx/nx-dev/ui-markdoc": ["nx-dev/ui-markdoc/src/index.ts"],

@@ -45,12 +45,14 @@ jobs:
             echo "##vso[task.setvariable variable=BASE_SHA]$LAST_SHA"
           fi
 
-      # Required for nx affected if we're on a branch
-      - script: git branch --track main origin/main
       # This line enables distribution
       # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "e2e-ci" targets have been requested
       # - script: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="e2e-ci"
       - script: npm ci
+
+      # Required for nx affected if we're on a branch
+      - script: git branch --track main origin/main
+        condition: eq(variables['Build.Reason'], 'PullRequest')
 
       - script: npx nx-cloud record -- nx format:check --base=$(BASE_SHA)
       - script: npx nx affected --base=$(BASE_SHA) -t lint test build e2e-ci

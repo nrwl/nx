@@ -9,7 +9,7 @@ import {
   CreateDependencies,
   CreateDependenciesContext,
   CreateNodes,
-} from '../../utils/nx-plugin';
+} from '../../project-graph/plugins';
 import {
   getLockFileDependencies,
   getLockFileName,
@@ -88,7 +88,7 @@ export const createDependencies: CreateDependencies = (
   if (
     pluginConfig.analyzeLockfile &&
     lockFileExists(packageManager) &&
-    parsedLockFile
+    parsedLockFile.externalNodes
   ) {
     const lockFilePath = join(workspaceRoot, getLockFileName(packageManager));
     const lockFileContents = readFileSync(lockFilePath).toString();

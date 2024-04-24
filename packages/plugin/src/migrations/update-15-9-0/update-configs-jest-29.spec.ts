@@ -5,8 +5,6 @@ import {
   Tree,
   updateProjectConfiguration,
 } from '@nx/devkit';
-import { updateConfigsJest29 } from './jest-29-configs';
-import { libraryGenerator } from '@nx/js';
 
 let projectGraph: ProjectGraph;
 jest.mock('@nx/devkit', () => ({
@@ -15,6 +13,9 @@ jest.mock('@nx/devkit', () => ({
     return projectGraph;
   }),
 }));
+
+import { updateConfigsJest29 } from './jest-29-configs';
+import { libraryGenerator } from '@nx/js';
 
 describe('Nx Plugin Migration - jest 29 update configs', () => {
   let tree: Tree;

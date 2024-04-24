@@ -37,7 +37,6 @@
         "outputPath": "build/apps/graph",
         "index": "graph/client/src/index.html",
         "main": "graph/client/src/main.tsx",
-        "polyfills": "graph/client/src/polyfills.ts",
         "tsConfig": "graph/client/tsconfig.app.json",
         "styles": ["graph/client/src/styles.css"],
         "scripts": [],
@@ -249,8 +248,6 @@
       },
       "defaultConfiguration": "dev"
     },
-    "lint": {},
-    "test": {},
     "storybook": {
       "executor": "@nx/storybook:storybook",
       "options": {

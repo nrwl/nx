@@ -224,7 +224,7 @@ This executor is similar to the `@angular-devkit/build-angular:ng-packagr` with 
 
 If you prefer a more integrated experience, you can install the "Nx Console" extension for your code editor. It has support for VSCode, IntelliJ and ships a LSP for Vim. Nx Console provides autocompletion support in Nx configuration files and has UIs for browsing and running generators.
 
-More info can be found in [the integrate with editors article](/features/integrate-with-editors).
+More info can be found in [the integrate with editors article](/getting-started/editor-setup).
 
 {% /callout %}
 
@@ -621,7 +621,7 @@ nx e2e angular-store-e2e # runs e2e tests for the angular-store
 
 ### Inferred Tasks
 
-Nx identifies available tasks for your project from [tooling configuration files](/concepts/inferred-tasks), `package.json` scripts and the targets defined in `project.json`. All tasks from the `angular-store` project are defined in its `project.json` file, but the companion `angular-store-e2e` project has its tasks inferred from configuration files. To view the tasks that Nx has detected, look in the [Nx Console](/features/integrate-with-editors), [Project Details View](/recipes/nx-console/console-project-details) or run:
+Nx identifies available tasks for your project from [tooling configuration files](/concepts/inferred-tasks), `package.json` scripts and the targets defined in `project.json`. All tasks from the `angular-store` project are defined in its `project.json` file, but the companion `angular-store-e2e` project has its tasks inferred from configuration files. To view the tasks that Nx has detected, look in the [Nx Console](/getting-started/editor-setup), [Project Details View](/recipes/nx-console/console-project-details) or run:
 
 ```shell
 nx show project angular-store-e2e --web
@@ -891,7 +891,7 @@ NX   Successfully ran targets test, lint, e2e for 5 projects (54ms)
 Nx read the output from the cache instead of running the command for 10 out of 10 tasks.
 ```
 
-Not all tasks might be cacheable though. You can configure `cacheableOperations` in the `nx.json` file. You can also [learn more about how caching works](/features/cache-task-results).
+Not all tasks might be cacheable though. You can [configure which tasks are cacheable](/features/cache-task-results) in [the project configuration](/reference/project-configuration#cache) or in [the global Nx configuration](/reference/nx-json#cache). You can also [learn more about how caching works](/concepts/how-caching-works).
 
 ### Testing Affected Projects
 

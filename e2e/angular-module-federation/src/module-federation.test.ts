@@ -319,7 +319,7 @@ describe('Angular Module Federation', () => {
     const hostPort = 4200;
 
     runCLI(
-      `generate @nx/angular:host ${host} --remotes=${remote} --no-interactive --projectNameAndRootFormat=as-provided`
+      `generate @nx/angular:host ${host} --remotes=${remote} --e2eTestRunner=cypress --no-interactive --projectNameAndRootFormat=as-provided`
     );
 
     runCLI(
@@ -393,7 +393,7 @@ describe('Angular Module Federation', () => {
     const hostPort = 4200;
 
     runCLI(
-      `generate @nx/angular:host ${host} --remotes=${remote} --no-interactive --projectNameAndRootFormat=as-provided`
+      `generate @nx/angular:host ${host} --remotes=${remote} --e2eTestRunner=cypress --no-interactive --projectNameAndRootFormat=as-provided`
     );
 
     runCLI(

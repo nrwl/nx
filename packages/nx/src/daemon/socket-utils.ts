@@ -2,7 +2,7 @@ import { unlinkSync } from 'fs';
 import { platform } from 'os';
 import { join, resolve } from 'path';
 import { DAEMON_SOCKET_PATH, socketDir } from './tmp-dir';
-import { DaemonProjectGraphError } from './daemon-project-graph-error';
+import { createSerializableError } from '../utils/serializable-error';
 
 export const isWindows = platform() === 'win32';
 
@@ -27,21 +27,6 @@ export function killSocketOrPath(): void {
   } catch {}
 }
 
-// Include the original stack trace within the serialized error so that the client can show it to the user.
-function serializeError(error: Error | null): string | null {
-  if (!error) {
-    return null;
-  }
-
-  if (error instanceof DaemonProjectGraphError) {
-    error.errors = error.errors.map((e) => JSON.parse(serializeError(e)));
-  }
-
-  return `{${Object.getOwnPropertyNames(error)
-    .map((k) => `"${k}": ${JSON.stringify(error[k])}`)
-    .join(',')}}`;
-}
-
 // Prepare a serialized project graph result for sending over IPC from the server to the client
 export function serializeResult(
   error: Error | null,
@@ -49,7 +34,7 @@ export function serializeResult(
   serializedSourceMaps: string | null
 ): string | null {
   // We do not want to repeat work `JSON.stringify`ing an object containing the potentially large project graph so merge as strings
-  return `{ "error": ${serializeError(
-    error
+  return `{ "error": ${JSON.stringify(
+    error ? createSerializableError(error) : error
   )}, "projectGraph": ${serializedProjectGraph}, "sourceMaps": ${serializedSourceMaps} }`;
 }

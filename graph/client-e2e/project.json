@@ -58,8 +58,7 @@
         ],
         "parallel": false
       }
-    },
-    "lint": {}
+    }
   },
   "implicitDependencies": ["graph-client"]
 }

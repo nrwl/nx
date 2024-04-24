@@ -11,7 +11,7 @@ You could manually address these problems by splitting your e2e tests into small
 
 ## Set up
 
-To enable automatically split e2e tasks, you need to turn on [inferred tasks](/concepts/inferred-tasks#existing-nx-workspaces) for the [@nx/cypress](/nx-api/cypress) or [@nx/playwright](/nx-api/playwright) plugins. Run this command to set up inferred tasks:
+To enable automatically split e2e tasks, you need to turn on [inferred tasks](/concepts/inferred-tasks#existing-nx-workspaces) for the [@nx/cypress](/nx-api/cypress), [@nx/playwright](/nx-api/playwright), or [@nx/playwright](/nx-api/jest) plugins. Run this command to set up inferred tasks:
 
 {% tabs %}
 {% tab label="Cypress" %}
@@ -28,13 +28,24 @@ nx add @nx/playwright
 ```
 
 {% /tab %}
+{% tab label="Jest" %}
+
+```shell {% skipRescope=true %}
+nx add @nx/jest
+```
+
+{% /tab %}
 {% /tabs %}
 
 This command will register the appropriate plugin in the `plugins` array of `nx.json`.
 
 ## Manual Configuration
 
-If you are already using the `@nx/cypress` or `@nx/playwright` plugin, you need to manually add the appropriate configuration to the `plugins` array of `nx.json`. The configuration settings can be found on the [Cypress](/nx-api/cypress#nxcypress-configuration) or [Playwright](/nx-api/playwright#nxplaywright-configuration) plugin docs.
+If you are already using the `@nx/cypress`, `@nx/playwright`, or `@nx/jest` plugin, you need to manually add the appropriate configuration to the `plugins` array of `nx.json`. Follow the instructions for the plugin you are using:
+
+- [Configure Cypress Task Splitting](/nx-api/cypress#nxcypress-configuration)
+- [Configure Playwright Task Splitting](/nx-api/playwright#nxplaywright-configuration)
+- [Configure Jest Task Splitting](/nx-api/jest#splitting-e2e-tests)
 
 ## Usage
 

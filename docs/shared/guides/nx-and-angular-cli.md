@@ -146,6 +146,10 @@ You can also run Angular Schematics through the Nx CLI. So something like this w
 npx nx g @schematics/angular:component my-component
 ```
 
+{% callout type="check" title="Important" %}
+Support to run Angular Devkit builders and schematics is enabled by installing the [`@nx/angular` plugin](/nx-api/angular/documents/overview). This plugin is installed by default when creating a new Angular workspace with Nx or [migrate an existing Angular CLI workspace to Nx](#migrate-from-the-angular-cli).
+{% /callout %}
+
 ### Running Commands
 
 Commands are run in the very same way as with the Angular CLI. You just switch `ng` with `nx`. For example:
@@ -191,15 +195,44 @@ What's the difference?
 
 To reiterate: `nx migrate` runs the migrations written by the Angular team the same way `ng update` runs them. So everything should still work. You just get more control over how it works. You can learn more in our docs about [Automate Updating Dependencies](/features/automate-updating-dependencies).
 
-### 'ng add'
+### 'nx add'
 
-`ng add` is not natively supported by Nx. We want a consistent package install experience for developers working with Angular or non-Angular packages.
-
-Instead, we recommend running:
+The [`nx add` command](/nx-api/nx/documents/add) is similar to the `ng add` command. It installs a given package specifier (e.g. `@nx/react`, `@nx/react@18.1.0`, `@nx/react@latest`) and it runs an `init` or `ng-add` generator if the installed package contains it.
 
 ```shell
-npm install [package] && nx g [package]:ng-add
+nx add [package]
 ```
+
+The command was introduced in **Nx 17.3.0**. If you're using an older version, you can instead run:
+
+{% tabs %}
+{% tab label="npm" %}
+
+```shell
+npm add [package]
+nx g [package]:ng-add
+```
+
+{% /tab %}
+
+{% tab label="yarn" %}
+
+```shell
+yarn add [package]
+nx g [package]:ng-add
+```
+
+{% /tab %}
+
+{% tab label="pnpm" %}
+
+```shell
+pnpm add [package]
+nx g [package]:ng-add
+```
+
+{% /tab %}
+{% /tabs %}
 
 Replace `[package]` with the package name you're trying to add.
 
@@ -219,7 +252,7 @@ And, Nx already uses fast, modern tooling like [ESBuild](/nx-api/esbuild), [Vite
 
 ### Editor Integration
 
-Nx goes beyond being just a CLI and comes with [Nx Console](/features/integrate-with-editors), a VSCode and WebStorm extension allowing you to run commands, generate code and visualize your workspace.
+Nx goes beyond being just a CLI and comes with [Nx Console](/getting-started/editor-setup), a VSCode and WebStorm extension allowing you to run commands, generate code and visualize your workspace.
 
 ![Nx Console screenshot](/shared/images/nx-console/nx-console-screenshot.webp)
 
@@ -234,7 +267,7 @@ Nx is really made to scale with you. You can
 
 ### Visualize your Workspace
 
-As you start modularizing your Angular workspace, Nx can visualize it using the `nx graph` command or via [Nx Console](/features/integrate-with-editors) directly in your editor.
+As you start modularizing your Angular workspace, Nx can visualize it using the `nx graph` command or via [Nx Console](/getting-started/editor-setup) directly in your editor.
 
 {% graph height="450px" %}
 
@@ -362,10 +395,7 @@ npx nx@latest init
 
 or alternatively using the `--integrated` flag if you want to create an Nx monorepo right away. Learn more about all the details on the [dedicated docs page](/recipes/angular/migration/angular).
 
-There are also guides describing how to:
-
-- [manually migrate an Angular CLI app](/recipes/angular/migration/angular-manual) and
-- how to [consolidate multiple Angular CLI projects into a single Nx monorepo](/recipes/angular/migration/angular-multiple)
+There is also a guide describing how to [consolidate multiple Angular CLI projects into a single Nx monorepo](/recipes/angular/migration/angular-multiple).
 
 You can learn more about Angular & Nx by following our dedicated tutorials:
 

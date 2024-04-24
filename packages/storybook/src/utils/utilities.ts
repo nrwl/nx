@@ -275,29 +275,3 @@ export function pleaseUpgrade(): string {
     https://nx.dev/nx-api/storybook/generators/migrate-7
     `;
 }
-
-export function addPlugin(tree: Tree) {
-  const nxJson = readNxJson(tree);
-  nxJson.plugins ??= [];
-
-  for (const plugin of nxJson.plugins) {
-    if (
-      typeof plugin === 'string'
-        ? plugin === '@nx/storybook/plugin'
-        : plugin.plugin === '@nx/storybook/plugin'
-    ) {
-      return;
-    }
-  }
-
-  nxJson.plugins.push({
-    plugin: '@nx/storybook/plugin',
-    options: {
-      buildStorybookTargetName: 'build-storybook',
-      serveStorybookTargetName: 'storybook',
-      testStorybookTargetName: 'test-storybook',
-      staticStorybookTargetName: 'static-storybook',
-    },
-  });
-  updateNxJson(tree, nxJson);
-}

@@ -6,7 +6,7 @@ A project's configuration is constructed by Nx from three sources:
 2. [Workspace `targetDefaults`](/reference/nx-json#target-defaults) defined in the `nx.json` file
 3. Individual project level configuration files (`package.json` and `project.json`)
 
-Each source will overwrite the previous source. That means `targetDefaults` will overwrite inferred tasks and project level configuration will overwrite both `targetDefaults` and inferred tasks. The combined project configuration can be viewed in the project details view by using [Nx Console](/features/integrate-with-editors) in your IDE or by running:
+Each source will overwrite the previous source. That means `targetDefaults` will overwrite inferred tasks and project level configuration will overwrite both `targetDefaults` and inferred tasks. The combined project configuration can be viewed in the project details view by using [Nx Console](/getting-started/editor-setup) in your IDE or by running:
 
 ```shell
 nx show project myproject --web
@@ -568,6 +568,40 @@ Additionally, when using the expanded object syntax, you can specify individual 
 
 This configuration is usually not needed. Nx comes with reasonable defaults (imported in `nx.json`) which implement the
 configuration above.
+
+### Executor/command options
+
+To define what a task does, you must configure which command or executor will run when the task is executed. In the case of [inferred tasks](/concepts/inferred-tasks) you can provide project-specific overrides. As an example, if your repo has projects with a `build` inferred target running the `vite build` command, you can provide some extra options as follows:
+
+```json
+{
+  "targets": {
+    "build": {
+      "options": {
+        "assetsInlineLimit": 2048,
+        "assetsDir": "static/assets"
+      }
+    }
+  }
+}
+```
+
+For more details on how to pass args to the underlying command see the [Pass Args to Commands recipe](/recipes/running-tasks/pass-args-to-commands).
+
+In the case of an explicit target using an executor, you can specify the executor and the options specific to that executor as follows:
+
+```json
+{
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "options": {
+        "generateExportsField": true
+      }
+    }
+  }
+}
+```
 
 ## Project Metadata
 

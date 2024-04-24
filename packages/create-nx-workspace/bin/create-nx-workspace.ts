@@ -170,7 +170,7 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
           })
           .option('e2eTestRunner', {
             describe: chalk.dim`Test runner to use for end to end (E2E) tests.`,
-            choices: ['cypress', 'playwright', 'none'],
+            choices: ['playwright', 'cypress', 'none'],
             type: 'string',
           })
           .option('ssr', {
@@ -380,6 +380,8 @@ async function determineStack(
       case Preset.NextJsStandalone:
       case Preset.RemixStandalone:
       case Preset.RemixMonorepo:
+      case Preset.ReactNative:
+      case Preset.Expo:
         return 'react';
       case Preset.Vue:
       case Preset.VueStandalone:
@@ -397,8 +399,6 @@ async function determineStack(
       case Preset.TsStandalone:
         return 'none';
       case Preset.WebComponents:
-      case Preset.ReactNative:
-      case Preset.Expo:
       default:
         return 'unknown';
     }
@@ -1225,12 +1225,12 @@ async function determineE2eTestRunner(
       name: 'e2eTestRunner',
       choices: [
         {
-          name: 'cypress',
-          message: 'Cypress [ https://www.cypress.io/ ]',
-        },
-        {
           name: 'playwright',
           message: 'Playwright [ https://playwright.dev/ ]',
+        },
+        {
+          name: 'cypress',
+          message: 'Cypress [ https://www.cypress.io/ ]',
         },
         {
           name: 'none',

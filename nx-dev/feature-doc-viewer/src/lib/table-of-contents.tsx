@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { cx } from '@nx/nx-dev/ui-primitives';
 import { useHeadingsObserver } from './use-headings-observer';
+import { ProcessedDocument } from '@nx/nx-dev/models-document';
 
 interface Heading {
   id: string;
@@ -49,11 +50,13 @@ export function TableOfContents({
   headings,
   path,
   children,
+  document,
 }: {
   elementRef: any;
   headings: Heading[];
   path: string;
   children: React.ReactNode;
+  document: ProcessedDocument;
 }): JSX.Element {
   const headingLevelTargets: number[] = [1, 2, 3]; // matching to: H1, H2, H3...
   const items = headings.filter(
@@ -75,7 +78,7 @@ export function TableOfContents({
       <nav className="toc">
         <span className="pl-4 font-medium">On this page</span>
         {!!items.length ? (
-          <ul className="flex-col mt-4">
+          <ul className="mt-4 flex-col">
             {items.map((item) => {
               const href = `${path}#${item.id}`;
               return (

@@ -1,23 +1,35 @@
-// When plugins from root nx.json load through ts-jest, they can cause transpile errors such as `@nx/playwright/plugin.d.ts` containing an unexpected "export" keyword.
-// Mock `loadNxPlugins` function to prevent them from loading.
-jest.mock('nx/src/utils/nx-plugin', () => ({
-  loadNxPlugins: () => Promise.resolve([]),
-}));
-
+import { TempFs } from '../../internal-testing-utils';
 import { convertNxExecutor } from './convert-nx-executor';
 
 describe('Convert Nx Executor', () => {
+  let fs: TempFs;
+
+  beforeAll(async () => {
+    fs = new TempFs('convert-nx-executor');
+    // The tests in this file don't actually care about the files in the temp dir.
+    // The converted executor reads project configuration from the workspace root,
+    // which is set to the temp dir in the tests. If there are no files in the temp
+    // dir, the glob search currently hangs. So we create a dummy file to prevent that.
+    await fs.createFile('blah.json', JSON.stringify({}));
+  });
+
+  afterAll(() => {
+    fs.cleanup();
+  });
+
   it('should convertNxExecutor to builder correctly and produce the same output', async () => {
     // ARRANGE
     const { schema } = require('@angular-devkit/core');
     const {
       TestingArchitectHost,
-    } = require('@angular-devkit/architect/testing');
+      // nx-ignore-next-line
+    } = require('@angular-devkit/architect/testing') as typeof import('@angular-devkit/architect/testing');
     const { Architect } = require('@angular-devkit/architect');
 
     const registry = new schema.CoreSchemaRegistry();
     registry.addPostTransform(schema.transforms.addUndefinedDefaults);
     const testArchitectHost = new TestingArchitectHost();
+    testArchitectHost.workspaceRoot = fs.tempDir;
     const architect = new Architect(testArchitectHost, registry);
 
     const convertedExecutor = convertNxExecutor(echoExecutor);

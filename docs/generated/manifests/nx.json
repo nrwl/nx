@@ -40,6 +40,17 @@
         "tags": []
       },
       {
+        "id": "editor-setup",
+        "name": "Editor Setup",
+        "description": "Learn about Nx Console, an extension for VS Code and WebStorm.",
+        "mediaImage": "",
+        "file": "shared/getting-started/editor-setup",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/getting-started/editor-setup",
+        "tags": ["editor-setup"]
+      },
+      {
         "id": "tutorials",
         "name": "Tutorials",
         "description": "Get started with basic information, concepts and tutorials.",
@@ -55,17 +66,6 @@
             "itemList": [],
             "isExternal": false,
             "path": "/getting-started/tutorials/npm-workspaces-tutorial",
-            "tags": []
-          },
-          {
-            "id": "integrated-repo-tutorial",
-            "name": "Integrated Monorepo",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/npm-tutorial/integrated",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/getting-started/tutorials/integrated-repo-tutorial",
             "tags": []
           },
           {
@@ -166,6 +166,17 @@
     "path": "/getting-started/why-nx",
     "tags": []
   },
+  "/getting-started/editor-setup": {
+    "id": "editor-setup",
+    "name": "Editor Setup",
+    "description": "Learn about Nx Console, an extension for VS Code and WebStorm.",
+    "mediaImage": "",
+    "file": "shared/getting-started/editor-setup",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/getting-started/editor-setup",
+    "tags": ["editor-setup"]
+  },
   "/getting-started/tutorials": {
     "id": "tutorials",
     "name": "Tutorials",
@@ -182,17 +193,6 @@
         "itemList": [],
         "isExternal": false,
         "path": "/getting-started/tutorials/npm-workspaces-tutorial",
-        "tags": []
-      },
-      {
-        "id": "integrated-repo-tutorial",
-        "name": "Integrated Monorepo",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/npm-tutorial/integrated",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/getting-started/tutorials/integrated-repo-tutorial",
         "tags": []
       },
       {
@@ -264,17 +264,6 @@
     "itemList": [],
     "isExternal": false,
     "path": "/getting-started/tutorials/npm-workspaces-tutorial",
-    "tags": []
-  },
-  "/getting-started/tutorials/integrated-repo-tutorial": {
-    "id": "integrated-repo-tutorial",
-    "name": "Integrated Monorepo",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/npm-tutorial/integrated",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/getting-started/tutorials/integrated-repo-tutorial",
     "tags": []
   },
   "/getting-started/tutorials/react-standalone-tutorial": {
@@ -550,17 +539,6 @@
         "tags": ["enforce-module-boundaries"]
       },
       {
-        "id": "integrate-with-editors",
-        "name": "Integrate with Editors",
-        "description": "Learn about Nx Console, an extension for VS Code and WebStorm.",
-        "mediaImage": "",
-        "file": "shared/features/integrate-with-editors",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/features/integrate-with-editors",
-        "tags": ["integrate-with-editors"]
-      },
-      {
         "id": "manage-releases",
         "name": "Manage Releases",
         "description": "Learn how Nx provides tools to help you manage releasing your projects.",
@@ -730,17 +708,6 @@
     "isExternal": false,
     "path": "/features/enforce-module-boundaries",
     "tags": ["enforce-module-boundaries"]
-  },
-  "/features/integrate-with-editors": {
-    "id": "integrate-with-editors",
-    "name": "Integrate with Editors",
-    "description": "Learn about Nx Console, an extension for VS Code and WebStorm.",
-    "mediaImage": "",
-    "file": "shared/features/integrate-with-editors",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/features/integrate-with-editors",
-    "tags": ["integrate-with-editors"]
   },
   "/features/manage-releases": {
     "id": "manage-releases",
@@ -935,7 +902,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/concepts/mental-model",
-        "tags": ["intro"]
+        "tags": ["intro", "inferred-tasks"]
       },
       {
         "id": "how-caching-works",
@@ -968,7 +935,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/concepts/nx-plugins",
-        "tags": ["generate-code", "create-your-own-plugin"]
+        "tags": ["generate-code", "create-your-own-plugin", "inferred-tasks"]
       },
       {
         "id": "inferred-tasks",
@@ -1251,7 +1218,7 @@
             "itemList": [],
             "isExternal": false,
             "path": "/concepts/more-concepts/how-project-graph-is-built",
-            "tags": ["explore-graph"]
+            "tags": ["explore-graph", "inferred-tasks"]
           }
         ],
         "isExternal": false,
@@ -1272,7 +1239,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/concepts/mental-model",
-    "tags": ["intro"]
+    "tags": ["intro", "inferred-tasks"]
   },
   "/concepts/how-caching-works": {
     "id": "how-caching-works",
@@ -1305,7 +1272,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/concepts/nx-plugins",
-    "tags": ["generate-code", "create-your-own-plugin"]
+    "tags": ["generate-code", "create-your-own-plugin", "inferred-tasks"]
   },
   "/concepts/inferred-tasks": {
     "id": "inferred-tasks",
@@ -1632,7 +1599,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/concepts/more-concepts/how-project-graph-is-built",
-        "tags": ["explore-graph"]
+        "tags": ["explore-graph", "inferred-tasks"]
       }
     ],
     "isExternal": false,
@@ -1813,7 +1780,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/concepts/more-concepts/how-project-graph-is-built",
-    "tags": ["explore-graph"]
+    "tags": ["explore-graph", "inferred-tasks"]
   },
   "/recipes": {
     "id": "recipes",
@@ -1822,6 +1789,40 @@
     "mediaImage": "",
     "file": "",
     "itemList": [
+      {
+        "id": "installation",
+        "name": "Installation",
+        "description": "Installing Nx",
+        "mediaImage": "",
+        "file": "",
+        "itemList": [
+          {
+            "id": "install-non-javascript",
+            "name": "Install Nx in a Non-Javascript Repo",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/recipes/installation/install-non-javascript",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/installation/install-non-javascript",
+            "tags": ["installation"]
+          },
+          {
+            "id": "update-global-installation",
+            "name": "Update Your Global Nx Installation",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/recipes/installation/update-global-installation",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/installation/update-global-installation",
+            "tags": ["installation"]
+          }
+        ],
+        "isExternal": false,
+        "path": "/recipes/installation",
+        "tags": []
+      },
       {
         "id": "running-tasks",
         "name": "Tasks & Caching",
@@ -1882,6 +1883,17 @@
             "itemList": [],
             "isExternal": false,
             "path": "/recipes/running-tasks/run-commands-executor",
+            "tags": ["run-tasks"]
+          },
+          {
+            "id": "pass-args-to-commands",
+            "name": "Pass Args to Commands",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/recipes/running-tasks/pass-args-to-commands",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/running-tasks/pass-args-to-commands",
             "tags": ["run-tasks"]
           },
           {
@@ -2008,28 +2020,6 @@
         "file": "",
         "itemList": [
           {
-            "id": "migration-cra",
-            "name": "Migrating from CRA",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/migration/migration-cra",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/react/migration-cra",
-            "tags": []
-          },
-          {
-            "id": "react-18",
-            "name": "React 18 Migration",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/guides/react-18",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/react/react-18",
-            "tags": []
-          },
-          {
             "id": "react-native",
             "name": "React Native with Nx",
             "description": "",
@@ -2145,17 +2135,6 @@
                 "itemList": [],
                 "isExternal": false,
                 "path": "/recipes/angular/migration/angular-multiple",
-                "tags": []
-              },
-              {
-                "id": "angular-manual",
-                "name": "Migrating Angular Application manually",
-                "description": "",
-                "mediaImage": "",
-                "file": "shared/migration/angular-manual",
-                "itemList": [],
-                "isExternal": false,
-                "path": "/recipes/angular/migration/angular-manual",
                 "tags": []
               }
             ],
@@ -2695,40 +2674,6 @@
         "tags": []
       },
       {
-        "id": "installation",
-        "name": "Installation",
-        "description": "Installing Nx",
-        "mediaImage": "",
-        "file": "",
-        "itemList": [
-          {
-            "id": "install-non-javascript",
-            "name": "Install Nx in a Non-Javascript Repo",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/recipes/installation/install-non-javascript",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/installation/install-non-javascript",
-            "tags": ["installation"]
-          },
-          {
-            "id": "update-global-installation",
-            "name": "Update Your Global Nx Installation",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/recipes/installation/update-global-installation",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/installation/update-global-installation",
-            "tags": ["installation"]
-          }
-        ],
-        "isExternal": false,
-        "path": "/recipes/installation",
-        "tags": []
-      },
-      {
         "id": "tips-n-tricks",
         "name": "Tips and tricks",
         "description": "Various tips and tricks for using Nx.",
@@ -2939,73 +2884,6 @@
         "tags": []
       },
       {
-        "id": "troubleshooting",
-        "name": "Troubleshooting",
-        "description": "Learn how to troubleshoot common problems.",
-        "mediaImage": "",
-        "file": "",
-        "itemList": [
-          {
-            "id": "resolve-circular-dependencies",
-            "name": "Resolve Circular Dependencies",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/recipes/resolve-circular-dependencies",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/troubleshooting/resolve-circular-dependencies",
-            "tags": ["explore-graph"]
-          },
-          {
-            "id": "troubleshoot-nx-install-issues",
-            "name": "Troubleshooting Nx Install Issues",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/installation/troubleshoot-installation",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/troubleshooting/troubleshoot-nx-install-issues",
-            "tags": []
-          },
-          {
-            "id": "troubleshoot-cache-misses",
-            "name": "Troubleshoot Cache Misses",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/recipes/troubleshoot-cache-misses",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/troubleshooting/troubleshoot-cache-misses",
-            "tags": ["cache-task-results"]
-          },
-          {
-            "id": "unknown-local-cache",
-            "name": "Unknown Local Cache Error",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/guides/unknown-local-cache",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/troubleshooting/unknown-local-cache",
-            "tags": []
-          },
-          {
-            "id": "performance-profiling",
-            "name": "Profiling Build Performance",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/guides/performance-profiling",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/troubleshooting/performance-profiling",
-            "tags": ["environment-variables"]
-          }
-        ],
-        "isExternal": false,
-        "path": "/recipes/troubleshooting",
-        "tags": []
-      },
-      {
         "id": "nx-console",
         "name": "Nx Console",
         "description": "Checkout all the recipes related to Nx Console.",
@@ -3021,7 +2899,7 @@
             "itemList": [],
             "isExternal": false,
             "path": "/recipes/nx-console/console-telemetry",
-            "tags": ["integrate-with-editors"]
+            "tags": ["editor-setup"]
           },
           {
             "id": "console-project-details",
@@ -3032,7 +2910,7 @@
             "itemList": [],
             "isExternal": false,
             "path": "/recipes/nx-console/console-project-details",
-            "tags": ["integrate-with-editors"]
+            "tags": ["editor-setup"]
           },
           {
             "id": "console-generate-command",
@@ -3043,7 +2921,7 @@
             "itemList": [],
             "isExternal": false,
             "path": "/recipes/nx-console/console-generate-command",
-            "tags": ["integrate-with-editors"]
+            "tags": ["editor-setup"]
           },
           {
             "id": "console-run-command",
@@ -3054,40 +2932,7 @@
             "itemList": [],
             "isExternal": false,
             "path": "/recipes/nx-console/console-run-command",
-            "tags": ["integrate-with-editors"]
-          },
-          {
-            "id": "console-add-dependency-command",
-            "name": "Add Dependency Command",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/recipes/console-add-dependency-command",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/nx-console/console-add-dependency-command",
-            "tags": ["integrate-with-editors"]
-          },
-          {
-            "id": "console-project-pane",
-            "name": "Project Pane",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/recipes/console-project-pane",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/nx-console/console-project-pane",
-            "tags": ["integrate-with-editors"]
-          },
-          {
-            "id": "console-shortcuts",
-            "name": "Keyboard Shortcuts",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/recipes/console-shortcuts",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/nx-console/console-shortcuts",
-            "tags": ["integrate-with-editors"]
+            "tags": ["editor-setup"]
           },
           {
             "id": "console-troubleshooting",
@@ -3098,7 +2943,7 @@
             "itemList": [],
             "isExternal": false,
             "path": "/recipes/nx-console/console-troubleshooting",
-            "tags": ["integrate-with-editors"]
+            "tags": ["editor-setup"]
           }
         ],
         "isExternal": false,
@@ -3143,6 +2988,17 @@
             "itemList": [],
             "isExternal": false,
             "path": "/recipes/nx-release/automatically-version-with-conventional-commits",
+            "tags": ["nx-release"]
+          },
+          {
+            "id": "configure-custom-registries",
+            "name": "Configure Custom Registries",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/recipes/nx-release/configure-custom-registries",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/nx-release/configure-custom-registries",
             "tags": ["nx-release"]
           },
           {
@@ -3233,6 +3089,62 @@
     "path": "/recipes",
     "tags": []
   },
+  "/recipes/installation": {
+    "id": "installation",
+    "name": "Installation",
+    "description": "Installing Nx",
+    "mediaImage": "",
+    "file": "",
+    "itemList": [
+      {
+        "id": "install-non-javascript",
+        "name": "Install Nx in a Non-Javascript Repo",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/installation/install-non-javascript",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/installation/install-non-javascript",
+        "tags": ["installation"]
+      },
+      {
+        "id": "update-global-installation",
+        "name": "Update Your Global Nx Installation",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/installation/update-global-installation",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/installation/update-global-installation",
+        "tags": ["installation"]
+      }
+    ],
+    "isExternal": false,
+    "path": "/recipes/installation",
+    "tags": []
+  },
+  "/recipes/installation/install-non-javascript": {
+    "id": "install-non-javascript",
+    "name": "Install Nx in a Non-Javascript Repo",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/installation/install-non-javascript",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/installation/install-non-javascript",
+    "tags": ["installation"]
+  },
+  "/recipes/installation/update-global-installation": {
+    "id": "update-global-installation",
+    "name": "Update Your Global Nx Installation",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/installation/update-global-installation",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/installation/update-global-installation",
+    "tags": ["installation"]
+  },
   "/recipes/running-tasks": {
     "id": "running-tasks",
     "name": "Tasks & Caching",
@@ -3293,6 +3205,17 @@
         "itemList": [],
         "isExternal": false,
         "path": "/recipes/running-tasks/run-commands-executor",
+        "tags": ["run-tasks"]
+      },
+      {
+        "id": "pass-args-to-commands",
+        "name": "Pass Args to Commands",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/running-tasks/pass-args-to-commands",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/running-tasks/pass-args-to-commands",
         "tags": ["run-tasks"]
       },
       {
@@ -3397,6 +3320,17 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/running-tasks/run-commands-executor",
+    "tags": ["run-tasks"]
+  },
+  "/recipes/running-tasks/pass-args-to-commands": {
+    "id": "pass-args-to-commands",
+    "name": "Pass Args to Commands",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/running-tasks/pass-args-to-commands",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/running-tasks/pass-args-to-commands",
     "tags": ["run-tasks"]
   },
   "/recipes/running-tasks/run-tasks-in-parallel": {
@@ -3573,28 +3507,6 @@
     "file": "",
     "itemList": [
       {
-        "id": "migration-cra",
-        "name": "Migrating from CRA",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/migration/migration-cra",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/react/migration-cra",
-        "tags": []
-      },
-      {
-        "id": "react-18",
-        "name": "React 18 Migration",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/guides/react-18",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/react/react-18",
-        "tags": []
-      },
-      {
         "id": "react-native",
         "name": "React Native with Nx",
         "description": "",
@@ -3674,28 +3586,6 @@
     ],
     "isExternal": false,
     "path": "/recipes/react",
-    "tags": []
-  },
-  "/recipes/react/migration-cra": {
-    "id": "migration-cra",
-    "name": "Migrating from CRA",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/migration/migration-cra",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/react/migration-cra",
-    "tags": []
-  },
-  "/recipes/react/react-18": {
-    "id": "react-18",
-    "name": "React 18 Migration",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/guides/react-18",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/react/react-18",
     "tags": []
   },
   "/recipes/react/react-native": {
@@ -3810,17 +3700,6 @@
             "isExternal": false,
             "path": "/recipes/angular/migration/angular-multiple",
             "tags": []
-          },
-          {
-            "id": "angular-manual",
-            "name": "Migrating Angular Application manually",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/migration/angular-manual",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/angular/migration/angular-manual",
-            "tags": []
           }
         ],
         "isExternal": false,
@@ -3915,17 +3794,6 @@
         "isExternal": false,
         "path": "/recipes/angular/migration/angular-multiple",
         "tags": []
-      },
-      {
-        "id": "angular-manual",
-        "name": "Migrating Angular Application manually",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/migration/angular-manual",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/angular/migration/angular-manual",
-        "tags": []
       }
     ],
     "isExternal": false,
@@ -3952,17 +3820,6 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/angular/migration/angular-multiple",
-    "tags": []
-  },
-  "/recipes/angular/migration/angular-manual": {
-    "id": "angular-manual",
-    "name": "Migrating Angular Application manually",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/migration/angular-manual",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/angular/migration/angular-manual",
     "tags": []
   },
   "/recipes/angular/use-environment-variables-in-angular": {
@@ -4854,62 +4711,6 @@
     "path": "/recipes/enforce-module-boundaries/tags-allow-list",
     "tags": ["enforce-module-boundaries"]
   },
-  "/recipes/installation": {
-    "id": "installation",
-    "name": "Installation",
-    "description": "Installing Nx",
-    "mediaImage": "",
-    "file": "",
-    "itemList": [
-      {
-        "id": "install-non-javascript",
-        "name": "Install Nx in a Non-Javascript Repo",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/recipes/installation/install-non-javascript",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/installation/install-non-javascript",
-        "tags": ["installation"]
-      },
-      {
-        "id": "update-global-installation",
-        "name": "Update Your Global Nx Installation",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/recipes/installation/update-global-installation",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/installation/update-global-installation",
-        "tags": ["installation"]
-      }
-    ],
-    "isExternal": false,
-    "path": "/recipes/installation",
-    "tags": []
-  },
-  "/recipes/installation/install-non-javascript": {
-    "id": "install-non-javascript",
-    "name": "Install Nx in a Non-Javascript Repo",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/recipes/installation/install-non-javascript",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/installation/install-non-javascript",
-    "tags": ["installation"]
-  },
-  "/recipes/installation/update-global-installation": {
-    "id": "update-global-installation",
-    "name": "Update Your Global Nx Installation",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/recipes/installation/update-global-installation",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/installation/update-global-installation",
-    "tags": ["installation"]
-  },
   "/recipes/tips-n-tricks": {
     "id": "tips-n-tricks",
     "name": "Tips and tricks",
@@ -5318,128 +5119,6 @@
     "path": "/recipes/tips-n-tricks/flat-config",
     "tags": ["eslint", "flat config"]
   },
-  "/recipes/troubleshooting": {
-    "id": "troubleshooting",
-    "name": "Troubleshooting",
-    "description": "Learn how to troubleshoot common problems.",
-    "mediaImage": "",
-    "file": "",
-    "itemList": [
-      {
-        "id": "resolve-circular-dependencies",
-        "name": "Resolve Circular Dependencies",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/recipes/resolve-circular-dependencies",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/troubleshooting/resolve-circular-dependencies",
-        "tags": ["explore-graph"]
-      },
-      {
-        "id": "troubleshoot-nx-install-issues",
-        "name": "Troubleshooting Nx Install Issues",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/installation/troubleshoot-installation",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/troubleshooting/troubleshoot-nx-install-issues",
-        "tags": []
-      },
-      {
-        "id": "troubleshoot-cache-misses",
-        "name": "Troubleshoot Cache Misses",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/recipes/troubleshoot-cache-misses",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/troubleshooting/troubleshoot-cache-misses",
-        "tags": ["cache-task-results"]
-      },
-      {
-        "id": "unknown-local-cache",
-        "name": "Unknown Local Cache Error",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/guides/unknown-local-cache",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/troubleshooting/unknown-local-cache",
-        "tags": []
-      },
-      {
-        "id": "performance-profiling",
-        "name": "Profiling Build Performance",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/guides/performance-profiling",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/troubleshooting/performance-profiling",
-        "tags": ["environment-variables"]
-      }
-    ],
-    "isExternal": false,
-    "path": "/recipes/troubleshooting",
-    "tags": []
-  },
-  "/recipes/troubleshooting/resolve-circular-dependencies": {
-    "id": "resolve-circular-dependencies",
-    "name": "Resolve Circular Dependencies",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/recipes/resolve-circular-dependencies",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/troubleshooting/resolve-circular-dependencies",
-    "tags": ["explore-graph"]
-  },
-  "/recipes/troubleshooting/troubleshoot-nx-install-issues": {
-    "id": "troubleshoot-nx-install-issues",
-    "name": "Troubleshooting Nx Install Issues",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/installation/troubleshoot-installation",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/troubleshooting/troubleshoot-nx-install-issues",
-    "tags": []
-  },
-  "/recipes/troubleshooting/troubleshoot-cache-misses": {
-    "id": "troubleshoot-cache-misses",
-    "name": "Troubleshoot Cache Misses",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/recipes/troubleshoot-cache-misses",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/troubleshooting/troubleshoot-cache-misses",
-    "tags": ["cache-task-results"]
-  },
-  "/recipes/troubleshooting/unknown-local-cache": {
-    "id": "unknown-local-cache",
-    "name": "Unknown Local Cache Error",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/guides/unknown-local-cache",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/troubleshooting/unknown-local-cache",
-    "tags": []
-  },
-  "/recipes/troubleshooting/performance-profiling": {
-    "id": "performance-profiling",
-    "name": "Profiling Build Performance",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/guides/performance-profiling",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/troubleshooting/performance-profiling",
-    "tags": ["environment-variables"]
-  },
   "/recipes/nx-console": {
     "id": "nx-console",
     "name": "Nx Console",
@@ -5456,7 +5135,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/recipes/nx-console/console-telemetry",
-        "tags": ["integrate-with-editors"]
+        "tags": ["editor-setup"]
       },
       {
         "id": "console-project-details",
@@ -5467,7 +5146,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/recipes/nx-console/console-project-details",
-        "tags": ["integrate-with-editors"]
+        "tags": ["editor-setup"]
       },
       {
         "id": "console-generate-command",
@@ -5478,7 +5157,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/recipes/nx-console/console-generate-command",
-        "tags": ["integrate-with-editors"]
+        "tags": ["editor-setup"]
       },
       {
         "id": "console-run-command",
@@ -5489,40 +5168,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/recipes/nx-console/console-run-command",
-        "tags": ["integrate-with-editors"]
-      },
-      {
-        "id": "console-add-dependency-command",
-        "name": "Add Dependency Command",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/recipes/console-add-dependency-command",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/nx-console/console-add-dependency-command",
-        "tags": ["integrate-with-editors"]
-      },
-      {
-        "id": "console-project-pane",
-        "name": "Project Pane",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/recipes/console-project-pane",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/nx-console/console-project-pane",
-        "tags": ["integrate-with-editors"]
-      },
-      {
-        "id": "console-shortcuts",
-        "name": "Keyboard Shortcuts",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/recipes/console-shortcuts",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/nx-console/console-shortcuts",
-        "tags": ["integrate-with-editors"]
+        "tags": ["editor-setup"]
       },
       {
         "id": "console-troubleshooting",
@@ -5533,7 +5179,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/recipes/nx-console/console-troubleshooting",
-        "tags": ["integrate-with-editors"]
+        "tags": ["editor-setup"]
       }
     ],
     "isExternal": false,
@@ -5549,7 +5195,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/nx-console/console-telemetry",
-    "tags": ["integrate-with-editors"]
+    "tags": ["editor-setup"]
   },
   "/recipes/nx-console/console-project-details": {
     "id": "console-project-details",
@@ -5560,7 +5206,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/nx-console/console-project-details",
-    "tags": ["integrate-with-editors"]
+    "tags": ["editor-setup"]
   },
   "/recipes/nx-console/console-generate-command": {
     "id": "console-generate-command",
@@ -5571,7 +5217,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/nx-console/console-generate-command",
-    "tags": ["integrate-with-editors"]
+    "tags": ["editor-setup"]
   },
   "/recipes/nx-console/console-run-command": {
     "id": "console-run-command",
@@ -5582,40 +5228,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/nx-console/console-run-command",
-    "tags": ["integrate-with-editors"]
-  },
-  "/recipes/nx-console/console-add-dependency-command": {
-    "id": "console-add-dependency-command",
-    "name": "Add Dependency Command",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/recipes/console-add-dependency-command",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/nx-console/console-add-dependency-command",
-    "tags": ["integrate-with-editors"]
-  },
-  "/recipes/nx-console/console-project-pane": {
-    "id": "console-project-pane",
-    "name": "Project Pane",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/recipes/console-project-pane",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/nx-console/console-project-pane",
-    "tags": ["integrate-with-editors"]
-  },
-  "/recipes/nx-console/console-shortcuts": {
-    "id": "console-shortcuts",
-    "name": "Keyboard Shortcuts",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/recipes/console-shortcuts",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/nx-console/console-shortcuts",
-    "tags": ["integrate-with-editors"]
+    "tags": ["editor-setup"]
   },
   "/recipes/nx-console/console-troubleshooting": {
     "id": "console-troubleshooting",
@@ -5626,7 +5239,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/nx-console/console-troubleshooting",
-    "tags": ["integrate-with-editors"]
+    "tags": ["editor-setup"]
   },
   "/recipes/nx-release": {
     "id": "nx-release",
@@ -5666,6 +5279,17 @@
         "itemList": [],
         "isExternal": false,
         "path": "/recipes/nx-release/automatically-version-with-conventional-commits",
+        "tags": ["nx-release"]
+      },
+      {
+        "id": "configure-custom-registries",
+        "name": "Configure Custom Registries",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/nx-release/configure-custom-registries",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/nx-release/configure-custom-registries",
         "tags": ["nx-release"]
       },
       {
@@ -5759,6 +5383,17 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/nx-release/automatically-version-with-conventional-commits",
+    "tags": ["nx-release"]
+  },
+  "/recipes/nx-release/configure-custom-registries": {
+    "id": "configure-custom-registries",
+    "name": "Configure Custom Registries",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/nx-release/configure-custom-registries",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/nx-release/configure-custom-registries",
     "tags": ["nx-release"]
   },
   "/recipes/nx-release/publish-in-ci-cd": {
@@ -6703,6 +6338,128 @@
     "path": "/reference/glossary",
     "tags": []
   },
+  "/troubleshooting": {
+    "id": "troubleshooting",
+    "name": "Troubleshooting",
+    "description": "Learn how to troubleshoot common problems.",
+    "mediaImage": "",
+    "file": "",
+    "itemList": [
+      {
+        "id": "resolve-circular-dependencies",
+        "name": "Resolve Circular Dependencies",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/resolve-circular-dependencies",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/troubleshooting/resolve-circular-dependencies",
+        "tags": ["explore-graph"]
+      },
+      {
+        "id": "troubleshoot-nx-install-issues",
+        "name": "Troubleshooting Nx Install Issues",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/installation/troubleshoot-installation",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/troubleshooting/troubleshoot-nx-install-issues",
+        "tags": []
+      },
+      {
+        "id": "troubleshoot-cache-misses",
+        "name": "Troubleshoot Cache Misses",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/troubleshoot-cache-misses",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/troubleshooting/troubleshoot-cache-misses",
+        "tags": ["cache-task-results"]
+      },
+      {
+        "id": "unknown-local-cache",
+        "name": "Unknown Local Cache Error",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/guides/unknown-local-cache",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/troubleshooting/unknown-local-cache",
+        "tags": []
+      },
+      {
+        "id": "performance-profiling",
+        "name": "Profiling Build Performance",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/guides/performance-profiling",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/troubleshooting/performance-profiling",
+        "tags": ["environment-variables"]
+      }
+    ],
+    "isExternal": false,
+    "path": "/troubleshooting",
+    "tags": []
+  },
+  "/troubleshooting/resolve-circular-dependencies": {
+    "id": "resolve-circular-dependencies",
+    "name": "Resolve Circular Dependencies",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/resolve-circular-dependencies",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/troubleshooting/resolve-circular-dependencies",
+    "tags": ["explore-graph"]
+  },
+  "/troubleshooting/troubleshoot-nx-install-issues": {
+    "id": "troubleshoot-nx-install-issues",
+    "name": "Troubleshooting Nx Install Issues",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/installation/troubleshoot-installation",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/troubleshooting/troubleshoot-nx-install-issues",
+    "tags": []
+  },
+  "/troubleshooting/troubleshoot-cache-misses": {
+    "id": "troubleshoot-cache-misses",
+    "name": "Troubleshoot Cache Misses",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/troubleshoot-cache-misses",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/troubleshooting/troubleshoot-cache-misses",
+    "tags": ["cache-task-results"]
+  },
+  "/troubleshooting/unknown-local-cache": {
+    "id": "unknown-local-cache",
+    "name": "Unknown Local Cache Error",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/guides/unknown-local-cache",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/troubleshooting/unknown-local-cache",
+    "tags": []
+  },
+  "/troubleshooting/performance-profiling": {
+    "id": "performance-profiling",
+    "name": "Profiling Build Performance",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/guides/performance-profiling",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/troubleshooting/performance-profiling",
+    "tags": ["environment-variables"]
+  },
   "/deprecated": {
     "id": "deprecated",
     "name": "Deprecated",
@@ -6719,17 +6476,6 @@
         "itemList": [],
         "isExternal": false,
         "path": "/deprecated/workspace-json",
-        "tags": []
-      },
-      {
-        "id": "workspace-lint",
-        "name": "workspace-lint",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/deprecated/workspace-lint",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/deprecated/workspace-lint",
         "tags": []
       },
       {
@@ -6763,17 +6509,6 @@
         "itemList": [],
         "isExternal": false,
         "path": "/deprecated/workspace-executors",
-        "tags": []
-      },
-      {
-        "id": "default-collection",
-        "name": "defaultCollection",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/deprecated/default-collection",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/deprecated/default-collection",
         "tags": []
       },
       {
@@ -6832,84 +6567,6 @@
         "tags": []
       },
       {
-        "id": "storybook",
-        "name": "Storybook deprecated docs",
-        "description": "Deprecated @nx/storybook package documentation and guides.",
-        "mediaImage": "",
-        "file": "",
-        "itemList": [
-          {
-            "id": "angular-storybook-targets",
-            "name": "Angular: Information about the Storybook targets",
-            "description": "This document explains the role of the storybook and build-storybook targets in Angular projects with a Storybook configuration, and specifically which executors are used for them.",
-            "mediaImage": "",
-            "file": "shared/deprecated/storybook/angular-storybook-targets",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/deprecated/storybook/angular-storybook-targets",
-            "tags": []
-          },
-          {
-            "id": "angular-project-build-config",
-            "name": "Angular - The projectBuildConfig",
-            "description": "This document explains the role of the projectBuildConfig in Angular projects with a Storybook configuration, and how the Storybook executors use it.",
-            "mediaImage": "",
-            "file": "shared/deprecated/storybook/angular-project-build-config",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/deprecated/storybook/angular-project-build-config",
-            "tags": []
-          },
-          {
-            "id": "migrate-webpack-final-angular",
-            "name": "Angular: Storybook Migration to webpackFinal",
-            "description": "This guide explains how migrate from older versions of Storybook which used a custom webpack.config.js to the new Storybook 6.3+ which uses the webpackFinal property in the main configuration.",
-            "mediaImage": "",
-            "file": "shared/deprecated/storybook/migrate-webpack-final-angular",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/deprecated/storybook/migrate-webpack-final-angular",
-            "tags": []
-          },
-          {
-            "id": "upgrade-storybook-v6-angular",
-            "name": "Angular: Upgrading to Storybook 6",
-            "description": "This guide explains how you can upgrade your Storybook from versions 5.3 and below to Storybook 6, for Angular projects.",
-            "mediaImage": "",
-            "file": "shared/deprecated/storybook/storybook-v6-angular",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/deprecated/storybook/upgrade-storybook-v6-angular",
-            "tags": []
-          },
-          {
-            "id": "migrate-webpack-final-react",
-            "name": "React: Storybook Migration to webpackFinal and the Nx Addon",
-            "description": "This guide explains how migrate from older versions of Storybook which used a custom webpack.config.js to the new Storybook 6.3+ which uses the webpackFinal property in the main configuration and the Nx React Addon.",
-            "mediaImage": "",
-            "file": "shared/deprecated/storybook/migrate-webpack-final-react",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/deprecated/storybook/migrate-webpack-final-react",
-            "tags": []
-          },
-          {
-            "id": "upgrade-storybook-v6-react",
-            "name": "React: Upgrading to Storybook 6",
-            "description": "This guide explains how you can upgrade your Storybook from versions 5.3 and below to Storybook 6, for React projects.",
-            "mediaImage": "",
-            "file": "shared/deprecated/storybook/storybook-v6-react",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/deprecated/storybook/upgrade-storybook-v6-react",
-            "tags": []
-          }
-        ],
-        "isExternal": false,
-        "path": "/deprecated/storybook",
-        "tags": []
-      },
-      {
         "id": "v1-nx-plugin-api",
         "name": "v1 Nx Plugin API",
         "description": "",
@@ -6934,17 +6591,6 @@
     "itemList": [],
     "isExternal": false,
     "path": "/deprecated/workspace-json",
-    "tags": []
-  },
-  "/deprecated/workspace-lint": {
-    "id": "workspace-lint",
-    "name": "workspace-lint",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/deprecated/workspace-lint",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/deprecated/workspace-lint",
     "tags": []
   },
   "/deprecated/as-provided-vs-derived": {
@@ -6978,17 +6624,6 @@
     "itemList": [],
     "isExternal": false,
     "path": "/deprecated/workspace-executors",
-    "tags": []
-  },
-  "/deprecated/default-collection": {
-    "id": "default-collection",
-    "name": "defaultCollection",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/deprecated/default-collection",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/deprecated/default-collection",
     "tags": []
   },
   "/deprecated/runtime-cache-inputs": {
@@ -7044,150 +6679,6 @@
     "itemList": [],
     "isExternal": false,
     "path": "/deprecated/angular-schematics-builders",
-    "tags": []
-  },
-  "/deprecated/storybook": {
-    "id": "storybook",
-    "name": "Storybook deprecated docs",
-    "description": "Deprecated @nx/storybook package documentation and guides.",
-    "mediaImage": "",
-    "file": "",
-    "itemList": [
-      {
-        "id": "angular-storybook-targets",
-        "name": "Angular: Information about the Storybook targets",
-        "description": "This document explains the role of the storybook and build-storybook targets in Angular projects with a Storybook configuration, and specifically which executors are used for them.",
-        "mediaImage": "",
-        "file": "shared/deprecated/storybook/angular-storybook-targets",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/deprecated/storybook/angular-storybook-targets",
-        "tags": []
-      },
-      {
-        "id": "angular-project-build-config",
-        "name": "Angular - The projectBuildConfig",
-        "description": "This document explains the role of the projectBuildConfig in Angular projects with a Storybook configuration, and how the Storybook executors use it.",
-        "mediaImage": "",
-        "file": "shared/deprecated/storybook/angular-project-build-config",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/deprecated/storybook/angular-project-build-config",
-        "tags": []
-      },
-      {
-        "id": "migrate-webpack-final-angular",
-        "name": "Angular: Storybook Migration to webpackFinal",
-        "description": "This guide explains how migrate from older versions of Storybook which used a custom webpack.config.js to the new Storybook 6.3+ which uses the webpackFinal property in the main configuration.",
-        "mediaImage": "",
-        "file": "shared/deprecated/storybook/migrate-webpack-final-angular",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/deprecated/storybook/migrate-webpack-final-angular",
-        "tags": []
-      },
-      {
-        "id": "upgrade-storybook-v6-angular",
-        "name": "Angular: Upgrading to Storybook 6",
-        "description": "This guide explains how you can upgrade your Storybook from versions 5.3 and below to Storybook 6, for Angular projects.",
-        "mediaImage": "",
-        "file": "shared/deprecated/storybook/storybook-v6-angular",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/deprecated/storybook/upgrade-storybook-v6-angular",
-        "tags": []
-      },
-      {
-        "id": "migrate-webpack-final-react",
-        "name": "React: Storybook Migration to webpackFinal and the Nx Addon",
-        "description": "This guide explains how migrate from older versions of Storybook which used a custom webpack.config.js to the new Storybook 6.3+ which uses the webpackFinal property in the main configuration and the Nx React Addon.",
-        "mediaImage": "",
-        "file": "shared/deprecated/storybook/migrate-webpack-final-react",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/deprecated/storybook/migrate-webpack-final-react",
-        "tags": []
-      },
-      {
-        "id": "upgrade-storybook-v6-react",
-        "name": "React: Upgrading to Storybook 6",
-        "description": "This guide explains how you can upgrade your Storybook from versions 5.3 and below to Storybook 6, for React projects.",
-        "mediaImage": "",
-        "file": "shared/deprecated/storybook/storybook-v6-react",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/deprecated/storybook/upgrade-storybook-v6-react",
-        "tags": []
-      }
-    ],
-    "isExternal": false,
-    "path": "/deprecated/storybook",
-    "tags": []
-  },
-  "/deprecated/storybook/angular-storybook-targets": {
-    "id": "angular-storybook-targets",
-    "name": "Angular: Information about the Storybook targets",
-    "description": "This document explains the role of the storybook and build-storybook targets in Angular projects with a Storybook configuration, and specifically which executors are used for them.",
-    "mediaImage": "",
-    "file": "shared/deprecated/storybook/angular-storybook-targets",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/deprecated/storybook/angular-storybook-targets",
-    "tags": []
-  },
-  "/deprecated/storybook/angular-project-build-config": {
-    "id": "angular-project-build-config",
-    "name": "Angular - The projectBuildConfig",
-    "description": "This document explains the role of the projectBuildConfig in Angular projects with a Storybook configuration, and how the Storybook executors use it.",
-    "mediaImage": "",
-    "file": "shared/deprecated/storybook/angular-project-build-config",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/deprecated/storybook/angular-project-build-config",
-    "tags": []
-  },
-  "/deprecated/storybook/migrate-webpack-final-angular": {
-    "id": "migrate-webpack-final-angular",
-    "name": "Angular: Storybook Migration to webpackFinal",
-    "description": "This guide explains how migrate from older versions of Storybook which used a custom webpack.config.js to the new Storybook 6.3+ which uses the webpackFinal property in the main configuration.",
-    "mediaImage": "",
-    "file": "shared/deprecated/storybook/migrate-webpack-final-angular",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/deprecated/storybook/migrate-webpack-final-angular",
-    "tags": []
-  },
-  "/deprecated/storybook/upgrade-storybook-v6-angular": {
-    "id": "upgrade-storybook-v6-angular",
-    "name": "Angular: Upgrading to Storybook 6",
-    "description": "This guide explains how you can upgrade your Storybook from versions 5.3 and below to Storybook 6, for Angular projects.",
-    "mediaImage": "",
-    "file": "shared/deprecated/storybook/storybook-v6-angular",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/deprecated/storybook/upgrade-storybook-v6-angular",
-    "tags": []
-  },
-  "/deprecated/storybook/migrate-webpack-final-react": {
-    "id": "migrate-webpack-final-react",
-    "name": "React: Storybook Migration to webpackFinal and the Nx Addon",
-    "description": "This guide explains how migrate from older versions of Storybook which used a custom webpack.config.js to the new Storybook 6.3+ which uses the webpackFinal property in the main configuration and the Nx React Addon.",
-    "mediaImage": "",
-    "file": "shared/deprecated/storybook/migrate-webpack-final-react",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/deprecated/storybook/migrate-webpack-final-react",
-    "tags": []
-  },
-  "/deprecated/storybook/upgrade-storybook-v6-react": {
-    "id": "upgrade-storybook-v6-react",
-    "name": "React: Upgrading to Storybook 6",
-    "description": "This guide explains how you can upgrade your Storybook from versions 5.3 and below to Storybook 6, for React projects.",
-    "mediaImage": "",
-    "file": "shared/deprecated/storybook/storybook-v6-react",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/deprecated/storybook/upgrade-storybook-v6-react",
     "tags": []
   },
   "/deprecated/v1-nx-plugin-api": {

@@ -16,6 +16,7 @@ import { existsSync, readdirSync } from 'fs';
 import { projectGraphCacheDirectory } from 'nx/src/utils/cache-directory';
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { getLockFileName } from '@nx/js';
+import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
 
 export interface NextPluginOptions {
   buildTargetName?: string;
@@ -162,6 +163,8 @@ function getStaticServeTargetConfig(options: NextPluginOptions) {
       buildTarget: options.buildTargetName,
       staticFilePath: '{projectRoot}/out',
       port: 3000,
+      // Routes are found correctly with serve-static
+      spa: false,
     },
   };
 
@@ -192,19 +195,13 @@ async function getOutputs(projectRoot, nextConfig) {
   }
 }
 
-async function getNextConfig(
+function getNextConfig(
   configFilePath: string,
   context: CreateNodesContext
 ): Promise<any> {
   const resolvedPath = join(context.workspaceRoot, configFilePath);
 
-  let module;
-  if (extname(configFilePath) === '.mjs') {
-    module = await loadEsmModule(resolvedPath);
-  } else {
-    module = load(resolvedPath);
-  }
-  return module.default ?? module;
+  return loadConfigFile(resolvedPath);
 }
 
 function normalizeOptions(options: NextPluginOptions): NextPluginOptions {
@@ -227,37 +224,4 @@ function getInputs(
       externalDependencies: ['next'],
     },
   ];
-}
-
-const packageInstallationDirectories = ['node_modules', '.yarn'];
-/**
- * Load the module after ensuring that the require cache is cleared.
- */
-function load(path: string): any {
-  // Clear cache if the path is in the cache
-  if (require.cache[path]) {
-    for (const key of Object.keys(require.cache)) {
-      if (!packageInstallationDirectories.some((dir) => key.includes(dir))) {
-        delete require.cache[key];
-      }
-    }
-  }
-
-  // Then require
-  return require(path);
-}
-
-/**
- * Lazily compiled dynamic import loader function.
- */
-let dynamicLoad: (<T>(modulePath: string | URL) => Promise<T>) | undefined;
-
-export function loadEsmModule<T>(modulePath: string | URL): Promise<T> {
-  const modulePathWithCacheBust = `${modulePath}?version=${Date.now()}`;
-  dynamicLoad ??= new Function(
-    'modulePath',
-    `return import(modulePath);`
-  ) as Exclude<typeof dynamicLoad, undefined>;
-
-  return dynamicLoad(modulePathWithCacheBust);
 }

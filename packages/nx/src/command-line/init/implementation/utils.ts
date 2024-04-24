@@ -168,7 +168,7 @@ export function addVsCodeRecommendedExtensions(
   }
 }
 
-export function markRootPackageJsonAsNxProject(
+export function markRootPackageJsonAsNxProjectLegacy(
   repoRoot: string,
   cacheableScripts: string[],
   pmc: PackageManagerCommands
@@ -194,22 +194,28 @@ export function markRootPackageJsonAsNxProject(
   writeJsonFile(`package.json`, json);
 }
 
+export function markPackageJsonAsNxProject(packageJsonPath: string) {
+  const json = readJsonFile<PackageJson>(packageJsonPath);
+  if (!json.scripts) {
+    return;
+  }
+
+  json.nx = {};
+  writeJsonFile(packageJsonPath, json);
+}
+
 export function printFinalMessage({
   learnMoreLink,
-  bodyLines,
 }: {
   learnMoreLink?: string;
-  bodyLines?: string[];
 }): void {
-  const normalizedBodyLines = (bodyLines ?? []).map((l) =>
-    l.startsWith('- ') ? l : `- ${l}`
-  );
+  const pmc = getPackageManagerCommand();
 
   output.success({
     title: '🎉 Done!',
     bodyLines: [
-      '- Enabled computation caching!',
-      ...normalizedBodyLines,
+      `- Run "${pmc.exec} nx run-many -t build" to run the build target for every project in the workspace. Run it again to replay the cached computation. https://nx.dev/features/cache-task-results`,
+      `- Run "${pmc.exec} nx graph" to see the graph of projects and tasks in your workspace. https://nx.dev/core-features/explore-graph`,
       learnMoreLink ? `- Learn more at ${learnMoreLink}.` : undefined,
     ].filter(Boolean),
   });

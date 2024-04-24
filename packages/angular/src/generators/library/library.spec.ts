@@ -1,3 +1,5 @@
+import 'nx/src/internal-testing-utils/mock-project-graph';
+
 import {
   getProjects,
   NxJsonConfiguration,
@@ -92,6 +94,22 @@ describe('lib', () => {
 
     // codelyzer should no longer be there by default
     expect(devDependencies['codelyzer']).toBeUndefined();
+  });
+
+  it('should not touch the package.json when run with `--skipPackageJson`', async () => {
+    let initialPackageJson;
+    updateJson(tree, 'package.json', (json) => {
+      json.dependencies = {};
+      json.devDependencies = {};
+      initialPackageJson = json;
+
+      return json;
+    });
+
+    await runLibraryGeneratorWithOpts({ skipPackageJson: true });
+
+    const packageJson = readJson(tree, 'package.json');
+    expect(packageJson).toEqual(initialPackageJson);
   });
 
   describe('not nested', () => {

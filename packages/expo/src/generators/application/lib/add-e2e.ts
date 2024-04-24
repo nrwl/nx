@@ -16,12 +16,11 @@ export async function addE2e(
   options: NormalizedSchema
 ): Promise<GeneratorCallback> {
   const hasPlugin = hasExpoPlugin(tree);
-  const port = hasPlugin ? 8081 : 4200;
   switch (options.e2eTestRunner) {
     case 'cypress': {
       const hasNxExpoPlugin = hasExpoPlugin(tree);
       if (!hasNxExpoPlugin) {
-        webStaticServeGenerator(tree, {
+        await webStaticServeGenerator(tree, {
           buildTarget: `${options.projectName}:export`,
           targetName: 'serve-static',
         });
@@ -47,9 +46,9 @@ export async function addE2e(
         // the name and root are already normalized, instruct the generator to use them as is
         bundler: 'none',
         skipFormat: true,
-        devServerTarget: `${options.projectName}:serve`,
-        port,
-        baseUrl: `http://localhost:${port}`,
+        devServerTarget: `${options.projectName}:${options.e2eWebServerTarget}`,
+        port: options.e2ePort,
+        baseUrl: options.e2eWebServerAddress,
         ciWebServerCommand: hasNxExpoPlugin
           ? `nx run ${options.projectName}:serve-static`
           : undefined,
@@ -76,10 +75,10 @@ export async function addE2e(
         js: false,
         linter: options.linter,
         setParserOptionsProject: options.setParserOptionsProject,
-        webServerCommand: `${getPackageManagerCommand().exec} nx serve ${
-          options.name
-        }`,
-        webServerAddress: `http://localhost:${port}`,
+        webServerCommand: `${getPackageManagerCommand().exec} nx ${
+          options.e2eWebServerTarget
+        } ${options.name}`,
+        webServerAddress: options.e2eWebServerAddress,
         rootProject: options.rootProject,
       });
     }

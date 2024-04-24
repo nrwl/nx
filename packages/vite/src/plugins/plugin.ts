@@ -66,9 +66,12 @@ export const createNodes: CreateNodes<VitePluginOptions> = [
 
     options = normalizeOptions(options);
 
-    const hash = calculateHashForCreateNodes(projectRoot, options, context, [
-      getLockFileName(detectPackageManager(context.workspaceRoot)),
-    ]);
+    // We do not want to alter how the hash is calculated, so appending the config file path to the hash
+    // to prevent vite/vitest files overwriting the target cache created by the other
+    const hash =
+      calculateHashForCreateNodes(projectRoot, options, context, [
+        getLockFileName(detectPackageManager(context.workspaceRoot)),
+      ]) + configFilePath;
     const targets = targetsCache[hash]
       ? targetsCache[hash]
       : await buildViteTargets(configFilePath, projectRoot, options, context);
@@ -226,6 +229,7 @@ function serveStaticTarget(options: VitePluginOptions) {
     executor: '@nx/web:file-server',
     options: {
       buildTarget: `${options.buildTargetName}`,
+      spa: true,
     },
   };
 

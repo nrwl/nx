@@ -38,7 +38,7 @@ function getRollupOptions(options: rollup.RollupOptions) {
       url({
         limit: 10000, // 10kB
       }),
-      ...options.plugins,
+      ...(Array.isArray(options.plugins) ? options.plugins : []),
     ];
   } catch {
     // Ignored for React Native

@@ -3,6 +3,7 @@ import { defineConfig } from 'cypress';
 
 import { createNodes } from './plugin';
 import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
+import { resetWorkspaceContext } from 'nx/src/utils/workspace-context';
 import { join } from 'path';
 import { nxE2EPreset } from '../../plugins/cypress-preset';
 
@@ -16,9 +17,9 @@ describe('@nx/cypress/plugin', () => {
 
     await tempFs.createFiles({
       'package.json': '{}',
+      'cypress.config.js': '',
       'src/test.cy.ts': '',
     });
-    process.chdir(tempFs.tempDir);
     context = {
       nxJsonConfiguration: {
         // These defaults should be overridden by plugin
@@ -41,6 +42,11 @@ describe('@nx/cypress/plugin', () => {
   afterEach(() => {
     jest.resetModules();
     tempFs.cleanup();
+    tempFs = null;
+  });
+
+  afterAll(() => {
+    resetWorkspaceContext();
   });
 
   it('should add a target for e2e', async () => {
@@ -70,11 +76,7 @@ describe('@nx/cypress/plugin', () => {
       {
         "projects": {
           ".": {
-            "metadata": {
-              "technologies": [
-                "cypress",
-              ],
-            },
+            "metadata": undefined,
             "projectType": "application",
             "targets": {
               "e2e": {
@@ -94,6 +96,12 @@ describe('@nx/cypress/plugin', () => {
                     ],
                   },
                 ],
+                "metadata": {
+                  "description": "Runs Cypress Tests",
+                  "technologies": [
+                    "cypress",
+                  ],
+                },
                 "options": {
                   "cwd": ".",
                 },
@@ -101,6 +109,18 @@ describe('@nx/cypress/plugin', () => {
                   "{projectRoot}/dist/videos",
                   "{projectRoot}/dist/screenshots",
                 ],
+              },
+              "open-cypress": {
+                "command": "cypress open",
+                "metadata": {
+                  "description": "Opens Cypress",
+                  "technologies": [
+                    "cypress",
+                  ],
+                },
+                "options": {
+                  "cwd": ".",
+                },
               },
             },
           },
@@ -134,11 +154,7 @@ describe('@nx/cypress/plugin', () => {
       {
         "projects": {
           ".": {
-            "metadata": {
-              "technologies": [
-                "cypress",
-              ],
-            },
+            "metadata": undefined,
             "projectType": "application",
             "targets": {
               "component-test": {
@@ -153,6 +169,12 @@ describe('@nx/cypress/plugin', () => {
                     ],
                   },
                 ],
+                "metadata": {
+                  "description": "Runs Cypress Component Tests",
+                  "technologies": [
+                    "cypress",
+                  ],
+                },
                 "options": {
                   "cwd": ".",
                 },
@@ -160,6 +182,18 @@ describe('@nx/cypress/plugin', () => {
                   "{projectRoot}/dist/videos",
                   "{projectRoot}/dist/screenshots",
                 ],
+              },
+              "open-cypress": {
+                "command": "cypress open",
+                "metadata": {
+                  "description": "Opens Cypress",
+                  "technologies": [
+                    "cypress",
+                  ],
+                },
+                "options": {
+                  "cwd": ".",
+                },
               },
             },
           },
@@ -172,16 +206,16 @@ describe('@nx/cypress/plugin', () => {
     mockCypressConfig(
       defineConfig({
         e2e: {
-          specPattern: '**/*.cy.ts',
-          videosFolder: './dist/videos',
-          screenshotsFolder: './dist/screenshots',
-          ...nxE2EPreset('.', {
+          ...nxE2EPreset(join(tempFs.tempDir, 'cypress.config.js'), {
             webServerCommands: {
               default: 'my-app:serve',
               production: 'my-app:serve:production',
             },
             ciWebServerCommand: 'my-app:serve-static',
           }),
+          specPattern: '**/*.cy.ts',
+          videosFolder: './dist/videos',
+          screenshotsFolder: './dist/screenshots',
         },
       })
     );
@@ -199,14 +233,11 @@ describe('@nx/cypress/plugin', () => {
           ".": {
             "metadata": {
               "targetGroups": {
-                "e2e-ci": [
+                "E2E (CI)": [
                   "e2e-ci--src/test.cy.ts",
                   "e2e-ci",
                 ],
               },
-              "technologies": [
-                "cypress",
-              ],
             },
             "projectType": "application",
             "targets": {
@@ -227,12 +258,18 @@ describe('@nx/cypress/plugin', () => {
                     ],
                   },
                 ],
+                "metadata": {
+                  "description": "Runs Cypress Tests",
+                  "technologies": [
+                    "cypress",
+                  ],
+                },
                 "options": {
                   "cwd": ".",
                 },
                 "outputs": [
-                  "{projectRoot}/dist/cypress/videos",
-                  "{projectRoot}/dist/cypress/screenshots",
+                  "{projectRoot}/dist/videos",
+                  "{projectRoot}/dist/screenshots",
                 ],
               },
               "e2e-ci": {
@@ -254,9 +291,15 @@ describe('@nx/cypress/plugin', () => {
                     ],
                   },
                 ],
+                "metadata": {
+                  "description": "Runs Cypress Tests in CI",
+                  "technologies": [
+                    "cypress",
+                  ],
+                },
                 "outputs": [
-                  "{projectRoot}/dist/cypress/videos",
-                  "{projectRoot}/dist/cypress/screenshots",
+                  "{projectRoot}/dist/videos",
+                  "{projectRoot}/dist/screenshots",
                 ],
               },
               "e2e-ci--src/test.cy.ts": {
@@ -271,13 +314,31 @@ describe('@nx/cypress/plugin', () => {
                     ],
                   },
                 ],
+                "metadata": {
+                  "description": "Runs Cypress Tests in src/test.cy.ts in CI",
+                  "technologies": [
+                    "cypress",
+                  ],
+                },
                 "options": {
                   "cwd": ".",
                 },
                 "outputs": [
-                  "{projectRoot}/dist/cypress/videos",
-                  "{projectRoot}/dist/cypress/screenshots",
+                  "{projectRoot}/dist/videos",
+                  "{projectRoot}/dist/screenshots",
                 ],
+              },
+              "open-cypress": {
+                "command": "cypress open",
+                "metadata": {
+                  "description": "Opens Cypress",
+                  "technologies": [
+                    "cypress",
+                  ],
+                },
+                "options": {
+                  "cwd": ".",
+                },
               },
             },
           },

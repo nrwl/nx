@@ -1,3 +1,5 @@
+import 'nx/src/internal-testing-utils/mock-project-graph';
+
 import { Tree } from '@nx/devkit';
 import storiesGenerator from './stories';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';

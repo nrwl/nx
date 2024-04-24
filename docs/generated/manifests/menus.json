@@ -33,6 +33,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Editor Setup",
+            "path": "/getting-started/editor-setup",
+            "id": "editor-setup",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Tutorials",
             "path": "/getting-started/tutorials",
             "id": "tutorials",
@@ -42,14 +50,6 @@
                 "name": "NPM Workspaces Monorepo",
                 "path": "/getting-started/tutorials/npm-workspaces-tutorial",
                 "id": "npm-workspaces-tutorial",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Integrated Monorepo",
-                "path": "/getting-started/tutorials/integrated-repo-tutorial",
-                "id": "integrated-repo-tutorial",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -125,6 +125,14 @@
         "disableCollapsible": false
       },
       {
+        "name": "Editor Setup",
+        "path": "/getting-started/editor-setup",
+        "id": "editor-setup",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
         "name": "Tutorials",
         "path": "/getting-started/tutorials",
         "id": "tutorials",
@@ -134,14 +142,6 @@
             "name": "NPM Workspaces Monorepo",
             "path": "/getting-started/tutorials/npm-workspaces-tutorial",
             "id": "npm-workspaces-tutorial",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Integrated Monorepo",
-            "path": "/getting-started/tutorials/integrated-repo-tutorial",
-            "id": "integrated-repo-tutorial",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -193,14 +193,6 @@
         "name": "NPM Workspaces Monorepo",
         "path": "/getting-started/tutorials/npm-workspaces-tutorial",
         "id": "npm-workspaces-tutorial",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Integrated Monorepo",
-        "path": "/getting-started/tutorials/integrated-repo-tutorial",
-        "id": "integrated-repo-tutorial",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -405,14 +397,6 @@
             "disableCollapsible": false
           },
           {
-            "name": "Integrate with Editors",
-            "path": "/features/integrate-with-editors",
-            "id": "integrate-with-editors",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
             "name": "Manage Releases",
             "path": "/features/manage-releases",
             "id": "manage-releases",
@@ -532,14 +516,6 @@
         "name": "Enforce Module Boundaries",
         "path": "/features/enforce-module-boundaries",
         "id": "enforce-module-boundaries",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Integrate with Editors",
-        "path": "/features/integrate-with-editors",
-        "id": "integrate-with-editors",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -1333,6 +1309,31 @@
         "isExternal": false,
         "children": [
           {
+            "name": "Installation",
+            "path": "/recipes/installation",
+            "id": "installation",
+            "isExternal": false,
+            "children": [
+              {
+                "name": "Install Nx in a Non-Javascript Repo",
+                "path": "/recipes/installation/install-non-javascript",
+                "id": "install-non-javascript",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Update Your Global Nx Installation",
+                "path": "/recipes/installation/update-global-installation",
+                "id": "update-global-installation",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              }
+            ],
+            "disableCollapsible": false
+          },
+          {
             "name": "Tasks & Caching",
             "path": "/recipes/running-tasks",
             "id": "running-tasks",
@@ -1374,6 +1375,14 @@
                 "name": "Run Custom Commands",
                 "path": "/recipes/running-tasks/run-commands-executor",
                 "id": "run-commands-executor",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Pass Args to Commands",
+                "path": "/recipes/running-tasks/pass-args-to-commands",
+                "id": "pass-args-to-commands",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -1469,22 +1478,6 @@
             "isExternal": false,
             "children": [
               {
-                "name": "Migrating from CRA",
-                "path": "/recipes/react/migration-cra",
-                "id": "migration-cra",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "React 18 Migration",
-                "path": "/recipes/react/react-18",
-                "id": "react-18",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
                 "name": "React Native with Nx",
                 "path": "/recipes/react/react-native",
                 "id": "react-native",
@@ -1567,14 +1560,6 @@
                     "name": "Migrating From Multiple Angular CLI Repos",
                     "path": "/recipes/angular/migration/angular-multiple",
                     "id": "angular-multiple",
-                    "isExternal": false,
-                    "children": [],
-                    "disableCollapsible": false
-                  },
-                  {
-                    "name": "Migrating Angular Application manually",
-                    "path": "/recipes/angular/migration/angular-manual",
-                    "id": "angular-manual",
                     "isExternal": false,
                     "children": [],
                     "disableCollapsible": false
@@ -1971,31 +1956,6 @@
             "disableCollapsible": false
           },
           {
-            "name": "Installation",
-            "path": "/recipes/installation",
-            "id": "installation",
-            "isExternal": false,
-            "children": [
-              {
-                "name": "Install Nx in a Non-Javascript Repo",
-                "path": "/recipes/installation/install-non-javascript",
-                "id": "install-non-javascript",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Update Your Global Nx Installation",
-                "path": "/recipes/installation/update-global-installation",
-                "id": "update-global-installation",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              }
-            ],
-            "disableCollapsible": false
-          },
-          {
             "name": "Tips and tricks",
             "path": "/recipes/tips-n-tricks",
             "id": "tips-n-tricks",
@@ -2149,55 +2109,6 @@
             "disableCollapsible": false
           },
           {
-            "name": "Troubleshooting",
-            "path": "/recipes/troubleshooting",
-            "id": "troubleshooting",
-            "isExternal": false,
-            "children": [
-              {
-                "name": "Resolve Circular Dependencies",
-                "path": "/recipes/troubleshooting/resolve-circular-dependencies",
-                "id": "resolve-circular-dependencies",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Troubleshooting Nx Install Issues",
-                "path": "/recipes/troubleshooting/troubleshoot-nx-install-issues",
-                "id": "troubleshoot-nx-install-issues",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Troubleshoot Cache Misses",
-                "path": "/recipes/troubleshooting/troubleshoot-cache-misses",
-                "id": "troubleshoot-cache-misses",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Unknown Local Cache Error",
-                "path": "/recipes/troubleshooting/unknown-local-cache",
-                "id": "unknown-local-cache",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Profiling Build Performance",
-                "path": "/recipes/troubleshooting/performance-profiling",
-                "id": "performance-profiling",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              }
-            ],
-            "disableCollapsible": false
-          },
-          {
             "name": "Nx Console",
             "path": "/recipes/nx-console",
             "id": "nx-console",
@@ -2231,30 +2142,6 @@
                 "name": "Run Command",
                 "path": "/recipes/nx-console/console-run-command",
                 "id": "console-run-command",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Add Dependency Command",
-                "path": "/recipes/nx-console/console-add-dependency-command",
-                "id": "console-add-dependency-command",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Project Pane",
-                "path": "/recipes/nx-console/console-project-pane",
-                "id": "console-project-pane",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Keyboard Shortcuts",
-                "path": "/recipes/nx-console/console-shortcuts",
-                "id": "console-shortcuts",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -2296,6 +2183,14 @@
                 "name": "Automatically Version with Conventional Commits",
                 "path": "/recipes/nx-release/automatically-version-with-conventional-commits",
                 "id": "automatically-version-with-conventional-commits",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Configure Custom Registries",
+                "path": "/recipes/nx-release/configure-custom-registries",
+                "id": "configure-custom-registries",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -2364,6 +2259,47 @@
         "disableCollapsible": false
       },
       {
+        "name": "Installation",
+        "path": "/recipes/installation",
+        "id": "installation",
+        "isExternal": false,
+        "children": [
+          {
+            "name": "Install Nx in a Non-Javascript Repo",
+            "path": "/recipes/installation/install-non-javascript",
+            "id": "install-non-javascript",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Update Your Global Nx Installation",
+            "path": "/recipes/installation/update-global-installation",
+            "id": "update-global-installation",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          }
+        ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Install Nx in a Non-Javascript Repo",
+        "path": "/recipes/installation/install-non-javascript",
+        "id": "install-non-javascript",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Update Your Global Nx Installation",
+        "path": "/recipes/installation/update-global-installation",
+        "id": "update-global-installation",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
         "name": "Tasks & Caching",
         "path": "/recipes/running-tasks",
         "id": "running-tasks",
@@ -2405,6 +2341,14 @@
             "name": "Run Custom Commands",
             "path": "/recipes/running-tasks/run-commands-executor",
             "id": "run-commands-executor",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Pass Args to Commands",
+            "path": "/recipes/running-tasks/pass-args-to-commands",
+            "id": "pass-args-to-commands",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -2480,6 +2424,14 @@
         "name": "Run Custom Commands",
         "path": "/recipes/running-tasks/run-commands-executor",
         "id": "run-commands-executor",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Pass Args to Commands",
+        "path": "/recipes/running-tasks/pass-args-to-commands",
+        "id": "pass-args-to-commands",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -2612,22 +2564,6 @@
         "isExternal": false,
         "children": [
           {
-            "name": "Migrating from CRA",
-            "path": "/recipes/react/migration-cra",
-            "id": "migration-cra",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "React 18 Migration",
-            "path": "/recipes/react/react-18",
-            "id": "react-18",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
             "name": "React Native with Nx",
             "path": "/recipes/react/react-native",
             "id": "react-native",
@@ -2684,22 +2620,6 @@
             "disableCollapsible": false
           }
         ],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Migrating from CRA",
-        "path": "/recipes/react/migration-cra",
-        "id": "migration-cra",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "React 18 Migration",
-        "path": "/recipes/react/react-18",
-        "id": "react-18",
-        "isExternal": false,
-        "children": [],
         "disableCollapsible": false
       },
       {
@@ -2785,14 +2705,6 @@
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
-              },
-              {
-                "name": "Migrating Angular Application manually",
-                "path": "/recipes/angular/migration/angular-manual",
-                "id": "angular-manual",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
               }
             ],
             "disableCollapsible": false
@@ -2861,14 +2773,6 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
-          },
-          {
-            "name": "Migrating Angular Application manually",
-            "path": "/recipes/angular/migration/angular-manual",
-            "id": "angular-manual",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -2885,14 +2789,6 @@
         "name": "Migrating From Multiple Angular CLI Repos",
         "path": "/recipes/angular/migration/angular-multiple",
         "id": "angular-multiple",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Migrating Angular Application manually",
-        "path": "/recipes/angular/migration/angular-manual",
-        "id": "angular-manual",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -3547,47 +3443,6 @@
         "disableCollapsible": false
       },
       {
-        "name": "Installation",
-        "path": "/recipes/installation",
-        "id": "installation",
-        "isExternal": false,
-        "children": [
-          {
-            "name": "Install Nx in a Non-Javascript Repo",
-            "path": "/recipes/installation/install-non-javascript",
-            "id": "install-non-javascript",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Update Your Global Nx Installation",
-            "path": "/recipes/installation/update-global-installation",
-            "id": "update-global-installation",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          }
-        ],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Install Nx in a Non-Javascript Repo",
-        "path": "/recipes/installation/install-non-javascript",
-        "id": "install-non-javascript",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Update Your Global Nx Installation",
-        "path": "/recipes/installation/update-global-installation",
-        "id": "update-global-installation",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
         "name": "Tips and tricks",
         "path": "/recipes/tips-n-tricks",
         "id": "tips-n-tricks",
@@ -3885,95 +3740,6 @@
         "disableCollapsible": false
       },
       {
-        "name": "Troubleshooting",
-        "path": "/recipes/troubleshooting",
-        "id": "troubleshooting",
-        "isExternal": false,
-        "children": [
-          {
-            "name": "Resolve Circular Dependencies",
-            "path": "/recipes/troubleshooting/resolve-circular-dependencies",
-            "id": "resolve-circular-dependencies",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Troubleshooting Nx Install Issues",
-            "path": "/recipes/troubleshooting/troubleshoot-nx-install-issues",
-            "id": "troubleshoot-nx-install-issues",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Troubleshoot Cache Misses",
-            "path": "/recipes/troubleshooting/troubleshoot-cache-misses",
-            "id": "troubleshoot-cache-misses",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Unknown Local Cache Error",
-            "path": "/recipes/troubleshooting/unknown-local-cache",
-            "id": "unknown-local-cache",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Profiling Build Performance",
-            "path": "/recipes/troubleshooting/performance-profiling",
-            "id": "performance-profiling",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          }
-        ],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Resolve Circular Dependencies",
-        "path": "/recipes/troubleshooting/resolve-circular-dependencies",
-        "id": "resolve-circular-dependencies",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Troubleshooting Nx Install Issues",
-        "path": "/recipes/troubleshooting/troubleshoot-nx-install-issues",
-        "id": "troubleshoot-nx-install-issues",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Troubleshoot Cache Misses",
-        "path": "/recipes/troubleshooting/troubleshoot-cache-misses",
-        "id": "troubleshoot-cache-misses",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Unknown Local Cache Error",
-        "path": "/recipes/troubleshooting/unknown-local-cache",
-        "id": "unknown-local-cache",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Profiling Build Performance",
-        "path": "/recipes/troubleshooting/performance-profiling",
-        "id": "performance-profiling",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
         "name": "Nx Console",
         "path": "/recipes/nx-console",
         "id": "nx-console",
@@ -4007,30 +3773,6 @@
             "name": "Run Command",
             "path": "/recipes/nx-console/console-run-command",
             "id": "console-run-command",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Add Dependency Command",
-            "path": "/recipes/nx-console/console-add-dependency-command",
-            "id": "console-add-dependency-command",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Project Pane",
-            "path": "/recipes/nx-console/console-project-pane",
-            "id": "console-project-pane",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Keyboard Shortcuts",
-            "path": "/recipes/nx-console/console-shortcuts",
-            "id": "console-shortcuts",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -4079,30 +3821,6 @@
         "disableCollapsible": false
       },
       {
-        "name": "Add Dependency Command",
-        "path": "/recipes/nx-console/console-add-dependency-command",
-        "id": "console-add-dependency-command",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Project Pane",
-        "path": "/recipes/nx-console/console-project-pane",
-        "id": "console-project-pane",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Keyboard Shortcuts",
-        "path": "/recipes/nx-console/console-shortcuts",
-        "id": "console-shortcuts",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
         "name": "Troubleshooting",
         "path": "/recipes/nx-console/console-troubleshooting",
         "id": "console-troubleshooting",
@@ -4136,6 +3854,14 @@
             "name": "Automatically Version with Conventional Commits",
             "path": "/recipes/nx-release/automatically-version-with-conventional-commits",
             "id": "automatically-version-with-conventional-commits",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Configure Custom Registries",
+            "path": "/recipes/nx-release/configure-custom-registries",
+            "id": "configure-custom-registries",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -4203,6 +3929,14 @@
         "name": "Automatically Version with Conventional Commits",
         "path": "/recipes/nx-release/automatically-version-with-conventional-commits",
         "id": "automatically-version-with-conventional-commits",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Configure Custom Registries",
+        "path": "/recipes/nx-release/configure-custom-registries",
+        "id": "configure-custom-registries",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -4895,6 +4629,95 @@
         "disableCollapsible": false
       },
       {
+        "name": "Troubleshooting",
+        "path": "/troubleshooting",
+        "id": "troubleshooting",
+        "isExternal": false,
+        "children": [
+          {
+            "name": "Resolve Circular Dependencies",
+            "path": "/troubleshooting/resolve-circular-dependencies",
+            "id": "resolve-circular-dependencies",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Troubleshooting Nx Install Issues",
+            "path": "/troubleshooting/troubleshoot-nx-install-issues",
+            "id": "troubleshoot-nx-install-issues",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Troubleshoot Cache Misses",
+            "path": "/troubleshooting/troubleshoot-cache-misses",
+            "id": "troubleshoot-cache-misses",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Unknown Local Cache Error",
+            "path": "/troubleshooting/unknown-local-cache",
+            "id": "unknown-local-cache",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Profiling Build Performance",
+            "path": "/troubleshooting/performance-profiling",
+            "id": "performance-profiling",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          }
+        ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Resolve Circular Dependencies",
+        "path": "/troubleshooting/resolve-circular-dependencies",
+        "id": "resolve-circular-dependencies",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Troubleshooting Nx Install Issues",
+        "path": "/troubleshooting/troubleshoot-nx-install-issues",
+        "id": "troubleshoot-nx-install-issues",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Troubleshoot Cache Misses",
+        "path": "/troubleshooting/troubleshoot-cache-misses",
+        "id": "troubleshoot-cache-misses",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Unknown Local Cache Error",
+        "path": "/troubleshooting/unknown-local-cache",
+        "id": "unknown-local-cache",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Profiling Build Performance",
+        "path": "/troubleshooting/performance-profiling",
+        "id": "performance-profiling",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
         "name": "Deprecated",
         "path": "/deprecated",
         "id": "deprecated",
@@ -4904,14 +4727,6 @@
             "name": "workspace.json",
             "path": "/deprecated/workspace-json",
             "id": "workspace-json",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "workspace-lint",
-            "path": "/deprecated/workspace-lint",
-            "id": "workspace-lint",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -4936,14 +4751,6 @@
             "name": "Workspace Executors",
             "path": "/deprecated/workspace-executors",
             "id": "workspace-executors",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "defaultCollection",
-            "path": "/deprecated/default-collection",
-            "id": "default-collection",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -4989,63 +4796,6 @@
             "disableCollapsible": false
           },
           {
-            "name": "Storybook deprecated docs",
-            "path": "/deprecated/storybook",
-            "id": "storybook",
-            "isExternal": false,
-            "children": [
-              {
-                "name": "Angular: Information about the Storybook targets",
-                "path": "/deprecated/storybook/angular-storybook-targets",
-                "id": "angular-storybook-targets",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Angular - The projectBuildConfig",
-                "path": "/deprecated/storybook/angular-project-build-config",
-                "id": "angular-project-build-config",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Angular: Storybook Migration to webpackFinal",
-                "path": "/deprecated/storybook/migrate-webpack-final-angular",
-                "id": "migrate-webpack-final-angular",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Angular: Upgrading to Storybook 6",
-                "path": "/deprecated/storybook/upgrade-storybook-v6-angular",
-                "id": "upgrade-storybook-v6-angular",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "React: Storybook Migration to webpackFinal and the Nx Addon",
-                "path": "/deprecated/storybook/migrate-webpack-final-react",
-                "id": "migrate-webpack-final-react",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "React: Upgrading to Storybook 6",
-                "path": "/deprecated/storybook/upgrade-storybook-v6-react",
-                "id": "upgrade-storybook-v6-react",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              }
-            ],
-            "disableCollapsible": false
-          },
-          {
             "name": "v1 Nx Plugin API",
             "path": "/deprecated/v1-nx-plugin-api",
             "id": "v1-nx-plugin-api",
@@ -5060,14 +4810,6 @@
         "name": "workspace.json",
         "path": "/deprecated/workspace-json",
         "id": "workspace-json",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "workspace-lint",
-        "path": "/deprecated/workspace-lint",
-        "id": "workspace-lint",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -5092,14 +4834,6 @@
         "name": "Workspace Executors",
         "path": "/deprecated/workspace-executors",
         "id": "workspace-executors",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "defaultCollection",
-        "path": "/deprecated/default-collection",
-        "id": "default-collection",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -5140,111 +4874,6 @@
         "name": "Angular Schematics and Builders",
         "path": "/deprecated/angular-schematics-builders",
         "id": "angular-schematics-builders",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Storybook deprecated docs",
-        "path": "/deprecated/storybook",
-        "id": "storybook",
-        "isExternal": false,
-        "children": [
-          {
-            "name": "Angular: Information about the Storybook targets",
-            "path": "/deprecated/storybook/angular-storybook-targets",
-            "id": "angular-storybook-targets",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Angular - The projectBuildConfig",
-            "path": "/deprecated/storybook/angular-project-build-config",
-            "id": "angular-project-build-config",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Angular: Storybook Migration to webpackFinal",
-            "path": "/deprecated/storybook/migrate-webpack-final-angular",
-            "id": "migrate-webpack-final-angular",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Angular: Upgrading to Storybook 6",
-            "path": "/deprecated/storybook/upgrade-storybook-v6-angular",
-            "id": "upgrade-storybook-v6-angular",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "React: Storybook Migration to webpackFinal and the Nx Addon",
-            "path": "/deprecated/storybook/migrate-webpack-final-react",
-            "id": "migrate-webpack-final-react",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "React: Upgrading to Storybook 6",
-            "path": "/deprecated/storybook/upgrade-storybook-v6-react",
-            "id": "upgrade-storybook-v6-react",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          }
-        ],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Angular: Information about the Storybook targets",
-        "path": "/deprecated/storybook/angular-storybook-targets",
-        "id": "angular-storybook-targets",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Angular - The projectBuildConfig",
-        "path": "/deprecated/storybook/angular-project-build-config",
-        "id": "angular-project-build-config",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Angular: Storybook Migration to webpackFinal",
-        "path": "/deprecated/storybook/migrate-webpack-final-angular",
-        "id": "migrate-webpack-final-angular",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Angular: Upgrading to Storybook 6",
-        "path": "/deprecated/storybook/upgrade-storybook-v6-angular",
-        "id": "upgrade-storybook-v6-angular",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "React: Storybook Migration to webpackFinal and the Nx Addon",
-        "path": "/deprecated/storybook/migrate-webpack-final-react",
-        "id": "migrate-webpack-final-react",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "React: Upgrading to Storybook 6",
-        "path": "/deprecated/storybook/upgrade-storybook-v6-react",
-        "id": "upgrade-storybook-v6-react",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -5662,6 +5291,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Why Nx Cloud?",
+            "path": "/ci/intro/why-nx-cloud",
+            "id": "why-nx-cloud",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Tutorials",
             "path": "/ci/intro/tutorials",
             "id": "tutorials",
@@ -5693,6 +5330,14 @@
         "name": "CI with Nx",
         "path": "/ci/intro/ci-with-nx",
         "id": "ci-with-nx",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Why Nx Cloud?",
+        "path": "/ci/intro/why-nx-cloud",
+        "id": "why-nx-cloud",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -6211,23 +5856,6 @@
                     "disableCollapsible": false
                   }
                 ],
-                "disableCollapsible": false
-              }
-            ],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Troubleshooting",
-            "path": "/ci/recipes/troubleshooting",
-            "id": "troubleshooting",
-            "isExternal": false,
-            "children": [
-              {
-                "name": "CI Execution Failed",
-                "path": "/ci/recipes/troubleshooting/ci-execution-failed",
-                "id": "ci-execution-failed",
-                "isExternal": false,
-                "children": [],
                 "disableCollapsible": false
               }
             ],
@@ -6894,31 +6522,6 @@
         "disableCollapsible": false
       },
       {
-        "name": "Troubleshooting",
-        "path": "/ci/recipes/troubleshooting",
-        "id": "troubleshooting",
-        "isExternal": false,
-        "children": [
-          {
-            "name": "CI Execution Failed",
-            "path": "/ci/recipes/troubleshooting/ci-execution-failed",
-            "id": "ci-execution-failed",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          }
-        ],
-        "disableCollapsible": false
-      },
-      {
-        "name": "CI Execution Failed",
-        "path": "/ci/recipes/troubleshooting/ci-execution-failed",
-        "id": "ci-execution-failed",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
         "name": "Other",
         "path": "/ci/recipes/other",
         "id": "other",
@@ -6998,14 +6601,6 @@
             "disableCollapsible": false
           },
           {
-            "name": "Server API Reference",
-            "path": "/ci/reference/server-api",
-            "id": "server-api",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
             "name": "Release Notes",
             "path": "/ci/reference/release-notes",
             "id": "release-notes",
@@ -7049,17 +6644,34 @@
         "disableCollapsible": false
       },
       {
-        "name": "Server API Reference",
-        "path": "/ci/reference/server-api",
-        "id": "server-api",
+        "name": "Release Notes",
+        "path": "/ci/reference/release-notes",
+        "id": "release-notes",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
       },
       {
-        "name": "Release Notes",
-        "path": "/ci/reference/release-notes",
-        "id": "release-notes",
+        "name": "Troubleshooting",
+        "path": "/ci/troubleshooting",
+        "id": "troubleshooting",
+        "isExternal": false,
+        "children": [
+          {
+            "name": "CI Execution Failed",
+            "path": "/ci/troubleshooting/ci-execution-failed",
+            "id": "ci-execution-failed",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          }
+        ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "CI Execution Failed",
+        "path": "/ci/troubleshooting/ci-execution-failed",
+        "id": "ci-execution-failed",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -8105,6 +7717,23 @@
         "path": "/nx-api/gradle",
         "name": "gradle",
         "children": [
+          {
+            "id": "documents",
+            "path": "/nx-api/gradle/documents",
+            "name": "documents",
+            "children": [
+              {
+                "name": "Overview",
+                "path": "/nx-api/gradle/documents/overview",
+                "id": "overview",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              }
+            ],
+            "isExternal": false,
+            "disableCollapsible": false
+          },
           {
             "id": "generators",
             "path": "/nx-api/gradle/generators",

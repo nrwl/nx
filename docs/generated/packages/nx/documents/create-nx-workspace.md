@@ -75,7 +75,7 @@ Generate a Dockerfile for the Node API
 
 Type: `string`
 
-Choices: [cypress, playwright, none]
+Choices: [playwright, cypress, none]
 
 Test runner to use for end to end (E2E) tests.
 

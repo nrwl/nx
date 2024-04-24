@@ -1,4 +1,5 @@
 import * as enquirer from 'enquirer';
+import { join } from 'path';
 import { InitArgs } from '../init-v1';
 import { readJsonFile } from '../../../utils/fileutils';
 import { output } from '../../../utils/output';
@@ -7,14 +8,16 @@ import {
   addDepsToPackageJson,
   createNxJsonFile,
   initCloud,
-  markRootPackageJsonAsNxProject,
-  printFinalMessage,
+  markPackageJsonAsNxProject,
+  markRootPackageJsonAsNxProjectLegacy,
   runInstall,
   updateGitIgnore,
 } from './utils';
 import { connectExistingRepoToNxCloudPrompt } from '../../connect/connect-to-nx-cloud';
 
-type Options = Pick<InitArgs, 'nxCloud' | 'interactive' | 'cacheable'>;
+type Options = Pick<InitArgs, 'nxCloud' | 'interactive' | 'cacheable'> & {
+  legacy?: boolean;
+};
 
 export async function addNxToNpmRepo(options: Options) {
   const repoRoot = process.cwd();
@@ -78,7 +81,11 @@ export async function addNxToNpmRepo(options: Options) {
 
   updateGitIgnore(repoRoot);
   addDepsToPackageJson(repoRoot);
-  markRootPackageJsonAsNxProject(repoRoot, cacheableOperations, pmc);
+  if (options.legacy) {
+    markRootPackageJsonAsNxProjectLegacy(repoRoot, cacheableOperations, pmc);
+  } else {
+    markPackageJsonAsNxProject(join(repoRoot, 'package.json'));
+  }
 
   output.log({ title: '📦 Installing dependencies' });
 
@@ -88,9 +95,4 @@ export async function addNxToNpmRepo(options: Options) {
     output.log({ title: '🛠️ Setting up Nx Cloud' });
     initCloud(repoRoot, 'nx-init-npm-repo');
   }
-
-  printFinalMessage({
-    learnMoreLink:
-      'https://nx.dev/recipes/adopting-nx/adding-to-existing-project',
-  });
 }

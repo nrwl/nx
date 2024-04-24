@@ -4,6 +4,7 @@ import { serverLogger } from './logger';
 import { serializeResult } from '../socket-utils';
 import { deleteDaemonJsonProcessCache } from '../cache';
 import type { Watcher } from '../../native';
+import { cleanupPlugins } from './plugins';
 
 export const SERVER_INACTIVITY_TIMEOUT_MS = 10800000 as const; // 10800000 ms = 3 hours
 
@@ -39,6 +40,7 @@ export async function handleServerProcessTermination({
   try {
     server.close();
     deleteDaemonJsonProcessCache();
+    cleanupPlugins();
 
     if (watcherInstance) {
       await watcherInstance.stop();

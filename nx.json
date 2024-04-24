@@ -93,27 +93,12 @@
     "test": {
       "dependsOn": ["test-native", "build-native", "^build-native"],
       "inputs": ["default", "^production", "{workspaceRoot}/jest.preset.js"],
-      "executor": "@nx/jest:jest",
       "options": {
-        "jestConfig": "{projectRoot}/jest.config.ts",
-        "passWithNoTests": true
-      },
-      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
-      "cache": true
+        "args": ["--passWithNoTests", "--detectOpenHandles", "--forceExit"]
+      }
     },
     "lint": {
-      "dependsOn": ["build-native", "^build-native"],
-      "inputs": [
-        "default",
-        "{workspaceRoot}/.eslintrc.json",
-        "{workspaceRoot}/tools/eslint-rules/**/*"
-      ],
-      "executor": "@nx/eslint:lint",
-      "options": {
-        "lintFilePatterns": ["{projectRoot}"]
-      },
-      "outputs": ["{options.outputFile}"],
-      "cache": true
+      "dependsOn": ["build-native", "^build-native"]
     },
     "e2e": {
       "inputs": [
@@ -192,19 +177,6 @@
     },
     "copy-docs": {
       "cache": true
-    },
-    "@nx/jest:jest": {
-      "cache": true,
-      "inputs": ["default", "^production", "{workspaceRoot}/jest.preset.js"],
-      "options": {
-        "passWithNoTests": true
-      },
-      "configurations": {
-        "ci": {
-          "ci": true,
-          "codeCoverage": true
-        }
-      }
     }
   },
   "plugins": [
@@ -214,6 +186,24 @@
       "options": {
         "targetName": "pw-e2e",
         "ciTargetName": "e2e-ci"
+      }
+    },
+    {
+      "plugin": "@nx/eslint/plugin",
+      "exclude": ["packages/**/__fixtures__/**/*"],
+      "options": {
+        "targetName": "lint"
+      }
+    },
+    {
+      "plugin": "@nx/jest/plugin",
+      "exclude": [
+        "e2e/**/*",
+        "packages/**/__fixtures__/**/*",
+        "jest.config.ts"
+      ],
+      "options": {
+        "targetName": "test"
       }
     }
   ],

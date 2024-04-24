@@ -1,4 +1,4 @@
-import { exec } from 'child_process';
+import { ChildProcess, exec, Serializable } from 'child_process';
 import * as path from 'path';
 import * as yargsParser from 'yargs-parser';
 import { env as appendLocalEnv } from 'npm-run-path';
@@ -7,9 +7,13 @@ import * as chalk from 'chalk';
 import {
   getPseudoTerminal,
   PseudoTerminal,
+  PseudoTtyProcess,
 } from '../../tasks-runner/pseudo-terminal';
+import { signalToCode } from '../../utils/exit-codes';
 
 export const LARGE_BUFFER = 1024 * 1000000;
+let pseudoTerminal: PseudoTerminal | null;
+const childProcesses = new Set<ChildProcess | PseudoTtyProcess>();
 
 async function loadEnvVars(path?: string) {
   if (path) {
@@ -50,6 +54,7 @@ export interface RunCommandsOptions extends Json {
   readyWhen?: string;
   cwd?: string;
   env?: Record<string, string>;
+  forwardAllArgs?: boolean; // default is true
   args?: string | string[];
   envFile?: string;
   __unparsed__: string[];
@@ -71,6 +76,7 @@ const propKeys = [
   'usePty',
   'streamOutput',
   'verbose',
+  'forwardAllArgs',
 ];
 
 export interface NormalizedRunCommandsOptions extends RunCommandsOptions {
@@ -84,6 +90,9 @@ export interface NormalizedRunCommandsOptions extends RunCommandsOptions {
   parsedArgs: {
     [k: string]: any;
   };
+  unparsedCommandArgs?: {
+    [k: string]: string;
+  };
   args?: string;
 }
 
@@ -94,6 +103,7 @@ export default async function (
   success: boolean;
   terminalOutput: string;
 }> {
+  registerProcessListener();
   await loadEnvVars(options.envFile);
   const normalized = normalizeOptions(options);
 
@@ -230,12 +240,13 @@ function normalizeOptions(
     options.unknownOptions,
     options.args as string
   );
+  options.unparsedCommandArgs = unparsedCommandArgs;
 
   (options as NormalizedRunCommandsOptions).commands.forEach((c) => {
     c.command = interpolateArgsIntoCommand(
       c.command,
       options as NormalizedRunCommandsOptions,
-      c.forwardAllArgs ?? true
+      c.forwardAllArgs ?? options.forwardAllArgs ?? true
     );
   });
   return options as NormalizedRunCommandsOptions;
@@ -245,9 +256,7 @@ async function runSerially(
   options: NormalizedRunCommandsOptions,
   context: ExecutorContext
 ): Promise<{ success: boolean; terminalOutput: string }> {
-  const pseudoTerminal = PseudoTerminal.isSupported()
-    ? getPseudoTerminal()
-    : null;
+  pseudoTerminal ??= PseudoTerminal.isSupported() ? getPseudoTerminal() : null;
   let terminalOutput = '';
   for (const c of options.commands) {
     const result: { success: boolean; terminalOutput: string } =
@@ -301,13 +310,19 @@ async function createProcess(
     !isParallel &&
     usePty
   ) {
+    let terminalOutput = chalk.dim('> ') + commandConfig.command + '\r\n\r\n';
+    if (streamOutput) {
+      process.stdout.write(terminalOutput);
+    }
+
     const cp = pseudoTerminal.runCommand(commandConfig.command, {
       cwd,
       jsEnv: env,
       quiet: !streamOutput,
     });
 
-    let terminalOutput = '';
+    childProcesses.add(cp);
+
     return new Promise((res) => {
       cp.onOutput((output) => {
         terminalOutput += output;
@@ -341,23 +356,18 @@ function nodeProcess(
   readyWhen: string,
   streamOutput = true
 ): Promise<{ success: boolean; terminalOutput: string }> {
-  let terminalOutput = '';
+  let terminalOutput = chalk.dim('> ') + commandConfig.command + '\r\n\r\n';
+  if (streamOutput) {
+    process.stdout.write(terminalOutput);
+  }
   return new Promise((res) => {
     const childProcess = exec(commandConfig.command, {
       maxBuffer: LARGE_BUFFER,
       env,
       cwd,
     });
-    /**
-     * Ensure the child process is killed when the parent exits
-     */
-    const processExitListener = (signal?: number | NodeJS.Signals) =>
-      childProcess.kill(signal);
 
-    process.on('exit', processExitListener);
-    process.on('SIGTERM', processExitListener);
-    process.on('SIGINT', processExitListener);
-    process.on('SIGQUIT', processExitListener);
+    childProcesses.add(childProcess);
 
     childProcess.stdout.on('data', (data) => {
       const output = addColorAndPrefix(data, commandConfig);
@@ -388,6 +398,7 @@ function nodeProcess(
       res({ success: false, terminalOutput });
     });
     childProcess.on('exit', (code) => {
+      childProcesses.delete(childProcess);
       if (!readyWhen) {
         res({ success: code === 0, terminalOutput });
       }
@@ -450,7 +461,11 @@ export function interpolateArgsIntoCommand(
   command: string,
   opts: Pick<
     NormalizedRunCommandsOptions,
-    'args' | 'parsedArgs' | '__unparsed__' | 'unknownOptions'
+    | 'args'
+    | 'parsedArgs'
+    | '__unparsed__'
+    | 'unknownOptions'
+    | 'unparsedCommandArgs'
   >,
   forwardAllArgs: boolean
 ): string {
@@ -470,14 +485,20 @@ export function interpolateArgsIntoCommand(
               typeof opts.unknownOptions[k] !== 'object' &&
               opts.parsedArgs[k] === opts.unknownOptions[k]
           )
-          .map((k) => `--${k} ${opts.unknownOptions[k]}`)
+          .map((k) => `--${k}=${opts.unknownOptions[k]}`)
           .join(' ');
     }
     if (opts.args) {
       args += ` ${opts.args}`;
     }
     if (opts.__unparsed__?.length > 0) {
-      args += ` ${opts.__unparsed__.join(' ')}`;
+      const filterdParsedOptions = filterPropKeysFromUnParsedOptions(
+        opts.__unparsed__,
+        opts.unparsedCommandArgs
+      );
+      if (filterdParsedOptions.length > 0) {
+        args += ` ${filterdParsedOptions.join(' ')}`;
+      }
     }
     return `${command}${args}`;
   } else {
@@ -495,5 +516,106 @@ function parseArgs(
   }
   return yargsParser(args.replace(/(^"|"$)/g, ''), {
     configuration: { 'camel-case-expansion': false },
+  });
+}
+
+/**
+ * This function filters out the prop keys from the unparsed options
+ * @param __unparsed__ e.g. ['--prop1', 'value1', '--prop2=value2', '--args=test']
+ * @param unparsedCommandArgs e.g. { prop1: 'value1', prop2: 'value2', args: 'test'}
+ * @returns filtered options that are not part of the propKeys array e.g. ['--prop1', 'value1', '--prop2=value2']
+ */
+function filterPropKeysFromUnParsedOptions(
+  __unparsed__: string[],
+  unparsedCommandArgs: {
+    [k: string]: string;
+  } = {}
+): string[] {
+  const parsedOptions = [];
+  for (let index = 0; index < __unparsed__.length; index++) {
+    const element = __unparsed__[index];
+    if (element.startsWith('--')) {
+      const key = element.replace('--', '');
+      if (element.includes('=')) {
+        if (!propKeys.includes(key.split('=')[0].split('.')[0])) {
+          // check if the key is part of the propKeys array
+          parsedOptions.push(element);
+        }
+      } else {
+        // check if the next element is a value for the key
+        if (propKeys.includes(key)) {
+          if (
+            index + 1 < __unparsed__.length &&
+            __unparsed__[index + 1] === unparsedCommandArgs[key]
+          ) {
+            index++; // skip the next element
+          }
+        } else {
+          parsedOptions.push(element);
+        }
+      }
+    } else {
+      parsedOptions.push(element);
+    }
+  }
+  return parsedOptions;
+}
+
+let registered = false;
+
+function registerProcessListener() {
+  if (registered) {
+    return;
+  }
+
+  registered = true;
+  // When the nx process gets a message, it will be sent into the task's process
+  process.on('message', (message: Serializable) => {
+    // this.publisher.publish(message.toString());
+    if (pseudoTerminal) {
+      pseudoTerminal.sendMessageToChildren(message);
+    }
+
+    childProcesses.forEach((p) => {
+      if ('connected' in p && p.connected) {
+        p.send(message);
+      }
+    });
+  });
+
+  // Terminate any task processes on exit
+  process.on('exit', () => {
+    childProcesses.forEach((p) => {
+      if ('connected' in p ? p.connected : p.isAlive) {
+        p.kill();
+      }
+    });
+  });
+  process.on('SIGINT', () => {
+    childProcesses.forEach((p) => {
+      if ('connected' in p ? p.connected : p.isAlive) {
+        p.kill('SIGTERM');
+      }
+    });
+    // we exit here because we don't need to write anything to cache.
+    process.exit(signalToCode('SIGINT'));
+  });
+  process.on('SIGTERM', () => {
+    childProcesses.forEach((p) => {
+      if ('connected' in p ? p.connected : p.isAlive) {
+        p.kill('SIGTERM');
+      }
+    });
+    // no exit here because we expect child processes to terminate which
+    // will store results to the cache and will terminate this process
+  });
+  process.on('SIGHUP', () => {
+    childProcesses.forEach((p) => {
+      if ('connected' in p ? p.connected : p.isAlive) {
+        p.kill('SIGTERM');
+      }
+    });
+    // no exit here because we expect child processes to terminate which
+    // will store results to the cache and will terminate this process
   });
 }

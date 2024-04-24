@@ -25,7 +25,7 @@ exports[`@nx/nuxt/plugin not root project should create nodes 1`] = `
             "cwd": "my-app",
           },
           "outputs": [
-            "{workspaceRoot}/dist/my-app/",
+            "{workspaceRoot}/dist/my-app/.nuxt",
           ],
         },
         "acme-serve-static": {
@@ -33,6 +33,7 @@ exports[`@nx/nuxt/plugin not root project should create nodes 1`] = `
           "options": {
             "buildTarget": "acme-build-static",
             "port": 4200,
+            "spa": false,
             "staticFilePath": "{projectRoot}/dist",
           },
         },
@@ -55,7 +56,7 @@ exports[`@nx/nuxt/plugin not root project should create nodes 1`] = `
             "cwd": "my-app",
           },
           "outputs": [
-            "{workspaceRoot}/dist/my-app/",
+            "{workspaceRoot}/dist/my-app/.nuxt",
           ],
         },
         "my-serve": {
@@ -95,7 +96,7 @@ exports[`@nx/nuxt/plugin root project should create nodes 1`] = `
             "cwd": ".",
           },
           "outputs": [
-            "dist/my-app/",
+            "dist/my-app/.nuxt",
           ],
         },
         "build-static": {
@@ -117,7 +118,7 @@ exports[`@nx/nuxt/plugin root project should create nodes 1`] = `
             "cwd": ".",
           },
           "outputs": [
-            "dist/my-app/",
+            "dist/my-app/.nuxt",
           ],
         },
         "serve": {
@@ -131,6 +132,7 @@ exports[`@nx/nuxt/plugin root project should create nodes 1`] = `
           "options": {
             "buildTarget": "build-static",
             "port": 4200,
+            "spa": false,
             "staticFilePath": "{projectRoot}/dist",
           },
         },

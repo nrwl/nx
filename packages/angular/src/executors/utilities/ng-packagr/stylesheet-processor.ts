@@ -15,7 +15,7 @@ import { colors } from 'ng-packagr/lib/utils/color';
 import { getTailwindConfigPath } from './tailwindcss';
 import { workspaceRoot } from '@nx/devkit';
 import type { PostcssConfiguration } from 'ng-packagr/lib/styles/postcss-configuration';
-import { gte } from 'semver';
+import { gt } from 'semver';
 import { getInstalledPackageVersionInfo } from '../angular-version-utils';
 
 const maxWorkersVariable = process.env['NG_BUILD_MAX_WORKERS'];
@@ -94,7 +94,7 @@ export class StylesheetProcessor {
     const { version: ngPackagrVersion } =
       getInstalledPackageVersionInfo('ng-packagr');
     let postcssConfiguration: PostcssConfiguration | undefined;
-    if (gte(ngPackagrVersion, '17.3.0')) {
+    if (gt(ngPackagrVersion, '17.2.0')) {
       const {
         loadPostcssConfiguration,
       } = require('ng-packagr/lib/styles/postcss-configuration');
@@ -129,10 +129,10 @@ export class StylesheetProcessor {
 }
 
 /**
- * This class is used when ng-packagr version is greater than or equal to 17.2.0 and less than 17.3.0.
- * The async `loadPostcssConfiguration` function introduced in ng-packagr 17.2.x causes a memory leak
- * due to multiple workers being created. We must keep this class to support any workspace that might
- * be using ng-packagr 17.2.x where that function need to be awaited.
+ * This class is used when ng-packagr version is 17.2.0. The async `loadPostcssConfiguration` function
+ * introduced in ng-packagr 17.2.0 causes a memory leak due to multiple workers being created. We must
+ * keep this class to support any workspace that might be using ng-packagr 17.2.0 where that function
+ * need to be awaited.
  */
 export class AsyncStylesheetProcessor {
   private renderWorker: typeof Piscina | undefined;
@@ -199,7 +199,7 @@ export class AsyncStylesheetProcessor {
     const { version: ngPackagrVersion } =
       getInstalledPackageVersionInfo('ng-packagr');
     let postcssConfiguration: PostcssConfiguration | undefined;
-    if (gte(ngPackagrVersion, '17.2.0')) {
+    if (ngPackagrVersion === '17.2.0') {
       const { loadPostcssConfiguration } = await import(
         'ng-packagr/lib/styles/postcss-configuration'
       );

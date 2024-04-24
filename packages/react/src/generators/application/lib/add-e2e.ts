@@ -22,9 +22,10 @@ export async function addE2e(
         (options.bundler === 'webpack' && hasWebpackPlugin(tree)) ||
         (options.bundler === 'vite' && hasVitePlugin(tree));
       if (!hasNxBuildPlugin) {
-        webStaticServeGenerator(tree, {
+        await webStaticServeGenerator(tree, {
           buildTarget: `${options.projectName}:build`,
           targetName: 'serve-static',
+          spa: true,
         });
       }
 
@@ -48,13 +49,13 @@ export async function addE2e(
         // the name and root are already normalized, instruct the generator to use them as is
         bundler: options.bundler === 'rspack' ? 'webpack' : options.bundler,
         skipFormat: true,
-        devServerTarget: `${options.projectName}:serve`,
-        baseUrl: `http://localhost:${options.devServerPort ?? 4200}`,
+        devServerTarget: `${options.projectName}:${options.e2eWebServerTarget}`,
+        baseUrl: options.e2eWebServerAddress,
         jsx: true,
         rootProject: options.rootProject,
         webServerCommands: hasNxBuildPlugin
           ? {
-              default: `nx run ${options.projectName}:serve`,
+              default: `nx run ${options.projectName}:${options.e2eWebServerTarget}`,
               production: `nx run ${options.projectName}:preview`,
             }
           : undefined,
@@ -82,10 +83,10 @@ export async function addE2e(
         js: false,
         linter: options.linter,
         setParserOptionsProject: options.setParserOptionsProject,
-        webServerCommand: `${getPackageManagerCommand().exec} nx serve ${
-          options.name
-        }`,
-        webServerAddress: `http://localhost:${options.devServerPort ?? 4200}`,
+        webServerCommand: `${getPackageManagerCommand().exec} nx ${
+          options.e2eWebServerTarget
+        } ${options.name}`,
+        webServerAddress: options.e2eWebServerAddress,
         rootProject: options.rootProject,
         addPlugin: options.addPlugin,
       });

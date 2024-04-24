@@ -186,7 +186,7 @@ const guideUrls = {
   '/migration/lerna-and-nx': 'https://lerna.js.org',
   '/cypress/v10-migration-guide': '/cypress/v11-migration-guide',
   '/cypress/generators/migrate-to-cypress-10':
-    '/cypress/generators/migrate-to-cypress-11',
+    '/packages/cypress/generators/migrate-to-cypress-11',
 };
 
 /**
@@ -201,7 +201,8 @@ const diataxis = {
   '/configuration/packagejson': '/reference/project-configuration',
   '/configuration/projectjson': '/reference/project-configuration',
   '/using-nx/nx-cli': '/getting-started/intro',
-  '/using-nx/console': '/features/integrate-with-editors',
+  '/using-nx/console': '/getting-started/editor-setup',
+  '/features/integrate-with-editors': '/getting-started/editor-setup',
   '/using-nx/mental-model': '/concepts/mental-model',
   '/using-nx/caching': '/concepts/how-caching-works',
   '/using-nx/dte': '/features/distribute-task-execution',
@@ -217,7 +218,7 @@ const diataxis = {
     '/recipes/advanced-plugins/project-graph-plugins',
   '/migration/lerna-and-nx': '/recipes/adopting-nx/lerna-and-nx',
   '/migration/adding-to-monorepo': '/recipes/adopting-nx/adding-to-monorepo',
-  '/migration/migration-cra': '/recipes/adopting-nx/migration-cra',
+  '/migration/migration-cra': '/recipes/adopting-nx/adding-to-existing-project',
   '/migration/migration-angular': '/recipes/adopting-nx/migration-angular',
   '/migration/migration-angularjs': '/recipes/adopting-nx/migration-angular',
   '/recipes/angular/migration/angularjs':
@@ -386,6 +387,11 @@ const recipesUrls = {
     '/recipes/webpack/webpack-config-setup',
   '/showcase/example-repos/add-nuxt': '/nx-api/nuxt',
   '/showcase/example-repos/add-vue': '/nx-api/vue',
+  '/recipes/react/react-18': '/nx-api/react',
+  '/recipes/nx-console/console-shortcuts': '/getting-started/editor-setup',
+  '/recipes/nx-console/console-project-pane': '/getting-started/editor-setup',
+  '/recipes/nx-console/console-add-dependency-command':
+    '/getting-started/editor-setup',
 };
 
 /**
@@ -758,7 +764,9 @@ const conceptUrls = {
   '/getting-started/tutorials/package-based-repo-tutorial':
     '/getting-started/tutorials/npm-workspaces-tutorial',
   '/getting-started/integrated-repo-tutorial':
-    '/getting-started/tutorials/integrated-repo-tutorial',
+    '/getting-started/tutorials/react-monorepo-tutorial',
+  '/getting-started/tutorials/integrated-repo-tutorial':
+    '/getting-started/tutorials/react-monorepo-tutorial',
   '/getting-started/react-standalone-tutorial':
     '/getting-started/tutorials/react-standalone-tutorial',
   '/getting-started/angular-standalone-tutorial':
@@ -888,7 +896,9 @@ const latestRecipesRefactoring = {
   '/recipes/adopting-nx-angular/angular-integrated':
     '/recipes/angular/migration/angular',
   '/recipes/adopting-nx-angular/angular-manual':
-    '/recipes/angular/migration/angular-manual',
+    '/recipes/angular/migration/angular',
+  '/recipes/angular/migration/angular-manual':
+    '/recipes/angular/migration/angular',
   '/recipes/adopting-nx-angular/angular-multiple':
     '/recipes/angular/migration/angular-multiple',
   '/recipes/adopting-nx/migration-angularjs':
@@ -902,7 +912,10 @@ const latestRecipesRefactoring = {
   '/recipes/other/setup-incremental-builds-angular':
     '/recipes/angular/setup-incremental-builds-angular',
   // react
-  '/recipes/adopting-nx/migration-cra': '/recipes/react/migration-cra',
+  '/recipes/adopting-nx/migration-cra':
+    '/recipes/adopting-nx/adding-to-existing-project',
+  '/recipes/react/migration-cra':
+    '/recipes/adopting-nx/adding-to-existing-project',
   '/recipes/other/react-18': '/recipes/react/react-18',
   '/recipes/other/react-native': '/recipes/react/react-native',
   '/recipes/other/remix': '/recipes/react/remix',
@@ -930,17 +943,6 @@ const latestRecipesRefactoring = {
   '/recipes/database/serverless-fastify-planetscale':
     '/showcase/example-repos/serverless-fastify-planetscale',
   '/recipes/example-repos/:path*': '/showcase/example-repos/:path*',
-  // troubleshooting
-  '/recipes/other/resolve-circular-dependencies':
-    '/recipes/troubleshooting/resolve-circular-dependencies',
-  '/recipes/ci/troubleshoot-nx-install-issues':
-    '/recipes/troubleshooting/troubleshoot-nx-install-issues',
-  '/recipes/other/troubleshoot-cache-misses':
-    '/recipes/troubleshooting/troubleshoot-cache-misses',
-  '/recipes/other/unknown-local-cache':
-    '/recipes/troubleshooting/unknown-local-cache',
-  '/recipes/other/performance-profiling':
-    '/recipes/troubleshooting/performance-profiling',
   // tips and tricks
   '/recipes/environment-variables/define-environment-variables':
     '/recipes/tips-n-tricks/define-environment-variables',
@@ -1018,6 +1020,42 @@ const eslintRename = {
   '/packages/linter': '/packages/eslint',
 };
 
+// move troubleshooting out of recipes
+const troubleshootingOutOfRecipes = {
+  '/recipes/troubleshooting': '/troubleshooting',
+  '/recipes/troubleshooting/:path*': '/troubleshooting/:path*',
+  '/ci/recipes/troubleshooting/:path*': '/ci/troubleshooting/:path*',
+  '/recipes/other/resolve-circular-dependencies':
+    '/troubleshooting/resolve-circular-dependencies',
+  '/recipes/ci/troubleshoot-nx-install-issues':
+    '/troubleshooting/troubleshoot-nx-install-issues',
+  '/recipes/other/troubleshoot-cache-misses':
+    '/troubleshooting/troubleshoot-cache-misses',
+  '/recipes/other/unknown-local-cache': '/troubleshooting/unknown-local-cache',
+  '/recipes/other/performance-profiling':
+    '/troubleshooting/performance-profiling',
+};
+
+/**
+ * Removed deprecated URLs
+ */
+const removedDeprecatedUrls = {
+  '/deprecated/default-collection': '/features/generate-code', // 46 views: has not worked since Nx 17 and has very little views
+  '/deprecated/workspace-lint': '/nx-api/nx/documents/report', // 168 views: workspace-lint hasn't worked since Nx 15 and users should use `nx report` to check versions and other info
+  '/deprecated/storybook/angular-storybook-targets':
+    '/recipes/storybook/overview-angular', // 49 views
+  '/deprecated/storybook/angular-project-build-config':
+    '/recipes/storybook/overview-angular', // 126 views: outdated since Nx 14
+  '/deprecated/storybook/migrate-webpack-final-angular':
+    '/recipes/storybook/overview-angular', // 50 views: For Nx < 12.7
+  '/deprecated/storybook/upgrade-storybook-v6-angular':
+    '/recipes/storybook/overview-angular', // 44 views: outdated since Nx 14
+  '/deprecated/storybook/migrate-webpack-final-react':
+    '/recipes/storybook/overview-react', // 417 views: mostly people searching "React Storybook" is matching this outdated page that was for Nx 12.7
+  '/deprecated/storybook/upgrade-storybook-v6-react':
+    '/recipes/storybook/overview-react', // 80 views
+};
+
 /**
  * Public export API
  */
@@ -1045,4 +1083,6 @@ module.exports = {
   coreFeatureRefactoring: coreFeatureAndConceptsRefactoring,
   aiChat,
   eslintRename,
+  removedDeprecatedUrls,
+  troubleshootingOutOfRecipes,
 };

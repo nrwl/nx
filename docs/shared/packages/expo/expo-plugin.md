@@ -27,6 +27,18 @@ nx add @nx/expo
 
 This will install the correct version of `@nx/expo`.
 
+{% /tab %}
+{% tab label="Nx < 18" %}
+
+Install the `@nx/expo` package with your package manager.
+
+```shell
+npm add -D @nx/expo
+```
+
+{% /tab %}
+{% /tabs %}
+
 ### How @nx/expo Infers Tasks
 
 The `@nx/expo` plugin will create a task for any project that has an app configuration file present. Any of the following files will be recognized as an app configuration file:
@@ -75,15 +87,6 @@ The `@nx/expo/plugin` is configured in the `plugins` array in `nx.json`.
 ```
 
 Once a Expo configuration file has been identified, the targets are created with the name you specify under `startTargetName`, `serveTargetName`, `runIosTargetName`, `runAndroidTargetname`, `exportTargetName`, `prebuildTargetName`, `installTargetName`, `buildTargetName` or `submitTargetName` in the `nx.json` `plugins` array. The default names for the inferred targets are `start`, `serve`, `run-ios`, `run-anroid`, `export`, `prebuild`, `install`, `build` and `submit`.
-
-{% /tab %}
-{% tab label="Nx < 18" %}
-
-Install the `@nx/expo` package with your package manager.
-
-```shell
-npm add -D @nx/expo
-```
 
 ### Creating Applications
 

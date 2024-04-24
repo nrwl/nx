@@ -8,8 +8,6 @@ import {
   Tree,
   updateNxJson,
 } from '@nx/devkit';
-import { updatePackageScripts } from '@nx/devkit/src/utils/update-package-scripts';
-import { createNodes } from '../../plugin/nodes';
 import { nxVersion } from '../../utils/versions';
 import { InitGeneratorSchema } from './schema';
 import { hasGradlePlugin } from '../../utils/has-gradle-plugin';
@@ -33,10 +31,6 @@ export async function initGenerator(tree: Tree, options: InitGeneratorSchema) {
 
   addPlugin(tree);
   addProjectReportToBuildGradle(tree);
-
-  if (options.updatePackageScripts && tree.exists('package.json')) {
-    await updatePackageScripts(tree, createNodes);
-  }
 
   if (!options.skipFormat) {
     await formatFiles(tree);

@@ -1,4 +1,5 @@
 import {
+  addDependenciesToPackageJson,
   formatFiles,
   GeneratorCallback,
   installPackagesTask,
@@ -10,10 +11,7 @@ import { addTsConfigPath, initGenerator as jsInitGenerator } from '@nx/js';
 import init from '../../generators/init/init';
 import addLintingGenerator from '../add-linting/add-linting';
 import setupTailwindGenerator from '../setup-tailwind/setup-tailwind';
-import {
-  addDependenciesToPackageJsonIfDontExist,
-  versions,
-} from '../utils/version-utils';
+import { versions } from '../utils/version-utils';
 import { addBuildableLibrariesPostCssDependencies } from '../utils/dependencies';
 import { addModule } from './lib/add-module';
 import { addStandaloneComponent } from './lib/add-standalone-component';
@@ -71,9 +69,16 @@ export async function libraryGeneratorInternal(
 
   const pkgVersions = versions(tree);
 
-  await jsInitGenerator(tree, { ...options, js: false, skipFormat: true });
+  await jsInitGenerator(tree, {
+    ...libraryOptions,
+    js: false,
+    skipFormat: true,
+  });
   await init(tree, { ...libraryOptions, skipFormat: true });
-  ensureAngularDependencies(tree);
+
+  if (!libraryOptions.skipPackageJson) {
+    ensureAngularDependencies(tree);
+  }
 
   const project = addProject(tree, libraryOptions);
 
@@ -96,16 +101,22 @@ export async function libraryGeneratorInternal(
     await setupTailwindGenerator(tree, {
       project: libraryOptions.name,
       skipFormat: true,
+      skipPackageJson: libraryOptions.skipPackageJson,
     });
   }
 
-  if (libraryOptions.buildable || libraryOptions.publishable) {
-    addDependenciesToPackageJsonIfDontExist(
+  if (
+    (libraryOptions.buildable || libraryOptions.publishable) &&
+    !libraryOptions.skipPackageJson
+  ) {
+    addDependenciesToPackageJson(
       tree,
       {},
       {
         'ng-packagr': pkgVersions.ngPackagrVersion,
-      }
+      },
+      undefined,
+      true
     );
     addBuildableLibrariesPostCssDependencies(tree);
   }

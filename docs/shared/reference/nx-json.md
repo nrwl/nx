@@ -22,14 +22,19 @@ The following is an expanded example showing all options. Your `nx.json` will li
     "production": ["!{projectRoot}/**/*.spec.tsx"]
   },
   "targetDefaults": {
-    "build": {
+    "@nx/js:tsc": {
       "inputs": ["production", "^production"],
       "dependsOn": ["^build"],
-      "executor": "@nrwl/js:tsc",
       "options": {
         "main": "{projectRoot}/src/index.ts"
       },
       "cache": true
+    },
+    "test": {
+      "cache": true,
+      "inputs": ["default", "^production", "{workspaceRoot}/jest.preset.js"],
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "executor": "@nx/jest:jest"
     }
   },
   "release": {
@@ -129,12 +134,18 @@ Tells Nx which base branch to use when calculating affected projects.
 
 ## Target Defaults
 
-Target defaults provide ways to set common options for a particular target in your workspace. When building your project's configuration, we merge it with up to 1 default from this map. For a given target, we look at its name and its executor. We then check target defaults for any of the following combinations:
+Target defaults provide ways to set common options for a particular target in your workspace. When building your project's configuration, we merge it with up to 1 default from this map. For a given target, we look at its name and its executor. We then check target defaults looking for a configuration whose key matches any of the following:
 
 - `` `${executor}` ``
-- `` `${targetName}` ``
+- `` `${targetName}` `` (if the configuration specifies the executor, this needs to match the target's executor as well)
 
-Whichever of these we find first, we use as the base for that target's configuration. Some common scenarios for this follow.
+Target defaults matching the executor takes precedence over those matching the target name. If we find a target default for a given target, we use it as the base for that target's configuration.
+
+{% callout type="warning" title="Beware" %}
+When using a target name as the key of a target default, make sure all the targets with that name use the same executor or that the target defaults you're setting make sense to all targets regardless of the executor they use. Anything set in a target default will also override the configuration of [tasks inferred by plugins](/concepts/inferred-tasks).
+{% /callout %}
+
+Some common scenarios for this follow.
 
 ### inputs & namedInputs
 
@@ -145,12 +156,13 @@ Using pseudocode `inputs = projectJson.targets.build.inputs || nxJson.targetDefa
 
 You can also define and redefine named inputs. This enables one key use case, where your `nx.json` can define things like this (which applies to every project):
 
-```
-"test": {
-  "inputs": [
-    "default",
-    "^production"
-  ]
+```json {% fileName="nx.json" %}
+{
+  "targetDefaults": {
+    "test": {
+      "inputs": ["default", "^production"]
+    }
+  }
 }
 ```
 
@@ -190,7 +202,7 @@ defining `targetDefaults` in `nx.json` is helpful.
 }
 ```
 
-The configuration above is identical to adding `{"dependsOn": ["^build"]}` to every build target of every project.
+The configuration above is identical to adding `{"dependsOn": ["^build"]}` to every `build` target of every project.
 
 {% cards %}
 {% card title="Project Configuration reference" type="documentation" description="For full documentation of the `dependsOn` property, see the project configuration reference" url="/reference/project-configuration#dependson" /%}
@@ -211,7 +223,7 @@ Another target default you can configure is `outputs`:
 }
 ```
 
-When defining any options or configurations inside of a target default, you may use the `{workspaceRoot}` and `{projectRoot}` tokens. This is useful for defining things like the outputPath or tsconfig for many build targets.
+When defining any options or configurations inside of a target default, you may use the `{workspaceRoot}` and `{projectRoot}` tokens. This is useful for defining options whose values are paths.
 
 ```json {% fileName="nx.json" %}
 {
@@ -238,7 +250,7 @@ When defining any options or configurations inside of a target default, you may 
 ```
 
 {% callout type="note" title="Target Default Priority" %}
-Note that the inputs and outputs are respecified on the @nx/js:tsc default configuration. This is **required**, as when reading target defaults Nx will only ever look at one key. If there is a default configuration based on the executor used, it will be read first. If not, Nx will fall back to looking at the configuration based on target name. For instance, running `nx build project` will read the options from `targetDefaults[@nx/js:tsc]` if the target configuration for build uses the @nx/js:tsc executor. It **would not** read any of the configuration from the `build` target default configuration unless the executor does not match.
+Note that the inputs and outputs are specified on both the `@nx/js:tsc` and `build` default configurations. This is **required**, as when reading target defaults Nx will only ever look at one key. If there is a default configuration based on the executor used, it will be read first. If not, Nx will fall back to looking at the configuration based on target name. For instance, running `nx build project` will read the options from `targetDefaults[@nx/js:tsc]` if the target configuration for `build` uses the `@nx/js:tsc executor`. It **would not** read any of the configuration from the `build` target default configuration unless the executor does not match.
 {% /callout %}
 
 {% cards %}
@@ -264,6 +276,43 @@ In Nx 17 and higher, caching is configured by specifying `"cache": true` in a ta
 If you are using distributed task execution and disable caching for a given target, you will not be able to use distributed task execution for that target. This is because distributed task execution requires caching to be enabled. This means that the target you have disabled caching for, and any targets which depend on that target will fail the pipeline if you try to run them with Nx Agents enabled.
 
 {% /callout %}
+
+### Executor/command options
+
+You can configure options specific to a target's executor. As an example, if your repo has projects using the `@nx/js:tsc` executor, you can provide some default options as follows:
+
+```json {% fileName="nx.json" %}
+{
+  "targetDefaults": {
+    "@nx/js:tsc": {
+      "options": {
+        "generateExportsField": true
+      }
+    }
+  }
+}
+```
+
+You can also provide defaults for [inferred targets](/concepts/inferred-tasks) or targets running a command using the `nx:run-commands` executor. As an example, if your repo has projects where **all the `build` targets** run the same `vite build` command, you can provide some default options as follows:
+
+```json {% fileName="nx.json" %}
+{
+  "targetDefaults": {
+    "build": {
+      "options": {
+        "assetsInlineLimit": 2048,
+        "assetsDir": "static/assets"
+      }
+    }
+  }
+}
+```
+
+{% callout type="caution" title="Be careful" %}
+If multiple targets with the same name run different commands (or use different executors), do not set options in `targetDefaults`. Different commands would accept different options, and the target defaults will apply to all targets with the same name regardless of the command they run. If you were to provide options in `targetDefaults` for them, the commands that don't expect those options could throw an error.
+{% /callout %}
+
+For more details on how to pass args to the underlying command see the [Pass Args to Commands recipe](/recipes/running-tasks/pass-args-to-commands).
 
 ## Release
 

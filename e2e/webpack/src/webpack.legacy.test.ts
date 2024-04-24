@@ -5,6 +5,7 @@ import {
   newProject,
   runCLI,
   runCommandUntil,
+  runE2ETests,
   uniq,
   updateFile,
 } from '@nx/e2e/utils';
@@ -101,5 +102,48 @@ describe('Webpack Plugin (legacy)', () => {
     expect(() => {
       checkFilesExist(`dist/${appName}/styles.css`);
     }).toThrow();
+  });
+
+  it('should support standard webpack config with executors', () => {
+    const appName = uniq('app');
+    runCLI(
+      `generate @nx/web:app ${appName} --bundler webpack --e2eTestRunner=playwright`
+    );
+    updateFile(
+      `${appName}/src/main.ts`,
+      `
+      document.querySelector('proj-root').innerHTML = '<h1>Welcome</h1>';
+    `
+    );
+    updateFile(
+      `${appName}/webpack.config.js`,
+      `
+        const { join } = require('path');
+        const {NxWebpackPlugin} = require('@nx/webpack');
+        module.exports = {
+          output: {
+            path: join(__dirname, '../dist/app9524918'),
+          },
+          plugins: [
+            new NxWebpackPlugin({
+              main: './src/main.ts',
+              compiler: 'tsc',
+              index: './src/index.html',
+              tsConfig: './tsconfig.app.json',
+            })
+          ]
+        };
+      `
+    );
+
+    expect(() => {
+      runCLI(`build ${appName} --outputHashing none`);
+    }).not.toThrow();
+
+    if (runE2ETests()) {
+      expect(() => {
+        runCLI(`e2e ${appName}-e2e`);
+      }).not.toThrow();
+    }
   });
 });

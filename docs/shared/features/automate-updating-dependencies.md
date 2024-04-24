@@ -35,6 +35,10 @@ nx migrate latest # same as nx migrate nx@latest
 
 Note you can also specify an exact version by replacing `latest` with `nx@<version>`.
 
+{% callout title="Update One Major Version at a Time" %}
+To avoid potential issues, it is [recommended to update one major version of Nx at a time](/recipes/tips-n-tricks/advanced-update#one-major-version-at-a-time-small-steps).
+{% /callout %}
+
 This fetches the specified version of the `nx` package, analyzes the dependencies and fetches all the dependent packages. The process keeps going until all the dependencies are resolved. This results in:
 
 - The `package.json` being updated

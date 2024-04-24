@@ -18,6 +18,17 @@
         "tags": []
       },
       {
+        "id": "why-nx-cloud",
+        "name": "Why Nx Cloud?",
+        "description": "",
+        "mediaImage": "",
+        "file": "nx-cloud/intro/why-nx-cloud",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/intro/why-nx-cloud",
+        "tags": []
+      },
+      {
         "id": "tutorials",
         "name": "Tutorials",
         "description": "Tutorials setting up CI with Nx",
@@ -65,6 +76,17 @@
     "itemList": [],
     "isExternal": false,
     "path": "/ci/intro/ci-with-nx",
+    "tags": []
+  },
+  "/ci/intro/why-nx-cloud": {
+    "id": "why-nx-cloud",
+    "name": "Why Nx Cloud?",
+    "description": "",
+    "mediaImage": "",
+    "file": "nx-cloud/intro/why-nx-cloud",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/intro/why-nx-cloud",
     "tags": []
   },
   "/ci/intro/tutorials": {
@@ -133,7 +155,7 @@
       {
         "id": "affected",
         "name": "Run Only Tasks Affected by a PR",
-        "description": "",
+        "description": "This allows to only run tasks on projects that got changed in a given PR.",
         "mediaImage": "",
         "file": "shared/using-nx/affected",
         "itemList": [],
@@ -166,7 +188,7 @@
       {
         "id": "dynamic-agents",
         "name": "Dynamically Allocate Agents",
-        "description": "",
+        "description": "Learn how to dynamically allocate agents based on the size of a PR, keeping the balance of speed and cost.",
         "mediaImage": "",
         "file": "nx-cloud/features/dynamic-agents",
         "itemList": [],
@@ -177,7 +199,7 @@
       {
         "id": "split-e2e-tasks",
         "name": "Automatically Split E2E Tasks (Atomizer)",
-        "description": "",
+        "description": "Learn how Nx can automatically split e2e tests into fine-grained chunks for a much better distribution on Nx Agents.",
         "mediaImage": "",
         "file": "nx-cloud/features/split-e2e-tasks",
         "itemList": [],
@@ -188,7 +210,7 @@
       {
         "id": "flaky-tasks",
         "name": "Identify and Re-run Flaky Tasks",
-        "description": "",
+        "description": "Learn how Nx Cloud is able to automatically identify flaky tasks and re-run them for you.",
         "mediaImage": "",
         "file": "nx-cloud/features/flaky-tasks",
         "itemList": [],
@@ -215,7 +237,7 @@
   "/ci/features/affected": {
     "id": "affected",
     "name": "Run Only Tasks Affected by a PR",
-    "description": "",
+    "description": "This allows to only run tasks on projects that got changed in a given PR.",
     "mediaImage": "",
     "file": "shared/using-nx/affected",
     "itemList": [],
@@ -248,7 +270,7 @@
   "/ci/features/dynamic-agents": {
     "id": "dynamic-agents",
     "name": "Dynamically Allocate Agents",
-    "description": "",
+    "description": "Learn how to dynamically allocate agents based on the size of a PR, keeping the balance of speed and cost.",
     "mediaImage": "",
     "file": "nx-cloud/features/dynamic-agents",
     "itemList": [],
@@ -259,7 +281,7 @@
   "/ci/features/split-e2e-tasks": {
     "id": "split-e2e-tasks",
     "name": "Automatically Split E2E Tasks (Atomizer)",
-    "description": "",
+    "description": "Learn how Nx can automatically split e2e tests into fine-grained chunks for a much better distribution on Nx Agents.",
     "mediaImage": "",
     "file": "nx-cloud/features/split-e2e-tasks",
     "itemList": [],
@@ -270,7 +292,7 @@
   "/ci/features/flaky-tasks": {
     "id": "flaky-tasks",
     "name": "Identify and Re-run Flaky Tasks",
-    "description": "",
+    "description": "Learn how Nx Cloud is able to automatically identify flaky tasks and re-run them for you.",
     "mediaImage": "",
     "file": "nx-cloud/features/flaky-tasks",
     "itemList": [],
@@ -774,29 +796,6 @@
         ],
         "isExternal": false,
         "path": "/ci/recipes/enterprise",
-        "tags": []
-      },
-      {
-        "id": "troubleshooting",
-        "name": "Troubleshooting",
-        "description": "Learn how to solve common issues in Nx Cloud.",
-        "mediaImage": "",
-        "file": "",
-        "itemList": [
-          {
-            "id": "ci-execution-failed",
-            "name": "CI Execution Failed",
-            "description": "",
-            "mediaImage": "",
-            "file": "nx-cloud/troubleshooting/ci-execution-failed",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/ci/recipes/troubleshooting/ci-execution-failed",
-            "tags": []
-          }
-        ],
-        "isExternal": false,
-        "path": "/ci/recipes/troubleshooting",
         "tags": []
       },
       {
@@ -1704,40 +1703,6 @@
     "path": "/ci/recipes/enterprise/dte/jenkins-dte",
     "tags": []
   },
-  "/ci/recipes/troubleshooting": {
-    "id": "troubleshooting",
-    "name": "Troubleshooting",
-    "description": "Learn how to solve common issues in Nx Cloud.",
-    "mediaImage": "",
-    "file": "",
-    "itemList": [
-      {
-        "id": "ci-execution-failed",
-        "name": "CI Execution Failed",
-        "description": "",
-        "mediaImage": "",
-        "file": "nx-cloud/troubleshooting/ci-execution-failed",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/ci/recipes/troubleshooting/ci-execution-failed",
-        "tags": []
-      }
-    ],
-    "isExternal": false,
-    "path": "/ci/recipes/troubleshooting",
-    "tags": []
-  },
-  "/ci/recipes/troubleshooting/ci-execution-failed": {
-    "id": "ci-execution-failed",
-    "name": "CI Execution Failed",
-    "description": "",
-    "mediaImage": "",
-    "file": "nx-cloud/troubleshooting/ci-execution-failed",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/ci/recipes/troubleshooting/ci-execution-failed",
-    "tags": []
-  },
   "/ci/recipes/other": {
     "id": "other",
     "name": "Other",
@@ -1846,17 +1811,6 @@
         "tags": []
       },
       {
-        "id": "server-api",
-        "name": "Server API Reference",
-        "description": "",
-        "mediaImage": "",
-        "file": "nx-cloud/reference/server-api",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/ci/reference/server-api",
-        "tags": []
-      },
-      {
         "id": "release-notes",
         "name": "Release Notes",
         "description": "",
@@ -1916,17 +1870,6 @@
     "path": "/ci/reference/env-vars",
     "tags": []
   },
-  "/ci/reference/server-api": {
-    "id": "server-api",
-    "name": "Server API Reference",
-    "description": "",
-    "mediaImage": "",
-    "file": "nx-cloud/reference/server-api",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/ci/reference/server-api",
-    "tags": []
-  },
   "/ci/reference/release-notes": {
     "id": "release-notes",
     "name": "Release Notes",
@@ -1936,6 +1879,40 @@
     "itemList": [],
     "isExternal": false,
     "path": "/ci/reference/release-notes",
+    "tags": []
+  },
+  "/ci/troubleshooting": {
+    "id": "troubleshooting",
+    "name": "Troubleshooting",
+    "description": "Learn how to solve common issues in Nx Cloud.",
+    "mediaImage": "",
+    "file": "",
+    "itemList": [
+      {
+        "id": "ci-execution-failed",
+        "name": "CI Execution Failed",
+        "description": "",
+        "mediaImage": "",
+        "file": "nx-cloud/troubleshooting/ci-execution-failed",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/troubleshooting/ci-execution-failed",
+        "tags": []
+      }
+    ],
+    "isExternal": false,
+    "path": "/ci/troubleshooting",
+    "tags": []
+  },
+  "/ci/troubleshooting/ci-execution-failed": {
+    "id": "ci-execution-failed",
+    "name": "CI Execution Failed",
+    "description": "",
+    "mediaImage": "",
+    "file": "nx-cloud/troubleshooting/ci-execution-failed",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/troubleshooting/ci-execution-failed",
     "tags": []
   }
 }
