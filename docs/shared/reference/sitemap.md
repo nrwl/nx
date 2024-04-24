@@ -556,6 +556,7 @@
     - [generators](/nx-api/playwright/generators)
       - [configuration](/nx-api/playwright/generators/configuration)
       - [init](/nx-api/playwright/generators/init)
+      - [convert-to-inferred](/nx-api/playwright/generators/convert-to-inferred)
   - [plugin](/nx-api/plugin)
     - [documents](/nx-api/plugin/documents)
       - [Overview](/nx-api/plugin/documents/overview)
