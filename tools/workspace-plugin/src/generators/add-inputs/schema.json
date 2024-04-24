@@ -1,8 +1,0 @@
-{
-  "$schema": "https://json-schema.org/schema",
-  "$id": "AddInputs",
-  "title": "",
-  "type": "object",
-  "properties": {},
-  "required": []
-}

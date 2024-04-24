@@ -9,11 +9,6 @@
       "factory": "./src/generators/create-nodes-plugin/generator",
       "schema": "./src/generators/create-nodes-plugin/schema.json",
       "description": "Workspace Generator to create a create-nodes-plugin"
-    },
-    "add-inputs": {
-      "factory": "./src/generators/add-inputs/generator",
-      "schema": "./src/generators/add-inputs/schema.json",
-      "description": "add-inputs generator"
     }
   }
 }

@@ -117,14 +117,19 @@
     "lint": {
       "dependsOn": ["build-native", "^build-native"]
     },
+    "e2e": {
+      "cache": true,
+      "inputs": ["e2eInputs", "^production"]
+    },
     "e2e-local": {
-      "inputs": ["e2eInputs"]
+      "cache": true,
+      "inputs": ["e2eInputs", "^production"]
     },
     "e2e-ci": {
-      "inputs": ["e2eInputs"]
+      "inputs": ["e2eInputs", "^production"]
     },
     "e2e-macos-ci": {
-      "inputs": ["e2eInputs"]
+      "inputs": ["e2eInputs", "^production"]
     },
     "e2e-base": {
       "inputs": ["default", "^production"]
@@ -181,7 +186,8 @@
       "options": {
         "serveTargetName": "serve-base",
         "buildTargetName": "build-client"
-      },
+      }
+    },
     {
       "plugin": "@nx/jest/plugin",
       "include": ["e2e/**/*"],
