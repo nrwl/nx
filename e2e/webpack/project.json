@@ -6,10 +6,10 @@
   "implicitDependencies": ["webpack"],
   "targets": {
     "e2e-ci--src/webpack.legacy.test.ts": {
-      "inputs": ["e2eInputs"]
+      "inputs": ["e2eInputs", "^production"]
     },
     "e2e-ci--src/webpack.test.ts": {
-      "inputs": ["e2eInputs"]
+      "inputs": ["e2eInputs", "^production"]
     }
   }
 }

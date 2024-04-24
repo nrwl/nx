@@ -6,37 +6,37 @@
   "implicitDependencies": ["nx", "js"],
   "targets": {
     "e2e-ci--src/affected-graph.test.ts": {
-      "inputs": ["e2eInputs"]
+      "inputs": ["e2eInputs", "^production"]
     },
     "e2e-ci--src/cache.test.ts": {
-      "inputs": ["e2eInputs"]
+      "inputs": ["e2eInputs", "^production"]
     },
     "e2e-ci--src/extras.test.ts": {
-      "inputs": ["e2eInputs"]
+      "inputs": ["e2eInputs", "^production"]
     },
     "e2e-ci--src/invoke-runner.test.ts": {
-      "inputs": ["e2eInputs"]
+      "inputs": ["e2eInputs", "^production"]
     },
     "e2e-ci--src/misc.test.ts": {
-      "inputs": ["e2eInputs"]
+      "inputs": ["e2eInputs", "^production"]
     },
     "e2e-ci--src/nx-cloud.test.ts": {
-      "inputs": ["e2eInputs"]
+      "inputs": ["e2eInputs", "^production"]
     },
     "e2e-ci--src/nxw.test.ts": {
-      "inputs": ["e2eInputs"]
+      "inputs": ["e2eInputs", "^production"]
     },
     "e2e-ci--src/run.test.ts": {
-      "inputs": ["e2eInputs"]
+      "inputs": ["e2eInputs", "^production"]
     },
     "e2e-ci--src/watch.test.ts": {
-      "inputs": ["e2eInputs"]
+      "inputs": ["e2eInputs", "^production"]
     },
     "e2e-ci--src/workspace-legacy.test.ts": {
-      "inputs": ["e2eInputs"]
+      "inputs": ["e2eInputs", "^production"]
     },
     "e2e-ci--src/workspace.test.ts": {
-      "inputs": ["e2eInputs"]
+      "inputs": ["e2eInputs", "^production"]
     }
   }
 }

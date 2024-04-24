@@ -6,10 +6,10 @@
   "implicitDependencies": ["eslint"],
   "targets": {
     "e2e-ci--src/linter.test.ts": {
-      "inputs": ["e2eInputs"]
+      "inputs": ["e2eInputs", "^production"]
     },
     "e2e-ci--src/linter-legacy.test.ts": {
-      "inputs": ["e2eInputs"]
+      "inputs": ["e2eInputs", "^production"]
     },
     "run-e2e-tests": {
       "executor": "@nx/jest:jest",

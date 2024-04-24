@@ -6,7 +6,7 @@
   "implicitDependencies": ["playwright"],
   "targets": {
     "e2e-ci--src/playwright.test.ts": {
-      "inputs": ["e2eInputs"]
+      "inputs": ["e2eInputs", "^production"]
     }
   }
 }

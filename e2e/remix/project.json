@@ -3,6 +3,7 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "e2e/remix",
   "projectType": "application",
-  "targets": {},
-  "implicitDependencies": ["remix"]
+  "implicitDependencies": ["remix"],
+  "// targets": "to see all targets run: nx show project e2e-remix --web",
+  "targets": {}
 }

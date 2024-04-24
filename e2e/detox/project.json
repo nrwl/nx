@@ -6,10 +6,10 @@
   "implicitDependencies": ["detox"],
   "targets": {
     "e2e-macos-ci--src/detox.test.ts": {
-      "inputs": ["e2eInputs"]
+      "inputs": ["e2eInputs", "^production"]
     },
     "e2e-macos-ci--src/detox-legacy.test.ts": {
-      "inputs": ["e2eInputs"]
+      "inputs": ["e2eInputs", "^production"]
     },
     "e2e-ci--src/detox-legacy.test.ts": {
       "inputs": ["e2eInputs"]

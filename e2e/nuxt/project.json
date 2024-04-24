@@ -6,7 +6,7 @@
   "implicitDependencies": ["nuxt"],
   "targets": {
     "e2e-ci--src/nuxt.test.ts": {
-      "inputs": ["e2eInputs"]
+      "inputs": ["e2eInputs", "^production"]
     }
   }
 }

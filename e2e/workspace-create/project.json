@@ -6,13 +6,13 @@
   "implicitDependencies": ["create-nx-workspace"],
   "targets": {
     "e2e-ci--src/create-nx-plugin.test.ts": {
-      "inputs": ["e2eInputs"]
+      "inputs": ["e2eInputs", "^production"]
     },
     "e2e-ci--src/create-nx-workspace-npm.test.ts": {
-      "inputs": ["e2eInputs"]
+      "inputs": ["e2eInputs", "^production"]
     },
     "e2e-ci--src/create-nx-workspace.test.ts": {
-      "inputs": ["e2eInputs"]
+      "inputs": ["e2eInputs", "^production"]
     }
   }
 }

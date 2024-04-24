@@ -9,7 +9,7 @@
       "inputs": ["e2eInputs"]
     },
     "e2e-ci--src/lerna-smoke-tests.test.ts": {
-      "inputs": ["e2eInputs"]
+      "inputs": ["e2eInputs", "^production"]
     }
   }
 }

@@ -27,7 +27,6 @@
     ],
     "e2eInputs": [
       "default",
-      "^production",
       "{workspaceRoot}/jest.preset.js",
       "{workspaceRoot}/.verdaccio/config.yml",
       {
