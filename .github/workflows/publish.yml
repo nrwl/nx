@@ -129,7 +129,7 @@ jobs:
         run: yarn config set supportedArchitectures.cpu "ia32"
         shell: bash
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --frozen-lockfile --force
         timeout-minutes: 30
       - name: Setup node x86
         uses: actions/setup-node@v4
