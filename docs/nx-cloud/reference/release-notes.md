@@ -1,6 +1,6 @@
 # Enterprise Release Notes
 
-### 2402.27.3
+### 2404.05.9
 
 ##### DTE Algorithm V2 Experimental Flag
 
