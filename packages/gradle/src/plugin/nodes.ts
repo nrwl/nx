@@ -4,6 +4,7 @@ import {
   ProjectConfiguration,
   TargetConfiguration,
   readJsonFile,
+  workspaceRoot,
   writeJsonFile,
 } from '@nx/devkit';
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
@@ -180,7 +181,10 @@ function createGradleTargets(
     const targetName = options?.[`${task.name}TargetName`] ?? task.name;
 
     const outputs = outputDirs.get(task.name);
-    const path = relative(projectRoot, getGradleBinaryPath());
+    const path = relative(
+      join(context.workspaceRoot, projectRoot),
+      getGradleBinaryPath()
+    );
     targets[targetName] = {
       command: `${path} ${task.name}`,
       options: {
