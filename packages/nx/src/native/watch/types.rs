@@ -1,9 +1,7 @@
 use napi::bindgen_prelude::*;
-use std::fs::read_dir;
 
-use crate::native::utils::Normalize;
 use crate::native::walker::nx_walker_sync;
-use ignore::gitignore::{GitignoreBuilder, Glob};
+use ignore::gitignore::GitignoreBuilder;
 use ignore::Match;
 use std::path::{Path, PathBuf};
 use tracing::trace;
@@ -137,18 +135,21 @@ pub fn transform_event_to_watch_events(
 
                 for path in nx_walker_sync(path_ref, None) {
                     let path = path_ref.join(path);
-                    match ignore.matched_path_or_any_parents(&path, path.is_dir()) {
-                        Match::Ignore(_) => continue,
-                        _ => {}
+                    let is_dir = path.is_dir();
+                    if is_dir
+                        || matches!(
+                            ignore.matched_path_or_any_parents(&path, is_dir),
+                            Match::Ignore(_)
+                        )
+                    {
+                        continue;
                     }
 
-                    if !path.is_dir() {
-                        result.push(WatchEventInternal {
-                            path,
-                            r#type: EventType::create,
-                            origin: origin.to_owned(),
-                        });
-                    }
+                    result.push(WatchEventInternal {
+                        path,
+                        r#type: EventType::create,
+                        origin: origin.to_owned(),
+                    });
                 }
 
                 Ok(result)
@@ -158,7 +159,7 @@ pub fn transform_event_to_watch_events(
         }
     }
 
-    
+
 }
 
 fn create_watch_event_internal(
