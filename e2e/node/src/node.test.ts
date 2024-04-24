@@ -217,6 +217,23 @@ module.exports = {
     }
   }, 60000);
 
+  it("should exclude 'test' target from e2e project that uses jest", async () => {
+    const appName = uniq('nodeapp');
+
+    runCLI(
+      `generate @nx/node:app ${appName} --project-name-and-root-format=as-provided --no-interactive`
+    );
+
+    const nxJson = JSON.parse(readFile('nx.json'));
+    expect(nxJson.plugins).toBeDefined();
+
+    const jestPlugin = nxJson.plugins.find(
+      (p) => p.plugin === '@nx/jest/plugin'
+    );
+    expect(jestPlugin).toBeDefined();
+    expect(jestPlugin.exclude).toContain(`${appName}-e2e/**/*`);
+  });
+
   it('should be able to generate an express application', async () => {
     const nodeapp = uniq('nodeapp');
     const originalEnvPort = process.env.PORT;
