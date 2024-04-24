@@ -12,12 +12,15 @@ export function execGradle(
   args: string[],
   execOptions?: ExecFileSyncOptionsWithBufferEncoding
 ) {
-  const gradleBinaryPath = getGradleBinaryPath();
+  const { gradleBinaryPath } = getGradleBinaryPath();
 
   return execFileSync(gradleBinaryPath, args, execOptions);
 }
 
-export function getGradleBinaryPath(): string {
+export function getGradleBinaryPath(): {
+  gradleBinaryPath: string;
+  gradleFile: string;
+} {
   const gradleFile = process.platform.startsWith('win')
     ? 'gradlew.bat'
     : 'gradlew';
@@ -26,14 +29,17 @@ export function getGradleBinaryPath(): string {
     throw new Error('Gradle is not setup. Run "gradle init"');
   }
 
-  return gradleBinaryPath;
+  return {
+    gradleBinaryPath,
+    gradleFile,
+  };
 }
 
 export function execGradleAsync(
   args: ReadonlyArray<string>,
   execOptions?: ExecFileOptions
 ) {
-  const gradleBinaryPath = getGradleBinaryPath();
+  const { gradleBinaryPath } = getGradleBinaryPath();
 
   return new Promise<Buffer>((res, rej) => {
     const cp = execFile(gradleBinaryPath, args, execOptions);
