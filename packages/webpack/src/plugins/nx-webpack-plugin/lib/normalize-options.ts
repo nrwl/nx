@@ -2,6 +2,7 @@ import { basename, dirname, join, relative, resolve } from 'path';
 import { statSync } from 'fs';
 import {
   normalizePath,
+  parseTargetString,
   readCachedProjectGraph,
   workspaceRoot,
 } from '@nx/devkit';
@@ -18,12 +19,21 @@ export function normalizeOptions(
   const combinedPluginAndMaybeExecutorOptions: Partial<NormalizedNxWebpackPluginOptions> =
     {};
   const isProd = process.env.NODE_ENV === 'production';
-  const projectName = process.env.NX_TASK_TARGET_PROJECT;
-  const targetName = process.env.NX_TASK_TARGET_TARGET;
-  const configurationName = process.env.NX_TASK_TARGET_CONFIGURATION;
-
   // Since this is invoked by the executor, the graph has already been created and cached.
   const projectGraph = readCachedProjectGraph();
+
+  const taskDetailsFromBuildTarget = process.env.NX_BUILD_TARGET
+    ? parseTargetString(process.env.NX_BUILD_TARGET, projectGraph)
+    : undefined;
+  const projectName = taskDetailsFromBuildTarget
+    ? taskDetailsFromBuildTarget.project
+    : process.env.NX_TASK_TARGET_PROJECT;
+  const targetName = taskDetailsFromBuildTarget
+    ? taskDetailsFromBuildTarget.target
+    : process.env.NX_TASK_TARGET_TARGET;
+  const configurationName = taskDetailsFromBuildTarget
+    ? taskDetailsFromBuildTarget.configuration
+    : process.env.NX_TASK_TARGET_CONFIGURATION;
 
   const projectNode = projectGraph.nodes[projectName];
   const targetConfig = projectNode.data.targets[targetName];
