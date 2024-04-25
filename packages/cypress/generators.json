@@ -32,6 +32,11 @@
       "factory": "./src/generators/migrate-to-cypress-11/migrate-to-cypress-11#migrateCypressProject",
       "schema": "./src/generators/migrate-to-cypress-11/schema.json",
       "description": "Migrate existing Cypress e2e projects to Cypress v11"
+    },
+    "convert-to-inferred": {
+      "factory": "./src/generators/convert-to-inferred/convert-to-inferred",
+      "schema": "./src/generators/convert-to-inferred/schema.json",
+      "description": "Convert existing Cypress project(s) using `@nx/cypress:cypress` executor to use `@nx/cypress/plugin`."
     }
   }
 }

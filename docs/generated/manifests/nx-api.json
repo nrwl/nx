@@ -545,6 +545,15 @@
         "originalFilePath": "/packages/cypress/src/generators/migrate-to-cypress-11/schema.json",
         "path": "/nx-api/cypress/generators/migrate-to-cypress-11",
         "type": "generator"
+      },
+      "/nx-api/cypress/generators/convert-to-inferred": {
+        "description": "Convert existing Cypress project(s) using `@nx/cypress:cypress` executor to use `@nx/cypress/plugin`.",
+        "file": "generated/packages/cypress/generators/convert-to-inferred.json",
+        "hidden": false,
+        "name": "convert-to-inferred",
+        "originalFilePath": "/packages/cypress/src/generators/convert-to-inferred/schema.json",
+        "path": "/nx-api/cypress/generators/convert-to-inferred",
+        "type": "generator"
       }
     },
     "path": "/nx-api/cypress"
