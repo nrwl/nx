@@ -50,9 +50,6 @@ export const createNodes: CreateNodes<EslintPluginOptions> = [
       }
     }
 
-    const childProjectRoots = new Set<string>();
-    const ESLint = resolveESLintClass(isFlatConfig(configFilePath));
-
     const projectFiles = globWithWorkspaceContext(
       context.workspaceRoot,
       [
@@ -63,28 +60,40 @@ export const createNodes: CreateNodes<EslintPluginOptions> = [
       ].map((f) => join(configDir, f)),
       nestedEslintRootPatterns.length ? nestedEslintRootPatterns : undefined
     );
-    for (const projectFile of projectFiles) {
-      const childProjectRoot = dirname(projectFile);
-      if (childProjectRoots.has(childProjectRoot)) {
-        continue;
-      }
+    // dedupe and sort project roots by depth for more efficient traversal
+    const dedupedProjectRoots = Array.from(
+      new Set(projectFiles.map((f) => dirname(f)))
+    ).sort((a, b) => (a !== b && isSubDir(a, b) ? -1 : 1));
+    const excludePatterns = dedupedProjectRoots.map((root) => `${root}/**/*`);
 
-      // Ignore project roots where the project does not contain any lintable files
-      const lintableFiles = globWithWorkspaceContext(
-        context.workspaceRoot,
-        [join(childProjectRoot, `**/*.{${options.extensions.join(',')}}`)],
-        nestedEslintRootPatterns.length ? nestedEslintRootPatterns : undefined
-      );
-      const eslint = new ESLint({
-        cwd: join(context.workspaceRoot, childProjectRoot),
-      });
-      for (const file of lintableFiles) {
-        if (!(await eslint.isPathIgnored(join(context.workspaceRoot, file)))) {
-          childProjectRoots.add(childProjectRoot);
-          break;
+    const ESLint = resolveESLintClass(isFlatConfig(configFilePath));
+    const childProjectRoots = new Set<string>();
+
+    await Promise.all(
+      dedupedProjectRoots.map(async (childProjectRoot, index) => {
+        // anything after is either a nested project or a sibling project, can be excluded
+        const nestedProjectRootPatterns = excludePatterns.slice(index + 1);
+
+        // Ignore project roots where the project does not contain any lintable files
+        const lintableFiles = globWithWorkspaceContext(
+          context.workspaceRoot,
+          [join(childProjectRoot, `**/*.{${options.extensions.join(',')}}`)],
+          // exclude nested eslint roots and nested project roots
+          [...nestedEslintRootPatterns, ...nestedProjectRootPatterns]
+        );
+        const eslint = new ESLint({
+          cwd: join(context.workspaceRoot, childProjectRoot),
+        });
+        for (const file of lintableFiles) {
+          if (
+            !(await eslint.isPathIgnored(join(context.workspaceRoot, file)))
+          ) {
+            childProjectRoots.add(childProjectRoot);
+            break;
+          }
         }
-      }
-    }
+      })
+    );
 
     const uniqueChildProjectRoots = Array.from(childProjectRoots);
 
