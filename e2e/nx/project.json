@@ -1,41 +1,41 @@
 {
-  "name": "e2e-release",
+  "name": "e2e-nx",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "e2e/release",
+  "sourceRoot": "e2e/nx-misc",
   "projectType": "application",
   "implicitDependencies": ["nx", "js"],
   "targets": {
-    "e2e-ci--src/conventional-commits-config.test.ts": {
+    "e2e-ci--src/affected-graph.test.ts": {
       "inputs": ["e2eInputs", "^production"]
     },
-    "e2e-ci--src/create-github-release.test.ts": {
+    "e2e-ci--src/cache.test.ts": {
       "inputs": ["e2eInputs", "^production"]
     },
-    "e2e-ci--src/custom-registries.test.ts": {
+    "e2e-ci--src/extras.test.ts": {
       "inputs": ["e2eInputs", "^production"]
     },
-    "e2e-ci--src/first-release.test.ts": {
+    "e2e-ci--src/invoke-runner.test.ts": {
       "inputs": ["e2eInputs", "^production"]
     },
-    "e2e-ci--src/independent-projects.test.ts": {
+    "e2e-ci--src/misc.test.ts": {
       "inputs": ["e2eInputs", "^production"]
     },
-    "e2e-ci--src/lock-file-updates.test.ts": {
+    "e2e-ci--src/nx-cloud.test.ts": {
       "inputs": ["e2eInputs", "^production"]
     },
-    "e2e-ci--src/multiple-release-branches.test.ts": {
+    "e2e-ci--src/nxw.test.ts": {
       "inputs": ["e2eInputs", "^production"]
     },
-    "e2e-ci--src/nx-release-git-operations.test.ts": {
+    "e2e-ci--src/run.test.ts": {
       "inputs": ["e2eInputs", "^production"]
     },
-    "e2e-ci--src/pre-version-command.test.ts": {
+    "e2e-ci--src/watch.test.ts": {
       "inputs": ["e2eInputs", "^production"]
     },
-    "e2e-ci--src/private-js-packages.test.ts": {
+    "e2e-ci--src/workspace-legacy.test.ts": {
       "inputs": ["e2eInputs", "^production"]
     },
-    "e2e-ci--src/release.test.ts": {
+    "e2e-ci--src/workspace.test.ts": {
       "inputs": ["e2eInputs", "^production"]
     }
   }
