@@ -86,9 +86,9 @@ To learn about creating your own plugin read about [extending Nx](/extending-nx/
 }
 ```
 
-### Restrict Plugin Inferred Tasks
+### Scope Plugins to Specific Projects
 
-You can limit which projects are processed by Nx plugins to infer tasks using the `include` and `exclude` properties in the plugin configuration object.
+Plugins use config files to infer tasks for projects. You can specify which config files are processed by Nx plugins using the `include` and `exclude` properties in the plugin configuration object.
 
 ```jsonc {% fileName="nx.json" %}
 {
@@ -102,7 +102,7 @@ You can limit which projects are processed by Nx plugins to infer tasks using th
 }
 ```
 
-The `include` and `exclude` properties are each file glob patterns that are used to include or exclude the configuration file that the plugin is interpreting. In the example provided, the `@nx/jest` plugin will only infer tasks for projects where the `jest.config.ts` file path both matches the `packages/**/*` glob and does not match the `**/*-e2e/**/*` glob.
+The `include` and `exclude` properties are each file glob patterns that are used to include or exclude the configuration file that the plugin is interpreting. In the example provided, the `@nx/jest/plugin` plugin will only infer tasks for projects where the `jest.config.ts` file path matches the `packages/**/*` glob but does not match the `**/*-e2e/**/*` glob.
 
 ## Task Options
 
