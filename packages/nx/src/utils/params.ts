@@ -6,6 +6,7 @@ import type {
 } from '../config/workspace-json-project-json';
 import { output } from './output';
 import type { ProjectGraphError } from '../project-graph/error-types';
+import { daemonClient } from '../daemon/client/client';
 
 const LIST_CHOICE_DISPLAY_LIMIT = 10;
 
@@ -125,6 +126,9 @@ export async function handleErrors(isVerbose: boolean, fn: Function) {
       if (err.stack && isVerbose) {
         logger.info(err.stack);
       }
+    }
+    if (daemonClient.enabled()) {
+      daemonClient.reset();
     }
     return 1;
   }
