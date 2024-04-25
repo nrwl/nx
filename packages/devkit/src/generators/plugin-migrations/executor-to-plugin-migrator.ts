@@ -24,6 +24,7 @@ import {
   LoadedNxPlugin,
   ProjectConfigurationsError,
 } from 'nx/src/devkit-internals';
+import type { ConfigurationResult } from 'nx/src/project-graph/utils/project-configuration-utils';
 
 type PluginOptionsBuilder<T> = (targetName: string) => T;
 type PostTargetTransformer = (

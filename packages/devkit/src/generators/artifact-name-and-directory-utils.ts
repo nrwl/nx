@@ -9,6 +9,7 @@ import {
   normalizePath,
   output,
   ProjectConfiguration,
+  Tree,
   workspaceRoot,
 } from 'nx/src/devkit-exports';
 

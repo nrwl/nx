@@ -1,7 +1,7 @@
 import { dirname, join } from 'node:path';
 
 import { ProjectConfiguration } from '../../../config/workspace-json-project-json';
-import { toProjectName } from '../../../config/workspaces';
+import { toProjectName } from '../../../config/to-project-name';
 import { readJsonFile } from '../../../utils/fileutils';
 import { NxPluginV2 } from '../../../project-graph/plugins';
 import { CreateNodesError } from '../../../project-graph/error-types';

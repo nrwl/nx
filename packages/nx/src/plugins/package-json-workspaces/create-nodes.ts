@@ -4,7 +4,7 @@ import { dirname, join } from 'node:path';
 
 import { NxJsonConfiguration, readNxJson } from '../../config/nx-json';
 import { ProjectConfiguration } from '../../config/workspace-json-project-json';
-import { toProjectName } from '../../config/workspaces';
+import { toProjectName } from '../../config/to-project-name';
 import { readJsonFile, readYamlFile } from '../../utils/fileutils';
 import { combineGlobPatterns } from '../../utils/globs';
 import { NX_PREFIX } from '../../utils/logger';

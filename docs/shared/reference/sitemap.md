@@ -562,8 +562,6 @@
   - [plugin](/nx-api/plugin)
     - [documents](/nx-api/plugin/documents)
       - [Overview](/nx-api/plugin/documents/overview)
-    - [executors](/nx-api/plugin/executors)
-      - [e2e](/nx-api/plugin/executors/e2e)
     - [generators](/nx-api/plugin/generators)
       - [plugin](/nx-api/plugin/generators/plugin)
       - [create-package](/nx-api/plugin/generators/create-package)

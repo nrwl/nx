@@ -8631,23 +8631,6 @@
             "disableCollapsible": false
           },
           {
-            "id": "executors",
-            "path": "/nx-api/plugin/executors",
-            "name": "executors",
-            "children": [
-              {
-                "id": "e2e",
-                "path": "/nx-api/plugin/executors/e2e",
-                "name": "e2e",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              }
-            ],
-            "isExternal": false,
-            "disableCollapsible": false
-          },
-          {
             "id": "generators",
             "path": "/nx-api/plugin/generators",
             "name": "generators",
