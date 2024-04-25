@@ -144,7 +144,7 @@ function logDeprecationMessage(
   formats: NameAndDirectoryFormats
 ) {
   logger.warn(`
-In Nx 19, generating a ${options.artifactType} will no longer support providing a project and deriving the directory.
+In Nx 20, generating a ${options.artifactType} will no longer support providing a project and deriving the directory.
 Please provide the exact directory in the future.
 Example: nx g ${options.callingGenerator} ${formats['derived'].artifactName} --directory ${formats['derived'].directory}
 NOTE: The example above assumes the command is being run from the workspace root. If the command is being run from a subdirectory, the directory option should be adjusted accordingly.
