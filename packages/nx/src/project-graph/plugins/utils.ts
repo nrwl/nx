@@ -9,7 +9,12 @@ import type {
   LoadedNxPlugin,
   NormalizedPlugin,
 } from './internal-api';
-import type { CreateNodesContext, NxPlugin, NxPluginV2 } from './public-api';
+import {
+  CreateNodesResult,
+  type CreateNodesContext,
+  type NxPlugin,
+  type NxPluginV2,
+} from './public-api';
 import { AggregateCreateNodesError, CreateNodesError } from '../error-types';
 
 export function isNxPluginV2(plugin: NxPlugin): plugin is NxPluginV2 {
@@ -49,7 +54,7 @@ export function normalizeNxPlugin(plugin: NxPlugin): NormalizedPlugin {
 }
 
 export async function runCreateNodesInParallel(
-  configFiles: string[],
+  configFiles: readonly string[],
   plugin: NormalizedPlugin,
   options: unknown,
   context: CreateNodesContext
@@ -59,39 +64,33 @@ export async function runCreateNodesInParallel(
   const errors: CreateNodesError[] = [];
   const results: CreateNodesResultWithContext[] = [];
 
-  const promises: Array<Promise<void>> = configFiles.map((file) => {
+  const promises: Array<Promise<void>> = configFiles.map(async (file) => {
     performance.mark(`${plugin.name}:createNodes:${file} - start`);
-    // Result is either static or a promise, using Promise.resolve lets us
-    // handle both cases with same logic
-    const value = Promise.resolve(
-      plugin.createNodes[1](file, options, context)
-    );
-    return value
-      .catch((e) => {
-        performance.mark(`${plugin.name}:createNodes:${file} - end`);
-        errors.push(
-          new CreateNodesError({
-            error: e,
-            pluginName: plugin.name,
-            file,
-          })
-        );
-        return null;
-      })
-      .then((r) => {
-        performance.mark(`${plugin.name}:createNodes:${file} - end`);
-        performance.measure(
-          `${plugin.name}:createNodes:${file}`,
-          `${plugin.name}:createNodes:${file} - start`,
-          `${plugin.name}:createNodes:${file} - end`
-        );
-
-        // Existing behavior is to ignore null results of
-        // createNodes function.
-        if (r) {
-          results.push({ ...r, file, pluginName: plugin.name });
-        }
-      });
+    try {
+      const value = await plugin.createNodes[1](file, options, context);
+      if (value) {
+        results.push({
+          ...value,
+          file,
+          pluginName: plugin.name,
+        });
+      }
+    } catch (e) {
+      errors.push(
+        new CreateNodesError({
+          error: e,
+          pluginName: plugin.name,
+          file,
+        })
+      );
+    } finally {
+      performance.mark(`${plugin.name}:createNodes:${file} - end`);
+      performance.measure(
+        `${plugin.name}:createNodes:${file}`,
+        `${plugin.name}:createNodes:${file} - start`,
+        `${plugin.name}:createNodes:${file} - end`
+      );
+    }
   });
 
   await Promise.all(promises).then(() => {
