@@ -4,6 +4,10 @@ import { loadNxPlugin } from '../loader';
 import { Serializable } from 'child_process';
 import { createSerializableError } from '../../../utils/serializable-error';
 
+if (process.env.NX_PERF_LOGGING === 'true') {
+  require('../../../utils/perf-logging');
+}
+
 global.NX_GRAPH_CREATION = true;
 
 let plugin: LoadedNxPlugin;
