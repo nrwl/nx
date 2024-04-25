@@ -60,6 +60,7 @@ export interface RunCommandsOptions extends Json {
   __unparsed__: string[];
   usePty?: boolean;
   streamOutput?: boolean;
+  tty?: boolean;
 }
 
 const propKeys = [
@@ -77,6 +78,7 @@ const propKeys = [
   'streamOutput',
   'verbose',
   'forwardAllArgs',
+  'tty',
 ];
 
 export interface NormalizedRunCommandsOptions extends RunCommandsOptions {
@@ -151,7 +153,8 @@ async function runInParallel(
       options.env ?? {},
       true,
       options.usePty,
-      options.streamOutput
+      options.streamOutput,
+      options.tty
     ).then((result: { success: boolean; terminalOutput: string }) => ({
       result,
       command: c.command,
@@ -269,7 +272,8 @@ async function runSerially(
         options.env ?? {},
         false,
         options.usePty,
-        options.streamOutput
+        options.streamOutput,
+        options.tty
       );
     terminalOutput += result.terminalOutput;
     if (!result.success) {
@@ -298,7 +302,8 @@ async function createProcess(
   env: Record<string, string>,
   isParallel: boolean,
   usePty: boolean = true,
-  streamOutput: boolean = true
+  streamOutput: boolean = true,
+  tty: boolean
 ): Promise<{ success: boolean; terminalOutput: string }> {
   env = processEnv(color, cwd, env);
   // The rust runCommand is always a tty, so it will not look nice in parallel and if we need prefixes
@@ -319,6 +324,7 @@ async function createProcess(
       cwd,
       jsEnv: env,
       quiet: !streamOutput,
+      tty,
     });
 
     childProcesses.add(cp);

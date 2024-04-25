@@ -55,6 +55,7 @@ pub fn create_pseudo_terminal() -> napi::Result<PseudoTerminal> {
             }
         });
     }
+    // Why do we do this here when it's already done when running a command?
     if std::io::stdout().is_tty() {
         trace!("Enabling raw mode");
         enable_raw_mode().expect("Failed to enter raw terminal mode");
@@ -95,7 +96,8 @@ pub fn create_pseudo_terminal() -> napi::Result<PseudoTerminal> {
         printing_tx.send(()).ok();
     });
     if std::io::stdout().is_tty() {
-        disable_raw_mode().expect("Failed to enter raw terminal mode");
+        trace!("Disabling raw mode");
+        disable_raw_mode().expect("Failed to exit raw terminal mode");
     }
     Ok(PseudoTerminal {
         quiet,
@@ -111,6 +113,7 @@ pub fn run_command(
     command_dir: Option<String>,
     js_env: Option<HashMap<String, String>>,
     quiet: Option<bool>,
+    tty: Option<bool>,
 ) -> napi::Result<ChildProcess> {
     let command_dir = get_directory(command_dir)?;
 
@@ -134,7 +137,7 @@ pub fn run_command(
     let mut child = pair.slave.spawn_command(cmd)?;
     pseudo_terminal.running.store(true, Ordering::SeqCst);
     trace!("Running {}", command);
-    let is_tty = std::io::stdout().is_tty();
+    let is_tty = tty.unwrap_or_else(|| std::io::stdout().is_tty());
     if is_tty {
         trace!("Enabling raw mode");
         enable_raw_mode().expect("Failed to enter raw terminal mode");
@@ -151,10 +154,10 @@ pub fn run_command(
             trace!("{} Exited", command);
             // This mitigates the issues with ConPTY on windows and makes it work.
             running_clone.store(false, Ordering::SeqCst);
-            trace!("Waiting for printing to finish");
-            let timeout = 500;
-            let a = Instant::now();
             if cfg!(windows) {
+                trace!("Waiting for printing to finish");
+                let timeout = 500;
+                let a = Instant::now();
                 loop {
                     if let Ok(_) = printing_rx.try_recv() {
                         break;
@@ -163,8 +166,10 @@ pub fn run_command(
                         break;
                     }
                 }
+                trace!("Printing finished");
             }
             if is_tty {
+                trace!("Disabling raw mode");
                 disable_raw_mode().expect("Failed to restore non-raw terminal");
             }
             exit_to_process_tx.send(exit.to_string()).ok();
