@@ -1,20 +1,21 @@
 import { prompt } from 'enquirer';
-import type { ProjectConfiguration } from 'nx/src/config/workspace-json-project-json';
-import type { Tree } from 'nx/src/generators/tree';
 import { join, relative } from 'path';
-import { requireNx } from '../../nx';
 import { names } from '../utils/names';
 
-const {
-  createProjectRootMappingsFromProjectConfigurations,
-  findProjectForPath,
+import {
   getProjects,
   joinPathFragments,
   logger,
   normalizePath,
   output,
+  ProjectConfiguration,
   workspaceRoot,
-} = requireNx();
+} from 'nx/src/devkit-exports';
+
+import {
+  createProjectRootMappingsFromProjectConfigurations,
+  findProjectForPath,
+} from 'nx/src/devkit-internals';
 
 export type NameAndDirectoryFormat = 'as-provided' | 'derived';
 export type ArtifactGenerationOptions = {

@@ -1,23 +1,22 @@
 import { prompt } from 'enquirer';
-import type { ProjectType } from 'nx/src/config/workspace-json-project-json';
-import type { Tree } from 'nx/src/generators/tree';
 import { join, relative } from 'path';
-import { requireNx } from '../../nx';
 import {
   extractLayoutDirectory,
   getWorkspaceLayout,
 } from '../utils/get-workspace-layout';
 import { names } from '../utils/names';
 
-const {
+import {
   joinPathFragments,
   logger,
   normalizePath,
   output,
+  ProjectType,
   readJson,
   stripIndents,
+  Tree,
   workspaceRoot,
-} = requireNx();
+} from 'nx/src/devkit-exports';
 
 export type ProjectNameAndRootFormat = 'as-provided' | 'derived';
 export type ProjectGenerationOptions = {
