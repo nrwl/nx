@@ -108,7 +108,7 @@ nx show project my-nuxt-app --web
 
 ### Using Nx Console
 
-You get access to all these features through our VSCode and WebStorm[Nx Console extension](/getting-started/intro/features/integrate-with-editors).
+You get access to all these features through our VSCode and WebStorm [Nx Console extension](/getting-started/editor-setup).
 
 You can use Nx Console to visualize tasks, and understand where each inferred task (like `build` and `serve` in Nuxt's case) is coming from, with our codelens-like feature, as an alternative to the `--web` flag on the `nx show project` command.
 

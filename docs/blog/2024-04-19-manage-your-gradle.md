@@ -25,7 +25,7 @@ This blog will show you:
 
 Before we start, let’s answer this question: what is Nx and why should we use it?
 
-From [nx.dev](/): “Nx is a build system with built-in tooling and advanced CI capabilities. It helps you maintain and scale monorepos, both locally and on CI.” It sounds good, what benefits does it bring?
+From [nx.dev](https://nx.dev): “Nx is a build system with built-in tooling and advanced CI capabilities. It helps you maintain and scale monorepos, both locally and on CI.” It sounds good, what benefits does it bring?
 
 Nx adds the following features to your workspace:
 
