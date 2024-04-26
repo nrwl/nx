@@ -150,7 +150,7 @@ export class ChildProcess {
 }
 export class RustPseudoTerminal {
   constructor()
-  runCommand(command: string, commandDir?: string | undefined | null, jsEnv?: Record<string, string> | undefined | null, quiet?: boolean | undefined | null): ChildProcess
+  runCommand(command: string, commandDir?: string | undefined | null, jsEnv?: Record<string, string> | undefined | null, quiet?: boolean | undefined | null, tty?: boolean | undefined | null): ChildProcess
   /**
    * This allows us to run a pseudoterminal with a fake node ipc channel
    * this makes it possible to be backwards compatible with the old implementation
