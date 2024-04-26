@@ -5,16 +5,16 @@ export interface BlogAuthorsProps {
 
 export function BlogAuthors({ authors }: BlogAuthorsProps) {
   return (
-    <div className="center items-center inline-flex">
+    <div className="center inline-flex items-center">
       {authors.map((author, index) => (
         <div
           key={index}
-          className="flex items-center relative gap-2"
+          className="relative flex items-center gap-2"
           style={{
             marginLeft: index > 0 ? '-0.8rem' : undefined,
           }}
         >
-          <div className="w-8 h-8 overflow-hidden rounded-full relative grayscale">
+          <div className="relative h-8 w-8 overflow-hidden rounded-full grayscale">
             <Image
               alt={author}
               title={author}

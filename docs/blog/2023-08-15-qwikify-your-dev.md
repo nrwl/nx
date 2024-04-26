@@ -148,7 +148,7 @@ Instead of organising your features into subfolders of your application, with Nx
 >
 > By doing this, you start to build out a project graph for your workspace and your application. Defining your architecture in this manner also helps to reduce the areas in your application that each change affects.
 >
-> [Learn more about the Project Graph.](/concepts/more-concepts/how-project-graph-is-built)
+> [Learn more about the Project Graph.](/concepts/mental-model#the-project-graph)
 
 Using this feature of Nx, we can organise the state management of our todo application into its own library, separating the logic from the application itself.
 

@@ -50,30 +50,30 @@ export default function BlogPostDetail({ post }: BlogPostDetailProps) {
       />
       <Header />
       <main id="main" role="main" className="w-full py-8">
-        <div className="max-w-screen-xl mx-auto flex mb-8 px-4 lg:px-8">
+        <div className="mx-auto mb-8 flex max-w-screen-xl px-4 lg:px-8">
           <Link
             href="/blog"
-            className="w-16 flex items-center hover:text-slate-600 text-slate-400"
+            className="flex w-16 items-center text-slate-400 hover:text-slate-600"
           >
-            <ChevronLeftIcon className="h-4 w-4 mr-1" />
+            <ChevronLeftIcon className="mr-1 h-4 w-4" />
             Blog
           </Link>
           <div className="flex flex-1 items-center justify-end text-right sm:justify-center sm:text-center">
             <BlogAuthors authors={post.authors} />
             <span className="ml-3 text-slate-500">{formattedDate}</span>
           </div>
-          <div className="w-16 hidden sm:block" />
+          <div className="hidden w-16 sm:block" />
         </div>
         <div id="content-wrapper">
-          <header className="max-w-3xl mx-auto mt-8 mb-16 px-4 lg:px-0">
-            <h1 className="prose prose-slate dark:prose-invert text-5xl font-semibold text-center">
+          <header className="mx-auto mb-16 mt-8 max-w-3xl px-4 lg:px-0">
+            <h1 className="prose prose-slate dark:prose-invert text-center text-5xl font-semibold">
               {post.title}
             </h1>
           </header>
           {post.cover_image && (
-            <div className="max-w-screen-lg mx-auto mb-16 w-full aspect-[1.9]">
+            <div className="mx-auto mb-16 aspect-[1.9] w-full max-w-screen-md">
               <Image
-                className="w-full h-full object-cover"
+                className="h-full w-full object-cover"
                 src={post.cover_image}
                 alt=""
                 width={1400}
@@ -81,7 +81,7 @@ export default function BlogPostDetail({ post }: BlogPostDetailProps) {
               />
             </div>
           )}
-          <div className="max-w-3xl mx-auto min-w-0 flex-auto pb-24 lg:pb-16 px-4 lg:px-0">
+          <div className="mx-auto min-w-0 max-w-3xl flex-auto px-4 pb-24 lg:px-0 lg:pb-16">
             <div className="relative">
               <div
                 data-document="main"

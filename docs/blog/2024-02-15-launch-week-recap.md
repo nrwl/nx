@@ -1,5 +1,5 @@
 ---
-title: Launch Nx Week Recap!!!
+title: Launch Nx Week Recap
 authors: [Zack DeRose]
 cover_image: '/blog/images/2024-02-15/featured_img.png'
 tags: [nx, nx-cloud, releases, changelog]

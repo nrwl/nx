@@ -1,11 +1,10 @@
-import Link from 'next/link';
-import { Footer, Header, SectionHeading } from '@nx/nx-dev/ui-common';
+import { Footer, Header } from '@nx/nx-dev/ui-common';
 import { NextSeo } from 'next-seo';
 import { useRouter } from 'next/router';
 import { BlogPostDataEntry } from '@nx/nx-dev/data-access-documents/node-only';
 
 import { blogApi } from '../../lib/blog.api';
-import { BlogAuthors, BlogEntry } from '@nx/nx-dev/ui-blog';
+import { BlogEntry, MoreBlogs } from '@nx/nx-dev/ui-blog';
 
 interface BlogListProps {
   blogposts: BlogPostDataEntry[];
@@ -49,11 +48,11 @@ export default function Blog(props: BlogListProps): JSX.Element {
       />
       <Header />
       <main id="main" role="main" className="w-full py-8">
-        <div className="max-w-screen-xl mx-auto mb-8 px-4 lg:px-8">
+        <div className="mx-auto mb-8 w-full max-w-[1088px] px-8">
           <header className="mx-auto mb-16">
             <h1
               id="blog-title"
-              className="font-semibold tracking-tight text-slate-900 dark:text-slate-100 text-xl md:text-2xl"
+              className="text-xl font-semibold tracking-tight text-slate-900 md:text-2xl dark:text-slate-100"
             >
               Blog
             </h1>
@@ -77,49 +76,7 @@ export default function Blog(props: BlogListProps): JSX.Element {
               </div>
             </div>
           </div>
-          {restOfPosts.length > 0 ? (
-            <>
-              <div className="mx-auto mt-20 pb-3 mb-8 text-sm border-b-2 border-slate-300 dark:border-slate-700">
-                <h2 className="font-semibold">More blogs</h2>
-              </div>
-              <div className="mx-auto">
-                {restOfPosts?.map((post) => {
-                  const formattedDate = new Date(post.date).toLocaleDateString(
-                    'en-US',
-                    {
-                      month: 'short',
-                      day: 'numeric',
-                      year: 'numeric',
-                    }
-                  );
-                  const tags = post.tags.map(
-                    (tag) =>
-                      `${tag.substring(0, 1).toUpperCase()}${tag.substring(1)}`
-                  );
-                  return (
-                    <Link
-                      href={`/blog/${post.slug}`}
-                      key={post.slug}
-                      className="flex py-[18px] border-b last:border-0 border-slate-300 dark:border-slate-800 hover:text-slate-500 dark:hover:text-white"
-                    >
-                      <span className="font-semibold w-[400px] text-balance">
-                        {post.title}
-                      </span>
-                      <span className="flex-1 self-center">
-                        {formattedDate}
-                      </span>
-                      <span className="flex-1 self-center">
-                        {tags.join(', ')}
-                      </span>
-                      <span className="flex-1 flex justify-end">
-                        <BlogAuthors authors={post.authors} />
-                      </span>
-                    </Link>
-                  );
-                })}
-              </div>
-            </>
-          ) : null}
+          {restOfPosts.length > 0 ? <MoreBlogs blogs={restOfPosts} /> : null}
         </div>
       </main>
       <Footer />
