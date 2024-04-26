@@ -14,7 +14,7 @@ export function BlogAuthors({ authors }: BlogAuthorsProps) {
             marginLeft: index > 0 ? '-0.8rem' : undefined,
           }}
         >
-          <div className="w-8 h-8 overflow-hidden rounded-full relative">
+          <div className="w-8 h-8 overflow-hidden rounded-full relative grayscale">
             <Image
               alt={author}
               title={author}

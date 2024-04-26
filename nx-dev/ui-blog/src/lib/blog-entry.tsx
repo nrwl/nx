@@ -19,9 +19,9 @@ export function BlogEntry({ post }: BlogEntryProps) {
     <div
       className={cx(
         'h-full flex flex-col rounded-2xl overflow-hidden',
-        'border-slate-300 border dark:border-slate-700 dark:bg-slate-900',
+        'border-slate-200 border dark:border-slate-800 dark:bg-slate-900',
         'transition-all duration-300 ease-in-out',
-        'hover:shadow-lg hover:scale-[1.02] transform-gpu'
+        'hover:shadow-lg dark:hover:shadow-[0_7px_32px_rgba(0,0,0,0.35)] hover:scale-[1.02] transform-gpu'
       )}
     >
       <Link href={`/blog/${post.slug}`}>
@@ -37,12 +37,11 @@ export function BlogEntry({ post }: BlogEntryProps) {
             />
           </div>
         )}
-        <div className="px-4 pb-4">
+        <div className="px-4 pb-4 flex flex-col gap-4">
           <div className="flex items-start justify-between w-full pt-2 mb-2">
             <BlogAuthors authors={post.authors} />
-            <span className="flex-1 ml-3">{formattedDate}</span>
           </div>
-          <span className="text-2xl font-semibold text-gray-900 dark:text-white">
+          <span className="text-lg flex-1 text-balance font-semibold text-gray-900 dark:text-white">
             {post.title}
           </span>
         </div>

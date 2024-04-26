@@ -51,12 +51,15 @@ export default function Blog(props: BlogListProps): JSX.Element {
       <main id="main" role="main" className="w-full py-8">
         <div className="max-w-screen-xl mx-auto mb-8 px-4 lg:px-8">
           <header className="mx-auto mb-16">
-            <SectionHeading as="h1" variant="display" id="blog-title">
+            <h1
+              id="blog-title"
+              className="font-semibold tracking-tight text-slate-900 dark:text-slate-100 text-xl md:text-2xl"
+            >
               Blog
-            </SectionHeading>
+            </h1>
           </header>
           <div className="mx-auto flex flex-col gap-4">
-            <div className="grid grid-cols-6 gap-4">
+            <div className="grid grid-cols-6 gap-6">
               <div className="col-span-6 md:col-span-3">
                 {blog1 && <BlogEntry post={blog1} />}
               </div>
