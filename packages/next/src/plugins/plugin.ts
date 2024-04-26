@@ -130,6 +130,11 @@ async function getBuildTargetConfig(
     inputs: getInputs(namedInputs),
     outputs: [nextOutputPath, `${nextOutputPath}/!(cache)`],
   };
+
+  // TODO(ndcunningham): Update this to be consider different versions of next.js which is running
+  // This doesn't actually need to be tty, but next.js has a bug, https://github.com/vercel/next.js/issues/62906, where it exits 0 when SIGINT is sent.
+  targetConfig.options.tty = false;
+
   return targetConfig;
 }
 
