@@ -132,6 +132,18 @@ function getNodes(
       packageNames.add(originalPackageName);
     }
 
+    const snapshots = Object.values(data.packages);
+    for (const snapshot of snapshots) {
+      const dependencyName = matchedDependencyName(
+        snapshot,
+        key,
+        originalPackageName
+      );
+      if (dependencyName) {
+        packageNames.add(dependencyName);
+      }
+    }
+
     for (const packageName of packageNames) {
       const rawVersion = findVersion(key, packageName);
       if (!rawVersion) {

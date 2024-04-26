@@ -43,5 +43,5 @@ publicHoistPattern:
 registries:
   default: https://registry.npmjs.org/
 skipped: []
-storeDir: /Users/columferry/Library/pnpm/store/v3
+storeDir: /Users/jdoe/Library/pnpm/store/v3
 virtualStoreDir: .pnpm`;

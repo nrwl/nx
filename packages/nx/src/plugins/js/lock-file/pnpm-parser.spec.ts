@@ -1067,7 +1067,7 @@ describe('pnpm LockFile utility', () => {
             "data": {
               "hash": "sha512-wKyQRQpjJ0sIp62ErSZdGsjMJWsap5oRNihHhu6G7JVO/9jIB6UyevL+tXuOqrng8j/cxKTWyWUwvSTriiZz/g==",
               "packageName": "string-width-cjs",
-              "version": "npm:string-width@^4.2.0",
+              "version": "npm:string-width@4.2.3",
             },
             "name": "npm:string-width-cjs",
             "type": "npm",
@@ -1081,20 +1081,11 @@ describe('pnpm LockFile utility', () => {
             "name": "npm:string-width@4.2.3",
             "type": "npm",
           },
-          "npm:strip-ansi": {
-            "data": {
-              "hash": "sha512-cXNxvT8dFNRVfhVME3JAe98mkXDYN2O1l7jmcwMnOslDeESg1rF/OZMtK0nRAhiari1unG5cD4jG3rapUAkLbw==",
-              "packageName": "strip-ansi",
-              "version": "7.0.1",
-            },
-            "name": "npm:strip-ansi",
-            "type": "npm",
-          },
           "npm:strip-ansi-cjs": {
             "data": {
               "hash": "sha512-Y38VPSHcqkFrCpFnQ9vuSXmquuv5oXOKpGeT6aGrr3o3Gc9AlVa6JBfUSOCnbxGGZF+/0ooI7KrPuUSztUdU5A==",
               "packageName": "strip-ansi-cjs",
-              "version": "npm:strip-ansi@^6.0.1",
+              "version": "npm:strip-ansi@6.0.1",
             },
             "name": "npm:strip-ansi-cjs",
             "type": "npm",
@@ -1106,6 +1097,15 @@ describe('pnpm LockFile utility', () => {
               "version": "6.0.1",
             },
             "name": "npm:strip-ansi@6.0.1",
+            "type": "npm",
+          },
+          "npm:strip-ansi@7.1.0": {
+            "data": {
+              "hash": "sha512-iq6eVVI64nQQTRYq2KtEg2d2uU7LElhTJwsH4YzIHZshxlgZms/wIc4VoDQTlG/IvVIrBKG06CrZnp0qv7hkcQ==",
+              "packageName": "strip-ansi",
+              "version": "7.1.0",
+            },
+            "name": "npm:strip-ansi@7.1.0",
             "type": "npm",
           },
           "npm:wrap-ansi": {
@@ -1121,7 +1121,7 @@ describe('pnpm LockFile utility', () => {
             "data": {
               "hash": "sha512-YVGIj2kamLSTxw6NsZjoBxfSwsn0ycdesmc4p+Q21c5zPuZ1pl+NfxVdxPtdHvmNVOQ6XSYG4AUtyt/Fi7D16Q==",
               "packageName": "wrap-ansi-cjs",
-              "version": "npm:wrap-ansi@^7.0.0",
+              "version": "npm:wrap-ansi@7.0.0",
             },
             "name": "npm:wrap-ansi-cjs",
             "type": "npm",
