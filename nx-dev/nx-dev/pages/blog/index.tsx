@@ -76,8 +76,8 @@ export default function Blog(props: BlogListProps): JSX.Element {
           </div>
           {restOfPosts.length > 0 ? (
             <>
-              <div className="mx-auto mt-16 mb-8">
-                <h2 className="text-3xl font-semibold">More Posts</h2>
+              <div className="mx-auto mt-20 pb-3 mb-8 text-sm border-b-2 border-slate-300 dark:border-slate-700">
+                <h2 className="font-semibold">More blogs</h2>
               </div>
               <div className="mx-auto">
                 {restOfPosts?.map((post) => {
@@ -89,19 +89,26 @@ export default function Blog(props: BlogListProps): JSX.Element {
                       year: 'numeric',
                     }
                   );
+                  const tags = post.tags.map(
+                    (tag) =>
+                      `${tag.substring(0, 1).toUpperCase()}${tag.substring(1)}`
+                  );
                   return (
                     <Link
                       href={`/blog/${post.slug}`}
                       key={post.slug}
-                      className="flex mb-4 pb-2 border-b last:border-0 border-slate-300 dark:border-slate-700 hover:text-slate-500 dark:hover:text-white"
+                      className="flex py-[18px] border-b last:border-0 border-slate-300 dark:border-slate-800 hover:text-slate-500 dark:hover:text-white"
                     >
-                      <span className="font-semibold w-[400px]">
+                      <span className="font-semibold w-[400px] text-balance">
                         {post.title}
                       </span>
-                      <span className="text-slate-500 flex-1">
+                      <span className="flex-1 self-center">
                         {formattedDate}
                       </span>
-                      <span className="flex-none">
+                      <span className="flex-1 self-center">
+                        {tags.join(', ')}
+                      </span>
+                      <span className="flex-1 flex justify-end">
                         <BlogAuthors authors={post.authors} />
                       </span>
                     </Link>

@@ -99,7 +99,7 @@ If you inspect the console output, you can see that:
 
 The dry-run mode also nicely previews all `package.json` changes in a git diff style:
 
-![](/blog/images/2024-02-09/bodyimg5.webp)
+![](/blog/images/2024-02-09/bodyimg5.png)
 
 Note, if you want to get even more insights into what is happening when running the command, you can use the `--verbose`, which will also print the actual git commands.
 
@@ -111,7 +111,7 @@ If you look closely at the dry-run logs, you may notice that Nx Release bumped t
 - `@tuskdesign/buttons`
 - `@tuskdesign/demo`
 
-![](/blog/images/2024-02-09/bodyimg6.webp)
+![](/blog/images/2024-02-09/bodyimg6.png)
 
 While we want to have it bumped on the `forms` and `buttons` packages, the `demo` is just for us to test things in the workspace. In this particular workspace, Nx Release doesn't have a way to distinguish what is an app and what is a library/package. Note, if you're in an Nx-generated workspace that uses Nx Plugins, you'd potentially have that classification in the `project.json` files.
 
