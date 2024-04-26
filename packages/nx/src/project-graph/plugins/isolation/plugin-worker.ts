@@ -26,6 +26,8 @@ process.on('message', async (message: Serializable) => {
           type: 'load-result',
           payload: {
             name: plugin.name,
+            include: plugin.include,
+            exclude: plugin.exclude,
             createNodesPattern: plugin.createNodes?.[0],
             hasCreateDependencies:
               'createDependencies' in plugin && !!plugin.createDependencies,

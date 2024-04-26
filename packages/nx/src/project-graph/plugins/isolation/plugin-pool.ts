@@ -110,11 +110,13 @@ function createWorkerHandler(
     return consumeMessage(message, {
       'load-result': (result) => {
         if (result.success) {
-          const { name, createNodesPattern } = result;
+          const { name, createNodesPattern, include, exclude } = result;
           pluginName = name;
           pluginNames.set(worker, pluginName);
           onload({
             name,
+            include,
+            exclude,
             createNodes: createNodesPattern
               ? [
                   createNodesPattern,
