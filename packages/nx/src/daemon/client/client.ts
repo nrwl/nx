@@ -48,7 +48,13 @@ enum DaemonStatus {
 }
 
 export class DaemonClient {
-  constructor(private readonly nxJson: NxJsonConfiguration) {
+  private readonly nxJson: NxJsonConfiguration | null;
+  constructor() {
+    try {
+      this.nxJson = readNxJson();
+    } catch (e) {
+      this.nxJson = null;
+    }
     this.reset();
   }
 
@@ -70,8 +76,8 @@ export class DaemonClient {
     if (this._enabled === undefined) {
       // TODO(v19): Add migration to move it out of existing configs and remove the ?? here.
       const useDaemonProcessOption =
-        this.nxJson.useDaemonProcess ??
-        this.nxJson.tasksRunnerOptions?.['default']?.options?.useDaemonProcess;
+        this.nxJson?.useDaemonProcess ??
+        this.nxJson?.tasksRunnerOptions?.['default']?.options?.useDaemonProcess;
       const env = process.env.NX_DAEMON;
 
       // env takes precedence
@@ -447,7 +453,7 @@ export class DaemonClient {
   }
 }
 
-export const daemonClient = new DaemonClient(readNxJson());
+export const daemonClient = new DaemonClient();
 
 function isDocker() {
   try {
