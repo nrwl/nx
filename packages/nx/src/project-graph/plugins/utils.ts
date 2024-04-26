@@ -65,7 +65,6 @@ export async function runCreateNodesInParallel(
   const results: CreateNodesResultWithContext[] = [];
 
   const promises: Array<Promise<void>> = configFiles.map(async (file) => {
-    performance.mark(`${plugin.name}:createNodes:${file} - start`);
     try {
       const value = await plugin.createNodes[1](file, options, context);
       if (value) {
@@ -82,13 +81,6 @@ export async function runCreateNodesInParallel(
           pluginName: plugin.name,
           file,
         })
-      );
-    } finally {
-      performance.mark(`${plugin.name}:createNodes:${file} - end`);
-      performance.measure(
-        `${plugin.name}:createNodes:${file}`,
-        `${plugin.name}:createNodes:${file} - start`,
-        `${plugin.name}:createNodes:${file} - end`
       );
     }
   });
