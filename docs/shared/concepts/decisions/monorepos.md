@@ -4,13 +4,13 @@ A monorepo is a single git repository that holds the source code for multiple ap
 
 ## What are the benefits of a monorepo?
 
-- **Shared code and visibility** - [Keeps your code DRY across your entire organization.](/concepts/more-concepts/code-sharing) Reuse validation code, UI components, and types across the codebase. Reuse code between the backend, the frontend, and utility libraries.
+- **Shared code and visibility** - [Keeps your code DRY across your entire organization.](/concepts/decisions/code-sharing) Reuse validation code, UI components, and types across the codebase. Reuse code between the backend, the frontend, and utility libraries.
 
 - **Atomic changes** - Change a server API and modify the downstream applications that consume that API in the same commit. You can change a button component in a shared library and the applications that use that component in the same commit. A monorepo saves the pain of trying to coordinate commits across multiple repositories.
 
 - **Developer mobility** - Get a consistent way of building and testing applications written using different tools and technologies. Developers can confidently contribute to other teams’ applications and verify that their changes are safe.
 
-- **Single set of dependencies** - [Use a single version of all third-party dependencies](/concepts/more-concepts/dependency-management), reducing inconsistencies between applications. Less actively developed applications are still kept up-to-date with the latest version of a framework, library, or build tool.
+- **Single set of dependencies** - [Use a single version of all third-party dependencies](/concepts/decisions/dependency-management), reducing inconsistencies between applications. Less actively developed applications are still kept up-to-date with the latest version of a framework, library, or build tool.
 
 ## Why not just code collocation?
 

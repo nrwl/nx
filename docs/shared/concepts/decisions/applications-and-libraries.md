@@ -45,6 +45,6 @@ In fact when organizing libraries you should think about your business domains.
 
 Most often teams are aligned with those domains and thus a similar organization of the libraries in the `libs/` folder might be most appropriate. Nx allows to nest libraries into sub-folders which makes it easy to reflect such structuring.
 
-- [Learn more about when you need to create a new library or using an existing one](/concepts/more-concepts/creating-libraries)
-- [Learn more about the different types of libraries we think you should follow](/concepts/more-concepts/library-types)
-- [Learn more about how to group libraries between each other](/concepts/more-concepts/grouping-libraries)
+- [Learn more about when you need to create a new library or using an existing one](/concepts/decisions/creating-libraries)
+- [Learn more about the different types of libraries we think you should follow](/concepts/decisions/library-types)
+- [Learn more about how to group libraries between each other](/concepts/decisions/grouping-libraries)

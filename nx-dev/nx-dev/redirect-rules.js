@@ -1060,6 +1060,19 @@ const removedDeprecatedUrls = {
     '/recipes/storybook/overview-react', // 80 views
 };
 
+const decisionsSection = {
+  '/concepts/more-concepts/why-monorepos': '/concepts/decisions/why-monorepos',
+  '/concepts/more-concepts/dependency-management':
+    '/concepts/decisions/dependency-management',
+  '/concepts/more-concepts/code-sharing': '/concepts/decisions/code-sharing',
+  '/concepts/more-concepts/applications-and-libraries':
+    '/concepts/decisions/applications-and-libraries',
+  '/concepts/more-concepts/creating-libraries':
+    '/concepts/decisions/creating-libraries',
+  '/concepts/more-concepts/library-types': '/concepts/decisions/library-types',
+  '/concepts/more-concepts/grouping-libraries':
+    '/concepts/decisions/grouping-libraries',
+};
 // Blog post redirects
 const blogPosts = {
   '/blog/2024-05-07-nx-19-release': '/blog/2024-05-08-nx-19-release',
@@ -1095,4 +1108,5 @@ module.exports = {
   removedDeprecatedUrls,
   troubleshootingOutOfRecipes,
   blogPosts,
+  decisionsSection,
 };

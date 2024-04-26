@@ -392,31 +392,31 @@
     },
     {
       "description": "",
-      "file": "shared/workspace/applications-and-libraries",
+      "file": "shared/concepts/decisions/applications-and-libraries",
       "id": "applications-and-libraries",
       "name": "Applications and Libraries",
-      "path": "/concepts/more-concepts/applications-and-libraries"
+      "path": "/concepts/decisions/applications-and-libraries"
     },
     {
       "description": "",
-      "file": "shared/workspace/creating-libraries",
+      "file": "shared/concepts/decisions/creating-libraries",
       "id": "creating-libraries",
       "name": "When to Create a New Library",
-      "path": "/concepts/more-concepts/creating-libraries"
+      "path": "/concepts/decisions/creating-libraries"
     },
     {
       "description": "",
-      "file": "shared/workspace/library-types",
+      "file": "shared/concepts/decisions/library-types",
       "id": "library-types",
       "name": "Library Types",
-      "path": "/concepts/more-concepts/library-types"
+      "path": "/concepts/decisions/library-types"
     },
     {
       "description": "",
-      "file": "shared/workspace/grouping-libraries",
+      "file": "shared/concepts/decisions/grouping-libraries",
       "id": "grouping-libraries",
       "name": "Grouping Libraries",
-      "path": "/concepts/more-concepts/grouping-libraries"
+      "path": "/concepts/decisions/grouping-libraries"
     },
     {
       "description": "",
@@ -550,7 +550,7 @@
   "intro": [
     {
       "description": "",
-      "file": "shared/mental-model",
+      "file": "shared/concepts/mental-model",
       "id": "mental-model",
       "name": "Mental Model",
       "path": "/concepts/mental-model"
@@ -566,7 +566,7 @@
   "inferred-tasks": [
     {
       "description": "",
-      "file": "shared/mental-model",
+      "file": "shared/concepts/mental-model",
       "id": "mental-model",
       "name": "Mental Model",
       "path": "/concepts/mental-model"

@@ -680,14 +680,14 @@
             "disableCollapsible": false
           },
           {
-            "name": "More Concepts",
-            "path": "/concepts/more-concepts",
-            "id": "more-concepts",
+            "name": "Organizational Decisions",
+            "path": "/concepts/decisions",
+            "id": "decisions",
             "isExternal": false,
             "children": [
               {
                 "name": "Monorepos",
-                "path": "/concepts/more-concepts/why-monorepos",
+                "path": "/concepts/decisions/why-monorepos",
                 "id": "why-monorepos",
                 "isExternal": false,
                 "children": [],
@@ -695,7 +695,7 @@
               },
               {
                 "name": "Dependency Management",
-                "path": "/concepts/more-concepts/dependency-management",
+                "path": "/concepts/decisions/dependency-management",
                 "id": "dependency-management",
                 "isExternal": false,
                 "children": [],
@@ -703,12 +703,53 @@
               },
               {
                 "name": "Code Sharing",
-                "path": "/concepts/more-concepts/code-sharing",
+                "path": "/concepts/decisions/code-sharing",
                 "id": "code-sharing",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
               },
+              {
+                "name": "Applications and Libraries",
+                "path": "/concepts/decisions/applications-and-libraries",
+                "id": "applications-and-libraries",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "When to Create a New Library",
+                "path": "/concepts/decisions/creating-libraries",
+                "id": "creating-libraries",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Library Types",
+                "path": "/concepts/decisions/library-types",
+                "id": "library-types",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Grouping Libraries",
+                "path": "/concepts/decisions/grouping-libraries",
+                "id": "grouping-libraries",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              }
+            ],
+            "disableCollapsible": false
+          },
+          {
+            "name": "More Concepts",
+            "path": "/concepts/more-concepts",
+            "id": "more-concepts",
+            "isExternal": false,
+            "children": [
               {
                 "name": "Nx Daemon",
                 "path": "/concepts/more-concepts/nx-daemon",
@@ -721,38 +762,6 @@
                 "name": "Nx and Turborepo",
                 "path": "/concepts/more-concepts/turbo-and-nx",
                 "id": "turbo-and-nx",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Applications and Libraries",
-                "path": "/concepts/more-concepts/applications-and-libraries",
-                "id": "applications-and-libraries",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "When to Create a New Library",
-                "path": "/concepts/more-concepts/creating-libraries",
-                "id": "creating-libraries",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Library Types",
-                "path": "/concepts/more-concepts/library-types",
-                "id": "library-types",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Grouping Libraries",
-                "path": "/concepts/more-concepts/grouping-libraries",
-                "id": "grouping-libraries",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -909,14 +918,14 @@
         "disableCollapsible": false
       },
       {
-        "name": "More Concepts",
-        "path": "/concepts/more-concepts",
-        "id": "more-concepts",
+        "name": "Organizational Decisions",
+        "path": "/concepts/decisions",
+        "id": "decisions",
         "isExternal": false,
         "children": [
           {
             "name": "Monorepos",
-            "path": "/concepts/more-concepts/why-monorepos",
+            "path": "/concepts/decisions/why-monorepos",
             "id": "why-monorepos",
             "isExternal": false,
             "children": [],
@@ -924,7 +933,7 @@
           },
           {
             "name": "Dependency Management",
-            "path": "/concepts/more-concepts/dependency-management",
+            "path": "/concepts/decisions/dependency-management",
             "id": "dependency-management",
             "isExternal": false,
             "children": [],
@@ -932,12 +941,109 @@
           },
           {
             "name": "Code Sharing",
-            "path": "/concepts/more-concepts/code-sharing",
+            "path": "/concepts/decisions/code-sharing",
             "id": "code-sharing",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
           },
+          {
+            "name": "Applications and Libraries",
+            "path": "/concepts/decisions/applications-and-libraries",
+            "id": "applications-and-libraries",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "When to Create a New Library",
+            "path": "/concepts/decisions/creating-libraries",
+            "id": "creating-libraries",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Library Types",
+            "path": "/concepts/decisions/library-types",
+            "id": "library-types",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Grouping Libraries",
+            "path": "/concepts/decisions/grouping-libraries",
+            "id": "grouping-libraries",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          }
+        ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Monorepos",
+        "path": "/concepts/decisions/why-monorepos",
+        "id": "why-monorepos",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Dependency Management",
+        "path": "/concepts/decisions/dependency-management",
+        "id": "dependency-management",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Code Sharing",
+        "path": "/concepts/decisions/code-sharing",
+        "id": "code-sharing",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Applications and Libraries",
+        "path": "/concepts/decisions/applications-and-libraries",
+        "id": "applications-and-libraries",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "When to Create a New Library",
+        "path": "/concepts/decisions/creating-libraries",
+        "id": "creating-libraries",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Library Types",
+        "path": "/concepts/decisions/library-types",
+        "id": "library-types",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Grouping Libraries",
+        "path": "/concepts/decisions/grouping-libraries",
+        "id": "grouping-libraries",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "More Concepts",
+        "path": "/concepts/more-concepts",
+        "id": "more-concepts",
+        "isExternal": false,
+        "children": [
           {
             "name": "Nx Daemon",
             "path": "/concepts/more-concepts/nx-daemon",
@@ -955,38 +1061,6 @@
             "disableCollapsible": false
           },
           {
-            "name": "Applications and Libraries",
-            "path": "/concepts/more-concepts/applications-and-libraries",
-            "id": "applications-and-libraries",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "When to Create a New Library",
-            "path": "/concepts/more-concepts/creating-libraries",
-            "id": "creating-libraries",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Library Types",
-            "path": "/concepts/more-concepts/library-types",
-            "id": "library-types",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Grouping Libraries",
-            "path": "/concepts/more-concepts/grouping-libraries",
-            "id": "grouping-libraries",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
             "name": "Buildable and Publishable Libraries",
             "path": "/concepts/more-concepts/buildable-and-publishable-libraries",
             "id": "buildable-and-publishable-libraries",
@@ -995,30 +1069,6 @@
             "disableCollapsible": false
           }
         ],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Monorepos",
-        "path": "/concepts/more-concepts/why-monorepos",
-        "id": "why-monorepos",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Dependency Management",
-        "path": "/concepts/more-concepts/dependency-management",
-        "id": "dependency-management",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Code Sharing",
-        "path": "/concepts/more-concepts/code-sharing",
-        "id": "code-sharing",
-        "isExternal": false,
-        "children": [],
         "disableCollapsible": false
       },
       {
@@ -1033,38 +1083,6 @@
         "name": "Nx and Turborepo",
         "path": "/concepts/more-concepts/turbo-and-nx",
         "id": "turbo-and-nx",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Applications and Libraries",
-        "path": "/concepts/more-concepts/applications-and-libraries",
-        "id": "applications-and-libraries",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "When to Create a New Library",
-        "path": "/concepts/more-concepts/creating-libraries",
-        "id": "creating-libraries",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Library Types",
-        "path": "/concepts/more-concepts/library-types",
-        "id": "library-types",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Grouping Libraries",
-        "path": "/concepts/more-concepts/grouping-libraries",
-        "id": "grouping-libraries",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false

@@ -1,6 +1,8 @@
 # Library Types
 
-There are many types of libraries in a workspace. In order to maintain a certain sense of order, we recommend having a small number of types, such as the below four (4) types of libraries.
+There are many types of libraries in a workspace. You can identify the type of a library through a naming convention and/or by using the project tagging system. This article explains one possible way to organize your repository projects by type. Every repository is different and yours may need a different set of types.
+
+In order to maintain a certain sense of order, we recommend having a small number of types, such as the below four (4) types of libraries.
 
 **Feature libraries:**
 

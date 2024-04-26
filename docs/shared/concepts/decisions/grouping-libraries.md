@@ -1,6 +1,6 @@
 # Grouping Libraries
 
-Libraries should be grouped by _scope_. A library's scope is either application to which it belongs or (for larger applications) a section within that application.
+Libraries are often grouped by _scope_. A library's scope is either the application to which it belongs or (for larger applications) a section within that application.
 
 ## Move Generator
 
