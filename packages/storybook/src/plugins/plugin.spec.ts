@@ -85,7 +85,7 @@ describe('@nx/storybook/plugin', () => {
       ],
     });
     expect(
-      nodes?.['projects']?.['my-app']?.targets?.['storybook']
+      nodes?.['projects']?.['my-app']?.targets?.['serve-storybook']
     ).toMatchObject({
       command: 'storybook dev',
     });
@@ -149,7 +149,7 @@ describe('@nx/storybook/plugin', () => {
       ],
     });
     expect(
-      nodes?.['projects']?.['my-ng-app']?.targets?.['storybook']
+      nodes?.['projects']?.['my-ng-app']?.targets?.['serve-storybook']
     ).toMatchObject({
       executor: '@storybook/angular:start-storybook',
       options: {
@@ -213,7 +213,7 @@ describe('@nx/storybook/plugin', () => {
       ],
     });
     expect(
-      nodes?.['projects']?.['my-react-lib']?.targets?.['storybook']
+      nodes?.['projects']?.['my-react-lib']?.targets?.['serve-storybook']
     ).toMatchObject({
       command: 'storybook dev',
     });
