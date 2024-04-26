@@ -1,6 +1,6 @@
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useNavigation, useSearchParams } from 'react-router-dom';
 
 /* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
@@ -10,6 +10,8 @@ import {
   useEnvironmentConfig,
   useRouteConstructor,
 } from '@nx/graph/shared';
+import { Spinner } from '@nx/graph/ui-components';
+
 import {
   ProjectDetails,
   ProjectDetailsImperativeHandle,
@@ -26,6 +28,7 @@ export function ProjectDetailsWrapper(props: ProjectDetailsProps) {
   const environment = useEnvironmentConfig()?.environment;
   const externalApiService = getExternalApiService();
   const navigate = useNavigate();
+  const { state: navigationState, location } = useNavigation();
   const routeConstructor = useRouteConstructor();
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -142,6 +145,17 @@ export function ProjectDetailsWrapper(props: ProjectDetailsProps) {
       }
     }
   }, [searchParams, props.project.data.targets, projectDetailsRef]);
+
+  if (
+    navigationState === 'loading' &&
+    !location.pathname.includes('project-details') // do not show spinner when updating search params
+  ) {
+    return (
+      <div className="flex justify-center">
+        <Spinner />
+      </div>
+    );
+  }
 
   return (
     <ProjectDetails
