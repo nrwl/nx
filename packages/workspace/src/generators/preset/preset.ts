@@ -15,7 +15,6 @@ export async function presetGenerator(tree: Tree, options: Schema) {
 export default presetGenerator;
 
 async function createPreset(tree: Tree, options: Schema) {
-  console.log('Crate preset');
   const nxJson = readNxJson(tree);
   const addPlugin =
     process.env.NX_ADD_PLUGINS !== 'false' &&
@@ -242,11 +241,8 @@ async function createPreset(tree: Tree, options: Schema) {
       addPlugin,
     });
   } else if (options.preset === Preset.ReactNative) {
-    console.log('Before require');
     const { reactNativeApplicationGenerator } = require('@nx' +
       '/react-native');
-    console.log('Hello', reactNativeApplicationGenerator);
-    console.log('Active require');
     return reactNativeApplicationGenerator(tree, {
       name: options.name,
       directory: join('apps', options.name),
