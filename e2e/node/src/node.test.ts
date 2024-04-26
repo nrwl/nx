@@ -115,7 +115,7 @@ describe('Node Applications', () => {
     updateFile(
       `apps/${nodeapp}/webpack.config.js`,
       `
-const { NxWebpackPlugin } = require('@nx/webpack');
+const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
 const { join } = require('path');
 
 module.exports = {
@@ -123,7 +123,7 @@ module.exports = {
     path: join(__dirname, '../../dist/apps/${nodeapp}'),
   },
   plugins: [
-    new NxWebpackPlugin({
+    new NxAppWebpackPlugin({
       target: 'node',
       compiler: 'tsc',
       main: './src/main.ts',

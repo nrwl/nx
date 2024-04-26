@@ -286,7 +286,7 @@ Watch for file changes.
 #### Example
 
 ```js
-const { NxWebpackPlugin } = require('@nx/webpack');
+const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
 const { join } = require('path');
 
 module.exports = {
@@ -297,7 +297,7 @@ module.exports = {
     port: 4200,
   },
   plugins: [
-    new NxWebpackPlugin({
+    new NxAppWebpackPlugin({
       main: './src/main.ts',
       tsConfig: './tsconfig.app.json',
       index: './src/index.html',
@@ -322,7 +322,7 @@ Enables or disables [React SVGR](https://react-svgr.com/). Default is `true`.
 #### Example
 
 ```js
-const { NxReactWebpackPlugin } = require('@nx/react');
+const { NxReactWebpackPlugin } = require('@nx/react/webpack-plugin');
 const { join } = require('path');
 
 module.exports = {

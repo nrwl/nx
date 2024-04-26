@@ -1,8 +1,8 @@
 import { Compiler } from 'webpack';
 import {
-  NormalizedNxWebpackPluginOptions,
-  NxWebpackPluginOptions,
-} from './nx-webpack-plugin-options';
+  NormalizedNxAppWebpackPluginOptions,
+  NxAppWebpackPluginOptions,
+} from './nx-app-webpack-plugin-options';
 import { normalizeOptions } from './lib/normalize-options';
 import { deleteOutputDir } from '../../utils/fs';
 import { applyBaseConfig } from './lib/apply-base-config';
@@ -18,10 +18,10 @@ import { applyWebConfig } from './lib/apply-web-config';
  *
  * Web-only features, such as stylesheets and images, are only supported when `target` is 'web' or 'webworker'.
  */
-export class NxWebpackPlugin {
-  private readonly options: NormalizedNxWebpackPluginOptions;
+export class NxAppWebpackPlugin {
+  private readonly options: NormalizedNxAppWebpackPluginOptions;
 
-  constructor(options: NxWebpackPluginOptions = {}) {
+  constructor(options: NxAppWebpackPluginOptions = {}) {
     // If we're building inferred targets, skip normalizing build options.
     if (!global.NX_GRAPH_CREATION) {
       this.options = normalizeOptions(options);
