@@ -33,7 +33,7 @@ export interface ProjectsVersionPlan extends VersionPlan {
 
 const versionPlansDirectory = join('.nx', 'version-plans');
 
-export async function readVersionPlans(): Promise<RawVersionPlan[]> {
+export async function readRawVersionPlans(): Promise<RawVersionPlan[]> {
   const versionPlansPath = getVersionPlansAbsolutePath();
   const versionPlansPathExists = await pathExists(versionPlansPath);
   if (!versionPlansPathExists) {

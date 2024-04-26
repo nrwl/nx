@@ -30,6 +30,10 @@ import {
   ReleaseGroupWithName,
   filterReleaseGroups,
 } from './config/filter-release-groups';
+import {
+  readRawVersionPlans,
+  setVersionPlansOnGroups,
+} from './config/version-plans';
 import { batchProjectsByGeneratorConfig } from './utils/batch-projects-by-generator-config';
 import { gitAdd, gitTag } from './utils/git';
 import { printDiff } from './utils/print-changes';
@@ -154,6 +158,12 @@ export async function releaseVersion(
     output.error(filterError);
     process.exit(1);
   }
+  const rawVersionPlans = await readRawVersionPlans();
+  setVersionPlansOnGroups(
+    rawVersionPlans,
+    releaseGroups,
+    Object.keys(projectGraph.nodes)
+  );
 
   runPreVersionCommand(nxReleaseConfig.version.preVersionCommand, {
     dryRun: args.dryRun,

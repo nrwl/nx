@@ -38,6 +38,7 @@ import {
   ReleaseGroupWithName,
   filterReleaseGroups,
 } from './config/filter-release-groups';
+import { GroupVersionPlan, ProjectsVersionPlan } from './config/version-plans';
 import {
   GitCommit,
   Reference,
@@ -65,10 +66,6 @@ import {
   handleDuplicateGitTags,
   noDiffInChangelogMessage,
 } from './utils/shared';
-import {
-  getVersionPlansForFixedGroup,
-  getVersionPlansForIndependentGroup,
-} from './utils/version-plans';
 
 export interface NxReleaseChangelogResult {
   workspaceChangelog?: {
@@ -249,9 +246,7 @@ export async function releaseChangelog(
     if (releaseGroups.length === 1) {
       const releaseGroup = releaseGroups[0];
       if (releaseGroup.projectsRelationship === 'fixed') {
-        const versionPlans = await getVersionPlansForFixedGroup(
-          releaseGroup.name
-        );
+        const versionPlans = releaseGroup.versionPlans as GroupVersionPlan[];
         workspaceChangelogChanges = versionPlans
           .map((vp) => {
             const parsedMessage = parseConventionalCommitsMessage(vp.message);
@@ -383,12 +378,7 @@ export async function releaseChangelog(
         let changes: ChangelogChange[] | null = null;
 
         if (releaseGroup.versionPlans) {
-          const versionPlans = await getVersionPlansForIndependentGroup(
-            releaseGroup.name,
-            [project.name]
-          );
-
-          changes = versionPlans
+          changes = (releaseGroup.versionPlans as ProjectsVersionPlan[])
             .map((vp) => {
               const parsedMessage = parseConventionalCommitsMessage(vp.message);
 
@@ -529,11 +519,7 @@ export async function releaseChangelog(
     } else {
       let changes: ChangelogChange[] = [];
       if (releaseGroup.versionPlans) {
-        const versionPlans = await getVersionPlansForFixedGroup(
-          releaseGroup.name
-        );
-
-        changes = versionPlans
+        changes = (releaseGroup.versionPlans as GroupVersionPlan[])
           .map((vp) => {
             const parsedMessage = parseConventionalCommitsMessage(vp.message);
 

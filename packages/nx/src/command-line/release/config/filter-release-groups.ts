@@ -2,7 +2,7 @@ import { ProjectGraph } from '../../../config/project-graph';
 import { findMatchingProjects } from '../../../utils/find-matching-projects';
 import { output } from '../../../utils/output';
 import { IMPLICIT_DEFAULT_RELEASE_GROUP, NxReleaseConfig } from './config';
-import { RawVersionPlan, VersionPlan } from './version-plans';
+import { VersionPlan } from './version-plans';
 
 export type ReleaseGroupWithName = Omit<
   NxReleaseConfig['groups'][string],
@@ -16,8 +16,7 @@ export function filterReleaseGroups(
   projectGraph: ProjectGraph,
   nxReleaseConfig: NxReleaseConfig,
   projectsFilter?: string[],
-  groupsFilter?: string[],
-  rawVersionPlans?: RawVersionPlan[]
+  groupsFilter?: string[]
 ): {
   error: null | { title: string; bodyLines?: string[] };
   releaseGroups: ReleaseGroupWithName[];
@@ -186,26 +185,6 @@ export function filterReleaseGroups(
       .filter((g) => !groupsFilter.includes(g.name))
       .forEach((g) => releaseGroupToFilteredProjects.delete(g));
     releaseGroups = releaseGroups.filter((g) => groupsFilter.includes(g.name));
-  }
-
-  if (rawVersionPlans) {
-    for (const rawVersionPlan of rawVersionPlans) {
-      const plans = parseVersionPlanContent(rawVersionPlan, releaseGroups);
-    }
-    // for (const group of releaseGroups) {
-    //   if (group.versionPlans === false) {
-    //     continue;
-    //   }
-    //   group.versionPlans = rawVersionPlans.filter();
-    //   parsedVersionPlans = group.versionPlans.map((plan) => {
-    //     const [projectPattern, version] = plan.split('=');
-    //     return {
-    //       projectPattern,
-    //       version,
-    //     };
-    //   });
-    //   group.versionPlans = parsedVersionPlans;
-    // }
   }
 
   if (!releaseGroups.length) {

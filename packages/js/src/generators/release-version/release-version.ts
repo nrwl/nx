@@ -14,6 +14,10 @@ import { exec } from 'node:child_process';
 import { join } from 'node:path';
 import { IMPLICIT_DEFAULT_RELEASE_GROUP } from 'nx/src/command-line/release/config/config';
 import {
+  GroupVersionPlan,
+  ProjectsVersionPlan,
+} from 'nx/src/command-line/release/config/version-plans';
+import {
   getFirstGitCommit,
   getLatestGitTagForPattern,
 } from 'nx/src/command-line/release/utils/git';
@@ -22,13 +26,6 @@ import {
   resolveSemverSpecifierFromPrompt,
 } from 'nx/src/command-line/release/utils/resolve-semver-specifier';
 import { isValidSemverSpecifier } from 'nx/src/command-line/release/utils/semver';
-import {
-  GroupVersionPlan,
-  ProjectsVersionPlan,
-  VersionPlan,
-  getVersionPlansForFixedGroup,
-  getVersionPlansForIndependentGroup,
-} from 'nx/src/command-line/release/utils/version-plans';
 import {
   ReleaseVersionGeneratorResult,
   VersionData,
@@ -110,8 +107,6 @@ Valid values are: ${validReleaseVersionPrefixes
       ? options.specifier
       : undefined;
 
-    // only parse the version plans once, then keep them in memory for the rest of the projects
-    let versionPlans: VersionPlan[] = undefined;
     const additionalCallbacks: (() => Promise<string>)[] = [];
 
     for (const project of projects) {
@@ -417,64 +412,56 @@ To fix this you will either need to add a package.json file at that location, or
             break;
           }
           case 'version-plans': {
-            if (!versionPlans) {
-              if (options.releaseGroup.projectsRelationship === 'independent') {
-                versionPlans = await getVersionPlansForIndependentGroup(
-                  options.releaseGroup.name,
-                  projects.map((p) => p.name)
+            if (!options.releaseGroup.versionPlans) {
+              if (
+                options.releaseGroup.name === IMPLICIT_DEFAULT_RELEASE_GROUP
+              ) {
+                throw new Error(
+                  `Invalid specifierSource "version-plans" provided. To enable version plans, set the "release.versionPlans" configuration option to "true" in nx.json.`
                 );
               } else {
-                versionPlans = await getVersionPlansForFixedGroup(
-                  options.releaseGroup.name
+                throw new Error(
+                  `Invalid specifierSource "version-plans" provided. To enable version plans for release group "${options.releaseGroup.name}", set the "versionPlans" configuration option to "true" within the release group configuration in nx.json.`
                 );
               }
-              versionPlans.forEach((plan) => {
-                additionalCallbacks.push(async () => {
-                  const fullPath = join(workspaceRoot, plan.relativePath);
-                  await remove(fullPath);
-                  return plan.relativePath;
-                });
-              });
             }
 
             if (options.releaseGroup.projectsRelationship === 'independent') {
-              specifier = (versionPlans as ProjectsVersionPlan[]).reduce(
-                (spec: ReleaseType, plan: ProjectsVersionPlan) => {
-                  if (!spec) {
-                    return plan.projectVersionBumps[projectName];
-                  }
-                  if (plan.projectVersionBumps[projectName]) {
-                    const prevNewVersion = inc(currentVersion, spec);
-                    const nextNewVersion = inc(
-                      currentVersion,
-                      plan.projectVersionBumps[projectName]
-                    );
-                    return gt(nextNewVersion, prevNewVersion)
-                      ? plan.projectVersionBumps[projectName]
-                      : spec;
-                  }
-                  return spec;
-                },
-                null
-              );
-            } else {
-              specifier = (versionPlans as GroupVersionPlan[]).reduce(
-                (spec: ReleaseType, plan: GroupVersionPlan) => {
-                  if (!spec) {
-                    return plan.groupVersionBump;
-                  }
-
+              specifier = (
+                options.releaseGroup.versionPlans as ProjectsVersionPlan[]
+              ).reduce((spec: ReleaseType, plan: ProjectsVersionPlan) => {
+                if (!spec) {
+                  return plan.projectVersionBumps[projectName];
+                }
+                if (plan.projectVersionBumps[projectName]) {
                   const prevNewVersion = inc(currentVersion, spec);
                   const nextNewVersion = inc(
                     currentVersion,
-                    plan.groupVersionBump
+                    plan.projectVersionBumps[projectName]
                   );
                   return gt(nextNewVersion, prevNewVersion)
-                    ? plan.groupVersionBump
+                    ? plan.projectVersionBumps[projectName]
                     : spec;
-                },
-                null
-              );
+                }
+                return spec;
+              }, null);
+            } else {
+              specifier = (
+                options.releaseGroup.versionPlans as GroupVersionPlan[]
+              ).reduce((spec: ReleaseType, plan: GroupVersionPlan) => {
+                if (!spec) {
+                  return plan.groupVersionBump;
+                }
+
+                const prevNewVersion = inc(currentVersion, spec);
+                const nextNewVersion = inc(
+                  currentVersion,
+                  plan.groupVersionBump
+                );
+                return gt(nextNewVersion, prevNewVersion)
+                  ? plan.groupVersionBump
+                  : spec;
+              }, null);
             }
 
             if (!specifier) {
@@ -485,6 +472,16 @@ To fix this you will either need to add a package.json file at that location, or
                 `📄 Resolved the specifier as "${specifier}" using version plans.`
               );
             }
+
+            options.releaseGroup.versionPlans.forEach((p) => {
+              additionalCallbacks.push(async () => {
+                await remove(p.absolutePath);
+                // the relative path is easier to digest, so use that for
+                // git operations and logging
+                return p.relativePath;
+              });
+            });
+
             break;
           }
           default:
