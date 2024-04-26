@@ -370,6 +370,6 @@
       "check-codeowners",
       "documentation"
     ]
-  }
+  },
+  "packageManager": "pnpm@8.15.7"
 }
-
