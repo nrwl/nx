@@ -301,10 +301,10 @@ function normalizeOptions(
   options: StorybookPluginOptions
 ): StorybookPluginOptions {
   options ??= {};
-  options.buildStorybookTargetName = 'build-storybook';
-  options.serveStorybookTargetName = 'storybook';
-  options.testStorybookTargetName = 'test-storybook';
-  options.staticStorybookTargetName = 'static-storybook';
+  options.buildStorybookTargetName ??= 'build-storybook';
+  options.serveStorybookTargetName ??= 'storybook';
+  options.testStorybookTargetName ??= 'test-storybook';
+  options.staticStorybookTargetName ??= 'static-storybook';
   return options;
 }
 
