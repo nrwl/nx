@@ -98,6 +98,19 @@ function matchedDependencyName(
   );
 }
 
+function createHashFromSnapshot(snapshot: PackageSnapshot) {
+  return (
+    snapshot.resolution?.['integrity'] ||
+    (snapshot.resolution?.['tarball']
+      ? hashArray([snapshot.resolution['tarball']])
+      : undefined)
+  );
+}
+
+function isLockFileKey(depVersion: string) {
+  return depVersion.startsWith('/');
+}
+
 function getNodes(
   data: Lockfile,
   keyMap: Map<string, ProjectGraphExternalNode>,
@@ -105,16 +118,25 @@ function getNodes(
 ): Record<string, ProjectGraphExternalNode> {
   const nodes: Map<string, Map<string, ProjectGraphExternalNode>> = new Map();
 
+  const maybeAliasedPackageVersions = new Map<string, string>(); // <version, alias>
+
+  const packageNames = new Set<{
+    key: string;
+    packageName: string;
+    hash?: string;
+  }>();
   for (const [key, snapshot] of Object.entries(data.packages)) {
     const originalPackageName = extractNameFromKey(key);
     if (!originalPackageName) {
       continue;
     }
-    const packageNames = new Set<string>();
-
     // snapshot already has a name
     if (snapshot.name) {
-      packageNames.add(snapshot.name);
+      packageNames.add({
+        key,
+        packageName: snapshot.name,
+        hash: createHashFromSnapshot(snapshot),
+      });
     }
     const rootDependencyName =
       matchedDependencyName(data.importers['.'], key, originalPackageName) ||
@@ -125,62 +147,87 @@ function getNodes(
         originalPackageName
       );
     if (rootDependencyName) {
-      packageNames.add(rootDependencyName);
-    }
-
-    if (packageNames.size === 0) {
-      packageNames.add(originalPackageName);
-    }
-
-    const snapshots = Object.values(data.packages);
-    for (const snapshot of snapshots) {
-      const dependencyName = matchedDependencyName(
-        snapshot,
+      packageNames.add({
         key,
-        originalPackageName
-      );
-      if (dependencyName) {
-        packageNames.add(dependencyName);
+        packageName: rootDependencyName,
+        hash: createHashFromSnapshot(snapshot),
+      });
+    }
+
+    if (!snapshot.name && !rootDependencyName) {
+      packageNames.add({
+        key,
+        packageName: originalPackageName,
+        hash: createHashFromSnapshot(snapshot),
+      });
+    }
+
+    if (snapshot.peerDependencies) {
+      for (const [depName, depVersion] of Object.entries(
+        snapshot.peerDependencies
+      )) {
+        if (isLockFileKey(depVersion)) {
+          maybeAliasedPackageVersions.set(depVersion, depName);
+        }
+      }
+    }
+    if (snapshot.optionalDependencies) {
+      for (const [depName, depVersion] of Object.entries(
+        snapshot.optionalDependencies
+      )) {
+        if (isLockFileKey(depVersion)) {
+          maybeAliasedPackageVersions.set(depVersion, depName);
+        }
+      }
+    }
+    if (snapshot.dependencies) {
+      for (const [depName, depVersion] of Object.entries(
+        snapshot.dependencies
+      )) {
+        if (isLockFileKey(depVersion)) {
+          maybeAliasedPackageVersions.set(depVersion, depName);
+        }
       }
     }
 
-    for (const packageName of packageNames) {
-      const rawVersion = findVersion(key, packageName);
-      if (!rawVersion) {
-        continue;
-      }
-      const version = parseBaseVersion(rawVersion, isV6);
-      if (!version) {
-        continue;
-      }
+    const aliasedDep = maybeAliasedPackageVersions.get(key);
+    if (aliasedDep) {
+      packageNames.add({
+        key,
+        packageName: aliasedDep,
+        hash: createHashFromSnapshot(snapshot),
+      });
+    }
+  }
 
-      if (!nodes.has(packageName)) {
-        nodes.set(packageName, new Map());
-      }
+  for (const { key, packageName, hash } of packageNames) {
+    const rawVersion = findVersion(key, packageName);
+    if (!rawVersion) {
+      continue;
+    }
+    const version = parseBaseVersion(rawVersion, isV6);
+    if (!version) {
+      continue;
+    }
 
-      if (!nodes.get(packageName).has(version)) {
-        const node: ProjectGraphExternalNode = {
-          type: 'npm',
-          name: version
-            ? `npm:${packageName}@${version}`
-            : `npm:${packageName}`,
-          data: {
-            version,
-            packageName,
-            hash:
-              snapshot.resolution?.['integrity'] ||
-              hashArray(
-                snapshot.resolution?.['tarball']
-                  ? [snapshot.resolution['tarball']]
-                  : [packageName, version]
-              ),
-          },
-        };
-        nodes.get(packageName).set(version, node);
-        keyMap.set(key, node);
-      } else {
-        keyMap.set(key, nodes.get(packageName).get(version));
-      }
+    if (!nodes.has(packageName)) {
+      nodes.set(packageName, new Map());
+    }
+
+    if (!nodes.get(packageName).has(version)) {
+      const node: ProjectGraphExternalNode = {
+        type: 'npm',
+        name: version ? `npm:${packageName}@${version}` : `npm:${packageName}`,
+        data: {
+          version,
+          packageName,
+          hash: hash ?? hashArray([packageName, version]),
+        },
+      };
+      nodes.get(packageName).set(version, node);
+      keyMap.set(key, node);
+    } else {
+      keyMap.set(key, nodes.get(packageName).get(version));
     }
   }
 

@@ -12,11 +12,6 @@ import {
   RawProjectGraphDependency,
 } from '../../../project-graph/project-graph-builder';
 import { CreateDependenciesContext } from '../../../project-graph/plugins';
-import {
-  getYarnLockfileDependencies,
-  getYarnLockfileNodes,
-  stringifyYarnLockfile,
-} from 'nx/src/plugins/js/lock-file/yarn-parser';
 
 jest.mock('fs', () => {
   const memFs = require('memfs').fs;
