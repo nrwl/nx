@@ -9,14 +9,14 @@ import {
 import {
   AssetGlobPattern,
   FileReplacement,
-  NormalizedNxWebpackPluginOptions,
-  NxWebpackPluginOptions,
-} from '../nx-webpack-plugin-options';
+  NormalizedNxAppWebpackPluginOptions,
+  NxAppWebpackPluginOptions,
+} from '../nx-app-webpack-plugin-options';
 
 export function normalizeOptions(
-  options: NxWebpackPluginOptions
-): NormalizedNxWebpackPluginOptions {
-  const combinedPluginAndMaybeExecutorOptions: Partial<NormalizedNxWebpackPluginOptions> =
+  options: NxAppWebpackPluginOptions
+): NormalizedNxAppWebpackPluginOptions {
+  const combinedPluginAndMaybeExecutorOptions: Partial<NormalizedNxAppWebpackPluginOptions> =
     {};
   const isProd = process.env.NODE_ENV === 'production';
   // Since this is invoked by the executor, the graph has already been created and cached.
@@ -197,7 +197,7 @@ export function normalizeFileReplacements(
 
 function normalizeRelativePaths(
   projectRoot: string,
-  options: NxWebpackPluginOptions
+  options: NxAppWebpackPluginOptions
 ): void {
   for (const [fieldName, fieldValue] of Object.entries(options)) {
     if (isRelativePath(fieldValue)) {

@@ -37,7 +37,7 @@ export interface OptimizationOptions {
   styles: boolean;
 }
 
-export interface NxWebpackPluginOptions {
+export interface NxAppWebpackPluginOptions {
   /**
    * The tsconfig file for the project. e.g. `tsconfig.json`
    */
@@ -212,8 +212,8 @@ export interface NxWebpackPluginOptions {
   watch?: boolean;
 }
 
-export interface NormalizedNxWebpackPluginOptions
-  extends NxWebpackPluginOptions {
+export interface NormalizedNxAppWebpackPluginOptions
+  extends NxAppWebpackPluginOptions {
   projectName: string;
   root: string;
   projectRoot: string;
