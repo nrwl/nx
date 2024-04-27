@@ -23,7 +23,7 @@ export type ChangelogRenderOptions = Record<string, unknown>;
  *
  * @param {Object} config The configuration object for the ChangelogRenderer
  * @param {ProjectGraph} config.projectGraph The project graph for the workspace
- * @param {ChangelogChange[]} config.changes The collection of changes to show int he changelog
+ * @param {ChangelogChange[]} config.changes The collection of changes to show in the changelog
  * @param {string} config.releaseVersion The version that is being released
  * @param {string | null} config.project The name of specific project to generate a changelog for, or `null` if the overall workspace changelog
  * @param {string | false} config.entryWhenNoChanges The (already interpolated) string to use as the changelog entry when there are no changes, or `false` if no entry should be generated
