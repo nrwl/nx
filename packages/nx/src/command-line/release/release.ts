@@ -1,4 +1,5 @@
 import { prompt } from 'enquirer';
+import { removeSync } from 'fs-extra';
 import { readNxJson } from '../../config/nx-json';
 import { createProjectFileMapUsingProjectGraph } from '../../project-graph/file-map-utils';
 import { createProjectGraphAsync } from '../../project-graph/project-graph';
@@ -11,8 +12,12 @@ import {
   handleNxReleaseConfigError,
 } from './config/config';
 import { filterReleaseGroups } from './config/filter-release-groups';
+import {
+  readRawVersionPlans,
+  setVersionPlansOnGroups,
+} from './config/version-plans';
 import { releasePublish } from './publish';
-import { getCommitHash, gitCommit, gitPush, gitTag } from './utils/git';
+import { getCommitHash, gitAdd, gitCommit, gitPush, gitTag } from './utils/git';
 import { createOrUpdateGithubRelease } from './utils/github';
 import { resolveNxJsonConfigErrorMessage } from './utils/resolve-nx-json-error-message';
 import {
@@ -75,6 +80,7 @@ export async function release(
     stageChanges: shouldStage,
     gitCommit: false,
     gitTag: false,
+    deleteVersionPlans: false,
   });
 
   const changelogResult = await releaseChangelog({
@@ -85,6 +91,7 @@ export async function release(
     gitCommit: false,
     gitTag: false,
     createRelease: false,
+    deleteVersionPlans: false,
   });
 
   const {
@@ -100,6 +107,32 @@ export async function release(
   if (filterError) {
     output.error(filterError);
     process.exit(1);
+  }
+  const rawVersionPlans = await readRawVersionPlans();
+  setVersionPlansOnGroups(
+    rawVersionPlans,
+    releaseGroups,
+    Object.keys(projectGraph.nodes)
+  );
+
+  const planFiles = new Set<string>();
+  releaseGroups.forEach((group) => {
+    if (group.versionPlans) {
+      group.versionPlans.forEach((plan) => {
+        if (!args.dryRun) {
+          removeSync(plan.absolutePath);
+        }
+        planFiles.add(plan.relativePath);
+      });
+    }
+  });
+  const changedFiles = Array.from(planFiles);
+  if (changedFiles.length > 0) {
+    await gitAdd({
+      changedFiles,
+      dryRun: args.dryRun,
+      verbose: args.verbose,
+    });
   }
 
   if (shouldCommit) {

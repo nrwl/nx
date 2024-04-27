@@ -3,7 +3,11 @@ import { join } from 'path';
 import { TempFs } from '../../../internal-testing-utils/temp-fs';
 import { IMPLICIT_DEFAULT_RELEASE_GROUP } from './config';
 import { ReleaseGroupWithName } from './filter-release-groups';
-import { RawVersionPlan, setVersionPlansOnGroups } from './version-plans';
+import {
+  RawVersionPlan,
+  readRawVersionPlans,
+  setVersionPlansOnGroups,
+} from './version-plans';
 
 expect.addSnapshotSerializer({
   serialize(str: string) {
@@ -52,10 +56,83 @@ describe('version-plans', () => {
     });
   });
 
-  describe('readRawVersionPlans', () => {});
-
   afterAll(() => {
     tempFs.cleanup();
+  });
+
+  describe('readRawVersionPlans', () => {
+    it('should parse all version plan files into raw version plan objects', async () => {
+      const result = await readRawVersionPlans();
+      result.forEach((r) => {
+        expect(typeof r.createdOnMs).toBe('number');
+        delete r.createdOnMs;
+      });
+      expect(result).toMatchInlineSnapshot(`
+        [
+          {
+            absolutePath: <workspace-root>/version-plans/plan1.md,
+            content: {
+              pkg1: patch,
+            },
+            fileName: plan1.md,
+            message: This is a change to just package 1,
+            relativePath: .nx/version-plans/plan1.md,
+          },
+          {
+            absolutePath: <workspace-root>/version-plans/plan2.md,
+            content: {
+              pkg1: minor,
+              pkg2: patch,
+            },
+            fileName: plan2.md,
+            message: This is a change to package 1 and package 2,
+            relativePath: .nx/version-plans/plan2.md,
+          },
+          {
+            absolutePath: <workspace-root>/version-plans/plan3.md,
+            content: {
+              pkg3: major,
+              pkg4: minor,
+            },
+            fileName: plan3.md,
+            message: This is a change to packages 3 and 4,
+            relativePath: .nx/version-plans/plan3.md,
+          },
+          {
+            absolutePath: <workspace-root>/version-plans/plan4.md,
+            content: {
+              pkg3: patch,
+              pkg4: minor,
+              pkg5: prerelease,
+              pkg6: preminor,
+            },
+            fileName: plan4.md,
+            message: This is a change to packages 3, 4, 5, and 6,
+            relativePath: .nx/version-plans/plan4.md,
+          },
+          {
+            absolutePath: <workspace-root>/version-plans/plan5.md,
+            content: {
+              fixed-group-1: minor,
+            },
+            fileName: plan5.md,
+            message: This is a change to fixed-group-1,
+            relativePath: .nx/version-plans/plan5.md,
+          },
+          {
+            absolutePath: <workspace-root>/version-plans/plan6.md,
+            content: {
+              fixed-group-1: major,
+              fixed-group-2: minor,
+              pkg3: major,
+            },
+            fileName: plan6.md,
+            message: This is a major change to fixed-group-1 and pkg3 and a minor change to fixed-group-2,
+            relativePath: .nx/version-plans/plan6.md,
+          },
+        ]
+      `);
+    });
   });
 
   describe('setVersionPlansOnGroups', () => {

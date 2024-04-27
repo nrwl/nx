@@ -1,6 +1,7 @@
 ---
 fixed-group-1: major
-ignored-group-1: minor
+fixed-group-2: minor
+pkg3: major
 ---
 
-This is a major change to fixed-group-1
+This is a major change to fixed-group-1 and pkg3 and a minor change to fixed-group-2

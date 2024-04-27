@@ -139,6 +139,12 @@ export async function getGitDiff(
     });
 }
 
+export async function getChangedTrackedFiles(): Promise<Set<string>> {
+  const result = await execCommand('git', ['status', '--porcelain']);
+  const lines = result.split('\n').filter((l) => l.trim().length > 0);
+  return new Set(lines.map((l) => l.substring(3)));
+}
+
 export async function gitAdd({
   changedFiles,
   dryRun,
@@ -152,13 +158,15 @@ export async function gitAdd({
 }): Promise<string> {
   logFn = logFn || console.log;
 
+  const changedTrackedFiles = await getChangedTrackedFiles();
+
   let ignoredFiles: string[] = [];
   let filesToAdd: string[] = [];
   for (const f of changedFiles) {
     const isFileIgnored = await isIgnored(f);
     if (isFileIgnored) {
       ignoredFiles.push(f);
-    } else {
+    } else if (changedTrackedFiles.has(f)) {
       filesToAdd.push(f);
     }
   }

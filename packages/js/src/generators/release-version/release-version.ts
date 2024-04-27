@@ -107,7 +107,7 @@ Valid values are: ${validReleaseVersionPrefixes
       ? options.specifier
       : undefined;
 
-    const additionalCallbacks: (() => Promise<string>)[] = [];
+    const additionalCallbacks: ((dryRun?: boolean) => Promise<string[]>)[] = [];
 
     for (const project of projects) {
       const projectName = project.name;
@@ -474,11 +474,15 @@ To fix this you will either need to add a package.json file at that location, or
             }
 
             options.releaseGroup.versionPlans.forEach((p) => {
-              additionalCallbacks.push(async () => {
-                await remove(p.absolutePath);
-                // the relative path is easier to digest, so use that for
-                // git operations and logging
-                return p.relativePath;
+              additionalCallbacks.push(async (dryRun?: boolean) => {
+                if (!dryRun && options.deleteVersionPlans) {
+                  await remove(p.absolutePath);
+                  // the relative path is easier to digest, so use that for
+                  // git operations and logging
+                  return [p.relativePath];
+                } else {
+                  return [];
+                }
               });
             });
 
@@ -602,9 +606,9 @@ To fix this you will either need to add a package.json file at that location, or
       callback: async (tree, opts) => {
         const updatedFiles: string[] = [];
 
-        // for (const cb of additionalCallbacks) {
-        //   updatedFiles.push(await cb());
-        // }
+        for (const cb of additionalCallbacks) {
+          updatedFiles.push(...(await cb(opts.dryRun)));
+        }
 
         const cwd = tree.root;
         updatedFiles.push(...(await updateLockFile(cwd, opts)));

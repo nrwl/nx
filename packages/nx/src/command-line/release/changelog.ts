@@ -1,6 +1,6 @@
 import * as chalk from 'chalk';
 import { prompt } from 'enquirer';
-import { remove } from 'fs-extra';
+import { removeSync } from 'fs-extra';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { valid } from 'semver';
 import { dirSync } from 'tmp';
@@ -264,25 +264,28 @@ export async function releaseChangelog(
       const releaseGroup = releaseGroups[0];
       if (releaseGroup.projectsRelationship === 'fixed') {
         const versionPlans = releaseGroup.versionPlans as GroupVersionPlan[];
-        workspaceChangelogChanges = versionPlans
-          .map((vp) => {
-            const parsedMessage = parseConventionalCommitsMessage(vp.message);
+        workspaceChangelogChanges = filterHiddenChanges(
+          versionPlans
+            .map((vp) => {
+              const parsedMessage = parseConventionalCommitsMessage(vp.message);
 
-            // only properly formatted conventional commits messages will be included in the changelog
-            if (!parsedMessage) {
-              return null;
-            }
+              // only properly formatted conventional commits messages will be included in the changelog
+              if (!parsedMessage) {
+                return null;
+              }
 
-            return <ChangelogChange>{
-              type: parsedMessage.type,
-              scope: parsedMessage.scope,
-              description: parsedMessage.description,
-              body: '',
-              isBreaking: parsedMessage.breaking,
-              githubReferences: [],
-            };
-          })
-          .filter(Boolean);
+              return <ChangelogChange>{
+                type: parsedMessage.type,
+                scope: parsedMessage.scope,
+                description: parsedMessage.description,
+                body: '',
+                isBreaking: parsedMessage.breaking,
+                githubReferences: [],
+              };
+            })
+            .filter(Boolean),
+          nxReleaseConfig.conventionalCommits
+        );
       }
     }
   } else {
@@ -311,24 +314,26 @@ export async function releaseChangelog(
 
     const workspaceChangelogCommits = await getCommits(
       workspaceChangelogFromSHA,
-      toSHA,
-      nxReleaseConfig.conventionalCommits
+      toSHA
     );
 
-    workspaceChangelogChanges = workspaceChangelogCommits.map((c) => {
-      return {
-        type: c.type,
-        scope: c.scope,
-        description: c.description,
-        body: c.body,
-        isBreaking: c.isBreaking,
-        githubReferences: c.references,
-        author: c.author,
-        shortHash: c.shortHash,
-        revertedHashes: c.revertedHashes,
-        affectedProjects: '*',
-      };
-    });
+    workspaceChangelogChanges = filterHiddenChanges(
+      workspaceChangelogCommits.map((c) => {
+        return {
+          type: c.type,
+          scope: c.scope,
+          description: c.description,
+          body: c.body,
+          isBreaking: c.isBreaking,
+          githubReferences: c.references,
+          author: c.author,
+          shortHash: c.shortHash,
+          revertedHashes: c.revertedHashes,
+          affectedProjects: '*',
+        };
+      }),
+      nxReleaseConfig.conventionalCommits
+    );
   }
 
   const workspaceChangelog = await generateChangelogForWorkspace(
@@ -395,26 +400,31 @@ export async function releaseChangelog(
         let changes: ChangelogChange[] | null = null;
 
         if (releaseGroup.versionPlans) {
-          changes = (releaseGroup.versionPlans as ProjectsVersionPlan[])
-            .map((vp) => {
-              const parsedMessage = parseConventionalCommitsMessage(vp.message);
+          changes = filterHiddenChanges(
+            (releaseGroup.versionPlans as ProjectsVersionPlan[])
+              .map((vp) => {
+                const parsedMessage = parseConventionalCommitsMessage(
+                  vp.message
+                );
 
-              // only properly formatted conventional commits messages will be included in the changelog
-              if (!parsedMessage) {
-                return null;
-              }
+                // only properly formatted conventional commits messages will be included in the changelog
+                if (!parsedMessage) {
+                  return null;
+                }
 
-              return {
-                type: parsedMessage.type,
-                scope: parsedMessage.scope,
-                description: parsedMessage.description,
-                body: '',
-                isBreaking: parsedMessage.breaking,
-                affectedProjects: Object.keys(vp.projectVersionBumps),
-                githubReferences: [],
-              };
-            })
-            .filter(Boolean);
+                return {
+                  type: parsedMessage.type,
+                  scope: parsedMessage.scope,
+                  description: parsedMessage.description,
+                  body: '',
+                  isBreaking: parsedMessage.breaking,
+                  affectedProjects: Object.keys(vp.projectVersionBumps),
+                  githubReferences: [],
+                };
+              })
+              .filter(Boolean),
+            nxReleaseConfig.conventionalCommits
+          );
         } else {
           let commits: GitCommit[];
           let fromRef =
@@ -427,11 +437,7 @@ export async function releaseChangelog(
 
           if (!fromRef && useAutomaticFromRef) {
             const firstCommit = await getFirstGitCommit();
-            const allCommits = await getCommits(
-              firstCommit,
-              toSHA,
-              nxReleaseConfig.conventionalCommits
-            );
+            const allCommits = await getCommits(firstCommit, toSHA);
             const commitsForProject = allCommits.filter((c) =>
               c.affectedFiles.find((f) => f.startsWith(project.data.root))
             );
@@ -452,11 +458,7 @@ export async function releaseChangelog(
           }
 
           if (!commits) {
-            commits = await getCommits(
-              fromRef,
-              toSHA,
-              nxReleaseConfig.conventionalCommits
-            );
+            commits = await getCommits(fromRef, toSHA);
           }
 
           const { fileMap } = await createFileMapUsingProjectGraph(
@@ -466,23 +468,26 @@ export async function releaseChangelog(
             fileMap.projectFileMap
           );
 
-          changes = commits.map((c) => ({
-            type: c.type,
-            scope: c.scope,
-            description: c.description,
-            body: c.body,
-            isBreaking: c.isBreaking,
-            githubReferences: c.references,
-            author: c.author,
-            shortHash: c.shortHash,
-            revertedHashes: c.revertedHashes,
-            affectedProjects: commitChangesNonProjectFiles(
-              c,
-              fileMap.nonProjectFiles
-            )
-              ? '*'
-              : getProjectsAffectedByCommit(c, fileToProjectMap),
-          }));
+          changes = filterHiddenChanges(
+            commits.map((c) => ({
+              type: c.type,
+              scope: c.scope,
+              description: c.description,
+              body: c.body,
+              isBreaking: c.isBreaking,
+              githubReferences: c.references,
+              author: c.author,
+              shortHash: c.shortHash,
+              revertedHashes: c.revertedHashes,
+              affectedProjects: commitChangesNonProjectFiles(
+                c,
+                fileMap.nonProjectFiles
+              )
+                ? '*'
+                : getProjectsAffectedByCommit(c, fileToProjectMap),
+            })),
+            nxReleaseConfig.conventionalCommits
+          );
         }
 
         const projectChangelogs = await generateChangelogForProjects(
@@ -536,26 +541,29 @@ export async function releaseChangelog(
     } else {
       let changes: ChangelogChange[] = [];
       if (releaseGroup.versionPlans) {
-        changes = (releaseGroup.versionPlans as GroupVersionPlan[])
-          .map((vp) => {
-            const parsedMessage = parseConventionalCommitsMessage(vp.message);
+        changes = filterHiddenChanges(
+          (releaseGroup.versionPlans as GroupVersionPlan[])
+            .map((vp) => {
+              const parsedMessage = parseConventionalCommitsMessage(vp.message);
 
-            // only properly formatted conventional commits messages will be included in the changelog
-            if (!parsedMessage) {
-              return null;
-            }
+              // only properly formatted conventional commits messages will be included in the changelog
+              if (!parsedMessage) {
+                return null;
+              }
 
-            return <ChangelogChange>{
-              type: parsedMessage.type,
-              scope: parsedMessage.scope,
-              description: parsedMessage.description,
-              body: '',
-              isBreaking: parsedMessage.breaking,
-              githubReferences: [],
-              affectedProjects: '*',
-            };
-          })
-          .filter(Boolean);
+              return <ChangelogChange>{
+                type: parsedMessage.type,
+                scope: parsedMessage.scope,
+                description: parsedMessage.description,
+                body: '',
+                isBreaking: parsedMessage.breaking,
+                githubReferences: [],
+                affectedProjects: '*',
+              };
+            })
+            .filter(Boolean),
+          nxReleaseConfig.conventionalCommits
+        );
       } else {
         const fromRef =
           args.from ||
@@ -573,28 +581,27 @@ export async function releaseChangelog(
         const { fileMap } = await createFileMapUsingProjectGraph(projectGraph);
         const fileToProjectMap = createFileToProjectMap(fileMap.projectFileMap);
 
-        const commits = await getCommits(
-          fromSHA,
-          toSHA,
+        const commits = await getCommits(fromSHA, toSHA);
+        changes = filterHiddenChanges(
+          commits.map((c) => ({
+            type: c.type,
+            scope: c.scope,
+            description: c.description,
+            body: c.body,
+            isBreaking: c.isBreaking,
+            githubReferences: c.references,
+            author: c.author,
+            shortHash: c.shortHash,
+            revertedHashes: c.revertedHashes,
+            affectedProjects: commitChangesNonProjectFiles(
+              c,
+              fileMap.nonProjectFiles
+            )
+              ? '*'
+              : getProjectsAffectedByCommit(c, fileToProjectMap),
+          })),
           nxReleaseConfig.conventionalCommits
         );
-        changes = commits.map((c) => ({
-          type: c.type,
-          scope: c.scope,
-          description: c.description,
-          body: c.body,
-          isBreaking: c.isBreaking,
-          githubReferences: c.references,
-          author: c.author,
-          shortHash: c.shortHash,
-          revertedHashes: c.revertedHashes,
-          affectedProjects: commitChangesNonProjectFiles(
-            c,
-            fileMap.nonProjectFiles
-          )
-            ? '*'
-            : getProjectsAffectedByCommit(c, fileToProjectMap),
-        }));
       }
 
       const projectChangelogs = await generateChangelogForProjects(
@@ -779,12 +786,12 @@ async function applyChangesAndExit(
 
   let changedFiles: string[] = [];
 
-  if (args.deleteVersionPlans) {
+  if (args.deleteVersionPlans && !args.dryRun) {
     const planFiles = new Set<string>();
     releaseGroups.forEach((group) => {
       if (group.versionPlans) {
         group.versionPlans.forEach((plan) => {
-          remove(plan.absolutePath);
+          removeSync(plan.absolutePath);
           planFiles.add(plan.relativePath);
         });
       }
@@ -1176,17 +1183,23 @@ function checkChangelogFilesEnabled(nxReleaseConfig: NxReleaseConfig): boolean {
 
 async function getCommits(
   fromSHA: string,
-  toSHA: string,
-  conventionalCommitsConfig: NxReleaseConfig['conventionalCommits']
+  toSHA: string
 ): Promise<GitCommit[]> {
   const rawCommits = await getGitDiff(fromSHA, toSHA);
   // Parse as conventional commits
-  return parseCommits(rawCommits).filter((c) => {
-    const type = c.type;
+  return parseCommits(rawCommits);
+}
+
+function filterHiddenChanges(
+  changes: ChangelogChange[],
+  conventionalCommitsConfig: NxReleaseConfig['conventionalCommits']
+): ChangelogChange[] {
+  return changes.filter((change) => {
+    const type = change.type;
 
     const typeConfig = conventionalCommitsConfig.types[type];
     if (!typeConfig) {
-      // don't include commits with unknown types
+      // don't include changes with unknown types
       return false;
     }
     return !typeConfig.changelog.hidden;
