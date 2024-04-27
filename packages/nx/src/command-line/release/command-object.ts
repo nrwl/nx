@@ -30,7 +30,8 @@ interface GitCommitAndTagOptions {
 }
 
 export type VersionOptions = NxReleaseArgs &
-  GitCommitAndTagOptions & {
+  GitCommitAndTagOptions &
+  VersionPlanArgs & {
     specifier?: string;
     preid?: string;
     stageChanges?: boolean;
@@ -38,7 +39,8 @@ export type VersionOptions = NxReleaseArgs &
   };
 
 export type ChangelogOptions = NxReleaseArgs &
-  GitCommitAndTagOptions & {
+  GitCommitAndTagOptions &
+  VersionPlanArgs & {
     // version and/or versionData must be set
     version?: string | null;
     versionData?: VersionData;
@@ -59,6 +61,10 @@ export type PublishOptions = NxReleaseArgs &
 export type ReleaseOptions = NxReleaseArgs & {
   yes?: boolean;
   skipPublish?: boolean;
+};
+
+export type VersionPlanArgs = {
+  deleteVersionPlans?: boolean;
 };
 
 export const yargsReleaseCommand: CommandModule<

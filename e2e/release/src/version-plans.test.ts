@@ -123,7 +123,6 @@ feat: Update the fixed packages with a minor release.
     await writeFile(
       join(versionPlansDir, 'bump-independent.md'),
       `---
-independent-group: independent
 ${pkg3}: patch
 ${pkg4}: preminor
 ${pkg5}: prerelease
@@ -229,8 +228,7 @@ feat: Update the independent packages with a patch, preminor, and prerelease.
 + - Update the independent packages with a patch, preminor, and prerelease.`
     );
 
-    // TODO: handle deleting version plans
-    // expect(exists(join(versionPlansDir, 'bump-fixed.md'))).toBeFalsy();
-    // expect(exists(join(versionPlansDir, 'bump-independent.md'))).toBeFalsy();
+    expect(exists(join(versionPlansDir, 'bump-fixed.md'))).toBeFalsy();
+    expect(exists(join(versionPlansDir, 'bump-independent.md'))).toBeFalsy();
   });
 });

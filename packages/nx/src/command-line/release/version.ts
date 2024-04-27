@@ -77,6 +77,7 @@ export interface ReleaseVersionGeneratorSchema {
   installArgs?: string;
   installIgnoreScripts?: boolean;
   conventionalCommitsConfig?: NxReleaseConfig['conventionalCommits'];
+  deleteVersionPlans?: boolean;
 }
 
 export interface NxReleaseVersionResult {
@@ -164,6 +165,11 @@ export async function releaseVersion(
     releaseGroups,
     Object.keys(projectGraph.nodes)
   );
+
+  if (args.deleteVersionPlans === undefined) {
+    // default to not delete version plans after versioning as they may be needed for changelog generation
+    args.deleteVersionPlans = false;
+  }
 
   runPreVersionCommand(nxReleaseConfig.version.preVersionCommand, {
     dryRun: args.dryRun,
@@ -495,6 +501,7 @@ async function runVersionOnProjects(
     releaseGroup,
     firstRelease: args.firstRelease ?? false,
     conventionalCommitsConfig,
+    deleteVersionPlans: args.deleteVersionPlans,
   };
 
   // Apply generator defaults from schema.json file etc

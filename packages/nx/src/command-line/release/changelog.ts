@@ -1,5 +1,6 @@
 import * as chalk from 'chalk';
 import { prompt } from 'enquirer';
+import { remove } from 'fs-extra';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { valid } from 'semver';
 import { dirSync } from 'tmp';
@@ -38,7 +39,12 @@ import {
   ReleaseGroupWithName,
   filterReleaseGroups,
 } from './config/filter-release-groups';
-import { GroupVersionPlan, ProjectsVersionPlan } from './config/version-plans';
+import {
+  GroupVersionPlan,
+  ProjectsVersionPlan,
+  readRawVersionPlans,
+  setVersionPlansOnGroups,
+} from './config/version-plans';
 import {
   GitCommit,
   Reference,
@@ -157,6 +163,17 @@ export async function releaseChangelog(
   if (filterError) {
     output.error(filterError);
     process.exit(1);
+  }
+  const rawVersionPlans = await readRawVersionPlans();
+  setVersionPlansOnGroups(
+    rawVersionPlans,
+    releaseGroups,
+    Object.keys(projectGraph.nodes)
+  );
+
+  if (args.deleteVersionPlans === undefined) {
+    // default to deleting version plans in this command instead of after versioning
+    args.deleteVersionPlans = true;
   }
 
   const changelogGenerationEnabled =
@@ -634,7 +651,8 @@ export async function releaseChangelog(
     toSHA,
     postGitTasks,
     commitMessageValues,
-    gitTagValues
+    gitTagValues,
+    releaseGroups
   );
 
   return {
@@ -711,7 +729,8 @@ async function applyChangesAndExit(
   toSHA: string,
   postGitTasks: PostGitTask[],
   commitMessageValues: string[],
-  gitTagValues: string[]
+  gitTagValues: string[],
+  releaseGroups: ReleaseGroupWithName[]
 ) {
   let latestCommit = toSHA;
 
@@ -758,10 +777,27 @@ async function applyChangesAndExit(
     return;
   }
 
+  let changedFiles: string[] = [];
+
+  if (args.deleteVersionPlans) {
+    const planFiles = new Set<string>();
+    releaseGroups.forEach((group) => {
+      if (group.versionPlans) {
+        group.versionPlans.forEach((plan) => {
+          remove(plan.absolutePath);
+          planFiles.add(plan.relativePath);
+        });
+      }
+    });
+    changedFiles = Array.from(planFiles);
+  }
+
+  changedFiles.push(...changes.map((f) => f.path));
+
   // Generate a new commit for the changes, if configured to do so
   if (args.gitCommit ?? nxReleaseConfig.changelog.git.commit) {
     await commitChanges(
-      changes.map((f) => f.path),
+      changedFiles,
       !!args.dryRun,
       !!args.verbose,
       commitMessageValues,
@@ -775,7 +811,7 @@ async function applyChangesAndExit(
   ) {
     output.logSingleLine(`Staging changed files with git`);
     await gitAdd({
-      changedFiles: changes.map((f) => f.path),
+      changedFiles: changedFiles,
       dryRun: args.dryRun,
       verbose: args.verbose,
     });
