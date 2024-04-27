@@ -64,6 +64,12 @@ dependencies {
     implementation(project(":app"))
 }`
           );
+          updateFile(`app/build.gradle.kts`, (content) => {
+            content += `\r\ntasks.register("task1"){  
+                println("REGISTER TASK1: This is executed during the configuration phase")
+            }`;
+            return content;
+          });
         }
         updateFile(
           `settings.gradle${type === 'kotlin' ? '.kts' : ''}`,

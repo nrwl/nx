@@ -51,7 +51,7 @@ Project nodes in the graph are considered to be the same if the project has the 
 
 Note: This is a shallow merge, so if you have a target with the same name in both plugins, the target from the second plugin will overwrite the target from the first plugin. Options, configurations, or any other properties within the target will be overwritten **_not_** merged.
 
-#### Example
+#### Example (adding projects)
 
 A simplified version of Nx's built-in `project.json` plugin is shown below, which adds a new project to the project graph for each `project.json` file it finds. This should be exported from the entry point of your plugin, which is listed in `nx.json`
 
@@ -79,6 +79,61 @@ If you create targets for a project within a plugin's code, the Nx migration gen
 2. If you create a dynamic target for an executor you don't own, only define the `executor` property and instruct your users to define their options in the `targetDefaults` property of `nx.json`.
 
 {% /callout %}
+
+#### Example (extending projects / adding targets)
+
+When writing a plugin to add support for some tooling, it may need to add a target to an existing project. For example, our @nx/jest plugin adds a target to the project for running Jest tests. This is done by checking for the presence of a jest configuration file, and if it is present, adding a target to the project.
+
+Most of Nx's first party plugins are written to add a target to a given project based on the configuration files present for that project. The below example shows how a plugin could add a target to a project based on the presence of a `tsconfig.json` file.
+
+```typescript {% fileName="/my-plugin/index.ts" %}
+export const createNodes: CreateNodes = [
+  '**/tsconfig.json',
+  (fileName: string, opts, context: CreateNodesContext) => {
+    const root = dirname(fileName);
+
+    const isProject =
+      existsSync(join(root, 'project.json')) ||
+      existsSync(join(root, 'package.json'));
+    if (!isProject) {
+      return {};
+    }
+
+    return {
+      projects: {
+        [root]: {
+          targets: {
+            build: {
+              command: `tsc -p ${fileName}`,
+            },
+          },
+        },
+      },
+    };
+  },
+];
+```
+
+By checking for the presence of a `project.json` or `package.json` file, the plugin can be more confident that the project it is modifying is an existing Nx project.
+
+When extending an existing project, its important to consider how Nx will merge the returned project configurations. In general, plugins are run in the order they are listed in `nx.json`, abd then Nx's built-in plugins are run last. Plugins overwrite information that was identified by plugins that run before them if a merge is not possible.
+
+Nx considers two identified projects to be the same if and only if they have the same root. If two projects are identified with the same name, but different roots, there will be an error.
+
+The logic for merging project declarations is as follows:
+
+- `name`, `sourceRoot`, `projectType`, and any other top level properties which are a literal (e.g. not an array or object) are overwritten.
+- `tags` are merged and deduplicated.
+- `implicitDependencies` are merged, with dependencies from later plugins being appended to the end
+- `targets` are merged, with special logic for the targets inside of them:
+  - If the targets are deemed compatible (They use the same executor / command, or one of the two declarations does not specify an executor / command):
+    - The `executor` or `command` remains the same
+    - The `options` object is merged with the later plugin's options overwriting the earlier plugin's options. This is a shallow merge, so if a property is an object, the later plugin's object will overwrite the earlier plugin's object rather than merging the two.
+    - The `configurations` object is merged, with the later plugin's configurations overwriting the earlier plugin's configurations. The options for each configuration are merged in the same way as the top level options.
+    - `inputs` and `outputs` overwrite the earlier plugin's inputs and outputs.
+  - If the targets are not deemed compatible, the later plugin's target will overwrite the earlier plugin's target.
+- `generators` are merged. If both project configurations specify the same generator, those generators are merged.
+- `namedInputs` are merged. If both project configurations specify the same named input, the later plugin's named input will overwrite the earlier plugin's named input. This is what allows overriding a named input from a plugin that ran earlier (e.g. in project.json).
 
 ### Adding External Nodes
 

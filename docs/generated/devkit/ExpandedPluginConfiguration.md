@@ -1,6 +1,12 @@
-# Type alias: ExpandedPluginConfiguration
+# Type alias: ExpandedPluginConfiguration\<T\>
 
-Ƭ **ExpandedPluginConfiguration**: `Object`
+Ƭ **ExpandedPluginConfiguration**\<`T`\>: `Object`
+
+#### Type parameters
+
+| Name | Type      |
+| :--- | :-------- |
+| `T`  | `unknown` |
 
 #### Type declaration
 
@@ -8,5 +14,5 @@
 | :--------- | :--------- |
 | `exclude?` | `string`[] |
 | `include?` | `string`[] |
-| `options?` | `unknown`  |
+| `options?` | `T`        |
 | `plugin`   | `string`   |

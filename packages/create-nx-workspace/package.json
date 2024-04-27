@@ -17,6 +17,7 @@
     "Nest",
     "Jest",
     "Cypress",
+    "Playwright",
     "CLI"
   ],
   "bin": {

@@ -17,6 +17,7 @@ import {
   registerTsConfigPaths,
 } from '../../plugins/js/utils/register';
 import {
+  ProjectRootMappings,
   createProjectRootMappingsFromProjectConfigurations,
   findProjectForPath,
 } from '../utils/find-project-for-path';
@@ -26,14 +27,12 @@ import { logger } from '../../utils/logger';
 import type * as ts from 'typescript';
 import { extname } from 'node:path';
 import { NxPlugin } from './public-api';
-import path = require('node:path/posix');
-import {
-  ExpandedPluginConfiguration,
-  PluginConfiguration,
-} from '../../config/nx-json';
+import { PluginConfiguration } from '../../config/nx-json';
 import { retrieveProjectConfigurationsWithoutPluginInference } from '../utils/retrieve-workspace-files';
 import { normalizeNxPlugin } from './utils';
 import { LoadedNxPlugin } from './internal-api';
+import { LoadPluginError } from '../error-types';
+import path = require('node:path/posix');
 
 export function readPluginPackageJson(
   pluginName: string,
@@ -57,6 +56,9 @@ export function readPluginPackageJson(
           localPluginPath.path,
           'package.json'
         );
+        if (!unregisterPluginTSTranspiler) {
+          registerPluginTSTranspiler();
+        }
         return {
           path: localPluginPackageJson,
           json: readJsonFile(localPluginPackageJson),
@@ -113,12 +115,11 @@ function lookupLocalPlugin(
   projects: Record<string, ProjectConfiguration>,
   root = workspaceRoot
 ) {
-  const plugin = findNxProjectForImportPath(importPath, projects, root);
-  if (!plugin) {
+  const projectConfig = findNxProjectForImportPath(importPath, projects, root);
+  if (!projectConfig) {
     return null;
   }
 
-  const projectConfig: ProjectConfiguration = projects[plugin];
   return { path: path.join(root, projectConfig.root), projectConfig };
 }
 
@@ -126,18 +127,23 @@ function findNxProjectForImportPath(
   importPath: string,
   projects: Record<string, ProjectConfiguration>,
   root = workspaceRoot
-): string | null {
+): ProjectConfiguration | null {
   const tsConfigPaths: Record<string, string[]> = readTsConfigPaths(root);
   const possiblePaths = tsConfigPaths[importPath]?.map((p) =>
     normalizePath(path.relative(root, path.join(root, p)))
   );
   if (possiblePaths?.length) {
-    const projectRootMappings =
-      createProjectRootMappingsFromProjectConfigurations(projects);
+    const projectRootMappings: ProjectRootMappings = new Map();
+    const projectNameMap = new Map<string, ProjectConfiguration>();
+    for (const projectRoot in projects) {
+      const project = projects[projectRoot];
+      projectRootMappings.set(project.root, project.name);
+      projectNameMap.set(project.name, project);
+    }
     for (const tsConfigPath of possiblePaths) {
       const nxProject = findProjectForPath(tsConfigPath, projectRootMappings);
       if (nxProject) {
-        return nxProject;
+        return projectNameMap.get(nxProject);
       }
     }
     logger.verbose(
@@ -247,39 +253,38 @@ export async function loadNxPluginAsync(
   paths: string[],
   root: string
 ): Promise<LoadedNxPlugin> {
-  try {
-    require.resolve(
-      typeof pluginConfiguration === 'string'
-        ? pluginConfiguration
-        : pluginConfiguration.plugin
-    );
-  } catch {
-    // If a plugin cannot be resolved, we will need projects to resolve it
-    projectsWithoutInference ??=
-      await retrieveProjectConfigurationsWithoutPluginInference(root);
-  }
-
   const moduleName =
     typeof pluginConfiguration === 'string'
       ? pluginConfiguration
       : pluginConfiguration.plugin;
+  try {
+    try {
+      require.resolve(moduleName);
+    } catch {
+      // If a plugin cannot be resolved, we will need projects to resolve it
+      projectsWithoutInference ??=
+        await retrieveProjectConfigurationsWithoutPluginInference(root);
+    }
 
-  performance.mark(`Load Nx Plugin: ${moduleName} - start`);
-  let { pluginPath, name } = await getPluginPathAndName(
-    moduleName,
-    paths,
-    projectsWithoutInference,
-    root
-  );
-  const plugin = normalizeNxPlugin(await importPluginModule(pluginPath));
-  plugin.name ??= name;
-  performance.mark(`Load Nx Plugin: ${moduleName} - end`);
-  performance.measure(
-    `Load Nx Plugin: ${moduleName}`,
-    `Load Nx Plugin: ${moduleName} - start`,
-    `Load Nx Plugin: ${moduleName} - end`
-  );
-  return new LoadedNxPlugin(plugin, pluginConfiguration);
+    performance.mark(`Load Nx Plugin: ${moduleName} - start`);
+    let { pluginPath, name } = await getPluginPathAndName(
+      moduleName,
+      paths,
+      projectsWithoutInference,
+      root
+    );
+    const plugin = normalizeNxPlugin(await importPluginModule(pluginPath));
+    plugin.name ??= name;
+    performance.mark(`Load Nx Plugin: ${moduleName} - end`);
+    performance.measure(
+      `Load Nx Plugin: ${moduleName}`,
+      `Load Nx Plugin: ${moduleName} - start`,
+      `Load Nx Plugin: ${moduleName} - end`
+    );
+    return new LoadedNxPlugin(plugin, pluginConfiguration);
+  } catch (e) {
+    throw new LoadPluginError(moduleName, e);
+  }
 }
 
 async function importPluginModule(pluginPath: string): Promise<NxPlugin> {

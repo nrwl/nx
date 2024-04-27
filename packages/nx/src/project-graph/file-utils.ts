@@ -192,7 +192,7 @@ function getProjectsSyncNoInference(root: string, nxJson: NxJsonConfiguration) {
     ...getDefaultPluginsSync(root),
   ];
 
-  const projectRootMap: Map<string, ProjectConfiguration> = new Map();
+  const projectRootMap: Record<string, ProjectConfiguration> = {};
 
   // We iterate over plugins first - this ensures that plugins specified first take precedence.
   for (const plugin of plugins) {

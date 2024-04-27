@@ -316,18 +316,6 @@
               "description": "Get deeper into how Nx works and its different aspects.",
               "itemList": [
                 {
-                  "name": "Incremental Builds",
-                  "id": "incremental-builds",
-                  "tags": [],
-                  "file": "shared/incremental-builds"
-                },
-                {
-                  "name": "Nx and Turborepo",
-                  "id": "turbo-and-nx",
-                  "mediaImage": "./shared/guides/nx-media-monorepo.jpg",
-                  "file": "shared/guides/turbo-and-nx"
-                },
-                {
                   "name": "Monorepos",
                   "id": "why-monorepos",
                   "file": "shared/guides/why-monorepos"
@@ -343,31 +331,15 @@
                   "file": "shared/concepts/code-sharing"
                 },
                 {
-                  "name": "Using Nx at Enterprises",
-                  "id": "monorepo-nx-enterprise",
-                  "tags": ["enforce-module-boundaries", "generate-code"],
-                  "file": "shared/monorepo-nx-enterprise"
-                },
-                {
                   "name": "Nx Daemon",
                   "id": "nx-daemon",
                   "file": "shared/daemon"
                 },
                 {
-                  "name": "Nx and the Angular CLI",
-                  "id": "nx-and-angular",
-                  "file": "shared/guides/nx-and-angular-cli"
-                },
-                {
-                  "name": "Folder Structure",
-                  "id": "folder-structure",
-                  "file": "shared/guides/integrated-repo-folder-structure"
-                },
-                {
-                  "name": "Nx Devkit and Angular Devkit",
-                  "id": "nx-devkit-angular-devkit",
-                  "tags": ["create-your-own-plugin"],
-                  "file": "shared/guides/nx-devkit-angular-devkit"
+                  "name": "Nx and Turborepo",
+                  "id": "turbo-and-nx",
+                  "mediaImage": "./shared/guides/nx-media-monorepo.jpg",
+                  "file": "shared/guides/turbo-and-nx"
                 },
                 {
                   "name": "Applications and Libraries",
@@ -376,7 +348,7 @@
                   "file": "shared/workspace/applications-and-libraries"
                 },
                 {
-                  "name": "Creating Libraries",
+                  "name": "When to Create a New Library",
                   "id": "creating-libraries",
                   "tags": ["enforce-module-boundaries"],
                   "file": "shared/workspace/creating-libraries"
@@ -397,12 +369,6 @@
                   "name": "Buildable and Publishable Libraries",
                   "id": "buildable-and-publishable-libraries",
                   "file": "shared/workspace/buildable-and-publishable-libraries"
-                },
-                {
-                  "name": "How the Project Graph is Built",
-                  "id": "how-project-graph-is-built",
-                  "tags": ["explore-graph", "inferred-tasks"],
-                  "file": "shared/concepts/how-project-graph-is-built"
                 }
               ]
             }
@@ -2259,6 +2225,17 @@
               "id": "overview",
               "path": "/nx-api/angular",
               "file": "shared/packages/angular/angular-plugin"
+            },
+            {
+              "name": "Nx and the Angular CLI",
+              "id": "nx-and-angular",
+              "file": "shared/guides/nx-and-angular-cli"
+            },
+            {
+              "name": "Nx Devkit and Angular Devkit",
+              "id": "nx-devkit-angular-devkit",
+              "tags": ["create-your-own-plugin"],
+              "file": "shared/guides/nx-devkit-angular-devkit"
             },
             {
               "name": "Angular and Nx Version Matrix",

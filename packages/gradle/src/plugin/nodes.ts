@@ -4,11 +4,12 @@ import {
   ProjectConfiguration,
   TargetConfiguration,
   readJsonFile,
+  workspaceRoot,
   writeJsonFile,
 } from '@nx/devkit';
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { existsSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { dirname, join, relative } from 'node:path';
 import { projectGraphCacheDirectory } from 'nx/src/utils/cache-directory';
 
 import { getGradleBinaryPath } from '../utils/exec-gradle';
@@ -180,8 +181,12 @@ function createGradleTargets(
     const targetName = options?.[`${task.name}TargetName`] ?? task.name;
 
     const outputs = outputDirs.get(task.name);
+    const path = relative(
+      join(context.workspaceRoot, projectRoot),
+      getGradleBinaryPath()
+    );
     targets[targetName] = {
-      command: `${getGradleBinaryPath()} ${task.name}`,
+      command: `${path} ${task.name}`,
       options: {
         cwd: projectRoot,
       },

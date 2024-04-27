@@ -121,6 +121,16 @@
         "items": { "type": "string" },
         "$default": { "$source": "unparsed" },
         "x-priority": "internal"
+      },
+      "forwardAllArgs": {
+        "type": "boolean",
+        "description": "Whether arguments should be forwarded when interpolation is not present.",
+        "default": true
+      },
+      "tty": {
+        "type": "boolean",
+        "description": "Whether commands should be run with a tty terminal",
+        "hidden": true
       }
     },
     "additionalProperties": true,

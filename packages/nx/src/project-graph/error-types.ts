@@ -4,16 +4,13 @@ import {
   ConfigurationSourceMaps,
 } from './utils/project-configuration-utils';
 import { ProjectConfiguration } from '../config/workspace-json-project-json';
-import {
-  ProcessDependenciesError,
-  ProcessProjectGraphError,
-} from './build-project-graph';
 import { ProjectGraph } from '../config/project-graph';
 
 export class ProjectGraphError extends Error {
   readonly #errors: Array<
     | CreateNodesError
     | MergeNodesError
+    | CreateMetadataError
     | ProjectsWithNoNameError
     | ProjectsWithConflictingNamesError
     | ProcessDependenciesError
@@ -30,11 +27,14 @@ export class ProjectGraphError extends Error {
       | ProjectsWithConflictingNamesError
       | ProcessDependenciesError
       | ProcessProjectGraphError
+      | CreateMetadataError
     >,
     partialProjectGraph: ProjectGraph,
     partialSourceMaps: ConfigurationSourceMaps
   ) {
-    super(`Failed to process project graph.`);
+    super(
+      `Failed to process project graph. Run "nx reset" to fix this. Please report the issue if you keep seeing it.`
+    );
     this.name = this.constructor.name;
     this.#errors = errors;
     this.#partialProjectGraph = partialProjectGraph;
@@ -198,6 +198,73 @@ export class MergeNodesError extends Error {
   }
 }
 
+export class CreateMetadataError extends Error {
+  constructor(public readonly error: Error, public readonly plugin: string) {
+    super(`The "${plugin}" plugin threw an error while creating metadata:`, {
+      cause: error,
+    });
+    this.name = this.constructor.name;
+  }
+}
+
+export class ProcessDependenciesError extends Error {
+  constructor(public readonly pluginName: string, { cause }) {
+    super(
+      `The "${pluginName}" plugin threw an error while creating dependencies:`,
+      {
+        cause,
+      }
+    );
+    this.name = this.constructor.name;
+    this.stack = `${this.message}\n  ${cause.stack.split('\n').join('\n  ')}`;
+  }
+}
+
+export class ProcessProjectGraphError extends Error {
+  constructor(public readonly pluginName: string, { cause }) {
+    super(
+      `The "${pluginName}" plugin threw an error while processing the project graph:`,
+      {
+        cause,
+      }
+    );
+    this.name = this.constructor.name;
+    this.stack = `${this.message}\n  ${cause.stack.split('\n').join('\n  ')}`;
+  }
+}
+
+export class AggregateProjectGraphError extends Error {
+  constructor(
+    public readonly errors: Array<
+      CreateMetadataError | ProcessDependenciesError | ProcessProjectGraphError
+    >,
+    public readonly partialProjectGraph: ProjectGraph
+  ) {
+    super('Failed to create project graph. See above for errors');
+    this.name = this.constructor.name;
+  }
+}
+
+export function isAggregateProjectGraphError(
+  e: unknown
+): e is AggregateProjectGraphError {
+  return (
+    e instanceof AggregateProjectGraphError ||
+    (typeof e === 'object' &&
+      'name' in e &&
+      e?.name === AggregateProjectGraphError.prototype.name)
+  );
+}
+
+export function isCreateMetadataError(e: unknown): e is CreateMetadataError {
+  return (
+    e instanceof CreateMetadataError ||
+    (typeof e === 'object' &&
+      'name' in e &&
+      e?.name === CreateMetadataError.prototype.name)
+  );
+}
+
 export function isCreateNodesError(e: unknown): e is CreateNodesError {
   return (
     e instanceof CreateNodesError ||
@@ -232,6 +299,15 @@ export class DaemonProjectGraphError extends Error {
     super(
       `The Daemon Process threw an error while calculating the project graph. Convert this error to a ProjectGraphError to get more information.`
     );
+    this.name = this.constructor.name;
+  }
+}
+
+export class LoadPluginError extends Error {
+  constructor(public plugin: string, cause: Error) {
+    super(`Could not load plugin ${plugin}`, {
+      cause,
+    });
     this.name = this.constructor.name;
   }
 }

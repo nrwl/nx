@@ -187,6 +187,52 @@ describe('workspace files', () => {
     `);
   });
 
+  describe('globbing', () => {
+    let context: WorkspaceContext;
+    let fs: TempFs;
+
+    beforeEach(async () => {
+      fs = new TempFs('workspace-files');
+
+      await fs.createFiles({
+        'file.txt': '',
+        'file.css': '',
+        'file.js': '',
+      });
+
+      context = new WorkspaceContext(
+        fs.tempDir,
+        cacheDirectoryForWorkspace(fs.tempDir)
+      );
+    });
+
+    afterEach(() => {
+      context = null;
+      fs.reset();
+    });
+
+    it('should glob', () => {
+      const results = context.glob(['**/*.txt']);
+      expect(results).toContain('file.txt');
+      expect(results).not.toContain('file.css');
+      expect(results).not.toContain('file.js');
+    });
+
+    it('should glob and exclude patterns', () => {
+      const results = context.glob(['**/*'], ['**/*.txt']);
+      expect(results).not.toContain('file.txt');
+      expect(results).toContain('file.css');
+      expect(results).toContain('file.js');
+    });
+
+    it('should glob and not exclude if exclude is empty', () => {
+      const results = context.glob(['**/*'], []);
+      expect(results).toContain('file.txt');
+      expect(results).toContain('file.css');
+      expect(results).toContain('file.js');
+    });
+  });
+
   // describe('errors', () => {
   //   it('it should infer names of configuration files without a name', async () => {
   //     const fs = new TempFs('workspace-files');

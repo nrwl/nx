@@ -3,11 +3,14 @@ import type { Executor, ExecutorContext } from 'nx/src/config/misc-interfaces';
 import type { ProjectsConfigurations } from 'nx/src/devkit-exports';
 
 import { requireNx } from '../../nx';
+import { NX_VERSION } from './package-json';
+import { lt } from 'semver';
 
 const {
   Workspaces,
   readNxJsonFromDisk,
   retrieveProjectConfigurationsWithAngularProjects,
+  readProjectConfigurationsFromRootMap,
 } = requireNx();
 
 /**
@@ -32,7 +35,24 @@ export function convertNxExecutor(executor: Executor) {
               projects: await retrieveProjectConfigurationsWithAngularProjects(
                 builderContext.workspaceRoot,
                 nxJsonConfiguration
-              ).then((p) => (p as any).projectNodes ?? p.projects),
+              ).then((p) => {
+                if ((p as any).projectNodes) {
+                  return (p as any).projectNodes;
+                }
+                // v18.3.4 changed projects to be keyed by root
+                // rather than project name
+                if (lt(NX_VERSION, '18.3.4')) {
+                  return p.projects;
+                }
+
+                if (readProjectConfigurationsFromRootMap) {
+                  return readProjectConfigurationsFromRootMap(p.projects);
+                }
+
+                throw new Error(
+                  'Unable to successfully map Nx executor -> Angular Builder'
+                );
+              }),
             }
           : // TODO(v19): remove retrieveProjectConfigurations. This is to be backwards compatible with Nx 16.5 and below.
             (workspaces as any).readProjectsConfigurations({

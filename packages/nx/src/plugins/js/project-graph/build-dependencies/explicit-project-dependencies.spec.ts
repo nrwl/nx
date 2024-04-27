@@ -580,7 +580,9 @@ async function createContext(
 
   return {
     externalNodes: builder.getUpdatedProjectGraph().externalNodes,
-    projects: projects,
+    projects: Object.fromEntries(
+      Object.entries(projects).map(([root, config]) => [config.name, config])
+    ),
     nxJsonConfiguration: nxJson,
     filesToProcess: fileMap,
     fileMap: fileMap,

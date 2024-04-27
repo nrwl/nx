@@ -30,8 +30,11 @@ async function* runCustomServer(
 ) {
   process.env.NX_NEXT_DIR ??= root;
   process.env.NX_NEXT_PUBLIC_DIR = join(root, 'public');
+  const httpProtocol = options.customServerHttps ? 'https' : 'http';
 
-  const baseUrl = `http://${options.hostname || 'localhost'}:${options.port}`;
+  const baseUrl = `${httpProtocol}://${options.hostname || 'localhost'}:${
+    options.port
+  }`;
 
   const customServerBuild = await runExecutor(
     parseTargetString(options.customServerTarget, context),

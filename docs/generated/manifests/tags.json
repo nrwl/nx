@@ -260,13 +260,6 @@
     },
     {
       "description": "",
-      "file": "shared/concepts/how-project-graph-is-built",
-      "id": "how-project-graph-is-built",
-      "name": "How the Project Graph is Built",
-      "path": "/concepts/more-concepts/how-project-graph-is-built"
-    },
-    {
-      "description": "",
       "file": "shared/recipes/analyze-source-files",
       "id": "analyze-source-files",
       "name": "Disable Graph Links Created from Analyzing Source Files",
@@ -308,13 +301,6 @@
       "id": "nx-plugins",
       "name": "What Are Nx Plugins",
       "path": "/concepts/nx-plugins"
-    },
-    {
-      "description": "",
-      "file": "shared/monorepo-nx-enterprise",
-      "id": "monorepo-nx-enterprise",
-      "name": "Using Nx at Enterprises",
-      "path": "/concepts/more-concepts/monorepo-nx-enterprise"
     },
     {
       "description": "",
@@ -406,13 +392,6 @@
     },
     {
       "description": "",
-      "file": "shared/monorepo-nx-enterprise",
-      "id": "monorepo-nx-enterprise",
-      "name": "Using Nx at Enterprises",
-      "path": "/concepts/more-concepts/monorepo-nx-enterprise"
-    },
-    {
-      "description": "",
       "file": "shared/workspace/applications-and-libraries",
       "id": "applications-and-libraries",
       "name": "Applications and Libraries",
@@ -422,7 +401,7 @@
       "description": "",
       "file": "shared/workspace/creating-libraries",
       "id": "creating-libraries",
-      "name": "Creating Libraries",
+      "name": "When to Create a New Library",
       "path": "/concepts/more-concepts/creating-libraries"
     },
     {
@@ -608,13 +587,6 @@
     },
     {
       "description": "",
-      "file": "shared/concepts/how-project-graph-is-built",
-      "id": "how-project-graph-is-built",
-      "name": "How the Project Graph is Built",
-      "path": "/concepts/more-concepts/how-project-graph-is-built"
-    },
-    {
-      "description": "",
       "file": "shared/recipes/plugins/project-graph-plugins",
       "id": "project-graph-plugins",
       "name": "Modify the Project Graph",
@@ -628,13 +600,6 @@
       "id": "nx-plugins",
       "name": "What Are Nx Plugins",
       "path": "/concepts/nx-plugins"
-    },
-    {
-      "description": "",
-      "file": "shared/guides/nx-devkit-angular-devkit",
-      "id": "nx-devkit-angular-devkit",
-      "name": "Nx Devkit and Angular Devkit",
-      "path": "/concepts/more-concepts/nx-devkit-angular-devkit"
     },
     {
       "description": "",
@@ -663,6 +628,13 @@
       "id": "project-graph-plugins",
       "name": "Modify the Project Graph",
       "path": "/extending-nx/recipes/project-graph-plugins"
+    },
+    {
+      "description": "The Nx Plugin for Angular contains executors, generators, and utilities for managing Angular applications and libraries within an Nx workspace. It provides: \n\n- Integration with libraries such as Storybook, Jest, ESLint, Tailwind CSS, Playwright and Cypress. \n\n- Generators to help scaffold code quickly (like: Micro Frontends, Libraries, both internal to your codebase and publishable to npm) \n\n- Single Component Application Modules (SCAMs) \n\n- NgRx helpers. \n\n- Utilities for automatic workspace refactoring.",
+      "file": "generated/packages/generated/packages/angular/documents/nx-devkit-angular-devkit",
+      "id": "nx-devkit-angular-devkit",
+      "name": "Nx Devkit and Angular Devkit",
+      "path": "/nx-api/angular/documents/nx-devkit-angular-devkit"
     }
   ],
   "repository-types": [

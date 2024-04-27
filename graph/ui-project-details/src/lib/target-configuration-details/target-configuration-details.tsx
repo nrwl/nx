@@ -141,13 +141,13 @@ export const TargetConfigurationDetails = forwardRef(
         : true);
 
     return (
-      <div className="rounded-md border border-slate-200 dark:border-slate-700/60 relative overflow-hidden">
+      <div className="relative overflow-hidden rounded-md border border-slate-200 dark:border-slate-700/60">
         <header
           className={twMerge(
-            `group hover:bg-slate-50 dark:hover:bg-slate-800/60 cursor-pointer`,
+            `group cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/60`,
             isCompact ? 'px-2 py-1' : 'p-2',
             !collapsed
-              ? 'bg-slate-50 dark:bg-slate-800/60 border-b dark:border-slate-700/60 dark:border-slate-300/10 '
+              ? 'border-b bg-slate-50 dark:border-slate-700/60 dark:border-slate-300/10 dark:bg-slate-800/60 '
               : ''
           )}
           onClick={handleCollapseToggle}
@@ -162,7 +162,7 @@ export const TargetConfigurationDetails = forwardRef(
               <h3 className="font-medium dark:text-slate-300">{targetName}</h3>
               {collapsed &&
                 targetConfiguration?.executor !== '@nx/js:release-publish' && (
-                  <p className="text-slate-400 text-sm">
+                  <p className="text-sm text-slate-400">
                     {singleCommand
                       ? singleCommand
                       : targetConfiguration.executor}
@@ -194,7 +194,7 @@ export const TargetConfigurationDetails = forwardRef(
             <div className="flex items-center gap-2">
               {onViewInTaskGraph && (
                 <button
-                  className="text-slate-600 dark:text-slate-300 text-sm ring-1 ring-inset ring-slate-400/40 dark:ring-slate-400/30 hover:bg-slate-200 dark:hover:bg-slate-700/60 p-1 bg-inherit rounded-md"
+                  className="rounded-md bg-inherit p-1 text-sm text-slate-600 ring-1 ring-inset ring-slate-400/40 hover:bg-slate-200 dark:text-slate-300 dark:ring-slate-400/30 dark:hover:bg-slate-700/60"
                   // TODO: fix tooltip overflow in collapsed state
                   data-tooltip={collapsed ? false : 'View in Task Graph'}
                   data-tooltip-align-right
@@ -211,7 +211,7 @@ export const TargetConfigurationDetails = forwardRef(
 
               {onRunTarget && (
                 <span
-                  className="text-slate-600 dark:text-slate-300 text-sm ring-1 ring-inset ring-slate-400/40 dark:ring-slate-400/30 hover:bg-slate-200 dark:hover:bg-slate-700/60 p-1 bg-inherit rounded-md"
+                  className="rounded-md bg-inherit p-1 text-sm text-slate-600 ring-1 ring-inset ring-slate-400/40 hover:bg-slate-200 dark:text-slate-300 dark:ring-slate-400/30 dark:hover:bg-slate-700/60"
                   // TODO: fix tooltip overflow in collapsed state
                   data-tooltip={collapsed ? false : 'Run Target'}
                   data-tooltip-align-right
@@ -228,8 +228,8 @@ export const TargetConfigurationDetails = forwardRef(
             </div>
           </div>
           {!collapsed && (
-            <div className="flex items-center text-sm mt-2 ml-5">
-              <span className="flex-1 flex min-w-0 items-center">
+            <div className="mt-2 ml-5 flex items-center text-sm">
+              <span className="flex min-w-0 flex-1 items-center">
                 <SourceInfo
                   data={sourceMap[`targets.${targetName}`]}
                   propertyKey={`targets.${targetName}`}
@@ -238,7 +238,7 @@ export const TargetConfigurationDetails = forwardRef(
               </span>
               {targetName !== 'nx-release-publish' && (
                 <div className="flex items-center gap-2">
-                  <code className="ml-4 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300 font-mono px-2 py-1 rounded">
+                  <code className="ml-4 rounded bg-gray-100 px-2 py-1 font-mono text-gray-800 dark:bg-gray-700 dark:text-gray-300">
                     nx run {projectName}:{targetName}
                   </code>
                   <span>
@@ -257,12 +257,12 @@ export const TargetConfigurationDetails = forwardRef(
         {/* body */}
         {!collapsed && (
           <div className="p-4 text-base">
-            <div className="mb-4 group">
+            <div className="group mb-4">
               <h4 className="mb-4">
                 {singleCommand ? (
                   <span className="font-medium">
                     Command
-                    <span className="hidden group-hover:inline ml-2 mb-1">
+                    <span className="ml-2 mb-1 hidden group-hover:inline">
                       <CopyToClipboard
                         onCopy={() =>
                           handleCopyClick(`"command": "${singleCommand}"`)
@@ -312,7 +312,7 @@ export const TargetConfigurationDetails = forwardRef(
                       <TooltipTriggerText>Inputs</TooltipTriggerText>
                     </span>
                   </Tooltip>
-                  <span className="hidden group-hover:inline ml-2 mb-1">
+                  <span className="ml-2 mb-1 hidden group-hover:inline">
                     <CopyToClipboard
                       onCopy={() =>
                         handleCopyClick(
@@ -324,7 +324,7 @@ export const TargetConfigurationDetails = forwardRef(
                     />
                   </span>
                 </h4>
-                <ul className="list-disc pl-5 mb-4">
+                <ul className="mb-4 list-disc pl-5">
                   {targetConfiguration.inputs.map((input, idx) => {
                     const sourceInfo = selectSourceInfo(
                       sourceMap,
@@ -337,7 +337,7 @@ export const TargetConfigurationDetails = forwardRef(
                       >
                         <TargetConfigurationProperty data={input}>
                           {sourceInfo && (
-                            <span className="opacity-0 flex shrink-1 min-w-0 group-hover/line:opacity-100 transition-opacity duration-150 ease-in-out inline pl-4">
+                            <span className="shrink-1 inline flex min-w-0 pl-4 opacity-0 transition-opacity duration-150 ease-in-out group-hover/line:opacity-100">
                               <SourceInfo
                                 data={sourceInfo}
                                 propertyKey={`targets.${targetName}.inputs`}
@@ -362,7 +362,7 @@ export const TargetConfigurationDetails = forwardRef(
                       <TooltipTriggerText>Outputs</TooltipTriggerText>
                     </span>
                   </Tooltip>
-                  <span className="hidden group-hover:inline ml-2 mb-1">
+                  <span className="ml-2 mb-1 hidden group-hover:inline">
                     <CopyToClipboard
                       onCopy={() =>
                         handleCopyClick(
@@ -374,7 +374,7 @@ export const TargetConfigurationDetails = forwardRef(
                     />
                   </span>
                 </h4>
-                <ul className="list-disc pl-5 mb-4">
+                <ul className="mb-4 list-disc pl-5">
                   {targetConfiguration.outputs?.map((output, idx) => {
                     const sourceInfo = selectSourceInfo(
                       sourceMap,
@@ -387,7 +387,7 @@ export const TargetConfigurationDetails = forwardRef(
                       >
                         <TargetConfigurationProperty data={output}>
                           {sourceInfo && (
-                            <span className="opacity-0 flex shrink-1 min-w-0 group-hover/line:opacity-100 transition-opacity duration-150 ease-in-out inline pl-4">
+                            <span className="shrink-1 inline flex min-w-0 pl-4 opacity-0 transition-opacity duration-150 ease-in-out group-hover/line:opacity-100">
                               <SourceInfo
                                 data={sourceInfo}
                                 propertyKey={`targets.${targetName}.outputs`}
@@ -412,7 +412,7 @@ export const TargetConfigurationDetails = forwardRef(
                       <TooltipTriggerText>Depends On</TooltipTriggerText>
                     </span>
                   </Tooltip>
-                  <span className="opacity-0 group-hover/line:opacity-100 transition-opacity duration-150 ease-in-out inline pl-4">
+                  <span className="inline pl-4 opacity-0 transition-opacity duration-150 ease-in-out group-hover/line:opacity-100">
                     <CopyToClipboard
                       onCopy={() =>
                         handleCopyClick(
@@ -424,7 +424,7 @@ export const TargetConfigurationDetails = forwardRef(
                     />
                   </span>
                 </h4>
-                <ul className="list-disc pl-5 mb-4">
+                <ul className="mb-4 list-disc pl-5">
                   {targetConfiguration.dependsOn.map((dep, idx) => {
                     const sourceInfo = selectSourceInfo(
                       sourceMap,
@@ -437,7 +437,7 @@ export const TargetConfigurationDetails = forwardRef(
                         key={`dependsOn-${idx}`}
                       >
                         <TargetConfigurationProperty data={dep}>
-                          <span className="opacity-0 flex shrink-1 min-w-0 group-hover/line:opacity-100 transition-opacity duration-150 ease-in-out inline pl-4">
+                          <span className="shrink-1 inline flex min-w-0 pl-4 opacity-0 transition-opacity duration-150 ease-in-out group-hover/line:opacity-100">
                             {sourceInfo && (
                               <SourceInfo
                                 data={sourceInfo}
@@ -475,7 +475,7 @@ export const TargetConfigurationDetails = forwardRef(
                           `targets.${targetName}.options.${propertyName}`
                         );
                         return sourceInfo ? (
-                          <span className="pl-4 flex shrink-1 min-w-0">
+                          <span className="shrink-1 flex min-w-0 pl-4">
                             <SourceInfo
                               data={sourceInfo}
                               propertyKey={`targets.${targetName}.options.${propertyName}`}
@@ -493,7 +493,7 @@ export const TargetConfigurationDetails = forwardRef(
 
             {shouldRenderConfigurations ? (
               <>
-                <h4 className="py-2 mb-4">
+                <h4 className="mb-4 py-2">
                   <Tooltip
                     openAction="hover"
                     content={
@@ -523,7 +523,7 @@ export const TargetConfigurationDetails = forwardRef(
                         `targets.${targetName}.configurations.${propertyName}`
                       );
                       return sourceInfo ? (
-                        <span className="pl-4 flex shrink-1 min-w-0">
+                        <span className="shrink-1 flex min-w-0 pl-4">
                           <SourceInfo
                             data={sourceInfo}
                             propertyKey={`targets.${targetName}.configurations.${propertyName}`}

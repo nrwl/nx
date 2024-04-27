@@ -1,4 +1,5 @@
 import { HeartIcon } from '@heroicons/react/24/solid';
+import { ThemeSwitcher } from '@nx/nx-dev/ui-theme';
 import Link from 'next/link';
 
 export function Footer(): JSX.Element {
@@ -178,6 +179,9 @@ export function Footer(): JSX.Element {
                   <item.icon className="h-6 w-6" aria-hidden="true" />
                 </Link>
               ))}
+            </div>
+            <div className="flex items-center text-sm">
+              Preferences <ThemeSwitcher />
             </div>
           </div>
           <div className="mt-12 grid grid-cols-2 gap-8 xl:col-span-2 xl:mt-0">
