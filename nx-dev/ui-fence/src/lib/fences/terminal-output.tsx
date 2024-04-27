@@ -17,7 +17,7 @@ export function TerminalOutput({
         <div className="items-left flex flex-col">
           {commandLines.map((line, index) => {
             return (
-              <div key={index} className="flex items-center">
+              <div key={index} className="flex">
                 <p className="mt-0.5">
                   {path && (
                     <span className="text-purple-600 dark:text-fuchsia-500">
