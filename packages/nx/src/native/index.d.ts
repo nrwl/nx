@@ -141,6 +141,8 @@ export interface InputsInput {
   projects?: string | Array<string>
 }
 
+export function isWasm(): boolean
+
 /** Stripped version of the NxJson interface for use in rust */
 export interface NxJson {
   namedInputs?: Record<string, Array<JsInputs>>

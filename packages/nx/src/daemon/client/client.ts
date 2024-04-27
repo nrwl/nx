@@ -29,6 +29,7 @@ import {
   DaemonProjectGraphError,
   ProjectGraphError,
 } from '../../project-graph/error-types';
+import { isWasm } from '../../native';
 
 const DAEMON_ENV_SETTINGS = {
   NX_PROJECT_GLOB_CACHE: 'false',
@@ -49,6 +50,7 @@ enum DaemonStatus {
 
 export class DaemonClient {
   private readonly nxJson: NxJsonConfiguration | null;
+
   constructor() {
     try {
       this.nxJson = readNxJson();
@@ -93,6 +95,7 @@ export class DaemonClient {
       // CI=true,env=false => no daemon
       // CI=true,env=true => daemon
       if (
+        isWasm() ||
         (isCI() && env !== 'true') ||
         isDocker() ||
         isDaemonDisabled() ||

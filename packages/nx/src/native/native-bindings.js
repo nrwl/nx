@@ -375,6 +375,7 @@ module.exports.findImports = nativeBinding.findImports
 module.exports.getFilesForOutputs = nativeBinding.getFilesForOutputs
 module.exports.hashArray = nativeBinding.hashArray
 module.exports.hashFile = nativeBinding.hashFile
+module.exports.isWasm = nativeBinding.isWasm
 module.exports.remove = nativeBinding.remove
 module.exports.testOnlyTransferFileMap = nativeBinding.testOnlyTransferFileMap
 module.exports.transferProjectGraph = nativeBinding.transferProjectGraph
