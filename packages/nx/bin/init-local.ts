@@ -81,10 +81,6 @@ export function rewriteTargetsAndProjects(args: string[]) {
   return newArgs;
 }
 
-function wrapIntoQuotesIfNeeded(arg: string) {
-  return arg.indexOf(':') > -1 ? `"${arg}"` : arg;
-}
-
 function isKnownCommand(command: string) {
   const commands = [
     ...Object.keys(

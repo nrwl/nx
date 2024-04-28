@@ -494,6 +494,7 @@ export function interpolateArgsIntoCommand(
               opts.parsedArgs[k] === opts.unknownOptions[k]
           )
           .map((k) => `--${k}=${opts.unknownOptions[k]}`)
+          .map(wrapArgIntoQuotesIfNeeded)
           .join(' ');
     }
     if (opts.args) {
@@ -505,7 +506,9 @@ export function interpolateArgsIntoCommand(
         opts.unparsedCommandArgs
       );
       if (filterdParsedOptions.length > 0) {
-        args += ` ${filterdParsedOptions.join(' ')}`;
+        args += ` ${filterdParsedOptions
+          .map(wrapArgIntoQuotesIfNeeded)
+          .join(' ')}`;
       }
     }
     return `${command}${args}`;
@@ -626,4 +629,22 @@ function registerProcessListener() {
     // no exit here because we expect child processes to terminate which
     // will store results to the cache and will terminate this process
   });
+}
+
+function wrapArgIntoQuotesIfNeeded(arg: string): string {
+  if (arg.includes('=')) {
+    const [key, value] = arg.split('=');
+    if (
+      key.startsWith('--') &&
+      value.includes(' ') &&
+      !(value[0] === "'" || value[0] === '"')
+    ) {
+      return `${key}="${value}"`;
+    }
+    return arg;
+  } else if (arg.includes(' ') && !(arg[0] === "'" || arg[0] === '"')) {
+    return `"${arg}"`;
+  } else {
+    return arg;
+  }
 }
