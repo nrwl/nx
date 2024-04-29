@@ -66,14 +66,14 @@ export default function BlogPostDetail({ post }: BlogPostDetailProps) {
         </div>
         <div id="content-wrapper">
           <header className="mx-auto mb-16 mt-8 max-w-3xl px-4 lg:px-0">
-            <h1 className="prose prose-slate dark:prose-invert text-center text-[40px] font-semibold">
+            <h1 className="text-center text-4xl font-semibold text-slate-900 dark:text-white">
               {post.title}
             </h1>
           </header>
           {post.cover_image && (
             <div className="mx-auto mb-16 aspect-[1.9] w-full max-w-screen-md">
               <Image
-                className="h-full w-full object-cover"
+                className="h-full w-full object-cover md:rounded-md"
                 src={post.cover_image}
                 alt=""
                 width={1400}
