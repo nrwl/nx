@@ -54,7 +54,6 @@ import { VideoLink, videoLink } from './lib/tags/video-link.component';
 // import { SvgAnimation, svgAnimation } from './lib/tags/svg-animation.component';
 import { Pill } from './lib/tags/pill.component';
 import { pill } from './lib/tags/pill.schema';
-import { frameworkIcons } from './lib/icons';
 import { fence } from './lib/nodes/fence.schema';
 import { FenceWrapper } from './lib/nodes/fence-wrapper.component';
 
@@ -138,8 +137,6 @@ export const parseMarkdown: (markdown: string) => Node = (markdown) => {
   const tokens = tokenizer.tokenize(markdown);
   return parse(tokens);
 };
-
-export { frameworkIcons };
 
 export const renderMarkdown: (
   documentContent: string,

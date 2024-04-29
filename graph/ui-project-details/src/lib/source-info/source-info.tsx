@@ -11,7 +11,7 @@ export function SourceInfo(props: {
   // Every other property within in the target has the form `target.${targetName}.${propertyName}
   const isTarget = props.propertyKey.split('.').length === 2;
   return (
-    <span className="inline-flex shrink-1 min-w-0 items-center gap-2">
+    <span className="inline-flex min-w-0 items-center gap-2">
       <Tooltip
         openAction="hover"
         strategy="fixed"
@@ -36,7 +36,7 @@ export function SourceInfo(props: {
         {/*</span>*/}
         <span
           className={twMerge(
-            'italic text-sm min-w-0 truncate',
+            'min-w-0 truncate text-sm italic',
             props.color ?? 'text-gray-500'
           )}
         >

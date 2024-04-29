@@ -8,7 +8,7 @@ import {
 import { NextSeo } from 'next-seo';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { frameworkIcons } from '@nx/nx-dev/ui-markdoc';
+import { frameworkIcons } from '@nx/graph/ui-icons';
 import { ReactNode, useEffect, useState } from 'react';
 
 interface NewYearTip {

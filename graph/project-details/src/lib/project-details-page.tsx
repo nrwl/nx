@@ -1,12 +1,12 @@
 /* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
-import { ProjectGraphProjectNode } from '@nx/devkit';
+import type { ProjectGraphProjectNode } from '@nx/devkit';
 import {
   ScrollRestoration,
   useParams,
   useRouteLoaderData,
 } from 'react-router-dom';
-import { ProjectDetailsWrapper } from './project-details-wrapper';
+import ProjectDetailsWrapper from './project-details-wrapper';
 import {
   fetchProjectGraph,
   getProjectGraphDataService,
