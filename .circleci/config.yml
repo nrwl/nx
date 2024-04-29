@@ -146,6 +146,7 @@ jobs:
       #     gradle-version: '8.5'
       - run-pnpm-install:
           os: linux
+      - run: echo hi
       - run: npx nx test eslint
       # - run:
       #     name: Check Documentation
