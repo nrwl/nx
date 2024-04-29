@@ -32,23 +32,23 @@ distribute-on:
   large-changeset: 10 linux-medium-js
 ```
 
-### --with-env-vars
+### --with-env-vars (Nx Agents Only)
 
-By default, invoking `npx nx-cloud start-ci-run` will take all environment variables prefixed with `NX_` and send them over to agents.
+By default, invoking `npx nx-cloud start-ci-run` will take all environment variables prefixed with `NX_` and send them over to Nx Agents.
 This means that your access token, verbose logging configuration and other Nx-related environment variables will be the same on your
-main CI jobs and the agents.
+main CI jobs and the Nx Agent machines.
 
-If you want to pass other environment variables from the main job to agents, you can do it as follows: `--with-env-vars="VAR1,VAR2"`.
-This will set `VAR1` and `VAR2` on agents to the same values set on the main job before any steps run.
+If you want to pass other environment variables from the main job to Nx Agents, you can do it as follows: `--with-env-vars="VAR1,VAR2"`.
+This will set `VAR1` and `VAR2` on Nx Agents to the same values set on the main job before any steps run.
 
-You can also pass `--with-env-vars="auto"` which will filter out all OS-specific environment variables and pass the rest to agents.
+You can also pass `--with-env-vars="auto"` which will filter out all OS-specific environment variables and pass the rest to Nx Agents.
 
 {% callout type="warning" title="Use Caution With 'auto'" %}
-Using `--with-env-vars="auto"` will override any existing environment variables on the agent, some of which might be critical to the
-functionality of that machine. In case of unexpected issues on agents, try fallback to the explicit variable definition using `--with-env-vars="VAR1,VAR2,..."`.
+Using `--with-env-vars="auto"` will override any existing environment variables on the Nx Agent, some of which might be critical to the
+functionality of that machine. In case of unexpected issues on Nx Agents, try fallback to the explicit variable definition using `--with-env-vars="VAR1,VAR2,..."`.
 {% /callout %}
 
-Note: none of the values passed to agents are stored by Nx Cloud.
+Note: none of the values passed to Nx Agents are stored by Nx Cloud.
 
 ### --use-dte-by-default
 
