@@ -50,6 +50,9 @@ The following resource classes are available:
 - `docker_linux_amd64/large+`
 - `docker_linux_amd64/extra_large`
 - `docker_linux_amd64/extra_large+`
+- `docker_linux_arm64/medium`
+- `docker_linux_arm64/large`
+- `docker_linux_arm64/extra_large`
 - `windows/medium`
 
 See their detailed description and pricing at [nx.app/pricing](https://nx.app/pricing).
