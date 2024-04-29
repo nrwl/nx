@@ -132,12 +132,10 @@ jobs:
       NX_CLOUD_DTE_V2: 'true'
     steps:
       - checkout
-      - run: echo hello
-      - run: echo $TEST_VAL
-      - run: echo bye
-      # - nx/set-shas:
-      #     main-branch-name: 'master'
-      # - run: npx nx-cloud@next start-ci-run --distribute-on=".nx/workflows/dynamic-changesets.yaml" --stop-agents-after="e2e"
+      - nx/set-shas:
+          main-branch-name: 'master'
+      - run: npx nx-cloud@next start-ci-run --distribute-on=".nx/workflows/dynamic-changesets.yaml" --stop-agents-after="e2e"
+      - run: npx nx test eslint
       # - run:
       #     command: |
       #       sudo apt-get update
