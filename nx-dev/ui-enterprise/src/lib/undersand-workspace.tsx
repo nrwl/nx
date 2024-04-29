@@ -1,17 +1,17 @@
 import {
-  ArrowsRightLeftIcon,
+  ArrowsRightLeftIcon, BuildingOffice2Icon,
   ChevronRightIcon,
-  ClipboardDocumentIcon,
+  ClipboardDocumentIcon, Cog6ToothIcon,
   InboxArrowDownIcon,
   LockClosedIcon,
   SparklesIcon,
-  Square3Stack3DIcon,
+  Square3Stack3DIcon, SquaresPlusIcon,
 } from '@heroicons/react/24/outline';
-import { animate, motion, useMotionValue, useTransform } from 'framer-motion';
-import { useEffect } from 'react';
-import { SectionHeading } from './temp/typography';
-import { BentoGrid, BentoGridItem } from './bento-grid';
-import { cx } from '@nx/nx-dev/ui-primitives';
+import {animate, motion, useMotionValue, useTransform} from 'framer-motion';
+import {useEffect} from 'react';
+import {SectionHeading} from './temp/typography';
+import {BentoGrid, BentoGridItem} from './bento-grid';
+import {cx} from '@nx/nx-dev/ui-primitives';
 
 export function UnderstandWorkspace(): JSX.Element {
   return (
@@ -20,6 +20,10 @@ export function UnderstandWorkspace(): JSX.Element {
         <div className="mx-auto max-w-2xl text-center">
           <SectionHeading as="h2" variant="title" id="solve-ci">
             Solve your CI
+          </SectionHeading>
+          <SectionHeading as="p" variant="subtitle" className="mt-6">
+            Nx and Nx Cloud are engineered to integrate seamlessly, delivering an end-to-end solution that
+            results in a smart monorepo and fast CI.
           </SectionHeading>
         </div>
         {/*FEATURES CONTAINER*/}
@@ -35,6 +39,54 @@ export function UnderstandWorkspace(): JSX.Element {
             />
           ))}
         </BentoGrid>
+        <div className="mx-auto mt-16 max-w-2xl space-y-12 sm:mt-20">
+          <div className="space-y-6 lg:space-y-12">
+            <div className="flex items-start gap-6">
+              <div className="rounded-full p-3 shadow-sm ring-1 ring-slate-200 dark:ring-slate-800/60">
+                <SquaresPlusIcon className="h-5 w-5 text-slate-900 dark:text-slate-100"/>
+              </div>
+              <div>
+                <h4 className="relative text-base font-medium capitalize leading-6 text-slate-900 dark:text-slate-100">
+                  Both faster and cheaper
+                </h4>
+                <p className="mt-2">
+                  Current CI providers aren’t made for monorepos. They’re low-level and static in their configuration. FINISH THIS
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start gap-6">
+              <div className="rounded-full p-3 shadow-sm ring-1 ring-slate-200 dark:ring-slate-800/60">
+                <Cog6ToothIcon className="h-5 w-5 text-slate-900 dark:text-slate-100"/>
+              </div>
+              <div>
+                <h4 className="relative text-base font-medium capitalize leading-6 text-slate-900 dark:text-slate-100">
+                  Solving e2e tests
+                </h4>
+                <p className="mt-2">
+                  Atomizer splits large e2e projects into fine-grained test runs, enabling more efficient distribution
+                  and dramatically reducing CI times. It also identifies flaky e2e tests at the file level and re-runs
+                  those specific tests.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start gap-6">
+              <div className="rounded-full p-3 shadow-sm ring-1 ring-slate-200 dark:ring-slate-800/60">
+                <BuildingOffice2Icon className="h-5 w-5 text-slate-900 dark:text-slate-100"/>
+              </div>
+              <div>
+                <h4 className="relative text-base font-medium capitalize leading-6 text-slate-900 dark:text-slate-100">
+                  What, not how
+                </h4>
+                <p className="mt-2">
+                  Nx Enterprise simplifies CI configuration, emphasizing which tasks to execute over how with no need to
+                  tweak your CI scripts as your monorepo evolves. This simplified configuration cuts down on CI
+                  maintenance and increases stability.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
       </div>
     </section>
   );
@@ -109,25 +161,27 @@ const Caching = () => {
       initial="hidden"
       variants={variants}
       whileInView="visible"
-      viewport={{ once: true }}
+      viewport={{once: true}}
       className="flex h-full min-h-[12rem] w-full flex-1 flex-col gap-2"
     >
       <motion.div className="flex items-center gap-1.5 text-center text-sm italic">
-        <SparklesIcon aria-hidden="true" className="h-4 w-4" />
+        <SparklesIcon aria-hidden="true" className="h-4 w-4"/>
         <span className="font-semibold">
-          <Counter value={items.length + 123} duration={5} />
+          <Counter value={items.length + 123} duration={5}/>
         </span>
         tasks replayed instantly with cache
       </motion.div>
-      <div className="flex flex-1 flex-col divide-y divide-slate-100 overflow-hidden rounded-lg border border-slate-100 dark:divide-slate-700 dark:border-slate-700 dark:bg-slate-950">
+      <div
+        className="flex flex-1 flex-col divide-y divide-slate-100 overflow-hidden rounded-lg border border-slate-100 dark:divide-slate-700 dark:border-slate-700 dark:bg-slate-950">
         {items.map((i, idx) => (
           <div
             key={`project-${i}-${idx}`}
             className="flex w-full flex-row items-center gap-2 p-2 transition-colors ease-out hover:bg-slate-50/40 dark:hover:bg-slate-900/40"
           >
-            <div className="m-1 h-2.5 w-2.5 flex-none rounded-full bg-emerald-500" />
+            <div className="m-1 h-2.5 w-2.5 flex-none rounded-full bg-emerald-500"/>
             <div className="flex min-w-[4rem]">
-              <span className="inline-flex cursor-default items-center rounded-md bg-slate-50 px-2 py-1 text-xs font-medium text-slate-600 ring-1 ring-inset ring-slate-500/10 dark:bg-slate-400/10 dark:text-slate-400 dark:ring-slate-400/20">
+              <span
+                className="inline-flex cursor-default items-center rounded-md bg-slate-50 px-2 py-1 text-xs font-medium text-slate-600 ring-1 ring-inset ring-slate-500/10 dark:bg-slate-400/10 dark:text-slate-400 dark:ring-slate-400/20">
                 {i.cache}
               </span>
             </div>
@@ -216,19 +270,21 @@ const Atomizer = () => {
       initial="hidden"
       variants={variants}
       whileInView="visible"
-      viewport={{ once: true }}
+      viewport={{once: true}}
       className="flex h-full min-h-[12rem] w-full flex-1 flex-col gap-2"
     >
       <motion.div className="flex items-center gap-1.5 text-center text-sm">
         Running
-        <ChevronRightIcon aria-hidden="true" className="h-3 w-3" />
+        <ChevronRightIcon aria-hidden="true" className="h-3 w-3"/>
         <code className="text-xs font-medium">nx affected --targets=e2e</code>
       </motion.div>
-      <div className="flex flex-1 flex-col divide-y divide-slate-100 overflow-hidden rounded-lg border border-slate-100 bg-white dark:divide-slate-700 dark:border-slate-700 dark:bg-slate-950">
-        <div className="flex w-full flex-row items-center gap-2 p-2 transition-colors ease-out hover:bg-slate-50/40 dark:hover:bg-slate-900/40">
+      <div
+        className="flex flex-1 flex-col divide-y divide-slate-100 overflow-hidden rounded-lg border border-slate-100 bg-white dark:divide-slate-700 dark:border-slate-700 dark:bg-slate-950">
+        <div
+          className="flex w-full flex-row items-center gap-2 p-2 transition-colors ease-out hover:bg-slate-50/40 dark:hover:bg-slate-900/40">
           <div className="flex items-center gap-2">
             <div className="flex-none animate-pulse rounded-full bg-yellow-500/20 p-1">
-              <div className="h-2 w-2 rounded-full bg-yellow-500" />
+              <div className="h-2 w-2 rounded-full bg-yellow-500"/>
             </div>
             <div className="flex min-w-[5rem]">
               <span className="whitespace-nowrap text-sm font-medium">
@@ -246,13 +302,13 @@ const Atomizer = () => {
             className="relative flex w-full flex-row items-center gap-2 p-2 transition-colors ease-out hover:bg-slate-50/40 dark:hover:bg-slate-900/40"
           >
             {uiDialogsTests.length === idx + 1 ? (
-              <BottomConnector />
+              <BottomConnector/>
             ) : (
-              <DefaultConnector />
+              <DefaultConnector/>
             )}
-            <span aria-hidden="true" className="h-4 w-4" />
+            <span aria-hidden="true" className="h-4 w-4"/>
             <div className="flex-none animate-pulse rounded-full bg-yellow-500/20 p-1">
-              <div className="h-2 w-2 rounded-full bg-yellow-500" />
+              <div className="h-2 w-2 rounded-full bg-yellow-500"/>
             </div>
             <div className="grow truncate text-left text-sm">{i}</div>
           </div>
@@ -262,9 +318,10 @@ const Atomizer = () => {
           variants={itemVariants}
           className="flex w-full flex-row items-center gap-2 p-2 transition-colors ease-out hover:bg-slate-50/40 dark:hover:bg-slate-900/40"
         >
-          <div className="m-1 h-2.5 w-2.5 flex-none rounded-full bg-emerald-500" />
+          <div className="m-1 h-2.5 w-2.5 flex-none rounded-full bg-emerald-500"/>
           <div className="flex min-w-[5rem]">
-            <span className="inline-flex cursor-default items-center rounded-md bg-slate-50 px-2 py-1 text-xs font-medium text-slate-600 ring-1 ring-inset ring-slate-500/10 dark:bg-slate-400/10 dark:text-slate-400 dark:ring-slate-400/20">
+            <span
+              className="inline-flex cursor-default items-center rounded-md bg-slate-50 px-2 py-1 text-xs font-medium text-slate-600 ring-1 ring-inset ring-slate-500/10 dark:bg-slate-400/10 dark:text-slate-400 dark:ring-slate-400/20">
               miss
             </span>
           </div>
@@ -286,10 +343,11 @@ const Atomizer = () => {
             1 retry
           </motion.span>
         </motion.div>
-        <div className="flex w-full flex-row items-center gap-2 p-2 transition-colors ease-out hover:bg-slate-50/40 dark:hover:bg-slate-900/40">
+        <div
+          className="flex w-full flex-row items-center gap-2 p-2 transition-colors ease-out hover:bg-slate-50/40 dark:hover:bg-slate-900/40">
           <div className="flex items-center gap-2">
             <div className="flex-none animate-pulse rounded-full bg-yellow-500/20 p-1">
-              <div className="h-2 w-2 rounded-full bg-yellow-500" />
+              <div className="h-2 w-2 rounded-full bg-yellow-500"/>
             </div>
             <div className="flex min-w-[5rem]">
               <span className="whitespace-nowrap text-sm font-medium">
@@ -307,13 +365,13 @@ const Atomizer = () => {
             className="relative flex w-full flex-row items-center gap-2 p-2 transition-colors ease-out hover:bg-slate-50/40 dark:hover:bg-slate-900/40"
           >
             {loansTests.length === idx + 1 ? (
-              <BottomConnector />
+              <BottomConnector/>
             ) : (
-              <DefaultConnector />
+              <DefaultConnector/>
             )}
-            <span aria-hidden="true" className="h-4 w-4" />
+            <span aria-hidden="true" className="h-4 w-4"/>
             <div className="flex-none animate-pulse rounded-full bg-yellow-500/20 p-1">
-              <div className="h-2 w-2 rounded-full bg-yellow-500" />
+              <div className="h-2 w-2 rounded-full bg-yellow-500"/>
             </div>
             <div className="grow truncate text-left text-sm">{i}</div>
           </div>
@@ -372,7 +430,7 @@ const TaskDistribution = () => {
       initial="hidden"
       variants={variants}
       whileInView="visible"
-      viewport={{ once: true }}
+      viewport={{once: true}}
       className="relative flex h-full min-h-[12rem] w-full flex-1 flex-col gap-2"
     >
       <div className="grid max-h-full grid-cols-2 items-stretch gap-8 overflow-hidden p-1 lg:grid-cols-3">
@@ -385,27 +443,29 @@ const TaskDistribution = () => {
             Main Workflow
           </p>
           <div className="mt-2 flex flex-col gap-1">
-            <p className="overflow-x-auto truncate py-2 font-mono text-xs font-medium text-slate-900 dark:text-slate-400">
+            <p
+              className="overflow-x-auto truncate py-2 font-mono text-xs font-medium text-slate-900 dark:text-slate-400">
               nx affected --target=build,lint,test
             </p>
             <div className="flex h-1.5 w-full flex-row rounded-full">
               <div
                 title="2 tasks in completed"
                 className="cursor-pointer rounded-l-full bg-green-400 dark:bg-green-600"
-                style={{ flexGrow: 8 }}
+                style={{flexGrow: 8}}
               />
               <div
                 title="12 tasks in progress"
                 className="cursor-pointer bg-yellow-400 dark:bg-yellow-600"
-                style={{ flexGrow: 12 }}
+                style={{flexGrow: 12}}
               />
               <div
                 title="24 tasks not started"
                 className="cursor-pointer rounded-r-full bg-slate-100 dark:bg-slate-600"
-                style={{ flexGrow: 24 }}
+                style={{flexGrow: 24}}
               />
             </div>
-            <div className="mt-2 flex flex-1 flex-col divide-y divide-slate-100 overflow-auto rounded-lg border border-slate-100 dark:divide-slate-700 dark:border-slate-700">
+            <div
+              className="mt-2 flex flex-1 flex-col divide-y divide-slate-100 overflow-auto rounded-lg border border-slate-100 dark:divide-slate-700 dark:border-slate-700">
               {notStartedTasks.map((i, idx) => (
                 <motion.div
                   key={`${i}-${idx}`}
@@ -429,7 +489,8 @@ const TaskDistribution = () => {
           </p>
           <div className="flex flex-1 flex-col overflow-hidden">
             <motion.div custom={4} variants={itemVariants} className="relative">
-              <div className="sticky top-0 z-10 mt-1 rounded-md border border-slate-100 bg-slate-50 p-2 transition hover:bg-slate-100 dark:border-slate-800 dark:bg-slate-900 dark:hover:bg-slate-800">
+              <div
+                className="sticky top-0 z-10 mt-1 rounded-md border border-slate-100 bg-slate-50 p-2 transition hover:bg-slate-100 dark:border-slate-800 dark:bg-slate-900 dark:hover:bg-slate-800">
                 <div className="flex items-center gap-x-2 text-xs font-medium">
                   <div className="flex-none animate-pulse rounded-full bg-yellow-500/20 p-1">
                     <div className="h-2 w-2 rounded-full bg-yellow-500"></div>
@@ -452,7 +513,8 @@ const TaskDistribution = () => {
               </ul>
             </motion.div>
             <motion.div custom={6} variants={itemVariants} className="relative">
-              <div className="sticky top-0 z-10 mt-1 rounded-md border border-slate-100 bg-slate-50 p-2 transition hover:bg-slate-100 dark:border-slate-800 dark:bg-slate-900 dark:hover:bg-slate-800">
+              <div
+                className="sticky top-0 z-10 mt-1 rounded-md border border-slate-100 bg-slate-50 p-2 transition hover:bg-slate-100 dark:border-slate-800 dark:bg-slate-900 dark:hover:bg-slate-800">
                 <div className="flex items-center gap-x-2 text-xs font-medium">
                   <div className="flex-none animate-pulse rounded-full bg-yellow-500/20 p-1">
                     <div className="h-2 w-2 rounded-full bg-yellow-500"></div>
@@ -479,7 +541,8 @@ const TaskDistribution = () => {
               variants={itemVariants}
               className="relative hidden lg:block"
             >
-              <div className="sticky top-0 z-10 mt-1 rounded-md border border-slate-100 bg-slate-50 p-2 transition hover:bg-slate-100 dark:border-slate-800 dark:bg-slate-900 dark:hover:bg-slate-800">
+              <div
+                className="sticky top-0 z-10 mt-1 rounded-md border border-slate-100 bg-slate-50 p-2 transition hover:bg-slate-100 dark:border-slate-800 dark:bg-slate-900 dark:hover:bg-slate-800">
                 <div className="flex items-center gap-x-2 text-xs font-medium">
                   <div className="flex-none animate-pulse rounded-full bg-yellow-500/20 p-1">
                     <div className="h-2 w-2 rounded-full bg-yellow-500"></div>
@@ -511,7 +574,8 @@ const TaskDistribution = () => {
           <p className="text-sm font-medium  text-slate-700 dark:text-slate-400">
             Nx Replay
           </p>
-          <div className="flex flex-1 flex-col divide-y divide-slate-100 overflow-auto rounded-lg border border-slate-100 dark:divide-slate-800 dark:border-slate-800">
+          <div
+            className="flex flex-1 flex-col divide-y divide-slate-100 overflow-auto rounded-lg border border-slate-100 dark:divide-slate-800 dark:border-slate-800">
             {nxReplayItems.map((i, idx) => (
               <motion.div
                 key={`replay-${i}-${idx}`}
@@ -547,7 +611,7 @@ const IncreasedVisibility = () => {
       initial="hidden"
       variants={variants}
       whileInView="visible"
-      viewport={{ once: true }}
+      viewport={{once: true}}
       className="flex h-full min-h-[12rem] w-full flex-1 flex-col gap-4"
     >
       <div className="flex items-center gap-1.5">
@@ -581,23 +645,28 @@ const IncreasedVisibility = () => {
       <div>
         <div className="border-b border-slate-100 dark:border-slate-700">
           <div className="-mb-px flex space-x-4">
-            <span className="cursor-default whitespace-nowrap border-b-2 border-transparent px-0.5 py-2 text-xs font-medium text-slate-500 dark:text-slate-400">
+            <span
+              className="cursor-default whitespace-nowrap border-b-2 border-transparent px-0.5 py-2 text-xs font-medium text-slate-500 dark:text-slate-400">
               Attempt 1
             </span>
-            <span className="cursor-default whitespace-nowrap border-b-2 border-blue-500 px-0.5 py-2 text-xs font-medium text-blue-500 dark:border-sky-600 dark:text-sky-600">
+            <span
+              className="cursor-default whitespace-nowrap border-b-2 border-blue-500 px-0.5 py-2 text-xs font-medium text-blue-500 dark:border-sky-600 dark:text-sky-600">
               Attempt 2
             </span>
           </div>
         </div>
       </div>
       <p className="text-xs">Feb 23, 2024 08:57:49 - 08:57:54 (4s)</p>
-      <motion.div className="terminal-output flex max-h-full min-h-[2rem] flex-col overflow-visible rounded-lg border border-slate-200 bg-slate-50 font-mono text-xs leading-normal text-slate-800 subpixel-antialiased dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
-        <div className="flex items-center justify-between gap-4 rounded-t-lg border-b border-slate-200 bg-slate-100 px-2 py-1 dark:border-slate-700 dark:bg-slate-800">
+      <motion.div
+        className="terminal-output flex max-h-full min-h-[2rem] flex-col overflow-visible rounded-lg border border-slate-200 bg-slate-50 font-mono text-xs leading-normal text-slate-800 subpixel-antialiased dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
+        <div
+          className="flex items-center justify-between gap-4 rounded-t-lg border-b border-slate-200 bg-slate-100 px-2 py-1 dark:border-slate-700 dark:bg-slate-800">
           <div className="font-sans text-sm font-medium">
-            <span className="group relative flex cursor-pointer items-center overflow-hidden whitespace-nowrap subpixel-antialiased dark:text-slate-300">
+            <span
+              className="group relative flex cursor-pointer items-center overflow-hidden whitespace-nowrap subpixel-antialiased dark:text-slate-300">
               <span>nx run nx-dev:build</span>
               <span className="transform opacity-0 transition-all">
-                <ClipboardDocumentIcon className="h-4 w-4" />
+                <ClipboardDocumentIcon className="h-4 w-4"/>
               </span>
             </span>
           </div>
@@ -622,9 +691,9 @@ Node.js v20.9.0 Warning: command "pnpm next-sitemap --config
 };
 
 export function Counter({
-  value,
-  duration = 2,
-}: {
+                          value,
+                          duration = 2,
+                        }: {
   value: number;
   duration?: number;
 }) {
@@ -647,27 +716,27 @@ export function Counter({
 const items = [
   {
     title: 'Nx Agents: seamless task distribution',
-    header: <TaskDistribution />,
+    header: <TaskDistribution/>,
     className: 'md:col-span-2',
-    icon: <ArrowsRightLeftIcon className="h-4 w-4 text-slate-500" />,
+    icon: <ArrowsRightLeftIcon className="h-4 w-4 text-slate-500"/>,
   },
   {
     title: 'Nx Replay: secure computation cache',
-    header: <Caching />,
+    header: <Caching/>,
     className: 'md:col-span-1',
-    icon: <LockClosedIcon className="h-4 w-4 text-slate-500" />,
+    icon: <LockClosedIcon className="h-4 w-4 text-slate-500"/>,
   },
   {
     title: 'Increased visibility',
-    header: <IncreasedVisibility />,
+    header: <IncreasedVisibility/>,
     className: 'md:col-span-1',
-    icon: <InboxArrowDownIcon className="h-4 w-4 text-slate-500" />,
+    icon: <InboxArrowDownIcon className="h-4 w-4 text-slate-500"/>,
   },
   {
     title: 'Atomizer: task splitting & flaky detection',
     description: null,
-    header: <Atomizer />,
+    header: <Atomizer/>,
     className: 'md:col-span-2',
-    icon: <Square3Stack3DIcon className="h-4 w-4 text-slate-500" />,
+    icon: <Square3Stack3DIcon className="h-4 w-4 text-slate-500"/>,
   },
 ];
