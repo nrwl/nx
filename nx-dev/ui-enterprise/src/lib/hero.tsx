@@ -6,17 +6,14 @@ export function Hero(): JSX.Element {
       <div className="relative mx-auto max-w-7xl px-6 lg:px-8">
         <div className="mx-auto max-w-3xl text-center">
           <SectionHeading id="fast-ci-for-monorepo" as="h1" variant="display">
-            Fast CI for monorepos <span className="underline">shouldn't</span>{' '}
-            be this hard.
+            Nx Enterprise
           </SectionHeading>
           <SectionHeading
             as="p"
             variant="subtitle"
             className="mx-auto mt-6 max-w-xl "
           >
-            Nx and Nx Cloud are engineered to integrated seamlessl, delivering
-            an end-to-end solution that results in a{' '}
-            <span className="font-medium">smart monorepo and fast CI</span>
+            Accelerate your organization's journey to tighter collaboration, better developer experience, and speed…lots of speed.
           </SectionHeading>
           <div className="mt-10 flex items-center justify-center gap-x-6">
             <a

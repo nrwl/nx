@@ -68,31 +68,27 @@ export function MetricsAndCustomers(): JSX.Element {
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <dl className="grid grid-cols-3 gap-4 text-center">
           <div className="p-4 text-xl">
-            <dt className="text-center text-xs uppercase">Speed</dt>
+            <dt className="text-center text-xs uppercase">CI Speed</dt>
             <dd className="mt-2 ">
               <span className="text-3xl font-semibold text-slate-950 dark:text-slate-50">
-                30 to 70% faster CI
+                30-70% Faster
               </span>
-              <br /> pipelines for your teams.
             </dd>
           </div>
           <div className="p-4 text-xl">
-            <dt className="text-center text-xs uppercase">Cost</dt>
+            <dt className="text-center text-xs uppercase">Infrastructure Cost</dt>
             <dd className="mt-2 ">
               <span className="text-3xl font-semibold text-slate-950 dark:text-slate-50">
-                40 to 75% costs reduction
+                40-75% Cheaper
               </span>{' '}
-              <br />
-              on CI infrastructure.
             </dd>
           </div>
           <div className="p-4 text-xl">
-            <dt className="text-center text-xs uppercase">Collaboration</dt>
+            <dt className="text-center text-xs uppercase">Computation</dt>
             <dd className="mt-2 ">
               <span className="text-3xl font-semibold text-slate-950 dark:text-slate-50">
-                from weeks to days
+                25-50% Less
               </span>
-              <br /> cross-team code changes.
             </dd>
           </div>
         </dl>

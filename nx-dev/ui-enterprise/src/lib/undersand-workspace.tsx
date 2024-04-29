@@ -19,11 +19,7 @@ export function UnderstandWorkspace(): JSX.Element {
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="mx-auto max-w-2xl text-center">
           <SectionHeading as="h2" variant="title" id="solve-ci">
-            Solve CI
-          </SectionHeading>
-          <SectionHeading as="p" variant="subtitle" className="mt-6">
-            Lorem ipsum, dolor sit amet consectetur adipisicing elit. Maiores
-            impedit perferendis suscipit eaque.
+            Solve your CI
           </SectionHeading>
         </div>
         {/*FEATURES CONTAINER*/}

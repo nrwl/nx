@@ -7,7 +7,7 @@ import {
   SquaresPlusIcon,
   UserGroupIcon,
 } from '@heroicons/react/24/outline';
-import { SectionHeading } from './temp/typography';
+import {SectionHeading} from './temp/typography';
 
 export function ScaleOrganizationsAndPeople(): JSX.Element {
   return (
@@ -18,17 +18,12 @@ export function ScaleOrganizationsAndPeople(): JSX.Element {
           variant="title"
           id="scale-organizations-and-people"
         >
-          Scale organizations <br /> to reduce time to market
+          Scale your people [COMING Q3 2024]
         </SectionHeading>
       </div>
-      <SectionHeading as="p" variant="subtitle" className="mt-6">
-        One of the the biggest value of monorepos is organizational
-        transformation. Nx & Nx Cloud allows you to support this transition in
-        the best possible experience, without downtime or any gaps in the
-        release pipeline. Foster collaboration at scale.
-      </SectionHeading>
       <div className="mx-auto mt-12 grid max-w-2xl grid-cols-1 gap-x-2 gap-y-16 lg:max-w-none lg:grid-cols-4">
-        <div className="relative rounded-md bg-slate-100 px-4 py-3 text-slate-900 dark:bg-slate-800 dark:text-slate-100">
+        <div
+          className="relative rounded-md bg-slate-100 px-4 py-3 text-slate-900 dark:bg-slate-800 dark:text-slate-100">
           <div className="flex items-center gap-3 text-lg font-medium leading-6">
             <CubeTransparentIcon
               aria-hidden="true"
@@ -48,7 +43,8 @@ export function ScaleOrganizationsAndPeople(): JSX.Element {
             />
           </svg>
         </div>
-        <div className="relative rounded-md bg-slate-100 px-4 py-3 text-slate-900 dark:bg-slate-800 dark:text-slate-100">
+        <div
+          className="relative rounded-md bg-slate-100 px-4 py-3 text-slate-900 dark:bg-slate-800 dark:text-slate-100">
           <svg
             aria-hidden="true"
             viewBox="0 0 4 12"
@@ -79,7 +75,8 @@ export function ScaleOrganizationsAndPeople(): JSX.Element {
             />
           </svg>
         </div>
-        <div className="relative rounded-md bg-slate-100 px-4 py-3 text-slate-900 dark:bg-slate-800 dark:text-slate-100">
+        <div
+          className="relative rounded-md bg-slate-100 px-4 py-3 text-slate-900 dark:bg-slate-800 dark:text-slate-100">
           <svg
             aria-hidden="true"
             viewBox="0 0 4 12"
@@ -92,7 +89,7 @@ export function ScaleOrganizationsAndPeople(): JSX.Element {
             />
           </svg>
           <div className="flex items-center gap-3 text-lg font-medium leading-6">
-            <UserGroupIcon aria-hidden="true" className="h-5 w-5 flex-none" />
+            <UserGroupIcon aria-hidden="true" className="h-5 w-5 flex-none"/>
             Control
           </div>
           <svg
@@ -107,7 +104,8 @@ export function ScaleOrganizationsAndPeople(): JSX.Element {
             />
           </svg>
         </div>
-        <div className="relative rounded-md bg-slate-100 px-4 py-3 text-slate-900 dark:bg-slate-800 dark:text-slate-100">
+        <div
+          className="relative rounded-md bg-slate-100 px-4 py-3 text-slate-900 dark:bg-slate-800 dark:text-slate-100">
           <svg
             aria-hidden="true"
             viewBox="0 0 4 12"
@@ -120,7 +118,7 @@ export function ScaleOrganizationsAndPeople(): JSX.Element {
             />
           </svg>
           <div className="flex items-center gap-3 text-lg font-medium leading-6">
-            <Cog6ToothIcon aria-hidden="true" className="h-5 w-5 flex-none" />
+            <Cog6ToothIcon aria-hidden="true" className="h-5 w-5 flex-none"/>
             Automation
           </div>
         </div>
@@ -208,68 +206,43 @@ export function ScaleOrganizationsAndPeople(): JSX.Element {
         <div className="space-y-6 lg:space-y-12">
           <div className="flex items-start gap-6">
             <div className="rounded-full p-3 shadow-sm ring-1 ring-slate-200 dark:ring-slate-800/60">
-              <SquaresPlusIcon className="h-5 w-5 text-slate-900 dark:text-slate-100" />
+              <SquaresPlusIcon className="h-5 w-5 text-slate-900 dark:text-slate-100"/>
             </div>
             <div>
               <h4 className="relative text-base font-medium capitalize leading-6 text-slate-900 dark:text-slate-100">
-                Monorepo experience in a polyrepo environment
+                Monorepo, polyrepo, multi-monorepo?
               </h4>
               <p className="mt-2">
-                Nx Enterprise will soon support optional monorepo-like
-                constraints to be applied across Nx Workspace boundaries in a
-                seamless and flexible way. Teams can enjoy the benefits of
-                atomic commits, single version policies, and continuous
-                integration without needing to co-locate everything in a single
-                monorepo. Move fast with confidence.
+                Whatever you’re working with, Nx Enterprise will give you the visibility you need to understand what
+                they have in common, how they relate, and how they differ.
               </p>
             </div>
           </div>
           <div className="flex items-start gap-6">
             <div className="rounded-full p-3 shadow-sm ring-1 ring-slate-200 dark:ring-slate-800/60">
-              <Cog6ToothIcon className="h-5 w-5 text-slate-900 dark:text-slate-100" />
+              <Cog6ToothIcon className="h-5 w-5 text-slate-900 dark:text-slate-100"/>
             </div>
             <div>
               <h4 className="relative text-base font-medium capitalize leading-6 text-slate-900 dark:text-slate-100">
-                Automation over coordination
+                Monorepo Experience in a Polyrepo Environment
               </h4>
               <p className="mt-2">
-                Testing and cross-repo coordination can be left to Nx Enterprise
-                tooling instead of manual human intervention to test and enforce
-                cross-repo dependencies & constraints. Do all your company's Nx
-                Workspaces work with the latest commit to the Design System
-                workspace? Nx Enterprise will tell you.
+                Nx Enterprise will support optional monorepo-like constraints to be applied across Nx Workspace
+                boundaries in a seamless and flexible way. Move fast with confidence.
               </p>
             </div>
           </div>
           <div className="flex items-start gap-6">
             <div className="rounded-full p-3 shadow-sm ring-1 ring-slate-200 dark:ring-slate-800/60">
-              <BuildingOffice2Icon className="h-5 w-5 text-slate-900 dark:text-slate-100" />
+              <BuildingOffice2Icon className="h-5 w-5 text-slate-900 dark:text-slate-100"/>
             </div>
             <div>
               <h4 className="relative text-base font-medium capitalize leading-6 text-slate-900 dark:text-slate-100">
-                Your platform's platform
+                Automation Over Coordination
               </h4>
               <p className="mt-2">
-                Nx Enterprise harnesses the power of Nx, Nx Cloud, and the Nx
-                Team to enable you to build a state of the art platform for your
-                developers.
-              </p>
-            </div>
-          </div>
-          <div className="flex items-start gap-6">
-            <div className="rounded-full p-3 shadow-sm ring-1 ring-slate-200 dark:ring-slate-800/60">
-              <PhotoIcon className="h-5 w-5 text-slate-900 dark:text-slate-100" />
-            </div>
-            <div>
-              <h4 className="relative text-base font-medium capitalize leading-6 text-slate-900 dark:text-slate-100">
-                Crystal clear organization
-              </h4>
-              <p className="mt-2">
-                Regardless of how many Nx Workspaces your company has, Nx
-                Enterprise can give you the visibility you need to understand
-                what they have in common, how they relate, and how they differ.
-                Developers are no longer relegated to contributing to one Nx
-                Workspace.
+                Testing and cross-repo coordination can be left to Nx Enterprise tooling instead of manual human
+                intervention to test and enforce cross-repo dependencies & constraints.
               </p>
             </div>
           </div>
