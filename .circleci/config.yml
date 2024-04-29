@@ -134,7 +134,7 @@ jobs:
       - checkout
       - nx/set-shas:
           main-branch-name: 'master'
-      - run: NX_CLOUD_ACCESS_TOKEN=$JAMES_NX_CLOUD_ACCESS_TOKEN npx nx-cloud@next start-ci-run --distribute-on=".nx/workflows/dynamic-changesets.yaml" --stop-agents-after="e2e"
+      - run: npx nx-cloud@next start-ci-run --distribute-on=".nx/workflows/dynamic-changesets.yaml" --stop-agents-after="e2e"
       # - run:
       #     command: |
       #       sudo apt-get update
