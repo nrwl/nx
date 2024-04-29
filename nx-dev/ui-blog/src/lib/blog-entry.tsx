@@ -14,7 +14,7 @@ export function BlogEntry({ post }: BlogEntryProps) {
       className={cx(
         'flex h-full flex-col overflow-hidden rounded-2xl',
         'border border-slate-200 dark:border-slate-800 dark:bg-slate-900',
-        'shadow-[0_1px_4px_-1px_rgba(0,0,0,0.09)] transition-all duration-300 ease-in-out',
+        'shadow-[0_1px_4px_-1px_rgba(0,0,0,0.09)] transition-all duration-300 ease-in-out dark:shadow-[0_2px_4px_rgba(0,0,0,0.1)]',
         'transform-gpu hover:scale-[1.02] hover:shadow-lg dark:hover:shadow-[0_7px_32px_rgba(0,0,0,0.35)]'
       )}
     >

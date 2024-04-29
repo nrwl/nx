@@ -15,7 +15,7 @@ In this article, we’re going to recap all the things launched during Launch Nx
 
 ---
 
-- [Nx 18.0 && Project Crystal](#nx-180-project-crystal-18-crystal)
+- [Nx 18.0 && Project Crystal](#nx-180-project-crystal)
   - [Project Crystal — By Juri Strumpflohner](#conference-talk-project-crystal)
   - [Project Crystal + .NET in Action — By Craigory Coppola](#conference-talk-project-crystal-net-in-action)
 - [New Plugin: @nx/nuxt](#new-plugin-nxnuxt)
@@ -82,7 +82,7 @@ We’re very excited about Nx Agents because we think that in its current state,
 
 Be sure to also checkout the [blog post from Isaac on Nx Agents](/blog/2024-02-07-fast-effortless-ci), including explanations of exclusive features like auto-detection and retrying for flaky tasks and automatically splitting lengthy end-to-end tests!
 
-You can [signup for Nx Agents NOW](https://nx.app/products/agents#content), and find out [more of the details in our docs](https://nx.dev/ci/features/distribute-task-execution)!
+You can [signup for Nx Agents NOW](https://nx.app/products/agents#content), and find out [more of the details in our docs](/ci/features/distribute-task-execution)!
 
 Rares and Altan are on the team building Nx Cloud, and during the conference, they dove deeper into some of these topics:
 

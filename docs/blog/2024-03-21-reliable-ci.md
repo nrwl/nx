@@ -125,7 +125,7 @@ First, `npm install` **failing will not break the build.** Nx Cloud will simply 
 
 The slowness of the `npm install` will affect the CI execution but in a very different way because it will be **amortized across agents.** So with 50 agents executing, adding 5 minutes to an `npm install` of one of the agents, will only increase the CI execution time by 6 seconds _(5 _ 60 / 50)\*.
 
-Second, **[Nx Cloud knows what specific tests are flaky](https://nx.dev/ci/features/flaky-tasks), and if they fail, it will rerun them on a separate agent.** Rerunning them on a separate agent is crucial. Often flaky failures will continue to fail when rerun on the same agent.
+Second, **[Nx Cloud knows what specific tests are flaky](/ci/features/flaky-tasks), and if they fail, it will rerun them on a separate agent.** Rerunning them on a separate agent is crucial. Often flaky failures will continue to fail when rerun on the same agent.
 
 This is the formula:
 

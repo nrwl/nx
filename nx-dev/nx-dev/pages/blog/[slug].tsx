@@ -66,7 +66,7 @@ export default function BlogPostDetail({ post }: BlogPostDetailProps) {
         </div>
         <div id="content-wrapper">
           <header className="mx-auto mb-16 mt-8 max-w-3xl px-4 lg:px-0">
-            <h1 className="prose prose-slate dark:prose-invert text-center text-5xl font-semibold">
+            <h1 className="prose prose-slate dark:prose-invert text-center text-[40px] font-semibold">
               {post.title}
             </h1>
           </header>
