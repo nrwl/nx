@@ -45,6 +45,7 @@ import { SideBySide } from './lib/tags/side-by-side.component';
 import { sideBySide } from './lib/tags/side-by-side.schema';
 import { Tab, Tabs } from './lib/tags/tabs.component';
 import { tab, tabs } from './lib/tags/tabs.schema';
+import { Tweet, tweet } from '@nx/nx-dev/ui-common';
 import { YouTube, youtube } from '@nx/nx-dev/ui-common';
 import {
   TerminalVideo,
@@ -91,8 +92,9 @@ export const getMarkdocCustomConfig = (
       'side-by-side': sideBySide,
       tab,
       tabs,
-      youtube,
       'terminal-video': terminalVideo,
+      tweet,
+      youtube,
       'video-link': videoLink,
       // 'svg-animation': svgAnimation,
     },
@@ -121,8 +123,9 @@ export const getMarkdocCustomConfig = (
     SideBySide,
     Tab,
     Tabs,
-    YouTube,
     TerminalVideo,
+    Tweet,
+    YouTube,
     VideoLink,
     // SvgAnimation,
   },
@@ -133,9 +136,19 @@ const tokenizer = new Tokenizer({
   allowComments: true,
 });
 
-export const parseMarkdown: (markdown: string) => Node = (markdown) => {
+const parseMarkdown: (markdown: string) => Node = (markdown) => {
   const tokens = tokenizer.tokenize(markdown);
   return parse(tokens);
+};
+
+export const extractFrontmatter = (
+  documentContent: string
+): Record<string, any> => {
+  const ast = parseMarkdown(documentContent);
+  const frontmatter = ast.attributes['frontmatter']
+    ? (yamlLoad(ast.attributes['frontmatter']) as Record<string, any>)
+    : {};
+  return frontmatter;
 };
 
 export const renderMarkdown: (
