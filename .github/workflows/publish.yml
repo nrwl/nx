@@ -192,7 +192,7 @@ jobs:
             env
             whoami
             sudo pkg install -y -f node libnghttp2 npm git
-            sudo npm install --location=global --ignore-scripts pnpm
+            sudo npm install --location=global --ignore-scripts pnpm@8.15.7
             curl https://sh.rustup.rs -sSf --output rustup.sh
             sh rustup.sh -y --profile minimal --default-toolchain stable
             source "$HOME/.cargo/env"
