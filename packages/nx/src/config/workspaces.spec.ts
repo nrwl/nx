@@ -59,6 +59,7 @@ describe('Workspaces', () => {
         projectType: 'library',
         targets: {
           'nx-release-publish': {
+            configurations: {},
             dependsOn: ['^nx-release-publish'],
             executor: '@nx/js:release-publish',
             options: {},

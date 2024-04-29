@@ -50,7 +50,7 @@ export function mergeProjectConfigurationIntoRootMap(
   sourceInformation?: SourceInformation,
   // This function is used when reading project configuration
   // in generators, where we don't want to do this.
-  skipCommandNormalization?: boolean
+  skipTargetNormalization?: boolean
 ): void {
   if (configurationSourceMaps && !configurationSourceMaps[project.root]) {
     configurationSourceMaps[project.root] = {};
@@ -202,10 +202,12 @@ export function mergeProjectConfigurationIntoRootMap(
         continue;
       }
 
+      const normalizedTarget = skipTargetNormalization
+        ? target
+        : normalizeTarget(target, project);
+
       const mergedTarget = mergeTargetConfigurations(
-        skipCommandNormalization
-          ? target
-          : resolveCommandSyntacticSugar(target, project.root),
+        normalizedTarget,
         matchingProject.targets?.[targetName],
         sourceMap,
         sourceInformation,
@@ -670,8 +672,8 @@ export function isCompatibleTarget(
 
   const isRunCommands = a.executor === 'nx:run-commands';
   if (isRunCommands) {
-    const aCommand = a.options?.command ?? a.options?.commands.join(' && ');
-    const bCommand = b.options?.command ?? b.options?.commands.join(' && ');
+    const aCommand = a.options?.command ?? a.options?.commands?.join(' && ');
+    const bCommand = b.options?.command ?? b.options?.commands?.join(' && ');
 
     const oneHasNoCommand = !aCommand || !bCommand;
     const hasSameCommand = aCommand === bCommand;
@@ -835,4 +837,28 @@ function resolveCommandSyntacticSugar(
       },
     };
   }
+}
+
+export function normalizeTarget(
+  target: TargetConfiguration,
+  project: ProjectConfiguration
+) {
+  target = resolveCommandSyntacticSugar(target, project.root);
+
+  target.options = resolveNxTokensInOptions(
+    target.options,
+    project,
+    `${project.root}:${target}`
+  );
+
+  target.configurations ??= {};
+  for (const configuration in target.configurations) {
+    target.configurations[configuration] = resolveNxTokensInOptions(
+      target.configurations[configuration],
+      project,
+      `${project.root}:${target}:${configuration}`
+    );
+  }
+
+  return target;
 }
