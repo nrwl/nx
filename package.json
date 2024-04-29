@@ -265,6 +265,7 @@
     "source-map": "0.7.3",
     "source-map-loader": "^3.0.0",
     "source-map-support": "0.5.19",
+    "storybook": "7.5.3",
     "storybook-dark-mode": "^3.0.0",
     "style-loader": "^3.3.0",
     "styled-components": "5.3.6",

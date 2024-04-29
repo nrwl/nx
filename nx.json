@@ -141,8 +141,7 @@
         "{workspaceRoot}/.storybook/**/*",
         "{projectRoot}/.storybook/**/*",
         "{projectRoot}/tsconfig.storybook.json"
-      ],
-      "cache": true
+      ]
     },
     "build-ng": {
       "cache": true
@@ -203,6 +202,15 @@
       "options": {
         "targetName": "e2e-local",
         "ciTargetName": "e2e-macos-ci"
+      }
+    },
+    {
+      "plugin": "@nx/storybook/plugin",
+      "options": {
+        "serveStorybookTargetName": "storybook",
+        "buildStorybookTargetName": "build-storybook",
+        "testStorybookTargetName": "test-storybook",
+        "staticStorybookTargetName": "static-storybook"
       }
     }
   ],

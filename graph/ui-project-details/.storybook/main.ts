@@ -1,8 +1,15 @@
 /* eslint-disable @nx/enforce-module-boundaries */
 import type { StorybookConfig } from '@storybook/react-vite';
 
+// Pointing directly to node_modules so we don't transpile from source and up with with an error.
+// e.g.  Cannot find module '../../bin/run-executor.js'
+// Require stack:
+// - packages/nx/src/tasks-runner/utils.ts
+// - packages/nx/src/devkit-exports.ts
+// - packages/devkit/index.ts
+// - /packages/vite/plugins/nx-tsconfig-paths.plugin.ts
 // nx-ignore-next-line
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+import { nxViteTsPaths } from '../../../node_modules/@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { mergeConfig } from 'vite';
 
 const config: StorybookConfig = {
