@@ -141,7 +141,6 @@ const parseMarkdown: (markdown: string) => Node = (markdown) => {
   return parse(tokens);
 };
 
-
 export const extractFrontmatter = (
   documentContent: string
 ): Record<string, any> => {
