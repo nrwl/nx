@@ -21,19 +21,20 @@ export function BlogDetails({ post }: BlogDetailsProps) {
 
   return (
     <main id="main" role="main" className="w-full py-8">
-      <div className="mx-auto mb-8 flex max-w-screen-xl px-4 lg:px-8">
+      <div className="mx-auto mb-8 flex max-w-screen-xl justify-between px-4 lg:px-8">
         <Link
           href="/blog"
-          className="flex w-16 items-center text-slate-400 hover:text-slate-600"
+          className="flex w-20 shrink-0 items-center gap-2 text-slate-400 hover:text-slate-800 dark:text-slate-600 dark:hover:text-slate-200"
         >
-          <ChevronLeftIcon className="mr-1 h-4 w-4" />
+          <ChevronLeftIcon className="h-3 w-3" />
           Blog
         </Link>
-        <div className="flex flex-1 items-center justify-end text-right sm:justify-center sm:text-center">
+        <div className="flex max-w-sm flex-1 grow items-center justify-end gap-2">
           <BlogAuthors authors={post.authors} />
-          <span className="ml-3 text-slate-500">{formattedDate}</span>
+          <span className="text-sm text-slate-400 dark:text-slate-600">
+            {formattedDate}
+          </span>
         </div>
-        <div className="hidden w-16 sm:block" />
       </div>
       <div id="content-wrapper">
         <header className="mx-auto mb-16 mt-8 max-w-3xl px-4 lg:px-0">

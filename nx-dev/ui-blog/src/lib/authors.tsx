@@ -1,10 +1,6 @@
 import Image from 'next/image';
 
-export interface BlogAuthorsProps {
-  authors: string[];
-}
-
-export function BlogAuthors({ authors }: BlogAuthorsProps) {
+export function BlogAuthors({ authors }: { authors: string[] }): JSX.Element {
   return (
     <div className="isolate flex items-center -space-x-2 overflow-hidden">
       {authors.map((author, index) => (
