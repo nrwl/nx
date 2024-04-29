@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { BlogPostDataEntry } from '@nx/nx-dev/data-access-documents/node-only';
 import { BlogAuthors } from './authors';
-import { ImageTheme } from '@nx/nx-dev/ui-common';
+import Image from 'next/image';
 
 export interface BlogEntryProps {
   post: BlogPostDataEntry;
@@ -12,12 +12,11 @@ export function BlogEntry({ post }: BlogEntryProps) {
     <div className="relative flex h-full transform-gpu flex-col overflow-hidden rounded-2xl border border-slate-200 shadow transition-all duration-300 ease-in-out hover:scale-[1.02] hover:shadow-lg dark:border-slate-800">
       {post.cover_image && (
         <div className="aspect-[1.9] w-full">
-          <ImageTheme
+          <Image
             quality={100}
             className="h-full w-full object-cover"
-            lightSrc={post.cover_image}
-            darkSrc={post.cover_image}
-            alt=""
+            src={post.cover_image}
+            alt={post.title}
             width={1400}
             height={735}
           />
