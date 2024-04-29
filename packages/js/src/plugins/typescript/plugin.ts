@@ -104,18 +104,20 @@ export const createNodes: CreateNodes<TscPluginOptions> = [
       return {};
     }
 
-    const hash = calculateHashForCreateNodes(
+    const nodeHash = calculateHashForCreateNodes(
       projectRoot,
       pluginOptions,
       context,
       [getLockFileName(detectPackageManager(context.workspaceRoot))]
     );
+    // The hash is calculated at the node/project level, so we add the config file path to avoid conflicts when caching
+    const cacheKey = `${nodeHash}_${configFilePath}`;
 
-    const targets = targetsCache[hash]
-      ? targetsCache[hash]
+    const targets = targetsCache[cacheKey]
+      ? targetsCache[cacheKey]
       : buildTscTargets(fullConfigPath, projectRoot, pluginOptions, context);
 
-    calculatedTargets[hash] = targets;
+    calculatedTargets[cacheKey] = targets;
 
     return {
       projects: {
