@@ -135,7 +135,6 @@ jobs:
       - nx/set-shas:
           main-branch-name: 'master'
       - run: npx nx-cloud@next start-ci-run --distribute-on=".nx/workflows/dynamic-changesets.yaml" --stop-agents-after="e2e"
-      - run: npx nx test eslint
       # - run:
       #     command: |
       #       sudo apt-get update
@@ -145,8 +144,9 @@ jobs:
       # - install-sdkman
       # - install-gradle:
       #     gradle-version: '8.5'
-      # - run-pnpm-install:
-      #     os: linux
+      - run-pnpm-install:
+          os: linux
+      - run: npx nx test eslint
       # - run:
       #     name: Check Documentation
       #     command: pnpm nx documentation --no-dte
