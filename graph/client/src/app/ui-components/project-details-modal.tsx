@@ -50,7 +50,7 @@ export function ProjectDetailsModal() {
   return (
     isOpen && (
       <div
-        className="fixed top-24 right-4 z-20 h-max w-1/3 bg-white opacity-100  dark:bg-slate-800"
+        className="fixed right-4 top-24 z-20 h-max w-1/3 bg-white opacity-100  dark:bg-slate-800"
         style={{
           height: 'calc(100vh - 6rem - 2rem)',
         }}
@@ -58,7 +58,7 @@ export function ProjectDetailsModal() {
       >
         <div className="h-full rounded-md border border-slate-500">
           <ProjectDetailsWrapper project={project} sourceMap={sourceMap} />
-          <div className="absolute top-2 right-2" onClick={onClose}>
+          <div className="absolute right-2 top-2" onClick={onClose}>
             <XMarkIcon className="h-4 w-4" />
           </div>
         </div>

@@ -64,7 +64,7 @@ export const TargetConfigurationDetailsHeader = ({
         collapsable ? 'cursor-pointer' : '',
         isCompact ? 'px-2 py-1' : 'p-2',
         !isCollasped || !collapsable
-          ? 'border-b bg-slate-50 dark:border-slate-700/60 dark:border-slate-300/10 dark:bg-slate-800 '
+          ? 'border-b bg-slate-50 dark:border-slate-300/10 dark:border-slate-700/60 dark:bg-slate-800 '
           : ''
       )}
       onClick={collapsable ? toggleCollapse : undefined}
@@ -148,7 +148,7 @@ export const TargetConfigurationDetailsHeader = ({
         </div>
       </div>
       {!isCollasped && (
-        <div className="mt-2 ml-5 text-sm">
+        <div className="ml-5 mt-2 text-sm">
           <SourceInfo
             data={sourceMap[`targets.${targetName}`]}
             propertyKey={`targets.${targetName}`}

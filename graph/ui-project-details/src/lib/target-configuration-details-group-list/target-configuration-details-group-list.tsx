@@ -86,7 +86,7 @@ export function TargetConfigurationGroupList({
         leaveFrom="opacity-100"
         leaveTo="opacity-0"
       >
-        <div className="fixed top-0 left-0 right-0 z-10 mb-8 border-b-2 border-slate-900/10 bg-slate-50 dark:border-slate-300/10 dark:bg-slate-800 dark:text-slate-300">
+        <div className="fixed left-0 right-0 top-0 z-10 mb-8 border-b-2 border-slate-900/10 bg-slate-50 dark:border-slate-300/10 dark:bg-slate-800 dark:text-slate-300">
           <div className="mx-auto max-w-6xl px-8 pt-2">
             <TargetConfigurationGroupHeader
               targetGroupName={stickyHeaderContent}

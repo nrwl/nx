@@ -74,10 +74,10 @@ export const Modal = forwardRef(
                 leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
               >
                 <Dialog.Panel
-                  className={`relative my-8 mx-4 w-full transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all dark:bg-slate-900 md:max-w-5xl xl:max-w-7xl
+                  className={`relative mx-4 my-8 w-full transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all md:max-w-5xl xl:max-w-7xl dark:bg-slate-900
                   `}
                 >
-                  <div className="flex items-center justify-between rounded-t border-b bg-white p-2 pb-1 dark:border-gray-600 dark:bg-slate-900 md:p-4 md:pb-2">
+                  <div className="flex items-center justify-between rounded-t border-b bg-white p-2 pb-1 md:p-4 md:pb-2 dark:border-gray-600 dark:bg-slate-900">
                     <Dialog.Title
                       as="h3"
                       className="text-lg font-medium leading-6 text-gray-900 dark:text-slate-200"
@@ -94,7 +94,7 @@ export const Modal = forwardRef(
                       <span className="sr-only">Close modal</span>
                     </button>
                   </div>
-                  <div className="max-h-[90vh] overflow-y-auto bg-white p-2 dark:bg-slate-900 md:p-4">
+                  <div className="max-h-[90vh] overflow-y-auto bg-white p-2 md:p-4 dark:bg-slate-900">
                     {children}
                   </div>
                 </Dialog.Panel>

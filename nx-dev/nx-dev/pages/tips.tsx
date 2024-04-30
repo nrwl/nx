@@ -453,7 +453,7 @@ export default function NewYear(): JSX.Element {
             className="py-18 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8"
           >
             <article id="nx-new-year-tips-intro" className="relative">
-              <h1 className="my-8 text-3xl font-semibold dark:text-white sm:text-5xl">
+              <h1 className="my-8 text-3xl font-semibold sm:text-5xl dark:text-white">
                 Nx New Year Tips
               </h1>
               <p>
@@ -477,7 +477,7 @@ export default function NewYear(): JSX.Element {
             className="py-18 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8"
           >
             <article id="nx-new-year-tips" className="relative">
-              <div className="mx-auto grid grid-cols-1 items-stretch gap-8 py-12 dark:text-slate-100 sm:grid-cols-2 md:grid-cols-3 lg:py-16">
+              <div className="mx-auto grid grid-cols-1 items-stretch gap-8 py-12 sm:grid-cols-2 md:grid-cols-3 lg:py-16 dark:text-slate-100">
                 {shownTips.map((tip) => (
                   <FlipCard
                     key={tip.day}

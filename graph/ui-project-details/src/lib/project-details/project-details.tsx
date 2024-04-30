@@ -86,7 +86,7 @@ export const ProjectDetails = ({
           <span>
             {onViewInProjectGraph ? (
               <button
-                className="inline-flex cursor-pointer items-center gap-2 rounded-md py-1 px-2 text-base text-slate-600 ring-2 ring-inset ring-slate-400/40 hover:bg-slate-50 dark:text-slate-300 dark:ring-slate-400/30 dark:hover:bg-slate-800/60"
+                className="inline-flex cursor-pointer items-center gap-2 rounded-md px-2 py-1 text-base text-slate-600 ring-2 ring-inset ring-slate-400/40 hover:bg-slate-50 dark:text-slate-300 dark:ring-slate-400/30 dark:hover:bg-slate-800/60"
                 onClick={() =>
                   onViewInProjectGraph({ projectName: project.name })
                 }

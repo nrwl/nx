@@ -219,7 +219,7 @@ function SubProjectList({
           </span>
         </div>
       ) : null}
-      <ul className="mt-2 -ml-3">
+      <ul className="-ml-3 mt-2">
         {sortedProjects.map((project) => {
           return (
             <ProjectListItem

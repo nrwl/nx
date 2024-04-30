@@ -123,7 +123,7 @@ export function Shell(): JSX.Element {
       <div
         className={`${
           environmentConfig.environment === 'nx-console'
-            ? 'absolute top-5 left-5 z-50 bg-white'
+            ? 'absolute left-5 top-5 z-50 bg-white'
             : 'relative flex h-full overflow-y-scroll'
         } w-72 flex-col pb-10 shadow-lg ring-1 ring-slate-900/10 ring-opacity-10 transition-all dark:ring-slate-300/10`}
         id="sidebar"
@@ -251,7 +251,7 @@ export function Shell(): JSX.Element {
               data-cy="downloadImageButton"
               onClick={downloadImage}
             >
-              <ArrowDownTrayIcon className="absolute top-1/2 left-1/2 -mt-3 -ml-3 h-6 w-6" />
+              <ArrowDownTrayIcon className="absolute left-1/2 top-1/2 -ml-3 -mt-3 h-6 w-6" />
             </button>
           </Tooltip>
         </div>
