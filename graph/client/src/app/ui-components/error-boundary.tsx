@@ -93,7 +93,7 @@ function ErrorWithStack({
 }) {
   return (
     <div>
-      <p className="mb-4 text-lg dark:text-slate-200">{message}</p>
+      <p className="mb-4 text-lg dark:text-slate-100">{message}</p>
       {stack && <p className="text-sm">Error message: {stack}</p>}
     </div>
   );

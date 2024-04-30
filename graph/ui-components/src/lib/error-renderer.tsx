@@ -16,12 +16,12 @@ export function ErrorRenderer({ errors }: { errors: GraphError[] }) {
             : error.fileName;
         return (
           <div className="overflow-hidden pb-4">
-            <span className="inline-flex max-w-full flex-col break-words font-normal font-bold dark:text-slate-200 md:inline">
+            <span className="inline-flex max-w-full flex-col break-words font-normal font-bold text-gray-900 dark:text-slate-200 md:inline">
               <span>{errorHeading}</span>
               <span className="hidden px-1 md:inline">-</span>
               <span>{fileSpecifier}</span>
             </span>
-            <pre className="overflow-x-scroll whitespace-pre-wrap pl-4 pt-3">
+            <pre className="overflow-x-scroll pl-4 pt-3">
               {isCauseWithErrors(error.cause) &&
               error.cause.errors.length === 1 ? (
                 <div>
