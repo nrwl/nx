@@ -310,7 +310,7 @@ export function withDepGraphOptions(yargs: Argv) {
     .option('watch', {
       describe: 'Watch for changes to project graph and update in-browser',
       type: 'boolean',
-      default: false,
+      default: true,
     })
     .option('open', {
       describe: 'Open the project graph in the browser.',

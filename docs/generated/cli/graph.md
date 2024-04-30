@@ -185,6 +185,6 @@ Choose whether to view the projects or task graph
 
 Type: `boolean`
 
-Default: `false`
+Default: `true`
 
 Watch for changes to project graph and update in-browser

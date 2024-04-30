@@ -504,7 +504,7 @@ async function startServer(
   environmentJs: string,
   host: string,
   port = 4211,
-  watchForchanges = false,
+  watchForchanges = true,
   affected: string[] = [],
   focus: string = null,
   groupByFolder: boolean = false,
