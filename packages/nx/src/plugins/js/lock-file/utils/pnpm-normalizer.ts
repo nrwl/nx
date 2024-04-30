@@ -17,6 +17,14 @@ export function usesParenthesisVersionSeparator(data: {
   }
 }
 
+export function usesLeadingDash(data: { lockfileVersion: number | string }) {
+  if (+data.lockfileVersion.toString() >= 9) {
+    false;
+  } else {
+    return true;
+  }
+}
+
 export function loadPnpmHoistedDepsDefinition() {
   const fullPath = `${workspaceRoot}/node_modules/.modules.yaml`;
 

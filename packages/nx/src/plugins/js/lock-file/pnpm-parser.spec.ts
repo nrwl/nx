@@ -833,6 +833,91 @@ describe('pnpm LockFile utility', () => {
         );
       });
     });
+
+    describe('v9.0', () => {
+      beforeEach(() => {
+        lockFile = require(joinPathFragments(
+          __dirname,
+          '__fixtures__/pruning/pnpm-lock-v9.yaml'
+        )).default;
+        lockFileHash = '__fixtures__/pruning/pnpm-lock-v9.yaml';
+
+        const externalNodes = getPnpmLockfileNodes(lockFile, lockFileHash);
+        graph = {
+          nodes: {},
+          dependencies: {},
+          externalNodes,
+        };
+        const ctx: CreateDependenciesContext = {
+          projects: {},
+          externalNodes,
+          fileMap: {
+            nonProjectFiles: [],
+            projectFileMap: {},
+          },
+          filesToProcess: {
+            nonProjectFiles: [],
+            projectFileMap: {},
+          },
+          nxJsonConfiguration: null,
+          workspaceRoot: '/virtual',
+        };
+        const dependencies = getPnpmLockfileDependencies(
+          lockFile,
+          lockFileHash,
+          ctx
+        );
+
+        const builder = new ProjectGraphBuilder(graph);
+        for (const dep of dependencies) {
+          builder.addDependency(
+            dep.source,
+            dep.target,
+            dep.type,
+            'sourceFile' in dep ? dep.sourceFile : null
+          );
+        }
+        graph = builder.getUpdatedProjectGraph();
+      });
+
+      it('should prune single package', () => {
+        const typescriptPackageJson = require(joinPathFragments(
+          __dirname,
+          '__fixtures__/pruning/typescript/package.json'
+        ));
+        const prunedGraph = pruneProjectGraph(graph, typescriptPackageJson);
+        const result = stringifyPnpmLockfile(
+          prunedGraph,
+          lockFile,
+          typescriptPackageJson
+        );
+        expect(result).toEqual(
+          require(joinPathFragments(
+            __dirname,
+            '__fixtures__/pruning/typescript/pnpm-lock-v9.yaml'
+          )).default
+        );
+      });
+
+      it('should prune multi packages', () => {
+        const multiPackageJson = require(joinPathFragments(
+          __dirname,
+          '__fixtures__/pruning/devkit-yargs/package.json'
+        ));
+        const prunedGraph = pruneProjectGraph(graph, multiPackageJson);
+        const result = stringifyPnpmLockfile(
+          prunedGraph,
+          lockFile,
+          multiPackageJson
+        );
+        expect(result).toEqual(
+          require(joinPathFragments(
+            __dirname,
+            '__fixtures__/pruning/devkit-yargs/pnpm-lock-v9.yaml'
+          )).default
+        );
+      });
+    });
   });
 
   describe('workspaces', () => {
