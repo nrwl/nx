@@ -16,6 +16,7 @@ export interface NxReleaseArgs {
   projects?: string[];
   dryRun?: boolean;
   verbose?: boolean;
+  // TODO: move this out of the "all commands" options since it is not relevant for the "plan" command
   firstRelease?: boolean;
 }
 
@@ -112,6 +113,7 @@ export const yargsReleaseCommand: CommandModule<
         describe:
           'Prints additional information about the commands (e.g., stack traces)',
       })
+      // TODO: move this out of the "all commands" options since it is not relevant for the "plan" command
       .option('first-release', {
         type: 'boolean',
         description:
@@ -320,7 +322,7 @@ const planCommand: CommandModule<NxReleaseArgs, PlanOptions> = {
   command: 'plan',
   aliases: ['pl'],
   describe:
-    'Create a plan to pick a new version and generate changelog entries later.',
+    'Create a plan to pick a new version and generate a changelog entry.',
   builder: (yargs) => yargs,
   handler: async (args) => {
     const release = await import('./plan');

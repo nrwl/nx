@@ -15,10 +15,13 @@ import {
 } from './config/config';
 import { filterReleaseGroups } from './config/filter-release-groups';
 import { getVersionPlansAbsolutePath } from './config/version-plans';
+import { parseConventionalCommitsMessage } from './utils/git';
 
 export const releasePlanCLIHandler = (args: PlanOptions) =>
   handleErrors(args.verbose, () => releasePlan(args));
 
+// TODO: add a way to pass bump values directly into this function so it can be called programmatically and not prompt
+// (this would allow users to create their own UX on top of this function to further restrict version plan creation)
 export async function releasePlan(args: PlanOptions): Promise<string | number> {
   const projectGraph = await createProjectGraphAsync({ exitOnError: true });
   const nxJson = readNxJson();
@@ -37,7 +40,11 @@ export async function releasePlan(args: PlanOptions): Promise<string | number> {
     return await handleNxReleaseConfigError(configError);
   }
 
-  const { error: filterError, releaseGroups } = filterReleaseGroups(
+  const {
+    error: filterError,
+    releaseGroups,
+    releaseGroupToFilteredProjects,
+  } = filterReleaseGroups(
     projectGraph,
     nxReleaseConfig,
     args.projects,
@@ -49,34 +56,60 @@ export async function releasePlan(args: PlanOptions): Promise<string | number> {
   }
 
   const versionPlanBumps: Record<string, string> = {};
+  const setBumpIfNotNone = (projectOrGroup: string, version: string) => {
+    if (version !== 'none') {
+      versionPlanBumps[projectOrGroup] = version;
+    }
+  };
 
   if (releaseGroups[0].name === IMPLICIT_DEFAULT_RELEASE_GROUP) {
     const group = releaseGroups[0];
     if (group.projectsRelationship === 'independent') {
       for (const project of group.projects) {
-        versionPlanBumps[project] = await promptForVersion(
-          `How do you want to bump the version of the project "${project}"?`
+        setBumpIfNotNone(
+          project,
+          await promptForVersion(
+            `How do you want to bump the version of the project "${project}"?`
+          )
         );
       }
     } else {
-      versionPlanBumps[group.name] = await promptForVersion(
-        `How do you want to bump the versions of all projects?`
+      // TODO: use project names instead of the implicit default release group name? (though this might be confusing, as users might think they can just delete one of the project bumps to change the behavior to independent versioning)
+      setBumpIfNotNone(
+        group.name,
+        await promptForVersion(
+          `How do you want to bump the versions of all projects?`
+        )
       );
     }
   } else {
     for (const group of releaseGroups) {
       if (group.projectsRelationship === 'independent') {
-        for (const project of group.projects) {
-          versionPlanBumps[project] = await promptForVersion(
-            `How do you want to bump the version of the project "${project}" within group "${group.name}"?`
+        for (const project of releaseGroupToFilteredProjects.get(group)) {
+          setBumpIfNotNone(
+            project,
+            await promptForVersion(
+              `How do you want to bump the version of the project "${project}" within group "${group.name}"?`
+            )
           );
         }
       } else {
-        versionPlanBumps[group.name] = await promptForVersion(
-          `How do you want to bump the versions of the projects in the group "${group.name}"?`
+        setBumpIfNotNone(
+          group.name,
+          await promptForVersion(
+            `How do you want to bump the versions of the projects in the group "${group.name}"?`
+          )
         );
       }
     }
+  }
+
+  if (!Object.keys(versionPlanBumps).length) {
+    output.warn({
+      title:
+        'No version bumps were selected so no version plan file was created.',
+    });
+    return 0;
   }
 
   const versionPlanMessage = await promptForMessage();
@@ -98,6 +131,8 @@ export async function releasePlan(args: PlanOptions): Promise<string | number> {
     );
   }
 
+  output.logSingleLine(`Done!`);
+
   return versionPlanFileName;
 }
 
@@ -108,7 +143,7 @@ async function promptForVersion(message: string): Promise<string> {
         name: 'version',
         message,
         type: 'select',
-        choices: RELEASE_TYPES,
+        choices: [...RELEASE_TYPES, 'none'],
       },
     ]);
     return reply.version;
@@ -121,6 +156,15 @@ async function promptForVersion(message: string): Promise<string> {
 }
 
 async function promptForMessage(): Promise<string> {
+  let message: string;
+  do {
+    message = await _promptForMessage();
+  } while (!message);
+  return message;
+}
+
+// TODO: support non-conventional commits messages (will require significant changelog renderer changes)
+async function _promptForMessage(): Promise<string> {
   try {
     const reply = await prompt<{ message: string }>([
       {
@@ -130,6 +174,27 @@ async function promptForMessage(): Promise<string> {
         type: 'input',
       },
     ]);
+
+    const conventionalCommitsMessage = parseConventionalCommitsMessage(
+      reply.message
+    );
+    if (!conventionalCommitsMessage) {
+      output.warn({
+        title: 'Changelog message is not in conventional commits format.',
+        bodyLines: [
+          'Please ensure your message is in the form of:',
+          '  type(optional scope): description',
+          '',
+          'For example:',
+          '  feat(pkg-b): add new feature',
+          '  fix(pkg-a): correct a bug',
+          '  chore: update build process',
+          '  fix(core)!: breaking change in core package',
+        ],
+      });
+      return null;
+    }
+
     return reply.message;
   } catch (e) {
     output.log({
@@ -143,9 +208,9 @@ function getVersionPlanFileContent(
   bumps: Record<string, string>,
   message: string
 ): string {
-  return `
----
+  return `---
 ${Object.entries(bumps)
+  .filter(([_, version]) => version !== 'none')
   .map(([projectOrGroup, version]) => `${projectOrGroup}: ${version}`)
   .join('\n')}
 ---
