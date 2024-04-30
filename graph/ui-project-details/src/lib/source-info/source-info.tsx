@@ -20,10 +20,7 @@ export function SourceInfo(props: {
         content={
           (
             <SourcemapInfoToolTip
-              showLink={
-                /* TODO(v18): remove this link show/hide logic once docs are published */
-                false
-              }
+              showLink={true}
               propertyKey={props.propertyKey}
               plugin={props.data?.[1]}
               file={props.data?.[0]}
