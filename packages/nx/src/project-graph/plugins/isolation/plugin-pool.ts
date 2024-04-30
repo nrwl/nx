@@ -35,7 +35,10 @@ export function loadRemoteNxPlugin(
       ...(isWorkerTypescript
         ? {
             // Ensures that the worker uses the same tsconfig as the main process
-            TS_NODE_PROJECT: path.join(__dirname, '../../../tsconfig.lib.json'),
+            TS_NODE_PROJECT: path.join(
+              __dirname,
+              '../../../../tsconfig.lib.json'
+            ),
           }
         : {}),
     },
