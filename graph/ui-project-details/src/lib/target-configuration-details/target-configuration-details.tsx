@@ -141,7 +141,7 @@ export const TargetConfigurationDetailsComponent = ({
               {singleCommand ? (
                 <span className="font-medium">
                   Command
-                  <span className="ml-2 mb-1 hidden group-hover:inline">
+                  <span className="mb-1 ml-2 hidden group-hover:inline">
                     <CopyToClipboard
                       onCopy={() =>
                         handleCopyClick(`"command": "${singleCommand}"`)
@@ -191,7 +191,7 @@ export const TargetConfigurationDetailsComponent = ({
                     <TooltipTriggerText>Inputs</TooltipTriggerText>
                   </span>
                 </Tooltip>
-                <span className="ml-2 mb-1 hidden group-hover:inline">
+                <span className="mb-1 ml-2 hidden group-hover:inline">
                   <CopyToClipboard
                     onCopy={() =>
                       handleCopyClick(
@@ -241,7 +241,7 @@ export const TargetConfigurationDetailsComponent = ({
                     <TooltipTriggerText>Outputs</TooltipTriggerText>
                   </span>
                 </Tooltip>
-                <span className="ml-2 mb-1 hidden group-hover:inline">
+                <span className="mb-1 ml-2 hidden group-hover:inline">
                   <CopyToClipboard
                     onCopy={() =>
                       handleCopyClick(
