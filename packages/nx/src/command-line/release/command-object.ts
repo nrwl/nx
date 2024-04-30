@@ -16,6 +16,7 @@ export interface NxReleaseArgs {
   projects?: string[];
   dryRun?: boolean;
   verbose?: boolean;
+  // TODO: move this out of the "all commands" options since it is not relevant for the "plan" command
   firstRelease?: boolean;
 }
 
@@ -58,6 +59,8 @@ export type PublishOptions = NxReleaseArgs &
     otp?: number;
   };
 
+export type PlanOptions = NxReleaseArgs & {};
+
 export type ReleaseOptions = NxReleaseArgs & {
   yes?: boolean;
   skipPublish?: boolean;
@@ -80,6 +83,7 @@ export const yargsReleaseCommand: CommandModule<
       .command(versionCommand)
       .command(changelogCommand)
       .command(publishCommand)
+      .command(planCommand)
       .demandCommand()
       // Error on typos/mistyped CLI args, there is no reason to support arbitrary unknown args for these commands
       .strictOptions()
@@ -109,6 +113,7 @@ export const yargsReleaseCommand: CommandModule<
         describe:
           'Prints additional information about the commands (e.g., stack traces)',
       })
+      // TODO: move this out of the "all commands" options since it is not relevant for the "plan" command
       .option('first-release', {
         type: 'boolean',
         description:
@@ -310,6 +315,26 @@ const publishCommand: CommandModule<NxReleaseArgs, PublishOptions> = {
     }
 
     process.exit(status);
+  },
+};
+
+const planCommand: CommandModule<NxReleaseArgs, PlanOptions> = {
+  command: 'plan',
+  aliases: ['pl'],
+  describe:
+    'Create a plan to pick a new version and generate a changelog entry.',
+  builder: (yargs) => yargs,
+  handler: async (args) => {
+    const release = await import('./plan');
+    const result = await release.releasePlanCLIHandler(args);
+    if (args.dryRun) {
+      logger.warn(`\nNOTE: The "dryRun" flag means no changes were made.`);
+    }
+
+    if (typeof result === 'number') {
+      process.exit(result);
+    }
+    process.exit(0);
   },
 };
 

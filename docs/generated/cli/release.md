@@ -388,3 +388,25 @@ Prints additional information about the commands (e.g., stack traces)
 Type: `boolean`
 
 Show version number
+
+### plan
+
+Create a plan to pick a new version and generate a changelog entry.
+
+```shell
+nx release plan
+```
+
+#### Options
+
+##### help
+
+Type: `boolean`
+
+Show help
+
+##### version
+
+Type: `boolean`
+
+Show version number
