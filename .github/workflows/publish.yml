@@ -328,16 +328,11 @@ jobs:
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}
           script: |
-            const date = new Date();
-            const year = date.getFullYear();
-            const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
-            const day = String(date.getDate()).padStart(2, '0');
-            const YYYYMMDD = `${year}${month}${day}`;
             // Get the current PR short git sha
             const fullSHA = "${{ needs.build.outputs.full_pr_sha }}";
             const shortSHA = fullSHA.slice(0, 7);
             const prInput = ${{ github.event.inputs.pr }};
-            const prReleaseVersion = `0.0.0-pr-${prInput}-${YYYYMMDD}-${shortSHA}`;
+            const prReleaseVersion = `0.0.0-pr-${prInput}-${shortSHA}`;
             core.setOutput('pr_release_version', prReleaseVersion); 
             core.setOutput('short_sha', shortSHA); 
             core.setOutput('long_sha', fullSHA); 
@@ -378,7 +373,7 @@ jobs:
           fi
           echo "Version set to: $VERSION"
           echo "DRY_RUN set to: $DRY_RUN"
-          pnpm nx-release --local=false $VERSION --dry-run
+          pnpm nx-release --local=false $VERSION $DRY_RUN
       - name: Trigger Docs Release
         # Publish docs only on a full release
         if: ${{ !github.event.release.prerelease }}
