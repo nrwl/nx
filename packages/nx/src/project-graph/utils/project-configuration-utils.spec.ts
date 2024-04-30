@@ -9,6 +9,7 @@ import {
   isCompatibleTarget,
   mergeProjectConfigurationIntoRootMap,
   mergeTargetConfigurations,
+  normalizeTarget,
   readProjectConfigurationsFromRootMap,
   readTargetDefaultsForTarget,
 } from './project-configuration-utils';
@@ -572,6 +573,7 @@ describe('project-configuration-utils', () => {
           "root": "libs/lib-a",
           "targets": {
             "build": {
+              "configurations": {},
               "executor": "nx:run-commands",
               "options": {
                 "command": "tsc",
@@ -725,8 +727,9 @@ describe('project-configuration-utils', () => {
       expect(targets.echo).toMatchInlineSnapshot(`
         {
           "command": "echo lib-a",
+          "configurations": {},
           "options": {
-            "cwd": "{projectRoot}",
+            "cwd": "libs/lib-a",
           },
         }
       `);
@@ -1545,6 +1548,28 @@ describe('project-configuration-utils', () => {
           }
         )
       ).toBe(false);
+    });
+  });
+
+  describe('normalizeTarget', () => {
+    it('should support {projectRoot}, {workspaceRoot}, and {projectName} tokens', () => {
+      const config = {
+        name: 'project',
+        root: 'libs/project',
+        targets: {
+          foo: { command: 'echo {projectRoot}' },
+        },
+      };
+      expect(normalizeTarget(config.targets.foo, config))
+        .toMatchInlineSnapshot(`
+        {
+          "configurations": {},
+          "executor": "nx:run-commands",
+          "options": {
+            "command": "echo libs/project",
+          },
+        }
+      `);
     });
   });
 
