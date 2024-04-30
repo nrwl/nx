@@ -20,36 +20,43 @@ export const createNodes: CreateNodes = [
   combineGlobPatterns('package.json', '**/package.json'),
   (p, _, { workspaceRoot }) => {
     const readJson = (f) => readJsonFile(join(workspaceRoot, f));
-    const patterns = getGlobPatternsFromPackageManagerWorkspaces(
-      workspaceRoot,
-      readJson
-    );
+    const matcher = buildPackageJsonWorkspacesMatcher(workspaceRoot, readJson);
 
-    const negativePatterns = patterns.filter((p) => p.startsWith('!'));
-    const positivePatterns = patterns.filter((p) => !p.startsWith('!'));
-
-    if (
-      // There are some negative patterns
-      negativePatterns.length > 0 &&
-      // No positive patterns
-      (positivePatterns.length === 0 ||
-        // Or only a single positive pattern that is the default coming from root package
-        (positivePatterns.length === 1 &&
-          positivePatterns[0] === 'package.json'))
-    ) {
-      positivePatterns.push('**/package.json');
-    }
-
-    if (
-      positivePatterns.some((positive) => minimatch(p, positive)) &&
-      !negativePatterns.some((negative) => minimatch(p, negative))
-    ) {
+    if (matcher(p)) {
       return createNodeFromPackageJson(p, workspaceRoot);
     }
     // The given package.json is not part of the workspaces configuration.
     return {};
   },
 ];
+
+export function buildPackageJsonWorkspacesMatcher(
+  workspaceRoot: string,
+  readJson: (string) => any
+) {
+  const patterns = getGlobPatternsFromPackageManagerWorkspaces(
+    workspaceRoot,
+    readJson
+  );
+
+  const negativePatterns = patterns.filter((p) => p.startsWith('!'));
+  const positivePatterns = patterns.filter((p) => !p.startsWith('!'));
+
+  if (
+    // There are some negative patterns
+    negativePatterns.length > 0 &&
+    // No positive patterns
+    (positivePatterns.length === 0 ||
+      // Or only a single positive pattern that is the default coming from root package
+      (positivePatterns.length === 1 && positivePatterns[0] === 'package.json'))
+  ) {
+    positivePatterns.push('**/package.json');
+  }
+
+  return (p: string) =>
+    positivePatterns.some((positive) => minimatch(p, positive)) &&
+    !negativePatterns.some((negative) => minimatch(p, negative));
+}
 
 export function createNodeFromPackageJson(pkgJsonPath: string, root: string) {
   const json: PackageJson = readJsonFile(join(root, pkgJsonPath));
