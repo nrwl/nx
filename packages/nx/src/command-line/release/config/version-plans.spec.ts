@@ -168,7 +168,7 @@ describe('version-plans', () => {
                 allProjectNamesInWorkspace
               )
             ).toThrowErrorMatchingInlineSnapshot(
-              `"Found a version bump in 'plan1.md' but version plans are not enabled."`
+              `Found a version bump in 'plan1.md' but version plans are not enabled.`
             );
           });
 
@@ -199,7 +199,7 @@ describe('version-plans', () => {
                 allProjectNamesInWorkspace
               )
             ).toThrowErrorMatchingInlineSnapshot(
-              `"Found a version bump in 'plan1.md' but projects are configured to be independently versioned. Individual projects should be bumped instead."`
+              `Found a version bump in 'plan1.md' but projects are configured to be independently versioned. Individual projects should be bumped instead.`
             );
           });
 
@@ -230,7 +230,7 @@ describe('version-plans', () => {
                 allProjectNamesInWorkspace
               )
             ).toThrowErrorMatchingInlineSnapshot(
-              `"Found a version bump in 'plan1.md' with an invalid release type. Please specify one of major, premajor, minor, preminor, patch, prepatch, prerelease."`
+              `Found a version bump in 'plan1.md' with an invalid release type. Please specify one of major, premajor, minor, preminor, patch, prepatch, prerelease.`
             );
           });
 
@@ -262,7 +262,7 @@ describe('version-plans', () => {
                 allProjectNamesInWorkspace
               )
             ).toThrowErrorMatchingInlineSnapshot(
-              `"Found a version bump in 'plan1.md' that conflicts with another version bump. When in fixed versioning mode, all version bumps must match."`
+              `Found a version bump in 'plan1.md' that conflicts with another version bump. When in fixed versioning mode, all version bumps must match.`
             );
           });
         });
@@ -295,7 +295,7 @@ describe('version-plans', () => {
                 allProjectNamesInWorkspace
               )
             ).toThrowErrorMatchingInlineSnapshot(
-              `"Found a version bump for project 'nonExistentPkg' in 'plan1.md' but the project does not exist in the workspace."`
+              `Found a version bump for project 'nonExistentPkg' in 'plan1.md' but the project does not exist in the workspace.`
             );
           });
 
@@ -326,7 +326,7 @@ describe('version-plans', () => {
                 allProjectNamesInWorkspace
               )
             ).toThrowErrorMatchingInlineSnapshot(
-              `"Found a version bump for project pkg1 in plan1.md but version plans are not enabled."`
+              `Found a version bump for project 'pkg1' in 'plan1.md' but version plans are not enabled.`
             );
           });
 
@@ -357,7 +357,7 @@ describe('version-plans', () => {
                 allProjectNamesInWorkspace
               )
             ).toThrowErrorMatchingInlineSnapshot(
-              `"Found a version bump for project 'pkg2' in 'plan1.md' but the project is not configured for release. Ensure it is included by the 'release.projects' globs in nx.json."`
+              `Found a version bump for project 'pkg2' in 'plan1.md' but the project is not configured for release. Ensure it is included by the 'release.projects' globs in nx.json.`
             );
           });
 
@@ -388,7 +388,7 @@ describe('version-plans', () => {
                 allProjectNamesInWorkspace
               )
             ).toThrowErrorMatchingInlineSnapshot(
-              `"Found a version bump for project 'pkg1' in 'plan1.md' with an invalid release type. Please specify one of major, premajor, minor, preminor, patch, prepatch, prerelease."`
+              `Found a version bump for project 'pkg1' in 'plan1.md' with an invalid release type. Please specify one of major, premajor, minor, preminor, patch, prepatch, prerelease.`
             );
           });
 
@@ -420,7 +420,7 @@ describe('version-plans', () => {
                 allProjectNamesInWorkspace
               )
             ).toThrowErrorMatchingInlineSnapshot(
-              `"Found a version bump for project 'pkg2' in 'plan1.md' that conflicts with another version bump. When in fixed versioning mode, all version bumps must match."`
+              `Found a version bump for project 'pkg2' in 'plan1.md' that conflicts with another version bump. When in fixed versioning mode, all version bumps must match.`
             );
           });
         });
@@ -455,7 +455,7 @@ describe('version-plans', () => {
                 allProjectNamesInWorkspace
               )
             ).toThrowErrorMatchingInlineSnapshot(
-              `"Found a version bump for group 'group1' in 'plan1.md' but the group does not have version plans enabled."`
+              `Found a version bump for group 'group1' in 'plan1.md' but the group does not have version plans enabled.`
             );
           });
 
@@ -486,7 +486,7 @@ describe('version-plans', () => {
                 allProjectNamesInWorkspace
               )
             ).toThrowErrorMatchingInlineSnapshot(
-              `"Found a version bump for group 'group1' in 'plan1.md' but the group's projects are independently versioned. Individual projects of 'group1' should be bumped instead."`
+              `Found a version bump for group 'group1' in 'plan1.md' but the group's projects are independently versioned. Individual projects of 'group1' should be bumped instead.`
             );
           });
 
@@ -517,7 +517,7 @@ describe('version-plans', () => {
                 allProjectNamesInWorkspace
               )
             ).toThrowErrorMatchingInlineSnapshot(
-              `"Found a version bump for group 'group1' in 'plan1.md' with an invalid release type. Please specify one of major, premajor, minor, preminor, patch, prepatch, prerelease."`
+              `Found a version bump for group 'group1' in 'plan1.md' with an invalid release type. Please specify one of major, premajor, minor, preminor, patch, prepatch, prerelease.`
             );
           });
 
@@ -549,7 +549,7 @@ describe('version-plans', () => {
                 allProjectNamesInWorkspace
               )
             ).toThrowErrorMatchingInlineSnapshot(
-              `"Found a version bump for group 'group1' in 'plan1.md' that conflicts with another version bump for this group. When the group is in fixed versioning mode, all groups' version bumps within the same version plan must match."`
+              `Found a version bump for group 'group1' in 'plan1.md' that conflicts with another version bump for this group. When the group is in fixed versioning mode, all groups' version bumps within the same version plan must match.`
             );
           });
         });
@@ -588,7 +588,7 @@ describe('version-plans', () => {
                 allProjectNamesInWorkspace
               )
             ).toThrowErrorMatchingInlineSnapshot(
-              `"Found a version bump for project 'pkg2' in 'plan1.md' but the project's group 'group2' does not have version plans enabled."`
+              `Found a version bump for project 'pkg2' in 'plan1.md' but the project's group 'group2' does not have version plans enabled.`
             );
           });
 
@@ -619,7 +619,7 @@ describe('version-plans', () => {
                 allProjectNamesInWorkspace
               )
             ).toThrowErrorMatchingInlineSnapshot(
-              `"Found a version bump for project 'nonExistentPkg' in 'plan1.md' but the project does not exist in the workspace."`
+              `Found a version bump for project 'nonExistentPkg' in 'plan1.md' but the project does not exist in the workspace.`
             );
           });
 
@@ -660,7 +660,7 @@ describe('version-plans', () => {
                 allProjectNamesInWorkspace
               )
             ).toThrowErrorMatchingInlineSnapshot(
-              `"Found a version bump for project 'pkg3' in 'plan1.md' but the project is not in any configured release groups."`
+              `Found a version bump for project 'pkg3' in 'plan1.md' but the project is not in any configured release groups.`
             );
           });
 
@@ -691,7 +691,7 @@ describe('version-plans', () => {
                 allProjectNamesInWorkspace
               )
             ).toThrowErrorMatchingInlineSnapshot(
-              `"Found a version bump for project 'pkg1' in 'plan1.md' with an invalid release type. Please specify one of major, premajor, minor, preminor, patch, prepatch, prerelease."`
+              `Found a version bump for project 'pkg1' in 'plan1.md' with an invalid release type. Please specify one of major, premajor, minor, preminor, patch, prepatch, prerelease.`
             );
           });
 
@@ -723,7 +723,7 @@ describe('version-plans', () => {
                 allProjectNamesInWorkspace
               )
             ).toThrowErrorMatchingInlineSnapshot(
-              `"Found a version bump for project 'pkg2' in 'plan1.md' that conflicts with another project's version bump in the same release group 'group1'. When the group is in fixed versioning mode, all projects' version bumps within the same group must match."`
+              `Found a version bump for project 'pkg2' in 'plan1.md' that conflicts with another project's version bump in the same release group 'group1'. When the group is in fixed versioning mode, all projects' version bumps within the same group must match.`
             );
           });
         });
@@ -781,7 +781,7 @@ describe('version-plans', () => {
                 versionPlans: [
                   {
                     absolutePath: <workspace-root>/version-plans/plan1.md,
-                    createdOnMs: 2,
+                    createdOnMs: 20,
                     fileName: plan1.md,
                     groupVersionBump: patch,
                     message: plan1 message,
@@ -789,7 +789,7 @@ describe('version-plans', () => {
                   },
                   {
                     absolutePath: <workspace-root>/version-plans/plan2.md,
-                    createdOnMs: 1,
+                    createdOnMs: 19,
                     fileName: plan2.md,
                     groupVersionBump: minor,
                     message: plan2 message,
@@ -856,7 +856,7 @@ describe('version-plans', () => {
                 versionPlans: [
                   {
                     absolutePath: <workspace-root>/version-plans/plan3.md,
-                    createdOnMs: 3,
+                    createdOnMs: 23,
                     fileName: plan3.md,
                     message: plan3 message,
                     projectVersionBumps: {
@@ -868,7 +868,7 @@ describe('version-plans', () => {
                   },
                   {
                     absolutePath: <workspace-root>/version-plans/plan1.md,
-                    createdOnMs: 2,
+                    createdOnMs: 22,
                     fileName: plan1.md,
                     message: plan1 message,
                     projectVersionBumps: {
@@ -880,7 +880,7 @@ describe('version-plans', () => {
                   },
                   {
                     absolutePath: <workspace-root>/version-plans/plan2.md,
-                    createdOnMs: 1,
+                    createdOnMs: 21,
                     fileName: plan2.md,
                     message: plan2 message,
                     projectVersionBumps: {
@@ -984,7 +984,7 @@ describe('version-plans', () => {
                 versionPlans: [
                   {
                     absolutePath: <workspace-root>/version-plans/plan3.md,
-                    createdOnMs: 3,
+                    createdOnMs: 26,
                     fileName: plan3.md,
                     groupVersionBump: major,
                     message: plan3 message,
@@ -992,7 +992,7 @@ describe('version-plans', () => {
                   },
                   {
                     absolutePath: <workspace-root>/version-plans/plan1.md,
-                    createdOnMs: 2,
+                    createdOnMs: 25,
                     fileName: plan1.md,
                     groupVersionBump: patch,
                     message: plan1 message,
@@ -1000,7 +1000,7 @@ describe('version-plans', () => {
                   },
                   {
                     absolutePath: <workspace-root>/version-plans/plan2.md,
-                    createdOnMs: 1,
+                    createdOnMs: 24,
                     fileName: plan2.md,
                     groupVersionBump: minor,
                     message: plan2 message,
@@ -1013,7 +1013,7 @@ describe('version-plans', () => {
                 versionPlans: [
                   {
                     absolutePath: <workspace-root>/version-plans/plan3.md,
-                    createdOnMs: 3,
+                    createdOnMs: 26,
                     fileName: plan3.md,
                     groupVersionBump: patch,
                     message: plan3 message,
@@ -1021,7 +1021,7 @@ describe('version-plans', () => {
                   },
                   {
                     absolutePath: <workspace-root>/version-plans/plan2.md,
-                    createdOnMs: 1,
+                    createdOnMs: 24,
                     fileName: plan2.md,
                     groupVersionBump: minor,
                     message: plan2 message,
@@ -1034,7 +1034,7 @@ describe('version-plans', () => {
                 versionPlans: [
                   {
                     absolutePath: <workspace-root>/version-plans/plan1.md,
-                    createdOnMs: 2,
+                    createdOnMs: 25,
                     fileName: plan1.md,
                     groupVersionBump: major,
                     message: plan1 message,
@@ -1042,7 +1042,7 @@ describe('version-plans', () => {
                   },
                   {
                     absolutePath: <workspace-root>/version-plans/plan2.md,
-                    createdOnMs: 1,
+                    createdOnMs: 24,
                     fileName: plan2.md,
                     groupVersionBump: minor,
                     message: plan2 message,
@@ -1055,7 +1055,7 @@ describe('version-plans', () => {
                 versionPlans: [
                   {
                     absolutePath: <workspace-root>/version-plans/plan3.md,
-                    createdOnMs: 3,
+                    createdOnMs: 26,
                     fileName: plan3.md,
                     message: plan3 message,
                     projectVersionBumps: {
@@ -1065,7 +1065,7 @@ describe('version-plans', () => {
                   },
                   {
                     absolutePath: <workspace-root>/version-plans/plan1.md,
-                    createdOnMs: 2,
+                    createdOnMs: 25,
                     fileName: plan1.md,
                     message: plan1 message,
                     projectVersionBumps: {

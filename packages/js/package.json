@@ -45,7 +45,6 @@
     "columnify": "^1.6.0",
     "detect-port": "^1.5.1",
     "fast-glob": "3.2.7",
-    "front-matter": "^4.0.2",
     "fs-extra": "^11.1.0",
     "npm-package-arg": "11.0.1",
     "npm-run-path": "^4.0.1",
