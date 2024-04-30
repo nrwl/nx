@@ -24,6 +24,8 @@ export interface PluginWorkerLoadResult {
   payload:
     | {
         name: string;
+        include?: string[];
+        exclude?: string[];
         createNodesPattern: string;
         hasCreateDependencies: boolean;
         hasProcessProjectGraph: boolean;

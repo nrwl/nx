@@ -41,7 +41,7 @@ export const calculatedTargets: Record<
   {
     name: string;
     targets: Record<string, TargetConfiguration>;
-    targetGroups: Record<string, string[]>;
+    metadata: ProjectConfiguration['metadata'];
   }
 > = {};
 
@@ -50,7 +50,7 @@ function readTargetsCache(): Record<
   {
     name: string;
     targets: Record<string, TargetConfiguration>;
-    targetGroups: Record<string, string[]>;
+    metadata: ProjectConfiguration['metadata'];
   }
 > {
   return readJsonFile(cachePath);
@@ -62,7 +62,7 @@ export function writeTargetsToCache(
     {
       name: string;
       targets: Record<string, TargetConfiguration>;
-      targetGroups: Record<string, string[]>;
+      metadata: ProjectConfiguration['metadata'];
     }
   >
 ) {
@@ -87,12 +87,7 @@ export const createNodes: CreateNodes<GradlePluginOptions> = [
       calculatedTargets[hash] = targetsCache[hash];
       return {
         projects: {
-          [projectRoot]: {
-            ...targetsCache[hash],
-            metadata: {
-              technologies: ['gradle'],
-            },
-          },
+          [projectRoot]: targetsCache[hash],
         },
       };
     }
@@ -136,19 +131,15 @@ export const createNodes: CreateNodes<GradlePluginOptions> = [
         context,
         outputDirs
       );
-      calculatedTargets[hash] = {
-        name: projectName,
-        targets,
-        targetGroups,
-      };
-
-      const project: Omit<ProjectConfiguration, 'root'> = {
+      const project = {
         name: projectName,
         targets,
         metadata: {
+          targetGroups,
           technologies: ['gradle'],
         },
       };
+      calculatedTargets[hash] = project;
 
       return {
         projects: {
@@ -180,7 +171,10 @@ function createGradleTargets(
     const targetName = options?.[`${task.name}TargetName`] ?? task.name;
 
     const outputs = outputDirs.get(task.name);
-    const path = relative(projectRoot, getGradleBinaryPath());
+    const path = relative(
+      join(context.workspaceRoot, projectRoot),
+      getGradleBinaryPath()
+    );
     targets[targetName] = {
       command: `${path} ${task.name}`,
       options: {
@@ -190,6 +184,9 @@ function createGradleTargets(
       inputs: inputsMap[task.name],
       outputs: outputs ? [outputs] : undefined,
       dependsOn: dependsOnMap[task.name],
+      metadata: {
+        technologies: ['gradle'],
+      },
     };
     if (!targetGroups[task.type]) {
       targetGroups[task.type] = [];

@@ -4,7 +4,7 @@ import {
   DocumentIcon,
   PlayCircleIcon,
 } from '@heroicons/react/24/outline';
-import { frameworkIcons } from '../icons';
+import { Framework, frameworkIcons } from '@nx/graph/ui-icons';
 
 import { cx } from '@nx/nx-dev/ui-primitives';
 import { ReactNode } from 'react';
@@ -127,7 +127,7 @@ export function LinkCard({
             }
           )}
         >
-          {icon && frameworkIcons[icon]?.image}
+          {icon && frameworkIcons[icon as Framework]?.image}
         </div>
       )}
       <div className={cx('pt-4', { 'pt-2': appearance === 'small' })}>

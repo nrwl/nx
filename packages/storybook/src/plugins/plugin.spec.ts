@@ -21,6 +21,7 @@ describe('@nx/storybook/plugin', () => {
       workspaceRoot: tempFs.tempDir,
       configFiles: [],
     };
+    tempFs.createFileSync('package.json', JSON.stringify({ name: 'repo' }));
     tempFs.createFileSync(
       'my-app/project.json',
       JSON.stringify({ name: 'my-app' })
@@ -85,14 +86,9 @@ describe('@nx/storybook/plugin', () => {
       ],
     });
     expect(
-      nodes?.['projects']?.['my-app']?.targets?.['storybook']
+      nodes?.['projects']?.['my-app']?.targets?.['serve-storybook']
     ).toMatchObject({
       command: 'storybook dev',
-    });
-    expect(
-      nodes?.['projects']?.['my-app']?.targets?.['test-storybook']
-    ).toMatchObject({
-      command: 'test-storybook',
     });
   });
 
@@ -149,7 +145,7 @@ describe('@nx/storybook/plugin', () => {
       ],
     });
     expect(
-      nodes?.['projects']?.['my-ng-app']?.targets?.['storybook']
+      nodes?.['projects']?.['my-ng-app']?.targets?.['serve-storybook']
     ).toMatchObject({
       executor: '@storybook/angular:start-storybook',
       options: {
@@ -157,11 +153,6 @@ describe('@nx/storybook/plugin', () => {
         configDir: 'my-ng-app/.storybook',
         compodoc: false,
       },
-    });
-    expect(
-      nodes?.['projects']?.['my-ng-app']?.targets?.['test-storybook']
-    ).toMatchObject({
-      command: 'test-storybook',
     });
   });
 
@@ -213,14 +204,9 @@ describe('@nx/storybook/plugin', () => {
       ],
     });
     expect(
-      nodes?.['projects']?.['my-react-lib']?.targets?.['storybook']
+      nodes?.['projects']?.['my-react-lib']?.targets?.['serve-storybook']
     ).toMatchObject({
       command: 'storybook dev',
-    });
-    expect(
-      nodes?.['projects']?.['my-react-lib']?.targets?.['test-storybook']
-    ).toMatchObject({
-      command: 'test-storybook',
     });
   });
 

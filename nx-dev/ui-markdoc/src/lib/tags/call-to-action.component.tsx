@@ -1,5 +1,5 @@
 import { ChevronRightIcon } from '@heroicons/react/24/outline';
-import { frameworkIcons } from '../icons';
+import { frameworkIcons } from '@nx/graph/ui-icons';
 
 export function CallToAction({
   url,

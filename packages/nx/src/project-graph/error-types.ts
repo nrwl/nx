@@ -32,7 +32,9 @@ export class ProjectGraphError extends Error {
     partialProjectGraph: ProjectGraph,
     partialSourceMaps: ConfigurationSourceMaps
   ) {
-    super(`Failed to process project graph.`);
+    super(
+      `Failed to process project graph. Run "nx reset" to fix this. Please report the issue if you keep seeing it.`
+    );
     this.name = this.constructor.name;
     this.#errors = errors;
     this.#partialProjectGraph = partialProjectGraph;

@@ -24,6 +24,23 @@
       {
         "runtime": "node -p '`${process.platform}_${process.arch}`'"
       }
+    ],
+    "e2eInputs": [
+      "default",
+      "{workspaceRoot}/jest.preset.js",
+      "{workspaceRoot}/.verdaccio/config.yml",
+      {
+        "env": "SELECTED_CLI"
+      },
+      {
+        "env": "SELECTED_PM"
+      },
+      {
+        "env": "NX_E2E_CI_CACHE_KEY"
+      },
+      {
+        "env": "CI"
+      }
     ]
   },
   "release": {
@@ -101,57 +118,18 @@
       "dependsOn": ["build-native", "^build-native"]
     },
     "e2e": {
-      "inputs": [
-        "default",
-        "^production",
-        "{workspaceRoot}/jest.preset.js",
-        "{workspaceRoot}/.verdaccio/config.yml",
-        {
-          "env": "SELECTED_CLI"
-        },
-        {
-          "env": "SELECTED_PM"
-        },
-        {
-          "env": "NX_E2E_CI_CACHE_KEY"
-        },
-        {
-          "env": "CI"
-        }
-      ],
-      "executor": "@nx/jest:jest",
-      "options": {
-        "jestConfig": "{projectRoot}/jest.config.ts",
-        "passWithNoTests": true,
-        "runInBand": true
-      },
-      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
-      "cache": true
+      "cache": true,
+      "inputs": ["e2eInputs", "^production"]
     },
-    "e2e-macos": {
-      "inputs": [
-        "default",
-        "^production",
-        "{workspaceRoot}/jest.preset.js",
-        "{workspaceRoot}/.verdaccio/config.yml",
-        {
-          "env": "SELECTED_CLI"
-        },
-        {
-          "env": "SELECTED_PM"
-        },
-        {
-          "env": "NX_E2E_CI_CACHE_KEY"
-        }
-      ],
-      "executor": "@nx/jest:jest",
-      "options": {
-        "jestConfig": "{projectRoot}/jest.config.ts",
-        "passWithNoTests": true,
-        "runInBand": true
-      },
-      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
-      "cache": true
+    "e2e-local": {
+      "cache": true,
+      "inputs": ["e2eInputs", "^production"]
+    },
+    "e2e-ci": {
+      "inputs": ["e2eInputs", "^production"]
+    },
+    "e2e-macos-ci": {
+      "inputs": ["e2eInputs", "^production"]
     },
     "e2e-base": {
       "inputs": ["default", "^production"]
@@ -208,6 +186,23 @@
       "options": {
         "serveTargetName": "serve-base",
         "buildTargetName": "build-client"
+      }
+    },
+    {
+      "plugin": "@nx/jest/plugin",
+      "include": ["e2e/**/*"],
+      "exclude": ["e2e/detox/**/*", "e2e/react-native/**/*", "e2e/expo/**/*"],
+      "options": {
+        "targetName": "e2e-local",
+        "ciTargetName": "e2e-ci"
+      }
+    },
+    {
+      "plugin": "@nx/jest/plugin",
+      "include": ["e2e/detox/**/*", "e2e/react-native/**/*", "e2e/expo/**/*"],
+      "options": {
+        "targetName": "e2e-local",
+        "ciTargetName": "e2e-macos-ci"
       }
     }
   ],

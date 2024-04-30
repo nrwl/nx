@@ -148,7 +148,9 @@ async function buildStorybookTargets(
     configFilePath
   );
 
-  targets[options.testStorybookTargetName] = testTarget(projectRoot);
+  if (isStorybookTestRunnerInstalled()) {
+    targets[options.testStorybookTargetName] = testTarget(projectRoot);
+  }
 
   targets[options.staticStorybookTargetName] = serveStaticTarget(
     options,
@@ -301,10 +303,10 @@ function normalizeOptions(
   options: StorybookPluginOptions
 ): StorybookPluginOptions {
   options ??= {};
-  options.buildStorybookTargetName = 'build-storybook';
-  options.serveStorybookTargetName = 'storybook';
-  options.testStorybookTargetName = 'test-storybook';
-  options.staticStorybookTargetName = 'static-storybook';
+  options.buildStorybookTargetName ??= 'build-storybook';
+  options.serveStorybookTargetName ??= 'storybook';
+  options.testStorybookTargetName ??= 'test-storybook';
+  options.staticStorybookTargetName ??= 'static-storybook';
   return options;
 }
 
@@ -323,4 +325,13 @@ function buildProjectName(
     name = packageJson.name;
   }
   return name;
+}
+
+function isStorybookTestRunnerInstalled(): boolean {
+  try {
+    require.resolve('@storybook/test-runner');
+    return true;
+  } catch (e) {
+    return false;
+  }
 }

@@ -3,7 +3,7 @@ import { ProjectDetailsHeader } from 'graph/project-details/src/lib/project-deta
 import { useRouteError } from 'react-router-dom';
 
 export function ErrorBoundary() {
-  let error = useRouteError()?.toString();
+  let error = useRouteError();
   console.error(error);
   const environment = useEnvironmentConfig()?.environment;
 
@@ -20,7 +20,7 @@ export function ErrorBoundary() {
       <h1 className="mb-4 text-4xl dark:text-slate-100">Error</h1>
       <div>
         <p className="mb-4 text-lg dark:text-slate-200">{message}</p>
-        <p className="text-sm">Error message: {error}</p>
+        <p className="text-sm">Error message: {error?.toString()}</p>
       </div>
     </div>
   );

@@ -33,7 +33,7 @@ describe('Webpack Plugin', () => {
       `libs/${myPkg}/webpack.config.js`,
       `
       const path  = require('path');
-      const { NxWebpackPlugin } = require('@nx/webpack');
+      const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
       
       class DebugPlugin {
         apply(compiler) {
@@ -47,7 +47,7 @@ describe('Webpack Plugin', () => {
           path: path.join(__dirname, '../../dist/libs/${myPkg}')
         },
         plugins: [
-          new NxWebpackPlugin({
+          new NxAppWebpackPlugin({
             compiler: 'tsc',
             main: './src/index.ts',
             tsConfig: './tsconfig.lib.json',
@@ -139,7 +139,7 @@ describe('Webpack Plugin', () => {
       `apps/${appName}/webpack.config.js`,
       `
       const path  = require('path');
-      const { NxWebpackPlugin } = require('@nx/webpack');
+      const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
 
       module.exports = {
         target: 'node',
@@ -147,7 +147,7 @@ describe('Webpack Plugin', () => {
           path: path.join(__dirname, '../../dist/${appName}')
         },
         plugins: [
-          new NxWebpackPlugin({
+          new NxAppWebpackPlugin({
             compiler: 'tsc',
             main: 'apps/${appName}/src/main.ts',
             tsConfig: 'apps/${appName}/tsconfig.app.json',
@@ -239,14 +239,14 @@ describe('Webpack Plugin', () => {
     updateFile(
       `apps/${appName}/webpack.config.js`,
       `
-        const { NxWebpackPlugin } = require('@nx/webpack');
+        const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
         const { join } = require('path');
         module.exports = {
           output: {
             path: join(__dirname, '../../dist/apps/demo'),
           },
           plugins: [
-            new NxWebpackPlugin({
+            new NxAppWebpackPlugin({
               // NOTE: generatePackageJson is missing here, but executor passes it.
               target: 'web',
               compiler: 'swc',

@@ -43,14 +43,16 @@ export class PseudoTerminal {
       cwd,
       jsEnv,
       quiet,
+      tty,
     }: {
       cwd?: string;
       jsEnv?: Record<string, string>;
       quiet?: boolean;
+      tty?: boolean;
     } = {}
   ) {
     return new PseudoTtyProcess(
-      this.rustPseudoTerminal.runCommand(command, cwd, jsEnv, quiet)
+      this.rustPseudoTerminal.runCommand(command, cwd, jsEnv, quiet, tty)
     );
   }
 
