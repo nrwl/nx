@@ -28,70 +28,39 @@ To verify that Gradle was installed correctly, run this command:
 gradle --version
 ```
 
-Next, create a `gradle-tutorial` folder to hold the repository.
+Next, check out [the sample repository](https://github.com/nrwl/gradle-spring) on your local machine:
 
 ```shell
-mkdir gradle-tutorial
-cd gradle-tutorial
+git clone https://github.com/nrwl/gradle-spring.git
 ```
 
-Then, run the `gradle init` command to generate a default repository:
+You can run the `./gradle projects` command to get a list of projects in the repo.
 
-```{% command="gradle init --type java-application --dsl kotlin" %}
-Enter target Java version (min: 7, default: 21): 21
-
-Project name (default: gradle-tutorial): gradle-tutorial
-
-Select application structure:
-  1: Single application project
-  2: Application and library project
-Enter selection (default: Single application project) [1..2] 2
-
-Generate build using new APIs and behavior (some features may change in the next minor release)? (default: no) [yes, no] no
-
-
-> Task :init
-To learn more about Gradle by exploring our Samples at https://docs.gradle.org/8.7/samples/sample_building_java_applications_multi_project.html
-
-BUILD SUCCESSFUL in 23s
-1 actionable task: 1 executed
-```
-
-Finally, set up git and create your first commit:
-
-```shell
-git init
-git commit -am "initial commit"
-```
-
-You can run the `gradle projects` command to get a list of projects in the repo.
-
-```text {% command="gradle projects" %}
+```text {% command="./gradle projects" %}
 > Task :projects
 
 ------------------------------------------------------------
-Root project 'gradle-tutorial'
+Root project 'gs-multi-module'
 ------------------------------------------------------------
 
-Root project 'gradle-tutorial'
-+--- Project ':app'
-+--- Project ':list'
-\--- Project ':utilities'
+Root project 'gs-multi-module'
++--- Project ':application'
+\--- Project ':library'
 
-To see a list of the tasks of a project, run gradle <project-path>:tasks
-For example, try running gradle :app:tasks
+To see a list of the tasks of a project, run gradlew <project-path>:tasks
+For example, try running gradlew :application:tasks
 
-BUILD SUCCESSFUL in 15s
-11 actionable tasks: 11 executed
+BUILD SUCCESSFUL in 3s
+1 actionable task: 1 executed
 ```
 
-The repository has two Java libraries (under `list` and `utilities`) that are used in an application located in the `app` folder.
+The repository has an application and a library created with the [Spring framework]().
 
-You can build the `app` project by running `gradle app:build`:
+You can build the `application` project by running `./gradlew application:build`:
 
-```text {% command="gradle app:build" %}
-BUILD SUCCESSFUL in 3s
-21 actionable tasks: 12 executed, 9 up-to-date
+```text {% command="./gradlew application:build" %}
+BUILD SUCCESSFUL in 1s
+9 actionable tasks: 9 up-to-date
 ```
 
 ## Add Nx
@@ -115,22 +84,22 @@ After Nx has been installed, there will be a few new files in your repository:
 ```treeview
 gradle-tutorial/
 ├── .nx/
-├── app/
-├── list/
-├── utilities/
+├── application/
+├── library/
+├── build.gradle
 ├── gradlew
 ├── gradlew.bat
 ├── nx
 ├── nx.bat
 ├── nx.json
-└── settings.gradle.kts
+└── settings.gradle
 ```
 
 Because this is not a javascript repository, there is no `package.json` file or `node_modules` folder. Instead, Nx has provided executables at the root of the repository: `nx` for Unix operating systems and `nx.bat` for Windows. These executables can be used in the same way that `gradlew` and `gradlew.bat` are used.
 
 The `.nx` folder contains all the code needed to run the `nx` CLI and the cache that Nx uses.
 
-The `nx.json` file contains repository-wide configuration options for Nx and contains a list of the currently installed Nx plugins.
+The `nx.json` file contains repository-wide configuration options for Nx and a list of the currently installed Nx plugins.
 
 ## Explore Your Workspace
 
@@ -147,10 +116,10 @@ Nx uses this graph to determine the order tasks are run and enforce module bound
 
 ## Run Tasks
 
-Nx can run any of your Gradle tasks. The Gradle command to run the `build` task for the `app` project is `./gradlew app:build`. The Nx command to run the same task is:
+Nx can run any of your Gradle tasks. The Gradle command to run the `build` task for the `application` project is `./gradlew application:build`. The Nx command to run the same task is:
 
 ```shell
-./nx build app
+./nx build application
 ```
 
 When Nx runs a Gradle task, it hands off the execution of that task to Gradle, so all task dependencies and configuration settings in the Gradle configuration are still respected.
@@ -163,20 +132,31 @@ To run all the `build` tasks in the repository with Gradle, run `./gradlew build
 
 ## Create a Custom Task
 
-Nx can run any tasks that are available to Gradle - even your own custom tasks. Let's create a custom task to see this functionality in action. Edit the `app` gradle build file to create a custom task:
+Nx can run any tasks that are available to Gradle - even your own custom tasks. Let's create a custom task to see this functionality in action. Edit the `application` gradle build file to create a custom task:
 
-```kts {% fileName="app/build.gradle.kts" %}
-/*
- * This file was generated by the Gradle 'init' task.
- */
-
+```{% fileName="application/build.gradle" %}
 plugins {
-    id("buildlogic.java-application-conventions")
+	id 'org.springframework.boot' version '3.2.2'
+	id 'io.spring.dependency-management' version '1.1.4'
+	id 'java'
+}
+
+group = 'com.example'
+version = '0.0.1-SNAPSHOT'
+
+java {
+	sourceCompatibility = '17'
+}
+
+repositories {
+	mavenCentral()
 }
 
 dependencies {
-    implementation("org.apache.commons:commons-text")
-    implementation(project(":utilities"))
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation project(':library')
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }
 
 tasks.register("mytask"){
@@ -189,32 +169,27 @@ tasks.named("mytask"){
         println("This is my task!")
     }
 }
-
-application {
-    // Define the main class for the application.
-    mainClass = "org.example.app.App"
-}
 ```
 
 Now, you can run `mytask` with Nx like this:
 
-```{% command="./nx mytask app" %}
-> nx run app:mytask
+```{% command="./nx mytask application" %}
+> nx run application:mytask
 
-> /Users/isaac/Documents/code/gradle/gradlew mytask
+> ../gradlew mytask
 
 
-> Task :app:mytask
+> Task :application:mytask
 This is my task!
 
-BUILD SUCCESSFUL in 522ms
-11 actionable tasks: 2 executed, 9 up-to-date
+BUILD SUCCESSFUL in 358ms
+1 actionable task: 1 executed
 ```
 
-You can see all the tasks available to Nx by opening the project details view for the `app` project. You can do this either through [Nx Console](/getting-started/editor-setup) or from the terminal:
+You can see all the tasks available to Nx by opening the project details view for the `application` project. You can do this either through [Nx Console](/getting-started/editor-setup) or from the terminal:
 
-```shell {% path="~/tuskydesigns" %}
-npx nx show project @tuskdesign/demo --web
+```shell {% path="~/gradle-tutorial" %}
+npx nx show project application --web
 ```
 
 {% project-details title="Project Details View" jsonFile="shared/tutorials/gradle-pdv.json" %}
@@ -230,29 +205,35 @@ First, commit any outstanding changes in your repository:
 git commit -am "changes"
 ```
 
-Next make a small change to the `app` code:
+Next make a small change to the `application` code:
 
-```java {% fileName="app/src/main/java/org/example/app/App.java" %}
-/*
- * This source file was generated by the Gradle 'init' task
- */
-package org.example.app;
+```java {% fileName="application/src/main/java/com/example/multimodule/application/DemoApplication.java" %}
+package com.example.multimodule.application;
 
-import org.example.list.LinkedList;
+import com.example.multimodule.service.MyService;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-import static org.example.utilities.StringUtils.join;
-import static org.example.utilities.StringUtils.split;
-import static org.example.app.MessageUtils.getMessage;
+@SpringBootApplication(scanBasePackages = "com.example.multimodule")
+@RestController
+public class DemoApplication {
 
-import org.apache.commons.text.WordUtils;
+	private final MyService myService;
 
-public class App {
-    public static void main(String[] args) {
-        LinkedList tokens;
-        tokens = split(getMessage());
-        String result = join(tokens) + " something";
-        System.out.println(WordUtils.capitalize(result));
-    }
+	public DemoApplication(MyService myService) {
+		this.myService = myService;
+	}
+
+	@GetMapping("/")
+	public String home() {
+		return myService.message() + " changed!";
+	}
+
+	public static void main(String[] args) {
+		SpringApplication.run(DemoApplication.class, args);
+	}
 }
 ```
 
@@ -262,7 +243,7 @@ Then you can use the `nx affected` command to run the `assemble` task only for p
 ./nx affected -t assemble
 ```
 
-The assemble task was run for the `app` project, but not for `list` or `utilities` because a change to the `app` project could not have changed the behavior of those projects. This feature is most useful in CI where you want to make sure to fully check every project that may have been affected by a change, but you want to avoid wasting time on tasks that do not need to be run. As more projects are added to the repository, this functionality becomes essential to maintain a fast CI pipeline.
+The assemble task was run for the `application` project, but not for `library` because a change to the `application` project could not have changed the behavior of those projects. This feature is most useful in CI where you want to make sure to fully check every project that may have been affected by a change, but you want to avoid wasting time on tasks that do not need to be run. As more projects are added to the repository, this functionality becomes essential to maintain a fast CI pipeline.
 
 ## Summary
 
@@ -299,6 +280,10 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin' # See 'Supported distributions' for available options
+          java-version: '21'
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v2
 
