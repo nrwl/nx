@@ -1,14 +1,14 @@
 export const GLOB = 'GLOB' as const;
 
-export type HandleGlobMessage = {
+export type HandleUpdateContextMessage = {
   type: typeof GLOB;
-  globs: string[];
-  exclude?: string[];
+  updatedFiles: string[],
+  deletedFiles: string[]
 };
 
-export function isHandleGlobMessage(
+export function isHandleUpdateContextMessage(
   message: unknown
-): message is HandleGlobMessage {
+): message is HandleUpdateContextMessage {
   return (
     typeof message === 'object' &&
     message !== null &&

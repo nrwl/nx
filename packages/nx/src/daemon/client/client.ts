@@ -31,6 +31,8 @@ import {
 } from '../../project-graph/error-types';
 import { loadRootEnvFiles } from '../../utils/dotenv';
 import { HandleGlobMessage } from '../message-types/glob';
+import { HandleNxWorkspaceFilesMessage } from '../message-types/get-nx-workspace-files';
+import { GET_CONTEXT_FILE_DATA, HandleContextFileDataMessage } from '../message-types/get-context-file-data';
 
 const DAEMON_ENV_SETTINGS = {
   NX_PROJECT_GLOB_CACHE: 'false',
@@ -266,6 +268,15 @@ export class DaemonClient {
       globs,
       exclude,
     };
+    return this.sendToDaemonViaQueue(message);
+  }
+
+  getWorkspaceContextFileData(globs: string[], exclude?: string[]): Promise<FileData[]> {
+    const message: HandleContextFileDataMessage = {
+      type: GET_CONTEXT_FILE_DATA,
+      globs: ['**/*'],
+      exclude: ['node_modules', '.git'],
+    }
     return this.sendToDaemonViaQueue(message);
   }
 

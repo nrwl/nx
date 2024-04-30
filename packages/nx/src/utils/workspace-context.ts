@@ -1,6 +1,8 @@
 import type { NxWorkspaceFilesExternals, WorkspaceContext } from '../native';
 import { performance } from 'perf_hooks';
 import { cacheDirectoryForWorkspace } from './cache-directory';
+import { isOnDaemon } from './is-on-daemon';
+import { daemonClient } from '../daemon/client/client';
 
 let workspaceContext: WorkspaceContext | undefined;
 
@@ -28,13 +30,17 @@ export function getNxWorkspaceFilesFromContext(
   return workspaceContext.getWorkspaceFiles(projectRootMap);
 }
 
-export function globWithWorkspaceContext(
+export async function globWithWorkspaceContext(
   workspaceRoot: string,
   globs: string[],
   exclude?: string[]
 ) {
-  ensureContextAvailable(workspaceRoot);
-  return workspaceContext.glob(globs, exclude);
+  if (isOnDaemon() || !daemonClient.enabled()) {
+    ensureContextAvailable(workspaceRoot);
+    return workspaceContext.glob(globs, exclude);
+  } else {
+    return daemonClient.glob(globs, exclude);
+  }
 }
 
 export function hashWithWorkspaceContext(
