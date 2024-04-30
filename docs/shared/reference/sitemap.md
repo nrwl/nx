@@ -372,6 +372,7 @@
       - [configuration](/nx-api/cypress/generators/configuration)
       - [component-configuration](/nx-api/cypress/generators/component-configuration)
       - [migrate-to-cypress-11](/nx-api/cypress/generators/migrate-to-cypress-11)
+      - [convert-to-inferred](/nx-api/cypress/generators/convert-to-inferred)
   - [detox](/nx-api/detox)
     - [documents](/nx-api/detox/documents)
       - [Overview](/nx-api/detox/documents/overview)

@@ -32,7 +32,8 @@ const {
 
 type PluginOptionsBuilder<T> = (targetName: string) => T;
 type PostTargetTransformer = (
-  targetConfiguration: TargetConfiguration
+  targetConfiguration: TargetConfiguration,
+  tree?: Tree
 ) => TargetConfiguration;
 type SkipTargetFilter = (
   targetConfiguration: TargetConfiguration
@@ -129,7 +130,7 @@ class ExecutorToPluginMigrator<T> {
     delete projectTarget.executor;
 
     deleteMatchingProperties(projectTarget, createdTarget);
-    projectTarget = this.#postTargetTransformer(projectTarget);
+    projectTarget = this.#postTargetTransformer(projectTarget, this.tree);
 
     if (
       projectTarget.options &&
