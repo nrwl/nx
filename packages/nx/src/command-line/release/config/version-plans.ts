@@ -266,7 +266,7 @@ function isDefault(releaseGroups: ReleaseGroupWithName[]) {
   );
 }
 
-function getVersionPlansAbsolutePath() {
+export function getVersionPlansAbsolutePath() {
   return join(workspaceRoot, versionPlansDirectory);
 }
 
