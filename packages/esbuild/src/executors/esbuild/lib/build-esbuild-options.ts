@@ -260,7 +260,7 @@ Module._resolveFilename = function(request, parent) {
       const match = request.match(re);
 
       if (match?.groups) {
-        const candidate = path.join(distPath, entry.pattern.replace("*", ""), match.groups.rest + ".js");
+        const candidate = path.join(distPath, entry.pattern.replace("*", ""), match.groups.rest);
         if (isFile(candidate)) {
           found = candidate;
         }
@@ -278,7 +278,8 @@ Module._resolveFilename = function(request, parent) {
 
 function isFile(s) {
   try {
-    return fs.statSync(s).isFile();
+    require.resolve(s);
+    return true;
   } catch (_e) {
     return false;
   }
