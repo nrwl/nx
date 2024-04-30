@@ -37,6 +37,7 @@ out
 .angular
 
 # Local dev files
+.env
 .bashrc
 .nx
 
