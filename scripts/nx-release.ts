@@ -130,6 +130,8 @@ const VALID_AUTHORS_FOR_LATEST = [
 
   const distTag = determineDistTag(options.version);
 
+  console.log('KATERINA THE TAG IS', distTag);
+
   if (options.dryRun) {
     console.warn('Not Publishing because --dryRun was passed');
   } else {
@@ -359,12 +361,15 @@ function getRegistry() {
 function determineDistTag(
   newVersion: string
 ): 'latest' | 'next' | 'previous' | 'canary' | 'pull-request' {
+  console.log(`KATERINA the new version: ${newVersion}`);
   // Special case of canary
   if (newVersion.includes('canary')) {
     return 'canary';
   }
 
   // Special case of PR release
+  console.log('Katerina is this a PR:', newVersion.startsWith('0.0.0-pr-'));
+  console.log('Katerina is this a PR 2:', newVersion.includes('0.0.0-pr-'));
   if (newVersion.startsWith('0.0.0-pr-')) {
     return 'pull-request';
   }
