@@ -6,7 +6,7 @@ import {
   execFileSync,
 } from 'node:child_process';
 import { existsSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, relative } from 'node:path';
 
 export function execGradle(
   args: string[],
@@ -27,6 +27,17 @@ export function getGradleBinaryPath(): string {
   }
 
   return gradleBinaryPath;
+}
+
+export function getGradleRelativePath(path: string): string {
+  const gradleBinaryPath = getGradleBinaryPath();
+  let relativePath = relative(path, gradleBinaryPath);
+  if (relativePath.startsWith('gradlew')) {
+    relativePath = process.platform.startsWith('win')
+      ? `.\\${relativePath}`
+      : `./${relativePath}`;
+  }
+  return relativePath;
 }
 
 export function execGradleAsync(
