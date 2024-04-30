@@ -14,34 +14,39 @@ import {
   readTargetsFromPackageJson,
 } from '../../utils/package-json';
 import { joinPathFragments } from '../../utils/path';
-import { workspaceRoot } from '../../utils/workspace-root';
 import { CreateNodes } from '../../project-graph/plugins';
 
-const readJson = (f) => readJsonFile(join(workspaceRoot, f));
-const patterns = getGlobPatternsFromPackageManagerWorkspaces(
-  workspaceRoot,
-  readJson
-);
-
-const negativePatterns = patterns.filter((p) => p.startsWith('!'));
-const positivePatterns = patterns.filter((p) => !p.startsWith('!'));
-if (
-  // There are some negative patterns
-  negativePatterns.length > 0 &&
-  // No positive patterns
-  (positivePatterns.length === 0 ||
-    // Or only a single positive pattern that is the default coming from root package
-    (positivePatterns.length === 1 && positivePatterns[0] === 'package.json'))
-) {
-  positivePatterns.push('**/package.json');
-}
 export const createNodes: CreateNodes = [
-  combineGlobPatterns(positivePatterns),
+  combineGlobPatterns('package.json', '**/package.json'),
   (p, _, { workspaceRoot }) => {
-    if (!negativePatterns.some((negative) => minimatch(p, negative))) {
+    const readJson = (f) => readJsonFile(join(workspaceRoot, f));
+    const patterns = getGlobPatternsFromPackageManagerWorkspaces(
+      workspaceRoot,
+      readJson
+    );
+
+    const negativePatterns = patterns.filter((p) => p.startsWith('!'));
+    const positivePatterns = patterns.filter((p) => !p.startsWith('!'));
+
+    if (
+      // There are some negative patterns
+      negativePatterns.length > 0 &&
+      // No positive patterns
+      (positivePatterns.length === 0 ||
+        // Or only a single positive pattern that is the default coming from root package
+        (positivePatterns.length === 1 &&
+          positivePatterns[0] === 'package.json'))
+    ) {
+      positivePatterns.push('**/package.json');
+    }
+
+    if (
+      positivePatterns.some((positive) => minimatch(p, positive)) &&
+      !negativePatterns.some((negative) => minimatch(p, negative))
+    ) {
       return createNodeFromPackageJson(p, workspaceRoot);
     }
-    // A negative pattern matched, so we should not create a node for this package.json
+    // The given package.json is not part of the workspaces configuration.
     return {};
   },
 ];
