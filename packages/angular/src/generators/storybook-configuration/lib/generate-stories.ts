@@ -10,9 +10,9 @@ export async function generateStories(
 ) {
   const project = readProjectConfiguration(tree, options.project);
   ensurePackage('@nx/cypress', nxVersion);
-  const { getE2eProjectName } = await import(
-    '@nx/cypress/src/utils/project-name'
-  );
+  const { getE2eProjectName } = <
+    typeof import('@nx/cypress/src/utils/project-name')
+  >require('@nx/cypress/src/utils/project-name');
   const e2eProjectName = getE2eProjectName(
     options.project,
     project.root,

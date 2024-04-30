@@ -46,7 +46,7 @@ export default async function* applicationExecutor(
     {
       builderName: 'application',
       description: 'Build an application.',
-      optionSchema: await import('./schema.json'),
+      optionSchema: require('./schema.json'),
     },
     context
   );

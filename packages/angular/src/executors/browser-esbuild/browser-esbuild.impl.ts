@@ -41,17 +41,15 @@ export default async function* esbuildExecutor(
 
   const plugins = await loadPlugins(pluginPaths, options.tsConfig);
 
-  const { buildEsbuildBrowser } = await import(
-    '@angular-devkit/build-angular/src/builders/browser-esbuild/index'
-  );
+  const { buildEsbuildBrowser } = <
+    typeof import('@angular-devkit/build-angular/src/builders/browser-esbuild')
+  >require('@angular-devkit/build-angular/src/builders/browser-esbuild');
 
   const builderContext = await createBuilderContext(
     {
       builderName: 'browser-esbuild',
       description: 'Build a browser application',
-      optionSchema: await import(
-        '@angular-devkit/build-angular/src/builders/browser-esbuild/schema.json'
-      ),
+      optionSchema: require('@angular-devkit/build-angular/src/builders/browser-esbuild/schema.json'),
     },
     context
   );

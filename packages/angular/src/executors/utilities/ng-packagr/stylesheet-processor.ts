@@ -6,7 +6,7 @@
  * config at the root of the workspace.
  */
 
-import * as browserslist from 'browserslist';
+import browserslist from 'browserslist';
 import { existsSync } from 'fs';
 import { dirname, join } from 'path';
 const Piscina = require('piscina');
@@ -200,9 +200,9 @@ export class AsyncStylesheetProcessor {
       getInstalledPackageVersionInfo('ng-packagr');
     let postcssConfiguration: PostcssConfiguration | undefined;
     if (ngPackagrVersion === '17.2.0') {
-      const { loadPostcssConfiguration } = await import(
-        'ng-packagr/lib/styles/postcss-configuration'
-      );
+      const {
+        loadPostcssConfiguration,
+      } = require('ng-packagr/lib/styles/postcss-configuration');
       postcssConfiguration = await loadPostcssConfiguration(
         this.projectBasePath
       );

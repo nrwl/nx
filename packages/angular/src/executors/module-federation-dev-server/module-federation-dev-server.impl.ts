@@ -63,9 +63,7 @@ export async function* moduleFederationDevServerExecutor(
             {
               builderName: '@nx/angular:webpack-browser',
               description: 'Build a browser application',
-              optionSchema: await import(
-                '../../builders/webpack-browser/schema.json'
-              ),
+              optionSchema: require('../../builders/webpack-browser/schema.json'),
             },
             context
           )
