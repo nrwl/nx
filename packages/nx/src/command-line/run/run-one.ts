@@ -70,7 +70,7 @@ export async function runOne(
 
     return await generateGraph(
       {
-        watch: false,
+        watch: true,
         open: true,
         view: 'tasks',
         targets: nxArgs.targets,
