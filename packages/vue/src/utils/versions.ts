@@ -19,6 +19,9 @@ export const postcssVersion = '8.4.21';
 export const tailwindcssVersion = '3.2.7';
 export const autoprefixerVersion = '10.4.13';
 
+// unocss
+export const unocssVersion = "0.59.4"
+
 // other deps
 export const sassVersion = '1.62.1';
 export const lessVersion = '3.12.2';

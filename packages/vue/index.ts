@@ -10,6 +10,8 @@ export {
 } from './src/generators/stories/stories';
 export { setupTailwindGenerator } from './src/generators/setup-tailwind/setup-tailwind';
 export { SetupTailwindOptions } from './src/generators/setup-tailwind/schema';
+export { setupUnoCSSGenerator } from './src/generators/setup-unocss/setup-unocss';
+export { SetupUnoCSSOptions } from './src/generators/setup-unocss/schema';
 export { type InitSchema } from './src/generators/init/schema';
 export { vueInitGenerator } from './src/generators/init/init';
 export * from './src/utils/versions';

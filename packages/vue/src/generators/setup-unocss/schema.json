@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/schema",
+  "cli": "nx",
+  "$id": "NxVueUnoCSSSetupGenerator",
+  "title": "Configures UnoCSS for an application or a library.",
+  "description": "Adds the UnoCSS configuration files for a given Vue project and installs, if needed, the packages required for UnoCSS to work.",
+  "type": "object",
+  "examples": [
+    {
+      "command": "nx g setup-unocss --project=my-app",
+      "description": "Initialize UnoCSS configuration for the `my-app` project."
+    }
+  ],
+  "properties": {
+    "project": {
+      "type": "string",
+      "description": "The name of the project to add the UnoCSS setup for.",
+      "alias": "p",
+      "$default": {
+        "$source": "argv",
+        "index": 0
+      },
+      "x-dropdown": "projects",
+      "x-prompt": "What project would you like to add the UnoCSS setup?",
+      "x-priority": "important"
+    },
+    "skipFormat": {
+      "type": "boolean",
+      "description": "Skips formatting the workspace after the generator completes.",
+      "x-priority": "internal"
+    },
+    "skipPackageJson": {
+      "type": "boolean",
+      "default": false,
+      "description": "Do not add dependencies to `package.json`.",
+      "x-priority": "internal"
+    },
+    "entrypoint": {
+      "type": "string",
+      "description": "Path to the project entry point relative to the workspace root. This option is only needed if the entrypoint location cannot be found automatically."
+    }
+  },
+  "additionalProperties": false,
+  "required": ["project"]
+}

@@ -34,6 +34,11 @@
       "schema": "./src/generators/setup-tailwind/schema.json",
       "description": "Set up Tailwind configuration for a project."
     },
+    "setup-unocss": {
+      "factory": "./src/generators/setup-unocss/setup-unocss",
+      "schema": "./src/generators/setup-unocss/schema.json",
+      "description": "Set up UnoCSS configuration for a project."
+    },
     "storybook-configuration": {
       "factory": "./src/generators/storybook-configuration/configuration#storybookConfigurationGeneratorInternal",
       "schema": "./src/generators/storybook-configuration/schema.json",
