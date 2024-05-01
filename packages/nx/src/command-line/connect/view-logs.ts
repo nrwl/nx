@@ -7,8 +7,8 @@ import { readNxJson } from '../../config/nx-json';
 import { connectExistingRepoToNxCloudPrompt } from './connect-to-nx-cloud';
 
 export async function viewLogs(): Promise<number> {
-  const cloudUsed = isNxCloudUsed(readNxJson());
-  if (cloudUsed) {
+  const [isCloudUsed, _] = isNxCloudUsed(readNxJson());
+  if (isCloudUsed) {
     output.error({
       title: 'Your workspace is already connected to Nx Cloud',
       bodyLines: [
@@ -48,7 +48,7 @@ export async function viewLogs(): Promise<number> {
     stdio: [0, 1, 2],
   });
 
-  if (!cloudUsed) {
+  if (!isCloudUsed) {
     output.note({
       title: 'Your workspace is now connected to Nx Cloud',
       bodyLines: [`Learn more about Nx Cloud at https://nx.app`],
