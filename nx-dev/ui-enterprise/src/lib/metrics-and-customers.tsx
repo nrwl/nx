@@ -91,7 +91,7 @@ export function MetricsAndCustomers(): JSX.Element {
             </dd>
           </div>
         </dl>
-        <div className="mt-12 flex justify-between gap-2 md:mt-0">
+        <div className="mt-12 grid grid-cols-2 justify-between gap-2 md:mt-0 md:flex">
           <div className="col-span-1 hidden h-14 items-center justify-center lg:flex lg:h-28">
             <ManIcon aria-hidden="true" className="h-14 w-14 text-[#E40045]" />
           </div>
