@@ -24,50 +24,50 @@ jobs:
       fail-fast: false
       matrix:
         settings:
-          - host: macos-13
-            target: x86_64-apple-darwin
-            build: |
-              pnpm nx run-many --target=build-native -- --target=x86_64-apple-darwin
-          - host: windows-latest
-            build: pnpm nx run-many --target=build-native -- --target=x86_64-pc-windows-msvc
-            target: x86_64-pc-windows-msvc
-          # Windows 32bit (not needed)
-          # - host: windows-latest
+          # - host: macos-13
+          #   target: x86_64-apple-darwin
           #   build: |
-          #     yarn nx -- run-many --target=build-native -- --target=i686-pc-windows-msvc
-          #   target: i686-pc-windows-msvc
-          - host: ubuntu-latest
-            target: x86_64-unknown-linux-gnu
-            docker: ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-debian
-            build: |-
-              set -e &&
-              pnpm --version &&
-              pnpm install --frozen-lockfile &&
-              pnpm nx run-many --verbose --target=build-native -- --target=x86_64-unknown-linux-gnu
-          - host: ubuntu-latest
-            target: x86_64-unknown-linux-musl
-            docker: ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-alpine
-            build: |-
-              set -e &&
-              pnpm install --frozen-lockfile &&
-              pnpm nx run-many --verbose --target=build-native -- --target=x86_64-unknown-linux-musl
-          - host: macos-13
-            target: aarch64-apple-darwin
-            build: |
-              sudo rm -Rf /Library/Developer/CommandLineTools/SDKs/*;
-              export CC=$(xcrun -f clang);
-              export CXX=$(xcrun -f clang++);
-              SYSROOT=$(xcrun --sdk macosx --show-sdk-path);
-              export CFLAGS="-isysroot $SYSROOT -isystem $SYSROOT";
-              pnpm nx run-many --target=build-native -- --target=aarch64-apple-darwin
-          - host: ubuntu-latest
-            target: aarch64-unknown-linux-gnu
-            docker: ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-debian-aarch64
-            build: |-
-              set -e &&
-              pnpm --version &&
-              pnpm install --frozen-lockfile &&
-              pnpm nx run-many --verbose --target=build-native -- --target=aarch64-unknown-linux-gnu
+          #     pnpm nx run-many --target=build-native -- --target=x86_64-apple-darwin
+          # # - host: windows-latest
+          #   build: pnpm nx run-many --target=build-native -- --target=x86_64-pc-windows-msvc
+          #   target: x86_64-pc-windows-msvc
+          # # Windows 32bit (not needed)
+          # # - host: windows-latest
+          # #   build: |
+          # #     yarn nx -- run-many --target=build-native -- --target=i686-pc-windows-msvc
+          # #   target: i686-pc-windows-msvc
+          # - host: ubuntu-latest
+          #   target: x86_64-unknown-linux-gnu
+          #   docker: ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-debian
+          #   build: |-
+          #     set -e &&
+          #     pnpm --version &&
+          #     pnpm install --frozen-lockfile &&
+          #     pnpm nx run-many --verbose --target=build-native -- --target=x86_64-unknown-linux-gnu
+          # - host: ubuntu-latest
+          #   target: x86_64-unknown-linux-musl
+          #   docker: ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-alpine
+          #   build: |-
+          #     set -e &&
+          #     pnpm install --frozen-lockfile &&
+          #     pnpm nx run-many --verbose --target=build-native -- --target=x86_64-unknown-linux-musl
+          # - host: macos-13
+          #   target: aarch64-apple-darwin
+          #   build: |
+          #     sudo rm -Rf /Library/Developer/CommandLineTools/SDKs/*;
+          #     export CC=$(xcrun -f clang);
+          #     export CXX=$(xcrun -f clang++);
+          #     SYSROOT=$(xcrun --sdk macosx --show-sdk-path);
+          #     export CFLAGS="-isysroot $SYSROOT -isystem $SYSROOT";
+          #     pnpm nx run-many --target=build-native -- --target=aarch64-apple-darwin
+          # - host: ubuntu-latest
+          #   target: aarch64-unknown-linux-gnu
+          #   docker: ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-debian-aarch64
+          #   build: |-
+          #     set -e &&
+          #     pnpm --version &&
+          #     pnpm install --frozen-lockfile &&
+          #     pnpm nx run-many --verbose --target=build-native -- --target=aarch64-unknown-linux-gnu
           - host: ubuntu-latest
             target: armv7-unknown-linux-gnueabihf
             setup: |
@@ -75,26 +75,26 @@ jobs:
               sudo apt-get install gcc-arm-linux-gnueabihf -y
             build: |
               pnpm nx run-many --target=build-native -- --target=armv7-unknown-linux-gnueabihf
-          # Android (not needed)
+          # # Android (not needed)
+          # # - host: ubuntu-latest
+          # #   target: aarch64-linux-android
+          # #   build: |
+          # #     pnpm nx run-many --target=build-native -- --target=aarch64-linux-android
+          # # - host: ubuntu-latest
+          # #   target: armv7-linux-androideabi
+          # #   build: |
+          # #     pnpm nx run-many --target=build-native -- --target=armv7-linux-androideabi
           # - host: ubuntu-latest
-          #   target: aarch64-linux-android
-          #   build: |
-          #     pnpm nx run-many --target=build-native -- --target=aarch64-linux-android
-          # - host: ubuntu-latest
-          #   target: armv7-linux-androideabi
-          #   build: |
-          #     pnpm nx run-many --target=build-native -- --target=armv7-linux-androideabi
-          - host: ubuntu-latest
-            target: aarch64-unknown-linux-musl
-            docker: ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-alpine
-            build: |-
-              set -e &&
-              rustup target add aarch64-unknown-linux-musl &&
-              pnpm install --frozen-lockfile &&
-              pnpm nx run-many --verbose --target=build-native -- --target=aarch64-unknown-linux-musl
-          - host: windows-latest
-            target: aarch64-pc-windows-msvc
-            build: pnpm nx run-many --target=build-native -- --target=aarch64-pc-windows-msvc
+          #   target: aarch64-unknown-linux-musl
+          #   docker: ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-alpine
+          #   build: |-
+          #     set -e &&
+          #     rustup target add aarch64-unknown-linux-musl &&
+          #     pnpm install --frozen-lockfile &&
+          #     pnpm nx run-many --verbose --target=build-native -- --target=aarch64-unknown-linux-musl
+          # - host: windows-latest
+          #   target: aarch64-pc-windows-msvc
+          #   build: pnpm nx run-many --target=build-native -- --target=aarch64-pc-windows-msvc
     name: stable - ${{ matrix.settings.target }} - node@18
     runs-on: ${{ matrix.settings.host }}
     outputs:
