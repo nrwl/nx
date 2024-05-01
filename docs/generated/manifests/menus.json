@@ -9639,6 +9639,14 @@
                 "disableCollapsible": false
               },
               {
+                "id": "setup-unocss",
+                "path": "/nx-api/vue/generators/setup-unocss",
+                "name": "setup-unocss",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
                 "id": "storybook-configuration",
                 "path": "/nx-api/vue/generators/storybook-configuration",
                 "name": "storybook-configuration",

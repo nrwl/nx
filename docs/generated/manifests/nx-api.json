@@ -3052,6 +3052,15 @@
         "path": "/nx-api/vue/generators/setup-tailwind",
         "type": "generator"
       },
+      "/nx-api/vue/generators/setup-unocss": {
+        "description": "Set up UnoCSS configuration for a project.",
+        "file": "generated/packages/vue/generators/setup-unocss.json",
+        "hidden": false,
+        "name": "setup-unocss",
+        "originalFilePath": "/packages/vue/src/generators/setup-unocss/schema.json",
+        "path": "/nx-api/vue/generators/setup-unocss",
+        "type": "generator"
+      },
       "/nx-api/vue/generators/storybook-configuration": {
         "description": "Set up storybook for a Vue app or library.",
         "file": "generated/packages/vue/generators/storybook-configuration.json",

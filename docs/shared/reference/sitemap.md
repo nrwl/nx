@@ -685,6 +685,7 @@
       - [library](/nx-api/vue/generators/library)
       - [component](/nx-api/vue/generators/component)
       - [setup-tailwind](/nx-api/vue/generators/setup-tailwind)
+      - [setup-unocss](/nx-api/vue/generators/setup-unocss)
       - [storybook-configuration](/nx-api/vue/generators/storybook-configuration)
       - [stories](/nx-api/vue/generators/stories)
   - [web](/nx-api/web)
