@@ -3,7 +3,7 @@ import { ButtonLink } from '@nx/nx-dev/ui-common';
 export function DownloadEbook(): JSX.Element {
   return (
     <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
-      <div className="relative isolate overflow-hidden bg-slate-50/70 px-6 pt-16 shadow-2xl ring-1 ring-slate-200 sm:rounded-3xl sm:px-16 md:pt-24 lg:flex lg:gap-x-20 lg:px-24 lg:pt-0 dark:border dark:border-slate-800/60 dark:bg-slate-950 dark:ring-slate-800/60">
+      <div className="relative isolate overflow-hidden bg-slate-50/70 px-6 pb-4 pt-16 shadow-2xl ring-1 ring-slate-200 sm:rounded-3xl sm:px-16 sm:pb-0 md:pt-24 lg:flex lg:gap-x-20 lg:px-24 lg:pt-0 dark:border dark:border-slate-800/60 dark:bg-slate-950 dark:ring-slate-800/60">
         <svg
           viewBox="0 0 1024 1024"
           className="absolute left-1/2 top-1/2 -z-10 h-[64rem] w-[64rem] -translate-y-1/2 [mask-image:radial-gradient(closest-side,white,transparent)] sm:left-full sm:-ml-80 lg:left-1/2 lg:ml-0 lg:-translate-x-1/2 lg:translate-y-0"
@@ -45,7 +45,7 @@ export function DownloadEbook(): JSX.Element {
             </ButtonLink>
           </div>
         </div>
-        <div className="relative mt-16 h-72 lg:mt-8">
+        <div className="relative mt-16 hidden h-72 sm:block lg:mt-8">
           <img
             className="absolute left-0 top-0 w-[42rem] max-w-none rounded-md bg-white/5 ring-1 ring-white/10"
             src="images/white-paper-ebook.avif"
