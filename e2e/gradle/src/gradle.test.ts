@@ -82,6 +82,18 @@ dependencies {
         // app2 depends on app
         expect(buildOutput).toContain('nx run app:build');
       });
+
+      it.each(['github', 'azure', 'circleci', 'bitbucket-pipelines', 'gitlab'])(
+        'should generate ci workflow for %s',
+        (ci) => {
+          expect(() => {
+            runCLI(
+              `generate @nx/gradle:ci-workflow --name=${gradleProjectName} --ci=${ci}`,
+              { verbose: true }
+            );
+          }).not.toThrow();
+        }
+      );
     }
   );
 });

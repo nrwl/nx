@@ -1,0 +1,31 @@
+version: 2.1
+
+orbs:
+  nx: nrwl/nx@1.6.2
+
+jobs:
+  main:
+    docker:
+      - image: cimg/node:lts-browsers
+    steps:
+      - checkout
+
+      # Connect your workspace on <%= nxCloudHost %> and uncomment this to enable task distribution.
+      # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
+      # - run: <%= packageManagerPrefix %> nx-cloud start-ci-run --distribute-on="5 linux-medium-jvm" --stop-agents-after="build"
+
+      - nx/set-shas:
+          main-branch-name: '<%= mainBranch %>'
+
+      # Required for nx affected if we're on a branch
+      - run: git branch --track main origin/main
+        condition: eq(variables['Build.Reason'], 'PullRequest')
+
+      - run: ./nx affected --base=$NX_BASE --head=$NX_HEAD -t test build
+
+workflows:
+  version: 2
+
+  <%= workflowFileName %>:
+    jobs:
+      - main

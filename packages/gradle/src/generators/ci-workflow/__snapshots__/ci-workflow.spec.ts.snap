@@ -1,0 +1,1061 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`CI Workflow generator optional e2e should add e2e to azure CI config 1`] = `
+"name: CI
+
+trigger:
+  - main
+pr:
+  - main
+
+variables:
+  CI: 'true'
+  \${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
+    NX_BRANCH: $(System.PullRequest.PullRequestNumber)
+    TARGET_BRANCH: $[replace(variables['System.PullRequest.TargetBranch'],'refs/heads/','origin/')]
+    BASE_SHA: $(git merge-base $(TARGET_BRANCH) HEAD)
+  \${{ if ne(variables['Build.Reason'], 'PullRequest') }}:
+    NX_BRANCH: $(Build.SourceBranchName)
+    BASE_SHA: $(git rev-parse HEAD~1)
+  HEAD_SHA: $(git rev-parse HEAD)
+
+jobs:
+  - job: main
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+      - checkout: self
+        fetchDepth: 0
+      # Set Azure Devops CLI default settings
+      - bash: az devops configure --defaults organization=$(System.TeamFoundationCollectionUri) project=$(System.TeamProject)
+        displayName: 'Set default Azure DevOps organization and project'
+      # Get last successfull commit from Azure Devops CLI
+      - displayName: 'Get last successful commit SHA'
+        condition: ne(variables['Build.Reason'], 'PullRequest')
+        env:
+          AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)
+        bash: |
+          LAST_SHA=$(az pipelines build list --branch $(Build.SourceBranchName) --definition-ids $(System.DefinitionId) --result succeeded --top 1 --query "[0].triggerInfo.\\"ci.sourceSha\\"")
+          if [ -z "$LAST_SHA" ]
+          then
+            echo "Last successful commit not found. Using fallback 'HEAD~1': $BASE_SHA"
+          else
+            echo "Last successful commit SHA: $LAST_SHA"
+            echo "##vso[task.setvariable variable=BASE_SHA]$LAST_SHA"
+          fi
+
+      # Connect your workspace on my.nx.app and uncomment this to enable task distribution.
+      # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
+      # - script: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-jvm" --stop-agents-after="build"
+
+      - script: git branch --track main origin/main
+        condition: eq(variables['Build.Reason'], 'PullRequest')
+
+      - ./nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t test build
+"
+`;
+
+exports[`CI Workflow generator optional e2e should add e2e to bitbucket pipelines config 1`] = `
+"image: node:20
+
+clone:
+  depth: full
+
+pipelines:
+  pull-requests:
+    '**':
+      - step:
+          name: 'Build and test affected apps on Pull Requests'
+          script:
+            - export NX_BRANCH=$BITBUCKET_PR_ID
+
+            # Connect your workspace on my.nx.app and uncomment this to enable task distribution.
+            # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
+            - npx nx-cloud start-ci-run --distribute-on="5 linux-medium-jvm" --stop-agents-after="build"
+
+            - ./nx affected --base=$NX_BASE --head=$NX_HEAD -t test build
+
+  branches:
+    main:
+      - step:
+          name: 'Build and test affected apps on "main" branch changes'
+          script:
+            - export NX_BRANCH=$BITBUCKET_BRANCH
+            # Connect your workspace on my.nx.app and uncomment this to enable task distribution.
+            # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
+            - npx nx-cloud start-ci-run --distribute-on="5 linux-medium-jvm" --stop-agents-after="build"
+
+            - ./nx affected --base=$NX_BASE --head=$NX_HEAD -t test build
+"
+`;
+
+exports[`CI Workflow generator optional e2e should add e2e to circleci CI config 1`] = `
+"version: 2.1
+
+orbs:
+  nx: nrwl/nx@1.6.2
+
+jobs:
+  main:
+    docker:
+      - image: cimg/node:lts-browsers
+    steps:
+      - checkout
+
+      # Connect your workspace on my.nx.app and uncomment this to enable task distribution.
+      # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
+      # - run: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-jvm" --stop-agents-after="build"
+
+      - nx/set-shas:
+          main-branch-name: 'main'
+
+      # Required for nx affected if we're on a branch
+      - run: git branch --track main origin/main
+        condition: eq(variables['Build.Reason'], 'PullRequest')
+
+      - run: ./nx affected --base=$NX_BASE --head=$NX_HEAD -t test build
+
+workflows:
+  version: 2
+
+  ci:
+    jobs:
+      - main
+"
+`;
+
+exports[`CI Workflow generator optional e2e should add e2e to github CI config 1`] = `
+"name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Connect your workspace on my.nx.app and uncomment this to enable task distribution.
+      # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
+      # - run: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-jvm" --stop-agents-after="build"
+
+      - uses: nrwl/nx-set-shas@v4
+
+      - run: git branch --track main origin/main
+        if: \${{ github.event_name == 'pull_request' }}
+
+      - run: ./nx affected --base=$NX_BASE --head=$NX_HEAD -t test build
+"
+`;
+
+exports[`CI Workflow generator optional e2e should add e2e to github CI config with custom name 1`] = `
+"name: My custom-workflow
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Connect your workspace on my.nx.app and uncomment this to enable task distribution.
+      # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
+      # - run: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-jvm" --stop-agents-after="build"
+
+      - uses: nrwl/nx-set-shas@v4
+
+      - run: git branch --track main origin/main
+        if: \${{ github.event_name == 'pull_request' }}
+
+      - run: ./nx affected --base=$NX_BASE --head=$NX_HEAD -t test build
+"
+`;
+
+exports[`CI Workflow generator with npm should generate azure CI config 1`] = `
+"name: CI
+
+trigger:
+  - main
+pr:
+  - main
+
+variables:
+  CI: 'true'
+  \${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
+    NX_BRANCH: $(System.PullRequest.PullRequestNumber)
+    TARGET_BRANCH: $[replace(variables['System.PullRequest.TargetBranch'],'refs/heads/','origin/')]
+    BASE_SHA: $(git merge-base $(TARGET_BRANCH) HEAD)
+  \${{ if ne(variables['Build.Reason'], 'PullRequest') }}:
+    NX_BRANCH: $(Build.SourceBranchName)
+    BASE_SHA: $(git rev-parse HEAD~1)
+  HEAD_SHA: $(git rev-parse HEAD)
+
+jobs:
+  - job: main
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+      - checkout: self
+        fetchDepth: 0
+      # Set Azure Devops CLI default settings
+      - bash: az devops configure --defaults organization=$(System.TeamFoundationCollectionUri) project=$(System.TeamProject)
+        displayName: 'Set default Azure DevOps organization and project'
+      # Get last successfull commit from Azure Devops CLI
+      - displayName: 'Get last successful commit SHA'
+        condition: ne(variables['Build.Reason'], 'PullRequest')
+        env:
+          AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)
+        bash: |
+          LAST_SHA=$(az pipelines build list --branch $(Build.SourceBranchName) --definition-ids $(System.DefinitionId) --result succeeded --top 1 --query "[0].triggerInfo.\\"ci.sourceSha\\"")
+          if [ -z "$LAST_SHA" ]
+          then
+            echo "Last successful commit not found. Using fallback 'HEAD~1': $BASE_SHA"
+          else
+            echo "Last successful commit SHA: $LAST_SHA"
+            echo "##vso[task.setvariable variable=BASE_SHA]$LAST_SHA"
+          fi
+
+      # Connect your workspace on my.nx.app and uncomment this to enable task distribution.
+      # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
+      # - script: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-jvm" --stop-agents-after="build"
+
+      - script: git branch --track main origin/main
+        condition: eq(variables['Build.Reason'], 'PullRequest')
+
+      - ./nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t test build
+"
+`;
+
+exports[`CI Workflow generator with npm should generate bitbucket pipelines config 1`] = `
+"image: node:20
+
+clone:
+  depth: full
+
+pipelines:
+  pull-requests:
+    '**':
+      - step:
+          name: 'Build and test affected apps on Pull Requests'
+          script:
+            - export NX_BRANCH=$BITBUCKET_PR_ID
+
+            # Connect your workspace on my.nx.app and uncomment this to enable task distribution.
+            # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
+            - npx nx-cloud start-ci-run --distribute-on="5 linux-medium-jvm" --stop-agents-after="build"
+
+            - ./nx affected --base=$NX_BASE --head=$NX_HEAD -t test build
+
+  branches:
+    main:
+      - step:
+          name: 'Build and test affected apps on "main" branch changes'
+          script:
+            - export NX_BRANCH=$BITBUCKET_BRANCH
+            # Connect your workspace on my.nx.app and uncomment this to enable task distribution.
+            # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
+            - npx nx-cloud start-ci-run --distribute-on="5 linux-medium-jvm" --stop-agents-after="build"
+
+            - ./nx affected --base=$NX_BASE --head=$NX_HEAD -t test build
+"
+`;
+
+exports[`CI Workflow generator with npm should generate circleci CI config 1`] = `
+"version: 2.1
+
+orbs:
+  nx: nrwl/nx@1.6.2
+
+jobs:
+  main:
+    docker:
+      - image: cimg/node:lts-browsers
+    steps:
+      - checkout
+
+      # Connect your workspace on my.nx.app and uncomment this to enable task distribution.
+      # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
+      # - run: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-jvm" --stop-agents-after="build"
+
+      - nx/set-shas:
+          main-branch-name: 'main'
+
+      # Required for nx affected if we're on a branch
+      - run: git branch --track main origin/main
+        condition: eq(variables['Build.Reason'], 'PullRequest')
+
+      - run: ./nx affected --base=$NX_BASE --head=$NX_HEAD -t test build
+
+workflows:
+  version: 2
+
+  ci:
+    jobs:
+      - main
+"
+`;
+
+exports[`CI Workflow generator with npm should generate github CI config 1`] = `
+"name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Connect your workspace on my.nx.app and uncomment this to enable task distribution.
+      # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
+      # - run: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-jvm" --stop-agents-after="build"
+
+      - uses: nrwl/nx-set-shas@v4
+
+      - run: git branch --track main origin/main
+        if: \${{ github.event_name == 'pull_request' }}
+
+      - run: ./nx affected --base=$NX_BASE --head=$NX_HEAD -t test build
+"
+`;
+
+exports[`CI Workflow generator with npm should generate github CI config with custom name 1`] = `
+"name: My custom-workflow
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Connect your workspace on my.nx.app and uncomment this to enable task distribution.
+      # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
+      # - run: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-jvm" --stop-agents-after="build"
+
+      - uses: nrwl/nx-set-shas@v4
+
+      - run: git branch --track main origin/main
+        if: \${{ github.event_name == 'pull_request' }}
+
+      - run: ./nx affected --base=$NX_BASE --head=$NX_HEAD -t test build
+"
+`;
+
+exports[`CI Workflow generator with npm should generate gitlab config 1`] = `
+"image: node:20
+variables:
+  CI: 'true'
+
+# Main job
+CI:
+  interruptible: true
+  only:
+    - main
+    - merge_requests
+  script:
+    # Connect your workspace on my.nx.app and uncomment this to enable task distribution.
+    # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
+    - npx nx-cloud start-ci-run --distribute-on="5 linux-medium-jvm" --stop-agents-after="build"
+
+    - NX_HEAD=$CI_COMMIT_SHA
+    - NX_BASE=\${CI_MERGE_REQUEST_DIFF_BASE_SHA:-$CI_COMMIT_BEFORE_SHA}
+
+    - ./nx affected --base=$NX_BASE --head=$NX_HEAD -t test build
+"
+`;
+
+exports[`CI Workflow generator with npm should throw error is nx cloud is not set 1`] = `"This workspace is not connected to Nx Cloud."`;
+
+exports[`CI Workflow generator with pnpm should generate azure CI config 1`] = `
+"name: CI
+
+trigger:
+  - main
+pr:
+  - main
+
+variables:
+  CI: 'true'
+  \${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
+    NX_BRANCH: $(System.PullRequest.PullRequestNumber)
+    TARGET_BRANCH: $[replace(variables['System.PullRequest.TargetBranch'],'refs/heads/','origin/')]
+    BASE_SHA: $(git merge-base $(TARGET_BRANCH) HEAD)
+  \${{ if ne(variables['Build.Reason'], 'PullRequest') }}:
+    NX_BRANCH: $(Build.SourceBranchName)
+    BASE_SHA: $(git rev-parse HEAD~1)
+  HEAD_SHA: $(git rev-parse HEAD)
+
+jobs:
+  - job: main
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+      - checkout: self
+        fetchDepth: 0
+      # Set Azure Devops CLI default settings
+      - bash: az devops configure --defaults organization=$(System.TeamFoundationCollectionUri) project=$(System.TeamProject)
+        displayName: 'Set default Azure DevOps organization and project'
+      # Get last successfull commit from Azure Devops CLI
+      - displayName: 'Get last successful commit SHA'
+        condition: ne(variables['Build.Reason'], 'PullRequest')
+        env:
+          AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)
+        bash: |
+          LAST_SHA=$(az pipelines build list --branch $(Build.SourceBranchName) --definition-ids $(System.DefinitionId) --result succeeded --top 1 --query "[0].triggerInfo.\\"ci.sourceSha\\"")
+          if [ -z "$LAST_SHA" ]
+          then
+            echo "Last successful commit not found. Using fallback 'HEAD~1': $BASE_SHA"
+          else
+            echo "Last successful commit SHA: $LAST_SHA"
+            echo "##vso[task.setvariable variable=BASE_SHA]$LAST_SHA"
+          fi
+
+      # Connect your workspace on my.nx.app and uncomment this to enable task distribution.
+      # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
+      # - script: pnpm exec nx-cloud start-ci-run --distribute-on="5 linux-medium-jvm" --stop-agents-after="build"
+
+      - script: git branch --track main origin/main
+        condition: eq(variables['Build.Reason'], 'PullRequest')
+
+      - ./nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t test build
+"
+`;
+
+exports[`CI Workflow generator with pnpm should generate bitbucket pipelines config 1`] = `
+"image: node:20
+
+clone:
+  depth: full
+
+pipelines:
+  pull-requests:
+    '**':
+      - step:
+          name: 'Build and test affected apps on Pull Requests'
+          script:
+            - export NX_BRANCH=$BITBUCKET_PR_ID
+
+            # Connect your workspace on my.nx.app and uncomment this to enable task distribution.
+            # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
+            - pnpm exec nx-cloud start-ci-run --distribute-on="5 linux-medium-jvm" --stop-agents-after="build"
+
+            - ./nx affected --base=$NX_BASE --head=$NX_HEAD -t test build
+
+  branches:
+    main:
+      - step:
+          name: 'Build and test affected apps on "main" branch changes'
+          script:
+            - export NX_BRANCH=$BITBUCKET_BRANCH
+            # Connect your workspace on my.nx.app and uncomment this to enable task distribution.
+            # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
+            - pnpm exec nx-cloud start-ci-run --distribute-on="5 linux-medium-jvm" --stop-agents-after="build"
+
+            - ./nx affected --base=$NX_BASE --head=$NX_HEAD -t test build
+"
+`;
+
+exports[`CI Workflow generator with pnpm should generate circleci CI config 1`] = `
+"version: 2.1
+
+orbs:
+  nx: nrwl/nx@1.6.2
+
+jobs:
+  main:
+    docker:
+      - image: cimg/node:lts-browsers
+    steps:
+      - checkout
+
+      # Connect your workspace on my.nx.app and uncomment this to enable task distribution.
+      # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
+      # - run: pnpm exec nx-cloud start-ci-run --distribute-on="5 linux-medium-jvm" --stop-agents-after="build"
+
+      - nx/set-shas:
+          main-branch-name: 'main'
+
+      # Required for nx affected if we're on a branch
+      - run: git branch --track main origin/main
+        condition: eq(variables['Build.Reason'], 'PullRequest')
+
+      - run: ./nx affected --base=$NX_BASE --head=$NX_HEAD -t test build
+
+workflows:
+  version: 2
+
+  ci:
+    jobs:
+      - main
+"
+`;
+
+exports[`CI Workflow generator with pnpm should generate github CI config 1`] = `
+"name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Connect your workspace on my.nx.app and uncomment this to enable task distribution.
+      # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
+      # - run: pnpm exec nx-cloud start-ci-run --distribute-on="5 linux-medium-jvm" --stop-agents-after="build"
+
+      - uses: nrwl/nx-set-shas@v4
+
+      - run: git branch --track main origin/main
+        if: \${{ github.event_name == 'pull_request' }}
+
+      - run: ./nx affected --base=$NX_BASE --head=$NX_HEAD -t test build
+"
+`;
+
+exports[`CI Workflow generator with pnpm should generate github CI config with custom name 1`] = `
+"name: My custom-workflow
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Connect your workspace on my.nx.app and uncomment this to enable task distribution.
+      # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
+      # - run: pnpm exec nx-cloud start-ci-run --distribute-on="5 linux-medium-jvm" --stop-agents-after="build"
+
+      - uses: nrwl/nx-set-shas@v4
+
+      - run: git branch --track main origin/main
+        if: \${{ github.event_name == 'pull_request' }}
+
+      - run: ./nx affected --base=$NX_BASE --head=$NX_HEAD -t test build
+"
+`;
+
+exports[`CI Workflow generator with pnpm should generate gitlab config 1`] = `
+"image: node:20
+variables:
+  CI: 'true'
+
+# Main job
+CI:
+  interruptible: true
+  only:
+    - main
+    - merge_requests
+  script:
+    # Connect your workspace on my.nx.app and uncomment this to enable task distribution.
+    # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
+    - pnpm exec nx-cloud start-ci-run --distribute-on="5 linux-medium-jvm" --stop-agents-after="build"
+
+    - NX_HEAD=$CI_COMMIT_SHA
+    - NX_BASE=\${CI_MERGE_REQUEST_DIFF_BASE_SHA:-$CI_COMMIT_BEFORE_SHA}
+
+    - ./nx affected --base=$NX_BASE --head=$NX_HEAD -t test build
+"
+`;
+
+exports[`CI Workflow generator with pnpm should throw error is nx cloud is not set 1`] = `"This workspace is not connected to Nx Cloud."`;
+
+exports[`CI Workflow generator with yarn should generate azure CI config 1`] = `
+"name: CI
+
+trigger:
+  - main
+pr:
+  - main
+
+variables:
+  CI: 'true'
+  \${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
+    NX_BRANCH: $(System.PullRequest.PullRequestNumber)
+    TARGET_BRANCH: $[replace(variables['System.PullRequest.TargetBranch'],'refs/heads/','origin/')]
+    BASE_SHA: $(git merge-base $(TARGET_BRANCH) HEAD)
+  \${{ if ne(variables['Build.Reason'], 'PullRequest') }}:
+    NX_BRANCH: $(Build.SourceBranchName)
+    BASE_SHA: $(git rev-parse HEAD~1)
+  HEAD_SHA: $(git rev-parse HEAD)
+
+jobs:
+  - job: main
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+      - checkout: self
+        fetchDepth: 0
+      # Set Azure Devops CLI default settings
+      - bash: az devops configure --defaults organization=$(System.TeamFoundationCollectionUri) project=$(System.TeamProject)
+        displayName: 'Set default Azure DevOps organization and project'
+      # Get last successfull commit from Azure Devops CLI
+      - displayName: 'Get last successful commit SHA'
+        condition: ne(variables['Build.Reason'], 'PullRequest')
+        env:
+          AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)
+        bash: |
+          LAST_SHA=$(az pipelines build list --branch $(Build.SourceBranchName) --definition-ids $(System.DefinitionId) --result succeeded --top 1 --query "[0].triggerInfo.\\"ci.sourceSha\\"")
+          if [ -z "$LAST_SHA" ]
+          then
+            echo "Last successful commit not found. Using fallback 'HEAD~1': $BASE_SHA"
+          else
+            echo "Last successful commit SHA: $LAST_SHA"
+            echo "##vso[task.setvariable variable=BASE_SHA]$LAST_SHA"
+          fi
+
+      # Connect your workspace on my.nx.app and uncomment this to enable task distribution.
+      # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
+      # - script: yarn nx-cloud start-ci-run --distribute-on="5 linux-medium-jvm" --stop-agents-after="build"
+
+      - script: git branch --track main origin/main
+        condition: eq(variables['Build.Reason'], 'PullRequest')
+
+      - ./nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t test build
+"
+`;
+
+exports[`CI Workflow generator with yarn should generate bitbucket pipelines config 1`] = `
+"image: node:20
+
+clone:
+  depth: full
+
+pipelines:
+  pull-requests:
+    '**':
+      - step:
+          name: 'Build and test affected apps on Pull Requests'
+          script:
+            - export NX_BRANCH=$BITBUCKET_PR_ID
+
+            # Connect your workspace on my.nx.app and uncomment this to enable task distribution.
+            # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
+            - yarn nx-cloud start-ci-run --distribute-on="5 linux-medium-jvm" --stop-agents-after="build"
+
+            - ./nx affected --base=$NX_BASE --head=$NX_HEAD -t test build
+
+  branches:
+    main:
+      - step:
+          name: 'Build and test affected apps on "main" branch changes'
+          script:
+            - export NX_BRANCH=$BITBUCKET_BRANCH
+            # Connect your workspace on my.nx.app and uncomment this to enable task distribution.
+            # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
+            - yarn nx-cloud start-ci-run --distribute-on="5 linux-medium-jvm" --stop-agents-after="build"
+
+            - ./nx affected --base=$NX_BASE --head=$NX_HEAD -t test build
+"
+`;
+
+exports[`CI Workflow generator with yarn should generate circleci CI config 1`] = `
+"version: 2.1
+
+orbs:
+  nx: nrwl/nx@1.6.2
+
+jobs:
+  main:
+    docker:
+      - image: cimg/node:lts-browsers
+    steps:
+      - checkout
+
+      # Connect your workspace on my.nx.app and uncomment this to enable task distribution.
+      # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
+      # - run: yarn nx-cloud start-ci-run --distribute-on="5 linux-medium-jvm" --stop-agents-after="build"
+
+      - nx/set-shas:
+          main-branch-name: 'main'
+
+      # Required for nx affected if we're on a branch
+      - run: git branch --track main origin/main
+        condition: eq(variables['Build.Reason'], 'PullRequest')
+
+      - run: ./nx affected --base=$NX_BASE --head=$NX_HEAD -t test build
+
+workflows:
+  version: 2
+
+  ci:
+    jobs:
+      - main
+"
+`;
+
+exports[`CI Workflow generator with yarn should generate github CI config 1`] = `
+"name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Connect your workspace on my.nx.app and uncomment this to enable task distribution.
+      # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
+      # - run: yarn nx-cloud start-ci-run --distribute-on="5 linux-medium-jvm" --stop-agents-after="build"
+
+      - uses: nrwl/nx-set-shas@v4
+
+      - run: git branch --track main origin/main
+        if: \${{ github.event_name == 'pull_request' }}
+
+      - run: ./nx affected --base=$NX_BASE --head=$NX_HEAD -t test build
+"
+`;
+
+exports[`CI Workflow generator with yarn should generate github CI config with custom name 1`] = `
+"name: My custom-workflow
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Connect your workspace on my.nx.app and uncomment this to enable task distribution.
+      # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
+      # - run: yarn nx-cloud start-ci-run --distribute-on="5 linux-medium-jvm" --stop-agents-after="build"
+
+      - uses: nrwl/nx-set-shas@v4
+
+      - run: git branch --track main origin/main
+        if: \${{ github.event_name == 'pull_request' }}
+
+      - run: ./nx affected --base=$NX_BASE --head=$NX_HEAD -t test build
+"
+`;
+
+exports[`CI Workflow generator with yarn should generate gitlab config 1`] = `
+"image: node:20
+variables:
+  CI: 'true'
+
+# Main job
+CI:
+  interruptible: true
+  only:
+    - main
+    - merge_requests
+  script:
+    # Connect your workspace on my.nx.app and uncomment this to enable task distribution.
+    # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
+    - yarn nx-cloud start-ci-run --distribute-on="5 linux-medium-jvm" --stop-agents-after="build"
+
+    - NX_HEAD=$CI_COMMIT_SHA
+    - NX_BASE=\${CI_MERGE_REQUEST_DIFF_BASE_SHA:-$CI_COMMIT_BEFORE_SHA}
+
+    - ./nx affected --base=$NX_BASE --head=$NX_HEAD -t test build
+"
+`;
+
+exports[`CI Workflow generator with yarn should throw error is nx cloud is not set 1`] = `"This workspace is not connected to Nx Cloud."`;
+
+exports[`Gradle CI Workflow generator should generate azure CI config 1`] = `
+"name: CI
+
+trigger:
+  - main
+pr:
+  - main
+
+variables:
+  CI: 'true'
+  \${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
+    NX_BRANCH: $(System.PullRequest.PullRequestNumber)
+    TARGET_BRANCH: $[replace(variables['System.PullRequest.TargetBranch'],'refs/heads/','origin/')]
+    BASE_SHA: $(git merge-base $(TARGET_BRANCH) HEAD)
+  \${{ if ne(variables['Build.Reason'], 'PullRequest') }}:
+    NX_BRANCH: $(Build.SourceBranchName)
+    BASE_SHA: $(git rev-parse HEAD~1)
+  HEAD_SHA: $(git rev-parse HEAD)
+
+jobs:
+  - job: main
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+      - checkout: self
+        fetchDepth: 0
+      # Set Azure Devops CLI default settings
+      - bash: az devops configure --defaults organization=$(System.TeamFoundationCollectionUri) project=$(System.TeamProject)
+        displayName: 'Set default Azure DevOps organization and project'
+      # Get last successfull commit from Azure Devops CLI
+      - displayName: 'Get last successful commit SHA'
+        condition: ne(variables['Build.Reason'], 'PullRequest')
+        env:
+          AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)
+        bash: |
+          LAST_SHA=$(az pipelines build list --branch $(Build.SourceBranchName) --definition-ids $(System.DefinitionId) --result succeeded --top 1 --query "[0].triggerInfo.\\"ci.sourceSha\\"")
+          if [ -z "$LAST_SHA" ]
+          then
+            echo "Last successful commit not found. Using fallback 'HEAD~1': $BASE_SHA"
+          else
+            echo "Last successful commit SHA: $LAST_SHA"
+            echo "##vso[task.setvariable variable=BASE_SHA]$LAST_SHA"
+          fi
+
+      # Connect your workspace on my.nx.app and uncomment this to enable task distribution.
+      # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
+      # - script: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-jvm" --stop-agents-after="build"
+
+      - script: git branch --track main origin/main
+        condition: eq(variables['Build.Reason'], 'PullRequest')
+
+      - ./nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t test build
+"
+`;
+
+exports[`Gradle CI Workflow generator should generate bitbucket pipelines config 1`] = `
+"image: node:20
+
+clone:
+  depth: full
+
+pipelines:
+  pull-requests:
+    '**':
+      - step:
+          name: 'Build and test affected apps on Pull Requests'
+          script:
+            - export NX_BRANCH=$BITBUCKET_PR_ID
+
+            # Connect your workspace on my.nx.app and uncomment this to enable task distribution.
+            # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
+            - npx nx-cloud start-ci-run --distribute-on="5 linux-medium-jvm" --stop-agents-after="build"
+
+            - ./nx affected --base=$NX_BASE --head=$NX_HEAD -t test build
+
+  branches:
+    main:
+      - step:
+          name: 'Build and test affected apps on "main" branch changes'
+          script:
+            - export NX_BRANCH=$BITBUCKET_BRANCH
+            # Connect your workspace on my.nx.app and uncomment this to enable task distribution.
+            # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
+            - npx nx-cloud start-ci-run --distribute-on="5 linux-medium-jvm" --stop-agents-after="build"
+
+            - ./nx affected --base=$NX_BASE --head=$NX_HEAD -t test build
+"
+`;
+
+exports[`Gradle CI Workflow generator should generate circleci CI config 1`] = `
+"version: 2.1
+
+orbs:
+  nx: nrwl/nx@1.6.2
+
+jobs:
+  main:
+    docker:
+      - image: cimg/node:lts-browsers
+    steps:
+      - checkout
+
+      # Connect your workspace on my.nx.app and uncomment this to enable task distribution.
+      # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
+      # - run: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-jvm" --stop-agents-after="build"
+
+      - nx/set-shas:
+          main-branch-name: 'main'
+
+      # Required for nx affected if we're on a branch
+      - run: git branch --track main origin/main
+        condition: eq(variables['Build.Reason'], 'PullRequest')
+
+      - run: ./nx affected --base=$NX_BASE --head=$NX_HEAD -t test build
+
+workflows:
+  version: 2
+
+  ci:
+    jobs:
+      - main
+"
+`;
+
+exports[`Gradle CI Workflow generator should generate github CI config 1`] = `
+"name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Connect your workspace on my.nx.app and uncomment this to enable task distribution.
+      # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
+      # - run: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-jvm" --stop-agents-after="build"
+
+      - uses: nrwl/nx-set-shas@v4
+
+      - run: git branch --track main origin/main
+        if: \${{ github.event_name == 'pull_request' }}
+
+      - run: ./nx affected --base=$NX_BASE --head=$NX_HEAD -t test build
+"
+`;
+
+exports[`Gradle CI Workflow generator should generate github CI config with custom name 1`] = `
+"name: My custom-workflow
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Connect your workspace on my.nx.app and uncomment this to enable task distribution.
+      # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
+      # - run: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-jvm" --stop-agents-after="build"
+
+      - uses: nrwl/nx-set-shas@v4
+
+      - run: git branch --track main origin/main
+        if: \${{ github.event_name == 'pull_request' }}
+
+      - run: ./nx affected --base=$NX_BASE --head=$NX_HEAD -t test build
+"
+`;
+
+exports[`Gradle CI Workflow generator should generate gitlab config 1`] = `
+"image: node:20
+variables:
+  CI: 'true'
+
+# Main job
+CI:
+  interruptible: true
+  only:
+    - main
+    - merge_requests
+  script:
+    # Connect your workspace on my.nx.app and uncomment this to enable task distribution.
+    # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
+    - npx nx-cloud start-ci-run --distribute-on="5 linux-medium-jvm" --stop-agents-after="build"
+
+    - NX_HEAD=$CI_COMMIT_SHA
+    - NX_BASE=\${CI_MERGE_REQUEST_DIFF_BASE_SHA:-$CI_COMMIT_BEFORE_SHA}
+
+    - ./nx affected --base=$NX_BASE --head=$NX_HEAD -t test build
+"
+`;
+
+exports[`Gradle CI Workflow generator should throw error is nx cloud is not set 1`] = `"This workspace is not connected to Nx Cloud."`;

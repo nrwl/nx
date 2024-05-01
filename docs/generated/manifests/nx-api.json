@@ -1068,6 +1068,15 @@
         "originalFilePath": "/packages/gradle/src/generators/init/schema.json",
         "path": "/nx-api/gradle/generators/init",
         "type": "generator"
+      },
+      "/nx-api/gradle/generators/ci-workflow": {
+        "description": "Generate a CI workflow.",
+        "file": "generated/packages/gradle/generators/ci-workflow.json",
+        "hidden": false,
+        "name": "ci-workflow",
+        "originalFilePath": "/packages/gradle/src/generators/ci-workflow/schema.json",
+        "path": "/nx-api/gradle/generators/ci-workflow",
+        "type": "generator"
       }
     },
     "path": "/nx-api/gradle"

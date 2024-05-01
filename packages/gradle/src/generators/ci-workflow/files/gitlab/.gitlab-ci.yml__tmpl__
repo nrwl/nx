@@ -1,0 +1,19 @@
+image: node:20
+variables:
+  CI: 'true'
+
+# Main job
+<%= workflowName %>:
+  interruptible: true
+  only:
+    - main
+    - merge_requests
+  script:
+    # Connect your workspace on <%= nxCloudHost %> and uncomment this to enable task distribution.
+    # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
+    - <%= packageManagerPrefix %> nx-cloud start-ci-run --distribute-on="5 linux-medium-jvm" --stop-agents-after="build"
+
+    - NX_HEAD=$CI_COMMIT_SHA
+    - NX_BASE=${CI_MERGE_REQUEST_DIFF_BASE_SHA:-$CI_COMMIT_BEFORE_SHA}
+
+    - ./nx affected --base=$NX_BASE --head=$NX_HEAD -t test build

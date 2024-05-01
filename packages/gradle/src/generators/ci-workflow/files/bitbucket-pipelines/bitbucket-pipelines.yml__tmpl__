@@ -1,0 +1,30 @@
+image: node:20
+
+clone:
+  depth: full
+
+pipelines:
+  pull-requests:
+    '**':
+      - step:
+          name: 'Build and test affected apps on Pull Requests'
+          script:
+            - export NX_BRANCH=$BITBUCKET_PR_ID
+
+            # Connect your workspace on <%= nxCloudHost %> and uncomment this to enable task distribution.
+            # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
+            - <%= packageManagerPrefix %> nx-cloud start-ci-run --distribute-on="5 linux-medium-jvm" --stop-agents-after="build"
+
+            - ./nx affected --base=$NX_BASE --head=$NX_HEAD -t test build
+
+  branches:
+    main:
+      - step:
+          name: 'Build and test affected apps on "<%= mainBranch %>" branch changes'
+          script:
+            - export NX_BRANCH=$BITBUCKET_BRANCH
+            # Connect your workspace on <%= nxCloudHost %> and uncomment this to enable task distribution.
+            # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
+            - <%= packageManagerPrefix %> nx-cloud start-ci-run --distribute-on="5 linux-medium-jvm" --stop-agents-after="build"
+
+            - ./nx affected --base=$NX_BASE --head=$NX_HEAD -t test build

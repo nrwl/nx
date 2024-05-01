@@ -441,6 +441,7 @@
       - [Overview](/nx-api/gradle/documents/overview)
     - [generators](/nx-api/gradle/generators)
       - [init](/nx-api/gradle/generators/init)
+      - [ci-workflow](/nx-api/gradle/generators/ci-workflow)
   - [jest](/nx-api/jest)
     - [documents](/nx-api/jest/documents)
       - [Overview](/nx-api/jest/documents/overview)
