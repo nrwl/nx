@@ -154,5 +154,6 @@ export async function getDefaultPlugins(root: string) {
       : []),
     join(__dirname, '../../plugins/package-json-workspaces'),
     join(__dirname, '../../plugins/project-json/build-nodes/project-json'),
+    join(__dirname, '../../plugins/project-sizes'),
   ];
 }
