@@ -123,6 +123,8 @@ const VALID_AUTHORS_FOR_LATEST = [
 
   runNxReleaseVersion();
 
+  console.log('Helllooooo katerina', options.version);
+
   execSync(`pnpm nx run-many -t add-extra-dependencies --parallel 8`, {
     stdio: isVerboseLogging ? [0, 1, 2] : 'ignore',
     maxBuffer: LARGE_BUFFER,
@@ -133,7 +135,7 @@ const VALID_AUTHORS_FOR_LATEST = [
   console.log('KATERINA THE TAG IS', distTag);
 
   if (options.dryRun) {
-    console.warn('Not Publishing because --dryRun was passed', distTag);
+    console.warn('Not Publishing katerina because --dryRun was passed', distTag);
   } else {
     // If publishing locally, force all projects to not be private first
     if (options.local) {
@@ -178,7 +180,7 @@ const VALID_AUTHORS_FOR_LATEST = [
     }
 
     // Run with dynamic output-style so that we have more minimal logs by default but still always see errors
-    let publishCommand = `pnpm nx release publish --registry=${getRegistry()} --tag=${distTag} --output-style=dynamic --parallel=8`;
+    let publishCommand = `pnpm nx release publish --registry=${getRegistry()} --tag=pull-request --output-style=dynamic --parallel=8`;
     if (options.dryRun) {
       publishCommand += ' --dry-run';
     }
@@ -196,6 +198,7 @@ const VALID_AUTHORS_FOR_LATEST = [
     }
 
     console.log(chalk.green` > Published version: ` + version);
+    console.log(chalk.green` > The dist tag was: ` + distTag);
     console.log(chalk.dim`   Use: npx create-nx-workspace@${version}\n`);
   }
 
@@ -368,8 +371,8 @@ function determineDistTag(
   }
 
   // Special case of PR release
-  console.log('Katerina is this a PR:', newVersion.startsWith('0.0.0-pr-'));
-  console.log('Katerina is this a PR 2:', newVersion.includes('0.0.0-pr-'));
+  console.warn('Katerina is this a PR:', newVersion.startsWith('0.0.0-pr-'));
+  console.warn('Katerina is this a PR 2:', newVersion.includes('0.0.0-pr-'));
   if (newVersion.startsWith('0.0.0-pr-')) {
     return 'pull-request';
   }
