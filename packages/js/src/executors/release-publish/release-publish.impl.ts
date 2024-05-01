@@ -98,7 +98,12 @@ export default async function runExecutor(
         stdio: ['ignore', 'pipe', 'pipe'],
       });
 
-      const resultJson = JSON.parse(result.toString());
+      const jsonRegex = /\{(?:[^{}])*\}/g;
+      const jsonObjectsInOutput = result.toString().match(jsonRegex);
+      const resultJson = JSON.parse(
+        jsonObjectsInOutput[jsonObjectsInOutput.length - 1]
+      );
+
       const distTags = resultJson['dist-tags'] || {};
       if (distTags[tag] === currentVersion) {
         console.warn(
