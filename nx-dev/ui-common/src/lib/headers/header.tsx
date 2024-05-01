@@ -46,7 +46,7 @@ export function Header(): JSX.Element {
   }, []);
 
   return (
-    <div className="relative flex print:hidden">
+    <div className="relative inset-x-0 top-0 z-50 flex print:hidden">
       {/*DESKTOP*/}
       <div className="mx-auto hidden w-full max-w-7xl items-center justify-between space-x-10 p-4 px-8 lg:flex">
         {/*PRIMARY NAVIGATION*/}
