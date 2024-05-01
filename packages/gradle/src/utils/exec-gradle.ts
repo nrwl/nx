@@ -29,15 +29,8 @@ export function getGradleBinaryPath(): string {
   return gradleBinaryPath;
 }
 
-export function getGradleRelativePath(path: string): string {
-  const gradleBinaryPath = getGradleBinaryPath();
-  let relativePath = relative(path, gradleBinaryPath);
-  if (relativePath.startsWith('gradlew')) {
-    relativePath = process.platform.startsWith('win')
-      ? `.\\${relativePath}`
-      : `./${relativePath}`;
-  }
-  return relativePath;
+export function getGradleExecFile(): string {
+  return process.platform.startsWith('win') ? '.\\gradlew.bat' : './gradlew';
 }
 
 export function execGradleAsync(
