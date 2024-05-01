@@ -18,8 +18,62 @@ env:
   CYPRESS_INSTALL_BINARY: 0
 
 jobs:
+  precheck:
+    if: github.event.inputs.pr  # Only run this job if a PR number is provided
+    runs-on: ubuntu-latest
+    outputs:
+      clean_branch_name: ${{ steps.set_branch_name.outputs.clean_branch_name }}
+      clean_fork_repo: ${{ steps.set_branch_name.outputs.clean_fork_repo }}
+      full_pr_sha: ${{ steps.set_branch_name.outputs.full_pr_sha }}
+    steps:
+      - name: Fetch PR details
+        id: pr_details
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const pr = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: ${{ github.event.inputs.pr }},
+            });
+            console.log(`Owner: ${context.repo.owner}`);
+            console.log(`Repo: ${context.repo.repo}`);
+            console.log(`Fork repo:`, pr.data.head.repo.full_name);
+            console.log(`Fetched PR details: ${pr.data.head.ref}`);
+            console.log(`Full PR SHA: ${pr.data.head.sha}`);
+            return {
+              pr_branch_name: pr.data.head.ref,
+              fork_repo: pr.data.head.repo.full_name,
+              full_pr_sha: pr.data.head.sha
+            };
+
+      - name: Set outputs
+        id: set_branch_name
+        run: |
+          echo "clean_branch_name=$(echo '${{ steps.pr_details.outputs.pr_branch_name }}' | sed 's/"//g')" >> $GITHUB_ENV
+          echo "clean_fork_repo=$(echo '${{ steps.pr_details.outputs.fork_repo }}' | sed 's/"//g')" >> $GITHUB_ENV
+          echo "full_pr_sha=${{ steps.pr_details.outputs.full_pr_sha }}" >> $GITHUB_ENV
+          
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.clean_branch_name }}
+          repository: ${{ env.clean_fork_repo }} 
+
+      - name: Check if nx-release.ts has changed
+        run: |
+          git fetch origin ${{ env.clean_branch_name }} --no-tags --unshallow 
+          CHANGES=$(git diff ${{ github.sha }}...HEAD --name-only | grep 'scripts/nx-release.ts' || true)
+          if [ -z "$CHANGES" ]; then
+            echo "No changes detected in scripts/nx-release.ts, continuing..."
+          else
+            echo "Changes detected in scripts/nx-release.ts, cancelling workflow."
+            exit 1
+          fi
+
   build:
-    if: ${{ github.repository_owner == 'nrwl' }}
+    needs: [precheck]
+    if: ${{ github.repository_owner == 'nrwl' }} && ${{ github.event.inputs.pr && needs.precheck.outputs.clean_branch_name != '' || !github.event.inputs.pr }}
     strategy:
       fail-fast: false
       matrix:
@@ -97,55 +151,11 @@ jobs:
             build: pnpm nx run-many --target=build-native -- --target=aarch64-pc-windows-msvc
     name: stable - ${{ matrix.settings.target }} - node@18
     runs-on: ${{ matrix.settings.host }}
-    outputs:
-      clean_branch_name: ${{ steps.set_branch_name.outputs.clean_branch_name }}
-      clean_fork_repo: ${{ steps.set_clean_fork_repo.outputs.clean_fork_repo }}
-      full_pr_sha: ${{ steps.set_full_pr_sha.outputs.full_pr_sha }}
-    steps:
-      - name: Fetch PR details (if PR number provided)
-        if: github.event.inputs.pr
-        id: pr_details
-        uses: actions/github-script@v6
-        with:
-          github-token: ${{secrets.GITHUB_TOKEN}}
-          script: |
-            const pr = await github.rest.pulls.get({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              pull_number: ${{ github.event.inputs.pr }},
-            });
-            console.log(`Owner: ${context.repo.owner}`);
-            console.log(`Repo: ${context.repo.repo}`);
-            console.log(`Fork repo:`, pr.data.head.repo.full_name);
-            console.log(`Fetched PR details: ${pr.data.head.ref}`);
-            console.log(`Full PR SHA: ${pr.data.head.sha}`);
-            core.setOutput('pr_branch_name', pr.data.head.ref);
-            core.setOutput('fork_repo', pr.data.head.repo.full_name);
-            core.setOutput('full_pr_sha', pr.data.head.sha);
-
-      - name: Set Clean Branch Name
-        # The reason we're doing this is because the branch name comes back 
-        # in double quotes, and we need to remove them to use it as a ref to checkout
-        if: github.event.inputs.pr
-        id: set_branch_name
-        run: echo "clean_branch_name=$(echo '${{ steps.pr_details.outputs.pr_branch_name }}' | sed 's/"//g')" >> $GITHUB_OUTPUT
-         
-      - name: Set Clean Fork Repo name
-        # The reason we're doing this is because the fork name comes back 
-        # in double quotes, and we need to remove them to use in checkout
-        if: github.event.inputs.pr
-        id: set_clean_fork_repo
-        run: echo "clean_fork_repo=$(echo '${{ steps.pr_details.outputs.fork_repo }}' | sed 's/"//g')" >> $GITHUB_OUTPUT   
-        
-      - name: Set long PR SHA
-        if: github.event.inputs.pr
-        id: set_full_pr_sha
-        run: echo "full_pr_sha=$(echo '${{ steps.pr_details.outputs.full_pr_sha }}')" >> $GITHUB_OUTPUT   
-          
+    steps: 
       - uses: actions/checkout@v4
         with:
-          ref: ${{ steps.set_branch_name.outputs.clean_branch_name }}
-          repository: ${{ steps.set_clean_fork_repo.outputs.clean_fork_repo }} 
+          ref: ${{ needs.precheck.outputs.clean_branch_name }}
+          repository: ${{ needs.precheck.outputs.clean_fork_repo }} 
 
       - uses: pnpm/action-setup@v2
         with:
@@ -218,7 +228,8 @@ jobs:
           if-no-files-found: error
 
   build-freebsd:
-    if: ${{ github.repository_owner == 'nrwl' }}
+    if: ${{ github.repository_owner == 'nrwl' }} && ${{ github.event.inputs.pr && needs.precheck.outputs.clean_branch_name != '' || !github.event.inputs.pr }}
+    needs: [precheck]
     runs-on: macos-13-large
     name: Build FreeBSD
     timeout-minutes: 45
@@ -226,8 +237,8 @@ jobs:
       - uses: actions/checkout@v4
         if: ${{ github.event_name != 'schedule' }}
         with:
-          ref: ${{ needs.build.outputs.clean_branch_name  }}
-          repository: ${{ needs.build.outputs.clean_fork_repo }} 
+          ref: ${{ needs.precheck.outputs.clean_branch_name }}
+          repository: ${{ needs.precheck.outputs.clean_fork_repo }} 
       - name: Build
         id: build
         if: ${{ github.event_name != 'schedule' }}
@@ -281,7 +292,7 @@ jobs:
           if-no-files-found: error
 
   publish:
-    if: ${{ github.repository_owner == 'nrwl' }}
+    if: ${{ github.repository_owner == 'nrwl' }} && ${{ github.event.inputs.pr && needs.precheck.outputs.clean_branch_name != '' || !github.event.inputs.pr }}
     name: Publish
     runs-on: ubuntu-latest
     permissions:
@@ -289,6 +300,7 @@ jobs:
       contents: write
       pull-requests: write
     needs:
+      - precheck
       - build-freebsd
       - build
     env:
@@ -298,8 +310,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ needs.build.outputs.clean_branch_name  }}
-          repository: ${{ needs.build.outputs.clean_fork_repo }} 
+          ref: ${{ needs.precheck.outputs.clean_branch_name  }}
+          repository: ${{ needs.precheck.outputs.clean_fork_repo }} 
       - uses: pnpm/action-setup@v2
         with:
           version: 8
@@ -329,7 +341,7 @@ jobs:
           github-token: ${{secrets.GITHUB_TOKEN}}
           script: |
             // Get the current PR short git sha
-            const fullSHA = "${{ needs.build.outputs.full_pr_sha }}";
+            const fullSHA = "${{ needs.precheck.outputs.full_pr_sha }}";
             const shortSHA = fullSHA.slice(0, 7);
             const prInput = ${{ github.event.inputs.pr }};
             const prReleaseVersion = `0.0.0-pr-${prInput}-${shortSHA}`;
@@ -341,8 +353,8 @@ jobs:
         run: |
           # If the PR number is set, and the branch name is set, use that to construct the publish branch name
           # else use existing logic of using the $GITHUB_REF_NAME
-          if [ -n "${{ github.event.inputs.pr }}" ] && [ -n "${{  needs.build.outputs.clean_branch_name }}" ]; then
-            git checkout -b publish/${{ needs.build.outputs.clean_branch_name }}
+          if [ -n "${{ github.event.inputs.pr }}" ] && [ -n "${{  needs.precheck.outputs.clean_branch_name }}" ]; then
+            git checkout -b publish/${{ needs.precheck.outputs.clean_branch_name }}
           else
             git checkout -b publish/$GITHUB_REF_NAME
           fi
@@ -361,8 +373,8 @@ jobs:
               DRY_RUN=""
               VERSION="${{ steps.versioning.outputs.pr_release_version }}"
               echo "Version for PR release set to: $VERSION"
-              echo "PR Release from branch: ${{ needs.build.outputs.clean_branch_name  }}"
-              echo "PR Release from fork: ${{ needs.build.outputs.clean_fork_repo  }}"
+              echo "PR Release from branch: ${{ needs.precheck.outputs.clean_branch_name  }}"
+              echo "PR Release from fork: ${{ needs.precheck.outputs.clean_fork_repo  }}"
             else
               # Otherwise, perform a dry-run on the current branch
               DRY_RUN="--dry-run"
@@ -373,7 +385,7 @@ jobs:
           fi
           echo "Version set to: $VERSION"
           echo "DRY_RUN set to: $DRY_RUN"
-          pnpm nx-release --local=false $VERSION $DRY_RUN
+          pnpm nx-release --local=false $VERSION --dry-run
       - name: Trigger Docs Release
         # Publish docs only on a full release
         if: ${{ !github.event.release.prerelease }}
@@ -393,7 +405,7 @@ jobs:
           script: |
             const issue_number = ${{ github.event.inputs.pr }};
             const prReleaseVersion = "${{ steps.versioning.outputs.pr_release_version }}";
-            const repo = "${{ needs.build.outputs.clean_fork_repo }}"?.length > 0 ? "${{ needs.build.outputs.clean_fork_repo }}" : "nrwl/nx";
+            const repo = "${{ needs.precheck.outputs.clean_fork_repo }}"?.length > 0 ? "${{ needs.precheck.outputs.clean_fork_repo }}" : "nrwl/nx";
             const message = `
             ## 🐳 We have a release for that!
 
@@ -412,7 +424,7 @@ jobs:
             | ------------- | ------------- |
             | **Published version** | [${prReleaseVersion}](https://www.npmjs.com/package/nx/v/${prReleaseVersion}) |
             | **Triggered by** | @${{ github.triggering_actor }} |
-            | **Branch** | [${{ needs.build.outputs.clean_branch_name }}](https://github.com/${repo}/tree/${{ needs.build.outputs.clean_branch_name }}) |
+            | **Branch** | [${{ needs.precheck.outputs.clean_branch_name }}](https://github.com/${repo}/tree/${{ needs.precheck.outputs.clean_branch_name }}) |
             | **Commit** | [${{ steps.versioning.outputs.short_sha }}](https://github.com/${repo}/commit/${{ steps.versioning.outputs.long_sha }}) |
             | **Workflow run** | [${{ github.run_id }}](https://github.com/nrwl/nx/actions/runs/${{ github.run_id }}) |
 
