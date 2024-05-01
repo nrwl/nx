@@ -309,7 +309,7 @@ jobs:
           fi
           echo "Version set to: $VERSION"
           echo "DRY_RUN set to: $DRY_RUN"
-          pnpm nx-release --local=false $VERSION $DRY_RUN
+          pnpm nx-release --local=false $VERSION --dry-run
       - name: Trigger Docs Release
         # Publish docs only on a full release
         if: ${{ !github.event.release.prerelease }}
