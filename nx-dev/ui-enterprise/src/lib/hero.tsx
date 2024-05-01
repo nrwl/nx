@@ -1,6 +1,5 @@
 import { SectionHeading } from './temp/typography';
 import { ButtonLink } from '@nx/nx-dev/ui-common';
-import Link from 'next/link';
 
 export function Hero(): JSX.Element {
   return (

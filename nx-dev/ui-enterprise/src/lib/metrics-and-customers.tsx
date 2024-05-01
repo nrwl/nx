@@ -6,7 +6,6 @@ import { ShopifyIcon } from './logos/shopify';
 import { CapitalOneIcon } from './logos/capital-one';
 import { VmwareIcon } from './logos/vmware';
 import { StorybookIcon } from './logos/storybook';
-import { RedwoodJsIcon } from './logos/redwood-js';
 import { CaterpillarIcon } from './logos/caterpillar';
 import { SevenElevenColoredIcon } from './logos/7eleven';
 import { BillColoredIcon } from './logos/bill';
@@ -51,7 +50,7 @@ export function MetricsAndCustomers(): JSX.Element {
         <svg
           x="50%"
           y={-1}
-          className="overflow-visible fill-slate-50 dark:fill-slate-900"
+          className="overflow-visible fill-slate-50/15 dark:fill-slate-900/10"
         >
           <path
             d="M-100.5 0h201v201h-201Z M699.5 0h201v201h-201Z M499.5 400h201v201h-201Z M-300.5 600h201v201h-201Z"
