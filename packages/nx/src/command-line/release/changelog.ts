@@ -939,12 +939,15 @@ async function generateChangelogForProjects(
         : undefined;
 
     const dependencyBumps = projectToDependencyProjectNames.has(project)
-      ? projectToDependencyProjectNames.get(project).map((dep) => {
-          return {
-            dependencyName: dep,
-            newVersion: projectsVersionData[dep].newVersion,
-          };
-        })
+      ? projectToDependencyProjectNames
+          .get(project)
+          .map((dep) => {
+            return {
+              dependencyName: dep,
+              newVersion: projectsVersionData[dep].newVersion,
+            };
+          })
+          .filter((b) => b.newVersion !== null)
       : undefined;
 
     let contents = await changelogRenderer({
