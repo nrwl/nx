@@ -156,14 +156,14 @@ export function Header(): JSX.Element {
             <Link
               href="/getting-started/intro"
               title="Documentation"
-              className="hidden px-3 py-2 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500 md:inline-flex"
+              className="hidden px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-slate-200 dark:hover:text-sky-500"
             >
               Documentation
             </Link>
             <Link
               href="/blog"
               title="Blog"
-              className="hidden px-3 py-2 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500 md:inline-flex"
+              className="hidden px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-slate-200 dark:hover:text-sky-500"
             >
               Blog
             </Link>
@@ -171,7 +171,7 @@ export function Header(): JSX.Element {
               href="https://nx.app/pricing"
               title="Nx Cloud"
               target="_blank"
-              className="hidden gap-2 px-3 py-2 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500 md:inline-flex"
+              className="hidden gap-2 px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-slate-200 dark:hover:text-sky-500"
             >
               CI Pricing
               <ArrowUpRightIcon className="h-2 w-2 align-super" />
@@ -225,7 +225,7 @@ export function Header(): JSX.Element {
         <div className="flex-shrink-0 text-sm">
           <nav className="flex items-center justify-center space-x-1">
             <Link
-              className="hidden cursor-pointer px-3 py-2 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500 md:inline-flex"
+              className="hidden cursor-pointer px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-slate-200 dark:hover:text-sky-500"
               title="Contact Us"
               href="/contact"
             >

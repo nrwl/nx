@@ -155,7 +155,7 @@ export function Footer(): JSX.Element {
       </h2>
       <div className="mx-auto max-w-7xl px-4 pt-12 opacity-50 transition-opacity hover:opacity-100 sm:px-6 lg:px-8 lg:pt-16">
         <div className="xl:grid xl:grid-cols-3 xl:gap-8">
-          <div className="space-y-4 text-slate-700 dark:text-slate-300 xl:col-span-1">
+          <div className="space-y-4 text-slate-700 xl:col-span-1 dark:text-slate-300">
             <svg
               className="h-14 subpixel-antialiased"
               role="img"

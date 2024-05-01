@@ -92,7 +92,7 @@ function SidebarSectionItems({ item }: { item: MenuItem }): JSX.Element {
         data-testid={`section-h5:${item.id}`}
         className={cx(
           'flex py-2',
-          'text-sm font-semibold uppercase tracking-wide text-slate-800 dark:text-slate-200 lg:text-xs',
+          'text-sm font-semibold uppercase tracking-wide text-slate-800 lg:text-xs dark:text-slate-200',
           item.disableCollapsible ? 'cursor-text' : 'cursor-pointer'
         )}
         onClick={handleCollapseToggle}
