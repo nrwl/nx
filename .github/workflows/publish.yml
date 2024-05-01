@@ -217,69 +217,6 @@ jobs:
           path: packages/**/*.node
           if-no-files-found: error
 
-  build-freebsd:
-    if: ${{ github.repository_owner == 'nrwl' }}
-    runs-on: macos-13-large
-    name: Build FreeBSD
-    timeout-minutes: 45
-    steps:
-      - uses: actions/checkout@v4
-        if: ${{ github.event_name != 'schedule' }}
-        with:
-          ref: ${{ needs.build.outputs.clean_branch_name  }}
-          repository: ${{ needs.build.outputs.clean_fork_repo }} 
-      - name: Build
-        id: build
-        if: ${{ github.event_name != 'schedule' }}
-        uses: cross-platform-actions/action@v0.22.0
-        env:
-          DEBUG: napi:*
-          RUSTUP_IO_THREADS: 1
-          NX_PREFER_TS_NODE: true
-          PLAYWRIGHT_BROWSERS_PATH: 0
-        with:
-          operating_system: freebsd
-          version: '13.2'
-          architecture: x86-64
-          environment_variables: DEBUG RUSTUP_IO_THREADS CI NX_PREFER_TS_NODE PLAYWRIGHT_BROWSERS_PATH
-          shell: bash
-          run: |
-            env
-            whoami
-            sudo pkg install -y -f node libnghttp2 npm git
-            sudo npm install --location=global --ignore-scripts pnpm@8.15.7
-            curl https://sh.rustup.rs -sSf --output rustup.sh
-            sh rustup.sh -y --profile minimal --default-toolchain stable
-            source "$HOME/.cargo/env"
-            echo "~~~~ rustc --version ~~~~"
-            rustc --version
-            echo "~~~~ node -v ~~~~"
-            node -v
-            echo "~~~~ pnpm --version ~~~~"
-            pnpm --version
-            pwd
-            ls -lah
-            whoami
-            env
-            freebsd-version
-            mkdir -p /Users/runner/work/_temp/_github_workflow
-            echo "{}" > /Users/runner/work/_temp/_github_workflow/event.json
-            pnpm install --frozen-lockfile --ignore-scripts
-            pnpm nx run-many --verbose --outputStyle stream --target=build-native -- --target=x86_64-unknown-freebsd
-            pnpm nx reset
-            rm -rf node_modules
-            rm -rf dist
-            echo "KILL ALL NODE PROCESSES"
-            killall node || true
-            echo "COMPLETE"
-      - name: Upload artifact
-        if: ${{ github.event_name != 'schedule' }}
-        uses: actions/upload-artifact@v3
-        with:
-          name: bindings-freebsd
-          path: packages/**/*.node
-          if-no-files-found: error
-
   publish:
     if: ${{ github.repository_owner == 'nrwl' }}
     name: Publish
@@ -289,7 +226,6 @@ jobs:
       contents: write
       pull-requests: write
     needs:
-      - build-freebsd
       - build
     env:
       GH_TOKEN: ${{ github.token }}

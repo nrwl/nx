@@ -133,7 +133,7 @@ const VALID_AUTHORS_FOR_LATEST = [
   console.log('KATERINA THE TAG IS', distTag);
 
   if (options.dryRun) {
-    console.warn('Not Publishing because --dryRun was passed');
+    console.warn('Not Publishing because --dryRun was passed', distTag);
   } else {
     // If publishing locally, force all projects to not be private first
     if (options.local) {
