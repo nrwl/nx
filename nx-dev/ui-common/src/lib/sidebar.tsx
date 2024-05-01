@@ -193,12 +193,12 @@ export function SidebarMobile({
       { name: 'Launch Nx', href: '/launch-nx', current: false },
       {
         name: 'Contact',
-        href: '/contact',
+        href: 'https://nx.app/enterprise?utm_source=nx.dev&utm_medium=header-menu',
         current: false,
       },
       {
         name: 'Go to app',
-        href: 'https://cloud.nx.app',
+        href: 'https://nx.app/?utm_source=nx.dev&utm_medium=header-menu',
         current: false,
       },
     ],

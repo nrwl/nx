@@ -5,7 +5,6 @@ import Link from 'next/link';
 export function Footer(): JSX.Element {
   const navigation = {
     solutions: [
-      { name: 'Nx Enterprise', href: '/enterprise' },
       { name: 'Nx', href: 'https://nx.dev' },
       { name: 'Nx Cloud', href: 'https://nx.app/?utm_source=nx.dev' },
     ],
