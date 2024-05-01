@@ -16,6 +16,7 @@ import {
   type NxPluginV2,
 } from './public-api';
 import { AggregateCreateNodesError, CreateNodesError } from '../error-types';
+import { performance } from 'perf_hooks';
 
 export function isNxPluginV2(plugin: NxPlugin): plugin is NxPluginV2 {
   return 'createNodes' in plugin || 'createDependencies' in plugin;
