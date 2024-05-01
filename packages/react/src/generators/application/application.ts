@@ -93,6 +93,8 @@ export async function applicationGeneratorInternal(
 ): Promise<GeneratorCallback> {
   const tasks = [];
 
+  console.log('Well hello Katerina!');
+
   const options = await normalizeOptions(host, schema);
   showPossibleWarnings(host, options);
 
