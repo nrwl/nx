@@ -1,7 +1,4 @@
-import type { Tree } from 'nx/src/devkit-exports';
-import { requireNx } from '../../nx';
-
-const { readNxJson, updateNxJson } = requireNx();
+import { readNxJson, Tree, updateNxJson } from 'nx/src/devkit-exports';
 
 export function addBuildTargetDefaults(
   tree: Tree,

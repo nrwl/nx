@@ -38,7 +38,7 @@
     "minimatch": "9.0.3"
   },
   "peerDependencies": {
-    "nx": ">= 16 <= 19"
+    "nx": ">= 17 <= 20"
   },
   "publishConfig": {
     "access": "public"

@@ -1,24 +1,23 @@
-import {
-  type CreateNodes,
-  type ProjectConfiguration,
-  type ProjectGraph,
-  type Tree,
-} from 'nx/src/devkit-exports';
 import type { PackageJson } from 'nx/src/utils/package-json';
-import * as yargs from 'yargs-parser';
-import { requireNx } from '../../nx';
-
-const {
-  readJson,
-  writeJson,
-  readNxJson,
-  updateNxJson,
-  retrieveProjectConfigurations,
-  LoadedNxPlugin,
-  ProjectConfigurationsError,
-} = requireNx();
 
 import type { ConfigurationResult } from 'nx/src/project-graph/utils/project-configuration-utils';
+import * as yargs from 'yargs-parser';
+
+import {
+  CreateNodes,
+  ProjectConfiguration,
+  ProjectGraph,
+  readJson,
+  readNxJson,
+  Tree,
+  updateNxJson,
+  writeJson,
+} from 'nx/src/devkit-exports';
+import {
+  LoadedNxPlugin,
+  ProjectConfigurationsError,
+  retrieveProjectConfigurations,
+} from 'nx/src/devkit-internals';
 
 /**
  * Iterates through various forms of plugin options to find the one which does not conflict with the current graph

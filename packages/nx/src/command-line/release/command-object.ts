@@ -1,5 +1,4 @@
 import { Argv, CommandModule, showHelp } from 'yargs';
-import { readNxJson } from '../../project-graph/file-utils';
 import { logger } from '../../utils/logger';
 import {
   OutputStyle,
@@ -10,6 +9,7 @@ import {
   withRunManyOptions,
 } from '../yargs-utils/shared-options';
 import { VersionData } from './utils/shared';
+import { readNxJson } from '../../config/nx-json';
 
 export interface NxReleaseArgs {
   groups?: string[];

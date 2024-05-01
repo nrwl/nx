@@ -2072,17 +2072,7 @@
     },
     "root": "/packages/plugin",
     "source": "/packages/plugin/src",
-    "executors": {
-      "/nx-api/plugin/executors/e2e": {
-        "description": "Creates and runs the E2E tests for an Nx Plugin.",
-        "file": "generated/packages/plugin/executors/e2e.json",
-        "hidden": false,
-        "name": "e2e",
-        "originalFilePath": "/packages/plugin/src/executors/e2e/schema.json",
-        "path": "/nx-api/plugin/executors/e2e",
-        "type": "executor"
-      }
-    },
+    "executors": {},
     "generators": {
       "/nx-api/plugin/generators/plugin": {
         "description": "Create a Nx Plugin.",

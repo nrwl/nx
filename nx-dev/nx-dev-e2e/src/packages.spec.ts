@@ -275,7 +275,6 @@ const pages: Array<{ title: string; path: string }> = [
     title: '@nx/plugin:executor',
     path: '/packages/plugin/generators/executor',
   },
-  { title: '@nx/plugin:e2e', path: '/packages/plugin/executors/e2e' },
   { title: '@nx/react', path: '/packages/react' },
   { title: '@nx/react:init', path: '/packages/react/generators/init' },
   {

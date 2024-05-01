@@ -1,6 +1,6 @@
 import { dirname } from 'node:path';
 
-import { toProjectName } from '../../config/workspaces';
+import { toProjectName } from '../../config/to-project-name';
 import { combineGlobPatterns } from '../../utils/globs';
 
 import type { NxPluginV1 } from '../../utils/nx-plugin.deprecated';

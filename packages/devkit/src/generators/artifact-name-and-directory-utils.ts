@@ -1,20 +1,22 @@
 import { prompt } from 'enquirer';
-import type { ProjectConfiguration } from 'nx/src/config/workspace-json-project-json';
-import type { Tree } from 'nx/src/generators/tree';
 import { join, relative } from 'path';
-import { requireNx } from '../../nx';
 import { names } from '../utils/names';
 
-const {
-  createProjectRootMappingsFromProjectConfigurations,
-  findProjectForPath,
+import {
   getProjects,
   joinPathFragments,
   logger,
   normalizePath,
   output,
+  ProjectConfiguration,
+  Tree,
   workspaceRoot,
-} = requireNx();
+} from 'nx/src/devkit-exports';
+
+import {
+  createProjectRootMappingsFromProjectConfigurations,
+  findProjectForPath,
+} from 'nx/src/devkit-internals';
 
 export type NameAndDirectoryFormat = 'as-provided' | 'derived';
 export type ArtifactGenerationOptions = {
@@ -142,7 +144,7 @@ function logDeprecationMessage(
   formats: NameAndDirectoryFormats
 ) {
   logger.warn(`
-In Nx 19, generating a ${options.artifactType} will no longer support providing a project and deriving the directory.
+In Nx 20, generating a ${options.artifactType} will no longer support providing a project and deriving the directory.
 Please provide the exact directory in the future.
 Example: nx g ${options.callingGenerator} ${formats['derived'].artifactName} --directory ${formats['derived'].directory}
 NOTE: The example above assumes the command is being run from the workspace root. If the command is being run from a subdirectory, the directory option should be adjusted accordingly.
