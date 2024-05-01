@@ -80,6 +80,7 @@ export async function applicationGenerator(
   host: Tree,
   schema: Schema
 ): Promise<GeneratorCallback> {
+  console.log('Hello to react app generator! 🐈');
   return await applicationGeneratorInternal(host, {
     addPlugin: false,
     projectNameAndRootFormat: 'derived',
