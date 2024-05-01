@@ -220,7 +220,11 @@ export default async function runExecutor(
       stdio: ['ignore', 'pipe', 'pipe'],
     });
 
-    const stdoutData = JSON.parse(output.toString());
+    const jsonRegex = /\{(?:[^{}])*\}/g;
+    const jsonObjectsInOutput = output.toString().match(jsonRegex);
+    const stdoutData = JSON.parse(
+      jsonObjectsInOutput[jsonObjectsInOutput.length - 1]
+    );
 
     // If npm workspaces are in use, the publish output will nest the data under the package name, so we normalize it first
     const normalizedStdoutData = stdoutData[packageName] ?? stdoutData;
