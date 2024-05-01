@@ -317,7 +317,7 @@
     "@swc/helpers": "~0.5.2",
     "@tailwindcss/aspect-ratio": "^0.4.2",
     "@tailwindcss/forms": "^0.5.7",
-    "@tailwindcss/typography": "^0.5.12",
+    "@tailwindcss/typography": "0.5.7",
     "@types/license-checker": "^25.0.3",
     "@types/minimatch": "^5.1.2",
     "@widgetbot/react-embed": "^1.9.0",
