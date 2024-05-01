@@ -2,7 +2,7 @@
 
 We offer multiple ways of running Nx Cloud for our Enterprise customers. The below options are listed in recommended order, from easiest to most complex in terms of set-up and maintenance for your team. Please carefully consider your organization's requirements and level of infrastructure expertise before deciding on a deployment option.
 
-{% call-to-action title="Get in Touch" icon="nxcloud" description="Get the package that best fits your needs" url="https://nx.app/enterprise?utm_source=nx.dev" /%}
+{% call-to-action title="Get in Touch" icon="nxcloud" description="Get the package that best fits your needs" url="/enterprise" /%}
 
 ## Managed Setup
 
