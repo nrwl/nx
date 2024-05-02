@@ -12,7 +12,7 @@ export class ProjectGraphError extends Error {
     | MergeNodesError
     | CreateMetadataError
     | ProjectsWithNoNameError
-    | ProjectsWithConflictingNamesError
+    | MultipleProjectsWithSameNameError
     | ProcessDependenciesError
     | ProcessProjectGraphError
     | WorkspaceValidityError
@@ -25,7 +25,7 @@ export class ProjectGraphError extends Error {
       | CreateNodesError
       | MergeNodesError
       | ProjectsWithNoNameError
-      | ProjectsWithConflictingNamesError
+      | MultipleProjectsWithSameNameError
       | ProcessDependenciesError
       | ProcessProjectGraphError
       | CreateMetadataError
@@ -73,9 +73,9 @@ export class ProjectGraphError extends Error {
   }
 }
 
-export class ProjectsWithConflictingNamesError extends Error {
+export class MultipleProjectsWithSameNameError extends Error {
   constructor(
-    conflicts: Map<string, string[]>,
+    public conflicts: Map<string, string[]>,
     public projects: Record<string, ProjectConfiguration>
   ) {
     super(
@@ -92,20 +92,38 @@ export class ProjectsWithConflictingNamesError extends Error {
   }
 }
 
-export function isProjectsWithConflictingNamesError(
+export class ProjectWithExistingNameError extends Error {
+  constructor(public projectName: string, public projectRoot: string) {
+    super(`The project "${projectName}" is defined in multiple locations.`);
+    this.name = this.constructor.name;
+  }
+}
+
+export function isProjectWithExistingNameError(
   e: unknown
-): e is ProjectsWithConflictingNamesError {
+): e is ProjectWithExistingNameError {
   return (
-    e instanceof ProjectsWithConflictingNamesError ||
+    e instanceof ProjectWithExistingNameError ||
     (typeof e === 'object' &&
       'name' in e &&
-      e?.name === ProjectsWithConflictingNamesError.prototype.name)
+      e?.name === ProjectWithExistingNameError.name)
+  );
+}
+
+export function isMultipleProjectsWithSameNameError(
+  e: unknown
+): e is MultipleProjectsWithSameNameError {
+  return (
+    e instanceof MultipleProjectsWithSameNameError ||
+    (typeof e === 'object' &&
+      'name' in e &&
+      e?.name === MultipleProjectsWithSameNameError.name)
   );
 }
 
 export class ProjectsWithNoNameError extends Error {
   constructor(
-    projectRoots: string[],
+    public projectRoots: string[],
     public projects: Record<string, ProjectConfiguration>
   ) {
     super(
@@ -124,7 +142,25 @@ export function isProjectsWithNoNameError(
     e instanceof ProjectsWithNoNameError ||
     (typeof e === 'object' &&
       'name' in e &&
-      e?.name === ProjectsWithNoNameError.prototype.name)
+      e?.name === ProjectsWithNoNameError.name)
+  );
+}
+
+export class ProjectWithNoNameError extends Error {
+  constructor(public projectRoot: string) {
+    super(`The project in ${projectRoot} has no name provided.`);
+    this.name = this.constructor.name;
+  }
+}
+
+export function isProjectWithNoNameError(
+  e: unknown
+): e is ProjectWithNoNameError {
+  return (
+    e instanceof ProjectWithNoNameError ||
+    (typeof e === 'object' &&
+      'name' in e &&
+      e?.name === ProjectWithNoNameError.name)
   );
 }
 
@@ -134,13 +170,24 @@ export class ProjectConfigurationsError extends Error {
       | MergeNodesError
       | CreateNodesError
       | ProjectsWithNoNameError
-      | ProjectsWithConflictingNamesError
+      | MultipleProjectsWithSameNameError
     >,
     public readonly partialProjectConfigurationsResult: ConfigurationResult
   ) {
     super('Failed to create project configurations');
     this.name = this.constructor.name;
   }
+}
+
+export function isProjectConfigurationsError(
+  e: unknown
+): e is ProjectConfigurationsError {
+  return (
+    e instanceof ProjectConfigurationsError ||
+    (typeof e === 'object' &&
+      'name' in e &&
+      e?.name === ProjectConfigurationsError.name)
+  );
 }
 
 export class CreateNodesError extends Error {
@@ -275,7 +322,7 @@ export function isAggregateProjectGraphError(
     e instanceof AggregateProjectGraphError ||
     (typeof e === 'object' &&
       'name' in e &&
-      e?.name === AggregateProjectGraphError.prototype.name)
+      e?.name === AggregateProjectGraphError.name)
   );
 }
 
@@ -284,7 +331,7 @@ export function isCreateMetadataError(e: unknown): e is CreateMetadataError {
     e instanceof CreateMetadataError ||
     (typeof e === 'object' &&
       'name' in e &&
-      e?.name === CreateMetadataError.prototype.name)
+      e?.name === CreateMetadataError.name)
   );
 }
 
