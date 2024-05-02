@@ -132,6 +132,25 @@ To run all the `build` tasks in the repository with Gradle, run `./gradlew build
 ./nx run-many -t build
 ```
 
+Just like Gradle, Nx caches your tasks so that if you run the builds a second time without changing the source files, they'll complete almost instantly.
+
+```{% command="./nx run-many -t build" %}
+
+   ✔  nx run gs-multi-module:classes  [existing outputs match the cache, left as is]
+   ✔  nx run library:classes  [existing outputs match the cache, left as is]
+   ✔  nx run gs-multi-module:build  [existing outputs match the cache, left as is]
+   ✔  nx run library:build  [existing outputs match the cache, left as is]
+   ✔  nx run application:classes  [existing outputs match the cache, left as is]
+   ✔  nx run application:build  [existing outputs match the cache, left as is]
+
+—————————————————————————————————————————————————————————————————————————
+
+ NX   Successfully ran target build for 3 projects and 3 tasks they depend on (74ms)
+
+Nx read the output from the cache instead of running the command for 6 out of 6 tasks.
+```
+
+
 ## Create a Custom Task
 
 Nx can run any tasks that are available to Gradle - even your own custom tasks. Let's create a custom task to see this functionality in action. Edit the `application` gradle build file to create a custom task:
