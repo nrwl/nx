@@ -55,9 +55,7 @@ function forEachProjectConfig<Options>(
         continue;
       }
 
-      if (target.options) {
-        callback(target.options, projectName, targetName);
-      }
+      callback(target.options ?? {}, projectName, targetName);
 
       if (!target.configurations) {
         continue;

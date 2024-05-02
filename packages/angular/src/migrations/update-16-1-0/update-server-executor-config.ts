@@ -30,8 +30,8 @@ export default async function (tree: Tree) {
           : projectConfiguration.targets[targetName].options;
 
         if (
-          configToUpdate.buildOptimizer === undefined &&
-          configToUpdate.optimization !== undefined
+          configToUpdate?.buildOptimizer === undefined &&
+          configToUpdate?.optimization !== undefined
         ) {
           configToUpdate.buildOptimizer = !!configToUpdate.optimization;
         }
