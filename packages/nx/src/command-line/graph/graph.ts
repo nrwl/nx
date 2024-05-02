@@ -300,9 +300,6 @@ export async function generateGraph(
     sourceMaps = projectGraphAndSourceMaps.sourceMaps;
   } catch (e) {
     if (e instanceof ProjectGraphError) {
-      output.warn({
-        title: 'Failed to process project graph. Showing partial graph.',
-      });
       rawGraph = e.getPartialProjectGraph();
       sourceMaps = e.getPartialSourcemaps();
 
@@ -310,6 +307,21 @@ export async function generateGraph(
     }
     if (!rawGraph) {
       handleProjectGraphError({ exitOnError: true }, e);
+    } else {
+      const errors = e.getErrors();
+      if (errors?.length > 0) {
+        errors.forEach((e) => {
+          output.error({
+            title: e.message,
+            bodyLines: [e.stack],
+          });
+        });
+      }
+      output.warn({
+        title: `${
+          errors?.length > 1 ? `${errors.length} errors` : `An error`
+        } occured while processing the project graph. Showing partial graph.`,
+      });
     }
   }
   let prunedGraph = pruneExternalNodes(rawGraph);
@@ -708,6 +720,21 @@ function createFileWatcher() {
             currentProjectGraphClientResponse.hash &&
           sourceMapResponse
         ) {
+          if (projectGraphClientResponse.errors?.length > 0) {
+            projectGraphClientResponse.errors.forEach((e) => {
+              output.error({
+                title: e.message,
+                bodyLines: [e.stack],
+              });
+            });
+            output.warn({
+              title: `${
+                projectGraphClientResponse.errors.length > 1
+                  ? `${projectGraphClientResponse.errors.length} errors`
+                  : `An error`
+              } occured while processing the project graph. Showing partial graph.`,
+            });
+          }
           output.note({ title: 'Graph changes updated.' });
 
           currentProjectGraphClientResponse = projectGraphClientResponse;
