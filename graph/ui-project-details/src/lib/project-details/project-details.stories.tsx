@@ -1,11 +1,9 @@
 import type { Meta } from '@storybook/react';
 import { ProjectDetails } from './project-details';
-import { StoreDecorator } from '@nx/graph/state';
 
 const meta: Meta<typeof ProjectDetails> = {
   component: ProjectDetails,
   title: 'ProjectDetails',
-  decorators: [StoreDecorator],
 };
 export default meta;
 

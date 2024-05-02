@@ -5,9 +5,9 @@ import type { ProjectGraphProjectNode } from '@nx/devkit';
 import { GraphError } from 'nx/src/command-line/graph/graph';
 /* eslint-enable @nx/enforce-module-boundaries */
 import { useNavigate, useNavigation, useSearchParams } from 'react-router-dom';
-import { connect } from 'react-redux';
 import {
   ErrorToast,
+  ExpandedTargetsContext,
   getExternalApiService,
   useEnvironmentConfig,
   useRouteConstructor,
@@ -15,27 +15,17 @@ import {
 import { Spinner } from '@nx/graph/ui-components';
 
 import { ProjectDetails } from '@nx/graph/ui-project-details';
-import { useCallback, useEffect } from 'react';
-import {
-  mapStateToProps,
-  mapDispatchToProps,
-  mapStateToPropsType,
-  mapDispatchToPropsType,
-} from './project-details-wrapper.state';
+import { useCallback, useContext, useEffect } from 'react';
 
-type ProjectDetailsProps = mapStateToPropsType &
-  mapDispatchToPropsType & {
-    project: ProjectGraphProjectNode;
-    sourceMap: Record<string, string[]>;
-    errors?: GraphError[];
-  };
+interface ProjectDetailsProps {
+  project: ProjectGraphProjectNode;
+  sourceMap: Record<string, string[]>;
+  errors?: GraphError[];
+}
 
-export function ProjectDetailsWrapperComponent({
+export function ProjectDetailsWrapper({
   project,
   sourceMap,
-  setExpandTargets,
-  expandTargets,
-  collapseAllTargets,
   errors,
 }: ProjectDetailsProps) {
   const environment = useEnvironmentConfig()?.environment;
@@ -44,6 +34,8 @@ export function ProjectDetailsWrapperComponent({
   const { state: navigationState, location } = useNavigation();
   const routeConstructor = useRouteConstructor();
   const [searchParams, setSearchParams] = useSearchParams();
+  const { expandedTargets, setExpandedTargets, collapseAllTargets } =
+    useContext(ExpandedTargetsContext);
 
   const handleViewInProjectGraph = useCallback(
     (data: { projectName: string }) => {
@@ -113,44 +105,39 @@ export function ProjectDetailsWrapperComponent({
   };
 
   useEffect(() => {
-    if (!project.data.targets) return;
-
     const expandedTargetsParams = searchParams.get('expanded')?.split(',');
     if (expandedTargetsParams && expandedTargetsParams.length > 0) {
-      setExpandTargets(expandedTargetsParams);
+      setExpandedTargets(expandedTargetsParams);
     }
 
     return () => {
       collapseAllTargets();
-      searchParams.delete('expanded');
-      setSearchParams(searchParams, { replace: true });
+      setSearchParams(
+        (currentSearchParams) => {
+          currentSearchParams.delete('expanded');
+          return currentSearchParams;
+        },
+        { replace: true, preventScrollReset: true }
+      );
     };
   }, []); // only run on mount
 
   useEffect(() => {
-    if (!project.data.targets) return;
-
     const expandedTargetsParams =
       searchParams.get('expanded')?.split(',') || [];
 
-    if (expandedTargetsParams.join(',') === expandTargets.join(',')) {
+    if (expandedTargetsParams.join(',') === expandedTargets.join(',')) {
       return;
     }
 
     setSearchParams(
       (currentSearchParams) => {
-        updateSearchParams(currentSearchParams, expandTargets);
+        updateSearchParams(currentSearchParams, expandedTargets);
         return currentSearchParams;
       },
       { replace: true, preventScrollReset: true }
     );
-  }, [
-    expandTargets,
-    project.data.targets,
-    setExpandTargets,
-    searchParams,
-    setSearchParams,
-  ]);
+  }, [expandedTargets, searchParams, setSearchParams]);
 
   if (
     navigationState === 'loading' &&
@@ -179,9 +166,3 @@ export function ProjectDetailsWrapperComponent({
     </>
   );
 }
-
-export const ProjectDetailsWrapper = connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(ProjectDetailsWrapperComponent);
-export default ProjectDetailsWrapper;

@@ -1,18 +1,16 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import {
-  TargetConfigurationDetailsListComponent,
+  TargetConfigurationDetailsList,
   TargetConfigurationDetailsListProps,
 } from './target-configuration-details-list';
-import { StoreDecorator } from '@nx/graph/state';
 
-const meta: Meta<typeof TargetConfigurationDetailsListComponent> = {
-  component: TargetConfigurationDetailsListComponent,
-  title: 'TargetConfigurationDetailsListComponent',
-  decorators: [StoreDecorator],
+const meta: Meta<typeof TargetConfigurationDetailsList> = {
+  component: TargetConfigurationDetailsList,
+  title: 'TargetConfigurationDetailsList',
 };
 export default meta;
 
-type Story = StoryObj<typeof TargetConfigurationDetailsListComponent>;
+type Story = StoryObj<typeof TargetConfigurationDetailsList>;
 
 export const OneTarget: Story = {
   args: {

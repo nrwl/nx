@@ -3,12 +3,10 @@ import {
   TargetConfigurationDetailsListItem,
   TargetConfigurationDetailsListItemProps,
 } from './target-configuration-details-list-item';
-import { StoreDecorator } from '@nx/graph/state';
 
 const meta: Meta<typeof TargetConfigurationDetailsListItem> = {
   component: TargetConfigurationDetailsListItem,
   title: 'TargetConfigurationDetailsListItem',
-  decorators: [StoreDecorator],
 };
 export default meta;
 

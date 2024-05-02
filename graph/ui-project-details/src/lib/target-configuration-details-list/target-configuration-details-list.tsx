@@ -1,29 +1,21 @@
-import { connect } from 'react-redux';
 /* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
 import type { ProjectGraphProjectNode } from '@nx/devkit';
-import {
-  mapDispatchToProps,
-  mapDispatchToPropsType,
-  mapStateToProps,
-  mapStateToPropsType,
-} from './target-configuration-details-list.state';
 import { TargetConfigurationGroupList } from '../target-configuration-details-group-list/target-configuration-details-group-list';
 
-export type TargetConfigurationDetailsListProps = mapStateToPropsType &
-  mapDispatchToPropsType & {
-    project: ProjectGraphProjectNode;
-    sourceMap: Record<string, string[]>;
-    variant?: 'default' | 'compact';
-    onRunTarget?: (data: { projectName: string; targetName: string }) => void;
-    onViewInTaskGraph?: (data: {
-      projectName: string;
-      targetName: string;
-    }) => void;
-    className?: string;
-  };
+export interface TargetConfigurationDetailsListProps {
+  project: ProjectGraphProjectNode;
+  sourceMap: Record<string, string[]>;
+  variant?: 'default' | 'compact';
+  onRunTarget?: (data: { projectName: string; targetName: string }) => void;
+  onViewInTaskGraph?: (data: {
+    projectName: string;
+    targetName: string;
+  }) => void;
+  className?: string;
+}
 
-export function TargetConfigurationDetailsListComponent({
+export function TargetConfigurationDetailsList({
   project,
   variant,
   sourceMap,
@@ -42,9 +34,3 @@ export function TargetConfigurationDetailsListComponent({
     />
   );
 }
-
-export const TargetConfigurationDetailsList = connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(TargetConfigurationDetailsListComponent);
-export default TargetConfigurationDetailsList;

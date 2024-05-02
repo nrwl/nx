@@ -1,6 +1,4 @@
 import { JSX, ReactElement, useEffect, useState } from 'react';
-import { Provider as StoreProvider } from 'react-redux';
-import { rootStore } from '@nx/graph/state';
 import { ProjectDetails as ProjectDetailsUi } from '@nx/graph/ui-project-details';
 
 export function Loading() {
@@ -82,13 +80,11 @@ export function ProjectDetails({
           height ? `p-4 h-[${height}] overflow-y-auto` : 'p-4'
         }`}
       >
-        <StoreProvider store={rootStore}>
-          <ProjectDetailsUi
-            project={parsedProps.project}
-            sourceMap={parsedProps.sourceMap}
-            variant="compact"
-          />
-        </StoreProvider>
+        <ProjectDetailsUi
+          project={parsedProps.project}
+          sourceMap={parsedProps.sourceMap}
+          variant="compact"
+        />
       </div>
     </div>
   );
