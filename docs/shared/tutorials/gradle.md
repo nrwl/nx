@@ -134,7 +134,7 @@ To run all the `build` tasks in the repository with Gradle, run `./gradlew build
 
 Nx can run any tasks that are available to Gradle - even your own custom tasks. Let's create a custom task to see this functionality in action. Edit the `application` gradle build file to create a custom task:
 
-```{% fileName="application/build.gradle" %}
+```{% fileName="application/build.gradle" highlightLines=["25-34"] %}
 plugins {
 	id 'org.springframework.boot' version '3.2.2'
 	id 'io.spring.dependency-management' version '1.1.4'
@@ -207,7 +207,7 @@ git commit -am "changes"
 
 Next make a small change to the `application` code:
 
-```java {% fileName="application/src/main/java/com/example/multimodule/application/DemoApplication.java" %}
+```java {% fileName="application/src/main/java/com/example/multimodule/application/DemoApplication.java" highlightLines=[21] %}
 package com.example.multimodule.application;
 
 import com.example.multimodule.service.MyService;
@@ -269,41 +269,43 @@ Then you can set up your CI by running the `@nx/gradle:ci-workflow` generator:
 
 This generator creates the following file:
 
-```yml {% fileName=".github/workflows/ci.yml" %}
+```yml {% fileName=".github/workflows/ci.yml" highlightLines=[19] %}
 name: CI
-
 on:
   push:
     branches:
       - main
   pull_request:
-
+permissions:
+  actions: read
+  contents: read
 jobs:
   main:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout project sources
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: actions/setup-java@v4
+      # Connect your workspace on nx.app and uncomment this to enable task distribution.
+      # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
+      # - run: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-jvm" --stop-agents-after="build"
+      - name: Set up JDK 17 for x64
+        uses: actions/setup-java@v4
         with:
-          distribution: 'temurin' # See 'Supported distributions' for available options
-          java-version: '21'
+          java-version: '17'
+          distribution: 'temurin'
+          architecture: x64
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v2
-
-      - uses: nrwl/nx-set-shas@v3
-
-      # This line is needed for nx affected to work when CI is running on a PR
+      - uses: nrwl/nx-set-shas@v4
       - run: git branch --track main origin/main
-        if: ${{ github.event_name == 'pull_request' }}
-
-      - name: Run build with Gradle Wrapper
-        run: ./nx affected -t test build --parallel=3
+        if: \${{ github.event_name == 'pull_request' }}
+      - run: ./nx affected -t test build
 ```
 
-This will create a default CI configuration that sets up Nx Cloud to [use distributed task execution](/ci/features/distribute-task-execution). This automatically runs all tasks on separate machines in parallel wherever possible, without requiring you to manually coordinate copying the output from one machine to another.
+This is a default CI configuration that sets up Nx Cloud to [use nx affected](/ci/features/affected). This will only run the tasks that are needed for a particular PR.
+
+You can also [enable distributed task execution](/ci/features/distribute-task-execution) by uncommenting the `nx-cloud start-ci-run` line. This will automatically run all tasks on separate machines in parallel wherever possible, without requiring you to manually coordinate copying the output from one machine to another.
 
 Check out one of these detailed tutorials on setting up CI with Nx:
 
