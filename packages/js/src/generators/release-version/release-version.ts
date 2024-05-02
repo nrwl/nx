@@ -79,12 +79,9 @@ Valid values are: ${validReleaseVersionPrefixes
       options.fallbackCurrentVersionResolver = 'disk';
     }
 
-    // Set defaults for updateDependentsOptions
-    const updateDependentsOptions = options.updateDependents ?? {};
-    // "auto" means "only when the dependents are already included in the current batch", and is the default
-    updateDependentsOptions.when = updateDependentsOptions.when || 'auto';
-    // in the case "when" is set to "always", what semver bump should be applied to the dependents which are not included in the current batch
-    updateDependentsOptions.bump = updateDependentsOptions.bump || 'patch';
+    // Set default for updateDependents
+    const updateDependents = options.updateDependents ?? 'never';
+    const updateDependentsBump = 'patch';
 
     // Sort the projects topologically because there are cases where we need to perform updates based on dependent relationships
     // TODO: maybe move this sorting to the command level?
@@ -376,10 +373,10 @@ To fix this you will either need to add a package.json file at that location, or
 
             if (!specifier) {
               if (projectToDependencyBumps.has(projectName)) {
-                // No applicable changes to the project directly by the user, but we have updated one or more dependencies from the current batch already, so it does need to be bumped
-                specifier = updateDependentsOptions.bump;
+                // No applicable changes to the project directly by the user, but one or more dependencies have been bumped and updateDependents is enabled
+                specifier = updateDependentsBump;
                 log(
-                  `📄 Resolved the specifier as "${specifier}" based on "release.version.generatorOptions.updateDependentsOptions.bump"`
+                  `📄 Resolved the specifier as "${specifier}" because "release.version.generatorOptions.updateDependents" is enabled`
                 );
                 break;
               }
@@ -460,8 +457,7 @@ To fix this you will either need to add a package.json file at that location, or
           return localPackageDependency.target === project.name;
         });
 
-      const includeTransitiveDependents =
-        updateDependentsOptions.when === 'always';
+      const includeTransitiveDependents = updateDependents === 'auto';
       const transitiveLocalPackageDependents: LocalPackageDependency[] = [];
       if (includeTransitiveDependents) {
         for (const directDependent of allDependentProjects) {
@@ -491,7 +487,7 @@ To fix this you will either need to add a package.json file at that location, or
       }
 
       // If not always updating dependents (when they don't already appear in the batch itself), print a warning to the user about what is being skipped and how to change it
-      if (updateDependentsOptions.when === 'auto') {
+      if (updateDependents === 'never') {
         if (dependentProjectsOutsideCurrentBatch.length > 0) {
           let logMsg = `⚠️  Warning, the following packages depend on "${project.name}"`;
           if (options.releaseGroup.name === IMPLICIT_DEFAULT_RELEASE_GROUP) {
@@ -505,7 +501,7 @@ To fix this you will either need to add a package.json file at that location, or
           logMsg += `\n${dependentProjectsOutsideCurrentBatch
             .map((dependentProject) => `${indent}- ${dependentProject.source}`)
             .join('\n')}`;
-          logMsg += `\n${indent}=> You can adjust this behavior by setting \`version.generatorOptions.updateDependents.when\` to "always"`;
+          logMsg += `\n${indent}=> You can adjust this behavior by setting \`version.generatorOptions.updateDependents\` to "auto"`;
           log(logMsg);
         }
       }
@@ -520,7 +516,7 @@ To fix this you will either need to add a package.json file at that location, or
         currentVersion,
         newVersion: null, // will stay as null in the final result in the case that no changes are detected
         dependentProjects:
-          updateDependentsOptions.when === 'always'
+          updateDependents === 'auto'
             ? allDependentProjects
             : dependentProjectsInCurrentBatch,
       };
@@ -548,7 +544,7 @@ To fix this you will either need to add a package.json file at that location, or
 
       if (allDependentProjects.length > 0) {
         const totalProjectsToUpdate =
-          updateDependentsOptions.when === 'always'
+          updateDependents === 'auto'
             ? allDependentProjects.length +
               transitiveLocalPackageDependents.length
             : dependentProjectsInCurrentBatch.length;
@@ -651,14 +647,14 @@ To fix this you will either need to add a package.json file at that location, or
         });
       }
 
-      if (updateDependentsOptions.when === 'always') {
+      if (updateDependents === 'auto') {
         for (const dependentProject of dependentProjectsOutsideCurrentBatch) {
           updateDependentProjectAndAddToVersionData({
             dependentProject,
             dependencyPackageName: packageName,
             newDependencyVersion: newVersion,
             // For these additional dependents, we need to update their package.json version as well because we know they will not come later in the topologically sorted projects loop
-            forceVersionBump: updateDependentsOptions.bump,
+            forceVersionBump: updateDependentsBump,
           });
         }
       }
@@ -683,7 +679,7 @@ To fix this you will either need to add a package.json file at that location, or
           dependencyPackageName: dependencyPackageJson.name,
           newDependencyVersion: dependencyPackageJson.version,
           // For these additional dependents, we need to update their package.json version as well because we know they will not come later in the topologically sorted projects loop
-          forceVersionBump: updateDependentsOptions.bump,
+          forceVersionBump: updateDependentsBump,
         });
       }
     }

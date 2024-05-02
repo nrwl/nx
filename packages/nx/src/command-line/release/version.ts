@@ -73,12 +73,11 @@ export interface ReleaseVersionGeneratorSchema {
   installArgs?: string;
   installIgnoreScripts?: boolean;
   conventionalCommitsConfig?: NxReleaseConfig['conventionalCommits'];
-  updateDependents?: {
-    // "auto" means "only when the dependents are already included in the current batch", and is the default
-    when?: 'auto' | 'always';
-    // in the case "when" is set to "always", what semver bump should be applied to the dependents which are not included in the current batch
-    bump?: 'patch' | 'minor' | 'major';
-  };
+  /**
+   * 'auto' allows users to opt into dependents being updated (a patch version bump) when a dependency is versioned.
+   * This is only applicable to independently released projects.
+   */
+  updateDependents?: 'never' | 'auto';
 }
 
 export interface NxReleaseVersionResult {

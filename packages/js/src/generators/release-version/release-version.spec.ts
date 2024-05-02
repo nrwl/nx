@@ -525,7 +525,7 @@ To fix this you will either need to add a package.json file at that location, or
           `);
         });
 
-        it(`should not update dependents when filtering to a subset of projects by default, if "when" is set to "auto"`, async () => {
+        it(`should not update dependents when filtering to a subset of projects by default, if "updateDependents" is set to "never"`, async () => {
           expect(readJson(tree, 'libs/my-lib/package.json').version).toEqual(
             '0.0.1'
           );
@@ -565,9 +565,7 @@ To fix this you will either need to add a package.json file at that location, or
             currentVersionResolver: 'disk',
             specifierSource: 'prompt',
             releaseGroup: createReleaseGroup('independent'),
-            updateDependents: {
-              when: 'auto',
-            },
+            updateDependents: 'never',
           });
 
           expect(readJson(tree, 'libs/my-lib/package.json'))
@@ -608,7 +606,7 @@ To fix this you will either need to add a package.json file at that location, or
           `);
         });
 
-        it(`should update dependents even when filtering to a subset of projects which do not include those dependents, if "when" is "always"`, async () => {
+        it(`should update dependents even when filtering to a subset of projects which do not include those dependents, if "updateDependents" is "auto"`, async () => {
           expect(readJson(tree, 'libs/my-lib/package.json').version).toEqual(
             '0.0.1'
           );
@@ -648,9 +646,7 @@ To fix this you will either need to add a package.json file at that location, or
             currentVersionResolver: 'disk',
             specifierSource: 'prompt',
             releaseGroup: createReleaseGroup('independent'),
-            updateDependents: {
-              when: 'always',
-            },
+            updateDependents: 'auto',
           });
 
           expect(readJson(tree, 'libs/my-lib/package.json'))
@@ -1157,7 +1153,7 @@ Valid values are: "auto", "", "~", "^", "="`,
       jest.clearAllMocks();
     });
 
-    it('should not update transitive dependents when updateDependents.when is set to "auto" and the transitive dependents are not in the same batch', async () => {
+    it('should not update transitive dependents when updateDependents is set to "never" and the transitive dependents are not in the same batch', async () => {
       expect(readJson(tree, 'libs/my-lib/package.json').version).toEqual(
         '0.0.1'
       );
@@ -1187,7 +1183,7 @@ Valid values are: "auto", "", "~", "^", "="`,
         }
       `);
 
-      // It should not include transitive dependents in the versionData because we are filtering to only my-lib and updateDependents.when is set to "auto"
+      // It should not include transitive dependents in the versionData because we are filtering to only my-lib and updateDependents is set to "never"
       expect(
         await releaseVersionGenerator(tree, {
           projects: [projectGraph.nodes['my-lib']], // version only my-lib
@@ -1196,9 +1192,7 @@ Valid values are: "auto", "", "~", "^", "="`,
           currentVersionResolver: 'disk',
           specifierSource: 'prompt',
           releaseGroup: createReleaseGroup('independent'),
-          updateDependents: {
-            when: 'auto',
-          },
+          updateDependents: 'never',
         })
       ).toMatchInlineSnapshot(`
         {
@@ -1220,7 +1214,7 @@ Valid values are: "auto", "", "~", "^", "="`,
         }
       `);
 
-      // The version of project-with-dependency-on-my-lib is untouched because it is not in the same batch as my-lib and updateDependents.when is set to "auto"
+      // The version of project-with-dependency-on-my-lib is untouched because it is not in the same batch as my-lib and updateDependents is set to "never"
       expect(
         readJson(tree, 'libs/project-with-dependency-on-my-lib/package.json')
       ).toMatchInlineSnapshot(`
@@ -1233,7 +1227,7 @@ Valid values are: "auto", "", "~", "^", "="`,
         }
       `);
 
-      // The version of project-with-transitive-dependency-on-my-lib is untouched because it is not in the same batch as my-lib and updateDependents.when is set to "auto"
+      // The version of project-with-transitive-dependency-on-my-lib is untouched because it is not in the same batch as my-lib and updateDependents is set to "never"
       expect(
         readJson(
           tree,
@@ -1250,7 +1244,7 @@ Valid values are: "auto", "", "~", "^", "="`,
       `);
     });
 
-    it('should always update transitive dependents when updateDependents.when is set to "always"', async () => {
+    it('should always update transitive dependents when updateDependents is set to "auto"', async () => {
       expect(readJson(tree, 'libs/my-lib/package.json').version).toEqual(
         '0.0.1'
       );
@@ -1289,9 +1283,7 @@ Valid values are: "auto", "", "~", "^", "="`,
           currentVersionResolver: 'disk',
           specifierSource: 'prompt',
           releaseGroup: createReleaseGroup('independent'),
-          updateDependents: {
-            when: 'always',
-          },
+          updateDependents: 'auto',
         })
       ).toMatchInlineSnapshot(`
         {
