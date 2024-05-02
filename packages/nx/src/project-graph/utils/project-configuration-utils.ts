@@ -525,6 +525,9 @@ export function readProjectConfigurationsFromRootMap(
     if (!configuration.name) {
       try {
         const { name } = readJsonFile(join(root, 'package.json'));
+        if (!name) {
+          throw new Error("No name found for project at '" + root + "'.");
+        }
         configuration.name = name;
       } catch {
         projectRootsWithNoName.push(root);
