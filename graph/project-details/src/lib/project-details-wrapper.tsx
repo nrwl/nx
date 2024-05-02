@@ -171,6 +171,9 @@ export function ProjectDetailsWrapperComponent({
         onViewInProjectGraph={handleViewInProjectGraph}
         onViewInTaskGraph={handleViewInTaskGraph}
         onRunTarget={environment === 'nx-console' ? handleRunTarget : undefined}
+        viewInProjectGraphPosition={
+          environment === 'nx-console' ? 'bottom' : 'top'
+        }
       />
       <ErrorToast errors={errors} />
     </>
