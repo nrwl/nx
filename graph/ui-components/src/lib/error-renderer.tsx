@@ -18,7 +18,9 @@ export function ErrorRenderer({ errors }: { errors: GraphError[] }) {
           <div className="overflow-hidden pb-4">
             <span className="inline-flex max-w-full flex-col break-words font-bold font-normal text-gray-900 md:inline dark:text-slate-200">
               <span>{errorHeading}</span>
-              <span className="hidden px-1 md:inline">-</span>
+              {fileSpecifier && (
+                <span className="hidden px-1 md:inline">-</span>
+              )}
               <span>{fileSpecifier}</span>
             </span>
             <pre className="overflow-x-scroll pl-4 pt-3">
