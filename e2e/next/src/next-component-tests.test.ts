@@ -118,10 +118,10 @@ function addBabelSupport(path: string) {
 
 function createAppWithCt(appName: string) {
   runCLI(
-    `generate @nx/next:app ${appName} --no-interactive --appDir=false --src=false`
+    `generate @nx/next:app ${appName} --directory=apps/${appName} --no-interactive --appDir=false --src=false --projectNameAndRootFormat=as-provided`
   );
   runCLI(
-    `generate @nx/next:component button --project=${appName} --directory=components --flat --no-interactive`
+    `generate @nx/next:component button --project=${appName} --directory=apps/${appName}/components --nameAndDirectoryFormat=as-provided --no-interactive`
   );
   createFile(
     `apps/${appName}/public/data.json`,
