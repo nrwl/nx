@@ -510,15 +510,6 @@
         "path": "/nx-api/cypress/generators/init",
         "type": "generator"
       },
-      "/nx-api/cypress/generators/cypress-project": {
-        "description": "Add a Cypress E2E Project.",
-        "file": "generated/packages/cypress/generators/cypress-project.json",
-        "hidden": true,
-        "name": "cypress-project",
-        "originalFilePath": "/packages/cypress/src/generators/cypress-project/schema.json",
-        "path": "/nx-api/cypress/generators/cypress-project",
-        "type": "generator"
-      },
       "/nx-api/cypress/generators/configuration": {
         "description": "Add a Cypress E2E Configuration to an existing project.",
         "file": "generated/packages/cypress/generators/configuration.json",

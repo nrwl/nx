@@ -9,13 +9,4 @@ export * from './src/executors/browser-esbuild/browser-esbuild.impl';
 export * from './src/executors/application/application.impl';
 export * from './src/executors/extract-i18n/extract-i18n.impl';
 
-import { executeDevServerBuilder } from './src/builders/dev-server/dev-server.impl';
-
-export {
-  // TODO(v19): remove this alias
-  /**
-   * @deprecated Use executeDevServerBuilder instead. It will be removed in Nx v19.
-   */
-  executeDevServerBuilder as executeWebpackDevServerBuilder,
-  executeDevServerBuilder,
-};
+export { executeDevServerBuilder } from './src/builders/dev-server/dev-server.impl';

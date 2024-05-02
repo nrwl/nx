@@ -368,7 +368,6 @@
       - [cypress](/nx-api/cypress/executors/cypress)
     - [generators](/nx-api/cypress/generators)
       - [init](/nx-api/cypress/generators/init)
-      - [cypress-project](/nx-api/cypress/generators/cypress-project)
       - [configuration](/nx-api/cypress/generators/configuration)
       - [component-configuration](/nx-api/cypress/generators/component-configuration)
       - [migrate-to-cypress-11](/nx-api/cypress/generators/migrate-to-cypress-11)

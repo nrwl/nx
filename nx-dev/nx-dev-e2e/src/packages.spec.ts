@@ -96,10 +96,6 @@ const pages: Array<{ title: string; path: string }> = [
   { title: '@nx/cypress', path: '/packages/cypress' },
   { title: '@nx/cypress:init', path: '/packages/cypress/generators/init' },
   {
-    title: '@nx/cypress:cypress-project',
-    path: '/packages/cypress/generators/cypress-project',
-  },
-  {
     title: '@nx/cypress:cypress',
     path: '/packages/cypress/executors/cypress',
   },

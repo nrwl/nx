@@ -7018,14 +7018,6 @@
                 "disableCollapsible": false
               },
               {
-                "id": "cypress-project",
-                "path": "/nx-api/cypress/generators/cypress-project",
-                "name": "cypress-project",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
                 "id": "configuration",
                 "path": "/nx-api/cypress/generators/configuration",
                 "name": "configuration",
