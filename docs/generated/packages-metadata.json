@@ -754,6 +754,15 @@
         "originalFilePath": "/packages/eslint/src/generators/convert-to-flat-config/schema.json",
         "path": "eslint/generators/convert-to-flat-config",
         "type": "generator"
+      },
+      {
+        "description": "Convert existing ESLint project(s) using `@nx/eslint:lint` executor to use `@nx/eslint/plugin`.",
+        "file": "generated/packages/eslint/generators/convert-to-inferred.json",
+        "hidden": false,
+        "name": "convert-to-inferred",
+        "originalFilePath": "/packages/eslint/src/generators/convert-to-inferred/schema.json",
+        "path": "eslint/generators/convert-to-inferred",
+        "type": "generator"
       }
     ],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
