@@ -7626,6 +7626,14 @@
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
+              },
+              {
+                "id": "ci-workflow",
+                "path": "/nx-api/gradle/generators/ci-workflow",
+                "name": "ci-workflow",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
               }
             ],
             "isExternal": false,

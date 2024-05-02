@@ -1052,6 +1052,15 @@
         "originalFilePath": "/packages/gradle/src/generators/init/schema.json",
         "path": "gradle/generators/init",
         "type": "generator"
+      },
+      {
+        "description": "Setup a CI Workflow to run Nx in CI",
+        "file": "generated/packages/gradle/generators/ci-workflow.json",
+        "hidden": false,
+        "name": "ci-workflow",
+        "originalFilePath": "/packages/gradle/src/generators/ci-workflow/schema.json",
+        "path": "gradle/generators/ci-workflow",
+        "type": "generator"
       }
     ],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
