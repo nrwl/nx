@@ -150,7 +150,6 @@ Just like Gradle, Nx caches your tasks so that if you run the builds a second ti
 Nx read the output from the cache instead of running the command for 6 out of 6 tasks.
 ```
 
-
 ## Create a Custom Task
 
 Nx can run any tasks that are available to Gradle - even your own custom tasks. Let's create a custom task to see this functionality in action. Edit the `application` gradle build file to create a custom task:
