@@ -34,6 +34,8 @@ Next, check out [the sample repository](https://github.com/nrwl/gradle-spring) o
 git clone https://github.com/nrwl/gradle-spring.git
 ```
 
+This repository was created by following the [Spring framework](https://spring.io/)'s tutorial for [Creating a Multi-Module Project](https://spring.io/guides/gs/multi-module).
+
 You can run the `./gradlew projects` command to get a list of projects in the repo.
 
 ```text {% command="./gradlew projects" %}
@@ -54,7 +56,7 @@ BUILD SUCCESSFUL in 3s
 1 actionable task: 1 executed
 ```
 
-The repository has an application and a library created with the [Spring framework](https://spring.io/).
+The repository has a simple library and an application that uses it.
 
 You can build the `application` project by running `./gradlew application:build`:
 
@@ -65,7 +67,7 @@ BUILD SUCCESSFUL in 1s
 
 ## Add Nx
 
-With the `@nx/gradle` plugin, Nx can be easily added to a Gradle repository and Nx will work seamlessly along side Gradle.
+With the `@nx/gradle` plugin, Nx can be easily added to a Gradle repository and Nx will work seamlessly along side it.
 
 Nx offers many features, but at its core, it is a task runner. Out of the box, it can cache your tasks and ensure those tasks are run in the correct order. After the initial set up, you can incrementally add on other features that would be helpful in your organization.
 
@@ -237,13 +239,13 @@ public class DemoApplication {
 }
 ```
 
-Then you can use the `nx affected` command to run the `assemble` task only for projects that were affected by that change.
+Then you can use the `nx affected` command to run the `test` task only for projects that were affected by that change.
 
 ```shell
-./nx affected -t assemble
+./nx affected -t test
 ```
 
-The assemble task was run for the `application` project, but not for `library` because a change to the `application` project could not have changed the behavior of those projects. This feature is most useful in CI where you want to make sure to fully check every project that may have been affected by a change, but you want to avoid wasting time on tasks that do not need to be run. As more projects are added to the repository, this functionality becomes essential to maintain a fast CI pipeline.
+The `test` task was run for the `application` project, but not for `library` because a change to the `application` project could not have changed the behavior of those projects. This feature is most useful in CI where you want to make sure to fully check every project that may have been affected by a change, but you want to avoid wasting time on tasks that do not need to be run. As more projects are added to the repository, this functionality becomes essential to maintain a fast CI pipeline.
 
 ## Summary
 
