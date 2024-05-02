@@ -34,9 +34,9 @@ Next, check out [the sample repository](https://github.com/nrwl/gradle-spring) o
 git clone https://github.com/nrwl/gradle-spring.git
 ```
 
-You can run the `./gradle projects` command to get a list of projects in the repo.
+You can run the `./gradlew projects` command to get a list of projects in the repo.
 
-```text {% command="./gradle projects" %}
+```text {% command="./gradlew projects" %}
 > Task :projects
 
 ------------------------------------------------------------
@@ -54,7 +54,7 @@ BUILD SUCCESSFUL in 3s
 1 actionable task: 1 executed
 ```
 
-The repository has an application and a library created with the [Spring framework]().
+The repository has an application and a library created with the [Spring framework](https://spring.io/).
 
 You can build the `application` project by running `./gradlew application:build`:
 
@@ -189,7 +189,7 @@ BUILD SUCCESSFUL in 358ms
 You can see all the tasks available to Nx by opening the project details view for the `application` project. You can do this either through [Nx Console](/getting-started/editor-setup) or from the terminal:
 
 ```shell {% path="~/gradle-tutorial" %}
-npx nx show project application --web
+./nx show project application --web
 ```
 
 {% project-details title="Project Details View" jsonFile="shared/tutorials/gradle-pdv.json" %}
@@ -256,12 +256,18 @@ This tutorial walked you through how Nx can improve the developer experience for
 To set up Nx Replay run:
 
 ```shell
-nx connect
+./nx connect
 ```
 
 And click the link provided. You'll need to follow the instructions on the website to sign up for your account.
 
-Then you can set up your CI by creating the following file:
+Then you can set up your CI by running the `@nx/gradle:ci-workflow` generator:
+
+```shell
+./nx generate @nx/gradle:ci-workflow --ci=github
+```
+
+This generator creates the following file:
 
 ```yml {% fileName=".github/workflows/ci.yml" %}
 name: CI
@@ -297,7 +303,7 @@ jobs:
         run: ./nx affected -t test build --parallel=3
 ```
 
-This is a default CI configuration that sets up Nx Cloud to [use nx affected](/ci/features/affected). This will only run the tasks that are needed for a particular PR.
+This will create a default CI configuration that sets up Nx Cloud to [use distributed task execution](/ci/features/distribute-task-execution). This automatically runs all tasks on separate machines in parallel wherever possible, without requiring you to manually coordinate copying the output from one machine to another.
 
 Check out one of these detailed tutorials on setting up CI with Nx:
 
