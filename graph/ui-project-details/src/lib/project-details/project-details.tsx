@@ -83,6 +83,7 @@ export const ProjectDetails = ({
             <TargetTechnologies
               technologies={technologies}
               showTooltip={true}
+              className="h-6 w-6"
             />
           </div>
           <span>
