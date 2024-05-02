@@ -72,9 +72,6 @@ jobs:
 
       - uses: nrwl/nx-set-shas@v4
 
-      - run: git branch --track main origin/main
-        if: \${{ github.event_name == 'pull_request' }}
-
       - run: ./nx affected -t test build
 "
 `;

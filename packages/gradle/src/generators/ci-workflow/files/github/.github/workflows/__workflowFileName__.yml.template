@@ -34,7 +34,5 @@ jobs:
 
       - uses: nrwl/nx-set-shas@v4
 
-      - run: git branch --track main origin/main
-        if: ${{ github.event_name == 'pull_request' }}
 <% for (const command of commands) { %>
       - run: <%= command %><% } %>
