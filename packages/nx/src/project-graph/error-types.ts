@@ -15,6 +15,7 @@ export class ProjectGraphError extends Error {
     | ProjectsWithConflictingNamesError
     | ProcessDependenciesError
     | ProcessProjectGraphError
+    | WorkspaceValidityError
   >;
   readonly #partialProjectGraph: ProjectGraph;
   readonly #partialSourceMaps: ConfigurationSourceMaps;
@@ -28,6 +29,7 @@ export class ProjectGraphError extends Error {
       | ProcessDependenciesError
       | ProcessProjectGraphError
       | CreateMetadataError
+      | WorkspaceValidityError
     >,
     partialProjectGraph: ProjectGraph,
     partialSourceMaps: ConfigurationSourceMaps
@@ -219,6 +221,23 @@ export class ProcessDependenciesError extends Error {
     this.stack = `${this.message}\n  ${cause.stack.split('\n').join('\n  ')}`;
   }
 }
+export class WorkspaceValidityError extends Error {
+  constructor(public readonly cause: string) {
+    super(cause);
+    this.name = this.constructor.name;
+  }
+}
+
+export function isWorkspaceValidityError(
+  e: unknown
+): e is WorkspaceValidityError {
+  return (
+    e instanceof WorkspaceValidityError ||
+    (typeof e === 'object' &&
+      'name' in e &&
+      e?.name === WorkspaceValidityError.name)
+  );
+}
 
 export class ProcessProjectGraphError extends Error {
   constructor(public readonly pluginName: string, { cause }) {
@@ -236,7 +255,10 @@ export class ProcessProjectGraphError extends Error {
 export class AggregateProjectGraphError extends Error {
   constructor(
     public readonly errors: Array<
-      CreateMetadataError | ProcessDependenciesError | ProcessProjectGraphError
+      | CreateMetadataError
+      | ProcessDependenciesError
+      | ProcessProjectGraphError
+      | WorkspaceValidityError
     >,
     public readonly partialProjectGraph: ProjectGraph
   ) {
