@@ -222,8 +222,9 @@ export class ProcessDependenciesError extends Error {
   }
 }
 export class WorkspaceValidityError extends Error {
-  constructor(public readonly cause: string) {
-    super(cause);
+  constructor(public message: string) {
+    message = `Configuration Error\n${message}`;
+    super(message);
     this.name = this.constructor.name;
   }
 }
