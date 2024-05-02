@@ -200,6 +200,8 @@ function createInputsMap(
       ? ['production', '^production']
       : ['default', '^default'],
     test: ['default', namedInputs?.production ? '^production' : '^default'],
-    classes: ['default', '^default'],
+    classes: namedInputs?.production
+      ? ['production', '^production']
+      : ['default', '^default'],
   };
 }
