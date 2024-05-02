@@ -21,7 +21,7 @@ interface Schema {
 
 export async function convertToInferred(tree: Tree, options: Schema) {
   const projectGraph = await createProjectGraphAsync();
-  await migrateExecutorToPlugin(
+  let migratedProjects = await migrateExecutorToPlugin(
     tree,
     projectGraph,
     '@nx/cypress:cypress',
@@ -34,6 +34,24 @@ export async function convertToInferred(tree: Tree, options: Schema) {
     createNodes,
     options.project
   );
+
+  migratedProjects += await migrateExecutorToPlugin(
+    tree,
+    projectGraph,
+    '@nrwl/cypress:cypress',
+    '@nx/cypress/plugin',
+    (targetName) => ({
+      targetName,
+      ciTargetName: 'e2e-ci',
+    }),
+    postTargetTransformer,
+    createNodes,
+    options.project
+  );
+
+  if (migratedProjects === 0) {
+    throw new Error('Could not find any targets to migrate.');
+  }
 
   if (!options.skipFormat) {
     await formatFiles(tree);

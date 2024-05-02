@@ -74,12 +74,15 @@ class ExecutorToPluginMigrator<T> {
     this.#skipTargetFilter = skipTargetFilter ?? ((...args) => [false, '']);
   }
 
-  async run(): Promise<void> {
+  async run(): Promise<Map<string, Set<string>>> {
     await this.#init();
-    for (const targetName of this.#targetAndProjectsToMigrate.keys()) {
-      this.#migrateTarget(targetName);
+    if (this.#targetAndProjectsToMigrate.size > 0) {
+      for (const targetName of this.#targetAndProjectsToMigrate.keys()) {
+        this.#migrateTarget(targetName);
+      }
+      this.#addPlugins();
     }
-    this.#addPlugins();
+    return this.#targetAndProjectsToMigrate;
   }
 
   async #init() {
@@ -239,17 +242,6 @@ class ExecutorToPluginMigrator<T> {
         }
       }
     );
-
-    if (this.#targetAndProjectsToMigrate.size === 0) {
-      const errorMsg = this.#specificProjectToMigrate
-        ? `Project "${
-            this.#specificProjectToMigrate
-          }" does not contain any targets using the "${
-            this.#executor
-          }" executor. Please select a project that does.`
-        : `Could not find any targets using the "${this.#executor}" executor.`;
-      throw new Error(errorMsg);
-    }
   }
 
   #getTargetDefaultsForExecutor() {
@@ -270,6 +262,10 @@ class ExecutorToPluginMigrator<T> {
   }
 
   async #getCreateNodesResults() {
+    if (this.#targetAndProjectsToMigrate.size === 0) {
+      return;
+    }
+
     for (const targetName of this.#targetAndProjectsToMigrate.keys()) {
       const loadedPlugin = new LoadedNxPlugin(
         {
@@ -312,7 +308,7 @@ export async function migrateExecutorToPlugin<T>(
   createNodes: CreateNodes<T>,
   specificProjectToMigrate?: string,
   skipTargetFilter?: SkipTargetFilter
-): Promise<void> {
+): Promise<number> {
   const migrator = new ExecutorToPluginMigrator<T>(
     tree,
     projectGraph,
@@ -324,5 +320,6 @@ export async function migrateExecutorToPlugin<T>(
     specificProjectToMigrate,
     skipTargetFilter
   );
-  await migrator.run();
+  const migratedProjectsAndTargets = await migrator.run();
+  return migratedProjectsAndTargets.size;
 }
