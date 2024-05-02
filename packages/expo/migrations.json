@@ -65,6 +65,12 @@
       "version": "18.0.0-beta.0",
       "description": "Remove the offset from the outputDir of the export target",
       "implementation": "./src/migrations/update-18-0-0/change-outputDir-export-target"
+    },
+    "update-19-0-0-change-webpack-to-metro": {
+      "version": "19.0.0-beta.9",
+      "cli": "nx",
+      "description": "Change webpack to metro in expo projects",
+      "factory": "./src/migrations/update-19-0-0/change-webpack-to-metro"
     }
   },
   "packageJsonUpdates": {
