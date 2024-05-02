@@ -30,6 +30,7 @@ export async function initGenerator(tree: Tree, options: InitGeneratorSchema) {
   }
 
   addPlugin(tree);
+  updateNxJsonConfiguration(tree);
   addProjectReportToBuildGradle(tree);
 
   if (!options.skipFormat) {
@@ -91,6 +92,23 @@ allprojects {
 }`;
     tree.write(buildGradleFile, buildGradleContent);
   }
+}
+
+function updateNxJsonConfiguration(tree: Tree) {
+  const nxJson = readNxJson(tree);
+
+  if (!nxJson.namedInputs) {
+    nxJson.namedInputs = {};
+  }
+  const defaultFilesSet = nxJson.namedInputs.default ?? [];
+  nxJson.namedInputs.default = Array.from(
+    new Set([...defaultFilesSet, '{projectRoot}/**/*'])
+  );
+  const productionFileSet = nxJson.namedInputs.production ?? [];
+  nxJson.namedInputs.production = Array.from(
+    new Set([...productionFileSet, 'default', '!{projectRoot}/test/**/*'])
+  );
+  updateNxJson(tree, nxJson);
 }
 
 export default initGenerator;
