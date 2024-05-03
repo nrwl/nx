@@ -6,10 +6,10 @@ At the beginning of your main job, invoke `npx nx-cloud start-ci-run`. This tell
 command correspond to the same CI run.
 
 {% callout type="warning" title="Do not run start-ci-run locally" %}
-`nx-cloud start-ci-run` is designed to run in CI. It will check to see if it is running in a CI environment and if not, it will exit. Bypass this check with `nx-cloud start-ci-run --force`.
-It generates a temporary marker file that can cause a local Nx repo to think it's a part of a CI run. This can cause strange behavior like Nx commands timing out or throwing unexpected errors.
+`nx-cloud start-ci-run` generates a temporary marker file that can cause a local Nx repo to behave as if it is a part of a CI run. This can cause strange behavior like Nx commands timing out or throwing unexpected errors.
+To discourage this from happening, this command will run a check to see if it is running in a CI environment. You can bypass this check with `nx-cloud start-ci-run --force`.
 
-You can remove all generated files with `nx-cloud cleanup` to reset your workspace if you accidentally run this command locally.
+If you accidentally run this command locally, remove all generated marker files with `nx-cloud cleanup`.
 {% /callout %}
 
 You can configure your CI run by passing the following flags:
