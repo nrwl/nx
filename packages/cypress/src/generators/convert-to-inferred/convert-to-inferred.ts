@@ -120,7 +120,7 @@ function postTargetTransformer(
         tree,
         configFilePath,
         webServerCommands,
-        target.configurations?.ci?.devServerTarget
+        webServerCommands?.['ci']
       );
     }
 

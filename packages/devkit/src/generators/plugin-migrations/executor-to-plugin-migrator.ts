@@ -201,6 +201,19 @@ class ExecutorToPluginMigrator<T> {
       }
 
       if (!existingPlugin) {
+        const allConfigFilesAreIncluded = this.#configFiles.every(
+          (configFile) => {
+            for (const includePattern of plugin.include) {
+              if (minimatch(configFile, includePattern, { dot: true })) {
+                return true;
+              }
+            }
+            return false;
+          }
+        );
+        if (allConfigFilesAreIncluded) {
+          plugin.include = undefined;
+        }
         this.#nxJson.plugins.push(plugin);
       }
     }

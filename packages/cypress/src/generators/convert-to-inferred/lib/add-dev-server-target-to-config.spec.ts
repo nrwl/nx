@@ -115,7 +115,7 @@ export default defineConfig({
         tree,
         configFilePath,
         { default: 'npx nx run myorg:serve' },
-        'myorg:static-serve'
+        'npx nx run myorg:static-serve'
       );
 
       // ASSERT
@@ -151,7 +151,7 @@ export default defineConfig({
         tree,
         configFilePath,
         { default: 'npx nx run myorg:serve' },
-        'myorg:static-serve'
+        'npx nx run myorg:static-serve'
       );
 
       // ASSERT
@@ -191,7 +191,7 @@ export default defineConfig({
           production: 'npx nx run myorg:serve:production',
           ci: 'npx nx run myorg-static-serve',
         },
-        'myorg:static-serve'
+        'npx nx run myorg:static-serve'
       );
 
       // ASSERT
