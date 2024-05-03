@@ -333,7 +333,7 @@ nx-cloud start-ci-run --distribute-on="8 linux-medium-js" --with-env-vars="auto"
 
 If you need to pass a value from one step to another step, such as assigning the value to an existing or new environment variable. You can write to the `NX_CLOUD_ENV` environment file.
 
-Commonly this is used for redefining the `PATH` or setting options for various toolchains.
+Commonly used for redefining the `PATH` or setting options for tooling.
 
 ```yaml {% fileName="./nx/workflows/agents.yaml" %}
 launch-templates:
