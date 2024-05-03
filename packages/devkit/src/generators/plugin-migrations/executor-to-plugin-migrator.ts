@@ -29,7 +29,8 @@ import type { ConfigurationResult } from 'nx/src/project-graph/utils/project-con
 type PluginOptionsBuilder<T> = (targetName: string) => T;
 type PostTargetTransformer = (
   targetConfiguration: TargetConfiguration,
-  tree?: Tree
+  tree?: Tree,
+  projectDetails?: { projectName: string; root: string }
 ) => TargetConfiguration;
 type SkipTargetFilter = (
   targetConfiguration: TargetConfiguration
@@ -129,7 +130,10 @@ class ExecutorToPluginMigrator<T> {
     delete projectTarget.executor;
 
     deleteMatchingProperties(projectTarget, createdTarget);
-    projectTarget = this.#postTargetTransformer(projectTarget, this.tree);
+    projectTarget = this.#postTargetTransformer(projectTarget, this.tree, {
+      projectName,
+      root: projectFromGraph.data.root,
+    });
 
     if (
       projectTarget.options &&
@@ -308,7 +312,7 @@ export async function migrateExecutorToPlugin<T>(
   createNodes: CreateNodes<T>,
   specificProjectToMigrate?: string,
   skipTargetFilter?: SkipTargetFilter
-): Promise<number> {
+): Promise<Map<string, Set<string>>> {
   const migrator = new ExecutorToPluginMigrator<T>(
     tree,
     projectGraph,
@@ -320,6 +324,5 @@ export async function migrateExecutorToPlugin<T>(
     specificProjectToMigrate,
     skipTargetFilter
   );
-  const migratedProjectsAndTargets = await migrator.run();
-  return migratedProjectsAndTargets.size;
+  return await migrator.run();
 }
