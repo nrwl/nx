@@ -93,6 +93,13 @@ export async function remixApplicationGeneratorInternal(
               cwd: options.projectRoot,
             },
           },
+          ['static-serve']: {
+            dependsOn: ['build'],
+            command: `remix-serve build/index.js`,
+            options: {
+              cwd: options.projectRoot,
+            },
+          },
           typecheck: {
             command: `tsc --project tsconfig.app.json`,
             options: {
