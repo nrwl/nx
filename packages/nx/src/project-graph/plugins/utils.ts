@@ -100,3 +100,11 @@ export async function runCreateNodesInParallel(
   }
   return results;
 }
+
+export function isRuntimePlugin(plugin: LoadedNxPlugin): boolean {
+  return !!(
+    plugin.createNodes ||
+    plugin.createDependencies ||
+    plugin.processProjectGraph
+  );
+}
