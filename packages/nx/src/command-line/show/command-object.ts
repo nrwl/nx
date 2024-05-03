@@ -23,6 +23,7 @@ export type ShowProjectsOptions = NxShowArgs & {
   projects: string[];
   withTarget: string[];
   verbose: boolean;
+  sep: string;
 };
 
 export type ShowProjectOptions = NxShowArgs & {
@@ -89,6 +90,10 @@ const showProjectsCommand: CommandModule<NxShowArgs, ShowProjectsOptions> = {
         type: 'string',
         description: 'Select only projects of the given type',
         choices: ['app', 'lib', 'e2e'],
+      })
+      .option('sep', {
+        type: 'string',
+        description: 'Outputs projects with the specified seperator',
       })
       .implies('untracked', 'affected')
       .implies('uncommitted', 'affected')

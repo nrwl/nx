@@ -75,11 +75,14 @@ export async function showProjectsHandler(
 
   if (args.json) {
     console.log(JSON.stringify(Array.from(selectedProjects)));
+  } else if (args.sep) {
+    console.log(Array.from(selectedProjects.values()).join(args.sep));
   } else {
     for (const project of selectedProjects) {
       console.log(project);
     }
   }
+
   await output.drain();
   process.exit(0);
 }
