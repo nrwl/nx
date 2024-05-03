@@ -18,6 +18,14 @@ describe('nx wrapper / .nx installation', () => {
 
   beforeAll(() => {
     runNxWrapper = newWrappedNxWorkspace();
+    updateJson<NxJsonConfiguration>('nx.json', (json) => {
+      json.targetDefaults ??= {};
+      json.targetDefaults.echo = { cache: true };
+      json.installation.plugins = {
+        '@nx/js': getPublishedVersion(),
+      };
+      return json;
+    });
   });
 
   afterAll(() => {
@@ -38,14 +46,6 @@ describe('nx wrapper / .nx installation', () => {
         },
       })
     );
-
-    updateJson<NxJsonConfiguration>('nx.json', (json) => {
-      json.targetDefaults.echo = { cache: true };
-      json.installation.plugins = {
-        '@nx/js': getPublishedVersion(),
-      };
-      return json;
-    });
 
     expect(runNxWrapper('echo a')).toContain('Hello from A');
 
