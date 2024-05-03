@@ -52,14 +52,14 @@ export function ProjectDetailsPage() {
 
   return (
     <ExpandedTargetsProvider>
-      <div className="flex w-full flex-col justify-center text-slate-700 dark:text-slate-400">
+      <div className="flex w-full flex-col justify-center bg-inherit text-slate-700 dark:text-slate-400">
         <ScrollRestoration />
         {environment !== 'nx-console' ? (
           <ProjectDetailsHeader />
         ) : (
           <div className="py-2"></div>
         )}
-        <div className="mx-auto mb-8 w-full max-w-6xl flex-grow px-8">
+        <div className="mx-auto mb-8 w-full max-w-6xl flex-grow bg-inherit px-8">
           <ProjectDetailsWrapper
             project={project}
             sourceMap={sourceMap}

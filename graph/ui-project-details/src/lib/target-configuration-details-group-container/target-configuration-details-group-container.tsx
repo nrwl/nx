@@ -12,11 +12,11 @@ export function TargetConfigurationGroupContainer({
   children,
 }: TargetConfigurationGroupContainerProps) {
   return (
-    <div className="mb-4 w-full">
+    <div className="mb-4 w-full bg-inherit">
       <TargetConfigurationGroupHeader
         targetGroupName={targetGroupName}
         targetsNumber={targetsNumber}
-        className="sticky top-0 z-10 bg-white dark:bg-slate-900"
+        className="sticky top-0 z-10 bg-inherit"
       />
       <div className="rounded-md border border-slate-200 p-2 dark:border-slate-700">
         {children}

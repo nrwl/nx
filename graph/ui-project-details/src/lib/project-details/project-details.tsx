@@ -133,27 +133,25 @@ export const ProjectDetails = ({
           </div>
         </div>
       </header>
-      <div>
-        <h2 className={isCompact ? `mb-3 text-lg` : `mb-4 text-xl`}>
-          <Tooltip
-            openAction="hover"
-            content={(<PropertyInfoTooltip type="targets" />) as any}
-          >
-            <span className="text-slate-800 dark:text-slate-200">
-              <TooltipTriggerText>Targets</TooltipTriggerText>
-            </span>
-          </Tooltip>
-        </h2>
+      <h2 className={isCompact ? `mb-3 text-lg` : `mb-4 text-xl`}>
+        <Tooltip
+          openAction="hover"
+          content={(<PropertyInfoTooltip type="targets" />) as any}
+        >
+          <span className="text-slate-800 dark:text-slate-200">
+            <TooltipTriggerText>Targets</TooltipTriggerText>
+          </span>
+        </Tooltip>
+      </h2>
 
-        <TargetConfigurationDetailsList
-          className="w-full"
-          project={project}
-          sourceMap={sourceMap}
-          variant={variant}
-          onRunTarget={onRunTarget}
-          onViewInTaskGraph={onViewInTaskGraph}
-        />
-      </div>
+      <TargetConfigurationDetailsList
+        className="w-full bg-inherit"
+        project={project}
+        sourceMap={sourceMap}
+        variant={variant}
+        onRunTarget={onRunTarget}
+        onViewInTaskGraph={onViewInTaskGraph}
+      />
     </>
   );
 };
