@@ -1,14 +1,14 @@
 # Launch Templates
 
 A launch template defines the setup steps Nx Agents will run before running tasks. A custom launch template isn't required to use Nx Agents.
-By default, Nx provides a simplified one for you. You can find built-in launch templates in the [`nx-cloud-workflows` repository](https://github.com/nrwl/nx-cloud-workflows/tree/main/launch-templates).
+Nx Cloud provides several pre-built launch templates for common use-cases. You can view available templates in the [`nx-cloud-workflows` repository](https://github.com/nrwl/nx-cloud-workflows/tree/main/launch-templates).
 
-{% github-repository url="https://github.com/nrwl/nx-cloud-workflows/tree/main/launch-templates" title="Built-in Launch Templates" /%}
+{% github-repository url="https://github.com/nrwl/nx-cloud-workflows/tree/main/launch-templates" title="Pre-Built Launch Templates" /%}
 
 ## Getting Started
 
-The easiest way to create a new custom launch template is to modify one of the built-in ones. To do that, create a file in the
-`.nx/workflows` folder and copy one of the [built-in templates](https://github.com/nrwl/nx-cloud-workflows/blob/main/launch-templates/linux.yaml). You can name the file any way you want (e.g., `agents.yaml`) and customize the steps as needed.
+The easiest way to create a new custom launch template is to modify one of the pre-built ones. To do that, create a file in the
+`.nx/workflows` folder and copy one of the [pre-built templates](https://github.com/nrwl/nx-cloud-workflows/blob/main/launch-templates/linux.yaml). You can name the file any way you want (e.g., `agents.yaml`) and customize the steps as needed.
 
 ## Launch Template Structure
 
@@ -22,7 +22,7 @@ launch-templates:
 
 ### `launch-templates.<template-name>`
 
-Name of your custom launch template. This name is used via `--distribute-on="<# of agents> <template-name>"` when starting the ci run. Multiple launch templates are not required. You can define as many as you need.
+The name of your custom launch template. This name is used via `--distribute-on="<# of agents> <template-name>"` when starting the ci run. Supports one to many uniquely named launch templates.
 Multiple launch templates can be useful for setting up different toolchains (rust, java, node versions) or resources classes for your workspace needs.
 
 ```yaml {% fileName=".nx/workflows/agents.yaml" %}
@@ -37,12 +37,12 @@ nx-cloud start-ci-run --distribute-on="3 template-one"
 
 ### `launch-templates.<template-name>.resource-class`
 
-The `launch-templates.<template-name>.resource-class` defines the memory and vCPUs available to the agent machine.
+A launch template's `resource-class` defines the memory and vCPUs available to each agent machine.
 
 ```yaml {% fileName=".nx/workflows/agents.yaml" %}
 launch-templates:
   template-one:
-    resourceClass: 'docker_linux_amd64/medium'
+    resource-class: 'docker_linux_amd64/medium'
 ```
 
 The following resource classes are available:
@@ -63,7 +63,7 @@ See their detailed description and pricing at [nx.app/pricing](https://nx.app/pr
 
 ### `launch-templates.<template-name>.image`
 
-The `launch-templates.<template-name>.image` defines the available base software for the agent machine.
+A launch template's `image` defines the available base software for the agent machine.
 
 ```yaml {% fileName=".nx/workflows/agents.yaml" %}
 launch-templates:
@@ -75,13 +75,6 @@ Nx Cloud provides the following images:
 
 > Changes added in previous images are included in newer images unless otherwise denoted
 
-- `ubuntu22.04-node20.9-v1`
-- `ubuntu22.04-node20.9-v2`
-- `ubuntu22.04-node20.9-v3`
-- `ubuntu22.04-node20.11-v1`
-- `ubuntu22.04-node20.11-v2`
-- `ubuntu22.04-node20.11-v3`
-- `ubuntu22.04-node20.11-v4`
 - `ubuntu22.04-node20.11-v5`
   - added elevated permission access via `sudo`
 - `ubuntu22.04-node20.11-v6`
@@ -96,7 +89,7 @@ Enterprise accounts can use custom images.
 
 ### `launch-templates.<template-name>.env`
 
-A `map` of values to be available within **all** steps of the specific launch template.
+A launch template's `env` defines a `map` of environment variable names and values to be available within **all** steps of the specific launch template.
 
 ```yaml {% fileName=".nx/workflows/agents.yaml" %}
 launch-templates:
@@ -107,7 +100,9 @@ launch-templates:
 
 ### `launch-templates.<template-name>.init-steps`
 
-A launch template defines a series of steps to set up an agent. Without a defined `init-steps` the Nx Agent is unable to process any tasks. This includes things such as checking out your workspace source code and installing any necessary dependencies. Any extra setup your workspace needs to run should be defined as a step. Once all steps run, the agent machine will inform Nx Cloud that it is ready to accept tasks.
+A launch template's `init-steps` defines the series of steps to perform before an Nx Agent runs. Without a defined `init-steps` the Nx Agent is unable to process any tasks.
+
+Typical `init-steps` perform actions such as checking out your workspace source code and installing any necessary dependencies. Any extra setup your workspace needs to run should be defined as an `init-step`. Once all steps run successfully, the agent machine will inform Nx Cloud that it is ready to accept tasks.
 
 ```yaml {% fileName=".nx/workflows/agents.yaml" %}
 launch-templates:
@@ -117,7 +112,7 @@ launch-templates:
 
 ### `launch-templates.<template-name>.init-steps[*].name`
 
-Name of the step, this will be reflected in the Nx Cloud UI. `name` can be used in conjunction with [`uses`](#launch-templatestemplate-nameinit-stepsuses) and [`script`](#launch-templatestemplate-nameinit-stepsscript)
+An init-step's `name` is the label that will be reflected in the Nx Cloud UI. `name` can be used in conjunction with [`uses`](#launch-templatestemplate-nameinit-stepsuses) and [`script`](#launch-templatestemplate-nameinit-stepsscript)
 
 ```yaml {% fileName=".nx/workflows/agents.yaml" %}
 launch-templates:
@@ -128,7 +123,7 @@ launch-templates:
 
 ### `launch-templates.<template-name>.init-steps[*].uses`
 
-Use a predefined step file in your `init-steps`.
+When defined, specifies an existing step file to be used. **Cannot be used when `script` is also defined**
 
 You can find the [list of Nx Cloud reusable steps here](https://github.com/nrwl/nx-cloud-workflows/tree/main/workflow-steps).
 
@@ -143,7 +138,7 @@ launch-templates:
 
 ### `launch-templates.<template-name>.init-steps[*].script`
 
-Run an inline script using the default shell of the agent.
+When defined, allows an inline script to be run. **Cannot be used when `uses` is also defined**
 
 ```yaml {% fileName=".nx/workflows/agents.yaml" %}
 launch-templates:
@@ -157,7 +152,7 @@ launch-templates:
 
 ### `launch-templates.<template-name>.init-steps[*].env`
 
-Similar to the [`launch-template.<template-name>.env`](#launch-templatestemplate-nameenv), except this environment variable `map` only is set for the current step.
+An init-step's `env` is similar to the [`launch-template.<template-name>.env`](#launch-templatestemplate-nameenv), except the environment variable `map` is **scoped for the current step only**.
 
 ```yaml {% fileName=".nx/workflows/agents.yaml" %}
 launch-templates:
@@ -172,7 +167,7 @@ launch-templates:
 
 ## Full Example
 
-This is an example of a launch template using all built-in features:
+This is an example of a launch template using all pre-built features:
 
 ```yaml {% fileName="./nx/workflows/agents.yaml" %}
 launch-templates:
@@ -180,7 +175,7 @@ launch-templates:
   # You can define as many templates as you need, commonly used to make different sizes or toolchains depending on your workspace needs
   my-linux-medium-js:
     # see the available resource list below
-    resourceClass: 'docker_linux_amd64/medium'
+    resource-class: 'docker_linux_amd64/medium'
     # see the available image list below
     image: 'ubuntu22.04-node20.11-v7'
     # Define environment variables shared among all steps
@@ -239,7 +234,7 @@ launch-templates:
   # another template which does the same as above, but with a large resource class
   # You're not required to define a template for every resource class, only define what you need!
   my-linux-large-js:
-    resourceClass: 'docker_linux_amd64/large'
+    resource-class: 'docker_linux_amd64/large'
     image: 'ubuntu22.04-node20.11-v7'
     env:
       MY_ENV_VAR: shared
@@ -279,7 +274,7 @@ launch-templates:
         script: echo $MY_ENV_VAR
   # template that installs rust
   my-linux-rust-large:
-    resourceClass: 'docker_linux_amd64/large'
+    resource-class: 'docker_linux_amd64/large'
     image: 'ubuntu22.04-node20.11-v7'
     init-steps:
       - name: Checkout
@@ -351,12 +346,12 @@ launch-templates:
 
 ## Private NPM Registry
 
-If your project consumes packages from a private registry, you'll have to set up an authentication step in a custom launch template and autenticate like you normally would, usually this is via a `.npmrc` or `.yarnrc` file. You can pass the auth token from your main agent, so it's available to the agent machines.
+If your project consumes packages from a private registry, you'll have to set up an authentication step in a custom launch template and authenticate like you normally would, usually this is via a `.npmrc` or `.yarnrc` file. You can pass the auth token from your main agent, so it's available to the agent machines.
 
 ```yaml {% fileName=".nx/workflows/agents.yaml" %}
 launch-templates:
   my-linux-medium-js:
-    resourceClass: 'docker_linux_amd64/medium'
+    resource-class: 'docker_linux_amd64/medium'
     image: 'ubuntu22.04-node20.11-v7'
     init-steps:
       - name: Checkout
@@ -374,7 +369,7 @@ Pass `SOME_AUTH_TOKEN` via `--with-env-vars`
 
 ```
 # this assumes SOME_AUTH_TOKEN is already defined on the main agent
-nx-cloud start-ci-run --distribute-on="5 my-linux-medium-js" --with-env-vars="GH_NPM_TOKEN"
+nx-cloud start-ci-run --distribute-on="5 my-linux-medium-js" --with-env-vars="SOME_AUTH_TOKEN"
 ```
 
 ## Custom Node Version
@@ -384,7 +379,7 @@ Nx Agents come with node LTS installed. If you want to use a different version, 
 ```yaml {% fileName=".nx/workflows/agents.yaml" %}
 launch-templates:
   node-21:
-    resourceClass: 'docker_linux_amd64/medium'
+    resource-class: 'docker_linux_amd64/medium'
     image: 'ubuntu22.04-node20.11-v7'
     init-steps:
       - name: Checkout
@@ -430,7 +425,7 @@ For example, you can install the [GitHub CLI](https://cli.github.com/) on the ag
 ```yaml {% fileName="./nx/workflows/agents.yaml" %}
 launch-templates:
   my-linux-medium-js:
-    resourceClass: 'docker_linux_amd64/medium'
+    resource-class: 'docker_linux_amd64/medium'
     image: 'ubuntu22.04-node20.11-v7'
     init-steps:
       - name: Install GH CLI
