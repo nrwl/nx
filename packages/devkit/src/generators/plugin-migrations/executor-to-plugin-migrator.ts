@@ -147,6 +147,13 @@ class ExecutorToPluginMigrator<T> {
     } else {
       delete projectConfig.targets[targetName];
     }
+
+    if (!projectConfig['// targets']) {
+      projectConfig[
+        '// targets'
+      ] = `to see all targets run: nx show project ${projectName} --web`;
+    }
+
     updateProjectConfiguration(this.tree, projectName, projectConfig);
 
     return `${projectFromGraph.data.root}/**/*`;
