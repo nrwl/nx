@@ -14,6 +14,7 @@ import { getPluginCapabilities } from '../../utils/plugins';
 import { nxVersion } from '../../utils/versions';
 import { workspaceRoot } from '../../utils/workspace-root';
 import type { AddOptions } from './command-object';
+import { normalizeVersionForNxJson } from '../init/implementation/dot-nx/add-nx-scripts';
 
 export function addHandler(options: AddOptions): Promise<void> {
   if (options.verbose) {
@@ -63,7 +64,10 @@ async function installPackage(
     );
   } else {
     nxJson.installation.plugins ??= {};
-    nxJson.installation.plugins[pkgName] = version;
+    nxJson.installation.plugins[pkgName] = normalizeVersionForNxJson(
+      pkgName,
+      version
+    );
     writeJsonFile('nx.json', nxJson);
 
     try {
@@ -113,7 +117,7 @@ async function initializePlugin(
 
   try {
     const args = [];
-    if (coreNxPlugins.includes(pkgName)) {
+    if (coreNxPluginVersions.has(pkgName)) {
       args.push(`--keepExistingVersions`);
 
       if (
@@ -171,8 +175,8 @@ function parsePackageSpecifier(
   const i = packageSpecifier.lastIndexOf('@');
 
   if (i <= 0) {
-    if (coreNxPlugins.includes(packageSpecifier)) {
-      return [packageSpecifier, nxVersion];
+    if (coreNxPluginVersions.has(packageSpecifier)) {
+      return [packageSpecifier, coreNxPluginVersions.get(packageSpecifier)];
     }
 
     return [packageSpecifier, 'latest'];
@@ -184,31 +188,14 @@ function parsePackageSpecifier(
   return [pkgName, version];
 }
 
-const coreNxPlugins = [
-  '@nx/angular',
-  '@nx/cypress',
-  '@nx/detox',
-  '@nx/devkit',
-  '@nx/esbuild',
-  '@nx/eslint',
-  '@nx/eslint-plugin',
-  '@nx/expo',
-  '@nx/express',
-  '@nx/jest',
-  '@nx/nest',
-  '@nx/next',
-  '@nx/node',
-  '@nx/nuxt',
-  '@nx/playwright',
-  '@nx/plugin',
-  '@nx/react',
-  '@nx/react-native',
-  '@nx/remix',
-  '@nx/rollup',
-  '@nx/storybook',
-  '@nx/vite',
-  '@nx/vue',
-  '@nx/web',
-  '@nx/webpack',
-  '@nx/workspace',
-];
+export const coreNxPluginVersions = (
+  require('../../../package.json') as typeof import('../../../package.json')
+)['nx-migrations'].packageGroup.reduce(
+  (map, entry) => {
+    const packageName = typeof entry === 'string' ? entry : entry.package;
+    const version = typeof entry === 'string' ? nxVersion : entry.version;
+    return map.set(packageName, version);
+  },
+  // Package Name -> Desired Version
+  new Map<string, string>()
+);
