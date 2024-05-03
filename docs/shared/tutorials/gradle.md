@@ -5,22 +5,14 @@ description: In this tutorial you'll add Nx to an existing Gradle repo
 
 # Gradle Tutorial
 
-In this tutorial, you'll learn how to add Nx to a repository with an existing Gradle setup. You'll see how Nx can provide immediate value with very little configuration and then you can gradually enable more features.
+In this tutorial, you'll learn how to add Nx to a repository with an existing Gradle setup. You'll see how Nx can
+provide immediate value.
 
-<!-- - Add Nx to the repository with a single command
-- Configure caching for your existing tasks
-- Configure a task pipeline
-- Use Nx Plugins to automatically configure caching -->
+## Prerequisites
 
-<!-- ## Final Source Code
-
-Here's the source code of the final result for this tutorial.
-
-{% github-repository url="https://github.com/nrwl/gradle-tutorial/tree/final" /%} -->
-
-## Get Started
-
-Make sure that you have [Gradle](https://gradle.org/) installed on your system. Consult [Gradle's installation guide](https://docs.gradle.org/current/userguide/installation.html) for instruction that are specific to your operating system.
+Make sure that you have [Gradle](https://gradle.org/) installed on your system.
+Consult [Gradle's installation guide](https://docs.gradle.org/current/userguide/installation.html) for instruction that
+are specific to your operating system.
 
 To verify that Gradle was installed correctly, run this command:
 
@@ -28,185 +20,97 @@ To verify that Gradle was installed correctly, run this command:
 gradle --version
 ```
 
-We'll start the tutorial with [a sample repository](https://github.com/nrwl/gradle-spring) that was created by following the [Spring framework](https://spring.io/)'s tutorial for [Creating a Multi-Module Project](https://spring.io/guides/gs/multi-module).
-
-Check out [the sample repository](https://github.com/nrwl/gradle-spring) on your local machine:
+Nx also requires NodeJS to be installed. If you do not have NodeJS installed, you can
+install it from the [NodeJS website](https://nodejs.org/en/download).
 
 ```shell
-git clone https://github.com/nrwl/gradle-spring.git
+node -v
 ```
 
-You can run the `./gradlew projects` command to get a list of projects in the repo.
+## Getting Started
+
+This tutorial picks up where [Spring framework](https://spring.io/)'s guide
+for [Multi-Module Projects](https://spring.io/guides/gs/multi-module) leaves off. Check
+out [the sample repository](https://github.com/nrwl/gradle-tutorial) on your local machine:
+
+```shell
+git clone https://github.com/nrwl/gradle-tutorial.git
+```
+
+The Multi-Module Spring Tutorial left us with 2 projects:
+
+- The main `application` project which contains the Spring `DemoApplication`
+- A `library` project which contains a Service used in the `DemoApplication`
+
+You can see the above 2 projects by running `./gradlew projects`
 
 ```text {% command="./gradlew projects" %}
 > Task :projects
 
 ------------------------------------------------------------
-Root project 'gs-multi-module'
+Root project 'gradle-tutorial'
 ------------------------------------------------------------
 
-Root project 'gs-multi-module'
+Root project 'gradle-tutorial'
 +--- Project ':application'
 \--- Project ':library'
 
-To see a list of the tasks of a project, run gradlew <project-path>:tasks
-For example, try running gradlew :application:tasks
-
-BUILD SUCCESSFUL in 3s
-1 actionable task: 1 executed
-```
-
-The repository has a simple library and an application that uses it.
-
-You can build the `application` project by running `./gradlew application:build`:
-
-```text {% command="./gradlew application:build" %}
-BUILD SUCCESSFUL in 1s
-9 actionable tasks: 9 up-to-date
 ```
 
 ## Add Nx
 
-With the `@nx/gradle` plugin, Nx can be easily added to a Gradle repository and Nx will work seamlessly along side it.
+Nx is a build system with built in tooling and advanced CI capabilities. It helps you maintain and scale monorepos,
+both locally and on CI. We will explore the features of Nx in this tutorial by adding it to the Gradle workspace above.
 
-Nx offers many features, but at its core, it is a task runner. Out of the box, it can cache your tasks and ensure those tasks are run in the correct order. After the initial set up, you can incrementally add on other features that would be helpful in your organization.
+To add Nx, run `npx nx@latest init`.
 
-To enable Nx in your repository, run a single command:
+This command will download the latest version of Nx and help set up your repository to take advantage of it. Nx will
+also detect Gradle is used in the repo so it will propose adding the `@nx/gradle` plugin to integrate Gradle with Nx.
+Select the plugin and continue with the setup.
 
-```shell {% path="~/gradle-tutorial" %}
-npx nx@latest init
-```
-
-This command will download the latest version of Nx and help set up your repository to take advantage of it.
-
-The script will propose installing the `@nx/gradle` plugin to allow Nx to understand Gradle configuration files. Make sure to select the plugin to install it.
-
-After Nx has been installed, there will be a few new files in your repository:
-
-```treeview
-gradle-tutorial/
-├── .nx/
-├── application/
-├── library/
-├── build.gradle
-├── gradlew
-├── gradlew.bat
-├── nx
-├── nx.bat
-├── nx.json
-└── settings.gradle
-```
-
-Because this is not a javascript repository, there is no `package.json` file or `node_modules` folder. Instead, Nx has provided executables at the root of the repository: `nx` for Unix operating systems and `nx.bat` for Windows. These executables can be used in the same way that `gradlew` and `gradlew.bat` are used.
-
-The `.nx` folder contains all the code needed to run the `nx` CLI and the cache that Nx uses.
-
-The `nx.json` file contains repository-wide configuration options for Nx and a list of the currently installed Nx plugins.
+Similar to Gradle, Nx can be run with the `nx` or `nx.bat` executables. We will learn about some of the Nx commands in
+the following sections.
 
 ## Explore Your Workspace
 
-To get a visual representation of the dependencies between the projects in your repository, run the `./nx graph` command.
+Like Gradle, Nx understands your workspace as a graph of projects. Nx uses this graph for many things which we will
+learn about in following sections. To visualize this graph in your browser, Run the following command and click the
+"Show all projects" button in the left sidebar.
 
-```shell {% path="~/gradle-tutorial" %}
+You will recognize that the projects which are shown, are the same projects which Gradle shows.
+The `@nx/gradle` plugin reflects the graph of projects in Gradle into the Nx Project Graph. As projects
+are created, deleted, and change their dependencies, Nx will automatically recalculate the graph. Exploring this graph
+visually is vital to understanding how your code is structured and how Nx and Gradle behaves.
+
+{% tabs %}
+{% tab label="Mac/Linux" %}
+
+```shell
 ./nx graph
 ```
+
+{% /tab %}
+{% tab label="Windows" %}
+
+```shell
+./nx.bat graph
+```
+
+{% /tab %}
+{% /tabs %}
 
 {% graph title="Gradle Projects" height="200px" jsonFile="shared/tutorials/gradle-project-graph.json" %}
 {% /graph %}
 
-Nx uses this graph to determine the order tasks are run and enforce module boundaries. You can also leverage this graph to gain an accurate understanding of the architecture of your codebase. Notice that we did not change any of the Gradle configuration files or hard code any of these project definitions for Nx. Nx was able to directly read the Gradle configuration files, so this graph will always accurately represent the current state of the projects in your repository.
+## Running Tasks
 
-## Run Tasks
+Nx is a task runner built for monorepos. It can run a single task for a single project, a task for all projects, and
+even intelligently run a subset of tasks based on the changes you've made in your repository. Nx also has sophisticated
+computation caching to reuse the results of tasks. We will explore how Nx adds to the task running Gradle provides.
 
-Nx can run any of your Gradle tasks. The Gradle command to run the `build` task for the `application` project is `./gradlew application:build`. The Nx command to run the same task is:
-
-```shell
-./nx build application
-```
-
-When Nx runs a Gradle task, it hands off the execution of that task to Gradle, so all task dependencies and configuration settings in the Gradle configuration are still respected.
-
-To run all the `build` tasks in the repository with Gradle, run `./gradlew build`. To do the same thing with Nx, run:
-
-```shell
-./nx run-many -t build
-```
-
-Just like Gradle, Nx caches your tasks so that if you run the builds a second time without changing the source files, they'll complete almost instantly.
-
-```{% command="./nx run-many -t build" %}
-
-   ✔  nx run gs-multi-module:classes  [existing outputs match the cache, left as is]
-   ✔  nx run library:classes  [existing outputs match the cache, left as is]
-   ✔  nx run gs-multi-module:build  [existing outputs match the cache, left as is]
-   ✔  nx run library:build  [existing outputs match the cache, left as is]
-   ✔  nx run application:classes  [existing outputs match the cache, left as is]
-   ✔  nx run application:build  [existing outputs match the cache, left as is]
-
-—————————————————————————————————————————————————————————————————————————
-
- NX   Successfully ran target build for 3 projects and 3 tasks they depend on (74ms)
-
-Nx read the output from the cache instead of running the command for 6 out of 6 tasks.
-```
-
-## Create a Custom Task
-
-Nx can run any tasks that are available to Gradle - even your own custom tasks. Let's create a custom task to see this functionality in action. Edit the `application` Gradle build file to create a custom task:
-
-```{% fileName="application/build.gradle" highlightLines=["25-34"] %}
-plugins {
-	id 'org.springframework.boot' version '3.2.2'
-	id 'io.spring.dependency-management' version '1.1.4'
-	id 'java'
-}
-
-group = 'com.example'
-version = '0.0.1-SNAPSHOT'
-
-java {
-	sourceCompatibility = '17'
-}
-
-repositories {
-	mavenCentral()
-}
-
-dependencies {
-	implementation 'org.springframework.boot:spring-boot-starter-actuator'
-	implementation 'org.springframework.boot:spring-boot-starter-web'
-	implementation project(':library')
-	testImplementation 'org.springframework.boot:spring-boot-starter-test'
-}
-
-tasks.register("mytask"){
-    group = "Custom"
-    description = "A custom task"
-}
-
-tasks.named("mytask"){
-    doFirst {
-        println("This is my task!")
-    }
-}
-```
-
-Now, you can run `mytask` with Nx like this:
-
-```{% command="./nx mytask application" %}
-> nx run application:mytask
-
-> ../gradlew mytask
-
-
-> Task :application:mytask
-This is my task!
-
-BUILD SUCCESSFUL in 358ms
-1 actionable task: 1 executed
-```
-
-You can see all the tasks available to Nx by opening the project details view for the `application` project. You can do this either through [Nx Console](/getting-started/editor-setup) or from the terminal:
+Before we start running tasks, let's explore the tasks available for the `application` project. The `@nx/gradle` plugin
+that we've added, also reflects Gradle's tasks to Nx, allowing it to run any of the Gradle
+tasks. You can do this either through [Nx Console](/getting-started/editor-setup) or from the terminal:
 
 ```shell {% path="~/gradle-tutorial" %}
 ./nx show project application --web
@@ -215,11 +119,92 @@ You can see all the tasks available to Nx by opening the project details view fo
 {% project-details title="Project Details View" jsonFile="shared/tutorials/gradle-pdv.json" %}
 {% /project-details %}
 
+The Nx command to run the `build` task for the `application` project is:
+
+```shell
+./nx run application:build
+```
+
+When Nx runs a Gradle task, it hands off the execution of that task to Gradle, so all task dependencies and
+configuration settings in the Gradle configuration are still respected.
+
+By running the task via Nx however, the computation was cached for reuse. Now, running `./nx run application:build`
+again, will be near instant as the result from the previous command will be used.
+
+```{% command="./nx run application:build" %}
+
+   ✔  1/1 dependent project tasks succeeded [1 read from cache]
+
+   Hint: you can run the command with --verbose to see the full dependent project outputs
+
+—————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+
+
+> nx run application:classes  [existing outputs match the cache, left as is]
+
+> ./gradlew :application:classes
+
+> Task :library:compileJava UP-TO-DATE
+> Task :library:processResources NO-SOURCE
+> Task :library:classes UP-TO-DATE
+> Task :library:jar UP-TO-DATE
+> Task :application:compileJava UP-TO-DATE
+> Task :application:processResources UP-TO-DATE
+> Task :application:classes UP-TO-DATE
+
+BUILD SUCCESSFUL in 647ms
+4 actionable tasks: 4 up-to-date
+
+> nx run application:build  [existing outputs match the cache, left as is]
+
+> ./gradlew :application:build
+
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.5/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 768ms
+9 actionable tasks: 1 executed, 8 up-to-date
+
+—————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+
+ NX   Successfully ran target build for project application and 3 tasks it depends on (30ms)
+
+Nx read the output from the cache instead of running the command for 4 out of 4 tasks.
+
+```
+
+Now that we've run one task, let's run all the `build` tasks in the repository with the Nx `run-many` command:
+
+```{% command="./nx run-many -t build" %}
+
+   ✔  nx run library:classes  [existing outputs match the cache, left as is]
+   ✔  nx run library:build  [existing outputs match the cache, left as is]
+   ✔  nx run application:classes  [existing outputs match the cache, left as is]
+   ✔  nx run application:build  [existing outputs match the cache, left as is]
+   ✔  nx run gradle-tutorial:classes (1s)
+   ✔  nx run gradle-tutorial:build (1s)
+
+—————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+
+ NX   Successfully ran target build for 3 projects and 3 tasks they depend on (2s)
+
+Nx read the output from the cache instead of running the command for 4 out of 6 tasks.
+
+```
+
+Again, because Nx cached the tasks when the application was built, most of the tasks here were near instant. The only
+ones which needed to be done is the root project's build. Running the command one more time, will be near instant as
+then all the tasks will be restored from the cache.
+
 ## Run Tasks for Affected Projects
 
-Nx doesn't just cache your task results, it can also eliminate the need to run unnecessary tasks. Nx can use its project graph in conjunction with your git history to only run tasks for projects that may have been affected by the changes that you made. Let's explore how the [nx affected](/ci/features/affected) command works.
+Nx doesn't just cache your task results, it can also eliminate the need to run unnecessary tasks.
 
-First, commit any outstanding changes in your repository:
+First, commit any outstanding changes to the `main` branch locally:
 
 ```shell
 git commit -am "changes"
@@ -240,38 +225,37 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class DemoApplication {
 
-	private final MyService myService;
+    private final MyService myService;
 
-	public DemoApplication(MyService myService) {
-		this.myService = myService;
-	}
+    public DemoApplication(MyService myService) {
+        this.myService = myService;
+    }
 
-	@GetMapping("/")
-	public String home() {
-		return myService.message() + " changed!";
-	}
+    @GetMapping("/")
+    public String home() {
+        return myService.message() + " changed!";
+    }
 
-	public static void main(String[] args) {
-		SpringApplication.run(DemoApplication.class, args);
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(DemoApplication.class, args);
+    }
 }
 ```
 
-Then you can use the `nx affected` command to run the `test` task only for projects that were affected by that change.
+As a developer, we know that this change only affects the `application` project, not the `library` project. We would
+run `./nx run application:test` to verify our changes. In CI, teams often run all test tasks rerunning
+the `library:test` task unnecessarily.
 
-```shell
-./nx affected -t test
-```
+The `./nx affected` command solves this problem. Nx uses its project graph in conjunction with git history to only run
+tasks for projects that may have been affected by the changes that you made.
 
-The `test` task was run for the `application` project, but not for `library` because a change to the `application` project could not have changed the behavior of those projects. This feature is most useful in CI where you want to make sure to fully check every project that may have been affected by a change, but you want to avoid wasting time on tasks that do not need to be run. As more projects are added to the repository, this functionality becomes essential to maintain a fast CI pipeline.
+## Set up CI with Nx
 
-## Summary
-
-Now that you have added Nx to your Gradle repository, you can take advantage of Nx's dependency graph visualisation and leverage the `affected` command to speed up your CI pipeline. You can also more easily add javascript projects along side your Gradle projects and use Nx to manage them all.
-
-## Setup CI for Your Gradle Repository
-
-This tutorial walked you through how Nx can improve the developer experience for local development, but Nx can also make a big difference in CI. Without adequate tooling, CI times tend to grow exponentially with the size of the codebase. Nx helps reduce wasted time in CI with the [`affected` command](/ci/features/affected) and Nx Replay's [remote caching](/ci/features/remote-cache). Nx also [efficiently parallelizes tasks across machines](/ci/concepts/parallelization-distribution) with Nx Agents.
+This tutorial walked you through how Nx can improve the developer experience for local development, but Nx also makes
+a huge difference in CI. Without adequate tooling, CI times tend to grow exponentially with the size of the codebase. Nx
+helps reduce wasted time in CI with the [`affected` command](/ci/features/affected) and Nx
+Replay's [remote caching](/ci/features/remote-cache). Nx
+also [efficiently parallelizes tasks across machines](/ci/concepts/parallelization-distribution) with Nx Agents.
 
 To set up Nx Replay run:
 
@@ -321,20 +305,35 @@ jobs:
       - run: ./nx affected -t test build
 ```
 
-This is a default CI configuration that sets up Nx Cloud to [use nx affected](/ci/features/affected). This will only run the tasks that are needed for a particular PR.
+This is a default CI configuration that sets up Nx Cloud to [use nx affected](/ci/features/affected). This will only run
+the tasks that are needed for a particular PR.
 
-You can also [enable distributed task execution](/ci/features/distribute-task-execution) by uncommenting the `nx-cloud start-ci-run` line. This will automatically run all tasks on separate machines in parallel wherever possible, without requiring you to manually coordinate copying the output from one machine to another.
+You can also [enable distributed task execution](/ci/features/distribute-task-execution) by uncommenting
+the `nx-cloud start-ci-run` line. This will automatically run all tasks on separate machines in parallel wherever
+possible, without requiring you to manually coordinate copying the output from one machine to another.
 
 Check out one of these detailed tutorials on setting up CI with Nx:
 
 - [Circle CI with Nx](/ci/intro/tutorials/circle)
 - [GitHub Actions with Nx](/ci/intro/tutorials/github-actions)
 
+## Summary
+
+Now that you have added Nx to this sample Gradle repository, you have learned several ways that Nx can help your
+organization:
+
+- Nx reflects the Gradle graph into the Nx graph
+- Nx's dependency graph visualisation helps you understand your codebase
+- Nx caches task results and reuses them when the same task is rerun later
+- Nx intelligently determines which tasks are `affected` by code changes to reduce waste in CI
+- Nx Cloud provides remote caching and distributed task execution to speed up CI
+
 ## Next Steps
 
 Connect with the rest of the Nx community with these resources:
 
-- [Join the Official Nx Discord Server](https://go.nx.dev/community) to ask questions and find out the latest news about Nx.
+- [Join the Official Nx Discord Server](https://go.nx.dev/community) to ask questions and find out the latest news about
+  Nx.
 - [Follow Nx on Twitter](https://twitter.com/nxdevtools) to stay up to date with Nx news
 - [Read our Nx blog](https://blog.nrwl.io/)
 - [Subscribe to our Youtube channel](https://www.youtube.com/@nxdevtools) for demos and Nx insights
