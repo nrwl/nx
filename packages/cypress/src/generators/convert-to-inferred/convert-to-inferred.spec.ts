@@ -121,6 +121,11 @@ function createTestProject(
           testingType: `e2e`,
           devServerTarget: 'myapp:serve',
         },
+        configurations: {
+          ci: {
+            devServerTarget: 'myapp:static-serve',
+          },
+        },
       },
     },
   };
@@ -273,6 +278,21 @@ describe('Cypress - Convert Executors To Plugin', () => {
           );
         });
       }
+
+      // cypress.config.ts modifications
+      expect(tree.read(`${project.root}/cypress.config.ts`, 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
+
+        import { defineConfig } from 'cypress';
+
+        export default defineConfig({
+          e2e: {
+            ...nxE2EPreset(__filename, {ciWebServerCommand: "npx nx run myapp:static-serve",webServerCommands: {"default":"npx nx run myapp:serve","ci":"npx nx run myapp:static-serve"}, cypressDir: 'src' }),
+            baseUrl: 'http://localhost:4200',
+          },
+        });"
+      `);
     });
 
     it('should setup Cypress plugin to match projects', async () => {
@@ -430,12 +450,12 @@ describe('Cypress - Convert Executors To Plugin', () => {
       // project.json modifications
       const updatedProject = readProjectConfiguration(tree, project.name);
       expect(updatedProject.targets.e2e).toMatchInlineSnapshot(`
-      {
-        "options": {
-          "runner-ui": true,
-        },
-      }
-    `);
+              {
+                "options": {
+                  "runner-ui": true,
+                },
+              }
+          `);
 
       // nx.json modifications
       const nxJsonPlugins = readNxJson(tree).plugins;
@@ -476,12 +496,12 @@ describe('Cypress - Convert Executors To Plugin', () => {
       // project.json modifications
       const updatedProject = readProjectConfiguration(tree, project.name);
       expect(updatedProject.targets.e2e).toMatchInlineSnapshot(`
-      {
-        "options": {
-          "no-exit": true,
-        },
-      }
-    `);
+              {
+                "options": {
+                  "no-exit": true,
+                },
+              }
+          `);
 
       // nx.json modifications
       const nxJsonPlugins = readNxJson(tree).plugins;

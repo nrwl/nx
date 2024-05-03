@@ -85,7 +85,7 @@ export function addDevServerTargetToConfig(
             `${configFileContents.slice(
               0,
               ciWebServerCommandNode.getStart()
-            )}"npx nx run ${ciDevServerTarget}"${configFileContents.slice(
+            )}"${ciDevServerTarget}"${configFileContents.slice(
               ciWebServerCommandNode.getEnd()
             )}`
           );
@@ -96,7 +96,7 @@ export function addDevServerTargetToConfig(
           `${configFileContents.slice(
             0,
             nxE2ePresetOptionsNode.getStart() + 1
-          )}ciWebServerCommand: "npx nx run ${ciDevServerTarget}",${configFileContents.slice(
+          )}ciWebServerCommand: "${ciDevServerTarget}",${configFileContents.slice(
             nxE2ePresetOptionsNode.getStart() + 1
           )}`
         );
