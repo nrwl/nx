@@ -107,7 +107,7 @@ launch-templates:
 
 ### `launch-templates.<template-name>.init-steps`
 
-A launch template defines a series of steps to set up an agent. Without a defined `init-steps` the Nx Agent is unable to process any tasks. This includes things such as checking out your workspace source code and installing any necessary dependencies. Any extra setup your workspace needs to run should be defined as a step. Once all steps have been ran, the agent machine will inform Nx Cloud that it is ready to accept tasks.
+A launch template defines a series of steps to set up an agent. Without a defined `init-steps` the Nx Agent is unable to process any tasks. This includes things such as checking out your workspace source code and installing any necessary dependencies. Any extra setup your workspace needs to run should be defined as a step. Once all steps run, the agent machine will inform Nx Cloud that it is ready to accept tasks.
 
 ```yaml {% fileName=".nx/workflows/agents.yaml" %}
 launch-templates:
@@ -331,7 +331,7 @@ nx-cloud start-ci-run --distribute-on="8 linux-medium-js" --with-env-vars="auto"
 
 ## Pass Values Between Steps
 
-If you need to pass a value from one step to another step such as assigning the value to an existing or new environment variable. You can write to the `NX_CLOUD_ENV` environment file.
+If you need to pass a value from one step to another step, such as assigning the value to an existing or new environment variable. You can write to the `NX_CLOUD_ENV` environment file.
 
 Commonly this is used for redefining the `PATH` or setting options for various toolchains.
 
@@ -351,7 +351,7 @@ launch-templates:
 
 ## Private NPM Registry
 
-If your project consumes packages from a private registry, you'll have to set up an authentication step in a custom launch template. We recommend creating an `.npmrc` file. You can pass the auth token from your main agent, so it's available to the agent machines.
+If your project consumes packages from a private registry, you'll have to set up an authentication step in a custom launch template and autenticate like you normally would, usually this is via a `.npmrc` or `.yarnrc` file. You can pass the auth token from your main agent, so it's available to the agent machines.
 
 ```yaml {% fileName=".nx/workflows/agents.yaml" %}
 launch-templates:
@@ -363,24 +363,19 @@ launch-templates:
         uses: 'nrwl/nx-cloud-workflows/v3.6/workflow-steps/checkout/main.yaml'
       - name: Auth to Registry
         script: |
-          echo "@myorg:registry=https://my-private-registry.com/myorg" >> .npmrc
-          echo "//my-private-registry.com/:_authToken=MY_REGISTRY_TOKEN" >> .npmrc
+          # create .npmrc with @myorg scoped packages pointing to GH npm registry
+          echo "@myorg:registry=https://npm.pkg.github.com" >> .npmrc
+          echo "//npm.pkg.github.com/:_authToken=${SOME_AUTH_TOKEN}" >> .npmrc
       - name: Install Node Modules
         uses: 'nrwl/nx-cloud-workflows/v3.6/workflow-steps/install-node-modules/main.yaml'
 ```
 
-Pass `MY_REGISTRY_TOKEN` via `--with-env-vars`
+Pass `SOME_AUTH_TOKEN` via `--with-env-vars`
 
 ```
-# this assumes MY_REGISTRY_TOKEN is already defined on the main agent
-nx-cloud start-ci-run --distribute-on="5 my-linux-medium-js" --with-env-vars="MY_REGISTRY_TOKEN"
+# this assumes SOME_AUTH_TOKEN is already defined on the main agent
+nx-cloud start-ci-run --distribute-on="5 my-linux-medium-js" --with-env-vars="GH_NPM_TOKEN"
 ```
-
-{% callout type="note" title="Token Name" %}
-The token name is not important here, `MY_REGISTRY_TOKEN` is to demonstrate where the value can be placed.
-
-Reference the npm docs on [how to use a `.npmrc` file](https://docs.npmjs.com/cli/v10/configuring-npm/npmrc)
-{% /callout %}
 
 ## Custom Node Version
 
@@ -449,11 +444,9 @@ If you're trying to install a package that isn't available on `apt`, check that 
 
 ## Dynamic Changesets
 
-Nx Agents support dynamically distributing a given changeset for a CI run with a different number of agents and templates.
-This is equivalent of changing the value passed to `--distribute-on` based on your changes. Instead of defining a static number of agents for each change.
+NxCloud can calculate how big your pull request is based on how many projects in your workspace it affects. You can then configure Nx Agents to dynamically use a different number of agents based on your changeset size.
 
-Currently, you can define a `small`, `medium` and `large` changeset for Nx Agents to use.
-These sizes are based on the ratio of affected projects Nx Cloud calculates for your PR.
+Here we define a `small`, `medium` and `large` distribution strategy:
 
 ```yaml {% fileName=".nx/workflows/dynamic-changesets.yaml" %}
 distribute-on:
