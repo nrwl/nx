@@ -1,11 +1,11 @@
 import { existsSync } from 'fs';
 import { PackageJson } from '../../utils/package-json';
-import { prerelease } from 'semver';
+import { prerelease, valid } from 'semver';
 import { output } from '../../utils/output';
 import { getPackageManagerCommand } from '../../utils/package-manager';
 import { generateDotNxSetup } from './implementation/dot-nx/add-nx-scripts';
 import { runNxSync } from '../../utils/child-process';
-import { readJsonFile, writeJsonFile } from '../../utils/fileutils';
+import { readJsonFile } from '../../utils/fileutils';
 import { nxVersion } from '../../utils/versions';
 import {
   addDepsToPackageJson,
@@ -22,7 +22,6 @@ import { globWithWorkspaceContext } from '../../utils/workspace-context';
 import { connectExistingRepoToNxCloudPrompt } from '../connect/connect-to-nx-cloud';
 import { addNxToNpmRepo } from './implementation/add-nx-to-npm-repo';
 import { addNxToMonorepo } from './implementation/add-nx-to-monorepo';
-import { join } from 'path';
 
 export interface InitArgs {
   interactive: boolean;
@@ -34,7 +33,7 @@ export interface InitArgs {
 export async function initHandler(options: InitArgs): Promise<void> {
   process.env.NX_RUNNING_NX_INIT = 'true';
   const version =
-    process.env.NX_VERSION ?? (prerelease(nxVersion) ? 'next' : 'latest');
+    process.env.NX_VERSION ?? (prerelease(nxVersion) ? 'next' : nxVersion);
   if (process.env.NX_VERSION) {
     output.log({ title: `Using version ${process.env.NX_VERSION}` });
   }
@@ -52,7 +51,7 @@ export async function initHandler(options: InitArgs): Promise<void> {
     generateDotNxSetup(version);
     const { plugins } = await detectPlugins();
     plugins.forEach((plugin) => {
-      execSync(`./nx add ${plugin}`, {
+      execSync(`./nx add ${plugin}@${version}`, {
         stdio: 'inherit',
       });
     });
