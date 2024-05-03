@@ -81,6 +81,7 @@ export const TargetConfigurationDetailsHeader = ({
           <TargetTechnologies
             technologies={targetConfiguration.metadata?.technologies}
             showTooltip={!isCollasped}
+            className="h-4 w-4"
           />
           {isCollasped &&
             targetConfiguration?.executor !== '@nx/js:release-publish' && (
