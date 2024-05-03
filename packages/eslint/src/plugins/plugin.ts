@@ -187,6 +187,7 @@ function buildEslintTargets(
       '{workspaceRoot}/tools/eslint-rules/**/*',
       { externalDependencies: ['eslint'] },
     ],
+    outputs: ['{options.outputFile}'],
   };
   if (eslintConfigs.some((config) => isFlatConfig(config))) {
     targetConfig.options.env = {

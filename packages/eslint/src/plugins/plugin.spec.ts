@@ -109,6 +109,9 @@ describe('@nx/eslint/plugin', () => {
                   "options": {
                     "cwd": ".",
                   },
+                  "outputs": [
+                    "{options.outputFile}",
+                  ],
                 },
               },
             },
@@ -178,6 +181,9 @@ describe('@nx/eslint/plugin', () => {
                   "options": {
                     "cwd": "apps/my-app",
                   },
+                  "outputs": [
+                    "{options.outputFile}",
+                  ],
                 },
               },
             },
@@ -216,6 +222,9 @@ describe('@nx/eslint/plugin', () => {
                   "options": {
                     "cwd": "apps/my-app",
                   },
+                  "outputs": [
+                    "{options.outputFile}",
+                  ],
                 },
               },
             },
@@ -326,6 +335,9 @@ describe('@nx/eslint/plugin', () => {
                   "options": {
                     "cwd": "apps/my-app",
                   },
+                  "outputs": [
+                    "{options.outputFile}",
+                  ],
                 },
               },
             },
@@ -348,6 +360,9 @@ describe('@nx/eslint/plugin', () => {
                   "options": {
                     "cwd": "libs/my-lib",
                   },
+                  "outputs": [
+                    "{options.outputFile}",
+                  ],
                 },
               },
             },
@@ -430,6 +445,9 @@ describe('@nx/eslint/plugin', () => {
                   "options": {
                     "cwd": "apps/my-app",
                   },
+                  "outputs": [
+                    "{options.outputFile}",
+                  ],
                 },
               },
             },
@@ -453,6 +471,9 @@ describe('@nx/eslint/plugin', () => {
                   "options": {
                     "cwd": "libs/my-lib",
                   },
+                  "outputs": [
+                    "{options.outputFile}",
+                  ],
                 },
               },
             },
@@ -493,6 +514,9 @@ describe('@nx/eslint/plugin', () => {
                   "options": {
                     "cwd": "apps/myapp",
                   },
+                  "outputs": [
+                    "{options.outputFile}",
+                  ],
                 },
               },
             },
@@ -538,6 +562,9 @@ describe('@nx/eslint/plugin', () => {
                   "options": {
                     "cwd": "apps/myapp/nested/mylib",
                   },
+                  "outputs": [
+                    "{options.outputFile}",
+                  ],
                 },
               },
             },
