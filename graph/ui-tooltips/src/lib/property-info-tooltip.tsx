@@ -65,14 +65,12 @@ const PROPERTY_INFO_TOOLTIP_TYPE_OPTIONS: Record<
       'This is a list of other tasks which must be completed before running this task.',
   },
   options: {
-    // TODO(v18): re-enable link once docs are published
-    // docsUrl: 'https://nx.dev/concepts/executors-and-configurations',
+    docsUrl: 'https://nx.dev/concepts/executors-and-configurations',
     heading: 'Options',
     description: 'Options modify the behaviour of the task.',
   },
   configurations: {
-    // TODO(v18): re-enable link once docs are published
-    // docsUrl: 'https://nx.dev/concepts/executors-and-configurations',
+    docsUrl: 'https://nx.dev/concepts/executors-and-configurations',
     heading: 'Configurations',
     description:
       'Configurations are sets of Options to allow a Target to be used in different scenarios.',

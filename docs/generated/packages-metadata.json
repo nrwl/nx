@@ -503,15 +503,6 @@
         "type": "generator"
       },
       {
-        "description": "Add a Cypress E2E Project.",
-        "file": "generated/packages/cypress/generators/cypress-project.json",
-        "hidden": true,
-        "name": "cypress-project",
-        "originalFilePath": "/packages/cypress/src/generators/cypress-project/schema.json",
-        "path": "cypress/generators/cypress-project",
-        "type": "generator"
-      },
-      {
         "description": "Add a Cypress E2E Configuration to an existing project.",
         "file": "generated/packages/cypress/generators/configuration.json",
         "hidden": false,
@@ -1051,6 +1042,15 @@
         "name": "init",
         "originalFilePath": "/packages/gradle/src/generators/init/schema.json",
         "path": "gradle/generators/init",
+        "type": "generator"
+      },
+      {
+        "description": "Setup a CI Workflow to run Nx in CI",
+        "file": "generated/packages/gradle/generators/ci-workflow.json",
+        "hidden": false,
+        "name": "ci-workflow",
+        "originalFilePath": "/packages/gradle/src/generators/ci-workflow/schema.json",
+        "path": "gradle/generators/ci-workflow",
         "type": "generator"
       }
     ],
@@ -2047,17 +2047,7 @@
         "originalFilePath": "shared/packages/plugin/plugin"
       }
     ],
-    "executors": [
-      {
-        "description": "Creates and runs the E2E tests for an Nx Plugin.",
-        "file": "generated/packages/plugin/executors/e2e.json",
-        "hidden": false,
-        "name": "e2e",
-        "originalFilePath": "/packages/plugin/src/executors/e2e/schema.json",
-        "path": "plugin/executors/e2e",
-        "type": "executor"
-      }
-    ],
+    "executors": [],
     "generators": [
       {
         "description": "Create a Nx Plugin.",

@@ -27,9 +27,13 @@ import {
   ProjectConfigurationsError,
   isAggregateCreateNodesError,
   ProjectsWithNoNameError,
-  ProjectsWithConflictingNamesError,
-  isProjectsWithConflictingNamesError,
+  MultipleProjectsWithSameNameError,
+  isMultipleProjectsWithSameNameError,
   isProjectsWithNoNameError,
+  ProjectWithNoNameError,
+  ProjectWithExistingNameError,
+  isProjectWithExistingNameError,
+  isProjectWithNoNameError,
 } from '../error-types';
 
 export type SourceInformation = [file: string | null, plugin: string];
@@ -50,7 +54,7 @@ export function mergeProjectConfigurationIntoRootMap(
   sourceInformation?: SourceInformation,
   // This function is used when reading project configuration
   // in generators, where we don't want to do this.
-  skipCommandNormalization?: boolean
+  skipTargetNormalization?: boolean
 ): void {
   if (configurationSourceMaps && !configurationSourceMaps[project.root]) {
     configurationSourceMaps[project.root] = {};
@@ -202,10 +206,12 @@ export function mergeProjectConfigurationIntoRootMap(
         continue;
       }
 
+      const normalizedTarget = skipTargetNormalization
+        ? target
+        : resolveCommandSyntacticSugar(target, project.root);
+
       const mergedTarget = mergeTargetConfigurations(
-        skipCommandNormalization
-          ? target
-          : resolveCommandSyntacticSugar(target, project.root),
+        normalizedTarget,
         matchingProject.targets?.[targetName],
         sourceMap,
         sourceInformation,
@@ -346,7 +352,7 @@ export async function createProjectConfigurations(
     | CreateNodesError
     | MergeNodesError
     | ProjectsWithNoNameError
-    | ProjectsWithConflictingNamesError
+    | MultipleProjectsWithSameNameError
   > = [];
 
   // We iterate over plugins first - this ensures that plugins specified first take precedence.
@@ -452,16 +458,11 @@ export async function createProjectConfigurations(
     }
 
     try {
-      // We still call this just to assert that the root map
-      // only contains valid project names. This is a safety check.
-      //
-      // The signature itself can't be changed as we need it to return
-      // project configurations for use in devkit.
-      readProjectConfigurationsFromRootMap(projectRootMap);
+      validateAndNormalizeProjectRootMap(projectRootMap);
     } catch (e) {
       if (
         isProjectsWithNoNameError(e) ||
-        isProjectsWithConflictingNamesError(e)
+        isMultipleProjectsWithSameNameError(e)
       ) {
         errors.push(e);
       } else {
@@ -516,37 +517,117 @@ export function readProjectConfigurationsFromRootMap(
   const projectRootsWithNoName: string[] = [];
 
   for (const root in projectRootMap) {
-    const configuration = projectRootMap[root];
+    const project = projectRootMap[root];
     // We're setting `// targets` as a comment `targets` is empty due to Project Crystal.
     // Strip it before returning configuration for usage.
-    if (configuration['// targets']) delete configuration['// targets'];
-    if (!configuration.name) {
-      try {
-        const { name } = readJsonFile(join(root, 'package.json'));
-        configuration.name = name;
-      } catch {
-        projectRootsWithNoName.push(root);
+    if (project['// targets']) delete project['// targets'];
+
+    try {
+      validateProject(project, projects);
+      projects[project.name] = project;
+    } catch (e) {
+      if (isProjectWithNoNameError(e)) {
+        projectRootsWithNoName.push(e.projectRoot);
+      } else if (isProjectWithExistingNameError(e)) {
+        const rootErrors = conflicts.get(e.projectName) ?? [
+          projects[e.projectName].root,
+        ];
+        rootErrors.push(e.projectRoot);
+        conflicts.set(e.projectName, rootErrors);
+      } else {
+        throw e;
       }
-    }
-    if (configuration.name in projects) {
-      let rootErrors = conflicts.get(configuration.name) ?? [
-        projects[configuration.name].root,
-      ];
-      rootErrors.push(root);
-      conflicts.set(configuration.name, rootErrors);
-      projects[configuration.name] = configuration;
-    } else {
-      projects[configuration.name] = configuration;
     }
   }
 
   if (conflicts.size > 0) {
-    throw new ProjectsWithConflictingNamesError(conflicts, projects);
+    throw new MultipleProjectsWithSameNameError(conflicts, projects);
   }
   if (projectRootsWithNoName.length > 0) {
     throw new ProjectsWithNoNameError(projectRootsWithNoName, projects);
   }
   return projects;
+}
+
+function validateAndNormalizeProjectRootMap(
+  projectRootMap: Record<string, ProjectConfiguration>
+) {
+  // Name -> Project, used to validate that all projects have unique names
+  const projects: Record<string, ProjectConfiguration> = {};
+  // If there are projects that have the same name, that is an error.
+  // This object tracks name -> (all roots of projects with that name)
+  // to provide better error messaging.
+  const conflicts = new Map<string, string[]>();
+  const projectRootsWithNoName: string[] = [];
+
+  for (const root in projectRootMap) {
+    const project = projectRootMap[root];
+    // We're setting `// targets` as a comment `targets` is empty due to Project Crystal.
+    // Strip it before returning configuration for usage.
+    if (project['// targets']) delete project['// targets'];
+
+    try {
+      validateProject(project, projects);
+      projects[project.name] = project;
+    } catch (e) {
+      if (isProjectWithNoNameError(e)) {
+        projectRootsWithNoName.push(e.projectRoot);
+      } else if (isProjectWithExistingNameError(e)) {
+        const rootErrors = conflicts.get(e.projectName) ?? [
+          projects[e.projectName].root,
+        ];
+        rootErrors.push(e.projectRoot);
+        conflicts.set(e.projectName, rootErrors);
+      } else {
+        throw e;
+      }
+    }
+
+    for (const targetName in project.targets) {
+      project.targets[targetName] = normalizeTarget(
+        project.targets[targetName],
+        project
+      );
+
+      if (
+        !project.targets[targetName].executor &&
+        !project.targets[targetName].command
+      ) {
+        delete project.targets[targetName];
+      }
+    }
+  }
+
+  if (conflicts.size > 0) {
+    throw new MultipleProjectsWithSameNameError(conflicts, projects);
+  }
+  if (projectRootsWithNoName.length > 0) {
+    throw new ProjectsWithNoNameError(projectRootsWithNoName, projects);
+  }
+  return projectRootMap;
+}
+
+export function validateProject(
+  project: ProjectConfiguration,
+  // name -> project
+  knownProjects: Record<string, ProjectConfiguration>
+) {
+  if (!project.name) {
+    try {
+      const { name } = readJsonFile(join(project.root, 'package.json'));
+      if (!name) {
+        throw new Error(`Project at ${project.root} has no name provided.`);
+      }
+      project.name = name;
+    } catch {
+      throw new ProjectWithNoNameError(project.root);
+    }
+  } else if (
+    knownProjects[project.name] &&
+    knownProjects[project.name].root !== project.root
+  ) {
+    throw new ProjectWithExistingNameError(project.name, project.root);
+  }
 }
 
 /**
@@ -670,8 +751,8 @@ export function isCompatibleTarget(
 
   const isRunCommands = a.executor === 'nx:run-commands';
   if (isRunCommands) {
-    const aCommand = a.options?.command ?? a.options?.commands.join(' && ');
-    const bCommand = b.options?.command ?? b.options?.commands.join(' && ');
+    const aCommand = a.options?.command ?? a.options?.commands?.join(' && ');
+    const bCommand = b.options?.command ?? b.options?.commands?.join(' && ');
 
     const oneHasNoCommand = !aCommand || !bCommand;
     const hasSameCommand = aCommand === bCommand;
@@ -835,4 +916,28 @@ function resolveCommandSyntacticSugar(
       },
     };
   }
+}
+
+export function normalizeTarget(
+  target: TargetConfiguration,
+  project: ProjectConfiguration
+) {
+  target = resolveCommandSyntacticSugar(target, project.root);
+
+  target.options = resolveNxTokensInOptions(
+    target.options,
+    project,
+    `${project.root}:${target}`
+  );
+
+  target.configurations ??= {};
+  for (const configuration in target.configurations) {
+    target.configurations[configuration] = resolveNxTokensInOptions(
+      target.configurations[configuration],
+      project,
+      `${project.root}:${target}:${configuration}`
+    );
+  }
+
+  return target;
 }

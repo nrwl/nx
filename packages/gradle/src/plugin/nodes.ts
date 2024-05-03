@@ -11,7 +11,7 @@ import { existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { projectGraphCacheDirectory } from 'nx/src/utils/cache-directory';
 
-import { getGradleRelativePath } from '../utils/exec-gradle';
+import { getGradleExecFile } from '../utils/exec-gradle';
 import { getGradleReport } from '../utils/get-gradle-report';
 
 const cacheableTaskType = new Set(['Build', 'Verification']);
@@ -126,10 +126,10 @@ export const createNodes: CreateNodes<GradlePluginOptions> = [
 
       const { targets, targetGroups } = createGradleTargets(
         tasks,
-        projectRoot,
         options,
         context,
-        outputDirs
+        outputDirs,
+        gradleProject
       );
       const project = {
         name: projectName,
@@ -155,10 +155,10 @@ export const createNodes: CreateNodes<GradlePluginOptions> = [
 
 function createGradleTargets(
   tasks: GradleTask[],
-  projectRoot: string,
   options: GradlePluginOptions | undefined,
   context: CreateNodesContext,
-  outputDirs: Map<string, string>
+  outputDirs: Map<string, string>,
+  gradleProject: string
 ): {
   targetGroups: Record<string, string[]>;
   targets: Record<string, TargetConfiguration>;
@@ -172,12 +172,9 @@ function createGradleTargets(
 
     const outputs = outputDirs.get(task.name);
     targets[targetName] = {
-      command: `${getGradleRelativePath(
-        join(context.workspaceRoot, projectRoot)
-      )} ${task.name}`,
-      options: {
-        cwd: projectRoot,
-      },
+      command: `${getGradleExecFile()} ${
+        gradleProject ? gradleProject + ':' : ''
+      }${task.name}`,
       cache: cacheableTaskType.has(task.type),
       inputs: inputsMap[task.name],
       outputs: outputs ? [outputs] : undefined,
@@ -203,6 +200,8 @@ function createInputsMap(
       ? ['production', '^production']
       : ['default', '^default'],
     test: ['default', namedInputs?.production ? '^production' : '^default'],
-    classes: ['default', '^default'],
+    classes: namedInputs?.production
+      ? ['production', '^production']
+      : ['default', '^default'],
   };
 }

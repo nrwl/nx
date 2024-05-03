@@ -91,6 +91,7 @@ interface CreateCypressTestProjectOptions {
   appName: string;
   appRoot: string;
   e2eTargetName: string;
+  legacyExecutor?: boolean;
 }
 
 const defaultCreateCypressTestProjectOptions: CreateCypressTestProjectOptions =
@@ -98,6 +99,7 @@ const defaultCreateCypressTestProjectOptions: CreateCypressTestProjectOptions =
     appName: 'myapp-e2e',
     appRoot: 'myapp-e2e',
     e2eTargetName: 'e2e',
+    legacyExecutor: false,
   };
 
 function createTestProject(
@@ -111,7 +113,9 @@ function createTestProject(
     projectType: 'application',
     targets: {
       [projectOpts.e2eTargetName]: {
-        executor: '@nx/cypress:cypress',
+        executor: projectOpts.legacyExecutor
+          ? '@nrwl/cypress:cypress'
+          : '@nx/cypress:cypress',
         options: {
           cypressConfig: `${projectOpts.appRoot}/cypress.config.ts`,
           testingType: `e2e`,
@@ -217,7 +221,7 @@ describe('Cypress - Convert Executors To Plugin', () => {
       // project.json modifications
       const updatedProject = readProjectConfiguration(tree, project.name);
       const targetKeys = Object.keys(updatedProject.targets);
-      ['test'].forEach((key) => expect(targetKeys).not.toContain(key));
+      expect(targetKeys).not.toContain('test');
 
       // nx.json modifications
       const nxJsonPlugins = readNxJson(tree).plugins;
@@ -274,6 +278,42 @@ describe('Cypress - Convert Executors To Plugin', () => {
       // ARRANGE
       const project = createTestProject(tree, {
         e2eTargetName: 'test',
+      });
+
+      // ACT
+      await convertToInferred(tree, { skipFormat: true });
+
+      // ASSERT
+      // project.json modifications
+      const updatedProject = readProjectConfiguration(tree, project.name);
+      const targetKeys = Object.keys(updatedProject.targets);
+      ['test'].forEach((key) => expect(targetKeys).not.toContain(key));
+
+      // nx.json modifications
+      const nxJsonPlugins = readNxJson(tree).plugins;
+      const hasCypressPlugin = nxJsonPlugins.find((plugin) =>
+        typeof plugin === 'string'
+          ? plugin === '@nx/cypress/plugin'
+          : plugin.plugin === '@nx/cypress/plugin'
+      );
+      expect(hasCypressPlugin).toBeTruthy();
+      if (typeof hasCypressPlugin !== 'string') {
+        [
+          ['targetName', 'test'],
+          ['ciTargetName', 'e2e-ci'],
+        ].forEach(([targetOptionName, targetName]) => {
+          expect(hasCypressPlugin.options[targetOptionName]).toEqual(
+            targetName
+          );
+        });
+      }
+    });
+
+    it('should setup handle legacy executor', async () => {
+      // ARRANGE
+      const project = createTestProject(tree, {
+        e2eTargetName: 'test',
+        legacyExecutor: true,
       });
 
       // ACT

@@ -510,15 +510,6 @@
         "path": "/nx-api/cypress/generators/init",
         "type": "generator"
       },
-      "/nx-api/cypress/generators/cypress-project": {
-        "description": "Add a Cypress E2E Project.",
-        "file": "generated/packages/cypress/generators/cypress-project.json",
-        "hidden": true,
-        "name": "cypress-project",
-        "originalFilePath": "/packages/cypress/src/generators/cypress-project/schema.json",
-        "path": "/nx-api/cypress/generators/cypress-project",
-        "type": "generator"
-      },
       "/nx-api/cypress/generators/configuration": {
         "description": "Add a Cypress E2E Configuration to an existing project.",
         "file": "generated/packages/cypress/generators/configuration.json",
@@ -1067,6 +1058,15 @@
         "name": "init",
         "originalFilePath": "/packages/gradle/src/generators/init/schema.json",
         "path": "/nx-api/gradle/generators/init",
+        "type": "generator"
+      },
+      "/nx-api/gradle/generators/ci-workflow": {
+        "description": "Setup a CI Workflow to run Nx in CI",
+        "file": "generated/packages/gradle/generators/ci-workflow.json",
+        "hidden": false,
+        "name": "ci-workflow",
+        "originalFilePath": "/packages/gradle/src/generators/ci-workflow/schema.json",
+        "path": "/nx-api/gradle/generators/ci-workflow",
         "type": "generator"
       }
     },
@@ -2072,17 +2072,7 @@
     },
     "root": "/packages/plugin",
     "source": "/packages/plugin/src",
-    "executors": {
-      "/nx-api/plugin/executors/e2e": {
-        "description": "Creates and runs the E2E tests for an Nx Plugin.",
-        "file": "generated/packages/plugin/executors/e2e.json",
-        "hidden": false,
-        "name": "e2e",
-        "originalFilePath": "/packages/plugin/src/executors/e2e/schema.json",
-        "path": "/nx-api/plugin/executors/e2e",
-        "type": "executor"
-      }
-    },
+    "executors": {},
     "generators": {
       "/nx-api/plugin/generators/plugin": {
         "description": "Create a Nx Plugin.",

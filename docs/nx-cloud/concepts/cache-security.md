@@ -48,8 +48,8 @@ Nx Cloud guarantees your cache entries will remain immutable - once they've been
 
 ### Use An On-Premise Version of Nx Cloud If Needed
 
-If you need to have all cache artifacts on servers that you control, there is an on-premise version of Nx Cloud that you can use as part of the [Enterprise plan](https://nx.app/enterprise).
+If you need to have all cache artifacts on servers that you control, there is an on-premise version of Nx Cloud that you can use as part of the [Enterprise plan](/enterprise).
 
 ## Security Decisions
 
-In any security discussion, there is a trade off between convenience and security. It could be that some of these threats do not apply to your organization. If that is the case you could relax some of the security precautions and gain the performance benefits of more task results being stored in the remote cache. Every organization is different and Nx can be adapted to best meet your needs without opening up vulnerabilities. If you would Nx team members to help your organization fine tune your set up, [talk to us about Nx Enterprise](https://nx.app/enterprise).
+In any security discussion, there is a trade off between convenience and security. It could be that some of these threats do not apply to your organization. If that is the case you could relax some of the security precautions and gain the performance benefits of more task results being stored in the remote cache. Every organization is different and Nx can be adapted to best meet your needs without opening up vulnerabilities. If you would Nx team members to help your organization fine tune your set up, [talk to us about Nx Enterprise](/enterprise).

@@ -1,9 +1,8 @@
 import { dirname, extname, join, sep } from 'path';
 import { existsSync, readdirSync } from 'fs';
-import { requireNx } from '../../nx';
 import { pathToFileURL } from 'node:url';
-
-const { workspaceRoot, registerTsProject } = requireNx();
+import { workspaceRoot } from 'nx/src/devkit-exports';
+import { registerTsProject } from 'nx/src/devkit-internals';
 
 export let dynamicImport = new Function(
   'modulePath',

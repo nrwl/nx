@@ -244,7 +244,7 @@ describe('index.html interpolation (legacy)', () => {
       </head>
       <body>
         <div id='root'></div>
-        <div>Nx Variable: %NX_VARIABLE%</div>
+        <div>Nx Variable: %NX_PUBLIC_VARIABLE%</div>
         <div>Some other variable: %SOME_OTHER_VARIABLE%</div>
         <div>Deploy Url: %DEPLOY_URL%</div>
       </body>
@@ -252,7 +252,7 @@ describe('index.html interpolation (legacy)', () => {
 `;
     const envFilePath = `apps/${appName}/.env`;
     const envFileContents = `
-      NX_VARIABLE=foo
+      NX_PUBLIC_VARIABLE=foo
       SOME_OTHER_VARIABLE=bar
     }`;
 

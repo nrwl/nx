@@ -9,11 +9,14 @@ import {
   isCompatibleTarget,
   mergeProjectConfigurationIntoRootMap,
   mergeTargetConfigurations,
+  normalizeTarget,
   readProjectConfigurationsFromRootMap,
   readTargetDefaultsForTarget,
 } from './project-configuration-utils';
 import { NxPluginV2 } from '../plugins';
 import { LoadedNxPlugin } from '../plugins/internal-api';
+import { dirname } from 'path';
+import { isProjectConfigurationsError } from '../error-types';
 
 describe('project-configuration-utils', () => {
   describe('target merging', () => {
@@ -1548,6 +1551,28 @@ describe('project-configuration-utils', () => {
     });
   });
 
+  describe('normalizeTarget', () => {
+    it('should support {projectRoot}, {workspaceRoot}, and {projectName} tokens', () => {
+      const config = {
+        name: 'project',
+        root: 'libs/project',
+        targets: {
+          foo: { command: 'echo {projectRoot}' },
+        },
+      };
+      expect(normalizeTarget(config.targets.foo, config))
+        .toMatchInlineSnapshot(`
+        {
+          "configurations": {},
+          "executor": "nx:run-commands",
+          "options": {
+            "command": "echo libs/project",
+          },
+        }
+      `);
+    });
+  });
+
   describe('createProjectConfigurations', () => {
     /* A fake plugin that sets `fake-lib` tag to libs. */
     const fakeTagPlugin: NxPluginV2 = {
@@ -1562,6 +1587,49 @@ describe('project-configuration-utils', () => {
                 name: name,
                 root: `libs/${name}`,
                 tags: ['fake-lib'],
+              },
+            },
+          };
+        },
+      ],
+    };
+
+    const fakeTargetsPlugin: NxPluginV2 = {
+      name: 'fake-targets-plugin',
+      createNodes: [
+        'libs/*/project.json',
+        (projectJsonPath) => {
+          const root = dirname(projectJsonPath);
+          return {
+            projects: {
+              [root]: {
+                root,
+                targets: {
+                  build: {
+                    executor: 'nx:run-commands',
+                    options: {
+                      command: 'echo {projectName} @ {projectRoot}',
+                    },
+                  },
+                },
+              },
+            },
+          };
+        },
+      ],
+    };
+
+    const sameNamePlugin: NxPluginV2 = {
+      name: 'same-name-plugin',
+      createNodes: [
+        'libs/*/project.json',
+        (projectJsonPath) => {
+          const root = dirname(projectJsonPath);
+          return {
+            projects: {
+              [root]: {
+                root,
+                name: 'same-name',
               },
             },
           };
@@ -1637,6 +1705,72 @@ describe('project-configuration-utils', () => {
           tags: ['fake-lib'],
         },
       });
+    });
+
+    it('should normalize targets', async () => {
+      const { projects } = await createProjectConfigurations(
+        undefined,
+        {},
+        ['libs/a/project.json'],
+        [
+          new LoadedNxPlugin(fakeTargetsPlugin, 'fake-targets-plugin'),
+          new LoadedNxPlugin(fakeTagPlugin, 'fake-tag-plugin'),
+        ]
+      );
+      expect(projects['libs/a'].targets.build).toMatchInlineSnapshot(`
+        {
+          "configurations": {},
+          "executor": "nx:run-commands",
+          "options": {
+            "command": "echo a @ libs/a",
+          },
+        }
+      `);
+    });
+
+    it('should validate that project names are unique', async () => {
+      const error = await createProjectConfigurations(
+        undefined,
+        {},
+        ['libs/a/project.json', 'libs/b/project.json', 'libs/c/project.json'],
+        [new LoadedNxPlugin(sameNamePlugin, 'same-name-plugin')]
+      ).catch((e) => e);
+      const isErrorType = isProjectConfigurationsError(error);
+      expect(isErrorType).toBe(true);
+      if (isErrorType) {
+        expect(error.errors).toMatchInlineSnapshot(`
+          [
+            [MultipleProjectsWithSameNameError: The following projects are defined in multiple locations:
+          - same-name: 
+            - libs/a
+            - libs/b
+            - libs/c
+
+          To fix this, set a unique name for each project in a project.json inside the project's root. If the project does not currently have a project.json, you can create one that contains only a name.],
+          ]
+        `);
+      }
+    });
+
+    it('should validate that projects have a name', async () => {
+      const error = await createProjectConfigurations(
+        undefined,
+        {},
+        ['libs/a/project.json', 'libs/b/project.json', 'libs/c/project.json'],
+        [new LoadedNxPlugin(fakeTargetsPlugin, 'fake-targets-plugin')]
+      ).catch((e) => e);
+      const isErrorType = isProjectConfigurationsError(error);
+      expect(isErrorType).toBe(true);
+      if (isErrorType) {
+        expect(error.errors).toMatchInlineSnapshot(`
+          [
+            [ProjectsWithNoNameError: The projects in the following directories have no name provided:
+            - libs/a
+            - libs/b
+            - libs/c],
+          ]
+        `);
+      }
     });
   });
 });

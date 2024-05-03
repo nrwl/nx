@@ -7018,14 +7018,6 @@
                 "disableCollapsible": false
               },
               {
-                "id": "cypress-project",
-                "path": "/nx-api/cypress/generators/cypress-project",
-                "name": "cypress-project",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
                 "id": "configuration",
                 "path": "/nx-api/cypress/generators/configuration",
                 "name": "configuration",
@@ -7623,6 +7615,14 @@
                 "id": "init",
                 "path": "/nx-api/gradle/generators/init",
                 "name": "init",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "ci-workflow",
+                "path": "/nx-api/gradle/generators/ci-workflow",
+                "name": "ci-workflow",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
@@ -8624,23 +8624,6 @@
                 "id": "overview",
                 "isExternal": false,
                 "children": [],
-                "disableCollapsible": false
-              }
-            ],
-            "isExternal": false,
-            "disableCollapsible": false
-          },
-          {
-            "id": "executors",
-            "path": "/nx-api/plugin/executors",
-            "name": "executors",
-            "children": [
-              {
-                "id": "e2e",
-                "path": "/nx-api/plugin/executors/e2e",
-                "name": "e2e",
-                "children": [],
-                "isExternal": false,
                 "disableCollapsible": false
               }
             ],

@@ -39,6 +39,10 @@ describe('Gradle', () => {
           `list/build/libs/list.jar`,
           `utilities/build/libs/utilities.jar`
         );
+
+        expect(() => {
+          runCLI(`build ${gradleProjectName}`, { verbose: true });
+        }).not.toThrow();
       });
 
       it('should track dependencies for new app', () => {

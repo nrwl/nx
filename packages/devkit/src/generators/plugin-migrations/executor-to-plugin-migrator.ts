@@ -1,34 +1,30 @@
-import type { TargetConfiguration } from 'nx/src/config/workspace-json-project-json';
-import type {
-  ExpandedPluginConfiguration,
-  NxJsonConfiguration,
-} from 'nx/src/config/nx-json';
-import type { Tree } from 'nx/src/generators/tree';
-import type {
-  CreateNodes,
-  CreateNodesContext,
-} from 'nx/src/project-graph/plugins';
-import type { ProjectGraph } from 'nx/src/config/project-graph';
 import type { RunCommandsOptions } from 'nx/src/executors/run-commands/run-commands.impl';
-import type { ConfigurationResult } from 'nx/src/project-graph/utils/project-configuration-utils';
 
 import { minimatch } from 'minimatch';
 
 import { forEachExecutorOptions } from '../executor-options-utils';
 import { deleteMatchingProperties } from './plugin-migration-utils';
-import { requireNx } from '../../../nx';
 
-const {
-  glob,
+import {
   readNxJson,
   updateNxJson,
-  mergeTargetConfigurations,
   updateProjectConfiguration,
   readProjectConfiguration,
+  ProjectGraph,
+  ExpandedPluginConfiguration,
+  NxJsonConfiguration,
+  TargetConfiguration,
+  Tree,
+  CreateNodes,
+} from 'nx/src/devkit-exports';
+
+import {
+  mergeTargetConfigurations,
   retrieveProjectConfigurations,
   LoadedNxPlugin,
   ProjectConfigurationsError,
-} = requireNx();
+} from 'nx/src/devkit-internals';
+import type { ConfigurationResult } from 'nx/src/project-graph/utils/project-configuration-utils';
 
 type PluginOptionsBuilder<T> = (targetName: string) => T;
 type PostTargetTransformer = (
@@ -78,12 +74,15 @@ class ExecutorToPluginMigrator<T> {
     this.#skipTargetFilter = skipTargetFilter ?? ((...args) => [false, '']);
   }
 
-  async run(): Promise<void> {
+  async run(): Promise<Map<string, Set<string>>> {
     await this.#init();
-    for (const targetName of this.#targetAndProjectsToMigrate.keys()) {
-      this.#migrateTarget(targetName);
+    if (this.#targetAndProjectsToMigrate.size > 0) {
+      for (const targetName of this.#targetAndProjectsToMigrate.keys()) {
+        this.#migrateTarget(targetName);
+      }
+      this.#addPlugins();
     }
-    this.#addPlugins();
+    return this.#targetAndProjectsToMigrate;
   }
 
   async #init() {
@@ -243,17 +242,6 @@ class ExecutorToPluginMigrator<T> {
         }
       }
     );
-
-    if (this.#targetAndProjectsToMigrate.size === 0) {
-      const errorMsg = this.#specificProjectToMigrate
-        ? `Project "${
-            this.#specificProjectToMigrate
-          }" does not contain any targets using the "${
-            this.#executor
-          }" executor. Please select a project that does.`
-        : `Could not find any targets using the "${this.#executor}" executor.`;
-      throw new Error(errorMsg);
-    }
   }
 
   #getTargetDefaultsForExecutor() {
@@ -274,6 +262,10 @@ class ExecutorToPluginMigrator<T> {
   }
 
   async #getCreateNodesResults() {
+    if (this.#targetAndProjectsToMigrate.size === 0) {
+      return;
+    }
+
     for (const targetName of this.#targetAndProjectsToMigrate.keys()) {
       const loadedPlugin = new LoadedNxPlugin(
         {
@@ -316,7 +308,7 @@ export async function migrateExecutorToPlugin<T>(
   createNodes: CreateNodes<T>,
   specificProjectToMigrate?: string,
   skipTargetFilter?: SkipTargetFilter
-): Promise<void> {
+): Promise<number> {
   const migrator = new ExecutorToPluginMigrator<T>(
     tree,
     projectGraph,
@@ -328,5 +320,6 @@ export async function migrateExecutorToPlugin<T>(
     specificProjectToMigrate,
     skipTargetFilter
   );
-  await migrator.run();
+  const migratedProjectsAndTargets = await migrator.run();
+  return migratedProjectsAndTargets.size;
 }
