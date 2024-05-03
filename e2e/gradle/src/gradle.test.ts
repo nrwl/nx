@@ -39,6 +39,10 @@ describe('Gradle', () => {
           `list/build/libs/list.jar`,
           `utilities/build/libs/utilities.jar`
         );
+
+        expect(() => {
+          runCLI(`build ${gradleProjectName}`, { verbose: true });
+        }).not.toThrow();
       });
 
       it('should track dependencies for new app', () => {
@@ -64,6 +68,12 @@ dependencies {
     implementation(project(":app"))
 }`
           );
+          updateFile(`app/build.gradle.kts`, (content) => {
+            content += `\r\ntasks.register("task1"){  
+                println("REGISTER TASK1: This is executed during the configuration phase")
+            }`;
+            return content;
+          });
         }
         updateFile(
           `settings.gradle${type === 'kotlin' ? '.kts' : ''}`,

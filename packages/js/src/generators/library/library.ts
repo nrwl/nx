@@ -869,10 +869,10 @@ function determineEntryFields(
       };
     case 'rollup':
       return {
-        type: 'commonjs',
+        // Since we're publishing both formats, skip the type field.
+        // Bundlers or Node will determine the entry point to use.
         main: './index.cjs',
         module: './index.js',
-        // typings is missing for rollup currently
       };
     case 'vite':
       return {
@@ -891,9 +891,9 @@ function determineEntryFields(
       };
     default: {
       return {
-        // CJS is the safest optional for now due to lack of support from some packages
-        // also setting `type: module` results in different resolution behavior (e.g. import 'foo' no longer resolves to 'foo/index.js')
-        type: 'commonjs',
+        // Safest option is to not set a type field.
+        // Allow the user to decide which module format their library is using
+        type: undefined,
       };
     }
   }

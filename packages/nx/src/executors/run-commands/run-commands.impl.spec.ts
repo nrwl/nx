@@ -37,17 +37,59 @@ describe('Run Commands', () => {
   });
 
   it('should not pass --args into underlying command', async () => {
-    const f = fileSync().name;
     const result = await runCommands(
       {
         command: `echo`,
         __unparsed__: ['--args=--key=123'],
         args: '--key=123',
-        unparsedCommandArgs: { args: '--key=123' },
       },
       context
     );
     expect(result.terminalOutput.trim()).not.toContain('--args=--key=123');
+  });
+
+  it('should not foward any args to underlying command if forwardAllArgs is false', async () => {
+    let result = await runCommands(
+      {
+        command: `echo`,
+        key: 123,
+        __unparsed__: [],
+        forwardAllArgs: false,
+      },
+      context
+    );
+    expect(result.terminalOutput.trim()).not.toContain('--key=123');
+
+    result = await runCommands(
+      {
+        command: `echo`,
+        key: 123,
+        __unparsed__: [],
+        forwardAllArgs: true,
+      },
+      context
+    );
+    expect(result.terminalOutput.trim()).toContain('--key=123');
+
+    result = await runCommands(
+      {
+        commands: [
+          {
+            command: `echo 1`,
+            forwardAllArgs: true,
+          },
+          {
+            command: `echo 2`,
+          },
+        ],
+        __unparsed__: ['--args=--key=123'],
+        args: '--key=123',
+        forwardAllArgs: false,
+      },
+      context
+    );
+    expect(result.terminalOutput).toContain('1 --key=123');
+    expect(result.terminalOutput).not.toContain('2 --key=123');
   });
 
   it('should interpolate all unknown args as if they were --args', async () => {

@@ -3,7 +3,7 @@ import { existsSync } from 'fs';
 import * as ora from 'ora';
 import { isAngularPluginInstalled } from '../../adapter/angular-json';
 import type { GeneratorsJsonEntry } from '../../config/misc-interfaces';
-import { readNxJson } from '../../config/nx-json';
+import { readNxJson, type NxJsonConfiguration } from '../../config/nx-json';
 import { runNxAsync } from '../../utils/child-process';
 import { writeJsonFile } from '../../utils/fileutils';
 import { logger } from '../../utils/logger';
@@ -25,9 +25,10 @@ export function addHandler(options: AddOptions): Promise<void> {
     output.addNewline();
 
     const [pkgName, version] = parsePackageSpecifier(options.packageSpecifier);
+    const nxJson = readNxJson();
 
-    await installPackage(pkgName, version);
-    await initializePlugin(pkgName, options);
+    await installPackage(pkgName, version, nxJson);
+    await initializePlugin(pkgName, options, nxJson);
 
     output.success({
       title: `Package ${pkgName} added successfully.`,
@@ -35,7 +36,11 @@ export function addHandler(options: AddOptions): Promise<void> {
   });
 }
 
-async function installPackage(pkgName: string, version: string): Promise<void> {
+async function installPackage(
+  pkgName: string,
+  version: string,
+  nxJson: NxJsonConfiguration
+): Promise<void> {
   const spinner = ora(`Installing ${pkgName}@${version}...`);
   spinner.start();
 
@@ -57,7 +62,6 @@ async function installPackage(pkgName: string, version: string): Promise<void> {
       })
     );
   } else {
-    const nxJson = readNxJson();
     nxJson.installation.plugins ??= {};
     nxJson.installation.plugins[pkgName] = version;
     writeJsonFile('nx.json', nxJson);
@@ -84,7 +88,8 @@ async function installPackage(pkgName: string, version: string): Promise<void> {
 
 async function initializePlugin(
   pkgName: string,
-  options: AddOptions
+  options: AddOptions,
+  nxJson: NxJsonConfiguration
 ): Promise<void> {
   const capabilities = await getPluginCapabilities(workspaceRoot, pkgName, {});
   const generators = capabilities?.generators;
@@ -107,23 +112,27 @@ async function initializePlugin(
   spinner.start();
 
   try {
-    let updatePackageScripts: boolean;
-    if (options.updatePackageScripts !== undefined) {
-      updatePackageScripts = options.updatePackageScripts;
-    } else {
-      updatePackageScripts =
-        readNxJson().useInferencePlugins !== false &&
-        process.env.NX_ADD_PLUGINS !== 'false' &&
-        coreNxPlugins.includes(pkgName);
-    }
-    await runNxAsync(
-      `g ${pkgName}:${initGenerator} --keepExistingVersions${
-        updatePackageScripts ? ' --updatePackageScripts' : ''
-      }`,
-      {
-        silent: !options.verbose,
+    const args = [];
+    if (coreNxPlugins.includes(pkgName)) {
+      args.push(`--keepExistingVersions`);
+
+      if (
+        options.updatePackageScripts ||
+        (options.updatePackageScripts === undefined &&
+          nxJson.useInferencePlugins !== false &&
+          process.env.NX_ADD_PLUGINS !== 'false')
+      ) {
+        args.push(`--updatePackageScripts`);
       }
-    );
+    }
+
+    if (options.__overrides_unparsed__.length) {
+      args.push(...options.__overrides_unparsed__);
+    }
+
+    await runNxAsync(`g ${pkgName}:${initGenerator} ${args.join(' ')}`, {
+      silent: !options.verbose,
+    });
   } catch (e) {
     spinner.fail();
     output.addNewline();

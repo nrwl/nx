@@ -20,10 +20,22 @@ export default async function* execute(
 `;
 
 export const NX_PLUGIN_V2_CONTENTS = `import { basename, dirname } from "path";
-import { CreateNodes } from "@nx/devkit";
+import { CreateNodes, CreateMetadata, ProjectsMetadata } from "@nx/devkit";
 
 type PluginOptions = {
     inferredTags: string[]
+}
+
+export const createMetadata: CreateMetadata = (graph) => {
+  const metadata: ProjectsMetadata = {};
+  for (const projectNode of Object.values(graph.nodes)) {
+    metadata[projectNode.name] = {
+        metadata: {
+            technologies: ["my-plugin"]
+        }
+    }
+  }
+  return metadata;
 }
 
 export const createNodes: CreateNodes<PluginOptions> = [

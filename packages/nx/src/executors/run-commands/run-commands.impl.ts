@@ -1,4 +1,4 @@
-import { exec } from 'child_process';
+import { ChildProcess, exec, Serializable } from 'child_process';
 import * as path from 'path';
 import * as yargsParser from 'yargs-parser';
 import { env as appendLocalEnv } from 'npm-run-path';
@@ -7,10 +7,13 @@ import * as chalk from 'chalk';
 import {
   getPseudoTerminal,
   PseudoTerminal,
+  PseudoTtyProcess,
 } from '../../tasks-runner/pseudo-terminal';
-import { output } from '../../utils/output';
+import { signalToCode } from '../../utils/exit-codes';
 
 export const LARGE_BUFFER = 1024 * 1000000;
+let pseudoTerminal: PseudoTerminal | null;
+const childProcesses = new Set<ChildProcess | PseudoTtyProcess>();
 
 async function loadEnvVars(path?: string) {
   if (path) {
@@ -51,11 +54,13 @@ export interface RunCommandsOptions extends Json {
   readyWhen?: string;
   cwd?: string;
   env?: Record<string, string>;
+  forwardAllArgs?: boolean; // default is true
   args?: string | string[];
   envFile?: string;
   __unparsed__: string[];
   usePty?: boolean;
   streamOutput?: boolean;
+  tty?: boolean;
 }
 
 const propKeys = [
@@ -72,6 +77,8 @@ const propKeys = [
   'usePty',
   'streamOutput',
   'verbose',
+  'forwardAllArgs',
+  'tty',
 ];
 
 export interface NormalizedRunCommandsOptions extends RunCommandsOptions {
@@ -98,6 +105,7 @@ export default async function (
   success: boolean;
   terminalOutput: string;
 }> {
+  registerProcessListener();
   await loadEnvVars(options.envFile);
   const normalized = normalizeOptions(options);
 
@@ -145,7 +153,8 @@ async function runInParallel(
       options.env ?? {},
       true,
       options.usePty,
-      options.streamOutput
+      options.streamOutput,
+      options.tty
     ).then((result: { success: boolean; terminalOutput: string }) => ({
       result,
       command: c.command,
@@ -240,7 +249,7 @@ function normalizeOptions(
     c.command = interpolateArgsIntoCommand(
       c.command,
       options as NormalizedRunCommandsOptions,
-      c.forwardAllArgs ?? true
+      c.forwardAllArgs ?? options.forwardAllArgs ?? true
     );
   });
   return options as NormalizedRunCommandsOptions;
@@ -250,9 +259,7 @@ async function runSerially(
   options: NormalizedRunCommandsOptions,
   context: ExecutorContext
 ): Promise<{ success: boolean; terminalOutput: string }> {
-  const pseudoTerminal = PseudoTerminal.isSupported()
-    ? getPseudoTerminal()
-    : null;
+  pseudoTerminal ??= PseudoTerminal.isSupported() ? getPseudoTerminal() : null;
   let terminalOutput = '';
   for (const c of options.commands) {
     const result: { success: boolean; terminalOutput: string } =
@@ -265,7 +272,8 @@ async function runSerially(
         options.env ?? {},
         false,
         options.usePty,
-        options.streamOutput
+        options.streamOutput,
+        options.tty
       );
     terminalOutput += result.terminalOutput;
     if (!result.success) {
@@ -294,7 +302,8 @@ async function createProcess(
   env: Record<string, string>,
   isParallel: boolean,
   usePty: boolean = true,
-  streamOutput: boolean = true
+  streamOutput: boolean = true,
+  tty: boolean
 ): Promise<{ success: boolean; terminalOutput: string }> {
   env = processEnv(color, cwd, env);
   // The rust runCommand is always a tty, so it will not look nice in parallel and if we need prefixes
@@ -315,7 +324,10 @@ async function createProcess(
       cwd,
       jsEnv: env,
       quiet: !streamOutput,
+      tty,
     });
+
+    childProcesses.add(cp);
 
     return new Promise((res) => {
       cp.onOutput((output) => {
@@ -360,16 +372,8 @@ function nodeProcess(
       env,
       cwd,
     });
-    /**
-     * Ensure the child process is killed when the parent exits
-     */
-    const processExitListener = (signal?: number | NodeJS.Signals) =>
-      childProcess.kill(signal);
 
-    process.on('exit', processExitListener);
-    process.on('SIGTERM', processExitListener);
-    process.on('SIGINT', processExitListener);
-    process.on('SIGQUIT', processExitListener);
+    childProcesses.add(childProcess);
 
     childProcess.stdout.on('data', (data) => {
       const output = addColorAndPrefix(data, commandConfig);
@@ -400,6 +404,7 @@ function nodeProcess(
       res({ success: false, terminalOutput });
     });
     childProcess.on('exit', (code) => {
+      childProcesses.delete(childProcess);
       if (!readyWhen) {
         res({ success: code === 0, terminalOutput });
       }
@@ -560,4 +565,63 @@ function filterPropKeysFromUnParsedOptions(
     }
   }
   return parsedOptions;
+}
+
+let registered = false;
+
+function registerProcessListener() {
+  if (registered) {
+    return;
+  }
+
+  registered = true;
+  // When the nx process gets a message, it will be sent into the task's process
+  process.on('message', (message: Serializable) => {
+    // this.publisher.publish(message.toString());
+    if (pseudoTerminal) {
+      pseudoTerminal.sendMessageToChildren(message);
+    }
+
+    childProcesses.forEach((p) => {
+      if ('connected' in p && p.connected) {
+        p.send(message);
+      }
+    });
+  });
+
+  // Terminate any task processes on exit
+  process.on('exit', () => {
+    childProcesses.forEach((p) => {
+      if ('connected' in p ? p.connected : p.isAlive) {
+        p.kill();
+      }
+    });
+  });
+  process.on('SIGINT', () => {
+    childProcesses.forEach((p) => {
+      if ('connected' in p ? p.connected : p.isAlive) {
+        p.kill('SIGTERM');
+      }
+    });
+    // we exit here because we don't need to write anything to cache.
+    process.exit(signalToCode('SIGINT'));
+  });
+  process.on('SIGTERM', () => {
+    childProcesses.forEach((p) => {
+      if ('connected' in p ? p.connected : p.isAlive) {
+        p.kill('SIGTERM');
+      }
+    });
+    // no exit here because we expect child processes to terminate which
+    // will store results to the cache and will terminate this process
+  });
+  process.on('SIGHUP', () => {
+    childProcesses.forEach((p) => {
+      if ('connected' in p ? p.connected : p.isAlive) {
+        p.kill('SIGTERM');
+      }
+    });
+    // no exit here because we expect child processes to terminate which
+    // will store results to the cache and will terminate this process
+  });
 }

@@ -1,0 +1,32 @@
+version: 2.1
+
+orbs:
+  nx: nrwl/nx@1.6.2
+
+jobs:
+  main:
+    environment:
+      # Configure the JVM and Gradle to avoid OOM errors
+      _JAVA_OPTIONS: "-Xmx3g"
+      GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.workers.max=2"
+    docker:
+      - image: cimg/openjdk:17.0-node
+    steps:
+      - checkout
+
+      # Connect your workspace on <%= nxCloudHost %> and uncomment this to enable task distribution.
+      # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
+      # - run: <%= packageManagerPrefix %> nx-cloud start-ci-run --distribute-on="5 linux-medium-jvm" --stop-agents-after="build"
+
+      - nx/set-shas:
+          main-branch-name: '<%= mainBranch %>'
+
+<% for (const command of commands) { %>
+      - run: <%= command %><% } %>
+
+workflows:
+  version: 2
+
+  <%= workflowFileName %>:
+    jobs:
+      - main

@@ -118,12 +118,12 @@ describe('Remix E2E Tests', () => {
       it('should check for un-escaped dollar signs in routes', async () => {
         await expect(async () =>
           runCLI(
-            `generate @nx/remix:route --project ${plugin} --path my.route.$withParams.tsx`
+            `generate @nx/remix:route --project ${plugin} --path="my.route.$withParams.tsx"`
           )
         ).rejects.toThrow();
 
         runCLI(
-          `generate @nx/remix:route --project ${plugin} --path my.route.\\$withParams.tsx`
+          `generate @nx/remix:route --project ${plugin} --path="my.route.\\$withParams.tsx"`
         );
 
         expect(() =>
@@ -133,7 +133,7 @@ describe('Remix E2E Tests', () => {
 
       it('should pass un-escaped dollar signs in routes with skipChecks flag', async () => {
         await runCommandAsync(
-          `someWeirdUseCase=route-segment && yarn nx generate @nx/remix:route --project ${plugin} --path my.route.$someWeirdUseCase.tsx --force`
+          `someWeirdUseCase=route-segment && yarn nx generate @nx/remix:route --project ${plugin} --path="my.route.$someWeirdUseCase.tsx" --force`
         );
 
         expect(() =>
@@ -146,12 +146,12 @@ describe('Remix E2E Tests', () => {
       it('should check for un-escaped dollar signs in resource routes', async () => {
         await expect(async () =>
           runCLI(
-            `generate @nx/remix:resource-route --project ${plugin} --path my.route.$withParams.ts`
+            `generate @nx/remix:resource-route --project ${plugin} --path="my.route.$withParams.ts"`
           )
         ).rejects.toThrow();
 
         runCLI(
-          `generate @nx/remix:resource-route --project ${plugin} --path my.route.\\$withParams.ts`
+          `generate @nx/remix:resource-route --project ${plugin} --path="my.route.\\$withParams.ts"`
         );
 
         expect(() =>
@@ -161,7 +161,7 @@ describe('Remix E2E Tests', () => {
 
       xit('should pass un-escaped dollar signs in resource routes with skipChecks flag', async () => {
         await runCommandAsync(
-          `someWeirdUseCase=route-segment && yarn nx generate @nx/remix:resource-route --project ${plugin} --path my.route.$someWeirdUseCase.ts --force`
+          `someWeirdUseCase=route-segment && yarn nx generate @nx/remix:resource-route --project ${plugin} --path="my.route.$someWeirdUseCase.ts" --force`
         );
 
         expect(() =>

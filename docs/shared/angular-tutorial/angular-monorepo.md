@@ -26,11 +26,11 @@ Advantages of Nx over the Angular CLI:
 
 - [Cache any target](/features/cache-task-results)
 - [Run only tasks affected by a code change](/ci/features/affected)
-- [Split a large angular.json into multiple project.json files](/concepts/more-concepts/nx-and-angular#projectjson-vs-angularjson)
-- [Integrate with modern tools](/concepts/more-concepts/nx-and-angular#integrating-with-modern-tools)
-- [Controllable update process](/concepts/more-concepts/nx-and-angular#ng-update-vs-nx-migrate)
+- [Split a large angular.json into multiple project.json files](/nx-api/angular/documents/nx-and-angular#projectjson-vs-angularjson)
+- [Integrate with modern tools](/nx-api/angular/documents/nx-and-angular#integrating-with-modern-tools)
+- [Controllable update process](/nx-api/angular/documents/nx-and-angular#ng-update-vs-nx-migrate)
 
-Visit our ["Nx and the Angular CLI" page](/concepts/more-concepts/nx-and-angular) for more details.
+Visit our ["Nx and the Angular CLI" page](/nx-api/angular/documents/nx-and-angular) for more details.
 
 ## Final Code
 
@@ -106,7 +106,7 @@ The setup includes:
 - ESLint preconfigured
 - Jest preconfigured
 
-Typically, an integrated Nx workspace places application projects in the `apps` folder and library projects in the `libs` folder. [Applications are encouraged to be as light-weight as possible](/concepts/more-concepts/applications-and-libraries) so that more code is pushed into libraries and can be reused in other projects. This [folder structure](/concepts/more-concepts/folder-structure) is just a suggestion and can be modified to suit your organization's needs.
+Typically, an integrated Nx workspace places application projects in the `apps` folder and library projects in the `libs` folder. [Applications are encouraged to be as light-weight as possible](/concepts/more-concepts/applications-and-libraries) so that more code is pushed into libraries and can be reused in other projects. This folder structure is just a suggestion and can be modified to suit your organization's needs.
 
 The [`nx.json` file](/reference/nx-json) contains configuration settings for Nx itself and global default settings that individual projects inherit. The `apps/angular-store/project.json` file contains [settings that are specific to the `angular-store` project](/reference/project-configuration). We'll examine that file more in the next section.
 
@@ -1261,7 +1261,7 @@ Check out one of these detailed tutorials on setting up CI with Nx:
 
 Here's some things you can dive into next:
 
-- Read more about [how Nx compares to the Angular CLI](/concepts/more-concepts/nx-and-angular)
+- Read more about [how Nx compares to the Angular CLI](/nx-api/angular/documents/nx-and-angular)
 - Learn more about the [underlying mental model of Nx](/concepts/mental-model)
 - Learn about popular generators such as [how to setup Tailwind](/recipes/angular/using-tailwind-css-with-angular-projects)
 - Learn how to [migrate your existing Angular CLI repo to Nx](/recipes/angular/migration/angular)

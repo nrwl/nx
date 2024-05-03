@@ -112,10 +112,11 @@ async function handleMessage(socket, data: string) {
   }
 
   if (daemonIsOutdated()) {
-    await respondWithErrorAndExit(socket, `Lock files changed`, {
-      name: '',
-      message: 'LOCK-FILES-CHANGED',
-    });
+    await respondWithErrorAndExit(
+      socket,
+      `Lock files changed`,
+      new Error('LOCK-FILES-CHANGED')
+    );
   }
 
   resetInactivityTimeout(handleInactivityTimeout);

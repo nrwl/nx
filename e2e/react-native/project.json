@@ -3,8 +3,13 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "e2e/react-native",
   "projectType": "application",
+  "implicitDependencies": ["react-native"],
   "targets": {
-    "e2e-macos": {}
-  },
-  "implicitDependencies": ["react-native"]
+    "e2e-macos-ci--src/react-native-legacy.test.ts": {
+      "inputs": ["e2eInputs", "^production"]
+    },
+    "e2e-macos-ci--src/react-native.test.ts": {
+      "inputs": ["e2eInputs", "^production"]
+    }
+  }
 }

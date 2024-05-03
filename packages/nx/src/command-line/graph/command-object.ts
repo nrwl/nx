@@ -3,6 +3,7 @@ import { linkToNxDevAndExamples } from '../yargs-utils/documentation';
 import {
   withAffectedOptions,
   withDepGraphOptions,
+  withVerbose,
 } from '../yargs-utils/shared-options';
 
 export const yargsDepGraphCommand: CommandModule = {
@@ -11,7 +12,7 @@ export const yargsDepGraphCommand: CommandModule = {
   aliases: ['dep-graph'],
   builder: (yargs) =>
     linkToNxDevAndExamples(
-      withAffectedOptions(withDepGraphOptions(yargs)),
+      withVerbose(withAffectedOptions(withDepGraphOptions(yargs))),
       'dep-graph'
     )
       .option('affected', {

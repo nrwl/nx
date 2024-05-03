@@ -18,24 +18,16 @@ import { mergePlugins } from './merge-plugins';
 import { withReact } from '../with-react';
 import { existsSync } from 'fs';
 
-// Prevent sensitive keys from being bundled when source code uses entire `process.env` object rather than individual keys (e.g. `process.env.NX_FOO`).
-// TODO(v19): BREAKING: Only env vars prefixed with NX_PUBLIC should be bundled. This is a breaking change so we won't do it in v18.
-const excludedKeys = ['NX_CLOUD_ACCESS_TOKEN', 'NX_CLOUD_ENCRYPTION_KEY'];
-
 // This is shamelessly taken from CRA and modified for NX use
 // https://github.com/facebook/create-react-app/blob/4784997f0682e75eb32a897b4ffe34d735912e6c/packages/react-scripts/config/env.js#L71
 function getClientEnvironment(mode) {
   // Grab NODE_ENV and NX_* and STORYBOOK_* environment variables and prepare them to be
   // injected into the application via DefinePlugin in webpack configuration.
-  const NX_PREFIX = /^NX_/i;
+  const NX_PREFIX = /^NX_PUBLIC_/i;
   const STORYBOOK_PREFIX = /^STORYBOOK_/i;
 
   const raw = Object.keys(process.env)
-    .filter(
-      (key) =>
-        !excludedKeys.includes(key) &&
-        (NX_PREFIX.test(key) || STORYBOOK_PREFIX.test(key))
-    )
+    .filter((key) => NX_PREFIX.test(key) || STORYBOOK_PREFIX.test(key))
     .reduce(
       (env, key) => {
         env[key] = process.env[key];

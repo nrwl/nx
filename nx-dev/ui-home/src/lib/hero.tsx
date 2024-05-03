@@ -23,9 +23,9 @@ export function Hero(): JSX.Element {
 
   return (
     <header className="bg-contain bg-fixed bg-clip-border bg-center bg-no-repeat bg-origin-border lg:bg-local">
-      <div className="mx-auto max-w-3xl pt-20 px-4">
+      <div className="mx-auto max-w-3xl px-4 pt-20">
         <div className="hidden sm:mb-8 sm:flex sm:justify-center">
-          <div className="relative rounded-full px-3 py-1 text-sm leading-6 ring-1 ring-slate-900/10 dark:ring-slate-100/10 hover:ring-slate-900/20 dark:hover:ring-slate-100/20 transition-all">
+          <div className="relative rounded-full px-3 py-1 text-sm leading-6 ring-1 ring-slate-900/10 transition-all hover:ring-slate-900/20 dark:ring-slate-100/10 dark:hover:ring-slate-100/20">
             Introducing{' '}
             <span className="text-blue-500 dark:text-sky-500">Nx Agents</span>,
             the next leap in CI.{' '}
@@ -60,12 +60,12 @@ export function Hero(): JSX.Element {
             </span>{' '}
             CI
           </h1>
-          <h2 className="mt-6 text-lg leading-8 font-medium dark:text-slate-100">
+          <h2 className="mt-6 text-lg font-medium leading-8 dark:text-slate-100">
             Nx is a{' '}
             <span
               onClick={() => setDisplayBuildSystem(!displayBuildSystem)}
               className={cx(
-                'cursor-pointer  hover:underline inline-flex items-center rounded-md hover:bg-slate-50 my-0.5 px-1.5 py-0.5 transition text-md font-medium ring-1 ring-inset ring-slate-500/10 hover:dark:bg-slate-400/10 dark:ring-slate-400/20',
+                'text-md  my-0.5 inline-flex cursor-pointer items-center rounded-md px-1.5 py-0.5 font-medium ring-1 ring-inset ring-slate-500/10 transition hover:bg-slate-50 hover:underline dark:ring-slate-400/20 hover:dark:bg-slate-400/10',
                 displayBuildSystem && 'bg-yellow-500/10 dark:bg-yellow-500/20'
               )}
             >
@@ -89,7 +89,7 @@ export function Hero(): JSX.Element {
             <span
               onClick={() => setDisplayTools(!displayTools)}
               className={cx(
-                'cursor-pointer hover:underline inline-flex items-center rounded-md hover:bg-slate-50 my-0.5 px-1.5 py-0.5 transition text-md font-medium ring-1 ring-inset ring-slate-500/10 hover:dark:bg-slate-400/10 dark:ring-slate-400/20',
+                'text-md my-0.5 inline-flex cursor-pointer items-center rounded-md px-1.5 py-0.5 font-medium ring-1 ring-inset ring-slate-500/10 transition hover:bg-slate-50 hover:underline dark:ring-slate-400/20 hover:dark:bg-slate-400/10',
                 displayTools && 'bg-cyan-500/10 dark:bg-cyan-500/20'
               )}
             >
@@ -114,7 +114,7 @@ export function Hero(): JSX.Element {
             <span
               onClick={() => setDisplayCi(!displayCi)}
               className={cx(
-                'cursor-pointer hover:underline inline-flex items-center rounded-md hover:bg-slate-50 my-0.5 px-1.5 py-0.5 transition text-md font-medium ring-1 ring-inset ring-slate-500/10 hover:dark:bg-slate-400/10 dark:ring-slate-400/20',
+                'text-md my-0.5 inline-flex cursor-pointer items-center rounded-md px-1.5 py-0.5 font-medium ring-1 ring-inset ring-slate-500/10 transition hover:bg-slate-50 hover:underline dark:ring-slate-400/20 hover:dark:bg-slate-400/10',
                 displayCi && 'bg-fuchsia-500/10 dark:bg-fuchsia-500/20'
               )}
             >
@@ -147,7 +147,7 @@ export function Hero(): JSX.Element {
             </ButtonLink>
 
             <ButtonLink
-              href="https://nx.app/enterprise?utm_source=nx.dev&utm_medium=hero"
+              href="/contact"
               variant="secondary"
               size="large"
               title="Contact us"
@@ -155,7 +155,7 @@ export function Hero(): JSX.Element {
               Contact us
             </ButtonLink>
           </div>
-          <div className="mt-4 flex gap-2 text-md items-center justify-center italic">
+          <div className="text-md mt-4 flex items-center justify-center gap-2 italic">
             Built with
             <svg
               role="img"
@@ -190,16 +190,16 @@ export function Hero(): JSX.Element {
             src="/images/illustrations/nxdev-light.webp"
             alt="light"
             aria-hidden="true"
-            className="dark:hidden block"
+            className="block dark:hidden"
           />
           <img
             src="/images/illustrations/nxdev-dark.webp"
             alt="dark"
             aria-hidden="true"
-            className="dark:block hidden"
+            className="hidden dark:block"
           />
           <div className="relative" aria-hidden="true">
-            <div className="absolute -inset-x-20 bottom-0 bg-gradient-to-t from-white dark:from-slate-900 pt-[7%]"></div>
+            <div className="absolute -inset-x-20 bottom-0 bg-gradient-to-t from-white pt-[7%] dark:from-slate-900"></div>
           </div>
         </div>
       </div>

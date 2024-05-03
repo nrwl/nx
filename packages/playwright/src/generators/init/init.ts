@@ -1,13 +1,13 @@
 import {
   addDependenciesToPackageJson,
+  createProjectGraphAsync,
   formatFiles,
   GeneratorCallback,
   readNxJson,
   runTasksInSerial,
   Tree,
-  updateNxJson,
 } from '@nx/devkit';
-import { updatePackageScripts } from '@nx/devkit/src/utils/update-package-scripts';
+import { addPlugin } from '@nx/devkit/src/utils/add-plugin';
 import { createNodes } from '../../plugins/plugin';
 import { nxVersion, playwrightVersion } from '../../utils/versions';
 import { InitGeneratorSchema } from './schema';
@@ -45,11 +45,14 @@ export async function initGeneratorInternal(
   }
 
   if (options.addPlugin) {
-    addPlugin(tree);
-  }
-
-  if (options.updatePackageScripts) {
-    await updatePackageScripts(tree, createNodes);
+    await addPlugin(
+      tree,
+      await createProjectGraphAsync(),
+      '@nx/playwright/plugin',
+      createNodes,
+      { targetName: ['e2e', 'playwright:e2e', 'playwright-e2e'] },
+      options.updatePackageScripts
+    );
   }
 
   if (!options.skipFormat) {
@@ -57,27 +60,6 @@ export async function initGeneratorInternal(
   }
 
   return runTasksInSerial(...tasks);
-}
-
-function addPlugin(tree: Tree) {
-  const nxJson = readNxJson(tree);
-  nxJson.plugins ??= [];
-
-  if (
-    !nxJson.plugins.some((p) =>
-      typeof p === 'string'
-        ? p === '@nx/playwright/plugin'
-        : p.plugin === '@nx/playwright/plugin'
-    )
-  ) {
-    nxJson.plugins.push({
-      plugin: '@nx/playwright/plugin',
-      options: {
-        targetName: 'e2e',
-      },
-    });
-    updateNxJson(tree, nxJson);
-  }
 }
 
 export default initGenerator;

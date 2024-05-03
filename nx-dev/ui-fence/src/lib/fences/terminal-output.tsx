@@ -13,11 +13,11 @@ export function TerminalOutput({
   const commandLines = command.split('\n').filter(Boolean);
   return (
     <TerminalShellWrapper>
-      <div className="p-4 pt-2 overflow-x-auto">
-        <div className="flex flex-col items-left">
+      <div className="overflow-x-auto p-4 pt-2">
+        <div className="items-left flex flex-col">
           {commandLines.map((line, index) => {
             return (
-              <div key={index} className="flex items-center">
+              <div key={index} className="flex">
                 <p className="mt-0.5">
                   {path && (
                     <span className="text-purple-600 dark:text-fuchsia-500">
@@ -33,7 +33,7 @@ export function TerminalOutput({
             );
           })}
         </div>
-        <div className="flex not-prose">{content}</div>
+        <div className="not-prose flex">{content}</div>
       </div>
     </TerminalShellWrapper>
   );

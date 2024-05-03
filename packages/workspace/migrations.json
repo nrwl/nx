@@ -1,11 +1,5 @@
 {
   "generators": {
-    "15-7-0-split-configuration-into-project-json-files": {
-      "version": "15.7.0-beta.0",
-      "description": "Split global configuration files (e.g., workspace.json) into individual project.json files.",
-      "cli": "nx",
-      "implementation": "./src/migrations/update-15-7-0/split-configuration-into-project-json-files"
-    },
     "update-16-0-0-add-nx-packages": {
       "cli": "nx",
       "version": "16.0.0-beta.1",
@@ -26,18 +20,6 @@
     }
   },
   "packageJsonUpdates": {
-    "15.8.0": {
-      "version": "15.8.0-beta.2",
-      "x-prompt": "Do you want to update to TypeScript v4.9?",
-      "requires": {
-        "typescript": ">=4.8.2 <4.9.0"
-      },
-      "packages": {
-        "typescript": {
-          "version": "~4.9.5"
-        }
-      }
-    },
     "16.1.0": {
       "version": "16.1.0-beta.0",
       "x-prompt": "Do you want to update to TypeScript v5.0?",

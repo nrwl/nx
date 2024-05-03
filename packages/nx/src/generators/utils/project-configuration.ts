@@ -200,18 +200,14 @@ function readAndCombineAllProjectConfigurations(tree: Tree): {
       readJson(tree, p, { expectComments: true })
     ),
   ];
-  const projectGlobPatterns = configurationGlobs([
-    ProjectJsonProjectsPlugin,
-    { createNodes: packageJsonWorkspacesCreateNodes },
-  ]);
-  const globbedFiles = globWithWorkspaceContext(tree.root, projectGlobPatterns);
+  const globbedFiles = globWithWorkspaceContext(tree.root, patterns);
   const createdFiles = findCreatedProjectFiles(tree, patterns);
   const deletedFiles = findDeletedProjectFiles(tree, patterns);
   const projectFiles = [...globbedFiles, ...createdFiles].filter(
     (r) => deletedFiles.indexOf(r) === -1
   );
 
-  const rootMap: Map<string, ProjectConfiguration> = new Map();
+  const rootMap: Record<string, ProjectConfiguration> = {};
   for (const projectFile of projectFiles) {
     if (basename(projectFile) === 'project.json') {
       const json = readJson(tree, projectFile);
@@ -230,7 +226,7 @@ function readAndCombineAllProjectConfigurations(tree: Tree): {
         projectFile,
         readNxJson(tree)
       );
-      if (!rootMap.has(config.root)) {
+      if (!rootMap[config.root]) {
         mergeProjectConfigurationIntoRootMap(
           rootMap,
           // Inferred targets, tags, etc don't show up when running generators

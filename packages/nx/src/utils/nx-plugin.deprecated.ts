@@ -5,7 +5,6 @@ import ProjectJsonProjectsPlugin from '../plugins/project-json/build-nodes/proje
 import TargetDefaultsPlugin from '../plugins/target-defaults/target-defaults-plugin';
 import * as PackageJsonWorkspacesPlugin from '../plugins/package-json-workspaces';
 import { NxPluginV2 } from '../project-graph/plugins';
-import { LoadedNxPlugin } from '../project-graph/plugins/internal-api';
 
 /**
  * @deprecated Add targets to the projects in a {@link CreateNodes} function instead. This will be removed in Nx 19
@@ -38,7 +37,7 @@ export type NxPluginV1 = {
 };
 
 /**
- * @todo(@agentender) v19: Remove this fn when we remove readWorkspaceConfig
+ * @todo(@agentender) v20: Remove this fn when we remove readWorkspaceConfig
  */
 export function getDefaultPluginsSync(root: string): NxPluginV2[] {
   const plugins: NxPluginV2[] = [

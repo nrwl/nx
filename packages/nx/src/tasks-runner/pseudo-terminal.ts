@@ -43,14 +43,16 @@ export class PseudoTerminal {
       cwd,
       jsEnv,
       quiet,
+      tty,
     }: {
       cwd?: string;
       jsEnv?: Record<string, string>;
       quiet?: boolean;
+      tty?: boolean;
     } = {}
   ) {
     return new PseudoTtyProcess(
-      this.rustPseudoTerminal.runCommand(command, cwd, jsEnv, quiet)
+      this.rustPseudoTerminal.runCommand(command, cwd, jsEnv, quiet, tty)
     );
   }
 
@@ -194,6 +196,13 @@ function messageToCode(message: string): number {
 function supportedPtyPlatform() {
   if (process.platform !== 'win32') {
     return true;
+  }
+
+  // TODO: Re-enable Windows support when it's stable
+  // Currently, there's an issue with control chars.
+  // See: https://github.com/nrwl/nx/issues/22358
+  if (process.env.NX_WINDOWS_PTY_SUPPORT !== 'true') {
+    return false;
   }
 
   let windowsVersion = os.release().split('.');

@@ -1,4 +1,6 @@
-import type { Tree } from '@nx/devkit';
+import 'nx/src/internal-testing-utils/mock-project-graph';
+
+import { Tree } from '@nx/devkit';
 import {
   readJson,
   readProjectConfiguration,

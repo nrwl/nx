@@ -1,6 +1,10 @@
 import type { ProjectGraphProjectNode } from '../../config/project-graph';
 import { CommandModule, showHelp } from 'yargs';
-import { parseCSV, withAffectedOptions } from '../yargs-utils/shared-options';
+import {
+  parseCSV,
+  withAffectedOptions,
+  withVerbose,
+} from '../yargs-utils/shared-options';
 import { handleErrors } from '../../utils/params';
 
 export interface NxShowArgs {
@@ -64,7 +68,7 @@ const showProjectsCommand: CommandModule<NxShowArgs, ShowProjectsOptions> = {
   command: 'projects',
   describe: 'Show a list of projects in the workspace',
   builder: (yargs) =>
-    withAffectedOptions(yargs)
+    withVerbose(withAffectedOptions(yargs))
       .option('affected', {
         type: 'boolean',
         description: 'Show only affected projects',
@@ -85,11 +89,6 @@ const showProjectsCommand: CommandModule<NxShowArgs, ShowProjectsOptions> = {
         type: 'string',
         description: 'Select only projects of the given type',
         choices: ['app', 'lib', 'e2e'],
-      })
-      .option('verbose', {
-        type: 'boolean',
-        description:
-          'Prints additional information about the commands (e.g., stack traces)',
       })
       .implies('untracked', 'affected')
       .implies('uncommitted', 'affected')

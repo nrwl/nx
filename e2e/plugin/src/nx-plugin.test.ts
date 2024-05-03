@@ -335,6 +335,7 @@ describe('Nx Plugin', () => {
         runCLI(`show project ${inferredProject} --json`)
       );
       expect(configuration.tags).toEqual(['my-tag']);
+      expect(configuration.metadata.technologies).toEqual(['my-plugin']);
     });
 
     it('should be able to use local generators and executors', async () => {

@@ -118,10 +118,6 @@ jobs:
       - nx/set-shas:
           main-branch-name: 'main'
 
-      # Required for nx affected if we're on a branch
-      - run: git branch --track main origin/main
-        condition: eq(variables['Build.Reason'], 'PullRequest')
-
       - run: npx nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD
       - run: npx nx affected --base=$NX_BASE --head=$NX_HEAD -t lint test build e2e-ci
 
@@ -167,9 +163,6 @@ jobs:
       - run: npm ci
       - uses: nrwl/nx-set-shas@v4
 
-      - run: git branch --track main origin/main
-        if: \${{ github.event_name == 'pull_request' }}
-
       - run: npx nx-cloud record -- nx format:check
       - run: npx nx affected -t lint test build e2e-ci
 "
@@ -207,9 +200,6 @@ jobs:
           cache: 'npm'
       - run: npm ci
       - uses: nrwl/nx-set-shas@v4
-
-      - run: git branch --track main origin/main
-        if: \${{ github.event_name == 'pull_request' }}
 
       - run: npx nx-cloud record -- nx format:check
       - run: npx nx affected -t lint test build e2e-ci
@@ -334,10 +324,6 @@ jobs:
       - nx/set-shas:
           main-branch-name: 'main'
 
-      # Required for nx affected if we're on a branch
-      - run: git branch --track main origin/main
-        condition: eq(variables['Build.Reason'], 'PullRequest')
-
       - run: npx nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD
       - run: npx nx affected --base=$NX_BASE --head=$NX_HEAD -t lint test build
 
@@ -383,9 +369,6 @@ jobs:
       - run: npm ci
       - uses: nrwl/nx-set-shas@v4
 
-      - run: git branch --track main origin/main
-        if: \${{ github.event_name == 'pull_request' }}
-
       - run: npx nx-cloud record -- nx format:check
       - run: npx nx affected -t lint test build
 "
@@ -423,9 +406,6 @@ jobs:
           cache: 'npm'
       - run: npm ci
       - uses: nrwl/nx-set-shas@v4
-
-      - run: git branch --track main origin/main
-        if: \${{ github.event_name == 'pull_request' }}
 
       - run: npx nx-cloud record -- nx format:check
       - run: npx nx affected -t lint test build
@@ -503,12 +483,13 @@ jobs:
             echo "##vso[task.setvariable variable=BASE_SHA]$LAST_SHA"
           fi
 
+      - script: npm install --prefix=$HOME/.local -g pnpm@8
+        displayName: Install PNPM
+
       # Connect your workspace on my.nx.app and uncomment this to enable task distribution.
       # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
       # - script: pnpm exec nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
 
-      - script: npm install --prefix=$HOME/.local -g pnpm@8
-        displayName: Install PNPM
       - script: pnpm install --frozen-lockfile
       - script: git branch --track main origin/main
         condition: eq(variables['Build.Reason'], 'PullRequest')
@@ -532,11 +513,11 @@ pipelines:
           script:
             - export NX_BRANCH=$BITBUCKET_PR_ID
 
+            - npm install --prefix=$HOME/.local -g pnpm@8
+
             # Connect your workspace on my.nx.app and uncomment this to enable task distribution.
             # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
             # - pnpm exec nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
-
-            - npm install --prefix=$HOME/.local -g pnpm@8
 
             - pnpm install --frozen-lockfile
 
@@ -575,20 +556,17 @@ jobs:
     steps:
       - checkout
 
+      - run:
+          name: Install PNPM
+          command: npm install --prefix=$HOME/.local -g pnpm@8
+
       # Connect your workspace on my.nx.app and uncomment this to enable task distribution.
       # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
       # - run: pnpm exec nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
 
-      - run:
-          name: Install PNPM
-          command: npm install --prefix=$HOME/.local -g pnpm@8
       - run: pnpm install --frozen-lockfile
       - nx/set-shas:
           main-branch-name: 'main'
-
-      # Required for nx affected if we're on a branch
-      - run: git branch --track main origin/main
-        condition: eq(variables['Build.Reason'], 'PullRequest')
 
       - run: pnpm exec nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD
       - run: pnpm exec nx affected --base=$NX_BASE --head=$NX_HEAD -t lint test build
@@ -623,13 +601,14 @@ jobs:
         with:
           fetch-depth: 0
 
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
       # Connect your workspace on my.nx.app and uncomment this to enable task distribution.
       # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
       # - run: pnpm exec nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
 
-      - uses: pnpm/action-setup@v2
-        with:
-          version: 8
       # Cache node_modules
       - uses: actions/setup-node@v3
         with:
@@ -637,9 +616,6 @@ jobs:
           cache: 'pnpm'
       - run: pnpm install --frozen-lockfile
       - uses: nrwl/nx-set-shas@v4
-
-      - run: git branch --track main origin/main
-        if: \${{ github.event_name == 'pull_request' }}
 
       - run: pnpm exec nx-cloud record -- nx format:check
       - run: pnpm exec nx affected -t lint test build
@@ -667,13 +643,14 @@ jobs:
         with:
           fetch-depth: 0
 
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
       # Connect your workspace on my.nx.app and uncomment this to enable task distribution.
       # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
       # - run: pnpm exec nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
 
-      - uses: pnpm/action-setup@v2
-        with:
-          version: 8
       # Cache node_modules
       - uses: actions/setup-node@v3
         with:
@@ -681,9 +658,6 @@ jobs:
           cache: 'pnpm'
       - run: pnpm install --frozen-lockfile
       - uses: nrwl/nx-set-shas@v4
-
-      - run: git branch --track main origin/main
-        if: \${{ github.event_name == 'pull_request' }}
 
       - run: pnpm exec nx-cloud record -- nx format:check
       - run: pnpm exec nx affected -t lint test build
@@ -702,11 +676,11 @@ CI:
     - main
     - merge_requests
   script:
+    - npm install --prefix=$HOME/.local -g pnpm@8
+
     # Connect your workspace on my.nx.app and uncomment this to enable task distribution.
     # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
     # - pnpm exec nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
-
-    - npm install --prefix=$HOME/.local -g pnpm@8
 
     - pnpm install --frozen-lockfile
     - NX_HEAD=$CI_COMMIT_SHA
@@ -837,10 +811,6 @@ jobs:
       - nx/set-shas:
           main-branch-name: 'main'
 
-      # Required for nx affected if we're on a branch
-      - run: git branch --track main origin/main
-        condition: eq(variables['Build.Reason'], 'PullRequest')
-
       - run: yarn nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD
       - run: yarn nx affected --base=$NX_BASE --head=$NX_HEAD -t lint test build
 
@@ -886,9 +856,6 @@ jobs:
       - run: yarn install --frozen-lockfile
       - uses: nrwl/nx-set-shas@v4
 
-      - run: git branch --track main origin/main
-        if: \${{ github.event_name == 'pull_request' }}
-
       - run: yarn nx-cloud record -- nx format:check
       - run: yarn nx affected -t lint test build
 "
@@ -926,9 +893,6 @@ jobs:
           cache: 'yarn'
       - run: yarn install --frozen-lockfile
       - uses: nrwl/nx-set-shas@v4
-
-      - run: git branch --track main origin/main
-        if: \${{ github.event_name == 'pull_request' }}
 
       - run: yarn nx-cloud record -- nx format:check
       - run: yarn nx affected -t lint test build

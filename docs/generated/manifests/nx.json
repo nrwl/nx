@@ -1045,28 +1045,6 @@
         "file": "",
         "itemList": [
           {
-            "id": "incremental-builds",
-            "name": "Incremental Builds",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/incremental-builds",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/concepts/more-concepts/incremental-builds",
-            "tags": []
-          },
-          {
-            "id": "turbo-and-nx",
-            "name": "Nx and Turborepo",
-            "description": "",
-            "mediaImage": "./shared/guides/nx-media-monorepo.jpg",
-            "file": "shared/guides/turbo-and-nx",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/concepts/more-concepts/turbo-and-nx",
-            "tags": []
-          },
-          {
             "id": "why-monorepos",
             "name": "Monorepos",
             "description": "",
@@ -1100,17 +1078,6 @@
             "tags": []
           },
           {
-            "id": "monorepo-nx-enterprise",
-            "name": "Using Nx at Enterprises",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/monorepo-nx-enterprise",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/concepts/more-concepts/monorepo-nx-enterprise",
-            "tags": ["enforce-module-boundaries", "generate-code"]
-          },
-          {
             "id": "nx-daemon",
             "name": "Nx Daemon",
             "description": "",
@@ -1122,37 +1089,15 @@
             "tags": []
           },
           {
-            "id": "nx-and-angular",
-            "name": "Nx and the Angular CLI",
+            "id": "turbo-and-nx",
+            "name": "Nx and Turborepo",
             "description": "",
-            "mediaImage": "",
-            "file": "shared/guides/nx-and-angular-cli",
+            "mediaImage": "./shared/guides/nx-media-monorepo.jpg",
+            "file": "shared/guides/turbo-and-nx",
             "itemList": [],
             "isExternal": false,
-            "path": "/concepts/more-concepts/nx-and-angular",
+            "path": "/concepts/more-concepts/turbo-and-nx",
             "tags": []
-          },
-          {
-            "id": "folder-structure",
-            "name": "Folder Structure",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/guides/integrated-repo-folder-structure",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/concepts/more-concepts/folder-structure",
-            "tags": []
-          },
-          {
-            "id": "nx-devkit-angular-devkit",
-            "name": "Nx Devkit and Angular Devkit",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/guides/nx-devkit-angular-devkit",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/concepts/more-concepts/nx-devkit-angular-devkit",
-            "tags": ["create-your-own-plugin"]
           },
           {
             "id": "applications-and-libraries",
@@ -1167,7 +1112,7 @@
           },
           {
             "id": "creating-libraries",
-            "name": "Creating Libraries",
+            "name": "When to Create a New Library",
             "description": "",
             "mediaImage": "",
             "file": "shared/workspace/creating-libraries",
@@ -1208,17 +1153,6 @@
             "isExternal": false,
             "path": "/concepts/more-concepts/buildable-and-publishable-libraries",
             "tags": []
-          },
-          {
-            "id": "how-project-graph-is-built",
-            "name": "How the Project Graph is Built",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/concepts/how-project-graph-is-built",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/concepts/more-concepts/how-project-graph-is-built",
-            "tags": ["explore-graph", "inferred-tasks"]
           }
         ],
         "isExternal": false,
@@ -1426,28 +1360,6 @@
     "file": "",
     "itemList": [
       {
-        "id": "incremental-builds",
-        "name": "Incremental Builds",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/incremental-builds",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/concepts/more-concepts/incremental-builds",
-        "tags": []
-      },
-      {
-        "id": "turbo-and-nx",
-        "name": "Nx and Turborepo",
-        "description": "",
-        "mediaImage": "./shared/guides/nx-media-monorepo.jpg",
-        "file": "shared/guides/turbo-and-nx",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/concepts/more-concepts/turbo-and-nx",
-        "tags": []
-      },
-      {
         "id": "why-monorepos",
         "name": "Monorepos",
         "description": "",
@@ -1481,17 +1393,6 @@
         "tags": []
       },
       {
-        "id": "monorepo-nx-enterprise",
-        "name": "Using Nx at Enterprises",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/monorepo-nx-enterprise",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/concepts/more-concepts/monorepo-nx-enterprise",
-        "tags": ["enforce-module-boundaries", "generate-code"]
-      },
-      {
         "id": "nx-daemon",
         "name": "Nx Daemon",
         "description": "",
@@ -1503,37 +1404,15 @@
         "tags": []
       },
       {
-        "id": "nx-and-angular",
-        "name": "Nx and the Angular CLI",
+        "id": "turbo-and-nx",
+        "name": "Nx and Turborepo",
         "description": "",
-        "mediaImage": "",
-        "file": "shared/guides/nx-and-angular-cli",
+        "mediaImage": "./shared/guides/nx-media-monorepo.jpg",
+        "file": "shared/guides/turbo-and-nx",
         "itemList": [],
         "isExternal": false,
-        "path": "/concepts/more-concepts/nx-and-angular",
+        "path": "/concepts/more-concepts/turbo-and-nx",
         "tags": []
-      },
-      {
-        "id": "folder-structure",
-        "name": "Folder Structure",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/guides/integrated-repo-folder-structure",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/concepts/more-concepts/folder-structure",
-        "tags": []
-      },
-      {
-        "id": "nx-devkit-angular-devkit",
-        "name": "Nx Devkit and Angular Devkit",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/guides/nx-devkit-angular-devkit",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/concepts/more-concepts/nx-devkit-angular-devkit",
-        "tags": ["create-your-own-plugin"]
       },
       {
         "id": "applications-and-libraries",
@@ -1548,7 +1427,7 @@
       },
       {
         "id": "creating-libraries",
-        "name": "Creating Libraries",
+        "name": "When to Create a New Library",
         "description": "",
         "mediaImage": "",
         "file": "shared/workspace/creating-libraries",
@@ -1589,43 +1468,10 @@
         "isExternal": false,
         "path": "/concepts/more-concepts/buildable-and-publishable-libraries",
         "tags": []
-      },
-      {
-        "id": "how-project-graph-is-built",
-        "name": "How the Project Graph is Built",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/concepts/how-project-graph-is-built",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/concepts/more-concepts/how-project-graph-is-built",
-        "tags": ["explore-graph", "inferred-tasks"]
       }
     ],
     "isExternal": false,
     "path": "/concepts/more-concepts",
-    "tags": []
-  },
-  "/concepts/more-concepts/incremental-builds": {
-    "id": "incremental-builds",
-    "name": "Incremental Builds",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/incremental-builds",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/concepts/more-concepts/incremental-builds",
-    "tags": []
-  },
-  "/concepts/more-concepts/turbo-and-nx": {
-    "id": "turbo-and-nx",
-    "name": "Nx and Turborepo",
-    "description": "",
-    "mediaImage": "./shared/guides/nx-media-monorepo.jpg",
-    "file": "shared/guides/turbo-and-nx",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/concepts/more-concepts/turbo-and-nx",
     "tags": []
   },
   "/concepts/more-concepts/why-monorepos": {
@@ -1661,17 +1507,6 @@
     "path": "/concepts/more-concepts/code-sharing",
     "tags": []
   },
-  "/concepts/more-concepts/monorepo-nx-enterprise": {
-    "id": "monorepo-nx-enterprise",
-    "name": "Using Nx at Enterprises",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/monorepo-nx-enterprise",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/concepts/more-concepts/monorepo-nx-enterprise",
-    "tags": ["enforce-module-boundaries", "generate-code"]
-  },
   "/concepts/more-concepts/nx-daemon": {
     "id": "nx-daemon",
     "name": "Nx Daemon",
@@ -1683,38 +1518,16 @@
     "path": "/concepts/more-concepts/nx-daemon",
     "tags": []
   },
-  "/concepts/more-concepts/nx-and-angular": {
-    "id": "nx-and-angular",
-    "name": "Nx and the Angular CLI",
+  "/concepts/more-concepts/turbo-and-nx": {
+    "id": "turbo-and-nx",
+    "name": "Nx and Turborepo",
     "description": "",
-    "mediaImage": "",
-    "file": "shared/guides/nx-and-angular-cli",
+    "mediaImage": "./shared/guides/nx-media-monorepo.jpg",
+    "file": "shared/guides/turbo-and-nx",
     "itemList": [],
     "isExternal": false,
-    "path": "/concepts/more-concepts/nx-and-angular",
+    "path": "/concepts/more-concepts/turbo-and-nx",
     "tags": []
-  },
-  "/concepts/more-concepts/folder-structure": {
-    "id": "folder-structure",
-    "name": "Folder Structure",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/guides/integrated-repo-folder-structure",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/concepts/more-concepts/folder-structure",
-    "tags": []
-  },
-  "/concepts/more-concepts/nx-devkit-angular-devkit": {
-    "id": "nx-devkit-angular-devkit",
-    "name": "Nx Devkit and Angular Devkit",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/guides/nx-devkit-angular-devkit",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/concepts/more-concepts/nx-devkit-angular-devkit",
-    "tags": ["create-your-own-plugin"]
   },
   "/concepts/more-concepts/applications-and-libraries": {
     "id": "applications-and-libraries",
@@ -1729,7 +1542,7 @@
   },
   "/concepts/more-concepts/creating-libraries": {
     "id": "creating-libraries",
-    "name": "Creating Libraries",
+    "name": "When to Create a New Library",
     "description": "",
     "mediaImage": "",
     "file": "shared/workspace/creating-libraries",
@@ -1770,17 +1583,6 @@
     "isExternal": false,
     "path": "/concepts/more-concepts/buildable-and-publishable-libraries",
     "tags": []
-  },
-  "/concepts/more-concepts/how-project-graph-is-built": {
-    "id": "how-project-graph-is-built",
-    "name": "How the Project Graph is Built",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/concepts/how-project-graph-is-built",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/concepts/more-concepts/how-project-graph-is-built",
-    "tags": ["explore-graph", "inferred-tasks"]
   },
   "/recipes": {
     "id": "recipes",
@@ -6479,17 +6281,6 @@
         "tags": []
       },
       {
-        "id": "workspace-lint",
-        "name": "workspace-lint",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/deprecated/workspace-lint",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/deprecated/workspace-lint",
-        "tags": []
-      },
-      {
         "id": "as-provided-vs-derived",
         "name": "As Provided vs. Derived",
         "description": "",
@@ -6520,17 +6311,6 @@
         "itemList": [],
         "isExternal": false,
         "path": "/deprecated/workspace-executors",
-        "tags": []
-      },
-      {
-        "id": "default-collection",
-        "name": "defaultCollection",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/deprecated/default-collection",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/deprecated/default-collection",
         "tags": []
       },
       {
@@ -6589,84 +6369,6 @@
         "tags": []
       },
       {
-        "id": "storybook",
-        "name": "Storybook deprecated docs",
-        "description": "Deprecated @nx/storybook package documentation and guides.",
-        "mediaImage": "",
-        "file": "",
-        "itemList": [
-          {
-            "id": "angular-storybook-targets",
-            "name": "Angular: Information about the Storybook targets",
-            "description": "This document explains the role of the storybook and build-storybook targets in Angular projects with a Storybook configuration, and specifically which executors are used for them.",
-            "mediaImage": "",
-            "file": "shared/deprecated/storybook/angular-storybook-targets",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/deprecated/storybook/angular-storybook-targets",
-            "tags": []
-          },
-          {
-            "id": "angular-project-build-config",
-            "name": "Angular - The projectBuildConfig",
-            "description": "This document explains the role of the projectBuildConfig in Angular projects with a Storybook configuration, and how the Storybook executors use it.",
-            "mediaImage": "",
-            "file": "shared/deprecated/storybook/angular-project-build-config",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/deprecated/storybook/angular-project-build-config",
-            "tags": []
-          },
-          {
-            "id": "migrate-webpack-final-angular",
-            "name": "Angular: Storybook Migration to webpackFinal",
-            "description": "This guide explains how migrate from older versions of Storybook which used a custom webpack.config.js to the new Storybook 6.3+ which uses the webpackFinal property in the main configuration.",
-            "mediaImage": "",
-            "file": "shared/deprecated/storybook/migrate-webpack-final-angular",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/deprecated/storybook/migrate-webpack-final-angular",
-            "tags": []
-          },
-          {
-            "id": "upgrade-storybook-v6-angular",
-            "name": "Angular: Upgrading to Storybook 6",
-            "description": "This guide explains how you can upgrade your Storybook from versions 5.3 and below to Storybook 6, for Angular projects.",
-            "mediaImage": "",
-            "file": "shared/deprecated/storybook/storybook-v6-angular",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/deprecated/storybook/upgrade-storybook-v6-angular",
-            "tags": []
-          },
-          {
-            "id": "migrate-webpack-final-react",
-            "name": "React: Storybook Migration to webpackFinal and the Nx Addon",
-            "description": "This guide explains how migrate from older versions of Storybook which used a custom webpack.config.js to the new Storybook 6.3+ which uses the webpackFinal property in the main configuration and the Nx React Addon.",
-            "mediaImage": "",
-            "file": "shared/deprecated/storybook/migrate-webpack-final-react",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/deprecated/storybook/migrate-webpack-final-react",
-            "tags": []
-          },
-          {
-            "id": "upgrade-storybook-v6-react",
-            "name": "React: Upgrading to Storybook 6",
-            "description": "This guide explains how you can upgrade your Storybook from versions 5.3 and below to Storybook 6, for React projects.",
-            "mediaImage": "",
-            "file": "shared/deprecated/storybook/storybook-v6-react",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/deprecated/storybook/upgrade-storybook-v6-react",
-            "tags": []
-          }
-        ],
-        "isExternal": false,
-        "path": "/deprecated/storybook",
-        "tags": []
-      },
-      {
         "id": "v1-nx-plugin-api",
         "name": "v1 Nx Plugin API",
         "description": "",
@@ -6691,17 +6393,6 @@
     "itemList": [],
     "isExternal": false,
     "path": "/deprecated/workspace-json",
-    "tags": []
-  },
-  "/deprecated/workspace-lint": {
-    "id": "workspace-lint",
-    "name": "workspace-lint",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/deprecated/workspace-lint",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/deprecated/workspace-lint",
     "tags": []
   },
   "/deprecated/as-provided-vs-derived": {
@@ -6735,17 +6426,6 @@
     "itemList": [],
     "isExternal": false,
     "path": "/deprecated/workspace-executors",
-    "tags": []
-  },
-  "/deprecated/default-collection": {
-    "id": "default-collection",
-    "name": "defaultCollection",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/deprecated/default-collection",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/deprecated/default-collection",
     "tags": []
   },
   "/deprecated/runtime-cache-inputs": {
@@ -6801,150 +6481,6 @@
     "itemList": [],
     "isExternal": false,
     "path": "/deprecated/angular-schematics-builders",
-    "tags": []
-  },
-  "/deprecated/storybook": {
-    "id": "storybook",
-    "name": "Storybook deprecated docs",
-    "description": "Deprecated @nx/storybook package documentation and guides.",
-    "mediaImage": "",
-    "file": "",
-    "itemList": [
-      {
-        "id": "angular-storybook-targets",
-        "name": "Angular: Information about the Storybook targets",
-        "description": "This document explains the role of the storybook and build-storybook targets in Angular projects with a Storybook configuration, and specifically which executors are used for them.",
-        "mediaImage": "",
-        "file": "shared/deprecated/storybook/angular-storybook-targets",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/deprecated/storybook/angular-storybook-targets",
-        "tags": []
-      },
-      {
-        "id": "angular-project-build-config",
-        "name": "Angular - The projectBuildConfig",
-        "description": "This document explains the role of the projectBuildConfig in Angular projects with a Storybook configuration, and how the Storybook executors use it.",
-        "mediaImage": "",
-        "file": "shared/deprecated/storybook/angular-project-build-config",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/deprecated/storybook/angular-project-build-config",
-        "tags": []
-      },
-      {
-        "id": "migrate-webpack-final-angular",
-        "name": "Angular: Storybook Migration to webpackFinal",
-        "description": "This guide explains how migrate from older versions of Storybook which used a custom webpack.config.js to the new Storybook 6.3+ which uses the webpackFinal property in the main configuration.",
-        "mediaImage": "",
-        "file": "shared/deprecated/storybook/migrate-webpack-final-angular",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/deprecated/storybook/migrate-webpack-final-angular",
-        "tags": []
-      },
-      {
-        "id": "upgrade-storybook-v6-angular",
-        "name": "Angular: Upgrading to Storybook 6",
-        "description": "This guide explains how you can upgrade your Storybook from versions 5.3 and below to Storybook 6, for Angular projects.",
-        "mediaImage": "",
-        "file": "shared/deprecated/storybook/storybook-v6-angular",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/deprecated/storybook/upgrade-storybook-v6-angular",
-        "tags": []
-      },
-      {
-        "id": "migrate-webpack-final-react",
-        "name": "React: Storybook Migration to webpackFinal and the Nx Addon",
-        "description": "This guide explains how migrate from older versions of Storybook which used a custom webpack.config.js to the new Storybook 6.3+ which uses the webpackFinal property in the main configuration and the Nx React Addon.",
-        "mediaImage": "",
-        "file": "shared/deprecated/storybook/migrate-webpack-final-react",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/deprecated/storybook/migrate-webpack-final-react",
-        "tags": []
-      },
-      {
-        "id": "upgrade-storybook-v6-react",
-        "name": "React: Upgrading to Storybook 6",
-        "description": "This guide explains how you can upgrade your Storybook from versions 5.3 and below to Storybook 6, for React projects.",
-        "mediaImage": "",
-        "file": "shared/deprecated/storybook/storybook-v6-react",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/deprecated/storybook/upgrade-storybook-v6-react",
-        "tags": []
-      }
-    ],
-    "isExternal": false,
-    "path": "/deprecated/storybook",
-    "tags": []
-  },
-  "/deprecated/storybook/angular-storybook-targets": {
-    "id": "angular-storybook-targets",
-    "name": "Angular: Information about the Storybook targets",
-    "description": "This document explains the role of the storybook and build-storybook targets in Angular projects with a Storybook configuration, and specifically which executors are used for them.",
-    "mediaImage": "",
-    "file": "shared/deprecated/storybook/angular-storybook-targets",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/deprecated/storybook/angular-storybook-targets",
-    "tags": []
-  },
-  "/deprecated/storybook/angular-project-build-config": {
-    "id": "angular-project-build-config",
-    "name": "Angular - The projectBuildConfig",
-    "description": "This document explains the role of the projectBuildConfig in Angular projects with a Storybook configuration, and how the Storybook executors use it.",
-    "mediaImage": "",
-    "file": "shared/deprecated/storybook/angular-project-build-config",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/deprecated/storybook/angular-project-build-config",
-    "tags": []
-  },
-  "/deprecated/storybook/migrate-webpack-final-angular": {
-    "id": "migrate-webpack-final-angular",
-    "name": "Angular: Storybook Migration to webpackFinal",
-    "description": "This guide explains how migrate from older versions of Storybook which used a custom webpack.config.js to the new Storybook 6.3+ which uses the webpackFinal property in the main configuration.",
-    "mediaImage": "",
-    "file": "shared/deprecated/storybook/migrate-webpack-final-angular",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/deprecated/storybook/migrate-webpack-final-angular",
-    "tags": []
-  },
-  "/deprecated/storybook/upgrade-storybook-v6-angular": {
-    "id": "upgrade-storybook-v6-angular",
-    "name": "Angular: Upgrading to Storybook 6",
-    "description": "This guide explains how you can upgrade your Storybook from versions 5.3 and below to Storybook 6, for Angular projects.",
-    "mediaImage": "",
-    "file": "shared/deprecated/storybook/storybook-v6-angular",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/deprecated/storybook/upgrade-storybook-v6-angular",
-    "tags": []
-  },
-  "/deprecated/storybook/migrate-webpack-final-react": {
-    "id": "migrate-webpack-final-react",
-    "name": "React: Storybook Migration to webpackFinal and the Nx Addon",
-    "description": "This guide explains how migrate from older versions of Storybook which used a custom webpack.config.js to the new Storybook 6.3+ which uses the webpackFinal property in the main configuration and the Nx React Addon.",
-    "mediaImage": "",
-    "file": "shared/deprecated/storybook/migrate-webpack-final-react",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/deprecated/storybook/migrate-webpack-final-react",
-    "tags": []
-  },
-  "/deprecated/storybook/upgrade-storybook-v6-react": {
-    "id": "upgrade-storybook-v6-react",
-    "name": "React: Upgrading to Storybook 6",
-    "description": "This guide explains how you can upgrade your Storybook from versions 5.3 and below to Storybook 6, for React projects.",
-    "mediaImage": "",
-    "file": "shared/deprecated/storybook/storybook-v6-react",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/deprecated/storybook/upgrade-storybook-v6-react",
     "tags": []
   },
   "/deprecated/v1-nx-plugin-api": {

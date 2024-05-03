@@ -30,7 +30,7 @@ export interface RunOptions {
 }
 
 export function withRunOptions<T>(yargs: Argv<T>): Argv<T & RunOptions> {
-  return withExcludeOption(yargs)
+  return withVerbose(withExcludeOption(yargs))
     .option('parallel', {
       describe: 'Max number of parallel processes [default is 3]',
       type: 'string',
@@ -62,11 +62,6 @@ export function withRunOptions<T>(yargs: Argv<T>): Argv<T & RunOptions> {
           : value === 'false' || value === false
           ? false
           : value,
-    })
-    .option('verbose', {
-      type: 'boolean',
-      describe:
-        'Prints additional information about the commands (e.g., stack traces)',
     })
     .option('nxBail', {
       describe: 'Stop command execution after the first failed task',
@@ -121,6 +116,20 @@ export function withConfiguration(yargs: Argv) {
     type: 'string',
     alias: 'c',
   });
+}
+
+export function withVerbose(yargs: Argv) {
+  return yargs
+    .option('verbose', {
+      describe:
+        'Prints additional information about the commands (e.g., stack traces)',
+      type: 'boolean',
+    })
+    .middleware((args) => {
+      if (args.verbose) {
+        process.env.NX_VERBOSE_LOGGING = 'true';
+      }
+    });
 }
 
 export function withBatch(yargs: Argv) {
@@ -301,7 +310,7 @@ export function withDepGraphOptions(yargs: Argv) {
     .option('watch', {
       describe: 'Watch for changes to project graph and update in-browser',
       type: 'boolean',
-      default: false,
+      default: true,
     })
     .option('open', {
       describe: 'Open the project graph in the browser.',

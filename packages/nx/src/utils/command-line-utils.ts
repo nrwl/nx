@@ -39,7 +39,7 @@ export interface NxArgs {
 }
 
 export function createOverrides(__overrides_unparsed__: string[] = []) {
-  let overrides =
+  let overrides: Record<string, any> =
     yargsParser(__overrides_unparsed__, {
       configuration: {
         'camel-case-expansion': false,

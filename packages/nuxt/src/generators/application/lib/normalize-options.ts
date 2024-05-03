@@ -76,7 +76,7 @@ export async function normalizeOptions(
   } as NormalizedSchema;
 
   normalized.unitTestRunner ??= 'vitest';
-  normalized.e2eTestRunner = normalized.e2eTestRunner ?? 'cypress';
+  normalized.e2eTestRunner = normalized.e2eTestRunner ?? 'playwright';
 
   return normalized;
 }

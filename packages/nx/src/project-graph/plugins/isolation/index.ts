@@ -3,10 +3,10 @@ import { PluginConfiguration } from '../../../config/nx-json';
 import { LoadedNxPlugin } from '../internal-api';
 import { loadRemoteNxPlugin } from './plugin-pool';
 
-const remotePluginCache = new Map<
-  string,
-  [Promise<LoadedNxPlugin>, () => void]
->();
+/**
+ * Used to ensure 1 plugin : 1 worker
+ */
+const remotePluginCache = new Map<string, Promise<LoadedNxPlugin>>();
 
 export function loadNxPluginInIsolation(
   plugin: PluginConfiguration,
@@ -15,10 +15,11 @@ export function loadNxPluginInIsolation(
   const cacheKey = JSON.stringify(plugin);
 
   if (remotePluginCache.has(cacheKey)) {
-    return remotePluginCache.get(cacheKey);
+    return [remotePluginCache.get(cacheKey), () => {}];
   }
 
-  const [loadingPlugin, cleanup] = loadRemoteNxPlugin(plugin, root);
-  remotePluginCache.set(cacheKey, [loadingPlugin, cleanup]);
-  return [loadingPlugin, cleanup];
+  const loadingPlugin = loadRemoteNxPlugin(plugin, root);
+  remotePluginCache.set(cacheKey, loadingPlugin);
+  // We clean up plugin workers when Nx process completes.
+  return [loadingPlugin, () => {}];
 }
