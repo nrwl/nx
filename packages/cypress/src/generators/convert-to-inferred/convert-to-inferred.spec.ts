@@ -263,6 +263,7 @@ describe('Cypress - Convert Executors To Plugin', () => {
       );
       expect(hasCypressPlugin).toBeTruthy();
       if (typeof hasCypressPlugin !== 'string') {
+        expect(hasCypressPlugin.include).not.toBeDefined();
         [
           ['targetName', 'e2e'],
           ['ciTargetName', 'e2e-ci'],
