@@ -28,13 +28,13 @@ To verify that Gradle was installed correctly, run this command:
 gradle --version
 ```
 
-Next, check out [the sample repository](https://github.com/nrwl/gradle-spring) on your local machine:
+We'll start the tutorial with [a sample repository](https://github.com/nrwl/gradle-spring) that was created by following the [Spring framework](https://spring.io/)'s tutorial for [Creating a Multi-Module Project](https://spring.io/guides/gs/multi-module).
+
+Check out [the sample repository](https://github.com/nrwl/gradle-spring) on your local machine:
 
 ```shell
 git clone https://github.com/nrwl/gradle-spring.git
 ```
-
-This repository was created by following the [Spring framework](https://spring.io/)'s tutorial for [Creating a Multi-Module Project](https://spring.io/guides/gs/multi-module).
 
 You can run the `./gradlew projects` command to get a list of projects in the repo.
 
@@ -152,7 +152,7 @@ Nx read the output from the cache instead of running the command for 6 out of 6 
 
 ## Create a Custom Task
 
-Nx can run any tasks that are available to Gradle - even your own custom tasks. Let's create a custom task to see this functionality in action. Edit the `application` gradle build file to create a custom task:
+Nx can run any tasks that are available to Gradle - even your own custom tasks. Let's create a custom task to see this functionality in action. Edit the `application` Gradle build file to create a custom task:
 
 ```{% fileName="application/build.gradle" highlightLines=["25-34"] %}
 plugins {
@@ -318,8 +318,6 @@ jobs:
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v2
       - uses: nrwl/nx-set-shas@v4
-      - run: git branch --track main origin/main
-        if: \${{ github.event_name == 'pull_request' }}
       - run: ./nx affected -t test build
 ```
 
