@@ -10,6 +10,7 @@ import {
   joinPathFragments,
   type ProjectConfiguration,
   type ProjectGraph,
+  readJson,
   readNxJson,
   readProjectConfiguration,
   type Tree,
@@ -413,8 +414,14 @@ describe('Eslint - Convert Executors To Plugin', () => {
       // project.json modifications
       const updatedProject = readProjectConfiguration(tree, project.name);
       const targetKeys = Object.keys(updatedProject.targets);
-      ['lint'].forEach((key) => expect(targetKeys).not.toContain(key));
-
+      expect(targetKeys).not.toContain('lint');
+      const projectJsonForProject = readJson(
+        tree,
+        `${project.root}/project.json`
+      );
+      expect(projectJsonForProject['// targets']).toEqual(
+        'to see all targets run: nx show project myapp --web'
+      );
       // nx.json modifications
       const nxJsonPlugins = readNxJson(tree).plugins;
       const addedTestEslintPlugin = nxJsonPlugins.find((plugin) => {
