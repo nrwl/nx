@@ -218,6 +218,11 @@ nx show project e2e --web
     "name": "e2e",
     "type": "e2e",
     "data": {
+      "metadata": {
+        "targetGroups": {
+          "E2E (CI)": ["e2e-ci--src/e2e/app.cy.ts", "e2e-ci"]
+        }
+      },
       "name": "e2e",
       "root": "e2e",
       "sourceRoot": "e2e/src",
@@ -247,7 +252,10 @@ nx show project e2e --web
               "command": "cypress run --env webServerCommand=\"nx run myngapp:serve:production\""
             }
           },
-          "executor": "nx:run-commands"
+          "executor": "nx:run-commands",
+          "metadata": {
+            "technologies": ["cypress"]
+          }
         },
         "e2e-ci--src/e2e/app.cy.ts": {
           "outputs": [
@@ -267,7 +275,10 @@ nx show project e2e --web
             "command": "cypress run --env webServerCommand=\"nx run myngapp:serve-static\" --spec src/e2e/app.cy.ts"
           },
           "executor": "nx:run-commands",
-          "configurations": {}
+          "configurations": {},
+          "metadata": {
+            "technologies": ["cypress"]
+          }
         },
         "e2e-ci": {
           "executor": "nx:noop",
@@ -291,7 +302,10 @@ nx show project e2e --web
             }
           ],
           "options": {},
-          "configurations": {}
+          "configurations": {},
+          "metadata": {
+            "technologies": ["cypress"]
+          }
         },
         "lint": {
           "cache": true,
@@ -309,7 +323,10 @@ nx show project e2e --web
             }
           ],
           "executor": "nx:run-commands",
-          "configurations": {}
+          "configurations": {},
+          "metadata": {
+            "technologies": ["eslint"]
+          }
         }
       }
     }
