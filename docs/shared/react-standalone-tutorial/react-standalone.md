@@ -129,6 +129,9 @@ nx show project myreactapp --web
   "project": {
     "name": "myreactapp",
     "data": {
+      "metadata": {
+        "technologies": ["react"]
+      },
       "root": ".",
       "includedScripts": [],
       "name": "myreactapp",
@@ -149,7 +152,10 @@ nx show project myreactapp --web
           ],
           "outputs": ["{projectRoot}/dist/myreactapp"],
           "executor": "nx:run-commands",
-          "configurations": {}
+          "configurations": {},
+          "metadata": {
+            "technologies": ["vite"]
+          }
         }
       },
       "sourceRoot": "./src",

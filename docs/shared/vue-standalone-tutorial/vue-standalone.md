@@ -127,6 +127,9 @@ nx show project myvueapp --web
   "project": {
     "name": "myvueapp",
     "data": {
+      "metadata": {
+        "technologies": ["vue"]
+      },
       "root": ".",
       "includedScripts": [],
       "name": "myvueapp",
@@ -147,7 +150,10 @@ nx show project myvueapp --web
           ],
           "outputs": ["{projectRoot}/dist/myvueapp"],
           "executor": "nx:run-commands",
-          "configurations": {}
+          "configurations": {},
+          "metadata": {
+            "technologies": ["vite"]
+          }
         }
       },
       "sourceRoot": "./src",
