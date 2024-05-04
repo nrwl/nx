@@ -377,6 +377,21 @@ describe('Eslint - Convert Executors To Plugin', () => {
     });
 
     it('should remove include when all projects are included', async () => {
+      jest.doMock(
+        '.eslintrc.base.json',
+        () => ({
+          ignorePatterns: ['**/*'],
+        }),
+        { virtual: true }
+      );
+      fs.createFileSync(
+        '.eslintrc.base.json',
+        JSON.stringify({ ignorePatterns: ['**/*'] })
+      );
+      tree.write(
+        '.eslintrc.base.json',
+        JSON.stringify({ ignorePatterns: ['**/*'] })
+      );
       // ARRANGE
       const existingProject = createTestProject(tree, {
         appRoot: 'existing',

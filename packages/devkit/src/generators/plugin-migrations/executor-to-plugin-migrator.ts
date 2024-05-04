@@ -81,7 +81,7 @@ class ExecutorToPluginMigrator<T> {
       for (const targetName of this.#targetAndProjectsToMigrate.keys()) {
         this.#migrateTarget(targetName);
       }
-      this.#addPlugins();
+      await this.#addPlugins();
     }
     return this.#targetAndProjectsToMigrate;
   }
@@ -159,7 +159,39 @@ class ExecutorToPluginMigrator<T> {
     return `${projectFromGraph.data.root}/**/*`;
   }
 
-  #addPlugins() {
+  async #pluginRequiresIncludes(
+    targetName: string,
+    plugin: ExpandedPluginConfiguration<T>
+  ) {
+    const loadedPlugin = new LoadedNxPlugin(
+      {
+        createNodes: this.#createNodes,
+        name: this.#pluginPath,
+      },
+      plugin
+    );
+
+    const originalResults = this.#createNodesResultsForTargets.get(targetName);
+
+    let resultsWithIncludes: ConfigurationResult;
+    try {
+      resultsWithIncludes = await retrieveProjectConfigurations(
+        [loadedPlugin],
+        this.tree.root,
+        this.#nxJson
+      );
+    } catch (e) {
+      if (e instanceof ProjectConfigurationsError) {
+        resultsWithIncludes = e.partialProjectConfigurationsResult;
+      } else {
+        throw e;
+      }
+    }
+
+    return !deepEqual(originalResults, resultsWithIncludes);
+  }
+
+  async #addPlugins() {
     for (const [targetName, plugin] of this.#pluginToAddForTarget.entries()) {
       const pluginOptions = this.#pluginOptionsBuilder(targetName);
 
@@ -183,42 +215,25 @@ class ExecutorToPluginMigrator<T> {
       ) as ExpandedPluginConfiguration<T>;
 
       if (existingPlugin?.include) {
-        for (const pluginIncludes of existingPlugin.include) {
-          for (const projectPath of plugin.include) {
-            if (!minimatch(projectPath, pluginIncludes, { dot: true })) {
-              existingPlugin.include.push(projectPath);
-            }
-          }
-        }
-
-        const allConfigFilesAreIncluded = this.#configFiles.every(
-          (configFile) => {
-            for (const includePattern of existingPlugin.include) {
-              if (minimatch(configFile, includePattern, { dot: true })) {
-                return true;
-              }
-            }
-            return false;
-          }
+        // Add to the existing plugin includes
+        existingPlugin.include = existingPlugin.include.concat(
+          // Any include that is in the new plugin's include list
+          plugin.include.filter(
+            (projectPath) =>
+              // And is not already covered by the existing plugin's include list
+              !existingPlugin.include.some((pluginIncludes) =>
+                minimatch(projectPath, pluginIncludes, { dot: true })
+              )
+          )
         );
 
-        if (allConfigFilesAreIncluded) {
-          existingPlugin.include = undefined;
+        if (!(await this.#pluginRequiresIncludes(targetName, existingPlugin))) {
+          delete existingPlugin.include;
         }
       }
 
       if (!existingPlugin) {
-        const allConfigFilesAreIncluded = this.#configFiles.every(
-          (configFile) => {
-            for (const includePattern of plugin.include) {
-              if (minimatch(configFile, includePattern, { dot: true })) {
-                return true;
-              }
-            }
-            return false;
-          }
-        );
-        if (allConfigFilesAreIncluded) {
+        if (!(await this.#pluginRequiresIncludes(targetName, plugin))) {
           plugin.include = undefined;
         }
         this.#nxJson.plugins.push(plugin);
@@ -274,11 +289,17 @@ class ExecutorToPluginMigrator<T> {
   }
 
   #getCreatedTargetForProjectRoot(targetName: string, projectRoot: string) {
-    const createdProject = Object.entries(
+    const entry = Object.entries(
       this.#createNodesResultsForTargets.get(targetName)?.projects ?? {}
-    ).find(([root]) => root === projectRoot)[1];
+    ).find(([root]) => root === projectRoot);
+    if (!entry) {
+      throw new Error(
+        `The nx plugin did not find a project inside ${projectRoot}. File an issue at https://github.com/nrwl/nx with information about your project structure.`
+      );
+    }
+    const createdProject = entry[1];
     const createdTarget: TargetConfiguration<RunCommandsOptions> =
-      createdProject.targets[targetName];
+      structuredClone(createdProject.targets[targetName]);
     delete createdTarget.command;
     delete createdTarget.options?.cwd;
 
@@ -345,4 +366,31 @@ export async function migrateExecutorToPlugin<T>(
     skipTargetFilter
   );
   return await migrator.run();
+}
+
+// Checks if two objects are structurely equal, without caring
+// about the order of the keys.
+function deepEqual<T extends Object>(a: T, b: T, logKey = ''): boolean {
+  const aKeys = Object.keys(a);
+  const bKeys = new Set(Object.keys(b));
+
+  if (aKeys.length !== bKeys.size) {
+    return false;
+  }
+
+  for (const key of aKeys) {
+    if (!bKeys.has(key)) {
+      return false;
+    }
+
+    if (typeof a[key] === 'object' && typeof b[key] === 'object') {
+      if (!deepEqual(a[key], b[key], logKey + '.' + key)) {
+        return false;
+      }
+    } else if (a[key] !== b[key]) {
+      return false;
+    }
+  }
+
+  return true;
 }
