@@ -289,9 +289,15 @@ class ExecutorToPluginMigrator<T> {
   }
 
   #getCreatedTargetForProjectRoot(targetName: string, projectRoot: string) {
-    const createdProject = Object.entries(
+    const entry = Object.entries(
       this.#createNodesResultsForTargets.get(targetName)?.projects ?? {}
-    ).find(([root]) => root === projectRoot)[1];
+    ).find(([root]) => root === projectRoot);
+    if (!entry) {
+      throw new Error(
+        `The nx plugin did not find a project inside ${projectRoot}. File an issue at https://github.com/nrwl/nx with information about your project structure.`
+      );
+    }
+    const createdProject = entry[1];
     const createdTarget: TargetConfiguration<RunCommandsOptions> =
       structuredClone(createdProject.targets[targetName]);
     delete createdTarget.command;
