@@ -43,7 +43,7 @@ export function getGitHubRepoSlug(remoteName = 'origin'): RepoSlug {
     }).trim();
 
     // Extract the 'user/repo' part from the URL
-    const regex = /github\.com[/:]([\w-]+\/[\w-]+)/;
+    const regex = /(?:github(?:\.|(?:(?:\.\w{2,}){1,})(?!\w))(?:[/:])|git@[\w.-]+:)([\w-]+\/[\w-]+)/;
     const match = remoteUrl.match(regex);
 
     if (match && match[1]) {
