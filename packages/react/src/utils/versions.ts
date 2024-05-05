@@ -3,14 +3,14 @@ export const nxVersion = require('../../package.json').version;
 // Always pull the latest version until we merge rspack plugin into the repo.
 export const nxRspackVersion = '*';
 
-export const reactVersion = '18.2.0';
-export const reactDomVersion = '18.2.0';
-export const reactIsVersion = '18.2.0';
+export const reactVersion = '18.3.1';
+export const reactDomVersion = '18.3.1';
+export const reactIsVersion = '18.3.1';
 export const swcLoaderVersion = '0.1.15';
 export const babelLoaderVersion = '^9.1.2';
-export const typesReactVersion = '18.2.33';
-export const typesReactDomVersion = '18.2.14';
-export const typesReactIsVersion = '18.2.2';
+export const typesReactVersion = '18.3.1';
+export const typesReactDomVersion = '18.3.0';
+export const typesReactIsVersion = '18.3.0';
 
 export const typesNodeVersion = '18.16.9';
 
@@ -29,7 +29,7 @@ export const styledJsxVersion = '5.1.2';
 
 export const reactRouterDomVersion = '6.11.2';
 
-export const testingLibraryReactVersion = '14.0.0';
+export const testingLibraryReactVersion = '15.0.6';
 
 export const reduxjsToolkitVersion = '1.9.3';
 export const reactReduxVersion = '8.0.5';

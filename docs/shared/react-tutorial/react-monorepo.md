@@ -138,6 +138,9 @@ nx show project react-store --web
   "project": {
     "name": "react-store",
     "data": {
+      "metadata": {
+        "technologies": ["react"]
+      },
       "root": "apps/react-store",
       "includedScripts": [],
       "name": "react-store",
@@ -158,7 +161,10 @@ nx show project react-store --web
           ],
           "outputs": ["{workspaceRoot}/dist/apps/react-store"],
           "executor": "nx:run-commands",
-          "configurations": {}
+          "configurations": {},
+          "metadata": {
+            "technologies": ["vite"]
+          }
         }
       },
       "sourceRoot": "apps/react-store/src",

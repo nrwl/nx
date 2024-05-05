@@ -403,6 +403,7 @@
       - [workspace-rules-project](/nx-api/eslint/generators/workspace-rules-project)
       - [workspace-rule](/nx-api/eslint/generators/workspace-rule)
       - [convert-to-flat-config](/nx-api/eslint/generators/convert-to-flat-config)
+      - [convert-to-inferred](/nx-api/eslint/generators/convert-to-inferred)
   - [eslint-plugin](/nx-api/eslint-plugin)
     - [documents](/nx-api/eslint-plugin/documents)
       - [Overview](/nx-api/eslint-plugin/documents/overview)

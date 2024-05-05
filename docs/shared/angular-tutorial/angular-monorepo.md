@@ -635,6 +635,11 @@ nx show project angular-store-e2e --web
     "name": "angular-store-e2e",
     "type": "e2e",
     "data": {
+      "metadata": {
+        "targetGroups": {
+          "E2E (CI)": ["e2e-ci--src/e2e/app.cy.ts", "e2e-ci"]
+        }
+      },
       "name": "angular-store-e2e",
       "root": "apps/angular-store-e2e",
       "sourceRoot": "apps/angular-store-e2e/src",
@@ -664,7 +669,10 @@ nx show project angular-store-e2e --web
               "command": "cypress run --env webServerCommand=\"nx run angular-store:serve:production\""
             }
           },
-          "executor": "nx:run-commands"
+          "executor": "nx:run-commands",
+          "metadata": {
+            "technologies": ["cypress"]
+          }
         },
         "e2e-ci--src/e2e/app.cy.ts": {
           "outputs": [
@@ -684,7 +692,10 @@ nx show project angular-store-e2e --web
             "command": "cypress run --env webServerCommand=\"nx run angular-store:serve-static\" --spec src/e2e/app.cy.ts"
           },
           "executor": "nx:run-commands",
-          "configurations": {}
+          "configurations": {},
+          "metadata": {
+            "technologies": ["cypress"]
+          }
         },
         "e2e-ci": {
           "executor": "nx:noop",
@@ -708,7 +719,10 @@ nx show project angular-store-e2e --web
             }
           ],
           "options": {},
-          "configurations": {}
+          "configurations": {},
+          "metadata": {
+            "technologies": ["cypress"]
+          }
         },
         "lint": {
           "cache": true,
@@ -726,7 +740,10 @@ nx show project angular-store-e2e --web
             }
           ],
           "executor": "nx:run-commands",
-          "configurations": {}
+          "configurations": {},
+          "metadata": {
+            "technologies": ["eslint"]
+          }
         }
       }
     }

@@ -4,7 +4,7 @@ import {
   DependentBuildableProjectNode,
 } from '@nx/js/src/utils/buildable-libs-utils';
 import { NgPackagr } from 'ng-packagr';
-import { resolve } from 'path';
+import { join, resolve } from 'path';
 import { createLibraryExecutor } from '../package/package.impl';
 import type { BuildAngularLibraryExecutorOptions } from '../package/schema';
 import { parseRemappedTsConfigAndMergeDefaults } from '../utilities/typescript';
@@ -20,7 +20,7 @@ async function initializeNgPackgrLite(
 
   if (options.tsConfig) {
     const remappedTsConfigFilePath = createTmpTsConfig(
-      options.tsConfig,
+      join(context.root, options.tsConfig),
       context.root,
       context.projectsConfigurations.projects[context.projectName].root,
       projectDependencies

@@ -16,10 +16,6 @@ export async function addE2E(tree: Tree, options: NormalizedSchema) {
       typeof import('@nx/cypress')
     >('@nx/cypress', getPackageVersion(tree, 'nx'));
 
-    // TODO(colum): Remix needs a different approach to serve-static
-    // Likely via remix start
-    // addFileServerTarget(tree, options, 'serve-static');
-
     addProjectConfiguration(tree, options.e2eProjectName, {
       projectType: 'application',
       root: options.e2eProjectRoot,
@@ -69,20 +65,4 @@ export async function addE2E(tree: Tree, options: NormalizedSchema) {
   } else {
     return () => {};
   }
-}
-
-function addFileServerTarget(
-  tree: Tree,
-  options: NormalizedSchema,
-  targetName: string
-) {
-  const projectConfig = readProjectConfiguration(tree, options.projectName);
-  projectConfig.targets[targetName] = {
-    executor: '@nx/web:file-server',
-    options: {
-      buildTarget: `${options.projectName}:build`,
-      port: options.e2ePort,
-    },
-  };
-  updateProjectConfiguration(tree, options.projectName, projectConfig);
 }

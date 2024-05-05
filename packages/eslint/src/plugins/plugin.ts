@@ -116,12 +116,11 @@ function getProjectsUsingESLintConfig(
 ): CreateNodesResult['projects'] {
   const projects: CreateNodesResult['projects'] = {};
 
-  const rootEslintConfig = context.configFiles.find(
-    (f) =>
-      f === baseEsLintConfigFile ||
-      f === baseEsLintFlatConfigFile ||
-      ESLINT_CONFIG_FILENAMES.includes(f)
-  );
+  const rootEslintConfig = [
+    baseEsLintConfigFile,
+    baseEsLintFlatConfigFile,
+    ...ESLINT_CONFIG_FILENAMES,
+  ].find((f) => existsSync(join(context.workspaceRoot, f)));
 
   // Add a lint target for each child project without an eslint config, with the root level config as an input
   for (const projectRoot of childProjectRoots) {
@@ -187,6 +186,7 @@ function buildEslintTargets(
       '{workspaceRoot}/tools/eslint-rules/**/*',
       { externalDependencies: ['eslint'] },
     ],
+    outputs: ['{options.outputFile}'],
   };
   if (eslintConfigs.some((config) => isFlatConfig(config))) {
     targetConfig.options.env = {
