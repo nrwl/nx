@@ -29,12 +29,16 @@ node -v
 
 ## Getting Started
 
-This tutorial picks up where [Spring framework](https://spring.io/)'s guide
-for [Multi-Module Projects](https://spring.io/guides/gs/multi-module) leaves off. Check
-out [the sample repository](https://github.com/nrwl/gradle-tutorial) on your local machine:
+This tutorial picks up where [Spring framework](https://spring.io/)'s guide for [Multi-Module Projects](https://spring.io/guides/gs/multi-module) leaves off.
+
+Fork [the sample repository](https://github.com/nrwl/gradle-tutorial):
+
+[https://github.com/nrwl/gradle-tutorial](https://github.com/nrwl/gradle-tutorial)
+
+And then clone it on your local machine:
 
 ```shell
-git clone https://github.com/nrwl/gradle-tutorial.git
+git clone https://github.com/<your-username>/gradle-tutorial.git
 ```
 
 The Multi-Module Spring Tutorial left us with 2 projects:
@@ -248,23 +252,18 @@ For a repository with only a few projects, you can manually calculate which proj
 The `./nx affected` command solves this problem. Nx uses its project graph in conjunction with git history to only run
 tasks for projects that may have been affected by the changes that you made.
 
-## Set up CI with Nx
+## Setup CI for Your NPM Workspace
 
-This tutorial walked you through how Nx can improve the developer experience for local development, but Nx also makes
-a huge difference in CI. Without adequate tooling, CI times tend to grow exponentially with the size of the codebase. Nx
-helps reduce wasted time in CI with the [`affected` command](/ci/features/affected) and Nx
-Replay's [remote caching](/ci/features/remote-cache). Nx
-also [efficiently parallelizes tasks across machines](/ci/concepts/parallelization-distribution) with Nx Agents.
+This tutorial walked you through how Nx can improve the local development experience, but the biggest different Nx makes is in CI. As repositories get bigger, making sure that the CI is fast, reliable and maintainable can get very challenging. Nx provides a solution.
 
-To set up Nx Replay run:
+- Nx reduces wasted time in CI with the [`affected` command](/ci/features/affected).
+- Nx Replay's [remote caching](/ci/features/remote-cache) will reuse task artifacts from different CI executions making sure you will never run the same computation twice.
+- Nx Agents [efficiently distribute tasks across machines](/ci/concepts/parallelization-distribution) ensuring constant CI time regardless of the repository size. The right number of machines is allocated for each PR to ensure good performance without wasting compute.
+- Nx Atomizer [automatically splits](/ci/features/split-e2e-tasks) large e2e tests to distribute them across machines. Nx can also automatically [identify and rerun flaky e2e tests](/ci/features/flaky-tasks).
 
-```shell
-./nx connect
-```
+### Generating a CI Workflow
 
-And click the link provided. You'll need to follow the instructions on the website to sign up for your account.
-
-Then you can set up your CI by running the `@nx/gradle:ci-workflow` generator:
+If you are starting a new project, you can use the following command to generate a CI workflow file.
 
 ```shell
 ./nx generate @nx/gradle:ci-workflow --ci=github
@@ -304,12 +303,24 @@ jobs:
       - run: ./nx affected -t test build
 ```
 
-This is a default CI configuration that sets up Nx Cloud to [use nx affected](/ci/features/affected). This will only run
-the tasks that are needed for a particular PR.
+`npx nx-cloud start-ci-run` transforms your CI from something that runs on a single machine and can only handle small workspaces into a CI that runs on multiple machines and can handle workspaces of any size. The only thing you need to do after this is to connect to Nx Cloud.
 
-You can also [enable distributed task execution](/ci/features/distribute-task-execution) by uncommenting
-the `nx-cloud start-ci-run` line. This will automatically run all tasks on separate machines in parallel wherever
-possible, without requiring you to manually coordinate copying the output from one machine to another.
+### Connecting to Nx Cloud
+
+Nx Cloud is a companion app for your CI system that provides remote caching, task distribution, e2e tests deflaking, better DX and more.
+
+To connect to Nx Cloud:
+
+- Commit and push your changes to GitHub
+- Go to [https://cloud.nx.app](https://cloud.nx.app), create an account, and connect you repository
+
+`cloud.nx.app` will send a PR to your repository enabling Nx Cloud, after which caching, distribution and more will start working.
+
+![Screenshot of Add an Nx Cloud access token to your repository dialog](/shared/tutorials/send-cloud-pr.png)
+
+Once you merge that PR, you'll be able to see CI pipeline runs appearing in the Nx Cloud dashboard:
+
+![CI Pipeline Executiosn](/shared/tutorials/ci-pipeline-executions.png)
 
 Check out one of these detailed tutorials on setting up CI with Nx:
 
