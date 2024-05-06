@@ -1,7 +1,7 @@
 ---
 title: Nx Console gets Lit
 authors: [Max Kless]
-cover_image: '/blog/images/2023-06-29/featured_img.png'
+cover_image: '/blog/images/2023-06-29/featured_img.webp'
 tags: [nx, nx-console]
 ---
 

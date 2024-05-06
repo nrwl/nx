@@ -1,7 +1,7 @@
 ---
 title: Unit Testing Expo Apps With Jest
 authors: [Emily Xiong]
-cover_image: '/blog/images/2023-11-22/featured_img.png'
+cover_image: '/blog/images/2023-11-22/featured_img.webp'
 tags: [nx, unit testing]
 ---
 
