@@ -39,5 +39,6 @@ pipelines:
             <% } %>
             - <%= packageManagerInstall %>
 
-            - <%= packageManagerPrefix %> nx-cloud record -- nx format:check
+            # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+            # - <%= packageManagerPrefix %> nx-cloud record -- echo Hello World
             - <%= packageManagerPrefix %> nx affected -t lint test build<% if(hasE2E){ %> e2e-ci<% } %> --base=HEAD~1
