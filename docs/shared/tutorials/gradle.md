@@ -113,7 +113,7 @@ even intelligently run a subset of tasks based on the changes you've made in you
 computation caching to reuse the results of tasks. We will explore how Nx adds to the task running Gradle provides.
 
 Before we start running tasks, let's explore the tasks available for the `application` project. The `@nx/gradle` plugin
-that we've installed allows Nx to run any of the Gradle tasks defined for that project. You can do this either through [Nx Console](/getting-started/editor-setup) or from the terminal:
+that we've installed reflects Gradle's tasks to Nx, which allows it to run any of the Gradle tasks defined for that project. You can do this either through [Nx Console](/getting-started/editor-setup) or from the terminal:
 
 ```shell {% path="~/gradle-tutorial" %}
 ./nx show project application --web
