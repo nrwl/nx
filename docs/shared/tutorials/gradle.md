@@ -252,9 +252,17 @@ For a repository with only a few projects, you can manually calculate which proj
 The `./nx affected` command solves this problem. Nx uses its project graph in conjunction with git history to only run
 tasks for projects that may have been affected by the changes that you made.
 
-## Setup CI for Your NPM Workspace
+To run the `test` tasks for projects affected by this change, run:
 
-This tutorial walked you through how Nx can improve the local development experience, but the biggest different Nx makes is in CI. As repositories get bigger, making sure that the CI is fast, reliable and maintainable can get very challenging. Nx provides a solution.
+```shell
+./nx affected -t test
+```
+
+Notice that this command does not run the `test` task for the `library` project, since it could not have been affected by the code change.
+
+## Set Up CI for Your Gradle Workspace
+
+This tutorial walked you through how Nx can improve the local development experience, but the biggest difference Nx makes is in CI. As repositories get bigger, making sure that the CI is fast, reliable and maintainable can get very challenging. Nx provides a solution.
 
 - Nx reduces wasted time in CI with the [`affected` command](/ci/features/affected).
 - Nx Replay's [remote caching](/ci/features/remote-cache) will reuse task artifacts from different CI executions making sure you will never run the same computation twice.
@@ -269,41 +277,13 @@ If you are starting a new project, you can use the following command to generate
 ./nx generate @nx/gradle:ci-workflow --ci=github
 ```
 
-This generator creates the following file:
+This generator creates a `.github/workflows/ci.yml` file that contains a CI pipeline that will run the `test` and `build` tasks for projects that are affected by any given PR.
 
-```yml {% fileName=".github/workflows/ci.yml" highlightLines=[19] %}
-name: CI
-on:
-  push:
-    branches:
-      - main
-  pull_request:
-permissions:
-  actions: read
-  contents: read
-jobs:
-  main:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      # Connect your workspace on nx.app and uncomment this to enable task distribution.
-      # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
-      # - run: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-jvm" --stop-agents-after="build"
-      - name: Set up JDK 17 for x64
-        uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'temurin'
-          architecture: x64
-      - name: Setup Gradle
-        uses: gradle/gradle-build-action@v2
-      - uses: nrwl/nx-set-shas@v4
-      - run: ./nx affected -t test build
+The key line in the CI pipeline is:
+
 ```
-
-`npx nx-cloud start-ci-run` transforms your CI from something that runs on a single machine and can only handle small workspaces into a CI that runs on multiple machines and can handle workspaces of any size. The only thing you need to do after this is to connect to Nx Cloud.
+./nx affected -t test build
+```
 
 ### Connecting to Nx Cloud
 
@@ -312,17 +292,31 @@ Nx Cloud is a companion app for your CI system that provides remote caching, tas
 To connect to Nx Cloud:
 
 - Commit and push your changes to GitHub
-- Go to [https://cloud.nx.app](https://cloud.nx.app), create an account, and connect you repository
+- Go to [https://cloud.nx.app](https://cloud.nx.app), create an account, and connect your repository
+
+![Connect to your repository](/shared/tutorials/connect-to-repository.png)
 
 `cloud.nx.app` will send a PR to your repository enabling Nx Cloud, after which caching, distribution and more will start working.
 
-![Screenshot of Add an Nx Cloud access token to your repository dialog](/shared/tutorials/send-cloud-pr.png)
+![Add an Nx Cloud access token to your repository dialog](/shared/tutorials/send-cloud-pr.png)
 
 Once you merge that PR, you'll be able to see CI pipeline runs appearing in the Nx Cloud dashboard:
 
 ![CI Pipeline Executiosn](/shared/tutorials/ci-pipeline-executions.png)
 
-Check out one of these detailed tutorials on setting up CI with Nx:
+### Enable a Distributed CI Pipeline
+
+The current CI pipeline runs on a single machine and can only handle small workspaces. To transform your CI into a CI that runs on multiple machines and can handle workspaces of any size, uncomment the `npx nx-cloud start-ci-run` line in the `.github/workflows/ci.yml` file.
+
+```yml
+# Connect your workspace on nx.app and uncomment this to enable task distribution.
+# The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
+- run: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-jvm" --stop-agents-after="build"
+```
+
+![Gradle run details](/shared/tutorials/gradle-run-details.png)
+
+For more information about how Nx can improve your CI pipeline, check out one of these detailed tutorials:
 
 - [Circle CI with Nx](/ci/intro/tutorials/circle)
 - [GitHub Actions with Nx](/ci/intro/tutorials/github-actions)
