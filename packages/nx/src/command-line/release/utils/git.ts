@@ -2,6 +2,7 @@
  * Special thanks to changelogen for the original inspiration for many of these utilities:
  * https://github.com/unjs/changelogen
  */
+import { existsSync } from 'fs-extra';
 import { interpolate } from '../../../tasks-runner/utils';
 import { execCommand } from './exec-command';
 
@@ -166,7 +167,8 @@ export async function gitAdd({
     const isFileIgnored = await isIgnored(f);
     if (isFileIgnored) {
       ignoredFiles.push(f);
-    } else if (changedTrackedFiles.has(f)) {
+      // only add a file deletion if it is already tracked
+    } else if (changedTrackedFiles.has(f) || existsSync(f)) {
       filesToAdd.push(f);
     }
   }
