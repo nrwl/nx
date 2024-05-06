@@ -379,17 +379,16 @@ After this first release, you can remove the `--first-release` flag and just run
 
 ## Setup CI for Your NPM Workspace
 
-This tutorial walked you through how Nx can improve the developer experience for local development, but Nx can also make a big difference in CI. Without adequate tooling, CI times tend to grow exponentially with the size of the codebase. Nx helps reduce wasted time in CI with the [`affected` command](/ci/features/affected) and Nx Replay's [remote caching](/ci/features/remote-cache). Nx also [efficiently parallelizes tasks across machines](/ci/concepts/parallelization-distribution) with Nx Agents.
+This tutorial walked you through how Nx can improve local development experience, but the biggest different Nx makes is in CI. As repositories get bigger, making sure that the CI is fast, reliable and maintainable can get very challenging. Nx provides a solution.
 
-To set up Nx Replay run:
+* Nx reduces wasted time in CI with the [`affected` command](/ci/features/affected). 
+* Nx Replay's [remote caching](/ci/features/remote-cache) will reuse task artifacts from different CI executions making sure you will never run the same computation twice. 
+* Nx Agents [efficiently distribute tasks across machines](/ci/concepts/parallelization-distribution) ensuring constant CI time regardless of the repository size. The right number of machines is allocated for each PR to ensure good performance without wasting compute. 
+* Nx Atomizer [automatically splits](/ci/features/split-e2e-tasks) large e2e tests to distribute them across machines. Nx can also automatically [identify and rerun flaky e2e tests](/ci/features/flaky-tasks).
 
-```shell
-nx connect
-```
+### Generating a CI Workflow
 
-And click the link provided. You'll need to follow the instructions on the website to sign up for your account.
-
-Then you can set up your CI with the following command:
+If you are starting a new project, you can use the following command to generate a CI workflow file.
 
 ```shell
 nx generate ci-workflow --ci=github
@@ -399,7 +398,44 @@ nx generate ci-workflow --ci=github
 You can choose `github`, `circleci`, `azure`, `bitbucket-pipelines`, or `gitlab` for the `ci` flag.
 {% /callout %}
 
-This will create a default CI configuration that sets up Nx Cloud to [use distributed task execution](/ci/features/distribute-task-execution). This automatically runs all tasks on separate machines in parallel wherever possible, without requiring you to manually coordinate copying the output from one machine to another.
+```yaml
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      # - run: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="e2e-ci"
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 20
+          cache: 'npm'
+      - run: npm ci
+      - uses: nrwl/nx-set-shas@v4
+
+      # - run: npx nx-cloud record -- nx format:check
+      - run: npx nx affected -t lint test build e2e-ci
+```
+
+`npx nx-cloud start-ci-run` transforms your CI from something that runs on a single machine and can only handle small workspaces into the CI that runs on multiple machines and can handle workspaces of any size. The only thing you need to do after this is to connect to Nx Cloud.
+
+### Connecting to Nx Cloud
+
+Nx Cloud is a companion app for your CI system that provides remote caching, task distribution, e2e tests deflaking, better DX and more. 
+
+To connect to Nx Cloud:
+
+* Push your Nx repository to GitHub
+* Go to cloud.nx.app, create an account, and connect you repository
+
+`cloud.nx.app` will send a PR to your repository enabling Nx Cloud, after which caching, distribution and more will start working. You will also status update comments on your pull request.
+
+SCREENSHOT OF SEND THE PR DIALOG
+
+you will see something like ...
+
+CIPE screen? Screenshot on PR?
 
 Check out one of these detailed tutorials on setting up CI with Nx:
 
