@@ -56,7 +56,7 @@ async function normalizeOptions(host: Tree, options: Schema) {
 
   if (options.project) {
     // Legacy behavior, detect app vs page router from specified project.
-    // TODO(v19): remove this logic
+    // TODO(v20): remove this logic
     const project = readProjectConfiguration(host, options.project);
     // app/ is a reserved folder in nextjs so it is safe to check it's existence
     isAppRouter =

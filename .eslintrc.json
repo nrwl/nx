@@ -28,7 +28,8 @@
     "storybook/no-uninstalled-addons": [
       "error",
       {
-        "ignore": ["@nx/react/plugins/storybook"]
+        "ignore": ["@nx/react/plugins/storybook"],
+        "packageJsonLocation": "../../package.json"
       }
     ]
   },

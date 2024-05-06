@@ -1,11 +1,11 @@
 /* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
+import { ProjectGraphClientResponse } from 'nx/src/command-line/graph/graph';
+// nx-ignore-next-line
+import { ProjectDetailsWrapper } from '@nx/graph/project-details';
+/* eslint-enable @nx/enforce-module-boundaries */
 import { useFloating } from '@floating-ui/react';
 import { XMarkIcon } from '@heroicons/react/24/outline';
-import { ProjectDetailsWrapper } from '@nx/graph/project-details';
-/* eslint-disable @nx/enforce-module-boundaries */
-// nx-ignore-next-line
-import { ProjectGraphClientResponse } from 'nx/src/command-line/graph/graph';
 import { useEffect, useState } from 'react';
 import { useRouteLoaderData, useSearchParams } from 'react-router-dom';
 
@@ -50,15 +50,15 @@ export function ProjectDetailsModal() {
   return (
     isOpen && (
       <div
-        className="top-24 z-20 right-4 opacity-100 bg-white dark:bg-slate-800 fixed h-max  w-1/3"
+        className="fixed right-4 top-24 z-20 h-max w-1/3 bg-white opacity-100  dark:bg-slate-800"
         style={{
           height: 'calc(100vh - 6rem - 2rem)',
         }}
         ref={refs.setFloating}
       >
-        <div className="rounded-md h-full border border-slate-500">
+        <div className="h-full rounded-md border border-slate-500">
           <ProjectDetailsWrapper project={project} sourceMap={sourceMap} />
-          <div className="top-2 right-2 absolute" onClick={onClose}>
+          <div className="absolute right-2 top-2" onClick={onClose}>
             <XMarkIcon className="h-4 w-4" />
           </div>
         </div>

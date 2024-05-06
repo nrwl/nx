@@ -6,6 +6,11 @@
       "factory": "./src/generators/init/init#initGenerator",
       "schema": "./src/generators/init/schema.json",
       "description": "Initializes a Gradle project in the current workspace"
+    },
+    "ci-workflow": {
+      "factory": "./src/generators/ci-workflow/generator",
+      "schema": "./src/generators/ci-workflow/schema.json",
+      "description": "Setup a CI Workflow to run Nx in CI"
     }
   }
 }

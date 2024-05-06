@@ -9,13 +9,16 @@ import {
   extractCachedFileData,
   FileMapCache,
   shouldRecomputeWholeGraph,
-  writeCache,
 } from './nx-deps-cache';
 import { applyImplicitDependencies } from './utils/implicit-project-dependencies';
 import { normalizeProjectNodes } from './utils/normalize-project-nodes';
 import { LoadedNxPlugin } from './plugins/internal-api';
 import { isNxPluginV1, isNxPluginV2 } from './plugins/utils';
-import { CreateDependenciesContext } from './plugins';
+import {
+  CreateDependenciesContext,
+  CreateMetadataContext,
+  ProjectsMetadata,
+} from './plugins';
 import { getRootTsConfigPath } from '../plugins/js/utils/typescript';
 import {
   FileMap,
@@ -31,6 +34,19 @@ import { existsSync } from 'fs';
 import { PackageJson } from '../utils/package-json';
 import { output } from '../utils/output';
 import { NxWorkspaceFilesExternals } from '../native';
+import {
+  AggregateProjectGraphError,
+  CreateMetadataError,
+  isAggregateProjectGraphError,
+  isWorkspaceValidityError,
+  ProcessDependenciesError,
+  ProcessProjectGraphError,
+  WorkspaceValidityError,
+} from './error-types';
+import {
+  ConfigurationSourceMaps,
+  mergeMetadata,
+} from './utils/project-configuration-utils';
 
 let storedFileMap: FileMap | null = null;
 let storedAllWorkspaceFiles: FileData[] | null = null;
@@ -60,13 +76,14 @@ export function getFileMap(): {
 }
 
 export async function buildProjectGraphUsingProjectFileMap(
-  projects: Record<string, ProjectConfiguration>,
+  projectRootMap: Record<string, ProjectConfiguration>,
   externalNodes: Record<string, ProjectGraphExternalNode>,
   fileMap: FileMap,
   allWorkspaceFiles: FileData[],
   rustReferences: NxWorkspaceFilesExternals,
   fileMapCache: FileMapCache | null,
-  plugins: LoadedNxPlugin[]
+  plugins: LoadedNxPlugin[],
+  sourceMap: ConfigurationSourceMaps
 ): Promise<{
   projectGraph: ProjectGraph;
   projectFileMapCache: FileMapCache;
@@ -75,9 +92,28 @@ export async function buildProjectGraphUsingProjectFileMap(
   storedAllWorkspaceFiles = allWorkspaceFiles;
   storedRustReferences = rustReferences;
 
+  const projects: Record<string, ProjectConfiguration> = {};
+  for (const root in projectRootMap) {
+    const project = projectRootMap[root];
+    projects[project.name] = project;
+  }
+
+  const errors: Array<
+    | CreateMetadataError
+    | ProcessDependenciesError
+    | ProcessProjectGraphError
+    | WorkspaceValidityError
+  > = [];
+
   const nxJson = readNxJson();
   const projectGraphVersion = '6.0';
-  assertWorkspaceValidity(projects, nxJson);
+  try {
+    assertWorkspaceValidity(projects, nxJson);
+  } catch (e) {
+    if (isWorkspaceValidityError(e)) {
+      errors.push(e);
+    }
+  }
   const packageJsonDeps = readCombinedDeps();
   const rootTsConfig = readRootTsConfig();
 
@@ -104,26 +140,44 @@ export async function buildProjectGraphUsingProjectFileMap(
     };
   }
 
-  const context = createContext(
-    projects,
-    nxJson,
-    externalNodes,
-    fileMap,
-    filesToProcess
-  );
-  let projectGraph = await buildProjectGraphUsingContext(
-    externalNodes,
-    context,
-    cachedFileData,
-    projectGraphVersion,
-    plugins
-  );
-  const projectFileMapCache = createProjectFileMapCache(
-    nxJson,
-    packageJsonDeps,
-    fileMap,
-    rootTsConfig
-  );
+  let projectGraph: ProjectGraph;
+  let projectFileMapCache: FileMapCache;
+  try {
+    const context = createContext(
+      projects,
+      nxJson,
+      externalNodes,
+      fileMap,
+      filesToProcess
+    );
+    projectGraph = await buildProjectGraphUsingContext(
+      externalNodes,
+      context,
+      cachedFileData,
+      projectGraphVersion,
+      plugins,
+      sourceMap
+    );
+    projectFileMapCache = createProjectFileMapCache(
+      nxJson,
+      packageJsonDeps,
+      fileMap,
+      rootTsConfig
+    );
+  } catch (e) {
+    // we need to include the workspace validity errors in the final error
+    if (isAggregateProjectGraphError(e)) {
+      errors.push(...e.errors);
+      throw new AggregateProjectGraphError(errors, e.partialProjectGraph);
+    } else {
+      throw e;
+    }
+  }
+
+  if (errors.length > 0) {
+    throw new AggregateProjectGraphError(errors, projectGraph);
+  }
+
   return {
     projectGraph,
     projectFileMapCache,
@@ -159,7 +213,8 @@ async function buildProjectGraphUsingContext(
   ctx: CreateDependenciesContext,
   cachedFileData: CachedFileData,
   projectGraphVersion: string,
-  plugins: LoadedNxPlugin[]
+  plugins: LoadedNxPlugin[],
+  sourceMap: ConfigurationSourceMaps
 ) {
   performance.mark('build project graph:start');
 
@@ -173,15 +228,16 @@ async function buildProjectGraphUsingContext(
   const initProjectGraph = builder.getUpdatedProjectGraph();
 
   let updatedGraph;
-  let error;
+  let error: AggregateProjectGraphError;
   try {
     updatedGraph = await updateProjectGraphWithPlugins(
       ctx,
       initProjectGraph,
-      plugins
+      plugins,
+      sourceMap
     );
   } catch (e) {
-    if (e instanceof CreateDependenciesError) {
+    if (isAggregateProjectGraphError(e)) {
       updatedGraph = e.partialProjectGraph;
       error = e;
     } else {
@@ -222,7 +278,7 @@ async function buildProjectGraphUsingContext(
   if (!error) {
     return finalGraph;
   } else {
-    throw new CreateDependenciesError(error.errors, finalGraph);
+    throw new AggregateProjectGraphError(error.errors, finalGraph);
   }
 }
 
@@ -233,15 +289,9 @@ function createContext(
   fileMap: FileMap,
   filesToProcess: FileMap
 ): CreateDependenciesContext {
-  const clonedProjects = Object.keys(projects).reduce((map, projectName) => {
-    map[projectName] = {
-      ...projects[projectName],
-    };
-    return map;
-  }, {} as Record<string, ProjectConfiguration>);
   return {
     nxJsonConfiguration: nxJson,
-    projects: clonedProjects,
+    projects,
     externalNodes,
     workspaceRoot,
     fileMap,
@@ -252,10 +302,13 @@ function createContext(
 async function updateProjectGraphWithPlugins(
   context: CreateDependenciesContext,
   initProjectGraph: ProjectGraph,
-  plugins: LoadedNxPlugin[]
+  plugins: LoadedNxPlugin[],
+  sourceMap: ConfigurationSourceMaps
 ) {
   let graph = initProjectGraph;
-  const errors: Array<ProcessDependenciesError | ProcessProjectGraphError> = [];
+  const errors: Array<
+    ProcessDependenciesError | ProcessProjectGraphError | CreateMetadataError
+  > = [];
   for (const plugin of plugins) {
     try {
       if (
@@ -343,51 +396,26 @@ async function updateProjectGraphWithPlugins(
     })
   );
 
-  const result = builder.getUpdatedProjectGraph();
+  const graphWithDeps = builder.getUpdatedProjectGraph();
 
-  if (errors.length === 0) {
-    return result;
-  } else {
-    throw new CreateDependenciesError(errors, result);
-  }
-}
-
-export class ProcessDependenciesError extends Error {
-  constructor(public readonly pluginName: string, { cause }) {
-    super(
-      `The "${pluginName}" plugin threw an error while creating dependencies:`,
+  const { errors: metadataErrors, graph: updatedGraph } =
+    await applyProjectMetadata(
+      graphWithDeps,
+      plugins,
       {
-        cause,
-      }
+        nxJsonConfiguration: context.nxJsonConfiguration,
+        workspaceRoot,
+      },
+      sourceMap
     );
-    this.name = this.constructor.name;
-    this.stack = `${this.message}\n  ${cause.stack.split('\n').join('\n  ')}`;
-  }
-}
 
-export class ProcessProjectGraphError extends Error {
-  constructor(public readonly pluginName: string, { cause }) {
-    super(
-      `The "${pluginName}" plugin threw an error while processing the project graph:`,
-      {
-        cause,
-      }
-    );
-    this.name = this.constructor.name;
-    this.stack = `${this.message}\n  ${cause.stack.split('\n').join('\n  ')}`;
-  }
-}
+  errors.push(...metadataErrors);
 
-export class CreateDependenciesError extends Error {
-  constructor(
-    public readonly errors: Array<
-      ProcessDependenciesError | ProcessProjectGraphError
-    >,
-    public readonly partialProjectGraph: ProjectGraph
-  ) {
-    super('Failed to create dependencies. See above for errors');
-    this.name = this.constructor.name;
+  if (errors.length > 0) {
+    throw new AggregateProjectGraphError(errors, updatedGraph);
   }
+
+  return updatedGraph;
 }
 
 function readRootTsConfig() {
@@ -399,4 +427,53 @@ function readRootTsConfig() {
   } catch (e) {
     return {};
   }
+}
+
+export async function applyProjectMetadata(
+  graph: ProjectGraph,
+  plugins: LoadedNxPlugin[],
+  context: CreateMetadataContext,
+  sourceMap: ConfigurationSourceMaps
+): Promise<{ graph: ProjectGraph; errors?: CreateMetadataError[] }> {
+  const results: { metadata: ProjectsMetadata; pluginName: string }[] = [];
+  const errors: CreateMetadataError[] = [];
+
+  const promises = plugins.map(async (plugin) => {
+    if (isNxPluginV2(plugin) && plugin.createMetadata) {
+      performance.mark(`${plugin.name}:createMetadata - start`);
+      try {
+        const metadata = await plugin.createMetadata(graph, undefined, context);
+        results.push({ metadata, pluginName: plugin.name });
+      } catch (e) {
+        errors.push(new CreateMetadataError(e, plugin.name));
+      } finally {
+        performance.mark(`${plugin.name}:createMetadata - end`);
+        performance.measure(
+          `${plugin.name}:createMetadata`,
+          `${plugin.name}:createMetadata - start`,
+          `${plugin.name}:createMetadata - end`
+        );
+      }
+    }
+  });
+
+  await Promise.all(promises);
+
+  for (const { metadata: projectsMetadata, pluginName } of results) {
+    for (const project in projectsMetadata) {
+      const projectConfiguration: ProjectConfiguration =
+        graph.nodes[project]?.data;
+      if (projectConfiguration) {
+        projectConfiguration.metadata = mergeMetadata(
+          sourceMap[project],
+          [null, pluginName],
+          'metadata',
+          projectsMetadata[project].metadata,
+          projectConfiguration.metadata
+        );
+      }
+    }
+  }
+
+  return { errors, graph };
 }

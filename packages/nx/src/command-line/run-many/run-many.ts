@@ -54,7 +54,7 @@ export async function runMany(
     const projectNames = projects.map((t) => t.name);
     return await generateGraph(
       {
-        watch: false,
+        watch: true,
         open: true,
         view: 'tasks',
         all: nxArgs.all,

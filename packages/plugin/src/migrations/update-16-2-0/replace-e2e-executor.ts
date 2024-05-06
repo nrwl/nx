@@ -5,7 +5,12 @@ import {
   updateProjectConfiguration,
 } from '@nx/devkit';
 import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-options-utils';
-import { NxPluginE2EExecutorOptions } from '../../executors/e2e/schema';
+import { JestExecutorOptions } from '@nx/jest/src/executors/jest/schema';
+
+export interface NxPluginE2EExecutorOptions extends JestExecutorOptions {
+  target: string;
+  jestConfig: string;
+}
 
 export default async function replaceE2EExecutor(tree: Tree): Promise<void> {
   const projects = getProjects(tree);

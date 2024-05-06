@@ -1,10 +1,10 @@
 import * as path from 'path';
 import { readTsConfig } from '@nx/js';
 
-import { NormalizedNxWebpackPluginOptions } from '../nx-webpack-plugin-options';
+import { NormalizedNxAppWebpackPluginOptions } from '../nx-app-webpack-plugin-options';
 
 export function createLoaderFromCompiler(
-  options: NormalizedNxWebpackPluginOptions
+  options: NormalizedNxAppWebpackPluginOptions
 ) {
   switch (options.compiler) {
     case 'swc':

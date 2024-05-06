@@ -6,3 +6,5 @@ export * from './lib/use-route-constructor';
 export * from './lib/use-interval-when';
 export * from './lib/project-graph-data-service/get-project-graph-data-service';
 export * from './lib/fetch-project-graph';
+export * from './lib/error-toast';
+export * from './lib/expanded-targets-provider';

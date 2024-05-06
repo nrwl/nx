@@ -448,9 +448,9 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
 
 export type PluginConfiguration = string | ExpandedPluginConfiguration;
 
-export type ExpandedPluginConfiguration = {
+export type ExpandedPluginConfiguration<T = unknown> = {
   plugin: string;
-  options?: unknown;
+  options?: T;
   include?: string[];
   exclude?: string[];
 };

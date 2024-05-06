@@ -8,10 +8,7 @@ import {
 } from '../../config/project-graph';
 import { ProjectConfiguration } from '../../config/workspace-json-project-json';
 import { hashArray } from '../../hasher/file-hasher';
-import {
-  buildProjectGraphUsingProjectFileMap as buildProjectGraphUsingFileMap,
-  CreateDependenciesError,
-} from '../../project-graph/build-project-graph';
+import { buildProjectGraphUsingProjectFileMap as buildProjectGraphUsingFileMap } from '../../project-graph/build-project-graph';
 import { updateFileMap } from '../../project-graph/file-map-utils';
 import {
   FileMapCache,
@@ -38,6 +35,7 @@ import { getPlugins } from './plugins';
 import {
   DaemonProjectGraphError,
   ProjectConfigurationsError,
+  isAggregateProjectGraphError,
 } from '../../project-graph/error-types';
 
 interface SerializedProjectGraph {
@@ -234,36 +232,36 @@ async function processFilesAndCreateAndSerializeProjectGraph(
     const nxJson = readNxJson(workspaceRoot);
     global.NX_GRAPH_CREATION = true;
 
-    let graphNodes: ConfigurationResult;
+    let projectConfigurationsResult: ConfigurationResult;
     let projectConfigurationsError;
 
     try {
-      graphNodes = await retrieveProjectConfigurations(
+      projectConfigurationsResult = await retrieveProjectConfigurations(
         plugins,
         workspaceRoot,
         nxJson
       );
     } catch (e) {
       if (e instanceof ProjectConfigurationsError) {
-        graphNodes = e.partialProjectConfigurationsResult;
+        projectConfigurationsResult = e.partialProjectConfigurationsResult;
         projectConfigurationsError = e;
       } else {
         throw e;
       }
     }
     await processCollectedUpdatedAndDeletedFiles(
-      graphNodes,
+      projectConfigurationsResult,
       updatedFileHashes,
       deletedFiles
     );
-    const g = await createAndSerializeProjectGraph(graphNodes);
+    const g = await createAndSerializeProjectGraph(projectConfigurationsResult);
 
     delete global.NX_GRAPH_CREATION;
 
     const errors = [...(projectConfigurationsError?.errors ?? [])];
 
     if (g.error) {
-      if (g.error instanceof CreateDependenciesError) {
+      if (isAggregateProjectGraphError(g.error) && g.error.errors?.length) {
         errors.push(...g.error.errors);
       } else {
         return {
@@ -284,7 +282,7 @@ async function processFilesAndCreateAndSerializeProjectGraph(
         error: new DaemonProjectGraphError(
           errors,
           g.projectGraph,
-          graphNodes.sourceMaps
+          projectConfigurationsResult.sourceMaps
         ),
         projectGraph: null,
         projectFileMapCache: null,
@@ -344,7 +342,8 @@ async function createAndSerializeProjectGraph({
         allWorkspaceFiles,
         rustReferences,
         currentProjectFileMapCache || readFileMapCache(),
-        await getPlugins()
+        await getPlugins(),
+        sourceMaps
       );
 
     currentProjectFileMapCache = projectFileMapCache;

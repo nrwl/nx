@@ -4,20 +4,18 @@ import {
   ConfigurationSourceMaps,
 } from './utils/project-configuration-utils';
 import { ProjectConfiguration } from '../config/workspace-json-project-json';
-import {
-  ProcessDependenciesError,
-  ProcessProjectGraphError,
-} from './build-project-graph';
 import { ProjectGraph } from '../config/project-graph';
 
 export class ProjectGraphError extends Error {
   readonly #errors: Array<
     | CreateNodesError
     | MergeNodesError
+    | CreateMetadataError
     | ProjectsWithNoNameError
-    | ProjectsWithConflictingNamesError
+    | MultipleProjectsWithSameNameError
     | ProcessDependenciesError
     | ProcessProjectGraphError
+    | WorkspaceValidityError
   >;
   readonly #partialProjectGraph: ProjectGraph;
   readonly #partialSourceMaps: ConfigurationSourceMaps;
@@ -27,14 +25,18 @@ export class ProjectGraphError extends Error {
       | CreateNodesError
       | MergeNodesError
       | ProjectsWithNoNameError
-      | ProjectsWithConflictingNamesError
+      | MultipleProjectsWithSameNameError
       | ProcessDependenciesError
       | ProcessProjectGraphError
+      | CreateMetadataError
+      | WorkspaceValidityError
     >,
     partialProjectGraph: ProjectGraph,
     partialSourceMaps: ConfigurationSourceMaps
   ) {
-    super(`Failed to process project graph.`);
+    super(
+      `Failed to process project graph. Run "nx reset" to fix this. Please report the issue if you keep seeing it.`
+    );
     this.name = this.constructor.name;
     this.#errors = errors;
     this.#partialProjectGraph = partialProjectGraph;
@@ -71,9 +73,9 @@ export class ProjectGraphError extends Error {
   }
 }
 
-export class ProjectsWithConflictingNamesError extends Error {
+export class MultipleProjectsWithSameNameError extends Error {
   constructor(
-    conflicts: Map<string, string[]>,
+    public conflicts: Map<string, string[]>,
     public projects: Record<string, ProjectConfiguration>
   ) {
     super(
@@ -90,20 +92,38 @@ export class ProjectsWithConflictingNamesError extends Error {
   }
 }
 
-export function isProjectsWithConflictingNamesError(
+export class ProjectWithExistingNameError extends Error {
+  constructor(public projectName: string, public projectRoot: string) {
+    super(`The project "${projectName}" is defined in multiple locations.`);
+    this.name = this.constructor.name;
+  }
+}
+
+export function isProjectWithExistingNameError(
   e: unknown
-): e is ProjectsWithConflictingNamesError {
+): e is ProjectWithExistingNameError {
   return (
-    e instanceof ProjectsWithConflictingNamesError ||
+    e instanceof ProjectWithExistingNameError ||
     (typeof e === 'object' &&
       'name' in e &&
-      e?.name === ProjectsWithConflictingNamesError.prototype.name)
+      e?.name === ProjectWithExistingNameError.name)
+  );
+}
+
+export function isMultipleProjectsWithSameNameError(
+  e: unknown
+): e is MultipleProjectsWithSameNameError {
+  return (
+    e instanceof MultipleProjectsWithSameNameError ||
+    (typeof e === 'object' &&
+      'name' in e &&
+      e?.name === MultipleProjectsWithSameNameError.name)
   );
 }
 
 export class ProjectsWithNoNameError extends Error {
   constructor(
-    projectRoots: string[],
+    public projectRoots: string[],
     public projects: Record<string, ProjectConfiguration>
   ) {
     super(
@@ -122,7 +142,25 @@ export function isProjectsWithNoNameError(
     e instanceof ProjectsWithNoNameError ||
     (typeof e === 'object' &&
       'name' in e &&
-      e?.name === ProjectsWithNoNameError.prototype.name)
+      e?.name === ProjectsWithNoNameError.name)
+  );
+}
+
+export class ProjectWithNoNameError extends Error {
+  constructor(public projectRoot: string) {
+    super(`The project in ${projectRoot} has no name provided.`);
+    this.name = this.constructor.name;
+  }
+}
+
+export function isProjectWithNoNameError(
+  e: unknown
+): e is ProjectWithNoNameError {
+  return (
+    e instanceof ProjectWithNoNameError ||
+    (typeof e === 'object' &&
+      'name' in e &&
+      e?.name === ProjectWithNoNameError.name)
   );
 }
 
@@ -132,13 +170,24 @@ export class ProjectConfigurationsError extends Error {
       | MergeNodesError
       | CreateNodesError
       | ProjectsWithNoNameError
-      | ProjectsWithConflictingNamesError
+      | MultipleProjectsWithSameNameError
     >,
     public readonly partialProjectConfigurationsResult: ConfigurationResult
   ) {
     super('Failed to create project configurations');
     this.name = this.constructor.name;
   }
+}
+
+export function isProjectConfigurationsError(
+  e: unknown
+): e is ProjectConfigurationsError {
+  return (
+    e instanceof ProjectConfigurationsError ||
+    (typeof e === 'object' &&
+      'name' in e &&
+      e?.name === ProjectConfigurationsError.name)
+  );
 }
 
 export class CreateNodesError extends Error {
@@ -196,6 +245,94 @@ export class MergeNodesError extends Error {
     this.pluginName = pluginName;
     this.stack = `${this.message}\n  ${error.stack.split('\n').join('\n  ')}`;
   }
+}
+
+export class CreateMetadataError extends Error {
+  constructor(public readonly error: Error, public readonly plugin: string) {
+    super(`The "${plugin}" plugin threw an error while creating metadata:`, {
+      cause: error,
+    });
+    this.name = this.constructor.name;
+  }
+}
+
+export class ProcessDependenciesError extends Error {
+  constructor(public readonly pluginName: string, { cause }) {
+    super(
+      `The "${pluginName}" plugin threw an error while creating dependencies:`,
+      {
+        cause,
+      }
+    );
+    this.name = this.constructor.name;
+    this.stack = `${this.message}\n  ${cause.stack.split('\n').join('\n  ')}`;
+  }
+}
+export class WorkspaceValidityError extends Error {
+  constructor(public message: string) {
+    message = `Configuration Error\n${message}`;
+    super(message);
+    this.name = this.constructor.name;
+  }
+}
+
+export function isWorkspaceValidityError(
+  e: unknown
+): e is WorkspaceValidityError {
+  return (
+    e instanceof WorkspaceValidityError ||
+    (typeof e === 'object' &&
+      'name' in e &&
+      e?.name === WorkspaceValidityError.name)
+  );
+}
+
+export class ProcessProjectGraphError extends Error {
+  constructor(public readonly pluginName: string, { cause }) {
+    super(
+      `The "${pluginName}" plugin threw an error while processing the project graph:`,
+      {
+        cause,
+      }
+    );
+    this.name = this.constructor.name;
+    this.stack = `${this.message}\n  ${cause.stack.split('\n').join('\n  ')}`;
+  }
+}
+
+export class AggregateProjectGraphError extends Error {
+  constructor(
+    public readonly errors: Array<
+      | CreateMetadataError
+      | ProcessDependenciesError
+      | ProcessProjectGraphError
+      | WorkspaceValidityError
+    >,
+    public readonly partialProjectGraph: ProjectGraph
+  ) {
+    super('Failed to create project graph. See above for errors');
+    this.name = this.constructor.name;
+  }
+}
+
+export function isAggregateProjectGraphError(
+  e: unknown
+): e is AggregateProjectGraphError {
+  return (
+    e instanceof AggregateProjectGraphError ||
+    (typeof e === 'object' &&
+      'name' in e &&
+      e?.name === AggregateProjectGraphError.name)
+  );
+}
+
+export function isCreateMetadataError(e: unknown): e is CreateMetadataError {
+  return (
+    e instanceof CreateMetadataError ||
+    (typeof e === 'object' &&
+      'name' in e &&
+      e?.name === CreateMetadataError.name)
+  );
 }
 
 export function isCreateNodesError(e: unknown): e is CreateNodesError {

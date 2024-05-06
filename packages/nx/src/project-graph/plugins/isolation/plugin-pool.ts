@@ -110,11 +110,13 @@ function createWorkerHandler(
     return consumeMessage(message, {
       'load-result': (result) => {
         if (result.success) {
-          const { name, createNodesPattern } = result;
+          const { name, createNodesPattern, include, exclude } = result;
           pluginName = name;
           pluginNames.set(worker, pluginName);
           onload({
             name,
+            include,
+            exclude,
             createNodes: createNodesPattern
               ? [
                   createNodesPattern,
@@ -153,6 +155,18 @@ function createWorkerHandler(
                   });
                 }
               : undefined,
+            createMetadata: result.hasCreateMetadata
+              ? (graph, ctx) => {
+                  const tx =
+                    pluginName + ':createMetadata:' + performance.now();
+                  return registerPendingPromise(tx, pending, () => {
+                    worker.send({
+                      type: 'createMetadata',
+                      payload: { graph, context: ctx, tx },
+                    });
+                  });
+                }
+              : undefined,
           });
         } else if (result.success === false) {
           onloadError(result.error);
@@ -178,6 +192,14 @@ function createWorkerHandler(
         const { resolver, rejector } = pending.get(tx);
         if (result.success) {
           resolver(result.graph);
+        } else if (result.success === false) {
+          rejector(result.error);
+        }
+      },
+      createMetadataResult: ({ tx, ...result }) => {
+        const { resolver, rejector } = pending.get(tx);
+        if (result.success) {
+          resolver(result.metadata);
         } else if (result.success === false) {
           rejector(result.error);
         }

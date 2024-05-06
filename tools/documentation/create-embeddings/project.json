@@ -51,14 +51,6 @@
           "buildTarget": "tools-documentation-create-embeddings:build:production"
         }
       }
-    },
-    "lint": {},
-    "test": {
-      "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
-      "options": {
-        "jestConfig": "tools/documentation/create-embeddings/jest.config.ts"
-      }
     }
   },
   "tags": []

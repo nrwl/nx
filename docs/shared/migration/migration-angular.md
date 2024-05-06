@@ -132,7 +132,7 @@ Once the script has run, commit the changes. Reverting this commit will effectiv
 
 {% cards cols="1" mdCols="3" smCols="3" lgCols="3" %}
 
-{% card title="Nx and the Angular CLI" description="Differences between Nx and the Angular CLI" type="documentation" url="/concepts/more-concepts/nx-and-angular" /%}
+{% card title="Nx and the Angular CLI" description="Differences between Nx and the Angular CLI" type="documentation" url="/nx-api/angular/documents/nx-and-angular" /%}
 
 {% card title="Multiple Angular Repositories to one Nx Workspace" description="Combine multiple Angular CLI workspaces into one Nx workspace" type="documentation" url="/recipes/angular/migration/angular-multiple" /%}
 

@@ -1,4 +1,5 @@
 import { performance } from 'perf_hooks';
+
 import { readNxJson } from '../config/nx-json';
 import { ProjectGraph } from '../config/project-graph';
 import {
@@ -11,17 +12,18 @@ import { fileExists } from '../utils/fileutils';
 import { output } from '../utils/output';
 import { stripIndents } from '../utils/strip-indents';
 import { workspaceRoot } from '../utils/workspace-root';
+import { buildProjectGraphUsingProjectFileMap } from './build-project-graph';
 import {
-  CreateDependenciesError,
-  buildProjectGraphUsingProjectFileMap,
-} from './build-project-graph';
+  AggregateProjectGraphError,
+  isAggregateProjectGraphError,
+  ProjectConfigurationsError,
+  ProjectGraphError,
+} from './error-types';
 import {
   readFileMapCache,
   readProjectGraphCache,
   writeCache,
 } from './nx-deps-cache';
-
-import { ProjectConfigurationsError, ProjectGraphError } from './error-types';
 import { loadNxPlugins } from './plugins/internal-api';
 import { ConfigurationResult } from './utils/project-configuration-utils';
 import {
@@ -120,7 +122,7 @@ export async function buildProjectGraphAndSourceMapsWithoutDaemon() {
 
   const cacheEnabled = process.env.NX_CACHE_PROJECT_GRAPH !== 'false';
   performance.mark('build-project-graph-using-project-file-map:start');
-  let createDependenciesError: CreateDependenciesError;
+  let projectGraphError: AggregateProjectGraphError;
   let projectGraphResult: Awaited<
     ReturnType<typeof buildProjectGraphUsingProjectFileMap>
   >;
@@ -132,15 +134,16 @@ export async function buildProjectGraphAndSourceMapsWithoutDaemon() {
       allWorkspaceFiles,
       rustReferences,
       cacheEnabled ? readFileMapCache() : null,
-      plugins
+      plugins,
+      sourceMaps
     );
   } catch (e) {
-    if (e instanceof CreateDependenciesError) {
+    if (isAggregateProjectGraphError(e)) {
       projectGraphResult = {
         projectGraph: e.partialProjectGraph,
         projectFileMapCache: null,
       };
-      createDependenciesError = e;
+      projectGraphError = e;
     } else {
       throw e;
     }
@@ -155,7 +158,7 @@ export async function buildProjectGraphAndSourceMapsWithoutDaemon() {
 
   const errors = [
     ...(projectConfigurationsError?.errors ?? []),
-    ...(createDependenciesError?.errors ?? []),
+    ...(projectGraphError?.errors ?? []),
   ];
 
   if (errors.length > 0) {
@@ -168,7 +171,7 @@ export async function buildProjectGraphAndSourceMapsWithoutDaemon() {
   }
 }
 
-function handleProjectGraphError(opts: { exitOnError: boolean }, e) {
+export function handleProjectGraphError(opts: { exitOnError: boolean }, e) {
   if (opts.exitOnError) {
     const isVerbose = process.env.NX_VERBOSE_LOGGING === 'true';
     if (e instanceof ProjectGraphError) {

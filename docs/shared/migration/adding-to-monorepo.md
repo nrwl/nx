@@ -136,7 +136,10 @@ nx show project my-workspace --web
             }
           ],
           "executor": "nx:run-commands",
-          "configurations": {}
+          "configurations": {},
+          "metadata": {
+            "technologies": ["eslint"]
+          }
         },
         "next:build": {
           "options": {
@@ -154,7 +157,10 @@ nx show project my-workspace --web
           ],
           "outputs": ["{projectRoot}/.next", "{projectRoot}/.next/!(cache)"],
           "executor": "nx:run-commands",
-          "configurations": {}
+          "configurations": {},
+          "metadata": {
+            "technologies": ["next"]
+          }
         },
         "dev": {
           "options": {
@@ -162,7 +168,10 @@ nx show project my-workspace --web
             "command": "next dev"
           },
           "executor": "nx:run-commands",
-          "configurations": {}
+          "configurations": {},
+          "metadata": {
+            "technologies": ["next"]
+          }
         },
         "start": {
           "options": {
@@ -171,7 +180,10 @@ nx show project my-workspace --web
           },
           "dependsOn": ["build"],
           "executor": "nx:run-commands",
-          "configurations": {}
+          "configurations": {},
+          "metadata": {
+            "technologies": ["next"]
+          }
         }
       },
       "sourceRoot": ".",

@@ -8,6 +8,7 @@ import { componentGenerator } from '../component/component';
 import * as storybookUtils from '../utils/storybook-ast/storybook-inputs';
 import { generateTestApplication } from '../utils/testing';
 import { componentCypressSpecGenerator } from './component-cypress-spec';
+import { E2eTestRunner } from '../../utils/test-runners';
 
 // need to mock cypress otherwise it'll use the nx installed version from package.json
 //  which is v9 while we are testing for the new v10 version
@@ -23,7 +24,11 @@ describe('componentCypressSpec generator', () => {
   beforeEach(async () => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
-    await generateTestApplication(tree, { name: appName, skipFormat: true });
+    await generateTestApplication(tree, {
+      name: appName,
+      skipFormat: true,
+      e2eTestRunner: E2eTestRunner.Cypress,
+    });
     await componentGenerator(tree, {
       name: 'test-button',
       project: appName,

@@ -3,6 +3,7 @@ import {
   CreateNodes,
   CreateNodesContext,
   joinPathFragments,
+  normalizePath,
   NxJsonConfiguration,
   ProjectConfiguration,
   readJsonFile,
@@ -195,7 +196,7 @@ async function buildJestTargets(
       targetGroup.push(options.ciTargetName);
 
       for (const testPath of testPaths) {
-        const relativePath = normalize(
+        const relativePath = normalizePath(
           relative(join(context.workspaceRoot, projectRoot), testPath)
         );
         const targetName = `${options.ciTargetName}--${relativePath}`;

@@ -125,9 +125,7 @@
         "color": true,
         "parallel": false
       }
-    },
-    "lint": {},
-    "test": {}
+    }
   },
   "tags": ["scope:nx-dev", "type:app"],
   "implicitDependencies": ["docs"]

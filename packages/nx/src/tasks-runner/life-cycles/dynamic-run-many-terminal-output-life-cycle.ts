@@ -409,7 +409,7 @@ export async function createRunManyDynamicOutputRenderer({
                 '-'
               )} ${output.formatCommand(t.toString())}`
           )
-          .join('\n ')}`,
+          .join('\n')}`,
       ];
 
       if (failedTasks.size > numFailedToPrint) {
