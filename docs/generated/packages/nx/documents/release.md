@@ -25,12 +25,6 @@ Default: `false`
 
 Preview the changes without updating files/creating releases
 
-### first-release
-
-Type: `boolean`
-
-Indicates that this is the first release for the selected release group. If the current version cannot be determined as usual, the version on disk will be used as a fallback. This is useful when using git or the registry to determine the current version of packages, since those sources are only available after the first release. Also indicates that changelog generation should not assume a previous git tag exists and that publishing should not check for the existence of the package before running.
-
 ### groups
 
 Type: `string`
@@ -73,6 +67,12 @@ nx release [specifier]
 
 #### Options
 
+##### first-release
+
+Type: `boolean`
+
+Indicates that this is the first release for the selected release group. If the current version cannot be determined as usual, the version on disk will be used as a fallback. This is useful when using git or the registry to determine the current version of packages, since those sources are only available after the first release. Also indicates that changelog generation should not assume a previous git tag exists and that publishing should not check for the existence of the package before running.
+
 ##### help
 
 Type: `boolean`
@@ -112,6 +112,12 @@ nx release version [specifier]
 ```
 
 #### Options
+
+##### first-release
+
+Type: `boolean`
+
+Indicates that this is the first release for the selected release group. If the current version cannot be determined as usual, the version on disk will be used as a fallback. This is useful when using git or the registry to determine the current version of packages, since those sources are only available after the first release. Also indicates that changelog generation should not assume a previous git tag exists and that publishing should not check for the existence of the package before running.
 
 ##### git-commit
 
@@ -188,6 +194,12 @@ nx release changelog [version]
 ```
 
 #### Options
+
+##### first-release
+
+Type: `boolean`
+
+Indicates that this is the first release for the selected release group. If the current version cannot be determined as usual, the version on disk will be used as a fallback. This is useful when using git or the registry to determine the current version of packages, since those sources are only available after the first release. Also indicates that changelog generation should not assume a previous git tag exists and that publishing should not check for the existence of the package before running.
 
 ##### from
 
@@ -296,6 +308,12 @@ Default: `true`
 Type: `string`
 
 Exclude certain projects from being processed
+
+##### first-release
+
+Type: `boolean`
+
+Indicates that this is the first release for the selected release group. If the current version cannot be determined as usual, the version on disk will be used as a fallback. This is useful when using git or the registry to determine the current version of packages, since those sources are only available after the first release. Also indicates that changelog generation should not assume a previous git tag exists and that publishing should not check for the existence of the package before running.
 
 ##### graph
 
