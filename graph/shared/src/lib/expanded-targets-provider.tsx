@@ -7,8 +7,16 @@ export const ExpandedTargetsContext = createContext<{
   collapseAllTargets?: () => void;
 }>({});
 
-export const ExpandedTargetsProvider = ({ children }) => {
-  const [expandedTargets, setExpandedTargets] = useState<string[]>([]);
+export const ExpandedTargetsProvider = ({
+  children,
+  initialExpanededTargets = [],
+}: {
+  children: React.ReactNode;
+  initialExpanededTargets?: string[];
+}) => {
+  const [expandedTargets, setExpandedTargets] = useState<string[]>(
+    initialExpanededTargets
+  );
 
   const toggleTarget = (targetName: string) => {
     setExpandedTargets((prevExpandedTargets) => {
