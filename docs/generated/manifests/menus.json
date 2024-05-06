@@ -93,6 +93,14 @@
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
+              },
+              {
+                "name": "Gradle Monorepo",
+                "path": "/getting-started/tutorials/gradle-tutorial",
+                "id": "gradle-tutorial",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
               }
             ],
             "disableCollapsible": false
@@ -185,6 +193,14 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
+          },
+          {
+            "name": "Gradle Monorepo",
+            "path": "/getting-started/tutorials/gradle-tutorial",
+            "id": "gradle-tutorial",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -233,6 +249,14 @@
         "name": "Vue Standalone",
         "path": "/getting-started/tutorials/vue-standalone-tutorial",
         "id": "vue-standalone-tutorial",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Gradle Monorepo",
+        "path": "/getting-started/tutorials/gradle-tutorial",
+        "id": "gradle-tutorial",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false

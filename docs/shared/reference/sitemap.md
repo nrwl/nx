@@ -12,6 +12,7 @@
       - [Angular Standalone](/getting-started/tutorials/angular-standalone-tutorial)
       - [Angular Monorepo](/getting-started/tutorials/angular-monorepo-tutorial)
       - [Vue Standalone](/getting-started/tutorials/vue-standalone-tutorial)
+      - [Gradle Monorepo](/getting-started/tutorials/gradle-tutorial)
   - [Core Tutorial](/core-tutorial)
     - [1 - Create Blog](/core-tutorial/01-create-blog)
     - [2 - Create CLI](/core-tutorial/02-create-cli)
