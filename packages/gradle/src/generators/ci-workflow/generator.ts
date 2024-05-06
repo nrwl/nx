@@ -7,6 +7,7 @@ import {
   formatFiles,
   detectPackageManager,
   readNxJson,
+  readJson,
 } from '@nx/devkit';
 import { join } from 'path';
 import { getNxCloudUrl, isNxCloudUsed } from 'nx/src/utils/nx-cloud-utils';
@@ -33,13 +34,7 @@ export interface Schema {
 export async function ciWorkflowGenerator(tree: Tree, schema: Schema) {
   const ci = schema.ci;
 
-  const nxJson: NxJsonConfiguration = readNxJson(tree);
-  const nxCloudUsed = isNxCloudUsed(nxJson);
-  if (!nxCloudUsed) {
-    throw new Error('This workspace is not connected to Nx Cloud.');
-  }
-
-  const options = getTemplateData(schema, nxJson);
+  const options = getTemplateData(tree, schema);
   generateFiles(tree, join(__dirname, 'files', ci), '', options);
   await formatFiles(tree);
 }
@@ -54,10 +49,7 @@ interface Substitutes {
   nxCloudHost: string;
 }
 
-function getTemplateData(
-  options: Schema,
-  nxJson: NxJsonConfiguration
-): Substitutes {
+function getTemplateData(tree: Tree, options: Schema): Substitutes {
   const { name: workflowName, fileName: workflowFileName } = names(
     options.name
   );
@@ -65,8 +57,11 @@ function getTemplateData(
   const { exec: packageManagerPrefix } =
     getPackageManagerCommand(packageManager);
 
-  const nxCloudUrl = getNxCloudUrl(nxJson);
-  const nxCloudHost = new URL(nxCloudUrl).host;
+  let nxCloudHost: string = 'nx.app';
+  try {
+    const nxCloudUrl = getNxCloudUrl(readJson(tree, 'nx.json'));
+    nxCloudHost = new URL(nxCloudUrl).host;
+  } catch {}
 
   const mainBranch = deduceDefaultBase();
 
