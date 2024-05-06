@@ -109,8 +109,7 @@ even intelligently run a subset of tasks based on the changes you've made in you
 computation caching to reuse the results of tasks. We will explore how Nx adds to the task running Gradle provides.
 
 Before we start running tasks, let's explore the tasks available for the `application` project. The `@nx/gradle` plugin
-that we've added, also reflects Gradle's tasks to Nx, allowing it to run any of the Gradle
-tasks. You can do this either through [Nx Console](/getting-started/editor-setup) or from the terminal:
+that we've installed allows Nx to run any of the Gradle tasks defined for that project. You can do this either through [Nx Console](/getting-started/editor-setup) or from the terminal:
 
 ```shell {% path="~/gradle-tutorial" %}
 ./nx show project application --web
@@ -128,8 +127,8 @@ The Nx command to run the `build` task for the `application` project is:
 When Nx runs a Gradle task, it hands off the execution of that task to Gradle, so all task dependencies and
 configuration settings in the Gradle configuration are still respected.
 
-By running the task via Nx however, the computation was cached for reuse. Now, running `./nx run application:build`
-again, will be near instant as the result from the previous command will be used.
+By running the task via Nx, however, the task computation was cached for reuse. Now, running `./nx run application:build`
+again, will complete almost instantly as the result from the previous execution will be used.
 
 ```{% command="./nx run application:build" %}
 
@@ -174,10 +173,9 @@ BUILD SUCCESSFUL in 768ms
  NX   Successfully ran target build for project application and 3 tasks it depends on (30ms)
 
 Nx read the output from the cache instead of running the command for 4 out of 4 tasks.
-
 ```
 
-Now that we've run one task, let's run all the `build` tasks in the repository with the Nx `run-many` command:
+Now that we've run one task, let's run all the `build` tasks in the repository with the Nx `run-many` command. This is similar to Gradle's `./gradlew build` command.
 
 ```{% command="./nx run-many -t build" %}
 
@@ -193,7 +191,6 @@ Now that we've run one task, let's run all the `build` tasks in the repository w
  NX   Successfully ran target build for 3 projects and 3 tasks they depend on (2s)
 
 Nx read the output from the cache instead of running the command for 4 out of 6 tasks.
-
 ```
 
 Again, because Nx cached the tasks when the application was built, most of the tasks here were near instant. The only
@@ -202,7 +199,7 @@ then all the tasks will be restored from the cache.
 
 ## Run Tasks for Affected Projects
 
-Nx doesn't just cache your task results, it can also eliminate the need to run unnecessary tasks.
+Nx doesn't just cache your task results, it can also [eliminate the need to run unnecessary tasks](/ci/features/affected).
 
 First, commit any outstanding changes to the `main` branch locally:
 
@@ -245,6 +242,8 @@ public class DemoApplication {
 As a developer, we know that this change only affects the `application` project, not the `library` project. We would
 run `./nx run application:test` to verify our changes. In CI, teams often run all test tasks rerunning
 the `library:test` task unnecessarily.
+
+For a repository with only a few projects, you can manually calculate which projects are affected. As the repository grows, it becomes critical to have a tool like Nx that understands the project dependency graph and eliminates wasted time in CI.
 
 The `./nx affected` command solves this problem. Nx uses its project graph in conjunction with git history to only run
 tasks for projects that may have been affected by the changes that you made.
