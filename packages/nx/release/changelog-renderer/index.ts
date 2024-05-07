@@ -334,7 +334,7 @@ function formatChange(
     (change.isBreaking ? '⚠️  ' : '') +
     (change.scope ? `**${change.scope.trim()}:** ` : '') +
     change.description;
-  if (repoSlug && changelogRenderOptions.changeReferences) {
+  if (repoSlug && changelogRenderOptions.commitReferences) {
     changeLine += formatReferences(change.githubReferences, repoSlug);
   }
   return changeLine;

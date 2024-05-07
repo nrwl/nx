@@ -2,7 +2,10 @@
  * Special thanks to changelogen for the original inspiration for many of these utilities:
  * https://github.com/unjs/changelogen
  */
+import { existsSync } from 'fs-extra';
+import { join } from 'path';
 import { interpolate } from '../../../tasks-runner/utils';
+import { workspaceRoot } from '../../../utils/workspace-root';
 import { execCommand } from './exec-command';
 
 export interface GitCommitAuthor {
@@ -166,10 +169,11 @@ export async function gitAdd({
     const isFileIgnored = await isIgnored(f);
     if (isFileIgnored) {
       ignoredFiles.push(f);
-      // only add a file deletion if it is already tracked
-    } else {
-      // TODO: prevent error when adding a file that doesn't exist and isn't tracked
-      // if (changedTrackedFiles.has(f) || existsSync(f)) {
+    } else if (
+      // we can't add files that were untracked and then deleted
+      changedTrackedFiles.has(f) ||
+      existsSync(join(workspaceRoot, f))
+    ) {
       filesToAdd.push(f);
     }
   }
