@@ -12,17 +12,18 @@ export interface NxShowArgs {
 }
 
 export type ShowProjectsOptions = NxShowArgs & {
-  exclude: string;
-  files: string;
-  uncommitted: any;
-  untracked: any;
-  base: string;
-  head: string;
-  affected: boolean;
-  type: ProjectGraphProjectNode['type'];
-  projects: string[];
-  withTarget: string[];
-  verbose: boolean;
+  exclude?: string[];
+  files?: string;
+  uncommitted?: any;
+  untracked?: any;
+  base?: string;
+  head?: string;
+  affected?: boolean;
+  type?: ProjectGraphProjectNode['type'];
+  projects?: string[];
+  withTarget?: string[];
+  verbose?: boolean;
+  sep?: string;
 };
 
 export type ShowProjectOptions = NxShowArgs & {
@@ -90,11 +91,17 @@ const showProjectsCommand: CommandModule<NxShowArgs, ShowProjectsOptions> = {
         description: 'Select only projects of the given type',
         choices: ['app', 'lib', 'e2e'],
       })
+      .option('sep', {
+        type: 'string',
+        description: 'Outputs projects with the specified seperator',
+      })
       .implies('untracked', 'affected')
       .implies('uncommitted', 'affected')
       .implies('files', 'affected')
       .implies('base', 'affected')
       .implies('head', 'affected')
+      .conflicts('sep', 'json')
+      .conflicts('json', 'sep')
       .example(
         '$0 show projects --projects "apps/*"',
         'Show all projects in the apps directory'
@@ -119,7 +126,9 @@ const showProjectsCommand: CommandModule<NxShowArgs, ShowProjectsOptions> = {
     return handleErrors(
       args.verbose ?? process.env.NX_VERBOSE_LOGGING === 'true',
       async () => {
-        return (await import('./show')).showProjectsHandler(args);
+        const { showProjectsHandler } = await import('./projects');
+        await showProjectsHandler(args);
+        process.exit(0);
       }
     );
   },
@@ -145,21 +154,23 @@ const showProjectCommand: CommandModule<NxShowArgs, ShowProjectOptions> = {
         description:
           'Prints additional information about the commands (e.g., stack traces)',
       })
-      .check((argv) => {
-        if (argv.web) {
-          argv.json = false;
-        }
-        return true;
-      })
+      .conflicts('json', 'web')
+      .conflicts('web', 'json')
       .example(
         '$0 show project my-app',
         'View project information for my-app in JSON format'
+      )
+      .example(
+        '$0 show project my-app --web',
+        'View project information for my-app in the browser'
       ),
   handler: (args) => {
     return handleErrors(
       args.verbose ?? process.env.NX_VERBOSE_LOGGING === 'true',
       async () => {
-        return (await import('./show')).showProjectHandler(args);
+        const { showProjectHandler } = await import('./project');
+        await showProjectHandler(args);
+        process.exit(0);
       }
     );
   },
