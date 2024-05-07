@@ -20,6 +20,7 @@ export * from './lib/typography';
 export * from './lib/github-star-widget';
 export * from './lib/youtube.component';
 export * from './lib/image-theme';
+export * from './lib/twitter-icon';
 export { resourceMenuItems } from './lib/headers/menu-items';
 export { solutionsMenuItems } from './lib/headers/menu-items';
 export { eventItems } from './lib/headers/menu-items';
