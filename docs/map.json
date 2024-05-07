@@ -69,6 +69,11 @@
                   "name": "Vue Standalone",
                   "id": "vue-standalone-tutorial",
                   "file": "shared/vue-standalone-tutorial/vue-standalone"
+                },
+                {
+                  "name": "Gradle Monorepo",
+                  "id": "gradle-tutorial",
+                  "file": "shared/tutorials/gradle"
                 }
               ]
             }

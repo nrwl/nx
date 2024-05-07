@@ -33,7 +33,7 @@ npx create-nx-workspace@latest
 
 {% /cards %}
 
-{% cards cols="2" lgCols="6" mdCols="3" smCols="2" %}
+{% cards cols="2" lgCols="3" mdCols="3" smCols="2" %}
 
 {% link-card title="NPM Workspaces" type="tutorial" url="/getting-started/tutorials/npm-workspaces-tutorial" icon="jsMono" /%}
 
@@ -41,11 +41,17 @@ npx create-nx-workspace@latest
 
 {% link-card title="React Monorepo" type="tutorial" url="/getting-started/tutorials/react-monorepo-tutorial" icon="reactMono" /%}
 
+{% /cards %}
+
+{% cards cols="2" lgCols="4" mdCols="4" smCols="2" %}
+
+{% link-card title="Single Vue App" type="tutorial" url="/getting-started/tutorials/vue-standalone-tutorial" icon="vue" /%}
+
 {% link-card title="Single Angular App" type="tutorial" url="/getting-started/tutorials/angular-standalone-tutorial" icon="angular" /%}
 
 {% link-card title="Angular Monorepo" type="tutorial" url="/getting-started/tutorials/angular-monorepo-tutorial" icon="angularMono" /%}
 
-{% link-card title="Single Vue App" type="tutorial" url="/getting-started/tutorials/vue-standalone-tutorial" icon="vue" /%}
+{% link-card title="Gradle Monorepo" type="tutorial" url="/getting-started/tutorials/gradle-tutorial" icon="gradle" /%}
 
 {% /cards %}
 

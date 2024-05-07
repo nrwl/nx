@@ -117,6 +117,7 @@ pub fn run_command(
     command: String,
     command_dir: Option<String>,
     js_env: Option<HashMap<String, String>>,
+    exec_argv: Option<Vec<String>>,
     quiet: Option<bool>,
     tty: Option<bool>,
 ) -> napi::Result<ChildProcess> {
@@ -136,6 +137,10 @@ pub fn run_command(
         for (key, value) in js_env {
             cmd.env(key, value);
         }
+    }
+
+    if let Some(exec_argv) = exec_argv {
+        cmd.env("NX_PSEUDO_TERMINAL_EXEC_ARGV", exec_argv.join("|"));
     }
 
     let (exit_to_process_tx, exit_to_process_rx) = bounded(1);

@@ -41,8 +41,18 @@ export function shareWorkspaceLibraries(
     return getEmptySharedLibrariesConfig();
   }
 
+  // Nested projects must come first, sort them as such
+  const sortedTsConfigPathAliases = {};
+  Object.keys(tsconfigPathAliases)
+    .sort((a, b) => {
+      return b.split('/').length - a.split('/').length;
+    })
+    .forEach(
+      (key) => (sortedTsConfigPathAliases[key] = tsconfigPathAliases[key])
+    );
+
   const pathMappings: { name: string; path: string }[] = [];
-  for (const [key, paths] of Object.entries(tsconfigPathAliases)) {
+  for (const [key, paths] of Object.entries(sortedTsConfigPathAliases)) {
     const library = workspaceLibs.find((lib) => lib.importKey === key);
     if (!library) {
       continue;
@@ -52,7 +62,7 @@ export function shareWorkspaceLibraries(
     // It will do nothing for React Projects
     collectWorkspaceLibrarySecondaryEntryPoints(
       library,
-      tsconfigPathAliases
+      sortedTsConfigPathAliases
     ).forEach(({ name, path }) =>
       pathMappings.push({
         name,

@@ -145,6 +145,12 @@ Type: `string`
 
 Show only projects that match a given pattern.
 
+##### sep
+
+Type: `string`
+
+Outputs projects with the specified seperator
+
 ##### type
 
 Type: `string`

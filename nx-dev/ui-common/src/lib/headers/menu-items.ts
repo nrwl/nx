@@ -186,10 +186,10 @@ export const learnItems: MenuItem[] = [
 ];
 export const eventItems: MenuItem[] = [
   {
-    name: 'Nx Conf',
+    name: 'Monorepo World',
     description:
-      'In person & virtual conference about latest monorepo advancements.',
-    href: '/conf',
+      'In person & virtual conference about the latest monorepo advancements.',
+    href: 'https://monorepo.tools/conf',
     icon: null,
     isNew: false,
     isHighlight: false,
