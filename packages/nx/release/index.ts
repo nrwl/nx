@@ -4,6 +4,7 @@
 export {
   release,
   releaseChangelog,
+  releasePlan,
   releasePublish,
   releaseVersion,
 } from '../src/command-line/release';

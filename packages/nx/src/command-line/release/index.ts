@@ -5,6 +5,10 @@ export { releaseChangelog } from './changelog';
 /**
  * @public
  */
+export { releasePlan } from './plan';
+/**
+ * @public
+ */
 export { releasePublish } from './publish';
 /**
  * @public
