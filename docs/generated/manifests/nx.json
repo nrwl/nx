@@ -122,6 +122,17 @@
             "isExternal": false,
             "path": "/getting-started/tutorials/vue-standalone-tutorial",
             "tags": []
+          },
+          {
+            "id": "gradle-tutorial",
+            "name": "Gradle Monorepo",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/tutorials/gradle",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/getting-started/tutorials/gradle-tutorial",
+            "tags": []
           }
         ],
         "isExternal": false,
@@ -249,6 +260,17 @@
         "isExternal": false,
         "path": "/getting-started/tutorials/vue-standalone-tutorial",
         "tags": []
+      },
+      {
+        "id": "gradle-tutorial",
+        "name": "Gradle Monorepo",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/tutorials/gradle",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/getting-started/tutorials/gradle-tutorial",
+        "tags": []
       }
     ],
     "isExternal": false,
@@ -319,6 +341,17 @@
     "itemList": [],
     "isExternal": false,
     "path": "/getting-started/tutorials/vue-standalone-tutorial",
+    "tags": []
+  },
+  "/getting-started/tutorials/gradle-tutorial": {
+    "id": "gradle-tutorial",
+    "name": "Gradle Monorepo",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/tutorials/gradle",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/getting-started/tutorials/gradle-tutorial",
     "tags": []
   },
   "/core-tutorial": {

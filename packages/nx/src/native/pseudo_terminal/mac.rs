@@ -24,11 +24,12 @@ impl RustPseudoTerminal {
         command: String,
         command_dir: Option<String>,
         js_env: Option<HashMap<String, String>>,
+        exec_argv: Option<Vec<String>>,
         quiet: Option<bool>,
         tty: Option<bool>,
     ) -> napi::Result<ChildProcess> {
         let pseudo_terminal = create_pseudo_terminal()?;
-        run_command(&pseudo_terminal, command, command_dir, js_env, quiet, tty)
+        run_command(&pseudo_terminal, command, command_dir, js_env, exec_argv, quiet, tty)
     }
 
     /// This allows us to run a pseudoterminal with a fake node ipc channel
@@ -41,6 +42,7 @@ impl RustPseudoTerminal {
         pseudo_ipc_path: String,
         command_dir: Option<String>,
         js_env: Option<HashMap<String, String>>,
+        exec_argv: Option<Vec<String>>,
         quiet: bool,
     ) -> napi::Result<ChildProcess> {
         let command = format!(
@@ -51,6 +53,6 @@ impl RustPseudoTerminal {
         );
 
         trace!("nx_fork command: {}", &command);
-        self.run_command(command, command_dir, js_env, Some(quiet), Some(true))
+        self.run_command(command, command_dir, js_env, exec_argv, Some(quiet), Some(true))
     }
 }

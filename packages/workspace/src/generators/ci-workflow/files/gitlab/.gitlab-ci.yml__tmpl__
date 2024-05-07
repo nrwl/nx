@@ -20,5 +20,6 @@ variables:
     - NX_HEAD=$CI_COMMIT_SHA
     - NX_BASE=${CI_MERGE_REQUEST_DIFF_BASE_SHA:-$CI_COMMIT_BEFORE_SHA}
 
-    - <%= packageManagerPrefix %> nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD
+    # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+    # - <%= packageManagerPrefix %> nx-cloud record -- echo Hello World
     - <%= packageManagerPrefix %> nx affected --base=$NX_BASE --head=$NX_HEAD -t lint test build<% if(hasE2E){ %> e2e-ci<% } %>

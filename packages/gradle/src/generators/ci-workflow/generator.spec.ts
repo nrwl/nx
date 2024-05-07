@@ -1,5 +1,5 @@
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { Tree, updateJson, NxJsonConfiguration } from '@nx/devkit';
+import { Tree } from '@nx/devkit';
 
 import { ciWorkflowGenerator } from './generator';
 
@@ -8,16 +8,6 @@ describe('ci-workflow generator', () => {
 
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace();
-  });
-
-  beforeEach(() => {
-    updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
-      return {
-        ...json,
-        nxCloudAccessToken: 'xxxx-xxx-xxxx',
-        nxCloudUrl: 'https://my.nx.app',
-      };
-    });
   });
 
   describe.each([

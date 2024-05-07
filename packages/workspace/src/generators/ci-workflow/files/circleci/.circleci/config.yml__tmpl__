@@ -23,7 +23,8 @@ jobs:
       - nx/set-shas:
           main-branch-name: '<%= mainBranch %>'
 
-      - run: <%= packageManagerPrefix %> nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD
+      # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+      # - run: <%= packageManagerPrefix %> nx-cloud record -- echo Hello World
       - run: <%= packageManagerPrefix %> nx affected --base=$NX_BASE --head=$NX_HEAD -t lint test build<% if(hasE2E){ %> e2e-ci<% } %>
 
 workflows:
