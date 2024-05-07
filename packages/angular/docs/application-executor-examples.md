@@ -1,10 +1,14 @@
-The `@nx/angular:application` executor is very similar to the `@angular-devkit/build-angular:application` builder provided by the Angular CLI. It builds an Angular application using [esbuild](https://esbuild.github.io/) with integrated SSR and prerendering capabilities.
+This executor is a drop-in replacement for the `@angular-devkit/build-angular:application` builder provided by the Angular CLI. It builds an Angular application using [esbuild](https://esbuild.github.io/) with integrated SSR and prerendering capabilities.
 
 In addition to the features provided by the Angular CLI builder, the `@nx/angular:application` executor also supports the following:
 
 - Providing esbuild plugins
 - Providing a function to transform the application's `index.html` file
 - Incremental builds
+
+{% callout type="check" title="Dev Server" %}
+The [`@nx/angular:dev-server` executor](https://nx.dev/nx-api/angular/executors/dev-server) is required to serve your application when using the `@nx/angular:application` to build it. It is a drop-in replacement for the Angular CLI's `@angular-devkit/build-angular:dev-server` builder and ensures the application is correctly served with Vite when using the `@nx/angular:application` executor.
+{% /callout %}
 
 ## Examples
 
