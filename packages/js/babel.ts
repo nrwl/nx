@@ -41,7 +41,7 @@ module.exports = function (api: any, options: NxWebBabelPresetOptions = {}) {
   const loose = options.classProperties?.loose ?? options.loose ?? true;
   if (options.classProperties) {
     logger.warn(
-      `Use =\`loose\` option instead of \`classProperties.loose\`. The \`classProperties\` option will be removed in Nx 19`
+      `Use =\`loose\` option instead of \`classProperties.loose\`. The \`classProperties\` option will be removed in Nx 20`
     );
   }
 

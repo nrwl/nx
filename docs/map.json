@@ -1272,7 +1272,6 @@
             }
           ]
         },
-
         {
           "name": "Troubleshooting",
           "id": "troubleshooting",
@@ -1314,6 +1313,16 @@
           "id": "deprecated",
           "description": "Functionality that has been superseded in the current version of Nx.  Listed here for those running older versions.",
           "itemList": [
+            {
+              "name": "affected:graph",
+              "id": "affected-graph",
+              "file": "shared/deprecated/affected-graph"
+            },
+            {
+              "name": "print-affected",
+              "id": "print-affected",
+              "file": "shared/deprecated/print-affected"
+            },
             {
               "name": "workspace.json",
               "id": "workspace-json",
@@ -1987,16 +1996,6 @@
               "tags": ["run-tasks"],
               "id": "affected",
               "file": "generated/cli/affected"
-            },
-            {
-              "name": "affected:graph",
-              "id": "affected-dep-graph",
-              "file": "generated/cli/affected-graph"
-            },
-            {
-              "name": "print-affected",
-              "id": "print-affected",
-              "file": "generated/cli/print-affected"
             },
             {
               "name": "format:check",

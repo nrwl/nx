@@ -1,6 +1,5 @@
 import type { NxJsonConfiguration } from '@nx/devkit';
 import {
-  getPackageManagerCommand,
   isNotWindows,
   newProject,
   readFile,
@@ -204,17 +203,17 @@ describe('Nx Affected and Graph Tests', () => {
       // TODO: investigate why affected gives different results on windows
       if (isNotWindows()) {
         runCLI(`generate @nx/web:app ${myapp}`);
-        expect(runCLI('print-affected --select projects')).toContain(myapp);
+        expect(runCLI('show projects --affected')).toContain(myapp);
         runCommand(`git add . && git commit -am "add ${myapp}"`);
 
         runCLI(`generate @nx/web:app ${myapp2}`);
-        let output = runCLI('print-affected --select projects');
+        let output = runCLI('show projects --affected');
         expect(output).not.toContain(myapp);
         expect(output).toContain(myapp2);
         runCommand(`git add . && git commit -am "add ${myapp2}"`);
 
         runCLI(`generate @nx/js:lib ${mylib}`);
-        output = runCLI('print-affected --select projects');
+        output = runCLI('show projects --affected');
         expect(output).not.toContain(myapp);
         expect(output).not.toContain(myapp2);
         expect(output).toContain(mylib);
@@ -230,7 +229,7 @@ describe('Nx Affected and Graph Tests', () => {
           data.tags = ['tag'];
           return JSON.stringify(data, null, 2);
         });
-        const output = runCLI('print-affected --select projects');
+        const output = runCLI('show projects --affected');
         expect(output).toContain(myapp);
         expect(output).not.toContain(myapp2);
         expect(output).not.toContain(mylib);
@@ -241,7 +240,7 @@ describe('Nx Affected and Graph Tests', () => {
       generateAll();
       const root = `libs/${mylib}`;
       removeFile(root);
-      const output = runCLI('print-affected --select projects');
+      const output = runCLI('show projects --affected');
       expect(output).toContain(myapp);
       expect(output).toContain(myapp2);
       expect(output).not.toContain(mylib);
@@ -258,7 +257,7 @@ describe('Nx Affected and Graph Tests', () => {
       runCommand('git commit -m "setup test"');
       updateFile(`libs/${mylib}/index.html`, '<html></html>');
 
-      const output = runCLI('print-affected --select projects');
+      const output = runCLI('show projects --affected');
 
       expect(output).toContain(myapp);
       expect(output).not.toContain(myapp2);
@@ -283,14 +282,12 @@ describe('Nx Affected and Graph Tests', () => {
       );
       removeFile(`apps/${myapp}/src/index.html`);
 
-      const affectedProjects = runCLI(
-        'print-affected --uncommitted --select projects'
-      )
-        .replace(
-          /.*nx print-affected --uncommitted --select projects( --verbose)?\n/,
-          ''
-        )
-        .split(', ');
+      const affectedProjects = runCLI('show projects --affected --uncommitted');
+      // .replace(
+      //   /.*nx print-affected --uncommitted --select projects( --verbose)?\n/,
+      //   ''
+      // )
+      // .split(', ');
 
       expect(affectedProjects).toContain(myapp);
       expect(affectedProjects).toContain(myapp2);
@@ -406,19 +403,6 @@ describe('Nx Affected and Graph Tests', () => {
           [myapp3]: [],
         })
       );
-
-      runCLI(
-        `affected:graph --files="libs/${mylib}/src/index.ts" --file="project-graph.json"`
-      );
-
-      expect(() => checkFilesExist('project-graph.json')).not.toThrow();
-
-      const jsonFileContents2 = readJson('project-graph.json');
-
-      expect(jsonFileContents2.criticalPath).toContain(myapp);
-      expect(jsonFileContents2.criticalPath).toContain(myapp2);
-      expect(jsonFileContents2.criticalPath).toContain(mylib);
-      expect(jsonFileContents2.criticalPath).not.toContain(mylib2);
     }, 1000000);
 
     if (isNotWindows()) {
@@ -538,7 +522,7 @@ describe('Nx Affected and Graph Tests', () => {
   });
 });
 
-describe('Print-affected', () => {
+describe('show projects --affected', () => {
   let proj: string;
 
   beforeAll(() => (proj = newProject()));
@@ -583,64 +567,33 @@ describe('Print-affected', () => {
         `
     );
 
-    const resWithoutTarget = JSON.parse(
-      (
-        await runCLIAsync(
-          `print-affected --files=apps/${myapp}/src/app/app.element.spec.ts`,
-          {
-            silent: true,
-          }
-        )
-      ).stdout
+    const { stdout: resWithoutTarget } = await runCLIAsync(
+      `show projects --affected --files=apps/${myapp}/src/app/app.element.spec.ts`
     );
-    expect(resWithoutTarget.tasks).toEqual([]);
-    compareTwoArrays(resWithoutTarget.projects, [`${myapp}-e2e`, myapp]);
+    compareTwoArrays(resWithoutTarget.split('\n').filter(Boolean), [
+      `${myapp}-e2e`,
+      myapp,
+    ]);
 
     const resWithTarget = JSON.parse(
       (
         await runCLIAsync(
-          `print-affected --files=apps/${myapp}/src/app/app.element.spec.ts --target=test`,
+          `affected -t test --files=apps/${myapp}/src/app/app.element.spec.ts --graph stdout`,
           { silent: true }
         )
       ).stdout.trim()
     );
 
-    const { runNx } = getPackageManagerCommand();
-    expect(resWithTarget.tasks[0]).toMatchObject({
+    expect(resWithTarget.tasks.tasks[`${myapp}:test`]).toMatchObject({
       id: `${myapp}:test`,
       overrides: {},
       target: {
         project: myapp,
         target: 'test',
       },
-      command: `${runNx} run ${myapp}:test`,
       outputs: [`coverage/apps/${myapp}`],
     });
-    compareTwoArrays(resWithTarget.projects, [myapp]);
-
-    const resWithTargetWithSelect1 = (
-      await runCLIAsync(
-        `print-affected --files=apps/${myapp}/src/app/app.element.spec.ts --target=test --select=projects`,
-        { silent: true }
-      )
-    ).stdout.trim();
-    compareTwoSerializedArrays(resWithTargetWithSelect1, myapp);
-
-    const resWithTargetWithSelect2 = (
-      await runCLIAsync(
-        `print-affected --files=apps/${myapp}/src/app/app.element.spec.ts --target=test --select="tasks.target.project"`,
-        { silent: true }
-      )
-    ).stdout.trim();
-    compareTwoSerializedArrays(resWithTargetWithSelect2, myapp);
   }, 120000);
-
-  function compareTwoSerializedArrays(a: string, b: string) {
-    compareTwoArrays(
-      a.split(',').map((_) => _.trim()),
-      b.split(',').map((_) => _.trim())
-    );
-  }
 
   function compareTwoArrays(a: string[], b: string[]) {
     expect(a.sort((x, y) => x.localeCompare(y))).toEqual(

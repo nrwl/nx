@@ -1778,28 +1778,6 @@
         "tags": ["run-tasks"],
         "originalFilePath": "generated/cli/affected"
       },
-      "/nx-api/nx/documents/affected-dep-graph": {
-        "id": "affected-dep-graph",
-        "name": "affected:graph",
-        "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-        "file": "generated/packages/nx/documents/affected-dep-graph",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/nx-api/nx/documents/affected-dep-graph",
-        "tags": [],
-        "originalFilePath": "generated/cli/affected-graph"
-      },
-      "/nx-api/nx/documents/print-affected": {
-        "id": "print-affected",
-        "name": "print-affected",
-        "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-        "file": "generated/packages/nx/documents/print-affected",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/nx-api/nx/documents/print-affected",
-        "tags": [],
-        "originalFilePath": "generated/cli/print-affected"
-      },
       "/nx-api/nx/documents/format-check": {
         "id": "format-check",
         "name": "format:check",

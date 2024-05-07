@@ -329,10 +329,6 @@ const cliUrls = {
   '/cli/dep-graph': '/nx/dep-graph',
   '/cli/run-many': '/nx/run-many',
   '/cli/affected': '/nx/affected',
-  '/cli/affected-dep-graph': '/nx/affected-dep-graph',
-  '/cli/affected-apps': '/packages/nx/documents/print-affected',
-  '/cli/affected-libs': '/packages/nx/documents/print-affected',
-  '/cli/print-affected': '/packages/nx/documents/print-affected',
   '/cli/format-check': '/nx/format-check',
   '/cli/format-write': '/nx/format-write',
   '/cli/migrate': '/nx/migrate',
@@ -649,14 +645,6 @@ const packagesDocuments = {
   '/nx/dep-graph': '/packages/nx/documents/dep-graph',
   '/nx/run-many': '/packages/nx/documents/run-many',
   '/nx/affected': '/packages/nx/documents/affected',
-  '/nx/affected-dep-graph': '/packages/nx/documents/affected-dep-graph',
-  '/nx/affected-apps': '/packages/nx/documents/print-affected',
-  '/nx/affected-libs': '/packages/nx/documents/print-affected',
-  '/nx/print-affected': '/packages/nx/documents/print-affected',
-  '/packages/nx/documents/affected-apps':
-    '/packages/nx/documents/print-affected',
-  '/packages/nx/documents/affected-libs':
-    '/packages/nx/documents/print-affected',
   '/nx/format-check': '/packages/nx/documents/format-check',
   '/nx/format-write': '/packages/nx/documents/format-write',
   '/nx/migrate': '/packages/nx/documents/migrate',
@@ -1043,6 +1031,19 @@ const troubleshootingOutOfRecipes = {
  * Removed deprecated URLs
  */
 const removedDeprecatedUrls = {
+  '/nx-api/nx/documents/affected-dep-graph': '/deprecated/affected-graph', // nx affected:graph was removed in Nx 19
+  '/cli/affected-dep-graph': '/deprecated/affected-graph',
+  '/nx/affected-dep-graph': '/deprecated/affected-graph',
+  '/nx-api/nx/documents/print-affected': '/deprecated/print-affected', // nx affected:graph was removed in Nx 19
+  '/cli/affected-apps': '/deprecated/print-affected',
+  '/cli/affected-libs': '/deprecated/print-affected',
+  '/cli/print-affected': '/deprecated/print-affected',
+  '/packages/nx/documents/print-affected': '/deprecated/print-affected',
+  '/nx/affected-apps': '/deprecated/print-affected',
+  '/nx/affected-libs': '/deprecated/print-affected',
+  '/nx/print-affected': '/deprecated/print-affected',
+  '/packages/nx/documents/affected-apps': '/deprecated/print-affected',
+  '/packages/nx/documents/affected-libs': '/deprecated/print-affected',
   '/deprecated/default-collection': '/features/generate-code', // 46 views: has not worked since Nx 17 and has very little views
   '/deprecated/workspace-lint': '/nx-api/nx/documents/report', // 168 views: workspace-lint hasn't worked since Nx 15 and users should use `nx report` to check versions and other info
   '/deprecated/storybook/angular-storybook-targets':

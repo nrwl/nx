@@ -6303,6 +6303,28 @@
     "file": "",
     "itemList": [
       {
+        "id": "affected-graph",
+        "name": "affected:graph",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/deprecated/affected-graph",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/deprecated/affected-graph",
+        "tags": []
+      },
+      {
+        "id": "print-affected",
+        "name": "print-affected",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/deprecated/print-affected",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/deprecated/print-affected",
+        "tags": []
+      },
+      {
         "id": "workspace-json",
         "name": "workspace.json",
         "description": "",
@@ -6415,6 +6437,28 @@
     ],
     "isExternal": false,
     "path": "/deprecated",
+    "tags": []
+  },
+  "/deprecated/affected-graph": {
+    "id": "affected-graph",
+    "name": "affected:graph",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/deprecated/affected-graph",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/deprecated/affected-graph",
+    "tags": []
+  },
+  "/deprecated/print-affected": {
+    "id": "print-affected",
+    "name": "print-affected",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/deprecated/print-affected",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/deprecated/print-affected",
     "tags": []
   },
   "/deprecated/workspace-json": {
