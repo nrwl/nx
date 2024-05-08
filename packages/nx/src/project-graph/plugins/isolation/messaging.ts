@@ -3,8 +3,13 @@ import {
   ProjectGraphProcessorContext,
 } from '../../../config/project-graph';
 import { PluginConfiguration } from '../../../config/nx-json';
-import { CreateDependenciesContext, CreateNodesContext } from '../public-api';
+import {
+  CreateDependenciesContext,
+  CreateMetadataContext,
+  CreateNodesContext,
+} from '../public-api';
 import { LoadedNxPlugin } from '../internal-api';
+import { Serializable } from 'child_process';
 
 export interface PluginWorkerLoadMessage {
   type: 'load';
@@ -19,14 +24,17 @@ export interface PluginWorkerLoadResult {
   payload:
     | {
         name: string;
+        include?: string[];
+        exclude?: string[];
         createNodesPattern: string;
         hasCreateDependencies: boolean;
         hasProcessProjectGraph: boolean;
+        hasCreateMetadata: boolean;
         success: true;
       }
     | {
         success: false;
-        error: string;
+        error: Error;
       };
 }
 
@@ -49,7 +57,7 @@ export interface PluginWorkerCreateNodesResult {
       }
     | {
         success: false;
-        error: string;
+        error: Error;
         tx: string;
       };
 }
@@ -62,11 +70,35 @@ export interface PluginCreateDependenciesMessage {
   };
 }
 
+export interface PluginCreateMetadataMessage {
+  type: 'createMetadata';
+  payload: {
+    graph: ProjectGraph;
+    context: CreateMetadataContext;
+    tx: string;
+  };
+}
+
 export interface PluginCreateDependenciesResult {
   type: 'createDependenciesResult';
   payload:
     | {
         dependencies: ReturnType<LoadedNxPlugin['createDependencies']>;
+        success: true;
+        tx: string;
+      }
+    | {
+        success: false;
+        error: Error;
+        tx: string;
+      };
+}
+
+export interface PluginCreateMetadataResult {
+  type: 'createMetadataResult';
+  payload:
+    | {
+        metadata: ReturnType<LoadedNxPlugin['createMetadata']>;
         success: true;
         tx: string;
       }
@@ -96,7 +128,7 @@ export interface PluginWorkerProcessProjectGraphResult {
       }
     | {
         success: false;
-        error: string;
+        error: Error;
         tx: string;
       };
 }
@@ -105,13 +137,47 @@ export type PluginWorkerMessage =
   | PluginWorkerLoadMessage
   | PluginWorkerCreateNodesMessage
   | PluginCreateDependenciesMessage
-  | PluginWorkerProcessProjectGraphMessage;
+  | PluginWorkerProcessProjectGraphMessage
+  | PluginCreateMetadataMessage;
 
 export type PluginWorkerResult =
   | PluginWorkerLoadResult
   | PluginWorkerCreateNodesResult
   | PluginCreateDependenciesResult
-  | PluginWorkerProcessProjectGraphResult;
+  | PluginWorkerProcessProjectGraphResult
+  | PluginCreateMetadataResult;
+
+export function isPluginWorkerMessage(
+  message: Serializable
+): message is PluginWorkerMessage {
+  return (
+    typeof message === 'object' &&
+    'type' in message &&
+    typeof message.type === 'string' &&
+    [
+      'load',
+      'createNodes',
+      'createDependencies',
+      'processProjectGraph',
+    ].includes(message.type)
+  );
+}
+
+export function isPluginWorkerResult(
+  message: Serializable
+): message is PluginWorkerResult {
+  return (
+    typeof message === 'object' &&
+    'type' in message &&
+    typeof message.type === 'string' &&
+    [
+      'load-result',
+      'createNodesResult',
+      'createDependenciesResult',
+      'processProjectGraphResult',
+    ].includes(message.type)
+  );
+}
 
 type MaybePromise<T> = T | Promise<T>;
 
@@ -126,7 +192,7 @@ type MessageHandlerReturn<T extends PluginWorkerMessage | PluginWorkerResult> =
 export async function consumeMessage<
   T extends PluginWorkerMessage | PluginWorkerResult
 >(
-  raw: string | T,
+  raw: T,
   handlers: {
     [K in T['type']]: (
       // Extract restricts the type of payload to the payload of the message with the type K
@@ -134,20 +200,12 @@ export async function consumeMessage<
     ) => MessageHandlerReturn<T>;
   }
 ) {
-  const message: T = typeof raw === 'string' ? JSON.parse(raw) : raw;
+  const message: T = raw;
   const handler = handlers[message.type];
   if (handler) {
     const response = await handler(message.payload);
     if (response) {
-      process.send!(createMessage(response));
+      process.send!(response);
     }
-  } else {
-    throw new Error(`Unhandled message type: ${message.type}`);
   }
-}
-
-export function createMessage(
-  message: PluginWorkerMessage | PluginWorkerResult
-): string {
-  return JSON.stringify(message);
 }

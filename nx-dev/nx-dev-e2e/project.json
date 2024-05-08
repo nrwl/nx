@@ -3,9 +3,7 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "nx-dev/nx-dev-e2e/src",
   "projectType": "application",
-  "targets": {
-    "lint": {}
-  },
+  "targets": {},
   "tags": ["scope:nx-dev", "type:e2e"],
   "implicitDependencies": ["nx-dev"]
 }

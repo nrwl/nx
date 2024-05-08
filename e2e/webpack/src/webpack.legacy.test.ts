@@ -125,7 +125,7 @@ describe('Webpack Plugin (legacy)', () => {
             path: join(__dirname, '../dist/app9524918'),
           },
           plugins: [
-            new NxWebpackPlugin({
+            new NxAppWebpackPlugin({
               main: './src/main.ts',
               compiler: 'tsc',
               index: './src/index.html',

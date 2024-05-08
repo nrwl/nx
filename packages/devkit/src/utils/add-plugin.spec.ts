@@ -10,7 +10,7 @@ import { addPlugin, generateCombinations } from './add-plugin';
 
 describe('addPlugin', () => {
   let tree: Tree;
-  let createNodes: CreateNodes;
+  let createNodes: CreateNodes<{ targetName: string }>;
   let graph: ProjectGraph;
   let fs: TempFs;
 
@@ -30,9 +30,27 @@ describe('addPlugin', () => {
             targets: {},
           },
         },
+        app2: {
+          name: 'app2',
+          type: 'app',
+          data: {
+            root: 'app2',
+            targets: {},
+          },
+        },
+        app3: {
+          name: 'app3',
+          type: 'app',
+          data: {
+            root: 'app3',
+            targets: {},
+          },
+        },
       },
       dependencies: {
         app1: [],
+        app2: [],
+        app3: [],
       },
     };
     createNodes = [
@@ -45,12 +63,19 @@ describe('addPlugin', () => {
               [targetName]: { command: 'next build' },
             },
           },
+          app2: {
+            name: 'app2',
+            targets: {
+              [targetName]: { command: 'next build' },
+            },
+          },
         },
       }),
     ];
 
     await fs.createFiles({
       'app1/next.config.js': '',
+      'app2/next.config.js': '',
     });
   });
 
@@ -61,6 +86,10 @@ describe('addPlugin', () => {
   describe('adding the plugin', () => {
     it('should not conflicting with the existing graph', async () => {
       graph.nodes.app1.data.targets.build = {};
+      graph.nodes.app2.data.targets.build1 = {};
+      // app 3 doesn't have a next config, so it having this
+      // target should not affect the plugin options
+      graph.nodes.app3.data.targets.build2 = {};
 
       await addPlugin(
         tree,
@@ -69,7 +98,7 @@ describe('addPlugin', () => {
         createNodes,
 
         {
-          targetName: ['build', '_build'],
+          targetName: ['build', 'build1', 'build2'],
         },
         true
       );
@@ -77,7 +106,7 @@ describe('addPlugin', () => {
       expect(readJson(tree, 'nx.json').plugins).toContainEqual({
         plugin: '@nx/next/plugin',
         options: {
-          targetName: '_build',
+          targetName: 'build2',
         },
       });
     });
@@ -372,6 +401,7 @@ describe('addPlugin', () => {
     });
   });
 });
+
 describe('generateCombinations', () => {
   it('should return all combinations for a 2x2 array of strings', () => {
     const input = {

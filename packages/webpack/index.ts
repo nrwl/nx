@@ -1,10 +1,18 @@
 import { configurationGenerator } from './src/generators/configuration/configuration';
+import { NxAppWebpackPlugin } from './src/plugins/nx-webpack-plugin/nx-app-webpack-plugin';
+import { NxTsconfigPathsWebpackPlugin as _NxTsconfigPathsWebpackPlugin } from './src/plugins/nx-typescript-webpack-plugin/nx-tsconfig-paths-webpack-plugin';
 
 export { configurationGenerator };
 
 // Exported for backwards compatibility in case a plugin is using the old name.
 /** @deprecated Use `configurationGenerator` instead. */
 export const webpackProjectGenerator = configurationGenerator;
+
+// TODO(v20): Remove this in favor of deep imports in order to load configs faster (150-200ms faster).
+/** @deprecated Use NxAppWebpackPlugin from `@nx/webpack/app-plugin` instead. */
+export const NxWebpackPlugin = NxAppWebpackPlugin;
+/** @deprecated Use NxTsconfigPathsWebpackPlugin from `@nx/webpack/tsconfig-paths-plugin` instead. */
+export const NxTsconfigPathsWebpackPlugin = _NxTsconfigPathsWebpackPlugin;
 
 export * from './src/utils/create-copy-plugin';
 export * from './src/utils/config';
@@ -23,5 +31,3 @@ export * from './src/utils/get-css-module-local-ident';
 export * from './src/utils/with-nx';
 export * from './src/utils/with-web';
 export * from './src/utils/module-federation/public-api';
-export { NxWebpackPlugin } from './src/plugins/nx-webpack-plugin/nx-webpack-plugin';
-export { NxTsconfigPathsWebpackPlugin } from './src/plugins/nx-typescript-webpack-plugin/nx-tsconfig-paths-webpack-plugin';

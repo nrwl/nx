@@ -56,6 +56,7 @@ export function nxViteTsPaths(options: nxViteTsPathsOptions = {}) {
           workspaceRoot,
           'tmp',
           projectRootFromWorkspaceRoot,
+          process.env.NX_TASK_TARGET_TARGET ?? 'build',
           'tsconfig.generated.json'
         )
       );

@@ -122,6 +122,17 @@
             "isExternal": false,
             "path": "/getting-started/tutorials/vue-standalone-tutorial",
             "tags": []
+          },
+          {
+            "id": "gradle-tutorial",
+            "name": "Gradle Monorepo",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/tutorials/gradle",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/getting-started/tutorials/gradle-tutorial",
+            "tags": []
           }
         ],
         "isExternal": false,
@@ -249,6 +260,17 @@
         "isExternal": false,
         "path": "/getting-started/tutorials/vue-standalone-tutorial",
         "tags": []
+      },
+      {
+        "id": "gradle-tutorial",
+        "name": "Gradle Monorepo",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/tutorials/gradle",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/getting-started/tutorials/gradle-tutorial",
+        "tags": []
       }
     ],
     "isExternal": false,
@@ -319,6 +341,17 @@
     "itemList": [],
     "isExternal": false,
     "path": "/getting-started/tutorials/vue-standalone-tutorial",
+    "tags": []
+  },
+  "/getting-started/tutorials/gradle-tutorial": {
+    "id": "gradle-tutorial",
+    "name": "Gradle Monorepo",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/tutorials/gradle",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/getting-started/tutorials/gradle-tutorial",
     "tags": []
   },
   "/core-tutorial": {
@@ -1045,28 +1078,6 @@
         "file": "",
         "itemList": [
           {
-            "id": "incremental-builds",
-            "name": "Incremental Builds",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/incremental-builds",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/concepts/more-concepts/incremental-builds",
-            "tags": []
-          },
-          {
-            "id": "turbo-and-nx",
-            "name": "Nx and Turborepo",
-            "description": "",
-            "mediaImage": "./shared/guides/nx-media-monorepo.jpg",
-            "file": "shared/guides/turbo-and-nx",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/concepts/more-concepts/turbo-and-nx",
-            "tags": []
-          },
-          {
             "id": "why-monorepos",
             "name": "Monorepos",
             "description": "",
@@ -1100,17 +1111,6 @@
             "tags": []
           },
           {
-            "id": "monorepo-nx-enterprise",
-            "name": "Using Nx at Enterprises",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/monorepo-nx-enterprise",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/concepts/more-concepts/monorepo-nx-enterprise",
-            "tags": ["enforce-module-boundaries", "generate-code"]
-          },
-          {
             "id": "nx-daemon",
             "name": "Nx Daemon",
             "description": "",
@@ -1122,37 +1122,15 @@
             "tags": []
           },
           {
-            "id": "nx-and-angular",
-            "name": "Nx and the Angular CLI",
+            "id": "turbo-and-nx",
+            "name": "Nx and Turborepo",
             "description": "",
-            "mediaImage": "",
-            "file": "shared/guides/nx-and-angular-cli",
+            "mediaImage": "./shared/guides/nx-media-monorepo.jpg",
+            "file": "shared/guides/turbo-and-nx",
             "itemList": [],
             "isExternal": false,
-            "path": "/concepts/more-concepts/nx-and-angular",
+            "path": "/concepts/more-concepts/turbo-and-nx",
             "tags": []
-          },
-          {
-            "id": "folder-structure",
-            "name": "Folder Structure",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/guides/integrated-repo-folder-structure",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/concepts/more-concepts/folder-structure",
-            "tags": []
-          },
-          {
-            "id": "nx-devkit-angular-devkit",
-            "name": "Nx Devkit and Angular Devkit",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/guides/nx-devkit-angular-devkit",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/concepts/more-concepts/nx-devkit-angular-devkit",
-            "tags": ["create-your-own-plugin"]
           },
           {
             "id": "applications-and-libraries",
@@ -1167,7 +1145,7 @@
           },
           {
             "id": "creating-libraries",
-            "name": "Creating Libraries",
+            "name": "When to Create a New Library",
             "description": "",
             "mediaImage": "",
             "file": "shared/workspace/creating-libraries",
@@ -1208,17 +1186,6 @@
             "isExternal": false,
             "path": "/concepts/more-concepts/buildable-and-publishable-libraries",
             "tags": []
-          },
-          {
-            "id": "how-project-graph-is-built",
-            "name": "How the Project Graph is Built",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/concepts/how-project-graph-is-built",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/concepts/more-concepts/how-project-graph-is-built",
-            "tags": ["explore-graph", "inferred-tasks"]
           }
         ],
         "isExternal": false,
@@ -1426,28 +1393,6 @@
     "file": "",
     "itemList": [
       {
-        "id": "incremental-builds",
-        "name": "Incremental Builds",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/incremental-builds",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/concepts/more-concepts/incremental-builds",
-        "tags": []
-      },
-      {
-        "id": "turbo-and-nx",
-        "name": "Nx and Turborepo",
-        "description": "",
-        "mediaImage": "./shared/guides/nx-media-monorepo.jpg",
-        "file": "shared/guides/turbo-and-nx",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/concepts/more-concepts/turbo-and-nx",
-        "tags": []
-      },
-      {
         "id": "why-monorepos",
         "name": "Monorepos",
         "description": "",
@@ -1481,17 +1426,6 @@
         "tags": []
       },
       {
-        "id": "monorepo-nx-enterprise",
-        "name": "Using Nx at Enterprises",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/monorepo-nx-enterprise",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/concepts/more-concepts/monorepo-nx-enterprise",
-        "tags": ["enforce-module-boundaries", "generate-code"]
-      },
-      {
         "id": "nx-daemon",
         "name": "Nx Daemon",
         "description": "",
@@ -1503,37 +1437,15 @@
         "tags": []
       },
       {
-        "id": "nx-and-angular",
-        "name": "Nx and the Angular CLI",
+        "id": "turbo-and-nx",
+        "name": "Nx and Turborepo",
         "description": "",
-        "mediaImage": "",
-        "file": "shared/guides/nx-and-angular-cli",
+        "mediaImage": "./shared/guides/nx-media-monorepo.jpg",
+        "file": "shared/guides/turbo-and-nx",
         "itemList": [],
         "isExternal": false,
-        "path": "/concepts/more-concepts/nx-and-angular",
+        "path": "/concepts/more-concepts/turbo-and-nx",
         "tags": []
-      },
-      {
-        "id": "folder-structure",
-        "name": "Folder Structure",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/guides/integrated-repo-folder-structure",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/concepts/more-concepts/folder-structure",
-        "tags": []
-      },
-      {
-        "id": "nx-devkit-angular-devkit",
-        "name": "Nx Devkit and Angular Devkit",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/guides/nx-devkit-angular-devkit",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/concepts/more-concepts/nx-devkit-angular-devkit",
-        "tags": ["create-your-own-plugin"]
       },
       {
         "id": "applications-and-libraries",
@@ -1548,7 +1460,7 @@
       },
       {
         "id": "creating-libraries",
-        "name": "Creating Libraries",
+        "name": "When to Create a New Library",
         "description": "",
         "mediaImage": "",
         "file": "shared/workspace/creating-libraries",
@@ -1589,43 +1501,10 @@
         "isExternal": false,
         "path": "/concepts/more-concepts/buildable-and-publishable-libraries",
         "tags": []
-      },
-      {
-        "id": "how-project-graph-is-built",
-        "name": "How the Project Graph is Built",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/concepts/how-project-graph-is-built",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/concepts/more-concepts/how-project-graph-is-built",
-        "tags": ["explore-graph", "inferred-tasks"]
       }
     ],
     "isExternal": false,
     "path": "/concepts/more-concepts",
-    "tags": []
-  },
-  "/concepts/more-concepts/incremental-builds": {
-    "id": "incremental-builds",
-    "name": "Incremental Builds",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/incremental-builds",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/concepts/more-concepts/incremental-builds",
-    "tags": []
-  },
-  "/concepts/more-concepts/turbo-and-nx": {
-    "id": "turbo-and-nx",
-    "name": "Nx and Turborepo",
-    "description": "",
-    "mediaImage": "./shared/guides/nx-media-monorepo.jpg",
-    "file": "shared/guides/turbo-and-nx",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/concepts/more-concepts/turbo-and-nx",
     "tags": []
   },
   "/concepts/more-concepts/why-monorepos": {
@@ -1661,17 +1540,6 @@
     "path": "/concepts/more-concepts/code-sharing",
     "tags": []
   },
-  "/concepts/more-concepts/monorepo-nx-enterprise": {
-    "id": "monorepo-nx-enterprise",
-    "name": "Using Nx at Enterprises",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/monorepo-nx-enterprise",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/concepts/more-concepts/monorepo-nx-enterprise",
-    "tags": ["enforce-module-boundaries", "generate-code"]
-  },
   "/concepts/more-concepts/nx-daemon": {
     "id": "nx-daemon",
     "name": "Nx Daemon",
@@ -1683,38 +1551,16 @@
     "path": "/concepts/more-concepts/nx-daemon",
     "tags": []
   },
-  "/concepts/more-concepts/nx-and-angular": {
-    "id": "nx-and-angular",
-    "name": "Nx and the Angular CLI",
+  "/concepts/more-concepts/turbo-and-nx": {
+    "id": "turbo-and-nx",
+    "name": "Nx and Turborepo",
     "description": "",
-    "mediaImage": "",
-    "file": "shared/guides/nx-and-angular-cli",
+    "mediaImage": "./shared/guides/nx-media-monorepo.jpg",
+    "file": "shared/guides/turbo-and-nx",
     "itemList": [],
     "isExternal": false,
-    "path": "/concepts/more-concepts/nx-and-angular",
+    "path": "/concepts/more-concepts/turbo-and-nx",
     "tags": []
-  },
-  "/concepts/more-concepts/folder-structure": {
-    "id": "folder-structure",
-    "name": "Folder Structure",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/guides/integrated-repo-folder-structure",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/concepts/more-concepts/folder-structure",
-    "tags": []
-  },
-  "/concepts/more-concepts/nx-devkit-angular-devkit": {
-    "id": "nx-devkit-angular-devkit",
-    "name": "Nx Devkit and Angular Devkit",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/guides/nx-devkit-angular-devkit",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/concepts/more-concepts/nx-devkit-angular-devkit",
-    "tags": ["create-your-own-plugin"]
   },
   "/concepts/more-concepts/applications-and-libraries": {
     "id": "applications-and-libraries",
@@ -1729,7 +1575,7 @@
   },
   "/concepts/more-concepts/creating-libraries": {
     "id": "creating-libraries",
-    "name": "Creating Libraries",
+    "name": "When to Create a New Library",
     "description": "",
     "mediaImage": "",
     "file": "shared/workspace/creating-libraries",
@@ -1770,17 +1616,6 @@
     "isExternal": false,
     "path": "/concepts/more-concepts/buildable-and-publishable-libraries",
     "tags": []
-  },
-  "/concepts/more-concepts/how-project-graph-is-built": {
-    "id": "how-project-graph-is-built",
-    "name": "How the Project Graph is Built",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/concepts/how-project-graph-is-built",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/concepts/more-concepts/how-project-graph-is-built",
-    "tags": ["explore-graph", "inferred-tasks"]
   },
   "/recipes": {
     "id": "recipes",

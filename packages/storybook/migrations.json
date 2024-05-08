@@ -1,29 +1,5 @@
 {
   "generators": {
-    "update-15.0.8-add-storybook-inputs": {
-      "cli": "nx",
-      "version": "15.0.0-beta.0",
-      "description": "Stop hashing storybook config files and story files for build targets and dependent tasks",
-      "factory": "./src/migrations/update-15-0-0/add-storybook-inputs"
-    },
-    "update-15.4.6": {
-      "cli": "nx",
-      "version": "15.4.6-beta.0",
-      "description": "Refactor the Storybook target options",
-      "factory": "./src/migrations/update-15-4-6/refactor-executor-options"
-    },
-    "update-15-5-3": {
-      "cli": "nx",
-      "version": "15.5.3-beta.0",
-      "description": "Add @nrwl/webpack if it is missing and is used.",
-      "factory": "./src/migrations/update-15-5-3/ensure-webpack-package"
-    },
-    "update-15-7-0": {
-      "cli": "nx",
-      "version": "15.7.0-beta.0",
-      "description": "Add @storybook/addon-essentials to all project-level configs and attempt to remove root config.",
-      "factory": "./src/migrations/update-15-7-0/add-addon-essentials-to-all"
-    },
     "update-16-0-0-add-nx-packages": {
       "cli": "nx",
       "version": "16.0.0-beta.1",
@@ -873,93 +849,6 @@
         },
         "@storybook/addon-essentials": {
           "version": "^7.0.5",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
-    "15.5.2": {
-      "version": "15.5.2-beta.0",
-      "packages": {
-        "@storybook/react-native": {
-          "version": "^6.0.1-beta.11",
-          "alwaysAddToPackageJson": false
-        },
-        "@storybook/addon-ondevice-actions": {
-          "version": "^6.0.1-beta.11",
-          "alwaysAddToPackageJson": false
-        },
-        "@storybook/addon-ondevice-backgrounds": {
-          "version": "^6.0.1-beta.11",
-          "alwaysAddToPackageJson": false
-        },
-        "@storybook/addon-ondevice-controls": {
-          "version": "^6.0.1-beta.11",
-          "alwaysAddToPackageJson": false
-        },
-        "@storybook/addon-ondevice-notes": {
-          "version": "^6.0.1-beta.11",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
-    "15.4.3": {
-      "version": "15.4.3-beta.1",
-      "packages": {
-        "@storybook/core-server": {
-          "version": "^6.5.15",
-          "alwaysAddToPackageJson": false
-        },
-        "@storybook/angular": {
-          "version": "^6.5.15",
-          "alwaysAddToPackageJson": false
-        },
-        "@storybook/react": {
-          "version": "^6.5.15",
-          "alwaysAddToPackageJson": false
-        },
-        "@storybook/web": {
-          "version": "^6.5.15",
-          "alwaysAddToPackageJson": false
-        },
-        "@storybook/addon-essentials": {
-          "version": "^6.5.15",
-          "alwaysAddToPackageJson": false
-        },
-        "@storybook/builder-webpack5": {
-          "version": "^6.5.15",
-          "alwaysAddToPackageJson": false
-        },
-        "@storybook/manager-webpack5": {
-          "version": "^6.5.15",
-          "alwaysAddToPackageJson": false
-        },
-        "@storybook/builder-vite": {
-          "version": "^0.2.6",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
-    "15.1.1": {
-      "version": "15.1.1-beta.0",
-      "packages": {
-        "@storybook/react-native": {
-          "version": "^6.0.1-beta.9",
-          "alwaysAddToPackageJson": false
-        },
-        "@storybook/addon-ondevice-actions": {
-          "version": "^6.0.1-beta.9",
-          "alwaysAddToPackageJson": false
-        },
-        "@storybook/addon-ondevice-backgrounds": {
-          "version": "^6.0.1-beta.9",
-          "alwaysAddToPackageJson": false
-        },
-        "@storybook/addon-ondevice-controls": {
-          "version": "^6.0.1-beta.9",
-          "alwaysAddToPackageJson": false
-        },
-        "@storybook/addon-ondevice-notes": {
-          "version": "^6.0.1-beta.9",
           "alwaysAddToPackageJson": false
         }
       }

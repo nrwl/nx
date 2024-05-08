@@ -220,6 +220,7 @@ export class ForkedProcessTaskRunner {
     const childId = task.id;
     const p = await this.pseudoTerminal.fork(childId, forkScript, {
       cwd: process.cwd(),
+      execArgv: process.execArgv,
       jsEnv: env,
       quiet: !streamOutput,
     });

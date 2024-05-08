@@ -123,11 +123,7 @@ The cache is stored in `.nx/cache` by default. You can also [change where the ca
 
 ## Enable Remote Caching
 
-You can enable remote caching (Nx Replay) by connecting to [Nx Cloud](/ci/features/remote-cache). To connect Nx to Nx Cloud run the following command:
-
-```shell
-npx nx connect
-```
+You can enable remote caching (Nx Replay) by connecting to [Nx Cloud](/ci/features/remote-cache). To connect Nx to Nx Cloud, [create an account on cloud.nx.app](https://cloud.nx.app) and connect to your repository.
 
 Learn more about [remote caching](/ci/features/remote-cache).
 

@@ -7,7 +7,7 @@ import {
   type DependentBuildableProjectNode,
 } from '@nx/js/src/utils/buildable-libs-utils';
 import type { NgPackagr } from 'ng-packagr';
-import { resolve } from 'path';
+import { join, resolve } from 'path';
 import { from } from 'rxjs';
 import { mapTo, switchMap } from 'rxjs/operators';
 import { parseRemappedTsConfigAndMergeDefaults } from '../utilities/typescript';
@@ -24,7 +24,7 @@ async function initializeNgPackagr(
 
   if (options.tsConfig) {
     const remappedTsConfigFilePath = createTmpTsConfig(
-      options.tsConfig,
+      join(context.root, options.tsConfig),
       context.root,
       context.projectsConfigurations.projects[context.projectName].root,
       projectDependencies

@@ -21,7 +21,6 @@ import { isCI } from '../../utils/is-ci';
 import { output } from '../../utils/output';
 import { handleErrors } from '../../utils/params';
 import { joinPathFragments } from '../../utils/path';
-import { getRootTsConfigPath } from '../../utils/typescript';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { ChangelogOptions } from './command-object';
 import {
@@ -58,6 +57,7 @@ import {
   handleDuplicateGitTags,
   noDiffInChangelogMessage,
 } from './utils/shared';
+import { getRootTsConfigPath } from '../../plugins/js/utils/typescript';
 
 export interface NxReleaseChangelogResult {
   workspaceChangelog?: {

@@ -7,9 +7,11 @@ import { invokeTasksRunner } from './run-command';
 import { InvokeRunnerTerminalOutputLifeCycle } from './life-cycles/invoke-runner-terminal-output-life-cycle';
 import { performance } from 'perf_hooks';
 import { getOutputs } from './utils';
+import { loadRootEnvFiles } from '../utils/dotenv';
 
 export async function initTasksRunner(nxArgs: NxArgs) {
   performance.mark('init-local');
+  loadRootEnvFiles();
   workspaceConfigurationCheck();
   const nxJson = readNxJson();
   if (nxArgs.verbose) {

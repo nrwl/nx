@@ -1,11 +1,5 @@
 {
   "generators": {
-    "rename-swcrc-config": {
-      "cli": "nx",
-      "version": "15.8.0-beta.0",
-      "description": "Rename .lib.swcrc to .swcrc for better SWC support throughout the workspace",
-      "factory": "./src/migrations/update-15-8-0/rename-swcrc-config"
-    },
     "update-16-0-0-add-nx-packages": {
       "cli": "nx",
       "version": "16.0.0-beta.1",
@@ -32,18 +26,6 @@
     }
   },
   "packageJsonUpdates": {
-    "15.8.0": {
-      "version": "15.8.0-beta.2",
-      "x-prompt": "Do you want to update to TypeScript v4.9?",
-      "requires": {
-        "typescript": ">=4.8.2 <4.9.0"
-      },
-      "packages": {
-        "typescript": {
-          "version": "~4.9.5"
-        }
-      }
-    },
     "16.0.0": {
       "version": "16.0.0-beta.3",
       "packages": {
@@ -164,6 +146,15 @@
       "packages": {
         "typescript": {
           "version": "~5.4.2",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "19.0.0": {
+      "version": "19.0.0-beta.0",
+      "packages": {
+        "@swc/cli": {
+          "version": "~0.3.12",
           "alwaysAddToPackageJson": false
         }
       }

@@ -92,7 +92,7 @@ function SidebarSectionItems({ item }: { item: MenuItem }): JSX.Element {
         data-testid={`section-h5:${item.id}`}
         className={cx(
           'flex py-2',
-          'text-sm font-semibold uppercase tracking-wide text-slate-800 dark:text-slate-200 lg:text-xs',
+          'text-sm font-semibold uppercase tracking-wide text-slate-800 lg:text-xs dark:text-slate-200',
           item.disableCollapsible ? 'cursor-text' : 'cursor-pointer'
         )}
         onClick={handleCollapseToggle}
@@ -109,7 +109,9 @@ function SidebarSectionItems({ item }: { item: MenuItem }): JSX.Element {
       </h5>
       <ul className={cx('mb-6 ml-3', collapsed ? 'hidden' : '')}>
         {(item.children as MenuItem[]).map((subItem, index) => {
-          const isActiveLink = subItem.path === withoutAnchors(router.asPath);
+          const isActiveLink = withoutAnchors(router.asPath).startsWith(
+            subItem.path
+          );
           if (isActiveLink && collapsed) {
             handleCollapseToggle();
           }
@@ -193,12 +195,12 @@ export function SidebarMobile({
       { name: 'Launch Nx', href: '/launch-nx', current: false },
       {
         name: 'Contact',
-        href: 'https://nx.app/enterprise?utm_source=nx.dev&utm_medium=header-menu',
+        href: '/contact',
         current: false,
       },
       {
         name: 'Go to app',
-        href: 'https://nx.app/?utm_source=nx.dev&utm_medium=header-menu',
+        href: 'https://cloud.nx.app',
         current: false,
       },
     ],

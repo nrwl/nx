@@ -37,7 +37,7 @@ export type NxPluginV1 = {
 };
 
 /**
- * @todo(@agentender) v19: Remove this fn when we remove readWorkspaceConfig
+ * @todo(@agentender) v20: Remove this fn when we remove readWorkspaceConfig
  */
 export function getDefaultPluginsSync(root: string): NxPluginV2[] {
   const plugins: NxPluginV2[] = [

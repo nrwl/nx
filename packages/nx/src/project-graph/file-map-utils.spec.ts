@@ -8,16 +8,19 @@ describe('fileMapUtils', () => {
         version: 2,
         projects: {
           demo: {
+            name: 'demo',
             root: 'apps/demo',
             sourceRoot: 'apps/demo/src',
             projectType: 'application' as ProjectType,
           },
           'demo-e2e': {
+            name: 'demo-e2e',
             root: 'apps/demo-e2e',
             sourceRoot: 'apps/demo-e2e/src',
             projectType: 'application' as ProjectType,
           },
           ui: {
+            name: 'ui',
             root: 'libs/ui',
             sourceRoot: 'libs/ui/src',
             projectType: 'library' as ProjectType,

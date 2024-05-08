@@ -69,50 +69,6 @@ commands:
             - ~/.pnpm-store
             - ~/.cache/Cypress
             - node_modules
-  install-sdkman:
-    description: Install SDKMAN
-    steps:
-      - restore_cache:
-          name: Restore SDKMAN executable and binaries from cache
-          keys:
-            - sdkman-cli-{{ arch }}-v2
-      - run:
-          name: Installing SDKMAN
-          command: |
-            if [ ! -d ~/.sdkman ]
-            then
-              curl -s "https://get.sdkman.io?rcupdate=false" | bash
-              sed -i -e 's/sdkman_auto_answer=false/sdkman_auto_answer=true/g' ~/.sdkman/etc/config
-            fi
-            echo -e '\nsource "/home/circleci/.sdkman/bin/sdkman-init.sh"' >> $BASH_ENV
-            source $BASH_ENV
-            sdk version
-      - save_cache:
-          name: Save SDKMAN executable and binaries to cache
-          key: sdkman-cli-{{ arch }}-v2
-          paths:
-            - ~/.sdkman
-  install-gradle:
-    description: Install gradle
-    parameters:
-      gradle-version:
-        type: string
-        default: ''
-    steps:
-      - restore_cache:
-          name: Restore Gradle binary from cache
-          keys:
-            - gradle-cli-{{ arch }}-v1
-      - run:
-          name: Installing Gradle
-          command: |
-            sdk install gradle << parameters.gradle-version >>
-            gradle --version
-      - save_cache:
-          name: Save Gradle binary to cache
-          key: gradle-cli-{{ arch }}-v1
-          paths:
-            - ~/.sdkman/candidates/gradle/
 # -------------------------
 #          JOBS
 # -------------------------
@@ -140,10 +96,6 @@ jobs:
             sudo apt-get update
             sudo apt-get install -y ca-certificates lsof
       - browser-tools/install-chrome
-      - browser-tools/install-chromedriver
-      - install-sdkman
-      - install-gradle:
-          gradle-version: '8.5'
       - run-pnpm-install:
           os: linux
       - run:
@@ -206,7 +158,7 @@ jobs:
       - run:
           name: Run E2E Tests for macOS
           command: |
-            pnpm nx affected -t e2e-macos --parallel=1 --base=$NX_BASE --head=$NX_HEAD
+            pnpm nx affected -t e2e-macos-ci --parallel=1 --base=$NX_BASE --head=$NX_HEAD
           no_output_timeout: 45m
 
 # -------------------------

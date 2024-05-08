@@ -21,7 +21,10 @@
           ],
           "outputs": ["{workspaceRoot}/dist/apps/myreactapp"],
           "executor": "nx:run-commands",
-          "configurations": {}
+          "configurations": {},
+          "metadata": {
+            "technologies": ["vite"]
+          }
         },
         "serve": {
           "options": {
@@ -29,7 +32,10 @@
             "command": "vite serve"
           },
           "executor": "nx:run-commands",
-          "configurations": {}
+          "configurations": {},
+          "metadata": {
+            "technologies": ["vite"]
+          }
         },
         "preview": {
           "options": {
@@ -37,7 +43,10 @@
             "command": "vite preview"
           },
           "executor": "nx:run-commands",
-          "configurations": {}
+          "configurations": {},
+          "metadata": {
+            "technologies": ["vite"]
+          }
         },
         "serve-static": {
           "executor": "@nx/web:file-server",
@@ -61,7 +70,10 @@
           ],
           "outputs": ["{workspaceRoot}/coverage/apps/myreactapp"],
           "executor": "nx:run-commands",
-          "configurations": {}
+          "configurations": {},
+          "metadata": {
+            "technologies": ["vite"]
+          }
         },
         "lint": {
           "cache": true,
@@ -79,7 +91,10 @@
             }
           ],
           "executor": "nx:run-commands",
-          "configurations": {}
+          "configurations": {},
+          "metadata": {
+            "technologies": ["eslint"]
+          }
         }
       },
       "name": "myreactapp",
@@ -87,7 +102,10 @@
       "sourceRoot": "apps/myreactapp/src",
       "projectType": "application",
       "tags": [],
-      "implicitDependencies": []
+      "implicitDependencies": [],
+      "metadata": {
+        "technologies": ["react"]
+      }
     }
   },
   "sourceMap": {

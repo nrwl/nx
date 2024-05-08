@@ -1,19 +1,15 @@
-import type {
-  Tree,
+import {
   CreateNodes,
-  ProjectConfiguration,
-  TargetConfiguration,
-} from 'nx/src/devkit-exports';
-import { requireNx } from '../../nx';
-const {
-  readNxJson,
-  updateNxJson,
   glob,
-  hashObject,
-  findProjectForPath,
+  ProjectConfiguration,
+  readNxJson,
   readProjectConfiguration,
+  TargetConfiguration,
+  Tree,
+  updateNxJson,
   updateProjectConfiguration,
-} = requireNx();
+} from 'nx/src/devkit-exports';
+import { findProjectForPath, hashObject } from 'nx/src/devkit-internals';
 
 export async function replaceProjectConfigurationsWithPlugin<T = unknown>(
   tree: Tree,

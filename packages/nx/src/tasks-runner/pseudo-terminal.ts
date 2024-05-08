@@ -41,16 +41,27 @@ export class PseudoTerminal {
     command: string,
     {
       cwd,
+      execArgv,
       jsEnv,
       quiet,
+      tty,
     }: {
       cwd?: string;
+      execArgv?: string[];
       jsEnv?: Record<string, string>;
       quiet?: boolean;
+      tty?: boolean;
     } = {}
   ) {
     return new PseudoTtyProcess(
-      this.rustPseudoTerminal.runCommand(command, cwd, jsEnv, quiet)
+      this.rustPseudoTerminal.runCommand(
+        command,
+        cwd,
+        jsEnv,
+        execArgv,
+        quiet,
+        tty
+      )
     );
   }
 
@@ -59,10 +70,12 @@ export class PseudoTerminal {
     script: string,
     {
       cwd,
+      execArgv,
       jsEnv,
       quiet,
     }: {
       cwd?: string;
+      execArgv?: string[];
       jsEnv?: Record<string, string>;
       quiet?: boolean;
     }
@@ -77,6 +90,7 @@ export class PseudoTerminal {
         this.pseudoIPCPath,
         cwd,
         jsEnv,
+        execArgv,
         quiet
       ),
       id,
@@ -194,6 +208,13 @@ function messageToCode(message: string): number {
 function supportedPtyPlatform() {
   if (process.platform !== 'win32') {
     return true;
+  }
+
+  // TODO: Re-enable Windows support when it's stable
+  // Currently, there's an issue with control chars.
+  // See: https://github.com/nrwl/nx/issues/22358
+  if (process.env.NX_WINDOWS_PTY_SUPPORT !== 'true') {
+    return false;
   }
 
   let windowsVersion = os.release().split('.');

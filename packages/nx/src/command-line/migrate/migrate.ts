@@ -1215,23 +1215,6 @@ async function generateMigrationsJsonAndUpdatePackageJson(
       originalNxJson.installation?.version ??
       readNxVersion(originalPackageJson);
 
-    try {
-      if (
-        ['nx', '@nrwl/workspace'].includes(opts.targetPackage) &&
-        (await isMigratingToNewMajor(from, opts.targetVersion)) &&
-        !isCI() &&
-        !isNxCloudUsed(originalNxJson)
-      ) {
-        await connectToNxCloudWithPrompt('migrate');
-        originalPackageJson = readJsonFile<PackageJson>(
-          join(root, 'package.json')
-        );
-      }
-    } catch {
-      // The above code is to remind folks when updating to a new major and not currently using Nx cloud.
-      // If for some reason it fails, it shouldn't affect the overall migration process
-    }
-
     logger.info(`Fetching meta data about packages.`);
     logger.info(`It may take a few minutes.`);
 
@@ -1268,6 +1251,32 @@ async function generateMigrationsJsonAndUpdatePackageJson(
           : `- There are no migrations to run, so migrations.json has not been created.`,
       ],
     });
+
+    try {
+      if (
+        ['nx', '@nrwl/workspace'].includes(opts.targetPackage) &&
+        (await isMigratingToNewMajor(from, opts.targetVersion)) &&
+        !isCI() &&
+        !isNxCloudUsed(originalNxJson)
+      ) {
+        output.success({
+          title: 'Connect to Nx Cloud',
+          bodyLines: [
+            'Nx Cloud is a first-party CI companion for Nx projects. It improves critical aspects of CI:',
+            '- Speed: 30% - 70% faster CI',
+            '- Cost: 40% - 75% reduction in CI costs',
+            '- Reliability: by automatically identifying flaky tasks and re-running them',
+          ],
+        });
+        await connectToNxCloudWithPrompt('migrate');
+        originalPackageJson = readJsonFile<PackageJson>(
+          join(root, 'package.json')
+        );
+      }
+    } catch {
+      // The above code is to remind folks when updating to a new major and not currently using Nx cloud.
+      // If for some reason it fails, it shouldn't affect the overall migration process
+    }
 
     output.log({
       title: 'Next steps:',

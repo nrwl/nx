@@ -76,7 +76,7 @@ describe('app', () => {
             options: { buildTargetName: 'build', serveTargetName: 'serve' },
           },
           {
-            plugin: '@nx/cypress/plugin',
+            plugin: '@nx/playwright/plugin',
             options: { targetName: 'e2e' },
           },
         ]);

@@ -1,4 +1,4 @@
-import { ChildProcess, fork } from 'child_process';
+import { ChildProcess, Serializable, fork } from 'child_process';
 import path = require('path');
 
 import { PluginConfiguration } from '../../../config/nx-json';
@@ -7,7 +7,7 @@ import { PluginConfiguration } from '../../../config/nx-json';
 // import { logger } from '../../utils/logger';
 
 import { LoadedNxPlugin, nxPluginCache } from '../internal-api';
-import { PluginWorkerResult, consumeMessage, createMessage } from './messaging';
+import { consumeMessage, isPluginWorkerResult } from './messaging';
 
 const cleanupFunctions = new Set<() => void>();
 
@@ -22,7 +22,7 @@ interface PendingPromise {
 export function loadRemoteNxPlugin(
   plugin: PluginConfiguration,
   root: string
-): [Promise<LoadedNxPlugin>, () => void] {
+): Promise<LoadedNxPlugin> {
   // this should only really be true when running unit tests within
   // the Nx repo. We still need to start the worker in this case,
   // but its typescript.
@@ -45,7 +45,7 @@ export function loadRemoteNxPlugin(
       ...(isWorkerTypescript ? ['-r', 'ts-node/register'] : []),
     ],
   });
-  worker.send(createMessage({ type: 'load', payload: { plugin, root } }));
+  worker.send({ type: 'load', payload: { plugin, root } });
 
   // logger.verbose(`[plugin-worker] started worker: ${worker.pid}`);
 
@@ -60,19 +60,13 @@ export function loadRemoteNxPlugin(
 
   cleanupFunctions.add(cleanupFunction);
 
-  return [
-    new Promise<LoadedNxPlugin>((res, rej) => {
-      worker.on(
-        'message',
-        createWorkerHandler(worker, pendingPromises, res, rej)
-      );
-      worker.on('exit', exitHandler);
-    }),
-    () => {
-      cleanupFunction();
-      cleanupFunctions.delete(cleanupFunction);
-    },
-  ] as const;
+  return new Promise<LoadedNxPlugin>((res, rej) => {
+    worker.on(
+      'message',
+      createWorkerHandler(worker, pendingPromises, res, rej)
+    );
+    worker.on('exit', exitHandler);
+  });
 }
 
 async function shutdownPluginWorker(
@@ -109,33 +103,30 @@ function createWorkerHandler(
 ) {
   let pluginName: string;
 
-  return function (message: string) {
-    const parsed = JSON.parse(message);
-    // logger.verbose(
-    //   `[plugin-pool] received message: ${parsed.type} from ${
-    //     pluginName ?? worker.pid
-    //   }`
-    // );
-    consumeMessage<PluginWorkerResult>(parsed, {
+  return function (message: Serializable) {
+    if (!isPluginWorkerResult(message)) {
+      return;
+    }
+    return consumeMessage(message, {
       'load-result': (result) => {
         if (result.success) {
-          const { name, createNodesPattern } = result;
+          const { name, createNodesPattern, include, exclude } = result;
           pluginName = name;
           pluginNames.set(worker, pluginName);
           onload({
             name,
+            include,
+            exclude,
             createNodes: createNodesPattern
               ? [
                   createNodesPattern,
                   (configFiles, ctx) => {
                     const tx = pluginName + ':createNodes:' + performance.now();
                     return registerPendingPromise(tx, pending, () => {
-                      worker.send(
-                        createMessage({
-                          type: 'createNodes',
-                          payload: { configFiles, context: ctx, tx },
-                        })
-                      );
+                      worker.send({
+                        type: 'createNodes',
+                        payload: { configFiles, context: ctx, tx },
+                      });
                     });
                   },
                 ]
@@ -145,12 +136,10 @@ function createWorkerHandler(
                   const tx =
                     pluginName + ':createDependencies:' + performance.now();
                   return registerPendingPromise(tx, pending, () => {
-                    worker.send(
-                      createMessage({
-                        type: 'createDependencies',
-                        payload: { context: ctx, tx },
-                      })
-                    );
+                    worker.send({
+                      type: 'createDependencies',
+                      payload: { context: ctx, tx },
+                    });
                   });
                 }
               : undefined,
@@ -159,12 +148,22 @@ function createWorkerHandler(
                   const tx =
                     pluginName + ':processProjectGraph:' + performance.now();
                   return registerPendingPromise(tx, pending, () => {
-                    worker.send(
-                      createMessage({
-                        type: 'processProjectGraph',
-                        payload: { graph, ctx, tx },
-                      })
-                    );
+                    worker.send({
+                      type: 'processProjectGraph',
+                      payload: { graph, ctx, tx },
+                    });
+                  });
+                }
+              : undefined,
+            createMetadata: result.hasCreateMetadata
+              ? (graph, ctx) => {
+                  const tx =
+                    pluginName + ':createMetadata:' + performance.now();
+                  return registerPendingPromise(tx, pending, () => {
+                    worker.send({
+                      type: 'createMetadata',
+                      payload: { graph, context: ctx, tx },
+                    });
                   });
                 }
               : undefined,
@@ -193,6 +192,14 @@ function createWorkerHandler(
         const { resolver, rejector } = pending.get(tx);
         if (result.success) {
           resolver(result.graph);
+        } else if (result.success === false) {
+          rejector(result.error);
+        }
+      },
+      createMetadataResult: ({ tx, ...result }) => {
+        const { resolver, rejector } = pending.get(tx);
+        if (result.success) {
+          resolver(result.metadata);
         } else if (result.success === false) {
           rejector(result.error);
         }

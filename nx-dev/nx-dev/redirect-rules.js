@@ -259,15 +259,12 @@ const diataxis = {
   '/ci/monorepo-ci-bitbucket-pipelines':
     '/recipes/ci/monorepo-ci-bitbucket-pipelines',
   '/ci/distributed-builds': '/nx-cloud/concepts/parallelization-distribution', // 👀
-  '/ci/incremental-builds': '/concepts/more-concepts/incremental-builds',
   '/ci/setup-incremental-builds-angular':
     '/recipes/other/setup-incremental-builds-angular',
   '/guides/turbo-and-nx': '/concepts/more-concepts/turbo-and-nx',
   '/guides/why-monorepos': '/concepts/more-concepts/why-monorepos',
   '/guides/adding-assets-react': '/recipes/other/adding-assets-react',
   '/guides/environment-variables': '/reference/environment-variables',
-  '/guides/monorepo-nx-enterprise':
-    '/concepts/more-concepts/monorepo-nx-enterprise',
   '/guides/performance-profiling': '/recipes/other/performance-profiling',
   '/guides/eslint': '/recipes/other/eslint',
   '/guides/customize-webpack': '/recipes/webpack/webpack-config-setup',
@@ -775,6 +772,12 @@ const conceptUrls = {
     '/concepts/module-federation/micro-frontend-architecture',
   '/concepts/more-concepts/faster-builds-with-module-federation':
     '/concepts/module-federation/faster-builds-with-module-federation',
+  '/concepts/more-concepts/nx-and-angular':
+    '/nx-api/angular/documents/nx-and-angular',
+  '/concepts/more-concepts/nx-devkit-angular-devkit':
+    '/nx-api/angular/documents/nx-devkit-angular-devkit',
+  '/concepts/more-concepts/incremental-builds':
+    '/concepts/more-concepts/buildable-and-publishable-libraries',
 };
 
 const nested5minuteTutorialUrls = {

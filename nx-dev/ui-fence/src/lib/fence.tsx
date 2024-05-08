@@ -171,7 +171,7 @@ export function Fence({
               <button
                 type="button"
                 className={
-                  'opacity-0 transition-opacity group-hover:opacity-100 not-prose flex border border-slate-200 bg-slate-50/50 p-2 dark:border-slate-700 dark:bg-slate-800/60' +
+                  'not-prose flex border border-slate-200 bg-slate-50/50 p-2 opacity-0 transition-opacity group-hover:opacity-100 dark:border-slate-700 dark:bg-slate-800/60' +
                   (highlightOptions && highlightOptions[0]
                     ? ''
                     : ' rounded-tr-lg')
@@ -192,7 +192,7 @@ export function Fence({
               selected={selectedOption}
               onChange={highlightChange}
             >
-              <SparklesIcon className="h-5 w-5 mr-1"></SparklesIcon>
+              <SparklesIcon className="mr-1 h-5 w-5"></SparklesIcon>
             </Selector>
           )}
         </div>
