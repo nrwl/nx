@@ -155,8 +155,8 @@ function nxCliPath() {
       });
       // if it's berry ensure we set the node_linker to node-modules
       if (packageManager === 'yarn' && pmc.ciInstall.includes('immutable')) {
-        execSync(pmc.preInstall, {
-          cwd: 'yarn config set nodeLinker node-modules',
+        execSync('yarn config set nodeLinker node-modules', {
+          cwd: tmpDir,
           stdio: ['ignore', 'ignore', 'ignore'],
         });
       }
