@@ -30,10 +30,9 @@ export function SourcemapInfoToolTip({
         <span className="font-bold">{isTarget ? 'Created' : 'Set'} by:</span>
         <span className="inline-flex grow items-center justify-between">
           {docsUrlSlug ? (
-            <ExternalLink
-              text={plugin}
-              href={`https://nx.dev/nx-api/${docsUrlSlug}`}
-            />
+            <ExternalLink href={`https://nx.dev/nx-api/${docsUrlSlug}`}>
+              {plugin}
+            </ExternalLink>
           ) : (
             `${plugin}`
           )}
@@ -46,7 +45,7 @@ export function SourcemapInfoToolTip({
   );
 
   return (
-    <div className="max-w-md text-sm text-slate-700 dark:text-slate-400 sm:max-w-full">
+    <div className="max-w-md text-sm text-slate-700 sm:max-w-full dark:text-slate-400">
       <div
         className={twMerge(
           `flex flex-col py-2 font-mono`,
@@ -58,10 +57,9 @@ export function SourcemapInfoToolTip({
       {showLink && (
         <div className="flex py-2">
           <p className={`flex flex-col gap-1`}>
-            <ExternalLink
-              text="Learn more about how projects are configured"
-              href="https://nx.dev/concepts/inferred-tasks"
-            />
+            <ExternalLink href="https://nx.dev/concepts/inferred-tasks">
+              Learn more about how projects are configured
+            </ExternalLink>
           </p>
         </div>
       )}

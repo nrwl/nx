@@ -78,6 +78,7 @@ describe('target-defaults plugin', () => {
                   "^build",
                 ],
                 "executor": "nx:run-commands",
+                "metadata": {},
               },
             },
           },
@@ -121,6 +122,10 @@ describe('target-defaults plugin', () => {
               "test": {
                 "command": "jest",
                 "executor": "nx:run-script",
+                "metadata": {
+                  "runCommand": "npm run test",
+                  "scriptContent": "nx affected:test",
+                },
                 "options": {
                   "script": "test",
                 },
@@ -169,6 +174,10 @@ describe('target-defaults plugin', () => {
               "test": {
                 "command": "jest",
                 "executor": "nx:run-script",
+                "metadata": {
+                  "runCommand": "npm run test",
+                  "scriptContent": "nx affected:test",
+                },
                 "options": {
                   "script": "test",
                 },
@@ -380,12 +389,14 @@ describe('target-defaults plugin', () => {
               "targets": {
                 "echo": {
                   "executor": "nx:run-commands",
+                  "metadata": {},
                   "options": {
                     "cwd": "{projectRoot}",
                   },
                 },
                 "echo2": {
                   "executor": "nx:run-commands",
+                  "metadata": {},
                   "options": {
                     "cwd": "{projectRoot}",
                   },
@@ -445,12 +456,14 @@ describe('target-defaults plugin', () => {
               "targets": {
                 "echo": {
                   "executor": "nx:run-commands",
+                  "metadata": {},
                   "options": {
                     "cwd": "{projectRoot}",
                   },
                 },
                 "echo2": {
                   "executor": "nx:run-commands",
+                  "metadata": {},
                   "options": {
                     "cwd": "{projectRoot}",
                   },
@@ -483,6 +496,7 @@ describe('target-defaults plugin', () => {
       expect(result).toMatchInlineSnapshot(`
         {
           "command": "echo hi",
+          "metadata": {},
         }
       `);
     });
@@ -504,6 +518,7 @@ describe('target-defaults plugin', () => {
       expect(result).toMatchInlineSnapshot(`
         {
           "executor": "nx:run-commands",
+          "metadata": {},
           "options": {
             "command": "echo hi",
           },
@@ -524,6 +539,7 @@ describe('target-defaults plugin', () => {
       ).toMatchInlineSnapshot(`
         {
           "executor": "nx:run-script",
+          "metadata": {},
           "options": {
             "script": "build",
           },
