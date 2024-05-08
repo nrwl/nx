@@ -13,9 +13,9 @@ import { basename, dirname, isAbsolute, join, relative } from 'path';
 import { projectGraphCacheDirectory } from 'nx/src/utils/cache-directory';
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { existsSync, readdirSync } from 'fs';
-import { loadNuxtKitDynamicImport } from '../utils/executor-utils';
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { getLockFileName } from '@nx/js';
+import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
 
 const cachePath = join(projectGraphCacheDirectory, 'nuxt.hash');
 const targetsCache = existsSync(cachePath) ? readTargetsCache() : {};
@@ -166,6 +166,8 @@ function serveStaticTarget(options: NuxtPluginOptions) {
       buildTarget: `${options.buildStaticTargetName}`,
       staticFilePath: '{projectRoot}/dist',
       port: 4200,
+      // Routes are found correctly with serve-static
+      spa: false,
     },
   };
 
@@ -206,15 +208,16 @@ async function getInfoFromNuxtConfig(
 ): Promise<{
   buildDir: string;
 }> {
-  const { loadNuxtConfig } = await loadNuxtKitDynamicImport();
-
-  const config = await loadNuxtConfig({
-    cwd: joinPathFragments(context.workspaceRoot, projectRoot),
-    configFile: basename(configFilePath),
-  });
-
+  // TODO(Colum): Once plugins are isolated we can go back to @nuxt/kit since each plugin will be run in its own worker.
+  const config = await loadConfigFile(
+    join(context.workspaceRoot, configFilePath)
+  );
   return {
-    buildDir: config?.buildDir,
+    buildDir:
+      config?.buildDir ??
+      // Match .nuxt default build dir from '@nuxt/schema'
+      // See: https://github.com/nuxt/nuxt/blob/871404ae5673425aeedde82f123ea58aa7c6facf/packages/schema/src/config/common.ts#L117-L119
+      '.nuxt',
   };
 }
 
@@ -224,16 +227,10 @@ function getOutputs(
 ): {
   buildOutputs: string[];
 } {
-  let nuxtBuildDir = nuxtConfig?.buildDir;
-  if (nuxtConfig?.buildDir && basename(nuxtConfig?.buildDir) === '.nuxt') {
-    // if buildDir exists, it will be `something/something/.nuxt`
-    // we want the "general" outputPath to be `something/something`
-    nuxtBuildDir = nuxtConfig.buildDir.replace(
-      basename(nuxtConfig.buildDir),
-      ''
-    );
-  }
-  const buildOutputPath = normalizeOutputPath(nuxtBuildDir, projectRoot);
+  const buildOutputPath = normalizeOutputPath(
+    nuxtConfig?.buildDir,
+    projectRoot
+  );
 
   return {
     buildOutputs: [buildOutputPath],

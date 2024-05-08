@@ -1,7 +1,8 @@
-import { joinPathFragments, workspaceRoot } from '@nx/devkit';
+import { workspaceRoot } from '@nx/devkit';
 import { mergeConfig } from 'metro-config';
 import type { MetroConfig } from 'metro-config';
 import { existsSync, readdirSync, statSync } from 'fs-extra';
+import { join } from 'path';
 
 import { getResolveRequest } from './metro-resolver';
 
@@ -24,7 +25,7 @@ export async function withNxMetro(
       (fileName) =>
         !['dist', 'e2e'].includes(fileName) && !fileName.startsWith('.')
     )
-    .map((fileName) => joinPathFragments(workspaceRoot, fileName))
+    .map((fileName) => join(workspaceRoot, fileName))
     .filter((filePath) => statSync(filePath).isDirectory());
 
   if (opts.watchFolders?.length) {
@@ -38,7 +39,7 @@ export async function withNxMetro(
   const nxConfig: MetroConfig = {
     resolver: {
       resolveRequest: getResolveRequest(extensions),
-      nodeModulesPaths: [joinPathFragments(workspaceRoot, 'node_modules')],
+      nodeModulesPaths: [join(workspaceRoot, 'node_modules')],
     },
     watchFolders,
   };

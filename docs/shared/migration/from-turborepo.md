@@ -107,18 +107,18 @@ For each `turbo.json` configuration property, the equivalent Nx property is list
 | `globalPassThroughEnv`    | N/A. See [Defining Environment Variables](/recipes/tips-n-tricks/define-environment-variables)                                                         |
 | `globalDotEnv`            | add to the [`sharedGlobals` `namedInput`](/recipes/running-tasks/configure-inputs)                                                                     |
 
-| **Task Configuration:**         |                                                                                                   |
-| ------------------------------- | ------------------------------------------------------------------------------------------------- |
-| `extends`                       | N/A. The project configurations will always extend the `targetDefaults` defined in `nx.json`.     |
-| `pipeline[task].dependsOn`      | [Same syntax](/reference/project-configuration#dependson).                                        |
-| `pipeline[task].dotEnv`         | Define [file `inputs`](/reference/project-configuration#filesets)                                 |
-| `pipeline[task].env`            | Define [env `inputs`](/reference/project-configuration#env-variables)                             |
-| `pipeline[task].passThroughEnv` | N/A. See [Defining Environment Variables](/recipes/tips-n-tricks/define-environment-variables)    |
-| `pipeline[task].outputs`        | [Same syntax](/reference/project-configuration#outputs).                                          |
-| `pipeline[task].cache`          | Define in the [`nx.json` `cacheableOperations` property](/reference/nx-json#tasks-runner-options) |
-| `pipeline[task].inputs`         | [Same syntax](/reference/project-configuration#filesets).                                         |
-| `pipeline[task].outputMode`     | Use the [`--output-style` command line flag](/nx-api/nx/documents/run-many#output-style)          |
-| `pipeline[task].persistent`     | N/A.                                                                                              |
+| **Task Configuration:**         |                                                                                                |
+| ------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `extends`                       | N/A. The project configurations will always extend the `targetDefaults` defined in `nx.json`.  |
+| `pipeline[task].dependsOn`      | [Same syntax](/reference/project-configuration#dependson).                                     |
+| `pipeline[task].dotEnv`         | Define [file `inputs`](/reference/project-configuration#filesets)                              |
+| `pipeline[task].env`            | Define [env `inputs`](/reference/project-configuration#env-variables)                          |
+| `pipeline[task].passThroughEnv` | N/A. See [Defining Environment Variables](/recipes/tips-n-tricks/define-environment-variables) |
+| `pipeline[task].outputs`        | [Same syntax](/reference/project-configuration#outputs).                                       |
+| `pipeline[task].cache`          | [Same syntax](/reference/project-configuration#cache)                                          |
+| `pipeline[task].inputs`         | [Same syntax](/reference/project-configuration#filesets).                                      |
+| `pipeline[task].outputMode`     | Use the [`--output-style` command line flag](/nx-api/nx/documents/run-many#output-style)       |
+| `pipeline[task].persistent`     | N/A.                                                                                           |
 
 ## Command Equivalents
 
@@ -150,8 +150,8 @@ For each `turbo.json` configuration property, the equivalent Nx property is list
 | `--preflight`               | N/A                                                                                                                                                                                   |
 | `--trace`                   | N/A. [`--verbose`](/nx-api/nx/documents/run-many#verbose) for more logging.                                                                                                           |
 | `--heap`                    | N/A. [`--verbose`](/nx-api/nx/documents/run-many#verbose) for more logging.                                                                                                           |
-| `--cpuprofile`              | Use [`NX_PROFILE=profile.json`](/recipes/troubleshooting/performance-profiling).                                                                                                      |
+| `--cpuprofile`              | Use [`NX_PROFILE=profile.json`](/troubleshooting/performance-profiling).                                                                                                              |
 | `--verbosity`               | Use [`--verbose`](/nx-api/nx/documents/run-many#verbose)                                                                                                                              |
 | `turbo gen`                 | [Use `nx generate`](/nx-api/nx/documents/generate)                                                                                                                                    |
-| `turbo login`               | No need. [Use `nx connect`](/nx-api/nx/documents/connect-to-nx-cloud) once to set up Nx Cloud.                                                                                        |
-| `turbo link`                | [Use `nx connect`](/nx-api/nx/documents/connect-to-nx-cloud)                                                                                                                          |
+| `turbo login`               | No need. [Create an Nx Cloud account](/nx-api/nx/documents/connect-to-nx-cloud) once to set up Nx Cloud.                                                                              |
+| `turbo link`                | [Create an Nx Cloud account](/nx-api/nx/documents/connect-to-nx-cloud)                                                                                                                |

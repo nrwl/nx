@@ -36,7 +36,7 @@ interface Schema {
   skipFormat?: boolean;
 }
 
-// TODO(v19): Remove this logic once we no longer derive directory.
+// TODO(v20): Remove this logic once we no longer derive directory.
 function maybeGetDerivedDirectory(host: Tree, options: Schema): string {
   if (!options.project) return options.directory;
   const workspace = getProjects(host);

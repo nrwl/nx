@@ -70,6 +70,7 @@ export async function configurationGeneratorInternal(
   opts.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
   const tasks: GeneratorCallback[] = [];
 
+  const projectGraph = await createProjectGraphAsync();
   if (!installedCypressVersion()) {
     tasks.push(await jsInitGenerator(tree, { ...options, skipFormat: true }));
     tasks.push(
@@ -79,10 +80,9 @@ export async function configurationGeneratorInternal(
       })
     );
   } else if (opts.addPlugin) {
-    addPlugin(tree);
+    await addPlugin(tree, projectGraph, false);
   }
 
-  const projectGraph = await createProjectGraphAsync();
   const nxJson = readNxJson(tree);
   const hasPlugin = nxJson.plugins?.some((p) =>
     typeof p === 'string'
@@ -125,7 +125,8 @@ function ensureDependencies(tree: Tree, options: NormalizedSchema) {
 }
 
 function normalizeOptions(tree: Tree, options: CypressE2EConfigSchema) {
-  const projectConfig = readProjectConfiguration(tree, options.project);
+  const projectConfig: ProjectConfiguration | undefined =
+    readProjectConfiguration(tree, options.project);
   if (projectConfig?.targets?.e2e) {
     throw new Error(`Project ${options.project} already has an e2e target.
 Rename or remove the existing e2e target.`);
@@ -134,7 +135,7 @@ Rename or remove the existing e2e target.`);
   if (
     !options.baseUrl &&
     !options.devServerTarget &&
-    !projectConfig.targets.serve
+    !projectConfig?.targets?.serve
   ) {
     throw new Error(`The project ${options.project} does not have a 'serve' target.
 In this case you need to provide a devServerTarget,'<projectName>:<targetName>[:<configName>]', or a baseUrl option`);
@@ -144,7 +145,7 @@ In this case you need to provide a devServerTarget,'<projectName>:<targetName>[:
 
   const devServerTarget =
     options.devServerTarget ??
-    (projectConfig.targets.serve ? `${options.project}:serve` : undefined);
+    (projectConfig?.targets?.serve ? `${options.project}:serve` : undefined);
 
   if (!options.baseUrl && !devServerTarget) {
     throw new Error('Either baseUrl or devServerTarget must be provided');

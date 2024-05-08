@@ -159,6 +159,12 @@ Type: `boolean`
 
 Untracked changes
 
+### verbose
+
+Type: `boolean`
+
+Prints additional information about the commands (e.g., stack traces)
+
 ### version
 
 Type: `boolean`
@@ -179,6 +185,6 @@ Choose whether to view the projects or task graph
 
 Type: `boolean`
 
-Default: `false`
+Default: `true`
 
 Watch for changes to project graph and update in-browser

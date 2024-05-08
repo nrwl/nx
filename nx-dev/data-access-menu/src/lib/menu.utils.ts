@@ -1,5 +1,7 @@
 import { MenuItem, MenuSection } from '@nx/nx-dev/models-menu';
 
+const COLLAPSIBLE_SECTIONS = ['concepts', 'recipes'];
+
 export function getBasicNxSection(items: MenuItem[]): MenuSection {
   return {
     id: 'basic',
@@ -13,12 +15,15 @@ export function getBasicNxSection(items: MenuItem[]): MenuSection {
           m.id === 'concepts' ||
           m.id === 'recipes' ||
           m.id === 'showcase' ||
-          m.id === 'reference'
+          m.id === 'reference' ||
+          m.id === 'troubleshooting'
       )
       .map((m) => {
         return {
           ...m,
-          disableCollapsible: !m.id.endsWith('tutorial'),
+          disableCollapsible: !COLLAPSIBLE_SECTIONS.some((collapsibleSection) =>
+            m.id.endsWith(collapsibleSection)
+          ),
         };
       }),
   };
@@ -84,7 +89,8 @@ export function getBasicNxCloudSection(items: MenuItem[]): MenuSection {
           m.id === 'features' ||
           m.id === 'concepts' ||
           m.id === 'recipes' ||
-          m.id === 'reference'
+          m.id === 'reference' ||
+          m.id === 'troubleshooting'
       )
       .map((m) => {
         return {

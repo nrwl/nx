@@ -1,6 +1,3 @@
 export * from './public-api';
 
-export {
-  readPluginPackageJson,
-  registerPluginTSTranspiler,
-} from './worker-api';
+export { readPluginPackageJson, registerPluginTSTranspiler } from './loader';

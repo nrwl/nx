@@ -7,6 +7,7 @@ import {
   runCLIAsync,
   uniq,
   updateFile,
+  updateJson,
 } from '@nx/e2e/utils';
 
 describe('Jest', () => {
@@ -26,7 +27,8 @@ describe('Jest', () => {
       `generate @nx/js:lib ${name} --unitTestRunner=jest --no-interactive`
     );
 
-    const results = await runCLIAsync(`test ${name}`, {
+    const results = await runCLIAsync(`test ${name} --skip-nx-cache`, {
+      silenceError: true,
       env: {
         ...process.env, // need to set this for some reason, or else get "env: node: No such file or directory"
         NODE_ENV: 'foobar',
@@ -145,5 +147,20 @@ describe('Jest', () => {
     expect(cliResults.combinedOutput).toContain(
       'Test Suites: 1 passed, 1 total'
     );
+  }, 90000);
+
+  it('should be able to run e2e tests split by tasks', async () => {
+    const libName = uniq('lib');
+    runCLI(`generate @nx/js:lib ${libName} --unitTestRunner=jest`);
+    updateJson('nx.json', (json) => {
+      const jestPlugin = json.plugins.find(
+        (plugin) => plugin.plugin === '@nx/jest/plugin'
+      );
+
+      jestPlugin.options.ciTargetName = 'e2e-ci';
+      return json;
+    });
+
+    await runCLIAsync(`e2e-ci ${libName}`);
   }, 90000);
 });

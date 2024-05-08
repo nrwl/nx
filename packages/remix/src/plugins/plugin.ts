@@ -44,9 +44,10 @@ export const createDependencies: CreateDependencies = () => {
 
 export interface RemixPluginOptions {
   buildTargetName?: string;
-  serveTargetName?: string;
+  devTargetName?: string;
   startTargetName?: string;
   typecheckTargetName?: string;
+  staticServeTargetName?: string;
 }
 
 export const createNodes: CreateNodes<RemixPluginOptions> = [
@@ -58,7 +59,9 @@ export const createNodes: CreateNodes<RemixPluginOptions> = [
     const siblingFiles = readdirSync(fullyQualifiedProjectRoot);
     if (
       !siblingFiles.includes('package.json') &&
-      !siblingFiles.includes('project.json')
+      !siblingFiles.includes('project.json') &&
+      !siblingFiles.includes('vite.config.ts') &&
+      !siblingFiles.includes('vite.config.js')
     ) {
       return {};
     }
@@ -110,8 +113,13 @@ async function buildRemixTargets(
     assetsBuildDirectory,
     namedInputs
   );
-  targets[options.serveTargetName] = serveTarget(serverBuildPath);
+  targets[options.devTargetName] = devTarget(serverBuildPath, projectRoot);
   targets[options.startTargetName] = startTarget(
+    projectRoot,
+    serverBuildPath,
+    options.buildTargetName
+  );
+  targets[options.staticServeTargetName] = startTarget(
     projectRoot,
     serverBuildPath,
     options.buildTargetName
@@ -151,19 +159,18 @@ function buildTarget(
         : ['default', '^default']),
     ],
     outputs: [serverBuildOutputPath, assetsBuildOutputPath],
-    executor: '@nx/remix:build',
-    options: {
-      outputPath: projectRoot,
-    },
+    command: 'remix build',
+    options: { cwd: projectRoot },
   };
 }
 
-function serveTarget(serverBuildPath: string): TargetConfiguration {
+function devTarget(
+  serverBuildPath: string,
+  projectRoot: string
+): TargetConfiguration {
   return {
-    executor: '@nx/remix:serve',
-    options: {
-      command: `npx remix-serve ${serverBuildPath}`,
-    },
+    command: 'remix dev --manual',
+    options: { cwd: projectRoot },
   };
 }
 
@@ -174,7 +181,7 @@ function startTarget(
 ): TargetConfiguration {
   return {
     dependsOn: [buildTargetName],
-    command: `npx remix-serve ${serverBuildPath}`,
+    command: `remix-serve ${serverBuildPath}`,
     options: {
       cwd: projectRoot,
     },
@@ -224,9 +231,10 @@ async function getBuildPaths(
 function normalizeOptions(options: RemixPluginOptions) {
   options ??= {};
   options.buildTargetName ??= 'build';
-  options.serveTargetName ??= 'serve';
+  options.devTargetName ??= 'dev';
   options.startTargetName ??= 'start';
   options.typecheckTargetName ??= 'typecheck';
+  options.staticServeTargetName ??= 'static-serve';
 
   return options;
 }

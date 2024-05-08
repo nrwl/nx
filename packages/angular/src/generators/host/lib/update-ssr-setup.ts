@@ -76,16 +76,18 @@ export async function updateSsrSetup(
 
   updateProjectConfiguration(tree, appName, project);
 
-  const installTask = addDependenciesToPackageJson(
-    tree,
-    {
-      cors: corsVersion,
-      '@module-federation/node': moduleFederationNodeVersion,
-    },
-    {
-      '@types/cors': typesCorsVersion,
-    }
-  );
+  if (!options.skipPackageJson) {
+    return addDependenciesToPackageJson(
+      tree,
+      {
+        cors: corsVersion,
+        '@module-federation/node': moduleFederationNodeVersion,
+      },
+      {
+        '@types/cors': typesCorsVersion,
+      }
+    );
+  }
 
-  return installTask;
+  return () => {};
 }

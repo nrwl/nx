@@ -419,7 +419,7 @@ export function createOrEditViteConfig(
 
   if (!onlyVitest && options.includeLib) {
     plugins.push(
-      `dts({ entryRoot: 'src', tsConfigFilePath: path.join(__dirname, 'tsconfig.lib.json'), skipDiagnostics: true })`
+      `dts({ entryRoot: 'src', tsconfigPath: path.join(__dirname, 'tsconfig.lib.json') })`
     );
   }
 

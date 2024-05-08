@@ -2,11 +2,12 @@
 import { readNxJson, updateNxJson } from '../../generators/utils/nx-json';
 import { Tree } from '../../generators/tree';
 import { NxJsonConfiguration } from '../../config/nx-json';
+import { formatChangedFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available';
 
 /**
  * Updates existing workspaces to move nx.json's affected.defaultBase to nx.json's base.
  */
-export default function update(host: Tree) {
+export default async function update(host: Tree) {
   const nxJson = readNxJson(host) as NxJsonConfiguration & {
     affected: { defaultBase?: string };
   };
@@ -18,4 +19,5 @@ export default function update(host: Tree) {
     }
     updateNxJson(host, nxJson);
   }
+  await formatChangedFilesWithPrettierIfAvailable(host);
 }

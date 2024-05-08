@@ -1,5 +1,7 @@
 import { output } from '../../utils/output';
 import { readNxJson } from '../../config/configuration';
+import { FsTree, flushChanges } from '../../generators/tree';
+import { connectToNxCloud } from '../../nx-cloud/generators/connect-to-nx-cloud/connect-to-nx-cloud';
 import { getNxCloudUrl, isNxCloudUsed } from '../../utils/nx-cloud-utils';
 import { runNxSync } from '../../utils/child-process';
 import { NxJsonConfiguration } from '../../config/nx-json';
@@ -11,6 +13,7 @@ import {
   messages,
 } from '../../utils/ab-testing';
 import { nxVersion } from '../../utils/versions';
+import { workspaceRoot } from '../../utils/workspace-root';
 import chalk = require('chalk');
 
 export function onlyDefaultRunnerIsUsed(nxJson: NxJsonConfiguration) {
@@ -59,9 +62,12 @@ export async function connectToNxCloudCommand(): Promise<boolean> {
     return false;
   }
 
-  runNxSync(`g nx:connect-to-nx-cloud --quiet --no-interactive`, {
-    stdio: [0, 1, 2],
-  });
+  const tree = new FsTree(workspaceRoot, false, 'connect-to-nx-cloud');
+  const callback = await connectToNxCloud(tree, {});
+  tree.lock();
+  flushChanges(workspaceRoot, tree.listChanges());
+  callback();
+
   return true;
 }
 

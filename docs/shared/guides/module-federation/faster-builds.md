@@ -288,8 +288,8 @@ a [shared config](https://webpack.js.org/plugins/module-federation-plugin/#shari
 The default configuration, without overrides, should work well for most workspaces, and we encourage you to analyze your
 bundles before optimizing the shared behavior.
 
-To analyze your bundle, run build with `--statsJson` and use a tool
-like [`webpack-bundle-analyzer`](https://www.npmjs.com/package/webpack-bundle-analyzer) to the size of your bundles.
+To analyze the size of your bundles, run build with `--statsJson` and use a tool
+like [`webpack-bundle-analyzer`](https://www.npmjs.com/package/webpack-bundle-analyzer).
 
 If you have any feedback regarding this feature, we'd love to hear from you--check
 our [community page](https://nx.dev/community) for links to our Discord and Twitter.
@@ -298,11 +298,7 @@ our [community page](https://nx.dev/community) for links to our Discord and Twit
 ## Remote computation caching with Nx Cloud
 
 To use Module Federation well, we recommend that you enable [Nx Cloud](https://nx.app). If you haven't enabled it yet
-when using `create-nx-workspace`, you can do the following.
-
-```shell
-nx connect
-```
+when using `create-nx-workspace`, create an account at [https://cloud.nx.app](https://cloud.nx.app) and connect to your repository.
 
 With Nx Cloud enabled, a large set of builds can be skipped entirely when running the application locally (and in
 CI/CD). When you run builds through Nx + Nx Cloud, the artifacts are stored in the remote cache, so as long as the

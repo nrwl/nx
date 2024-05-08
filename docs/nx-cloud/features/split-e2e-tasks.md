@@ -1,4 +1,9 @@
-# Automatically Split E2E Tasks by File
+# Automatically Split E2E Tasks by File (Atomizer)
+
+{% youtube
+src="https://youtu.be/0YxcxIR7QU0"
+title="10x Faster e2e Tests!"
+width="100%" /%}
 
 In almost every codebase, e2e tests are the largest portion of the CI pipeline. Typically, e2e tests are grouped by application so that whenever an application's code changes, all the e2e tests for that application are run. These large groupings of e2e tests make caching and distribution less effective. Also, because e2e tests deal with a lot of integration code, they are at a much higher risk to be flaky.
 
@@ -6,7 +11,7 @@ You could manually address these problems by splitting your e2e tests into small
 
 ## Set up
 
-To enable automatically split e2e tasks, you need to turn on [inferred tasks](/concepts/inferred-tasks#existing-nx-workspaces) for the [@nx/cypress](/nx-api/cypress) or [@nx/playwright](/nx-api/playwright) plugins. Run this command to set up inferred tasks:
+To enable automatically split e2e tasks, you need to turn on [inferred tasks](/concepts/inferred-tasks#existing-nx-workspaces) for the [@nx/cypress](/nx-api/cypress), [@nx/playwright](/nx-api/playwright), or [@nx/playwright](/nx-api/jest) plugins. Run this command to set up inferred tasks:
 
 {% tabs %}
 {% tab label="Cypress" %}
@@ -23,13 +28,24 @@ nx add @nx/playwright
 ```
 
 {% /tab %}
+{% tab label="Jest" %}
+
+```shell {% skipRescope=true %}
+nx add @nx/jest
+```
+
+{% /tab %}
 {% /tabs %}
 
 This command will register the appropriate plugin in the `plugins` array of `nx.json`.
 
 ## Manual Configuration
 
-If you are already using the `@nx/cypress` or `@nx/playwright` plugin, you need to manually add the appropriate configuration to the `plugins` array of `nx.json`. The configuration settings can be found on the [Cypress](/nx-api/cypress#nxcypress-configuration) or [Playwright](/nx-api/playwright#nxplaywright-configuration) plugin docs.
+If you are already using the `@nx/cypress`, `@nx/playwright`, or `@nx/jest` plugin, you need to manually add the appropriate configuration to the `plugins` array of `nx.json`. Follow the instructions for the plugin you are using:
+
+- [Configure Cypress Task Splitting](/nx-api/cypress#nxcypress-configuration)
+- [Configure Playwright Task Splitting](/nx-api/playwright#nxplaywright-configuration)
+- [Configure Jest Task Splitting](/nx-api/jest#splitting-e2e-tests)
 
 ## Usage
 
@@ -46,6 +62,15 @@ nx show project myproject-e2e --web
   "project": {
     "name": "admin-e2e",
     "data": {
+      "metadata": {
+        "targetGroups": {
+          "E2E (CI)": [
+            "e2e-ci--src/e2e/app.cy.ts",
+            "e2e-ci--src/e2e/login.cy.ts",
+            "e2e-ci"
+          ]
+        }
+      },
       "root": "apps/admin-e2e",
       "projectType": "application",
       "targets": {
@@ -66,6 +91,9 @@ nx show project myproject-e2e --web
             "production": {
               "command": "cypress run --env webServerCommand=\"nx run admin:preview\""
             }
+          },
+          "metadata": {
+            "technologies": ["cypress"]
           }
         },
         "e2e-ci--src/e2e/app.cy.ts": {
@@ -86,7 +114,10 @@ nx show project myproject-e2e --web
             "command": "cypress run --env webServerCommand=\"nx run admin:serve-static\" --spec src/e2e/app.cy.ts"
           },
           "executor": "nx:run-commands",
-          "configurations": {}
+          "configurations": {},
+          "metadata": {
+            "technologies": ["cypress"]
+          }
         },
         "e2e-ci--src/e2e/login.cy.ts": {
           "outputs": [
@@ -106,7 +137,10 @@ nx show project myproject-e2e --web
             "command": "cypress run --env webServerCommand=\"nx run admin:serve-static\" --spec src/e2e/login.cy.ts"
           },
           "executor": "nx:run-commands",
-          "configurations": {}
+          "configurations": {},
+          "metadata": {
+            "technologies": ["cypress"]
+          }
         },
         "e2e-ci": {
           "executor": "nx:noop",
@@ -135,7 +169,10 @@ nx show project myproject-e2e --web
             }
           ],
           "options": {},
-          "configurations": {}
+          "configurations": {},
+          "metadata": {
+            "technologies": ["cypress"]
+          }
         },
         "lint": {
           "executor": "@nx/eslint:lint",
@@ -143,7 +180,10 @@ nx show project myproject-e2e --web
           "cache": true,
           "outputs": ["{options.outputFile}"],
           "options": {},
-          "configurations": {}
+          "configurations": {},
+          "metadata": {
+            "technologies": ["eslint"]
+          }
         }
       },
       "name": "admin-e2e",

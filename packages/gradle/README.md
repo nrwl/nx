@@ -9,6 +9,8 @@
 
 <hr>
 
+> Note: this plugin is currently experimental.
+
 # Nx: Smart Monorepos · Fast CI
 
 Nx is a build system with built-in tooling and advanced CI capabilities. It helps you maintain and scale monorepos, both locally and on CI.

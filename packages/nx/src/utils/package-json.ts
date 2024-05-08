@@ -4,9 +4,9 @@ import {
   InputDefinition,
   TargetConfiguration,
 } from '../config/workspace-json-project-json';
+import { mergeTargetConfigurations } from '../project-graph/utils/project-configuration-utils';
 import { readJsonFile } from './fileutils';
 import { getNxRequirePaths } from './installation-directory';
-import { mergeTargetConfigurations } from '../project-graph/utils/project-configuration-utils';
 
 export interface NxProjectPackageJsonConfiguration {
   implicitDependencies?: string[];
@@ -59,6 +59,7 @@ export interface PackageJson {
     | {
         packages: string[];
       };
+  publishConfig?: Record<string, string>;
 
   // Nx Project Configuration
   nx?: NxProjectPackageJsonConfiguration;

@@ -43,7 +43,7 @@ interface ReactArguments extends BaseArguments {
   stack: 'react';
   workspaceType: 'standalone' | 'integrated';
   appName: string;
-  framework: 'none' | 'next';
+  framework: 'none' | 'next' | 'remix';
   style: string;
   bundler: 'webpack' | 'vite' | 'rspack';
   nextAppDir: boolean;
@@ -170,7 +170,7 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
           })
           .option('e2eTestRunner', {
             describe: chalk.dim`Test runner to use for end to end (E2E) tests.`,
-            choices: ['cypress', 'playwright', 'none'],
+            choices: ['playwright', 'cypress', 'none'],
             type: 'string',
           })
           .option('ssr', {
@@ -196,14 +196,7 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
         throw error;
       });
     },
-    [
-      normalizeArgsMiddleware,
-      normalizeAndWarnOnDeprecatedPreset({
-        // TODO(v19): Remove Empty and Core presets
-        [Preset.Core]: Preset.NPM,
-        [Preset.Empty]: Preset.Apps,
-      }),
-    ] as yargs.MiddlewareFunction<{}>[]
+    [normalizeArgsMiddleware] as yargs.MiddlewareFunction<{}>[]
   )
   .help('help', chalk.dim`Show help`)
   .updateLocale(yargsDecorator)
@@ -246,28 +239,6 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
       title: `Successfully applied preset: ${parsedArgs.preset}`,
     });
   }
-}
-
-function normalizeAndWarnOnDeprecatedPreset(
-  deprecatedPresets: Partial<Record<Preset, Preset>>
-): (argv: yargs.Arguments<Arguments>) => Promise<void> {
-  return async (args: yargs.Arguments<Arguments>): Promise<void> => {
-    if (!args.preset) return;
-    if (deprecatedPresets[args.preset]) {
-      output.addVerticalSeparator();
-      output.note({
-        title: `The "${args.preset}" preset is deprecated.`,
-        bodyLines: [
-          `The "${
-            args.preset
-          }" preset will be removed in a future Nx release. Use the "${
-            deprecatedPresets[args.preset]
-          }" preset instead.`,
-        ],
-      });
-      args.preset = deprecatedPresets[args.preset] as Preset;
-    }
-  };
 }
 
 /**
@@ -378,6 +349,10 @@ async function determineStack(
       case Preset.ReactMonorepo:
       case Preset.NextJs:
       case Preset.NextJsStandalone:
+      case Preset.RemixStandalone:
+      case Preset.RemixMonorepo:
+      case Preset.ReactNative:
+      case Preset.Expo:
         return 'react';
       case Preset.Vue:
       case Preset.VueStandalone:
@@ -395,8 +370,6 @@ async function determineStack(
       case Preset.TsStandalone:
         return 'none';
       case Preset.WebComponents:
-      case Preset.ReactNative:
-      case Preset.Expo:
       default:
         return 'unknown';
     }
@@ -520,7 +493,8 @@ async function determineReactOptions(
     preset = parsedArgs.preset;
     if (
       preset === Preset.ReactStandalone ||
-      preset === Preset.NextJsStandalone
+      preset === Preset.NextJsStandalone ||
+      preset === Preset.RemixStandalone
     ) {
       appName = parsedArgs.appName ?? parsedArgs.name;
     } else {
@@ -548,6 +522,12 @@ async function determineReactOptions(
       } else {
         preset = Preset.NextJs;
       }
+    } else if (framework === 'remix') {
+      if (workspaceType === 'standalone') {
+        preset = Preset.RemixStandalone;
+      } else {
+        preset = Preset.RemixMonorepo;
+      }
     } else if (framework === 'react-native') {
       preset = Preset.ReactNative;
     } else if (framework === 'expo') {
@@ -567,6 +547,11 @@ async function determineReactOptions(
   } else if (preset === Preset.NextJs || preset === Preset.NextJsStandalone) {
     nextAppDir = await determineNextAppDir(parsedArgs);
     nextSrcDir = await determineNextSrcDir(parsedArgs);
+    e2eTestRunner = await determineE2eTestRunner(parsedArgs);
+  } else if (
+    preset === Preset.RemixMonorepo ||
+    preset === Preset.RemixStandalone
+  ) {
     e2eTestRunner = await determineE2eTestRunner(parsedArgs);
   }
 
@@ -1017,9 +1002,9 @@ async function determineAppName(
 
 async function determineReactFramework(
   parsedArgs: yargs.Arguments<ReactArguments>
-): Promise<'none' | 'nextjs' | 'expo' | 'react-native'> {
+): Promise<'none' | 'nextjs' | 'remix' | 'expo' | 'react-native'> {
   const reply = await enquirer.prompt<{
-    framework: 'none' | 'nextjs' | 'expo' | 'react-native';
+    framework: 'none' | 'nextjs' | 'remix' | 'expo' | 'react-native';
   }>([
     {
       name: 'framework',
@@ -1034,6 +1019,10 @@ async function determineReactFramework(
         {
           name: 'nextjs',
           message: 'Next.js       [ https://nextjs.org/      ]',
+        },
+        {
+          name: 'remix',
+          message: 'Remix         [ https://remix.run/       ]',
         },
         {
           name: 'expo',
@@ -1141,7 +1130,7 @@ async function determineVueFramework(
         {
           name: 'none',
           message: 'None',
-          hint: '         I only want vue',
+          hint: '         I only want Vue',
         },
         {
           name: 'nuxt',
@@ -1207,12 +1196,12 @@ async function determineE2eTestRunner(
       name: 'e2eTestRunner',
       choices: [
         {
-          name: 'cypress',
-          message: 'Cypress [ https://www.cypress.io/ ]',
-        },
-        {
           name: 'playwright',
           message: 'Playwright [ https://playwright.dev/ ]',
+        },
+        {
+          name: 'cypress',
+          message: 'Cypress [ https://www.cypress.io/ ]',
         },
         {
           name: 'none',

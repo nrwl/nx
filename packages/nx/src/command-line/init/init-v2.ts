@@ -11,6 +11,7 @@ import {
   addDepsToPackageJson,
   createNxJsonFile,
   isMonorepo,
+  printFinalMessage,
   runInstall,
   updateGitIgnore,
 } from './implementation/utils';
@@ -31,6 +32,7 @@ export interface InitArgs {
 }
 
 export async function initHandler(options: InitArgs): Promise<void> {
+  process.env.NX_RUNNING_NX_INIT = 'true';
   const version =
     process.env.NX_VERSION ?? (prerelease(nxVersion) ? 'next' : 'latest');
   if (process.env.NX_VERSION) {
@@ -48,8 +50,15 @@ export async function initHandler(options: InitArgs): Promise<void> {
       );
     }
     generateDotNxSetup(version);
+    const { plugins } = await detectPlugins();
+    plugins.forEach((plugin) => {
+      execSync(`./nx add ${plugin}`, {
+        stdio: 'inherit',
+      });
+    });
+
     // invokes the wrapper, thus invoking the initial installation process
-    runNxSync('');
+    runNxSync('--version', { stdio: 'ignore' });
     return;
   }
 
@@ -59,48 +68,54 @@ export async function initHandler(options: InitArgs): Promise<void> {
       ...options,
       integrated: !!options.integrated,
     });
+
+    printFinalMessage({
+      learnMoreLink: 'https://nx.dev/recipes/angular/migration/angular',
+    });
     return;
   }
 
   output.log({ title: '🧐 Checking dependencies' });
 
-  const detectPluginsResponse = await detectPlugins();
+  const { plugins, updatePackageScripts } = await detectPlugins();
 
-  if (!detectPluginsResponse?.plugins.length) {
-    // If no plugins are detected/chosen, guide users to setup
-    // their targetDefaults correctly so their package scripts will work.
-    const packageJson: PackageJson = readJsonFile('package.json');
-    if (isMonorepo(packageJson)) {
-      await addNxToMonorepo({ interactive: options.interactive });
-    } else {
-      await addNxToNpmRepo({ interactive: options.interactive });
-    }
+  const packageJson: PackageJson = readJsonFile('package.json');
+  if (isMonorepo(packageJson)) {
+    await addNxToMonorepo({
+      interactive: options.interactive,
+      nxCloud: false,
+    });
   } else {
-    const useNxCloud =
-      options.nxCloud ??
-      (options.interactive
-        ? await connectExistingRepoToNxCloudPrompt()
-        : false);
+    await addNxToNpmRepo({
+      interactive: options.interactive,
+      nxCloud: false,
+    });
+  }
+  const learnMoreLink = isMonorepo(packageJson)
+    ? 'https://nx.dev/getting-started/tutorials/npm-workspaces-tutorial'
+    : 'https://nx.dev/recipes/adopting-nx/adding-to-existing-project';
+  const useNxCloud =
+    options.nxCloud ??
+    (options.interactive ? await connectExistingRepoToNxCloudPrompt() : false);
 
-    const repoRoot = process.cwd();
-    const pmc = getPackageManagerCommand();
+  const repoRoot = process.cwd();
+  const pmc = getPackageManagerCommand();
 
-    createNxJsonFile(repoRoot, [], [], {});
-    updateGitIgnore(repoRoot);
+  createNxJsonFile(repoRoot, [], [], {});
+  updateGitIgnore(repoRoot);
 
-    addDepsToPackageJson(repoRoot, detectPluginsResponse.plugins);
+  addDepsToPackageJson(repoRoot, plugins);
 
-    output.log({ title: '📦 Installing Nx' });
+  output.log({ title: '📦 Installing Nx' });
 
-    runInstall(repoRoot, pmc);
+  runInstall(repoRoot, pmc);
 
+  if (plugins.length > 0) {
     output.log({ title: '🔨 Configuring plugins' });
-    for (const plugin of detectPluginsResponse.plugins) {
+    for (const plugin of plugins) {
       execSync(
         `${pmc.exec} nx g ${plugin}:init --keepExistingVersions ${
-          detectPluginsResponse.updatePackageScripts
-            ? '--updatePackageScripts'
-            : ''
+          updatePackageScripts ? '--updatePackageScripts' : ''
         } --no-interactive`,
         {
           stdio: [0, 1, 2],
@@ -108,32 +123,21 @@ export async function initHandler(options: InitArgs): Promise<void> {
         }
       );
     }
-
-    if (!detectPluginsResponse.updatePackageScripts) {
-      const rootPackageJsonPath = join(repoRoot, 'package.json');
-      const json = readJsonFile<PackageJson>(rootPackageJsonPath);
-      json.nx = {};
-      writeJsonFile(rootPackageJsonPath, json);
-    }
-
-    if (useNxCloud) {
-      output.log({ title: '🛠️ Setting up Nx Cloud' });
-      execSync(
-        `${pmc.exec} nx g nx:connect-to-nx-cloud --installationSource=nx-init --quiet --hideFormatLogs --no-interactive`,
-        {
-          stdio: [0, 1, 2],
-          cwd: repoRoot,
-        }
-      );
-    }
   }
 
-  output.log({
-    title: '👀 Explore Your Workspace',
-    bodyLines: [
-      `Run "nx graph" to show the graph of the workspace. It will show tasks that you can run with Nx.`,
-      `Read this guide on exploring your workspace: https://nx.dev/core-features/explore-graph`,
-    ],
+  if (useNxCloud) {
+    output.log({ title: '🛠️ Setting up Nx Cloud' });
+    execSync(
+      `${pmc.exec} nx g nx:connect-to-nx-cloud --installationSource=nx-init --quiet --hideFormatLogs --no-interactive`,
+      {
+        stdio: [0, 1, 2],
+        cwd: repoRoot,
+      }
+    );
+  }
+
+  printFinalMessage({
+    learnMoreLink,
   });
 }
 
@@ -159,9 +163,10 @@ const npmPackageToPluginMap: Record<string, string> = {
   '@remix-run/dev': '@nx/remix',
 };
 
-async function detectPlugins(): Promise<
-  undefined | { plugins: string[]; updatePackageScripts: boolean }
-> {
+async function detectPlugins(): Promise<{
+  plugins: string[];
+  updatePackageScripts: boolean;
+}> {
   let files = ['package.json'].concat(
     globWithWorkspaceContext(process.cwd(), ['**/*/package.json'])
   );
@@ -189,10 +194,18 @@ async function detectPlugins(): Promise<
       }
     }
   }
+  if (existsSync('gradlew') || existsSync('gradlew.bat')) {
+    detectedPlugins.add('@nx/gradle');
+  }
 
   const plugins = Array.from(detectedPlugins);
 
-  if (plugins.length === 0) return undefined;
+  if (plugins.length === 0) {
+    return {
+      plugins: [],
+      updatePackageScripts: false,
+    };
+  }
 
   output.log({
     title: `Recommended Plugins:`,
@@ -205,33 +218,35 @@ async function detectPlugins(): Promise<
     {
       name: 'plugins',
       type: 'multiselect',
-      message: `Which plugins would you like to add?`,
+      message: `Which plugins would you like to add? Press <Space> to select and <Enter> to submit.`,
       choices: plugins.map((p) => ({ name: p, value: p })),
-      initial: plugins.map((_, i) => i) as unknown as number, // casting to avoid type error due to bad d.ts file from enquirer
     },
   ]).then((r) => r.plugins);
 
-  if (pluginsToInstall?.length === 0) return undefined;
+  if (pluginsToInstall?.length === 0)
+    return {
+      plugins: [],
+      updatePackageScripts: false,
+    };
 
-  const updatePackageScripts = await prompt<{ updatePackageScripts: string }>([
-    {
-      name: 'updatePackageScripts',
-      type: 'autocomplete',
-      message: `Do you want to start using Nx in your package.json scripts?`,
-      choices: [
-        {
-          name: 'Yes',
-        },
-        {
-          name: 'No',
-        },
-      ],
-      initial: 0,
-    },
-  ]).then((r) => r.updatePackageScripts === 'Yes');
+  const updatePackageScripts =
+    existsSync('package.json') &&
+    (await prompt<{ updatePackageScripts: string }>([
+      {
+        name: 'updatePackageScripts',
+        type: 'autocomplete',
+        message: `Do you want to start using Nx in your package.json scripts?`,
+        choices: [
+          {
+            name: 'Yes',
+          },
+          {
+            name: 'No',
+          },
+        ],
+        initial: 0,
+      },
+    ]).then((r) => r.updatePackageScripts === 'Yes'));
 
-  return {
-    plugins: pluginsToInstall,
-    updatePackageScripts,
-  };
+  return { plugins: pluginsToInstall, updatePackageScripts };
 }

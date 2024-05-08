@@ -1,27 +1,35 @@
 import type { ProjectGraphProjectNode } from '../../config/project-graph';
 import { CommandModule, showHelp } from 'yargs';
-import { parseCSV, withAffectedOptions } from '../yargs-utils/shared-options';
+import {
+  parseCSV,
+  withAffectedOptions,
+  withVerbose,
+} from '../yargs-utils/shared-options';
+import { handleErrors } from '../../utils/params';
 
 export interface NxShowArgs {
   json?: boolean;
 }
 
 export type ShowProjectsOptions = NxShowArgs & {
-  exclude: string;
-  files: string;
-  uncommitted: any;
-  untracked: any;
-  base: string;
-  head: string;
-  affected: boolean;
-  type: ProjectGraphProjectNode['type'];
-  projects: string[];
-  withTarget: string[];
+  exclude?: string[];
+  files?: string;
+  uncommitted?: any;
+  untracked?: any;
+  base?: string;
+  head?: string;
+  affected?: boolean;
+  type?: ProjectGraphProjectNode['type'];
+  projects?: string[];
+  withTarget?: string[];
+  verbose?: boolean;
+  sep?: string;
 };
 
 export type ShowProjectOptions = NxShowArgs & {
   projectName: string;
   web?: boolean;
+  verbose: boolean;
 };
 
 export const yargsShowCommand: CommandModule<
@@ -61,7 +69,7 @@ const showProjectsCommand: CommandModule<NxShowArgs, ShowProjectsOptions> = {
   command: 'projects',
   describe: 'Show a list of projects in the workspace',
   builder: (yargs) =>
-    withAffectedOptions(yargs)
+    withVerbose(withAffectedOptions(yargs))
       .option('affected', {
         type: 'boolean',
         description: 'Show only affected projects',
@@ -83,11 +91,17 @@ const showProjectsCommand: CommandModule<NxShowArgs, ShowProjectsOptions> = {
         description: 'Select only projects of the given type',
         choices: ['app', 'lib', 'e2e'],
       })
+      .option('sep', {
+        type: 'string',
+        description: 'Outputs projects with the specified seperator',
+      })
       .implies('untracked', 'affected')
       .implies('uncommitted', 'affected')
       .implies('files', 'affected')
       .implies('base', 'affected')
       .implies('head', 'affected')
+      .conflicts('sep', 'json')
+      .conflicts('json', 'sep')
       .example(
         '$0 show projects --projects "apps/*"',
         'Show all projects in the apps directory'
@@ -108,7 +122,16 @@ const showProjectsCommand: CommandModule<NxShowArgs, ShowProjectsOptions> = {
         '$0 show projects --affected --exclude=*-e2e',
         'Show affected projects in the workspace, excluding end-to-end projects'
       ) as any,
-  handler: (args) => import('./show').then((m) => m.showProjectsHandler(args)),
+  handler: (args) => {
+    return handleErrors(
+      args.verbose ?? process.env.NX_VERBOSE_LOGGING === 'true',
+      async () => {
+        const { showProjectsHandler } = await import('./projects');
+        await showProjectsHandler(args);
+        process.exit(0);
+      }
+    );
+  },
 };
 
 const showProjectCommand: CommandModule<NxShowArgs, ShowProjectOptions> = {
@@ -126,15 +149,29 @@ const showProjectCommand: CommandModule<NxShowArgs, ShowProjectOptions> = {
         type: 'boolean',
         description: 'Show project details in the browser',
       })
-      .check((argv) => {
-        if (argv.web) {
-          argv.json = false;
-        }
-        return true;
+      .option('verbose', {
+        type: 'boolean',
+        description:
+          'Prints additional information about the commands (e.g., stack traces)',
       })
+      .conflicts('json', 'web')
+      .conflicts('web', 'json')
       .example(
         '$0 show project my-app',
         'View project information for my-app in JSON format'
+      )
+      .example(
+        '$0 show project my-app --web',
+        'View project information for my-app in the browser'
       ),
-  handler: (args) => import('./show').then((m) => m.showProjectHandler(args)),
+  handler: (args) => {
+    return handleErrors(
+      args.verbose ?? process.env.NX_VERBOSE_LOGGING === 'true',
+      async () => {
+        const { showProjectHandler } = await import('./project');
+        await showProjectHandler(args);
+        process.exit(0);
+      }
+    );
+  },
 };

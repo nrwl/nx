@@ -1,22 +1,35 @@
-import { readFileMapCache, readProjectGraphCache } from './nx-deps-cache';
-import { buildProjectGraphUsingProjectFileMap } from './build-project-graph';
-import { output } from '../utils/output';
-import { markDaemonAsDisabled, writeDaemonLogs } from '../daemon/tmp-dir';
+import { performance } from 'perf_hooks';
+
+import { readNxJson } from '../config/nx-json';
 import { ProjectGraph } from '../config/project-graph';
-import { stripIndents } from '../utils/strip-indents';
 import {
   ProjectConfiguration,
   ProjectsConfigurations,
 } from '../config/workspace-json-project-json';
 import { daemonClient } from '../daemon/client/client';
+import { markDaemonAsDisabled, writeDaemonLogs } from '../daemon/tmp-dir';
 import { fileExists } from '../utils/fileutils';
+import { output } from '../utils/output';
+import { stripIndents } from '../utils/strip-indents';
 import { workspaceRoot } from '../utils/workspace-root';
-import { performance } from 'perf_hooks';
+import { buildProjectGraphUsingProjectFileMap } from './build-project-graph';
+import {
+  AggregateProjectGraphError,
+  isAggregateProjectGraphError,
+  ProjectConfigurationsError,
+  ProjectGraphError,
+} from './error-types';
+import {
+  readFileMapCache,
+  readProjectGraphCache,
+  writeCache,
+} from './nx-deps-cache';
+import { loadNxPlugins } from './plugins/internal-api';
+import { ConfigurationResult } from './utils/project-configuration-utils';
 import {
   retrieveProjectConfigurations,
   retrieveWorkspaceFiles,
 } from './utils/retrieve-workspace-files';
-import { readNxJson } from '../config/nx-json';
 
 /**
  * Synchronously reads the latest cached copy of the workspace's ProjectGraph.
@@ -81,8 +94,25 @@ export async function buildProjectGraphAndSourceMapsWithoutDaemon() {
   const nxJson = readNxJson();
 
   performance.mark('retrieve-project-configurations:start');
+  let configurationResult: ConfigurationResult;
+  let projectConfigurationsError: ProjectConfigurationsError;
+  const [plugins, cleanup] = await loadNxPlugins(nxJson.plugins);
+  try {
+    configurationResult = await retrieveProjectConfigurations(
+      plugins,
+      workspaceRoot,
+      nxJson
+    );
+  } catch (e) {
+    if (e instanceof ProjectConfigurationsError) {
+      projectConfigurationsError = e;
+      configurationResult = e.partialProjectConfigurationsResult;
+    } else {
+      throw e;
+    }
+  }
   const { projects, externalNodes, sourceMaps, projectRootMap } =
-    await retrieveProjectConfigurations(workspaceRoot, nxJson);
+    configurationResult;
   performance.mark('retrieve-project-configurations:end');
 
   performance.mark('retrieve-workspace-files:start');
@@ -92,31 +122,81 @@ export async function buildProjectGraphAndSourceMapsWithoutDaemon() {
 
   const cacheEnabled = process.env.NX_CACHE_PROJECT_GRAPH !== 'false';
   performance.mark('build-project-graph-using-project-file-map:start');
-  const projectGraph = (
-    await buildProjectGraphUsingProjectFileMap(
+  let projectGraphError: AggregateProjectGraphError;
+  let projectGraphResult: Awaited<
+    ReturnType<typeof buildProjectGraphUsingProjectFileMap>
+  >;
+  try {
+    projectGraphResult = await buildProjectGraphUsingProjectFileMap(
       projects,
       externalNodes,
       fileMap,
       allWorkspaceFiles,
       rustReferences,
       cacheEnabled ? readFileMapCache() : null,
-      cacheEnabled
-    )
-  ).projectGraph;
+      plugins,
+      sourceMaps
+    );
+  } catch (e) {
+    if (isAggregateProjectGraphError(e)) {
+      projectGraphResult = {
+        projectGraph: e.partialProjectGraph,
+        projectFileMapCache: null,
+      };
+      projectGraphError = e;
+    } else {
+      throw e;
+    }
+  } finally {
+    cleanup();
+  }
+
+  const { projectGraph, projectFileMapCache } = projectGraphResult;
   performance.mark('build-project-graph-using-project-file-map:end');
+
   delete global.NX_GRAPH_CREATION;
-  return { projectGraph, sourceMaps };
+
+  const errors = [
+    ...(projectConfigurationsError?.errors ?? []),
+    ...(projectGraphError?.errors ?? []),
+  ];
+
+  if (errors.length > 0) {
+    throw new ProjectGraphError(errors, projectGraph, sourceMaps);
+  } else {
+    if (cacheEnabled) {
+      writeCache(projectFileMapCache, projectGraph);
+    }
+    return { projectGraph, sourceMaps };
+  }
 }
 
-function handleProjectGraphError(opts: { exitOnError: boolean }, e) {
+export function handleProjectGraphError(opts: { exitOnError: boolean }, e) {
   if (opts.exitOnError) {
-    const lines = e.message.split('\n');
-    output.error({
-      title: lines[0],
-      bodyLines: lines.slice(1),
-    });
-    if (process.env.NX_VERBOSE_LOGGING === 'true') {
-      console.error(e);
+    const isVerbose = process.env.NX_VERBOSE_LOGGING === 'true';
+    if (e instanceof ProjectGraphError) {
+      let title = e.message;
+      if (isVerbose) {
+        title += ' See errors below.';
+      }
+
+      const bodyLines = isVerbose
+        ? [e.stack]
+        : ['Pass --verbose to see the stacktraces.'];
+
+      output.error({
+        title,
+        bodyLines: bodyLines,
+      });
+    } else {
+      const lines = e.message.split('\n');
+      output.error({
+        title: lines[0],
+        bodyLines: lines.slice(1),
+      });
+      if (isVerbose) {
+        console.error(e);
+      }
     }
     process.exit(1);
   } else {
@@ -197,9 +277,6 @@ export async function createProjectGraphAndSourceMapsAsync(
     try {
       const projectGraphAndSourceMaps =
         await daemonClient.getProjectGraphAndSourceMaps();
-      if (opts.resetDaemonClient) {
-        daemonClient.reset();
-      }
       performance.mark('create-project-graph-async:end');
       performance.measure(
         'create-project-graph-async',
@@ -236,6 +313,10 @@ export async function createProjectGraphAndSourceMapsAsync(
       }
 
       handleProjectGraphError(opts, e);
+    } finally {
+      if (opts.resetDaemonClient) {
+        daemonClient.reset();
+      }
     }
   }
 }

@@ -29,19 +29,21 @@
               "file": "shared/getting-started/why-nx"
             },
             {
+              "name": "Editor Setup",
+              "description": "Learn about Nx Console, an extension for VS Code and WebStorm.",
+              "id": "editor-setup",
+              "tags": ["editor-setup"],
+              "file": "shared/getting-started/editor-setup"
+            },
+            {
               "name": "Tutorials",
               "id": "tutorials",
               "description": "Get started with basic information, concepts and tutorials.",
               "itemList": [
                 {
-                  "name": "Package-Based Monorepo",
-                  "id": "package-based-repo-tutorial",
-                  "file": "shared/npm-tutorial/package-based"
-                },
-                {
-                  "name": "Integrated Monorepo",
-                  "id": "integrated-repo-tutorial",
-                  "file": "shared/npm-tutorial/integrated"
+                  "name": "NPM Workspaces Monorepo",
+                  "id": "npm-workspaces-tutorial",
+                  "file": "shared/tutorials/npm-workspaces"
                 },
                 {
                   "name": "React Standalone",
@@ -67,6 +69,11 @@
                   "name": "Vue Standalone",
                   "id": "vue-standalone-tutorial",
                   "file": "shared/vue-standalone-tutorial/vue-standalone"
+                },
+                {
+                  "name": "Gradle Monorepo",
+                  "id": "gradle-tutorial",
+                  "file": "shared/tutorials/gradle"
                 }
               ]
             }
@@ -155,17 +162,10 @@
               "file": "shared/features/enforce-module-boundaries"
             },
             {
-              "name": "Integrate with Editors",
-              "description": "Learn about Nx Console, an extension for VS Code and WebStorm.",
-              "id": "integrate-with-editors",
-              "tags": ["integrate-with-editors"],
-              "file": "shared/features/integrate-with-editors"
-            },
-            {
               "name": "Manage Releases",
               "description": "Learn how Nx provides tools to help you manage releasing your projects.",
               "id": "manage-releases",
-              "tags": ["manage-releases"],
+              "tags": ["nx-release"],
               "file": "shared/features/manage-releases"
             },
             {
@@ -236,7 +236,7 @@
           "itemList": [
             {
               "name": "Mental Model",
-              "tags": ["intro"],
+              "tags": ["intro", "inferred-tasks"],
               "id": "mental-model",
               "file": "shared/mental-model"
             },
@@ -254,7 +254,11 @@
             },
             {
               "name": "What Are Nx Plugins",
-              "tags": ["generate-code", "create-your-own-plugin"],
+              "tags": [
+                "generate-code",
+                "create-your-own-plugin",
+                "inferred-tasks"
+              ],
               "id": "nx-plugins",
               "file": "shared/concepts/nx-plugins"
             },
@@ -317,18 +321,6 @@
               "description": "Get deeper into how Nx works and its different aspects.",
               "itemList": [
                 {
-                  "name": "Incremental Builds",
-                  "id": "incremental-builds",
-                  "tags": [],
-                  "file": "shared/incremental-builds"
-                },
-                {
-                  "name": "Nx and Turborepo",
-                  "id": "turbo-and-nx",
-                  "mediaImage": "./shared/guides/nx-media-monorepo.jpg",
-                  "file": "shared/guides/turbo-and-nx"
-                },
-                {
                   "name": "Monorepos",
                   "id": "why-monorepos",
                   "file": "shared/guides/why-monorepos"
@@ -344,31 +336,15 @@
                   "file": "shared/concepts/code-sharing"
                 },
                 {
-                  "name": "Using Nx at Enterprises",
-                  "id": "monorepo-nx-enterprise",
-                  "tags": ["enforce-module-boundaries", "generate-code"],
-                  "file": "shared/monorepo-nx-enterprise"
-                },
-                {
                   "name": "Nx Daemon",
                   "id": "nx-daemon",
                   "file": "shared/daemon"
                 },
                 {
-                  "name": "Nx and the Angular CLI",
-                  "id": "nx-and-angular",
-                  "file": "shared/guides/nx-and-angular-cli"
-                },
-                {
-                  "name": "Folder Structure",
-                  "id": "folder-structure",
-                  "file": "shared/guides/integrated-repo-folder-structure"
-                },
-                {
-                  "name": "Nx Devkit and Angular Devkit",
-                  "id": "nx-devkit-angular-devkit",
-                  "tags": ["create-your-own-plugin"],
-                  "file": "shared/guides/nx-devkit-angular-devkit"
+                  "name": "Nx and Turborepo",
+                  "id": "turbo-and-nx",
+                  "mediaImage": "./shared/guides/nx-media-monorepo.jpg",
+                  "file": "shared/guides/turbo-and-nx"
                 },
                 {
                   "name": "Applications and Libraries",
@@ -377,7 +353,7 @@
                   "file": "shared/workspace/applications-and-libraries"
                 },
                 {
-                  "name": "Creating Libraries",
+                  "name": "When to Create a New Library",
                   "id": "creating-libraries",
                   "tags": ["enforce-module-boundaries"],
                   "file": "shared/workspace/creating-libraries"
@@ -398,12 +374,6 @@
                   "name": "Buildable and Publishable Libraries",
                   "id": "buildable-and-publishable-libraries",
                   "file": "shared/workspace/buildable-and-publishable-libraries"
-                },
-                {
-                  "name": "How the Project Graph is Built",
-                  "id": "how-project-graph-is-built",
-                  "tags": ["explore-graph"],
-                  "file": "shared/concepts/how-project-graph-is-built"
                 }
               ]
             }
@@ -414,6 +384,25 @@
           "id": "recipes",
           "description": "In depth recipes for common tasks",
           "itemList": [
+            {
+              "name": "Installation",
+              "id": "installation",
+              "description": "Installing Nx",
+              "itemList": [
+                {
+                  "name": "Install Nx in a Non-Javascript Repo",
+                  "id": "install-non-javascript",
+                  "tags": ["installation"],
+                  "file": "shared/recipes/installation/install-non-javascript"
+                },
+                {
+                  "name": "Update Your Global Nx Installation",
+                  "id": "update-global-installation",
+                  "tags": ["installation"],
+                  "file": "shared/recipes/installation/update-global-installation"
+                }
+              ]
+            },
             {
               "name": "Tasks & Caching",
               "id": "running-tasks",
@@ -447,6 +436,12 @@
                   "id": "run-commands-executor",
                   "tags": ["run-tasks"],
                   "file": "shared/recipes/running-tasks/running-custom-commands"
+                },
+                {
+                  "name": "Pass Args to Commands",
+                  "id": "pass-args-to-commands",
+                  "tags": ["run-tasks"],
+                  "file": "shared/recipes/running-tasks/pass-args-to-commands"
                 },
                 {
                   "name": "Run Tasks in Parallel",
@@ -512,16 +507,6 @@
               "description": "Advanced guides to adopt Nx in React.",
               "itemList": [
                 {
-                  "name": "Migrating from CRA",
-                  "id": "migration-cra",
-                  "file": "shared/migration/migration-cra"
-                },
-                {
-                  "name": "React 18 Migration",
-                  "id": "react-18",
-                  "file": "shared/guides/react-18"
-                },
-                {
                   "name": "React Native with Nx",
                   "id": "react-native",
                   "file": "shared/guides/react-native"
@@ -578,11 +563,6 @@
                       "name": "Migrating From Multiple Angular CLI Repos",
                       "id": "angular-multiple",
                       "file": "shared/migration/angular-multiple"
-                    },
-                    {
-                      "name": "Migrating Angular Application manually",
-                      "id": "angular-manual",
-                      "file": "shared/migration/angular-manual"
                     }
                   ]
                 },
@@ -891,25 +871,6 @@
               ]
             },
             {
-              "name": "Installation",
-              "id": "installation",
-              "description": "Installing Nx",
-              "itemList": [
-                {
-                  "name": "Install Nx in a Non-Javascript Repo",
-                  "id": "install-non-javascript",
-                  "tags": ["installation"],
-                  "file": "shared/recipes/installation/install-non-javascript"
-                },
-                {
-                  "name": "Update Your Global Nx Installation",
-                  "id": "update-global-installation",
-                  "tags": ["installation"],
-                  "file": "shared/recipes/installation/update-global-installation"
-                }
-              ]
-            },
-            {
               "name": "Tips and tricks",
               "id": "tips-n-tricks",
               "description": "Various tips and tricks for using Nx.",
@@ -1019,42 +980,6 @@
               ]
             },
             {
-              "name": "Troubleshooting",
-              "id": "troubleshooting",
-              "description": "Learn how to troubleshoot common problems.",
-              "itemList": [
-                {
-                  "name": "Resolve Circular Dependencies",
-                  "id": "resolve-circular-dependencies",
-                  "tags": ["explore-graph"],
-                  "file": "shared/recipes/resolve-circular-dependencies"
-                },
-                {
-                  "name": "Troubleshooting Nx Install Issues",
-                  "id": "troubleshoot-nx-install-issues",
-                  "file": "shared/installation/troubleshoot-installation"
-                },
-                {
-                  "name": "Troubleshoot Cache Misses",
-                  "id": "troubleshoot-cache-misses",
-                  "tags": ["cache-task-results"],
-                  "file": "shared/recipes/troubleshoot-cache-misses"
-                },
-                {
-                  "name": "Unknown Local Cache Error",
-                  "id": "unknown-local-cache",
-                  "tags": [],
-                  "file": "shared/guides/unknown-local-cache"
-                },
-                {
-                  "name": "Profiling Build Performance",
-                  "id": "performance-profiling",
-                  "tags": ["environment-variables"],
-                  "file": "shared/guides/performance-profiling"
-                }
-              ]
-            },
-            {
               "name": "Nx Console",
               "id": "nx-console",
               "description": "Checkout all the recipes related to Nx Console.",
@@ -1062,49 +987,31 @@
                 {
                   "name": "Telemetry",
                   "id": "console-telemetry",
-                  "tags": ["integrate-with-editors"],
+                  "tags": ["editor-setup"],
                   "file": "shared/recipes/console-telemetry"
                 },
                 {
                   "name": "Project Details View",
                   "id": "console-project-details",
-                  "tags": ["integrate-with-editors"],
+                  "tags": ["editor-setup"],
                   "file": "shared/recipes/console-project-details"
                 },
                 {
                   "name": "Generate Command",
                   "id": "console-generate-command",
-                  "tags": ["integrate-with-editors"],
+                  "tags": ["editor-setup"],
                   "file": "shared/recipes/console-generate-command"
                 },
                 {
                   "name": "Run Command",
                   "id": "console-run-command",
-                  "tags": ["integrate-with-editors"],
+                  "tags": ["editor-setup"],
                   "file": "shared/recipes/console-run-command"
-                },
-                {
-                  "name": "Add Dependency Command",
-                  "id": "console-add-dependency-command",
-                  "tags": ["integrate-with-editors"],
-                  "file": "shared/recipes/console-add-dependency-command"
-                },
-                {
-                  "name": "Project Pane",
-                  "id": "console-project-pane",
-                  "tags": ["integrate-with-editors"],
-                  "file": "shared/recipes/console-project-pane"
-                },
-                {
-                  "name": "Keyboard Shortcuts",
-                  "id": "console-shortcuts",
-                  "tags": ["integrate-with-editors"],
-                  "file": "shared/recipes/console-shortcuts"
                 },
                 {
                   "name": "Troubleshooting",
                   "id": "console-troubleshooting",
-                  "tags": ["integrate-with-editors"],
+                  "tags": ["editor-setup"],
                   "file": "shared/recipes/console-troubleshooting"
                 }
               ]
@@ -1133,6 +1040,12 @@
                   "file": "shared/recipes/nx-release/automatically-version-with-conventional-commits"
                 },
                 {
+                  "name": "Configure Custom Registries",
+                  "id": "configure-custom-registries",
+                  "tags": ["nx-release"],
+                  "file": "shared/recipes/nx-release/configure-custom-registries"
+                },
+                {
                   "name": "Publish in CI/CD",
                   "id": "publish-in-ci-cd",
                   "tags": ["nx-release"],
@@ -1149,6 +1062,18 @@
                   "id": "publish-rust-crates",
                   "tags": ["nx-release"],
                   "file": "shared/recipes/nx-release/publish-rust-crates"
+                },
+                {
+                  "name": "Update Your Local Registry Setup to use Nx Release",
+                  "id": "update-local-registry-setup",
+                  "tags": ["nx-release"],
+                  "file": "shared/recipes/nx-release/update-local-registry-setup"
+                },
+                {
+                  "name": "Customize Conventional Commit Types",
+                  "id": "customize-conventional-commit-types",
+                  "tags": ["nx-release"],
+                  "file": "shared/recipes/nx-release/customize-conventional-commit-types"
                 }
               ]
             },
@@ -1176,98 +1101,99 @@
               "name": "Nx with your favorite tech",
               "id": "example-repos",
               "description": "Examples of different ways to use Nx with your favorite tech",
+              "file": "shared/showcase/example-repos",
               "itemList": [
                 {
-                  "name": "Add an Express Project",
+                  "name": "Express",
                   "id": "add-express",
                   "description": "Add an Express application to your repo",
                   "file": "shared/recipes/add-stack/add-express"
                 },
                 {
-                  "name": "Add a Lit Project",
+                  "name": "Lit",
                   "id": "add-lit",
-                  "description": "Add a Lit project to your repo",
+                  "description": "Lit to your repo",
                   "file": "shared/recipes/add-stack/add-lit"
                 },
                 {
-                  "name": "Add a Solid Project",
+                  "name": "Solid",
                   "id": "add-solid",
-                  "description": "Add a Solid project to your repo",
+                  "description": "Solid to your repo",
                   "file": "shared/recipes/add-stack/add-solid"
                 },
                 {
-                  "name": "Add a Qwik Project",
+                  "name": "Qwik",
                   "id": "add-qwik",
-                  "description": "Add a Qwik project to your repo",
+                  "description": "Qwik to your repo",
                   "file": "shared/recipes/add-stack/add-qwik"
                 },
                 {
-                  "name": "Add a Rust Project",
+                  "name": "Rust",
                   "id": "add-rust",
-                  "description": "Add a Rust project to your repo",
+                  "description": "Rust to your repo",
                   "file": "shared/recipes/add-stack/add-rust"
                 },
                 {
-                  "name": "Add a .NET Project",
+                  "name": ".NET",
                   "id": "add-dotnet",
-                  "description": "Add a .NET project to your repo",
+                  "description": ".NET to your repo",
                   "file": "shared/recipes/add-stack/add-dotnet"
                 },
                 {
-                  "name": "Add an Astro Project",
+                  "name": "Astro",
                   "id": "add-astro",
                   "description": "Add Nx to an Astro project",
                   "file": "shared/recipes/add-stack/add-astro"
                 },
                 {
-                  "name": "Add a Svelte Project",
+                  "name": "Svelte",
                   "id": "add-svelte",
-                  "description": "Add a Svelte project to your repo",
+                  "description": "Svelte to your repo",
                   "file": "shared/recipes/add-stack/add-svelte"
                 },
                 {
-                  "name": "Add a Fastify Project",
+                  "name": "Fastify",
                   "id": "add-fastify",
-                  "description": "Add a Fastify project to your repo",
+                  "description": "Fastify to your repo",
                   "file": "shared/recipes/add-stack/add-fastify"
                 },
                 {
-                  "name": "Using Apollo GraphQL",
+                  "name": "Apollo GraphQL",
                   "id": "apollo-react",
                   "file": "shared/examples/apollo-react"
                 },
                 {
-                  "name": "Using Prisma with NestJS",
+                  "name": "Prisma with NestJS",
                   "id": "nestjs-prisma",
                   "tags": ["database", "node"],
                   "file": "shared/recipes/database/nestjs-prisma"
                 },
                 {
-                  "name": "Using Mongo with Fastify",
+                  "name": "Mongo with Fastify",
                   "id": "mongo-fastify",
                   "tags": ["database", "node"],
                   "file": "shared/recipes/database/mongo-fastify"
                 },
                 {
-                  "name": "Using Redis with Fastify",
+                  "name": "Redis with Fastify",
                   "id": "redis-fastify",
                   "tags": ["database", "node"],
                   "file": "shared/recipes/database/redis-fastify"
                 },
                 {
-                  "name": "Using Postgres with Fastify",
+                  "name": "Postgres with Fastify",
                   "id": "postgres-fastify",
                   "tags": ["database", "node"],
                   "file": "shared/recipes/database/postgres-fastify"
                 },
                 {
-                  "name": "Using PlanetScale with Serverless Fastify",
+                  "name": "PlanetScale with Serverless Fastify",
                   "id": "serverless-fastify-planetscale",
                   "tags": ["database", "node", "serverless"],
                   "file": "shared/recipes/database/serverless-fastify-planetscale"
                 },
                 {
-                  "name": "Nx Micro-Frontend Example",
+                  "name": "Nx with Micro-frontends",
                   "id": "mfe",
                   "file": "shared/examples/nx-examples"
                 }
@@ -1346,6 +1272,43 @@
             }
           ]
         },
+
+        {
+          "name": "Troubleshooting",
+          "id": "troubleshooting",
+          "description": "Learn how to troubleshoot common problems.",
+          "itemList": [
+            {
+              "name": "Resolve Circular Dependencies",
+              "id": "resolve-circular-dependencies",
+              "tags": ["explore-graph"],
+              "file": "shared/recipes/resolve-circular-dependencies"
+            },
+            {
+              "name": "Troubleshooting Nx Install Issues",
+              "id": "troubleshoot-nx-install-issues",
+              "file": "shared/installation/troubleshoot-installation"
+            },
+            {
+              "name": "Troubleshoot Cache Misses",
+              "id": "troubleshoot-cache-misses",
+              "tags": ["cache-task-results"],
+              "file": "shared/recipes/troubleshoot-cache-misses"
+            },
+            {
+              "name": "Unknown Local Cache Error",
+              "id": "unknown-local-cache",
+              "tags": [],
+              "file": "shared/guides/unknown-local-cache"
+            },
+            {
+              "name": "Profiling Build Performance",
+              "id": "performance-profiling",
+              "tags": ["environment-variables"],
+              "file": "shared/guides/performance-profiling"
+            }
+          ]
+        },
         {
           "name": "Deprecated",
           "id": "deprecated",
@@ -1355,11 +1318,6 @@
               "name": "workspace.json",
               "id": "workspace-json",
               "file": "shared/deprecated/workspace-json"
-            },
-            {
-              "name": "workspace-lint",
-              "id": "workspace-lint",
-              "file": "shared/deprecated/workspace-lint"
             },
             {
               "name": "As Provided vs. Derived",
@@ -1375,11 +1333,6 @@
               "name": "Workspace Executors",
               "id": "workspace-executors",
               "file": "shared/deprecated/workspace-executors"
-            },
-            {
-              "name": "defaultCollection",
-              "id": "default-collection",
-              "file": "shared/deprecated/default-collection"
             },
             {
               "name": "runtimeCacheInputs",
@@ -1405,49 +1358,6 @@
               "name": "Angular Schematics and Builders",
               "id": "angular-schematics-builders",
               "file": "shared/deprecated/angular-schematics-builders"
-            },
-            {
-              "name": "Storybook deprecated docs",
-              "id": "storybook",
-              "description": "Deprecated @nx/storybook package documentation and guides.",
-              "itemList": [
-                {
-                  "id": "angular-storybook-targets",
-                  "name": "Angular: Information about the Storybook targets",
-                  "description": "This document explains the role of the storybook and build-storybook targets in Angular projects with a Storybook configuration, and specifically which executors are used for them.",
-                  "file": "shared/deprecated/storybook/angular-storybook-targets"
-                },
-                {
-                  "id": "angular-project-build-config",
-                  "name": "Angular - The projectBuildConfig",
-                  "description": "This document explains the role of the projectBuildConfig in Angular projects with a Storybook configuration, and how the Storybook executors use it.",
-                  "file": "shared/deprecated/storybook/angular-project-build-config"
-                },
-                {
-                  "id": "migrate-webpack-final-angular",
-                  "name": "Angular: Storybook Migration to webpackFinal",
-                  "description": "This guide explains how migrate from older versions of Storybook which used a custom webpack.config.js to the new Storybook 6.3+ which uses the webpackFinal property in the main configuration.",
-                  "file": "shared/deprecated/storybook/migrate-webpack-final-angular"
-                },
-                {
-                  "id": "upgrade-storybook-v6-angular",
-                  "name": "Angular: Upgrading to Storybook 6",
-                  "description": "This guide explains how you can upgrade your Storybook from versions 5.3 and below to Storybook 6, for Angular projects.",
-                  "file": "shared/deprecated/storybook/storybook-v6-angular"
-                },
-                {
-                  "id": "migrate-webpack-final-react",
-                  "name": "React: Storybook Migration to webpackFinal and the Nx Addon",
-                  "description": "This guide explains how migrate from older versions of Storybook which used a custom webpack.config.js to the new Storybook 6.3+ which uses the webpackFinal property in the main configuration and the Nx React Addon.",
-                  "file": "shared/deprecated/storybook/migrate-webpack-final-react"
-                },
-                {
-                  "id": "upgrade-storybook-v6-react",
-                  "name": "React: Upgrading to Storybook 6",
-                  "description": "This guide explains how you can upgrade your Storybook from versions 5.3 and below to Storybook 6, for React projects.",
-                  "file": "shared/deprecated/storybook/storybook-v6-react"
-                }
-              ]
             },
             {
               "name": "v1 Nx Plugin API",
@@ -1630,7 +1540,11 @@
             {
               "name": "Modify the Project Graph",
               "id": "project-graph-plugins",
-              "tags": ["create-your-own-plugin", "explore-graph"],
+              "tags": [
+                "create-your-own-plugin",
+                "explore-graph",
+                "inferred-tasks"
+              ],
               "file": "shared/recipes/plugins/project-graph-plugins"
             }
           ]
@@ -1651,6 +1565,11 @@
               "name": "CI with Nx",
               "id": "ci-with-nx",
               "file": "nx-cloud/intro/ci-with-nx"
+            },
+            {
+              "name": "Why Nx Cloud?",
+              "id": "why-nx-cloud",
+              "file": "nx-cloud/intro/why-nx-cloud"
             },
             {
               "name": "Tutorials",
@@ -1678,6 +1597,7 @@
           "itemList": [
             {
               "name": "Run Only Tasks Affected by a PR",
+              "description": "This allows to only run tasks on projects that got changed in a given PR.",
               "tags": ["run-tasks"],
               "id": "affected",
               "file": "shared/using-nx/affected"
@@ -1697,17 +1617,20 @@
             },
             {
               "name": "Dynamically Allocate Agents",
+              "description": "Learn how to dynamically allocate agents based on the size of a PR, keeping the balance of speed and cost.",
               "id": "dynamic-agents",
               "file": "nx-cloud/features/dynamic-agents"
             },
             {
-              "name": "Automatically Split E2E Tasks (TestAtomizer)",
+              "name": "Automatically Split E2E Tasks (Atomizer)",
               "id": "split-e2e-tasks",
+              "description": "Learn how Nx can automatically split e2e tests into fine-grained chunks for a much better distribution on Nx Agents.",
               "file": "nx-cloud/features/split-e2e-tasks"
             },
             {
               "name": "Identify and Re-run Flaky Tasks",
               "id": "flaky-tasks",
+              "description": "Learn how Nx Cloud is able to automatically identify flaky tasks and re-run them for you.",
               "file": "nx-cloud/features/flaky-tasks"
             },
             {
@@ -1715,7 +1638,7 @@
               "description": "Set up Nx Cloud on machines that you control",
               "id": "on-premise",
               "tags": ["on-premise"],
-              "file": "nx-cloud/private/nx-enterprise-on-prem"
+              "file": "nx-cloud/features/nx-enterprise-on-prem"
             }
           ]
         },
@@ -1838,65 +1761,102 @@
                   "name": "Enable GitLab MR Integration",
                   "id": "gitlab",
                   "file": "nx-cloud/set-up/gitlab"
+                },
+                {
+                  "name": "Enable Azure DevOps PR Integration",
+                  "id": "azure-devops",
+                  "file": "nx-cloud/set-up/azure-devops"
                 }
               ]
             },
             {
-              "name": "On-Premise",
-              "id": "on-premise",
-              "description": "Manage an on-premise installation of Nx Cloud",
+              "name": "Enterprise",
+              "id": "enterprise",
+              "description": "Recipes for enterprise accounts",
               "itemList": [
                 {
-                  "name": "Authenticate with a Single Admin",
-                  "id": "auth-single-admin",
-                  "file": "nx-cloud/private/auth-single-admin"
+                  "name": "On-Premise",
+                  "id": "on-premise",
+                  "description": "Manage an on-premise installation of Nx Cloud",
+                  "itemList": [
+                    {
+                      "name": "Authenticate with a Single Admin",
+                      "id": "auth-single-admin",
+                      "file": "nx-cloud/enterprise/on-premise/auth-single-admin"
+                    },
+                    {
+                      "name": "Authenticate with GitHub",
+                      "id": "auth-github",
+                      "file": "nx-cloud/enterprise/on-premise/auth-github"
+                    },
+                    {
+                      "name": "On-Prem VM Setup",
+                      "id": "ami-setup",
+                      "file": "nx-cloud/enterprise/on-premise/ami-setup"
+                    },
+                    {
+                      "name": "Authenticate with GitLab",
+                      "id": "auth-gitlab",
+                      "file": "nx-cloud/enterprise/on-premise/auth-gitlab"
+                    },
+                    {
+                      "name": "Authenticate with BitBucket",
+                      "id": "auth-bitbucket",
+                      "file": "nx-cloud/enterprise/on-premise/auth-bitbucket"
+                    },
+                    {
+                      "name": "Authenticate via SAML",
+                      "id": "auth-saml",
+                      "file": "nx-cloud/enterprise/on-premise/auth-saml"
+                    },
+                    {
+                      "name": "Authenticate via SAML on Managed Version",
+                      "id": "auth-saml-managed",
+                      "file": "nx-cloud/enterprise/on-premise/auth-saml-managed"
+                    },
+                    {
+                      "name": "Advanced Configuration",
+                      "id": "advanced-config",
+                      "file": "nx-cloud/enterprise/on-premise/advanced-config"
+                    }
+                  ]
                 },
                 {
-                  "name": "Authenticate with GitHub",
-                  "id": "auth-github",
-                  "file": "nx-cloud/private/auth-github"
-                },
-                {
-                  "name": "On-Prem VM Setup",
-                  "id": "ami-setup",
-                  "file": "nx-cloud/private/ami-setup"
-                },
-                {
-                  "name": "Authenticate with GitLab",
-                  "id": "auth-gitlab",
-                  "file": "nx-cloud/private/auth-gitlab"
-                },
-                {
-                  "name": "Authenticate with BitBucket",
-                  "id": "auth-bitbucket",
-                  "file": "nx-cloud/private/auth-bitbucket"
-                },
-                {
-                  "name": "Authenticate via SAML",
-                  "id": "auth-saml",
-                  "file": "nx-cloud/private/auth-saml"
-                },
-                {
-                  "name": "Authenticate via SAML on Managed Version",
-                  "id": "auth-saml-managed",
-                  "file": "nx-cloud/private/auth-saml-managed"
-                },
-                {
-                  "name": "Advanced Configuration",
-                  "id": "advanced-config",
-                  "file": "nx-cloud/private/advanced-config"
-                }
-              ]
-            },
-            {
-              "name": "Troubleshooting",
-              "id": "troubleshooting",
-              "description": "Learn how to solve common issues in Nx Cloud.",
-              "itemList": [
-                {
-                  "name": "CI Execution Failed",
-                  "id": "ci-execution-failed",
-                  "file": "nx-cloud/troubleshooting/ci-execution-failed"
+                  "name": "Custom Distributed Task Execution",
+                  "id": "dte",
+                  "description": "Custom DTE on your own CI provider",
+                  "itemList": [
+                    {
+                      "name": "GitHub Actions Custom DTE",
+                      "id": "github-dte",
+                      "file": "nx-cloud/enterprise/dte/github-dte"
+                    },
+                    {
+                      "name": "Circle CI Custom DTE",
+                      "id": "circle-ci-dte",
+                      "file": "nx-cloud/enterprise/dte/circle-ci-dte"
+                    },
+                    {
+                      "name": "Azure Pipelines Custom DTE",
+                      "id": "azure-dte",
+                      "file": "nx-cloud/enterprise/dte/azure-dte"
+                    },
+                    {
+                      "name": "Bitbucket Pipelines Custom DTE",
+                      "id": "bitbucket-dte",
+                      "file": "nx-cloud/enterprise/dte/bitbucket-dte"
+                    },
+                    {
+                      "name": "GitLab Custom DTE",
+                      "id": "gitlab-dte",
+                      "file": "nx-cloud/enterprise/dte/gitlab-dte"
+                    },
+                    {
+                      "name": "Jenkins Custom DTE",
+                      "id": "jenkins-dte",
+                      "file": "nx-cloud/enterprise/dte/jenkins-dte"
+                    }
+                  ]
                 }
               ]
             },
@@ -1946,14 +1906,21 @@
               "file": "nx-cloud/reference/env-vars"
             },
             {
-              "name": "Server API Reference",
-              "id": "server-api",
-              "file": "nx-cloud/reference/server-api"
-            },
-            {
               "name": "Release Notes",
               "id": "release-notes",
               "file": "nx-cloud/reference/release-notes"
+            }
+          ]
+        },
+        {
+          "name": "Troubleshooting",
+          "id": "troubleshooting",
+          "description": "Learn how to solve common issues in Nx Cloud.",
+          "itemList": [
+            {
+              "name": "CI Execution Failed",
+              "id": "ci-execution-failed",
+              "file": "nx-cloud/troubleshooting/ci-execution-failed"
             }
           ]
         }
@@ -2100,6 +2067,7 @@
             {
               "name": "release",
               "id": "release",
+              "tags": ["nx-release"],
               "file": "generated/cli/release"
             },
             {
@@ -2262,6 +2230,17 @@
               "id": "overview",
               "path": "/nx-api/angular",
               "file": "shared/packages/angular/angular-plugin"
+            },
+            {
+              "name": "Nx and the Angular CLI",
+              "id": "nx-and-angular",
+              "file": "shared/guides/nx-and-angular-cli"
+            },
+            {
+              "name": "Nx Devkit and Angular Devkit",
+              "id": "nx-devkit-angular-devkit",
+              "tags": ["create-your-own-plugin"],
+              "file": "shared/guides/nx-devkit-angular-devkit"
             },
             {
               "name": "Angular and Nx Version Matrix",
@@ -2488,6 +2467,19 @@
               "name": "Overview",
               "path": "/nx-api/expo",
               "file": "shared/packages/expo/expo-plugin"
+            }
+          ]
+        },
+        {
+          "name": "gradle",
+          "id": "gradle",
+          "description": "Gradle package.",
+          "itemList": [
+            {
+              "id": "overview",
+              "name": "Overview",
+              "path": "/nx-api/gradle",
+              "file": "shared/packages/gradle/gradle-plugin"
             }
           ]
         }

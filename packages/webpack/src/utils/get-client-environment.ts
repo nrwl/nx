@@ -1,10 +1,10 @@
 export function getClientEnvironment(mode?: string) {
-  // Grab NODE_ENV and NX_* environment variables and prepare them to be
+  // Grab NODE_ENV and NX_PUBLIC_* environment variables and prepare them to be
   // injected into the application via DefinePlugin in webpack configuration.
-  const NX_APP = /^NX_/i;
+  const nxPublicKeyRegex = /^NX_PUBLIC_/i;
 
   const raw = Object.keys(process.env)
-    .filter((key) => NX_APP.test(key))
+    .filter((key) => nxPublicKeyRegex.test(key))
     .reduce(
       (env, key) => {
         env[key] = process.env[key];

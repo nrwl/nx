@@ -327,67 +327,65 @@ export function getNextConfig(
       }
 
       /**
-       * 5. Add env variables prefixed with NX_
-       */
-      addNxEnvVariables(config);
-
-      /**
-       * 6. Add SVGR support if option is on.
+       * 5. Add SVGR support if option is on.
        */
 
       // Default SVGR support to be on for projects.
       if (nx?.svgr !== false) {
-        config.module.rules.push(
-          // Apply rule for svg imports ending in ?url
-          {
-            test: /\.svg$/i,
-            type: 'asset',
-            resourceQuery: /url/, // apply to *.svg?url
+        // TODO(v20): Remove file-loader and use `?react` querystring to differentiate between asset and SVGR.
+        // It should be:
+        // use: [{
+        //   test: /\.svg$/i,
+        //   type: 'asset',
+        //   resourceQuery: /react/, // *.svg?react
+        // },
+        // {
+        //   test: /\.svg$/i,
+        //   issuer: /\.[jt]sx?$/,
+        //   resourceQuery: { not: [/react/] }, // exclude react component if *.svg?react
+        //   use: ['@svgr/webpack'],
+        // }],
+        // See:
+        // - SVGR: https://react-svgr.com/docs/webpack/#use-svgr-and-asset-svg-in-the-same-project
+        // - Vite: https://www.npmjs.com/package/vite-plugin-svgr
+        // - Rsbuild: https://github.com/web-infra-dev/rsbuild/pull/1783
+        // Note: We also need a migration for any projects that are using SVGR to convert
+        //       `import { ReactComponent as X } from './x.svg` to
+        //       `import X from './x.svg?react';
+        config.module.rules.push({
+          test: /\.svg$/,
+          issuer: { not: /\.(css|scss|sass)$/ },
+          resourceQuery: {
+            not: [
+              /__next_metadata__/,
+              /__next_metadata_route__/,
+              /__next_metadata_image_meta__/,
+            ],
           },
-
-          // Convert all other svg imports to React components
-          {
-            test: /\.svg$/i,
-            issuer: /\.[jt]sx?$/,
-            resourceQuery: { not: [/url/] },
-            use: ['@svgr/webpack'],
-          }
-        );
+          use: [
+            {
+              loader: require.resolve('@svgr/webpack'),
+              options: {
+                svgo: false,
+                titleProp: true,
+                ref: true,
+              },
+            },
+            {
+              loader: require.resolve('file-loader'),
+              options: {
+                // Next.js hard-codes assets to load from "static/media".
+                // See: https://github.com/vercel/next.js/blob/53d017d/packages/next/src/build/webpack-config.ts#L1993
+                name: 'static/media/[name].[hash].[ext]',
+              },
+            },
+          ],
+        });
       }
 
       return userWebpack(config, options);
     },
   };
-}
-
-function getNxEnvironmentVariables() {
-  return Object.keys(process.env)
-    .filter((env) => /^NX_/i.test(env))
-    .reduce((env, key) => {
-      env[key] = process.env[key];
-      return env;
-    }, {});
-}
-
-/**
- * TODO(v19)
- * @deprecated Use Next.js 9.4+ built-in support for environment variables. Reference https://nextjs.org/docs/pages/api-reference/next-config-js/env
- */
-function addNxEnvVariables(config: any) {
-  const maybeDefinePlugin = config.plugins?.find((plugin) => {
-    return plugin.definitions?.['process.env.NODE_ENV'];
-  });
-
-  if (maybeDefinePlugin) {
-    const env = getNxEnvironmentVariables();
-
-    Object.entries(env)
-      .map(([name, value]) => [`process.env.${name}`, `"${value}"`])
-      .filter(([name]) => !maybeDefinePlugin.definitions[name])
-      .forEach(
-        ([name, value]) => (maybeDefinePlugin.definitions[name] = value)
-      );
-  }
 }
 
 export function getAliasForProject(

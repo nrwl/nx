@@ -132,8 +132,8 @@ function defaultReadFileAtRevision(
 }
 
 /**
- * TODO(v19): Remove this function
- * @deprecated To get projects use {@link retrieveProjectConfigurations} instead
+ * TODO(v20): Remove this function
+ * @deprecated To get projects use {@link retrieveProjectConfigurations} instead. This will be removed in v20.
  */
 export function readWorkspaceConfig(opts: {
   format: 'angularCli' | 'nx';
@@ -172,33 +172,35 @@ export function readPackageJson(): any {
     return {}; // if package.json doesn't exist
   }
 }
+
 // Original Exports
 export { FileData };
-// TODO(17): Remove these exports
-export { readNxJson, workspaceLayout } from '../config/configuration';
 
 /**
- * TODO(v19): Remove this function.
+ * TODO(v20): Remove this function.
  */
 function getProjectsSyncNoInference(root: string, nxJson: NxJsonConfiguration) {
-  const projectFiles = retrieveProjectConfigurationPaths(
+  const allConfigFiles = retrieveProjectConfigurationPaths(
     root,
-    getDefaultPluginsSync(root).map((p) => p.plugin)
+    getDefaultPluginsSync(root)
   );
   const plugins = [
-    { plugin: PackageJsonProjectsNextToProjectJsonPlugin },
+    PackageJsonProjectsNextToProjectJsonPlugin,
     ...getDefaultPluginsSync(root),
   ];
 
-  const projectRootMap: Map<string, ProjectConfiguration> = new Map();
+  const projectRootMap: Record<string, ProjectConfiguration> = {};
 
   // We iterate over plugins first - this ensures that plugins specified first take precedence.
-  for (const { plugin } of plugins) {
+  for (const plugin of plugins) {
     const [pattern, createNodes] = plugin.createNodes ?? [];
     if (!pattern) {
       continue;
     }
-    for (const file of projectFiles) {
+    const matchingConfigFiles = allConfigFiles.filter((file) =>
+      minimatch(file, pattern, { dot: true })
+    );
+    for (const file of matchingConfigFiles) {
       if (minimatch(file, pattern, { dot: true })) {
         let r = createNodes(
           file,
@@ -206,6 +208,7 @@ function getProjectsSyncNoInference(root: string, nxJson: NxJsonConfiguration) {
           {
             nxJsonConfiguration: nxJson,
             workspaceRoot: root,
+            configFiles: matchingConfigFiles,
           }
         ) as CreateNodesResult;
         for (const node in r.projects) {

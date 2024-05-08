@@ -3,15 +3,6 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "tools/workspace-plugin/src",
   "projectType": "library",
-  "targets": {
-    "lint": {},
-    "test": {
-      "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
-      "options": {
-        "jestConfig": "tools/workspace-plugin/jest.config.ts"
-      }
-    }
-  },
+  "targets": {},
   "tags": []
 }

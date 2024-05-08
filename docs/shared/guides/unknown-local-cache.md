@@ -8,7 +8,7 @@ NX Invalid Cache Directory for Task "myapp:build"
 The local cache artifact in ".nx/cache/nx/786524780459028195" was not generated on this machine.
 As a result, the cache's content integrity cannot be confirmed, which may make cache restoration potentially unsafe.
 If your machine ID has changed since the artifact was cached, run "nx reset" to fix this issue.
-Read about the error and how to address it here: https://nx.dev/recipes/troubleshooting/unknown-local-cache
+Read about the error and how to address it here: https://nx.dev/troubleshooting/unknown-local-cache
 ```
 
 ## Nx Tracks Cache Source
@@ -37,7 +37,7 @@ error.
 ## You Share Cache with Another Machine Using a Network Drive
 
 You can prefix any Nx command with `NX_REJECT_UNKNOWN_LOCAL_CACHE=0` to ignore the error (
-e.g., `NX REJECT_UNKNOWN_LOCAL_CACHE=0 nx run-many -t build test`). This is similar to
+e.g., `NX_REJECT_UNKNOWN_LOCAL_CACHE=0 nx run-many -t build test`). This is similar to
 setting `NODE_TLS_REJECT_UNAUTHORIZED=0` to ignore any errors stemming form self-signed certificates. Even though it
 will make it work, this approach is discouraged.
 

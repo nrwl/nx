@@ -286,6 +286,8 @@ jobs:
       - uses: nrwl/nx-set-shas@v3
       # This line is needed for nx affected to work when CI is running on a PR
       - run: git branch --track main origin/main
+        if: ${{ github.event_name == 'pull_request' }}
+
       - run: pnpm nx affected -t lint test build --parallel=3
       - run: pnpm nx affected -t e2e --parallel=1
 ```
@@ -463,6 +465,7 @@ jobs:
       - uses: nrwl/nx-set-shas@v3
       # This line is needed for nx affected to work when CI is running on a PR
       - run: git branch --track main origin/main
+        if: ${{ github.event_name == 'pull_request' }}
       - run: pnpm nx affected -t lint test build --parallel=3
       - run: pnpm nx affected -t e2e-ci --parallel=1
       - run: pnpm nx affected -t deploy --no-agents

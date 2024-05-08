@@ -5,6 +5,13 @@ use std::process::Command;
 use std::sync::Arc;
 use tracing::trace;
 
+#[cfg(target_os = "windows")]
+use std::os::windows::process::CommandExt;
+
+// Windows API constant to prevent creating a window
+#[cfg(target_os = "windows")]
+const CREATE_NO_WINDOW: u32 = 0x08000000;
+
 pub fn hash_runtime(
     workspace_root: &str,
     command: &str,
@@ -17,20 +24,7 @@ pub fn hash_runtime(
         return Ok(cache_results.clone());
     }
 
-    let mut command_builder = if cfg!(target_os = "windows") {
-        let comspec = std::env::var("COMSPEC");
-        let shell = comspec
-            .as_ref()
-            .map(|v| v.as_str())
-            .unwrap_or_else(|_| "cmd.exe");
-        let mut command = Command::new(shell);
-        command.arg("/C");
-        command
-    } else {
-        let mut command = Command::new("sh");
-        command.arg("-c");
-        command
-    };
+    let mut command_builder = create_command_builder();
 
     command_builder.arg(command);
 
@@ -51,6 +45,26 @@ pub fn hash_runtime(
     cache.insert(cache_key, hash_result.clone());
 
     Ok(hash_result)
+}
+
+#[cfg(target_os = "windows")]
+fn create_command_builder() -> Command {
+    let comspec = std::env::var("COMSPEC");
+    let shell = comspec
+        .as_ref()
+        .map(|v| v.as_str())
+        .unwrap_or_else(|_| "cmd.exe");
+    let mut command = Command::new(shell);
+    command.creation_flags(CREATE_NO_WINDOW);
+    command.arg("/C");
+    command
+}
+
+#[cfg(not(target_os = "windows"))]
+fn create_command_builder() -> Command {
+    let mut command = Command::new("sh");
+    command.arg("-c");
+    command
 }
 
 #[cfg(test)]

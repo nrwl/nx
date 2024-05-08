@@ -497,6 +497,7 @@ describe('Linter', () => {
             },
             "main": "./src/index.js",
             "name": "@proj/${mylib}",
+            "private": true,
             "type": "commonjs",
             "typings": "./src/index.d.ts",
             "version": "0.0.1",
@@ -594,7 +595,6 @@ describe('Linter', () => {
       expect(appOverrides).toContain('plugin:@nx/typescript');
       let e2eOverrides = JSON.stringify(e2eEslint.overrides);
       expect(e2eOverrides).toContain('plugin:@nx/javascript');
-      expect(e2eOverrides).toContain('plugin:@nx/typescript');
 
       runCLI(`generate @nx/js:lib ${mylib} --unitTestRunner=jest`);
       verifySuccessfulMigratedSetup(myapp, mylib);
@@ -627,7 +627,7 @@ describe('Linter', () => {
       let appOverrides = JSON.stringify(appEslint.overrides);
       expect(appOverrides).toContain('plugin:@nx/typescript');
       let e2eOverrides = JSON.stringify(e2eEslint.overrides);
-      expect(e2eOverrides).toContain('plugin:@nx/typescript');
+      expect(e2eOverrides).toContain('plugin:@nx/javascript');
 
       runCLI(`generate @nx/js:lib ${mylib} --no-interactive`);
       verifySuccessfulMigratedSetup(myapp, mylib);

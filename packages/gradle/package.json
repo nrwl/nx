@@ -1,8 +1,8 @@
 {
   "name": "@nx/gradle",
   "version": "0.0.1",
-  "private": true,
-  "description": "The Nx Plugin for gradle",
+  "private": false,
+  "description": "The Nx Plugin for Gradle allows Gradle tasks to be run through Nx",
   "repository": {
     "type": "git",
     "url": "https://github.com/nrwl/nx.git",
@@ -22,6 +22,13 @@
     "url": "https://github.com/nrwl/nx/issues"
   },
   "homepage": "https://nx.dev",
+  "generators": "./generators.json",
+  "exports": {
+    ".": "./index.js",
+    "./package.json": "./package.json",
+    "./migrations.json": "./migrations.json",
+    "./generators.json": "./generators.json"
+  },
   "nx-migrate": {
     "migrations": "./migrations.json"
   },

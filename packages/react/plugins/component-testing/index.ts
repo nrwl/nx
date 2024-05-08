@@ -66,7 +66,7 @@ export function nxComponentTestingPreset(
     testingType: 'component',
   });
 
-  if (global.NX_GRAPH_CREATION || global.NX_CYPRESS_INIT_GENERATOR_RUNNING) {
+  if (global.NX_GRAPH_CREATION) {
     // this is only used by plugins, so we don't need the component testing
     // options, cast to any to avoid type errors
     return basePresetSettings as any;
@@ -283,7 +283,10 @@ function buildTargetWebpack(
 
   return async () => {
     customWebpack = await customWebpack;
-    // TODO(v19): Once webpackConfig is always set in @nx/webpack:webpack and isolatedConfig is removed, we no longer need this default.
+    // TODO(v20): Component testing need to be agnostic of the underlying executor. With Crystal, we're not using `@nx/webpack:webpack` by default.
+    // We need to decouple CT from the build target of the app, we just care about bundler config (e.g. webpack.config.js).
+    // The generated setup should support both Webpack and Vite as documented here: https://docs.cypress.io/guides/component-testing/react/overview
+    // Related issue: https://github.com/nrwl/nx/issues/21546
     const configure = composePluginsSync(withNx(), withWeb());
     const defaultWebpack = configure(
       {},

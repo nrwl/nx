@@ -1,4 +1,4 @@
-import { join } from 'path';
+import { join, relative, resolve, dirname } from 'path';
 import { ExecutorContext, logger, readJsonFile } from '@nx/devkit';
 import { fileExists } from '@nx/workspace/src/utilities/fileutils';
 import * as chalk from 'chalk';
@@ -66,9 +66,15 @@ export function runCliStorybook(
   workspaceRoot: string,
   options: ReactNativeStorybookOptions
 ) {
-  const storiesFiles: string[] = options.searchDir.flatMap((dir) =>
-    globSync(join(dir, options.pattern))
-  );
+  const storiesFiles: string[] = options.searchDir.flatMap((dir) => {
+    const storyFilePaths: string[] = globSync(join(dir, options.pattern));
+
+    return storyFilePaths.map((storyFilePath) => {
+      const loaderPath: string = resolve(dirname(options.outputFile));
+      return relative(loaderPath, storyFilePath);
+    });
+  });
+
   if (storiesFiles.length === 0) {
     logger.warn(`${chalk.bold.yellow('warn')} No stories found.`);
   }

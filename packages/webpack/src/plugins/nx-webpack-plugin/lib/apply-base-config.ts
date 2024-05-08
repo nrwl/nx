@@ -16,7 +16,7 @@ import { getOutputHashFormat } from '../../../utils/hash-format';
 import { NxTsconfigPathsWebpackPlugin } from '../../nx-typescript-webpack-plugin/nx-tsconfig-paths-webpack-plugin';
 import { getTerserEcmaVersion } from './get-terser-ecma-version';
 import { createLoaderFromCompiler } from './compiler-loaders';
-import { NormalizedNxWebpackPluginOptions } from '../nx-webpack-plugin-options';
+import { NormalizedNxAppWebpackPluginOptions } from '../nx-app-webpack-plugin-options';
 import TerserPlugin = require('terser-webpack-plugin');
 import nodeExternals = require('webpack-node-externals');
 
@@ -29,7 +29,7 @@ const extensions = ['.ts', '.tsx', '.mjs', '.js', '.jsx'];
 const mainFields = ['module', 'main'];
 
 export function applyBaseConfig(
-  options: NormalizedNxWebpackPluginOptions,
+  options: NormalizedNxAppWebpackPluginOptions,
   config: Partial<WebpackOptionsNormalized | Configuration> = {},
   {
     useNormalizedEntry,
@@ -57,7 +57,7 @@ export function applyBaseConfig(
 }
 
 function applyNxIndependentConfig(
-  options: NormalizedNxWebpackPluginOptions,
+  options: NormalizedNxAppWebpackPluginOptions,
   config: Partial<WebpackOptionsNormalized | Configuration>
 ): void {
   const hashFormat = getOutputHashFormat(options.outputHashing as string);
@@ -200,7 +200,7 @@ function applyNxIndependentConfig(
 }
 
 function applyNxDependentConfig(
-  options: NormalizedNxWebpackPluginOptions,
+  options: NormalizedNxAppWebpackPluginOptions,
   config: Partial<WebpackOptionsNormalized | Configuration>,
   { useNormalizedEntry }: { useNormalizedEntry?: boolean } = {}
 ): void {

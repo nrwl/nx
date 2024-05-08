@@ -4,7 +4,7 @@
 
 [Read more here](https://nx.dev/recipes/other/rescope)
 
-@nx/linter will no longer be published in Nx v18.
+@nx/linter will no longer be published in the future.
 
 <p style="text-align: center;">
   <picture>

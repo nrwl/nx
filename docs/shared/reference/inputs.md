@@ -188,15 +188,12 @@ Naming a set of inputs with the same name as a set of inputs defined for the wor
 
 By default, Nx Workspaces are generated with the following named inputs:
 
-```jsonc {% fileName="nx.json" highlightLines=["2-6"] %}
+```jsonc {% fileName="nx.json" %}
 {
   "namedInputs": {
     "default": ["{projectRoot}/**/*", "sharedGlobals"], // Default Inputs
     "production": ["default", "!{projectRoot}/jest.config.ts"], // Production Inputs
     "sharedGlobals": [] // Shared Global Inputs
-  },
-  "targetDefaults": {
-    "inputs": ["default", "^default"]
   }
 }
 ```

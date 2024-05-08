@@ -145,6 +145,12 @@ Type: `string`
 
 Show only projects that match a given pattern.
 
+##### sep
+
+Type: `string`
+
+Outputs projects with the specified seperator
+
 ##### type
 
 Type: `string`
@@ -164,6 +170,12 @@ Uncommitted changes
 Type: `boolean`
 
 Untracked changes
+
+##### verbose
+
+Type: `boolean`
+
+Prints additional information about the commands (e.g., stack traces)
 
 ##### version
 
@@ -198,6 +210,12 @@ Show help
 Type: `string`
 
 Which project should be viewed?
+
+##### verbose
+
+Type: `boolean`
+
+Prints additional information about the commands (e.g., stack traces)
 
 ##### version
 

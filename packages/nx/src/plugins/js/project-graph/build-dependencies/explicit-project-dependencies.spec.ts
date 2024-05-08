@@ -1,4 +1,5 @@
 import { TempFs } from '../../../../internal-testing-utils/temp-fs';
+
 const tempFs = new TempFs('explicit-project-deps');
 
 import { ProjectGraphBuilder } from '../../../../project-graph/project-graph-builder';
@@ -9,7 +10,7 @@ import {
 } from '../../../../project-graph/utils/retrieve-workspace-files';
 import { CreateDependenciesContext } from '../../../../project-graph/plugins';
 import { setupWorkspaceContext } from '../../../../utils/workspace-context';
-import { shutdownPluginWorkers } from '../../../../project-graph/plugins/plugin-pool';
+import { loadNxPlugins } from '../../../../project-graph/plugins/internal-api';
 
 // projectName => tsconfig import path
 const dependencyProjectNamesToImportPaths = {
@@ -21,10 +22,6 @@ const dependencyProjectNamesToImportPaths = {
 describe('explicit project dependencies', () => {
   beforeEach(() => {
     tempFs.reset();
-  });
-
-  afterEach(async () => {
-    await shutdownPluginWorkers();
   });
 
   describe('static imports, dynamic imports, and commonjs requires', () => {
@@ -568,10 +565,13 @@ async function createContext(
 
   setupWorkspaceContext(tempFs.tempDir);
 
+  const [plugins, cleanup] = await loadNxPlugins([], tempFs.tempDir);
   const { projects, projectRootMap } = await retrieveProjectConfigurations(
+    plugins,
     tempFs.tempDir,
     nxJson
   );
+  cleanup();
 
   const { fileMap } = await retrieveWorkspaceFiles(
     tempFs.tempDir,
@@ -580,7 +580,9 @@ async function createContext(
 
   return {
     externalNodes: builder.getUpdatedProjectGraph().externalNodes,
-    projects: projects,
+    projects: Object.fromEntries(
+      Object.entries(projects).map(([root, config]) => [config.name, config])
+    ),
     nxJsonConfiguration: nxJson,
     filesToProcess: fileMap,
     fileMap: fileMap,

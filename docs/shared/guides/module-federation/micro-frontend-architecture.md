@@ -1,9 +1,7 @@
 # Micro Frontend Architecture
 
-Since version 14, Nx provides
-out-of-the-box [Module Federation](/concepts/module-federation/faster-builds-with-module-federation) support to both
-React
-and Angular. The Micro Frontend (MFE) architecture builds on top of Module Federation by providing _independent
+Nx provides out-of-the-box [Module Federation](/concepts/module-federation/faster-builds-with-module-federation) support to both
+React and Angular. The Micro Frontend (MFE) architecture builds on top of Module Federation by providing _independent
 deployability_.
 
 If you have not read the [Module Federation guide](/concepts/module-federation/faster-builds-with-module-federation)

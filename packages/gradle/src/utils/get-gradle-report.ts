@@ -1,17 +1,21 @@
-import { readFileSync } from 'node:fs';
-import { dirname, join, relative } from 'node:path';
+import { existsSync, readFileSync } from 'node:fs';
+import { join, relative } from 'node:path';
 
-import { workspaceRoot } from '@nx/devkit';
-import { hashWithWorkspaceContext } from 'nx/src/utils/workspace-context';
+import { normalizePath, workspaceRoot } from '@nx/devkit';
 
 import { execGradle } from './exec-gradle';
 
-interface GradleReport {
+export const fileSeparator = process.platform.startsWith('win')
+  ? 'file:///'
+  : 'file://';
+
+const newLineSeparator = process.platform.startsWith('win') ? '\r\n' : '\n';
+
+export interface GradleReport {
   gradleFileToGradleProjectMap: Map<string, string>;
   buildFileToDepsMap: Map<string, string>;
   gradleFileToOutputDirsMap: Map<string, Map<string, string>>;
   gradleProjectToTasksTypeMap: Map<string, Map<string, string>>;
-  tasksMap: Map<string, string[]>;
   gradleProjectToProjectName: Map<string, string>;
 }
 
@@ -33,7 +37,7 @@ export function getGradleReport(): GradleReport {
     cwd: workspaceRoot,
   })
     .toString()
-    .split('\n');
+    .split(newLineSeparator);
   const gradleProjectReportEnd = performance.mark('gradleProjectReport:end');
   performance.measure(
     'gradleProjectReport',
@@ -44,7 +48,9 @@ export function getGradleReport(): GradleReport {
   return gradleReportCache;
 }
 
-function processProjectReports(projectReportLines: string[]): GradleReport {
+export function processProjectReports(
+  projectReportLines: string[]
+): GradleReport {
   /**
    * Map of Gradle File path to Gradle Project Name
    */
@@ -54,10 +60,6 @@ function processProjectReports(projectReportLines: string[]): GradleReport {
    */
   const gradleProjectToGradleFileMap = new Map<string, string>();
   const dependenciesMap = new Map<string, string>();
-  /**
-   * Map of Gradle Build File to available tasks
-   */
-  const tasksMap = new Map<string, string[]>();
   /**
    * Map of Gradle Build File to tasks type map
    */
@@ -73,15 +75,22 @@ function processProjectReports(projectReportLines: string[]): GradleReport {
    */
   const gradleFileToOutputDirsMap = new Map<string, Map<string, string>>();
 
-  projectReportLines.forEach((line, index) => {
+  let index = 0;
+  while (index < projectReportLines.length) {
+    const line = projectReportLines[index].trim();
     if (line.startsWith('> Task ')) {
-      const nextLine = projectReportLines[index + 1];
       if (line.endsWith(':dependencyReport')) {
         const gradleProject = line.substring(
           '> Task '.length,
           line.length - ':dependencyReport'.length
         );
-        const [_, file] = nextLine.split('file://');
+        while (
+          index < projectReportLines.length &&
+          !projectReportLines[index].includes(fileSeparator)
+        ) {
+          index++;
+        }
+        const [_, file] = projectReportLines[index].split(fileSeparator);
         dependenciesMap.set(gradleProject, file);
       }
       if (line.endsWith('propertyReport')) {
@@ -89,13 +98,20 @@ function processProjectReports(projectReportLines: string[]): GradleReport {
           '> Task '.length,
           line.length - ':propertyReport'.length
         );
-        const [_, file] = nextLine.split('file://');
-        const propertyReportLines = readFileSync(file).toString().split('\n');
+        while (
+          index < projectReportLines.length &&
+          !projectReportLines[index].includes(fileSeparator)
+        ) {
+          index++;
+        }
+        const [_, file] = projectReportLines[index].split(fileSeparator);
+        const propertyReportLines = existsSync(file)
+          ? readFileSync(file).toString().split(newLineSeparator)
+          : [];
 
         let projectName: string,
           absBuildFilePath: string,
           absBuildDirPath: string;
-        const tasks: string[] = [];
         const outputDirMap = new Map<string, string>();
         for (const line of propertyReportLines) {
           if (line.startsWith('name: ')) {
@@ -106,10 +122,6 @@ function processProjectReports(projectReportLines: string[]): GradleReport {
           }
           if (line.startsWith('buildDir: ')) {
             absBuildDirPath = line.substring('buildDir: '.length);
-          }
-          if (line.includes(': task ')) {
-            const taskSegments = line.split(': task ');
-            tasks.push(taskSegments[0]);
           }
           if (line.includes('Dir: ')) {
             const [dirName, dirPath] = line.split(': ');
@@ -122,9 +134,11 @@ function processProjectReports(projectReportLines: string[]): GradleReport {
         }
 
         if (!projectName || !absBuildFilePath || !absBuildDirPath) {
-          return;
+          continue;
         }
-        const buildFile = relative(workspaceRoot, absBuildFilePath);
+        const buildFile = normalizePath(
+          relative(workspaceRoot, absBuildFilePath)
+        );
         const buildDir = relative(workspaceRoot, absBuildDirPath);
         buildFileToDepsMap.set(
           buildFile,
@@ -141,16 +155,23 @@ function processProjectReports(projectReportLines: string[]): GradleReport {
         gradleFileToGradleProjectMap.set(buildFile, gradleProject);
         gradleProjectToGradleFileMap.set(gradleProject, buildFile);
         gradleProjectToProjectName.set(gradleProject, projectName);
-        tasksMap.set(buildFile, tasks);
       }
       if (line.endsWith('taskReport')) {
         const gradleProject = line.substring(
           '> Task '.length,
           line.length - ':taskReport'.length
         );
-        const [_, file] = nextLine.split('file://');
+        while (
+          index < projectReportLines.length &&
+          !projectReportLines[index].includes(fileSeparator)
+        ) {
+          index++;
+        }
+        const [_, file] = projectReportLines[index].split(fileSeparator);
         const taskTypeMap = new Map<string, string>();
-        const tasksFileLines = readFileSync(file).toString().split('\n');
+        const tasksFileLines = existsSync(file)
+          ? readFileSync(file).toString().split(newLineSeparator)
+          : [];
 
         let i = 0;
         while (i < tasksFileLines.length) {
@@ -172,14 +193,14 @@ function processProjectReports(projectReportLines: string[]): GradleReport {
         gradleProjectToTasksTypeMap.set(gradleProject, taskTypeMap);
       }
     }
-  });
+    index++;
+  }
 
   return {
     gradleFileToGradleProjectMap,
     buildFileToDepsMap,
     gradleFileToOutputDirsMap,
     gradleProjectToTasksTypeMap,
-    tasksMap,
     gradleProjectToProjectName,
   };
 }

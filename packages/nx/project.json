@@ -10,7 +10,7 @@
       "executor": "@monodon/rust:napi",
       "options": {
         "dist": "packages/nx/src/native",
-        "jsFile": "packages/nx/src/native/index.js",
+        "jsFile": "packages/nx/src/native/native-bindings.js",
         "release": true
       },
       "configurations": {
@@ -110,8 +110,6 @@
     "add-extra-dependencies": {
       "command": "node ./scripts/add-dependency-to-build.js nx @nrwl/tao"
     },
-    "lint": {},
-    "test": {},
     "test-native": {}
   }
 }

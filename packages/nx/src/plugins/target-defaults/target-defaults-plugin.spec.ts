@@ -20,6 +20,7 @@ describe('target-defaults plugin', () => {
         },
       },
       workspaceRoot: '/root',
+      configFiles: [],
     };
   });
 
@@ -109,6 +110,7 @@ describe('target-defaults plugin', () => {
           },
         },
         workspaceRoot: '/root',
+        configFiles: [],
       })
     ).toMatchInlineSnapshot(`
       {
@@ -156,6 +158,7 @@ describe('target-defaults plugin', () => {
           },
         },
         workspaceRoot: '/root',
+        configFiles: [],
       })
     ).toMatchInlineSnapshot(`
       {
@@ -200,6 +203,7 @@ describe('target-defaults plugin', () => {
           },
         },
         workspaceRoot: '/root',
+        configFiles: [],
       })
     ).toMatchInlineSnapshot(`{}`);
   });
@@ -230,6 +234,7 @@ describe('target-defaults plugin', () => {
           },
         },
         workspaceRoot: '/root',
+        configFiles: [],
       })
     ).toMatchInlineSnapshot(`
       {
@@ -278,6 +283,7 @@ describe('target-defaults plugin', () => {
         },
       },
       workspaceRoot: '/root',
+      configFiles: [],
     });
 
     const { targets } = result.projects['.'];
@@ -321,6 +327,7 @@ describe('target-defaults plugin', () => {
         },
       },
       workspaceRoot: '/root',
+      configFiles: [],
     });
 
     const { targets } = result.projects['.'];

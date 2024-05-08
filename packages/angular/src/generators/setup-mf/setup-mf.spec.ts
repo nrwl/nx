@@ -1,7 +1,15 @@
-import { readJson, readProjectConfiguration, Tree } from '@nx/devkit';
+import 'nx/src/internal-testing-utils/mock-project-graph';
+
+import {
+  readJson,
+  readProjectConfiguration,
+  Tree,
+  updateJson,
+} from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { generateTestApplication } from '../utils/testing';
 import { setupMf } from './setup-mf';
+import { E2eTestRunner } from '../../utils/test-runners';
 
 describe('Init MF', () => {
   let tree: Tree;
@@ -469,6 +477,7 @@ describe('Init MF', () => {
       routing: true,
       standalone: false,
       skipFormat: true,
+      e2eTestRunner: E2eTestRunner.Cypress,
     });
 
     // ACT
@@ -534,6 +543,76 @@ describe('Init MF', () => {
         tree.exists('app1/src/assets/module-federation.manifest.json')
       ).toBeTruthy();
       expect(tree.read('app1/src/main.ts', 'utf-8')).toMatchSnapshot();
+    });
+
+    it('should wire up existing remote to dynamic host correctly', async () => {
+      await setupMf(tree, {
+        appName: 'remote1',
+        mfType: 'remote',
+        port: 4201,
+        routing: true,
+        typescriptConfiguration: false,
+        standalone: false,
+        skipFormat: true,
+      });
+
+      await setupMf(tree, {
+        appName: 'app1',
+        mfType: 'host',
+        routing: true,
+        federationType: 'dynamic',
+        remotes: ['remote1'],
+        typescriptConfiguration: false,
+        standalone: false,
+        skipFormat: true,
+      });
+
+      expect(tree.read('app1/module-federation.config.js', 'utf-8')).toContain(
+        'remotes: []'
+      );
+      expect(
+        readJson(tree, 'app1/src/assets/module-federation.manifest.json')
+      ).toEqual({
+        remote1: 'http://localhost:4201',
+      });
+      expect(
+        tree.read('app1/src/app/app.routes.ts', 'utf-8')
+      ).toMatchSnapshot();
+    });
+
+    it('should wire up existing remote to dynamic host correctly when --typescriptConfiguration=true', async () => {
+      await setupMf(tree, {
+        appName: 'remote1',
+        mfType: 'remote',
+        port: 4201,
+        routing: true,
+        typescriptConfiguration: true,
+        standalone: false,
+        skipFormat: true,
+      });
+
+      await setupMf(tree, {
+        appName: 'app1',
+        mfType: 'host',
+        routing: true,
+        federationType: 'dynamic',
+        remotes: ['remote1'],
+        typescriptConfiguration: true,
+        standalone: false,
+        skipFormat: true,
+      });
+
+      expect(tree.read('app1/module-federation.config.ts', 'utf-8')).toContain(
+        'remotes: []'
+      );
+      expect(
+        readJson(tree, 'app1/src/assets/module-federation.manifest.json')
+      ).toEqual({
+        remote1: 'http://localhost:4201',
+      });
+      expect(
+        tree.read('app1/src/app/app.routes.ts', 'utf-8')
+      ).toMatchSnapshot();
     });
   });
 
@@ -607,5 +686,26 @@ describe('Init MF', () => {
       remote1: 'http://localhost:4201',
     });
     expect(tree.read('app1/src/app/app.routes.ts', 'utf-8')).toMatchSnapshot();
+  });
+
+  it('should not touch the package.json when run with `--skipPackageJson`', async () => {
+    let initialPackageJson;
+    updateJson(tree, 'package.json', (json) => {
+      json.dependencies = {};
+      json.devDependencies = {};
+      initialPackageJson = json;
+
+      return json;
+    });
+
+    await setupMf(tree, {
+      appName: 'app1',
+      mfType: 'host',
+      skipFormat: true,
+      skipPackageJson: true,
+    });
+
+    const packageJson = readJson(tree, 'package.json');
+    expect(packageJson).toEqual(initialPackageJson);
   });
 });

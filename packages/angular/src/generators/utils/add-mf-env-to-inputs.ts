@@ -7,7 +7,10 @@ export function addMfEnvToTargetDefaultInputs(tree: Tree) {
 
   nxJson.targetDefaults ??= {};
   nxJson.targetDefaults[webpackExecutor] ??= {};
-  nxJson.targetDefaults[webpackExecutor].inputs ??= [];
+  nxJson.targetDefaults[webpackExecutor].inputs ??= [
+    'production',
+    '^production',
+  ];
 
   let mfEnvVarExists = false;
   for (const input of nxJson.targetDefaults[webpackExecutor].inputs) {
