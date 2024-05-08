@@ -170,6 +170,8 @@ export async function gitAdd({
     if (isFileIgnored) {
       ignoredFiles.push(f);
     } else if (
+      // TODO: revisit putting this check somewhere else, like in the version command,
+      // TODO: since it's the only thing that could actually delete a file
       // we can't add files that were untracked and then deleted
       changedTrackedFiles.has(f) ||
       existsSync(join(workspaceRoot, f))
@@ -183,7 +185,8 @@ export async function gitAdd({
     ignoredFiles.forEach((f) => logFn(f));
   }
 
-  if (!filesToAdd.length) {
+  // TODO: revisit only logging this if not a dry run (changed because of deletion clause above)
+  if (!filesToAdd.length && !dryRun) {
     logFn('\nNo files to stage. Skipping git add.');
     return;
   }
