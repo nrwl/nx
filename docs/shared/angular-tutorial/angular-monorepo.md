@@ -1287,11 +1287,11 @@ To connect to Nx Cloud:
 
 `cloud.nx.app` will send a PR to your repository enabling Nx Cloud, after which caching, distribution and more will start working.
 
-![Add an Nx Cloud access token to your repository dialog](/shared/tutorials/send-cloud-pr.png)
+![Add an Nx Cloud access token to your repository dialog](/shared/tutorials/send-cloud-pr.webp)
 
 Once you merge that PR, you'll be able to see CI pipeline runs appearing in the Nx Cloud dashboard:
 
-![CI Pipeline Executions](/shared/tutorials/ci-pipeline-executions.png)
+![CI Pipeline Executions](/shared/tutorials/ci-pipeline-executions.webp)
 
 ### Enable a Distributed CI Pipeline
 
@@ -1301,7 +1301,7 @@ The current CI pipeline runs on a single machine and can only handle small works
 - run: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="e2e-ci"
 ```
 
-![Run details](/shared/tutorials/gradle-run-details.png)
+![Run details](/shared/tutorials/gradle-run-details.webp)
 
 For more information about how Nx can improve your CI pipeline, check out one of these detailed tutorials:
 
