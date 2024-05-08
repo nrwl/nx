@@ -10,7 +10,7 @@ export default {
     '^.+\\.[tj]sx?$': ['babel-jest', { presets: ['@nx/next/babel'] }],
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
-  coverageDirectory: '../../coverage/nx-dev/nx-dev',
+  coverageDirectory: '../../coverage/graph/client',
   // The mock for widnow.matchMedia has to be in a separete file and imported before the components to test
   // for more info check : // https://jestjs.io/docs/manual-mocks#mocking-methods-which-are-not-implemented-in-jsdom
   modulePathIgnorePatterns: [

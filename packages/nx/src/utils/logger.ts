@@ -1,4 +1,4 @@
-import * as chalk from 'chalk';
+import chalk = require('chalk');
 
 export const NX_PREFIX = chalk.inverse(chalk.bold(chalk.cyan(' NX ')));
 

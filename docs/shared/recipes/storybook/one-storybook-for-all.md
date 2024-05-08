@@ -38,7 +38,11 @@ Now let’s configure our new library to use Storybook, using the [`@nx/storyboo
 nx g @nx/storybook:configuration storybook-host --interactionTests=true --uiFramework=@storybook/react-vite
 ```
 
-This generator will only generate the `storybook`, `build-storybook` and `test-storybook` targets in our new library's `project.json` (`libs/storybook-host/project.json`), and also the `libs/storybook-host/.storybook` folder. This is all we care about. We don’t need any stories in this project, since we will be importing the stories from other projects in our workspace. So, if you want, you can delete the contents of the `src/lib` folder. You may also delete the `lint` and `test` targets in `libs/storybook-host/project.json`. We will not be needing those.
+This generator will only create the `libs/storybook-host/.storybook` folder. It will also [infer the tasks](/concepts/inferred-tasks): `storybook`, `build-storybook`, and `test-storybook`. This is all we care about. We don’t need any stories for this project since we will import the stories from other projects in our workspace. So, if you want, you can delete the contents of the `src/lib` folder.
+
+{% callout type="note" title="Using explicit tasks" %}
+If you're on an Nx version lower than 18 or have opted out of using inferred tasks, the `storybook`, `build-storybook`, and `test-storybook` targets will be explicitly defined in the `libs/storybook-host/project.json` file.
+{% /callout %}
 
 ### Import the stories in our library's main.ts
 
@@ -46,7 +50,7 @@ Now it’s time to import the stories of our other projects in our new library's
 
 Here is a sample `libs/storybook-host/.storybook/main.ts` file:
 
-```javascript {% fileName="libs/storybook-host/.storybook/main.ts" %}
+```javascript {% fileName="libs/storybook-host/.storybook/main.ts" highlightLines=[6] %}
 import type { StorybookConfig } from '@storybook/react-vite';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { mergeConfig } from 'vite';
@@ -73,18 +77,22 @@ Notice how we only link the stories matching a specific pattern. According to yo
 For example:
 
 ```javascript
-stories: [
-  '../../**/ui/**/src/lib/**/*.stories.@(js|jsx|ts|tsx|mdx)',
-  '../../**/src/lib/**/*.stories.@(js|jsx|ts|tsx|mdx)',
-  // etc...
-];
+// ...
+const config: StorybookConfig = {
+  stories: [
+    '../../**/ui/**/src/lib/**/*.stories.@(js|jsx|ts|tsx|mdx)',
+    '../../**/src/lib/**/*.stories.@(js|jsx|ts|tsx|mdx)',
+    // ...
+  ],
+  // ...
+};
 ```
 
 ### If you're using Angular add the stories in your tsconfig.json
 
 Here is a sample `libs/storybook-host/.storybook/tsconfig.json` file:
 
-```json {% fileName="libs/storybook-host/.storybook/tsconfig.json" %}
+```json {% fileName="libs/storybook-host/.storybook/tsconfig.json" highlightLines=[7] %}
 {
   "extends": "../tsconfig.json",
   "compilerOptions": {
@@ -129,11 +137,11 @@ Ideal for:
 
 ## Extras - Dependencies
 
-Your new Storybook host, essentially, depends on all the projects from which it is importing stories. This means whenever one of these projects updates a component, or updates a story, our Storybook host would have to rebuild, to reflect these changes. It cannot rely on the cached result. However, Nx does not understand the imports in `libs/storybook-host/.storybook/main.ts`, and the result is that Nx does not know which projects the Storybook host depends on, based solely on the `main.ts` imports. The good thing is that there is a solution to this. You can manually add the projects your Storybook host depends on as implicit dependencies in your project’s `project.json`, in the implicit dependencies array.
+Your new Storybook host, essentially, depends on all the projects from which it is importing stories. This means whenever one of these projects updates a component, or updates a story, our Storybook host would have to rebuild, to reflect these changes. It cannot rely on the cached result. However, Nx does not understand the imports in `libs/storybook-host/.storybook/main.ts`, and the result is that Nx does not know which projects the Storybook host depends on, based solely on the `main.ts` imports.
 
-For example, `libs/storybook-host/project.json`:
+The good thing is that there is a solution to this. You can manually add the projects your Storybook host depends on as implicit dependencies in your project’s `project.json` file:
 
-```json {% fileName="libs/storybook-host/project.json" %}
+```json {% fileName="libs/storybook-host/project.json" highlightLines=["6-14"] %}
 {
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "libs/storybook-host/src",
@@ -147,5 +155,6 @@ For example, `libs/storybook-host/project.json`:
     "shared-ui-button",
     "shared-ui-main",
     "shared-ui-notification"
-  ],
+  ]
+}
 ```

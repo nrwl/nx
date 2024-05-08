@@ -2,13 +2,8 @@ use crate::native::types::JsInputs;
 use std::collections::HashMap;
 
 #[napi(object)]
-pub struct ExternalNodeData {
-    pub version: String,
-    pub hash: Option<String>,
-}
-
-#[napi(object)]
 pub struct ExternalNode {
+    pub package_name: Option<String>,
     pub version: String,
     pub hash: Option<String>,
 }

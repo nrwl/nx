@@ -159,7 +159,7 @@ Show help
 
 Type: `string`
 
-The optional prerelease identifier to apply to the version, in the case that specifier has been set to prerelease.
+The optional prerelease identifier to apply to the version, in the case that the specifier argument has been set to `prerelease`.
 
 ##### specifier
 

@@ -16,7 +16,7 @@ import {
   writeFileSync,
 } from 'fs-extra';
 import { dirname, extname, join, relative } from 'path';
-import { findNodes } from 'nx/src/utils/typescript';
+import { findNodes } from '@nx/js';
 
 import type { NextBuildBuilderOptions } from '../../../utils/types';
 

@@ -1,6 +1,5 @@
 import { Socket } from 'net';
 import { findMatchingProjects } from '../../../utils/find-matching-projects';
-import { ProjectGraph } from '../../../config/project-graph';
 import { findAllProjectNodeDependencies } from '../../../utils/project-graph-utils';
 import { PromisedBasedQueue } from '../../../utils/promised-based-queue';
 import { currentProjectGraph } from '../project-graph-incremental-recomputation';

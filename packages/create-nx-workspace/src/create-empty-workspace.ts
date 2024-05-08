@@ -9,7 +9,6 @@ import {
   getPackageManagerVersion,
   PackageManager,
 } from './utils/package-manager';
-import { getFileName } from './utils/string-utils';
 import { unparse } from './utils/unparse';
 
 /**
@@ -32,7 +31,6 @@ export async function createEmptyWorkspace<T extends CreateWorkspaceOptions>(
     options.packageManager = packageManager;
   }
 
-  options.name = getFileName(name);
   const directory = options.name;
 
   const args = unparse({

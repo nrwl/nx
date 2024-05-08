@@ -15,7 +15,7 @@ export interface Schema {
   js: boolean; // default is false
   linter: Linter; // default is eslint
   setParserOptionsProject?: boolean; // default is false
-  e2eTestRunner: 'cypress' | 'playwright' | 'detox' | 'none'; // default is cypress
+  e2eTestRunner: 'cypress' | 'playwright' | 'detox' | 'none'; // default is playwright
   standaloneConfig?: boolean;
   skipPackageJson?: boolean; // default is false
   addPlugin?: boolean;

@@ -166,6 +166,33 @@ describe('determineArtifactNameAndDirectoryOptions', () => {
       restoreCwd();
     });
 
+    it('should not duplicate the cwd when the provided directory starts with the cwd and format is "as-provided"', async () => {
+      addProjectConfiguration(tree, 'app1', {
+        root: 'apps/app1',
+        projectType: 'application',
+      });
+      setCwd('apps/app1');
+
+      const result = await determineArtifactNameAndDirectoryOptions(tree, {
+        name: 'myComponent',
+        directory: 'apps/app1',
+        nameAndDirectoryFormat: 'as-provided',
+        artifactType: 'component',
+        callingGenerator: '@my-org/my-plugin:component',
+      });
+
+      expect(result).toStrictEqual({
+        artifactName: 'myComponent',
+        directory: 'apps/app1',
+        fileName: 'myComponent',
+        filePath: 'apps/app1/myComponent.ts',
+        project: 'app1',
+        nameAndDirectoryFormat: 'as-provided',
+      });
+
+      restoreCwd();
+    });
+
     it('should return the options as provided when directory is provided', async () => {
       addProjectConfiguration(tree, 'app1', {
         root: 'apps/app1',

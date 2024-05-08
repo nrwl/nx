@@ -1,0 +1,8 @@
+{
+  "name": "nx-dev-ui-contact",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "nx-dev/ui-contact/src",
+  "projectType": "library",
+  "tags": ["scope:nx-dev", "type:ui"],
+  "targets": {}
+}

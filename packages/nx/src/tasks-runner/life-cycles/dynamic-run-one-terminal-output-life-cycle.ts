@@ -9,8 +9,9 @@ import { Task } from '../../config/task-graph';
 import { formatFlags, formatTargetsAndProjects } from './formatting-utils';
 import { viewLogsFooterRows } from './view-logs-utils';
 
-const LEFT_PAD = `  `;
-const EXTENDED_LEFT_PAD = `    `;
+const LEFT_PAD = `   `;
+const SPACER = `  `;
+const EXTENDED_LEFT_PAD = `      `;
 
 /**
  * As tasks are completed the overall state moves from:
@@ -46,6 +47,10 @@ export async function createRunOneDynamicOutputRenderer({
   overrides: Record<string, unknown>;
 }): Promise<{ lifeCycle: LifeCycle; renderIsDone: Promise<void> }> {
   cliCursor.hide();
+  // Show the cursor again after the process exits
+  process.on('exit', () => {
+    cliCursor.show();
+  });
   let resolveRenderIsDonePromise: (value: void) => void;
   const renderIsDone = new Promise<void>(
     (resolve) => (resolveRenderIsDonePromise = resolve)
@@ -138,7 +143,7 @@ export async function createRunOneDynamicOutputRenderer({
           linesToRender.push(
             `${LEFT_PAD}${output.colors.cyan(
               dots.frames[dependentTargetsCurrentFrame]
-            )}    ${output.dim(
+            )}${SPACER}${output.dim(
               `Nx is waiting on ${remainingDependentTasksNotFromInitiatingProject} dependent project tasks before running tasks from`
             )} ${initiatingProject}${output.dim('...')}`
           );
@@ -154,7 +159,7 @@ export async function createRunOneDynamicOutputRenderer({
         output.colors.red.dim(
           `${LEFT_PAD}${output.colors.red(
             figures.cross
-          )}    ${totalFailedTasks}${`/${totalCompletedTasks}`} dependent project tasks failed (see below)`
+          )}${SPACER}${totalFailedTasks}${`/${totalCompletedTasks}`} dependent project tasks failed (see below)`
         )
       );
     }
@@ -164,7 +169,7 @@ export async function createRunOneDynamicOutputRenderer({
         output.dim(
           `${LEFT_PAD}${output.dim(
             figures.tick
-          )}    ${totalSuccessfulTasks}${`/${totalCompletedTasks}`} dependent project tasks succeeded ${output.dim(
+          )}${SPACER}${totalSuccessfulTasks}${`/${totalCompletedTasks}`} dependent project tasks succeeded ${output.dim(
             `[${totalCachedTasks} read from cache]`
           )}`
         )
@@ -344,10 +349,10 @@ export async function createRunOneDynamicOutputRenderer({
           '',
           `${LEFT_PAD}${output.colors.red(
             figures.cross
-          )}    ${totalFailedTasks}${`/${totalCompletedTasks}`} failed`,
+          )}${SPACER}${totalFailedTasks}${`/${totalCompletedTasks}`} failed`,
           `${LEFT_PAD}${output.dim(
             figures.tick
-          )}    ${totalSuccessfulTasks}${`/${totalCompletedTasks}`} succeeded ${output.dim(
+          )}${SPACER}${totalSuccessfulTasks}${`/${totalCompletedTasks}`} succeeded ${output.dim(
             `[${totalCachedTasks} read from cache]`
           )}`,
           ...viewLogs,

@@ -7,7 +7,7 @@ export function validateOptions(options: Schema): void {
   const { major: angularMajorVersion, version: angularVersion } =
     getInstalledAngularVersionInfo();
 
-  if (lt(angularVersion, '16.1.0') && options.forceEsbuild !== undefined) {
+  if (lt(angularVersion, '16.1.0') && options.forceEsbuild) {
     throw new Error(stripIndents`The "forceEsbuild" option is only supported in Angular >= 16.1.0. You are currently using "${angularVersion}".
       You can resolve this error by removing the "forceEsbuild" option or by migrating to Angular 16.1.0.`);
   }

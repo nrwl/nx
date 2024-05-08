@@ -20,6 +20,7 @@ describe('target-defaults plugin', () => {
         },
       },
       workspaceRoot: '/root',
+      configFiles: [],
     };
   });
 
@@ -50,14 +51,15 @@ describe('target-defaults plugin', () => {
     expect(createNodesFn('project.json', undefined, context))
       .toMatchInlineSnapshot(`
       {
+        "NX_OVERRIDE_SOURCE_FILE": "nx.json",
         "projects": {
           ".": {
             "targets": {
               "build": {
+                "NX_ONLY_MODIFIES_EXISTING_TARGET": true,
                 "dependsOn": [
                   "^build",
                 ],
-                Symbol(ONLY_MODIFIES_EXISTING_TARGET): true,
               },
             },
           },
@@ -67,6 +69,7 @@ describe('target-defaults plugin', () => {
     expect(createNodesFn('packages/lib-a/project.json', undefined, context))
       .toMatchInlineSnapshot(`
       {
+        "NX_OVERRIDE_SOURCE_FILE": "nx.json",
         "projects": {
           "packages/lib-a": {
             "targets": {
@@ -107,9 +110,11 @@ describe('target-defaults plugin', () => {
           },
         },
         workspaceRoot: '/root',
+        configFiles: [],
       })
     ).toMatchInlineSnapshot(`
       {
+        "NX_OVERRIDE_SOURCE_FILE": "nx.json",
         "projects": {
           ".": {
             "targets": {
@@ -153,9 +158,11 @@ describe('target-defaults plugin', () => {
           },
         },
         workspaceRoot: '/root',
+        configFiles: [],
       })
     ).toMatchInlineSnapshot(`
       {
+        "NX_OVERRIDE_SOURCE_FILE": "nx.json",
         "projects": {
           ".": {
             "targets": {
@@ -196,6 +203,7 @@ describe('target-defaults plugin', () => {
           },
         },
         workspaceRoot: '/root',
+        configFiles: [],
       })
     ).toMatchInlineSnapshot(`{}`);
   });
@@ -226,21 +234,108 @@ describe('target-defaults plugin', () => {
           },
         },
         workspaceRoot: '/root',
+        configFiles: [],
       })
     ).toMatchInlineSnapshot(`
       {
+        "NX_OVERRIDE_SOURCE_FILE": "nx.json",
         "projects": {
           ".": {
             "targets": {
               "test": {
+                "NX_ONLY_MODIFIES_EXISTING_TARGET": true,
                 "command": "jest",
-                Symbol(ONLY_MODIFIES_EXISTING_TARGET): true,
               },
             },
           },
         },
       }
     `);
+  });
+
+  it('should not register target if target default and package.json target if package.json target is not included script', async () => {
+    memfs.vol.fromJSON(
+      {
+        'package.json': JSON.stringify({
+          name: 'lib-a',
+          scripts: {
+            test: 'nx affected:test',
+          },
+          nx: {
+            includedScripts: [],
+            targets: {
+              test: {
+                outputs: ['coverage'],
+              },
+            },
+          },
+        }),
+      },
+      '/root'
+    );
+
+    const result = await createNodesFn('package.json', undefined, {
+      nxJsonConfiguration: {
+        targetDefaults: {
+          test: {
+            cache: true,
+          },
+        },
+      },
+      workspaceRoot: '/root',
+      configFiles: [],
+    });
+
+    const { targets } = result.projects['.'];
+
+    // Info from target defaults will be merged
+    expect(targets.test.cache).toBeTruthy();
+    // Info from package.json will not be merged at this time - it will be merged when processing package json plugin
+    expect(targets.test.outputs).not.toBeDefined();
+  });
+
+  it('should register target if target default and package.json target if package.json target is not included script but has executor', async () => {
+    memfs.vol.fromJSON(
+      {
+        'package.json': JSON.stringify({
+          name: 'lib-a',
+          scripts: {
+            test: 'nx affected:test',
+          },
+          nx: {
+            includedScripts: [],
+            targets: {
+              test: {
+                executor: 'nx:run-commands',
+                options: {
+                  command: 'echo hi',
+                },
+              },
+            },
+          },
+        }),
+      },
+      '/root'
+    );
+
+    const result = await createNodesFn('package.json', undefined, {
+      nxJsonConfiguration: {
+        targetDefaults: {
+          test: {
+            cache: true,
+          },
+        },
+      },
+      workspaceRoot: '/root',
+      configFiles: [],
+    });
+
+    const { targets } = result.projects['.'];
+
+    // Info from target defaults will be merged
+    expect(targets.test.cache).toBeTruthy();
+    // Info from package.json will be merged so that the target default is compatible
+    expect(targets.test.executor).toEqual('nx:run-commands');
   });
 
   describe('executor key', () => {
@@ -279,6 +374,7 @@ describe('target-defaults plugin', () => {
       expect(createNodesFn('project.json', undefined, context))
         .toMatchInlineSnapshot(`
         {
+          "NX_OVERRIDE_SOURCE_FILE": "nx.json",
           "projects": {
             ".": {
               "targets": {
@@ -295,10 +391,10 @@ describe('target-defaults plugin', () => {
                   },
                 },
                 "nx:run-commands": {
+                  "NX_ONLY_MODIFIES_EXISTING_TARGET": true,
                   "options": {
                     "cwd": "{projectRoot}",
                   },
-                  Symbol(ONLY_MODIFIES_EXISTING_TARGET): true,
                 },
               },
             },
@@ -343,6 +439,7 @@ describe('target-defaults plugin', () => {
       expect(createNodesFn('project.json', undefined, context))
         .toMatchInlineSnapshot(`
         {
+          "NX_OVERRIDE_SOURCE_FILE": "nx.json",
           "projects": {
             ".": {
               "targets": {
@@ -359,10 +456,10 @@ describe('target-defaults plugin', () => {
                   },
                 },
                 "nx:run-commands": {
+                  "NX_ONLY_MODIFIES_EXISTING_TARGET": true,
                   "options": {
                     "cwd": "{projectRoot}",
                   },
-                  Symbol(ONLY_MODIFIES_EXISTING_TARGET): true,
                 },
               },
             },

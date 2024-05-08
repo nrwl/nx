@@ -25,7 +25,7 @@
 
 **`Deprecated`**
 
-use hashTask(task:Task, taskGraph: TaskGraph, env: NodeJS.ProcessEnv) instead. This will be removed in v19
+use hashTask(task:Task, taskGraph: TaskGraph, env: NodeJS.ProcessEnv) instead. This will be removed in v20
 
 ▸ **hashTask**(`task`, `taskGraph`): `Promise`\<[`Hash`](../../devkit/documents/Hash)\>
 
@@ -42,7 +42,7 @@ use hashTask(task:Task, taskGraph: TaskGraph, env: NodeJS.ProcessEnv) instead. T
 
 **`Deprecated`**
 
-use hashTask(task:Task, taskGraph: TaskGraph, env: NodeJS.ProcessEnv) instead. This will be removed in v19
+use hashTask(task:Task, taskGraph: TaskGraph, env: NodeJS.ProcessEnv) instead. This will be removed in v20
 
 ▸ **hashTask**(`task`, `taskGraph`, `env`): `Promise`\<[`Hash`](../../devkit/documents/Hash)\>
 
@@ -76,7 +76,7 @@ use hashTask(task:Task, taskGraph: TaskGraph, env: NodeJS.ProcessEnv) instead. T
 
 **`Deprecated`**
 
-use hashTasks(tasks:Task[], taskGraph: TaskGraph, env: NodeJS.ProcessEnv) instead. This will be removed in v19
+use hashTasks(tasks:Task[], taskGraph: TaskGraph, env: NodeJS.ProcessEnv) instead. This will be removed in v20
 
 ▸ **hashTasks**(`tasks`, `taskGraph`): `Promise`\<[`Hash`](../../devkit/documents/Hash)[]\>
 
@@ -93,7 +93,7 @@ use hashTasks(tasks:Task[], taskGraph: TaskGraph, env: NodeJS.ProcessEnv) instea
 
 **`Deprecated`**
 
-use hashTasks(tasks:Task[], taskGraph: TaskGraph, env: NodeJS.ProcessEnv) instead. This will be removed in v19
+use hashTasks(tasks:Task[], taskGraph: TaskGraph, env: NodeJS.ProcessEnv) instead. This will be removed in v20
 
 ▸ **hashTasks**(`tasks`, `taskGraph`, `env`): `Promise`\<[`Hash`](../../devkit/documents/Hash)[]\>
 

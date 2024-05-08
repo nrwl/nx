@@ -3,8 +3,16 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "e2e/vue",
   "projectType": "application",
+  "implicitDependencies": ["vue"],
   "targets": {
-    "e2e": {}
-  },
-  "implicitDependencies": ["vue"]
+    "e2e-ci--src/vue-storybook.test.ts": {
+      "inputs": ["e2eInputs", "^production"]
+    },
+    "e2e-ci--src/vue-tailwind.test.ts": {
+      "inputs": ["e2eInputs", "^production"]
+    },
+    "e2e-ci--src/vue.test.ts": {
+      "inputs": ["e2eInputs", "^production"]
+    }
+  }
 }

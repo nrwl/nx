@@ -25,7 +25,7 @@ exports[`app should setup eslint 1`] = `
 `;
 
 exports[`app should setup the web build builder 1`] = `
-"const { NxWebpackPlugin } = require('@nx/webpack');
+"const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
 const { join } = require('path');
 
 module.exports = {
@@ -36,7 +36,7 @@ module.exports = {
     port: 4200,
   },
   plugins: [
-    new NxWebpackPlugin({
+    new NxAppWebpackPlugin({
       tsConfig: './tsconfig.app.json',
       compiler: 'babel',
       main: './src/main.ts',
@@ -53,7 +53,7 @@ module.exports = {
 `;
 
 exports[`app should setup the web dev server 1`] = `
-"const { NxWebpackPlugin } = require('@nx/webpack');
+"const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
 const { join } = require('path');
 
 module.exports = {
@@ -64,7 +64,7 @@ module.exports = {
     port: 4200,
   },
   plugins: [
-    new NxWebpackPlugin({
+    new NxAppWebpackPlugin({
       tsConfig: './tsconfig.app.json',
       compiler: 'babel',
       main: './src/main.ts',

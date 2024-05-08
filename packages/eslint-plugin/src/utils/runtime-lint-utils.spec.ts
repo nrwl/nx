@@ -19,7 +19,8 @@ import {
 } from './runtime-lint-utils';
 import { vol } from 'memfs';
 
-jest.mock('nx/src/utils/workspace-root', () => ({
+jest.mock('@nx/devkit', () => ({
+  ...jest.requireActual<any>('@nx/devkit'),
   workspaceRoot: '/root',
 }));
 

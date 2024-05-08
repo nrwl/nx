@@ -1,4 +1,5 @@
 import {
+  createProjectGraphAsync,
   formatFiles,
   GeneratorCallback,
   readNxJson,
@@ -6,15 +7,11 @@ import {
   Tree,
   updateNxJson,
 } from '@nx/devkit';
-import { updatePackageScripts } from '@nx/devkit/src/utils/update-package-scripts';
+import { addPlugin } from '@nx/devkit/src/utils/add-plugin';
 
 import { createNodes } from '../../plugins/plugin';
 import { InitGeneratorSchema } from './schema';
-import {
-  addPlugin,
-  checkDependenciesInstalled,
-  moveToDevDependencies,
-} from './lib/utils';
+import { checkDependenciesInstalled, moveToDevDependencies } from './lib/utils';
 
 export function updateNxJsonSettings(tree: Tree) {
   const nxJson = readNxJson(tree);
@@ -56,9 +53,31 @@ export async function initGeneratorInternal(
   tree: Tree,
   schema: InitGeneratorSchema
 ) {
-  schema.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
+  const nxJson = readNxJson(tree);
+  const addPluginDefault =
+    process.env.NX_ADD_PLUGINS !== 'false' &&
+    nxJson.useInferencePlugins !== false;
+  schema.addPlugin ??= addPluginDefault;
+
   if (schema.addPlugin) {
-    addPlugin(tree);
+    await addPlugin(
+      tree,
+      await createProjectGraphAsync(),
+      '@nx/vite/plugin',
+      createNodes,
+      {
+        buildTargetName: ['build', 'vite:build', 'vite-build'],
+        testTargetName: ['test', 'vite:test', 'vite-test'],
+        serveTargetName: ['serve', 'vite:serve', 'vite-serve'],
+        previewTargetName: ['preview', 'vite:preview', 'vite-preview'],
+        serveStaticTargetName: [
+          'serve-static',
+          'vite:serve-static',
+          'vite-serve-static',
+        ],
+      },
+      schema.updatePackageScripts
+    );
   }
 
   updateNxJsonSettings(tree);
@@ -67,10 +86,6 @@ export async function initGeneratorInternal(
   if (!schema.skipPackageJson) {
     tasks.push(moveToDevDependencies(tree));
     tasks.push(checkDependenciesInstalled(tree, schema));
-  }
-
-  if (schema.updatePackageScripts) {
-    await updatePackageScripts(tree, createNodes);
   }
 
   if (!schema.skipFormat) {

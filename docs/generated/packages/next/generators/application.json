@@ -47,6 +47,10 @@
               "label": "LESS              [ https://lesscss.org            ]"
             },
             {
+              "value": "tailwind",
+              "label": "tailwind          [ https://tailwindcss.com/       ]"
+            },
+            {
               "value": "styled-components",
               "label": "styled-components [ https://styled-components.com ]"
             },
@@ -82,10 +86,10 @@
       },
       "e2eTestRunner": {
         "type": "string",
-        "enum": ["cypress", "playwright", "none"],
+        "enum": ["playwright", "cypress", "none"],
         "description": "Test runner to use for end to end (E2E) tests.",
         "x-prompt": "Which E2E test runner would you like to use?",
-        "default": "cypress"
+        "default": "playwright"
       },
       "tags": {
         "type": "string",

@@ -6,7 +6,7 @@ import {
   updateJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import * as variousProjects from '../update-15-7-0/test-configs/various-configs.json';
+import * as variousProjects from './test-configs/various-configs.json';
 import eslintIgnoreReactPlugin from './eslint-ignore-react-plugin';
 
 describe('Ignore @nx/react/plugins/storybook in Storybook eslint plugin', () => {

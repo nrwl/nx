@@ -118,15 +118,43 @@ npx nx build-ios mobile
 
 **Android:**
 
+{% tabs %}
+{% tab label="Using inferred tasks" %}
+
+{% callout type="note" title="Inferred Tasks" %}
+Since Nx 18, Nx plugins can infer tasks for your projects based on the configuration of different tools. You can read more about it at the [Inferred Tasks concept page](/concepts/inferred-tasks).
+{% /callout %}
+
+```shell
+npx nx test mobile-e2e -- --configuration="android.emu.debug"
+```
+
+{% /tab %}
+{% tab label="Using explicit targets with executors" %}
+
 ```shell
 npx nx test-android mobile-e2e
 ```
 
+{% /tab %}
+
 **iOS:** (Mac only)
+
+{% tabs %}
+{% tab label="Using inferred tasks" %}
+
+```shell
+npx nx test mobile-e2e -- --configuration="ios.sim.debug"
+```
+
+{% /tab %}
+{% tab label="Using explicit targets with executors" %}
 
 ```shell
 npx nx test-ios mobile-e2e
 ```
+
+{% /tab %}
 
 When using React Native in Nx, you get the out-of-the-box support for TypeScript, Detox, and Jest.
 
@@ -200,7 +228,7 @@ Run:
 To generate a new component inside `shared-ui-layout` run:
 
 ```shell
-npx nx g @nx/react-native:component layout --project=shared-ui-layout --export
+npx nx g @nx/react-native:component layout --directory=libs/shared-ui-layout/src/lib/layout --export
 ```
 
 And you will see the following updated for `shared-ui-layout`:
@@ -246,7 +274,7 @@ For libraries intended to be built and published to a registry (e.g. npm) you ca
 
 ```shell
 npx nx g @nx/react-native:lib shared-ui-layout --directory=libs/shared-ui-layout --publishable --importPath=@happynrwl/ui-components
-npx nx g @nx/react-native:component layout --project=shared-ui-layout --export
+npx nx g @nx/react-native:component layout --directory=libs/shared-ui-layout/src/lib/layout --export
 ```
 
 Run `npx nx build shared-ui-layout` to build the library. It will generate the following:

@@ -340,7 +340,8 @@ describe('app', () => {
     });
   });
 
-  describe('--style @emotion/styled', () => {
+  // Support for emotion is still being worked on disable for now: https://nextjs.org/docs/app/building-your-application/styling/css-in-js
+  xdescribe('--style @emotion/styled', () => {
     it('should generate  @emotion/styled styles', async () => {
       const name = uniq();
 

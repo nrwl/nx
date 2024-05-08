@@ -18,8 +18,8 @@ describe('@nx/remix/plugin', () => {
               cache: false,
               inputs: ['foo', '^foo'],
             },
-            serve: {
-              command: 'npm run serve',
+            dev: {
+              command: 'npm run dev',
             },
             start: {
               command: 'npm run start',
@@ -34,6 +34,7 @@ describe('@nx/remix/plugin', () => {
           },
         },
         workspaceRoot: tempFs.tempDir,
+        configFiles: [],
       };
       tempFs.createFileSync(
         'package.json',
@@ -65,9 +66,10 @@ module.exports = {
         'remix.config.cjs',
         {
           buildTargetName: 'build',
-          serveTargetName: 'serve',
+          devTargetName: 'dev',
           startTargetName: 'start',
           typecheckTargetName: 'typecheck',
+          staticServeTargetName: 'static-serve',
         },
         context
       );
@@ -89,6 +91,7 @@ module.exports = {
           },
         },
         workspaceRoot: tempFs.tempDir,
+        configFiles: [],
       };
 
       tempFs.createFileSync(
@@ -123,9 +126,10 @@ module.exports = {
         'my-app/remix.config.cjs',
         {
           buildTargetName: 'build',
-          serveTargetName: 'serve',
+          devTargetName: 'dev',
           startTargetName: 'start',
           typecheckTargetName: 'tsc',
+          staticServeTargetName: 'static-serve',
         },
         context
       );

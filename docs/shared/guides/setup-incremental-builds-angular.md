@@ -3,10 +3,6 @@
 In this guide we’ll specifically look into which changes need to be made to enable incremental builds for Angular
 applications.
 
-{% callout type="caution" title="Nx > 10.4.0" %}
-Incremental builds requires Nx version 10.4.0 or later.
-{% /callout %}
-
 ## Requirements
 
 If your library consumes any Angular package that has not been compiled with Ivy, you must ensure the

@@ -9,9 +9,8 @@ import { combineGlobPatterns } from '../../../utils/globs';
 
 export const getTouchedProjectsFromProjectGlobChanges: TouchedProjectLocator =
   async (touchedFiles, projectGraphNodes, nxJson): Promise<string[]> => {
-    const globPattern = combineGlobPatterns(
-      configurationGlobs(await loadNxPlugins(nxJson?.plugins, workspaceRoot))
-    );
+    const [plugins] = await loadNxPlugins(nxJson?.plugins ?? [], workspaceRoot);
+    const globPattern = combineGlobPatterns(configurationGlobs(plugins));
 
     const touchedProjects = new Set<string>();
     for (const touchedFile of touchedFiles) {

@@ -10,8 +10,9 @@ import { prettyTime } from './pretty-time';
 import { formatFlags, formatTargetsAndProjects } from './formatting-utils';
 import { viewLogsFooterRows } from './view-logs-utils';
 
-const LEFT_PAD = `  `;
-const EXTENDED_LEFT_PAD = `    `;
+const LEFT_PAD = `   `;
+const SPACER = `  `;
+const EXTENDED_LEFT_PAD = `      `;
 
 /**
  * The following function is responsible for creating a life cycle with dynamic
@@ -35,6 +36,10 @@ export async function createRunManyDynamicOutputRenderer({
   overrides: Record<string, unknown>;
 }): Promise<{ lifeCycle: LifeCycle; renderIsDone: Promise<void> }> {
   cliCursor.hide();
+  // Show the cursor again after the process exits
+  process.on('exit', () => {
+    cliCursor.show();
+  });
   let resolveRenderIsDonePromise: (value: void) => void;
   const renderIsDone = new Promise<void>(
     (resolve) => (resolveRenderIsDonePromise = resolve)
@@ -122,7 +127,7 @@ export async function createRunManyDynamicOutputRenderer({
         writeCompletedTaskResultLine(
           `${
             output.colors.green(figures.tick) +
-            '  ' +
+            SPACER +
             output.formatCommand(task.id)
           }  ${output.dim('[local cache]')}`
         );
@@ -134,7 +139,7 @@ export async function createRunManyDynamicOutputRenderer({
         writeCompletedTaskResultLine(
           `${
             output.colors.green(figures.tick) +
-            '  ' +
+            SPACER +
             output.formatCommand(task.id)
           }  ${output.dim('[existing outputs match the cache, left as is]')}`
         );
@@ -146,7 +151,7 @@ export async function createRunManyDynamicOutputRenderer({
         writeCompletedTaskResultLine(
           `${
             output.colors.green(figures.tick) +
-            '  ' +
+            SPACER +
             output.formatCommand(task.id)
           }  ${output.dim('[remote cache]')}`
         );
@@ -160,7 +165,7 @@ export async function createRunManyDynamicOutputRenderer({
         );
         writeCompletedTaskResultLine(
           output.colors.green(figures.tick) +
-            '  ' +
+            SPACER +
             output.formatCommand(task.id) +
             output.dim(` (${timeTakenText})`)
         );
@@ -171,9 +176,10 @@ export async function createRunManyDynamicOutputRenderer({
       }
       case 'failure':
         output.addNewline();
+        output.addNewline();
         writeCompletedTaskResultLine(
           output.colors.red(figures.cross) +
-            '  ' +
+            SPACER +
             output.formatCommand(output.colors.red(task.id))
         );
         writeCommandOutputBlock(tasksToTerminalOutputs[task.id]);
@@ -197,7 +203,9 @@ export async function createRunManyDynamicOutputRenderer({
     if (runningTasks.length > 0) {
       additionalFooterRows.push(
         output.dim(
-          `${LEFT_PAD}${output.colors.cyan(figures.arrowRight)}    Executing ${
+          `${LEFT_PAD}${output.colors.cyan(
+            figures.arrowRight
+          )}${SPACER}Executing ${
             runningTasks.length
           }/${remainingTasks} remaining tasks${
             runningTasks.length > 1 ? ' in parallel' : ''
@@ -209,7 +217,7 @@ export async function createRunManyDynamicOutputRenderer({
         additionalFooterRows.push(
           `${LEFT_PAD}${output.dim.cyan(
             dots.frames[currentFrame]
-          )}    ${output.formatCommand(runningTask.task.id)}`
+          )}${SPACER}${output.formatCommand(runningTask.task.id)}`
         );
       }
       /**
@@ -241,7 +249,7 @@ export async function createRunManyDynamicOutputRenderer({
       additionalFooterRows.push(
         `${LEFT_PAD}${output.colors.green(
           figures.tick
-        )}    ${totalSuccessfulTasks}${`/${totalCompletedTasks}`} succeeded ${output.dim(
+        )}${SPACER}${totalSuccessfulTasks}${`/${totalCompletedTasks}`} succeeded ${output.dim(
           `[${totalCachedTasks} read from cache]`
         )}`
       );
@@ -251,7 +259,7 @@ export async function createRunManyDynamicOutputRenderer({
       additionalFooterRows.push(
         `${LEFT_PAD}${output.colors.red(
           figures.cross
-        )}    ${totalFailedTasks}${`/${totalCompletedTasks}`} failed`
+        )}${SPACER}${totalFailedTasks}${`/${totalCompletedTasks}`} failed`
       );
     }
 
@@ -385,14 +393,15 @@ export async function createRunManyDynamicOutputRenderer({
         output.dim(
           `${LEFT_PAD}${output.dim(
             figures.tick
-          )}    ${totalSuccessfulTasks}${`/${totalCompletedTasks}`} succeeded ${output.dim(
+          )}${SPACER}${totalSuccessfulTasks}${`/${totalCompletedTasks}`} succeeded ${output.dim(
             `[${totalCachedTasks} read from cache]`
           )}`
         ),
         '',
         `${LEFT_PAD}${output.colors.red(
           figures.cross
-        )}    ${totalFailedTasks}${`/${totalCompletedTasks}`} targets failed, including the following:`,
+        )}${SPACER}${totalFailedTasks}${`/${totalCompletedTasks}`} targets failed, including the following:`,
+        '',
         `${failedTasksForPrinting
           .map(
             (t) =>
@@ -400,7 +409,7 @@ export async function createRunManyDynamicOutputRenderer({
                 '-'
               )} ${output.formatCommand(t.toString())}`
           )
-          .join('\n ')}`,
+          .join('\n')}`,
       ];
 
       if (failedTasks.size > numFailedToPrint) {

@@ -29,7 +29,7 @@ export function nxComponentTestingPreset(
   pathToConfig: string,
   options?: NxComponentTestingOptions
 ) {
-  if (global.NX_GRAPH_CREATION || global.NX_CYPRESS_INIT_GENERATOR_RUNNING) {
+  if (global.NX_GRAPH_CREATION) {
     // this is only used by plugins, so we don't need the component testing
     // options, cast to any to avoid type errors
     return nxBaseCypressPreset(pathToConfig) as any;

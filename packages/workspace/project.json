@@ -4,7 +4,6 @@
   "sourceRoot": "packages/workspace/src",
   "projectType": "library",
   "targets": {
-    "test": {},
     "build-base": {
       "executor": "@nx/js:tsc",
       "options": {
@@ -87,7 +86,6 @@
         ],
         "parallel": false
       }
-    },
-    "lint": {}
+    }
   }
 }

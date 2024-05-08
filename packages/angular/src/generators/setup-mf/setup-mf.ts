@@ -30,15 +30,22 @@ export async function setupMf(tree: Tree, rawOptions: Schema) {
 
   let installTask = () => {};
   if (options.mfType === 'remote') {
-    addRemoteToHost(tree, options);
+    addRemoteToHost(tree, {
+      appName: options.appName,
+      host: options.host,
+      standalone: options.standalone,
+      port: options.port,
+    });
     addRemoteEntry(tree, options, projectConfig.root);
     removeDeadCodeFromRemote(tree, options);
     setupTspathForRemote(tree, options);
-    installTask = addDependenciesToPackageJson(
-      tree,
-      {},
-      { '@nx/web': nxVersion, '@nx/webpack': nxVersion }
-    );
+    if (!options.skipPackageJson) {
+      installTask = addDependenciesToPackageJson(
+        tree,
+        {},
+        { '@nx/web': nxVersion, '@nx/webpack': nxVersion }
+      );
+    }
   }
 
   const remotesWithPorts = getRemotesWithPorts(tree, options);
@@ -54,11 +61,21 @@ export async function setupMf(tree: Tree, rawOptions: Schema) {
   if (options.mfType === 'host') {
     setupHostIfDynamic(tree, options);
     updateHostAppRoutes(tree, options);
-    installTask = addDependenciesToPackageJson(
-      tree,
-      {},
-      { '@nx/webpack': nxVersion }
-    );
+    for (const { remoteName, port } of remotesWithPorts) {
+      addRemoteToHost(tree, {
+        appName: remoteName,
+        host: options.appName,
+        standalone: options.standalone,
+        port,
+      });
+    }
+    if (!options.skipPackageJson) {
+      installTask = addDependenciesToPackageJson(
+        tree,
+        {},
+        { '@nx/webpack': nxVersion }
+      );
+    }
   }
 
   if (!options.skipE2E) {

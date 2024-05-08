@@ -40,13 +40,13 @@ export interface Hash {
 
 export interface TaskHasher {
   /**
-   * @deprecated use hashTask(task:Task, taskGraph: TaskGraph, env: NodeJS.ProcessEnv) instead. This will be removed in v19
+   * @deprecated use hashTask(task:Task, taskGraph: TaskGraph, env: NodeJS.ProcessEnv) instead. This will be removed in v20
    * @param task
    */
   hashTask(task: Task): Promise<Hash>;
 
   /**
-   * @deprecated use hashTask(task:Task, taskGraph: TaskGraph, env: NodeJS.ProcessEnv) instead. This will be removed in v19
+   * @deprecated use hashTask(task:Task, taskGraph: TaskGraph, env: NodeJS.ProcessEnv) instead. This will be removed in v20
    */
   hashTask(task: Task, taskGraph: TaskGraph): Promise<Hash>;
 
@@ -57,13 +57,13 @@ export interface TaskHasher {
   ): Promise<Hash>;
 
   /**
-   *  @deprecated use hashTasks(tasks:Task[], taskGraph: TaskGraph, env: NodeJS.ProcessEnv) instead. This will be removed in v19
+   *  @deprecated use hashTasks(tasks:Task[], taskGraph: TaskGraph, env: NodeJS.ProcessEnv) instead. This will be removed in v20
    * @param tasks
    */
   hashTasks(tasks: Task[]): Promise<Hash[]>;
 
   /**
-   * @deprecated use hashTasks(tasks:Task[], taskGraph: TaskGraph, env: NodeJS.ProcessEnv) instead. This will be removed in v19
+   * @deprecated use hashTasks(tasks:Task[], taskGraph: TaskGraph, env: NodeJS.ProcessEnv) instead. This will be removed in v20
    */
   hashTasks(tasks: Task[], taskGraph: TaskGraph): Promise<Hash[]>;
 

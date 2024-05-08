@@ -9,6 +9,11 @@ import { major } from 'semver';
 
 let childProcess: ChildProcess;
 
+let env: NodeJS.ProcessEnv = {
+  SKIP_YARN_COREPACK_CHECK: 'true',
+  ...process.env,
+};
+
 /**
  * - set npm and yarn to use local registry
  * - start verdaccio
@@ -126,7 +131,7 @@ function createVerdaccioOptions(
 
 function setupNpm(options: VerdaccioExecutorSchema) {
   try {
-    execSync('npm --version');
+    execSync('npm --version', { env });
   } catch (e) {
     return () => {};
   }
@@ -134,16 +139,19 @@ function setupNpm(options: VerdaccioExecutorSchema) {
   let npmRegistryPath: string;
   try {
     npmRegistryPath = execSync(
-      `npm config get registry --location ${options.location}`
+      `npm config get registry --location ${options.location}`,
+      { env }
     )
       ?.toString()
       ?.trim()
       ?.replace('\u001b[2K\u001b[1G', ''); // strip out ansi codes
     execSync(
-      `npm config set registry http://localhost:${options.port}/ --location ${options.location}`
+      `npm config set registry http://localhost:${options.port}/ --location ${options.location}`,
+      { env }
     );
     execSync(
-      `npm config set //localhost:${options.port}/:_authToken="secretVerdaccioToken" --location ${options.location}`
+      `npm config set //localhost:${options.port}/:_authToken="secretVerdaccioToken" --location ${options.location}`,
+      { env }
     );
     logger.info(`Set npm registry to http://localhost:${options.port}/`);
   } catch (e) {
@@ -155,22 +163,27 @@ function setupNpm(options: VerdaccioExecutorSchema) {
   return () => {
     try {
       const currentNpmRegistryPath = execSync(
-        `npm config get registry --location ${options.location}`
+        `npm config get registry --location ${options.location}`,
+        { env }
       )
         ?.toString()
         ?.trim()
         ?.replace('\u001b[2K\u001b[1G', ''); // strip out ansi codes
       if (npmRegistryPath && currentNpmRegistryPath.includes('localhost')) {
         execSync(
-          `npm config set registry ${npmRegistryPath} --location ${options.location}`
+          `npm config set registry ${npmRegistryPath} --location ${options.location}`,
+          { env }
         );
         logger.info(`Reset npm registry to ${npmRegistryPath}`);
       } else {
-        execSync(`npm config delete registry --location ${options.location}`);
+        execSync(`npm config delete registry --location ${options.location}`, {
+          env,
+        });
         logger.info('Cleared custom npm registry');
       }
       execSync(
-        `npm config delete //localhost:${options.port}/:_authToken  --location ${options.location}`
+        `npm config delete //localhost:${options.port}/:_authToken  --location ${options.location}`,
+        { env }
       );
     } catch (e) {
       throw new Error(`Failed to reset npm registry: ${e.message}`);
@@ -182,7 +195,9 @@ function getYarnUnsafeHttpWhitelist(isYarnV1: boolean) {
   return !isYarnV1
     ? new Set<string>(
         JSON.parse(
-          execSync(`yarn config get unsafeHttpWhitelist --json`).toString()
+          execSync(`yarn config get unsafeHttpWhitelist --json`, {
+            env,
+          }).toString()
         )
       )
     : null;
@@ -196,12 +211,14 @@ function setYarnUnsafeHttpWhitelist(
     execSync(
       `yarn config set unsafeHttpWhitelist --json '${JSON.stringify(
         Array.from(currentWhitelist)
-      )}'` + (options.location === 'user' ? ' --home' : '')
+      )}'` + (options.location === 'user' ? ' --home' : ''),
+      { env }
     );
   } else {
     execSync(
       `yarn config unset unsafeHttpWhitelist` +
-        (options.location === 'user' ? ' --home' : '')
+        (options.location === 'user' ? ' --home' : ''),
+      { env }
     );
   }
 }
@@ -210,7 +227,8 @@ function setupYarn(options: VerdaccioExecutorSchema) {
   let isYarnV1;
 
   try {
-    isYarnV1 = major(execSync('yarn --version').toString().trim()) === 1;
+    isYarnV1 =
+      major(execSync('yarn --version', { env }).toString().trim()) === 1;
   } catch {
     // This would fail if yarn is not installed which is okay
     return () => {};
@@ -218,14 +236,17 @@ function setupYarn(options: VerdaccioExecutorSchema) {
   try {
     const registryConfigName = isYarnV1 ? 'registry' : 'npmRegistryServer';
 
-    const yarnRegistryPath = execSync(`yarn config get ${registryConfigName}`)
+    const yarnRegistryPath = execSync(`yarn config get ${registryConfigName}`, {
+      env,
+    })
       ?.toString()
       ?.trim()
       ?.replace('\u001b[2K\u001b[1G', ''); // strip out ansi codes
 
     execSync(
       `yarn config set ${registryConfigName} http://localhost:${options.port}/` +
-        (options.location === 'user' ? ' --home' : '')
+        (options.location === 'user' ? ' --home' : ''),
+      { env }
     );
 
     logger.info(`Set yarn registry to http://localhost:${options.port}/`);
@@ -248,7 +269,8 @@ function setupYarn(options: VerdaccioExecutorSchema) {
     return () => {
       try {
         const currentYarnRegistryPath = execSync(
-          `yarn config get ${registryConfigName}`
+          `yarn config get ${registryConfigName}`,
+          { env }
         )
           ?.toString()
           ?.trim()
@@ -256,7 +278,8 @@ function setupYarn(options: VerdaccioExecutorSchema) {
         if (yarnRegistryPath && currentYarnRegistryPath.includes('localhost')) {
           execSync(
             `yarn config set ${registryConfigName} ${yarnRegistryPath}` +
-              (options.location === 'user' ? ' --home' : '')
+              (options.location === 'user' ? ' --home' : ''),
+            { env }
           );
           logger.info(
             `Reset yarn ${registryConfigName} to ${yarnRegistryPath}`
@@ -266,7 +289,8 @@ function setupYarn(options: VerdaccioExecutorSchema) {
             `yarn config ${
               isYarnV1 ? 'delete' : 'unset'
             } ${registryConfigName}` +
-              (options.location === 'user' ? ' --home' : '')
+              (options.location === 'user' ? ' --home' : ''),
+            { env }
           );
           logger.info(`Cleared custom yarn ${registryConfigName}`);
         }

@@ -54,8 +54,8 @@ it('should have a greeting as the title', () => {
 
 exports[`app --style @emotion/styled should exclude styles 1`] = `
 "
-const { NxWebpackPlugin } = require('@nx/webpack');
-const { NxReactWebpackPlugin } = require('@nx/react');
+const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
+const { NxReactWebpackPlugin } = require('@nx/react/webpack-plugin');
 const { join } = require('path');
 
 module.exports = {
@@ -66,7 +66,7 @@ module.exports = {
     port: 4200
   },
   plugins: [
-    new NxWebpackPlugin({
+    new NxAppWebpackPlugin({
       tsConfig: './tsconfig.app.json',
       compiler: 'babel',
       main: './src/main.tsx',
@@ -145,8 +145,8 @@ nxViteTsPaths()],
 
 exports[`app --style none should exclude styles 1`] = `
 "
-const { NxWebpackPlugin } = require('@nx/webpack');
-const { NxReactWebpackPlugin } = require('@nx/react');
+const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
+const { NxReactWebpackPlugin } = require('@nx/react/webpack-plugin');
 const { join } = require('path');
 
 module.exports = {
@@ -157,7 +157,7 @@ module.exports = {
     port: 4200
   },
   plugins: [
-    new NxWebpackPlugin({
+    new NxAppWebpackPlugin({
       tsConfig: './tsconfig.app.json',
       compiler: 'babel',
       main: './src/main.tsx',
@@ -256,8 +256,8 @@ exports[`app setup React app with --bundler=vite should setup targets with vite 
 
 exports[`app should add custom webpack config 1`] = `
 "
-const { NxWebpackPlugin } = require('@nx/webpack');
-const { NxReactWebpackPlugin } = require('@nx/react');
+const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
+const { NxReactWebpackPlugin } = require('@nx/react/webpack-plugin');
 const { join } = require('path');
 
 module.exports = {
@@ -268,7 +268,7 @@ module.exports = {
     port: 4200
   },
   plugins: [
-    new NxWebpackPlugin({
+    new NxAppWebpackPlugin({
       tsConfig: './tsconfig.app.json',
       compiler: 'babel',
       main: './src/main.tsx',
@@ -374,8 +374,8 @@ nxViteTsPaths()],
 
 exports[`app should setup webpack 1`] = `
 "
-const { NxWebpackPlugin } = require('@nx/webpack');
-const { NxReactWebpackPlugin } = require('@nx/react');
+const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
+const { NxReactWebpackPlugin } = require('@nx/react/webpack-plugin');
 const { join } = require('path');
 
 module.exports = {
@@ -386,7 +386,7 @@ module.exports = {
     port: 4200
   },
   plugins: [
-    new NxWebpackPlugin({
+    new NxAppWebpackPlugin({
       tsConfig: './tsconfig.app.json',
       compiler: 'babel',
       main: './src/main.tsx',

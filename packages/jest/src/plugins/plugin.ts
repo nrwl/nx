@@ -3,45 +3,42 @@ import {
   CreateNodes,
   CreateNodesContext,
   joinPathFragments,
+  normalizePath,
   NxJsonConfiguration,
+  ProjectConfiguration,
   readJsonFile,
   TargetConfiguration,
   writeJsonFile,
 } from '@nx/devkit';
-import { dirname, join, relative, resolve } from 'path';
+import { dirname, join, normalize, relative, resolve } from 'path';
 
-import { readTargetDefaultsForTarget } from 'nx/src/project-graph/utils/project-configuration-utils';
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { existsSync, readdirSync, readFileSync } from 'fs';
 import { readConfig } from 'jest-config';
 import { projectGraphCacheDirectory } from 'nx/src/utils/cache-directory';
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
+import { clearRequireCache } from '@nx/devkit/src/utils/config-utils';
 import { getGlobPatternsFromPackageManagerWorkspaces } from 'nx/src/plugins/package-json-workspaces';
 import { combineGlobPatterns } from 'nx/src/utils/globs';
 import { minimatch } from 'minimatch';
 
 export interface JestPluginOptions {
   targetName?: string;
+  ciTargetName?: string;
 }
 
 const cachePath = join(projectGraphCacheDirectory, 'jest.hash');
 const targetsCache = existsSync(cachePath) ? readTargetsCache() : {};
 
-const calculatedTargets: Record<
-  string,
-  Record<string, TargetConfiguration>
-> = {};
+type JestTargets = Awaited<ReturnType<typeof buildJestTargets>>;
 
-function readTargetsCache(): Record<
-  string,
-  Record<string, TargetConfiguration>
-> {
+const calculatedTargets: JestTargets = {};
+
+function readTargetsCache(): Record<string, JestTargets> {
   return readJsonFile(cachePath);
 }
 
-function writeTargetsToCache(
-  targets: Record<string, Record<string, TargetConfiguration>>
-) {
+function writeTargetsToCache(targets: JestTargets) {
   writeJsonFile(cachePath, targets);
 }
 
@@ -96,17 +93,18 @@ export const createNodes: CreateNodes<JestPluginOptions> = [
     options = normalizeOptions(options);
 
     const hash = calculateHashForCreateNodes(projectRoot, options, context);
-    const targets =
+    const { targets, metadata } =
       targetsCache[hash] ??
       (await buildJestTargets(configFilePath, projectRoot, options, context));
 
-    calculatedTargets[hash] = targets;
+    calculatedTargets[hash] = { targets, metadata };
 
     return {
       projects: {
         [projectRoot]: {
           root: projectRoot,
-          targets: targets,
+          targets,
+          metadata,
         },
       },
     };
@@ -118,19 +116,19 @@ async function buildJestTargets(
   projectRoot: string,
   options: JestPluginOptions,
   context: CreateNodesContext
-) {
+): Promise<Pick<ProjectConfiguration, 'targets' | 'metadata'>> {
+  const absConfigFilePath = resolve(context.workspaceRoot, configFilePath);
+
+  if (require.cache[absConfigFilePath]) {
+    clearRequireCache();
+  }
+
   const config = await readConfig(
     {
       _: [],
       $0: undefined,
     },
-    resolve(context.workspaceRoot, configFilePath)
-  );
-
-  const targetDefaults = readTargetDefaultsForTarget(
-    options.targetName,
-    context.nxJsonConfiguration.targetDefaults,
-    'nx:run-commands'
+    absConfigFilePath
   );
 
   const namedInputs = getNamedInputs(projectRoot, context);
@@ -142,19 +140,86 @@ async function buildJestTargets(
     options: {
       cwd: projectRoot,
     },
+    metadata: {
+      technologies: ['jest'],
+      description: 'Run Jest Tests',
+    },
   });
 
-  if (!targetDefaults?.cache) {
-    target.cache = true;
-  }
-  if (!targetDefaults?.inputs) {
-    target.inputs = getInputs(namedInputs);
-  }
-  if (!targetDefaults?.outputs) {
-    target.outputs = getOutputs(projectRoot, config, context);
+  const cache = (target.cache = true);
+  const inputs = (target.inputs = getInputs(namedInputs));
+  const outputs = (target.outputs = getOutputs(projectRoot, config, context));
+
+  let metadata: ProjectConfiguration['metadata'];
+  if (options?.ciTargetName) {
+    // Resolve the version of `jest-runtime` that `jest` is using.
+    const jestPath = require.resolve('jest');
+    const jest = require(jestPath) as typeof import('jest');
+    // nx-ignore-next-line
+    const { default: Runtime } = require(require.resolve('jest-runtime', {
+      paths: [dirname(jestPath)],
+      // nx-ignore-next-line
+    })) as typeof import('jest-runtime');
+
+    const jestContext = await Runtime.createContext(config.projectConfig, {
+      maxWorkers: 1,
+      watchman: false,
+    });
+
+    const source = new jest.SearchSource(jestContext);
+
+    const specs = await source.getTestPaths(config.globalConfig);
+
+    const testPaths = new Set(specs.tests.map(({ path }) => path));
+
+    if (testPaths.size > 0) {
+      const groupName = 'E2E (CI)';
+      const targetGroup = [];
+      metadata = {
+        targetGroups: {
+          [groupName]: targetGroup,
+        },
+      };
+      const dependsOn: string[] = [];
+
+      targets[options.ciTargetName] = {
+        executor: 'nx:noop',
+        cache: true,
+        inputs,
+        outputs,
+        dependsOn,
+        metadata: {
+          technologies: ['jest'],
+          description: 'Run Jest Tests in CI',
+        },
+      };
+      targetGroup.push(options.ciTargetName);
+
+      for (const testPath of testPaths) {
+        const relativePath = normalizePath(
+          relative(join(context.workspaceRoot, projectRoot), testPath)
+        );
+        const targetName = `${options.ciTargetName}--${relativePath}`;
+        dependsOn.push(targetName);
+        targets[targetName] = {
+          command: `jest ${relativePath}`,
+          cache,
+          inputs,
+          outputs,
+          options: {
+            cwd: projectRoot,
+          },
+          metadata: {
+            technologies: ['jest'],
+            description: `Run Jest Tests in ${relativePath}`,
+          },
+        };
+        targetGroup.push(targetName);
+      }
+    }
   }
 
-  return targets;
+  return { targets, metadata };
 }
 
 function getInputs(
@@ -200,6 +265,7 @@ function getOutputs(
 
   return outputs;
 }
+
 function normalizeOptions(options: JestPluginOptions): JestPluginOptions {
   options ??= {};
   options.targetName ??= 'test';

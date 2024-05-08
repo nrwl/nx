@@ -1,5 +1,6 @@
 import {
   formatFiles,
+  joinPathFragments,
   readProjectConfiguration,
   runTasksInSerial,
   Tree,
@@ -13,38 +14,35 @@ import { Schema } from './schema';
  * are just adding the styles in `.storybook/preview.ts`
  */
 export async function storybookConfigurationGenerator(
-  host: Tree,
+  tree: Tree,
   options: Schema
 ) {
   const storybookConfigurationGenerator =
-    await vueStorybookConfigurationGenerator(host, {
+    await vueStorybookConfigurationGenerator(tree, {
       ...options,
       addPlugin: true,
     });
 
-  const projectConfiguration = readProjectConfiguration(host, options.project);
+  const { root } = readProjectConfiguration(tree, options.project);
 
-  const storybookConfigFolder =
-    projectConfiguration.targets?.storybook?.options?.configDir;
-
-  host.write(
-    `${storybookConfigFolder}/preview.${options.tsConfiguration ? 'ts' : 'js'}`,
+  tree.write(
+    joinPathFragments(
+      root,
+      '.storybook',
+      'preview.' + options.tsConfiguration ? 'ts' : 'js'
+    ),
     `import '../src/assets/css/styles.css';`
   );
 
-  updateJson(
-    host,
-    `${projectConfiguration.root}/tsconfig.storybook.json`,
-    (json) => {
-      json.compilerOptions = {
-        ...json.compilerOptions,
-        composite: true,
-      };
-      return json;
-    }
-  );
+  updateJson(tree, `${root}/tsconfig.storybook.json`, (json) => {
+    json.compilerOptions = {
+      ...json.compilerOptions,
+      composite: true,
+    };
+    return json;
+  });
 
-  await formatFiles(host);
+  await formatFiles(tree);
   return runTasksInSerial(storybookConfigurationGenerator);
 }
 

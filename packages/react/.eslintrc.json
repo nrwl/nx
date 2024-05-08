@@ -67,6 +67,7 @@
               "babel-plugin-emotion",
               "babel-plugin-styled-components",
               "css-loader",
+              "file-loader",
               "less-loader",
               "react-refresh",
               "rollup",

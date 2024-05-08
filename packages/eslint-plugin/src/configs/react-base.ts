@@ -8,7 +8,6 @@
  * This configuration is intended to be combined with other configs from this
  * package.
  */
-import restrictedGlobals from 'confusing-browser-globals';
 
 /**
  * Rule set originally adapted from:
@@ -90,7 +89,9 @@ export default {
     'no-template-curly-in-string': 'warn',
     'no-this-before-super': 'warn',
     'no-throw-literal': 'warn',
-    'no-restricted-globals': ['error'].concat(restrictedGlobals),
+    'no-restricted-globals': ['error'].concat(
+      require('confusing-browser-globals')
+    ),
     'no-unexpected-multiline': 'warn',
     'no-unreachable': 'warn',
     'no-unused-expressions': 'off',

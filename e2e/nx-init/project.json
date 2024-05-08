@@ -3,8 +3,22 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "e2e/nx-init",
   "projectType": "application",
+  "implicitDependencies": ["nx", "angular", "react", "js", "nest"],
   "targets": {
-    "e2e": {}
-  },
-  "implicitDependencies": ["nx"]
+    "e2e-ci--src/nx-init-angular.test.ts": {
+      "inputs": ["e2eInputs", "^production"]
+    },
+    "e2e-ci--src/nx-init-monorepo.test.ts": {
+      "inputs": ["e2eInputs", "^production"]
+    },
+    "e2e-ci--src/nx-init-nest.test.ts": {
+      "inputs": ["e2eInputs", "^production"]
+    },
+    "e2e-ci--src/nx-init-npm-repo.test.ts": {
+      "inputs": ["e2eInputs", "^production"]
+    },
+    "e2e-ci--src/nx-init-react.test.ts": {
+      "inputs": ["e2eInputs", "^production"]
+    }
+  }
 }

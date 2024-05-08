@@ -177,9 +177,7 @@ This setup instructs Nx to use the configuration under the `build` target of `my
 ## More Documentation
 
 - [Set up Compodoc for Storybook on Nx](/recipes/storybook/angular-storybook-compodoc)
-- [Information about the `storybook` tasks](/deprecated/storybook/angular-storybook-targets)
 - [Configuring styles and preprocessor options](/recipes/storybook/angular-configuring-styles)
-- [The `projectBuildConfig`](/deprecated/storybook/angular-project-build-config)
 
 You can find all Storybook-related Nx topics [here](/nx-api#storybook).
 
@@ -191,8 +189,3 @@ Here's more information on common migration scenarios for Storybook with Nx. For
 
 - [Set up Storybook version 7](/nx-api/storybook/documents/storybook-7-setup)
 - [Migrate to Storybook version 7](/nx-api/storybook/generators/migrate-7)
-
-#### Older migration scenarios
-
-- [Upgrading to Storybook 6](/deprecated/storybook/upgrade-storybook-v6-angular)
-- [Migrate to the new Storybook `webpackFinal` config](/deprecated/storybook/migrate-webpack-final-angular)

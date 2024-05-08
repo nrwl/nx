@@ -11,10 +11,10 @@ import { readNxJson } from '../src/config/nx-json';
 import { setupWorkspaceContext } from '../src/utils/workspace-context';
 
 (async () => {
+  const start = new Date();
   try {
     setupWorkspaceContext(workspaceRoot);
     if (isMainNxPackage() && fileExists(join(workspaceRoot, 'nx.json'))) {
-      const b = new Date();
       assertSupportedPlatform();
 
       try {
@@ -35,14 +35,17 @@ import { setupWorkspaceContext } from '../src/utils/workspace-context';
           });
         })
       );
-      if (process.env.NX_VERBOSE_LOGGING === 'true') {
-        const a = new Date();
-        console.log(`Nx postinstall steps took ${a.getTime() - b.getTime()}ms`);
-      }
     }
   } catch (e) {
     if (process.env.NX_VERBOSE_LOGGING === 'true') {
       console.log(e);
+    }
+  } finally {
+    if (process.env.NX_VERBOSE_LOGGING === 'true') {
+      const end = new Date();
+      console.log(
+        `Nx postinstall steps took ${end.getTime() - start.getTime()}ms`
+      );
     }
   }
 })();

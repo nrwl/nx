@@ -155,11 +155,6 @@ export default defineConfig({
 exports[`convertToCypressTen convertCypressProject should infer targets with --all flag 2`] = `
 {
   "e2e": {
-    "configurations": {
-      "production": {
-        "devServerTarget": "app:serve:production",
-      },
-    },
     "executor": "@nx/cypress:cypress",
     "options": {
       "cypressConfig": "app-e2e/cypress.config.ts",
@@ -168,11 +163,6 @@ exports[`convertToCypressTen convertCypressProject should infer targets with --a
     },
   },
   "e2e-custom": {
-    "configurations": {
-      "production": {
-        "devServerTarget": "app:serve:production",
-      },
-    },
     "executor": "@nx/cypress:cypress",
     "options": {
       "cypressConfig": "app-e2e/cypress.config.ts",
@@ -212,11 +202,6 @@ export default defineConfig({
 exports[`convertToCypressTen convertCypressProject should not break when an invalid target is passed in 2`] = `
 {
   "e2e": {
-    "configurations": {
-      "production": {
-        "devServerTarget": "app:serve:production",
-      },
-    },
     "executor": "@nx/cypress:cypress",
     "options": {
       "cypressConfig": "app-e2e/cypress.config.ts",
@@ -225,11 +210,6 @@ exports[`convertToCypressTen convertCypressProject should not break when an inva
     },
   },
   "e2e-custom": {
-    "configurations": {
-      "production": {
-        "devServerTarget": "app:serve:production",
-      },
-    },
     "executor": "@nx/cypress:cypress",
     "options": {
       "cypressConfig": "app-e2e/cypress.config.ts",

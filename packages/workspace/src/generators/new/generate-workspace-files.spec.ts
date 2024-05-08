@@ -230,4 +230,25 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
     const pnpm = tree.read('/proj/pnpm-workspace.yaml').toString();
     expect(pnpm).toContain('packages/*');
   });
+
+  it.each([
+    Preset.ReactStandalone,
+    Preset.VueStandalone,
+    Preset.NuxtStandalone,
+    Preset.AngularStandalone,
+    Preset.NodeStandalone,
+    Preset.NextJsStandalone,
+    Preset.TsStandalone,
+  ])('should create package scripts for %s preset', async (preset) => {
+    await generateWorkspaceFiles(tree, {
+      name: 'proj',
+      directory: 'proj',
+      preset,
+      defaultBase: 'main',
+      appName: 'demo',
+      isCustomPreset: false,
+    });
+
+    expect(readJson(tree, 'proj/package.json').scripts).toMatchSnapshot();
+  });
 });

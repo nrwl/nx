@@ -18,6 +18,40 @@ fetch('/assets/module-federation.manifest.json')
   .then(() => import('./bootstrap').catch(err => console.error(err)));"
 `;
 
+exports[`Init MF --federationType=dynamic should wire up existing remote to dynamic host correctly 1`] = `
+"import { NxWelcomeComponent } from './nx-welcome.component';
+import { Route } from '@angular/router';
+import { loadRemoteModule } from '@nx/angular/mf';
+
+export const appRoutes: Route[] = [
+    {
+    path: 'remote1',
+    loadChildren: () => loadRemoteModule('remote1', './Module').then(m => m.RemoteEntryModule)
+    },
+    {
+      path: '',
+      component: NxWelcomeComponent
+    },];
+"
+`;
+
+exports[`Init MF --federationType=dynamic should wire up existing remote to dynamic host correctly when --typescriptConfiguration=true 1`] = `
+"import { NxWelcomeComponent } from './nx-welcome.component';
+import { Route } from '@angular/router';
+import { loadRemoteModule } from '@nx/angular/mf';
+
+export const appRoutes: Route[] = [
+    {
+    path: 'remote1',
+    loadChildren: () => loadRemoteModule('remote1', './Module').then(m => m.RemoteEntryModule)
+    },
+    {
+      path: '',
+      component: NxWelcomeComponent
+    },];
+"
+`;
+
 exports[`Init MF should add a remote application and add it to a specified host applications router config 1`] = `
 "import { NxWelcomeComponent } from './nx-welcome.component';
 import { Route } from '@angular/router';

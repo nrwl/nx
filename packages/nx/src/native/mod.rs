@@ -1,10 +1,10 @@
 pub mod cache;
-pub mod command;
 pub mod glob;
 pub mod hasher;
 mod logger;
 pub mod plugins;
 pub mod project_graph;
+pub mod pseudo_terminal;
 pub mod tasks;
 mod types;
 mod utils;

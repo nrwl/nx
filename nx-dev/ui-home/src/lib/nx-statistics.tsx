@@ -4,12 +4,12 @@ import { LogoCloud } from './logo-cloud';
 export function NxStatistics(): JSX.Element {
   return (
     <div className="bg-white pt-12 dark:bg-slate-900 sm:pt-28">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-12">
+      <div className="mx-auto max-w-7xl px-4 pt-12 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-4xl text-center">
           <SectionHeading as="h2" variant="display" id="trusted-by-all">
             Trusted by developers, enterprises and open-source projects.
           </SectionHeading>
-          <p className="mt-3 text-lg text-slate-700 dark:text-slate-400 sm:mt-4 sr-only">
+          <p className="sr-only mt-3 text-lg text-slate-700 dark:text-slate-400 sm:mt-4">
             Whether your workspace{' '}
             <span className="font-semibold">
               has a single project or a thousand

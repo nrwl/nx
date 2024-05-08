@@ -258,7 +258,7 @@ export function calculateDependenciesFromTaskGraph(
     const depTask = taskGraph.tasks[taskName];
     const depProjectNode = projectGraph.nodes?.[depTask.target.project];
     if (depProjectNode?.type !== 'lib') {
-      return null;
+      continue;
     }
 
     let outputs = getOutputsForTargetAndConfiguration(
@@ -434,6 +434,7 @@ export function createTmpTsConfig(
     workspaceRoot,
     'tmp',
     projectRoot,
+    process.env.NX_TASK_TARGET_TARGET ?? 'build',
     'tsconfig.generated.json'
   );
   const parsedTSConfig = readTsConfigWithRemappedPaths(

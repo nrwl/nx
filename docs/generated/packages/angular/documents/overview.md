@@ -4,16 +4,24 @@ description: The Nx Plugin for Angular contains executors, generators, and utili
 ---
 
 The Nx Plugin for Angular contains executors, generators, and utilities for managing Angular applications and libraries
-within an Nx workspace. It provides:
+within an Nx workspace. It also enables using Angular Devkit builders and schematics in Nx workspaces.
 
-- Integration with libraries such as Storybook, Jest and Cypress.
+Among other things, it provides:
+
+- Integration with libraries such as:
+  - Cypress
+  - ESLint
+  - Jest
+  - Playwright
+  - Storybook
 - Generators to help scaffold code quickly, including:
   - Micro Frontends
   - Libraries, both internal to your codebase and publishable to npm
-  - Upgrading AngularJS applications
-  - Single Component Application Modules (SCAMs)
-- NgRx helpers.
-- Utilities for automatic workspace refactoring.
+  - Projects with Tailwind CSS
+- Executors providing extra capabilities on top of the Angular Devkit builders:
+  - Provide ESBuild plugins
+  - Provide custom webpack configurations
+- Utilities for automatic workspace refactoring
 
 {% callout type="note" title="Currently using the Angular CLI?" %}
 You can easily and mostly **automatically migrate from an Angular CLI** project to Nx! Learn
@@ -123,5 +131,4 @@ nx g @nx/angular:service my-service
 - [Angular Monorepo Tutorial](/getting-started/tutorials/angular-monorepo-tutorial)
 - [Migrating from the Angular CLI](/recipes/angular/migration/angular)
 - [Setup Module Federation with Angular and Nx](/concepts/module-federation/faster-builds-with-module-federation)
-- [Upgrading an AngularJS application to Angular](/recipes/angular/migration/angularjs)
 - [Using Tailwind CSS with Angular projects](/recipes/angular/using-tailwind-css-with-angular-projects)

@@ -1,6 +1,5 @@
 import { Tab } from '@headlessui/react';
 import { Button, SectionHeading } from '@nx/nx-dev/ui-common';
-import { AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { Fragment } from 'react';
 import { tabs } from './extensible-and-integrated/tabs';
@@ -35,7 +34,7 @@ export function ExtensibleAndIntegrated(): JSX.Element {
             <span className="font-medium">Stay in the flow!</span> Augment your
             editor with Nx Console, a dedicated extension available for{' '}
             <Link
-              href="/features/integrate-with-editors"
+              href="/getting-started/editor-setup"
               title="Install VSCode's native extension for Nx"
               className="font-medium text-blue-500 dark:text-sky-500"
             >
@@ -43,7 +42,7 @@ export function ExtensibleAndIntegrated(): JSX.Element {
             </Link>{' '}
             ,{' '}
             <Link
-              href="/features/integrate-with-editors"
+              href="/getting-started/editor-setup"
               className="font-medium text-blue-500 dark:text-sky-500"
               title="Install JetBrains' native plugin for Nx"
             >
@@ -51,7 +50,7 @@ export function ExtensibleAndIntegrated(): JSX.Element {
             </Link>{' '}
             and{' '}
             <Link
-              href="/features/integrate-with-editors#neovim"
+              href="/getting-started/editor-setup#neovim"
               className="font-medium text-blue-500 dark:text-sky-500"
             >
               Neovim

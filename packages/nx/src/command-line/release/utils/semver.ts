@@ -4,6 +4,7 @@
  */
 
 import { RELEASE_TYPES, ReleaseType, inc, valid } from 'semver';
+import { NxReleaseConfig } from '../config/config';
 import { GitCommit } from './git';
 
 export function isRelativeVersionKeyword(val: string): val is ReleaseType {
@@ -16,28 +17,22 @@ export function isValidSemverSpecifier(specifier: string): boolean {
   );
 }
 
-export interface ConventionalCommitsConfig {
-  types: {
-    [type: string]: {
-      semver: 'patch' | 'minor' | 'major';
-    };
-  };
-}
-
 // https://github.com/unjs/changelogen/blob/main/src/semver.ts
 export function determineSemverChange(
   commits: GitCommit[],
-  config: ConventionalCommitsConfig
+  config: NxReleaseConfig['conventionalCommits']
 ): 'patch' | 'minor' | 'major' | null {
   let [hasMajor, hasMinor, hasPatch] = [false, false, false];
   for (const commit of commits) {
-    const semverType = config.types[commit.type]?.semver;
+    const semverType = config.types[commit.type]?.semverBump;
     if (semverType === 'major' || commit.isBreaking) {
       hasMajor = true;
     } else if (semverType === 'minor') {
       hasMinor = true;
     } else if (semverType === 'patch') {
       hasPatch = true;
+    } else if (semverType === 'none' || !semverType) {
+      // do not report a change
     }
   }
 

@@ -1,8 +1,16 @@
 // TODO@ben: refactor to use HeadlessUI tabs
 import cx from 'classnames';
-import { createContext, ReactNode, useContext, useState } from 'react';
+import {
+  createContext,
+  ReactNode,
+  useContext,
+  useEffect,
+  useState,
+} from 'react';
 
 export const TabContext = createContext('');
+export const SELECTED_TAB_KEY = 'selectedTab';
+export const TAB_SELECTED_EVENT = 'tabSelectedEvent';
 
 export function Tabs({
   labels,
@@ -12,6 +20,18 @@ export function Tabs({
   children: ReactNode;
 }) {
   const [currentTab, setCurrentTab] = useState(labels[0]);
+  useEffect(() => {
+    const handleTabSelectedEvent = () => {
+      const selectedTab = localStorage.getItem(SELECTED_TAB_KEY);
+      if (selectedTab && labels.includes(selectedTab)) {
+        setCurrentTab(selectedTab);
+      }
+    };
+    handleTabSelectedEvent();
+    window.addEventListener(TAB_SELECTED_EVENT, handleTabSelectedEvent);
+    return () =>
+      window.removeEventListener(TAB_SELECTED_EVENT, handleTabSelectedEvent);
+  }, [labels]);
 
   return (
     <TabContext.Provider value={currentTab}>
@@ -24,7 +44,11 @@ export function Tabs({
                   key={label}
                   role="tab"
                   aria-selected={label === currentTab}
-                  onClick={() => setCurrentTab(label)}
+                  onClick={() => {
+                    localStorage.setItem(SELECTED_TAB_KEY, label);
+                    window.dispatchEvent(new Event(TAB_SELECTED_EVENT));
+                    setCurrentTab(label);
+                  }}
                   className={cx(
                     'whitespace-nowrap border-b-2 border-transparent p-2 text-sm font-medium',
                     label === currentTab

@@ -29,7 +29,7 @@ For more details on the mechanics, remember that Nx is an open source project, s
 
 Buildable libraries are similar to "publishable libraries" described above. Their scope however is not to distribute or publish them to some external registry. Thus they might not be optimized for bundling and distribution.
 
-Buildable libraries are mostly used for producing some pre-compiled output that can be directly referenced from an Nx workspace application without the need to again compile it. A typical scenario is to leverage Nx’s [incremental building](/concepts/more-concepts/incremental-builds) capabilities.
+Buildable libraries are mostly used for producing some pre-compiled output that can be directly referenced from an Nx workspace application without the need to again compile it. A typical scenario is to leverage Nx’s incremental building capabilities.
 
 {% callout type="warning" title="More details" %}
 In order for a buildable library to be pre-compiled, it can only depend on other buildable libraries. This allows you to take full advantage of incremental builds.

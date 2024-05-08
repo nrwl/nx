@@ -41,6 +41,12 @@
       "schema": "./src/generators/setup-build/schema.json",
       "alias": ["build"],
       "description": "setup-build generator"
+    },
+    "sync": {
+      "factory": "./src/generators/sync/sync#syncGenerator",
+      "schema": "./src/generators/sync/schema.json",
+      "description": "Synchronize TypeScript project references based on the project graph",
+      "hidden": true
     }
   }
 }

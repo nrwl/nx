@@ -1,4 +1,5 @@
 import { registerTsProject } from '@nx/js/src/internal';
+import { clearRequireCache } from '@nx/devkit/src/utils/config-utils';
 
 export function resolveUserDefinedWebpackConfig(
   path: string,
@@ -10,9 +11,7 @@ export function resolveUserDefinedWebpackConfig(
     // Clear cache if the path is in the cache
     if (require.cache[path]) {
       // Clear all entries because config may import other modules
-      for (const k of Object.keys(require.cache)) {
-        delete require.cache[k];
-      }
+      clearRequireCache();
     }
   }
 

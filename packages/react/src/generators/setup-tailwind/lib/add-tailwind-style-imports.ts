@@ -5,35 +5,29 @@ import {
   stripIndents,
   Tree,
 } from '@nx/devkit';
-import * as chalk from 'chalk';
 
 import { SetupTailwindOptions } from '../schema';
 
-const knownLocations = [
-  // Plain React
-  'src/styles.css',
-  'src/styles.scss',
-  'src/styles.less',
+// base directories and file types to simplify locating the stylesheet
+const baseDirs = ['src', 'pages', 'src/pages', 'src/app', 'app'];
+const fileNames = ['styles', 'global'];
+const extensions = ['.css', '.scss', '.less'];
 
-  // Next.js
-  'pages/styles.css',
-  'pages/styles.scss',
-  'pages/styles.less',
-
-  'app/global.css',
-  'app/global.scss',
-  'app/global.less',
-];
+const knownLocations = baseDirs.flatMap((dir) =>
+  fileNames.flatMap((name) => extensions.map((ext) => `${dir}/${name}${ext}`))
+);
 
 export function addTailwindStyleImports(
   tree: Tree,
   project: ProjectConfiguration,
   _options: SetupTailwindOptions
 ) {
-  const candidates = knownLocations.map((x) =>
-    joinPathFragments(project.root, x)
+  const candidates = knownLocations.map((currentPath) =>
+    joinPathFragments(project.root, currentPath)
   );
-  const stylesPath = candidates.find((x) => tree.exists(x));
+  const stylesPath = candidates.find((currentStylePath) =>
+    tree.exists(currentStylePath)
+  );
 
   if (stylesPath) {
     const content = tree.read(stylesPath).toString();

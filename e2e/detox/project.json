@@ -3,8 +3,19 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "e2e/detox",
   "projectType": "application",
+  "implicitDependencies": ["detox"],
   "targets": {
-    "e2e-macos": {}
-  },
-  "implicitDependencies": ["detox"]
+    "e2e-macos-ci--src/detox.test.ts": {
+      "inputs": ["e2eInputs", "^production"]
+    },
+    "e2e-macos-ci--src/detox-legacy.test.ts": {
+      "inputs": ["e2eInputs", "^production"]
+    },
+    "e2e-ci--src/detox-legacy.test.ts": {
+      "inputs": ["e2eInputs"]
+    },
+    "e2e-ci--src/detox.test.ts": {
+      "inputs": ["e2eInputs"]
+    }
+  }
 }

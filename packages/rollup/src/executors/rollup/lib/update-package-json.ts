@@ -52,7 +52,7 @@ export function updatePackageJson(
 
     packageJson.main = cjsExports['.'];
 
-    if (!hasEsmFormat) {
+    if (!hasEsmFormat && !options.skipTypeField) {
       packageJson.type = 'commonjs';
     }
 

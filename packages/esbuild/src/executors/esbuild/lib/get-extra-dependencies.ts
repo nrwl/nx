@@ -6,9 +6,14 @@ export function getExtraDependencies(
   graph: ProjectGraph
 ): DependentBuildableProjectNode[] {
   const deps = new Map<string, DependentBuildableProjectNode>();
+  const visited = new Set<string>(); // Track visited projects
+
   recur(projectName);
 
   function recur(currProjectName) {
+    if (visited.has(currProjectName)) return; // Check if project already visited
+    visited.add(currProjectName); // Mark project as visited
+
     const allDeps = graph.dependencies[currProjectName];
     const externalDeps = allDeps.reduce((acc, node) => {
       const found = graph.externalNodes[node.target];

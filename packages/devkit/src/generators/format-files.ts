@@ -1,13 +1,8 @@
-import type { Tree } from 'nx/src/generators/tree';
 import * as path from 'path';
 import type * as Prettier from 'prettier';
-import { requireNx } from '../../nx';
 
-let { updateJson, readJson, sortObjectByKeys } = requireNx();
-
-// TODO: Remove this in Nx 19 when Nx 16.7.0 is no longer supported
-sortObjectByKeys =
-  sortObjectByKeys ?? require('nx/src/utils/object-sort').sortObjectByKeys;
+import { readJson, Tree, updateJson } from 'nx/src/devkit-exports';
+import { sortObjectByKeys } from 'nx/src/devkit-internals';
 
 /**
  * Formats all the created or updated files using Prettier

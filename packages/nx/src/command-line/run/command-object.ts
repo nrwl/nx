@@ -4,6 +4,7 @@ import {
   withOverrides,
   withRunOneOptions,
 } from '../yargs-utils/shared-options';
+import { handleErrors } from '../../utils/params';
 
 export const yargsRunCommand: CommandModule = {
   command: 'run [project][:target][:configuration] [_..]',
@@ -16,7 +17,12 @@ export const yargsRunCommand: CommandModule = {
     You can skip the use of Nx cache by using the --skip-nx-cache option.`,
   builder: (yargs) => withRunOneOptions(withBatch(yargs)),
   handler: async (args) =>
-    (await import('./run-one')).runOne(process.cwd(), withOverrides(args)),
+    await handleErrors(
+      (args.verbose as boolean) ?? process.env.NX_VERBOSE_LOGGING === 'true',
+      async () => {
+        (await import('./run-one')).runOne(process.cwd(), withOverrides(args));
+      }
+    ),
 };
 
 /**
@@ -26,6 +32,15 @@ export const yargsNxInfixCommand: CommandModule = {
   ...yargsRunCommand,
   command: '$0 <target> [project] [_..]',
   describe: 'Run a target for a project',
-  handler: async (args) =>
-    (await import('./run-one')).runOne(process.cwd(), withOverrides(args, 0)),
+  handler: async (args) => {
+    await handleErrors(
+      (args.verbose as boolean) ?? process.env.NX_VERBOSE_LOGGING === 'true',
+      async () => {
+        return (await import('./run-one')).runOne(
+          process.cwd(),
+          withOverrides(args, 0)
+        );
+      }
+    );
+  },
 };

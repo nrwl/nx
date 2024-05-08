@@ -1,4 +1,4 @@
-import { names, readProjectConfiguration, Tree } from '@nx/devkit';
+import { names, readNxJson, readProjectConfiguration, Tree } from '@nx/devkit';
 import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { Schema } from '../schema';
 
@@ -23,8 +23,11 @@ export async function normalizeOptions(
       projectNameAndRootFormat: options.projectNameAndRootFormat,
       callingGenerator: '@nx/detox:application',
     });
-
-  options.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
+  const nxJson = readNxJson(host);
+  const addPlugin =
+    process.env.NX_ADD_PLUGINS !== 'false' &&
+    nxJson.useInferencePlugins !== false;
+  options.addPlugin ??= addPlugin;
 
   const { fileName: appFileName, className: appClassName } = names(
     options.appName || options.appProject

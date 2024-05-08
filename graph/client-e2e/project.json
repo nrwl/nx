@@ -8,28 +8,21 @@
       "executor": "@nx/cypress:cypress",
       "options": {
         "testingType": "e2e",
+        "skipServe": true,
         "browser": "chrome"
       },
       "configurations": {
         "dev": {
-          "cypressConfig": "graph/client-e2e/cypress.config.ts",
-          "devServerTarget": "graph-client:serve-base:dev-e2e",
-          "baseUrl": "http://localhost:4206"
+          "cypressConfig": "graph/client-e2e/cypress.config.ts"
         },
         "watch": {
-          "cypressConfig": "graph/client-e2e/cypress-watch-mode.config.ts",
-          "devServerTarget": "graph-client:serve-base:watch",
-          "baseUrl": "http://localhost:4204"
+          "cypressConfig": "graph/client-e2e/cypress-watch-mode.config.ts"
         },
         "release": {
-          "cypressConfig": "graph/client-e2e/cypress-release.config.ts",
-          "devServerTarget": "graph-client:serve-base:release",
-          "baseUrl": "http://localhost:4203"
+          "cypressConfig": "graph/client-e2e/cypress-release.config.ts"
         },
         "release-static": {
-          "cypressConfig": "graph/client-e2e/cypress-release-static.config.ts",
-          "devServerTarget": "graph-client:serve-base:release-static",
-          "baseUrl": "http://localhost:4205"
+          "cypressConfig": "graph/client-e2e/cypress-release-static.config.ts"
         }
       },
       "defaultConfiguration": "dev"
@@ -58,8 +51,7 @@
         ],
         "parallel": false
       }
-    },
-    "lint": {}
+    }
   },
   "implicitDependencies": ["graph-client"]
 }

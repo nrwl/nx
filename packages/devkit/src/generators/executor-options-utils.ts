@@ -1,9 +1,9 @@
-import type { Tree } from 'nx/src/generators/tree';
-import type { ProjectGraph } from 'nx/src/config/project-graph';
-import type { ProjectConfiguration } from 'nx/src/config/workspace-json-project-json';
-import { requireNx } from '../../nx';
-
-const { getProjects } = requireNx();
+import {
+  getProjects,
+  ProjectConfiguration,
+  ProjectGraph,
+  Tree,
+} from 'nx/src/devkit-exports';
 
 type CallBack<T> = (
   currentValue: T,
@@ -55,9 +55,7 @@ function forEachProjectConfig<Options>(
         continue;
       }
 
-      if (target.options) {
-        callback(target.options, projectName, targetName);
-      }
+      callback(target.options ?? {}, projectName, targetName);
 
       if (!target.configurations) {
         continue;

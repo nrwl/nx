@@ -2,7 +2,6 @@ import {
   getPackageManagerCommand,
   installPackagesTask,
   joinPathFragments,
-  names,
   PackageManager,
   Tree,
 } from '@nx/devkit';
@@ -131,7 +130,6 @@ function normalizeOptions(options: Schema): NormalizedSchema {
     ...options,
   };
 
-  normalized.name = names(options.name).fileName;
   if (!options.directory) {
     normalized.directory = normalized.name;
   }

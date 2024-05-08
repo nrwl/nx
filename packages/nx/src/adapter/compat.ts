@@ -44,6 +44,7 @@ export const allowedProjectExtensions = [
   'projectType',
   'release',
   'includedScripts',
+  'metadata',
 ] as const;
 
 // If we pass props on the workspace that angular doesn't know about,
@@ -75,6 +76,7 @@ export const allowedWorkspaceExtensions = [
   'parallel',
   'cacheDirectory',
   'useDaemonProcess',
+  'useInferencePlugins',
 ] as const;
 
 if (!patched) {

@@ -1,3 +1,4 @@
+import { DEFAULT_CONVENTIONAL_COMMITS_CONFIG } from '../../src/command-line/release/config/conventional-commits';
 import type { GitCommit } from '../../src/command-line/release/utils/git';
 import defaultChangelogRenderer from './index';
 
@@ -180,6 +181,7 @@ describe('defaultChangelogRenderer()', () => {
         changelogRenderOptions: {
           authors: true,
         },
+        conventionalCommitsConfig: DEFAULT_CONVENTIONAL_COMMITS_CONFIG,
       });
       expect(markdown).toMatchInlineSnapshot(`
           "## v1.1.0
@@ -213,6 +215,7 @@ describe('defaultChangelogRenderer()', () => {
         changelogRenderOptions: {
           authors: false,
         },
+        conventionalCommitsConfig: DEFAULT_CONVENTIONAL_COMMITS_CONFIG,
       });
       expect(markdown).toMatchInlineSnapshot(`
         "# v1.0.0
@@ -242,6 +245,7 @@ describe('defaultChangelogRenderer()', () => {
         changelogRenderOptions: {
           authors: true,
         },
+        conventionalCommitsConfig: DEFAULT_CONVENTIONAL_COMMITS_CONFIG,
       };
 
       expect(
@@ -333,6 +337,7 @@ describe('defaultChangelogRenderer()', () => {
         changelogRenderOptions: {
           authors: true,
         },
+        conventionalCommitsConfig: DEFAULT_CONVENTIONAL_COMMITS_CONFIG,
       };
 
       expect(
@@ -363,6 +368,7 @@ describe('defaultChangelogRenderer()', () => {
         changelogRenderOptions: {
           authors: true,
         },
+        conventionalCommitsConfig: DEFAULT_CONVENTIONAL_COMMITS_CONFIG,
       };
 
       expect(
@@ -435,6 +441,7 @@ describe('defaultChangelogRenderer()', () => {
         changelogRenderOptions: {
           authors: true,
         },
+        conventionalCommitsConfig: DEFAULT_CONVENTIONAL_COMMITS_CONFIG,
       });
 
       expect(markdown).toMatchInlineSnapshot(`
@@ -535,6 +542,7 @@ describe('defaultChangelogRenderer()', () => {
         changelogRenderOptions: {
           authors: true,
         },
+        conventionalCommitsConfig: DEFAULT_CONVENTIONAL_COMMITS_CONFIG,
       });
 
       expect(markdown).toMatchInlineSnapshot(`""`);
@@ -580,6 +588,7 @@ describe('defaultChangelogRenderer()', () => {
         changelogRenderOptions: {
           authors: true,
         },
+        conventionalCommitsConfig: DEFAULT_CONVENTIONAL_COMMITS_CONFIG,
       });
 
       expect(markdown).toMatchInlineSnapshot(`
@@ -641,6 +650,7 @@ describe('defaultChangelogRenderer()', () => {
         changelogRenderOptions: {
           authors: true,
         },
+        conventionalCommitsConfig: DEFAULT_CONVENTIONAL_COMMITS_CONFIG,
       });
 
       expect(markdown).toMatchInlineSnapshot(`

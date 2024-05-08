@@ -44,6 +44,7 @@ exports[`@nx/vite/plugin not root project should create nodes 1`] = `
           "executor": "@nx/web:file-server",
           "options": {
             "buildTarget": "build-something",
+            "spa": true,
           },
         },
       },
@@ -96,6 +97,7 @@ exports[`@nx/vite/plugin root project should create nodes 1`] = `
           "executor": "@nx/web:file-server",
           "options": {
             "buildTarget": "build",
+            "spa": true,
           },
         },
       },

@@ -89,7 +89,7 @@ If you want to learn more, check out our article on [Distributing CI - Binning a
 
 All the available Nx commands can be executed via the command line. But as your monorepo grows, with multiple teams and hundreds of projects, even just finding the project to run a command against can sometimes be difficult. Having a high quality IDE integration can be a time saver there.
 
-- Nx has [VSCode](/features/integrate-with-editors) and WebStorm/Intellij plugins.
+- Nx has [VSCode](/getting-started/editor-setup) and WebStorm/Intellij plugins.
 - Turborepo doesn’t have any plugins, and the maintainer has indicated there's no intention to provide editor support.
 
 Learn more [by watching this Egghead lesson](https://egghead.io/lessons/javascript-generate-new-projects-for-nx-with-nx-console).
@@ -170,9 +170,9 @@ It’s also worth noting that the backend of Nx Cloud is written in Kotlin. This
 
 Nx was released in 2016. Turborepo was open sourced in December of 2021. Turborepo doesn't have a large community yet, but it probably will at some point.
 
-- There are about [3 million downloads per week](https://www.npmjs.com/package/@nx/tao).
+- There are about [4 million downloads per week](https://www.npmjs.com/package/nx).
 - There are about 1 million+ unique [Nx Console](https://marketplace.visualstudio.com/items?itemName=nrwl.angular-console) (a plugin for VSCode) installations.
-- There is a rich ecosystem of [third-party plugins.](https://nx.dev/community)
+- There is a rich ecosystem of [third-party plugins](https://nx.dev/plugin-registry).
 
 From day 1 Nx has always been an **MIT-licensed open source project**, and we did everything to make sure companies using Nx won’t end up in the vendor lock-in. We clearly separated Nx the open source project and Nx Cloud the SAAS product. For instance, Nx Cloud is built using the public APIs Nx provides (you can build your own and some companies do). Nx Cloud docs are on a separate domain etc.
 

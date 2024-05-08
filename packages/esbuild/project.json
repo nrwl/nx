@@ -4,7 +4,6 @@
   "sourceRoot": "packages/esbuild",
   "projectType": "library",
   "targets": {
-    "test": {},
     "build-base": {
       "executor": "@nx/js:tsc",
       "options": {
@@ -56,7 +55,6 @@
     },
     "add-extra-dependencies": {
       "command": "node ./scripts/add-dependency-to-build.js esbuild @nrwl/esbuild"
-    },
-    "lint": {}
+    }
   }
 }

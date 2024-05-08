@@ -1,0 +1,70 @@
+{
+  "project": {
+    "name": "@tuskdesign/demo",
+    "type": "lib",
+    "data": {
+      "root": "apps/demo",
+      "targets": {
+        "build": {
+          "cache": true,
+          "dependsOn": ["^build"],
+          "inputs": [
+            "default",
+            "^default",
+            {
+              "externalDependencies": ["vite"]
+            }
+          ],
+          "outputs": ["{projectRoot}/dist"],
+          "executor": "nx:run-commands",
+          "options": {
+            "cwd": "apps/demo",
+            "command": "vite build"
+          },
+          "configurations": {}
+        }
+      },
+      "sourceRoot": "apps/demo",
+      "name": "@tuskdesign/demo",
+      "projectType": "library",
+      "includedScripts": [],
+      "implicitDependencies": [],
+      "tags": []
+    }
+  },
+  "sourceMap": {
+    "root": ["apps/demo/package.json", "nx/core/package-json-workspaces"],
+    "targets": ["apps/demo/package.json", "nx/core/package-json-workspaces"],
+    "targets.build": ["apps/demo/package.json", "nx/core/target-defaults"],
+    "targets.build.options": ["apps/demo/vite.config.ts", "@nx/vite/plugin"],
+    "targets.build.cache": [
+      "apps/demo/package.json",
+      "nx/core/target-defaults"
+    ],
+    "targets.build.dependsOn": [
+      "apps/demo/package.json",
+      "nx/core/target-defaults"
+    ],
+    "targets.build.inputs": ["apps/demo/vite.config.ts", "@nx/vite/plugin"],
+    "targets.build.outputs": ["apps/demo/vite.config.ts", "@nx/vite/plugin"],
+    "targets.build.executor": ["apps/demo/vite.config.ts", "@nx/vite/plugin"],
+    "targets.build.options.cwd": [
+      "apps/demo/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.build.options.command": [
+      "apps/demo/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "sourceRoot": ["apps/demo/package.json", "nx/core/package-json-workspaces"],
+    "name": ["apps/demo/package.json", "nx/core/package-json-workspaces"],
+    "projectType": [
+      "apps/demo/package.json",
+      "nx/core/package-json-workspaces"
+    ],
+    "includedScripts": [
+      "apps/demo/package.json",
+      "nx/core/package-json-workspaces"
+    ]
+  }
+}

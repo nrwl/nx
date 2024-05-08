@@ -61,6 +61,7 @@ export class MockProjectGraphService implements ProjectGraphService {
     focus: null,
     exclude: [],
     groupByFolder: false,
+    isPartial: false,
   };
 
   private taskGraphsResponse: TaskGraphClientResponse = {

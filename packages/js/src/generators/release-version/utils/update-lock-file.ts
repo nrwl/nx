@@ -2,6 +2,7 @@ import {
   detectPackageManager,
   getPackageManagerCommand,
   getPackageManagerVersion,
+  isWorkspacesEnabled,
   output,
 } from '@nx/devkit';
 import { execSync } from 'child_process';
@@ -41,6 +42,16 @@ export async function updateLockFile(
     if (verbose) {
       console.log(
         '\nSkipped lock file update because it is not necessary for Yarn Classic.'
+      );
+    }
+    return [];
+  }
+
+  const workspacesEnabled = isWorkspacesEnabled(packageManager, cwd);
+  if (!workspacesEnabled) {
+    if (verbose) {
+      console.log(
+        `\nSkipped lock file update because ${packageManager} workspaces are not enabled.`
       );
     }
     return [];

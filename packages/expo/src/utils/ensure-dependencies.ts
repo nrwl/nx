@@ -1,10 +1,12 @@
 import {
   addDependenciesToPackageJson,
+  detectPackageManager,
   type GeneratorCallback,
   type Tree,
 } from '@nx/devkit';
 import {
   babelPresetExpoVersion,
+  babelRuntimeVersion,
   expoMetroConfigVersion,
   expoMetroRuntimeVersion,
   expoSplashScreenVersion,
@@ -20,6 +22,7 @@ import {
 } from './versions';
 
 export function ensureDependencies(host: Tree): GeneratorCallback {
+  const isPnpm = detectPackageManager(host.root) === 'pnpm';
   return addDependenciesToPackageJson(
     host,
     {
@@ -38,6 +41,11 @@ export function ensureDependencies(host: Tree): GeneratorCallback {
       '@testing-library/jest-native': testingLibraryJestNativeVersion,
       'jest-expo': jestExpoVersion,
       'babel-preset-expo': babelPresetExpoVersion,
+      ...(isPnpm
+        ? {
+            '@babel/runtime': babelRuntimeVersion, // @babel/runtime is used by react-native-svg
+          }
+        : {}),
     }
   );
 }

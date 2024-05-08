@@ -1,6 +1,5 @@
 import { defineConfig } from 'cypress';
 import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
-import setupNodeEvents from './src/plugins/index';
 
 const cypressJsonConfig = {
   fileServerFolder: '.',
@@ -14,9 +13,14 @@ const cypressJsonConfig = {
 };
 export default defineConfig({
   e2e: {
-    ...nxE2EPreset(__dirname),
+    ...nxE2EPreset(__dirname, {
+      webServerCommands: {
+        default:
+          'pnpm exec nx run graph-client:serve --configuration=release-static',
+      },
+    }),
+    baseUrl: 'http://localhost:4205',
     ...cypressJsonConfig,
-    setupNodeEvents,
     /**
      * TODO(@nx/cypress): In Cypress v12,the testIsolation option is turned on by default.
      * This can cause tests to start breaking where not indended.

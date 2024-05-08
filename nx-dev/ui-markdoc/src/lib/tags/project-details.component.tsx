@@ -1,6 +1,6 @@
-import { useTheme } from '@nx/nx-dev/ui-theme';
 import { JSX, ReactElement, useEffect, useState } from 'react';
 import { ProjectDetails as ProjectDetailsUi } from '@nx/graph/ui-project-details';
+import { ExpandedTargetsProvider } from '@nx/graph/shared';
 
 export function Loading() {
   return (
@@ -26,7 +26,6 @@ export function ProjectDetails({
   jsonFile?: string;
   children: ReactElement;
 }): JSX.Element {
-  const [theme] = useTheme();
   const [parsedProps, setParsedProps] = useState<any>();
   const getData = async (path: string) => {
     const response = await fetch('/documentation/' + path, {
@@ -73,7 +72,7 @@ export function ProjectDetails({
   return (
     <div className="w-full place-content-center overflow-hidden rounded-md ring-1 ring-slate-200 dark:ring-slate-700">
       {title && (
-        <div className="relative flex justify-center p-2 border-b border-slate-200 bg-slate-100/50 dark:border-slate-700 dark:bg-slate-700/50 font-bold">
+        <div className="relative flex justify-center border-b border-slate-200 bg-slate-100/50 p-2 font-bold dark:border-slate-700 dark:bg-slate-700/50">
           {title}
         </div>
       )}
@@ -82,11 +81,13 @@ export function ProjectDetails({
           height ? `p-4 h-[${height}] overflow-y-auto` : 'p-4'
         }`}
       >
-        <ProjectDetailsUi
-          project={parsedProps.project}
-          sourceMap={parsedProps.sourceMap}
-          variant="compact"
-        />
+        <ExpandedTargetsProvider>
+          <ProjectDetailsUi
+            project={parsedProps.project}
+            sourceMap={parsedProps.sourceMap}
+            variant="compact"
+          />
+        </ExpandedTargetsProvider>
       </div>
     </div>
   );

@@ -96,6 +96,8 @@ export function registerProjectTargets(
 }
 ```
 
+For guidance on implementing a similar function in the v2 API, see the documentation on [createNodes](/extending-nx/recipes/project-graph-plugins#example-extending-projects-adding-targets).
+
 ### Multiple Matches
 
 It is possible that the registerProjectTargets function may be called multiple times for one project. This could occur in a few cases, one of which is demonstrated above.

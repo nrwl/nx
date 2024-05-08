@@ -1,7 +1,10 @@
 import { type Schema } from '../schema';
-import { logger, type ExecutorContext } from '@nx/devkit';
-import { fork } from 'child_process';
+import { type ExecutorContext, logger } from '@nx/devkit';
 import type { StaticRemotesConfig } from './parse-static-remotes-config';
+import { projectGraphCacheDirectory } from 'nx/src/utils/cache-directory';
+import { fork } from 'node:child_process';
+import { join } from 'node:path';
+import { createWriteStream } from 'node:fs';
 
 export async function buildStaticRemotes(
   staticRemotesConfig: StaticRemotesConfig,
@@ -44,10 +47,17 @@ export async function buildStaticRemotes(
         stdio: ['ignore', 'pipe', 'pipe', 'ipc'],
       }
     );
+    // File to debug build failures e.g. 2024-01-01T00_00_0_0Z-build.log'
+    const remoteBuildLogFile = join(
+      projectGraphCacheDirectory,
+      `${new Date().toISOString().replace(/[:\.]/g, '_')}-build.log`
+    );
+    const stdoutStream = createWriteStream(remoteBuildLogFile);
     staticProcess.stdout.on('data', (data) => {
       const ANSII_CODE_REGEX =
         /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g;
       const stdoutString = data.toString().replace(ANSII_CODE_REGEX, '');
+      stdoutStream.write(stdoutString);
       if (stdoutString.includes('Successfully ran target build')) {
         staticProcess.stdout.removeAllListeners('data');
         logger.info(
@@ -58,8 +68,11 @@ export async function buildStaticRemotes(
     });
     staticProcess.stderr.on('data', (data) => logger.info(data.toString()));
     staticProcess.on('exit', (code) => {
+      stdoutStream.end();
       if (code !== 0) {
-        throw new Error(`Remotes failed to build. See above for errors.`);
+        throw new Error(
+          `Remote failed to start. A complete log can be found in: ${remoteBuildLogFile}`
+        );
       }
     });
     process.on('SIGTERM', () => staticProcess.kill('SIGTERM'));

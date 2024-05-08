@@ -127,6 +127,26 @@
       "items": {
         "type": "string"
       }
+    },
+    "release": {
+      "type": "object",
+      "description": "Configuration for the nx release commands.",
+      "properties": {
+        "version": {
+          "type": "object",
+          "description": "Configuration for the nx release version command.",
+          "properties": {
+            "generator": {
+              "type": "string",
+              "description": "The version generator to use. Defaults to @nx/js:release-version."
+            },
+            "generatorOptions": {
+              "type": "object",
+              "description": "Options for the version generator."
+            }
+          }
+        }
+      }
     }
   },
   "definitions": {

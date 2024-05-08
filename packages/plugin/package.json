@@ -22,13 +22,11 @@
   },
   "homepage": "https://nx.dev",
   "generators": "./generators.json",
-  "executors": "./executors.json",
   "ng-update": {
     "requirements": {},
     "migrations": "./migrations.json"
   },
   "dependencies": {
-    "@phenomnomnominal/tsquery": "~5.0.1",
     "fs-extra": "^11.1.0",
     "tslib": "^2.3.0",
     "@nx/devkit": "file:../devkit",

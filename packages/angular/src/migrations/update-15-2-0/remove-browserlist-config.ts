@@ -1,3 +1,5 @@
+import 'nx/src/internal-testing-utils/mock-project-graph';
+
 import type { Tree } from '@nx/devkit';
 import { logger, visitNotIgnoredFiles } from '@nx/devkit';
 import { basename } from 'path';

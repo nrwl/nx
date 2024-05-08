@@ -19,6 +19,10 @@ import { RawProjectGraphDependency } from '../project-graph-builder';
 export interface CreateNodesContext {
   readonly nxJsonConfiguration: NxJsonConfiguration;
   readonly workspaceRoot: string;
+  /**
+   * The subset of configuration files which match the createNodes pattern
+   */
+  readonly configFiles: readonly string[];
 }
 
 /**
@@ -94,6 +98,22 @@ export type CreateDependencies<T = unknown> = (
   context: CreateDependenciesContext
 ) => RawProjectGraphDependency[] | Promise<RawProjectGraphDependency[]>;
 
+export type CreateMetadataContext = {
+  readonly nxJsonConfiguration: NxJsonConfiguration;
+  readonly workspaceRoot: string;
+};
+
+export type ProjectsMetadata = Record<
+  string,
+  Pick<ProjectConfiguration, 'metadata'>
+>;
+
+export type CreateMetadata<T = unknown> = (
+  graph: ProjectGraph,
+  options: T | undefined,
+  context: CreateMetadataContext
+) => ProjectsMetadata | Promise<ProjectsMetadata>;
+
 /**
  * A plugin for Nx which creates nodes and dependencies for the {@link ProjectGraph}
  */
@@ -104,13 +124,17 @@ export type NxPluginV2<TOptions = unknown> = {
    * Provides a file pattern and function that retrieves configuration info from
    * those files. e.g. { '**\/*.csproj': buildProjectsFromCsProjFile }
    */
-  createNodes?: CreateNodes;
+  createNodes?: CreateNodes<TOptions>;
 
-  // Todo(@AgentEnder): This shouldn't be a full processor, since its only responsible for defining edges between projects. What do we want the API to be?
   /**
    * Provides a function to analyze files to create dependencies for the {@link ProjectGraph}
    */
   createDependencies?: CreateDependencies<TOptions>;
+
+  /**
+   * Provides a function to create metadata for the {@link ProjectGraph}
+   */
+  createMetadata?: CreateMetadata<TOptions>;
 };
 
 /**

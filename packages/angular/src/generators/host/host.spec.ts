@@ -1,4 +1,6 @@
-import { updateJson } from '@nx/devkit';
+import 'nx/src/internal-testing-utils/mock-project-graph';
+
+import { readJson, updateJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import {
   getProjects,
@@ -607,5 +609,27 @@ describe('Host App Generator', () => {
         tree.read('apps/foo/host-app/module-federation.config.ts', 'utf-8')
       ).toContain(`'remote1','foo-remote2','foo-remote3'`);
     });
+  });
+
+  it('should not touch the package.json when run with `--skipPackageJson`', async () => {
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    let initialPackageJson;
+    updateJson(tree, 'package.json', (json) => {
+      json.dependencies = {};
+      json.devDependencies = {};
+      initialPackageJson = json;
+
+      return json;
+    });
+
+    await generateTestHostApplication(tree, {
+      name: 'test',
+      ssr: true,
+      skipFormat: true,
+      skipPackageJson: true,
+    });
+
+    const packageJson = readJson(tree, 'package.json');
+    expect(packageJson).toEqual(initialPackageJson);
   });
 });

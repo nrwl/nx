@@ -1,9 +1,22 @@
-import { requireNx } from '../../nx';
+import { TempFs } from '../../internal-testing-utils';
 import { convertNxExecutor } from './convert-nx-executor';
 
-const { workspaceRoot } = requireNx();
-
 describe('Convert Nx Executor', () => {
+  let fs: TempFs;
+
+  beforeAll(async () => {
+    fs = new TempFs('convert-nx-executor');
+    // The tests in this file don't actually care about the files in the temp dir.
+    // The converted executor reads project configuration from the workspace root,
+    // which is set to the temp dir in the tests. If there are no files in the temp
+    // dir, the glob search currently hangs. So we create a dummy file to prevent that.
+    await fs.createFile('blah.json', JSON.stringify({}));
+  });
+
+  afterAll(() => {
+    fs.cleanup();
+  });
+
   it('should convertNxExecutor to builder correctly and produce the same output', async () => {
     // ARRANGE
     const { schema } = require('@angular-devkit/core');
@@ -16,7 +29,7 @@ describe('Convert Nx Executor', () => {
     const registry = new schema.CoreSchemaRegistry();
     registry.addPostTransform(schema.transforms.addUndefinedDefaults);
     const testArchitectHost = new TestingArchitectHost();
-    testArchitectHost.workspaceRoot = workspaceRoot;
+    testArchitectHost.workspaceRoot = fs.tempDir;
     const architect = new Architect(testArchitectHost, registry);
 
     const convertedExecutor = convertNxExecutor(echoExecutor);

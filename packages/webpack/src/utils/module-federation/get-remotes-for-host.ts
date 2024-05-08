@@ -17,6 +17,7 @@ function extractRemoteProjectsFromConfig(
   pathToManifestFile?: string
 ) {
   const remotes = [];
+  const dynamicRemotes = [];
   if (pathToManifestFile && existsSync(pathToManifestFile)) {
     const moduleFederationManifestJson = readFileSync(
       pathToManifestFile,
@@ -35,14 +36,14 @@ function extractRemoteProjectsFromConfig(
             typeof key === 'string' && typeof parsedManifest[key] === 'string'
         )
       ) {
-        remotes.push(...Object.keys(parsedManifest));
+        dynamicRemotes.push(...Object.keys(parsedManifest));
       }
     }
   }
   const staticRemotes =
     config.remotes?.map((r) => (Array.isArray(r) ? r[0] : r)) ?? [];
   remotes.push(...staticRemotes);
-  return remotes;
+  return { remotes, dynamicRemotes };
 }
 
 function collectRemoteProjects(
@@ -64,7 +65,7 @@ function collectRemoteProjects(
     context.root,
     remoteProjectRoot
   );
-  const remoteProjectRemotes =
+  const { remotes: remoteProjectRemotes } =
     extractRemoteProjectsFromConfig(remoteProjectConfig);
 
   remoteProjectRemotes.forEach((r) =>
@@ -80,7 +81,10 @@ export function getRemotes(
   pathToManifestFile?: string
 ) {
   const collectedRemotes = new Set<string>();
-  const remotes = extractRemoteProjectsFromConfig(config, pathToManifestFile);
+  const { remotes, dynamicRemotes } = extractRemoteProjectsFromConfig(
+    config,
+    pathToManifestFile
+  );
   remotes.forEach((r) => collectRemoteProjects(r, collectedRemotes, context));
   const remotesToSkip = new Set(
     findMatchingProjects(skipRemotes, context.projectGraph.nodes) ?? []
@@ -98,10 +102,14 @@ export function getRemotes(
     (r) => !remotesToSkip.has(r)
   );
 
+  const knownDynamicRemotes = dynamicRemotes.filter(
+    (r) => !remotesToSkip.has(r)
+  );
+
   logger.info(
     `NX Starting module federation dev-server for ${chalk.bold(
       context.projectName
-    )} with ${knownRemotes.length} remotes`
+    )} with ${[...knownRemotes, ...knownDynamicRemotes].length} remotes`
   );
 
   const devServeApps = new Set(
@@ -113,14 +121,20 @@ export function getRemotes(
   );
 
   const staticRemotes = knownRemotes.filter((r) => !devServeApps.has(r));
-  const devServeRemotes = knownRemotes.filter((r) => devServeApps.has(r));
-  const remotePorts = devServeRemotes.map(
+  const devServeRemotes = [...knownRemotes, ...dynamicRemotes].filter((r) =>
+    devServeApps.has(r)
+  );
+  const staticDynamicRemotes = knownDynamicRemotes.filter(
+    (r) => !devServeApps.has(r)
+  );
+  const remotePorts = [...devServeRemotes, ...staticDynamicRemotes].map(
     (r) => context.projectGraph.nodes[r].data.targets['serve'].options.port
   );
 
   return {
     staticRemotes,
     devRemotes: devServeRemotes,
+    dynamicRemotes: staticDynamicRemotes,
     remotePorts,
   };
 }

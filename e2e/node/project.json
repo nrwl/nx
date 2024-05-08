@@ -3,8 +3,22 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "e2e/node",
   "projectType": "application",
+  "implicitDependencies": ["node", "nest", "webpack"],
   "targets": {
-    "e2e": {}
-  },
-  "implicitDependencies": ["node", "nest", "webpack"]
+    "e2e-ci--src/node.test.ts": {
+      "inputs": ["e2eInputs", "^production"]
+    },
+    "e2e-ci--src/node-esbuild.test.ts": {
+      "inputs": ["e2eInputs", "^production"]
+    },
+    "e2e-ci--src/node-server.test.ts": {
+      "inputs": ["e2eInputs", "^production"]
+    },
+    "e2e-ci--src/webpack.test.ts": {
+      "inputs": ["e2eInputs"]
+    },
+    "e2e-ci--src/node-webpack.test.ts": {
+      "inputs": ["e2eInputs", "^production"]
+    }
+  }
 }

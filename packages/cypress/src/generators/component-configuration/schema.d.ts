@@ -10,4 +10,5 @@ export interface CypressComponentConfigurationSchema {
    * @internal
    */
   addExplicitTargets?: boolean;
+  framework?: 'next';
 }

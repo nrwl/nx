@@ -26,10 +26,11 @@ export async function addE2e(host: Tree, options: NormalizedSchema) {
     >('@nx/cypress', nxVersion);
 
     if (!hasPlugin) {
-      webStaticServeGenerator(host, {
+      await webStaticServeGenerator(host, {
         buildTarget: `${options.projectName}:build`,
         outputPath: `${options.outputPath}/out`,
         targetName: 'serve-static',
+        spa: true,
       });
     }
 
@@ -47,14 +48,12 @@ export async function addE2e(host: Tree, options: NormalizedSchema) {
       project: options.e2eProjectName,
       directory: 'src',
       skipFormat: true,
-      devServerTarget: `${options.projectName}:${
-        hasPlugin ? 'start' : 'serve'
-      }`,
-      baseUrl: `http://localhost:${hasPlugin ? '3000' : '4200'}`,
+      devServerTarget: `${options.projectName}:${options.e2eWebServerTarget}`,
+      baseUrl: options.e2eWebServerAddress,
       jsx: true,
       webServerCommands: hasPlugin
         ? {
-            default: `nx run ${options.projectName}:start`,
+            default: `nx run ${options.projectName}:${options.e2eWebServerTarget}`,
           }
         : undefined,
       ciWebServerCommand: hasPlugin
@@ -69,6 +68,7 @@ export async function addE2e(host: Tree, options: NormalizedSchema) {
       root: options.e2eProjectRoot,
       sourceRoot: joinPathFragments(options.e2eProjectRoot, 'src'),
       targets: {},
+      tags: [],
       implicitDependencies: [options.projectName],
     });
     return configurationGenerator(host, {
@@ -80,9 +80,9 @@ export async function addE2e(host: Tree, options: NormalizedSchema) {
       js: false,
       linter: options.linter,
       setParserOptionsProject: options.setParserOptionsProject,
-      webServerAddress: `http://127.0.0.1:${hasPlugin ? '3000' : '4200'}`,
+      webServerAddress: `http://127.0.0.1:${options.e2ePort}`,
       webServerCommand: `${getPackageManagerCommand().exec} nx ${
-        hasPlugin ? 'start' : 'serve'
+        options.e2eWebServerTarget
       } ${options.projectName}`,
       addPlugin: options.addPlugin,
     });

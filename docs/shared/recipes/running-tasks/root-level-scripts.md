@@ -5,7 +5,7 @@ src="https://www.youtube.com/embed/PRURABLaS8s"
 title="Run root-level NPM scripts with Nx"
 /%}
 
-There are often tasks in a codebase that apply to the whole codebase rather than a single project. Starting with version 15.3.0 of Nx, you can run npm scripts directly from the root `package.json`.
+There are often tasks in a codebase that apply to the whole codebase rather than a single project. Nx can run npm scripts directly from the root `package.json`.
 
 Let's say your root `package.json` looks like this:
 
@@ -80,7 +80,7 @@ Our fully configured example would look like this:
 }
 ```
 
-To cache the `docs` target, you can add `docs` to the `cacheableOperations` in `nx.json` and then your output would look like this:
+To cache the `docs` target, you can set `cache: true` on the `docs` target shown in the `package.json` above. Your output would then look as follows:
 
 ```{% command="nx docs" path="~/myorg" %}
 > nx run myorg:docs  [existing outputs match the cache, left as is]
@@ -96,7 +96,7 @@ NX   Successfully ran target docs for project myorg (31ms)
 Nx read the output from the cache instead of running the command for 1 out of 1 tasks.
 ```
 
-Read more about [cacheableOperations](/features/cache-task-results) and fine-tuning caching with [task inputs](/recipes/running-tasks/configure-inputs).
+Read more about [caching task results](/features/cache-task-results) and fine-tuning caching with [task inputs](/recipes/running-tasks/configure-inputs).
 
 ## Keep using NPM to run scripts rather than Nx
 

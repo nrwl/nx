@@ -11,7 +11,7 @@ export function TargetConfigurationProperty({
 }: RenderPropertyProps): JSX.Element | null {
   if (typeof data === 'string') {
     return (
-      <span className="font-mono flex shrink-1 text-sm">
+      <span className="flex font-mono text-sm">
         {data}
         {children}
       </span>
@@ -20,7 +20,7 @@ export function TargetConfigurationProperty({
     return (
       <ul>
         {data.map((item, index) => (
-          <li key={index} className="font-mono flex shrink-1 text-sm">
+          <li key={index} className="flex font-mono text-sm">
             {String(item)}
             {children}
           </li>
@@ -31,7 +31,7 @@ export function TargetConfigurationProperty({
     return (
       <ul>
         {Object.entries(data).map(([key, value], index) => (
-          <li key={index} className="font-mono flex shrink-1 text-sm">
+          <li key={index} className="flex font-mono text-sm">
             <strong>{key}</strong>: {String(value)}
             {children}
           </li>

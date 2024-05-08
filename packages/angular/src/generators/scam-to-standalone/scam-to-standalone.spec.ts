@@ -1,3 +1,5 @@
+import 'nx/src/internal-testing-utils/mock-project-graph';
+
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import scamGenerator from '../scam/scam';
 import { generateTestApplication } from '../utils/testing';

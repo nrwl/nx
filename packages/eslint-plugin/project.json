@@ -4,7 +4,6 @@
   "sourceRoot": "packages/eslint-plugin",
   "projectType": "library",
   "targets": {
-    "test": {},
     "build-base": {
       "executor": "@nx/js:tsc",
       "options": {
@@ -54,7 +53,6 @@
     },
     "add-extra-dependencies": {
       "command": "node ./scripts/add-dependency-to-build.js eslint-plugin @nrwl/eslint-plugin-nx"
-    },
-    "lint": {}
+    }
   }
 }

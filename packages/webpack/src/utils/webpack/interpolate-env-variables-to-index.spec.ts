@@ -2,7 +2,7 @@ import { interpolateEnvironmentVariablesToIndex } from './interpolate-env-variab
 
 describe('interpolateEnvironmentVariablesToIndex()', () => {
   const envDefaults = {
-    NX_VARIABLE: 'foo',
+    NX_PUBLIC_VARIABLE: 'foo',
     SOME_OTHER_VARIABLE: 'bar',
     DEPLOY_URL: 'baz',
   };
@@ -14,7 +14,7 @@ describe('interpolateEnvironmentVariablesToIndex()', () => {
 
   test('default env variables', () => {
     const content = `
-<div>Nx Variable: %NX_VARIABLE%</div>
+<div>Nx Variable: %NX_PUBLIC_VARIABLE%</div>
 <div>Some other variable: %SOME_OTHER_VARIABLE%</div>
 <div>Deploy Url: %DEPLOY_URL%</div>
 `;
@@ -28,7 +28,7 @@ describe('interpolateEnvironmentVariablesToIndex()', () => {
 
   test('Deploy url set as option overrides DEPLOY_URL env variable', () => {
     const content = `
-<div>Nx Variable: %NX_VARIABLE%</div>
+<div>Nx Variable: %NX_PUBLIC_VARIABLE%</div>
 <div>Some other variable: %SOME_OTHER_VARIABLE%</div>
 <div>Deploy Url: %DEPLOY_URL%</div>
 `;
@@ -45,7 +45,7 @@ describe('interpolateEnvironmentVariablesToIndex()', () => {
   test('No deploy url provided via either option', () => {
     delete process.env.DEPLOY_URL;
     const content = `
-<div>Nx Variable: %NX_VARIABLE%</div>
+<div>Nx Variable: %NX_PUBLIC_VARIABLE%</div>
 <div>Some other variable: %SOME_OTHER_VARIABLE%</div>
 <div>Deploy Url: %DEPLOY_URL%</div>
 `;
@@ -60,7 +60,7 @@ describe('interpolateEnvironmentVariablesToIndex()', () => {
   test('NX_ prefixed option present in index.html, but not present in process.env', () => {
     delete process.env.DEPLOY_URL;
     const content = `
-<div>Nx Variable: %NX_VARIABLE%</div>
+<div>Nx Variable: %NX_PUBLIC_VARIABLE%</div>
 <div>Some other variable: %SOME_OTHER_VARIABLE%</div>
 <div>Some other nx_variable: %NX_SOME_OTHER_VARIABLE%</div>
 <div>Deploy Url: %DEPLOY_URL%</div>

@@ -26,8 +26,10 @@ pub fn hash_file_path<P: AsRef<Path>>(path: P) -> Option<String> {
         trace!("Failed to read file: {:?}", path);
         return None;
     };
+    let hash = hash(&content);
+    trace!("Hashed file {:?} - {:?}", path, hash);
 
-    Some(hash(&content))
+    Some(hash)
 }
 
 #[cfg(test)]

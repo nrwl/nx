@@ -30,7 +30,9 @@ export async function setupSsr(tree: Tree, schema: Schema) {
     targets.build.executor === '@angular-devkit/build-angular:application' ||
     targets.build.executor === '@nx/angular:application';
 
-  addDependencies(tree, isUsingApplicationBuilder);
+  if (!schema.skipPackageJson) {
+    addDependencies(tree, isUsingApplicationBuilder);
+  }
   generateSSRFiles(tree, options, isUsingApplicationBuilder);
 
   if (!options.standalone) {

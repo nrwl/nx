@@ -1,3 +1,5 @@
+import 'nx/src/internal-testing-utils/mock-project-graph';
+
 import {
   readJson,
   readProjectConfiguration,
@@ -238,6 +240,8 @@ describe('updateImports', () => {
       importerFilePath,
       `
         import { MyClass } from '@proj/my-source';
+        
+        export { MyClass };
         export { MyOtherClass } from '@proj/my-source';
         
         export class MyExtendedClass extends MyClass {};

@@ -1,8 +1,9 @@
+import 'nx/src/internal-testing-utils/mock-project-graph';
+
 import {
   addProjectConfiguration,
   NxJsonConfiguration,
   readJson,
-  readProjectConfiguration,
   Tree,
   updateJson,
 } from '@nx/devkit';

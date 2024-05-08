@@ -82,11 +82,16 @@ module.exports = function (path, options) {
     // Fallback to using typescript
     compilerSetup = compilerSetup || getCompilerSetup(options.rootDir);
     const { compilerOptions, host } = compilerSetup;
-    return ts.resolveModuleName(
+    const name = ts.resolveModuleName(
       path,
       join(options.basedir, 'fake-placeholder.ts'),
       compilerOptions,
       host
     ).resolvedModule.resolvedFileName;
+    if (name.startsWith('..')) {
+      return path_1.join(options.rootDir, name);
+    } else {
+      return name;
+    }
   }
 };

@@ -1,4 +1,4 @@
-import type { Tree } from 'nx/src/generators/tree';
+import type { Tree } from 'nx/src/devkit-exports';
 import type { ScriptTarget, ModuleKind } from 'typescript';
 import { typescriptVersion } from '../utils/versions';
 import { ensurePackage } from '../utils/package-json';

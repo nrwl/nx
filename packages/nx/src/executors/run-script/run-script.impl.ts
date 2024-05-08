@@ -1,9 +1,11 @@
 import * as path from 'path';
 import type { ExecutorContext } from '../../config/misc-interfaces';
-import { runCommand } from '../../native';
-import { PseudoTtyProcess } from '../../utils/child-process';
 import { getPackageManagerCommand } from '../../utils/package-manager';
 import { execSync } from 'child_process';
+import {
+  getPseudoTerminal,
+  PseudoTerminal,
+} from '../../tasks-runner/pseudo-terminal';
 
 export interface RunScriptOptions {
   script: string;
@@ -32,7 +34,7 @@ export default async function (
         .join(path.delimiter) ?? '';
     env.PATH = filteredPath;
 
-    if (process.stdout.isTTY) {
+    if (PseudoTerminal.isSupported()) {
       await ptyProcess(command, cwd, env);
     } else {
       nodeProcess(command, cwd, env);
@@ -60,8 +62,10 @@ async function ptyProcess(
   cwd: string,
   env: Record<string, string>
 ) {
+  const terminal = getPseudoTerminal();
+
   return new Promise<void>((res, rej) => {
-    const cp = new PseudoTtyProcess(runCommand(command, cwd, env));
+    const cp = terminal.runCommand(command, { cwd, jsEnv: env });
     cp.onExit((code) => {
       if (code === 0) {
         res();

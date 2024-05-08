@@ -20,7 +20,7 @@ In essence, you have a Storybook running, which will be the host of the embeded 
 
 All you need is a URL of a live Storybook, and a "host" Storybook. In the `.storybook/main.ts` file of the "host" Storybook, inside `module.exports` you add a new `refs` attribute, which will contain the link(s) for the composed Storybook(s).
 
-In the example below, we have a host Storybook running on local port 4400 (http://localhost:4400) - not displayed here. In it, we want to compose three other Storybooks. The "one-composed" and "two-composed", running on local ports `4401` and `4402` accordingly, as well as the [Storybook website's Storybook](https://next--storybookjs.netlify.app/official-storybook) which is live on the address that you see.
+In the example below, we have a host Storybook running on local port 4400 (http://localhost:4400) - not displayed here. In it, we want to compose three other Storybooks. The "one-composed" and "two-composed", running on local ports `4401` and `4402` accordingly, as well as the [Storybook Design System's Storybook](https://master--5ccbc373887ca40020446347.chromatic.com/) which is live on the address that you see.
 
 ```javascript
 // .storybook/main.ts of our Host Storybook - assuming it's running on port 4400
@@ -40,7 +40,7 @@ const config: StorybookConfig = {
     },
     'storybook-website-storybook': {
       title: 'The Storybook of the Storybook website',
-      url: 'https://next--storybookjs.netlify.app/official-storybook/',
+      url: 'https://master--5ccbc373887ca40020446347.chromatic.com/',
     },
   },
   ...
@@ -49,7 +49,7 @@ const config: StorybookConfig = {
 export default config;
 ```
 
-You can always read more in the [official Storybook docs](https://storybook.js.org/docs/react/workflows/storybook-composition#compose-published-storybooks).
+You can always read more in the [official Storybook docs](https://storybook.js.org/docs/sharing/storybook-composition#compose-published-storybooks).
 
 ## How to use it in Nx
 
@@ -74,50 +74,42 @@ nx storybook main-host
 
 Before doing the above steps to actually compose our Storybook instances under the **`main-host`** project, we would need to do the following adjustments to our workspace:
 
-### Adjust the Storybook ports in `project.json`
+### Adjust the Storybook ports
 
-Take a look in your `project.json` file of each one of your projects (e.g. for the `main-host` project, you can find it in the path `apps/main-host/project.json`).
-In your project's targets, in the `storybook` target, you will notice that the default port that Nx assigns to your projects' Storybook is always `4400`:
+By default, the `storybook` task for all projects uses the same port. This is problematic when it comes to setting up the Storybook Composition. We need to serve multiple Storybook instances (one per project) in parallel, and all of them are configured to be served in the same port. Storybook automatically assigns a random free port (usually adding `1` to the default port until it finds an empty port). This is not deterministic. There's no guarantee that the same port number will be assigned to the same project. Therefore, we wouldn't be able to create the proper configuration for Storybook Composition since we wouldn't know which URLs our composed Storybooks run on.
 
-```jsonc {% fileName="project.json" %}
+To solve this, we must statically set different ports for each project. We can keep the default port (or any set port) for the project serving as the host of our configuration, but we must change the port numbers for the rest of the projects that will be composed. Doing so ensures that each project will always use a known port, and we can correctly configure the Storybook Composition with the correct Storybook URLs.
+
+```json {% fileName="<some-project-root>/project.json" highlightLines=[7] %}
 {
-  ...
+  // ...
   "targets": {
-    ...
+    // ...
     "storybook": {
-      ...
       "options": {
-        ...
-        "port": 4400,
-        ...
-      },
-      ...
-    },
-    ...
-`  },
+        "port": 4401 // make sure to set a port different than the rest of the projects
+      }
+    }
+  }
 }
 ```
 
-We can keep this port for the project which will serve as the host of our configuration, but we must change the port numbers of the other projects, the projects which will be composed/composed. The reason for that is the following:
+{% callout type="note" title="Inferred tasks vs explicit tasks" %}
+Projects using [inferred tasks](/concepts/inferred-tasks) might not have the `storybook` target defined in the `project.json` file, so you need to add the target with only the `port` option set.
 
-- When the `nx run-many -t storybook --parallel=3` command executes, it will go and look into your `project.json` file to see the port you have assigned for that project's Storybook.
-- When it finds a port that it is already used, it will change the port number randomly (usually adding `1` until it finds an empty port).
+If the project has the `storybook` target explicitly defined in the `project.json` file, you need to update or set the `port` option.
+{% /callout %}
 
-Since we are using the `--parallel` flag, and the commands are executed in parallel, we cannot know for sure the order that the `storybook` command will be executed. So, we cannot be sure which port will correspond to which of the projects.
+### Add the `refs` to the host project's `.storybook/main.ts` file
 
-If we don't change the port numbers, and there are projects that want to use the same port for their Storybooks, the `run-many` command will change that port, and the result will be that we will not know for sure which
-of our projects runs on which port. The problem that this creates is that we will not be able to create the proper configuration for Storybook Composition, since we will not be able to tell which URLs our composed Storybooks run on.
+To configure our composition, we need to add a `refs` object to our host project's `main.ts` file. An example of such a configuration looks like this:
 
-### Add the refs in our host project's `.storybook/main.ts` file
-
-Now, we need to add to our host project's `main.ts` file (the path of which would be `apps/main-host/.storybook/main.ts`) a `refs` object, to configure our composition. An example of such a configuration looks like this:
-
-```javascript {% fileName="apps/main-host/.storybook/main.ts" %}
+```javascript {% fileName="apps/main-host/.storybook/main.ts" highlightLines=["6-19"] %}
 import type { StorybookConfig } from '@storybook/react-vite';
-...
+// ...
 
 const config: StorybookConfig = {
-  ...
+  // ...
   refs: {
     one-composed: {
       title: 'One composed',
@@ -132,7 +124,7 @@ const config: StorybookConfig = {
       url: 'http://localhost:4403',
     },
   },
-  ...
+  // ...
 };
 
 export default config;
@@ -142,9 +134,13 @@ export default config;
 
 If you want to take advantage of the [`run-commands`](/nx-api/nx/executors/run-commands) functionality of Nx, you can create a custom target that will invoke the `run-parallel` command for your "composed" Storybook instances.
 
-The objective is to end up with a new target in your `main-host`'s `project.json` file (`apps/main-host/project.json`) that looks like this:
+The objective is to end up with a new target in your `main-host`'s `project.json` file that looks like this:
 
-```jsonc {% fileName="apps/main-host/project.json" %}
+```jsonc {% fileName="apps/main-host/project.json" highlightLines=["5-15"] %}
+{
+  // ...
+  "targets": {
+    // ...
     "storybook-composition": {
       "executor": "nx:run-commands",
       "options": {
@@ -152,10 +148,12 @@ The objective is to end up with a new target in your `main-host`'s `project.json
           "nx storybook one-composed",
           "nx storybook two-composed",
           "nx storybook three-composed"
-          ],
+        ],
         "parallel": true
       }
     }
+  }
+}
 ```
 
 which you can then invoke like this:
@@ -178,7 +176,11 @@ nx generate nx:run-commands storybook-composition --command='nx storybook one-co
 
 This will create a new `target` in your `apps/main-host/project.json`:
 
-```jsonc {% fileName="apps/main-host/project.json" %}
+```jsonc {% fileName="apps/main-host/project.json" highlightLines=["5-11"] %}
+{
+  // ...
+  "targets": {
+    // ...
     "storybook-composition": {
       "executor": "nx:run-commands",
       "outputs": [],
@@ -186,11 +188,17 @@ This will create a new `target` in your `apps/main-host/project.json`:
         "command": "nx storybook one-composed"
       }
     }
+  }
+}
 ```
 
 Now, change the `command` option to be `commands`, add the `"parallel": true` option, and add all the other "composed" Storybook commands:
 
-```jsonc {% fileName="apps/main-host/project.json" %}
+```jsonc {% fileName="apps/main-host/project.json" highlightLines=["5-15"] %}
+{
+  // ...
+  "targets": {
+    // ...
     "storybook-composition": {
       "executor": "nx:run-commands",
       "options": {
@@ -198,10 +206,12 @@ Now, change the `command` option to be `commands`, add the `"parallel": true` op
           "nx storybook one-composed",
           "nx storybook two-composed",
           "nx storybook three-composed"
-          ],
+        ],
         "parallel": true
       }
     }
+  }
+}
 ```
 
 Now, you can start all your "composed" Storybook instances by running:

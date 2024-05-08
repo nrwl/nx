@@ -122,6 +122,10 @@ function getPresetDependencies({
     case Preset.NextJsStandalone:
       return { dependencies: { '@nx/next': nxVersion }, dev: {} };
 
+    case Preset.RemixStandalone:
+    case Preset.RemixMonorepo:
+      return { dependencies: { '@nx/remix': nxVersion }, dev: {} };
+
     case Preset.VueMonorepo:
     case Preset.VueStandalone:
       return {

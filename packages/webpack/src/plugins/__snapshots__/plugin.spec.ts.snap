@@ -53,6 +53,7 @@ exports[`@nx/webpack/plugin should create nodes 1`] = `
           "executor": "@nx/web:file-server",
           "options": {
             "buildTarget": "build-something",
+            "spa": true,
           },
         },
       },

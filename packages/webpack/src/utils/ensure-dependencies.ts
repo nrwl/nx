@@ -11,7 +11,6 @@ import {
   svgrWebpackVersion,
   swcLoaderVersion,
   tsLibVersion,
-  urlLoaderVersion,
 } from './versions';
 
 export type EnsureDependenciesOptions = {
@@ -41,7 +40,6 @@ export function ensureDependencies(
       reactRefreshWebpackPluginVersion;
     devDependencies['@svgr/webpack'] = svgrWebpackVersion;
     devDependencies['react-refresh'] = reactRefreshVersion;
-    devDependencies['url-loader'] = urlLoaderVersion;
   }
 
   tasks.push(addDependenciesToPackageJson(tree, {}, devDependencies));

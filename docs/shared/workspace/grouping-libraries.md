@@ -12,10 +12,6 @@ For instance, if a library under the `booking` folder is now being shared by mul
 nx g move --project booking-some-library shared/some-library
 ```
 
-{% callout type="note" title="Angular" %}
-For Angular projects, you should use the [`@nx/angular:move` generator](/nx-api/angular/generators/move) instead.
-{% /callout %}
-
 ## Remove Generator
 
 Similarly, if you no longer need a library, you can remove it with the [`@nx/workspace:remove` generator](/nx-api/workspace/generators/remove).

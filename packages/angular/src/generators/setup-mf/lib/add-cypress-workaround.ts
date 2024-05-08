@@ -2,7 +2,6 @@
 // as Angular attempt to figure out how to fix HMR when styles.js
 // is attached to the index.html with type=module
 
-import { CYPRESS_CONFIG_FILE_NAME_PATTERN } from '@nx/cypress/src/utils/config';
 import type { ProjectConfiguration, Tree } from '@nx/devkit';
 import {
   glob,
@@ -32,13 +31,23 @@ export function addCypressOnErrorWorkaround(tree: Tree, schema: Schema) {
     return;
   }
 
-  if (
-    e2eProject.targets?.e2e?.executor !== '@nx/cypress:cypress' &&
-    !glob(tree, [`${e2eProject.root}/${CYPRESS_CONFIG_FILE_NAME_PATTERN}`])
-      .length
-  ) {
-    // Not a cypress e2e project, skip
-    return;
+  if (e2eProject.targets?.e2e?.executor !== '@nx/cypress:cypress') {
+    try {
+      // don't ensure package is installed, if it's not installed, we don't need to add the workaround
+      const {
+        CYPRESS_CONFIG_FILE_NAME_PATTERN,
+      } = require('@nx/cypress/src/utils/config');
+      if (
+        !glob(tree, [`${e2eProject.root}/${CYPRESS_CONFIG_FILE_NAME_PATTERN}`])
+          .length
+      ) {
+        // Not a cypress e2e project, skip
+        return;
+      }
+    } catch {
+      // assume cypress is not installed
+      return;
+    }
   }
 
   const commandToAdd = `Cypress.on('uncaught:exception', err => {

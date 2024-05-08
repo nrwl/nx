@@ -39,7 +39,7 @@ export default function Index(): JSX.Element {
         }}
       />
       <h1 className="sr-only">Next generation monorepo tool</h1>
-      {/*<AnnouncementBanner />*/}
+      <AnnouncementBanner />
       <Header />
       <main id="main" role="main">
         <div className="w-full">

@@ -5,18 +5,18 @@ import { join, relative } from 'path';
 import { InitArgs } from '../init-v1';
 import { readJsonFile } from '../../../utils/fileutils';
 import { output } from '../../../utils/output';
-import { getPackageManagerCommand } from '../../../utils/package-manager';
 import {
   addDepsToPackageJson,
   createNxJsonFile,
   initCloud,
-  printFinalMessage,
   runInstall,
   updateGitIgnore,
 } from './utils';
 import { connectExistingRepoToNxCloudPrompt } from '../../connect/connect-to-nx-cloud';
 
-type Options = Pick<InitArgs, 'nxCloud' | 'interactive' | 'cacheable'>;
+type Options = Pick<InitArgs, 'nxCloud' | 'interactive' | 'cacheable'> & {
+  legacy?: boolean;
+};
 
 export async function addNxToMonorepo(options: Options) {
   const repoRoot = process.cwd();
@@ -102,16 +102,6 @@ export async function addNxToMonorepo(options: Options) {
     output.log({ title: '🛠️ Setting up Nx Cloud' });
     initCloud(repoRoot, 'nx-init-monorepo');
   }
-
-  const pmc = getPackageManagerCommand();
-  printFinalMessage({
-    learnMoreLink: 'https://nx.dev/recipes/adopting-nx/adding-to-monorepo',
-    bodyLines: [
-      `- Run "${pmc.exec} nx run-many --target=build" to run the build script for every project in the monorepo.`,
-      '- Run it again to replay the cached computation.',
-      `- Run "${pmc.exec} nx graph" to see the structure of the monorepo.`,
-    ],
-  });
 }
 
 // scanning package.json files

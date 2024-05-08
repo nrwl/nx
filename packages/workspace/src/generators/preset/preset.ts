@@ -1,10 +1,9 @@
-import { installPackagesTask, names, Tree } from '@nx/devkit';
+import { installPackagesTask, names, readNxJson, Tree } from '@nx/devkit';
 import { Schema } from './schema';
 import { Preset } from '../utils/presets';
 import { join } from 'path';
 
 export async function presetGenerator(tree: Tree, options: Schema) {
-  options = normalizeOptions(options);
   const presetTask = await createPreset(tree, options);
   return async () => {
     installPackagesTask(tree);
@@ -15,7 +14,11 @@ export async function presetGenerator(tree: Tree, options: Schema) {
 export default presetGenerator;
 
 async function createPreset(tree: Tree, options: Schema) {
-  const addPlugin = process.env.NX_ADD_PLUGINS !== 'false';
+  const nxJson = readNxJson(tree);
+  const addPlugin =
+    process.env.NX_ADD_PLUGINS !== 'false' &&
+    nxJson.useInferencePlugins !== false;
+
   if (options.preset === Preset.Apps) {
     return;
   } else if (options.preset === Preset.AngularMonorepo) {
@@ -31,7 +34,7 @@ async function createPreset(tree: Tree, options: Schema) {
       linter: options.linter,
       standalone: options.standaloneApi,
       routing: options.routing,
-      e2eTestRunner: options.e2eTestRunner ?? 'cypress',
+      e2eTestRunner: options.e2eTestRunner ?? 'playwright',
       bundler: options.bundler,
       ssr: options.ssr,
       prefix: options.prefix,
@@ -50,7 +53,7 @@ async function createPreset(tree: Tree, options: Schema) {
       routing: options.routing,
       rootProject: true,
       standalone: options.standaloneApi,
-      e2eTestRunner: options.e2eTestRunner ?? 'cypress',
+      e2eTestRunner: options.e2eTestRunner ?? 'playwright',
       bundler: options.bundler,
       ssr: options.ssr,
       prefix: options.prefix,
@@ -66,7 +69,7 @@ async function createPreset(tree: Tree, options: Schema) {
       style: options.style,
       linter: options.linter,
       bundler: options.bundler ?? 'webpack',
-      e2eTestRunner: options.e2eTestRunner ?? 'cypress',
+      e2eTestRunner: options.e2eTestRunner ?? 'playwright',
       addPlugin,
     });
   } else if (options.preset === Preset.ReactStandalone) {
@@ -81,8 +84,35 @@ async function createPreset(tree: Tree, options: Schema) {
       linter: options.linter,
       rootProject: true,
       bundler: options.bundler ?? 'vite',
-      e2eTestRunner: options.e2eTestRunner ?? 'cypress',
+      e2eTestRunner: options.e2eTestRunner ?? 'playwright',
       unitTestRunner: options.bundler === 'vite' ? 'vitest' : 'jest',
+      addPlugin,
+    });
+  } else if (options.preset === Preset.RemixMonorepo) {
+    const { applicationGenerator: remixApplicationGenerator } = require('@nx' +
+      '/remix/generators');
+
+    return remixApplicationGenerator(tree, {
+      name: options.name,
+      directory: join('apps', options.name),
+      projectNameAndRootFormat: 'as-provided',
+      linter: options.linter,
+      e2eTestRunner: options.e2eTestRunner ?? 'playwright',
+      unitTestRunner: 'vitest',
+      addPlugin,
+    });
+  } else if (options.preset === Preset.RemixStandalone) {
+    const { applicationGenerator: remixApplicationGenerator } = require('@nx' +
+      '/remix/generators');
+
+    return remixApplicationGenerator(tree, {
+      name: options.name,
+      directory: '.',
+      projectNameAndRootFormat: 'as-provided',
+      linter: options.linter,
+      e2eTestRunner: options.e2eTestRunner ?? 'playwright',
+      rootProject: true,
+      unitTestRunner: 'vitest',
       addPlugin,
     });
   } else if (options.preset === Preset.VueMonorepo) {
@@ -95,7 +125,7 @@ async function createPreset(tree: Tree, options: Schema) {
       projectNameAndRootFormat: 'as-provided',
       style: options.style,
       linter: options.linter,
-      e2eTestRunner: options.e2eTestRunner ?? 'cypress',
+      e2eTestRunner: options.e2eTestRunner ?? 'playwright',
       addPlugin,
     });
   } else if (options.preset === Preset.VueStandalone) {
@@ -109,7 +139,7 @@ async function createPreset(tree: Tree, options: Schema) {
       style: options.style,
       linter: options.linter,
       rootProject: true,
-      e2eTestRunner: options.e2eTestRunner ?? 'cypress',
+      e2eTestRunner: options.e2eTestRunner ?? 'playwright',
       unitTestRunner: 'vitest',
       addPlugin,
     });
@@ -123,7 +153,7 @@ async function createPreset(tree: Tree, options: Schema) {
       projectNameAndRootFormat: 'as-provided',
       style: options.style,
       linter: options.linter,
-      e2eTestRunner: options.e2eTestRunner ?? 'cypress',
+      e2eTestRunner: options.e2eTestRunner ?? 'playwright',
       addPlugin,
     });
   } else if (options.preset === Preset.NuxtStandalone) {
@@ -137,7 +167,7 @@ async function createPreset(tree: Tree, options: Schema) {
       style: options.style,
       linter: options.linter,
       rootProject: true,
-      e2eTestRunner: options.e2eTestRunner ?? 'cypress',
+      e2eTestRunner: options.e2eTestRunner ?? 'playwright',
       unitTestRunner: 'vitest',
       addPlugin,
     });
@@ -153,7 +183,7 @@ async function createPreset(tree: Tree, options: Schema) {
       linter: options.linter,
       appDir: options.nextAppDir,
       src: options.nextSrcDir,
-      e2eTestRunner: options.e2eTestRunner ?? 'cypress',
+      e2eTestRunner: options.e2eTestRunner ?? 'playwright',
       addPlugin,
     });
   } else if (options.preset === Preset.NextJsStandalone) {
@@ -167,7 +197,7 @@ async function createPreset(tree: Tree, options: Schema) {
       linter: options.linter,
       appDir: options.nextAppDir,
       src: options.nextSrcDir,
-      e2eTestRunner: options.e2eTestRunner ?? 'cypress',
+      e2eTestRunner: options.e2eTestRunner ?? 'playwright',
       rootProject: true,
       addPlugin,
     });
@@ -182,7 +212,7 @@ async function createPreset(tree: Tree, options: Schema) {
       style: options.style,
       linter: options.linter,
       bundler: 'vite',
-      e2eTestRunner: options.e2eTestRunner ?? 'cypress',
+      e2eTestRunner: options.e2eTestRunner ?? 'playwright',
       addPlugin,
     });
   } else if (options.preset === Preset.Nest) {
@@ -282,9 +312,4 @@ async function createPreset(tree: Tree, options: Schema) {
   } else {
     throw new Error(`Invalid preset ${options.preset}`);
   }
-}
-
-function normalizeOptions(options: Schema): Schema {
-  options.name = names(options.name).fileName;
-  return options;
 }

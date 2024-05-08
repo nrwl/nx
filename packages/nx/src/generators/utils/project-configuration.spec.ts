@@ -21,7 +21,6 @@ const projectConfiguration: ProjectConfiguration = {
   name: 'test',
   root: 'libs/test',
   sourceRoot: 'libs/test/src',
-  targets: {},
 };
 
 describe('project configuration', () => {
@@ -32,7 +31,32 @@ describe('project configuration', () => {
   });
 
   it('should create project.json file when adding a project if standalone is true', () => {
-    addProjectConfiguration(tree, 'test', projectConfiguration);
+    addProjectConfiguration(tree, 'test', {
+      ...projectConfiguration,
+      targets: {
+        test: {},
+      },
+    });
+
+    expect(readProjectConfiguration(tree, 'test')).toMatchInlineSnapshot(`
+      {
+        "$schema": "../../node_modules/nx/schemas/project-schema.json",
+        "name": "test",
+        "root": "libs/test",
+        "sourceRoot": "libs/test/src",
+        "targets": {
+          "test": {},
+        },
+      }
+    `);
+    expect(tree.exists('libs/test/project.json')).toBeTruthy();
+  });
+
+  it('should add a comment to show project details when targets are missing', () => {
+    addProjectConfiguration(tree, 'test', {
+      ...projectConfiguration,
+      targets: {},
+    });
 
     expect(readProjectConfiguration(tree, 'test')).toMatchInlineSnapshot(`
       {
@@ -43,7 +67,54 @@ describe('project configuration', () => {
         "targets": {},
       }
     `);
-    expect(tree.exists('libs/test/project.json')).toBeTruthy();
+
+    expect(tree.read('libs/test/project.json', 'utf-8')).toMatchInlineSnapshot(`
+      "{
+        "name": "test",
+        "$schema": "../../node_modules/nx/schemas/project-schema.json",
+        "sourceRoot": "libs/test/src",
+        "// targets": "to see all targets run: nx show project test --web",
+        "targets": {}
+      }
+      "
+    `);
+
+    // Adding a target removes the "// targets" comment.
+    updateProjectConfiguration(tree, 'test', {
+      ...projectConfiguration,
+      targets: {
+        test: {},
+      },
+    });
+
+    expect(tree.read('libs/test/project.json', 'utf-8')).toMatchInlineSnapshot(`
+      "{
+        "name": "test",
+        "$schema": "../../node_modules/nx/schemas/project-schema.json",
+        "sourceRoot": "libs/test/src",
+        "targets": {
+          "test": {}
+        }
+      }
+      "
+    `);
+
+    // Emptying out targets add "// targets" comment back.
+    updateProjectConfiguration(tree, 'test', {
+      ...projectConfiguration,
+      targets: {},
+    });
+
+    expect(tree.read('libs/test/project.json', 'utf-8')).toMatchInlineSnapshot(`
+      "{
+        "name": "test",
+        "$schema": "../../node_modules/nx/schemas/project-schema.json",
+        "sourceRoot": "libs/test/src",
+        "// targets": "to see all targets run: nx show project test --web",
+        "targets": {}
+      }
+      "
+    `);
   });
 
   it('should update project.json file when updating a project', () => {

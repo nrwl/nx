@@ -1,27 +1,23 @@
 import { execSync } from 'child_process';
 import { Module } from 'module';
-
-import type { Tree } from 'nx/src/generators/tree';
-
-import type { GeneratorCallback } from 'nx/src/config/misc-interfaces';
 import { clean, coerce, gt } from 'semver';
 
 import { installPackagesTask } from '../tasks/install-packages-task';
-import { requireNx } from '../../nx';
 import { dirSync } from 'tmp';
 import { join } from 'path';
-import type { PackageManager } from 'nx/src/utils/package-manager';
-import { writeFileSync } from 'fs';
-
-const {
-  readJson,
-  updateJson,
-  getPackageManagerCommand,
-  workspaceRoot,
+import {
   detectPackageManager,
-  createTempNpmDirectory,
+  GeneratorCallback,
+  getPackageManagerCommand,
   getPackageManagerVersion,
-} = requireNx();
+  PackageManager,
+  readJson,
+  Tree,
+  updateJson,
+  workspaceRoot,
+} from 'nx/src/devkit-exports';
+import { createTempNpmDirectory } from 'nx/src/devkit-internals';
+import { writeFileSync } from 'fs';
 
 const UNIDENTIFIED_VERSION = 'UNIDENTIFIED_VERSION';
 const NON_SEMVER_TAGS = {
@@ -483,7 +479,7 @@ export function ensurePackage<T extends any = any>(
 
   if (process.env.NX_DRY_RUN && process.env.NX_DRY_RUN !== 'false') {
     throw new Error(
-      'NOTE: This generator does not support --dry-run. If you are running this in Nx Console, it should execute fine once you hit the "Run" button.\n'
+      'NOTE: This generator does not support --dry-run. If you are running this in Nx Console, it should execute fine once you hit the "Generate" button.\n'
     );
   }
 

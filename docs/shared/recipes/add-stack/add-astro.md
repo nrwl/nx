@@ -13,7 +13,7 @@ Because we are not using an Nx plugin for Astro, there are few items we'll have 
 {% pill url="/ci/features/remote-cache" %}✅ Remote Caching{% /pill %}
 {% pill url="/features/explore-graph" %}✅ Explore the Graph{% /pill %}
 {% pill url="/ci/features/distribute-task-execution" %}✅ Distribute Task Execution{% /pill %}
-{% pill url="/features/integrate-with-editors" %}✅ Integrate with Editors{% /pill %}
+{% pill url="/getting-started/editor-setup" %}✅ Integrate with Editors{% /pill %}
 {% pill url="/features/automate-updating-dependencies" %}✅ Automate Updating Nx{% /pill %}
 {% pill url="/recipes/enforce-module-boundaries" %}✅ Enforce Project Boundaries{% /pill %}
 {% pill url="/features/generate-code" %}🚫 Use Code Generators{% /pill %}
@@ -48,7 +48,7 @@ NX   🎉 Done!
 - Learn more at https://nx.dev/recipes/adopting-nx/adding-to-existing-project.
 ```
 
-You can add a task as cacheable after the fact by updating the `cacheableOperations` in the `nx.json` file. Learn more about [caching task results](/recipes/adopting-nx/adding-to-existing-project#installing-nx-on-a-non-monorepo-project) or [how caching works](/features/cache-task-results).
+You can [configure a task as cacheable](/features/cache-task-results) after the fact by updating [the project configuration](/reference/project-configuration#cache) or [the global Nx configuration](/reference/nx-json#cache). Learn more about [caching task results](/features/cache-task-results) or [how caching works](/concepts/how-caching-works).
 
 ## Running Tasks
 

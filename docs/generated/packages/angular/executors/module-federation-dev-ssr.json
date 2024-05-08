@@ -4,7 +4,7 @@
   "schema": {
     "$schema": "http://json-schema.org/draft-07/schema",
     "title": "Module Federation SSR Dev Server Target",
-    "description": "SSR Dev Server target options for Module Federation host applications.",
+    "description": "Serves host [Module Federation](https://module-federation.io/) applications ([webpack](https://webpack.js.org/)-based) that use SSR allowing to specify which remote applications should be served with the host.",
     "type": "object",
     "properties": {
       "browserTarget": {
@@ -88,7 +88,7 @@
     "required": ["browserTarget", "serverTarget"],
     "presets": []
   },
-  "description": "The module-federation-dev-ssr executor is reserved exclusively for use with host Module Federation applications that use SSR. It allows the user to specify which remote applications should be served with the host.",
+  "description": "Serves host [Module Federation](https://module-federation.io/) applications ([webpack](https://webpack.js.org/)-based) that use SSR allowing to specify which remote applications should be served with the host.",
   "aliases": [],
   "hidden": false,
   "path": "/packages/angular/src/builders/module-federation-dev-ssr/schema.json",

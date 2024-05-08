@@ -1,3 +1,5 @@
+import 'nx/src/internal-testing-utils/mock-project-graph';
+
 import { NxJsonConfiguration, readJson, Tree, updateJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 
@@ -80,7 +82,9 @@ describe('init', () => {
         "plugins": [
           {
             "options": {
+              "ciTargetName": "e2e-ci",
               "componentTestingTargetName": "component-test",
+              "openTargetName": "open-cypress",
               "targetName": "e2e",
             },
             "plugin": "@nx/cypress/plugin",

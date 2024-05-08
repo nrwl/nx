@@ -1,7 +1,4 @@
-import type { Tree } from 'nx/src/generators/tree';
-import { requireNx } from '../../nx';
-
-const { readNxJson } = requireNx();
+import { readNxJson, Tree } from 'nx/src/devkit-exports';
 
 /**
  * Returns workspace defaults. It includes defaults folders for apps and libs,

@@ -21,11 +21,13 @@ export async function updateSsrSetup(
     port,
     standalone,
     typescriptConfiguration,
+    skipPackageJson,
   }: {
     appName: string;
     port: number;
     standalone: boolean;
     typescriptConfiguration: boolean;
+    skipPackageJson?: boolean;
   }
 ) {
   let project = readProjectConfiguration(tree, appName);
@@ -116,16 +118,18 @@ export async function updateSsrSetup(
 
   updateProjectConfiguration(tree, appName, project);
 
-  const installTask = addDependenciesToPackageJson(
-    tree,
-    {
-      cors: corsVersion,
-      '@module-federation/node': moduleFederationNodeVersion,
-    },
-    {
-      '@types/cors': typesCorsVersion,
-    }
-  );
+  if (!skipPackageJson) {
+    return addDependenciesToPackageJson(
+      tree,
+      {
+        cors: corsVersion,
+        '@module-federation/node': moduleFederationNodeVersion,
+      },
+      {
+        '@types/cors': typesCorsVersion,
+      }
+    );
+  }
 
-  return installTask;
+  return () => {};
 }

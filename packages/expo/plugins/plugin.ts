@@ -15,6 +15,7 @@ import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { existsSync, readdirSync } from 'fs';
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { projectGraphCacheDirectory } from 'nx/src/utils/cache-directory';
+import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
 
 export interface ExpoPluginOptions {
   startTargetName?: string;
@@ -59,7 +60,7 @@ export const createDependencies: CreateDependencies = () => {
 
 export const createNodes: CreateNodes<ExpoPluginOptions> = [
   '**/app.{json,config.js}',
-  (configFilePath, options, context) => {
+  async (configFilePath, options, context) => {
     options = normalizeOptions(options);
     const projectRoot = dirname(configFilePath);
 
@@ -71,7 +72,7 @@ export const createNodes: CreateNodes<ExpoPluginOptions> = [
     ) {
       return {};
     }
-    const appConfig = getAppConfig(configFilePath, context);
+    const appConfig = await getAppConfig(configFilePath, context);
     // if appConfig.expo is not defined
     if (!appConfig.expo) {
       return {};
@@ -152,11 +153,10 @@ function buildExpoTargets(
 function getAppConfig(
   configFilePath: string,
   context: CreateNodesContext
-): any {
+): Promise<any> {
   const resolvedPath = join(context.workspaceRoot, configFilePath);
 
-  let module = load(resolvedPath);
-  return module.default ?? module;
+  return loadConfigFile(resolvedPath);
 }
 
 function getInputs(
@@ -178,21 +178,6 @@ function getOutputs(projectRoot: string, dir: string) {
   } else {
     return `{workspaceRoot}/${projectRoot}/${dir}`;
   }
-}
-
-/**
- * Load the module after ensuring that the require cache is cleared.
- */
-function load(path: string): any {
-  // Clear cache if the path is in the cache
-  if (require.cache[path]) {
-    for (const k of Object.keys(require.cache)) {
-      delete require.cache[k];
-    }
-  }
-
-  // Then require
-  return require(path);
 }
 
 function normalizeOptions(options: ExpoPluginOptions): ExpoPluginOptions {

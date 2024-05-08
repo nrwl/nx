@@ -24,7 +24,7 @@ This guide will teach you to use this tool to explore projects, the project grap
 Projects in Nx are the different parts of the monorepo which can have tasks run for them.
 
 The best way to see what projects are in your workspace is to view the [project graph](#explore-the-project-graph) which will be covered in the next section.
-Another way is to look at the **Projects** pane in [Nx Console](/features/integrate-with-editors) or run `nx show projects` to show a list of projects in your terminal.
+Another way is to look at the **Projects** pane in [Nx Console](/getting-started/editor-setup) or run `nx show projects` to show a list of projects in your terminal.
 
 You can see more details about a specific project in Nx Console or by running `nx show project <project-name> --web`. Both methods will show something like the example below:
 
@@ -38,11 +38,11 @@ Each target has different options which determine how Nx runs the task.
 
 Nx understands the projects in your workspace as a graph and uses this understanding to behave intelligently.
 Exploring this graph visually is vital to understanding how your code is structured and how Nx behaves.
-It always stays up to date without having to actively maintain a document as it is [calculated by analyzing your source code](/concepts/more-concepts/how-project-graph-is-built#how-the-project-graph-is-built)
+It always stays up to date without having to actively maintain a document as it is calculated by analyzing your source code.
 
 ### Launching the Project Graph
 
-To launch the project graph visualization for your workspace, use [Nx Console](/features/integrate-with-editors) or run:
+To launch the project graph visualization for your workspace, use [Nx Console](/getting-started/editor-setup) or run:
 
 ```shell
 npx nx graph

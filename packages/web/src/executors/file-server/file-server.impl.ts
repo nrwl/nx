@@ -181,6 +181,7 @@ export default async function* fileServerExecutor(
     run();
   }
 
+  const port = await detectPort(options.port || 8080);
   const outputPath = getBuildTargetOutputPath(options, context);
 
   if (options.spa) {
@@ -189,6 +190,10 @@ export default async function* fileServerExecutor(
 
     // See: https://github.com/http-party/http-server#magic-files
     copyFileSync(src, dst);
+
+    // We also need to ensure the proxyUrl is set, otherwise the browser will continue to throw a 404 error
+    // This can cause unexpected behaviors and failures especially in automated test suites
+    options.proxyUrl ??= `http${options.ssl ? 's' : ''}://localhost:${port}?`;
   }
 
   const args = getHttpServerArgs(options);
@@ -205,7 +210,6 @@ export default async function* fileServerExecutor(
 
   // detect port as close to when used to prevent port being used by another process
   // when running in  parallel
-  const port = await detectPort(options.port || 8080);
   args.push(`-p=${port}`);
 
   const serve = fork(pathToHttpServer, [outputPath, ...args], {

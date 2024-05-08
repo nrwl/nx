@@ -119,6 +119,7 @@
       "@nrwl/expo",
       "@nx/express",
       "@nrwl/express",
+      "@nx/gradle",
       "@nx/nest",
       "@nrwl/nest",
       "@nx/next",

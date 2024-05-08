@@ -19,6 +19,7 @@ Target's configuration
 - [dependsOn](../../devkit/documents/TargetConfiguration#dependson): (string | TargetDependencyConfig)[]
 - [executor](../../devkit/documents/TargetConfiguration#executor): string
 - [inputs](../../devkit/documents/TargetConfiguration#inputs): (string | InputDefinition)[]
+- [metadata](../../devkit/documents/TargetConfiguration#metadata): TargetMetadata
 - [options](../../devkit/documents/TargetConfiguration#options): T
 - [outputs](../../devkit/documents/TargetConfiguration#outputs): string[]
 
@@ -83,6 +84,14 @@ Example: '@nx/rollup:rollup'
 • `Optional` **inputs**: (`string` \| `InputDefinition`)[]
 
 This describes filesets, runtime dependencies and other inputs that a target depends on.
+
+---
+
+### metadata
+
+• `Optional` **metadata**: `TargetMetadata`
+
+Metadata about the target
 
 ---
 

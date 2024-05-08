@@ -1,7 +1,7 @@
 import { NextConfigFn } from '../src/utils/config';
 import { WithNxOptions } from './with-nx';
 
-// TODO(v19): Remove file, it is here until users migrate over to SASS manually.
+// TODO(v20): Remove file, it is here until users migrate over to SASS manually.
 export function withStylus(
   configOrFn: WithNxOptions | NextConfigFn
 ): NextConfigFn {

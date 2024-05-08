@@ -59,6 +59,10 @@
       "experimentalHttps": {
         "type": "boolean",
         "description": "Enable HTTPS support for the Next.js development server."
+      },
+      "customServerHttps:": {
+        "type": "boolean",
+        "description": "Enable HTTPS support for the custom server."
       }
     },
     "required": ["buildTarget"],

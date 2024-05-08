@@ -4,13 +4,6 @@
   "sourceRoot": "packages/vue",
   "projectType": "library",
   "targets": {
-    "test": {
-      "executor": "@nx/jest:jest",
-      "options": {
-        "jestConfig": "packages/vue/jest.config.ts"
-      },
-      "outputs": ["{workspaceRoot}/coverage/packages/vue"]
-    },
     "build-base": {
       "executor": "@nx/js:tsc",
       "options": {
@@ -62,7 +55,6 @@
     "build": {
       "command": "node ./scripts/copy-readme.js vue",
       "outputs": ["{workspaceRoot}/build/packages/vue"]
-    },
-    "lint": {}
+    }
   }
 }

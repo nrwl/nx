@@ -54,12 +54,15 @@ describe('Storybook generators and executors for standalone workspaces - using R
   });
 
   describe('serve storybook', () => {
-    afterEach(() => killPorts());
+    afterEach(() => killPorts(4400));
 
     it('should serve a React based Storybook setup that uses Vite', async () => {
-      const p = await runCommandUntil(`run ${appName}:storybook`, (output) => {
-        return /Storybook.*started/gi.test(output);
-      });
+      const p = await runCommandUntil(
+        `run ${appName}:storybook --port 4400`,
+        (output) => {
+          return /Storybook.*started/gi.test(output);
+        }
+      );
       p.kill();
     }, 100_000);
   });

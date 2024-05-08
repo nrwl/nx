@@ -24,9 +24,10 @@ export async function addE2e(
           : p.plugin === '@nx/vite/plugin'
       );
       if (!hasPlugin) {
-        webStaticServeGenerator(tree, {
+        await webStaticServeGenerator(tree, {
           buildTarget: `${options.projectName}:build`,
           targetName: 'serve-static',
+          spa: true,
         });
       }
 
@@ -64,6 +65,7 @@ export async function addE2e(
         implicitDependencies: [options.projectName],
       });
       return configurationGenerator(tree, {
+        ...options,
         project: options.e2eProjectName,
         skipFormat: true,
         skipPackageJson: options.skipPackageJson,

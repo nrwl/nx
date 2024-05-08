@@ -37,7 +37,7 @@ export async function runOne(
   workspaceConfigurationCheck();
 
   const nxJson = readNxJson();
-  const projectGraph = await createProjectGraphAsync({ exitOnError: true });
+  const projectGraph = await createProjectGraphAsync();
 
   const opts = parseRunOneOptions(cwd, args, projectGraph, nxJson);
 
@@ -70,7 +70,7 @@ export async function runOne(
 
     return await generateGraph(
       {
-        watch: false,
+        watch: true,
         open: true,
         view: 'tasks',
         targets: nxArgs.targets,

@@ -33,6 +33,7 @@ export function generateWebpackConfig(
     {
       tmpl: '',
       type: options.mfType,
+      federationType: options.federationType,
       name: options.appName,
       remotes: remotesWithPorts ?? [],
       projectRoot: appRoot,

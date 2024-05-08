@@ -1,15 +1,14 @@
 import { join } from 'path';
 import { existsSync } from 'fs';
 
-import type {
-  CreateNodesContext,
-  ProjectConfiguration,
-} from 'nx/src/devkit-exports';
 import type { PackageJson } from 'nx/src/utils/package-json';
 import type { InputDefinition } from 'nx/src/config/workspace-json-project-json';
-import { requireNx } from '../../nx';
 
-const { readJsonFile } = requireNx();
+import {
+  CreateNodesContext,
+  ProjectConfiguration,
+  readJsonFile,
+} from 'nx/src/devkit-exports';
 
 /**
  * Get the named inputs available for a directory

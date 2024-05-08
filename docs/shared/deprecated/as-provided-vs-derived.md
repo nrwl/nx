@@ -12,7 +12,7 @@ Here are some of the issues with the `derived` behavior that are addressed with 
 
 ## Using Nx Console
 
-You can use [Nx Console](/features/integrate-with-editors) for an intuitive experience running generators.
+You can use [Nx Console](/getting-started/editor-setup) for an intuitive experience running generators.
 
 1. If you right-click a folder and choose `Nx generate`, the code generation will be run from that folder.
 2. As you fill out the generate form, Nx Console will show you a preview of where the new files will be generated.

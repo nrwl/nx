@@ -6,7 +6,7 @@ export function interpolateEnvironmentVariablesToIndex(
   return interpolateEnvironmentVariables(contents, environmentVariables as any);
 }
 
-const NX_PREFIX = /^NX_/i;
+const NX_PREFIX = /^NX_PUBLIC_/i;
 
 function isNxEnvironmentKey(x: string): boolean {
   return NX_PREFIX.test(x);

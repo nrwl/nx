@@ -16,7 +16,7 @@ export function LaunchWeekAgenda(): JSX.Element {
       title: 'Nx Project Crystal',
       description: '',
       speakers: ['Juri Strumpflohner'],
-      videoUrl: '',
+      videoUrl: 'https://youtu.be/PzCgpM7qtTU',
     },
     {
       type: 'event',
@@ -24,7 +24,7 @@ export function LaunchWeekAgenda(): JSX.Element {
       title: 'Project Crystal + .NET in Action',
       description: '',
       speakers: ['Craigory Coppola'],
-      videoUrl: '',
+      videoUrl: 'https://youtu.be/fh-yzOuQGE8',
     },
     {
       type: 'event',
@@ -32,7 +32,7 @@ export function LaunchWeekAgenda(): JSX.Element {
       title: 'Nx Agents Walkthrough: Effortlessly Fast CI Built for Monorepos',
       description: '',
       speakers: ['Rareş Matei'],
-      videoUrl: '',
+      videoUrl: 'https://youtu.be/XS-exYYP_Gg',
     },
     {
       type: 'event',
@@ -40,7 +40,7 @@ export function LaunchWeekAgenda(): JSX.Element {
       title: 'Solving E2E Tests',
       description: '',
       speakers: ['Altan Stalker'],
-      videoUrl: '',
+      videoUrl: 'https://youtu.be/EO_tGa0Nx1s',
     },
     {
       type: 'event',
@@ -48,7 +48,7 @@ export function LaunchWeekAgenda(): JSX.Element {
       title: 'Releasing Nx Release',
       description: ``,
       speakers: ['James Henry'],
-      videoUrl: '',
+      videoUrl: 'https://youtu.be/KjZKFGu3_9I',
     },
     {
       type: 'event',
@@ -56,7 +56,7 @@ export function LaunchWeekAgenda(): JSX.Element {
       title: 'Special Announcement',
       description: ``,
       speakers: ['Zack DeRose'],
-      videoUrl: '',
+      videoUrl: 'https://youtu.be/Xfvv09wSoM8',
     },
     {
       type: 'event',
@@ -106,7 +106,7 @@ export function LaunchWeekAgenda(): JSX.Element {
           </article>
         </div>
         <div className="w-full">
-          <div className="mx-auto max-w-screen-lg xl:max-w-screen-xl px-5 py-12 md:pr-12">
+          <div className="mx-auto max-w-screen-lg px-5 py-12 md:pr-12 xl:max-w-screen-xl">
             <span className="rounded-md bg-slate-100 p-2 dark:bg-slate-800">
               Thursday, February 8th
             </span>
@@ -126,13 +126,13 @@ const launchWeekScheduleRow = (item: ScheduleItem): JSX.Element => (
   <div key={item.title + item.time} className="w-full">
     <div className="mx-auto max-w-screen-lg xl:max-w-screen-xl">
       <article className="grid w-full grid-cols-1 md:grid-cols-5 md:divide-x md:divide-slate-200 md:dark:divide-slate-700">
-        <div className="font-input-mono px-5 py-6 flex items-center">
+        <div className="font-input-mono flex items-center px-5 py-6">
           <span className="hidden md:block">{item.time}</span>
           <span className="mb-4 rounded-md py-4 px-6 md:hidden">
             {item.time}
           </span>
         </div>
-        <div className="font-input-mono col-span-2 px-5 py-6 flex items-center md:px-8">
+        <div className="font-input-mono col-span-2 flex items-center px-5 py-6 md:px-8">
           {item.videoUrl ? (
             <h3 className="underline">
               <a href={item.videoUrl} target="_blank" rel="noreferrer">
@@ -143,7 +143,7 @@ const launchWeekScheduleRow = (item: ScheduleItem): JSX.Element => (
             <h3>{item.title}</h3>
           )}
         </div>
-        <p className="col-span-2 px-5 py-6 flex items-center md:px-8">
+        <p className="col-span-2 flex items-center px-5 py-6 md:px-8">
           {item.speakers.length > 2
             ? `${item.speakers.slice(0, -1).join(', ')}, & ${item.speakers.at(
                 -1

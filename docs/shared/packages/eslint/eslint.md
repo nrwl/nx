@@ -21,7 +21,7 @@ This will install the correct version of `@nx/eslint`.
 
 ### How @nx/eslint Infers Tasks
 
-The `@nx/eslint` plugin will create a task for any project that has an ESLint configuration file present. Any of the following files will be recognized as an ESLint configuration file:
+The `@nx/eslint` plugin will create a task for any project that has an ESLint configuration file present and files to lint. Any of the following files will be recognized as an ESLint configuration file:
 
 - `.eslintrc`
 - `.eslintrc.js`
@@ -32,6 +32,8 @@ The `@nx/eslint` plugin will create a task for any project that has an ESLint co
 - `eslint.config.js`
 
 Because ESLint applies configuration files to all subdirectories, the `@nx/eslint` plugin will also infer tasks for projects in subdirectories. So, if there is an ESLint configuration file in the root of the repository, every project will have an inferred ESLint task.
+
+Even if a project has an ESLint configuration file, it will only have an inferred ESLint task if there are files to lint. Otherwise, the task will not be created. Therefore, if you don't want an ESLint task to be inferred for a particular project, make sure the project files are properly excluded from ESLint.
 
 ### View Inferred Tasks
 

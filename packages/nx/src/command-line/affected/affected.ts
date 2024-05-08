@@ -94,7 +94,7 @@ export async function affected(
 
           return await generateGraph(
             {
-              watch: false,
+              watch: true,
               open: true,
               view: 'tasks',
               targets: nxArgs.targets,

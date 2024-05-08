@@ -50,7 +50,7 @@ export async function normalizeOptions(
   normalized.style = options.style ?? 'css';
   normalized.routing = normalized.routing ?? false;
   normalized.unitTestRunner ??= 'vitest';
-  normalized.e2eTestRunner = normalized.e2eTestRunner ?? 'cypress';
+  normalized.e2eTestRunner = normalized.e2eTestRunner ?? 'playwright';
 
   return normalized;
 }

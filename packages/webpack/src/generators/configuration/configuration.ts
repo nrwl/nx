@@ -3,6 +3,7 @@ import {
   GeneratorCallback,
   joinPathFragments,
   offsetFromRoot,
+  readNxJson,
   readProjectConfiguration,
   runTasksInSerial,
   Tree,
@@ -29,7 +30,11 @@ export async function configurationGeneratorInternal(
   options: ConfigurationGeneratorSchema
 ) {
   const tasks: GeneratorCallback[] = [];
-  options.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
+  const nxJson = readNxJson(tree);
+  const addPluginDefault =
+    process.env.NX_ADD_PLUGINS !== 'false' &&
+    nxJson.useInferencePlugins !== false;
+  options.addPlugin ??= addPluginDefault;
 
   const initTask = await webpackInitGenerator(tree, {
     ...options,
@@ -101,7 +106,7 @@ function createWebpackConfig(
       joinPathFragments(project.root, 'webpack.config.js'),
       hasPlugin(tree)
         ? `
-const { NxWebpackPlugin } = require('@nx/webpack');
+const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
 const { join } = require('path');
 
 module.exports = {
@@ -111,7 +116,7 @@ module.exports = {
           }'),
   },
   plugins: [
-    new NxWebpackPlugin({
+    new NxAppWebpackPlugin({
       target: '${buildOptions.target}',
       tsConfig: '${buildOptions.tsConfig}',
       compiler: '${buildOptions.compiler}',
@@ -137,7 +142,7 @@ module.exports = composePlugins(withNx(), withWeb(), (config) => {
       joinPathFragments(project.root, 'webpack.config.js'),
       hasPlugin(tree)
         ? `
-const { NxWebpackPlugin } = require('@nx/webpack');
+const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
 const { join } = require('path');
 
 module.exports = {
@@ -147,7 +152,7 @@ module.exports = {
           }'),
   },
   plugins: [
-    new NxWebpackPlugin({
+    new NxAppWebpackPlugin({
       target: '${buildOptions.target}',
       tsConfig: '${buildOptions.tsConfig}',
       compiler: '${buildOptions.compiler}',

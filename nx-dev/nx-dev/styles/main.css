@@ -82,6 +82,10 @@ iframe[src*='youtube'] {
   font-weight: 600;
 }
 
+.prose .twitter-tweet {
+  margin: 0 auto;
+}
+
 /**
  * Tooltips
  */

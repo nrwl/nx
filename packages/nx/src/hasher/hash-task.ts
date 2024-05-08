@@ -16,7 +16,7 @@ export async function hashTasksThatDoNotDependOnOutputsOfOtherTasks(
   const tasks = Object.values(taskGraph.tasks);
   const tasksWithHashers = await Promise.all(
     tasks.map(async (task) => {
-      const customHasher = await getCustomHasher(task, projectGraph);
+      const customHasher = getCustomHasher(task, projectGraph);
       return { task, customHasher };
     })
   );
@@ -56,7 +56,7 @@ export async function hashTask(
   env: NodeJS.ProcessEnv
 ) {
   performance.mark('hashSingleTask:start');
-  const customHasher = await getCustomHasher(task, projectGraph);
+  const customHasher = getCustomHasher(task, projectGraph);
   const projectsConfigurations =
     readProjectsConfigurationFromProjectGraph(projectGraph);
   const { value, details } = await (customHasher

@@ -17,7 +17,7 @@ packages/nx/src/plugins/js/lock-file/__fixtures__/**/*.*
 packages/**/schematics/**/files/**/*.html
 packages/**/generators/**/files/**/*.html
 packages/nx/src/native/**/*.rs
-packages/nx/src/native/index.js
+packages/nx/src/native/native-bindings.js
 packages/nx/src/native/index.d.ts
 nx-dev/nx-dev/.next/
 nx-dev/nx-dev/public/documentation

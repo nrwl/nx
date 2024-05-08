@@ -1,9 +1,7 @@
+import { NxReleaseConfig } from '../config/config';
+import { DEFAULT_CONVENTIONAL_COMMITS_CONFIG } from '../config/conventional-commits';
 import { GitCommit } from './git';
-import {
-  ConventionalCommitsConfig,
-  deriveNewSemverVersion,
-  determineSemverChange,
-} from './semver';
+import { deriveNewSemverVersion, determineSemverChange } from './semver';
 
 describe('semver', () => {
   describe('deriveNewSemverVersion()', () => {
@@ -76,16 +74,19 @@ describe('semver', () => {
   });
   // tests for determineSemverChange()
   describe('determineSemverChange()', () => {
-    const config: ConventionalCommitsConfig = {
+    const config: NxReleaseConfig['conventionalCommits'] = {
       types: {
         feat: {
-          semver: 'minor',
+          semverBump: 'minor',
+          changelog: DEFAULT_CONVENTIONAL_COMMITS_CONFIG.types.feat.changelog,
         },
         fix: {
-          semver: 'patch',
+          semverBump: 'patch',
+          changelog: DEFAULT_CONVENTIONAL_COMMITS_CONFIG.types.fix.changelog,
         },
         chore: {
-          semver: 'patch',
+          semverBump: 'patch',
+          changelog: DEFAULT_CONVENTIONAL_COMMITS_CONFIG.types.chore.changelog,
         },
       },
     };

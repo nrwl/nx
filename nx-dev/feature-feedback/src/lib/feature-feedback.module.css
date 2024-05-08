@@ -1,0 +1,63 @@
+/*
+ * Replace this with your own classes
+ *
+ * e.g.
+ * .container {
+ * }
+*/
+
+.closebutton {
+  position: absolute;
+  top: 0.4rem;
+  right: 0.7rem;
+  padding: 0.5rem;
+  cursor: pointer;
+  font-size: 1.5rem;
+}
+
+.fadeinout {
+  -webkit-animation: fadeinout 0.5s; /* Safari, Chrome and Opera > 12.1 */
+  -moz-animation: fadeinout 0.5s; /* Firefox < 16 */
+  -ms-animation: fadeinout 0.5s; /* Internet Explorer */
+  -o-animation: fadeinout 0.5s; /* Opera < 12.1 */
+  animation: fadeinout 0.5s;
+}
+
+@keyframes fadeinout {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Firefox < 16 */
+@keyframes fadeinout {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Safari, Chrome and Opera > 12.1 */
+@-webkit-keyframes fadeinout {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Internet Explorer */
+@-ms-keyframes fadeinout {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}

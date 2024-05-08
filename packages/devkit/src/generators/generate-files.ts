@@ -1,10 +1,8 @@
-import { readFileSync, readdirSync, statSync } from 'fs';
+import { readdirSync, readFileSync, statSync } from 'fs';
 import * as path from 'path';
-import type { Tree } from 'nx/src/generators/tree';
-import { requireNx } from '../../nx';
 import { isBinaryPath } from '../utils/binary-extensions';
 
-const { logger } = requireNx();
+import { logger, Tree } from 'nx/src/devkit-exports';
 
 /**
  * Generates a folder of files based on provided templates.

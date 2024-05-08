@@ -1,3 +1,5 @@
+import 'nx/src/internal-testing-utils/mock-project-graph';
+
 import * as devkit from '@nx/devkit';
 import {
   getProjects,

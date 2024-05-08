@@ -3,15 +3,7 @@ import { WorkspaceLibrarySecondaryEntryPoint } from './models';
 import { dirname, join, relative } from 'path';
 import { existsSync, lstatSync, readdirSync } from 'fs';
 import { readJsonFile, joinPathFragments, workspaceRoot } from '@nx/devkit';
-import type { PackageJson } from 'nx/src/utils/package-json';
-import { requireNx } from '@nx/devkit/nx';
-
-let { readModulePackageJson } = requireNx();
-
-// TODO: Remove this in Nx 19 when Nx 16.7.0 is no longer supported
-readModulePackageJson =
-  readModulePackageJson ??
-  require('nx/src/utils/package-json').readModulePackageJson;
+import { PackageJson, readModulePackageJson } from 'nx/src/utils/package-json';
 
 export function collectWorkspaceLibrarySecondaryEntryPoints(
   library: WorkspaceLibrary,

@@ -23,10 +23,15 @@ describe('@nx/expo (legacy)', () => {
   let proj: string;
   let appName = uniq('my-app');
   let libName = uniq('lib');
+  let originalEnv: string;
 
   beforeAll(() => {
     proj = newProject({ packages: ['@nx/expo'] });
     // we create empty preset above which skips creation of `production` named input
+
+    originalEnv = process.env.NX_ADD_PLUGINS;
+    process.env.NX_ADD_PLUGINS = 'false';
+
     updateJson('nx.json', (nxJson) => {
       nxJson.namedInputs = {
         default: ['{projectRoot}/**/*', 'sharedGlobals'],
@@ -36,14 +41,16 @@ describe('@nx/expo (legacy)', () => {
       return nxJson;
     });
     runCLI(
-      `generate @nx/expo:application ${appName} --e2eTestRunner=cypress --no-interactive`,
-      { env: { NX_ADD_PLUGINS: 'false' } }
+      `generate @nx/expo:application ${appName} --e2eTestRunner=cypress --no-interactive`
     );
     runCLI(
       `generate @nx/expo:library ${libName} --buildable --publishable --importPath=${proj}/${libName}`
     );
   });
-  afterAll(() => cleanupProject());
+  afterAll(() => {
+    process.env.NX_ADD_PLUGINS = originalEnv;
+    cleanupProject();
+  });
 
   it('should test and lint', async () => {
     const componentName = uniq('Component');
@@ -137,9 +144,7 @@ describe('@nx/expo (legacy)', () => {
     );
   });
 
-  // TODO (@xiongemi): this test is disabled due to expo requires typescript ^5.3.0
-  // re-enable it when typescript is updated
-  xit('should install', async () => {
+  it('should install', async () => {
     // run install command
     const installResults = await runCLIAsync(
       `install ${appName} --no-interactive`
@@ -193,8 +198,7 @@ describe('@nx/expo (legacy)', () => {
     const libName = uniq('@my-org/lib1');
 
     runCLI(
-      `generate @nx/expo:application ${appName} --project-name-and-root-format=as-provided --no-interactive`,
-      { env: { NX_ADD_PLUGINS: 'false' } }
+      `generate @nx/expo:application ${appName} --project-name-and-root-format=as-provided --no-interactive`
     );
 
     // check files are generated without the layout directory ("apps/") and
@@ -268,8 +272,7 @@ describe('@nx/expo (legacy)', () => {
   it('should run e2e for playwright', async () => {
     const appName2 = uniq('my-app');
     runCLI(
-      `generate @nx/expo:application ${appName2} --e2eTestRunner=playwright --no-interactive`,
-      { env: { NX_ADD_PLUGINS: 'false' } }
+      `generate @nx/expo:application ${appName2} --e2eTestRunner=playwright --no-interactive`
     );
     if (runE2ETests()) {
       const results = runCLI(`e2e ${appName2}-e2e`, { verbose: true });

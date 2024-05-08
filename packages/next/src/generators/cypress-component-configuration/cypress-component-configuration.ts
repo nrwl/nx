@@ -39,6 +39,7 @@ export async function cypressComponentConfigurationInternal(
     await baseCyCtConfig(tree, {
       project: options.project,
       skipFormat: true,
+      framework: 'next',
       jsx: true,
       addPlugin: options.addPlugin,
     })

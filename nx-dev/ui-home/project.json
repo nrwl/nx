@@ -5,7 +5,6 @@
   "projectType": "library",
   "tags": ["scope:nx-dev", "type:ui"],
   "targets": {
-    "lint": {},
     "xtest": {
       "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/nx-dev/ui-home"],

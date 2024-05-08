@@ -1,6 +1,8 @@
-import { ExecutorContext, joinPathFragments, readJsonFile } from '@nx/devkit';
+import { ExecutorContext, readJsonFile } from '@nx/devkit';
 import { execSync } from 'child_process';
 import { env as appendLocalEnv } from 'npm-run-path';
+import { join } from 'path';
+import { parseRegistryOptions } from '../../utils/npm-config';
 import { logTar } from './log-tar';
 import { PublishExecutorSchema } from './schema';
 import chalk = require('chalk');
@@ -32,14 +34,14 @@ export default async function runExecutor(
   const projectConfig =
     context.projectsConfigurations!.projects[context.projectName!]!;
 
-  const packageRoot = joinPathFragments(
+  const packageRoot = join(
     context.root,
     options.packageRoot ?? projectConfig.root
   );
 
-  const packageJsonPath = joinPathFragments(packageRoot, 'package.json');
-  const projectPackageJson = readJsonFile(packageJsonPath);
-  const packageName = projectPackageJson.name;
+  const packageJsonPath = join(packageRoot, 'package.json');
+  const packageJson = readJsonFile(packageJsonPath);
+  const packageName = packageJson.name;
 
   // If package and project name match, we can make log messages terser
   let packageTxt =
@@ -47,7 +49,7 @@ export default async function runExecutor(
       ? `package "${packageName}"`
       : `package "${packageName}" from project "${context.projectName}"`;
 
-  if (projectPackageJson.private === true) {
+  if (packageJson.private === true) {
     console.warn(
       `Skipped ${packageTxt}, because it has \`"private": true\` in ${packageJsonPath}`
     );
@@ -56,32 +58,28 @@ export default async function runExecutor(
     };
   }
 
-  const npmPublishCommandSegments = [`npm publish --json`];
+  const warnFn = (message: string) => {
+    console.log(chalk.keyword('orange')(message));
+  };
+  const { registry, tag, registryConfigKey } = await parseRegistryOptions(
+    context.root,
+    {
+      packageRoot,
+      packageJson,
+    },
+    {
+      registry: options.registry,
+      tag: options.tag,
+    },
+    warnFn
+  );
+
   const npmViewCommandSegments = [
-    `npm view ${packageName} versions dist-tags --json`,
+    `npm view ${packageName} versions dist-tags --json --"${registryConfigKey}=${registry}"`,
   ];
-
-  if (options.registry) {
-    npmPublishCommandSegments.push(`--registry=${options.registry}`);
-    npmViewCommandSegments.push(`--registry=${options.registry}`);
-  }
-
-  if (options.tag) {
-    npmPublishCommandSegments.push(`--tag=${options.tag}`);
-  }
-
-  if (options.otp) {
-    npmPublishCommandSegments.push(`--otp=${options.otp}`);
-  }
-
-  if (isDryRun) {
-    npmPublishCommandSegments.push(`--dry-run`);
-  }
-
-  // Resolve values using the `npm config` command so that things like environment variables and `publishConfig`s are accounted for
-  const registry =
-    options.registry ?? execSync(`npm config get registry`).toString().trim();
-  const tag = options.tag ?? execSync(`npm config get tag`).toString().trim();
+  const npmDistTagAddCommandSegments = [
+    `npm dist-tag add ${packageName}@${packageJson.version} ${tag} --"${registryConfigKey}=${registry}"`,
+  ];
 
   /**
    * In a dry-run scenario, it is most likely that all commands are being run with dry-run, therefore
@@ -92,11 +90,11 @@ export default async function runExecutor(
    * perform the npm view step, and just show npm publish's dry-run output.
    */
   if (!isDryRun && !options.firstRelease) {
-    const currentVersion = projectPackageJson.version;
+    const currentVersion = packageJson.version;
     try {
       const result = execSync(npmViewCommandSegments.join(' '), {
         env: processEnv(true),
-        cwd: packageRoot,
+        cwd: context.root,
         stdio: ['ignore', 'pipe', 'pipe'],
       });
 
@@ -114,14 +112,11 @@ export default async function runExecutor(
       if (resultJson.versions.includes(currentVersion)) {
         try {
           if (!isDryRun) {
-            execSync(
-              `npm dist-tag add ${packageName}@${currentVersion} ${tag} --registry=${registry}`,
-              {
-                env: processEnv(true),
-                cwd: packageRoot,
-                stdio: 'ignore',
-              }
-            );
+            execSync(npmDistTagAddCommandSegments.join(' '), {
+              env: processEnv(true),
+              cwd: context.root,
+              stdio: 'ignore',
+            });
             console.log(
               `Added the dist-tag ${tag} to v${currentVersion} for registry ${registry}.\n`
             );
@@ -205,11 +200,23 @@ export default async function runExecutor(
     console.log('Skipped npm view because --first-release was set');
   }
 
+  const npmPublishCommandSegments = [
+    `npm publish ${packageRoot} --json --"${registryConfigKey}=${registry}" --tag=${tag}`,
+  ];
+
+  if (options.otp) {
+    npmPublishCommandSegments.push(`--otp=${options.otp}`);
+  }
+
+  if (isDryRun) {
+    npmPublishCommandSegments.push(`--dry-run`);
+  }
+
   try {
     const output = execSync(npmPublishCommandSegments.join(' '), {
       maxBuffer: LARGE_BUFFER,
       env: processEnv(true),
-      cwd: packageRoot,
+      cwd: context.root,
       stdio: ['ignore', 'pipe', 'pipe'],
     });
 

@@ -1,3 +1,5 @@
+import 'nx/src/internal-testing-utils/mock-project-graph';
+
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { Tree, readJson, readProjectConfiguration } from '@nx/devkit';
 import { applicationGenerator } from './application';
@@ -22,6 +24,8 @@ describe('app', () => {
         expect(projectConfig.targets.build).toBeUndefined();
         expect(projectConfig.targets.serve).toBeUndefined();
         expect(projectConfig.targets.test).toBeUndefined();
+        expect(projectConfig.targets['build-static']).toBeUndefined();
+        expect(projectConfig.targets['serve-static']).toBeUndefined();
       });
 
       it('should create all new files in the correct location', async () => {
@@ -54,6 +58,37 @@ describe('app', () => {
       it('should configure tsconfig and project.json correctly', () => {
         expect(tree.read('my-app/project.json', 'utf-8')).toMatchSnapshot();
         expect(tree.read('my-app/tsconfig.json', 'utf-8')).toMatchSnapshot();
+      });
+
+      it('should add the nuxt and vitest plugins', () => {
+        const nxJson = readJson(tree, 'nx.json');
+        expect(nxJson.plugins).toMatchObject([
+          {
+            plugin: '@nx/eslint/plugin',
+            options: { targetName: 'lint' },
+          },
+          {
+            plugin: '@nx/vite/plugin',
+            options: { testTargetName: 'test' },
+          },
+          {
+            plugin: '@nx/nuxt/plugin',
+            options: { buildTargetName: 'build', serveTargetName: 'serve' },
+          },
+          {
+            plugin: '@nx/playwright/plugin',
+            options: { targetName: 'e2e' },
+          },
+        ]);
+        expect(
+          nxJson.plugins.indexOf(
+            nxJson.plugins.find((p) => p.plugin === '@nx/nuxt/plugin')
+          )
+        ).toBeGreaterThan(
+          nxJson.plugins.indexOf(
+            nxJson.plugins.find((p) => p.plugin === '@nx/vite/plugin')
+          )
+        );
       });
     });
 

@@ -3,7 +3,7 @@
 exports[`app --style styled-jsx should use <style jsx> in index page 1`] = `
 "'use client';
 
-export default async function Index() {
+export default function Index() {
   /*
    * Replace the elements below with your own.
    *

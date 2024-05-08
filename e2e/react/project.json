@@ -1,0 +1,30 @@
+{
+  "name": "e2e-react",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "e2e/react",
+  "projectType": "application",
+  "implicitDependencies": ["react"],
+  "targets": {
+    "e2e-ci--src/react-package.test.ts": {
+      "inputs": ["e2eInputs", "^production"]
+    },
+    "e2e-ci--src/react.test.ts": {
+      "inputs": ["e2eInputs", "^production"]
+    },
+    "e2e-ci--src/cypress-component-tests.test.ts": {
+      "inputs": ["e2eInputs", "^production"]
+    },
+    "e2e-ci--src/playwright.test.ts": {
+      "inputs": ["e2eInputs", "^production"]
+    },
+    "e2e-ci--src/react-module-federation.test.ts": {
+      "inputs": ["e2eInputs", "^production"]
+    },
+    "e2e-ci--src/react-vite.test.ts": {
+      "inputs": ["e2eInputs", "^production"]
+    },
+    "e2e-ci--src/react-webpack.test.ts": {
+      "inputs": ["e2eInputs", "^production"]
+    }
+  }
+}

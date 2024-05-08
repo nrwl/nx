@@ -35,6 +35,7 @@ where
         "**/node_modules".into(),
         "**/.git".into(),
         "**/.nx/cache".into(),
+        "**/.yarn/cache".into(),
     ];
 
     if let Some(additional_ignores) = ignores {

@@ -7,33 +7,13 @@ import {
   updateNxJson,
   type GeneratorCallback,
   type Tree,
+  createProjectGraphAsync,
 } from '@nx/devkit';
-import { updatePackageScripts } from '@nx/devkit/src/utils/update-package-scripts';
 import { createNodes } from '../../plugins/plugin';
 import { jestVersion, nxVersion } from '../../utils/versions';
 import { isPresetCjs } from '../../utils/config/is-preset-cjs';
 import type { JestInitSchema } from './schema';
-
-function addPlugin(tree: Tree) {
-  const nxJson = readNxJson(tree);
-
-  nxJson.plugins ??= [];
-  if (
-    !nxJson.plugins.some((p) =>
-      typeof p === 'string'
-        ? p === '@nx/jest/plugin'
-        : p.plugin === '@nx/jest/plugin'
-    )
-  ) {
-    nxJson.plugins.push({
-      plugin: '@nx/jest/plugin',
-      options: {
-        targetName: 'test',
-      },
-    });
-  }
-  updateNxJson(tree, nxJson);
-}
+import { addPlugin } from '@nx/devkit/src/utils/add-plugin';
 
 function updateProductionFileSet(tree: Tree, presetExt: 'cjs' | 'js') {
   const nxJson = readNxJson(tree);
@@ -110,14 +90,27 @@ export async function jestInitGeneratorInternal(
   tree: Tree,
   options: JestInitSchema
 ): Promise<GeneratorCallback> {
-  options.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
+  const nxJson = readNxJson(tree);
+  const addPluginDefault =
+    process.env.NX_ADD_PLUGINS !== 'false' &&
+    nxJson.useInferencePlugins !== false;
+  options.addPlugin ??= addPluginDefault;
 
   const presetExt = isPresetCjs(tree) ? 'cjs' : 'js';
 
   if (!tree.exists('jest.preset.js') && !tree.exists('jest.preset.cjs')) {
     updateProductionFileSet(tree, presetExt);
     if (options.addPlugin) {
-      addPlugin(tree);
+      await addPlugin(
+        tree,
+        await createProjectGraphAsync(),
+        '@nx/jest/plugin',
+        createNodes,
+        {
+          targetName: ['test', 'jest:test', 'jest-test'],
+        },
+        options.updatePackageScripts
+      );
     } else {
       addJestTargetDefaults(tree, presetExt);
     }
@@ -127,10 +120,6 @@ export async function jestInitGeneratorInternal(
   if (!options.skipPackageJson) {
     tasks.push(removeDependenciesFromPackageJson(tree, ['@nx/jest'], []));
     tasks.push(updateDependencies(tree, options));
-  }
-
-  if (options.updatePackageScripts) {
-    await updatePackageScripts(tree, createNodes);
   }
 
   if (!options.skipFormat) {

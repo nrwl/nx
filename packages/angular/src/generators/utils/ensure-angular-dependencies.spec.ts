@@ -10,7 +10,7 @@ describe('ensureAngularDependencies', () => {
     tree = createTreeWithEmptyWorkspace();
   });
 
-  it('should add angular dependencies', () => {
+  it('should add angular dependencies when not installed', () => {
     // ACT
     ensureAngularDependencies(tree);
 
@@ -35,12 +35,13 @@ describe('ensureAngularDependencies', () => {
     expect(devDependencies['@angular-devkit/build-angular']).toBe(
       angularDevkitVersion
     );
-
-    // codelyzer should no longer be there by default
-    expect(devDependencies['codelyzer']).toBeUndefined();
+    expect(devDependencies['@angular-devkit/schematics']).toBe(
+      angularDevkitVersion
+    );
+    expect(devDependencies['@schematics/angular']).toBe(angularDevkitVersion);
   });
 
-  it('should add angular dependencies respecting base packages versions', () => {
+  it('should add peer dependencies respecting the @angular/devkit installed version', () => {
     // ARRANGE
     updateJson(tree, 'package.json', (json) => ({
       ...json,
@@ -58,22 +59,10 @@ describe('ensureAngularDependencies', () => {
     ensureAngularDependencies(tree);
 
     // ASSERT
-    const { dependencies, devDependencies } = readJson(tree, 'package.json');
-
-    expect(dependencies['@angular/animations']).toBe('~15.0.0');
-    expect(dependencies['@angular/common']).toBe('~15.0.0');
-    expect(dependencies['@angular/compiler']).toBe('~15.0.0');
-    expect(dependencies['@angular/core']).toBe('~15.0.0');
-    expect(dependencies['@angular/platform-browser']).toBe('~15.0.0');
-    expect(dependencies['@angular/platform-browser-dynamic']).toBe('~15.0.0');
-    expect(dependencies['@angular/router']).toBe('~15.0.0');
-    expect(dependencies['rxjs']).toBeDefined();
-    expect(dependencies['tslib']).toBeDefined();
-    expect(dependencies['zone.js']).toBeDefined();
-    expect(devDependencies['@angular/cli']).toBe('~15.0.0');
-    expect(devDependencies['@angular/compiler-cli']).toBe('~15.0.0');
-    expect(devDependencies['@angular/language-service']).toBe('~15.0.0');
+    const { devDependencies } = readJson(tree, 'package.json');
     expect(devDependencies['@angular-devkit/build-angular']).toBe('~15.0.0');
+    expect(devDependencies['@angular-devkit/schematics']).toBe('~15.0.0');
+    expect(devDependencies['@schematics/angular']).toBe('~15.0.0');
   });
 
   it('should not overwrite already installed dependencies', () => {
@@ -85,15 +74,48 @@ describe('ensureAngularDependencies', () => {
         '@angular/animations': '~15.0.1',
         '@angular/core': '~15.0.0',
       },
+      devDependencies: {
+        ...json.devDependencies,
+        '@angular-devkit/build-angular': '~15.0.1',
+      },
     }));
 
     // ACT
     ensureAngularDependencies(tree);
 
     // ASSERT
-    const { dependencies } = readJson(tree, 'package.json');
+    const { dependencies, devDependencies } = readJson(tree, 'package.json');
 
     expect(dependencies['@angular/animations']).toBe('~15.0.1');
     expect(dependencies['@angular/core']).toBe('~15.0.0');
+    expect(devDependencies['@angular-devkit/build-angular']).toBe('~15.0.1');
+  });
+
+  it('should not add extra runtime dependencies when `@angular/core` is already installed', () => {
+    // ARRANGE
+    updateJson(tree, 'package.json', (json) => ({
+      ...json,
+      dependencies: {
+        ...json.dependencies,
+        '@angular/core': '~15.0.0',
+      },
+    }));
+
+    // ACT
+    ensureAngularDependencies(tree);
+
+    // ASSERT
+    const { dependencies, devDependencies } = readJson(tree, 'package.json');
+
+    expect(dependencies['@angular/core']).toBe('~15.0.0');
+    expect(dependencies['@angular/animations']).toBeUndefined();
+    expect(dependencies['@angular/common']).toBeUndefined();
+    expect(dependencies['@angular/compiler']).toBeUndefined();
+    expect(dependencies['@angular/platform-browser']).toBeUndefined();
+    expect(dependencies['@angular/platform-browser-dynamic']).toBeUndefined();
+    expect(dependencies['@angular/router']).toBeUndefined();
+    expect(dependencies['rxjs']).toBeUndefined();
+    expect(dependencies['tslib']).toBeUndefined();
+    expect(dependencies['zone.js']).toBeUndefined();
   });
 });

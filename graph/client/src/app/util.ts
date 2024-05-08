@@ -1,7 +1,9 @@
 /* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
-import { ProjectGraphDependency, ProjectGraphProjectNode } from '@nx/devkit';
-import { getEnvironmentConfig } from '@nx/graph/shared';
+import type {
+  ProjectGraphDependency,
+  ProjectGraphProjectNode,
+} from '@nx/devkit';
 /* eslint-enable @nx/enforce-module-boundaries */
 
 export function parseParentDirectoriesFromFilePath(

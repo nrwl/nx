@@ -3,9 +3,6 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "nx-dev/feature-doc-viewer/src",
   "projectType": "library",
-  "targets": {
-    "lint": {},
-    "test": {}
-  },
+  "targets": {},
   "tags": ["scope:nx-dev", "type:feature"]
 }

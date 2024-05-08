@@ -46,29 +46,18 @@ export function generateDotNxSetup(version?: string) {
   flushChanges(host.root, changes);
 }
 
+export function normalizeVersionForNxJson(pkg: string, version: string) {
+  if (!valid(version)) {
+    version = execSync(`npm view ${pkg}@${version} version`).toString();
+  }
+  return version.trimEnd();
+}
+
 export function writeMinimalNxJson(host: Tree, version: string) {
   if (!host.exists('nx.json')) {
-    if (!valid(version)) {
-      version = execSync(`npm view nx@${version} version`).toString();
-    }
     writeJson<NxJsonConfiguration>(host, 'nx.json', {
-      targetDefaults: {
-        build: {
-          cache: true,
-          dependsOn: ['^build'],
-        },
-        lint: {
-          cache: true,
-        },
-        test: {
-          cache: true,
-        },
-        e2e: {
-          cache: true,
-        },
-      },
       installation: {
-        version: version.trimEnd(),
+        version: normalizeVersionForNxJson('nx', version),
       },
     });
   }

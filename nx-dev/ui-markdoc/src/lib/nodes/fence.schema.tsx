@@ -9,7 +9,7 @@ export const fence: Schema = {
     highlightLines: { type: 'Array', default: [] },
     lineGroups: { type: 'Object', default: {} },
     command: { type: 'String', default: '' },
-    path: { type: 'String', default: '~/workspace' },
+    path: { type: 'String', default: '' },
     process: { type: 'Boolean', render: false, default: true },
     skipRescope: { type: 'Boolean', default: false },
     enableCopy: { type: 'Boolean', default: true },

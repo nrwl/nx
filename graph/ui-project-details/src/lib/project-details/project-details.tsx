@@ -2,116 +2,105 @@
 
 /* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
-import { ProjectGraphProjectNode } from '@nx/devkit';
+import type { ProjectGraphProjectNode } from '@nx/devkit';
+// nx-ignore-next-line
+import { GraphError } from 'nx/src/command-line/graph/graph';
+/* eslint-enable @nx/enforce-module-boundaries */
 
 import { EyeIcon } from '@heroicons/react/24/outline';
 import { PropertyInfoTooltip, Tooltip } from '@nx/graph/ui-tooltips';
-import {
-  TargetConfigurationDetails,
-  TargetConfigurationDetailsHandle,
-} from '../target-configuration-details/target-configuration-details';
 import { TooltipTriggerText } from '../target-configuration-details/tooltip-trigger-text';
-import {
-  createRef,
-  ForwardedRef,
-  forwardRef,
-  RefObject,
-  useImperativeHandle,
-  useRef,
-} from 'react';
 import { twMerge } from 'tailwind-merge';
 import { Pill } from '../pill';
+import { TargetTechnologies } from '../target-technologies/target-technologies';
+import { TargetConfigurationGroupList } from '../target-configuration-details-group-list/target-configuration-details-group-list';
 
 export interface ProjectDetailsProps {
   project: ProjectGraphProjectNode;
   sourceMap: Record<string, string[]>;
+  errors?: GraphError[];
   variant?: 'default' | 'compact';
-  onTargetCollapse?: (targetName: string) => void;
-  onTargetExpand?: (targetName: string) => void;
   onViewInProjectGraph?: (data: { projectName: string }) => void;
   onViewInTaskGraph?: (data: {
     projectName: string;
     targetName: string;
   }) => void;
   onRunTarget?: (data: { projectName: string; targetName: string }) => void;
+  viewInProjectGraphPosition?: 'top' | 'bottom';
 }
 
-export interface ProjectDetailsImperativeHandle {
-  collapseTarget: (targetName: string) => void;
-  expandTarget: (targetName: string) => void;
-}
+export const ProjectDetails = ({
+  project,
+  sourceMap,
+  variant,
+  onViewInProjectGraph,
+  onViewInTaskGraph,
+  onRunTarget,
+  viewInProjectGraphPosition = 'top',
+}: ProjectDetailsProps) => {
+  const projectData = project.data;
+  const isCompact = variant === 'compact';
 
-export const ProjectDetails = forwardRef(
-  (
-    {
-      project: {
-        name,
-        data: { root, ...projectData },
-      },
-      sourceMap,
-      variant,
-      onTargetCollapse,
-      onTargetExpand,
-      onViewInProjectGraph,
-      onViewInTaskGraph,
-      onRunTarget,
-    }: ProjectDetailsProps,
-    ref: ForwardedRef<ProjectDetailsImperativeHandle>
-  ) => {
-    const isCompact = variant === 'compact';
-    const projectTargets = Object.keys(projectData.targets ?? {});
-    const targetRefs = useRef(
-      projectTargets.reduce((acc, targetName) => {
-        acc[targetName] = createRef<TargetConfigurationDetailsHandle>();
-        return acc;
-      }, {} as Record<string, RefObject<TargetConfigurationDetailsHandle>>)
-    );
+  const displayType =
+    projectData.projectType &&
+    projectData.projectType?.charAt(0)?.toUpperCase() +
+      projectData.projectType?.slice(1);
 
-    const displayType =
-      projectData.projectType &&
-      projectData.projectType?.charAt(0)?.toUpperCase() +
-        projectData.projectType?.slice(1);
+  const technologies = [
+    ...new Set(
+      [
+        ...(projectData.metadata?.technologies ?? []),
+        ...Object.values(projectData.targets ?? {})
+          .map((target) => target?.metadata?.technologies)
+          .flat(),
+      ].filter(Boolean)
+    ),
+  ] as string[];
 
-    useImperativeHandle(ref, () => ({
-      collapseTarget: (targetName: string) => {
-        targetRefs.current[targetName]?.current?.collapse();
-      },
-      expandTarget: (targetName: string) => {
-        targetRefs.current[targetName]?.current?.expand();
-      },
-    }));
-
-    return (
-      <>
-        <header
+  return (
+    <>
+      <header
+        className={twMerge(
+          `border-b border-slate-900/10 dark:border-slate-300/10`,
+          isCompact ? 'mb-2' : 'mb-4'
+        )}
+      >
+        <div
           className={twMerge(
-            `border-b border-slate-900/10 dark:border-slate-300/10`,
-            isCompact ? 'mb-2' : 'mb-4'
+            `flex items-center justify-between`,
+            isCompact ? `gap-1` : `mb-4 gap-2`
           )}
         >
-          <h1
-            className={twMerge(
-              `flex items-center justify-between dark:text-slate-100`,
-              isCompact ? `text-2xl gap-1` : `text-4xl mb-4 gap-2`
-            )}
-          >
-            <span>{name}</span>
-            <span>
-              {onViewInProjectGraph ? (
-                <button
-                  className="text-base cursor-pointer items-center inline-flex gap-2 text-slate-600 dark:text-slate-300 ring-2 ring-inset ring-slate-400/40 dark:ring-slate-400/30 hover:bg-slate-50 dark:hover:bg-slate-800/60 rounded-md py-1 px-2"
-                  onClick={() => onViewInProjectGraph({ projectName: name })}
-                >
-                  <EyeIcon className="h-5 w-5 "></EyeIcon>
-                  <span>View In Graph</span>
-                </button>
-              ) : null}{' '}
-            </span>
-          </h1>
-          <div className="py-2 ">
+          <div className="flex items-center gap-2">
+            <h1
+              className={twMerge(
+                `dark:text-slate-100`,
+                isCompact ? `text-2xl` : `text-4xl`
+              )}
+            >
+              {project.name}
+            </h1>
+            <TargetTechnologies
+              technologies={technologies}
+              showTooltip={true}
+              className="h-6 w-6"
+            />
+          </div>
+          <span>
+            {onViewInProjectGraph && viewInProjectGraphPosition === 'top' && (
+              <ViewInProjectGraphButton
+                callback={() =>
+                  onViewInProjectGraph({ projectName: project.name })
+                }
+              />
+            )}{' '}
+          </span>
+        </div>
+        <div className="flex justify-between py-2">
+          <div>
             {projectData.tags && projectData.tags.length ? (
               <p>
-                <span className="font-medium inline-block w-10">Tags:</span>
+                <span className="inline-block w-10 font-medium">Tags:</span>
                 {projectData.tags?.map((tag) => (
                   <span className="ml-2 font-mono">
                     <Pill text={tag} />
@@ -120,59 +109,65 @@ export const ProjectDetails = forwardRef(
               </p>
             ) : null}
             <p>
-              <span className="font-medium inline-block w-10">Root:</span>
-              <span className="font-mono"> {root}</span>
+              <span className="inline-block w-10 font-medium">Root:</span>
+              <span className="font-mono"> {projectData.root}</span>
             </p>
             {displayType ? (
               <p>
-                <span className="font-medium inline-block w-10">Type:</span>
+                <span className="inline-block w-10 font-medium">Type:</span>
                 <span className="font-mono"> {displayType}</span>
               </p>
             ) : null}
           </div>
-        </header>
-        <div>
-          <h2 className={isCompact ? `text-lg mb-3` : `text-xl mb-4`}>
-            <Tooltip
-              openAction="hover"
-              content={(<PropertyInfoTooltip type="targets" />) as any}
-            >
-              <span className="text-slate-800 dark:text-slate-200">
-                <TooltipTriggerText>Targets</TooltipTriggerText>
-              </span>
-            </Tooltip>
-          </h2>
-          <ul>
-            {projectTargets.sort(sortNxReleasePublishLast).map((targetName) => {
-              const target = projectData.targets?.[targetName];
-              return target && targetRefs.current[targetName] ? (
-                <li className="mb-4 last:mb-0" key={`target-${targetName}`}>
-                  <TargetConfigurationDetails
-                    ref={targetRefs.current[targetName]}
-                    variant={variant}
-                    projectName={name}
-                    targetName={targetName}
-                    targetConfiguration={target}
-                    sourceMap={sourceMap}
-                    onRunTarget={onRunTarget}
-                    onViewInTaskGraph={onViewInTaskGraph}
-                    onCollapse={onTargetCollapse}
-                    onExpand={onTargetExpand}
+          <div className="self-end">
+            <span>
+              {onViewInProjectGraph &&
+                viewInProjectGraphPosition === 'bottom' && (
+                  <ViewInProjectGraphButton
+                    callback={() =>
+                      onViewInProjectGraph({ projectName: project.name })
+                    }
                   />
-                </li>
-              ) : null;
-            })}
-          </ul>
+                )}{' '}
+            </span>
+          </div>
         </div>
-      </>
-    );
-  }
-);
+      </header>
+      <div>
+        <h2 className={isCompact ? `mb-3 text-lg` : `mb-4 text-xl`}>
+          <Tooltip
+            openAction="hover"
+            content={(<PropertyInfoTooltip type="targets" />) as any}
+          >
+            <span className="text-slate-800 dark:text-slate-200">
+              <TooltipTriggerText>Targets</TooltipTriggerText>
+            </span>
+          </Tooltip>
+        </h2>
 
-function sortNxReleasePublishLast(a: string, b: string) {
-  if (a === 'nx-release-publish') return 1;
-  if (b === 'nx-release-publish') return -1;
-  return 1;
-}
+        <TargetConfigurationGroupList
+          className="w-full"
+          project={project}
+          sourceMap={sourceMap}
+          variant={variant}
+          onRunTarget={onRunTarget}
+          onViewInTaskGraph={onViewInTaskGraph}
+        />
+      </div>
+    </>
+  );
+};
 
 export default ProjectDetails;
+
+function ViewInProjectGraphButton({ callback }: { callback: () => void }) {
+  return (
+    <button
+      className="inline-flex cursor-pointer items-center gap-2 rounded-md px-2 py-1 text-base text-slate-600 ring-2 ring-inset ring-slate-400/40 hover:bg-slate-50 dark:text-slate-300 dark:ring-slate-400/30 dark:hover:bg-slate-800/60"
+      onClick={() => callback()}
+    >
+      <EyeIcon className="h-5 w-5 "></EyeIcon>
+      <span>View In Graph</span>
+    </button>
+  );
+}
