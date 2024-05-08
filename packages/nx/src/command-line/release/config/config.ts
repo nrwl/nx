@@ -11,7 +11,7 @@
  * defaults and user overrides, as well as handling common errors, up front to produce a single, consistent,
  * and easy to consume config object for all the `nx release` command implementations.
  */
-import { join } from 'path';
+import { join, relative } from 'node:path';
 import { NxJsonConfiguration } from '../../../config/nx-json';
 import { ProjectFileMap, ProjectGraph } from '../../../config/project-graph';
 import { readJsonFile } from '../../../utils/fileutils';
@@ -19,6 +19,7 @@ import { findMatchingProjects } from '../../../utils/find-matching-projects';
 import { output } from '../../../utils/output';
 import { PackageJson } from '../../../utils/package-json';
 import { workspaceRoot } from '../../../utils/workspace-root';
+import { resolveChangelogRenderer } from '../utils/resolve-changelog-renderer';
 import { resolveNxJsonConfigErrorMessage } from '../utils/resolve-nx-json-error-message';
 import { DEFAULT_CONVENTIONAL_COMMITS_CONFIG } from './conventional-commits';
 
@@ -508,6 +509,8 @@ export async function createNxReleaseConfig(
     releaseGroups[releaseGroupName] = finalReleaseGroup;
   }
 
+  ensureChangelogRenderersAreResolvable(releaseGroups, rootChangelogConfig);
+
   return {
     error: null,
     nxReleaseConfig: {
@@ -882,5 +885,57 @@ function isProjectPublic(
     // do nothing and assume that the project is not public if there is a parsing issue
     // this will result in it being excluded from the default projects list
     return false;
+  }
+}
+
+function ensureChangelogRenderersAreResolvable(
+  releaseGroups: NxReleaseConfig['groups'],
+  rootChangelogConfig: NxReleaseConfig['changelog']
+) {
+  /**
+   * If any form of changelog config is enabled, ensure that any provided changelog renderers are resolvable
+   * up front so that we do not end up erroring only after the versioning step has been completed.
+   */
+  const uniqueRendererPaths = new Set<string>();
+
+  if (
+    rootChangelogConfig.workspaceChangelog &&
+    typeof rootChangelogConfig.workspaceChangelog !== 'boolean' &&
+    rootChangelogConfig.workspaceChangelog.renderer?.length
+  ) {
+    uniqueRendererPaths.add(rootChangelogConfig.workspaceChangelog.renderer);
+  }
+  if (
+    rootChangelogConfig.projectChangelogs &&
+    typeof rootChangelogConfig.projectChangelogs !== 'boolean' &&
+    rootChangelogConfig.projectChangelogs.renderer?.length
+  ) {
+    uniqueRendererPaths.add(rootChangelogConfig.projectChangelogs.renderer);
+  }
+
+  for (const group of Object.values(releaseGroups)) {
+    if (
+      group.changelog &&
+      typeof group.changelog !== 'boolean' &&
+      group.changelog.renderer?.length
+    ) {
+      uniqueRendererPaths.add(group.changelog.renderer);
+    }
+  }
+
+  if (!uniqueRendererPaths.size) {
+    return;
+  }
+
+  for (const rendererPath of uniqueRendererPaths) {
+    try {
+      resolveChangelogRenderer(rendererPath);
+    } catch (e) {
+      const workspaceRelativePath = relative(workspaceRoot, rendererPath);
+      output.error({
+        title: `There was an error when resolving the configured changelog renderer at path: ${workspaceRelativePath}`,
+      });
+      throw e;
+    }
   }
 }
