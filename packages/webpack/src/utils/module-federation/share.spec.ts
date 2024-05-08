@@ -58,6 +58,30 @@ describe('MF Share Utils', () => {
       });
     });
 
+    it('should order nested projects first', () => {
+      // ARRANGE
+      jest.spyOn(fs, 'existsSync').mockReturnValue(true);
+      jest.spyOn(tsUtils, 'readTsPathMappings').mockReturnValue({
+        '@myorg/shared': ['/libs/shared/src/index.ts'],
+        '@myorg/shared/components': ['/libs/shared/components/src/index.ts'],
+      });
+
+      // ACT
+      const sharedLibraries = shareWorkspaceLibraries([
+        { name: 'shared', root: 'libs/shared', importKey: '@myorg/shared' },
+        {
+          name: 'shared-components',
+          root: 'libs/shared/components',
+          importKey: '@myorg/shared/components',
+        },
+      ]);
+
+      // ASSERT
+      expect(Object.keys(sharedLibraries.getAliases())[0]).toEqual(
+        '@myorg/shared/components'
+      );
+    });
+
     it('should handle path mappings with wildcards correctly in non-buildable libraries', () => {
       // ARRANGE
       jest.spyOn(fs, 'existsSync').mockImplementation((file: string) => true);

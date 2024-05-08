@@ -17,11 +17,7 @@ You get the **same level of security**, **dedicated support**, **SSO/SAML auth**
 
 We also offer an uptime SLA guarantee of 99.98% for our Enterprise customers, SOC certificates on request, and we're happy to meet with your security teams if they have questions, or fill in security questionnaires. We also maintain a [Status Page here](https://status.nx.app/).
 
-To start with this option, it's as easy as running
-
-```shell
-npx nx connect
-```
+To start with this option, it's as easy as creating an account on [nx.app](https://cloud.nx.app) and connecting your repository.
 
 ### Single-tenant instance
 

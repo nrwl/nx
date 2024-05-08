@@ -1,0 +1,50 @@
+[
+  {
+    "name": "Juri Strumpflohner",
+    "image": "/blog/images/Juri Strumpfloner.jpeg",
+    "twitter": "juristr",
+    "github": "juristr"
+  },
+  {
+    "name": "Colum Ferry",
+    "image": "/blog/images/Colum Ferry.jpeg",
+    "twitter": "FerryColum",
+    "github": "Coly010"
+  },
+  {
+    "name": "Emily Xiong",
+    "image": "/blog/images/Emily Xiong.jpeg",
+    "twitter": "xiongemily",
+    "github": "xiongemi"
+  },
+  {
+    "name": "Isaac Mann",
+    "image": "/blog/images/Isaac Mann.jpeg",
+    "twitter": "mannisaac",
+    "github": "isaacplmann"
+  },
+  {
+    "name": "Katerina Skroumpelou",
+    "image": "/blog/images/Katerina Skroumpelou.jpeg",
+    "twitter": "psybercity",
+    "github": "mandarini"
+  },
+  {
+    "name": "Max Kless",
+    "image": "/blog/images/Max Kless.jpeg",
+    "twitter": "MaxKless",
+    "github": "MaxKless"
+  },
+  {
+    "name": "Victor Savkin",
+    "image": "/blog/images/Victor Savkin.jpeg",
+    "twitter": "victorsavkin",
+    "github": "vsavkin"
+  },
+  {
+    "name": "Zack DeRose",
+    "image": "/blog/images/Zack DeRose.jpeg",
+    "twitter": "zackderose",
+    "github": "ZackDeRose"
+  }
+]

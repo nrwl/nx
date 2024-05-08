@@ -294,15 +294,15 @@ To connect to Nx Cloud:
 - Commit and push your changes to GitHub
 - Go to [https://cloud.nx.app](https://cloud.nx.app), create an account, and connect your repository
 
-![Connect to your repository](/shared/tutorials/connect-to-repository.png)
+![Connect to your repository](/shared/tutorials/connect-to-repository.webp)
 
 `cloud.nx.app` will send a PR to your repository enabling Nx Cloud, after which caching, distribution and more will start working.
 
-![Add an Nx Cloud access token to your repository dialog](/shared/tutorials/send-cloud-pr.png)
+![Add an Nx Cloud access token to your repository dialog](/shared/tutorials/send-cloud-pr.webp)
 
 Once you merge that PR, you'll be able to see CI pipeline runs appearing in the Nx Cloud dashboard:
 
-![CI Pipeline Executiosn](/shared/tutorials/ci-pipeline-executions.png)
+![CI Pipeline Executiosn](/shared/tutorials/ci-pipeline-executions.webp)
 
 ### Enable a Distributed CI Pipeline
 
@@ -314,7 +314,7 @@ The current CI pipeline runs on a single machine and can only handle small works
 - run: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-jvm" --stop-agents-after="build"
 ```
 
-![Gradle run details](/shared/tutorials/gradle-run-details.png)
+![Gradle run details](/shared/tutorials/gradle-run-details.webp)
 
 For more information about how Nx can improve your CI pipeline, check out one of these detailed tutorials:
 
