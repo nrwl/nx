@@ -4,7 +4,7 @@ on:
 
 name: Stale Bot workflow
 
-permissions: {}
+permissions: { }
 
 jobs:
   build:
@@ -16,163 +16,96 @@ jobs:
     name: stale
     runs-on: ubuntu-latest
     steps:
+      # This handles issues that need more info
       - name: stale-more-info-needed
         id: stale-more-info-needed
-        uses: actions/stale@v3.0.13
+        uses: actions/stale@v9.0.0
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
-          days-before-stale: 14
-          days-before-close: 14
+          days-before-stale: 7
+          days-before-close: 21
           stale-issue-label: "stale"
           operations-per-run: 300
           remove-stale-when-updated: true
           only-labels: "blocked: more info needed"
           stale-issue-message: |
-            This issue has been automatically marked as stale because it hasn't had any recent activity. It will be closed in 14 days if no further activity occurs.
-            If we missed this issue please reply to keep it active.
+            This issue has been automatically marked as stale because more information has not been provided within 7 days.
+            It will be closed in 21 days if no information is provided.
+            If information has been provided, please reply to keep it active.
             Thanks for being a part of the Nx community! 🙏
 
+      # This handles PRs that need to be rebased
       - name: stale-needs-rebase
         id: stale-needs-rebase
-        uses: actions/stale@v3.0.13
+        uses: actions/stale@v9.0.0
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
-          days-before-stale: 14
-          days-before-close: 14
+          days-before-stale: 7
+          days-before-close: 21
           stale-issue-label: "stale"
           operations-per-run: 300
           remove-stale-when-updated: true
           only-labels: "blocked: needs rebased"
           stale-issue-message: |
-            This issue has been automatically marked as stale because it hasn't had any recent activity. It will be closed in 14 days if no further activity occurs.
-            If we missed this issue please reply to keep it active.
+            This PR has been automatically marked as stale because it has not been rebased in 7 days.
+            It will be closed in 21 days if it is not rebased.
+            If the PR has been rebased or you are working on rebasing it, please reply to keep it active.
+            If you do not have time, please let us know and we can rebase it.
             Thanks for being a part of the Nx community! 🙏
 
+      # This handles issues that do not have a repro
       - name: stale-repro-needed
         id: stale-repro-needed
-        uses: actions/stale@v3.0.13
+        uses: actions/stale@v9.0.0
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
-          days-before-stale: 14
-          days-before-close: 14
+          days-before-stale: 7
+          days-before-close: 21
           stale-issue-label: "stale"
           operations-per-run: 300
           remove-stale-when-updated: true
           only-labels: "blocked: repro needed"
           stale-issue-message: |
-            This issue has been automatically marked as stale because it hasn't had any recent activity. It will be closed in 14 days if no further activity occurs.
-            If we missed this issue please reply to keep it active.
+            This issue has been automatically marked as stale because no reproduction was provided within 7 days.
+            Please help us help you. Providing a repository exhibiting the issue helps us diagnose and fix the issue.
+            Any time that we spend reproducing this issue is time taken away from addressing this issue and other issues.
+            This issue will be closed in 21 days if a reproduction is not provided.
+            If a reproduction has been provided, please reply to keep it active.
             Thanks for being a part of the Nx community! 🙏
 
       - name: stale-retry-with-latest
         id: stale-retry-with-latest
-        uses: actions/stale@v3.0.13
+        uses: actions/stale@v9.0.0
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
-          days-before-stale: 14
-          days-before-close: 14
+          days-before-stale: 7
+          days-before-close: 21
           stale-issue-label: "stale"
           operations-per-run: 300
           remove-stale-when-updated: true
           only-labels: "blocked: retry with latest"
           stale-issue-message: |
-            This issue has been automatically marked as stale because it hasn't had any recent activity. It will be closed in 14 days if no further activity occurs.
-            If we missed this issue please reply to keep it active.
+            This issue has been automatically marked as stale because no results of retrying on the latest version of Nx was provided within 7 days.
+            It will be closed in 21 days if no results are provided.
+            If the issue is still present, please reply to keep it active.
+            If the issue was not present, please close this issue.
             Thanks for being a part of the Nx community! 🙏
 
 
+      # This handles issues are really old and were made with a previous major
       - name: stale-bug
         id: stale-bug
-        uses: actions/stale@v3.0.13
+        uses: actions/stale@v9.0.0
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           days-before-stale: 180
-          days-before-close: 14
+          days-before-close: 21
           stale-issue-label: "stale"
           operations-per-run: 300
           remove-stale-when-updated: true
-          only-labels: "type: bug"
           stale-issue-message: |
-            This issue has been automatically marked as stale because it hasn't had any recent activity. It will be closed in 14 days if no further activity occurs.
-            If we missed this issue please reply to keep it active.
-            Thanks for being a part of the Nx community! 🙏
-
-      - name: stale-cleanup
-        id: stale-cleanup
-        uses: actions/stale@v3.0.13
-        with:
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-          days-before-stale: 180
-          days-before-close: 14
-          stale-issue-label: "stale"
-          operations-per-run: 300
-          remove-stale-when-updated: true
-          only-labels: "type: cleanup"
-          stale-issue-message: |
-            This issue has been automatically marked as stale because it hasn't had any recent activity. It will be closed in 14 days if no further activity occurs.
-            If we missed this issue please reply to keep it active.
-            Thanks for being a part of the Nx community! 🙏
-
-      - name: stale-docs
-        id: stale-docs
-        uses: actions/stale@v3.0.13
-        with:
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-          days-before-stale: 180
-          days-before-close: 14
-          stale-issue-label: "stale"
-          operations-per-run: 300
-          remove-stale-when-updated: true
-          only-labels: "type: docs"
-          stale-issue-message: |
-            This issue has been automatically marked as stale because it hasn't had any recent activity. It will be closed in 14 days if no further activity occurs.
-            If we missed this issue please reply to keep it active.
-            Thanks for being a part of the Nx community! 🙏
-
-      - name: stale-enhancement
-        id: stale-enhancement
-        uses: actions/stale@v3.0.13
-        with:
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-          days-before-stale: 250
-          days-before-close: 14
-          stale-issue-label: "stale"
-          operations-per-run: 300
-          remove-stale-when-updated: true
-          only-labels: "type: enhancement"
-          stale-issue-message: |
-            This issue has been automatically marked as stale because it hasn't had any recent activity. It will be closed in 14 days if no further activity occurs.
-            If we missed this issue please reply to keep it active.
-            Thanks for being a part of the Nx community! 🙏
-
-      - name: stale-feature
-        id: stale-feature
-        uses: actions/stale@v3.0.13
-        with:
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-          days-before-stale: 250
-          days-before-close: 14
-          stale-issue-label: "stale"
-          operations-per-run: 300
-          remove-stale-when-updated: true
-          only-labels: "type: feature"
-          stale-issue-message: |
-            This issue has been automatically marked as stale because it hasn't had any recent activity. It will be closed in 14 days if no further activity occurs.
-            If we missed this issue please reply to keep it active.
-            Thanks for being a part of the Nx community! 🙏
-
-      - name: stale-question
-        id: stale-question
-        uses: actions/stale@v3.0.13
-        with:
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-          days-before-stale: 45
-          days-before-close: 14
-          stale-issue-label: "stale"
-          operations-per-run: 300
-          remove-stale-when-updated: true
-          only-labels: "type: question / discussion"
-          stale-issue-message: |
-            This issue has been automatically marked as stale because it hasn't had any recent activity. It will be closed in 14 days if no further activity occurs.
-            If we missed this issue please reply to keep it active.
+            This issue has been automatically marked as stale because it hasn't had any activity for 6 months.
+            Many things may have changed within this time. The issue may have already been fixed or it may not be relevant anymore.
+            If at this point, this is still an issue, please respond with updated information.
+            It will be closed in 21 days if no further activity occurs.
             Thanks for being a part of the Nx community! 🙏
