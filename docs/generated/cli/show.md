@@ -205,6 +205,12 @@ Type: `boolean`
 
 Show help
 
+##### open
+
+Type: `boolean`
+
+Set to false to prevent the browser from opening when using --web
+
 ##### projectName
 
 Type: `string`

@@ -29,7 +29,8 @@ export type ShowProjectsOptions = NxShowArgs & {
 export type ShowProjectOptions = NxShowArgs & {
   projectName: string;
   web?: boolean;
-  verbose: boolean;
+  open?: boolean;
+  verbose?: boolean;
 };
 
 export const yargsShowCommand: CommandModule<
@@ -138,7 +139,7 @@ const showProjectCommand: CommandModule<NxShowArgs, ShowProjectOptions> = {
   command: 'project <projectName>',
   describe: 'Shows resolved project configuration for a given project.',
   builder: (yargs) =>
-    yargs
+    withVerbose(yargs)
       .positional('projectName', {
         type: 'string',
         alias: 'p',
@@ -149,13 +150,18 @@ const showProjectCommand: CommandModule<NxShowArgs, ShowProjectOptions> = {
         type: 'boolean',
         description: 'Show project details in the browser',
       })
-      .option('verbose', {
+      .option('open', {
         type: 'boolean',
         description:
-          'Prints additional information about the commands (e.g., stack traces)',
+          'Set to false to prevent the browser from opening when using --web',
+        implies: 'web',
       })
-      .conflicts('json', 'web')
-      .conflicts('web', 'json')
+      .check((argv) => {
+        if (argv.web) {
+          argv.json = false;
+        }
+        return true;
+      })
       .example(
         '$0 show project my-app',
         'View project information for my-app in JSON format'

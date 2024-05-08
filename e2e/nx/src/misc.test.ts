@@ -6,6 +6,7 @@ import {
   getPackageManagerCommand,
   getPublishedVersion,
   isNotWindows,
+  killProcessAndPorts,
   newProject,
   readFile,
   readJson,
@@ -13,6 +14,7 @@ import {
   runCLI,
   runCLIAsync,
   runCommand,
+  runCommandUntil,
   tmpProjPath,
   uniq,
   updateFile,
@@ -73,6 +75,33 @@ describe('Nx Commands', () => {
       expect(project.targets.build).toBeDefined();
       expect(project.targets.lint).toBeDefined();
     });
+
+    it('should open project details view', async () => {
+      const app = uniq('myapp');
+      runCLI(`generate @nx/web:app ${app}`);
+      let url: string;
+      let port: number;
+      const child_process = await runCommandUntil(
+        `show project ${app} --web --open=false`,
+        (output) => {
+          console.log(output);
+          // output should contain 'Project graph started at http://127.0.0.1:{port}'
+          if (output.includes('Project graph started at http://')) {
+            const match = /https?:\/\/[\d.]+:(?<port>\d+)/.exec(output);
+            if (match) {
+              port = parseInt(match.groups.port);
+              url = match[0];
+              return true;
+            }
+          }
+          return false;
+        }
+      );
+      // Check that url is alive
+      const response = await fetch(url);
+      expect(response.status).toEqual(200);
+      await killProcessAndPorts(child_process.pid, port);
+    }, 700000);
   });
 
   describe('report and list', () => {
