@@ -1079,7 +1079,7 @@ To connect to Nx Cloud:
 - Commit and push your changes to GitHub
 - Go to [https://cloud.nx.app](https://cloud.nx.app), create an account, and connect your repository
 
-![Connect to your repository](/shared/tutorials/connect-to-repository.png)
+![Connect to your repository](/shared/tutorials/connect-to-repository.webp)
 
 `cloud.nx.app` will send a PR to your repository enabling Nx Cloud, after which caching, distribution and more will start working.
 
