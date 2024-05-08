@@ -27,6 +27,7 @@ export interface PackageManagerCommands {
   dlx: string;
   list: string;
   run: (script: string, args: string) => string;
+  getRegistryUrl: string;
 }
 
 /**
@@ -101,6 +102,9 @@ export function getPackageManagerCommand(
         dlx: useBerry ? 'yarn dlx' : 'yarn',
         run: (script: string, args: string) => `yarn ${script} ${args}`,
         list: useBerry ? 'yarn info --name-only' : 'yarn list',
+        getRegistryUrl: useBerry
+          ? 'yarn config get npmRegistryServer'
+          : 'yarn config get registry',
       };
     },
     pnpm: () => {
@@ -123,6 +127,7 @@ export function getPackageManagerCommand(
             ? `pnpm run ${script} -- ${args}`
             : `pnpm run ${script} ${args}`,
         list: 'pnpm ls --depth 100',
+        getRegistryUrl: 'pnpm config get registry',
       };
     },
     npm: () => {
@@ -140,6 +145,7 @@ export function getPackageManagerCommand(
         dlx: 'npx',
         run: (script: string, args: string) => `npm run ${script} -- ${args}`,
         list: 'npm ls',
+        getRegistryUrl: 'npm config get registry',
       };
     },
   };
