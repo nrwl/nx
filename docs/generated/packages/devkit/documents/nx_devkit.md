@@ -19,7 +19,6 @@ It only uses language primitives and immutable objects
 ### Classes
 
 - [ProjectGraphBuilder](../../devkit/documents/ProjectGraphBuilder)
-- [Workspaces](../../devkit/documents/Workspaces)
 
 ### Interfaces
 
@@ -64,11 +63,14 @@ It only uses language primitives and immutable objects
 ### Type Aliases
 
 - [CreateDependencies](../../devkit/documents/CreateDependencies)
+- [CreateMetadata](../../devkit/documents/CreateMetadata)
+- [CreateMetadataContext](../../devkit/documents/CreateMetadataContext)
 - [CreateNodes](../../devkit/documents/CreateNodes)
 - [CreateNodesFunction](../../devkit/documents/CreateNodesFunction)
 - [CustomHasher](../../devkit/documents/CustomHasher)
 - [DynamicDependency](../../devkit/documents/DynamicDependency)
 - [Executor](../../devkit/documents/Executor)
+- [ExpandedPluginConfiguration](../../devkit/documents/ExpandedPluginConfiguration)
 - [Generator](../../devkit/documents/Generator)
 - [GeneratorCallback](../../devkit/documents/GeneratorCallback)
 - [Hasher](../../devkit/documents/Hasher)
@@ -82,6 +84,7 @@ It only uses language primitives and immutable objects
 - [ProjectGraphNode](../../devkit/documents/ProjectGraphNode)
 - [ProjectTargetConfigurator](../../devkit/documents/ProjectTargetConfigurator)
 - [ProjectType](../../devkit/documents/ProjectType)
+- [ProjectsMetadata](../../devkit/documents/ProjectsMetadata)
 - [RawProjectGraphDependency](../../devkit/documents/RawProjectGraphDependency)
 - [StaticDependency](../../devkit/documents/StaticDependency)
 - [StringChange](../../devkit/documents/StringChange)

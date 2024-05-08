@@ -256,11 +256,5 @@ For more on using Storybook, see the [official Storybook documentation](https://
 
 Here's more information on common migration scenarios for Storybook with Nx. For Storybook specific migrations that are not automatically handled by Nx please refer to the [official Storybook page](https://storybook.js.org/)
 
-- [Upgrading to Storybook 6](/deprecated/storybook/upgrade-storybook-v6-react)
-- [Migrate to the Nx React Storybook Addon](/deprecated/storybook/migrate-webpack-final-react)
 - [Storybook 7 migration generator](/nx-api/storybook/generators/migrate-7)
 - [Storybook 7 setup guide](/nx-api/storybook/documents/storybook-7-setup)
-
-## Older documentation
-
-You can find older documentation for the `@nx/storybook` package in our [deprecated section](/deprecated/storybook).

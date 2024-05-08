@@ -26,11 +26,11 @@ Advantages of Nx over the Angular CLI:
 
 - [Cache any target](/features/cache-task-results)
 - [Run only tasks affected by a code change](/ci/features/affected)
-- [Split a large angular.json into multiple project.json files](/concepts/more-concepts/nx-and-angular#projectjson-vs-angularjson)
-- [Integrate with modern tools](/concepts/more-concepts/nx-and-angular#integrating-with-modern-tools)
-- [Controllable update process](/concepts/more-concepts/nx-and-angular#ng-update-vs-nx-migrate)
+- [Split a large angular.json into multiple project.json files](/nx-api/angular/documents/nx-and-angular#projectjson-vs-angularjson)
+- [Integrate with modern tools](/nx-api/angular/documents/nx-and-angular#integrating-with-modern-tools)
+- [Controllable update process](/nx-api/angular/documents/nx-and-angular#ng-update-vs-nx-migrate)
 
-Visit our ["Nx and the Angular CLI" page](/concepts/more-concepts/nx-and-angular) for more details.
+Visit our ["Nx and the Angular CLI" page](/nx-api/angular/documents/nx-and-angular) for more details.
 
 ## Final Code
 
@@ -106,7 +106,7 @@ The setup includes:
 - ESLint preconfigured
 - Jest preconfigured
 
-Typically, an integrated Nx workspace places application projects in the `apps` folder and library projects in the `libs` folder. [Applications are encouraged to be as light-weight as possible](/concepts/more-concepts/applications-and-libraries) so that more code is pushed into libraries and can be reused in other projects. This [folder structure](/concepts/more-concepts/folder-structure) is just a suggestion and can be modified to suit your organization's needs.
+Typically, an integrated Nx workspace places application projects in the `apps` folder and library projects in the `libs` folder. [Applications are encouraged to be as light-weight as possible](/concepts/more-concepts/applications-and-libraries) so that more code is pushed into libraries and can be reused in other projects. This folder structure is just a suggestion and can be modified to suit your organization's needs.
 
 The [`nx.json` file](/reference/nx-json) contains configuration settings for Nx itself and global default settings that individual projects inherit. The `apps/angular-store/project.json` file contains [settings that are specific to the `angular-store` project](/reference/project-configuration). We'll examine that file more in the next section.
 
@@ -224,7 +224,7 @@ This executor is similar to the `@angular-devkit/build-angular:ng-packagr` with 
 
 If you prefer a more integrated experience, you can install the "Nx Console" extension for your code editor. It has support for VSCode, IntelliJ and ships a LSP for Vim. Nx Console provides autocompletion support in Nx configuration files and has UIs for browsing and running generators.
 
-More info can be found in [the integrate with editors article](/features/integrate-with-editors).
+More info can be found in [the integrate with editors article](/getting-started/editor-setup).
 
 {% /callout %}
 
@@ -621,7 +621,7 @@ nx e2e angular-store-e2e # runs e2e tests for the angular-store
 
 ### Inferred Tasks
 
-Nx identifies available tasks for your project from [tooling configuration files](/concepts/inferred-tasks), `package.json` scripts and the targets defined in `project.json`. All tasks from the `angular-store` project are defined in its `project.json` file, but the companion `angular-store-e2e` project has its tasks inferred from configuration files. To view the tasks that Nx has detected, look in the [Nx Console](/features/integrate-with-editors), [Project Details View](/recipes/nx-console/console-project-details) or run:
+Nx identifies available tasks for your project from [tooling configuration files](/concepts/inferred-tasks), `package.json` scripts and the targets defined in `project.json`. All tasks from the `angular-store` project are defined in its `project.json` file, but the companion `angular-store-e2e` project has its tasks inferred from configuration files. To view the tasks that Nx has detected, look in the [Nx Console](/getting-started/editor-setup), [Project Details View](/recipes/nx-console/console-project-details) or run:
 
 ```shell
 nx show project angular-store-e2e --web
@@ -635,6 +635,11 @@ nx show project angular-store-e2e --web
     "name": "angular-store-e2e",
     "type": "e2e",
     "data": {
+      "metadata": {
+        "targetGroups": {
+          "E2E (CI)": ["e2e-ci--src/e2e/app.cy.ts", "e2e-ci"]
+        }
+      },
       "name": "angular-store-e2e",
       "root": "apps/angular-store-e2e",
       "sourceRoot": "apps/angular-store-e2e/src",
@@ -664,7 +669,10 @@ nx show project angular-store-e2e --web
               "command": "cypress run --env webServerCommand=\"nx run angular-store:serve:production\""
             }
           },
-          "executor": "nx:run-commands"
+          "executor": "nx:run-commands",
+          "metadata": {
+            "technologies": ["cypress"]
+          }
         },
         "e2e-ci--src/e2e/app.cy.ts": {
           "outputs": [
@@ -684,7 +692,10 @@ nx show project angular-store-e2e --web
             "command": "cypress run --env webServerCommand=\"nx run angular-store:serve-static\" --spec src/e2e/app.cy.ts"
           },
           "executor": "nx:run-commands",
-          "configurations": {}
+          "configurations": {},
+          "metadata": {
+            "technologies": ["cypress"]
+          }
         },
         "e2e-ci": {
           "executor": "nx:noop",
@@ -708,7 +719,10 @@ nx show project angular-store-e2e --web
             }
           ],
           "options": {},
-          "configurations": {}
+          "configurations": {},
+          "metadata": {
+            "technologies": ["cypress"]
+          }
         },
         "lint": {
           "cache": true,
@@ -726,7 +740,10 @@ nx show project angular-store-e2e --web
             }
           ],
           "executor": "nx:run-commands",
-          "configurations": {}
+          "configurations": {},
+          "metadata": {
+            "technologies": ["eslint"]
+          }
         }
       }
     }
@@ -1228,31 +1245,65 @@ If you have the ESLint plugin installed in your IDE you should immediately see a
 
 Learn more about how to [enforce module boundaries](/features/enforce-module-boundaries).
 
-## Setup CI for Your Angular Monorepo
+## Set Up CI for Your Angular Monorepo
 
-This tutorial walked you through how Nx can improve the developer experience for local development, but Nx can also make a big difference in CI. Without adequate tooling, CI times tend to grow exponentially with the size of the codebase. Nx helps reduce wasted time in CI with the [`affected` command](/ci/features/affected) and Nx Replay's [remote caching](/ci/features/remote-cache). Nx also [efficiently parallelizes tasks across machines](/ci/concepts/parallelization-distribution) with Nx Agents.
+This tutorial walked you through how Nx can improve the local development experience, but the biggest difference Nx makes is in CI. As repositories get bigger, making sure that the CI is fast, reliable and maintainable can get very challenging. Nx provides a solution.
 
-To set up Nx Cloud run:
+- Nx reduces wasted time in CI with the [`affected` command](/ci/features/affected).
+- Nx Replay's [remote caching](/ci/features/remote-cache) will reuse task artifacts from different CI executions making sure you will never run the same computation twice.
+- Nx Agents [efficiently distribute tasks across machines](/ci/concepts/parallelization-distribution) ensuring constant CI time regardless of the repository size. The right number of machines is allocated for each PR to ensure good performance without wasting compute.
+- Nx Atomizer [automatically splits](/ci/features/split-e2e-tasks) large e2e tests to distribute them across machines. Nx can also automatically [identify and rerun flaky e2e tests](/ci/features/flaky-tasks).
+
+### Generating a CI Workflow
+
+If you are starting a new project, you can use the following command to generate a CI workflow file.
 
 ```shell
-nx connect
-```
-
-And click the link provided. You'll need to follow the instructions on the website to sign up for your account.
-
-Then you can set up your CI with the following command:
-
-```shell
-nx generate ci-workflow --ci=github
+npx nx generate ci-workflow --ci=github
 ```
 
 {% callout type="note" title="Choose your CI provider" %}
 You can choose `github`, `circleci`, `azure`, `bitbucket-pipelines`, or `gitlab` for the `ci` flag.
 {% /callout %}
 
-This will create a default CI configuration that sets up Nx Cloud to [use distributed task execution](/ci/features/distribute-task-execution). This automatically runs all tasks on separate machines in parallel wherever possible, without requiring you to manually coordinate copying the output from one machine to another.
+This generator creates a `.github/workflows/ci.yml` file that contains a CI pipeline that will run the `lint`, `test`, `build` and `e2e` tasks for projects that are affected by any given PR.
 
-Check out one of these detailed tutorials on setting up CI with Nx:
+The key line in the CI pipeline is:
+
+```yml
+- run: npx nx affected -t lint test build e2e-ci
+```
+
+### Connecting to Nx Cloud
+
+Nx Cloud is a companion app for your CI system that provides remote caching, task distribution, e2e tests deflaking, better DX and more.
+
+To connect to Nx Cloud:
+
+- Commit and push your changes to GitHub
+- Go to [https://cloud.nx.app](https://cloud.nx.app), create an account, and connect your repository
+
+![Connect to your repository](/shared/tutorials/connect-to-repository.png)
+
+`cloud.nx.app` will send a PR to your repository enabling Nx Cloud, after which caching, distribution and more will start working.
+
+![Add an Nx Cloud access token to your repository dialog](/shared/tutorials/send-cloud-pr.png)
+
+Once you merge that PR, you'll be able to see CI pipeline runs appearing in the Nx Cloud dashboard:
+
+![CI Pipeline Executions](/shared/tutorials/ci-pipeline-executions.png)
+
+### Enable a Distributed CI Pipeline
+
+The current CI pipeline runs on a single machine and can only handle small workspaces. To transform your CI into a CI that runs on multiple machines and can handle workspaces of any size, uncomment the `npx nx-cloud start-ci-run` line in the `.github/workflows/ci.yml` file.
+
+```yml
+- run: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="e2e-ci"
+```
+
+![Run details](/shared/tutorials/gradle-run-details.png)
+
+For more information about how Nx can improve your CI pipeline, check out one of these detailed tutorials:
 
 - [Circle CI with Nx](/ci/intro/tutorials/circle)
 - [GitHub Actions with Nx](/ci/intro/tutorials/github-actions)
@@ -1261,7 +1312,7 @@ Check out one of these detailed tutorials on setting up CI with Nx:
 
 Here's some things you can dive into next:
 
-- Read more about [how Nx compares to the Angular CLI](/concepts/more-concepts/nx-and-angular)
+- Read more about [how Nx compares to the Angular CLI](/nx-api/angular/documents/nx-and-angular)
 - Learn more about the [underlying mental model of Nx](/concepts/mental-model)
 - Learn about popular generators such as [how to setup Tailwind](/recipes/angular/using-tailwind-css-with-angular-projects)
 - Learn how to [migrate your existing Angular CLI repo to Nx](/recipes/angular/migration/angular)

@@ -26,6 +26,7 @@ import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
 export interface CypressPluginOptions {
   ciTargetName?: string;
   targetName?: string;
+  openTargetName?: string;
   componentTestingTargetName?: string;
 }
 
@@ -66,7 +67,7 @@ export const createNodes: CreateNodes<CypressPluginOptions> = [
       getLockFileName(detectPackageManager(context.workspaceRoot)),
     ]);
 
-    const { targets, targetGroups } = targetsCache[hash]
+    const { targets, metadata } = targetsCache[hash]
       ? targetsCache[hash]
       : await buildCypressTargets(
           configFilePath,
@@ -75,19 +76,13 @@ export const createNodes: CreateNodes<CypressPluginOptions> = [
           context
         );
 
-    calculatedTargets[hash] = { targets, targetGroups };
+    calculatedTargets[hash] = { targets, metadata };
 
     const project: Omit<ProjectConfiguration, 'root'> = {
       projectType: 'application',
       targets,
-      metadata: {
-        technologies: ['cypress'],
-      },
+      metadata,
     };
-
-    if (targetGroups) {
-      project.metadata.targetGroups = targetGroups;
-    }
 
     return {
       projects: {
@@ -145,10 +140,7 @@ function getOutputs(
   return outputs;
 }
 
-interface CypressTargets {
-  targets: Record<string, TargetConfiguration>;
-  targetGroups: Record<string, string[]> | null;
-}
+type CypressTargets = Pick<ProjectConfiguration, 'targets' | 'metadata'>;
 
 async function buildCypressTargets(
   configFilePath: string,
@@ -172,7 +164,7 @@ async function buildCypressTargets(
   const namedInputs = getNamedInputs(projectRoot, context);
 
   const targets: Record<string, TargetConfiguration> = {};
-  let targetGroups: Record<string, string[]>;
+  let metadata: ProjectConfiguration['metadata'];
 
   if ('e2e' in cypressConfig) {
     targets[options.targetName] = {
@@ -181,6 +173,10 @@ async function buildCypressTargets(
       cache: true,
       inputs: getInputs(namedInputs),
       outputs: getOutputs(projectRoot, cypressConfig, 'e2e'),
+      metadata: {
+        technologies: ['cypress'],
+        description: 'Runs Cypress Tests',
+      },
     };
 
     if (webServerCommands?.default) {
@@ -221,8 +217,8 @@ async function buildCypressTargets(
       const inputs = getInputs(namedInputs);
 
       const groupName = 'E2E (CI)';
-      targetGroups = { [groupName]: [] };
-      const ciTargetGroup = targetGroups[groupName];
+      metadata = { targetGroups: { [groupName]: [] } };
+      const ciTargetGroup = metadata.targetGroups[groupName];
       for (const file of specFiles) {
         const relativeSpecFilePath = normalizePath(relative(projectRoot, file));
         const targetName = options.ciTargetName + '--' + relativeSpecFilePath;
@@ -235,6 +231,10 @@ async function buildCypressTargets(
           command: `cypress run --env webServerCommand="${ciWebServerCommand}" --spec ${relativeSpecFilePath}`,
           options: {
             cwd: projectRoot,
+          },
+          metadata: {
+            technologies: ['cypress'],
+            description: `Runs Cypress Tests in ${relativeSpecFilePath} in CI`,
           },
         };
         dependsOn.push({
@@ -250,10 +250,12 @@ async function buildCypressTargets(
         inputs,
         outputs,
         dependsOn,
+        metadata: {
+          technologies: ['cypress'],
+          description: 'Runs Cypress Tests in CI',
+        },
       };
       ciTargetGroup.push(options.ciTargetName);
-    } else {
-      targetGroups = null;
     }
   }
 
@@ -265,15 +267,29 @@ async function buildCypressTargets(
       cache: true,
       inputs: getInputs(namedInputs),
       outputs: getOutputs(projectRoot, cypressConfig, 'component'),
+      metadata: {
+        technologies: ['cypress'],
+        description: 'Runs Cypress Component Tests',
+      },
     };
   }
 
-  return { targets, targetGroups };
+  targets[options.openTargetName] = {
+    command: `cypress open`,
+    options: { cwd: projectRoot },
+    metadata: {
+      technologies: ['cypress'],
+      description: 'Opens Cypress',
+    },
+  };
+
+  return { targets, metadata };
 }
 
 function normalizeOptions(options: CypressPluginOptions): CypressPluginOptions {
   options ??= {};
   options.targetName ??= 'e2e';
+  options.openTargetName ??= 'open-cypress';
   options.componentTestingTargetName ??= 'component-test';
   options.ciTargetName ??= 'e2e-ci';
   return options;

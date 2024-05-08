@@ -42,7 +42,7 @@ describe('Web Components Applications', () => {
 
     if (isNotWindows() && runE2ETests()) {
       const e2eResults = runCLI(`e2e ${appName}-e2e`);
-      expect(e2eResults).toContain('All specs passed!');
+      expect(e2eResults).toContain('Successfully ran target e2e for project');
       await killPorts();
     }
 
@@ -243,39 +243,39 @@ describe('CLI - Environment Variables', () => {
     //test if the Nx CLI loads root .env vars
     updateFile(
       `.env`,
-      'NX_WS_BASE=ws-base\nNX_SHARED_ENV=shared-in-workspace-base'
+      'NX_PUBLIC_WS_BASE=ws-base\nNX_PUBLIC_SHARED_ENV=shared-in-workspace-base'
     );
     updateFile(
       `.env.local`,
-      'NX_WS_ENV_LOCAL=ws-env-local\nNX_SHARED_ENV=shared-in-workspace-env-local'
+      'NX_PUBLIC_WS_ENV_LOCAL=ws-env-local\nNX_PUBLIC_SHARED_ENV=shared-in-workspace-env-local'
     );
     updateFile(
       `.local.env`,
-      'NX_WS_LOCAL_ENV=ws-local-env\nNX_SHARED_ENV=shared-in-workspace-local-env'
+      'NX_PUBLIC_WS_LOCAL_ENV=ws-local-env\nNX_PUBLIC_SHARED_ENV=shared-in-workspace-local-env'
     );
     updateFile(
       `apps/${appName}/.env`,
-      'NX_APP_BASE=app-base\nNX_SHARED_ENV=shared-in-app-base'
+      'NX_PUBLIC_APP_BASE=app-base\nNX_PUBLIC_SHARED_ENV=shared-in-app-base'
     );
     updateFile(
       `apps/${appName}/.env.local`,
-      'NX_APP_ENV_LOCAL=app-env-local\nNX_SHARED_ENV=shared-in-app-env-local'
+      'NX_PUBLIC_APP_ENV_LOCAL=app-env-local\nNX_PUBLIC_SHARED_ENV=shared-in-app-env-local'
     );
     updateFile(
       `apps/${appName}/.local.env`,
-      'NX_APP_LOCAL_ENV=app-local-env\nNX_SHARED_ENV=shared-in-app-local-env'
+      'NX_PUBLIC_APP_LOCAL_ENV=app-local-env\nNX_PUBLIC_SHARED_ENV=shared-in-app-local-env'
     );
     const main = `apps/${appName}/src/main.ts`;
     const newCode = `
-      const envVars = [process.env.NODE_ENV, process.env.NX_WS_BASE, process.env.NX_WS_ENV_LOCAL, process.env.NX_WS_LOCAL_ENV, process.env.NX_APP_BASE, process.env.NX_APP_ENV_LOCAL, process.env.NX_APP_LOCAL_ENV, process.env.NX_SHARED_ENV];
+      const envVars = [process.env.NODE_ENV, process.env.NX_PUBLIC_WS_BASE, process.env.NX_PUBLIC_WS_ENV_LOCAL, process.env.NX_PUBLIC_WS_LOCAL_ENV, process.env.NX_PUBLIC_APP_BASE, process.env.NX_PUBLIC_APP_ENV_LOCAL, process.env.NX_PUBLIC_APP_LOCAL_ENV, process.env.NX_PUBLIC_SHARED_ENV];
       const nodeEnv = process.env.NODE_ENV;
-      const nxWsBase = process.env.NX_WS_BASE;
-      const nxWsEnvLocal = process.env.NX_WS_ENV_LOCAL;
-      const nxWsLocalEnv = process.env.NX_WS_LOCAL_ENV;
-      const nxAppBase = process.env.NX_APP_BASE;
-      const nxAppEnvLocal = process.env.NX_APP_ENV_LOCAL;
-      const nxAppLocalEnv = process.env.NX_APP_LOCAL_ENV;
-      const nxSharedEnv = process.env.NX_SHARED_ENV;
+      const nxWsBase = process.env.NX_PUBLIC_WS_BASE;
+      const nxWsEnvLocal = process.env.NX_PUBLIC_WS_ENV_LOCAL;
+      const nxWsLocalEnv = process.env.NX_PUBLIC_WS_LOCAL_ENV;
+      const nxAppBase = process.env.NX_PUBLIC_APP_BASE;
+      const nxAppEnvLocal = process.env.NX_PUBLIC_APP_ENV_LOCAL;
+      const nxAppLocalEnv = process.env.NX_PUBLIC_APP_LOCAL_ENV;
+      const nxSharedEnv = process.env.NX_PUBLIC_SHARED_ENV;
       `;
 
     runCLI(
@@ -290,18 +290,18 @@ describe('CLI - Environment Variables', () => {
 
     updateFile(
       `apps/${appName2}/.env`,
-      'NX_APP_BASE=app2-base\nNX_SHARED_ENV=shared2-in-app-base'
+      'NX_PUBLIC_APP_BASE=app2-base\nNX_PUBLIC_SHARED_ENV=shared2-in-app-base'
     );
     updateFile(
       `apps/${appName2}/.env.local`,
-      'NX_APP_ENV_LOCAL=app2-env-local\nNX_SHARED_ENV=shared2-in-app-env-local'
+      'NX_PUBLIC_APP_ENV_LOCAL=app2-env-local\nNX_PUBLIC_SHARED_ENV=shared2-in-app-env-local'
     );
     updateFile(
       `apps/${appName2}/.local.env`,
-      'NX_APP_LOCAL_ENV=app2-local-env\nNX_SHARED_ENV=shared2-in-app-local-env'
+      'NX_PUBLIC_APP_LOCAL_ENV=app2-local-env\nNX_PUBLIC_SHARED_ENV=shared2-in-app-local-env'
     );
     const main2 = `apps/${appName2}/src/main.ts`;
-    const newCode2 = `const envVars = [process.env.NODE_ENV, process.env.NX_WS_BASE, process.env.NX_WS_ENV_LOCAL, process.env.NX_WS_LOCAL_ENV, process.env.NX_APP_BASE, process.env.NX_APP_ENV_LOCAL, process.env.NX_APP_LOCAL_ENV, process.env.NX_SHARED_ENV];`;
+    const newCode2 = `const envVars = [process.env.NODE_ENV, process.env.NX_PUBLIC_WS_BASE, process.env.NX_PUBLIC_WS_ENV_LOCAL, process.env.NX_PUBLIC_WS_LOCAL_ENV, process.env.NX_PUBLIC_APP_BASE, process.env.NX_PUBLIC_APP_ENV_LOCAL, process.env.NX_PUBLIC_APP_LOCAL_ENV, process.env.NX_PUBLIC_SHARED_ENV];`;
 
     runCLI(
       `generate @nx/web:app ${appName2} --bundler=webpack --no-interactive --compiler=babel`
@@ -361,14 +361,14 @@ describe('index.html interpolation', () => {
       </head>
       <body>
         <div id='root'></div>
-        <div>Nx Variable: %NX_VARIABLE%</div>
+        <div>Nx Variable: %NX_PUBLIC_VARIABLE%</div>
         <div>Some other variable: %SOME_OTHER_VARIABLE%</div>
       </body>
     </html>
 `;
     const envFilePath = `apps/${appName}/.env`;
     const envFileContents = `
-      NX_VARIABLE=foo
+      NX_PUBLIC_VARIABLE=foo
       SOME_OTHER_VARIABLE=bar
     }`;
 

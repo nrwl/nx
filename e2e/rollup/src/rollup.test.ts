@@ -2,6 +2,7 @@ import {
   checkFilesExist,
   cleanupProject,
   newProject,
+  packageInstall,
   readJson,
   rmDist,
   runCLI,
@@ -164,6 +165,11 @@ describe('Rollup Plugin', () => {
 
   it('should build correctly with crystal', () => {
     // ARRANGE
+    packageInstall('@rollup/plugin-babel', undefined, '5.3.0', 'prod');
+    packageInstall('@rollup/plugin-commonjs', undefined, '25.0.7', 'prod');
+    packageInstall('rollup-plugin-typescript2', undefined, '0.36.0', 'prod');
+    runCLI(`generate @nx/js:init --no-interactive`);
+    runCLI(`generate @nx/rollup:init --no-interactive`);
     updateFile(
       `libs/test/src/index.ts`,
       `export function helloWorld() {
@@ -172,8 +178,8 @@ describe('Rollup Plugin', () => {
     );
     updateFile(`libs/test/package.json`, JSON.stringify({ name: 'test' }));
     updateFile(
-      `libs/test/rollup.config.js`,
-      `import babel from '@rollup/plugin-babel';
+      `libs/test/rollup.config.mjs`,
+      `import { babel } from '@rollup/plugin-babel';
 import commonjs from '@rollup/plugin-commonjs';
 import typescript2 from 'rollup-plugin-typescript2';
 
@@ -201,13 +207,39 @@ const config = {
 export default config;
 `
     );
+
     // ACT
-    runCLI(`generate @nx/rollup:init --no-interactive`);
-    const output = runCLI(`build test`);
+    const output = runCLI(`build test --verbose`);
 
     // ASSERT
     expect(output).toContain('Successfully ran target build for project test');
     checkFilesExist(`libs/test/dist/bundle.js`);
     checkFilesExist(`libs/test/dist/bundle.es.js`);
+  });
+
+  it('should support array config from rollup.config.js', () => {
+    const jsLib = uniq('jslib');
+    runCLI(`generate @nx/js:lib ${jsLib} --bundler rollup --verbose`);
+    updateFile(
+      `libs/${jsLib}/rollup.config.js`,
+      `module.exports = (config) => [{
+        ...config,
+        output: {
+          format: "esm",
+          dir: "dist/test",
+          name: "Mylib",
+          entryFileNames: "[name].js",
+          chunkFileNames: "[name].js"
+        }
+      }]`
+    );
+    updateJson(join('libs', jsLib, 'project.json'), (config) => {
+      config.targets.build.options.rollupConfig = `libs/${jsLib}/rollup.config.js`;
+      return config;
+    });
+
+    expect(() => runCLI(`build ${jsLib} --format=esm`)).not.toThrow();
+
+    checkFilesExist(`dist/test/index.js`);
   });
 });

@@ -37,26 +37,26 @@ export type {
   HasherContext,
 } from './config/misc-interfaces';
 
-// TODO(v19): Remove this export
-/**
- * @category Workspace
- */
-export { Workspaces } from './config/workspaces';
-
 export { workspaceLayout } from './config/configuration';
 
 export type {
   NxPlugin,
-  NxPluginV1,
   NxPluginV2,
-  ProjectTargetConfigurator,
   CreateNodes,
   CreateNodesFunction,
   CreateNodesResult,
   CreateNodesContext,
   CreateDependencies,
   CreateDependenciesContext,
-} from './utils/nx-plugin';
+  CreateMetadata,
+  CreateMetadataContext,
+  ProjectsMetadata,
+} from './project-graph/plugins';
+
+export type {
+  NxPluginV1,
+  ProjectTargetConfigurator,
+} from './utils/nx-plugin.deprecated';
 
 /**
  * @category Workspace
@@ -71,6 +71,7 @@ export type {
   ImplicitJsonSubsetDependency,
   NxJsonConfiguration,
   PluginConfiguration,
+  ExpandedPluginConfiguration,
   TargetDefaults,
   NxAffectedConfig,
 } from './config/nx-json';

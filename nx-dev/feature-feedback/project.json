@@ -1,0 +1,8 @@
+{
+  "name": "feature-feedback",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "nx-dev/feature-feedback/src",
+  "projectType": "library",
+  "tags": ["scope:nx-dev", "type:feature"],
+  "targets": {}
+}

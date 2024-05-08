@@ -1,6 +1,10 @@
 /* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
 import { ProjectGraphProjectNode } from '@nx/devkit';
+// nx-ignore-next-line
+import { GraphError } from 'nx/src/command-line/graph/graph';
+/* eslint-enable @nx/enforce-module-boundaries */
+
 import {
   ScrollRestoration,
   useParams,
@@ -8,6 +12,7 @@ import {
 } from 'react-router-dom';
 import { ProjectDetailsWrapper } from './project-details-wrapper';
 import {
+  ExpandedTargetsProvider,
   fetchProjectGraph,
   getProjectGraphDataService,
   useEnvironmentConfig,
@@ -16,12 +21,13 @@ import {
 import { ProjectDetailsHeader } from './project-details-header';
 
 export function ProjectDetailsPage() {
-  const { project, sourceMap, hash } = useRouteLoaderData(
+  const { project, sourceMap, hash, errors } = useRouteLoaderData(
     'selectedProjectDetails'
   ) as {
     hash: string;
     project: ProjectGraphProjectNode;
     sourceMap: Record<string, string[]>;
+    errors?: GraphError[];
   };
 
   const { environment, watch, appConfig } = useEnvironmentConfig();
@@ -45,19 +51,22 @@ export function ProjectDetailsPage() {
   );
 
   return (
-    <div className="flex flex-col justify-center w-full text-slate-700 dark:text-slate-400">
-      <ScrollRestoration />
-      {environment !== 'nx-console' ? (
-        <ProjectDetailsHeader />
-      ) : (
-        <div className="py-2"></div>
-      )}
-      <div className="flex-grow mx-auto w-full max-w-6xl px-8 mb-8">
-        <ProjectDetailsWrapper
-          project={project}
-          sourceMap={sourceMap}
-        ></ProjectDetailsWrapper>
+    <ExpandedTargetsProvider>
+      <div className="flex w-full flex-col justify-center text-slate-700 dark:text-slate-400">
+        <ScrollRestoration />
+        {environment !== 'nx-console' ? (
+          <ProjectDetailsHeader />
+        ) : (
+          <div className="py-2"></div>
+        )}
+        <div className="mx-auto mb-8 w-full max-w-6xl flex-grow px-8">
+          <ProjectDetailsWrapper
+            project={project}
+            sourceMap={sourceMap}
+            errors={errors}
+          ></ProjectDetailsWrapper>
+        </div>
       </div>
-    </div>
+    </ExpandedTargetsProvider>
   );
 }

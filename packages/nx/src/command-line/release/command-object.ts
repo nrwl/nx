@@ -1,5 +1,4 @@
 import { Argv, CommandModule, showHelp } from 'yargs';
-import { readNxJson } from '../../project-graph/file-utils';
 import { logger } from '../../utils/logger';
 import {
   OutputStyle,
@@ -10,6 +9,7 @@ import {
   withRunManyOptions,
 } from '../yargs-utils/shared-options';
 import { VersionData } from './utils/shared';
+import { readNxJson } from '../../config/nx-json';
 
 export interface NxReleaseArgs {
   groups?: string[];
@@ -192,7 +192,7 @@ const versionCommand: CommandModule<NxReleaseArgs, VersionOptions> = {
         .option('preid', {
           type: 'string',
           describe:
-            'The optional prerelease identifier to apply to the version, in the case that specifier has been set to prerelease.',
+            'The optional prerelease identifier to apply to the version, in the case that the specifier argument has been set to `prerelease`.',
           default: '',
         })
         .option('stage-changes', {

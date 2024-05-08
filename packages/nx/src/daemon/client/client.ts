@@ -25,11 +25,12 @@ import { safelyCleanUpExistingProcess } from '../cache';
 import { Hash } from '../../hasher/task-hasher';
 import { Task, TaskGraph } from '../../config/task-graph';
 import { ConfigurationSourceMaps } from '../../project-graph/utils/project-configuration-utils';
-import { DaemonProjectGraphError } from '../daemon-project-graph-error';
-import { ProjectGraphError } from '../../project-graph/project-graph';
+import {
+  DaemonProjectGraphError,
+  ProjectGraphError,
+} from '../../project-graph/error-types';
 
 const DAEMON_ENV_SETTINGS = {
-  ...process.env,
   NX_PROJECT_GLOB_CACHE: 'false',
   NX_CACHE_PROJECTS_CONFIG: 'false',
 };
@@ -47,7 +48,13 @@ enum DaemonStatus {
 }
 
 export class DaemonClient {
-  constructor(private readonly nxJson: NxJsonConfiguration) {
+  private readonly nxJson: NxJsonConfiguration | null;
+  constructor() {
+    try {
+      this.nxJson = readNxJson();
+    } catch (e) {
+      this.nxJson = null;
+    }
     this.reset();
   }
 
@@ -69,8 +76,8 @@ export class DaemonClient {
     if (this._enabled === undefined) {
       // TODO(v19): Add migration to move it out of existing configs and remove the ?? here.
       const useDaemonProcessOption =
-        this.nxJson.useDaemonProcess ??
-        this.nxJson.tasksRunnerOptions?.['default']?.options?.useDaemonProcess;
+        this.nxJson?.useDaemonProcess ??
+        this.nxJson?.tasksRunnerOptions?.['default']?.options?.useDaemonProcess;
       const env = process.env.NX_DAEMON;
 
       // env takes precedence
@@ -172,6 +179,7 @@ export class DaemonClient {
       watchProjects: string[] | 'all';
       includeGlobalWorkspaceFiles?: boolean;
       includeDependentProjects?: boolean;
+      allowPartialGraph?: boolean;
     },
     callback: (
       error: Error | null | 'closed',
@@ -181,7 +189,15 @@ export class DaemonClient {
       } | null
     ) => void
   ): Promise<UnregisterCallback> {
-    await this.getProjectGraphAndSourceMaps();
+    try {
+      await this.getProjectGraphAndSourceMaps();
+    } catch (e) {
+      if (config.allowPartialGraph && e instanceof ProjectGraphError) {
+        // we are fine with partial graph
+      } else {
+        throw e;
+      }
+    }
     let messenger: DaemonSocketMessenger | undefined;
 
     await this.queue.sendToQueue(() => {
@@ -402,7 +418,7 @@ export class DaemonClient {
         detached: true,
         windowsHide: true,
         shell: false,
-        env: DAEMON_ENV_SETTINGS,
+        env: { ...process.env, ...DAEMON_ENV_SETTINGS },
       }
     );
     backgroundProcess.unref();
@@ -446,7 +462,7 @@ export class DaemonClient {
   }
 }
 
-export const daemonClient = new DaemonClient(readNxJson());
+export const daemonClient = new DaemonClient();
 
 function isDocker() {
   try {

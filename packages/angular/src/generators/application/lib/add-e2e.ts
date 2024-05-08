@@ -40,8 +40,8 @@ export async function addE2e(tree: Tree, options: NormalizedSchema) {
       linter: options.linter,
       skipPackageJson: options.skipPackageJson,
       skipFormat: true,
-      devServerTarget: `${options.name}:serve:development`,
-      baseUrl: 'http://localhost:4200',
+      devServerTarget: `${options.name}:${options.e2eWebServerTarget}:development`,
+      baseUrl: options.e2eWebServerAddress,
       rootProject: options.rootProject,
       addPlugin,
     });
@@ -64,10 +64,10 @@ export async function addE2e(tree: Tree, options: NormalizedSchema) {
       js: false,
       linter: options.linter,
       setParserOptionsProject: options.setParserOptionsProject,
-      webServerCommand: `${getPackageManagerCommand().exec} nx serve ${
-        options.name
-      }`,
-      webServerAddress: `http://localhost:${options.port ?? 4200}`,
+      webServerCommand: `${getPackageManagerCommand().exec} nx ${
+        options.e2eWebServerTarget
+      } ${options.name}`,
+      webServerAddress: options.e2eWebServerAddress,
       rootProject: options.rootProject,
       addPlugin,
     });
@@ -79,7 +79,9 @@ function addFileServerTarget(
   options: NormalizedSchema,
   targetName: string
 ) {
-  addDependenciesToPackageJson(tree, {}, { '@nx/web': nxVersion });
+  if (!options.skipPackageJson) {
+    addDependenciesToPackageJson(tree, {}, { '@nx/web': nxVersion });
+  }
 
   const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
   const isUsingApplicationBuilder =
@@ -90,7 +92,7 @@ function addFileServerTarget(
     executor: '@nx/web:file-server',
     options: {
       buildTarget: `${options.name}:build`,
-      port: options.port,
+      port: options.e2ePort,
       staticFilePath: isUsingApplicationBuilder
         ? joinPathFragments(options.outputPath, 'browser')
         : undefined,

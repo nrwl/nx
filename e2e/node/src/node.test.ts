@@ -115,7 +115,7 @@ describe('Node Applications', () => {
     updateFile(
       `apps/${nodeapp}/webpack.config.js`,
       `
-const { NxWebpackPlugin } = require('@nx/webpack');
+const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
 const { join } = require('path');
 
 module.exports = {
@@ -123,7 +123,7 @@ module.exports = {
     path: join(__dirname, '../../dist/apps/${nodeapp}'),
   },
   plugins: [
-    new NxWebpackPlugin({
+    new NxAppWebpackPlugin({
       target: 'node',
       compiler: 'tsc',
       main: './src/main.ts',
@@ -217,6 +217,23 @@ module.exports = {
     }
   }, 60000);
 
+  it("should exclude 'test' target from e2e project that uses jest", async () => {
+    const appName = uniq('nodeapp');
+
+    runCLI(
+      `generate @nx/node:app ${appName} --project-name-and-root-format=as-provided --no-interactive`
+    );
+
+    const nxJson = JSON.parse(readFile('nx.json'));
+    expect(nxJson.plugins).toBeDefined();
+
+    const jestPlugin = nxJson.plugins.find(
+      (p) => p.plugin === '@nx/jest/plugin'
+    );
+    expect(jestPlugin).toBeDefined();
+    expect(jestPlugin.exclude).toContain(`${appName}-e2e/**/*`);
+  });
+
   it('should be able to generate an express application', async () => {
     const nodeapp = uniq('nodeapp');
     const originalEnvPort = process.env.PORT;
@@ -264,7 +281,7 @@ module.exports = {
     }
   }, 120_000);
 
-  xit('should be able to generate a nest application', async () => {
+  it('should be able to generate a nest application', async () => {
     const nestapp = uniq('nestapp');
     const port = 3335;
     runCLI(`generate @nx/nest:app ${nestapp} --linter=eslint`);
@@ -278,49 +295,32 @@ module.exports = {
       'Test Suites: 2 passed, 2 total'
     );
 
-    await runCLIAsync(`build ${nestapp}`);
+    const buildResult = runCLI(`build ${nestapp}`);
 
     checkFilesExist(
       `dist/apps/${nestapp}/main.js`,
-      `dist/apps/${nestapp}/assets/file.txt`,
-      `dist/apps/${nestapp}/main.js.map`
+      `dist/apps/${nestapp}/assets/file.txt`
     );
 
-    const server = exec(`node ./dist/apps/${nestapp}/main.js`, {
-      cwd: tmpProjPath(),
-    });
-    expect(server).toBeTruthy();
-
-    // checking build
-    await new Promise((resolve) => {
-      server.stdout.on('data', async (data) => {
-        const message = data.toString();
-        if (message.includes(`Listening at http://localhost:${port}`)) {
-          const result = await getData(port);
-
-          expect(result.message).toEqual(`Welcome to ${nestapp}!`);
-          server.kill();
-          resolve(null);
-        }
-      });
-    });
+    expect(buildResult).toContain(
+      `Successfully ran target build for project ${nestapp}`
+    );
 
     // checking serve
     const p = await runCommandUntil(
       `serve ${nestapp} --port=${port}`,
       (output) => {
         process.stdout.write(output);
-        return output.includes(`Listening at http://localhost:${port}`);
+        return output.includes(`listening on ws://localhost:${port}`);
       }
     );
-    const result = await getData(port);
-    expect(result.message).toEqual(`Welcome to ${nestapp}!`);
-    try {
-      await promisifiedTreeKill(p.pid, 'SIGKILL');
-      expect(await killPorts(port)).toBeTruthy();
-    } catch (err) {
-      expect(err).toBeFalsy();
-    }
+
+    const e2eRsult = await runCLIAsync(`e2e ${nestapp}-e2e`);
+
+    expect(e2eRsult.combinedOutput).toContain('Test Suites: 1 passed, 1 total');
+
+    await killPorts(port);
+    p.kill();
   }, 120000);
 
   // TODO(crystal, @ndcunningham): how do we handle this now?

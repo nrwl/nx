@@ -38,12 +38,17 @@ import { getNpmScope } from '@nx/js/src/utils/package-json/get-npm-scope';
 import { hasWebpackPlugin } from '../../utils/has-webpack-plugin';
 import { addBuildTargetDefaults } from '@nx/devkit/src/generators/add-build-target-defaults';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
+import { VitePluginOptions } from '@nx/vite/src/plugins/plugin';
+import { WebpackPluginOptions } from '@nx/webpack/src/plugins/plugin';
 
 interface NormalizedSchema extends Schema {
   projectName: string;
   appProjectRoot: string;
   e2eProjectName: string;
   e2eProjectRoot: string;
+  e2eWebServerAddress: string;
+  e2eWebServerTarget: string;
+  e2ePort: number;
   parsedTags: string[];
 }
 
@@ -360,8 +365,8 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
     const cypressTask = await configurationGenerator(host, {
       ...options,
       project: options.e2eProjectName,
-      devServerTarget: `${options.projectName}:serve`,
-      baseUrl: 'http://localhost:4200',
+      devServerTarget: `${options.projectName}:${options.e2eWebServerTarget}`,
+      baseUrl: options.e2eWebServerAddress,
       directory: 'src',
       skipFormat: true,
     });
@@ -375,6 +380,7 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
       sourceRoot: joinPathFragments(options.e2eProjectRoot, 'src'),
       projectType: 'application',
       targets: {},
+      tags: [],
       implicitDependencies: [options.projectName],
     });
     const playwrightTask = await playwrightConfigGenerator(host, {
@@ -385,10 +391,10 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
       js: false,
       linter: options.linter,
       setParserOptionsProject: options.setParserOptionsProject,
-      webServerCommand: `${getPackageManagerCommand().exec} nx serve ${
-        options.name
-      }`,
-      webServerAddress: 'http://localhost:4200',
+      webServerCommand: `${getPackageManagerCommand().exec} nx ${
+        options.e2eWebServerTarget
+      } ${options.name}`,
+      webServerAddress: options.e2eWebServerAddress,
       addPlugin: options.addPlugin,
     });
     tasks.push(playwrightTask);
@@ -473,8 +479,42 @@ async function normalizeOptions(
     nxJson.useInferencePlugins !== false;
   options.addPlugin ??= addPluginDefault;
 
+  let e2eWebServerTarget = 'serve';
+  if (options.addPlugin) {
+    if (nxJson.plugins) {
+      for (const plugin of nxJson.plugins) {
+        if (
+          options.bundler === 'vite' &&
+          typeof plugin === 'object' &&
+          plugin.plugin === '@nx/vite/plugin' &&
+          (plugin.options as VitePluginOptions).serveTargetName
+        ) {
+          e2eWebServerTarget = (plugin.options as VitePluginOptions)
+            .serveTargetName;
+        } else if (
+          options.bundler === 'webpack' &&
+          typeof plugin === 'object' &&
+          plugin.plugin === '@nx/webpack/plugin' &&
+          (plugin.options as WebpackPluginOptions).serveTargetName
+        ) {
+          e2eWebServerTarget = (plugin.options as WebpackPluginOptions)
+            .serveTargetName;
+        }
+      }
+    }
+  }
+
+  let e2ePort = 4200;
+  if (
+    nxJson.targetDefaults?.[e2eWebServerTarget] &&
+    nxJson.targetDefaults?.[e2eWebServerTarget].options?.port
+  ) {
+    e2ePort = nxJson.targetDefaults?.[e2eWebServerTarget].options?.port;
+  }
+
   const e2eProjectName = `${appProjectName}-e2e`;
   const e2eProjectRoot = `${appProjectRoot}-e2e`;
+  const e2eWebServerAddress = `http://localhost:${e2ePort}`;
 
   const npmScope = getNpmScope(host);
 
@@ -489,7 +529,7 @@ async function normalizeOptions(
   options.style = options.style || 'css';
   options.linter = options.linter || ('eslint' as Linter.EsLint);
   options.unitTestRunner = options.unitTestRunner || 'jest';
-  options.e2eTestRunner = options.e2eTestRunner || 'cypress';
+  options.e2eTestRunner = options.e2eTestRunner || 'playwright';
 
   return {
     ...options,
@@ -501,6 +541,9 @@ async function normalizeOptions(
     appProjectRoot,
     e2eProjectRoot,
     e2eProjectName,
+    e2eWebServerAddress,
+    e2eWebServerTarget,
+    e2ePort,
     parsedTags,
   };
 }

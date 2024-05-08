@@ -1,4 +1,48 @@
 {
+  "editor-setup": [
+    {
+      "description": "Learn about Nx Console, an extension for VS Code and WebStorm.",
+      "file": "shared/getting-started/editor-setup",
+      "id": "editor-setup",
+      "name": "Editor Setup",
+      "path": "/getting-started/editor-setup"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/console-telemetry",
+      "id": "console-telemetry",
+      "name": "Telemetry",
+      "path": "/recipes/nx-console/console-telemetry"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/console-project-details",
+      "id": "console-project-details",
+      "name": "Project Details View",
+      "path": "/recipes/nx-console/console-project-details"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/console-generate-command",
+      "id": "console-generate-command",
+      "name": "Generate Command",
+      "path": "/recipes/nx-console/console-generate-command"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/console-run-command",
+      "id": "console-run-command",
+      "name": "Run Command",
+      "path": "/recipes/nx-console/console-run-command"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/console-troubleshooting",
+      "id": "console-troubleshooting",
+      "name": "Troubleshooting",
+      "path": "/recipes/nx-console/console-troubleshooting"
+    }
+  ],
   "run-tasks": [
     {
       "description": "Learn about the various ways you can use Nx to run tasks in your workspace.",
@@ -48,6 +92,13 @@
       "id": "run-commands-executor",
       "name": "Run Custom Commands",
       "path": "/recipes/running-tasks/run-commands-executor"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/running-tasks/pass-args-to-commands",
+      "id": "pass-args-to-commands",
+      "name": "Pass Args to Commands",
+      "path": "/recipes/running-tasks/pass-args-to-commands"
     },
     {
       "description": "",
@@ -137,17 +188,17 @@
     },
     {
       "description": "",
-      "file": "shared/recipes/troubleshoot-cache-misses",
-      "id": "troubleshoot-cache-misses",
-      "name": "Troubleshoot Cache Misses",
-      "path": "/recipes/troubleshooting/troubleshoot-cache-misses"
-    },
-    {
-      "description": "",
       "file": "shared/reference/inputs",
       "id": "inputs",
       "name": "Inputs and Named Inputs",
       "path": "/reference/inputs"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/troubleshoot-cache-misses",
+      "id": "troubleshoot-cache-misses",
+      "name": "Troubleshoot Cache Misses",
+      "path": "/troubleshooting/troubleshoot-cache-misses"
     },
     {
       "description": "",
@@ -209,13 +260,6 @@
     },
     {
       "description": "",
-      "file": "shared/concepts/how-project-graph-is-built",
-      "id": "how-project-graph-is-built",
-      "name": "How the Project Graph is Built",
-      "path": "/concepts/more-concepts/how-project-graph-is-built"
-    },
-    {
-      "description": "",
       "file": "shared/recipes/analyze-source-files",
       "id": "analyze-source-files",
       "name": "Disable Graph Links Created from Analyzing Source Files",
@@ -226,7 +270,7 @@
       "file": "shared/recipes/resolve-circular-dependencies",
       "id": "resolve-circular-dependencies",
       "name": "Resolve Circular Dependencies",
-      "path": "/recipes/troubleshooting/resolve-circular-dependencies"
+      "path": "/troubleshooting/resolve-circular-dependencies"
     },
     {
       "description": "",
@@ -257,13 +301,6 @@
       "id": "nx-plugins",
       "name": "What Are Nx Plugins",
       "path": "/concepts/nx-plugins"
-    },
-    {
-      "description": "",
-      "file": "shared/monorepo-nx-enterprise",
-      "id": "monorepo-nx-enterprise",
-      "name": "Using Nx at Enterprises",
-      "path": "/concepts/more-concepts/monorepo-nx-enterprise"
     },
     {
       "description": "",
@@ -355,13 +392,6 @@
     },
     {
       "description": "",
-      "file": "shared/monorepo-nx-enterprise",
-      "id": "monorepo-nx-enterprise",
-      "name": "Using Nx at Enterprises",
-      "path": "/concepts/more-concepts/monorepo-nx-enterprise"
-    },
-    {
-      "description": "",
       "file": "shared/workspace/applications-and-libraries",
       "id": "applications-and-libraries",
       "name": "Applications and Libraries",
@@ -371,7 +401,7 @@
       "description": "",
       "file": "shared/workspace/creating-libraries",
       "id": "creating-libraries",
-      "name": "Creating Libraries",
+      "name": "When to Create a New Library",
       "path": "/concepts/more-concepts/creating-libraries"
     },
     {
@@ -438,71 +468,6 @@
       "path": "/nx-api/nx/documents/format-write"
     }
   ],
-  "integrate-with-editors": [
-    {
-      "description": "Learn about Nx Console, an extension for VS Code and WebStorm.",
-      "file": "shared/features/integrate-with-editors",
-      "id": "integrate-with-editors",
-      "name": "Integrate with Editors",
-      "path": "/features/integrate-with-editors"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/console-telemetry",
-      "id": "console-telemetry",
-      "name": "Telemetry",
-      "path": "/recipes/nx-console/console-telemetry"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/console-project-details",
-      "id": "console-project-details",
-      "name": "Project Details View",
-      "path": "/recipes/nx-console/console-project-details"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/console-generate-command",
-      "id": "console-generate-command",
-      "name": "Generate Command",
-      "path": "/recipes/nx-console/console-generate-command"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/console-run-command",
-      "id": "console-run-command",
-      "name": "Run Command",
-      "path": "/recipes/nx-console/console-run-command"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/console-add-dependency-command",
-      "id": "console-add-dependency-command",
-      "name": "Add Dependency Command",
-      "path": "/recipes/nx-console/console-add-dependency-command"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/console-project-pane",
-      "id": "console-project-pane",
-      "name": "Project Pane",
-      "path": "/recipes/nx-console/console-project-pane"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/console-shortcuts",
-      "id": "console-shortcuts",
-      "name": "Keyboard Shortcuts",
-      "path": "/recipes/nx-console/console-shortcuts"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/console-troubleshooting",
-      "id": "console-troubleshooting",
-      "name": "Troubleshooting",
-      "path": "/recipes/nx-console/console-troubleshooting"
-    }
-  ],
   "nx-release": [
     {
       "description": "Learn how Nx provides tools to help you manage releasing your projects.",
@@ -531,6 +496,13 @@
       "id": "automatically-version-with-conventional-commits",
       "name": "Automatically Version with Conventional Commits",
       "path": "/recipes/nx-release/automatically-version-with-conventional-commits"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/nx-release/configure-custom-registries",
+      "id": "configure-custom-registries",
+      "name": "Configure Custom Registries",
+      "path": "/recipes/nx-release/configure-custom-registries"
     },
     {
       "description": "",
@@ -591,7 +563,14 @@
       "path": "/concepts/integrated-vs-package-based"
     }
   ],
-  "create-your-own-plugin": [
+  "inferred-tasks": [
+    {
+      "description": "",
+      "file": "shared/mental-model",
+      "id": "mental-model",
+      "name": "Mental Model",
+      "path": "/concepts/mental-model"
+    },
     {
       "description": "",
       "file": "shared/concepts/nx-plugins",
@@ -601,10 +580,26 @@
     },
     {
       "description": "",
-      "file": "shared/guides/nx-devkit-angular-devkit",
-      "id": "nx-devkit-angular-devkit",
-      "name": "Nx Devkit and Angular Devkit",
-      "path": "/concepts/more-concepts/nx-devkit-angular-devkit"
+      "file": "shared/concepts/inferred-tasks",
+      "id": "inferred-tasks",
+      "name": "Inferred Tasks",
+      "path": "/concepts/inferred-tasks"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/plugins/project-graph-plugins",
+      "id": "project-graph-plugins",
+      "name": "Modify the Project Graph",
+      "path": "/extending-nx/recipes/project-graph-plugins"
+    }
+  ],
+  "create-your-own-plugin": [
+    {
+      "description": "",
+      "file": "shared/concepts/nx-plugins",
+      "id": "nx-plugins",
+      "name": "What Are Nx Plugins",
+      "path": "/concepts/nx-plugins"
     },
     {
       "description": "",
@@ -633,15 +628,13 @@
       "id": "project-graph-plugins",
       "name": "Modify the Project Graph",
       "path": "/extending-nx/recipes/project-graph-plugins"
-    }
-  ],
-  "inferred-tasks": [
+    },
     {
-      "description": "",
-      "file": "shared/concepts/inferred-tasks",
-      "id": "inferred-tasks",
-      "name": "Inferred Tasks",
-      "path": "/concepts/inferred-tasks"
+      "description": "The Nx Plugin for Angular contains executors, generators, and utilities for managing Angular applications and libraries within an Nx workspace. It provides: \n\n- Integration with libraries such as Storybook, Jest, ESLint, Tailwind CSS, Playwright and Cypress. \n\n- Generators to help scaffold code quickly (like: Micro Frontends, Libraries, both internal to your codebase and publishable to npm) \n\n- Single Component Application Modules (SCAMs) \n\n- NgRx helpers. \n\n- Utilities for automatic workspace refactoring.",
+      "file": "generated/packages/generated/packages/angular/documents/nx-devkit-angular-devkit",
+      "id": "nx-devkit-angular-devkit",
+      "name": "Nx Devkit and Angular Devkit",
+      "path": "/nx-api/angular/documents/nx-devkit-angular-devkit"
     }
   ],
   "repository-types": [
@@ -764,6 +757,22 @@
       "path": "/recipes/react/module-federation-with-ssr"
     }
   ],
+  "installation": [
+    {
+      "description": "",
+      "file": "shared/recipes/installation/install-non-javascript",
+      "id": "install-non-javascript",
+      "name": "Install Nx in a Non-Javascript Repo",
+      "path": "/recipes/installation/install-non-javascript"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/installation/update-global-installation",
+      "id": "update-global-installation",
+      "name": "Update Your Global Nx Installation",
+      "path": "/recipes/installation/update-global-installation"
+    }
+  ],
   "workspace-watching": [
     {
       "description": "",
@@ -804,17 +813,17 @@
     },
     {
       "description": "",
-      "file": "shared/guides/performance-profiling",
-      "id": "performance-profiling",
-      "name": "Profiling Build Performance",
-      "path": "/recipes/troubleshooting/performance-profiling"
-    },
-    {
-      "description": "",
       "file": "shared/reference/environment-variables",
       "id": "environment-variables",
       "name": "Environment Variables",
       "path": "/reference/environment-variables"
+    },
+    {
+      "description": "",
+      "file": "shared/guides/performance-profiling",
+      "id": "performance-profiling",
+      "name": "Profiling Build Performance",
+      "path": "/troubleshooting/performance-profiling"
     }
   ],
   "deployment": [
@@ -996,22 +1005,6 @@
       "id": "angular-configuring-styles",
       "name": "Angular: Configuring styles and preprocessor options",
       "path": "/recipes/storybook/angular-configuring-styles"
-    }
-  ],
-  "installation": [
-    {
-      "description": "",
-      "file": "shared/recipes/installation/install-non-javascript",
-      "id": "install-non-javascript",
-      "name": "Install Nx in a Non-Javascript Repo",
-      "path": "/recipes/installation/install-non-javascript"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/installation/update-global-installation",
-      "id": "update-global-installation",
-      "name": "Update Your Global Nx Installation",
-      "path": "/recipes/installation/update-global-installation"
     }
   ],
   "yarn": [

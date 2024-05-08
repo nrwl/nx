@@ -9,7 +9,7 @@ import {
 } from '../../../../config/workspace-json-project-json';
 import { NxJsonConfiguration } from '../../../../config/nx-json';
 import { PackageJson } from '../../../../utils/package-json';
-import { CreateDependenciesContext } from '../../../../utils/nx-plugin';
+import { CreateDependenciesContext } from '../../../../project-graph/plugins';
 import {
   RawProjectGraphDependency,
   validateDependency,

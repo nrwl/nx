@@ -1,4 +1,5 @@
 import {
+  checkFilesExist,
   cleanupProject,
   fileExists,
   listFiles,
@@ -32,7 +33,7 @@ describe('Webpack Plugin', () => {
       `libs/${myPkg}/webpack.config.js`,
       `
       const path  = require('path');
-      const { NxWebpackPlugin } = require('@nx/webpack');
+      const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
       
       class DebugPlugin {
         apply(compiler) {
@@ -46,7 +47,7 @@ describe('Webpack Plugin', () => {
           path: path.join(__dirname, '../../dist/libs/${myPkg}')
         },
         plugins: [
-          new NxWebpackPlugin({
+          new NxAppWebpackPlugin({
             compiler: 'tsc',
             main: './src/index.ts',
             tsConfig: './tsconfig.lib.json',
@@ -138,7 +139,7 @@ describe('Webpack Plugin', () => {
       `apps/${appName}/webpack.config.js`,
       `
       const path  = require('path');
-      const { NxWebpackPlugin } = require('@nx/webpack');
+      const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
 
       module.exports = {
         target: 'node',
@@ -146,7 +147,7 @@ describe('Webpack Plugin', () => {
           path: path.join(__dirname, '../../dist/${appName}')
         },
         plugins: [
-          new NxWebpackPlugin({
+          new NxAppWebpackPlugin({
             compiler: 'tsc',
             main: 'apps/${appName}/src/main.ts',
             tsConfig: 'apps/${appName}/tsconfig.app.json',
@@ -163,22 +164,18 @@ describe('Webpack Plugin', () => {
     expect(output).toMatch(/Hello/);
   }, 500_000);
 
-  it('should bundle in non-sensitive NX_ environment variables', () => {
+  it('should bundle in NX_PUBLIC_ environment variables', () => {
     const appName = uniq('app');
     runCLI(`generate @nx/web:app ${appName} --bundler webpack`);
     updateFile(
       `apps/${appName}/src/main.ts`,
       `
-      console.log(process.env['NX_CLOUD_ENCRYPTION_KEY']);
-      console.log(process.env['NX_CLOUD_ACCESS_TOKEN']);
       console.log(process.env['NX_PUBLIC_TEST']);
       `
     );
 
     runCLI(`build ${appName}`, {
       env: {
-        NX_CLOUD_ENCRYPTION_KEY: 'secret',
-        NX_CLOUD_ACCESS_TOKEN: 'secret',
         NX_PUBLIC_TEST: 'foobar',
       },
     });
@@ -187,7 +184,6 @@ describe('Webpack Plugin', () => {
       f.startsWith('main.')
     );
     const content = readFile(`dist/apps/${appName}/${mainFile}`);
-    expect(content).not.toMatch(/secret/);
     expect(content).toMatch(/foobar/);
   });
 
@@ -238,14 +234,14 @@ describe('Webpack Plugin', () => {
     updateFile(
       `apps/${appName}/webpack.config.js`,
       `
-        const { NxWebpackPlugin } = require('@nx/webpack');
+        const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
         const { join } = require('path');
         module.exports = {
           output: {
             path: join(__dirname, '../../dist/apps/demo'),
           },
           plugins: [
-            new NxWebpackPlugin({
+            new NxAppWebpackPlugin({
               // NOTE: generatePackageJson is missing here, but executor passes it.
               target: 'web',
               compiler: 'swc',
@@ -261,6 +257,34 @@ describe('Webpack Plugin', () => {
     runCLI(`build ${appName}`);
 
     fileExists(`dist/apps/${appName}/package.json`);
+  });
+
+  it('should resolve assets from executors as relative to workspace root', () => {
+    const appName = uniq('app');
+    runCLI(`generate @nx/web:app ${appName} --bundler webpack`);
+    updateFile('shared/docs/TEST.md', 'TEST');
+    updateJson(`apps/${appName}/project.json`, (json) => {
+      json.targets.build = {
+        executor: '@nx/webpack:webpack',
+        outputs: ['{options.outputPath}'],
+        options: {
+          assets: [
+            {
+              input: 'shared/docs',
+              glob: 'TEST.md',
+              output: '.',
+            },
+          ],
+          outputPath: `dist/apps/${appName}`,
+          webpackConfig: `apps/${appName}/webpack.config.js`,
+        },
+      };
+      return json;
+    });
+
+    runCLI(`build ${appName}`);
+
+    checkFilesExist(`dist/apps/${appName}/TEST.md`);
   });
 });
 

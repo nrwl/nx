@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema",
   "title": "Schema for Nx ESBuild Executor",
-  "description": "Nx ESBuild Executor supporting Incremental Builds.",
+  "description": "Builds an Angular application using [esbuild](https://esbuild.github.io/).",
   "examplesFile": "../../../docs/browser-esbuild-examples.md",
   "outputCapture": "direct-nodejs",
   "type": "object",

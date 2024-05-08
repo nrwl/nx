@@ -2,28 +2,38 @@ import { basename, dirname, join, relative, resolve } from 'path';
 import { statSync } from 'fs';
 import {
   normalizePath,
+  parseTargetString,
   readCachedProjectGraph,
   workspaceRoot,
 } from '@nx/devkit';
 import {
   AssetGlobPattern,
   FileReplacement,
-  NormalizedNxWebpackPluginOptions,
-  NxWebpackPluginOptions,
-} from '../nx-webpack-plugin-options';
+  NormalizedNxAppWebpackPluginOptions,
+  NxAppWebpackPluginOptions,
+} from '../nx-app-webpack-plugin-options';
 
 export function normalizeOptions(
-  options: NxWebpackPluginOptions
-): NormalizedNxWebpackPluginOptions {
-  const combinedPluginAndMaybeExecutorOptions: Partial<NormalizedNxWebpackPluginOptions> =
+  options: NxAppWebpackPluginOptions
+): NormalizedNxAppWebpackPluginOptions {
+  const combinedPluginAndMaybeExecutorOptions: Partial<NormalizedNxAppWebpackPluginOptions> =
     {};
   const isProd = process.env.NODE_ENV === 'production';
-  const projectName = process.env.NX_TASK_TARGET_PROJECT;
-  const targetName = process.env.NX_TASK_TARGET_TARGET;
-  const configurationName = process.env.NX_TASK_TARGET_CONFIGURATION;
-
   // Since this is invoked by the executor, the graph has already been created and cached.
   const projectGraph = readCachedProjectGraph();
+
+  const taskDetailsFromBuildTarget = process.env.NX_BUILD_TARGET
+    ? parseTargetString(process.env.NX_BUILD_TARGET, projectGraph)
+    : undefined;
+  const projectName = taskDetailsFromBuildTarget
+    ? taskDetailsFromBuildTarget.project
+    : process.env.NX_TASK_TARGET_PROJECT;
+  const targetName = taskDetailsFromBuildTarget
+    ? taskDetailsFromBuildTarget.target
+    : process.env.NX_TASK_TARGET_TARGET;
+  const configurationName = taskDetailsFromBuildTarget
+    ? taskDetailsFromBuildTarget.configuration
+    : process.env.NX_TASK_TARGET_CONFIGURATION;
 
   const projectNode = projectGraph.nodes[projectName];
   const targetConfig = projectNode.data.targets[targetName];
@@ -51,14 +61,16 @@ export function normalizeOptions(
     }
     Object.assign(
       combinedPluginAndMaybeExecutorOptions,
-      buildTargetOptions,
-      options // plugin options take precedence
+      options,
+      // executor options take precedence (especially for overriding with CLI args)
+      buildTargetOptions
     );
   } else {
     Object.assign(
       combinedPluginAndMaybeExecutorOptions,
-      originalTargetOptions,
-      options // plugin options take precedence
+      options,
+      // executor options take precedence (especially for overriding with CLI args)
+      originalTargetOptions
     );
   }
 
@@ -121,7 +133,8 @@ export function normalizeAssets(
   assets: any[],
   root: string,
   sourceRoot: string,
-  projectRoot: string
+  projectRoot: string,
+  resolveRelativePathsToProjectRoot = true
 ): AssetGlobPattern[] {
   return assets.map((asset) => {
     if (typeof asset === 'string') {
@@ -155,7 +168,7 @@ export function normalizeAssets(
 
       const assetPath = normalizePath(asset.input);
       let resolvedAssetPath = resolve(root, assetPath);
-      if (asset.input.startsWith('.')) {
+      if (resolveRelativePathsToProjectRoot && asset.input.startsWith('.')) {
         const resolvedProjectRoot = resolve(root, projectRoot);
         resolvedAssetPath = resolve(resolvedProjectRoot, assetPath);
       }
@@ -184,7 +197,7 @@ export function normalizeFileReplacements(
 
 function normalizeRelativePaths(
   projectRoot: string,
-  options: NxWebpackPluginOptions
+  options: NxAppWebpackPluginOptions
 ): void {
   for (const [fieldName, fieldValue] of Object.entries(options)) {
     if (isRelativePath(fieldValue)) {

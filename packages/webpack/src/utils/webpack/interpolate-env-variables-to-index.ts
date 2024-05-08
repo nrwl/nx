@@ -6,14 +6,10 @@ export function interpolateEnvironmentVariablesToIndex(
   return interpolateEnvironmentVariables(contents, environmentVariables as any);
 }
 
-const NX_PREFIX = /^NX_/i;
-
-// Prevent sensitive keys from being bundled when source code uses entire `process.env` object rather than individual keys (e.g. `process.env.NX_FOO`).
-// TODO(v19): Only env vars prefixed with NX_PUBLIC should be bundled. This is a breaking change so we won't do it in v18.
-const excludedKeys = ['NX_CLOUD_ACCESS_TOKEN', 'NX_CLOUD_ENCRYPTION_KEY'];
+const NX_PREFIX = /^NX_PUBLIC_/i;
 
 function isNxEnvironmentKey(x: string): boolean {
-  return !excludedKeys.includes(x) && NX_PREFIX.test(x);
+  return NX_PREFIX.test(x);
 }
 
 function getClientEnvironment(deployUrl: string) {

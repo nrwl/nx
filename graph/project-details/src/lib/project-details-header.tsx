@@ -5,8 +5,8 @@ import { ThemePanel } from '@nx/graph/ui-theme';
 export function ProjectDetailsHeader() {
   const routeConstructor = useRouteConstructor();
   return (
-    <header className="flex w-full justify-center items-center py-2 mx-auto border-b-2 border-slate-900/10 mb-8 dark:border-slate-300/10">
-      <div className="flex flex-grow items-center justify-between max-w-6xl px-8 ">
+    <header className="mx-auto mb-8 flex w-full items-center justify-center border-b-2 border-slate-900/10 py-2 dark:border-slate-300/10">
+      <div className="flex max-w-6xl flex-grow items-center justify-between px-8 ">
         <Link to={routeConstructor('/projects', false)}>
           <svg
             className="h-10 w-auto text-slate-900 dark:text-white"

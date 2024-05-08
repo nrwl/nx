@@ -7,10 +7,6 @@ import runCommands, {
 } from './run-commands.impl';
 import { env } from 'npm-run-path';
 
-const {
-  devDependencies: { nx: version },
-} = require('package.json');
-
 function normalize(p: string) {
   return p.startsWith('/private') ? p.substring(8) : p;
 }
@@ -38,6 +34,62 @@ describe('Run Commands', () => {
     );
     expect(result).toEqual(expect.objectContaining({ success: true }));
     expect(readFile(f)).toEqual('123');
+  });
+
+  it('should not pass --args into underlying command', async () => {
+    const result = await runCommands(
+      {
+        command: `echo`,
+        __unparsed__: ['--args=--key=123'],
+        args: '--key=123',
+      },
+      context
+    );
+    expect(result.terminalOutput.trim()).not.toContain('--args=--key=123');
+  });
+
+  it('should not foward any args to underlying command if forwardAllArgs is false', async () => {
+    let result = await runCommands(
+      {
+        command: `echo`,
+        key: 123,
+        __unparsed__: [],
+        forwardAllArgs: false,
+      },
+      context
+    );
+    expect(result.terminalOutput.trim()).not.toContain('--key=123');
+
+    result = await runCommands(
+      {
+        command: `echo`,
+        key: 123,
+        __unparsed__: [],
+        forwardAllArgs: true,
+      },
+      context
+    );
+    expect(result.terminalOutput.trim()).toContain('--key=123');
+
+    result = await runCommands(
+      {
+        commands: [
+          {
+            command: `echo 1`,
+            forwardAllArgs: true,
+          },
+          {
+            command: `echo 2`,
+          },
+        ],
+        __unparsed__: ['--args=--key=123'],
+        args: '--key=123',
+        forwardAllArgs: false,
+      },
+      context
+    );
+    expect(result.terminalOutput).toContain('1 --key=123');
+    expect(result.terminalOutput).not.toContain('2 --key=123');
   });
 
   it('should interpolate all unknown args as if they were --args', async () => {
@@ -180,6 +232,37 @@ describe('Run Commands', () => {
       ).toEqual('echo one -a=b');
     });
 
+    it('should not forward all unparsed args when the options is a prop to run command', () => {
+      expect(
+        interpolateArgsIntoCommand(
+          'echo',
+          {
+            __unparsed__: ['--args', 'test', 'hello'],
+            unparsedCommandArgs: { args: 'test' },
+          } as any,
+          true
+        )
+      ).toEqual('echo hello');
+
+      expect(
+        interpolateArgsIntoCommand(
+          'echo',
+          {
+            __unparsed__: ['--args=test', 'hello'],
+          } as any,
+          true
+        )
+      ).toEqual('echo hello');
+
+      expect(
+        interpolateArgsIntoCommand(
+          'echo',
+          { __unparsed__: ['--parallel=true', 'hello'] } as any,
+          true
+        )
+      ).toEqual('echo hello');
+    });
+
     it('should add all args when forwardAllArgs is true', () => {
       expect(
         interpolateArgsIntoCommand(
@@ -197,7 +280,7 @@ describe('Run Commands', () => {
           { unknownOptions: { hello: 123 }, parsedArgs: { hello: 123 } } as any,
           true
         )
-      ).toEqual('echo --hello 123');
+      ).toEqual('echo --hello=123');
     });
 
     it('should add all args and unparsed args when forwardAllArgs is true', () => {

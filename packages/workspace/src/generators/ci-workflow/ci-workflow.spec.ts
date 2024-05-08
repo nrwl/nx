@@ -1,5 +1,4 @@
 import {
-  NxJsonConfiguration,
   PackageManager,
   readJson,
   readNxJson,
@@ -54,7 +53,6 @@ describe('CI Workflow generator', () => {
       });
 
       it('should generate github CI config', async () => {
-        setNxCloud(tree);
         await ciWorkflowGenerator(tree, { ci: 'github', name: 'CI' });
 
         expect(
@@ -63,21 +61,18 @@ describe('CI Workflow generator', () => {
       });
 
       it('should generate circleci CI config', async () => {
-        setNxCloud(tree);
         await ciWorkflowGenerator(tree, { ci: 'circleci', name: 'CI' });
 
         expect(tree.read('.circleci/config.yml', 'utf-8')).toMatchSnapshot();
       });
 
       it('should generate azure CI config', async () => {
-        setNxCloud(tree);
         await ciWorkflowGenerator(tree, { ci: 'azure', name: 'CI' });
 
         expect(tree.read('azure-pipelines.yml', 'utf-8')).toMatchSnapshot();
       });
 
       it('should generate github CI config with custom name', async () => {
-        setNxCloud(tree);
         await ciWorkflowGenerator(tree, {
           ci: 'github',
           name: 'My custom-workflow',
@@ -89,7 +84,6 @@ describe('CI Workflow generator', () => {
       });
 
       it('should generate bitbucket pipelines config', async () => {
-        setNxCloud(tree);
         await ciWorkflowGenerator(tree, {
           ci: 'bitbucket-pipelines',
           name: 'CI',
@@ -99,8 +93,6 @@ describe('CI Workflow generator', () => {
       });
 
       it('should prefix nx.json affected defaultBase with origin/ if ci is bitbucket-pipelines', async () => {
-        setNxCloud(tree);
-
         const nxJson = readJson(tree, 'nx.json');
         nxJson.affected.defaultBase = 'my-branch';
         writeJson(tree, 'nx.json', nxJson);
@@ -116,8 +108,6 @@ describe('CI Workflow generator', () => {
       });
 
       it('should prefix nx.json base with origin/ if ci is bitbucket-pipelines', async () => {
-        setNxCloud(tree);
-
         const nxJson = readNxJson(tree);
         nxJson.defaultBase = 'my-branch';
         writeJson(tree, 'nx.json', nxJson);
@@ -131,19 +121,9 @@ describe('CI Workflow generator', () => {
       });
 
       it('should generate gitlab config', async () => {
-        setNxCloud(tree);
         await ciWorkflowGenerator(tree, { ci: 'gitlab', name: 'CI' });
 
         expect(tree.read('.gitlab-ci.yml', 'utf-8')).toMatchSnapshot();
-      });
-
-      it('should throw error is nx cloud is not set', async () => {
-        await expect(
-          ciWorkflowGenerator(tree, {
-            ci: 'github',
-            name: 'CI',
-          })
-        ).rejects.toThrowErrorMatchingSnapshot();
       });
     });
   });
@@ -160,28 +140,24 @@ describe('CI Workflow generator', () => {
     });
 
     it('should add e2e to github CI config', async () => {
-      setNxCloud(tree);
       await ciWorkflowGenerator(tree, { ci: 'github', name: 'CI' });
 
       expect(tree.read('.github/workflows/ci.yml', 'utf-8')).toMatchSnapshot();
     });
 
     it('should add e2e to circleci CI config', async () => {
-      setNxCloud(tree);
       await ciWorkflowGenerator(tree, { ci: 'circleci', name: 'CI' });
 
       expect(tree.read('.circleci/config.yml', 'utf-8')).toMatchSnapshot();
     });
 
     it('should add e2e to azure CI config', async () => {
-      setNxCloud(tree);
       await ciWorkflowGenerator(tree, { ci: 'azure', name: 'CI' });
 
       expect(tree.read('azure-pipelines.yml', 'utf-8')).toMatchSnapshot();
     });
 
     it('should add e2e to github CI config with custom name', async () => {
-      setNxCloud(tree);
       await ciWorkflowGenerator(tree, {
         ci: 'github',
         name: 'My custom-workflow',
@@ -193,7 +169,6 @@ describe('CI Workflow generator', () => {
     });
 
     it('should add e2e to bitbucket pipelines config', async () => {
-      setNxCloud(tree);
       await ciWorkflowGenerator(tree, {
         ci: 'bitbucket-pipelines',
         name: 'CI',
@@ -203,13 +178,3 @@ describe('CI Workflow generator', () => {
     });
   });
 });
-
-function setNxCloud(tree: Tree) {
-  updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
-    return {
-      ...json,
-      nxCloudAccessToken: 'xxxx-xxx-xxxx',
-      nxCloudUrl: 'https://my.nx.app',
-    };
-  });
-}

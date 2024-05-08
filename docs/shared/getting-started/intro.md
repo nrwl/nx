@@ -33,21 +33,25 @@ npx create-nx-workspace@latest
 
 {% /cards %}
 
-{% cards cols="2" lgCols="5" mdCols="5" smCols="2" %}
+{% cards cols="2" lgCols="3" mdCols="3" smCols="2" %}
 
 {% link-card title="NPM Workspaces" type="tutorial" url="/getting-started/tutorials/npm-workspaces-tutorial" icon="jsMono" /%}
 
-{% link-card title="Integrated Monorepos" type="tutorial" url="/getting-started/tutorials/integrated-repo-tutorial" icon="nx" /%}
-
 {% link-card title="Single React App" type="tutorial" url="/getting-started/tutorials/react-standalone-tutorial" icon="react" /%}
 
-{% link-card title="Single Angular App" type="tutorial" url="/getting-started/tutorials/angular-standalone-tutorial" icon="angular" /%}
+{% link-card title="React Monorepo" type="tutorial" url="/getting-started/tutorials/react-monorepo-tutorial" icon="reactMono" /%}
+
+{% /cards %}
+
+{% cards cols="2" lgCols="4" mdCols="4" smCols="2" %}
 
 {% link-card title="Single Vue App" type="tutorial" url="/getting-started/tutorials/vue-standalone-tutorial" icon="vue" /%}
 
-<!-- {% link-card title="React Monorepo" type="tutorial" url="/getting-started/tutorials/react-standalone-tutorial" icon="reactMono" /%}
+{% link-card title="Single Angular App" type="tutorial" url="/getting-started/tutorials/angular-standalone-tutorial" icon="angular" /%}
 
-{% link-card title="Angular Monorepo" type="tutorial" url="/getting-started/tutorials/angular-standalone-tutorial" icon="angularMono" /%}-->
+{% link-card title="Angular Monorepo" type="tutorial" url="/getting-started/tutorials/angular-monorepo-tutorial" icon="angularMono" /%}
+
+{% link-card title="Gradle Monorepo" type="tutorial" url="/getting-started/tutorials/gradle-tutorial" icon="gradle" /%}
 
 {% /cards %}
 
@@ -66,8 +70,6 @@ Alternatively, here are some recipes that give you more details based on the tec
 {% link-card title="Add to Existing Monorepo" appearance="small" url="/recipes/adopting-nx/adding-to-monorepo" icon="pnpm" /%}
 
 {% link-card title="Add to Any Project" appearance="small" url="/recipes/adopting-nx/adding-to-existing-project" icon="nx" /%}
-
-{% link-card title="Migrate from CRA" appearance="small" url="/recipes/react/migration-cra" icon="cra" /%}
 
 {% link-card title="Migrate from Angular CLI" appearance="small" url="/recipes/angular/migration/angular" icon="angular" /%}
 

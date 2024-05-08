@@ -41,14 +41,19 @@ jobs:
         env:
           AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)
 
+      <% if(packageManager == 'pnpm'){ %>
+      - script: npm install --prefix=$HOME/.local -g pnpm@8
+        displayName: Install PNPM
+
+      <% } %>
       # Connect your workspace on <%= nxCloudHost %> and uncomment this to enable task distribution.
       # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "<% if(hasE2E){ %>e2e-ci<% } else { %>build<% } %>" targets have been requested
       # - script: <%= packageManagerPrefix %> nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="<% if(hasE2E){ %>e2e-ci<% } else { %>build<% } %>"
 
-      <% if(packageManager == 'pnpm'){ %>
-      - script: npm install --prefix=$HOME/.local -g pnpm@8
-        displayName: Install PNPM
-      <% } %>- script: <%= packageManagerInstall %>
+      - script: <%= packageManagerInstall %>
+      - script: git branch --track <%= mainBranch %> origin/<%= mainBranch %>
+        condition: eq(variables['Build.Reason'], 'PullRequest')
 
-      - script: <%= packageManagerPrefix %> nx-cloud record -- nx format:check --base=$(BASE_SHA) --head=$(HEAD_SHA)
+      # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
+      # - script: <%= packageManagerPrefix %> nx-cloud record -- echo Hello World
       - script: <%= packageManagerPrefix %> nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build<% if(hasE2E){ %> e2e-ci<% } %>

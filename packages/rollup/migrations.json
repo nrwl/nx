@@ -1,11 +1,5 @@
 {
   "generators": {
-    "add-babel-inputs": {
-      "cli": "nx",
-      "version": "15.0.0-beta.0",
-      "description": "Adds babel.config.json to the hash of all tasks",
-      "factory": "./src/migrations/update-15-0-0/add-babel-inputs"
-    },
     "update-16-0-0-add-nx-packages": {
       "cli": "nx",
       "version": "16.0.0-beta.1",
@@ -31,6 +25,19 @@
       "packages": {
         "core-js": {
           "version": "3.36.1",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "19.0.0": {
+      "version": "19.0.0-beta.0",
+      "packages": {
+        "@rollup/plugin-url": {
+          "version": "^8.0.2",
+          "alwaysAddToPackageJson": false
+        },
+        "@svgr/rollup": {
+          "version": "^8.1.0",
           "alwaysAddToPackageJson": false
         }
       }

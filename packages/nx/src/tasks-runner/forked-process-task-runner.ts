@@ -201,6 +201,7 @@ export class ForkedProcessTaskRunner {
   private async forkProcessWithPseudoTerminal(
     task: Task,
     {
+      temporaryOutputPath,
       streamOutput,
       taskGraph,
       env,
@@ -219,6 +220,7 @@ export class ForkedProcessTaskRunner {
     const childId = task.id;
     const p = await this.pseudoTerminal.fork(childId, forkScript, {
       cwd: process.cwd(),
+      execArgv: process.execArgv,
       jsEnv: env,
       quiet: !streamOutput,
     });
@@ -242,7 +244,7 @@ export class ForkedProcessTaskRunner {
         if (code >= 128) {
           process.exit(code);
         }
-
+        this.writeTerminalOutput(temporaryOutputPath, terminalOutput);
         res({
           code,
           terminalOutput,

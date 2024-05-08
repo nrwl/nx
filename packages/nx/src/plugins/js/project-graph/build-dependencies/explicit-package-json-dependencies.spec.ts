@@ -6,7 +6,7 @@ import { buildExplicitPackageJsonDependencies } from './explicit-package-json-de
 import { ProjectGraphProjectNode } from '../../../../config/project-graph';
 import { ProjectGraphBuilder } from '../../../../project-graph/project-graph-builder';
 import { createFileMap } from '../../../../project-graph/file-map-utils';
-import { CreateDependenciesContext } from '../../../../utils/nx-plugin';
+import { CreateDependenciesContext } from '../../../../project-graph/plugins';
 import { getAllFileDataInContext } from '../../../../utils/workspace-context';
 
 describe('explicit package json dependencies', () => {
@@ -18,15 +18,19 @@ describe('explicit package json dependencies', () => {
       projects: {
         proj: {
           root: 'libs/proj',
+          name: 'proj',
         },
         proj2: {
           root: 'libs/proj2',
+          name: 'proj2',
         },
         proj3: {
           root: 'libs/proj3',
+          name: 'proj3',
         },
         proj4: {
           root: 'libs/proj4',
+          name: 'proj4',
         },
       },
     };

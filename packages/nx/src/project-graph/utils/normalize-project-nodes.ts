@@ -5,35 +5,41 @@ import {
   TargetConfiguration,
 } from '../../config/workspace-json-project-json';
 import { findMatchingProjects } from '../../utils/find-matching-projects';
-import { NX_PREFIX } from '../../utils/logger';
-import { resolveNxTokensInOptions } from '../utils/project-configuration-utils';
-import { CreateDependenciesContext } from '../../utils/nx-plugin';
+import {
+  readProjectConfigurationsFromRootMap,
+  resolveNxTokensInOptions,
+} from '../utils/project-configuration-utils';
+import { CreateDependenciesContext } from '../plugins';
 
 export async function normalizeProjectNodes(
-  ctx: CreateDependenciesContext,
+  { projects }: CreateDependenciesContext,
   builder: ProjectGraphBuilder
 ) {
-  const toAdd = [];
   // Sorting projects by name to make sure that the order of projects in the graph is deterministic.
   // This is important to ensure that expanded properties referencing projects (e.g. implicit dependencies)
   // are also deterministic, and thus don't cause the calculated project configuration hash to shift.
-  const projects = Object.keys(ctx.projects).sort();
+  const sortedProjectNames = Object.keys(projects).sort();
 
   // Used for expanding implicit dependencies (e.g. `@proj/*` or `tag:foo`)
-  const partialProjectGraphNodes = projects.reduce((graph, project) => {
-    const projectConfiguration = ctx.projects[project];
-    graph[project] = {
-      name: project,
-      type: projectConfiguration.projectType === 'library' ? 'lib' : 'app', // missing fallback to `e2e`
-      data: {
-        ...projectConfiguration,
-      },
-    };
-    return graph;
-  }, {} as Record<string, ProjectGraphProjectNode>);
+  const partialProjectGraphNodes = sortedProjectNames.reduce(
+    (graph, project) => {
+      const projectConfiguration = projects[project];
+      graph[project] = {
+        name: project,
+        type: projectConfiguration.projectType === 'library' ? 'lib' : 'app', // missing fallback to `e2e`
+        data: {
+          ...projectConfiguration,
+        },
+      };
+      return graph;
+    },
+    {} as Record<string, ProjectGraphProjectNode>
+  );
 
-  for (const key of projects) {
-    const p = ctx.projects[key];
+  const toAdd = [];
+
+  for (const key of sortedProjectNames) {
+    const p = projects[key];
 
     p.implicitDependencies = normalizeImplicitDependencies(
       key,
@@ -50,7 +56,7 @@ export async function normalizeProjectNodes(
           ? 'e2e'
           : 'app'
         : 'lib';
-    const tags = ctx.projects?.[key]?.tags || [];
+    const tags = p.tags || [];
 
     toAdd.push({
       name: key,
@@ -92,21 +98,6 @@ export function normalizeProjectTargets(
     if (!targets[target].command && !targets[target].executor) {
       delete targets[target];
       continue;
-    }
-
-    targets[target].options = resolveNxTokensInOptions(
-      targets[target].options,
-      project,
-      `${projectName}:${target}`
-    );
-
-    targets[target].configurations ??= {};
-    for (const configuration in targets[target].configurations) {
-      targets[target].configurations[configuration] = resolveNxTokensInOptions(
-        targets[target].configurations[configuration],
-        project,
-        `${projectName}:${target}:${configuration}`
-      );
     }
   }
   return targets;

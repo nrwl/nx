@@ -10,7 +10,7 @@ import {
   resolveSchema,
 } from '../../config/schema-utils';
 import { readJsonFile } from '../../utils/fileutils';
-import { readPluginPackageJson } from '../../utils/nx-plugin';
+import { readPluginPackageJson } from '../../project-graph/plugins';
 
 export function getGeneratorInformation(
   collectionName: string,

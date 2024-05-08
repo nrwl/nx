@@ -4,8 +4,7 @@ import {
   WorkspaceTypeAndRoot,
 } from '../src/utils/find-workspace-root';
 import * as chalk from 'chalk';
-import { config as loadDotEnvFile } from 'dotenv';
-import { expand } from 'dotenv-expand';
+import { loadRootEnvFiles } from '../src/utils/dotenv';
 import { initLocal } from './init-local';
 import { output } from '../src/utils/output';
 import {
@@ -26,15 +25,20 @@ function main() {
   if (
     process.argv[2] !== 'report' &&
     process.argv[2] !== '--version' &&
-    process.argv[2] !== '--help'
+    process.argv[2] !== '--help' &&
+    process.argv[2] !== 'reset'
   ) {
     assertSupportedPlatform();
   }
 
   require('nx/src/utils/perf-logging');
 
+  const workspace = findWorkspaceRoot(process.cwd());
+
   performance.mark('loading dotenv files:start');
-  loadDotEnvFiles();
+  if (workspace) {
+    loadRootEnvFiles(workspace.dir);
+  }
   performance.mark('loading dotenv files:end');
   performance.measure(
     'loading dotenv files',
@@ -42,7 +46,6 @@ function main() {
     'loading dotenv files:end'
   );
 
-  const workspace = findWorkspaceRoot(process.cwd());
   // new is a special case because there is no local workspace to load
   if (
     process.argv[2] === 'new' ||
@@ -102,21 +105,6 @@ function main() {
         require(localNx);
       }
     }
-  }
-}
-
-/**
- * This loads dotenv files from:
- * - .env
- * - .local.env
- * - .env.local
- */
-function loadDotEnvFiles() {
-  for (const file of ['.local.env', '.env.local', '.env']) {
-    const myEnv = loadDotEnvFile({
-      path: file,
-    });
-    expand(myEnv);
   }
 }
 

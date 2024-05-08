@@ -34,9 +34,7 @@ import {
 
 export const meta: MetaFunction = () => [
   {
-    charset: 'utf-8',
     title: 'New Remix App',
-    viewport: 'width=device-width,initial-scale=1',
   },
 ];
 
@@ -44,6 +42,8 @@ export default function App() {
   return (
     <html lang="en">
       <head>
+        <meta charSet="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
         <Meta />
         <Links />
       </head>
@@ -106,9 +106,7 @@ import {
 
 export const meta: MetaFunction = () => [
   {
-    charset: 'utf-8',
     title: 'New Remix App',
-    viewport: 'width=device-width,initial-scale=1',
   },
 ];
 
@@ -116,6 +114,8 @@ export default function App() {
   return (
     <html lang="en">
       <head>
+        <meta charSet="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
         <Meta />
         <Links />
       </head>
@@ -153,9 +153,9 @@ export default defineConfig({
   e2e: {
     ...nxE2EPreset(__filename, {
       cypressDir: 'src',
-      webServerCommands: { default: 'nx run test:serve:development' },
+      webServerCommands: { default: 'nx run test:dev:development' },
     }),
-    baseUrl: 'http://localhost:4200',
+    baseUrl: 'http://localhost:3000',
   },
 });
 "
@@ -168,7 +168,7 @@ import { nxE2EPreset } from '@nx/playwright/preset';
 import { workspaceRoot } from '@nx/devkit';
 
 // For CI, you may want to set BASE_URL to the deployed application.
-const baseURL = process.env['BASE_URL'] || 'http://localhost:4200';
+const baseURL = process.env['BASE_URL'] || 'http://localhost:3000';
 
 /**
  * Read environment variables from file.
@@ -189,8 +189,8 @@ export default defineConfig({
   },
   /* Run your local dev server before starting the tests */
   webServer: {
-    command: 'pnpm exec nx serve test',
-    url: 'http://localhost:4200',
+    command: 'npx nx dev test',
+    url: 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
     cwd: workspaceRoot,
   },
@@ -266,15 +266,15 @@ exports[`Remix Application Integrated Repo --projectNameAndRootFormat=as-provide
 } from '@remix-run/react';
 export const meta = () => [
   {
-    charset: 'utf-8',
     title: 'New Remix App',
-    viewport: 'width=device-width,initial-scale=1',
   },
 ];
 export default function App() {
   return (
     <html lang="en">
       <head>
+        <meta charSet="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
         <Meta />
         <Links />
       </head>
@@ -475,9 +475,7 @@ import {
 
 export const meta: MetaFunction = () => [
   {
-    charset: 'utf-8',
     title: 'New Remix App',
-    viewport: 'width=device-width,initial-scale=1',
   },
 ];
 
@@ -485,6 +483,8 @@ export default function App() {
   return (
     <html lang="en">
       <head>
+        <meta charSet="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
         <Meta />
         <Links />
       </head>
@@ -547,9 +547,7 @@ import {
 
 export const meta: MetaFunction = () => [
   {
-    charset: 'utf-8',
     title: 'New Remix App',
-    viewport: 'width=device-width,initial-scale=1',
   },
 ];
 
@@ -557,6 +555,8 @@ export default function App() {
   return (
     <html lang="en">
       <head>
+        <meta charSet="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
         <Meta />
         <Links />
       </head>
@@ -619,9 +619,7 @@ import {
 
 export const meta: MetaFunction = () => [
   {
-    charset: 'utf-8',
     title: 'New Remix App',
-    viewport: 'width=device-width,initial-scale=1',
   },
 ];
 
@@ -629,6 +627,8 @@ export default function App() {
   return (
     <html lang="en">
       <head>
+        <meta charSet="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
         <Meta />
         <Links />
       </head>
@@ -666,9 +666,9 @@ export default defineConfig({
   e2e: {
     ...nxE2EPreset(__filename, {
       cypressDir: 'src',
-      webServerCommands: { default: 'nx run test:serve:development' },
+      webServerCommands: { default: 'nx run test:dev:development' },
     }),
-    baseUrl: 'http://localhost:4200',
+    baseUrl: 'http://localhost:3000',
   },
 });
 "
@@ -681,7 +681,7 @@ import { nxE2EPreset } from '@nx/playwright/preset';
 import { workspaceRoot } from '@nx/devkit';
 
 // For CI, you may want to set BASE_URL to the deployed application.
-const baseURL = process.env['BASE_URL'] || 'http://localhost:4200';
+const baseURL = process.env['BASE_URL'] || 'http://localhost:3000';
 
 /**
  * Read environment variables from file.
@@ -702,8 +702,8 @@ export default defineConfig({
   },
   /* Run your local dev server before starting the tests */
   webServer: {
-    command: 'pnpm exec nx serve test',
-    url: 'http://localhost:4200',
+    command: 'npx nx dev test',
+    url: 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
     cwd: workspaceRoot,
   },
@@ -779,15 +779,15 @@ exports[`Remix Application Integrated Repo --projectNameAndRootFormat=derived --
 } from '@remix-run/react';
 export const meta = () => [
   {
-    charset: 'utf-8',
     title: 'New Remix App',
-    viewport: 'width=device-width,initial-scale=1',
   },
 ];
 export default function App() {
   return (
     <html lang="en">
       <head>
+        <meta charSet="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
         <Meta />
         <Links />
       </head>
@@ -988,9 +988,7 @@ import {
 
 export const meta: MetaFunction = () => [
   {
-    charset: 'utf-8',
     title: 'New Remix App',
-    viewport: 'width=device-width,initial-scale=1',
   },
 ];
 
@@ -998,6 +996,8 @@ export default function App() {
   return (
     <html lang="en">
       <head>
+        <meta charSet="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
         <Meta />
         <Links />
       </head>
@@ -1035,9 +1035,9 @@ export default defineConfig({
   e2e: {
     ...nxE2EPreset(__filename, {
       cypressDir: 'src',
-      webServerCommands: { default: 'nx run test:serve:development' },
+      webServerCommands: { default: 'nx run test:dev:development' },
     }),
-    baseUrl: 'http://localhost:4200',
+    baseUrl: 'http://localhost:3000',
   },
 });
 "
@@ -1075,15 +1075,15 @@ exports[`Remix Application Standalone Project Repo --js should create the applic
 } from '@remix-run/react';
 export const meta = () => [
   {
-    charset: 'utf-8',
     title: 'New Remix App',
-    viewport: 'width=device-width,initial-scale=1',
   },
 ];
 export default function App() {
   return (
     <html lang="en">
       <head>
+        <meta charSet="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
         <Meta />
         <Links />
       </head>
@@ -1328,9 +1328,7 @@ import {
 
 export const meta: MetaFunction = () => [
   {
-    charset: 'utf-8',
     title: 'New Remix App',
-    viewport: 'width=device-width,initial-scale=1',
   },
 ];
 
@@ -1338,6 +1336,8 @@ export default function App() {
   return (
     <html lang="en">
       <head>
+        <meta charSet="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
         <Meta />
         <Links />
       </head>
@@ -1416,7 +1416,7 @@ import { nxE2EPreset } from '@nx/playwright/preset';
 import { workspaceRoot } from '@nx/devkit';
 
 // For CI, you may want to set BASE_URL to the deployed application.
-const baseURL = process.env['BASE_URL'] || 'http://localhost:4200';
+const baseURL = process.env['BASE_URL'] || 'http://localhost:3000';
 
 /**
  * Read environment variables from file.
@@ -1437,8 +1437,8 @@ export default defineConfig({
   },
   /* Run your local dev server before starting the tests */
   webServer: {
-    command: 'pnpm exec nx serve test',
-    url: 'http://localhost:4200',
+    command: 'npx nx dev test',
+    url: 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
     cwd: workspaceRoot,
   },

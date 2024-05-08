@@ -17,8 +17,7 @@ export default defineConfig({
     nxViteTsPaths(),
     dts({
       entryRoot: 'src',
-      tsConfigFilePath: path.join(__dirname, 'tsconfig.lib.json'),
-      skipDiagnostics: true,
+      tsconfigPath: path.join(__dirname, 'tsconfig.lib.json'),
     }),
   ],
 
@@ -81,7 +80,6 @@ exports[`lib nested should create a local tsconfig.json 1`] = `
     "moduleResolution": "node",
     "resolveJsonModule": true,
     "strict": true,
-    "verbatimModuleSyntax": true,
   },
   "extends": "../../tsconfig.base.json",
   "files": [],
@@ -114,8 +112,7 @@ export default defineConfig({
     nxViteTsPaths(),
     dts({
       entryRoot: 'src',
-      tsConfigFilePath: path.join(__dirname, 'tsconfig.lib.json'),
-      skipDiagnostics: true,
+      tsconfigPath: path.join(__dirname, 'tsconfig.lib.json'),
     }),
   ],
 

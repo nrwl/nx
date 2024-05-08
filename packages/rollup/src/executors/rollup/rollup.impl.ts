@@ -1,6 +1,5 @@
 import * as ts from 'typescript';
 import * as rollup from 'rollup';
-import * as peerDepsExternal from 'rollup-plugin-peer-deps-external';
 import { getBabelInputPlugin } from '@rollup/plugin-babel';
 import { dirname, join, parse, resolve } from 'path';
 import * as autoprefixer from 'autoprefixer';
@@ -118,13 +117,17 @@ export async function* rollupExecutor(
       }
 
       const start = process.hrtime.bigint();
-      const bundle = await rollup.rollup(rollupOptions);
-      const output = Array.isArray(rollupOptions.output)
-        ? rollupOptions.output
-        : [rollupOptions.output];
+      const allRollupOptions = Array.isArray(rollupOptions)
+        ? rollupOptions
+        : [rollupOptions];
 
-      for (const o of output) {
-        await bundle.write(o);
+      for (const opts of allRollupOptions) {
+        const bundle = await rollup.rollup(opts);
+        const output = Array.isArray(opts.output) ? opts.output : [opts.output];
+
+        for (const o of output) {
+          await bundle.write(o);
+        }
       }
 
       const end = process.hrtime.bigint();
@@ -133,7 +136,13 @@ export async function* rollupExecutor(
       updatePackageJson(options, packageJson);
       logger.info(`⚡ Done in ${duration}`);
       return { success: true, outfile };
-    } catch {
+    } catch (e) {
+      if (e.formatted) {
+        logger.info(e.formatted);
+      } else if (e.message) {
+        logger.info(e.message);
+      }
+      logger.error(e);
       logger.error(`Bundle failed: ${context.projectName}`);
       return { success: false };
     }
@@ -150,9 +159,8 @@ export async function createRollupOptions(
   packageJson: PackageJson,
   sourceRoot: string,
   npmDeps: string[]
-): Promise<rollup.RollupOptions> {
+): Promise<rollup.RollupOptions | rollup.RollupOptions[]> {
   const useBabel = options.compiler === 'babel';
-  const useTsc = options.compiler === 'tsc';
   const useSwc = options.compiler === 'swc';
 
   const tsConfigPath = joinPathFragments(context.root, options.tsConfig);
@@ -204,9 +212,6 @@ export async function createRollupOptions(
     typeDefinitions({
       main: options.main,
       projectRoot: options.projectRoot,
-    }),
-    peerDepsExternal({
-      packageJsonPath: options.project,
     }),
     postcss({
       inject: true,
@@ -287,7 +292,7 @@ export async function createRollupOptions(
   const userDefinedRollupConfigs = options.rollupConfig.map((plugin) =>
     loadConfigFile(plugin)
   );
-  let finalConfig: rollup.InputOptions = rollupConfig;
+  let finalConfig: rollup.RollupOptions = rollupConfig;
   for (const _config of userDefinedRollupConfigs) {
     const config = await _config;
     if (typeof config === 'function') {
@@ -297,7 +302,10 @@ export async function createRollupOptions(
         ...finalConfig,
         ...config,
         plugins: [
-          ...(finalConfig.plugins?.length > 0 ? finalConfig.plugins : []),
+          ...(Array.isArray(finalConfig.plugins) &&
+          finalConfig.plugins?.length > 0
+            ? finalConfig.plugins
+            : []),
           ...(config.plugins?.length > 0 ? config.plugins : []),
         ],
       };

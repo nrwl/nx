@@ -12,9 +12,7 @@ Implementing an efficient CI setup for monorepos - while crucial - can be challe
 
 ## Try Nx Cloud Yourself!
 
-```shell
-npx nx connect
-```
+[Create an account on Nx Cloud](https://cloud.nx.app) and connect your repository.
 
 ## Learn about Nx on CI
 
@@ -55,7 +53,7 @@ npx nx g ci-workflow
 
 Connect on our channels and with the Nx Community to ask questions, get help and keep up to date with the latest news.
 
-- Reach out for [Enterprise Support](https://nx.app/enterprise)
+- Reach out for [Enterprise Support](/enterprise)
 - Join our [Discord Community](https://go.nx.dev/community)
 - Subscribe to our [Youtube Channel](https://www.youtube.com/@nxdevtools)
 - Follow us on [Twitter](https://twitter.com/nxdevtools)

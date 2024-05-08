@@ -3,13 +3,16 @@ import {
   cleanupProject,
   createFile,
   e2eConsoleLogger,
+  isWindows,
   newProject,
   runCLI,
   runCommand,
+  tmpProjPath,
   uniq,
   updateFile,
 } from '@nx/e2e/utils';
 import { execSync } from 'child_process';
+import { resolve } from 'path';
 
 describe('Gradle', () => {
   describe.each([{ type: 'kotlin' }, { type: 'groovy' }])(
@@ -39,6 +42,10 @@ describe('Gradle', () => {
           `list/build/libs/list.jar`,
           `utilities/build/libs/utilities.jar`
         );
+
+        expect(() => {
+          runCLI(`build ${gradleProjectName}`, { verbose: true });
+        }).not.toThrow();
       });
 
       it('should track dependencies for new app', () => {
@@ -64,6 +71,12 @@ dependencies {
     implementation(project(":app"))
 }`
           );
+          updateFile(`app/build.gradle.kts`, (content) => {
+            content += `\r\ntasks.register("task1"){  
+                println("REGISTER TASK1: This is executed during the configuration phase")
+            }`;
+            return content;
+          });
         }
         updateFile(
           `settings.gradle${type === 'kotlin' ? '.kts' : ''}`,
@@ -85,11 +98,26 @@ function createGradleProject(
   type: 'kotlin' | 'groovy' = 'kotlin'
 ) {
   e2eConsoleLogger(`Using java version: ${execSync('java --version')}`);
-  e2eConsoleLogger(`Using gradle version: ${execSync('gradle --version')}`);
-  e2eConsoleLogger(execSync(`gradle help --task :init`).toString());
+  const gradleCommand = isWindows()
+    ? resolve(`${__dirname}/../gradlew.bat`)
+    : resolve(`${__dirname}/../gradlew`);
+  e2eConsoleLogger(
+    'Using gradle version: ' +
+      execSync(`${gradleCommand} --version`, {
+        cwd: tmpProjPath(),
+      })
+  );
+  e2eConsoleLogger(
+    execSync(`${gradleCommand} help --task :init`, {
+      cwd: tmpProjPath(),
+    }).toString()
+  );
   e2eConsoleLogger(
     runCommand(
-      `gradle init --type ${type}-application --dsl ${type} --project-name ${projectName} --package gradleProject --no-incubating --split-project`
+      `${gradleCommand} init --type ${type}-application --dsl ${type} --project-name ${projectName} --package gradleProject --no-incubating --split-project`,
+      {
+        cwd: tmpProjPath(),
+      }
     )
   );
   runCLI(`add @nx/gradle`);

@@ -86,6 +86,24 @@ To learn about creating your own plugin read about [extending Nx](/extending-nx/
 }
 ```
 
+### Scope Plugins to Specific Projects
+
+Plugins use config files to infer tasks for projects. You can specify which config files are processed by Nx plugins using the `include` and `exclude` properties in the plugin configuration object.
+
+```jsonc {% fileName="nx.json" %}
+{
+  "plugins": [
+    {
+      "plugin": "@nx/jest/plugin",
+      "include": ["packages/**/*"], // include any projects in the packages folder
+      "exclude": ["**/*-e2e/**/*"] // exclude any projects in a *-e2e folder
+    }
+  ]
+}
+```
+
+The `include` and `exclude` properties are each file glob patterns that are used to include or exclude the configuration file that the plugin is interpreting. In the example provided, the `@nx/jest/plugin` plugin will only infer tasks for projects where the `jest.config.ts` file path matches the `packages/**/*` glob but does not match the `**/*-e2e/**/*` glob.
+
 ## Task Options
 
 The following properties affect the way Nx runs tasks and can be set at the root of `nx.json`.
@@ -276,6 +294,43 @@ In Nx 17 and higher, caching is configured by specifying `"cache": true` in a ta
 If you are using distributed task execution and disable caching for a given target, you will not be able to use distributed task execution for that target. This is because distributed task execution requires caching to be enabled. This means that the target you have disabled caching for, and any targets which depend on that target will fail the pipeline if you try to run them with Nx Agents enabled.
 
 {% /callout %}
+
+### Executor/command options
+
+You can configure options specific to a target's executor. As an example, if your repo has projects using the `@nx/js:tsc` executor, you can provide some default options as follows:
+
+```json {% fileName="nx.json" %}
+{
+  "targetDefaults": {
+    "@nx/js:tsc": {
+      "options": {
+        "generateExportsField": true
+      }
+    }
+  }
+}
+```
+
+You can also provide defaults for [inferred targets](/concepts/inferred-tasks) or targets running a command using the `nx:run-commands` executor. As an example, if your repo has projects where **all the `build` targets** run the same `vite build` command, you can provide some default options as follows:
+
+```json {% fileName="nx.json" %}
+{
+  "targetDefaults": {
+    "build": {
+      "options": {
+        "assetsInlineLimit": 2048,
+        "assetsDir": "static/assets"
+      }
+    }
+  }
+}
+```
+
+{% callout type="caution" title="Be careful" %}
+If multiple targets with the same name run different commands (or use different executors), do not set options in `targetDefaults`. Different commands would accept different options, and the target defaults will apply to all targets with the same name regardless of the command they run. If you were to provide options in `targetDefaults` for them, the commands that don't expect those options could throw an error.
+{% /callout %}
+
+For more details on how to pass args to the underlying command see the [Pass Args to Commands recipe](/recipes/running-tasks/pass-args-to-commands).
 
 ## Release
 

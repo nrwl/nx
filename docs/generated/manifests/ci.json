@@ -799,29 +799,6 @@
         "tags": []
       },
       {
-        "id": "troubleshooting",
-        "name": "Troubleshooting",
-        "description": "Learn how to solve common issues in Nx Cloud.",
-        "mediaImage": "",
-        "file": "",
-        "itemList": [
-          {
-            "id": "ci-execution-failed",
-            "name": "CI Execution Failed",
-            "description": "",
-            "mediaImage": "",
-            "file": "nx-cloud/troubleshooting/ci-execution-failed",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/ci/recipes/troubleshooting/ci-execution-failed",
-            "tags": []
-          }
-        ],
-        "isExternal": false,
-        "path": "/ci/recipes/troubleshooting",
-        "tags": []
-      },
-      {
         "id": "other",
         "name": "Other",
         "description": "Learn how to set up Nx Cloud for your workspace.",
@@ -1726,40 +1703,6 @@
     "path": "/ci/recipes/enterprise/dte/jenkins-dte",
     "tags": []
   },
-  "/ci/recipes/troubleshooting": {
-    "id": "troubleshooting",
-    "name": "Troubleshooting",
-    "description": "Learn how to solve common issues in Nx Cloud.",
-    "mediaImage": "",
-    "file": "",
-    "itemList": [
-      {
-        "id": "ci-execution-failed",
-        "name": "CI Execution Failed",
-        "description": "",
-        "mediaImage": "",
-        "file": "nx-cloud/troubleshooting/ci-execution-failed",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/ci/recipes/troubleshooting/ci-execution-failed",
-        "tags": []
-      }
-    ],
-    "isExternal": false,
-    "path": "/ci/recipes/troubleshooting",
-    "tags": []
-  },
-  "/ci/recipes/troubleshooting/ci-execution-failed": {
-    "id": "ci-execution-failed",
-    "name": "CI Execution Failed",
-    "description": "",
-    "mediaImage": "",
-    "file": "nx-cloud/troubleshooting/ci-execution-failed",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/ci/recipes/troubleshooting/ci-execution-failed",
-    "tags": []
-  },
   "/ci/recipes/other": {
     "id": "other",
     "name": "Other",
@@ -1868,17 +1811,6 @@
         "tags": []
       },
       {
-        "id": "server-api",
-        "name": "Server API Reference",
-        "description": "",
-        "mediaImage": "",
-        "file": "nx-cloud/reference/server-api",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/ci/reference/server-api",
-        "tags": []
-      },
-      {
         "id": "release-notes",
         "name": "Release Notes",
         "description": "",
@@ -1938,17 +1870,6 @@
     "path": "/ci/reference/env-vars",
     "tags": []
   },
-  "/ci/reference/server-api": {
-    "id": "server-api",
-    "name": "Server API Reference",
-    "description": "",
-    "mediaImage": "",
-    "file": "nx-cloud/reference/server-api",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/ci/reference/server-api",
-    "tags": []
-  },
   "/ci/reference/release-notes": {
     "id": "release-notes",
     "name": "Release Notes",
@@ -1958,6 +1879,40 @@
     "itemList": [],
     "isExternal": false,
     "path": "/ci/reference/release-notes",
+    "tags": []
+  },
+  "/ci/troubleshooting": {
+    "id": "troubleshooting",
+    "name": "Troubleshooting",
+    "description": "Learn how to solve common issues in Nx Cloud.",
+    "mediaImage": "",
+    "file": "",
+    "itemList": [
+      {
+        "id": "ci-execution-failed",
+        "name": "CI Execution Failed",
+        "description": "",
+        "mediaImage": "",
+        "file": "nx-cloud/troubleshooting/ci-execution-failed",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/troubleshooting/ci-execution-failed",
+        "tags": []
+      }
+    ],
+    "isExternal": false,
+    "path": "/ci/troubleshooting",
+    "tags": []
+  },
+  "/ci/troubleshooting/ci-execution-failed": {
+    "id": "ci-execution-failed",
+    "name": "CI Execution Failed",
+    "description": "",
+    "mediaImage": "",
+    "file": "nx-cloud/troubleshooting/ci-execution-failed",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/troubleshooting/ci-execution-failed",
     "tags": []
   }
 }

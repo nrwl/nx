@@ -1,3 +1,5 @@
+import 'nx/src/internal-testing-utils/mock-project-graph';
+
 import {
   NxJsonConfiguration,
   readJson,
@@ -378,6 +380,28 @@ describe('setupSSR', () => {
     expect(dependencies['@nguniversal/express-engine']).toBeUndefined();
     expect(devDependencies['@types/express']).toBe(typesExpressVersion);
     expect(devDependencies['@nguniversal/builders']).toBeUndefined();
+  });
+
+  it('should not touch the package.json when run with `--skipPackageJson`', async () => {
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    await generateTestApplication(tree, { name: 'app1', skipFormat: true });
+    let initialPackageJson;
+    updateJson(tree, 'package.json', (json) => {
+      json.dependencies = {};
+      json.devDependencies = {};
+      initialPackageJson = json;
+
+      return json;
+    });
+
+    await setupSsr(tree, {
+      project: 'app1',
+      skipFormat: true,
+      skipPackageJson: true,
+    });
+
+    const packageJson = readJson(tree, 'package.json');
+    expect(packageJson).toEqual(initialPackageJson);
   });
 
   it('should add hydration correctly for NgModule apps', async () => {

@@ -1,7 +1,6 @@
-import { requireNx } from '../../nx';
+import { output } from 'nx/src/devkit-exports';
 
 export function logShowProjectCommand(projectName: string): void {
-  const { output } = requireNx();
   output.log({
     title: `👀 View Details of ${projectName}`,
     bodyLines: [

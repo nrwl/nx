@@ -27,7 +27,6 @@ import { getDefaultPluginsSync } from '../utils/nx-plugin.deprecated';
 import { minimatch } from 'minimatch';
 import { CreateNodesResult } from '../devkit-exports';
 import { PackageJsonProjectsNextToProjectJsonPlugin } from '../plugins/project-json/build-nodes/package-json-next-to-project-json';
-import { LoadedNxPlugin } from '../utils/nx-plugin';
 
 export interface Change {
   type: string;
@@ -133,8 +132,8 @@ function defaultReadFileAtRevision(
 }
 
 /**
- * TODO(v19): Remove this function
- * @deprecated To get projects use {@link retrieveProjectConfigurations} instead
+ * TODO(v20): Remove this function
+ * @deprecated To get projects use {@link retrieveProjectConfigurations} instead. This will be removed in v20.
  */
 export function readWorkspaceConfig(opts: {
   format: 'angularCli' | 'nx';
@@ -173,28 +172,27 @@ export function readPackageJson(): any {
     return {}; // if package.json doesn't exist
   }
 }
+
 // Original Exports
 export { FileData };
-// TODO(17): Remove these exports
-export { readNxJson, workspaceLayout } from '../config/configuration';
 
 /**
- * TODO(v19): Remove this function.
+ * TODO(v20): Remove this function.
  */
 function getProjectsSyncNoInference(root: string, nxJson: NxJsonConfiguration) {
   const allConfigFiles = retrieveProjectConfigurationPaths(
     root,
     getDefaultPluginsSync(root)
   );
-  const plugins: LoadedNxPlugin[] = [
-    { plugin: PackageJsonProjectsNextToProjectJsonPlugin },
+  const plugins = [
+    PackageJsonProjectsNextToProjectJsonPlugin,
     ...getDefaultPluginsSync(root),
   ];
 
-  const projectRootMap: Map<string, ProjectConfiguration> = new Map();
+  const projectRootMap: Record<string, ProjectConfiguration> = {};
 
   // We iterate over plugins first - this ensures that plugins specified first take precedence.
-  for (const { plugin, options } of plugins) {
+  for (const plugin of plugins) {
     const [pattern, createNodes] = plugin.createNodes ?? [];
     if (!pattern) {
       continue;
@@ -204,11 +202,15 @@ function getProjectsSyncNoInference(root: string, nxJson: NxJsonConfiguration) {
     );
     for (const file of matchingConfigFiles) {
       if (minimatch(file, pattern, { dot: true })) {
-        let r = createNodes(file, options, {
-          nxJsonConfiguration: nxJson,
-          workspaceRoot: root,
-          configFiles: matchingConfigFiles,
-        }) as CreateNodesResult;
+        let r = createNodes(
+          file,
+          {},
+          {
+            nxJsonConfiguration: nxJson,
+            workspaceRoot: root,
+            configFiles: matchingConfigFiles,
+          }
+        ) as CreateNodesResult;
         for (const node in r.projects) {
           const project = {
             root: node,

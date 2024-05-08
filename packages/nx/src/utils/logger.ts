@@ -1,4 +1,4 @@
-import * as chalk from 'chalk';
+import chalk = require('chalk');
 
 export const NX_PREFIX = chalk.inverse(chalk.bold(chalk.cyan(' NX ')));
 
@@ -30,6 +30,11 @@ export const logger = {
   },
   fatal: (...s) => {
     console.error(...s);
+  },
+  verbose: (...s) => {
+    if (process.env.NX_VERBOSE_LOGGING) {
+      console.log(...s);
+    }
   },
 };
 
