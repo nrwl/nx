@@ -109,7 +109,9 @@ function SidebarSectionItems({ item }: { item: MenuItem }): JSX.Element {
       </h5>
       <ul className={cx('mb-6 ml-3', collapsed ? 'hidden' : '')}>
         {(item.children as MenuItem[]).map((subItem, index) => {
-          const isActiveLink = subItem.path === withoutAnchors(router.asPath);
+          const isActiveLink = withoutAnchors(router.asPath).startsWith(
+            subItem.path
+          );
           if (isActiveLink && collapsed) {
             handleCollapseToggle();
           }
