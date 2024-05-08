@@ -112,7 +112,24 @@
     "devRemotes": {
       "type": "array",
       "items": {
-        "type": "string"
+        "oneOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "remoteName": {
+                "type": "string"
+              },
+              "configuration": {
+                "type": "string"
+              }
+            },
+            "required": ["remoteName"],
+            "additionalProperties": false
+          }
+        ]
       },
       "description": "List of remote applications to run in development mode (i.e. using serve target).",
       "x-priority": "important"

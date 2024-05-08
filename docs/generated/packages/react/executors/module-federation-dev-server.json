@@ -11,7 +11,20 @@
     "properties": {
       "devRemotes": {
         "type": "array",
-        "items": { "type": "string" },
+        "items": {
+          "oneOf": [
+            { "type": "string" },
+            {
+              "type": "object",
+              "properties": {
+                "remoteName": { "type": "string" },
+                "configuration": { "type": "string" }
+              },
+              "required": ["remoteName"],
+              "additionalProperties": false
+            }
+          ]
+        },
         "description": "List of remote applications to run in development mode (i.e. using serve target).",
         "x-priority": "important"
       },
@@ -114,6 +127,7 @@
         "description": "Path to a Module Federation manifest file (e.g. `my/path/to/module-federation.manifest.json`) containing the dynamic remote applications relative to the workspace root."
       }
     },
+    "examplesFile": "## Examples\n\n{% tabs %}\n\n{% tab label=\"Basic Usage\" %}\nThe Module Federation Dev Server will serve a host application and find the remote applications associated with the host and serve them statically also.  \nSee an example set up of it below:\n\n```json\n{\n  \"serve\": {\n    \"executor\": \"@nx/react:module-federation-dev-server\",\n    \"configurations\": {\n      \"production\": {\n        \"buildTarget\": \"host:build:production\"\n      },\n      \"development\": {\n        \"buildTarget\": \"host:build:development\"\n      }\n    },\n    \"defaultConfiguration\": \"development\",\n    \"options\": {\n      \"port\": 4200,\n      \"publicHost\": \"http://localhost:4200\"\n    }\n  }\n}\n```\n\n{% /tab %}\n\n{% tab label=\"Serve host with remotes that can be live reloaded\" %}\nThe Module Federation Dev Server will serve a host application and find the remote applications associated with the host and serve a set selection with live reloading enabled also.  \nSee an example set up of it below:\n\n```json\n{\n  \"serve-with-hmr-remotes\": {\n    \"executor\": \"@nx/react:module-federation-dev-server\",\n    \"configurations\": {\n      \"production\": {\n        \"buildTarget\": \"host:build:production\"\n      },\n      \"development\": {\n        \"buildTarget\": \"host:build:development\"\n      }\n    },\n    \"defaultConfiguration\": \"development\",\n    \"options\": {\n      \"port\": 4200,\n      \"publicHost\": \"http://localhost:4200\",\n      \"devRemotes\": [\n        \"remote1\",\n        {\n          \"remoteName\": \"remote2\",\n          \"configuration\": \"development\"\n        }\n      ]\n    }\n  }\n}\n```\n\n{% /tab %}\n\n{% /tabs %}\n",
     "presets": []
   },
   "description": "Serve a host or remote application.",
