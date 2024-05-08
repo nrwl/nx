@@ -1,12 +1,23 @@
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { readJson, NxJsonConfiguration, Tree } from '@nx/devkit';
+import { readJson, Tree, ProjectGraph } from '@nx/devkit';
 
 import { nextInitGenerator } from './init';
 
+let projectGraph: ProjectGraph;
+jest.mock('@nx/devkit', () => ({
+  ...jest.requireActual<any>('@nx/devkit'),
+  createProjectGraphAsync: jest.fn().mockImplementation(async () => {
+    return projectGraph;
+  }),
+}));
 describe('init', () => {
   let tree: Tree;
 
   beforeEach(() => {
+    projectGraph = {
+      nodes: {},
+      dependencies: {},
+    };
     tree = createTreeWithEmptyWorkspace();
   });
 
@@ -16,10 +27,5 @@ describe('init', () => {
     expect(packageJson.dependencies['@nx/react']).toBeUndefined();
     expect(packageJson.devDependencies['@nx/next']).toBeDefined();
     expect(packageJson.dependencies['next']).toBeDefined();
-  });
-
-  it('should not add jest config if unitTestRunner is none', async () => {
-    await nextInitGenerator(tree, { unitTestRunner: 'none' });
-    expect(tree.exists('jest.config.js')).toEqual(false);
   });
 });

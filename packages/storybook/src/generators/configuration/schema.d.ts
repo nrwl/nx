@@ -12,11 +12,17 @@ export interface StorybookConfigureSchema {
   configureStaticServe?: boolean;
   skipFormat?: boolean;
   /**
-   * @deprecated Use interactionTests instead. This option will be removed in v18.
+   * @deprecated Use interactionTests instead. This option will be removed in v19.
    */
   configureCypress?: boolean;
   /**
-   * @deprecated Use interactionTests instead. This option will be removed in v18.
+   * @deprecated Use interactionTests instead. This option will be removed in v19.
    */
   cypressDirectory?: string;
+  addPlugin?: boolean;
+
+  /**
+   * @internal
+   */
+  addExplicitTargets?: boolean;
 }

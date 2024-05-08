@@ -48,12 +48,10 @@ import {
 } from '../../utils/package-manager';
 import { handleErrors } from '../../utils/params';
 import {
-  connectToNxCloudCommand,
+  connectToNxCloudWithPrompt,
   onlyDefaultRunnerIsUsed,
 } from '../connect/connect-to-nx-cloud';
 import { output } from '../../utils/output';
-import { messages, recordStat } from '../../utils/ab-testing';
-import { nxVersion } from '../../utils/versions';
 import { existsSync, readFileSync } from 'fs';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { isCI } from '../../utils/is-ci';
@@ -718,6 +716,7 @@ async function parseTargetPackageAndVersion(
     if (
       args === 'latest' ||
       args === 'next' ||
+      args === 'canary' ||
       valid(args) ||
       args.match(/^\d+(?:\.\d+)?(?:\.\d+)?$/)
     ) {
@@ -726,7 +725,8 @@ async function parseTargetPackageAndVersion(
       // on the registry
       const targetVersion = await normalizeVersionWithTagCheck('nx', args);
       const targetPackage =
-        !['latest', 'next'].includes(args) && lt(targetVersion, '14.0.0-beta.0')
+        !['latest', 'next', 'canary'].includes(args) &&
+        lt(targetVersion, '14.0.0-beta.0')
           ? '@nrwl/workspace'
           : 'nx';
 
@@ -1179,7 +1179,7 @@ async function updateInstallationDetails(
 
 async function isMigratingToNewMajor(from: string, to: string) {
   from = normalizeVersion(from);
-  to = ['latest', 'next'].includes(to) ? to : normalizeVersion(to);
+  to = ['latest', 'next', 'canary'].includes(to) ? to : normalizeVersion(to);
   if (!valid(from)) {
     from = await resolvePackageVersionUsingRegistry('nx', from);
   }
@@ -1214,32 +1214,6 @@ async function generateMigrationsJsonAndUpdatePackageJson(
     const from =
       originalNxJson.installation?.version ??
       readNxVersion(originalPackageJson);
-
-    try {
-      if (
-        ['nx', '@nrwl/workspace'].includes(opts.targetPackage) &&
-        (await isMigratingToNewMajor(from, opts.targetVersion)) &&
-        !isCI() &&
-        !isNxCloudUsed(originalNxJson)
-      ) {
-        const useCloud = await connectToNxCloudCommand({
-          promptOverride: messages.getPromptMessage('nxCloudMigration'),
-          interactive: true,
-        });
-        await recordStat({
-          command: 'migrate',
-          nxVersion,
-          useCloud,
-          meta: messages.codeOfSelectedPromptMessage('nxCloudMigration'),
-        });
-        originalPackageJson = readJsonFile<PackageJson>(
-          join(root, 'package.json')
-        );
-      }
-    } catch {
-      // The above code is to remind folks when updating to a new major and not currently using Nx cloud.
-      // If for some reason it fails, it shouldn't affect the overall migration process
-    }
 
     logger.info(`Fetching meta data about packages.`);
     logger.info(`It may take a few minutes.`);
@@ -1278,6 +1252,32 @@ async function generateMigrationsJsonAndUpdatePackageJson(
       ],
     });
 
+    try {
+      if (
+        ['nx', '@nrwl/workspace'].includes(opts.targetPackage) &&
+        (await isMigratingToNewMajor(from, opts.targetVersion)) &&
+        !isCI() &&
+        !isNxCloudUsed(originalNxJson)
+      ) {
+        output.success({
+          title: 'Connect to Nx Cloud',
+          bodyLines: [
+            'Nx Cloud is a first-party CI companion for Nx projects. It improves critical aspects of CI:',
+            '- Speed: 30% - 70% faster CI',
+            '- Cost: 40% - 75% reduction in CI costs',
+            '- Reliability: by automatically identifying flaky tasks and re-running them',
+          ],
+        });
+        await connectToNxCloudWithPrompt('migrate');
+        originalPackageJson = readJsonFile<PackageJson>(
+          join(root, 'package.json')
+        );
+      }
+    } catch {
+      // The above code is to remind folks when updating to a new major and not currently using Nx cloud.
+      // If for some reason it fails, it shouldn't affect the overall migration process
+    }
+
     output.log({
       title: 'Next steps:',
       bodyLines: [
@@ -1292,7 +1292,7 @@ async function generateMigrationsJsonAndUpdatePackageJson(
               `- To learn more go to https://nx.dev/recipes/tips-n-tricks/advanced-update`,
             ]
           : [
-              `- To learn more go to https://nx.dev/core-features/automate-updating-dependencies`,
+              `- To learn more go to https://nx.dev/features/automate-updating-dependencies`,
             ]),
         ...(showConnectToCloudMessage()
           ? [
@@ -1378,8 +1378,21 @@ export async function executeMigrations(
   const depsBeforeMigrations = getStringifiedPackageJsonDeps(root);
 
   const migrationsWithNoChanges: typeof migrations = [];
+  const sortedMigrations = migrations.sort((a, b) => {
+    // special case for the split configuration migration to run first
+    if (a.name === '15-7-0-split-configuration-into-project-json-files') {
+      return -1;
+    }
+    if (b.name === '15-7-0-split-configuration-into-project-json-files') {
+      return 1;
+    }
 
-  for (const m of migrations) {
+    return lt(normalizeVersion(a.version), normalizeVersion(b.version))
+      ? -1
+      : 1;
+  });
+
+  for (const m of sortedMigrations) {
     try {
       const { collection, collectionPath } = readMigrationCollection(
         m.package,

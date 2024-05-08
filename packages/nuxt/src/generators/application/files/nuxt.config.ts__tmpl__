@@ -3,8 +3,8 @@ import { defineNuxtConfig } from 'nuxt/config';
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
+  workspaceDir: '<%= offsetFromRoot %>',
   srcDir: 'src',
-  buildDir: '<%= buildDirectory %>',
   devtools: { enabled: true },
   devServer: {
     host: 'localhost',
@@ -13,11 +13,11 @@ export default defineNuxtConfig({
   typescript: {
     typeCheck: true,
     tsConfig: {
-      extends: '<%= projectRoot %>/tsconfig.app.json',
+      extends: './tsconfig.app.json',
     },
   },
   imports: {
-    autoImport: false,
+    autoImport: true,
   },
   <% if (style !== 'none') { %>
   css: ['~/assets/css/styles.<%= style %>'],
@@ -26,12 +26,5 @@ export default defineNuxtConfig({
     plugins: [
       nxViteTsPaths()
     ],
-  },
-  nitro: {
-    output: {
-      dir: '<%= nitroOutputDir %>',
-      serverDir: '<%= nitroOutputDir %>/server',
-      publicDir: '<%= nitroOutputDir %>/public',
-    },
   },
 });

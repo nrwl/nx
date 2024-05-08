@@ -1,4 +1,7 @@
-import type { NxJsonConfiguration } from './nx-json';
+import type {
+  NxJsonConfiguration,
+  NxReleaseVersionConfiguration,
+} from './nx-json';
 
 /**
  * @deprecated use ProjectsConfigurations or NxJsonConfiguration
@@ -98,6 +101,31 @@ export interface ProjectConfiguration {
    * List of tags used by enforce-module-boundaries / project graph
    */
   tags?: string[];
+
+  /**
+   * Project specific configuration for `nx release`
+   */
+  release?: {
+    version?: Pick<
+      NxReleaseVersionConfiguration,
+      'generator' | 'generatorOptions'
+    >;
+  };
+
+  /**
+   * Metadata about the project
+   */
+  metadata?: ProjectMetadata;
+}
+
+export interface ProjectMetadata {
+  technologies?: string[];
+  targetGroups?: Record<string, string[]>;
+}
+
+export interface TargetMetadata {
+  description?: string;
+  technologies?: string[];
 }
 
 export interface TargetDependencyConfig {
@@ -186,4 +214,9 @@ export interface TargetConfiguration<T = any> {
    * Determines if Nx is able to cache a given target.
    */
   cache?: boolean;
+
+  /**
+   * Metadata about the target
+   */
+  metadata?: TargetMetadata;
 }

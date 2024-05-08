@@ -1,6 +1,6 @@
+import { TerminalShellWrapper } from '@nx/nx-dev/ui-fence';
 import { VideoLoop } from './video-loop.component';
 import { Schema } from '@markdoc/markdoc';
-import { TerminalShellWrapper } from '../nodes/fences/terminal-shell.component';
 
 export const terminalVideo: Schema = {
   render: 'TerminalVideo',
@@ -24,7 +24,7 @@ export function TerminalVideo({
   alt: string;
 }): JSX.Element {
   return (
-    <TerminalShellWrapper isMessageBelow={false}>
+    <TerminalShellWrapper>
       <div className="overflow-x-auto">
         <VideoLoop src={src} alt={alt}></VideoLoop>
       </div>

@@ -10,12 +10,14 @@ import {
   updateTsConfig,
 } from './lib';
 import type { ApplicationGeneratorOptions } from './schema';
+import { ensureDependencies } from '../../utils/ensure-dependencies';
 
 export async function applicationGenerator(
   tree: Tree,
   rawOptions: ApplicationGeneratorOptions
 ): Promise<GeneratorCallback> {
   return await applicationGeneratorInternal(tree, {
+    addPlugin: false,
     projectNameAndRootFormat: 'derived',
     ...rawOptions,
   });
@@ -26,23 +28,30 @@ export async function applicationGeneratorInternal(
   rawOptions: ApplicationGeneratorOptions
 ): Promise<GeneratorCallback> {
   const options = await normalizeOptions(tree, rawOptions);
+
+  const tasks: GeneratorCallback[] = [];
   const initTask = await initGenerator(tree, {
     skipPackageJson: options.skipPackageJson,
-    unitTestRunner: options.unitTestRunner,
     skipFormat: true,
   });
+  tasks.push(initTask);
   const nodeApplicationTask = await nodeApplicationGenerator(
     tree,
     toNodeApplicationGeneratorOptions(options)
   );
+  tasks.push(nodeApplicationTask);
   createFiles(tree, options);
   updateTsConfig(tree, options);
+
+  if (!options.skipPackageJson) {
+    tasks.push(ensureDependencies(tree));
+  }
 
   if (!options.skipFormat) {
     await formatFiles(tree);
   }
 
-  return runTasksInSerial(initTask, nodeApplicationTask);
+  return runTasksInSerial(...tasks);
 }
 
 export default applicationGenerator;

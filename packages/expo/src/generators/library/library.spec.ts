@@ -1,3 +1,5 @@
+import 'nx/src/internal-testing-utils/mock-project-graph';
+
 import {
   getProjects,
   readJson,
@@ -23,6 +25,7 @@ describe('lib', () => {
     strict: true,
     js: false,
     projectNameAndRootFormat: 'as-provided',
+    addPlugin: true,
   };
 
   beforeEach(() => {
@@ -37,16 +40,20 @@ describe('lib', () => {
         tags: 'one,two',
       });
       const projectConfiguration = readProjectConfiguration(appTree, 'my-lib');
-      expect(projectConfiguration.root).toEqual('my-lib');
-      expect(projectConfiguration.targets.build).toBeUndefined();
-      expect(projectConfiguration.targets.lint).toEqual({
-        executor: '@nx/eslint:lint',
-        outputs: ['{options.outputFile}'],
-        options: {
-          lintFilePatterns: ['my-lib/**/*.{ts,tsx,js,jsx}'],
-        },
-      });
-      expect(projectConfiguration.tags).toEqual(['one', 'two']);
+      expect(projectConfiguration).toMatchInlineSnapshot(`
+        {
+          "$schema": "../node_modules/nx/schemas/project-schema.json",
+          "name": "my-lib",
+          "projectType": "library",
+          "root": "my-lib",
+          "sourceRoot": "my-lib/src",
+          "tags": [
+            "one",
+            "two",
+          ],
+          "targets": {},
+        }
+      `);
     });
 
     it('should update tsconfig.base.json', async () => {
@@ -148,13 +155,17 @@ describe('lib', () => {
         appTree,
         'my-dir-my-lib'
       );
-      expect(projectConfiguration.targets.lint).toEqual({
-        executor: '@nx/eslint:lint',
-        outputs: ['{options.outputFile}'],
-        options: {
-          lintFilePatterns: ['my-dir/my-lib/**/*.{ts,tsx,js,jsx}'],
-        },
-      });
+      expect(projectConfiguration).toMatchInlineSnapshot(`
+        {
+          "$schema": "../../node_modules/nx/schemas/project-schema.json",
+          "name": "my-dir-my-lib",
+          "projectType": "library",
+          "root": "my-dir/my-lib",
+          "sourceRoot": "my-dir/my-lib/src",
+          "tags": [],
+          "targets": {},
+        }
+      `);
     });
 
     it('should update tsconfig.base.json', async () => {
@@ -197,14 +208,17 @@ describe('lib', () => {
       expect(appTree.exists('my-lib/tsconfig.spec.json')).toBeFalsy();
       expect(appTree.exists('my-lib/jest.config.ts')).toBeFalsy();
       const projectConfiguration = readProjectConfiguration(appTree, 'my-lib');
-      expect(projectConfiguration.targets.test).toBeUndefined();
-      expect(projectConfiguration.targets.lint).toMatchObject({
-        executor: '@nx/eslint:lint',
-        options: {
-          lintFilePatterns: ['my-lib/**/*.{ts,tsx,js,jsx}'],
-        },
-        outputs: ['{options.outputFile}'],
-      });
+      expect(projectConfiguration).toMatchInlineSnapshot(`
+        {
+          "$schema": "../node_modules/nx/schemas/project-schema.json",
+          "name": "my-lib",
+          "projectType": "library",
+          "root": "my-lib",
+          "sourceRoot": "my-lib/src",
+          "tags": [],
+          "targets": {},
+        }
+      `);
     });
   });
 

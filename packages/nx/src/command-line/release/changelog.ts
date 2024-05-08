@@ -1,18 +1,24 @@
 import * as chalk from 'chalk';
+import { prompt } from 'enquirer';
 import { readFileSync, writeFileSync } from 'node:fs';
-import { prerelease, valid } from 'semver';
+import { valid } from 'semver';
 import { dirSync } from 'tmp';
-import type { ChangelogRenderer } from '../../../changelog-renderer';
-import { readNxJson } from '../../config/nx-json';
-import { ProjectGraphProjectNode } from '../../config/project-graph';
+import {
+  NxReleaseChangelogConfiguration,
+  readNxJson,
+} from '../../config/nx-json';
+import {
+  ProjectGraph,
+  ProjectGraphProjectNode,
+} from '../../config/project-graph';
 import { FsTree, Tree } from '../../generators/tree';
-import { registerTsProject } from '../../plugins/js/utils/register';
+import { createProjectFileMapUsingProjectGraph } from '../../project-graph/file-map-utils';
 import { createProjectGraphAsync } from '../../project-graph/project-graph';
 import { interpolate } from '../../tasks-runner/utils';
-import { logger } from '../../utils/logger';
+import { isCI } from '../../utils/is-ci';
 import { output } from '../../utils/output';
+import { handleErrors } from '../../utils/params';
 import { joinPathFragments } from '../../utils/path';
-import { getRootTsConfigPath } from '../../utils/typescript';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { ChangelogOptions } from './command-object';
 import {
@@ -20,232 +26,675 @@ import {
   createNxReleaseConfig,
   handleNxReleaseConfigError,
 } from './config/config';
-import { filterReleaseGroups } from './config/filter-release-groups';
+import {
+  ReleaseGroupWithName,
+  filterReleaseGroups,
+} from './config/filter-release-groups';
 import {
   GitCommit,
+  getCommitHash,
+  getFirstGitCommit,
   getGitDiff,
   getLatestGitTagForPattern,
+  gitAdd,
+  gitPush,
+  gitTag,
   parseCommits,
-  getCommitHash,
 } from './utils/git';
-import {
-  GithubRelease,
-  GithubRequestConfig,
-  createOrUpdateGithubRelease,
-  getGitHubRepoSlug,
-  getGithubReleaseByTag,
-  resolveGithubToken,
-} from './utils/github';
+import { createOrUpdateGithubRelease, getGitHubRepoSlug } from './utils/github';
 import { launchEditor } from './utils/launch-editor';
 import { parseChangelogMarkdown } from './utils/markdown';
-import { printChanges, printDiff } from './utils/print-changes';
-import { handleErrors } from '../../utils/params';
+import { printAndFlushChanges } from './utils/print-changes';
+import { resolveChangelogRenderer } from './utils/resolve-changelog-renderer';
+import { resolveNxJsonConfigErrorMessage } from './utils/resolve-nx-json-error-message';
+import {
+  ReleaseVersion,
+  VersionData,
+  commitChanges,
+  createCommitMessageValues,
+  createGitTagValues,
+  handleDuplicateGitTags,
+  noDiffInChangelogMessage,
+} from './utils/shared';
 
-class ReleaseVersion {
-  rawVersion: string;
-  gitTag: string;
-  isPrerelease: boolean;
-
-  constructor({
-    version, // short form version string with no prefixes or patterns, e.g. 1.0.0
-    releaseTagPattern, // full pattern to interpolate, e.g. "v{version}" or "{projectName}@{version}"
-    projectName, // optional project name to interpolate into the releaseTagPattern
-  }: {
-    version: string;
-    releaseTagPattern: string;
-    projectName?: string;
-  }) {
-    this.rawVersion = version;
-    this.gitTag = interpolate(releaseTagPattern, {
-      version,
-      projectName,
-    });
-    this.isPrerelease = isPrerelease(version);
-  }
+export interface NxReleaseChangelogResult {
+  workspaceChangelog?: {
+    releaseVersion: ReleaseVersion;
+    contents: string;
+  };
+  projectChangelogs?: {
+    [projectName: string]: {
+      releaseVersion: ReleaseVersion;
+      contents: string;
+    };
+  };
 }
 
-export async function changelogHandler(args: ChangelogOptions): Promise<void> {
-  return handleErrors(args.verbose, async () => {
-    // Right now, the given version must be valid semver in order to proceed
-    if (!valid(args.version)) {
-      output.error({
-        title: `The given version "${args.version}" is not a valid semver version. Please provide your version in the format "1.0.0", "1.0.0-beta.1" etc`,
-      });
-      process.exit(1);
-    }
+type PostGitTask = (latestCommit: string) => Promise<void>;
 
-    const projectGraph = await createProjectGraphAsync({ exitOnError: true });
-    const nxJson = readNxJson();
-    const commitHash = await getCommitHash(args.to);
+export const releaseChangelogCLIHandler = (args: ChangelogOptions) =>
+  handleErrors(args.verbose, () => releaseChangelog(args));
 
-    if (args.verbose) {
-      process.env.NX_VERBOSE_LOGGING = 'true';
-    }
+/**
+ * NOTE: This function is also exported for programmatic usage and forms part of the public API
+ * of Nx. We intentionally do not wrap the implementation with handleErrors because users need
+ * to have control over their own error handling when using the API.
+ */
+export async function releaseChangelog(
+  args: ChangelogOptions
+): Promise<NxReleaseChangelogResult> {
+  const projectGraph = await createProjectGraphAsync({ exitOnError: true });
+  const nxJson = readNxJson();
 
-    // Apply default configuration to any optional user configuration
-    const { error: configError, nxReleaseConfig } = await createNxReleaseConfig(
-      projectGraph,
-      nxJson.release
-    );
-    if (configError) {
-      return await handleNxReleaseConfigError(configError);
-    }
+  if (args.verbose) {
+    process.env.NX_VERBOSE_LOGGING = 'true';
+  }
 
-    const {
-      error: filterError,
+  // Apply default configuration to any optional user configuration
+  const { error: configError, nxReleaseConfig } = await createNxReleaseConfig(
+    projectGraph,
+    await createProjectFileMapUsingProjectGraph(projectGraph),
+    nxJson.release
+  );
+  if (configError) {
+    return await handleNxReleaseConfigError(configError);
+  }
+
+  // The nx release top level command will always override these three git args. This is how we can tell
+  // if the top level release command was used or if the user is using the changelog subcommand.
+  // If the user explicitly overrides these args, then it doesn't matter if the top level config is set,
+  // as all of the git options would be overridden anyway.
+  if (
+    (args.gitCommit === undefined ||
+      args.gitTag === undefined ||
+      args.stageChanges === undefined) &&
+    nxJson.release?.git
+  ) {
+    const nxJsonMessage = await resolveNxJsonConfigErrorMessage([
+      'release',
+      'git',
+    ]);
+    output.error({
+      title: `The "release.git" property in nx.json may not be used with the "nx release changelog" subcommand or programmatic API. Instead, configure git options for subcommands directly with "release.version.git" and "release.changelog.git".`,
+      bodyLines: [nxJsonMessage],
+    });
+    process.exit(1);
+  }
+
+  const {
+    error: filterError,
+    releaseGroups,
+    releaseGroupToFilteredProjects,
+  } = filterReleaseGroups(
+    projectGraph,
+    nxReleaseConfig,
+    args.projects,
+    args.groups
+  );
+  if (filterError) {
+    output.error(filterError);
+    process.exit(1);
+  }
+
+  const changelogGenerationEnabled =
+    !!nxReleaseConfig.changelog.workspaceChangelog ||
+    Object.values(nxReleaseConfig.groups).some((g) => g.changelog);
+  if (!changelogGenerationEnabled) {
+    output.warn({
+      title: `Changelogs are disabled. No changelog entries will be generated`,
+      bodyLines: [
+        `To explicitly enable changelog generation, configure "release.changelog.workspaceChangelog" or "release.changelog.projectChangelogs" in nx.json.`,
+      ],
+    });
+    return {};
+  }
+
+  const useAutomaticFromRef =
+    nxReleaseConfig.changelog?.automaticFromRef || args.firstRelease;
+
+  /**
+   * For determining the versions to use within changelog files, there are a few different possibilities:
+   * - the user is using the nx CLI, and therefore passes a single --version argument which represents the version for any and all changelog
+   * files which will be generated (i.e. both the workspace changelog, and all project changelogs, depending on which of those has been enabled)
+   * - the user is using the nxReleaseChangelog API programmatically, and:
+   *   - passes only a version property
+   *     - this works in the same way as described above for the CLI
+   *   - passes only a versionData object
+   *     - this is a special case where the user is providing a version for each project, and therefore the version argument is not needed
+   *     - NOTE: it is not possible to generate a workspace level changelog with only a versionData object, and this will produce an error
+   *   - passes both a version and a versionData object
+   *     - in this case, the version property will be used as the reference for the workspace changelog, and the versionData object will be used
+   *    to generate project changelogs
+   */
+  const { workspaceChangelogVersion, projectsVersionData } =
+    resolveChangelogVersions(
+      args,
       releaseGroups,
-      releaseGroupToFilteredProjects,
-    } = filterReleaseGroups(
-      projectGraph,
-      nxReleaseConfig,
-      args.projects,
-      args.groups
+      releaseGroupToFilteredProjects
     );
-    if (filterError) {
-      output.error(filterError);
-      process.exit(1);
-    }
 
-    const releaseVersion = new ReleaseVersion({
-      version: args.version,
-      releaseTagPattern: nxReleaseConfig.releaseTagPattern,
-    });
+  const to = args.to || 'HEAD';
+  const toSHA = await getCommitHash(to);
+  const headSHA = to === 'HEAD' ? toSHA : await getCommitHash('HEAD');
 
-    const from =
-      args.from ||
-      (await getLatestGitTagForPattern(nxReleaseConfig.releaseTagPattern))?.tag;
-    if (!from) {
-      output.error({
-        title: `Unable to determine the previous git tag, please provide an explicit git reference using --from`,
-      });
-      process.exit(1);
-    }
-    const rawCommits = await getGitDiff(from, args.to);
+  /**
+   * Protect the user against attempting to create a new commit when recreating an old release changelog,
+   * this seems like it would always be unintentional.
+   */
+  const autoCommitEnabled =
+    args.gitCommit ?? nxReleaseConfig.changelog.git.commit;
+  if (autoCommitEnabled && headSHA !== toSHA) {
+    throw new Error(
+      `You are attempting to recreate the changelog for an old release, but you have enabled auto-commit mode. Please disable auto-commit mode by updating your nx.json, or passing --git-commit=false`
+    );
+  }
 
-    // Parse as conventional commits
-    const commits = parseCommits(rawCommits).filter((c) => {
-      const type = c.type;
-      // Always ignore non user-facing commits for now
-      // TODO: allow this filter to be configurable via config in a future release
-      if (type === 'feat' || type === 'fix' || type === 'perf') {
-        return true;
+  const tree = new FsTree(workspaceRoot, args.verbose);
+
+  const commitMessage: string | undefined =
+    args.gitCommitMessage || nxReleaseConfig.changelog.git.commitMessage;
+
+  const commitMessageValues: string[] = createCommitMessageValues(
+    releaseGroups,
+    releaseGroupToFilteredProjects,
+    projectsVersionData,
+    commitMessage
+  );
+
+  // Resolve any git tags as early as possible so that we can hard error in case of any duplicates before reaching the actual git command
+  const gitTagValues: string[] =
+    args.gitTag ?? nxReleaseConfig.changelog.git.tag
+      ? createGitTagValues(
+          releaseGroups,
+          releaseGroupToFilteredProjects,
+          projectsVersionData
+        )
+      : [];
+  handleDuplicateGitTags(gitTagValues);
+
+  const postGitTasks: PostGitTask[] = [];
+
+  let workspaceChangelogFromRef =
+    args.from ||
+    (await getLatestGitTagForPattern(nxReleaseConfig.releaseTagPattern))?.tag;
+  if (!workspaceChangelogFromRef) {
+    if (useAutomaticFromRef) {
+      workspaceChangelogFromRef = await getFirstGitCommit();
+      if (args.verbose) {
+        console.log(
+          `Determined workspace --from ref from the first commit in workspace: ${workspaceChangelogFromRef}`
+        );
       }
-      return false;
-    });
+    } else {
+      throw new Error(
+        `Unable to determine the previous git tag. If this is the first release of your workspace, use the --first-release option or set the "release.changelog.automaticFromRef" config property in nx.json to generate a changelog from the first commit. Otherwise, be sure to configure the "release.releaseTagPattern" property in nx.json to match the structure of your repository's git tags.`
+      );
+    }
+  }
 
-    const tree = new FsTree(workspaceRoot, args.verbose);
+  // Make sure that the fromRef is actually resolvable
+  const workspaceChangelogFromSHA = await getCommitHash(
+    workspaceChangelogFromRef
+  );
 
-    await generateChangelogForWorkspace(
-      tree,
-      releaseVersion,
-      !!args.dryRun,
-      // Only trigger interactive mode for the workspace changelog if the user explicitly requested it via "all" or "workspace"
-      args.interactive === 'all' || args.interactive === 'workspace',
-      commitHash,
-      commits,
+  const workspaceChangelogCommits = await getCommits(
+    workspaceChangelogFromSHA,
+    toSHA,
+    nxReleaseConfig.conventionalCommits
+  );
+
+  const workspaceChangelog = await generateChangelogForWorkspace(
+    tree,
+    args,
+    projectGraph,
+    nxReleaseConfig,
+    workspaceChangelogVersion,
+    workspaceChangelogCommits
+  );
+
+  if (
+    workspaceChangelog &&
+    shouldCreateGitHubRelease(
       nxReleaseConfig.changelog.workspaceChangelog,
-      args.gitRemote
-    );
+      args.createRelease
+    )
+  ) {
+    let hasPushed = false;
 
-    if (args.projects?.length) {
-      /**
-       * Run changelog generation for all remaining release groups and filtered projects within them
-       */
-      for (const releaseGroup of releaseGroups) {
-        const projectNodes = Array.from(
-          releaseGroupToFilteredProjects.get(releaseGroup)
-        ).map((name) => projectGraph.nodes[name]);
+    postGitTasks.push(async (latestCommit) => {
+      if (!hasPushed) {
+        output.logSingleLine(`Pushing to git remote`);
 
-        await generateChangelogForProjects(
+        // Before we can create/update the release we need to ensure the commit exists on the remote
+        await gitPush({
+          gitRemote: args.gitRemote,
+          dryRun: args.dryRun,
+          verbose: args.verbose,
+        });
+        hasPushed = true;
+      }
+
+      output.logSingleLine(`Creating GitHub Release`);
+
+      await createOrUpdateGithubRelease(
+        workspaceChangelog.releaseVersion,
+        workspaceChangelog.contents,
+        latestCommit,
+        { dryRun: args.dryRun }
+      );
+    });
+  }
+
+  const allProjectChangelogs: NxReleaseChangelogResult['projectChangelogs'] =
+    {};
+
+  for (const releaseGroup of releaseGroups) {
+    const config = releaseGroup.changelog;
+    // The entire feature is disabled at the release group level, exit early
+    if (config === false) {
+      continue;
+    }
+
+    const projects = args.projects?.length
+      ? // If the user has passed a list of projects, we need to use the filtered list of projects within the release group
+        Array.from(releaseGroupToFilteredProjects.get(releaseGroup))
+      : // Otherwise, we use the full list of projects within the release group
+        releaseGroup.projects;
+    const projectNodes = projects.map((name) => projectGraph.nodes[name]);
+
+    if (releaseGroup.projectsRelationship === 'independent') {
+      for (const project of projectNodes) {
+        let fromRef =
+          args.from ||
+          (
+            await getLatestGitTagForPattern(releaseGroup.releaseTagPattern, {
+              projectName: project.name,
+            })
+          )?.tag;
+
+        let commits: GitCommit[] | null = null;
+
+        if (!fromRef && useAutomaticFromRef) {
+          const firstCommit = await getFirstGitCommit();
+          const allCommits = await getCommits(
+            firstCommit,
+            toSHA,
+            nxReleaseConfig.conventionalCommits
+          );
+          const commitsForProject = allCommits.filter((c) =>
+            c.affectedFiles.find((f) => f.startsWith(project.data.root))
+          );
+
+          fromRef = commitsForProject[0]?.shortHash;
+          if (args.verbose) {
+            console.log(
+              `Determined --from ref for ${project.name} from the first commit in which it exists: ${fromRef}`
+            );
+          }
+          commits = commitsForProject;
+        }
+
+        if (!fromRef && !commits) {
+          throw new Error(
+            `Unable to determine the previous git tag. If this is the first release of your workspace, use the --first-release option or set the "release.changelog.automaticFromRef" config property in nx.json to generate a changelog from the first commit. Otherwise, be sure to configure the "release.releaseTagPattern" property in nx.json to match the structure of your repository's git tags.`
+          );
+        }
+
+        if (!commits) {
+          commits = await getCommits(
+            fromRef,
+            toSHA,
+            nxReleaseConfig.conventionalCommits
+          );
+        }
+
+        const projectChangelogs = await generateChangelogForProjects(
           tree,
-          args.version,
-          !!args.dryRun,
-          // Only trigger interactive mode for the workspace changelog if the user explicitly requested it via "all" or "projects"
-          args.interactive === 'all' || args.interactive === 'projects',
-          commitHash,
+          args,
+          projectGraph,
           commits,
-          releaseGroup.changelog,
-          releaseGroup.releaseTagPattern,
-          projectNodes,
-          args.gitRemote
+          projectsVersionData,
+          releaseGroup,
+          [project],
+          nxReleaseConfig
+        );
+
+        let hasPushed = false;
+        for (const [projectName, projectChangelog] of Object.entries(
+          projectChangelogs
+        )) {
+          if (
+            projectChangelogs &&
+            shouldCreateGitHubRelease(
+              releaseGroup.changelog,
+              args.createRelease
+            )
+          ) {
+            postGitTasks.push(async (latestCommit) => {
+              if (!hasPushed) {
+                output.logSingleLine(`Pushing to git remote`);
+
+                // Before we can create/update the release we need to ensure the commit exists on the remote
+                await gitPush({
+                  gitRemote: args.gitRemote,
+                  dryRun: args.dryRun,
+                  verbose: args.verbose,
+                });
+                hasPushed = true;
+              }
+
+              output.logSingleLine(`Creating GitHub Release`);
+
+              await createOrUpdateGithubRelease(
+                projectChangelog.releaseVersion,
+                projectChangelog.contents,
+                latestCommit,
+                { dryRun: args.dryRun }
+              );
+            });
+          }
+          allProjectChangelogs[projectName] = projectChangelog;
+        }
+      }
+    } else {
+      const fromRef =
+        args.from ||
+        (await getLatestGitTagForPattern(releaseGroup.releaseTagPattern))?.tag;
+      if (!fromRef) {
+        throw new Error(
+          `Unable to determine the previous git tag, please provide an explicit git reference using --from`
         );
       }
 
-      return process.exit(0);
-    }
+      // Make sure that the fromRef is actually resolvable
+      const fromSHA = await getCommitHash(fromRef);
 
-    /**
-     * Run changelog generation for all remaining release groups
-     */
-    for (const releaseGroup of releaseGroups) {
-      const projectNodes = releaseGroup.projects.map(
-        (name) => projectGraph.nodes[name]
+      const commits = await getCommits(
+        fromSHA,
+        toSHA,
+        nxReleaseConfig.conventionalCommits
       );
 
-      await generateChangelogForProjects(
+      const projectChangelogs = await generateChangelogForProjects(
         tree,
-        args.version,
-        !!args.dryRun,
-        // Only trigger interactive mode for the workspace changelog if the user explicitly requested it via "all" or "projects"
-        args.interactive === 'all' || args.interactive === 'projects',
-        commitHash,
+        args,
+        projectGraph,
         commits,
-        releaseGroup.changelog,
-        releaseGroup.releaseTagPattern,
+        projectsVersionData,
+        releaseGroup,
         projectNodes,
-        args.gitRemote
+        nxReleaseConfig
       );
+
+      let hasPushed = false;
+      for (const [projectName, projectChangelog] of Object.entries(
+        projectChangelogs
+      )) {
+        if (
+          projectChangelogs &&
+          shouldCreateGitHubRelease(releaseGroup.changelog, args.createRelease)
+        ) {
+          postGitTasks.push(async (latestCommit) => {
+            if (!hasPushed) {
+              output.logSingleLine(`Pushing to git remote`);
+
+              // Before we can create/update the release we need to ensure the commit exists on the remote
+              await gitPush({
+                gitRemote: args.gitRemote,
+                dryRun: args.dryRun,
+                verbose: args.verbose,
+              });
+              hasPushed = true;
+            }
+
+            output.logSingleLine(`Creating GitHub Release`);
+
+            await createOrUpdateGithubRelease(
+              projectChangelog.releaseVersion,
+              projectChangelog.contents,
+              latestCommit,
+              { dryRun: args.dryRun }
+            );
+          });
+        }
+        allProjectChangelogs[projectName] = projectChangelog;
+      }
     }
-
-    if (args.dryRun) {
-      logger.warn(
-        `\nNOTE: The "dryRun" flag means no changelogs were actually created.`
-      );
-    }
-
-    process.exit(0);
-  });
-}
-
-function isPrerelease(version: string): boolean {
-  // prerelease returns an array of matching prerelease "components", or null if the version is not a prerelease
-  return prerelease(version) !== null;
-}
-
-function resolveChangelogRenderer(
-  changelogRendererPath: string
-): ChangelogRenderer {
-  // Try and load the provided (or default) changelog renderer
-  let changelogRenderer: ChangelogRenderer;
-  let cleanupTranspiler = () => {};
-  try {
-    const rootTsconfigPath = getRootTsConfigPath();
-    if (rootTsconfigPath) {
-      cleanupTranspiler = registerTsProject(rootTsconfigPath);
-    }
-    const r = require(changelogRendererPath);
-    changelogRenderer = r.default || r;
-  } catch {
-  } finally {
-    cleanupTranspiler();
   }
-  return changelogRenderer;
+
+  await applyChangesAndExit(
+    args,
+    nxReleaseConfig,
+    tree,
+    toSHA,
+    postGitTasks,
+    commitMessageValues,
+    gitTagValues
+  );
+
+  return {
+    workspaceChangelog,
+    projectChangelogs: allProjectChangelogs,
+  };
+}
+
+function resolveChangelogVersions(
+  args: ChangelogOptions,
+  releaseGroups: ReleaseGroupWithName[],
+  releaseGroupToFilteredProjects: Map<ReleaseGroupWithName, Set<string>>
+): {
+  workspaceChangelogVersion: string | undefined;
+  projectsVersionData: VersionData;
+} {
+  if (!args.version && !args.versionData) {
+    throw new Error(
+      `You must provide a version string and/or a versionData object.`
+    );
+  }
+
+  /**
+   * TODO: revaluate this assumption holistically in a dedicated PR when we add support for calver
+   * (e.g. the Release class also uses semver utils to check if prerelease).
+   *
+   * Right now, the given version must be valid semver in order to proceed
+   */
+  if (args.version && !valid(args.version)) {
+    throw new Error(
+      `The given version "${args.version}" is not a valid semver version. Please provide your version in the format "1.0.0", "1.0.0-beta.1" etc`
+    );
+  }
+
+  const versionData: VersionData = releaseGroups.reduce(
+    (versionData, releaseGroup) => {
+      const releaseGroupProjectNames = Array.from(
+        releaseGroupToFilteredProjects.get(releaseGroup)
+      );
+      for (const projectName of releaseGroupProjectNames) {
+        if (!args.versionData) {
+          versionData[projectName] = {
+            newVersion: args.version,
+            currentVersion: '', // not relevant within changelog/commit generation
+            dependentProjects: [], // not relevant within changelog/commit generation
+          };
+          continue;
+        }
+        /**
+         * In the case where a versionData object was provided, we need to make sure all projects are present,
+         * otherwise it suggests a filtering mismatch between the version and changelog command invocations.
+         */
+        if (!args.versionData[projectName]) {
+          throw new Error(
+            `The provided versionData object does not contain a version for project "${projectName}". This suggests a filtering mismatch between the version and changelog command invocations.`
+          );
+        }
+      }
+      return versionData;
+    },
+    args.versionData || {}
+  );
+
+  return {
+    workspaceChangelogVersion: args.version,
+    projectsVersionData: versionData,
+  };
+}
+
+async function applyChangesAndExit(
+  args: ChangelogOptions,
+  nxReleaseConfig: NxReleaseConfig,
+  tree: Tree,
+  toSHA: string,
+  postGitTasks: PostGitTask[],
+  commitMessageValues: string[],
+  gitTagValues: string[]
+) {
+  let latestCommit = toSHA;
+
+  const changes = tree.listChanges();
+
+  /**
+   * In the case where we are expecting changelog file updates, but there is nothing
+   * to flush from the tree, we exit early. This could happen we using conventional
+   * commits, for example.
+   */
+  const changelogFilesEnabled = checkChangelogFilesEnabled(nxReleaseConfig);
+  if (changelogFilesEnabled && !changes.length) {
+    output.warn({
+      title: `No changes detected for changelogs`,
+      bodyLines: [
+        `No changes were detected for any changelog files, so no changelog entries will be generated.`,
+      ],
+    });
+
+    if (!postGitTasks.length) {
+      // no GitHub releases to create so we can just exit
+      return;
+    }
+
+    if (isCI()) {
+      output.warn({
+        title: `Skipped GitHub release creation because no changes were detected for any changelog files.`,
+      });
+      return;
+    }
+
+    // prompt the user to see if they want to create a GitHub release anyway
+    // we know that the user has configured GitHub releases because we have postGitTasks
+    const shouldCreateGitHubReleaseAnyway = await promptForGitHubRelease();
+
+    if (!shouldCreateGitHubReleaseAnyway) {
+      return;
+    }
+
+    for (const postGitTask of postGitTasks) {
+      await postGitTask(latestCommit);
+    }
+
+    return;
+  }
+
+  // Generate a new commit for the changes, if configured to do so
+  if (args.gitCommit ?? nxReleaseConfig.changelog.git.commit) {
+    await commitChanges(
+      changes.map((f) => f.path),
+      !!args.dryRun,
+      !!args.verbose,
+      commitMessageValues,
+      args.gitCommitArgs || nxReleaseConfig.changelog.git.commitArgs
+    );
+    // Resolve the commit we just made
+    latestCommit = await getCommitHash('HEAD');
+  } else if (
+    (args.stageChanges ?? nxReleaseConfig.changelog.git.stageChanges) &&
+    changes.length
+  ) {
+    output.logSingleLine(`Staging changed files with git`);
+    await gitAdd({
+      changedFiles: changes.map((f) => f.path),
+      dryRun: args.dryRun,
+      verbose: args.verbose,
+    });
+  }
+
+  // Generate a one or more git tags for the changes, if configured to do so
+  if (args.gitTag ?? nxReleaseConfig.changelog.git.tag) {
+    output.logSingleLine(`Tagging commit with git`);
+    for (const tag of gitTagValues) {
+      await gitTag({
+        tag,
+        message: args.gitTagMessage || nxReleaseConfig.changelog.git.tagMessage,
+        additionalArgs:
+          args.gitTagArgs || nxReleaseConfig.changelog.git.tagArgs,
+        dryRun: args.dryRun,
+        verbose: args.verbose,
+      });
+    }
+  }
+
+  // Run any post-git tasks in series
+  for (const postGitTask of postGitTasks) {
+    await postGitTask(latestCommit);
+  }
+
+  return;
 }
 
 async function generateChangelogForWorkspace(
   tree: Tree,
-  releaseVersion: ReleaseVersion,
-  dryRun: boolean,
-  interactive: boolean,
-  commit: string,
-  commits: GitCommit[],
-  config: NxReleaseConfig['changelog']['workspaceChangelog'],
-  gitRemote?: string
-) {
+  args: ChangelogOptions,
+  projectGraph: ProjectGraph,
+  nxReleaseConfig: NxReleaseConfig,
+  workspaceChangelogVersion: (string | null) | undefined,
+  commits: GitCommit[]
+): Promise<NxReleaseChangelogResult['workspaceChangelog']> {
+  const config = nxReleaseConfig.changelog.workspaceChangelog;
   // The entire feature is disabled at the workspace level, exit early
   if (config === false) {
     return;
   }
+
+  // If explicitly null it must mean that no changes were detected (e.g. when using conventional commits), so do nothing
+  if (workspaceChangelogVersion === null) {
+    return;
+  }
+
+  // The user explicitly passed workspaceChangelog=true but does not have a workspace changelog config in nx.json
+  if (!config) {
+    throw new Error(
+      `Workspace changelog is enabled but no configuration was provided. Please provide a workspaceChangelog object in your nx.json`
+    );
+  }
+
+  if (Object.entries(nxReleaseConfig.groups).length > 1) {
+    output.warn({
+      title: `Workspace changelog is enabled, but you have multiple release groups configured. This is not supported, so workspace changelog will be disabled.`,
+      bodyLines: [
+        `A single workspace version cannot be determined when defining multiple release groups because versions differ between each group.`,
+        `Project level changelogs can be enabled with the "release.changelog.projectChangelogs" property.`,
+      ],
+    });
+    return;
+  }
+
+  if (
+    Object.values(nxReleaseConfig.groups)[0].projectsRelationship ===
+    'independent'
+  ) {
+    output.warn({
+      title: `Workspace changelog is enabled, but you have configured an independent projects relationship. This is not supported, so workspace changelog will be disabled.`,
+      bodyLines: [
+        `A single workspace version cannot be determined when using independent projects because versions differ between each project.`,
+        `Project level changelogs can be enabled with the "release.changelog.projectChangelogs" property.`,
+      ],
+    });
+    return;
+  }
+
+  // Only trigger interactive mode for the workspace changelog if the user explicitly requested it via "all" or "workspace"
+  const interactive =
+    args.interactive === 'all' || args.interactive === 'workspace';
+  const dryRun = !!args.dryRun;
+  const gitRemote = args.gitRemote;
 
   const changelogRenderer = resolveChangelogRenderer(config.renderer);
 
@@ -258,39 +707,31 @@ async function generateChangelogForWorkspace(
     });
   }
 
-  // We are either creating/previewing a changelog file, a Github release, or both
-  let logTitle = dryRun ? 'Previewing a' : 'Generating a';
-  switch (true) {
-    case interpolatedTreePath && config.createRelease === 'github':
-      logTitle += ` Github release and an entry in ${interpolatedTreePath} for ${chalk.white(
-        releaseVersion.gitTag
-      )}`;
-      break;
-    case !!interpolatedTreePath:
-      logTitle += `n entry in ${interpolatedTreePath} for ${chalk.white(
-        releaseVersion.gitTag
-      )}`;
-      break;
-    case config.createRelease === 'github':
-      logTitle += ` Github release for ${chalk.white(releaseVersion.gitTag)}`;
-  }
-
-  output.log({
-    title: logTitle,
+  const releaseVersion = new ReleaseVersion({
+    version: workspaceChangelogVersion,
+    releaseTagPattern: nxReleaseConfig.releaseTagPattern,
   });
 
-  const githubRepoSlug =
-    config.createRelease === 'github'
-      ? getGitHubRepoSlug(gitRemote)
-      : undefined;
+  if (interpolatedTreePath) {
+    const prefix = dryRun ? 'Previewing' : 'Generating';
+    output.log({
+      title: `${prefix} an entry in ${interpolatedTreePath} for ${chalk.white(
+        releaseVersion.gitTag
+      )}`,
+    });
+  }
+
+  const githubRepoSlug = getGitHubRepoSlug(gitRemote);
 
   let contents = await changelogRenderer({
+    projectGraph,
     commits,
     releaseVersion: releaseVersion.rawVersion,
     project: null,
     repoSlug: githubRepoSlug,
     entryWhenNoChanges: config.entryWhenNoChanges,
     changelogRenderOptions: config.renderOptions,
+    conventionalCommitsConfig: nxReleaseConfig.conventionalCommits,
   });
 
   /**
@@ -309,18 +750,10 @@ async function generateChangelogForWorkspace(
     contents = readFileSync(changelogPath, 'utf-8');
   }
 
-  /**
-   * The exact logic we use for printing the summary/diff to the user is dependent upon whether they are creating
-   * a changelog file, a Github release, or both.
-   */
-  let printSummary = () => {};
-  const noDiffInChangelogMessage = chalk.yellow(
-    `NOTE: There was no diff detected for the changelog entry. Maybe you intended to pass alternative git references via --from and --to?`
-  );
-
   if (interpolatedTreePath) {
-    let rootChangelogContents =
-      tree.read(interpolatedTreePath)?.toString() ?? '';
+    let rootChangelogContents = tree.exists(interpolatedTreePath)
+      ? tree.read(interpolatedTreePath).toString()
+      : '';
     if (rootChangelogContents) {
       // NOTE: right now existing releases are always expected to be in markdown format, but in the future we could potentially support others via a custom parser option
       const changelogReleases = parseChangelogMarkdown(
@@ -346,118 +779,40 @@ async function generateChangelogForWorkspace(
 
     tree.write(interpolatedTreePath, rootChangelogContents);
 
-    printSummary = () =>
-      printChanges(tree, !!dryRun, 3, false, noDiffInChangelogMessage);
+    printAndFlushChanges(tree, !!dryRun, 3, false, noDiffInChangelogMessage);
   }
 
-  if (config.createRelease === 'github') {
-    if (!githubRepoSlug) {
-      output.error({
-        title: `Unable to create a Github release because the Github repo slug could not be determined.`,
-        bodyLines: [
-          `Please ensure you have a valid Github remote configured. You can run \`git remote -v\` to list your current remotes.`,
-        ],
-      });
-      process.exit(1);
-    }
-
-    const token = await resolveGithubToken();
-    const githubRequestConfig: GithubRequestConfig = {
-      repo: githubRepoSlug,
-      token,
-    };
-
-    let existingGithubReleaseForVersion: GithubRelease;
-    try {
-      existingGithubReleaseForVersion = await getGithubReleaseByTag(
-        githubRequestConfig,
-        releaseVersion.gitTag
-      );
-    } catch (err) {
-      if (err.response?.status === 401) {
-        output.error({
-          title: `Unable to resolve data via the Github API. You can use any of the following options to resolve this:`,
-          bodyLines: [
-            '- Set the `GITHUB_TOKEN` or `GH_TOKEN` environment variable to a valid Github token with `repo` scope',
-            '- Have an active session via the official gh CLI tool (https://cli.github.com) in your current terminal',
-          ],
-        });
-        process.exit(1);
-      }
-      if (err.response?.status === 404) {
-        // No existing release found, this is fine
-      } else {
-        // Rethrow unknown errors for now
-        throw err;
-      }
-    }
-
-    let existingPrintSummaryFn = printSummary;
-    printSummary = () => {
-      const logTitle = `https://github.com/${githubRepoSlug}/releases/tag/${releaseVersion.gitTag}`;
-      if (existingGithubReleaseForVersion) {
-        console.error(
-          `${chalk.white('UPDATE')} ${logTitle}${
-            dryRun ? chalk.keyword('orange')(' [dry-run]') : ''
-          }`
-        );
-      } else {
-        console.error(
-          `${chalk.green('CREATE')} ${logTitle}${
-            dryRun ? chalk.keyword('orange')(' [dry-run]') : ''
-          }`
-        );
-      }
-      // Only print the diff here if we are not already going to be printing changes from the Tree
-      if (!interpolatedTreePath) {
-        console.log('');
-        printDiff(
-          existingGithubReleaseForVersion
-            ? existingGithubReleaseForVersion.body
-            : '',
-          contents,
-          3,
-          noDiffInChangelogMessage
-        );
-      }
-      existingPrintSummaryFn();
-    };
-
-    if (!dryRun) {
-      await createOrUpdateGithubRelease(
-        githubRequestConfig,
-        {
-          version: releaseVersion.gitTag,
-          prerelease: releaseVersion.isPrerelease,
-          body: contents,
-          commit,
-        },
-        existingGithubReleaseForVersion
-      );
-    }
-  }
-
-  printSummary();
+  return {
+    releaseVersion,
+    contents,
+  };
 }
 
 async function generateChangelogForProjects(
   tree: Tree,
-  rawVersion: string,
-  dryRun: boolean,
-  interactive: boolean,
-  commit: string,
+  args: ChangelogOptions,
+  projectGraph: ProjectGraph,
   commits: GitCommit[],
-  config: NxReleaseConfig['changelog']['projectChangelogs'],
-  releaseTagPattern: string,
+  projectsVersionData: VersionData,
+  releaseGroup: ReleaseGroupWithName,
   projects: ProjectGraphProjectNode[],
-  gitRemote?: string
-) {
-  // The entire feature is disabled at the project level, exit early
+  nxReleaseConfig: NxReleaseConfig
+): Promise<NxReleaseChangelogResult['projectChangelogs']> {
+  const config = releaseGroup.changelog;
+  // The entire feature is disabled at the release group level, exit early
   if (config === false) {
     return;
   }
 
+  // Only trigger interactive mode for the project changelog if the user explicitly requested it via "all" or "projects"
+  const interactive =
+    args.interactive === 'all' || args.interactive === 'projects';
+  const dryRun = !!args.dryRun;
+  const gitRemote = args.gitRemote;
+
   const changelogRenderer = resolveChangelogRenderer(config.renderer);
+
+  const projectChangelogs: NxReleaseChangelogResult['projectChangelogs'] = {};
 
   for (const project of projects) {
     let interpolatedTreePath = config.file || '';
@@ -469,32 +824,28 @@ async function generateChangelogForProjects(
       });
     }
 
+    /**
+     * newVersion will be null in the case that no changes were detected (e.g. in conventional commits mode),
+     * no changelog entry is relevant in that case.
+     */
+    if (projectsVersionData[project.name].newVersion === null) {
+      continue;
+    }
+
     const releaseVersion = new ReleaseVersion({
-      version: rawVersion,
-      releaseTagPattern,
+      version: projectsVersionData[project.name].newVersion,
+      releaseTagPattern: releaseGroup.releaseTagPattern,
       projectName: project.name,
     });
 
-    // We are either creating/previewing a changelog file, a Github release, or both
-    let logTitle = dryRun ? 'Previewing a' : 'Generating a';
-    switch (true) {
-      case interpolatedTreePath && config.createRelease === 'github':
-        logTitle += ` Github release and an entry in ${interpolatedTreePath} for ${chalk.white(
+    if (interpolatedTreePath) {
+      const prefix = dryRun ? 'Previewing' : 'Generating';
+      output.log({
+        title: `${prefix} an entry in ${interpolatedTreePath} for ${chalk.white(
           releaseVersion.gitTag
-        )}`;
-        break;
-      case !!interpolatedTreePath:
-        logTitle += `n entry in ${interpolatedTreePath} for ${chalk.white(
-          releaseVersion.gitTag
-        )}`;
-        break;
-      case config.createRelease === 'github':
-        logTitle += ` Github release for ${chalk.white(releaseVersion.gitTag)}`;
+        )}`,
+      });
     }
-
-    output.log({
-      title: logTitle,
-    });
 
     const githubRepoSlug =
       config.createRelease === 'github'
@@ -502,9 +853,10 @@ async function generateChangelogForProjects(
         : undefined;
 
     let contents = await changelogRenderer({
+      projectGraph,
       commits,
       releaseVersion: releaseVersion.rawVersion,
-      project: null,
+      project: project.name,
       repoSlug: githubRepoSlug,
       entryWhenNoChanges:
         typeof config.entryWhenNoChanges === 'string'
@@ -515,6 +867,7 @@ async function generateChangelogForProjects(
             })
           : false,
       changelogRenderOptions: config.renderOptions,
+      conventionalCommitsConfig: nxReleaseConfig.conventionalCommits,
     });
 
     /**
@@ -533,17 +886,10 @@ async function generateChangelogForProjects(
       contents = readFileSync(changelogPath, 'utf-8');
     }
 
-    /**
-     * The exact logic we use for printing the summary/diff to the user is dependent upon whether they are creating
-     * a changelog file, a Github release, or both.
-     */
-    let printSummary = () => {};
-    const noDiffInChangelogMessage = chalk.yellow(
-      `NOTE: There was no diff detected for the changelog entry. Maybe you intended to pass alternative git references via --from and --to?`
-    );
-
     if (interpolatedTreePath) {
-      let changelogContents = tree.read(interpolatedTreePath)?.toString() ?? '';
+      let changelogContents = tree.exists(interpolatedTreePath)
+        ? tree.read(interpolatedTreePath).toString()
+        : '';
       if (changelogContents) {
         // NOTE: right now existing releases are always expected to be in markdown format, but in the future we could potentially support others via a custom parser option
         const changelogReleases =
@@ -568,105 +914,83 @@ async function generateChangelogForProjects(
 
       tree.write(interpolatedTreePath, changelogContents);
 
-      printSummary = () =>
-        printChanges(
-          tree,
-          !!dryRun,
-          3,
-          false,
-          noDiffInChangelogMessage,
-          // Only print the change for the current changelog file at this point
-          (f) => f.path === interpolatedTreePath
-        );
+      printAndFlushChanges(
+        tree,
+        !!dryRun,
+        3,
+        false,
+        noDiffInChangelogMessage,
+        // Only print the change for the current changelog file at this point
+        (f) => f.path === interpolatedTreePath
+      );
     }
 
-    if (config.createRelease === 'github') {
-      if (!githubRepoSlug) {
-        output.error({
-          title: `Unable to create a Github release because the Github repo slug could not be determined.`,
-          bodyLines: [
-            `Please ensure you have a valid Github remote configured. You can run \`git remote -v\` to list your current remotes.`,
-          ],
-        });
-        process.exit(1);
-      }
+    projectChangelogs[project.name] = {
+      releaseVersion,
+      contents,
+    };
+  }
 
-      const token = await resolveGithubToken();
-      const githubRequestConfig: GithubRequestConfig = {
-        repo: githubRepoSlug,
-        token,
-      };
+  return projectChangelogs;
+}
 
-      let existingGithubReleaseForVersion: GithubRelease;
-      try {
-        existingGithubReleaseForVersion = await getGithubReleaseByTag(
-          githubRequestConfig,
-          releaseVersion.gitTag
-        );
-      } catch (err) {
-        if (err.response?.status === 401) {
-          output.error({
-            title: `Unable to resolve data via the Github API. You can use any of the following options to resolve this:`,
-            bodyLines: [
-              '- Set the `GITHUB_TOKEN` or `GH_TOKEN` environment variable to a valid Github token with `repo` scope',
-              '- Have an active session via the official gh CLI tool (https://cli.github.com) in your current terminal',
-            ],
-          });
-          process.exit(1);
-        }
-        if (err.response?.status === 404) {
-          // No existing release found, this is fine
-        } else {
-          // Rethrow unknown errors for now
-          throw err;
-        }
-      }
-
-      let existingPrintSummaryFn = printSummary;
-      printSummary = () => {
-        const logTitle = `https://github.com/${githubRepoSlug}/releases/tag/${releaseVersion.gitTag}`;
-        if (existingGithubReleaseForVersion) {
-          console.error(
-            `${chalk.white('UPDATE')} ${logTitle}${
-              dryRun ? chalk.keyword('orange')(' [dry-run]') : ''
-            }`
-          );
-        } else {
-          console.error(
-            `${chalk.green('CREATE')} ${logTitle}${
-              dryRun ? chalk.keyword('orange')(' [dry-run]') : ''
-            }`
-          );
-        }
-        // Only print the diff here if we are not already going to be printing changes from the Tree
-        if (!interpolatedTreePath) {
-          console.log('');
-          printDiff(
-            existingGithubReleaseForVersion
-              ? existingGithubReleaseForVersion.body
-              : '',
-            contents,
-            3,
-            noDiffInChangelogMessage
-          );
-        }
-        existingPrintSummaryFn();
-      };
-
-      if (!dryRun) {
-        await createOrUpdateGithubRelease(
-          githubRequestConfig,
-          {
-            version: releaseVersion.gitTag,
-            prerelease: releaseVersion.isPrerelease,
-            body: contents,
-            commit,
-          },
-          existingGithubReleaseForVersion
-        );
-      }
+function checkChangelogFilesEnabled(nxReleaseConfig: NxReleaseConfig): boolean {
+  if (
+    nxReleaseConfig.changelog.workspaceChangelog &&
+    nxReleaseConfig.changelog.workspaceChangelog.file
+  ) {
+    return true;
+  }
+  for (const releaseGroup of Object.values(nxReleaseConfig.groups)) {
+    if (releaseGroup.changelog && releaseGroup.changelog.file) {
+      return true;
     }
+  }
+  return false;
+}
 
-    printSummary();
+async function getCommits(
+  fromSHA: string,
+  toSHA: string,
+  conventionalCommitsConfig: NxReleaseConfig['conventionalCommits']
+): Promise<GitCommit[]> {
+  const rawCommits = await getGitDiff(fromSHA, toSHA);
+  // Parse as conventional commits
+  return parseCommits(rawCommits).filter((c) => {
+    const type = c.type;
+
+    const typeConfig = conventionalCommitsConfig.types[type];
+    if (!typeConfig) {
+      // don't include commits with unknown types
+      return false;
+    }
+    return !typeConfig.changelog.hidden;
+  });
+}
+
+export function shouldCreateGitHubRelease(
+  changelogConfig: NxReleaseChangelogConfiguration | false | undefined,
+  createReleaseArg: ChangelogOptions['createRelease'] | undefined = undefined
+): boolean {
+  if (createReleaseArg !== undefined) {
+    return createReleaseArg === 'github';
+  }
+
+  return (changelogConfig || {}).createRelease === 'github';
+}
+
+async function promptForGitHubRelease(): Promise<boolean> {
+  try {
+    const result = await prompt<{ confirmation: boolean }>([
+      {
+        name: 'confirmation',
+        message: 'Do you want to create a GitHub release anyway?',
+        type: 'confirm',
+      },
+    ]);
+    return result.confirmation;
+  } catch (e) {
+    // Handle the case where the user exits the prompt with ctrl+c
+    return false;
   }
 }

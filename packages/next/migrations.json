@@ -1,11 +1,5 @@
 {
   "generators": {
-    "add-style-packages": {
-      "cli": "nx",
-      "version": "15.8.8-beta.0",
-      "description": "Add less and stylus packages if used.",
-      "factory": "./src/migrations/update-15-8-8/add-style-packages"
-    },
     "update-16-0-0-add-nx-packages": {
       "cli": "nx",
       "version": "16.0.0-beta.1",
@@ -23,43 +17,15 @@
       "version": "16.4.0-beta.3",
       "description": "Update package.json moving @nx/next from dependency to devDependency",
       "implementation": "./src/migrations/update-16-4-0/update-nx-next-dependency"
+    },
+    "update-17-2-7": {
+      "cli": "nx",
+      "version": "17.2.7",
+      "description": "Remove patched eslint rule for @next/next/no-html-link-for-pages",
+      "implementation": "./src/migrations/update-17-2-7/remove-eslint-rules-patch"
     }
   },
   "packageJsonUpdates": {
-    "15.0.4": {
-      "version": "15.0.4-beta.0",
-      "packages": {
-        "next": {
-          "version": "13.0.0",
-          "alwaysAddToPackageJson": false
-        },
-        "eslint-config-next": {
-          "version": "13.0.0",
-          "alwaysAddToPackageJson": false
-        },
-        "less-loader": {
-          "version": "11.1.0",
-          "alwaysAddToPackageJson": false
-        },
-        "stylus-loader": {
-          "version": "7.1.0",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
-    "15.4.5": {
-      "version": "15.4.5-beta.0",
-      "packages": {
-        "next": {
-          "version": "13.1.1",
-          "alwaysAddToPackageJson": false
-        },
-        "eslint-config-next": {
-          "version": "13.1.1",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
     "16.0.0": {
       "version": "16.0.0-beta.0",
       "packages": {
@@ -74,6 +40,24 @@
       "packages": {
         "stylus": {
           "version": "^0.59.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "17.3.1-beta.0": {
+      "version": "17.3.1-beta.0",
+      "packages": {
+        "next": {
+          "version": "14.0.4",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "18.0.4": {
+      "version": "18.0.4-beta.0",
+      "packages": {
+        "@swc-node/register": {
+          "version": "~1.8.0",
           "alwaysAddToPackageJson": false
         }
       }

@@ -25,6 +25,7 @@ export interface Schema {
   unitTestRunner?: 'vitest' | 'none';
   minimal?: boolean;
   e2eTestRunner?: 'cypress' | 'none';
+  addPlugin?: boolean;
 }
 
 export interface NormalizedSchema extends Schema {

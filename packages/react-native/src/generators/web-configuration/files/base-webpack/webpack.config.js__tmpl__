@@ -1,0 +1,77 @@
+<% if (webpackPluginOptions) { %>
+const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
+const { NxReactWebpackPlugin } = require('@nx/react/webpack-plugin');
+
+module.exports = {
+  resolve: {
+    alias: {
+      'react-native$': 'react-native-web',
+    },
+    extensions: ['.web.tsx', '.web.ts', '.web.jsx', '.web.js']
+  },
+  devServer: {
+    port: 4200
+  },
+  plugins: [
+    new NxAppWebpackPlugin({
+      tsConfig: '<%= webpackPluginOptions.tsConfig %>',
+      compiler: '<%= webpackPluginOptions.compiler %>',
+      main: '<%= webpackPluginOptions.main %>',
+      index: '<%= webpackPluginOptions.index %>',
+      outputPath: '<%= webpackPluginOptions.outputPath %>', 
+      baseHref: '<%= webpackPluginOptions.baseHref %>',
+      assets: <%- JSON.stringify(webpackPluginOptions.assets) %>,
+      styles: <%- JSON.stringify(webpackPluginOptions.styles) %>,
+      outputHashing: process.env['NODE_ENV'] === 'production' ? 'all' : 'none',
+      optimization: process.env['NODE_ENV'] === 'production',
+    }),
+    new NxReactWebpackPlugin({
+      // Uncomment this line if you don't want to use SVGR
+      // See: https://react-svgr.com/
+      // svgr: false
+    }),
+  ],
+};
+<% } else { %>
+const { composePlugins, withNx } = require('@nx/webpack');
+const { withReact } = require('@nx/react');
+
+// Nx plugins for webpack.
+module.exports = composePlugins(
+  withNx(),
+  withReact({
+    // Uncomment this line if you don't want to use SVGR
+    // See: https://react-svgr.com/
+    // svgr: false
+  }),
+  (config) => {
+    // Update the webpack config as needed here.
+    // e.g. `config.plugins.push(new MyPlugin())`
+    
+  config.resolve.alias = {
+    ...config.resolve.alias ?? {},
+    'react-native$': 'react-native-web',
+  };
+  config.resolve.extensions = [
+    '.web.tsx',
+    '.web.ts',
+    '.web.jsx',
+    '.web.js',
+    ...config.resolve.extensions,
+  ];
+  config.module.rules.push({
+    test: /\.(js|jsx)$/,
+    include: /react-native-vector-icons/,
+    loader: 'babel-loader',
+    options: {
+      presets: [
+        '@babel/preset-env',
+        ['@babel/preset-react', { runtime: 'automatic' }],
+      ],
+    },
+  });
+  
+  return config;
+  }
+);
+<% } %>

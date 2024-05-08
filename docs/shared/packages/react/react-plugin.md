@@ -6,27 +6,46 @@ It provides:
 - Library build support for publishing packages to npm or other registries.
 - Utilities for automatic workspace refactoring.
 
-## Setting Up React
+## Setting Up @nx/react
+
+### Generating a new Workspace
 
 To create a new workspace with React, run `npx create-nx-workspace@latest --preset=react-standalone`.
+
+{% callout type="note" title="React Tutorials" %}
+For a full tutorial experience, follow the [React Standalone Tutorial](/getting-started/tutorials/react-standalone-tutorial) or the [React Monorepo Tutorial](/getting-started/tutorials/react-monorepo-tutorial)
+{% /callout %}
+
+### Installation
 
 {% callout type="note" title="Keep Nx Package Versions In Sync" %}
 Make sure to install the `@nx/react` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/recipes/tips-n-tricks/keep-nx-versions-in-sync).
 {% /callout %}
 
-To add the React plugin to an existing workspace, run one of the following:
+In any Nx workspace, you can install `@nx/react` by running the following command:
 
-```shell
-# For npm users
-npm install -D @nx/react
+{% tabs %}
+{% tab label="Nx 18+" %}
 
-# For yarn users
-yarn add -D @nx/react
+```shell {% skipRescope=true %}
+nx add @nx/react
 ```
 
-{% callout type="note" title="React Tutorials" %}
-For a full tutorial experience, follow the [React Standalone Tutorial](/getting-started/tutorials/react-standalone-tutorial) or the [React Monorepo Tutorial](/getting-started/tutorials/react-monorepo-tutorial)
-{% /callout %}
+This will install the correct version of `@nx/react`.
+
+{% /tab %}
+{% tab label="Nx < 18" %}
+
+Install the `@nx/react` package with your package manager.
+
+```shell
+npm add -D @nx/react
+```
+
+{% /tab %}
+{% /tabs %}
+
+## Using the @nx/react Plugin
 
 ### Creating Applications and Libraries
 

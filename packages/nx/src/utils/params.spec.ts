@@ -826,7 +826,8 @@ describe('params', () => {
           }
         )
       ).toThrowErrorMatchingInlineSnapshot(`
-        "Options did not match schema. Please fix 1 of the following errors:
+        "Options did not match schema: {}.
+        Please fix 1 of the following errors:
          - Required property 'a' is missing
          - Required property 'b' is missing"
       `);
@@ -862,7 +863,15 @@ describe('params', () => {
             ],
           }
         )
-      ).toThrowErrorMatchingInlineSnapshot(`"Options did not match schema."`);
+      ).toThrowErrorMatchingInlineSnapshot(`
+        "Options did not match schema: {
+          "a": true,
+          "b": false
+        }.
+        Should only match one of 
+         - {"required":["a"]}
+         - {"required":["b"]}"
+      `);
     });
 
     it('should throw if none of the anyOf conditions are met', () => {
@@ -948,6 +957,82 @@ describe('params', () => {
           }
         )
       ).toThrow("'b' is not found in schema");
+    });
+
+    it('should throw if property name matching pattern is not valid', () => {
+      expect(() =>
+        validateOptsAgainstSchema(
+          { a: true, b: false },
+          {
+            properties: {
+              a: { type: 'boolean' },
+            },
+            patternProperties: {
+              '^b$': { type: 'number' },
+            },
+            additionalProperties: false,
+          }
+        )
+      ).toThrow(
+        "Property 'b' does not match the schema. 'false' should be a 'number'."
+      );
+    });
+
+    it('should handle properties matching patternProperties schema', () => {
+      expect(() =>
+        validateOptsAgainstSchema(
+          { a: true, b: false },
+          {
+            properties: {
+              a: { type: 'boolean' },
+            },
+            patternProperties: {
+              '^b$': { type: 'boolean' },
+            },
+            additionalProperties: false,
+          }
+        )
+      ).not.toThrow();
+    });
+
+    it('should throw if additional property does not match schema', () => {
+      expect(() =>
+        validateOptsAgainstSchema(
+          { a: true, b: 'b', c: 'c' },
+          {
+            properties: {
+              a: { type: 'boolean' },
+            },
+            patternProperties: {
+              '^b$': { type: 'string' },
+            },
+            additionalProperties: {
+              type: 'number',
+            },
+          }
+        )
+      ).toThrow(
+        "Property 'c' does not match the schema. 'c' should be a 'number'."
+      );
+    });
+
+    it('should handle additional properties when they match the additionalProperties schema', () => {
+      expect(() =>
+        validateOptsAgainstSchema(
+          { a: true, b: 'b', c: 1, d: 2 },
+          {
+            properties: {
+              a: { type: 'boolean' },
+            },
+            patternProperties: {
+              '^b$': { type: 'string' },
+            },
+            additionalProperties: {
+              type: 'number',
+            },
+          }
+        )
+      ).not.toThrow();
     });
 
     it('should throw if found unsupported positional property', () => {

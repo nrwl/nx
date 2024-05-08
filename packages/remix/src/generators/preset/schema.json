@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/schema",
+  "$id": "Remix",
+  "title": "",
+  "type": "object",
+  "description": "Generate a Remix application in a standalone workspace. Can be used with `create-nx-workspace --preset=@nx/remix`.",
+  "properties": {
+    "tags": {
+      "type": "string",
+      "description": "Add tags to the app (used for linting).",
+      "alias": "t"
+    }
+  }
+}

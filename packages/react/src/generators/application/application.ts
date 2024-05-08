@@ -3,7 +3,7 @@ import { NormalizedSchema, Schema } from './schema';
 import { createApplicationFiles } from './lib/create-application-files';
 import { updateSpecConfig } from './lib/update-jest-config';
 import { normalizeOptions } from './lib/normalize-options';
-import { addProject, maybeJs } from './lib/add-project';
+import { addProject } from './lib/add-project';
 import { addJest } from './lib/add-jest';
 import { addRouting } from './lib/add-routing';
 import { setDefaults } from './lib/set-defaults';
@@ -22,12 +22,12 @@ import {
 
 import reactInitGenerator from '../init/init';
 import { Linter, lintProjectGenerator } from '@nx/eslint';
-import { mapLintPattern } from '@nx/eslint/src/generators/lint-project/lint-project';
 import {
   babelLoaderVersion,
   nxRspackVersion,
   nxVersion,
 } from '../../utils/versions';
+import { maybeJs } from '../../utils/maybe-js';
 import { installCommonDependencies } from './lib/install-common-dependencies';
 import { extractTsConfigBase } from '../../utils/create-ts-config';
 import { addSwcDependencies } from '@nx/js/src/utils/swc/add-swc-dependencies';
@@ -38,6 +38,9 @@ import {
   addExtendsToLintConfig,
   isEslintConfigSupported,
 } from '@nx/eslint/src/generators/utils/eslint-file';
+import { initGenerator as jsInitGenerator } from '@nx/js';
+import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
+import { setupTailwindGenerator } from '../setup-tailwind/setup-tailwind';
 
 async function addLinting(host: Tree, options: NormalizedSchema) {
   const tasks: GeneratorCallback[] = [];
@@ -49,16 +52,10 @@ async function addLinting(host: Tree, options: NormalizedSchema) {
         joinPathFragments(options.appProjectRoot, 'tsconfig.app.json'),
       ],
       unitTestRunner: options.unitTestRunner,
-      eslintFilePatterns: [
-        mapLintPattern(
-          options.appProjectRoot,
-          '{ts,tsx,js,jsx}',
-          options.rootProject
-        ),
-      ],
       skipFormat: true,
       rootProject: options.rootProject,
       skipPackageJson: options.skipPackageJson,
+      addPlugin: options.addPlugin,
     });
     tasks.push(lintTask);
 
@@ -84,6 +81,7 @@ export async function applicationGenerator(
   schema: Schema
 ): Promise<GeneratorCallback> {
   return await applicationGeneratorInternal(host, {
+    addPlugin: false,
     projectNameAndRootFormat: 'derived',
     ...schema,
   });
@@ -98,13 +96,36 @@ export async function applicationGeneratorInternal(
   const options = await normalizeOptions(host, schema);
   showPossibleWarnings(host, options);
 
+  const jsInitTask = await jsInitGenerator(host, {
+    ...schema,
+    tsConfigName: schema.rootProject ? 'tsconfig.json' : 'tsconfig.base.json',
+    skipFormat: true,
+  });
+  tasks.push(jsInitTask);
+
   const initTask = await reactInitGenerator(host, {
     ...options,
     skipFormat: true,
-    skipHelperLibs: options.bundler === 'vite',
   });
-
   tasks.push(initTask);
+
+  if (options.bundler === 'webpack') {
+    const { webpackInitGenerator } = ensurePackage<
+      typeof import('@nx/webpack')
+    >('@nx/webpack', nxVersion);
+    const webpackInitTask = await webpackInitGenerator(host, {
+      skipPackageJson: options.skipPackageJson,
+      skipFormat: true,
+      addPlugin: options.addPlugin,
+    });
+    tasks.push(webpackInitTask);
+    if (!options.skipPackageJson) {
+      const { ensureDependencies } = await import(
+        '@nx/webpack/src/utils/ensure-dependencies'
+      );
+      tasks.push(ensureDependencies(host, { uiFramework: 'react' }));
+    }
+  }
 
   if (!options.rootProject) {
     extractTsConfigBase(host);
@@ -112,6 +133,13 @@ export async function applicationGeneratorInternal(
 
   createApplicationFiles(host, options);
   addProject(host, options);
+
+  if (options.style === 'tailwind') {
+    const twTask = await setupTailwindGenerator(host, {
+      project: options.projectName,
+    });
+    tasks.push(twTask);
+  }
 
   if (options.bundler === 'vite') {
     const { createOrEditViteConfig, viteConfigurationGenerator } =
@@ -134,6 +162,7 @@ export async function applicationGeneratorInternal(
       inSourceTests: options.inSourceTests,
       compiler: options.compiler,
       skipFormat: true,
+      addPlugin: options.addPlugin,
     });
     tasks.push(viteTask);
     createOrEditViteConfig(
@@ -157,15 +186,6 @@ export async function applicationGeneratorInternal(
       },
       false
     );
-  } else if (options.bundler === 'webpack') {
-    const { webpackInitGenerator } = ensurePackage<
-      typeof import('@nx/webpack')
-    >('@nx/webpack', nxVersion);
-    const webpackInitTask = await webpackInitGenerator(host, {
-      uiFramework: 'react',
-      skipFormat: true,
-    });
-    tasks.push(webpackInitTask);
   } else if (options.bundler === 'rspack') {
     const { configurationGenerator } = ensurePackage(
       '@nx/rspack',
@@ -180,7 +200,7 @@ export async function applicationGeneratorInternal(
       tsConfig: joinPathFragments(options.appProjectRoot, 'tsconfig.app.json'),
       target: 'web',
       newProject: true,
-      uiFramework: 'react',
+      framework: 'react',
     });
     tasks.push(rspackTask);
   }
@@ -196,6 +216,7 @@ export async function applicationGeneratorInternal(
       project: options.projectName,
       inSourceTests: options.inSourceTests,
       skipFormat: true,
+      addPlugin: options.addPlugin,
     });
     tasks.push(vitestTask);
     createOrEditViteConfig(
@@ -274,8 +295,8 @@ export async function applicationGeneratorInternal(
     host.write(
       joinPathFragments(options.appProjectRoot, 'rspack.config.js'),
       stripIndents`
-        const { composePlugins, withNx, withWeb } = require('@nx/rspack');
-        module.exports = composePlugins(withNx(), withWeb(), (config) => {
+        const { composePlugins, withNx, withReact } = require('@nx/rspack');
+        module.exports = composePlugins(withNx(), withReact(), (config) => {
           config.module.rules.push({
             test: /\\.[jt]sx$/i,
             use: [
@@ -297,6 +318,10 @@ export async function applicationGeneratorInternal(
   if (!options.skipFormat) {
     await formatFiles(host);
   }
+
+  tasks.push(() => {
+    logShowProjectCommand(options.projectName);
+  });
 
   return runTasksInSerial(...tasks);
 }

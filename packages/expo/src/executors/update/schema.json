@@ -1,7 +1,7 @@
 {
   "version": 2,
   "outputCapture": "direct-nodejs",
-  "$schema": "http://json-schema.org/schema",
+  "$schema": "https://json-schema.org/schema",
   "$id": "NxExpoEasUpdate",
   "cli": "nx",
   "title": "Expo EAS Update executor",
@@ -28,7 +28,7 @@
     },
     "republish": {
       "type": "boolean",
-      "description": "Enable JSON output, non-JSON messages will be printed to stderr",
+      "description": "Republish a previous update within a branch",
       "default": false
     },
     "group": {

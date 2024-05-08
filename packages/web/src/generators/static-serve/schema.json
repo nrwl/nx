@@ -1,5 +1,5 @@
 {
-  "$schema": "http://json-schema.org/schema",
+  "$schema": "https://json-schema.org/schema",
   "$id": "NxWebStaticServe",
   "cli": "nx",
   "title": "Static Serve Configuration",
@@ -18,6 +18,11 @@
       "type": "string",
       "description": "Name of the serve target to add. Defaults to 'serve-static'.",
       "default": "serve-static"
+    },
+    "spa": {
+      "type": "boolean",
+      "description": "Whether to set the 'spa' flag on the generated target.",
+      "default": true
     }
   },
   "required": ["buildTarget"]

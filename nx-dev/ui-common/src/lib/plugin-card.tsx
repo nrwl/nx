@@ -3,6 +3,7 @@ import {
   ClockIcon,
   StarIcon,
 } from '@heroicons/react/24/outline';
+import Link from 'next/link';
 
 export interface PluginCardProps {
   name: string;
@@ -41,17 +42,17 @@ export function PluginCard({
           </svg>{' '}
           <span className="truncate">{name}</span>
         </h3>
-        <a
+        <Link
           href={url}
-          target="_blank"
-          rel="noreferrer"
-          className="focus:outline-none flex flex-col grow"
+          target={isOfficial ? undefined : '_blank'}
+          rel={isOfficial ? undefined : 'noreferrer'}
+          className="flex grow flex-col focus:outline-none"
         >
           <span className="absolute inset-0" aria-hidden="true" />
-          <p className="line-clamp-3 mb-2 text-sm grow">{description}</p>
+          <p className="line-clamp-3 mb-2 grow text-sm">{description}</p>
 
-          <div className="flex flex-wrap justify-between items-center py-0.5 text-xs font-medium capitalize">
-            <div className="mr-1 my-1">
+          <div className="flex flex-wrap items-center justify-between py-0.5 text-xs font-medium capitalize">
+            <div className="my-1 mr-1">
               <LastPublishedWidget
                 lastPublishedDate={lastPublishedDate}
               ></LastPublishedWidget>
@@ -64,23 +65,23 @@ export function PluginCard({
             <div className="mx-1 my-1">
               <GithubStarsWidget githubStars={githubStars}></GithubStarsWidget>
             </div>
-            <div className="flex-grow flex justify-end">
+            <div className="flex flex-grow justify-end">
               {isOfficial ? (
                 <div
                   data-tooltip="Maintained by the Nx Team"
                   data-tooltip-align-right
-                  className="ml-1 my-1 border inline-block bg-green-50 border-green-300 text-green-600 dark:border-green-900 dark:bg-green-900/30 dark:text-green-400 rounded-full px-3 py-0.5 text-xs font-medium capitalize"
+                  className="my-1 ml-1 inline-block rounded-full border border-green-300 bg-green-50 px-3 py-0.5 text-xs font-medium capitalize text-green-600 dark:border-green-900 dark:bg-green-900/30 dark:text-green-400"
                 >
                   Nx Team
                 </div>
               ) : (
-                <div className="ml-1 my-1">
+                <div className="my-1 ml-1">
                   <NxVersionWidget nxVersion={nxVersion}></NxVersionWidget>
                 </div>
               )}
             </div>
           </div>
-        </a>
+        </Link>
       </div>
     </div>
   );
@@ -96,7 +97,7 @@ export function LastPublishedWidget({
   }
   return (
     <abbr data-tooltip="Most Recent Release Date" data-tooltip-align-right>
-      <ClockIcon className="h-4 w-4 inline-block mx-0.5 align-bottom"></ClockIcon>
+      <ClockIcon className="mx-0.5 inline-block h-4 w-4 align-bottom"></ClockIcon>
       {/* yyyy-MM-dd */}
       <span>{new Date(lastPublishedDate).toISOString().slice(0, 10)}</span>
       <span className="md:hidden">
@@ -117,7 +118,7 @@ function NpmDownloadsWidget({
   }
   return (
     <abbr data-tooltip="Monthly NPM Downloads" data-tooltip-align-right>
-      <ArrowDownTrayIcon className="h-4 w-4 inline-block mx-0.5 align-bottom"></ArrowDownTrayIcon>
+      <ArrowDownTrayIcon className="mx-0.5 inline-block h-4 w-4 align-bottom"></ArrowDownTrayIcon>
       {shortenNumber(npmDownloads)}
       <span className="md:hidden">
         <br />
@@ -137,7 +138,7 @@ function GithubStarsWidget({
   }
   return (
     <abbr data-tooltip="GitHub Stars" data-tooltip-align-right>
-      <StarIcon className="h-4 w-4 inline-block mx-0.5 align-bottom"></StarIcon>
+      <StarIcon className="mx-0.5 inline-block h-4 w-4 align-bottom"></StarIcon>
       {shortenNumber(githubStars)}
       <span className="md:hidden">
         <br />
@@ -169,7 +170,7 @@ function NxVersionWidget({ nxVersion }: { nxVersion: string | undefined }) {
         role="img"
         viewBox="0 0 24 24"
         xmlns="http://www.w3.org/2000/svg"
-        className="h-4 w-4 inline-block mx-0.5 align-bottom"
+        className="mx-0.5 inline-block h-4 w-4 align-bottom"
         fill="currentColor"
       >
         <title>Nx</title>

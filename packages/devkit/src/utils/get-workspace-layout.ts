@@ -1,7 +1,4 @@
-import type { Tree } from 'nx/src/generators/tree';
-import { requireNx } from '../../nx';
-
-const { readNxJson } = requireNx();
+import { readNxJson, Tree } from 'nx/src/devkit-exports';
 
 /**
  * Returns workspace defaults. It includes defaults folders for apps and libs,
@@ -34,9 +31,9 @@ export function getWorkspaceLayout(tree: Tree): {
 /**
  * Experimental
  */
-export function extractLayoutDirectory(directory: string): {
-  layoutDirectory: string;
-  projectDirectory: string;
+export function extractLayoutDirectory(directory?: string): {
+  layoutDirectory: string | null;
+  projectDirectory?: string;
 } {
   if (directory) {
     directory = directory.startsWith('/') ? directory.substring(1) : directory;

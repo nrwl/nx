@@ -1,29 +1,5 @@
 {
   "generators": {
-    "add-cypress-inputs": {
-      "cli": "nx",
-      "version": "15.0.0-beta.0",
-      "description": "Stop hashing cypress spec files and config files for build targets and dependent tasks",
-      "factory": "./src/migrations/update-15-0-0/add-cypress-inputs"
-    },
-    "update-cy-mount-usage": {
-      "cli": "nx",
-      "version": "15.0.0-beta.4",
-      "description": "Update to using cy.mount in the commands.ts file instead of importing mount for each component test file",
-      "factory": "./src/migrations/update-15-0-0/update-cy-mount-usage"
-    },
-    "update-to-cypress-11": {
-      "cli": "nx",
-      "version": "15.1.0-beta.0",
-      "description": "Update to Cypress v11. This migration will only update if the workspace is already on v10. https://www.cypress.io/blog/2022/11/04/upcoming-changes-to-component-testing/",
-      "factory": "./src/migrations/update-15-1-0/cypress-11"
-    },
-    "update-to-cypress-12": {
-      "cli": "nx",
-      "version": "15.5.0-beta.0",
-      "description": "Update to Cypress v12. Cypress 12 contains a handful of breaking changes that might causes tests to start failing that nx cannot directly fix. Read more Cypress 12 changes: https://docs.cypress.io/guides/references/migration-guide#Migrating-to-Cypress-12-0.This migration will only run if you are already using Cypress v11.",
-      "factory": "./src/migrations/update-15-5-0/update-to-cypress-12"
-    },
     "update-16-0-0-add-nx-packages": {
       "cli": "nx",
       "version": "16.0.0-beta.1",
@@ -48,15 +24,11 @@
       "description": "Update to Cypress v13. Most noteable change is video recording is off by default. This migration will only update if the workspace is already on Cypress v12. https://docs.cypress.io/guides/references/migration-guide#Migrating-to-Cypress-130",
       "implementation": "./src/migrations/update-16-8-0/cypress-13"
     },
-    "add-nx-metadata": {
-      "version": "17.2.0-beta.0",
-      "description": "Add devServerTargets into cypress.config.ts files for @nx/cypress/plugin",
-      "implementation": "./src/migrations/update-17-2-0/add-dev-server-targets-to-cypress-configs"
-    },
-    "add-nx-cypress-plugin": {
-      "version": "17.2.0-beta.0",
-      "description": "Add the @nx/cypress/plugin to nx.json plugins",
-      "implementation": "./src/migrations/update-17-2-0/add-nx-cypress-plugin"
+    "update-cypress-version-13-6-6": {
+      "cli": "nx",
+      "version": "18.1.0-beta.3",
+      "description": "Update to Cypress ^13.6.6 if the workspace is using Cypress v13 to ensure workspaces don't use v13.6.5 which has an issue when verifying Cypress.",
+      "implementation": "./src/migrations/update-18-1-0/update-cypress-version-13-6-6"
     }
   },
   "packageJsonUpdates": {
@@ -89,6 +61,40 @@
       "packages": {
         "eslint-plugin-cypress": {
           "version": "^2.13.4",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "17.2.0-beta.2": {
+      "version": "17.2.0-beta.2",
+      "packages": {
+        "vite": {
+          "version": "^5.0.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "17.3.0": {
+      "version": "17.3.0-beta.3",
+      "packages": {
+        "@types/node": {
+          "version": "18.16.9",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "19.1.0": {
+      "version": "19.1.0-beta.0",
+      "requires": {
+        "cypress": "^13.0.0"
+      },
+      "packages": {
+        "cypress": {
+          "version": "^13.8.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@cypress/webpack-dev-server": {
+          "version": "^3.8.0",
           "alwaysAddToPackageJson": false
         }
       }

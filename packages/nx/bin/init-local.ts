@@ -1,7 +1,5 @@
 import { performance } from 'perf_hooks';
-import { execSync } from 'child_process';
 
-import { getPackageManagerCommand } from '../src/utils/package-manager';
 import { commandsObject } from '../src/command-line/nx-commands';
 import { WorkspaceTypeAndRoot } from '../src/utils/find-workspace-root';
 import { stripIndents } from '../src/utils/strip-indents';
@@ -19,6 +17,7 @@ export function initLocal(workspace: WorkspaceTypeAndRoot) {
 
   try {
     performance.mark('init-local');
+
     monkeyPatchRequire();
 
     if (workspace.type !== 'nx' && shouldDelegateToAngularCLI()) {
@@ -43,8 +42,7 @@ export function initLocal(workspace: WorkspaceTypeAndRoot) {
         commandsObject.parse(newArgs);
       }
     } else {
-      const newArgs = rewritePositionalArguments(process.argv);
-      commandsObject.parse(newArgs);
+      commandsObject.parse(process.argv.slice(2));
     }
   } catch (e) {
     console.error(e.message);
@@ -83,41 +81,6 @@ export function rewriteTargetsAndProjects(args: string[]) {
   return newArgs;
 }
 
-function rewritePositionalArguments(args: string[]) {
-  const relevantPositionalArgs = [];
-  const rest = [];
-  for (let i = 2; i < args.length; i++) {
-    if (args[i] === '--') {
-      rest.push(...args.slice(i + 1));
-      break;
-    } else if (!args[i].startsWith('-')) {
-      relevantPositionalArgs.push(args[i]);
-      if (relevantPositionalArgs.length === 2) {
-        rest.push(...args.slice(i + 1));
-        break;
-      }
-    } else {
-      rest.push(args[i]);
-    }
-  }
-
-  if (relevantPositionalArgs.length === 1) {
-    return [
-      'run',
-      `${wrapIntoQuotesIfNeeded(relevantPositionalArgs[0])}`,
-      ...rest,
-    ];
-  }
-
-  return [
-    'run',
-    `${relevantPositionalArgs[1]}:${wrapIntoQuotesIfNeeded(
-      relevantPositionalArgs[0]
-    )}`,
-    ...rest,
-  ];
-}
-
 function wrapIntoQuotesIfNeeded(arg: string) {
   return arg.indexOf(':') > -1 ? `"${arg}"` : arg;
 }
@@ -145,12 +108,12 @@ function isKnownCommand(command: string) {
 function shouldDelegateToAngularCLI() {
   const command = process.argv[2];
   const commands = [
-    'add',
     'analytics',
+    'cache',
+    'completion',
     'config',
     'doc',
     'update',
-    'completion',
   ];
   return commands.indexOf(command) > -1;
 }
@@ -177,36 +140,16 @@ function handleAngularCLIFallbacks(workspace: WorkspaceTypeAndRoot) {
       `Running "ng update" can still be useful in some dev workflows, so we aren't planning to remove it.`
     );
     console.log(`If you need to use it, run "FORCE_NG_UPDATE=true ng update".`);
-  } else if (process.argv[2] === 'add') {
-    console.log('Ng add is not natively supported by Nx');
-    const pkg = process.argv[2] === 'add' ? process.argv[3] : process.argv[4];
-    if (!pkg) {
-      process.exit(1);
-    }
-
-    const pm = getPackageManagerCommand();
-    const cmd = `${pm.add} ${pkg} && ${pm.exec} nx g ${pkg}:ng-add`;
-    console.log(`Instead, we recommend running \`${cmd}\``);
-
-    import('enquirer').then((x) =>
-      x
-        .prompt<{ c: boolean }>({
-          name: 'c',
-          type: 'confirm',
-          message: 'Run this command?',
-        })
-        .then(({ c }) => {
-          if (c) {
-            execSync(cmd, { stdio: 'inherit' });
-          }
-        })
-    );
   } else if (process.argv[2] === 'completion') {
     if (!process.argv[3]) {
       console.log(`"ng completion" is not natively supported by Nx.
   Instead, you could try an Nx Editor Plugin for a visual tool to run Nx commands. If you're using VSCode, you can use the Nx Console plugin, or if you're using WebStorm, you could use one of the available community plugins.
-  For more information, see https://nx.dev/core-features/integrate-with-editors`);
+  For more information, see https://nx.dev/getting-started/editor-setup`);
     }
+  } else if (process.argv[2] === 'cache') {
+    console.log(`"ng cache" is not natively supported by Nx.
+To clear the cache, you can delete the ".angular/cache" directory (or the directory configured by "cli.cache.path" in the "nx.json" file).
+To update the cache configuration, you can directly update the relevant options in your "nx.json" file (https://angular.io/guide/workspace-config#cache-options).`);
   } else {
     try {
       // nx-ignore-next-line

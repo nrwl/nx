@@ -91,7 +91,10 @@
         "description": "String to appear in `stdout` or `stderr` that indicates that the task is done. When running multiple commands, this option can only be used when `parallel` is set to `true`. If not specified, the task is done when all the child processes complete."
       },
       "args": {
-        "type": "string",
+        "oneOf": [
+          { "type": "array", "items": { "type": "string" } },
+          { "type": "string" }
+        ],
         "description": "Extra arguments. You can pass them as follows: nx run project:target --args='--wait=100'. You can then use {args.wait} syntax to interpolate them in the workspace config file. See example [above](#chaining-commands-interpolating-args-and-setting-the-cwd)"
       },
       "envFile": {
@@ -107,12 +110,27 @@
         "type": "string",
         "description": "Current working directory of the commands. If it's not specified the commands will run in the workspace root, if a relative path is specified the commands will run in that path relative to the workspace root and if it's an absolute path the commands will run in that path."
       },
+      "env": {
+        "type": "object",
+        "description": "Environment variables that will be made available to the commands. This property has priority over the `.env` files.",
+        "additionalProperties": { "type": "string" }
+      },
       "__unparsed__": {
         "hidden": true,
         "type": "array",
         "items": { "type": "string" },
         "$default": { "$source": "unparsed" },
         "x-priority": "internal"
+      },
+      "forwardAllArgs": {
+        "type": "boolean",
+        "description": "Whether arguments should be forwarded when interpolation is not present.",
+        "default": true
+      },
+      "tty": {
+        "type": "boolean",
+        "description": "Whether commands should be run with a tty terminal",
+        "hidden": true
       }
     },
     "additionalProperties": true,

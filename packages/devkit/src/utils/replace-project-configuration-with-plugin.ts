@@ -1,25 +1,21 @@
-import type {
-  ProjectConfiguration,
-  TargetConfiguration,
-} from 'nx/src/config/workspace-json-project-json';
-import type { Tree } from 'nx/src/generators/tree';
-import type { CreateNodes, CreateNodesAsync } from 'nx/src/utils/nx-plugin';
-import { requireNx } from '../../nx';
-const {
-  readNxJson,
-  updateNxJson,
+import {
+  CreateNodes,
   glob,
-  hashObject,
-  findProjectForPath,
+  ProjectConfiguration,
+  readNxJson,
   readProjectConfiguration,
+  TargetConfiguration,
+  Tree,
+  updateNxJson,
   updateProjectConfiguration,
-} = requireNx();
+} from 'nx/src/devkit-exports';
+import { findProjectForPath, hashObject } from 'nx/src/devkit-internals';
 
 export async function replaceProjectConfigurationsWithPlugin<T = unknown>(
   tree: Tree,
   rootMappings: Map<string, string>,
   pluginPath: string,
-  createNodes: CreateNodes<T> | CreateNodesAsync<T>,
+  createNodes: CreateNodes<T>,
   pluginOptions: T
 ): Promise<void> {
   const nxJson = readNxJson(tree);
@@ -48,6 +44,7 @@ export async function replaceProjectConfigurationsWithPlugin<T = unknown>(
       const nodes = await createNodesFunction(configFile, pluginOptions, {
         workspaceRoot: tree.root,
         nxJsonConfiguration: readNxJson(tree),
+        configFiles,
       });
       const node = nodes.projects[Object.keys(nodes.projects)[0]];
 
@@ -134,7 +131,7 @@ function removeConfigurationDefinedByPlugin<T>(
   for (const [optionName, optionValue] of Object.entries(
     targetFromProjectConfig.options ?? {}
   )) {
-    if (targetFromCreateNodes.options[optionName] === optionValue) {
+    if (equals(targetFromCreateNodes.options[optionName], optionValue)) {
       delete targetFromProjectConfig.options[optionName];
     }
   }
@@ -165,6 +162,16 @@ function removeConfigurationDefinedByPlugin<T>(
   if (Object.keys(targetFromProjectConfig).length === 0) {
     delete projectConfig.targets[targetName];
   }
+}
+
+function equals<T extends unknown>(a: T, b: T) {
+  if (Array.isArray(a) && Array.isArray(b)) {
+    return a.length === b.length && a.every((v, i) => v === b[i]);
+  }
+  if (typeof a === 'object' && typeof b === 'object') {
+    return hashObject(a) === hashObject(b);
+  }
+  return a === b;
 }
 
 function shouldRemoveArrayProperty(

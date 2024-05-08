@@ -12,6 +12,7 @@ import { join, resolve } from 'path';
 import { readModulePackageJson } from 'nx/src/utils/package-json';
 import * as detectPort from 'detect-port';
 import { daemonClient } from 'nx/src/daemon/client/client';
+import { interpolate } from 'nx/src/tasks-runner/utils';
 
 // platform specific command name
 const pmCmd = platform() === 'win32' ? `npx.cmd` : 'npx';
@@ -52,8 +53,16 @@ function getHttpServerArgs(options: Schema) {
   return args;
 }
 
-function getBuildTargetCommand(options: Schema) {
-  const cmd = ['nx', 'run', options.buildTarget];
+function getBuildTargetCommand(options: Schema, context: ExecutorContext) {
+  const target = parseTargetString(options.buildTarget, context);
+  const cmd = ['nx', 'run'];
+
+  if (target.configuration) {
+    cmd.push(`${target.project}:${target.target}:${target.configuration}`);
+  } else {
+    cmd.push(`${target.project}:${target.target}`);
+  }
+
   if (options.parallel) {
     cmd.push(`--parallel`);
   }
@@ -68,16 +77,26 @@ function getBuildTargetOutputPath(options: Schema, context: ExecutorContext) {
     return options.staticFilePath;
   }
 
-  let buildOptions;
+  let outputPath: string;
   try {
     const target = parseTargetString(options.buildTarget, context);
-    buildOptions = readTargetOptions(target, context);
+    const buildOptions = readTargetOptions(target, context);
+    if (buildOptions?.outputPath) {
+      outputPath = buildOptions.outputPath;
+    } else {
+      const project = context.projectGraph.nodes[context.projectName];
+      const buildTarget = project.data.targets[target.target];
+      outputPath = buildTarget.outputs?.[0];
+      if (outputPath)
+        outputPath = interpolate(outputPath, {
+          projectName: project.data.name,
+          projectRoot: project.data.root,
+        });
+    }
   } catch (e) {
     throw new Error(`Invalid buildTarget: ${options.buildTarget}`);
   }
 
-  // TODO: vsavkin we should also check outputs
-  const outputPath = buildOptions.outputPath;
   if (!outputPath) {
     throw new Error(
       `Unable to get the outputPath from buildTarget ${options.buildTarget}. Make sure ${options.buildTarget} has an outputPath property or manually provide an staticFilePath property`
@@ -97,12 +116,12 @@ function createFileWatcher(
       includeGlobalWorkspaceFiles: true,
       includeDependentProjects: true,
     },
-    async (error, { changedFiles }) => {
+    async (error, val) => {
       if (error === 'closed') {
         throw new Error('Watch error: Daemon closed the connection');
       } else if (error) {
         throw new Error(`Watch error: ${error?.message ?? 'Unknown'}`);
-      } else if (changedFiles.length > 0) {
+      } else if (val?.changedFiles.length > 0) {
         changeHandler();
       }
     }
@@ -130,8 +149,14 @@ export default async function* fileServerExecutor(
     const run = () => {
       if (!running) {
         running = true;
+        /**
+         * Expose a variable to the build target to know if it's being run by the serve-static executor
+         * This is useful because a config might need to change if it's being run by serve-static without the user's input
+         * or if being ran by another executor (eg. E2E tests)
+         * */
+        process.env.NX_SERVE_STATIC_BUILD_RUNNING = 'true';
         try {
-          const args = getBuildTargetCommand(options);
+          const args = getBuildTargetCommand(options, context);
           execFileSync(pmCmd, args, {
             stdio: [0, 1, 2],
           });
@@ -140,6 +165,7 @@ export default async function* fileServerExecutor(
             `Build target failed: ${chalk.bold(options.buildTarget)}`
           );
         } finally {
+          process.env.NX_SERVE_STATIC_BUILD_RUNNING = undefined;
           running = false;
         }
       }
@@ -155,6 +181,7 @@ export default async function* fileServerExecutor(
     run();
   }
 
+  const port = await detectPort(options.port || 8080);
   const outputPath = getBuildTargetOutputPath(options, context);
 
   if (options.spa) {
@@ -163,6 +190,10 @@ export default async function* fileServerExecutor(
 
     // See: https://github.com/http-party/http-server#magic-files
     copyFileSync(src, dst);
+
+    // We also need to ensure the proxyUrl is set, otherwise the browser will continue to throw a 404 error
+    // This can cause unexpected behaviors and failures especially in automated test suites
+    options.proxyUrl ??= `http${options.ssl ? 's' : ''}://localhost:${port}?`;
   }
 
   const args = getHttpServerArgs(options);
@@ -179,7 +210,6 @@ export default async function* fileServerExecutor(
 
   // detect port as close to when used to prevent port being used by another process
   // when running in  parallel
-  const port = await detectPort(options.port || 8080);
   args.push(`-p=${port}`);
 
   const serve = fork(pathToHttpServer, [outputPath, ...args], {

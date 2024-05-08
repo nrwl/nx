@@ -1,5 +1,5 @@
 {
-  "$schema": "http://json-schema.org/schema",
+  "$schema": "https://json-schema.org/schema",
   "id": "NxCloudInit",
   "title": "Add Nx Cloud Configuration to the workspace",
   "description": "Connect a workspace to Nx Cloud.",
@@ -15,6 +15,11 @@
       "type": "string",
       "description": "Name of Nx Cloud installation invoker (ex. user, add-nx-to-monorepo, create-nx-workspace, nx-upgrade",
       "default": "user"
+    },
+    "hideFormatLogs": {
+      "type": "boolean",
+      "description": "Hide formatting logs",
+      "x-priority": "internal"
     }
   },
   "additionalProperties": false,

@@ -32,7 +32,7 @@ export interface CypressExecutorOptions extends Json {
   copyFiles?: string;
   ciBuildId?: string | number;
   group?: string;
-  ignoreTestFiles?: string;
+  ignoreTestFiles?: string | string[];
   reporter?: string;
   reporterOptions?: string | Json;
   skipServe?: boolean;
@@ -169,10 +169,6 @@ async function runCypress(
   if (opts.browser) {
     options.browser = opts.browser;
   }
-
-  options.env = {
-    devServerTarget: opts.devServerTarget,
-  };
 
   if (opts.env) {
     options.env = {

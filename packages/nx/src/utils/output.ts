@@ -2,7 +2,10 @@ import * as chalk from 'chalk';
 import { EOL } from 'os';
 import * as readline from 'readline';
 import { isCI } from './is-ci';
-import { TaskStatus } from '../tasks-runner/tasks-runner';
+import type { TaskStatus } from '../tasks-runner/tasks-runner';
+
+const GH_GROUP_PREFIX = '::group::';
+const GH_GROUP_SUFFIX = '::endgroup::';
 
 export interface CLIErrorMessageConfig {
   title: string;
@@ -36,7 +39,6 @@ if (isCI() && !forceColor) {
 }
 
 class CLIOutput {
-  readonly X_PADDING = ' ';
   cliName = 'NX';
   formatCommand = (taskId: string) => `${chalk.dim('nx run')} ${taskId}`;
 
@@ -46,11 +48,7 @@ class CLIOutput {
    */
   private get VERTICAL_SEPARATOR() {
     let divider = '';
-    for (
-      let i = 0;
-      i < process.stdout.columns - this.X_PADDING.length * 2;
-      i++
-    ) {
+    for (let i = 0; i < process.stdout.columns - 1; i++) {
       divider += '\u2014';
     }
     return divider;
@@ -92,7 +90,7 @@ class CLIOutput {
     color: string;
     title: string;
   }): void {
-    this.writeToStdOut(` ${this.applyNxPrefix(color, title)}${EOL}`);
+    this.writeToStdOut(`${this.applyNxPrefix(color, title)}${EOL}`);
   }
 
   private writeOptionalOutputBody(bodyLines?: string[]): void {
@@ -100,19 +98,15 @@ class CLIOutput {
       return;
     }
     this.addNewline();
-    bodyLines.forEach((bodyLine) => this.writeToStdOut(`   ${bodyLine}${EOL}`));
+    bodyLines.forEach((bodyLine) => this.writeToStdOut(`${bodyLine}${EOL}`));
   }
 
   applyNxPrefix(color = 'cyan', text: string): string {
     let nxPrefix = '';
     if (chalk[color]) {
-      nxPrefix = `${chalk[color]('>')} ${chalk.reset.inverse.bold[color](
-        ` ${this.cliName} `
-      )}`;
+      nxPrefix = chalk.reset.inverse.bold[color](` ${this.cliName} `);
     } else {
-      nxPrefix = `${chalk.keyword(color)(
-        '>'
-      )} ${chalk.reset.inverse.bold.keyword(color)(` ${this.cliName} `)}`;
+      nxPrefix = chalk.reset.inverse.bold.keyword(color)(` ${this.cliName} `);
     }
     return `${nxPrefix}  ${text}`;
   }
@@ -136,7 +130,7 @@ class CLIOutput {
   }
 
   private getVerticalSeparator(color: string): string {
-    return `${this.X_PADDING}${chalk.dim[color](this.VERTICAL_SEPARATOR)}`;
+    return chalk.dim[color](this.VERTICAL_SEPARATOR);
   }
 
   error({ title, slug, bodyLines }: CLIErrorMessageConfig) {
@@ -228,14 +222,60 @@ class CLIOutput {
 
   logCommand(message: string, taskStatus?: TaskStatus) {
     this.addNewline();
-    const commandOutput =
-      chalk.dim('> ') + this.formatCommand(this.normalizeMessage(message));
-    const commandOutputWithStatus = this.addTaskStatus(
-      taskStatus,
-      commandOutput
+    this.writeToStdOut(this.getCommandWithStatus(message, taskStatus));
+    this.addNewline();
+    this.addNewline();
+  }
+
+  logCommandOutput(message: string, taskStatus: TaskStatus, output: string) {
+    let commandOutputWithStatus = this.getCommandWithStatus(
+      message,
+      taskStatus
     );
+    if (
+      process.env.NX_SKIP_LOG_GROUPING !== 'true' &&
+      process.env.GITHUB_ACTIONS
+    ) {
+      const icon = this.getStatusIcon(taskStatus);
+      commandOutputWithStatus = `${GH_GROUP_PREFIX}${icon} ${commandOutputWithStatus}`;
+    }
+
+    this.addNewline();
     this.writeToStdOut(commandOutputWithStatus);
     this.addNewline();
+    this.addNewline();
+    this.writeToStdOut(output);
+
+    if (
+      process.env.NX_SKIP_LOG_GROUPING !== 'true' &&
+      process.env.GITHUB_ACTIONS
+    ) {
+      this.writeToStdOut(GH_GROUP_SUFFIX);
+    }
+  }
+
+  private getCommandWithStatus(
+    message: string,
+    taskStatus: TaskStatus
+  ): string {
+    const commandOutput =
+      chalk.dim('> ') + this.formatCommand(this.normalizeMessage(message));
+    return this.addTaskStatus(taskStatus, commandOutput);
+  }
+
+  private getStatusIcon(taskStatus: TaskStatus) {
+    switch (taskStatus) {
+      case 'success':
+        return '✅';
+      case 'failure':
+        return '❌';
+      case 'skipped':
+      case 'local-cache-kept-existing':
+        return '⏩';
+      case 'local-cache':
+      case 'remote-cache':
+        return '🔁';
+    }
   }
 
   private normalizeMessage(message: string) {

@@ -31,12 +31,13 @@ import {
 import { yargsNewCommand } from './new/command-object';
 import { yargsRepairCommand } from './repair/command-object';
 import { yargsReportCommand } from './report/command-object';
-import { yargsRunCommand } from './run/command-object';
+import { yargsNxInfixCommand, yargsRunCommand } from './run/command-object';
 import { yargsRunManyCommand } from './run-many/command-object';
 import { yargsShowCommand } from './show/command-object';
 import { yargsWatchCommand } from './watch/command-object';
 import { yargsResetCommand } from './reset/command-object';
 import { yargsReleaseCommand } from './release/command-object';
+import { yargsAddCommand } from './add/command-object';
 
 // Ensure that the output takes up the available width of the terminal.
 yargs.wrap(yargs.terminalWidth());
@@ -54,8 +55,9 @@ export const parserConfiguration: Partial<yargs.ParserConfigurationOptions> = {
  */
 export const commandsObject = yargs
   .parserConfiguration(parserConfiguration)
-  .usage(chalk.bold('Smart, Fast and Extensible Build System'))
+  .usage(chalk.bold('Smart Monorepos · Fast CI'))
   .demandCommand(1, '')
+  .command(yargsAddCommand)
   .command(yargsAffectedBuildCommand)
   .command(yargsAffectedCommand)
   .command(yargsAffectedE2ECommand)
@@ -84,6 +86,7 @@ export const commandsObject = yargs
   .command(yargsShowCommand)
   .command(yargsViewLogsCommand)
   .command(yargsWatchCommand)
+  .command(yargsNxInfixCommand)
   .scriptName('nx')
   .help()
   // NOTE: we handle --version in nx.ts, this just tells yargs that the option exists

@@ -17,4 +17,5 @@ export interface Schema {
   linter?: Linter;
   standaloneConfig?: boolean;
   setParserOptionsProject?: boolean;
+  addPlugin?: boolean;
 }

@@ -19,6 +19,7 @@ import {
   prettierVersion,
   supportedTypescriptVersions,
   swcCoreVersion,
+  swcHelpersVersion,
   swcNodeVersion,
   typescriptVersion,
 } from '../../utils/versions';
@@ -77,9 +78,10 @@ export async function initGenerator(
     // we prefer to use SWC, and fallback to ts-node for workspaces that don't use SWC.
     '@swc-node/register': swcNodeVersion,
     '@swc/core': swcCoreVersion,
+    '@swc/helpers': swcHelpersVersion,
   };
 
-  if (!schema.js) {
+  if (!schema.js && !schema.keepExistingVersions) {
     const installedTsVersion = await getInstalledTypescriptVersion(tree);
 
     if (
@@ -135,7 +137,13 @@ export async function initGenerator(
   }
 
   const installTask = !schema.skipPackageJson
-    ? addDependenciesToPackageJson(tree, {}, devDependencies)
+    ? addDependenciesToPackageJson(
+        tree,
+        {},
+        devDependencies,
+        undefined,
+        schema.keepExistingVersions
+      )
     : () => {};
   tasks.push(installTask);
 

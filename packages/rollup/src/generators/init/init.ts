@@ -1,39 +1,39 @@
 import {
   addDependenciesToPackageJson,
+  createProjectGraphAsync,
   formatFiles,
   GeneratorCallback,
   Tree,
 } from '@nx/devkit';
+import { nxVersion } from '../../utils/versions';
 import { Schema } from './schema';
-import { swcCoreVersion, swcHelpersVersion } from '@nx/js/src/utils/versions';
-import {
-  nxVersion,
-  swcLoaderVersion,
-  tsLibVersion,
-} from '../../utils/versions';
+import { addPlugin } from '@nx/devkit/src/utils/add-plugin';
+import { createNodes } from '../../plugins/plugin';
 
 export async function rollupInitGenerator(tree: Tree, schema: Schema) {
-  let task: GeneratorCallback;
+  let task: GeneratorCallback = () => {};
 
-  if (schema.compiler === 'swc') {
+  if (!schema.skipPackageJson) {
     task = addDependenciesToPackageJson(
       tree,
       {},
-      {
-        '@nx/rollup': nxVersion,
-        '@swc/helpers': swcHelpersVersion,
-        '@swc/core': swcCoreVersion,
-        'swc-loader': swcLoaderVersion,
-      }
+      { '@nx/rollup': nxVersion },
+      undefined,
+      schema.keepExistingVersions
     );
-  } else {
-    task = addDependenciesToPackageJson(
+  }
+
+  schema.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
+  if (schema.addPlugin) {
+    await addPlugin(
       tree,
-      {},
+      await createProjectGraphAsync(),
+      '@nx/rollup/plugin',
+      createNodes,
       {
-        '@nx/rollup': nxVersion,
-        tslib: tsLibVersion,
-      }
+        buildTargetName: ['build', 'rollup:build', 'rollup-build'],
+      },
+      schema.updatePackageScripts
     );
   }
 

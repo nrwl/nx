@@ -6,7 +6,7 @@ const VIEW_LOGS_MESSAGE = `Hint: Try "nx view-logs" to get structured, searchabl
 
 export function viewLogsFooterRows(failedTasks: number) {
   if (failedTasks >= 2 && !isNxCloudUsed(readNxJson())) {
-    return [``, output.dim(`${output.X_PADDING} ${VIEW_LOGS_MESSAGE}`)];
+    return [``, output.dim(` ${VIEW_LOGS_MESSAGE}`)];
   } else {
     return [];
   }

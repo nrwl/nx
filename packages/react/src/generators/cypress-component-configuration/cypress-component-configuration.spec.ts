@@ -7,11 +7,6 @@ import {
   updateProjectConfiguration,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { Linter } from '@nx/eslint';
-import { applicationGenerator } from '../application/application';
-import { componentGenerator } from '../component/component';
-import { libraryGenerator } from '../library/library';
-import { cypressComponentConfigGenerator } from './cypress-component-configuration';
 
 let projectGraph: ProjectGraph;
 jest.mock('@nx/devkit', () => ({
@@ -21,6 +16,13 @@ jest.mock('@nx/devkit', () => ({
     .fn()
     .mockImplementation(async () => projectGraph),
 }));
+
+import { Linter } from '@nx/eslint';
+import { applicationGenerator } from '../application/application';
+import { componentGenerator } from '../component/component';
+import { libraryGenerator } from '../library/library';
+import { cypressComponentConfigGenerator } from './cypress-component-configuration';
+
 jest.mock('@nx/cypress/src/utils/cypress-version');
 // nested code imports graph from the repo, which might have innacurate graph version
 jest.mock('nx/src/project-graph/project-graph', () => ({
@@ -33,6 +35,17 @@ describe('React:CypressComponentTestConfiguration', () => {
   let mockedAssertCypressVersion: jest.Mock<
     ReturnType<typeof assertMinimumCypressVersion>
   > = assertMinimumCypressVersion as never;
+  // TODO(@jaysoo): Turn this back to adding the plugin
+  let originalEnv: string;
+
+  beforeEach(() => {
+    originalEnv = process.env.NX_ADD_PLUGINS;
+    process.env.NX_ADD_PLUGINS = 'false';
+  });
+
+  afterEach(() => {
+    process.env.NX_ADD_PLUGINS = originalEnv;
+  });
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace();
   });
@@ -459,9 +472,9 @@ describe('React:CypressComponentTestConfiguration', () => {
         buildTarget: 'my-app:build',
       });
     }).resolves;
-    expect(
-      require('@nx/devkit').createProjectGraphAsync
-    ).not.toHaveBeenCalled();
+    expect(require('@nx/devkit').createProjectGraphAsync).toHaveBeenCalledTimes(
+      1
+    );
   });
 
   it('should setup cypress config files correctly', async () => {

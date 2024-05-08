@@ -40,6 +40,16 @@
     "url": "https://github.com/berenddeboer/nx-plugins/tree/main/packages/nx-aws-cdk"
   },
   {
+    "name": "@nx-iac/aws-cdk",
+    "description": "Empowers your Nx workspace with AWS CDK capabilities ⚡",
+    "url": "https://github.com/joelklint/nx-aws-cdk"
+  },
+  {
+    "name": "@routineless/nx-aws-cdk",
+    "description": "Nx plugin to generate and manage aws cdk app and lambdas.",
+    "url": "https://github.com/KozelAnatoliy/routineless/tree/main/packages/nx-aws-cdk"
+  },
+  {
     "name": "@berenddeboer/nx-sst",
     "description": "Nx plugin to generate an SST stack and execute all SST commands.",
     "url": "https://github.com/berenddeboer/nx-plugins/tree/main/packages/nx-sst"
@@ -275,6 +285,16 @@
     "url": "https://github.com/tripss/nx-extend/tree/master/packages/pulumi"
   },
   {
+    "name": "@nx-extend/react-email",
+    "description": "Nx plugin for developing email templates with react.email",
+    "url": "https://github.com/tripss/nx-extend/tree/master/packages/react-email"
+  },
+  {
+    "name": "@nx-extend/shadcn-ui",
+    "description": "Nx plugin for working with shadcn/ui",
+    "url": "https://github.com/tripss/nx-extend/tree/master/packages/shadcn-ui"
+  },
+  {
     "name": "@nativescript/nx",
     "description": "Nx Plugin adding first class support for NativeScript in your Nx workspace",
     "url": "https://github.com/nativescript/nx"
@@ -433,5 +453,25 @@
     "name": "@simondotm/nx-firebase",
     "description": "Nx plugin to support Firebase Apps and Cloud Functions in Nx workspaces",
     "url": "https://github.com/simondotm/nx-firebase"
+  },
+  {
+    "name": "@dman926/nx-python-pdm",
+    "description": "Use Python in NX workspaces with PDM",
+    "url": "https://github.com/dman926/nx-python-pdm"
+  },
+  {
+    "name": "@gnuechtel/nx-cucumber",
+    "description": "Plugin to use Cucumber within Nx workspaces",
+    "url": "https://gitlab.com/gnuechtel/open-source/-/tree/main/libs/nx-cucumber"
+  },
+  {
+    "name": "@analogjs/platform",
+    "description": "Official plugin to add Analog to your Nx monorepo.",
+    "url": "https://analogjs.org/docs/integrations/nx"
+  },
+  {
+    "name": "@getlarge/nx-heroku",
+    "description": "Plugin to deploy and promote Nx apps on Heroku",
+    "url": "https://github.com/getlarge/nx-heroku"
   }
 ]

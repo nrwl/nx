@@ -1,0 +1,24 @@
+{
+  "name": "setup",
+  "implementation": "/packages/remix/src/generators/setup/setup.impl.ts",
+  "schema": {
+    "$schema": "https://json-schema.org/schema",
+    "$id": "NxRemixSetup",
+    "title": "",
+    "type": "object",
+    "description": "Generate initial files required for Remix to work within the workspace.",
+    "properties": {
+      "packageManager": {
+        "type": "string",
+        "description": "The package manager to setup for",
+        "enum": ["yarn", "npm", "pnpm"]
+      }
+    },
+    "presets": []
+  },
+  "description": "Setup a Remix in an existing workspace",
+  "hidden": true,
+  "aliases": [],
+  "path": "/packages/remix/src/generators/setup/schema.json",
+  "type": "generator"
+}

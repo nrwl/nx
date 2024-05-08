@@ -53,6 +53,10 @@ export function fetchCorePlugins(): CorePlugin[] {
       capabilities: 'executors,generators',
     },
     {
+      name: '@nx/nuxt',
+      capabilities: 'generators',
+    },
+    {
       name: 'nx',
       capabilities: 'executors',
     },
@@ -66,6 +70,10 @@ export function fetchCorePlugins(): CorePlugin[] {
     },
     {
       name: '@nx/react-native',
+      capabilities: 'executors,generators',
+    },
+    {
+      name: '@nx/remix',
       capabilities: 'executors,generators',
     },
     {

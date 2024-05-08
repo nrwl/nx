@@ -1,3 +1,5 @@
+import 'nx/src/internal-testing-utils/mock-project-graph';
+
 import { readProjectConfiguration, Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { NormalizedSchema } from '../schema';
@@ -66,7 +68,7 @@ describe('updateJestConfig', () => {
     expect(jestConfigAfter).toContain(
       `coverageDirectory: '../coverage/my-destination'`
     );
-    expect(rootJestConfigAfter).toContain('getJestProjects()');
+    expect(rootJestConfigAfter).toContain('getJestProjectsAsync()');
   });
 
   it('should update the name and dir correctly when moving to a nested dir', async () => {
@@ -142,7 +144,7 @@ describe('updateJestConfig', () => {
     expect(jestConfigAfter).toContain(
       `coverageDirectory: '../coverage/other/test/dir/my-destination'`
     );
-    expect(rootJestConfigAfter).toContain('getJestProjects()');
+    expect(rootJestConfigAfter).toContain('getJestProjectsAsync()');
   });
 
   it('updates the root config if not using `getJestProjects()`', async () => {

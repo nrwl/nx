@@ -1,33 +1,21 @@
 import { performance } from 'perf_hooks';
-import { getNxRequirePaths } from '../../utils/installation-directory';
+import { ProjectConfiguration } from '../../config/workspace-json-project-json';
 import {
-  ProjectConfiguration,
-  ProjectsConfigurations,
-} from '../../config/workspace-json-project-json';
-import {
-  NxAngularJsonPlugin,
   NX_ANGULAR_JSON_PLUGIN_NAME,
   shouldMergeAngularProjects,
 } from '../../adapter/angular-json';
 import { NxJsonConfiguration, readNxJson } from '../../config/nx-json';
 import {
-  FileData,
-  ProjectFileMap,
-  ProjectGraphExternalNode,
-} from '../../config/project-graph';
-import type { NxWorkspaceFiles } from '../../native';
+  ConfigurationResult,
+  createProjectConfigurations,
+} from './project-configuration-utils';
+import { LoadedNxPlugin, loadNxPlugins } from '../plugins/internal-api';
 import {
-  getGlobPatternsFromPackageManagerWorkspaces,
-  getNxPackageJsonWorkspacesPlugin,
-} from '../../../plugins/package-json-workspaces';
-import { buildProjectsConfigurationsFromProjectPathsAndPlugins } from './project-configuration-utils';
-import { LoadedNxPlugin, loadNxPlugins } from '../../utils/nx-plugin';
-import { CreateProjectJsonProjectsPlugin } from '../../plugins/project-json/build-nodes/project-json';
-import {
-  globWithWorkspaceContext,
-  getProjectConfigurationsFromContext,
   getNxWorkspaceFilesFromContext,
+  globWithWorkspaceContext,
 } from '../../utils/workspace-context';
+import { buildAllWorkspaceFiles } from './build-all-workspace-files';
+import { join } from 'path';
 
 /**
  * Walks the workspace directory to create the `projectFileMap`, `ProjectConfigurations` and `allWorkspaceFiles`
@@ -37,15 +25,9 @@ import {
  */
 export async function retrieveWorkspaceFiles(
   workspaceRoot: string,
-  nxJson: NxJsonConfiguration
+  projectRootMap: Record<string, string>
 ) {
   performance.mark('native-file-deps:start');
-  const plugins = await loadNxPlugins(
-    nxJson?.plugins ?? [],
-    getNxRequirePaths(workspaceRoot),
-    workspaceRoot
-  );
-  let globs = configurationGlobs(workspaceRoot, plugins);
   performance.mark('native-file-deps:end');
   performance.measure(
     'native-file-deps',
@@ -54,26 +36,9 @@ export async function retrieveWorkspaceFiles(
   );
 
   performance.mark('get-workspace-files:start');
-  let projects: Record<string, ProjectConfiguration>;
-  let externalNodes: Record<string, ProjectGraphExternalNode>;
 
-  const { projectFileMap, globalFiles } = (await getNxWorkspaceFilesFromContext(
-    workspaceRoot,
-    globs,
-    async (configs: string[]) => {
-      const projectConfigurations = await createProjectConfigurations(
-        workspaceRoot,
-        nxJson,
-        configs,
-        plugins
-      );
-
-      projects = projectConfigurations.projects;
-
-      externalNodes = projectConfigurations.externalNodes;
-      return projectConfigurations.rootMap;
-    }
-  )) as NxWorkspaceFiles;
+  const { projectFileMap, globalFiles, externalReferences } =
+    getNxWorkspaceFilesFromContext(workspaceRoot, projectRootMap);
   performance.mark('get-workspace-files:end');
   performance.measure(
     'get-workspace-files',
@@ -87,111 +52,63 @@ export async function retrieveWorkspaceFiles(
       projectFileMap,
       nonProjectFiles: globalFiles,
     },
-    projectConfigurations: {
-      version: 2,
-      projects,
-    } as ProjectsConfigurations,
-    externalNodes,
+    rustReferences: externalReferences,
   };
 }
 
 /**
  * Walk through the workspace and return `ProjectConfigurations`. Only use this if the projectFileMap is not needed.
- *
- * @param workspaceRoot
- * @param nxJson
  */
-export async function retrieveProjectConfigurations(
+
+export function retrieveProjectConfigurations(
+  plugins: LoadedNxPlugin[],
   workspaceRoot: string,
   nxJson: NxJsonConfiguration
-): Promise<{
-  externalNodes: Record<string, ProjectGraphExternalNode>;
-  projectNodes: Record<string, ProjectConfiguration>;
-}> {
-  const plugins = await loadNxPlugins(
-    nxJson?.plugins ?? [],
-    getNxRequirePaths(workspaceRoot),
-    workspaceRoot
-  );
+): Promise<ConfigurationResult> {
+  const globPatterns = configurationGlobs(plugins);
+  const workspaceFiles = globWithWorkspaceContext(workspaceRoot, globPatterns);
 
-  const globs = configurationGlobs(workspaceRoot, plugins);
-  return _retrieveProjectConfigurations(workspaceRoot, nxJson, plugins, globs);
+  return createProjectConfigurations(
+    workspaceRoot,
+    nxJson,
+    workspaceFiles,
+    plugins
+  );
 }
 
 export async function retrieveProjectConfigurationsWithAngularProjects(
   workspaceRoot: string,
   nxJson: NxJsonConfiguration
-): Promise<{
-  externalNodes: Record<string, ProjectGraphExternalNode>;
-  projectNodes: Record<string, ProjectConfiguration>;
-}> {
-  const plugins = await loadNxPlugins(
-    nxJson?.plugins ?? [],
-    getNxRequirePaths(workspaceRoot),
-    workspaceRoot
-  );
+): Promise<ConfigurationResult> {
+  const pluginsToLoad = nxJson?.plugins ?? [];
 
   if (
     shouldMergeAngularProjects(workspaceRoot, true) &&
-    !plugins.some((p) => p.plugin.name === NX_ANGULAR_JSON_PLUGIN_NAME)
+    !pluginsToLoad.some(
+      (p) =>
+        p === NX_ANGULAR_JSON_PLUGIN_NAME ||
+        (typeof p === 'object' && p.plugin === NX_ANGULAR_JSON_PLUGIN_NAME)
+    )
   ) {
-    plugins.push({ plugin: NxAngularJsonPlugin });
+    pluginsToLoad.push(join(__dirname, '../../adapter/angular-json'));
   }
 
-  const globs = configurationGlobs(workspaceRoot, plugins);
-  return _retrieveProjectConfigurations(workspaceRoot, nxJson, plugins, globs);
-}
-
-function _retrieveProjectConfigurations(
-  workspaceRoot: string,
-  nxJson: NxJsonConfiguration,
-  plugins: LoadedNxPlugin[],
-  globs: string[]
-): Promise<{
-  externalNodes: Record<string, ProjectGraphExternalNode>;
-  projectNodes: Record<string, ProjectConfiguration>;
-}> {
-  let result: {
-    externalNodes: Record<string, ProjectGraphExternalNode>;
-    projectNodes: Record<string, ProjectConfiguration>;
-  };
-  return getProjectConfigurationsFromContext(
-    workspaceRoot,
-    globs,
-    async (configs: string[]) => {
-      const { projects, externalNodes, rootMap } =
-        await createProjectConfigurations(
-          workspaceRoot,
-          nxJson,
-          configs,
-          plugins
-        );
-
-      result = {
-        projectNodes: projects,
-        externalNodes: externalNodes,
-      };
-
-      return rootMap;
-    }
-  ).then(() => result);
-}
-
-export async function retrieveProjectConfigurationPaths(
-  root: string,
-  nxJson: NxJsonConfiguration
-): Promise<string[]> {
-  const projectGlobPatterns = configurationGlobs(
-    root,
-    await loadNxPlugins(nxJson?.plugins ?? [], getNxRequirePaths(root), root)
+  const [plugins, cleanup] = await loadNxPlugins(
+    nxJson?.plugins ?? [],
+    workspaceRoot
   );
-  return globWithWorkspaceContext(root, projectGlobPatterns);
+
+  const res = retrieveProjectConfigurations(plugins, workspaceRoot, nxJson);
+  cleanup();
+  return res;
 }
 
-export function retrieveProjectConfigurationPathsWithoutPluginInference(
-  root: string
+export function retrieveProjectConfigurationPaths(
+  root: string,
+  plugins: Array<{ createNodes?: readonly [string, ...unknown[]] } & unknown>
 ): string[] {
-  return globWithWorkspaceContext(root, configurationGlobsWithoutPlugins(root));
+  const projectGlobPatterns = configurationGlobs(plugins);
+  return globWithWorkspaceContext(root, projectGlobPatterns);
 }
 
 const projectsWithoutPluginCache = new Map<
@@ -204,108 +121,38 @@ export async function retrieveProjectConfigurationsWithoutPluginInference(
   root: string
 ): Promise<Record<string, ProjectConfiguration>> {
   const nxJson = readNxJson(root);
-  const projectGlobPatterns = configurationGlobsWithoutPlugins(root);
+  const [plugins, cleanup] = await loadNxPlugins([]); // only load default plugins
+  const projectGlobPatterns = retrieveProjectConfigurationPaths(root, plugins);
   const cacheKey = root + ',' + projectGlobPatterns.join(',');
 
   if (projectsWithoutPluginCache.has(cacheKey)) {
     return projectsWithoutPluginCache.get(cacheKey);
   }
 
-  let projects: Record<string, ProjectConfiguration>;
-  await getProjectConfigurationsFromContext(
+  const projectFiles =
+    globWithWorkspaceContext(root, projectGlobPatterns) ?? [];
+  const { projects } = await createProjectConfigurations(
     root,
-    projectGlobPatterns,
-    async (configs: string[]) => {
-      const projectConfigurations = await createProjectConfigurations(
-        root,
-        nxJson,
-        configs,
-        [
-          { plugin: getNxPackageJsonWorkspacesPlugin(root) },
-          { plugin: CreateProjectJsonProjectsPlugin },
-        ]
-      );
-      projects = projectConfigurations.projects;
-      return projectConfigurations.rootMap;
-    }
+    nxJson,
+    projectFiles,
+    plugins
   );
 
   projectsWithoutPluginCache.set(cacheKey, projects);
 
+  cleanup();
+
   return projects;
 }
 
-function buildAllWorkspaceFiles(
-  projectFileMap: ProjectFileMap,
-  globalFiles: FileData[]
-): FileData[] {
-  performance.mark('get-all-workspace-files:start');
-  let fileData: FileData[] = Object.values(projectFileMap).flat();
-  fileData = fileData
-    .concat(globalFiles)
-    .sort((a, b) => a.file.localeCompare(b.file));
-  performance.mark('get-all-workspace-files:end');
-  performance.measure(
-    'get-all-workspace-files',
-    'get-all-workspace-files:start',
-    'get-all-workspace-files:end'
-  );
-
-  return fileData;
-}
-
-export async function createProjectConfigurations(
-  workspaceRoot: string,
-  nxJson: NxJsonConfiguration,
-  configFiles: string[],
-  plugins: LoadedNxPlugin[]
-): Promise<{
-  projects: Record<string, ProjectConfiguration>;
-  externalNodes: Record<string, ProjectGraphExternalNode>;
-  rootMap: Record<string, string>;
-}> {
-  performance.mark('build-project-configs:start');
-
-  const { projects, externalNodes, rootMap } =
-    await buildProjectsConfigurationsFromProjectPathsAndPlugins(
-      nxJson,
-      configFiles,
-      plugins,
-      workspaceRoot
-    );
-
-  performance.mark('build-project-configs:end');
-  performance.measure(
-    'build-project-configs',
-    'build-project-configs:start',
-    'build-project-configs:end'
-  );
-
-  return {
-    projects,
-    externalNodes,
-    rootMap,
-  };
-}
-
 export function configurationGlobs(
-  workspaceRoot: string,
-  plugins: LoadedNxPlugin[]
+  plugins: Array<{ createNodes?: readonly [string, ...unknown[]] }>
 ): string[] {
-  const globPatterns: string[] =
-    configurationGlobsWithoutPlugins(workspaceRoot);
-  for (const { plugin } of plugins) {
-    if (plugin.createNodes) {
+  const globPatterns = [];
+  for (const plugin of plugins) {
+    if ('createNodes' in plugin && plugin.createNodes) {
       globPatterns.push(plugin.createNodes[0]);
     }
   }
   return globPatterns;
-}
-
-function configurationGlobsWithoutPlugins(workspaceRoot: string): string[] {
-  return [
-    'project.json',
-    '**/project.json',
-    ...getGlobPatternsFromPackageManagerWorkspaces(workspaceRoot),
-  ];
 }

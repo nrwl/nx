@@ -1,6 +1,6 @@
-The ESLint plugin contains executors, generator, plugin and utilities used for linting JavaScript/TypeScript projects within an Nx workspace.
+The ESLint plugin integrates [ESLint](https://eslint.org/) with Nx. It allows you to run ESLint through Nx with caching enabled. It also includes code generators to help you set up ESLint in your workspace.
 
-## Setting Up ESLint
+## Setting Up @nx/eslint
 
 ### Installation
 
@@ -8,26 +8,83 @@ The ESLint plugin contains executors, generator, plugin and utilities used for l
 Make sure to install the `@nx/eslint` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/recipes/tips-n-tricks/keep-nx-versions-in-sync).
 {% /callout %}
 
-In any Nx workspace, you can install `@nx/eslint` by running the following commands if `@nx/eslint` package is not installed:
+In any Nx workspace, you can install `@nx/eslint` by running the following command:
 
-```shell
-npm i --save-dev @nx/eslint
+{% tabs %}
+{% tab label="Nx 18+" %}
+
+```shell {% skipRescope=true %}
+nx add @nx/eslint
 ```
 
-```shell
-yarn add --dev @nx/eslint
+This will install the correct version of `@nx/eslint`.
+
+### How @nx/eslint Infers Tasks
+
+The `@nx/eslint` plugin will create a task for any project that has an ESLint configuration file present and files to lint. Any of the following files will be recognized as an ESLint configuration file:
+
+- `.eslintrc`
+- `.eslintrc.js`
+- `.eslintrc.cjs`
+- `.eslintrc.yaml`
+- `.eslintrc.yml`
+- `.eslintrc.json`
+- `eslint.config.js`
+
+Because ESLint applies configuration files to all subdirectories, the `@nx/eslint` plugin will also infer tasks for projects in subdirectories. So, if there is an ESLint configuration file in the root of the repository, every project will have an inferred ESLint task.
+
+Even if a project has an ESLint configuration file, it will only have an inferred ESLint task if there are files to lint. Otherwise, the task will not be created. Therefore, if you don't want an ESLint task to be inferred for a particular project, make sure the project files are properly excluded from ESLint.
+
+### View Inferred Tasks
+
+To view inferred tasks for a project, open the [project details view](/concepts/inferred-tasks) in Nx Console or run `nx show project my-project --web` in the command line.
+
+### @nx/eslint Configuration
+
+The `@nx/eslint/plugin` is configured in the `plugins` array in `nx.json`.
+
+```json {% fileName="nx.json" %}
+{
+  "plugins": [
+    {
+      "plugin": "@nx/eslint/plugin",
+      "options": {
+        "targetName": "lint"
+      }
+    }
+  ]
+}
 ```
+
+- The `targetName` option controls the name of the inferred ESLint tasks. The default name is `lint`.
+
+{% /tab %}
+{% tab label="Nx 17" %}
+
+Install the `@nx/eslint` package with your package manager.
+
+```shell {% skipRescope=true %}
+npm add -D @nx/eslint
+```
+
+{% /tab %}
+{% tab label="Nx < 17" %}
+
+Install the `@nx/linter` package with your package manager.
+
+```shell
+npm add -D @nx/linter
+```
+
+{% /tab %}
+{% /tabs %}
 
 ## Lint
 
 You can lint an application or a library with the following command:
 
 ```shell
-nx lint my-app
-```
-
-```shell
-nx lint my-lib
+nx lint my-project
 ```
 
 ## Utils

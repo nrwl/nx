@@ -1,14 +1,23 @@
-import { Shell } from './shell';
-import { redirect, RouteObject } from 'react-router-dom';
+import { redirect, RouteObject, json } from 'react-router-dom';
 import { ProjectsSidebar } from './feature-projects/projects-sidebar';
 import { TasksSidebar } from './feature-tasks/tasks-sidebar';
-import { getEnvironmentConfig } from './hooks/use-environment-config';
+import { Shell } from './shell';
 /* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
-import { ProjectGraphClientResponse } from 'nx/src/command-line/graph/graph';
+import type {
+  GraphError,
+  ProjectGraphClientResponse,
+} from 'nx/src/command-line/graph/graph';
+// nx-ignore-next-line
+import type { ProjectGraphProjectNode } from 'nx/src/config/project-graph';
 /* eslint-enable @nx/enforce-module-boundaries */
-import { getProjectGraphDataService } from './hooks/get-project-graph-data-service';
+import {
+  getEnvironmentConfig,
+  getProjectGraphDataService,
+} from '@nx/graph/shared';
 import { TasksSidebarErrorBoundary } from './feature-tasks/tasks-sidebar-error-boundary';
+import { ProjectDetailsPage } from '@nx/graph/project-details';
+import { ErrorBoundary } from './ui-components/error-boundary';
 
 const { appConfig } = getEnvironmentConfig();
 const projectGraphDataService = getProjectGraphDataService();
@@ -43,15 +52,57 @@ const workspaceDataLoader = async (selectedWorkspaceId: string) => {
 
   const targets = Array.from(targetsSet).sort((a, b) => a.localeCompare(b));
 
-  return { ...projectGraph, targets };
+  const sourceMaps = await sourceMapsLoader(selectedWorkspaceId);
+
+  return { ...projectGraph, targets, sourceMaps };
 };
 
 const taskDataLoader = async (selectedWorkspaceId: string) => {
-  const projectInfo = appConfig.workspaces.find(
+  const workspaceInfo = appConfig.workspaces.find(
     (graph) => graph.id === selectedWorkspaceId
   );
 
-  return await projectGraphDataService.getTaskGraph(projectInfo.taskGraphUrl);
+  return await projectGraphDataService.getTaskGraph(workspaceInfo.taskGraphUrl);
+};
+
+const sourceMapsLoader = async (selectedWorkspaceId: string) => {
+  const workspaceInfo = appConfig.workspaces.find(
+    (graph) => graph.id === selectedWorkspaceId
+  );
+
+  return await projectGraphDataService.getSourceMaps(
+    workspaceInfo.sourceMapsUrl
+  );
+};
+
+const projectDetailsLoader = async (
+  selectedWorkspaceId: string,
+  projectName: string
+): Promise<{
+  hash: string;
+  project: ProjectGraphProjectNode;
+  sourceMap: Record<string, string[]>;
+  errors?: GraphError[];
+}> => {
+  const workspaceData = await workspaceDataLoader(selectedWorkspaceId);
+  const sourceMaps = await sourceMapsLoader(selectedWorkspaceId);
+
+  const project = workspaceData.projects.find(
+    (project) => project.name === projectName
+  );
+  if (!project) {
+    throw json({
+      id: 'project-not-found',
+      projectName,
+      errors: workspaceData.errors,
+    });
+  }
+  return {
+    hash: workspaceData.hash,
+    project,
+    sourceMap: sourceMaps[project.data.root],
+    errors: workspaceData.errors,
+  };
 };
 
 const childRoutes: RouteObject[] = [
@@ -121,6 +172,7 @@ const childRoutes: RouteObject[] = [
 export const devRoutes: RouteObject[] = [
   {
     path: '/',
+    errorElement: <ErrorBoundary />,
     children: [
       {
         index: true,
@@ -146,6 +198,15 @@ export const devRoutes: RouteObject[] = [
         },
         children: childRoutes,
       },
+      {
+        path: ':selectedWorkspaceId/project-details/:projectName',
+        id: 'selectedProjectDetails',
+        element: <ProjectDetailsPage />,
+        loader: async ({ params }) => {
+          const projectName = params.projectName;
+          return projectDetailsLoader(params.selectedWorkspaceId, projectName);
+        },
+      },
     ],
   },
 ];
@@ -154,7 +215,7 @@ export const releaseRoutes: RouteObject[] = [
   {
     path: '/',
     id: 'selectedWorkspace',
-    loader: async ({ request, params }) => {
+    loader: async () => {
       const selectedWorkspaceId = appConfig.defaultWorkspaceId;
       return workspaceDataLoader(selectedWorkspaceId);
     },
@@ -173,5 +234,16 @@ export const releaseRoutes: RouteObject[] = [
       },
       ...childRoutes,
     ],
+    errorElement: <ErrorBoundary />,
+  },
+  {
+    path: 'project-details/:projectName',
+    id: 'selectedProjectDetails',
+    element: <ProjectDetailsPage />,
+    errorElement: <ErrorBoundary />,
+    loader: async ({ params }) => {
+      const projectName = params.projectName;
+      return projectDetailsLoader(appConfig.defaultWorkspaceId, projectName);
+    },
   },
 ];

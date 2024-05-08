@@ -7,7 +7,9 @@ Nest.js is a framework designed for building scalable server-side applications. 
 
 Many conventions and best practices used in Angular applications can be also be used in Nest.
 
-## Setting Up Nest
+## Setting Up @nx/nest
+
+### Generating a new workspace
 
 To create a new workspace with Nest, run the following command:
 
@@ -21,19 +23,34 @@ Yarn users can use the following command instead:
 yarn create nx-workspace my-workspace --preset=nest
 ```
 
+### Installation
+
 {% callout type="note" title="Keep Nx Package Versions In Sync" %}
 Make sure to install the `@nx/nest` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/recipes/tips-n-tricks/keep-nx-versions-in-sync).
 {% /callout %}
 
-To add the Nest plugin to an existing workspace, run one the following commands:
+In any Nx workspace, you can install `@nx/nest` by running the following command:
 
-```shell
-npm install -D @nx/nest
+{% tabs %}
+{% tab label="Nx 18+" %}
+
+```shell {% skipRescope=true %}
+nx add @nx/nest
 ```
 
+This will install the correct version of `@nx/nest`.
+
+{% /tab %}
+{% tab label="Nx < 18" %}
+
+Install the `@nx/nest` package with your package manager.
+
 ```shell
-yarn add -D @nx/nest
+npm add -D @nx/nest
 ```
+
+{% /tab %}
+{% /tabs %}
 
 ### Create Applications
 

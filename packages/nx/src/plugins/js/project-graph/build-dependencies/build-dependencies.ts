@@ -1,6 +1,6 @@
 import { buildExplicitTypeScriptDependencies } from './explicit-project-dependencies';
 import { buildExplicitPackageJsonDependencies } from './explicit-package-json-dependencies';
-import { CreateDependenciesContext } from '../../../../utils/nx-plugin';
+import { CreateDependenciesContext } from '../../../../project-graph/plugins';
 import { RawProjectGraphDependency } from '../../../../project-graph/project-graph-builder';
 
 export function buildExplicitDependencies(

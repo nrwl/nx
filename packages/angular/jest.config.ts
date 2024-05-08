@@ -6,7 +6,6 @@ export default {
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html'],
   globals: {},
   displayName: 'angular',
-  testEnvironment: 'node',
   preset: '../../jest.preset.js',
   setupFilesAfterEnv: ['<rootDir>/test-setup.ts'],
 };

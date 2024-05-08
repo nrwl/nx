@@ -2,7 +2,6 @@ import {
   getPackageManagerCommand,
   installPackagesTask,
   joinPathFragments,
-  names,
   PackageManager,
   Tree,
 } from '@nx/devkit';
@@ -26,6 +25,7 @@ interface Schema {
   docker?: boolean;
   js?: boolean;
   nextAppDir?: boolean;
+  nextSrcDir?: boolean;
   linter?: Linter;
   bundler?: 'vite' | 'webpack';
   standaloneApi?: boolean;
@@ -33,6 +33,7 @@ interface Schema {
   packageManager?: PackageManager;
   e2eTestRunner?: 'cypress' | 'playwright' | 'detox' | 'jest' | 'none';
   ssr?: boolean;
+  prefix?: string;
 }
 
 export interface NormalizedSchema extends Schema {
@@ -49,14 +50,22 @@ export async function newGenerator(tree: Tree, opts: Schema) {
   addPresetDependencies(tree, options);
 
   return async () => {
-    const pmc = getPackageManagerCommand(options.packageManager);
-    if (pmc.preInstall) {
-      execSync(pmc.preInstall, {
-        cwd: joinPathFragments(tree.root, options.directory),
-        stdio: process.env.NX_GENERATE_QUIET === 'true' ? 'ignore' : 'inherit',
-      });
+    if (!options.skipInstall) {
+      const pmc = getPackageManagerCommand(options.packageManager);
+      if (pmc.preInstall) {
+        execSync(pmc.preInstall, {
+          cwd: joinPathFragments(tree.root, options.directory),
+          stdio:
+            process.env.NX_GENERATE_QUIET === 'true' ? 'ignore' : 'inherit',
+        });
+      }
+      installPackagesTask(
+        tree,
+        false,
+        options.directory,
+        options.packageManager
+      );
     }
-    installPackagesTask(tree, false, options.directory, options.packageManager);
     // TODO: move all of these into create-nx-workspace
     if (options.preset !== Preset.NPM && !options.isCustomPreset) {
       await generatePreset(tree, options);
@@ -121,7 +130,6 @@ function normalizeOptions(options: Schema): NormalizedSchema {
     ...options,
   };
 
-  normalized.name = names(options.name).fileName;
   if (!options.directory) {
     normalized.directory = normalized.name;
   }

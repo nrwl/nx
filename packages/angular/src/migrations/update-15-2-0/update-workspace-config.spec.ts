@@ -1,3 +1,6 @@
+import 'nx/src/internal-testing-utils/mock-project-graph';
+
+import * as devkit from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { Builders } from '@schematics/angular/utility/workspace-models';
 import {
@@ -10,9 +13,13 @@ import updateWorkspaceConfig from './update-workspace-config';
 describe(`Migration to remove bundleDependencies`, () => {
   it(`should remove 'bundleDependencies'`, async () => {
     const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    jest
+      .spyOn(devkit, 'formatFiles')
+      .mockImplementation(() => Promise.resolve());
     await generateTestApplication(tree, {
       name: 'test',
       projectNameAndRootFormat: 'derived',
+      skipFormat: true,
     });
 
     const project = readProjectConfiguration(tree, 'test');

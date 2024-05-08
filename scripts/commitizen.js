@@ -14,12 +14,14 @@ const scopes = [
   { value: 'nextjs',        name: 'nextjs:          anything Next specific' },
   { value: 'node',          name: 'node:            anything Node specific' },
   { value: 'nuxt',          name: 'nuxt:            anything Nuxt specific' },
-  { value: 'nx-cloud',      name: 'nx-cloud:        anything NxCloud specific' },
+  { value: 'nx-cloud',      name: 'nx-cloud:        anything Nx Cloud specific' },
   { value: 'nx-plugin',     name: 'nx-plugin:       anything Nx Plugin specific' },
   { value: 'nx-dev',        name: 'nx-dev:         anything related to docs infrastructure' },
   { value: 'react',         name: 'react:           anything React specific' },
   { value: 'react-native',  name: 'react-native:    anything React Native specific' },
+  { value: 'remix',         name: 'remix:           anything Remix specific' },
   { value: 'expo',          name: 'expo:            anything Expo specific' },
+  { value: 'release',       name: 'release:         anything related to nx release' },
   { value: 'repo',          name: 'repo:            anything related to managing the repo itself' },
   { value: 'storybook',     name: 'storybook:       anything Storybook specific' },
   { value: 'testing',       name: 'testing:         anything testing specific (e.g. jest or cypress)' },
@@ -27,6 +29,7 @@ const scopes = [
   { value: 'vue',           name: 'vue:             anything Vue specific' },
   { value: 'web',           name: 'web:             anything Web specific' },
   { value: 'webpack',       name: 'webpack:         anything Webpack specific' },
+  { value: 'gradle',        name: 'gradle:          anything Gradle specific'},
   {value: 'module-federation', name: 'module-federation:         anything Module Federation specific'},
 ];
 

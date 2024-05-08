@@ -33,10 +33,12 @@
     "ignore": "^5.0.4",
     "tmp": "~0.2.1",
     "tslib": "^2.3.0",
-    "semver": "7.5.3"
+    "semver": "^7.5.3",
+    "yargs-parser": "21.1.1",
+    "minimatch": "9.0.3"
   },
   "peerDependencies": {
-    "nx": ">= 16 <= 18"
+    "nx": ">= 17 <= 20"
   },
   "publishConfig": {
     "access": "public"

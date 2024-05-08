@@ -6,7 +6,7 @@
     "outputCapture": "direct-nodejs",
     "cli": "nx",
     "$id": "NxReactNativeRunAndroid",
-    "$schema": "http://json-schema.org/schema",
+    "$schema": "https://json-schema.org/schema",
     "title": "Run Android application",
     "description": "Run Android target options.",
     "type": "object",

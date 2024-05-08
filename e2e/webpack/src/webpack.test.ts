@@ -1,7 +1,11 @@
 import {
+  checkFilesExist,
   cleanupProject,
+  fileExists,
+  listFiles,
   newProject,
   packageInstall,
+  readFile,
   rmDist,
   runCLI,
   runCommand,
@@ -28,13 +32,31 @@ describe('Webpack Plugin', () => {
     updateFile(
       `libs/${myPkg}/webpack.config.js`,
       `
-const { composePlugins, withNx } = require('@nx/webpack');
+      const path  = require('path');
+      const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
+      
+      class DebugPlugin {
+        apply(compiler) {
+          console.log('scriptType is ' + compiler.options.output.scriptType);
+        }
+      }
 
-module.exports = composePlugins(withNx(), (config) => {
-  console.log('scriptType is ' + config.output.scriptType);
-  return config;
-});
-`
+      module.exports = {
+        target: 'node',
+        output: {
+          path: path.join(__dirname, '../../dist/libs/${myPkg}')
+        },
+        plugins: [
+          new NxAppWebpackPlugin({
+            compiler: 'tsc',
+            main: './src/index.ts',
+            tsConfig: './tsconfig.lib.json',
+            outputHashing: 'none',
+            optimization: false,
+          }),
+          new DebugPlugin()
+        ]
+      };`
     );
 
     rmDist();
@@ -117,7 +139,7 @@ module.exports = composePlugins(withNx(), (config) => {
       `apps/${appName}/webpack.config.js`,
       `
       const path  = require('path');
-      const { NxWebpackPlugin } = require('@nx/webpack');
+      const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
 
       module.exports = {
         target: 'node',
@@ -125,41 +147,148 @@ module.exports = composePlugins(withNx(), (config) => {
           path: path.join(__dirname, '../../dist/${appName}')
         },
         plugins: [
-          new NxWebpackPlugin()
+          new NxAppWebpackPlugin({
+            compiler: 'tsc',
+            main: 'apps/${appName}/src/main.ts',
+            tsConfig: 'apps/${appName}/tsconfig.app.json',
+            outputHashing: 'none',
+            optimization: false,
+          })
         ]
       };`
     );
 
-    runCLI(`build ${appName} --outputHashing none`);
+    runCLI(`build ${appName}`);
 
     let output = runCommand(`node dist/${appName}/main.js`);
     expect(output).toMatch(/Hello/);
   }, 500_000);
 
-  // Issue: https://github.com/nrwl/nx/issues/20179
-  it('should allow main/styles entries to be spread within composePlugins() function (#20179)', () => {
+  it('should bundle in NX_PUBLIC_ environment variables', () => {
     const appName = uniq('app');
     runCLI(`generate @nx/web:app ${appName} --bundler webpack`);
-    updateFile(`apps/${appName}/src/main.ts`, `console.log('Hello');\n`);
-
     updateFile(
-      `apps/${appName}/webpack.config.js`,
+      `apps/${appName}/src/main.ts`,
       `
-        const { composePlugins, withNx, withWeb } = require('@nx/webpack');
-        module.exports = composePlugins(withNx(), withWeb(), (config) => {
-          return {
-            ...config,
-            entry: {
-              main: [...config.entry.main],
-              styles: [...config.entry.styles],
-            }
-          };
-        });
+      console.log(process.env['NX_PUBLIC_TEST']);
       `
     );
 
-    expect(() => {
-      runCLI(`build ${appName} --outputHashing none`);
-    }).not.toThrow();
+    runCLI(`build ${appName}`, {
+      env: {
+        NX_PUBLIC_TEST: 'foobar',
+      },
+    });
+
+    const mainFile = listFiles(`dist/apps/${appName}`).filter((f) =>
+      f.startsWith('main.')
+    );
+    const content = readFile(`dist/apps/${appName}/${mainFile}`);
+    expect(content).toMatch(/foobar/);
+  });
+
+  it('should support babel + core-js to polyfill JS features', async () => {
+    const appName = uniq('app');
+    runCLI(
+      `generate @nx/web:app ${appName} --bundler webpack --compiler=babel`
+    );
+    packageInstall('core-js', undefined, '3.26.1', 'prod');
+    updateFile(
+      `apps/${appName}/src/main.ts`,
+      `
+      import 'core-js/stable';
+      async function main() {
+        const result = await Promise.resolve('foobar')
+        console.log(result);
+      }
+      main();
+    `
+    );
+
+    // Modern browser
+    updateFile(`apps/${appName}/.browserslistrc`, `last 1 Chrome version\n`);
+    runCLI(`build ${appName}`);
+    expect(readMainFile(`dist/apps/${appName}`)).toMatch(`await Promise`);
+
+    // Legacy browser
+    updateFile(`apps/${appName}/.browserslistrc`, `IE 11\n`);
+    runCLI(`build ${appName}`);
+    expect(readMainFile(`dist/apps/${appName}`)).not.toMatch(`await Promise`);
+  });
+
+  it('should allow options to be passed from the executor', async () => {
+    const appName = uniq('app');
+    runCLI(`generate @nx/web:app ${appName} --bundler webpack`);
+    updateJson(`apps/${appName}/project.json`, (json) => {
+      json.targets.build = {
+        executor: '@nx/webpack:webpack',
+        outputs: ['{options.outputPath}'],
+        options: {
+          generatePackageJson: true, // This should be passed to the plugin.
+          outputPath: `dist/apps/${appName}`,
+          webpackConfig: `apps/${appName}/webpack.config.js`,
+        },
+      };
+      return json;
+    });
+    updateFile(
+      `apps/${appName}/webpack.config.js`,
+      `
+        const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
+        const { join } = require('path');
+        module.exports = {
+          output: {
+            path: join(__dirname, '../../dist/apps/demo'),
+          },
+          plugins: [
+            new NxAppWebpackPlugin({
+              // NOTE: generatePackageJson is missing here, but executor passes it.
+              target: 'web',
+              compiler: 'swc',
+              main: './src/main.ts',
+              tsConfig: './tsconfig.app.json',
+              optimization: false,
+              outputHashing: 'none',
+            }),
+          ],
+        };`
+    );
+
+    runCLI(`build ${appName}`);
+
+    fileExists(`dist/apps/${appName}/package.json`);
+  });
+
+  it('should resolve assets from executors as relative to workspace root', () => {
+    const appName = uniq('app');
+    runCLI(`generate @nx/web:app ${appName} --bundler webpack`);
+    updateFile('shared/docs/TEST.md', 'TEST');
+    updateJson(`apps/${appName}/project.json`, (json) => {
+      json.targets.build = {
+        executor: '@nx/webpack:webpack',
+        outputs: ['{options.outputPath}'],
+        options: {
+          assets: [
+            {
+              input: 'shared/docs',
+              glob: 'TEST.md',
+              output: '.',
+            },
+          ],
+          outputPath: `dist/apps/${appName}`,
+          webpackConfig: `apps/${appName}/webpack.config.js`,
+        },
+      };
+      return json;
+    });
+
+    runCLI(`build ${appName}`);
+
+    checkFilesExist(`dist/apps/${appName}/TEST.md`);
   });
 });
+
+function readMainFile(dir: string): string {
+  const main = listFiles(dir).find((f) => f.startsWith('main.'));
+  return readFile(`${dir}/${main}`);
+}

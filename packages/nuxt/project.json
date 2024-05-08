@@ -4,13 +4,6 @@
   "sourceRoot": "packages/nuxt",
   "projectType": "library",
   "targets": {
-    "test": {
-      "executor": "@nx/jest:jest",
-      "options": {
-        "jestConfig": "packages/nuxt/jest.config.ts"
-      },
-      "outputs": ["{workspaceRoot}/coverage/packages/nuxt"]
-    },
     "build-base": {
       "executor": "@nx/js:tsc",
       "options": {
@@ -19,7 +12,8 @@
         "main": "packages/nuxt/index.ts",
         "generateExportsField": true,
         "additionalEntryPoints": [
-          "{projectRoot}/{executors,generators,migrations}.json"
+          "{projectRoot}/{executors,generators,migrations}.json",
+          "{projectRoot}/plugin.ts"
         ],
         "assets": [
           {
@@ -61,7 +55,6 @@
     "build": {
       "command": "node ./scripts/copy-readme.js nuxt",
       "outputs": ["{workspaceRoot}/build/packages/nuxt"]
-    },
-    "lint": {}
+    }
   }
 }

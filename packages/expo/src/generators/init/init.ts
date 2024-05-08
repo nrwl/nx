@@ -1,71 +1,70 @@
 import {
   addDependenciesToPackageJson,
+  createProjectGraphAsync,
   formatFiles,
   GeneratorCallback,
+  readNxJson,
   removeDependenciesFromPackageJson,
   runTasksInSerial,
   Tree,
 } from '@nx/devkit';
-import { Schema } from './schema';
+import { addPlugin } from '@nx/devkit/src/utils/add-plugin';
+import { createNodes } from '../../../plugins/plugin';
 import {
-  babelPresetExpoVersion,
-  easCliVersion,
   expoCliVersion,
-  expoMetroConfigVersion,
-  expoSplashScreenVersion,
-  expoStatusBarVersion,
   expoVersion,
-  jestExpoVersion,
-  metroVersion,
   nxVersion,
   reactDomVersion,
-  reactNativeSvgTransformerVersion,
-  reactNativeSvgVersion,
   reactNativeVersion,
-  reactNativeWebVersion,
-  reactTestRendererVersion,
   reactVersion,
-  testingLibraryJestNativeVersion,
-  testingLibraryReactNativeVersion,
-  typesReactVersion,
 } from '../../utils/versions';
 
-import { jestInitGenerator } from '@nx/jest';
-import { detoxInitGenerator } from '@nx/detox';
-import { initGenerator as jsInitGenerator } from '@nx/js';
-
 import { addGitIgnoreEntry } from './lib/add-git-ignore-entry';
-import { initRootBabelConfig } from './lib/init-root-babel-config';
+import { Schema } from './schema';
 
-export async function expoInitGenerator(host: Tree, schema: Schema) {
+export function expoInitGenerator(tree: Tree, schema: Schema) {
+  return expoInitGeneratorInternal(tree, { addPlugin: false, ...schema });
+}
+
+export async function expoInitGeneratorInternal(host: Tree, schema: Schema) {
+  const nxJson = readNxJson(host);
+  const addPluginDefault =
+    process.env.NX_ADD_PLUGINS !== 'false' &&
+    nxJson.useInferencePlugins !== false;
+  schema.addPlugin ??= addPluginDefault;
+
   addGitIgnoreEntry(host);
-  initRootBabelConfig(host);
+
+  if (schema.addPlugin) {
+    await addPlugin(
+      host,
+      await createProjectGraphAsync(),
+      '@nx/expo/plugin',
+      createNodes,
+      {
+        startTargetName: ['start', 'expo:start', 'expo-start'],
+        buildTargetName: ['build', 'expo:build', 'expo-build'],
+        prebuildTargetName: ['prebuild', 'expo:prebuild', 'expo-prebuild'],
+        serveTargetName: ['serve', 'expo:serve', 'expo-serve'],
+        installTargetName: ['install', 'expo:install', 'expo-install'],
+        exportTargetName: ['export', 'expo:export', 'expo-export'],
+        submitTargetName: ['submit', 'expo:submit', 'expo-submit'],
+        runIosTargetName: ['run-ios', 'expo:run-ios', 'expo-run-ios'],
+        runAndroidTargetName: [
+          'run-android',
+          'expo:run-android',
+          'expo-run-android',
+        ],
+      },
+
+      schema.updatePackageScripts
+    );
+  }
 
   const tasks: GeneratorCallback[] = [];
-
-  tasks.push(
-    await jsInitGenerator(host, {
-      ...schema,
-      skipFormat: true,
-    })
-  );
-
   if (!schema.skipPackageJson) {
     tasks.push(moveDependency(host));
-    tasks.push(updateDependencies(host));
-  }
-
-  if (!schema.unitTestRunner || schema.unitTestRunner === 'jest') {
-    const jestTask = await jestInitGenerator(host, schema);
-    tasks.push(jestTask);
-  }
-
-  if (!schema.e2eTestRunner || schema.e2eTestRunner === 'detox') {
-    const detoxTask = await detoxInitGenerator(host, {
-      ...schema,
-      skipFormat: true,
-    });
-    tasks.push(detoxTask);
+    tasks.push(updateDependencies(host, schema));
   }
 
   if (!schema.skipFormat) {
@@ -75,7 +74,7 @@ export async function expoInitGenerator(host: Tree, schema: Schema) {
   return runTasksInSerial(...tasks);
 }
 
-export function updateDependencies(host: Tree) {
+export function updateDependencies(host: Tree, schema: Schema) {
   return addDependenciesToPackageJson(
     host,
     {
@@ -83,26 +82,13 @@ export function updateDependencies(host: Tree) {
       'react-dom': reactDomVersion,
       'react-native': reactNativeVersion,
       expo: expoVersion,
-      'expo-splash-screen': expoSplashScreenVersion,
-      'expo-status-bar': expoStatusBarVersion,
-      'react-native-web': reactNativeWebVersion,
-      '@expo/metro-config': expoMetroConfigVersion,
-      'react-native-svg-transformer': reactNativeSvgTransformerVersion,
-      'react-native-svg': reactNativeSvgVersion,
     },
     {
       '@nx/expo': nxVersion,
-      '@types/react': typesReactVersion,
-      metro: metroVersion,
-      'metro-resolver': metroVersion,
-      'react-test-renderer': reactTestRendererVersion,
-      '@testing-library/react-native': testingLibraryReactNativeVersion,
-      '@testing-library/jest-native': testingLibraryJestNativeVersion,
-      'jest-expo': jestExpoVersion,
       '@expo/cli': expoCliVersion,
-      'eas-cli': easCliVersion,
-      'babel-preset-expo': babelPresetExpoVersion,
-    }
+    },
+    undefined,
+    schema.keepExistingVersions
   );
 }
 

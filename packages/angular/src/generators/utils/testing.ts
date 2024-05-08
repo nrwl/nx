@@ -1,9 +1,8 @@
 import type { Tree } from '@nx/devkit';
-import { names, readProjectConfiguration, updateJson } from '@nx/devkit';
+import { names, readProjectConfiguration } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { Linter } from '@nx/eslint';
 import { UnitTestRunner } from '../../utils/test-runners';
-import { angularDevkitVersion } from '../../utils/versions';
 import { applicationGenerator } from '../application/application';
 import type { Schema as ApplicationOptions } from '../application/schema';
 import { componentGenerator } from '../component/component';
@@ -18,7 +17,6 @@ export async function generateTestApplication(
   tree: Tree,
   options: ApplicationOptions
 ): Promise<void> {
-  addAngularPluginPeerDeps(tree);
   tree.write('.gitignore', '');
   await applicationGenerator(tree, {
     projectNameAndRootFormat: 'as-provided',
@@ -30,7 +28,6 @@ export async function generateTestHostApplication(
   tree: Tree,
   options: HostOptions
 ): Promise<void> {
-  addAngularPluginPeerDeps(tree);
   tree.write('.gitignore', '');
   await host(tree, { projectNameAndRootFormat: 'as-provided', ...options });
 }
@@ -39,7 +36,6 @@ export async function generateTestRemoteApplication(
   tree: Tree,
   options: RemoteOptions
 ): Promise<void> {
-  addAngularPluginPeerDeps(tree);
   tree.write('.gitignore', '');
   await remote(tree, { projectNameAndRootFormat: 'as-provided', ...options });
 }
@@ -48,7 +44,6 @@ export async function generateTestLibrary(
   tree: Tree,
   options: LibraryOptions
 ): Promise<void> {
-  addAngularPluginPeerDeps(tree);
   tree.write('.gitignore', '');
   await libraryGenerator(tree, {
     projectNameAndRootFormat: 'as-provided',
@@ -60,7 +55,6 @@ export async function createStorybookTestWorkspaceForLib(
   libName: string
 ): Promise<Tree> {
   let tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-  addAngularPluginPeerDeps(tree);
   tree.write('.gitignore', '');
 
   await libraryGenerator(tree, {
@@ -69,7 +63,7 @@ export async function createStorybookTestWorkspaceForLib(
     linter: Linter.EsLint,
     publishable: false,
     simpleName: false,
-    skipFormat: false,
+    skipFormat: true,
     unitTestRunner: UnitTestRunner.Jest,
     projectNameAndRootFormat: 'as-provided',
     standalone: false,
@@ -79,6 +73,7 @@ export async function createStorybookTestWorkspaceForLib(
     name: 'test-button',
     project: libName,
     standalone: false,
+    skipFormat: true,
   });
 
   tree.write(
@@ -124,6 +119,7 @@ export class TestButtonComponent {
     path: `${libName}/src/lib/barrel`,
     module: 'barrel',
     standalone: false,
+    skipFormat: true,
   });
 
   tree.write(
@@ -156,6 +152,7 @@ export class BarrelModule {}`
     path: `${libName}/src/lib/variable-declare`,
     module: 'variable-declare',
     standalone: false,
+    skipFormat: true,
   });
 
   await componentGenerator(tree, {
@@ -164,6 +161,7 @@ export class BarrelModule {}`
     path: `${libName}/src/lib/variable-declare`,
     module: 'variable-declare',
     standalone: false,
+    skipFormat: true,
   });
 
   tree.write(
@@ -198,6 +196,7 @@ export class VariableDeclareModule {}`
     path: `${libName}/src/lib/variable-spread-declare`,
     module: 'variable-spread-declare',
     standalone: false,
+    skipFormat: true,
   });
 
   await componentGenerator(tree, {
@@ -206,6 +205,7 @@ export class VariableDeclareModule {}`
     path: `${libName}/src/lib/variable-spread-declare`,
     module: 'variable-spread-declare',
     standalone: false,
+    skipFormat: true,
   });
 
   await componentGenerator(tree, {
@@ -214,6 +214,7 @@ export class VariableDeclareModule {}`
     path: `${libName}/src/lib/variable-spread-declare`,
     module: 'variable-spread-declare',
     standalone: false,
+    skipFormat: true,
   });
 
   tree.write(
@@ -248,6 +249,7 @@ export class VariableSpreadDeclareModule {}`
     path: `${libName}/src/lib/static-member-declarations`,
     module: 'static-member-declarations',
     standalone: false,
+    skipFormat: true,
   });
 
   await componentGenerator(tree, {
@@ -256,6 +258,7 @@ export class VariableSpreadDeclareModule {}`
     path: `${libName}/src/lib/static-member-declarations`,
     module: 'static-member-declarations',
     standalone: false,
+    skipFormat: true,
   });
 
   tree.write(
@@ -288,27 +291,17 @@ export class StaticMemberDeclarationsModule {
     module: 'nested',
     path: `${libName}/src/lib/nested`,
     standalone: false,
+    skipFormat: true,
   });
 
   await componentGenerator(tree, {
     name: 'test-other',
     project: libName,
     standalone: false,
+    skipFormat: true,
   });
 
   return tree;
-}
-
-function addAngularPluginPeerDeps(tree: Tree): void {
-  updateJson(tree, 'package.json', (json) => ({
-    ...json,
-    devDependencies: {
-      ...json.devDependencies,
-      '@angular-devkit/core': angularDevkitVersion,
-      '@angular-devkit/schematics': angularDevkitVersion,
-      '@schematics/angular': angularDevkitVersion,
-    },
-  }));
 }
 
 function generateModule(

@@ -1,38 +1,53 @@
 import { Tree } from 'nx/src/generators/tree';
 import {
+  GeneratorCallback,
   addDependenciesToPackageJson,
   ensurePackage,
   joinPathFragments,
   readProjectConfiguration,
+  runTasksInSerial,
   updateProjectConfiguration,
 } from '@nx/devkit';
 
-import { maybeJs } from './maybe-js';
-import { NormalizedSchema } from '../schema';
+import { maybeJs } from '../../../utils/maybe-js';
 import {
   nxVersion,
   rollupPluginUrlVersion,
   svgrRollupVersion,
 } from '../../../utils/versions';
+import { NormalizedSchema } from '../schema';
 
 export async function addRollupBuildTarget(
   host: Tree,
   options: NormalizedSchema
 ) {
-  const { rollupInitGenerator } = ensurePackage<typeof import('@nx/rollup')>(
+  const tasks: GeneratorCallback[] = [];
+
+  const { configurationGenerator } = ensurePackage<typeof import('@nx/rollup')>(
     '@nx/rollup',
     nxVersion
   );
-
-  // These are used in `@nx/react/plugins/bundle-rollup`
-  addDependenciesToPackageJson(
-    host,
-    {},
-    {
-      '@rollup/plugin-url': rollupPluginUrlVersion,
-      '@svgr/rollup': svgrRollupVersion,
-    }
+  tasks.push(
+    await configurationGenerator(host, {
+      ...options,
+      project: options.name,
+      skipFormat: true,
+    })
   );
+
+  if (!options.skipPackageJson) {
+    // These are used in `@nx/react/plugins/bundle-rollup`
+    tasks.push(
+      addDependenciesToPackageJson(
+        host,
+        {},
+        {
+          '@rollup/plugin-url': rollupPluginUrlVersion,
+          '@svgr/rollup': svgrRollupVersion,
+        }
+      )
+    );
+  }
 
   const { targets } = readProjectConfiguration(host, options.name);
 
@@ -73,5 +88,5 @@ export async function addRollupBuildTarget(
     targets,
   });
 
-  return rollupInitGenerator(host, { ...options, skipFormat: true });
+  return runTasksInSerial(...tasks);
 }

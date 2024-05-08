@@ -421,7 +421,7 @@ exports[`TaskHasher should hash tasks where the project graph has circular depen
     },
     "runtime": {},
   },
-  "value": "13762475745855667295",
+  "value": "9112654928859037831",
 }
 `;
 
@@ -444,7 +444,7 @@ exports[`TaskHasher should hash tasks where the project graph has circular depen
     },
     "runtime": {},
   },
-  "value": "11293543081462853412",
+  "value": "144123652661336112",
 }
 `;
 

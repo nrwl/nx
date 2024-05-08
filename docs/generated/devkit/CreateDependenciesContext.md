@@ -6,18 +6,18 @@ Context for [CreateDependencies](../../devkit/documents/CreateDependencies)
 
 ### Properties
 
-- [externalNodes](../../devkit/documents/CreateDependenciesContext#externalnodes): Record&lt;string, ProjectGraphExternalNode&gt;
+- [externalNodes](../../devkit/documents/CreateDependenciesContext#externalnodes): Record<string, ProjectGraphExternalNode>
 - [fileMap](../../devkit/documents/CreateDependenciesContext#filemap): FileMap
 - [filesToProcess](../../devkit/documents/CreateDependenciesContext#filestoprocess): FileMap
-- [nxJsonConfiguration](../../devkit/documents/CreateDependenciesContext#nxjsonconfiguration): NxJsonConfiguration&lt;string[] | &quot;\*&quot;&gt;
-- [projects](../../devkit/documents/CreateDependenciesContext#projects): Record&lt;string, ProjectConfiguration&gt;
+- [nxJsonConfiguration](../../devkit/documents/CreateDependenciesContext#nxjsonconfiguration): NxJsonConfiguration<string[] | "\*">
+- [projects](../../devkit/documents/CreateDependenciesContext#projects): Record<string, ProjectConfiguration>
 - [workspaceRoot](../../devkit/documents/CreateDependenciesContext#workspaceroot): string
 
 ## Properties
 
 ### externalNodes
 
-• `Readonly` **externalNodes**: `Record`<`string`, [`ProjectGraphExternalNode`](../../devkit/documents/ProjectGraphExternalNode)\>
+• `Readonly` **externalNodes**: `Record`\<`string`, [`ProjectGraphExternalNode`](../../devkit/documents/ProjectGraphExternalNode)\>
 
 The external nodes that have been added to the graph.
 
@@ -41,7 +41,7 @@ Files changes since last invocation
 
 ### nxJsonConfiguration
 
-• `Readonly` **nxJsonConfiguration**: [`NxJsonConfiguration`](../../devkit/documents/NxJsonConfiguration)<`string`[] \| `"*"`\>
+• `Readonly` **nxJsonConfiguration**: [`NxJsonConfiguration`](../../devkit/documents/NxJsonConfiguration)\<`string`[] \| `"*"`\>
 
 The `nx.json` configuration from the workspace
 
@@ -49,7 +49,7 @@ The `nx.json` configuration from the workspace
 
 ### projects
 
-• `Readonly` **projects**: `Record`<`string`, [`ProjectConfiguration`](../../devkit/documents/ProjectConfiguration)\>
+• `Readonly` **projects**: `Record`\<`string`, [`ProjectConfiguration`](../../devkit/documents/ProjectConfiguration)\>
 
 The configuration of each project in the workspace.
 

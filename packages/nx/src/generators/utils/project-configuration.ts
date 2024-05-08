@@ -1,10 +1,15 @@
+import { minimatch } from 'minimatch';
 import { basename, join, relative } from 'path';
 
 import {
   buildProjectConfigurationFromPackageJson,
   getGlobPatternsFromPackageManagerWorkspaces,
-} from '../../../plugins/package-json-workspaces';
-import { buildProjectFromProjectJson } from '../../plugins/project-json/build-nodes/project-json';
+  createNodes as packageJsonWorkspacesCreateNodes,
+} from '../../plugins/package-json-workspaces';
+import {
+  buildProjectFromProjectJson,
+  ProjectJsonProjectsPlugin,
+} from '../../plugins/project-json/build-nodes/project-json';
 import { renamePropertyWithStableKeys } from '../../adapter/angular-json';
 import {
   ProjectConfiguration,
@@ -14,7 +19,8 @@ import {
   mergeProjectConfigurationIntoRootMap,
   readProjectConfigurationsFromRootMap,
 } from '../../project-graph/utils/project-configuration-utils';
-import { retrieveProjectConfigurationPathsWithoutPluginInference } from '../../project-graph/utils/retrieve-workspace-files';
+import { configurationGlobs } from '../../project-graph/utils/retrieve-workspace-files';
+import { globWithWorkspaceContext } from '../../utils/workspace-context';
 import { output } from '../../utils/output';
 import { PackageJson } from '../../utils/package-json';
 import { joinPathFragments, normalizePath } from '../../utils/path';
@@ -22,8 +28,7 @@ import { readJson, writeJson } from './json';
 import { readNxJson } from './nx-json';
 
 import type { Tree } from '../tree';
-
-import minimatch = require('minimatch');
+import { NxPlugin } from '../../project-graph/plugins';
 
 export { readNxJson, updateNxJson } from './nx-json';
 
@@ -55,11 +60,14 @@ export function addProjectConfiguration(
 
   if (tree.exists(projectConfigFile)) {
     throw new Error(
-      `Cannot create a new project ${projectName} at ${projectConfiguration.root}. It already exists.`
+      `Cannot create a new project ${projectName} at ${projectConfiguration.root}. A project already exists in this directory.`
     );
   }
 
   delete (projectConfiguration as any).$schema;
+
+  handleEmptyTargets(projectName, projectConfiguration);
+
   writeJson(tree, projectConfigFile, {
     name: projectName,
     $schema: getRelativeProjectJsonSchemaPath(tree, projectConfiguration),
@@ -90,6 +98,7 @@ export function updateProjectConfiguration(
       `Cannot update Project ${projectName} at ${projectConfiguration.root}. It either doesn't exist yet, or may not use project.json for configuration. Use \`addProjectConfiguration()\` instead if you want to create a new project.`
     );
   }
+  handleEmptyTargets(projectName, projectConfiguration);
   writeJson(tree, projectConfigFile, {
     name: projectConfiguration.name ?? projectName,
     $schema: getRelativeProjectJsonSchemaPath(tree, projectConfiguration),
@@ -188,25 +197,28 @@ function readAndCombineAllProjectConfigurations(tree: Tree): {
     '**/project.json',
     'project.json',
     ...getGlobPatternsFromPackageManagerWorkspaces(tree.root, (p) =>
-      readJson(tree, p)
+      readJson(tree, p, { expectComments: true })
     ),
   ];
-
-  const globbedFiles = retrieveProjectConfigurationPathsWithoutPluginInference(
-    tree.root
-  );
+  const globbedFiles = globWithWorkspaceContext(tree.root, patterns);
   const createdFiles = findCreatedProjectFiles(tree, patterns);
   const deletedFiles = findDeletedProjectFiles(tree, patterns);
   const projectFiles = [...globbedFiles, ...createdFiles].filter(
     (r) => deletedFiles.indexOf(r) === -1
   );
 
-  const rootMap: Map<string, ProjectConfiguration> = new Map();
+  const rootMap: Record<string, ProjectConfiguration> = {};
   for (const projectFile of projectFiles) {
     if (basename(projectFile) === 'project.json') {
       const json = readJson(tree, projectFile);
       const config = buildProjectFromProjectJson(json, projectFile);
-      mergeProjectConfigurationIntoRootMap(rootMap, config);
+      mergeProjectConfigurationIntoRootMap(
+        rootMap,
+        config,
+        undefined,
+        undefined,
+        true
+      );
     } else if (basename(projectFile) === 'package.json') {
       const packageJson = readJson<PackageJson>(tree, projectFile);
       const config = buildProjectConfigurationFromPackageJson(
@@ -214,7 +226,7 @@ function readAndCombineAllProjectConfigurations(tree: Tree): {
         projectFile,
         readNxJson(tree)
       );
-      if (!rootMap.has(config.root)) {
+      if (!rootMap[config.root]) {
         mergeProjectConfigurationIntoRootMap(
           rootMap,
           // Inferred targets, tags, etc don't show up when running generators
@@ -222,7 +234,10 @@ function readAndCombineAllProjectConfigurations(tree: Tree): {
           {
             name: config.name,
             root: config.root,
-          }
+          },
+          undefined,
+          undefined,
+          true
         );
       }
     }
@@ -313,4 +328,23 @@ function toNewFormat(w: any): ProjectsConfigurations {
     w.version = 2;
   }
   return w;
+}
+
+function handleEmptyTargets(
+  projectName: string,
+  projectConfiguration: ProjectConfiguration
+): void {
+  if (
+    projectConfiguration.targets &&
+    !Object.keys(projectConfiguration.targets).length
+  ) {
+    // Re-order `targets` to appear after the `// target` comment.
+    delete projectConfiguration.targets;
+    projectConfiguration[
+      '// targets'
+    ] = `to see all targets run: nx show project ${projectName} --web`;
+    projectConfiguration.targets = {};
+  } else {
+    delete projectConfiguration['// targets'];
+  }
 }

@@ -3,7 +3,7 @@
   "outputCapture": "direct-nodejs",
   "cli": "nx",
   "$id": "NxReactNativePodInstall",
-  "$schema": "http://json-schema.org/schema",
+  "$schema": "https://json-schema.org/schema",
   "title": "Run Pod Install for React Native iOS Project",
   "description": "Run `pod install` for React Native iOS Project.",
   "type": "object",

@@ -4,9 +4,12 @@ import {
   joinPathFragments,
   ProjectConfiguration,
   TargetConfiguration,
+  Tree,
 } from '@nx/devkit';
+import { hasWebpackPlugin } from '../../../utils/has-webpack-plugin';
+import { maybeJs } from '../../../utils/maybe-js';
 
-export function addProject(host, options: NormalizedSchema) {
+export function addProject(host: Tree, options: NormalizedSchema) {
   const project: ProjectConfiguration = {
     root: options.appProjectRoot,
     sourceRoot: `${options.appProjectRoot}/src`,
@@ -16,21 +19,17 @@ export function addProject(host, options: NormalizedSchema) {
   };
 
   if (options.bundler === 'webpack') {
-    project.targets = {
-      build: createBuildTarget(options),
-      serve: createServeTarget(options),
-    };
+    if (!hasWebpackPlugin(host) || !options.addPlugin) {
+      project.targets = {
+        build: createBuildTarget(options),
+        serve: createServeTarget(options),
+      };
+    }
   }
 
   addProjectConfiguration(host, options.projectName, {
     ...project,
   });
-}
-
-export function maybeJs(options: NormalizedSchema, path: string): string {
-  return options.js && (path.endsWith('.ts') || path.endsWith('.tsx'))
-    ? path.replace(/\.tsx?$/, '.js')
-    : path;
 }
 
 function createBuildTarget(options: NormalizedSchema): TargetConfiguration {
@@ -67,7 +66,6 @@ function createBuildTarget(options: NormalizedSchema): TargetConfiguration {
               ),
             ],
       scripts: [],
-      isolatedConfig: true,
       webpackConfig: joinPathFragments(
         options.appProjectRoot,
         'webpack.config.js'

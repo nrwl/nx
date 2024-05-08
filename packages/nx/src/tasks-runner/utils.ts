@@ -2,14 +2,17 @@ import { output } from '../utils/output';
 import { relative } from 'path';
 import { Task, TaskGraph } from '../config/task-graph';
 import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
-import { TargetDependencyConfig } from '../config/workspace-json-project-json';
+import {
+  TargetConfiguration,
+  TargetDependencyConfig,
+} from '../config/workspace-json-project-json';
 import { workspaceRoot } from '../utils/workspace-root';
 import { joinPathFragments } from '../utils/path';
 import { isRelativePath } from '../utils/fileutils';
 import { serializeOverridesIntoCommandLine } from '../utils/serialize-overrides-into-command-line';
 import { splitByColons } from '../utils/split-target';
 import { getExecutorInformation } from '../command-line/run/executor-utils';
-import { CustomHasher } from '../config/misc-interfaces';
+import { CustomHasher, ExecutorConfig } from '../config/misc-interfaces';
 import { readProjectsConfigurationFromProjectGraph } from '../project-graph/project-graph';
 
 export function getCommandAsString(execCommand: string, task: Task) {
@@ -104,7 +107,32 @@ class InvalidOutputsError extends Error {
   }
 }
 
+function assertOutputsAreValidType(outputs: unknown) {
+  if (!Array.isArray(outputs)) {
+    throw new Error("The 'outputs' field must be an array");
+  }
+
+  const typesArray = [];
+  let hasInvalidType = false;
+  for (const output of outputs) {
+    if (typeof output !== 'string') {
+      hasInvalidType = true;
+    }
+    typesArray.push(typeof output);
+  }
+
+  if (hasInvalidType) {
+    throw new Error(
+      `The 'outputs' field must contain only strings, but received types: [${typesArray.join(
+        ', '
+      )}]`
+    );
+  }
+}
+
 export function validateOutputs(outputs: string[]) {
+  assertOutputsAreValidType(outputs);
+
   const invalidOutputs = new Set<string>();
 
   for (const output of outputs) {
@@ -146,7 +174,7 @@ export function transformLegacyOutputs(
 }
 
 /**
- * @deprecated Pass the target and overrides instead. This will be removed in v18.
+ * @deprecated Pass the target and overrides instead. This will be removed in v19.
  */
 export function getOutputsForTargetAndConfiguration(
   task: Task,
@@ -248,19 +276,23 @@ export function interpolate(template: string, data: any): string {
   });
 }
 
-export async function getExecutorNameForTask(
+export function getTargetConfigurationForTask(
   task: Task,
   projectGraph: ProjectGraph
-) {
+): TargetConfiguration | undefined {
   const project = projectGraph.nodes[task.target.project].data;
-  return project.targets[task.target.target].executor;
+  return project.targets[task.target.target];
 }
 
-export async function getExecutorForTask(
+export function getExecutorNameForTask(task: Task, projectGraph: ProjectGraph) {
+  return getTargetConfigurationForTask(task, projectGraph)?.executor;
+}
+
+export function getExecutorForTask(
   task: Task,
   projectGraph: ProjectGraph
-) {
-  const executor = await getExecutorNameForTask(task, projectGraph);
+): ExecutorConfig & { isNgCompat: boolean; isNxExecutor: boolean } {
+  const executor = getExecutorNameForTask(task, projectGraph);
   const [nodeModule, executorName] = executor.split(':');
 
   return getExecutorInformation(
@@ -271,11 +303,11 @@ export async function getExecutorForTask(
   );
 }
 
-export async function getCustomHasher(
+export function getCustomHasher(
   task: Task,
   projectGraph: ProjectGraph
-): Promise<CustomHasher> | null {
-  const factory = (await getExecutorForTask(task, projectGraph)).hasherFactory;
+): CustomHasher | null {
+  const factory = getExecutorForTask(task, projectGraph).hasherFactory;
   return factory ? factory() : null;
 }
 

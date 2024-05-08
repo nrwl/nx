@@ -16,12 +16,11 @@ import { useEffect, useMemo } from 'react';
 import { getGraphService } from '../machines/graph.service';
 import { CheckboxPanel } from '../ui-components/checkbox-panel';
 
+import { useRouteConstructor } from '@nx/graph/shared';
 import { Dropdown } from '@nx/graph/ui-components';
 import { useCurrentPath } from '../hooks/use-current-path';
 import { ShowHideAll } from '../ui-components/show-hide-all';
-import { createTaskName, useRouteConstructor } from '../util';
-import { GraphInteractionEvents } from '@nx/graph/ui-graph';
-import { getProjectGraphDataService } from '../hooks/get-project-graph-data-service';
+import { createTaskName } from '../util';
 
 export function TasksSidebar() {
   const graphService = getGraphService();

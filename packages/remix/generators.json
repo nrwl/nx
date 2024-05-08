@@ -1,0 +1,90 @@
+{
+  "$schema": "https://json-schema.org/schema",
+  "name": "NxRemix",
+  "version": "0.0.1",
+  "extends": ["@nx/react"],
+  "generators": {
+    "preset": {
+      "implementation": "./src/generators/preset/preset.impl",
+      "schema": "./src/generators/preset/schema.json",
+      "description": "Generate a new Remix workspace",
+      "hidden": true
+    },
+    "setup": {
+      "implementation": "./src/generators/setup/setup.impl",
+      "schema": "./src/generators/setup/schema.json",
+      "description": "Setup a Remix in an existing workspace",
+      "hidden": true
+    },
+    "application": {
+      "implementation": "./src/generators/application/application.impl#remixApplicationGeneratorInternal",
+      "schema": "./src/generators/application/schema.json",
+      "description": "Generate a new Remix application",
+      "aliases": ["app"],
+      "x-type": "application"
+    },
+    "cypress-component-configuration": {
+      "implementation": "./src/generators/cypress-component-configuration/cypress-component-configuration.impl#cypressComponentConfigurationGeneratorInternal",
+      "schema": "./src/generators/cypress-component-configuration/schema.json",
+      "description": "Generate a Cypress Component Testing configuration for a Remix project"
+    },
+    "library": {
+      "implementation": "./src/generators/library/library.impl#remixLibraryGeneratorInternal",
+      "schema": "./src/generators/library/schema.json",
+      "description": "Generate a new library",
+      "aliases": ["lib"],
+      "x-type": "library"
+    },
+    "init": {
+      "implementation": "./src/generators/init/init#remixInitGeneratorInternal",
+      "schema": "./src/generators/init/schema.json",
+      "description": "Initialize the `@nx/remix` plugin.",
+      "hidden": true
+    },
+    "route": {
+      "implementation": "./src/generators/route/route.impl",
+      "schema": "./src/generators/route/schema.json",
+      "description": "Generate a new route"
+    },
+    "resource-route": {
+      "implementation": "./src/generators/resource-route/resource-route.impl",
+      "schema": "./src/generators/resource-route/schema.json",
+      "description": "Generate a new resource route"
+    },
+    "action": {
+      "implementation": "./src/generators/action/action.impl",
+      "schema": "./src/generators/action/schema.json",
+      "description": "Add an action function to an existing route"
+    },
+    "loader": {
+      "implementation": "./src/generators/loader/loader.impl",
+      "schema": "./src/generators/loader/schema.json",
+      "description": "Add a loader function to an existing route"
+    },
+    "style": {
+      "implementation": "./src/generators/style/style.impl",
+      "schema": "./src/generators/style/schema.json",
+      "description": "Generates a new stylesheet and adds it to an existing route"
+    },
+    "setup-tailwind": {
+      "implementation": "./src/generators/setup-tailwind/setup-tailwind.impl",
+      "schema": "./src/generators/setup-tailwind/schema.json",
+      "description": "Generates a TailwindCSS configuration for the Remix application"
+    },
+    "storybook-configuration": {
+      "implementation": "./src/generators/storybook-configuration/storybook-configuration.impl#remixStorybookConfiguration",
+      "schema": "./src/generators/storybook-configuration/schema.json",
+      "description": "Generates a Storybook configuration for a Remix application"
+    },
+    "meta": {
+      "implementation": "./src/generators/meta/meta.impl",
+      "schema": "./src/generators/meta/schema.json",
+      "description": "Add a meta function to an existing route"
+    },
+    "error-boundary": {
+      "implementation": "./src/generators/error-boundary/error-boundary.impl",
+      "schema": "./src/generators/error-boundary/schema.json",
+      "description": "Add an ErrorBoundary to an existing route"
+    }
+  }
+}

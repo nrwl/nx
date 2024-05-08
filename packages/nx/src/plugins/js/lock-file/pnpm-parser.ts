@@ -25,7 +25,7 @@ import {
   ProjectGraphExternalNode,
 } from '../../../config/project-graph';
 import { hashArray } from '../../../hasher/file-hasher';
-import { CreateDependenciesContext } from '../../../utils/nx-plugin';
+import { CreateDependenciesContext } from '../../../project-graph/plugins';
 
 // we use key => node map to avoid duplicate work when parsing keys
 let keyMap = new Map<string, ProjectGraphExternalNode>();
@@ -65,6 +65,52 @@ export function getPnpmLockfileDependencies(
   return getDependencies(data, keyMap, isV6, ctx);
 }
 
+function matchPropValue(
+  record: Record<string, string>,
+  key: string,
+  originalPackageName: string
+): string | undefined {
+  if (!record) {
+    return undefined;
+  }
+  const index = Object.values(record).findIndex((version) => version === key);
+  if (index > -1) {
+    return Object.keys(record)[index];
+  }
+  // check if non-aliased name is found
+  if (
+    record[originalPackageName] &&
+    key.startsWith(`/${originalPackageName}/${record[originalPackageName]}`)
+  ) {
+    return originalPackageName;
+  }
+}
+
+function matchedDependencyName(
+  importer: Partial<PackageSnapshot>,
+  key: string,
+  originalPackageName: string
+): string | undefined {
+  return (
+    matchPropValue(importer.dependencies, key, originalPackageName) ||
+    matchPropValue(importer.optionalDependencies, key, originalPackageName) ||
+    matchPropValue(importer.peerDependencies, key, originalPackageName)
+  );
+}
+
+function createHashFromSnapshot(snapshot: PackageSnapshot) {
+  return (
+    snapshot.resolution?.['integrity'] ||
+    (snapshot.resolution?.['tarball']
+      ? hashArray([snapshot.resolution['tarball']])
+      : undefined)
+  );
+}
+
+function isLockFileKey(depVersion: string) {
+  return depVersion.startsWith('/');
+}
+
 function getNodes(
   data: Lockfile,
   keyMap: Map<string, ProjectGraphExternalNode>,
@@ -72,42 +118,118 @@ function getNodes(
 ): Record<string, ProjectGraphExternalNode> {
   const nodes: Map<string, Map<string, ProjectGraphExternalNode>> = new Map();
 
-  Object.entries(data.packages).forEach(([key, snapshot]) => {
-    findPackageNames(key, snapshot, data).forEach((packageName) => {
-      const rawVersion = findVersion(key, packageName);
-      const version = parseBaseVersion(rawVersion, isV6);
+  const maybeAliasedPackageVersions = new Map<string, string>(); // <version, alias>
 
-      // we don't need to keep duplicates, we can just track the keys
-      const existingNode = nodes.get(packageName)?.get(version);
-      if (existingNode) {
-        keyMap.set(key, existingNode);
-        return;
+  const packageNames = new Set<{
+    key: string;
+    packageName: string;
+    hash?: string;
+  }>();
+  for (const [key, snapshot] of Object.entries(data.packages)) {
+    const originalPackageName = extractNameFromKey(key);
+    if (!originalPackageName) {
+      continue;
+    }
+    // snapshot already has a name
+    if (snapshot.name) {
+      packageNames.add({
+        key,
+        packageName: snapshot.name,
+        hash: createHashFromSnapshot(snapshot),
+      });
+    }
+    const rootDependencyName =
+      matchedDependencyName(data.importers['.'], key, originalPackageName) ||
+      // only root importers have devDependencies
+      matchPropValue(
+        data.importers['.'].devDependencies,
+        key,
+        originalPackageName
+      );
+    if (rootDependencyName) {
+      packageNames.add({
+        key,
+        packageName: rootDependencyName,
+        hash: createHashFromSnapshot(snapshot),
+      });
+    }
+
+    if (!snapshot.name && !rootDependencyName) {
+      packageNames.add({
+        key,
+        packageName: originalPackageName,
+        hash: createHashFromSnapshot(snapshot),
+      });
+    }
+
+    if (snapshot.peerDependencies) {
+      for (const [depName, depVersion] of Object.entries(
+        snapshot.peerDependencies
+      )) {
+        if (isLockFileKey(depVersion)) {
+          maybeAliasedPackageVersions.set(depVersion, depName);
+        }
       }
+    }
+    if (snapshot.optionalDependencies) {
+      for (const [depName, depVersion] of Object.entries(
+        snapshot.optionalDependencies
+      )) {
+        if (isLockFileKey(depVersion)) {
+          maybeAliasedPackageVersions.set(depVersion, depName);
+        }
+      }
+    }
+    if (snapshot.dependencies) {
+      for (const [depName, depVersion] of Object.entries(
+        snapshot.dependencies
+      )) {
+        if (isLockFileKey(depVersion)) {
+          maybeAliasedPackageVersions.set(depVersion, depName);
+        }
+      }
+    }
 
+    const aliasedDep = maybeAliasedPackageVersions.get(key);
+    if (aliasedDep) {
+      packageNames.add({
+        key,
+        packageName: aliasedDep,
+        hash: createHashFromSnapshot(snapshot),
+      });
+    }
+  }
+
+  for (const { key, packageName, hash } of packageNames) {
+    const rawVersion = findVersion(key, packageName);
+    if (!rawVersion) {
+      continue;
+    }
+    const version = parseBaseVersion(rawVersion, isV6);
+    if (!version) {
+      continue;
+    }
+
+    if (!nodes.has(packageName)) {
+      nodes.set(packageName, new Map());
+    }
+
+    if (!nodes.get(packageName).has(version)) {
       const node: ProjectGraphExternalNode = {
         type: 'npm',
         name: version ? `npm:${packageName}@${version}` : `npm:${packageName}`,
         data: {
           version,
           packageName,
-          hash:
-            snapshot.resolution?.['integrity'] ||
-            hashArray(
-              snapshot.resolution?.['tarball']
-                ? [snapshot.resolution['tarball']]
-                : [packageName, version]
-            ),
+          hash: hash ?? hashArray([packageName, version]),
         },
       };
-
+      nodes.get(packageName).set(version, node);
       keyMap.set(key, node);
-      if (!nodes.has(packageName)) {
-        nodes.set(packageName, new Map([[version, node]]));
-      } else {
-        nodes.get(packageName).set(version, node);
-      }
-    });
-  });
+    } else {
+      keyMap.set(key, nodes.get(packageName).get(version));
+    }
+  }
 
   const hoistedDeps = loadPnpmHoistedDepsDefinition();
   const results: Record<string, ProjectGraphExternalNode> = {};
@@ -321,67 +443,6 @@ function findVersion(key: string, packageName: string): string {
 
   // for tarball package the entire key is the version spec
   return key;
-}
-
-function findPackageNames(
-  key: string,
-  snapshot: PackageSnapshot,
-  data: Lockfile
-): string[] {
-  const packageNames = new Set<string>();
-  const originalPackageName = extractNameFromKey(key);
-
-  const matchPropValue = (record: Record<string, string>): string => {
-    if (!record) {
-      return undefined;
-    }
-    const index = Object.values(record).findIndex((version) => version === key);
-    if (index > -1) {
-      return Object.keys(record)[index];
-    }
-    // check if non aliased name is found
-    if (
-      record[originalPackageName] &&
-      key.startsWith(`/${originalPackageName}/${record[originalPackageName]}`)
-    ) {
-      return originalPackageName;
-    }
-  };
-
-  const matchedDependencyName = (
-    importer: Partial<PackageSnapshot>
-  ): string => {
-    return (
-      matchPropValue(importer.dependencies) ||
-      matchPropValue(importer.optionalDependencies) ||
-      matchPropValue(importer.peerDependencies)
-    );
-  };
-
-  // snapshot already has a name
-  if (snapshot.name) {
-    packageNames.add(snapshot.name);
-  }
-  // it'a a root dependency
-  const rootDependencyName =
-    matchedDependencyName(data.importers['.']) ||
-    // only root importers have devDependencies
-    matchPropValue(data.importers['.'].devDependencies);
-  if (rootDependencyName) {
-    packageNames.add(rootDependencyName);
-  }
-  // find a snapshot that has a dependency that points to this snapshot
-  const snapshots = Object.values(data.packages);
-  for (let i = 0; i < snapshots.length; i++) {
-    const dependencyName = matchedDependencyName(snapshots[i]);
-    if (dependencyName) {
-      packageNames.add(dependencyName);
-    }
-  }
-  if (packageNames.size === 0) {
-    packageNames.add(originalPackageName);
-  }
-  return Array.from(packageNames);
 }
 
 function getVersion(key: string, packageName: string): string {

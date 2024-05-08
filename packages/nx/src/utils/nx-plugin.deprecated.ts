@@ -1,66 +1,54 @@
-import { getNxPackageJsonWorkspacesPlugin } from '../../plugins/package-json-workspaces';
-import {
-  NxAngularJsonPlugin,
-  shouldMergeAngularProjects,
-} from '../adapter/angular-json';
-import { NxJsonConfiguration, PluginConfiguration } from '../config/nx-json';
+import { shouldMergeAngularProjects } from '../adapter/angular-json';
 import { ProjectGraphProcessor } from '../config/project-graph';
-import {
-  ProjectConfiguration,
-  TargetConfiguration,
-} from '../config/workspace-json-project-json';
-import { CreateProjectJsonProjectsPlugin } from '../plugins/project-json/build-nodes/project-json';
-import { retrieveProjectConfigurationsWithoutPluginInference } from '../project-graph/utils/retrieve-workspace-files';
-import { getNxRequirePaths } from './installation-directory';
-import {
-  ensurePluginIsV2,
-  getPluginPathAndName,
-  LoadedNxPlugin,
-  nxPluginCache,
-  NxPluginV2,
-} from './nx-plugin';
-import { workspaceRoot } from './workspace-root';
+import { TargetConfiguration } from '../config/workspace-json-project-json';
+import ProjectJsonProjectsPlugin from '../plugins/project-json/build-nodes/project-json';
+import TargetDefaultsPlugin from '../plugins/target-defaults/target-defaults-plugin';
+import * as PackageJsonWorkspacesPlugin from '../plugins/package-json-workspaces';
+import { NxPluginV2 } from '../project-graph/plugins';
 
 /**
- * @deprecated Add targets to the projects in a {@link CreateNodes} function instead. This will be removed in Nx 18
+ * @deprecated Add targets to the projects in a {@link CreateNodes} function instead. This will be removed in Nx 19
  */
 export type ProjectTargetConfigurator = (
   file: string
 ) => Record<string, TargetConfiguration>;
 
 /**
- * @deprecated Use {@link NxPluginV2} instead. This will be removed in Nx 18
+ * @deprecated Use {@link NxPluginV2} instead. This will be removed in Nx 19
  */
 export type NxPluginV1 = {
   name: string;
   /**
-   * @deprecated Use {@link CreateNodes} and {@link CreateDependencies} instead. This will be removed in Nx 18
+   * @deprecated Use {@link CreateNodes} and {@link CreateDependencies} instead. This will be removed in Nx 19
    */
   processProjectGraph?: ProjectGraphProcessor;
 
   /**
-   * @deprecated Add targets to the projects inside of {@link CreateNodes} instead. This will be removed in Nx 18
+   * @deprecated Add targets to the projects inside of {@link CreateNodes} instead. This will be removed in Nx 19
    */
   registerProjectTargets?: ProjectTargetConfigurator;
 
   /**
    * A glob pattern to search for non-standard project files.
    * @example: ["*.csproj", "pom.xml"]
-   * @deprecated Use {@link CreateNodes} instead. This will be removed in Nx 18
+   * @deprecated Use {@link CreateNodes} instead. This will be removed in Nx 19
    */
   projectFilePatterns?: string[];
 };
 
 /**
- * @todo(@agentender) v18: Remove this fn when we remove readWorkspaceConfig
+ * @todo(@agentender) v20: Remove this fn when we remove readWorkspaceConfig
  */
-export function getDefaultPluginsSync(root: string): LoadedNxPlugin[] {
-  const plugins: NxPluginV2[] = [require('../plugins/js')];
+export function getDefaultPluginsSync(root: string): NxPluginV2[] {
+  const plugins: NxPluginV2[] = [
+    require('../plugins/js'),
+    ...(shouldMergeAngularProjects(root, false)
+      ? [require('../adapter/angular-json').NxAngularJsonPlugin]
+      : []),
+    TargetDefaultsPlugin,
+    PackageJsonWorkspacesPlugin,
+    ProjectJsonProjectsPlugin,
+  ];
 
-  if (shouldMergeAngularProjects(root, false)) {
-    plugins.push(require('../adapter/angular-json').NxAngularJsonPlugin);
-  }
-  return plugins.map((p) => ({
-    plugin: p,
-  }));
+  return plugins;
 }

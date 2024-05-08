@@ -22,6 +22,7 @@ import {
   resolveModuleByImport,
   TargetProjectLocator,
 } from '@nx/js/src/internal';
+import { AST_NODE_TYPES, TSESTree } from '@typescript-eslint/utils';
 
 export type Deps = { [projectName: string]: ProjectGraphDependency[] };
 type SingleSourceTagConstraint = {
@@ -202,17 +203,42 @@ export function findConstraintsFor(
   });
 }
 
-export function onlyLoadChildren(
+export function hasStaticImportOfDynamicResource(
+  node:
+    | TSESTree.ImportDeclaration
+    | TSESTree.ImportExpression
+    | TSESTree.ExportAllDeclaration
+    | TSESTree.ExportNamedDeclaration,
+  graph: ProjectGraph,
+  sourceProjectName: string,
+  targetProjectName: string
+): boolean {
+  if (
+    node.type !== AST_NODE_TYPES.ImportDeclaration ||
+    node.importKind === 'type'
+  ) {
+    return false;
+  }
+  return onlyLoadChildren(graph, sourceProjectName, targetProjectName, []);
+}
+
+function onlyLoadChildren(
   graph: ProjectGraph,
   sourceProjectName: string,
   targetProjectName: string,
   visited: string[]
 ) {
-  if (visited.indexOf(sourceProjectName) > -1) return false;
+  if (visited.indexOf(sourceProjectName) > -1) {
+    return false;
+  }
   return (
     (graph.dependencies[sourceProjectName] || []).filter((d) => {
-      if (d.type !== DependencyType.dynamic) return false;
-      if (d.target === targetProjectName) return true;
+      if (d.type !== DependencyType.dynamic) {
+        return false;
+      }
+      if (d.target === targetProjectName) {
+        return true;
+      }
       return onlyLoadChildren(graph, d.target, targetProjectName, [
         ...visited,
         sourceProjectName,
@@ -416,7 +442,7 @@ export function hasBuildExecutor(
   );
 }
 
-const ESLINT_REGEX = /node_modules.*[\/\\]eslint$/;
+const ESLINT_REGEX = /node_modules.*[\/\\]eslint(?:\.js)?$/;
 const JEST_REGEX = /node_modules\/.bin\/jest$/; // when we run unit tests in jest
 const NRWL_CLI_REGEX = /nx[\/\\]bin[\/\\]run-executor\.js$/;
 
@@ -463,28 +489,34 @@ export function groupImports(
 }
 
 /**
- * Checks if import points to a secondary entry point in Angular project
- * @param targetProjectLocator
- * @param importExpr
- * @returns
+ * Checks if source file belongs to a secondary entry point different than the import one
  */
-export function isAngularSecondaryEntrypoint(
+export function belongsToDifferentNgEntryPoint(
   importExpr: string,
   filePath: string,
   projectRoot: string
 ): boolean {
-  const resolvedModule = resolveModuleByImport(
+  const resolvedImportFile = resolveModuleByImport(
     importExpr,
-    filePath,
+    filePath, // not strictly necessary, but speeds up resolution
     join(workspaceRoot, getRootTsConfigFileName())
   );
 
-  return (
-    !!resolvedModule && fileIsSecondaryEntryPoint(resolvedModule, projectRoot)
+  if (!resolvedImportFile) {
+    return false;
+  }
+
+  const importEntryPoint = getAngularEntryPoint(
+    resolvedImportFile,
+    projectRoot
   );
+  const srcEntryPoint = getAngularEntryPoint(filePath, projectRoot);
+
+  // check if the entry point of import expression is different than the source file's entry point
+  return importEntryPoint !== srcEntryPoint;
 }
 
-function fileIsSecondaryEntryPoint(file: string, projectRoot: string): boolean {
+function getAngularEntryPoint(file: string, projectRoot: string): string {
   let parent = joinPathFragments(file, '../');
   while (parent !== `${projectRoot}/`) {
     // we need to find closest existing ng-package.json
@@ -495,11 +527,11 @@ function fileIsSecondaryEntryPoint(file: string, projectRoot: string): boolean {
     if (ngPackageContent) {
       // https://github.com/ng-packagr/ng-packagr/blob/23c718d04eea85e015b4c261310b7bd0c39e5311/src/ng-package.schema.json#L54
       const entryFile = parseJson(ngPackageContent)?.lib?.entryFile;
-      return entryFile && file === joinPathFragments(parent, entryFile);
+      return joinPathFragments(parent, entryFile);
     }
     parent = joinPathFragments(parent, '../');
   }
-  return false;
+  return undefined;
 }
 
 /**

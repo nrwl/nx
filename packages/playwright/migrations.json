@@ -1,0 +1,16 @@
+{
+  "generators": {
+    "17-3-1-add-project-to-config": {
+      "cli": "nx",
+      "version": "17.3.1-beta.0",
+      "description": "Add project property to playwright config",
+      "implementation": "./src/migrations/update-17-3-1/add-project-to-config"
+    },
+    "18-1-0-remove-baseUrl-from-project-json": {
+      "cli": "nx",
+      "version": "18.1.0-beta.3",
+      "description": "Remove invalid baseUrl option from @nx/playwright:playwright targets in project.json.",
+      "implementation": "./src/migrations/update-18-1-0/remove-baseUrl-from-project-json"
+    }
+  }
+}

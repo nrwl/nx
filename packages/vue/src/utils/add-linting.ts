@@ -11,7 +11,6 @@ import {
   addExtendsToLintConfig,
   isEslintConfigSupported,
 } from '@nx/eslint/src/generators/utils/eslint-file';
-import { mapLintPattern } from '@nx/eslint/src/generators/lint-project/lint-project';
 
 export async function addLinting(
   host: Tree,
@@ -23,6 +22,7 @@ export async function addLinting(
     setParserOptionsProject?: boolean;
     skipPackageJson?: boolean;
     rootProject?: boolean;
+    addPlugin?: boolean;
   },
   projectType: 'lib' | 'app'
 ) {
@@ -34,16 +34,10 @@ export async function addLinting(
         joinPathFragments(options.projectRoot, `tsconfig.${projectType}.json`),
       ],
       unitTestRunner: options.unitTestRunner,
-      eslintFilePatterns: [
-        mapLintPattern(
-          options.projectRoot,
-          '{ts,tsx,js,jsx,vue}',
-          options.rootProject
-        ),
-      ],
       skipFormat: true,
       setParserOptionsProject: options.setParserOptionsProject,
       rootProject: options.rootProject,
+      addPlugin: options.addPlugin,
     });
 
     if (isEslintConfigSupported(host)) {

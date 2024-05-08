@@ -65,7 +65,13 @@ Show information about "my-app" in a human readable format.:
  nx show project my-app --json false
 ```
 
-## Options
+Opens a web browser to explore the configuration of "my-app":
+
+```shell
+ nx show project my-app --web
+```
+
+## Shared Options
 
 ### help
 
@@ -139,6 +145,12 @@ Type: `string`
 
 Show only projects that match a given pattern.
 
+##### sep
+
+Type: `string`
+
+Outputs projects with the specified seperator
+
 ##### type
 
 Type: `string`
@@ -158,6 +170,12 @@ Uncommitted changes
 Type: `boolean`
 
 Untracked changes
+
+##### verbose
+
+Type: `boolean`
+
+Prints additional information about the commands (e.g., stack traces)
 
 ##### version
 
@@ -187,14 +205,32 @@ Type: `boolean`
 
 Show help
 
+##### open
+
+Type: `boolean`
+
+Set to false to prevent the browser from opening when using --web
+
 ##### projectName
 
 Type: `string`
 
 Which project should be viewed?
 
+##### verbose
+
+Type: `boolean`
+
+Prints additional information about the commands (e.g., stack traces)
+
 ##### version
 
 Type: `boolean`
 
 Show version number
+
+##### web
+
+Type: `boolean`
+
+Show project details in the browser

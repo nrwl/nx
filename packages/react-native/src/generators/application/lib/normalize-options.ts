@@ -1,9 +1,12 @@
-import { joinPathFragments, names, Tree } from '@nx/devkit';
+import { joinPathFragments, names, readNxJson, Tree } from '@nx/devkit';
+import { VitePluginOptions } from '@nx/vite/src/plugins/plugin';
 import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { Schema } from '../schema';
+import { ReactNativePluginOptions } from '../../../../plugins/plugin';
 
 export interface NormalizedSchema extends Schema {
-  className: string; // app name in class name
+  className: string; // app name in class case
+  fileName: string; // app name in file class
   projectName: string; // directory + app name in kebab case
   appProjectRoot: string; // app directory path
   lowerCaseName: string; // app name in lower case
@@ -11,6 +14,12 @@ export interface NormalizedSchema extends Schema {
   androidProjectRoot: string;
   parsedTags: string[];
   entryFile: string;
+  rootProject: boolean;
+  e2eProjectName: string;
+  e2eProjectRoot: string;
+  e2eWebServerAddress: string;
+  e2eWebServerTarget: string;
+  e2ePort: number;
 }
 
 export async function normalizeOptions(
@@ -30,10 +39,45 @@ export async function normalizeOptions(
     callingGenerator: '@nx/react-native:application',
   });
   options.projectNameAndRootFormat = projectNameAndRootFormat;
+  const nxJson = readNxJson(host);
+  const addPluginDefault =
+    process.env.NX_ADD_PLUGINS !== 'false' &&
+    nxJson.useInferencePlugins !== false;
+  options.addPlugin ??= addPluginDefault;
 
-  const { className } = names(options.name);
+  const { className, fileName } = names(options.name);
   const iosProjectRoot = joinPathFragments(appProjectRoot, 'ios');
   const androidProjectRoot = joinPathFragments(appProjectRoot, 'android');
+  const rootProject = appProjectRoot === '.';
+
+  let e2eWebServerTarget = 'serve';
+  if (options.addPlugin) {
+    if (nxJson.plugins) {
+      for (const plugin of nxJson.plugins) {
+        if (
+          options.bundler === 'vite' &&
+          typeof plugin === 'object' &&
+          plugin.plugin === '@nx/vite/plugin' &&
+          (plugin.options as VitePluginOptions).serveTargetName
+        ) {
+          e2eWebServerTarget = (plugin.options as ReactNativePluginOptions)
+            .startTargetName;
+        }
+      }
+    }
+  }
+
+  let e2ePort = 4200;
+  if (
+    nxJson.targetDefaults?.[e2eWebServerTarget] &&
+    nxJson.targetDefaults?.[e2eWebServerTarget].options?.port
+  ) {
+    e2ePort = nxJson.targetDefaults?.[e2eWebServerTarget].options?.port;
+  }
+
+  const e2eProjectName = rootProject ? 'e2e' : `${fileName}-e2e`;
+  const e2eProjectRoot = rootProject ? 'e2e' : `${appProjectRoot}-e2e`;
+  const e2eWebServerAddress = `http://localhost:${e2ePort}`;
 
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())
@@ -43,10 +87,9 @@ export async function normalizeOptions(
 
   return {
     ...options,
-    unitTestRunner: options.unitTestRunner || 'jest',
-    e2eTestRunner: options.e2eTestRunner || 'detox',
     name: projectNames.projectSimpleName,
     className,
+    fileName,
     lowerCaseName: className.toLowerCase(),
     displayName: options.displayName || className,
     projectName: appProjectName,
@@ -55,5 +98,11 @@ export async function normalizeOptions(
     androidProjectRoot,
     parsedTags,
     entryFile,
+    rootProject,
+    e2eProjectName,
+    e2eProjectRoot,
+    e2eWebServerAddress,
+    e2eWebServerTarget,
+    e2ePort,
   };
 }

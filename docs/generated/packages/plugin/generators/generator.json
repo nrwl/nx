@@ -2,7 +2,7 @@
   "name": "generator",
   "factory": "./src/generators/generator/generator#generatorGeneratorInternal",
   "schema": {
-    "$schema": "http://json-schema.org/schema",
+    "$schema": "https://json-schema.org/schema",
     "cli": "nx",
     "$id": "NxPluginGenerator",
     "title": "Create a Generator for an Nx Plugin",
@@ -49,7 +49,7 @@
         "description": "The name of the project.",
         "alias": "p",
         "$default": { "$source": "projectName" },
-        "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. The project will be determined from the directory provided. It will be removed in Nx v18."
+        "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. The project will be determined from the directory provided. It will be removed in Nx v19."
       },
       "skipFormat": {
         "type": "boolean",

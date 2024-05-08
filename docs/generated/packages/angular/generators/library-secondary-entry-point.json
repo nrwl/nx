@@ -2,7 +2,7 @@
   "name": "library-secondary-entry-point",
   "factory": "./src/generators/library-secondary-entry-point/library-secondary-entry-point",
   "schema": {
-    "$schema": "http://json-schema.org/schema",
+    "$schema": "https://json-schema.org/schema",
     "$id": "NxAngularLibrarySecondaryEntryPoint",
     "title": "Creates a secondary entry point for a library",
     "description": "Creates a secondary entry point for an Angular publishable library.",
@@ -14,14 +14,14 @@
         "description": "The name of the secondary entry point.",
         "$default": { "$source": "argv", "index": 0 },
         "x-prompt": "What name would you like to use for the secondary entry point?",
-        "pattern": "^[a-zA-Z].*$",
+        "pattern": "(?:^@[a-zA-Z0-9-*~][a-zA-Z0-9-*._~]*(?:\\/[a-zA-Z0-9-~][a-zA-Z0-9-._~]*)+|^[a-zA-Z][^:]*)$",
         "x-priority": "important"
       },
       "library": {
         "type": "string",
         "description": "The name of the library to create the secondary entry point for.",
         "x-prompt": "What library would you like to create the secondary entry point for?",
-        "pattern": "^[a-zA-Z].*$",
+        "pattern": "(?:^@[a-zA-Z0-9-*~][a-zA-Z0-9-*._~]*\\/[a-zA-Z0-9-~][a-zA-Z0-9-._~]*|^[a-zA-Z][^:]*)$",
         "x-dropdown": "projects",
         "x-priority": "important"
       },
@@ -29,6 +29,12 @@
         "type": "boolean",
         "description": "Skip generating a module for the secondary entry point.",
         "default": false
+      },
+      "skipFormat": {
+        "description": "Skip formatting files.",
+        "type": "boolean",
+        "default": false,
+        "x-priority": "internal"
       }
     },
     "additionalProperties": false,

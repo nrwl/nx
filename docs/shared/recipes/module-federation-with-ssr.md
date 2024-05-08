@@ -10,15 +10,15 @@ Run the following command with the options listed to create an empty workspace.
 
 ```{% command="npx create-nx-workspace@latest" path="~" %}
 
- >  NX   Let's create a new workspace [https://nx.dev/getting-started/intro]
+NX   Let's create a new workspace [https://nx.dev/getting-started/intro]
 
 ✔ Where would you like to create your workspace? · myorg
 ✔ Which stack do you want to use? · none
 ✔ Package-based or integrated? · integrated
-✔ Enable distributed caching to make your CI faster · Yes
+✔ Do you want Nx Cloud to make your CI fast? · Yes
 ```
 
-{% card title="Opting into Nx Cloud" description="You will also be prompted whether to add Nx Cloud to your workspace. We won't address this in this recipe, but you can see the introduction to Nx Cloud for more details." url="/nx-cloud/intro/ci-with-nx" /%}
+{% card title="Opting into Nx Cloud" description="You will also be prompted whether to add Nx Cloud to your workspace. We won't address this in this recipe, but you can see the introduction to Nx Cloud for more details." url="/ci/intro/ci-with-nx" /%}
 
 ### Install your framework plugin
 
@@ -30,7 +30,7 @@ Make sure to install the `@nx/angular` or `@nx/react` versions that matches the 
 
 {% tab label="Angular" %}
 
-```{% command="npm install --save-dev @nx/angular" path="~/myorg" %}
+```{% command="nx add @nx/angular" path="~/myorg" %}
 
 ```
 
@@ -38,7 +38,7 @@ Make sure to install the `@nx/angular` or `@nx/react` versions that matches the 
 
 {% tab label="React" %}
 
-```{% command="npm install --save-dev @nx/react" path="~/myorg" %}
+```{% command="nx add @nx/react" path="~/myorg" %}
 
 ```
 

@@ -1,3 +1,5 @@
+import 'nx/src/internal-testing-utils/mock-project-graph';
+
 import type { Tree } from '@nx/devkit';
 import * as devkit from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
@@ -25,6 +27,7 @@ describe('ngrx', () => {
     minimal: true,
     parent: 'myapp/src/app/app.module.ts',
     name: 'users',
+    skipFormat: true,
   };
 
   const defaultStandaloneOptions: NgRxGeneratorOptions = {
@@ -32,6 +35,7 @@ describe('ngrx', () => {
     minimal: true,
     parent: 'my-app/src/app/app.config.ts',
     name: 'users',
+    skipFormat: true,
   };
 
   const defaultModuleOptions: NgRxGeneratorOptions = {
@@ -39,6 +43,7 @@ describe('ngrx', () => {
     minimal: true,
     module: 'myapp/src/app/app.module.ts',
     name: 'users',
+    skipFormat: true,
   };
 
   const expectFileToExist = (file: string) =>
@@ -417,9 +422,27 @@ describe('ngrx', () => {
     it('should format files', async () => {
       jest.spyOn(devkit, 'formatFiles');
 
-      await ngrxGenerator(tree, defaultOptions);
+      await ngrxGenerator(tree, { ...defaultOptions, skipFormat: false });
 
       expect(devkit.formatFiles).toHaveBeenCalled();
+      expect(
+        tree.read('myapp/src/app/app.module.ts', 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        tree.read('myapp/src/app/+state/users.actions.ts', 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        tree.read('myapp/src/app/+state/users.effects.ts', 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        tree.read('myapp/src/app/+state/users.models.ts', 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        tree.read('myapp/src/app/+state/users.reducer.ts', 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        tree.read('myapp/src/app/+state/users.selectors.ts', 'utf-8')
+      ).toMatchSnapshot();
     });
 
     it('should not format files when skipFormat is true', async () => {
@@ -494,6 +517,7 @@ describe('ngrx', () => {
         name: 'my-app',
         standalone: true,
         routing: true,
+        skipFormat: true,
       });
       tree.write(
         'my-app/src/app/app.component.html',
@@ -502,8 +526,10 @@ describe('ngrx', () => {
       tree.write(
         'my-app/src/app/app.routes.ts',
         `import { Routes } from '@angular/router';
-        import { NxWelcomeComponent } from './nx-welcome.component'; 
-      export const appRoutes: Routes = [{ path: '', component: NxWelcomeComponent }];`
+import { NxWelcomeComponent } from './nx-welcome.component';
+
+export const appRoutes: Routes = [{ path: '', component: NxWelcomeComponent }];
+`
       );
     });
 
@@ -575,8 +601,10 @@ describe('ngrx', () => {
       tree.write(
         'my-app/src/app/app.routes.ts',
         `import { Routes } from '@angular/router';
-        import { NxWelcomeComponent } from './nx-welcome.component'; 
-      export const appRoutes: Routes = [{ path: 'home', component: NxWelcomeComponent }];`
+import { NxWelcomeComponent } from './nx-welcome.component';
+
+export const appRoutes: Routes = [{ path: 'home', component: NxWelcomeComponent }];
+`
       );
 
       await ngrxGenerator(tree, {
@@ -637,7 +665,11 @@ describe('ngrx', () => {
     beforeEach(async () => {
       jest.clearAllMocks();
       tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-      await generateTestApplication(tree, { name: 'myapp', standalone: false });
+      await generateTestApplication(tree, {
+        name: 'myapp',
+        standalone: false,
+        skipFormat: true,
+      });
       devkit.updateJson(tree, 'package.json', (json) => ({
         ...json,
         dependencies: {
@@ -679,7 +711,11 @@ describe('ngrx', () => {
   describe('rxjs v6 support', () => {
     beforeEach(async () => {
       tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-      await generateTestApplication(tree, { name: 'myapp', standalone: false });
+      await generateTestApplication(tree, {
+        name: 'myapp',
+        standalone: false,
+        skipFormat: true,
+      });
       devkit.updateJson(tree, 'package.json', (json) => ({
         ...json,
         dependencies: {

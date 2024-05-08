@@ -8,17 +8,16 @@ The code for this example is available on GitHub:
 
 Because we are not using an Nx plugin for Astro, there are few items we'll have to configure manually. We'll have to configure our own build system. There are no pre-created Astro-specific code generators. And we'll have to take care of updating any framework dependencies as needed.
 
-{% pill url="/core-features/run-tasks" %}✅ Run Tasks{% /pill %}
-{% pill url="/core-features/cache-task-results" %}✅ Cache Task Results{% /pill %}
-{% pill url="/nx-cloud/features/remote-cache" %}✅ Remote Caching{% /pill %}
-{% pill url="/core-features/explore-graph" %}✅ Explore the Graph{% /pill %}
-{% pill url="/nx-cloud/features/distribute-task-execution" %}✅ Distribute Task Execution{% /pill %}
-{% pill url="/core-features/integrate-with-editors" %}✅ Integrate with Editors{% /pill %}
-{% pill url="/core-features/automate-updating-dependencies" %}✅ Automate Updating Nx{% /pill %}
+{% pill url="/features/run-tasks" %}✅ Run Tasks{% /pill %}
+{% pill url="/features/cache-task-results" %}✅ Cache Task Results{% /pill %}
+{% pill url="/ci/features/remote-cache" %}✅ Remote Caching{% /pill %}
+{% pill url="/features/explore-graph" %}✅ Explore the Graph{% /pill %}
+{% pill url="/ci/features/distribute-task-execution" %}✅ Distribute Task Execution{% /pill %}
+{% pill url="/getting-started/editor-setup" %}✅ Integrate with Editors{% /pill %}
+{% pill url="/features/automate-updating-dependencies" %}✅ Automate Updating Nx{% /pill %}
 {% pill url="/recipes/enforce-module-boundaries" %}✅ Enforce Project Boundaries{% /pill %}
-{% pill url="/core-features/plugin-features/use-task-executors" %}🚫 Use Task Executors{% /pill %}
-{% pill url="/core-features/plugin-features/use-code-generators" %}🚫 Use Code Generators{% /pill %}
-{% pill url="/core-features/automate-updating-dependencies" %}🚫 Automate Updating Framework Dependencies{% /pill %}
+{% pill url="/features/generate-code" %}🚫 Use Code Generators{% /pill %}
+{% pill url="/features/automate-updating-dependencies" %}🚫 Automate Updating Framework Dependencies{% /pill %}
 
 ## Create an astro app
 
@@ -31,25 +30,25 @@ npm create astro@latest
 We can leverage [`nx init`](/recipes/adopting-nx/adding-to-existing-project#installing-nx-on-a-non-monorepo-project) to add Nx to the Astro application.
 
 ```{% command="npx nx@latest init" path="~/astro-app"%}
- >  NX   🐳 Nx initialization
+NX   🐳 Nx initialization
 
 
- >  NX   🧑‍🔧 Please answer the following questions about the scripts found in your package.json in order to generate task runner configuration
+NX   🧑‍🔧 Please answer the following questions about the scripts found in your package.json in order to generate task runner configuration
 
 ✔ Which of the following scripts are cacheable? (Produce the same output given the same input, e.g. build, test and lint usually are, serve and start are not). You can use spacebar to select one or more scripts. · build
 
-✔ Does the "build" script create any outputs? If not, leave blank, otherwise provide a path (e.g. dist, lib, build, coverage) · dist
-✔ Enable distributed caching to make your CI faster · No
 
- >  NX   📦 Installing dependencies
+✔ Would you like remote caching to make your build faster? · Yes
 
- >  NX   🎉 Done!
+NX   📦 Installing dependencies
 
-   - Enabled computation caching!
-   - Learn more at https://nx.dev/recipes/adopting-nx/adding-to-existing-project.
+NX   🎉 Done!
+
+- Enabled computation caching!
+- Learn more at https://nx.dev/recipes/adopting-nx/adding-to-existing-project.
 ```
 
-You can add a task as cacheable after the fact by updating the `cacheableOperations` in the `nx.json` file. Learn more about [caching task results](/recipes/adopting-nx/adding-to-existing-project#installing-nx-on-a-non-monorepo-project) or [how caching works](/core-features/cache-task-results).
+You can [configure a task as cacheable](/features/cache-task-results) after the fact by updating [the project configuration](/reference/project-configuration#cache) or [the global Nx configuration](/reference/nx-json#cache). Learn more about [caching task results](/features/cache-task-results) or [how caching works](/concepts/how-caching-works).
 
 ## Running Tasks
 
@@ -83,8 +82,8 @@ Install `@nx/js` plugin.
 
 > Note: you should make sure any first party, `@nx/` scoped, plugins match the `nx` package version
 
-```shell
-npm i -DE @nx/js@<nx-version>
+```shell {% skipRescope=true %}
+nx add @nx/js@<nx-version>
 ```
 
 Then generate a project
@@ -93,18 +92,19 @@ Then generate a project
 The command below uses the `as-provided` directory flag behavior, which is the default in Nx 16.8.0. If you're on an earlier version of Nx or using the `derived` option, omit the `--directory` flag. See the [as-provided vs. derived documentation](/deprecated/as-provided-vs-derived) for more details.
 {% /callout %}
 
-```{% command="nx g @nx/js:lib ui --directory=libs/ui --simpleName --minimal}
->  NX  Generating @nx/js:library
+```{% command="nx g @nx/js:lib ui --directory=libs/ui --simpleName --minimal" path="~/astro-app"}
+NX  Generating @nx/js:library
 
 ✔ Which unit test runner would you like to use? · none
 ✔ Which bundler would you like to use to build the library? Choose 'none' to skip build setup. · none
 
-CREATE ui/tsconfig.json
-CREATE ui/src/index.ts
-CREATE ui/src/lib/ui.ts
-CREATE ui/tsconfig.lib.json
-CREATE ui/project.json
-CREATE ui/.eslintrc.json
+CREATE libs/ui/tsconfig.json
+CREATE libs/ui/README.md
+CREATE libs/ui/src/index.ts
+CREATE libs/ui/src/lib/ui.ts
+CREATE libs/ui/tsconfig.lib.json
+CREATE libs/ui/project.json
+CREATE libs/ui/.eslintrc.json
 UPDATE tsconfig.json
 ```
 

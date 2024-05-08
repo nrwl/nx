@@ -15,24 +15,25 @@ export function fixBootstrap(tree: Tree, appRoot: string, options: Schema) {
 
   const fetchMFManifestCode = `import { setRemoteDefinitions } from '@nx/angular/mf';
 
-  fetch('/assets/module-federation.manifest.json')
+fetch('/assets/module-federation.manifest.json')
   .then((res) => res.json())
   .then(definitions => setRemoteDefinitions(definitions))
-  .then(() => ${bootstrapImportCode})`;
+  .then(() => ${bootstrapImportCode});`;
 
   tree.write(
     mainFilePath,
     options.mfType === 'host' && options.federationType === 'dynamic'
       ? fetchMFManifestCode
-      : bootstrapImportCode
+      : `${bootstrapImportCode};`
   );
 }
 
 const standaloneBootstrapCode =
-  () => `import {bootstrapApplication} from "@angular/platform-browser";
-import {appConfig} from './app/app.config';
-import {RemoteEntryComponent} from './app/remote-entry/entry.component';
+  () => `import { bootstrapApplication } from '@angular/platform-browser';
+import { appConfig } from './app/app.config';
+import { RemoteEntryComponent } from './app/remote-entry/entry.component';
 
 bootstrapApplication(RemoteEntryComponent, appConfig).catch((err) =>
   console.error(err)
-);`;
+);
+`;

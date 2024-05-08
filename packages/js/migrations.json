@@ -1,11 +1,5 @@
 {
   "generators": {
-    "rename-swcrc-config": {
-      "cli": "nx",
-      "version": "15.8.0-beta.0",
-      "description": "Rename .lib.swcrc to .swcrc for better SWC support throughout the workspace",
-      "factory": "./src/migrations/update-15-8-0/rename-swcrc-config"
-    },
     "update-16-0-0-add-nx-packages": {
       "cli": "nx",
       "version": "16.0.0-beta.1",
@@ -32,18 +26,6 @@
     }
   },
   "packageJsonUpdates": {
-    "15.8.0": {
-      "version": "15.8.0-beta.2",
-      "x-prompt": "Do you want to update to TypeScript v4.9?",
-      "requires": {
-        "typescript": ">=4.8.2 <4.9.0"
-      },
-      "packages": {
-        "typescript": {
-          "version": "~4.9.5"
-        }
-      }
-    },
     "16.0.0": {
       "version": "16.0.0-beta.3",
       "packages": {
@@ -121,6 +103,59 @@
       "packages": {
         "typescript": {
           "version": "~5.2.2"
+        }
+      }
+    },
+    "17.3.0": {
+      "version": "17.3.0-beta.3",
+      "packages": {
+        "@types/node": {
+          "version": "^18.16.9",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "17.3.0-beta.10": {
+      "version": "17.3.0-beta.10",
+      "x-prompt": "Do you want to update to TypeScript v5.3?",
+      "requires": {
+        "typescript": ">=5.2.0 <5.3.0"
+      },
+      "packages": {
+        "typescript": {
+          "version": "~5.3.2",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "18.0.4": {
+      "version": "18.0.4-beta.0",
+      "packages": {
+        "@swc-node/register": {
+          "version": "~1.8.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "18.2.0": {
+      "version": "18.2.0-beta.0",
+      "x-prompt": "Do you want to update to TypeScript v5.4?",
+      "requires": {
+        "typescript": ">=5.3.0 <5.4.0"
+      },
+      "packages": {
+        "typescript": {
+          "version": "~5.4.2",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "19.0.0": {
+      "version": "19.0.0-beta.0",
+      "packages": {
+        "@swc/cli": {
+          "version": "~0.3.12",
+          "alwaysAddToPackageJson": false
         }
       }
     }

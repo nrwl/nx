@@ -1,26 +1,63 @@
 import { isCI } from '../ci/is-ci';
 
+export const NxCloudChoices = ['yes', 'github', 'circleci', 'skip'];
+
 const messageOptions = {
-  nxCloudCreation: [
+  setupCI: [
     {
-      code: 'set-up-distributed-caching-ci',
-      message: `Enable distributed caching to make your CI faster`,
+      code: 'enable-nx-cloud',
+      message: `Do you want Nx Cloud to make your CI fast?`,
+      initial: 1,
+      choices: [
+        { value: 'yes', name: 'Yes, enable Nx Cloud' },
+        { value: 'github', name: 'Yes, configure Nx Cloud for GitHub Actions' },
+        { value: 'circleci', name: 'Yes, configure Nx Cloud for Circle CI' },
+        { value: 'skip', name: 'Skip for now' },
+      ],
+      footer:
+        '\nWatch a short video on Nx Cloud at https://nx.dev/ci/intro/why-nx-cloud',
+      hint: `\n(it's free and can be disabled any time)`,
+      fallback: undefined,
+    },
+    {
+      code: 'set-up-ci',
+      message: `Set up CI with caching, distribution and test deflaking`,
+      initial: 0,
+      choices: [
+        { value: 'github', name: 'Yes, for GitHub Actions with Nx Cloud' },
+        { value: 'circleci', name: 'Yes, for CircleCI with Nx Cloud' },
+        { value: 'skip', name: 'Skip for now' },
+      ],
+      footer:
+        '\nWatch a short video on Nx Cloud at https://nx.dev/ci/intro/why-nx-cloud',
+      hint: `\n(it's free and can be disabled any time)`,
+      fallback: { value: 'skip', key: 'setupNxCloud' },
     },
   ],
-  nxCloudMigration: [
+  setupNxCloud: [
     {
-      code: 'make-ci-faster',
-      message: `Enable distributed caching to make your CI faster?`,
+      code: 'enable-caching',
+      message: `Would you like remote caching to make your build faster?`,
+      initial: 0,
+      choices: [
+        { value: 'yes', name: 'Yes' },
+        { value: 'skip', name: 'Skip for now' },
+      ],
+      footer:
+        '\nRead more about remote caching at https://nx.dev/ci/features/remote-cache',
+      hint: `\n(it's free and can be disabled any time)`,
+      fallback: undefined,
     },
   ],
 } as const;
 
-type MessageKey = keyof typeof messageOptions;
+export type MessageKey = keyof typeof messageOptions;
+type MessageData = typeof messageOptions[MessageKey][number];
 
 export class PromptMessages {
   private selectedMessages: { [key in MessageKey]?: number } = {};
 
-  getPromptMessage(key: MessageKey): string {
+  getPrompt(key: MessageKey): MessageData {
     if (this.selectedMessages[key] === undefined) {
       if (process.env.NX_GENERATE_DOCS_PROCESS === 'true') {
         this.selectedMessages[key] = 0;
@@ -30,13 +67,13 @@ export class PromptMessages {
         );
       }
     }
-    return messageOptions[key][this.selectedMessages[key]!].message;
+    return messageOptions[key][this.selectedMessages[key]!];
   }
 
   codeOfSelectedPromptMessage(key: MessageKey): string {
     const selected = this.selectedMessages[key];
     if (selected === undefined) {
-      return messageOptions[key][0].code;
+      return '';
     } else {
       return messageOptions[key][selected].code;
     }
@@ -53,14 +90,14 @@ export async function recordStat(opts: {
   command: string;
   nxVersion: string;
   useCloud: boolean;
-  meta: string;
+  meta: string[];
 }) {
   try {
     const major = Number(opts.nxVersion.split('.')[0]);
     if (process.env.NX_VERBOSE_LOGGING === 'true') {
       console.log(`Record stat. Major: ${major}`);
     }
-    if (major < 10 || major > 16) return; // test version, skip it
+    if (major < 10 || major > 19) return; // test version, skip it
     const axios = require('axios');
     await (axios['default'] ?? axios)
       .create({
@@ -71,7 +108,7 @@ export async function recordStat(opts: {
         command: opts.command,
         isCI: isCI(),
         useCloud: opts.useCloud,
-        meta: opts.meta,
+        meta: opts.meta.filter((v) => !!v).join(','),
       });
   } catch (e) {
     if (process.env.NX_VERBOSE_LOGGING === 'true') {

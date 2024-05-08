@@ -6,7 +6,7 @@
     "version": 2,
     "outputCapture": "direct-nodejs",
     "$id": "NxExpoInstall",
-    "$schema": "http://json-schema.org/schema",
+    "$schema": "https://json-schema.org/schema",
     "title": "Expo Install",
     "description": "Install a module or other package to a project.",
     "type": "object",

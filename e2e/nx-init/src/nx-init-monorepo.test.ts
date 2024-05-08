@@ -8,7 +8,15 @@ import {
   updateFile,
 } from '@nx/e2e/utils';
 
-describe('nx init (Monorepo)', () => {
+describe('nx init (Monorepo - legacy)', () => {
+  beforeAll(() => {
+    process.env.NX_ADD_PLUGINS = 'false';
+  });
+
+  afterAll(() => {
+    delete process.env.NX_ADD_PLUGINS;
+  });
+
   const pmc = getPackageManagerCommand({
     packageManager: getSelectedPackageManager(),
   });

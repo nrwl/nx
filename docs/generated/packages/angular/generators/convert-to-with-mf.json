@@ -22,6 +22,12 @@
         "$default": { "$source": "argv", "index": 0 },
         "x-prompt": "What micro frontend project would you like to migrate?",
         "x-priority": "important"
+      },
+      "skipFormat": {
+        "description": "Skip formatting files.",
+        "type": "boolean",
+        "default": false,
+        "x-priority": "internal"
       }
     },
     "presets": []

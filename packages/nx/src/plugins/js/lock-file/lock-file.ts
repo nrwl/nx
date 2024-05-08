@@ -37,7 +37,10 @@ import {
 import { pruneProjectGraph } from './project-graph-pruning';
 import { normalizePackageJson } from './utils/package-json';
 import { readJsonFile } from '../../../utils/fileutils';
-import { CreateDependenciesContext } from '../../../utils/nx-plugin';
+import {
+  CreateDependenciesContext,
+  CreateNodesContext,
+} from '../../../project-graph/plugins';
 
 const YARN_LOCK_FILE = 'yarn.lock';
 const NPM_LOCK_FILE = 'package-lock.json';
@@ -54,11 +57,14 @@ const PNPM_LOCK_PATH = join(workspaceRoot, PNPM_LOCK_FILE);
 export function getLockFileNodes(
   packageManager: PackageManager,
   contents: string,
-  lockFileHash: string
+  lockFileHash: string,
+  context: CreateNodesContext
 ): Record<string, ProjectGraphExternalNode> {
   try {
     if (packageManager === 'yarn') {
-      const packageJson = readJsonFile('package.json');
+      const packageJson = readJsonFile(
+        join(context.workspaceRoot, 'package.json')
+      );
       return getYarnLockfileNodes(contents, lockFileHash, packageJson);
     }
     if (packageManager === 'pnpm') {
@@ -143,6 +149,19 @@ export function getLockFileName(packageManager: PackageManager): string {
   throw new Error(`Unknown package manager: ${packageManager}`);
 }
 
+function getLockFilePath(packageManager: PackageManager): string {
+  if (packageManager === 'yarn') {
+    return YARN_LOCK_PATH;
+  }
+  if (packageManager === 'pnpm') {
+    return PNPM_LOCK_PATH;
+  }
+  if (packageManager === 'npm') {
+    return NPM_LOCK_PATH;
+  }
+  throw new Error(`Unknown package manager: ${packageManager}`);
+}
+
 /**
  * Create lock file based on the root level lock file and (pruned) package.json
  *
@@ -157,7 +176,7 @@ export function createLockFile(
   packageManager: PackageManager = detectPackageManager(workspaceRoot)
 ): string {
   const normalizedPackageJson = normalizePackageJson(packageJson);
-  const content = readFileSync(getLockFileName(packageManager), 'utf8');
+  const content = readFileSync(getLockFilePath(packageManager), 'utf8');
 
   try {
     if (packageManager === 'yarn') {

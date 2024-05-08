@@ -5,6 +5,7 @@ import { dirname, resolve } from 'path';
 
 import type { Schema } from './schema';
 import { resolveAndInstantiateESLint } from './utility/eslint-utils';
+import { interpolate } from 'nx/src/tasks-runner/utils';
 
 export default async function run(
   options: Schema,
@@ -21,19 +22,13 @@ export default async function run(
   process.chdir(systemRoot);
 
   const projectName = context.projectName || '<???>';
+  const projectRoot =
+    context.projectsConfigurations.projects[context.projectName].root;
   const printInfo = options.format && !options.silent;
 
   if (printInfo) {
     console.info(`\nLinting ${JSON.stringify(projectName)}...`);
   }
-
-  /**
-   * We want users to have the option of not specifying the config path, and let
-   * eslint automatically resolve the `.eslintrc.json` files in each folder.
-   */
-  let eslintConfigPath = options.eslintConfig
-    ? resolve(systemRoot, options.eslintConfig)
-    : undefined;
 
   options.cacheLocation = options.cacheLocation
     ? joinPathFragments(options.cacheLocation, projectName)
@@ -50,6 +45,23 @@ export default async function run(
   const hasFlatConfig = existsSync(
     joinPathFragments(workspaceRoot, 'eslint.config.js')
   );
+
+  // while standard eslint uses by default closest config to the file, if otherwise not specified,
+  // the flat config would always use the root config, so we need to explicitly set it to the local one
+  if (hasFlatConfig && !normalizedOptions.eslintConfig) {
+    const eslintConfigPath = joinPathFragments(projectRoot, 'eslint.config.js');
+    if (existsSync(eslintConfigPath)) {
+      normalizedOptions.eslintConfig = eslintConfigPath;
+    }
+  }
+
+  /**
+   * We want users to have the option of not specifying the config path, and let
+   * eslint automatically resolve the `.eslintrc.json` files in each folder.
+   */
+  let eslintConfigPath = normalizedOptions.eslintConfig
+    ? resolve(systemRoot, normalizedOptions.eslintConfig)
+    : undefined;
 
   const { eslint, ESLint } = await resolveAndInstantiateESLint(
     eslintConfigPath,
@@ -84,14 +96,24 @@ export default async function run(
 
   let lintResults: ESLint.LintResult[] = [];
 
+  const normalizedLintFilePatterns = normalizedOptions.lintFilePatterns.map(
+    (pattern) => {
+      return interpolate(pattern, {
+        workspaceRoot: '',
+        projectRoot,
+        projectName: context.projectName,
+      });
+    }
+  );
   try {
-    lintResults = await eslint.lintFiles(normalizedOptions.lintFilePatterns);
+    lintResults = await eslint.lintFiles(normalizedLintFilePatterns);
   } catch (err) {
     if (
       err.message.includes(
         'You must therefore provide a value for the "parserOptions.project" property for @typescript-eslint/parser'
       )
     ) {
+      const ruleName = err.message.match(/rule '([^']+)':/)?.[1];
       let eslintConfigPathForError = `for ${projectName}`;
       if (context.projectsConfigurations?.projects?.[projectName]?.root) {
         const { root } = context.projectsConfigurations.projects[projectName];
@@ -99,7 +121,9 @@ export default async function run(
       }
 
       console.error(`
-Error: You have attempted to use a lint rule which requires the full TypeScript type-checker to be available, but you do not have \`parserOptions.project\` configured to point at your project tsconfig.json files in the relevant TypeScript file "overrides" block of your project ESLint config ${
+Error: You have attempted to use ${
+        ruleName ? `the lint rule ${ruleName}` : 'a lint rule'
+      } which requires the full TypeScript type-checker to be available, but you do not have \`parserOptions.project\` configured to point at your project tsconfig.json files in the relevant TypeScript file "overrides" block of your project ESLint config ${
         eslintConfigPath || eslintConfigPathForError
       }
 
@@ -117,7 +141,7 @@ Please see https://nx.dev/guides/eslint for full guidance on how to resolve this
   if (lintResults.length === 0 && errorOnUnmatchedPattern) {
     const ignoredPatterns = (
       await Promise.all(
-        normalizedOptions.lintFilePatterns.map(async (pattern) =>
+        normalizedLintFilePatterns.map(async (pattern) =>
           (await eslint.isPathIgnored(pattern)) ? pattern : null
         )
       )
@@ -150,16 +174,6 @@ Please see https://nx.dev/guides/eslint for full guidance on how to resolve this
 
   const formatter = await eslint.loadFormatter(normalizedOptions.format);
 
-  let totalErrors = 0;
-  let totalWarnings = 0;
-
-  for (const result of lintResults) {
-    if (result.errorCount || result.warningCount) {
-      totalErrors += result.errorCount;
-      totalWarnings += result.warningCount;
-    }
-  }
-
   const formattedResults = await formatter.format(lintResults);
 
   if (normalizedOptions.outputFile) {
@@ -173,23 +187,71 @@ Please see https://nx.dev/guides/eslint for full guidance on how to resolve this
     console.info(formattedResults);
   }
 
-  if (totalWarnings > 0 && printInfo) {
-    console.warn('Lint warnings found in the listed files.\n');
-  }
+  const totals = getTotals(lintResults);
 
-  if (totalErrors > 0 && printInfo) {
-    console.error('Lint errors found in the listed files.\n');
-  }
-
-  if (totalWarnings === 0 && totalErrors === 0 && printInfo) {
-    console.info('All files pass linting.\n');
+  if (printInfo) {
+    outputPrintInfo(totals);
   }
 
   return {
     success:
       normalizedOptions.force ||
-      (totalErrors === 0 &&
+      (totals.errors === 0 &&
         (normalizedOptions.maxWarnings === -1 ||
-          totalWarnings <= normalizedOptions.maxWarnings)),
+          totals.warnings <= normalizedOptions.maxWarnings)),
   };
+}
+
+function getTotals(lintResults: ESLint.LintResult[]) {
+  let errors = 0;
+  let warnings = 0;
+  let fixableErrors = 0;
+  let fixableWarnings = 0;
+
+  for (const result of lintResults) {
+    errors += result.errorCount || 0;
+    warnings += result.warningCount || 0;
+    fixableErrors += result.fixableErrorCount || 0;
+    fixableWarnings += result.fixableWarningCount || 0;
+  }
+
+  return {
+    errors,
+    warnings,
+    fixableErrors,
+    fixableWarnings,
+  };
+}
+
+function pluralizedOutput(word: string, count: number) {
+  return `${count} ${word}${count === 1 ? '' : 's'}`;
+}
+
+function outputPrintInfo({
+  errors,
+  warnings,
+  fixableErrors,
+  fixableWarnings,
+}: ReturnType<typeof getTotals>) {
+  const total = warnings + errors;
+  const totalFixable = fixableErrors + fixableWarnings;
+
+  if (total <= 0) {
+    console.info('\u2714 All files pass linting\n');
+    return;
+  }
+
+  console.info(
+    `\u2716 ${pluralizedOutput('problem', total)} (${pluralizedOutput(
+      'error',
+      errors
+    )}, ${pluralizedOutput('warning', warnings)})\n`
+  );
+  if (totalFixable <= 0) return;
+  console.info(
+    `  ${pluralizedOutput('error', fixableErrors)} and ${pluralizedOutput(
+      'warning',
+      fixableWarnings
+    )} are potentially fixable with the \`--fix\` option.\n`
+  );
 }

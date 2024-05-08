@@ -37,10 +37,10 @@
       "schema": "@nx/angular/src/builders/webpack-browser/schema.json",
       "description": "The `webpack-browser` executor is very similar to the standard `browser` builder provided by the Angular Devkit. It allows you to build your Angular application to a build artifact that can be hosted online. There are some key differences:   \n- Supports Custom Webpack Configurations  \n- Supports Incremental Building"
     },
-    "webpack-dev-server": {
-      "implementation": "@nx/angular/src/builders/webpack-dev-server/webpack-dev-server.impl",
-      "schema": "@nx/angular/src/builders/webpack-dev-server/schema.json",
-      "description": "The `webpack-dev-server` executor is very similar to the standard `dev-server` builder provided by the Angular Devkit. It is usually used in tandem with `@nrwl/angular:webpack-browser` when your Angular application uses a custom webpack configuration."
+    "dev-server": {
+      "implementation": "@nx/angular/src/builders/dev-server/dev-server.impl",
+      "schema": "@nx/angular/src/builders/dev-server/schema.json",
+      "description": "The `dev-server` executor is very similar to the standard `dev-server` builder provided by the Angular Devkit. It is usually used in tandem with `@nrwl/angular:webpack-browser` when your Angular application uses a custom webpack configuration."
     },
     "webpack-server": {
       "implementation": "@nx/angular/src/builders/webpack-server/webpack-server.impl",

@@ -6,6 +6,5 @@ export default {
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html'],
   globals: {},
   displayName: 'eslint',
-  testEnvironment: 'node',
   preset: '../../jest.preset.js',
 };

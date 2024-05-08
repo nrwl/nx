@@ -4,23 +4,42 @@ The Nx Plugin for Web Components contains generators for managing Web Component 
 - Scaffolding for creating buildable libraries that can be published to npm.
 - Utilities for automatic workspace refactoring.
 
-## Setting Up Web
+## Setting Up @nx/web
 
-To create a new workspace with web, run `npx create-nx-workspace@latest --preset=web-components`.
+### Generating a new Workspace
+
+To create a new workspace with React, run `npx create-nx-workspace@latest --preset=web-components`.
+
+### Installation
 
 {% callout type="note" title="Keep Nx Package Versions In Sync" %}
 Make sure to install the `@nx/web` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/recipes/tips-n-tricks/keep-nx-versions-in-sync).
 {% /callout %}
 
-To add the web plugin to an existing workspace, run one of the following:
+In any Nx workspace, you can install `@nx/web` by running the following command:
+
+{% tabs %}
+{% tab label="Nx 18+" %}
+
+```shell {% skipRescope=true %}
+nx add @nx/web
+```
+
+This will install the correct version of `@nx/web`.
+
+{% /tab %}
+{% tab label="Nx < 18" %}
+
+Install the `@nx/web` package with your package manager.
 
 ```shell
-# For npm users
-npm install -D @nx/web
-
-# For yarn users
-yarn add -D @nx/web
+npm add -D @nx/web
 ```
+
+{% /tab %}
+{% /tabs %}
+
+## Using the @nx/web Plugin
 
 ### Creating Applications
 

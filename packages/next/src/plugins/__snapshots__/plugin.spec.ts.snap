@@ -1,0 +1,121 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`@nx/next/plugin integrated projects should create nodes 1`] = `
+{
+  "projects": {
+    "my-app": {
+      "root": "my-app",
+      "targets": {
+        "my-build": {
+          "cache": true,
+          "command": "next build",
+          "dependsOn": [
+            "^build",
+          ],
+          "inputs": [
+            "default",
+            "^production",
+            {
+              "externalDependencies": [
+                "next",
+              ],
+            },
+          ],
+          "options": {
+            "cwd": "my-app",
+            "tty": false,
+          },
+          "outputs": [
+            "{workspaceRoot}/my-app/.next",
+            "{workspaceRoot}/my-app/.next/!(cache)",
+          ],
+        },
+        "my-serve": {
+          "command": "next dev",
+          "options": {
+            "cwd": "my-app",
+          },
+        },
+        "my-serve-static": {
+          "executor": "@nx/web:file-server",
+          "options": {
+            "buildTarget": "my-build",
+            "port": 3000,
+            "spa": false,
+            "staticFilePath": "{projectRoot}/out",
+          },
+        },
+        "my-start": {
+          "command": "next start",
+          "dependsOn": [
+            "my-build",
+          ],
+          "options": {
+            "cwd": "my-app",
+          },
+        },
+      },
+    },
+  },
+}
+`;
+
+exports[`@nx/next/plugin root projects should create nodes 1`] = `
+{
+  "projects": {
+    ".": {
+      "root": ".",
+      "targets": {
+        "build": {
+          "cache": true,
+          "command": "next build",
+          "dependsOn": [
+            "^build",
+          ],
+          "inputs": [
+            "default",
+            "^production",
+            {
+              "externalDependencies": [
+                "next",
+              ],
+            },
+          ],
+          "options": {
+            "cwd": ".",
+            "tty": false,
+          },
+          "outputs": [
+            "{projectRoot}/.next",
+            "{projectRoot}/.next/!(cache)",
+          ],
+        },
+        "dev": {
+          "command": "next dev",
+          "options": {
+            "cwd": ".",
+          },
+        },
+        "serve-static": {
+          "executor": "@nx/web:file-server",
+          "options": {
+            "buildTarget": "build",
+            "port": 3000,
+            "spa": false,
+            "staticFilePath": "{projectRoot}/out",
+          },
+        },
+        "start": {
+          "command": "next start",
+          "dependsOn": [
+            "build",
+          ],
+          "options": {
+            "cwd": ".",
+          },
+        },
+      },
+    },
+  },
+}
+`;

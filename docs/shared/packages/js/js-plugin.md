@@ -1,6 +1,11 @@
+---
+title: Overview of the Nx JS Plugin
+description: The Nx JS plugin contains executors and generators that are useful for JavaScript/TypeScript projects in an Nx workspace.
+---
+
 The JS plugin contains executors and generators that are useful for JavaScript/TypeScript projects in an Nx workspace.
 
-## Setting Up JS
+## Setting Up @nx/js
 
 ### Installation
 
@@ -8,20 +13,24 @@ The JS plugin contains executors and generators that are useful for JavaScript/T
 Make sure to install the `@nx/js` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/recipes/tips-n-tricks/keep-nx-versions-in-sync).
 {% /callout %}
 
-In any Nx workspace, you can install `@nx/js` by running the following commands if `@nx/js` package is not installed:
+In any Nx workspace, you can install `@nx/js` by running the following command:
 
 {% tabs %}
-{%tab label="npm"%}
+{% tab label="Nx 18+" %}
 
-```shell
-npm i --save-dev @nx/js
+```shell {% skipRescope=true %}
+nx add @nx/js
 ```
 
+This will install the correct version of `@nx/js`.
+
 {% /tab %}
-{%tab label="yarn"%}
+{% tab label="Nx < 18" %}
+
+Install the `@nx/js` package with your package manager.
 
 ```shell
-yarn add --dev @nx/js
+npm add -D @nx/js
 ```
 
 {% /tab %}

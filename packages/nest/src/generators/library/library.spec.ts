@@ -17,25 +17,21 @@ describe('lib', () => {
       await libraryGenerator(tree, {
         name: 'my-lib',
         projectNameAndRootFormat: 'as-provided',
+        addPlugin: true,
       });
 
       const config = readProjectConfiguration(tree, 'my-lib');
-      expect(config.root).toEqual(`my-lib`);
-      expect(config.targets.build).toBeUndefined();
-      expect(config.targets.lint).toEqual({
-        executor: '@nx/eslint:lint',
-        outputs: ['{options.outputFile}'],
-        options: {
-          lintFilePatterns: [`my-lib/**/*.ts`],
-        },
-      });
-      expect(config.targets.test).toEqual({
-        executor: '@nx/jest:jest',
-        outputs: [`{workspaceRoot}/coverage/{projectRoot}`],
-        options: {
-          jestConfig: `my-lib/jest.config.ts`,
-        },
-      });
+      expect(config).toMatchInlineSnapshot(`
+        {
+          "$schema": "../node_modules/nx/schemas/project-schema.json",
+          "name": "my-lib",
+          "projectType": "library",
+          "root": "my-lib",
+          "sourceRoot": "my-lib/src",
+          "tags": [],
+          "targets": {},
+        }
+      `);
     });
 
     it('should include a controller', async () => {
@@ -202,24 +198,6 @@ describe('lib', () => {
       expect(tree.exists(`my-dir/my-lib/src/lib/my-lib.spec.ts`)).toBeFalsy();
     });
 
-    it('should update workspace.json', async () => {
-      await libraryGenerator(tree, {
-        name: 'my-lib',
-        directory: 'my-dir/my-lib',
-        projectNameAndRootFormat: 'as-provided',
-      });
-
-      const project = readProjectConfiguration(tree, `my-lib`);
-      expect(project.root).toEqual(`my-dir/my-lib`);
-      expect(project.targets.lint).toEqual({
-        executor: '@nx/eslint:lint',
-        outputs: ['{options.outputFile}'],
-        options: {
-          lintFilePatterns: [`my-dir/my-lib/**/*.ts`],
-        },
-      });
-    });
-
     it('should update tsconfig.json', async () => {
       await libraryGenerator(tree, {
         name: 'my-lib',
@@ -276,9 +254,6 @@ describe('lib', () => {
       expect(tree.exists(`my-lib/jest.config.ts`)).toBeFalsy();
       expect(tree.exists(`my-lib/lib/my-lib.spec.ts`)).toBeFalsy();
       expect(readJson(tree, `my-lib/tsconfig.json`)).toMatchSnapshot();
-      const project = readProjectConfiguration(tree, 'my-lib');
-      expect(project.targets.test).toBeUndefined();
-      expect(project.targets.lint).toMatchSnapshot();
     });
   });
 

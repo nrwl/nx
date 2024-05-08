@@ -4,7 +4,7 @@ import { applyReactConfig } from './nx-react-webpack-plugin/lib/apply-react-conf
 
 const processed = new Set();
 
-interface WithReactOptions extends WithWebOptions {
+export interface WithReactOptions extends WithWebOptions {
   svgr?: false;
 }
 

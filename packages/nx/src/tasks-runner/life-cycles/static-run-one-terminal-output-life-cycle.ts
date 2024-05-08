@@ -24,6 +24,7 @@ export class StaticRunOneTerminalOutputLifeCycle implements LifeCycle {
     private readonly args: {
       targets?: string[];
       configuration?: string;
+      verbose?: boolean;
     }
   ) {}
 
@@ -110,15 +111,20 @@ export class StaticRunOneTerminalOutputLifeCycle implements LifeCycle {
     status: TaskStatus,
     terminalOutput: string
   ) {
+    const args = getPrintableCommandArgsForTask(task);
     if (
+      this.args.verbose ||
       status === 'success' ||
       status === 'failure' ||
       task.target.project === this.initiatingProject
     ) {
-      const args = getPrintableCommandArgsForTask(task);
-      output.logCommand(args.join(' '), status);
-      output.addNewline();
-      process.stdout.write(terminalOutput);
+      output.logCommandOutput(args.join(' '), status, terminalOutput);
+    } else {
+      /**
+       * Do not show the terminal output in the case where it is not the initiating project and verbose is not set,
+       * but still print the command that was run and its status (so that cache hits can still be traced).
+       */
+      output.logCommandOutput(args.join(' '), status, '');
     }
   }
 }

@@ -1,20 +1,25 @@
 name: publish
+
+on:
+  schedule:
+    - cron: "0 3 * * 2-6" # Tuesdays - Saturdays, at 3am UTC
+  workflow_dispatch:
+  release:
+    types: [ published ]
+
 env:
   DEBUG: napi:*
   NX_RUN_GROUP: ${{ github.run_id }}-${{ github.run_attempt }}
-  NPM_CONFIG_PROVENANCE: true
-on:
-  workflow_dispatch:
-  release:
-    types: [published]
+  CYPRESS_INSTALL_BINARY: 0
+
 jobs:
   build:
-    if: "!contains(github.event.head_commit.message, 'skip ci')"
+    if: ${{ github.repository_owner == 'nrwl' }}
     strategy:
       fail-fast: false
       matrix:
         settings:
-          - host: macos-latest
+          - host: macos-13
             target: x86_64-apple-darwin
             build: |
               pnpm nx run-many --target=build-native -- --target=x86_64-apple-darwin
@@ -31,13 +36,20 @@ jobs:
             docker: ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-debian
             build: |-
               set -e &&
+              npm i -g pnpm@8.15.7 --force &&
               pnpm --version &&
-              pnpm nx run-many --target=build-native -- --target=x86_64-unknown-linux-gnu
+              pnpm install --frozen-lockfile &&
+              pnpm nx run-many --verbose --target=build-native -- --target=x86_64-unknown-linux-gnu
           - host: ubuntu-latest
             target: x86_64-unknown-linux-musl
             docker: ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-alpine
-            build: set -e && pnpm nx run-many --target=build-native -- --target=x86_64-unknown-linux-musl
-          - host: macos-latest
+            build: |-
+              set -e &&
+              npm i -g pnpm@8.15.7 --force &&
+              pnpm --version &&
+              pnpm install --frozen-lockfile &&
+              pnpm nx run-many --verbose --target=build-native -- --target=x86_64-unknown-linux-musl
+          - host: macos-13
             target: aarch64-apple-darwin
             build: |
               sudo rm -Rf /Library/Developer/CommandLineTools/SDKs/*;
@@ -51,8 +63,10 @@ jobs:
             docker: ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-debian-aarch64
             build: |-
               set -e &&
+              npm i -g pnpm@8.15.7 --force &&
               pnpm --version &&
-              pnpm nx run-many --target=build-native -- --target=aarch64-unknown-linux-gnu
+              pnpm install --frozen-lockfile &&
+              pnpm nx run-many --verbose --target=build-native -- --target=aarch64-unknown-linux-gnu
           - host: ubuntu-latest
             target: armv7-unknown-linux-gnueabihf
             setup: |
@@ -75,21 +89,24 @@ jobs:
             build: |-
               set -e &&
               rustup target add aarch64-unknown-linux-musl &&
-              pnpm nx run-many --target=build-native -- --target=aarch64-unknown-linux-musl
+              npm i -g pnpm@8.15.7 --force &&
+              pnpm --version &&
+              pnpm install --frozen-lockfile &&
+              pnpm nx run-many --verbose --target=build-native -- --target=aarch64-unknown-linux-musl
           - host: windows-latest
             target: aarch64-pc-windows-msvc
             build: pnpm nx run-many --target=build-native -- --target=aarch64-pc-windows-msvc
     name: stable - ${{ matrix.settings.target }} - node@18
     runs-on: ${{ matrix.settings.host }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - uses: pnpm/action-setup@v2
         with:
-          version: 8.2
+          version: 8
 
       - name: Setup node
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         if: ${{ !matrix.settings.docker }}
         with:
           node-version: 18
@@ -125,10 +142,11 @@ jobs:
         run: yarn config set supportedArchitectures.cpu "ia32"
         shell: bash
       - name: Install dependencies
+        if: ${{ !matrix.settings.docker }}
         run: pnpm install --frozen-lockfile
         timeout-minutes: 30
       - name: Setup node x86
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         if: matrix.settings.target == 'i686-pc-windows-msvc'
         with:
           node-version: 18
@@ -152,79 +170,95 @@ jobs:
           name: bindings-${{ matrix.settings.target }}
           path: packages/**/*.node
           if-no-files-found: error
+
   build-freebsd:
-     runs-on: macos-12
-     name: Build FreeBSD
-     timeout-minutes: 45
-     steps:
-       - uses: actions/checkout@v3
-       - name: Build
-         id: build
-         uses: cross-platform-actions/action@v0.21.0
-         env:
-           DEBUG: napi:*
-           RUSTUP_IO_THREADS: 1
-         with:
-           operating_system: freebsd
-           version: '13.2'
-           architecture: x86-64
-           environment_variables: DEBUG RUSTUP_IO_THREADS CI
-           shell: bash
-           run: |
-             env
-             whoami
-             sudo pkg install -y -f node libnghttp2 npm git
-             sudo npm install --location=global --ignore-scripts pnpm
-             curl https://sh.rustup.rs -sSf --output rustup.sh
-             sh rustup.sh -y --profile minimal --default-toolchain stable
-             source "$HOME/.cargo/env"
-             echo "~~~~ rustc --version ~~~~"
-             rustc --version
-             echo "~~~~ node -v ~~~~"
-             node -v
-             echo "~~~~ pnpm --version ~~~~"
-             pnpm --version
-             pwd
-             ls -lah
-             whoami
-             env
-             freebsd-version
-             mkdir -p /Users/runner/work/_temp/_github_workflow
-             echo "{}" > /Users/runner/work/_temp/_github_workflow/event.json
-             pnpm install --frozen-lockfile --ignore-scripts
-             pnpm nx run-many --outputStyle stream --target=build-native -- --target=x86_64-unknown-freebsd
-             pnpm nx reset
-             rm -rf node_modules
-             rm -rf dist
-             echo "KILL ALL NODE PROCESSES"
-             killall node
-             echo "COMPLETE"
-       - name: Upload artifact
-         uses: actions/upload-artifact@v3
-         with:
-           name: bindings-freebsd
-           path: packages/**/*.node
-           if-no-files-found: error
+    if: ${{ github.repository_owner == 'nrwl' }}
+    runs-on: macos-13-large
+    name: Build FreeBSD
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        if: ${{ github.event_name != 'schedule' }}
+      - name: Build
+        id: build
+        if: ${{ github.event_name != 'schedule' }}
+        uses: cross-platform-actions/action@v0.22.0
+        env:
+          DEBUG: napi:*
+          RUSTUP_IO_THREADS: 1
+          NX_PREFER_TS_NODE: true
+          PLAYWRIGHT_BROWSERS_PATH: 0
+        with:
+          operating_system: freebsd
+          version: '13.2'
+          architecture: x86-64
+          environment_variables: DEBUG RUSTUP_IO_THREADS CI NX_PREFER_TS_NODE PLAYWRIGHT_BROWSERS_PATH
+          shell: bash
+          run: |
+            env
+            whoami
+            sudo pkg install -y -f node libnghttp2 npm git
+            sudo npm install --location=global --ignore-scripts pnpm@8.15.7
+            curl https://sh.rustup.rs -sSf --output rustup.sh
+            sh rustup.sh -y --profile minimal --default-toolchain stable
+            source "$HOME/.cargo/env"
+            echo "~~~~ rustc --version ~~~~"
+            rustc --version
+            echo "~~~~ node -v ~~~~"
+            node -v
+            echo "~~~~ pnpm --version ~~~~"
+            pnpm --version
+            pwd
+            ls -lah
+            whoami
+            env
+            freebsd-version
+            mkdir -p /Users/runner/work/_temp/_github_workflow
+            echo "{}" > /Users/runner/work/_temp/_github_workflow/event.json
+            pnpm install --frozen-lockfile --ignore-scripts
+            pnpm nx run-many --verbose --outputStyle stream --target=build-native -- --target=x86_64-unknown-freebsd
+            pnpm nx reset
+            rm -rf node_modules
+            rm -rf dist
+            echo "KILL ALL NODE PROCESSES"
+            killall node || true
+            echo "COMPLETE"
+      - name: Upload artifact
+        if: ${{ github.event_name != 'schedule' }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: bindings-freebsd
+          path: packages/**/*.node
+          if-no-files-found: error
+
   publish:
-    if: ${{ github.event_name == 'release' && github.repository_owner == 'nrwl' }}
+    if: ${{ github.repository_owner == 'nrwl' }}
     name: Publish
     runs-on: ubuntu-latest
     permissions:
       id-token: write
+      contents: write
     needs:
       - build-freebsd
       - build
+    env:
+      GH_TOKEN: ${{ github.token }}
+      NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      NPM_CONFIG_PROVENANCE: true
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v2
         with:
-          version: 8.2
+          version: 8
       - name: Setup node
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: 18
+          registry-url: 'https://registry.npmjs.org'
           check-latest: true
           cache: 'pnpm'
+      - name: Check NPM Credentials
+        run: npm whoami && echo "NPM credentials are valid" || (echo "NPM credentials are invalid or have expired." && exit 1)
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
       - name: Download all artifacts
@@ -237,15 +271,27 @@ jobs:
       - name: Publish
         run: |
           git checkout -b publish/$GITHUB_REF_NAME
-          npm config set //registry.npmjs.org/:_authToken=$NPM_TOKEN
-          pnpm nx-release --local=false $GITHUB_REF_NAME
+          # If triggered by the cron, create a canary release
+          if [ "${{ github.event_name }}" = "schedule" ]; then
+            VERSION="canary"
+          else
+            # Otherwise, use the tag name (if triggered via release), or explicit version (if triggered via workflow_dispatch)
+            VERSION="${GITHUB_REF_NAME}"
+          fi
+          # If triggered via workflow_dispatch, perform a dry-run
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            DRY_RUN="--dry-run"
+          else
+            DRY_RUN=""
+          fi
+          pnpm nx-release --local=false $VERSION $DRY_RUN
       - name: Trigger Docs Release
-        # Publish docs only on a full release and when publishing the latest version
-        if: ${{ !github.event.release.prerelease && github.event.release.target_commitish == 'master' }}
+        # Publish docs only on a full release
+        if: ${{ !github.event.release.prerelease }}
         run: |
+          # The GITHUB_REF_NAME is a full version (i.e. 17.3.2). The branchName will only use the major version number.
+          # We will publish docs to the website branch based on the current tag (i.e. website-17)
+          branchName=website-${GITHUB_REF_NAME%.*.*}
           # We force recreate the branch in order to always be up to date and avoid merge conflicts within the automated workflow
-          git branch -f website
-          git push -f origin website
-    env:
-      GH_TOKEN: ${{ github.token }}
-      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          git branch -f $branchName
+          git push -f origin $branchName

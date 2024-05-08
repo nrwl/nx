@@ -23,29 +23,9 @@ npx create-nx-workspace@latest my-functions --preset=@nx/netlify --site=my-site
 
 You will need to install `@nx/netlify` if you haven't already.
 
-{% tabs %}
-{% tab label="npm" %}
-
-```shell
-npm i -D @nx/netlify
+```shell {% skipRescope=true %}
+nx add @nx/netlify
 ```
-
-{% /tab %}
-{% tab label="yarn" %}
-
-```shell
-yarn add -D @nx/netlify
-```
-
-{% /tab %}
-{% tab label="pnpm" %}
-
-```shell
-pnpm add -D @nx/netlify
-```
-
-{% /tab %}
-{% /tabs %}
 
 Next add the Netlify serverless configuration by running the following command:
 

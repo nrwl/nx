@@ -2,13 +2,14 @@ import { exec, execSync } from 'child_process';
 import { copyFileSync, existsSync, writeFileSync } from 'fs';
 import { remove } from 'fs-extra';
 import { dirname, join, relative } from 'path';
+import { gte, lt } from 'semver';
 import { dirSync } from 'tmp';
 import { promisify } from 'util';
-import { readFileIfExisting, writeJsonFile } from './fileutils';
-import { readModulePackageJson } from './package-json';
-import { gte, lt } from 'semver';
-import { workspaceRoot } from './workspace-root';
 import { readNxJson } from '../config/configuration';
+import { readPackageJson } from '../project-graph/file-utils';
+import { readFileIfExisting, writeJsonFile } from './fileutils';
+import { PackageJson, readModulePackageJson } from './package-json';
+import { workspaceRoot } from './workspace-root';
 
 const execAsync = promisify(exec);
 
@@ -18,6 +19,7 @@ export interface PackageManagerCommands {
   preInstall?: string;
   install: string;
   ciInstall: string;
+  updateLockFile: string;
   add: string;
   addDev: string;
   rm: string;
@@ -40,6 +42,24 @@ export function detectPackageManager(dir: string = ''): PackageManager {
       ? 'pnpm'
       : 'npm')
   );
+}
+
+/**
+ * Returns true if the workspace is using npm workspaces, yarn workspaces, or pnpm workspaces.
+ * @param packageManager The package manager to use. If not provided, it will be detected based on the lock file.
+ * @param root The directory the commands will be ran inside of. Defaults to the current workspace's root.
+ */
+export function isWorkspacesEnabled(
+  packageManager: PackageManager = detectPackageManager(),
+  root: string = workspaceRoot
+): boolean {
+  if (packageManager === 'pnpm') {
+    return existsSync(join(root, 'pnpm-workspace.yaml'));
+  }
+
+  // yarn and pnpm both use the same 'workspaces' property in package.json
+  const packageJson: PackageJson = readPackageJson();
+  return !!packageJson?.workspaces;
 }
 
 /**
@@ -71,6 +91,9 @@ export function getPackageManagerCommand(
         ciInstall: useBerry
           ? 'yarn install --immutable'
           : 'yarn install --frozen-lockfile',
+        updateLockFile: useBerry
+          ? 'yarn install --mode update-lockfile'
+          : 'yarn install',
         add: useBerry ? 'yarn add' : 'yarn add -W',
         addDev: useBerry ? 'yarn add -D' : 'yarn add -D -W',
         rm: 'yarn remove',
@@ -89,6 +112,7 @@ export function getPackageManagerCommand(
       return {
         install: 'pnpm install --no-frozen-lockfile', // explicitly disable in case of CI
         ciInstall: 'pnpm install --frozen-lockfile',
+        updateLockFile: 'pnpm install --lockfile-only',
         add: isPnpmWorkspace ? 'pnpm add -w' : 'pnpm add',
         addDev: isPnpmWorkspace ? 'pnpm add -Dw' : 'pnpm add -D',
         rm: 'pnpm rm',
@@ -108,6 +132,7 @@ export function getPackageManagerCommand(
       return {
         install: 'npm install',
         ciInstall: 'npm ci',
+        updateLockFile: 'npm install --package-lock-only',
         add: 'npm install',
         addDev: 'npm install -D',
         rm: 'npm rm',

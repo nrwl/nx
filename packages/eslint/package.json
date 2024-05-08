@@ -27,19 +27,20 @@
     "requirements": {},
     "migrations": "./migrations.json"
   },
-  "executors": "./executors.json",
   "generators": "./generators.json",
+  "executors": "./executors.json",
   "peerDependencies": {
-    "eslint": "^8.0.0"
+    "js-yaml": "4.1.0"
   },
   "dependencies": {
-    "tslib": "^2.3.0",
     "@nx/devkit": "file:../devkit",
     "@nx/js": "file:../js",
-    "typescript": "~5.2.2"
+    "eslint": "^8.0.0",
+    "tslib": "^2.3.0",
+    "typescript": "~5.4.2"
   },
   "peerDependenciesMeta": {
-    "eslint": {
+    "js-yaml": {
       "optional": true
     }
   },

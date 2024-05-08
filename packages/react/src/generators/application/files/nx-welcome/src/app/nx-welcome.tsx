@@ -727,7 +727,7 @@ export function NxWelcome({ title }: { title: string }) {
                     />
                   </svg>
                   <h2>
-                    NxCloud
+                    Nx Cloud
                     <span>Enable faster CI & better DX</span>
                   </h2>
                 </div>
@@ -735,7 +735,7 @@ export function NxWelcome({ title }: { title: string }) {
                   You can activate distributed tasks executions and caching by
                   running:
                 </p>
-                <pre>nx connect-to-nx-cloud</pre>
+                <pre>nx connect</pre>
                 <a
                   href="https://nx.app/?utm_source=nx-project"
                   target="_blank"
@@ -794,6 +794,25 @@ export function NxWelcome({ title }: { title: string }) {
                 <span># Add a component</span>
                 nx g @nx/react:component ui/src/lib/button
               </pre>
+            </details>
+            <details>
+              <summary>
+                <svg
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                  />
+                </svg>
+                View project details
+              </summary>
+              <pre>nx show project {title} --web</pre>
             </details>
             <details>
               <summary>

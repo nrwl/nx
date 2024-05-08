@@ -20,13 +20,17 @@ import { NxJsonConfiguration } from '../../config/nx-json';
 import { readNxJson } from '../../config/configuration';
 import { PromisedBasedQueue } from '../../utils/promised-based-queue';
 import { hasNxJson } from '../../config/nx-json';
-import { Message, SocketMessenger } from './socket-messenger';
+import { Message, DaemonSocketMessenger } from './daemon-socket-messenger';
 import { safelyCleanUpExistingProcess } from '../cache';
 import { Hash } from '../../hasher/task-hasher';
 import { Task, TaskGraph } from '../../config/task-graph';
+import { ConfigurationSourceMaps } from '../../project-graph/utils/project-configuration-utils';
+import {
+  DaemonProjectGraphError,
+  ProjectGraphError,
+} from '../../project-graph/error-types';
 
 const DAEMON_ENV_SETTINGS = {
-  ...process.env,
   NX_PROJECT_GLOB_CACHE: 'false',
   NX_CACHE_PROJECTS_CONFIG: 'false',
 };
@@ -44,12 +48,18 @@ enum DaemonStatus {
 }
 
 export class DaemonClient {
-  constructor(private readonly nxJson: NxJsonConfiguration) {
+  private readonly nxJson: NxJsonConfiguration | null;
+  constructor() {
+    try {
+      this.nxJson = readNxJson();
+    } catch (e) {
+      this.nxJson = null;
+    }
     this.reset();
   }
 
   private queue: PromisedBasedQueue;
-  private socketMessenger: SocketMessenger;
+  private socketMessenger: DaemonSocketMessenger;
 
   private currentMessage;
   private currentResolve;
@@ -64,10 +74,10 @@ export class DaemonClient {
 
   enabled() {
     if (this._enabled === undefined) {
-      // TODO(v18): Add migration to move it out of existing configs and remove the ?? here.
+      // TODO(v19): Add migration to move it out of existing configs and remove the ?? here.
       const useDaemonProcessOption =
-        this.nxJson.useDaemonProcess ??
-        this.nxJson.tasksRunnerOptions?.['default']?.options?.useDaemonProcess;
+        this.nxJson?.useDaemonProcess ??
+        this.nxJson?.tasksRunnerOptions?.['default']?.options?.useDaemonProcess;
       const env = process.env.NX_DAEMON;
 
       // env takes precedence
@@ -124,9 +134,25 @@ export class DaemonClient {
     return this.sendToDaemonViaQueue({ type: 'REQUEST_SHUTDOWN' });
   }
 
-  async getProjectGraph(): Promise<ProjectGraph> {
-    return (await this.sendToDaemonViaQueue({ type: 'REQUEST_PROJECT_GRAPH' }))
-      .projectGraph;
+  async getProjectGraphAndSourceMaps(): Promise<{
+    projectGraph: ProjectGraph;
+    sourceMaps: ConfigurationSourceMaps;
+  }> {
+    try {
+      const response = await this.sendToDaemonViaQueue({
+        type: 'REQUEST_PROJECT_GRAPH',
+      });
+      return {
+        projectGraph: response.projectGraph,
+        sourceMaps: response.sourceMaps,
+      };
+    } catch (e) {
+      if (e.name === DaemonProjectGraphError.name) {
+        throw ProjectGraphError.fromDaemonProjectGraphError(e);
+      } else {
+        throw e;
+      }
+    }
   }
 
   async getAllFileData(): Promise<FileData[]> {
@@ -153,6 +179,7 @@ export class DaemonClient {
       watchProjects: string[] | 'all';
       includeGlobalWorkspaceFiles?: boolean;
       includeDependentProjects?: boolean;
+      allowPartialGraph?: boolean;
     },
     callback: (
       error: Error | null | 'closed',
@@ -162,11 +189,21 @@ export class DaemonClient {
       } | null
     ) => void
   ): Promise<UnregisterCallback> {
-    await this.getProjectGraph();
-    let messenger: SocketMessenger | undefined;
+    try {
+      await this.getProjectGraphAndSourceMaps();
+    } catch (e) {
+      if (config.allowPartialGraph && e instanceof ProjectGraphError) {
+        // we are fine with partial graph
+      } else {
+        throw e;
+      }
+    }
+    let messenger: DaemonSocketMessenger | undefined;
 
     await this.queue.sendToQueue(() => {
-      messenger = new SocketMessenger(connect(FULL_OS_SOCKET_PATH)).listen(
+      messenger = new DaemonSocketMessenger(
+        connect(FULL_OS_SOCKET_PATH)
+      ).listen(
         (message) => {
           try {
             const parsedMessage = JSON.parse(message);
@@ -239,7 +276,7 @@ export class DaemonClient {
   }
 
   private setUpConnection() {
-    this.socketMessenger = new SocketMessenger(
+    this.socketMessenger = new DaemonSocketMessenger(
       connect(FULL_OS_SOCKET_PATH)
     ).listen(
       (message) => this.handleMessage(message),
@@ -256,6 +293,12 @@ export class DaemonClient {
               `If you get this error again, check for any errors in the daemon process logs found in: ${DAEMON_OUTPUT_LOG_FILE}`,
             ],
           });
+          this._daemonStatus = DaemonStatus.DISCONNECTED;
+          this.currentReject?.(
+            daemonProcessException(
+              'Daemon process terminated and closed the connection'
+            )
+          );
           process.exit(1);
         }
       },
@@ -375,7 +418,7 @@ export class DaemonClient {
         detached: true,
         windowsHide: true,
         shell: false,
-        env: DAEMON_ENV_SETTINGS,
+        env: { ...process.env, ...DAEMON_ENV_SETTINGS },
       }
     );
     backgroundProcess.unref();
@@ -419,7 +462,7 @@ export class DaemonClient {
   }
 }
 
-export const daemonClient = new DaemonClient(readNxJson());
+export const daemonClient = new DaemonClient();
 
 function isDocker() {
   try {

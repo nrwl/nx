@@ -8,6 +8,24 @@ use nom::sequence::{preceded, terminated};
 use nom::{Finish, IResult};
 use std::borrow::Cow;
 
+/// Consumes special characters if they are not part of a group, otherwise returns an error
+/// Example:
+/// - ?snap -> snap
+/// - +snap -> snap
+/// - @snap -> snap
+///
+fn special_char_with_no_group(input: &str) -> IResult<&str, &str, VerboseError<&str>> {
+    context("special_char_with_no_group", |input| {
+        // check the input if it has ?,+, or @
+        let (alt_input, _) = alt((tag("?"), tag("+"), tag("@")))(input)?;
+        // check the remaining input from the previous parser to see if the next character is (
+        // if it is, then we know that the special character is part of a group, and we can return an Err here
+        let _ = is_not("(")(alt_input)?;
+        // consume the special character and return the rest of the alt input
+        Ok((alt_input, ""))
+    })(input)
+}
+
 fn simple_group(input: &str) -> IResult<&str, GlobGroup, VerboseError<&str>> {
     context(
         "simple_group",
@@ -36,6 +54,13 @@ fn one_or_more_group(input: &str) -> IResult<&str, GlobGroup, VerboseError<&str>
     )(input)
 }
 
+fn brace_group_with_empty_item(input: &str) -> IResult<&str, GlobGroup, VerboseError<&str>> {
+    context(
+        "brace_group_with_empty_item",
+        map(preceded(tag("{,"), brace_group), GlobGroup::ZeroOrOne),
+    )(input)
+}
+
 fn exact_one_group(input: &str) -> IResult<&str, GlobGroup, VerboseError<&str>> {
     context(
         "exact_one_group",
@@ -58,11 +83,20 @@ fn negated_file_group(input: &str) -> IResult<&str, GlobGroup, VerboseError<&str
     })(input)
 }
 
+fn negated_wildcard(input: &str) -> IResult<&str, GlobGroup, VerboseError<&str>> {
+    context("negated_wildcard", |input| {
+        let (input, result) = preceded(tag("!("), group)(input)?;
+        let (input, _) = tag("*")(input)?;
+        Ok((input, GlobGroup::NegatedWildcard(result)))
+    })(input)
+}
+
 fn non_special_character(input: &str) -> IResult<&str, GlobGroup, VerboseError<&str>> {
     context(
         "non_special_character",
         map(
             alt((
+                take_until("{,"),
                 take_while(|c| c != '?' && c != '+' && c != '@' && c != '!' && c != '('),
                 is_not("*("),
             )),
@@ -75,6 +109,13 @@ fn group(input: &str) -> IResult<&str, Cow<str>, VerboseError<&str>> {
     context(
         "group",
         map_parser(terminated(take_until(")"), tag(")")), separated_group_items),
+    )(input)
+}
+
+fn brace_group(input: &str) -> IResult<&str, Cow<str>, VerboseError<&str>> {
+    context(
+        "brace_group",
+        map_parser(terminated(take_until("}"), tag("}")), separated_group_items),
     )(input)
 }
 
@@ -98,8 +139,14 @@ fn parse_segment(input: &str) -> IResult<&str, Vec<GlobGroup>, VerboseError<&str
     context(
         "parse_segment",
         many_till(
-            context(
-                "glob_group",
+            context("glob_group", |input| {
+                // check if the special character is part of a group
+                let group_input = match special_char_with_no_group(input) {
+                    // if there was no (, then we know that the special character is not part of a group, we can return this input
+                    Ok((no_group_input, _)) => no_group_input,
+                    // otherwise, there was a ( after the special character, so we need to parse the original input
+                    Err(_) => input,
+                };
                 alt((
                     simple_group,
                     zero_or_more_group,
@@ -107,10 +154,12 @@ fn parse_segment(input: &str) -> IResult<&str, Vec<GlobGroup>, VerboseError<&str
                     one_or_more_group,
                     exact_one_group,
                     negated_file_group,
+                    negated_wildcard,
                     negated_group,
+                    brace_group_with_empty_item,
                     non_special_character,
-                )),
-            ),
+                ))(group_input)
+            }),
             eof,
         ),
     )(input)
@@ -150,7 +199,29 @@ pub fn parse_glob(input: &str) -> anyhow::Result<(bool, Vec<Vec<GlobGroup>>)> {
 #[cfg(test)]
 mod test {
     use crate::native::glob::glob_group::GlobGroup;
-    use crate::native::glob::glob_parser::parse_glob;
+    use crate::native::glob::glob_parser::{parse_glob, special_char_with_no_group};
+
+    #[test]
+    fn invalid_groups() {
+        let result = special_char_with_no_group("?snap").unwrap();
+        assert_eq!(result, ("snap", ""));
+        // assert_eq!(result, ("?", "snap"));
+        let result = parse_glob("libs/?(*.)+spec.ts?(.snap)").unwrap();
+        assert_eq!(
+            result,
+            (
+                false,
+                vec![
+                    vec![GlobGroup::NonSpecial("libs".into())],
+                    vec![
+                        GlobGroup::ZeroOrOne("*.".into()),
+                        GlobGroup::NonSpecial("spec.ts".into()),
+                        GlobGroup::ZeroOrOne(".snap".into())
+                    ]
+                ]
+            )
+        );
+    }
 
     #[test]
     fn should_parse_globs() {
@@ -269,6 +340,49 @@ mod test {
                         GlobGroup::NonSpecial("[jt]s".into()),
                         GlobGroup::Negated("x".into())
                     ]
+                ]
+            )
+        );
+
+        let result = parse_glob("packages/!(package-a)*/package.json").unwrap();
+        assert_eq!(
+            result,
+            (
+                false,
+                vec![
+                    vec![GlobGroup::NonSpecial("packages".into())],
+                    vec![GlobGroup::NegatedWildcard("package-a".into()),],
+                    vec![GlobGroup::NonSpecial("package.json".into())]
+                ]
+            )
+        );
+    }
+    #[test]
+    fn should_parse_globs_with_braces() {
+        let result = parse_glob("**/*.spec.ts{,.snap}").unwrap();
+
+        assert_eq!(
+            result,
+            (
+                false,
+                vec![
+                    vec![GlobGroup::NonSpecial("**".into())],
+                    vec![
+                        GlobGroup::NonSpecial("*.spec.ts".into()),
+                        GlobGroup::ZeroOrOne(".snap".into())
+                    ]
+                ]
+            )
+        );
+        let result = parse_glob("**/*.spec.ts{.snapshot,.snap}").unwrap();
+
+        assert_eq!(
+            result,
+            (
+                false,
+                vec![
+                    vec![GlobGroup::NonSpecial("**".into())],
+                    vec![GlobGroup::NonSpecial("*.spec.ts{.snapshot,.snap}".into()),]
                 ]
             )
         );

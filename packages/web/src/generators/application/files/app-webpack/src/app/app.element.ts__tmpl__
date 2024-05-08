@@ -279,7 +279,7 @@ export class AppElement extends HTMLElement {
                   <path stroke-width="2" d="M23 6v14.1667C23 21.7307 21.7307 23 20.1667 23H6c0-3.128 2.53867-5.6667 5.6667-5.6667 3.128 0 5.6666-2.5386 5.6666-5.6666C17.3333 8.53867 19.872 6 23 6Z" />
                 </svg>
                 <h2>
-                  NxCloud
+                  Nx Cloud
                   <span>
                     Enable faster CI & better DX
                   </span>
@@ -289,7 +289,7 @@ export class AppElement extends HTMLElement {
                 You can activate distributed tasks executions and caching by
                 running:
               </p>
-              <pre>nx connect-to-nx-cloud</pre>
+              <pre>nx connect</pre>
               <a href="https://nx.app/?utm_source=nx-project" target="_blank" rel="noreferrer"> What is Nx Cloud? </a>
             </div>
             <a id="nx-repo" class="button-pill rounded shadow" href="https://github.com/nrwl/nx?utm_source=nx-project" target="_blank" rel="noreferrer">

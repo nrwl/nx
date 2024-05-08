@@ -1,0 +1,52 @@
+{
+  "name": "graph-ui-code-block",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "graph/ui-code-block/src",
+  "projectType": "library",
+  "tags": [],
+  "targets": {
+    "storybook": {
+      "executor": "@nx/storybook:storybook",
+      "options": {
+        "port": 4400,
+        "configDir": "graph/ui-code-block/.storybook"
+      },
+      "configurations": {
+        "ci": {
+          "quiet": true
+        }
+      }
+    },
+    "build-storybook": {
+      "executor": "@nx/storybook:build",
+      "outputs": ["{options.outputDir}"],
+      "options": {
+        "outputDir": "dist/storybook/graph-ui-code-block",
+        "configDir": "graph/ui-code-block/.storybook"
+      },
+      "configurations": {
+        "ci": {
+          "quiet": true
+        }
+      }
+    },
+    "test-storybook": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "test-storybook -c graph/ui-code-block/.storybook --url=http://localhost:4400"
+      }
+    },
+    "static-storybook": {
+      "executor": "@nx/web:file-server",
+      "options": {
+        "buildTarget": "graph-ui-code-block:build-storybook",
+        "staticFilePath": "dist/storybook/graph-ui-code-block"
+      },
+      "configurations": {
+        "ci": {
+          "buildTarget": "graph-ui-code-block:build-storybook:ci"
+        }
+      }
+    }
+  }
+}

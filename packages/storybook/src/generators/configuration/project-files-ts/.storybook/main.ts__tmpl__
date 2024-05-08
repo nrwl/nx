@@ -10,18 +10,37 @@ const config: StorybookConfig = {
     '../**/*.stories.@(js|jsx|ts|tsx|mdx)' <% } else { %>
     '../<%= projectDirectory %>/**/*.stories.@(js|jsx|ts|tsx|mdx)'
   <% } %>],
-  addons: ['@storybook/addon-essentials' <% if(interactionTests) { %>, '@storybook/addon-interactions' <% } %><% if(uiFramework === '@storybook/react-webpack5') { %>, '@nx/react/plugins/storybook' <% } %><% if(uiFramework === '@storybook/react-native') { %>, '@storybook/addon-ondevice-actions',  '@storybook/addon-ondevice-backgrounds', '@storybook/addon-ondevice-controls', '@storybook/addon-ondevice-notes'  <% } %>],
+  addons: ['@storybook/addon-essentials' <% if(interactionTests) { %>, '@storybook/addon-interactions' <% } %><% if(uiFramework === '@storybook/react-webpack5') { %>, '@nx/react/plugins/storybook' <% } %>],
   framework: {
     name: '<%= uiFramework %>',
     options: {
-      <% if (usesVite && viteConfigFilePath) { %>
+      <% if (usesVite && viteConfigFilePath && hasPlugin) { %>
+      builder: {
+        viteConfigPath: '<%= viteConfigFileName %>',
+      },
+      <% } %><% if (usesVite && viteConfigFilePath && !hasPlugin) { %>
       builder: {
         viteConfigPath: '<%= viteConfigFilePath %>',
       },
       <% } %>
     },
   },
-  <% if (usesVite && !viteConfigFilePath) { %>
+  <% if (useReactNative && uiFramework === '@storybook/react-webpack5') { %>webpackFinal: async (config) => {
+    if (config.resolve) {
+      config.resolve.alias = {
+        ...config.resolve.alias,
+        'react-native$': 'react-native-web',
+      };
+      config.resolve.extensions = [
+        '.web.tsx',
+        '.web.ts',
+        '.web.jsx',
+        '.web.js',
+        ...(config.resolve.extensions ?? []),
+      ];
+    }
+    return config;
+  },<% } %><% if (usesVite && !viteConfigFilePath) { %>
   viteFinal: async (config) =>
     mergeConfig(config, {
       plugins: [nxViteTsPaths()],

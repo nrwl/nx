@@ -1,6 +1,8 @@
-# Type alias: Generator<T\>
+# Type alias: Generator\<T\>
 
-Ƭ **Generator**<`T`\>: (`tree`: `any`, `schema`: `T`) => `void` \| [`GeneratorCallback`](../../devkit/documents/GeneratorCallback) \| `Promise`<`void` \| [`GeneratorCallback`](../../devkit/documents/GeneratorCallback)\>
+Ƭ **Generator**\<`T`\>: (`tree`: `any`, `schema`: `T`) => `void` \| [`GeneratorCallback`](../../devkit/documents/GeneratorCallback) \| `Promise`\<`void` \| [`GeneratorCallback`](../../devkit/documents/GeneratorCallback)\>
+
+A function that schedules updates to the filesystem to be done atomically
 
 #### Type parameters
 
@@ -10,9 +12,7 @@
 
 #### Type declaration
 
-▸ (`tree`, `schema`): `void` \| [`GeneratorCallback`](../../devkit/documents/GeneratorCallback) \| `Promise`<`void` \| [`GeneratorCallback`](../../devkit/documents/GeneratorCallback)\>
-
-A function that schedules updates to the filesystem to be done atomically
+▸ (`tree`, `schema`): `void` \| [`GeneratorCallback`](../../devkit/documents/GeneratorCallback) \| `Promise`\<`void` \| [`GeneratorCallback`](../../devkit/documents/GeneratorCallback)\>
 
 ##### Parameters
 
@@ -23,4 +23,4 @@ A function that schedules updates to the filesystem to be done atomically
 
 ##### Returns
 
-`void` \| [`GeneratorCallback`](../../devkit/documents/GeneratorCallback) \| `Promise`<`void` \| [`GeneratorCallback`](../../devkit/documents/GeneratorCallback)\>
+`void` \| [`GeneratorCallback`](../../devkit/documents/GeneratorCallback) \| `Promise`\<`void` \| [`GeneratorCallback`](../../devkit/documents/GeneratorCallback)\>

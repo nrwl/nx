@@ -7,6 +7,7 @@ import { MyScamComponent } from './my-scam.component';
 import { within } from '@storybook/testing-library';
 import { expect } from '@storybook/jest';
 
+
 const meta: Meta<MyScamComponent> = {
   component: MyScamComponent,
   title: 'MyScamComponent',
@@ -15,11 +16,14 @@ export default meta;
 type Story = StoryObj<MyScamComponent>;
 
 export const Primary: Story = {
-  args: {},
+  args: {
+  },
 };
 
+
 export const Heading: Story = {
-  args: {},
+  args: {
+  },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     expect(canvas.getByText(/my-scam works!/gi)).toBeTruthy();
@@ -63,6 +67,7 @@ import { ComponentBComponent } from './component-b.component';
 import { within } from '@storybook/testing-library';
 import { expect } from '@storybook/jest';
 
+
 const meta: Meta<ComponentBComponent> = {
   component: ComponentBComponent,
   title: 'ComponentBComponent',
@@ -71,11 +76,14 @@ export default meta;
 type Story = StoryObj<ComponentBComponent>;
 
 export const Primary: Story = {
-  args: {},
+  args: {
+  },
 };
 
+
 export const Heading: Story = {
-  args: {},
+  args: {
+  },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     expect(canvas.getByText(/component-b works!/gi)).toBeTruthy();
@@ -91,6 +99,7 @@ import { ComponentComponent } from './component.component';
 import { within } from '@storybook/testing-library';
 import { expect } from '@storybook/jest';
 
+
 const meta: Meta<ComponentComponent> = {
   component: ComponentComponent,
   title: 'ComponentComponent',
@@ -99,11 +108,14 @@ export default meta;
 type Story = StoryObj<ComponentComponent>;
 
 export const Primary: Story = {
-  args: {},
+  args: {
+  },
 };
 
+
 export const Heading: Story = {
-  args: {},
+  args: {
+  },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     expect(canvas.getByText(/component works!/gi)).toBeTruthy();

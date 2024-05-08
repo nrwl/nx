@@ -1,32 +1,15 @@
 {
-  "$schema": "http://json-schema.org/schema",
+  "$schema": "https://json-schema.org/schema",
   "cli": "nx",
   "$id": "NxNextNgInit",
   "title": "Init Next Plugin",
   "description": "Init Next Plugin.",
   "type": "object",
   "properties": {
-    "unitTestRunner": {
-      "description": "Adds the specified unit test runner.",
-      "type": "string",
-      "enum": ["jest", "none"],
-      "default": "jest"
-    },
-    "e2eTestRunner": {
-      "description": "Adds the specified e2e test runner.",
-      "type": "string",
-      "enum": ["cypress", "none"],
-      "default": "cypress"
-    },
     "skipFormat": {
       "description": "Skip formatting files.",
       "type": "boolean",
       "default": false
-    },
-    "js": {
-      "type": "boolean",
-      "default": false,
-      "description": "Use JavaScript instead of TypeScript"
     },
     "skipPackageJson": {
       "type": "boolean",
@@ -34,12 +17,17 @@
       "description": "Do not add dependencies to `package.json`.",
       "x-priority": "internal"
     },
-    "rootProject": {
-      "description": "Create an application at the root of the workspace.",
+    "keepExistingVersions": {
       "type": "boolean",
-      "default": false,
-      "hidden": true,
-      "x-priority": "internal"
+      "x-priority": "internal",
+      "description": "Keep existing dependencies versions",
+      "default": false
+    },
+    "updatePackageScripts": {
+      "type": "boolean",
+      "x-priority": "internal",
+      "description": "Update `package.json` scripts with inferred targets",
+      "default": false
     }
   },
   "required": []

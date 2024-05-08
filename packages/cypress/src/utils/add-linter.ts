@@ -17,7 +17,10 @@ import {
   isEslintConfigSupported,
   replaceOverridesInLintConfig,
 } from '@nx/eslint/src/generators/utils/eslint-file';
-import { javaScriptOverride } from '@nx/eslint/src/generators/init/global-eslint-config';
+import {
+  javaScriptOverride,
+  typeScriptOverride,
+} from '@nx/eslint/src/generators/init/global-eslint-config';
 
 export interface CyLinterOptions {
   project: string;
@@ -36,6 +39,7 @@ export interface CyLinterOptions {
    * This is useful when adding linting to a brand new project vs an existing one
    **/
   overwriteExisting?: boolean;
+  addPlugin?: boolean;
 }
 
 export async function addLinterToCyProject(
@@ -57,12 +61,10 @@ export async function addLinterToCyProject(
         linter: options.linter,
         skipFormat: true,
         tsConfigPaths: [joinPathFragments(projectConfig.root, 'tsconfig.json')],
-        eslintFilePatterns: [
-          `${projectConfig.root}/**/*.${options.js ? 'js' : '{js,ts}'}`,
-        ],
         setParserOptionsProject: options.setParserOptionsProject,
         skipPackageJson: options.skipPackageJson,
         rootProject: options.rootProject,
+        addPlugin: options.addPlugin,
       })
     );
   }
@@ -70,6 +72,8 @@ export async function addLinterToCyProject(
   if (!options.linter || options.linter !== Linter.EsLint) {
     return runTasksInSerial(...tasks);
   }
+
+  options.overwriteExisting = options.overwriteExisting || !eslintFile;
 
   tasks.push(
     !options.skipPackageJson
@@ -85,6 +89,7 @@ export async function addLinterToCyProject(
     const overrides = [];
     if (options.rootProject) {
       addPluginsToLintConfig(tree, projectConfig.root, '@nx');
+      overrides.push(typeScriptOverride);
       overrides.push(javaScriptOverride);
     }
     addExtendsToLintConfig(
@@ -107,7 +112,7 @@ export async function addLinterToCyProject(
     const addCy6Override = cyVersion && cyVersion < 7;
 
     if (options.overwriteExisting) {
-      overrides.push({
+      overrides.unshift({
         files: ['*.ts', '*.tsx', '*.js', '*.jsx'],
         parserOptions: !options.setParserOptionsProject
           ? undefined

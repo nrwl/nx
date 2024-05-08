@@ -1,4 +1,6 @@
-import { updateJson } from '@nx/devkit';
+import 'nx/src/internal-testing-utils/mock-project-graph';
+
+import { readJson, updateJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import {
   getProjects,
@@ -20,6 +22,7 @@ describe('Host App Generator', () => {
       name: 'test',
       typescriptConfiguration: false,
       standalone: false,
+      skipFormat: true,
     });
 
     // ASSERT
@@ -34,6 +37,7 @@ describe('Host App Generator', () => {
       name: 'test',
       typescriptConfiguration: true,
       standalone: false,
+      skipFormat: true,
     });
 
     // ASSERT
@@ -48,6 +52,7 @@ describe('Host App Generator', () => {
       name: 'remote',
       typescriptConfiguration: false,
       standalone: false,
+      skipFormat: true,
     });
 
     // ACT
@@ -56,6 +61,7 @@ describe('Host App Generator', () => {
       remotes: ['remote'],
       typescriptConfiguration: false,
       standalone: false,
+      skipFormat: true,
     });
 
     // ASSERT
@@ -70,6 +76,7 @@ describe('Host App Generator', () => {
       name: 'remote',
       typescriptConfiguration: true,
       standalone: false,
+      skipFormat: true,
     });
 
     // ACT
@@ -78,6 +85,7 @@ describe('Host App Generator', () => {
       remotes: ['remote'],
       typescriptConfiguration: true,
       standalone: false,
+      skipFormat: true,
     });
 
     // ASSERT
@@ -96,6 +104,7 @@ describe('Host App Generator', () => {
       remotes: ['remote1', 'remote2'],
       typescriptConfiguration: false,
       standalone: false,
+      skipFormat: true,
     });
 
     // ASSERT
@@ -103,13 +112,13 @@ describe('Host App Generator', () => {
     expect(tree.exists('remote2/project.json')).toBeTruthy();
     expect(
       tree.read('host-app/module-federation.config.js', 'utf-8')
-    ).toContain(`'remote1', 'remote2'`);
+    ).toContain(`'remote1','remote2'`);
     expect(tree.read('host-app/src/app/app.component.html', 'utf-8'))
       .toMatchInlineSnapshot(`
       "<ul class="remote-menu">
-        <li><a routerLink="/">Home</a></li>
-        <li><a routerLink="remote1">Remote1</a></li>
-        <li><a routerLink="remote2">Remote2</a></li>
+      <li><a routerLink="/">Home</a></li>
+      <li><a routerLink="remote1">Remote1</a></li>
+      <li><a routerLink="remote2">Remote2</a></li>
       </ul>
       <router-outlet></router-outlet>
       "
@@ -127,6 +136,7 @@ describe('Host App Generator', () => {
       remotes: ['remote1', 'remote2'],
       typescriptConfiguration: true,
       standalone: false,
+      skipFormat: true,
     });
 
     // ASSERT
@@ -134,13 +144,13 @@ describe('Host App Generator', () => {
     expect(tree.exists('remote2/project.json')).toBeTruthy();
     expect(
       tree.read('host-app/module-federation.config.ts', 'utf-8')
-    ).toContain(`'remote1', 'remote2'`);
+    ).toContain(`'remote1','remote2'`);
     expect(tree.read('host-app/src/app/app.component.html', 'utf-8'))
       .toMatchInlineSnapshot(`
       "<ul class="remote-menu">
-        <li><a routerLink="/">Home</a></li>
-        <li><a routerLink="remote1">Remote1</a></li>
-        <li><a routerLink="remote2">Remote2</a></li>
+      <li><a routerLink="/">Home</a></li>
+      <li><a routerLink="remote1">Remote1</a></li>
+      <li><a routerLink="remote2">Remote2</a></li>
       </ul>
       <router-outlet></router-outlet>
       "
@@ -154,6 +164,7 @@ describe('Host App Generator', () => {
       name: 'remote1',
       typescriptConfiguration: false,
       standalone: false,
+      skipFormat: true,
     });
 
     // ACT
@@ -162,6 +173,7 @@ describe('Host App Generator', () => {
       remotes: ['remote1', 'remote2', 'remote3'],
       typescriptConfiguration: false,
       standalone: false,
+      skipFormat: true,
     });
 
     // ASSERT
@@ -170,7 +182,7 @@ describe('Host App Generator', () => {
     expect(tree.exists('remote3/project.json')).toBeTruthy();
     expect(
       tree.read('host-app/module-federation.config.js', 'utf-8')
-    ).toContain(`'remote1', 'remote2', 'remote3'`);
+    ).toContain(`'remote1','remote2','remote3'`);
   });
 
   it('should generate a host, integrate existing remotes and generate any remotes that dont exist when --typescript=true', async () => {
@@ -180,6 +192,7 @@ describe('Host App Generator', () => {
       name: 'remote1',
       typescriptConfiguration: true,
       standalone: false,
+      skipFormat: true,
     });
 
     // ACT
@@ -188,6 +201,7 @@ describe('Host App Generator', () => {
       remotes: ['remote1', 'remote2', 'remote3'],
       typescriptConfiguration: true,
       standalone: false,
+      skipFormat: true,
     });
 
     // ASSERT
@@ -196,7 +210,7 @@ describe('Host App Generator', () => {
     expect(tree.exists('remote3/project.json')).toBeTruthy();
     expect(
       tree.read('host-app/module-federation.config.ts', 'utf-8')
-    ).toContain(`'remote1', 'remote2', 'remote3'`);
+    ).toContain(`'remote1','remote2','remote3'`);
   });
 
   it('should generate a host, integrate existing remotes and generate any remotes that dont exist, in a directory', async () => {
@@ -206,6 +220,7 @@ describe('Host App Generator', () => {
       name: 'remote1',
       typescriptConfiguration: false,
       standalone: false,
+      skipFormat: true,
     });
 
     // ACT
@@ -215,6 +230,7 @@ describe('Host App Generator', () => {
       remotes: ['remote1', 'remote2', 'remote3'],
       typescriptConfiguration: false,
       standalone: false,
+      skipFormat: true,
     });
 
     // ASSERT
@@ -223,7 +239,7 @@ describe('Host App Generator', () => {
     expect(tree.exists('foo/remote3/project.json')).toBeTruthy();
     expect(
       tree.read('foo/host-app/module-federation.config.js', 'utf-8')
-    ).toContain(`'remote1', 'remote2', 'remote3'`);
+    ).toContain(`'remote1','remote2','remote3'`);
   });
 
   it('should generate a host, integrate existing remotes and generate any remotes that dont exist, in a directory when --typescript=true', async () => {
@@ -233,6 +249,7 @@ describe('Host App Generator', () => {
       name: 'remote1',
       typescriptConfiguration: true,
       standalone: false,
+      skipFormat: true,
     });
 
     // ACT
@@ -242,6 +259,7 @@ describe('Host App Generator', () => {
       remotes: ['remote1', 'remote2', 'remote3'],
       typescriptConfiguration: true,
       standalone: false,
+      skipFormat: true,
     });
 
     // ASSERT
@@ -250,7 +268,7 @@ describe('Host App Generator', () => {
     expect(tree.exists('foo/remote3/project.json')).toBeTruthy();
     expect(
       tree.read('foo/host-app/module-federation.config.ts', 'utf-8')
-    ).toContain(`'remote1', 'remote2', 'remote3'`);
+    ).toContain(`'remote1','remote2','remote3'`);
   });
 
   it('should generate a host with remotes using standalone components', async () => {
@@ -261,6 +279,7 @@ describe('Host App Generator', () => {
     await generateTestHostApplication(tree, {
       name: 'host',
       remotes: ['remote1'],
+      skipFormat: true,
     });
 
     // ASSERT
@@ -279,6 +298,7 @@ describe('Host App Generator', () => {
     await generateTestHostApplication(tree, {
       name: 'host',
       remotes: ['remote1'],
+      skipFormat: true,
     });
 
     // ASSERT
@@ -296,6 +316,7 @@ describe('Host App Generator', () => {
       name: 'dashboard',
       remotes: ['remote1'],
       directory: 'test/dashboard',
+      skipFormat: true,
     });
 
     // ASSERT
@@ -314,6 +335,7 @@ describe('Host App Generator', () => {
       remotes: ['remote1'],
       e2eTestRunner: E2eTestRunner.None,
       standalone: false,
+      skipFormat: true,
     });
 
     // ASSERT
@@ -369,6 +391,7 @@ describe('Host App Generator', () => {
         ssr: true,
         typescriptConfiguration: true,
         standalone: false,
+        skipFormat: true,
       });
 
       // ASSERT
@@ -443,6 +466,7 @@ describe('Host App Generator', () => {
         name: 'test',
         ssr: true,
         typescriptConfiguration: true,
+        skipFormat: true,
       });
 
       // ASSERT
@@ -483,7 +507,11 @@ describe('Host App Generator', () => {
           },
         }));
 
-        await generateTestHostApplication(tree, { name: 'test', ssr: true });
+        await generateTestHostApplication(tree, {
+          name: 'test',
+          ssr: true,
+          skipFormat: true,
+        });
 
         expect(tree.read(`test/src/main.server.ts`, 'utf-8')).toMatchSnapshot();
       });
@@ -499,6 +527,7 @@ describe('Host App Generator', () => {
         projectNameAndRootFormat: 'derived',
         typescriptConfiguration: false,
         standalone: false,
+        skipFormat: true,
       });
 
       // ACT
@@ -508,6 +537,7 @@ describe('Host App Generator', () => {
         projectNameAndRootFormat: 'derived',
         typescriptConfiguration: false,
         standalone: false,
+        skipFormat: true,
       });
 
       // ASSERT
@@ -516,7 +546,7 @@ describe('Host App Generator', () => {
       expect(tree.exists('apps/remote3/project.json')).toBeTruthy();
       expect(
         tree.read('apps/host-app/module-federation.config.js', 'utf-8')
-      ).toContain(`'remote1', 'remote2', 'remote3'`);
+      ).toContain(`'remote1','remote2','remote3'`);
     });
 
     it('should generate a host, integrate existing remotes and generate any remotes that dont exist, in a directory', async () => {
@@ -527,6 +557,7 @@ describe('Host App Generator', () => {
         projectNameAndRootFormat: 'derived',
         typescriptConfiguration: false,
         standalone: false,
+        skipFormat: true,
       });
 
       // ACT
@@ -537,6 +568,7 @@ describe('Host App Generator', () => {
         projectNameAndRootFormat: 'derived',
         typescriptConfiguration: false,
         standalone: false,
+        skipFormat: true,
       });
 
       // ASSERT
@@ -545,7 +577,7 @@ describe('Host App Generator', () => {
       expect(tree.exists('apps/foo/remote3/project.json')).toBeTruthy();
       expect(
         tree.read('apps/foo/host-app/module-federation.config.js', 'utf-8')
-      ).toContain(`'remote1', 'foo-remote2', 'foo-remote3'`);
+      ).toContain(`'remote1','foo-remote2','foo-remote3'`);
     });
     it('should generate a host, integrate existing remotes and generate any remotes that dont exist, in a directory when --typescript=true', async () => {
       // ARRANGE
@@ -555,6 +587,7 @@ describe('Host App Generator', () => {
         projectNameAndRootFormat: 'derived',
         typescriptConfiguration: true,
         standalone: false,
+        skipFormat: true,
       });
 
       // ACT
@@ -565,6 +598,7 @@ describe('Host App Generator', () => {
         projectNameAndRootFormat: 'derived',
         typescriptConfiguration: true,
         standalone: false,
+        skipFormat: true,
       });
 
       // ASSERT
@@ -573,7 +607,29 @@ describe('Host App Generator', () => {
       expect(tree.exists('apps/foo/remote3/project.json')).toBeTruthy();
       expect(
         tree.read('apps/foo/host-app/module-federation.config.ts', 'utf-8')
-      ).toContain(`'remote1', 'foo-remote2', 'foo-remote3'`);
+      ).toContain(`'remote1','foo-remote2','foo-remote3'`);
     });
+  });
+
+  it('should not touch the package.json when run with `--skipPackageJson`', async () => {
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    let initialPackageJson;
+    updateJson(tree, 'package.json', (json) => {
+      json.dependencies = {};
+      json.devDependencies = {};
+      initialPackageJson = json;
+
+      return json;
+    });
+
+    await generateTestHostApplication(tree, {
+      name: 'test',
+      ssr: true,
+      skipFormat: true,
+      skipPackageJson: true,
+    });
+
+    const packageJson = readJson(tree, 'package.json');
+    expect(packageJson).toEqual(initialPackageJson);
   });
 });

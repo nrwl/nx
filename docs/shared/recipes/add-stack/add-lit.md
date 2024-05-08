@@ -8,17 +8,16 @@ The code for this example is available on GitHub:
 
 Because we are not using an Nx plugin for Lit, there are few items we'll have to configure manually. We'll have to configure our own build system. There are no pre-created Lit-specific code generators. And we'll have to take care of updating any framework dependencies as needed.
 
-{% pill url="/core-features/run-tasks" %}✅ Run Tasks{% /pill %}
-{% pill url="/core-features/cache-task-results" %}✅ Cache Task Results{% /pill %}
-{% pill url="/nx-cloud/features/remote-cache" %}✅ Share Your Cache{% /pill %}
-{% pill url="/core-features/explore-graph" %}✅ Explore the Graph{% /pill %}
-{% pill url="/nx-cloud/features/distribute-task-execution" %}✅ Distribute Task Execution{% /pill %}
-{% pill url="/core-features/integrate-with-editors" %}✅ Integrate with Editors{% /pill %}
-{% pill url="/core-features/automate-updating-dependencies" %}✅ Automate Updating Nx{% /pill %}
-{% pill url="/core-features/enforce-module-boundaries" %}✅ Enforce Module Boundaries{% /pill %}
-{% pill url="/core-features/plugin-features/use-task-executors" %}🚫 Use Task Executors{% /pill %}
-{% pill url="/core-features/plugin-features/use-code-generators" %}🚫 Use Code Generators{% /pill %}
-{% pill url="/core-features/automate-updating-dependencies" %}🚫 Automate Updating Framework Dependencies{% /pill %}
+{% pill url="/features/run-tasks" %}✅ Run Tasks{% /pill %}
+{% pill url="/features/cache-task-results" %}✅ Cache Task Results{% /pill %}
+{% pill url="/ci/features/remote-cache" %}✅ Share Your Cache{% /pill %}
+{% pill url="/features/explore-graph" %}✅ Explore the Graph{% /pill %}
+{% pill url="/ci/features/distribute-task-execution" %}✅ Distribute Task Execution{% /pill %}
+{% pill url="/getting-started/editor-setup" %}✅ Integrate with Editors{% /pill %}
+{% pill url="/features/automate-updating-dependencies" %}✅ Automate Updating Nx{% /pill %}
+{% pill url="/features/enforce-module-boundaries" %}✅ Enforce Module Boundaries{% /pill %}
+{% pill url="/features/generate-code" %}🚫 Use Code Generators{% /pill %}
+{% pill url="/features/automate-updating-dependencies" %}🚫 Automate Updating Framework Dependencies{% /pill %}
 
 ## Install Lit and Other Dependencies
 
@@ -27,15 +26,25 @@ Install all the dependencies we need:
 {% tabs %}
 {%tab label="npm"%}
 
-```shell
-npm i --save-dev @nx/node lit http-server
+```shell {% skipRescope=true %}
+nx add @nx/node
+npm add -D lit http-server
 ```
 
 {% /tab %}
 {%tab label="yarn"%}
 
-```shell
-yarn add --dev @nx/node lit http-server
+```shell {% skipRescope=true %}
+nx add @nx/node
+yarn add -D lit http-server
+```
+
+{% /tab %}
+{%tab label="pnpm"%}
+
+```shell {% skipRescope=true %}
+nx add @nx/node
+pnpm add -D lit http-server
 ```
 
 {% /tab %}

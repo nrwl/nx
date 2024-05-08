@@ -1,5 +1,9 @@
+import 'nx/src/internal-testing-utils/mock-project-graph';
+
 import {
+  getPackageManagerCommand,
   getProjects,
+  output,
   readJson,
   readProjectConfiguration,
   Tree,
@@ -40,8 +44,8 @@ describe('lib', () => {
       });
       expect(readJson(tree, '/my-lib/package.json')).toEqual({
         name: '@proj/my-lib',
+        private: true,
         version: '0.0.1',
-        type: 'commonjs',
         scripts: {
           build: "echo 'implement build'",
           test: "echo 'implement test'",
@@ -487,21 +491,6 @@ describe('lib', () => {
     });
 
     describe('not nested', () => {
-      it('should update configuration', async () => {
-        await libraryGenerator(tree, {
-          ...defaultOptions,
-          name: 'my-lib',
-          projectNameAndRootFormat: 'as-provided',
-        });
-        expect(readProjectConfiguration(tree, 'my-lib').targets.lint).toEqual({
-          executor: '@nx/eslint:lint',
-          outputs: ['{options.outputFile}'],
-          options: {
-            lintFilePatterns: ['my-lib/**/*.ts', 'my-lib/package.json'],
-          },
-        });
-      });
-
       it('should create a local .eslintrc.json', async () => {
         await libraryGenerator(tree, {
           ...defaultOptions,
@@ -558,26 +547,6 @@ describe('lib', () => {
     });
 
     describe('nested', () => {
-      it('should update configuration', async () => {
-        await libraryGenerator(tree, {
-          ...defaultOptions,
-          name: 'my-lib',
-          directory: 'my-dir/my-lib',
-          projectNameAndRootFormat: 'as-provided',
-        });
-
-        expect(readProjectConfiguration(tree, 'my-lib').targets.lint).toEqual({
-          executor: '@nx/eslint:lint',
-          outputs: ['{options.outputFile}'],
-          options: {
-            lintFilePatterns: [
-              'my-dir/my-lib/**/*.ts',
-              'my-dir/my-lib/package.json',
-            ],
-          },
-        });
-      });
-
       it('should create a local .eslintrc.json', async () => {
         await libraryGenerator(tree, {
           ...defaultOptions,
@@ -711,10 +680,6 @@ describe('lib', () => {
           js: true,
           projectNameAndRootFormat: 'as-provided',
         });
-        expect(
-          readProjectConfiguration(tree, 'my-lib').targets.lint.options
-            .lintFilePatterns
-        ).toEqual(['my-dir/my-lib/**/*.js', 'my-dir/my-lib/package.json']);
         expect(readJson(tree, 'my-dir/my-lib/.eslintrc.json'))
           .toMatchInlineSnapshot(`
           {
@@ -777,9 +742,6 @@ describe('lib', () => {
       expect(tree.exists('my-lib/jest.config.ts')).toBeTruthy();
       expect(tree.exists('my-lib/src/lib/my-lib.spec.ts')).toBeTruthy();
 
-      const projectConfig = readProjectConfiguration(tree, 'my-lib');
-      expect(projectConfig.targets.test).toBeDefined();
-
       expect(tree.exists(`my-lib/jest.config.ts`)).toBeTruthy();
       expect(tree.read(`my-lib/jest.config.ts`, 'utf-8'))
         .toMatchInlineSnapshot(`
@@ -812,9 +774,6 @@ describe('lib', () => {
       expect(tree.exists('my-lib/tsconfig.spec.json')).toBeTruthy();
       expect(tree.exists('my-lib/jest.config.js')).toBeTruthy();
       expect(tree.exists('my-lib/src/lib/my-lib.spec.js')).toBeTruthy();
-
-      const projectConfig = readProjectConfiguration(tree, 'my-lib');
-      expect(projectConfig.targets.test).toBeDefined();
 
       expect(tree.exists(`my-lib/jest.config.js`)).toBeTruthy();
       expect(tree.read(`my-lib/jest.config.js`, 'utf-8')).toMatchSnapshot();
@@ -1019,6 +978,9 @@ describe('lib', () => {
         expect(config.targets.build.options.project).toEqual(
           `my-lib/package.json`
         );
+
+        const pkgJson = readJson(tree, 'my-lib/package.json');
+        expect(pkgJson.type).not.toBeDefined();
       });
 
       it('should always set compiler to swc if bundler is rollup', async () => {
@@ -1058,7 +1020,7 @@ describe('lib', () => {
         });
       });
 
-      it('should generate the publish target', async () => {
+      it('should update the nx-release-publish target to specify dist/{projectRoot} as the package root', async () => {
         await libraryGenerator(tree, {
           ...defaultOptions,
           name: 'my-lib',
@@ -1069,24 +1031,356 @@ describe('lib', () => {
         });
 
         const config = readProjectConfiguration(tree, 'my-lib');
-        expect(config.targets.publish).toEqual({
-          command:
-            'node tools/scripts/publish.mjs my-lib {args.ver} {args.tag}',
-          dependsOn: ['build'],
+        expect(config.targets['nx-release-publish']).toEqual({
+          options: {
+            packageRoot: 'dist/{projectRoot}',
+          },
         });
       });
 
-      it('should generate publish script', async () => {
-        await libraryGenerator(tree, {
-          ...defaultOptions,
-          name: 'my-lib',
-          publishable: true,
-          importPath: '@proj/my-lib',
-          bundler: 'tsc',
-          projectNameAndRootFormat: 'as-provided',
+      describe('nx release config', () => {
+        it('should not change preVersionCommand if it already exists', async () => {
+          updateJson(tree, 'nx.json', (json) => {
+            json.release = {
+              version: {
+                preVersionCommand: 'echo "hello world"',
+              },
+            };
+            return json;
+          });
+
+          await libraryGenerator(tree, {
+            ...defaultOptions,
+            name: 'my-lib',
+            publishable: true,
+            importPath: '@proj/my-lib',
+            bundler: 'tsc',
+            projectNameAndRootFormat: 'as-provided',
+          });
+
+          const nxJson = readJson(tree, 'nx.json');
+          expect(nxJson.release).toEqual({
+            version: {
+              preVersionCommand: 'echo "hello world"',
+            },
+          });
         });
 
-        expect(tree.exists('tools/scripts/publish.mjs')).toBeTruthy();
+        it('should not add projects if no release config exists', async () => {
+          updateJson(tree, 'nx.json', (json) => {
+            delete json.release;
+            return json;
+          });
+
+          await libraryGenerator(tree, {
+            ...defaultOptions,
+            name: 'my-lib',
+            publishable: true,
+            importPath: '@proj/my-lib',
+            bundler: 'tsc',
+            projectNameAndRootFormat: 'as-provided',
+          });
+
+          const nxJson = readJson(tree, 'nx.json');
+          expect(nxJson.release).toEqual({
+            version: {
+              preVersionCommand: `${
+                getPackageManagerCommand().dlx
+              } nx run-many -t build`,
+            },
+          });
+        });
+
+        it("should not add projects if release config exists but doesn't specify groups or projects", async () => {
+          const existingReleaseConfig = {
+            version: {
+              git: {},
+            },
+            changelog: {
+              projectChangelogs: true,
+            },
+          };
+          updateJson(tree, 'nx.json', (json) => {
+            json.release = existingReleaseConfig;
+            return json;
+          });
+
+          await libraryGenerator(tree, {
+            ...defaultOptions,
+            name: 'my-lib',
+            publishable: true,
+            importPath: '@proj/my-lib',
+            bundler: 'tsc',
+            projectNameAndRootFormat: 'as-provided',
+          });
+
+          const nxJson = readJson(tree, 'nx.json');
+          expect(nxJson.release).toEqual({
+            ...existingReleaseConfig,
+            version: {
+              ...existingReleaseConfig.version,
+              preVersionCommand: `${
+                getPackageManagerCommand().dlx
+              } nx run-many -t build`,
+            },
+          });
+        });
+
+        it('should not change projects if it already exists as a string and matches the new project', async () => {
+          updateJson(tree, 'nx.json', (json) => {
+            json.release = {
+              projects: '*',
+            };
+            return json;
+          });
+
+          await libraryGenerator(tree, {
+            ...defaultOptions,
+            name: 'my-lib',
+            publishable: true,
+            importPath: '@proj/my-lib',
+            bundler: 'tsc',
+            projectNameAndRootFormat: 'as-provided',
+          });
+
+          const nxJson = readJson(tree, 'nx.json');
+          expect(nxJson.release).toEqual({
+            projects: '*',
+            version: {
+              preVersionCommand: `${
+                getPackageManagerCommand().dlx
+              } nx run-many -t build`,
+            },
+          });
+        });
+
+        it('should not change projects if it already exists as an array and matches the new project by name', async () => {
+          updateJson(tree, 'nx.json', (json) => {
+            json.release = {
+              projects: ['something-else', 'my-lib'],
+            };
+            return json;
+          });
+
+          await libraryGenerator(tree, {
+            ...defaultOptions,
+            name: 'my-lib',
+            publishable: true,
+            importPath: '@proj/my-lib',
+            bundler: 'tsc',
+            projectNameAndRootFormat: 'as-provided',
+          });
+
+          const nxJson = readJson(tree, 'nx.json');
+          expect(nxJson.release).toEqual({
+            projects: ['something-else', 'my-lib'],
+            version: {
+              preVersionCommand: `${
+                getPackageManagerCommand().dlx
+              } nx run-many -t build`,
+            },
+          });
+        });
+
+        it('should not change projects if it already exists and matches the new project by tag', async () => {
+          updateJson(tree, 'nx.json', (json) => {
+            json.release = {
+              projects: ['tag:one'],
+            };
+            return json;
+          });
+
+          await libraryGenerator(tree, {
+            ...defaultOptions,
+            name: 'my-lib',
+            publishable: true,
+            importPath: '@proj/my-lib',
+            bundler: 'tsc',
+            projectNameAndRootFormat: 'as-provided',
+            tags: 'one,two',
+          });
+
+          const nxJson = readJson(tree, 'nx.json');
+          expect(nxJson.release).toEqual({
+            projects: ['tag:one'],
+            version: {
+              preVersionCommand: `${
+                getPackageManagerCommand().dlx
+              } nx run-many -t build`,
+            },
+          });
+        });
+
+        it('should not change projects if it already exists and matches the new project by root directory', async () => {
+          updateJson(tree, 'nx.json', (json) => {
+            json.release = {
+              projects: ['packages/*'],
+            };
+            return json;
+          });
+
+          await libraryGenerator(tree, {
+            ...defaultOptions,
+            name: 'my-lib',
+            publishable: true,
+            importPath: '@proj/my-lib',
+            bundler: 'tsc',
+            projectNameAndRootFormat: 'as-provided',
+            directory: 'packages/my-lib',
+          });
+
+          const nxJson = readJson(tree, 'nx.json');
+          expect(nxJson.release).toEqual({
+            projects: ['packages/*'],
+            version: {
+              preVersionCommand: `${
+                getPackageManagerCommand().dlx
+              } nx run-many -t build`,
+            },
+          });
+        });
+
+        it("should append project to projects if projects exists as an array, but doesn't already match the new project", async () => {
+          updateJson(tree, 'nx.json', (json) => {
+            json.release = {
+              projects: ['something-else'],
+            };
+            return json;
+          });
+
+          await libraryGenerator(tree, {
+            ...defaultOptions,
+            name: 'my-lib',
+            publishable: true,
+            importPath: '@proj/my-lib',
+            bundler: 'tsc',
+            projectNameAndRootFormat: 'as-provided',
+          });
+
+          const nxJson = readJson(tree, 'nx.json');
+          expect(nxJson.release).toEqual({
+            projects: ['something-else', 'my-lib'],
+            version: {
+              preVersionCommand: `${
+                getPackageManagerCommand().dlx
+              } nx run-many -t build`,
+            },
+          });
+        });
+
+        it("should convert projects to an array and append the new project to it if projects exists as a string, but doesn't already match the new project", async () => {
+          updateJson(tree, 'nx.json', (json) => {
+            json.release = {
+              projects: 'packages',
+            };
+            return json;
+          });
+
+          await libraryGenerator(tree, {
+            ...defaultOptions,
+            name: 'my-lib',
+            publishable: true,
+            importPath: '@proj/my-lib',
+            bundler: 'tsc',
+            projectNameAndRootFormat: 'as-provided',
+          });
+
+          const nxJson = readJson(tree, 'nx.json');
+          expect(nxJson.release).toEqual({
+            projects: ['packages', 'my-lib'],
+            version: {
+              preVersionCommand: `${
+                getPackageManagerCommand().dlx
+              } nx run-many -t build`,
+            },
+          });
+        });
+
+        it('should not change projects if it already exists as groups config and matches the new project', async () => {
+          const existingReleaseConfig = {
+            groups: {
+              group1: {
+                projects: ['something-else'],
+              },
+              group2: {
+                projects: ['my-lib'],
+              },
+            },
+          };
+          updateJson(tree, 'nx.json', (json) => {
+            json.release = existingReleaseConfig;
+            return json;
+          });
+
+          await libraryGenerator(tree, {
+            ...defaultOptions,
+            name: 'my-lib',
+            publishable: true,
+            importPath: '@proj/my-lib',
+            bundler: 'tsc',
+            projectNameAndRootFormat: 'as-provided',
+          });
+
+          const nxJson = readJson(tree, 'nx.json');
+          expect(nxJson.release).toEqual({
+            groups: existingReleaseConfig.groups,
+            version: {
+              preVersionCommand: `${
+                getPackageManagerCommand().dlx
+              } nx run-many -t build`,
+            },
+          });
+        });
+
+        it("should warn the user if their defined groups don't match the new project", async () => {
+          const outputSpy = jest
+            .spyOn(output, 'warn')
+            .mockImplementationOnce(() => {
+              return undefined as never;
+            });
+
+          const existingReleaseConfig = {
+            groups: {
+              group1: {
+                projects: ['something-else'],
+              },
+              group2: {
+                projects: ['other-thing'],
+              },
+            },
+          };
+          updateJson(tree, 'nx.json', (json) => {
+            json.release = existingReleaseConfig;
+            return json;
+          });
+
+          await libraryGenerator(tree, {
+            ...defaultOptions,
+            name: 'my-lib',
+            publishable: true,
+            importPath: '@proj/my-lib',
+            bundler: 'tsc',
+            projectNameAndRootFormat: 'as-provided',
+          });
+
+          const nxJson = readJson(tree, 'nx.json');
+          expect(nxJson.release).toEqual({
+            groups: existingReleaseConfig.groups,
+            version: {
+              preVersionCommand: `${
+                getPackageManagerCommand().dlx
+              } nx run-many -t build`,
+            },
+          });
+          expect(outputSpy).toHaveBeenCalledWith({
+            title: `Could not find a release group that includes my-lib`,
+            bodyLines: [
+              `Ensure that my-lib is included in a release group's "projects" list in nx.json so it can be published with "nx release"`,
+            ],
+          });
+
+          outputSpy.mockRestore();
+        });
       });
     });
 
@@ -1186,14 +1480,10 @@ describe('lib', () => {
         projectNameAndRootFormat: 'as-provided',
       });
 
-      const project = readProjectConfiguration(tree, 'my-lib');
-      expect(project.targets.build).toMatchObject({
-        executor: '@nx/vite:build',
-      });
-      expect(project.targets.test).toMatchObject({
-        executor: '@nx/vite:test',
-      });
+      expect(tree.exists('my-lib/vite.config.ts')).toBeTruthy();
       expect(tree.read('my-lib/vite.config.ts', 'utf-8')).toMatchSnapshot();
+      expect(tree.read('my-lib/README.md', 'utf-8')).toMatchSnapshot();
+      expect(tree.read('my-lib/tsconfig.lib.json', 'utf-8')).toMatchSnapshot();
       expect(readJson(tree, 'my-lib/.eslintrc.json').overrides).toContainEqual({
         files: ['*.json'],
         parser: 'jsonc-eslint-parser',
@@ -1209,12 +1499,12 @@ describe('lib', () => {
     });
 
     it.each`
-      unitTestRunner | executor
+      unitTestRunner | configPath
       ${'none'}      | ${undefined}
-      ${'jest'}      | ${'@nx/jest:jest'}
+      ${'jest'}      | ${'my-lib/jest.config.ts'}
     `(
       'should respect unitTestRunner if passed',
-      async ({ unitTestRunner, executor }) => {
+      async ({ unitTestRunner, configPath }) => {
         await libraryGenerator(tree, {
           ...defaultOptions,
           name: 'my-lib',
@@ -1223,8 +1513,13 @@ describe('lib', () => {
           projectNameAndRootFormat: 'as-provided',
         });
 
-        const project = readProjectConfiguration(tree, 'my-lib');
-        expect(project.targets.test?.executor).toEqual(executor);
+        expect(tree.read('my-lib/README.md', 'utf-8')).toMatchSnapshot();
+        expect(
+          tree.read('my-lib/tsconfig.lib.json', 'utf-8')
+        ).toMatchSnapshot();
+        if (configPath) {
+          expect(tree.read(configPath, 'utf-8')).toMatchSnapshot();
+        }
       }
     );
   });

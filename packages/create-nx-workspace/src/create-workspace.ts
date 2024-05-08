@@ -17,7 +17,6 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
     packageManager,
     name,
     nxCloud,
-    ci = '',
     skipGit = false,
     defaultBase = 'main',
     commit,
@@ -30,7 +29,7 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
 
   const tmpDir = await createSandbox(packageManager);
 
-  // nx new requires preset currently. We should probably make it optional.
+  // nx new requires a preset currently. We should probably make it optional.
   const directory = await createEmptyWorkspace<T>(
     tmpDir,
     name,
@@ -39,7 +38,7 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
   );
 
   // If the preset is a third-party preset, we need to call createPreset to install it
-  // For first-party presets, it will created by createEmptyWorkspace instead.
+  // For first-party presets, it will be created by createEmptyWorkspace instead.
   // In createEmptyWorkspace, it will call `nx new` -> `@nx/workspace newGenerator` -> `@nx/workspace generatePreset`.
   const thirdPartyPreset = await getThirdPartyPreset(preset);
   if (thirdPartyPreset) {
@@ -47,16 +46,17 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
   }
 
   let nxCloudInstallRes;
-  if (nxCloud) {
-    nxCloudInstallRes = await setupNxCloud(directory, packageManager);
-  }
-  if (ci) {
-    await setupCI(
-      directory,
-      ci,
-      packageManager,
-      nxCloud && nxCloudInstallRes?.code === 0
-    );
+  if (nxCloud !== 'skip') {
+    nxCloudInstallRes = await setupNxCloud(directory, packageManager, nxCloud);
+
+    if (nxCloud !== 'yes') {
+      await setupCI(
+        directory,
+        nxCloud,
+        packageManager,
+        nxCloudInstallRes?.code === 0
+      );
+    }
   }
   if (!skipGit && commit) {
     try {

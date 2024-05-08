@@ -1,11 +1,17 @@
-import { formatFiles, GeneratorCallback, Tree } from '@nx/devkit';
+import {
+  formatFiles,
+  GeneratorCallback,
+  readProjectConfiguration,
+  Tree,
+} from '@nx/devkit';
+import { updateAppEditorTsConfigExcludedFiles } from '../utils/update-app-editor-tsconfig-excluded-files';
 import { assertCompatibleStorybookVersion } from './lib/assert-compatible-storybook-version';
 import { generateStories } from './lib/generate-stories';
 import { generateStorybookConfiguration } from './lib/generate-storybook-configuration';
 import { validateOptions } from './lib/validate-options';
 import type { StorybookConfigurationOptions } from './schema';
 
-// TODO(katerina): Nx 18 -> remove Cypress
+// TODO(katerina): Nx 19 -> remove Cypress
 export async function storybookConfigurationGenerator(
   tree: Tree,
   options: StorybookConfigurationOptions
@@ -30,13 +36,16 @@ export async function storybookConfigurationGenerator(
     });
   }
 
+  const project = readProjectConfiguration(tree, options.project);
+  if (project.projectType === 'application') {
+    updateAppEditorTsConfigExcludedFiles(tree, project);
+  }
+
   if (!options.skipFormat) {
     await formatFiles(tree);
   }
 
-  return () => {
-    storybookGeneratorInstallTask();
-  };
+  return storybookGeneratorInstallTask;
 }
 
 export default storybookConfigurationGenerator;

@@ -92,7 +92,7 @@ function SidebarSectionItems({ item }: { item: MenuItem }): JSX.Element {
         data-testid={`section-h5:${item.id}`}
         className={cx(
           'flex py-2',
-          'text-sm font-semibold uppercase tracking-wide text-slate-800 dark:text-slate-200 lg:text-xs',
+          'text-sm font-semibold uppercase tracking-wide text-slate-800 lg:text-xs dark:text-slate-200',
           item.disableCollapsible ? 'cursor-text' : 'cursor-pointer'
         )}
         onClick={handleCollapseToggle}
@@ -109,7 +109,9 @@ function SidebarSectionItems({ item }: { item: MenuItem }): JSX.Element {
       </h5>
       <ul className={cx('mb-6 ml-3', collapsed ? 'hidden' : '')}>
         {(item.children as MenuItem[]).map((subItem, index) => {
-          const isActiveLink = subItem.path === withoutAnchors(router.asPath);
+          const isActiveLink = withoutAnchors(router.asPath).startsWith(
+            subItem.path
+          );
           if (isActiveLink && collapsed) {
             handleCollapseToggle();
           }
@@ -177,43 +179,61 @@ export function SidebarMobile({
   navIsOpen,
 }: FloatingSidebarProps): JSX.Element {
   const router = useRouter();
-  const isNxCloud: boolean = router.asPath.startsWith('/nx-cloud');
+  const isCI: boolean = router.asPath.startsWith('/ci');
   const isAPI: boolean = router.asPath.startsWith('/nx-api');
   const isPlugins: boolean = router.asPath.startsWith('/extending-nx');
   const isChangelog: boolean = router.asPath.startsWith('/changelog');
   const isAiChat: boolean = router.asPath.startsWith('/ai-chat');
   const isNx: boolean =
-    !isNxCloud && !isAPI && !isPlugins && !isChangelog && !isAiChat;
+    !isCI && !isAPI && !isPlugins && !isChangelog && !isAiChat;
 
-  const sections = [
-    { name: 'Home', href: '/', current: false },
-    { name: 'Nx', href: '/getting-started/intro', current: isNx },
-    {
-      name: 'Nx Cloud',
-      href: '/nx-cloud/intro/ci-with-nx',
-      current: isNxCloud,
-    },
-    {
-      name: 'Extending Nx',
-      href: '/extending-nx/intro/getting-started',
-      current: isPlugins,
-    },
-    {
-      name: 'API',
-      href: '/nx-api',
-      current: isAPI,
-    },
-    {
-      name: 'Changelog',
-      href: '/changelog',
-      current: isChangelog,
-    },
-    {
-      name: 'AI Chat (beta)',
-      href: '/ai-chat',
-      current: isAiChat,
-    },
-  ];
+  const sections = {
+    general: [
+      { name: 'Home', href: '/', current: false },
+      { name: 'Blog', href: '/blog', current: false },
+      { name: 'Community', href: '/community', current: false },
+      { name: 'Launch Nx', href: '/launch-nx', current: false },
+      {
+        name: 'Contact',
+        href: '/contact',
+        current: false,
+      },
+      {
+        name: 'Go to app',
+        href: 'https://cloud.nx.app',
+        current: false,
+      },
+    ],
+    documentation: [
+      { name: 'Nx', href: '/getting-started/intro', current: isNx },
+      {
+        name: 'CI',
+        href: '/ci/intro/ci-with-nx',
+        current: isCI,
+      },
+      {
+        name: 'Extending Nx',
+        href: '/extending-nx/intro/getting-started',
+        current: isPlugins,
+      },
+      {
+        name: 'API',
+        href: '/nx-api',
+        current: isAPI,
+      },
+      {
+        name: 'Changelog',
+        href: '/changelog',
+        current: isChangelog,
+      },
+      {
+        name: 'AI Chat',
+        href: '/ai-chat',
+        current: isAiChat,
+      },
+    ],
+  };
+
   return (
     <Transition.Root show={navIsOpen} as={Fragment}>
       <Dialog as="div" className="relative z-40" onClose={() => void 0}>
@@ -229,25 +249,44 @@ export function SidebarMobile({
           >
             <Dialog.Panel className="relative flex w-full flex-col overflow-y-auto bg-white p-4 dark:bg-slate-900">
               {/*SECTIONS*/}
-              <div className="mb-8 grid w-full shrink-0 grid-cols-3 items-center justify-between">
-                {sections.map((section) => (
-                  <Link
-                    key={section.name}
-                    href={section.href}
-                    className={cx(
-                      section.current
-                        ? 'text-blue-600 dark:text-sky-500'
-                        : 'hover:text-slate-900 dark:hover:text-sky-400',
-                      'whitespace-nowrap p-4 text-center text-sm font-medium'
-                    )}
-                    aria-current={section.current ? 'page' : undefined}
-                  >
-                    {section.name}
-                  </Link>
-                ))}
+              <div className="divide-y divide-slate-200">
+                <div className="grid w-full shrink-0 grid-cols-3 items-center justify-between">
+                  {sections.general.map((section) => (
+                    <Link
+                      key={section.name}
+                      href={section.href}
+                      className={cx(
+                        section.current
+                          ? 'text-blue-600 dark:text-sky-500'
+                          : 'hover:text-slate-900 dark:hover:text-sky-400',
+                        'whitespace-nowrap p-4 text-center text-sm font-medium'
+                      )}
+                      aria-current={section.current ? 'page' : undefined}
+                    >
+                      {section.name}
+                    </Link>
+                  ))}
+                </div>
+                <div className="grid w-full shrink-0 grid-cols-3 items-center justify-between">
+                  {sections.documentation.map((section) => (
+                    <Link
+                      key={section.name}
+                      href={section.href}
+                      className={cx(
+                        section.current
+                          ? 'text-blue-600 dark:text-sky-500'
+                          : 'hover:text-slate-900 dark:hover:text-sky-400',
+                        'whitespace-nowrap p-4 text-center text-sm font-medium'
+                      )}
+                      aria-current={section.current ? 'page' : undefined}
+                    >
+                      {section.name}
+                    </Link>
+                  ))}
+                </div>
               </div>
               {/*SIDEBAR*/}
-              <div data-testid="mobile-navigation-wrapper ">
+              <div data-testid="mobile-navigation-wrapper" className="mt-8">
                 <nav
                   id="mobile-nav"
                   data-testid="mobile-navigation"

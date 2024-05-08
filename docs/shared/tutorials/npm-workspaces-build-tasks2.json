@@ -1,0 +1,513 @@
+{
+  "taskId": "@tuskdesign/demo:build",
+  "projects": [
+    {
+      "name": "@tuskdesign/buttons",
+      "type": "lib",
+      "data": {
+        "root": "packages/buttons",
+        "targets": {
+          "build": {},
+          "typecheck": {},
+          "dev": {},
+          "nx-release-publish": {}
+        },
+        "sourceRoot": "packages/buttons",
+        "name": "@tuskdesign/buttons",
+        "projectType": "library",
+        "implicitDependencies": [],
+        "tags": []
+      }
+    },
+    {
+      "name": "@tuskdesign/forms",
+      "type": "lib",
+      "data": {
+        "root": "packages/forms",
+        "targets": {
+          "build": {},
+          "typecheck": {},
+          "dev": {},
+          "nx-release-publish": {}
+        },
+        "sourceRoot": "packages/forms",
+        "name": "@tuskdesign/forms",
+        "projectType": "library",
+        "implicitDependencies": [],
+        "tags": []
+      }
+    },
+    {
+      "name": "@tuskdesign/demo",
+      "type": "lib",
+      "data": {
+        "root": "apps/demo",
+        "targets": {
+          "build": {},
+          "typecheck": {},
+          "lint": {},
+          "dev": {},
+          "prebuild": {},
+          "preview": {}
+        },
+        "sourceRoot": "apps/demo",
+        "name": "@tuskdesign/demo",
+        "projectType": "library",
+        "implicitDependencies": [],
+        "tags": []
+      }
+    }
+  ],
+  "taskGraphs": {
+    "@tuskdesign/buttons:build": {
+      "roots": ["@tuskdesign/buttons:typecheck"],
+      "tasks": {
+        "@tuskdesign/buttons:build": {
+          "id": "@tuskdesign/buttons:build",
+          "target": {
+            "project": "@tuskdesign/buttons",
+            "target": "build"
+          },
+          "projectRoot": "packages/buttons",
+          "overrides": {},
+          "outputs": [
+            "dist/packages/buttons",
+            "packages/buttons/dist",
+            "packages/buttons/build",
+            "packages/buttons/public"
+          ],
+          "cache": true
+        },
+        "@tuskdesign/buttons:typecheck": {
+          "id": "@tuskdesign/buttons:typecheck",
+          "target": {
+            "project": "@tuskdesign/buttons",
+            "target": "typecheck"
+          },
+          "projectRoot": "packages/buttons",
+          "overrides": {
+            "__overrides_unparsed__": []
+          },
+          "outputs": [],
+          "cache": true
+        }
+      },
+      "dependencies": {
+        "@tuskdesign/buttons:build": ["@tuskdesign/buttons:typecheck"],
+        "@tuskdesign/buttons:typecheck": []
+      }
+    },
+    "@tuskdesign/buttons:typecheck": {
+      "roots": ["@tuskdesign/buttons:typecheck"],
+      "tasks": {
+        "@tuskdesign/buttons:typecheck": {
+          "id": "@tuskdesign/buttons:typecheck",
+          "target": {
+            "project": "@tuskdesign/buttons",
+            "target": "typecheck"
+          },
+          "projectRoot": "packages/buttons",
+          "overrides": {},
+          "outputs": [],
+          "cache": true
+        }
+      },
+      "dependencies": {
+        "@tuskdesign/buttons:typecheck": []
+      }
+    },
+    "@tuskdesign/buttons:dev": {
+      "roots": ["@tuskdesign/buttons:dev"],
+      "tasks": {
+        "@tuskdesign/buttons:dev": {
+          "id": "@tuskdesign/buttons:dev",
+          "target": {
+            "project": "@tuskdesign/buttons",
+            "target": "dev"
+          },
+          "projectRoot": "packages/buttons",
+          "overrides": {},
+          "outputs": []
+        }
+      },
+      "dependencies": {
+        "@tuskdesign/buttons:dev": []
+      }
+    },
+    "@tuskdesign/buttons:nx-release-publish": {
+      "roots": ["@tuskdesign/buttons:nx-release-publish"],
+      "tasks": {
+        "@tuskdesign/buttons:nx-release-publish": {
+          "id": "@tuskdesign/buttons:nx-release-publish",
+          "target": {
+            "project": "@tuskdesign/buttons",
+            "target": "nx-release-publish"
+          },
+          "projectRoot": "packages/buttons",
+          "overrides": {},
+          "outputs": []
+        }
+      },
+      "dependencies": {
+        "@tuskdesign/buttons:nx-release-publish": []
+      }
+    },
+    "@tuskdesign/forms:build": {
+      "roots": ["@tuskdesign/buttons:typecheck", "@tuskdesign/forms:typecheck"],
+      "tasks": {
+        "@tuskdesign/forms:build": {
+          "id": "@tuskdesign/forms:build",
+          "target": {
+            "project": "@tuskdesign/forms",
+            "target": "build"
+          },
+          "projectRoot": "packages/forms",
+          "overrides": {},
+          "outputs": [
+            "dist/packages/forms",
+            "packages/forms/dist",
+            "packages/forms/build",
+            "packages/forms/public"
+          ],
+          "cache": true
+        },
+        "@tuskdesign/buttons:build": {
+          "id": "@tuskdesign/buttons:build",
+          "target": {
+            "project": "@tuskdesign/buttons",
+            "target": "build"
+          },
+          "projectRoot": "packages/buttons",
+          "overrides": {
+            "__overrides_unparsed__": []
+          },
+          "outputs": [
+            "dist/packages/buttons",
+            "packages/buttons/dist",
+            "packages/buttons/build",
+            "packages/buttons/public"
+          ],
+          "cache": true
+        },
+        "@tuskdesign/buttons:typecheck": {
+          "id": "@tuskdesign/buttons:typecheck",
+          "target": {
+            "project": "@tuskdesign/buttons",
+            "target": "typecheck"
+          },
+          "projectRoot": "packages/buttons",
+          "overrides": {
+            "__overrides_unparsed__": []
+          },
+          "outputs": [],
+          "cache": true
+        },
+        "@tuskdesign/forms:typecheck": {
+          "id": "@tuskdesign/forms:typecheck",
+          "target": {
+            "project": "@tuskdesign/forms",
+            "target": "typecheck"
+          },
+          "projectRoot": "packages/forms",
+          "overrides": {
+            "__overrides_unparsed__": []
+          },
+          "outputs": [],
+          "cache": true
+        }
+      },
+      "dependencies": {
+        "@tuskdesign/forms:build": [
+          "@tuskdesign/buttons:build",
+          "@tuskdesign/forms:typecheck"
+        ],
+        "@tuskdesign/buttons:build": ["@tuskdesign/buttons:typecheck"],
+        "@tuskdesign/buttons:typecheck": [],
+        "@tuskdesign/forms:typecheck": []
+      }
+    },
+    "@tuskdesign/forms:typecheck": {
+      "roots": ["@tuskdesign/forms:typecheck"],
+      "tasks": {
+        "@tuskdesign/forms:typecheck": {
+          "id": "@tuskdesign/forms:typecheck",
+          "target": {
+            "project": "@tuskdesign/forms",
+            "target": "typecheck"
+          },
+          "projectRoot": "packages/forms",
+          "overrides": {},
+          "outputs": [],
+          "cache": true
+        }
+      },
+      "dependencies": {
+        "@tuskdesign/forms:typecheck": []
+      }
+    },
+    "@tuskdesign/forms:dev": {
+      "roots": ["@tuskdesign/forms:dev"],
+      "tasks": {
+        "@tuskdesign/forms:dev": {
+          "id": "@tuskdesign/forms:dev",
+          "target": {
+            "project": "@tuskdesign/forms",
+            "target": "dev"
+          },
+          "projectRoot": "packages/forms",
+          "overrides": {},
+          "outputs": []
+        }
+      },
+      "dependencies": {
+        "@tuskdesign/forms:dev": []
+      }
+    },
+    "@tuskdesign/forms:nx-release-publish": {
+      "roots": ["@tuskdesign/buttons:nx-release-publish"],
+      "tasks": {
+        "@tuskdesign/forms:nx-release-publish": {
+          "id": "@tuskdesign/forms:nx-release-publish",
+          "target": {
+            "project": "@tuskdesign/forms",
+            "target": "nx-release-publish"
+          },
+          "projectRoot": "packages/forms",
+          "overrides": {},
+          "outputs": []
+        },
+        "@tuskdesign/buttons:nx-release-publish": {
+          "id": "@tuskdesign/buttons:nx-release-publish",
+          "target": {
+            "project": "@tuskdesign/buttons",
+            "target": "nx-release-publish"
+          },
+          "projectRoot": "packages/buttons",
+          "overrides": {
+            "__overrides_unparsed__": []
+          },
+          "outputs": []
+        }
+      },
+      "dependencies": {
+        "@tuskdesign/forms:nx-release-publish": [
+          "@tuskdesign/buttons:nx-release-publish"
+        ],
+        "@tuskdesign/buttons:nx-release-publish": []
+      }
+    },
+    "@tuskdesign/demo:build": {
+      "roots": [
+        "@tuskdesign/buttons:typecheck",
+        "@tuskdesign/forms:typecheck",
+        "@tuskdesign/demo:typecheck"
+      ],
+      "tasks": {
+        "@tuskdesign/demo:build": {
+          "id": "@tuskdesign/demo:build",
+          "target": {
+            "project": "@tuskdesign/demo",
+            "target": "build"
+          },
+          "projectRoot": "apps/demo",
+          "overrides": {},
+          "outputs": [
+            "dist/apps/demo",
+            "apps/demo/dist",
+            "apps/demo/build",
+            "apps/demo/public"
+          ],
+          "cache": true
+        },
+        "@tuskdesign/buttons:build": {
+          "id": "@tuskdesign/buttons:build",
+          "target": {
+            "project": "@tuskdesign/buttons",
+            "target": "build"
+          },
+          "projectRoot": "packages/buttons",
+          "overrides": {
+            "__overrides_unparsed__": []
+          },
+          "outputs": [
+            "dist/packages/buttons",
+            "packages/buttons/dist",
+            "packages/buttons/build",
+            "packages/buttons/public"
+          ],
+          "cache": true
+        },
+        "@tuskdesign/buttons:typecheck": {
+          "id": "@tuskdesign/buttons:typecheck",
+          "target": {
+            "project": "@tuskdesign/buttons",
+            "target": "typecheck"
+          },
+          "projectRoot": "packages/buttons",
+          "overrides": {
+            "__overrides_unparsed__": []
+          },
+          "outputs": [],
+          "cache": true
+        },
+        "@tuskdesign/forms:build": {
+          "id": "@tuskdesign/forms:build",
+          "target": {
+            "project": "@tuskdesign/forms",
+            "target": "build"
+          },
+          "projectRoot": "packages/forms",
+          "overrides": {
+            "__overrides_unparsed__": []
+          },
+          "outputs": [
+            "dist/packages/forms",
+            "packages/forms/dist",
+            "packages/forms/build",
+            "packages/forms/public"
+          ],
+          "cache": true
+        },
+        "@tuskdesign/forms:typecheck": {
+          "id": "@tuskdesign/forms:typecheck",
+          "target": {
+            "project": "@tuskdesign/forms",
+            "target": "typecheck"
+          },
+          "projectRoot": "packages/forms",
+          "overrides": {
+            "__overrides_unparsed__": []
+          },
+          "outputs": [],
+          "cache": true
+        },
+        "@tuskdesign/demo:typecheck": {
+          "id": "@tuskdesign/demo:typecheck",
+          "target": {
+            "project": "@tuskdesign/demo",
+            "target": "typecheck"
+          },
+          "projectRoot": "apps/demo",
+          "overrides": {
+            "__overrides_unparsed__": []
+          },
+          "outputs": [],
+          "cache": true
+        }
+      },
+      "dependencies": {
+        "@tuskdesign/demo:build": [
+          "@tuskdesign/buttons:build",
+          "@tuskdesign/forms:build",
+          "@tuskdesign/demo:typecheck"
+        ],
+        "@tuskdesign/buttons:build": ["@tuskdesign/buttons:typecheck"],
+        "@tuskdesign/buttons:typecheck": [],
+        "@tuskdesign/forms:build": [
+          "@tuskdesign/buttons:build",
+          "@tuskdesign/forms:typecheck"
+        ],
+        "@tuskdesign/forms:typecheck": [],
+        "@tuskdesign/demo:typecheck": []
+      }
+    },
+    "@tuskdesign/demo:serve": {
+      "roots": ["@tuskdesign/demo:serve"],
+      "tasks": {
+        "@tuskdesign/demo:serve": {
+          "id": "@tuskdesign/demo:serve",
+          "target": {
+            "project": "@tuskdesign/demo",
+            "target": "serve"
+          },
+          "projectRoot": "apps/demo",
+          "overrides": {},
+          "outputs": []
+        }
+      },
+      "dependencies": {
+        "@tuskdesign/demo:serve": []
+      }
+    },
+    "@tuskdesign/demo:preview": {
+      "roots": ["@tuskdesign/demo:preview"],
+      "tasks": {
+        "@tuskdesign/demo:preview": {
+          "id": "@tuskdesign/demo:preview",
+          "target": {
+            "project": "@tuskdesign/demo",
+            "target": "preview"
+          },
+          "projectRoot": "apps/demo",
+          "overrides": {},
+          "outputs": []
+        }
+      },
+      "dependencies": {
+        "@tuskdesign/demo:preview": []
+      }
+    },
+    "@tuskdesign/demo:serve-static": {
+      "roots": ["@tuskdesign/demo:serve-static"],
+      "tasks": {
+        "@tuskdesign/demo:serve-static": {
+          "id": "@tuskdesign/demo:serve-static",
+          "target": {
+            "project": "@tuskdesign/demo",
+            "target": "serve-static"
+          },
+          "projectRoot": "apps/demo",
+          "overrides": {},
+          "outputs": []
+        }
+      },
+      "dependencies": {
+        "@tuskdesign/demo:serve-static": []
+      }
+    },
+    "@tuskdesign/demo:lint": {
+      "roots": ["@tuskdesign/demo:lint"],
+      "tasks": {
+        "@tuskdesign/demo:lint": {
+          "id": "@tuskdesign/demo:lint",
+          "target": {
+            "project": "@tuskdesign/demo",
+            "target": "lint"
+          },
+          "projectRoot": "apps/demo",
+          "overrides": {},
+          "outputs": [],
+          "cache": true
+        }
+      },
+      "dependencies": {
+        "@tuskdesign/demo:lint": []
+      }
+    },
+    "@tuskdesign/demo:typecheck": {
+      "roots": ["@tuskdesign/demo:typecheck"],
+      "tasks": {
+        "@tuskdesign/demo:typecheck": {
+          "id": "@tuskdesign/demo:typecheck",
+          "target": {
+            "project": "@tuskdesign/demo",
+            "target": "typecheck"
+          },
+          "projectRoot": "apps/demo",
+          "overrides": {},
+          "outputs": [],
+          "cache": true
+        }
+      },
+      "dependencies": {
+        "@tuskdesign/demo:typecheck": []
+      }
+    }
+  },
+  "errors": {},
+  "plans": {
+    "@tuskdesign/buttons:build": [],
+    "@tuskdesign/forms:build": [],
+    "@tuskdesign/demo:build": []
+  }
+}

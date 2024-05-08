@@ -1,14 +1,36 @@
-import { Compiler, Configuration, WebpackOptionsNormalized } from 'webpack';
+import { Configuration, WebpackOptionsNormalized } from 'webpack';
 
 export function applyReactConfig(
   options: { svgr?: boolean },
   config: Partial<WebpackOptionsNormalized | Configuration> = {}
 ): void {
+  if (!process.env['NX_TASK_TARGET_PROJECT']) return;
+
   addHotReload(config);
 
   if (options.svgr !== false) {
     removeSvgLoaderIfPresent(config);
 
+    // TODO(v20): Remove file-loader and use `?react` querystring to differentiate between asset and SVGR.
+    // It should be:
+    // use: [{
+    //   test: /\.svg$/i,
+    //   type: 'asset',
+    //   resourceQuery: /react/, // *.svg?react
+    // },
+    // {
+    //   test: /\.svg$/i,
+    //   issuer: /\.[jt]sx?$/,
+    //   resourceQuery: { not: [/react/] }, // exclude react component if *.svg?react
+    //   use: ['@svgr/webpack'],
+    // }],
+    // See:
+    // - SVGR: https://react-svgr.com/docs/webpack/#use-svgr-and-asset-svg-in-the-same-project
+    // - Vite: https://www.npmjs.com/package/vite-plugin-svgr
+    // - Rsbuild: https://github.com/web-infra-dev/rsbuild/pull/1783
+    // Note: We also need a migration for any projects that are using SVGR to convert
+    //       `import { ReactComponent as X } from './x.svg` to
+    //       `import X from './x.svg?react';
     config.module.rules.push({
       test: /\.svg$/,
       issuer: /\.(js|ts|md)x?$/,

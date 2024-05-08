@@ -1,0 +1,12 @@
+{
+  "name": "e2e-gradle",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "e2e/gradle",
+  "projectType": "application",
+  "implicitDependencies": ["eslint"],
+  "targets": {
+    "e2e-ci--src/gradle.test.ts": {
+      "inputs": ["e2eInputs", "^production"]
+    }
+  }
+}

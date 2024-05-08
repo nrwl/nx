@@ -4,8 +4,7 @@ import {
   WorkspaceTypeAndRoot,
 } from '../src/utils/find-workspace-root';
 import * as chalk from 'chalk';
-import { config as loadDotEnvFile } from 'dotenv';
-import { expand } from 'dotenv-expand';
+import { loadRootEnvFiles } from '../src/utils/dotenv';
 import { initLocal } from './init-local';
 import { output } from '../src/utils/output';
 import {
@@ -26,15 +25,20 @@ function main() {
   if (
     process.argv[2] !== 'report' &&
     process.argv[2] !== '--version' &&
-    process.argv[2] !== '--help'
+    process.argv[2] !== '--help' &&
+    process.argv[2] !== 'reset'
   ) {
     assertSupportedPlatform();
   }
 
   require('nx/src/utils/perf-logging');
 
+  const workspace = findWorkspaceRoot(process.cwd());
+
   performance.mark('loading dotenv files:start');
-  loadDotEnvFiles();
+  if (workspace) {
+    loadRootEnvFiles(workspace.dir);
+  }
   performance.mark('loading dotenv files:end');
   performance.measure(
     'loading dotenv files',
@@ -42,7 +46,6 @@ function main() {
     'loading dotenv files:end'
   );
 
-  const workspace = findWorkspaceRoot(process.cwd());
   // new is a special case because there is no local workspace to load
   if (
     process.argv[2] === 'new' ||
@@ -53,20 +56,6 @@ function main() {
     process.env.NX_DAEMON = 'false';
     require('nx/src/command-line/nx-commands').commandsObject.argv;
   } else {
-    // v8-compile-cache doesn't support ESM. Attempting to import ESM
-    // with it enabled results in an error that reads "Invalid host options".
-    //
-    // Angular CLI, and prettier both use ESM so we need to disable it in these cases.
-    if (
-      workspace &&
-      workspace.type === 'nx' &&
-      !['format', 'format:check', 'format:write', 'g', 'generate'].some(
-        (cmd) => process.argv[2] === cmd
-      )
-    ) {
-      require('v8-compile-cache');
-    }
-
     if (!daemonClient.enabled() && workspace !== null) {
       setupWorkspaceContext(workspace.dir);
     }
@@ -116,21 +105,6 @@ function main() {
         require(localNx);
       }
     }
-  }
-}
-
-/**
- * This loads dotenv files from:
- * - .env
- * - .local.env
- * - .env.local
- */
-function loadDotEnvFiles() {
-  for (const file of ['.local.env', '.env.local', '.env']) {
-    const myEnv = loadDotEnvFile({
-      path: file,
-    });
-    expand(myEnv);
   }
 }
 

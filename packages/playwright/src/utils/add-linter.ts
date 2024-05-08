@@ -28,6 +28,7 @@ export interface PlaywrightLinterOptions {
    * Directory from the project root, where the playwright files will be located.
    **/
   directory: string;
+  addPlugin?: boolean;
 }
 
 export async function addLinterToPlaywrightProject(
@@ -49,12 +50,10 @@ export async function addLinterToPlaywrightProject(
         linter: options.linter,
         skipFormat: true,
         tsConfigPaths: [joinPathFragments(projectConfig.root, 'tsconfig.json')],
-        eslintFilePatterns: [
-          `${projectConfig.root}/**/*.${options.js ? 'js' : '{js,ts}'}`,
-        ],
         setParserOptionsProject: options.setParserOptionsProject,
         skipPackageJson: options.skipPackageJson,
         rootProject: options.rootProject,
+        addPlugin: options.addPlugin,
       })
     );
   }

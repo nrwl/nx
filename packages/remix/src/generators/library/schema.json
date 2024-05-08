@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/schema",
+  "$id": "NxRemixLibrary",
+  "title": "Create a Library",
+  "description": "Generate a Remix library to help structure workspace and application.",
+  "type": "object",
+  "examples": [
+    {
+      "command": "g lib mylib --directory=myapp",
+      "description": "Generate libs/myapp/mylib"
+    }
+  ],
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Library name",
+      "$default": {
+        "$source": "argv",
+        "index": 0
+      },
+      "x-prompt": "What name would you like to use for the library?",
+      "pattern": "^[a-zA-Z].*$"
+    },
+    "directory": {
+      "type": "string",
+      "description": "A directory where the lib is placed.",
+      "alias": "dir",
+      "x-priority": "important"
+    },
+    "projectNameAndRootFormat": {
+      "description": "Whether to generate the project name and root directory as provided (`as-provided`) or generate them composing their values and taking the configured layout into account (`derived`).",
+      "type": "string",
+      "enum": ["as-provided", "derived"]
+    },
+    "tags": {
+      "type": "string",
+      "description": "Add tags to the library (used for linting)"
+    },
+    "style": {
+      "type": "string",
+      "description": "Generate a stylesheet",
+      "enum": ["none", "css"],
+      "default": "css"
+    },
+    "buildable": {
+      "type": "boolean",
+      "description": "Should the library be buildable?",
+      "default": false
+    },
+    "unitTestRunner": {
+      "type": "string",
+      "enum": ["jest", "vitest", "none"],
+      "description": "Test Runner to use for Unit Tests",
+      "x-prompt": "What test runner should be used?",
+      "default": "vitest"
+    },
+    "importPath": {
+      "type": "string",
+      "description": "The library name used to import it, like @myorg/my-awesome-lib"
+    },
+    "js": {
+      "type": "boolean",
+      "description": "Generate JavaScript files rather than TypeScript files",
+      "default": false
+    },
+    "skipFormat": {
+      "type": "boolean",
+      "description": "Skip formatting files after generator runs",
+      "default": false,
+      "x-priority": "internal"
+    }
+  },
+  "required": ["name"]
+}

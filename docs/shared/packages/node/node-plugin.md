@@ -1,20 +1,37 @@
 The Node Plugin contains generators and executors to manage Node applications within an Nx workspace. It provides:
 
-## Setting Up Node
+## Setting Up @nx/node
+
+### Installation
 
 {% callout type="note" title="Keep Nx Package Versions In Sync" %}
 Make sure to install the `@nx/node` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/recipes/tips-n-tricks/keep-nx-versions-in-sync).
 {% /callout %}
 
-To add the Node plugin to an existing workspace, run one of the following:
+In any Nx workspace, you can install `@nx/node` by running the following command:
+
+{% tabs %}
+{% tab label="Nx 18+" %}
+
+```shell {% skipRescope=true %}
+nx add @nx/node
+```
+
+This will install the correct version of `@nx/node`.
+
+{% /tab %}
+{% tab label="Nx < 18" %}
+
+Install the `@nx/node` package with your package manager.
 
 ```shell
-# For npm users
-npm install -D @nx/node
-
-# For yarn users
-yarn add -D @nx/node
+npm add -D @nx/node
 ```
+
+{% /tab %}
+{% /tabs %}
+
+## Using the @nx/node Plugin
 
 ### Creating Applications
 

@@ -1,4 +1,4 @@
-import { Tree } from '@nx/devkit';
+import { Tree, readNxJson } from '@nx/devkit';
 import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { getNpmScope } from '@nx/js/src/utils/package-json/get-npm-scope';
 import type { LibraryGeneratorSchema as JsLibraryGeneratorSchema } from '@nx/js/src/utils/schema';
@@ -22,6 +22,12 @@ export async function normalizeOptions(
     projectNameAndRootFormat: options.projectNameAndRootFormat,
     callingGenerator: '@nx/nest:library',
   });
+  const nxJson = readNxJson(tree);
+  const addPlugin =
+    process.env.NX_ADD_PLUGINS !== 'false' &&
+    nxJson.useInferencePlugins !== false;
+
+  options.addPlugin ??= addPlugin;
 
   const fileName = options.simpleName
     ? projectNames.projectSimpleName
@@ -63,6 +69,7 @@ export function toJsLibraryGeneratorOptions(
     publishable: options.publishable,
     skipFormat: true,
     skipTsConfig: options.skipTsConfig,
+    skipPackageJson: options.skipPackageJson,
     strict: options.strict,
     tags: options.tags,
     testEnvironment: options.testEnvironment,
@@ -70,5 +77,6 @@ export function toJsLibraryGeneratorOptions(
     config: options.standaloneConfig ? 'project' : 'workspace',
     setParserOptionsProject: options.setParserOptionsProject,
     projectNameAndRootFormat: options.projectNameAndRootFormat,
+    addPlugin: options.addPlugin,
   };
 }

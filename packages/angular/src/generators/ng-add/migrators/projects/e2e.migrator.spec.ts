@@ -1,3 +1,5 @@
+import 'nx/src/internal-testing-utils/mock-project-graph';
+
 // mock so we can test multiple versions
 jest.mock('@nx/cypress/src/utils/cypress-version');
 // mock bc the nxE2EPreset uses fs for path normalization
@@ -468,8 +470,7 @@ describe('e2e migrator', () => {
 
         await migrator.migrate();
 
-        const appProject = readProjectConfiguration(tree, 'app1-e2e');
-        expect(appProject.targets.lint).toBeTruthy();
+        expect(tree.exists('apps/app1-e2e/.eslintrc.json')).toBe(true);
       });
 
       it('should not add a lint target when the application is not using it', async () => {
@@ -701,8 +702,7 @@ describe('e2e migrator', () => {
 
         await migrator.migrate();
 
-        const e2eProject = readProjectConfiguration(tree, 'app1-e2e');
-        expect(e2eProject.targets.lint).toBeTruthy();
+        expect(tree.exists('apps/app1-e2e/.eslintrc.json')).toBe(true);
       });
 
       it('should not add a lint target when the application is not using it', async () => {

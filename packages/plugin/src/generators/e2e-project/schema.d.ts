@@ -1,4 +1,4 @@
-import type { ProjectNameAndRootFormat } from '@nx/devkit/src/generators/project-name-directory-utils';
+import type { ProjectNameAndRootFormat } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import type { Linter } from '@nx/eslint';
 
 export interface Schema {
@@ -11,4 +11,5 @@ export interface Schema {
   linter?: Linter;
   skipFormat?: boolean;
   rootProject?: boolean;
+  addPlugin?: boolean;
 }

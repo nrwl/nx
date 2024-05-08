@@ -1,0 +1,35 @@
+{
+  "name": "@nrwl/remix",
+  "version": "0.0.1",
+  "description": "The Remix plugin for Nx contains executors and generators for managing Remix applications and libraries within an Nx workspace. It provides:\n\n\n- Integration with libraries such as Vitest, Jest, Cypress, and Storybook.\n\n- Generators for applications, libraries, routes, loaders, and more.\n\n- Library build support for publishing packages to npm or other registries.\n\n- Utilities for automatic workspace refactoring.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nrwl/nx.git",
+    "directory": "packages-legacy/remix"
+  },
+  "keywords": [
+    "Monorepo",
+    "Remix",
+    "React",
+    "Web",
+    "CLI"
+  ],
+  "author": "Victor Savkin",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nrwl/nx/issues"
+  },
+  "homepage": "https://nx.dev",
+  "main": "index.js",
+  "typings": "./index.d.ts",
+  "generators": "./generators.json",
+  "dependencies": {
+    "@nx/remix": "file:../../packages/remix"
+  },
+  "nx-migrations": {
+    "migrations": "@nx/remix/migrations.json"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

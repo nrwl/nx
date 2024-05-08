@@ -1,5 +1,5 @@
 {
-  "$schema": "http://json-schema.org/schema",
+  "$schema": "https://json-schema.org/schema",
   "cli": "nx",
   "$id": "NxReactFederateModule",
   "title": "Federate Module",
@@ -68,8 +68,9 @@
     },
     "e2eTestRunner": {
       "type": "string",
-      "enum": ["cypress", "none"],
-      "description": "Test runner to use for end to end (e2e) tests.",
+      "enum": ["cypress", "playwright", "none"],
+      "description": "Test runner to use for end to end (E2E) tests.",
+      "x-prompt": "Which E2E test runner would you like to use?",
       "default": "cypress"
     },
     "host": {

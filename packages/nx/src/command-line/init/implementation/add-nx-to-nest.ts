@@ -1,11 +1,8 @@
 import * as enquirer from 'enquirer';
 import { unlinkSync, writeFileSync } from 'fs-extra';
 import { join } from 'path';
-import { InitArgs } from '../init';
-import {
-  NrwlJsPluginConfig,
-  NxJsonConfiguration,
-} from '../../../config/nx-json';
+import { InitArgs } from '../init-v1';
+import { NxJsonConfiguration } from '../../../config/nx-json';
 import { ProjectConfiguration } from '../../../config/workspace-json-project-json';
 import {
   fileExists,
@@ -17,15 +14,14 @@ import { PackageJson } from '../../../utils/package-json';
 import { getPackageManagerCommand } from '../../../utils/package-manager';
 import {
   addDepsToPackageJson,
-  askAboutNxCloud,
   createNxJsonFile,
   initCloud,
-  markRootPackageJsonAsNxProject,
-  printFinalMessage,
+  markRootPackageJsonAsNxProjectLegacy,
   runInstall,
   updateGitIgnore,
 } from './utils';
 import { nxVersion } from '../../../utils/versions';
+import { connectExistingRepoToNxCloudPrompt } from '../../connect/connect-to-nx-cloud';
 
 type Options = Pick<InitArgs, 'nxCloud' | 'interactive' | 'cacheable'>;
 type NestCLIConfiguration = any;
@@ -101,19 +97,22 @@ export async function addNxToNest(options: Options, packageJson: PackageJson) {
       )[scriptName];
     }
 
-    useNxCloud = options.nxCloud ?? (await askAboutNxCloud());
+    useNxCloud =
+      options.nxCloud ?? (await connectExistingRepoToNxCloudPrompt());
   } else {
     cacheableOperations = options.cacheable ?? [];
     useNxCloud =
       options.nxCloud ??
-      (options.interactive ? await askAboutNxCloud() : false);
+      (options.interactive
+        ? await connectExistingRepoToNxCloudPrompt()
+        : false);
   }
 
   createNxJsonFile(
     repoRoot,
     [],
     [...cacheableOperations, ...nestCacheableScripts],
-    {}
+    scriptOutputs
   );
 
   const pmc = getPackageManagerCommand();
@@ -121,12 +120,7 @@ export async function addNxToNest(options: Options, packageJson: PackageJson) {
   updateGitIgnore(repoRoot);
   addDepsToPackageJson(repoRoot);
   addNestPluginToPackageJson(repoRoot);
-  markRootPackageJsonAsNxProject(
-    repoRoot,
-    cacheableOperations,
-    scriptOutputs,
-    pmc
-  );
+  markRootPackageJsonAsNxProjectLegacy(repoRoot, cacheableOperations, pmc);
 
   createProjectJson(repoRoot, packageJson, nestCLIConfiguration);
   removeFile(repoRoot, 'nest-cli.json');
@@ -144,10 +138,6 @@ export async function addNxToNest(options: Options, packageJson: PackageJson) {
     output.log({ title: '🛠️ Setting up Nx Cloud' });
     initCloud(repoRoot, 'nx-init-nest');
   }
-
-  printFinalMessage({
-    learnMoreLink: 'https://nx.dev/recipes/adopting-nx/adding-to-monorepo',
-  });
 }
 
 function addNestPluginToPackageJson(repoRoot: string) {
@@ -182,8 +172,6 @@ function createProjectJson(
         buildTarget: `${packageName}:build`,
       },
     };
-
-    console.log(nestCLIOptions);
 
     if (nestCLIOptions.webpackOptions) {
       json.targets['build'] = {
@@ -238,9 +226,8 @@ function createProjectJson(
     // lint
     json.targets['lint'] = {
       executor: '@nx/eslint:lint',
-      outputs: ['{options.outputFile}'],
       options: {
-        lintFilePatterns: ['src/**/*.ts', 'test/**/*.ts'],
+        lintFilePatterns: ['./src', './test'],
       },
     };
 

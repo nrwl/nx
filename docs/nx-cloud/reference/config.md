@@ -30,7 +30,7 @@ The Nx Cloud runner is configured in `nx.json`.
 
 ## Cacheable Operations
 
-Targets can be marked as cacheable either in the `targetDefaults` in `nx.json` or in the project configuration by setting `"cache": true`. With this option enabled they can be cached using Nx Cloud and distributed using distributed task execution (DTE).
+Targets can be marked as cacheable either in the `targetDefaults` in `nx.json` or in the project configuration by setting `"cache": true`. With this option enabled they can be cached and distributed using Nx Cloud.
 
 ## Timeouts
 

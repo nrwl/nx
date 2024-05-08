@@ -1,46 +1,46 @@
-import type { GeneratorCallback, Tree } from '@nx/devkit';
 import {
   addDependenciesToPackageJson,
+  createProjectGraphAsync,
+  GeneratorCallback,
   readNxJson,
   removeDependenciesFromPackageJson,
-  updateJson,
+  runTasksInSerial,
+  Tree,
   updateNxJson,
-  writeJson,
 } from '@nx/devkit';
-import {
-  eslintConfigPrettierVersion,
-  eslintVersion,
-  nxVersion,
-  typescriptESLintVersion,
-} from '../../utils/versions';
-
-import { Linter } from '../utils/linter';
+import { addPlugin } from '@nx/devkit/src/utils/add-plugin';
+import { eslintVersion, nxVersion } from '../../utils/versions';
 import { findEslintFile } from '../utils/eslint-file';
-import { getGlobalEsLintConfiguration } from './global-eslint-config';
+import { createNodes } from '../../plugins/plugin';
+import { hasEslintPlugin } from '../utils/plugin';
 
 export interface LinterInitOptions {
-  linter?: Linter;
-  unitTestRunner?: string;
   skipPackageJson?: boolean;
-  rootProject?: boolean;
+  keepExistingVersions?: boolean;
+  updatePackageScripts?: boolean;
+  addPlugin?: boolean;
 }
 
-function addTargetDefaults(tree: Tree) {
+function updateProductionFileset(tree: Tree) {
   const nxJson = readNxJson(tree);
 
   const productionFileSet = nxJson.namedInputs?.production;
   if (productionFileSet) {
-    // Remove .eslintrc.json
     productionFileSet.push('!{projectRoot}/.eslintrc.json');
     productionFileSet.push('!{projectRoot}/eslint.config.js');
     // Dedupe and set
     nxJson.namedInputs.production = Array.from(new Set(productionFileSet));
   }
+  updateNxJson(tree, nxJson);
+}
+
+function addTargetDefaults(tree: Tree) {
+  const nxJson = readNxJson(tree);
 
   nxJson.targetDefaults ??= {};
-
-  nxJson.targetDefaults.lint ??= {};
-  nxJson.targetDefaults.lint.inputs ??= [
+  nxJson.targetDefaults['@nx/eslint:lint'] ??= {};
+  nxJson.targetDefaults['@nx/eslint:lint'].cache ??= true;
+  nxJson.targetDefaults['@nx/eslint:lint'].inputs ??= [
     'default',
     `{workspaceRoot}/.eslintrc.json`,
     `{workspaceRoot}/.eslintignore`,
@@ -49,53 +49,88 @@ function addTargetDefaults(tree: Tree) {
   updateNxJson(tree, nxJson);
 }
 
-/**
- * Initializes ESLint configuration in a workspace and adds necessary dependencies.
- */
-function initEsLint(tree: Tree, options: LinterInitOptions): GeneratorCallback {
-  if (findEslintFile(tree)) {
+export async function initEsLint(
+  tree: Tree,
+  options: LinterInitOptions
+): Promise<GeneratorCallback> {
+  const nxJson = readNxJson(tree);
+  const addPluginDefault =
+    process.env.NX_ADD_PLUGINS !== 'false' &&
+    nxJson.useInferencePlugins !== false;
+  options.addPlugin ??= addPluginDefault;
+  const hasPlugin = hasEslintPlugin(tree);
+  const rootEslintFile = findEslintFile(tree);
+
+  const graph = await createProjectGraphAsync();
+
+  const lintTargetNames = [
+    'lint',
+    'eslint:lint',
+    'eslint-lint',
+    '_lint',
+    '_eslint:lint',
+    '_eslint-lint',
+  ];
+
+  if (rootEslintFile && options.addPlugin && !hasPlugin) {
+    await addPlugin(
+      tree,
+      graph,
+      '@nx/eslint/plugin',
+      createNodes,
+      {
+        targetName: lintTargetNames,
+      },
+      options.updatePackageScripts
+    );
+
     return () => {};
   }
 
+  if (rootEslintFile) {
+    return () => {};
+  }
+
+  updateProductionFileset(tree);
+
+  if (options.addPlugin) {
+    await addPlugin(
+      tree,
+      graph,
+      '@nx/eslint/plugin',
+      createNodes,
+      {
+        targetName: lintTargetNames,
+      },
+      options.updatePackageScripts
+    );
+  } else {
+    addTargetDefaults(tree);
+  }
+
+  const tasks: GeneratorCallback[] = [];
   if (!options.skipPackageJson) {
-    removeDependenciesFromPackageJson(tree, ['@nx/eslint'], []);
-  }
-
-  writeJson(
-    tree,
-    '.eslintrc.json',
-    getGlobalEsLintConfiguration(options.unitTestRunner, options.rootProject)
-  );
-  tree.write('.eslintignore', 'node_modules\n');
-  addTargetDefaults(tree);
-
-  if (tree.exists('.vscode/extensions.json')) {
-    updateJson(tree, '.vscode/extensions.json', (json) => {
-      json.recommendations ||= [];
-      const extension = 'dbaeumer.vscode-eslint';
-      if (!json.recommendations.includes(extension)) {
-        json.recommendations.push(extension);
-      }
-      return json;
-    });
-  }
-
-  return !options.skipPackageJson
-    ? addDependenciesToPackageJson(
+    tasks.push(removeDependenciesFromPackageJson(tree, ['@nx/eslint'], []));
+    tasks.push(
+      addDependenciesToPackageJson(
         tree,
         {},
         {
           '@nx/eslint': nxVersion,
-          '@nx/eslint-plugin': nxVersion,
-          '@typescript-eslint/parser': typescriptESLintVersion,
-          '@typescript-eslint/eslint-plugin': typescriptESLintVersion,
           eslint: eslintVersion,
-          'eslint-config-prettier': eslintConfigPrettierVersion,
-        }
+        },
+        undefined,
+        options.keepExistingVersions
       )
-    : () => {};
+    );
+  }
+
+  return runTasksInSerial(...tasks);
 }
 
-export function lintInitGenerator(tree: Tree, options: LinterInitOptions) {
-  return initEsLint(tree, options);
+export async function lintInitGenerator(
+  tree: Tree,
+  options: LinterInitOptions
+) {
+  return await initEsLint(tree, { addPlugin: false, ...options });
 }

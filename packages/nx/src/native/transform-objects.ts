@@ -21,6 +21,8 @@ export function transformProjectGraphForRust(
         executor: targetConfig.executor,
         inputs: targetConfig.inputs,
         outputs: targetConfig.outputs,
+        options: JSON.stringify(targetConfig.options),
+        configurations: JSON.stringify(targetConfig.configurations),
       };
     }
     nodes[projectName] = {
@@ -40,6 +42,7 @@ export function transformProjectGraphForRust(
     graph.externalNodes ?? {}
   )) {
     externalNodes[projectName] = {
+      packageName: externalNode.data.packageName,
       hash: externalNode.data.hash,
       version: externalNode.data.version,
     };
@@ -57,6 +60,3 @@ export function transformProjectGraphForRust(
     dependencies,
   };
 }
-
-
-

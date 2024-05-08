@@ -2,26 +2,29 @@ import {
   checkFilesExist,
   cleanupProject,
   killPorts,
+  listFiles,
   newProject,
+  readFile,
   runCLI,
   runCommandUntil,
-  setMaxWorkers,
   tmpProjPath,
   uniq,
+  updateFile,
 } from '@nx/e2e/utils';
 import { writeFileSync } from 'fs';
 import { createFileSync } from 'fs-extra';
-import { join } from 'path';
 
 describe('Storybook generators and executors for monorepos', () => {
   const reactStorybookApp = uniq('react-app');
   let proj;
   beforeAll(async () => {
-    proj = newProject();
+    proj = newProject({
+      packages: ['@nx/react'],
+      unsetProjectNameAndRootFormat: false,
+    });
     runCLI(
       `generate @nx/react:app ${reactStorybookApp} --bundler=webpack --project-name-and-root-format=as-provided --no-interactive`
     );
-    setMaxWorkers(join(reactStorybookApp, 'project.json'));
     runCLI(
       `generate @nx/react:storybook-configuration ${reactStorybookApp} --generateStories --no-interactive --bundler=webpack`
     );
@@ -35,7 +38,7 @@ describe('Storybook generators and executors for monorepos', () => {
   xdescribe('serve storybook', () => {
     afterEach(() => killPorts());
 
-    it('should serve a React based Storybook setup that uses Vite', async () => {
+    it('should serve a React based Storybook setup that uses webpack', async () => {
       const p = await runCommandUntil(
         `run ${reactStorybookApp}:storybook`,
         (output) => {
@@ -50,7 +53,7 @@ describe('Storybook generators and executors for monorepos', () => {
     it('should build a React based storybook setup that uses webpack', () => {
       // build
       runCLI(`run ${reactStorybookApp}:build-storybook --verbose`);
-      checkFilesExist(`dist/storybook/${reactStorybookApp}/index.html`);
+      checkFilesExist(`${reactStorybookApp}/storybook-static/index.html`);
     }, 300_000);
 
     // This test makes sure path resolution works
@@ -104,7 +107,34 @@ describe('Storybook generators and executors for monorepos', () => {
 
       // build React lib
       runCLI(`run ${reactStorybookApp}:build-storybook --verbose`);
-      checkFilesExist(`dist/storybook/${reactStorybookApp}/index.html`);
+      checkFilesExist(`${reactStorybookApp}/storybook-static/index.html`);
+    }, 300_000);
+
+    it('should not bundle in sensitive NX_ environment variables', () => {
+      updateFile(
+        `${reactStorybookApp}/.storybook/main.ts`,
+        (content) => `
+      ${content}
+      console.log(process.env);
+      `
+      );
+      runCLI(`run ${reactStorybookApp}:build-storybook --verbose`, {
+        env: {
+          NX_CLOUD_ENCRYPTION_KEY: 'MY SECRET',
+          NX_CLOUD_ACCESS_TOKEN: 'MY SECRET',
+        },
+      });
+
+      // Check all output chunks for bundled environment variables
+      const outDir = `${reactStorybookApp}/storybook-static`;
+      const files = listFiles(outDir);
+      for (const file of files) {
+        if (!file.endsWith('.js')) continue;
+        const content = readFile(`${outDir}/${file}`);
+        expect(content).not.toMatch(/NX_CLOUD_ENCRYPTION_KEY/);
+        expect(content).not.toMatch(/NX_CLOUD_ACCESS_TOKEN/);
+        expect(content).not.toMatch(/MY SECRET/);
+      }
     }, 300_000);
   });
 });

@@ -19,10 +19,11 @@ use ProjectsConfigurations or NxJsonConfiguration
 - [affected](../../devkit/documents/Workspace#affected): NxAffectedConfig
 - [cacheDirectory](../../devkit/documents/Workspace#cachedirectory): string
 - [cli](../../devkit/documents/Workspace#cli): Object
+- [defaultBase](../../devkit/documents/Workspace#defaultbase): string
 - [defaultProject](../../devkit/documents/Workspace#defaultproject): string
 - [extends](../../devkit/documents/Workspace#extends): string
 - [generators](../../devkit/documents/Workspace#generators): Object
-- [implicitDependencies](../../devkit/documents/Workspace#implicitdependencies): ImplicitDependencyEntry&lt;string[] | &quot;\*&quot;&gt;
+- [implicitDependencies](../../devkit/documents/Workspace#implicitdependencies): ImplicitDependencyEntry<string[] | "\*">
 - [installation](../../devkit/documents/Workspace#installation): NxInstallationConfiguration
 - [namedInputs](../../devkit/documents/Workspace#namedinputs): Object
 - [nxCloudAccessToken](../../devkit/documents/Workspace#nxcloudaccesstoken): string
@@ -30,12 +31,13 @@ use ProjectsConfigurations or NxJsonConfiguration
 - [nxCloudUrl](../../devkit/documents/Workspace#nxcloudurl): string
 - [parallel](../../devkit/documents/Workspace#parallel): number
 - [plugins](../../devkit/documents/Workspace#plugins): PluginConfiguration[]
-- [pluginsConfig](../../devkit/documents/Workspace#pluginsconfig): Record&lt;string, Record&lt;string, unknown&gt;&gt;
-- [projects](../../devkit/documents/Workspace#projects): Record&lt;string, ProjectConfiguration&gt;
+- [pluginsConfig](../../devkit/documents/Workspace#pluginsconfig): Record<string, Record<string, unknown>>
+- [projects](../../devkit/documents/Workspace#projects): Record<string, ProjectConfiguration>
 - [release](../../devkit/documents/Workspace#release): NxReleaseConfiguration
 - [targetDefaults](../../devkit/documents/Workspace#targetdefaults): TargetDefaults
 - [tasksRunnerOptions](../../devkit/documents/Workspace#tasksrunneroptions): Object
 - [useDaemonProcess](../../devkit/documents/Workspace#usedaemonprocess): boolean
+- [useInferencePlugins](../../devkit/documents/Workspace#useinferenceplugins): boolean
 - [version](../../devkit/documents/Workspace#version): number
 - [workspaceLayout](../../devkit/documents/Workspace#workspacelayout): Object
 
@@ -46,6 +48,10 @@ use ProjectsConfigurations or NxJsonConfiguration
 • `Optional` **affected**: [`NxAffectedConfig`](../../devkit/documents/NxAffectedConfig)
 
 Default options for `nx affected`
+
+**`Deprecated`**
+
+use [defaultBase](../../devkit/documents/NxJsonConfiguration#defaultbase) instead. For more information see https://nx.dev/deprecated/affected-config#affected-config
 
 #### Inherited from
 
@@ -81,6 +87,18 @@ Default generator collection. It is used when no collection is provided.
 #### Inherited from
 
 [NxJsonConfiguration](../../devkit/documents/NxJsonConfiguration).[cli](../../devkit/documents/NxJsonConfiguration#cli)
+
+---
+
+### defaultBase
+
+• `Optional` **defaultBase**: `string`
+
+Default value for --base used by `nx affected` and `nx format`.
+
+#### Inherited from
+
+[NxJsonConfiguration](../../devkit/documents/NxJsonConfiguration).[defaultBase](../../devkit/documents/NxJsonConfiguration#defaultbase)
 
 ---
 
@@ -131,7 +149,7 @@ Example:
 
 #### Index signature
 
-▪ [collectionName: `string`]: { `[generatorName: string]`: `any`; }
+▪ [collectionName: `string`]: \{ `[generatorName: string]`: `any`; }
 
 #### Inherited from
 
@@ -141,13 +159,13 @@ Example:
 
 ### implicitDependencies
 
-• `Optional` **implicitDependencies**: [`ImplicitDependencyEntry`](../../devkit/documents/ImplicitDependencyEntry)<`string`[] \| `"*"`\>
+• `Optional` **implicitDependencies**: [`ImplicitDependencyEntry`](../../devkit/documents/ImplicitDependencyEntry)\<`string`[] \| `"*"`\>
 
 Map of files to projects that implicitly depend on them
 
 **`Deprecated`**
 
-use [namedInputs](../../devkit/documents/Workspace#namedinputs) instead. For more information see https://nx.dev/deprecated/global-implicit-dependencies#global-implicit-dependencies
+use [namedInputs](../../devkit/documents/NxJsonConfiguration#namedinputs) instead. For more information see https://nx.dev/deprecated/global-implicit-dependencies#global-implicit-dependencies
 
 #### Inherited from
 
@@ -190,7 +208,7 @@ Named inputs targets can refer to reduce duplication
 • `Optional` **nxCloudAccessToken**: `string`
 
 If specified Nx will use nx-cloud by default with the given token.
-To use a different runner that accepts an access token, define it in [tasksRunnerOptions](../../devkit/documents/Workspace#tasksrunneroptions)
+To use a different runner that accepts an access token, define it in [tasksRunnerOptions](../../devkit/documents/NxJsonConfiguration#tasksrunneroptions)
 
 #### Inherited from
 
@@ -249,7 +267,7 @@ Plugins for extending the project graph
 
 ### pluginsConfig
 
-• `Optional` **pluginsConfig**: `Record`<`string`, `Record`<`string`, `unknown`\>\>
+• `Optional` **pluginsConfig**: `Record`\<`string`, `Record`\<`string`, `unknown`\>\>
 
 Configuration for Nx Plugins
 
@@ -261,7 +279,7 @@ Configuration for Nx Plugins
 
 ### projects
 
-• **projects**: `Record`<`string`, [`ProjectConfiguration`](../../devkit/documents/ProjectConfiguration)\>
+• **projects**: `Record`\<`string`, [`ProjectConfiguration`](../../devkit/documents/ProjectConfiguration)\>
 
 Projects' projects
 
@@ -275,7 +293,7 @@ Projects' projects
 
 • `Optional` **release**: `NxReleaseConfiguration`
 
-**ALPHA**: Configuration for `nx release` (versioning and publishing of applications and libraries)
+Configuration for `nx release` (versioning and publishing of applications and libraries)
 
 #### Inherited from
 
@@ -303,7 +321,7 @@ Available Task Runners
 
 #### Index signature
 
-▪ [tasksRunnerName: `string`]: { `options?`: `any` ; `runner?`: `string` }
+▪ [tasksRunnerName: `string`]: \{ `options?`: `any` ; `runner?`: `string` }
 
 #### Inherited from
 
@@ -320,6 +338,18 @@ Set this to false to disable the daemon.
 #### Inherited from
 
 [NxJsonConfiguration](../../devkit/documents/NxJsonConfiguration).[useDaemonProcess](../../devkit/documents/NxJsonConfiguration#usedaemonprocess)
+
+---
+
+### useInferencePlugins
+
+• `Optional` **useInferencePlugins**: `boolean`
+
+Set this to false to disable adding inference plugins when generating new projects
+
+#### Inherited from
+
+[NxJsonConfiguration](../../devkit/documents/NxJsonConfiguration).[useInferencePlugins](../../devkit/documents/NxJsonConfiguration#useinferenceplugins)
 
 ---
 

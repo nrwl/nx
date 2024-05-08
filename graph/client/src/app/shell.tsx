@@ -1,25 +1,48 @@
+/* eslint-disable @nx/enforce-module-boundaries */
+// nx-ignore-next-line
+import {
+  GraphError,
+  ProjectGraphClientResponse,
+} from 'nx/src/command-line/graph/graph';
+/* eslint-enable @nx/enforce-module-boundaries */
+
 import {
   ArrowDownTrayIcon,
   ArrowLeftCircleIcon,
   InformationCircleIcon,
 } from '@heroicons/react/24/outline';
-import classNames from 'classnames';
-import { DebuggerPanel } from './ui-components/debugger-panel';
-import { useEnvironmentConfig } from './hooks/use-environment-config';
-import { getGraphService } from './machines/graph.service';
-import { Outlet, useNavigate, useParams } from 'react-router-dom';
-import { ThemePanel } from './feature-projects/panels/theme-panel';
-import { Dropdown } from '@nx/graph/ui-components';
-import { useCurrentPath } from './hooks/use-current-path';
-import { ExperimentalFeature } from './ui-components/experimental-feature';
-import { RankdirPanel } from './feature-projects/panels/rankdir-panel';
-import { getProjectGraphService } from './machines/get-services';
-import { useSyncExternalStore } from 'use-sync-external-store/shim';
+import {
+  ErrorToast,
+  fetchProjectGraph,
+  getProjectGraphDataService,
+  useEnvironmentConfig,
+  useIntervalWhen,
+} from '@nx/graph/shared';
+import { Dropdown, Spinner } from '@nx/graph/ui-components';
+import { getSystemTheme, Theme, ThemePanel } from '@nx/graph/ui-theme';
 import { Tooltip } from '@nx/graph/ui-tooltips';
+import classNames from 'classnames';
+import { useLayoutEffect, useState } from 'react';
+import {
+  Outlet,
+  useNavigate,
+  useNavigation,
+  useParams,
+  useRouteLoaderData,
+} from 'react-router-dom';
+import { useSyncExternalStore } from 'use-sync-external-store/shim';
+import { RankdirPanel } from './feature-projects/panels/rankdir-panel';
+import { useCurrentPath } from './hooks/use-current-path';
+import { getProjectGraphService } from './machines/get-services';
+import { getGraphService } from './machines/graph.service';
+import { DebuggerPanel } from './ui-components/debugger-panel';
+import { ExperimentalFeature } from './ui-components/experimental-feature';
 import { TooltipDisplay } from './ui-tooltips/graph-tooltip-display';
 
 export function Shell(): JSX.Element {
   const projectGraphService = getProjectGraphService();
+  const projectGraphDataService = getProjectGraphDataService();
+
   const graphService = getGraphService();
 
   const lastPerfReport = useSyncExternalStore(
@@ -31,11 +54,36 @@ export function Shell(): JSX.Element {
 
   const environment = useEnvironmentConfig();
   const environmentConfig = useEnvironmentConfig();
+  function onThemeChange(theme: Theme) {
+    graphService.theme = theme === 'system' ? getSystemTheme() : theme;
+  }
 
   const navigate = useNavigate();
+  const { state: navigationState } = useNavigation();
   const currentPath = useCurrentPath();
-  const { selectedWorkspaceId, selectedTaskId } = useParams();
+  const params = useParams();
   const currentRoute = currentPath.currentPath;
+
+  const [errors, setErrors] = useState<GraphError[] | undefined>(undefined);
+  const { errors: routerErrors } = useRouteLoaderData('selectedWorkspace') as {
+    errors: GraphError[];
+  };
+  useLayoutEffect(() => {
+    setErrors(routerErrors);
+  }, [routerErrors]);
+  useIntervalWhen(
+    () => {
+      fetchProjectGraph(
+        projectGraphDataService,
+        params,
+        environmentConfig.appConfig
+      ).then((response: ProjectGraphClientResponse) => {
+        setErrors(response.errors);
+      });
+    },
+    1000,
+    environmentConfig.watch
+  );
 
   const topLevelRoute = currentRoute.startsWith('/tasks')
     ? '/tasks'
@@ -71,11 +119,11 @@ export function Shell(): JSX.Element {
   }
 
   return (
-    <>
+    <div className="flex h-screen w-screen">
       <div
         className={`${
           environmentConfig.environment === 'nx-console'
-            ? 'absolute top-5 left-5 z-50 bg-white'
+            ? 'absolute left-5 top-5 z-50 bg-white'
             : 'relative flex h-full overflow-y-scroll'
         } w-72 flex-col pb-10 shadow-lg ring-1 ring-slate-900/10 ring-opacity-10 transition-all dark:ring-slate-300/10`}
         id="sidebar"
@@ -124,7 +172,7 @@ export function Shell(): JSX.Element {
                   <RankdirPanel />
                 </ExperimentalFeature>
 
-                <ThemePanel />
+                <ThemePanel onThemeChange={onThemeChange} />
               </div>
             </div>
 
@@ -156,23 +204,29 @@ export function Shell(): JSX.Element {
         {environment.appConfig.showDebugger ? (
           <DebuggerPanel
             projects={environment.appConfig.workspaces}
-            selectedProject={selectedWorkspaceId}
+            selectedProject={params.selectedWorkspaceId}
             lastPerfReport={lastPerfReport}
             selectedProjectChange={projectChange}
           ></DebuggerPanel>
         ) : null}
 
-        {!nodesVisible ? (
+        {!nodesVisible || navigationState === 'loading' ? (
           <div
             data-cy="no-tasks-selected"
             className="flex h-full w-full items-center justify-center text-slate-700 dark:text-slate-400"
           >
-            <ArrowLeftCircleIcon className="mr-4 h-6 w-6" />
-            <h4>
-              Please select a{' '}
-              {currentRoute.startsWith('/tasks') ? 'task' : 'project'} in the
-              sidebar.
-            </h4>
+            {navigationState === 'loading' ? (
+              <Spinner></Spinner>
+            ) : (
+              <>
+                <ArrowLeftCircleIcon className="mr-4 h-6 w-6" />
+                <h4>
+                  Please select a{' '}
+                  {currentRoute.startsWith('/tasks') ? 'task' : 'project'} in
+                  the sidebar.
+                </h4>
+              </>
+            )}
           </div>
         ) : null}
 
@@ -197,11 +251,12 @@ export function Shell(): JSX.Element {
               data-cy="downloadImageButton"
               onClick={downloadImage}
             >
-              <ArrowDownTrayIcon className="absolute top-1/2 left-1/2 -mt-3 -ml-3 h-6 w-6" />
+              <ArrowDownTrayIcon className="absolute left-1/2 top-1/2 -ml-3 -mt-3 h-6 w-6" />
             </button>
           </Tooltip>
         </div>
       </div>
-    </>
+      <ErrorToast errors={errors} />
+    </div>
   );
 }

@@ -1,8 +1,5 @@
 {
   "$schema": "packages/nx/schemas/nx-schema.json",
-  "affected": {
-    "defaultBase": "master"
-  },
   "namedInputs": {
     "default": ["{projectRoot}/**/*", "sharedGlobals"],
     "production": [
@@ -16,36 +13,64 @@
       "!{projectRoot}/tsconfig.storybook.json",
       "!{projectRoot}/src/test-setup.[jt]s"
     ],
-    "sharedGlobals": ["{workspaceRoot}/babel.config.json"],
+    "sharedGlobals": [
+      "{workspaceRoot}/babel.config.json",
+      "{workspaceRoot}/.nx/workflows/agents.yaml",
+      "{workspaceRoot}/.circleci/config.yml"
+    ],
     "native": [
       "{projectRoot}/**/*.rs",
       "{projectRoot}/**/Cargo.*",
       {
         "runtime": "node -p '`${process.platform}_${process.arch}`'"
       }
+    ],
+    "e2eInputs": [
+      "default",
+      "{workspaceRoot}/jest.preset.js",
+      "{workspaceRoot}/.verdaccio/config.yml",
+      {
+        "env": "SELECTED_CLI"
+      },
+      {
+        "env": "SELECTED_PM"
+      },
+      {
+        "env": "NX_E2E_CI_CACHE_KEY"
+      },
+      {
+        "env": "CI"
+      }
     ]
   },
   "release": {
+    "projects": [
+      "packages/*",
+      "packages/nx/native-packages/*",
+      "packages-legacy/*"
+    ],
     "releaseTagPattern": "{version}",
     "changelog": {
       "workspaceChangelog": {
         "createRelease": "github",
         "file": false
+      },
+      "git": {
+        "commit": false,
+        "stageChanges": false,
+        "tag": false
       }
     },
-    "groups": {
-      "npm": {
-        "projects": [
-          "packages/*",
-          "packages/nx/native-packages/*",
-          "packages-legacy/*"
-        ],
-        "version": {
-          "generatorOptions": {
-            "packageRoot": "build/packages/{projectName}",
-            "currentVersionResolver": "registry"
-          }
-        }
+    "version": {
+      "generatorOptions": {
+        "packageRoot": "build/packages/{projectName}",
+        "currentVersionResolver": "registry",
+        "skipLockFileUpdate": true
+      },
+      "git": {
+        "commit": false,
+        "stageChanges": false,
+        "tag": false
       }
     }
   },
@@ -57,13 +82,7 @@
     },
     "build": {
       "dependsOn": ["build-base", "build-native"],
-      "inputs": [
-        "production",
-        "^production",
-        {
-          "dependentTasksOutputFiles": "**/*.node"
-        }
-      ],
+      "inputs": ["production", "^production"],
       "cache": true
     },
     "build-native": {
@@ -91,89 +110,26 @@
     "test": {
       "dependsOn": ["test-native", "build-native", "^build-native"],
       "inputs": ["default", "^production", "{workspaceRoot}/jest.preset.js"],
-      "executor": "@nx/jest:jest",
       "options": {
-        "jestConfig": "{projectRoot}/jest.config.ts",
-        "passWithNoTests": true
-      },
-      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
-      "cache": true
+        "args": ["--passWithNoTests", "--detectOpenHandles", "--forceExit"]
+      }
     },
     "lint": {
-      "dependsOn": ["build-native", "^build-native"],
-      "inputs": [
-        "default",
-        "{workspaceRoot}/.eslintrc.json",
-        "{workspaceRoot}/tools/eslint-rules/**/*"
-      ],
-      "executor": "@nx/eslint:lint",
-      "options": {
-        "lintFilePatterns": [
-          "{projectRoot}/**/*.{ts,tsx,js,jsx}",
-          "{projectRoot}/**/executors/**/schema.json",
-          "{projectRoot}/**/generators/**/schema.json",
-          "{projectRoot}/generators.json",
-          "{projectRoot}/executors.json",
-          "{projectRoot}/package.json",
-          "{projectRoot}/project.json",
-          "{projectRoot}/migrations.json"
-        ]
-      },
-      "outputs": ["{options.outputFile}"],
-      "cache": true
+      "dependsOn": ["build-native", "^build-native"]
     },
     "e2e": {
-      "inputs": [
-        "default",
-        "^production",
-        "{workspaceRoot}/jest.preset.js",
-        "{workspaceRoot}/.verdaccio/config.yml",
-        {
-          "env": "SELECTED_CLI"
-        },
-        {
-          "env": "SELECTED_PM"
-        },
-        {
-          "env": "NX_E2E_CI_CACHE_KEY"
-        },
-        {
-          "env": "CI"
-        }
-      ],
-      "executor": "@nx/jest:jest",
-      "options": {
-        "jestConfig": "{projectRoot}/jest.config.ts",
-        "passWithNoTests": true,
-        "runInBand": true
-      },
-      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
-      "cache": true
+      "cache": true,
+      "inputs": ["e2eInputs", "^production"]
     },
-    "e2e-macos": {
-      "inputs": [
-        "default",
-        "^production",
-        "{workspaceRoot}/jest.preset.js",
-        "{workspaceRoot}/.verdaccio/config.yml",
-        {
-          "env": "SELECTED_CLI"
-        },
-        {
-          "env": "SELECTED_PM"
-        },
-        {
-          "env": "NX_E2E_CI_CACHE_KEY"
-        }
-      ],
-      "executor": "@nx/jest:jest",
-      "options": {
-        "jestConfig": "{projectRoot}/jest.config.ts",
-        "passWithNoTests": true,
-        "runInBand": true
-      },
-      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
-      "cache": true
+    "e2e-local": {
+      "cache": true,
+      "inputs": ["e2eInputs", "^production"]
+    },
+    "e2e-ci": {
+      "inputs": ["e2eInputs", "^production"]
+    },
+    "e2e-macos-ci": {
+      "inputs": ["e2eInputs", "^production"]
     },
     "e2e-base": {
       "inputs": ["default", "^production"]
@@ -191,32 +147,69 @@
     "build-ng": {
       "cache": true
     },
-    "build-client": {
-      "cache": true
-    },
     "sitemap": {
       "cache": true
     },
     "copy-docs": {
       "cache": true
-    },
-    "@nx/jest:jest": {
-      "cache": true,
-      "inputs": ["default", "^production", "{workspaceRoot}/jest.preset.js"],
-      "options": {
-        "passWithNoTests": true
-      },
-      "configurations": {
-        "ci": {
-          "ci": true,
-          "codeCoverage": true
-        }
-      }
     }
   },
-  "plugins": ["@monodon/rust"],
+  "plugins": [
+    "@monodon/rust",
+    {
+      "plugin": "@nx/playwright/plugin",
+      "options": {
+        "targetName": "pw-e2e",
+        "ciTargetName": "e2e-ci"
+      }
+    },
+    {
+      "plugin": "@nx/eslint/plugin",
+      "exclude": ["packages/**/__fixtures__/**/*"],
+      "options": {
+        "targetName": "lint"
+      }
+    },
+    {
+      "plugin": "@nx/jest/plugin",
+      "exclude": [
+        "e2e/**/*",
+        "packages/**/__fixtures__/**/*",
+        "jest.config.ts"
+      ],
+      "options": {
+        "targetName": "test"
+      }
+    },
+    {
+      "plugin": "@nx/webpack/plugin",
+      "options": {
+        "serveTargetName": "serve-base",
+        "buildTargetName": "build-client"
+      }
+    },
+    {
+      "plugin": "@nx/jest/plugin",
+      "include": ["e2e/**/*"],
+      "exclude": ["e2e/detox/**/*", "e2e/react-native/**/*", "e2e/expo/**/*"],
+      "options": {
+        "targetName": "e2e-local",
+        "ciTargetName": "e2e-ci"
+      }
+    },
+    {
+      "plugin": "@nx/jest/plugin",
+      "include": ["e2e/detox/**/*", "e2e/react-native/**/*", "e2e/expo/**/*"],
+      "options": {
+        "targetName": "e2e-local",
+        "ciTargetName": "e2e-macos-ci"
+      }
+    }
+  ],
   "nxCloudAccessToken": "YmZiOWQyNzctOThiZC00MjYwLWI3YTAtZDA3MDg4YWY1YTExfHJlYWQ=",
   "nxCloudUrl": "https://staging.nx.app",
   "parallel": 1,
-  "cacheDirectory": "/tmp/nx-cache"
+  "cacheDirectory": "/tmp/nx-cache",
+  "bust": 5,
+  "defaultBase": "master"
 }

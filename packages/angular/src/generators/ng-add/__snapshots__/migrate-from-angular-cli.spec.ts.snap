@@ -80,9 +80,7 @@ exports[`workspace move to nx layout should create a root eslint config 1`] = `
 
 exports[`workspace move to nx layout should create nx.json 1`] = `
 {
-  "affected": {
-    "defaultBase": "main",
-  },
+  "defaultBase": "main",
   "defaultProject": "myApp",
   "namedInputs": {
     "default": [
@@ -100,6 +98,15 @@ exports[`workspace move to nx layout should create nx.json 1`] = `
     "sharedGlobals": [],
   },
   "targetDefaults": {
+    "@nx/eslint:lint": {
+      "cache": true,
+      "inputs": [
+        "default",
+        "{workspaceRoot}/.eslintrc.json",
+        "{workspaceRoot}/.eslintignore",
+        "{workspaceRoot}/eslint.config.js",
+      ],
+    },
     "build": {
       "cache": true,
       "dependsOn": [

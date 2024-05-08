@@ -4,21 +4,30 @@ import { serverLogger } from './logger';
 import { serializeResult } from '../socket-utils';
 import { deleteDaemonJsonProcessCache } from '../cache';
 import type { Watcher } from '../../native';
+import { cleanupPlugins } from './plugins';
+import {
+  DaemonProjectGraphError,
+  ProjectGraphError,
+} from '../../project-graph/error-types';
 
 export const SERVER_INACTIVITY_TIMEOUT_MS = 10800000 as const; // 10800000 ms = 3 hours
 
 let watcherInstance: Watcher | undefined;
+
 export function storeWatcherInstance(instance: Watcher) {
   watcherInstance = instance;
 }
+
 export function getWatcherInstance() {
   return watcherInstance;
 }
 
 let outputWatcherInstance: Watcher | undefined;
+
 export function storeOutputWatcherInstance(instance: Watcher) {
   outputWatcherInstance = instance;
 }
+
 export function getOutputWatcherInstance() {
   return outputWatcherInstance;
 }
@@ -35,6 +44,7 @@ export async function handleServerProcessTermination({
   try {
     server.close();
     deleteDaemonJsonProcessCache();
+    cleanupPlugins();
 
     if (watcherInstance) {
       await watcherInstance.stop();
@@ -89,16 +99,19 @@ export async function respondWithErrorAndExit(
   description: string,
   error: Error
 ) {
+  const normalizedError =
+    error instanceof DaemonProjectGraphError
+      ? ProjectGraphError.fromDaemonProjectGraphError(error)
+      : error;
+
   // print some extra stuff in the error message
   serverLogger.requestLog(
     `Responding to the client with an error.`,
     description,
-    error.message
+    normalizedError.message
   );
-  console.error(error);
+  console.error(normalizedError.stack);
 
-  error.message = `${error.message}\n\nBecause of the error the Nx daemon process has exited. The next Nx command is going to restart the daemon process.\nIf the error persists, please run "nx reset".`;
-
-  await respondToClient(socket, serializeResult(error, null), null);
-  process.exit(1);
+  // Respond with the original error
+  await respondToClient(socket, serializeResult(error, null, null), null);
 }

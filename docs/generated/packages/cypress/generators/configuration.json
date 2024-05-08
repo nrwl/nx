@@ -1,9 +1,9 @@
 {
   "name": "configuration",
   "aliases": ["cypress-e2e-configuration", "e2e", "e2e-config"],
-  "factory": "./src/generators/configuration/configuration",
+  "factory": "./src/generators/configuration/configuration#configurationGeneratorInternal",
   "schema": {
-    "$schema": "http://json-schema.org/schema",
+    "$schema": "https://json-schema.org/schema",
     "$id": "NxCypressE2EConfigGenerator",
     "cli": "nx",
     "title": "Add a Cypress Configuration.",
@@ -93,7 +93,7 @@
     "presets": []
   },
   "description": "Add a Cypress E2E Configuration to an existing project.",
-  "implementation": "/packages/cypress/src/generators/configuration/configuration.ts",
+  "implementation": "/packages/cypress/src/generators/configuration/configuration#configurationGeneratorInternal.ts",
   "hidden": false,
   "path": "/packages/cypress/src/generators/configuration/schema.json",
   "type": "generator"

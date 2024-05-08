@@ -1,4 +1,4 @@
-## Compile Typescript Libraries to Multiple Formats
+# Compile Typescript Libraries to Multiple Formats
 
 {% youtube
 src="https://youtu.be/Vy4d0-SF5cY"
@@ -7,9 +7,64 @@ width="100%" /%}
 
 It can be difficult to set up a typescript library to compile to ESM and CommonJS. As of Nx 16.8, you can use the `@nx/rollup:rollup` executor to take care of it for you.
 
-You'll need to specify `format`, `additionalEntryPoints` and `generateExportsField` in the executor options. Here's an example:
+## Use Rollup to Compile your TypeScript Project
+
+If you do not use Rollup already, install the corresponding Nx plugin as follows:
+
+```shell {% skipRescope=true %}
+nx add @nx/rollup
+```
+
+Make sure the version of `@nx/rollup` matches your other `@nx/*` package versions.
+
+You can then configure Rollup to compile your library by adding a `build` target to your `project.json` or `package.json` file. Here's an example:
+
+{% tabs %}
+{%tab label="package.json"%}
 
 ```jsonc {% fileName="packages/my-awesome-lib/project.json" %}
+{
+  "name": "my-awesome-lib",
+  "nx": {
+    "targets": {
+      "build": {
+        "executor": "@nx/rollup:rollup",
+        "options": {
+          "main": "packages/my-awesome-lib/src/index.ts"
+        }
+      }
+    }
+  }
+}
+```
+
+{% /tab%}
+{%tab label="project.json"%}
+
+```jsonc {% fileName="packages/my-awesome-lib/project.json" %}
+{
+  "name": "my-awesome-lib",
+  "targets": {
+    "build": {
+      "executor": "@nx/rollup:rollup",
+      "options": {
+        "main": "packages/my-awesome-lib/src/index.ts"
+      }
+    }
+  }
+}
+```
+
+{% /tab%}
+{% /tabs %}
+
+If you happen to use the `@nx/js:tsc` executor already, you can also use the [Rollup configuration](/nx-api/rollup/generators/configuration) generator from the Nx Rollup plugin to automatically configure your project's build target.
+
+## Configure Rollup to Create Multiple Formats
+
+You'll need to specify `format`, `additionalEntryPoints` and `generateExportsField` in the executor options. Here's an example:
+
+```jsonc {% fileName="packages/my-awesome-lib/project.json" highlightLines=["8-10"] %}
 {
   "name": "my-awesome-lib",
   "targets": {

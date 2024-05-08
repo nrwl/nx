@@ -21,6 +21,7 @@ export async function addVite(
     includeVitest: options.unitTestRunner === 'vitest',
     skipFormat: true,
     testEnvironment: 'jsdom',
+    addPlugin: options.addPlugin,
   });
 
   createOrEditViteConfig(
@@ -39,8 +40,10 @@ export async function addVite(
   // Update build to skip type checking since tsc won't work on .vue files.
   // Need to use vue-tsc instead.
   const projectConfig = readProjectConfiguration(tree, options.name);
-  projectConfig.targets.build.options.skipTypeCheck = true;
-  updateProjectConfiguration(tree, options.name, projectConfig);
+  if (projectConfig.targets?.build?.options) {
+    projectConfig.targets.build.options.skipTypeCheck = true;
+    updateProjectConfiguration(tree, options.name, projectConfig);
+  }
 
   return viteTask;
 }

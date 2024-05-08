@@ -85,7 +85,7 @@ export async function generateIndexMarkdownFile(
     recipes: `/recipes/`,
     plugins: `/plugins/`,
     packages: `/packages/`,
-    cloud: `/nx-cloud/`,
+    ci: `/ci/`,
   };
   const content = json
     .map(
@@ -231,7 +231,12 @@ export function generateOptionsMarkdown(
 ): string {
   const lines: string[] = [];
   if (Array.isArray(command.options) && !!command.options.length) {
-    lines.push(h(2 + extraHeadingLevels, 'Options'));
+    lines.push(
+      h(
+        2 + extraHeadingLevels,
+        command.subcommands?.length ? 'Shared Options' : 'Options'
+      )
+    );
 
     command.options
       .sort((a, b) => sortAlphabeticallyFunction(a.name, b.name))

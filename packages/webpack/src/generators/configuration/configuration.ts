@@ -1,8 +1,12 @@
-import type { Tree } from '@nx/devkit';
 import {
   formatFiles,
+  GeneratorCallback,
   joinPathFragments,
+  offsetFromRoot,
+  readNxJson,
   readProjectConfiguration,
+  runTasksInSerial,
+  Tree,
   updateProjectConfiguration,
   writeJson,
 } from '@nx/devkit';
@@ -10,26 +14,55 @@ import {
 import { webpackInitGenerator } from '../init/init';
 import { ConfigurationGeneratorSchema } from './schema';
 import { WebpackExecutorOptions } from '../../executors/webpack/schema';
+import { hasPlugin } from '../../utils/has-plugin';
+import { addBuildTargetDefaults } from '@nx/devkit/src/generators/add-build-target-defaults';
+import { ensureDependencies } from '../../utils/ensure-dependencies';
 
-export async function configurationGenerator(
+export function configurationGenerator(
   tree: Tree,
   options: ConfigurationGeneratorSchema
 ) {
-  const task = await webpackInitGenerator(tree, {
+  return configurationGeneratorInternal(tree, { addPlugin: false, ...options });
+}
+
+export async function configurationGeneratorInternal(
+  tree: Tree,
+  options: ConfigurationGeneratorSchema
+) {
+  const tasks: GeneratorCallback[] = [];
+  const nxJson = readNxJson(tree);
+  const addPluginDefault =
+    process.env.NX_ADD_PLUGINS !== 'false' &&
+    nxJson.useInferencePlugins !== false;
+  options.addPlugin ??= addPluginDefault;
+
+  const initTask = await webpackInitGenerator(tree, {
     ...options,
     skipFormat: true,
   });
+  tasks.push(initTask);
+
+  const depsTask = ensureDependencies(tree, {
+    compiler: options.compiler === 'babel' ? undefined : options.compiler,
+  });
+  tasks.push(depsTask);
+
   checkForTargetConflicts(tree, options);
-  addBuildTarget(tree, options);
-  if (options.devServer) {
-    addServeTarget(tree, options);
+
+  if (!hasPlugin(tree)) {
+    addBuildTarget(tree, options);
+    if (options.devServer) {
+      addServeTarget(tree, options);
+    }
   }
+
+  createWebpackConfig(tree, options);
 
   if (!options.skipFormat) {
     await formatFiles(tree);
   }
 
-  return task;
+  return runTasksInSerial(...tasks);
 }
 
 function checkForTargetConflicts(
@@ -53,7 +86,99 @@ function checkForTargetConflicts(
   }
 }
 
+function createWebpackConfig(
+  tree: Tree,
+  options: ConfigurationGeneratorSchema
+) {
+  const project = readProjectConfiguration(tree, options.project);
+  const buildOptions: WebpackExecutorOptions = {
+    target: options.target,
+    outputPath: joinPathFragments('dist', project.root),
+    compiler: options.compiler ?? 'swc',
+    main: options.main ?? joinPathFragments(project.root, 'src/main.ts'),
+    tsConfig:
+      options.tsConfig ?? joinPathFragments(project.root, 'tsconfig.app.json'),
+    webpackConfig: joinPathFragments(project.root, 'webpack.config.js'),
+  };
+
+  if (options.target === 'web') {
+    tree.write(
+      joinPathFragments(project.root, 'webpack.config.js'),
+      hasPlugin(tree)
+        ? `
+const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
+const { join } = require('path');
+
+module.exports = {
+  output: {
+    path: join(__dirname, '${offsetFromRoot(project.root)}${
+            buildOptions.outputPath
+          }'),
+  },
+  plugins: [
+    new NxAppWebpackPlugin({
+      target: '${buildOptions.target}',
+      tsConfig: '${buildOptions.tsConfig}',
+      compiler: '${buildOptions.compiler}',
+      main: '${buildOptions.main}',
+      outputHashing: '${buildOptions.target !== 'web' ? 'none' : 'all'}',
+    })
+  ],
+}
+`
+        : `
+const { composePlugins, withNx, withWeb } = require('@nx/webpack');
+
+// Nx plugins for webpack.
+module.exports = composePlugins(withNx(), withWeb(), (config) => {
+  // Update the webpack config as needed here.
+  // e.g. \`config.plugins.push(new MyPlugin())\`
+  return config;
+});
+`
+    );
+  } else {
+    tree.write(
+      joinPathFragments(project.root, 'webpack.config.js'),
+      hasPlugin(tree)
+        ? `
+const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
+const { join } = require('path');
+
+module.exports = {
+  output: {
+    path: join(__dirname, '${offsetFromRoot(project.root)}${
+            buildOptions.outputPath
+          }'),
+  },
+  plugins: [
+    new NxAppWebpackPlugin({
+      target: '${buildOptions.target}',
+      tsConfig: '${buildOptions.tsConfig}',
+      compiler: '${buildOptions.compiler}',
+      main: '${buildOptions.main}',
+      outputHashing: '${buildOptions.target !== 'web' ? 'none' : 'all'}',
+    })
+  ],
+}
+`
+        : `
+const { composePlugins, withNx } = require('@nx/webpack');
+
+// Nx plugins for webpack.
+module.exports = composePlugins(withNx(), (config) => {
+  // Update the webpack config as needed here.
+  // e.g. \`config.plugins.push(new MyPlugin())\`
+  return config;
+});
+`
+    );
+  }
+}
+
 function addBuildTarget(tree: Tree, options: ConfigurationGeneratorSchema) {
+  addBuildTargetDefaults(tree, '@nx/webpack:webpack');
+
   const project = readProjectConfiguration(tree, options.project);
   const buildOptions: WebpackExecutorOptions = {
     target: options.target,
@@ -78,35 +203,6 @@ function addBuildTarget(tree: Tree, options: ConfigurationGeneratorSchema) {
     });
   }
 
-  if (options.target === 'web') {
-    tree.write(
-      joinPathFragments(project.root, 'webpack.config.js'),
-      `
-const { composePlugins, withNx, withWeb } = require('@nx/webpack');
-
-// Nx plugins for webpack.
-module.exports = composePlugins(withNx(), withWeb(), (config) => {
-  // Update the webpack config as needed here.
-  // e.g. \`config.plugins.push(new MyPlugin())\`
-  return config;
-});
-`
-    );
-  } else {
-    tree.write(
-      joinPathFragments(project.root, 'webpack.config.js'),
-      `
-const { composePlugins, withNx } = require('@nx/webpack');
-
-// Nx plugins for webpack.
-module.exports = composePlugins(withNx(), (config) => {
-  // Update the webpack config as needed here.
-  // e.g. \`config.plugins.push(new MyPlugin())\`
-  return config;
-});
-`
-    );
-  }
   updateProjectConfiguration(tree, options.project, {
     ...project,
     targets: {

@@ -1,20 +1,26 @@
-import { assertMinimumCypressVersion } from '@nx/cypress/src/utils/cypress-version';
 import {
+  ensurePackage,
+  formatFiles,
   generateFiles,
   joinPathFragments,
   readProjectConfiguration,
   Tree,
 } from '@nx/devkit';
+import { nxVersion } from '../../utils/versions';
 import {
   getArgsDefaultValue,
   getComponentProps,
 } from '../utils/storybook-ast/storybook-inputs';
 import { ComponentTestSchema } from './schema';
 
-export function componentTestGenerator(
+export async function componentTestGenerator(
   tree: Tree,
   options: ComponentTestSchema
 ) {
+  ensurePackage('@nx/cypress', nxVersion);
+  const { assertMinimumCypressVersion } = await import(
+    '@nx/cypress/src/utils/cypress-version'
+  );
   assertMinimumCypressVersion(10);
   const { root } = readProjectConfiguration(tree, options.project);
   const componentDirPath = joinPathFragments(root, options.componentDir);
@@ -47,6 +53,10 @@ export function componentTestGenerator(
         tpl: '',
       }
     );
+  }
+
+  if (!options.skipFormat) {
+    await formatFiles(tree);
   }
 }
 

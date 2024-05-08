@@ -10,7 +10,7 @@
         "ng-packagr-lite",
         "package",
         "webpack-browser",
-        "webpack-dev-server",
+        "dev-server",
         "webpack-server",
         "module-federation-dev-server",
         "module-federation-dev-ssr"
@@ -60,7 +60,7 @@
   {
     "name": "create-nx-workspace",
     "packageName": "create-nx-workspace",
-    "description": "Smart, Fast and Extensible Build System",
+    "description": "Smart Monorepos · Fast CI",
     "path": "generated/packages/create-nx-workspace.json",
     "schemas": { "executors": [], "generators": [] }
   },

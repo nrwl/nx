@@ -1,4 +1,9 @@
-import { ExecutorContext, names } from '@nx/devkit';
+import {
+  ExecutorContext,
+  joinPathFragments,
+  names,
+  offsetFromRoot,
+} from '@nx/devkit';
 import { ChildProcess, fork } from 'child_process';
 import { resolve as pathResolve } from 'path';
 
@@ -19,7 +24,6 @@ export default async function* exportExecutor(
 
   try {
     await exportAsync(context.root, projectRoot, options);
-
     yield {
       success: true,
     };
@@ -38,11 +42,7 @@ function exportAsync(
   return new Promise((resolve, reject) => {
     childProcess = fork(
       require.resolve('@expo/cli/build/bin/cli'),
-      [
-        `export${options.bundler === 'webpack' ? ':web' : ''}`,
-        '.',
-        ...createExportOptions(options),
-      ],
+      [`export`, ...createExportOptions(options, projectRoot)],
       { cwd: pathResolve(workspaceRoot, projectRoot), env: process.env }
     );
 
@@ -63,19 +63,34 @@ function exportAsync(
   });
 }
 
-const nxOptions = ['bundler'];
+const nxOptions = ['bundler', 'interactive']; // interactive is passed in by e2e tests
 // options from https://github.com/expo/expo/blob/main/packages/@expo/cli/src/export/index.ts
-function createExportOptions(options: ExportExecutorSchema) {
+export function createExportOptions(
+  options: ExportExecutorSchema,
+  projectRoot: string
+) {
   return Object.keys(options).reduce((acc, k) => {
     if (!nxOptions.includes(k)) {
       const v = options[k];
-      if (typeof v === 'boolean') {
-        if (v === true) {
-          // when true, does not need to pass the value true, just need to pass the flag in kebob case
-          acc.push(`--${names(k).fileName}`);
-        }
-      } else {
-        acc.push(`--${names(k).fileName}`, v);
+      switch (k) {
+        case 'outputDir':
+          const path = joinPathFragments(offsetFromRoot(projectRoot), v); // need to add offset for the outputDir
+          acc.push('--output-dir', path);
+          break;
+        case 'minify':
+          if (v === false) {
+            acc.push('--no-minify'); // cli only accpets --no-minify
+          }
+          break;
+        default:
+          if (typeof v === 'boolean') {
+            if (v === true) {
+              // when true, does not need to pass the value true, just need to pass the flag in kebob case
+              acc.push(`--${names(k).fileName}`);
+            }
+          } else {
+            acc.push(`--${names(k).fileName}`, v);
+          }
       }
     }
     return acc;

@@ -1,9 +1,9 @@
 {
   "name": "component-configuration",
   "aliases": ["cypress-component-configuration"],
-  "factory": "./src/generators/component-configuration/component-configuration",
+  "factory": "./src/generators/component-configuration/component-configuration#componentConfigurationGeneratorInternal",
   "schema": {
-    "$schema": "http://json-schema.org/schema",
+    "$schema": "https://json-schema.org/schema",
     "$id": "NxCypressComponentConfiguration",
     "cli": "nx",
     "title": "Set up Cypress component testing for a project",
@@ -46,7 +46,7 @@
   },
   "description": "Set up Cypress Component Test for a project",
   "hidden": true,
-  "implementation": "/packages/cypress/src/generators/component-configuration/component-configuration.ts",
+  "implementation": "/packages/cypress/src/generators/component-configuration/component-configuration#componentConfigurationGeneratorInternal.ts",
   "path": "/packages/cypress/src/generators/component-configuration/schema.json",
   "type": "generator"
 }

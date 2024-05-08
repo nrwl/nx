@@ -1,27 +1,23 @@
 import { execSync } from 'child_process';
 import { Module } from 'module';
-
-import type { Tree } from 'nx/src/generators/tree';
-
-import type { GeneratorCallback } from 'nx/src/config/misc-interfaces';
 import { clean, coerce, gt } from 'semver';
 
 import { installPackagesTask } from '../tasks/install-packages-task';
-import { requireNx } from '../../nx';
 import { dirSync } from 'tmp';
 import { join } from 'path';
-import type { PackageManager } from 'nx/src/utils/package-manager';
-import { writeFileSync } from 'fs';
-
-const {
-  readJson,
-  updateJson,
-  getPackageManagerCommand,
-  workspaceRoot,
+import {
   detectPackageManager,
-  createTempNpmDirectory,
+  GeneratorCallback,
+  getPackageManagerCommand,
   getPackageManagerVersion,
-} = requireNx();
+  PackageManager,
+  readJson,
+  Tree,
+  updateJson,
+  workspaceRoot,
+} from 'nx/src/devkit-exports';
+import { createTempNpmDirectory } from 'nx/src/devkit-internals';
+import { writeFileSync } from 'fs';
 
 const UNIDENTIFIED_VERSION = 'UNIDENTIFIED_VERSION';
 const NON_SEMVER_TAGS = {
@@ -132,13 +128,15 @@ function updateExistingDependenciesVersion(
  * @param dependencies Dependencies to be added to the dependencies section of package.json
  * @param devDependencies Dependencies to be added to the devDependencies section of package.json
  * @param packageJsonPath Path to package.json
+ * @param keepExistingVersions If true, prevents existing dependencies from being bumped to newer versions
  * @returns Callback to install dependencies only if necessary, no-op otherwise
  */
 export function addDependenciesToPackageJson(
   tree: Tree,
   dependencies: Record<string, string>,
   devDependencies: Record<string, string>,
-  packageJsonPath: string = 'package.json'
+  packageJsonPath: string = 'package.json',
+  keepExistingVersions?: boolean
 ): GeneratorCallback {
   const currentPackageJson = readJson(tree, packageJsonPath);
 
@@ -155,6 +153,7 @@ export function addDependenciesToPackageJson(
 
   // filtered dependencies should consist of:
   // - dependencies of the same type that are not present
+  // by default, filtered dependencies also include these (unless keepExistingVersions is true):
   // - dependencies of the same type that have greater version
   // - specified dependencies of the other type that have greater version and are already installed as current type
   filteredDependencies = {
@@ -178,14 +177,25 @@ export function addDependenciesToPackageJson(
     ),
   };
 
-  filteredDependencies = removeLowerVersions(
-    filteredDependencies,
-    currentPackageJson.dependencies
-  );
-  filteredDevDependencies = removeLowerVersions(
-    filteredDevDependencies,
-    currentPackageJson.devDependencies
-  );
+  if (keepExistingVersions) {
+    filteredDependencies = removeExistingDependencies(
+      filteredDependencies,
+      currentPackageJson.dependencies
+    );
+    filteredDevDependencies = removeExistingDependencies(
+      filteredDevDependencies,
+      currentPackageJson.devDependencies
+    );
+  } else {
+    filteredDependencies = removeLowerVersions(
+      filteredDependencies,
+      currentPackageJson.dependencies
+    );
+    filteredDevDependencies = removeLowerVersions(
+      filteredDevDependencies,
+      currentPackageJson.devDependencies
+    );
+  }
 
   if (
     requiresAddingOfPackages(
@@ -227,12 +237,24 @@ function removeLowerVersions(
 ) {
   return Object.keys(incomingDeps).reduce((acc, d) => {
     if (
-      existingDeps?.[d] &&
-      !isIncomingVersionGreater(incomingDeps[d], existingDeps[d])
+      !existingDeps?.[d] ||
+      isIncomingVersionGreater(incomingDeps[d], existingDeps[d])
     ) {
-      return acc;
+      acc[d] = incomingDeps[d];
     }
-    return { ...acc, [d]: incomingDeps[d] };
+    return acc;
+  }, {});
+}
+
+function removeExistingDependencies(
+  incomingDeps: Record<string, string>,
+  existingDeps: Record<string, string>
+): Record<string, string> {
+  return Object.keys(incomingDeps).reduce((acc, d) => {
+    if (!existingDeps?.[d]) {
+      acc[d] = incomingDeps[d];
+    }
+    return acc;
   }, {});
 }
 
@@ -457,7 +479,7 @@ export function ensurePackage<T extends any = any>(
 
   if (process.env.NX_DRY_RUN && process.env.NX_DRY_RUN !== 'false') {
     throw new Error(
-      'NOTE: This generator does not support --dry-run. If you are running this in Nx Console, it should execute fine once you hit the "Run" button.\n'
+      'NOTE: This generator does not support --dry-run. If you are running this in Nx Console, it should execute fine once you hit the "Generate" button.\n'
     );
   }
 

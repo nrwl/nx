@@ -1,0 +1,62 @@
+{
+  "name": "gradle",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/gradle/src",
+  "projectType": "library",
+  "targets": {
+    "nx-release-publish": {
+      "dependsOn": ["^nx-release-publish"],
+      "executor": "@nx/js:release-publish",
+      "options": {
+        "packageRoot": "build/packages/gradle"
+      }
+    },
+    "build-base": {
+      "executor": "@nx/js:tsc",
+      "options": {
+        "assets": [
+          {
+            "input": "packages/gradle",
+            "glob": "**/@(files|files-angular)/**",
+            "output": "/"
+          },
+          {
+            "input": "packages/gradle",
+            "glob": "**/files/**/.gitkeep",
+            "output": "/"
+          },
+          {
+            "input": "packages/gradle",
+            "glob": "**/*.json",
+            "ignore": ["**/tsconfig*.json", "project.json", ".eslintrc.json"],
+            "output": "/"
+          },
+          {
+            "input": "packages/gradle",
+            "glob": "**/*.js",
+            "ignore": ["**/jest.config.js"],
+            "output": "/"
+          },
+          {
+            "input": "packages/gradle",
+            "glob": "**/*.d.ts",
+            "output": "/"
+          },
+          {
+            "input": "",
+            "glob": "LICENSE",
+            "output": "/"
+          }
+        ]
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/build/packages/gradle"],
+      "options": {
+        "command": "node ./scripts/copy-readme.js gradle"
+      }
+    }
+  },
+  "tags": []
+}

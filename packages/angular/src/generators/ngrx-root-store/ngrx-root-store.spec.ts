@@ -1,3 +1,5 @@
+import 'nx/src/internal-testing-utils/mock-project-graph';
+
 import type { Tree } from '@nx/devkit';
 import { readJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
@@ -15,6 +17,7 @@ describe('NgRxRootStoreGenerator', () => {
           project: 'non-exist',
           minimal: true,
           name: '',
+          skipFormat: true,
         })
       ).rejects.toThrowError();
     });
@@ -30,6 +33,7 @@ describe('NgRxRootStoreGenerator', () => {
           project: 'my-app',
           minimal: false,
           name: undefined,
+          skipFormat: true,
         })
       ).rejects.toThrowError();
     });
@@ -43,6 +47,7 @@ describe('NgRxRootStoreGenerator', () => {
       await ngrxRootStoreGenerator(tree, {
         project: 'my-app',
         minimal: true,
+        skipFormat: true,
       });
 
       // ASSERT
@@ -137,6 +142,7 @@ describe('NgRxRootStoreGenerator', () => {
         project: 'my-app',
         minimal: true,
         addDevTools: true,
+        skipFormat: true,
       });
 
       // ASSERT
@@ -154,6 +160,7 @@ describe('NgRxRootStoreGenerator', () => {
       await ngrxRootStoreGenerator(tree, {
         project: 'my-app',
         minimal: true,
+        skipFormat: true,
       });
 
       // ASSERT
@@ -186,6 +193,7 @@ describe('NgRxRootStoreGenerator', () => {
         project: 'my-app',
         minimal: true,
         addDevTools: true,
+        skipFormat: true,
       });
 
       // ASSERT
@@ -205,6 +213,7 @@ describe('NgRxRootStoreGenerator', () => {
         project: 'my-app',
         minimal: true,
         skipPackageJson: true,
+        skipFormat: true,
       });
 
       // ASSERT
@@ -231,6 +240,7 @@ describe('NgRxRootStoreGenerator', () => {
           project: 'non-exist',
           minimal: true,
           name: '',
+          skipFormat: true,
         })
       ).rejects.toThrowError();
     });
@@ -246,6 +256,7 @@ describe('NgRxRootStoreGenerator', () => {
           project: 'my-app',
           minimal: false,
           name: undefined,
+          skipFormat: true,
         })
       ).rejects.toThrowError();
     });
@@ -259,6 +270,7 @@ describe('NgRxRootStoreGenerator', () => {
       await ngrxRootStoreGenerator(tree, {
         project: 'my-app',
         minimal: true,
+        skipFormat: true,
       });
 
       // ASSERT
@@ -295,6 +307,7 @@ describe('NgRxRootStoreGenerator', () => {
         project: 'my-app',
         minimal: false,
         name: 'users',
+        skipFormat: true,
       });
 
       // ASSERT
@@ -332,6 +345,7 @@ describe('NgRxRootStoreGenerator', () => {
         minimal: false,
         name: 'users',
         facade: true,
+        skipFormat: true,
       });
 
       // ASSERT
@@ -353,6 +367,7 @@ describe('NgRxRootStoreGenerator', () => {
         project: 'my-app',
         minimal: true,
         addDevTools: true,
+        skipFormat: true,
       });
 
       // ASSERT
@@ -370,6 +385,7 @@ describe('NgRxRootStoreGenerator', () => {
       await ngrxRootStoreGenerator(tree, {
         project: 'my-app',
         minimal: true,
+        skipFormat: true,
       });
 
       // ASSERT
@@ -402,6 +418,7 @@ describe('NgRxRootStoreGenerator', () => {
         project: 'my-app',
         minimal: true,
         addDevTools: true,
+        skipFormat: true,
       });
 
       // ASSERT
@@ -421,6 +438,7 @@ describe('NgRxRootStoreGenerator', () => {
         project: 'my-app',
         minimal: true,
         skipPackageJson: true,
+        skipFormat: true,
       });
 
       // ASSERT
@@ -444,6 +462,7 @@ async function createNgModuleApp(tree: Tree, name = 'my-app') {
     name,
     standalone: false,
     routing: true,
+    skipFormat: true,
   });
 }
 
@@ -452,5 +471,6 @@ async function createStandaloneApp(tree: Tree, name = 'my-app') {
     name,
     standalone: true,
     routing: true,
+    skipFormat: true,
   });
 }

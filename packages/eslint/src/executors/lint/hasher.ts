@@ -44,7 +44,7 @@ export default async function run(
 
   const nodes = {};
   const hashes = [] as string[];
-  for (const d of Object.keys(res.details.nodes)) {
+  for (const d of Object.keys(res.details.nodes).sort()) {
     if (d.indexOf('$fileset') === -1) {
       nodes[d] = res.details.nodes[d];
       hashes.push(res.details.nodes[d]);

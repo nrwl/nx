@@ -1,4 +1,4 @@
-import type { ProjectNameAndRootFormat } from '@nx/devkit/src/generators/project-name-directory-utils';
+import type { ProjectNameAndRootFormat } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import type { Linter } from '@nx/eslint';
 import type { SupportedStyles } from '@nx/react';
 
@@ -24,4 +24,5 @@ export interface Schema {
   strict?: boolean;
   setParserOptionsProject?: boolean;
   skipPackageJson?: boolean;
+  addPlugin?: boolean;
 }

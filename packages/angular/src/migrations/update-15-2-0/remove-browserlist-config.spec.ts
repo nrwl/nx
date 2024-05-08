@@ -1,4 +1,7 @@
+import 'nx/src/internal-testing-utils/mock-project-graph';
+
 import type { Tree } from '@nx/devkit';
+import * as devkit from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { generateTestApplication } from '../../generators/utils/testing';
 import removeBrowserlistConfig, {
@@ -10,9 +13,13 @@ describe('Migration to delete Browserslist configurations', () => {
 
   beforeEach(async () => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    jest
+      .spyOn(devkit, 'formatFiles')
+      .mockImplementation(() => Promise.resolve());
     await generateTestApplication(tree, {
       name: 'test',
       projectNameAndRootFormat: 'derived',
+      skipFormat: true,
     });
   });
 

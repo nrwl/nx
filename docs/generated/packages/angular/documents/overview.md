@@ -1,37 +1,63 @@
-The Nx Plugin for Angular contains executors, generators, and utilities for managing Angular applications and libraries
-within an Nx workspace. It provides:
+---
+title: Overview of the Nx Angular Plugin
+description: The Nx Plugin for Angular contains executors, generators, and utilities for managing Angular applications and libraries within an Nx workspace.
+---
 
-- Integration with libraries such as Storybook, Jest and Cypress.
+The Nx Plugin for Angular contains executors, generators, and utilities for managing Angular applications and libraries
+within an Nx workspace. It also enables using Angular Devkit builders and schematics in Nx workspaces.
+
+Among other things, it provides:
+
+- Integration with libraries such as:
+  - Cypress
+  - ESLint
+  - Jest
+  - Playwright
+  - Storybook
 - Generators to help scaffold code quickly, including:
   - Micro Frontends
   - Libraries, both internal to your codebase and publishable to npm
-  - Upgrading AngularJS applications
-  - Single Component Application Modules (SCAMs)
-- NgRx helpers.
-- Utilities for automatic workspace refactoring.
+  - Projects with Tailwind CSS
+- Executors providing extra capabilities on top of the Angular Devkit builders:
+  - Provide ESBuild plugins
+  - Provide custom webpack configurations
+- Utilities for automatic workspace refactoring
 
 {% callout type="note" title="Currently using the Angular CLI?" %}
 You can easily and mostly **automatically migrate from an Angular CLI** project to Nx! Learn
 more [here](/recipes/angular/migration/angular).
 {% /callout %}
 
-## Setting up the Angular plugin
+## Setting Up @nx/angular
+
+### Installation
 
 {% callout type="note" title="Keep Nx Package Versions In Sync" %}
-Make sure to install the `@nx/angular` version that matches the version of `nx` in your repository. If the version
-numbers get out of sync, you can encounter some difficult to debug errors. You
-can [fix Nx version mismatches with this recipe](/recipes/tips-n-tricks/keep-nx-versions-in-sync).
+Make sure to install the `@nx/angular` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/recipes/tips-n-tricks/keep-nx-versions-in-sync).
 {% /callout %}
 
-Adding the Angular plugin to an existing Nx workspace can be done with the following:
+In any Nx workspace, you can install `@nx/angular` by running the following command:
 
-```shell
-yarn add -D @nx/angular
+{% tabs %}
+{% tab label="Nx 18+" %}
+
+```shell {% skipRescope=true %}
+nx add @nx/angular
 ```
 
+This will install the correct version of `@nx/angular`.
+
+{% /tab %}
+{% tab label="Nx < 18" %}
+
+Install the `@nx/angular` package with your package manager.
+
 ```shell
-npm install -D @nx/angular
+npm add -D @nx/angular
 ```
+
+{% /tab %}
+{% /tabs %}
 
 {% callout type="note" title="Angular Tutorials" %}
 For a full tutorial experience, follow the [Angular Standalone Tutorial](/getting-started/tutorials/angular-standalone-tutorial) or the [Angular Monorepo Tutorial](/getting-started/tutorials/angular-monorepo-tutorial)
@@ -105,5 +131,4 @@ nx g @nx/angular:service my-service
 - [Angular Monorepo Tutorial](/getting-started/tutorials/angular-monorepo-tutorial)
 - [Migrating from the Angular CLI](/recipes/angular/migration/angular)
 - [Setup Module Federation with Angular and Nx](/concepts/module-federation/faster-builds-with-module-federation)
-- [Upgrading an AngularJS application to Angular](/recipes/angular/migration/angularjs)
 - [Using Tailwind CSS with Angular projects](/recipes/angular/using-tailwind-css-with-angular-projects)

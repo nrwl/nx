@@ -1,0 +1,153 @@
+{
+  "version": 2,
+  "outputCapture": "direct-nodejs",
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "title": "Schema for Webpack Dev Server",
+  "description": "Serves an Angular application using [webpack](https://webpack.js.org/) when the build target is using a webpack-based executor, or [Vite](https://vitejs.dev/) when the build target uses an [esbuild](https://esbuild.github.io/)-based executor.",
+  "examplesFile": "../../../docs/dev-server-examples.md",
+  "type": "object",
+  "presets": [
+    {
+      "name": "Using a Different Port",
+      "keys": ["buildTarget", "port"]
+    }
+  ],
+  "properties": {
+    "browserTarget": {
+      "type": "string",
+      "description": "A browser builder target to serve in the format of `project:target[:configuration]`. Ignored if `buildTarget` is set.",
+      "pattern": "^[^:\\s]+:[^:\\s]+(:[^\\s]+)?$",
+      "x-deprecated": "Use 'buildTarget' instead. It will be removed in Nx v19."
+    },
+    "buildTarget": {
+      "type": "string",
+      "description": "A build builder target to serve in the format of `project:target[:configuration]`.",
+      "pattern": "^[^:\\s]+:[^:\\s]+(:[^\\s]+)?$"
+    },
+    "port": {
+      "type": "number",
+      "description": "Port to listen on.",
+      "default": 4200
+    },
+    "host": {
+      "type": "string",
+      "description": "Host to listen on.",
+      "default": "localhost"
+    },
+    "proxyConfig": {
+      "type": "string",
+      "description": "Proxy configuration file. For more information, see https://angular.io/guide/build#proxying-to-a-backend-server."
+    },
+    "ssl": {
+      "type": "boolean",
+      "description": "Serve using HTTPS.",
+      "default": false
+    },
+    "sslKey": {
+      "type": "string",
+      "description": "SSL key to use for serving HTTPS."
+    },
+    "sslCert": {
+      "type": "string",
+      "description": "SSL certificate to use for serving HTTPS."
+    },
+    "headers": {
+      "type": "object",
+      "description": "Custom HTTP headers to be added to all responses.",
+      "propertyNames": {
+        "pattern": "^[-_A-Za-z0-9]+$"
+      },
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "open": {
+      "type": "boolean",
+      "description": "Opens the url in default browser.",
+      "default": false,
+      "alias": "o"
+    },
+    "verbose": {
+      "type": "boolean",
+      "description": "Adds more details to output logging."
+    },
+    "liveReload": {
+      "type": "boolean",
+      "description": "Whether to reload the page on change, using live-reload.",
+      "default": true
+    },
+    "publicHost": {
+      "type": "string",
+      "description": "The URL that the browser client (or live-reload client, if enabled) should use to connect to the development server. Use for a complex dev server setup, such as one with reverse proxies."
+    },
+    "allowedHosts": {
+      "type": "array",
+      "description": "List of hosts that are allowed to access the dev server.",
+      "default": [],
+      "items": {
+        "type": "string"
+      }
+    },
+    "servePath": {
+      "type": "string",
+      "description": "The pathname where the app will be served."
+    },
+    "disableHostCheck": {
+      "type": "boolean",
+      "description": "Don't verify connected clients are part of allowed hosts.",
+      "default": false
+    },
+    "hmr": {
+      "type": "boolean",
+      "description": "Enable hot module replacement.",
+      "default": false
+    },
+    "watch": {
+      "type": "boolean",
+      "description": "Rebuild on change.",
+      "default": true
+    },
+    "poll": {
+      "type": "number",
+      "description": "Enable and define the file watching poll time period in milliseconds."
+    },
+    "forceEsbuild": {
+      "type": "boolean",
+      "description": "Force the development server to use the 'browser-esbuild' builder when building. This is a developer preview option for the esbuild-based build system. _Note: this is only supported in Angular versions >= 16.1.0_.",
+      "default": false
+    },
+    "prebundle": {
+      "description": "Enable and control the Vite-based development server's prebundling capabilities. To enable prebundling, the Angular CLI cache must also be enabled. This option has no effect when using the 'browser' or other Webpack-based builders. _Note: this is only supported in Angular versions >= 17.2.0_.",
+      "oneOf": [
+        { "type": "boolean" },
+        {
+          "type": "object",
+          "properties": {
+            "exclude": {
+              "description": "List of package imports that should not be prebundled by the development server. The packages will be bundled into the application code itself.",
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          },
+          "additionalProperties": false,
+          "required": ["exclude"]
+        }
+      ]
+    },
+    "buildLibsFromSource": {
+      "type": "boolean",
+      "description": "Read buildable libraries from source instead of building them separately. If not set, it will take the value specified in the `browserTarget` options, or it will default to `true` if it's also not set in the `browserTarget` options.",
+      "x-priority": "important"
+    },
+    "esbuildMiddleware": {
+      "description": "A list of HTTP request middleware functions. _Note: this is only supported in Angular versions >= 17.0.0_.",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "description": "The path to the middleware function. Relative to the workspace root."
+      }
+    }
+  },
+  "additionalProperties": false,
+  "anyOf": [{ "required": ["buildTarget"] }, { "required": ["browserTarget"] }]
+}

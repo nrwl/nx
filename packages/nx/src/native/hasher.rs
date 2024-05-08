@@ -1,6 +1,6 @@
-use crate::native::utils::path::Normalize;
-use crate::native::walker::nx_walker;
-use std::collections::HashMap;
+use std::path::Path;
+
+use tracing::trace;
 use xxhash_rust::xxh3;
 
 pub fn hash(content: &[u8]) -> String {
@@ -16,30 +16,25 @@ pub fn hash_array(input: Vec<String>) -> String {
 
 #[napi]
 pub fn hash_file(file: String) -> Option<String> {
-    let Ok(content) = std::fs::read(file) else {
-        return None;
-    };
-
-    Some(hash(&content))
+    hash_file_path(file)
 }
 
-#[napi]
-pub fn hash_files(workspace_root: String) -> HashMap<String, String> {
-    nx_walker(workspace_root, |rec| {
-        let mut collection: HashMap<String, String> = HashMap::new();
-        for (path, content) in rec {
-            collection.insert(
-                path.to_normalized_string(),
-                xxh3::xxh3_64(&content).to_string(),
-            );
-        }
-        collection
-    })
+#[inline]
+pub fn hash_file_path<P: AsRef<Path>>(path: P) -> Option<String> {
+    let path = path.as_ref();
+    let Ok(content) = std::fs::read(path) else {
+        trace!("Failed to read file: {:?}", path);
+        return None;
+    };
+    let hash = hash(&content);
+    trace!("Hashed file {:?} - {:?}", path, hash);
+
+    Some(hash)
 }
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use crate::native::hasher::hash_file;
     use assert_fs::prelude::*;
     use assert_fs::TempDir;
 

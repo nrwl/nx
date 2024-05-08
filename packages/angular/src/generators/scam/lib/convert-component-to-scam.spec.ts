@@ -19,6 +19,7 @@ describe('convertComponentToScam', () => {
       skipImport: true,
       export: false,
       standalone: false,
+      skipFormat: true,
     });
 
     // ACT
@@ -44,9 +45,9 @@ describe('convertComponentToScam', () => {
       import { CommonModule } from '@angular/common';
 
       @Component({
-        selector: 'proj-example',
+        selector: 'example',
         templateUrl: './example.component.html',
-        styleUrl: './example.component.css',
+        styleUrl: './example.component.css'
       })
       export class ExampleComponent {}
 
@@ -55,7 +56,8 @@ describe('convertComponentToScam', () => {
         declarations: [ExampleComponent],
         exports: [ExampleComponent],
       })
-      export class ExampleComponentModule {}"
+      export class ExampleComponentModule {}
+      "
     `);
   });
 
@@ -74,6 +76,7 @@ describe('convertComponentToScam', () => {
       skipImport: true,
       export: false,
       standalone: false,
+      skipFormat: true,
     });
 
     // ACT
@@ -104,7 +107,8 @@ describe('convertComponentToScam', () => {
         declarations: [ExampleComponent],
         exports: [ExampleComponent],
       })
-      export class ExampleComponentModule {}"
+      export class ExampleComponentModule {}
+      "
     `);
   });
 
@@ -124,6 +128,7 @@ describe('convertComponentToScam', () => {
       export: false,
       flat: true,
       standalone: false,
+      skipFormat: true,
     });
 
     // ACT
@@ -150,9 +155,9 @@ describe('convertComponentToScam', () => {
       import { CommonModule } from '@angular/common';
 
       @Component({
-        selector: 'proj-example',
+        selector: 'example',
         templateUrl: './example.component.html',
-        styleUrl: './example.component.css',
+        styleUrl: './example.component.css'
       })
       export class ExampleComponent {}
 
@@ -161,7 +166,8 @@ describe('convertComponentToScam', () => {
         declarations: [ExampleComponent],
         exports: [ExampleComponent],
       })
-      export class ExampleComponentModule {}"
+      export class ExampleComponentModule {}
+      "
     `);
   });
 
@@ -181,6 +187,7 @@ describe('convertComponentToScam', () => {
       export: false,
       flat: true,
       standalone: false,
+      skipFormat: true,
     });
 
     // ACT
@@ -212,7 +219,8 @@ describe('convertComponentToScam', () => {
         declarations: [ExampleComponent],
         exports: [ExampleComponent],
       })
-      export class ExampleComponentModule {}"
+      export class ExampleComponentModule {}
+      "
     `);
   });
 
@@ -233,6 +241,7 @@ describe('convertComponentToScam', () => {
       flat: true,
       type: 'random',
       standalone: false,
+      skipFormat: true,
     });
 
     // ACT
@@ -260,9 +269,9 @@ describe('convertComponentToScam', () => {
       import { CommonModule } from '@angular/common';
 
       @Component({
-        selector: 'proj-example',
+        selector: 'example',
         templateUrl: './example.random.html',
-        styleUrl: './example.random.css',
+        styleUrl: './example.random.css'
       })
       export class ExampleRandom {}
 
@@ -271,7 +280,8 @@ describe('convertComponentToScam', () => {
         declarations: [ExampleRandom],
         exports: [ExampleRandom],
       })
-      export class ExampleRandomModule {}"
+      export class ExampleRandomModule {}
+      "
     `);
   });
 
@@ -292,6 +302,7 @@ describe('convertComponentToScam', () => {
       flat: true,
       type: 'random',
       standalone: false,
+      skipFormat: true,
     });
 
     // ACT
@@ -324,7 +335,8 @@ describe('convertComponentToScam', () => {
         declarations: [ExampleRandom],
         exports: [ExampleRandom],
       })
-      export class ExampleRandomModule {}"
+      export class ExampleRandomModule {}
+      "
     `);
   });
 
@@ -345,6 +357,7 @@ describe('convertComponentToScam', () => {
       flat: false,
       path: 'apps/app1/src/app/random',
       standalone: false,
+      skipFormat: true,
     });
 
     // ACT
@@ -371,9 +384,9 @@ describe('convertComponentToScam', () => {
       import { CommonModule } from '@angular/common';
 
       @Component({
-        selector: 'proj-example',
+        selector: 'example',
         templateUrl: './example.component.html',
-        styleUrl: './example.component.css',
+        styleUrl: './example.component.css'
       })
       export class ExampleComponent {}
 
@@ -382,7 +395,8 @@ describe('convertComponentToScam', () => {
         declarations: [ExampleComponent],
         exports: [ExampleComponent],
       })
-      export class ExampleComponentModule {}"
+      export class ExampleComponentModule {}
+      "
     `);
   });
 
@@ -403,6 +417,7 @@ describe('convertComponentToScam', () => {
       flat: true,
       path: 'apps/app1/src/app/random',
       standalone: false,
+      skipFormat: true,
     });
 
     // ACT
@@ -429,9 +444,9 @@ describe('convertComponentToScam', () => {
       import { CommonModule } from '@angular/common';
 
       @Component({
-        selector: 'proj-example',
+        selector: 'example',
         templateUrl: './example.component.html',
-        styleUrl: './example.component.css',
+        styleUrl: './example.component.css'
       })
       export class ExampleComponent {}
 
@@ -440,7 +455,8 @@ describe('convertComponentToScam', () => {
         declarations: [ExampleComponent],
         exports: [ExampleComponent],
       })
-      export class ExampleComponentModule {}"
+      export class ExampleComponentModule {}
+      "
     `);
   });
 });

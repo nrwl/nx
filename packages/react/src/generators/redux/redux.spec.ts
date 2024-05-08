@@ -1,3 +1,5 @@
+import 'nx/src/internal-testing-utils/mock-project-graph';
+
 import { readJson, Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { Linter } from '@nx/eslint';
@@ -13,7 +15,7 @@ describe('redux', () => {
     await libraryGenerator(appTree, {
       name: 'my-lib',
       linter: Linter.EsLint,
-      skipFormat: false,
+      skipFormat: true,
       skipTsConfig: false,
       style: 'css',
       unitTestRunner: 'jest',

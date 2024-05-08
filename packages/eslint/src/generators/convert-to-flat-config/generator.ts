@@ -1,8 +1,10 @@
 import {
+  addDependenciesToPackageJson,
   formatFiles,
   getProjects,
   NxJsonConfiguration,
   ProjectConfiguration,
+  readJson,
   readNxJson,
   Tree,
   updateJson,
@@ -10,7 +12,11 @@ import {
 } from '@nx/devkit';
 import { ConvertToFlatConfigGeneratorSchema } from './schema';
 import { findEslintFile } from '../utils/eslint-file';
+import { join } from 'path';
+import { eslintrcVersion, eslintVersion } from '../../utils/versions';
+import { ESLint } from 'eslint';
 import { convertEslintJsonToFlatConfig } from './converters/json-converter';
+import { load } from 'js-yaml';
 
 export async function convertToFlatConfigGenerator(
   tree: Tree,
@@ -20,9 +26,9 @@ export async function convertToFlatConfigGenerator(
   if (!eslintFile) {
     throw new Error('Could not find root eslint file');
   }
-  if (!eslintFile.endsWith('.json')) {
+  if (eslintFile.endsWith('.js')) {
     throw new Error(
-      'Only json eslint config files are supported for conversion'
+      'Only json and yaml eslint config files are supported for conversion'
     );
   }
 
@@ -60,15 +66,15 @@ export async function convertToFlatConfigGenerator(
 export default convertToFlatConfigGenerator;
 
 function convertRootToFlatConfig(tree: Tree, eslintFile: string) {
-  if (eslintFile.endsWith('.base.json')) {
-    convertConfigToFlatConfig(
-      tree,
-      '',
-      '.eslintrc.base.json',
-      'eslint.base.config.js'
-    );
+  if (/\.base\.(js|json|yml|yaml)$/.test(eslintFile)) {
+    convertConfigToFlatConfig(tree, '', eslintFile, 'eslint.base.config.js');
   }
-  convertConfigToFlatConfig(tree, '', '.eslintrc.json', 'eslint.config.js');
+  convertConfigToFlatConfig(
+    tree,
+    '',
+    eslintFile.replace('.base.', '.'),
+    'eslint.config.js'
+  );
 }
 
 function convertProjectToFlatConfig(
@@ -78,10 +84,13 @@ function convertProjectToFlatConfig(
   nxJson: NxJsonConfiguration,
   eslintIgnoreFiles: Set<string>
 ) {
-  if (tree.exists(`${projectConfig.root}/.eslintrc.json`)) {
+  const eslintFile = findEslintFile(tree, projectConfig.root);
+  if (eslintFile && !eslintFile.endsWith('.js')) {
     if (projectConfig.targets) {
       const eslintTargets = Object.keys(projectConfig.targets || {}).filter(
-        (t) => projectConfig.targets[t].executor === '@nx/eslint:lint'
+        (t) =>
+          projectConfig.targets[t].executor === '@nx/eslint:lint' ||
+          projectConfig.targets[t].command?.includes('eslint')
       );
       let ignorePath: string | undefined;
       for (const target of eslintTargets) {
@@ -95,17 +104,24 @@ function convertProjectToFlatConfig(
         }
         updateProjectConfiguration(tree, project, projectConfig);
       }
-      const nxHasLintTargets = Object.keys(nxJson.targetDefaults || {}).some(
+      const nxHasEsLintTargets = Object.keys(nxJson.targetDefaults || {}).some(
         (t) =>
           (t === '@nx/eslint:lint' ||
-            nxJson.targetDefaults[t].executor === '@nx/eslint:lint') &&
+            nxJson.targetDefaults[t].executor === '@nx/eslint:lint' ||
+            nxJson.targetDefaults[t].command?.includes('eslint')) &&
           projectConfig.targets?.[t]
       );
-      if (nxHasLintTargets || eslintTargets.length > 0) {
+      const nxHasEsLintPlugin = (nxJson.plugins || []).some((p) =>
+        typeof p === 'string'
+          ? p === '@nx/eslint/plugin'
+          : p.plugin === '@nx/eslint/plugin'
+      );
+
+      if (nxHasEsLintTargets || nxHasEsLintPlugin || eslintTargets.length > 0) {
         convertConfigToFlatConfig(
           tree,
           projectConfig.root,
-          '.eslintrc.json',
+          eslintFile,
           'eslint.config.js',
           ignorePath
         );
@@ -153,5 +169,67 @@ function convertConfigToFlatConfig(
   const ignorePaths = ignorePath
     ? [ignorePath, `${root}/.eslintignore`]
     : [`${root}/.eslintignore`];
-  convertEslintJsonToFlatConfig(tree, root, source, target, ignorePaths);
+
+  if (source.endsWith('.json')) {
+    const config: ESLint.ConfigData = readJson(tree, `${root}/${source}`);
+    const conversionResult = convertEslintJsonToFlatConfig(
+      tree,
+      root,
+      config,
+      ignorePaths
+    );
+    return processConvertedConfig(tree, root, source, target, conversionResult);
+  }
+  if (source.endsWith('.yaml') || source.endsWith('.yml')) {
+    const originalContent = tree.read(`${root}/${source}`, 'utf-8');
+    const config = load(originalContent, {
+      json: true,
+      filename: source,
+    }) as ESLint.ConfigData;
+    const conversionResult = convertEslintJsonToFlatConfig(
+      tree,
+      root,
+      config,
+      ignorePaths
+    );
+    return processConvertedConfig(tree, root, source, target, conversionResult);
+  }
+}
+
+function processConvertedConfig(
+  tree: Tree,
+  root: string,
+  source: string,
+  target: string,
+  {
+    content,
+    addESLintRC,
+    addESLintJS,
+  }: { content: string; addESLintRC: boolean; addESLintJS: boolean }
+) {
+  // remove original config file
+  tree.delete(join(root, source));
+
+  // save new
+  tree.write(join(root, target), content);
+
+  // add missing packages
+  if (addESLintRC) {
+    addDependenciesToPackageJson(
+      tree,
+      {},
+      {
+        '@eslint/eslintrc': eslintrcVersion,
+      }
+    );
+  }
+  if (addESLintJS) {
+    addDependenciesToPackageJson(
+      tree,
+      {},
+      {
+        '@eslint/js': eslintVersion,
+      }
+    );
+  }
 }

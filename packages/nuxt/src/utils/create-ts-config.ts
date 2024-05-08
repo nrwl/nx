@@ -7,7 +7,6 @@ export function createTsConfig(
     projectRoot: string;
     rootProject?: boolean;
     unitTestRunner?: string;
-    outputPath: string;
   },
   relativePathToRootTsConfig: string
 ) {
@@ -15,7 +14,7 @@ export function createTsConfig(
   const json = {
     compilerOptions: {},
     files: [],
-    include: [],
+    include: ['.nuxt/nuxt.d.ts'],
     references: [
       {
         path: './tsconfig.app.json',

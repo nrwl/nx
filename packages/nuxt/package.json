@@ -1,8 +1,8 @@
 {
   "name": "@nx/nuxt",
   "version": "0.0.1",
-  "private": true,
-  "description": "The Nuxt plugin for Nx contains executors and generators for managing Nuxt applications and libraries within an Nx workspace. It provides:\n\n\n- Integration with libraries such as Vitest, Cypress, and Storybook.\n\n- Generators for applications, libraries, and more.\n\n- Library build support for publishing packages to npm or other registries.\n\n- Utilities for automatic workspace refactoring.",
+  "private": false,
+  "description": "The Nuxt plugin for Nx contains executors and generators for managing Nuxt applications and libraries within an Nx workspace. It provides:\n\n\n- Integration with libraries such as Vitest, Playwright, Cypress, and Storybook.\n\n- Generators for applications, libraries, and more.\n\n- Library build support for publishing packages to npm or other registries.\n\n- Utilities for automatic workspace refactoring.",
   "repository": {
     "type": "git",
     "url": "https://github.com/nrwl/nx.git",
@@ -28,17 +28,16 @@
     "migrations": "./migrations.json"
   },
   "dependencies": {
-    "nuxi": "npm:nuxi-nightly@3.9.2-1699007958.251cab5",
     "tslib": "^2.3.0",
-    "@nuxt/kit": "^3.8.1",
-    "@nuxt/schema": "^3.8.1",
+    "@nuxt/kit": "^3.10.0",
     "@nx/devkit": "file:../devkit",
     "@nx/js": "file:../js",
     "@nx/eslint": "file:../eslint",
-    "@nx/vue": "file:../vue"
+    "@nx/vue": "file:../vue",
+    "@nx/vite": "file:../vite"
   },
+  "peerDependencies": {},
   "publishConfig": {
     "access": "public"
-  },
-  "peerDependencies": {}
+  }
 }

@@ -18,7 +18,7 @@ To generate a remote application in your workspace, run the following command:
 {% tab label="React" %}
 
 ```{% command="nx g @nx/react:remote myremote --directory=apps/react/myremote" %}
->  NX  Generating @nx/react:remote
+NX  Generating @nx/react:remote
 
 CREATE apps/react/myremote/src/app/app.spec.tsx
 CREATE apps/react/myremote/src/assets/.gitkeep
@@ -50,7 +50,7 @@ UPDATE tsconfig.base.json
 {% tab label="Angular" %}
 
 ```{% command="nx g @nx/angular:remote myremote --directory=apps/angular/myremote" %}
-> NX Generating @nx/angular:host
+NX Generating @nx/angular:host
 
 CREATE apps/angular/myremote/project.json
 CREATE apps/angular/myremote/src/assets/.gitkeep
@@ -126,7 +126,7 @@ The command would look like the following:
 {% tab label="React" %}
 
 ```{% command="nx g @nx/react:remote myremote --directory=apps/react/myremote --host=shell" %}
->  NX  Generating @nx/react:remote
+NX  Generating @nx/react:remote
 
 CREATE apps/react/myremote/src/app/app.spec.tsx
 CREATE apps/react/myremote/src/assets/.gitkeep
@@ -226,6 +226,9 @@ This is less memory and CPU intensive than `webpack-dev-server` but it does not 
 
 The purpose of the `serve-static` target is to allow you to serve your `host` application, along with all of
 the `remote` applications it depends on without being too resource intensive.
+
+This has been further expanded upon. When you serve the `host` application, Nx will build (or pull from cache) your
+`remote` applications and serve them all via a single file server, to further reduce resource consumption.
 
 ### Serving your Remote via your Host
 

@@ -52,6 +52,8 @@ export interface NextServeBuilderOptions {
   buildLibsFromSource?: boolean;
   keepAliveTimeout?: number;
   turbo?: boolean;
+  experimentalHttps?: boolean;
+  customServerHttps?: boolean;
 }
 
 export interface NextExportBuilderOptions {

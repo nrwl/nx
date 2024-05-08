@@ -8,6 +8,7 @@ import {
   WebpackOptionsNormalized,
   WebpackPluginInstance,
 } from 'webpack';
+import { getRootTsConfigPath } from '@nx/js';
 
 import { StatsJsonPlugin } from '../../stats-json-plugin';
 import { GeneratePackageJsonPlugin } from '../../generate-package-json-plugin';
@@ -15,10 +16,9 @@ import { getOutputHashFormat } from '../../../utils/hash-format';
 import { NxTsconfigPathsWebpackPlugin } from '../../nx-typescript-webpack-plugin/nx-tsconfig-paths-webpack-plugin';
 import { getTerserEcmaVersion } from './get-terser-ecma-version';
 import { createLoaderFromCompiler } from './compiler-loaders';
-import { NormalizedNxWebpackPluginOptions } from '../nx-webpack-plugin-options';
+import { NormalizedNxAppWebpackPluginOptions } from '../nx-app-webpack-plugin-options';
 import TerserPlugin = require('terser-webpack-plugin');
 import nodeExternals = require('webpack-node-externals');
-import ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 
 const IGNORED_WEBPACK_WARNINGS = [
   /The comment file/i,
@@ -29,7 +29,7 @@ const extensions = ['.ts', '.tsx', '.mjs', '.js', '.jsx'];
 const mainFields = ['module', 'main'];
 
 export function applyBaseConfig(
-  options: NormalizedNxWebpackPluginOptions,
+  options: NormalizedNxAppWebpackPluginOptions,
   config: Partial<WebpackOptionsNormalized | Configuration> = {},
   {
     useNormalizedEntry,
@@ -40,8 +40,173 @@ export function applyBaseConfig(
     useNormalizedEntry?: boolean;
   } = {}
 ): void {
+  // Defaults that was applied from executor schema previously.
+  options.compiler ??= 'babel';
+  options.deleteOutputPath ??= true;
+  options.externalDependencies ??= 'all';
+  options.fileReplacements ??= [];
+  options.memoryLimit ??= 2048;
+  options.transformers ??= [];
+
+  applyNxIndependentConfig(options, config);
+
+  // Some of the options only work during actual tasks, not when reading the webpack config during CreateNodes.
+  if (!process.env['NX_TASK_TARGET_PROJECT']) return;
+
+  applyNxDependentConfig(options, config, { useNormalizedEntry });
+}
+
+function applyNxIndependentConfig(
+  options: NormalizedNxAppWebpackPluginOptions,
+  config: Partial<WebpackOptionsNormalized | Configuration>
+): void {
+  const hashFormat = getOutputHashFormat(options.outputHashing as string);
+  config.context = path.join(options.root, options.projectRoot);
+  config.target ??= options.target;
+  config.node = false;
+  config.mode =
+    // When the target is Node avoid any optimizations, such as replacing `process.env.NODE_ENV` with build time value.
+    config.target === 'node'
+      ? 'none'
+      : // Otherwise, make sure it matches `process.env.NODE_ENV`.
+      // When mode is development or production, webpack will automatically
+      // configure DefinePlugin to replace `process.env.NODE_ENV` with the
+      // build-time value. Thus, we need to make sure it's the same value to
+      // avoid conflicts.
+      //
+      // When the NODE_ENV is something else (e.g. test), then set it to none
+      // to prevent extra behavior from webpack.
+      process.env.NODE_ENV === 'development' ||
+        process.env.NODE_ENV === 'production'
+      ? (process.env.NODE_ENV as 'development' | 'production')
+      : 'none';
+  // When target is Node, the Webpack mode will be set to 'none' which disables in memory caching and causes a full rebuild on every change.
+  // So to mitigate this we enable in memory caching when target is Node and in watch mode.
+  config.cache =
+    options.target === 'node' && options.watch ? { type: 'memory' } : undefined;
+
+  config.devtool =
+    options.sourceMap === 'hidden'
+      ? 'hidden-source-map'
+      : options.sourceMap
+      ? 'source-map'
+      : false;
+
+  config.output = {
+    ...config.output,
+    libraryTarget:
+      (config as Configuration).output?.libraryTarget ??
+      (options.target === 'node' ? 'commonjs' : undefined),
+    path:
+      config.output?.path ??
+      (options.outputPath
+        ? path.join(options.root, options.outputPath)
+        : undefined),
+    filename:
+      config.output?.filename ??
+      (options.outputHashing ? `[name]${hashFormat.script}.js` : '[name].js'),
+    chunkFilename:
+      config.output?.chunkFilename ??
+      (options.outputHashing ? `[name]${hashFormat.chunk}.js` : '[name].js'),
+    hashFunction: config.output?.hashFunction ?? 'xxhash64',
+    // Disabled for performance
+    pathinfo: config.output?.pathinfo ?? false,
+    // Use CJS for Node since it has the widest support.
+    scriptType:
+      config.output?.scriptType ??
+      (options.target === 'node' ? undefined : 'module'),
+  };
+
+  config.watch = options.watch;
+
+  config.watchOptions = {
+    poll: options.poll,
+  };
+
+  config.profile = options.statsJson;
+
+  config.performance = {
+    ...config.performance,
+    hints: false,
+  };
+
+  config.experiments = { ...config.experiments, cacheUnaffected: true };
+
+  config.ignoreWarnings = [
+    (x) =>
+      IGNORED_WEBPACK_WARNINGS.some((r) =>
+        typeof x === 'string' ? r.test(x) : r.test(x.message)
+      ),
+  ];
+
+  config.optimization = {
+    ...config.optimization,
+    sideEffects: true,
+    minimize:
+      typeof options.optimization === 'object'
+        ? !!options.optimization.scripts
+        : !!options.optimization,
+    minimizer: [
+      options.compiler !== 'swc'
+        ? new TerserPlugin({
+            parallel: true,
+            terserOptions: {
+              keep_classnames: true,
+              ecma: getTerserEcmaVersion(
+                path.join(options.root, options.projectRoot)
+              ),
+              safari10: true,
+              format: {
+                ascii_only: true,
+                comments: false,
+                webkit: true,
+              },
+            },
+            extractComments: false,
+          })
+        : new TerserPlugin({
+            minify: TerserPlugin.swcMinify,
+            // `terserOptions` options will be passed to `swc`
+            terserOptions: {
+              module: true,
+              mangle: false,
+            },
+          }),
+    ],
+    runtimeChunk: false,
+    concatenateModules: true,
+  };
+
+  config.stats = {
+    hash: true,
+    timings: false,
+    cached: false,
+    cachedAssets: false,
+    modules: false,
+    warnings: true,
+    errors: true,
+    colors: !options.verbose && !options.statsJson,
+    chunks: !options.verbose,
+    assets: !!options.verbose,
+    chunkOrigins: !!options.verbose,
+    chunkModules: !!options.verbose,
+    children: !!options.verbose,
+    reasons: !!options.verbose,
+    version: !!options.verbose,
+    errorDetails: !!options.verbose,
+    moduleTrace: !!options.verbose,
+    usedExports: !!options.verbose,
+  };
+}
+
+function applyNxDependentConfig(
+  options: NormalizedNxAppWebpackPluginOptions,
+  config: Partial<WebpackOptionsNormalized | Configuration>,
+  { useNormalizedEntry }: { useNormalizedEntry?: boolean } = {}
+): void {
+  const tsConfig = options.tsConfig ?? getRootTsConfigPath();
   const plugins: WebpackPluginInstance[] = [
-    new NxTsconfigPathsWebpackPlugin(options),
+    new NxTsconfigPathsWebpackPlugin({ tsConfig }),
   ];
   const executorContext: Partial<ExecutorContext> = {
     projectName: options.projectName,
@@ -52,12 +217,13 @@ export function applyBaseConfig(
   };
 
   if (!options?.skipTypeChecking) {
+    const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
     plugins.push(
       new ForkTsCheckerWebpackPlugin({
         typescript: {
-          configFile: path.isAbsolute(options.tsConfig)
-            ? options.tsConfig
-            : path.join(options.root, options.tsConfig),
+          configFile: path.isAbsolute(tsConfig)
+            ? tsConfig
+            : path.join(options.root, tsConfig),
           memoryLimit: options.memoryLimit || 2018,
         },
       })
@@ -141,7 +307,7 @@ export function applyBaseConfig(
     );
   }
   if (options.generatePackageJson && executorContext) {
-    plugins.push(new GeneratePackageJsonPlugin(options));
+    plugins.push(new GeneratePackageJsonPlugin({ ...options, tsConfig }));
   }
 
   if (options.statsJson) {
@@ -163,137 +329,23 @@ export function applyBaseConfig(
     });
   }
 
-  const hashFormat = getOutputHashFormat(options.outputHashing as string);
-  config.context = path.join(options.root, options.projectRoot);
-  config.target ??= options.target;
-  config.node = false;
-  config.mode =
-    // When the target is Node avoid any optimizations, such as replacing `process.env.NODE_ENV` with build time value.
-    config.target === 'node'
-      ? 'none'
-      : // Otherwise, make sure it matches `process.env.NODE_ENV`.
-      // When mode is development or production, webpack will automatically
-      // configure DefinePlugin to replace `process.env.NODE_ENV` with the
-      // build-time value. Thus, we need to make sure it's the same value to
-      // avoid conflicts.
-      //
-      // When the NODE_ENV is something else (e.g. test), then set it to none
-      // to prevent extra behavior from webpack.
-      process.env.NODE_ENV === 'development' ||
-        process.env.NODE_ENV === 'production'
-      ? (process.env.NODE_ENV as 'development' | 'production')
-      : 'none';
-  // When target is Node, the Webpack mode will be set to 'none' which disables in memory caching and causes a full rebuild on every change.
-  // So to mitigate this we enable in memory caching when target is Node and in watch mode.
-  config.cache =
-    options.target === 'node' && options.watch ? { type: 'memory' } : undefined;
-
-  config.devtool =
-    options.sourceMap === 'hidden'
-      ? 'hidden-source-map'
-      : options.sourceMap
-      ? 'source-map'
-      : false;
-
-  config.output = {
-    ...config.output,
-    path:
-      config.output?.path ??
-      (options.outputPath
-        ? path.join(options.root, options.outputPath)
-        : undefined),
-    filename:
-      config.output?.filename ?? options.outputHashing
-        ? `[name]${hashFormat.script}.js`
-        : '[name].js',
-    chunkFilename:
-      config.output?.chunkFilename ?? options.outputHashing
-        ? `[name]${hashFormat.chunk}.js`
-        : '[name].js',
-    hashFunction: config.output?.hashFunction ?? 'xxhash64',
-    // Disabled for performance
-    pathinfo: config.output?.pathinfo ?? false,
-    // Use CJS for Node since it has the widest support.
-    scriptType:
-      config.output?.scriptType ?? options.target === 'node'
-        ? undefined
-        : 'module',
-  };
-
-  config.watch = options.watch;
-
-  config.watchOptions = {
-    poll: options.poll,
-  };
-
-  config.profile = options.statsJson;
-
   config.resolve = {
     ...config.resolve,
-    extensions: [...extensions, ...(config?.resolve?.extensions ?? [])],
-    alias: options.fileReplacements.reduce(
-      (aliases, replacement) => ({
-        ...aliases,
-        [replacement.replace]: replacement.with,
-      }),
-      {}
-    ),
-    mainFields,
+    extensions: [...(config?.resolve?.extensions ?? []), ...extensions],
+    alias: {
+      ...(config.resolve?.alias ?? {}),
+      ...(options.fileReplacements?.reduce(
+        (aliases, replacement) => ({
+          ...aliases,
+          [replacement.replace]: replacement.with,
+        }),
+        {}
+      ) ?? {}),
+    },
+    mainFields: config.resolve?.mainFields ?? mainFields,
   };
 
   config.externals = externals;
-
-  config.optimization = {
-    ...config.optimization,
-    sideEffects: true,
-    minimize:
-      typeof options.optimization === 'object'
-        ? !!options.optimization.scripts
-        : !!options.optimization,
-    minimizer: [
-      options.compiler !== 'swc'
-        ? new TerserPlugin({
-            parallel: true,
-            terserOptions: {
-              keep_classnames: true,
-              ecma: getTerserEcmaVersion(
-                path.join(options.root, options.projectRoot)
-              ),
-              safari10: true,
-              format: {
-                ascii_only: true,
-                comments: false,
-                webkit: true,
-              },
-            },
-            extractComments: false,
-          })
-        : new TerserPlugin({
-            minify: TerserPlugin.swcMinify,
-            // `terserOptions` options will be passed to `swc`
-            terserOptions: {
-              module: true,
-              mangle: false,
-            },
-          }),
-    ],
-    runtimeChunk: false,
-    concatenateModules: true,
-  };
-
-  config.performance = {
-    ...config.performance,
-    hints: false,
-  };
-
-  config.experiments = { ...config.experiments, cacheUnaffected: true };
-
-  config.ignoreWarnings = [
-    (x) =>
-      IGNORED_WEBPACK_WARNINGS.some((r) =>
-        typeof x === 'string' ? r.test(x) : r.test(x.message)
-      ),
-  ];
 
   config.module = {
     ...config.module,
@@ -325,27 +377,6 @@ export function applyBaseConfig(
       },
       createLoaderFromCompiler(options),
     ].filter((r) => !!r),
-  };
-
-  config.stats = {
-    hash: true,
-    timings: false,
-    cached: false,
-    cachedAssets: false,
-    modules: false,
-    warnings: true,
-    errors: true,
-    colors: !options.verbose && !options.statsJson,
-    chunks: !options.verbose,
-    assets: !!options.verbose,
-    chunkOrigins: !!options.verbose,
-    chunkModules: !!options.verbose,
-    children: !!options.verbose,
-    reasons: !!options.verbose,
-    version: !!options.verbose,
-    errorDetails: !!options.verbose,
-    moduleTrace: !!options.verbose,
-    usedExports: !!options.verbose,
   };
 
   config.plugins ??= [];

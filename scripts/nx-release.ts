@@ -1,14 +1,23 @@
 #!/usr/bin/env node
 import { createProjectGraphAsync, workspaceRoot } from '@nx/devkit';
+import * as chalk from 'chalk';
 import { execSync } from 'node:child_process';
 import { rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { URL } from 'node:url';
 import { isRelativeVersionKeyword } from 'nx/src/command-line/release/utils/semver';
-import { ReleaseType, parse } from 'semver';
+import { ReleaseType, inc, major, parse } from 'semver';
 import * as yargs from 'yargs';
 
 const LARGE_BUFFER = 1024 * 1000000;
+
+// DO NOT MODIFY, even for testing. This only gates releases to latest.
+const VALID_AUTHORS_FOR_LATEST = [
+  'jaysoo',
+  'JamesHenry',
+  'FrozenPandaz',
+  'vsavkin',
+];
 
 (async () => {
   const options = parseArgs();
@@ -36,7 +45,7 @@ const LARGE_BUFFER = 1024 * 1000000;
   });
 
   // Expected to run as part of the Github `publish` workflow
-  if (!options.local && process.env.NPM_TOKEN) {
+  if (!options.local && process.env.NODE_AUTH_TOKEN) {
     // Delete all .node files that were built during the previous steps
     // Always run before the artifacts step because we still need the .node files for native-packages
     execSync('find ./build -name "*.node" -delete', {
@@ -57,6 +66,9 @@ const LARGE_BUFFER = 1024 * 1000000;
     if (options.dryRun) {
       versionCommand += ' --dry-run';
     }
+    if (isVerboseLogging) {
+      versionCommand += ' --verbose';
+    }
     console.log(`> ${versionCommand}`);
     execSync(versionCommand, {
       stdio: isVerboseLogging ? [0, 1, 2] : 'ignore',
@@ -65,7 +77,7 @@ const LARGE_BUFFER = 1024 * 1000000;
   };
 
   // Intended for creating a github release which triggers the publishing workflow
-  if (!options.local && !process.env.NPM_TOKEN) {
+  if (!options.local && !process.env.NODE_AUTH_TOKEN) {
     // For this important use-case it makes sense to always have full logs
     isVerboseLogging = true;
 
@@ -94,6 +106,9 @@ const LARGE_BUFFER = 1024 * 1000000;
     if (options.dryRun) {
       changelogCommand += ' --dry-run';
     }
+    if (isVerboseLogging) {
+      changelogCommand += ' --verbose';
+    }
     console.log(`> ${changelogCommand}`);
     execSync(changelogCommand, {
       stdio: isVerboseLogging ? [0, 1, 2] : 'ignore',
@@ -113,13 +128,15 @@ const LARGE_BUFFER = 1024 * 1000000;
     maxBuffer: LARGE_BUFFER,
   });
 
+  const distTag = determineDistTag(options.version);
+
   if (options.dryRun) {
     console.warn('Not Publishing because --dryRun was passed');
   } else {
     // If publishing locally, force all projects to not be private first
     if (options.local) {
       console.log(
-        '\nPublishing locally, so setting all resolved packages to not be private'
+        chalk.dim`\n  Publishing locally, so setting all packages with existing nx-release-publish targets to not be private. If you have created a new private package and you want it to be published, you will need to manually configure the "nx-release-publish" target using executor "@nx/js:release-publish"`
       );
       const projectGraph = await createProjectGraphAsync();
       for (const proj of Object.values(projectGraph.nodes)) {
@@ -146,7 +163,17 @@ const LARGE_BUFFER = 1024 * 1000000;
       }
     }
 
-    const distTag = determineDistTag(options.version);
+    if (!options.local && (!distTag || distTag === 'latest')) {
+      // We are only expecting non-local latest releases to be performed within publish.yml on GitHub
+      const author = process.env.GITHUB_ACTOR ?? '';
+      if (!VALID_AUTHORS_FOR_LATEST.includes(author)) {
+        throw new Error(
+          `The GitHub user "${author}" is not allowed to publish to "latest". Please request one of the following users to carry out the release: ${VALID_AUTHORS_FOR_LATEST.join(
+            ', '
+          )}`
+        );
+      }
+    }
 
     // Run with dynamic output-style so that we have more minimal logs by default but still always see errors
     let publishCommand = `pnpm nx release publish --registry=${getRegistry()} --tag=${distTag} --output-style=dynamic --parallel=8`;
@@ -158,6 +185,16 @@ const LARGE_BUFFER = 1024 * 1000000;
       stdio: [0, 1, 2],
       maxBuffer: LARGE_BUFFER,
     });
+
+    let version;
+    if (['minor', 'major', 'patch'].includes(options.version)) {
+      version = execSync(`npm view nx@${distTag} version`).toString().trim();
+    } else {
+      version = options.version;
+    }
+
+    console.log(chalk.green` > Published version: ` + version);
+    console.log(chalk.dim`   Use: npx create-nx-workspace@${version}\n`);
   }
 
   process.exit(0);
@@ -204,6 +241,60 @@ function parseArgs() {
       description:
         'The version to publish. This does not need to be passed and can be inferred.',
       default: 'minor',
+      coerce: (version) => {
+        if (version !== 'canary') {
+          return version;
+        }
+        /**
+         * Handle the special case of `canary`
+         */
+
+        const currentLatestVersion = execSync('npm view nx@latest version')
+          .toString()
+          .trim();
+        const currentNextVersion = execSync('npm view nx@next version')
+          .toString()
+          .trim();
+
+        let canaryBaseVersion: string | null = null;
+
+        // If the latest and next are not on the same major version, then we need to publish a canary version of the next major
+        if (major(currentLatestVersion) !== major(currentNextVersion)) {
+          canaryBaseVersion = `${major(currentNextVersion)}.0.0`;
+        } else {
+          // Determine next minor version above the currentLatestVersion
+          const nextMinorRelease = inc(
+            currentLatestVersion,
+            'minor',
+            undefined
+          );
+          canaryBaseVersion = nextMinorRelease;
+        }
+
+        if (!canaryBaseVersion) {
+          throw new Error(`Unable to determine a base for the canary version.`);
+        }
+
+        // Create YYYYMMDD string
+        const date = new Date();
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
+        const day = String(date.getDate()).padStart(2, '0');
+        const YYYYMMDD = `${year}${month}${day}`;
+
+        // Get the current short git sha
+        const gitSha = execSync('git rev-parse --short HEAD').toString().trim();
+
+        const canaryVersion = `${canaryBaseVersion}-canary.${YYYYMMDD}-${gitSha}`;
+
+        console.log(`\nDerived canary version dynamically`, {
+          currentLatestVersion,
+          currentNextVersion,
+          canaryVersion,
+        });
+
+        return canaryVersion;
+      },
     })
     .option('gitRemote', {
       type: 'string',
@@ -265,7 +356,14 @@ function getRegistry() {
   return new URL(execSync('npm config get registry').toString().trim());
 }
 
-function determineDistTag(newVersion: string): 'latest' | 'next' | 'previous' {
+function determineDistTag(
+  newVersion: string
+): 'latest' | 'next' | 'previous' | 'canary' {
+  // Special case of canary
+  if (newVersion.includes('canary')) {
+    return 'canary';
+  }
+
   // For a relative version keyword, it cannot be previous
   if (isRelativeVersionKeyword(newVersion)) {
     const prereleaseKeywords: ReleaseType[] = [

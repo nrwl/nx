@@ -1,3 +1,8 @@
+---
+title: Overview of the Nx esbuild Plugin
+description: The Nx Plugin for esbuild contains executors and generators that support building applications using esbuild. This page also explains how to configure esbuild on your Nx workspace.
+---
+
 The Nx Plugin for [esbuild](https://esbuild.github.io/api/), an extremely fast JavaScript bundler.
 
 Why should you use this plugin?
@@ -7,32 +12,38 @@ Why should you use this plugin?
 - Intelligent `package.json` output.
 - Additional [assets](/nx-api/esbuild/executors/esbuild#assets) for the output.
 
-## Setting up esbuild
+## Setting Up @nx/esbuild
 
-To create a new workspace, run `npx create-nx-workspace@latest --preset=npm`.
+### Installation
 
 {% callout type="note" title="Keep Nx Package Versions In Sync" %}
 Make sure to install the `@nx/esbuild` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/recipes/tips-n-tricks/keep-nx-versions-in-sync).
 {% /callout %}
 
-To add the esbuild plugin to an existing workspace, run the following:
+In any Nx workspace, you can install `@nx/esbuild` by running the following command:
 
 {% tabs %}
-{% tab label="npm" %}
+{% tab label="Nx 18+" %}
 
-```shell
-npm install -D @nx/esbuild
+```shell {% skipRescope=true %}
+nx add @nx/esbuild
 ```
 
+This will install the correct version of `@nx/esbuild`.
+
 {% /tab %}
-{% tab label="yarn" %}
+{% tab label="Nx < 18" %}
+
+Install the `@nx/esbuild` package with your package manager.
 
 ```shell
-yarn add -D @nx/esbuild
+npm add -D @nx/esbuild
 ```
 
 {% /tab %}
 {% /tabs %}
+
+## Using the @nx/esbuild Plugin
 
 ### Creating a new JS library
 

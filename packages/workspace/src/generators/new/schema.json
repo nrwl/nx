@@ -1,5 +1,5 @@
 {
-  "$schema": "http://json-schema.org/schema",
+  "$schema": "https://json-schema.org/schema",
   "$id": "NxWorkspaceNew",
   "title": "Create an empty workspace",
   "description": "Create an empty workspace.",
@@ -68,15 +68,24 @@
       "type": "boolean",
       "default": true
     },
+    "nextSrcDir": {
+      "description": "Generate a `src` directory for this project.",
+      "type": "boolean",
+      "default": true
+    },
     "e2eTestRunner": {
       "description": "The tool to use for running e2e tests.",
       "type": "string",
-      "enum": ["cypress", "playwright", "jest", "detox", "none"]
+      "enum": ["playwright", "cypress", "jest", "detox", "none"]
     },
     "ssr": {
       "description": "Enable Server-Side Rendering (SSR) and Static Site Generation (SSG/Prerendering) for the Angular application.",
       "type": "boolean",
       "default": false
+    },
+    "prefix": {
+      "description": "The prefix to use for Angular component and directive selectors.",
+      "type": "string"
     }
   },
   "additionalProperties": true

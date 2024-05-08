@@ -1,5 +1,5 @@
 {
-  "$schema": "http://json-schema.org/schema",
+  "$schema": "https://json-schema.org/schema",
   "$id": "GeneratorAngularUniversalSetup",
   "cli": "nx",
   "title": "Generate Angular Universal (SSR) setup for an Angular App",
@@ -60,6 +60,12 @@
     "skipFormat": {
       "type": "boolean",
       "description": "Skip formatting the workspace after the generator completes.",
+      "x-priority": "internal"
+    },
+    "skipPackageJson": {
+      "type": "boolean",
+      "default": false,
+      "description": "Do not add dependencies to `package.json`.",
       "x-priority": "internal"
     }
   },

@@ -1,3 +1,5 @@
+import 'nx/src/internal-testing-utils/mock-project-graph';
+
 import {
   addProjectConfiguration,
   readJson,
@@ -29,6 +31,7 @@ describe('detox application generator', () => {
         linter: Linter.None,
         framework: 'react-native',
         projectNameAndRootFormat: 'as-provided',
+        addPlugin: true,
       });
     });
 
@@ -100,6 +103,7 @@ describe('detox application generator', () => {
         linter: Linter.None,
         framework: 'react-native',
         projectNameAndRootFormat: 'as-provided',
+        addPlugin: true,
       });
     });
 
@@ -171,6 +175,7 @@ describe('detox application generator', () => {
         linter: Linter.None,
         framework: 'react-native',
         projectNameAndRootFormat: 'as-provided',
+        addPlugin: true,
       });
     });
 
@@ -241,6 +246,7 @@ describe('detox application generator', () => {
         linter: Linter.None,
         framework: 'react-native',
         projectNameAndRootFormat: 'as-provided',
+        addPlugin: true,
       });
     });
 
@@ -287,12 +293,12 @@ describe('detox application generator', () => {
     });
 
     it('should update configuration', async () => {
-      const project = readProjectConfiguration(tree, 'my-dir/my-app-e2e');
+      const project = readProjectConfiguration(tree, 'my-app-e2e');
       expect(project.root).toEqual('my-dir/my-app-e2e');
     });
 
     it('should update nx.json', async () => {
-      const project = readProjectConfiguration(tree, 'my-dir/my-app-e2e');
+      const project = readProjectConfiguration(tree, 'my-app-e2e');
       expect(project.tags).toEqual([]);
       expect(project.implicitDependencies).toEqual(['my-dir-my-app']);
     });
@@ -310,6 +316,7 @@ describe('detox application generator', () => {
         linter: Linter.None,
         framework: 'expo',
         projectNameAndRootFormat: 'as-provided',
+        addPlugin: true,
       });
     });
 
@@ -368,13 +375,13 @@ describe('detox application generator', () => {
     });
 
     it('should update configuration', async () => {
-      const project = readProjectConfiguration(tree, 'my-dir/my-app-e2e');
+      const project = readProjectConfiguration(tree, 'my-app-e2e');
 
       expect(project.root).toEqual('my-dir/my-app-e2e');
     });
 
     it('should update nx.json', async () => {
-      const project = readProjectConfiguration(tree, 'my-dir/my-app-e2e');
+      const project = readProjectConfiguration(tree, 'my-app-e2e');
       expect(project.tags).toEqual([]);
       expect(project.implicitDependencies).toEqual(['my-dir-my-app']);
     });
@@ -391,6 +398,7 @@ describe('detox application generator', () => {
         appProject: 'my-app',
         linter: Linter.None,
         framework: 'react-native',
+        addPlugin: true,
       });
 
       const tsConfig = readJson(tree, 'my-app-e2e/tsconfig.json');
@@ -405,6 +413,7 @@ describe('detox application generator', () => {
         appProject: 'my-app',
         linter: Linter.None,
         framework: 'react-native',
+        addPlugin: true,
       });
 
       const tsConfig = readJson(tree, 'my-app-e2e/tsconfig.json');

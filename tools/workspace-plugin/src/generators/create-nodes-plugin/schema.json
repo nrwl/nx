@@ -1,8 +1,9 @@
 {
-  "$schema": "http://json-schema.org/schema",
+  "$schema": "https://json-schema.org/schema",
   "$id": "Generator",
   "title": "",
   "type": "object",
+  "description": "A generator for creating a new nodes plugin.",
   "properties": {},
   "required": []
 }

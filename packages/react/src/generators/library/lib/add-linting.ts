@@ -19,10 +19,10 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
         joinPathFragments(options.projectRoot, 'tsconfig.lib.json'),
       ],
       unitTestRunner: options.unitTestRunner,
-      eslintFilePatterns: [`${options.projectRoot}/**/*.{ts,tsx,js,jsx}`],
       skipFormat: true,
       skipPackageJson: options.skipPackageJson,
       setParserOptionsProject: options.setParserOptionsProject,
+      addPlugin: options.addPlugin,
     });
 
     if (isEslintConfigSupported(host)) {
@@ -31,7 +31,7 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
 
     let installTask = () => {};
     if (!options.skipPackageJson) {
-      installTask = await addDependenciesToPackageJson(
+      installTask = addDependenciesToPackageJson(
         host,
         extraEslintDependencies.dependencies,
         extraEslintDependencies.devDependencies

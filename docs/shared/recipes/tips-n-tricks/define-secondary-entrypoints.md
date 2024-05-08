@@ -1,4 +1,4 @@
-## Define Secondary Entry Points for Typescript Packages
+# Define Secondary Entry Points for Typescript Packages
 
 If you have a package where you want people to be able to access more than just the `main` file, you can define an `exports` property in the `package.json` file. Like this:
 
@@ -21,9 +21,38 @@ import foo from 'my-lib/foo';
 import bar from 'my-lib/bar';
 ```
 
+## Setup package.json export fields with Nx
+
 Nx helps generate other properties in the `package.json` file, and you can also use Nx to maintain this property.
 
 If you're using the `@nx/js:tsc` executor, as of Nx 16.8, you can specify the `additionalEntryPoints` and `generateExportsField` options. Here's an example:
+
+{% tabs %}
+{%tab label="package.json"%}
+
+```jsonc {% fileName="packages/my-awesome-lib/package.json" %}
+{
+  "name": "my-awesome-lib",
+  "nx": {
+    "targets": {
+      "build": {
+        "executor": "@nx/js:tsc",
+        "options": {
+          "main": "packages/my-awesome-lib/src/index.ts",
+          "additionalEntryPoints": [
+            "packages/my-awesome-lib/src/foo.ts",
+            "packages/my-awesome-lib/src/bar.ts"
+          ],
+          "generateExportsField": true
+        }
+      }
+    }
+  }
+}
+```
+
+{% /tab%}
+{%tab label="project.json"%}
 
 ```jsonc {% fileName="packages/my-awesome-lib/project.json" %}
 {
@@ -44,6 +73,11 @@ If you're using the `@nx/js:tsc` executor, as of Nx 16.8, you can specify the `a
 }
 ```
 
+{% /tab%}
+{% /tabs %}
+
 When building the library, the `@nx/js:tsc` executor automatically adds the correct `exports` definition to the resulting `package.json`.
 
-You can also [compile to multiple formats](/recipes/tips-n-tricks/compile-multiple-formats), if you switch to using the `@nx/rollup:rollup` executor.
+## Compile to Multiple Formats
+
+You can also compile to multiple formats, if you switch to using the `@nx/rollup:rollup` executor. Read all [the details here](/recipes/tips-n-tricks/compile-multiple-formats).

@@ -157,7 +157,9 @@ export function getStrippedEnvironmentVariables() {
         return true;
       }
 
-      if (key.startsWith('NX_')) {
+      const allowedKeys = ['NX_ADD_PLUGINS'];
+
+      if (key.startsWith('NX_') && !allowedKeys.includes(key)) {
         return false;
       }
 

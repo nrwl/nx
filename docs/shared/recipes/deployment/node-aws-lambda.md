@@ -21,29 +21,9 @@ npx create-nx-workspace@latest my-functions --preset=@nx/aws-lambda
 
 First, make sure you have `@nx/aws-lambda` installed.
 
-{% tabs %}
-{% tab label="npm" %}
-
-```shell
-npm i -D @nx/aws-lambda
+```shell {% skipRescope=true %}
+nx add @nx/aws-lambda
 ```
-
-{% /tab %}
-{% tab label="yarn" %}
-
-```shell
-yarn add -D @nx/aws-lambda
-```
-
-{% /tab %}
-{% tab label="pnpm" %}
-
-```shell
-pnpm add -D @nx/aws-lambda
-```
-
-{% /tab %}
-{% /tabs %}
 
 Next, use the corresponding Nx generator to add the AWS Lambda configuration to an existing project:
 

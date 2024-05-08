@@ -27,8 +27,7 @@
     "compiler": {
       "type": "string",
       "description": "The compiler to use.",
-      "enum": ["babel", "swc", "tsc"],
-      "default": "babel"
+      "enum": ["babel", "swc", "tsc"]
     },
     "outputPath": {
       "type": "string",
@@ -40,8 +39,7 @@
       "type": "string",
       "alias": "platform",
       "description": "Target platform for the build, same as the Webpack target option.",
-      "enum": ["node", "web", "webworker"],
-      "default": "web"
+      "enum": ["node", "web", "webworker"]
     },
     "deleteOutputPath": {
       "type": "boolean",
@@ -50,8 +48,7 @@
     },
     "watch": {
       "type": "boolean",
-      "description": "Enable re-building when files change.",
-      "default": false
+      "description": "Enable re-building when files change."
     },
     "baseHref": {
       "type": "string",
@@ -63,22 +60,18 @@
     },
     "vendorChunk": {
       "type": "boolean",
-      "description": "Use a separate bundle containing only vendor libraries.",
-      "default": true
+      "description": "Use a separate bundle containing only vendor libraries."
     },
     "commonChunk": {
       "type": "boolean",
-      "description": "Use a separate bundle containing code used across multiple bundles.",
-      "default": true
+      "description": "Use a separate bundle containing code used across multiple bundles."
     },
     "runtimeChunk": {
       "type": "boolean",
-      "description": "Use a separate bundle containing the runtime.",
-      "default": true
+      "description": "Use a separate bundle containing the runtime."
     },
     "sourceMap": {
       "description": "Output sourcemaps. Use 'hidden' for use with error reporting tools without generating sourcemap comment.",
-      "default": true,
       "oneOf": [
         {
           "type": "boolean"
@@ -90,13 +83,11 @@
     },
     "progress": {
       "type": "boolean",
-      "description": "Log progress to the console while building.",
-      "default": false
+      "description": "Log progress to the console while building."
     },
     "assets": {
       "type": "array",
       "description": "List of static application assets.",
-      "default": [],
       "items": {
         "$ref": "#/definitions/assetPattern"
       }
@@ -112,26 +103,22 @@
       "description": "External Scripts which will be included before the main application entry.",
       "items": {
         "$ref": "#/definitions/extraEntryPoint"
-      },
-      "default": []
+      }
     },
     "styles": {
       "type": "array",
       "description": "External Styles which will be included with the application",
       "items": {
         "$ref": "#/definitions/extraEntryPoint"
-      },
-      "default": []
+      }
     },
     "namedChunks": {
       "type": "boolean",
-      "description": "Names the produced bundles according to their entry file.",
-      "default": true
+      "description": "Names the produced bundles according to their entry file."
     },
     "outputHashing": {
       "type": "string",
       "description": "Define the output filename cache-busting hashing mode.",
-      "default": "none",
       "enum": ["none", "all", "media", "bundles"]
     },
     "stylePreprocessorOptions": {
@@ -143,8 +130,7 @@
           "type": "array",
           "items": {
             "type": "string"
-          },
-          "default": []
+          }
         }
       },
       "additionalProperties": false
@@ -175,13 +161,11 @@
     },
     "generatePackageJson": {
       "type": "boolean",
-      "description": "Generates a `package.json` and pruned lock file with the project's `node_module` dependencies populated for installing in a container. If a `package.json` exists in the project's directory, it will be reused with dependencies populated.",
-      "default": false
+      "description": "Generates a `package.json` and pruned lock file with the project's `node_module` dependencies populated for installing in a container. If a `package.json` exists in the project's directory, it will be reused with dependencies populated."
     },
     "transformers": {
       "type": "array",
       "description": "List of TypeScript Compiler Transfomers Plugins.",
-      "default": [],
       "aliases": ["tsPlugins"],
       "items": {
         "$ref": "#/definitions/transformerPattern"
@@ -223,18 +207,15 @@
           }
         }
       ],
-      "description": "Dependencies to keep external to the bundle. (`all` (default), `none`, or an array of module names)",
-      "default": "all"
+      "description": "Dependencies to keep external to the bundle. (`all` (default), `none`, or an array of module names)"
     },
     "extractCss": {
       "type": "boolean",
-      "description": "Extract CSS into a `.css` file.",
-      "default": true
+      "description": "Extract CSS into a `.css` file."
     },
     "subresourceIntegrity": {
       "type": "boolean",
-      "description": "Enables the use of subresource integrity validation.",
-      "default": false
+      "description": "Enables the use of subresource integrity validation."
     },
     "polyfills": {
       "type": "string",
@@ -244,28 +225,30 @@
     },
     "verbose": {
       "type": "boolean",
-      "description": "Emits verbose output",
-      "default": false
+      "description": "Emits verbose output"
     },
     "statsJson": {
       "type": "boolean",
-      "description": "Generates a 'stats.json' file which can be analyzed using tools such as: 'webpack-bundle-analyzer' or `<https://webpack.github.io/analyse>`.",
-      "default": false
+      "description": "Generates a 'stats.json' file which can be analyzed using tools such as: 'webpack-bundle-analyzer' or `<https://webpack.github.io/analyse>`."
     },
     "isolatedConfig": {
       "type": "boolean",
       "description": "Do not apply Nx webpack plugins automatically. Plugins need to be applied in the project's webpack.config.js file (e.g. withNx, withReact, etc.).",
+      "default": true,
+      "x-deprecated": "Automatic configuration of Webpack is deprecated in favor of an explicit 'webpack.config.js' file. This option will be removed in Nx 19. See https://nx.dev/recipes/webpack/webpack-config-setup."
+    },
+    "standardWebpackConfigFunction": {
+      "type": "boolean",
+      "description": "Set to true if the webpack config exports a standard webpack function, not an Nx-specific one. See: https://webpack.js.org/configuration/configuration-types/#exporting-a-function",
       "default": false
     },
     "extractLicenses": {
       "type": "boolean",
-      "description": "Extract all licenses in a separate file, in the case of production builds only.",
-      "default": false
+      "description": "Extract all licenses in a separate file, in the case of production builds only."
     },
     "memoryLimit": {
       "type": "number",
-      "description": "Memory limit for type checking service process in `MB`.",
-      "default": 2048
+      "description": "Memory limit for type checking service process in `MB`."
     },
     "fileReplacements": {
       "description": "Replace files with other files in the build.",
@@ -286,18 +269,16 @@
         },
         "additionalProperties": false,
         "required": ["replace", "with"]
-      },
-      "default": []
+      }
     },
     "buildLibsFromSource": {
       "type": "boolean",
-      "description": "Read buildable libraries from source instead of building them separately.",
+      "description": "Read buildable libraries from source instead of building them separately. If set to `false`, the `tsConfig` option must also be set to remap paths.",
       "default": true
     },
     "generateIndexHtml": {
       "type": "boolean",
-      "description": "Generates `index.html` file to the output path. This can be turned off if using a webpack plugin to generate HTML such as `html-webpack-plugin`.",
-      "default": true
+      "description": "Generates `index.html` file to the output path. This can be turned off if using a webpack plugin to generate HTML such as `html-webpack-plugin`."
     },
     "postcssConfig": {
       "type": "string",
@@ -312,8 +293,7 @@
     },
     "babelUpwardRootMode": {
       "type": "boolean",
-      "description": "Whether to set rootmode to upward. See https://babeljs.io/docs/en/options#rootmode",
-      "default": false
+      "description": "Whether to set rootmode to upward. See https://babeljs.io/docs/en/options#rootmode"
     },
     "babelConfig": {
       "type": "string",
@@ -321,7 +301,7 @@
       "x-completion-type": "file"
     }
   },
-  "required": ["tsConfig", "main"],
+  "required": [],
   "definitions": {
     "assetPattern": {
       "oneOf": [

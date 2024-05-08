@@ -1,5 +1,5 @@
 {
-  "$schema": "http://json-schema.org/schema",
+  "$schema": "https://json-schema.org/schema",
   "$id": "NxMFRemote",
   "cli": "nx",
   "title": "Nx Module Federation Remote App",
@@ -55,15 +55,15 @@
           },
           {
             "value": "scss",
-            "label": "SASS(.scss)  [ http://sass-lang.com   ]"
+            "label": "SASS(.scss)  [ https://sass-lang.com   ]"
           },
           {
             "value": "sass",
-            "label": "SASS(.sass)  [ http://sass-lang.com   ]"
+            "label": "SASS(.sass)  [ https://sass-lang.com   ]"
           },
           {
             "value": "less",
-            "label": "LESS         [ http://lesscss.org     ]"
+            "label": "LESS         [ https://lesscss.org     ]"
           }
         ]
       }
@@ -111,10 +111,10 @@
     },
     "e2eTestRunner": {
       "type": "string",
-      "enum": ["cypress", "playwright", "none"],
+      "enum": ["playwright", "cypress", "none"],
       "description": "Test runner to use for end to end (E2E) tests.",
       "x-prompt": "Which E2E test runner would you like to use?",
-      "default": "cypress"
+      "default": "playwright"
     },
     "tags": {
       "type": "string",

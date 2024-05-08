@@ -7,9 +7,11 @@ import {
   joinPathFragments,
   names,
   offsetFromRoot,
+  readNxJson,
   readProjectConfiguration,
   runTasksInSerial,
   Tree,
+  updateJson,
 } from '@nx/devkit';
 import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { Linter, lintProjectGenerator } from '@nx/eslint';
@@ -25,9 +27,11 @@ import {
   isEslintConfigSupported,
   replaceOverridesInLintConfig,
 } from '@nx/eslint/src/generators/utils/eslint-file';
+import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 
 export async function e2eProjectGenerator(host: Tree, options: Schema) {
   return await e2eProjectGeneratorInternal(host, {
+    addPlugin: false,
     projectNameAndRootFormat: 'derived',
     ...options,
   });
@@ -41,6 +45,7 @@ export async function e2eProjectGeneratorInternal(
   const options = await normalizeOptions(host, _options);
   const appProject = readProjectConfiguration(host, options.project);
 
+  // TODO(@ndcunningham): This is broken.. the outputs are wrong.. and this isn't using the jest generator
   addProjectConfiguration(host, options.e2eProjectName, {
     root: options.e2eProjectRoot,
     implicitDependencies: [options.project],
@@ -53,9 +58,37 @@ export async function e2eProjectGeneratorInternal(
           jestConfig: `${options.e2eProjectRoot}/jest.config.ts`,
           passWithNoTests: true,
         },
+        dependsOn: [`${options.project}:build`],
       },
     },
   });
+  // TODO(@nicholas): Find a better way to get build target
+
+  // We remove the 'test' target from the e2e project because it is not needed
+  // The 'e2e' target is the one that should run the tests for the e2e project
+  const nxJson = readNxJson(host);
+  const hasPlugin = nxJson.plugins?.some((p) => {
+    if (typeof p !== 'string' && p.plugin === '@nx/jest/plugin') {
+      return true;
+    }
+  });
+
+  if (hasPlugin) {
+    updateJson(host, 'nx.json', (json) => {
+      return {
+        ...json,
+        plugins: json.plugins?.map((p) => {
+          if (typeof p !== 'string' && p.plugin === '@nx/jest/plugin') {
+            return {
+              ...p,
+              exclude: [...(p.exclude || []), `${options.e2eProjectRoot}/**/*`],
+            };
+          }
+          return p;
+        }),
+      };
+    });
+  }
 
   if (options.projectType === 'server') {
     generateFiles(
@@ -115,10 +148,10 @@ export async function e2eProjectGeneratorInternal(
       tsConfigPaths: [
         joinPathFragments(options.e2eProjectRoot, 'tsconfig.json'),
       ],
-      eslintFilePatterns: [`${options.e2eProjectRoot}/**/*.{js,ts}`],
       setParserOptionsProject: false,
       skipPackageJson: false,
       rootProject: options.rootProject,
+      addPlugin: options.addPlugin,
     });
     tasks.push(linterTask);
 
@@ -134,6 +167,10 @@ export async function e2eProjectGeneratorInternal(
   if (!options.skipFormat) {
     await formatFiles(host);
   }
+
+  tasks.push(() => {
+    logShowProjectCommand(options.e2eProjectName);
+  });
 
   return runTasksInSerial(...tasks);
 }
@@ -156,7 +193,13 @@ async function normalizeOptions(
       callingGenerator: null,
     });
 
+  const nxJson = readNxJson(tree);
+  const addPlugin =
+    process.env.NX_ADD_PLUGINS !== 'false' &&
+    nxJson.useInferencePlugins !== false;
+
   return {
+    addPlugin,
     ...options,
     e2eProjectRoot,
     e2eProjectName,

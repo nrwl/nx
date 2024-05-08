@@ -4,11 +4,15 @@
  */
 import type { AxiosRequestConfig } from 'axios';
 import * as chalk from 'chalk';
+import { prompt } from 'enquirer';
 import { execSync } from 'node:child_process';
 import { existsSync, promises as fsp } from 'node:fs';
 import { homedir } from 'node:os';
+import { output } from '../../../utils/output';
 import { joinPathFragments } from '../../../utils/path';
 import { Reference } from './git';
+import { printDiff } from './print-changes';
+import { ReleaseVersion, noDiffInChangelogMessage } from './shared';
 
 // axios types and values don't seem to match
 import _axios = require('axios');
@@ -54,6 +58,91 @@ export function getGitHubRepoSlug(remoteName = 'origin'): RepoSlug {
   }
 }
 
+export async function createOrUpdateGithubRelease(
+  releaseVersion: ReleaseVersion,
+  changelogContents: string,
+  latestCommit: string,
+  { dryRun }: { dryRun: boolean }
+): Promise<void> {
+  const githubRepoSlug = getGitHubRepoSlug();
+  if (!githubRepoSlug) {
+    output.error({
+      title: `Unable to create a GitHub release because the GitHub repo slug could not be determined.`,
+      bodyLines: [
+        `Please ensure you have a valid GitHub remote configured. You can run \`git remote -v\` to list your current remotes.`,
+      ],
+    });
+    process.exit(1);
+  }
+
+  const token = await resolveGithubToken();
+  const githubRequestConfig: GithubRequestConfig = {
+    repo: githubRepoSlug,
+    token,
+  };
+
+  let existingGithubReleaseForVersion: GithubRelease;
+  try {
+    existingGithubReleaseForVersion = await getGithubReleaseByTag(
+      githubRequestConfig,
+      releaseVersion.gitTag
+    );
+  } catch (err) {
+    if (err.response?.status === 401) {
+      output.error({
+        title: `Unable to resolve data via the GitHub API. You can use any of the following options to resolve this:`,
+        bodyLines: [
+          '- Set the `GITHUB_TOKEN` or `GH_TOKEN` environment variable to a valid GitHub token with `repo` scope',
+          '- Have an active session via the official gh CLI tool (https://cli.github.com) in your current terminal',
+        ],
+      });
+      process.exit(1);
+    }
+    if (err.response?.status === 404) {
+      // No existing release found, this is fine
+    } else {
+      // Rethrow unknown errors for now
+      throw err;
+    }
+  }
+
+  const logTitle = `https://github.com/${githubRepoSlug}/releases/tag/${releaseVersion.gitTag}`;
+  if (existingGithubReleaseForVersion) {
+    console.error(
+      `${chalk.white('UPDATE')} ${logTitle}${
+        dryRun ? chalk.keyword('orange')(' [dry-run]') : ''
+      }`
+    );
+  } else {
+    console.error(
+      `${chalk.green('CREATE')} ${logTitle}${
+        dryRun ? chalk.keyword('orange')(' [dry-run]') : ''
+      }`
+    );
+  }
+
+  console.log('');
+  printDiff(
+    existingGithubReleaseForVersion ? existingGithubReleaseForVersion.body : '',
+    changelogContents,
+    3,
+    noDiffInChangelogMessage
+  );
+
+  if (!dryRun) {
+    await createOrUpdateGithubReleaseInternal(
+      githubRequestConfig,
+      {
+        version: releaseVersion.gitTag,
+        prerelease: releaseVersion.isPrerelease,
+        body: changelogContents,
+        commit: latestCommit,
+      },
+      existingGithubReleaseForVersion
+    );
+  }
+}
+
 interface GithubReleaseOptions {
   version: string;
   body: string;
@@ -61,7 +150,7 @@ interface GithubReleaseOptions {
   commit: string;
 }
 
-export async function createOrUpdateGithubRelease(
+async function createOrUpdateGithubReleaseInternal(
   githubRequestConfig: GithubRequestConfig,
   release: GithubReleaseOptions,
   existingGithubReleaseForVersion?: GithubRelease
@@ -71,6 +160,59 @@ export async function createOrUpdateGithubRelease(
     release,
     existingGithubReleaseForVersion
   );
+
+  /**
+   * If something went wrong POSTing to Github we can still pre-populate the web form on github.com
+   * to allow the user to manually complete the release if they so choose.
+   */
+  if (result.status === 'manual') {
+    if (result.error) {
+      process.exitCode = 1;
+
+      if (result.error.response?.data) {
+        // There's a nicely formatted error from GitHub we can display to the user
+        output.error({
+          title: `A GitHub API Error occurred when creating/updating the release`,
+          bodyLines: [
+            `GitHub Error: ${JSON.stringify(result.error.response.data)}`,
+            `---`,
+            `Request Data:`,
+            `Repo: ${githubRequestConfig.repo}`,
+            `Token: ${githubRequestConfig.token}`,
+            `Body: ${JSON.stringify(result.requestData)}`,
+          ],
+        });
+      } else {
+        console.log(result.error);
+        console.error(
+          `An unknown error occurred while trying to create a release on GitHub, please report this on https://github.com/nrwl/nx (NOTE: make sure to redact your GitHub token from the error message!)`
+        );
+      }
+    }
+
+    const shouldContinueInGitHub = await promptForContinueInGitHub();
+    if (!shouldContinueInGitHub) {
+      return;
+    }
+
+    const open = require('open');
+    await open(result.url)
+      .then(() => {
+        console.info(
+          `\nFollow up in the browser to manually create the release:\n\n` +
+            chalk.underline(chalk.cyan(result.url)) +
+            `\n`
+        );
+      })
+      .catch(() => {
+        console.info(
+          `Open this link to manually create a release: \n` +
+            chalk.underline(chalk.cyan(result.url)) +
+            '\n'
+        );
+      });
+  }
+
   /**
    * If something went wrong POSTing to Github we can still pre-populate the web form on github.com
    * to allow the user to manually complete the release.
@@ -94,6 +236,33 @@ export async function createOrUpdateGithubRelease(
             '\n'
         );
       });
+  }
+}
+
+async function promptForContinueInGitHub(): Promise<boolean> {
+  try {
+    const reply = await prompt<{ open: 'Yes' | 'No' }>([
+      {
+        name: 'open',
+        message:
+          'Do you want to finish creating the release manually in your browser?',
+        type: 'autocomplete',
+        choices: [
+          {
+            name: 'Yes',
+            hint: 'It will pre-populate the form for you',
+          },
+          {
+            name: 'No',
+          },
+        ],
+        initial: 0,
+      },
+    ]);
+    return reply.open === 'Yes';
+  } catch (e) {
+    // Handle the case where the user exits the prompt with ctrl+c
+    process.exit(1);
   }
 }
 
@@ -130,6 +299,7 @@ async function syncGithubRelease(
       status: 'manual',
       error,
       url: githubNewReleaseURL(githubRequestConfig, release),
+      requestData: ghRelease,
     };
   }
 }
@@ -150,7 +320,22 @@ export async function resolveGithubToken(): Promise<string | null> {
     const yamlContents = await fsp.readFile(ghCLIPath, 'utf8');
     const { load } = require('@zkochan/js-yaml');
     const ghCLIConfig = load(yamlContents);
-    return ghCLIConfig['github.com'].oauth_token;
+    if (ghCLIConfig['github.com']) {
+      // Web based session (the token is already embedded in the config)
+      if (ghCLIConfig['github.com'].oauth_token) {
+        return ghCLIConfig['github.com'].oauth_token;
+      }
+      // SSH based session (we need to dynamically resolve a token using the CLI)
+      if (
+        ghCLIConfig['github.com'].user &&
+        ghCLIConfig['github.com'].git_protocol === 'ssh'
+      ) {
+        return execSync(`gh auth token`, {
+          encoding: 'utf8',
+          stdio: 'pipe',
+        }).trim();
+      }
+    }
   }
   return null;
 }
@@ -212,9 +397,9 @@ function githubNewReleaseURL(
   config: GithubRequestConfig,
   release: { version: string; body: string }
 ) {
-  return `https://github.com/${config.repo}/releases/new?tag=v${
+  return `https://github.com/${config.repo}/releases/new?tag=${
     release.version
-  }&title=v${release.version}&body=${encodeURIComponent(release.body)}`;
+  }&title=${release.version}&body=${encodeURIComponent(release.body)}`;
 }
 
 type RepoProvider = 'github';

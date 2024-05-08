@@ -2,7 +2,6 @@
 export default {
   displayName: 'tools-documentation-create-embeddings',
   preset: './jest.preset.js',
-  testEnvironment: 'node',
   transform: {
     '^.+\\.(ts|tsx|js|jsx|mts|mjs)$': [
       'ts-jest',

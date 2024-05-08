@@ -1,3 +1,5 @@
+import 'nx/src/internal-testing-utils/mock-project-graph';
+
 import {
   addProjectConfiguration,
   ProjectConfiguration,
@@ -99,8 +101,9 @@ describe('Cypress Component Configuration', () => {
   });
 
   it('should not add the target when @nx/cypress/plugin is registered', async () => {
-    process.env.NX_PCV3 = 'true';
-    await cypressInitGenerator(tree, {});
+    await cypressInitGenerator(tree, {
+      addPlugin: true,
+    });
     const nxJson = readNxJson(tree);
     nxJson.namedInputs = {
       default: ['{projectRoot}/**/*'],
@@ -111,6 +114,7 @@ describe('Cypress Component Configuration', () => {
     await componentConfigurationGenerator(tree, {
       project: 'cool-lib',
       skipFormat: false,
+      addPlugin: true,
     });
 
     expect(
@@ -125,8 +129,6 @@ describe('Cypress Component Configuration', () => {
         "!{projectRoot}/cypress.config.[jt]s",
       ]
     `);
-
-    delete process.env.NX_PCV3;
   });
 
   it('should add base cypress component testing config', async () => {
@@ -136,8 +138,14 @@ describe('Cypress Component Configuration', () => {
       skipFormat: false,
       jsx: true,
     });
-    const projectConfig = readProjectConfiguration(tree, 'cool-lib');
     expect(tree.exists('libs/cool-lib/cypress.config.ts')).toEqual(true);
+    expect(tree.read('libs/cool-lib/cypress.config.ts', 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "import { defineConfig } from 'cypress';
+
+      export default defineConfig({});
+      "
+    `);
     expect(tree.exists('libs/cool-lib/cypress')).toEqual(true);
     expect(
       tree.exists('libs/cool-lib/cypress/support/component-index.html')
@@ -151,7 +159,6 @@ describe('Cypress Component Configuration', () => {
     expect(tree.exists('libs/cool-lib/cypress/support/component.ts')).toEqual(
       true
     );
-    expect(projectConfig.targets['component-test']).toMatchSnapshot();
 
     expect(tree.exists('libs/cool-lib/cypress/tsconfig.json')).toEqual(true);
     const cyTsConfig = readJson(tree, 'libs/cool-lib/cypress/tsconfig.json');
@@ -183,7 +190,7 @@ describe('Cypress Component Configuration', () => {
     );
   });
 
-  it('should update cacheable operations', async () => {
+  it('should exclude cypress files from the production fileset', async () => {
     mockedInstalledCypressVersion.mockReturnValue(10);
     updateJson(tree, 'nx.json', (json) => {
       json.namedInputs = {
@@ -198,11 +205,6 @@ describe('Cypress Component Configuration', () => {
     });
 
     const nxJson = readJson(tree, 'nx.json');
-
-    expect(nxJson.targetDefaults['component-test']).toEqual({
-      inputs: ['default', '^production'],
-      cache: true,
-    });
 
     expect(nxJson.namedInputs.production).toEqual([
       '!{projectRoot}/cypress/**/*',

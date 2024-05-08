@@ -6,7 +6,7 @@
     "outputCapture": "direct-nodejs",
     "cli": "nx",
     "$id": "NxReactNativeSyncDeps",
-    "$schema": "http://json-schema.org/schema",
+    "$schema": "https://json-schema.org/schema",
     "title": "Sync Deps for React Native",
     "description": "Updates `package.json` with project dependencies.",
     "type": "object",
@@ -22,6 +22,11 @@
         "items": { "type": "string" },
         "default": [],
         "description": "An array of npm packages to exclude."
+      },
+      "all": {
+        "type": "boolean",
+        "description": "Copy all dependencies and devDependencies from the workspace root package.json.",
+        "default": false
       }
     },
     "presets": []

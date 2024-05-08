@@ -2,7 +2,7 @@
   "name": "ng-add",
   "factory": "./src/generators/ng-add/ng-add",
   "schema": {
-    "$schema": "http://json-schema.org/schema",
+    "$schema": "https://json-schema.org/schema",
     "$id": "NxAngularNgAddGenerator",
     "title": "Angular plugin initialization",
     "cli": "nx",
@@ -64,7 +64,7 @@
       }
     },
     "additionalProperties": false,
-    "examplesFile": "## Information\n\nThis generator is usually used as part of the process of migrating from an Angular CLI Workspace to an [Nx Integrated Workspace](/concepts/integrated-vs-package-based#integrated-repos) using `npx nx@latest init --integrated`.\n\nYou can read more about [migrating from Angular CLI to Nx here](/recipes/adopting-nx-angular).\n",
+    "examplesFile": "## Information\n\nThis generator is usually used as part of the process of migrating from an Angular CLI Workspace to an [Nx Integrated Workspace](/concepts/integrated-vs-package-based#integrated-repos) using `npx nx@latest init --integrated`.\n\nYou can read more about [migrating from Angular CLI to Nx here](/recipes/angular/migration/angular).\n",
     "presets": []
   },
   "description": "Migrates an Angular CLI workspace to Nx or adds the Angular plugin to an Nx workspace.",

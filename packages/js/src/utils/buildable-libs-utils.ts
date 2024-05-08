@@ -170,7 +170,8 @@ function collectDependencies(
   areTopLevelDeps = true
 ): { name: string; isTopLevel: boolean }[] {
   (projGraph.dependencies[project] || []).forEach((dependency) => {
-    if (!acc.some((dep) => dep.name === dependency.target)) {
+    const existingEntry = acc.find((dep) => dep.name === dependency.target);
+    if (!existingEntry) {
       // Temporary skip this. Currently the set of external nodes is built from package.json, not lock file.
       // As a result, some nodes might be missing. This should not cause any issues, we can just skip them.
       if (
@@ -184,6 +185,8 @@ function collectDependencies(
       if (!shallow && isInternalTarget) {
         collectDependencies(dependency.target, projGraph, acc, shallow, false);
       }
+    } else if (areTopLevelDeps && !existingEntry.isTopLevel) {
+      existingEntry.isTopLevel = true;
     }
   });
   return acc;
@@ -255,7 +258,7 @@ export function calculateDependenciesFromTaskGraph(
     const depTask = taskGraph.tasks[taskName];
     const depProjectNode = projectGraph.nodes?.[depTask.target.project];
     if (depProjectNode?.type !== 'lib') {
-      return null;
+      continue;
     }
 
     let outputs = getOutputsForTargetAndConfiguration(
@@ -431,6 +434,7 @@ export function createTmpTsConfig(
     workspaceRoot,
     'tmp',
     projectRoot,
+    process.env.NX_TASK_TARGET_TARGET ?? 'build',
     'tsconfig.generated.json'
   );
   const parsedTSConfig = readTsConfigWithRemappedPaths(

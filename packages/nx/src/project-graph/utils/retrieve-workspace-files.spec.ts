@@ -24,11 +24,21 @@ describe('retrieveProjectConfigurationPaths', () => {
         name: 'project-1',
       })
     );
-    expect(
-      await retrieveProjectConfigurationPaths(fs.tempDir, {})
-    ).not.toContain('not-projects/project.json');
-    expect(await retrieveProjectConfigurationPaths(fs.tempDir, {})).toContain(
-      'projects/project.json'
-    );
+
+    const configPaths = retrieveProjectConfigurationPaths(fs.tempDir, [
+      {
+        createNodes: [
+          '{project.json,**/project.json}',
+          () => {
+            return {
+              projects: {},
+            };
+          },
+        ],
+      },
+    ]);
+
+    expect(configPaths).not.toContain('not-projects/project.json');
+    expect(configPaths).toContain('projects/project.json');
   });
 });

@@ -88,6 +88,11 @@ fn build_segment(
                 let on_group = build_segment(&built_glob, &group[1..], is_last_segment, true);
                 off_group.into_iter().chain(on_group).collect::<Vec<_>>()
             }
+            GlobGroup::NegatedWildcard(_) => {
+                let off_group = build_segment("*", &group[1..], is_last_segment, is_negative);
+                let on_group = build_segment(&built_glob, &group[1..], is_last_segment, true);
+                off_group.into_iter().chain(on_group).collect::<Vec<_>>()
+            }
             GlobGroup::OneOrMore(_)
             | GlobGroup::ExactOne(_)
             | GlobGroup::NonSpecial(_)
@@ -154,6 +159,15 @@ mod test {
     }
 
     #[test]
+    fn convert_globs_single_negative_wildcard_directory() {
+        let negative_single_dir = convert_glob("packages/!(package-a)*/package.json").unwrap();
+        assert_eq!(
+            negative_single_dir,
+            ["!packages/package-a*/", "packages/*/package.json"]
+        );
+    }
+
+    #[test]
     fn test_transforming_globs() {
         let globs = convert_glob("!(test|e2e)/?(*.)+(spec|test).[jt]s!(x)?(.snap)").unwrap();
         assert_eq!(
@@ -181,6 +195,41 @@ mod test {
                 "!dist/*/**/{README,LICENSE}.{js,ts}",
                 "!dist/{cache,cache2}/",
                 "dist/*/**/*.{js,ts}"
+            ]
+        );
+    }
+
+    #[test]
+    fn should_convert_globs_with_invalid_groups() {
+        let globs = convert_glob("libs/**/?(*.)+spec.ts?(.snap)").unwrap();
+        assert_eq!(
+            globs,
+            [
+                "libs/**/*.spec.ts",
+                "libs/**/*.spec.ts.snap",
+                "libs/**/spec.ts",
+                "libs/**/spec.ts.snap"
+            ]
+        );
+
+        let globs = convert_glob("libs/**/?(*.)@spec.ts?(.snap)").unwrap();
+        assert_eq!(
+            globs,
+            [
+                "libs/**/*.spec.ts",
+                "libs/**/*.spec.ts.snap",
+                "libs/**/spec.ts",
+                "libs/**/spec.ts.snap"
+            ]
+        );
+        let globs = convert_glob("libs/**/?(*.)?spec.ts?(.snap)").unwrap();
+        assert_eq!(
+            globs,
+            [
+                "libs/**/*.spec.ts",
+                "libs/**/*.spec.ts.snap",
+                "libs/**/spec.ts",
+                "libs/**/spec.ts.snap"
             ]
         );
     }

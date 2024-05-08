@@ -4,7 +4,7 @@ Additional information to be used to process a project graph
 
 **`Deprecated`**
 
-The ProjectGraphProcessor is deprecated. This will be removed in Nx 18.
+The ProjectGraphProcessor is deprecated. This will be removed in Nx 19.
 
 ## Table of contents
 
@@ -12,7 +12,7 @@ The ProjectGraphProcessor is deprecated. This will be removed in Nx 18.
 
 - [fileMap](../../devkit/documents/ProjectGraphProcessorContext#filemap): ProjectFileMap
 - [filesToProcess](../../devkit/documents/ProjectGraphProcessorContext#filestoprocess): ProjectFileMap
-- [nxJsonConfiguration](../../devkit/documents/ProjectGraphProcessorContext#nxjsonconfiguration): NxJsonConfiguration&lt;string[] | &quot;\*&quot;&gt;
+- [nxJsonConfiguration](../../devkit/documents/ProjectGraphProcessorContext#nxjsonconfiguration): NxJsonConfiguration<string[] | "\*">
 - [projectsConfigurations](../../devkit/documents/ProjectGraphProcessorContext#projectsconfigurations): ProjectsConfigurations
 - [workspace](../../devkit/documents/ProjectGraphProcessorContext#workspace): Workspace
 
@@ -36,7 +36,7 @@ Files changes since last invocation
 
 ### nxJsonConfiguration
 
-• **nxJsonConfiguration**: [`NxJsonConfiguration`](../../devkit/documents/NxJsonConfiguration)<`string`[] \| `"*"`\>
+• **nxJsonConfiguration**: [`NxJsonConfiguration`](../../devkit/documents/NxJsonConfiguration)\<`string`[] \| `"*"`\>
 
 ---
 

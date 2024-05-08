@@ -39,7 +39,7 @@ export interface NxArgs {
 }
 
 export function createOverrides(__overrides_unparsed__: string[] = []) {
-  let overrides =
+  let overrides: Record<string, any> =
     yargsParser(__overrides_unparsed__, {
       configuration: {
         'camel-case-expansion': false,
@@ -142,7 +142,8 @@ export function splitArgsIntoNxArgsAndOverrides(
     }
 
     if (!nxArgs.base) {
-      nxArgs.base = nxJson.affected?.defaultBase || 'main';
+      nxArgs.base =
+        nxJson.defaultBase ?? nxJson.affected?.defaultBase ?? 'main';
 
       // No user-provided arguments to set the affected criteria, so inform the user of the defaults being used
       if (

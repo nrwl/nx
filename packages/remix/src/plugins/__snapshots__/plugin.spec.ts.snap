@@ -1,0 +1,131 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`@nx/remix/plugin non-root project should create nodes 1`] = `
+{
+  "projects": {
+    "my-app": {
+      "root": "my-app",
+      "targets": {
+        "build": {
+          "cache": true,
+          "command": "remix build",
+          "dependsOn": [
+            "^build",
+          ],
+          "inputs": [
+            "production",
+            "^production",
+          ],
+          "options": {
+            "cwd": "my-app",
+          },
+          "outputs": [
+            "{workspaceRoot}/my-app/build",
+            "{workspaceRoot}/my-app/public/build",
+          ],
+        },
+        "dev": {
+          "command": "remix dev --manual",
+          "options": {
+            "cwd": "my-app",
+          },
+        },
+        "start": {
+          "command": "remix-serve build/index.js",
+          "dependsOn": [
+            "build",
+          ],
+          "options": {
+            "cwd": "my-app",
+          },
+        },
+        "static-serve": {
+          "command": "remix-serve build/index.js",
+          "dependsOn": [
+            "build",
+          ],
+          "options": {
+            "cwd": "my-app",
+          },
+        },
+        "tsc": {
+          "cache": true,
+          "command": "tsc",
+          "inputs": [
+            "production",
+            "^production",
+          ],
+          "options": {
+            "cwd": "my-app",
+          },
+        },
+      },
+    },
+  },
+}
+`;
+
+exports[`@nx/remix/plugin root project should create nodes 1`] = `
+{
+  "projects": {
+    ".": {
+      "root": ".",
+      "targets": {
+        "build": {
+          "cache": true,
+          "command": "remix build",
+          "dependsOn": [
+            "^build",
+          ],
+          "inputs": [
+            "production",
+            "^production",
+          ],
+          "options": {
+            "cwd": ".",
+          },
+          "outputs": [
+            "{workspaceRoot}/build",
+            "{workspaceRoot}/public/build",
+          ],
+        },
+        "dev": {
+          "command": "remix dev --manual",
+          "options": {
+            "cwd": ".",
+          },
+        },
+        "start": {
+          "command": "remix-serve build/index.js",
+          "dependsOn": [
+            "build",
+          ],
+          "options": {
+            "cwd": ".",
+          },
+        },
+        "static-serve": {
+          "command": "remix-serve build/index.js",
+          "dependsOn": [
+            "build",
+          ],
+          "options": {
+            "cwd": ".",
+          },
+        },
+        "typecheck": {
+          "cache": true,
+          "command": "tsc",
+          "inputs": [
+            "production",
+            "^production",
+          ],
+          "options": {
+            "cwd": ".",
+          },
+        },
+      },
+    },
+  },
+}
+`;

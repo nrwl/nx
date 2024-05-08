@@ -16,11 +16,11 @@ import {
 } from '@nx/e2e/utils';
 import type { PackageJson } from 'nx/src/utils/package-json';
 
+import { join } from 'path';
 import {
   ASYNC_GENERATOR_EXECUTOR_CONTENTS,
   NX_PLUGIN_V2_CONTENTS,
 } from './nx-plugin.fixtures';
-import { join } from 'path';
 
 describe('Nx Plugin', () => {
   let workspaceName: string;
@@ -38,7 +38,7 @@ describe('Nx Plugin', () => {
       `generate @nx/plugin:plugin ${plugin} --linter=eslint --e2eTestRunner=jest --publishable`
     );
     const lintResults = runCLI(`lint ${plugin}`);
-    expect(lintResults).toContain('All files pass linting.');
+    expect(lintResults).toContain('All files pass linting');
 
     const buildResults = runCLI(`build ${plugin}`);
     expect(buildResults).toContain('Done compiling TypeScript files');
@@ -50,6 +50,7 @@ describe('Nx Plugin', () => {
     expect(project).toMatchObject({
       tags: [],
     });
+
     runCLI(`e2e ${plugin}-e2e`);
   }, 90000);
 
@@ -63,7 +64,7 @@ describe('Nx Plugin', () => {
     );
 
     const lintResults = runCLI(`lint ${plugin}`);
-    expect(lintResults).toContain('All files pass linting.');
+    expect(lintResults).toContain('All files pass linting');
 
     expectTestsPass(await runCLIAsync(`test ${plugin}`));
 
@@ -93,7 +94,7 @@ describe('Nx Plugin', () => {
     runCLI(`generate @nx/plugin:generator ${generator} --project=${plugin}`);
 
     const lintResults = runCLI(`lint ${plugin}`);
-    expect(lintResults).toContain('All files pass linting.');
+    expect(lintResults).toContain('All files pass linting');
 
     expectTestsPass(await runCLIAsync(`test ${plugin}`));
 
@@ -130,7 +131,7 @@ describe('Nx Plugin', () => {
     );
 
     const lintResults = runCLI(`lint ${plugin}`);
-    expect(lintResults).toContain('All files pass linting.');
+    expect(lintResults).toContain('All files pass linting');
 
     expectTestsPass(await runCLIAsync(`test ${plugin}`));
 
@@ -334,6 +335,7 @@ describe('Nx Plugin', () => {
         runCLI(`show project ${inferredProject} --json`)
       );
       expect(configuration.tags).toEqual(['my-tag']);
+      expect(configuration.metadata.technologies).toEqual(['my-plugin']);
     });
 
     it('should be able to use local generators and executors', async () => {

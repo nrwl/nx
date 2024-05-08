@@ -7,7 +7,8 @@ import react from '@vitejs/plugin-react';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 
 export default defineConfig({
-  cacheDir: '../../node_modules/.vite/my-test-react-app',
+  root: __dirname,
+  cacheDir: '../../node_modules/.vite/apps/my-test-react-app',
 
   plugins: [react(), nxViteTsPaths()],
 
@@ -27,8 +28,18 @@ export default defineConfig({
     environment: 'jsdom',
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
     includeSource: ['src/**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    reporters: ['default'],
+    coverage: {
+      reportsDirectory: '../../coverage/apps/my-test-react-app',
+      provider: 'v8',
+    },
   },
 });
+"
+`;
+
+exports[`vitest generator tsconfig should add vitest.workspace.ts at the root 1`] = `
+"export default ['**/*/vite.config.ts', '**/*/vitest.config.ts'];
 "
 `;
 
@@ -39,7 +50,8 @@ import react from '@vitejs/plugin-react';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 
 export default defineConfig({
-  cacheDir: '../../node_modules/.vite/my-test-react-app',
+  root: __dirname,
+  cacheDir: '../../node_modules/.vite/apps/my-test-react-app',
 
   plugins: [react(), nxViteTsPaths()],
 
@@ -55,6 +67,12 @@ export default defineConfig({
     },
     environment: 'jsdom',
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+
+    reporters: ['default'],
+    coverage: {
+      reportsDirectory: '../../coverage/apps/my-test-react-app',
+      provider: 'v8',
+    },
   },
 });
 "
@@ -67,7 +85,8 @@ import react from '@vitejs/plugin-react';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 
 export default defineConfig({
-  cacheDir: '../../node_modules/.vite/react-lib-nonb-jest',
+  root: __dirname,
+  cacheDir: '../../node_modules/.vite/libs/react-lib-nonb-jest',
 
   plugins: [react(), nxViteTsPaths()],
 
@@ -83,6 +102,12 @@ export default defineConfig({
     },
     environment: 'jsdom',
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+
+    reporters: ['default'],
+    coverage: {
+      reportsDirectory: '../../coverage/libs/react-lib-nonb-jest',
+      provider: 'v8',
+    },
   },
 });
 "

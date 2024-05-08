@@ -1,3 +1,5 @@
+import 'nx/src/internal-testing-utils/mock-project-graph';
+
 import {
   readJson,
   readProjectConfiguration,
@@ -5,6 +7,7 @@ import {
   updateProjectConfiguration,
   writeJson,
 } from '@nx/devkit';
+import * as devkit from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { generateTestApplication } from '../../generators/utils/testing';
 import { UnitTestRunner } from '../../utils/test-runners';
@@ -14,16 +17,21 @@ describe('Migration to update target and add useDefineForClassFields', () => {
   let tree: Tree;
   beforeEach(async () => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    jest
+      .spyOn(devkit, 'formatFiles')
+      .mockImplementation(() => Promise.resolve());
     await generateTestApplication(tree, {
       name: 'test',
       bundler: 'webpack',
       projectNameAndRootFormat: 'derived',
+      skipFormat: true,
     });
     await generateTestApplication(tree, {
       name: 'karma',
       unitTestRunner: UnitTestRunner.None,
       bundler: 'webpack',
       projectNameAndRootFormat: 'derived',
+      skipFormat: true,
     });
 
     const karmaProject = readProjectConfiguration(tree, 'karma');

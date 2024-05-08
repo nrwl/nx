@@ -1,3 +1,5 @@
+import 'nx/src/internal-testing-utils/mock-project-graph';
+
 import {
   getProjects,
   joinPathFragments,
@@ -66,23 +68,6 @@ describe('NxPlugin Plugin Generator', () => {
             output: '.',
           },
         ],
-      },
-    });
-    expect(project.targets.lint).toEqual({
-      executor: '@nx/eslint:lint',
-      outputs: ['{options.outputFile}'],
-      options: {
-        lintFilePatterns: expect.arrayContaining([
-          'libs/my-plugin/**/*.ts',
-          'libs/my-plugin/package.json',
-        ]),
-      },
-    });
-    expect(project.targets.test).toEqual({
-      executor: '@nx/jest:jest',
-      outputs: ['{workspaceRoot}/coverage/{projectRoot}'],
-      options: {
-        jestConfig: 'libs/my-plugin/jest.config.ts',
       },
     });
   });

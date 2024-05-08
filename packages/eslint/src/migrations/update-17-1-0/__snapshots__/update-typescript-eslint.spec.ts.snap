@@ -34,7 +34,7 @@ exports[`update-typescript-eslint migration should update the rules 1`] = `
 
 import { ESLintUtils } from '@typescript-eslint/utils';
 
-// NOTE: The rule will be available in ESLint configs as "@nx/workspace/lint-rule"
+// NOTE: The rule will be available in ESLint configs as "@nx/workspace-lint-rule"
 export const RULE_NAME = 'lint-rule';
 
 export const rule = ESLintUtils.RuleCreator(() => __filename)({

@@ -35,7 +35,6 @@ const oldConfigComment = `/**
 const content = `
 const { withNxMetro } = require('@nx/react-native');
 const { getDefaultConfig, mergeConfig } = require('@react-native/metro-config');
-const exclusionList = require('metro-config/src/defaults/exclusionList');
 
 const defaultConfig = getDefaultConfig(__dirname);
 const { assetExts, sourceExts } = defaultConfig.resolver;
@@ -52,10 +51,7 @@ const customConfig = {
   },
   resolver: {
     assetExts: assetExts.filter((ext) => ext !== 'svg'),
-    sourceExts: [...sourceExts, 'svg'],
-    blockList: exclusionList([/^(?!.*node_modules).*\\/dist\\/.*/]),
-    unstable_enableSymlinks: true,
-    unstable_enablePackageExports: true,
+    sourceExts: [...sourceExts, 'cjs', 'mjs', 'svg'],
   },
 };
 

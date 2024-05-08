@@ -6,6 +6,7 @@ import {
   offsetFromRoot,
   readProjectConfiguration,
   updateJson,
+  readJson,
 } from '@nx/devkit';
 import { getRelativePathToRootTsConfig } from '@nx/js';
 import { join } from 'path';
@@ -17,6 +18,7 @@ export interface CypressBaseSetupSchema {
    * default is `cypress`
    * */
   directory?: string;
+  js?: boolean;
   jsx?: boolean;
 }
 
@@ -26,13 +28,15 @@ export function addBaseCypressSetup(
 ) {
   const projectConfig = readProjectConfiguration(tree, options.project);
 
-  if (tree.exists(joinPathFragments(projectConfig.root, 'cypress.config.ts'))) {
+  if (
+    tree.exists(joinPathFragments(projectConfig.root, 'cypress.config.ts')) ||
+    tree.exists(joinPathFragments(projectConfig.root, 'cypress.config.js'))
+  ) {
     return;
   }
 
   const opts = normalizeOptions(tree, projectConfig, options);
-
-  generateFiles(tree, join(__dirname, 'files'), projectConfig.root, {
+  const templateVars = {
     ...opts,
     jsx: !!opts.jsx,
     offsetFromRoot: offsetFromRoot(projectConfig.root),
@@ -41,7 +45,39 @@ export function addBaseCypressSetup(
       ? `${opts.offsetFromProjectRoot}tsconfig.json`
       : getRelativePathToRootTsConfig(tree, projectConfig.root),
     ext: '',
-  });
+  };
+
+  generateFiles(
+    tree,
+    join(__dirname, 'files/common'),
+    projectConfig.root,
+    templateVars
+  );
+
+  if (options.js) {
+    if (isEsmProject(tree, projectConfig.root)) {
+      generateFiles(
+        tree,
+        join(__dirname, 'files/config-js-esm'),
+        projectConfig.root,
+        templateVars
+      );
+    } else {
+      generateFiles(
+        tree,
+        join(__dirname, 'files/config-js-cjs'),
+        projectConfig.root,
+        templateVars
+      );
+    }
+  } else {
+    generateFiles(
+      tree,
+      join(__dirname, 'files/config-ts'),
+      projectConfig.root,
+      templateVars
+    );
+  }
 
   if (opts.hasTsConfig) {
     updateJson(
@@ -94,4 +130,17 @@ function normalizeOptions(
     offsetFromProjectRoot: `${offsetFromProjectRoot}/`,
     hasTsConfig,
   };
+}
+
+function isEsmProject(tree: Tree, projectRoot: string) {
+  let packageJson: any;
+  if (tree.exists(joinPathFragments(projectRoot, 'package.json'))) {
+    packageJson = readJson(
+      tree,
+      joinPathFragments(projectRoot, 'package.json')
+    );
+  } else {
+    packageJson = readJson(tree, 'package.json');
+  }
+  return packageJson.type === 'module';
 }

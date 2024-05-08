@@ -43,6 +43,7 @@ export const patternsWeIgnoreInCommunityReport: Array<string | RegExp> = [
 ];
 
 const LINE_SEPARATOR = '---------------------------------------';
+
 /**
  * Reports relevant version numbers for adding to an Nx issue report
  *
@@ -57,6 +58,7 @@ export async function reportHandler() {
     pmVersion,
     localPlugins,
     communityPlugins,
+    registeredPlugins,
     packageVersionsWeCareAbout,
     outOfSyncPackageGroup,
     projectGraphError,
@@ -76,6 +78,14 @@ export async function reportHandler() {
       `${chalk.green(p.package.padEnd(padding))} : ${chalk.bold(p.version)}`
     );
   });
+
+  if (registeredPlugins.length) {
+    bodyLines.push(LINE_SEPARATOR);
+    bodyLines.push('Registered Plugins:');
+    for (const plugin of registeredPlugins) {
+      bodyLines.push(`${chalk.green(plugin)}`);
+    }
+  }
 
   if (communityPlugins.length) {
     bodyLines.push(LINE_SEPARATOR);
@@ -130,6 +140,7 @@ export interface ReportData {
   pmVersion: string;
   localPlugins: string[];
   communityPlugins: PackageJson[];
+  registeredPlugins: string[];
   packageVersionsWeCareAbout: {
     package: string;
     version: string;
@@ -149,8 +160,10 @@ export async function getReportData(): Promise<ReportData> {
   const pm = detectPackageManager();
   const pmVersion = getPackageManagerVersion(pm);
 
-  const localPlugins = await findLocalPlugins(readNxJson());
+  const nxJson = readNxJson();
+  const localPlugins = await findLocalPlugins(nxJson);
   const communityPlugins = findInstalledCommunityPlugins();
+  const registeredPlugins = findRegisteredPluginsBeingUsed(nxJson);
 
   let projectGraphError: Error | null = null;
   if (isNativeAvailable()) {
@@ -180,6 +193,7 @@ export async function getReportData(): Promise<ReportData> {
     pmVersion,
     localPlugins,
     communityPlugins,
+    registeredPlugins,
     packageVersionsWeCareAbout,
     outOfSyncPackageGroup,
     projectGraphError,
@@ -268,9 +282,20 @@ export function findInstalledCommunityPlugins(): PackageJson[] {
       )
   );
 }
+
+export function findRegisteredPluginsBeingUsed(nxJson: NxJsonConfiguration) {
+  if (!nxJson.plugins) {
+    return [];
+  }
+
+  return nxJson.plugins.map((plugin) =>
+    typeof plugin === 'object' ? plugin.plugin : plugin
+  );
+}
+
 export function findInstalledPackagesWeCareAbout() {
   const packagesWeMayCareAbout: Record<string, string> = {};
-  // TODO (v18): Remove workaround for hiding @nrwl packages when matching @nx package is found.
+  // TODO (v20): Remove workaround for hiding @nrwl packages when matching @nx package is found.
   const packageChangeMap: Record<string, string> = {
     '@nrwl/nx-plugin': '@nx/plugin',
     '@nx/plugin': '@nrwl/nx-plugin',

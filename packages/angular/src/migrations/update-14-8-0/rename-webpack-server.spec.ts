@@ -1,15 +1,25 @@
+import 'nx/src/internal-testing-utils/mock-project-graph';
+
 import { readJson, updateJson } from '@nx/devkit';
+import * as devkit from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { generateTestRemoteApplication } from '../../generators/utils/testing';
 import renameWebpackServer from './rename-webpack-server';
 
 describe('renameWebpackServer', () => {
+  beforeEach(() => {
+    jest
+      .spyOn(devkit, 'formatFiles')
+      .mockImplementation(() => Promise.resolve());
+  });
+
   it('should rename webpack-server to webpack-dev-server correctly', async () => {
     // ARRANGE
     const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     await generateTestRemoteApplication(tree, {
       name: 'remote',
       projectNameAndRootFormat: 'derived',
+      skipFormat: true,
     });
 
     updateJson(tree, 'apps/remote/project.json', (json) => {

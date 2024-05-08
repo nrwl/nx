@@ -37,14 +37,6 @@ Type: `string`
 
 Bundler to be used to build the app
 
-### ci
-
-Type: `string`
-
-Choices: [github, circleci, azure, bitbucket-pipelines, gitlab]
-
-Generate a CI workflow file
-
 ### commit.email
 
 Type: `string`
@@ -83,7 +75,7 @@ Generate a Dockerfile for the Node API
 
 Type: `string`
 
-Choices: [cypress, playwright, none]
+Choices: [playwright, cypress, none]
 
 Test runner to use for end to end (E2E) tests.
 
@@ -119,11 +111,19 @@ Type: `boolean`
 
 Enable the App Router for Next.js
 
-### nxCloud
+### nextSrcDir
 
 Type: `boolean`
 
-Enable distributed caching to make your CI faster
+Generate a 'src/' directory for Next.js
+
+### nxCloud
+
+Type: `string`
+
+Choices: [yes, github, circleci, skip]
+
+Do you want Nx Cloud to make your CI fast?
 
 ### packageManager
 
@@ -135,11 +135,17 @@ Default: `npm`
 
 Package manager to use
 
+### prefix
+
+Type: `string`
+
+Prefix to use for Angular component and directive selectors.
+
 ### preset
 
 Type: `string`
 
-Customizes the initial content of your workspace. Default presets include: ["apps", "empty", "core", "npm", "ts", "web-components", "angular-monorepo", "angular-standalone", "react-monorepo", "react-standalone", "vue-monorepo", "vue-standalone", "next", "nextjs-standalone", "react-native", "expo", "nest", "express", "react", "angular", "node-standalone", "node-monorepo", "ts-standalone"]. To build your own see https://nx.dev/extending-nx/recipes/create-preset
+Customizes the initial content of your workspace. Default presets include: ["apps", "npm", "ts", "web-components", "angular-monorepo", "angular-standalone", "react-monorepo", "react-standalone", "vue-monorepo", "vue-standalone", "nuxt", "nuxt-standalone", "next", "nextjs-standalone", "remix-monorepo", "remix-standalone", "react-native", "expo", "nest", "express", "react", "vue", "angular", "node-standalone", "node-monorepo", "ts-standalone"]. To build your own see https://nx.dev/extending-nx/recipes/create-preset
 
 ### routing
 

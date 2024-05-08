@@ -10,18 +10,19 @@ import {
   runCommandUntil,
   uniq,
   updateFile,
-  setMaxWorkers,
   updateJson,
 } from '@nx/e2e/utils';
 import { join } from 'path';
 
 describe('Node Applications + webpack', () => {
   let proj: string;
-  beforeEach(() => {
-    proj = newProject();
+  beforeAll(() => {
+    proj = newProject({
+      packages: ['@nx/node'],
+    });
   });
 
-  afterEach(() => cleanupProject());
+  afterAll(() => cleanupProject());
 
   function addLibImport(appName: string, libName: string, importPath?: string) {
     const content = readFile(`apps/${appName}/src/main.ts`);
@@ -61,7 +62,9 @@ describe('Node Applications + webpack', () => {
     process.env.PORT = '';
   }
 
-  it('should generate an app using webpack', async () => {
+  // Disabled due to flakiness of ajv disabled (Error: Cannot find module 'ajv/dist/compile/codegen')
+  // TODO: (nicholas) Re-enable when the flakiness is resolved
+  xit('should generate an app using webpack', async () => {
     const testLib1 = uniq('test1');
     const testLib2 = uniq('test2');
     const expressApp = uniq('expressapp');
@@ -74,17 +77,13 @@ describe('Node Applications + webpack', () => {
     runCLI(
       `generate @nx/node:app ${expressApp} --framework=express --no-interactive`
     );
-    setMaxWorkers(join('apps', expressApp, 'project.json'));
     runCLI(
       `generate @nx/node:app ${fastifyApp} --framework=fastify --no-interactive`
     );
-    setMaxWorkers(join('apps', fastifyApp, 'project.json'));
     runCLI(`generate @nx/node:app ${koaApp} --framework=koa --no-interactive`);
-    setMaxWorkers(join('apps', koaApp, 'project.json'));
     runCLI(
       `generate @nx/node:app ${nestApp} --framework=nest --bundler=webpack --no-interactive`
     );
-    setMaxWorkers(join('apps', nestApp, 'project.json'));
 
     // Use esbuild by default
     checkFilesDoNotExist(`apps/${expressApp}/webpack.config.js`);
@@ -144,7 +143,6 @@ describe('Node Applications + webpack', () => {
     runCLI(
       `generate @nx/node:app  ${expressApp} --framework=express --docker --no-interactive`
     );
-    setMaxWorkers(join('apps', expressApp, 'project.json'));
 
     checkFilesExist(`apps/${expressApp}/Dockerfile`);
   }, 300_000);
@@ -152,14 +150,14 @@ describe('Node Applications + webpack', () => {
   it('should support waitUntilTargets for serve target', async () => {
     const nodeApp1 = uniq('nodeapp1');
     const nodeApp2 = uniq('nodeapp2');
+
+    // Set ports to avoid conflicts with other tests that might run in parallel
     runCLI(
-      `generate @nx/node:app ${nodeApp1} --framework=none --no-interactive`
+      `generate @nx/node:app ${nodeApp1} --framework=none --no-interactive --port=4444`
     );
-    setMaxWorkers(join('apps', nodeApp1, 'project.json'));
     runCLI(
-      `generate @nx/node:app ${nodeApp2} --framework=none --no-interactive`
+      `generate @nx/node:app ${nodeApp2} --framework=none --no-interactive --port=4445`
     );
-    setMaxWorkers(join('apps', nodeApp2, 'project.json'));
     updateJson(join('apps', nodeApp1, 'project.json'), (config) => {
       config.targets.serve.options.waitUntilTargets = [`${nodeApp2}:build`];
       return config;

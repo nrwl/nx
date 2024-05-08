@@ -19,7 +19,13 @@ exports[`e2e migrator cypress with project root at "" cypress version >=10 shoul
 import { defineConfig } from 'cypress';
 
 export default defineConfig({
-  e2e: { ...nxE2EPreset(__filename, { cypressDir: 'src' }) },
+  e2e: {
+    ...nxE2EPreset(__filename, {
+      cypressDir: 'src',
+      webServerCommands: { default: 'nx run app1:serve' },
+    }),
+    baseUrl: 'http://localhost:4200',
+  },
 });
 "
 `;
@@ -96,7 +102,13 @@ exports[`e2e migrator cypress with project root at "projects/app1" cypress versi
 import { defineConfig } from 'cypress';
 
 export default defineConfig({
-  e2e: { ...nxE2EPreset(__filename, { cypressDir: 'src' }) },
+  e2e: {
+    ...nxE2EPreset(__filename, {
+      cypressDir: 'src',
+      webServerCommands: { default: 'nx run app1:serve' },
+    }),
+    baseUrl: 'http://localhost:4200',
+  },
 });
 "
 `;

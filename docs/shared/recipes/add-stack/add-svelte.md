@@ -8,17 +8,16 @@ The code for this example is available on GitHub:
 
 Because we are not using a Nx plugin for Svelte, there are a few items we'll have to configure manually. We'll have to configure our own build system. There are no pre-created Svelte-specific code generators. And we'll have to take care of updating any framework dependencies as needed.
 
-{% pill url="/core-features/run-tasks" %}✅ Run Tasks{% /pill %}
-{% pill url="/core-features/cache-task-results" %}✅ Cache Task Results{% /pill %}
-{% pill url="/nx-cloud/features/remote-cache" %}✅ Share Your Cache{% /pill %}
-{% pill url="/core-features/explore-graph" %}✅ Explore the Graph{% /pill %}
-{% pill url="/nx-cloud/features/distribute-task-execution" %}✅ Distribute Task Execution{% /pill %}
-{% pill url="/core-features/integrate-with-editors" %}✅ Integrate with Editors{% /pill %}
-{% pill url="/core-features/automate-updating-dependencies" %}✅ Automate Updating Nx{% /pill %}
-{% pill url="/core-features/enforce-module-boundaries" %}✅ Enforce Module Boundaries{% /pill %}
-{% pill url="/core-features/plugin-features/use-task-executors" %}🚫 Use Task Executors{% /pill %}
-{% pill url="/core-features/plugin-features/use-code-generators" %}🚫 Use Code Generators{% /pill %}
-{% pill url="/core-features/automate-updating-dependencies" %}🚫 Automate Updating Framework Dependencies{% /pill %}
+{% pill url="/features/run-tasks" %}✅ Run Tasks{% /pill %}
+{% pill url="/features/cache-task-results" %}✅ Cache Task Results{% /pill %}
+{% pill url="/ci/features/remote-cache" %}✅ Share Your Cache{% /pill %}
+{% pill url="/features/explore-graph" %}✅ Explore the Graph{% /pill %}
+{% pill url="/ci/features/distribute-task-execution" %}✅ Distribute Task Execution{% /pill %}
+{% pill url="/getting-started/editor-setup" %}✅ Integrate with Editors{% /pill %}
+{% pill url="/features/automate-updating-dependencies" %}✅ Automate Updating Nx{% /pill %}
+{% pill url="/features/enforce-module-boundaries" %}✅ Enforce Module Boundaries{% /pill %}
+{% pill url="/features/generate-code" %}🚫 Use Code Generators{% /pill %}
+{% pill url="/features/automate-updating-dependencies" %}🚫 Automate Updating Framework Dependencies{% /pill %}
 
 ## Setup workspace
 
@@ -28,21 +27,21 @@ Because we are not using a Nx plugin for Svelte, there are a few items we'll hav
 {%tab label="npm"%}
 
 ```shell
-npx create-nx-workspace@latest workspace --preset=react-monorepo --style=css --bundler=vite --nx-cloud=true --appName=acme
+npx create-nx-workspace@latest acme --preset=ts-standalone --nx-cloud=yes
 ```
 
 {% /tab %}
 {%tab label="yarn"%}
 
 ```shell
-npx create-nx-workspace@latest workspace --preset=react-monorepo --style=css --bundler=vite --nx-cloud=true --appName=acme --pm yarn
+npx create-nx-workspace@latest acme --preset=ts-standalone --nx-cloud=yes --pm yarn
 ```
 
 {% /tab %}
 {%tab label="pnpm"%}
 
 ```shell
-npx create-nx-workspace@latest workspace --preset=react-monorepo --style=css --bundler=vite --nx-cloud=true --appName=acme --pm pnpm
+npx create-nx-workspace@latest acme --preset=ts-standalone --nx-cloud=yes --pm pnpm
 ```
 
 {% /tab %}
@@ -58,21 +57,24 @@ Make sure to install the `@nx/vite` and `@nx/js` versions that matches the versi
 {%tab label="npm"%}
 
 ```shell
-npm install --save-dev @nx/vite @nx/js vitest vite svelte svelte-check @sveltejs/vite-plugin-svelte
+npm add -D vitest vite svelte svelte-check @sveltejs/vite-plugin-svelte
+nx add @nx/vite @nx/js
 ```
 
 {% /tab %}
 {%tab label="yarn"%}
 
 ```shell
-yarn add --dev @nx/vite @nx/js vitest vite svelte svelte-check @sveltejs/vite-plugin-svelte
+yarn add -D vitest vite svelte svelte-check @sveltejs/vite-plugin-svelte
+nx add @nx/vite @nx/js
 ```
 
 {% /tab %}
 {%tab label="pnpm"%}
 
 ```shell
-pnpm add --save-dev @nx/vite @nx/js vitest vite svelte svelte-check @sveltejs/vite-plugin-svelte
+pnpm add -D vitest vite svelte svelte-check @sveltejs/vite-plugin-svelte
+nx add @nx/vite @nx/js
 ```
 
 {% /tab %}
@@ -80,13 +82,7 @@ pnpm add --save-dev @nx/vite @nx/js vitest vite svelte svelte-check @sveltejs/vi
 
 ## Create the application
 
-Before we start to create our application, let's remove the React application that was created for us.
-
-```shell
-rm -rf apps/acme/src/app/*
-```
-
-Update your `apps/acme/src/index.html` to the following:
+Create your `index.html` at the root with the following:
 
 ```html
 <!DOCTYPE html>
@@ -103,10 +99,10 @@ Update your `apps/acme/src/index.html` to the following:
 </html>
 ```
 
-Navigate to `apps/acme/src/main.tsx` and change it to `apps/acme/src/main.ts` and add the following content:
+Navigate to `src/index.ts` and change it to `src/main.ts` and add the following content:
 
 ```ts
-import App from './app/App.svelte';
+import App from './App.svelte';
 
 const app = new App({
   target: document.getElementById('app'),
@@ -115,25 +111,45 @@ const app = new App({
 export default app;
 ```
 
-Create a new file `apps/acme/src/app/App.svelte` and add the following content:
+Create a new file `src/App.svelte` and add the following content:
 
-```ts
+```ts {% fileName="src/App.svelte" %}
 <script lang="ts">
-    let count: number = 0
-    const increment = () => {
-      count += 1
-    }
-  </script>
+  let count: number = 0;
+  const increment = () => {
+    count += 1;
+  };
+</script>
 
-  <button on:click={increment}>
-    count is {count}
-  </button>
-
+<button on:click={increment}>
+  count is {count}
+</button>
 ```
+
+Since we have a `.svelte` file, we'll need to tell typescript how to handle it. Create a new file `src/svelte-shims.d.ts` and add the following content:
+
+```ts {% fileName="src/svelte-shims.d.ts" %}
+declare module '*.svelte' {
+  import type { ComponentType } from 'svelte';
+  const component: ComponentType;
+  export default component;
+}
+```
+
+Alternatively, you could also extend the `tsconfig.json` file to use tsconfig/svelte.
+
+```json {% fileName="tsconfig.json" %}
+{
+  "extends": "@tsconfig/svelte/tsconfig.json"
+  //... other configs
+}
+```
+
+See more here: [Svelte TypeScript](https://www.npmjs.com/package/@tsconfig/svelte)
 
 ## Configure Nx to build and serve the application
 
-Navigate to `vite.config.ts` update the file name to `vite.config.mts` and add the following content:
+Navigate to `vite.config.ts` add `svelte` to your plugins.
 
 ```ts
 // Add this to your imports
@@ -141,10 +157,10 @@ import { svelte } from '@sveltejs/vite-plugin-svelte';
 
 export default defineConfig({
   plugins: [
-    //...
-    svelte(),
+    //... other plugins
+    svelte(), // Add this line
   ],
-
+  //...
   server: {
     port: 4200,
     host: 'localhost',
@@ -152,78 +168,44 @@ export default defineConfig({
 });
 ```
 
-{%callout type="Note" title="Why use the .mts file extension?" %}
-We change `vite.config.ts` to `vite.config.mts` because `'@sveltejs/vite-plugin-svelte'` is an ESM only package. As a result, we need to use the `.mts` extension to tell Nx to use the ESM loader. See more here: [ESM Package](https://vitejs.dev/guide/troubleshooting.html#this-package-is-esm-only)
-{% /callout %}
+Change your `tsconfig.lib.json` to `tsconfig.app.json`. It should look like this:
 
-Update your `tsconfig.app.json` with the following content:
-
-```json {% fileName="/apps/acme/tsconfig.app.json" %}
+```json {% fileName="/tsconfig.app.json" %}
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "moduleResolution": "node",
-    "target": "esnext",
-    "ignoreDeprecations": "5.0",
-    "isolatedModules": true,
-    "sourceMap": true,
-    "types": ["svelte", "node", "vite/client"],
-    "strict": false,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-    "checkJs": true
+    "outDir": "./dist/out-tsc",
+    "declaration": true,
+    "types": ["node"]
   },
-  "include": [
-    "src/**/*.d.ts",
-    "src/**/*.ts",
-    "src/**/*.js",
-    "src/**/*.svelte",
-    "vite.config.mts"
-  ],
+  "include": ["src/**/*.ts", "src/**/*.svelte"],
   "exclude": ["jest.config.ts", "src/**/*.spec.ts", "src/**/*.test.ts"]
 }
 ```
 
-Navigate to `project.json` and update it with the following content:
+Navigate to `nx.json` it should contain the following:
 
-```json {% fileName="/apps/acme/project.json" %}
+```json {% fileName="/project.json" %}
 {
-  "targets": {
-    "build": {
-      "executor": "@nx/vite:build",
-      "outputs": ["{options.outputPath}"],
-      "defaultConfiguration": "production",
+  // ... other config
+  "plugins": [
+    {
+      "plugin": "@nx/eslint/plugin",
       "options": {
-        "outputPath": "dist/apps/acme"
-      },
-      "configurations": {
-        "development": {
-          "mode": "development"
-        },
-        "production": {
-          "mode": "production"
-        }
+        "targetName": "lint"
       }
     },
-    "serve": {
-      "executor": "@nx/vite:dev-server",
-      "defaultConfiguration": "development",
+    {
+      "plugin": "@nx/vite/plugin",
       "options": {
-        "buildTarget": "acme:build"
-      },
-      "configurations": {
-        "development": {
-          "buildTarget": "acme:build:development",
-          "hmr": true
-        },
-        "production": {
-          "buildTarget": "acme:build:production",
-          "hmr": false
-        }
+        "buildTargetName": "build",
+        "previewTargetName": "preview",
+        "testTargetName": "test",
+        "serveTargetName": "serve",
+        "serveStaticTargetName": "serve-static"
       }
     }
-  }
+  ]
 }
 ```
 
@@ -259,7 +241,7 @@ Test it out
 nx build acme
 ```
 
-Your build artifacts should be in `dist/apps/acme`
+Your build artifacts should be in `dist/acme`
 
 **Serve the application**
 
@@ -281,7 +263,7 @@ The command below uses the `as-provided` directory flag behavior, which is the d
 nx generate @nx/js:library --name=Counter --directory=libs/counter --unitTestRunner=vitest --bundler=vite --importPath=@acme/counter
 ```
 
-Create the Counter component at `libs/counter/src/lib/Counter.svelte` and copy the contents of your `apps/acme/src/App.svelte` file into it.
+Create the Counter component at `libs/counter/src/lib/Counter.svelte` and copy the contents of your `src/App.svelte` file into it.
 
 Update your `libs/counter/src/lib/index.ts` to export your Counter component.
 
@@ -293,7 +275,7 @@ export { default as Counter } from './Counter.svelte';
 The `default` is import here as due to the aliasing we'll be doing later, we'll need to import the Counter component as `import { Counter } from '@acme/counter'`.
 {% /callout %}
 
-Update your project's `/apps/acme/vite.config.mts` to include the following:
+Update your project's `vite.config.ts` to include the following:
 
 ```ts
 export default defineConfig({
@@ -310,7 +292,7 @@ export default defineConfig({
 
 This allows the runtime to resolve the `@acme/counter` import to the correct location.
 
-Finally update your `apps/acme/src/App.svelte` to use the counter component.
+Finally update your `src/App.svelte` to use the counter component.
 
 ```ts
 <script lang="ts">
@@ -326,7 +308,7 @@ Now we can build and serve our application again.
 nx build acme
 ```
 
-To generate the build artifact at `dist/apps/acme`.
+To generate the build artifact at `dist/acme`.
 
 ```shell
 nx serve acme

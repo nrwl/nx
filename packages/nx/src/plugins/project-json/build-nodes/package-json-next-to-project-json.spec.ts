@@ -2,9 +2,9 @@ import * as memfs from 'memfs';
 
 import '../../../internal-testing-utils/mock-fs';
 
-import { CreatePackageJsonProjectsNextToProjectJson } from './package-json-next-to-project-json';
-import { CreateNodesContext } from '../../../utils/nx-plugin';
-const { createNodes } = CreatePackageJsonProjectsNextToProjectJson;
+import { PackageJsonProjectsNextToProjectJsonPlugin } from './package-json-next-to-project-json';
+import { CreateNodesContext } from '../../../project-graph/plugins';
+const { createNodes } = PackageJsonProjectsNextToProjectJsonPlugin;
 
 describe('nx project.json plugin', () => {
   let context: CreateNodesContext;
@@ -14,6 +14,7 @@ describe('nx project.json plugin', () => {
     context = {
       nxJsonConfiguration: {},
       workspaceRoot: '/root',
+      configFiles: [],
     };
   });
 

@@ -12,6 +12,7 @@ import { setupMf } from '../setup-mf/setup-mf';
 import { findNextAvailablePort, updateSsrSetup } from './lib';
 import type { Schema } from './schema';
 import { swcHelpersVersion } from '@nx/js/src/utils/versions';
+import { addMfEnvToTargetDefaultInputs } from '../utils/add-mf-env-to-inputs';
 
 export async function remote(tree: Tree, options: Schema) {
   return await remoteInternal(tree, {
@@ -71,24 +72,30 @@ export async function remoteInternal(tree: Tree, schema: Schema) {
     setParserOptionsProject: options.setParserOptionsProject,
   });
 
-  const installSwcHelpersTask = addDependenciesToPackageJson(
-    tree,
-    {},
-    {
-      '@swc/helpers': swcHelpersVersion,
-    }
-  );
+  const installTasks = [appInstallTask];
+  if (!options.skipPackageJson) {
+    const installSwcHelpersTask = addDependenciesToPackageJson(
+      tree,
+      {},
+      {
+        '@swc/helpers': swcHelpersVersion,
+      }
+    );
+    installTasks.push(installSwcHelpersTask);
+  }
 
-  let installTasks = [appInstallTask, installSwcHelpersTask];
   if (options.ssr) {
     let ssrInstallTask = await updateSsrSetup(tree, {
       appName: remoteProjectName,
       port,
       typescriptConfiguration,
       standalone: options.standalone,
+      skipPackageJson: options.skipPackageJson,
     });
     installTasks.push(ssrInstallTask);
   }
+
+  addMfEnvToTargetDefaultInputs(tree);
 
   if (!options.skipFormat) {
     await formatFiles(tree);

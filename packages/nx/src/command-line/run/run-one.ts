@@ -37,7 +37,7 @@ export async function runOne(
   workspaceConfigurationCheck();
 
   const nxJson = readNxJson();
-  const projectGraph = await createProjectGraphAsync({ exitOnError: true });
+  const projectGraph = await createProjectGraphAsync();
 
   const opts = parseRunOneOptions(cwd, args, projectGraph, nxJson);
 
@@ -51,6 +51,7 @@ export async function runOne(
     { printWarnings: args.graph !== 'stdout' },
     nxJson
   );
+
   if (nxArgs.verbose) {
     process.env.NX_VERBOSE_LOGGING = 'true';
   }
@@ -69,7 +70,7 @@ export async function runOne(
 
     return await generateGraph(
       {
-        watch: false,
+        watch: true,
         open: true,
         view: 'tasks',
         targets: nxArgs.targets,
@@ -89,8 +90,6 @@ export async function runOne(
       extraTargetDependencies,
       extraOptions
     );
-    // fix for https://github.com/nrwl/nx/issues/1666
-    if (process.stdin['unref']) (process.stdin as any).unref();
     process.exit(status);
   }
 }
@@ -135,7 +134,7 @@ function parseRunOneOptions(
   let target;
   let configuration;
 
-  if (parsedArgs['project:target:configuration'].indexOf(':') > -1) {
+  if (parsedArgs['project:target:configuration']?.indexOf(':') > -1) {
     // run case
     [project, target, configuration] = splitTarget(
       parsedArgs['project:target:configuration'],
@@ -147,7 +146,7 @@ function parseRunOneOptions(
       project = defaultProjectName;
     }
   } else {
-    target = parsedArgs['project:target:configuration'];
+    target = parsedArgs.target ?? parsedArgs['project:target:configuration'];
   }
   if (parsedArgs.project) {
     project = parsedArgs.project;

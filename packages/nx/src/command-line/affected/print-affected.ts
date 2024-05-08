@@ -10,12 +10,18 @@ import {
   mapTargetDefaultsToDependencies,
 } from '../../tasks-runner/create-task-graph';
 import { NxJsonConfiguration } from '../../config/nx-json';
-import { InProcessTaskHasher } from '../../hasher/task-hasher';
+import {
+  DaemonBasedTaskHasher,
+  InProcessTaskHasher,
+  TaskHasher,
+} from '../../hasher/task-hasher';
 import { hashTask } from '../../hasher/hash-task';
 import { getPackageManagerCommand } from '../../utils/package-manager';
 import { printAffectedDeprecationMessage } from './command-object';
 import { logger, NX_PREFIX } from '../../utils/logger';
 import { getTaskSpecificEnv } from '../../tasks-runner/task-env';
+import { getFileMap } from '../../project-graph/build-project-graph';
+import { daemonClient } from '../../daemon/client/client';
 
 /**
  * @deprecated Use showProjectsHandler, generateGraph, or affected (without the print-affected mode) instead.
@@ -72,7 +78,22 @@ async function createTasks(
     nxArgs.configuration,
     overrides
   );
-  const hasher = new InProcessTaskHasher({}, [], projectGraph, nxJson, {});
+
+  let hasher: TaskHasher;
+  if (daemonClient.enabled()) {
+    hasher = new DaemonBasedTaskHasher(daemonClient, {});
+  } else {
+    const { fileMap, allWorkspaceFiles, rustReferences } = getFileMap();
+    hasher = new InProcessTaskHasher(
+      fileMap?.projectFileMap,
+      allWorkspaceFiles,
+      projectGraph,
+      nxJson,
+      rustReferences,
+      {}
+    );
+  }
+
   const execCommand = getPackageManagerCommand().exec;
   const tasks = Object.values(taskGraph.tasks);
 
