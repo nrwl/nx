@@ -66,7 +66,11 @@ export default function RspackIndex({
         role="main"
         className="flex h-full flex-1 overflow-y-hidden"
       >
-        <SidebarContainer menu={vm.menu} navIsOpen={navIsOpen} />
+        <SidebarContainer
+          menu={vm.menu}
+          navIsOpen={navIsOpen}
+          toggleNav={toggleNav}
+        />
         <div
           ref={wrapperElement}
           id="wrapper"
