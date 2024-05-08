@@ -29,6 +29,7 @@ The following environment variables are ones that you can set to change the beha
 | NX_BATCH_MODE                    | boolean | If set to `true`, Nx will run task(s) in batches for executors which support batches.                                                                                                                                          |
 | NX_SKIP_LOG_GROUPING             | boolean | If set to `true`, Nx will not group command's logs on CI.                                                                                                                                                                      |
 | NX_MIGRATE_CLI_VERSION           | string  | The version of Nx to use for running the `nx migrate` command. If not set, it defaults to `latest`.                                                                                                                            |
+| NX_LOAD_DOT_ENV_FILES            | boolean | If set to 'false', Nx will not load any environment files (e.g. `.local.env`, `.env.local`)                                                                                                                                    |
 
 Nx will set the following environment variables so they can be accessible within the process even outside of executors and generators.
 
