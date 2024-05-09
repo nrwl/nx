@@ -448,7 +448,7 @@ export const appRoutes: Route[] = [
 
 Serving your app (`nx serve angular-store`) and then navigating to `/products` should give you the following result:
 
-![products route](/shared/angular-tutorial/app-products-route.png)
+![products route](/shared/tutorials/app-products-route.png)
 
 Let's apply the same for our `orders` library.
 
@@ -1241,7 +1241,7 @@ NX   Ran target lint for 7 projects (3s)
 
 If you have the ESLint plugin installed in your IDE you should immediately see an error:
 
-![ESLint module boundary error](/shared/angular-tutorial/module-boundary-lint-rule.png)
+![ESLint module boundary error](/shared/tutorials/module-boundary-lint-rule.png)
 
 Learn more about how to [enforce module boundaries](/features/enforce-module-boundaries).
 
