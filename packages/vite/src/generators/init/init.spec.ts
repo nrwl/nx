@@ -22,7 +22,6 @@ import { initGenerator } from './init';
 
 describe('@nx/vite:init', () => {
   let tree: Tree;
-
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace();
     projectGraph = {
@@ -31,7 +30,7 @@ describe('@nx/vite:init', () => {
     };
   });
 
-  describe('dependencies for package.json', () => {
+  describe('vite basic setup', () => {
     it('should add required packages', async () => {
       const existing = 'existing';
       const existingVersion = '1.0.0';
@@ -44,8 +43,20 @@ describe('@nx/vite:init', () => {
         addPlugin: true,
       });
       const packageJson = readJson(tree, 'package.json');
-
       expect(packageJson).toMatchSnapshot();
+    });
+
+    it('should add sharedGlobals for .env if sharedGlobals is defined', async () => {
+      updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
+        json.namedInputs ??= {};
+        json.namedInputs.sharedGlobals = [];
+        return json;
+      });
+      await initGenerator(tree, {});
+      const sharedGlobalsNamedInputs = readJson(tree, 'nx.json').namedInputs
+        .sharedGlobals;
+      console.log(sharedGlobalsNamedInputs);
+      expect(sharedGlobalsNamedInputs).toContain('{workspaceRoot}/.env?(.*)');
     });
   });
 
