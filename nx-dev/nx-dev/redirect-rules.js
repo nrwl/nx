@@ -1060,6 +1060,11 @@ const removedDeprecatedUrls = {
     '/recipes/storybook/overview-react', // 80 views
 };
 
+// Blog post redirects
+const blogPosts = {
+  '/blog/2024-05-07-nx-19-release': '/blog/2024-05-08-nx-19-release',
+};
+
 /**
  * Public export API
  */
@@ -1089,4 +1094,5 @@ module.exports = {
   eslintRename,
   removedDeprecatedUrls,
   troubleshootingOutOfRecipes,
+  blogPosts,
 };
