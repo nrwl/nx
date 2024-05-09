@@ -773,7 +773,26 @@ export function generateFlatOverride(
   ];
   addTSObjectProperty(objectLiteralElements, 'files', files);
   addTSObjectProperty(objectLiteralElements, 'excludedFiles', excludedFiles);
-  addTSObjectProperty(objectLiteralElements, 'rules', rules);
+
+  // Apply rules (and spread ...config.rules into it as the first assignment)
+  addTSObjectProperty(objectLiteralElements, 'rules', rules || {});
+  const rulesObjectAST = objectLiteralElements.pop() as ts.PropertyAssignment;
+  const rulesObjectInitializer =
+    rulesObjectAST.initializer as ts.ObjectLiteralExpression;
+  const spreadAssignment = ts.factory.createSpreadAssignment(
+    ts.factory.createIdentifier('config.rules')
+  );
+  const updatedRulesProperties = [
+    spreadAssignment,
+    ...rulesObjectInitializer.properties,
+  ];
+  objectLiteralElements.push(
+    ts.factory.createPropertyAssignment(
+      'rules',
+      ts.factory.createObjectLiteralExpression(updatedRulesProperties, true)
+    )
+  );
+
   if (parserOptions) {
     addTSObjectProperty(objectLiteralElements, 'languageSettings', {
       parserOptions,
