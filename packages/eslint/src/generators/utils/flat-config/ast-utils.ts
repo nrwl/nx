@@ -775,7 +775,7 @@ export function generateFlatOverride(
   addTSObjectProperty(objectLiteralElements, 'excludedFiles', excludedFiles);
 
   // Apply rules (and spread ...config.rules into it as the first assignment)
-  addTSObjectProperty(objectLiteralElements, 'rules', rules);
+  addTSObjectProperty(objectLiteralElements, 'rules', rules || {});
   const rulesObjectAST = objectLiteralElements.pop() as ts.PropertyAssignment;
   const rulesObjectInitializer =
     rulesObjectAST.initializer as ts.ObjectLiteralExpression;
