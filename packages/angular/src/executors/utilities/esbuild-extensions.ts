@@ -1,7 +1,5 @@
-import type { IndexHtmlTransform } from '@angular-devkit/build-angular/src/utils/index-file/index-html-generator';
 import { registerTsProject } from '@nx/js/src/internal';
 import type { Plugin } from 'esbuild';
-import type { Connect } from 'vite';
 import { loadModule } from './module-loader';
 
 export type PluginSpec = {
@@ -45,7 +43,7 @@ async function loadPlugin(pluginSpec: string | PluginSpec): Promise<Plugin> {
 export async function loadMiddleware(
   middlewareFns: string[] | undefined,
   tsConfig: string
-): Promise<Connect.NextHandleFunction[]> {
+): Promise<any[]> {
   if (!middlewareFns?.length) {
     return [];
   }
@@ -61,7 +59,7 @@ export async function loadMiddleware(
 export async function loadIndexHtmlTransformer(
   indexHtmlTransformerPath: string,
   tsConfig: string
-): Promise<IndexHtmlTransform> {
+): Promise<any> {
   const cleanupTranspiler = registerTsProject(tsConfig);
 
   try {

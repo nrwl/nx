@@ -7,7 +7,10 @@ import {
   formatFiles,
   readJson,
 } from '@nx/devkit';
-import { ExecutorConfig } from 'nx/src/config/misc-interfaces';
+import {
+  ExecutorConfig,
+  ExecutorJsonEntryConfig,
+} from 'nx/src/config/misc-interfaces';
 import { PackageJson } from 'nx/src/utils/package-json';
 
 export default async function update(tree: Tree): Promise<void> {
@@ -37,7 +40,11 @@ export default async function update(tree: Tree): Promise<void> {
           continue;
         }
         for (const entry of Object.values(collection)) {
-          const schemaPath = joinPathFragments(root, entry.schema);
+          const schemaPath = joinPathFragments(
+            root,
+            // the migration is for a version that didn't support string entries
+            (entry as ExecutorJsonEntryConfig).schema
+          );
           if (tree.exists(schemaPath)) {
             updateJson(tree, schemaPath, (json: ExecutorConfig['schema']) => {
               if (json.version) {

@@ -6,7 +6,7 @@
  * config at the root of the workspace.
  */
 
-import * as browserslist from 'browserslist';
+import browserslist from 'browserslist';
 import { existsSync } from 'fs';
 import { dirname, join } from 'path';
 const Piscina = require('piscina');

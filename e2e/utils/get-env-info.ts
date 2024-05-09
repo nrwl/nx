@@ -97,6 +97,19 @@ export function getYarnMajorVersion(path: string): string | undefined {
   }
 }
 
+export function getPnpmVersion(path: string): string | undefined {
+  try {
+    // this fails if path is not yet created
+    return execSync(`pnpm -v`, { cwd: path, encoding: 'utf-8' }).trim();
+  } catch {
+    try {
+      return execSync(`pnpm -v`, { encoding: 'utf-8' }).trim();
+    } catch {
+      return undefined;
+    }
+  }
+}
+
 export function getLatestLernaVersion(): string {
   const lernaVersion = execSync(`npm view lerna version`, {
     encoding: 'utf-8',

@@ -6,7 +6,7 @@
  * - Added PostCSS plugin needed to support TailwindCSS.
  */
 
-import * as browserslist from 'browserslist';
+import browserslist from 'browserslist';
 import { existsSync } from 'fs';
 import {
   generateKey,
@@ -15,7 +15,7 @@ import {
 } from 'ng-packagr/lib/utils/cache';
 import * as log from 'ng-packagr/lib/utils/log';
 import { dirname, extname, join } from 'path';
-import * as autoprefixer from 'autoprefixer';
+import autoprefixer from 'autoprefixer';
 import * as postcssUrl from 'postcss-url';
 import { pathToFileURL } from 'node:url';
 import {
