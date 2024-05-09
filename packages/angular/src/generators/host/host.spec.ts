@@ -6,11 +6,12 @@ import {
   getProjects,
   readProjectConfiguration,
 } from 'nx/src/generators/utils/project-configuration';
-import { E2eTestRunner } from '../../utils/test-runners';
+import { E2eTestRunner, UnitTestRunner } from '../../utils/test-runners';
 import {
   generateTestHostApplication,
   generateTestRemoteApplication,
 } from '../utils/testing';
+import { Linter } from '@nx/eslint';
 
 describe('Host App Generator', () => {
   it('should generate a host app with no remotes', async () => {
@@ -631,5 +632,24 @@ describe('Host App Generator', () => {
 
     const packageJson = readJson(tree, 'package.json');
     expect(packageJson).toEqual(initialPackageJson);
+  });
+
+  it('should throw an error if invalid remotes names are provided and --dynamic is set to true', async () => {
+    const tree = createTreeWithEmptyWorkspace();
+    const remote = 'invalid-remote-name';
+
+    await expect(
+      generateTestHostApplication(tree, {
+        name: 'myhostapp',
+        remotes: [remote],
+        dynamic: true,
+        projectNameAndRootFormat: 'as-provided',
+        e2eTestRunner: E2eTestRunner.None,
+        linter: Linter.None,
+        style: 'css',
+        unitTestRunner: UnitTestRunner.None,
+        typescriptConfiguration: false,
+      })
+    ).rejects.toThrowError(`Invalid remote name provided: ${remote}.`);
   });
 });
