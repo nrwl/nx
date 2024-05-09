@@ -1,4 +1,4 @@
-# Code Sharing
+# Code Ownership
 
 One of the most obvious benefits of having a monorepo is that you can easily share code across projects. This enables you to apply the Don't Repeat Yourself principle across the whole codebase. Code sharing could mean using a function or a component in multiple projects. Or code sharing could mean using a typescript interface to define the network API interface for both the front end and back end applications.
 
@@ -20,7 +20,7 @@ Another team can use a piece of code that is intended to be internal to your pro
 
 Libraries with presentational components can accidentally use code from a library that holds a data store. Projects with Angular code can accidentally use code from a React project. Projects from team A could accidentally use code in projects that are intended to be only for team B. These kinds of rules will vary based on the organisation, but they can all be enforced automatically using tags and the `enforce-module-boundaries` lint rule.
 
-## Code Ownership
+## Defining Code Ownership
 
 As more teams are contributing to the same repository, it becomes crucial to establish clear code ownership.
 

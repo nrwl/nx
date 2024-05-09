@@ -8,8 +8,6 @@ This is a short list of Nx-specific terms that will help you understand the rest
 
 A [project](#project) that can run on its own. Generally uses [libraries](#library).
 
-> See: [Applications and Libraries](/concepts/decisions/applications-and-libraries)
-
 ### Atomizer
 
 The Atomizer is an Nx Cloud feature that automatically splits tasks so that they can be executed in parallel.
@@ -120,13 +118,9 @@ Launch Templates are used to set up an agent machine. They specify a resource cl
 
 A [project](#project) that is used by [applications](#application) or other [libraries](#library).
 
-> See: [Applications and Libraries](/concepts/decisions/applications-and-libraries)
-
 ### Monolith
 
 A large [application](#application) that is difficult to separate into smaller pieces.
-
-> See: [Applications and Libraries](/concepts/decisions/applications-and-libraries)
 
 ### Monorepo
 
@@ -179,8 +173,6 @@ Related [projects](#project) spread across multiple repositories.
 ### Project
 
 The unit of code on which a [task](#task) can be run. A project can be an [application](#application) or a [library](#library).
-
-> See: [Applications and Libraries](/concepts/decisions/applications-and-libraries)
 
 ### Publishable Library
 

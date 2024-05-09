@@ -111,8 +111,8 @@ nx lint libName
 
 Read more about:
 
-- [Creating Libraries](/concepts/decisions/creating-libraries)
-- [Library Types](/concepts/decisions/library-types)
+- [Creating Libraries](/concepts/decisions/project-size)
+- [Library Types](/concepts/decisions/project-dependency-rules)
 - [Buildable and Publishable Libraries](/concepts/more-concepts/buildable-and-publishable-libraries)
 
 ### Fallback to `@schematics/angular`

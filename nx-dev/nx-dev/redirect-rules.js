@@ -1064,14 +1064,15 @@ const decisionsSection = {
   '/concepts/more-concepts/why-monorepos': '/concepts/decisions/why-monorepos',
   '/concepts/more-concepts/dependency-management':
     '/concepts/decisions/dependency-management',
-  '/concepts/more-concepts/code-sharing': '/concepts/decisions/code-sharing',
+  '/concepts/more-concepts/code-sharing': '/concepts/decisions/code-ownership',
   '/concepts/more-concepts/applications-and-libraries':
-    '/concepts/decisions/applications-and-libraries',
+    '/concepts/decisions/project-size',
   '/concepts/more-concepts/creating-libraries':
-    '/concepts/decisions/creating-libraries',
-  '/concepts/more-concepts/library-types': '/concepts/decisions/library-types',
+    '/concepts/decisions/project-size',
+  '/concepts/more-concepts/library-types':
+    '/concepts/decisions/project-dependency-rules',
   '/concepts/more-concepts/grouping-libraries':
-    '/concepts/decisions/grouping-libraries',
+    '/concepts/decisions/folder-structure',
 };
 // Blog post redirects
 const blogPosts = {

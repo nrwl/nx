@@ -108,9 +108,6 @@ Nx allows you to create libraries with just one command. Some reasons you might 
 - Publish a package to be used outside the monorepo
 - Better visualize the architecture using `nx graph`
 
-For more information on Nx libraries, see our documentation on [Creating Libraries](/concepts/decisions/creating-libraries)
-and [Library Types](/concepts/decisions/library-types).
-
 To generate a new library run:
 
 ```shell

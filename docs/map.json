@@ -284,6 +284,11 @@
               "description": "Topics that need to be considered when structuring your repository",
               "itemList": [
                 {
+                  "name": "Overview",
+                  "id": "overview",
+                  "file": "shared/concepts/decisions/monorepo-polyrepo"
+                },
+                {
                   "name": "Monorepos",
                   "id": "why-monorepos",
                   "file": "shared/concepts/decisions/monorepos"
@@ -294,33 +299,27 @@
                   "file": "shared/concepts/decisions/dependency-management"
                 },
                 {
-                  "name": "Code Sharing",
-                  "id": "code-sharing",
-                  "file": "shared/concepts/decisions/code-sharing"
+                  "name": "Code Ownership",
+                  "id": "code-ownership",
+                  "file": "shared/concepts/decisions/code-ownership"
                 },
                 {
-                  "name": "Applications and Libraries",
-                  "id": "applications-and-libraries",
+                  "name": "Project Size",
+                  "id": "project-size",
                   "tags": ["enforce-module-boundaries"],
-                  "file": "shared/concepts/decisions/applications-and-libraries"
+                  "file": "shared/concepts/decisions/project-size"
                 },
                 {
-                  "name": "When to Create a New Library",
-                  "id": "creating-libraries",
+                  "name": "Project Dependency Rules",
+                  "id": "project-dependency-rules",
                   "tags": ["enforce-module-boundaries"],
-                  "file": "shared/concepts/decisions/creating-libraries"
+                  "file": "shared/concepts/decisions/project-dependency-rules"
                 },
                 {
-                  "name": "Library Types",
-                  "id": "library-types",
+                  "name": "Folder Structure",
+                  "id": "folder-structure",
                   "tags": ["enforce-module-boundaries"],
-                  "file": "shared/concepts/decisions/library-types"
-                },
-                {
-                  "name": "Grouping Libraries",
-                  "id": "grouping-libraries",
-                  "tags": ["enforce-module-boundaries"],
-                  "file": "shared/concepts/decisions/grouping-libraries"
+                  "file": "shared/concepts/decisions/folder-structure"
                 }
               ]
             },

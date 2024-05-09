@@ -392,31 +392,24 @@
     },
     {
       "description": "",
-      "file": "shared/concepts/decisions/applications-and-libraries",
-      "id": "applications-and-libraries",
-      "name": "Applications and Libraries",
-      "path": "/concepts/decisions/applications-and-libraries"
+      "file": "shared/concepts/decisions/project-size",
+      "id": "project-size",
+      "name": "Project Size",
+      "path": "/concepts/decisions/project-size"
     },
     {
       "description": "",
-      "file": "shared/concepts/decisions/creating-libraries",
-      "id": "creating-libraries",
-      "name": "When to Create a New Library",
-      "path": "/concepts/decisions/creating-libraries"
+      "file": "shared/concepts/decisions/project-dependency-rules",
+      "id": "project-dependency-rules",
+      "name": "Project Dependency Rules",
+      "path": "/concepts/decisions/project-dependency-rules"
     },
     {
       "description": "",
-      "file": "shared/concepts/decisions/library-types",
-      "id": "library-types",
-      "name": "Library Types",
-      "path": "/concepts/decisions/library-types"
-    },
-    {
-      "description": "",
-      "file": "shared/concepts/decisions/grouping-libraries",
-      "id": "grouping-libraries",
-      "name": "Grouping Libraries",
-      "path": "/concepts/decisions/grouping-libraries"
+      "file": "shared/concepts/decisions/folder-structure",
+      "id": "folder-structure",
+      "name": "Folder Structure",
+      "path": "/concepts/decisions/folder-structure"
     },
     {
       "description": "",

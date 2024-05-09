@@ -686,6 +686,14 @@
             "isExternal": false,
             "children": [
               {
+                "name": "Overview",
+                "path": "/concepts/decisions/overview",
+                "id": "overview",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
                 "name": "Monorepos",
                 "path": "/concepts/decisions/why-monorepos",
                 "id": "why-monorepos",
@@ -702,41 +710,33 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Code Sharing",
-                "path": "/concepts/decisions/code-sharing",
-                "id": "code-sharing",
+                "name": "Code Ownership",
+                "path": "/concepts/decisions/code-ownership",
+                "id": "code-ownership",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
               },
               {
-                "name": "Applications and Libraries",
-                "path": "/concepts/decisions/applications-and-libraries",
-                "id": "applications-and-libraries",
+                "name": "Project Size",
+                "path": "/concepts/decisions/project-size",
+                "id": "project-size",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
               },
               {
-                "name": "When to Create a New Library",
-                "path": "/concepts/decisions/creating-libraries",
-                "id": "creating-libraries",
+                "name": "Project Dependency Rules",
+                "path": "/concepts/decisions/project-dependency-rules",
+                "id": "project-dependency-rules",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
               },
               {
-                "name": "Library Types",
-                "path": "/concepts/decisions/library-types",
-                "id": "library-types",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Grouping Libraries",
-                "path": "/concepts/decisions/grouping-libraries",
-                "id": "grouping-libraries",
+                "name": "Folder Structure",
+                "path": "/concepts/decisions/folder-structure",
+                "id": "folder-structure",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -924,6 +924,14 @@
         "isExternal": false,
         "children": [
           {
+            "name": "Overview",
+            "path": "/concepts/decisions/overview",
+            "id": "overview",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Monorepos",
             "path": "/concepts/decisions/why-monorepos",
             "id": "why-monorepos",
@@ -940,46 +948,46 @@
             "disableCollapsible": false
           },
           {
-            "name": "Code Sharing",
-            "path": "/concepts/decisions/code-sharing",
-            "id": "code-sharing",
+            "name": "Code Ownership",
+            "path": "/concepts/decisions/code-ownership",
+            "id": "code-ownership",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
           },
           {
-            "name": "Applications and Libraries",
-            "path": "/concepts/decisions/applications-and-libraries",
-            "id": "applications-and-libraries",
+            "name": "Project Size",
+            "path": "/concepts/decisions/project-size",
+            "id": "project-size",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
           },
           {
-            "name": "When to Create a New Library",
-            "path": "/concepts/decisions/creating-libraries",
-            "id": "creating-libraries",
+            "name": "Project Dependency Rules",
+            "path": "/concepts/decisions/project-dependency-rules",
+            "id": "project-dependency-rules",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
           },
           {
-            "name": "Library Types",
-            "path": "/concepts/decisions/library-types",
-            "id": "library-types",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Grouping Libraries",
-            "path": "/concepts/decisions/grouping-libraries",
-            "id": "grouping-libraries",
+            "name": "Folder Structure",
+            "path": "/concepts/decisions/folder-structure",
+            "id": "folder-structure",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
           }
         ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Overview",
+        "path": "/concepts/decisions/overview",
+        "id": "overview",
+        "isExternal": false,
+        "children": [],
         "disableCollapsible": false
       },
       {
@@ -999,41 +1007,33 @@
         "disableCollapsible": false
       },
       {
-        "name": "Code Sharing",
-        "path": "/concepts/decisions/code-sharing",
-        "id": "code-sharing",
+        "name": "Code Ownership",
+        "path": "/concepts/decisions/code-ownership",
+        "id": "code-ownership",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
       },
       {
-        "name": "Applications and Libraries",
-        "path": "/concepts/decisions/applications-and-libraries",
-        "id": "applications-and-libraries",
+        "name": "Project Size",
+        "path": "/concepts/decisions/project-size",
+        "id": "project-size",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
       },
       {
-        "name": "When to Create a New Library",
-        "path": "/concepts/decisions/creating-libraries",
-        "id": "creating-libraries",
+        "name": "Project Dependency Rules",
+        "path": "/concepts/decisions/project-dependency-rules",
+        "id": "project-dependency-rules",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
       },
       {
-        "name": "Library Types",
-        "path": "/concepts/decisions/library-types",
-        "id": "library-types",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Grouping Libraries",
-        "path": "/concepts/decisions/grouping-libraries",
-        "id": "grouping-libraries",
+        "name": "Folder Structure",
+        "path": "/concepts/decisions/folder-structure",
+        "id": "folder-structure",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false

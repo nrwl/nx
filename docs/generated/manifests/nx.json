@@ -934,6 +934,17 @@
         "file": "",
         "itemList": [
           {
+            "id": "overview",
+            "name": "Overview",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/concepts/decisions/monorepo-polyrepo",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/concepts/decisions/overview",
+            "tags": []
+          },
+          {
             "id": "why-monorepos",
             "name": "Monorepos",
             "description": "",
@@ -956,58 +967,47 @@
             "tags": []
           },
           {
-            "id": "code-sharing",
-            "name": "Code Sharing",
+            "id": "code-ownership",
+            "name": "Code Ownership",
             "description": "",
             "mediaImage": "",
-            "file": "shared/concepts/decisions/code-sharing",
+            "file": "shared/concepts/decisions/code-ownership",
             "itemList": [],
             "isExternal": false,
-            "path": "/concepts/decisions/code-sharing",
+            "path": "/concepts/decisions/code-ownership",
             "tags": []
           },
           {
-            "id": "applications-and-libraries",
-            "name": "Applications and Libraries",
+            "id": "project-size",
+            "name": "Project Size",
             "description": "",
             "mediaImage": "",
-            "file": "shared/concepts/decisions/applications-and-libraries",
+            "file": "shared/concepts/decisions/project-size",
             "itemList": [],
             "isExternal": false,
-            "path": "/concepts/decisions/applications-and-libraries",
+            "path": "/concepts/decisions/project-size",
             "tags": ["enforce-module-boundaries"]
           },
           {
-            "id": "creating-libraries",
-            "name": "When to Create a New Library",
+            "id": "project-dependency-rules",
+            "name": "Project Dependency Rules",
             "description": "",
             "mediaImage": "",
-            "file": "shared/concepts/decisions/creating-libraries",
+            "file": "shared/concepts/decisions/project-dependency-rules",
             "itemList": [],
             "isExternal": false,
-            "path": "/concepts/decisions/creating-libraries",
+            "path": "/concepts/decisions/project-dependency-rules",
             "tags": ["enforce-module-boundaries"]
           },
           {
-            "id": "library-types",
-            "name": "Library Types",
+            "id": "folder-structure",
+            "name": "Folder Structure",
             "description": "",
             "mediaImage": "",
-            "file": "shared/concepts/decisions/library-types",
+            "file": "shared/concepts/decisions/folder-structure",
             "itemList": [],
             "isExternal": false,
-            "path": "/concepts/decisions/library-types",
-            "tags": ["enforce-module-boundaries"]
-          },
-          {
-            "id": "grouping-libraries",
-            "name": "Grouping Libraries",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/concepts/decisions/grouping-libraries",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/concepts/decisions/grouping-libraries",
+            "path": "/concepts/decisions/folder-structure",
             "tags": ["enforce-module-boundaries"]
           }
         ],
@@ -1261,6 +1261,17 @@
     "file": "",
     "itemList": [
       {
+        "id": "overview",
+        "name": "Overview",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/concepts/decisions/monorepo-polyrepo",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/concepts/decisions/overview",
+        "tags": []
+      },
+      {
         "id": "why-monorepos",
         "name": "Monorepos",
         "description": "",
@@ -1283,63 +1294,63 @@
         "tags": []
       },
       {
-        "id": "code-sharing",
-        "name": "Code Sharing",
+        "id": "code-ownership",
+        "name": "Code Ownership",
         "description": "",
         "mediaImage": "",
-        "file": "shared/concepts/decisions/code-sharing",
+        "file": "shared/concepts/decisions/code-ownership",
         "itemList": [],
         "isExternal": false,
-        "path": "/concepts/decisions/code-sharing",
+        "path": "/concepts/decisions/code-ownership",
         "tags": []
       },
       {
-        "id": "applications-and-libraries",
-        "name": "Applications and Libraries",
+        "id": "project-size",
+        "name": "Project Size",
         "description": "",
         "mediaImage": "",
-        "file": "shared/concepts/decisions/applications-and-libraries",
+        "file": "shared/concepts/decisions/project-size",
         "itemList": [],
         "isExternal": false,
-        "path": "/concepts/decisions/applications-and-libraries",
+        "path": "/concepts/decisions/project-size",
         "tags": ["enforce-module-boundaries"]
       },
       {
-        "id": "creating-libraries",
-        "name": "When to Create a New Library",
+        "id": "project-dependency-rules",
+        "name": "Project Dependency Rules",
         "description": "",
         "mediaImage": "",
-        "file": "shared/concepts/decisions/creating-libraries",
+        "file": "shared/concepts/decisions/project-dependency-rules",
         "itemList": [],
         "isExternal": false,
-        "path": "/concepts/decisions/creating-libraries",
+        "path": "/concepts/decisions/project-dependency-rules",
         "tags": ["enforce-module-boundaries"]
       },
       {
-        "id": "library-types",
-        "name": "Library Types",
+        "id": "folder-structure",
+        "name": "Folder Structure",
         "description": "",
         "mediaImage": "",
-        "file": "shared/concepts/decisions/library-types",
+        "file": "shared/concepts/decisions/folder-structure",
         "itemList": [],
         "isExternal": false,
-        "path": "/concepts/decisions/library-types",
-        "tags": ["enforce-module-boundaries"]
-      },
-      {
-        "id": "grouping-libraries",
-        "name": "Grouping Libraries",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/concepts/decisions/grouping-libraries",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/concepts/decisions/grouping-libraries",
+        "path": "/concepts/decisions/folder-structure",
         "tags": ["enforce-module-boundaries"]
       }
     ],
     "isExternal": false,
     "path": "/concepts/decisions",
+    "tags": []
+  },
+  "/concepts/decisions/overview": {
+    "id": "overview",
+    "name": "Overview",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/concepts/decisions/monorepo-polyrepo",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/concepts/decisions/overview",
     "tags": []
   },
   "/concepts/decisions/why-monorepos": {
@@ -1364,59 +1375,48 @@
     "path": "/concepts/decisions/dependency-management",
     "tags": []
   },
-  "/concepts/decisions/code-sharing": {
-    "id": "code-sharing",
-    "name": "Code Sharing",
+  "/concepts/decisions/code-ownership": {
+    "id": "code-ownership",
+    "name": "Code Ownership",
     "description": "",
     "mediaImage": "",
-    "file": "shared/concepts/decisions/code-sharing",
+    "file": "shared/concepts/decisions/code-ownership",
     "itemList": [],
     "isExternal": false,
-    "path": "/concepts/decisions/code-sharing",
+    "path": "/concepts/decisions/code-ownership",
     "tags": []
   },
-  "/concepts/decisions/applications-and-libraries": {
-    "id": "applications-and-libraries",
-    "name": "Applications and Libraries",
+  "/concepts/decisions/project-size": {
+    "id": "project-size",
+    "name": "Project Size",
     "description": "",
     "mediaImage": "",
-    "file": "shared/concepts/decisions/applications-and-libraries",
+    "file": "shared/concepts/decisions/project-size",
     "itemList": [],
     "isExternal": false,
-    "path": "/concepts/decisions/applications-and-libraries",
+    "path": "/concepts/decisions/project-size",
     "tags": ["enforce-module-boundaries"]
   },
-  "/concepts/decisions/creating-libraries": {
-    "id": "creating-libraries",
-    "name": "When to Create a New Library",
+  "/concepts/decisions/project-dependency-rules": {
+    "id": "project-dependency-rules",
+    "name": "Project Dependency Rules",
     "description": "",
     "mediaImage": "",
-    "file": "shared/concepts/decisions/creating-libraries",
+    "file": "shared/concepts/decisions/project-dependency-rules",
     "itemList": [],
     "isExternal": false,
-    "path": "/concepts/decisions/creating-libraries",
+    "path": "/concepts/decisions/project-dependency-rules",
     "tags": ["enforce-module-boundaries"]
   },
-  "/concepts/decisions/library-types": {
-    "id": "library-types",
-    "name": "Library Types",
+  "/concepts/decisions/folder-structure": {
+    "id": "folder-structure",
+    "name": "Folder Structure",
     "description": "",
     "mediaImage": "",
-    "file": "shared/concepts/decisions/library-types",
+    "file": "shared/concepts/decisions/folder-structure",
     "itemList": [],
     "isExternal": false,
-    "path": "/concepts/decisions/library-types",
-    "tags": ["enforce-module-boundaries"]
-  },
-  "/concepts/decisions/grouping-libraries": {
-    "id": "grouping-libraries",
-    "name": "Grouping Libraries",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/concepts/decisions/grouping-libraries",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/concepts/decisions/grouping-libraries",
+    "path": "/concepts/decisions/folder-structure",
     "tags": ["enforce-module-boundaries"]
   },
   "/concepts/more-concepts": {
