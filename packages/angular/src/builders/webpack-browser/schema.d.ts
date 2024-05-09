@@ -7,7 +7,7 @@ export type BrowserBuilderSchema = Schema & {
   indexHtmlTransformer?: string;
   buildLibsFromSource?: boolean;
   /**
-   * @deprecated Use `indexHtmlTransformer` instead. It will be removed in Nx 19.
+   * @deprecated Use `indexHtmlTransformer` instead. It will be removed in Nx 20.
    */
   indexFileTransformer?: string;
 };

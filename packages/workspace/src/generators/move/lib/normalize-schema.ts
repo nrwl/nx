@@ -240,7 +240,7 @@ function logDeprecationMessage(
 
   logger.warn(
     stripIndents`
-    In Nx 19, the project name and destination will no longer be derived.
+    In Nx 20, the project name and destination will no longer be derived.
     Please provide the exact new project name and destination in the future.
     Example: nx g ${callingGenerator} --projectName ${options.projectName} --destination ${formats['derived'].destination}` +
       (options.projectName !== formats['derived'].newProjectName

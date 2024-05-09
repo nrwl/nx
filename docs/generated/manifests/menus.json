@@ -4604,6 +4604,22 @@
         "isExternal": false,
         "children": [
           {
+            "name": "affected:graph",
+            "path": "/deprecated/affected-graph",
+            "id": "affected-graph",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "print-affected",
+            "path": "/deprecated/print-affected",
+            "id": "print-affected",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "workspace.json",
             "path": "/deprecated/workspace-json",
             "id": "workspace-json",
@@ -4684,6 +4700,22 @@
             "disableCollapsible": false
           }
         ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "affected:graph",
+        "path": "/deprecated/affected-graph",
+        "id": "affected-graph",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "print-affected",
+        "path": "/deprecated/print-affected",
+        "id": "print-affected",
+        "isExternal": false,
+        "children": [],
         "disableCollapsible": false
       },
       {
@@ -8374,22 +8406,6 @@
                 "name": "affected",
                 "path": "/nx-api/nx/documents/affected",
                 "id": "affected",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "affected:graph",
-                "path": "/nx-api/nx/documents/affected-dep-graph",
-                "id": "affected-dep-graph",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "print-affected",
-                "path": "/nx-api/nx/documents/print-affected",
-                "id": "print-affected",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
