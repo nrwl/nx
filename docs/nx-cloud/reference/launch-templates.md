@@ -312,6 +312,9 @@ nx-cloud start-ci-run --distribute-on="4 my-linux-large-rust"
 
 ## Validating Launch Templates
 
+{% callout type="note" title="Commit before Validation" %}
+Before Nx Cloud can validate your custom templates, you must first commit any changes to these templates to your source control repository. Running the validation command from a CI is the recommended approach.
+{% /callout %}
 After creating your custom launch template, it's recommended to validate it. This ensures that all necessary fields
 within the launch template and all respective inputs within each step are appropriately defined.
 
@@ -320,10 +323,6 @@ To do this, run the `nx-cloud validate` command, with the path to the launch tem
 ```shell
 nx-cloud validate --workflow-file=./nx/workflows/agents.yaml
 ```
-
-{% callout type="note" title="Commit before Validation" %}
-Before Nx Cloud can validate your custom templates, you must first commit any changes to these templates to your source control repository. Running the validation command from a CI is the recommended approach.
-{% /callout %}
 
 ## Pass Environment Variables to Agents
 
