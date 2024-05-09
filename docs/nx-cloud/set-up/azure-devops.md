@@ -30,7 +30,7 @@ For example, a URL of `https://dev.azure.com/nrwl/_git/large-monorepo` has the r
 
 To use a Personal Access Token for authentication, one must be generated with proper permissions. The minimum required permissions are shown in the screenshot below.
 
-![Work Items - Read, Code - Read, Build - Read & execute, Release - Read, write, & execute](/nx-cloud/set-up/minimal-ado-access-token.webp 'Minimum Azure DevOps Personal Access Token Permissions')
+![Work Items - Read, Code - Read, Build - Read & execute, Release - Read, write, & execute](/nx-cloud/set-up/minimal-ado-access-token.webp)
 
 Once this token is created paste the value and then click "Connect".
 
