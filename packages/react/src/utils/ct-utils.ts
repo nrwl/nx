@@ -50,7 +50,9 @@ export async function configureCypressCT(
     const executor = buildTargetProject.targets?.[target]?.executor;
     if (!executor || !options.validExecutorNames.has(executor)) {
       throw new Error(
-        `Cypress Component Testing is not currently supported for this project. Please check https://github.com/nrwl/nx/issues/21546 for more information.`
+        `Cypress Component Testing is not currently supported for this project. Either 'executer' is not defined in '${target} target' of '${project} project.json' or executer present is not valid one. Valid ones are ${JSON.stringify(
+          [...options.validExecutorNames]
+        )}. Please check https://github.com/nrwl/nx/issues/21546 for more information.`
       );
     }
   }
