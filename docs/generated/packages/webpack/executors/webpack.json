@@ -381,7 +381,7 @@
         "description": "Set a public path for assets resources with absolute paths."
       },
       "rebaseRootRelative": {
-        "type": "string",
+        "type": "boolean",
         "description": "Whether to rebase absolute path for assets in postcss cli resources."
       }
     },
