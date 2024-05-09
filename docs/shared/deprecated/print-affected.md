@@ -5,7 +5,8 @@ description: 'Prints information about the projects and targets affected by chan
 
 # print-affected
 
-**Deprecated:** Use `nx show projects --affected`, `nx affected --graph -t build` or `nx graph --affected` depending on which best suits your use case. The `print-affected` command will be removed in Nx 19.
+**Deprecated:** Use `nx show projects --affected`, `nx affected --graph -t build` or `nx graph --affected` depending on
+which best suits your use case. The `print-affected` command was removed in Nx 19.
 
 Prints information about the projects and targets affected by changes
 
@@ -73,7 +74,8 @@ Exclude certain projects from being processed
 
 Type: `string`
 
-Change the way Nx is calculating the affected command by providing directly changed files, list of files delimited by commas or spaces
+Change the way Nx is calculating the affected command by providing directly changed files, list of files delimited by
+commas or spaces
 
 ### head
 

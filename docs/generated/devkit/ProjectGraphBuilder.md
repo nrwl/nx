@@ -4,7 +4,7 @@ A class which builds up a project graph
 
 **`Deprecated`**
 
-The ProjectGraphProcessor has been deprecated. Use a [CreateNodes](../../devkit/documents/CreateNodes) and/or a [CreateDependencies](../../devkit/documents/CreateDependencies) instead. This will be removed in Nx 19.
+The ProjectGraphProcessor has been deprecated. Use a [CreateNodes](../../devkit/documents/CreateNodes) and/or a [CreateDependencies](../../devkit/documents/CreateDependencies) instead. This will be removed in Nx 20.
 
 ## Table of contents
 

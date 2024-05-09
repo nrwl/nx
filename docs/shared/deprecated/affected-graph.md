@@ -5,7 +5,8 @@ description: 'Graph dependencies affected by changes'
 
 # affected:graph
 
-**Deprecated:** Use `nx graph --affected`, or `nx affected --graph` instead depending on which best suits your use case. The `affected:graph` command will be removed in Nx 19.
+**Deprecated:** Use `nx graph --affected`, or `nx affected --graph` instead depending on which best suits your use case.
+The `affected:graph` command was removed in Nx 19.
 
 Graph dependencies affected by changes
 
@@ -19,25 +20,29 @@ Install `nx` globally to invoke the command directly using `nx`, or use `npx nx`
 
 ### Examples
 
-Open the project graph of the workspace in the browser, and highlight the projects affected by changing the index.ts file:
+Open the project graph of the workspace in the browser, and highlight the projects affected by changing the index.ts
+file:
 
 ```shell
  nx affected:graph --files=libs/mylib/src/index.ts
 ```
 
-Open the project graph of the workspace in the browser, and highlight the projects affected by the changes between main and HEAD (e.g., PR):
+Open the project graph of the workspace in the browser, and highlight the projects affected by the changes between main
+and HEAD (e.g., PR):
 
 ```shell
  nx affected:graph --base=main --head=HEAD
 ```
 
-Save the project graph of the workspace in a json file, and highlight the projects affected by the changes between main and HEAD (e.g., PR):
+Save the project graph of the workspace in a json file, and highlight the projects affected by the changes between main
+and HEAD (e.g., PR):
 
 ```shell
  nx affected:graph --base=main --head=HEAD --file=output.json
 ```
 
-Generate a static website with project graph data in an html file, highlighting the projects affected by the changes between main and HEAD (e.g., PR):
+Generate a static website with project graph data in an html file, highlighting the projects affected by the changes
+between main and HEAD (e.g., PR):
 
 ```shell
  nx affected:graph --base=main --head=HEAD --file=output.html
@@ -49,7 +54,8 @@ Open the project graph of the workspace in the browser, and highlight the projec
  nx affected:graph --base=main~1 --head=main
 ```
 
-Open the project graph of the workspace in the browser, highlight the projects affected, but exclude project-one and project-two:
+Open the project graph of the workspace in the browser, highlight the projects affected, but exclude project-one and
+project-two:
 
 ```shell
  nx affected:graph --exclude=project-one,project-two
@@ -79,7 +85,8 @@ Output file (e.g. --file=output.json or --file=dep-graph.html)
 
 Type: `string`
 
-Change the way Nx is calculating the affected command by providing directly changed files, list of files delimited by commas or spaces
+Change the way Nx is calculating the affected command by providing directly changed files, list of files delimited by
+commas or spaces
 
 ### focus
 

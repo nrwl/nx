@@ -29,7 +29,7 @@
     "configureCypress": {
       "type": "boolean",
       "description": "Specifies whether to configure Cypress or not.",
-      "x-deprecated": "Use interactionTests instead. This option will be removed in v19."
+      "x-deprecated": "Use interactionTests instead. This option will be removed in v20."
     },
     "generateStories": {
       "type": "boolean",
@@ -41,7 +41,7 @@
     "generateCypressSpecs": {
       "type": "boolean",
       "description": "Specifies whether to automatically generate test files in the generated Cypress e2e app.",
-      "x-deprecated": "Use interactionTests instead. This option will be removed in v19."
+      "x-deprecated": "Use interactionTests instead. This option will be removed in v20."
     },
     "configureStaticServe": {
       "type": "boolean",
@@ -53,7 +53,7 @@
     "cypressDirectory": {
       "type": "string",
       "description": "A directory where the Cypress project will be placed. Placed at the root by default.",
-      "x-deprecated": "Use interactionTests instead. This option will be removed in v19."
+      "x-deprecated": "Use interactionTests instead. This option will be removed in v20."
     },
     "linter": {
       "description": "The tool to use for running lint checks.",

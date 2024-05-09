@@ -1,7 +1,6 @@
 import { calculateFileChanges } from '../../project-graph/file-utils';
 import { runCommand } from '../../tasks-runner/run-command';
 import { output } from '../../utils/output';
-import { printAffected } from './print-affected';
 import { connectToNxCloudIfExplicitlyAsked } from '../connect/connect-to-nx-cloud';
 import type { NxArgs } from '../../utils/command-line-utils';
 import {
@@ -24,7 +23,6 @@ import { findMatchingProjects } from '../../utils/find-matching-projects';
 import { generateGraph } from '../graph/graph';
 import { allFileData } from '../../utils/all-file-data';
 import { NX_PREFIX, logger } from '../../utils/logger';
-import { affectedGraphDeprecationMessage } from './command-object';
 
 export async function affected(
   command: 'graph' | 'print-affected' | 'affected',
@@ -60,32 +58,6 @@ export async function affected(
 
   try {
     switch (command) {
-      case 'graph':
-        logger.warn([NX_PREFIX, affectedGraphDeprecationMessage].join(' '));
-        const projectNames = projects.map((p) => p.name);
-        await generateGraph(args as any, projectNames);
-        break;
-
-      case 'print-affected':
-        if (nxArgs.targets && nxArgs.targets.length > 0) {
-          await printAffected(
-            allProjectsWithTarget(projects, nxArgs),
-            projectGraph,
-            { nxJson },
-            nxArgs,
-            overrides
-          );
-        } else {
-          await printAffected(
-            projects,
-            projectGraph,
-            { nxJson },
-            nxArgs,
-            overrides
-          );
-        }
-        break;
-
       case 'affected': {
         const projectsWithTarget = allProjectsWithTarget(projects, nxArgs);
         if (nxArgs.graph) {
