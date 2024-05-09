@@ -472,9 +472,6 @@ describe('React:CypressComponentTestConfiguration', () => {
         buildTarget: 'my-app:build',
       });
     }).resolves;
-    expect(require('@nx/devkit').createProjectGraphAsync).toHaveBeenCalledTimes(
-      1
-    );
   });
 
   it('should setup cypress config files correctly', async () => {

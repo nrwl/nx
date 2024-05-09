@@ -5,12 +5,8 @@ import {
   readNxJson,
   addDependenciesToPackageJson,
   runTasksInSerial,
-  createProjectGraphAsync,
 } from '@nx/devkit';
-import {
-  addPlugin,
-  generateCombinations,
-} from '@nx/devkit/src/utils/add-plugin';
+import { addPlugin } from '@nx/devkit/src/utils/add-plugin';
 import { createNodes } from '../../plugins/plugin';
 import { nxVersion, remixVersion } from '../../utils/versions';
 import { type Schema } from './schema';
@@ -46,7 +42,6 @@ export async function remixInitGeneratorInternal(tree: Tree, options: Schema) {
   if (options.addPlugin) {
     await addPlugin(
       tree,
-      await createProjectGraphAsync(),
       '@nx/remix/plugin',
       createNodes,
       {

@@ -8,7 +8,6 @@ import { updateDependencies } from './lib/utils';
 export async function nuxtInitGenerator(host: Tree, schema: InitSchema) {
   await addPlugin(
     host,
-    await createProjectGraphAsync(),
     '@nx/nuxt/plugin',
     createNodes,
     {
