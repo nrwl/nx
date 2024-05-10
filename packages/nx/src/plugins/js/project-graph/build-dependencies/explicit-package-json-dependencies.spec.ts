@@ -46,9 +46,12 @@ describe('explicit package json dependencies', () => {
       './nx.json': JSON.stringify(nxJsonConfiguration),
       './tsconfig.base.json': JSON.stringify({}),
       './libs/proj2/package.json': JSON.stringify({ name: 'proj2' }),
-      './libs/proj3/package.json': JSON.stringify({ name: 'proj3' }),
+      './libs/proj3/package.json': JSON.stringify({
+        name: 'proj3',
+        dependencies: { lodash: '3.0.0' },
+      }),
       './libs/proj/package.json': JSON.stringify({
-        dependencies: { proj2: '*', external: '12.0.0' },
+        dependencies: { proj2: '*', lodash: '4.0.0' },
         devDependencies: { proj3: '*' },
       }),
     });
@@ -84,9 +87,17 @@ describe('explicit package json dependencies', () => {
     });
     builder.addExternalNode({
       type: 'npm',
-      name: 'npm:external',
+      name: 'npm:lodash',
       data: {
-        version: '12.0.0',
+        version: '4.0.0',
+        packageName: 'external',
+      },
+    });
+    builder.addExternalNode({
+      type: 'npm',
+      name: 'npm:lodash@3.0.0',
+      data: {
+        version: '3.0.0',
         packageName: 'external',
       },
     });
@@ -105,10 +116,16 @@ describe('explicit package json dependencies', () => {
     tempFs.cleanup();
   });
 
-  it(`should add dependencies for projects based on deps in package.json`, () => {
-    const res = buildExplicitPackageJsonDependencies(ctx);
-
+  it(`should add dependencies with mixed versions for projects based on deps in package.json and populate the cache`, async () => {
+    const cache = new Map();
+    const res = buildExplicitPackageJsonDependencies(ctx, cache);
     expect(res).toEqual([
+      {
+        source: 'proj',
+        target: 'proj3',
+        sourceFile: 'libs/proj/package.json',
+        type: 'static',
+      },
       {
         source: 'proj',
         target: 'proj2',
@@ -118,15 +135,25 @@ describe('explicit package json dependencies', () => {
       {
         sourceFile: 'libs/proj/package.json',
         source: 'proj',
-        target: 'npm:external',
+        target: 'npm:lodash',
         type: 'static',
       },
       {
-        source: 'proj',
-        target: 'proj3',
-        sourceFile: 'libs/proj/package.json',
+        sourceFile: 'libs/proj3/package.json',
+        source: 'proj3',
+        target: 'npm:lodash@3.0.0',
         type: 'static',
       },
     ]);
+    expect(cache).toMatchInlineSnapshot(`
+      Map {
+        "proj" => Set {
+          "npm:lodash",
+        },
+        "proj3" => Set {
+          "npm:lodash@3.0.0",
+        },
+      }
+    `);
   });
 });

@@ -42,7 +42,7 @@ describe('explicit project dependencies', () => {
         ],
       });
 
-      const res = buildExplicitTypeScriptDependencies(ctx);
+      const res = buildExplicitTypeScriptDependencies(ctx, new Map());
 
       expect(res).toEqual([
         {
@@ -72,6 +72,55 @@ describe('explicit project dependencies', () => {
       ]);
     });
 
+    it('should build prefer external dependencies found in the externalDependenciesCache', async () => {
+      const source = 'proj';
+      const ctx = await createContext({
+        source,
+        sourceProjectFiles: [
+          {
+            path: 'libs/proj/index.ts',
+            content: `
+              import * as npmPackage from 'npm-package';
+            `,
+          },
+        ],
+      });
+
+      // Set the cache to include a project specific version of the external dependency
+      const externalDependenciesCache = new Map();
+      const cachedDeps = new Set();
+      cachedDeps.add('npm:npm-package@0.5.0');
+      externalDependenciesCache.set(source, cachedDeps);
+
+      const resWithEmptyCache = buildExplicitTypeScriptDependencies(
+        ctx,
+        new Map()
+      );
+      const resWithCache = buildExplicitTypeScriptDependencies(
+        ctx,
+        externalDependenciesCache
+      );
+
+      expect(resWithEmptyCache).toEqual([
+        {
+          source,
+          sourceFile: 'libs/proj/index.ts',
+          target: 'npm:npm-package',
+          type: 'static',
+        },
+      ]);
+
+      expect(resWithCache).toEqual([
+        {
+          source,
+          sourceFile: 'libs/proj/index.ts',
+          // The project specific version is preferred over the root version (which would be 'npm:npm-package')
+          target: 'npm:npm-package@0.5.0',
+          type: 'static',
+        },
+      ]);
+    });
+
     it('should build explicit dependencies for static exports', async () => {
       const source = 'proj';
       const ctx = await createContext({
@@ -88,7 +137,7 @@ describe('explicit project dependencies', () => {
         ],
       });
 
-      const res = buildExplicitTypeScriptDependencies(ctx);
+      const res = buildExplicitTypeScriptDependencies(ctx, new Map());
 
       expect(res).toEqual([
         {
@@ -128,7 +177,7 @@ describe('explicit project dependencies', () => {
         ],
       });
 
-      const res = buildExplicitTypeScriptDependencies(ctx);
+      const res = buildExplicitTypeScriptDependencies(ctx, new Map());
       expect(res).toEqual([
         {
           source,
@@ -167,7 +216,7 @@ describe('explicit project dependencies', () => {
         ],
       });
 
-      const res = buildExplicitTypeScriptDependencies(ctx);
+      const res = buildExplicitTypeScriptDependencies(ctx, new Map());
 
       expect(res).toEqual([
         {
@@ -228,7 +277,7 @@ describe('explicit project dependencies', () => {
         ],
       });
 
-      const res = buildExplicitTypeScriptDependencies(ctx);
+      const res = buildExplicitTypeScriptDependencies(ctx, new Map());
 
       expect(res).toEqual([
         {
@@ -272,7 +321,7 @@ describe('explicit project dependencies', () => {
         ],
       });
 
-      const res = buildExplicitTypeScriptDependencies(ctx);
+      const res = buildExplicitTypeScriptDependencies(ctx, new Map());
 
       expect(res).toEqual([
         {
@@ -387,7 +436,7 @@ describe('explicit project dependencies', () => {
         ],
       });
 
-      const res = buildExplicitTypeScriptDependencies(ctx);
+      const res = buildExplicitTypeScriptDependencies(ctx, new Map());
 
       expect(res).toEqual([]);
     });
@@ -459,7 +508,7 @@ describe('explicit project dependencies', () => {
         ],
       });
 
-      const res = buildExplicitTypeScriptDependencies(ctx);
+      const res = buildExplicitTypeScriptDependencies(ctx, new Map());
 
       expect(res).toEqual([]);
     });
