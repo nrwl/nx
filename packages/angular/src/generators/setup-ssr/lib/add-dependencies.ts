@@ -1,6 +1,6 @@
 import { addDependenciesToPackageJson, type Tree } from '@nx/devkit';
 import { gte } from 'semver';
-import type { PackageCompatVersions } from '../../../utils/backward-compatible-versions';
+import type { VersionMap } from '../../../utils/backward-compatible-versions';
 import {
   getInstalledAngularVersionInfo,
   getInstalledPackageVersionInfo,
@@ -35,10 +35,11 @@ export function addDependencies(
   } else {
     dependencies['@nguniversal/express-engine'] =
       getInstalledPackageVersionInfo(tree, '@nguniversal/express-engine')
-        ?.version ?? (pkgVersions as PackageCompatVersions).ngUniversalVersion;
+        ?.version ??
+      (pkgVersions as VersionMap['angularV16']).ngUniversalVersion;
     devDependencies['@nguniversal/builders'] =
       getInstalledPackageVersionInfo(tree, '@nguniversal/builders')?.version ??
-      (pkgVersions as PackageCompatVersions).ngUniversalVersion;
+      (pkgVersions as VersionMap['angularV16']).ngUniversalVersion;
   }
 
   addDependenciesToPackageJson(tree, dependencies, devDependencies);
