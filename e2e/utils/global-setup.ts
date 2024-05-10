@@ -13,15 +13,15 @@ const LARGE_BUFFER = 1024 * 1000000;
 export default async function (globalConfig: Config.ConfigGlobals) {
   const isVerbose: boolean =
     process.env.NX_VERBOSE_LOGGING === 'true' || !!globalConfig.verbose;
-  const storageLocation = join(
-    tmpdir,
-    'local-registry/storage',
-    process.env.NX_TASK_TARGET_PROJECT ?? ''
-  );
+  // const storageLocation = join(
+  //   tmpdir,
+  //   'local-registry/storage',
+  //   process.env.NX_TASK_TARGET_PROJECT ?? ''
+  // );
   global.e2eTeardown = await startLocalRegistry({
     localRegistryTarget: '@nx/nx-source:local-registry',
     verbose: isVerbose,
-    storage: storageLocation,
+    // storage: storageLocation,
   });
 
   if (process.env.NX_E2E_SKIP_CLEANUP !== 'true' || !existsSync('./build')) {
