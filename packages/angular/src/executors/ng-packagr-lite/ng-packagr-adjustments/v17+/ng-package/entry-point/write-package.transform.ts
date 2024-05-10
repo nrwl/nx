@@ -354,12 +354,6 @@ type ConditionalExport = {
   esm2022?: string;
   esm?: string;
   default?: string;
-
-  // backward compat for Angular < 16
-  node?: string;
-  esm2020?: string;
-  es2020?: string;
-  es2015?: string;
 };
 
 /**

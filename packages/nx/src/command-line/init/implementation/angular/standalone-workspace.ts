@@ -138,8 +138,6 @@ function createNxJson(
       inputs: ['default', '^production'],
     };
   }
-  // Angular 15 workspaces still support defaultProject. Support was removed in Angular 16.
-  nxJson.defaultProject = angularJson.defaultProject;
   writeJsonFile(join(repoRoot, 'nx.json'), nxJson);
 }
 
