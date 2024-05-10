@@ -25,7 +25,8 @@ jobs:
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - run: <%= packageManagerPrefix %> nx-cloud record -- echo Hello World
-      - run: <%= packageManagerPrefix %> nx affected --base=$NX_BASE --head=$NX_HEAD -t lint test build<% if(hasE2E){ %> e2e-ci<% } %>
+      - run: <%= packageManagerPrefix %> nx affected --base=$NX_BASE --head=$NX_HEAD -t lint test build<% if(hasE2E){ %>
+      - run: <%= packageManagerPrefix %> nx affected --base=$NX_BASE --head=$NX_HEAD --parallel 1 -t e2e-ci<% } %>
 
 workflows:
   version: 2
