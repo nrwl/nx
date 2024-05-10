@@ -215,8 +215,8 @@ async function testTarget(
   projectRoot: string
 ) {
   return {
-    command: `vitest run`,
-    options: { cwd: joinPathFragments(projectRoot) },
+    command: `vitest`,
+    options: { cwd: joinPathFragments(projectRoot), watch: false },
     cache: true,
     inputs: [
       ...('production' in namedInputs
