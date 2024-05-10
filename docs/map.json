@@ -241,13 +241,29 @@
               "name": "Executors and Configurations",
               "id": "executors-and-configurations",
               "tags": ["run-tasks"],
-              "file": "shared/recipes/running-tasks/executors-and-configurations"
+              "file": "shared/concepts/executors-and-configurations"
             },
             {
               "name": "Integrated Repos vs. Package-Based Repos vs. Standalone Apps",
               "tags": ["intro", "repository-types"],
               "id": "integrated-vs-package-based",
               "file": "shared/concepts/integrated-vs-package-based"
+            },
+            {
+              "name": "Nx Daemon",
+              "id": "nx-daemon",
+              "file": "shared/concepts/daemon"
+            },
+            {
+              "name": "Nx and Turborepo",
+              "id": "turbo-and-nx",
+              "mediaImage": "./shared/concepts/nx-media-monorepo.jpg",
+              "file": "shared/concepts/turbo-and-nx"
+            },
+            {
+              "name": "Buildable and Publishable Libraries",
+              "id": "buildable-and-publishable-libraries",
+              "file": "shared/concepts/buildable-and-publishable-libraries"
             },
             {
               "name": "Module Federation",
@@ -258,23 +274,23 @@
                   "name": "Module Federation and Nx",
                   "id": "module-federation-and-nx",
                   "tags": ["module-federation", "angular", "react"],
-                  "file": "shared/guides/module-federation/module-federation-and-nx"
+                  "file": "shared/concepts/module-federation/module-federation-and-nx"
                 },
                 {
                   "name": "Faster Builds with Module Federation",
                   "id": "faster-builds-with-module-federation",
                   "tags": ["module-federation", "angular", "react"],
-                  "file": "shared/guides/module-federation/faster-builds"
+                  "file": "shared/concepts/module-federation/faster-builds"
                 },
                 {
                   "name": "Micro Frontend Architecture",
                   "id": "micro-frontend-architecture",
-                  "file": "shared/guides/module-federation/micro-frontend-architecture"
+                  "file": "shared/concepts/module-federation/micro-frontend-architecture"
                 },
                 {
                   "name": "Manage Library Versions with Module Federation",
                   "id": "manage-library-versions-with-module-federation",
-                  "file": "shared/guides/module-federation/manage-library-versions-with-module-federation"
+                  "file": "shared/concepts/module-federation/manage-library-versions-with-module-federation"
                 }
               ]
             },
@@ -320,29 +336,6 @@
                   "id": "folder-structure",
                   "tags": ["enforce-module-boundaries"],
                   "file": "shared/concepts/decisions/folder-structure"
-                }
-              ]
-            },
-            {
-              "name": "More Concepts",
-              "id": "more-concepts",
-              "description": "Get deeper into how Nx works and its different aspects.",
-              "itemList": [
-                {
-                  "name": "Nx Daemon",
-                  "id": "nx-daemon",
-                  "file": "shared/concepts/daemon"
-                },
-                {
-                  "name": "Nx and Turborepo",
-                  "id": "turbo-and-nx",
-                  "mediaImage": "./shared/guides/nx-media-monorepo.jpg",
-                  "file": "shared/guides/turbo-and-nx"
-                },
-                {
-                  "name": "Buildable and Publishable Libraries",
-                  "id": "buildable-and-publishable-libraries",
-                  "file": "shared/concepts/buildable-and-publishable-libraries"
                 }
               ]
             }
@@ -556,7 +549,7 @@
                   "name": "Advanced Micro Frontends with Angular using Dynamic Federation",
                   "id": "dynamic-module-federation-with-angular",
                   "tags": ["module-federation", "angular"],
-                  "file": "shared/guides/module-federation/dynamic-mfe-angular"
+                  "file": "shared/recipes/module-federation/dynamic-mfe-angular"
                 },
                 {
                   "name": "Setup incremental builds for Angular applications",

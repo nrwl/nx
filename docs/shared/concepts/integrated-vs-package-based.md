@@ -18,7 +18,7 @@ Nx's features can be enabled in each of these types of repositories. Just as eac
 
 A package-based repo is a collection of packages that depend on each other via `package.json` files and nested `node_modules`. With this setup, you typically have [different dependencies for each project](/concepts/decisions/dependency-management). Build tools like Jest and Webpack work as usual, since everything is resolved as if each package was in a separate repo and all of its dependencies were published to npm. Moving an existing package into a package-based repo is very easy since you generally leave that package's existing build tooling untouched. Creating a new package inside the repo is just as difficult as spinning up a new repo since you have to create all the build tooling from scratch.
 
-Lerna, Yarn, Lage, [Turborepo](/concepts/more-concepts/turbo-and-nx) and Nx support this style.
+Lerna, Yarn, Lage, [Turborepo](/concepts/turbo-and-nx) and Nx support this style.
 
 Someone who appreciates the flexibility of a package-based repository will be most interested in the following features of Nx:
 

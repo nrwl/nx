@@ -1073,6 +1073,10 @@ const decisionsSection = {
     '/concepts/decisions/project-dependency-rules',
   '/concepts/more-concepts/grouping-libraries':
     '/concepts/decisions/folder-structure',
+  '/concepts/more-concepts/turbo-and-nx': '/concepts/turbo-and-nx',
+  '/concepts/more-concepts/nx-daemon': '/concepts/nx-daemon',
+  '/concepts/more-concepts/buildable-and-publishable-libraries':
+    '/concepts/buildable-and-publishable-libraries',
 };
 // Blog post redirects
 const blogPosts = {

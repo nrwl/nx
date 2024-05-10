@@ -639,6 +639,30 @@
             "disableCollapsible": false
           },
           {
+            "name": "Nx Daemon",
+            "path": "/concepts/nx-daemon",
+            "id": "nx-daemon",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Nx and Turborepo",
+            "path": "/concepts/turbo-and-nx",
+            "id": "turbo-and-nx",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Buildable and Publishable Libraries",
+            "path": "/concepts/buildable-and-publishable-libraries",
+            "id": "buildable-and-publishable-libraries",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Module Federation",
             "path": "/concepts/module-federation",
             "id": "module-federation",
@@ -743,39 +767,6 @@
               }
             ],
             "disableCollapsible": false
-          },
-          {
-            "name": "More Concepts",
-            "path": "/concepts/more-concepts",
-            "id": "more-concepts",
-            "isExternal": false,
-            "children": [
-              {
-                "name": "Nx Daemon",
-                "path": "/concepts/more-concepts/nx-daemon",
-                "id": "nx-daemon",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Nx and Turborepo",
-                "path": "/concepts/more-concepts/turbo-and-nx",
-                "id": "turbo-and-nx",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Buildable and Publishable Libraries",
-                "path": "/concepts/more-concepts/buildable-and-publishable-libraries",
-                "id": "buildable-and-publishable-libraries",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              }
-            ],
-            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -840,6 +831,30 @@
         "name": "Integrated Repos vs. Package-Based Repos vs. Standalone Apps",
         "path": "/concepts/integrated-vs-package-based",
         "id": "integrated-vs-package-based",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Nx Daemon",
+        "path": "/concepts/nx-daemon",
+        "id": "nx-daemon",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Nx and Turborepo",
+        "path": "/concepts/turbo-and-nx",
+        "id": "turbo-and-nx",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Buildable and Publishable Libraries",
+        "path": "/concepts/buildable-and-publishable-libraries",
+        "id": "buildable-and-publishable-libraries",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -1034,63 +1049,6 @@
         "name": "Folder Structure",
         "path": "/concepts/decisions/folder-structure",
         "id": "folder-structure",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "More Concepts",
-        "path": "/concepts/more-concepts",
-        "id": "more-concepts",
-        "isExternal": false,
-        "children": [
-          {
-            "name": "Nx Daemon",
-            "path": "/concepts/more-concepts/nx-daemon",
-            "id": "nx-daemon",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Nx and Turborepo",
-            "path": "/concepts/more-concepts/turbo-and-nx",
-            "id": "turbo-and-nx",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Buildable and Publishable Libraries",
-            "path": "/concepts/more-concepts/buildable-and-publishable-libraries",
-            "id": "buildable-and-publishable-libraries",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          }
-        ],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Nx Daemon",
-        "path": "/concepts/more-concepts/nx-daemon",
-        "id": "nx-daemon",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Nx and Turborepo",
-        "path": "/concepts/more-concepts/turbo-and-nx",
-        "id": "turbo-and-nx",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Buildable and Publishable Libraries",
-        "path": "/concepts/more-concepts/buildable-and-publishable-libraries",
-        "id": "buildable-and-publishable-libraries",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false

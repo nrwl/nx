@@ -20,7 +20,7 @@ Atomizer automatically splits tasks on [Nx Agents](#nx-agents), providing you de
 
 A [library](#library) that has a `build` [target](#target). Some libraries can be generated with a `build` target using the `--buildable` flag.
 
-> See: [Publishable and Buildable Nx Libraries](/concepts/more-concepts/buildable-and-publishable-libraries)
+> See: [Publishable and Buildable Nx Libraries](/concepts/buildable-and-publishable-libraries)
 
 ### Cache
 
@@ -178,7 +178,7 @@ The unit of code on which a [task](#task) can be run. A project can be an [appli
 
 A [library](#library) that has a `publish` [target](#target). Some libraries can be generated with a `publish` target using the `--publishable` flag.
 
-> See: [Publishable and Buildable Nx Libraries](/concepts/more-concepts/buildable-and-publishable-libraries)
+> See: [Publishable and Buildable Nx Libraries](/concepts/buildable-and-publishable-libraries)
 
 ### Remote Cache
 

@@ -60,7 +60,7 @@
     },
     {
       "description": "",
-      "file": "shared/recipes/running-tasks/executors-and-configurations",
+      "file": "shared/concepts/executors-and-configurations",
       "id": "executors-and-configurations",
       "name": "Executors and Configurations",
       "path": "/concepts/executors-and-configurations"
@@ -663,14 +663,14 @@
   "module-federation": [
     {
       "description": "",
-      "file": "shared/guides/module-federation/module-federation-and-nx",
+      "file": "shared/concepts/module-federation/module-federation-and-nx",
       "id": "module-federation-and-nx",
       "name": "Module Federation and Nx",
       "path": "/concepts/module-federation/module-federation-and-nx"
     },
     {
       "description": "",
-      "file": "shared/guides/module-federation/faster-builds",
+      "file": "shared/concepts/module-federation/faster-builds",
       "id": "faster-builds-with-module-federation",
       "name": "Faster Builds with Module Federation",
       "path": "/concepts/module-federation/faster-builds-with-module-federation"
@@ -691,7 +691,7 @@
     },
     {
       "description": "",
-      "file": "shared/guides/module-federation/dynamic-mfe-angular",
+      "file": "shared/recipes/module-federation/dynamic-mfe-angular",
       "id": "dynamic-module-federation-with-angular",
       "name": "Advanced Micro Frontends with Angular using Dynamic Federation",
       "path": "/recipes/angular/dynamic-module-federation-with-angular"
@@ -700,14 +700,14 @@
   "angular": [
     {
       "description": "",
-      "file": "shared/guides/module-federation/module-federation-and-nx",
+      "file": "shared/concepts/module-federation/module-federation-and-nx",
       "id": "module-federation-and-nx",
       "name": "Module Federation and Nx",
       "path": "/concepts/module-federation/module-federation-and-nx"
     },
     {
       "description": "",
-      "file": "shared/guides/module-federation/faster-builds",
+      "file": "shared/concepts/module-federation/faster-builds",
       "id": "faster-builds-with-module-federation",
       "name": "Faster Builds with Module Federation",
       "path": "/concepts/module-federation/faster-builds-with-module-federation"
@@ -721,7 +721,7 @@
     },
     {
       "description": "",
-      "file": "shared/guides/module-federation/dynamic-mfe-angular",
+      "file": "shared/recipes/module-federation/dynamic-mfe-angular",
       "id": "dynamic-module-federation-with-angular",
       "name": "Advanced Micro Frontends with Angular using Dynamic Federation",
       "path": "/recipes/angular/dynamic-module-federation-with-angular"
@@ -730,14 +730,14 @@
   "react": [
     {
       "description": "",
-      "file": "shared/guides/module-federation/module-federation-and-nx",
+      "file": "shared/concepts/module-federation/module-federation-and-nx",
       "id": "module-federation-and-nx",
       "name": "Module Federation and Nx",
       "path": "/concepts/module-federation/module-federation-and-nx"
     },
     {
       "description": "",
-      "file": "shared/guides/module-federation/faster-builds",
+      "file": "shared/concepts/module-federation/faster-builds",
       "id": "faster-builds-with-module-federation",
       "name": "Faster Builds with Module Federation",
       "path": "/concepts/module-federation/faster-builds-with-module-federation"

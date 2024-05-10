@@ -113,7 +113,7 @@ Read more about:
 
 - [Creating Libraries](/concepts/decisions/project-size)
 - [Library Types](/concepts/decisions/project-dependency-rules)
-- [Buildable and Publishable Libraries](/concepts/more-concepts/buildable-and-publishable-libraries)
+- [Buildable and Publishable Libraries](/concepts/buildable-and-publishable-libraries)
 
 ### Fallback to `@schematics/angular`
 

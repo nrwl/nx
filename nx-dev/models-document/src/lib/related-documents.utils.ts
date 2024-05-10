@@ -17,7 +17,11 @@ export function categorizeRelatedDocuments(
     {
       id: 'concepts',
       name: 'Concepts',
-      matchers: ['/concepts/', '/concepts/more-concepts/'],
+      matchers: [
+        '/concepts/',
+        '/concepts/module-federation/',
+        '/concepts/decisions/',
+      ],
       relatedDocuments: [],
     },
     {
