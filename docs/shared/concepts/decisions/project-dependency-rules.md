@@ -1,6 +1,8 @@
-# Library Types
+# Project Dependency Rules
 
-There are many types of libraries in a workspace. In order to maintain a certain sense of order, we recommend having a small number of types, such as the below four (4) types of libraries.
+There are many types of libraries in a workspace. You can identify the type of a library through a naming convention and/or by using the project tagging system. With explicitly defined types, you can also use Nx to enforce project dependency rules based on the types of each project. This article explains one possible way to organize your repository projects by type. Every repository is different and yours may need a different set of types.
+
+In order to maintain a certain sense of order, we recommend having a small number of types, such as the below four (4) types of libraries.
 
 **Feature libraries:**
 
@@ -100,6 +102,49 @@ An example util lib module: **libs/shared/util-formatting**
 ```typescript
 export { formatDate, formatTime } from './src/format-date-fns';
 export { formatCurrency } from './src/format-currency';
+```
+
+## Enforce Project Dependency Rules
+
+In order to enforce the dependency constraints that were listed for each type, you can add the following rule in the root `.eslintrc.json` file:
+
+```json {% fileName="/.eslintrc.json" %}
+{
+  "root": true,
+  "ignorePatterns": ["**/*"],
+  "plugins": ["@nx"],
+  "overrides": [
+    {
+      "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
+      "rules": {
+        "@nx/enforce-module-boundaries": [
+          "error",
+          {
+            "allow": [],
+            "depConstraints": [
+              {
+                "sourceTag": "type:feature",
+                "onlyDependOnLibsWithTags": [
+                  "type:feature",
+                  "type:ui",
+                  "type:util"
+                ]
+              },
+              {
+                "sourceTag": "type:ui",
+                "onlyDependOnLibsWithTags": ["type:ui", "type:util"]
+              },
+              {
+                "sourceTag": "type:util",
+                "onlyDependOnLibsWithTags": ["type:util"]
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}
 ```
 
 ## Other Types

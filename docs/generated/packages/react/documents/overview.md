@@ -70,7 +70,7 @@ nx g @nx/react:lib my-new-lib \
 --importPath=@myorg/my-new-lib
 ```
 
-Read more about [building and publishing libraries here](/concepts/more-concepts/buildable-and-publishable-libraries).
+Read more about [building and publishing libraries here](/concepts/buildable-and-publishable-libraries).
 
 ### Creating Components
 

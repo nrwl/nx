@@ -2,7 +2,7 @@
 
 If you have an existing monorepo that uses Turborepo, switching to use Nx is a straight-forward process. After switching, you'll have cleaner CLI output, a better graph view and IDE support with the option to incorporate Nx plugins and take advantage of the features of an integrated repository. All this without increasing the complexity of your configuration files.
 
-For more details, read our [comparison of Nx and Turborepo](/concepts/more-concepts/turbo-and-nx)
+For more details, read our [comparison of Nx and Turborepo](/concepts/turbo-and-nx)
 
 ## Initialize Nx
 
@@ -139,7 +139,7 @@ For each `turbo.json` configuration property, the equivalent Nx property is list
 | `--ignore`                  | Use an [`.nxignore` file](/reference/nxignore) (or `.gitignore`)                                                                                                                      |
 | `--log-order`               | Use [`--output-style`](/nx-api/nx/documents/run-many#output-style)                                                                                                                    |
 | `--no-cache`                | Use [`--skip-nx-cache`](/nx-api/nx/documents/run-many#skip-nx-cache)                                                                                                                  |
-| `--no-daemon`               | Use [`NX_DAEMON=false` or set `useDaemonProcess: false`](/concepts/more-concepts/nx-daemon#turning-it-off) in `nx.json`                                                               |
+| `--no-daemon`               | Use [`NX_DAEMON=false` or set `useDaemonProcess: false`](/concepts/nx-daemon#turning-it-off) in `nx.json`                                                                             |
 | `--output-logs`             | Use [`--output-style`](/nx-api/nx/documents/run-many#output-style)                                                                                                                    |
 | `--only`                    | N/A                                                                                                                                                                                   |
 | `--parallel`                | N/A                                                                                                                                                                                   |

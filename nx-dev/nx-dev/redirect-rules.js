@@ -1060,6 +1060,24 @@ const removedDeprecatedUrls = {
     '/recipes/storybook/overview-react', // 80 views
 };
 
+const decisionsSection = {
+  '/concepts/more-concepts/why-monorepos': '/concepts/decisions/why-monorepos',
+  '/concepts/more-concepts/dependency-management':
+    '/concepts/decisions/dependency-management',
+  '/concepts/more-concepts/code-sharing': '/concepts/decisions/code-ownership',
+  '/concepts/more-concepts/applications-and-libraries':
+    '/concepts/decisions/project-size',
+  '/concepts/more-concepts/creating-libraries':
+    '/concepts/decisions/project-size',
+  '/concepts/more-concepts/library-types':
+    '/concepts/decisions/project-dependency-rules',
+  '/concepts/more-concepts/grouping-libraries':
+    '/concepts/decisions/folder-structure',
+  '/concepts/more-concepts/turbo-and-nx': '/concepts/turbo-and-nx',
+  '/concepts/more-concepts/nx-daemon': '/concepts/nx-daemon',
+  '/concepts/more-concepts/buildable-and-publishable-libraries':
+    '/concepts/buildable-and-publishable-libraries',
+};
 // Blog post redirects
 const blogPosts = {
   '/blog/2024-05-07-nx-19-release': '/blog/2024-05-08-nx-19-release',
@@ -1095,4 +1113,5 @@ module.exports = {
   removedDeprecatedUrls,
   troubleshootingOutOfRecipes,
   blogPosts,
+  decisionsSection,
 };

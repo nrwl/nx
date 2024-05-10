@@ -1,4 +1,4 @@
-# Code Sharing
+# Code Ownership
 
 One of the most obvious benefits of having a monorepo is that you can easily share code across projects. This enables you to apply the Don't Repeat Yourself principle across the whole codebase. Code sharing could mean using a function or a component in multiple projects. Or code sharing could mean using a typescript interface to define the network API interface for both the front end and back end applications.
 
@@ -19,3 +19,21 @@ Another team can use a piece of code that is intended to be internal to your pro
 ### Projects Depending on the Wrong Libraries
 
 Libraries with presentational components can accidentally use code from a library that holds a data store. Projects with Angular code can accidentally use code from a React project. Projects from team A could accidentally use code in projects that are intended to be only for team B. These kinds of rules will vary based on the organisation, but they can all be enforced automatically using tags and the `enforce-module-boundaries` lint rule.
+
+## Defining Code Ownership
+
+As more teams are contributing to the same repository, it becomes crucial to establish clear code ownership.
+
+Since Nx allows us to place projects in any directory structure, those directories can become code-ownership boundaries. That's
+why the structure of an Nx workspace often reflects the structure of an organization. GitHub users can use
+the `CODEOWNERS` file for that.
+
+```plaintext
+/libs/happynrwlapp          julie-happynrwlapp-lead
+/apps/happynrwlapp          julie-happynrwlapp-lead
+/libs/shared/ui             hank-the-ui-guy
+/libs/shared/utils-testing  julie,hank
+```
+
+If you want to know more about code ownership on GitHub, please
+check [the documentation on the `CODEOWNERS` file](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners).
