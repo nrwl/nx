@@ -102,7 +102,7 @@ jobs:
           name: Run Checks/Lint/Test/Build
           no_output_timeout: 60m
           command: |
-            pnpm nx e2e-ci nuxt
+            pnpm nx e2e-ci e2e-nuxt
       - save_cache:
           name: Save Local Registry Storage
           key: local-registry-storage
