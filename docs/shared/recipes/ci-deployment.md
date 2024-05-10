@@ -97,6 +97,7 @@ const {
   createProjectGraphAsync,
   readCachedProjectGraph,
   detectPackageManager,
+  writeJsonFile,
 } = require('@nx/devkit');
 const {
   createLockFile,
@@ -128,7 +129,7 @@ async function main() {
 
   const lockFileName = getLockFileName(pm);
 
-  writeFileSync(`${outputDir}/package.json`, packageJson);
+  writeJsonFile(`${outputDir}/package.json`, packageJson);
   writeFileSync(`${outputDir}/${lockFileName}`, lockFile, {
     encoding: 'utf8',
   });
