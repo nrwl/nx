@@ -1231,7 +1231,7 @@ describe('app', () => {
         ...json,
         dependencies: {
           ...json.dependencies,
-          '@angular/core': '~15.2.0',
+          '@angular/core': '~16.2.0',
         },
       }));
     });
@@ -1241,13 +1241,13 @@ describe('app', () => {
 
       const { devDependencies } = readJson(appTree, 'package.json');
       expect(devDependencies['@angular-devkit/build-angular']).toEqual(
-        backwardCompatibleVersions.angularV15.angularDevkitVersion
+        backwardCompatibleVersions.angularV16.angularDevkitVersion
       );
       expect(devDependencies['@angular-devkit/schematics']).toEqual(
-        backwardCompatibleVersions.angularV15.angularDevkitVersion
+        backwardCompatibleVersions.angularV16.angularDevkitVersion
       );
       expect(devDependencies['@schematics/angular']).toEqual(
-        backwardCompatibleVersions.angularV15.angularDevkitVersion
+        backwardCompatibleVersions.angularV16.angularDevkitVersion
       );
     });
 
