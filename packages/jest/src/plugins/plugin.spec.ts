@@ -33,8 +33,6 @@ describe('@nx/jest/plugin', () => {
     });
   });
 
-  test('foo', () => {});
-
   afterEach(() => {
     jest.resetModules();
     process.chdir(cwd);

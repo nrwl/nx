@@ -28,22 +28,24 @@ export interface JestPluginOptions {
 }
 
 const cachePath = join(projectGraphCacheDirectory, 'jest.hash');
-const targetsCache = existsSync(cachePath) ? readTargetsCache() : {};
+const targetsCache = readTargetsCache();
 
 type JestTargets = Awaited<ReturnType<typeof buildJestTargets>>;
 
-const calculatedTargets: JestTargets = {};
-
 function readTargetsCache(): Record<string, JestTargets> {
-  return readJsonFile(cachePath);
+  return existsSync(cachePath) ? readJsonFile(cachePath) : {};
 }
 
-function writeTargetsToCache(targets: JestTargets) {
-  writeJsonFile(cachePath, targets);
+function writeTargetsToCache(targetCache: Record<string, JestTargets>) {
+  const cache = readTargetsCache();
+  writeJsonFile(cachePath, {
+    ...cache,
+    ...targetCache,
+  });
 }
 
 export const createDependencies: CreateDependencies = () => {
-  writeTargetsToCache(calculatedTargets);
+  writeTargetsToCache(targetsCache);
   return [];
 };
 
@@ -93,11 +95,14 @@ export const createNodes: CreateNodes<JestPluginOptions> = [
     options = normalizeOptions(options);
 
     const hash = calculateHashForCreateNodes(projectRoot, options, context);
-    const { targets, metadata } =
-      targetsCache[hash] ??
-      (await buildJestTargets(configFilePath, projectRoot, options, context));
+    targetsCache[hash] ??= await buildJestTargets(
+      configFilePath,
+      projectRoot,
+      options,
+      context
+    );
 
-    calculatedTargets[hash] = { targets, metadata };
+    const { targets, metadata } = targetsCache[hash];
 
     return {
       projects: {

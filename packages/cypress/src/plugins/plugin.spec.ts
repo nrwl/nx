@@ -348,6 +348,7 @@ describe('@nx/cypress/plugin', () => {
   });
 
   function mockCypressConfig(cypressConfig: Cypress.ConfigOptions) {
+    tempFs.createFileSync('cypress.config.js', JSON.stringify(cypressConfig));
     jest.mock(
       join(tempFs.tempDir, 'cypress.config.js'),
       () => ({

@@ -35,22 +35,24 @@ interface NormalizedOptions {
 
 const cachePath = join(projectGraphCacheDirectory, 'playwright.hash');
 
-const targetsCache = existsSync(cachePath) ? readTargetsCache() : {};
+const targetsCache = readTargetsCache();
 
 type PlaywrightTargets = Pick<ProjectConfiguration, 'targets' | 'metadata'>;
 
-const calculatedTargets: Record<string, PlaywrightTargets> = {};
-
 function readTargetsCache(): Record<string, PlaywrightTargets> {
-  return readJsonFile(cachePath);
+  return existsSync(cachePath) ? readJsonFile(cachePath) : {};
 }
 
-function writeTargetsToCache(targets: Record<string, PlaywrightTargets>) {
-  writeJsonFile(cachePath, targets);
+function writeTargetsToCache() {
+  const oldCache = readTargetsCache();
+  writeJsonFile(cachePath, {
+    ...readTargetsCache,
+    targetsCache,
+  });
 }
 
 export const createDependencies: CreateDependencies = () => {
-  writeTargetsToCache(calculatedTargets);
+  writeTargetsToCache();
   return [];
 };
 
@@ -74,16 +76,13 @@ export const createNodes: CreateNodes<PlaywrightPluginOptions> = [
       getLockFileName(detectPackageManager(context.workspaceRoot)),
     ]);
 
-    const { targets, metadata } =
-      targetsCache[hash] ??
-      (await buildPlaywrightTargets(
-        configFilePath,
-        projectRoot,
-        normalizedOptions,
-        context
-      ));
-
-    calculatedTargets[hash] = { targets, metadata };
+    targetsCache[hash] ??= await buildPlaywrightTargets(
+      configFilePath,
+      projectRoot,
+      normalizedOptions,
+      context
+    );
+    const { targets, metadata } = targetsCache[hash];
 
     return {
       projects: {

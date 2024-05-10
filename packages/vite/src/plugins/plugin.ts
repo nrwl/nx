@@ -26,28 +26,25 @@ export interface VitePluginOptions {
 }
 
 const cachePath = join(projectGraphCacheDirectory, 'vite.hash');
-const targetsCache = existsSync(cachePath) ? readTargetsCache() : {};
-
-const calculatedTargets: Record<
-  string,
-  Record<string, TargetConfiguration>
-> = {};
+const targetsCache = readTargetsCache();
 
 function readTargetsCache(): Record<
   string,
   Record<string, TargetConfiguration>
 > {
-  return readJsonFile(cachePath);
+  return existsSync(cachePath) ? readJsonFile(cachePath) : {};
 }
 
-function writeTargetsToCache(
-  targets: Record<string, Record<string, TargetConfiguration>>
-) {
-  writeJsonFile(cachePath, targets);
+function writeTargetsToCache() {
+  const oldCache = readTargetsCache();
+  writeJsonFile(cachePath, {
+    ...oldCache,
+    ...targetsCache,
+  });
 }
 
 export const createDependencies: CreateDependencies = () => {
-  writeTargetsToCache(calculatedTargets);
+  writeTargetsToCache();
   return [];
 };
 
@@ -72,17 +69,19 @@ export const createNodes: CreateNodes<VitePluginOptions> = [
       calculateHashForCreateNodes(projectRoot, options, context, [
         getLockFileName(detectPackageManager(context.workspaceRoot)),
       ]) + configFilePath;
-    const targets = targetsCache[hash]
-      ? targetsCache[hash]
-      : await buildViteTargets(configFilePath, projectRoot, options, context);
 
-    calculatedTargets[hash] = targets;
+    targetsCache[hash] ??= await buildViteTargets(
+      configFilePath,
+      projectRoot,
+      options,
+      context
+    );
 
     return {
       projects: {
         [projectRoot]: {
           root: projectRoot,
-          targets,
+          targets: targetsCache[hash],
         },
       },
     };

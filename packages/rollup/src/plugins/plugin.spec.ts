@@ -38,16 +38,7 @@ describe('@nx/rollup/plugin', () => {
         workspaceRoot: tempFs.tempDir,
         configFiles: [],
       };
-
-      tempFs.createFileSync('package.json', JSON.stringify({ name: 'mylib' }));
-      tempFs.createFileSync(
-        'src/index.js',
-        `export function main() { 
-      console.log("hello world");
-      }`
-      );
-
-      loadConfigFile.mockReturnValue({
+      const rollupConfigOptions = {
         options: [
           {
             output: {
@@ -57,7 +48,21 @@ describe('@nx/rollup/plugin', () => {
             },
           },
         ],
-      });
+      };
+
+      tempFs.createFileSync(
+        'rollup.config.js',
+        JSON.stringify(rollupConfigOptions)
+      );
+      tempFs.createFileSync('package.json', JSON.stringify({ name: 'mylib' }));
+      tempFs.createFileSync(
+        'src/index.js',
+        `export function main() { 
+      console.log("hello world");
+      }`
+      );
+
+      loadConfigFile.mockReturnValue(rollupConfigOptions);
 
       process.chdir(tempFs.tempDir);
     });
@@ -97,18 +102,7 @@ describe('@nx/rollup/plugin', () => {
         workspaceRoot: tempFs.tempDir,
         configFiles: [],
       };
-
-      tempFs.createFileSync(
-        'mylib/package.json',
-        JSON.stringify({ name: 'mylib' })
-      );
-      tempFs.createFileSync(
-        'mylib/src/index.js',
-        `export function main() { 
-      console.log("hello world");
-      }`
-      );
-      loadConfigFile.mockReturnValue({
+      const rollupConfigOptions = {
         options: [
           {
             output: {
@@ -125,7 +119,22 @@ describe('@nx/rollup/plugin', () => {
             },
           },
         ],
-      });
+      };
+      tempFs.createFileSync(
+        'mylib/rollup.config.js',
+        JSON.stringify(rollupConfigOptions)
+      );
+      tempFs.createFileSync(
+        'mylib/package.json',
+        JSON.stringify({ name: 'mylib' })
+      );
+      tempFs.createFileSync(
+        'mylib/src/index.js',
+        `export function main() { 
+      console.log("hello world");
+      }`
+      );
+      loadConfigFile.mockReturnValue(rollupConfigOptions);
 
       process.chdir(tempFs.tempDir);
     });

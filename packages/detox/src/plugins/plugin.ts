@@ -22,31 +22,21 @@ export interface DetoxPluginOptions {
 }
 
 const cachePath = join(projectGraphCacheDirectory, 'detox.hash');
-const targetsCache = existsSync(cachePath) ? readTargetsCache() : {};
-
-const calculatedTargets: Record<
-  string,
-  Record<string, TargetConfiguration>
-> = {};
+const targetsCache = readTargetsCache();
 
 function readTargetsCache(): Record<
   string,
   Record<string, TargetConfiguration<DetoxPluginOptions>>
 > {
-  return readJsonFile(cachePath);
+  return existsSync(cachePath) ? readJsonFile(cachePath) : {};
 }
 
-function writeTargetsToCache(
-  targets: Record<
-    string,
-    Record<string, TargetConfiguration<DetoxPluginOptions>>
-  >
-) {
-  writeJsonFile(cachePath, targets);
+function writeTargetsToCache() {
+  writeJsonFile(cachePath, targetsCache);
 }
 
 export const createDependencies: CreateDependencies = () => {
-  writeTargetsToCache(calculatedTargets);
+  writeTargetsToCache();
   return [];
 };
 
@@ -66,16 +56,12 @@ export const createNodes: CreateNodes<DetoxPluginOptions> = [
       getLockFileName(detectPackageManager(context.workspaceRoot)),
     ]);
 
-    const targets = targetsCache[hash]
-      ? targetsCache[hash]
-      : buildDetoxTargets(projectRoot, options, context);
-
-    calculatedTargets[hash] = targets;
+    targetsCache[hash] ??= buildDetoxTargets(projectRoot, options, context);
 
     return {
       projects: {
         [projectRoot]: {
-          targets,
+          targets: targetsCache[hash],
         },
       },
     };
