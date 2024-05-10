@@ -674,35 +674,35 @@ export const appRoutes: Routes = [{ path: 'home', component: NxWelcomeComponent 
         ...json,
         dependencies: {
           ...json.dependencies,
-          '@angular/core': '15.0.0',
+          '@angular/core': '16.0.0',
         },
       }));
     });
 
-    it('should install the ngrx 15 packages', async () => {
+    it('should install the ngrx 16 packages', async () => {
       await ngrxGenerator(tree, defaultOptions);
 
       const packageJson = devkit.readJson(tree, 'package.json');
       expect(packageJson.dependencies['@ngrx/store']).toEqual(
-        backwardCompatibleVersions.angularV15.ngrxVersion
+        backwardCompatibleVersions.angularV16.ngrxVersion
       );
       expect(packageJson.dependencies['@ngrx/effects']).toEqual(
-        backwardCompatibleVersions.angularV15.ngrxVersion
+        backwardCompatibleVersions.angularV16.ngrxVersion
       );
       expect(packageJson.dependencies['@ngrx/entity']).toEqual(
-        backwardCompatibleVersions.angularV15.ngrxVersion
+        backwardCompatibleVersions.angularV16.ngrxVersion
       );
       expect(packageJson.dependencies['@ngrx/router-store']).toEqual(
-        backwardCompatibleVersions.angularV15.ngrxVersion
+        backwardCompatibleVersions.angularV16.ngrxVersion
       );
       expect(packageJson.dependencies['@ngrx/component-store']).toEqual(
-        backwardCompatibleVersions.angularV15.ngrxVersion
+        backwardCompatibleVersions.angularV16.ngrxVersion
       );
       expect(packageJson.devDependencies['@ngrx/schematics']).toEqual(
-        backwardCompatibleVersions.angularV15.ngrxVersion
+        backwardCompatibleVersions.angularV16.ngrxVersion
       );
       expect(packageJson.devDependencies['@ngrx/store-devtools']).toEqual(
-        backwardCompatibleVersions.angularV15.ngrxVersion
+        backwardCompatibleVersions.angularV16.ngrxVersion
       );
       expect(packageJson.devDependencies['jasmine-marbles']).toBeDefined();
     });

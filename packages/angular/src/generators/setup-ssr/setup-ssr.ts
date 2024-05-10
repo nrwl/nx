@@ -14,7 +14,6 @@ import {
   normalizeOptions,
   setRouterInitialNavigation,
   setServerTsConfigOptionsForApplicationBuilder,
-  updateAppModule,
   updateProjectConfigForApplicationBuilder,
   updateProjectConfigForBrowserBuilder,
   validateOptions,
@@ -35,9 +34,6 @@ export async function setupSsr(tree: Tree, schema: Schema) {
   }
   generateSSRFiles(tree, options, isUsingApplicationBuilder);
 
-  if (!options.standalone) {
-    updateAppModule(tree, options);
-  }
   if (options.hydration) {
     addHydration(tree, options);
   }
