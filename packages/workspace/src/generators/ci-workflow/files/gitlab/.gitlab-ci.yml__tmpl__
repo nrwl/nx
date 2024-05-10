@@ -22,4 +22,5 @@ variables:
 
     # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
     # - <%= packageManagerPrefix %> nx-cloud record -- echo Hello World
-    - <%= packageManagerPrefix %> nx affected --base=$NX_BASE --head=$NX_HEAD -t lint test build<% if(hasE2E){ %> e2e-ci<% } %>
+    - <%= packageManagerPrefix %> nx affected --base=$NX_BASE --head=$NX_HEAD -t lint test build<% if(hasE2E){ %>
+    - <%= packageManagerPrefix %> nx affected --base=$NX_BASE --head=$NX_HEAD --parallel 1 -t e2e-ci<% } %>
