@@ -4,8 +4,6 @@ import {
   joinPathFragments,
   readProjectConfiguration,
 } from '@nx/devkit';
-import { lt } from 'semver';
-import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
 import type { Schema } from '../schema';
 
 export function generateSSRFiles(
@@ -27,7 +25,6 @@ export function generateSSRFiles(
   }
 
   const pathToFiles = joinPathFragments(__dirname, '..', 'files');
-  const { version: angularVersion } = getInstalledAngularVersionInfo(tree);
 
   if (schema.standalone) {
     generateFiles(
@@ -39,18 +36,9 @@ export function generateSSRFiles(
   } else {
     generateFiles(
       tree,
-      joinPathFragments(pathToFiles, 'ngmodule', 'base'),
+      joinPathFragments(pathToFiles, 'ngmodule'),
       projectRoot,
       { ...schema, tpl: '' }
     );
-
-    if (lt(angularVersion, '15.2.0')) {
-      generateFiles(
-        tree,
-        joinPathFragments(pathToFiles, 'ngmodule', 'pre-v15-2'),
-        projectRoot,
-        { ...schema, tpl: '' }
-      );
-    }
   }
 }

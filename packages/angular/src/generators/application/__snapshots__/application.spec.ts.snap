@@ -835,7 +835,7 @@ exports[`app --strict should enable strict type checking: e2e tsconfig.json 1`] 
 `;
 
 exports[`app angular compat support should import "ApplicationConfig" from "@angular/platform-browser" 1`] = `
-"import { ApplicationConfig } from '@angular/platform-browser';
+"import { ApplicationConfig } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { appRoutes } from './app.routes';
 

@@ -1,4 +1,4 @@
-import { ApplicationConfig<% if (useEventCoalescing) { %>, provideZoneChangeDetection<% } %> } from <% if (angularMajorVersion >= 16) { %>'@angular/core';<% } else { %>'@angular/platform-browser';<% } %><% if (routing) { %>
+import { ApplicationConfig<% if (useEventCoalescing) { %>, provideZoneChangeDetection<% } %> } from '@angular/core';<% if (routing) { %>
 import { provideRouter } from '@angular/router';
 import { appRoutes } from './app.routes';<% } %>
 
