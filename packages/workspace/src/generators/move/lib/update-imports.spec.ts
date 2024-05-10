@@ -493,4 +493,41 @@ export MyExtendedClass extends MyClass {};`
       '@proj/my-source': ['my-destination/src/index.ts'],
     });
   });
+
+  it("should update project ref in the root tsconfig file if it contains a secondary entry point for Next.js's server", async () => {
+    await libraryGenerator(tree, {
+      name: 'my-source',
+      projectNameAndRootFormat: 'as-provided',
+    });
+
+    tree.write('my-source/src/server.ts', '');
+
+    updateJson(tree, '/tsconfig.base.json', (json) => {
+      json.compilerOptions.paths['@proj/my-source/server'] = [
+        'my-source/src/server.ts',
+      ];
+      return json;
+    });
+
+    const projectConfig = readProjectConfiguration(tree, 'my-source');
+    updateImports(
+      tree,
+      await normalizeSchema(
+        tree,
+        {
+          ...schema,
+          updateImportPath: false,
+        },
+        projectConfig
+      ),
+
+      projectConfig
+    );
+
+    const tsConfig = readJson(tree, '/tsconfig.base.json');
+    expect(tsConfig.compilerOptions.paths).toEqual({
+      '@proj/my-source': ['my-destination/src/index.ts'],
+      '@proj/my-source/server': ['my-destination/src/server.ts'],
+    });
+  });
 });
