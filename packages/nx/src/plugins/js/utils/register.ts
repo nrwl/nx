@@ -3,6 +3,7 @@ import type { CompilerOptions } from 'typescript';
 import { logger, NX_PREFIX, stripIndent } from '../../../utils/logger';
 import { existsSync } from 'fs';
 import { workspaceRoot } from '../../../utils/workspace-root';
+import { readFileSync } from 'fs-extra';
 
 const swcNodeInstalled = packageIsInstalled('@swc-node/register');
 const tsNodeInstalled = packageIsInstalled('ts-node/register');
@@ -40,9 +41,15 @@ export function registerTsProject(
   const tsConfigPath = configFilename ? join(path, configFilename) : path;
   const compilerOptions: CompilerOptions = readCompilerOptions(tsConfigPath);
 
+  const nearestPkgJson = getNearestPackageJson(
+    tsConfigPath,
+    compilerOptions.rootDir ?? workspaceRoot
+  );
+  const projectUsesEsm = nearestPkgJson?.type === 'module';
+
   const cleanupFunctions: ((...args: unknown[]) => unknown)[] = [
     registerTsConfigPaths(tsConfigPath),
-    registerTranspiler(compilerOptions),
+    registerTranspiler(compilerOptions, projectUsesEsm),
   ];
 
   // Add ESM support for `.ts` files.
@@ -103,21 +110,32 @@ export function getTsNodeTranspiler(
   };
 }
 
-export function getTranspiler(compilerOptions: CompilerOptions) {
+export function getTranspiler(
+  compilerOptions: CompilerOptions,
+  useEsm = false
+) {
   const preferTsNode = process.env.NX_PREFER_TS_NODE === 'true';
 
   if (!ts) {
     ts = require('typescript');
   }
 
-  compilerOptions.lib = ['es2021'];
-  compilerOptions.module = ts.ModuleKind.CommonJS;
+  compilerOptions.lib = useEsm ? ['es2022'] : ['es2021'];
+  compilerOptions.module = useEsm
+    ? ts.ModuleKind.Node16
+    : ts.ModuleKind.CommonJS;
   // use NodeJs module resolution until support for TS 4.x is dropped and then
   // we can switch to Node10
-  compilerOptions.moduleResolution = ts.ModuleResolutionKind.NodeJs;
-  compilerOptions.target = ts.ScriptTarget.ES2021;
+  compilerOptions.moduleResolution = useEsm
+    ? ts.ModuleResolutionKind.Node16
+    : ts.ModuleResolutionKind.NodeJs;
+  compilerOptions.target = useEsm
+    ? ts.ScriptTarget.ES2022
+    : ts.ScriptTarget.ES2021;
   compilerOptions.inlineSourceMap = true;
   compilerOptions.skipLibCheck = true;
+  // If inlineSourceMap is being set to true, this sourceMap must not be set
+  delete compilerOptions.sourceMap;
 
   if (swcNodeInstalled && !preferTsNode) {
     return () => getSwcTranspiler(compilerOptions);
@@ -138,10 +156,11 @@ export function getTranspiler(compilerOptions: CompilerOptions) {
  * @returns cleanup method
  */
 export function registerTranspiler(
-  compilerOptions: CompilerOptions
+  compilerOptions: CompilerOptions,
+  useEsm = false
 ): () => void {
   // Function to register transpiler that returns cleanup function
-  const transpiler = getTranspiler(compilerOptions);
+  const transpiler = getTranspiler(compilerOptions, useEsm);
 
   if (!transpiler) {
     warnNoTranspiler();
@@ -317,3 +336,17 @@ export function getTsNodeCompilerOptions(compilerOptions: CompilerOptions) {
 type RemoveIndex<T> = {
   [K in keyof T as {} extends Record<K, 1> ? never : K]: T[K];
 };
+
+function getNearestPackageJson(path: string, root = workspaceRoot) {
+  path = dirname(path);
+  const pkgJson = join(path, 'package.json');
+  if (existsSync(pkgJson)) {
+    return JSON.parse(readFileSync(pkgJson, { encoding: 'utf-8' }));
+  } else {
+    if (path === root) {
+      return {};
+    }
+
+    return getNearestPackageJson(path);
+  }
+}
