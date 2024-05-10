@@ -2,6 +2,7 @@ import {
   ProjectGraphProjectNode,
   Tree,
   formatFiles,
+  joinPathFragments,
   output,
   readJson,
   updateJson,
@@ -29,7 +30,7 @@ import {
 } from 'nx/src/command-line/release/version';
 import { interpolate } from 'nx/src/tasks-runner/utils';
 import * as ora from 'ora';
-import { prerelease } from 'semver';
+import { parse, prerelease } from 'semver';
 import { parseRegistryOptions } from '../../utils/npm-config';
 import { ReleaseVersionGeneratorSchema } from './schema';
 import { resolveLocalPackageDependencies } from './utils/resolve-local-package-dependencies';
@@ -522,7 +523,19 @@ To fix this you will either need to add a package.json file at that location, or
       callback: async (tree, opts) => {
         const cwd = tree.root;
         const updatedFiles = await updateLockFile(cwd, opts);
-        return updatedFiles;
+
+        return {
+          updatedFiles,
+          async restoreLocalDependencyReferences() {
+            if (true) {
+              await _restoreLocalDependencyReferences(
+                tree,
+                versionData,
+                projectNameToPackageRootMap
+              );
+            }
+          },
+        };
       },
     };
   } catch (e: any) {
@@ -582,4 +595,65 @@ function getColor(projectName: string) {
   const colorIndex = code % colors.length;
 
   return colors[colorIndex];
+}
+
+async function _restoreLocalDependencyReferences(
+  tree: Tree,
+  projectsVersionData: VersionData,
+  projectNameToPackageRootMap: Map<string, string>
+): Promise<string[]> {
+  const changedFiles: string[] = [];
+
+  for (const [projectName, versionData] of Object.entries(
+    projectsVersionData
+  )) {
+    for (const dependentProjectData of versionData.dependentProjects) {
+      const isSemver = parse(dependentProjectData.rawVersionSpec);
+      // If a semver specifier, no action needed
+      if (isSemver) {
+        continue;
+      }
+      // If a non-semver specifier, restore it in the source package.json
+      const sourceProjectName = dependentProjectData.source;
+      const sourcePackageRoot =
+        projectNameToPackageRootMap.get(sourceProjectName);
+      if (!sourcePackageRoot) {
+        console.warn(
+          `The project "${sourceProjectName}" could not be found on the project graph`,
+          { dependentProjectData }
+        );
+        continue;
+      }
+      const sourcePackageJsonPath = joinPathFragments(
+        sourcePackageRoot,
+        'package.json'
+      );
+      const targetPackageRoot = projectNameToPackageRootMap.get(projectName);
+      if (!targetPackageRoot) {
+        console.warn(
+          `The project "${projectName}" could not be found on the project graph`,
+          { dependentProjectData }
+        );
+        continue;
+      }
+      const updatedSourceProjectPackageJson = readJson(
+        tree,
+        sourcePackageJsonPath
+      );
+      const targetProjectPackageJsonPath = joinPathFragments(
+        targetPackageRoot,
+        'package.json'
+      );
+      const targetProjectPackageJson = readJson(
+        tree,
+        targetProjectPackageJsonPath
+      );
+      updatedSourceProjectPackageJson[
+        dependentProjectData.dependencyCollection
+      ][targetProjectPackageJson.name] = dependentProjectData.rawVersionSpec;
+      writeJson(tree, sourcePackageJsonPath, updatedSourceProjectPackageJson);
+      changedFiles.push(sourcePackageJsonPath);
+    }
+  }
+  return changedFiles;
 }

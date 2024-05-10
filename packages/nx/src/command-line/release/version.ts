@@ -8,7 +8,7 @@ import {
   ProjectGraph,
   ProjectGraphProjectNode,
 } from '../../config/project-graph';
-import { FsTree, Tree, flushChanges } from '../../generators/tree';
+import { FileChange, FsTree, Tree, flushChanges } from '../../generators/tree';
 import { createProjectFileMapUsingProjectGraph } from '../../project-graph/file-map-utils';
 import {
   createProjectGraphAsync,
@@ -73,6 +73,8 @@ export interface ReleaseVersionGeneratorSchema {
   installArgs?: string;
   installIgnoreScripts?: boolean;
   conventionalCommitsConfig?: NxReleaseConfig['conventionalCommits'];
+  // Whether or not to
+  revertLocalDependencyReferences?: boolean;
 }
 
 export interface NxReleaseVersionResult {
@@ -88,6 +90,8 @@ export interface NxReleaseVersionResult {
    */
   workspaceVersion: (string | null) | undefined;
   projectsVersionData: VersionData;
+  restoreLocalDependencyReferencesCallbacks: (() => Promise<void>)[];
+  tree: Tree;
 }
 
 export const releaseVersionCLIHandler = (args: VersionOptions) =>
@@ -167,6 +171,7 @@ export async function releaseVersion(
     args.gitCommitMessage || nxReleaseConfig.version.git.commitMessage;
   const additionalChangedFiles = new Set<string>();
   const generatorCallbacks: (() => Promise<void>)[] = [];
+  const restoreLocalDependencyReferencesCallbacks: (() => Promise<void>)[] = [];
 
   if (args.projects?.length) {
     /**
@@ -217,7 +222,7 @@ export async function releaseVersion(
         );
         // Capture the callback so that we can run it after flushing the changes to disk
         generatorCallbacks.push(async () => {
-          const changedFiles = await generatorCallback(tree, {
+          const generatorCallbackResult = await generatorCallback(tree, {
             dryRun: !!args.dryRun,
             verbose: !!args.verbose,
             generatorOptions: {
@@ -225,6 +230,17 @@ export async function releaseVersion(
               ...args.generatorOptionsOverrides,
             },
           });
+
+          let changedFiles = [];
+          // Handle older generators which just returned the changedFiles directly from the callback
+          if (Array.isArray(generatorCallbackResult)) {
+            changedFiles = generatorCallbackResult;
+          } else {
+            changedFiles = generatorCallbackResult.updatedFiles;
+            restoreLocalDependencyReferencesCallbacks.push(
+              generatorCallbackResult.restoreLocalDependencyReferences
+            );
+          }
           changedFiles.forEach((f) => additionalChangedFiles.add(f));
         });
       }
@@ -241,14 +257,17 @@ export async function releaseVersion(
         : [];
     handleDuplicateGitTags(gitTagValues);
 
-    printAndFlushChanges(tree, !!args.dryRun);
+    const treeChanges = printAndFlushChanges(tree, !!args.dryRun);
+    // Reset changes stored on the tree at this point
+    // TODO: implement API for this?
+    (tree as any).recordedChanges = {};
 
     for (const generatorCallback of generatorCallbacks) {
       await generatorCallback();
     }
 
     const changedFiles = [
-      ...tree.listChanges().map((f) => f.path),
+      ...treeChanges.map((f) => f.path),
       ...additionalChangedFiles,
     ];
 
@@ -258,6 +277,8 @@ export async function releaseVersion(
         // An overall workspace version cannot be relevant when filtering to independent projects
         workspaceVersion: undefined,
         projectsVersionData: versionData,
+        restoreLocalDependencyReferencesCallbacks,
+        tree,
       };
     }
 
@@ -301,6 +322,8 @@ export async function releaseVersion(
       // An overall workspace version cannot be relevant when filtering to independent projects
       workspaceVersion: undefined,
       projectsVersionData: versionData,
+      restoreLocalDependencyReferencesCallbacks,
+      tree,
     };
   }
 
@@ -349,7 +372,7 @@ export async function releaseVersion(
       );
       // Capture the callback so that we can run it after flushing the changes to disk
       generatorCallbacks.push(async () => {
-        const changedFiles = await generatorCallback(tree, {
+        const generatorCallbackResult = await generatorCallback(tree, {
           dryRun: !!args.dryRun,
           verbose: !!args.verbose,
           generatorOptions: {
@@ -357,6 +380,17 @@ export async function releaseVersion(
             ...args.generatorOptionsOverrides,
           },
         });
+
+        let changedFiles = [];
+        // Handle older generators which just returned the changedFiles directly from the callback
+        if (Array.isArray(generatorCallbackResult)) {
+          changedFiles = generatorCallbackResult;
+        } else {
+          changedFiles = generatorCallbackResult.updatedFiles;
+          restoreLocalDependencyReferencesCallbacks.push(
+            generatorCallbackResult.restoreLocalDependencyReferences
+          );
+        }
         changedFiles.forEach((f) => additionalChangedFiles.add(f));
       });
     }
@@ -373,7 +407,10 @@ export async function releaseVersion(
       : [];
   handleDuplicateGitTags(gitTagValues);
 
-  printAndFlushChanges(tree, !!args.dryRun);
+  const treeChanges = printAndFlushChanges(tree, !!args.dryRun);
+  // Reset changes stored on the tree at this point
+  // TODO: implement API for this?
+  (tree as any).recordedChanges = {};
 
   for (const generatorCallback of generatorCallbacks) {
     await generatorCallback();
@@ -392,7 +429,7 @@ export async function releaseVersion(
   }
 
   const changedFiles = [
-    ...tree.listChanges().map((f) => f.path),
+    ...treeChanges.map((f) => f.path),
     ...additionalChangedFiles,
   ];
 
@@ -401,6 +438,8 @@ export async function releaseVersion(
     return {
       workspaceVersion,
       projectsVersionData: versionData,
+      restoreLocalDependencyReferencesCallbacks,
+      tree,
     };
   }
 
@@ -442,6 +481,8 @@ export async function releaseVersion(
   return {
     workspaceVersion,
     projectsVersionData: versionData,
+    restoreLocalDependencyReferencesCallbacks,
+    tree,
   };
 }
 
@@ -521,7 +562,7 @@ async function runVersionOnProjects(
   return versionResult.callback;
 }
 
-function printAndFlushChanges(tree: Tree, isDryRun: boolean) {
+function printAndFlushChanges(tree: Tree, isDryRun: boolean): FileChange[] {
   const changes = tree.listChanges();
 
   console.log('');
@@ -555,6 +596,8 @@ function printAndFlushChanges(tree: Tree, isDryRun: boolean) {
   if (!isDryRun) {
     flushChanges(workspaceRoot, changes);
   }
+
+  return changes;
 }
 
 function extractGeneratorCollectionAndName(

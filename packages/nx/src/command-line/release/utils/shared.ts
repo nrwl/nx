@@ -21,7 +21,13 @@ export type ReleaseVersionGeneratorResult = {
       verbose?: boolean;
       generatorOptions?: Record<string, unknown>;
     }
-  ) => Promise<string[]>;
+  ) => Promise<
+    | string[]
+    | {
+        updatedFiles: string[];
+        restoreLocalDependencyReferences(): Promise<void>;
+      }
+  >;
 };
 
 export type VersionData = Record<
