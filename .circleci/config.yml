@@ -108,6 +108,8 @@ jobs:
           key: local-registry-storage
           paths:
             - build/local-registry/storage
+      - store_artifacts:
+          path: build/local-registry/storage
 
   # -------------------------
   #     JOBS: Main-MacOS
