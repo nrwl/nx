@@ -555,7 +555,7 @@ describe('convert-to-flat-config generator', () => {
         {
           files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
           rules: {},
-          languageSettings: {
+          languageOptions: {
             parserOptions: { project: ['apps/dx-assets-ui/tsconfig.*?.json'] },
           },
         },
