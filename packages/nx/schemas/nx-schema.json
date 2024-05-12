@@ -664,6 +664,20 @@
     },
     "ChangelogRenderOptions": {
       "type": "object",
+      "properties": {
+        "authors": {
+          "type": boolean,
+          "default": true
+        },
+        "commitReferences": {
+          "type": boolean,
+          "default": true
+        },
+        "versionTitleDate": {
+          "type": boolean,
+          "default": true
+        }
+      },
       "additionalProperties": true
     },
     "NxReleaseConventionalCommitsConfiguration": {
