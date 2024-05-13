@@ -64,4 +64,4 @@ All other packages keep the same name, but change scope from `@nrwl` to `@nx`.
 
 ## @nrwl Scope End of Life
 
-Starting in version 19, the `@nrwl` scoped packages will no longer be published to npm. Only the `@nx` scoped packages will be available on the npm registry.
+Starting in version 20, the `@nrwl` scoped packages will no longer be published to npm. Only the `@nx` scoped packages will be available on the npm registry.
